@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-70d451dce72acbbc": {
+        "hash": "sha256:dbb0d86db891567ef93f46eca68b8d9878f252f786e1a8cd111431b6c685d8d5",
+        "path": "analyses/r-70d451dce72acbbc.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:3f8307b9bc4e8a2ec85f5c70592120efc55736ab64f0fabe63f8cacc7da51272",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:3f8307b9bc4e8a2ec85f5c70592120efc55736ab64f0fabe63f8cacc7da51272",
+      "hash": "sha256:730a089ca3d1ad5569ea52720607901c3d0b8b1b8d8b3829a5d4f176845b46e7",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:a2cec03065650c110cccb98f946fb873d95c6e9703d808720d4f6804c3646248",
+      "path": "games/vol-hell/audio-manifests/music/combat/surge-protocol.json"
+    },
+    "renders": {
+      "r-70d451dce72acbbc": {
+        "hash": "sha256:3d349ac623be15bb92f66bf7f2eae0b7b3a021f6110367347090c53a6d0e15f5",
+        "path": "renders/r-70d451dce72acbbc.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:0b8e6aacb32e44f63b912a2a1ba23ffff67682a402f1263b4ee941ea0aaa6be1",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "mix",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/music/combat/surge-protocol.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "music-surge-protocol/mix"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

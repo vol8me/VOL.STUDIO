@@ -1,0 +1,100 @@
+{
+  "channels": 1,
+  "description": "Arcade telegraph telegraph-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 0.45,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "exponential",
+          "decay": 0.12,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -2,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "duty": 0.125,
+          "frequency": 987.77,
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "exponential",
+          "decay": 0.1,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -4,
+      "name": "retro-1",
+      "role": "body",
+      "source": {
+        "params": {
+          "duty": 0.125,
+          "frequency": 1318.51,
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0.16
+    },
+    {
+      "gainDb": -13,
+      "name": "preset-2",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "struck",
+          "frequency": 1975.53,
+          "instrument": "crystalBell",
+          "noteSeconds": 0.3,
+          "velocity": 0.4
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609309
+}

@@ -1,0 +1,91 @@
+{
+  "brief": {
+    "hash": "sha256:73707cee41fb19198a6cb863e6d7108ba554621f48079d518afd59164989ccc1",
+    "path": "devtools/audio-synth/audio-music/first-light/brief.json"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 2
+  },
+  "music": {
+    "hash": "sha256:43c50a94d3649ef5d772bc68da424c845c2a31beedc8d6c59f44b15febdd8d40",
+    "musicId": "first-light",
+    "path": "devtools/audio-synth/audio-music/first-light/music.json",
+    "playback": "playlistOneShot",
+    "seed": 202609305,
+    "version": 1
+  },
+  "package": "@volstudio/vol-hell",
+  "qa": {
+    "hash": "sha256:c9cb6821b49b7fba52e503cec72da5449dbd429886cd80881e40aa648d832083",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/first-light/qa.json"
+  },
+  "report": {
+    "hash": "sha256:d83bb58359990d6a7038ba7d100a09d1e50f0806d8d77ef95cd3877b7569ea54",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/first-light/report.json"
+  },
+  "schema": "MusicBundleV1",
+  "spec": {
+    "bars": 16,
+    "bpm": 96,
+    "engine": {
+      "compressor": false
+    },
+    "frames": 1773585,
+    "mastering": {
+      "gainDb": 2.565,
+      "integratedLufs": -19.268,
+      "path": "one-shot-limited",
+      "truePeakDbtp": -1.962
+    },
+    "meter": [4, 4],
+    "musicId": "first-light",
+    "playback": "playlistOneShot",
+    "runtimeGain": 1,
+    "sampleRate": 44100,
+    "schema": "MusicAssetSpecV1",
+    "stems": [
+      {
+        "file": "public/assets/audio/music/end/first-light.ogg",
+        "frames": 1773585,
+        "id": "main"
+      }
+    ],
+    "transitions": []
+  },
+  "stems": [
+    {
+      "asset": {
+        "bytes": 322535,
+        "encodedHash": "sha256:3e0545984531e6b8cdc206c79cb4fc69be3a2d67b5ef1e449640b881582e782d",
+        "path": "public/assets/audio/music/end/first-light.ogg"
+      },
+      "frames": 1773585,
+      "id": "mix",
+      "integratedLufs": -19.28272338147743,
+      "manifest": {
+        "hash": "sha256:e26f472d062038f171cae3d89e0e1aa1fac187e8a3f45959333d539f959df99e",
+        "path": "audio-manifests/music/end/first-light.json"
+      },
+      "pcmHash": "sha256:e29abf98d3317d9ce007ada74624d1ecc4d811ed622b1488b9675ef0156d146d",
+      "truePeakDbtp": -1.8555627042346452
+    }
+  ],
+  "sync": {
+    "checks": [
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "mix",
+        "lagSamples": 0,
+        "ok": true
+      }
+    ],
+    "method": "cross-correlation-v1",
+    "ok": true
+  },
+  "themeBook": null
+}

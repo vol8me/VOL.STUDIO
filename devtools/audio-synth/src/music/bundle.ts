@@ -1,3 +1,4 @@
+import { ASSET_CLASS_POLICIES } from '../analysis/assetQa';
 import {
   barsToFrames,
   resolveStemGain,
@@ -43,6 +44,13 @@ export const QA_SAMPLE_PEAK_MAX = 0.999;
 /** En kısık state bile bu eşiğin altına inerse "duyulmuyor" sayılır. */
 export const QA_SILENT_LUFS = -60;
 export const MUSIC_LOUDNESS_RANGE = { min: -20, max: -12 } as const;
+
+function loudnessRange(program: MusicProgramV1): { min: number; max: number } {
+  const range = ASSET_CLASS_POLICIES.classes.ambience.loudnessRange;
+  return program.delivery.assetClass === 'ambience'
+    ? { min: range[0], max: range[1] }
+    : MUSIC_LOUDNESS_RANGE;
+}
 
 export interface RenderedStemV1 {
   readonly id: string;
@@ -198,8 +206,8 @@ export function planAdaptive(input: AdaptivePlanInput): AdaptivePlanV1 {
     if (measured.integratedLufs < QA_SILENT_LUFS) problems.push('duyulmuyor');
     if (
       point.intensity === loudest.intensity &&
-      (measured.integratedLufs < MUSIC_LOUDNESS_RANGE.min ||
-        measured.integratedLufs > MUSIC_LOUDNESS_RANGE.max)
+      (measured.integratedLufs < loudnessRange(program).min ||
+        measured.integratedLufs > loudnessRange(program).max)
     ) {
       problems.push(`en yüksek state ${measured.integratedLufs} LUFS politika dışında`);
     }
@@ -298,8 +306,8 @@ export function planSingle(input: SinglePlanInput): AdaptivePlanV1 {
   if (after.truePeakDbtp > QA_TRUE_PEAK_MAX_DBTP)
     problems.push(`true-peak ${after.truePeakDbtp} dBTP`);
   if (
-    after.integratedLufs < MUSIC_LOUDNESS_RANGE.min ||
-    after.integratedLufs > MUSIC_LOUDNESS_RANGE.max
+    after.integratedLufs < loudnessRange(input.program).min ||
+    after.integratedLufs > loudnessRange(input.program).max
   ) {
     problems.push(`${after.integratedLufs} LUFS politika dışında`);
   }

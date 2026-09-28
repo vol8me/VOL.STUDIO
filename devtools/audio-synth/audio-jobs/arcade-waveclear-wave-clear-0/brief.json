@@ -1,0 +1,22 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "arcade",
+    "retro"
+  ],
+  "durationSeconds": {
+    "max": 1.1509999999999998,
+    "min": 1.149
+  },
+  "id": "arcade-waveclear-wave-clear-0",
+  "intent": "Arcade waveClear wave-clear-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Arcade waveClear wave-clear-0"
+}

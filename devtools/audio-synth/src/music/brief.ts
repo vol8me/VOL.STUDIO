@@ -1,4 +1,5 @@
 import { AudioParamError } from '../guard/errors';
+import type { AudioCharacterPolicyV1 } from '../analysis/character';
 import { checkArray, checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
 import {
   DENSITY_LEVELS,
@@ -31,6 +32,7 @@ export interface MusicBriefEnvelope {
   readonly title: string;
   readonly intent: string;
   readonly provenance: { readonly author: 'agent' | 'human'; readonly by?: string };
+  readonly character?: AudioCharacterPolicyV1;
 }
 
 export interface MusicAdaptiveStateV1 {
@@ -46,7 +48,7 @@ export interface SpectralProtectionV1 {
 
 export interface MusicBriefV1 extends MusicBriefEnvelope {
   readonly kind: 'music';
-  readonly assetClass: 'music';
+  readonly assetClass: 'music' | 'ambience';
   readonly usage: MusicUsage;
   readonly playback: MusicPlayback;
   readonly affect: {
@@ -234,9 +236,7 @@ function missingDecisions(o: ParamObject): MusicDecisionV1[] {
 export function checkMusicBrief(o: ParamObject, envelope: MusicBriefEnvelope): MusicBriefV1 {
   const pending = missingDecisions(o);
   if (pending.length > 0) throw new MusicDecisionError(pending);
-  if (o.assetClass !== 'music') {
-    throw new AudioParamError('assetClass', 'type', "'music' olmalı", o.assetClass);
-  }
+  const assetClass = checkChoice(o.assetClass, 'assetClass', ['music', 'ambience'] as const);
   const playback = checkChoice(o.playback, 'playback', PLAYBACK_MODES);
   const affectRaw = checkObject(o.affect ?? {}, 'affect', ['valence', 'arousal', 'tags']);
   const tags =
@@ -277,7 +277,7 @@ export function checkMusicBrief(o: ParamObject, envelope: MusicBriefEnvelope): M
   return {
     ...envelope,
     kind: 'music',
-    assetClass: 'music',
+    assetClass,
     usage: checkChoice(o.usage, 'usage', MUSIC_USAGES),
     playback,
     affect: {

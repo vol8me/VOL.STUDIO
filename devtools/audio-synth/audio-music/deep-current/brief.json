@@ -1,0 +1,41 @@
+{
+  "schema": "AudioBriefV1",
+  "id": "deep-current",
+  "title": "Derin Akıntı",
+  "intent": "Ambiyans: D pedalı, cello uzun tonları ve sub üzerinde üç yumuşak kick; pad yok, 64 sn loop.",
+  "provenance": {
+    "author": "agent"
+  },
+  "kind": "music",
+  "assetClass": "ambience",
+  "usage": "bed",
+  "playback": "loop",
+  "affect": {
+    "valence": -0.2,
+    "arousal": 0.12
+  },
+  "tempo": {
+    "bpm": {
+      "min": 60,
+      "max": 60
+    }
+  },
+  "meter": [4, 4],
+  "tonal": {
+    "systems": ["minor"],
+    "roots": ["D2"]
+  },
+  "melodicSalience": 0,
+  "rhythmicDensity": "sparse",
+  "form": {
+    "sections": ["intro", "body", "body", "release"]
+  },
+  "length": {
+    "bars": {
+      "min": 16,
+      "max": 16
+    }
+  },
+  "channels": 2,
+  "avoidNotes": ["arcade setinin estetik kabulü insan dinlemesi bekler"]
+}

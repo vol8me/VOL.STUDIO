@@ -126,6 +126,8 @@ export interface MarkerV1 {
 }
 
 export interface MusicDeliveryV1 {
+  readonly assetClass?: 'music' | 'ambience';
+  readonly files?: Readonly<Record<string, string>>;
   readonly package: string;
   /** Paket-göreli dizin; stem asset'i `<assetDir>/<stem>.ogg`. */
   readonly assetDir: string;

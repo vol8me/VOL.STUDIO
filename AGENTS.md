@@ -112,12 +112,12 @@ Kapıların tek kaynağı `justfile`'dır; bu tablo onu izler ve bir kapı onu
 denetler. `just` global değildir; `pnpm exec just <tarif>` ya da aşağıdaki
 `pnpm` betikleriyle çağrılır.
 
-| Kapı           | Ne zaman                | Bileşim                                                                                |
-| -------------- | ----------------------- | -------------------------------------------------------------------------------------- |
-| `pnpm quick`   | pre-commit, ~45 sn      | `contract` `format-check` `typecheck` `lint`                                           |
-| `pnpm fast`    | yerel geliştirme        | `quick` `test`                                                                         |
-| `pnpm high`    | pre-push                | `quick` `rust` `lint-css` `coverage` `coverage-shape` `build` `bundle` `scaling` `e2e` |
-| `pnpm signoff` | sürüm ve kilometre taşı | `high` `coverage-audio` `audio-verify` `security-js` `security-rust`                   |
+| Kapı           | Ne zaman                | Bileşim                                                                                             |
+| -------------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `pnpm quick`   | pre-commit, ~45 sn      | `contract` `format-check` `typecheck` `lint`                                                        |
+| `pnpm fast`    | yerel geliştirme        | `quick` `test`                                                                                      |
+| `pnpm high`    | pre-push                | `quick` `rust` `lint-css` `coverage` `coverage-shape` `audio-test` `build` `bundle` `scaling` `e2e` |
+| `pnpm signoff` | sürüm ve kilometre taşı | `high` `coverage-audio` `audio-verify` `security-js` `security-rust`                                |
 
 `signoff`un audio kapsamı tek başına yaklaşık 19 dakika sürer.
 
@@ -242,7 +242,8 @@ oyunların build'i geçmeye devam eder.
 - Manifest programı, render yüzeyini ve PCM kimliğini kaydeder. Doğrulama yeniden render edip karşılaştırır.
 - Düğüm sözleşmesi sürüm artmadan değişemez (`pnpm --filter @volstudio/audio-synth audio:surface-lock`).
 - Üretim kanıtı `pnpm --filter @volstudio/audio-synth audio:production-check` iledir.
-- Canary'lerin insan dinlemesi `pending-human` olarak kalır; dinleme uydurulmaz.
+- Canary dinlemesi yalnız `devtools/audio-synth/canaries/reviews.json`daki insan beyanıyla kapanır;
+  bayat sürüm beyanı etkin durumda `pending-human` sayılır. Dinleme uydurulmaz.
 
 **pen.dev:** `.pen` dosyasına yalnız Pencil MCP araçlarıyla erişilir; kurallar
 `devtools/pen.dev/AGENTS.md`dedir.
@@ -321,7 +322,7 @@ Uzun gerekçe bir belgedir ve belgeye taşınır.
   - Genel `testTimeout` büyütülmez; gerçek takılmaları gizler.
 - **Kapsam dışlaması** yalnız çalıştırılabilir satırı olmayan dosyalar içindir (barrel, tip, `.d.ts`).
 - **Disk gerçeğini sınayan testler gerçek geçici dizinde koşar.** Taklit edilen bir disk, sınanan farkı tanım gereği üretemez.
-- **E2E bugün Chromium'da koşar.** vol-ui'nin piksel temelleri yalnız bilinçli bir görsel değişiklikte yenilenir.
+- **E2E Chromium ve WebKit'te koşar.** vol-ui'nin piksel temelleri yalnız bilinçli bir görsel değişiklikte yenilenir.
 
 ## Git
 

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-41428d5b2f8eb9a8": {
+        "hash": "sha256:30e9f3a1adfa5c5441a90e8a664711c82aa166ce3c6c6efec997398be2f6678e",
+        "path": "analyses/r-41428d5b2f8eb9a8.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:ea078c487151b692e86a53f056ccd60c5698e67538b04ca301b736c767927cf4",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:ea078c487151b692e86a53f056ccd60c5698e67538b04ca301b736c767927cf4",
+      "hash": "sha256:d51db778c2ecd73ee81fc46f8b2de6482e8ee1080a9be70c5702f2da54ed5825",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:36e7facb44825c7f7e3fbb0e8665333f9766359b7bda8d003665e52109fc836a",
+      "path": "games/vol-hell/audio-manifests/sfx/ability/chain-lightning-0.json"
+    },
+    "renders": {
+      "r-41428d5b2f8eb9a8": {
+        "hash": "sha256:6933ce7873bc981529bfc4721fd73905cb5019ddddb89d7234671f354ecf69e3",
+        "path": "renders/r-41428d5b2f8eb9a8.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:5bc0d48a0bc9305faf4ef3f5ffb9e80f4c92f45b4bba4fa685195cd02959ca0a",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-chainlightning-chain-lightning-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 7,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/ability/chain-lightning-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-chain-lightning"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

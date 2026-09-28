@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-9bc84d648bbfcb8d": {
+        "hash": "sha256:89e549dccb5e1b0a5f3235ed1f362d4089060de28939898b6e0b3bfbec2858bb",
+        "path": "analyses/r-9bc84d648bbfcb8d.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:4b21eff28788ec7219d5cd537fa1fddc0c8afa105cc5af7b6a85c73aa4572145",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:4b21eff28788ec7219d5cd537fa1fddc0c8afa105cc5af7b6a85c73aa4572145",
+      "hash": "sha256:557f138767f254e40923e0e668c93854bfb30cb1f6d1694c43eb8997886f57b1",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:b55ca635e33cc6107b832d307425bf59be051cc72c574343922b77a6ba3414eb",
+      "path": "games/vol-hell/audio-manifests/sfx/combat/boss-enrage-0.json"
+    },
+    "renders": {
+      "r-9bc84d648bbfcb8d": {
+        "hash": "sha256:096229e32ed1c6af7b3d89f3f5e828a98532c51bf83113b5cbc36386a558f964",
+        "path": "renders/r-9bc84d648bbfcb8d.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:c177db9f53d16fc1dfc3fafe00948ee0d8789944554452fcb44e7255ce296677",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-bossenrage-boss-enrage-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/combat/boss-enrage-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-boss-enrage"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

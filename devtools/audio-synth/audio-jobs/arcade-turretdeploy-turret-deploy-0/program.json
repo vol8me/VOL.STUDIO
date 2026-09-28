@@ -1,0 +1,107 @@
+{
+  "channels": 1,
+  "description": "Arcade turretDeploy turret-deploy-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 0.55,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "pitch-retro-1": {
+      "curve": "curve.exponential",
+      "points": [
+        [
+          0,
+          293.66
+        ],
+        [
+          0.322,
+          440
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "gainDb": -6,
+      "name": "drum-0",
+      "role": "transient",
+      "source": {
+        "params": {
+          "decay": 0.25,
+          "model": "perc",
+          "tone": 0.5,
+          "tune": -2,
+          "velocity": 0.6
+        },
+        "primitive": "source.drum",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.35,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -4,
+      "name": "retro-1",
+      "role": "body",
+      "source": {
+        "params": {
+          "duty": 0.5,
+          "frequency": {
+            "gesture": "pitch-retro-1"
+          },
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -10,
+      "name": "preset-2",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "struck",
+          "frequency": 587.33,
+          "instrument": "electricPiano2",
+          "noteSeconds": 0.3,
+          "velocity": 0.5
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609312
+}

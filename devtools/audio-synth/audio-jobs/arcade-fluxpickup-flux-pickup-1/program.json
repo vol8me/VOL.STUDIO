@@ -1,0 +1,74 @@
+{
+  "channels": 1,
+  "description": "Arcade fluxPickup flux-pickup-1: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 0.32,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "exponential",
+          "decay": 0.14840000000000003,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -2,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "arpRate": 18,
+          "arpeggio": "octave",
+          "duty": 0.25,
+          "frequency": 1245.335,
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -11,
+      "name": "preset-1",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "struck",
+          "frequency": 1865.8962,
+          "instrument": "crystalBell",
+          "noteSeconds": 0.21200000000000002,
+          "velocity": 0.5
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609311
+}

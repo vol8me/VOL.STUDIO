@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a032c86b82d0668f": {
+        "hash": "sha256:d9a6826e3819ffab65a984668fb2b2d049adbcbe9514aca7a0b01627cbbd4d14",
+        "path": "analyses/r-a032c86b82d0668f.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:0b7ae6c47d582be6d02a0a3e3bd0fb7c411254a3ec16200a7495276e67cf4b5b",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:0b7ae6c47d582be6d02a0a3e3bd0fb7c411254a3ec16200a7495276e67cf4b5b",
+      "hash": "sha256:c8379662cf7f68ecab76af8beadd9106cedb5006a1f75b91d38f036a8d5b0af5",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:60ad446d2c78cfb11e06cd58e8b9065968b0a577a79246e439f4ea296556cd44",
+      "path": "games/vol-hell/audio-manifests/sfx/combat/telegraph-0.json"
+    },
+    "renders": {
+      "r-a032c86b82d0668f": {
+        "hash": "sha256:aecf7a360156fd2f7dad9c0f4fdcfcbc17d84299d4aa6bfba81fccb49dc6a5f5",
+        "path": "renders/r-a032c86b82d0668f.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:d604d90ceb2add208d6f510e5d4e4271a5ec6fecc9cfa127f2ef5d85b9ac77e5",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-telegraph-telegraph-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/combat/telegraph-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-telegraph"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

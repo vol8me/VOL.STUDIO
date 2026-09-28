@@ -1,0 +1,92 @@
+{
+  "channels": 1,
+  "description": "Arcade multiShot multi-shot-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 0.34,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "pitch-retro-0": {
+      "curve": "curve.exponential",
+      "points": [
+        [
+          0,
+          987.77
+        ],
+        [
+          0.2208,
+          329.63
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "exponential",
+          "decay": 0.24,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -2,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "arpRate": 20,
+          "arpeggio": "major",
+          "duty": 0.25,
+          "frequency": {
+            "gesture": "pitch-retro-0"
+          },
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -9,
+      "name": "preset-1",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "natural",
+          "frequency": 659.25,
+          "instrument": "brightLead",
+          "noteSeconds": 0.22,
+          "velocity": 0.55
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609309
+}

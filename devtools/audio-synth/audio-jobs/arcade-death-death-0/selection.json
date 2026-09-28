@@ -1,0 +1,8 @@
+{
+  "analysisHash": "sha256:007045afe0f111d81b84819b866e849a4249bc5d43d8f600b9db8cf7d65182f4",
+  "pcmHash": "sha256:36aedcc2db7d601fd5e3c912ee6317dfc2e0fbb4fa78a8725c4438b91db4347d",
+  "reason": "Arcade paleti; kullanıcı 2026-09-28 tarihinde oyun ses setini onayladı.",
+  "renderHash": "sha256:ec23aaaab463d2ea654a848cefe680758dbb0755a3eb59e78ec886a38826f1ca",
+  "renderId": "r-45f937232bdbdcb5",
+  "schema": "AudioSelectionV1"
+}

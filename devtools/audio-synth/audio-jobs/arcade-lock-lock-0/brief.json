@@ -1,0 +1,22 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "arcade",
+    "retro"
+  ],
+  "durationSeconds": {
+    "max": 0.201,
+    "min": 0.199
+  },
+  "id": "arcade-lock-lock-0",
+  "intent": "Arcade lock lock-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Arcade lock lock-0"
+}

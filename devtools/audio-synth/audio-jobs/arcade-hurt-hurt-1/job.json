@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-baaf902d5b7f54a0": {
+        "hash": "sha256:376fcd6ecb5c729c639563b06da726d7ef89ef5440114e381be23f2895bd45cd",
+        "path": "analyses/r-baaf902d5b7f54a0.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:d31faacda929bae3c3d73b0698b4737cc688260c587520a26c5004fdf88ecf51",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:d31faacda929bae3c3d73b0698b4737cc688260c587520a26c5004fdf88ecf51",
+      "hash": "sha256:5d369663059aec208531dbda8631bbf70a6629948d051e95cd699592c26843ee",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:e25f4be532f9f3b078417a9aa418520d89fd614e65a08d43d4aa505759f6627c",
+      "path": "games/vol-hell/audio-manifests/sfx/player/hurt-1.json"
+    },
+    "renders": {
+      "r-baaf902d5b7f54a0": {
+        "hash": "sha256:704f3ee10a0681664722847f75fd615a85c3b00d6cfea9b6c1c0b6ec084f23ce",
+        "path": "renders/r-baaf902d5b7f54a0.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:64ad0b1960e08cd6b742add8716e148fa29f216355f726fc8836b34f4a0289b8",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-hurt-hurt-1",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/player/hurt-1.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-hurt"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

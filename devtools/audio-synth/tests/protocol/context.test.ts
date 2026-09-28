@@ -13,14 +13,16 @@ import { createTestRepo, testBrief } from './repo';
 const REPO = fileURLToPath(new URL('../../../..', import.meta.url));
 
 describe('audio:job context', () => {
-  it('gerçek repo: aktif oyun hedefi yok — bunu AÇIKÇA söyler; frozen oyunlar listelenir', () => {
+  it('gerçek repo: aktif oyun hedefi beyanlıdır; frozen oyun ayrı listelenir', () => {
     const context = buildContext(REPO);
     expect(context.targets.publishable.map((t) => t.packageName)).toEqual([
       '@volstudio/audio-synth',
+      '@volstudio/vol-hell',
     ]);
     expect(context.targets.publishable[0].runtime).toBeNull();
-    expect(context.targets.frozen).toEqual(['@volstudio/vol-arachnid', '@volstudio/vol-hell']);
-    expect(context.targets.note).toMatch(/oyun hedefi YOK/);
+    expect(context.targets.publishable[1].runtime?.formats).toEqual(['ogg']);
+    expect(context.targets.frozen).toEqual(['@volstudio/vol-arachnid']);
+    expect(context.targets.note).toBe('1 aktif oyun hedefi beyanlı.');
     expect(context.schemas.brief.kinds.music.status).toBe('supported');
     expect(context.music.schemas.program).toBe('MusicProgramV1');
     expect(context.music.runtime.capabilities.stingers).toBe('bar-or-beat');

@@ -1,0 +1,81 @@
+{
+  "channels": 1,
+  "description": "Arcade deny deny-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 0.36,
+  "effects": [
+    {
+      "params": {
+        "frequency": 130,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.24,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -2,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "duty": 0.5,
+          "frequency": 146.83,
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.12,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -14,
+      "name": "noise-1",
+      "role": "tail",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609304
+}

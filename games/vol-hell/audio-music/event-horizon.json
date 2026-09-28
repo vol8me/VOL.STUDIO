@@ -1,0 +1,104 @@
+{
+  "brief": {
+    "hash": "sha256:86686b3377fac8aedd029643b45a0c835fd65e1a126268a81062c45d95f915b6",
+    "path": "devtools/audio-synth/audio-music/event-horizon/brief.json"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 2
+  },
+  "music": {
+    "hash": "sha256:8b22cfc852c925c47dacc7cac6537ba26825cfae6875d7df410518e01620ae16",
+    "musicId": "event-horizon",
+    "path": "devtools/audio-synth/audio-music/event-horizon/music.json",
+    "playback": "loop",
+    "seed": 202609301,
+    "version": 1
+  },
+  "package": "@volstudio/vol-hell",
+  "qa": {
+    "hash": "sha256:44865e0e0cf3f0203092f4c8109c310f7cb91a51e123082e10100426328f0fd5",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/event-horizon/qa.json"
+  },
+  "report": {
+    "hash": "sha256:516169713170a01a6657d4b05d4d1977311d4bc10f7044adce0643124cfb3b3b",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/event-horizon/report.json"
+  },
+  "schema": "MusicBundleV1",
+  "spec": {
+    "bars": 48,
+    "bpm": 138,
+    "engine": {
+      "compressor": false
+    },
+    "frames": 3681391,
+    "loop": {
+      "endBar": 48,
+      "startBar": 0
+    },
+    "mastering": {
+      "gainDb": -2.408,
+      "integratedLufs": -19.62,
+      "path": "loop-cyclic",
+      "truePeakDbtp": -1.99
+    },
+    "meter": [4, 4],
+    "musicId": "event-horizon",
+    "playback": "loop",
+    "runtimeGain": 1,
+    "sampleRate": 44100,
+    "schema": "MusicAssetSpecV1",
+    "stems": [
+      {
+        "file": "public/assets/audio/music/main-menu/event-horizon.ogg",
+        "frames": 3681391,
+        "id": "main"
+      }
+    ],
+    "transitions": []
+  },
+  "stems": [
+    {
+      "asset": {
+        "bytes": 986899,
+        "encodedHash": "sha256:97683bcef15b8dece92296a1ae4054051dfa3de266c5320a1755dbb54f8019f6",
+        "path": "public/assets/audio/music/main-menu/event-horizon.ogg"
+      },
+      "frames": 3681391,
+      "id": "mix",
+      "integratedLufs": -19.647093149092026,
+      "manifest": {
+        "hash": "sha256:8c65c604a2710b7448f0aefab5a517ba4faf6a2c0d2e09808f34798a2d0da621",
+        "path": "audio-manifests/music/main-menu/event-horizon.json"
+      },
+      "pcmHash": "sha256:992d333c1746ee23b21bae43a405b6b4108846a4ed2bfc06d700316417d47025",
+      "truePeakDbtp": -2.4325903279524903
+    }
+  ],
+  "sync": {
+    "checks": [
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "mix",
+        "lagSamples": 0,
+        "ok": true
+      }
+    ],
+    "method": "cross-correlation-v1",
+    "ok": true,
+    "seams": [
+      {
+        "detail": "dikiş sürekli (adım 0.0002 ≤ 2×0.1475)",
+        "id": "mix",
+        "jump": 0.000176,
+        "ok": true,
+        "typicalStep": 0.147531
+      }
+    ]
+  },
+  "themeBook": null
+}

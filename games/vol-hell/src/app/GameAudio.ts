@@ -96,9 +96,9 @@ export class GameAudio {
     };
 
     // İlk kullanıcı etkileşiminde context'i çalıştır; daha fazla olay dinleyerek mobil/safari uyumluluğu artır.
-    const events = ['pointerdown', 'touchstart', 'keydown', 'click'] as const;
+    const events = ['pointerdown', 'touchstart', 'keydown', 'click', 'vol:focusactivate'] as const;
     for (const event of events) {
-      this.lifecycle.addListener(window, event, resume, { once: true });
+      this.lifecycle.addListener(window, event, resume);
     }
 
     // Sekme arka planda sesi durdur, öne gelince devam et; pil/performans için.
@@ -172,14 +172,14 @@ export class GameAudio {
 
   async playMusic(
     trackId: string,
-    options?: { fadeIn?: number; crossfade?: boolean },
+    options?: { fadeIn?: number; crossfade?: boolean; state?: MusicState },
   ): Promise<void> {
     if (this.settings.isMuted()) return;
     try {
       if (options?.crossfade) {
-        await this.music.crossfadeTo(trackId, options.fadeIn ?? 2, { state: {} });
+        await this.music.crossfadeTo(trackId, options.fadeIn ?? 2, { state: options.state ?? {} });
       } else {
-        await this.music.play(trackId, { fadeIn: options?.fadeIn });
+        await this.music.play(trackId, { fadeIn: options?.fadeIn, state: options?.state });
       }
     } catch (err) {
       console.warn(`[GameAudio] Müzik çalınamadı: ${trackId}`, err);
@@ -203,6 +203,17 @@ export class GameAudio {
   /** Müzik state'ini günceller; dikey adaptive layering (stem gain map) buradan tetiklenir. */
   setMusicState(state: MusicState, fadeTime = 0.5): void {
     this.music.setState(state, fadeTime);
+  }
+
+  playStinger(cueId: string): boolean {
+    if (this.settings.isMuted()) return false;
+    try {
+      this.music.playStinger(cueId);
+      return true;
+    } catch (error) {
+      console.warn(`[GameAudio] Müzik vurgusu çalınamadı: ${cueId}`, error);
+      return false;
+    }
   }
 
   async loadAmbient(track: MusicTrack): Promise<boolean> {

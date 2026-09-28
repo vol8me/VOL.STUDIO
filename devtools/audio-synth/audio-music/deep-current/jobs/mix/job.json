@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-b8e47a1f2fd3969d": {
+        "hash": "sha256:979c1db4e59d9bb9baed02ed882f40d78ee2f49100918e0d99c369104b0716a3",
+        "path": "analyses/r-b8e47a1f2fd3969d.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:52de387f1ae7cffb21875e13256d63f3f740f64e65b96988bd93649d99c76d19",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:52de387f1ae7cffb21875e13256d63f3f740f64e65b96988bd93649d99c76d19",
+      "hash": "sha256:3a41307dd0b4be58f8222236950747a4dfefdd3a56b1edc598dca4e58d3678cc",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:a6cb33fc0386cf1c2f2f6ca25db47ff422e2e98a798174db8fde314b6bb53802",
+      "path": "games/vol-hell/audio-manifests/ambience/deep-current.json"
+    },
+    "renders": {
+      "r-b8e47a1f2fd3969d": {
+        "hash": "sha256:964ffe192a48e4ac96d18d2ea0f45304235860dfc7921ae2c0bb789418e62fc1",
+        "path": "renders/r-b8e47a1f2fd3969d.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:080a468d10cbb6bb5f2702e37215971cf5ee100c33b123defc945e449009dfb9",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "mix",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ambience/deep-current.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "ambience-deep-current/mix"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

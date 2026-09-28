@@ -1,0 +1,187 @@
+{
+  "brief": [
+    {
+      "detail": "loop",
+      "name": "playback",
+      "ok": true
+    },
+    {
+      "detail": "4/4",
+      "name": "meter",
+      "ok": true
+    },
+    {
+      "detail": "60 bpm ∈ [60, 60]",
+      "name": "tempo",
+      "ok": true,
+      "value": 60
+    },
+    {
+      "detail": "16 ölçü ∈ [16, 16]",
+      "name": "length",
+      "ok": true,
+      "value": 16
+    },
+    {
+      "detail": "minor ∈ minor",
+      "name": "tonal-system",
+      "ok": true
+    },
+    {
+      "detail": "intro → body → body → release",
+      "name": "form",
+      "ok": true
+    },
+    {
+      "detail": "1.06 nota/ölçü, \"sparse\" bandı [0, 4]",
+      "name": "rhythmic-density",
+      "ok": true,
+      "value": 1.06
+    },
+    {
+      "detail": "ölçülen 0, beyan 0",
+      "name": "melodic-salience",
+      "ok": true,
+      "value": 0
+    },
+    {
+      "detail": "hedef sırayla uyum 1",
+      "name": "section-contrast",
+      "ok": true,
+      "value": 1
+    }
+  ],
+  "lanes": [
+    {
+      "events": 4,
+      "highMidi": 29,
+      "id": "sub",
+      "instrument": "preset:subBass",
+      "lowMidi": 24,
+      "maxPolyphony": 1,
+      "meanMidi": 26.25,
+      "notesPerBar": 0.25,
+      "role": "bass"
+    },
+    {
+      "events": 10,
+      "highMidi": 48,
+      "id": "cello",
+      "instrument": "preset:cello",
+      "lowMidi": 38,
+      "maxPolyphony": 2,
+      "meanMidi": 41.7,
+      "notesPerBar": 0.625,
+      "role": "bass"
+    },
+    {
+      "events": 3,
+      "highMidi": null,
+      "id": "drums",
+      "instrument": "inst:abyss-kit",
+      "lowMidi": null,
+      "maxPolyphony": 1,
+      "meanMidi": null,
+      "notesPerBar": 0.1875,
+      "role": "percussion",
+      "unpitched": true
+    }
+  ],
+  "motifs": [],
+  "musicId": "deep-current",
+  "pitchClasses": [
+    2,
+    0,
+    5,
+    0,
+    1,
+    3,
+    0,
+    1,
+    0,
+    2,
+    0,
+    0
+  ],
+  "policyVersion": 1,
+  "programHash": "sha256:767989dfe61c40fcdc8d81d607171bf07ffe03f325e300ca4d12ab01e7970a9f",
+  "rules": [],
+  "schema": "MusicSymbolicReportV1",
+  "scoreHash": "sha256:be1d794abb459484a42f1f036b8eae360efd0dac468e479d418c562d54574f0a",
+  "sections": [
+    {
+      "activeLanes": 2,
+      "bars": [
+        0,
+        4
+      ],
+      "events": 3,
+      "harmonicChangesPerBar": 0,
+      "id": "a-sink",
+      "measuredEnergy": 0,
+      "notesPerBar": 0.75,
+      "role": "intro",
+      "targetEnergy": 0.2
+    },
+    {
+      "activeLanes": 3,
+      "bars": [
+        4,
+        8
+      ],
+      "events": 4,
+      "harmonicChangesPerBar": 0,
+      "id": "b-dark",
+      "measuredEnergy": 0.6507,
+      "notesPerBar": 1,
+      "role": "body",
+      "targetEnergy": 0.5
+    },
+    {
+      "activeLanes": 3,
+      "bars": [
+        8,
+        12
+      ],
+      "events": 5,
+      "harmonicChangesPerBar": 0,
+      "id": "c-pressure",
+      "measuredEnergy": 1,
+      "notesPerBar": 1.25,
+      "role": "body",
+      "targetEnergy": 0.6
+    },
+    {
+      "activeLanes": 3,
+      "bars": [
+        12,
+        16
+      ],
+      "events": 5,
+      "harmonicChangesPerBar": 0,
+      "id": "d-resurface",
+      "measuredEnergy": 1,
+      "notesPerBar": 1.25,
+      "role": "release",
+      "targetEnergy": 0.6
+    }
+  ],
+  "totals": {
+    "bars": 16,
+    "events": 17,
+    "maxPolyphony": 4,
+    "melodicSalience": 0,
+    "motifInstances": 0,
+    "notesPerBar": 1.063,
+    "outOfSystemRatio": 0,
+    "uniqueVariations": 0
+  },
+  "transitions": [],
+  "unchecked": [
+    "brief.avoidNotes: arcade setinin estetik kabulü insan dinlemesi bekler"
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

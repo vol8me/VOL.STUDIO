@@ -163,3 +163,38 @@ latency) and requires render-side interpolation; planned as a separate round.
 This contract is not a browser gate: real Web Audio behaviour, Phaser
 renderer/device performance, and long-session gameplay still require manual
 smoke testing.
+
+## Audio
+
+VOL.HELL ships the **Arcade** sound set. The user listened to and rejected
+the previous Ash Rite set (`heard-problem`: music resembled ambience and had
+narrow pitch and frequency ranges). The user recreated and integrated the
+Arcade music and SFX, and approved this game audio on 2026-09-28. That approval
+does not change the separate organic canary reviews in `audio-synth`.
+Listening on Deck speakers or headphones has not been measured separately.
+
+`scripts/audio-v2/definitions.arcade.ts` and `sfxSpecs.arcade.ts` define the
+38 SFX programs. Eight scores live under `scripts/audio-v2/scores/`;
+`scripts/audio-v2/publish.arcade.ts` uses the canonical job and music
+publication gates. The game consumes only the 46 OGG files in
+`public/assets/audio/`. Their manifests are in `audio-manifests/`, and music
+bundles in `audio-music/`. Source job and score documents live under
+`devtools/audio-synth/audio-jobs/` and `audio-music/`. The
+`audio:production-check` verifies rerendered PCM identities and delivery
+links; `tests/config/audioAuthoring.test.ts` locks the asset taxonomy.
+Intermediate WAV files and `dist` are not shipped.
+
+| Use      | Tracks                       | Tempo / length                    |
+| -------- | ---------------------------- | --------------------------------- |
+| Menu     | hollow-signal, event-horizon | 132 and 138 BPM; 48 bars          |
+| Combat   | surge-protocol               | 144 BPM; 64 bars                  |
+| Boss     | sovereign                    | 120 BPM; 64 bars                  |
+| Ending   | terminal-echo, first-light   | 60 BPM / 8 bars; 96 BPM / 16 bars |
+| Ambience | null-drift, deep-current     | 64 seconds                        |
+
+Each track ships as a single `main` mix. The former bed/rhythm/lead stems and
+separate stinger files are absent from this set. `musicTiming.ts` derives
+playback lengths from score bars and tempos; `audioIntegration` checks parity
+between runtime and published bundles. The music QA gate measures encoded
+level, clipping and loop seams. Menu, combat and boss pieces have rhythm,
+melody and harmony; ambience remains a separate category.

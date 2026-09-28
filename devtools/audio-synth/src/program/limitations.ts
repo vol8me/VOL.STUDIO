@@ -109,7 +109,7 @@ export const KNOWN_LIMITATIONS: readonly KnownLimitation[] = [
     description:
       'Archetype, vokal, SFX mekanizma aileleri, çevresel dokular, stil profilleri ve ' +
       'granular/stretch yolu yalnız ölçülen fiziksel/spektral özelliklerle doğrulandı; insan ' +
-      'dinlemesi yapılmadı (canary incelemeleri pending-human). "Gerçekçi/doğal/ikna edici" ' +
+      'dinleme kabulü tamamlanmadı (bazı canary beyanları sorunlu veya bayat). "Gerçekçi/doğal/ikna edici" ' +
       'iddiası yoktur.',
   },
   {

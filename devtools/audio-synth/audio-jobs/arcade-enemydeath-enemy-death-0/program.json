@@ -1,0 +1,133 @@
+{
+  "channels": 1,
+  "description": "Arcade enemyDeath enemy-death-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 0.6,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "pitch-retro-0": {
+      "curve": "curve.exponential",
+      "points": [
+        [
+          0,
+          900
+        ],
+        [
+          0.3864,
+          220
+        ]
+      ],
+      "version": 1
+    },
+    "pitch-retro-1": {
+      "curve": "curve.exponential",
+      "points": [
+        [
+          0,
+          220
+        ],
+        [
+          0.46,
+          82.41
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "exponential",
+          "decay": 0.42,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -3,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "bits": 6,
+          "frequency": {
+            "gesture": "pitch-retro-0"
+          },
+          "waveform": "noise-long"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.5,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -4,
+      "name": "retro-1",
+      "role": "body",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "pitch-retro-1"
+          },
+          "waveform": "triangle"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -6,
+      "name": "drum-2",
+      "role": "transient",
+      "source": {
+        "params": {
+          "decay": 0.35,
+          "model": "kick",
+          "tone": 0.35,
+          "tune": -3,
+          "velocity": 0.7
+        },
+        "primitive": "source.drum",
+        "version": 2
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609310
+}

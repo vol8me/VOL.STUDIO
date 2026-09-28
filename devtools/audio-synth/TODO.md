@@ -63,8 +63,9 @@ Dalga 4'ün dört mühendislik maddesi kapandı; kısa kanıtları
 ayrı ve açıktır:
 
 - [ ] **[P3] Organik canary'lerin insan dinlemesi.** 19 canary'nin
-      mekanik beklentileri geçiyor ama hiçbiri dinlenmedi;
-      `canaries/reviews.json`da hepsi `pending-human`. Kapanır: bir insan her
+      mekanik beklentileri geçiyor; `canaries/reviews.json`da 13 kabul,
+      6 sorun beyanı var. Bayat sürüm beyanları etkin `pending-human`dır.
+      Kapanır: bir insan her güncel canary'yi
       canary'yi dinleme rehberine göre dinler ve
       `audio:job canary review <id> --status … --note … --by human` ile
       beyanını yazar; `heard-problem` çıkan canary için ayrı bir motor maddesi
@@ -163,7 +164,7 @@ kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
       `BenchmarkReportV1`'de döker; kodek-sonrası dikiş/hiza, müzik QA ve
       bar hizası kriterleri ölçülür, seri/worker eşitliği ve mutasyon
       ayırt ediciliği `tests/benchmark/` ile kilitli. Dinleme durumları
-      `reviews.json`da `pending-human`.
+      benchmark `reviews.json`unda dinleme `pending-human`.
 - [x] **[P2] `audio:capabilities` kalite matrisi oluşsun.** Motor yalnız
       "primitive mevcut" demez; sürümlü benchmark görevlerinde hangi ses
       ailelerinin production-ready/canary/research seviyesinde olduğunu
@@ -691,7 +692,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       görev (`canaries/*.json`): deterministik kaynak + mekanik beklenti +
       dinleme rehberi; `audio:job canary run`. Kanıt:
       `tests/canary/canaries.test.ts` — sekizi geçer, deterministik, beklenti
-      mutasyonla düşer; incelemelerin hepsi `pending-human` (uydurulmadı).
+      mutasyonla düşer; o turun dinleme incelemeleri `pending-human` idi.
       İnsan dinlemesi ayrı açık madde. (Dalga 4)
 - [x] **[P2] Candidate audition aracı.** `search audition <id> [--serve]`:
       git-dışı WAV + bağımlılıksız sayfa; 127.0.0.1 sunucusu yalnız

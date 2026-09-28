@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-83182345fe7f141e": {
+        "hash": "sha256:ae2327efefc850b6f7f199308040e0368b917f3dca54816db067326e8f8f2227",
+        "path": "analyses/r-83182345fe7f141e.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:d2586ec90f70c30d29f0ace744429b010682176d3d0b939a436c082edb66eb4a",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:d2586ec90f70c30d29f0ace744429b010682176d3d0b939a436c082edb66eb4a",
+      "hash": "sha256:2cd4b3b8f528b79d6c46d89cd1617f8faf5857b9b9274a4f10b74b59cfb1fe15",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:9bd225e7ba9a37e9db46db0ce74dd438ab7cd66c10fce3c84e6b65720f49cdc8",
+      "path": "games/vol-hell/audio-manifests/sfx/combat/elite-spawn-0.json"
+    },
+    "renders": {
+      "r-83182345fe7f141e": {
+        "hash": "sha256:652bf08e4694ef981468ac5fa5cedd437cb68813d42f1fbd5a3a648ab531c961",
+        "path": "renders/r-83182345fe7f141e.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:095debeed5d0ad2685f0ce5bdba0ce1988aacebee493bd0d921ecefa5e8601af",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-elitespawn-elite-spawn-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/combat/elite-spawn-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-elite-spawn"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

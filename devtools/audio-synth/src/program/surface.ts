@@ -65,6 +65,7 @@ export function renderProjection(entry: ProgramEntry): Record<string, unknown> {
         .sort()
         .map((name) => [name, paramDomain(entry.params[name])]),
     ),
+    ...(entry.renderContract ? { renderContract: entry.renderContract } : {}),
     ...(entry.kind === 'effect'
       ? {
           routing: {

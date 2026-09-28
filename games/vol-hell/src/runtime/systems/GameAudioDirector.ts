@@ -118,6 +118,24 @@ export class GameAudioDirector {
     this.bossActive = active;
   }
 
+  onWaveStart(): void {
+    if (!this.stopped && this.musicState === 'combat') this.playCue(combatTrackId, 'wave-start');
+  }
+
+  onLevelUp(): void {
+    if (!this.stopped && this.musicState === 'combat') this.playCue(combatTrackId, 'level-up');
+  }
+
+  /**
+   * Vurgu YALNIZ parça onu beyan ediyorsa istenir. Arcade setinde ayrı cue
+   * dosyası yoktur; koşulsuz çağrı her dalga/level olayında motorun
+   * "cue yok" hatasını konsola düşürürdü.
+   */
+  private playCue(trackId: keyof typeof musicTracks, cueId: string): void {
+    if (!musicTracks[trackId].cues?.some((cue) => cue.id === cueId)) return;
+    gameAudio.playStinger(cueId);
+  }
+
   /**
    * Sahadaki düşman sayısına göre ambiyansı sakin/gergin arasında geçirir
    * ve yoğunluğa göre savaş müziğini devreye sokar/çeker.
@@ -229,10 +247,17 @@ export class GameAudioDirector {
         this.musicState = 'boss';
         this.combatTimerMs = 0;
         if (this.loadedMusicTrackIds.has(bossTrackId)) {
-          void gameAudio.playMusic(bossTrackId, {
-            crossfade: true,
-            fadeIn: musicConfig.boss.fadeInSec,
-          });
+          const token = this.lifecycleToken;
+          void gameAudio
+            .playMusic(bossTrackId, {
+              crossfade: true,
+              fadeIn: musicConfig.boss.fadeInSec,
+            })
+            .then(() => {
+              if (!this.stopped && token === this.lifecycleToken && this.musicState === 'boss') {
+                this.playCue(bossTrackId, 'boss-entry');
+              }
+            });
         }
       }
       return;

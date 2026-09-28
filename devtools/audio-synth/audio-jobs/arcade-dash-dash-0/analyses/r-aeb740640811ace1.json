@@ -1,0 +1,72 @@
+{
+  "pcmHash": "sha256:3b8a65acc5c40f7bd7fbc166a6f26e8cd6a297ddc7b4ca5f5e005ca87abfbf3d",
+  "renderHash": "sha256:7d4d710e20869d99c64394da3123aab13af18409f77234d256c86adacffb9bc7",
+  "renderId": "r-aeb740640811ace1",
+  "report": {
+    "analyzerVersion": 1,
+    "dc": {
+      "channelOffset": [
+        -0.00047573775077844874
+      ]
+    },
+    "defects": {
+      "clicks": {
+        "count": 0,
+        "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+      },
+      "clips": {
+        "channelSamples": 0,
+        "frames": 0,
+        "perChannel": [
+          0
+        ]
+      }
+    },
+    "format": {
+      "channels": 1,
+      "durationSeconds": 0.4,
+      "frames": 17640,
+      "sampleRate": 44100
+    },
+    "level": {
+      "channelPeakDbfs": [
+        -3.0000002493010487
+      ],
+      "channelRmsDbfs": [
+        -23.26237837099406
+      ],
+      "crestFactorDb": 20.26237812169301,
+      "integratedLufs": -21.46018240631352,
+      "maxMomentaryLufs": -21.46018240631352,
+      "rmsDbfs": -23.26237837099406,
+      "samplePeakDbfs": -3.0000002493010487,
+      "truePeakDbtp": -1.400852852085688
+    },
+    "measuredFrom": "source-pcm",
+    "schema": "AudioAnalysisReportV1",
+    "spectral": {
+      "bandsDb": {
+        "air": -35.793045960125326,
+        "high": -30.664942708875344,
+        "low": -31.139094225284648,
+        "mid": -32.364588092535044,
+        "sub": -46.53113197700516
+      },
+      "centroidHz": 3537.8823253477917,
+      "flatness": 0.18226813547810694,
+      "peakHz": 366.064453125,
+      "rolloff85Hz": 6718.359375
+    },
+    "stereo": null,
+    "temporal": {
+      "activeSeconds": 0.21,
+      "attackSeconds": 0,
+      "decay40Seconds": 0.15,
+      "leadingSilenceSeconds": 0,
+      "peakTimeSeconds": 0,
+      "temporalCentroidSeconds": 0.01634121444557684,
+      "trailingSilenceSeconds": 0.22000000000000003
+    }
+  },
+  "schema": "AudioAnalysisRecordV1"
+}

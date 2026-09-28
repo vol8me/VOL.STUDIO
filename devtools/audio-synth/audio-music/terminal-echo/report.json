@@ -1,0 +1,186 @@
+{
+  "brief": [
+    {
+      "detail": "playlistOneShot",
+      "name": "playback",
+      "ok": true
+    },
+    {
+      "detail": "4/4",
+      "name": "meter",
+      "ok": true
+    },
+    {
+      "detail": "60 bpm ∈ [60, 60]",
+      "name": "tempo",
+      "ok": true,
+      "value": 60
+    },
+    {
+      "detail": "8 ölçü ∈ [8, 8]",
+      "name": "length",
+      "ok": true,
+      "value": 8
+    },
+    {
+      "detail": "minor ∈ minor",
+      "name": "tonal-system",
+      "ok": true
+    },
+    {
+      "detail": "intro → body → bridge → outro",
+      "name": "form",
+      "ok": true
+    },
+    {
+      "detail": "3.5 nota/ölçü, \"sparse\" bandı [0, 4]",
+      "name": "rhythmic-density",
+      "ok": true,
+      "value": 3.5
+    },
+    {
+      "detail": "ölçülen 0.5, beyan 0.5",
+      "name": "melodic-salience",
+      "ok": true,
+      "value": 0.5
+    },
+    {
+      "detail": "hedef sırayla uyum 1",
+      "name": "section-contrast",
+      "ok": true,
+      "value": 1
+    }
+  ],
+  "lanes": [
+    {
+      "events": 12,
+      "highMidi": 76,
+      "id": "lead",
+      "instrument": "preset:softLead",
+      "lowMidi": 57,
+      "maxPolyphony": 1,
+      "meanMidi": 66.75,
+      "notesPerBar": 1.5,
+      "role": "lead"
+    },
+    {
+      "events": 4,
+      "highMidi": 84,
+      "id": "bell",
+      "instrument": "preset:bell",
+      "lowMidi": 76,
+      "maxPolyphony": 1,
+      "meanMidi": 80.5,
+      "notesPerBar": 0.5,
+      "role": "bell"
+    },
+    {
+      "events": 12,
+      "highMidi": 60,
+      "id": "pad",
+      "instrument": "preset:detunedPad",
+      "lowMidi": 38,
+      "maxPolyphony": 3,
+      "meanMidi": 49.67,
+      "notesPerBar": 1.5,
+      "role": "pad"
+    }
+  ],
+  "motifs": [],
+  "musicId": "terminal-echo",
+  "pitchClasses": [
+    6,
+    0,
+    3,
+    0,
+    6,
+    3,
+    0,
+    1,
+    0,
+    8,
+    0,
+    1
+  ],
+  "policyVersion": 1,
+  "programHash": "sha256:40fe235e12cfeea108ce20f182a32745dcc88988bde8be1ad223a3a3a666de10",
+  "rules": [],
+  "schema": "MusicSymbolicReportV1",
+  "scoreHash": "sha256:9ee98f2c6cd2384214b8aa073e9928ef74e3ccaa59c4d8e41218a52e44753834",
+  "sections": [
+    {
+      "activeLanes": 2,
+      "bars": [
+        0,
+        2
+      ],
+      "events": 6,
+      "harmonicChangesPerBar": 0,
+      "id": "a-last-breath",
+      "measuredEnergy": 0,
+      "notesPerBar": 3,
+      "role": "intro",
+      "targetEnergy": 0.2
+    },
+    {
+      "activeLanes": 3,
+      "bars": [
+        2,
+        4
+      ],
+      "events": 8,
+      "harmonicChangesPerBar": 0,
+      "id": "b-echo",
+      "measuredEnergy": 1,
+      "notesPerBar": 4,
+      "role": "body",
+      "targetEnergy": 0.55
+    },
+    {
+      "activeLanes": 3,
+      "bars": [
+        4,
+        6
+      ],
+      "events": 8,
+      "harmonicChangesPerBar": 0,
+      "id": "c-fall",
+      "measuredEnergy": 1,
+      "notesPerBar": 4,
+      "role": "bridge",
+      "targetEnergy": 0.55
+    },
+    {
+      "activeLanes": 2,
+      "bars": [
+        6,
+        8
+      ],
+      "events": 6,
+      "harmonicChangesPerBar": 0,
+      "id": "d-vacuum",
+      "measuredEnergy": 0,
+      "notesPerBar": 3,
+      "role": "outro",
+      "targetEnergy": 0.2
+    }
+  ],
+  "totals": {
+    "bars": 8,
+    "events": 28,
+    "maxPolyphony": 5,
+    "melodicSalience": 0.5,
+    "motifInstances": 0,
+    "notesPerBar": 3.5,
+    "outOfSystemRatio": 0,
+    "uniqueVariations": 0
+  },
+  "transitions": [],
+  "unchecked": [
+    "brief.avoidNotes: arcade setinin estetik kabulü insan dinlemesi bekler"
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

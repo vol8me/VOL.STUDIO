@@ -1,0 +1,109 @@
+{
+  "channels": 1,
+  "description": "Arcade levelUp level-up-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 1.05,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "pitch-retro-0": {
+      "curve": "curve.exponential",
+      "points": [
+        [
+          0,
+          659.25
+        ],
+        [
+          0.7360000000000001,
+          1318.51
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.8,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -2,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "arpRate": 18,
+          "arpeggio": "coin",
+          "duty": 0.125,
+          "frequency": {
+            "gesture": "pitch-retro-0"
+          },
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -8,
+      "name": "preset-1",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "struck",
+          "frequency": 1760,
+          "instrument": "crystalBell",
+          "noteSeconds": 0.8,
+          "velocity": 0.6
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -12,
+      "name": "preset-2",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "natural",
+          "frequency": 880,
+          "instrument": "electricPiano2",
+          "noteSeconds": 0.6,
+          "velocity": 0.45
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0.1
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609307
+}

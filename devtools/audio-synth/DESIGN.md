@@ -142,9 +142,9 @@ Birden çok sesi zamanda birleştirip seviye veren TEK bir uygulama vardır:
 
 Kök yüzeye `Arrange` ve `compose` olarak girer.
 
-**Tarihî not.** Frozen VOL.HELL kendi `scripts/audio/lib/mix.ts` kopyasıyla
-üretildi; bu kopya freeze etiketinde değişmez bir tarihsel kayıttır, aktif
-paralel bir yol DEĞİLDİR. Yukarıdaki üç kural oradan kanıtlanmış olarak
+**Tarihî not.** VOL.HELL'in freeze sürümü kendi ses üreticisiyle üretildi;
+freeze etiketi ve git-dışı byte+hash arşivi o sürümün kanıtıdır. Oyun bugün
+aktiftir; eski üretici kaldırıldı. Yukarıdaki üç kural freeze kanıtından
 taşındı; oyun kavramı taşınmadı.
 
 ### Zaman sınırı
@@ -322,8 +322,9 @@ bir dosyanın üzerine yazılmaz. `tests/governance/publishPath.test.ts` aktif
 ağaçlarda yazıcıyı çağıran her dosyayı gerekçesiyle listeler; yeni bir
 sahipsiz publish yolu testi düşürür.
 
-**Üretim-referans fixture'ı.** Aktif bir oyun yok; kapıyı gerçek kodek
-QA'sıyla uçtan uca çalıştırmak için audio-synth'in KENDİ işi
+**Üretim-referans fixture'ı.** Aktif VOL.HELL'in 54 teslimi kanonik yoldan
+yayımlandı; 46 eski manifest'siz dosya arşiv kimliğiyle korundu. Kapıyı gerçek
+kodek QA'sıyla bağımsız çalıştırmak için audio-synth'in KENDİ işi
 `audio-jobs/platform-reference` vardır (hiçbir oyun onu çalmaz).
 `just audio-verify` her koşuda `audio:production-check` ile manifest'i
 yalnız kendisinden doğrular: gömülü program yeniden render edilir, dosya
@@ -840,7 +841,9 @@ taşır; mevcut yapı taşlarından kurulur, asset kütüphanesi değildir. Meka
 beklentilerin dişi mutasyonla sınanır (nabız hızı, düz perde eğrisi, nefese
 eklenen ton beklentiyi düşürür; metal teması lastiğe dönünce, bağlı germe
 resample'a dönünce beklenti düşer). İnsan dinleme durumu `canaries/reviews.json`
-(`CanaryReviewsV1`) içindedir, 19'u da `pending-human`dır ve yalnız
+(`CanaryReviewsV1`) içindedir. 2026-09-28 kaydında 13 `heard-acceptable`,
+6 `heard-problem` beyanı vardır; sürüm uyuşmazlığı olan beyanlar etkin
+durumda yeniden `pending-human` sayılır. Durum yalnız
 `canary review … --by human` ile değişir; canary sürümü artınca inceleme
 bayatlar. Mekanik geçiş sesin "organik" olduğunu kanıtlamaz.
 
@@ -2237,30 +2240,13 @@ Presets.getPreset('laser', 880, 0.15);
 
 Kategoriler: `combat`, `ui`, `rewards`, `movement`, `sequence`.
 
-## VOL.HELL SFX'leri
+## VOL.HELL ses kaynağı
 
-> VOL.HELL `frozen`'dır (`workspace-lifecycle.json`): aşağıdaki adımlar ürünün
-> **tarihsel reçetidir** — frozen ağaçta yeniden üretim koşulmaz, seslerin
-> üretim kanıtı `vol-hell/final-*` etiketindedir. Yeni bir ürün aynı akışı
-> kendi paket ağacında kurar.
-
-VOL.HELL'in sesleri bu dosyadaki genel preset kütüphanesini DEĞİL,
-`games/vol-hell/scripts/audio/palette/*.ts` altındaki "Dark Synthetic / Void"
-paletini kullanır — müzikle aynı sözlük.
-Gerekçe: SFX çıplak `sawtooth`/`triangle` + kısa ADSR ile üretildiğinde klasik
-konsol (chiptune) karakteri veriyor ve additive/FM ile üretilen müzikle
-tutarsız bir kimlik oluşturuyordu. Aynı FM/bandpass/gürültü yaklaşımı iki
-tarafta da kullanılınca ateş sesi ile ambiyans aynı dünyaya ait duyuluyor.
-
-Frozen ağaçta ses eklenmez ve yeniden üretilmez; yeni bir ürün sesini
-"Hızlı Başlangıç"taki kanonik yoldan alır.
-
-### Seviye kuralı
-
-Sesler aynı tepeye normalize EDİLMEZ. Her katman `normalize: false` ile üretilir,
-normalize son mix'te bir kez uygulanır (`masterPeak`). Tepe hedefi olay önemine
-göre verilir: UI tıkı ~0.45-0.62, ateş ~0.6, hasar ~0.78, ölüm ~0.86. Hepsini
-eşitlemek oyunun dinamik hiyerarşisini `sfxVolumes` tablosuna yüklüyordu.
+Gönderilen Arcade SFX programları ve besteler
+`games/vol-hell/scripts/audio-v2/` altında, oyun asset'leri ve manifestleri
+oyun ağacındadır. Bu motorun kanonik job/müzik yayın kapısı her teslimi
+doğrular. Parça ve oyun olayı eşlemesi `games/vol-hell/DESIGN.md` Ses
+bölümündedir.
 
 ## Kategori Yapısı
 
@@ -2449,13 +2435,14 @@ Kısa seslerde attack ve release'te `cosine` eğrisi, başlangıç ve bitişteki
 
 ## Sınırlar
 
-**Motor müzik için yetersiz DEĞİLDİR.** Tarihî kanıt: frozen VOL.HELL'in
+**Motor müzik için yetersiz DEĞİLDİR.** Tarihî kanıt: VOL.HELL'in freeze sürümünün
 gönderilen müzik ve SFX'inin hepsi bu motorla üretildi ve freeze anında
 (`vol-hell/final-2026-09-20`) reçete ↔ asset bayt-birebir doğrulandı. Bu
 kanıt freeze etiketinde yaşar: motor o tarihten sonra bilinçli DSP
 düzeltmeleri aldı (RT60 reverb, halfband decimator, …), yani bugünkü motor o
 dosyaları bayt-birebir yeniden üretmez ve üretmesi beklenmez. Rutin kapı
-frozen ağaçta üretim tetiklemez.
+freeze sürümünde üretim tetiklemez. Aktif VOL.HELL'in yeni sesleri ayrıca
+kanonik manifest kanıtı ve insan dinlemesi bekler.
 
 Gerçek sınır **motorda değil KATALOGDA**. Primitifler güçlü; altı fiziksel
 model (`pluck`, `piano`, `bowedString`, `airColumn`, `brass`, `formant`)
@@ -2562,3 +2549,35 @@ Kanonik yoldan yayımlanan asset'in tazelik kanıtı reçete değil manifest'tir
 - `writeWav` sadece build zamanında, Node ortamında çalışır.
 - Runtime tarayıcıda ses üretmek için `synth()` sonucu `AudioBuffer`'a aktarılır.
 - `pan` veya `stereoWidth` verildiğinde çıkış stereo (`channels` 2 elemanlı); verilmezse mono.
+
+## Kısa enstrüman kaynağı ve karakter sözleşmesi
+
+`source.instrument@1` mevcut cello, preparedPiano, doubleBass ve additivePad
+sentezini akustik program katmanına bağlar. Seed adlı voice alt akışındadır;
+kanallar mono toplanır, kaynak normalize edilmez, konum/oda programın
+kararıdır. `natural` preset zarfını, `struck` kısa vurulmuş tel zarfını
+seçer. Kaynağın preset parametre snapshot'ı `renderContract` olarak render
+yüzeyine ve kilide girer. Mevcut düğümlerin izdüşümü değişmez; bu yeni
+kimliğin davranışı değişirse sürümü artar. Kurulum maliyeti nota süresiyle
+artar; kaynak ayrıca `setupWork` bildirir, eski kaynaklarda bu değer sıfırdır.
+`source.instrument@2`, v1'i değiştirmeden brightLead, crystalBell,
+electricPiano2 ve subBass ekler. İki sürümün render yüzeyi ayrı kilitlenir;
+aynı program ve tohumun eski PCM kimliği korunur.
+
+Brief'teki isteğe bağlı `AudioCharacterPolicyV1`, `centroidMaxHz`,
+`airToMidMaxDb` ve `maxMomentaryRiseLu` sınırlarını taşır. Yayın kapısı ve
+manifest doğrulaması kodek sonrası PCM'i aynı yöntemle ölçer. Welch güçleri
+her kanal ve tüm süre boyunca ayrı toplanır; zıt fazlı stereo tiz,
+kanalları ortalayarak gizlenemez. Air 8–20 kHz, mid 500–2500 Hz'dir.
+Beyan edilmiş ölçü tanımsızsa kapı düşer. Bu sözleşme insan beğenisini
+uydurmaz; karakter alanı olmayan eski brief'lerin davranışı aynıdır.
+
+MusicDelivery'nin `files` alanı isteğe bağlı stem/cue → paket-göreli OGG
+haritasıdır. Varsayılan `<assetDir>/<stem>.ogg` yolu değişmez. Yalnız gerçekten
+yayımlanan adlar kabul edilir; traversal, mutlak yol, yanlış kodek ve iki
+asset'in aynı dosyaya teslimi reddedilir. Hedef/kök/yayın/manifest korumaları
+aynı kapıdan geçer. `assetClass: ambience` opt-in olarak MusicBrief ve
+MusicBundle'ın ambience yollarını taşımasını sağlar. Varsayılan music'tir;
+ambience bundle QA mevcut ambience loudness aralığını kullanır, music
+sınırları korunur. Loop dikişi ve cue+loop true-peak kapıları iki sınıfta da
+uygulanır.

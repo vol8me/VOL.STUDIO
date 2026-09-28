@@ -1,0 +1,396 @@
+{
+  "mastering": {
+    "ceiling": 0.95,
+    "fadeOutSeconds": 0,
+    "gainDb": 13.678,
+    "limiter": {
+      "knee": 0.28,
+      "threshold": 0.7
+    },
+    "path": "loop-cyclic",
+    "schema": "MusicMasteringPlanV1",
+    "targetLufs": -24,
+    "trimSilence": false
+  },
+  "music": {
+    "bars": 16,
+    "delivery": {
+      "assetClass": "ambience",
+      "assetDir": "public/assets/audio/ambience/deep-current",
+      "files": {
+        "mix": "public/assets/audio/ambience/deep-current.ogg"
+      },
+      "package": "@volstudio/vol-hell",
+      "runtimeKey": "ambience-deep-current"
+    },
+    "description": "Ambiyans: D pedalı, cello uzun tonları ve sub üzerinde üç yumuşak kick; pad yok, 64 sn loop.",
+    "grooves": [],
+    "instruments": [
+      {
+        "articulations": [
+          "accent",
+          "ghost"
+        ],
+        "id": "abyss-kit",
+        "polyphony": 4,
+        "role": "percussion",
+        "source": {
+          "kind": "drum-kit",
+          "pieces": [
+            {
+              "macros": {
+                "attack": 0.3,
+                "decay": 0.55,
+                "tone": 0.2
+              },
+              "model": "kick",
+              "note": "A1"
+            },
+            {
+              "macros": {
+                "decay": 0.45,
+                "tone": 0.15,
+                "tune": -0.5
+              },
+              "model": "tom",
+              "note": "D2"
+            },
+            {
+              "macros": {
+                "attack": 0.45,
+                "decay": 0.35,
+                "tone": 0.35
+              },
+              "model": "snare",
+              "note": "E2"
+            },
+            {
+              "macros": {
+                "attack": 0.3,
+                "decay": 0.25,
+                "tone": 0.35
+              },
+              "model": "hat",
+              "note": "F#2"
+            }
+          ]
+        },
+        "velocity": {
+          "brightness": 0,
+          "rangeDb": 6
+        }
+      }
+    ],
+    "lanes": [
+      {
+        "gain": 0.32,
+        "id": "sub",
+        "instrument": "preset:subBass",
+        "stem": "main"
+      },
+      {
+        "gain": 0.34,
+        "id": "cello",
+        "instrument": "preset:cello",
+        "pan": -0.08,
+        "stem": "main"
+      },
+      {
+        "gain": 0.3,
+        "id": "drums",
+        "instrument": "inst:abyss-kit",
+        "stem": "main"
+      }
+    ],
+    "markers": [
+      {
+        "bar": 0,
+        "kind": "loop-start"
+      },
+      {
+        "bar": 16,
+        "kind": "loop-end"
+      }
+    ],
+    "mastering": {
+      "integratedLufs": -24
+    },
+    "meter": [
+      4,
+      4
+    ],
+    "motifs": [],
+    "musicId": "deep-current",
+    "playback": "loop",
+    "sampleRate": 44100,
+    "schema": "MusicProgramV1",
+    "sections": [
+      {
+        "bars": [
+          0,
+          4
+        ],
+        "id": "a-sink",
+        "lanes": [
+          "sub",
+          "cello"
+        ],
+        "parts": [
+          {
+            "lane": "sub",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 15.9,
+                "note": "D1",
+                "velocity": 0.3
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "lane": "cello",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "D2",
+                "velocity": 0.26
+              },
+              {
+                "bar": 2,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "A2",
+                "velocity": 0.26
+              }
+            ],
+            "source": "notes"
+          }
+        ],
+        "role": "intro",
+        "targetEnergy": 0.2
+      },
+      {
+        "bars": [
+          4,
+          8
+        ],
+        "id": "b-dark",
+        "lanes": [
+          "sub",
+          "cello",
+          "drums"
+        ],
+        "parts": [
+          {
+            "lane": "sub",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 15.9,
+                "note": "F1",
+                "velocity": 0.3
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "lane": "cello",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "F2",
+                "velocity": 0.26
+              },
+              {
+                "bar": 2,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "C3",
+                "velocity": 0.26
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "lane": "drums",
+            "notes": [
+              {
+                "bar": 3,
+                "beat": 3.5,
+                "beats": 0.3,
+                "note": "A1",
+                "velocity": 0.18
+              }
+            ],
+            "source": "notes"
+          }
+        ],
+        "role": "body",
+        "targetEnergy": 0.5
+      },
+      {
+        "bars": [
+          8,
+          12
+        ],
+        "id": "c-pressure",
+        "lanes": [
+          "sub",
+          "cello",
+          "drums"
+        ],
+        "parts": [
+          {
+            "lane": "sub",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 15.9,
+                "note": "C1",
+                "velocity": 0.3
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "lane": "cello",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "D2",
+                "velocity": 0.26
+              },
+              {
+                "bar": 2,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "A2",
+                "velocity": 0.26
+              },
+              {
+                "bar": 2,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "F2",
+                "velocity": 0.24
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "lane": "drums",
+            "notes": [
+              {
+                "bar": 3,
+                "beat": 1,
+                "beats": 0.3,
+                "note": "A1",
+                "velocity": 0.2
+              }
+            ],
+            "source": "notes"
+          }
+        ],
+        "role": "body",
+        "targetEnergy": 0.6
+      },
+      {
+        "bars": [
+          12,
+          16
+        ],
+        "id": "d-resurface",
+        "lanes": [
+          "sub",
+          "cello",
+          "drums"
+        ],
+        "parts": [
+          {
+            "lane": "sub",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 15.9,
+                "note": "D1",
+                "velocity": 0.3
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "lane": "cello",
+            "notes": [
+              {
+                "bar": 0,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "G2",
+                "velocity": 0.26
+              },
+              {
+                "bar": 2,
+                "beat": 0,
+                "beats": 7.9,
+                "note": "D2",
+                "velocity": 0.26
+              },
+              {
+                "bar": 3,
+                "beat": 0,
+                "beats": 3.9,
+                "note": "E2",
+                "velocity": 0.22
+              }
+            ],
+            "source": "notes"
+          },
+          {
+            "lane": "drums",
+            "notes": [
+              {
+                "bar": 2,
+                "beat": 3,
+                "beats": 0.3,
+                "note": "A1",
+                "velocity": 0.15
+              }
+            ],
+            "source": "notes"
+          }
+        ],
+        "role": "release",
+        "targetEnergy": 0.6
+      }
+    ],
+    "seed": 202609307,
+    "stems": [
+      {
+        "id": "main",
+        "title": "Ana mix"
+      }
+    ],
+    "tempo": {
+      "bpm": 60
+    },
+    "title": "Derin Akıntı",
+    "tonal": {
+      "root": "D2",
+      "system": "minor"
+    },
+    "version": 1
+  },
+  "schema": "MusicStemProgramV1",
+  "stem": "mix"
+}

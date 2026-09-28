@@ -1,0 +1,91 @@
+{
+  "channels": 1,
+  "description": "Arcade turretFire turret-fire-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 0.14,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "pitch-retro-0": {
+      "curve": "curve.exponential",
+      "points": [
+        [
+          0,
+          1200
+        ],
+        [
+          0.0736,
+          500
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "exponential",
+          "decay": 0.08,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -3,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "bits": 10,
+          "duty": 0.125,
+          "frequency": {
+            "gesture": "pitch-retro-0"
+          },
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -12,
+      "name": "preset-1",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "struck",
+          "frequency": 880,
+          "instrument": "brightLead",
+          "noteSeconds": 0.08,
+          "velocity": 0.45
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609310
+}

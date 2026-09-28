@@ -1,0 +1,270 @@
+{
+  "brief": [
+    {
+      "detail": "loop",
+      "name": "playback",
+      "ok": true
+    },
+    {
+      "detail": "4/4",
+      "name": "meter",
+      "ok": true
+    },
+    {
+      "detail": "138 bpm ∈ [138, 138]",
+      "name": "tempo",
+      "ok": true,
+      "value": 138
+    },
+    {
+      "detail": "48 ölçü ∈ [48, 48]",
+      "name": "length",
+      "ok": true,
+      "value": 48
+    },
+    {
+      "detail": "minor ∈ minor",
+      "name": "tonal-system",
+      "ok": true
+    },
+    {
+      "detail": "intro → body → bridge → bridge → peak → release",
+      "name": "form",
+      "ok": true
+    },
+    {
+      "detail": "42.6 nota/ölçü, \"dense\" bandı [8, 64]",
+      "name": "rhythmic-density",
+      "ok": true,
+      "value": 42.6
+    },
+    {
+      "detail": "ölçülen 0.464, beyan 0.464",
+      "name": "melodic-salience",
+      "ok": true,
+      "value": 0.464
+    },
+    {
+      "detail": "hedef sırayla uyum 1",
+      "name": "section-contrast",
+      "ok": true,
+      "value": 1
+    }
+  ],
+  "lanes": [
+    {
+      "events": 472,
+      "highMidi": 52,
+      "id": "bass",
+      "instrument": "preset:dubBass",
+      "lowMidi": 34,
+      "maxPolyphony": 1,
+      "meanMidi": 43.14,
+      "notesPerBar": 9.8333,
+      "role": "bass"
+    },
+    {
+      "events": 20,
+      "highMidi": 33,
+      "id": "sub",
+      "instrument": "preset:subBass",
+      "lowMidi": 26,
+      "maxPolyphony": 1,
+      "meanMidi": 29.9,
+      "notesPerBar": 0.4167,
+      "role": "bass"
+    },
+    {
+      "events": 64,
+      "highMidi": 60,
+      "id": "organ",
+      "instrument": "preset:drawbarOrgan",
+      "lowMidi": 45,
+      "maxPolyphony": 2,
+      "meanMidi": 52.94,
+      "notesPerBar": 1.3333,
+      "role": "keys"
+    },
+    {
+      "events": 576,
+      "highMidi": 76,
+      "id": "arp",
+      "instrument": "preset:metalPluck",
+      "lowMidi": 50,
+      "maxPolyphony": 1,
+      "meanMidi": 61.6,
+      "notesPerBar": 12,
+      "role": "pluck"
+    },
+    {
+      "events": 91,
+      "highMidi": 88,
+      "id": "hook",
+      "instrument": "preset:softLead",
+      "lowMidi": 65,
+      "maxPolyphony": 1,
+      "meanMidi": 79.18,
+      "notesPerBar": 1.8958,
+      "role": "lead"
+    },
+    {
+      "events": 68,
+      "highMidi": 84,
+      "id": "bell",
+      "instrument": "preset:bell",
+      "lowMidi": 62,
+      "maxPolyphony": 1,
+      "meanMidi": 71.29,
+      "notesPerBar": 1.4167,
+      "role": "bell"
+    },
+    {
+      "events": 138,
+      "highMidi": 62,
+      "id": "pad",
+      "instrument": "preset:detunedPad",
+      "lowMidi": 38,
+      "maxPolyphony": 3,
+      "meanMidi": 49.12,
+      "notesPerBar": 2.875,
+      "role": "pad"
+    },
+    {
+      "events": 616,
+      "highMidi": null,
+      "id": "drums",
+      "instrument": "inst:horizon-kit",
+      "lowMidi": null,
+      "maxPolyphony": 4,
+      "meanMidi": null,
+      "notesPerBar": 12.8333,
+      "role": "percussion",
+      "unpitched": true
+    }
+  ],
+  "motifs": [],
+  "musicId": "event-horizon",
+  "pitchClasses": [
+    130,
+    0,
+    175,
+    0,
+    326,
+    183,
+    0,
+    82,
+    80,
+    301,
+    6,
+    146
+  ],
+  "policyVersion": 1,
+  "programHash": "sha256:8b22cfc852c925c47dacc7cac6537ba26825cfae6875d7df410518e01620ae16",
+  "rules": [],
+  "schema": "MusicSymbolicReportV1",
+  "scoreHash": "sha256:1e7d436438d58a2cc4cc9cb686d16fdd4df040e32b52e2d9f75862d627a267f3",
+  "sections": [
+    {
+      "activeLanes": 2,
+      "bars": [
+        0,
+        4
+      ],
+      "events": 10,
+      "harmonicChangesPerBar": 0,
+      "id": "a-drift",
+      "measuredEnergy": 0,
+      "notesPerBar": 2.5,
+      "role": "intro",
+      "targetEnergy": 0.35
+    },
+    {
+      "activeLanes": 5,
+      "bars": [
+        4,
+        16
+      ],
+      "events": 513,
+      "harmonicChangesPerBar": 0,
+      "id": "b-hook-a",
+      "measuredEnergy": 0.4052,
+      "notesPerBar": 42.75,
+      "role": "body",
+      "targetEnergy": 0.85
+    },
+    {
+      "activeLanes": 5,
+      "bars": [
+        16,
+        24
+      ],
+      "events": 300,
+      "harmonicChangesPerBar": 0,
+      "id": "c-tension",
+      "measuredEnergy": 0.3527,
+      "notesPerBar": 37.5,
+      "role": "bridge",
+      "targetEnergy": 0.7
+    },
+    {
+      "activeLanes": 4,
+      "bars": [
+        24,
+        28
+      ],
+      "events": 102,
+      "harmonicChangesPerBar": 0,
+      "id": "d-break",
+      "measuredEnergy": 0.1883,
+      "notesPerBar": 25.5,
+      "role": "bridge",
+      "targetEnergy": 0.5
+    },
+    {
+      "activeLanes": 8,
+      "bars": [
+        28,
+        44
+      ],
+      "events": 1078,
+      "harmonicChangesPerBar": 0,
+      "id": "e-hook-b",
+      "measuredEnergy": 1,
+      "notesPerBar": 67.375,
+      "role": "peak",
+      "targetEnergy": 0.95
+    },
+    {
+      "activeLanes": 3,
+      "bars": [
+        44,
+        48
+      ],
+      "events": 42,
+      "harmonicChangesPerBar": 0,
+      "id": "f-sink",
+      "measuredEnergy": 0.0491,
+      "notesPerBar": 10.5,
+      "role": "release",
+      "targetEnergy": 0.35
+    }
+  ],
+  "totals": {
+    "bars": 48,
+    "events": 2045,
+    "maxPolyphony": 12,
+    "melodicSalience": 0.464,
+    "motifInstances": 0,
+    "notesPerBar": 42.604,
+    "outOfSystemRatio": 0.0602,
+    "uniqueVariations": 0
+  },
+  "transitions": [],
+  "unchecked": [
+    "brief.avoidNotes: arcade setinin estetik kabulü insan dinlemesi bekler"
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

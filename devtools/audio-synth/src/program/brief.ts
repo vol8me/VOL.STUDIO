@@ -1,4 +1,5 @@
 import type { AssetClass } from '../analysis/assetQa';
+import { validateCharacterPolicy, type AudioCharacterPolicyV1 } from '../analysis/character';
 import { layoutProblem, placementOf, PLACEMENTS, type Placement } from '../analysis/layout';
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
@@ -31,6 +32,7 @@ interface BriefEnvelopeV1 {
   /** Doğal dil niyet — korunur ama programın makine-okunur kaynağı DEĞİLDİR. */
   readonly intent: string;
   readonly provenance: BriefProvenanceV1;
+  readonly character?: AudioCharacterPolicyV1;
 }
 
 export interface AcousticBriefV1 extends BriefEnvelopeV1 {
@@ -142,7 +144,15 @@ function checkAcoustic(o: ParamObject, envelope: BriefEnvelopeV1): AcousticBrief
   };
 }
 
-const ENVELOPE_KEYS = ['schema', 'kind', 'id', 'title', 'intent', 'provenance'] as const;
+const ENVELOPE_KEYS = [
+  'schema',
+  'kind',
+  'id',
+  'title',
+  'intent',
+  'provenance',
+  'character',
+] as const;
 const ACOUSTIC_KEYS = [
   'subtype',
   'assetClass',
@@ -180,6 +190,7 @@ export function validateBrief(value: unknown): AudioBriefV1 {
     title: checkText(o.title, 'title', 120),
     intent: checkText(o.intent, 'intent', 4000),
     provenance: checkProvenance(o.provenance),
+    ...(o.character === undefined ? {} : { character: validateCharacterPolicy(o.character) }),
   };
   return kind === 'music' ? checkMusicBrief(o, envelope) : checkAcoustic(o, envelope);
 }

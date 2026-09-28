@@ -108,23 +108,65 @@ export function checkAdaptive(value: unknown, path: string, stems: readonly stri
 }
 
 export function checkDelivery(value: unknown, path: string): MusicDeliveryV1 {
-  const o = checkObject(value, path, ['package', 'assetDir', 'runtimeKey']);
+  const o = checkObject(value, path, ['package', 'assetDir', 'runtimeKey', 'assetClass', 'files']);
   const pkg = checkText(o.package, `${path}.package`, 80);
   if (!/^@[a-z0-9-]+\/[a-z0-9.-]+$/.test(pkg)) {
     throw new AudioParamError(`${path}.package`, 'type', 'paket adı olmalı', pkg);
   }
   const assetDir = checkText(o.assetDir, `${path}.assetDir`, 200);
-  if (!assetDir.split('/').includes('music')) {
+  const assetClass =
+    o.assetClass === undefined
+      ? 'music'
+      : checkChoice(o.assetClass, `${path}.assetClass`, ['music', 'ambience'] as const);
+  if (!assetDir.split('/').includes(assetClass)) {
     throw new AudioParamError(
       `${path}.assetDir`,
       'combination',
-      "müzik asset'i yol sınıfı için 'music' klasörü altında olmalı",
+      `asset yolu ${assetClass} klasörü altında olmalı`,
       assetDir,
     );
   }
+  const files =
+    o.files === undefined
+      ? undefined
+      : checkObject(o.files, `${path}.files`, Object.keys(o.files as object));
+  if (files && Object.keys(files).length === 0)
+    throw new AudioParamError(`${path}.files`, 'range', 'en az bir dosya', files);
+  const mapped = files
+    ? Object.fromEntries(
+        Object.entries(files).map(([key, value]) => {
+          checkPattern(key, `${path}.files`, MUSIC_KEY);
+          const file = checkText(value, `${path}.files.${key}`, 240);
+          if (
+            !file.endsWith('.ogg') ||
+            file.startsWith('/') ||
+            file.includes('\\') ||
+            file.split('/').some((part) => !part || part === '.' || part === '..') ||
+            !file.split('/').includes(assetClass)
+          ) {
+            throw new AudioParamError(
+              `${path}.files.${key}`,
+              'type',
+              `güvenli ${assetClass} OGG yolu`,
+              file,
+            );
+          }
+          return [key, file];
+        }),
+      )
+    : undefined;
+  if (mapped && new Set(Object.values(mapped)).size !== Object.keys(mapped).length)
+    throw new AudioParamError(
+      `${path}.files`,
+      'combination',
+      'dosya yolları farklı olmalı',
+      mapped,
+    );
   return {
     package: pkg,
     assetDir,
+    ...(o.assetClass === undefined ? {} : { assetClass }),
+    ...(mapped === undefined ? {} : { files: mapped }),
     ...(o.runtimeKey === undefined
       ? {}
       : { runtimeKey: checkText(o.runtimeKey, `${path}.runtimeKey`, 96) }),

@@ -1,0 +1,72 @@
+{
+  "pcmHash": "sha256:36aedcc2db7d601fd5e3c912ee6317dfc2e0fbb4fa78a8725c4438b91db4347d",
+  "renderHash": "sha256:ec23aaaab463d2ea654a848cefe680758dbb0755a3eb59e78ec886a38826f1ca",
+  "renderId": "r-45f937232bdbdcb5",
+  "report": {
+    "analyzerVersion": 1,
+    "dc": {
+      "channelOffset": [
+        0.00004860387981266089
+      ]
+    },
+    "defects": {
+      "clicks": {
+        "count": 16,
+        "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+      },
+      "clips": {
+        "channelSamples": 0,
+        "frames": 0,
+        "perChannel": [
+          0
+        ]
+      }
+    },
+    "format": {
+      "channels": 1,
+      "durationSeconds": 1.3500226757369616,
+      "frames": 59536,
+      "sampleRate": 44100
+    },
+    "level": {
+      "channelPeakDbfs": [
+        -3.0000002493010487
+      ],
+      "channelRmsDbfs": [
+        -23.173144545703664
+      ],
+      "crestFactorDb": 20.173144296402615,
+      "integratedLufs": -23.43393013767672,
+      "maxMomentaryLufs": -19.191768225530762,
+      "rmsDbfs": -23.173144545703664,
+      "samplePeakDbfs": -3.0000002493010487,
+      "truePeakDbtp": -2.926652158194062
+    },
+    "measuredFrom": "source-pcm",
+    "schema": "AudioAnalysisReportV1",
+    "spectral": {
+      "bandsDb": {
+        "air": -45.490146082842536,
+        "high": -39.86334116199386,
+        "low": -26.292488028911865,
+        "mid": -33.00607964584645,
+        "sub": -27.774631570165326
+      },
+      "centroidHz": 455.98459884677055,
+      "flatness": 0.02478417225848626,
+      "peakHz": 64.599609375,
+      "rolloff85Hz": 430.6640625
+    },
+    "stereo": null,
+    "temporal": {
+      "activeSeconds": 0.96,
+      "attackSeconds": 0.01,
+      "decay40Seconds": 0.66,
+      "leadingSilenceSeconds": 0,
+      "peakTimeSeconds": 0.03,
+      "temporalCentroidSeconds": 0.14778987399666357,
+      "trailingSilenceSeconds": 0.5500226757369615
+    }
+  },
+  "schema": "AudioAnalysisRecordV1"
+}

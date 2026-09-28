@@ -1,0 +1,55 @@
+{
+  "affect": {
+    "arousal": 0.12,
+    "valence": -0.2
+  },
+  "assetClass": "ambience",
+  "avoidNotes": [
+    "arcade setinin estetik kabulü insan dinlemesi bekler"
+  ],
+  "channels": 2,
+  "form": {
+    "sections": [
+      "intro",
+      "body",
+      "body",
+      "release"
+    ]
+  },
+  "id": "null-drift",
+  "intent": "Ambiyans: A pedalı, dört ölçülük pad swell’leri ve üç seyrek zil ping’i; melodi ve ritim yok, 64 sn loop.",
+  "kind": "music",
+  "length": {
+    "bars": {
+      "max": 16,
+      "min": 16
+    }
+  },
+  "melodicSalience": 0.1579,
+  "meter": [
+    4,
+    4
+  ],
+  "playback": "loop",
+  "provenance": {
+    "author": "agent"
+  },
+  "rhythmicDensity": "sparse",
+  "schema": "AudioBriefV1",
+  "tempo": {
+    "bpm": {
+      "max": 60,
+      "min": 60
+    }
+  },
+  "title": "Sıfır Sürüklenme",
+  "tonal": {
+    "roots": [
+      "A2"
+    ],
+    "systems": [
+      "minor"
+    ]
+  },
+  "usage": "bed"
+}

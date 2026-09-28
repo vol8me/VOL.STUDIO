@@ -1,19 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
 import { MUSIC_TIMING, beatSeconds, trackSeconds } from '@/config/musicTiming';
 import { musicTracks, musicTrackIds } from '@/config/music';
-
-/**
- * Müzik zamanlamasının TEK KAYNAK kaldığını doğrular.
- *
- * BPM ve vuruş sayısı bir dönem hem `config/music.ts`te hem üretim
- * script'lerinde ayrı ayrı yazılıydı ve yalnızca bir yorumla ("BİREBİR
- * eşleşmek zorunda") korunuyordu. Ayrışma SESSİZDİR: `loopEnd` dosyadan
- * uzunsa Web Audio loop aralığını yok sayar, kısaysa besteden bir bölüm hiç
- * duyulmaz. İkisi de kulakla fark edilene kadar görünmez.
- */
-const SCRIPTS_DIR = resolve(import.meta.dirname, '../../scripts/audio/music');
 
 describe('müzik zamanlaması tek kaynak', () => {
   it('her müzik track kimliğinin bir zamanlama girdisi vardır', () => {
@@ -37,38 +24,6 @@ describe('müzik zamanlaması tek kaynak', () => {
       const timing = MUSIC_TIMING[id];
       expect(musicTracks[id].bpm, `${id} bpm ayrışmış`).toBe(timing.bpm);
     }
-  });
-
-  it("üretim script'leri BPM/BEATS sayısını YENİDEN TANIMLAMAZ", () => {
-    // Regresyon: bu dosyalar bir dönem `const BPM = 132;` yazıyordu ve
-    // config'le elle eşlenmesi gerekiyordu. Artık MUSIC_TIMING'ten okunur.
-    const offenders: string[] = [];
-
-    for (const file of readdirSync(SCRIPTS_DIR)) {
-      if (!file.endsWith('.ts')) continue;
-      const source = readFileSync(join(SCRIPTS_DIR, file), 'utf-8');
-
-      if (/^const BPM\s*=\s*\d/m.test(source)) offenders.push(`${file}: const BPM = <sayı>`);
-      if (/^const BEATS\s*=\s*\d/m.test(source)) offenders.push(`${file}: const BEATS = <sayı>`);
-    }
-
-    expect(
-      offenders,
-      'Tempo/uzunluk sayısı script içinde yeniden tanımlanmış. ' +
-        "MUSIC_TIMING'ten okunmalı, aksi halde config ile sessizce ayrışır.",
-    ).toEqual([]);
-  });
-
-  it("her üretim script'i MUSIC_TIMING okur", () => {
-    const missing: string[] = [];
-
-    for (const file of readdirSync(SCRIPTS_DIR)) {
-      if (!file.endsWith('.ts')) continue;
-      const source = readFileSync(join(SCRIPTS_DIR, file), 'utf-8');
-      if (!source.includes('MUSIC_TIMING')) missing.push(file);
-    }
-
-    expect(missing, 'Bu script tek kaynağa bağlı değil').toEqual([]);
   });
 
   it('zamanlama değerleri geçerlidir', () => {

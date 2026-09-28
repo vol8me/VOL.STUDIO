@@ -1,0 +1,541 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [-0.0000035044143832281213, -0.0000016264695657572407]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [0, 0]
+        }
+      },
+      "format": {
+        "channels": 2,
+        "durationSeconds": 64,
+        "frames": 2822400,
+        "sampleRate": 44100
+      },
+      "level": {
+        "channelPeakDbfs": [-9.330467248088718, -9.373381447282204],
+        "channelRmsDbfs": [-26.045018538165976, -26.660750900877478],
+        "crestFactorDb": 17.011514465214574,
+        "integratedLufs": -24.067067587536453,
+        "maxMomentaryLufs": -19.455997944781092,
+        "rmsDbfs": -26.341981713303294,
+        "samplePeakDbfs": -9.330467248088718,
+        "truePeakDbtp": -9.329786224170608
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -68.6666274281341,
+          "high": -58.11151726271525,
+          "low": -30.126535301517492,
+          "mid": -32.97030392107731,
+          "sub": -32.95608918363478
+        },
+        "centroidHz": 379.4334640649756,
+        "flatness": 0.00006217819584267153,
+        "peakHz": 172.265625,
+        "rolloff85Hz": 882.861328125
+      },
+      "stereo": {
+        "correlation": 0.7027401609756303,
+        "width": 0.41927802913172746
+      },
+      "temporal": {
+        "activeSeconds": 63.23,
+        "attackSeconds": 0.03,
+        "decay40Seconds": 15.45,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 32.02,
+        "temporalCentroidSeconds": 31.825723436339068,
+        "trailingSilenceSeconds": 0.4399999999999977
+      }
+    },
+    "sourceRecordHash": "sha256:bc99bd95eba1925bc718ffa1560a1d629e038f92093d210dd7f503d8207e2e59"
+  },
+  "asset": {
+    "bytes": 1017806,
+    "encodedHash": "sha256:8afc0dea4bd94e414a0c84ebc439699815a81515270a1c21baac23f76f424957",
+    "format": "ogg-vorbis",
+    "path": "games/vol-hell/public/assets/audio/ambience/null-drift.ogg"
+  },
+  "assetId": "null-drift-mix",
+  "brief": {
+    "document": {
+      "affect": {
+        "arousal": 0.12,
+        "valence": -0.2
+      },
+      "assetClass": "ambience",
+      "avoidNotes": ["arcade setinin estetik kabulü insan dinlemesi bekler"],
+      "channels": 2,
+      "form": {
+        "sections": ["intro", "body", "body", "release"]
+      },
+      "id": "null-drift",
+      "intent": "Ambiyans: A pedalı, dört ölçülük pad swell’leri ve üç seyrek zil ping’i; melodi ve ritim yok, 64 sn loop.",
+      "kind": "music",
+      "length": {
+        "bars": {
+          "max": 16,
+          "min": 16
+        }
+      },
+      "melodicSalience": 0.1579,
+      "meter": [4, 4],
+      "playback": "loop",
+      "provenance": {
+        "author": "agent"
+      },
+      "rhythmicDensity": "sparse",
+      "schema": "AudioBriefV1",
+      "tempo": {
+        "bpm": {
+          "max": 60,
+          "min": 60
+        }
+      },
+      "title": "Sıfır Sürüklenme",
+      "tonal": {
+        "roots": ["A2"],
+        "systems": ["minor"]
+      },
+      "usage": "bed"
+    },
+    "hash": "sha256:5ee499eaac3828d476d62375b099f8dd31d6e751845967193ae1fd7b8627bc7b",
+    "kind": "music",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": ["-f", "f32le", "-c:a", "libvorbis", "-q:a", "6", "-bitexact"],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:a776e173ee49d0dfa96bcbf997016593a91f297bfc9a2af4a2e609db91aa4432",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 6,
+    "tool": "ffmpeg",
+    "unreported": ["libvorbis"],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 6,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "renderSurface": {
+      "hash": "sha256:3ae42f228c8d8a41ca3eb759cb22e9190f5da224d7a7ec6b550819276c26418d",
+      "instruments": [
+        {
+          "hash": "sha256:fec1e6b2a6914f5ceafe2438ada6e74eaf557386e0662b9906e11f60fcf0fd24",
+          "id": "preset:bell"
+        },
+        {
+          "hash": "sha256:78ffde88d6550f78794d14616bea182e7de95b065103d35a8c4ca07cdfb1d1dc",
+          "id": "preset:detunedPad"
+        },
+        {
+          "hash": "sha256:206aa1445a6716662b34e35120aafb53d95c29dbe5158a3c379e9c16f78475c8",
+          "id": "preset:subBass"
+        }
+      ],
+      "nodes": [],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "b83b6e28760755b3f628d31a72a7996413967733",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/vol-hell",
+    "runtimeDeclaration": "games/vol-hell/audio-target.json",
+    "runtimeKey": "ambience-null-drift/mix",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "mix",
+    "path": "devtools/audio-synth/audio-music/null-drift/jobs/mix",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 2,
+    "image": {
+      "correlation": 0.703,
+      "dualMono": false,
+      "method": "stereo-image-v1",
+      "monoFoldLossDb": 0.773,
+      "sideDb": -7.55
+    },
+    "placement": "bed",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "ambience",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "mastering": {
+        "ceiling": 0.95,
+        "fadeOutSeconds": 0,
+        "gainDb": 11.672,
+        "limiter": {
+          "knee": 0.28,
+          "threshold": 0.7
+        },
+        "path": "loop-cyclic",
+        "schema": "MusicMasteringPlanV1",
+        "targetLufs": -24,
+        "trimSilence": false
+      },
+      "music": {
+        "bars": 16,
+        "delivery": {
+          "assetClass": "ambience",
+          "assetDir": "public/assets/audio/ambience/null-drift",
+          "files": {
+            "mix": "public/assets/audio/ambience/null-drift.ogg"
+          },
+          "package": "@volstudio/vol-hell",
+          "runtimeKey": "ambience-null-drift"
+        },
+        "description": "Ambiyans: A pedalı, dört ölçülük pad swell’leri ve üç seyrek zil ping’i; melodi ve ritim yok, 64 sn loop.",
+        "grooves": [],
+        "lanes": [
+          {
+            "gain": 0.3,
+            "id": "sub",
+            "instrument": "preset:subBass",
+            "stem": "main"
+          },
+          {
+            "gain": 0.32,
+            "id": "pad",
+            "instrument": "preset:detunedPad",
+            "pan": -0.08,
+            "stem": "main"
+          },
+          {
+            "gain": 0.2,
+            "id": "ping",
+            "instrument": "preset:bell",
+            "pan": 0.2,
+            "stem": "main"
+          }
+        ],
+        "markers": [
+          {
+            "bar": 0,
+            "kind": "loop-start"
+          },
+          {
+            "bar": 16,
+            "kind": "loop-end"
+          }
+        ],
+        "mastering": {
+          "integratedLufs": -24
+        },
+        "meter": [4, 4],
+        "motifs": [],
+        "musicId": "null-drift",
+        "playback": "loop",
+        "sampleRate": 44100,
+        "schema": "MusicProgramV1",
+        "sections": [
+          {
+            "bars": [0, 4],
+            "id": "a-still",
+            "lanes": ["sub", "pad"],
+            "parts": [
+              {
+                "lane": "sub",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "A1",
+                    "velocity": 0.26
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "pad",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "A2",
+                    "velocity": 0.2
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "E3",
+                    "velocity": 0.21000000000000002
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "C4",
+                    "velocity": 0.22
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "intro",
+            "targetEnergy": 0.2
+          },
+          {
+            "bars": [4, 8],
+            "id": "b-sway",
+            "lanes": ["sub", "pad", "ping"],
+            "parts": [
+              {
+                "lane": "sub",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "A1",
+                    "velocity": 0.26
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "pad",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "F2",
+                    "velocity": 0.2
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "C3",
+                    "velocity": 0.21000000000000002
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "A3",
+                    "velocity": 0.22
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "ping",
+                "notes": [
+                  {
+                    "bar": 1,
+                    "beat": 2,
+                    "beats": 3,
+                    "note": "A5",
+                    "velocity": 0.22
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "body",
+            "targetEnergy": 0.5
+          },
+          {
+            "bars": [8, 12],
+            "id": "c-deepen",
+            "lanes": ["sub", "pad", "ping"],
+            "parts": [
+              {
+                "lane": "sub",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "F1",
+                    "velocity": 0.26
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "pad",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "D2",
+                    "velocity": 0.2
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "A2",
+                    "velocity": 0.21000000000000002
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "F3",
+                    "velocity": 0.22
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "ping",
+                "notes": [
+                  {
+                    "bar": 2,
+                    "beat": 1,
+                    "beats": 3,
+                    "note": "C6",
+                    "velocity": 0.24
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "body",
+            "targetEnergy": 0.5
+          },
+          {
+            "bars": [12, 16],
+            "id": "d-return",
+            "lanes": ["sub", "pad", "ping"],
+            "parts": [
+              {
+                "lane": "sub",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "G1",
+                    "velocity": 0.26
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "pad",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "E2",
+                    "velocity": 0.2
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "B2",
+                    "velocity": 0.21000000000000002
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 15.9,
+                    "note": "G#3",
+                    "velocity": 0.22
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "ping",
+                "notes": [
+                  {
+                    "bar": 2,
+                    "beat": 3,
+                    "beats": 2,
+                    "note": "E5",
+                    "velocity": 0.2
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "release",
+            "targetEnergy": 0.5
+          }
+        ],
+        "seed": 202609306,
+        "stems": [
+          {
+            "id": "main",
+            "title": "Ana mix"
+          }
+        ],
+        "tempo": {
+          "bpm": 60
+        },
+        "title": "Sıfır Sürüklenme",
+        "tonal": {
+          "root": "A2",
+          "system": "minor"
+        },
+        "version": 1
+      },
+      "schema": "MusicStemProgramV1",
+      "stem": "mix"
+    },
+    "hash": "sha256:4fb3181c0b439b9d57089f8be24a414f3cad3acf9682b83b3b39547371ce551c",
+    "schema": "MusicStemProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 2,
+      "format": "f32le-interleaved-clamped",
+      "frames": 2822400,
+      "hash": "sha256:9bed5d8f7ad2ef8527c94853c1da6faded7f77493715425a8433663329274dc5",
+      "sampleRate": 44100
+    },
+    "renderId": "r-6d34200f22e0de59",
+    "rendererVersion": 2,
+    "seed": 202609306
+  },
+  "schema": "AudioAssetManifestV1"
+}

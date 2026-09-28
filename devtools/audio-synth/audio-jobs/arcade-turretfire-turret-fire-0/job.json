@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-0d4b06d968b9cf1f": {
+        "hash": "sha256:17bcfedc0864c032f8a8c24d0f98cb20f9781febbf021905c2fd0859b769e73e",
+        "path": "analyses/r-0d4b06d968b9cf1f.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:4cb8767c036d7494e5d96b8452eef82176a8006f09866fc6943daefa5bec8786",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:4cb8767c036d7494e5d96b8452eef82176a8006f09866fc6943daefa5bec8786",
+      "hash": "sha256:c6a85801bec23b763cc137dcae0ad4bafa583dcea5576a461dcf85cbf0eba0c0",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:bc30ba71a0a21c22610fd7251aa21d7f798bbc3c01dabd42595fd18b269e0f16",
+      "path": "games/vol-hell/audio-manifests/sfx/ability/turret-fire-0.json"
+    },
+    "renders": {
+      "r-0d4b06d968b9cf1f": {
+        "hash": "sha256:c66cacb67b347df9b02aa2c990c625da64cd6e42b639ea2c43fef6ba757fe323",
+        "path": "renders/r-0d4b06d968b9cf1f.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:c8135ec89e3b16b15a6ddcd658739895a34ff8b7669cfaa33d2b9b6c32ade5df",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-turretfire-turret-fire-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/ability/turret-fire-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-turret-fire"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

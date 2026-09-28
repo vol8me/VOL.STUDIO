@@ -1,0 +1,587 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [-0.000002147705161863347, -0.000002183602695334133]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [0, 0]
+        }
+      },
+      "format": {
+        "channels": 2,
+        "durationSeconds": 32.015192743764175,
+        "frames": 1411870,
+        "sampleRate": 44100
+      },
+      "level": {
+        "channelPeakDbfs": [-6.531306397604094, -6.844265189572967],
+        "channelRmsDbfs": [-21.625738789151182, -21.766387899727135],
+        "crestFactorDb": 15.164187595027585,
+        "integratedLufs": -18.97949919237951,
+        "maxMomentaryLufs": -12.730294410032503,
+        "rmsDbfs": -21.69549399263168,
+        "samplePeakDbfs": -6.531306397604094,
+        "truePeakDbtp": -6.521638468712778
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -62.37610576970924,
+          "high": -51.077506941999495,
+          "low": -23.755471628337574,
+          "mid": -26.679701307309944,
+          "sub": -36.637265490822074
+        },
+        "centroidHz": 477.36214944972266,
+        "flatness": 0.000010408073165700245,
+        "peakHz": 344.53125,
+        "rolloff85Hz": 645.99609375
+      },
+      "stereo": {
+        "correlation": 0.9416715587588309,
+        "width": 0.1735102677140883
+      },
+      "temporal": {
+        "activeSeconds": 31.12,
+        "attackSeconds": 0.02,
+        "decay40Seconds": 7.85,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.03,
+        "temporalCentroidSeconds": 14.070162384478866,
+        "trailingSilenceSeconds": 0.505192743764173
+      }
+    },
+    "sourceRecordHash": "sha256:fbc8d61b30edd1216253e10d75f261a40bb3d855343dbd4844bccfba1d3191c6"
+  },
+  "asset": {
+    "bytes": 362777,
+    "encodedHash": "sha256:23e7d776643a2bfdeceb50ba031570dc2cc563acb9833cb5c2ef0ba9ec1df8e5",
+    "format": "ogg-vorbis",
+    "path": "games/vol-hell/public/assets/audio/music/end/terminal-echo.ogg"
+  },
+  "assetId": "terminal-echo-mix",
+  "brief": {
+    "document": {
+      "affect": {
+        "arousal": 0.45,
+        "valence": -0.6
+      },
+      "assetClass": "music",
+      "avoidNotes": ["arcade setinin estetik kabulü insan dinlemesi bekler"],
+      "channels": 2,
+      "form": {
+        "sections": ["intro", "body", "bridge", "outro"]
+      },
+      "id": "terminal-echo",
+      "intent": "A minör ölüm cue’su: davulsuz, seyrek zil ve alçalan lead motif; uzun kuyrukla sönümlenen 8 ölçü.",
+      "kind": "music",
+      "length": {
+        "bars": {
+          "max": 8,
+          "min": 8
+        }
+      },
+      "melodicSalience": 0.5,
+      "meter": [4, 4],
+      "playback": "playlistOneShot",
+      "provenance": {
+        "author": "agent"
+      },
+      "rhythmicDensity": "sparse",
+      "schema": "AudioBriefV1",
+      "tempo": {
+        "bpm": {
+          "max": 60,
+          "min": 60
+        }
+      },
+      "title": "Terminal Yankısı",
+      "tonal": {
+        "roots": ["A2"],
+        "systems": ["minor"]
+      },
+      "usage": "cue"
+    },
+    "hash": "sha256:d6be2d0e2407976ae94df26a85ba425683e834d698b4761f2fb5e4da6816e1ba",
+    "kind": "music",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": ["-f", "f32le", "-c:a", "libvorbis", "-q:a", "4", "-bitexact"],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:776376a3732908172132f1f9bdcf3ec8479b0f819a06259602095d847eeb1923",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 4,
+    "tool": "ffmpeg",
+    "unreported": ["libvorbis"],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 4,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "renderSurface": {
+      "hash": "sha256:db0378c9e1c88156413f0554db3d7036f9351c012449e2a9176d4084bd18c5e4",
+      "instruments": [
+        {
+          "hash": "sha256:fec1e6b2a6914f5ceafe2438ada6e74eaf557386e0662b9906e11f60fcf0fd24",
+          "id": "preset:bell"
+        },
+        {
+          "hash": "sha256:78ffde88d6550f78794d14616bea182e7de95b065103d35a8c4ca07cdfb1d1dc",
+          "id": "preset:detunedPad"
+        },
+        {
+          "hash": "sha256:541d6120a8394a18e29bc62759bf6197b5f61d63dc35e989fe4e20e7ae4cae32",
+          "id": "preset:softLead"
+        }
+      ],
+      "nodes": [],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "b83b6e28760755b3f628d31a72a7996413967733",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-hell",
+    "runtimeDeclaration": "games/vol-hell/audio-target.json",
+    "runtimeKey": "music-terminal-echo/mix",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "mix",
+    "path": "devtools/audio-synth/audio-music/terminal-echo/jobs/mix",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 2,
+    "image": {
+      "correlation": 0.942,
+      "dualMono": false,
+      "method": "stereo-image-v1",
+      "monoFoldLossDb": 0.107,
+      "sideDb": -15.213
+    },
+    "placement": "bed",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "music",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "mastering": {
+        "ceiling": 0.95,
+        "fadeOutSeconds": 0.04,
+        "gainDb": 9.258,
+        "limiter": {
+          "knee": 0.28,
+          "threshold": 0.7
+        },
+        "path": "one-shot-limited",
+        "schema": "MusicMasteringPlanV1",
+        "targetLufs": -19,
+        "trimSilence": true
+      },
+      "music": {
+        "bars": 8,
+        "delivery": {
+          "assetDir": "public/assets/audio/music/terminal-echo",
+          "files": {
+            "mix": "public/assets/audio/music/end/terminal-echo.ogg"
+          },
+          "package": "@volstudio/vol-hell",
+          "runtimeKey": "music-terminal-echo"
+        },
+        "description": "A minör ölüm cue’su: davulsuz, seyrek zil ve alçalan lead motif; uzun kuyrukla sönümlenen 8 ölçü.",
+        "grooves": [],
+        "lanes": [
+          {
+            "gain": 0.4,
+            "id": "lead",
+            "instrument": "preset:softLead",
+            "stem": "main"
+          },
+          {
+            "gain": 0.3,
+            "id": "bell",
+            "instrument": "preset:bell",
+            "pan": 0.16,
+            "stem": "main"
+          },
+          {
+            "gain": 0.3,
+            "id": "pad",
+            "instrument": "preset:detunedPad",
+            "pan": -0.1,
+            "stem": "main"
+          }
+        ],
+        "mastering": {
+          "integratedLufs": -19
+        },
+        "meter": [4, 4],
+        "motifs": [],
+        "musicId": "terminal-echo",
+        "playback": "playlistOneShot",
+        "sampleRate": 44100,
+        "schema": "MusicProgramV1",
+        "sections": [
+          {
+            "bars": [0, 2],
+            "id": "a-last-breath",
+            "lanes": ["lead", "pad"],
+            "parts": [
+              {
+                "lane": "lead",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 3,
+                    "note": "E5",
+                    "velocity": 0.6
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 3,
+                    "note": "D5",
+                    "velocity": 0.58
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 3,
+                    "beats": 1,
+                    "note": "C5",
+                    "velocity": 0.56
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "pad",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "A2",
+                    "velocity": 0.26
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "E3",
+                    "velocity": 0.26
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "C4",
+                    "velocity": 0.26
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "intro",
+            "targetEnergy": 0.2
+          },
+          {
+            "bars": [2, 4],
+            "id": "b-echo",
+            "lanes": ["lead", "bell", "pad"],
+            "parts": [
+              {
+                "lane": "lead",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 2,
+                    "note": "B4",
+                    "velocity": 0.56
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 2,
+                    "beats": 2,
+                    "note": "A4",
+                    "velocity": 0.54
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 4,
+                    "note": "G4",
+                    "velocity": 0.54
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "bell",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 1,
+                    "beats": 2,
+                    "note": "A5",
+                    "velocity": 0.26
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 2,
+                    "beats": 1.5,
+                    "note": "E5",
+                    "velocity": 0.24
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "pad",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "F2",
+                    "velocity": 0.28
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "C3",
+                    "velocity": 0.28
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "A3",
+                    "velocity": 0.28
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "body",
+            "targetEnergy": 0.55
+          },
+          {
+            "bars": [4, 6],
+            "id": "c-fall",
+            "lanes": ["lead", "bell", "pad"],
+            "parts": [
+              {
+                "lane": "lead",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 2,
+                    "note": "F4",
+                    "velocity": 0.56
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 2,
+                    "beats": 2,
+                    "note": "E4",
+                    "velocity": 0.54
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 4,
+                    "note": "D4",
+                    "velocity": 0.52
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "bell",
+                "notes": [
+                  {
+                    "bar": 1,
+                    "beat": 1,
+                    "beats": 2,
+                    "note": "C6",
+                    "velocity": 0.28
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 3,
+                    "beats": 1,
+                    "note": "A5",
+                    "velocity": 0.24
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "pad",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "D2",
+                    "velocity": 0.28
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "A2",
+                    "velocity": 0.28
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "F3",
+                    "velocity": 0.28
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "bridge",
+            "targetEnergy": 0.55
+          },
+          {
+            "bars": [6, 8],
+            "id": "d-vacuum",
+            "lanes": ["lead", "pad"],
+            "parts": [
+              {
+                "lane": "lead",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 2,
+                    "note": "E4",
+                    "velocity": 0.54
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 2,
+                    "beats": 2,
+                    "note": "C4",
+                    "velocity": 0.52
+                  },
+                  {
+                    "bar": 1,
+                    "beat": 0,
+                    "beats": 8,
+                    "note": "A3",
+                    "velocity": 0.5
+                  }
+                ],
+                "source": "notes"
+              },
+              {
+                "lane": "pad",
+                "notes": [
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "A2",
+                    "velocity": 0.26
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "E3",
+                    "velocity": 0.26
+                  },
+                  {
+                    "bar": 0,
+                    "beat": 0,
+                    "beats": 7.9,
+                    "note": "C4",
+                    "velocity": 0.26
+                  }
+                ],
+                "source": "notes"
+              }
+            ],
+            "role": "outro",
+            "targetEnergy": 0.2
+          }
+        ],
+        "seed": 202609304,
+        "stems": [
+          {
+            "id": "main",
+            "title": "Ana mix"
+          }
+        ],
+        "tempo": {
+          "bpm": 60
+        },
+        "title": "Terminal Yankısı",
+        "tonal": {
+          "root": "A2",
+          "system": "minor"
+        },
+        "version": 1
+      },
+      "schema": "MusicStemProgramV1",
+      "stem": "mix"
+    },
+    "hash": "sha256:9c4acf6d79b1a26ddcf4127b924be8b05d6a1d388dafc445b766e5de1fd6f926",
+    "schema": "MusicStemProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 2,
+      "format": "f32le-interleaved-clamped",
+      "frames": 1411870,
+      "hash": "sha256:c7b226b2b58374dd13387007f04af2913dafc2d65202be7eb8d251fcfb424001",
+      "sampleRate": 44100
+    },
+    "renderId": "r-eddee44f7915a5e6",
+    "rendererVersion": 2,
+    "seed": 202609304
+  },
+  "schema": "AudioAssetManifestV1"
+}

@@ -1,0 +1,91 @@
+{
+  "brief": {
+    "hash": "sha256:d6be2d0e2407976ae94df26a85ba425683e834d698b4761f2fb5e4da6816e1ba",
+    "path": "devtools/audio-synth/audio-music/terminal-echo/brief.json"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 2
+  },
+  "music": {
+    "hash": "sha256:40fe235e12cfeea108ce20f182a32745dcc88988bde8be1ad223a3a3a666de10",
+    "musicId": "terminal-echo",
+    "path": "devtools/audio-synth/audio-music/terminal-echo/music.json",
+    "playback": "playlistOneShot",
+    "seed": 202609304,
+    "version": 1
+  },
+  "package": "@volstudio/vol-hell",
+  "qa": {
+    "hash": "sha256:82a9c0b4d1d35d6becab727b90cce2876dab3b515cf5011318ed73649c7346d1",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/terminal-echo/qa.json"
+  },
+  "report": {
+    "hash": "sha256:2980076e419af3d9c67e78abdf38978853668595a60ea6f1278ede5672baac1c",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/terminal-echo/report.json"
+  },
+  "schema": "MusicBundleV1",
+  "spec": {
+    "bars": 8,
+    "bpm": 60,
+    "engine": {
+      "compressor": false
+    },
+    "frames": 1411870,
+    "mastering": {
+      "gainDb": 9.258,
+      "integratedLufs": -19.007,
+      "path": "one-shot-limited",
+      "truePeakDbtp": -6.651
+    },
+    "meter": [4, 4],
+    "musicId": "terminal-echo",
+    "playback": "playlistOneShot",
+    "runtimeGain": 1,
+    "sampleRate": 44100,
+    "schema": "MusicAssetSpecV1",
+    "stems": [
+      {
+        "file": "public/assets/audio/music/end/terminal-echo.ogg",
+        "frames": 1411870,
+        "id": "main"
+      }
+    ],
+    "transitions": []
+  },
+  "stems": [
+    {
+      "asset": {
+        "bytes": 362777,
+        "encodedHash": "sha256:23e7d776643a2bfdeceb50ba031570dc2cc563acb9833cb5c2ef0ba9ec1df8e5",
+        "path": "public/assets/audio/music/end/terminal-echo.ogg"
+      },
+      "frames": 1411870,
+      "id": "mix",
+      "integratedLufs": -18.97949919237951,
+      "manifest": {
+        "hash": "sha256:b29f59dbbbd4f35e965f84f66baf2e64cefd05c55ea23d4e2721245546191074",
+        "path": "audio-manifests/music/end/terminal-echo.json"
+      },
+      "pcmHash": "sha256:c7b226b2b58374dd13387007f04af2913dafc2d65202be7eb8d251fcfb424001",
+      "truePeakDbtp": -6.521638468712778
+    }
+  ],
+  "sync": {
+    "checks": [
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "mix",
+        "lagSamples": 0,
+        "ok": true
+      }
+    ],
+    "method": "cross-correlation-v1",
+    "ok": true
+  },
+  "themeBook": null
+}

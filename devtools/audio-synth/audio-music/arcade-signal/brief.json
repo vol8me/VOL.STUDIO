@@ -1,0 +1,41 @@
+{
+  "schema": "AudioBriefV1",
+  "id": "arcade-signal",
+  "title": "Arcade Sinyal",
+  "intent": "Hızlı arcade denemesi: 16’lık pluck, FM zil hook, sürekli bas, davul aksanlı.",
+  "provenance": {
+    "author": "agent"
+  },
+  "kind": "music",
+  "assetClass": "music",
+  "usage": "bed",
+  "playback": "loop",
+  "affect": {
+    "valence": 0.3,
+    "arousal": 0.45
+  },
+  "tempo": {
+    "bpm": {
+      "min": 132,
+      "max": 132
+    }
+  },
+  "meter": [4, 4],
+  "tonal": {
+    "systems": ["minor"],
+    "roots": ["A2"]
+  },
+  "melodicSalience": 0.46,
+  "rhythmicDensity": "dense",
+  "form": {
+    "sections": ["intro", "body", "bridge", "peak", "release"]
+  },
+  "length": {
+    "bars": {
+      "min": 48,
+      "max": 48
+    }
+  },
+  "channels": 2,
+  "avoidNotes": ["arcade setinin estetik kabulü insan dinlemesi bekler"]
+}

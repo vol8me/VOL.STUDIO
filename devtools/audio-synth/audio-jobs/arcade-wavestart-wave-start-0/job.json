@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-473d93abc4a243be": {
+        "hash": "sha256:d3c304020ceb84f150d42725de9f144796ab960d6a5359c03fb007b7792dc021",
+        "path": "analyses/r-473d93abc4a243be.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:2adfb14a5eb8e8cb27bbbc3e57a6e365a0ea8f4c3d6ae345e8316f048339433e",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:2adfb14a5eb8e8cb27bbbc3e57a6e365a0ea8f4c3d6ae345e8316f048339433e",
+      "hash": "sha256:7320091ebcc2c1c359f0e4674bdcbb27c4241f2df7ffdc3be0cfd47782342ee9",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:79c64b81f5c752c92570afa2a27cf67b525deda85b654e1f7a27ddd7d0a8997f",
+      "path": "games/vol-hell/audio-manifests/sfx/progress/wave-start-0.json"
+    },
+    "renders": {
+      "r-473d93abc4a243be": {
+        "hash": "sha256:524cc5119dfde94bcdabdbb0de3dd22e71ec25870c9829461c2af26ca1dd40e2",
+        "path": "renders/r-473d93abc4a243be.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:677f77eaadc98c29670fd937b0209c90345c3502c589764f9e712bb67bd73759",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-wavestart-wave-start-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/progress/wave-start-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-wave-start"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

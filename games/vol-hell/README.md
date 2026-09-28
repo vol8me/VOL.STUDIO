@@ -21,9 +21,11 @@ Tüm tarifler `pnpm exec just --list`; paket script'leri `package.json`.
 **UI kendi bileşenini icat etmez.** Her arayüz parçası `@volstudio/core`'dan
 gelir; canlı örnekler [devtools/vol-ui](../../devtools/vol-ui/README.md).
 
-**Ses asset'i üretilir, yazılmaz.** Gönderilen `.ogg` dosyaları repoda durur;
-ses tasarımı değişince `generate:audio` ile yenilenir. Ara formatlar (WAV, MP3)
-repoda tutulmaz — [audio-synth](../../devtools/audio-synth/DESIGN.md),
+**Ses asset'i kanonik yayın kapısından üretilir.** Gönderilen `.ogg` dosyaları
+manifestleriyle birlikte repoda durur. Kaynak iş, aile ve müzik belgeleri
+`devtools/audio-synth/audio-{jobs,families,music}/` ağacındadır; değiştirilince
+`audio:job` akışıyla yeniden yayımlanır. Ara formatlar (WAV, MP3) repoda
+tutulmaz — [audio-synth](../../devtools/audio-synth/DESIGN.md),
 [music-engine](../../core/docs/music-engine.md).
 
 ## Daha derine

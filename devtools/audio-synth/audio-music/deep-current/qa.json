@@ -1,0 +1,26 @@
+{
+  "musicId": "deep-current",
+  "parity": {
+    "ok": true,
+    "residualDbfs": -200
+  },
+  "schema": "MusicAdaptiveQaV1",
+  "states": [
+    {
+      "gains": {
+        "main": 1
+      },
+      "integratedLufs": -25.052,
+      "intensity": 1,
+      "ok": true,
+      "problems": [],
+      "samplePeak": 0.798726,
+      "state": "fixed",
+      "truePeakDbtp": -1.952
+    }
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

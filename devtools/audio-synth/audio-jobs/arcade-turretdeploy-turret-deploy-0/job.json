@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-3f3024605f474290": {
+        "hash": "sha256:5bddabdfef53567b6e36c198e7ed1d008108f855849a5c20ed378555ce03e87e",
+        "path": "analyses/r-3f3024605f474290.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:dcff9085fe43daafaa031bec6880fdb1e7b5f4f4294c22d37c6f4147c4aad5a9",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:dcff9085fe43daafaa031bec6880fdb1e7b5f4f4294c22d37c6f4147c4aad5a9",
+      "hash": "sha256:e60c123f5fd6089dc599430c241f4054cb3b9b008948c53a3b237e49e74a8761",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:095ac77658f43f17a84400ce98bdc6ff93904de059b0d1c6bd9a78212ac4bd3e",
+      "path": "games/vol-hell/audio-manifests/sfx/ability/turret-deploy-0.json"
+    },
+    "renders": {
+      "r-3f3024605f474290": {
+        "hash": "sha256:4f39d039bd4dfd0083de2169fde3eae61f1252de15b44793ca13d3db9e82ab56",
+        "path": "renders/r-3f3024605f474290.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:ed2027707901e20db0e9522b430965c82de56dfaa506740bf1096aeb1eec13d4",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-turretdeploy-turret-deploy-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/ability/turret-deploy-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-turret-deploy"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

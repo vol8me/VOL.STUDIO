@@ -4,9 +4,11 @@ VOL.STUDIO deterministik ses asset compiler'ı.
 
 Bu paket prosedürel ses sentezi, efekt zinciri, WAV/OGG yazma ve ses QA altyapısını taşır. Çıktı WAV/OGG'dir; tarayıcı veya oyun yalnızca üretilmiş asset'i tüketir.
 
-Aktif bir oyun paketi bugün bu paketi tüketmiyor. Frozen `games/vol-hell` ve
-`games/vol-arachnid` sesleri bu motorla üretildi; o kanıt freeze
-etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
+Aktif `games/vol-hell` paketinin Arcade ses kaynakları bu paketin kanonik
+job/aile/müzik hattıyla yayımlandı. 46 eski OGG'nin arşiv hash'leri korunarak
+54 yeni teslim manifestleriyle üretildi; insan dinlemesi bekler.
+`games/vol-arachnid` frozen kalır.
+Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 
 ## Yapı
 
@@ -19,12 +21,13 @@ etiketlerindedir. Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 - `src/program/` — kanonik `AudioBriefV1`/`AcousticProgramV1`, yapı taşı
   registry'si ve render'ı; SoundGraph yönlendirmesi (bus/send/sidechain),
   stil ve materyal profilleri, ses ontolojisi ve planlayıcı, sample
-  bildirimleri, render yüzeyi kaydı; teslim işleme katmanı (`treatment`) ve
+  bildirimleri, render yüzeyi kaydı, kısa gerçek preset kökeni
+  (`source.instrument@1/@2`); teslim işleme katmanı (`treatment`) ve
   teslim profilleri (uzaklık, engel, ortam, cihaz)
 - `src/analysis/` — kanonik ölçüm çekirdeği (BS.1770, true peak, betimleyiciler,
   dikiş, transient/gövde ayrıştırması, stem hizası, stereo görüntü ve
-  yerleşim, kodek sonrası sadakat, teslim yön ölçüleri, tını zarfı ve durum
-  iddiaları)
+  yerleşim, kodek sonrası sadakat ve opt-in tam süreli spektral karakter
+  sınırları, teslim yön ölçüleri, tını zarfı ve durum iddiaları)
 - `src/protocol/` — `AudioJobV1`, manifest, TEK publish kapısı, arama/aile/
   müzik/sample protokolleri, kodlama profili ve teslim varyantı türetme
   (Node-only)
@@ -146,6 +149,14 @@ kaynakları, artikülasyon kümeleri, görev bantları, desen dizgisi, segment v
 ayar kuralları `music` bağlamındadır; sözdizimi `music.commands`
 alanındadır. `reference-arcade` fixture'ı giriş + dikişsiz loop + bitiş +
 stinger bundle'ının uçtan uca örneğidir.
+
+Bir bundle'ın `delivery.files` alanı eski olay yoluna mix teslimini açıkça
+bağlayabilir; eksik stem/cue yolları varsayılan dizinden türetilir.
+`assetClass: ambience` fiziksel kaynağı sample kimliğiyle bağlanan atmosfer
+loop'unu da aynı MusicBundle kapısından geçirir. Bu iki alan opt-in'dir;
+eski programların yolu, sınıfı ve PCM'i değişmez. Brief'in isteğe bağlı
+`character` sınırları tüm decode edilmiş kanallarda kodek sonrası ölçülür;
+insan dinleme kararının yerine geçmez.
 
 Ses tasarımı brief'ten başlayabilir: `plan` brief'in betimleyici
 sözcüklerinden mekanizma/stil/materyal planı ve render edilebilir bir

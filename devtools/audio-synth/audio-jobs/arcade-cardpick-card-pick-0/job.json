@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-f0b6039c53362dd7": {
+        "hash": "sha256:e5e06cedb63a4976f948248674fcf6c9faa7e8fcb0d93fe0872bacac90c3b9ad",
+        "path": "analyses/r-f0b6039c53362dd7.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:fd7d5bc7e57c0f4ac0d85955883a126ee2679d8eaeac9ae3cd42919c97097b0a",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:fd7d5bc7e57c0f4ac0d85955883a126ee2679d8eaeac9ae3cd42919c97097b0a",
+      "hash": "sha256:dbb8cc2b73994250e1c78b01d55640552aeda7ec1c02a7296532f290f5725d96",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:eb5655ebd64dc215db997365b7010a106fb7da1473b6202e9ed05707938d9429",
+      "path": "games/vol-hell/audio-manifests/sfx/ui/card-pick-0.json"
+    },
+    "renders": {
+      "r-f0b6039c53362dd7": {
+        "hash": "sha256:f46deadfa9f50bf57abd664da556ee6de8cbe742a3e8a5674bb94e3fbd039c5e",
+        "path": "renders/r-f0b6039c53362dd7.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:d5890b1d35bc869b2638e9565aa0cb2210b34d6d5ca2ea9df0082c2d32372192",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-cardpick-card-pick-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 18,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/ui/card-pick-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-card-pick"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

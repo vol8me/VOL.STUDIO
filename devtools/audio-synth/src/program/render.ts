@@ -138,7 +138,7 @@ function nodeCost(
   }
   const scratch = node.entry.resource.bytesPerFrame?.(params) ?? 0;
   return {
-    work: frames * perFrame,
+    work: frames * perFrame + (node.entry.resource.setupWork?.(params, sampleRate) ?? 0),
     bytes:
       node.entry.resource.stateBytes(params, sampleRate) +
       buffers * frames * FLOAT32_BYTES +

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-9a58b81ebe29b441": {
+        "hash": "sha256:1afac5b462d1b051c6c5f1337a953a7e8d479539bdd3d7a1ffcd8f9b056eca95",
+        "path": "analyses/r-9a58b81ebe29b441.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:b5836e6dc50ff25a19bc43e2dfdd34d8ddf2251ace267b910f6e33289f6efee6",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:b5836e6dc50ff25a19bc43e2dfdd34d8ddf2251ace267b910f6e33289f6efee6",
+      "hash": "sha256:78ef5041ef81cd638070c95c69dc22b557b19524ddc78a065472945dbb084880",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:04f03204fd1f65af382e03073869665e894ef5927764c409e032fc99edcc4277",
+      "path": "games/vol-hell/audio-manifests/sfx/ui/reroll-0.json"
+    },
+    "renders": {
+      "r-9a58b81ebe29b441": {
+        "hash": "sha256:84c80b4f07449836c262fe2a0e3930a4799ca9ce3d873ca32ef9033400dcabcd",
+        "path": "renders/r-9a58b81ebe29b441.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:f7069847c41d2451b2a11da8a09655151880f3f5269ba9a57d4967179b1e6fae",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-reroll-reroll-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 18,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/ui/reroll-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-reroll"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

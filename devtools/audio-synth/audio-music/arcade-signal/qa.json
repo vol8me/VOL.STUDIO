@@ -1,0 +1,26 @@
+{
+  "musicId": "arcade-signal",
+  "parity": {
+    "ok": true,
+    "residualDbfs": -200
+  },
+  "schema": "MusicAdaptiveQaV1",
+  "states": [
+    {
+      "gains": {
+        "main": 1
+      },
+      "integratedLufs": -19.474,
+      "intensity": 1,
+      "ok": true,
+      "problems": [],
+      "samplePeak": 0.75033,
+      "state": "fixed",
+      "truePeakDbtp": -1.974
+    }
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

@@ -343,6 +343,31 @@ export function validateMusicProgram(value: unknown): MusicProgramV1 {
           },
         }),
   };
+  const delivered =
+    program.playback === 'adaptiveLoop'
+      ? [...program.stems.map((stem) => stem.id), 'mix']
+      : ['mix'];
+  delivered.push(
+    ...(program.segments ?? [])
+      .filter((segment) => segment.kind !== 'loop')
+      .map((segment) => segment.id),
+  );
+  const files = program.delivery.files ?? {};
+  if (Object.keys(files).some((key) => !delivered.includes(key)))
+    throw new AudioParamError(
+      'delivery.files',
+      'combination',
+      'yalnız yayımlanan stem ve cue adları',
+      files,
+    );
+  const paths = delivered.map((key) => files[key] ?? `${program.delivery.assetDir}/${key}.ogg`);
+  if (new Set(paths).size !== paths.length)
+    throw new AudioParamError(
+      'delivery.files',
+      'combination',
+      'her asset farklı dosyaya teslim edilir',
+      files,
+    );
   assertPlaybackShape(program);
   assertTransitionCues(program);
   assertLaneContracts(program);

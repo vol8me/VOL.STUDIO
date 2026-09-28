@@ -4,7 +4,9 @@
  *
  * Ayrışmanın sonucu sessizdir: `loopEnd` dosyadan uzunsa Web Audio loop
  * aralığını yok sayar (parça geç sarar), kısaysa besteden bir bölüm hiç
- * duyulmaz.
+ * duyulmaz. Değerler `scripts/audio-v2/scores/` altındaki programların
+ * `bars` ve `tempo.bpm` alanlarıyla aynıdır; `audioIntegration` testi bunu
+ * yayımlanmış bütünlerle karşılaştırır.
  */
 
 export interface MusicTiming {
@@ -15,12 +17,12 @@ export interface MusicTiming {
 
 /** Parça kimliği → zamanlama. Anahtarlar `musicTrackIds` ile aynıdır. */
 export const MUSIC_TIMING = {
-  'hollow-signal': { bpm: 84, beats: 128 },
-  'event-horizon': { bpm: 100, beats: 128 },
-  'surge-protocol': { bpm: 132, beats: 128 },
-  sovereign: { bpm: 140, beats: 128 },
-  'terminal-echo': { bpm: 56, beats: 24 },
-  'first-light': { bpm: 92, beats: 32 },
+  'hollow-signal': { bpm: 132, beats: 192 },
+  'event-horizon': { bpm: 138, beats: 192 },
+  'surge-protocol': { bpm: 144, beats: 256 },
+  sovereign: { bpm: 120, beats: 256 },
+  'terminal-echo': { bpm: 60, beats: 32 },
+  'first-light': { bpm: 96, beats: 64 },
   /* Ambiyans ritimsiz; 60 BPM seçildi ki `beats` doğrudan SANİYE olsun. */
   'null-drift': { bpm: 60, beats: 64 },
   'deep-current': { bpm: 60, beats: 64 },

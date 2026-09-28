@@ -1,6 +1,7 @@
 import { CURVES } from './curves';
 import { AIRFLOW } from './primitives/airflow';
 import { CONTACT } from './primitives/contact';
+import { INSTRUMENT, INSTRUMENT_V2 } from './primitives/instrument';
 import { CONVOLUTION } from './primitives/convolution';
 import { ELECTRICAL } from './primitives/electrical';
 import { ENVIRONMENT } from './primitives/environment';
@@ -48,6 +49,8 @@ export const PROGRAM_REGISTRY = new Registry<ProgramEntry>([
   ...PROCESSORS,
   ...SPATIAL,
   CONTACT,
+  INSTRUMENT,
+  INSTRUMENT_V2,
   PRESSURE_WAVE,
   BLAST,
   AIRFLOW,

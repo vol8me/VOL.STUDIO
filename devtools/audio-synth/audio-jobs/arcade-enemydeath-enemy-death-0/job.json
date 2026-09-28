@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-365e712985693cda": {
+        "hash": "sha256:5c34422aa20695d1b0fb0cd7bf321d0c802c5198e36afa37c80342156818cab0",
+        "path": "analyses/r-365e712985693cda.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:6819de2b5bcce5a976d0e0f8963cb15b6f707477f2c7eabe9701d8e3e716c964",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:6819de2b5bcce5a976d0e0f8963cb15b6f707477f2c7eabe9701d8e3e716c964",
+      "hash": "sha256:a620bbaa41e8fa6e74ca3481ffdd0d5c91b7420403ad2d6cf37f059e13089d03",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:3d57a6792a9fad36291f8d786b643b7b8ed20eb3b802707161f49a26a3e2bdba",
+      "path": "games/vol-hell/audio-manifests/sfx/combat/enemy-death-0.json"
+    },
+    "renders": {
+      "r-365e712985693cda": {
+        "hash": "sha256:beab7d7380527844de37b7c6b1aecb06c628e00b494f7a2f170a7a7f2f1b8f3a",
+        "path": "renders/r-365e712985693cda.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:cf686e9c97b6c19b2593862fef8dc9e236e5501f53ab23c7b0a6de4aa8d34b92",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-enemydeath-enemy-death-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/combat/enemy-death-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-enemy-death"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

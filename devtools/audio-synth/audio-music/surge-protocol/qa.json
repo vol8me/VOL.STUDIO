@@ -1,0 +1,26 @@
+{
+  "musicId": "surge-protocol",
+  "parity": {
+    "ok": true,
+    "residualDbfs": -200
+  },
+  "schema": "MusicAdaptiveQaV1",
+  "states": [
+    {
+      "gains": {
+        "main": 1
+      },
+      "integratedLufs": -19.145,
+      "intensity": 1,
+      "ok": true,
+      "problems": [],
+      "samplePeak": 0.77262,
+      "state": "fixed",
+      "truePeakDbtp": -1.968
+    }
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

@@ -19,7 +19,6 @@ const DOCS = ['README.md', 'DESIGN.md', 'TODO.md'] as const;
  */
 const HISTORICAL = new Map<string, string>([
   ['scripts/music-demo.ts', 'Dalga 6’da silindi; kapanış kaydı kaldırıldığını anlatır'],
-  ['scripts/audio/lib/mix.ts', 'frozen VOL.HELL ağacındaki tarihsel mix kopyası'],
 ]);
 
 const PATH_PATTERN =

@@ -2,8 +2,8 @@
  * Oyun ses efektleri — olay → kategorize edilmiş dosya yolları.
  * Dosyalar `public/assets/audio/sfx/<kategori>/` altında üretilir.
  *
- * Tema: Karanlık Sentetik / Void. Tüm SFX'ler `scripts/audio/sfx/specs.ts`
- * tarafından üretilir; bu dosya yalnızca runtime haritasıdır.
+ * Arcade seslerinin kaynağı `audio-synth/audio-jobs` ve
+ * `audio-synth/audio-families` belgeleridir; bu dosya runtime haritasıdır.
  */
 
 const basePath = 'assets/audio/sfx';

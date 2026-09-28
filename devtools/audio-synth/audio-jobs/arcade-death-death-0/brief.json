@@ -1,0 +1,22 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "arcade",
+    "retro"
+  ],
+  "durationSeconds": {
+    "max": 1.351,
+    "min": 1.3490000000000002
+  },
+  "id": "arcade-death-death-0",
+  "intent": "Arcade death death-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "Arcade death death-0"
+}

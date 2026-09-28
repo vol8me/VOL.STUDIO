@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-dff773329fa40262": {
+        "hash": "sha256:ada12fa9f003880501286028ecda15f2dce7e79953ef732e4399bb4d9dedc029",
+        "path": "analyses/r-dff773329fa40262.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:18dab3e096151a9e6856f799af3251597ed617c982bc70cf5db2ebe690005a16",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:18dab3e096151a9e6856f799af3251597ed617c982bc70cf5db2ebe690005a16",
+      "hash": "sha256:4b79ee96a8f2f17d56d243667ce972c0f6aede0762e1d9fec8e5bf65585edaab",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:cad9fe7ecbaed1b3f7cab5673167190726a07d877152086888df064d585efe25",
+      "path": "games/vol-hell/audio-manifests/sfx/player/flux-pickup-1.json"
+    },
+    "renders": {
+      "r-dff773329fa40262": {
+        "hash": "sha256:d883335e2ef98857a39d1333e0ff3947e2ba8ab98e1782e8a1719763a6f47471",
+        "path": "renders/r-dff773329fa40262.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:e50159dca28851845445f3729085795669994a7b317d918420fb4d8686c21e86",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-fluxpickup-flux-pickup-1",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 7,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/player/flux-pickup-1.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-flux-pickup"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

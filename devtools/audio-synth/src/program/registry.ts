@@ -55,6 +55,8 @@ export interface ResourceModel {
   readonly stateBytes: (params: CostParams, sampleRate: number) => number;
   /** Tampon uzunluğuyla büyüyen ara bellek (kare başına bayt; kanal başına). */
   readonly bytesPerFrame?: (params: CostParams) => number;
+  /** Çıkış tamponundan uzun olabilen nota/kaynak hazırlığının bağımsız iş bütçesi. */
+  readonly setupWork?: (params: CostParams, sampleRate: number) => number;
 }
 
 export interface Determinism {
@@ -72,6 +74,8 @@ interface EntryBase {
   readonly causal: readonly CausalEffect[];
   readonly determinism: Determinism;
   readonly resource: ResourceModel;
+  /** Dış preset gibi kaynakların PCM'i belirleyen sürümlü parametre izdüşümü. */
+  readonly renderContract?: Readonly<Record<string, unknown>>;
   /**
    * Varsayılanları KİMLİK olan (etkisiz: 0 dB bell) yapı taşlarının governance
    * yoklama noktası: "her parametre PCM'i değiştirir" denetimi varsayılanlar

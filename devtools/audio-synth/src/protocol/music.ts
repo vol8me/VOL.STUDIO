@@ -182,6 +182,10 @@ export function publishedStems(program: MusicProgramV1): string[] {
   return [...loop, ...cueSegments(program).map((s) => s.id)];
 }
 
+function deliveryFile(program: MusicProgramV1, stem: string): string {
+  return program.delivery.files?.[stem] ?? `${program.delivery.assetDir}/${stem}.ogg`;
+}
+
 function destinationOf(
   repoRoot: string,
   program: MusicProgramV1,
@@ -190,13 +194,13 @@ function destinationOf(
   const destination = resolveDestination(
     surveyTargets(repoRoot),
     program.delivery.package,
-    `${program.delivery.assetDir}/${stem}.ogg`,
+    deliveryFile(program, stem),
   );
   const assetClass = classifyAssetPath(destination.withinRoot);
-  if (assetClass !== 'music') {
+  if (assetClass !== (program.delivery.assetClass ?? 'music')) {
     throw new ProtocolError(
       'destination',
-      `yol sınıfı ${assetClass}, müzik bekleniyor`,
+      `yol sınıfı ${assetClass}, ${program.delivery.assetClass ?? 'music'} bekleniyor`,
       destination.assetPath,
     );
   }
@@ -215,6 +219,8 @@ export interface MusicPreviewV1 {
 /** Doğrulama + genişletme + sembolik analiz + hedef + bütçe; render YOK. */
 export function previewMusic(repoRoot: string, documents: MusicDocumentsV1): MusicPreviewV1 {
   const { program, brief, themeBook } = documents;
+  if (brief.assetClass !== (program.delivery.assetClass ?? 'music'))
+    throw new ProtocolError('policy', 'brief ile teslim ses sınıfı farklı', 'delivery.assetClass');
   const score = asProtocol('music.json', () => expandProgram(program));
   const report = analyzeScore({ program, score, brief, ...(themeBook ? { themeBook } : {}) });
   const assets = publishedStems(program);
@@ -435,8 +441,10 @@ function stemProgram(
  * DETERMİNİSTİK türer (çalma modeli ve kullanım değişir, niyet ve kararlar
  * aynı kalır). Bundle kaydı ana brief'in özetini taşır.
  */
-function assetBrief(brief: MusicBriefV1, cue: boolean): MusicBriefV1 {
-  return cue ? { ...brief, playback: 'playlistOneShot', usage: 'cue' } : brief;
+export function musicAssetBrief(brief: MusicBriefV1, cue: boolean): MusicBriefV1 {
+  if (!cue) return brief;
+  const { adaptive: _adaptive, ...base } = brief;
+  return { ...base, playback: 'playlistOneShot', usage: 'cue' };
 }
 
 /** Tek stem'i kanonik job akışından yayımlar; yayımlanmışsa dokunmaz. */
@@ -449,10 +457,10 @@ function publishStem(
   const job = stemJob(loc, stem);
   const { program } = check;
   const cue = cueSegments(program).find((s) => s.id === stem);
-  const brief = assetBrief(bundleBrief, cue !== undefined);
+  const brief = musicAssetBrief(bundleBrief, cue !== undefined);
   const target = {
     package: program.delivery.package,
-    asset: `${program.delivery.assetDir}/${stem}.ogg`,
+    asset: deliveryFile(program, stem),
     integration: {
       runtimeKey: program.delivery.runtimeKey
         ? `${program.delivery.runtimeKey}/${stem}`

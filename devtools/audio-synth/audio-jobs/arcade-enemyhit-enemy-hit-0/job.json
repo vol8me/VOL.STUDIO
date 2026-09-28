@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-d33e2cc2de0697bb": {
+        "hash": "sha256:0ba6d569f3fce81a265748affafc4320f0cae886bf656c8a46c5360c544a10f0",
+        "path": "analyses/r-d33e2cc2de0697bb.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:51f7bc81288c23b9ebaf21167e26a63ec1554c098b6dc2de2b7a142e7d9501de",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:51f7bc81288c23b9ebaf21167e26a63ec1554c098b6dc2de2b7a142e7d9501de",
+      "hash": "sha256:a8b20dbe46b6259f4a726308f4edfd8efaf9e257ca06df237633d57c6aadc9b9",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:afa00556cf3c9c2ac69a2fa48680a861ca53d4b577eaf9a681a0a68aec5ab24f",
+      "path": "games/vol-hell/audio-manifests/sfx/combat/enemy-hit-0.json"
+    },
+    "renders": {
+      "r-d33e2cc2de0697bb": {
+        "hash": "sha256:7e7d79a977850f668ebc5a847429cdaef9579e723989ec4491d34e2a63f65cbc",
+        "path": "renders/r-d33e2cc2de0697bb.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:fbd95a8f6d7fab11a0eeef3da42acbd012fb98e5f9f56f5457bd9c41fd265858",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-enemyhit-enemy-hit-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/combat/enemy-hit-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-enemy-hit"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

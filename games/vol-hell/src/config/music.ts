@@ -28,7 +28,8 @@ export const musicTrackIds = [
 export type MusicTrackId = (typeof musicTrackIds)[number];
 
 /** Vol-Hell müzik ve ambiyans track'leri.
- *  2 ana menü, 1 savaş, 1 boss, 1 ölüm, 1 zafer, 2 ambiyans. */
+ *  2 ana menü, 1 savaş, 1 boss, 1 ölüm, 1 zafer, 2 ambiyans.
+ *  Her parça tek `main` stemlidir; arcade setinde ayrı giriş/cue dosyası yoktur. */
 export const musicTracks: Record<MusicTrackId, MusicTrack> = {
   'hollow-signal': {
     id: 'hollow-signal',
@@ -37,11 +38,9 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     loopEnd: loopEndOf('hollow-signal'),
     stems: [
       {
-        id: 'hollow-signal',
+        id: 'main',
         src: `${musicBasePath}/main-menu/hollow-signal.ogg`,
         gain: 0.8,
-        // Menü parçaları DÖNMEZ: bitince playlist sıradakine geçsin diye.
-        // `loop: true` iken ikinci parçaya hiç sıra gelmiyordu.
         loop: false,
       },
     ],
@@ -54,11 +53,9 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     loopEnd: loopEndOf('event-horizon'),
     stems: [
       {
-        id: 'event-horizon',
+        id: 'main',
         src: `${musicBasePath}/main-menu/event-horizon.ogg`,
         gain: 0.8,
-        // Menü parçaları DÖNMEZ: bitince playlist sıradakine geçsin diye.
-        // `loop: true` iken ikinci parçaya hiç sıra gelmiyordu.
         loop: false,
       },
     ],
@@ -71,7 +68,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     loopEnd: loopEndOf('surge-protocol'),
     stems: [
       {
-        id: 'surge-protocol',
+        id: 'main',
         src: `${musicBasePath}/combat/surge-protocol.ogg`,
         gain: 0.85,
         loop: true,
@@ -86,7 +83,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     loopEnd: loopEndOf('sovereign'),
     stems: [
       {
-        id: 'sovereign',
+        id: 'main',
         src: `${musicBasePath}/boss/sovereign.ogg`,
         gain: 0.85,
         loop: true,
@@ -101,7 +98,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     loopEnd: loopEndOf('terminal-echo'),
     stems: [
       {
-        id: 'terminal-echo',
+        id: 'main',
         src: `${musicBasePath}/end/terminal-echo.ogg`,
         gain: 0.75,
         loop: false,
@@ -116,7 +113,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     loopEnd: loopEndOf('first-light'),
     stems: [
       {
-        id: 'first-light',
+        id: 'main',
         src: `${musicBasePath}/end/first-light.ogg`,
         gain: 0.75,
         loop: false,
@@ -131,7 +128,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     loopEnd: loopEndOf('null-drift'),
     stems: [
       {
-        id: 'null-drift',
+        id: 'main',
         src: `${ambienceBasePath}/null-drift.ogg`,
         gain: 0.7,
         loop: true,
@@ -146,7 +143,7 @@ export const musicTracks: Record<MusicTrackId, MusicTrack> = {
     loopEnd: loopEndOf('deep-current'),
     stems: [
       {
-        id: 'deep-current',
+        id: 'main',
         src: `${ambienceBasePath}/deep-current.ogg`,
         gain: 0.7,
         loop: true,

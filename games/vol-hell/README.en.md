@@ -21,9 +21,11 @@ All recipes: `pnpm exec just --list`; package scripts: `package.json`.
 **UI invents nothing.** Every interface part comes from `@volstudio/core`; live
 examples in [devtools/vol-ui](../../devtools/vol-ui/README.md).
 
-**Audio is generated, not authored.** Shipped `.ogg` files live in the repo and
-are refreshed with `generate:audio` when the sound design changes. Intermediate
-formats (WAV, MP3) are not tracked — see
+**Audio is generated through the canonical publication gate.** Shipped `.ogg`
+files and their manifests live in the repo. Source job, family, and music
+documents live under `devtools/audio-synth/audio-{jobs,families,music}/`; changes
+are republished through `audio:job`. Intermediate formats (WAV, MP3) are not
+tracked — see
 [audio-synth](../../devtools/audio-synth/DESIGN.md),
 [music-engine](../../core/docs/music-engine.md).
 

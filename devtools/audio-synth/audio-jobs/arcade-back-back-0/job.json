@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-cf2e790d15cc6a93": {
+        "hash": "sha256:b045fb4faec33feb2ce95d3823e1a47d42bc6dde51c0b02698e4537a79c88500",
+        "path": "analyses/r-cf2e790d15cc6a93.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:49d73c9d4984c7aad8fbd3eb56beb6186c8431d7c4febc0e9e2fcd6f97596753",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:49d73c9d4984c7aad8fbd3eb56beb6186c8431d7c4febc0e9e2fcd6f97596753",
+      "hash": "sha256:c04e3bcdf308d0919fe8bf1f266039c6f02ed70b2f9b387422dd37c07afb20d6",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:02adcf4e05f5bad164f57be62301483c356b54434de0e9f52801c8dd4128d028",
+      "path": "games/vol-hell/audio-manifests/sfx/ui/back-0.json"
+    },
+    "renders": {
+      "r-cf2e790d15cc6a93": {
+        "hash": "sha256:c676fbf4deca0c6e7780b60c467c79b1407424e7f4e2d96cd7e52a827eeae03d",
+        "path": "renders/r-cf2e790d15cc6a93.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:3fd4da4bf3ae869cd83722315a9accd460e95fc03723ed1fb935bb09d1cc9d12",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-back-back-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 18,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/ui/back-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-back"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

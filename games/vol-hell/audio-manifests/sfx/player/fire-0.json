@@ -1,0 +1,285 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [0.0006906364278742188]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [0]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.15709750566893424,
+        "frames": 6928,
+        "sampleRate": 44100
+      },
+      "level": {
+        "channelPeakDbfs": [-3.0538933735497213],
+        "channelRmsDbfs": [-21.284778852563147],
+        "crestFactorDb": 18.230885479013423,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -23.581036989340454,
+        "rmsDbfs": -21.284778852563147,
+        "samplePeakDbfs": -3.0538933735497213,
+        "truePeakDbtp": -3.0538933735497213
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -39.094992205775604,
+          "high": -34.54629581646942,
+          "low": -58.897002980441,
+          "mid": -26.194520659997913,
+          "sub": -45.45064010499304
+        },
+        "centroidHz": 2309.4174981785377,
+        "flatness": 0.09857342729415272,
+        "peakHz": 1098.193359375,
+        "rolloff85Hz": 2928.515625
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.11,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.08,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.010079123426246202,
+        "trailingSilenceSeconds": 0.057097505668934234
+      }
+    },
+    "sourceRecordHash": "sha256:0d8586485f67dbbff4ff7f40d6846c2e3b6cad70103e084aa378762236565515"
+  },
+  "asset": {
+    "bytes": 5677,
+    "encodedHash": "sha256:15d4a33294de9912ac32614665b7a26750929897357f73eb1d2766e3771b993a",
+    "format": "ogg-vorbis",
+    "path": "games/vol-hell/public/assets/audio/sfx/player/fire-0.ogg"
+  },
+  "assetId": "arcade-fire-fire-0",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": ["arcade", "retro"],
+      "durationSeconds": {
+        "max": 0.161,
+        "min": 0.159
+      },
+      "id": "arcade-fire-fire-0",
+      "intent": "Arcade fire fire-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "Arcade fire fire-0"
+    },
+    "hash": "sha256:b195875b2c67cfee761ea855ebfe1edb30b4214e757c14b08fafd882b98fea67",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": ["-f", "f32le", "-c:a", "libvorbis", "-q:a", "7", "-bitexact"],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": ["libvorbis"],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:5cd10a9185da28500255352c5cc06d01c1f89f7080840974e7fbae65580b32aa",
+    "renderSurface": {
+      "hash": "sha256:0573c2fbc300cc25f816009e7e43ff17a2c0b3ae60a3ffba1ff8cccb5b9a6824",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        },
+        {
+          "hash": "sha256:da9a49ce9e54adf1b83d6745532e138715b9f476d0557db21e2783b06d08310f",
+          "id": "source.retro",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "b83b6e28760755b3f628d31a72a7996413967733",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-hell",
+    "runtimeDeclaration": "games/vol-hell/audio-target.json",
+    "runtimeKey": "sfx-fire",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "arcade-fire-fire-0",
+    "path": "devtools/audio-synth/audio-jobs/arcade-fire-fire-0",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Arcade fire fire-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+      "durationSeconds": 0.16,
+      "effects": [
+        {
+          "params": {
+            "frequency": 45,
+            "order": 1,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "gestures": {
+        "pitch-retro-0": {
+          "curve": "curve.exponential",
+          "points": [
+            [0, 1400],
+            [0.1104, 300]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "exponential",
+              "decay": 0.12,
+              "hold": 0,
+              "release": 0.025,
+              "sustain": 0,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -2,
+          "name": "retro-0",
+          "role": "body",
+          "source": {
+            "params": {
+              "duty": 0.25,
+              "frequency": {
+                "gesture": "pitch-retro-0"
+              },
+              "waveform": "pulse"
+            },
+            "primitive": "source.retro",
+            "version": 2
+          },
+          "startSeconds": 0
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "exponential",
+              "decay": 0.06,
+              "hold": 0,
+              "release": 0.025,
+              "sustain": 0,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -17,
+          "name": "noise-1",
+          "role": "tail",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          },
+          "startSeconds": 0
+        }
+      ],
+      "master": {
+        "fadeInSeconds": 0.0015,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 44100,
+      "schema": "AcousticProgramV1",
+      "seed": 202609304
+    },
+    "hash": "sha256:43a6309dc59c74c38653962229b82aa4bab83b6359c689bada3cc28c0fa13818",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 7056,
+      "hash": "sha256:c9cdaa65fd761245c82d54c7ca740f3dd9348943ba4a52b69496c93bf24e7a87",
+      "sampleRate": 44100
+    },
+    "renderId": "r-1940c4b4eced4885",
+    "rendererVersion": 2,
+    "seed": 202609304
+  },
+  "schema": "AudioAssetManifestV1"
+}

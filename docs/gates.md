@@ -4,12 +4,12 @@ Tüm monorepo `pnpm quick` (pre-commit), `pnpm high` (pre-push) ve `pnpm signoff
 (sürüm/milestone) olmak üzere üç kademeli kapıyla korunur. Kapılar `justfile`
 içinde tanımlıdır; `just` yüklü değilse `pnpm exec just <tarif>` çalışır.
 
-| Kapı      | Süre   | Ne zaman çalışır | Kapsamı                                                                                                |
-| --------- | ------ | ---------------- | ------------------------------------------------------------------------------------------------------ |
-| `quick`   | ~45 sn | Pre-commit hook  | `contract` + `format-check` + `typecheck` + `lint`                                                     |
-| `fast`    | ~1 dk  | Yerel geliştirme | `quick` + `test`                                                                                       |
-| `high`    | ~2 dk  | Pre-push hook    | `quick` + `rust` + `lint-css` + `coverage` + `coverage-shape` + `build` + `bundle` + `scaling` + `e2e` |
-| `signoff` | 20 dk+ | Sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`                           |
+| Kapı      | Süre   | Ne zaman çalışır | Kapsamı                                                                                                               |
+| --------- | ------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `quick`   | ~45 sn | Pre-commit hook  | `contract` + `format-check` + `typecheck` + `lint`                                                                    |
+| `fast`    | ~1 dk  | Yerel geliştirme | `quick` + `test`                                                                                                      |
+| `high`    | ~5 dk  | Pre-push hook    | `quick` + `rust` + `lint-css` + `coverage` + `coverage-shape` + `audio-test` + `build` + `bundle` + `scaling` + `e2e` |
+| `signoff` | 20 dk+ | Sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`                                          |
 
 ## Workspace yaşam döngüsü (Lifecycle Governance)
 
@@ -108,6 +108,10 @@ paketleri `quality.json` → `coverageRuns`tan alır ve neyi ne zaman ölçtüğ
 kaydeder; kapı kaydı olmayan, yarım kalan ya da koşudan eski bir lcov'u
 değerlendirmez. `high` audio-synth'i ölçmediği için onun şekline de karar
 vermez; o paket `coverage-audio` ile `signoff`ta değerlendirilir.
+`contract` gerçek Vitest config'inde `coverage.include` değerini `src/**/*.ts`
+olarak kilitler; `exclude` yalnız çalıştırılabilir satırı olmayan barrel ve
+tip dosyalarına izin verir. Eşik korunurken kaynakların sessizce ölçümden
+çıkarılması da kapıyı düşürür.
 
 **Cihaz ölçümünün kapsamı kapılıdır.** Ölçülecek uygulamalar elle tutulan bir
 listeden değil, `deviceApps.mjs` içindeki `deviceBenchmarkCandidates` keşfinden
@@ -179,7 +183,7 @@ kaynak kodda import edilemez (örneğin yerel bir debug yardımcısı).
 
 **Blob boyutu kapılıdır.** `scripts/quality/blobSize.mjs` Git ağacındaki her
 dosyanın boyutunu denetler; 2 MiB üstündeki ikili dosyalar depoya giremez.
-İstisnalar `quality.json` → `blobSize.acknowledged` alanına yazılır.
+Gerekçeli istisna listesi `scripts/quality/blobSize.mjs` içindedir.
 
 **Cargo.lock paritesi kapılıdır.** Monorepo'da her uygulama kendi `src-tauri`
 ağacına sahiptir; `tauri-v2` bağımsız bir native kütüphanedir ve her aktif

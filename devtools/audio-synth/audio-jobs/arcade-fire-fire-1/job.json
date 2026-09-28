@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-c190fd907c1c5c11": {
+        "hash": "sha256:41d9d07f2be2b78f189e871a180abc9af04ef1b343db1ef345a0ac9597402ad9",
+        "path": "analyses/r-c190fd907c1c5c11.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:c3f718bf7c2e168e828cd8854822e301d3f085492051a09924f549a1f3fa8de7",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:c3f718bf7c2e168e828cd8854822e301d3f085492051a09924f549a1f3fa8de7",
+      "hash": "sha256:1ec8d14b36c5b5a074ddb9619613c137296a601c5c7331d5cf06cbf4399a38d5",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:cc401a6997e53f74f1f3716aef7e52ce99f72febe5c3a6fd020a35666f68fc22",
+      "path": "games/vol-hell/audio-manifests/sfx/player/fire-1.json"
+    },
+    "renders": {
+      "r-c190fd907c1c5c11": {
+        "hash": "sha256:6313f5fff238bef69e22f64966afb665e6e86b27c75e4617819b1e93eaa8d10c",
+        "path": "renders/r-c190fd907c1c5c11.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:b071dd24e1051d077edd66ecefec2ca35fe3dc4c5d9979de5e73841867ce6b1f",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-fire-fire-1",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/player/fire-1.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-fire"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

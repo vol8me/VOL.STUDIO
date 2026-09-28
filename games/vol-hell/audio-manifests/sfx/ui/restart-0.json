@@ -1,0 +1,275 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [0.00012137415665643684]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [0]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.5413151927437642,
+        "frames": 23872,
+        "sampleRate": 44100
+      },
+      "level": {
+        "channelPeakDbfs": [-3.0276250384728867],
+        "channelRmsDbfs": [-25.393799490043914],
+        "crestFactorDb": 22.366174451571027,
+        "integratedLufs": -24.221097099375104,
+        "maxMomentaryLufs": -24.221097099375104,
+        "rmsDbfs": -25.393799490043914,
+        "samplePeakDbfs": -3.0276250384728867,
+        "truePeakDbtp": -2.985137569454376
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -45.16603447789829,
+          "high": -39.30174576834304,
+          "low": -27.90092923131727,
+          "mid": -33.160977075440854,
+          "sub": -72.44933201433967
+        },
+        "centroidHz": 828.6234710982617,
+        "flatness": 0.04641145310119536,
+        "peakHz": 215.33203125,
+        "rolloff85Hz": 1033.59375
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.35,
+        "attackSeconds": 0.01,
+        "decay40Seconds": 0.24,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.01,
+        "temporalCentroidSeconds": 0.03165859313523031,
+        "trailingSilenceSeconds": 0.2513151927437642
+      }
+    },
+    "sourceRecordHash": "sha256:b2b9267b9b62557abfa283e8632b9d0a28eb62c95641c1596ed581da91629a82"
+  },
+  "asset": {
+    "bytes": 9606,
+    "encodedHash": "sha256:5dfa484f8b00c80f501d561970a29c060568120605bf4f7bd1b120fdb5a8f0ea",
+    "format": "ogg-vorbis",
+    "path": "games/vol-hell/public/assets/audio/sfx/ui/restart-0.ogg"
+  },
+  "assetId": "arcade-restart-restart-0",
+  "brief": {
+    "document": {
+      "assetClass": "ui",
+      "channels": 1,
+      "descriptors": ["arcade", "retro"],
+      "durationSeconds": {
+        "max": 0.521,
+        "min": 0.519
+      },
+      "id": "arcade-restart-restart-0",
+      "intent": "Arcade restart restart-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+      "kind": "acoustic",
+      "placement": "screen",
+      "provenance": {
+        "author": "agent"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "Arcade restart restart-0"
+    },
+    "hash": "sha256:43a1a5bbefbd0401073328480c94a07501f2f995a19cee95d1e57e51f1ed9ead",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": ["-f", "f32le", "-c:a", "libvorbis", "-q:a", "6", "-bitexact"],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:a776e173ee49d0dfa96bcbf997016593a91f297bfc9a2af4a2e609db91aa4432",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 6,
+    "tool": "ffmpeg",
+    "unreported": ["libvorbis"],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 6,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:5cd10a9185da28500255352c5cc06d01c1f89f7080840974e7fbae65580b32aa",
+    "renderSurface": {
+      "hash": "sha256:a2d365197eef366307390254ae2aaa48c4b6c33f2fe3fe101bb036c59cd7d8a5",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:521c6bf3a8c8b86db9a1cbf58732d87ee925f6f8c18b2ad06fef0430a37a974d",
+          "id": "source.drum",
+          "version": 2
+        },
+        {
+          "hash": "sha256:da9a49ce9e54adf1b83d6745532e138715b9f476d0557db21e2783b06d08310f",
+          "id": "source.retro",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "b83b6e28760755b3f628d31a72a7996413967733",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-hell",
+    "runtimeDeclaration": "games/vol-hell/audio-target.json",
+    "runtimeKey": "sfx-restart",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "arcade-restart-restart-0",
+    "path": "devtools/audio-synth/audio-jobs/arcade-restart-restart-0",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "screen",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "ui",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Arcade restart restart-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+      "durationSeconds": 0.52,
+      "effects": [
+        {
+          "params": {
+            "frequency": 130,
+            "order": 1,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "gestures": {
+        "pitch-retro-0": {
+          "curve": "curve.exponential",
+          "points": [
+            [0, 196],
+            [0.3312, 587.33]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "exponential",
+              "decay": 0.36,
+              "hold": 0,
+              "release": 0.025,
+              "sustain": 0,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -3,
+          "name": "retro-0",
+          "role": "body",
+          "source": {
+            "params": {
+              "duty": 0.5,
+              "frequency": {
+                "gesture": "pitch-retro-0"
+              },
+              "waveform": "sawtooth"
+            },
+            "primitive": "source.retro",
+            "version": 2
+          },
+          "startSeconds": 0
+        },
+        {
+          "gainDb": -10,
+          "name": "drum-1",
+          "role": "transient",
+          "source": {
+            "params": {
+              "decay": 0.2,
+              "model": "snare",
+              "tone": 0.55,
+              "velocity": 0.5
+            },
+            "primitive": "source.drum",
+            "version": 2
+          },
+          "startSeconds": 0
+        }
+      ],
+      "master": {
+        "fadeInSeconds": 0.0015,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 44100,
+      "schema": "AcousticProgramV1",
+      "seed": 202609307
+    },
+    "hash": "sha256:7f99427df7a21748331a41bce1730894d23c0b4664ff791004e76466d20017fc",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 22932,
+      "hash": "sha256:41779d3da30a59dddc6858f35f03668e0db882b825696b1c61311225156e8b3f",
+      "sampleRate": 44100
+    },
+    "renderId": "r-593b855163bdf29f",
+    "rendererVersion": 2,
+    "seed": 202609307
+  },
+  "schema": "AudioAssetManifestV1"
+}

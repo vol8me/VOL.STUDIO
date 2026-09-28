@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-af062bf848db9290": {
+        "hash": "sha256:4c2ac3532c1413d9680b98a433a136268bfa3f387c28677bc9c600f916bf911c",
+        "path": "analyses/r-af062bf848db9290.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e49d3554fe4fbbd94efab8ae102899a123977fd764d52bf6cbf83df4628bc525",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e49d3554fe4fbbd94efab8ae102899a123977fd764d52bf6cbf83df4628bc525",
+      "hash": "sha256:522210cfd0d6f5f9e45854ae5ffe1f62b51a81fa3e80eda6dea693d8258ba45e",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:85db75fca6e1c8027bacf72778a6d019714f5f062a31177e94e30af283e23264",
+      "path": "games/vol-hell/audio-manifests/sfx/ui/pause-0.json"
+    },
+    "renders": {
+      "r-af062bf848db9290": {
+        "hash": "sha256:bae1e41e018c66901af5672632ab8b37b5de098f5c145e6d60cc9f9f58984e07",
+        "path": "renders/r-af062bf848db9290.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:fc3cc37ef09c1d5765d4816f6164fc1701f1bb46bc8284e01b482df9a1a0a794",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-pause-pause-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 18,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/ui/pause-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-pause"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

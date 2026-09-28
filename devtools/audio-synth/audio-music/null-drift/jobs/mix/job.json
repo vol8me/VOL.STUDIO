@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-6d34200f22e0de59": {
+        "hash": "sha256:bc99bd95eba1925bc718ffa1560a1d629e038f92093d210dd7f503d8207e2e59",
+        "path": "analyses/r-6d34200f22e0de59.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:5ee499eaac3828d476d62375b099f8dd31d6e751845967193ae1fd7b8627bc7b",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:5ee499eaac3828d476d62375b099f8dd31d6e751845967193ae1fd7b8627bc7b",
+      "hash": "sha256:4fb3181c0b439b9d57089f8be24a414f3cad3acf9682b83b3b39547371ce551c",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:71719f13514fe2b097c561b6cf94eecb4c513874e95a8243f125fb0910a4ae0b",
+      "path": "games/vol-hell/audio-manifests/ambience/null-drift.json"
+    },
+    "renders": {
+      "r-6d34200f22e0de59": {
+        "hash": "sha256:fa642766a622ff2ae0782f240eaa1fdb70fe151e6174f843ddda0215db79ce59",
+        "path": "renders/r-6d34200f22e0de59.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:60f755db91b8f369ee6ed01b53149aa3535d166aa0ee7a9f5030c582e39aa972",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "mix",
+  "kind": "music",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ambience/null-drift.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "ambience-null-drift/mix"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

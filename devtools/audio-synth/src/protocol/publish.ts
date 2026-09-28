@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { evaluateCharacterPolicy } from '../analysis/character';
 import {
   ASSET_CLASS_POLICIES,
   classifyAssetPath,
@@ -328,6 +329,21 @@ export function publishJob(loc: JobLocation): PublishOutcome {
         );
       }
       const placement = placementFor(brief, assetClass);
+      if (brief.character) {
+        const character = evaluateCharacterPolicy(
+          encoded.decoded.channels,
+          encoded.decoded.sampleRate,
+          encoded.report,
+          brief.character,
+        );
+        if (!character.pass) {
+          throw new ProtocolError(
+            'policy',
+            `kodek sonrası karakter: ${character.violations.join('; ')}`,
+            destination.assetPath,
+          );
+        }
+      }
       const image = measureStereoImage(encoded.decoded.channels, encoded.decoded.sampleRate);
       const layoutIssues = layoutViolations(
         assetClass,
@@ -570,6 +586,20 @@ export function verifyManifest(repoRoot: string, manifestPath: string): AssetVer
   } else {
     const report = analyzeAudio(decoded.channels, decoded.sampleRate, 'decoded-encoded');
     const verdict = evaluateAssetPolicy(measurementOf(report), manifest.policy.assetClass);
+    const brief = validateBrief(manifest.brief.document);
+    if (brief.character) {
+      const character = evaluateCharacterPolicy(
+        decoded.channels,
+        decoded.sampleRate,
+        report,
+        brief.character,
+      );
+      checks.push({
+        name: 'encoded-character',
+        ok: character.pass,
+        detail: character.violations.join('; ') || 'geçti',
+      });
+    }
     checks.push({
       name: 'encoded-policy',
       ok: verdict.violations.length === 0,

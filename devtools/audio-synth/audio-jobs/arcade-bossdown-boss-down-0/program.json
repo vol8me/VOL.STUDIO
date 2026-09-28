@@ -1,0 +1,133 @@
+{
+  "channels": 1,
+  "description": "Arcade bossDown boss-down-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 1.7,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "pitch-retro-0": {
+      "curve": "curve.exponential",
+      "points": [
+        [
+          0,
+          233.08
+        ],
+        [
+          1.3800000000000001,
+          41.2
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.004,
+          "curve": "exponential",
+          "decay": 1.5,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -3,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "duty": 0.5,
+          "frequency": {
+            "gesture": "pitch-retro-0"
+          },
+          "waveform": "sawtooth"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 1.2,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -9,
+      "name": "noise-1",
+      "role": "tail",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -5,
+      "name": "preset-2",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "natural",
+          "frequency": 41.2,
+          "instrument": "subBass",
+          "noteSeconds": 1.5,
+          "velocity": 0.8
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -4,
+      "name": "drum-3",
+      "role": "transient",
+      "source": {
+        "params": {
+          "decay": 0.8,
+          "model": "kick",
+          "tone": 0.3,
+          "tune": -5,
+          "velocity": 0.9
+        },
+        "primitive": "source.drum",
+        "version": 2
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3.5
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609308
+}

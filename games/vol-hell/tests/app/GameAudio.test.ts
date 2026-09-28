@@ -32,6 +32,7 @@ vi.mock('@volstudio/core', async () => {
     readonly crossfadeTo = vi.fn(() => Promise.resolve());
     readonly stop = vi.fn();
     readonly setState = vi.fn();
+    readonly playStinger = vi.fn();
     readonly setMasterVolume = vi.fn();
     readonly dispose = vi.fn();
     constructor(readonly options: unknown) {
@@ -183,6 +184,25 @@ describe('GameAudio — ayarlar', () => {
   });
 });
 
+describe('GameAudio — müzikal vurgular', () => {
+  it('sessiz ayarı ve eksik cue güvenli döner; çalan cue müzik motoruna gider', () => {
+    const { audio, music, change } = build();
+    expect(audio.playStinger('wave-start')).toBe(true);
+    expect(music.playStinger).toHaveBeenCalledWith('wave-start');
+
+    music.playStinger.mockImplementationOnce(() => {
+      throw new Error('cue yok');
+    });
+    expect(audio.playStinger('missing')).toBe(false);
+    expect(warn).toHaveBeenCalledOnce();
+
+    change({ muted: true });
+    music.playStinger.mockClear();
+    expect(audio.playStinger('wave-start')).toBe(false);
+    expect(music.playStinger).not.toHaveBeenCalled();
+  });
+});
+
 describe('GameAudio — SFX', () => {
   it('kesilecek olayları çalmadan ÖNCE durdurur ve ducking profilini uygular', async () => {
     const { audio, musicDucker, ambientDucker } = build();
@@ -303,6 +323,16 @@ describe('GameAudio — müzik ve ambiyans', () => {
 });
 
 describe('GameAudio — tarayıcı yaşam döngüsü', () => {
+  it('başarısız ilk etkileşimden sonra aynı girdi türüyle yeniden resume dener', async () => {
+    const { audio, context } = build();
+    context.state = 'suspended';
+    const resume = vi.spyOn(context, 'resume').mockRejectedValueOnce(new Error('ilk izin yok'));
+    window.dispatchEvent(new Event('pointerdown'));
+    await Promise.resolve();
+    window.dispatchEvent(new Event('pointerdown'));
+    expect(resume).toHaveBeenCalledTimes(2);
+    await audio.dispose();
+  });
   it('ilk etkileşim askıdaki bağlamı sürdürür', () => {
     const { context } = build();
     context.state = 'suspended';

@@ -1,0 +1,26 @@
+{
+  "musicId": "sovereign",
+  "parity": {
+    "ok": true,
+    "residualDbfs": -200
+  },
+  "schema": "MusicAdaptiveQaV1",
+  "states": [
+    {
+      "gains": {
+        "main": 1
+      },
+      "integratedLufs": -18.115,
+      "intensity": 1,
+      "ok": true,
+      "problems": [],
+      "samplePeak": 0.756388,
+      "state": "fixed",
+      "truePeakDbtp": -2.211
+    }
+  ],
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

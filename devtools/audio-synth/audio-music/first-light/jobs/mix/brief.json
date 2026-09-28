@@ -1,0 +1,56 @@
+{
+  "affect": {
+    "arousal": 0.45,
+    "valence": 0.3
+  },
+  "assetClass": "music",
+  "avoidNotes": [
+    "arcade setinin estetik kabulü insan dinlemesi bekler"
+  ],
+  "channels": 2,
+  "form": {
+    "sections": [
+      "intro",
+      "build",
+      "build",
+      "peak",
+      "release"
+    ]
+  },
+  "id": "first-light",
+  "intent": "A majör zafer cue’su: tırmanan zil arpeji, org swell ve yumuşak kick build; doruk son iki ölçüde söner.",
+  "kind": "music",
+  "length": {
+    "bars": {
+      "max": 16,
+      "min": 16
+    }
+  },
+  "melodicSalience": 0.3969,
+  "meter": [
+    4,
+    4
+  ],
+  "playback": "playlistOneShot",
+  "provenance": {
+    "author": "agent"
+  },
+  "rhythmicDensity": "moderate",
+  "schema": "AudioBriefV1",
+  "tempo": {
+    "bpm": {
+      "max": 96,
+      "min": 96
+    }
+  },
+  "title": "İlk Işık",
+  "tonal": {
+    "roots": [
+      "A2"
+    ],
+    "systems": [
+      "major"
+    ]
+  },
+  "usage": "cue"
+}

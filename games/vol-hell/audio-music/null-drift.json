@@ -1,0 +1,104 @@
+{
+  "brief": {
+    "hash": "sha256:5ee499eaac3828d476d62375b099f8dd31d6e751845967193ae1fd7b8627bc7b",
+    "path": "devtools/audio-synth/audio-music/null-drift/brief.json"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 2
+  },
+  "music": {
+    "hash": "sha256:ec698ecb996b9bc5bfe1cf125221548babd6865b878c83ee9e6e7a30ee40433c",
+    "musicId": "null-drift",
+    "path": "devtools/audio-synth/audio-music/null-drift/music.json",
+    "playback": "loop",
+    "seed": 202609306,
+    "version": 1
+  },
+  "package": "@volstudio/vol-hell",
+  "qa": {
+    "hash": "sha256:54f2734130f2d627a83cacf1e54b5136607b5abb4ced74566fb58c3441787150",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/null-drift/qa.json"
+  },
+  "report": {
+    "hash": "sha256:eea823ea4f8d834489c12b646c8dfea4539b710c3204a08cb8d3283f62870b71",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/null-drift/report.json"
+  },
+  "schema": "MusicBundleV1",
+  "spec": {
+    "bars": 16,
+    "bpm": 60,
+    "engine": {
+      "compressor": false
+    },
+    "frames": 2822400,
+    "loop": {
+      "endBar": 16,
+      "startBar": 0
+    },
+    "mastering": {
+      "gainDb": 11.672,
+      "integratedLufs": -24.05,
+      "path": "loop-cyclic",
+      "truePeakDbtp": -9.439
+    },
+    "meter": [4, 4],
+    "musicId": "null-drift",
+    "playback": "loop",
+    "runtimeGain": 1,
+    "sampleRate": 44100,
+    "schema": "MusicAssetSpecV1",
+    "stems": [
+      {
+        "file": "public/assets/audio/ambience/null-drift.ogg",
+        "frames": 2822400,
+        "id": "main"
+      }
+    ],
+    "transitions": []
+  },
+  "stems": [
+    {
+      "asset": {
+        "bytes": 1017806,
+        "encodedHash": "sha256:8afc0dea4bd94e414a0c84ebc439699815a81515270a1c21baac23f76f424957",
+        "path": "public/assets/audio/ambience/null-drift.ogg"
+      },
+      "frames": 2822400,
+      "id": "mix",
+      "integratedLufs": -24.067067587536453,
+      "manifest": {
+        "hash": "sha256:71719f13514fe2b097c561b6cf94eecb4c513874e95a8243f125fb0910a4ae0b",
+        "path": "audio-manifests/ambience/null-drift.json"
+      },
+      "pcmHash": "sha256:9bed5d8f7ad2ef8527c94853c1da6faded7f77493715425a8433663329274dc5",
+      "truePeakDbtp": -9.329786224170608
+    }
+  ],
+  "sync": {
+    "checks": [
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "mix",
+        "lagSamples": 0,
+        "ok": true
+      }
+    ],
+    "method": "cross-correlation-v1",
+    "ok": true,
+    "seams": [
+      {
+        "detail": "dikiş sürekli (adım 0.0005 ≤ 2×0.0200)",
+        "id": "mix",
+        "jump": 0.000471,
+        "ok": true,
+        "typicalStep": 0.020009
+      }
+    ]
+  },
+  "themeBook": null
+}

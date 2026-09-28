@@ -1,0 +1,91 @@
+{
+  "channels": 1,
+  "description": "Arcade waveClear wave-clear-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 1.15,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.9,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -2,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "arpRate": 14,
+          "arpeggio": "major",
+          "duty": 0.125,
+          "frequency": 523.25,
+          "waveform": "pulse"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -8,
+      "name": "preset-1",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "struck",
+          "frequency": 1567.98,
+          "instrument": "crystalBell",
+          "noteSeconds": 0.8,
+          "velocity": 0.6
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -12,
+      "name": "preset-2",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "struck",
+          "frequency": 1864.66,
+          "instrument": "crystalBell",
+          "noteSeconds": 0.7,
+          "velocity": 0.45
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0.14
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609309
+}

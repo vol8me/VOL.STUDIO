@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-76534537b9fc3d0f": {
+        "hash": "sha256:1a05a4df7097e1ad7c9c77f245756067295f2b943c3e911167ebb4bfdabb2e35",
+        "path": "analyses/r-76534537b9fc3d0f.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:3794593a19848086264c7a7cc8fcafeefa4107bbd5093a0f87ef3b41575de901",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:3794593a19848086264c7a7cc8fcafeefa4107bbd5093a0f87ef3b41575de901",
+      "hash": "sha256:67db3dd6af2ee475e016b70f7b9b294f1aaaa1b1bb6d20b041846724ae89e188",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:e93c52ffd75210705996760fed171d1681d2125daf1f0eb9acc8b410abffd555",
+      "path": "games/vol-hell/audio-manifests/sfx/combat/boss-spawn-0.json"
+    },
+    "renders": {
+      "r-76534537b9fc3d0f": {
+        "hash": "sha256:8f988a6e22f2e99edd65079b3cf4698ede392e517c768b804808952b890cc196",
+        "path": "renders/r-76534537b9fc3d0f.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:ec135566d9699aa20250e126b82b547afd97e0a56b3403e9f2e6808d9336ac65",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-bossspawn-boss-spawn-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/combat/boss-spawn-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-boss-spawn"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

@@ -257,6 +257,14 @@
       "version": 1,
       "hash": "sha256:f353e9b1d5eea041f06f576722f541756612a70188f3681ec4da924d9b3f3da9"
     },
+    "source.instrument@1": {
+      "version": 1,
+      "hash": "sha256:c4b9f9c5e223540340b657880d75fe68fd41295f33b41747361abf1b0fe9a450"
+    },
+    "source.instrument@2": {
+      "version": 2,
+      "hash": "sha256:87bb605d4afe7fbd5636fe3f88151af2678c9a5682074e40a5af7b918b031d9d"
+    },
     "source.machine@1": {
       "version": 1,
       "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995"

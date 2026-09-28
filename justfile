@@ -37,6 +37,11 @@ test:
 test-pkg pkg:
     pnpm --filter @volstudio/{{ pkg }} test
 
+# Ses motorunun DSP, müzik ve yayın sözleşmesi push öncesinde de çalışır;
+# tam derlem ve ağır kapsam/yeniden render signoff'tadır.
+audio-test:
+    pnpm --filter @volstudio/audio-synth exec vitest run tests/dspCorrectness.test.ts tests/retro.test.ts tests/program/instrument.test.ts tests/music/delivery.test.ts tests/governance/publishPath.test.ts tests/protocol/context.test.ts tests/protocol/character.test.ts
+
 # Test + kapsam eşikleri. Eşikler kök `quality.json`da (tek kaynak); paketlerin
 # vitest.config.ts dosyaları onu okur, `contract` ikisinin ayrışmadığını doğrular.
 #
@@ -82,7 +87,7 @@ bundle:
 scaling:
     node scripts/scaling-report.mjs
 
-# Gerçek tarayıcı kritik akışları (Chromium). jsdom testleri font yüklemesini,
+# Gerçek tarayıcı kritik akışları (Chromium + WebKit). jsdom font yüklemesini,
 # gerçek yerleşimi ve bundle içeriğini göremez; bu kapı o boşluğu kapatır.
 #
 # vol-ui CORE'un GÖRSEL sözleşmesini taşır: geometri iddiaları (taşma, dokunma
@@ -127,8 +132,8 @@ fast: quick test
 # ürünün parçasıdır (frozen oyun kabukları kapıya girmez — kilitleri
 # değiştirilemez); aktif crate'lerin check + fmt + clippy'si sıcak önbellekle
 # saniyeler sürer.
-# Push öncesi kapısı: quick + Rust + css lint + kapsam eşikleri + build + Chromium smoke
-high: quick rust lint-css coverage coverage-shape build bundle scaling e2e
+# Push öncesi kapısı: quick + Rust + css lint + kapsam eşikleri + ses testleri + build + tarayıcı smoke
+high: quick rust lint-css coverage coverage-shape audio-test build bundle scaling e2e
 
 # AKTİF ses üreticisinde reçete↔asset tazeliğini, BÜTÜN ağaçlarda asset
 # bütünlüğünü doğrular.

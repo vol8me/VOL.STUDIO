@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-aeb740640811ace1": {
+        "hash": "sha256:c06443b269952b62e5b2f9366f71661de822731c13b69f5e9bff113e854a32a0",
+        "path": "analyses/r-aeb740640811ace1.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:ac6977a1cd2aea17a7d2573a9007517f2990730eaec439cd55d1116df29692c5",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:ac6977a1cd2aea17a7d2573a9007517f2990730eaec439cd55d1116df29692c5",
+      "hash": "sha256:729f336873ab8182d9f555426ff9c7aa410468ff6ee7fa1ddc825cf04a1ae4ae",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:b2004f65118c50013c91418e0e3e3400ffae0f1b29c0b1fed6fc0c82f3aacd36",
+      "path": "games/vol-hell/audio-manifests/sfx/player/dash-0.json"
+    },
+    "renders": {
+      "r-aeb740640811ace1": {
+        "hash": "sha256:7d4d710e20869d99c64394da3123aab13af18409f77234d256c86adacffb9bc7",
+        "path": "renders/r-aeb740640811ace1.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:589b7112cc4d7721afa70043cb8e44094c3ce9c4285879fc1f8300cdc04d5453",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-dash-dash-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/player/dash-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-dash"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

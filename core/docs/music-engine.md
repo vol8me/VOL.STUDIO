@@ -7,7 +7,7 @@ SFX motorundan (build-time ses sentez aracından) ayrıdır; müzik uzun loop'la
 
 > **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş OGG (iOS'ta MP3)
 > stem'leri çalar. Müzik ve SFX dosyaları build-time script'lerle
-> (`games/vol-hell/scripts/audio/` veya `devtools/audio-synth/scripts/`) üretilir.
+> (`games/vol-hell/scripts/audio-v2/` ve `devtools/audio-synth/`) üretilir.
 > Bu bilinçli bir karardır: runtime sentez CPU maliyeti ve mobilde öngörülemeyen
 > zamanlama getirir.
 
@@ -25,20 +25,11 @@ core/src/audio/music/
   index.ts             — public API
 ```
 
-Track'ler ve SFX'ler artık oyun paketi içinden üretilir:
-
-```
-games/vol-hell/scripts/audio/
-  lib/mix.ts           — master zincir: voice toplama, normalize, DC blocker
-  lib/theory.ts        — müzik teorisi yardımcıları
-  palette/*.ts         — "Dark Synthetic / Void" ses paleti
-  music/*.ts           — track başına render script'leri
-  ambience/*.ts        — gameplay ambiyans render'ları
-  sfx/specs.ts         — SFX tanım tablosu
-  generate-music.ts    — tüm müzik ve ambiyansı export eder
-  generate-ambience.ts — ambiyans render giriş noktası
-  generate-sfx.ts      — SFX render giriş noktası
-```
+VOL.HELL'in gönderilen Arcade besteleri ve SFX tanımları
+`games/vol-hell/scripts/audio-v2/` altında tutulur. Kanonik job ve müzik
+yayın kapısı `devtools/audio-synth/` içindedir; oyun yalnız yayımlanmış OGG
+ve manifestlerini kendi ağacından kullanır. Güncel eser envanteri ve insan
+dinleme kararı `games/vol-hell/DESIGN.md` Ses bölümündedir.
 
 Pipeline:
 
@@ -272,127 +263,28 @@ ve bitişi ayrı alanlara, stinger ve geçişleri `cues` listesine koyar.
 
 ## Ses üretimi (build-time)
 
-Motor runtime'da sentez YAPMAZ; yalnızca hazır dosya çalar.
+Motor runtime'da sentez yapmaz; hazır OGG stem'lerini yükler. Yeni müzik ve
+SFX kanonik `devtools/audio-synth` job/müzik yayın kapısından geçer. Oyun
+paketinin `public/assets/audio/` ağacı gönderilen dosyaların tek kaynağıdır;
+manifest ve bundle oyun ağacında kalır. Ara WAV ve `dist` Git'e girmez.
 
-> **Freeze notu:** `vol-hell` frozen'dır (`workspace-lifecycle.json`). Bu
-> bölümdeki `generate:*`/`audio:qa` komutları ürünün tarihsel reçetidir —
-> rutin kapılar frozen ağaçta üretim tetiklemez ve elle koşmak freeze
-> bekçisini (drift) kırar. Üretim kanıtı `vol-hell/final-*` etiketindedir.
-
-### Asset akışı — tek format, tek kopya
-
-```
-games/vol-hell/scripts/audio/*.ts   ÜRETİM SCRIPT'LERİ (git'te)
-        ↓ pnpm --filter @volstudio/vol-hell generate:audio
-        ↓ (yalnız ses tasarımı değişince elle çalıştırılır)
-games/vol-hell/public/assets/audio/**.ogg  OYUN ASSET'İ (git'te)
-        ↓ vite build
-games/vol-hell/dist/assets/audio/**.ogg    BUILD ÇIKTISI (gitignore)
-```
-
-**Shipped OGG dosyaları repoda tutulur; üreten script'ler de git'te durur.**
-Oyun kodları bu dosyaları `public/assets/audio/` altında bekler. Ses tasarımı
-değiştiğinde `pnpm --filter @volstudio/vol-hell generate:audio` çalıştırılarak
-OGG'ler yenilenir. Ara formatlar (WAV, MP3) repoda tutulmaz; iOS hedefi için
-audio-synth'in `convert:ios` script'i (`tsx scripts/convert-audio.ts <dizin>`)
-ile üretilen MP3'ler build çıktısına (`dist`) gider.
-
-Üretim deterministiktir: aynı seed + aynı script aynı OGG'yi verir.
-Kayıpsız WAV kopyası saklanmaz, gerektiğinde yeniden üretilir. iOS hedefi
-için `StemLoader` `.ogg` başarısız olursa `.mp3` fallback dener; proje
-build'inde `convert:ios` yokken yalnızca OGG üretilir.
-
-Parçalar build zamanında sentezle üretilir; elle hazırlanmış bir stem de aynı
-yoldan çalınır — motor ikisini ayırt etmez ve üretenini bilmez. Sentezin
-gerçek sınırı [devtools/audio-synth/DESIGN.md](../../devtools/audio-synth/DESIGN.md)
-"Sınırlar" bölümündedir.
-
-```bash
-pnpm --filter @volstudio/vol-hell generate:audio   # SFX + müzik (hepsi)
-pnpm --filter @volstudio/vol-hell generate:music   # yalnız müzik
-pnpm --filter @volstudio/vol-hell generate:sounds  # yalnız SFX
-pnpm --filter @volstudio/vol-hell audio:qa         # üretileni ölç
-```
+VOL.HELL'in Arcade seti 38 SFX ve sekiz tek-`main` mix (menü, savaş, boss,
+bitiş, ambiyans) gönderir. Eski ayrı combat stem/cue dosyaları bu sette yoktur.
+Kaynaklar `games/vol-hell/scripts/audio-v2/` ve
+`devtools/audio-synth/audio-jobs/` ile `audio-music/` altındadır.
+`pnpm --filter @volstudio/audio-synth audio:production-check` manifestleri
+kaynak programdan yeniden render ederek PCM kimliğini ve gönderilen OGG
+ilişkisini doğrular. `games/vol-hell/tests/config/audioIntegration.test.ts`
+parça sürelerini ve runtime eşlemesini denetler.
 
 ## VOL.HELL Kullanımı
 
-```
-games/vol-hell/src/app/GameAudio.ts
-games/vol-hell/src/runtime/systems/GameAudioDirector.ts
-```
-
-`GameAudio` tek bir `AudioContext` yönetir ve içinde iki `MusicEngine` barındırır:
-
-- `music` — ana temalar (main menu, death screen, victory)
-- `ambient` — gameplay ambiyans
-
-`GameAudioDirector` sahne durumuna göre müzik ve ambiyans arası geçişi
-yönetir: menüden oyuna, oyundan savaşa, savaştan boss'a, ölüm ve zafer
-anlarına kararlı geçişler kurar.
-
-```typescript
-gameAudio.loadMusic(musicTracks['hollow-signal']);
-gameAudio.playMusic('hollow-signal', { fadeIn: 2 });
-
-gameAudio.loadAmbient(musicTracks['null-drift']);
-gameAudio.playAmbient('null-drift', { fadeIn: 2 });
-```
-
-Track tanımları:
-
-```
-games/vol-hell/src/config/music.ts
-```
-
-Üretim altyapısı (`Dark Synthetic / Void` teması):
-
-```
-games/vol-hell/scripts/audio/
-  lib/mix.ts          — master zincir: normalize, DC blocker, peak limitleme
-  lib/theory.ts       — armoni, ölçek ve ritim yardımcıları
-  lib/track.ts        — track render pipeline'ı
-  palette/*.ts        — sentez ses paleti (bass, pads, keys, percussion, fx, ambience)
-  music/*.ts          — her track için ayrı render script'i
-  ambience/*.ts       — gameplay ambiyans render'ları
-  generate-music.ts   — müzik + ambiyans üretim giriş noktası
-  generate-ambience.ts — ambiyans giriş noktası
-```
-
-`devtools/audio-synth/scripts/audio-qa.ts` gönderilen asset'leri kodek sonrası ölçer (BS.1770 LUFS, true peak, kanal bazlı kırpma, tık, bant profili; `--policy` ile sınıf politikası) — paylaşılan CLI, `devtools/audio-synth` içinde `pnpm qa <dizin>` ile çağrılır. Frozen VOL.HELL'in `audio:qa` betiği aynı aracı tarihsel olarak çağırır.
-
-Mevcut müzik track'leri:
-
-- `hollow-signal` — ana menü, yavaş, boşluk hissiyatı
-- `event-horizon` — ana menü alternatifi, hareketli
-- `surge-protocol` — savaş müziği
-- `sovereign` — boss müziği
-- `terminal-echo` — ölüm ekranı
-- `first-light` — zafer ekranı
-- `null-drift` / `deep-current` — gameplay ambiyansı
-
-Çalıştır:
-
-```bash
-pnpm --filter @volstudio/vol-hell generate:music
-pnpm --filter @volstudio/vol-hell audio:qa
-```
-
-## Üretim kuralları
-
-Bu kurallar ölçümle konuldu; bozulduğunda sonuç duyulur şekilde kötüleşir.
-
-- **Voice'lar `normalize: false` ile üretilir.** Üretim aracının varsayılanı
-  `true`'dur ve her notayı tek tek 0.95 tepeye çeker; bu katmanlar arası doğal dinamiği yok eder.
-  Seviye dengesi `gain` ile kurulur, normalize yalnızca master zincirde bir kez
-  uygulanır (`masterChain` / `masterPeak`).
-- **Seviye hedefi RMS'tir, tepe değil.** Arka plan müziğinde algılanan yükseklik
-  ortalama seviyeyle belirlenir. Menü ~-17 dB, ambiyans -20/-22 dB.
-- **Ambiyans parçalarında orta bant boşaltılır.** Oyun içi SFX enerjisi 200-3000 Hz
-  bandında; ambiyans o bandı doldurursa ateş/hasar sesleri maskelenir.
-- **Üst üste binen perküsyon `humanize` ile ayrıştırılır.** Aynı örneğe düşen
-  transientlerin farkları toplanıp yapay sertlik üretiyordu.
-- **Loop'lanan parçada uzun fade YOK.** Yalnızca milisaniyelik `applyEdgeGuard`;
-  uzun fade her turda duyulur bir boşluk bırakır.
+`games/vol-hell/src/app/GameAudio.ts` tek bir `AudioContext` yönetir ve iki
+`MusicEngine` tutar: `music` menü/savaş/boss/bitiş parçalarını, `ambient`
+oyun içi ambiyansı çalar. `GameAudioDirector` sahneye göre geçişi yönetir.
+Track'lerin yolları ve loop süreleri `games/vol-hell/src/config/music.ts`
+ile `musicTiming.ts` içindedir. Combat ve boss artık birer tek mix'tir; CORE
+motorunun çoklu stem/cue kabiliyeti diğer oyunlar için kullanılabilir.
 
 ## Müzik asset sözleşmesi
 
@@ -434,9 +326,8 @@ eşleşmelidir.
 4. Doğrula: `audio:job music verify <id>` (ya da `verify --all`) ve oyunun
    kendi kapıları.
 
-Frozen VOL.HELL'in müziği bu hattan ÖNCE, oyun içi betiklerle üretildi
-(yukarıdaki "VOL.HELL Kullanımı"); o yol tarihsel kayıttır ve yeni müzik için
-kullanılmaz.
+VOL.HELL Arcade seti bu yayın hattını kullanır; oyun paketi yalnız yayımlanmış
+varlıkları tüketir.
 
 ## Scheduler
 

@@ -1,0 +1,265 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [-0.00027619681196975666]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [0]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.34104308390022675,
+        "frames": 15040,
+        "sampleRate": 44100
+      },
+      "level": {
+        "channelPeakDbfs": [-2.8112305617622635],
+        "channelRmsDbfs": [-25.360196518261905],
+        "crestFactorDb": 22.548965956499643,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -23.790343941681115,
+        "rmsDbfs": -25.360196518261905,
+        "samplePeakDbfs": -2.8112305617622635,
+        "truePeakDbtp": -1.7685660234673672
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -38.75181781062405,
+          "high": -32.060040658078385,
+          "low": -42.09769588679454,
+          "mid": -32.30514181251011,
+          "sub": -51.65074195715136
+        },
+        "centroidHz": 4038.192979044726,
+        "flatness": 0.10621683481091874,
+        "peakHz": 1055.126953125,
+        "rolloff85Hz": 6524.560546875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.15,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.11,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.0133140627366273,
+        "trailingSilenceSeconds": 0.22104308390022676
+      }
+    },
+    "sourceRecordHash": "sha256:1afac5b462d1b051c6c5f1337a953a7e8d479539bdd3d7a1ffcd8f9b056eca95"
+  },
+  "asset": {
+    "bytes": 5988,
+    "encodedHash": "sha256:37c8dee2b46042da879eb6ce80a903ee400631526387ecc7d4e9eef45b35e449",
+    "format": "ogg-vorbis",
+    "path": "games/vol-hell/public/assets/audio/sfx/ui/reroll-0.ogg"
+  },
+  "assetId": "arcade-reroll-reroll-0",
+  "brief": {
+    "document": {
+      "assetClass": "ui",
+      "channels": 1,
+      "descriptors": ["arcade", "retro"],
+      "durationSeconds": {
+        "max": 0.321,
+        "min": 0.319
+      },
+      "id": "arcade-reroll-reroll-0",
+      "intent": "Arcade reroll reroll-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+      "kind": "acoustic",
+      "placement": "screen",
+      "provenance": {
+        "author": "agent"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "Arcade reroll reroll-0"
+    },
+    "hash": "sha256:b5836e6dc50ff25a19bc43e2dfdd34d8ddf2251ace267b910f6e33289f6efee6",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": ["-f", "f32le", "-c:a", "libvorbis", "-q:a", "6", "-bitexact"],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:a776e173ee49d0dfa96bcbf997016593a91f297bfc9a2af4a2e609db91aa4432",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 6,
+    "tool": "ffmpeg",
+    "unreported": ["libvorbis"],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 6,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "packageVersion": "0.1.0",
+    "registryHash": "sha256:5cd10a9185da28500255352c5cc06d01c1f89f7080840974e7fbae65580b32aa",
+    "renderSurface": {
+      "hash": "sha256:71dc16919f023673402d3ed2424229e6b1d28175481266b738b99812c23eb252",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:87bb605d4afe7fbd5636fe3f88151af2678c9a5682074e40a5af7b918b031d9d",
+          "id": "source.instrument",
+          "version": 2
+        },
+        {
+          "hash": "sha256:da9a49ce9e54adf1b83d6745532e138715b9f476d0557db21e2783b06d08310f",
+          "id": "source.retro",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    },
+    "sourceCommit": "b83b6e28760755b3f628d31a72a7996413967733",
+    "sourceTreeDirty": true
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-hell",
+    "runtimeDeclaration": "games/vol-hell/audio-target.json",
+    "runtimeKey": "sfx-reroll",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "arcade-reroll-reroll-0",
+    "path": "devtools/audio-synth/audio-jobs/arcade-reroll-reroll-0",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "screen",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "ui",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Arcade reroll reroll-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+      "durationSeconds": 0.32,
+      "effects": [
+        {
+          "params": {
+            "frequency": 130,
+            "order": 1,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "exponential",
+              "decay": 0.16,
+              "hold": 0,
+              "release": 0.025,
+              "sustain": 0,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -4,
+          "name": "retro-0",
+          "role": "body",
+          "source": {
+            "params": {
+              "bits": 8,
+              "frequency": 1800,
+              "rate": 12000,
+              "waveform": "noise-long"
+            },
+            "primitive": "source.retro",
+            "version": 2
+          },
+          "startSeconds": 0
+        },
+        {
+          "gainDb": -9,
+          "name": "preset-1",
+          "role": "detail",
+          "source": {
+            "params": {
+              "articulation": "struck",
+              "frequency": 1046.5,
+              "instrument": "electricPiano2",
+              "noteSeconds": 0.18,
+              "velocity": 0.5
+            },
+            "primitive": "source.instrument",
+            "version": 2
+          },
+          "startSeconds": 0
+        }
+      ],
+      "master": {
+        "fadeInSeconds": 0.0015,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 44100,
+      "schema": "AcousticProgramV1",
+      "seed": 202609306
+    },
+    "hash": "sha256:78ef5041ef81cd638070c95c69dc22b557b19524ddc78a065472945dbb084880",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 14112,
+      "hash": "sha256:1d2cf77b4a678df32adbf7b9ae8406e518b7a24898a43d0db73b5c9bb56dea38",
+      "sampleRate": 44100
+    },
+    "renderId": "r-9a58b81ebe29b441",
+    "rendererVersion": 2,
+    "seed": 202609306
+  },
+  "schema": "AudioAssetManifestV1"
+}

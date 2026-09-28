@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-ca58773e182680d6": {
+        "hash": "sha256:d415c6b0b19321fd6935a66b9ec70e5f4bcd80d7f8a3346d32ebf10bd70d0bf3",
+        "path": "analyses/r-ca58773e182680d6.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:6754f4ca8a02e74d107d0b5e2d3243d15b23c1a33b0074847efcae2a935382da",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:6754f4ca8a02e74d107d0b5e2d3243d15b23c1a33b0074847efcae2a935382da",
+      "hash": "sha256:a43802537624b258b5799af44df62000fec9c083f6908ce8323dff26134e1481",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:75a6853e8d22d7023aa80b0108c10cdf552a69ae730dc9df8cc8081eef2ad360",
+      "path": "games/vol-hell/audio-manifests/sfx/progress/wave-clear-0.json"
+    },
+    "renders": {
+      "r-ca58773e182680d6": {
+        "hash": "sha256:aba41707929349342b3d0f2389d8ae19b0fd58b111d5242f7f0fecd31ef145bd",
+        "path": "renders/r-ca58773e182680d6.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:43cfcfa85990572b5b8bc2fc51794fa918d24325fb98367b57450c11708acfeb",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-waveclear-wave-clear-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 7,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/progress/wave-clear-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-wave-clear"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

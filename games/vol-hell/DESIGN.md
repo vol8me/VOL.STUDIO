@@ -174,3 +174,38 @@ gecikmesi) ve render tarafında interpolasyon ister; ayrı bir tur olarak planl�
 Bu sözleşme ağ geçidi değildir: gerçek tarayıcı Web Audio davranışı, Phaser
 renderer/cihaz performansı ve uzun süreli gerçek oyun oturumu ayrıca manuel
 smoke test gerektirir.
+
+## Ses
+
+VOL.HELL'in gönderilen ses seti **Arcade**dir. Kullanıcı önceki Kül Ayini
+setini dinleyip reddetti (`heard-problem`: müzik ambiyans gibi, dar perde ve
+frekans dağılımı). Arcade müzikleri ve SFX'leri kullanıcı tarafından yeniden
+oluşturulup entegre edildi; 2026-09-28'de ses onayı verildi. Bu onay oyun
+setine aittir; `audio-synth` organik canary'lerinin incelemelerini otomatik
+olarak kapatmaz. Deck hoparlörü/kulaklığıyla ayrı dinleme ölçümü yapılmadı.
+
+`scripts/audio-v2/definitions.arcade.ts` ve `sfxSpecs.arcade.ts` 38 SFX
+programını tanımlar. Sekiz beste `scripts/audio-v2/scores/` altında yaşar;
+`scripts/audio-v2/publish.arcade.ts` kanonik job ve müzik yayın kapısını
+kullanır. Oyun yalnız `public/assets/audio/` içindeki 46 OGG'yi tüketir.
+Karşılıkları `audio-manifests/` altında, müzik demetleri `audio-music/`
+altındadır. Kaynak iş ve beste belgeleri `devtools/audio-synth/audio-jobs/`
+ve `audio-music/` altındadır. `audio:production-check` yeniden render edilen
+PCM kimliğini ve teslim ilişkilerini doğrular; asset taksonomisi
+`tests/config/audioAuthoring.test.ts` ile kilitlidir. Ara WAV ve `dist`
+gönderilmez.
+
+| Kullanım | Parça                        | Tempo / uzunluk                   |
+| -------- | ---------------------------- | --------------------------------- |
+| Menü     | hollow-signal, event-horizon | 132 ve 138 BPM; 48 ölçü           |
+| Savaş    | surge-protocol               | 144 BPM; 64 ölçü                  |
+| Boss     | sovereign                    | 120 BPM; 64 ölçü                  |
+| Bitiş    | terminal-echo, first-light   | 60 BPM / 8 ölçü; 96 BPM / 16 ölçü |
+| Ambiyans | null-drift, deep-current     | 64 saniye                         |
+
+Sekiz parçanın her biri tek `main` mix olarak gönderilir; eski bed/rhythm/lead
+stemleri ve ayrı stinger dosyaları bu sette yoktur. `musicTiming.ts` süreleri
+bestelerin ölçü ve tempolarından türetir; `audioIntegration` testi runtime
+ile yayımlanan demetlerin paritesini denetler. OGG kodek sonrası seviye,
+clipping ve loop dikişi müzik QA kapısında ölçülür. Menü, savaş ve boss
+parçaları gerçek ritim, melodi ve armoni taşır; ambiyans ayrı tutulur.

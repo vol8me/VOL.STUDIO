@@ -1,0 +1,58 @@
+{
+  "affect": {
+    "arousal": 0.75,
+    "valence": 0.3
+  },
+  "assetClass": "music",
+  "avoidNotes": [
+    "arcade setinin estetik kabulü insan dinlemesi bekler"
+  ],
+  "channels": 2,
+  "form": {
+    "sections": [
+      "intro",
+      "body",
+      "bridge",
+      "body",
+      "bridge",
+      "peak",
+      "release"
+    ]
+  },
+  "id": "surge-protocol",
+  "intent": "D minör aksiyon: yuvarlanan bas, tom ağırlıklı davul, iki hook ve org-zil doruk; 64 ölçü dikişsiz loop.",
+  "kind": "music",
+  "length": {
+    "bars": {
+      "max": 64,
+      "min": 64
+    }
+  },
+  "melodicSalience": 0.447,
+  "meter": [
+    4,
+    4
+  ],
+  "playback": "loop",
+  "provenance": {
+    "author": "agent"
+  },
+  "rhythmicDensity": "dense",
+  "schema": "AudioBriefV1",
+  "tempo": {
+    "bpm": {
+      "max": 144,
+      "min": 144
+    }
+  },
+  "title": "Dalga Protokolü",
+  "tonal": {
+    "roots": [
+      "D2"
+    ],
+    "systems": [
+      "minor"
+    ]
+  },
+  "usage": "bed"
+}

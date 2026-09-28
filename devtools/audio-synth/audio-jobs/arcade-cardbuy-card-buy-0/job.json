@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-85e690625db249c4": {
+        "hash": "sha256:b2c52e3e63f971301357dc9d0cee48d0814e466ea88ad35aad9a38b39d6fdc44",
+        "path": "analyses/r-85e690625db249c4.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:65152f10f26d30ebac4afbc20298c6b0c0a4cc7177a3cc076a852e0121d19397",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:65152f10f26d30ebac4afbc20298c6b0c0a4cc7177a3cc076a852e0121d19397",
+      "hash": "sha256:09c47d02b44d7d81fbfc53e94b1bdfde94e9a86b4439cb4d4305b5b5607f36bf",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:d183ba4d034c129eb6b6967d504e83eb94d8f8709c541714a9baa7c13562b11c",
+      "path": "games/vol-hell/audio-manifests/sfx/ui/card-buy-0.json"
+    },
+    "renders": {
+      "r-85e690625db249c4": {
+        "hash": "sha256:11204de0bbe35fbc94c76f3cf1570becc3f6a884724598794b9ec857afaf8756",
+        "path": "renders/r-85e690625db249c4.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:251434ce910aafc7c93aa44ddc3d1d3bbaa9d6e6be84ec9e79e457354f92d9d5",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-cardbuy-card-buy-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 18,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/ui/card-buy-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-card-buy"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}

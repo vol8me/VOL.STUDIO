@@ -1,0 +1,116 @@
+{
+  "channels": 1,
+  "description": "Arcade death death-0: retro çip dokusu, kısa gövde ve parlak vurgu.",
+  "durationSeconds": 1.35,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 1,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "pitch-retro-0": {
+      "curve": "curve.exponential",
+      "points": [
+        [
+          0,
+          440
+        ],
+        [
+          1.0120000000000002,
+          55
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "exponential",
+          "decay": 1.1,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -3,
+      "name": "retro-0",
+      "role": "body",
+      "source": {
+        "params": {
+          "duty": 0.5,
+          "frequency": {
+            "gesture": "pitch-retro-0"
+          },
+          "waveform": "sawtooth"
+        },
+        "primitive": "source.retro",
+        "version": 2
+      },
+      "startSeconds": 0
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.7,
+          "hold": 0,
+          "release": 0.025,
+          "sustain": 0,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -11,
+      "name": "noise-1",
+      "role": "tail",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      },
+      "startSeconds": 0
+    },
+    {
+      "gainDb": -7,
+      "name": "preset-2",
+      "role": "detail",
+      "source": {
+        "params": {
+          "articulation": "natural",
+          "frequency": 55,
+          "instrument": "subBass",
+          "noteSeconds": 1,
+          "velocity": 0.7
+        },
+        "primitive": "source.instrument",
+        "version": 2
+      },
+      "startSeconds": 0
+    }
+  ],
+  "master": {
+    "fadeInSeconds": 0.0015,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 44100,
+  "schema": "AcousticProgramV1",
+  "seed": 202609305
+}

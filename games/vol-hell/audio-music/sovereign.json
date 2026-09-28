@@ -1,0 +1,104 @@
+{
+  "brief": {
+    "hash": "sha256:8f19e5d19f6679f55c171108c9d04ce9f17a7f5aa9573cc8771aeaf0c798d73d",
+    "path": "devtools/audio-synth/audio-music/sovereign/brief.json"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "instrumentRegistryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
+    "rendererVersion": 2
+  },
+  "music": {
+    "hash": "sha256:f50f4f1e5ea8a8cc595118f7a48cba5c97f0ef26a493fe94b1c04bda6d4f870f",
+    "musicId": "sovereign",
+    "path": "devtools/audio-synth/audio-music/sovereign/music.json",
+    "playback": "loop",
+    "seed": 202609303,
+    "version": 1
+  },
+  "package": "@volstudio/vol-hell",
+  "qa": {
+    "hash": "sha256:6d294912b61913b89d3670902170bbf7cd9572cbae8b4207c3320ef5cb846167",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/sovereign/qa.json"
+  },
+  "report": {
+    "hash": "sha256:8ebe9d071dd7c906c3cd20be88e4fef501f5ae9055ca172514d6fac3e84cbc85",
+    "pass": true,
+    "path": "devtools/audio-synth/audio-music/sovereign/report.json"
+  },
+  "schema": "MusicBundleV1",
+  "spec": {
+    "bars": 64,
+    "bpm": 120,
+    "engine": {
+      "compressor": false
+    },
+    "frames": 5644800,
+    "loop": {
+      "endBar": 64,
+      "startBar": 0
+    },
+    "mastering": {
+      "gainDb": -2.742,
+      "integratedLufs": -18.115,
+      "path": "loop-cyclic",
+      "truePeakDbtp": -2.211
+    },
+    "meter": [4, 4],
+    "musicId": "sovereign",
+    "playback": "loop",
+    "runtimeGain": 1,
+    "sampleRate": 44100,
+    "schema": "MusicAssetSpecV1",
+    "stems": [
+      {
+        "file": "public/assets/audio/music/boss/sovereign.ogg",
+        "frames": 5644800,
+        "id": "main"
+      }
+    ],
+    "transitions": []
+  },
+  "stems": [
+    {
+      "asset": {
+        "bytes": 1309765,
+        "encodedHash": "sha256:5e7c1309a9f790cfa80ebd2db6421922e92f16ea9dcf75a2dc6e0ac689136681",
+        "path": "public/assets/audio/music/boss/sovereign.ogg"
+      },
+      "frames": 5644800,
+      "id": "mix",
+      "integratedLufs": -18.115627188135935,
+      "manifest": {
+        "hash": "sha256:778934e0e1c25ad3ae8fbb4c184d00a29383b021f3dc3a0c6eb1eeb45f0ce927",
+        "path": "audio-manifests/music/boss/sovereign.json"
+      },
+      "pcmHash": "sha256:9579051b335dd64ef4a27a427541c3b2f4bbc8d0e89c73586c4f6738ca7f5418",
+      "truePeakDbtp": -2.1383863505351037
+    }
+  ],
+  "sync": {
+    "checks": [
+      {
+        "detail": "hizalı (gecikme 0, kare farkı 0)",
+        "frameDelta": 0,
+        "id": "mix",
+        "lagSamples": 0,
+        "ok": true
+      }
+    ],
+    "method": "cross-correlation-v1",
+    "ok": true,
+    "seams": [
+      {
+        "detail": "dikiş sürekli (adım 0.0003 ≤ 2×0.1115)",
+        "id": "mix",
+        "jump": 0.000302,
+        "ok": true,
+        "typicalStep": 0.111529
+      }
+    ]
+  },
+  "themeBook": null
+}

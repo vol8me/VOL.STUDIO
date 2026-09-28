@@ -14,6 +14,8 @@ const { audio } = vi.hoisted(() => ({
     // parçanın çalındığı testte okunabilsin.
     playMusic: vi.fn((_trackId: string, _options?: unknown) => Promise.resolve()),
     playSfx: vi.fn(() => Promise.resolve()),
+    setMusicState: vi.fn(),
+    playStinger: vi.fn((_cueId: string) => true),
   },
 }));
 
@@ -120,5 +122,37 @@ describe('GameAudioDirector', () => {
     expect(picked.size).toBeGreaterThan(1);
     expect(Math.min(...picked)).toBe(0);
     expect(Math.max(...picked)).toBe(rolls.length - 1);
+  });
+
+  it('savaş müziği tek stem ile ve yoğunluk durumu göndermeden başlar', async () => {
+    const director = new GameAudioDirector(makeScene(), createRandom(1));
+    director.start();
+    await settleMicrotasks();
+
+    director.update(2500, 12, true);
+    const combat = audio.playMusic.mock.calls.find(([id]) => id === 'surge-protocol');
+    expect(combat).toBeDefined();
+    expect(combat?.[1]).not.toHaveProperty('state');
+
+    audio.setMusicState.mockClear();
+    director.update(16, 20, true);
+    director.update(16, 30, true);
+    expect(audio.setMusicState).not.toHaveBeenCalled();
+  });
+
+  it('cue beyan etmeyen arcade parçalarında müzikal vurgu istenmez', async () => {
+    const director = new GameAudioDirector(makeScene(), createRandom(1));
+    director.start();
+    await settleMicrotasks();
+
+    director.onWaveStart();
+    director.update(2500, 20, true);
+    director.onWaveStart();
+    director.onLevelUp();
+    director.setBossActive(true);
+    director.update(16, 20, true);
+    await settleMicrotasks();
+
+    expect(audio.playStinger).not.toHaveBeenCalled();
   });
 });

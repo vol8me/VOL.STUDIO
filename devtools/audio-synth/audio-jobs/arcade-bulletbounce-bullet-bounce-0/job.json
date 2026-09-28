@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a2e7783b561a7bbb": {
+        "hash": "sha256:e3066a09dbeb743eb4633987f7f1d81a8018ac9913fd13e08c3c1979b407f10b",
+        "path": "analyses/r-a2e7783b561a7bbb.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:2fc2c319b86097b2e4b58697a58580e33df104b9f007b88a9dcdb7b15a2a7139",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:2fc2c319b86097b2e4b58697a58580e33df104b9f007b88a9dcdb7b15a2a7139",
+      "hash": "sha256:bcd3327e76fb41b4a8e792f5757e8890954c72026fdbdea26ec2a9a3235cf04d",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:0eea525f73b821036d60551b0aa9aeec2087774cc13c83f3320d38680a8a8dcc",
+      "path": "games/vol-hell/audio-manifests/sfx/combat/bullet-bounce-0.json"
+    },
+    "renders": {
+      "r-a2e7783b561a7bbb": {
+        "hash": "sha256:027459cfb463188d689d75f50676b91fd2f9475d42a0cf8d410899a069f82cec",
+        "path": "renders/r-a2e7783b561a7bbb.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:6e469d6854f78ecd3053e704f65a8d6758c37e8fce4f009146475beeb230a144",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "arcade-bulletbounce-bullet-bounce-0",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/combat/bullet-bounce-0.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "sfx-bullet-bounce"
+    },
+    "package": "@volstudio/vol-hell"
+  }
+}
