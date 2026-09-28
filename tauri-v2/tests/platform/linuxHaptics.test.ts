@@ -19,9 +19,20 @@ const fakes = vi.hoisted(() => ({
   ]),
 }));
 
-vi.mock('@volstudio/core', () => fakes);
+const tauri = vi.hoisted(() => ({
+  isTauri: vi.fn(() => true),
+  invoke: vi.fn((): Promise<unknown> => Promise.resolve({ backend: 'none' })),
+}));
 
-beforeEach(() => vi.clearAllMocks());
+vi.mock('@volstudio/core', () => fakes);
+vi.mock('@tauri-apps/api/core', () => tauri);
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  tauri.invoke.mockReset();
+  tauri.invoke.mockResolvedValue({ backend: 'none' });
+  tauri.isTauri.mockReturnValue(true);
+});
 afterEach(() => vi.useRealTimers());
 
 function probe(status: unknown, record?: { calls: [string, unknown?][] }) {
@@ -196,6 +207,72 @@ describe('observeLinuxHaptics', () => {
     } finally {
       dispose();
     }
+  });
+});
+
+describe('varsayılan prob', () => {
+  it('native komutları kendi yüklemleriyle çağırır', async () => {
+    tauri.invoke.mockResolvedValue({ backend: 'hidraw' });
+    expect(await getLinuxHapticsStatus()).toEqual({ backend: 'hidraw' });
+
+    const driver = createLinuxHapticsDriver();
+    await driver.play('error');
+    expect(tauri.invoke).toHaveBeenCalledWith(
+      'vol_haptics_rumble',
+      expect.objectContaining({ strong: 0.85, weak: 0.6, durationMs: 40 }),
+    );
+    await driver.cancel?.();
+    expect(tauri.invoke).toHaveBeenCalledWith('vol_haptics_stop', undefined);
+  });
+
+  it('gözlemci varsayılan probla kurulur ve dispose edilir', async () => {
+    const dispose = observeLinuxHaptics();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(tauri.invoke).toHaveBeenCalledWith('vol_haptics_status', undefined);
+    dispose();
+  });
+
+  it('Tauri dışında gözlemci boş temizleyici döndürür', () => {
+    const dispose = observeLinuxHaptics({
+      isTauri: () => false,
+      invoke: () => Promise.resolve({ backend: 'hidraw' }),
+      sleep: () => Promise.resolve(),
+    });
+    expect(() => dispose()).not.toThrow();
+  });
+
+  it('iptal komutu düşse de gözlemci sessiz kalır', async () => {
+    vi.useFakeTimers();
+    let backend = 'hidraw';
+    const events = new EventTarget();
+    const p = {
+      isTauri: () => true,
+      invoke: vi.fn(
+        (command: string): Promise<unknown> =>
+          command === 'vol_haptics_status'
+            ? Promise.resolve({ backend })
+            : Promise.reject(new Error('iptal yok')),
+      ),
+      sleep: () => Promise.resolve(),
+      events,
+    };
+    const dispose = observeLinuxHaptics(p);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fakes.setHapticsDriver).toHaveBeenCalledTimes(1);
+
+    events.dispatchEvent(new Event('blur'));
+    await vi.advanceTimersByTimeAsync(0);
+    backend = 'none';
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(fakes.setHapticsDriver).toHaveBeenLastCalledWith(null);
+    dispose();
+
+    backend = 'hidraw';
+    const second = observeLinuxHaptics(p);
+    await vi.advanceTimersByTimeAsync(0);
+    second();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fakes.setHapticsDriver).toHaveBeenLastCalledWith(null);
   });
 });
 

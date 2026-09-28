@@ -1,11 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  activateSteamActionSet,
   cloudFileKey,
   cloudFileName,
   createSteamCloudAdapter,
   createSteamworksTextEntryProvider,
+  onSteamFloatingKeyboardDismissed,
   onSteamOverlay,
+  setSteamInputManifest,
   setSteamworksProbe,
+  showSteamBindingPanel,
+  showSteamFloatingKeyboard,
+  steamActionGlyph,
   steamworksGlyphContext,
   steamworksStatus,
   type SteamworksProbe,
@@ -397,6 +403,51 @@ describe('glif ipucu ve overlay', () => {
     events.get('vol-steamworks:overlay')?.({ active: true });
     events.get('vol-steamworks:overlay')?.({ active: false });
     expect(seen).toEqual([true, false]);
+    restore();
+  });
+});
+
+describe('Steam Input ve kayan klavye komutları', () => {
+  it('manifest, aksiyon seti, glif, panel ve klavye komutlarına çevrilir', async () => {
+    const { probe } = fakeProbe({
+      set_input_manifest: true,
+      activate_action_set: 2,
+      action_glyph: [{ name: 'A', pngBase64: null }],
+      show_binding_panel: true,
+      show_floating_input: true,
+    });
+    const restore = afterEach(probe);
+
+    expect(await setSteamInputManifest('steam_input_manifest.vdf')).toBe(true);
+    expect(await activateSteamActionSet('Gameplay')).toBe(2);
+    expect(await steamActionGlyph('Gameplay', 'fire')).toEqual([{ name: 'A', pngBase64: null }]);
+    expect(await showSteamBindingPanel()).toBe(true);
+    expect(await showSteamFloatingKeyboard({ x: 1, y: 2, width: 3, height: 4 })).toBe(true);
+
+    expect(probe.invoke).toHaveBeenCalledWith('set_input_manifest', {
+      path: 'steam_input_manifest.vdf',
+    });
+    expect(probe.invoke).toHaveBeenCalledWith('activate_action_set', { name: 'Gameplay' });
+    expect(probe.invoke).toHaveBeenCalledWith('action_glyph', {
+      actionSet: 'Gameplay',
+      action: 'fire',
+    });
+    expect(probe.invoke).toHaveBeenCalledWith('show_floating_input', {
+      x: 1,
+      y: 2,
+      width: 3,
+      height: 4,
+    });
+    restore();
+  });
+
+  it('kayan klavye kapanışı abonelikten bildirilir', async () => {
+    const { probe, events } = fakeProbe({});
+    const restore = afterEach(probe);
+    const onDismiss = vi.fn();
+    await onSteamFloatingKeyboardDismissed(onDismiss);
+    events.get('vol-steamworks:floating-dismissed')?.({});
+    expect(onDismiss).toHaveBeenCalledOnce();
     restore();
   });
 });

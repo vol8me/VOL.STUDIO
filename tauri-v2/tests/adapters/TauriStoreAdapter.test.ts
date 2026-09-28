@@ -71,6 +71,12 @@ describe('TauriStoreAdapter', () => {
     await expect(adapter.get('b')).resolves.toBe(2);
   });
 
+  it('keys kayıttaki tüm anahtarları döndürür', async () => {
+    store.set('volstudio-store.json', JSON.stringify({ a: 1, b: 2 }));
+    const adapter = new TauriStoreAdapter();
+    await expect(adapter.keys()).resolves.toEqual(['a', 'b']);
+  });
+
   it('yazmalar sirayla gider — kuyruk onceki hata ile kirilmaz', async () => {
     const order: string[] = [];
     let fail = true;
