@@ -1,4 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
+
+const fakes = vi.hoisted(() => ({
+  isTauri: vi.fn(() => true),
+  invoke: vi.fn(() => Promise.resolve()),
+  handlers: new Map<string, () => void>(),
+  listen: vi.fn((event: string, handler: () => void) => {
+    fakes.handlers.set(event, handler);
+    return Promise.resolve(() => undefined);
+  }),
+}));
+
+vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri, invoke: fakes.invoke }));
+vi.mock('@tauri-apps/api/event', () => ({ listen: fakes.listen }));
 import { onSystemResume, registerSuspendFlush } from '../../src/platform/systemSleep';
 import type { SystemSleepProbe } from '../../src/platform/systemSleep';
 
@@ -68,6 +81,51 @@ describe('systemSleep', () => {
 
     const web = fakeProbe(false);
     registerSuspendFlush(() => undefined, web.probe)();
+    onSystemResume(() => undefined, web.probe)();
     expect(web.invoke).not.toHaveBeenCalled();
+  });
+
+  it('varsayılan prob Tauri olay ve komut API’sini kullanır', async () => {
+    const stop = registerSuspendFlush(() => undefined);
+    await settle();
+    fakes.handlers.get('vol:suspending')?.();
+    await settle();
+    expect(fakes.invoke).toHaveBeenCalledWith('vol_suspend_ready');
+    stop();
+  });
+
+  it('kayıt silindikten sonra çözülen abonelik hemen bırakılır', async () => {
+    let resolveListen!: (unlisten: () => void) => void;
+    const unlisten = vi.fn();
+    const probe: SystemSleepProbe = {
+      isTauri: () => true,
+      listen: () => new Promise((resolve) => (resolveListen = resolve)),
+      invoke: () => Promise.resolve(),
+    };
+    const stop = registerSuspendFlush(() => undefined, probe);
+    stop();
+    resolveListen(unlisten);
+    await settle();
+    expect(unlisten).toHaveBeenCalled();
+  });
+
+  it('onay komutu reddedilirse işlenmemiş ret kalmaz', async () => {
+    const { probe, emit } = fakeProbe();
+    registerSuspendFlush(() => undefined, {
+      ...probe,
+      invoke: () => Promise.reject(new Error('kabuk yok')),
+    });
+    emit('vol:suspending');
+    await settle();
+  });
+
+  it('dinleme kurulamazsa kayıt yine çalışır, hata yutulur', async () => {
+    const stop = registerSuspendFlush(() => undefined, {
+      isTauri: () => true,
+      listen: () => Promise.reject(new Error('olay yok')),
+      invoke: () => Promise.resolve(),
+    });
+    await settle();
+    stop();
   });
 });

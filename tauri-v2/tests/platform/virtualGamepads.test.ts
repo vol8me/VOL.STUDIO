@@ -1,4 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+const fakes = vi.hoisted(() => ({
+  isTauri: vi.fn(() => true),
+  invoke: vi.fn(() => Promise.resolve([])),
+}));
+
+vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri, invoke: fakes.invoke }));
 import { singleVirtualPad, steamVirtualGamepads } from '../../src/platform/virtualGamepads';
 
 const pad = { slot: 0, name: 'DualSense', vid: 0x054c, pid: 0x0ce6, type: 'ps5' };
@@ -14,6 +21,11 @@ describe('steamVirtualGamepads', () => {
     await expect(
       steamVirtualGamepads({ isTauri: () => true, invoke: () => Promise.reject(new Error('x')) }),
     ).resolves.toEqual([]);
+  });
+
+  it('varsayılan prob kabuk komutunu çağırır', async () => {
+    await expect(steamVirtualGamepads()).resolves.toEqual([]);
+    expect(fakes.invoke).toHaveBeenCalledWith('steam_virtual_gamepads');
   });
 
   it('ipucu yalnız tek kol varken verilir', () => {
