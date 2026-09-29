@@ -8,12 +8,6 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 
 ### Sertleştirme
 
-- [ ] **[P1] S0 — Kapılar.** Her kapının neyi sınadığı denetlenir; boşluklar
-      kapatılır: rapor aşama haritası, Rust test/all-targets/feature matrisi,
-      deck-probe testleri, betiklerin lint'i, lifecycle ↔ belge eşlemesi,
-      `docs/*.md` yol kapısı, yerel ayara bağlı sıralama yasağı, audio-synth
-      dizin katmanı ve `exports` kapısı. Kapanır: her kapı `docs/gates.md`de
-      anlatılır ve `pnpm signoff` bir kez yeşil koşar.
 - [ ] **[P1] SD8 — Uyku/uyanma Deck'te kanıtlanır.** Kabuk logind kilidi,
       `registerSuspendFlush`/`onSystemResume` ve CORE `resumeAudioAfterWake`
       tarifi uygulandı; Deck'te uyku turu yapılmadı. Kapanır: Deck'te son değer
@@ -100,6 +94,8 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 
 ## Kapatılanlar
 
+- [x] **S0 — Kapılar denetlendi, boşluklar kapatıldı; `pnpm signoff` yeşil**
+      (oturum başından beri kırmızı olan ses kapsamı dahil).
 - [x] **SD (ikinci dilim) — kabuk ve Steamworks sağlamlığı.** Aygıt yokken
       odak kaybı tarama yapmaz ve yoklama geri çekilir (A8, A9); Steamworks
       geç açılan Steam'e yeniden bağlanır ve disk/Cloud komutları ana iş
