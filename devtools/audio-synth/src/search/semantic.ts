@@ -205,7 +205,11 @@ export function validateSemanticResponse(
 /** Skora göre azalan; eşitlikte kimlik sırası — deterministik sunum sırası. */
 export function rankedOrder(scores: readonly SemanticScoreEntryV1[]): string[] {
   return [...scores]
-    .sort((a, b) => b.score - a.score || a.candidateId.localeCompare(b.candidateId))
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        (a.candidateId < b.candidateId ? -1 : a.candidateId > b.candidateId ? 1 : 0),
+    )
     .map((s) => s.candidateId);
 }
 

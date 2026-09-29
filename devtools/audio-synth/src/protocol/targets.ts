@@ -101,7 +101,9 @@ export function surveyTargets(repoRoot: string): TargetSurvey {
   const publishable: PublishTarget[] = [];
   const undeclaredGames: string[] = [];
   const frozen: string[] = [];
-  for (const entry of [...lifecycle].sort((a, b) => a.packageName.localeCompare(b.packageName))) {
+  for (const entry of [...lifecycle].sort((a, b) =>
+    a.packageName < b.packageName ? -1 : a.packageName > b.packageName ? 1 : 0,
+  )) {
     const packagePath = checkRepoRelative(
       entry.path,
       `workspace-lifecycle.json:${entry.packageName}`,

@@ -12,7 +12,7 @@ pnpm build:linux-steamrt4 <workspace-yolu>    # steamrt4 SDK kabında (Steam, De
 yeniden paketler: `productName`/`version` hedefin `tauri.conf.json`undan gelir,
 WebKit medya çalışma zamanı (GStreamer elementleri, plugin scanner) AppDir'e
 bağlanır ve zincir paketteki bir OGG ile sınanır. Başlatıcı paketin
-`src-tauri/linux.AppRun` dosyasıdır. Frozen workspace reddedilir; frozen ürün
+`<paket>/src-tauri/linux.AppRun` dosyasıdır. Frozen workspace reddedilir; frozen ürün
 etiketinin worktree'sinde paketlenir.
 
 Host'ta üretilen paket host'un glibc'sine bağlanır; daha yeni glibc'li bir

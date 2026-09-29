@@ -21,7 +21,9 @@ const activeScaling = Object.fromEntries(
   ),
 );
 
-const problems = validateScaling(root, activeScaling);
+const problems = validateScaling(root, activeScaling, undefined, (line) =>
+  console.log(`[scaling] ${line}`),
+);
 
 console.log(`##quality:${JSON.stringify({ kind: 'scaling', count: problems.length })}`);
 if (problems.length > 0) {

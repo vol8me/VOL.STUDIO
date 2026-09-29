@@ -52,10 +52,30 @@
   },
   "coverageRuns": {
     "coverage": {
-      "exclude": ["@volstudio/audio-synth", "@volstudio/deck-probe"]
+      "exclude": ["@volstudio/audio-synth"]
     },
     "coverage-audio": {
       "only": ["@volstudio/audio-synth"]
+    }
+  },
+  "bundles": {
+    "$comment": "vol-ui vitrini CORE UI'ın gönderilen ağırlığını taşır: ölçülen app 137.6, css 19.8 KB (gzip 9).",
+    "devtools/vol-ui": {
+      "app": 150,
+      "vendor": 1,
+      "css": 24
+    }
+  },
+  "scaling": {
+    "$comment": "CORE uzamsal indeks 128→512 varlık oranı ~3.3 ölçüldü; karesel büyüme ~16 olur.",
+    "core": {
+      "$measure": {
+        "script": "scripts/scaling.ts",
+        "series": "spatial",
+        "input": "entities",
+        "value": "ms"
+      },
+      "spatial512Over128": 6.0
     }
   }
 }

@@ -272,6 +272,7 @@ export function assertInventoryPreserved(before, after) {
   }
 }
 
+/** @param {string} path @param {{ size: number, sha256: string, endsWithNewline: boolean } | null} [baseline] */
 export function renderLogReadCommand(path, baseline = null) {
   return pythonCommand(
     `import os, sys, json, hashlib, base64

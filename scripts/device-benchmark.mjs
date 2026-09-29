@@ -87,7 +87,7 @@ function coldStart(pkg, runs = 3) {
  * "yavaş" görünür, sebebi görünmez. Oyun geri düşüşte konsola uyarı yazar ve
  * WebView bunu logcat'e aktarır; ölçüm o uyarıyı arar.
  */
-function rendererFallback(pkg) {
+function rendererFallback() {
   try {
     const log = adb(['shell', 'logcat', '-d', '-t', '400', '-s', 'chromium:*']);
     return /WebGL kurulamadı/.test(log) ? 'canvas (⚠ WebGL kurulamadı)' : 'webgl';
@@ -108,7 +108,7 @@ function runtimeProfile(pkg) {
 
   const frames = Number(pick(gfx, /Total frames rendered:\s*(\d+)/) ?? 0);
   return {
-    renderer: rendererFallback(pkg),
+    renderer: rendererFallback(),
     frames,
     fps: frames === 0 ? 0 : Math.round((frames / SECONDS) * 10) / 10,
     jankPercent: pick(gfx, /Janky frames:\s*\d+\s*\(([\d.]+)%\)/),

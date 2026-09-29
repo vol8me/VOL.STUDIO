@@ -35,21 +35,6 @@ const PATH_ROOTS = new Set([
 
 const isPlaceholder = (token) => /[<>{}*]/.test(token);
 
-/** `justfile` tarifleri: ad → ön koşul tarifleri. */
-export function parseJustRecipes(text) {
-  const recipes = new Map();
-  for (const line of text.split('\n')) {
-    const match = /^([a-z][\w-]*)([^:\n]*):(?!=)(.*)$/.exec(line);
-    if (!match || match[1] === 'set') continue;
-    const deps = match[3]
-      .trim()
-      .split(/\s+/)
-      .filter((dep) => /^[a-z][\w-]*$/.test(dep));
-    recipes.set(match[1], deps);
-  }
-  return recipes;
-}
-
 function fencedLines(markdown) {
   const lines = [];
   let inside = false;
@@ -92,7 +77,9 @@ export function commandRefs(markdown) {
       }
     }
   }
-  return refs.filter((ref) => !isPlaceholder(ref.name) && !/^--/.test(ref.name));
+  return refs.filter(
+    (ref) => !isPlaceholder(ref.name) && !isPlaceholder(ref.pkg ?? '') && !/^--/.test(ref.name),
+  );
 }
 
 /** Satır içi koddaki depo yolları; yer tutuculu, paket belirteçli ve biçimsiz olanlar dışarıda. */

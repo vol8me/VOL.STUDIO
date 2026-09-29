@@ -151,7 +151,7 @@ export class TouchController<TAction extends string>
     this.hasDrawnSticks = false;
   }
 
-  update(_delta: number): void {
+  override update(_delta: number): void {
     if (!this.sticks.isActive) {
       // graphics.clear() yalnızca drawSticks() içinde çağrılıyor; erken dönmek
       // son çizilen halkaları ekranda kalıcı olarak bırakırdı. Bayrak, parmak
@@ -172,7 +172,7 @@ export class TouchController<TAction extends string>
    * `undefined` olabilir (Phaser'in Systems.shutdown sırasına bağlı) —
    * kontrol olmadan `this.scene.input.off(...)` fırlatır.
    */
-  destroy(fromScene?: boolean): void {
+  override destroy(fromScene?: boolean): void {
     if (this.scene?.input) {
       this.scene.input.off('pointerdown', this.onPointerDown, this);
       this.scene.input.off('pointermove', this.onPointerMove, this);

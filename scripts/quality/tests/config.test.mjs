@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -6,7 +7,7 @@ import {
   validateQualityWorkspaceParity,
   validateActiveGameBudgets,
   COVERAGE_KEYS,
-} from '../../../scripts/quality/config.mjs';
+} from '../config.mjs';
 
 /**
  * `quality.json` kalite kapılarının tek doğruluk kaynağı: paket `vitest.config.ts`
@@ -17,13 +18,13 @@ import {
  */
 const REAL_CONFIG = JSON.parse(
   readFileSync(resolve(import.meta.dirname, '../../../quality.json'), 'utf-8'),
-) as Record<string, unknown>;
+);
 
-function validPackage(): Record<string, number> {
+function validPackage() {
   return { lines: 80, statements: 80, branches: 70, functions: 75 };
 }
 
-function validConfig(): Record<string, unknown> {
+function validConfig() {
   return {
     floor: { lines: 50, statements: 50, branches: 50, functions: 40 },
     packages: { '@volstudio/core': validPackage() },
@@ -32,7 +33,7 @@ function validConfig(): Record<string, unknown> {
 
 describe('quality.json şema doğrulaması', () => {
   it('repodaki gerçek quality.json geçerlidir', () => {
-    expect(validateQualityConfig(REAL_CONFIG)).toEqual([]);
+    assert.deepEqual(validateQualityConfig(REAL_CONFIG), []);
   });
 
   it('floor anahtarındaki yazım hatası teşhis edilebilir mesaj verir', () => {
@@ -42,9 +43,9 @@ describe('quality.json şema doğrulaması', () => {
     delete broken.floor;
 
     const problems = validateQualityConfig(broken);
-    expect(problems).toHaveLength(1);
-    expect(problems[0]).toContain('floor');
-    expect(problems[0]).toContain('nesne olmalı');
+    assert.equal(problems.length, 1);
+    assert.ok(problems[0].includes('floor'));
+    assert.ok(problems[0].includes('nesne olmalı'));
   });
 
   it('eksik metrikler TEK TEK ve HEPSİ birden bildirilir', () => {
@@ -54,9 +55,9 @@ describe('quality.json şema doğrulaması', () => {
     broken.packages = { '@volstudio/core': { lines: 80 } };
 
     const problems = validateQualityConfig(broken);
-    expect(problems).toHaveLength(3);
+    assert.equal(problems.length, 3);
     for (const key of ['statements', 'branches', 'functions']) {
-      expect(problems.some((p: string) => p.includes(key))).toBe(true);
+      assert.ok(problems.some((p) => p.includes(key)));
     }
   });
 
@@ -67,10 +68,11 @@ describe('quality.json şema doğrulaması', () => {
     };
 
     const problems = validateQualityConfig(broken);
-    expect(problems.some((p: string) => p.includes('lines') && p.includes('sayı olmalı'))).toBe(
+    assert.equal(
+      problems.some((p) => p.includes('lines') && p.includes('sayı olmalı')),
       true,
     );
-    expect(problems.some((p: string) => p.includes('branches') && p.includes('0-100'))).toBe(true);
+    assert.ok(problems.some((p) => p.includes('branches') && p.includes('0-100')));
   });
 
   it('tanınmayan metrik adı yakalanır (sessizce yok sayılmaz)', () => {
@@ -79,7 +81,7 @@ describe('quality.json şema doğrulaması', () => {
     broken.packages = { '@volstudio/core': { ...validPackage(), line: 90 } };
 
     const problems = validateQualityConfig(broken);
-    expect(problems.some((p: string) => p.includes('line') && p.includes('tanınmayan'))).toBe(true);
+    assert.ok(problems.some((p) => p.includes('line') && p.includes('tanınmayan')));
   });
 
   it('gerekçesiz muafiyet reddedilir', () => {
@@ -87,7 +89,7 @@ describe('quality.json şema doğrulaması', () => {
     broken.exempt = { '@volstudio/vol-ui': '' };
 
     const problems = validateQualityConfig(broken);
-    expect(problems.some((p: string) => p.includes('Sessiz muafiyet yok'))).toBe(true);
+    assert.ok(problems.some((p) => p.includes('Sessiz muafiyet yok')));
   });
 
   it('aynı paket hem muaf hem eşikli olamaz', () => {
@@ -95,57 +97,51 @@ describe('quality.json şema doğrulaması', () => {
     broken.exempt = { '@volstudio/core': 'gerekçe' };
 
     const problems = validateQualityConfig(broken);
-    expect(problems.some((p: string) => p.includes('belirsiz'))).toBe(true);
+    assert.ok(problems.some((p) => p.includes('belirsiz')));
   });
 
   it('boş packages reddedilir — eşiksiz repo kapsam gerilemesini yakalamaz', () => {
     const broken = validConfig();
     broken.packages = {};
 
-    expect(validateQualityConfig(broken).some((p: string) => p.includes('boş'))).toBe(true);
+    assert.ok(validateQualityConfig(broken).some((p) => p.includes('boş')));
   });
 
   it('COVERAGE_KEYS gerçek config ile senkron', () => {
     // Bekçi ile veri ayrışırsa doğrulama anlamsızlaşır.
-    const packages = REAL_CONFIG.packages as Record<string, Record<string, number>>;
+    const packages = REAL_CONFIG.packages;
     for (const [name, block] of Object.entries(packages)) {
-      expect(Object.keys(block).sort(), name).toEqual([...COVERAGE_KEYS].sort());
+      assert.deepEqual(Object.keys(block).sort(), [...COVERAGE_KEYS].sort(), name);
     }
   });
 
   it('coverageShape geçersiz tipleri ve boş gerekçeleri reddeder', () => {
     const broken = validConfig();
     broken.coverageShape = 'string';
-    expect(
-      validateQualityConfig(broken).some((p: string) => p.includes('coverageShape: nesne olmalı')),
-    ).toBe(true);
+    assert.ok(validateQualityConfig(broken).some((p) => p.includes('coverageShape: nesne olmalı')));
 
     const brokenNumbers = validConfig();
     brokenNumbers.coverageShape = { minLines: -5, floorPct: 150 };
     const problems = validateQualityConfig(brokenNumbers);
-    expect(
-      problems.some((p: string) => p.includes('minLines') && p.includes('pozitif tam sayı')),
-    ).toBe(true);
-    expect(problems.some((p: string) => p.includes('floorPct') && p.includes('0-100'))).toBe(true);
+    assert.ok(problems.some((p) => p.includes('minLines') && p.includes('pozitif tam sayı')));
+    assert.ok(problems.some((p) => p.includes('floorPct') && p.includes('0-100')));
 
     const brokenAck = validConfig();
     brokenAck.coverageShape = { acknowledged: { 'some/file.ts': '   ' } };
-    expect(
-      validateQualityConfig(brokenAck).some((p: string) => p.includes('Sessiz muafiyet yok')),
-    ).toBe(true);
+    assert.ok(validateQualityConfig(brokenAck).some((p) => p.includes('Sessiz muafiyet yok')));
   });
 
   it('bundle bütçesinde yanlış metrik sessizce atlanmaz', () => {
     const broken = validConfig();
     broken.bundles = { 'games/sample-game': { app: 140, vendor: 370, cs: 25 } };
     const problems = validateQualityConfig(broken);
-    expect(problems.some((p: string) => p.includes('bundles') && p.includes('cs'))).toBe(true);
-    expect(problems.some((p: string) => p.includes('css'))).toBe(true);
+    assert.ok(problems.some((p) => p.includes('bundles') && p.includes('cs')));
+    assert.ok(problems.some((p) => p.includes('css')));
   });
 
   it('aktif oyunun boş performans kapıları reddedilir', () => {
     const config = validConfig();
-    expect(validateActiveGameBudgets(config, ['games/sample-game'])).toEqual([
+    assert.deepEqual(validateActiveGameBudgets(config, ['games/sample-game']), [
       'games/sample-game: aktif oyun için bundle bütçesi yok',
       'games/sample-game: aktif oyun için scaling bütçesi yok',
     ]);
@@ -155,8 +151,8 @@ describe('quality.json şema doğrulaması', () => {
     const config = validConfig();
     config.scaling = { 'games/sample-game': { snapshot40Over10: 0 } };
     const problems = validateQualityConfig(config);
-    expect(problems.some((problem: string) => problem.includes('$measure'))).toBe(true);
-    expect(problems.some((problem: string) => problem.includes('snapshot40Over10'))).toBe(true);
+    assert.ok(problems.some((problem) => problem.includes('$measure')));
+    assert.ok(problems.some((problem) => problem.includes('snapshot40Over10')));
   });
 
   it('kapsam koşularının birleşimi her eşikli aktif paketi ölçer', () => {
@@ -165,23 +161,26 @@ describe('quality.json şema doğrulaması', () => {
       coverage: { exclude: ['@volstudio/core'] },
       'coverage-audio': { only: ['@volstudio/yeni'] },
     };
-    expect(
-      validateQualityWorkspaceParity(broken, ['@volstudio/core']).some((p: string) =>
+    assert.ok(
+      validateQualityWorkspaceParity(broken, ['@volstudio/core']).some((p) =>
         p.includes('@volstudio/core: hiçbir kapsam koşusu'),
       ),
-    ).toBe(true);
+    );
   });
 
   it('workspace ile quality kayıtlarının iki yönlü paritesini korur', () => {
     const config = validConfig();
 
-    expect(validateQualityWorkspaceParity(config, ['@volstudio/core'])).toEqual([]);
+    assert.deepEqual(validateQualityWorkspaceParity(config, ['@volstudio/core']), []);
 
-    expect(validateQualityWorkspaceParity(config, ['@volstudio/core', '@volstudio/yeni'])).toEqual([
-      '@volstudio/yeni: workspace paketi quality.json içinde eşik veya gerekçeli muafiyet taşımıyor.',
-    ]);
+    assert.deepEqual(
+      validateQualityWorkspaceParity(config, ['@volstudio/core', '@volstudio/yeni']),
+      [
+        '@volstudio/yeni: workspace paketi quality.json içinde eşik veya gerekçeli muafiyet taşımıyor.',
+      ],
+    );
 
-    expect(validateQualityWorkspaceParity(config, [])).toEqual([
+    assert.deepEqual(validateQualityWorkspaceParity(config, []), [
       '@volstudio/core: quality.json kaydı bayat; karşılık gelen bir workspace paketi bulunamadı.',
     ]);
   });
@@ -232,14 +231,15 @@ describe('pnpm script adları yerleşik komutlarla çakışmamalı', () => {
   it('kök package.json script adları pnpm yerleşiklerini gölgelemez', () => {
     const manifest = JSON.parse(
       readFileSync(resolve(import.meta.dirname, '../../../package.json'), 'utf-8'),
-    ) as { scripts: Record<string, string> };
+    );
 
     const shadowed = Object.keys(manifest.scripts).filter((name) => PNPM_BUILTINS.includes(name));
 
-    expect(
+    assert.deepEqual(
       shadowed,
+      [],
       'Bu script adları pnpm yerleşik komutları tarafından gölgelenir ve ' +
         '`pnpm <ad>` onlara ULAŞMAZ. Sonuna bir ek koy (ör. "doctor:env").',
-    ).toEqual([]);
+    );
   });
 });

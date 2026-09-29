@@ -32,8 +32,6 @@ export {
 } from './platform/diagnostics';
 export type { DiagnosticsProbe } from './platform/diagnostics';
 
-export { TauriHapticsDriver } from './platform/TauriHapticsDriver';
-
 export {
   createLinuxHapticsDriver,
   getLinuxHapticsStatus,

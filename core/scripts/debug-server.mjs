@@ -62,9 +62,12 @@ function formatLine(data) {
 
 function formatCounts(counts) {
   if (!counts || Object.keys(counts).length === 0) return '';
-  return ' | ' + Object.entries(counts)
-    .map(([k, v]) => `${k}:${v}`)
-    .join(' ');
+  return (
+    ' | ' +
+    Object.entries(counts)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(' ')
+  );
 }
 
 function formatInput(input) {
@@ -79,7 +82,9 @@ function formatInput(input) {
     if (input.pc.dash) keys.push('SPACE');
     const pointer = input.pc.pointer;
     const btn = pointer.leftButtonDown ? 'L' : pointer.isDown ? 'R' : '-';
-    return ` | keys:[${keys.join(',')}] mouse:(${Math.round(pointer.x)},${Math.round(pointer.y)},${btn})`;
+    return ` | keys:[${keys.join(',')}] mouse:(${Math.round(pointer.x)},${Math.round(
+      pointer.y,
+    )},${btn})`;
   }
 
   if (input.activeProvider === 'touch' && input.touch) {
@@ -107,7 +112,7 @@ function formatEvents(events) {
     counts.set(e.type, (counts.get(e.type) ?? 0) + 1);
   }
   const summary = [...counts.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
+    .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
     .map(([type, count]) => `${type}:${count}`)
     .join(',');
   return ` | events:[${summary}]`;

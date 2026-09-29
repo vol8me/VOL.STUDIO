@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noImplicitAny": false,
+    "useUnknownInCatchVariables": false,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowImportingTsExtensions": false,
+    "lib": ["ES2023"],
+    "types": ["node"]
+  },
+  "include": ["**/*.mjs"],
+  "exclude": ["**/tests/**"]
+}

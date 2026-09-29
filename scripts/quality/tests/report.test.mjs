@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { classify } from '../../../scripts/quality/report.mjs';
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { COMPOSITE_GATES, classify, stagesFor } from '../report.mjs';
+import { gateStages, parseJustRecipes } from '../justfile.mjs';
 
 /**
  * `report.mjs` kapı çıktısını sınıflandırır. Üçüncü parti araçların (tsc,
@@ -26,22 +30,22 @@ describe('kalite raporu sınıflandırması', () => {
     ].join('\n');
 
     const result = classify('contract', output);
-    expect(result.kind).toBe('contract');
-    expect(result.reason).toContain('3');
+    assert.equal(result.kind, 'contract');
+    assert.ok(result.reason.includes('3'));
   });
 
   it('bozuk işaret sınıflandırmayı çökertmez, kalıplara düşer', () => {
     const output = '##quality:{bozuk json\nCode style issues found in 2 files';
-    expect(classify('format-check', output).kind).toBe('format');
+    assert.equal(classify('format-check', output).kind, 'format');
   });
 
   it('tsc hatası dosya ve kod ile sınıflandırılır', () => {
     const output = "src/foo.ts(42,17): error TS2345: Argument of type 'string' is not assignable.";
     const result = classify('typecheck', output);
 
-    expect(result.kind).toBe('typecheck');
-    expect(result.reason).toContain('TS2345');
-    expect(result.reason).toContain('src/foo.ts:42');
+    assert.equal(result.kind, 'typecheck');
+    assert.ok(result.reason.includes('TS2345'));
+    assert.ok(result.reason.includes('src/foo.ts:42'));
   });
 
   it('vitest kapsam eşiği ihlali eşik değeriyle sınıflandırılır', () => {
@@ -50,9 +54,9 @@ describe('kalite raporu sınıflandırması', () => {
       ' ELIFECYCLE  Command failed with exit code 1.';
     const result = classify('coverage', output);
 
-    expect(result.kind).toBe('coverage-threshold');
-    expect(result.reason).toContain('68.42');
-    expect(result.reason).toContain('70');
+    assert.equal(result.kind, 'coverage-threshold');
+    assert.ok(result.reason.includes('68.42'));
+    assert.ok(result.reason.includes('70'));
   });
 
   it('düşen test sayısı ve paket birlikte çıkarılır', () => {
@@ -61,15 +65,15 @@ describe('kalite raporu sınıflandırması', () => {
       '      Tests  2 failed | 444 passed (446)';
     const result = classify('test', output);
 
-    expect(result.kind).toBe('test');
-    expect(result.reason).toContain('2');
-    expect(result.package).toBe('@volstudio/sample-game');
+    assert.equal(result.kind, 'test');
+    assert.ok(result.reason.includes('2'));
+    assert.equal(result.package, '@volstudio/sample-game');
   });
 
   it('eslint hata sayısı sınıflandırılır', () => {
     const result = classify('lint', '✖ 7 problems (7 errors, 0 warnings)');
-    expect(result.kind).toBe('lint');
-    expect(result.reason).toContain('7');
+    assert.equal(result.kind, 'lint');
+    assert.ok(result.reason.includes('7'));
   });
 
   it('stylelint, eslint ile AYNI simgeyi kullansa da aşamayla ayrılır', () => {
@@ -80,26 +84,26 @@ describe('kalite raporu sınıflandırması', () => {
       'core/src/ui/theme.css\n 12:3  ✖  Expected indentation of 2 spaces\n\n✖ 1 problem';
     const result = classify('lint-css', output);
 
-    expect(result.kind).toBe('lint-css');
-    expect(result.reason).toContain('1');
+    assert.equal(result.kind, 'lint-css');
+    assert.ok(result.reason.includes('1'));
   });
 
   it('cargo hatası rust aşamasında sınıflandırılır', () => {
     const output = 'error[E0425]: cannot find value `foo` in this scope\n --> src/lib.rs:10:5';
     const result = classify('rust', output);
 
-    expect(result.kind).toBe('rust');
-    expect(result.reason).toContain('E0425');
+    assert.equal(result.kind, 'rust');
+    assert.ok(result.reason.includes('E0425'));
   });
 
   it('JS ve Rust advisory kapıları güvenlik aşaması olarak sınıflandırılır', () => {
-    expect(classify('security-js', '3 vulnerabilities found').kind).toBe('security-js');
-    expect(classify('security-rust', 'Crate: vulnerable 0.1.0').kind).toBe('security-rust');
+    assert.equal(classify('security-js', '3 vulnerabilities found').kind, 'security-js');
+    assert.equal(classify('security-rust', 'Crate: vulnerable 0.1.0').kind, 'security-rust');
   });
 
   it('prettier uyumsuzluğu format olarak sınıflandırılır', () => {
     const result = classify('format-check', 'Code style issues found in 3 files. Run Prettier.');
-    expect(result.kind).toBe('format');
+    assert.equal(result.kind, 'format');
   });
 
   it('sınıflandırılamayan hata KÖR bırakmaz — son satırlar rapora girer', () => {
@@ -108,12 +112,31 @@ describe('kalite raporu sınıflandırması', () => {
     const output = ['bir sey oldu', '', 'anlasilmayan bir arac ciktisi', 'son satir'].join('\n');
     const result = classify('build', output);
 
-    expect(result.kind).toBe('unknown');
-    expect(result.tail).toEqual(['bir sey oldu', 'anlasilmayan bir arac ciktisi', 'son satir']);
+    assert.equal(result.kind, 'unknown');
+    assert.deepEqual(result.tail, ['bir sey oldu', 'anlasilmayan bir arac ciktisi', 'son satir']);
   });
 
   it('paket adı çıktının herhangi bir yerinden yakalanır', () => {
     const result = classify('typecheck', 'core typecheck: @volstudio/core@0.1.0 tsc --noEmit');
-    expect(result.package).toBe('@volstudio/core');
+    assert.equal(result.package, '@volstudio/core');
+  });
+});
+
+describe('kapı aşamaları justfile’dan türer', () => {
+  it('iç içe kapılar sırayla ve tekrarsız açılır', () => {
+    const recipes = parseJustRecipes('a:\nb:\nc:\nquick: a b\nhigh: quick c a\n');
+    assert.deepEqual(gateStages(recipes, 'high'), ['a', 'b', 'c']);
+    assert.throws(() => gateStages(recipes, 'yok'), /tarifi yok/);
+  });
+
+  it('gerçek justfile’daki her birleşik kapı yalnız tekil tariflere açılır', () => {
+    const root = resolve(import.meta.dirname, '../../..');
+    const recipes = parseJustRecipes(readFileSync(resolve(root, 'justfile'), 'utf8'));
+    for (const gate of COMPOSITE_GATES) {
+      const stages = stagesFor(root, gate);
+      assert.ok(stages.length > 0, gate);
+      for (const stage of stages) assert.deepEqual(recipes.get(stage), [], `${gate} → ${stage}`);
+    }
+    assert.ok(stagesFor(root, 'high').includes('audio-test'));
   });
 });

@@ -16,53 +16,55 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 
 ## Tekil kapılar
 
-| Tarif            | Sınadığı                                                                                                              |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `contract`       | `scripts/quality/tests/*.test.mjs` (bekçilerin kendi testleri) ve `scripts/workspace-contract.mjs` (aşağıda)          |
-| `format-check`   | Prettier, `**/*.{ts,css,json,md}`                                                                                     |
-| `typecheck`      | Aktif paketlerin `typecheck` betiği (`tsc --noEmit`)                                                                  |
-| `lint`           | ESLint; frozen ağaçlar yok sayma listesine lifecycle'dan girer                                                        |
-| `lint-css`       | Stylelint, `**/*.css`                                                                                                 |
-| `test`           | Aktif paketlerin `test` betiği; kapsam eşiği uygulamaz                                                                |
-| `coverage`       | `quality.json` → `coverageRuns` paketlerini eşikleriyle koşar ve koşu kaydı yazar (`scripts/quality/coverageRun.mjs`) |
-| `coverage-shape` | 100 satırın üstünde ve %50 kapsamın altındaki dosya test ister; yalnız aynı koşunun taze lcov'unu okur                |
-| `audio-test`     | audio-synth'in DSP, müzik, yayın yolu ve protokol testlerinden hızlı bir alt küme                                     |
-| `build`          | Aktif paketlerin `build` betiği                                                                                       |
-| `bundle`         | `dist` altındaki gzip'li `app`/`vendor` baytı, `quality.json` → `bundles` bütçesine karşı                             |
-| `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı                      |
-| `e2e`            | Aktif paketlerin `test:e2e` betiği; Chromium ve WebKit, üretim derlemesi üzerinde                                     |
-| `rust`           | Git'in gördüğü aktif Cargo manifestleri: `check --locked`, `fmt --check`, `clippy -D warnings`                        |
-| `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                   |
-| `audio-verify`   | Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır                                    |
-| `security-js`    | `pnpm audit --audit-level moderate`                                                                                   |
-| `security-rust`  | Aktif `Cargo.lock` dosyalarında cargo-audit                                                                           |
+| Tarif            | Sınadığı                                                                                                                                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contract`       | `scripts/quality/tests/*.test.mjs` (bekçilerin kendi testleri) ve `scripts/workspace-contract.mjs` (aşağıda)                                                                                                         |
+| `format-check`   | Prettier, `**/*.{ts,css,json,md}`                                                                                                                                                                                    |
+| `typecheck`      | Aktif paketlerin `typecheck` betiği (`tsc --noEmit`, `noImplicitOverride` dahil) ve kök betiklerin JSDoc denetimi (`scripts/tsconfig.json`)                                                                          |
+| `lint`           | ESLint: TS kaynak, betik ve testler tip bilgisiyle (`no-floating-promises` hata); `.js`/`.mjs` betikler `@eslint/js` ile; deterministik kodda `localeCompare` yasak; frozen ağaçlar lifecycle'dan yok sayılır        |
+| `lint-css`       | Stylelint, `**/*.css`                                                                                                                                                                                                |
+| `test`           | Aktif paketlerin `test` betiği; kapsam eşiği uygulamaz                                                                                                                                                               |
+| `coverage`       | `quality.json` → `coverageRuns` paketlerini eşikleriyle koşar ve koşu kaydı yazar; eşikten muaf paketin testini düz koşar (`scripts/quality/coverageRun.mjs`)                                                        |
+| `coverage-shape` | 100 satırın üstünde ve %50 kapsamın altındaki dosya test ister; yalnız aynı koşunun taze lcov'unu okur                                                                                                               |
+| `audio-test`     | audio-synth'in DSP, müzik, yayın yolu, protokol ve dizin katmanı testlerinden hızlı bir alt küme                                                                                                                     |
+| `build`          | Aktif paketlerin `build` betiği                                                                                                                                                                                      |
+| `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-ui: CORE UI'ın gönderilen ağırlığı)                                                                       |
+| `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı (bugün CORE uzamsal indeksi); ölçülen oranı yazar                                                                   |
+| `e2e`            | Aktif paketlerin `test:e2e` betiği; Chromium ve WebKit, üretim derlemesi üzerinde                                                                                                                                    |
+| `rust`           | Git'in gördüğü aktif Cargo manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır |
+| `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                                                                                                                  |
+| `audio-verify`   | Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır                                                                                                                                   |
+| `security-js`    | `pnpm audit --audit-level moderate`                                                                                                                                                                                  |
+| `security-rust`  | Aktif `Cargo.lock` dosyalarında cargo-audit                                                                                                                                                                          |
 
 `pnpm exec just report <kapı> --json` kapıyı koşup sonucu makine-okunur
-verir.
+verir; aşamalar `justfile`dan türer. `pnpm run doctor:env` araçları ve
+Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 
 ## Workspace sözleşmesi
 
 `scripts/workspace-contract.mjs` bütün ihlalleri birlikte raporlar:
 
-| Bekçi                                    | Kural                                                                                                                 |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `REQUIRED_SCRIPTS`                       | Her aktif paket `typecheck`, `test`, `test:coverage` taşır; yoksa `--if-present` onu sessizce atlardı                 |
-| `scripts/quality/coverageBinding.mjs`    | Paketin `vitest.config.ts`'i yüklenir; eşikleri `quality.json` ile derin eşittir, `coverage.include` `src/**/*.ts`dir |
-| `scripts/quality/config.mjs`             | `quality.json` şeması; eşik `floor`un altına inemez; muafiyet gerekçe ister; aktif paket kümesiyle eşleşir            |
-| `scripts/quality/workspaceLifecycle.mjs` | Lifecycle kayıtları; frozen ağaçlar etiketlerine eşittir; aktif paket frozen pakete bağımlı olamaz                    |
-| `scripts/quality/layers.mjs`             | Paket ve kaynak import yönü (aşağıda)                                                                                 |
-| `scripts/quality/moduleCycles.mjs`       | Paket içi çalışma zamanı import döngüsü; `import type` sayılmaz, `@/` alias'ı çözülür                                 |
-| `scripts/quality/sourceSize.mjs`         | Kod, test, betik, stil ve native kaynak en çok 1000 satır; belge, veri ve asset sayılmaz                              |
-| `scripts/quality/commentDensity.mjs`     | Yorum oranı en çok %40 (aşım gerekçe listesiyle), tek yorum bloğu en çok 24 satır (gerekçe kabul edilmez)             |
-| `scripts/quality/deadI18n.mjs`           | Kullanılmayan çeviri anahtarı; şablonla üretilen anahtarlar tam adla muaftır, üreten kod silinince muafiyet düşer     |
-| `scripts/quality/blobSize.mjs`           | İndeks ve çalışma ağacında 2 MiB üstü dosya                                                                           |
-| `scripts/quality/trackedImports.mjs`     | `.gitignore`'un yok saydığı dosya kaynak koddan import edilemez                                                       |
-| `scripts/quality/devPorts.mjs`           | İki ayrı paket aynı geliştirme portunu bildiremez                                                                     |
-| `scripts/quality/deviceApps.mjs`         | Cihaz ölçümü adayları `active` + `<paket>/src-tauri/tauri.conf.json` keşfinden türer                                  |
-| `scripts/quality/cargoLockParity.mjs`    | `tauri*`, `wry`, `tao` sürümleri aktif kilitlerde eşittir                                                             |
-| `scripts/quality/productIcons.mjs`       | Her aktif Tauri uygulaması kendi ikonunu taşır; şablon ya da başka ürünün ikonu reddedilir                            |
-| `scripts/quality/phaserBoundary.mjs`     | `core` Phaser'ı yalnız kayıtlı köprü dosyalarında import eder                                                         |
-| `scripts/quality/publicTypeSurface.mjs`  | CORE'un public tip yüzeyi `coreTypeSurface.snapshot.json` ile eşittir                                                 |
+| Bekçi                                    | Kural                                                                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `REQUIRED_SCRIPTS`                       | Her aktif paket `typecheck`, `test`, `test:coverage` taşır; yoksa `--if-present` onu sessizce atlardı                                                                    |
+| `scripts/quality/coverageBinding.mjs`    | Paketin `vitest.config.ts`'i yüklenir; eşikleri `quality.json` ile derin eşittir, `coverage.include` `src/**/*.ts`dir                                                    |
+| `scripts/quality/config.mjs`             | `quality.json` şeması; eşik `floor`un altına inemez; muafiyet gerekçe ister; aktif paket kümesiyle eşleşir                                                               |
+| `scripts/quality/workspaceLifecycle.mjs` | Lifecycle kayıtları; frozen ağaçlar etiketlerine eşittir; aktif paket frozen pakete bağımlı olamaz                                                                       |
+| `scripts/quality/layers.mjs`             | Paket ve kaynak import yönü (aşağıda); başka pakete yalnız `exports` haritasındaki yoldan girilir                                                                        |
+| `scripts/quality/moduleCycles.mjs`       | Paket içi çalışma zamanı import döngüsü; `import type` sayılmaz, `@/` alias'ı çözülür                                                                                    |
+| `scripts/quality/sourceSize.mjs`         | Kod, test, betik, stil ve native kaynak en çok 1000 satır; belge, veri ve asset sayılmaz                                                                                 |
+| `scripts/quality/commentDensity.mjs`     | TS, JS, Rust, CSS ve Kotlin kaynağında yorum oranı en çok %40 (aşım gerekçe listesiyle), tek yorum bloğu en çok 24 satır                                                 |
+| `scripts/quality/deadI18n.mjs`           | Kullanılmayan çeviri anahtarı; şablonla üretilen anahtarlar tam adla muaftır, üreten kod silinince muafiyet düşer                                                        |
+| `scripts/quality/blobSize.mjs`           | İndeks ve çalışma ağacında 2 MiB üstü dosya                                                                                                                              |
+| `scripts/quality/trackedImports.mjs`     | `.gitignore`'un yok saydığı dosya kaynak koddan import edilemez                                                                                                          |
+| `scripts/quality/devPorts.mjs`           | İki ayrı paket aynı geliştirme portunu bildiremez                                                                                                                        |
+| `scripts/quality/deviceApps.mjs`         | Cihaz ölçümü adayları `active` + `<paket>/src-tauri/tauri.conf.json` keşfinden türer                                                                                     |
+| `scripts/quality/cargoLockParity.mjs`    | `tauri*`, `wry`, `tao` sürümleri aktif kilitlerde eşittir                                                                                                                |
+| `scripts/quality/productIcons.mjs`       | Her aktif Tauri uygulaması kendi ikonunu taşır; şablon ya da başka ürünün ikonu reddedilir                                                                               |
+| `scripts/quality/phaserBoundary.mjs`     | `core` Phaser'ı yalnız kayıtlı köprü dosyalarında import eder                                                                                                            |
+| `scripts/quality/publicTypeSurface.mjs`  | CORE'un public tip yüzeyi `coreTypeSurface.snapshot.json` ile eşittir                                                                                                    |
+| `scripts/quality/tauriPlugins.mjs`       | JS `@tauri-apps/plugin-*` → Rust kaydı; Cargo eklenti bağımlılığı → kaynakta kayıt ya da izin; kayıtlı eklenti → izin ya da JS tüketicisi; yetenek izni → kurulu eklenti |
 
 Ürün kalitesi bekçileri (satır, yorum, i18n, döngü, katman, port, ikon, kilit
 paritesi) frozen ağaçları taramaz; bütünlük bekçileri (lifecycle, blob,
@@ -99,11 +101,12 @@ devtools/*   ──/
 
 ## Belge kapıları
 
-| Kapı                                                          | Bağladığı şey                                                                                               |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `core/tests/governance/docSymbols.test.ts`                    | `core/docs/*.md` sembolleri ve `music-engine.md` API tablosu → CORE yüzeyi                                  |
-| `devtools/audio-synth/tests/governance/docReferences.test.ts` | audio-synth README, DESIGN ve TODO'daki yollar ve betik adları → gerçek ağaç                                |
-| `scripts/quality/tests/agentDocs.test.mjs`                    | `AGENTS.md`, `CLAUDE.md`, `devtools/pen.dev/AGENTS.md` ve bu belgedeki yollar, komutlar ve kapı bileşimleri |
+| Kapı                                                          | Bağladığı şey                                                                                                                                                   |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/tests/governance/docSymbols.test.ts`                    | `core/docs/*.md` sembolleri ve `music-engine.md` API tablosu → CORE yüzeyi                                                                                      |
+| `devtools/audio-synth/tests/governance/docReferences.test.ts` | audio-synth README, DESIGN ve TODO'daki yollar ve betik adları → gerçek ağaç                                                                                    |
+| `scripts/quality/tests/agentDocs.test.mjs`                    | Bütün `.md` belgelerindeki yollar ve komutlar (audio-synth hariç); agent belgelerinde kapı bileşimleri; `AGENTS.md` repo haritası ↔ `workspace-lifecycle.json` |
+| `devtools/audio-synth/tests/governance/dirLayers.test.ts`     | audio-synth kaynak dizinleri arasında karşılıklı import; bilinen çiftler yalnız azalır                                                                          |
 
 Ters yön de kapılıdır: ölü muafiyet ya da belgede olmayan istisna kapıyı
 kırar.

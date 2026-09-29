@@ -1,4 +1,7 @@
 import { spawnSync } from 'node:child_process';
+import { existsSync, readdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 
 const failures = [];
 
@@ -65,6 +68,46 @@ if (tauri.status === 0) {
   );
   console.error('Tauri sistem deps: YOK');
 }
+
+// E2E WebKit projesi Playwright'ın indirdiği MiniBrowser'ı koşar; eksik paylaşımlı
+// kütüphane ancak test anında "browser has been closed" olarak görünür.
+function checkPlaywrightWebkit() {
+  const cache = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(homedir(), '.cache', 'ms-playwright');
+  const installs = existsSync(cache)
+    ? readdirSync(cache).filter((name) => name.startsWith('webkit-'))
+    : [];
+  if (installs.length === 0) {
+    failures.push(
+      'Playwright WebKit: kurulu değil. `pnpm --filter @volstudio/vol-ui exec playwright install webkit`.',
+    );
+    console.error('Playwright WebKit: YOK');
+    return;
+  }
+  for (const install of installs) {
+    const browser = join(cache, install, 'minibrowser-wpe', 'MiniBrowser');
+    if (!existsSync(browser)) continue;
+    const run = spawnSync(browser, ['--help'], { encoding: 'utf8', timeout: 10_000 });
+    const missing = /error while loading shared libraries: (\S+)/.exec(run.stderr ?? '');
+    if (missing) {
+      failures.push(
+        `Playwright WebKit (${install}): ${
+          missing[1]
+        } yüklenemiyor. Dağıtım bu sürümü sağlamıyorsa kütüphane ${join(
+          cache,
+          install,
+          'minibrowser-wpe',
+          'sys',
+          'lib',
+        )} altına konur.`,
+      );
+      console.error(`Playwright WebKit (${install}): EKSİK KÜTÜPHANE`);
+    } else {
+      console.log(`Playwright WebKit (${install}): OK`);
+    }
+  }
+}
+
+checkPlaywrightWebkit();
 
 if (failures.length > 0) {
   console.error('\n[doctor] Ortam sorunları:');

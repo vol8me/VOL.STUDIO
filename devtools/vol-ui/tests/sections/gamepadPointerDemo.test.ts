@@ -17,7 +17,7 @@ describe('TOUCH sanal kol cursor tüketicisi', () => {
     vi.stubGlobal(
       'PointerEvent',
       class extends Original {
-        readonly pointerType: string;
+        override readonly pointerType: string;
         constructor(type: string, options: PointerEventInit = {}) {
           super(type, options);
           this.pointerType = options.pointerType ?? '';

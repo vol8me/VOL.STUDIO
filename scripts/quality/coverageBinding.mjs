@@ -5,7 +5,7 @@ import { loadConfigFromFile } from 'vite';
 export async function validateCoverageBinding(configPath, expected) {
   try {
     const loaded = await loadConfigFromFile({ command: 'serve', mode: 'test' }, configPath);
-    const config = loaded?.config;
+    const config = /** @type {any} */ (loaded?.config);
     const coverage = config?.test?.coverage;
     const problems = [];
     if (!isDeepStrictEqual(coverage?.thresholds, expected)) {

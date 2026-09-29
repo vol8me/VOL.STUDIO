@@ -25,6 +25,7 @@ import { validateCargoLockParity } from './quality/cargoLockParity.mjs';
 import { validateProductIcons } from './quality/productIcons.mjs';
 import { validatePhaserBoundary } from './quality/phaserBoundary.mjs';
 import { validateCoreTypeSurface } from './quality/publicTypeSurface.mjs';
+import { validateTauriPlugins } from './quality/tauriPlugins.mjs';
 import {
   activeWorkspaceNames,
   listWorkspacePackages,
@@ -94,6 +95,7 @@ problems.push(...validateCommentDensity(root, undefined, undefined, lifecycle));
 problems.push(...validateDeviceApps(root, lifecycle));
 problems.push(...validateCargoLockParity(root, undefined, lifecycle));
 problems.push(...validateProductIcons(root, undefined, lifecycle));
+problems.push(...validateTauriPlugins(root, lifecycle));
 problems.push(...validatePhaserBoundary(root));
 problems.push(...validateCoreTypeSurface(root));
 

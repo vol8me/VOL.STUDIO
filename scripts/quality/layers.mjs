@@ -2,13 +2,30 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { sourceImports } from './sourceImports.mjs';
-import {
-  frozenWorkspacePaths,
-  loadRepoLifecycle,
-} from './workspaceLifecycle.mjs';
+import { frozenWorkspacePaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
-/** Yazarlık formatının sahibi üreticidir; çalışma zamanı CORE'a taşınmaz. */
+/**
+ * Devtool → devtool kenarları yalnız burada gerekçesiyle yazılırsa meşrudur.
+ * Biçim: `{ '<sahip>': { '<hedef>': '<gerekçe>' } }`; bugün böyle kenar yoktur.
+ */
 const DEVTOOL_EDGES = {};
+
+/**
+ * Başka bir workspace paketine yalnız `exports` haritasındaki yoldan girilir;
+ * haritası olmayan paket dışarıya kapalıdır.
+ */
+export function exportViolation(specifier, target) {
+  if (!specifier.startsWith(target.name)) return null;
+  const rest = specifier.slice(target.name.length);
+  if (rest !== '' && !rest.startsWith('/')) return null;
+  const subpath = rest === '' ? '.' : `.${rest}`;
+  const exports = target.manifest.exports;
+  if (exports === undefined) {
+    return `"${target.name}" exports tanımlamıyor; paket dışarıya kapalıdır ("${specifier}").`;
+  }
+  const keys = typeof exports === 'string' ? ['.'] : Object.keys(exports);
+  return keys.includes(subpath) ? null : `"${specifier}" ${target.name} exports haritasında yok.`;
+}
 const SKIP_DIRS = new Set([
   'node_modules',
   'dist',
@@ -104,7 +121,7 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
   };
   const check = (owner, target, where, runtime) => {
     if (!target || target === owner) return;
-    graph.get(owner.name).add(target.name);
+    graph.get(owner.name)?.add(target.name);
     const allowed = DEVTOOL_EDGES[owner.name]?.[target.name];
     if (owner.kind === 'core' && target.kind !== 'core') {
       problems.push(`${where}: CORE bir tüketici paketi import ediyor ("${target.name}").`);
@@ -148,7 +165,12 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
       walk(join(owner.root, directory), (file) => {
         for (const specifier of sourceImports(readFileSync(file, 'utf8'), file)) {
           const where = relative(root, file);
-          check(owner, targetOf(specifier, file), where, directory !== 'scripts');
+          const target = targetOf(specifier, file);
+          check(owner, target, where, directory !== 'scripts');
+          if (target && target !== owner) {
+            const violation = exportViolation(specifier, target);
+            if (violation) problems.push(`${where}: ${violation}`);
+          }
           if (
             directory !== 'scripts' &&
             specifier.startsWith('.') &&
@@ -161,6 +183,17 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
         }
       });
   }
+  for (const owner of packages) {
+    if (frozenDirs.has(owner.dir)) continue;
+    walk(join(owner.root, 'tests'), (file) => {
+      for (const specifier of sourceImports(readFileSync(file, 'utf8'), file)) {
+        const target = targetOf(specifier, file);
+        if (!target || target === owner) continue;
+        const violation = exportViolation(specifier, target);
+        if (violation) problems.push(`${relative(root, file)}: ${violation}`);
+      }
+    });
+  }
   const visiting = new Set();
   const done = new Set();
   const visit = (name, chain) => {
@@ -170,7 +203,7 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
     }
     if (done.has(name)) return;
     visiting.add(name);
-    for (const target of graph.get(name)) visit(target, [...chain, name]);
+    for (const target of graph.get(name) ?? []) visit(target, [...chain, name]);
     visiting.delete(name);
     done.add(name);
   };

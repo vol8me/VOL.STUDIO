@@ -20,10 +20,6 @@ tauri-plugin-vol-diagnostics = { path = "../../../tauri-v2/plugins/vol-diagnosti
 tauri-plugin-vol-steamworks = { path = "../../../tauri-v2/plugins/vol-steamworks" }
 tauri = { version = "2.11", features = ["rustls-tls"] }
 
-# İzin tanımları uygulama crate'inin bağımlılık ağacından toplanır: kabuğun
-# kurduğu eklentiler burada da görünür olmalıdır.
-tauri-plugin-log = "2.9"
-tauri-plugin-store = "2.4"
 
 [features]
 default = ["custom-protocol"]

@@ -18,16 +18,7 @@
   width: calc(100vw / var(--vol-layout-zoom));
   height: calc(100vh / var(--vol-layout-zoom));
 
-  /*
-   * Mobil WebView'in KENDİ dokunma vurgusunu kapatır.
-   *
-   * Android WebView her dokunulabilir elemanın üstüne yarı saydam mavi bir
-   * dikdörtgen basar (`-webkit-tap-highlight-color` varsayılanı) ve uzun
-   * basışta metin seçimi/"kopyala" balonunu açar. İkisi de tasarım sisteminin
-   * kendi `--pressed` durumunun ÜSTÜNE biner: düğme basılınca beklenen renk
-   * yerine mavi bir kopya gibi görünür. Devralınan bir davranış olduğu için
-   * bileşen bazında değil, tüm arayüz kökünde kapatılır.
-   */
+  /* WebView'in kendi dokunma vurgusu ve uzun basış balonu `--pressed` durumunun üstüne biner. */
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
 }
@@ -49,18 +40,7 @@ body {
   user-select: none;
 }
 
-/**
- * `hidden` attribute'unu KORUR.
- *
- * Tarayıcının `[hidden] { display: none }` kuralı bir UA stilidir; yazar
- * stillerindeki HERHANGİ bir `display` bildirimi onu ezer. `.x { display: flex }`
- * yazan bir kural, `element.hidden = true` yapılan aynı elemanı görünür bırakır
- * ve kimse fark etmez — bileşen "gizlendi" sanır, kullanıcı görmeye devam eder.
- *
- * Bu tuzak repoda bir dönem seçici seçici çözülüyordu (`.vol-button[hidden]`,
- * `.vol-card-picker[hidden]`, `.studio-toast[hidden]`…); her yeni `display`
- * kuralı onu geri getirebiliyordu. Tek merkezi kural sınıfı kapatır.
- */
+/* UA'nın `[hidden]` kuralını herhangi bir yazar `display` bildirimi ezer; tek merkezi kural korur. */
 [hidden] {
   display: none !important;
 }
@@ -82,22 +62,9 @@ body {
 }
 
 /*
- * SÜRÜKLEME YÜZEYLERİNDE METİN SEÇİMİ KAPALIDIR.
- *
- * Bir öğeyi sürüklerken tarayıcı aynı jesti metin seçimi olarak da yorumlar:
- * kart mavi vurguya boyanır, imleç I-beam'e döner, mobilde "kopyala" balonu
- * açılır. Ölçüldü — Kanban'da bir kartı sürüklemek 36 karakter metin seçiyordu.
- *
- * Koruma bir dönem YALNIZCA `.vol-ui-root` üzerindeydi; o tam ekran katmanı
- * oyunların kullandığı kabuktur. Bileşenler başka bir yere monte edildiğinde
- * (VOL.UI showcase, bir araç paneli, herhangi bir tüketici) korumasız kalıyordu:
- * yani bileşenin davranışı NEREYE ASILDIĞINA bağlıydı. Bir sözleşme, konumuna
- * göre değişemez.
- *
- * Liste sürükleme yüzeyleriyle SINIRLI tutulur: metin seçimini genel olarak
- * kapatmak, kullanıcının bir açıklamayı ya da bir değeri kopyalamasını
- * engellerdi. Sürüklenebilir bir yüzeyde ise seçim zaten aynı jestle mümkün
- * değildir — kapatmak bir yeteneği almaz, çakışmayı kaldırır.
+ * Sürükleme yüzeylerinde metin seçimi kapalıdır: aynı jest seçim olarak da
+ * yorumlanır. Koruma bileşenin kendisindedir, monte edildiği köke bağlı değildir;
+ * seçim yalnız sürüklenebilir yüzeylerde kapanır.
  */
 .vol-kanban-wrap,
 .vol-slot-grid__item,

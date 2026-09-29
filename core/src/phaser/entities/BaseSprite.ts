@@ -14,5 +14,5 @@ export abstract class BaseSprite extends Phaser.GameObjects.Sprite implements Ba
     this.id = id;
   }
 
-  public abstract update(delta: number): void;
+  public abstract override update(delta: number): void;
 }

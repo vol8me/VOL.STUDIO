@@ -42,6 +42,10 @@ export function extractGStreamerPluginFilename(output) {
  * geliştirme paketi kuruluysa verdiği dizinler öne alınır; yalnız runtime
  * paketi olan Fedora/Debian kurulumları bilinen sistem yollarına düşer.
  */
+/**
+ * @param {{ envOverride?: string, pluginScannerDir?: string, libexecDir?: string, arch?: string }} [options]
+ * @returns {string[]}
+ */
 export function buildGStreamerScannerCandidates({
   envOverride,
   pluginScannerDir,
@@ -49,14 +53,16 @@ export function buildGStreamerScannerCandidates({
   arch = process.arch,
 } = {}) {
   const multiarch = arch === 'arm64' ? 'aarch64-linux-gnu' : 'x86_64-linux-gnu';
-  const candidates = [
-    envOverride,
-    pluginScannerDir && `${pluginScannerDir}/gst-plugin-scanner`,
-    libexecDir && `${libexecDir}/gstreamer-1.0/gst-plugin-scanner`,
-    '/usr/libexec/gstreamer-1.0/gst-plugin-scanner',
-    '/usr/lib/gstreamer-1.0/gst-plugin-scanner',
-    '/usr/lib64/gstreamer-1.0/gst-plugin-scanner',
-    `/usr/lib/${multiarch}/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner`,
-  ].filter(Boolean);
+  const candidates = /** @type {string[]} */ (
+    [
+      envOverride,
+      pluginScannerDir && `${pluginScannerDir}/gst-plugin-scanner`,
+      libexecDir && `${libexecDir}/gstreamer-1.0/gst-plugin-scanner`,
+      '/usr/libexec/gstreamer-1.0/gst-plugin-scanner',
+      '/usr/lib/gstreamer-1.0/gst-plugin-scanner',
+      '/usr/lib64/gstreamer-1.0/gst-plugin-scanner',
+      `/usr/lib/${multiarch}/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner`,
+    ].filter(Boolean)
+  );
   return [...new Set(candidates)];
 }

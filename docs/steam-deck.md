@@ -188,7 +188,7 @@ Steam Input API ile ya da kullanıcı eşlemesiyle görünür.
   yığına bağlar; `Modal` açıkken kendini kaydeder.
 
 **Oyunun işi:** Menu'yü duraklatmaya, nişanı sağ çubuğa, ateş/atılmayı
-tetiklere bağlamak; bağlar `src/config/` altında veridir.
+tetiklere bağlamak; bağlar `<oyun>/src/config/` altında veridir.
 
 **Oyun turunda görülen tuzaklar** (her yeni oyunun kabulünde sınanır):
 

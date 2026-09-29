@@ -31,6 +31,17 @@ export function readStamp(root, run) {
   }
 }
 
+/**
+ * Seçilen paketleri ölçülecekler ve eşikten muaf olduğu için yalnız testi
+ * koşacaklar diye ayırır; muaf paketin testi de kapıda koşar.
+ */
+export function splitMeasured(packages, exempt) {
+  return {
+    measured: packages.filter((pkg) => !(pkg.name in exempt)),
+    plain: packages.filter((pkg) => pkg.name in exempt),
+  };
+}
+
 /** `{ only }` yalnız adı geçenleri, `{ exclude }` adı geçenler dışındakileri seçer. */
 export function selectRunPackages(packages, spec) {
   if (spec.only) return packages.filter((pkg) => spec.only.includes(pkg.name));
@@ -57,19 +68,23 @@ function coveragePackages(root) {
       const manifest = JSON.parse(readFileSync(join(root, pkg.dir, 'package.json'), 'utf8'));
       return Boolean(manifest.scripts?.['test:coverage']);
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }
 
 function main(run) {
   const root = process.cwd();
-  const spec = loadQualityConfig(join(root, 'quality.json')).coverageRuns?.[run];
+  const quality = loadQualityConfig(join(root, 'quality.json'));
+  const spec = quality.coverageRuns?.[run];
   if (!spec) {
     console.error(`[coverage] "${run}" koşusu quality.json → coverageRuns içinde tanımlı değil.`);
     return 2;
   }
-  const packages = selectRunPackages(coveragePackages(root), spec);
+  const { measured: packages, plain } = splitMeasured(
+    selectRunPackages(coveragePackages(root), spec),
+    quality.exempt ?? {},
+  );
   if (packages.length === 0) {
-    console.error(`[coverage] "${run}" koşusu hiçbir paketi seçmiyor.`);
+    console.error(`[coverage] "${run}" koşusu hiçbir paketi ölçmüyor.`);
     return 2;
   }
 
@@ -84,7 +99,19 @@ function main(run) {
   });
   if (result.status !== 0) return result.status ?? 1;
 
-  writeFileSync(stampPath(root, run), JSON.stringify({ ...stamp, finishedAt: Date.now() }, null, 2));
+  if (plain.length > 0) {
+    const plainFilters = plain.flatMap((pkg) => ['--filter', pkg.name]);
+    const tests = spawnSync('pnpm', ['-r', ...plainFilters, 'run', 'test'], {
+      cwd: root,
+      stdio: 'inherit',
+    });
+    if (tests.status !== 0) return tests.status ?? 1;
+  }
+
+  writeFileSync(
+    stampPath(root, run),
+    JSON.stringify({ ...stamp, finishedAt: Date.now() }, null, 2),
+  );
   return 0;
 }
 

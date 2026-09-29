@@ -8,9 +8,9 @@ import {
   documentedPaths,
   gateRows,
   inlineSpans,
-  parseJustRecipes,
   resolvesInTree,
 } from '../agentDocs.mjs';
+import { parseJustRecipes } from '../justfile.mjs';
 import { workingTreeFiles } from '../gitFiles.mjs';
 import { excludingFrozenPaths, loadRepoLifecycle } from '../workspaceLifecycle.mjs';
 
@@ -180,4 +180,56 @@ test('aktif belgelerde düz metin olarak kalmış Unicode kaçışı yoktur', ()
   const docs = excludingFrozenPaths(workingTreeFiles(ROOT, ['*.md']), loadRepoLifecycle(ROOT));
   const escaped = docs.filter((doc) => /\\u[0-9a-fA-F]{4}/.test(read(doc)));
   assert.deepEqual(escaped, []);
+});
+
+test('AGENTS.md repo haritası lifecycle kayıtlarıyla birebir aynıdır', () => {
+  const rows = new Map();
+  for (const line of read('AGENTS.md').split('\n')) {
+    const match = /^\|\s*`([^`]+)\/`\s*\|\s*`(@volstudio\/[^`]+)`\s*\|/.exec(line);
+    if (match) rows.set(match[1], match[2]);
+  }
+  const lifecycle = loadRepoLifecycle(ROOT);
+  assert.ok(lifecycle, 'workspace-lifecycle.json okunamadı');
+  const expected = new Map(lifecycle.workspaces.map((w) => [w.path, w.packageName]));
+  assert.deepEqual([...rows].sort(), [...expected].sort());
+});
+
+test('repo belgelerindeki her yol gerçek ağaçta vardır', () => {
+  // audio-synth belgeleri kendi kapısındadır (docReferences.test.ts).
+  const files = new Set(workingTreeFiles(ROOT, []));
+  const docs = excludingFrozenPaths(
+    workingTreeFiles(ROOT, ['*.md']),
+    loadRepoLifecycle(ROOT),
+  ).filter((doc) => !doc.startsWith('devtools/audio-synth/') && !AGENT_DOCS.includes(doc));
+  const missing = [];
+  for (const doc of docs) {
+    for (const path of documentedPaths(read(doc))) {
+      if (LOCAL_ONLY.has(path) || ABSENT_BY_RULE.has(path)) continue;
+      if (!resolvesInTree(path, dirname(doc), files)) missing.push(`${doc}: ${path}`);
+    }
+  }
+  assert.deepEqual(missing, []);
+});
+
+test('repo belgelerindeki her komut gerçekten vardır', () => {
+  const recipes = parseJustRecipes(read('justfile'));
+  const rootScripts = new Set(Object.keys(JSON.parse(read('package.json')).scripts));
+  const packages = workspaceScripts();
+  const docs = excludingFrozenPaths(
+    workingTreeFiles(ROOT, ['*.md']),
+    loadRepoLifecycle(ROOT),
+  ).filter((doc) => !doc.startsWith('devtools/audio-synth/') && !AGENT_DOCS.includes(doc));
+  const missing = [];
+  for (const doc of docs) {
+    for (const ref of commandRefs(read(doc))) {
+      const known =
+        ref.kind === 'recipe'
+          ? recipes.has(ref.name)
+          : ref.kind === 'root'
+          ? rootScripts.has(ref.name)
+          : packages.get(ref.pkg)?.has(ref.name) === true;
+      if (!known) missing.push(`${doc}: ${ref.kind} ${ref.pkg ?? ''} ${ref.name}`.trim());
+    }
+  }
+  assert.deepEqual(missing, []);
 });

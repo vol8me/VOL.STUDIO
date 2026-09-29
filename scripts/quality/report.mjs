@@ -1,52 +1,25 @@
 #!/usr/bin/env node
 /**
- * Kalite kapılarını koşar ve sonucu MAKİNE-OKUNUR raporlar.
+ * Birleşik kapıyı aşama aşama `just <aşama>` ile koşar ve sonucu
+ * makine-okunur raporlar: düşen aşama, paket ve sebep. Aşamalar `justfile`dan
+ * türer; çıkış kodu kapınınkiyle aynıdır.
  *
- * Kapıların kendisi `justfile`dadır ve tek doğruluk kaynağı odur; bu betik
- * onları YENİDEN TANIMLAMAZ, `just <kapı>` çağırır. Kattığı tek şey çıktının
- * biçimi: hangi aşamada, hangi pakette, hangi sebeple düşüldüğünü yapılandırılmış
- * olarak verir.
- *
- * Neden: bugün kapı çıktısını insan okuyor ve araçların (pnpm, eslint, vitest,
- * cargo, stylelint) her biri kendi biçiminde yazıyor. Bir agent döngüsü
- * "hangi aşama düştü, tekrar koşmaya değer mi?" sorusunu bu metinden
- * çıkarmak zorunda kalır. Yapılandırılmış rapor o çıkarımı gereksiz kılar.
- *
- * Kullanım:
  *   node scripts/quality/report.mjs quick|fast|high|signoff [--json]
- *
- * Çıkış kodu koşulan kapının çıkış koduyla AYNIdır — betik bir sarmalayıcıdır,
- * kapının kararını değiştirmez.
  */
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { gateStages, parseJustRecipes } from './justfile.mjs';
 
-/**
- * Birleşik kapıların hangi tekil aşamalardan oluştuğu.
- *
- * `justfile` ile SENKRON tutulmalıdır; ayrışırsa rapor yanlış aşama adı
- * gösterir. Aşağıdaki `verifyGateGraph()` bu senkronu doğrular — elle
- * hatırlamaya bırakılmaz.
- */
-const GATES = {
-  quick: ['contract', 'format-check', 'typecheck', 'lint'],
-  fast: ['quick', 'test'],
-  high: [
-    'quick',
-    'rust',
-    'lint-css',
-    'coverage',
-    'coverage-shape',
-    'build',
-    'bundle',
-    'scaling',
-    'e2e',
-  ],
-  signoff: ['high', 'coverage-audio', 'audio-verify', 'security-js', 'security-rust'],
-};
+/** Raporlanabilen birleşik kapılar; aşamaları `justfile`dan türer. */
+export const COMPOSITE_GATES = ['quick', 'fast', 'high', 'signoff'];
+
+/** Kapının tekil aşamaları, `justfile`ın kendisinden. */
+export function stagesFor(root, gate) {
+  return gateStages(parseJustRecipes(readFileSync(join(root, 'justfile'), 'utf8')), gate);
+}
 
 /**
  * Çıktının SON anlamlı satırları — sınıflandırma başarısız olduğunda raporun
@@ -75,7 +48,7 @@ function tailLines(output, limit = 5) {
  * Üçüncü parti kalıpları araç biçimine bağlıdır ve bir sürüm yükseltmesinde
  * eşleşmeyi bırakabilir. Bu KAPIYI bozmaz — geçer/kalır kararı çıkış
  * kodundan gelir, buradan değil; yalnızca teşhis `unknown`a düşer ve
- * `tail` alanı devreye girer. Kalıplar `core/tests/governance/qualityReport.test.ts` içinde gerçek
+ * `tail` alanı devreye girer. Kalıplar `scripts/quality/tests/report.test.mjs` içinde gerçek
  * çıktı örnekleriyle kilitlidir.
  */
 export function classify(stage, output) {
@@ -158,33 +131,7 @@ export function classify(stage, output) {
   };
 }
 
-/** `justfile` ile `GATES` haritasının ayrışmadığını doğrular. */
-function verifyGateGraph(root) {
-  const justfile = readFileSync(join(root, 'justfile'), 'utf8');
-  const problems = [];
-
-  for (const [gate, stages] of Object.entries(GATES)) {
-    const recipe = new RegExp(`^${gate}:([^\\n]*)$`, 'm').exec(justfile);
-    if (!recipe) {
-      problems.push(`justfile içinde "${gate}" tarifi yok`);
-      continue;
-    }
-    const actual = recipe[1].trim().split(/\s+/).filter(Boolean);
-    if (actual.join(' ') !== stages.join(' ')) {
-      problems.push(`"${gate}" aşamaları ayrışmış: justfile=[${actual}] rapor=[${stages}]`);
-    }
-  }
-
-  return problems;
-}
-
-/*
- * Buradan aşağısı yalnızca betik DOĞRUDAN çalıştırıldığında koşar.
- *
- * `classify` dışa açık: kalıplarının gerçek araç çıktılarıyla test edilmesi
- * gerekiyor (`report.test.mjs`). Koruma olmadan testin import'u tüm kalite
- * kapısını başlatırdı.
- */
+// Koruma olmadan testin import'u bütün kapıyı başlatırdı.
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isMain) {
@@ -196,25 +143,12 @@ function runCli() {
   const asJson = flags.includes('--json');
   const root = process.cwd();
 
-  if (!(gateArg in GATES)) {
-    console.error(`Bilinmeyen kapı: ${gateArg}. Seçenekler: ${Object.keys(GATES).join(', ')}`);
+  if (!COMPOSITE_GATES.includes(gateArg)) {
+    console.error(`Bilinmeyen kapı: ${gateArg}. Seçenekler: ${COMPOSITE_GATES.join(', ')}`);
     process.exit(2);
   }
 
-  const graphProblems = verifyGateGraph(root);
-  if (graphProblems.length > 0) {
-    console.error('[quality-report] justfile ile aşama haritası ayrışmış:');
-    for (const problem of graphProblems) console.error(`  ✗ ${problem}`);
-    console.error('  scripts/quality/report.mjs içindeki GATES haritasını güncelle.');
-    process.exit(2);
-  }
-
-  /** Birleşik kapıyı tekil aşamalara açar (bir kez, iç içe kapılar dahil). */
-  function flatten(gate) {
-    return GATES[gate].flatMap((stage) => (stage in GATES ? flatten(stage) : [stage]));
-  }
-
-  const stages = [...new Set(flatten(gateArg))];
+  const stages = stagesFor(root, gateArg);
   const started = Date.now();
   const results = [];
   let failure = null;

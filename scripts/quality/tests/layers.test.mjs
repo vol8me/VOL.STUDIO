@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { validateLayerBoundaries } from '../layers.mjs';
+import { exportViolation, validateLayerBoundaries } from '../layers.mjs';
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'vol-layers-'));
@@ -88,4 +88,20 @@ test('yorum içindeki örnek import ihlal değildir', (t) => {
   const { root, write } = fixture(t);
   write('games/demo/src/index.ts', '// import "@volstudio/tool";\nexport {};');
   assert.deepEqual(validateLayerBoundaries(root), []);
+});
+
+test('başka pakete yalnız exports haritasındaki yoldan girilir', () => {
+  const core = {
+    name: '@volstudio/core',
+    manifest: { exports: { '.': './a.ts', './ui': './ui.ts' } },
+  };
+  assert.equal(exportViolation('@volstudio/core', core), null);
+  assert.equal(exportViolation('@volstudio/core/ui', core), null);
+  assert.match(
+    exportViolation('@volstudio/core/src/ui/Button', core) ?? '',
+    /exports haritasında yok/,
+  );
+  assert.equal(exportViolation('@volstudio/core-extra', core), null);
+  const closed = { name: '@volstudio/tool', manifest: {} };
+  assert.match(exportViolation('@volstudio/tool', closed) ?? '', /dışarıya kapalıdır/);
 });

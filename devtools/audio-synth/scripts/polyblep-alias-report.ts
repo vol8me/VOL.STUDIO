@@ -17,7 +17,6 @@ import { powerSpectrum } from '../src/analysis/spectrum';
 import { downsample2x } from '../src/engine/render';
 import { synthesize } from '../src/engine/synthesize';
 import { renderRetro, waveformFields, type RetroWaveform } from '../src/synthesis/retro';
-import type { Waveform } from '../src/types';
 
 const RATE = 44100;
 

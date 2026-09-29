@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadWorkspaceLifecycle } from './workspaceLifecycle.mjs';
 

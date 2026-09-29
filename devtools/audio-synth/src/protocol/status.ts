@@ -206,7 +206,7 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
   const programHash = programResult.loaded?.hash ?? null;
 
   const renders = Object.entries(a.renders)
-    .sort(([x], [y]) => x.localeCompare(y))
+    .sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0))
     .map(([renderId, ref]): CandidateState => {
       const result = inspect(file(ref.path), ref.path, ref.hash, validateRenderRecord);
       const record = result.loaded?.doc as
@@ -227,7 +227,7 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
   const renderById = new Map(renders.map((r) => [r.renderId, r]));
 
   const analyses = Object.entries(a.analyses)
-    .sort(([x], [y]) => x.localeCompare(y))
+    .sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0))
     .map(([renderId, ref]): CandidateState => {
       const result = inspect(file(ref.path), ref.path, ref.hash, validateAnalysisRecord);
       const record = result.loaded?.doc as

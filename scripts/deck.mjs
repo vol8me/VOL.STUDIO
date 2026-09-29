@@ -136,6 +136,7 @@ function privateFile(path, data) {
   writeFileSync(path, data, { flag: 'wx', mode: 0o600 });
 }
 
+/** @param {string} host @param {string} path @param {{ size: number, sha256: string, endsWithNewline: boolean } | null} [baseline] */
 function readLog(host, path, baseline = null) {
   return JSON.parse(ssh(host, renderLogReadCommand(path, baseline), { quiet: true }));
 }
@@ -211,6 +212,10 @@ function cmdDiscover(argv) {
   console.log(`${host}  (${via})`);
 }
 
+/**
+ * @param {string} root @param {string} workspace @param {string} host
+ * @param {{ compat?: string }} [options]
+ */
 function cmdDeploy(root, workspace, host, { compat } = {}) {
   const shell = readShell(root, workspace);
   if (!existsSync(shell.appDir)) {
@@ -352,7 +357,7 @@ t1=$(date +%s%3N)
 echo "t0=$t0 t1=$t1"
 for kv in ${reads.join(' ')}; do
   name=\${kv%%=*}; path=\${kv#*=}
-  echo "$name=\$(cat $path 2>/dev/null || echo -)"
+  echo "$name=$(cat $path 2>/dev/null || echo -)"
 done
 echo "bat.status=$(cat ${POWER_COUNTERS.batteryStatus} 2>/dev/null || echo -)"
 echo "bat.charge_uah=$(cat ${POWER_COUNTERS.batteryChargeUah} 2>/dev/null || echo -)"

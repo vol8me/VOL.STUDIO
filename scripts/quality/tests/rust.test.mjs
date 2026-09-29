@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join, relative, resolve, dirname, delimiter } from 'node:path';
 import test from 'node:test';
-import { checkRust, rustManifests } from '../rust.mjs';
+import { cargoSteps, checkRust, optionalFeatures, rustManifests } from '../rust.mjs';
 
 test('gerçek just rust tarifi bütün uygulama crate’lerini çalıştırır', () => {
   const temporary = mkdtempSync(join(tmpdir(), 'vol-cargo-command-'));
@@ -28,7 +28,10 @@ test('gerçek just rust tarifi bütün uygulama crate’lerini çalıştırır',
     const calls = readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
     const projects = rustManifests(process.cwd()).map((p) => resolve(dirname(p)));
     assert.deepEqual([...new Set(calls.map((c) => c.cwd))].sort(), projects.sort());
-    assert.equal(calls.length, projects.length * 3);
+    for (const project of projects) {
+      const verbs = calls.filter((c) => c.cwd === project).map((c) => c.args[0]);
+      assert.deepEqual([...new Set(verbs)], ['fmt', 'clippy', 'test'], project);
+    }
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }
@@ -47,10 +50,7 @@ test('Rust kapısı aktif manifestleri check/fmt/clippy ile sınar', () => {
     const lifecycle = {
       workspaces: projects.map((path) => ({ path: path.split('/src-tauri')[0], status: 'active' })),
     };
-    assert.deepEqual(
-      rustManifests(root, lifecycle),
-      projects.map((p) => `${p}/Cargo.toml`).sort(),
-    );
+    assert.deepEqual(rustManifests(root, lifecycle), projects.map((p) => `${p}/Cargo.toml`).sort());
     const calls = [];
     checkRust(
       root,
@@ -62,9 +62,9 @@ test('Rust kapısı aktif manifestleri check/fmt/clippy ile sınar', () => {
       assert.deepEqual(
         calls.filter((c) => c[2] === project).map((c) => c.slice(0, 2)),
         [
-          ['cargo', ['check', '--locked']],
           ['cargo', ['fmt', '--check']],
-          ['cargo', ['clippy', '--locked', '--', '-D', 'warnings']],
+          ['cargo', ['clippy', '--locked', '--all-targets', '--', '-D', 'warnings']],
+          ['cargo', ['test', '--locked', '--all-targets']],
         ],
       );
     }
@@ -82,4 +82,16 @@ test('Rust kapısı aktif manifestleri check/fmt/clippy ile sınar', () => {
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('feature taşıyan crate feature açıkken de lint edilir', () => {
+  const manifest =
+    '[package]\nname = "x"\n\n[features]\ndefault = []\nsteamworks = ["dep:steamworks"]\n\n[dependencies.steamworks]\nversion = "1"\n';
+  assert.deepEqual(optionalFeatures(manifest), ['steamworks']);
+  assert.deepEqual(optionalFeatures('[package]\nname = "x"\n'), []);
+  assert.deepEqual(optionalFeatures('[features]\ndefault = ["a"]\na = []\n'), ['a']);
+  assert.ok(
+    cargoSteps(manifest).some((step) => step[0] === 'clippy' && step.includes('--all-features')),
+  );
+  assert.ok(!cargoSteps('[package]\n').some((step) => step.includes('--all-features')));
 });

@@ -5,17 +5,17 @@ da testlerin sessizce hiç koşmamasına yol açar.
 
 ## Zorunlu
 
-| Ne                                                      | Kapı                                                                  |
-| ------------------------------------------------------- | --------------------------------------------------------------------- |
-| `workspace-lifecycle.json` → `active` kaydı             | `scripts/quality/workspaceLifecycle.mjs`                              |
-| `package.json` → `typecheck`, `test`, `test:coverage`   | `scripts/workspace-contract.mjs` (`REQUIRED_SCRIPTS`)                 |
-| `vitest.config.ts`                                      | `test:coverage` varsa `scripts/workspace-contract.mjs` onu da ister   |
-| `quality.json` → paket adı altında kapsam eşikleri      | `scripts/quality/config.mjs`; eşik `floor`un altına inemez            |
-| `quality.json` → `bundles` ve `scaling` girdileri       | `scripts/quality/bundleSize.mjs`, `scripts/quality/scalingBudget.mjs` |
-| `tsconfig.json`, `vite.config.ts`, `index.html`         | `build` ve `typecheck`                                                |
-| `vite.config.ts` + `vitest.config.ts` → `coreAliases()` | `scripts/vite/coreAliases.mjs`; CORE alt yolları elle yazılmaz        |
-| `src/i18n/tr.json` + `en.json` ve bir `keyParity` testi | [core/docs/i18n.md](../core/docs/i18n.md)                             |
-| `src-tauri/` varsa kendi ikonu ve çakışmayan dev portu  | `scripts/quality/productIcons.mjs`, `scripts/quality/devPorts.mjs`    |
+| Ne                                                             | Kapı                                                                  |
+| -------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `workspace-lifecycle.json` → `active` kaydı                    | `scripts/quality/workspaceLifecycle.mjs`                              |
+| `package.json` → `typecheck`, `test`, `test:coverage`          | `scripts/workspace-contract.mjs` (`REQUIRED_SCRIPTS`)                 |
+| `vitest.config.ts`                                             | `test:coverage` varsa `scripts/workspace-contract.mjs` onu da ister   |
+| `quality.json` → paket adı altında kapsam eşikleri             | `scripts/quality/config.mjs`; eşik `floor`un altına inemez            |
+| `quality.json` → `bundles` ve `scaling` girdileri              | `scripts/quality/bundleSize.mjs`, `scripts/quality/scalingBudget.mjs` |
+| `tsconfig.json`, `vite.config.ts`, `index.html`                | `build` ve `typecheck`                                                |
+| `vite.config.ts` + `vitest.config.ts` → `coreAliases()`        | `scripts/vite/coreAliases.mjs`; CORE alt yolları elle yazılmaz        |
+| `<oyun>/src/i18n/tr.json` + `en.json` ve bir `keyParity` testi | [core/docs/i18n.md](../core/docs/i18n.md)                             |
+| `<oyun>/src-tauri/` varsa kendi ikonu ve çakışmayan dev portu  | `scripts/quality/productIcons.mjs`, `scripts/quality/devPorts.mjs`    |
 
 `bundles` ve `scaling` girdisi yazılmazsa ölçüm yapılmaz; `scaling.<paket>.$measure`
 benchmark betiğini, argümanlarını ve rapordaki seri adlarını taşır. Aynı paketin
@@ -23,8 +23,8 @@ preview ve e2e portu aynı olabilir; iki ayrı paket aynı portu bildiremez.
 
 ## Sınırlar
 
-- Oyunun çalışma zamanı (`src/`) yalnız `core`, `tauri-v2` ve dış bağımlılıkları
-  import eder; devtool ve başka oyun import edemez. `scripts/` ve `tests/`
+- Oyunun çalışma zamanı (`<oyun>/src/`) yalnız `core`, `tauri-v2` ve dış bağımlılıkları
+  import eder; devtool ve başka oyun import edemez. `<oyun>/scripts/` ve `<oyun>/tests/`
   build/doğrulama zamanıdır.
 - Aktif paket frozen pakete bağımlı olamaz.
 
@@ -32,8 +32,8 @@ preview ve e2e portu aynı olabilir; iki ayrı paket aynı portu bildiremez.
 
 - `typecheck`, `test`, `build` ve `test:e2e` betikleri
   `scripts/quality/runActive.mjs` ile keşfedilir.
-- Rust kapısı `src-tauri/Cargo.toml` taşıyan her aktif paketi tarar.
-- `active` + `src-tauri/tauri.conf.json` taşıyan paket cihaz ölçümü adayıdır
+- Rust kapısı `<paket>/src-tauri/Cargo.toml` taşıyan her aktif paketi tarar.
+- `active` + `<paket>/src-tauri/tauri.conf.json` taşıyan paket cihaz ölçümü adayıdır
   (`scripts/quality/deviceApps.mjs`).
 
 ## Sıra

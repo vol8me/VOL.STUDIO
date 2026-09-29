@@ -14,6 +14,9 @@ import { join } from 'node:path';
 import { workingTreeFiles } from './gitFiles.mjs';
 import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
 
+/** Ölçülen kaynak türleri: kod, betik, stil ve native. */
+export const SOURCE_PATTERNS = ['*.ts', '*.mjs', '*.js', '*.rs', '*.css', '*.kt'];
+
 /** Duraksama oranı: bunun üstünde dosya kodundan çok anlatı taşıyordur. */
 export const DENSITY_THRESHOLD = 0.4;
 
@@ -53,7 +56,7 @@ export function validateCommentDensity(
   threshold = DENSITY_THRESHOLD,
   lifecycle = loadRepoLifecycle(root),
 ) {
-  const files = excludingFrozenPaths(workingTreeFiles(root, ['*.ts', '*.mjs']), lifecycle)
+  const files = excludingFrozenPaths(workingTreeFiles(root, SOURCE_PATTERNS), lifecycle)
     .filter((file) => !file.endsWith('.d.ts'))
     .filter((file) => !/\.test\.|\.spec\.|(^|\/)tests?\//.test(file));
 
@@ -69,7 +72,8 @@ export function validateCommentDensity(
     }
     if (lines.length < MIN_LINES) continue;
 
-    const longest = longestCommentBlock(lines);
+    const flags = commentLines(lines, file.endsWith('.css'));
+    const longest = longestCommentBlock(flags);
     if (longest.length > MAX_BLOCK_LINES) {
       problems.push(
         `${file}:${longest.start}: ${longest.length} satırlık tek yorum bloğu ` +
@@ -77,7 +81,7 @@ export function validateCommentDensity(
       );
     }
 
-    const comments = lines.filter((line) => /^\s*(\/\/|\*|\/\*)/.test(line)).length;
+    const comments = flags.filter(Boolean).length;
     const ratio = comments / lines.length;
     if (ratio <= threshold) continue;
 
@@ -104,15 +108,35 @@ export function validateCommentDensity(
 }
 
 /**
- * @param lines Dosya satırları.
+ * Satır başına "yalnız yorum" bayrağı. Blok yorumun içindeki ve `//` ile
+ * başlayan satırlar yorumdur; CSS'te yalnız blok yorum vardır.
+ */
+export function commentLines(lines, blockOnly = false) {
+  let inBlock = false;
+  return lines.map((line) => {
+    const text = line.trim();
+    if (inBlock) {
+      if (text.includes('*/')) inBlock = false;
+      return true;
+    }
+    if (text.startsWith('/*')) {
+      inBlock = !text.includes('*/', 2);
+      return true;
+    }
+    return !blockOnly && text.startsWith('//');
+  });
+}
+
+/**
+ * @param flags Satır başına yorum bayrakları.
  * @returns En uzun kesintisiz yorum bloğunun uzunluğu ve 1-tabanlı başlangıcı.
  */
-function longestCommentBlock(lines) {
+function longestCommentBlock(flags) {
   let best = { length: 0, start: 0 };
   let run = 0;
   let start = 0;
-  for (let index = 0; index < lines.length; index++) {
-    if (/^\s*(\/\/|\*|\/\*)/.test(lines[index])) {
+  for (let index = 0; index < flags.length; index++) {
+    if (flags[index]) {
       if (run === 0) start = index + 1;
       run += 1;
       if (run > best.length) best = { length: run, start };

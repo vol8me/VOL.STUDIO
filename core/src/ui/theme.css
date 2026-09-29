@@ -82,16 +82,7 @@
   --vol-font-family-body: 'Exo 2', sans-serif;
 
   /*
-   * TİP ÖLÇEĞİ — kademeler ROL taşır, piksel değil.
-   *
-   * Ölçek yokken CORE'da 15 farklı boyut vardı ve altısı (10-11-12-13-14-15)
-   * birer piksel arayla duruyordu: bir ölçek değil, her dosyada yeniden verilmiş
-   * bir karar birikimi. Aynı işi gören iki etiketin 12 ve 13 px olması bir
-   * tasarım tercihi değil, kimsenin fark etmediği bir sapmaydı.
-   *
-   * Yeni bir boyut EKLEME; en yakın rolü seç. Hiçbir rol uymuyorsa tartışılacak
-   * bir eksiklik vardır — sessizce yeni bir sayı değil.
-   *
+   * Tip ölçeği rol taşır; yeni boyut eklenmez, en yakın rol seçilir.
    *   micro   rozet, sayaç üstü, ikincil birim
    *   label   HUD etiketi, düğme, sekme, tablo başlığı
    *   body    okunacak metin, açıklama, diyalog
@@ -99,13 +90,7 @@
    *   title   panel/kart başlığı
    *   heading bölüm başlığı
    *   display ekran başlığı, hasar sayısı
-  */
-
-  /*
-   * micro/label alt sınırı 12 px'tir: Steam Deck okunabilirlik rehberinin
-   * tabanı (1280×800'de ölçülür, vol-ui readability kapısı). Altına düşen
-   * bir token elde taşmaz değil OKUNMAZ üretir — eşik tüm boyutlar için
-   * uygulanır çünkü 10 px masaüstünde de kötü okunur.
+   * Taban 12 px'tir (Steam Deck okunabilirliği; vol-ui readability kapısı).
    */
   --vol-text-micro: 12px;
   --vol-text-label: 12px;

@@ -22,9 +22,10 @@ import { execFileSync } from 'node:child_process';
  * @param root Repo kökü.
  * @param budgets `quality.json` → `scaling` bölümü.
  * @param runner Ölçümü döndüren fonksiyon; testler kendi sahtesini verir.
+ * @param log Ölçülen her oranı bildirir.
  * @returns Sorun listesi; boşsa ölçekleme bütçe içindedir.
  */
-export function validateScaling(root, budgets, runner = measureScaling) {
+export function validateScaling(root, budgets, runner = measureScaling, log = (_line) => {}) {
   const problems = [];
 
   for (const [packageDir, budget] of Object.entries(budgets ?? {})) {
@@ -50,6 +51,7 @@ export function validateScaling(root, budgets, runner = measureScaling) {
         problems.push(`${packageDir}: "${key}" ölçülemedi — bütçe doğrulanamaz.`);
         continue;
       }
+      log(`${packageDir}: ${key} = ${actual.toFixed(3)} (tavan ${ceiling})`);
       if (actual > ceiling) {
         problems.push(
           `${packageDir}: ${key} = ${actual.toFixed(3)}, tavan ${ceiling}. ` +

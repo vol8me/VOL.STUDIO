@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadWorkspaceLifecycle } from './workspaceLifecycle.mjs';
@@ -26,6 +27,27 @@ export function rustManifests(
     .sort();
 }
 
+/** `default` dışındaki Cargo feature adları; feature'lı yol da derlenir. */
+export function optionalFeatures(manifestText) {
+  const section = /^\[features\]\s*\n([\s\S]*?)(?=^\[|(?![\s\S]))/m.exec(manifestText);
+  if (!section) return [];
+  return [...section[1].matchAll(/^([A-Za-z0-9_-]+)\s*=/gm)]
+    .map((match) => match[1])
+    .filter((name) => name !== 'default');
+}
+
+/** Bir crate için sırayla koşan cargo adımları. */
+export function cargoSteps(manifestText) {
+  const lint = ['clippy', '--locked', '--all-targets'];
+  const deny = ['--', '-D', 'warnings'];
+  return [
+    ['fmt', '--check'],
+    [...lint, ...deny],
+    ...(optionalFeatures(manifestText).length > 0 ? [[...lint, '--all-features', ...deny]] : []),
+    ['test', '--locked', '--all-targets'],
+  ];
+}
+
 export function checkRust(
   root,
   run = execFileSync,
@@ -33,12 +55,18 @@ export function checkRust(
 ) {
   const manifests = rustManifests(root, lifecycle);
   if (manifests.length === 0) throw new Error('Rust kapısı: Cargo.toml bulunamadı');
+  // Crate'ler aynı bağımlılık ağacını paylaşır; ortak hedef dizini onları bir kez derler.
+  const env = {
+    ...process.env,
+    CARGO_TARGET_DIR: process.env.CARGO_TARGET_DIR ?? join(root, 'target'),
+  };
   for (const manifest of manifests) {
     console.log(`[rust] ${manifest}`);
-    const options = { cwd: resolve(root, dirname(manifest)), stdio: 'inherit' };
-    run('cargo', ['check', '--locked'], options);
-    run('cargo', ['fmt', '--check'], options);
-    run('cargo', ['clippy', '--locked', '--', '-D', 'warnings'], options);
+    /** @type {import('node:child_process').ExecFileSyncOptions} */
+    const options = { cwd: resolve(root, dirname(manifest)), stdio: 'inherit', env };
+    for (const args of cargoSteps(readFileSync(join(root, manifest), 'utf8'))) {
+      run('cargo', args, options);
+    }
   }
 }
 

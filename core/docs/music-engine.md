@@ -253,20 +253,20 @@ ve bitişi ayrı alanlara, stinger ve geçişleri `cues` listesine koyar.
 ## Ses üretimi ve kullanım
 
 Yeni müzik ve SFX kanonik `devtools/audio-synth` job/müzik yayın kapısından
-geçer. Oyun paketinin `public/assets/audio/` ağacı gönderilen dosyaların tek
+geçer. Oyun paketinin `<oyun>/public/assets/audio/` ağacı gönderilen dosyaların tek
 kaynağıdır; manifest ve bundle oyun ağacında kalır, ara WAV ve `dist` Git'e
 girmez. `pnpm exec just audio-verify` manifestleri kaynak programdan yeniden
 render ederek PCM kimliğini doğrular.
 
 Oyun tek bir `AudioContext` yönetir; müzik ve ambiyans için ayrı iki
 `MusicEngine` tutabilir. Sahne geçişini oyunun kendi yöneticisi yapar; track
-yolları ve loop süreleri oyunun `src/config/` ağacındadır.
+yolları ve loop süreleri oyunun `<oyun>/src/config/` ağacındadır.
 
 ## Müzik asset sözleşmesi
 
 Yeni müzik `devtools/audio-synth` müzik hattında üretilir ve çalma
 sözleşmesini `MusicAssetSpecV1` olarak taşır. Spec bu paketin
-`src/audio/music/spec.ts` dosyasındadır, çünkü üretim aracı da çalışma
+`core/src/audio/music/spec.ts` dosyasındadır, çünkü üretim aracı da çalışma
 zamanı da ondan TÜRETİR: ölçü → örnek dönüşümü tek yerdedir ve iki taraf
 ayrışamaz (ayrışma loop dikişinde duyulur, hiçbir test yakalamaz).
 
@@ -287,9 +287,9 @@ eşleşmelidir.
 ## Yeni Müzik Ekleme
 
 1. audio-synth'te müzik isteğini (`brief.json`, `AudioBriefV1` `kind: 'music'`)
-   ve programı (`music.json`, `MusicProgramV1`) yaz; `devtools/audio-synth`
-   içinde `pnpm audio:job music analyze <id>` ses render etmeden sembolik
-   uyumu raporlar. Giriş, bitiş ve stinger isteyen parça programda
+   ve programı (`music.json`, `MusicProgramV1`) yaz;
+   audio-synth'in `audio:job music analyze <id>` komutu ses render etmeden
+   sembolik uyumu raporlar. Giriş, bitiş ve stinger isteyen parça programda
    `segments` bildirir; her cue ayrı asset olarak yayımlanır ve spec'in
    `cues` listesine girer.
 2. `audio:job music publish <id>`: her stem kanonik publish kapısından geçer,

@@ -9,7 +9,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { openSync, readdirSync, readSync, statSync, closeSync } from 'node:fs';
+import { openSync, readdirSync, readSync, closeSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**

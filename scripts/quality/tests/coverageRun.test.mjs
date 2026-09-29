@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { readStamp, selectRunPackages, stampPath } from '../coverageRun.mjs';
+import { readStamp, selectRunPackages, splitMeasured, stampPath } from '../coverageRun.mjs';
 
 const PACKAGES = [
   { name: '@volstudio/audio-synth', dir: 'devtools/audio-synth' },
@@ -36,5 +36,20 @@ test('koşu kaydı yoksa null, varsa yazıldığı gibi okunur', (t) => {
 });
 
 test('kayıt repoya girmeyen node_modules önbelleğinde durur', () => {
-  assert.match(stampPath('/r', 'coverage'), /node_modules[/\\]\.cache[/\\]vol-quality[/\\]coverage-coverage\.json$/);
+  assert.match(
+    stampPath('/r', 'coverage'),
+    /node_modules[/\\]\.cache[/\\]vol-quality[/\\]coverage-coverage\.json$/,
+  );
+});
+
+test('eşikten muaf paket ölçülmez ama testi koşar', () => {
+  const { measured, plain } = splitMeasured(PACKAGES, { '@volstudio/sample-game': 'gerekçe' });
+  assert.deepEqual(
+    measured.map((p) => p.name),
+    ['@volstudio/audio-synth', '@volstudio/core'],
+  );
+  assert.deepEqual(
+    plain.map((p) => p.name),
+    ['@volstudio/sample-game'],
+  );
 });

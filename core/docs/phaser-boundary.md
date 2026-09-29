@@ -22,9 +22,9 @@ Bridge rolleri:
 
 - `createVolGame.ts`: oyun boot ve renderer seçimi
 - `ViewportManager.ts`: Phaser Scale/kamera adaptasyonu
-- `entities/`: Phaser GameObject tabanlı entity adaptörleri
-- `input/`: Phaser keyboard/pointer sağlayıcıları
-- `rig/assembleRig.ts`: saf rig tanımını Phaser container/image ağacına kurma
+- `core/src/phaser/entities/`: Phaser GameObject tabanlı entity adaptörleri
+- `core/src/phaser/input/`: Phaser keyboard/pointer sağlayıcıları
+- `core/src/phaser/rig/assembleRig.ts`: saf rig tanımını Phaser container/image ağacına kurma
 
 Rig layout hesabı `core/src/rig/partLayout.ts` içinde saf TypeScript'tir.
 Derece-radyan dönüşümü ve ebeveyn-yerel koordinat hesabı Phaser.Math

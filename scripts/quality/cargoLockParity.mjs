@@ -20,7 +20,9 @@ export const WATCHED_CRATES = /^(?:tauri(?:-.+)?|wry|tao)$/;
 /** `Cargo.lock` metninden paket adı → sıralı sürüm listesi. */
 export function parseLockPackages(text) {
   const packages = new Map();
-  for (const match of text.matchAll(/\[\[package\]\]\s*\nname = "([^"]+)"\s*\nversion = "([^"]+)"/g)) {
+  for (const match of text.matchAll(
+    /\[\[package\]\]\s*\nname = "([^"]+)"\s*\nversion = "([^"]+)"/g,
+  )) {
     const versions = packages.get(match[1]) ?? [];
     versions.push(match[2]);
     packages.set(match[1], versions);
@@ -54,7 +56,7 @@ export function validateCargoLockParity(
   }
 
   const problems = [];
-  for (const [name, seen] of [...byCrate].sort(([a], [b]) => a.localeCompare(b))) {
+  for (const [name, seen] of [...byCrate].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     if (new Set(seen.values()).size <= 1) continue;
     const detail = [...seen].map(([lock, versions]) => `${lock} → ${versions}`).join('; ');
     problems.push(

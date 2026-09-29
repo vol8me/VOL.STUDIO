@@ -5,7 +5,9 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { test } from 'node:test';
 import {
+  commentLines,
   validateCommentDensity,
+  SOURCE_PATTERNS,
   ACKNOWLEDGED,
   DENSITY_THRESHOLD,
   MAX_BLOCK_LINES,
@@ -113,4 +115,14 @@ test('henüz eklenmemiş yoğun dosya da yakalanır', (t) => {
 
   assert.equal(problems.length, 1);
   assert.match(problems[0], /src\/fresh\.ts/);
+});
+
+test('yorum satırı sayımı blok, satır ve CSS yorumlarını ayırır', () => {
+  assert.deepEqual(
+    commentLines(['/*', ' * a', ' */', '* { margin: 0; }', 'a * b', '// x', '/* tek */', 'x']),
+    [true, true, true, false, false, true, true, false],
+  );
+  assert.deepEqual(commentLines(['// css değil', '/* css */'], true), [false, true]);
+  assert.deepEqual(commentLines(['/// belge', '//! crate', 'fn x() {}']), [true, true, false]);
+  for (const kind of ['*.rs', '*.css', '*.js', '*.kt']) assert.ok(SOURCE_PATTERNS.includes(kind));
 });

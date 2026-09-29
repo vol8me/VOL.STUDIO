@@ -95,7 +95,7 @@ describe('GamepadPointerController DOM niyeti', () => {
     vi.stubGlobal(
       'PointerEvent',
       class extends Original {
-        readonly pointerType: string;
+        override readonly pointerType: string;
         constructor(type: string, options: PointerEventInit = {}) {
           super(type, options);
           this.pointerType = options.pointerType ?? '';

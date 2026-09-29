@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import path, { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
+import path, { join } from 'node:path';
 
 const RECORD_KEYS = new Set([
   'packageName',

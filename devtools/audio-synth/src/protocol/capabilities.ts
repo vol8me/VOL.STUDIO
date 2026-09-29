@@ -185,7 +185,11 @@ export function deriveQualityMatrix(input: QualityMatrixInput): QualityMatrixV1 
         });
       }
     }
-    evidence.sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
+    evidence.sort(
+      (a, b) =>
+        (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0) ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
     const published = (input.published ?? [])
       .filter((ref) => covers(mechanism, ref.tags))
       .map((ref) => ref.manifest)
@@ -245,7 +249,7 @@ export function loadPublishedReferences(repoRoot: string): readonly PublishedRef
     };
     walk(root);
   }
-  return refs.sort((a, b) => a.manifest.localeCompare(b.manifest));
+  return refs.sort((a, b) => (a.manifest < b.manifest ? -1 : a.manifest > b.manifest ? 1 : 0));
 
   function tagsOf(manifest: string): PublishedRefV1 {
     const raw = readJsonFile(join(repoRoot, manifest), manifest) as {
