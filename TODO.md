@@ -24,8 +24,6 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       yetenekler, başlatıcı, masaüstü şablonu, Steam Input manifestosu,
       1280×800 pencere, kayıt kapsamları ve oturuma göre grafik varsayılanı.
       Kapanır: iskeletten kurulan paket `pnpm signoff`u ilk denemede geçer.
-- [ ] **[P2] S2 — audio-synth sertleştirme.** Önbellek, paralel işçi, manifest
-      ve analiz yolundaki bulgular.
 - [ ] **[P2] S3 — Kalıntı.** Katalog politikası kapıya bağlanır; tüketicisiz
       bağımlılık ve eklentiler kaldırılır.
 - [ ] **[P2] SH — Hiyerarşi.** Cargo workspace, stil ve test yerleşimi, Deck
@@ -94,6 +92,8 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 
 ## Kapatılanlar
 
+- [x] **S2 — audio-synth sertleştirme** (AS4, AS6, AS7, AS9, AS12–AS16,
+      AS21; AS20 paket TODO'sunda açık).
 - [x] **S0 — Kapılar denetlendi, boşluklar kapatıldı; `pnpm signoff` yeşil**
       (oturum başından beri kırmızı olan ses kapsamı dahil).
 - [x] **SD (ikinci dilim) — kabuk ve Steamworks sağlamlığı.** Aygıt yokken

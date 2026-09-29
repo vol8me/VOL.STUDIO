@@ -2,12 +2,12 @@
  * `audio:job music search …` — hiyerarşik müzik aramasının CLI kabuğu.
  * İş mantığı `src/music/search.ts` + `src/protocol/musicSearch.ts`tedir.
  */
+import type { MusicLocation } from '../../src/protocol/music';
 import {
   loadMusicSearchSpec,
   promoteMusicCandidate,
   runMusicSearch,
-  type MusicLocation,
-} from '../../src/protocol';
+} from '../../src/protocol/musicSearch';
 import { positional, print, required, type Parsed } from './args';
 
 const ms = (started: number) => Number((performance.now() - started).toFixed(1));

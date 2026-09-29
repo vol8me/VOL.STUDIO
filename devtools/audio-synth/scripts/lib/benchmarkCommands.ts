@@ -7,15 +7,14 @@ import {
   benchmarkReviews,
   BENCHMARK_REPORT_SCHEMA,
   loadBenchmarkTasks,
-  ProtocolError,
-  qualityMatrix,
-  readJsonFile,
   recordBenchmarkReview,
-  resolveInside,
   runBenchmarks,
   type BenchmarkReportV1,
   type BenchmarkReviewStatus,
-} from '../../src/protocol';
+} from '../../src/protocol/benchmark';
+import { qualityMatrix } from '../../src/protocol/capabilities';
+import { ProtocolError } from '../../src/protocol/errors';
+import { readJsonFile, resolveInside } from '../../src/protocol/fs';
 import { positional, print, required, text, type Parsed } from './args';
 
 export function runBenchmarkCommand(parsed: Parsed, repoRoot: string): number {

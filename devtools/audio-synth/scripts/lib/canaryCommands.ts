@@ -6,11 +6,11 @@
 import {
   canaryReviews,
   loadCanaries,
-  ProtocolError,
   recordCanaryReview,
   runCanaries,
   type CanaryReviewStatus,
-} from '../../src/protocol';
+} from '../../src/protocol/canary';
+import { ProtocolError } from '../../src/protocol/errors';
 import { positional, print, required, text, type Parsed } from './args';
 
 export function runCanaryCommand(parsed: Parsed, repoRoot: string): number {

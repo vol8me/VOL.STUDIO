@@ -15,6 +15,7 @@ import {
   measureAsset,
   type AssetMeasurement,
 } from '../src/analysis/assetQa';
+import { withRenderSession } from '../src/engine/session';
 
 /**
  * Beklenen değerler uygulamadan DEĞİL, yayımlanmış kaynaklardan gelir:
@@ -134,6 +135,15 @@ describe('EBU Tech 3341 — true peak (48 kHz, 0.5 FFS ≈ −6.02 dBTP)', () =>
   it('#18: fs/8, 67.5°', () => within(truePeakDb(tone(1 / 8, 67.5, half), FS), -6.02));
   it('#19: fs/4, 1.41 FFS, 45° → +3.0 dBTP', () =>
     within(truePeakDb(tone(1 / 4, 45, 20 * Math.log10(1.41)), FS), 20 * Math.log10(1.41)));
+  it('ölçüm render oturumunu okumaz; örnek tepesi yalnız açıkça istenir', () => {
+    const x = tone(1 / 4, 45, half);
+    const draft = withRenderSession({ quality: 'draft' }, () => truePeakDb(x, FS));
+    within(draft, -6.02);
+    expect(truePeakDb(x, FS, 1)).toBeCloseTo(samplePeakDb(x), 9);
+    expect(withRenderSession({ quality: 'draft' }, () => measureAsset(x, FS).truePeakDbtp)).toBe(
+      truePeakDb(x, FS),
+    );
+  });
 });
 
 describe('kırpma sayımı kanal örneği cinsindendir', () => {

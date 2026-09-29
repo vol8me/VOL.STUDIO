@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import type { SynthesisResult } from './types';
 import { createRandom } from '@volstudio/core/random';
 import { assertRenderBudget } from './guard/budget';
@@ -148,14 +148,12 @@ let ffmpegAvailable: boolean | undefined;
  */
 export function ensureFfmpeg(): void {
   if (ffmpegAvailable) return;
-  try {
-    execSync('ffmpeg -version', { stdio: 'ignore' });
+  // Kodlamanın kendisiyle aynı çözüm (kabuksuz spawn); yalnız başarı saklanır,
+  // sonradan kurulan FFmpeg aynı süreçte görülür.
+  const probe = spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+  if (probe.status === 0 && !probe.error) {
     ffmpegAvailable = true;
-  } catch {
-    // ffmpegAvailable bilinçli olarak false'a ayarlanmaz: bu dal her
-    // çağrıda yeniden denenir (yalnızca başarı memoize edilir), böylece
-    // FFmpeg sonradan kurulursa aynı process içinde bir sonraki çağrı onu
-    // görür.
+  } else {
     throw new Error(
       'FFmpeg bulunamadı. OGG encode için gerekli.\n' +
         'Kurulum:\n' +
@@ -265,7 +263,7 @@ export function writeOgg(filePath: string, result: SynthesisResult, opts: OggOpt
   if (res.error) {
     const hint =
       (res.error as NodeJS.ErrnoException).code === 'ENOENT'
-        ? ' FFmpeg .cmd/.bat shim üzerinden kuruluysa (bazı paket yöneticileri) bu satır onu bulamayabilir; execSync PATH çözümü farklıdır.'
+        ? ' FFmpeg .cmd/.bat shim üzerinden kuruluysa (bazı paket yöneticileri) kabuksuz çağrı onu bulamaz.'
         : '';
     throw new Error(`FFmpeg çalıştırılamadı (${filePath}): ${res.error.message}.${hint}`);
   }

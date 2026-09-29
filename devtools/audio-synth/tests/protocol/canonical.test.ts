@@ -89,3 +89,13 @@ describe('kanonik PCM özeti', () => {
     expect(hashPcm([a.slice()], 48000)).toBe(reference);
   });
 });
+
+describe('hashPcm girdi denetimi', () => {
+  it('eşit olmayan kanal uzunluğu ve sonlu olmayan örnek kimlik almaz', () => {
+    expect(() => hashPcm([new Float32Array(4), new Float32Array(3)], 48000)).toThrow(
+      'eşit uzunlukta',
+    );
+    expect(() => hashPcm([Float32Array.from([0, Number.NaN])], 48000)).toThrow('sonlu değil');
+    expect(hashPcm([new Float32Array(2), new Float32Array(2)], 48000)).toMatch(/^sha256:/);
+  });
+});

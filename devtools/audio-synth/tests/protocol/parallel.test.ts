@@ -50,11 +50,11 @@ describe('eşzamanlılık politikası', () => {
     expect(batchWorkers(heavy, 6, policy)).toBe(3);
   });
 
-  it('ortam değişkeni worker sayısını sabitler; geçersiz değer yok sayılır', () => {
+  it('ortam değişkeni worker sayısını sabitler; geçersiz değer sessizce yok sayılmaz', () => {
     process.env[WORKERS_ENV] = '1';
     expect(batchWorkers(estimate(), undefined, policy)).toBe(1);
     process.env[WORKERS_ENV] = 'çok';
-    expect(batchWorkers(estimate(), undefined, policy)).toBe(7);
+    expect(() => batchWorkers(estimate(), undefined, policy)).toThrow(WORKERS_ENV);
   });
 });
 
@@ -131,6 +131,31 @@ describe('paralel toplu iş seri ile aynı sonucu aynı sırayla verir', () => {
     },
     PIPELINE_TIMEOUT,
   );
+});
+
+describe('ölen ya da asılı kalan worker (hata enjeksiyonu)', () => {
+  const fault = (name: string) => new URL(`./faultWorkers/${name}.mjs`, import.meta.url);
+  const inputs = [{ key: 'a' }, { key: 'b' }, { key: 'c' }];
+
+  it('ölen worker kalp atışının durmasıyla saniyeler içinde adıyla düşer', () => {
+    const started = Date.now();
+    expect(() =>
+      runTasks(REPO, 'family-member', inputs, 2, {
+        workerUrl: fault('dies'),
+        heartbeatStaleMs: 1_500,
+      }),
+    ).toThrow(/WorkerDied.*öldü/);
+    expect(Date.now() - started).toBeLessThan(10_000);
+  });
+
+  it('canlı ama yanıtsız görev kendi süre sınırında düşer', () => {
+    expect(() =>
+      runTasks(REPO, 'family-member', inputs, 2, {
+        workerUrl: fault('hangs'),
+        taskTimeoutMs: 1_500,
+      }),
+    ).toThrow(/görev yanıtı süre sınırını aştı/);
+  });
 });
 
 describe('serveTasks — worker döngüsü (süreç içi kanal)', () => {

@@ -2,8 +2,10 @@
 // Yükleme başarısız olursa ana iş parçacığı bunu el sıkışmasında görür; bloklu
 // bekleyen ana iş parçacığı worker'ın asenkron `error` olayını göremez.
 import { workerData } from 'node:worker_threads';
+import { startHeartbeat } from './parallelHeartbeat.mjs';
 
-const { port, signal } = workerData;
+const { port, signal, beats, slot } = workerData;
+startHeartbeat(beats, slot);
 try {
   const { register } = await import('tsx/esm/api');
   register();

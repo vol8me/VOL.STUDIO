@@ -6,8 +6,6 @@
  * de standardın tanımıyla hesaplar; RMS/örnek tepe ayrı adlarla kalır.
  */
 
-import { qualityProfile } from '../engine/session';
-
 export interface Biquad {
   readonly b: readonly [number, number, number];
   readonly a: readonly [number, number];
@@ -154,11 +152,14 @@ export function samplePeakDb(channels: readonly Float32Array[]): number {
 }
 
 /**
- * True-peak yeniden örnekleme: fs < 96 kHz'te 4×, < 192 kHz'te 2× (BS.1770
- * Ek 2). Taslak kalitede örnek tepesi ölçülür.
+ * True-peak aşırı örneklemesi: 4 = BS.1770 ölçümü, 1 = örnek tepesi. Analiz
+ * render oturumunu okumaz; taslak kaliteyi isteyen çağıran açıkça geçirir.
  */
-function truePeakFactor(sampleRate: number): number {
-  if (qualityProfile().truePeakOversample === 1) return 1;
+export type TruePeakOversample = 1 | 4;
+
+/** fs < 96 kHz'te 4×, < 192 kHz'te 2× (BS.1770 Ek 2). */
+function truePeakFactor(sampleRate: number, oversample: TruePeakOversample): number {
+  if (oversample === 1) return 1;
   if (sampleRate < 96000) return 4;
   return sampleRate < 192000 ? 2 : 1;
 }
@@ -210,8 +211,12 @@ function truePeakPhases(factor: number): Phase[] {
  * |ara değer| (4× çok fazlı süzgeç, `truePeakDb` ile aynı çekirdek). True-peak
  * sınırlayıcı kazanç ihtiyacını buradan okur.
  */
-export function interSamplePeaks(channel: Float32Array, sampleRate: number): Float32Array {
-  const factor = truePeakFactor(sampleRate);
+export function interSamplePeaks(
+  channel: Float32Array,
+  sampleRate: number,
+  oversample: TruePeakOversample = 4,
+): Float32Array {
+  const factor = truePeakFactor(sampleRate, oversample);
   const n = channel.length;
   const out = new Float32Array(n);
   for (let k = 0; k < n; k++) out[k] = Math.abs(channel[k]);
@@ -239,8 +244,12 @@ export function interSamplePeaks(channel: Float32Array, sampleRate: number): Flo
  * sınırlıdır; bu sınır mevcut en iyi tepenin altındaysa nokta hesaplanmaz —
  * sonuç budamasız hesapla aynıdır.
  */
-export function truePeakDb(channels: readonly Float32Array[], sampleRate: number): number {
-  const factor = truePeakFactor(sampleRate);
+export function truePeakDb(
+  channels: readonly Float32Array[],
+  sampleRate: number,
+  oversample: TruePeakOversample = 4,
+): number {
+  const factor = truePeakFactor(sampleRate, oversample);
   let best = 0;
   for (const channel of channels) {
     for (const v of channel) best = Math.max(best, Math.abs(v));

@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { evaluateAssetPolicy, measureAsset } from '../analysis/assetQa';
+import { qualityProfile } from '../engine/session';
 import { assertRenderBudget } from '../guard/budget';
 import { musicProgramHash, type MusicProgramV1 } from '../music/program';
 import { renderAndPlan } from '../music/bundle';
@@ -98,7 +99,11 @@ function measureFinalist(
   const mastered = reference.channels.map((channel) => Float32Array.from(channel));
   applyMastering(mastered, reference.sampleRate, plan.mastering);
   const rendered = { frames: mastered[0].length };
-  const measurement = measureAsset(mastered, reference.sampleRate);
+  const measurement = measureAsset(
+    mastered,
+    reference.sampleRate,
+    qualityProfile().truePeakOversample,
+  );
   const verdict = evaluateAssetPolicy(measurement, 'music');
   return {
     candidateId: candidate.candidateId,

@@ -4,6 +4,7 @@ import {
   maxMomentaryLoudness,
   samplePeakDb,
   truePeakDb,
+  type TruePeakOversample,
   type ClipCount,
 } from './loudness';
 
@@ -59,16 +60,18 @@ export interface AssetMeasurement {
 
 const finiteOrNull = (value: number): number | null => (Number.isFinite(value) ? value : null);
 
+/** `oversample` 1 yalnız taslak render içindir; varsayılan BS.1770 true-peak ölçer. */
 export function measureAsset(
   channels: readonly Float32Array[],
   sampleRate: number,
+  oversample: TruePeakOversample = 4,
 ): AssetMeasurement {
   return {
     durationSeconds: (channels[0]?.length ?? 0) / sampleRate,
     channels: channels.length,
     integratedLufs: finiteOrNull(integratedLoudness(channels, sampleRate)),
     maxMomentaryLufs: finiteOrNull(maxMomentaryLoudness(channels, sampleRate)),
-    truePeakDbtp: finiteOrNull(truePeakDb(channels, sampleRate)),
+    truePeakDbtp: finiteOrNull(truePeakDb(channels, sampleRate, oversample)),
     samplePeakDbfs: finiteOrNull(samplePeakDb(channels)),
     clips: countClips(channels),
   };

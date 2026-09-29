@@ -5,13 +5,8 @@
  * publish'a tek giriş yolu kanonik iş akışıdır.
  */
 import { statSync } from 'node:fs';
-import {
-  checkRepoRelative,
-  DEFAULT_FITS_ROOT,
-  listFits,
-  readFitReport,
-  runFit,
-} from '../../src/protocol';
+import { DEFAULT_FITS_ROOT, listFits, readFitReport, runFit } from '../../src/protocol/fit';
+import { checkRepoRelative } from '../../src/protocol/fs';
 import { positional, print, readInput, required, text, type Parsed } from './args';
 
 function fitsRoot(parsed: Parsed): string {

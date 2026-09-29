@@ -7,17 +7,15 @@ import { statSync } from 'node:fs';
 import { withRenderSession } from '../../src/engine/session';
 import {
   checkFamily,
-  checkRepoRelative,
   DEFAULT_FAMILIES_ROOT,
   familyStatus,
   listFamilies,
   previewFamily,
   publishFamily,
-  readJsonFile,
-  resolveInside,
   verifyFamily,
   type FamilyLocation,
-} from '../../src/protocol';
+} from '../../src/protocol/family';
+import { checkRepoRelative, readJsonFile, resolveInside } from '../../src/protocol/fs';
 import { positional, print, qualityOf, readInput, required, text, type Parsed } from './args';
 
 const ms = (started: number) => Number((performance.now() - started).toFixed(1));

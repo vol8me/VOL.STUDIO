@@ -1,4 +1,5 @@
 import { measureAsset, type AssetMeasurement } from './assetQa';
+import { qualityProfile } from '../engine/session';
 import type { ClipCount } from './loudness';
 import { fft } from './spectrum';
 
@@ -306,7 +307,11 @@ export function analyzeAudio(
   sampleRate: number,
   measuredFrom: MeasurementSource,
 ): AudioAnalysisReportV1 {
-  const measured: AssetMeasurement = measureAsset(channels, sampleRate);
+  const measured: AssetMeasurement = measureAsset(
+    channels,
+    sampleRate,
+    qualityProfile().truePeakOversample,
+  );
   const stats = channels.map(channelStats);
   const frames = channels[0]?.length ?? 0;
   const totalRms = Math.sqrt(

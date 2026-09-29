@@ -10,13 +10,12 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderProgram } from '../src/program/render';
+import { prettyCanonicalJson, sha256Bytes } from '../src/protocol/canonical';
 import {
   DEFAULT_SAMPLES_ROOT,
-  prettyCanonicalJson,
   SAMPLE_ASSET_SCHEMA,
-  sha256Bytes,
   validateSampleAsset,
-} from '../src/protocol';
+} from '../src/protocol/samples';
 import { encodeWav } from '../src/writer';
 import { findRepoRoot } from './lib/args';
 

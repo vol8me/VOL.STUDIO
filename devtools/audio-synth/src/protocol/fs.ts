@@ -85,8 +85,55 @@ export function toRepoRelative(root: string, absolute: string): string {
 
 let tempCounter = 0;
 
+type WriteFn = (fd: number, buffer: Uint8Array, offset: number, length: number) => number;
+
 /**
- * Atomik yazım: aynı dizinde benzersiz geçici dosya (`wx`), fsync, rename.
+ * `writeSync` isteneni tek çağrıda yazmayabilir (sinyal, dolu disk kotası);
+ * kalan bayt bitene dek döngü sürer. İlerlemeyen yazım sonsuz döngü yerine
+ * hata verir.
+ */
+export function writeAllSync(
+  fd: number,
+  data: string | Uint8Array,
+  write: WriteFn = writeSync,
+): void {
+  const bytes = typeof data === 'string' ? Buffer.from(data, 'utf8') : data;
+  let offset = 0;
+  while (offset < bytes.length) {
+    const written = write(fd, bytes, offset, bytes.length - offset);
+    if (written <= 0) throw new Error(`yazım ilerlemedi (${offset}/${bytes.length} bayt)`);
+    offset += written;
+  }
+}
+
+const DIR_FSYNC_UNSUPPORTED = new Set(['EINVAL', 'ENOTSUP', 'EISDIR', 'EPERM', 'EACCES']);
+
+/**
+ * Rename'in kendisi dizin girdisidir; güç kesilirse dizin fsync'lenmemişse
+ * yeni ad kaybolabilir. Windows dizin açmayı desteklemez, bazı dosya
+ * sistemleri dizin fsync'ini reddeder: bu durumlar atlanır.
+ */
+export function fsyncDir(dir: string): void {
+  if (process.platform === 'win32') return;
+  let fd: number;
+  try {
+    fd = openSync(dir, 'r');
+  } catch (error) {
+    if (DIR_FSYNC_UNSUPPORTED.has((error as NodeJS.ErrnoException).code ?? '')) return;
+    throw error;
+  }
+  try {
+    fsyncSync(fd);
+  } catch (error) {
+    if (!DIR_FSYNC_UNSUPPORTED.has((error as NodeJS.ErrnoException).code ?? '')) throw error;
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/**
+ * Atomik yazım: aynı dizinde benzersiz geçici dosya (`wx`), fsync, rename,
+ * dizin fsync'i.
  * Yarıda kalan yazım hedefi ASLA yarım bırakmaz — ya eski içerik ya yenisi
  * görünür; geride kalan geçici dosya `.tmp-` önekiyle tanınır.
  */
@@ -95,17 +142,21 @@ export function writeFileAtomic(target: string, data: string | Uint8Array): void
   const temp = join(dirname(target), `.tmp-${process.pid}-${++tempCounter}-${Date.now()}`);
   const fd = openSync(temp, 'wx');
   try {
-    writeSync(fd, typeof data === 'string' ? Buffer.from(data, 'utf8') : data);
+    writeAllSync(fd, data);
     fsyncSync(fd);
-  } finally {
+  } catch (error) {
     closeSync(fd);
+    rmSync(temp, { force: true });
+    throw error;
   }
+  closeSync(fd);
   try {
     renameSync(temp, target);
   } catch (error) {
     rmSync(temp, { force: true });
     throw error;
   }
+  fsyncDir(dirname(target));
 }
 
 /** Hazırlık dosyasını fsync'leyerek yazar; yerine koyma çağıranın işidir. */
@@ -113,7 +164,7 @@ export function writeStaged(path: string, data: string | Uint8Array): void {
   mkdirSync(dirname(path), { recursive: true });
   const fd = openSync(path, 'wx');
   try {
-    writeSync(fd, typeof data === 'string' ? Buffer.from(data, 'utf8') : data);
+    writeAllSync(fd, data);
     fsyncSync(fd);
   } finally {
     closeSync(fd);
@@ -149,6 +200,7 @@ export function commitFiles(files: readonly StagedFile[]): void {
       renameSync(staged, target);
       placed.push(index);
     });
+    for (const dir of new Set(files.map(({ target }) => dirname(target)))) fsyncDir(dir);
   } catch (error) {
     for (const index of placed.reverse()) {
       const keep = previous[index];

@@ -1,6 +1,7 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
 import { truePeakDb } from '../analysis/loudness';
+import { qualityProfile } from '../engine/session';
 import {
   MASTER_CEILING,
   MASTER_END_FADE_SECONDS,
@@ -288,6 +289,7 @@ export function segmentQa(input: {
   readonly introFrames: (segment: SegmentV1) => number;
   readonly segments: readonly { readonly segment: SegmentV1; readonly channels: Float32Array[] }[];
 }): SegmentQaV1[] {
+  const oversample = qualityProfile().truePeakOversample;
   return input.segments.map(({ segment, channels }) => {
     const measured = measureMix(channels, input.sampleRate, 'one-shot-limited');
     const problems: string[] = [];
@@ -303,7 +305,7 @@ export function segmentQa(input: {
       for (let offset = 0; offset < input.loop[0].length; offset += step) {
         worst = Math.max(
           worst,
-          truePeakDb(overlayLoop(input.loop, channels, offset), input.sampleRate),
+          truePeakDb(overlayLoop(input.loop, channels, offset), input.sampleRate, oversample),
         );
         positions++;
       }
@@ -312,7 +314,7 @@ export function segmentQa(input: {
       const joined = handoff(channels, input.loop, input.introFrames(segment));
       overlay = {
         positions: 1,
-        worstTruePeakDbtp: Number(truePeakDb(joined, input.sampleRate).toFixed(3)),
+        worstTruePeakDbtp: Number(truePeakDb(joined, input.sampleRate, oversample).toFixed(3)),
       };
     }
     if (overlay && overlay.worstTruePeakDbtp > QA_TRUE_PEAK_MAX_DBTP) {

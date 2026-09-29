@@ -6,21 +6,13 @@
  */
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  checkRepoRelative,
-  DEFAULT_FAMILIES_ROOT,
-  DEFAULT_MUSIC_ROOT,
-  DEFAULT_SEARCHES_ROOT,
-  listFamilies,
-  listMusic,
-  listSearches,
-  surveyTargets,
-  verifyFamily,
-  verifyManifest,
-  verifyMusic,
-  verifySampleLibrary,
-  verifySearch,
-} from '../../src/protocol';
+import { DEFAULT_FAMILIES_ROOT, listFamilies, verifyFamily } from '../../src/protocol/family';
+import { checkRepoRelative } from '../../src/protocol/fs';
+import { DEFAULT_MUSIC_ROOT, listMusic, verifyMusic } from '../../src/protocol/music';
+import { verifyManifest } from '../../src/protocol/publish';
+import { verifySampleLibrary } from '../../src/protocol/samples';
+import { DEFAULT_SEARCHES_ROOT, listSearches, verifySearch } from '../../src/protocol/search';
+import { surveyTargets } from '../../src/protocol/targets';
 import { print, type Parsed } from './args';
 
 function manifestsUnder(repoRoot: string): string[] {

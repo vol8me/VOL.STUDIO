@@ -9,6 +9,13 @@ geneli işler kök [TODO.md](../../TODO.md)'de.
 
 ## Açık
 
+- [ ] **[P2] AS20 — Dev doğrulayıcılar bildirimsel şemaya iner.** 32 fonksiyon
+      100 satırı aşıyor (`validateMusicProgram` 233 satır, `publishJob` 228,
+      `buildContext` 175, `validateManifest` 165); elle yazılmış
+      `checkObject`/`checkNumber` zincirleri binlerce satır. Kapanır:
+      doğrulayıcılar alt şemalardan kurulur, 100 satırı aşan fonksiyon sayısı
+      bir bekçiyle yalnız azalabilir ve `verify --all` birebir aynı kalır.
+
 ## Yol haritası — agent-first genel amaçlı audio-authoring platformu
 
 > **Dalga 0**, yukarıdaki `## Açık` bölümündeki mevcut motor doğruluğu ve
@@ -207,6 +214,15 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
 
 ## Kapatılanlar
 
+- [x] **S2 — Araç sağlamlığı.** Paralel havuz ölen worker'ı kalp atışıyla
+      saniyeler içinde, asılı görevi kendi süresinde düşürür (AS4); iki WAV
+      çözücüsü aynı katılıkta (AS6); FFmpeg çözümü akışı doğrular, tek ses
+      akışını seçer ve süre sınırlıdır (AS7); `-inf` özeti okunur (AS9);
+      `hashPcm` eksik ya da sonsuz PCM'i reddeder (AS12); bilinmeyen CLI
+      bayrağı ve geçersiz `AUDIO_SYNTH_WORKERS` hata verir (AS13); FFmpeg
+      varlık denetimi tek yoldan (AS14); true-peak ölçümü render oturumunu
+      okumaz (AS15); atomik yazım kısmi yazımı tamamlar ve dizini fsync'ler
+      (AS16); betikler protokol barrel'ını almaz, bekçili (AS21).
 - [x] **[P2] Referans yayınları kanonik yoldan tazelendi (F7a).** 12
       akustik job `render → analyze → select → publish`, 4 müzik
       lokasyonu `music publish`, 2 aile `family publish` — hepsi

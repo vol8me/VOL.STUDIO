@@ -90,6 +90,11 @@ export function prettyCanonicalJson(value: unknown): string {
  */
 export function hashPcm(channels: readonly Float32Array[], sampleRate: number): Sha256 {
   const frames = channels[0]?.length ?? 0;
+  // Kısa kanal ya da sonsuz/NaN örnek sessizce özetlenirse iki farklı ses aynı
+  // kimliği alabilir; kimlik yalnız geçerli PCM'e verilir.
+  if (channels.some((channel) => channel.length !== frames)) {
+    throw new Error('PCM kanalları eşit uzunlukta değil');
+  }
   const hash = createHash('sha256');
   hash.update(`pcm-f32le-interleaved-v1;rate=${sampleRate};channels=${channels.length};`);
   hash.update(`frames=${frames};`);
@@ -100,7 +105,9 @@ export function hashPcm(channels: readonly Float32Array[], sampleRate: number): 
     let offset = 0;
     for (let i = start; i < end; i++) {
       for (const channel of channels) {
-        buffer.writeFloatLE(Math.max(-1, Math.min(1, channel[i])), offset);
+        const sample = channel[i];
+        if (!Number.isFinite(sample)) throw new Error(`PCM örneği sonlu değil (çerçeve ${i})`);
+        buffer.writeFloatLE(Math.max(-1, Math.min(1, sample)), offset);
         offset += 4;
       }
     }

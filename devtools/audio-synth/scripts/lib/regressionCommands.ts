@@ -5,15 +5,15 @@
  * `decide` yalnız insan beyanıdır (`--by human` zorunlu): karar tam o PCM
  * kimliğine bağlanır, başka hash üretilirse bayatlar.
  */
+import { ProtocolError } from '../../src/protocol/errors';
 import {
   decideRegression,
-  ProtocolError,
   regressionCorpus,
   regressionDecisions,
   runRegression,
   type RegressionDecisionStatus,
-} from '../../src/protocol';
-import { positional, print, required, text, type Parsed } from './args';
+} from '../../src/protocol/regression';
+import { positional, positiveCount, print, required, text, type Parsed } from './args';
 
 export function runRegressionCommand(parsed: Parsed, repoRoot: string): number {
   const sub = positional(parsed, 0, 'bir alt komut (corpus|run|decide)');
@@ -31,9 +31,7 @@ export function runRegressionCommand(parsed: Parsed, repoRoot: string): number {
     case 'run': {
       const ids = text(parsed.flags, 'ids');
       const report = runRegression(repoRoot, {
-        workers: parsed.flags.has('workers')
-          ? Number(required(parsed.flags, 'workers'))
-          : undefined,
+        workers: parsed.flags.has('workers') ? positiveCount(parsed, 'workers') : undefined,
         ...(ids ? { ids: ids.split(',') } : {}),
       });
       if (parsed.flags.has('json')) print(report);

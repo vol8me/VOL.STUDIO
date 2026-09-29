@@ -120,8 +120,8 @@ function readWavFormat(
 
 /**
  * Kanalları KORUYARAK çözer (mono ya da ön sol + ön sağ stereo); sample
- * kütüphanesi ve konvolüsyon IR'ları için. Kanal düzeni kuralları ve biçim
- * denetimi `decodeWav` ile aynıdır; tek fark mono'ya indirmemesidir.
+ * kütüphanesi ve konvolüsyon IR'ları için. Ayrıştırma ve biçim denetimi
+ * `decodeWav` ile aynı fonksiyonlardır; tek fark mono'ya indirmemesidir.
  */
 export function decodeWavChannels(buffer: ArrayBuffer | Uint8Array): {
   channels: Float32Array[];
@@ -176,153 +176,75 @@ function readSampleValue(
   }
 }
 
+/**
+ * RIFF chunk'larını bulur. Katıdır: RIFF boyutu dosyayı aşamaz, chunk başlığı
+ * ve tek sayılı chunk'ın dolgu baytı kesik olamaz. Üretim yolu (sample
+ * kütüphanesi, IR'lar) ve `decodeWav` aynı kuralı kullanır.
+ */
 function locateChunks(bytes: Uint8Array, view: DataView) {
   const text = (offset: number, length: number) =>
     String.fromCharCode(...bytes.subarray(offset, offset + length));
-  if (bytes.byteLength < 12 || text(0, 4) !== 'RIFF' || text(8, 4) !== 'WAVE') {
-    throw new Error('Geçersiz WAV dosyası');
+  if (bytes.byteLength < 12) throw new Error('Geçersiz WAV dosyası: RIFF başlığı eksik');
+  if (text(0, 4) !== 'RIFF' || text(8, 4) !== 'WAVE') throw new Error('Geçersiz WAV dosyası');
+  const riffSize = view.getUint32(4, true);
+  if (riffSize < 4 || riffSize > bytes.byteLength - 8) {
+    throw new Error('Geçersiz WAV RIFF boyutu: chunk sınırları dosyayı aşıyor');
   }
-  const end = Math.min(bytes.byteLength, view.getUint32(4, true) + 8);
+  const end = riffSize + 8;
   let fmtOffset = -1;
   let fmtSize = 0;
   let dataOffset = -1;
   let dataSize = 0;
-  for (let offset = 12; offset + 8 <= end; ) {
+  for (let offset = 12; offset < end; ) {
+    if (offset + 8 > end) throw new Error('WAV chunk başlığı kesik (bozuk dosya)');
     const id = text(offset, 4);
     const size = view.getUint32(offset + 4, true);
-    if (offset + 8 + size > end) throw new Error(`WAV ${id} chunk boyutu dosya sınırını aşıyor`);
+    if (size > end - (offset + 8)) throw new Error(`WAV ${id} chunk boyutu dosya sınırını aşıyor`);
+    const next = offset + 8 + size + (size % 2);
+    if (next > end) throw new Error(`WAV ${id} chunk padding'i kesik (bozuk dosya)`);
     if (id === 'fmt ') [fmtOffset, fmtSize] = [offset + 8, size];
     if (id === 'data') [dataOffset, dataSize] = [offset + 8, size];
-    offset += 8 + size + (size % 2);
+    offset = next;
   }
-  if (fmtOffset < 0 || dataOffset < 0 || fmtSize < 16) {
-    throw new Error('WAV fmt veya data chunk bulunamadı');
-  }
+  if (fmtOffset < 0 || dataOffset < 0) throw new Error('WAV fmt veya data chunk bulunamadı');
+  if (fmtSize < 16) throw new Error('WAV fmt chunk çok kısa (bozuk dosya)');
   return { fmtOffset, fmtSize, dataOffset, dataSize };
 }
 
-/** Ham WAV dosyasından mono Float32Array ve orijinal örnek oranını döner. */
+/**
+ * Ham WAV dosyasından mono Float32Array ve orijinal örnek oranını döner.
+ * Ayrıştırma `decodeWavChannels` ile aynıdır; kanallar çift duyarlıkta
+ * ortalanır.
+ */
 export function decodeWav(buffer: ArrayBuffer | Uint8Array): {
   samples: Float32Array;
   sampleRate: number;
 } {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  if (bytes.byteLength < 12) throw new Error('Geçersiz WAV dosyası: RIFF başlığı eksik');
-  const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-
-  const readString = (offset: number, length: number): string => {
-    let s = '';
-    for (let i = 0; i < length; i++) s += String.fromCharCode(bytes[offset + i]);
-    return s;
-  };
-
-  if (readString(0, 4) !== 'RIFF' || readString(8, 4) !== 'WAVE') {
-    throw new Error('Geçersiz WAV dosyası');
-  }
-  const riffSize = dataView.getUint32(4, true);
-  if (riffSize < 4 || riffSize > bytes.byteLength - 8) {
-    throw new Error('Geçersiz WAV RIFF boyutu: chunk sınırları dosyayı aşıyor');
-  }
-  const riffEnd = riffSize + 8;
-
-  let fmtOffset = -1;
-  let fmtSize = 0;
-  let dataOffset = -1;
-  let dataSize = 0;
-
-  let offset = 12;
-  while (offset < riffEnd) {
-    if (offset + 8 > riffEnd) {
-      throw new Error('WAV chunk başlığı kesik (bozuk dosya)');
-    }
-    const chunkId = readString(offset, 4);
-    const chunkSize = dataView.getUint32(offset + 4, true);
-    const chunkDataStart = offset + 8;
-    if (chunkSize > riffEnd - chunkDataStart) {
-      throw new Error(`WAV ${chunkId} chunk boyutu dosya sınırını aşıyor`);
-    }
-    const nextOffset = chunkDataStart + chunkSize + (chunkSize % 2);
-    if (nextOffset > riffEnd) {
-      throw new Error(`WAV ${chunkId} chunk padding'i kesik (bozuk dosya)`);
-    }
-
-    if (chunkId === 'fmt ') {
-      fmtOffset = chunkDataStart;
-      fmtSize = chunkSize;
-    } else if (chunkId === 'data') {
-      dataOffset = chunkDataStart;
-      dataSize = chunkSize;
-    }
-    offset = nextOffset;
-  }
-
-  if (fmtOffset < 0 || dataOffset < 0) {
-    throw new Error('WAV fmt veya data chunk bulunamadı');
-  }
-  if (fmtSize < 16 || fmtOffset + fmtSize > bytes.byteLength) {
-    throw new Error('WAV fmt chunk çok kısa (bozuk dosya)');
-  }
-
-  const { effectiveFormat, numChannels, wavSampleRate, bitsPerSample, validBits } = readWavFormat(
-    dataView,
-    bytes,
-    fmtOffset,
-    fmtSize,
-  );
-
-  const bytesPerSample = bitsPerSample / 8;
-  const frameSize = numChannels * bytesPerSample;
-  if (dataSize % frameSize !== 0) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const chunks = locateChunks(bytes, view);
+  const format = readWavFormat(view, bytes, chunks.fmtOffset, chunks.fmtSize);
+  const bytesPerSample = format.bitsPerSample / 8;
+  const frameSize = format.numChannels * bytesPerSample;
+  if (chunks.dataSize % frameSize !== 0) {
     throw new Error('WAV data chunk tam örnek frame içermiyor (bozuk dosya)');
   }
-  const sampleCount = dataSize / frameSize;
-  const samples = new Float32Array(sampleCount);
-  // Geçerli bitler kabın EN ANLAMLI bitleridir; alttaki dolgu bitleri
-  // sözleşmeye göre 0 olmalı, olmayan dosyada çöp olarak maskelenir. Ölçek
-  // kabın tam ölçeğidir — sola yaslı veri böyle doğru genliği verir.
-  const padMask = ~((1 << (bitsPerSample - validBits)) - 1);
-
-  let readIndex = dataOffset;
-  for (let i = 0; i < sampleCount; i++) {
+  const frames = chunks.dataSize / frameSize;
+  const samples = new Float32Array(frames);
+  // Geçerli bitler kabın en anlamlı bitleridir; dolgu bitleri maskelenir.
+  const padMask = ~((1 << (format.bitsPerSample - format.validBits)) - 1);
+  let at = chunks.dataOffset;
+  for (let i = 0; i < frames; i++) {
     let sum = 0;
-    for (let ch = 0; ch < numChannels; ch++) {
-      if (effectiveFormat === 3) {
-        if (bitsPerSample === 32) {
-          sum += dataView.getFloat32(readIndex, true);
-          readIndex += 4;
-        } else {
-          sum += dataView.getFloat64(readIndex, true);
-          readIndex += 8;
-        }
-      } else if (bitsPerSample === 16) {
-        sum += (dataView.getInt16(readIndex, true) & padMask) / 32768;
-        readIndex += 2;
-      } else if (bitsPerSample === 24) {
-        // 24-bit little-endian işaretli: üç baytı birleştirip işaret genişlet.
-        const b0 = bytes[readIndex];
-        const b1 = bytes[readIndex + 1];
-        const b2 = bytes[readIndex + 2];
-        const raw = (b2 << 16) | (b1 << 8) | b0;
-        const signed = raw & 0x800000 ? raw - 0x1000000 : raw;
-        sum += (signed & padMask) / 8388608;
-        readIndex += 3;
-      } else if (bitsPerSample === 32) {
-        sum += (dataView.getInt32(readIndex, true) & padMask) / 2147483648;
-        readIndex += 4;
-      } else if (bitsPerSample === 8) {
-        // 8-bit WAV işaretsizdir (0-255, orta nokta 128).
-        sum += ((bytes[readIndex] & padMask) - 128) / 128;
-        readIndex += 1;
-      } else {
-        throw new Error(`Desteklenmeyen bit derinliği: ${bitsPerSample}`);
-      }
+    for (let ch = 0; ch < format.numChannels; ch++) {
+      sum += readSampleValue(view, bytes, at, format, padMask);
+      at += bytesPerSample;
     }
-    const sample = sum / numChannels;
+    const sample = sum / format.numChannels;
     if (!Number.isFinite(sample)) throw new Error('WAV örnek verisi sonlu değil');
     samples[i] = sample;
   }
-
-  return { samples, sampleRate: wavSampleRate };
+  return { samples, sampleRate: format.wavSampleRate };
 }
 
 /**

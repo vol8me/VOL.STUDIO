@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { rmSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { execSync, spawnSync, SpawnSyncReturns } from 'node:child_process';
+import type { spawnSync, SpawnSyncReturns } from 'node:child_process';
 import { writeWav, writeOgg, writeAudio, resetFfmpegCache } from '@volstudio/audio-synth/writer';
 import { synth } from '@volstudio/audio-synth';
 
@@ -12,18 +12,20 @@ import { synth } from '@volstudio/audio-synth';
 // sırasında "before initialization" hatası alınır; `vi.hoisted` bu değişkenleri
 // mock ile aynı anda hoist eder. `default` alanı da gerekli — built-in modüllerin
 // ESM/CJS interop köprüsü bunu bekliyor, yoksa "no default export" hatası verir.
-// Tip parametreleri (`typeof execSync`/`spawnSync`) verilmezse `mock.calls` `any`
-// olur ve `no-unsafe-*` lint kuralları devreye girer.
-const { execSyncMock, spawnSyncMock } = vi.hoisted(() => ({
-  execSyncMock: vi.fn<typeof execSync>(),
+// Tip parametresi (`typeof spawnSync`) verilmezse `mock.calls` `any` olur ve
+// `no-unsafe-*` lint kuralları devreye girer.
+const { spawnSyncMock } = vi.hoisted(() => ({
   spawnSyncMock: vi.fn<typeof spawnSync>(),
 }));
 
 vi.mock('node:child_process', () => ({
-  execSync: execSyncMock,
   spawnSync: spawnSyncMock,
-  default: { execSync: execSyncMock, spawnSync: spawnSyncMock },
+  default: { spawnSync: spawnSyncMock },
 }));
+
+/** FFmpeg varlık denetimi (`-version`) dışındaki çağrılar: kodlamanın kendisi. */
+const encodeCalls = () =>
+  spawnSyncMock.mock.calls.filter(([, args]) => !(args ?? []).includes('-version'));
 
 const TEST_DIR = join(tmpdir(), 'vol-synth-test');
 
@@ -106,24 +108,20 @@ describe('OGG writer', () => {
     // Varsayılan: FFmpeg mevcut ve encode başarılı. Testler yalnızca farklı
     // davranan kısmı `...Once` ile geçersiz kılar — `mockReset` sonrası
     // yeniden kurulum sırasına bağlı kırılganlığı önler.
-    execSyncMock.mockReturnValue(Buffer.alloc(0));
     spawnSyncMock.mockReturnValue(fakeSpawnResult(0));
   });
 
   afterEach(() => {
     if (existsSync(TEST_DIR)) rmSync(TEST_DIR, { recursive: true, force: true });
-    execSyncMock.mockClear();
     spawnSyncMock.mockClear();
   });
 
   it('FFmpeg bulunamazsa kurulum talimatlı hata fırlatır, spawnSync hiç çağrılmaz', () => {
-    execSyncMock.mockImplementationOnce(() => {
-      throw new Error('command not found');
-    });
+    spawnSyncMock.mockReturnValueOnce(fakeSpawnResult(null));
     const result = synth(0.05, { wave: 'sine', frequency: 440 });
 
     expect(() => writeOgg(join(TEST_DIR, 'test.ogg'), result)).toThrow(/FFmpeg bulunamadı/);
-    expect(spawnSyncMock).not.toHaveBeenCalled();
+    expect(encodeCalls()).toHaveLength(0);
   });
 
   it('FFmpeg mevcutsa doğru argümanlarla spawnSync çağırır (shell yok, array argüman)', () => {
@@ -131,8 +129,8 @@ describe('OGG writer', () => {
     const result = synth(0.05, { wave: 'sine', frequency: 440 });
     writeOgg(outPath, result, { quality: 6 });
 
-    expect(spawnSyncMock).toHaveBeenCalledTimes(1);
-    const call = spawnSyncMock.mock.calls[0];
+    expect(encodeCalls()).toHaveLength(1);
+    const call = encodeCalls()[0];
     expect(call?.[0]).toBe('ffmpeg');
     expect(call?.[1]).toEqual(
       expect.arrayContaining([
@@ -164,11 +162,14 @@ describe('OGG writer', () => {
     expect(() => writeOgg(join(TEST_DIR, 'bad-gain.ogg'), result, { targetGain: 3 })).toThrow(
       /gain/,
     );
-    expect(spawnSyncMock).not.toHaveBeenCalled();
+    expect(encodeCalls()).toHaveLength(0);
   });
 
   it('FFmpeg sıfırdan farklı çıkış koduyla dönerse hata fırlatır', () => {
-    spawnSyncMock.mockReturnValueOnce(fakeSpawnResult(1, 'boom'));
+    // İlk çağrı varlık denetimi (başarılı), ikincisi kodlama (düşer).
+    spawnSyncMock
+      .mockReturnValueOnce(fakeSpawnResult(0))
+      .mockReturnValueOnce(fakeSpawnResult(1, 'boom'));
 
     const result = synth(0.05, { wave: 'sine', frequency: 440 });
     expect(() => writeOgg(join(TEST_DIR, 'fail.ogg'), result)).toThrow(/encode başarısız/);
@@ -181,13 +182,11 @@ describe('writeAudio format seçimi', () => {
     // Bu blok 'OGG writer'dan bağımsız çalışabilsin diye (tek dosya çalıştırma,
     // yeniden sıralama vb.) kendi cache'ini de sıfırlar.
     resetFfmpegCache();
-    execSyncMock.mockReturnValue(Buffer.alloc(0));
     spawnSyncMock.mockReturnValue(fakeSpawnResult(0));
   });
 
   afterEach(() => {
     if (existsSync(TEST_DIR)) rmSync(TEST_DIR, { recursive: true, force: true });
-    execSyncMock.mockClear();
     spawnSyncMock.mockClear();
   });
 
@@ -197,7 +196,7 @@ describe('writeAudio format seçimi', () => {
     writeAudio(outPath, result, 'wav');
 
     expect(existsSync(outPath)).toBe(true);
-    expect(spawnSyncMock).not.toHaveBeenCalled();
+    expect(encodeCalls()).toHaveLength(0);
   });
 
   it("format 'ogg' iken writeOgg'a delege eder", () => {

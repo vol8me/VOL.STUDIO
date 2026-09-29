@@ -2045,6 +2045,11 @@ yüzden ana iş parçacığı `Atomics.wait` ile bekler ve yanıtı
   bekleyen ana iş parçacığı worker'ın asenkron `error` olayını göremeyeceği
   için yükleme hatası da el sıkışmasıyla döner.
 - Görev hatası `ParallelTaskError` olarak adıyla gelir.
+- Ölen worker (bellek taşması, çöküş) de `exit` olayıyla görülemez. Her worker
+  alt iş parçacığından paylaşılan belleğe kalp atışı yazar; worker ölünce
+  sayaç durur ve havuz 10 sn içinde `WorkerDied` ile düşer
+  (`src/protocol/parallelHeartbeat.mjs`). Canlı ama yanıtsız görev kendi
+  30 dk sınırında düşer; başka worker'ın ilerlemesi bu süreyi sıfırlamaz.
 - Worker ana oturumun kalite ve önbellek kararını izler: önbellek varsa
   deponun disk katmanını paylaşır.
 

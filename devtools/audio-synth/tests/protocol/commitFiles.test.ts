@@ -11,7 +11,13 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { commitFiles, writeStaged } from '../../src/protocol/fs';
+import {
+  commitFiles,
+  fsyncDir,
+  writeAllSync,
+  writeFileAtomic,
+  writeStaged,
+} from '../../src/protocol/fs';
 
 const roots: string[] = [];
 function layout() {
@@ -91,5 +97,37 @@ describe('commitFiles', () => {
     chmodSync(join(root, 'manifests'), 0o555);
     expect(() => commitFiles(files)).toThrow();
     expect(existsSync(asset)).toBe(false);
+  });
+});
+
+describe('writeAllSync / writeFileAtomic', () => {
+  it('kısmi yazımda kalan baytları döngüyle tamamlar', () => {
+    const chunks: string[] = [];
+    writeAllSync(7, 'merhaba dünya', (_fd, buffer, offset, length) => {
+      const n = Math.min(3, length);
+      chunks.push(Buffer.from(buffer.subarray(offset, offset + n)).toString('latin1'));
+      return n;
+    });
+    expect(chunks.length).toBeGreaterThan(4);
+    expect(Buffer.from(chunks.join(''), 'latin1').toString('utf8')).toBe('merhaba dünya');
+  });
+
+  it('ilerlemeyen yazım sonsuz döngü yerine hata verir', () => {
+    expect(() => writeAllSync(7, 'x', () => 0)).toThrow(/ilerlemedi/);
+  });
+
+  it('hedefi yazar, dizini fsync eder ve geçici dosya bırakmaz', () => {
+    const { root } = layout();
+    const target = join(root, 'out', 'b.json');
+    writeFileAtomic(target, '{"a":1}\n');
+    writeFileAtomic(target, '{"a":2}\n');
+    expect(readFileSync(target, 'utf8')).toBe('{"a":2}\n');
+    expect(readdirSync(join(root, 'out'))).toEqual(['b.json']);
+    expect(() => fsyncDir(join(root, 'out'))).not.toThrow();
+  });
+
+  it('olmayan dizinin fsync hatası yutulmaz', () => {
+    const { root } = layout();
+    expect(() => fsyncDir(join(root, 'yok'))).toThrow(/ENOENT/);
   });
 });

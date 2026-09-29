@@ -183,7 +183,8 @@ function rawWav(opts: {
   const { format = 1, channels = 1, rate = 8000, bits = 16, data, fmtBody } = opts;
   const bytesPer = bits / 8;
   const fmtSize = fmtBody ? fmtBody.length : 16;
-  const total = 12 + 8 + fmtSize + 8 + data.length;
+  // Tek boyutlu chunk RIFF gereği bir dolgu baytı taşır.
+  const total = 12 + 8 + fmtSize + 8 + data.length + (data.length % 2);
   const out = new Uint8Array(total);
   const view = new DataView(out.buffer);
   const text = (at: number, s: string) => {
@@ -311,6 +312,18 @@ describe('decodeWavChannels — çok kanallı çözümleme ve hata dalları', ()
     expect(rs.channels[1][1]).toBeCloseTo(-0.25, 7);
     const u8 = decodeWavChannels(rawWav({ bits: 8, data: new Uint8Array([192]) }));
     expect(u8.channels[0][0]).toBeCloseTo((192 - 128) / 128, 7);
+  });
+
+  it('iki çözücü aynı dosyaları reddeder: taşan RIFF boyutu ve kesik dolgu', () => {
+    const odd = rawWav({ bits: 8, data: new Uint8Array([192]) });
+    const noPad = odd.slice(0, odd.length - 1);
+    new DataView(noPad.buffer).setUint32(4, noPad.length - 8, true);
+    const oversized = odd.slice();
+    new DataView(oversized.buffer).setUint32(4, oversized.length, true);
+    for (const bad of [noPad, oversized]) {
+      expect(() => decodeWav(bad)).toThrow();
+      expect(() => decodeWavChannels(bad)).toThrow();
+    }
   });
 
   it('bozuk RIFF, eksik chunk ve frame hizasızlığı reddedilir', () => {

@@ -8,24 +8,23 @@
  */
 import { withRenderSession } from '../src/engine/session';
 import { AudioParamError, BatchBudgetError, RenderBudgetError } from '../src/guard';
+import { buildContext } from '../src/protocol/context';
+import { ProtocolError } from '../src/protocol/errors';
+import { checkRepoRelative } from '../src/protocol/fs';
 import {
   analyzeCandidate,
-  buildContext,
-  checkRepoRelative,
-  DEFAULT_JOBS_ROOT,
-  deriveTreatment,
   initJob,
-  jobStatus,
   listJobs,
-  ProtocolError,
-  publishJob,
   registerBrief,
   registerProgram,
   renderCandidate,
-  repoRenderCache,
   selectCandidate,
-  type JobLocation,
-} from '../src/protocol';
+} from '../src/protocol/job';
+import { DEFAULT_JOBS_ROOT, type JobLocation } from '../src/protocol/location';
+import { publishJob } from '../src/protocol/publish';
+import { repoRenderCache } from '../src/protocol/renderCacheStore';
+import { jobStatus } from '../src/protocol/status';
+import { deriveTreatment } from '../src/protocol/treatments';
 import {
   findRepoRoot,
   parse,

@@ -42,7 +42,10 @@ function envWorkers(): number | undefined {
   const raw = process.env[WORKERS_ENV];
   if (raw === undefined || raw === '') return undefined;
   const value = Number(raw);
-  return Number.isInteger(value) && value >= 1 ? value : undefined;
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${WORKERS_ENV} pozitif tam sayı olmalı: ${raw}`);
+  }
+  return value;
 }
 
 /**

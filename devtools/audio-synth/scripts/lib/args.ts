@@ -5,7 +5,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import type { RenderQuality } from '../../src/engine/session';
-import { ProtocolError } from '../../src/protocol';
+import { ProtocolError } from '../../src/protocol/errors';
 
 export interface Parsed {
   readonly command: string;
@@ -13,7 +13,50 @@ export interface Parsed {
   readonly flags: ReadonlyMap<string, string | true>;
 }
 
-const BOOLEAN_FLAGS = new Set(['json', 'loop', 'audition', 'all', 'serve', 'draft', 'semantic']);
+export const BOOLEAN_FLAGS: ReadonlySet<string> = new Set([
+  'json',
+  'loop',
+  'audition',
+  'all',
+  'serve',
+  'draft',
+  'semantic',
+]);
+
+/** Değer alan bayraklar; komutların okuduğu adlarla birebir (testle kilitli). */
+export const VALUE_FLAGS: ReadonlySet<string> = new Set([
+  'asset',
+  'brief',
+  'by',
+  'candidate',
+  'families',
+  'file',
+  'fits',
+  'from',
+  'from-report',
+  'ids',
+  'jobs',
+  'label',
+  'music',
+  'negative',
+  'note',
+  'package',
+  'pcm',
+  'port',
+  'positive',
+  'profile',
+  'reason',
+  'render',
+  'runtime-key',
+  'scorer',
+  'search',
+  'searches',
+  'seed',
+  'skeleton',
+  'state',
+  'status',
+  'workers',
+]);
 
 export function parse(argv: readonly string[]): Parsed {
   const [command = 'help', ...rest] = argv;
@@ -26,6 +69,9 @@ export function parse(argv: readonly string[]): Parsed {
       continue;
     }
     const name = arg.slice(2);
+    if (!BOOLEAN_FLAGS.has(name) && !VALUE_FLAGS.has(name)) {
+      throw new ProtocolError('invalid', `bilinmeyen bayrak --${name}`);
+    }
     if (BOOLEAN_FLAGS.has(name)) {
       flags.set(name, true);
     } else {
@@ -79,6 +125,16 @@ export function readInput(path: string): unknown {
 
 export function print(value: unknown): void {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
+}
+
+/** Pozitif tam sayı değeri isteyen bayrak (ör. `--workers`). */
+export function positiveCount(parsed: Parsed, name: string): number {
+  const raw = required(parsed.flags, name);
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new ProtocolError('invalid', `--${name} pozitif tam sayı olmalı: ${raw}`);
+  }
+  return value;
 }
 
 /** `--draft` bayrağı: hızlı yineleme kalitesi; yayın yalnız nihai kaliteyi kabul eder. */

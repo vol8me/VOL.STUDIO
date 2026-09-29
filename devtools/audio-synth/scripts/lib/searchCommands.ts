@@ -5,23 +5,22 @@
  * girmez ve hiçbir kararı etkilemez.
  */
 import { statSync } from 'node:fs';
+import { exportAuditionPage, startAuditionServer } from '../../src/protocol/auditionServer';
+import { ProtocolError } from '../../src/protocol/errors';
+import { checkRepoRelative } from '../../src/protocol/fs';
+import type { JobLocation } from '../../src/protocol/location';
 import {
-  checkRepoRelative,
   DEFAULT_SEARCHES_ROOT,
-  exportAuditionPage,
   exportSearchAudition,
   listSearches,
   previewSearch,
   promoteCandidate,
-  ProtocolError,
   recordDecision,
   runSearch,
   searchStatus,
-  startAuditionServer,
-  type JobLocation,
   verifySearch,
   type SearchLocation,
-} from '../../src/protocol';
+} from '../../src/protocol/search';
 import { validateDecision } from '../../src/search/selection';
 import { parseScorerArgv } from '../../src/search/semantic';
 import { positional, print, readInput, required, text, type Parsed } from './args';

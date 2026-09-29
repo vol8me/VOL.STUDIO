@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
  * çözülen çift listeden silinmek zorundadır.
  */
 const SRC = resolve(import.meta.dirname, '../../src');
+const SCRIPTS = resolve(import.meta.dirname, '../../scripts');
 
 const KNOWN_CYCLES = new Set([
   '(root)<->arrange',
@@ -92,5 +93,17 @@ describe('src dizin katmanları', () => {
 
   it('çözülen çift listeden silinir', () => {
     expect([...KNOWN_CYCLES].filter((cycle) => !cycles.includes(cycle))).toEqual([]);
+  });
+});
+
+describe('betik importları', () => {
+  // Protokol barrel'ı paket dışa aktarımıdır; betik onu alırsa her komut
+  // bütün protokol grafiğini yükler. Betikler modülü doğrudan alır.
+  it("betikler protokol barrel'ını almaz", () => {
+    const barrel = join(SRC, 'protocol');
+    const offenders = sourceFiles(SCRIPTS).filter((file) =>
+      runtimeTargets(file).some((target) => target === barrel || target === join(barrel, 'index')),
+    );
+    expect(offenders.map((file) => relative(SCRIPTS, file))).toEqual([]);
   });
 });

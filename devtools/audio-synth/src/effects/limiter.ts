@@ -1,4 +1,5 @@
 import { interSamplePeaks, truePeakDb } from '../analysis/loudness';
+import { qualityProfile } from '../engine/session';
 
 /**
  * İleriye bakan true-peak sınırlayıcı (offline; gecikme yok, çünkü bütün
@@ -82,7 +83,8 @@ export function limitTruePeak(
   s: LimiterSettings,
 ): LimiterOutcome {
   const original = channels.map((c) => c.slice());
-  const peaks = original.map((c) => interSamplePeaks(c, sampleRate));
+  const oversample = qualityProfile().truePeakOversample;
+  const peaks = original.map((c) => interSamplePeaks(c, sampleRate, oversample));
   const lookahead = Math.max(1, Math.round(s.lookaheadSeconds * sampleRate));
   const release = s.releaseSeconds > 0 ? Math.exp(-1 / (s.releaseSeconds * sampleRate)) : 0;
   let target = s.ceilingDb;
@@ -98,7 +100,7 @@ export function limitTruePeak(
       for (let n = 0; n < channel.length; n++) channel[n] = source[n] * gains[n];
     });
     for (const g of gains) if (g < minGain) minGain = g;
-    measured = truePeakDb(channels, sampleRate);
+    measured = truePeakDb(channels, sampleRate, oversample);
     if (!(measured > s.ceilingDb + TOLERANCE_DB)) break;
     target -= measured - s.ceilingDb + TOLERANCE_DB;
   }

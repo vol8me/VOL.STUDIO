@@ -1,6 +1,7 @@
 import { MASTERING_PATHS, type MusicPlaybackMode } from '@volstudio/core/audio/music';
 import { integratedLoudness, truePeakDb } from '../analysis/loudness';
 import { masterChannels, measurePeak } from '../engine/master';
+import { qualityProfile } from '../engine/session';
 import { AudioParamError } from '../guard/errors';
 import { checkChoice, checkNumber, checkObject } from '../guard/read';
 
@@ -193,6 +194,8 @@ export function measureMix(
   return {
     integratedLufs: Number(measureLoudness(channels, sampleRate, path).toFixed(3)),
     samplePeak: Number(measurePeak(channels).toFixed(6)),
-    truePeakDbtp: Number(truePeakDb(channels, sampleRate).toFixed(3)),
+    truePeakDbtp: Number(
+      truePeakDb(channels, sampleRate, qualityProfile().truePeakOversample).toFixed(3),
+    ),
   };
 }
