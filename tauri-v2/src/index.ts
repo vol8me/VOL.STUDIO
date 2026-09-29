@@ -26,6 +26,9 @@ export type { SessionKind, SessionKindProbe } from './platform/sessionKind';
 export { registerShutdownFlush } from './platform/shutdownFlush';
 export type { ShutdownFlushHook, ShutdownFlushProbe } from './platform/shutdownFlush';
 
+export { singleVirtualPad, steamVirtualGamepads } from './platform/virtualGamepads';
+export type { SteamVirtualGamepad, VirtualGamepadProbe } from './platform/virtualGamepads';
+
 export { onSystemResume, registerSuspendFlush } from './platform/systemSleep';
 export type { ResumeListener, SuspendHook, SystemSleepProbe } from './platform/systemSleep';
 

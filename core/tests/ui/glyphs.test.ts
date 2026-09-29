@@ -209,3 +209,30 @@ describe('Glyph', () => {
     g.destroy();
   });
 });
+
+describe('resolveGlyphFamily — Steam sanal kolunun arkasındaki aygıt', () => {
+  const steamVirtual = 'Microsoft X-Box 360 pad 0 (STANDARD GAMEPAD Vendor: 28de Product: 11ff)';
+
+  it('sanal kol kimliği yerine gerçek aygıtın türü kazanır', () => {
+    expect(resolveGlyphFamily('gamepad', { gamepadId: steamVirtual })).toBe('valve');
+    expect(
+      resolveGlyphFamily('gamepad', {
+        gamepadId: steamVirtual,
+        virtualPad: { vid: 0x054c, type: 'ps5' },
+      }),
+    ).toBe('playstation');
+    expect(resolveGlyphFamily('gamepad', { virtualPad: { vid: 0x057e } })).toBe('nintendo');
+  });
+
+  it('Steamworks türü yine önceliklidir; tanınmayan sanal kol sıradakine düşer', () => {
+    expect(
+      resolveGlyphFamily('gamepad', {
+        steamworksType: 'xboxone',
+        virtualPad: { vid: 0x054c, type: 'ps5' },
+      }),
+    ).toBe('xbox');
+    expect(
+      resolveGlyphFamily('gamepad', { virtualPad: { vid: 0x1234 }, steamDeckSession: true }),
+    ).toBe('valve');
+  });
+});

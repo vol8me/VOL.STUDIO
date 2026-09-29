@@ -17,9 +17,32 @@ export interface GlyphFamilyContext {
    * Steam Input'un sanal kolu (`28DE` VID) `valve` sayılır.
    */
   gamepadId?: string;
+  /**
+   * Steam Input sanal kolunun arkasındaki gerçek aygıt
+   * (`SteamVirtualGamepadInfo`); `Gamepad.id` bu durumda Steam'in sanal
+   * kolunu gösterir ve gerçek aileyi saklar.
+   */
+  virtualPad?: { readonly vid: number; readonly type?: string };
   /** `SteamDeck=1` ortam bayrağı ya da eşdeğer oturum işareti. */
   steamDeckSession?: boolean;
 }
+
+const VENDOR_FAMILY: ReadonlyMap<number, GlyphFamily> = new Map([
+  [0x28de, 'valve'],
+  [0x054c, 'playstation'],
+  [0x057e, 'nintendo'],
+  [0x045e, 'xbox'],
+]);
+
+/** `SteamVirtualGamepadInfo` `type=` değerleri. */
+const VIRTUAL_TYPE_FAMILY: Readonly<Record<string, GlyphFamily>> = {
+  steam: 'valve',
+  ps4: 'playstation',
+  ps5: 'playstation',
+  xbox360: 'xbox',
+  xboxone: 'xbox',
+  switchpro: 'nintendo',
+};
 
 const STEAMWORKS_FAMILY: Readonly<Record<string, GlyphFamily>> = {
   steamdeck: 'valve',
@@ -57,9 +80,10 @@ const PAD_PROVIDERS = new Set(['gamepad', 'pad', 'controller']);
  *
  * Kol sağlayıcısında çözüm sırası:
  * 1. `steamworksType` — en doğru kaynak (varsa kazanır).
- * 2. `gamepadId` kalıpları.
- * 3. `steamDeckSession` — Steam Input kapanıksa fiziksel kol Deck'inkidir.
- * 4. Bilinmeyen pad → `xbox` (standart düzenin varsayılan sunumu).
+ * 2. `virtualPad` — Steam Input arkasındaki gerçek aygıt.
+ * 3. `gamepadId` kalıpları.
+ * 4. `steamDeckSession` — Steam Input kapanıksa fiziksel kol Deck'inkidir.
+ * 5. Bilinmeyen pad → `xbox` (standart düzenin varsayılan sunumu).
  */
 export function resolveGlyphFamily(
   providerId: string | undefined,
@@ -69,9 +93,15 @@ export function resolveGlyphFamily(
   if (PC_PROVIDERS.has(providerId)) return 'keyboard';
   if (!PAD_PROVIDERS.has(providerId)) return null;
 
-  const { steamworksType, gamepadId, steamDeckSession } = context;
+  const { steamworksType, virtualPad, gamepadId, steamDeckSession } = context;
   if (steamworksType !== undefined) {
     const family = STEAMWORKS_FAMILY[steamworksType.toLowerCase()];
+    if (family !== undefined) return family;
+  }
+  if (virtualPad !== undefined) {
+    const family =
+      VIRTUAL_TYPE_FAMILY[(virtualPad.type ?? '').toLowerCase()] ??
+      VENDOR_FAMILY.get(virtualPad.vid);
     if (family !== undefined) return family;
   }
   if (gamepadId !== undefined && gamepadId !== '') {

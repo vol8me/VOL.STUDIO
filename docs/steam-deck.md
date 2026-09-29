@@ -210,7 +210,9 @@ tetiklere bağlamak; bağlar `<oyun>/src/config/` altında veridir.
 ## Glifler
 
 Aile çözüm sırası: Steamworks girdi türü → `SteamVirtualGamepadInfo` üzerinden
-gerçek VID/PID (native köprü) → `Gamepad.id` → `SteamDeck=1` → Xbox.
+gerçek aygıt (kabuk `steam_virtual_gamepads`, JS `steamVirtualGamepads`; yuva ↔
+Gamepad sırası ölçülmediği için yalnız tek kolda kullanılır) → `Gamepad.id` →
+`SteamDeck=1` → Xbox.
 
 Aileler: Xbox, PlayStation, Nintendo, **Valve** (Deck ve yeni Steam
 Controller: A/B/X/Y, L1/R1, L2/R2, L4/R4/L5/R5, View, Menu, iki trackpad;

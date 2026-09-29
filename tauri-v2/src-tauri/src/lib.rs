@@ -154,6 +154,7 @@ where
             session_kind,
             shutdown::vol_flush_done,
             sleep::vol_suspend_ready,
+            virtual_gamepads::steam_virtual_gamepads,
             store::vol_store_read,
             store::vol_store_write,
             haptics::vol_haptics_status,
@@ -232,6 +233,7 @@ mod native_menus;
 mod shutdown;
 mod sleep;
 mod store;
+mod virtual_gamepads;
 
 #[cfg(target_os = "linux")]
 fn configure_linux_webview() {
