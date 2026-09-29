@@ -28,7 +28,8 @@ Valve'ın önerileri de bağlayıcıdır:
 - Kayıtlar Steam Cloud ile eşitlenir; grafik ayarları cihaza özgü kalır.
 - Tek oyunculu içerik internetsiz oynanır.
 - Fare ile çubuk girdisi aynı anda kabul edilir; biri ötekini kilitlemez.
-- Her oyunun bir FPS sınırı vardır: kendi sınırı ya da sistemin sınırlayıcısı.
+- Her oyunun bir FPS sınırı vardır: kendi sınırı (`createVolGame({ fpsLimit })`)
+  ya da sistemin sınırlayıcısı.
 - Uykudan önce kayıt güvenceye alınır.
 
 ## Cihaz ve çalışma ortamı
@@ -152,8 +153,10 @@ izleyicisine zorlamak 60'ı geri getirir.
   kabuk `WEBKIT_FORCE_VBLANK_TIMER=1` verir ve DMA-BUF çizicisini açık bırakır;
   kapalı yola göre aynı kare hızında ~2,5 kat daha az CPU harcar.
 - Dışarıdan verilen değişken ezilmez (`set_env_default`).
-- Kabuk oturumu `session_kind` komutuyla bildirir; ön yüz `getSessionKind()`
-  ile okur.
+- Kabuk oturumu `session_kind` komutuyla bildirir, ön yüz `getSessionKind()`
+  ile okur: `gamescope` (Deck oyun kipi), `bigpicture` (masaüstünde Steam Big
+  Picture: `SteamGamepadUI`/`SteamTenfoot`), `desktop`. İlk ikisi kol kipiyle
+  başlar; gamescope'ta kabuk bütün pencereleri tam ekrana alır.
 
 **Açık zamanlama soruları:**
 
@@ -199,7 +202,9 @@ tetiklere bağlamak; bağlar `<oyun>/src/config/` altında veridir.
 - Açılır açılmaz ilk eylemine odaklanan seçim ekranı, önceki basışın
   bırakılmasıyla yanlış seçim yapabilir.
 - UI'da sağ çubuk imleci taşımaz; imleç yalnız işaretçi olaylarından beslenir.
-- Sol trackpad WebKit'in Undo/Print kısayollarını tetikleyebilir.
+- Sol trackpad WebKit'in Undo/Print kısayollarını tetikleyebilir; kabuk
+  betiği ve `suppressNativeMenus` yazdırma, yenileme, bul, geri/ileri ve metin
+  alanı dışında geri al/tümünü seç kısayollarının varsayılanını durdurur.
 - Paketlenen libmanette ile süreç SIGSEGV ile düşebilir.
 
 ## Glifler
@@ -224,7 +229,9 @@ Bilinmeyen: Gamepad API sırası ile sanal kol yuvası numarasının eşleşmesi
 `requestTextEntryForElement` çalışır; kip `gamepad` ise native odak
 kaldırılır ve klavye açılır. Sağlayıcı kayıtlıysa (`setTextEntryProvider`)
 platform klavyesi, yoksa `OnScreenKeyboard` açılır: Türkçe Q düzeni,
-ı/İ/ğ/ü/ş/ö/ç birinci sınıf tuş, B/Escape ortak geri yığınından iptal eder,
+ı/İ/ğ/ü/ş/ö/ç birinci sınıf tuş; shift tuşları yeniden yaratmaz, odak yerinde
+kalır; parola ekranda maskelenir; alanın `maxLength`i klavyeye ve Steam'e
+taşınır; B/Escape ortak geri yığınından iptal eder ve başlangıç değeri döner;
 Bitti commit eder ve odak alana döner.
 
 ## Titreşim
@@ -315,7 +322,8 @@ derlenir (komutlar stub döner, `status.compiled:false`); sonda feature'ı
 
 Otomasyon `pnpm deck <komut>` (`scripts/deck.mjs`): `discover`, `deploy`,
 `run`, `stop`, `log`, `shot`, `power`, `measure`, `mode`, `clean`, `full`.
-Ölçüm kaydı depoya girmez. Deck ölçümü kapı değildir; sonraki ölçümün
+Ölçüm kayıtları git dışı devtools/deck-probe/records/ altına yazılır ve depoya
+girmez. Deck ölçümü kapı değildir; sonraki ölçümün
 kıyaslandığı referanstır.
 
 - Devkit anahtarı `~/.config/steamos-devkit/devkit_rsa`, SSH kullanıcısı

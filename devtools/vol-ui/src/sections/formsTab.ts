@@ -99,6 +99,7 @@ function buildDisplaySettingsDemo(disposables: DisposableScope): HTMLElement {
       { value: 'web', label: i18next.t('volui:forms.sessionWeb') },
       { value: 'desktop', label: i18next.t('volui:forms.sessionDesktop') },
       { value: 'gamescope', label: i18next.t('volui:forms.sessionGamescope') },
+      { value: 'bigpicture', label: i18next.t('volui:forms.sessionBigPicture') },
     ],
     value: 'web',
     onCommit: applySession,

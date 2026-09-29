@@ -387,6 +387,7 @@
     "sessionWeb": "Web",
     "sessionDesktop": "Desktop",
     "sessionGamescope": "gamescope (Deck game mode)",
+    "sessionBigPicture": "Steam Big Picture (desktop)",
     "displayMode": "Window mode",
     "displayWindowed": "Windowed",
     "displayFullscreen": "Fullscreen",

@@ -64,6 +64,7 @@ Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 | `scripts/quality/productIcons.mjs`       | Her aktif Tauri uygulaması kendi ikonunu taşır; şablon ya da başka ürünün ikonu reddedilir                                                                               |
 | `scripts/quality/phaserBoundary.mjs`     | `core` Phaser'ı yalnız kayıtlı köprü dosyalarında import eder                                                                                                            |
 | `scripts/quality/publicTypeSurface.mjs`  | CORE'un public tip yüzeyi `coreTypeSurface.snapshot.json` ile eşittir                                                                                                    |
+| `scripts/quality/appIdentity.mjs`        | Her aktif Tauri uygulamasının kimliği ürüne özgüdür (paket adını taşır), jenerik değildir ve çakışmaz; veri dizini ve Cloud kökü ondan türer                             |
 | `scripts/quality/tauriPlugins.mjs`       | JS `@tauri-apps/plugin-*` → Rust kaydı; Cargo eklenti bağımlılığı → kaynakta kayıt ya da izin; kayıtlı eklenti → izin ya da JS tüketicisi; yetenek izni → kurulu eklenti |
 
 Ürün kalitesi bekçileri (satır, yorum, i18n, döngü, katman, port, ikon, kilit

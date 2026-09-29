@@ -68,4 +68,32 @@ describe('native_menus.js — WebView yerel menüsü', () => {
     expect(lib).toContain('mod native_menus;');
     expect(lib).toContain('.plugin(native_menus::plugin())');
   });
+
+  it('tarayıcı kısayollarını durdurur, metin alanında düzenlemeyi korur', () => {
+    runScript();
+    const canvas = document.createElement('canvas');
+    const input = document.createElement('input');
+    document.body.append(canvas, input);
+    const press = (target, init) => {
+      const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(press(canvas, { key: 'p', ctrlKey: true })).toBe(true);
+    expect(press(canvas, { key: 'z', ctrlKey: true })).toBe(true);
+    expect(press(input, { key: 'z', ctrlKey: true })).toBe(false);
+    expect(press(canvas, { key: 'w' })).toBe(false);
+  });
+
+  it('kısayol tablosu CORE web karşılığıyla aynıdır', () => {
+    const core = readFileSync(
+      join(process.cwd(), '..', 'core', 'src', 'ui', 'nativeMenus.ts'),
+      'utf8',
+    );
+    const list = (text, name) =>
+      new RegExp(`${name}[^=]*=\\s*\\[([^\\]]*)\\]`).exec(text)?.[1].replace(/\s/g, '');
+    expect(list(SCRIPT, 'ALWAYS_BLOCKED')).toBe(list(core, 'ALWAYS_BLOCKED_SHORTCUTS'));
+    expect(list(SCRIPT, 'OUTSIDE_TEXT_BLOCKED')).toBe(list(core, 'OUTSIDE_TEXT_BLOCKED_SHORTCUTS'));
+    expect(list(SCRIPT, 'ALWAYS_BLOCKED')).toBeTruthy();
+  });
 });

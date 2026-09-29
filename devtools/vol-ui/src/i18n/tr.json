@@ -387,6 +387,7 @@
     "sessionWeb": "Web",
     "sessionDesktop": "Masaüstü",
     "sessionGamescope": "gamescope (Deck oyun kipi)",
+    "sessionBigPicture": "Steam Big Picture (masaüstü)",
     "displayMode": "Pencere kipi",
     "displayWindowed": "Pencere",
     "displayFullscreen": "Tam ekran",

@@ -38,24 +38,40 @@ async fn window_fullscreen_state(window: tauri::WebviewWindow) -> Result<bool, S
 }
 
 /// Oturum sınıfı JS'e yetenek olarak bildirilir: ön yüz gamescope'ta
-/// işe yaramayan pencere/çözünürlük ayarlarını gizlemek ister (D5) ve
-/// kol-kipi varsayılanı buna bağlanır (D3).
+/// işe yaramayan pencere/çözünürlük ayarlarını gizler ve kol öncelikli
+/// oturumda (gamescope, masaüstünde Steam Big Picture) kol kipiyle başlar.
 #[tauri::command]
 fn session_kind() -> &'static str {
-    session_kind_inner()
+    classify_session(
+        is_gamescope_session(),
+        std::env::var("SteamGamepadUI").ok().as_deref(),
+        std::env::var("SteamTenfoot").ok().as_deref(),
+    )
 }
 
-#[cfg(target_os = "linux")]
-fn session_kind_inner() -> &'static str {
-    match LinuxSession::detect() {
-        LinuxSession::Gamescope => "gamescope",
-        LinuxSession::NvidiaWayland | LinuxSession::Other => "desktop",
+/// Saf sınıflama: gamescope > Big Picture (Steam'in koyduğu değişkenler) > masaüstü.
+fn classify_session(
+    gamescope: bool,
+    gamepad_ui: Option<&str>,
+    tenfoot: Option<&str>,
+) -> &'static str {
+    if gamescope {
+        "gamescope"
+    } else if gamepad_ui == Some("1") || tenfoot == Some("1") {
+        "bigpicture"
+    } else {
+        "desktop"
     }
 }
 
+#[cfg(target_os = "linux")]
+fn is_gamescope_session() -> bool {
+    matches!(LinuxSession::detect(), LinuxSession::Gamescope)
+}
+
 #[cfg(not(target_os = "linux"))]
-fn session_kind_inner() -> &'static str {
-    "desktop"
+fn is_gamescope_session() -> bool {
+    false
 }
 
 #[cfg(target_os = "linux")]
@@ -163,9 +179,10 @@ where
         .setup(|app| {
             shutdown::watch_signals(app.handle());
             #[cfg(target_os = "linux")]
+            // gamescope çıktıyı tam ekran sunar; pencere etiketi uygulamanındır.
             if is_gamescope() {
                 use tauri::Manager;
-                if let Some(window) = app.get_webview_window("main") {
+                for window in app.webview_windows().values() {
                     window.set_fullscreen(true)?;
                 }
             }
@@ -341,6 +358,21 @@ fn display_is_nvidia_only() -> bool {
 
 #[cfg(all(test, target_os = "linux"))]
 mod tests {
+
+    #[test]
+    fn oturum_siniflamasi_gamescope_big_picture_ve_masaustunu_ayirir() {
+        assert_eq!(super::classify_session(true, Some("1"), None), "gamescope");
+        assert_eq!(
+            super::classify_session(false, Some("1"), None),
+            "bigpicture"
+        );
+        assert_eq!(
+            super::classify_session(false, None, Some("1")),
+            "bigpicture"
+        );
+        assert_eq!(super::classify_session(false, Some("0"), None), "desktop");
+        assert_eq!(super::classify_session(false, None, None), "desktop");
+    }
     use super::{linux_webview_plan, LinuxSession};
 
     #[test]

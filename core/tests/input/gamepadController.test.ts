@@ -162,3 +162,26 @@ describe('GamepadController sağlayıcı', () => {
     expect(Vector2.zero().length()).toBe(0);
   });
 });
+
+describe('GamepadController bağlantı kancası', () => {
+  it('kol görünür ve kaybolurken birer kez bildirir', () => {
+    let pads: (PadLike | null)[] = [];
+    const events: [boolean, string][] = [];
+    const controller = new GamepadController<TestAction>({
+      actions: TEST_ACTIONS,
+      getGamepads: () => pads,
+      onConnectionChange: (connected, padId) => events.push([connected, padId]),
+    });
+    controller.update(16);
+    pads = [makePad()];
+    controller.update(16);
+    controller.update(16);
+    pads = [];
+    controller.update(16);
+    controller.update(16);
+    expect(events).toEqual([
+      [true, 'Steam Deck Controller'],
+      [false, 'Steam Deck Controller'],
+    ]);
+  });
+});

@@ -96,10 +96,9 @@ export class InputModeArbiter {
 }
 
 /**
- * Oturum tipinden başlangıç girdi kipini türetir. Kabuk (`tauri-v2`
- * `getSessionKind`) oturumu bildirir; ürün kodu platform algılaması yazmaz.
- * Bilinmeyen oturumda `undefined` — hakem ilk gerçek girdiyle kipi kurar.
+ * Oturumdan başlangıç kipi: kol öncelikli oturum (gamescope, Big Picture) kol
+ * kipiyle başlar; bilinmeyende `undefined`, hakem ilk girdiyle kurar.
  */
 export function inputModeForSession(sessionKind: string): string | undefined {
-  return sessionKind === 'gamescope' ? 'gamepad' : undefined;
+  return sessionKind === 'gamescope' || sessionKind === 'bigpicture' ? 'gamepad' : undefined;
 }

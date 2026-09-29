@@ -26,6 +26,11 @@ export interface VolGameConfig {
   /** Phaser renderer ayarları; oyun kalite profilinden açıkça verilebilir. */
   render?: Phaser.Types.Core.RenderConfig;
   /**
+   * Kare hızı üst sınırı (ör. pil için 30/40). Verilmezse ekranın yenileme
+   * hızı ve sistemin sınırlayıcısı (Steam Deck'te Steam'in kare sınırı) geçerlidir.
+   */
+  fpsLimit?: number;
+  /**
    * Hangi renderer istensin? Varsayılan `'auto'`.
    *
    * `'auto'`: WebGL denenir, kurulamazsa Canvas2D'ye düşülür — cihazda hiç
@@ -58,6 +63,9 @@ export interface VolGameConfig {
  * fontlar yüklenir, ardından `onBeforeSceneInit` awaitlenir, sonra `Phaser.Game` oluşturulur.
  */
 export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game> {
+  if (config.fpsLimit !== undefined && !(Number.isFinite(config.fpsLimit) && config.fpsLimit > 0)) {
+    throw new Error(`fpsLimit pozitif bir sayı olmalı: ${config.fpsLimit}`);
+  }
   const selectedFamilies: VolFontFamily[] =
     config.fonts ?? (Object.keys(VOL_FONTS) as VolFontFamily[]);
 
@@ -115,6 +123,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     physics: config.physics,
     input: config.input,
     render: config.render,
+    ...(config.fpsLimit === undefined ? {} : { fps: { limit: config.fpsLimit } }),
     /*
      * Phaser'ın SES sistemi KAPALIDIR ve bu bilinçli bir sınırdır.
      *

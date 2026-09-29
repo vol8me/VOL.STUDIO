@@ -1,6 +1,8 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
-export type SessionKind = 'web' | 'desktop' | 'gamescope';
+export type SessionKind = 'web' | 'desktop' | 'gamescope' | 'bigpicture';
+
+const NATIVE_KINDS: readonly SessionKind[] = ['desktop', 'gamescope', 'bigpicture'];
 
 export interface SessionKindProbe {
   readonly isTauri: () => boolean;
@@ -14,15 +16,15 @@ const defaultProbe: SessionKindProbe = {
 
 /**
  * Kabuğun oturum sınıfı; `getRuntimePlatform`'ın tamamlayıcısı. Steam Deck
- * oyun kipinde (gamescope) kabuk `gamescope` döner — bu sınıf ön yüzün
- * pencere/çözünürlük ayarını gizlemesine (D5) ve kol kipini açmasına (D3)
- * bağlanır. Tarayıcı her zaman `web`, başarısız komut `desktop` verir.
+ * oyun kipi `gamescope`, masaüstünde Steam Big Picture `bigpicture` döner;
+ * ikisi de kol kipiyle başlar, gamescope ayrıca pencere/çözünürlük ayarını
+ * gizler. Tarayıcı her zaman `web`, bilinmeyen ya da başarısız komut `desktop` verir.
  */
 export async function getSessionKind(probe: SessionKindProbe = defaultProbe): Promise<SessionKind> {
   if (!probe.isTauri()) return 'web';
   try {
     const kind = await probe.invoke('session_kind');
-    return kind === 'gamescope' ? 'gamescope' : 'desktop';
+    return NATIVE_KINDS.find((known) => known === kind) ?? 'desktop';
   } catch {
     return 'desktop';
   }

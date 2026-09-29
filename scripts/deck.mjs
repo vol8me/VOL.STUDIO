@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Steam Deck devkit otomasyonu — KAPI DEĞİLDİR, referans ölçümdür.
- * Cihaz her zaman bağlı değildir; çıktı `.claude/deck-olcum/` altına sürümlü
- * kayıt olarak yazılır (depoya girmez).
+ * Cihaz her zaman bağlı değildir; çıktı `devtools/deck-probe/records/` altına
+ * sürümlü kayıt olarak yazılır (depoya girmez).
  *
  *   node scripts/deck.mjs <komut> [seçenekler]
  *
@@ -11,7 +11,7 @@
  *   run      <workspace> [--release=<kayıt>]  Seçilen kısayolu başlatır
  *   stop     <workspace> [--release=<kayıt>] Seçilen sürece SIGTERM gönderir
  *   log      <workspace>          diagnostics.jsonl kaydını yazdırır
- *   shot     <ad>                 gamescopectl ekran görüntüsü → .claude/deck-olcum/
+ *   shot     <ad>                 gamescopectl ekran görüntüsü → devtools/deck-probe/records/
  *   power    [saniye]             Güç sayaçları örneği (RAPL enerjisi + hwmon)
  *   measure  <workspace> <etiket> [--until <işaret>] [--seconds <n>]
  *                                   run → bekle → rapor+güç+görüntü → kayıt
@@ -58,7 +58,7 @@ import {
 import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const RECORDS = join(ROOT, '.claude', 'deck-olcum');
+const RECORDS = join(ROOT, 'devtools', 'deck-probe', 'records');
 const SSH_KEY =
   process.env.DECK_SSH_KEY ?? join(homedir(), '.config', 'steamos-devkit', 'devkit_rsa');
 const SSH_OPTS = ['-i', SSH_KEY, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8'];

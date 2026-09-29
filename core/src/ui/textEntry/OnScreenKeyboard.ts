@@ -41,6 +41,8 @@ export class OnScreenKeyboard {
   private readonly resolve: (result: TextEntryResult) => void;
   private readonly original: string;
   private readonly isMultiline: boolean;
+  private readonly masked: boolean;
+  private readonly maxLength: number;
   private value: string;
   private shifted = false;
   private closed = false;
@@ -49,6 +51,8 @@ export class OnScreenKeyboard {
     this.value = request.value;
     this.original = request.value;
     this.isMultiline = request.multiline === true;
+    this.masked = request.purpose === 'password';
+    this.maxLength = request.maxLength ?? Number.POSITIVE_INFINITY;
     this.resolve = resolve;
 
     this.element = document.createElement('div');
@@ -58,8 +62,8 @@ export class OnScreenKeyboard {
 
     this.valueView = document.createElement('div');
     this.valueView.className = 'vol-osk__value';
-    this.valueView.textContent = this.value;
     this.element.appendChild(this.valueView);
+    this.showValue();
 
     this.keyGrid = document.createElement('div');
     this.keyGrid.className = 'vol-osk__grid';
@@ -117,6 +121,7 @@ export class OnScreenKeyboard {
     ];
   }
 
+  /** Tuşlar bir kez kurulur; shift yalnız etiketleri değiştirir, odak yerinde kalır. */
   private renderKeys(): void {
     this.keyGrid.replaceChildren();
     for (const row of this.buildRows()) {
@@ -130,11 +135,24 @@ export class OnScreenKeyboard {
           (def.action ? ' vol-osk__key--action' : '') +
           (def.wide ? ' vol-osk__key--wide' : '');
         key.textContent = def.label;
-        if (def.action) key.dataset.action = def.action;
-        else key.dataset.value = def.value ?? '';
+        if (def.action) {
+          key.dataset.action = def.action;
+          if (def.action === 'shift') key.setAttribute('aria-pressed', 'false');
+        } else key.dataset.value = def.value ?? '';
         rowEl.appendChild(key);
       }
       this.keyGrid.appendChild(rowEl);
+    }
+  }
+
+  private applyShift(shifted: boolean): void {
+    this.shifted = shifted;
+    for (const key of this.keyGrid.querySelectorAll<HTMLButtonElement>('.vol-osk__key')) {
+      const value = key.dataset.value;
+      if (key.dataset.action === 'shift') key.setAttribute('aria-pressed', String(shifted));
+      else if (value && /\p{L}/u.test(value)) {
+        key.textContent = shifted ? value.toLocaleUpperCase('tr') : value;
+      }
     }
   }
 
@@ -144,25 +162,31 @@ export class OnScreenKeyboard {
         this.value = this.value.slice(0, -1);
         break;
       case 'shift':
-        this.shifted = !this.shifted;
-        this.renderKeys();
+        this.applyShift(!this.shifted);
         return;
       case 'newline':
-        this.value += '\n';
+        this.append('\n');
         break;
       case 'done':
         this.close(false);
         return;
       default:
         if (data.value !== undefined) {
-          this.value += this.shifted ? data.value.toLocaleUpperCase('tr') : data.value;
-          if (this.shifted) {
-            this.shifted = false;
-            this.renderKeys();
-          }
+          this.append(this.shifted ? data.value.toLocaleUpperCase('tr') : data.value);
+          if (this.shifted) this.applyShift(false);
         }
     }
-    this.valueView.textContent = this.value || ' ';
+    this.showValue();
+  }
+
+  private append(text: string): void {
+    if ([...this.value].length < this.maxLength) this.value += text;
+  }
+
+  /** Parola ekranda maskelenir; değer yine olduğu gibi döner. */
+  private showValue(): void {
+    const shown = this.masked ? '•'.repeat([...this.value].length) : this.value;
+    this.valueView.textContent = shown || ' ';
   }
 
   private close(canceled: boolean): void {
@@ -170,6 +194,7 @@ export class OnScreenKeyboard {
     this.closed = true;
     this.removeBack();
     this.element.remove();
-    this.resolve({ value: canceled ? '' : this.value, canceled });
+    // İptal, sözleşme gereği başlangıç değerini döndürür.
+    this.resolve({ value: canceled ? this.original : this.value, canceled });
   }
 }

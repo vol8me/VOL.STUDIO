@@ -23,6 +23,8 @@ describe('getSessionKind', () => {
 
   it('kabuk gamescope bildirirse gamescope döner', async () => {
     await expect(getSessionKind(probe(true, 'gamescope'))).resolves.toBe('gamescope');
+    await expect(getSessionKind(probe(true, 'bigpicture'))).resolves.toBe('bigpicture');
+    await expect(getSessionKind(probe(true, 'bilinmeyen'))).resolves.toBe('desktop');
   });
 
   it("kabuk desktop ya da bilinmedik bir değer bildirirse desktop'a düşer", async () => {

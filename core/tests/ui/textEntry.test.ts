@@ -9,6 +9,7 @@ import {
   type TextEntryRequest,
 } from '../../src/ui/textEntry/textEntry';
 import { triggerBack } from '../../src/platform/backNavigation';
+import { OnScreenKeyboard } from '../../src/ui/textEntry/OnScreenKeyboard';
 
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -105,6 +106,48 @@ describe('textEntry — kolla metin girişi', () => {
     pressKey('[data-action="done"]');
     await flush();
     expect(applied).toEqual(['İz']);
+  });
+
+  it('shift tuşları yeniden yaratmaz: odak aynı tuşta kalır, etiket değişir', async () => {
+    focus();
+    await flush();
+    const shift = document.querySelector<HTMLButtonElement>('.vol-osk__key[data-action="shift"]')!;
+    const letter = document.querySelector<HTMLButtonElement>('.vol-osk__key[data-value="ş"]')!;
+    shift.focus();
+    shift.click();
+    expect(document.activeElement).toBe(shift);
+    expect(letter.isConnected).toBe(true);
+    expect(letter.textContent).toBe('Ş');
+    expect(shift.getAttribute('aria-pressed')).toBe('true');
+    letter.focus();
+    letter.click();
+    expect(document.activeElement).toBe(letter);
+    expect(letter.textContent).toBe('ş');
+  });
+
+  it('parola ekranda maskelenir, değer olduğu gibi döner; alan sınırı aşılmaz', async () => {
+    const pending = OnScreenKeyboard.open({ value: 'ab', purpose: 'password', maxLength: 3 });
+    pressKey('[data-value="c"]');
+    pressKey('[data-value="d"]');
+    expect(document.querySelector('.vol-osk__value')?.textContent).toBe('•••');
+    pressKey('[data-action="done"]');
+    await expect(pending).resolves.toEqual({ value: 'abc', canceled: false });
+  });
+
+  it('alanın maxLength değeri isteğe taşınır', async () => {
+    const open = vi.fn(() => Promise.resolve({ value: 'x', canceled: true }));
+    setTextEntryProvider({ open });
+    input.maxLength = 12;
+    focus();
+    await flush();
+    expect(open).toHaveBeenCalledWith(expect.objectContaining({ maxLength: 12 }));
+  });
+
+  it('iptal başlangıç değerini döndürür (sağlayıcı sözleşmesi)', async () => {
+    const pending = OnScreenKeyboard.open({ value: 'eski', multiline: false });
+    pressKey('[data-value="x"]');
+    triggerBack();
+    await expect(pending).resolves.toEqual({ value: 'eski', canceled: true });
   });
 
   it('kapanınca odağı alana geri verir; bu odak klavyeyi tekrar açmaz', async () => {

@@ -14,8 +14,20 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       `docs/*.md` yol kapısı, yerel ayara bağlı sıralama yasağı, audio-synth
       dizin katmanı ve `exports` kapısı. Kapanır: her kapı `docs/gates.md`de
       anlatılır ve `pnpm signoff` bir kez yeşil koşar.
-- [ ] **[P1] SD — Steam Deck boşlukları.** Referans kabuk uygulaması, yeni oyun
-      şablonu, uyku/uyanma, kısayol süzgeci, FPS sınırı ve glif köprüsü.
+- [ ] **[P1] SD8 — Uyku/uyanma yaşam döngüsü.** Kabukta uyku öncesi
+      boşaltma ve uyanma olayı; CORE'da duraklatma, ses toparlama ve kayıt
+      boşaltma sözleşmesi. Kapanır: sözleşme testli; Deck'te uyku turu ölçülür.
+- [ ] **[P1] SD9 — Referans kabuk uygulaması.** deck-probe CORE ve tauri-v2
+      JS'ini (kayıt, oturum, odak, glif, metin girişi, kapanış) uçtan uca koşar.
+      Kapanır: WebKit E2E ve Deck ölçümü bu uygulamayla yapılır.
+- [ ] **[P1] SD10 — Deck'e hazır yeni oyun iskeleti.** Tauri yapılandırması,
+      yetenekler, başlatıcı, masaüstü şablonu, Steam Input manifestosu,
+      1280×800 pencere, kayıt kapsamları ve oturuma göre grafik varsayılanı.
+      Kapanır: iskeletten kurulan paket `pnpm signoff`u ilk denemede geçer.
+- [ ] **[P2] SD14 — `SteamVirtualGamepadInfo` glif köprüsü.** Kapanır: Steam
+      Input arkasındaki gerçek kolun ailesi Steamworks'süz de çözülür.
+- [ ] **[P2] SD15 — Steam Input titreşimi ve aksiyon verisi.** Kapanır:
+      eklenti titreşim ve analog/dijital aksiyon okur; testli.
 - [ ] **[P2] S2 — audio-synth sertleştirme.** Önbellek, paralel işçi, manifest
       ve analiz yolundaki bulgular.
 - [ ] **[P2] S3 — Kalıntı.** Katalog politikası kapıya bağlanır; tüketicisiz
@@ -83,6 +95,11 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 
 ## Kapatılanlar
 
+- [x] **SD (ilk dilim) — Deck kol ve kabuk boşlukları.** Ekran klavyesinde
+      odak kaybı ve iptal sözleşmesi, parola maskesi ve alan sınırı, Big
+      Picture oturumu, tarayıcı kısayol süzgeci, kol bağlantı kancası, uygulama
+      kimliği bekçisi, gamescope'ta bütün pencerelerin tam ekranı, FPS sınırı
+      seçeneği, Deck kayıtlarının paket dizinine alınması.
 - [x] **S1 — Veri bütünlüğü.** Store yazıcısı güncel dosyayı hiç kaldırmaz,
       okuma geçici/yedek jenerasyondan kurtarır ya da karantinaya alıp
       bildirir; disk işi ana iş parçacığı dışında; adaptör ilk okumayı paylaşır;

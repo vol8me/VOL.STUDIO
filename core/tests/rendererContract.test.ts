@@ -71,6 +71,17 @@ describe('renderer sözleşmesi', { timeout: PHASER_TRANSFORM_TIMEOUT_MS }, () =
     expect(gameConfigs[1]?.type, 'webgl istendiğinde geri düşüş OLMAMALI').toBe(Phaser.WEBGL);
   });
 
+  it('kare hızı sınırı Phaser fps.limit olarak geçer; geçersiz değer reddedilir', async () => {
+    const { createVolGame } = await import('../src/phaser/createVolGame');
+    await createVolGame({ width: 320, height: 200, scenes: [], fpsLimit: 30 });
+    expect(gameConfigs[0]?.fps).toEqual({ limit: 30 });
+    await createVolGame({ width: 320, height: 200, scenes: [] });
+    expect(gameConfigs[1]?.fps).toBeUndefined();
+    await expect(
+      createVolGame({ width: 320, height: 200, scenes: [], fpsLimit: 0 }),
+    ).rejects.toThrow('fpsLimit');
+  });
+
   it('AUTO iken canvas`a düşülürse teşhis bunu GERİ DÜŞÜŞ olarak işaretler', async () => {
     const Phaser = (await import('phaser')).default;
     const { createVolGame } = await import('../src/phaser/createVolGame');

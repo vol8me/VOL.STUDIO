@@ -201,7 +201,7 @@ export function createSteamworksTextEntryProvider(): TextEntryProvider {
             (await currentProbe.invoke('show_text_input', {
               description: '',
               existingText: request.value,
-              maxCharacters: 4096,
+              maxCharacters: request.maxLength ?? 4096,
               multiline: request.multiline ?? false,
             })) === true;
         } catch {

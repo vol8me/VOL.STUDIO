@@ -22,8 +22,10 @@ export interface TextEntryRequest {
   value: string;
   /** Çok satırlı giriş (TextArea). Yerel klavyede Enter ayrı tuş olur. */
   multiline?: boolean;
-  /** Amaç ipucu: sağlayıcı klavye düzeni seçebilir; yerel klavye yoksayar. */
+  /** Amaç ipucu: `password` ekranda maskelenir; sağlayıcı klavye düzeni seçebilir. */
   purpose?: 'default' | 'password' | 'search';
+  /** En çok karakter; alanın `maxLength`inden gelir. Verilmezse sınır yok. */
+  maxLength?: number;
 }
 
 export interface TextEntryResult {
@@ -124,6 +126,7 @@ export function requestTextEntryForElement(
     value: element.value,
     multiline: options.multiline,
     purpose: options.purpose,
+    ...(element.maxLength > 0 ? { maxLength: element.maxLength } : {}),
   };
   void requestGamepadTextEntry(request)
     .then((result) => {

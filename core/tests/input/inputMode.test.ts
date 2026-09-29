@@ -115,6 +115,7 @@ describe('InputModeArbiter', () => {
 describe('inputModeForSession', () => {
   it('gamescope oturumu ilk kareden kol kipi verir', () => {
     expect(inputModeForSession('gamescope')).toBe('gamepad');
+    expect(inputModeForSession('bigpicture')).toBe('gamepad');
   });
 
   it('bilinmeyen ve masaüstü oturumları hakeme bırakır', () => {

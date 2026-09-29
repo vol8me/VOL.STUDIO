@@ -50,6 +50,11 @@ export interface GamepadControllerOptions<TAction extends string> extends Gamepa
   padIndex?: number;
   /** Diagnostics'teki sağlayıcı kimliği; varsayılan `'gamepad'`. */
   id?: string;
+  /**
+   * Kol görünür olunca ya da kaybolunca bir kez çağrılır (yoklamadan türer).
+   * Duraklatma ve oyuncu atama politikası tüketicinindir.
+   */
+  onConnectionChange?: (connected: boolean, padId: string) => void;
 }
 
 /**
@@ -71,6 +76,7 @@ export class GamepadController<TAction extends string> implements InputProvider<
   private readonly padIndex?: number;
   private readonly options: GamepadInputOptions;
   private readonly actions: readonly TAction[];
+  private readonly onConnectionChange?: (connected: boolean, padId: string) => void;
   /** Son görülen kol — `getDebugSnapshot` update'ler arasında da çalışsın diye. */
   private pad: PadLike | null = null;
 
@@ -79,6 +85,7 @@ export class GamepadController<TAction extends string> implements InputProvider<
     this.padIndex = options.padIndex;
     this.id = options.id ?? 'gamepad';
     this.actions = options.actions;
+    this.onConnectionChange = options.onConnectionChange;
     this.options = options;
     this.getGamepads =
       options.getGamepads ??
@@ -96,7 +103,11 @@ export class GamepadController<TAction extends string> implements InputProvider<
   }
 
   update(_delta: number): void {
+    const previous = this.pad;
     this.pad = this.selectPad();
+    if ((previous === null) !== (this.pad === null)) {
+      this.onConnectionChange?.(this.pad !== null, (this.pad ?? previous)?.id ?? '');
+    }
   }
 
   get isActive(): boolean {
