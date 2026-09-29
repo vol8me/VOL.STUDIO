@@ -90,10 +90,15 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     );
   }
 
-  await Promise.race([
-    document.fonts.ready,
-    new Promise<void>((resolve) => setTimeout(resolve, TECH.FONT_READY_FALLBACK_MS)),
-  ]);
+  let fallback: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      document.fonts.ready,
+      new Promise<void>((resolve) => (fallback = setTimeout(resolve, TECH.FONT_READY_FALLBACK_MS))),
+    ]);
+  } finally {
+    clearTimeout(fallback);
+  }
 
   if (config.onBeforeSceneInit) {
     await config.onBeforeSceneInit();

@@ -34,7 +34,10 @@ fn stop_haptics() {
 /// beklerken kilitlenirdi.
 #[tauri::command]
 async fn window_fullscreen_state(window: tauri::WebviewWindow) -> Result<bool, String> {
-    read_fullscreen_state(window)
+    // Ana döngü yanıtı beklenirken async işçi değil, bloklayan havuz tutulur.
+    tauri::async_runtime::spawn_blocking(move || read_fullscreen_state(window))
+        .await
+        .map_err(|error| error.to_string())?
 }
 
 /// Oturum sınıfı JS'e yetenek olarak bildirilir: ön yüz gamescope'ta

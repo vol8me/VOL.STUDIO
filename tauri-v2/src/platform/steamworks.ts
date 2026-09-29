@@ -3,7 +3,6 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import {
   OnScreenKeyboard,
   type GlyphFamilyContext,
-  type IStorageAdapter,
   type TextEntryProvider,
   type TextEntryRequest,
   type TextEntryResult,
@@ -212,6 +211,11 @@ interface TextInputPayload {
  * Aynı anda tek diyalog: açık bir diyalog varken ikinci `open` hemen
  * iptal döner.
  */
+/** Overlay kapandıktan sonra sonuç olayı için tanınan süre. */
+const DISMISS_GRACE_MS = 750;
+/** Sonuç ve overlay olayı hiç gelmezse girişin açık kalabileceği en uzun süre. */
+const TEXT_INPUT_LIMIT_MS = 10 * 60 * 1000;
+
 export function createSteamworksTextEntryProvider(): TextEntryProvider {
   let pending = false;
   return {
@@ -219,20 +223,31 @@ export function createSteamworksTextEntryProvider(): TextEntryProvider {
       if (pending) return { value: request.value, canceled: true };
       pending = true;
       const currentProbe = probe;
-      let unlisten: UnlistenFn | undefined;
+      const unlisteners: UnlistenFn[] = [];
+      const timers: ReturnType<typeof setTimeout>[] = [];
       const cleanup = () => {
-        const remove = unlisten;
-        unlisten = undefined;
-        remove?.();
+        for (const timer of timers.splice(0)) clearTimeout(timer);
+        for (const remove of unlisteners.splice(0)) remove();
       };
       try {
         let dismiss!: (payload: TextInputPayload) => void;
         const dismissed = new Promise<TextInputPayload>((resolve) => (dismiss = resolve));
         let shown = false;
         try {
-          unlisten = await currentProbe.listen('vol-steamworks:text-input', (payload) => {
-            dismiss((payload ?? {}) as TextInputPayload);
-          });
+          unlisteners.push(
+            await currentProbe.listen('vol-steamworks:text-input', (payload) => {
+              dismiss((payload ?? {}) as TextInputPayload);
+            }),
+          );
+          // Steam sonuç olayı göndermeden overlay'i kapatabilir; o zaman giriş
+          // iptal sayılır, yoksa sonraki bütün girişler kilitli kalırdı.
+          unlisteners.push(
+            await currentProbe.listen('vol-steamworks:overlay', (payload) => {
+              if ((payload as { active?: boolean } | null)?.active === false) {
+                timers.push(setTimeout(() => dismiss({ submitted: false }), DISMISS_GRACE_MS));
+              }
+            }),
+          );
           shown =
             (await currentProbe.invoke('show_text_input', {
               description: '',
@@ -247,6 +262,7 @@ export function createSteamworksTextEntryProvider(): TextEntryProvider {
           cleanup();
           return await OnScreenKeyboard.open(request);
         }
+        timers.push(setTimeout(() => dismiss({ submitted: false }), TEXT_INPUT_LIMIT_MS));
         const payload = await dismissed;
         const submitted = payload.submitted === true;
         return {
@@ -281,85 +297,4 @@ export async function showSteamFloatingKeyboard(rect: {
 
 export async function onSteamFloatingKeyboardDismissed(onDismiss: () => void): Promise<UnlistenFn> {
   return probe.listen('vol-steamworks:floating-dismissed', () => onDismiss());
-}
-
-const CLOUD_PREFIX = 'v2_';
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
-
-/** `btoa` Latin-1 sınırlıdır; UTF-8 metni önce bayta çevrilir. */
-function toB64Url(text: string): string {
-  let bin = '';
-  for (const b of encoder.encode(text)) bin += String.fromCharCode(b);
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function fromB64Url(b64url: string): string {
-  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return decoder.decode(bytes);
-}
-
-function toB64(text: string): string {
-  let bin = '';
-  for (const b of encoder.encode(text)) bin += String.fromCharCode(b);
-  return btoa(bin);
-}
-
-function fromB64(b64: string): string {
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return decoder.decode(bytes);
-}
-
-/** Kayıt anahtarı → güvenli bulut dosya adı (yol/özel karakter taşımaz). */
-export function cloudFileName(key: string): string {
-  return `${CLOUD_PREFIX}${toB64Url(key)}`;
-}
-
-/** Bulut dosya adı → kayıt anahtarı; `v2_` taşımayanlar `null`. */
-export function cloudFileKey(name: string): string | null {
-  if (!name.startsWith(CLOUD_PREFIX)) return null;
-  try {
-    return fromB64Url(name.slice(CLOUD_PREFIX.length));
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Steam Cloud (`IRemoteStorage`) üzerinden `IStorageAdapter`. `synced`
- * kapsamına takılır; değerler JSON metni olarak base64'lenir.
- * Yedek/atomiklik Steam istemcisinin kendi senkronizasyonundadır — bu
- * katman `file.write`ın boolean sonucunu döndürür.
- */
-export function createSteamCloudAdapter(): IStorageAdapter & {
-  keys(): Promise<readonly string[]>;
-} {
-  return {
-    async get<T>(key: string): Promise<T | undefined> {
-      const data = (await probe.invoke('cloud_read', {
-        name: cloudFileName(key),
-      })) as string | null;
-      if (data == null) return undefined;
-      const json = JSON.parse(fromB64(data)) as T;
-      return json;
-    },
-    async set<T>(key: string, value: T): Promise<void> {
-      await probe.invoke('cloud_write', {
-        name: cloudFileName(key),
-        dataBase64: toB64(JSON.stringify(value)),
-      });
-    },
-    async remove(key: string): Promise<void> {
-      await probe.invoke('cloud_delete', { name: cloudFileName(key) });
-    },
-    async keys(): Promise<readonly string[]> {
-      const files = (await probe.invoke('cloud_list')) as { name: string }[];
-      return files.map((f) => cloudFileKey(f.name)).filter((k): k is string => k != null);
-    },
-  };
 }

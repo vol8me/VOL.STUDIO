@@ -97,11 +97,18 @@ export async function registerLinuxHaptics(
   return true;
 }
 
+/** Aygıt yokken yoklama aralığı ikiye katlanır; her durum sorgusu tam tarama demektir. */
+const POLL_MIN_MS = 1000;
+const POLL_MAX_MS = 30_000;
+
 export function observeLinuxHaptics(probe: LinuxHapticsProbe = defaultProbe): () => void {
   if (!probe.isTauri()) return () => {};
   let active = true;
   let refreshing = false;
   let registered = false;
+  let supported = true;
+  let backoff = POLL_MIN_MS;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const driver = createLinuxHapticsDriver(probe);
   const refresh = async () => {
     if (!active || refreshing || probe.visible?.() === false) return;
@@ -109,8 +116,9 @@ export function observeLinuxHaptics(probe: LinuxHapticsProbe = defaultProbe): ()
     try {
       const status = await getLinuxHapticsStatus(probe);
       if (!active) return;
-      if (status.platformSupported === false) clearInterval(interval);
+      if (status.platformSupported === false) supported = false;
       const available = status.backend !== 'none';
+      backoff = available ? POLL_MIN_MS : Math.min(backoff * 2, POLL_MAX_MS);
       if (available === registered) return;
       registered = available;
       setHapticsDriver(available ? driver : null);
@@ -119,7 +127,21 @@ export function observeLinuxHaptics(probe: LinuxHapticsProbe = defaultProbe): ()
       refreshing = false;
     }
   };
+  const schedule = (delay: number) => {
+    clearTimeout(timer);
+    if (!active || !supported) return;
+    timer = setTimeout(() => {
+      if (!supported) return;
+      const again = () => schedule(registered ? POLL_MIN_MS : backoff);
+      if (probe.visible?.() === false) again();
+      else void refresh().finally(again);
+    }, delay);
+  };
   const wake = (event?: Event) => {
+    if (event) {
+      backoff = POLL_MIN_MS;
+      schedule(POLL_MIN_MS);
+    }
     if (
       registered &&
       (event?.type === 'blur' || event?.type === 'pagehide' || probe.visible?.() === false)
@@ -138,14 +160,12 @@ export function observeLinuxHaptics(probe: LinuxHapticsProbe = defaultProbe): ()
     'blur',
   ];
   for (const event of events) probe.events?.addEventListener(event, wake);
-  const interval = setInterval(() => {
-    if (probe.visible?.() !== false) wake();
-  }, 1000);
   wake();
+  schedule(POLL_MIN_MS);
   return () => {
     if (!active) return;
     active = false;
-    clearInterval(interval);
+    clearTimeout(timer);
     for (const event of events) probe.events?.removeEventListener(event, wake);
     if (registered) {
       setHapticsDriver(null);

@@ -57,9 +57,6 @@ export type { ScreenOrientation, ScreenOrientationState } from './platform/scree
 
 export {
   activateSteamActionSet,
-  cloudFileKey,
-  cloudFileName,
-  createSteamCloudAdapter,
   createSteamworksTextEntryProvider,
   onSteamFloatingKeyboardDismissed,
   onSteamOverlay,

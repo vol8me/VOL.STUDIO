@@ -141,6 +141,25 @@ describe('observeLinuxHaptics', () => {
     expect(p.invoke.mock.calls.length).toBe(calls);
   });
 
+  it('aygit yokken tarama araligi geri cekilir; kol olayi hemen yeniden sorar', async () => {
+    vi.useFakeTimers();
+    const events = new EventTarget();
+    const p = { ...probe({ backend: 'none' }), events };
+    const dispose = observeLinuxHaptics(p);
+    try {
+      await vi.advanceTimersByTimeAsync(60_000);
+      const polls = p.invoke.mock.calls.length;
+      expect(polls).toBeLessThanOrEqual(8);
+      events.dispatchEvent(new Event('gamepadconnected'));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(p.invoke.mock.calls.length).toBe(polls + 1);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(p.invoke.mock.calls.length).toBe(polls + 2);
+    } finally {
+      dispose();
+    }
+  });
+
   it('gec durum cevabi destroy sonrasinda surucu kaydetmez', async () => {
     let reply!: (value: unknown) => void;
     const p = { ...probe(null), invoke: vi.fn(() => new Promise((resolve) => (reply = resolve))) };

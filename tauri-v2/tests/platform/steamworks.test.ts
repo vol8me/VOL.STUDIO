@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   activateSteamActionSet,
-  cloudFileKey,
-  cloudFileName,
-  createSteamCloudAdapter,
   createSteamworksTextEntryProvider,
   onSteamFloatingKeyboardDismissed,
   onSteamOverlay,
@@ -203,9 +200,46 @@ describe('createSteamworksTextEntryProvider', () => {
         value: 'erken',
         canceled: false,
       });
-      expect(unlisten).toHaveBeenCalledTimes(1);
+      // Sonuç ve overlay abonelikleri ikisi de bırakılır.
+      expect(unlisten).toHaveBeenCalledTimes(2);
     } finally {
       restore();
+    }
+  });
+
+  it('overlay sonuç göndermeden kapanırsa giriş iptal olur, sonraki giriş kilitlenmez', async () => {
+    vi.useFakeTimers();
+    const { probe, events } = fakeProbe({ show_text_input: true });
+    const restore = afterEach(probe);
+    try {
+      const provider = createSteamworksTextEntryProvider();
+      const opened = provider.open({ value: 'ilk' });
+      await vi.advanceTimersByTimeAsync(0);
+      events.get('vol-steamworks:overlay')?.({ active: false });
+      await vi.advanceTimersByTimeAsync(750);
+      await expect(opened).resolves.toEqual({ value: 'ilk', canceled: true });
+
+      const next = provider.open({ value: 'ikinci' });
+      await vi.advanceTimersByTimeAsync(0);
+      events.get('vol-steamworks:text-input')?.({ submitted: true, text: 'tamam' });
+      await expect(next).resolves.toEqual({ value: 'tamam', canceled: false });
+    } finally {
+      restore();
+      vi.useRealTimers();
+    }
+  });
+
+  it('hiçbir olay gelmezse üst süre sınırında iptal olur', async () => {
+    vi.useFakeTimers();
+    const { probe } = fakeProbe({ show_text_input: true });
+    const restore = afterEach(probe);
+    try {
+      const opened = createSteamworksTextEntryProvider().open({ value: 'ilk' });
+      await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+      await expect(opened).resolves.toEqual({ value: 'ilk', canceled: true });
+    } finally {
+      restore();
+      vi.useRealTimers();
     }
   });
 
@@ -332,46 +366,6 @@ describe('createSteamworksTextEntryProvider', () => {
     expect(second.canceled).toBe(true);
     events.get('vol-steamworks:text-input')?.({ submitted: false });
     await first;
-    restore();
-  });
-});
-
-describe('Steam Cloud adaptörü', () => {
-  it('anahtar ⇄ dosya adı karşılıklı dönüşür', () => {
-    for (const key of ['volui:display-quality', 'save slot 1', 'ç/ğ/ü']) {
-      const name = cloudFileName(key);
-      expect(name).not.toContain(':');
-      expect(cloudFileKey(name)).toBe(key);
-    }
-    expect(cloudFileKey('başka_dosya')).toBeNull();
-  });
-
-  it('get/set/remove/keys bulut komutlarına tercüme edilir', async () => {
-    const store = new Map<string, string>();
-    const { probe } = fakeProbe({});
-    // invoke'un argümanlı sürümü: basit bir sahte depo davranışı
-    const invoke = vi.fn((cmd: string, args?: Record<string, unknown>) => {
-      const name = args?.name as string;
-      let result: unknown = null;
-      if (cmd === 'cloud_write') {
-        store.set(name, args?.dataBase64 as string);
-        result = true;
-      } else if (cmd === 'cloud_read') {
-        result = store.get(name) ?? null;
-      } else if (cmd === 'cloud_delete') {
-        result = store.delete(name);
-      } else if (cmd === 'cloud_list') {
-        result = [...store.keys()].map((n) => ({ name: n }));
-      }
-      return Promise.resolve(result);
-    });
-    const restore = afterEach({ ...probe, invoke });
-    const adapter = createSteamCloudAdapter();
-    await adapter.set('k1', { hp: 42 });
-    expect(await adapter.get('k1')).toEqual({ hp: 42 });
-    expect(await adapter.keys()).toEqual(['k1']);
-    await adapter.remove('k1');
-    expect(await adapter.get('k1')).toBeUndefined();
     restore();
   });
 });

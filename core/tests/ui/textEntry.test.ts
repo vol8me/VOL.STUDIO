@@ -143,6 +143,14 @@ describe('textEntry — kolla metin girişi', () => {
     expect(open).toHaveBeenCalledWith(expect.objectContaining({ maxLength: 12 }));
   });
 
+  it('sağlayıcı reddederse değer değişmez ve işlenmemiş ret kalmaz', async () => {
+    setTextEntryProvider({ open: () => Promise.reject(new Error('steam kapandı')) });
+    focus();
+    await flush();
+    await flush();
+    expect(applied).toEqual([]);
+  });
+
   it('iptal başlangıç değerini döndürür (sağlayıcı sözleşmesi)', async () => {
     const pending = OnScreenKeyboard.open({ value: 'eski', multiline: false });
     pressKey('[data-value="x"]');

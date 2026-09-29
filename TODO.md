@@ -18,10 +18,15 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       `registerSuspendFlush`/`onSystemResume` ve CORE `resumeAudioAfterWake`
       tarifi uygulandı; Deck'te uyku turu yapılmadı. Kapanır: Deck'te son değer
       uyku öncesi diske ulaşır ve ses uyanışta geri gelir.
-- [ ] **[P1] SD9 — Referans kabuk uygulaması.** deck-probe CORE ve tauri-v2
+- [ ] **[P1] E1 — Tek girdi hakemi ve tek kol kaynağı.** CORE'da üç ayrı kol
+      seçimi ve iki kip hakemi var; glif ile oynanış kipi ayrışabilir.
+      Kapanır: kare başına tek kol yoklaması ve tek hakem; testli.
+- [ ] **[P1] SD9 — Referans kabuk uygulaması (SH'deki devtools/deck
+      taşımasından sonra).** deck-probe CORE ve tauri-v2
       JS'ini (kayıt, oturum, odak, glif, metin girişi, kapanış) uçtan uca koşar.
       Kapanır: WebKit E2E ve Deck ölçümü bu uygulamayla yapılır.
-- [ ] **[P1] SD10 — Deck'e hazır yeni oyun iskeleti.** Tauri yapılandırması,
+- [ ] **[P1] SD10 — Deck'e hazır yeni oyun iskeleti (SH'den sonra,
+      tauri-v2/templates/game; Android geri tuşu varsayılanı dahil).** Tauri yapılandırması,
       yetenekler, başlatıcı, masaüstü şablonu, Steam Input manifestosu,
       1280×800 pencere, kayıt kapsamları ve oturuma göre grafik varsayılanı.
       Kapanır: iskeletten kurulan paket `pnpm signoff`u ilk denemede geçer.
@@ -77,6 +82,9 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 - [ ] **[P3] OLED Deck ve Steam Machine'de kare zamanlaması.** Kapanır: cihaz
       bulunduğunda ölçüm `docs/steam-deck.md`ye girer.
 
+- [ ] **[P3] A20 — Titreşim darbesi başına bloklayan iş parçacığı.** Kapanır:
+      darbeler tek zamanlayıcı iş parçacığından yürür.
+
 ### Windows
 
 - [ ] **[P2] Kayıt yazıcısı Windows'ta doğrulanır.** Dizin fsync'i Windows'ta
@@ -92,6 +100,14 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 
 ## Kapatılanlar
 
+- [x] **SD (ikinci dilim) — kabuk ve Steamworks sağlamlığı.** Aygıt yokken
+      odak kaybı tarama yapmaz ve yoklama geri çekilir (A8, A9); Steamworks
+      geç açılan Steam'e yeniden bağlanır ve disk/Cloud komutları ana iş
+      parçacığı dışında (A11, A12); Steam metin girişi overlay kapanışı ya da
+      süre sınırıyla çözülür (A13); yazı tipi yarış zamanlayıcısı ve sağlayıcı
+      reddi temizlendi (A17, A21); tam ekran okuması bloklayan havuzda (A19);
+      tek Cloud stratejisi Auto-Cloud (E9); web menü bastırıcısı kabukla aynı
+      evrede (E10).
 - [x] **SD15 — Steam Input titreşimi ve aksiyon verisi** (cihazda denenmedi).
 - [x] **SD14 — `SteamVirtualGamepadInfo` glif köprüsü** (tek kolda; yuva sırası D0'da).
 - [x] **SD (ilk dilim) — Deck kol ve kabuk boşlukları.** Ekran klavyesinde

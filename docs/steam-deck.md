@@ -280,6 +280,8 @@ kesilir. Steamworks'te uyanma bildirimi `AppResumingFromSuspend_t`'dir.
   (en çok 1,5 sn) uykuyu erteler, uyanışta `vol:resumed` yayınlar
   (`onSystemResume`); ses bağlamı `resumeAudioAfterWake` ile toparlanır.
   Deck'te uyku turuyla ölçülmedi.
+- **Cloud stratejisi tektir:** Steam Auto-Cloud yalnız `*-synced.json`
+  dosyalarını eşitler; eklentinin `cloud_*` komutları ölçüm içindir.
 - **Kapsamlar:** `synced` (ilerleme; gerçek App ID'de Auto-Cloud adayı) ve
   `device` (grafik, pencere, cihaz ses ayarları, dil; Cloud'a konmaz) ayrı
   dosyalardır.

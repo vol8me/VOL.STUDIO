@@ -375,6 +375,10 @@ mod imp {
             }
         }
 
+        fn has_device(&self) -> bool {
+            self.device.is_some()
+        }
+
         fn discover(&mut self, now_ms: u64, mut scan: impl FnMut() -> (Option<T>, ScanStats)) {
             if self.device.is_none()
                 && self
@@ -634,12 +638,14 @@ mod imp {
             .finish(generation, now_ms(), open_backend, stop)
     }
 
+    /// Odak kaybında ana iş parçacığında koşar: bilinen aygıt yoksa durduracak
+    /// bir şey de yoktur, tam aygıt taraması yapılmaz.
     pub fn halt() -> Result<(), String> {
-        DEVICE
-            .lock()
-            .map_err(|_| "titreşim kilidi bozuldu")?
-            .begin(now_ms(), open_backend, stop)
-            .map(|_| ())
+        let mut cache = DEVICE.lock().map_err(|_| "titreşim kilidi bozuldu")?;
+        if !cache.has_device() {
+            return Ok(());
+        }
+        cache.begin(now_ms(), open_backend, stop).map(|_| ())
     }
 
     #[cfg(test)]
@@ -652,6 +658,15 @@ mod imp {
             assert_eq!(std::mem::size_of::<FfEffect>(), 48);
             assert_eq!(std::mem::offset_of!(FfEffect, u), 16);
             assert_eq!(eviocsff(), 0x40304580);
+        }
+
+        #[test]
+        fn aygit_yokken_durdurma_taramaya_girmez() {
+            let cache = DeviceCache::<u8>::new();
+            assert!(!cache.has_device());
+            let mut found = DeviceCache::new();
+            found.discover(0, || (Some(1u8), ScanStats::default()));
+            assert!(found.has_device());
         }
 
         #[test]

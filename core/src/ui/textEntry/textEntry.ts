@@ -132,6 +132,8 @@ export function requestTextEntryForElement(
     .then((result) => {
       if (result && !result.canceled) options.apply(result.value);
     })
+    // Sağlayıcı hatası girişi iptal sayar; değer değişmez, odak yine döner.
+    .catch(() => undefined)
     .finally(() => {
       refocusSuppress.add(element);
       element.focus({ preventScroll: true });

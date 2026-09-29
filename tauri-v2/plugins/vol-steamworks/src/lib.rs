@@ -91,15 +91,27 @@ fn controllers<R: Runtime>(app: AppHandle<R>) -> Result<Vec<ControllerInfo>, Err
     service(&app).controllers().map_err(Error)
 }
 
+/// Disk ya da Cloud okuyan komutlar ana iş parçacığında koşmaz.
+async fn off_main<R: Runtime, T: Send + 'static>(
+    app: AppHandle<R>,
+    job: impl FnOnce(&Service<R>) -> Result<T, String> + Send + 'static,
+) -> Result<T, Error> {
+    tauri::async_runtime::spawn_blocking(move || job(&service(&app)))
+        .await
+        .map_err(|error| Error(error.to_string()))?
+        .map_err(Error)
+}
+
 #[tauri::command]
-fn action_glyph<R: Runtime>(
+async fn action_glyph<R: Runtime>(
     app: AppHandle<R>,
     action_set: String,
     action: String,
 ) -> Result<Vec<GlyphOrigin>, Error> {
-    service(&app)
-        .action_glyph(&action_set, &action)
-        .map_err(Error)
+    off_main(app, move |service| {
+        service.action_glyph(&action_set, &action)
+    })
+    .await
 }
 
 #[tauri::command]
@@ -148,29 +160,27 @@ fn action_state<R: Runtime>(
 }
 
 #[tauri::command]
-fn cloud_list<R: Runtime>(app: AppHandle<R>) -> Result<Vec<CloudFileInfo>, Error> {
-    service(&app).cloud_list().map_err(Error)
+async fn cloud_list<R: Runtime>(app: AppHandle<R>) -> Result<Vec<CloudFileInfo>, Error> {
+    off_main(app, |service| service.cloud_list()).await
 }
 
 #[tauri::command]
-fn cloud_read<R: Runtime>(app: AppHandle<R>, name: String) -> Result<Option<String>, Error> {
-    service(&app).cloud_read(&name).map_err(Error)
+async fn cloud_read<R: Runtime>(app: AppHandle<R>, name: String) -> Result<Option<String>, Error> {
+    off_main(app, move |service| service.cloud_read(&name)).await
 }
 
 #[tauri::command]
-fn cloud_write<R: Runtime>(
+async fn cloud_write<R: Runtime>(
     app: AppHandle<R>,
     name: String,
     data_base64: String,
 ) -> Result<bool, Error> {
-    service(&app)
-        .cloud_write(&name, &data_base64)
-        .map_err(Error)
+    off_main(app, move |service| service.cloud_write(&name, &data_base64)).await
 }
 
 #[tauri::command]
-fn cloud_delete<R: Runtime>(app: AppHandle<R>, name: String) -> Result<bool, Error> {
-    service(&app).cloud_delete(&name).map_err(Error)
+async fn cloud_delete<R: Runtime>(app: AppHandle<R>, name: String) -> Result<bool, Error> {
+    off_main(app, move |service| service.cloud_delete(&name)).await
 }
 
 /// `app_id` — geliştirme için Valve'ın ortak test uygulaması 480
@@ -182,7 +192,8 @@ fn cloud_delete<R: Runtime>(app: AppHandle<R>, name: String) -> Result<bool, Err
 /// geçirilir; dönüş `status.manifestOk` alanında görünür.
 ///
 /// Eklenti kayıt olur olmaz bağlanmayı dener; Steam o an açık değilse
-/// `status` hatası saklanır ve sonraki `status` çağrısı yeniden dener —
+/// hata `status`ta saklanır; sonraki `status` ya da komut en erken 5 sn arayla
+/// yeniden bağlanmayı dener —
 /// kısa süreli ağ/istemci yokluğunda kalıcı kilitlenme yoktur.
 pub fn init<R: Runtime>(app_id: u32, manifest_resource: Option<&str>) -> TauriPlugin<R> {
     let manifest_resource = manifest_resource.map(str::to_owned);

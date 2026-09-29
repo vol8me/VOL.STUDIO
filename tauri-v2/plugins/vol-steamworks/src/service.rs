@@ -137,7 +137,18 @@ pub(crate) mod imp {
             app: AppHandle<R>,
             state: Mutex<State>,
             stop: Arc<AtomicBool>,
+            /// Bağlantı hedefi ve son deneme; Steam geç açılırsa yeniden denenir.
+            retry: Mutex<Option<Retry>>,
         }
+
+        struct Retry {
+            app_id: u32,
+            manifest: Option<String>,
+            last_attempt: std::time::Instant,
+        }
+
+        /// Başarısız bağlantı en erken bu aralıkla yeniden denenir.
+        const RETRY_INTERVAL: Duration = Duration::from_secs(5);
 
         enum State {
             /// Hiç denenmedi veya son deneme başarısız — neden saklanır.
@@ -169,6 +180,28 @@ pub(crate) mod imp {
                         error: "steamworks henüz başlatılmadı".into(),
                     }),
                     stop: Arc::new(AtomicBool::new(false)),
+                    retry: Mutex::new(None),
+                }
+            }
+
+            /// Bağlantı düşükse ve son denemeden beri `RETRY_INTERVAL` geçtiyse
+            /// yeniden bağlanır.
+            fn ensure_connected(&self) {
+                if matches!(&*self.state.lock().unwrap(), State::Up { .. }) {
+                    return;
+                }
+                let target = {
+                    let mut retry = self.retry.lock().unwrap();
+                    match retry.as_mut() {
+                        Some(r) if r.last_attempt.elapsed() >= RETRY_INTERVAL => {
+                            r.last_attempt = std::time::Instant::now();
+                            Some((r.app_id, r.manifest.clone()))
+                        }
+                        _ => None,
+                    }
+                };
+                if let Some((app_id, manifest)) = target {
+                    self.attempt(app_id, manifest);
                 }
             }
 
@@ -180,6 +213,15 @@ pub(crate) mod imp {
             /// başlamadan (ilk `RunFrame` koşmadan) çağrılır — sonrası
             /// için API `false` döndürebilir.
             pub fn connect(&self, app_id: u32, manifest: Option<String>) {
+                *self.retry.lock().unwrap() = Some(Retry {
+                    app_id,
+                    manifest: manifest.clone(),
+                    last_attempt: std::time::Instant::now(),
+                });
+                self.attempt(app_id, manifest);
+            }
+
+            fn attempt(&self, app_id: u32, manifest: Option<String>) {
                 match Client::init_app(app_id) {
                     Ok(client) => {
                         client.input().init(false);
@@ -228,6 +270,7 @@ pub(crate) mod imp {
             }
 
             fn client(&self) -> Result<Client, String> {
+                self.ensure_connected();
                 let state = self.state.lock().unwrap();
                 match &*state {
                     State::Up { client, .. } => Ok(client.clone()),
@@ -236,6 +279,7 @@ pub(crate) mod imp {
             }
 
             pub fn status(&self) -> Status {
+                self.ensure_connected();
                 let state = self.state.lock().unwrap();
                 match &*state {
                     State::Down { error } => Status {

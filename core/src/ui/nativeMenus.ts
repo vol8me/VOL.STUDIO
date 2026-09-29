@@ -50,12 +50,14 @@ export function suppressNativeMenus(root: Document | HTMLElement = document): ()
     if (isBlockedShortcut(event, editable)) event.preventDefault();
   };
 
-  root.addEventListener('contextmenu', onContextMenu);
-  root.addEventListener('dragstart', onDragStart);
-  root.addEventListener('keydown', onKeyDown);
+  // Kabuk betiği gibi yakalama evresinde: alt öğenin propagation'ı durdurması
+  // varsayılanın durdurulmasını engellemez.
+  root.addEventListener('contextmenu', onContextMenu, true);
+  root.addEventListener('dragstart', onDragStart, true);
+  root.addEventListener('keydown', onKeyDown, true);
   return () => {
-    root.removeEventListener('contextmenu', onContextMenu);
-    root.removeEventListener('dragstart', onDragStart);
-    root.removeEventListener('keydown', onKeyDown);
+    root.removeEventListener('contextmenu', onContextMenu, true);
+    root.removeEventListener('dragstart', onDragStart, true);
+    root.removeEventListener('keydown', onKeyDown, true);
   };
 }
