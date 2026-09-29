@@ -45,3 +45,20 @@ export function observeWakeGaps(options: WakeGapOptions): () => void {
 
   return () => clearIv(id);
 }
+
+/** `resumeAudioAfterWake`in beklediği asgari ses bağlamı. */
+export interface WakeableAudioContext {
+  readonly state: string;
+  resume(): Promise<void>;
+}
+
+/**
+ * Uyanış tarifi: uykudan sonra `suspended` ya da `interrupted` kalan ses
+ * bağlamını yeniden başlatır. Kapalı ya da zaten çalan bağlama dokunmaz.
+ * @returns Yeniden başlatma denendiyse `true`.
+ */
+export async function resumeAudioAfterWake(context: WakeableAudioContext): Promise<boolean> {
+  if (context.state === 'running' || context.state === 'closed') return false;
+  await context.resume();
+  return true;
+}

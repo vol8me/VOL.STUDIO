@@ -26,6 +26,9 @@ export type { SessionKind, SessionKindProbe } from './platform/sessionKind';
 export { registerShutdownFlush } from './platform/shutdownFlush';
 export type { ShutdownFlushHook, ShutdownFlushProbe } from './platform/shutdownFlush';
 
+export { onSystemResume, registerSuspendFlush } from './platform/systemSleep';
+export type { ResumeListener, SuspendHook, SystemSleepProbe } from './platform/systemSleep';
+
 export {
   getDiagnosticsEnv,
   isDeckMeasureRequested,

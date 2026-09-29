@@ -4113,6 +4113,7 @@ dependencies = [
 name = "volstudio-tauri"
 version = "0.1.0"
 dependencies = [
+ "dbus",
  "gtk",
  "libc",
  "log",

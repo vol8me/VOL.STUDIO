@@ -14,9 +14,10 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       `docs/*.md` yol kapısı, yerel ayara bağlı sıralama yasağı, audio-synth
       dizin katmanı ve `exports` kapısı. Kapanır: her kapı `docs/gates.md`de
       anlatılır ve `pnpm signoff` bir kez yeşil koşar.
-- [ ] **[P1] SD8 — Uyku/uyanma yaşam döngüsü.** Kabukta uyku öncesi
-      boşaltma ve uyanma olayı; CORE'da duraklatma, ses toparlama ve kayıt
-      boşaltma sözleşmesi. Kapanır: sözleşme testli; Deck'te uyku turu ölçülür.
+- [ ] **[P1] SD8 — Uyku/uyanma Deck'te kanıtlanır.** Kabuk logind kilidi,
+      `registerSuspendFlush`/`onSystemResume` ve CORE `resumeAudioAfterWake`
+      tarifi uygulandı; Deck'te uyku turu yapılmadı. Kapanır: Deck'te son değer
+      uyku öncesi diske ulaşır ve ses uyanışta geri gelir.
 - [ ] **[P1] SD9 — Referans kabuk uygulaması.** deck-probe CORE ve tauri-v2
       JS'ini (kayıt, oturum, odak, glif, metin girişi, kapanış) uçtan uca koşar.
       Kapanır: WebKit E2E ve Deck ölçümü bu uygulamayla yapılır.

@@ -256,6 +256,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'pointInRect',
   'planRumblePulses',
   'preloadRigTextures',
+  'resumeAudioAfterWake',
   'pushBackHandler',
   'raycastCircles',
   'readStick',

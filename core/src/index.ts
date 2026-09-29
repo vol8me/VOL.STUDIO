@@ -23,7 +23,12 @@ export {
   type AppVisibilityOptions,
   type AppVisibilityState,
 } from './lifecycle/appVisibility';
-export { observeWakeGaps, type WakeGapOptions } from './lifecycle/wakeGaps';
+export {
+  observeWakeGaps,
+  resumeAudioAfterWake,
+  type WakeableAudioContext,
+  type WakeGapOptions,
+} from './lifecycle/wakeGaps';
 export {
   AutosaveCoordinator,
   isScopedKey,

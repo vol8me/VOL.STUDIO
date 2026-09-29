@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { observeWakeGaps } from '../../src/lifecycle/wakeGaps';
+import { observeWakeGaps, resumeAudioAfterWake } from '../../src/lifecycle/wakeGaps';
 
 /** Elle ilerletilen saat + kuyruk: setInterval kaydı tutulur, tick elle çalıştırılır. */
 function fakeClock() {
@@ -76,5 +76,25 @@ describe('observeWakeGaps', () => {
     });
     stop();
     expect(clock.cleared).toHaveLength(1);
+  });
+});
+
+describe('resumeAudioAfterWake', () => {
+  const context = (state: string) => ({ state, resume: vi.fn(() => Promise.resolve()) });
+
+  it('askıda ya da kesilmiş bağlamı yeniden başlatır', async () => {
+    for (const state of ['suspended', 'interrupted']) {
+      const ctx = context(state);
+      await expect(resumeAudioAfterWake(ctx)).resolves.toBe(true);
+      expect(ctx.resume).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('çalan ya da kapalı bağlama dokunmaz', async () => {
+    for (const state of ['running', 'closed']) {
+      const ctx = context(state);
+      await expect(resumeAudioAfterWake(ctx)).resolves.toBe(false);
+      expect(ctx.resume).not.toHaveBeenCalled();
+    }
   });
 });

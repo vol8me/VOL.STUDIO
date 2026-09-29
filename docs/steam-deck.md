@@ -272,7 +272,12 @@ kesilir. Steamworks'te uyanma bildirimi `AppResumingFromSuspend_t`'dir.
   `vol:terminate` yayınlar; JS bütün `registerShutdownFlush` kancaları bitince
   `vol_flush_done` gönderir (sınır 1,5 sn). Çıkış olağan olay yolundan
   (haptik durdurma dahil) 128+sinyal koduyla yapılır. SIGKILL'e karşı güvence
-  atomikliktir. logind `PrepareForSleep` aboneliği yoktur.
+  atomikliktir.
+- **Uyku:** kabuk logind'den "delay" uyku kilidi alır; `PrepareForSleep`te
+  `vol:suspending` yayınlar ve `registerSuspendFlush` kancaları bitene kadar
+  (en çok 1,5 sn) uykuyu erteler, uyanışta `vol:resumed` yayınlar
+  (`onSystemResume`); ses bağlamı `resumeAudioAfterWake` ile toparlanır.
+  Deck'te uyku turuyla ölçülmedi.
 - **Kapsamlar:** `synced` (ilerleme; gerçek App ID'de Auto-Cloud adayı) ve
   `device` (grafik, pencere, cihaz ses ayarları, dil; Cloud'a konmaz) ayrı
   dosyalardır.

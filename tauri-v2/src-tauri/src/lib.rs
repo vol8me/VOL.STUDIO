@@ -153,6 +153,7 @@ where
             window_fullscreen_state,
             session_kind,
             shutdown::vol_flush_done,
+            sleep::vol_suspend_ready,
             store::vol_store_read,
             store::vol_store_write,
             haptics::vol_haptics_status,
@@ -178,6 +179,7 @@ where
         .plugin(native_menus::plugin())
         .setup(|app| {
             shutdown::watch_signals(app.handle());
+            sleep::watch_sleep(app.handle());
             #[cfg(target_os = "linux")]
             // gamescope çıktıyı tam ekran sunar; pencere etiketi uygulamanındır.
             if is_gamescope() {
@@ -228,6 +230,7 @@ where
 mod haptics;
 mod native_menus;
 mod shutdown;
+mod sleep;
 mod store;
 
 #[cfg(target_os = "linux")]
