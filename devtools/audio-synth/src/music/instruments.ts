@@ -134,16 +134,16 @@ function measure(preset: string, midi: number): InstrumentMeasurementV1 {
   };
 }
 
-function build(id: string): InstrumentProfileV1 {
+type InstrumentBasics = Omit<InstrumentProfileV1, 'spectral'>;
+
+/** Aralık, rol, zarf türü ve eklemleme: tek zarf probuyla ölçülür. */
+function buildBasics(id: string): InstrumentBasics {
   const preset = presetOf(id);
   const meta = PRESET_CATALOG[preset];
   const [lowHz, highHz] = meta.range as [number, number];
   const lowMidi = Math.max(MIDI_MIN, hzToMidi(lowHz));
   const highMidi = Math.min(MIDI_MAX, hzToMidi(highHz));
   const role = meta.role as MusicRole;
-  const spectral = PROBE_POINTS.map((t) =>
-    measure(preset, Math.round(lowMidi + (highMidi - lowMidi) * t)),
-  );
   const probeSeconds = Math.min(MAX_ENVELOPE_PROBE_SECONDS, meta.typicalDuration);
   const probe = { ...getPreset(preset, meta.typicalFrequency, probeSeconds), sampleRate: 44100 };
   const rendered = synthesize(probe);
@@ -164,6 +164,19 @@ function build(id: string): InstrumentProfileV1 {
       decay40Ms: decay === null ? null : Number((decay * 1000).toFixed(3)),
       kind,
     },
+  };
+}
+
+function build(id: string): InstrumentProfileV1 {
+  const basics = instrumentBasics(id);
+  const spectral = PROBE_POINTS.map((t) =>
+    measure(
+      basics.preset,
+      Math.round(basics.range.lowMidi + (basics.range.highMidi - basics.range.lowMidi) * t),
+    ),
+  );
+  return {
+    ...basics,
     spectral: spectral.map((m) => ({
       midi: m.midi,
       centroidHz: m.centroidHz === null ? null : Number(m.centroidHz.toFixed(2)),
@@ -173,9 +186,22 @@ function build(id: string): InstrumentProfileV1 {
   };
 }
 
+const basicsCache = new Map<string, InstrumentBasics>();
 const cache = new Map<string, InstrumentProfileV1>();
 
-/** Profil ilk istendiğinde ölçülür ve süreç boyunca saklanır (ölçüm deterministiktir). */
+/**
+ * Doğrulama ve çözümlemenin ihtiyacı olan kısım; spektral ölçüm istemez.
+ * Ölçüm deterministiktir ve süreç boyunca saklanır.
+ */
+export function instrumentBasics(id: string): InstrumentBasics {
+  const cached = basicsCache.get(id);
+  if (cached) return cached;
+  const basics = buildBasics(id);
+  basicsCache.set(id, basics);
+  return basics;
+}
+
+/** Tam profil (spektral ölçüm dahil) ilk istendiğinde ölçülür ve saklanır. */
 export function instrumentProfile(id: string): InstrumentProfileV1 {
   const cached = cache.get(id);
   if (cached) return cached;

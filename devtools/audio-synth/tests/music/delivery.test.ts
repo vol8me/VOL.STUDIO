@@ -6,6 +6,7 @@ import { renderAndPlan } from '../../src/music/bundle';
 import { expandProgram } from '../../src/music/score';
 import { createTestRepo } from '../protocol/repo';
 import { unitProgram, musicBrief } from './fixtures';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 describe('açık müzik dosya teslimi', () => {
   it('varsayılan yol aynı kalır; mix eski olay dosyasına yönlendirilebilir', () => {
@@ -75,19 +76,23 @@ describe('açık müzik dosya teslimi', () => {
     }
   });
 
-  it('ambience bundle QA kendi sınıfının loudness aralığını kullanır', () => {
-    const program = validateMusicProgram(
-      unitProgram({
-        delivery: {
-          package: '@volstudio/audio-synth',
-          assetDir: 'reference/production/assets/ambience/unit-loop',
-          assetClass: 'ambience',
-        },
-      }),
-    );
-    const plan = renderAndPlan(program, expandProgram(program), -22);
-    expect(plan.plan.qa.verdict).toEqual({ pass: true, failures: [] });
-  });
+  it(
+    'ambience bundle QA kendi sınıfının loudness aralığını kullanır',
+    () => {
+      const program = validateMusicProgram(
+        unitProgram({
+          delivery: {
+            package: '@volstudio/audio-synth',
+            assetDir: 'reference/production/assets/ambience/unit-loop',
+            assetClass: 'ambience',
+          },
+        }),
+      );
+      const plan = renderAndPlan(program, expandProgram(program), -22);
+      expect(plan.plan.qa.verdict).toEqual({ pass: true, failures: [] });
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('adaptive bundle cue brief’i state alanını taşımadan tek seferlik doğrulanır', () => {
     const brief = validateBrief(

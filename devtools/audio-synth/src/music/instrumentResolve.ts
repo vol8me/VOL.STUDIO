@@ -19,7 +19,7 @@ import {
   type RetroPatchV1,
   type VelocityResponseV1,
 } from './instrumentDefinition';
-import { INSTRUMENT_PREFIX, instrumentProfile, instrumentSurface, presetOf } from './instruments';
+import { INSTRUMENT_PREFIX, instrumentBasics, instrumentSurface, presetOf } from './instruments';
 import { laneInstrument, type PaletteV1 } from './orchestration';
 import type { LaneV1 } from './programTypes';
 import { noteToMidi } from './tonal';
@@ -105,7 +105,7 @@ const dbToGain = (db: number) => Math.pow(10, db / 20);
 /** `preset:<ad>` yerleşik enstrümanı: aralık ve rol katalogdan, artikülasyon ölçülen zarftan. */
 export function builtinInstrument(id: string, path = 'instrument'): ResolvedInstrumentV1 {
   const preset = presetOf(id, path);
-  const profile = instrumentProfile(id);
+  const profile = instrumentBasics(id);
   const range = { lowMidi: profile.range.lowMidi, highMidi: profile.range.highMidi };
   return {
     id,
