@@ -27,10 +27,9 @@ const groups = new WeakMap<ShutdownFlushProbe, FlushGroup>();
 
 /**
  * Sinyal üzerine kapanışta bekleyen yazma kuyruklarını boşaltır.
- * Diagnostics eklentisi SIGTERM/SIGINT/SIGHUP'ı yakalayıp `vol:terminate`
- * yayınlar ve 1.5 sn bekler; kanca bittiğinde `flush_done` komutu izleyiciyi
- * erken çıkarır — çıkış her koşulda süre sınırıyla gerçekleşir. Eklenti
- * kurulu değilse dinleme kurulamaz, kanca kaydı sessizce pas kalır.
+ * Paylaşılan kabuk SIGTERM/SIGINT/SIGHUP'ı yakalayıp `vol:terminate`
+ * yayınlar ve 1.5 sn bekler; kancalar bitince `vol_flush_done` komutu çıkışı
+ * öne alır — çıkış her koşulda süre sınırıyla gerçekleşir.
  *
  * `AutosaveCoordinator.flush` gibi tek atımlık kuyruk boşaltıcılar için;
  * dönen fonksiyon kaydı siler.
@@ -53,7 +52,7 @@ export function registerShutdownFlush(
           void Promise.allSettled(
             [...current.hooks.values()].map((callback) => Promise.resolve().then(callback)),
           )
-            .then(() => probe.invoke('plugin:vol-diagnostics|flush_done'))
+            .then(() => probe.invoke('vol_flush_done'))
             .catch(() => undefined);
         }),
       )

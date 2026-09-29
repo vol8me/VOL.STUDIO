@@ -307,18 +307,6 @@
           "markdownDescription": "Denies the env_info command without any pre-configured scope."
         },
         {
-          "description": "Enables the flush_done command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-flush-done",
-          "markdownDescription": "Enables the flush_done command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the flush_done command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-flush-done",
-          "markdownDescription": "Denies the flush_done command without any pre-configured scope."
-        },
-        {
           "description": "Enables the report command without any pre-configured scope.",
           "type": "string",
           "const": "allow-report",
@@ -331,10 +319,10 @@
           "markdownDescription": "Denies the report command without any pre-configured scope."
         },
         {
-          "description": "Ölçüm sondası kaydına satır yazma ve izin listeli ortam dökümü izni.\n#### This default permission set includes:\n\n- `allow-report`\n- `allow-env-info`\n- `allow-flush-done`",
+          "description": "Ölçüm sondası kaydına satır yazma ve izin listeli ortam dökümü izni.\n#### This default permission set includes:\n\n- `allow-report`\n- `allow-env-info`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Ölçüm sondası kaydına satır yazma ve izin listeli ortam dökümü izni.\n#### This default permission set includes:\n\n- `allow-report`\n- `allow-env-info`\n- `allow-flush-done`"
+          "markdownDescription": "Ölçüm sondası kaydına satır yazma ve izin listeli ortam dökümü izni.\n#### This default permission set includes:\n\n- `allow-report`\n- `allow-env-info`"
         }
       ]
     }

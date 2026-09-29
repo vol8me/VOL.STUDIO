@@ -2,9 +2,10 @@
 // Frontend storage adapter'lari ve native API'ler buradan disa aktarilir.
 
 export { TauriStoreAdapter } from './adapters/TauriStoreAdapter';
-export type { TauriStoreAdapterOptions } from './adapters/TauriStoreAdapter';
+export type { StoreIntegrityEvent, TauriStoreAdapterOptions } from './adapters/TauriStoreAdapter';
 
 export { createScopedStores } from './adapters/scopedStores';
+export type { ScopedStoresOptions } from './adapters/scopedStores';
 
 export { TauriWindowAdapter } from './window/TauriWindowAdapter';
 export type { TauriWindowAdapterOptions } from './window/TauriWindowAdapter';

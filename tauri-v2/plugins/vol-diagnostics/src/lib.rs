@@ -9,9 +9,9 @@
 //!
 //! - `report`: JS'in yazdığı her satır dosyaya eklenir ve `fsync`lenir —
 //!   süreç ölürse o ana kadarki kanıt diskte kalır.
-//! - Sinyal izleyici: SIGTERM/SIGINT/SIGHUP sürece ve `vol:terminate` olayı
-//!   olarak ön yüze yazılır; Steam'in "Oyundan çık"ının gönderdiği sinyal
-//!   sırası bu kayıttan okunur.
+//! - Kapanış kaydı: kabuğun (`volstudio-tauri`) yayınladığı `vol:terminate`
+//!   ve `vol:exiting` olayları kayda geçer; Steam'in "Oyundan çık"ının
+//!   gönderdiği sinyal sırası bu kayıttan okunur.
 //! - Uyku izleyici: `CLOCK_BOOTTIME − CLOCK_MONOTONIC` sıçraması uyku
 //!   süresini verir; `performance.now()` uykuyu saymadığı için JS tarafındaki
 //!   sıçrama bununla kıyaslanır.
@@ -24,7 +24,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    AppHandle, Emitter, Manager, Runtime,
+    AppHandle, Manager, Runtime,
 };
 
 /// Kayıt biçimi sürümü; ölçüm kayıtları bunu taşır ki okuyucu eski/yeni
@@ -133,6 +133,90 @@ fn env_info() -> serde_json::Value {
     serde_json::Value::Object(map)
 }
 
+/// Kayıt dizini bir kez çözülür ve state olarak saklanır.
+struct DiagnosticsDir(PathBuf);
+
+fn diagnostics_dir<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
+    if let Ok(custom) = std::env::var("VOL_DIAGNOSTICS_DIR") {
+        return PathBuf::from(custom);
+    }
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("/tmp/vol-diagnostics"))
+}
+
+/// Kapanış kaydı: sinyali ve boşaltma sonucunu kabuk (`volstudio-tauri`)
+/// `vol:terminate` ve `vol:exiting` olarak yayınlar; burada yalnız kayda geçer.
+#[cfg(target_os = "linux")]
+fn record_shutdown<R: Runtime>(app: &AppHandle<R>, dir: PathBuf) {
+    use tauri::Listener;
+    let signal_dir = dir.clone();
+    app.listen_any("vol:terminate", move |event| {
+        let signal: serde_json::Value = serde_json::from_str(event.payload()).unwrap_or_default();
+        native(
+            &signal_dir,
+            "signal",
+            serde_json::json!({ "signal": signal }),
+        );
+    });
+    app.listen_any("vol:exiting", move |event| {
+        let detail: serde_json::Value = serde_json::from_str(event.payload()).unwrap_or_default();
+        native(&dir, "exit-after-grace", detail);
+    });
+}
+
+/// Uyku izleyici: BOOTTIME uyku süresini de sayar, MONOTONIC saymaz —
+/// ikisinin farkının sıçraması uyku uzunluğudur.
+#[cfg(target_os = "linux")]
+fn watch_suspend(dir: PathBuf) {
+    std::thread::spawn(move || {
+        let mut offset = clock(libc::CLOCK_BOOTTIME) - clock(libc::CLOCK_MONOTONIC);
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            let next = clock(libc::CLOCK_BOOTTIME) - clock(libc::CLOCK_MONOTONIC);
+            if next - offset > 0.5 {
+                native(
+                    &dir,
+                    "suspend-gap",
+                    serde_json::json!({ "seconds": next - offset }),
+                );
+            }
+            offset = next;
+        }
+    });
+}
+
+pub fn init<R: Runtime>() -> TauriPlugin<R> {
+    build(true)
+}
+
+/// Oyunda komut yüzeyini korur; kayıt, uyku ve kapanış kaydı yalnız
+/// açık Deck ölçümünde kurulur. Sonda uygulaması `init()` ile sürekli kayıt alır.
+pub fn init_for_measurement<R: Runtime>() -> TauriPlugin<R> {
+    let enabled = measurement_requested(std::env::var("VOL_DECK_MEASURE").ok().as_deref());
+    build(enabled)
+}
+
+fn build<R: Runtime>(enabled: bool) -> TauriPlugin<R> {
+    Builder::new("vol-diagnostics")
+        .invoke_handler(tauri::generate_handler![report, env_info])
+        .setup(move |app, _api| {
+            if !enabled {
+                return Ok(());
+            }
+            let dir = diagnostics_dir(app);
+            #[cfg(target_os = "linux")]
+            {
+                native(&dir, "start", serde_json::json!({}));
+                record_shutdown(app, dir.clone());
+                watch_suspend(dir.clone());
+            }
+            app.manage(DiagnosticsDir(dir));
+            Ok(())
+        })
+        .build()
+}
+
 #[cfg(test)]
 mod privacy_tests {
     use super::{allowed_env_name, measurement_requested};
@@ -169,115 +253,4 @@ mod privacy_tests {
             assert!(allowed_env_name(key));
         }
     }
-}
-
-/// Kayıt dizini bir kez çözülür ve state olarak saklanır.
-struct DiagnosticsDir(PathBuf);
-
-fn diagnostics_dir<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
-    if let Ok(custom) = std::env::var("VOL_DIAGNOSTICS_DIR") {
-        return PathBuf::from(custom);
-    }
-    app.path()
-        .app_data_dir()
-        .unwrap_or_else(|_| PathBuf::from("/tmp/vol-diagnostics"))
-}
-
-/// Flush kapısı: sinyal izleyici `vol:terminate` yayınladıktan sonra JS'in
-/// `flush_done` komutunu bekler; süre dolarsa yine çıkar. Kanal tek atımlık
-/// değil — sinyal bir kere işlenir, komut takılsa da kayıt düşer.
-#[cfg(target_os = "linux")]
-struct FlushGate(std::sync::mpsc::Sender<()>);
-
-/// JS tarafı sinyal üzerine bekleyen yazma kuyruklarını boşalttıktan sonra
-/// bunu çağırır; izleyici erken çıkar ya da süre sonunda kendisi çıkar.
-/// Sinyal izleyici yalnız Linux'ta kurulur — diğer platformlarda no-op'tur
-/// ki JS tarafı platform ayırmadan çağırabilsin.
-#[tauri::command]
-fn flush_done<R: Runtime>(#[allow(unused_variables)] app: AppHandle<R>) {
-    #[cfg(target_os = "linux")]
-    if let Some(gate) = app.try_state::<FlushGate>() {
-        let _ = gate.0.send(());
-    }
-}
-
-/// Sinyal izleyici: kayda yazar, `vol:terminate` yayınlar, JS'in flush'ını
-/// en çok 1.5 sn bekler ve süreci bitirir. Yayın, JS tarafının sinyali
-/// gördüğünü kanıtlaması içindir; süre sınırı Steam'in sessiz takılmalarını
-/// raporda bırakır.
-#[cfg(target_os = "linux")]
-fn watch_signals<R: Runtime>(app: AppHandle<R>, dir: PathBuf) {
-    use signal_hook::consts::{SIGHUP, SIGINT, SIGTERM};
-    let Ok(mut signals) = signal_hook::iterator::Signals::new([SIGTERM, SIGINT, SIGHUP]) else {
-        return;
-    };
-    let (sender, receiver) = std::sync::mpsc::channel::<()>();
-    app.manage(FlushGate(sender));
-    std::thread::spawn(move || {
-        if let Some(signal) = signals.forever().next() {
-            native(&dir, "signal", serde_json::json!({ "signal": signal }));
-            let _ = app.emit("vol:terminate", signal);
-            let flushed = receiver
-                .recv_timeout(std::time::Duration::from_millis(1500))
-                .is_ok();
-            native(
-                &dir,
-                "exit-after-grace",
-                serde_json::json!({ "signal": signal, "flushed": flushed }),
-            );
-            std::process::exit(0);
-        }
-    });
-}
-
-/// Uyku izleyici: BOOTTIME uyku süresini de sayar, MONOTONIC saymaz —
-/// ikisinin farkının sıçraması uyku uzunluğudur.
-#[cfg(target_os = "linux")]
-fn watch_suspend(dir: PathBuf) {
-    std::thread::spawn(move || {
-        let mut offset = clock(libc::CLOCK_BOOTTIME) - clock(libc::CLOCK_MONOTONIC);
-        loop {
-            std::thread::sleep(std::time::Duration::from_millis(500));
-            let next = clock(libc::CLOCK_BOOTTIME) - clock(libc::CLOCK_MONOTONIC);
-            if next - offset > 0.5 {
-                native(
-                    &dir,
-                    "suspend-gap",
-                    serde_json::json!({ "seconds": next - offset }),
-                );
-            }
-            offset = next;
-        }
-    });
-}
-
-pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    build(true)
-}
-
-/// Oyunda komut yüzeyini korur; kayıt, uyku ve sinyal izleyicileri yalnız
-/// açık Deck ölçümünde kurulur. Sonda uygulaması `init()` ile sürekli kayıt alır.
-pub fn init_for_measurement<R: Runtime>() -> TauriPlugin<R> {
-    let enabled = measurement_requested(std::env::var("VOL_DECK_MEASURE").ok().as_deref());
-    build(enabled)
-}
-
-fn build<R: Runtime>(enabled: bool) -> TauriPlugin<R> {
-    Builder::new("vol-diagnostics")
-        .invoke_handler(tauri::generate_handler![report, env_info, flush_done])
-        .setup(move |app, _api| {
-            if !enabled {
-                return Ok(());
-            }
-            let dir = diagnostics_dir(app);
-            #[cfg(target_os = "linux")]
-            {
-                native(&dir, "start", serde_json::json!({}));
-                watch_signals(app.clone(), dir.clone());
-                watch_suspend(dir.clone());
-            }
-            app.manage(DiagnosticsDir(dir));
-            Ok(())
-        })
-        .build()
 }

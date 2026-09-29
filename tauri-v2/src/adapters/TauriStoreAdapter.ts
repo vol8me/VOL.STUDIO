@@ -1,56 +1,69 @@
 import { invoke } from '@tauri-apps/api/core';
 import type { IStorageAdapter } from '@volstudio/core';
 
+/** Native okuma kaydı eksik ya da bozuk bulduğunda bildirilen olay. */
+export interface StoreIntegrityEvent {
+  readonly name: string;
+  /** `recovered`: başka bir jenerasyondan okundu; `reset`: hiçbiri okunamadı, kayıt boş başladı. */
+  readonly kind: 'recovered' | 'reset';
+}
+
 export interface TauriStoreAdapterOptions {
   /** Store dosyasının adı. Belirtilmezse gameId'den türetilir. */
   path?: string;
-  /** Oyun kimliği. Store dosyası "{gameId}-store.json" olarak adlandirilir. */
+  /** Oyun kimliği. Store dosyası "{gameId}-store.json" olarak adlandırılır. */
   gameId?: string;
+  /** Kurtarma ve sıfırlama bildirimi; teşhise ya da kullanıcı uyarısına bağlanır. */
+  onIntegrity?: (event: StoreIntegrityEvent) => void;
 }
 
 interface StoreReadResult {
   readonly data: string | null;
-  /** Güncel dosya bozuktu, yedekten okundu. */
   readonly recovered: boolean;
+  readonly reset: boolean;
 }
 
 /**
- * Tauri native store tabanlı IStorageAdapter implementasyonu.
- * WebView localStorage yerine uygulamanın veri dizinine JSON dosyası yazar.
- * Kayıt atomikdir: geçici dosya → fsync → rename → dizin fsync'i; güncel
- * kayıt bozuksa `.bak` jenerasyonundan okunur ve kurtarma raporlanır
- * (native `vol_store_read`/`vol_store_write` komutları, `store.rs`).
+ * Uygulamanın veri dizinine JSON dosyası yazan `IStorageAdapter`; native yarısı
+ * kabuğun `vol_store_read`/`vol_store_write` komutlarıdır (`store.rs`).
  *
- * Yazmalar sıraya alınır — iki set aynı anda dosyayı açmaz; sinyal üzerine
- * kapanışta bekleyen kuyruk `registerShutdownFlush` ile boşaltılır.
+ * İlk okuma paylaşılır: eşzamanlı çağrılar tek önbellek kurar, araya giren
+ * `set` sonradan dönen bir okumayla ezilmez. Yazmalar sıraya alınır.
  */
 export class TauriStoreAdapter implements IStorageAdapter {
   private readonly name: string;
-  private cache: Record<string, unknown> | null = null;
+  private readonly onIntegrity?: (event: StoreIntegrityEvent) => void;
+  private loading: Promise<Record<string, unknown>> | null = null;
   private queue: Promise<void> = Promise.resolve();
-  /** Bozuk dosyadan yedekle dönüldüğünde bir kere çağrılır. */
-  public onRecovered?: (name: string) => void;
 
   constructor(options: TauriStoreAdapterOptions = {}) {
     this.name =
       options.path ?? (options.gameId ? `${options.gameId}-store.json` : 'volstudio-store.json');
+    this.onIntegrity = options.onIntegrity;
   }
 
-  private async load(): Promise<Record<string, unknown>> {
-    if (this.cache) return this.cache;
+  private load(): Promise<Record<string, unknown>> {
+    if (!this.loading) {
+      this.loading = this.read().catch((error: unknown) => {
+        // Başarısız okuma önbelleğe yazılmaz; sonraki çağrı yeniden dener.
+        this.loading = null;
+        throw error;
+      });
+    }
+    return this.loading;
+  }
+
+  private async read(): Promise<Record<string, unknown>> {
     const result = await invoke<StoreReadResult>('vol_store_read', { name: this.name });
-    if (result.recovered) this.onRecovered?.(this.name);
-    this.cache = result.data ? (JSON.parse(result.data) as Record<string, unknown>) : {};
-    return this.cache;
+    if (result.recovered) this.onIntegrity?.({ name: this.name, kind: 'recovered' });
+    if (result.reset) this.onIntegrity?.({ name: this.name, kind: 'reset' });
+    return result.data ? (JSON.parse(result.data) as Record<string, unknown>) : {};
   }
 
-  private persist(): Promise<void> {
-    const write = async () => {
-      const data = JSON.stringify(this.cache ?? {});
-      await invoke('vol_store_write', { name: this.name, data });
-    };
-    // Kuyruğu zincirleme: hata sonraki yazmayı bloklamasın diye catch'lenir
-    // ama çağırana hâlâ döner.
+  private persist(data: Record<string, unknown>): Promise<void> {
+    const write = () =>
+      invoke<void>('vol_store_write', { name: this.name, data: JSON.stringify(data) });
+    // Hata sonraki yazmayı bloklamasın diye kuyrukta yutulur, çağırana döner.
     const next = this.queue.then(write);
     this.queue = next.catch(() => undefined);
     return next;
@@ -58,22 +71,22 @@ export class TauriStoreAdapter implements IStorageAdapter {
 
   async get<T>(key: string): Promise<T | undefined> {
     const data = await this.load();
-    return (data[key] as T | undefined) ?? undefined;
+    return data[key] as T | undefined;
   }
 
   async set<T>(key: string, value: T): Promise<void> {
     const data = await this.load();
     data[key] = value;
-    await this.persist();
+    await this.persist(data);
   }
 
   async remove(key: string): Promise<void> {
     const data = await this.load();
     delete data[key];
-    await this.persist();
+    await this.persist(data);
   }
 
-  /** Tüm anahtarlar — tek-dosyadan kapsamlı store'a kayıpsız taşımada kullanılır. */
+  /** Tüm anahtarlar — tek dosyadan kapsamlı store'a kayıpsız taşımada kullanılır. */
   async keys(): Promise<readonly string[]> {
     return Object.keys(await this.load());
   }

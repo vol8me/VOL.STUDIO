@@ -19,10 +19,12 @@ export interface RenderCacheStats {
   evictions: number;
   /** Tek girdi sınırını aştığı için saklanmayan sonuçlar. */
   skipped: number;
+  /** Disk hatası yüzünden yazılamayan girdiler; render etkilenmez. */
+  failures: number;
 }
 
 export function emptyStats(): RenderCacheStats {
-  return { hits: 0, misses: 0, writes: 0, evictions: 0, skipped: 0 };
+  return { hits: 0, misses: 0, writes: 0, evictions: 0, skipped: 0, failures: 0 };
 }
 
 export function copyChannels(channels: readonly Float32Array[]): Float32Array[] {

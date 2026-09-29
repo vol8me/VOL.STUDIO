@@ -62,15 +62,30 @@ describe('disk render önbelleği', () => {
     expect(files(cache.dir)).toEqual([]);
   });
 
-  it('kod parmak izi değişince eski dizin hiç okunmadan temizlenir', () => {
+  it('başka parmak izli dizin yalnız dokunulmamışsa temizlenir; eşzamanlı sürecinki korunur', () => {
     const root = tempRoot();
     const stale = join(root, 'eskiparmakizi000');
+    const live = join(root, 'canliparmakizi00');
     mkdirSync(stale, { recursive: true });
+    mkdirSync(live, { recursive: true });
     writeFileSync(join(stale, 'x.f32'), 'eski');
+    const old = (Date.now() - 11 * 60 * 1000) / 1000;
+    utimesSync(stale, old, old);
     const cache = new DiskRenderCache(root);
-    expect(readdirSync(root)).toEqual([]);
+    expect(readdirSync(root)).toEqual(['canliparmakizi00']);
     expect(cache.dir).toBe(join(root, codeFingerprint()));
     expect(codeFingerprint()).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  it('disk hatası render’ı düşürmez; sayılır', () => {
+    const root = tempRoot();
+    const cache = new DiskRenderCache(root);
+    // Önbellek dizininin yerinde bir dosya: her yazma ENOTDIR ile düşer.
+    writeFileSync(cache.dir, 'engel');
+    const key = cacheKey({ diskHatasi: 1 });
+    expect(() => cache.write(key, [ramp(64)])).not.toThrow();
+    expect(cache.stats.failures).toBe(1);
+    expect(cache.read(key)).toBeUndefined();
   });
 
   it('bayt sınırı aşılınca en eski kullanılan girdiler bütçenin %80’ine kadar atılır', () => {

@@ -8,7 +8,7 @@ const store = new Map<string, string>();
 const mockInvoke = vi.mocked(invoke);
 
 function wireStore(overrides?: {
-  read?: (name: string) => { data: string | null; recovered: boolean };
+  read?: (name: string) => { data: string | null; recovered: boolean; reset?: boolean };
   write?: (name: string, data: string) => void;
 }) {
   mockInvoke.mockImplementation((command: string, args?: unknown) => {
@@ -17,7 +17,7 @@ function wireStore(overrides?: {
       return Promise.resolve(
         overrides?.read
           ? overrides.read(name)
-          : { data: store.get(name) ?? null, recovered: false },
+          : { data: store.get(name) ?? null, recovered: false, reset: false },
       );
     }
     if (command === 'vol_store_write') {
@@ -99,16 +99,60 @@ describe('TauriStoreAdapter', () => {
     await expect(adapter.get<number>('x')).resolves.toBe(2);
   });
 
-  it('native yedekten dondugunu bildirirse onRecovered cagrilir', async () => {
+  it('yedekten kurtarma ve sıfırlama bütünlük olayı olarak bildirilir', async () => {
     wireStore({
       read: () => ({ data: JSON.stringify({ keep: true }), recovered: true }),
     });
-    const onRecovered = vi.fn();
-    const adapter = new TauriStoreAdapter();
-    adapter.onRecovered = onRecovered;
+    const onIntegrity = vi.fn();
+    await expect(new TauriStoreAdapter({ onIntegrity }).get('keep')).resolves.toBe(true);
+    expect(onIntegrity).toHaveBeenCalledWith({ name: 'volstudio-store.json', kind: 'recovered' });
 
-    await expect(adapter.get('keep')).resolves.toBe(true);
-    expect(onRecovered).toHaveBeenCalledWith('volstudio-store.json');
+    wireStore({ read: () => ({ data: null, recovered: false, reset: true }) });
+    onIntegrity.mockClear();
+    const reset = new TauriStoreAdapter({ onIntegrity });
+    await expect(reset.keys()).resolves.toEqual([]);
+    expect(onIntegrity).toHaveBeenCalledWith({ name: 'volstudio-store.json', kind: 'reset' });
+  });
+
+  it('eşzamanlı ilk okumalar tek önbellek kurar; araya giren yazı kaybolmaz', async () => {
+    store.set('volstudio-store.json', JSON.stringify({ a: 1 }));
+    const reads: Array<() => void> = [];
+    mockInvoke.mockImplementation((command: string, args?: unknown) => {
+      const { name, data } = (args ?? {}) as { name: string; data?: string };
+      if (command === 'vol_store_read') {
+        const snapshot = store.get(name) ?? null;
+        return new Promise((resolve) =>
+          reads.push(() => resolve({ data: snapshot, recovered: false, reset: false })),
+        );
+      }
+      store.set(name, data ?? '');
+      return Promise.resolve();
+    });
+    const adapter = new TauriStoreAdapter();
+    const first = adapter.get('a');
+    const second = adapter.get('c');
+    const write = adapter.set('b', 2);
+    expect(reads).toHaveLength(1);
+    reads.splice(0).forEach((resolve) => resolve());
+    await Promise.all([first, second, write]);
+    await adapter.set('c', 3);
+
+    expect(JSON.parse(store.get('volstudio-store.json') ?? '{}')).toEqual({ a: 1, b: 2, c: 3 });
+  });
+
+  it('başarısız okuma önbelleğe yazılmaz; sonraki çağrı yeniden dener', async () => {
+    let fail = true;
+    mockInvoke.mockImplementation((command: string) => {
+      if (command !== 'vol_store_read') return Promise.resolve();
+      if (fail) {
+        fail = false;
+        return Promise.reject(new Error('okunamadı'));
+      }
+      return Promise.resolve({ data: JSON.stringify({ x: 1 }), recovered: false, reset: false });
+    });
+    const adapter = new TauriStoreAdapter();
+    await expect(adapter.get('x')).rejects.toThrow('okunamadı');
+    await expect(adapter.get('x')).resolves.toBe(1);
   });
 
   it('custom path ile calisir', async () => {

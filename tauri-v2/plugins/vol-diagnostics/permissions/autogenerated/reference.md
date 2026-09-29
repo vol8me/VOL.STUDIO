@@ -6,7 +6,6 @@
 
 - `allow-report`
 - `allow-env-info`
-- `allow-flush-done`
 
 ## Permission Table
 
@@ -39,32 +38,6 @@ Enables the env_info command without any pre-configured scope.
 <td>
 
 Denies the env_info command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`vol-diagnostics:allow-flush-done`
-
-</td>
-<td>
-
-Enables the flush_done command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`vol-diagnostics:deny-flush-done`
-
-</td>
-<td>
-
-Denies the flush_done command without any pre-configured scope.
 
 </td>
 </tr>

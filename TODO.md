@@ -14,9 +14,6 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       `docs/*.md` yol kapısı, yerel ayara bağlı sıralama yasağı, audio-synth
       dizin katmanı ve `exports` kapısı. Kapanır: her kapı `docs/gates.md`de
       anlatılır ve `pnpm signoff` bir kez yeşil koşar.
-- [ ] **[P1] S1 — Veri bütünlüğü.** `TauriStoreAdapter` yazı kaybı, boş kilidin
-      çalınması, iki WAV çözücünün ayrışması ve audio-synth'in bütünlük
-      hataları regresyon testleriyle düzeltilir.
 - [ ] **[P1] SD — Steam Deck boşlukları.** Referans kabuk uygulaması, yeni oyun
       şablonu, uyku/uyanma, kısayol süzgeci, FPS sınırı ve glif köprüsü.
 - [ ] **[P2] S2 — audio-synth sertleştirme.** Önbellek, paralel işçi, manifest
@@ -71,6 +68,13 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 - [ ] **[P3] OLED Deck ve Steam Machine'de kare zamanlaması.** Kapanır: cihaz
       bulunduğunda ölçüm `docs/steam-deck.md`ye girer.
 
+### Windows
+
+- [ ] **[P2] Kayıt yazıcısı Windows'ta doğrulanır.** Dizin fsync'i Windows'ta
+      atlanır ve rename güncelin üstüne yazar; bu yol yerelde ölçülemedi.
+      Kapanır: Windows derlemesinde `vol_store_write` hatasız yazar ve bozuk
+      kayıt yedekten okunur.
+
 ### Android
 
 - [ ] **[P3] Android 16 geniş ekranda yön kilidi.** Kapanır: bir oyunla,
@@ -79,6 +83,11 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 
 ## Kapatılanlar
 
+- [x] **S1 — Veri bütünlüğü.** Store yazıcısı güncel dosyayı hiç kaldırmaz,
+      okuma geçici/yedek jenerasyondan kurtarır ya da karantinaya alıp
+      bildirir; disk işi ana iş parçacığı dışında; adaptör ilk okumayı paylaşır;
+      kapanış boşaltması kabukta her kipte açık; audio-synth kilidi atomik,
+      yayın asset ile manifesti birlikte yerleştirir.
 - [x] **SK — Ürün emekliliği.** vol-hell ve vol-arachnid etiketleriyle
       arşivlenip ağaçtan kaldırıldı; lifecycle mekanizması korundu.
 - [x] **D7 — Oyunla Deck referansı (iptal).** Oyun emekliye ayrıldı; kabul

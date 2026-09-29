@@ -307,10 +307,13 @@ programlar bit-eşit render edilir (`tests/governance/legacyV1.test.ts`,
 ### Publish kapısı
 
 `publishJob` TEK kanonik yoldur: özet zinciri → belgeler → hedef/yol/sınıf →
-yeniden render + PCM kimliği → aynı dizinde staging kodlama (sınıfın kodlama
+önbelleksiz yeniden render + PCM kimliği → gönderilen ağaç dışında
+(`node_modules/.cache/audio-synth/publish`) staging kodlama (sınıfın kodlama
 profiliyle) → çözme + kodek sonrası analiz + sınıf politikası + yerleşim →
-teslim varyantında kaynağa bağ → manifest doğrulaması → iki atomik
-rename → job kaydı. Politika düşerse hiçbir dosya yazılmaz; kapı ihlali
+teslim varyantında kaynağa bağ → manifest doğrulaması → asset ve manifestin
+birlikte yerleşmesi (biri düşerse önceki hâller geri gelir) → job kaydı.
+Süreç iki rename arasında öldürülürse ayrışma `verify` ile görünür. Politika
+düşerse hiçbir dosya yazılmaz; kapı ihlali
 DÜZELTMEZ. True-peak sınırlama programın kendi kararıdır (`master.limiter`,
 isteğe bağlı): kapı onu ne açar ne de onun yerine sinyali ezer. Manifest'siz ya da başka işe ait
 bir dosyanın üzerine yazılmaz. `tests/governance/publishPath.test.ts` aktif

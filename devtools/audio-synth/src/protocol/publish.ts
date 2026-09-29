@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { evaluateCharacterPolicy } from '../analysis/character';
 import {
   ASSET_CLASS_POLICIES,
@@ -46,7 +46,7 @@ import {
   type Sha256,
 } from './canonical';
 import { ProtocolError } from './errors';
-import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
+import { commitFiles, readJsonFile, resolveInside, withLock, writeStaged } from './fs';
 import {
   advance,
   artifactFile,
@@ -189,6 +189,9 @@ function checkRuntime(
     throw new ProtocolError('destination', 'hedef loop beyan etmiyor', where);
 }
 
+/** Yayın hazırlık dosyalarının depo köküne göreli dizini (git dışı). */
+export const PUBLISH_STAGING_ROOT = 'node_modules/.cache/audio-synth/publish';
+
 /** Var olan asset'i yalnız AYNI job'un aynı asset'i için yayımlanmış bir manifest sahiplenebilir. */
 function guardOverwrite(
   assetFile: string,
@@ -228,9 +231,10 @@ export interface PublishOutcome {
 
 /**
  * TEK kanonik publish kapısı. Sıra: durum zinciri → belgeler → hedef/yol →
- * yeniden render + PCM kimliği → aşamalı (staging) kodlama → kodek sonrası
- * analiz + sınıf politikası → manifest doğrulaması → iki atomik rename.
- * Herhangi bir adım düşerse asset de manifest de yazılmaz; staging silinir.
+ * önbelleksiz yeniden render + PCM kimliği → gönderilen ağaç dışında staging
+ * kodlama → kodek sonrası analiz + sınıf politikası → manifest doğrulaması →
+ * asset ve manifestin birlikte yerleşmesi (`commitFiles`). Yerleşme yarıda
+ * düşerse önceki hâller geri gelir; staging silinir.
  */
 export function publishJob(loc: JobLocation): PublishOutcome {
   return withLock(jobDir(loc), jobLabel(loc), () => {
@@ -293,10 +297,13 @@ export function publishJob(loc: JobLocation): PublishOutcome {
       );
     }
     const assetClass = policyClassOf(job.kind, programDocument, pathClass);
+    // Yayındaki PCM kimliği bağımsız bir render'dan gelir; önbellek ilk
+    // render'ın yazdığını geri okuyup denetimi kendi kendine doğrulatırdı.
     const rendered = renderForKind(job.kind, programDocument, {
       seed: record.seed,
       samples: repoSampleResolver(loc.repoRoot),
       quality: 'final',
+      cache: null,
     });
     const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
     if (pcmHash !== record.pcm.hash) {
@@ -316,8 +323,13 @@ export function publishJob(loc: JobLocation): PublishOutcome {
     const quality = encodeQualityOf(assetClass);
     const toolchain = readEncoderToolchain(quality);
     const revision = sourceRevision(loc.repoRoot);
-    mkdirSync(dirname(assetFile), { recursive: true });
-    const staging = join(dirname(assetFile), `.tmp-publish-${process.pid}-${Date.now()}.ogg`);
+    // Hazırlık dosyaları hedef paketin gönderilen ağacı dışında, aynı depo
+    // dosya sisteminde durur: yarım kalan yayın build'e girmez.
+    const stagingDir = join(loc.repoRoot, PUBLISH_STAGING_ROOT);
+    mkdirSync(stagingDir, { recursive: true });
+    const stagingId = `${process.pid}-${Date.now()}`;
+    const staging = join(stagingDir, `.tmp-publish-${stagingId}.ogg`);
+    const manifestStaging = join(stagingDir, `.tmp-publish-${stagingId}.json`);
     try {
       const encoded = encodeAndMeasure(staging, rendered, quality);
       const verdict = evaluateAssetPolicy(measurementOf(encoded.report), assetClass);
@@ -446,8 +458,11 @@ export function publishJob(loc: JobLocation): PublishOutcome {
         ...(derivation ? { derivation } : {}),
       };
       asProtocol('manifest', () => validateManifest(JSON.parse(canonicalJson(manifest))));
-      renameSync(staging, assetFile);
-      writeFileAtomic(manifestFile, prettyCanonicalJson(manifest));
+      writeStaged(manifestStaging, prettyCanonicalJson(manifest));
+      commitFiles([
+        { staged: staging, target: assetFile },
+        { staged: manifestStaging, target: manifestFile },
+      ]);
       saveJob(
         loc,
         advance(job, 'published', {
@@ -457,6 +472,7 @@ export function publishJob(loc: JobLocation): PublishOutcome {
       return { manifestPath: destination.manifestPath, manifest };
     } finally {
       rmSync(staging, { force: true });
+      rmSync(manifestStaging, { force: true });
     }
   });
 }

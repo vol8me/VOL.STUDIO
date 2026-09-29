@@ -3511,7 +3511,6 @@ dependencies = [
  "libc",
  "serde",
  "serde_json",
- "signal-hook",
  "tauri",
  "tauri-plugin",
 ]
@@ -4120,6 +4119,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
+ "signal-hook",
  "tauri",
  "tauri-plugin-log",
 ]

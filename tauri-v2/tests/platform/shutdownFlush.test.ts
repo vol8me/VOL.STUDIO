@@ -42,7 +42,7 @@ describe('registerShutdownFlush', () => {
     fakes.isTauri.mockReturnValue(false);
   });
 
-  it('bütün kancalar bitmeden flush_done göndermez ve geç kurulan dinleyiciyi temizler', async () => {
+  it('bütün kancalar bitmeden vol_flush_done göndermez ve geç kurulan dinleyiciyi temizler', async () => {
     const handlers: Array<() => void> = [];
     let finish: (() => void) | undefined;
     const unlisten = vi.fn();
@@ -77,18 +77,16 @@ describe('registerShutdownFlush', () => {
     expect(fakes.listen).not.toHaveBeenCalled();
   });
 
-  it('varsayılan probla dinler ve kancalar bitince flush_done gönderir', async () => {
+  it('varsayılan probla dinler ve kancalar bitince vol_flush_done gönderir', async () => {
     fakes.isTauri.mockReturnValue(true);
     const stop = registerShutdownFlush(() => undefined);
     await vi.waitFor(() => expect(fakes.handlers).toHaveLength(1));
     fakes.handlers[0]();
-    await vi.waitFor(() =>
-      expect(fakes.invoke).toHaveBeenCalledWith('plugin:vol-diagnostics|flush_done'),
-    );
+    await vi.waitFor(() => expect(fakes.invoke).toHaveBeenCalledWith('vol_flush_done'));
     stop();
   });
 
-  it('flush_done reddedilirse kapanış sessizce sürer', async () => {
+  it('vol_flush_done reddedilirse kapanış sessizce sürer', async () => {
     fakes.isTauri.mockReturnValue(true);
     fakes.invoke.mockRejectedValue(new Error('izleyici yok'));
     const stop = registerShutdownFlush(() => undefined);
@@ -110,7 +108,7 @@ describe('registerShutdownFlush', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
-  it('vol:terminate gelince kancayi calistirip flush_done bildirir', async () => {
+  it('vol:terminate gelince kancayi calistirip vol_flush_done bildirir', async () => {
     let handler: (() => void) | undefined;
     const p: ShutdownFlushProbe = {
       isTauri: () => true,
@@ -124,12 +122,10 @@ describe('registerShutdownFlush', () => {
     registerShutdownFlush(hook, p);
     handler?.();
     await vi.waitFor(() => expect(hook).toHaveBeenCalled());
-    await vi.waitFor(() =>
-      expect(p.invoke).toHaveBeenCalledWith('plugin:vol-diagnostics|flush_done'),
-    );
+    await vi.waitFor(() => expect(p.invoke).toHaveBeenCalledWith('vol_flush_done'));
   });
 
-  it('kanca firlatsa bile flush_done yine bildirilir', async () => {
+  it('kanca firlatsa bile vol_flush_done yine bildirilir', async () => {
     let handler: (() => void) | undefined;
     const p: ShutdownFlushProbe = {
       isTauri: () => true,
@@ -141,8 +137,6 @@ describe('registerShutdownFlush', () => {
     };
     registerShutdownFlush(() => Promise.reject(new Error('kayit hatasi')), p);
     handler?.();
-    await vi.waitFor(() =>
-      expect(p.invoke).toHaveBeenCalledWith('plugin:vol-diagnostics|flush_done'),
-    );
+    await vi.waitFor(() => expect(p.invoke).toHaveBeenCalledWith('vol_flush_done'));
   });
 });

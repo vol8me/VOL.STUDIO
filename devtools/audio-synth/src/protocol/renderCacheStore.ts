@@ -55,10 +55,14 @@ function sourceFiles(root: string): string[] {
 
 let fingerprint: string | null = null;
 
-/** Render'ı etkileyebilecek kaynak ağacının (audio-synth + CORE) özeti. */
+/**
+ * Render'ı etkileyebilecek her şeyin özeti: kaynak ağacı (audio-synth + CORE),
+ * Node/V8 sürümü ve mimari (`Math` sonuçları motor sürümüne bağlıdır).
+ */
 export function codeFingerprint(): string {
   if (fingerprint) return fingerprint;
   const hash = createHash('sha256');
+  hash.update(`${process.version}\0${process.arch}\0`);
   for (const root of SOURCE_ROOTS) {
     for (const file of sourceFiles(root)) {
       hash.update(relative(root, file));
@@ -68,6 +72,25 @@ export function codeFingerprint(): string {
   }
   fingerprint = hash.digest('hex').slice(0, 16);
   return fingerprint;
+}
+
+/** Başka parmak izli dizin ve yarım `.tmp-` dosyası bu süre dokunulmamışsa bayattır. */
+const STALE_DIR_MS = 10 * 60 * 1000;
+
+function safeEntries(dir: string): string[] {
+  try {
+    return readdirSync(dir);
+  } catch {
+    return [];
+  }
+}
+
+function olderThan(path: string, ms: number): boolean {
+  try {
+    return Date.now() - statSync(path).mtimeMs > ms;
+  } catch {
+    return false;
+  }
 }
 
 let tempCounter = 0;
@@ -129,11 +152,12 @@ export class DiskRenderCache implements RenderCache {
     private readonly options: DiskCacheOptions = DEFAULT_DISK_CACHE,
   ) {
     this.dir = join(root, codeFingerprint());
-    if (existsSync(root)) {
-      for (const stale of readdirSync(root)) {
-        if (stale !== codeFingerprint())
-          rmSync(join(root, stale), { recursive: true, force: true });
-      }
+    // Başka parmak izli dizin ancak bir süredir dokunulmamışsa silinir: aynı anda
+    // farklı kodla koşan ikinci süreç (vitest + CLI) kendi dizinini kaybetmez.
+    for (const stale of safeEntries(root)) {
+      if (stale === codeFingerprint()) continue;
+      const path = join(root, stale);
+      if (olderThan(path, STALE_DIR_MS)) rmSync(path, { recursive: true, force: true });
     }
   }
 
@@ -168,6 +192,7 @@ export class DiskRenderCache implements RenderCache {
     return channels;
   }
 
+  /** En-iyi-çaba: disk hatası (dolu disk, yarışan silme) render'ı düşürmez, sayılır. */
   write(key: Sha256, channels: readonly Float32Array[]): void {
     const size = channelBytes(channels);
     if (size > this.options.maxEntryBytes) {
@@ -176,22 +201,37 @@ export class DiskRenderCache implements RenderCache {
     }
     const file = this.fileOf(key);
     if (existsSync(file)) return;
-    this.bytes ??= this.scan();
-    writeQuick(file, encode(channels));
-    this.stats.writes++;
-    this.bytes += size + HEADER_BYTES;
-    if (this.bytes > this.options.maxBytes) this.evict();
+    try {
+      this.bytes ??= this.scan();
+      writeQuick(file, encode(channels));
+      this.stats.writes++;
+      this.bytes += size + HEADER_BYTES;
+      if (this.bytes > this.options.maxBytes) this.evict();
+    } catch {
+      this.stats.failures++;
+    }
   }
 
+  /** Girdiler; yarım kalmış eski `.tmp-` dosyaları bu tarama sırasında silinir. */
   private entries(): { file: string; size: number; mtime: number }[] {
     if (!existsSync(this.dir)) return [];
-    return readdirSync(this.dir, { recursive: true, withFileTypes: true })
-      .filter((entry) => entry.isFile() && entry.name.endsWith('.f32'))
-      .map((entry) => {
-        const file = join(entry.parentPath, entry.name);
-        const stat = statSync(file);
-        return { file, size: stat.size, mtime: stat.mtimeMs };
-      });
+    const found: { file: string; size: number; mtime: number }[] = [];
+    for (const entry of readdirSync(this.dir, { recursive: true, withFileTypes: true })) {
+      if (!entry.isFile()) continue;
+      const file = join(entry.parentPath, entry.name);
+      let stat;
+      try {
+        stat = statSync(file);
+      } catch {
+        continue;
+      }
+      if (entry.name.includes('.tmp-')) {
+        if (Date.now() - stat.mtimeMs > STALE_DIR_MS) rmSync(file, { force: true });
+        continue;
+      }
+      if (entry.name.endsWith('.f32')) found.push({ file, size: stat.size, mtime: stat.mtimeMs });
+    }
+    return found;
   }
 
   private scan(): number {

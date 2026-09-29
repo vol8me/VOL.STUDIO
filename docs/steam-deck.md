@@ -251,14 +251,20 @@ kesilir. Steamworks'te uyanma bildirimi `AppResumingFromSuspend_t`'dir.
 **Kararlar:**
 
 - **Atomik yazıcı** (`tauri-v2/src-tauri/src/store.rs`): geçici dosya →
-  `fsync` → yedek değişimi → `rename` → dizin `fsync`. `tauri-plugin-store`
-  `save()`'i doğrudan `fs::write` yaptığı için kullanılmaz; `TauriStoreAdapter`
-  kabuğun `vol_store_read`/`vol_store_write` komutlarını kullanır.
-- **Kurtarma:** güncel dosya bozuksa `.bak` okunur ve `onRecovered` kancası
-  çağrılır; ikisi de bozuksa okuma hata verir, boş kayıt yutturulmaz.
-- **Boşaltma:** Diagnostics eklentisi SIGTERM/SIGINT/SIGHUP'ı yakalayıp
+  `fsync` → güncel kayıt `.bak` olarak bağlanır → geçici dosya güncelin
+  üstüne `rename` → (Unix'te) dizin `fsync`; güncel dosya hiçbir anda diskten
+  kalkmaz. Disk işi ana iş parçacığı dışında, ad başına sırayla koşar.
+  `tauri-plugin-store` `save()`'i doğrudan `fs::write` yaptığı için
+  kullanılmaz; `TauriStoreAdapter` kabuğun `vol_store_read`/`vol_store_write`
+  komutlarını kullanır.
+- **Kurtarma:** güncel dosya eksik ya da bozuksa tam geçici dosya ya da `.bak`
+  okunur (`recovered`); hiçbiri okunamazsa bozuk dosyalar `.corrupt-<zaman>`
+  adıyla karantinaya alınır ve kayıt boş başlar (`reset`). İkisi de
+  `createScopedStores(gameId, { onIntegrity })` ile tüketiciye bildirilir.
+- **Boşaltma:** paylaşılan kabuk SIGTERM/SIGINT/SIGHUP'ı her kipte yakalayıp
   `vol:terminate` yayınlar; JS bütün `registerShutdownFlush` kancaları bitince
-  tek `flush_done` gönderir (sınır 1,5 sn). SIGKILL'e karşı güvence
+  `vol_flush_done` gönderir (sınır 1,5 sn). Çıkış olağan olay yolundan
+  (haptik durdurma dahil) 128+sinyal koduyla yapılır. SIGKILL'e karşı güvence
   atomikliktir. logind `PrepareForSleep` aboneliği yoktur.
 - **Kapsamlar:** `synced` (ilerleme; gerçek App ID'de Auto-Cloud adayı) ve
   `device` (grafik, pencere, cihaz ses ayarları, dil; Cloud'a konmaz) ayrı

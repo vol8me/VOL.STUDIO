@@ -136,6 +136,7 @@ where
             exit_application,
             window_fullscreen_state,
             session_kind,
+            shutdown::vol_flush_done,
             store::vol_store_read,
             store::vol_store_write,
             haptics::vol_haptics_status,
@@ -160,6 +161,7 @@ where
         // bunu kendiliginden alir (bkz. native_menus.rs).
         .plugin(native_menus::plugin())
         .setup(|app| {
+            shutdown::watch_signals(app.handle());
             #[cfg(target_os = "linux")]
             if is_gamescope() {
                 use tauri::Manager;
@@ -208,6 +210,7 @@ where
 /// NVIDIA'nın tek başına sürdüğü yerel Wayland; başka her yerde güvenli yol.
 mod haptics;
 mod native_menus;
+mod shutdown;
 mod store;
 
 #[cfg(target_os = "linux")]

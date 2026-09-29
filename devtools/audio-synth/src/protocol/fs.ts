@@ -1,7 +1,9 @@
+import { randomUUID } from 'node:crypto';
 import {
   closeSync,
   existsSync,
   fsyncSync,
+  linkSync,
   lstatSync,
   mkdirSync,
   openSync,
@@ -9,6 +11,8 @@ import {
   realpathSync,
   renameSync,
   rmSync,
+  statSync,
+  writeFileSync,
   writeSync,
 } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -104,6 +108,59 @@ export function writeFileAtomic(target: string, data: string | Uint8Array): void
   }
 }
 
+/** Hazırlık dosyasını fsync'leyerek yazar; yerine koyma çağıranın işidir. */
+export function writeStaged(path: string, data: string | Uint8Array): void {
+  mkdirSync(dirname(path), { recursive: true });
+  const fd = openSync(path, 'wx');
+  try {
+    writeSync(fd, typeof data === 'string' ? Buffer.from(data, 'utf8') : data);
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
+}
+
+export interface StagedFile {
+  readonly staged: string;
+  readonly target: string;
+}
+
+/**
+ * Hazırlanmış dosyaları sırayla yerine koyar. Biri düşerse önceden
+ * yerleşenler eski hâllerine döner (eskisi yoksa silinir); böylece asset ile
+ * manifest birbirinden ayrışmış hâlde kalmaz. Eski hâller yerleştirmeden önce
+ * sabit bağla ayrılır ve iş bitince silinir.
+ */
+export function commitFiles(files: readonly StagedFile[]): void {
+  const previous: (string | null)[] = [];
+  const placed: number[] = [];
+  try {
+    for (const { target } of files) {
+      if (!existsSync(target)) {
+        previous.push(null);
+        continue;
+      }
+      const keep = join(dirname(target), `.tmp-prev-${process.pid}-${randomUUID()}`);
+      linkSync(target, keep);
+      previous.push(keep);
+    }
+    files.forEach(({ staged, target }, index) => {
+      mkdirSync(dirname(target), { recursive: true });
+      renameSync(staged, target);
+      placed.push(index);
+    });
+  } catch (error) {
+    for (const index of placed.reverse()) {
+      const keep = previous[index];
+      if (keep) renameSync(keep, files[index].target);
+      else rmSync(files[index].target, { force: true });
+    }
+    throw error;
+  } finally {
+    for (const keep of previous) if (keep) rmSync(keep, { force: true });
+  }
+}
+
 export function readJsonFile(path: string, label: string): unknown {
   let text: string;
   try {
@@ -118,6 +175,9 @@ export function readJsonFile(path: string, label: string): unknown {
   }
 }
 
+/** İçeriği okunamayan kilit bu yaştan sonra bayat sayılır (yazım anında ölen süreç). */
+export const LOCK_UNREADABLE_STALE_MS = 60_000;
+
 function lockOwnerAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
@@ -127,28 +187,80 @@ function lockOwnerAlive(pid: number): boolean {
   }
 }
 
+/** Kilidin sahibi; dosya yoksa `null`, içerik geçersizse `NaN`. */
+function readOwner(lock: string): number | null {
+  try {
+    const text = readFileSync(lock, 'utf8').trim();
+    return /^\d+$/.test(text) ? Number(text) : Number.NaN;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
+function isStale(lock: string, owner: number): boolean {
+  if (Number.isInteger(owner) && owner > 0) return !lockOwnerAlive(owner);
+  try {
+    return Date.now() - statSync(lock).mtimeMs > LOCK_UNREADABLE_STALE_MS;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Tek yazıcı kilidi: `wx` ile oluşturulan kilit dosyası sahibinin pid'ini
- * taşır. Sahibi yaşamıyorsa (çöken süreç) kilit bayat sayılır ve alınır;
- * yaşıyorsa ikinci yazıcı `locked` ile durur.
+ * Tek yazıcı kilidi. Kilit dosyası sahibinin pid'iyle önce geçici adda yazılır
+ * ve `link` ile atomik yaratılır; hiçbir okuyucu pid'siz kilit görmez. Bayat
+ * kilit tekil bir ada taşınıp içeriği doğrulanarak silinir, böylece iki
+ * temizleyici birbirinin yeni kilidini silemez. Yaşayan ya da okunamayan
+ * (yeni) kilit ikinci yazıcıyı `locked` ile durdurur.
  */
 function acquireLock(lock: string, label: string): void {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const fd = openSync(lock, 'wx');
-      writeSync(fd, String(process.pid));
-      closeSync(fd);
-      return;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+  const dir = dirname(lock);
+  const staged = join(dir, `.tmp-lock-${process.pid}-${randomUUID()}`);
+  writeFileSync(staged, String(process.pid), { flag: 'wx' });
+  try {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        linkSync(staged, lock);
+        return;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      }
+      const owner = readOwner(lock);
+      if (owner === null) continue;
+      if (!isStale(lock, owner)) {
+        throw new ProtocolError(
+          'locked',
+          Number.isNaN(owner)
+            ? 'kilit yazılıyor ya da okunamıyor'
+            : `başka bir süreç (pid ${owner}) bu işi yazıyor`,
+          label,
+        );
+      }
+      const moved = join(dir, `.tmp-stale-lock-${process.pid}-${randomUUID()}`);
+      try {
+        renameSync(lock, moved);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue;
+        throw error;
+      }
+      const taken = readOwner(moved);
+      if (taken === owner || (Number.isNaN(taken) && Number.isNaN(owner))) {
+        rmSync(moved, { force: true });
+        continue;
+      }
+      // Taşınan dosya arada alınmış taze bir kilit: yerine bağlanır, sıra onundur.
+      try {
+        linkSync(moved, lock);
+      } finally {
+        rmSync(moved, { force: true });
+      }
+      throw new ProtocolError('locked', `başka bir süreç (pid ${taken}) bu işi yazıyor`, label);
     }
-    const owner = Number(readFileSync(lock, 'utf8'));
-    if (Number.isInteger(owner) && owner > 0 && lockOwnerAlive(owner)) {
-      throw new ProtocolError('locked', `başka bir süreç (pid ${owner}) bu işi yazıyor`, label);
-    }
-    rmSync(lock, { force: true });
+    throw new ProtocolError('locked', 'kilit alınamadı', label);
+  } finally {
+    rmSync(staged, { force: true });
   }
-  throw new ProtocolError('locked', 'kilit alınamadı', label);
 }
 
 export function withLock<T>(dir: string, label: string, fn: () => T): T {
@@ -158,6 +270,7 @@ export function withLock<T>(dir: string, label: string, fn: () => T): T {
   try {
     return fn();
   } finally {
-    rmSync(lock, { force: true });
+    // Yalnız kendi kilidini bırakır.
+    if (readOwner(lock) === process.pid) rmSync(lock, { force: true });
   }
 }
