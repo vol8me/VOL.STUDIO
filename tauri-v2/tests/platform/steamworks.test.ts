@@ -12,6 +12,8 @@ import {
   showSteamBindingPanel,
   showSteamFloatingKeyboard,
   steamActionGlyph,
+  steamActionState,
+  steamVibrate,
   steamworksGlyphContext,
   steamworksStatus,
   type SteamworksProbe,
@@ -408,6 +410,20 @@ describe('glif ipucu ve overlay', () => {
 });
 
 describe('Steam Input ve kayan klavye komutları', () => {
+  it('titreşim hızı 0–1 aralığından Steam ölçeğine kısılır; aksiyon durumu okunur', async () => {
+    const state = { digital: [{ name: 'fire', pressed: true, active: true }], analog: [] };
+    const { probe } = fakeProbe({ vibrate: 1, action_state: state });
+    const restore = afterEach(probe);
+
+    expect(await steamVibrate(0.5, 2)).toBe(1);
+    expect(probe.invoke).toHaveBeenCalledWith('vibrate', { left: 32768, right: 65535 });
+    await steamVibrate(-1, 0);
+    expect(probe.invoke).toHaveBeenCalledWith('vibrate', { left: 0, right: 0 });
+    expect(await steamActionState(['fire'])).toEqual(state);
+    expect(probe.invoke).toHaveBeenCalledWith('action_state', { digital: ['fire'], analog: [] });
+    restore();
+  });
+
   it('manifest, aksiyon seti, glif, panel ve klavye komutlarına çevrilir', async () => {
     const { probe } = fakeProbe({
       set_input_manifest: true,

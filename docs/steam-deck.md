@@ -318,6 +318,10 @@ derlenir (komutlar stub döner, `status.compiled:false`); sonda feature'ı
 - `ShowGamepadTextInput` `TextEntryProvider` sözleşmesine oturur (sonuç
   `vol-steamworks:text-input` olayıyla; overlay yoksa yerel klavye).
   `ShowFloatingGamepadTextInput` metni odaklı alana doğrudan yazar.
+- `steamVibrate(sol, sağ)` bağlı kollara Steam Input titreşimi gönderir (SDK
+  `TriggerVibration`; sarmalayıcıda olmadığı için `raw-bindings`);
+  `steamActionState` ilk kolun dijital/analog aksiyon değerlerini okur. İkisi
+  de cihazda denenmedi.
 - `GameOverlayActivated` JS'e `vol-steamworks:overlay` olarak taşınır;
   duraklatma kararı oyunundur.
 - `init_app` App ID'yi env'e yazar, `steam_appid.txt` gerekmez.

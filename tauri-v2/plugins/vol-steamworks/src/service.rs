@@ -56,6 +56,32 @@ pub struct GlyphOrigin {
     pub png_base64: Option<String>,
 }
 
+/// İlk bağlı kolun aksiyon durumu; kol yoksa listeler boştur.
+#[derive(Debug, Clone, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ActionState {
+    pub digital: Vec<DigitalAction>,
+    pub analog: Vec<AnalogAction>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DigitalAction {
+    pub name: String,
+    pub pressed: bool,
+    /// Aksiyon etkin sette bağlı mı.
+    pub active: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalogAction {
+    pub name: String,
+    pub x: f32,
+    pub y: f32,
+    pub active: bool,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudFileInfo {
@@ -289,6 +315,75 @@ pub(crate) mod imp {
                             .into(),
                     })
                     .collect())
+            }
+
+            /// Steam Input titreşimi: bağlı bütün kollara iki motor hızı
+            /// (0–65535); 0,0 durdurur. `steamworks` 0.13 sarmalayıcısı bu
+            /// çağrıyı açmadığı için SDK fonksiyonu doğrudan çağrılır.
+            pub fn vibrate(&self, left: u16, right: u16) -> Result<u32, String> {
+                let client = self.client()?;
+                let input = client.input();
+                input.run_frame();
+                let controllers = input.get_connected_controllers();
+                // SAFETY: istemci ayaktayken SteamAPI başlatılmıştır ve arayüz
+                // işaretçisi süreç boyunca geçerlidir.
+                let raw = unsafe { steamworks::sys::SteamAPI_SteamInput_v006() };
+                for handle in &controllers {
+                    unsafe {
+                        steamworks::sys::SteamAPI_ISteamInput_TriggerVibration(
+                            raw, *handle, left, right,
+                        );
+                    }
+                }
+                Ok(controllers.len() as u32)
+            }
+
+            /// İlk bağlı kolun dijital ve analog aksiyon değerleri.
+            pub fn action_state(
+                &self,
+                digital: &[String],
+                analog: &[String],
+            ) -> Result<ActionState, String> {
+                if !digital.iter().chain(analog).all(|name| valid_name(name)) {
+                    return Err("geçersiz aksiyon adı".into());
+                }
+                let client = self.client()?;
+                let input = client.input();
+                input.run_frame();
+                let Some(&handle) = input.get_connected_controllers().first() else {
+                    return Ok(ActionState::default());
+                };
+                Ok(ActionState {
+                    digital: digital
+                        .iter()
+                        .map(|name| {
+                            let data = input.get_digital_action_data(
+                                handle,
+                                input.get_digital_action_handle(name),
+                            );
+                            DigitalAction {
+                                name: name.clone(),
+                                pressed: data.bState,
+                                active: data.bActive,
+                            }
+                        })
+                        .collect(),
+                    analog: analog
+                        .iter()
+                        .map(|name| {
+                            let data = input.get_analog_action_data(
+                                handle,
+                                input.get_analog_action_handle(name),
+                            );
+                            AnalogAction {
+                                name: name.clone(),
+                                x: data.x,
+                                y: data.y,
+                                active: data.bActive,
+                            }
+                        })
+                        .collect(),
+                })
             }
 
             /// Dijital aksiyonun bağlı olduğu origin'ler ve her origin'in
@@ -558,6 +653,16 @@ pub(crate) mod imp {
                 self.unavailable()
             }
             pub fn cloud_write(&self, _n: &str, _d: &str) -> Result<bool, String> {
+                self.unavailable()
+            }
+            pub fn vibrate(&self, _left: u16, _right: u16) -> Result<u32, String> {
+                self.unavailable()
+            }
+            pub fn action_state(
+                &self,
+                _d: &[String],
+                _a: &[String],
+            ) -> Result<ActionState, String> {
                 self.unavailable()
             }
             pub fn cloud_delete(&self, _n: &str) -> Result<bool, String> {

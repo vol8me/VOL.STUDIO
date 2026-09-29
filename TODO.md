@@ -25,8 +25,6 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       yetenekler, başlatıcı, masaüstü şablonu, Steam Input manifestosu,
       1280×800 pencere, kayıt kapsamları ve oturuma göre grafik varsayılanı.
       Kapanır: iskeletten kurulan paket `pnpm signoff`u ilk denemede geçer.
-- [ ] **[P2] SD15 — Steam Input titreşimi ve aksiyon verisi.** Kapanır:
-      eklenti titreşim ve analog/dijital aksiyon okur; testli.
 - [ ] **[P2] S2 — audio-synth sertleştirme.** Önbellek, paralel işçi, manifest
       ve analiz yolundaki bulgular.
 - [ ] **[P2] S3 — Kalıntı.** Katalog politikası kapıya bağlanır; tüketicisiz
@@ -94,6 +92,7 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 
 ## Kapatılanlar
 
+- [x] **SD15 — Steam Input titreşimi ve aksiyon verisi** (cihazda denenmedi).
 - [x] **SD14 — `SteamVirtualGamepadInfo` glif köprüsü** (tek kolda; yuva sırası D0'da).
 - [x] **SD (ilk dilim) — Deck kol ve kabuk boşlukları.** Ekran klavyesinde
       odak kaybı ve iptal sözleşmesi, parola maskesi ve alan sınırı, Big

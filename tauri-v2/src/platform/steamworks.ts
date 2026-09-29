@@ -117,6 +117,42 @@ export async function steamControllers(): Promise<SteamControllerInfo[]> {
   return (await probe.invoke('controllers')) as SteamControllerInfo[];
 }
 
+/** İlk bağlı kolun aksiyon değerleri; kol yoksa listeler boştur. */
+export interface SteamActionState {
+  readonly digital: readonly {
+    readonly name: string;
+    readonly pressed: boolean;
+    readonly active: boolean;
+  }[];
+  readonly analog: readonly {
+    readonly name: string;
+    readonly x: number;
+    readonly y: number;
+    readonly active: boolean;
+  }[];
+}
+
+/** Motor hızı 0–1 aralığından Steam'in 0–65535 ölçeğine. */
+function motorSpeed(value: number): number {
+  return Math.round(Math.min(1, Math.max(0, value)) * 65535);
+}
+
+/** Steam Input titreşimi bağlı bütün kollara; (0, 0) durdurur. Kaç kola gittiği döner. */
+export async function steamVibrate(left: number, right: number): Promise<number> {
+  return (await probe.invoke('vibrate', {
+    left: motorSpeed(left),
+    right: motorSpeed(right),
+  })) as number;
+}
+
+/** Adı verilen dijital ve analog aksiyonların anlık değeri. */
+export async function steamActionState(
+  digital: readonly string[],
+  analog: readonly string[] = [],
+): Promise<SteamActionState> {
+  return (await probe.invoke('action_state', { digital, analog })) as SteamActionState;
+}
+
 /** Dijital aksiyonun origin'leri + istemci glif PNG'leri (base64). */
 export async function steamActionGlyph(
   actionSet: string,

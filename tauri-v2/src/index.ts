@@ -68,11 +68,14 @@ export {
   showSteamBindingPanel,
   showSteamFloatingKeyboard,
   steamActionGlyph,
+  steamActionState,
   steamControllers,
+  steamVibrate,
   steamworksGlyphContext,
   steamworksStatus,
 } from './platform/steamworks';
 export type {
+  SteamActionState,
   SteamControllerInfo,
   SteamGlyphOrigin,
   SteamworksProbe,

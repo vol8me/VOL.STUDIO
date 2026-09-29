@@ -1,6 +1,6 @@
 ## Default Permission
 
-İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, metin girişi, bağlama paneli ve Steam Cloud dosyaları.
+İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, titreşim, aksiyon verisi, metin girişi, bağlama paneli ve Steam Cloud dosyaları.
 
 #### This default permission set includes the following:
 
@@ -12,6 +12,8 @@
 - `allow-show-text-input`
 - `allow-show-floating-input`
 - `allow-show-binding-panel`
+- `allow-vibrate`
+- `allow-action-state`
 - `allow-cloud-list`
 - `allow-cloud-read`
 - `allow-cloud-write`
@@ -48,6 +50,32 @@ Enables the action_glyph command without any pre-configured scope.
 <td>
 
 Denies the action_glyph command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vol-steamworks:allow-action-state`
+
+</td>
+<td>
+
+Enables the action_state command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vol-steamworks:deny-action-state`
+
+</td>
+<td>
+
+Denies the action_state command without any pre-configured scope.
 
 </td>
 </tr>
@@ -334,6 +362,32 @@ Enables the status command without any pre-configured scope.
 <td>
 
 Denies the status command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vol-steamworks:allow-vibrate`
+
+</td>
+<td>
+
+Enables the vibrate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vol-steamworks:deny-vibrate`
+
+</td>
+<td>
+
+Denies the vibrate command without any pre-configured scope.
 
 </td>
 </tr>

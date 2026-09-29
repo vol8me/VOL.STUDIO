@@ -1,7 +1,7 @@
 "$schema" = "schemas/schema.json"
 
 [default]
-description = "İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, metin girişi, bağlama paneli ve Steam Cloud dosyaları."
+description = "İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, titreşim, aksiyon verisi, metin girişi, bağlama paneli ve Steam Cloud dosyaları."
 permissions = [
   "allow-status",
   "allow-set-input-manifest",
@@ -11,6 +11,8 @@ permissions = [
   "allow-show-text-input",
   "allow-show-floating-input",
   "allow-show-binding-panel",
+  "allow-vibrate",
+  "allow-action-state",
   "allow-cloud-list",
   "allow-cloud-read",
   "allow-cloud-write",

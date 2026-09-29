@@ -21,7 +21,9 @@
 mod b64;
 mod service;
 
-pub use service::{CloudFileInfo, ControllerInfo, GlyphOrigin, Status};
+pub use service::{
+    ActionState, AnalogAction, CloudFileInfo, ControllerInfo, DigitalAction, GlyphOrigin, Status,
+};
 
 use serde::Serialize;
 use service::imp::Service;
@@ -132,6 +134,20 @@ fn show_binding_panel<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> {
 }
 
 #[tauri::command]
+fn vibrate<R: Runtime>(app: AppHandle<R>, left: u16, right: u16) -> Result<u32, Error> {
+    Ok(service(&app).vibrate(left, right)?)
+}
+
+#[tauri::command]
+fn action_state<R: Runtime>(
+    app: AppHandle<R>,
+    digital: Vec<String>,
+    analog: Vec<String>,
+) -> Result<ActionState, Error> {
+    Ok(service(&app).action_state(&digital, &analog)?)
+}
+
+#[tauri::command]
 fn cloud_list<R: Runtime>(app: AppHandle<R>) -> Result<Vec<CloudFileInfo>, Error> {
     service(&app).cloud_list().map_err(Error)
 }
@@ -180,6 +196,8 @@ pub fn init<R: Runtime>(app_id: u32, manifest_resource: Option<&str>) -> TauriPl
             show_text_input,
             show_floating_input,
             show_binding_panel,
+            vibrate,
+            action_state,
             cloud_list,
             cloud_read,
             cloud_write,

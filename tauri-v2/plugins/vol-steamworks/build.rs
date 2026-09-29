@@ -7,6 +7,8 @@ const COMMANDS: &[&str] = &[
     "show_text_input",
     "show_floating_input",
     "show_binding_panel",
+    "vibrate",
+    "action_state",
     "cloud_list",
     "cloud_read",
     "cloud_write",

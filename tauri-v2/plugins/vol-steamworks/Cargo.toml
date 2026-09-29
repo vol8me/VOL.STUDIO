@@ -31,3 +31,5 @@ steamworks = ["dep:steamworks"]
 [dependencies.steamworks]
 version = "0.13"
 optional = true
+# raw-bindings: titreşim (TriggerVibration) sarmalayıcıda yok, SDK çağrısı gerekir.
+features = ["raw-bindings"]
