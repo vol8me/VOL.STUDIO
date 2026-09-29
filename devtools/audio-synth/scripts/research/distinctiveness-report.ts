@@ -12,26 +12,20 @@
  * reddeder. Çapraz sınama yalnız mekanik kriterleri (`CHECK_KINDS`)
  * kullanır; kodek ve müzik-özgü kriterler yabancı render'a uygulanmaz.
  */
-import { CHECK_KINDS, evaluateChecks, type MechanicalCheckV1 } from '../src/analysis/checks.js';
-import { analyzeAudio } from '../src/analysis/report.js';
-import { materialize } from '../src/program/dimensions.js';
-import { renderProgram } from '../src/program/render.js';
-import { withRenderSession } from '../src/engine/session.js';
-import { REFERENCE_MIX_ID } from '../src/music/stem.js';
-import type { BenchmarkTaskV1 } from '../src/protocol/index.js';
-import { loadBenchmarkTasks } from '../src/protocol/benchmark.js';
-import { checkMusic } from '../src/protocol/music.js';
-import { repoRenderCache } from '../src/protocol/renderCacheStore.js';
-import { repoSampleResolver } from '../src/protocol/samples.js';
-import { findRepoRoot } from './lib/args.js';
+import { CHECK_KINDS, evaluateChecks, type MechanicalCheckV1 } from '../../src/analysis/checks.js';
+import { analyzeAudio } from '../../src/analysis/report.js';
+import { materialize } from '../../src/program/dimensions.js';
+import { renderProgram } from '../../src/program/render.js';
+import { withRenderSession } from '../../src/engine/session.js';
+import { REFERENCE_MIX_ID } from '../../src/music/stem.js';
+import type { BenchmarkTaskV1 } from '../../src/protocol/index.js';
+import { loadBenchmarkTasks } from '../../src/protocol/benchmark.js';
+import { checkMusic } from '../../src/protocol/music.js';
+import { repoRenderCache } from '../../src/protocol/renderCacheStore.js';
+import { repoSampleResolver } from '../../src/protocol/samples.js';
+import { findRepoRoot } from '../lib/args.js';
 
 const REPO = findRepoRoot(process.cwd());
-
-export interface DistinctRender {
-  readonly key: string;
-  readonly channels: Float32Array[];
-  readonly sampleRate: number;
-}
 
 export interface DistinctMatrix {
   readonly rows: readonly {

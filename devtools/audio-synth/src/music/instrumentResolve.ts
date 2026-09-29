@@ -90,7 +90,7 @@ export type ResolvedSourceV1 =
 /** Velocity yazılmamış notanın değeri; tepki bu noktada birim kazançtır. */
 export const DEFAULT_VELOCITY = 0.8;
 /** Yerleşik presetlerin velocity tepkisi (yalnız velocity YAZILDIĞINDA uygulanır). */
-export const BUILTIN_VELOCITY: VelocityResponseV1 = { rangeDb: 18, brightness: 0 };
+const BUILTIN_VELOCITY: VelocityResponseV1 = { rangeDb: 18, brightness: 0 };
 
 const RETRO_DEFAULT_ENVELOPE: RetroEnvelopeV1 = {
   attack: 0.002,
@@ -122,7 +122,7 @@ export function builtinInstrument(id: string, path = 'instrument'): ResolvedInst
   };
 }
 
-export function resolveRetro(patch: RetroPatchV1): ResolvedRetroV1 {
+function resolveRetro(patch: RetroPatchV1): ResolvedRetroV1 {
   const fields =
     patch.waveform === 'table-custom'
       ? { ...waveformFields('table-ramp-4bit'), table: patch.table ?? RETRO_TABLES['ramp-4bit'] }
@@ -218,7 +218,7 @@ function kitRange(source: InstrumentSourceV1): { lowMidi: number; highMidi: numb
   return { lowMidi: Math.min(...keys), highMidi: Math.max(...keys) };
 }
 
-export function resolveDefinition(
+function resolveDefinition(
   definition: InstrumentDefinitionV1,
   path: string,
   context: SampleContext,
@@ -318,7 +318,7 @@ export function programInstruments(program: {
 }
 
 /** Kaynak türlerinin render yüzeyi: tanım programın içindedir, sürüm kodun. */
-export function backendSurface(kind: InstrumentSourceKind): { id: string; hash: Sha256 } {
+function backendSurface(kind: InstrumentSourceKind): { id: string; hash: Sha256 } {
   const version = INSTRUMENT_BACKEND_VERSIONS[kind];
   return { id: `backend:${kind}`, hash: hashCanonical({ backend: kind, version }) };
 }
@@ -357,7 +357,7 @@ export function programInstrumentSurfaces(
   return [...ids].sort().map(recordedInstrumentSurface);
 }
 
-export function sourceKinds(source: ResolvedSourceV1): InstrumentSourceKind[] {
+function sourceKinds(source: ResolvedSourceV1): InstrumentSourceKind[] {
   return source.kind === 'layer'
     ? ['layer', ...source.layers.map((layer) => layer.source.kind)]
     : [source.kind];

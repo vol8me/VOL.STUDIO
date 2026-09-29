@@ -20,7 +20,6 @@ export const MOTIF_TRANSFORMS = [
   'diminish',
   'invert',
 ] as const;
-export type MotifTransformOp = (typeof MOTIF_TRANSFORMS)[number];
 
 export interface MotifNoteV1 {
   /** Dizi derecesi (0 = kök); oktav taşması serbesttir. */
@@ -48,7 +47,7 @@ export type MotifTransformV1 =
   | { readonly op: 'diminish'; readonly factor: number }
   | { readonly op: 'invert'; readonly axisDegree: number };
 
-export const MAX_MOTIF_NOTES = 64;
+const MAX_MOTIF_NOTES = 64;
 const MAX_DEGREE = 48;
 const MAX_BEATS = 128;
 

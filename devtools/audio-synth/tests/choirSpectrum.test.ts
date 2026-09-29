@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Presets, synthesize } from '../src/index';
+import { Presets } from '../src/index';
+import { synthesize } from '../src/engine';
 import type { SynthParams } from '../src/types';
 
 function toneEnergy(samples: Float32Array, sampleRate: number, frequency: number): number {

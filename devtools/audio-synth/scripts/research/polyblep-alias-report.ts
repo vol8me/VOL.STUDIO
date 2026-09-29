@@ -11,12 +11,12 @@
  * Deterministiktir; çıktı commit'lenmez, sınırlar yeniden ölçülmek
  * istendiğinde koşulur.
  *
- * Kullanım: tsx scripts/polyblep-alias-report.ts [--json]
+ * Kullanım: tsx scripts/research/polyblep-alias-report.ts [--json]
  */
-import { powerSpectrum } from '../src/analysis/spectrum';
-import { downsample2x } from '../src/engine/render';
-import { synthesize } from '../src/engine/synthesize';
-import { renderRetro, waveformFields, type RetroWaveform } from '../src/synthesis/retro';
+import { powerSpectrum } from '../../src/analysis/spectrum';
+import { downsample2x } from '../../src/engine/render';
+import { synthesize } from '../../src/engine/synthesize';
+import { renderRetro, waveformFields, type RetroWaveform } from '../../src/synthesis/retro';
 
 const RATE = 44100;
 

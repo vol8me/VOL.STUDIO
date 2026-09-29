@@ -64,8 +64,8 @@ export const INSTRUMENT_BACKEND_VERSIONS: Readonly<Record<InstrumentSourceKind, 
 };
 
 export const MAX_INSTRUMENTS = 16;
-export const MAX_KIT_PIECES = 32;
-export const MAX_LAYERS = 4;
+const MAX_KIT_PIECES = 32;
+const MAX_LAYERS = 4;
 
 export interface VelocityResponseV1 {
   /** Velocity 0 ile 1 arasındaki seviye farkı (dB); 0 → velocity seviyeyi değiştirmez. */

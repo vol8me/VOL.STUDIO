@@ -64,7 +64,7 @@ export interface PaletteV1 {
   readonly roles: Readonly<Partial<Record<OrchestrationRole, PaletteSlotV1>>>;
 }
 
-export const MAX_PALETTES = 8;
+const MAX_PALETTES = 8;
 
 export function validatePalettes(
   value: unknown,

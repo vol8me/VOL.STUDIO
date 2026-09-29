@@ -4,13 +4,13 @@ import { numberOf } from '../params';
 import type { EffectEntry } from '../registry';
 
 /**
- * Uzaklık ve yerleşim ilkelleri (Dalga 12): kaynağı değiştirmeden onu
+ * Uzaklık ve yerleşim ilkelleri: kaynağı değiştirmeden onu
  * uzağa ya da dar bir görüntüye taşır. İşleme katmanının (`treatment`)
  * profilleri bunlarla kurulur; bus ve master zincirinde de kullanılabilir.
  */
 const DETERMINISTIC = { stochastic: false, substreams: [] } as const;
 
-export const AIR_ABSORPTION: EffectEntry = {
+const AIR_ABSORPTION: EffectEntry = {
   id: 'effect.air-absorption',
   kind: 'effect',
   version: 1,
@@ -61,7 +61,7 @@ export const AIR_ABSORPTION: EffectEntry = {
   },
 };
 
-export const WIDTH: EffectEntry = {
+const WIDTH: EffectEntry = {
   id: 'effect.width',
   kind: 'effect',
   version: 1,

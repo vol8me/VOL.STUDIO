@@ -175,7 +175,7 @@ export function materialById(id: string): MaterialProfileV1 | undefined {
   return MATERIALS.find((m) => m.id === id);
 }
 
-export function soundSpeed(material: MaterialProfileV1): number {
+function soundSpeed(material: MaterialProfileV1): number {
   return Math.sqrt((material.youngModulusGPa * 1e9) / material.densityKgM3);
 }
 

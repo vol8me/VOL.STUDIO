@@ -7,11 +7,11 @@
  * üçgen ve kenarlı dalgaları ayrı tarar — `carrier-*` sınıfları PM'in
  * taşıyıcı kenarına etkisini ayrı ölçer (F6a kalibrasyonu).
  *
- * Kullanım: tsx scripts/fm-alias-report.ts [--json]
+ * Kullanım: tsx scripts/research/fm-alias-report.ts [--json]
  */
-import { measureFmAlias } from '../src/analysis/fmAlias';
-import { FM_ALIAS_LIMITS, assessFmAlias } from '../src/analysis/fmRisk';
-import type { FmParams } from '../src/types';
+import { measureFmAlias } from '../../src/analysis/fmAlias';
+import { FM_ALIAS_LIMITS, assessFmAlias } from '../../src/analysis/fmRisk';
+import type { FmParams } from '../../src/types';
 
 const MODULATORS = ['sine', 'triangle', 'sawtooth', 'square', 'pulse'] as const;
 const CARRIERS = ['sine', 'triangle', 'sawtooth', 'square'] as const;

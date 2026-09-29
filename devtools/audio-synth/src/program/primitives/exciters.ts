@@ -133,7 +133,7 @@ export const MEMBRANE: SourceEntry = {
   },
 };
 
-export const TURBULENCE: SourceEntry = {
+const TURBULENCE: SourceEntry = {
   id: 'exciter.turbulence',
   kind: 'exciter',
   version: 1,

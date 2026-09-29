@@ -1,16 +1,16 @@
 /**
- * R8b — mutasyon kampanyası. Her satır kritik bir iddiayı bilerek bozar ve
+ * Mutasyon kampanyası. Her satır kritik bir iddiayı bilerek bozar ve
  * ilgili test takımının KIRMIZIYA dönmesini kanıtlar: test geçerse mutant
  * "survived" sayılır (testin o iddiayı gerçekten kilitli olmadığı anlamına
  * gelir). Mutantlar yalnız bellekte değiştirilir; dosya `finally` ile
  * geri yazılır ve koşu sonunda ağaç temiz doğrulanır.
  *
- * Kullanım: tsx scripts/mutation-campaign.ts   (çıktı JSON satırları)
+ * Kullanım: tsx scripts/research/mutation-campaign.ts   (çıktı JSON satırları)
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { findRepoRoot } from './lib/args';
+import { findRepoRoot } from '../lib/args';
 
 interface Mutant {
   readonly id: string;
@@ -62,6 +62,13 @@ const MUTANTS: readonly Mutant[] = [
     file: 'src/protocol/parallel.ts',
     find: 'cache: session.cache !== null',
     replace: 'cache: true',
+    test: 'tests/protocol/parallel.test.ts',
+  },
+  {
+    id: 'worker-death-unnoticed',
+    file: 'src/protocol/parallel.ts',
+    find: '} else if (now - handle.beatAt > this.options.heartbeatStaleMs) {',
+    replace: '} else if (now < 0) {',
     test: 'tests/protocol/parallel.test.ts',
   },
   {

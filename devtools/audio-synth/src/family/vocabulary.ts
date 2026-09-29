@@ -2,7 +2,7 @@
  * Aile rol sözlüğü — KAPALI ve genel. İki grup eksen vardır:
  *
  * - Akustik roller: sesin karakteri (sertlik, ağırlık, uzunluk…).
- * - Oyun durumu eksenleri (Dalga 12): SIRALI anlam eksenleri. Oyun alanı
+ * - Oyun durumu eksenleri: SIRALI anlam eksenleri. Oyun alanı
  *   kavramı değildir: "silah şarjlı" ya da "motor yüksek devir" tüketici
  *   paketinde `energy: high`e, "yaratık yaralı" `integrity: damaged`e,
  *   "arayüz kritik uyarı" `urgency: critical`e eşlenir. Değerler sıralıdır;
@@ -12,7 +12,7 @@
  * Bu modül bilerek hiçbir şey import etmez: şema, analiz ve protokol aynı
  * sözlüğü döngüsüz okur.
  */
-export const ACOUSTIC_ROLE_AXES = {
+const ACOUSTIC_ROLE_AXES = {
   intensity: ['soft', 'medium', 'hard'],
   weight: ['light', 'medium', 'heavy'],
   length: ['short', 'long'],

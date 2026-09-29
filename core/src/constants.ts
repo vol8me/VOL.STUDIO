@@ -128,9 +128,9 @@ export const PINCH_ZOOM = {
 
 /** Teknik altyapı sabitleri. */
 export const TECH = {
-  /** FontManager font yükleme timeout (FontManager + Game.ts). */
+  /** Font yükleme süre sınırı (`FontManager`, `createVolGame`). */
   FONT_LOAD_TIMEOUT_MS: 30000,
-  /** Game.ts document.fonts.ready fallback süresi. */
+  /** `createVolGame` içinde `document.fonts.ready` için yedek süre. */
   FONT_READY_FALLBACK_MS: 5000,
   /** ViewportManager DPR fallback değeri. */
   DPR_FALLBACK: 1,

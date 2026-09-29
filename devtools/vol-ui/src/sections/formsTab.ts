@@ -12,6 +12,7 @@ import {
   CurveEditor,
   Input,
   NumberStepper,
+  OnScreenKeyboard,
   PropertyField,
   RadioGroup,
   RangeSlider,
@@ -458,6 +459,34 @@ function buildToolbarDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
+/** Kol kipinde metin alanının açtığı ekran klavyesi; sonuç ve iptal ayrı gösterilir. */
+function buildOnScreenKeyboardDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo vol-showcase-panel-demo--centered';
+
+  let value = i18next.t('volui:forms.playerNameValue');
+  const state = new Text(i18next.t('volui:forms.onScreenKeyboardValue', { value }), {
+    variant: 'muted',
+  });
+  const open = new Button(i18next.t('volui:forms.onScreenKeyboardOpen'), {
+    onClick: () => {
+      void OnScreenKeyboard.open({ value, maxLength: 16 }).then((result) => {
+        if (result.canceled) {
+          state.setContent(i18next.t('volui:forms.onScreenKeyboardCanceled', { value }));
+          return;
+        }
+        value = result.value;
+        state.setContent(i18next.t('volui:forms.onScreenKeyboardValue', { value }));
+      });
+    },
+  });
+  disposables.addDestroyables(open, state);
+
+  wrap.appendChild(open.element);
+  wrap.appendChild(state.element);
+  return wrap;
+}
+
 export function buildFormsTab(uiRootElement: HTMLElement): {
   element: HTMLElement;
   destroy: () => void;
@@ -548,6 +577,7 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:forms.curveEditor'), buildCurveEditorDemo(disposables), { center: true }),
     card(i18next.t('volui:forms.propertyField'), buildPropertyFieldDemo(disposables)),
     card(i18next.t('volui:forms.toolbar'), buildToolbarDemo(disposables)),
+    card(i18next.t('volui:forms.onScreenKeyboard'), buildOnScreenKeyboardDemo(disposables)),
   ];
 
   container.appendChild(cardGrid(cards));

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { synthesize, synth, normalize, mix, Presets } from '@volstudio/audio-synth';
+import { Presets } from '@volstudio/audio-synth';
+import { synthesize, synth, normalize, mix } from '../src/engine';
 import type { SynthParams } from '@volstudio/audio-synth';
 import type { AudioParamIssue } from '../src/guard/errors';
 import { DelayLine, Reverb } from '../src/effects';

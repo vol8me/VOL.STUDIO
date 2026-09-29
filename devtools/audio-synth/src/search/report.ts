@@ -23,8 +23,8 @@ import {
 export const SEARCH_REPORT_SCHEMA = 'AcousticSearchReportV1';
 
 /**
- * Aşama 2 — yürütme SERİdir (paralellik Dalga 13'ündür): her geçerli aday
- * kendi programıyla (tohum ezilmeden) render edilir, kanonik analizörle
+ * Aşama 2 — yürütme: her geçerli aday (seri ya da worker'larda, sonuç her
+ * durumda aday sırasıyla) kendi programıyla (tohum ezilmeden) render edilir, kanonik analizörle
  * ölçülür ve spec filtrelerinden geçirilir. Rapor kanoniktir: zaman damgası,
  * süre ölçümü ya da yol taşımaz; aynı spec + motor aynı baytları verir.
  *

@@ -17,10 +17,10 @@ import { helmholtzFrequency } from './resonance';
  * - `sibilance` 1.7·f_jet civarında (3–11 kHz) dar bir rezonans, `cavity`
  *   akışın beslediği Helmholtz boşluğudur (ağız kesiti boyun olarak).
  */
-export const MAX_FLOW_SPEED = 80;
+const MAX_FLOW_SPEED = 80;
 const STROUHAL = 0.2;
 
-export function jetPeakHz(flowSpeed: number, apertureMm: number): number {
+function jetPeakHz(flowSpeed: number, apertureMm: number): number {
   return (STROUHAL * flowSpeed) / (apertureMm * 1e-3);
 }
 

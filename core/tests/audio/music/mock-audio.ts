@@ -78,11 +78,11 @@ class FakeAudioNode {
   }
 }
 
-export class FakeGainNode extends FakeAudioNode {
+class FakeGainNode extends FakeAudioNode {
   gain = new FakeAudioParam();
 }
 
-export class FakeDynamicsCompressorNode extends FakeAudioNode {
+class FakeDynamicsCompressorNode extends FakeAudioNode {
   threshold = new FakeAudioParam();
   knee = new FakeAudioParam();
   ratio = new FakeAudioParam();
@@ -113,7 +113,7 @@ export class FakeAudioBufferSourceNode extends FakeAudioNode {
   }
 }
 
-export class FakeAudioBuffer {
+class FakeAudioBuffer {
   readonly length: number;
   readonly sampleRate: number;
   readonly duration: number;

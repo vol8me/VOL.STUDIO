@@ -7,7 +7,7 @@ import { AudioParamError } from '../guard/errors';
  * adımda metin ayrıştırmak gerekirdi. Adlar yalnız sınırlarda (program
  * belgesi ve rapor) kullanılır.
  */
-export const MIDI_A4 = 69;
+const MIDI_A4 = 69;
 export const MIDI_MIN = 0;
 export const MIDI_MAX = 127;
 

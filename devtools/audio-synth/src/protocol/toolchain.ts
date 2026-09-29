@@ -1,5 +1,4 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 import { hashCanonical, type Sha256 } from './canonical';
 import { ProtocolError } from './errors';
 
@@ -130,8 +129,4 @@ export function readEncoderToolchain(quality: number): EncoderToolchain {
     unreported: ['libvorbis'],
   };
   return { ...base, fingerprint: hashCanonical(base) };
-}
-
-export function fileBytes(path: string): Buffer {
-  return readFileSync(path);
 }

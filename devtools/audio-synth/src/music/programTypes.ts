@@ -25,7 +25,6 @@ import type { MusicTransitionV1 } from './transitions';
  * bir sınırlama olarak reddedilir (bkz. `music-single-tempo`).
  */
 export const MUSIC_PROGRAM_SCHEMA = 'MusicProgramV1';
-export const MUSIC_PROGRAM_VERSION = 1;
 
 export const MAX_BARS = 512;
 export const MAX_LANES = 16;

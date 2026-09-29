@@ -8,10 +8,10 @@ import { degreeToMidi, MIDI_MAX, MIDI_MIN } from './tonal';
  * `alter` ile açıkça istenir. Sessizce bozuk score üretilmez: aralık,
  * ses sayısı ya da hareket sınırı karşılanamıyorsa akorun indeksiyle hata.
  */
-export const CHORD_QUALITIES = ['triad', 'seventh', 'sus2', 'sus4', 'fifth'] as const;
+const CHORD_QUALITIES = ['triad', 'seventh', 'sus2', 'sus4', 'fifth'] as const;
 export type ChordQuality = (typeof CHORD_QUALITIES)[number];
 
-export const VOICING_SPREADS = ['close', 'open'] as const;
+const VOICING_SPREADS = ['close', 'open'] as const;
 export type VoicingSpread = (typeof VOICING_SPREADS)[number];
 
 export interface ChordAlterationV1 {
@@ -38,7 +38,7 @@ export interface VoicingV1 {
   readonly maxMovement: number;
 }
 
-export const MAX_VOICES = 8;
+const MAX_VOICES = 8;
 
 /** Akor niteliğinin dizi derecesi adımları (kökten itibaren). */
 const QUALITY_STEPS: Readonly<Record<ChordQuality, readonly number[]>> = {

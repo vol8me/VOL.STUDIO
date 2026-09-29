@@ -9,7 +9,7 @@ import { checkName } from './names';
  * bellekten verir); bildirimle uyuşmayan veri render'dan önce reddedilir.
  * Kare/oran/kanal bildirimi maliyetin veri yüklenmeden hesaplanmasını sağlar.
  */
-export const MAX_SAMPLE_FRAMES = 48000 * 120;
+const MAX_SAMPLE_FRAMES = 48000 * 120;
 
 export interface SampleDeclV1 {
   /** Kütüphane kimliği (`audio-samples/<id>`). */

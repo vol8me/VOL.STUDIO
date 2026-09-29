@@ -41,7 +41,7 @@ export interface ContactPhysics {
   readonly peakForceN: number;
 }
 
-export function hertzContact(
+function hertzContact(
   massKg: number,
   velocity: number,
   striker: MaterialProfileV1,

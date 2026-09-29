@@ -10,7 +10,7 @@ import { NEUTRAL_STYLE, STYLE_PROFILES } from '../program/styles';
 import { DEFAULT_SAMPLES_ROOT, SAMPLE_ASSET_SCHEMA, SAMPLE_CACHE_ROOT } from './samples';
 
 /**
- * `context` çıktısının ses tasarımı bölümü (Dalga 7–10): SoundGraph kuralları,
+ * `context` çıktısının ses tasarımı bölümü: SoundGraph kuralları,
  * mekanizma kabiliyet matrisi, stil ve materyal verisi, planlayıcı ve sample
  * kütüphanesi. Hepsi çalışan koddaki veriden türetilir.
  */

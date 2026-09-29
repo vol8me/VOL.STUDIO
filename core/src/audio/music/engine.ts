@@ -21,7 +21,7 @@ import { resolveStemGain } from './gain-resolver';
 /**
  * `loopEnd` ile dosya süresi arasında kabul edilen fark (saniye).
  *
- * Kodlayıcılar (OGG/MP3) blok hizalaması yüzünden birkaç milisaniyelik fark
+ * Kodlayıcılar (OGG) blok hizalaması yüzünden birkaç milisaniyelik fark
  * bırakabilir; eşik bunun altındaki gürültüyü susturur ama gerçek bir
  * ayrışmayı (bölüm eksik, parça erken sarıyor) geçirmez.
  */
@@ -34,7 +34,7 @@ const LOOP_DURATION_TOLERANCE = 0.05;
 const CUE_HANDOFF_FADE = 0.03;
 
 /** Web Audio API tabanlı müzik motoru.
- *  Önceden üretilmiş OGG/MP3 stem'leri senkron çalar, adaptive gain ve crossfade destekler. */
+ *  Önceden üretilmiş OGG stem'leri senkron çalar, adaptive gain ve crossfade destekler. */
 export class MusicEngine {
   readonly context: AudioContext;
   readonly mixer: MusicMixer;

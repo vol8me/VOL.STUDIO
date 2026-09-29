@@ -100,7 +100,7 @@ const grainWork = (p: CostParams) =>
     Number(p.damping),
   ) * 8;
 
-export const BUBBLE: SourceEntry = {
+const BUBBLE: SourceEntry = {
   id: 'source.bubble',
   kind: 'source',
   version: 1,
@@ -125,7 +125,7 @@ export const BUBBLE: SourceEntry = {
   },
 };
 
-export const BUBBLES: SourceEntry = {
+const BUBBLES: SourceEntry = {
   id: 'source.bubbles',
   kind: 'source',
   version: 1,
@@ -181,7 +181,7 @@ function glugs(
   }
 }
 
-export const GURGLE: SourceEntry = {
+const GURGLE: SourceEntry = {
   id: 'source.gurgle',
   kind: 'source',
   version: 1,

@@ -21,7 +21,7 @@ function tableLookup(table: Float32Array, phase: number): number {
  * Bant sınırlı basamak düzeltmesi (BLEP rezidüeli) — süreksizliğin ±`BLEP_RADIUS`
  * örnek komşuluğuna Kaiser pencereli sinc integraliyle dağıtılır. İki örneklik
  * PolyBLEP'in iç oranda bıraktığı katlanmayı ≈90 dB durdurma bandına indirir
- * (ölçüm: `scripts/polyblep-alias-report.ts` ızgarası).
+ * (ölçüm: `scripts/research/polyblep-alias-report.ts` ızgarası).
  *
  * Çekirdek durumsuzdur: her örnek, penceresi içine düşen bütün kenarların
  * rezidüel katkısını toplar — durum nesnesi gerekmez, tek örneklik çağrılar

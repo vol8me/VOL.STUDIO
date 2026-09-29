@@ -50,7 +50,7 @@ export function checkRepoRelative(value: unknown, label: string): string {
   return value;
 }
 
-export function isInside(parent: string, child: string): boolean {
+function isInside(parent: string, child: string): boolean {
   const rel = relative(parent, child);
   return rel === '' || (!rel.startsWith(`..${sep}`) && rel !== '..' && !isAbsolute(rel));
 }

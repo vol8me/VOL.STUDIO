@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { decomposeTransient } from '../../src/analysis/decompose';
 import { analyzeAudio } from '../../src/analysis/report';
-import { onsetSharpnessAt, stretchQuality } from '../../src/analysis/stretchQa';
+import { onsetSharpnessAt, stretchQuality } from '../support/stretchQa';
 import { convolve } from '../../src/effects/convolution';
 import { AudioParamError } from '../../src/guard/errors';
 import { estimateProgramCost, renderProgram } from '../../src/program/render';

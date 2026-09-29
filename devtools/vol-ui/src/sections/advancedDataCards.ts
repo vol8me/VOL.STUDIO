@@ -161,7 +161,7 @@ export function buildDataTableDemo(disposables: DisposableScope): HTMLElement {
 
 /** Pencerelemeli DataTable demosu için büyük veri seti. */
 
-export function buildLargeUnitRows(count: number): UnitRow[] {
+function buildLargeUnitRows(count: number): UnitRow[] {
   const types = [
     i18next.t('volui:advanced.ranged'),
     i18next.t('volui:advanced.melee'),

@@ -16,7 +16,7 @@ import { runModes } from './resonance';
  * - `source.blast`: türbülanslı patlama gürültüsü; bant zamanla kararır ve
  *   seyrek çatırtılar içerir.
  */
-export function friedlander(t: number, positive: number, decay: number): number {
+function friedlander(t: number, positive: number, decay: number): number {
   if (t < 0) return 0;
   const x = t / positive;
   return (1 - x) * Math.exp(-decay * x);

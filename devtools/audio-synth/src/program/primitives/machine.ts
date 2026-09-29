@@ -21,10 +21,6 @@ import type { SourceEntry } from '../registry';
 const FIRING: Readonly<Record<string, number>> = { engine: 0.5, fan: 1, gear: 1 };
 const BALL_PASS = 4.1;
 
-export function cycleHz(mechanism: string, rpm: number, count: number): number {
-  return (rpm / 60) * count * FIRING[mechanism];
-}
-
 export const MACHINE: SourceEntry = {
   id: 'source.machine',
   kind: 'source',

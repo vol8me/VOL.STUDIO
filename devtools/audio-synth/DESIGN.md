@@ -294,7 +294,7 @@ kilidin bugünkü registry ile birebir eşleşmesini ister. Kilidi
 yazmayı REDDEDER: parametre alanı ya da varsayılanı değişen düğüm sürümünü
 artırır, eski programlar eski sürümü adıyla ister.
 
-**Registry çok sürümlüdür (K2).** Bir düğüm kimliği birden çok sürümü
+**Registry çok sürümlüdür.** Bir düğüm kimliği birden çok sürümü
 yan yana tutar: `get(id)` en güncel sürümü verir (katalog/üretim yolu),
 `resolve(id, version)` kesin sürümü çözümler ve sürüm uyuşmazlığı açık
 `AudioParamError`'dır; tip denetimi sürüm denetiminden önce gelir. Kilit
@@ -302,7 +302,9 @@ anahtarı `id@version`'dır — iki sürüm aynı anda kilitlenir. Eski davranı
 dondurulmuş modülde yaşar (`synthesis/waveforms-v1.ts`,
 `synthesis/retro-v1.ts`, `program/primitives/environmentV1.ts`) ve eski
 programlar bit-eşit render edilir (`tests/governance/legacyV1.test.ts`,
-2cd8b45 manifestlerinin PCM özetleri); güncel davranış v2'dir.
+2cd8b45 manifestlerinin PCM özetleri); güncel davranış v2'dir. Dondurulmuş
+sürüm silinmez: sürümü kaldırmak onu adıyla isteyen her programı sessizce
+değil ama kesin olarak kırar ve sözleşmenin kendisini geri alır.
 
 ### Publish kapısı
 
@@ -423,7 +425,7 @@ alias 3.6 kHz testerede −88.3 dB'ye indi ve `polyblep-alias` sınırlaması
 ### Bant sınırlama yöntemi seçimi (R2e)
 
 Dört aday aynı testere ızgarasında ölçüldü
-(`scripts/antialias-method-report.ts`; kafes-dışı alias + bant içi
+(`scripts/research/antialias-method-report.ts`; kafes-dışı alias + bant içi
 harmonik genlik hatası + örnek başına CPU, 44.1 kHz):
 
 | Yöntem                                                        | 917 Hz alias | 3.6 kHz alias | 8 kHz alias | harmonik hata | ns/örnek (8 kHz) |
@@ -885,7 +887,7 @@ durumu `benchmarks/reviews.json` (`BenchmarkReviewsV1`) içindedir, hepsi
 `pending-human`dır ve yalnız `benchmark review … --by human` ile değişir;
 görev sürümü artınca inceleme bayatlar.
 
-**Açıklık matrisi (R4).** `scripts/distinctiveness-report.ts`
+**Açıklık matrisi (R4).** `scripts/research/distinctiveness-report.ts`
 (`measureDistinctiveness`) bütün görev parçalarını bir kez render eder —
 akustik `renderProgram`, müzik `checkMusic` referans mix'i — sonra her
 (değerlendirici, aday) çiftinde adayın bütün parça render'larını
@@ -1217,7 +1219,7 @@ bilinçli alias yalnız `bits`/`holdHz` aşamasından ve çıkış oranında gel
 −88.3 dB; 4-bit üçgen 917 Hz −88.7 dB; org tablosu 3.6 kHz −88.6 dB;
 sync'li testere 917 Hz −89.3 dB. Sınırlar ölçülenin 2 dB üstünde
 kilitlidir (`tests/retro.test.ts`); tam ızgara
-`scripts/polyblep-alias-report.ts`. Müzikte `retro` kaynağı,
+`scripts/research/polyblep-alias-report.ts`. Müzikte `retro` kaynağı,
 akustik programda `source.retro` düğümüdür (UI, arcade SFX, gürültü).
 
 **Orkestrasyon** (`music/orchestration.ts`): şeridin görevi (`bass`,
@@ -2011,9 +2013,11 @@ için şerit kazancı değişince hiçbir ses yeniden sentezlenmez.
 | Bellek | süreç geneli, depolar arasında paylaşılır            | 512 MiB, girdi başı 128 MiB | en az yakın zamanda kullanılan          |
 | Disk   | `node_modules/.cache/audio-synth/render/<parmakizi>` | 2 GiB, girdi başı 256 MiB   | en eski erişilen, bütçenin %80'ine iner |
 
-- **Parmak izi** audio-synth `src/` ve CORE `src/` ağacının özetidir. Kod
-  değişince eski girdiler hiç okunmaz ve dizinleri temizlenir. Aynı sürümde
-  DSP'si değişmiş bir düğüm bu yüzden bayat PCM döndüremez.
+- **Parmak izi** audio-synth `src/` ağacının ve onun import zincirinin
+  yüklediği CORE dosyalarının özetidir (`src/protocol/sourceClosure.ts`);
+  CORE UI düzenlemesi önbelleği düşürmez. Kod değişince eski girdiler hiç
+  okunmaz ve dizinleri temizlenir. Aynı sürümde DSP'si değişmiş bir düğüm bu
+  yüzden bayat PCM döndüremez. Çözülemeyen import kapanışı hata verir.
 - **Yarım ya da bozuk girdi** (başlık, boyut) ıska sayılır ve silinir.
 - **Nerede açık:** `audio:job` süreci önbellekli bir oturumda koşar;
   `AUDIO_SYNTH_RENDER_CACHE=off` kapatır. Kütüphane olarak çağrılan protokol
@@ -2140,7 +2144,7 @@ en büyük örnek farkı 0.043.
 Ölçü kafes yöntemidir (`analysis/fmAlias.ts`): periyodik modülatörlü faz
 modülasyonu yalnız `fc + k·fm` çizgilerinde enerji taşır; işitilir bantta
 kafes dışında kalan güç / kafes gücü = alias (ölçülmüş alt sınır). Izgara
-(`pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts`,
+(`pnpm --filter @volstudio/audio-synth exec tsx scripts/research/fm-alias-report.ts`,
 4800 nokta, dört taşıyıcı dalga × 110–5000 Hz, 44.1 kHz) risk sınıflarını ve
 eşiklerini `FM_ALIAS_LIMITS`e (makine-okunur) yazar; `Analysis.assessFmAlias()`
 bir ayarı render etmeden değerlendirir. Seviye: güvenli ≤ −60 dB, dikkat ≤
@@ -2195,12 +2199,13 @@ sınırlarını ölçer ve tahminin ölçümden iyimser olmadığını doğrular
 
 ## Arp / Sequence
 
-`compose()` ile melodik diziler üretilir:
+`Arrange.compose()` ile melodik diziler üretilir:
 
 ```typescript
-import { compose, Presets } from '@volstudio/audio-synth';
+import { Arrange, Presets } from '@volstudio/audio-synth';
+import { writeOgg } from '@volstudio/audio-synth/writer';
 
-const result = compose(Presets.arpeggioUp(440), Presets.blip(440, 0.1));
+const result = Arrange.compose(Presets.arpeggioUp(440), Presets.blip(440, 0.1));
 writeOgg('public/assets/audio/sfx/level-up.ogg', result);
 ```
 
@@ -2359,7 +2364,7 @@ seçenektir. `sawtooth`, `square` ve `pulse` bant sınırlı basamak
 rezidüeliyle düzeltilir ve tüm sentez 2x oversampling + halfband FIR ile
 decimate edilir (bkz. "Örnekleme ve alias"); ölçülen alias 3.6 kHz
 testerede −88.3 dB, kareda −87.3 dB'dir
-(`scripts/polyblep-alias-report.ts`).
+(`scripts/research/polyblep-alias-report.ts`).
 
 ```typescript
 // Koyu, yumuşak UI blip
@@ -2432,7 +2437,7 @@ elle yazılmaz, çalışan koddan okunur (`audio:job context --json` →
 - Kenarlı osilatörlerin katlanması F6a'da ölçülen marjın altına indi:
   3.6 kHz testere −88.3 dB alias/sinyal (eski iki örneklik PolyBLEP'te
   −47 dB idi); artık pratik bir sınırlama değil, karakterizasyon kaydıdır
-  (`scripts/polyblep-alias-report.ts`).
+  (`scripts/research/polyblep-alias-report.ts`).
 - Paralel comb reverb tonal girdide renklenir (saf sinüste wet ±4 dB).
 - Master tavanları örnek tepesidir; kodek sonrası true peak onu aşabilir.
   4× true-peak sınırlayıcı `master.limiter` ile OPT-İNDİR; varsayılan zincir
@@ -2507,7 +2512,7 @@ pnpm --filter @volstudio/audio-synth audio:job context --json
 pnpm --filter @volstudio/audio-synth bench:budget     # kaynak bütçesi referans ölçümü
 pnpm --filter @volstudio/audio-synth bench:resonators # tüp ↔ modal maliyet kıyası
 pnpm --filter @volstudio/audio-synth audio:audition   # git-dışı dinleme paketi
-pnpm --filter @volstudio/audio-synth exec tsx scripts/fm-alias-report.ts
+pnpm --filter @volstudio/audio-synth exec tsx scripts/research/fm-alias-report.ts
 ```
 
 `just audio-verify` (signoff) dört işi birlikte sınar: `generate:audio`

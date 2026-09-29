@@ -19,7 +19,7 @@ export type FmModulatorClass =
 /**
  * Ölçülmüş FM alias sınırları — makine-okunur.
  *
- * Kaynak: `scripts/fm-alias-report.ts` ızgarası (taşıyıcı
+ * Kaynak: `scripts/research/fm-alias-report.ts` ızgarası (taşıyıcı
  * sine/triangle/sawtooth/square × 110–5000 Hz; modülatör
  * sine/triangle/sawtooth/square/pulse; index 0.5–20; oran 0.5–3.5; feedback
  * 0/0.1/0.3; 44.1 kHz; 4800 nokta). Ölçü: işitilir

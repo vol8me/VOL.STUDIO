@@ -70,6 +70,7 @@ Kök dizinler: `docs/` (repo geneli belgeler), `scripts/` (kapılar
 | Başka bir pakete yalnız `exports` haritasındaki yoldan girilir                                                                                                                                            | `scripts/quality/layers.mjs`                                                                                                                          |
 | Her Tauri uygulamasının kimliği ürüne özgü ve benzersizdir (kayıt yolu ondan türer)                                                                                                                       | `scripts/quality/appIdentity.mjs`                                                                                                                     |
 | JS eklenti bağımlılığı, Rust kaydı ve uygulama izni birbirine bağlıdır; ölü eklenti kalmaz                                                                                                                | `scripts/quality/tauriPlugins.mjs`                                                                                                                    |
+| Tüketicisiz CORE UI bileşeni katalogdadır: vol-ui vitrininde gösterilir ve CORE testinde adıyla sınanır                                                                                                   | `scripts/quality/catalog.mjs`                                                                                                                         |
 | Deterministik çıktı üreten kod yerel ayara bağlı sıralama (`localeCompare`) kullanmaz                                                                                                                     | `eslint.config.mjs`                                                                                                                                   |
 | Frozen ağaç değişmez; aktif paket frozen pakete bağımlı olamaz                                                                                                                                            | `scripts/quality/workspaceLifecycle.mjs`                                                                                                              |
 | Görünen metin i18n anahtarıdır; `tr.json` ile `en.json` aynı anahtarları taşır; modül düzeyinde `t()` çağrılmaz; ölü anahtar kalmaz                                                                       | paketlerin `keyParity` testleri, `scripts/quality/deadI18n.mjs`                                                                                       |
@@ -128,7 +129,7 @@ Evetse kural tarif katmanına gider. Bir sunum bileşeni kendi defterini tutmaz.
 
 **Katalog:** CORE'da hiçbir üründe tüketicisi olmayan bileşenler bilinçli
 olarak bekletilir; her biri vol-ui vitrininde gösterilir ve kendi testleriyle
-korunur. Kataloğa giren bileşen oyuna özgü varsayım taşımaz ve aynı turda
+korunur (bekçi: `scripts/quality/catalog.mjs`). Kataloğa giren bileşen oyuna özgü varsayım taşımaz ve aynı turda
 vitrine ve `devtools/vol-ui/README.md` sekme tablosuna eklenir.
 
 **Kaynak yaşam döngüsü:** eklenen her listener, timer ve abonelik

@@ -5,7 +5,12 @@
 //! platform ayarlarını taşır; her oyun kendi uygulama crate'inde bağlamını
 //! üretip `run_with_context()` çağırır.
 
-// Tauri komutları hakkında bilgi almak için: https://tauri.app/develop/calling-rust/
+mod haptics;
+mod native_menus;
+mod shutdown;
+mod sleep;
+mod store;
+mod virtual_gamepads;
 
 /// Ürün içindeki çıkış onayından sonra uygulamayı gerçekten sonlandırır.
 ///
@@ -215,29 +220,11 @@ where
 /// WebView'ın çizim yolunu seçer; WebView yaratılmadan ÖNCE çağrılır, değişkenler
 /// WebKit alt süreçlerine devralınır. Dışarıdan verilen değişken ezilmez.
 ///
-/// WebKit'in DMA-BUF çizicisi bazı sürücülerde boş WebView bırakıyor; güvenli yol
-/// onu kapatmaktır ama o yolda her kare CPU üzerinden kopyalanır. Ölçüldü (NVIDIA
-/// RTX 3050 / 610.57, KDE Plasma 6.7, WebKitGTK 2.52, 1920×1080, boş sahne):
-/// çizici kapalıyken yerel Wayland'da 18 FPS ve bir çekirdek dolu; açıkken
-/// Wayland'da explicit sync protokol hatasıyla açılışta çöküş, XWayland'da boş
-/// pencere; açık ve `__NV_DISABLE_EXPLICIT_SYNC=1` ile yerel Wayland'da 60 FPS.
-///
-/// Gamescope ölçüldü (Steam Deck LCD / Jupiter, SteamOS 3.8.16, SLR4
-/// 4.0.20260805.254769, WebKitGTK 2.52.6, 1280×800, 4000 sprite): DMA-BUF
-/// kapalıyken 49.9 FPS / p95 21 ms; açık + `WEBKIT_FORCE_VBLANK_TIMER=1`
-/// iken 59.6 FPS / p95 19 ms. Gamescope'ta compositor vsync'i WebKit'e
-/// ulaşmadığı için zamanlayıcı şarttır — yalnız DMA-BUF açmak yetmez
-/// (aynı turda 50.0/21 ölçüldü).
-///
-/// Çizici yalnız ölçülen iki durumda açık kalır: gamescope oturumu ve
-/// NVIDIA'nın tek başına sürdüğü yerel Wayland; başka her yerde güvenli yol.
-mod haptics;
-mod native_menus;
-mod shutdown;
-mod sleep;
-mod store;
-mod virtual_gamepads;
-
+/// WebKit'in DMA-BUF çizicisi bazı sürücülerde boş WebView bırakır; güvenli yol
+/// onu kapatmaktır ama o yolda her kare CPU üzerinden kopyalanır. Çizici yalnız
+/// ölçülen iki durumda açık kalır: gamescope oturumu (vblank zamanlayıcısıyla) ve
+/// NVIDIA'nın tek başına sürdüğü yerel Wayland (explicit sync kapalı); başka her
+/// yerde güvenli yol. Ölçümler: `docs/linux.md`, `docs/steam-deck.md`.
 #[cfg(target_os = "linux")]
 fn configure_linux_webview() {
     let plan = linux_webview_plan(LinuxSession::detect());

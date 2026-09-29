@@ -1,5 +1,5 @@
-import { estimatePitch } from './descriptors';
-import { blackmanHarris, powerSpectrum } from './spectrum';
+import { estimatePitch } from '../../src/analysis/descriptors';
+import { blackmanHarris, powerSpectrum } from '../../src/analysis/spectrum';
 
 /**
  * Perde kaydırma / zaman germe artefakt ölçümü — yöntemleri aynı fixture'da

@@ -31,7 +31,7 @@ function checkFactor(factor: number, label: string): void {
   }
 }
 
-export function stretchWsola(x: Float32Array, stretch: number, sampleRate: number): Float32Array {
+function stretchWsola(x: Float32Array, stretch: number, sampleRate: number): Float32Array {
   checkFactor(stretch, 'stretch');
   const outLength = Math.max(1, Math.round(x.length * stretch));
   if (stretch === 1) return x.slice(0, outLength);
@@ -77,11 +77,7 @@ export function stretchWsola(x: Float32Array, stretch: number, sampleRate: numbe
 
 const princarg = (phase: number) => phase - 2 * Math.PI * Math.round(phase / (2 * Math.PI));
 
-export function stretchPhaseVocoder(
-  x: Float32Array,
-  stretch: number,
-  sampleRate: number,
-): Float32Array {
+function stretchPhaseVocoder(x: Float32Array, stretch: number, sampleRate: number): Float32Array {
   checkFactor(stretch, 'stretch');
   const outLength = Math.max(1, Math.round(x.length * stretch));
   if (stretch === 1) return x.slice(0, outLength);
@@ -158,7 +154,7 @@ export function stretchPhaseVocoder(
  * giriş iki yandan 50 ms sıfırla uzatılıp çıktı karşılık gelen aralıktan
  * kesilir — başlangıçtaki transient pencere yükselişinde kaybolmaz.
  */
-export function timeStretch(
+function timeStretch(
   x: Float32Array,
   stretch: number,
   method: Exclude<StretchMethod, 'resample'>,

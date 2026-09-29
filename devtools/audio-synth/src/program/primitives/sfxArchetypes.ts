@@ -117,7 +117,7 @@ function tailBus(tail: number, size: number, random: Random) {
 
 const sends = (on: boolean, levelDb: number) => (on ? { sends: [{ bus: 'space', levelDb }] } : {});
 
-export const PRESSURE_EVENT = sfx(
+const PRESSURE_EVENT = sfx(
   'pressure-event',
   'PressureEvent: şok (transient) + Friedlander gövde (low-end) + türbülanslı blast + döküntü + ' +
     'deşarj + kuyruk bus’ı AYRI katmanlar. Tank/havan atışı, büyük patlama ve enerji deşarjı ' +
@@ -255,7 +255,7 @@ export const PRESSURE_EVENT = sfx(
       : null,
 );
 
-export const LAUNCHER = sfx(
+const LAUNCHER = sfx(
   'launcher',
   'Launcher: isteğe bağlı charge + tetik + namlu (Friedlander + blast) + materyal gövdesi + ' +
     'sürgü/mekanizma + kovan döküntüsü + kuyruk bus’ı. Tank topu, arcade taret ve bilimkurgu ' +

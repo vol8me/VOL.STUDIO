@@ -40,8 +40,8 @@ export const KNOWN_LIMITATIONS: readonly KnownLimitation[] = [
     id: 'music-percussion-thin',
     affects: ['MusicProgramV1', 'preset:*'],
     description:
-      'Enstrüman kaydında perküsyon rolü yalnız 3 preset taşır (ölçüldü); ritim bölümü ' +
-      'melodik enstrümanlarla kurulur. Parametrik davul ailesi Dalga 11 kapsamındadır.',
+      'Preset kaydında perküsyon rolünü az sayıda preset taşır; ritim bölümü parametrik ' +
+      'davul modelini kullanan `drum-kit` enstrüman kaynağıyla kurulur.',
   },
   {
     id: 'music-no-listening-validation',

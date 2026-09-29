@@ -13,7 +13,6 @@ const SRC = resolve(import.meta.dirname, '../../src');
 const SCRIPTS = resolve(import.meta.dirname, '../../scripts');
 
 const KNOWN_CYCLES = new Set([
-  '(root)<->arrange',
   'analysis<->family',
   'effects<->synthesis',
   'engine<->guard',

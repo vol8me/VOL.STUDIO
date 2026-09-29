@@ -8,7 +8,7 @@ import { choiceOf, numberOf, type NumberParamSpec } from '../params';
 import type { EffectEntry } from '../registry';
 
 /**
- * Üretim işleme ilkelleri (Dalga 10): EQ, dinamik, doygunluk, gecikme. Hepsi
+ * Üretim işleme ilkelleri: EQ, dinamik, doygunluk, gecikme. Hepsi
  * kanal dizisini YERİNDE işler ve bus zincirinde, program master zincirinde
  * ya da — zamana yayılmayanlar — katman insert'inde kullanılır. Sentez
  * filtresinden (`resonator.biquad`) ayrıdır: o ses ÜRETİMİNİN parçasıdır,
@@ -42,7 +42,7 @@ function eachChannel(channels: readonly Float32Array[], run: (c: Float32Array) =
   for (const channel of channels) run(channel);
 }
 
-export const EQ_BELL: EffectEntry = {
+const EQ_BELL: EffectEntry = {
   id: 'effect.eq-bell',
   kind: 'effect',
   version: 1,
@@ -79,7 +79,7 @@ export const EQ_BELL: EffectEntry = {
   },
 };
 
-export const EQ_SHELF: EffectEntry = {
+const EQ_SHELF: EffectEntry = {
   id: 'effect.eq-shelf',
   kind: 'effect',
   version: 1,
@@ -122,7 +122,7 @@ export const EQ_SHELF: EffectEntry = {
   },
 };
 
-export const EQ_PASS: EffectEntry = {
+const EQ_PASS: EffectEntry = {
   id: 'effect.eq-pass',
   kind: 'effect',
   version: 1,
@@ -166,7 +166,7 @@ export const EQ_PASS: EffectEntry = {
   },
 };
 
-export const COMPRESSOR: EffectEntry = {
+const COMPRESSOR: EffectEntry = {
   id: 'effect.compressor',
   kind: 'effect',
   version: 1,
@@ -231,7 +231,7 @@ export const COMPRESSOR: EffectEntry = {
   },
 };
 
-export const LIMITER: EffectEntry = {
+const LIMITER: EffectEntry = {
   id: 'effect.limiter',
   kind: 'effect',
   version: 1,
@@ -268,7 +268,7 @@ export const LIMITER: EffectEntry = {
   },
 };
 
-export const TRANSIENT_SHAPER: EffectEntry = {
+const TRANSIENT_SHAPER: EffectEntry = {
   id: 'effect.transient-shaper',
   kind: 'effect',
   version: 1,
@@ -300,7 +300,7 @@ export const TRANSIENT_SHAPER: EffectEntry = {
   },
 };
 
-export const SATURATION: EffectEntry = {
+const SATURATION: EffectEntry = {
   id: 'effect.saturation',
   kind: 'effect',
   version: 1,
@@ -344,7 +344,7 @@ export const SATURATION: EffectEntry = {
   },
 };
 
-export const BITCRUSH: EffectEntry = {
+const BITCRUSH: EffectEntry = {
   id: 'effect.bitcrush',
   kind: 'effect',
   version: 1,
@@ -380,7 +380,7 @@ export const BITCRUSH: EffectEntry = {
   },
 };
 
-export const DELAY: EffectEntry = {
+const DELAY: EffectEntry = {
   id: 'effect.delay',
   kind: 'effect',
   version: 1,

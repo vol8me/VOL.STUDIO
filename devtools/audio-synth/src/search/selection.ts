@@ -32,7 +32,7 @@ export interface SearchSelectionV1 {
 
 const LABEL = /^[a-z0-9][a-z0-9-]{0,31}$/;
 const MAX_LABELS = 8;
-export const MAX_NOTE = 1000;
+const MAX_NOTE = 1000;
 
 export function validateDecision(value: unknown, path: string): CandidateDecisionV1 {
   const o = checkObject(value, path, ['state', 'by', 'labels', 'note']);

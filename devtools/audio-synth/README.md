@@ -71,10 +71,12 @@ list|run [--audition] [--json]|review` — 19 canary + görevler tek raporda
 - `tests/` — birim, özellik, yönetişim (`tests/governance/`) ve protokol
   testleri
 - `scripts/` — `audio-job` CLI'ı ve alt komutları (`scripts/lib/`), QA
-  (`audio-qa`, `audio-reference-check`), karakterizasyon (`fm-alias-report`,
-  `polyblep-alias-report`, `render-budget-bench`, `resonator-bench`),
-  sample fixture üreticisi,
-  render yüzeyi kilidi, kodlama taban çizgisi, dinleme paketi ve dönüştürücü
+  (`audio-qa`, `audio-reference-check`), ölçüm (`render-budget-bench`,
+  `resonator-bench`), sample fixture üreticisi,
+  render yüzeyi kilidi, kodlama taban çizgisi ve dinleme paketi
+- `scripts/research/` — pakete bağlanmamış karakterizasyon ve mutasyon
+  betikleri (`pnpm exec tsx scripts/research/<ad>.ts`); ölçüm sonuçları
+  `DESIGN.md`dedir
 - `export/` — yerel üretim ve dinleme çıktısı (izlenmez)
 
 ## Doktrin

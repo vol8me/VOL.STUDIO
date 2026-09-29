@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -85,26 +84,6 @@ import { resolveDestination, surveyTargets, type ResolvedDestination } from './t
 
 const PACKAGE_NAME = '@volstudio/audio-synth';
 
-function packageVersion(): string {
-  const manifest = JSON.parse(
-    readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
-  ) as { version: string };
-  return manifest.version;
-}
-
-function sourceRevision(repoRoot: string): { commit: string | null; dirty: boolean | null } {
-  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });
-  if (head.status !== 0) return { commit: null, dirty: null };
-  const status = spawnSync('git', ['status', '--porcelain', '--untracked-files=no'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  });
-  return {
-    commit: head.stdout.trim(),
-    dirty: status.status === 0 ? status.stdout.trim().length > 0 : null,
-  };
-}
-
 /**
  * Motor yüzeyinin sürüm etiketi: registry'nin RENDER izdüşümünün özeti.
  * Açıklama ve yoklama metni girmez; programa özgü kanıt `renderSurface`tır.
@@ -113,11 +92,6 @@ export function registryHash(): Sha256 {
   return registryRenderHash();
 }
 
-/**
- * Asset kimliği. Müzik bir brief'ten BİRDEN ÇOK asset üretir (stem'ler ve
- * referans mix); kimlik brief'in kimliğine stem'i ekler, yoksa iki stem aynı
- * asset sayılır ve üzerine yazma koruması yanlış çalışır.
- */
 /**
  * Politika sınıfı yol sınıfından AYRILABİLİR: bir müzik stem'i yola göre
  * `music`tir ama tek başına çalınmaz, bu yüzden mix'in yükseklik aralığına
@@ -130,6 +104,11 @@ function policyClassOf(kind: JobKind, programDocument: unknown, pathClass: Asset
     : 'music-stem';
 }
 
+/**
+ * Asset kimliği. Müzik bir brief'ten BİRDEN ÇOK asset üretir (stem'ler ve
+ * referans mix); kimlik brief'in kimliğine stem'i ekler, yoksa iki stem aynı
+ * asset sayılır ve üzerine yazma koruması yanlış çalışır.
+ */
 function assetIdOf(kind: JobKind, brief: AudioBriefV1, programDocument: unknown): string {
   if (kind !== 'music') return brief.id;
   const stem = validateMusicStemProgram(programDocument).stem;
@@ -190,7 +169,7 @@ function checkRuntime(
 }
 
 /** Yayın hazırlık dosyalarının depo köküne göreli dizini (git dışı). */
-export const PUBLISH_STAGING_ROOT = 'node_modules/.cache/audio-synth/publish';
+const PUBLISH_STAGING_ROOT = 'node_modules/.cache/audio-synth/publish';
 
 /** Var olan asset'i yalnız AYNI job'un aynı asset'i için yayımlanmış bir manifest sahiplenebilir. */
 function guardOverwrite(
@@ -322,7 +301,6 @@ export function publishJob(loc: JobLocation): PublishOutcome {
 
     const quality = encodeQualityOf(assetClass);
     const toolchain = readEncoderToolchain(quality);
-    const revision = sourceRevision(loc.repoRoot);
     // Hazırlık dosyaları hedef paketin gönderilen ağacı dışında, aynı depo
     // dosya sisteminde durur: yarım kalan yayın build'e girmez.
     const stagingDir = join(loc.repoRoot, PUBLISH_STAGING_ROOT);
@@ -419,12 +397,9 @@ export function publishJob(loc: JobLocation): PublishOutcome {
         },
         engine: {
           package: PACKAGE_NAME,
-          packageVersion: packageVersion(),
           rendererVersion: RENDERER_VERSIONS[job.kind],
           registryHash: job.kind === 'music' ? instrumentRegistryHash() : registryHash(),
           renderSurface: surfaceForKind(job.kind, programDocument),
-          sourceCommit: revision.commit,
-          sourceTreeDirty: revision.dirty,
           runtime: { node: process.version },
         },
         encoder: toolchain,

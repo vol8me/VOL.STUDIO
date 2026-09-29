@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { RenderBudgetError, piano, synthesize } from '../src/index';
+import { RenderBudgetError, piano } from '../src/index';
+import { synthesize } from '../src/engine';
 import { downsample2x } from '../src/engine/render';
 import { assertRenderBudget, estimateSynthCost } from '../src/guard/budget';
 import { resolveSynthParams } from '../src/guard/synth';

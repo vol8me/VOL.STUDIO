@@ -49,7 +49,7 @@ export interface DrumParams {
   readonly gateSeconds?: number;
 }
 
-export const DRUM_KEYS = [
+const DRUM_KEYS = [
   'model',
   'velocity',
   'tune',
@@ -65,8 +65,8 @@ export const DRUM_KEYS = [
   'gateSeconds',
 ] as const;
 
-export const DEFAULT_DRUM_VELOCITY = 0.8;
-export const MAX_DRUM_SECONDS = 4;
+const DEFAULT_DRUM_VELOCITY = 0.8;
+const MAX_DRUM_SECONDS = 4;
 export const CHOKE_FADE_SECONDS = 0.005;
 /** Tavanda kesilen uzun sönümün (zil) kuyruğu tık bırakmasın diye. */
 export const END_FADE_SECONDS = 0.02;
@@ -101,7 +101,7 @@ export function drumSeconds(d: ResolvedDrum): number {
   return Math.min(MAX_DRUM_SECONDS, naturalSeconds(d) + 0.01);
 }
 
-export function drumLength(d: ResolvedDrum, gateSeconds: number | undefined): number {
+function drumLength(d: ResolvedDrum, gateSeconds: number | undefined): number {
   const natural = drumSeconds(d);
   return gateSeconds === undefined ? natural : Math.min(natural, gateSeconds + CHOKE_FADE_SECONDS);
 }

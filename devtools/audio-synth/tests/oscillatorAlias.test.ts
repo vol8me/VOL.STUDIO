@@ -40,7 +40,7 @@ function aliasDb(x: Float32Array, f: number): number {
 
 /**
  * Motor osilatör alias'ı ÖLÇÜLEREK kilitlenir: sınır ölçülen değerin 2 dB
- * üstüdür. Tam ızgara `scripts/polyblep-alias-report.ts` ile koşulur; bu
+ * üstüdür. Tam ızgara `scripts/research/polyblep-alias-report.ts` ile koşulur; bu
  * dosya temsil noktalarını ve F6a'nın sözleşme hedefini taşır.
  *
  * F6a öncesi 3.6 kHz testere ~−47 dB ölçülüyordu; pencerelenmiş-sinc BLEP

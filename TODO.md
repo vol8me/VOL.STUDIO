@@ -18,14 +18,21 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 - [ ] **[P1] SD9 — Referans kabuk uygulaması (SH'deki devtools/deck
       taşımasından sonra).** deck-probe CORE ve tauri-v2
       JS'ini (kayıt, oturum, odak, glif, metin girişi, kapanış) uçtan uca koşar.
+      Tipsiz `probe.js` TypeScript'e taşınır ve tip denetimine girer.
+      Bugün tüketicisi olmayan tauri-v2 platform export'ları (Steamworks
+      klavye/bağlama paneli/glif, Linux titreşim kaydı, Android yön) burada
+      tüketilir; tüketilmeyen kalırsa silinir.
       Kapanır: WebKit E2E ve Deck ölçümü bu uygulamayla yapılır.
 - [ ] **[P1] SD10 — Deck'e hazır yeni oyun iskeleti (SH'den sonra,
       tauri-v2/templates/game; Android geri tuşu varsayılanı dahil).** Tauri yapılandırması,
       yetenekler, başlatıcı, masaüstü şablonu, Steam Input manifestosu,
       1280×800 pencere, kayıt kapsamları ve oturuma göre grafik varsayılanı.
       Kapanır: iskeletten kurulan paket `pnpm signoff`u ilk denemede geçer.
-- [ ] **[P2] S3 — Kalıntı.** Katalog politikası kapıya bağlanır; tüketicisiz
-      bağımlılık ve eklentiler kaldırılır.
+- [ ] **[P3] Yerel dallar ve stash temizliği (kullanıcı eli).** HEAD'e dahil
+      12 yerel dal ve atılmış bacak deneyi stash'i duruyor; silme otomatik
+      izin denetiminde reddedildi. Kapanır: `git branch --merged` yalnız
+      `dev` ve çalışma dalını gösterir, `git stash list` boştur; uzak eski
+      dallar S8'de.
 - [ ] **[P2] SH — Hiyerarşi.** Cargo workspace, stil ve test yerleşimi, Deck
       araçlarının tek dizinde toplanması.
 - [ ] **[P1] SC — Repo ve kök dizin temizliği (kullanıcı geri bildirimi).**
@@ -45,7 +52,9 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       girdiler kalır; `git status --ignored` yalnız belgelenmiş yerel
       dizinleri gösterir; bir bekçi kök girdi listesini kilitler.
 - [ ] **[P2] SB — Belgeler.** Paket README/DESIGN/TODO dosyaları minimal hâle
-      gelir; `core` ve `tauri-v2` README kazanır.
+      gelir; `core` ve `tauri-v2` README kazanır. Kaynak yorumlarındaki ölçüm
+      günlükleri (37 dosyada 44 "ölçüldü" satırı) belgeye taşınır, yorumda
+      yalnız gerekçe kalır.
 - [ ] **[P3] S7 — Araç zinciri.** ESLint, Prettier ve TypeScript sürümleri
       ile yapılandırması güncellenir.
 
@@ -92,6 +101,15 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
 
 ## Kapatılanlar
 
+- [x] **S3 — Kalıntı.** Katalog kapısı (`scripts/quality/catalog.mjs`):
+      CORE kökünden açılan her UI bileşeni vitrinde ve testte; ekran klavyesi
+      vitrine girdi. iOS MP3 yedeği ve dönüştürücüsü, kullanılmayan Tauri CLI,
+      audio-synth ölü sembolleri, öksüz barrel ve eski kök API kaldırıldı;
+      araştırma betikleri `devtools/audio-synth/scripts/research/`
+      dizininde; önbellek parmak izi yalnız
+      yüklenen CORE dosyalarını özetler; boş provenance alanları yazılmaz;
+      v1 yolları politika gereği kalır; plan kimliği ve tarihçe yorumları
+      temizlendi. knip kullanılmayan export 94 → 43.
 - [x] **S2 — audio-synth sertleştirme** (AS4, AS6, AS7, AS9, AS12–AS16,
       AS21; AS20 paket TODO'sunda açık).
 - [x] **S0 — Kapılar denetlendi, boşluklar kapatıldı; `pnpm signoff` yeşil**

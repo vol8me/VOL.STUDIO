@@ -8,7 +8,7 @@ import { basename, dirname } from 'node:path';
  */
 
 /** Devkit sözleşmesinin oyun kimliği deseni — tire kabul edilmez. */
-export const GAME_ID_PATTERN = /^[A-Za-z_][A-Za-z0-9_.]+$/;
+const GAME_ID_PATTERN = /^[A-Za-z_][A-Za-z0-9_.]+$/;
 
 /**
  * Ürün adından devkit oyun kimliği türetir. `vol-deck-probe` → `vol_deck_probe`.
@@ -183,7 +183,7 @@ export function shellQuote(value) {
   return `'${String(value).replaceAll("'", "'\\''")}'`;
 }
 
-export function pythonCommand(script, args = []) {
+function pythonCommand(script, args = []) {
   return `python3 -c ${shellQuote(script)} ${args.map(shellQuote).join(' ')}`;
 }
 

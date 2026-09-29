@@ -10,9 +10,9 @@
  * yine de korunur — `input`/`textarea` dışında seçimi `base.css` kapatır.
  */
 /** Her yerde kapalı Ctrl/⌘ kısayolları: yazdır, yenile, bul, kaydet, kaynak, git, aç. */
-export const ALWAYS_BLOCKED_SHORTCUTS: readonly string[] = ['p', 'r', 'f', 's', 'u', 'g', 'o'];
+const ALWAYS_BLOCKED_SHORTCUTS: readonly string[] = ['p', 'r', 'f', 's', 'u', 'g', 'o'];
 /** Metin alanı dışında kapalı Ctrl/⌘ kısayolları: geri al, yinele, tümünü seç. */
-export const OUTSIDE_TEXT_BLOCKED_SHORTCUTS: readonly string[] = ['z', 'y', 'a'];
+const OUTSIDE_TEXT_BLOCKED_SHORTCUTS: readonly string[] = ['z', 'y', 'a'];
 
 const EDITABLE = 'input, textarea, [contenteditable="true"]';
 

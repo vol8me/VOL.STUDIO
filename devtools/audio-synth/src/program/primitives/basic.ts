@@ -9,7 +9,7 @@ import { choiceOf, numberOf, sampleAt, signalOf, type NumberParamSpec } from '..
 import type { EffectEntry, ProcessorEntry, SourceEntry } from '../registry';
 
 /**
- * Dalga 1 ilkelleri: mevcut, ölçülmüş motor parçalarının program yüzeyine
+ * Temel ilkeller: mevcut, ölçülmüş motor parçalarının program yüzeyine
  * bağlanmış hâli. Yeni DSP yazmazlar; registry'nin gerçek bir
  * implementasyona bağlı olduğunu ve programın kanonik yol olduğunu kanıtlarlar.
  */
@@ -51,7 +51,7 @@ type TonalWave = 'sine' | 'triangle' | 'sawtooth' | 'square';
  * (`waveforms-v1.ts`, `2cd8b45` anlığı). Eski programların bit-eşit PCM'i
  * bununla üretilir; yeni programlar v2'yi alır.
  */
-export const OSCILLATOR_V1: SourceEntry = {
+const OSCILLATOR_V1: SourceEntry = {
   id: 'source.oscillator',
   kind: 'source',
   version: 1,
@@ -88,7 +88,7 @@ export const OSCILLATOR_V1: SourceEntry = {
   },
 };
 
-export const OSCILLATOR: SourceEntry = {
+const OSCILLATOR: SourceEntry = {
   id: 'source.oscillator',
   kind: 'source',
   version: 2,
@@ -125,7 +125,7 @@ export const OSCILLATOR: SourceEntry = {
   },
 };
 
-export const NOISE: SourceEntry = {
+const NOISE: SourceEntry = {
   id: 'source.noise',
   kind: 'source',
   version: 1,
@@ -151,7 +151,7 @@ export const NOISE: SourceEntry = {
   },
 };
 
-export const BIQUAD: ProcessorEntry = {
+const BIQUAD: ProcessorEntry = {
   id: 'resonator.biquad',
   kind: 'resonator',
   version: 1,
@@ -258,7 +258,7 @@ export const ENVELOPE: ProcessorEntry = {
   },
 };
 
-export const REVERB: EffectEntry = {
+const REVERB: EffectEntry = {
   id: 'effect.reverb',
   kind: 'effect',
   version: 1,

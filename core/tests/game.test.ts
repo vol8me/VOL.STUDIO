@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Phaser.Game'in gerçek kurulumu (canvas/WebGL context, render loop) bu
 // testin kapsamı dışında — burada yalnızca createVolGame'in DETERMINISTIC
 // BOOT ORDER sözleşmesini (font yükleme -> onBeforeSceneInit -> Phaser.Game
-// oluşturma) doğruluyoruz (bkz. GDD 17.3). Phaser modülü mock'lanır ki
+// oluşturma) doğruluyoruz. Phaser modülü mock'lanır ki
 // gerçek bir oyun örneği ayağa kalkmasın.
 const gameConstructorCalls: unknown[] = [];
 

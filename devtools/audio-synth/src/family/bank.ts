@@ -182,7 +182,7 @@ export interface BankQuery {
   readonly tags?: readonly string[];
 }
 
-export function filterVariants(bank: SoundFamilyBankV1, query: BankQuery = {}): BankVariantV1[] {
+function filterVariants(bank: SoundFamilyBankV1, query: BankQuery = {}): BankVariantV1[] {
   return bank.variants
     .filter(
       (v) =>

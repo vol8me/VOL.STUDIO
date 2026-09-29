@@ -9,7 +9,7 @@ import {
   type Stem,
   type StemGainMap,
 } from '@volstudio/core/audio/music';
-import { hashCanonical, hashPcm, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../protocol/canonical';
 import {
   applyMastering,
   measureMix,
@@ -43,7 +43,7 @@ export const QA_TRUE_PEAK_MAX_DBTP = -1;
 export const QA_SAMPLE_PEAK_MAX = 0.999;
 /** En kısık state bile bu eşiğin altına inerse "duyulmuyor" sayılır. */
 export const QA_SILENT_LUFS = -60;
-export const MUSIC_LOUDNESS_RANGE = { min: -20, max: -12 } as const;
+const MUSIC_LOUDNESS_RANGE = { min: -20, max: -12 } as const;
 
 function loudnessRange(program: MusicProgramV1): { min: number; max: number } {
   const range = ASSET_CLASS_POLICIES.classes.ambience.loudnessRange;
@@ -469,10 +469,6 @@ export function specFrames(program: MusicProgramV1, rendered: number): number {
   return program.playback === 'playlistOneShot'
     ? rendered
     : barsToFrames(bars, program.tempo.bpm, program.meter[0], program.sampleRate);
-}
-
-export function stemPcmHash(stem: RenderedStemV1, sampleRate: number): Sha256 {
-  return hashPcm(stem.channels as Float32Array[], sampleRate);
 }
 
 export function adaptiveQaHash(qa: MusicAdaptiveQaV1): Sha256 {

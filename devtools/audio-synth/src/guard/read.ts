@@ -131,7 +131,7 @@ export function checkArray(value: unknown, path: string): readonly unknown[] {
  * tabanıdır (telefon bandı); 384 kHz üstü hiçbir teslim biçiminde yoktur.
  * Tamsayı şartı WAV/OGG başlıklarından gelir.
  */
-export const SAMPLE_RATE_RULE: NumberRule = { min: 8000, max: 384000, integer: true };
+const SAMPLE_RATE_RULE: NumberRule = { min: 8000, max: 384000, integer: true };
 
 export function checkSampleRate(value: unknown, path: string): number {
   return checkNumber(value, path, SAMPLE_RATE_RULE);

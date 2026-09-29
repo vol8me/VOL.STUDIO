@@ -18,7 +18,7 @@ import { checkChoice, checkNumber, checkObject } from '../guard/read';
  */
 export const MUSIC_MASTERING_SCHEMA = 'MusicMasteringPlanV1';
 
-export const MASTERING_PATH_NAMES = ['one-shot-limited', 'loop-cyclic', 'stem-linear'] as const;
+const MASTERING_PATH_NAMES = ['one-shot-limited', 'loop-cyclic', 'stem-linear'] as const;
 export type MasteringPath = (typeof MASTERING_PATH_NAMES)[number];
 
 /** Müzik sınıfı politikası [−20, −12] LUFS ister; varsayılan hedef ortadır. */
@@ -26,7 +26,7 @@ export const DEFAULT_MUSIC_LUFS = -16;
 export const MASTER_DC_BLOCK_HZ = 20;
 export const MASTER_CEILING = 0.95;
 export const MASTER_END_FADE_SECONDS = 0.04;
-export const MAX_MASTER_GAIN_DB = 24;
+const MAX_MASTER_GAIN_DB = 24;
 /**
  * Kodek sonrası −1 dBTP politikası için kaynakta bırakılan pay. Ölçüldü:
  * libvorbis dönüşü true peak'i ~0.2 dB yükseltiyor (kaynakta −1.086 dBTP
@@ -112,7 +112,7 @@ export function cyclicLoudness(channels: readonly Float32Array[], sampleRate: nu
   return integratedLoudness(tail, sampleRate);
 }
 
-export function measureLoudness(
+function measureLoudness(
   channels: readonly Float32Array[],
   sampleRate: number,
   path: MasteringPath,

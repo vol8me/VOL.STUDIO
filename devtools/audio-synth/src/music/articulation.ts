@@ -33,7 +33,7 @@ export const MUTE_BRIGHTNESS = 0.5;
 /** Slide: önceki notanın perdesinden hedefe kayma süresi (notanın yarısını aşmaz). */
 export const SLIDE_SECONDS = 0.08;
 
-export const MAX_ARTICULATIONS = 3;
+const MAX_ARTICULATIONS = 3;
 
 export function checkArticulations(value: unknown, path: string): Articulation[] {
   const list = checkArray(value, path);

@@ -17,7 +17,7 @@ import { planVoices, voiceSecondsBound, type VoiceContext } from './voices';
 export const MUSIC_RENDERER_VERSION = 2;
 
 /** Tek seferlik cue'da son notadan sonra bırakılan pay. */
-export const ONE_SHOT_TAIL_SECONDS = 3;
+const ONE_SHOT_TAIL_SECONDS = 3;
 /** Doğal sönümün sonunda bırakılan pay (kırpma zaten sessizliği atar). */
 const TRIM_MARGIN = 0.1;
 
@@ -26,7 +26,7 @@ const TRIM_MARGIN = 0.1;
  * değildir; bütçe kapısının görevi aşırı işi ÖNCEDEN reddetmektir, maliyeti
  * tahmin etmek değil.
  */
-export const VOICE_WORK_PER_FRAME = 40;
+const VOICE_WORK_PER_FRAME = 40;
 
 export interface MusicRenderV1 {
   readonly channels: Float32Array[];

@@ -31,9 +31,8 @@ export const MUSIC_TARGET_KINDS = [
   'density-thinning',
   'motif-transpose',
 ] as const;
-export type MusicTargetKind = (typeof MUSIC_TARGET_KINDS)[number];
 
-export const MUSIC_OBJECTIVE_METRICS = [
+const MUSIC_OBJECTIVE_METRICS = [
   'notesPerBar',
   'melodicSalience',
   'maxPolyphony',
@@ -75,7 +74,7 @@ export interface MusicSearchSpecV1 {
 }
 
 export const MAX_CANDIDATES = 256;
-export const MAX_FINALISTS = 8;
+const MAX_FINALISTS = 8;
 /** Yoğunluk inceltmesi bu oranın altında etkisizdir (nota atlamak için en az 1/k gerekir). */
 const MIN_THINNING = 0.1;
 

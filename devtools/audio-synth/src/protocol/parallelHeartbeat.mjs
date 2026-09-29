@@ -5,7 +5,7 @@
 // Görev senkron koştuğundan işçinin kendi zamanlayıcısı bu işi göremez.
 import { Worker } from 'node:worker_threads';
 
-export const HEARTBEAT_INTERVAL_MS = 250;
+const HEARTBEAT_INTERVAL_MS = 250;
 
 const BEAT = `const { workerData } = require('node:worker_threads');
 const { beats, slot, interval } = workerData;

@@ -42,7 +42,7 @@ const SILENCE = 1e-12;
  * gördüğü sinyaldir: kendi girişi ya da sidechain. Bağlı modda tek zarf
  * bütün kanallara uygulanır (stereo görüntü kaymaz).
  */
-export function compressorGains(
+function compressorGains(
   detect: readonly Float32Array[],
   frames: number,
   sampleRate: number,

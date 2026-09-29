@@ -403,7 +403,7 @@ function narrowed(
 }
 
 /** Kararlı varyant kimliği: aile kimliği + anahtar + roller + politika + tohum + program özeti. */
-export function variantIdOf(
+function variantIdOf(
   family: SoundFamilyProgramV1,
   variant: FamilyVariantV1,
   programHash: Sha256,

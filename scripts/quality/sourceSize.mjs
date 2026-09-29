@@ -1,14 +1,13 @@
 /**
  * KAYNAK DOSYA BOYUTU — 1000 satır SERT sınırdır, muafiyet yoktur.
  *
- * Eşik bir dönem 600'dü ve gerekçe listesiyle çalışıyordu; liste sürekli büyüdü
- * ve sürekli muafiyet yazılan bir eşik eşik değildir. Sınır gerçekten büyük
- * dosyaların başladığı yere çekildi: bin satırın üstü bölünür.
+ * Sürekli muafiyet yazılan eşik eşik değildir; sınır gerçekten büyük
+ * dosyaların başladığı yerdedir ve bin satırın üstü bölünür.
  *
- * Testler, betikler (`.mjs`), stil ve native kaynak da kapsamdadır. Belge,
- * yapılandırma/veri ve asset dosyaları satır sınırına tabi değildir; bunların
- * doğal boyutu kaynak kod karmaşıklığını göstermez. Kapsam bir dönem yalnız
- * `*.ts` idi ve beş stil dosyası 1083–2276 satıra ulaşmıştı.
+ * Testler, betikler (`.mjs`), stil ve native kaynak da kapsamdadır; kapsam
+ * dışı kalan tür sınırsız büyür. Belge, yapılandırma/veri ve asset dosyaları
+ * satır sınırına tabi değildir; bunların doğal boyutu kaynak kod
+ * karmaşıklığını göstermez.
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

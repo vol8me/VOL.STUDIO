@@ -3,7 +3,6 @@ import { renderSession, withRenderSession, type RenderQuality } from '../engine/
 import { AudioParamError } from '../guard/errors';
 import { checkObject } from '../guard/read';
 import type { RenderCost } from '../guard/budget';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
 import {
   applyMastering,
   masteringPathOf,
@@ -219,10 +218,6 @@ export function estimateMusicStemCost(value: unknown): RenderCost {
   const document = validateMusicStemProgram(value);
   const score = expandProgram(document.music);
   return costOf(musicView(document.music, score, stemFilter(document)), document.music);
-}
-
-export function musicStemProgramHash(document: MusicStemProgramV1): Sha256 {
-  return hashCanonical(document);
 }
 
 export { MUSIC_RENDERER_VERSION };

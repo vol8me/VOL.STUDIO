@@ -21,7 +21,7 @@ import { masterChannels } from './master';
  *
  * `dryBuffer` değiştirilmez; zincir kendi kopyasında çalışır.
  */
-export function applyBusEffects(
+function applyBusEffects(
   dryBuffer: Float32Array,
   bus: ResolvedBusEffects,
   sampleRate: number,

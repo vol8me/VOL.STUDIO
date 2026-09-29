@@ -392,7 +392,11 @@
     "displayWindowed": "Windowed",
     "displayFullscreen": "Fullscreen",
     "displayResolution": "Resolution",
-    "displayQuality": "Graphics quality"
+    "displayQuality": "Graphics quality",
+    "onScreenKeyboard": "On-screen keyboard",
+    "onScreenKeyboardOpen": "Open keyboard",
+    "onScreenKeyboardValue": "Value: {{value}}",
+    "onScreenKeyboardCanceled": "Canceled, value kept: {{value}}"
   },
   "palette": {
     "surface": "Surface",

@@ -1,7 +1,7 @@
 /**
  * DONDURULMUŞ v1 çevre girdileri — `2cd8b45` anlığı. `source.wind@1`,
  * `source.rain@1`, `source.fire@1` programları eski mikro-olay/OU
- * uygulamasını buradan alır; dosya "iyileştirilmez" (K2). Güncel (dinleme
+ * uygulamasını buradan alır; dosya "iyileştirilmez". Güncel (dinleme
  * turu 2 sonrası) girdiler `./environment` içindedir (v2).
  */
 import { createNoiseSource } from '../../synthesis/noise';
@@ -26,7 +26,7 @@ function multiScale(tau: readonly number[], sampleRate: number, seedUniform: () 
     processes.reduce((sum, process, i) => sum + weights[i] * process.next(), 0);
 }
 
-export const WIND_V1: SourceEntry = {
+const WIND_V1: SourceEntry = {
   id: 'source.wind',
   kind: 'source',
   version: 1,
@@ -104,7 +104,7 @@ export const WIND_V1: SourceEntry = {
   },
 };
 
-export const RAIN_V1: SourceEntry = {
+const RAIN_V1: SourceEntry = {
   id: 'source.rain',
   kind: 'source',
   version: 1,
@@ -229,7 +229,7 @@ export const RAIN_V1: SourceEntry = {
   },
 };
 
-export const FIRE_V1: SourceEntry = {
+const FIRE_V1: SourceEntry = {
   id: 'source.fire',
   kind: 'source',
   version: 1,

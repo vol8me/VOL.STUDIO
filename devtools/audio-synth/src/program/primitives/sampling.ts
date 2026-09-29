@@ -73,7 +73,7 @@ const sampleRef = {
   description: 'Programın `samples` bildirimindeki kayıt adı.',
 } as const;
 
-export const SAMPLE: SourceEntry = {
+const SAMPLE: SourceEntry = {
   id: 'source.sample',
   kind: 'source',
   version: 1,
@@ -179,7 +179,7 @@ function playZone(
   }
 }
 
-export const SAMPLER: SourceEntry = {
+const SAMPLER: SourceEntry = {
   id: 'source.sampler',
   kind: 'source',
   version: 1,
@@ -333,7 +333,7 @@ function renderGrains(
   }
 }
 
-export const GRANULAR: SourceEntry = {
+const GRANULAR: SourceEntry = {
   id: 'source.granular',
   kind: 'source',
   version: 1,

@@ -100,7 +100,7 @@ export interface SelectionV1 {
 }
 
 export const JOB_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
-export const RENDER_ID = /^r-[0-9a-f]{16}$/;
+const RENDER_ID = /^r-[0-9a-f]{16}$/;
 
 /** Belge doğrulama hatasını dosya etiketiyle `invalid` protokol hatasına çevirir. */
 export function asProtocol<T>(label: string, fn: () => T): T {

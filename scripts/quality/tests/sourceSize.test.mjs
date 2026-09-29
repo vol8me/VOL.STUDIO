@@ -60,11 +60,7 @@ test('dosya küçüldüğünde ÖLÜ gerekçe bildirilir', (t) => {
   assert.match(problems[0], /ölü muafiyet/);
 });
 
-/*
- * Testler bir dönem kapsam DIŞINDAYDI ("test dosyaları uzundur ve olmalıdır").
- * Pratikte bir test dosyası da birikir: `cards.test.ts` 1413 satıra çıkmıştı ve
- * içinde üç ayrı konu vardı. Aynı sebep, aynı sınır.
- */
+/* Test dosyası da birikir ve konu karıştırır: aynı sebep, aynı sınır. */
 test('TESTLER de kapsamdadır', (t) => {
   const root = repo(t, { 'tests/huge.test.ts': 900, 'src/x.ts': 10 });
   const problems = validateSourceSize(root, {}, 100);

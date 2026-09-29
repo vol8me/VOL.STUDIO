@@ -223,7 +223,7 @@ function declarationOf(id: string): Record<string, unknown> {
 }
 
 /** Ölçüm İÇERMEYEN beyan yüzeyi: registry özeti bunun üstünden alınır. */
-export function instrumentDeclaration(): unknown {
+function instrumentDeclaration(): unknown {
   return instrumentIds().map(declarationOf);
 }
 

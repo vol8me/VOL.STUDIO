@@ -75,7 +75,7 @@ export interface ResolvedBusEffects {
   readonly stereoWidth?: number;
 }
 
-export function resolveBusEffects(o: ParamObject, path: string): ResolvedBusEffects {
+function resolveBusEffects(o: ParamObject, path: string): ResolvedBusEffects {
   const at = (key: string): string => (path === '' ? key : `${path}.${key}`);
   return {
     delay: o.delay === undefined ? undefined : resolveDelayParams(o.delay, at('delay')),

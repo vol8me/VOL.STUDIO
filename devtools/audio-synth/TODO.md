@@ -260,7 +260,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       (`tests/protocol/fuzz.test.ts` — `validate*`/`resolve*` bozuk
       girdileri yalnız `AudioParamError`/`ProtocolError`/
       `CanonicalJsonError` fırlatır, `TypeError` yok); mutasyon
-      kampanyası `scripts/mutation-campaign.ts` — 12 kritik iddia
+      kampanyası `scripts/research/mutation-campaign.ts` — 12 kritik iddia
       bilerek bozuldu, 12/12 testler öldürdü (kanonik sıralama,
       sürüm çözümü, encode kalitesi, BLEP, manifest şeması, worker
       önbelleği/sırası, canary varsayılanı, yüzey pinleme, fit
@@ -929,7 +929,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       (`waveforms.ts` `blepResidual`: ±16 örneklik Kaiser pencereli sinc
       integrali) hem motor osilatörüne hem retro çekirdeğe uygulandı;
       retro tarafında kenar-zamanı semantiği düzeltildi. Ölçüm ızgarası
-      `scripts/polyblep-alias-report.ts`: 3.6 kHz testere motor ve retro
+      `scripts/research/polyblep-alias-report.ts`: 3.6 kHz testere motor ve retro
       −88.3 dB (F6a hedefi −70; eski çekirdek −47 idi), bütün ızgara
       ≤ −87 dB. Kilitler `tests/oscillatorAlias.test.ts` (motor) ve
       `tests/retro.test.ts` (retro), ölçülenin 2 dB üstünde.

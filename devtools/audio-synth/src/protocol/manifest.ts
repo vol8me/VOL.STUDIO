@@ -54,13 +54,19 @@ export interface AudioAssetManifestV1 {
   };
   readonly engine: {
     readonly package: string;
-    readonly packageVersion: string;
+    /**
+     * Eski manifest'lerde kalan, bilgi taşımayan alanlar: paket sürümü hiç
+     * değişmedi, yayın her zaman kirli ağaçta yazıldı. Kaynak kimliği
+     * `program.hash`, `renderSurface` ve `registryHash`tir; yeni yayın bunları
+     * yazmaz.
+     */
+    readonly packageVersion?: string;
     readonly rendererVersion: number;
     readonly registryHash: Sha256;
     /** Programın kullandığı düğümlerin render yüzeyi; eski manifest'lerde yoktur. */
     readonly renderSurface?: RenderSurfaceV1;
-    readonly sourceCommit: string | null;
-    readonly sourceTreeDirty: boolean | null;
+    readonly sourceCommit?: string | null;
+    readonly sourceTreeDirty?: boolean | null;
     readonly runtime: { readonly node: string };
   };
   readonly encoder: EncoderToolchain;

@@ -17,12 +17,12 @@
  *
  * Deterministiktir; çıktı commit'lenmez.
  *
- * Kullanım: tsx scripts/antialias-method-report.ts [--json]
+ * Kullanım: tsx scripts/research/antialias-method-report.ts [--json]
  */
 import { performance } from 'node:perf_hooks';
-import { fft, powerSpectrum } from '../src/analysis/spectrum';
-import { downsample2x } from '../src/engine/render';
-import { blepResidual, BLEP_RADIUS } from '../src/synthesis/waveforms';
+import { fft, powerSpectrum } from '../../src/analysis/spectrum';
+import { downsample2x } from '../../src/engine/render';
+import { blepResidual, BLEP_RADIUS } from '../../src/synthesis/waveforms';
 
 const RATE = 44100;
 const SUBSTEPS = 64;

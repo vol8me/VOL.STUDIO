@@ -25,7 +25,7 @@ import { strategyPoints } from './strategy';
 /**
  * Aşama 1 — plan/ön-denetim. Hiçbir aday render EDİLMEZ: noktalar üretilir,
  * programlar oluşturulup doğrulanır, geçersizler sınıflanır, her geçerli
- * adayın maliyeti Dalga 0 modeliyle tahmin edilir ve toplu bütçe bütün
+ * adayın maliyeti render bütçesi modeliyle tahmin edilir ve toplu bütçe bütün
  * plan üzerinden bir kez sınanır. Bütçe aşımı yürütmeden önce adıyla
  * reddedilir; plan hiçbir dosya yazmaz.
  */

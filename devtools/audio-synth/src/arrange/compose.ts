@@ -16,9 +16,7 @@ function resolveTime(value: number, bpm?: number): number {
 
 /**
  * Nota parametresi: bus efektleri, örnek oranı ve sample katmanı DİZİYE
- * aittir. Eskiden nota başına verildiklerinde sessizce siliniyordu (ve liste
- * flanger/phaser'ı unuttuğu için bu ikisi iki kez uygulanıyordu); artık
- * adıyla reddedilir.
+ * aittir; nota başına verilirse sessizce silinmez, adıyla reddedilir.
  */
 function noteOverrides(params: unknown, path: string): Partial<SynthParams> {
   if (params === undefined) return {};

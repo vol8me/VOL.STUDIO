@@ -53,13 +53,13 @@ export interface VolGameConfig {
   diagnostics?: Diagnostics;
   /**
    * Sahneler init edilmeden (Phaser.Game oluşturulmadan) ÖNCE çalışır; native
-   * state/save load için kullanılır (bkz. GDD 17.3). Hook reddedilirse oyun başlatılmaz.
+   * state/save load için kullanılır. Hook reddedilirse oyun başlatılmaz.
    */
   onBeforeSceneInit?: () => Promise<void>;
 }
 
 /**
- * VOL.STUDIO oyunlarını asenkron olarak başlatır. Deterministic boot order (GDD 17.3):
+ * VOL.STUDIO oyunlarını asenkron olarak başlatır. Deterministik açılış sırası:
  * fontlar yüklenir, ardından `onBeforeSceneInit` awaitlenir, sonra `Phaser.Game` oluşturulur.
  */
 export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game> {

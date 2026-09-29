@@ -1,5 +1,5 @@
 /**
- * Deterministik aday arama laboratuvarı (Dalga 4): sürümlü spec, uzay
+ * Deterministik aday arama laboratuvarı: sürümlü spec, uzay
  * doldurma stratejisi, plan/ön-denetim, aday değerlendirmesi, seri yürütme,
  * rapor ve arama seçimi. Kalıcılık, terfi, paralel yürütme ve dinleme
  * sunucusu `src/protocol/` altındadır.

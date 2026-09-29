@@ -19,14 +19,14 @@ import { MUSIC_KEY, checkPattern, checkText, type Articulation } from './terms';
  * sus, `_` önceki vuruşu bir adım uzatır. Boşluk ve `|` okunabilirlik
  * içindir, adım sayılmaz.
  */
-export const PATTERN_HIT = { x: [], X: ['accent'], o: ['ghost'] } as const satisfies Record<
+const PATTERN_HIT = { x: [], X: ['accent'], o: ['ghost'] } as const satisfies Record<
   string,
   readonly Articulation[]
 >;
 
-export const MAX_PATTERN_STEPS = 64;
+const MAX_PATTERN_STEPS = 64;
 export const MAX_PATTERNS = 32;
-export const MAX_PATTERN_ROWS = 16;
+const MAX_PATTERN_ROWS = 16;
 
 interface PitchRef {
   readonly note?: string;

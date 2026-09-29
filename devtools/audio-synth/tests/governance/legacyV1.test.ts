@@ -7,7 +7,7 @@ import { hashPcm } from '../../src/protocol/canonical';
 import { repoSampleResolver } from '../../src/protocol/samples';
 
 /**
- * K2 miras kanıtı: `2cd8b45` commit'inde yayımlanmış 25 akustik manifestin
+ * Miras kanıtı: `2cd8b45` commit'inde yayımlanmış 25 akustik manifestin
  * gömülü programı ve kayıtlı PCM özeti (`tests/fixtures/legacy-v1.json`)
  * bugünkü motorla BİT-EŞİT yeniden üretilmeli. Düğüm sürümleri 1'e
  * pin'lidir ve dondurulmuş v1 çekirdeklerine çözülür; bu dosyada bir satır

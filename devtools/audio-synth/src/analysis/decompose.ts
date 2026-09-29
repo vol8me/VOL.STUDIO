@@ -17,7 +17,7 @@ import { fft } from './spectrum';
  * gövdededir, 1 ms'lik tam genlikli atak enerji payında görünmez (ölçüldü:
  * metal–metal temasta %0.06).
  */
-export const DECOMPOSE_METHOD = 'hpss-median-v1';
+const DECOMPOSE_METHOD = 'hpss-median-v1';
 
 export interface DecompositionV1 {
   readonly method: typeof DECOMPOSE_METHOD;

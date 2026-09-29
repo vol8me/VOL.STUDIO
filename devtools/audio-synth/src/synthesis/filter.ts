@@ -14,7 +14,7 @@ function checkFilterRate(sampleRate: number, owner: string): number {
  * Kutup açıları 22.5° ve 67.5° → Q = 1/(2·cos θ).
  * Rastgele seçilmiş bir `q * 0.6` bu tepkiyi vermez.
  */
-export const BUTTERWORTH_Q4: readonly [number, number] = [0.5411961, 1.306563];
+const BUTTERWORTH_Q4: readonly [number, number] = [0.5411961, 1.306563];
 
 /** Katsayı yeniden hesabı için minimum bağıl cutoff değişimi (%0.1). */
 const COEFF_UPDATE_EPSILON = 0.001;

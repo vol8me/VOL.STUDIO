@@ -1,7 +1,7 @@
 /** @volstudio/core/audio/music
  *
  *  Web Audio tabanlı müzik motoru.
- *  Önceden üretilmiş OGG/MP3 stem'leri çalar, adaptive gain ve crossfade destekler.
+ *  Önceden üretilmiş OGG stem'leri çalar, adaptive gain ve crossfade destekler.
  *  Runtime melodi/procedural üretim yok — tüm müzik build-time'da üretilir.
  */
 

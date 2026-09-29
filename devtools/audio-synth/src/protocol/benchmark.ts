@@ -597,7 +597,7 @@ export function runBenchmarks(
   }
 }
 
-export function validateBenchmarkReviews(value: unknown): BenchmarkReviewsV1 {
+function validateBenchmarkReviews(value: unknown): BenchmarkReviewsV1 {
   const o = checkObject(value, 'reviews', ['schema', 'reviews']);
   if (o.schema !== BENCHMARK_REVIEWS_SCHEMA)
     throw new AudioParamError('schema', 'type', `"${BENCHMARK_REVIEWS_SCHEMA}" olmalı`, o.schema);

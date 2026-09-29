@@ -37,7 +37,6 @@
     "audio:audition": "tsx scripts/archetype-audition.ts",
     "audio:listen": "tsx scripts/listening-package.ts",
     "bench:resonators": "tsx scripts/resonator-bench.ts",
-    "convert:ios": "tsx scripts/convert-audio.ts",
     "audio:samples": "tsx scripts/sample-fixtures.ts"
   },
   "dependencies": {

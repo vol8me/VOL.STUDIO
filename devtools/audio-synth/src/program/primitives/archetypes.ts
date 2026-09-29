@@ -109,7 +109,7 @@ function archetype(
 
 const SIZE = macro('Gövde boyutu → control.body-size.');
 
-export const FLUID_CREATURE = archetype(
+const FLUID_CREATURE = archetype(
   'fluid-creature',
   'FluidCreature: kabarcık nüfusu + akışkan nabzı + kısık, formantlı glottal ses. Islaklık ' +
     'kabarcık sıklığını, viskozite kabarcık sönümünü, etkinlik nabız ve olay hızını sürer.',
@@ -205,7 +205,7 @@ export const FLUID_CREATURE = archetype(
       : null,
 );
 
-export const MEMBRANE_CREATURE = archetype(
+const MEMBRANE_CREATURE = archetype(
   'membrane-creature',
   'MembraneCreature: burkulan zar (timbal) tık dizisi → gerilmiş zar modal gövde → genlik ' +
     'eğrisi; arkada boşluktan geçen hafif nefes. Etkinlik tık hızını, gerilim modları sürer.',
@@ -284,7 +284,7 @@ export const MEMBRANE_CREATURE = archetype(
   },
 );
 
-export const AIR_SAC_CREATURE = archetype(
+const AIR_SAC_CREATURE = archetype(
   'air-sac-creature',
   'AirSacCreature: düşük perdeli glottal ses → şişip inen hava kesesi (Helmholtz boşluk, hacim ' +
     'gesture’ı) → formant; keseden geçen hava akışı. Şişme boşluk makrosunu, pürüz alt-harmoniği sürer.',
@@ -369,7 +369,7 @@ export const AIR_SAC_CREATURE = archetype(
   },
 );
 
-export const CHITIN_CLICKER = archetype(
+const CHITIN_CLICKER = archetype(
   'chitin-clicker',
   'ChitinClicker: kümelenebilen tık olayları → yüksek, kısa sönümlü serbest-çubuk modları ' +
     '(kitin plaka). Etkinlik olay hızını, patlamalılık kümelenmeyi, sertlik sönüm/parlaklığı sürer.',
@@ -416,7 +416,7 @@ export const CHITIN_CLICKER = archetype(
   }),
 );
 
-export const RESONANT_SHELL = archetype(
+const RESONANT_SHELL = archetype(
   'resonant-shell',
   'ResonantShell: tek vuruş → paralel modal gövde (çubuk ya da zar yerleşimi) + iç boşluk; ' +
     'küçük oda. Sertlik temas süresini, sönüm viskozite makrosunu, pürüz temas gürültüsünü sürer.',
@@ -467,7 +467,7 @@ export const RESONANT_SHELL = archetype(
   }),
 );
 
-export const VOCAL_TUBE = archetype(
+const VOCAL_TUBE = archetype(
   'vocal-tube',
   'VocalTube: glottal kaynak → açık/kapalı tüp dalga kılavuzu (ses yolu benzeri tek harmonik ' +
     'rezonanslar) → genlik eğrisi. Boyut tüpü uzatıp perdeyi düşürür, gerilim ve havalılık kaynağı sürer.',

@@ -392,7 +392,11 @@
     "displayWindowed": "Pencere",
     "displayFullscreen": "Tam ekran",
     "displayResolution": "Çözünürlük",
-    "displayQuality": "Grafik kalitesi"
+    "displayQuality": "Grafik kalitesi",
+    "onScreenKeyboard": "Ekran klavyesi",
+    "onScreenKeyboardOpen": "Klavyeyi aç",
+    "onScreenKeyboardValue": "Değer: {{value}}",
+    "onScreenKeyboardCanceled": "İptal edildi, değer korundu: {{value}}"
   },
   "palette": {
     "surface": "Surface",

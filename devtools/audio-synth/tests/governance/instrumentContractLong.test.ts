@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Presets, synthesize } from '../../src/index';
+import { Presets } from '../../src/index';
+import { synthesize } from '../../src/engine';
 import { INSTRUMENTS, measure } from './instrumentContractShared';
 
 /**

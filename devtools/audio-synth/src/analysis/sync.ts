@@ -97,7 +97,7 @@ export interface LoopSeamCheckV1 {
 }
 
 /** Dikiş adımı tipik adımın bu katını aşarsa süreksizlik sayılır. */
-export const SEAM_STEP_FACTOR = 2;
+const SEAM_STEP_FACTOR = 2;
 const SEAM_FLOOR = 1e-4;
 
 function stepPercentile(channel: Float32Array, fraction: number): number {

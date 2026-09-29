@@ -93,7 +93,7 @@ function withoutTreatment(document: unknown): unknown {
 }
 
 /** Programın kaynağa + profile bağının üç eşitliği; ilk bozulanı adıyla döner. */
-export function derivationProblem(
+function derivationProblem(
   programDocument: unknown,
   source: AudioAssetManifestV1,
   origin: TreatmentOriginV1,

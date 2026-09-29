@@ -58,7 +58,7 @@ export const REROLL_FLASH_MS = 240;
 export const PURCHASE_FLASH_MS = 240;
 
 /** `.vol-card-shop__balance--changed` vurgu süresi. */
-export const BALANCE_FLASH_MS = 240;
+const BALANCE_FLASH_MS = 240;
 
 /**
  * Dalga arası dükkan — teklif edilen kartlar fiyatlarıyla, sahip olunan

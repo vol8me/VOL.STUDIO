@@ -1,7 +1,7 @@
 /**
  * DONDURULMUŞ v1 retro çekirdeği — `2cd8b45` anlığı. `source.retro@1`
  * programları iki-örneklik PolyBLEP düzeltmesini buradan alır; dosya
- * "iyileştirilmez" (K2). Güncel ±BLEP_RADIUS rezidüel çekirdek
+ * "iyileştirilmez". Güncel ±BLEP_RADIUS rezidüel çekirdek
  * `./retro` içindedir (v2).
  */
 import { crush } from '../effects/saturation';

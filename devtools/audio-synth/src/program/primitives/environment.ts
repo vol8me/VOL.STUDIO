@@ -20,7 +20,7 @@ function multiScale(tau: readonly number[], sampleRate: number, seedUniform: () 
     processes.reduce((sum, process, i) => sum + weights[i] * process.next(), 0);
 }
 
-export const WIND: SourceEntry = {
+const WIND: SourceEntry = {
   id: 'source.wind',
   kind: 'source',
   version: 2,
@@ -105,7 +105,7 @@ export const WIND: SourceEntry = {
   },
 };
 
-export const RAIN: SourceEntry = {
+const RAIN: SourceEntry = {
   id: 'source.rain',
   kind: 'source',
   version: 2,
@@ -240,7 +240,7 @@ export const RAIN: SourceEntry = {
   },
 };
 
-export const FIRE: SourceEntry = {
+const FIRE: SourceEntry = {
   id: 'source.fire',
   kind: 'source',
   version: 2,

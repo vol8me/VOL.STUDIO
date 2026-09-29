@@ -20,4 +20,5 @@ export type { MasterOptions, MasterLevel } from '../engine/master';
 export { renderVoices } from './render';
 export type { PlacedVoiceV1, RenderVoicesOptions } from './render';
 export { Timeline } from './timeline';
+export { compose } from './compose';
 export type { InstrumentFn, NoteEvent, TimelineOptions, RenderOptions } from './timeline';

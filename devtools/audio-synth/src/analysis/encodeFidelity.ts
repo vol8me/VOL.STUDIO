@@ -34,7 +34,7 @@ export interface EncodeFidelityV1 {
 }
 
 /** 1/3 oktav bant merkezleri, 50 Hz – 16 kHz (1000·2^(k/3)). */
-export const THIRD_OCTAVE_CENTERS: readonly number[] = Array.from(
+const THIRD_OCTAVE_CENTERS: readonly number[] = Array.from(
   { length: 26 },
   (_, i) => 1000 * 2 ** ((i - 13) / 3),
 );

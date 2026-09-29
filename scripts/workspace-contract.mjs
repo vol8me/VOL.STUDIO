@@ -27,6 +27,7 @@ import { validatePhaserBoundary } from './quality/phaserBoundary.mjs';
 import { validateCoreTypeSurface } from './quality/publicTypeSurface.mjs';
 import { validateTauriPlugins } from './quality/tauriPlugins.mjs';
 import { validateRepoAppIdentity } from './quality/appIdentity.mjs';
+import { validateRepoCatalog } from './quality/catalog.mjs';
 import {
   activeWorkspaceNames,
   listWorkspacePackages,
@@ -100,6 +101,7 @@ problems.push(...validateTauriPlugins(root, lifecycle));
 problems.push(...validateRepoAppIdentity(root, lifecycle));
 problems.push(...validatePhaserBoundary(root));
 problems.push(...validateCoreTypeSurface(root));
+problems.push(...validateRepoCatalog(root));
 
 for (const pkg of activePackages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));

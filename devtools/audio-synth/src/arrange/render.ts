@@ -81,10 +81,10 @@ export function renderVoices(voices: readonly PlacedVoiceV1[], options: RenderVo
 }
 
 /** Kırpma eşiği: mix tepesinin −56 dB altı. */
-export const AUDIBLE_FLOOR_RELATIVE = Math.pow(10, -56 / 20);
+const AUDIBLE_FLOOR_RELATIVE = Math.pow(10, -56 / 20);
 
 /** Son duyulur örnekten sonra bırakılan pay (saniye). */
-export const TRIM_MARGIN_SECONDS = 0.35;
+const TRIM_MARGIN_SECONDS = 0.35;
 
 function peakOf(channels: readonly Float32Array[]): number {
   let peak = 0;

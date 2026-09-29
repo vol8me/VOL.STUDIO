@@ -129,7 +129,7 @@ const hz = (description: string, fallback: number, max = 12000): NumberParamSpec
 
 const perModeWork = (automated: ReadonlySet<string>) => (automated.size > 0 ? 12 : 5);
 
-export const MODAL: ProcessorEntry = {
+const MODAL: ProcessorEntry = {
   id: 'resonator.modal',
   kind: 'resonator',
   version: 1,
@@ -252,7 +252,7 @@ export function helmholtzFrequency(
   return (SPEED_OF_SOUND / (2 * Math.PI)) * Math.sqrt(area / (volume * effective));
 }
 
-export const CAVITY: ProcessorEntry = {
+const CAVITY: ProcessorEntry = {
   id: 'resonator.cavity',
   kind: 'resonator',
   version: 1,
@@ -338,7 +338,7 @@ export const CAVITY: ProcessorEntry = {
 const FORMANT_BANDWIDTH = [80, 90, 120, 130];
 const FORMANT_LEVEL = [1, 0.7, 0.4, 0.25];
 
-export const FORMANT: ProcessorEntry = {
+const FORMANT: ProcessorEntry = {
   id: 'resonator.formant',
   kind: 'resonator',
   version: 1,

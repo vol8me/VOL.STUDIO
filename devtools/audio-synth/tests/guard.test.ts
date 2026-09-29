@@ -1,19 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
+import { BiquadFilter, Envelope, Reverb, createFilter } from '../src/index';
 import {
-  BiquadFilter,
   Chorus,
   DelayLine,
   Distortion,
-  Envelope,
   Flanger,
   PhaserEffect,
-  Reverb,
   StereoWidener,
-  createFilter,
   getPanGains,
-  synthesize,
-} from '../src/index';
+} from '../src/effects';
+import { synthesize } from '../src/engine';
 import type { SynthParams } from '../src/types';
 import type { AudioParamIssue } from '../src/guard/errors';
 

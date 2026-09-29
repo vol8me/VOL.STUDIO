@@ -3,7 +3,7 @@ import type { Waveform } from '../types';
 /**
  * DONDURULMUŞ v1 dalga çekirdeği — `2cd8b45` anlığı. `source.oscillator@1`,
  * `source.retro@1` ve `source.drum@1` girdileri eski programların bit-eşit
- * PCM'ini buradan üretir; bu dosya hiçbir zaman "iyileştirilmez" (K2).
+ * PCM'ini buradan üretir; bu dosya hiçbir zaman "iyileştirilmez".
  * Güncel bant sınırlı rezidüel çekirdek `./waveforms` içindedir (v2).
  */
 

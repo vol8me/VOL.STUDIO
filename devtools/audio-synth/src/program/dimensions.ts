@@ -75,7 +75,7 @@ export function checkBase(value: unknown, path: string): ProgramBaseV1 {
   return { kind, program: o.program as AcousticProgramV1 };
 }
 
-export function baseArchetype(base: ProgramBaseV1): ArchetypeEntry | null {
+function baseArchetype(base: ProgramBaseV1): ArchetypeEntry | null {
   if (base.kind !== 'archetype') return null;
   return PROGRAM_REGISTRY.resolve(
     base.request.archetype,

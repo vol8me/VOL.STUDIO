@@ -91,7 +91,7 @@ describe('kanonik publish kapısı', () => {
     expect(manifest.analysis.encoded.measuredFrom).toBe('decoded-encoded');
     expect(manifest.encoder.version).toMatch(/^ffmpeg version /);
     expect(manifest.encoder.unreported).toEqual(['libvorbis']);
-    expect(manifest.engine.sourceCommit).toBeNull();
+    expect(Object.keys(manifest.engine)).not.toContain('sourceCommit');
     expect(manifest.integration).toEqual({
       package: '@volstudio/audio-synth',
       targetKind: 'reference',

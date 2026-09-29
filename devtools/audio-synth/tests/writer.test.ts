@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { spawnSync, SpawnSyncReturns } from 'node:child_process';
 import { writeWav, writeOgg, writeAudio, resetFfmpegCache } from '@volstudio/audio-synth/writer';
-import { synth } from '@volstudio/audio-synth';
+import { synth } from '../src/engine';
 
 // `writer.ts`, `@volstudio/core/...` paket specifier'ı üzerinden (pnpm workspace
 // self-import) çözülüyor — bu, Vite'ın bağımlılık grafiğinde test dosyasından

@@ -26,7 +26,7 @@ import { writeAuditionCopy, EXPORT_ROOT } from './audition';
 import { readJsonFile, resolveInside, writeFileAtomic } from './fs';
 
 /**
- * Tek-komut dinleme paketi (F7b + R7): insan incelemesi bekleyen her ses
+ * Tek-komut dinleme paketi: insan incelemesi bekleyen her ses
  * `export/listening/` altına toplanır:
  *
  *  - **canary**: kanonik `runCanary` render'ı; karar `canary review`.
@@ -455,7 +455,7 @@ function referenceItems(repoRoot: string, samples: SampleResolver): ListeningIte
   return items;
 }
 
-/** R7 — PolyBLEP(v1) ↔ BLAMP/blepR16(v2) öncesi/sonrası çiftleri. */
+/** PolyBLEP(v1) ↔ BLAMP/blepR16(v2) öncesi/sonrası çiftleri. */
 const AA_PAIRS = [
   { id: 'aa-triangle', waveform: 'triangle', frequency: 5200 },
   { id: 'aa-sawtooth', waveform: 'sawtooth', frequency: 2400 },

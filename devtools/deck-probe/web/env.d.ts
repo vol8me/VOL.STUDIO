@@ -1,4 +1,5 @@
-// Tarayıcı/Tauri genelleri — probe.js'in checkJs tip denetimi için.
+// Tarayıcı/Tauri genelleri: editör tamamlaması içindir. probe.js tip denetimine
+// girmez (`checkJs: false`); referans uygulamasında TypeScript'e taşınır.
 declare const Phaser: any;
 
 interface Window {

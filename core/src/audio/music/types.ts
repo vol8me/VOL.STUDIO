@@ -2,7 +2,7 @@
  * Müzik motoru tipleri.
  *
  * **Mimari karar: çalma zamanında beste YOKTUR.** Runtime yalnızca önceden
- * üretilmiş stem'leri (OGG/MP3) çalar; nota/melodi üretimi build-time'da
+ * üretilmiş stem'leri (OGG) çalar; nota/melodi üretimi build-time'da
  * harici bir asset compiler ile yapılır ve sonuç repoya asset olarak girer.
  *
  * Kazancı: bir parçayı render etmek saniyeler sürebilir, kimse fark etmez —

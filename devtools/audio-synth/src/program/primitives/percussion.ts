@@ -33,7 +33,7 @@ function writeInto(out: Float32Array, source: Float32Array): void {
   out.set(source.subarray(0, Math.min(out.length, source.length)));
 }
 
-export const DRUM: SourceEntry = {
+const DRUM: SourceEntry = {
   id: 'source.drum',
   kind: 'source',
   version: 2,
@@ -112,7 +112,7 @@ function renderDrumInto(
 }
 
 /** `source.drum` v1 — metalik kümede PolyBLEP kare (dondurulmuş çekirdek). */
-export const DRUM_V1: SourceEntry = {
+const DRUM_V1: SourceEntry = {
   ...DRUM,
   version: 1,
   description:
@@ -124,7 +124,7 @@ export const DRUM_V1: SourceEntry = {
 };
 
 /** Arpej kalıpları (yarım ton); çip müziğinin hızlı akor taklidi. */
-export const RETRO_ARPEGGIOS: Readonly<Record<string, readonly number[]>> = {
+const RETRO_ARPEGGIOS: Readonly<Record<string, readonly number[]>> = {
   none: [],
   octave: [0, 12],
   fifth: [0, 7],
@@ -134,7 +134,7 @@ export const RETRO_ARPEGGIOS: Readonly<Record<string, readonly number[]>> = {
   coin: [0, 5],
 };
 
-export const RETRO: SourceEntry = {
+const RETRO: SourceEntry = {
   id: 'source.retro',
   kind: 'source',
   version: 2,
@@ -280,7 +280,7 @@ function renderRetroInto(
 }
 
 /** `source.retro` v1 — iki-örneklik PolyBLEP düzeltmeli dondurulmuş çekirdek. */
-export const RETRO_V1: SourceEntry = {
+const RETRO_V1: SourceEntry = {
   ...RETRO,
   version: 1,
   description:

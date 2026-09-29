@@ -9,7 +9,7 @@ import type { FmParams, Waveform } from '../src/types';
  *
  * Sözleşme "yanlış güvenli yok": kuralın `safe` dediği yerde ölçülen alias
  * güvenli eşiğin, `caution` dediği yerde dikkat eşiğinin üstüne çıkmaz. Tam
- * ızgara (4800 nokta) `scripts/fm-alias-report.ts` ile koşulur; burada sınıf
+ * ızgara (4800 nokta) `scripts/research/fm-alias-report.ts` ile koşulur; burada sınıf
  * sınırlarını ve bilinen en kötü noktaları taşıyan alt küme ölçülür.
  */
 

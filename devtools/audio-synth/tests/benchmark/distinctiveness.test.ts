@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { measureDistinctiveness } from '../../scripts/distinctiveness-report.js';
+import { measureDistinctiveness } from '../../scripts/research/distinctiveness-report.js';
 import { repoRenderCache } from '../../src/protocol/renderCacheStore';
 import { withRenderSession } from '../../src/engine/session';
 import { CORPUS_TIMEOUT } from '../support/timeouts';

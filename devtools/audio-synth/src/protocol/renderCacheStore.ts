@@ -22,6 +22,7 @@ import {
   type RenderCache,
 } from '../engine/renderCache';
 import type { Sha256 } from './canonical';
+import { coreClosure } from './sourceClosure';
 
 /**
  * Render önbelleğinin disk katmanı. Girdiler `node_modules` altında durur
@@ -37,13 +38,11 @@ const HEADER_BYTES = 16;
 const GIB = 1024 ** 3;
 const MIB = 1024 ** 2;
 
-export const DEFAULT_DISK_CACHE = { maxBytes: 2 * GIB, maxEntryBytes: 256 * MIB } as const;
-export const DEFAULT_MEMORY_CACHE = { maxBytes: 512 * MIB, maxEntryBytes: 128 * MIB } as const;
+const DEFAULT_DISK_CACHE = { maxBytes: 2 * GIB, maxEntryBytes: 256 * MIB } as const;
+const DEFAULT_MEMORY_CACHE = { maxBytes: 512 * MIB, maxEntryBytes: 128 * MIB } as const;
 
-const SOURCE_ROOTS = [
-  fileURLToPath(new URL('..', import.meta.url)),
-  fileURLToPath(new URL('../../../../core/src', import.meta.url)),
-];
+const SYNTH_SRC = fileURLToPath(new URL('..', import.meta.url));
+const CORE_DIR = fileURLToPath(new URL('../../../../core', import.meta.url));
 
 function sourceFiles(root: string): string[] {
   if (!existsSync(root)) return [];
@@ -56,19 +55,22 @@ function sourceFiles(root: string): string[] {
 let fingerprint: string | null = null;
 
 /**
- * Render'ı etkileyebilecek her şeyin özeti: kaynak ağacı (audio-synth + CORE),
- * Node/V8 sürümü ve mimari (`Math` sonuçları motor sürümüne bağlıdır).
+ * Render'ı etkileyebilecek her şeyin özeti: audio-synth kaynak ağacı,
+ * onun yüklediği CORE dosyaları (`coreClosure`), Node/V8 sürümü ve mimari
+ * (`Math` sonuçları motor sürümüne bağlıdır).
  */
 export function codeFingerprint(): string {
   if (fingerprint) return fingerprint;
   const hash = createHash('sha256');
   hash.update(`${process.version}\0${process.arch}\0`);
-  for (const root of SOURCE_ROOTS) {
-    for (const file of sourceFiles(root)) {
-      hash.update(relative(root, file));
-      hash.update('\0');
-      hash.update(readFileSync(file));
-    }
+  const files: [string, string][] = [
+    ...sourceFiles(SYNTH_SRC).map((file): [string, string] => [SYNTH_SRC, file]),
+    ...coreClosure(SYNTH_SRC, CORE_DIR).map((file): [string, string] => [CORE_DIR, file]),
+  ];
+  for (const [root, file] of files) {
+    hash.update(relative(root, file));
+    hash.update('\0');
+    hash.update(readFileSync(file));
   }
   fingerprint = hash.digest('hex').slice(0, 16);
   return fingerprint;

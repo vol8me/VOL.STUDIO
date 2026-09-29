@@ -9,7 +9,7 @@ import { fft } from '../analysis/spectrum';
  * uzunluğuyla değil); sonuç doğrudan konvolüsyonla kayan nokta hassasiyetinde
  * aynıdır ve deterministiktir.
  */
-export const BLOCK = 2048;
+const BLOCK = 2048;
 
 export function convolve(input: Float32Array, ir: Float32Array): Float32Array {
   const n = input.length;

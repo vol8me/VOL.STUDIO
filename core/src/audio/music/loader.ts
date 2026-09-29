@@ -24,43 +24,11 @@ export class StemLoader {
   constructor(private readonly context: AudioContext) {}
 
   /**
-   * URL'den AudioBuffer yükle. Zaman aşımı ve iptal desteklenir.
-   *
-   * `.ogg` başarısız olursa `.mp3`'e düşer — iOS WKWebView Ogg Vorbis decode
-   * etmez (audio-synth üretim hattı `generate:*` + `convert:ios` ile her
-   * ikisini de üretir). Kaynak zaten `.ogg` değilse (ör. `.wav`) fallback
-   * denenmez, orijinal hata fırlatılır. Kaynak `options.signal` çağıran
-   * tarafından abort
-   * edildiyse fallback denenmez — iptal isteği, sırf ilk denemenin türü
-   * yüzünden yok sayılmaz.
-   *
-   * `timeoutMs` her deneme için AYRI uygulanır: `.ogg` başarısız olup
-   * `.mp3`'e düşülürse toplam bekleme teorik olarak 2×`timeoutMs`'e kadar
-   * çıkabilir.
+   * URL'den AudioBuffer yükle. Zaman aşımı ve iptal desteklenir. Hedef
+   * WebView'ların hepsi Ogg Vorbis çözer; başka biçime düşülmez.
    */
-  async loadFromUrl(src: string, options: StemLoadOptions = {}): Promise<AudioBuffer> {
-    try {
-      return await this.fetchAndDecode(src, options);
-    } catch (err) {
-      if (options.signal?.aborted) throw err;
-
-      const mp3Src = src.replace(/\.ogg(?=$|[?#])/i, '.mp3');
-      if (mp3Src === src) throw err;
-
-      try {
-        return await this.fetchAndDecode(mp3Src, options);
-      } catch (fallbackErr) {
-        // Mesajda hem .ogg hem .mp3 anılır: yalnızca `err.message` loglayan
-        // bir çağıran bile ikisinin de denendiğini görür. Orijinal .ogg hatası
-        // ayrıca `cause` ile zincire eklenir — ilgisiz bir .ogg sunucu hatası
-        // (500 gibi) tamamen kaybolmaz, tam metni isteyen `cause`'a bakabilir.
-        const fallbackMessage =
-          fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
-        throw new Error(`Stem yüklenemedi (.ogg ve .mp3 ikisi de başarısız): ${fallbackMessage}`, {
-          cause: err,
-        });
-      }
-    }
+  loadFromUrl(src: string, options: StemLoadOptions = {}): Promise<AudioBuffer> {
+    return this.fetchAndDecode(src, options);
   }
 
   private async fetchAndDecode(src: string, options: StemLoadOptions): Promise<AudioBuffer> {

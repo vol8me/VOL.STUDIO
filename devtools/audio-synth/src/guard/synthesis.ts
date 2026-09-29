@@ -14,13 +14,7 @@ import {
 
 export type TonalWave = Exclude<Waveform, 'noise' | 'pink' | 'brown'>;
 
-export const TONAL_WAVES: readonly TonalWave[] = [
-  'sine',
-  'triangle',
-  'sawtooth',
-  'square',
-  'pulse',
-];
+const TONAL_WAVES: readonly TonalWave[] = ['sine', 'triangle', 'sawtooth', 'square', 'pulse'];
 export const WAVEFORMS: readonly Waveform[] = [...TONAL_WAVES, 'noise', 'pink', 'brown'];
 export const CURVES: readonly Curve[] = ['linear', 'exponential', 'cosine'];
 const FILTER_TYPES: readonly FilterType[] = ['lowpass', 'highpass', 'bandpass', 'notch'];

@@ -27,7 +27,7 @@ export function emptyStats(): RenderCacheStats {
   return { hits: 0, misses: 0, writes: 0, evictions: 0, skipped: 0, failures: 0 };
 }
 
-export function copyChannels(channels: readonly Float32Array[]): Float32Array[] {
+function copyChannels(channels: readonly Float32Array[]): Float32Array[] {
   return channels.map((channel) => channel.slice());
 }
 

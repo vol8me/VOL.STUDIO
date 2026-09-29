@@ -6,7 +6,7 @@ import { DERIVATION_SCHEME, TREATMENT_CEILING_DBTP } from './derivation';
 import { ENCODE_BASELINE_FILE, ENCODE_POLICY } from './encodeProfiles';
 
 /**
- * `context` çıktısının teslim bölümü (Dalga 12): kanal/yerleşim politikası,
+ * `context` çıktısının teslim bölümü: kanal/yerleşim politikası,
  * sınıf bazlı kodlama profili ve teslim (işleme) profilleri. Hepsi çalışan
  * koddaki veriden türetilir.
  */

@@ -22,19 +22,8 @@ export { AudioParamError, RenderBudgetError } from './guard';
 export type { AudioParamIssue, RenderCost, RenderBudget } from './guard';
 
 export * from './synthesis';
-export {
-  Chorus,
-  DelayLine,
-  Distortion,
-  Flanger,
-  PhaserEffect,
-  Reverb,
-  StereoWidener,
-  getPanGains,
-} from './effects';
-export { applyGlobalEffects, synthesize, synth, normalize, limitBuffer, mix } from './engine';
+export { Reverb } from './effects';
 export * from './instruments';
-export { compose } from './arrange/compose';
 
 export * as Presets from './presets';
 export * as Arrange from './arrange';
