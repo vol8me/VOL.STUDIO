@@ -25,6 +25,22 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       bağımlılık ve eklentiler kaldırılır.
 - [ ] **[P2] SH — Hiyerarşi.** Cargo workspace, stil ve test yerleşimi, Deck
       araçlarının tek dizinde toplanması.
+- [ ] **[P1] SC — Repo ve kök dizin temizliği (kullanıcı geri bildirimi).**
+      Kökteki her dosya ve dizin gerekçelendirilir ya da kaldırılır; git dışı
+      yerel artıklar da kapsamdadır. Bilinenler: ölü .idea/ (editör VS Code),
+      KDE `.directory` dosyası, silinmiş paketi çalıştıran
+      .vscode/launch.json, kök target/ (ortak Cargo çıktısı; SH'deki Cargo
+      workspace ile tek hedef dizine iner), eski kapıdan kalan paket başına
+      Cargo target/ dizinleri, `graphify-out/` ve `.claude/` yerel
+      çıktılarının yeri ve boyutu, kök yapılandırma dosyalarının sayısı ve
+      yeri (`.prettierrc.json`, `.stylelintrc.json`, iki ignore dosyası,
+      `quality.json`, `workspace-lifecycle.json`, `tsconfig.base.json`),
+      `.gitignore`un her satırı, testlerin paket ağacına yazdığı
+      devtools/audio-synth/export/samples, paketlerde kalan coverage/,
+      dist/, test-results/, src-tauri/gen/ ve android/.tauri/.
+      Kapanır: kökte yalnız gerekçesi `README.md` ya da `AGENTS.md`de yazılı
+      girdiler kalır; `git status --ignored` yalnız belgelenmiş yerel
+      dizinleri gösterir; bir bekçi kök girdi listesini kilitler.
 - [ ] **[P2] SB — Belgeler.** Paket README/DESIGN/TODO dosyaları minimal hâle
       gelir; `core` ve `tauri-v2` README kazanır.
 - [ ] **[P3] S7 — Araç zinciri.** ESLint, Prettier ve TypeScript sürümleri
