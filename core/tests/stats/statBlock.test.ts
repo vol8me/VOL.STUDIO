@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { StatBlock } from '../../src/stats/StatBlock';
 
 /**
- * Testin KENDİ stat sözlüğü — VOL.HELL'in kümesinden (`damage`/`speed`/
+ * Testin KENDİ stat sözlüğü — tipik bir oyun kümesinden (`damage`/`speed`/
  * `health`/`fireRate`) BİLİNÇLİ olarak farklı seçildi.
  *
  * `StatBlock` hiçbir stat adı bilmez. Motoru oyunun sözlüğüyle test etmek bu
@@ -11,7 +11,7 @@ import { StatBlock } from '../../src/stats/StatBlock';
  * ada duyarsız olduğunu gösterir.
  *
  * `recovery`, ters bir stat'ı temsil eder (bekleme süresi; düşük değer = daha
- * sık aksiyon) — VOL.HELL'deki `fireRate`'in oynadığı rol.
+ * sık aksiyon), ör. atış hızı.
  */
 type TestStat = 'attack' | 'agility' | 'vitality' | 'recovery';
 

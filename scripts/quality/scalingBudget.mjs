@@ -66,10 +66,7 @@ export function validateScaling(root, budgets, runner = measureScaling) {
  * Bütçedeki ölçüm TARİFİNİ koşar ve oran anahtarlarını üretir.
  *
  * Tarif `quality.json` → `scaling.<paket>.$measure` içinde VERİ olarak durur;
- * bekçi hiçbir paketin betik adını ya da rapor alanını bilmez. Bir dönem bu
- * fonksiyon `vol-arachnid`in `locomotion-benchmark.ts`ini ve `fxScale` alanını
- * doğrudan çağırıyordu: başka bir pakete bütçe yazmak kapıyı "ölçülemedi" ile
- * düşürüyordu, yani kapı tek pakete kilitliydi.
+ * bekçi hiçbir paketin betik adını ya da rapor alanını bilmez.
  *
  * Oran anahtarı kendi girdilerini taşır: `fxParts72Over18` = 72 girdideki süre
  * bölü 18 girdideki süre.

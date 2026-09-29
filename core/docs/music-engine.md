@@ -6,10 +6,9 @@ SFX motorundan (build-time ses sentez aracından) ayrıdır; müzik uzun loop'la
 çok kanallı stem mix'i için optimize edilmiştir.
 
 > **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş OGG (iOS'ta MP3)
-> stem'leri çalar. Müzik ve SFX dosyaları build-time script'lerle
-> (`games/vol-hell/scripts/audio-v2/` ve `devtools/audio-synth/`) üretilir.
-> Bu bilinçli bir karardır: runtime sentez CPU maliyeti ve mobilde öngörülemeyen
-> zamanlama getirir.
+> stem'leri çalar. Müzik ve SFX `devtools/audio-synth/` ile build-time'da
+> üretilir: runtime sentez CPU maliyeti ve mobilde öngörülemeyen zamanlama
+> getirir.
 
 ## Mimari
 
@@ -24,12 +23,6 @@ core/src/audio/music/
   gain-resolver.ts     — state'e göre stem gain'ini çözer
   index.ts             — public API
 ```
-
-VOL.HELL'in gönderilen Arcade besteleri ve SFX tanımları
-`games/vol-hell/scripts/audio-v2/` altında tutulur. Kanonik job ve müzik
-yayın kapısı `devtools/audio-synth/` içindedir; oyun yalnız yayımlanmış OGG
-ve manifestlerini kendi ağacından kullanır. Güncel eser envanteri ve insan
-dinleme kararı `games/vol-hell/DESIGN.md` Ses bölümündedir.
 
 Pipeline:
 
@@ -48,23 +41,19 @@ Pipeline:
 Bu maddeler kolayca yanlış varsayılan, ölçülerek doğrulanmış davranışlardır.
 
 - **`crossfadeTo()` varsayılan olarak HEMEN başlar.** `options.bars` verilirse geçiş
-  o kadar bar sonraki sınıra hizalanır. Daha önce `bars` yokken geçiş `duration`
-  kadar gecikiyordu: `fadeIn: 2` çağrısı 2 saniye hiçbir şey yapmayıp sonra 2
-  saniyede geçiyordu.
+  o kadar bar sonraki sınıra hizalanır.
 - **Kısmi yükleme başarısı KULLANILABİLİR.** `loadTrack()` "en az bir stem
   yüklendi mi" döner. Bir listeyi hazırlayan tüketici `Promise.all` yerine
   `allSettled` kullanmalı ve YALNIZCA yüklenen parçalarla liste kurmalıdır:
   tek bozuk dosya bütün listeyi düşürürse müzik hiç çalmaz, yüklenmemiş bir id
-  listeye girerse o tur sessiz geçer (bkz. `vol-hell/src/app/menuMusic.ts`).
+  listeye girerse o tur sessiz geçer.
 - **Reddedilen yükleme sözü ÖNBELLEKLENMEZ.** "Bir kez yükle" deseni sözü bir
   alana yazıyorsa, red durumunda o alan temizlenmelidir; aksi hâlde geçici bir
   hata süreç ömrü boyunca yeniden denemeyi engeller.
 - **Geçişler İKİ FAZLIDIR ve yarım kalmaz.** `play()` ve `crossfadeTo()` önce
   hedefin çalınabilir stem'lerini çözer; hiçbiri yoksa ÇALAN müziğe hiç
-  dokunmadan fırlatır. Eskiden `crossfadeTo()` önce eski stem'leri susturup
-  `stop()` planlıyor, sonra "hiç stem yok" diye fırlatıyordu: geçiş başarısız
-  olduğu hâlde mevcut müzik ölüyor, `isPlaying` `true` takılı kalıyor ve
-  playlist bir daha ilerlemiyordu.
+  dokunmadan fırlatır; başarısız geçiş mevcut müziği öldürmez ve `isPlaying`
+  takılı kalmaz.
 - **`play()` çalan parçayı yeniden başlatmaz** ama verilen `state`'i uygular.
   Yoğunluğu değiştirmek için ayrıca `setState()` çağırmak gerekmez.
 - **`mute(false)` ayarlanan seviyeye döner**, 1.0'a değil.
@@ -261,30 +250,17 @@ Spec tarafında cue'lar `MusicAssetSpecV1.cues` listesidir (`MusicCueSpecV1`:
 `id`, `kind`, `file`, `frames`, `bars`, `align`, `to`); `toMusicTrack` girişi
 ve bitişi ayrı alanlara, stinger ve geçişleri `cues` listesine koyar.
 
-## Ses üretimi (build-time)
+## Ses üretimi ve kullanım
 
-Motor runtime'da sentez yapmaz; hazır OGG stem'lerini yükler. Yeni müzik ve
-SFX kanonik `devtools/audio-synth` job/müzik yayın kapısından geçer. Oyun
-paketinin `public/assets/audio/` ağacı gönderilen dosyaların tek kaynağıdır;
-manifest ve bundle oyun ağacında kalır. Ara WAV ve `dist` Git'e girmez.
+Yeni müzik ve SFX kanonik `devtools/audio-synth` job/müzik yayın kapısından
+geçer. Oyun paketinin `public/assets/audio/` ağacı gönderilen dosyaların tek
+kaynağıdır; manifest ve bundle oyun ağacında kalır, ara WAV ve `dist` Git'e
+girmez. `pnpm exec just audio-verify` manifestleri kaynak programdan yeniden
+render ederek PCM kimliğini doğrular.
 
-VOL.HELL'in Arcade seti 38 SFX ve sekiz tek-`main` mix (menü, savaş, boss,
-bitiş, ambiyans) gönderir. Eski ayrı combat stem/cue dosyaları bu sette yoktur.
-Kaynaklar `games/vol-hell/scripts/audio-v2/` ve
-`devtools/audio-synth/audio-jobs/` ile `audio-music/` altındadır.
-`pnpm exec just audio-verify` (signoff) manifestleri kaynak programdan yeniden
-render ederek PCM kimliğini ve gönderilen OGG ilişkisini doğrular.
-`games/vol-hell/tests/config/audioIntegration.test.ts`
-parça sürelerini ve runtime eşlemesini denetler.
-
-## VOL.HELL Kullanımı
-
-`games/vol-hell/src/app/GameAudio.ts` tek bir `AudioContext` yönetir ve iki
-`MusicEngine` tutar: `music` menü/savaş/boss/bitiş parçalarını, `ambient`
-oyun içi ambiyansı çalar. `GameAudioDirector` sahneye göre geçişi yönetir.
-Track'lerin yolları ve loop süreleri `games/vol-hell/src/config/music.ts`
-ile `musicTiming.ts` içindedir. Combat ve boss artık birer tek mix'tir; CORE
-motorunun çoklu stem/cue kabiliyeti diğer oyunlar için kullanılabilir.
+Oyun tek bir `AudioContext` yönetir; müzik ve ambiyans için ayrı iki
+`MusicEngine` tutabilir. Sahne geçişini oyunun kendi yöneticisi yapar; track
+yolları ve loop süreleri oyunun `src/config/` ağacındadır.
 
 ## Müzik asset sözleşmesi
 
@@ -326,9 +302,6 @@ eşleşmelidir.
 4. Doğrula: `audio:job music verify <id>` (ya da `verify --all`) ve oyunun
    kendi kapıları.
 
-VOL.HELL Arcade seti bu yayın hattını kullanır; oyun paketi yalnız yayımlanmış
-varlıkları tüketir.
-
 ## Scheduler
 
 `MusicScheduler` BPM ve ölçü üzerinden bar/beat hesaplar. `crossfadeTo` içinde kullanılır.
@@ -342,8 +315,7 @@ const nextBarTime = scheduler.getNextBarTime(ctx.currentTime, trackStartTime);
 - `barDuration = beatDuration * timeSignature[0]`
 
 Spec'in `bpm`'i ise ölçü BİRİMİ başına vuruştur (6/8'de sekizlik);
-`toMusicTrack` dönüşümü `bpm × 4 / birim` ile tek yerde yapar. Önceden bpm
-olduğu gibi geçiyor ve 6/8 parçada bar hizalı geçişler yarım ölçü kayıyordu.
+`toMusicTrack` dönüşümü `bpm × 4 / birim` ile tek yerde yapar.
 
 ## Sınırlar
 
@@ -372,8 +344,8 @@ Müzik değişikliği sonrası:
 ```bash
 pnpm -r typecheck
 pnpm --filter @volstudio/core test
-pnpm --filter @volstudio/vol-hell build
-pnpm --filter @volstudio/vol-hell test
+pnpm --filter <oyun-paketi> build
+pnpm --filter <oyun-paketi> test
 ```
 
 Ayrıca tarayıcıda `?debug` ile ses hataları ve context state gözlemlenebilir.

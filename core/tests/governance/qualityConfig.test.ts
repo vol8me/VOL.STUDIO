@@ -137,7 +137,7 @@ describe('quality.json şema doğrulaması', () => {
 
   it('bundle bütçesinde yanlış metrik sessizce atlanmaz', () => {
     const broken = validConfig();
-    broken.bundles = { 'games/vol-hell': { app: 140, vendor: 370, cs: 25 } };
+    broken.bundles = { 'games/sample-game': { app: 140, vendor: 370, cs: 25 } };
     const problems = validateQualityConfig(broken);
     expect(problems.some((p: string) => p.includes('bundles') && p.includes('cs'))).toBe(true);
     expect(problems.some((p: string) => p.includes('css'))).toBe(true);
@@ -145,15 +145,15 @@ describe('quality.json şema doğrulaması', () => {
 
   it('aktif oyunun boş performans kapıları reddedilir', () => {
     const config = validConfig();
-    expect(validateActiveGameBudgets(config, ['games/vol-hell'])).toEqual([
-      'games/vol-hell: aktif oyun için bundle bütçesi yok',
-      'games/vol-hell: aktif oyun için scaling bütçesi yok',
+    expect(validateActiveGameBudgets(config, ['games/sample-game'])).toEqual([
+      'games/sample-game: aktif oyun için bundle bütçesi yok',
+      'games/sample-game: aktif oyun için scaling bütçesi yok',
     ]);
   });
 
   it('ölçekleme tarifi ve oranı geçerli olmalı', () => {
     const config = validConfig();
-    config.scaling = { 'games/vol-hell': { snapshot40Over10: 0 } };
+    config.scaling = { 'games/sample-game': { snapshot40Over10: 0 } };
     const problems = validateQualityConfig(config);
     expect(problems.some((problem: string) => problem.includes('$measure'))).toBe(true);
     expect(problems.some((problem: string) => problem.includes('snapshot40Over10'))).toBe(true);

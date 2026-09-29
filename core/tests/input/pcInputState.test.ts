@@ -11,9 +11,9 @@ import {
 } from '../../src/input/PCInputState';
 
 /**
- * Testin KENDİ eylem sözlüğü — VOL.HELL'in kümesinden bilinçli olarak farklı
- * seçildi. Bu katman hiçbir eylem adı bilmez; adlar yalnızca `bindings`
- * kaydının anahtarlarıdır.
+ * Testin KENDİ eylem sözlüğü — hiçbir oyunun kümesine bağlı değildir. Bu
+ * katman hiçbir eylem adı bilmez; adlar yalnızca `bindings` kaydının
+ * anahtarlarıdır.
  */
 type TestAction = 'engage' | 'boost';
 

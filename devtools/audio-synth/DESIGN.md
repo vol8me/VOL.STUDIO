@@ -142,11 +142,6 @@ Birden çok sesi zamanda birleştirip seviye veren TEK bir uygulama vardır:
 
 Kök yüzeye `Arrange` ve `compose` olarak girer.
 
-**Tarihî not.** VOL.HELL'in freeze sürümü kendi ses üreticisiyle üretildi;
-freeze etiketi ve git-dışı byte+hash arşivi o sürümün kanıtıdır. Oyun bugün
-aktiftir; eski üretici kaldırıldı. Yukarıdaki üç kural freeze kanıtından
-taşındı; oyun kavramı taşınmadı.
-
 ### Zaman sınırı
 
 Modeller BUILD zamanında yaşar. Hat şudur ve öyle kalır:
@@ -269,7 +264,7 @@ kaynağını söyler: `source-pcm` (job analizi) ya da `decoded-encoded`
 (publish/verify — gönderilen dosyanın FFmpeg ile çözülmüş hâli). Tık sayacı
 bir ADAY dedektörüdür: ikinci fark yerel RMS'in 8 katını ve −60 dBFS'i aşıp
 ±10 ms içinde eşdeğer bir tepeyle eşlik etmiyorsa sayılır (periyodik
-kenarlar elenir); frozen VOL.HELL kataloğunda 46 dosyada toplam 9 aday.
+kenarlar elenir).
 
 `AudioAssetManifestV1` provenance'ın kanonik sözleşmesidir ve KENDİ BAŞINA
 yeterlidir: brief ve program belgeleri gömülüdür; tohum, renderId, render
@@ -322,9 +317,8 @@ bir dosyanın üzerine yazılmaz. `tests/governance/publishPath.test.ts` aktif
 ağaçlarda yazıcıyı çağıran her dosyayı gerekçesiyle listeler; yeni bir
 sahipsiz publish yolu testi düşürür.
 
-**Üretim-referans fixture'ı.** Aktif VOL.HELL'in 54 teslimi kanonik yoldan
-yayımlandı; 46 eski manifest'siz dosya arşiv kimliğiyle korundu. Kapıyı gerçek
-kodek QA'sıyla bağımsız çalıştırmak için audio-synth'in KENDİ işi
+**Üretim-referans fixture'ı.** Kapıyı gerçek kodek QA'sıyla bağımsız
+çalıştırmak için audio-synth'in KENDİ işi
 `audio-jobs/platform-reference` vardır (hiçbir oyun onu çalmaz).
 `just audio-verify` her koşuda `audio:production-check` ile manifest'i
 yalnız kendisinden doğrular: gömülü program yeniden render edilir, dosya
@@ -2240,22 +2234,6 @@ Presets.getPreset('laser', 880, 0.15);
 
 Kategoriler: `combat`, `ui`, `rewards`, `movement`, `sequence`.
 
-## VOL.HELL ses kaynağı
-
-Gönderilen Arcade SFX programları ve besteler
-`games/vol-hell/scripts/audio-v2/` altında, oyun asset'leri ve manifestleri
-oyun ağacındadır. Bu motorun kanonik job/müzik yayın kapısı her teslimi
-doğrular. Parça ve oyun olayı eşlemesi `games/vol-hell/DESIGN.md` Ses
-bölümündedir.
-
-## Kategori Yapısı
-
-Sesler `public/assets/audio/sfx/` altında gruplanır; path ile `sounds.ts` eşleşmesi yeterli:
-
-- `combat/`
-- `player/`
-- `ui/`
-
 ## API Örnekleri
 
 ### Koyu, temiz UI blip
@@ -2435,15 +2413,6 @@ Kısa seslerde attack ve release'te `cosine` eğrisi, başlangıç ve bitişteki
 
 ## Sınırlar
 
-**Motor müzik için yetersiz DEĞİLDİR.** Tarihî kanıt: VOL.HELL'in freeze sürümünün
-gönderilen müzik ve SFX'inin hepsi bu motorla üretildi ve freeze anında
-(`vol-hell/final-2026-09-20`) reçete ↔ asset bayt-birebir doğrulandı. Bu
-kanıt freeze etiketinde yaşar: motor o tarihten sonra bilinçli DSP
-düzeltmeleri aldı (RT60 reverb, halfband decimator, …), yani bugünkü motor o
-dosyaları bayt-birebir yeniden üretmez ve üretmesi beklenmez. Rutin kapı
-freeze sürümünde üretim tetiklemez. Aktif VOL.HELL'in yeni sesleri ayrıca
-kanonik manifest kanıtı ve insan dinlemesi bekler.
-
 Gerçek sınır **motorda değil KATALOGDA**. Primitifler güçlü; altı fiziksel
 model (`pluck`, `piano`, `bowedString`, `airColumn`, `brass`, `formant`)
 katalogdaki akustik enstrümanların çoğunu taşır. Güncel enstrüman sayısı
@@ -2495,27 +2464,23 @@ geçer. Referans çapraz denetim (`pnpm --filter @volstudio/audio-synth
 audio:reference-check`, `just audio-verify`in parçası): fixture'lar
 `writeOgg` ile encode edilip çözülür, FFmpeg `ebur128` ile karşılaştırılır —
 tolerans integrated ±0.2 LU, true peak ±0.3 dB; ölçülen en büyük fark 0.052
-LU / 0.044 dB. Frozen VOL.HELL kataloğunun 46 dosyasında (salt-okur) fark
-integrated ≤ 0.051 LU, true peak ≤ 0.049 dB.
+LU / 0.044 dB.
 
 **Sınıf politikası** (`ASSET_CLASS_POLICIES`, makine-okunur): true peak tavanı
 her sınıfta −1 dBTP (EBU R128, Sony ASWG-R001, AES TD1008); kırpma sıfır.
-Yükseklik aralıkları yayın standardı DEĞİLDİR; frozen VOL.HELL kataloğunun
-kodek sonrası ölçümünden ~4–6 LU payla kalibre edildi:
+Yükseklik aralıkları yayın standardı DEĞİLDİR; gönderilmiş bir oyun
+kataloğunun kodek sonrası ölçümünden ~4–6 LU payla kalibre edildi:
 
-| Sınıf    | Ölçü        | Katalogda gözlenen | Politika (LUFS) |
-| -------- | ----------- | ------------------ | --------------- |
-| ui       | en yüksek M | −22.8 … −16.0      | [−28, −14]      |
-| sfx      | en yüksek M | −24.0 … −10.0      | [−30, −8]       |
-| ambience | integrated  | −20.2 … −19.9      | [−26, −16]      |
-| music    | integrated  | −17.0 … −14.4      | [−20, −12]      |
+| Sınıf    | Ölçü        | Politika (LUFS) |
+| -------- | ----------- | --------------- |
+| ui       | en yüksek M | [−28, −14]      |
+| sfx      | en yüksek M | [−30, −8]       |
+| ambience | integrated  | [−26, −16]      |
+| music    | integrated  | [−20, −12]      |
 
 Sınıf yol kuralıyla (`music/`, `ambience/`, `ui/` klasörleri; gerisi `sfx`)
-ya da `--class` ile belirlenir. **Taban çizgisi:** frozen katalogda 46 dosyanın
-43'ü politikayı geçer; 3 müzik parçası true peak tavanını aşar
-(`sovereign` −0.84, `surge-protocol` −0.73, `hollow-signal` −0.92 dBTP). Frozen
-ağaç değiştirilemediği için bu tarihsel kayıttır; `just audio-verify`
-politikayı yalnız AKTİF paketlerin `public/assets/audio` ağaçlarına uygular.
+ya da `--class` ile belirlenir. `just audio-verify` politikayı aktif
+paketlerin `public/assets/audio` ağaçlarına uygular.
 
 ## Doğrulama
 

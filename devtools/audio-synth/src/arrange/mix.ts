@@ -8,8 +8,7 @@ import type { SynthesisResult } from '../types';
 /**
  * Kanonik mix veriyolu — sesleri zamanda toplayan TEK yer.
  *
- * Üç kural ölçümle kanıtlandı ve burada kalır (tarihî kaynak: frozen
- * VOL.HELL `scripts/audio/lib/mix.ts`):
+ * Üç kural:
  *
  * 1. Veriyolu sesleri NORMALİZE ETMEZ; seviye mix'in sonunda bir kez
  *    (`masterMix`) verilir, katmanlar arası dinamik korunur.

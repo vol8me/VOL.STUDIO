@@ -44,11 +44,6 @@ test('`$comment` anahtarları bütçe sanılmaz', () => {
   assert.deepEqual(problems, []);
 });
 
-/*
- * Bekçi bir dönem `vol-arachnid`in betiğine ve `fxScale` alanına kilitliydi;
- * başka bir pakete bütçe yazmak kapıyı "ölçülemedi" ile düşürüyordu. Tarif
- * artık VERİDİR ve oran anahtarı kendi girdilerini taşır.
- */
 test('ölçüm tarifi bütçeden okunur; oran anahtarı girdilerini taşır', () => {
   const calls = [];
   const runner = (root, dir, measure, keys) => {

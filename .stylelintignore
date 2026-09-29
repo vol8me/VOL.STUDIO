@@ -8,5 +8,4 @@ target/
 # yoktur ve kapı sonucu yerel duruma bağlı olmamalı.
 devtools/*/export/
 
-# Frozen ürün ağaçları (workspace-lifecycle.json): rutin stil kapısı dışında.
-games/vol-arachnid/**
+# Frozen ürün ağaçları (workspace-lifecycle.json) buraya yazılır.

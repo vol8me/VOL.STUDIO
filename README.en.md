@@ -3,55 +3,53 @@
 Cross-platform monorepo bringing a Tauri v2 + Phaser 4 game runtime and
 web-based developer tools into one workspace.
 
-[Türkçe](README.md) · [Quality gates](docs/gates.md) · [Android](docs/android.md) · [Steam Deck](docs/steam-deck.md)
-
-## Stack
-
-Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
+[Türkçe](README.md) · [Quality gates](docs/gates.md) · [Linux](docs/linux.md) · [Steam Deck](docs/steam-deck.md) · [Android](docs/android.md)
 
 ## Layout
 
 ```
-core/                       # shared systems + DOM UI library
-games/vol-hell/             # game — ACTIVE (freeze decision awaits user approval)
-games/vol-arachnid/         # articulated spider arena vertical slice — FROZEN
-devtools/pen.dev/           # Pencil source, export pipeline and sync tool
-devtools/vol-ui/            # live component catalogue for CORE UI
-devtools/audio-synth/       # deterministic audio asset compiler
-tauri-v2/                   # SHARED native shell (not an app); each game carries its own src-tauri
+core/                   # engine and DOM UI catalogue (@volstudio/core)
+tauri-v2/               # shared native shell and plugins; not an app
+devtools/audio-synth/   # deterministic sound and music generation
+devtools/deck-probe/    # Steam Deck measurement probe
+devtools/pen.dev/       # rig export from Pencil source
+devtools/vol-ui/        # CORE UI showcase and visual contract
+docs/                   # gates, platforms, new game guide
+scripts/                # quality gates, Linux packaging, device measurement
 ```
+
+There is no game in the tree today; a new game is set up under
+`games/<game>/` following [docs/new-game.md](docs/new-game.md).
 
 ## Requirements
 
 Node.js `^20.19.0` or `>=22.12.0` · pnpm >= 11.18 · Rust + Cargo ·
-Android Studio (SDK + NDK) · Visual Studio C++ Build Tools on Windows
-
-`pnpm run doctor:env` checks all of them.
+Android Studio (SDK + NDK) for Android · Visual Studio C++ Build Tools on
+Windows. `pnpm run doctor:env` checks all of them.
 
 ## Commands
 
 ```bash
 pnpm install
-pnpm dev                                       # active dev targets (VOL.HELL + UI catalogue)
-pnpm --filter @volstudio/vol-ui dev            # UI showcase  :5174
+pnpm dev                 # dev servers of active packages
+pnpm exec just dev-ui    # UI showcase
 
-pnpm quick                                     # pre-commit gate
-pnpm high                                      # pre-push gate
-pnpm signoff                                   # release gate
+pnpm quick               # pre-commit gate
+pnpm high                # pre-push gate
+pnpm signoff             # release gate
+pnpm exec just --list    # every recipe
 ```
-
-Build and Android recipes in [docs/android.md](docs/android.md); what the gates
-do in [docs/gates.md](docs/gates.md). Every recipe: `pnpm exec just --list`.
 
 ## Where to look
 
-| Topic                               | Location                                                     |
-| ----------------------------------- | ------------------------------------------------------------ |
-| CORE primitives, i18n, audio        | [core/docs](core/docs)                                       |
-| Phaser boundary: layer or engine    | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
-| Adding a new game package           | [games/docs/new-game.md](games/docs/new-game.md)             |
-| Steam Deck: measurements, decisions | [docs/steam-deck.md](docs/steam-deck.md)                     |
-| Work list (open and closed)         | [TODO.md](TODO.md)                                           |
+| Topic                        | Location                                                     |
+| ---------------------------- | ------------------------------------------------------------ |
+| Working contract             | [AGENTS.md](AGENTS.md)                                       |
+| CORE primitives, i18n, audio | [core/docs](core/docs)                                       |
+| Phaser boundary              | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
+| New game package             | [docs/new-game.md](docs/new-game.md)                         |
+| Sound generation             | [devtools/audio-synth](devtools/audio-synth/README.md)       |
+| Work list                    | [TODO.md](TODO.md)                                           |
 
 ## License
 

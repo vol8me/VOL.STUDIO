@@ -1,11 +1,8 @@
 import type { Vector2 } from './Vector2';
 
 /**
- * Çarpışma ve görünürlük testleri — daire, dikdörtgen, ışın.
- *
- * vol-hell'in `CollisionResolver`ü bu testleri kendi içinde, entity tiplerine
- * gömülü yazıyordu; buradaki hâlleri saf sayılarla çalışır ve hiçbir oyun
- * nesnesi tanımaz.
+ * Çarpışma ve görünürlük testleri — daire, dikdörtgen, ışın. Saf sayılarla
+ * çalışır, hiçbir oyun nesnesi tanımaz.
  *
  * **Karesel mesafe tercihi:** karşılaştırma yapılan her yerde `Math.sqrt`
  * çağrılmaz. Kare kök, sonucu bir eşikle karşılaştırırken hiçbir bilgi

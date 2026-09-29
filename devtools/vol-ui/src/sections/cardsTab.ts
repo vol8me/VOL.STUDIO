@@ -109,8 +109,8 @@ function buildRarityCard(disposables: DisposableScope): HTMLElement {
 
 /**
  * Ortak overlay katmanı — `CardPicker` bilinçli olarak Modal'a bağlı değildir
- * (konumlandırma çağıranın sorumluluğu); burada `games/vol-hell`'in
- * `vol-card-layer`'ıyla aynı mekanizma kurulur: ortalanmış, kararmış,
+ * (konumlandırma çağıranın sorumluluğu); burada bir oyunun kart katmanıyla
+ * aynı mekanizma kurulur: ortalanmış, kararmış,
  * `uiRootElement`'e mount edilmiş bir katman. Panel bu katmanda yaşar,
  * kartın kendi akışında değil; açılış kart boyutunu etkilemez.
  *
@@ -453,9 +453,8 @@ function buildShopCard(
  * (`.vol-showcase-card-row`, auto-fit grid) ancak geniş bir konteynerde yan
  * yana sığar. LevelUpPicker/ShopPicker altta, yüzde-elli bölünmüş ayrı bir
  * satırda yan yana durur; panelleri `uiRootElement`'e mount edilmiş ortak
- * bir overlay katmanında açılır (bkz. `buildCardLayer`) — `games/vol-hell`'deki
- * gerçek kullanım deseniyle aynı (ortalanmış, kararmış, tam ekran,
- * yumuşak geçişli).
+ * bir overlay katmanında açılır (bkz. `buildCardLayer`): ortalanmış, kararmış,
+ * tam ekran, yumuşak geçişli.
  */
 export function buildCardsTab(uiRootElement: HTMLElement): {
   element: HTMLElement;

@@ -118,8 +118,8 @@ describe('TauriStoreAdapter', () => {
   });
 
   it('gameId ile oyun bazli store dosyasi acar', async () => {
-    const adapter = new TauriStoreAdapter({ gameId: 'vol-hell' });
+    const adapter = new TauriStoreAdapter({ gameId: 'sample-game' });
     await adapter.get('x');
-    expect(mockInvoke).toHaveBeenCalledWith('vol_store_read', { name: 'vol-hell-store.json' });
+    expect(mockInvoke).toHaveBeenCalledWith('vol_store_read', { name: 'sample-game-store.json' });
   });
 });

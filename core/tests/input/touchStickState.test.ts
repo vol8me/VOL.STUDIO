@@ -3,8 +3,7 @@ import { TouchStickState } from '../../src/input/TouchStickState';
 import { VirtualActionSource } from '../../src/input/VirtualActionSource';
 
 /**
- * Testin KENDİ eylem sözlüğü — VOL.HELL'in `fire`/`dash` kümesinden bilinçli
- * olarak farklı. `TouchStickState` hiçbir eylem adı bilmez; sağ stick'in hangi
+ * Testin KENDİ eylem sözlüğü — hiçbir oyunun kümesine bağlı değildir. `TouchStickState` hiçbir eylem adı bilmez; sağ stick'in hangi
  * eyleme bağlandığı `aimStickAction` ile dışarıdan verilir.
  */
 type TestAction = 'engage' | 'boost';

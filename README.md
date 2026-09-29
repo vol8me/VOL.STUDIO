@@ -1,58 +1,55 @@
 <img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
-Tauri v2 + Phaser 4 oyun runtime'ı ile web tabanlı geliştirici araçlarını aynı
-çalışma alanında buluşturan çapraz platform monorepo.
+Tauri v2 + Phaser 4 oyun çalışma zamanı ile web tabanlı geliştirici araçlarını
+aynı çalışma alanında buluşturan çapraz platform monorepo.
 
-[English](README.en.md) · [Kalite kapıları](docs/gates.md) · [Android](docs/android.md) · [Steam Deck](docs/steam-deck.md)
-
-## Yığın
-
-Phaser 4 · Tauri v2 (Rust) · TypeScript · Vite · pnpm workspace
+[English](README.en.md) · [Kalite kapıları](docs/gates.md) · [Linux](docs/linux.md) · [Steam Deck](docs/steam-deck.md) · [Android](docs/android.md)
 
 ## Yapı
 
 ```
-core/                       # paylaşılan sistemler + DOM UI kütüphanesi
-games/vol-hell/             # oyun — AKTİF (freeze kararı kullanıcı onayında)
-games/vol-arachnid/         # eklemli örümcek arena dikey kesiti — FROZEN
-devtools/pen.dev/           # Pencil kaynağı, export hattı ve gönderim aracı
-devtools/vol-ui/            # CORE UI canlı bileşen kataloğu
-devtools/audio-synth/       # deterministik ses asset compiler'ı
-tauri-v2/                   # PAYLAŞILAN native kabuk (uygulama değil); her oyun kendi src-tauri'sini taşır
+core/                   # motor ve DOM UI kataloğu (@volstudio/core)
+tauri-v2/               # paylaşılan native kabuk ve eklentiler; uygulama değildir
+devtools/audio-synth/   # deterministik ses ve müzik üretimi
+devtools/deck-probe/    # Steam Deck ölçüm sondası
+devtools/pen.dev/       # Pencil kaynağından rig export'u
+devtools/vol-ui/        # CORE UI vitrini ve görsel sözleşmesi
+docs/                   # kapılar, platformlar, yeni oyun rehberi
+scripts/                # kalite kapıları, Linux paketleme, cihaz ölçümü
 ```
+
+Bugün ağaçta oyun yoktur; yeni oyun `games/<oyun>/` altına
+[docs/new-game.md](docs/new-game.md) ile kurulur.
 
 ## Gereksinimler
 
 Node.js `^20.19.0` veya `>=22.12.0` · pnpm >= 11.18 · Rust + Cargo ·
-Android Studio (SDK + NDK) · Windows'ta Visual Studio C++ Build Tools
-
-`pnpm run doctor:env` hepsini kontrol eder.
+Android için Android Studio (SDK + NDK) · Windows'ta Visual Studio C++ Build
+Tools. `pnpm run doctor:env` hepsini denetler.
 
 ## Komutlar
 
 ```bash
 pnpm install
-pnpm dev                                       # aktif dev hedefleri (VOL.HELL + UI kataloğu)
-pnpm --filter @volstudio/vol-ui dev            # UI showcase  :5174
+pnpm dev                 # aktif paketlerin geliştirme sunucuları
+pnpm exec just dev-ui    # UI vitrini
 
-pnpm quick                                     # commit öncesi kapı
-pnpm high                                      # push öncesi kapı
-pnpm signoff                                   # release kapısı
+pnpm quick               # commit öncesi kapı
+pnpm high                # push öncesi kapı
+pnpm signoff             # sürüm kapısı
+pnpm exec just --list    # tüm tarifler
 ```
-
-Build ve Android tarifleri için [docs/android.md](docs/android.md), kapıların
-ne yaptığı için [docs/gates.md](docs/gates.md). Tüm tarifler:
-`pnpm exec just --list`.
 
 ## Nereye bakmalı
 
-| Konu                              | Yer                                                          |
-| --------------------------------- | ------------------------------------------------------------ |
-| CORE primitifleri, i18n, ses      | [core/docs](core/docs)                                       |
-| Phaser sınırı: katman mı motor mu | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
-| Yeni oyun paketi eklemek          | [games/docs/new-game.md](games/docs/new-game.md)             |
-| Steam Deck: ölçüm ve kararlar     | [docs/steam-deck.md](docs/steam-deck.md)                     |
-| İş listesi (açık ve kapatılan)    | [TODO.md](TODO.md)                                           |
+| Konu                         | Yer                                                          |
+| ---------------------------- | ------------------------------------------------------------ |
+| Çalışma sözleşmesi           | [AGENTS.md](AGENTS.md)                                       |
+| CORE primitifleri, i18n, ses | [core/docs](core/docs)                                       |
+| Phaser sınırı                | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
+| Yeni oyun paketi             | [docs/new-game.md](docs/new-game.md)                         |
+| Ses üretimi                  | [devtools/audio-synth](devtools/audio-synth/README.md)       |
+| İş listesi                   | [TODO.md](TODO.md)                                           |
 
 ## Lisans
 

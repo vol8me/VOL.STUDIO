@@ -7,8 +7,6 @@ import { isFiniteNumber, requireFinite } from '../math/numeric';
  * parametresidir; hangi kaynakların var olduğu tüketicinin kararıdır
  * (`new ResourcePool<'gold' | 'energy'>({ gold: 100, energy: 3 })`).
  * `StatBlock<TStat>` ile aynı sözleşme: mekanizma CORE'da, sözlük oyunda.
- *
- * vol-hell'in `RunEconomy`si bu desenin Flux/Spark'a özel hâliydi.
  */
 
 /** Çok kaynaklı bir maliyet: kaynak → miktar. */

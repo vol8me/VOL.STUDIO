@@ -169,7 +169,7 @@ export {
 } from './constants';
 
 // Stat SÖZLÜĞÜ bilinçli olarak burada yok. Motor jeneriktir (`StatBlock<TStat>`);
-// kümeyi tüketici tanımlar (bkz. games/vol-hell/src/config/stats.ts).
+// kümeyi tüketici tanımlar.
 export {
   StatBlock,
   type StatModifier,
@@ -256,7 +256,7 @@ export {
 
 // Eylem SÖZLÜĞÜ bilinçli olarak burada yok. `InputState` jenerik
 // `actions: Record<TAction, boolean>` taşır; hangi eylemlerin var olduğunu ve
-// hangi tuşa bağlandığını tüketici tanımlar (bkz. games/vol-hell/src/config/input.ts).
+// hangi tuşa bağlandığını tüketici tanımlar.
 export * from './input';
 
 export * as Music from './audio/music';

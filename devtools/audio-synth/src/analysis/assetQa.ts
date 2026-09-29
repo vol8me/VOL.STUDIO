@@ -23,9 +23,9 @@ export interface AssetClassPolicy {
  *
  * True peak tavanı −1 dBTP: EBU R128, Sony ASWG-R001 ve AES TD1008'in ortak
  * sınırı (kayıplı kodek payı). Yükseklik aralıkları bir yayın standardı
- * DEĞİLDİR (oyun varlığı başına standart yok); frozen VOL.HELL kataloğunun
- * kodek sonrası ölçümünden, gözlenen aralığın iki yanına ~4–6 LU pay
- * bırakılarak kalibre edildi (DESIGN "Varlık QA'sı"). Amaç kaba seviye
+ * DEĞİLDİR (oyun varlığı başına standart yok); gönderilmiş bir oyun
+ * kataloğunun kodek sonrası ölçümüne ~4–6 LU pay bırakılarak kalibre edildi
+ * (DESIGN "Varlık QA'sı"). Amaç kaba seviye
  * hatasını (−5 LUFS'lik bir UI tıkı, −40'lık bir müzik) yakalamaktır.
  * Kırpma her sınıfta sıfırdır.
  */

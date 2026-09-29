@@ -35,6 +35,7 @@ function workspaceScripts() {
   const scripts = new Map();
   const dirs = ['core', 'tauri-v2'];
   for (const group of ['devtools', 'games']) {
+    if (!existsSync(join(ROOT, group))) continue;
     for (const entry of readdirSync(join(ROOT, group), { withFileTypes: true })) {
       if (entry.isDirectory()) dirs.push(`${group}/${entry.name}`);
     }

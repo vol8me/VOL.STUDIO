@@ -15,7 +15,7 @@ import { TauriStoreAdapter } from '../../src/adapters/TauriStoreAdapter';
 describe('createScopedStores', () => {
   it('Tauri kabuğunda iki ayrı kapsam dosyasını TauriStoreAdapter ile açar', () => {
     fakes.isTauri.mockReturnValue(true);
-    const stores = createScopedStores('vol-hell');
+    const stores = createScopedStores('sample-game');
     expect(stores.synced).toBeInstanceOf(TauriStoreAdapter);
     expect(stores.device).toBeInstanceOf(TauriStoreAdapter);
     expect((stores.synced as TauriStoreAdapter).onRecovered).toBeUndefined();
@@ -23,7 +23,7 @@ describe('createScopedStores', () => {
 
   it('tarayıcıda iki kapsamı localStorage adaptörlerine indirir', () => {
     fakes.isTauri.mockReturnValue(false);
-    const stores = createScopedStores('vol-hell');
+    const stores = createScopedStores('sample-game');
     expect(stores.synced).toBeInstanceOf(LocalStorageAdapter);
     expect(stores.device).toBeInstanceOf(LocalStorageAdapter);
   });

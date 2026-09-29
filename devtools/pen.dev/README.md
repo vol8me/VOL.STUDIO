@@ -17,8 +17,7 @@ zamanında okuyan katman burada değil, `@volstudio/core/rig`dedir: bu paket
 # 1. Pencil'den çıkan staging'i entity düzenine taşı ve metadata yaz
 node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 
-# 2. Doğrula ve tüketicinin sahipliğine gönder
-pnpm --filter @volstudio/vol-arachnid rig:sync
+# 2. Tüketici oyun doğrulanmış export'u kendi rig senkron betiğiyle alır
 ```
 
 `pen_export/` bir ARA çıktıdır ve oyunun build'i onu doğrudan okumaz — ama

@@ -127,7 +127,7 @@ exec ./AppRun "$@"
 `;
 }
 
-/** Full akışı yalnız yeni release ortamını açar; VOL.HELL prob işaretini üretmez. */
+/** Full akışı yalnız yeni release ortamını açar. Oyun paketleri faz işareti üretmez; duvar saati penceresiyle ölçülür. */
 export function fullMeasurementPlan(workspace, release, seconds) {
   if (typeof release !== 'string' || release.length === 0)
     throw new Error('full için yeni release kaydı gerekli');
@@ -135,7 +135,7 @@ export function fullMeasurementPlan(workspace, release, seconds) {
   return {
     release,
     flags: { VOL_DECK_MEASURE: '1' },
-    seconds: seconds ?? (workspace === 'games/vol-hell' ? 60 : undefined),
+    seconds: seconds ?? (workspace.startsWith('games/') ? 60 : undefined),
   };
 }
 
@@ -451,7 +451,7 @@ export function sanitizeReport(text) {
     result: /^(ok|error|unavailable|pending-human)$/,
     sessionKind: /^(gamescope|desktop|web|unknown)$/,
     phase:
-      /^(vol-hell(?: [a-z-]+| oyun)|\d+ sprite|boş|empty|gameplay|menu|pause|settings|cards|shop|boss|death|loading|unclassified|background)$/u,
+      /^(oyun|\d+ sprite|boş|empty|gameplay|menu|pause|settings|cards|shop|boss|death|loading|unclassified|background)$/u,
     context: /^(menu|settings|gameplay|pause|cards|death|loading|unclassified|background)$/,
     shortcut: /^(undo|print|printscreen)$/,
     target: /^(editable|canvas|other)$/,
@@ -590,7 +590,7 @@ export function summarizeReport(lines) {
       }
     })
     .filter(Boolean);
-  // Sonda faz kaydı (`phase`/`phase-raf`) üretir; gerçek oyun (vol-hell) ise
+  // Sonda faz kaydı (`phase`/`phase-raf`) üretir; oyun ise
   // faz değil duvar-saati penceresi koşar — `perf` kayıtları aynı alanları
   // taşır ve burada aynı tabloya girer.
   const phases = records.filter(

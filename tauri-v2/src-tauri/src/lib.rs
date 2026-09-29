@@ -4,10 +4,6 @@
 //! noktası ve üretilmiş native projesi yoktur. Yalnız eklenti kurulumunu ve
 //! platform ayarlarını taşır; her oyun kendi uygulama crate'inde bağlamını
 //! üretip `run_with_context()` çağırır.
-//!
-//! Bir dönem bu crate AYNI ZAMANDA VOL.HELL'in uygulamasıydı ve adı taşıdığı
-//! vaadi karşılamıyordu: ortak yuva dolu olduğu için sonradan gelen oyunlar
-//! kendi kabuklarını kurmak zorunda kaldı. Kimlik artık tüketicinin.
 
 // Tauri komutları hakkında bilgi almak için: https://tauri.app/develop/calling-rust/
 
@@ -96,8 +92,7 @@ fn read_fullscreen_state(window: tauri::WebviewWindow) -> Result<bool, String> {
 /// `tauri::generate_context!()` çağrıldığı CRATE'in yapılandırmasını ve
 /// gömülü ön yüz varlıklarını paketler. Bu yüzden bağlam BURADA üretilemez:
 /// paylaşılan kabuk kendi bağlamını üretseydi, onu kütüphane olarak kullanan
-/// her uygulama o kabuğun kimliğini, penceresini ve ön yüzünü çalıştırırdı —
-/// ölçüldü, cihazda VOL.ARACHNID paketi açılıp VOL.HELL menüsünü gösteriyordu.
+/// her uygulama o kabuğun kimliğini, penceresini ve ön yüzünü çalıştırırdı.
 ///
 /// Her uygulama bağlamı kendi crate'inde üretir; ortak olan yalnız eklenti
 /// kurulumu ve platform ayarlarıdır.

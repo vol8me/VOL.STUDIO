@@ -141,7 +141,7 @@ export abstract class CardPicker {
 
   /**
    * `hide()`'ın ANİMASYONSUZ hali — `hidden` hemen uygulanır. Aynı paylaşılan
-   * katmanda (ör. `games/vol-hell`'in tek `.vol-card-layer`'ı) BAŞKA bir
+   * katmanda BAŞKA bir
    * CardPicker hemen `show()` edilecekse bunu kullan: gecikmeli `hide()`
    * iki panelin flex konteynerde bir an üst üste binmesine/kaymasına yol
    * açar — katman zaten açık kalıyorsa (yalnızca İÇERİĞİ değişiyorsa) ayrı

@@ -148,9 +148,8 @@ describe('Reverb decay = RT60 (saniye)', () => {
     expect(Math.abs(last)).toBeLessThan(1e-3);
   });
 
-  it('tarihî VOL.HELL reverb setleri (salt-okur kanarya) artık ayrışır', () => {
-    // frozen `vol-hell/final-2026-09-20` paletindeki dokuz bloğun sekizi 1'in
-    // üstündeydi ve eski kelepçe hepsini aynı geri beslemeye çökertiyordu.
+  it('decay değerleri 1 sn üstünde de ayrı T30 verir', () => {
+    // Eski kelepçe 1 sn üstündeki bütün decay değerlerini aynı geri beslemeye çökertiyordu.
     const palette: ReverbParams[] = [
       { amount: 0.14, decay: 0.9, roomSize: 0.55, damp: 0.6 },
       { amount: 0.18, decay: 1.1, roomSize: 0.6, damp: 0.55 },

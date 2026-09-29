@@ -8,13 +8,13 @@ import { readStamp, selectRunPackages, stampPath } from '../coverageRun.mjs';
 const PACKAGES = [
   { name: '@volstudio/audio-synth', dir: 'devtools/audio-synth' },
   { name: '@volstudio/core', dir: 'core' },
-  { name: '@volstudio/vol-hell', dir: 'games/vol-hell' },
+  { name: '@volstudio/sample-game', dir: 'games/sample-game' },
 ];
 
 test('exclude adı geçenleri dışarıda bırakır, only yalnız onları seçer', () => {
   assert.deepEqual(
     selectRunPackages(PACKAGES, { exclude: ['@volstudio/audio-synth'] }).map((p) => p.name),
-    ['@volstudio/core', '@volstudio/vol-hell'],
+    ['@volstudio/core', '@volstudio/sample-game'],
   );
   assert.deepEqual(
     selectRunPackages(PACKAGES, { only: ['@volstudio/audio-synth'] }).map((p) => p.name),

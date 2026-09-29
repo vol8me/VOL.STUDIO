@@ -5,9 +5,8 @@ import { finiteOr, requireFinite } from '../math/numeric';
  *
  * `setTimeout`/`setInterval` YERİNE oyun döngüsüne bağlıdır ve fark önemlidir:
  * duraklatılan bir oyunda tarayıcı zamanlayıcıları işlemeye devam eder, bu
- * scheduler ise `update()` çağrılmadığı sürece hiç ilerlemez. Sahne
- * duraklatıldığında yetenek cooldown'ının akmaya devam etmesi, vol-hell'de
- * her sınıfın kendi `elapsed += delta` sayacını elle yazmasının sebebiydi.
+ * scheduler ise `update()` çağrılmadığı sürece hiç ilerlemez; duraklatılan
+ * sahnede cooldown'lar akmaz.
  *
  * Deterministiktir: aynı delta dizisi aynı tetiklenme sırasını üretir, yani
  * kayıtlı bir koşu tekrar oynatılabilir.

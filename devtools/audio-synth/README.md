@@ -4,10 +4,6 @@ VOL.STUDIO deterministik ses asset compiler'ı.
 
 Bu paket prosedürel ses sentezi, efekt zinciri, WAV/OGG yazma ve ses QA altyapısını taşır. Çıktı WAV/OGG'dir; tarayıcı veya oyun yalnızca üretilmiş asset'i tüketir.
 
-Aktif `games/vol-hell` paketinin Arcade ses kaynakları bu paketin kanonik
-job/aile/müzik hattıyla yayımlandı. 46 eski OGG'nin arşiv hash'leri korunarak
-54 yeni teslim manifestleriyle üretildi; insan dinlemesi bekler.
-`games/vol-arachnid` frozen kalır.
 Çalma tarafı `core/src/audio/music/`tedir (stem çalar).
 
 ## Yapı

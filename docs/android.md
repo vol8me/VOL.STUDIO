@@ -1,142 +1,61 @@
 # Android
 
-> **Lifecycle notu:** `games/vol-arachnid` `frozen`'dır ve
-> `vol-arachnid/final-*` etiketiyle kilitlidir; rutin kapılar ona üretim/test
-> koşmaz. `games/vol-hell` D7 ile yeniden `active`'tir (freeze kararı kullanıcı
-> onayında), bu yüzden VOL.HELL derleme komutları günceldir. Yeni bir `active`
-> kabuk aynı düzeni kendi paketinde kurar.
+Her oyunun native projesi kendi paketindedir:
+`games/<oyun>/src-tauri/gen/android`. Paylaşılan kabuk (`tauri-v2/src-tauri`)
+uygulama değildir; kendi `tauri.conf.json`u, kimliği ya da üretilmiş projesi
+yoktur.
 
-Her oyunun native projesi AYRIDIR ve KENDİ paketinin altındadır:
-`games/<oyun>/src-tauri/gen/android`. Ortak Rust kabuğu
-`tauri-v2/src-tauri`dedir ve bir uygulama değildir — kendi `tauri.conf.json`u,
-kimliği ya da üretilmiş projesi yoktur.
-
-Hepsi **sürüm kontrolünde tutulur** ve yeniden üretilebilir değildir: yön
-kilidi, çentik yerleşimi, geri hareketi ve sürükleyici tam ekran Tauri
-yapılandırmasından ayarlanamadığı için `AndroidManifest.xml`, tema ve
-`MainActivity.kt` elle düzenlendi. Ayrı paket kimlikleri
-(`com.volstudio.game`, `com.volstudio.arachnid`) ikisinin
-aynı cihazda birlikte kurulmasını sağlar.
+Üretilmiş proje sürüm kontrolünde tutulur ve elle düzenlenir: yön kilidi,
+çentik yerleşimi, geri hareketi ve sürükleyici tam ekran Tauri
+yapılandırmasından ayarlanamaz; `AndroidManifest.xml`, tema ve
+`MainActivity.kt` bu yüzden kaynaktır. Her oyun ayrı paket kimliği taşır.
+Oyun, manifestin kaynak yapılandırmasından ayrışmadığını bir drift testiyle
+korur (yön, `appCategory`, `VIBRATE` izni, geri çağrısı, tam ekran, kimlik).
 
 ## Build
 
-JDK **21 LTS** gerekir; JDK 25 desteklenmez.
+JDK 21 LTS gerekir.
 
 ```bash
 export ANDROID_HOME="$HOME/Android/Sdk"
 export NDK_HOME="$ANDROID_HOME/ndk/<sürüm>"
 export JAVA_HOME=<JDK 21 LTS>
-rustup target add aarch64-linux-android    # cihaz için; emülatör x86_64 ister
+rustup target add aarch64-linux-android    # cihaz; emülatör x86_64 ister
 
-pnpm --filter @volstudio/vol-hell exec tauri android build --debug --target aarch64
-adb install -r games/vol-hell/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
-
-pnpm --filter @volstudio/vol-arachnid exec tauri android build --debug --target aarch64
-adb install -r games/vol-arachnid/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
-
+pnpm --filter <oyun-paketi> exec tauri android build --debug --target aarch64
+adb install -r games/<oyun>/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
 
-Drift testleri (`games/*/tests/platform/androidDrift.test.ts`) manifest, yön,
-oyun kategorisi, `VIBRATE` izni, geri çağrısı, tam ekran, kayıtlı yönün
-açılışta uygulanması ve paket kimliklerini kaynak yapılandırmayla
-karşılaştırmıştır — üretilmiş proje ile kaynak sessizce ayrışamazdı. Bu
-testler frozen ağaçların içindedir ve artık rutin kapıda koşmaz; onların
-yerine aynı ağaçların tamamı freeze bekçisiyle diff'siz kalmaya zorlanır.
+Kabuk, ikon ya da native proje değişince uygulama bağlı cihazlara kurulur,
+açılır ve ekran görüntüsüyle doğrulanır. Referans ölçüm:
+`pnpm benchmark:device`.
 
-## Çalışma zamanı davranışı
+## Çalışma zamanı
 
-Sistem çubukları gizlenir ve güvenli alan (`env(safe-area-inset-*)`) HUD
-yerleşimine uygulanır. İki ayrı soru iki ayrı yüklemle cevaplanır:
+Sistem çubukları gizlenir; güvenli alan (`env(safe-area-inset-*)`) HUD
+yerleşimine uygulanır.
 
 - **İşaretçi türü** (`shouldUseTouchControls`, CORE): ekran üstü kontroller
-  yalnız dokunmatik BİRİNCİL cihazlarda kurulur.
-- **Kabuk** (`getRuntimePlatform`, `@volstudio/tauri-v2`: `web` / `desktop` /
-  `android`): tam ekran düğmesi Android kabuğunda gösterilmez, çünkü sistem
-  çubukları zaten gizlidir; çıkış onayı Android kabuğunda fareli cihazda (DeX)
-  da kurulur; native pencere yetenekleri yalnız masaüstündedir. Telefon
-  tarayıcısı `web`dir: orada DOM tam ekranı tarayıcı çubuklarını gerçekten
-  kaldırır.
-
-VOL.HELL ve VOL.ARACHNID yatay yöne KİLİTLİDİR (`sensorLandscape`). WebView'ın
-`screen.orientation.lock()`u Android'de desteklenmediği için yön uygulama
-sözleşmesi `vol-orientation` eklentisinde (`tauri-v2/plugins/vol-orientation`)
-yaşar. Yön değişimi Activity'yi yeniden yaratmaz (`configChanges`).
-
-### Yerel WebView menüleri
-
-WebView'ın KENDİ menüleri oyun yüzeyinde karşılıksızdır: WebKitGTK sağ tıkta
-ve uzun basışta "Yazdır / Geri / Yenile" menüsünü açar, resim ya da bağlantı
-sürüklemesinde hayalet gösterir. Paylaşılan kabuk bunları her pencereye sayfa
-yüklenmeden önce enjekte edilen bir betikle kapatır
-(`tauri-v2/src-tauri/src/native_menus.rs`); yeni oyun ek çağrı yapmadan alır.
-Web hedefinde aynı davranışı `suppressNativeMenus` (`@volstudio/core`) verir.
-Metin alanlarında menü yine kapalıdır ama seçim korunur (`base.css`); cihaz
-turunda tıklama ve uzun basışın menü açmadığı ayrıca doğrulanır.
-
-İki manifest de `android:appCategory="game"` taşır: Android 16, en dar kenarı
-600dp ve üstü ekranlarda yön kilidini ve yön isteklerini yok sayar; oyun
-kategorisi bundan muaftır.
+  yalnız dokunmatik birincil cihazda kurulur.
+- **Kabuk** (`getRuntimePlatform`: `web` / `desktop` / `android`): tam ekran
+  düğmesi Android kabuğunda gösterilmez; çıkış onayı fareli cihazda (DeX) da
+  kurulur; native pencere yetenekleri yalnız masaüstündedir. Telefon
+  tarayıcısı `web`dir.
+- **Yön:** WebView'ın `screen.orientation.lock()`u Android'de desteklenmez;
+  yön sözleşmesi `tauri-v2/plugins/vol-orientation` eklentisindedir. Yön
+  değişimi Activity'yi yeniden yaratmaz (`configChanges`).
+- **Oyun kategorisi:** manifest `android:appCategory="game"` taşır; Android 16
+  600dp üstü ekranlarda yön kilidini yok sayar, oyun kategorisi muaftır.
+- **Yerel WebView menüleri:** kabuk sağ tık/uzun basış menüsünü ve sürükleme
+  hayaletini sayfa yüklenmeden enjekte edilen betikle kapatır
+  (`tauri-v2/src-tauri/src/native_menus.rs`); web hedefinde aynı davranışı
+  `suppressNativeMenus` verir. Metin alanlarında seçim korunur.
 
 ## Native eklentiler
 
-Kotlin kaynağı taşıyan bir eklenti yalnız ona DOĞRUDAN bağımlı uygulamanın
-APK'sına girer (`links` → `DEP_<links>_ANDROID_LIBRARY_PATH` → gradle). Bu
-yüzden böyle bir eklenti paylaşılan kabukta herkese değil, onu kullanan
-uygulamanın `run_with_context_and` çağrısında kaydedilir; aksi hâlde bağımlılığı
-olmayan uygulama açılışta eklenti sınıfını bulamazdı. Eklenti crate'i kendi
+Kotlin kaynağı taşıyan eklenti yalnız ona doğrudan bağımlı uygulamanın APK'sına
+girer (`links` → `DEP_<links>_ANDROID_LIBRARY_PATH` → gradle). Böyle bir
+eklenti paylaşılan kabukta değil, onu kullanan uygulamanın
+`run_with_context_and` çağrısında kaydedilir; yoksa bağımlılığı olmayan
+uygulama açılışta eklenti sınıfını bulamaz. Eklenti crate'i kendi
 `Cargo.lock`unu taşır ve Rust kapısıyla Tauri sürüm eşitliği bekçisine girer.
-
-## Fedora / Linux release
-
-Tauri'nin AppImage sonlandırması `linuxdeploy`/ELF strip adımında kırılırsa
-(`NO_STRIP=1` yalnız harici strip'i kapatır, `.relr.dyn` kusuru kalır)
-AppDir elle yeniden paketlenir:
-
-```bash
-node scripts/build-linux-appimage.mjs <workspace-yolu>
-```
-
-Betik hedefin `tauri.conf.json`undan `productName`/`version` türetir, WebKit
-medya çalışma zamanını (GStreamer elementleri + plugin scanner) AppDir'e
-bağlar ve zinciri gerçek bir OGG asset'iyle sınar. **Frozen workspace'i
-reddeder** — yeniden paketleme gerekiyorsa `freezeTag` worktree'sinde yapılır,
-HEAD'de değil. Rutin bir kapıya bağlı değildir; aktif bir Tauri uygulaması
-doğduğunda aynı komut onun için çalışır.
-
-Host'ta üretilen paket host'un glibc'sine bağlanır. Fedora 44'te (glibc 2.43)
-üretilen AppImage, SteamOS'ta (glibc 2.41) açılmaz. Steam Deck ve Steam
-dağıtımı için derleme steamrt4 SDK kabında yapılır; ayrıntı
-[steam-deck.md](steam-deck.md#dağıtım-yolu).
-
-### WebView çizim yolu
-
-Paylaşılan kabuk (`configure_linux_webview`, kural tablosu
-`linux_webview_plan`) WebView yaratılmadan önce çizim yolunu seçer ve
-dışarıdan verilen değişkeni ezmez. WebKit'in DMA-BUF çizicisi bazı
-sürücülerde boş WebView bıraktığı için güvenli yol onu kapatmaktır, ama o
-yolda her kare CPU üzerinden kopyalanır. İki ölçülen istisna vardır: ekranı
-tek başına NVIDIA sürücüsü sürdüğü yerel Wayland'da çizici açık kalır ve
-`__NV_DISABLE_EXPLICIT_SYNC=1` verilir; gamescope oturumunda ise çizici
-açık + `WEBKIT_FORCE_VBLANK_TIMER=1` verilir. Ölçüm (RTX 3050 / 610.57,
-KDE Plasma 6.7, WebKitGTK 2.52, 1920×1080, boş sahne):
-
-| Yol                                          | Sonuç                        |
-| -------------------------------------------- | ---------------------------- |
-| Çizici kapalı                                | 18 FPS, web işlemi %89       |
-| Çizici açık, yerel Wayland                   | açılışta Gdk Error 71, çöküş |
-| Çizici açık, XWayland (`GDK_BACKEND=x11`)    | boş pencere                  |
-| Çizici açık + explicit sync kapalı (Wayland) | 60 FPS, web işlemi %12       |
-
-Değişkenleri elle vermek kuralı devre dışı bırakır; ör. boş pencere görülen bir
-sürücüde `WEBKIT_DISABLE_DMABUF_RENDERER=1`. vol-hell AppImage başlatıcısı
-(`linux.AppRun`) bu değişkeni dayatmaz; ayrıca linuxdeploy GTK hook'unun
-`GDK_BACKEND=x11` dayatmasını da oturum türüne ve kullanıcı tercihine göre
-Wayland'e çevirir. AppImage bu kurala girer: Wayland oturumunda `GDK_BACKEND`
-görmeden `WEBKIT_DISABLE_DMABUF_RENDERER=0` ve
-`__NV_DISABLE_EXPLICIT_SYNC=1` ile çalışır; `GDK_BACKEND=x11` verilerek
-XWayland yoluna da çizdirilebilir.
-
-Gamescope oturumu (Steam Deck) bu tabloya eklendi: kural artık orada
-çiziciyi açık bırakır ve zamanlayıcıyı zorlar — önceki kapalı-yol davranışı
-aynı kare hızında yaklaşık 2,5 kat CPU harcıyordu. Ölçüm ve kural tablosu:
-[steam-deck.md](steam-deck.md#çizim-ve-kare-zamanlaması).

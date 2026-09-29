@@ -132,7 +132,7 @@ test('lightweight freeze etiketi annotated kanıt yerine geçmez', (t) => {
 
 test('normalizeWorkspacePath POSIX yollarını doğru normalize eder', () => {
   assert.equal(normalizeWorkspacePath('/repo', '/repo/core', posix), 'core');
-  assert.equal(normalizeWorkspacePath('/repo', '/repo/games/vol-hell', posix), 'games/vol-hell');
+  assert.equal(normalizeWorkspacePath('/repo', '/repo/games/sample-game', posix), 'games/sample-game');
   assert.equal(normalizeWorkspacePath('/repo', '/repo/devtools/vol-ui', posix), 'devtools/vol-ui');
   assert.equal(normalizeWorkspacePath('/repo', '/repo', posix), '');
   assert.equal(
@@ -143,9 +143,9 @@ test('normalizeWorkspacePath POSIX yollarını doğru normalize eder', () => {
 
 test('normalizeWorkspacePath Windows sürücü harfi, backslash ve mixed separator yollarını doğru normalize eder', () => {
   assert.equal(normalizeWorkspacePath('C:\\repo', 'C:\\repo\\core', win32), 'core');
-  assert.equal(normalizeWorkspacePath('C:\\repo', 'C:\\repo\\games\\vol-hell', win32), 'games/vol-hell');
+  assert.equal(normalizeWorkspacePath('C:\\repo', 'C:\\repo\\games\\sample-game', win32), 'games/sample-game');
   assert.equal(normalizeWorkspacePath('D:\\vol.studio', 'D:\\vol.studio\\devtools\\vol-ui', win32), 'devtools/vol-ui');
-  assert.equal(normalizeWorkspacePath('C:/repo', 'C:\\repo\\games\\vol-arachnid', win32), 'games/vol-arachnid');
+  assert.equal(normalizeWorkspacePath('C:/repo', 'C:\\repo\\games\\other-game', win32), 'games/other-game');
   assert.equal(normalizeWorkspacePath('C:\\repo', 'C:/repo/devtools/audio-synth', win32), 'devtools/audio-synth');
   assert.equal(normalizeWorkspacePath('c:\\repo', 'C:\\repo\\core', win32), 'core');
   assert.equal(normalizeWorkspacePath('C:\\repo', 'C:\\repo', win32), '');
@@ -158,14 +158,14 @@ test('normalizeWorkspacePath Windows sürücü harfi, backslash ve mixed separat
 
 test('validWorkspacePath POSIX ve Windows yollarında güvenlik ve sınırları doğrular', () => {
   assert.equal(validWorkspacePath('/repo', 'core', posix), true);
-  assert.equal(validWorkspacePath('/repo', 'games/vol-hell', posix), true);
+  assert.equal(validWorkspacePath('/repo', 'games/sample-game', posix), true);
   assert.equal(validWorkspacePath('/repo', '../escape', posix), false);
   assert.equal(validWorkspacePath('/repo', '', posix), false);
   assert.equal(validWorkspacePath('/repo', '/absolute', posix), false);
 
   assert.equal(validWorkspacePath('C:\\repo', 'core', win32), true);
-  assert.equal(validWorkspacePath('C:\\repo', 'games/vol-hell', win32), true);
-  assert.equal(validWorkspacePath('C:\\repo', 'games\\vol-hell', win32), true);
+  assert.equal(validWorkspacePath('C:\\repo', 'games/sample-game', win32), true);
+  assert.equal(validWorkspacePath('C:\\repo', 'games\\sample-game', win32), true);
   assert.equal(validWorkspacePath('C:\\repo', '..\\escape', win32), false);
   assert.equal(validWorkspacePath('C:\\repo', '../escape', win32), false);
   assert.equal(validWorkspacePath('C:\\repo', '', win32), false);

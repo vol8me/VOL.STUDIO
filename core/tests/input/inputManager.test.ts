@@ -9,7 +9,7 @@ import { NO_ACTIVE_PROVIDER, createSingleProviderSnapshot } from '../../src/inpu
 import { createIdleActions } from '../../src/input/InputState';
 
 /**
- * Testin KENDİ eylem sözlüğü — VOL.HELL'in kümesinden bilinçli olarak farklı.
+ * Testin KENDİ eylem sözlüğü — hiçbir oyunun kümesine bağlı değildir.
  * `InputManager` eylem adlarını bilmez; kümeyi `options.actions` ile alır.
  */
 type TestAction = 'engage' | 'boost';

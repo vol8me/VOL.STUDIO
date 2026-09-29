@@ -57,13 +57,13 @@ describe('kalite raporu sınıflandırması', () => {
 
   it('düşen test sayısı ve paket birlikte çıkarılır', () => {
     const output =
-      'games/vol-hell test: @volstudio/vol-hell@0.1.0 test\n' +
+      'games/sample-game test: @volstudio/sample-game@0.1.0 test\n' +
       '      Tests  2 failed | 444 passed (446)';
     const result = classify('test', output);
 
     expect(result.kind).toBe('test');
     expect(result.reason).toContain('2');
-    expect(result.package).toBe('@volstudio/vol-hell');
+    expect(result.package).toBe('@volstudio/sample-game');
   });
 
   it('eslint hata sayısı sınıflandırılır', () => {

@@ -12,7 +12,7 @@ import * as Core from '@volstudio/core';
  *    dokunma ve klavye etkileşimleri) görsel olarak doğrulandığı, test edildiği
  *    ve Playwright visual regresyon testlerine tabi tutulduğu DEVTOOL / QUALIFICATION
  *    yüzeyidir.
- * 3. Oyunlar (vol-hell, vol-arachnid) vol-ui'ye bağımlı DEĞİLDİR; vol-ui bir çalışma
+ * 3. Oyunlar vol-ui'ye bağımlı DEĞİLDİR; vol-ui bir çalışma
  *    zamanı (production) kütüphanesi değil, geliştirme ve kabul test tezgahıdır.
  */
 describe('VOL.UI Qualification Parity Invariant', () => {

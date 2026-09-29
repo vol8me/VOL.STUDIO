@@ -12,11 +12,9 @@ interface Unit {
 /**
  * İKİ GÜNCELLEME YOLUNUN DAVRANIŞ EŞİTLİĞİ.
  *
- * `SpatialIndex` iki modeli birden sunar ve ürün ikisini de kullanır:
- * `VolHellSimulation` artımlı yolu (`insert`/`update`/`remove`), Phaser
- * `GameScene` ise her kare `rebuild()` çağırır. İkisi aynı soruya aynı cevabı
- * vermezse, headless simülasyonda doğrulanan bir davranış sahnede başka türlü
- * çalışır ve fark yalnız oynarken görülür.
+ * `SpatialIndex` iki modeli birden sunar: artımlı yol (`insert`/`update`/
+ * `remove`) ve her kare `rebuild()`. İkisi aynı soruya aynı cevabı vermezse,
+ * headless simülasyonda doğrulanan bir davranış sahnede başka türlü çalışır.
  *
  * Test bir DENKLİK iddiasıdır: aynı doğum/hareket/ölüm dizisinden sonra iki
  * indeks, her sorgu noktası için AYNI komşu kümesini vermelidir. Sıra önemli

@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as CoreExports from '../../src/index';
 
 /**
- * CORE public API'sinin VOL.HELL (veya başka bir tüketici) terminolojisi
- * taşımadığını doğrular.
+ * CORE public API'sinin bir oyunun terminolojisini taşımadığını doğrular.
  *
  * Kapsam BİLİNÇLİ olarak dar tutulmuştur: yalnızca `core/src/index.ts`'in
  * export ettiği isimler taranır, dosya İÇERİKLERİ değil. Ham bir substring
@@ -13,7 +12,7 @@ import * as CoreExports from '../../src/index';
  * (tur/dalga sayacı) ve `CardTile`/`CardPicker` (jenerik seçim kartı UI'ı)
  * zaten CORE'un kendi export yüzeyinde meşru, domain-nötr isimler taşıyor.
  */
-const FORBIDDEN_DOMAIN_TERMS = ['enemy', 'boss', 'flux', 'spark', 'volhell'] as const;
+const FORBIDDEN_DOMAIN_TERMS = ['enemy', 'boss', 'flux', 'spark'] as const;
 
 /**
  * Dosyayı yorum satırları ÇIKARILMIŞ hâlde okur.
@@ -57,7 +56,7 @@ async function walkCoreSrc(visit: (relPath: string, code: string) => void): Prom
 }
 
 describe('CORE public API domain-neutral kalmalı', () => {
-  it('export edilen isimler VOL.HELL terminolojisi taşımamalı', () => {
+  it('export edilen isimler oyun terminolojisi taşımamalı', () => {
     const exportNames = Object.keys(CoreExports);
     expect(exportNames.length).toBeGreaterThan(0);
 
@@ -75,9 +74,8 @@ describe('CORE public API domain-neutral kalmalı', () => {
    *
    * Export ADI taraması yetmez: `StatKey = 'damage' | 'speed' | ...` gibi bir
    * tip, adında hiçbir yasaklı terim taşımadan CORE'a bir oyunun sözlüğünü
-   * sokar ve tüketiciyi ona bağlar (bu gerçekten oldu: `StatKey`/`STAT_KEYS`/
-   * `StatBaseValues` CORE'dan ihraç ediliyordu ve VOL.HELL onları oradan
-   * import ediyordu). Bu yüzden değer seviyesinde, DOSYA İÇERİĞİ taranır.
+   * sokar ve tüketiciyi ona bağlar. Bu yüzden değer seviyesinde, DOSYA
+   * İÇERİĞİ taranır.
    *
    * Kapsam bilinçli olarak dar: aranan şey tek tek kelimeler değil, oyunun
    * stat/eylem sözlüğünü oluşturan string LİTERALLERİ. Yanlış pozitifleri
@@ -91,8 +89,7 @@ describe('CORE public API domain-neutral kalmalı', () => {
    * SONUNDAKİ bir yorum hâlâ taranır, yani hata yönü fazla-raporlamadır.
    */
   it('core/src içinde oyunun stat/eylem sözlüğü string literali olarak bulunmamalı', async () => {
-    // VOL.HELL'in sözlüğü. Mekanizma CORE'da, bu kelimeler oyunda yaşar
-    // (games/vol-hell/src/config/stats.ts, games/vol-hell/src/config/input.ts).
+    // Tipik bir oyunun stat/eylem sözlüğü: mekanizma CORE'da, kelimeler oyunda yaşar.
     const GAME_VOCABULARY = ['damage', 'fireRate', 'dash'] as const;
 
     /**
@@ -116,11 +113,9 @@ describe('CORE public API domain-neutral kalmalı', () => {
   /**
    * CORE, tüketicisine GLOBAL bir örnek dayatmamalı.
    *
-   * `Diagnostics.getInstance()` tam olarak bunu yapıyordu: ölçüm bağımlılığı
-   * imzalarda görünmüyordu (gizli global) ve tek process'te ikinci bir çalışma
-   * zamanı — core doğrulaması + oyun + showcase yan yana — imkânsızdı. Tek
-   * örnek tercihi TÜKETİCİNİN kararıdır; VOL.HELL onu kendi `app/services.ts`
-   * modülünde tutuyor.
+   * Gizli global, bağımlılığı imzalardan saklar ve tek süreçte ikinci bir
+   * çalışma zamanını (core doğrulaması + oyun + vitrin) imkânsız kılar. Tek
+   * örnek tercihi TÜKETİCİNİN kararıdır.
    */
   it('CORE sınıfları static getInstance/reset singleton kalıbı taşımamalı', async () => {
     const offenders: string[] = [];

@@ -24,7 +24,7 @@ const root = resolve(import.meta.dirname, '..');
 
 /**
  * Kullanım: node scripts/build-linux-appimage.mjs <workspace-yolu>
- * Örn:      node scripts/build-linux-appimage.mjs games/vol-life
+ * Örn:      node scripts/build-linux-appimage.mjs devtools/deck-probe
  *
  * Manuel teslim aracıdır, kapı değildir: Tauri'nin AppDir'ini alıp WebKit
  * medya çalışma zamanını bağlayıp yeniden paketler. Hedef workspace

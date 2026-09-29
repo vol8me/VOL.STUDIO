@@ -758,10 +758,9 @@ body {
 
 /*
  * `CardPicker` bilinçli olarak Modal'a bağlı değildir (bkz. core/src/ui/cards/CardPicker.ts)
- * — konumlandırma çağıranın sorumluluğu. `games/vol-hell` bunu `.vol-card-layer`
- * (ortalanmış, kararmış, `position: absolute; inset: 0`) içine yerleştiriyor;
- * burada aynı mekanizmanın vol-ui eşdeğeri — `position: fixed` kullanılır çünkü
- * showcase'in vol-hell'deki gibi tam-ekran tek bir oyun konteyneri yok, sayfa
+ * — konumlandırma çağıranın sorumluluğu. Bir oyun onu ortalanmış, kararmış,
+ * `position: absolute; inset: 0` bir katmana yerleştirir; vitrin `position:
+ * fixed` kullanır çünkü tam ekran tek bir oyun konteyneri yok, sayfa
  * kaydırılabilir; `fixed` viewport'u kaydırmadan bağımsız ortalar.
  */
 .vol-showcase-card-layer {

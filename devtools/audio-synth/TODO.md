@@ -848,11 +848,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       (her comb kendi gecikmesinden); gerçek allpass difüzörler, wet enerji
       normalizasyonu, 20 Hz DC engelleyici; `tailSeconds` = ön gecikme +
       taşıma gecikmesi + RT60. Ölçülen T30: istenen 0.8/1.4/2.2/3.5 sn →
-      0.800/1.400/2.200/3.500 sn (eski kod 0.467/0.687/0.687/0.687 sn).
-      Uzlaştırma: frozen VOL.HELL'in dokuz reverb parçası yeniden üretilmedi
-      (ağaç değiştirilemez); VOL.HELL'in reverb setleri salt-okur kanarya
-      olarak `tests/reverbDecay.test.ts`te ölçülüyor. Paket presetleri eski
-      uygulamanın gerçekte ürettiği RT60'a taşındı. (dd44c07)
+      0.800/1.400/2.200/3.500 sn; `tests/reverbDecay.test.ts`. (dd44c07)
 - [x] **[P1] İç içe parametreler tek sınırdan geçiyor (`src/guard/`).**
       NaN/Infinity, yanlış tip, bilinmeyen alan, eksik zorunlu alan ve
       belgelenmiş aralık dışı değer tampon ayrılmadan `AudioParamError` ile
@@ -889,8 +885,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       normalize etmez, loop kuyruğu sarar, durumsuz insanlaştırma) +
       `engine/master.ts` (tek seviye çekirdeği: DC → kazanç → sınırlayıcı →
       tavan → sönüm); `synthesize` çıkışı, `compose` ve `Timeline` onu
-      kullanır. Uzlaştırma: frozen VOL.HELL `lib/mix.ts` tarihsel kopyadır,
-      aktif paralel yol değildir; yönlendirilmedi (ağaç değiştirilemez).
+      kullanır.
 - [x] **[P2] `resampleLinear` → `resample` (Kaiser sinc, A = 96 dB).** 2× aşağı
       örneklemede alias −3.3…−16.7 dB → ≤ −101 dB; yukarı görüntü −18 → −115
       dB; bütçe −90 dB. (4d12cb1)
@@ -904,9 +899,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       `ASSET_CLASS_POLICIES` (ui/sfx/ambience/music, −1 dBTP). EBU Tech 3341
       testleri geçer; FFmpeg ebur128 ile fark ≤ 0.052 LU / 0.049 dB.
       `just audio-verify` referans denetimini ve aktif ses ağaçlarının
-      politikasını raporlar. Uzlaştırma: VOL.HELL kataloğu salt-okur taban
-      çizgisi (43/46 geçer; 3 müzik parçası −1 dBTP üstü) DESIGN'da; frozen
-      ağaca politika uygulanmaz.
+      politikasını raporlar.
 - [x] **[P2] Filtre `poles`/`type` birleşimi sessizce değişmiyor.** 1 kutup +
       bandpass/notch `combination` hatası; 1 kutupta `type` yuvayı ezer.
       (dd44c07)

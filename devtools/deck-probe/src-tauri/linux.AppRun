@@ -8,7 +8,7 @@ this_dir="$(readlink -f "$(dirname "$0")")"
 
 # Önbellek adı üründen türetilir: AppDir her zaman `<productName>.AppDir`
 # diye adlandırılır (bkz. build-linux-appimage.mjs). Küçültme ve alfanumerik
-# dışı → '-' eşlemesi "VOL.HELL" → "vol-hell" eşlemesini verir; ad bu dosyada
+# dışı → '-' eşlemesi "SAMPLE.GAME" → "sample-game" eşlemesini verir; ad bu dosyada
 # sabitlenmez ki aynı launcher her oyunda çalışsın.
 product="$(basename "$this_dir" .AppDir | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-\|-$//g')"
 

@@ -9,9 +9,8 @@ tutar, export'u düzenler, ürettiğini DOĞRULAR ve tüketicisine GÖNDERİR.
 doğrulayan, `RigDefinition` kuran, eklemlendiren ve Phaser sahnesinde
 montajlayan yüzey `@volstudio/core/rig`de yaşar. Sebep kök `AGENTS.md`'deki
 bağımlılık yönü değişmezidir: bir oyunun çalışma zamanı, asset'ini üreten araca bağlanmaz — bağlandığında
-`devtools/` oyunun gönderilen bundle'ının sözleşmesine girer. Bu paket bir
-dönem o katmanı taşıyordu ve `vol-arachnid` onu `dependencies` altından import
-ediyordu; sınır `pnpm quick` içindeki `workspace-contract` kapısıyla korunuyor.
+`devtools/` oyunun gönderilen bundle'ının sözleşmesine girer; sınır `pnpm quick`
+içindeki `workspace-contract` kapısıyla korunur.
 
 Bağımlılık yönü: pen.dev → `@volstudio/core/rig/metadata` (devtool → core
 serbesttir). Hiçbir oyunu ve başka bir devtool'u import etmez. Phaser'a

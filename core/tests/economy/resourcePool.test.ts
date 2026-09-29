@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { ResourcePool } from '../../src/economy/ResourcePool';
 
 /**
- * Testin KENDİ kaynak sözlüğü — CORE hiçbir kaynak adı bilmez, bu yüzden
- * VOL.HELL'in Flux/Spark'ı yerine yabancı bir küme kullanılır.
+ * Testin KENDİ kaynak sözlüğü — CORE hiçbir kaynak adı bilmez.
  */
 type Resource = 'gold' | 'energy' | 'research';
 

@@ -202,7 +202,7 @@ mod store_tests {
         for kotu in ["../x", "a/b", "a\\b", "", ".gizli", ".."] {
             assert!(validate_name(kotu).is_err(), "reddedilmeli: {kotu}");
         }
-        for iyi in ["vol-hell-store.json", "a_b.json", "x.json"] {
+        for iyi in ["game-store.json", "a_b.json", "x.json"] {
             assert!(validate_name(iyi).is_ok(), "geçmeli: {iyi}");
         }
     }

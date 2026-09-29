@@ -7,10 +7,7 @@ import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mj
  * MODÜL düzeyinde dairesel bağımlılık.
  *
  * `layers.mjs` de döngü arar ama grafiğini PAKET adlarından kurar; bir paketin
- * İÇİNDEKİ dosya döngüsü ona görünmez. Ölçüldü: `vol-hell` içinde
- * `AudioSettings → settingsPersistence → services → AudioSettings` döngüsü
- * repoya girdi, yaşadı ve hiçbir kapı ses çıkarmadı — dışarıdan bir analiz
- * aracı söyleyene kadar kimse fark etmedi.
+ * İÇİNDEKİ dosya döngüsü ona görünmez.
  *
  * Döngü bir stil sorunu değildir: modül başlatma sırası döngüde tanımsızdır,
  * yani biri diğerinin henüz atanmamış export'unu `undefined` olarak görür. Hata
@@ -129,8 +126,7 @@ function resolveFile(target) {
  *
  * `./` yeterli DEĞİLDİR: bu repoda paket içi import'ların çoğu `@/` alias'ıyla
  * yazılır (`@/app/services`). Yalnız göreli yolları izleyen bir bekçi, tam da
- * yakalaması gereken döngüyü kaçırırdı — ölçüldü, `vol-hell`in gerçek
- * döngüsündeki kenarlardan biri alias'lıydı.
+ * yakalaması gereken döngüyü kaçırırdı.
  *
  * Alias haritası paketin `tsconfig.json`undaki `paths`ten okunur; paket
  * dışına çıkan hedefler bu bekçinin işi değildir (`layers.mjs` onları kapılar).

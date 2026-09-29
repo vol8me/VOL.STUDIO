@@ -5,8 +5,8 @@ import { basename, extname, isAbsolute, join, relative, sep } from 'node:path';
  * KAPSAMIN ŞEKLİ — ortalamanın gizlediği şey.
  *
  * Paket kapsamı tek bir yüzde olarak raporlanır ve o yüzde yüksekse iş bitmiş
- * görünür. Ortalama yükü nereye koyduğunu söylemez: ölçüldü, `vol-hell` %84
- * raporlarken `GameScene.ts` 503 satırla %0'daydı.
+ * görünür. Ortalama, yükün nerede olduğunu söylemez: yüksek paket yüzdesi
+ * sıfır kapsamlı büyük bir dosyayı gizleyebilir.
  *
  * Büyük ve düşük kapsamlı dosya ya test alır ya da gerekçe VE KANIT yazar.
  * Kanıt, gerekçeyi sınayan test dosyasıdır; bekçi var olduğunu ve modülü

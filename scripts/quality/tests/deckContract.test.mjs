@@ -57,7 +57,7 @@ function inDisk(task) {
 
 test('toDeckGameId: ürün adı devkit desenine çevrilir', () => {
   assert.equal(toDeckGameId('vol-deck-probe'), 'vol_deck_probe');
-  assert.equal(toDeckGameId('VOL.HELL'), 'VOL.HELL');
+  assert.equal(toDeckGameId('SAMPLE.GAME'), 'SAMPLE.GAME');
   assert.throws(() => toDeckGameId(''), /desen/);
   assert.throws(() => toDeckGameId('1oyun'), /desen/);
 });
@@ -104,12 +104,12 @@ test('buildShortcutParms: sözleşme şekli ve env dışarıda tutulur', () => {
 });
 
 test('devkit release kısayolu betiği gameid köküne göre bulur', () => {
-  const root = '/home/deck/devkit-game/VOL.HELL_unique';
+  const root = '/home/deck/devkit-game/SAMPLE.GAME_unique';
   const release = `${root}/.vol-release-2026-unique`;
-  const parms = buildReleaseShortcutParms({ gameid: 'VOL.HELL_unique', release });
+  const parms = buildReleaseShortcutParms({ gameid: 'SAMPLE.GAME_unique', release });
   assert.equal(parms.directory, root);
   assert.equal(join(parms.directory, parms.argv[0]), `${release}/run.sh`);
-  assert.throws(() => buildReleaseShortcutParms({ gameid: 'VOL.HELL', release: root }));
+  assert.throws(() => buildReleaseShortcutParms({ gameid: 'SAMPLE.GAME', release: root }));
 });
 
 test('devkit boş başarı yanıtını kayıt başarısı olarak kabul eder', () => {
@@ -127,15 +127,15 @@ test('renderLauncher: ortam mode.env üzerinden, argv AppRun', () => {
 
 test('full yeni release kaydı ile ölçüm flagını açar ve oyun için süre kullanır', () => {
   const records = '/private/new-release-record';
-  assert.deepEqual(fullMeasurementPlan('games/vol-hell', records), {
+  assert.deepEqual(fullMeasurementPlan('games/sample-game', records), {
     release: records,
     flags: { VOL_DECK_MEASURE: '1' },
     seconds: 60,
   });
-  assert.equal(fullMeasurementPlan('games/vol-hell', records, 30).seconds, 30);
+  assert.equal(fullMeasurementPlan('games/sample-game', records, 30).seconds, 30);
   assert.equal(fullMeasurementPlan('devtools/deck-probe', records).seconds, undefined);
-  assert.throws(() => fullMeasurementPlan('games/vol-hell', undefined), /release/);
-  assert.throws(() => fullMeasurementPlan('games/vol-hell', records, 0), /saniye/);
+  assert.throws(() => fullMeasurementPlan('games/sample-game', undefined), /release/);
+  assert.throws(() => fullMeasurementPlan('games/sample-game', records, 0), /saniye/);
 });
 
 test('renderModeEnv: meta karakterler reddedilir', () => {
@@ -242,7 +242,7 @@ test('summarizeReport: oyun perf pencereleri, pad-input ve steamworks ayrışır
     JSON.stringify({
       src: 'js',
       type: 'perf',
-      phase: 'vol-hell oyun',
+      phase: 'oyun',
       window: 0,
       fps: 59.9,
       p95: 17.2,
@@ -252,7 +252,7 @@ test('summarizeReport: oyun perf pencereleri, pad-input ve steamworks ayrışır
     JSON.stringify({
       src: 'js',
       type: 'perf',
-      phase: 'vol-hell oyun',
+      phase: 'oyun',
       window: 1,
       fps: 60.0,
       p95: 16.9,
@@ -345,7 +345,7 @@ test('paylasilan kayit izin listesi disindaki kimlik ve metni tasimaz', () => {
     { type: 'steamworks', available: true, appId: 123, deck: true, manifestOk: true },
     { type: 'haptics', backend: 'hidraw', lastError: 'personal path SECRET', device: 'SECRET' },
     { type: 'error', message: 'personal typed text SECRET' },
-    { type: 'perf', phase: 'vol-hell oyun', fps: 60, p95: 17, enemies: 20, window: 3 },
+    { type: 'perf', phase: 'oyun', fps: 60, p95: 17, enemies: 20, window: 3 },
   ]
     .map(JSON.stringify)
     .join('\n');

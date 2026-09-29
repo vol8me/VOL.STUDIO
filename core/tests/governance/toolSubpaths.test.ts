@@ -50,9 +50,7 @@ describe('Phaser taşımayan araç alt-yolları', () => {
      * bırakmaz ve tüketiciler kaçınılmaz olarak ayrışır. Tam olarak bu oldu:
      * harita hem `./random` hem `./random/random`, hem `./spatial` hem
      * `./spatial/SpatialIndex`, hem `./stats` hem `./stats/StatBlock`
-     * taşıyordu. Yukarıdaki test KISA biçimi kanonik ilan ediyordu ama
-     * VOL.HELL üç dosyada uzun biçimi kullanıyor, kısa biçimin ise hiç
-     * tüketicisi yoktu — yani kanonik olan fiilen ölüydü.
+     * taşıyordu; tüketiciler iki biçim arasında ayrışmıştı.
      *
      * Bir export haritası bir SÖZDÜR: her girdi sonsuza kadar korunmak
      * zorundadır. Mükerrer bir giriş, karşılığı olmayan bir söz demektir.

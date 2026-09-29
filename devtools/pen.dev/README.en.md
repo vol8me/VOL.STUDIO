@@ -17,8 +17,7 @@ PRODUCES and SHIPS, CORE consumes.
 # 1. Move Pencil's staging output into entity layout and write metadata
 node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 
-# 2. Verify and ship into the consumer's ownership
-pnpm --filter @volstudio/vol-arachnid rig:sync
+# 2. The consuming game pulls the verified export with its own rig sync script
 ```
 
 `pen_export/` is an INTERMEDIATE output and no game build reads it directly —

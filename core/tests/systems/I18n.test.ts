@@ -199,10 +199,10 @@ describe('I18n — SaveManager entegrasyonu', () => {
 describe('I18n — addResources (namespace)', () => {
   it('yeni namespace ve dil eklenir', async () => {
     await i18n.init();
-    i18n.addResources('tr', 'volhell', {
+    i18n.addResources('tr', 'game', {
       menu: { start: 'BAŞLA' },
     });
-    expect((i18next.t as (key: string) => string)('volhell:menu.start')).toBe('BAŞLA');
+    expect((i18next.t as (key: string) => string)('game:menu.start')).toBe('BAŞLA');
   });
 
   it('getLocales yeni dili icerir', async () => {
@@ -218,12 +218,12 @@ describe('I18n — addResources (namespace)', () => {
   });
 
   it('init oncesi cagrilirsa queue lanir ve init sonrasi uygulanir', async () => {
-    i18n.addResources('tr', 'volhell', {
+    i18n.addResources('tr', 'game', {
       menu: { start: 'BAŞLA' },
     });
     expect(i18n.isInitialized()).toBe(false);
     await i18n.init();
-    expect((i18next.t as (key: string) => string)('volhell:menu.start')).toBe('BAŞLA');
+    expect((i18next.t as (key: string) => string)('game:menu.start')).toBe('BAŞLA');
   });
 
   it('boş kaynak eklenmez ve locale listesine dahil olmaz', async () => {
@@ -237,7 +237,7 @@ describe('I18n — addResources (namespace)', () => {
 
   it('core kaynağı olmayan dile geçiş reddedilir', async () => {
     await i18n.init();
-    i18n.addResources('fr', 'volhell', { menu: { start: 'DÉMARRER' } });
+    i18n.addResources('fr', 'game', { menu: { start: 'DÉMARRER' } });
     await expect(i18n.changeLanguage('fr')).rejects.toThrow(/core.*kaynağı/);
   });
 });
@@ -409,11 +409,11 @@ describe('I18n — resources option (ek dil)', () => {
 describe('I18n — reset', () => {
   it('reset eklenen resource bundle lari i18next ten temizler', async () => {
     await i18n.init();
-    i18n.addResources('tr', 'volhell', { menu: { start: 'BAŞLA' } });
-    expect((i18next.t as (key: string) => string)('volhell:menu.start')).toBe('BAŞLA');
+    i18n.addResources('tr', 'game', { menu: { start: 'BAŞLA' } });
+    expect((i18next.t as (key: string) => string)('game:menu.start')).toBe('BAŞLA');
     i18n.reset();
     await i18n.init();
-    expect((i18next.t as (key: string) => string)('volhell:menu.start')).not.toBe('BAŞLA');
+    expect((i18next.t as (key: string) => string)('game:menu.start')).not.toBe('BAŞLA');
   });
 
   it('reset, init ÖNCESİ eklenmiş bekleyen kaynakları düşürür', async () => {
@@ -422,20 +422,20 @@ describe('I18n — reset', () => {
      * doğrulamıyordu: `reset` no-op olsa da geçerdi. Bekleyen kaynaklar
      * `init` sırasında uygulandığı için etki ancak init SONRASI görülür.
      */
-    i18n.addResources('tr', 'volhell', { menu: { start: 'BAŞLA' } });
+    i18n.addResources('tr', 'game', { menu: { start: 'BAŞLA' } });
     i18n.reset();
     await i18n.init();
 
-    expect(i18next.exists('volhell:menu.start')).toBe(false);
+    expect(i18next.exists('game:menu.start')).toBe(false);
   });
 
   it('reset EDİLMEDİĞİNDE bekleyen kaynak init sırasında uygulanır', async () => {
     // Karşı taraf: yukarıdaki testin `reset` yüzünden mi yoksa mekanizma hiç
     // çalışmadığı için mi geçtiğini ayırt eder.
-    i18n.addResources('tr', 'volhell', { menu: { start: 'BAŞLA' } });
+    i18n.addResources('tr', 'game', { menu: { start: 'BAŞLA' } });
     await i18n.init();
 
-    expect(i18next.exists('volhell:menu.start')).toBe(true);
+    expect(i18next.exists('game:menu.start')).toBe(true);
   });
 
   it('reset sonrasi initialized false doner', async () => {

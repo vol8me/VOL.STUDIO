@@ -216,8 +216,7 @@ function createObjectPoolWorkload(entityCount: number): BenchmarkWorkload {
 type BenchStat = 'output' | 'durability' | 'velocity' | 'cadence';
 
 function createStatBlockWorkload(): BenchmarkWorkload {
-  // Gerçek tüketici deseni (vol-hell `Player`/`Enemy`in kendi stat kümesiyle
-  // parametrelenmiş kullanımı — bkz. `games/vol-hell/src/config/stats.ts`):
+  // Tipik tüketici deseni:
   // birkaç stat, birkaç kalıcı `add`/`multiply` modifier VE en az bir
   // KOŞULLU modifier (`condition` her okumada yeniden değerlendirilir —
   // statik değerden daha pahalı yol). `getValue` her frame birden çok kez
@@ -267,7 +266,7 @@ function createStatBlockWorkload(): BenchmarkWorkload {
 type BenchResource = 'spark' | 'flux';
 
 function createResourcePoolWorkload(): BenchmarkWorkload {
-  // Gerçek tüketici deseni (vol-hell `RunEconomy`): her karede kazanç
+  // Oyun ekonomisi deseni: her karede kazanç
   // eklenir, periyodik olarak bir satın alma denenir (canAfford + spend).
   return {
     name: 'core/resource-pool-cycle',
