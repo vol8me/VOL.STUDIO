@@ -150,8 +150,8 @@ describe('SoundBank', () => {
   });
 
   it('bozuk bir varyant kalanı susturmaz', async () => {
+    // Bozuk varyant tek istekle düşer (başka biçime yedek yok), sağlamı yüklenir.
     vi.mocked(fetch)
-      .mockResolvedValueOnce(new Response('', { status: 500 }))
       .mockResolvedValueOnce(new Response('', { status: 500 }))
       .mockResolvedValueOnce(
         new Response(new Uint8Array([1]), {
