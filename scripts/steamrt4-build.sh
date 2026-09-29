@@ -7,6 +7,9 @@ set -euo pipefail
 
 WORKSPACE="$1"
 cd "/work/${WORKSPACE}/src-tauri"
+# Kök workspace'in target/'i host derlemesiyle paylaşılmaz: kap farklı glibc
+# ve rustc taşır (bkz. scripts/linux/targets.mjs).
+export CARGO_TARGET_DIR=/work/target/steamrt4
 
 echo "[steamrt4] kap: $(ldd --version | head -1)"
 echo "[steamrt4] rustc: $(rustc --version)"
@@ -33,7 +36,7 @@ if [ -n "${VOL_CARGO_FEATURES:-}" ]; then
   # ve AppDir'e taşır. Depoya SDK binary girmez; pakete girer (lisansın
   # amaçladığı da budur — redistributable_bin).
   cargo build --release "${FEATURES_ARGS[@]}"
-  api_lib="$(find "$PWD/target/release/build" -name 'libsteam_api.so' -print -quit)"
+  api_lib="$(find "$CARGO_TARGET_DIR/release/build" -name 'libsteam_api.so' -print -quit)"
   if [ -n "$api_lib" ]; then
     # Mutlak yol şart: ikinci linuxdeploy AppDir dizininden koşar, göreli
     # yol orada ölür.

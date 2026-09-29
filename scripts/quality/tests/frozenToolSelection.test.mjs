@@ -101,7 +101,7 @@ const PRODUCT_QUALITY_SCANNERS = [
   'layers.mjs',
   'devPorts.mjs',
   'productIcons.mjs',
-  'cargoLockParity.mjs',
+  'cargoWorkspace.mjs',
 ];
 
 test('ürün-kalitesi tarayıcıları lifecycle filtresiyle türer', () => {

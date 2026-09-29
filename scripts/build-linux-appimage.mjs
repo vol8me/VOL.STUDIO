@@ -19,6 +19,7 @@ import {
   REQUIRED_GSTREAMER_ELEMENTS,
 } from './linux-appimage-media.mjs';
 import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
+import { cargoTargetDir } from './linux/targets.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -60,9 +61,10 @@ if (record?.status === 'frozen') {
 }
 
 const shell = join(root, workspace, 'src-tauri');
-const bundleDir = join(shell, 'target/release/bundle/appimage');
+const targetDir = cargoTargetDir(root);
+const bundleDir = join(targetDir, 'release/bundle/appimage');
 const appDir = join(bundleDir, `${productName}.AppDir`);
-const binary = join(shell, 'target/release', productName);
+const binary = join(targetDir, 'release', productName);
 const deploy =
   process.env.LINUXDEPLOY ?? join(homedir(), '.cache/tauri/linuxdeploy-x86_64.AppImage');
 const canonical = join(bundleDir, `${productName}_${version}_amd64.AppImage`);

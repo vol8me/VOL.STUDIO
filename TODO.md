@@ -28,15 +28,16 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       yetenekler, başlatıcı, masaüstü şablonu, Steam Input manifestosu,
       1280×800 pencere, kayıt kapsamları ve oturuma göre grafik varsayılanı.
       Kapanır: iskeletten kurulan paket `pnpm signoff`u ilk denemede geçer.
-- [ ] **[P3] Yerel dallar ve stash temizliği (kullanıcı eli).** HEAD'e dahil
-      12 yerel dal ve atılmış bacak deneyi stash'i duruyor; silme otomatik
-      izin denetiminde reddedildi. Kapanır: `git branch --merged` yalnız
-      `dev` ve çalışma dalını gösterir, `git stash list` boştur; uzak eski
-      dallar S8'de.
+- [ ] **[P3] `feature/asset-studio` yerel dalı (kullanıcı eli).** HEAD'e dahil
+      ama uzaktaki kopyasından farklı olduğu için `-D` ister; zorla silme
+      otomatik izin denetiminde reddedildi. Diğer 12 dal ve stash silindi.
+      Kapanır: dal silinir; uzak eski dallar S8'de.
 - [ ] **[P2] SH — Hiyerarşi.** Cargo workspace, stil ve test yerleşimi, Deck
       araçlarının tek dizinde toplanması.
 - [ ] **[P1] SC — Repo ve kök dizin temizliği (kullanıcı geri bildirimi).**
-      Kökteki her dosya ve dizin gerekçelendirilir ya da kaldırılır; git dışı
+      Kapsam 2026-09-30'da büyüdü: kök ve paketlerdeki her dosya ve dizin,
+      yapılandırma, betik, belge ve yerel artık gerekçelendirilir ya da
+      kaldırılır; git dışı
       yerel artıklar da kapsamdadır. Bilinenler: ölü .idea/ (editör VS Code),
       KDE `.directory` dosyası, silinmiş paketi çalıştıran
       .vscode/launch.json, kök target/ (ortak Cargo çıktısı; SH'deki Cargo
@@ -51,17 +52,49 @@ Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş
       Kapanır: kökte yalnız gerekçesi `README.md` ya da `AGENTS.md`de yazılı
       girdiler kalır; `git status --ignored` yalnız belgelenmiş yerel
       dizinleri gösterir; bir bekçi kök girdi listesini kilitler.
-- [ ] **[P2] SB — Belgeler.** Paket README/DESIGN/TODO dosyaları minimal hâle
-      gelir; `core` ve `tauri-v2` README kazanır. Kaynak yorumlarındaki ölçüm
-      günlükleri (37 dosyada 44 "ölçüldü" satırı) belgeye taşınır, yorumda
-      yalnız gerekçe kalır.
+- [ ] **[P1] SB — Belgeler sıfırdan (kullanıcı talimatı 2026-09-30).**
+      İngilizce README'lerin hepsi kalkar (kökteki `README.en.md` dahil).
+      `AGENTS.md` ve `CLAUDE.md` sıfırdan, profesyonel yazılır. Bütün
+      README'ler yeniden yazılır: kısa, net, README biçiminde; `core`,
+      `tauri-v2` ve Deck araçları README kazanır. `DESIGN.md` dosyaları
+      sıfırdan, yalnız bugünkü kodun doğruladığı tasarımla yazılır. `docs/`
+      kapsamdadır: her belge gerçekle doğrulanır, birleşir ya da silinir.
+      Kaynak yorumlarındaki ölçüm günlükleri (37 dosyada 44 "ölçüldü"
+      satırı) belgeye taşınır. Kapanır: belge kapıları yeşil, her belge
+      kendi sorumluluğunu taşır, İngilizce kopya kalmaz.
 - [ ] **[P3] S7 — Araç zinciri.** ESLint, Prettier ve TypeScript sürümleri
       ile yapılandırması güncellenir.
+
+### Kullanıcı kararı bekleyenler
+
+Kritik kararlar kullanıcıya açıktır; onaysız uygulanmaz. Ayrıntı: yerel
+sertleştirme raporu §16.
+
+- [ ] **K3 — Birleştirme.** Dal zinciri `dev`e ve `main`e nasıl ve ne zaman gider.
+- [ ] **K4 — Tüketicisiz platform export'ları.** Budansın mı, referans
+      uygulamaya mı bağlansın (geçici öneri: SD9'a bağlama).
+- [ ] **K5 — Uzak eski dallar ve `feature/asset-studio`.** Silinsin mi.
+- [ ] **K6 — audio-synth veri yerleşimi.** Taşıma 36 manifestin yeniden
+      yayınını ister; yapılsın mı.
+- [ ] **K7 — audio-synth v1 yolları.** Emekliye mi ayrılsın, korunsun mu
+      (geçici: korundu).
+- [ ] **K8 — Arşiv pratiği.** Bitmiş ürün etiket + ağaçtan kaldırma ile mi arşivlenir.
+- [ ] **K9 — Android.** Oyun yokken cihaz doğrulaması ve betikleri uykuda mı.
+- [ ] **K11 — TODO `Kapatılanlar`.** Kalsın mı, kısalsın mı.
 
 ### Steam Deck ve Valve donanım ailesi
 
 Ölçümler ve kararlar: [docs/steam-deck.md](docs/steam-deck.md).
 
+- [ ] **[P1] Deck'teki kalıntıların temizliği (Deck bağlı, kullanıcı başında).**
+      Eski ürünlerin ve sondanın sürüm dizinleri (`~/devkit-game/`), non-Steam
+      kısayolları, `~/.local/share/<kimlik>/` verileri ve deneme dosyaları.
+      Kapanır: cihaz envanteri kullanıcıya gösterilir, onaylı liste silinir,
+      sistem bileşenleri (SteamLinuxRuntime_4) yerinde kalır.
+- [ ] **[P1] Deck belgesi sağlamlaştırılır.** `docs/steam-deck.md` ölçülmüş
+      gerçek, karar ve devkit sözleşmesi olarak sıfırdan kurulur; ölçülmeyen
+      "ölçülmedi" kalır. Kapanır: belgedeki her iddia ölçüme, koda ya da
+      teste bağlıdır.
 - [ ] **[P1] D0 — Deck'te insan eliyle açık ölçümler.** Kapanır:
       `docs/steam-deck.md` "Açık ölçümler" listesinde yalnız eldeki cihazla
       ölçülemeyenler kalır.

@@ -33,6 +33,8 @@ preview ve e2e portu aynı olabilir; iki ayrı paket aynı portu bildiremez.
 - `typecheck`, `test`, `build` ve `test:e2e` betikleri
   `scripts/quality/runActive.mjs` ile keşfedilir.
 - Rust kapısı `<paket>/src-tauri/Cargo.toml` taşıyan her aktif paketi tarar.
+  Crate kök `Cargo.toml`un `members` listesine girer; kendi kilidi ve profili
+  olmaz (`scripts/quality/cargoWorkspace.mjs`).
 - `active` + `<paket>/src-tauri/tauri.conf.json` taşıyan paket cihaz ölçümü adayıdır
   (`scripts/quality/deviceApps.mjs`).
 

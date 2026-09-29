@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { loadWorkspaceLifecycle } from './workspaceLifecycle.mjs';
+import { excludingFrozenPaths, loadWorkspaceLifecycle } from './workspaceLifecycle.mjs';
 
 export function activeCargoLocks(root, lifecycle) {
   const locks = execFileSync(
@@ -11,10 +11,9 @@ export function activeCargoLocks(root, lifecycle) {
   )
     .split('\0')
     .filter(Boolean);
-  const prefixes = lifecycle.workspaces
-    .filter((workspace) => workspace.status === 'active')
-    .map((workspace) => `${workspace.path}/`);
-  return locks.filter((lock) => prefixes.some((prefix) => lock.startsWith(prefix))).sort();
+  // Aktif crate'ler kökteki tek kilidi paylaşır; frozen ağaçlar kendi
+  // kilidiyle donar ve denetlenmez (bkz. cargoWorkspace.mjs).
+  return excludingFrozenPaths(locks, lifecycle).sort();
 }
 
 export function auditRust(root, run = execFileSync) {

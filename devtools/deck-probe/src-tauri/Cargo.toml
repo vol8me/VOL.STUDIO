@@ -27,10 +27,3 @@ custom-protocol = ["tauri/custom-protocol", "volstudio-tauri/custom-protocol"]
 # Gerçek Steamworks istemci bağlantısı yalnız bu feature'la derlenir —
 # `tauri build --features steamworks`. Stub yapıda SDK'ya hiç dokunulmaz.
 steamworks = ["tauri-plugin-vol-steamworks/steamworks"]
-
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = 3
-panic = "abort"
-strip = true

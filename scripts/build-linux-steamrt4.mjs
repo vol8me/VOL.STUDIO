@@ -18,6 +18,7 @@ import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { checkGlibcCap } from './glibc-cap.mjs';
 import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
+import { appImageAppDir, steamrt4TargetDir } from './linux/targets.mjs';
 import { syncProbeMetrics } from './probe-metrics.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -202,16 +203,7 @@ execFileSync(
   { stdio: 'inherit' },
 );
 
-const appDir = join(
-  ROOT,
-  workspace,
-  'src-tauri',
-  'target',
-  'release',
-  'bundle',
-  'appimage',
-  `${productName}.AppDir`,
-);
+const appDir = appImageAppDir(steamrt4TargetDir(ROOT), productName);
 if (!existsSync(appDir)) {
   console.error(`[steamrt4] AppDir üretilemedi: ${appDir}`);
   process.exit(1);

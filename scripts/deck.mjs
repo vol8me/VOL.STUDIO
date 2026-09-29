@@ -56,6 +56,7 @@ import {
   toDeckGameId,
 } from './deck-contract.mjs';
 import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
+import { appImageAppDir, steamrt4TargetDir } from './linux/targets.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const RECORDS = join(ROOT, 'devtools', 'deck-probe', 'records');
@@ -191,15 +192,7 @@ function readShell(root, workspace) {
     productName,
     identifier: conf.identifier,
     gameid: toDeckGameId(productName),
-    appDir: join(
-      dir,
-      'src-tauri',
-      'target',
-      'release',
-      'bundle',
-      'appimage',
-      `${productName}.AppDir`,
-    ),
+    appDir: appImageAppDir(steamrt4TargetDir(ROOT), productName),
     remoteLog: `~/.local/share/${conf.identifier}/diagnostics.jsonl`,
   };
 }

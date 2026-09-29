@@ -57,5 +57,5 @@ Kotlin kaynağı taşıyan eklenti yalnız ona doğrudan bağımlı uygulamanın
 girer (`links` → `DEP_<links>_ANDROID_LIBRARY_PATH` → gradle). Böyle bir
 eklenti paylaşılan kabukta değil, onu kullanan uygulamanın
 `run_with_context_and` çağrısında kaydedilir; yoksa bağımlılığı olmayan
-uygulama açılışta eklenti sınıfını bulamaz. Eklenti crate'i kendi
-`Cargo.lock`unu taşır ve Rust kapısıyla Tauri sürüm eşitliği bekçisine girer.
+uygulama açılışta eklenti sınıfını bulamaz. Eklenti crate'i kök Cargo
+workspace'inin üyesidir ve kökteki tek kilitle derlenir.

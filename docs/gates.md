@@ -31,11 +31,11 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-ui: CORE UI'ın gönderilen ağırlığı)                                                                       |
 | `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı (bugün CORE uzamsal indeksi); ölçülen oranı yazar                                                                   |
 | `e2e`            | Aktif paketlerin `test:e2e` betiği; Chromium ve WebKit, üretim derlemesi üzerinde                                                                                                                                    |
-| `rust`           | Git'in gördüğü aktif Cargo manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır |
+| `rust`           | Kök workspace'in aktif üye manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır |
 | `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                                                                                                                  |
 | `audio-verify`   | Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır                                                                                                                                   |
 | `security-js`    | `pnpm audit --audit-level moderate`                                                                                                                                                                                  |
-| `security-rust`  | Aktif `Cargo.lock` dosyalarında cargo-audit                                                                                                                                                                          |
+| `security-rust`  | Kökteki tek `Cargo.lock` üzerinde cargo-audit                                                                                                                                                                        |
 
 `pnpm exec just report <kapı> --json` kapıyı koşup sonucu makine-okunur
 verir; aşamalar `justfile`dan türer. `pnpm run doctor:env` araçları ve
@@ -60,7 +60,7 @@ Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 | `scripts/quality/trackedImports.mjs`     | `.gitignore`'un yok saydığı dosya kaynak koddan import edilemez                                                                                                          |
 | `scripts/quality/devPorts.mjs`           | İki ayrı paket aynı geliştirme portunu bildiremez                                                                                                                        |
 | `scripts/quality/deviceApps.mjs`         | Cihaz ölçümü adayları `active` + `<paket>/src-tauri/tauri.conf.json` keşfinden türer                                                                                     |
-| `scripts/quality/cargoLockParity.mjs`    | `tauri*`, `wry`, `tao` sürümleri aktif kilitlerde eşittir                                                                                                                |
+| `scripts/quality/cargoWorkspace.mjs`     | Aktif her crate kök Cargo workspace'inin üyesidir; tek kilit kökteki `Cargo.lock`tur; profil yalnız kökte                                                                |
 | `scripts/quality/productIcons.mjs`       | Her aktif Tauri uygulaması kendi ikonunu taşır; şablon ya da başka ürünün ikonu reddedilir                                                                               |
 | `scripts/quality/phaserBoundary.mjs`     | `core` Phaser'ı yalnız kayıtlı köprü dosyalarında import eder                                                                                                            |
 | `scripts/quality/publicTypeSurface.mjs`  | CORE'un public tip yüzeyi `coreTypeSurface.snapshot.json` ile eşittir                                                                                                    |

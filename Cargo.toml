@@ -1,0 +1,18 @@
+# Depodaki bütün Rust crate'leri tek workspace'tir: tek Cargo.lock, tek
+# target/. Paylaşılan kabuk, eklentiler ve onları tüketen uygulamalar aynı
+# bağımlılık sürümlerini görür; sürüm ayrışması kilit düzeyinde imkânsızdır.
+[workspace]
+resolver = "2"
+members = [
+  "tauri-v2/src-tauri",
+  "tauri-v2/plugins/*",
+  "devtools/*/src-tauri",
+]
+
+# Üye crate'lerdeki profil bölümleri workspace'te yok sayılır; tek yer burası.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
