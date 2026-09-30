@@ -53,7 +53,9 @@ preview ve e2e portu aynı olabilir; iki ayrı paket aynı portu bildiremez.
   `workspace-lifecycle.json`da `status: "frozen"` ile `freezeTag`,
   `freezeCommit`, `decisionDate`, `reason` yazılır; `.prettierignore` ve
   `.stylelintignore`a `<yol>/**` eklenir (ESLint yok sayma listesi lifecycle'dan
-  türer). Frozen ağaç değişmez.
+  türer). Frozen ağaç değişmez. `frozen` kısa bir geçiş hâlidir: frozen
+  ağaç rutin kapılarda koşmaz ve CORE değişiklikleriyle sessizce bozulur;
+  karar verilince emekliliğe geçer.
 - **Emeklilik:** frozen ürün ağaçta tutulmaz; etiket arşivdir. Paket, lifecycle
   kaydı, `quality.json` girdileri, yok sayma satırları ve belge anmaları aynı
   commit'te silinir. CORE'a katkısı olan bileşenler katalogda kalır.
