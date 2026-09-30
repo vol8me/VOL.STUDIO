@@ -2,7 +2,7 @@ import type { AssetClass } from '../analysis/assetQa';
 import { FIDELITY_METHOD, type EncodeFidelityV1 } from '../analysis/encodeFidelity';
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkNumber, checkObject } from '../guard/read';
-import { hashCanonical, type Sha256 } from './canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 
 /**
  * Sınıf bazlı kodlama profili. Vorbis kalitesi asset sınıfına göre seçilir;

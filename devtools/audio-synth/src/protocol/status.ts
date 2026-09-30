@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { ANALYZER_VERSION } from '../analysis/report';
 import { validateBrief } from '../program/brief';
 import { RENDERER_VERSIONS, validateForKind } from './kinds';
-import { hashCanonical, sha256Bytes, type Sha256 } from './canonical';
+import { hashCanonical, sha256Bytes, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside } from './fs';
 import { artifactFile, jobLabel, loadJob, type JobLocation } from './location';

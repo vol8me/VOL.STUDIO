@@ -1,6 +1,6 @@
 import { AudioParamError } from '../guard/errors';
 import { deriveSeed } from '../program/random';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { applyTies, assertSupported, mergeArticulations } from './articulation';
 import { applyGroove, STRAIGHT_GROOVE, type GrooveProfileV1 } from './groove';
 import { voiceChord, type VoicedChordV1 } from './harmony';

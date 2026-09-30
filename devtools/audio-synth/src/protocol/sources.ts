@@ -3,7 +3,7 @@ import { checkArray, checkObject } from '../guard/read';
 import { numberOf } from '../program/params';
 import { selectZone } from '../program/sampleBank';
 import { resolveProgram } from '../program/schema';
-import { canonicalJson } from './canonical';
+import { canonicalJson } from '../kernel/canonical';
 import type { JobKind } from './kinds';
 import { loadSampleLibrary } from './samples';
 

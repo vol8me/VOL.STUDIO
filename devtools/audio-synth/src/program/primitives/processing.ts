@@ -2,7 +2,7 @@ import { DelayLine } from '../../effects/delay';
 import { compress } from '../../effects/dynamics';
 import { applyBiquad, eqCoefficients, passCascade } from '../../effects/eq';
 import { limitTruePeak } from '../../effects/limiter';
-import { crush, saturate, type SaturationCharacter } from '../../effects/saturation';
+import { crush, saturate, type SaturationCharacter } from '../../synthesis/saturation';
 import { shapeTransients } from '../../effects/dynamics';
 import { choiceOf, numberOf, type NumberParamSpec } from '../params';
 import type { EffectEntry } from '../registry';

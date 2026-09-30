@@ -8,7 +8,7 @@ import {
   Reverb,
   StereoWidener,
 } from '../effects';
-import { NORMALIZE_TARGET_PEAK } from './constants';
+import { NORMALIZE_TARGET_PEAK } from '../kernel/constants';
 import { resolveBusParams, type ResolvedBusEffects } from '../guard/synth';
 import { checkNumber } from '../guard/read';
 import { masterChannels } from './master';

@@ -1,5 +1,5 @@
 import type { RenderCache } from '../engine/renderCache';
-import { renderSession, withRenderSession, type RenderQuality } from '../engine/session';
+import { renderSession, withRenderSession, type RenderQuality } from '../kernel/session';
 import { AudioParamError } from '../guard/errors';
 import { checkObject } from '../guard/read';
 import type { RenderCost } from '../guard/budget';

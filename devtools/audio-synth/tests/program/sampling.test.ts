@@ -8,7 +8,7 @@ import { estimateProgramCost, renderProgram } from '../../src/program/render';
 import { selectZone } from '../../src/program/sampleBank';
 import { resolveProgram } from '../../src/program/schema';
 import { shiftAndStretch } from '../../src/synthesis/stretch';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { probeResolver, probeSample, probeStereoSample, registerSample } from '../support/samples';
 import { RENDER_BLOCK } from '../support/timeouts';
 import { node } from '../support/program';

@@ -4,7 +4,7 @@ import {
   Worker,
   type MessagePort,
 } from 'node:worker_threads';
-import { renderSession } from '../engine/session';
+import { renderSession } from '../kernel/session';
 import { runTaskInline, type TaskContext, type TaskName } from './parallelTasks';
 
 /**

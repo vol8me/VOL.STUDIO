@@ -1,8 +1,8 @@
 import { AUDIO_ANALYSIS_SCHEMA, type AudioAnalysisReportV1 } from '../analysis/report';
-import { RENDER_QUALITIES, type RenderQuality } from '../engine/session';
+import { RENDER_QUALITIES, type RenderQuality } from '../kernel/session';
 import { AudioParamError } from '../guard/errors';
 import { checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
-import { HASH_PATTERN, type Sha256 } from './canonical';
+import { HASH_PATTERN, type Sha256 } from '../kernel/canonical';
 import { JOB_KINDS, type JobKind } from './kinds';
 import { ProtocolError } from './errors';
 import { checkRepoRelative } from './fs';

@@ -3,7 +3,7 @@ import { resolveDrum, type ResolvedDrum } from '../instruments/percussion/drum';
 import { PRESET_CATALOG } from '../presets';
 import { resolveBanks, type ResolvedZone } from '../program/sampleBank';
 import { resolveSampleDecls, type SampleDeclV1 } from '../program/samples';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import {
   RETRO_TABLES,
   waveformFields,

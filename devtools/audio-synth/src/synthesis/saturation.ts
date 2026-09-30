@@ -1,5 +1,5 @@
-import { qualityProfile } from '../engine/session';
-import { resample } from '../synthesis/sample';
+import { qualityProfile } from '../kernel/session';
+import { resample } from './sample';
 
 /**
  * Doğrusal olmayan renklendirme: dalga şekillendirici (4× aşırı örnekli) ve

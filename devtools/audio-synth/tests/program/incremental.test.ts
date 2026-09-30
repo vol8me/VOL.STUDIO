@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { MemoryRenderCache } from '../../src/engine/renderCache';
 import { materialize } from '../../src/program/dimensions';
 import { renderProgram, renderProgramLayers } from '../../src/program/render';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { loadCanaries } from '../../src/protocol/canary';
 import { repoSampleResolver } from '../../src/protocol/samples';
 import { probeResolver, probeSample } from '../support/samples';

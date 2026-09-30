@@ -10,10 +10,10 @@ import { assertRenderBudget, estimateSynthCost } from '../guard/budget';
 import { createVoices } from './voice';
 import { renderDrySample, downsample2x } from './render';
 import { applyGlobalEffects } from './effects-chain';
-import { OVERSAMPLE_FACTOR } from './constants';
+import { OVERSAMPLE_FACTOR } from '../kernel/constants';
 import { cacheKey } from './renderCache';
-import { qualityProfile, renderSession } from './session';
-import type { Sha256 } from '../protocol/canonical';
+import { qualityProfile, renderSession } from '../kernel/session';
+import type { Sha256 } from '../kernel/canonical';
 
 /**
  * Önbellek anahtarı: doğrulanmış VE ham parametreler (global efektler ham

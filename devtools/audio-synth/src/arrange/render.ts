@@ -1,6 +1,6 @@
 import { synthesize } from '../engine';
-import { renderSession } from '../engine/session';
-import type { Sha256 } from '../protocol/canonical';
+import { renderSession } from '../kernel/session';
+import type { Sha256 } from '../kernel/canonical';
 import type { SynthParams } from '../types';
 import { addVoice, createMix, type Mix } from './mix';
 

@@ -4,7 +4,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import type { RenderQuality } from '../../src/engine/session';
+import type { RenderQuality } from '../../src/kernel/session';
 import { ProtocolError } from '../../src/protocol/errors';
 
 export interface Parsed {

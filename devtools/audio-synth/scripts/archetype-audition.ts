@@ -13,7 +13,7 @@ import { analyzeAudio } from '../src/analysis/report';
 import { expandArchetype } from '../src/program/archetype';
 import { ARCHETYPES } from '../src/program/primitives/archetypes';
 import { renderProgram } from '../src/program/render';
-import { hashCanonical, hashPcm } from '../src/protocol/canonical';
+import { hashCanonical, hashPcm } from '../src/kernel/canonical';
 import { writeWav } from '../src/writer';
 import { VOCAL_FAMILIES } from '../tests/fixtures/vocalFamilies';
 

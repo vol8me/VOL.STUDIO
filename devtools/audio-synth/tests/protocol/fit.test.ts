@@ -5,7 +5,7 @@ import { analyzeAudio } from '../../src/analysis/report';
 import { summarizeAudio, type DescriptorSummaryV1 } from '../../src/analysis/summary';
 import { AudioParamError } from '../../src/guard/errors';
 import { renderProgram } from '../../src/program/render';
-import { hashCanonical } from '../../src/protocol/canonical';
+import { hashCanonical } from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import { readJsonFile } from '../../src/protocol/fs';
 import { listFits, readFitReport, runFit } from '../../src/protocol/fit';
@@ -16,7 +16,7 @@ import {
   validateFitReport,
   type AcousticFitReportV1,
 } from '../../src/search/fit';
-import type { Sha256 } from '../../src/protocol/canonical';
+import type { Sha256 } from '../../src/kernel/canonical';
 import { createTestRepo, type TestRepo } from './repo';
 import { RENDER_TIMEOUT } from '../support/timeouts';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AudioParamError } from '../../src/guard/errors';
-import { sha256Bytes } from '../../src/protocol/canonical';
+import { sha256Bytes } from '../../src/kernel/canonical';
 import {
   validateAnalysisRecord,
   validateJob,

@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { prettyCanonicalJson } from '../../src/protocol/canonical';
+import { prettyCanonicalJson } from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import {
   analyzeCandidate,

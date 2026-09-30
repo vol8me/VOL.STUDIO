@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BatchBudgetError } from '../../src/guard/batch';
 import { renderProgram } from '../../src/program/render';
 import { writeAuditionCopy } from '../../src/protocol/audition';
-import { hashCanonical, prettyCanonicalJson } from '../../src/protocol/canonical';
+import { hashCanonical, prettyCanonicalJson } from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import {
   analyzeCandidate,

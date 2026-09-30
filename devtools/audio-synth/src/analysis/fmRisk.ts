@@ -1,5 +1,5 @@
 import type { FmParams, Waveform } from '../types';
-import { OVERSAMPLE_FACTOR } from '../engine/constants';
+import { OVERSAMPLE_FACTOR } from '../kernel/constants';
 
 export type FmAliasLevel = 'safe' | 'caution' | 'risky';
 

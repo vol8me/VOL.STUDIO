@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { renderVoices } from '../../src/arrange/render';
 import { MemoryRenderCache } from '../../src/engine/renderCache';
-import { withRenderSession } from '../../src/engine/session';
+import { withRenderSession } from '../../src/kernel/session';
 import type { MusicProgramV1 } from '../../src/music/program';
 import { eventsFor, renderScoreRaw, voicesOf } from '../../src/music/render';
 import { expandProgram } from '../../src/music/score';
 import { renderMusicStem } from '../../src/music/stem';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { RENDER_BLOCK } from '../support/timeouts';
 
 const LOOP = new URL('../../audio-music/reference-loop/music.json', import.meta.url);

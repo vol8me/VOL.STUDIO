@@ -4,7 +4,7 @@
  * kanıt olarak görünür.
  */
 import { statSync } from 'node:fs';
-import { withRenderSession } from '../../src/engine/session';
+import { withRenderSession } from '../../src/kernel/session';
 import {
   checkFamily,
   DEFAULT_FAMILIES_ROOT,

@@ -23,13 +23,13 @@ import {
   type BenchmarkPartV1,
   type BenchmarkTaskV1,
 } from '../../src/protocol/benchmark';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { runTasks } from '../../src/protocol/parallel';
 import type { BenchmarkPartOutput } from '../../src/protocol/parallelTasks';
 import { checkMusic } from '../../src/protocol/music';
 import { repoRenderCache } from '../../src/protocol/renderCacheStore';
 import { repoSampleResolver } from '../../src/protocol/samples';
-import { withRenderSession } from '../../src/engine/session';
+import { withRenderSession } from '../../src/kernel/session';
 import { edited } from '../support/json';
 import { createTestRepo, type TestRepo } from '../protocol/repo';
 import { CORPUS_TIMEOUT, PIPELINE_TIMEOUT, RENDER_TIMEOUT } from '../support/timeouts';

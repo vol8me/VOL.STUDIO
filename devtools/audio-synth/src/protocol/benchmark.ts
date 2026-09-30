@@ -42,7 +42,7 @@ import {
   type CanaryResultV1,
   type CanaryReviewStatus,
 } from './canary';
-import { prettyCanonicalJson, type Sha256 } from './canonical';
+import { prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
 import { encodeQualityOf } from './encodeProfiles';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';

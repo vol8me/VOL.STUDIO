@@ -1,6 +1,6 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { SEARCH_STRATEGIES, strategyPoints, type SearchStrategyId } from '../search/strategy';
 import { analyzeScore, type MusicSymbolicReportV1 } from './analyze';
 import type { MusicBriefV1 } from './brief';

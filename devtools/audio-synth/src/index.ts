@@ -1,8 +1,10 @@
 /**
  * @volstudio/audio-synth — prosedürel ses sentezi, saf matematik.
  *
- * Dört katman, dört ayrı soru:
+ * Katmanlar ve sordukları soru:
  *
+ *   kernel/       Herkesin paylaştığı temel: kanonik JSON ve özet, render
+ *                 oturumu, sabitler. Çalışma zamanında hiçbir katmanı import etmez.
  *   synthesis/    Örnek NASIL üretilir? (osilatör, gürültü, zarf, filtre)
  *   engine/       Parametreler nasıl BİRLEŞTİRİLİR? (`SynthParams` → örnek)
  *   instruments/  Bir enstrüman ailesi NASIL DAVRANIR? (fiziksel model)

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { estimateProgramCost, renderProgram } from '../../src/program/render';
 import { PROGRAM_REGISTRY } from '../../src/program/catalog';
 import { renderProjection } from '../../src/program/surface';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { resolveProgram } from '../../src/program/schema';
 
 const program = (params: Record<string, number | string> = {}) => ({

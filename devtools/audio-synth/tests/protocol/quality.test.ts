@@ -2,10 +2,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRenderCache } from '../../src/engine/renderCache';
-import { withRenderSession } from '../../src/engine/session';
+import { withRenderSession } from '../../src/kernel/session';
 import { PROGRAM_RENDERER_VERSION, renderProgram } from '../../src/program/render';
 import { programRootKey } from '../../src/program/renderKeys';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import {
   analyzeCandidate,

@@ -6,7 +6,7 @@ import {
 } from '../../src/family/program';
 import { AudioParamError } from '../../src/guard/errors';
 import { renderProgram } from '../../src/program/render';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { edited, getAt } from '../support/json';
 import { dropletFamily, shellFamily } from './fixtures';
 

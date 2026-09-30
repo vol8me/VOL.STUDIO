@@ -30,7 +30,7 @@ import { validateMusicProgram } from '../../src/music/program';
 import { estimateScoreCost, loopFrames, renderScoreRaw } from '../../src/music/render';
 import { expandProgram } from '../../src/music/score';
 import { renderMusicStem, REFERENCE_MIX_ID, validateMusicStemProgram } from '../../src/music/stem';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { Timeline } from '../../src/arrange';
 import { getPreset } from '../../src/presets';
 import { unitAdaptiveProgram, unitProgram } from './fixtures';

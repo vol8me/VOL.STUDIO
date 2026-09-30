@@ -3,7 +3,7 @@
  * `src/music/` + `src/protocol/music.ts`tedir. Süreler yalnız bu çıktıda
  * kanıt olarak görünür.
  */
-import { withRenderSession } from '../../src/engine/session';
+import { withRenderSession } from '../../src/kernel/session';
 import {
   checkMusic,
   DEFAULT_MUSIC_ROOT,

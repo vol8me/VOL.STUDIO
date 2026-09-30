@@ -43,7 +43,7 @@ import {
   prettyCanonicalJson,
   sha256Bytes,
   type Sha256,
-} from './canonical';
+} from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { commitFiles, readJsonFile, resolveInside, withLock, writeStaged } from './fs';
 import {

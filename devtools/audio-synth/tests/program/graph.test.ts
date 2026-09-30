@@ -5,7 +5,7 @@ import { AudioParamError } from '../../src/guard/errors';
 import { estimateProgramCost, renderProgram } from '../../src/program/render';
 import { outputSeconds, resolveProgram } from '../../src/program/schema';
 import { soundGraph, topologyOf } from '../../src/program/soundGraph';
-import { hashCanonical, hashPcm } from '../../src/protocol/canonical';
+import { hashCanonical, hashPcm } from '../../src/kernel/canonical';
 import { snakeHiss, tankFire } from './graphFixtures';
 import { node } from '../support/program';
 

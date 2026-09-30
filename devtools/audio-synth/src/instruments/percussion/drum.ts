@@ -1,6 +1,6 @@
 import { DEFAULT_SEED } from '@volstudio/core/random';
 import { downsample2x } from '../../engine/render';
-import { qualityProfile } from '../../engine/session';
+import { qualityProfile } from '../../kernel/session';
 import { assertRenderBudget, estimateFrameCost } from '../../guard/budget';
 import { AudioParamError } from '../../guard/errors';
 import {

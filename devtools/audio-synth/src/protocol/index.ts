@@ -10,8 +10,8 @@ export {
   hashPcm,
   prettyCanonicalJson,
   sha256Bytes,
-} from './canonical';
-export type { Sha256 } from './canonical';
+} from '../kernel/canonical';
+export type { Sha256 } from '../kernel/canonical';
 export { EXPORT_ROOT, writeAuditionCopy } from './audition';
 export {
   auditionState,

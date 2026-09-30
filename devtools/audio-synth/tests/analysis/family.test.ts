@@ -10,7 +10,7 @@ import { summarizeAudio } from '../../src/analysis/summary';
 import { AudioParamError } from '../../src/guard/errors';
 import { expandArchetype } from '../../src/program/archetype';
 import { renderProgram } from '../../src/program/render';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 
 /** Gerçek render'dan üye: ölçümler sahte değil, motorun kendi çıktısı. */
 function member(key: string, params: Record<string, number>, variation = 0): FamilyMemberInput {

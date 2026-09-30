@@ -30,8 +30,8 @@ import {
   runRegression,
 } from '../../src/protocol';
 import { ProtocolError } from '../../src/protocol/errors';
-import { hashCanonical, type Sha256 } from '../../src/protocol/canonical';
-import { withRenderSession } from '../../src/engine/session';
+import { hashCanonical, type Sha256 } from '../../src/kernel/canonical';
+import { withRenderSession } from '../../src/kernel/session';
 import { repoRenderCache } from '../../src/protocol/renderCacheStore';
 import { CORPUS_TIMEOUT } from '../support/timeouts';
 

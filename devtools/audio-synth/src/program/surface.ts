@@ -1,4 +1,4 @@
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { PROGRAM_REGISTRY } from './catalog';
 import type { ParamSpec } from './params';
 import type { ProgramEntry } from './registry';

@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { canonicalJson } from '../../src/protocol/canonical';
+import { canonicalJson } from '../../src/kernel/canonical';
 import { buildContext } from '../../src/protocol/context';
 import { ProtocolError } from '../../src/protocol/errors';
 import { resolveDestination, surveyTargets } from '../../src/protocol/targets';

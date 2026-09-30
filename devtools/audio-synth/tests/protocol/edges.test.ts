@@ -14,7 +14,7 @@ import { AudioParamError } from '../../src/guard/errors';
 import { renderProgram } from '../../src/program/render';
 import { startAuditionServer } from '../../src/protocol/auditionServer';
 import { validateCanary, validateReviews } from '../../src/protocol/canary';
-import { prettyCanonicalJson } from '../../src/protocol/canonical';
+import { prettyCanonicalJson } from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import { validateOrigin } from '../../src/protocol/origin';
 import {

@@ -11,7 +11,7 @@
  * Dış API değişmedi: `synth`, `synthesize`, `applyGlobalEffects`, `normalize`,
  * `limitBuffer`, `mix` aynı isimlerle buradan çıkar.
  */
-export { DEFAULT_SAMPLE_RATE, OVERSAMPLE_FACTOR, NORMALIZE_TARGET_PEAK } from './constants';
+export { DEFAULT_SAMPLE_RATE, OVERSAMPLE_FACTOR, NORMALIZE_TARGET_PEAK } from '../kernel/constants';
 export type { FmState, Voice } from './voice';
 export { createFmState, createVoices } from './voice';
 export { frequencyAtTime, getFmSample } from './frequency';
@@ -24,7 +24,7 @@ export {
   qualityProfile,
   renderSession,
   withRenderSession,
-} from './session';
-export type { QualityProfileV1, RenderQuality, RenderSession } from './session';
+} from '../kernel/session';
+export type { QualityProfileV1, RenderQuality, RenderSession } from '../kernel/session';
 export { cacheKey, MemoryRenderCache } from './renderCache';
 export type { RenderCache, RenderCacheStats } from './renderCache';

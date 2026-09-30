@@ -19,7 +19,7 @@ import { MUSIC_RENDERER_VERSION } from '../music/render';
 import { PROGRAM_RENDERER_VERSION } from '../program/render';
 import { decodeWithFfmpeg } from './toolchain';
 import { registryHash } from './publish';
-import { prettyCanonicalJson, type Sha256 } from './canonical';
+import { prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import { estimateForKind, kindOfProgramSchema, renderForKind, type JobKind } from './kinds';

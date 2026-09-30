@@ -4,7 +4,7 @@ import { AUDIO_ANALYSIS_SCHEMA, type AudioAnalysisReportV1 } from '../analysis/r
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
 import { RENDER_SURFACE_SCHEME, type RenderSurfaceV1 } from '../program/surface';
-import { hashCanonical, type Sha256 } from './canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { checkHash } from './records';
 import type { LoopSeamV1 } from '../analysis/seam';
 import type { ManifestDerivationV1 } from './derivation';

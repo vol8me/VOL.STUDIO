@@ -1,5 +1,5 @@
 import { interSamplePeaks, truePeakDb } from '../analysis/loudness';
-import { qualityProfile } from '../engine/session';
+import { qualityProfile } from '../kernel/session';
 
 /**
  * İleriye bakan true-peak sınırlayıcı (offline; gecikme yok, çünkü bütün

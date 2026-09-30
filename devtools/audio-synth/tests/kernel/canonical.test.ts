@@ -6,7 +6,7 @@ import {
   hashPcm,
   prettyCanonicalJson,
   sha256Bytes,
-} from '../../src/protocol/canonical';
+} from '../../src/kernel/canonical';
 
 describe('kanonik JSON', () => {
   it('anahtar sırası ve girinti özeti değiştirmez', () => {

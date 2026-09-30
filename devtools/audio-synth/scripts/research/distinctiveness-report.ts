@@ -16,7 +16,7 @@ import { CHECK_KINDS, evaluateChecks, type MechanicalCheckV1 } from '../../src/a
 import { analyzeAudio } from '../../src/analysis/report.js';
 import { materialize } from '../../src/program/dimensions.js';
 import { renderProgram } from '../../src/program/render.js';
-import { withRenderSession } from '../../src/engine/session.js';
+import { withRenderSession } from '../../src/kernel/session.js';
 import { REFERENCE_MIX_ID } from '../../src/music/stem.js';
 import type { BenchmarkTaskV1 } from '../../src/protocol/index.js';
 import { loadBenchmarkTasks } from '../../src/protocol/benchmark.js';

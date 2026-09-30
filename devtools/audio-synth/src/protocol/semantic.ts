@@ -13,7 +13,7 @@ import {
 import type { AcousticSearchSpecV1 } from '../search/spec';
 import { AudioParamError } from '../guard/errors';
 import { writeAuditionCopy } from './audition';
-import { hashCanonical, prettyCanonicalJson, type Sha256 } from './canonical';
+import { hashCanonical, prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { resolveInside, writeFileAtomic } from './fs';
 import type { SearchCandidateOutput } from './parallelTasks';

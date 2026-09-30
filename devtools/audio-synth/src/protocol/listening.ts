@@ -1,8 +1,8 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Sha256 } from './canonical';
-import { hashPcm, prettyCanonicalJson } from './canonical';
+import type { Sha256 } from '../kernel/canonical';
+import { hashPcm, prettyCanonicalJson } from '../kernel/canonical';
 import { canaryReviews, loadCanaries, runCanary, type CanaryReviewStatus } from './canary';
 import {
   benchmarkReviews,

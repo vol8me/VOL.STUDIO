@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { analyzeAudio } from '../analysis/report';
-import { withRenderSession, type RenderQuality } from '../engine/session';
+import { withRenderSession, type RenderQuality } from '../kernel/session';
 import { assertRenderBudget } from '../guard/budget';
 import { validateBrief, type AudioBriefV1 } from '../program/brief';
 import {
@@ -15,7 +15,7 @@ import {
 import { documentPlayback, validateMusicStemProgram } from '../music/stem';
 import { outputChannels, outputSeconds, resolveProgram } from '../program/schema';
 import { writeAuditionCopy } from './audition';
-import { hashCanonical, hashPcm, type Sha256 } from './canonical';
+import { hashCanonical, hashPcm, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock } from './fs';
 import {

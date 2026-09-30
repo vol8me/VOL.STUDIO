@@ -7,7 +7,7 @@ import type { SampleData, SampleDeclV1, SampleResolver } from '../program/sample
 import { decodeWavChannels } from '../synthesis/sample';
 import { encodeWav } from '../writer';
 import { EXPORT_ROOT } from './audition';
-import { sha256Bytes } from './canonical';
+import { sha256Bytes } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { checkRepoRelative, readJsonFile, resolveInside, writeFileAtomic } from './fs';
 import { asProtocol } from './records';

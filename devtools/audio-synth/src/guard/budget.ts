@@ -1,4 +1,4 @@
-import { OVERSAMPLE_FACTOR } from '../engine/constants';
+import { OVERSAMPLE_FACTOR } from '../kernel/constants';
 import type { ResolvedSynthParams } from './synth';
 
 const FLOAT32_BYTES = 4;

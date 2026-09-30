@@ -10,7 +10,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderProgram } from '../src/program/render';
-import { prettyCanonicalJson, sha256Bytes } from '../src/protocol/canonical';
+import { prettyCanonicalJson, sha256Bytes } from '../src/kernel/canonical';
 import {
   DEFAULT_SAMPLES_ROOT,
   SAMPLE_ASSET_SCHEMA,

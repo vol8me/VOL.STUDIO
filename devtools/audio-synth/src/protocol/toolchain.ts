@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { hashCanonical, type Sha256 } from './canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 
 /**

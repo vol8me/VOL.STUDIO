@@ -1,6 +1,6 @@
 import { cacheKey } from '../engine/renderCache';
-import type { RenderQuality } from '../engine/session';
-import type { Sha256 } from '../protocol/canonical';
+import type { RenderQuality } from '../kernel/session';
+import type { Sha256 } from '../kernel/canonical';
 import type { ResolvedGesture } from './bindings';
 import type { ProgramEntry, ProcessorEntry, SourceEntry } from './registry';
 import type { ResolvedEffect } from './routing';

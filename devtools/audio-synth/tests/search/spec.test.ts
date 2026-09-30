@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AudioParamError } from '../../src/guard/errors';
-import { hashCanonical } from '../../src/protocol/canonical';
+import { hashCanonical } from '../../src/kernel/canonical';
 import { planSearch } from '../../src/search/plan';
 import { validateSearchSpec } from '../../src/search/spec';
 import { edited } from '../support/json';

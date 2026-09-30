@@ -3,7 +3,7 @@ import type { MessagePort } from 'node:worker_threads';
 import { analyzeAudio } from '../analysis/report';
 import { summarizeAudio, type DescriptorSummaryV1 } from '../analysis/summary';
 import { evaluateChecks, type MechanicalCheckV1 } from '../analysis/checks';
-import { withRenderSession, type RenderQuality } from '../engine/session';
+import { withRenderSession, type RenderQuality } from '../kernel/session';
 import type { MusicRenderV1 } from '../music/render';
 import { renderMusicRaw } from '../music/stem';
 import type { MusicProgramV1 } from '../music/program';
@@ -11,7 +11,7 @@ import { expandProgram } from '../music/score';
 import { renderProgram, type ProgramRender } from '../program/render';
 import { evaluateCandidate, type SearchCandidateV1, type SearchPlan } from '../search';
 import { renderForKind, type JobKind } from './kinds';
-import { hashCanonical, hashPcm, type Sha256 } from './canonical';
+import { hashCanonical, hashPcm, type Sha256 } from '../kernel/canonical';
 import { repoRenderCache } from './renderCacheStore';
 import { repoSampleResolver } from './samples';
 

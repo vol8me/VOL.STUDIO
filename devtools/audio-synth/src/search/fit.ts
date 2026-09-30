@@ -9,7 +9,7 @@ import {
   type DimensionValue,
   type ProgramBaseV1,
 } from '../program/dimensions';
-import { hashCanonical, HASH_PATTERN, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, HASH_PATTERN, type Sha256 } from '../kernel/canonical';
 import { PROGRAM_RENDERER_VERSION } from '../program/render';
 import { ANALYZER_VERSION } from '../analysis/report';
 import { registryRenderHash } from '../program/surface';

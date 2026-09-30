@@ -1,6 +1,6 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { validateMotif, type MotifV1 } from './motif';
 import {
   MUSIC_ID,

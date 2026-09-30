@@ -1,4 +1,4 @@
-import { QUALITY_PROFILES } from '../engine/session';
+import { QUALITY_PROFILES } from '../kernel/session';
 import { DEFAULT_PARALLEL_POLICY, WORKERS_ENV } from '../guard/parallel';
 import { RENDER_CACHE_ENV, RENDER_CACHE_ROOT } from './renderCacheStore';
 import { ASSET_CLASS_POLICIES } from '../analysis/assetQa';
@@ -12,7 +12,7 @@ import { KNOWN_LIMITATIONS } from '../program/limitations';
 import { SUBSTREAM_SCHEME } from '../program/random';
 import { PROGRAM_RENDERER_VERSION } from '../program/render';
 import { ACOUSTIC_PROGRAM_SCHEMA, PROGRAM_LIMITS } from '../program/schema';
-import { hashCanonical } from './canonical';
+import { hashCanonical } from '../kernel/canonical';
 import {
   BENCHMARK_AUDITION_ROOT,
   BENCHMARK_REVIEWS_SCHEMA,

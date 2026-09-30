@@ -10,7 +10,7 @@ import {
   type TreatmentProfileV1,
 } from '../program/treatmentProfiles';
 import type { TreatmentV1 } from '../program/treatment';
-import { hashCanonical, type Sha256 } from './canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside } from './fs';
 import { renderForKind } from './kinds';

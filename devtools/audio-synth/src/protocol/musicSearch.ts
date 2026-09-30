@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { evaluateAssetPolicy, measureAsset } from '../analysis/assetQa';
-import { qualityProfile } from '../engine/session';
+import { qualityProfile } from '../kernel/session';
 import { assertRenderBudget } from '../guard/budget';
 import { musicProgramHash, type MusicProgramV1 } from '../music/program';
 import { renderAndPlan } from '../music/bundle';
@@ -16,7 +16,7 @@ import {
   type MusicCandidateV1,
   type MusicSearchSpecV1,
 } from '../music/search';
-import { hashCanonical, prettyCanonicalJson, type Sha256 } from './canonical';
+import { hashCanonical, prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import { loadMusicDocuments, musicLabel, type MusicLocation } from './music';

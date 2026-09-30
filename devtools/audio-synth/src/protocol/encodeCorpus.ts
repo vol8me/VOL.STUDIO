@@ -5,7 +5,7 @@ import { blip, pause, restart, resume } from '../presets/ui';
 import { renderProgram } from '../program/render';
 import { PROGRAM_REGISTRY } from '../program/catalog';
 import type { SynthParams } from '../types';
-import { hashPcm, type Sha256 } from './canonical';
+import { hashPcm, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside } from './fs';
 import { kindOfProgramSchema, renderForKind } from './kinds';

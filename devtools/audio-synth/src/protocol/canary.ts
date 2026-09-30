@@ -6,7 +6,7 @@ import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read
 import { checkBase, materialize, type ProgramBaseV1 } from '../program/dimensions';
 import { renderProgram, type ProgramRender } from '../program/render';
 import { writeAuditionCopy, EXPORT_ROOT } from './audition';
-import { hashCanonical, hashPcm, prettyCanonicalJson, type Sha256 } from './canonical';
+import { hashCanonical, hashPcm, prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import { asProtocol } from './records';

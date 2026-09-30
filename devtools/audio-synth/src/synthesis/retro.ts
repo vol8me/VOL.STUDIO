@@ -1,4 +1,4 @@
-import { crush } from '../effects/saturation';
+import { crush } from './saturation';
 import { BLEP_RADIUS, blepResidual, getWaveSampleWithPhase } from './waveforms';
 
 /**

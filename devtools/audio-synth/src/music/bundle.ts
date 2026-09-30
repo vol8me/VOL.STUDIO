@@ -9,7 +9,7 @@ import {
   type Stem,
   type StemGainMap,
 } from '@volstudio/core/audio/music';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import {
   applyMastering,
   measureMix,

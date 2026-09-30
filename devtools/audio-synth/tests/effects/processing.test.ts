@@ -8,7 +8,7 @@ import {
 } from '../../src/effects/dynamics';
 import { applyBiquad, biquadResponseDb, eqCoefficients, passCascade } from '../../src/effects/eq';
 import { limitTruePeak } from '../../src/effects/limiter';
-import { crush, saturate } from '../../src/effects/saturation';
+import { crush, saturate } from '../../src/synthesis/saturation';
 import { powerSpectrum } from '../../src/analysis/spectrum';
 
 /**

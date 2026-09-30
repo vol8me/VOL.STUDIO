@@ -1,6 +1,6 @@
 import { compress } from '../effects/dynamics';
 import { applyBiquad, passCascade } from '../effects/eq';
-import { crush, saturate } from '../effects/saturation';
+import { crush, saturate } from '../synthesis/saturation';
 import { shapeTransients } from '../effects/dynamics';
 import { AudioParamError } from '../guard/errors';
 import { checkNumber, checkObject } from '../guard/read';

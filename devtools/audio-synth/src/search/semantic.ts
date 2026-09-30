@@ -1,6 +1,6 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkNumber, checkObject } from '../guard/read';
-import type { Sha256 } from '../protocol/canonical';
+import type { Sha256 } from '../kernel/canonical';
 import type { DescriptorSummaryV1 } from '../analysis/summary';
 
 /**

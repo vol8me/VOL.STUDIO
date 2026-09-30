@@ -1,7 +1,7 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
 import { truePeakDb } from '../analysis/loudness';
-import { qualityProfile } from '../engine/session';
+import { qualityProfile } from '../kernel/session';
 import {
   MASTER_CEILING,
   MASTER_END_FADE_SECONDS,

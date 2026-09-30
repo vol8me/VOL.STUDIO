@@ -4,7 +4,7 @@ import { resolveMusicMix } from '../../src/music/mix';
 import { validateMusicProgram } from '../../src/music/program';
 import { renderMusicStem, REFERENCE_MIX_ID } from '../../src/music/stem';
 import { AudioParamError } from '../../src/guard/errors';
-import { hashCanonical } from '../../src/protocol/canonical';
+import { hashCanonical } from '../../src/kernel/canonical';
 import { clone, unitAdaptiveProgram, unitProgram } from './fixtures';
 import { RENDER_BLOCK } from '../support/timeouts';
 

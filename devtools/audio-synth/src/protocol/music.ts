@@ -57,7 +57,13 @@ import {
   type MusicStemProgramV1,
 } from '../music/stem';
 import { validateBrief } from '../program/brief';
-import { hashCanonical, hashPcm, prettyCanonicalJson, sha256Bytes, type Sha256 } from './canonical';
+import {
+  hashCanonical,
+  hashPcm,
+  prettyCanonicalJson,
+  sha256Bytes,
+  type Sha256,
+} from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import {

@@ -11,7 +11,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { PROGRAM_REGISTRY } from '../src/program/catalog';
 import { nodeSurface } from '../src/program/surface';
 import { RENDER_SURFACE_LOCK_PATH, type RenderSurfaceLockV2 } from '../src/program/surfaceLock';
-import type { Sha256 } from '../src/protocol/canonical';
+import type { Sha256 } from '../src/kernel/canonical';
 
 const lockFile = new URL(`../${RENDER_SURFACE_LOCK_PATH}`, import.meta.url);
 const previous: RenderSurfaceLockV2 | null = existsSync(lockFile)

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { renderProgram } from '../../src/program/render';
-import { sha256Bytes } from '../../src/protocol/canonical';
+import { sha256Bytes } from '../../src/kernel/canonical';
 import { DEFAULT_SAMPLES_ROOT, SAMPLE_ASSET_SCHEMA } from '../../src/protocol/samples';
 import { encodeWav } from '../../src/writer';
 import { snakeHiss } from '../program/graphFixtures';

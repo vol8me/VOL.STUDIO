@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -12,18 +12,7 @@ import { describe, expect, it } from 'vitest';
 const SRC = resolve(import.meta.dirname, '../../src');
 const SCRIPTS = resolve(import.meta.dirname, '../../scripts');
 
-const KNOWN_CYCLES = new Set([
-  'analysis<->family',
-  'effects<->synthesis',
-  'engine<->guard',
-  'engine<->protocol',
-  'family<->program',
-  'family<->protocol',
-  'music<->program',
-  'music<->protocol',
-  'program<->protocol',
-  'protocol<->search',
-]);
+const KNOWN_CYCLES = new Set(['analysis<->family', 'family<->program', 'music<->program']);
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -33,8 +22,13 @@ function sourceFiles(dir: string): string[] {
   });
 }
 
+/**
+ * Dizin import'u (`'../effects'`) o dizinin `index.ts`idir: katmanı dizinin
+ * kendisidir, kök değil. Uzantısız dosya yolu da aynı katmana düşer.
+ */
 const layerOf = (file: string): string => {
-  const parts = relative(SRC, file).split(sep);
+  const target = existsSync(file) && statSync(file).isDirectory() ? join(file, 'index.ts') : file;
+  const parts = relative(SRC, target).split(sep);
   return parts.length > 1 ? parts[0] : '(root)';
 };
 
@@ -85,6 +79,17 @@ function directoryCycles(): string[] {
 
 describe('src dizin katmanları', () => {
   const cycles = directoryCycles();
+
+  it('kernel çalışma zamanında hiçbir katmanı import etmez', () => {
+    const outward = sourceFiles(join(SRC, 'kernel')).flatMap((file) =>
+      runtimeTargets(file)
+        .filter((target) => !relative(SRC, target).startsWith('..'))
+        .map(layerOf)
+        .filter((layer) => layer !== 'kernel')
+        .map((layer) => `${relative(SRC, file)} -> ${layer}`),
+    );
+    expect(outward).toEqual([]);
+  });
 
   it('yeni karşılıklı dizin bağımlılığı eklenmez', () => {
     expect(cycles.filter((cycle) => !KNOWN_CYCLES.has(cycle))).toEqual([]);

@@ -7,7 +7,7 @@ import {
   checkSampleRate,
   type ParamObject,
 } from '../guard/read';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { resolveBanks } from '../program/sampleBank';
 import { resolveSampleDecls } from '../program/samples';
 import { validateGroove } from './groove';

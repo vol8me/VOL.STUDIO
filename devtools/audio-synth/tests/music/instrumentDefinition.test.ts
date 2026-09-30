@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { MemoryRenderCache } from '../../src/engine/renderCache';
-import { withRenderSession } from '../../src/engine/session';
+import { withRenderSession } from '../../src/kernel/session';
 import { AudioParamError } from '../../src/guard/errors';
 import { analyzeScore } from '../../src/music/analyze';
 import { validateMusicProgram, type MusicProgramV1 } from '../../src/music/program';
 import { expandProgram, type ScoreEventV1 } from '../../src/music/score';
 import { renderMusicRaw } from '../../src/music/stem';
 import { planVoices } from '../../src/music/voices';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { probeResolver, registerSample } from '../support/samples';
 import { rms } from '../support/measure';
 import { RENDER_BLOCK } from '../support/timeouts';

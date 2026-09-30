@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { createRandom } from '@volstudio/core/random';
 import { AudioParamError } from '../../src/guard/errors';
 import { ProtocolError } from '../../src/protocol/errors';
-import { CanonicalJsonError } from '../../src/protocol/canonical';
+import { CanonicalJsonError } from '../../src/kernel/canonical';
 import { resolveProgram } from '../../src/program/schema';
 import { resolveSynthParams } from '../../src/guard/synth';
 import { validateBenchmarkTask } from '../../src/protocol/benchmark';

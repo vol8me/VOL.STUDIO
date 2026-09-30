@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { withRenderSession } from '../engine/session';
+import { withRenderSession } from '../kernel/session';
 import { batchWorkers } from '../guard/parallel';
 import { renderProgram } from '../program/render';
 import { assertPlanWithinBudget, CANDIDATE_ID, planSearch, type SearchPlan } from '../search/plan';
@@ -17,7 +17,7 @@ import {
 } from '../search/selection';
 import { SEARCH_ID, validateSearchSpec, type AcousticSearchSpecV1 } from '../search/spec';
 import { writeAuditionCopy, EXPORT_ROOT } from './audition';
-import { hashCanonical, hashPcm, prettyCanonicalJson, type Sha256 } from './canonical';
+import { hashCanonical, hashPcm, prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { runTasks } from './parallel';
 import type { SearchCandidateOutput } from './parallelTasks';

@@ -10,7 +10,7 @@
  */
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { prettyCanonicalJson } from '../src/protocol/canonical';
+import { prettyCanonicalJson } from '../src/kernel/canonical';
 import { measureEncodeBaseline } from '../src/protocol/encodeBaseline';
 import { ENCODE_BASELINE_FILE, ENCODE_POLICY } from '../src/protocol/encodeProfiles';
 

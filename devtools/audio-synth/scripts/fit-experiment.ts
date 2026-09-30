@@ -25,7 +25,7 @@ import { renderProgram } from '../src/program/render';
 import { materialize, type DimensionV1, type DimensionTarget } from '../src/program/dimensions';
 import type { AcousticProgramV1 } from '../src/program/schema';
 import { runFit } from '../src/protocol/fit';
-import { prettyCanonicalJson } from '../src/protocol/canonical';
+import { prettyCanonicalJson } from '../src/kernel/canonical';
 import { FIT_MANIFEST_FIELDS, type AcousticFitSpecV1 } from '../src/search/fit';
 
 const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');

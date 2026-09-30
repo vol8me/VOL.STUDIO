@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { join } from 'node:path';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { validateBank } from '../../src/family/bank';
-import { hashCanonical } from '../../src/protocol/canonical';
+import { hashCanonical } from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import {
   checkFamily,

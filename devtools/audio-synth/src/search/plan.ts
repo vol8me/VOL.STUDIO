@@ -18,7 +18,7 @@ import {
 } from '../program/dimensions';
 import { estimateProgramCost, PROGRAM_RENDERER_VERSION } from '../program/render';
 import { resolveProgram, type AcousticProgramV1 } from '../program/schema';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { effectiveBudget, excludedBy, SEARCH_SPEC_SCHEMA, type AcousticSearchSpecV1 } from './spec';
 import { strategyPoints } from './strategy';
 

@@ -36,7 +36,7 @@ import {
 import type { AudioBriefV1 } from '../program/brief';
 import { estimateProgramCost, PROGRAM_RENDERER_VERSION } from '../program/render';
 import { outputChannels, resolveProgram } from '../program/schema';
-import { hashCanonical, prettyCanonicalJson, sha256Bytes, type Sha256 } from './canonical';
+import { hashCanonical, prettyCanonicalJson, sha256Bytes, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 import {

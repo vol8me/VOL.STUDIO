@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { hashCanonical, prettyCanonicalJson, type Sha256 } from './canonical';
+import { hashCanonical, prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { readJsonFile, resolveInside, writeFileAtomic } from './fs';
 import { asProtocol, JOB_ID, validateJob, type AudioJobV1, type JobStage } from './records';

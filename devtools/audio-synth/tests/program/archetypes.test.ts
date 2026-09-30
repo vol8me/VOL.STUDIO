@@ -5,7 +5,7 @@ import { expandArchetype } from '../../src/program/archetype';
 import { ARCHETYPES } from '../../src/program/primitives/archetypes';
 import { renderProgram, renderProgramLayers } from '../../src/program/render';
 import type { AcousticProgramV1 } from '../../src/program/schema';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { clone } from '../support/json';
 import { RENDER_TIMEOUT } from '../support/timeouts';
 import {

@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { AudioParamError } from '../guard/errors';
 import { checkChoice, checkNumber, checkObject, type ParamObject } from '../guard/read';
-import { hashCanonical, HASH_PATTERN, type Sha256 } from './canonical';
+import { hashCanonical, HASH_PATTERN, type Sha256 } from '../kernel/canonical';
 import { readJsonFile } from './fs';
 import { artifactFile, type JobLocation } from './location';
 

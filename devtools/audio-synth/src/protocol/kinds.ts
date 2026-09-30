@@ -1,5 +1,5 @@
 import type { RenderCache } from '../engine/renderCache';
-import type { RenderQuality } from '../engine/session';
+import type { RenderQuality } from '../kernel/session';
 import type { RenderCost } from '../guard/budget';
 import {
   estimateMusicStemCost,

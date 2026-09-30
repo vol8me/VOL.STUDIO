@@ -1,6 +1,6 @@
 import type { SampleBankV1 } from '../program/sampleBank';
 import type { SampleDeclV1 } from '../program/samples';
-import type { Sha256 } from '../protocol/canonical';
+import type { Sha256 } from '../kernel/canonical';
 import type { GrooveProfileV1 } from './groove';
 import type { ChordV1, VoicingV1 } from './harmony';
 import type { InstrumentDefinitionV1 } from './instrumentDefinition';

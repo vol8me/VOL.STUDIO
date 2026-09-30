@@ -17,7 +17,7 @@ import {
 import { substream } from '../program/random';
 import { ROLE_AXES, type RoleAxis } from './vocabulary';
 import { outputChannels, resolveProgram, type AcousticProgramV1 } from '../program/schema';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 
 export const SOUND_FAMILY_SCHEMA = 'SoundFamilyProgramV1';
 export const FAMILY_VARIATION_POLICY = 'role-subrange-v1';

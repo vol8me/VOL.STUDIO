@@ -21,7 +21,7 @@ import {
   MemoryRenderCache,
   type RenderCache,
 } from '../engine/renderCache';
-import type { Sha256 } from './canonical';
+import type { Sha256 } from '../kernel/canonical';
 import { coreClosure } from './sourceClosure';
 
 /**

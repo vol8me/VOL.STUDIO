@@ -16,7 +16,7 @@ import { LAYER_ROLES } from '../../src/program/roles';
 import { outputSeconds, resolveProgram } from '../../src/program/schema';
 import { soundGraph, topologyOf } from '../../src/program/soundGraph';
 import { STYLE_PROFILES } from '../../src/program/styles';
-import { canonicalJson, hashCanonical } from '../../src/protocol/canonical';
+import { canonicalJson, hashCanonical } from '../../src/kernel/canonical';
 
 /**
  * Ontoloji ve ProgramPlanner (Dalga 7): sözlüğün her kimliği gerçek bir

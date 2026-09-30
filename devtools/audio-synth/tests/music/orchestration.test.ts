@@ -5,7 +5,7 @@ import { programInstrumentSurfaces } from '../../src/music/instrumentResolve';
 import { validateMusicProgram } from '../../src/music/program';
 import { expandProgram, type ScoreEventV1 } from '../../src/music/score';
 import { renderMusicRaw } from '../../src/music/stem';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { RENDER_BLOCK } from '../support/timeouts';
 import { unitProgram } from './fixtures';
 

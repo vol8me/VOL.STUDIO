@@ -1,5 +1,5 @@
 import { downsample2x } from '../../engine/render';
-import { qualityProfile } from '../../engine/session';
+import { qualityProfile } from '../../kernel/session';
 import { DRUM_MODELS, renderDrum, resolveDrum } from '../../instruments/percussion/drum';
 import {
   renderRetro,

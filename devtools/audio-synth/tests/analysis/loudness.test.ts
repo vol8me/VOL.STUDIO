@@ -15,7 +15,7 @@ import {
   measureAsset,
   type AssetMeasurement,
 } from '../../src/analysis/assetQa';
-import { withRenderSession } from '../../src/engine/session';
+import { withRenderSession } from '../../src/kernel/session';
 
 /**
  * Beklenen değerler uygulamadan DEĞİL, yayımlanmış kaynaklardan gelir:

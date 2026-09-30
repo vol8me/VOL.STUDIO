@@ -5,7 +5,7 @@ import {
   withRenderSession,
   type RenderQuality,
   type RenderSession,
-} from '../engine/session';
+} from '../kernel/session';
 import { limitTruePeak } from '../effects/limiter';
 import { assertRenderBudget, type RenderBudget, type RenderCost } from '../guard/budget';
 import { checkNumber } from '../guard/read';

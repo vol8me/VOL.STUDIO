@@ -7,7 +7,7 @@ import { CANDIDATE_ID } from '../search/plan';
 import type { SearchCandidateV1 } from '../search/report';
 import { validateDecision } from '../search/selection';
 import { AUDITION_CSS, AUDITION_JS, auditionHtml } from './auditionPage';
-import { canonicalJson, type Sha256 } from './canonical';
+import { canonicalJson, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { resolveInside, writeFileAtomic } from './fs';
 import {

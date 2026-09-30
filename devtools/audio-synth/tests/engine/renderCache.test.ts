@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { OVERSAMPLE_FACTOR } from '../../src/engine/constants';
+import { OVERSAMPLE_FACTOR } from '../../src/kernel/constants';
 import { cacheKey, MemoryRenderCache } from '../../src/engine/renderCache';
 import {
   QUALITY_PROFILES,
   qualityProfile,
   renderSession,
   withRenderSession,
-} from '../../src/engine/session';
+} from '../../src/kernel/session';
 import { synthesize } from '../../src/engine/synthesize';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 
 const buffer = (length: number, value = 0.5) => new Float32Array(length).fill(value);
 

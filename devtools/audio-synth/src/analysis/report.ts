@@ -1,5 +1,5 @@
 import { measureAsset, type AssetMeasurement } from './assetQa';
-import { qualityProfile } from '../engine/session';
+import { qualityProfile } from '../kernel/session';
 import type { ClipCount } from './loudness';
 import { fft } from './spectrum';
 

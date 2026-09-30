@@ -2,7 +2,7 @@ import { analyzeAudio } from '../analysis/report';
 import { synthesize } from '../engine';
 import { AudioParamError } from '../guard/errors';
 import { getPreset, PRESET_CATALOG } from '../presets';
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { midiToHz, MIDI_MAX, MIDI_MIN } from './tonal';
 import type { Articulation, MusicRole } from './terms';
 

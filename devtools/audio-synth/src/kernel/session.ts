@@ -1,4 +1,4 @@
-import type { RenderCache } from './renderCache';
+import type { RenderCache } from '../engine/renderCache';
 
 /**
  * Render kalitesi. Program ve düğümler iki kalitede de AYNIDIR; yalnız iç

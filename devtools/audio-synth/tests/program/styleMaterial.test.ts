@@ -13,7 +13,7 @@ import { renderProgram } from '../../src/program/render';
 import { resolveProgram } from '../../src/program/schema';
 import { soundGraph, topologyOf } from '../../src/program/soundGraph';
 import { STYLE_PROFILES } from '../../src/program/styles';
-import { hashCanonical, hashPcm } from '../../src/protocol/canonical';
+import { hashCanonical, hashPcm } from '../../src/kernel/canonical';
 import { peakFrequency } from '../support/measure';
 import { tankFire } from './graphFixtures';
 import { node } from '../support/program';

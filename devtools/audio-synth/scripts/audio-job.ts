@@ -6,7 +6,7 @@
  * `audio:job context --json` çıktısındaki `protocol.commands` alanındadır
  * (bu yorum onu tekrar etmez).
  */
-import { withRenderSession } from '../src/engine/session';
+import { withRenderSession } from '../src/kernel/session';
 import { AudioParamError, BatchBudgetError, RenderBudgetError } from '../src/guard';
 import { buildContext } from '../src/protocol/context';
 import { ProtocolError } from '../src/protocol/errors';

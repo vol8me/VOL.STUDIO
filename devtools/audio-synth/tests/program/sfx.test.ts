@@ -6,7 +6,7 @@ import { expandArchetype } from '../../src/program/archetype';
 import { PROGRAM_REGISTRY } from '../../src/program/catalog';
 import { renderProgram } from '../../src/program/render';
 import { soundGraph } from '../../src/program/soundGraph';
-import { hashPcm } from '../../src/protocol/canonical';
+import { hashPcm } from '../../src/kernel/canonical';
 import { centroid, envelopeRate, peakFrequency } from '../support/measure';
 
 /**

@@ -1,7 +1,7 @@
 import type { ModelVoiceV1, PlacedVoiceV1 } from '../arrange/render';
 import { cacheKey } from '../engine/renderCache';
 import { downsample2x } from '../engine/render';
-import { qualityProfile } from '../engine/session';
+import { qualityProfile } from '../kernel/session';
 import { AudioParamError } from '../guard/errors';
 import { drumSeconds, renderDrum } from '../instruments/percussion/drum';
 import { getPreset } from '../presets';

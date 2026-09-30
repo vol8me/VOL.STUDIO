@@ -1,4 +1,4 @@
-import { hashCanonical, type Sha256 } from '../protocol/canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import type { MusicBriefV1 } from './brief';
 import { densityBand, MUSIC_ANALYSIS_POLICY } from './policy';
 import { ROLE_BANDS, type OrchestrationRole } from './orchestration';

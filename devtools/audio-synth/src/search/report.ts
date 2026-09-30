@@ -10,7 +10,7 @@ import type { DimensionValue } from '../program/dimensions';
 import { SUBSTREAM_SCHEME } from '../program/random';
 import { PROGRAM_RENDERER_VERSION, renderProgram, type ProgramRender } from '../program/render';
 import type { SampleResolver } from '../program/samples';
-import { hashPcm, HASH_PATTERN, type Sha256 } from '../protocol/canonical';
+import { hashPcm, HASH_PATTERN, type Sha256 } from '../kernel/canonical';
 import {
   CANDIDATE_ID,
   type BudgetVerdictV1,

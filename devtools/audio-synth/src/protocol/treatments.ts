@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import type { AcousticBriefV1 } from '../program/brief';
 import { resolveProgram, outputSeconds, type AcousticProgramV1 } from '../program/schema';
 import { treatmentProfileHash, type TreatmentProfileV1 } from '../program/treatmentProfiles';
-import { hashCanonical, type Sha256 } from './canonical';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { expectedTreatment, profileOrThrow, readSourceManifest } from './derivation';
 import { ProtocolError } from './errors';
 import { resolveInside } from './fs';

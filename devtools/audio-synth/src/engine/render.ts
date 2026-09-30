@@ -5,7 +5,7 @@ import type { Distortion } from '../effects';
 import type { ResolvedFilter } from '../guard/synthesis';
 import type { Voice } from './voice';
 import { frequencyAtTime, getFmSample } from './frequency';
-import { OVERSAMPLE_FACTOR } from './constants';
+import { OVERSAMPLE_FACTOR } from '../kernel/constants';
 
 export function renderDrySample(
   t: number,

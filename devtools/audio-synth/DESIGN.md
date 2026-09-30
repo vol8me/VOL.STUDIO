@@ -1926,7 +1926,7 @@ yinelemeyi ucuzlatır ve hiçbiri yayımlanan PCM'i değiştirmez:
 ### Render oturumu ve kalite profili
 
 Kalite ve önbellek, derindeki çekirdeklere imza değiştirmeden bir **render
-oturumuyla** ulaşır (`src/engine/session.ts`). Genel render API'leri
+oturumuyla** ulaşır (`src/kernel/session.ts`). Genel render API'leri
 (`renderProgram`, `renderMusicStem`, protokol girişleri) `quality` ve `cache`
 seçeneklerini alır ve oturumu yalnız kendi çağrı süreleri boyunca kurar.
 Oturum dışında render nihai kalitededir ve önbelleksizdir; davranış bu

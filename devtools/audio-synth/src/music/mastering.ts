@@ -1,7 +1,7 @@
 import { MASTERING_PATHS, type MusicPlaybackMode } from '@volstudio/core/audio/music';
 import { integratedLoudness, truePeakDb } from '../analysis/loudness';
 import { masterChannels, measurePeak } from '../engine/master';
-import { qualityProfile } from '../engine/session';
+import { qualityProfile } from '../kernel/session';
 import { AudioParamError } from '../guard/errors';
 import { checkChoice, checkNumber, checkObject } from '../guard/read';
 

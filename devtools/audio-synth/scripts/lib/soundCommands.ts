@@ -7,7 +7,7 @@ import { writeFileSync } from 'node:fs';
 import { planBrief } from '../../src/program/planner';
 import { validateBrief } from '../../src/program/brief';
 import { soundGraph, topologyOf } from '../../src/program/soundGraph';
-import { hashCanonical, prettyCanonicalJson } from '../../src/protocol/canonical';
+import { hashCanonical, prettyCanonicalJson } from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import { readJsonFile } from '../../src/protocol/fs';
 import type { JobLocation } from '../../src/protocol/location';

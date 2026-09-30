@@ -1,6 +1,6 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
-import { hashCanonical } from '../protocol/canonical';
+import { hashCanonical } from '../kernel/canonical';
 import { checkExpression } from './articulation';
 import { checkPattern, MUSIC_KEY, type Articulation } from './terms';
 

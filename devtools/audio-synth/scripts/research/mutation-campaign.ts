@@ -24,10 +24,10 @@ interface Mutant {
 const MUTANTS: readonly Mutant[] = [
   {
     id: 'canonical-key-sort',
-    file: 'src/protocol/canonical.ts',
+    file: 'src/kernel/canonical.ts',
     find: 'Object.keys(record).sort()',
     replace: 'Object.keys(record)',
-    test: 'tests/protocol/canonical.test.ts',
+    test: 'tests/kernel/canonical.test.ts',
   },
   {
     id: 'registry-version-order-reversed',

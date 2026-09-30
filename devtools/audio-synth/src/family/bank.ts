@@ -1,6 +1,6 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkNumber, checkObject } from '../guard/read';
-import { HASH_PATTERN, type Sha256 } from '../protocol/canonical';
+import { HASH_PATTERN, type Sha256 } from '../kernel/canonical';
 
 export const SOUND_FAMILY_BANK_SCHEMA = 'SoundFamilyBankV1';
 export const BANK_LOOKUP_CONTRACT = 'sound-family-lookup-v1';

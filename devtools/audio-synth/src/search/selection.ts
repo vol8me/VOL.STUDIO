@@ -1,6 +1,6 @@
 import { AudioParamError } from '../guard/errors';
 import { checkArray, checkChoice, checkObject } from '../guard/read';
-import { HASH_PATTERN, type Sha256 } from '../protocol/canonical';
+import { HASH_PATTERN, type Sha256 } from '../kernel/canonical';
 import { CANDIDATE_ID } from './plan';
 import type { AcousticSearchReportV1 } from './report';
 

@@ -7,7 +7,7 @@ import {
   hashCanonical,
   prettyCanonicalJson,
   sha256Bytes,
-} from '../../src/protocol/canonical';
+} from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import {
   analyzeCandidate,
