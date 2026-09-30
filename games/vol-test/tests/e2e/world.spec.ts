@@ -40,6 +40,11 @@ test('oyun açılır, HUD ve kontrol ipuçları görünür, konsol temiz', async
   await expect(page.getByTestId('control-hints')).toBeVisible();
   await expect(page.getByTestId('touch-boost')).toBeHidden();
   await expect.poll(() => position(page)).toEqual({ x: 64, y: 64 });
+  // Tam ekran düğmesi yalnız webde, haritanın ALTINDA.
+  const map = (await page.locator('.vt-hud__map').boundingBox())!;
+  const fullscreen = (await page.locator('.vt-hud__fullscreen').boundingBox())!;
+  expect(fullscreen.y).toBeGreaterThanOrEqual(map.y + map.height);
+  expect(fullscreen.x + fullscreen.width).toBeCloseTo(map.x + map.width, 0);
   expect(errors).toEqual([]);
 });
 
@@ -135,9 +140,47 @@ test.describe('dokunmatik', () => {
     await open(page);
     await page.touchscreen.tap(300, 500);
     await expect(page.getByTestId('touch-boost')).toBeVisible();
+    await expect(page.getByTestId('touch-brake')).toBeVisible();
     await expect(page.getByTestId('control-hints')).toBeHidden();
     await page.getByTestId('touch-pause').tap();
     await expect(page.locator('.vt-pause.vol-modal--visible')).toHaveCount(1);
+  });
+
+  test('telefon yatayında HUD parçaları birbirini örtmez', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await open(page);
+    await page.touchscreen.tap(420, 200);
+    await expect(page.getByTestId('touch-brake')).toBeVisible();
+    const selectors = [
+      '.vt-hud__touch > :not([hidden])',
+      '.vt-hud__map',
+      '.vt-hud__fullscreen',
+      '.vt-hud__telemetry',
+    ];
+    const boxes = [];
+    for (const selector of selectors) {
+      for (const element of await page.locator(selector).all()) {
+        const box = await element.boundingBox();
+        if (box) boxes.push({ selector, ...box });
+      }
+    }
+    const overlaps: string[] = [];
+    for (let a = 0; a < boxes.length; a++) {
+      for (let b = a + 1; b < boxes.length; b++) {
+        const [p, q] = [boxes[a], boxes[b]];
+        const apart =
+          p.x + p.width <= q.x ||
+          q.x + q.width <= p.x ||
+          p.y + p.height <= q.y ||
+          q.y + q.height <= p.y;
+        if (!apart) overlaps.push(`${p.selector}#${a} ∩ ${q.selector}#${b}`);
+      }
+    }
+    expect(overlaps).toEqual([]);
+    for (const box of boxes) {
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.y + box.height).toBeLessThanOrEqual(390);
+    }
   });
 
   test("sabit hareket joystick'i tankı sürer", async ({ page }) => {

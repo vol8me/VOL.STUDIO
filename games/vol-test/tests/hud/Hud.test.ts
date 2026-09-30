@@ -16,6 +16,7 @@ function mount(touch = false, fullscreen = true) {
     metre: 32,
     worldWidth: 4096,
     worldHeight: 4096,
+    mapGridStep: 1024,
     actionSource: source,
     stickSource: sticks,
     touch,

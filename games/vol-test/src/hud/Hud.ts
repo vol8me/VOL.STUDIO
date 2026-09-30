@@ -17,6 +17,8 @@ export interface HudOptions {
   readonly metre: number;
   readonly worldWidth: number;
   readonly worldHeight: number;
+  /** Haritadaki soluk ızgaranın aralığı (dünya birimi). */
+  readonly mapGridStep: number;
   readonly actionSource: VirtualActionSource<TestAction>;
   readonly stickSource: VirtualStickSource;
   /** Ekran üstü düğmeler başlangıçta gösterilsin mi (dokunmatik birincil cihaz). */
@@ -61,7 +63,7 @@ export class Hud {
     );
     this.status = this.scope.addDestroyable(new StatusPanel(options.metre));
     this.map = this.scope.addDestroyable(
-      new MapPanel(options.worldWidth, options.worldHeight, options.metre),
+      new MapPanel(options.worldWidth, options.worldHeight, options.metre, options.mapGridStep),
     );
     this.hints = this.scope.addDestroyable(new ControlHints(this.presentation));
     this.touch = this.scope.addDestroyable(

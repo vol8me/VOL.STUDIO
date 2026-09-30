@@ -73,6 +73,7 @@ export class WorldScene extends Phaser.Scene {
         metre: WORLD.metre,
         worldWidth: world.width,
         worldHeight: world.height,
+        mapGridStep: WORLD.gridStep * WORLD.gridMajorEvery,
         actionSource: this.controls.actionSource,
         stickSource: this.controls.stickSource,
         touch: shouldUseTouchControls(),

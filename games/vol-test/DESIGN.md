@@ -209,8 +209,16 @@ Web'de Android Vibration API ve kol `vibrationActuator` çalışır. Steam Deck
 Görünen her parça CORE bileşenidir (testli): başlık ve telemetri `Text`,
 hızlanma deposu dikey `Bar`, harita `MinimapPanel`, ipuçları `Glyph` ve
 `Text`, `FpsMeter`, tam ekran `IconButton` ve `FullscreenController`,
-dokunmatik `HoldButton` ve `IconButton`, duraklatma `Modal`, `Text` ve
+dokunmatik `Joystick`, `HoldButton` ve `IconButton`, duraklatma `Modal`, `Text` ve
 `Button`. Oyunun CSS'i yalnız yerleşimi ve UI tokenıyla zemini verir.
+
+- Harita sağ üsttedir; arka planında dünyayı kalın ızgara aralığıyla bölen
+  soluk bir ızgara vardır (UI tokenı `uiBorderSoft`, oyun paleti değil).
+- Tam ekran düğmesi yalnız tarayıcıda kurulur ve haritanın altındadır; native
+  kabuk pencere kipini kendisi yönetir.
+- Dokunmatikte sol altta hareket, sağ altta nişan joystick'i; basılı tutulan
+  fren ve hızlanma nişan joystick'inin solunda tek sütundur. Telefon yatayında
+  (844×390) hiçbir parçanın örtüşmediği E2E ile kilitlidir.
 
 Telemetri saniyede ~15, harita ~10 kez yenilenir. Duraklatma katmanı düğme,
 Esc, kolun Menu düğmesi ya da Android geri hareketiyle kapanır; arka plana

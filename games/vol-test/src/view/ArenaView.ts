@@ -3,11 +3,11 @@ import { clamp01 } from '@volstudio/core/math/interpolation';
 import { FEEL } from '@/config/feel';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
+import { WORLD } from '@/config/world';
 import type { World } from '@/sim/world/World';
 
 const GRID_WIDTH = 1;
 /** Her bu kadar ızgara hücresinde bir ana çizgi. */
-const MAJOR_EVERY = 8;
 const BORDER_WIDTH = 4;
 const FLASH = FX.wallFlash;
 /** Sekme dönüşünde tek karede yankının tamamı sönmesin diye süre tavanı. */
@@ -118,12 +118,12 @@ export class ArenaView {
       this.grid.lineStyle(GRID_WIDTH * (major ? 1.5 : 1), style.color, style.alpha);
       this.grid.beginPath();
       for (let index = 1; index * gridStep < width; index++) {
-        if ((index % MAJOR_EVERY === 0) !== major) continue;
+        if ((index % WORLD.gridMajorEvery === 0) !== major) continue;
         this.grid.moveTo(index * gridStep, 0);
         this.grid.lineTo(index * gridStep, height);
       }
       for (let index = 1; index * gridStep < height; index++) {
-        if ((index % MAJOR_EVERY === 0) !== major) continue;
+        if ((index % WORLD.gridMajorEvery === 0) !== major) continue;
         this.grid.moveTo(0, index * gridStep);
         this.grid.lineTo(width, index * gridStep);
       }

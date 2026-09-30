@@ -2,8 +2,9 @@
 export const WORLD = {
   width: 4096,
   height: 4096,
-  /** Izgara aralığı (birim). */
+  /** Izgara aralığı (birim) ve kaç aralıkta bir kalın çizgi çekildiği. */
   gridStep: 128,
+  gridMajorEvery: 8,
   metre: 32,
 } as const;
 

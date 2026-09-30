@@ -17,10 +17,6 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       varlık kimliği, araç listesi, kontrol edilen araç, sahibi olan mermi ve
       olaylar, araç–araç çarpışması, görünüm kaydı (kimlik → görünüm).
       Kapanır: iki araçlı simülasyon ve sahne testleri.
-- [ ] **[P1] VT-R3 — Dokunmatik ve HUD düzeni.** Sabit CORE joystick
-      (hareket + nişan), fren ve hızlanma düğmeleri; tam ekran yalnız webde ve
-      haritanın altında; minimap'te soluk ızgara. Kapanır: E2E dokunmatik ve
-      telefon ekran görüntüsü.
 - [ ] **[P1] VT-R4 — Silah ve efekt gerçekçiliği.** Mermi gövdesi ve izi,
       namlu ağzı patlaması ve zemin tozu, menzil sonu/duvar patlaması (şok
       halkası, parlama, enkaz, kararmış zemin izi), gerçekçi palet izi
@@ -109,6 +105,7 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ## Kapatılanlar
 
+- [x] VT-R3 — Sabit CORE joystick'ler, fren ve hızlanma sütunu; tam ekran yalnız webde ve haritanın altında; minimap'te soluk ızgara; telefon yatayında örtüşmezlik E2E kapısı.
 - [x] VT-R2 — Fren (Space, kol B, dokunmatik düğme) paletleri kilitler; Stribeck statik/kinetik sürtünme, birleşik kayma elipsi, tork sınırlı aktarma ve motor freni; keskin dönüşte drift; 20 s yerde kalan kayma çizgisi; hissiyat zarfına fren, drift ve dönüşte fren ölçüleri eklendi.
 - [x] VT-C — VOL.TEST'teki genel parçalar CORE'a taşındı (`FollowCamera`, açı, gürültü, `ActionEdges`, katı cisim ve temaslar, `VirtualStickSource`, `poseSourceOf`); VOL.TEST hepsini CORE'dan tüketiyor.
 - [x] I1 — `PCController` kare arasında düşen tuş basışını bir okuma boyunca tutar; testli.
