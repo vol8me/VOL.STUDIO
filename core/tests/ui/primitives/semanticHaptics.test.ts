@@ -43,7 +43,7 @@ describe('CORE semantik UI titreşimi', () => {
     iconButton.element.click();
 
     expect(order).toEqual(['haptic', 'button', 'haptic', 'icon']);
-    expect(play).toHaveBeenNthCalledWith(1, 'tap');
+    expect(play).toHaveBeenNthCalledWith(1, 'tap', 1);
   });
 
   it('false ile primitive titreşimi açıkça kapatılabilir', () => {
@@ -77,6 +77,10 @@ describe('CORE semantik UI titreşimi', () => {
     document.querySelector<HTMLButtonElement>('[role="option"][aria-selected="false"]')!.click();
     segmented.element.querySelectorAll('button')[1].click();
 
-    expect(play.mock.calls).toEqual([['select'], ['select'], ['select']]);
+    expect(play.mock.calls).toEqual([
+      ['select', 1],
+      ['select', 1],
+      ['select', 1],
+    ]);
   });
 });

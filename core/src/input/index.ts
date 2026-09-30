@@ -46,6 +46,8 @@ export { InputModeArbiter, inputModeForSession, type InputModePolicyOptions } fr
 export { selectGamepad, type GamepadSelectionOptions } from './selectGamepad';
 export { InputManager } from '../phaser/input/InputManager';
 export { VirtualActionSource } from './VirtualActionSource';
+export { ActionEdges } from './ActionEdges';
+export { VirtualStickSource, type VirtualStick } from './VirtualStickSource';
 export * as InputUtils from './InputUtils';
 export { PCController } from '../phaser/input/PCController';
 export { TouchController } from '../phaser/input/TouchController';

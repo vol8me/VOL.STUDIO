@@ -101,11 +101,11 @@ Tek atış dört katmanda hissedilir:
 2. Süspansiyon: gövde atışın tersine yaylanır ve salınarak oturur.
 3. Namlu: geri kayar ve yayla yerine döner; ağız parlaması ve duman.
 4. Kamera ve titreşim: görüntü atışın tersine yaylı tepme yapar; kol ve
-   telefon `tap` titreşimi verir.
+   telefon %70 şiddetle `tap` titreşimi verir.
 
 ## Kamera
 
-Kamera arachnid modelidir (`src/sim/camera/FollowCamera.ts`): hedef ara
+Kamera arachnid modelidir (CORE `FollowCamera`, ayarı `src/config/camera.ts`): hedef ara
 değerli gövde konumudur ve 90 ms zaman sabitli üstel takiple izlenir. İleri
 bakış yoktur; görüntü dünya sınırında kalır. Zoom kademesizdir (0.55–1.9,
 varsayılan 1.5). Üstüne iki öteleme biner: ateşte yaylı tepme, duvar
@@ -123,9 +123,8 @@ girdi (CORE InputManager) ─► TankCommand ─► Simulation.step (60 Hz sabit
 
 | Katman              | Sorumluluk                                                                          | Phaser |
 | ------------------- | ----------------------------------------------------------------------------------- | ------ |
-| `src/sim/physics/`  | Genel katı cisim (`RigidBody`) ve duvar teması (`wallContact`)                      | hayır  |
 | `src/sim/tank/`     | `Tank` (bileşim), `trackForces`, `Driver`, `Suspension`, `Turret`, `BoostReserve`   | hayır  |
-| `src/sim/`          | `Simulation`, dünya, mermi, olaylar, takip kamerası modeli                          | hayır  |
+| `src/sim/`          | `Simulation`, araç varlıkları, dünya, mermi, olaylar                                | hayır  |
 | `src/view/`         | `ArenaView`, `TankView` + `TreadRig`, `EffectsView` (izler, parçacıklar, palet izi) | evet   |
 | `src/hud/`          | `Hud` (bileşim) + durum, harita, ipuçları, dokunmatik, duraklatma, tam ekran        | hayır  |
 | `src/input/`        | Eylem sözlüğü ve eşleme verisi                                                      | hayır  |
@@ -158,8 +157,10 @@ tek yerde değişir.
 
 ## Sanat
 
-Tank sekiz SVG parçadır (`src/assets/tank/`): gövde, taret, palet dokusu,
-palet ucu, çekirdek parıltısı, duyarga, gölge, ağız parlaması. Parçalar dört
+Tank yedi SVG parçadır (`src/assets/tank/`): gövde, taret, palet dokusu,
+palet ucu, çekirdek parıltısı, duyarga, ağız parlaması. Gölge ayrı bir resim
+değildir: CORE `PoseShadow` tankın kendi parçalarını karartıp kaydırır
+(`poseSourceOf`). Parçalar dört
 kat çözünürlükte rasterlenir ve sahnede tersiyle ölçeklenir.
 
 - Palet, yüzey yoluyla kayan bir banttır. Uçlar paletin döndüğü yarım
@@ -185,7 +186,8 @@ olarak gelir.
 
 ## Titreşim
 
-CORE `vibrate` anlamsal desenleri kullanılır; titreşim açılışta açıktır.
+CORE `vibrate(desen, şiddet)` anlamsal desenleri kullanılır; şiddet telefonda
+darbe süresini, kolda iki motorun gücünü ölçekler. Titreşim açılışta açıktır.
 
 | Olay                 | Desen     |
 | -------------------- | --------- |
@@ -239,9 +241,5 @@ Zarfı değiştirmek bir tasarım kararıdır ve bu tabloyla birlikte yapılır.
 
 ## Bilinen sınırlar
 
-- CORE `PCController` tuş durumunu kare başında okur; bir kareden kısa tuş
-  basışı kaybolabilir (CORE işi I1).
-- CORE titreşimi şiddet parametresi taşımaz; kolun güçlü ve zayıf motoru
-  ayrı sürülemez.
 - Ses yoktur.
 - Tauri kabuğu, Android, Steam Deck ve Windows paketleri henüz yoktur.

@@ -77,7 +77,7 @@ describe('titreşim yeteneği', () => {
 
     expect(getHapticsCapability()).toEqual({ supported: true, backend: 'native' });
     vibrate('select');
-    expect(play).toHaveBeenCalledWith('select');
+    expect(play).toHaveBeenCalledWith('select', 1);
   });
 
   it('platform sürücüsü varken iptali fallback katmanlarına yaymaz', () => {
@@ -235,5 +235,24 @@ describe('titreşim yeteneği', () => {
     setHapticsEnabled(true);
 
     expect(() => vibrate('select')).not.toThrow();
+  });
+});
+
+describe('kol titreşim şiddeti', () => {
+  afterEach(() => {
+    setHapticsEnabled(false);
+    setGamepads([]);
+  });
+
+  it('şiddet iki motorun genliğini ölçekler', () => {
+    setVibrationApi(undefined);
+    const { pad, playEffect } = makeRumblePad();
+    setGamepads([pad]);
+    setHapticsEnabled(true);
+    vibrate('warning', 0.5);
+    expect(playEffect).toHaveBeenCalledWith(
+      'dual-rumble',
+      expect.objectContaining({ strongMagnitude: 0.25, weakMagnitude: 0.2 }),
+    );
   });
 });

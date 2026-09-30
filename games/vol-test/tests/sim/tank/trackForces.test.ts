@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TANK } from '@/config/tank';
-import { RigidBody } from '@/sim/physics/RigidBody';
+import { RigidBody } from '@volstudio/core/physics';
 import { computeTrackForces, createTrackForces } from '@/sim/tank/trackForces';
 
 function body(): RigidBody {

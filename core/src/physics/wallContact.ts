@@ -1,6 +1,12 @@
-import { clamp } from '@volstudio/core/math/interpolation';
-import type { Wall } from '../world/World';
+import { clamp } from '../math/interpolation';
 import type { RigidBody } from './RigidBody';
+
+/** Düz duvar: iç normali ve konumu. Nokta içerideyse `x·nx + y·ny - offset ≥ 0`. */
+export interface Wall {
+  readonly nx: number;
+  readonly ny: number;
+  readonly offset: number;
+}
 
 /** Dikdörtgen ayak izi (yarı boy, yarı en) ve temas malzemesi. */
 export interface ContactShape {

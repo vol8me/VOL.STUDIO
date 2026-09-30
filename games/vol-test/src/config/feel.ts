@@ -7,6 +7,8 @@ export const FEEL = {
     /** Kamera atışın tersine bu hızla (birim/s) itilir. */
     cameraKick: 150,
     trauma: 0.06,
+    /** Atış titreşiminin şiddeti (0–1). */
+    haptic: 0.7,
   },
   wall: {
     /** Bu çarpma hızında yankı, sarsıntı ve titreşim tam şiddettedir. */

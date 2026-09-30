@@ -1,5 +1,5 @@
 import { clamp } from '@volstudio/core/math/interpolation';
-import type { RigidBody } from '../physics/RigidBody';
+import type { RigidBody } from '@volstudio/core/physics';
 import type { TankConfig } from '@/config/tank';
 
 /** Bir alt adımda paletlerin gövdeye uyguladığı kuvvetler (gövde çerçevesi). */

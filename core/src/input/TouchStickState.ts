@@ -2,6 +2,7 @@ import { Vector2 } from '../math/Vector2';
 import { normalizeAnalog, normalizeDirection } from './InputUtils';
 import { createIdleActions, type InputState } from './InputState';
 import type { VirtualActionSource } from './VirtualActionSource';
+import type { VirtualStick, VirtualStickSource } from './VirtualStickSource';
 import { INPUT } from '../constants';
 
 export interface Stick {
@@ -42,6 +43,11 @@ export interface TouchStickOptions<TAction extends string> {
    * düşer ve yutulurdu.
    */
   actionSource?: VirtualActionSource<TAction>;
+  /**
+   * Ekran üstü sabit joystick'lerin eksen kaynağı. Serbest çubuk o yarıda
+   * yokken kaynağın değeri kullanılır; ölü bölge ve normalizasyon aynıdır.
+   */
+  stickSource?: VirtualStickSource;
   deadZone?: number;
   maxRadius?: number;
 }
@@ -61,6 +67,7 @@ export class TouchStickState<TAction extends string> {
   private readonly aimStickAction?: TAction;
   private readonly aimStickActivatesOnTouch: boolean;
   private readonly actionSource?: VirtualActionSource<TAction>;
+  private readonly stickSource?: VirtualStickSource;
   private readonly deadZone: number;
   public readonly maxRadius: number;
   /**
@@ -84,6 +91,7 @@ export class TouchStickState<TAction extends string> {
     this.aimStickAction = options.aimStickAction;
     this.aimStickActivatesOnTouch = options.aimStickActivatesOnTouch ?? false;
     this.actionSource = options.actionSource;
+    this.stickSource = options.stickSource;
     this.deadZone = options.deadZone ?? INPUT.DEAD_ZONE_RATIO;
     this.maxRadius = options.maxRadius ?? INPUT.STICK_MAX_RADIUS_PX;
   }
@@ -92,7 +100,8 @@ export class TouchStickState<TAction extends string> {
     return (
       this.leftStick !== undefined ||
       this.rightStick !== undefined ||
-      this.actionSource?.hasPressed === true
+      this.actionSource?.hasPressed === true ||
+      this.stickSource?.hasInput === true
     );
   }
 
@@ -156,16 +165,21 @@ export class TouchStickState<TAction extends string> {
     this.leftStick = undefined;
     this.rightStick = undefined;
     this.actionSource?.clear();
+    this.stickSource?.clear();
   }
 
   getState(): InputState<TAction> {
     const leftRaw = this.writeRaw(this.leftRawBuf, this.leftStick);
     const rightRaw = this.writeRaw(this.rightRawBuf, this.rightStick);
+    const source = this.stickSource;
+    if (source && !this.leftStick && source.isHeld('move')) this.writeSource('move', leftRaw);
+    const aimFromSource = source !== undefined && !this.rightStick && source.isHeld('aim');
+    if (aimFromSource) this.writeSource('aim', rightRaw);
 
     const actions = createIdleActions(this.actions);
     if (this.aimStickAction !== undefined) {
       actions[this.aimStickAction] =
-        this.rightStick !== undefined &&
+        (this.rightStick !== undefined || aimFromSource) &&
         (this.aimStickActivatesOnTouch || rightRaw.length() / this.maxRadius > this.deadZone);
     }
     // Düğmeler stick'ten SONRA yazılır: aynı eyleme hem nişan çubuğu hem
@@ -191,6 +205,13 @@ export class TouchStickState<TAction extends string> {
   hasDirectionalInput(stick: Stick): boolean {
     const raw = this.writeRaw(this.scratchRawBuf, stick);
     return Math.hypot(raw.x, raw.y) / this.maxRadius > this.deadZone;
+  }
+
+  /** Kaynak değeri (-1..1) serbest çubuğun ham uzayına (piksel) çevirir. */
+  private writeSource(stick: VirtualStick, out: Vector2): void {
+    this.stickSource?.write(stick, out);
+    out.x *= this.maxRadius;
+    out.y *= this.maxRadius;
   }
 
   private updateStick(stick: Stick | undefined, pointerId: number, x: number, y: number): void {

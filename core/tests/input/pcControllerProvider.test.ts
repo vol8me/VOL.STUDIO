@@ -40,8 +40,17 @@ function setup(options: Partial<PCControllerOptions<Action>> = {}) {
     },
   };
   const getWorldPoint = vi.fn((x: number, y: number) => ({ x: x + 1000, y: y + 2000 }));
+  const listeners = new Map<string, (event: KeyboardEvent) => void>();
+  const keyboard = {
+    addKey,
+    on: vi.fn((name: string, handler: (event: KeyboardEvent) => void) =>
+      listeners.set(name, handler),
+    ),
+    off: vi.fn((name: string) => listeners.delete(name)),
+  };
+  const press = (keyCode: number) => listeners.get('keydown')?.({ keyCode } as KeyboardEvent);
   const scene = {
-    input: { keyboard: { addKey }, activePointer: pointer },
+    input: { keyboard, activePointer: pointer },
     cameras: { main: { getWorldPoint } },
   };
   const controller = new PCController<Action>(scene as unknown as Phaser.Scene, {
@@ -53,7 +62,7 @@ function setup(options: Partial<PCControllerOptions<Action>> = {}) {
     ...options,
   });
   instances.push(controller);
-  return { controller, keys, addKey, pointer, getWorldPoint, scene };
+  return { controller, keys, addKey, pointer, getWorldPoint, scene, press, keyboard, listeners };
 }
 
 const instances: PCController<Action>[] = [];
@@ -194,5 +203,36 @@ describe('PCController — yaşam döngüsü', () => {
     window.dispatchEvent(new Event('blur'));
 
     expect(keys.get(SPACE)!.isDown).toBe(true);
+  });
+});
+
+describe('PCController — kısa basış mandalı', () => {
+  it('kare içinde basılıp bırakılan tuş bir okuma yaşar, sonra düşer', () => {
+    const { controller, press } = setup();
+    press(SPACE);
+    expect(controller.isActive).toBe(true);
+    expect(controller.getState(Vector2.zero()).actions.dash).toBe(true);
+    expect(controller.getState(Vector2.zero()).actions.dash).toBe(false);
+    expect(controller.isActive).toBe(false);
+  });
+
+  it('bağlı olmayan tuş mandallanmaz; odak kaybı mandalı temizler', () => {
+    const { controller, press } = setup();
+    press(70);
+    expect(controller.isActive).toBe(false);
+    press(SPACE);
+    window.dispatchEvent(new Event('blur'));
+    expect(controller.getState(Vector2.zero()).actions.dash).toBe(false);
+  });
+
+  it('anlık görüntü mandalı tüketmez; yok edince dinleyici kalkar', () => {
+    const { controller, press, keyboard, listeners } = setup();
+    press(SPACE);
+    controller.getDebugSnapshot();
+    expect(controller.getState(Vector2.zero()).actions.dash).toBe(true);
+    controller.destroy();
+    instances.splice(instances.indexOf(controller), 1);
+    expect(keyboard.off).toHaveBeenCalledWith('keydown', expect.any(Function));
+    expect(listeners.has('keydown')).toBe(false);
   });
 });

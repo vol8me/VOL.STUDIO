@@ -1,4 +1,4 @@
-import { clamp } from '@volstudio/core/math/interpolation';
+import { clamp } from '../math/interpolation';
 import type { RigidBody } from './RigidBody';
 import type { Contact, ContactShape } from './wallContact';
 

@@ -138,6 +138,24 @@ export {
   wrap,
 } from './math/interpolation';
 export { Spring1D, type SpringConfig } from './math/Spring';
+export { wrapAngle, angleDelta, rotateTowards, lerpAngle } from './math/angle';
+export { valueNoise } from './random/noise';
+export { FollowCamera, type FollowCameraConfig } from './camera';
+
+/*
+ * Düzlem katı cisim fiziği: kuvvet/itki alan cisim, düz duvar teması ve iki
+ * dikdörtgen cisim arasındaki temas. Render motorundan bağımsızdır; araç
+ * dinamiği (palet, tekerlek) tüketicinin kuvvet modelidir.
+ */
+export {
+  RigidBody,
+  createContact,
+  resolveWallContacts,
+  resolveBodyContact,
+  type Contact,
+  type ContactShape,
+  type Wall,
+} from './physics';
 export { solveTwoBoneIk, type TwoBoneIkResult } from './math/ik';
 export { StateMachine } from './state/StateMachine';
 export type { StateDefinition, StateMachineOptions } from './state/StateMachine';
@@ -256,6 +274,7 @@ export {
  * Sunum efektleri. Bir görüntü ağacının POZUNU okur ve ondan türetilmiş
  * ikinci bir görüntü çizer (art-görüntü, gölge); simülasyona dokunmaz.
  */
+export { poseSourceOf } from './phaser/poseSource';
 export {
   samplePose,
   GhostTrail,

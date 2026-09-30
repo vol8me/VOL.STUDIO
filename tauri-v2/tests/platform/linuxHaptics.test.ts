@@ -81,6 +81,15 @@ describe('createLinuxHapticsDriver', () => {
     expect(p.sleep).toHaveBeenCalledWith(50);
   });
 
+  it('şiddeti CORE darbe planına iletir; varsayılan tam şiddettir', async () => {
+    const record = { calls: [] as [string, unknown?][] };
+    const driver = createLinuxHapticsDriver(probe({ backend: 'hidraw' }, record));
+    await driver.play('error', 0.5);
+    expect(fakes.planRumblePulses).toHaveBeenLastCalledWith('error', 0.5);
+    await driver.play('tap');
+    expect(fakes.planRumblePulses).toHaveBeenLastCalledWith('tap', 1);
+  });
+
   it('cancel durdurma komutunu gönderir', async () => {
     const record = { calls: [] as [string, unknown?][] };
     const driver = createLinuxHapticsDriver(probe({ backend: 'evdev' }, record));

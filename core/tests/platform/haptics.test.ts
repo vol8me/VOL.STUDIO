@@ -162,3 +162,36 @@ describe('planRumblePulses', () => {
     expect(pulses[0].strong).toBe(0.85);
   });
 });
+
+describe('titreşim şiddeti', () => {
+  it('Vibration API genlik taşımaz: şiddet titreşim sürelerini ölçekler, aralıkları korur', () => {
+    const spy = mockVibrate();
+    setHapticsEnabled(true);
+    vibrate('error', 0.5);
+    expect(spy.mock.calls[0][0]).toEqual([20, 50, 20]);
+  });
+
+  it('çok düşük şiddet de hissedilir bir alt süre taşır; sıfır ve altı titremez', () => {
+    const spy = mockVibrate();
+    setHapticsEnabled(true);
+    vibrate('tap', 0.01);
+    expect(spy.mock.calls[0][0]).toEqual([4]);
+    vibrate('select', 0);
+    vibrate('select', -1);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('sonlu olmayan şiddet tam şiddettir, 1 üstü kelepçelenir', () => {
+    expect(planRumblePulses('warning', Number.NaN)[0]).toMatchObject({ strong: 0.5, weak: 0.4 });
+    expect(planRumblePulses('warning', 3)[0]).toMatchObject({ strong: 0.5, weak: 0.4 });
+    expect(planRumblePulses('warning', 0.5)[0]).toMatchObject({ strong: 0.25, weak: 0.2 });
+  });
+
+  it('native sürücüye şiddet iletilir', () => {
+    const play = vi.fn();
+    setHapticsDriver({ play });
+    setHapticsEnabled(true);
+    vibrate('warning', 0.3);
+    expect(play).toHaveBeenCalledWith('warning', 0.3);
+  });
+});

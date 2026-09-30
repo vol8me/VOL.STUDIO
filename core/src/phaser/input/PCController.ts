@@ -80,6 +80,17 @@ export class PCController<TAction extends string> implements InputProvider<TActi
   private readonly actionBindings: Readonly<Record<TAction, PCActionBinding>>;
   readonly id: string;
   private readonly boundBlur: () => void;
+  /**
+   * Kare içinde basılıp bırakılan tuşlar. `isDown` kare başında okunur: bir
+   * kareden kısa basış (düşük FPS'te hızlı dokunuş, otomasyon) okunmadan
+   * biterdi. Okunmamış basış bir `getState` daha yaşar; `VirtualActionSource`
+   * mandalıyla aynı sözleşme.
+   */
+  private readonly latched = new Set<number>();
+  private readonly keyboard: Phaser.Input.Keyboard.KeyboardPlugin;
+  private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (this.actionKeys.has(event.keyCode)) this.latched.add(event.keyCode);
+  };
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -109,6 +120,8 @@ export class PCController<TAction extends string> implements InputProvider<TActi
       }
     }
 
+    this.keyboard = keyboard;
+    keyboard.on('keydown', this.onKeyDown);
     this.boundBlur = () => this.resetKeys();
     window.addEventListener('blur', this.boundBlur);
   }
@@ -121,6 +134,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
     for (const key of this.actionKeys.values()) {
       key.reset();
     }
+    this.latched.clear();
   }
 
   reset(): void {
@@ -155,7 +169,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
   private get actionState(): Record<TAction, boolean> {
     return resolvePCActions(
       this.actionBindings,
-      (keyCode) => this.actionKeys.get(keyCode)?.isDown ?? false,
+      (keyCode) => (this.actionKeys.get(keyCode)?.isDown ?? false) || this.latched.has(keyCode),
       this.pointerState,
     );
   }
@@ -190,18 +204,21 @@ export class PCController<TAction extends string> implements InputProvider<TActi
     const camera = this.scene.cameras.main;
     const target = camera.getWorldPoint(this.pointer.x, this.pointer.y);
 
-    return computePCInputState(
+    const state = computePCInputState(
       this.moveState,
       this.pointerState,
       new Vector2(target.x, target.y),
       playerPosition,
       this.actionState,
     );
+    this.latched.clear();
+    return state;
   }
 
   update(_delta: number): void {}
 
   destroy(): void {
+    this.keyboard.off('keydown', this.onKeyDown);
     window.removeEventListener('blur', this.boundBlur);
   }
 }

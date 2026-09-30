@@ -1,5 +1,5 @@
 import { clamp } from '@volstudio/core/math/interpolation';
-import { angleDelta, wrapAngle } from '../angle';
+import { angleDelta, wrapAngle } from '@volstudio/core/math';
 import type { TankCommand } from '../command';
 import type { TankConfig } from '@/config/tank';
 

@@ -12,6 +12,7 @@ export const PHASER_BRIDGES = Object.freeze([
   'core/src/phaser/input/PCController.ts',
   'core/src/phaser/input/TouchController.ts',
   'core/src/phaser/rig/assembleRig.ts',
+  'core/src/phaser/poseSource.ts',
 ]);
 
 export const PHASER_REPLACEMENTS = Object.freeze({

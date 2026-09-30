@@ -1,12 +1,12 @@
 import { approach } from '@volstudio/core/math/interpolation';
-import type { TankCommand } from '../command';
-import { RigidBody } from '../physics/RigidBody';
 import {
   createContact,
   resolveWallContacts,
+  RigidBody,
   type Contact,
   type ContactShape,
-} from '../physics/wallContact';
+} from '@volstudio/core/physics';
+import type { TankCommand } from '../command';
 import type { World } from '../world/World';
 import { BoostReserve } from './BoostReserve';
 import { Driver, type TrackTargets } from './Driver';

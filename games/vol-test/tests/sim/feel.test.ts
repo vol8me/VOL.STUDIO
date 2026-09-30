@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SimulationClock } from '@volstudio/core/time';
 import { GAME } from '@/config/game';
 import { TANK } from '@/config/tank';
-import { angleDelta } from '@/sim/angle';
+import { angleDelta } from '@volstudio/core/math';
 import { command, DT, simulation, STEP_MS, tank, world } from '../support/sim';
 
 /**

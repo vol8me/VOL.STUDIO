@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { RigidBody } from '@/sim/physics/RigidBody';
-import { createContact, resolveWallContacts, type ContactShape } from '@/sim/physics/wallContact';
-import { World } from '@/sim/world/World';
+import { RigidBody } from '../../src/physics/RigidBody';
+import {
+  createContact,
+  resolveWallContacts,
+  type ContactShape,
+} from '../../src/physics/wallContact';
 
 const shape = (restitution = 0.5, friction = 0.4): ContactShape => ({
   halfLength: 10,
@@ -19,7 +22,15 @@ function body(x: number, y: number, angle = 0): RigidBody {
 }
 
 describe('resolveWallContacts', () => {
-  const world = new World(200, 100, 10);
+  // 200 × 100 kutunun dört duvarı (iç normaller).
+  const world = {
+    walls: [
+      { nx: 1, ny: 0, offset: 0 },
+      { nx: -1, ny: 0, offset: -200 },
+      { nx: 0, ny: 1, offset: 0 },
+      { nx: 0, ny: -1, offset: -100 },
+    ],
+  };
 
   it('temas yoksa cisme dokunmaz', () => {
     const subject = body(100, 50);

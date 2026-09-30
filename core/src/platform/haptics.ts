@@ -35,7 +35,8 @@ export interface HapticsCapability {
 export type HapticPattern = 'tap' | 'select' | 'success' | 'warning' | 'error';
 
 export interface HapticsDriver {
-  play(pattern: HapticPattern): void | Promise<void>;
+  /** `intensity` 0–1: desenin şiddet çarpanı (bkz. `vibrate`). */
+  play(pattern: HapticPattern, intensity?: number): void | Promise<void>;
   cancel?(): void | Promise<void>;
 }
 
@@ -103,21 +104,33 @@ export interface RumblePulse {
   readonly gapAfterMs: number;
 }
 
-/** Deseni native sürücülerin oynatacağı darbe dizisine çevirir. */
-export function planRumblePulses(pattern: HapticPattern): readonly RumblePulse[] {
+/**
+ * Deseni native sürücülerin oynatacağı darbe dizisine çevirir. `intensity`
+ * (0–1) motor şiddetlerini ölçekler; süreler desenin kendisidir.
+ */
+export function planRumblePulses(pattern: HapticPattern, intensity = 1): readonly RumblePulse[] {
   const durations = PATTERNS[pattern];
-  const intensity = GAMEPAD_INTENSITY[pattern];
+  const motors = GAMEPAD_INTENSITY[pattern];
+  const scale = clampIntensity(intensity);
   const pulses: RumblePulse[] = [];
   for (let i = 0; i < durations.length; i += 2) {
     pulses.push({
-      strong: intensity.strong,
-      weak: intensity.weak,
+      strong: motors.strong * scale,
+      weak: motors.weak * scale,
       durationMs: durations[i],
       gapAfterMs: durations[i + 1] ?? 0,
     });
   }
   return pulses;
 }
+
+/** Şiddet [0, 1] aralığına kelepçelenir; sonlu olmayan değer tam şiddettir. */
+function clampIntensity(intensity: number): number {
+  return Number.isFinite(intensity) ? Math.min(1, Math.max(0, intensity)) : 1;
+}
+
+/** Vibration API genlik taşımaz: şiddet titreşim sürelerini kısaltır. */
+const MIN_VIBRATION_MS = 4;
 
 const lastFiredAt = new Map<HapticPattern, number>();
 const capabilityListeners = new Set<(capability: HapticsCapability) => void>();
@@ -295,9 +308,15 @@ export function cancelHaptics(): void {
 /**
  * Adlandırılmış deseni oynatır. Kapalıysa ya da platform desteklemiyorsa
  * sessizce hiçbir şey yapmaz — çağıran koşul yazmak zorunda değildir.
+ *
+ * `intensity` (0–1, varsayılan 1) olayın şiddetidir: kolda motor genliğini,
+ * Vibration API'de titreşim sürelerini ölçekler, native sürücüye iletilir.
+ * Hafif bir çarpma ile sert bir çarpma aynı desenle farklı hissedilir.
  */
-export function vibrate(pattern: HapticPattern): void {
+export function vibrate(pattern: HapticPattern, intensity = 1): void {
   if (!enabled) return;
+  const scale = clampIntensity(intensity);
+  if (scale <= 0) return;
   const capability = getHapticsCapability();
   if (!capability.supported) return;
 
@@ -309,20 +328,24 @@ export function vibrate(pattern: HapticPattern): void {
   lastFiredAt.set(pattern, timestamp);
 
   if (capability.backend === 'native') {
-    callDriver(() => platformDriver?.play(pattern));
+    callDriver(() => platformDriver?.play(pattern, scale));
     return;
   }
 
   if (capability.backend === 'vibration') {
     try {
-      navigator.vibrate([...PATTERNS[pattern]]);
+      navigator.vibrate(
+        PATTERNS[pattern].map((value, index) =>
+          index % 2 === 0 ? Math.max(MIN_VIBRATION_MS, Math.round(value * scale)) : value,
+        ),
+      );
     } catch {
       // bkz. cancelHaptics — titreşim asla hata yüzeyi olmamalı.
     }
     return;
   }
 
-  playGamepadPattern(pattern);
+  playGamepadPattern(pattern, scale);
 }
 
 function callDriver(call: () => void | Promise<void> | undefined): void {
@@ -334,7 +357,7 @@ function callDriver(call: () => void | Promise<void> | undefined): void {
 }
 
 /** Deseni oyun kolunun süre+şiddet sözleşmesine çevirir. */
-function playGamepadPattern(pattern: HapticPattern): void {
+function playGamepadPattern(pattern: HapticPattern, scale: number): void {
   const actuator = findHapticGamepad();
   if (!actuator?.playEffect) return;
 
@@ -349,8 +372,8 @@ function playGamepadPattern(pattern: HapticPattern): void {
     actuator.playEffect('dual-rumble', {
       startDelay: 0,
       duration: Math.max(1, Math.round(totalMs)),
-      strongMagnitude: intensity.strong,
-      weakMagnitude: intensity.weak,
+      strongMagnitude: intensity.strong * scale,
+      weakMagnitude: intensity.weak * scale,
     }),
   ).catch(() => {
     // Tarayıcı efekti reddedebilir (izin, desteklenmeyen tip); sessiz kal.

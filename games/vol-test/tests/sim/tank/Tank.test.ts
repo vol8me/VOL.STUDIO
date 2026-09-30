@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TANK } from '@/config/tank';
-import { angleDelta } from '@/sim/angle';
+import { angleDelta } from '@volstudio/core/math';
 import { command, drive, DT, tank, world } from '../../support/sim';
 
 describe('Tank fiziği', () => {

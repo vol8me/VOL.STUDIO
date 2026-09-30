@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { resolveBodyContact } from '@/sim/physics/bodyContact';
-import { RigidBody } from '@/sim/physics/RigidBody';
-import { createContact, type ContactShape } from '@/sim/physics/wallContact';
+import { resolveBodyContact } from '../../src/physics/bodyContact';
+import { RigidBody } from '../../src/physics/RigidBody';
+import { createContact, type ContactShape } from '../../src/physics/wallContact';
 
 const shape: ContactShape = { halfLength: 10, halfWidth: 5, restitution: 0.4, friction: 0.3 };
 

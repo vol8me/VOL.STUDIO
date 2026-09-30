@@ -36,15 +36,6 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       patlama, duvar çarpması, fren kayması, hızlanma, UI. Sürekli sesler
       hız/yükle modüle edilir. Kapanır: audio-synth yayın kapısı, verify,
       oyunda sesler ve kullanıcının dinleme onayı.
-- [ ] **[P1] VT-C — CORE sertleştirme (VOL.TEST'ten).** Envanter: rapor §0.4d.
-      Tekrar edenler CORE'a çevrilir (`Spring1D`, `PoseShadow`, CORE
-      `Joystick`). Eksikler CORE'a eklenir ve testleriyle gelir:
-      `VirtualStickSource`, `FollowCamera`, `math/angle`, `random/noise`,
-      `ActionEdges`, CORE fizik modülü (katı cisim + temaslar), Phaser nesnesini
-      `PoseSourceNode`a güvenli çeviren köprü yardımcısı (bugün tüketiciler
-      `as unknown as` kullanıyor). I1 ve H1 kapanır. Kural: CORE'a eklenen her
-      parçayı VOL.TEST aynı turda tüketir; tüketicisiz ekleme yok.
-      Kapanır: CORE testleri ve kapsam eşiği; VOL.TEST CORE'dan tüketir.
 - [ ] **[P3] VT-S — Test senaryoları.** Boş dünya korunur; açılıp kapanan
       senaryolar: slalom, hedef atış, fizik sandbox, çoklu tank. Her CORE
       yeteneği bir senaryoda sınanır.
@@ -110,12 +101,6 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 - [ ] **[P1] E1 — Tek girdi hakemi ve tek kol kaynağı.** Kare başına tek kol
       yoklaması ve tek hakem; testli.
-- [ ] **[P2] I1 — Klavye basışı mandalı.** CORE `PCController` tuşu kare başında
-      `isDown` ile okur; bir kareden kısa basış kaybolur (düşük FPS'te hızlı
-      dokunuş). `VirtualActionSource` gibi okunmamış basış bir kare yaşar; testli.
-- [ ] **[P2] H1 — Şiddet parametreli titreşim.** CORE `vibrate` yalnız anlamsal
-      desen alır; kolun güçlü/zayıf motoru ve çarpma şiddeti taşınamıyor.
-      Desenle birlikte şiddet (0–1) ve süre; tüm arka uçlarda testli.
 - [ ] **[P3] A20 — Titreşim darbeleri tek zamanlayıcı iş parçacığından yürür.**
 - [ ] **[P3] S7 — Araç zinciri.** ESLint, Prettier, TypeScript sürüm ve
       yapılandırması.
@@ -129,6 +114,9 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ## Kapatılanlar
 
+- [x] VT-C — VOL.TEST'teki genel parçalar CORE'a taşındı (`FollowCamera`, açı, gürültü, `ActionEdges`, katı cisim ve temaslar, `VirtualStickSource`, `poseSourceOf`); VOL.TEST hepsini CORE'dan tüketiyor.
+- [x] I1 — `PCController` kare arasında düşen tuş basışını bir okuma boyunca tutar; testli.
+- [x] H1 — `vibrate(desen, şiddet)`: telefonda darbe süresi, kolda motor gücü, native sürücüye şiddet iletilir; testli. Ayrı süre parametresi eklenmedi, şiddet süreyi ölçekler.
 - [x] VT-H — VOL.TEST sertleştirme: katı cisim fiziği (paylaşılan motor gücü, direksiyon önceliği, hıza bağlı dönme direnci), süspansiyon, oyun/UI renk ayrımı, ayarlar tek yerde, titreşim, değişmez + hissiyat + kare hızı testleri, E2E kol ve dokunmatik.
 - [x] VT1 — VOL.TEST oyun çekirdeği: boş çöl dünyası, organik-robotik SVG tank, arachnid kamerası, yalnız CORE bileşenli HUD, klavye/kol/dokunmatik, kapılar ve E2E.
 - [x] VT0 — VOL.TEST analizi ve kapsamı onaylandı; ikon onaylı.

@@ -1,6 +1,6 @@
 import { vibrate } from '@volstudio/core';
 import { FEEL } from '@/config/feel';
-import type { FollowCamera } from '@/sim/camera/FollowCamera';
+import type { FollowCamera } from '@volstudio/core/camera';
 import type { SimEvent } from '@/sim/events';
 import type { ArenaView } from '@/view/ArenaView';
 import type { EffectsView } from '@/view/EffectsView';
@@ -24,7 +24,7 @@ function strengthOf(speed: number): number {
 function feelImpact(targets: SimEventTargets, strength: number): void {
   const wall = FEEL.wall;
   targets.camera.addTrauma(wall.traumaBase + strength * wall.traumaScale);
-  vibrate(strength >= wall.heavyHaptic ? 'warning' : 'tap');
+  vibrate(strength >= wall.heavyHaptic ? 'warning' : 'tap', strength);
 }
 
 /**
@@ -41,7 +41,7 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
         if (event.source === targets.player) {
           targets.camera.kick(event.angle, FEEL.fire.cameraKick);
           targets.camera.addTrauma(FEEL.fire.trauma);
-          vibrate('tap');
+          vibrate('tap', FEEL.fire.haptic);
         }
         break;
       case 'impact':

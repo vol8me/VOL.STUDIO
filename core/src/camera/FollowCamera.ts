@@ -1,7 +1,23 @@
-import { Spring1D } from '@volstudio/core/math';
-import { clamp } from '@volstudio/core/math/interpolation';
-import { valueNoise } from '../noise';
-import type { CameraConfig } from '@/config/camera';
+import { Spring1D, type SpringConfig } from '../math/Spring';
+import { clamp } from '../math/interpolation';
+import { valueNoise } from '../random/noise';
+
+/** Takip kamerası ayarları; süreler milisaniye, ötelemeler dünya birimidir. */
+export interface FollowCameraConfig {
+  /** Takibin zaman sabiti: kalan mesafenin ~%63'ü bu sürede kapanır. */
+  readonly followMs: number;
+  readonly zoomMin: number;
+  readonly zoomMax: number;
+  readonly zoomDefault: number;
+  /** Bir zoom kademesinin çarpanı. */
+  readonly zoomStep: number;
+  readonly zoomMs: number;
+  /** Yaylı tepme (ör. ateş): yay ayarı ve azami öteleme. */
+  readonly kick: SpringConfig & { readonly max: number };
+  /** Sarsıntının azami ötelemesi ve saniyelik sönümü. */
+  readonly shakeMax: number;
+  readonly shakeDecay: number;
+}
 
 /** Zaman sabitli üstel yaklaşım; kare hızından bağımsızdır. */
 function follow(current: number, target: number, timeConstantMs: number, deltaMs: number): number {
@@ -10,7 +26,7 @@ function follow(current: number, target: number, timeConstantMs: number, deltaMs
 }
 
 /**
- * Oyuncuyu izleyen kamera modeli. Hedefi (ara değerli gövde konumu) zaman
+ * Oyuncuyu izleyen kamera modeli; render motorundan bağımsızdır. Hedefi (ara değerli gövde konumu) zaman
  * sabitli üstel yaklaşımla izler, dünya sınırına kelepçelenir. Üstüne iki
  * sunum katmanı biner: ateşte yaylı tepme, çarpmada sönen sarsıntı. Her ikisi
  * de merkezi değil yalnız görüntü ötelemesini değiştirir.
@@ -30,7 +46,7 @@ export class FollowCamera {
   shakeY = 0;
 
   constructor(
-    private readonly config: CameraConfig,
+    private readonly config: FollowCameraConfig,
     private readonly worldWidth: number,
     private readonly worldHeight: number,
   ) {

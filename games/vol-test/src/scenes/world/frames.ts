@@ -1,5 +1,5 @@
 import type { HudFrame } from '@/hud/HudFrame';
-import { lerpAngle } from '@/sim/angle';
+import { lerpAngle } from '@volstudio/core/math';
 import type { Tank } from '@/sim/tank/Tank';
 import type { TankFrame } from '@/view/TankView';
 

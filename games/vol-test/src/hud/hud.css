@@ -103,9 +103,20 @@
   translate: -50% 0;
 }
 
+.vt-hud__stick-move {
+  left: calc(var(--vol-safe-left) + 32px);
+  bottom: calc(var(--vol-safe-bottom) + 28px);
+}
+
+.vt-hud__stick-aim {
+  right: calc(var(--vol-safe-right) + 32px);
+  bottom: calc(var(--vol-safe-bottom) + 28px);
+}
+
+/* Hızlanma nişan joystick'inin üstünde, başparmak menzilinde. */
 .vt-hud__boost {
-  right: calc(var(--vol-safe-right) + 28px);
-  bottom: calc(var(--vol-safe-bottom) + 64px);
+  right: calc(var(--vol-safe-right) + 48px);
+  bottom: calc(var(--vol-safe-bottom) + 172px);
 }
 
 /* Zoom düğmeleri harita sütununun solunda, haritayla aynı hizada. */
@@ -128,9 +139,8 @@
 }
 
 .vt-hud[data-mode='touch'] .vt-hud__boost-bar {
-  top: auto;
-  bottom: calc(var(--vol-safe-bottom) + 24px);
-  height: min(28vh, 200px);
+  top: calc(var(--vol-safe-top) + 104px);
+  height: min(24vh, 160px);
   transform: none;
 }
 

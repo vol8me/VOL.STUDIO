@@ -17,4 +17,5 @@ export {
 } from './geometry';
 export { isFiniteNumber, requireFinite, finiteOr, finitePositiveOr } from './numeric';
 export { clamp, clamp01, lerp, inverseLerp, remap, approach, damp, wrap } from './interpolation';
+export { wrapAngle, angleDelta, rotateTowards, lerpAngle } from './angle';
 export { solveTwoBoneIk, type TwoBoneIkResult } from './ik';

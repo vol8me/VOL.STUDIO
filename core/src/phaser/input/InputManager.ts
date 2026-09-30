@@ -8,6 +8,7 @@ import { createIdleActions, type InputState } from '../../input/InputState';
 import { createIdleSnapshot, type InputSnapshot } from '../../input/InputSnapshot';
 import { TouchController, type TouchControllerOptions } from './TouchController';
 import type { VirtualActionSource } from '../../input/VirtualActionSource';
+import type { VirtualStickSource } from '../../input/VirtualStickSource';
 import { InputModeArbiter, type InputModePolicyOptions } from '../../input/inputMode';
 import { registerTextEntryModeProbe } from '../../ui/textEntry/textEntry';
 import { GamepadController, type GamepadControllerOptions } from '../../input/GamepadController';
@@ -42,6 +43,11 @@ export interface InputManagerOptions<TAction extends string> {
    * eylem kümesine karışır (bkz. `VirtualActionSource`).
    */
   actionSource?: VirtualActionSource<TAction>;
+  /**
+   * Ekran üstü sabit joystick'lerin (CORE `Joystick`) eksen kaynağı;
+   * dokunmatik sağlayıcının çubuklarına karışır (bkz. `VirtualStickSource`).
+   */
+  stickSource?: VirtualStickSource;
   /**
    * Girdi kipi politikası. `initial` ile ilk kareden kip seçilir (ör.
    * gamescope oturumunda `'gamepad'`); ayrıntılar `InputModeArbiter`'de.
@@ -80,6 +86,7 @@ export class InputManager<TAction extends string> {
             aimStickAction: options.aimStickAction,
             aimStickActivatesOnTouch: options.aimStickActivatesOnTouch,
             actionSource: options.actionSource,
+            stickSource: options.stickSource,
             leftStickRegion: options.leftStickRegion,
             rightStickRegion: options.rightStickRegion,
           }),

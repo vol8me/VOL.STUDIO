@@ -74,6 +74,7 @@ export class WorldScene extends Phaser.Scene {
         worldWidth: world.width,
         worldHeight: world.height,
         actionSource: this.controls.actionSource,
+        stickSource: this.controls.stickSource,
         touch: shouldUseTouchControls(),
         fullscreen: !isTauri(),
         onResume: () => this.pause.resume(),

@@ -1,9 +1,4 @@
-/** Dünya duvarının iç normali ve konumu: nokta içerideyse `x·nx + y·ny - offset ≥ 0`. */
-export interface Wall {
-  readonly nx: number;
-  readonly ny: number;
-  readonly offset: number;
-}
+import type { Wall } from '@volstudio/core/physics';
 
 /**
  * Boş, sınırlı dünya. İçinde engel yoktur; dört duvar dünyanın kenarıdır.

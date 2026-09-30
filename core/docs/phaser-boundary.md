@@ -25,6 +25,7 @@ Bridge rolleri:
 - `core/src/phaser/entities/`: Phaser GameObject tabanlı entity adaptörleri
 - `core/src/phaser/input/`: Phaser keyboard/pointer sağlayıcıları
 - `core/src/phaser/rig/assembleRig.ts`: saf rig tanımını Phaser container/image ağacına kurma
+- `core/src/phaser/poseSource.ts`: Phaser nesnelerini Phaser'sız `fx` poz kaynağı sözleşmesine bağlama
 
 Rig layout hesabı `core/src/rig/partLayout.ts` içinde saf TypeScript'tir.
 Derece-radyan dönüşümü ve ebeveyn-yerel koordinat hesabı Phaser.Math

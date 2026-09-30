@@ -128,25 +128,37 @@ test.describe('dokunmatik', () => {
     await expect(page.locator('.vt-pause.vol-modal--visible')).toHaveCount(1);
   });
 
-  test('sol dokunmatik çubuk tankı sürer', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'Sürükleme dokunuşu CDP ile üretilir (yalnız Chromium).');
+  test("sabit hareket joystick'i tankı sürer", async ({ page }) => {
     await open(page);
+    await page.touchscreen.tap(640, 400);
+    const base = page.getByTestId('stick-move').locator('.vol-joystick__base');
+    await expect(base).toBeVisible();
+    const box = (await base.boundingBox())!;
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
     const start = await position(page);
-    const cdp = await page.context().newCDPSession(page);
-    await cdp.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [{ x: 260, y: 520 }],
-    });
-    for (let step = 1; step <= 8; step++) {
-      await cdp.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: [{ x: 260 + step * 10, y: 520 }],
-      });
-      await page.waitForTimeout(16);
-    }
+    // Joystick işaretçi olaylarını dinler; dokunma işaretçisi sayfadan üretilir.
+    await page.evaluate(
+      ({ x, y }) => {
+        const target = document.querySelector('[data-testid="stick-move"] .vol-joystick__base')!;
+        const make = (type: string, clientX: number) =>
+          new PointerEvent(type, {
+            bubbles: true,
+            pointerId: 9,
+            pointerType: 'touch',
+            clientX,
+            clientY: y,
+          });
+        target.dispatchEvent(make('pointerdown', x));
+        window.dispatchEvent(make('pointermove', x + 60));
+      },
+      { x: cx, y: cy },
+    );
     await expect
       .poll(async () => (await position(page)).x, { timeout: 6000 })
       .toBeGreaterThan(start.x + 2);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.evaluate(() =>
+      window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 9 })),
+    );
   });
 });

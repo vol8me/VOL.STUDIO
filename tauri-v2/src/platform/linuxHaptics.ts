@@ -62,9 +62,9 @@ export async function getLinuxHapticsStatus(
 export function createLinuxHapticsDriver(probe: LinuxHapticsProbe = defaultProbe): HapticsDriver {
   let generation = 0;
   return {
-    async play(pattern: HapticPattern) {
+    async play(pattern: HapticPattern, intensity = 1) {
       const current = ++generation;
-      for (const pulse of planRumblePulses(pattern)) {
+      for (const pulse of planRumblePulses(pattern, intensity)) {
         if (current !== generation) return;
         await probe.invoke('vol_haptics_rumble', {
           strong: pulse.strong,

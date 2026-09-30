@@ -1,4 +1,4 @@
-import { rotateTowards } from '../angle';
+import { rotateTowards } from '@volstudio/core/math';
 import type { TankCommand } from '../command';
 
 export interface TurretConfig {

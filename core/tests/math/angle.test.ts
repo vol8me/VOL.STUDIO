@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { angleDelta, lerpAngle, rotateTowards, wrapAngle } from '@/sim/angle';
+import { angleDelta, lerpAngle, rotateTowards, wrapAngle } from '../../src/math/angle';
 
 describe('angle', () => {
   it('açıyı (-π, π] aralığına sarar', () => {

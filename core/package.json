@@ -64,8 +64,8 @@
       "types": "./src/audio/music/index.ts"
     },
     "./random": {
-      "import": "./src/random/random.ts",
-      "types": "./src/random/random.ts"
+      "import": "./src/random/index.ts",
+      "types": "./src/random/index.ts"
     },
     "./spatial": {
       "import": "./src/spatial/SpatialIndex.ts",
@@ -90,6 +90,14 @@
     "./platform": {
       "import": "./src/platform/index.ts",
       "types": "./src/platform/index.ts"
+    },
+    "./physics": {
+      "import": "./src/physics/index.ts",
+      "types": "./src/physics/index.ts"
+    },
+    "./camera": {
+      "import": "./src/camera/index.ts",
+      "types": "./src/camera/index.ts"
     }
   },
   "scripts": {

@@ -1,7 +1,12 @@
 import type Phaser from 'phaser';
-import { InputManager, Vector2, VirtualActionSource } from '@volstudio/core';
 import {
   ActionEdges,
+  InputManager,
+  Vector2,
+  VirtualActionSource,
+  VirtualStickSource,
+} from '@volstudio/core';
+import {
   AIM_STICK_ACTION,
   EDGE_ACTIONS,
   GAMEPAD_BINDINGS,
@@ -13,13 +18,16 @@ import { idleCommand, type TankCommand } from '@/sim/command';
 
 /**
  * Oyuncu girdisinin tek sahibi: CORE `InputManager` (klavye/fare, kol,
- * dokunmatik), ekran düğmelerinin sanal kaynağı ve kenar algılayıcı. Her
+ * dokunmatik), ekran düğmelerinin ve sabit joystick'lerin sanal kaynakları,
+ * kenar algılayıcı. Her
  * kare bir `TankCommand` üretir ve kenar eylemlerini (zoom, ızgara,
  * duraklatma) sorgulanabilir kılar.
  */
 export class PlayerControls {
   /** HUD'un dokunmatik düğmelerinin yazdığı kaynak. */
   readonly actionSource = new VirtualActionSource<TestAction>();
+  /** HUD'un sabit joystick'lerinin (CORE `Joystick`) yazdığı eksen kaynağı. */
+  readonly stickSource = new VirtualStickSource();
   readonly command: TankCommand = idleCommand();
   private readonly manager: InputManager<TestAction>;
   private readonly edges = new ActionEdges<TestAction>();
@@ -32,6 +40,11 @@ export class PlayerControls {
       gamepad: { actionBindings: GAMEPAD_BINDINGS },
       aimStickAction: AIM_STICK_ACTION,
       actionSource: this.actionSource,
+      stickSource: this.stickSource,
+      // Dokunmatikte sabit joystick'ler kullanılır; görünmeyen serbest
+      // çubuklar kapatılır, ekrana dokunmak çubuk doğurmaz.
+      leftStickRegion: null,
+      rightStickRegion: null,
     });
   }
 
@@ -69,10 +82,12 @@ export class PlayerControls {
   release(): void {
     this.manager.reset();
     this.actionSource.clear();
+    this.stickSource.clear();
   }
 
   destroy(): void {
     this.manager.destroy();
     this.actionSource.clear();
+    this.stickSource.clear();
   }
 }

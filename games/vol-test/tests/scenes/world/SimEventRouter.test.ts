@@ -3,11 +3,14 @@ import type * as CoreModule from '@volstudio/core';
 import { FEEL } from '@/config/feel';
 import { routeSimEvents } from '@/scenes/world/SimEventRouter';
 
-const haptics = vi.hoisted(() => ({ patterns: [] as string[] }));
+const haptics = vi.hoisted(() => ({ patterns: [] as string[], intensities: [] as number[] }));
 
 vi.mock('@volstudio/core', async (importOriginal) => ({
   ...(await importOriginal<typeof CoreModule>()),
-  vibrate: (pattern: string) => haptics.patterns.push(pattern),
+  vibrate: (pattern: string, intensity: number) => {
+    haptics.patterns.push(pattern);
+    haptics.intensities.push(intensity);
+  },
 }));
 
 const PLAYER = 1;
@@ -27,6 +30,7 @@ function targets() {
 
 afterEach(() => {
   haptics.patterns = [];
+  haptics.intensities = [];
 });
 
 describe('routeSimEvents', () => {
@@ -37,6 +41,7 @@ describe('routeSimEvents', () => {
     expect(t.effects.muzzle).toHaveBeenCalledWith(1, 2, 0.5);
     expect(t.camera.kick).toHaveBeenCalledWith(0.5, FEEL.fire.cameraKick);
     expect(haptics.patterns).toEqual(['tap']);
+    expect(haptics.intensities).toEqual([FEEL.fire.haptic]);
   });
 
   it('başka aracın atışı görünür ama kamerayı ve titreşimi tetiklemez', () => {
@@ -72,6 +77,7 @@ describe('routeSimEvents', () => {
     hit(FEEL.wall.fullSpeed, OTHER);
     expect(t.arena.strike).toHaveBeenCalledTimes(3);
     expect(haptics.patterns).toEqual(['tap', 'warning']);
+    expect(haptics.intensities).toEqual([0.2, 1]);
     const [light, heavy] = t.camera.addTrauma.mock.calls.map(([value]) => value as number);
     expect(heavy).toBeGreaterThan(light);
   });

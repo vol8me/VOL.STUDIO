@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { VirtualActionSource } from '@volstudio/core';
+import { Vector2, VirtualActionSource, VirtualStickSource } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
 import { Hud } from '@/hud/Hud';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
@@ -10,19 +10,21 @@ function mount(touch = false, fullscreen = true) {
   document.body.append(parent);
   const onResume = vi.fn();
   const source = new VirtualActionSource<TestAction>();
+  const sticks = new VirtualStickSource();
   const hud = new Hud({
     parent,
     metre: 32,
     worldWidth: 4096,
     worldHeight: 4096,
     actionSource: source,
+    stickSource: sticks,
     touch,
     fullscreen,
     onResume,
   });
   const find = <T extends HTMLElement = HTMLElement>(id: string): T =>
     parent.querySelector<T>(`[data-testid="${id}"]`)!;
-  return { hud, parent, onResume, source, find };
+  return { hud, parent, onResume, source, sticks, find };
 }
 
 function read(source: VirtualActionSource<TestAction>): Record<TestAction, boolean> {
@@ -111,6 +113,29 @@ describe('Hud', () => {
     find<HTMLButtonElement>('touch-pause').click();
     hud.setTouchMode(false);
     expect(read(source).pause).toBe(false);
+    hud.destroy();
+  });
+
+  it('sabit joystick sürüklendikçe eksen kaynağına yazar, bırakınca sıfırlar', () => {
+    const { hud, find, sticks } = mount(true);
+    const base = find('stick-move').querySelector<HTMLElement>('.vol-joystick__base')!;
+    const event = (type: string, x: number, y: number) => {
+      const pointerEvent = new Event(type, { bubbles: true, cancelable: true }) as PointerEvent;
+      Object.defineProperties(pointerEvent, {
+        pointerId: { value: 7 },
+        clientX: { value: x },
+        clientY: { value: y },
+      });
+      return pointerEvent;
+    };
+    base.dispatchEvent(event('pointerdown', 0, 0));
+    window.dispatchEvent(event('pointermove', 60, 0));
+    expect(sticks.isHeld('move')).toBe(true);
+    expect(sticks.write('move', Vector2.zero()).x).toBeGreaterThan(0.5);
+    window.dispatchEvent(event('pointerup', 60, 0));
+    expect(sticks.isHeld('move')).toBe(false);
+    hud.setTouchMode(false);
+    expect(sticks.hasInput).toBe(false);
     hud.destroy();
   });
 

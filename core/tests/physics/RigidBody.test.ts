@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RigidBody } from '@/sim/physics/RigidBody';
+import { RigidBody } from '../../src/physics/RigidBody';
 
 describe('RigidBody', () => {
   it('geçersiz kütle ve eylemsizliği reddeder', () => {

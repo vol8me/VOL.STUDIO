@@ -1,4 +1,4 @@
-import { wrapAngle } from '../angle';
+import { wrapAngle } from '../math/angle';
 
 /**
  * Düzlemde katı cisim: konum, yön, doğrusal ve açısal hız. Kuvvet ve itki

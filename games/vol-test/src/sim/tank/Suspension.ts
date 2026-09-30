@@ -1,5 +1,5 @@
 import { Spring1D, type SpringConfig } from '@volstudio/core/math';
-import { valueNoise } from '../noise';
+import { valueNoise } from '@volstudio/core/random';
 import type { SuspensionConfig } from '@/config/tank';
 
 /** Sınıra dayanan yay geri seker; sönümlü sekme katsayısı. */

@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { VIEWPORT_REGISTRY_KEY, ViewportManager } from '@volstudio/core';
-import { FollowCamera } from '@/sim/camera/FollowCamera';
-import type { CameraConfig } from '@/config/camera';
+import { FollowCamera } from '@volstudio/core/camera';
+import type { FollowCameraConfig } from '@volstudio/core/camera';
 
 /**
  * Takip kamerası modelini Phaser'ın ana kamerasına bağlar. Phaser kamerasının
@@ -13,7 +13,7 @@ export class CameraRig {
 
   constructor(
     private readonly scene: Phaser.Scene,
-    config: CameraConfig,
+    config: FollowCameraConfig,
     worldWidth: number,
     worldHeight: number,
   ) {

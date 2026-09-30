@@ -1,4 +1,4 @@
-import type { VirtualActionSource } from '@volstudio/core';
+import type { VirtualActionSource, VirtualStickSource } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { FpsMeter, InputPresentationController, UIRoot } from '@volstudio/core/ui';
@@ -18,6 +18,7 @@ export interface HudOptions {
   readonly worldWidth: number;
   readonly worldHeight: number;
   readonly actionSource: VirtualActionSource<TestAction>;
+  readonly stickSource: VirtualStickSource;
   /** Ekran üstü düğmeler başlangıçta gösterilsin mi (dokunmatik birincil cihaz). */
   readonly touch: boolean;
   /** Tam ekran düğmesi sunulsun mu (native kabuk kendi kipini yönetir). */
@@ -63,7 +64,9 @@ export class Hud {
       new MapPanel(options.worldWidth, options.worldHeight, options.metre),
     );
     this.hints = this.scope.addDestroyable(new ControlHints(this.presentation));
-    this.touch = this.scope.addDestroyable(new TouchControls(options.actionSource));
+    this.touch = this.scope.addDestroyable(
+      new TouchControls(options.actionSource, options.stickSource),
+    );
     const fps = this.scope.addDestroyable(new FpsMeter({ position: 'bottom-right' }));
     this.pause = this.scope.addDestroyable(new PauseOverlay(options.onResume));
     this.fullscreen = options.fullscreen ? this.scope.addDestroyable(new FullscreenToggle()) : null;

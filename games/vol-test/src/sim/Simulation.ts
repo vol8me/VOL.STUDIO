@@ -3,8 +3,7 @@ import { idleCommand, type TankCommand } from './command';
 import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { SimEvent } from './events';
-import { resolveBodyContact } from './physics/bodyContact';
-import { createContact } from './physics/wallContact';
+import { createContact, resolveBodyContact } from '@volstudio/core/physics';
 import type { World } from './world/World';
 
 export interface SimulationOptions {

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { PoseShadow, type PoseSourceNode } from '@volstudio/core';
+import { poseSourceOf, PoseShadow, type PoseSourceNode } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
 import type { TankPose } from '@/sim/tank/Tank';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
@@ -82,10 +82,12 @@ export class TankView {
     this.body = scene.add.container(0, 0, [...this.feelers, hull, this.core, this.turretRig]);
 
     this.root = scene.add.container(0, 0, [...this.treads.parts, this.body]);
-    // CORE `fx` Phaser'sızdır; Phaser nesnesi poz kaynağı sözleşmesine uyar.
-    this.shadowSource = {
-      list: [...this.treads.shadowCasters, ...this.feelers, hull, this.turret],
-    } as unknown as PoseSourceNode;
+    this.shadowSource = poseSourceOf([
+      ...this.treads.shadowCasters,
+      ...this.feelers,
+      hull,
+      this.turret,
+    ]);
     this.root.setDepth(10);
   }
 

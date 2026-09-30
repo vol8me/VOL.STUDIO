@@ -16,9 +16,9 @@ pnpm --filter @volstudio/vol-test scaling    # ölçekleme ölçümü (JSON)
 
 | Eylem    | Klavye / fare   | Kol (Steam Deck dahil) | Dokunmatik               |
 | -------- | --------------- | ---------------------- | ------------------------ |
-| Hareket  | WASD            | Sol çubuk              | Sol yarıda serbest çubuk |
-| Nişan    | Fare            | Sağ çubuk              | Sağ yarıda serbest çubuk |
-| Ateş     | Sol tık         | RT                     | Sağ çubuk sürüklenirken  |
+| Hareket  | WASD            | Sol çubuk              | Sol altta sabit joystick |
+| Nişan    | Fare            | Sağ çubuk              | Sağ altta sabit joystick |
+| Ateş     | Sol tık         | RT                     | Nişan joystick itilince  |
 | Hızlanma | Shift           | LT                     | Hızlanma düğmesi         |
 | Zoom     | Tekerlek, Q / E | LB / RB                | + / − düğmeleri          |
 | Izgara   | G               | View                   | —                        |
@@ -28,12 +28,11 @@ pnpm --filter @volstudio/vol-test scaling    # ölçekleme ölçümü (JSON)
 
 | Yol                 | İçerik                                                                     |
 | ------------------- | -------------------------------------------------------------------------- |
-| `src/sim/physics/`  | Genel 2B katı cisim ve duvar teması (itki, sekme, sürtünme)                |
 | `src/sim/tank/`     | Tank: palet kuvvetleri, sürücü, süspansiyon, taret, hızlanma deposu        |
-| `src/sim/`          | Dünya, mermi, olaylar, takip kamerası modeli, `Simulation`                 |
+| `src/sim/`          | `Simulation`, araç varlıkları, dünya, mermi, olaylar                       |
 | `src/view/`         | Phaser görünümü: çöl zemini, tank ve palet rig'i, efekt katmanları         |
 | `src/hud/`          | HUD: yalnız CORE UI bileşenleri; her bölge ayrı dosya                      |
-| `src/input/`        | Eylem sözlüğü, tuş ve kol eşlemesi, kenar algılayıcı                       |
+| `src/input/`        | Eylem sözlüğü, tuş ve kol eşlemesi                                         |
 | `src/scenes/world/` | Sahne parçaları: girdi, duraklatma, kamera bağlama, olay yönlendirme, kare |
 | `src/scenes/`       | `BootScene` (yükleme), `WorldScene` (yaşam döngüsü ve bağlama)             |
 | `src/config/`       | Ayarlar: dünya, tank fiziği, süspansiyon, silah, kamera, his, efekt, palet |

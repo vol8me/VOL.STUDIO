@@ -1,4 +1,6 @@
 /** Takip kamerası (arachnid modeli): zaman sabitli üstel takip, ileri bakış yok. */
+import type { FollowCameraConfig } from '@volstudio/core/camera';
+
 export const CAMERA = {
   /** Takibin zaman sabiti (ms): kalan mesafenin ~%63'ü bu sürede kapanır. */
   followMs: 90,
@@ -12,6 +14,4 @@ export const CAMERA = {
   /** Çarpma sarsıntısı: azami öteleme (birim) ve saniyelik sönüm. */
   shakeMax: 8,
   shakeDecay: 2.8,
-} as const;
-
-export type CameraConfig = typeof CAMERA;
+} as const satisfies FollowCameraConfig;

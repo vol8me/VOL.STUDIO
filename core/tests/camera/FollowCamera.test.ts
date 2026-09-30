@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { CAMERA } from '@/config/camera';
-import { FollowCamera } from '@/sim/camera/FollowCamera';
+import { FollowCamera, type FollowCameraConfig } from '../../src/camera/FollowCamera';
+
+const CAMERA: FollowCameraConfig = {
+  followMs: 90,
+  zoomMin: 0.55,
+  zoomMax: 1.9,
+  zoomDefault: 1.5,
+  zoomStep: 1.18,
+  zoomMs: 140,
+  kick: { stiffness: 260, damping: 18, max: 14 },
+  shakeMax: 8,
+  shakeDecay: 2.8,
+};
 
 function run(camera: FollowCamera, x: number, y: number, ms: number, frameMs = 1000 / 60): void {
   for (let elapsed = 0; elapsed < ms; elapsed += frameMs) camera.update(x, y, frameMs);
