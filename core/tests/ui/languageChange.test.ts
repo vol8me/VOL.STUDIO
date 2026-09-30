@@ -5,9 +5,9 @@ import { Select } from '../../src/ui/primitives/Select';
 import { Bar } from '../../src/ui/feedback/Bar';
 import { ResourceBar } from '../../src/ui/feedback/ResourceBar';
 import { RoundCounter } from '../../src/ui/feedback/RoundCounter';
-import { PauseResumeButton } from '../../src/ui/controls/PauseResumeButton';
-import { Carousel } from '../../src/ui/controls/Carousel';
-import { DPad } from '../../src/ui/controls/DPad';
+import { PauseResumeButton } from '../../src/ui/buttons/PauseResumeButton';
+import { Carousel } from '../../src/ui/layout/Carousel';
+import { DPad } from '../../src/ui/touch/DPad';
 import { DataTable } from '../../src/ui/data/DataTable';
 import { EventLog } from '../../src/ui/data/EventLog';
 

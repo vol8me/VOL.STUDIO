@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { KeyBindingList, type KeyBindingRow } from '../../src/ui/controls/KeyBindingList';
+import { KeyBindingList, type KeyBindingRow } from '../../src/ui/data/KeyBindingList';
 import { i18n, i18next } from '../../src/i18n/I18n';
 
 const ROWS: KeyBindingRow[] = [

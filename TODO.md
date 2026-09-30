@@ -11,7 +11,7 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 ### Hiyerarşi ve temizlik
 
 - [ ] **[P1] SH4 — CORE hiyerarşisi.** Tek dosyalı dizinler birleşir,
-      `ui/controls` bölünür, CSS bileşen grubunun yanına gider, testler kaynağın
+      ui/controls bölünür, CSS bileşen grubunun yanına gider, testler kaynağın
       aynasıdır. Kapanır: tip yüzeyi ve görsel temeller değişmeden kapılar yeşil.
 - [ ] **[P1] SH5 — audio-synth yerleşimi.** v1 render yolları, fikstürü ve
       testi silinir (K7); veri dizinleri taşınır ve manifestler yeniden

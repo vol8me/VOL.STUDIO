@@ -1,4 +1,4 @@
-import { requireFinite } from '../../math/numeric';
+import { requireFinite } from '../math/numeric';
 
 export interface HistoryCommand {
   label: string;

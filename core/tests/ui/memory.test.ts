@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { TextArea } from '../../src/ui/primitives/TextArea';
-import { HoldButton } from '../../src/ui/controls/HoldButton';
+import { HoldButton } from '../../src/ui/buttons/HoldButton';
 import { Tabs } from '../../src/ui/layout/Tabs';
 
 describe('Bellek sızıntısı regresyonları', () => {

@@ -14,10 +14,6 @@ import ts from 'typescript';
  */
 export const SHOWN_VIA = {
   ToolButton: { via: 'Toolbar', reason: 'araç çubuğunun öğesi; çubukla birlikte çizilir' },
-  CommandTransaction: {
-    via: 'CommandHistory',
-    reason: 'komut geçmişinin toplu adımı; geçmiş demosunda çalışır',
-  },
   Glyph: { via: 'createGlyph', reason: 'glif sunum denetleyicisi üzerinden üretilir' },
   UIRoot: {
     via: null,

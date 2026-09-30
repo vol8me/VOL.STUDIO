@@ -4,7 +4,6 @@ import {
   CanvasViewportController,
   VOL_ICONS,
   Checkbox,
-  CommandHistory,
   Input,
   KeyedVirtualList,
   Icon,
@@ -12,8 +11,8 @@ import {
   Slider,
   SplitPane,
   Text,
-  type CommandHistorySnapshot,
 } from '@volstudio/core/ui';
+import { CommandHistory, type CommandHistorySnapshot } from '@volstudio/core/state';
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid3 } from './shared';

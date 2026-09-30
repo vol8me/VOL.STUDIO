@@ -1,4 +1,4 @@
-import { FullscreenController } from '@volstudio/core/ui';
+import { FullscreenController } from '@volstudio/core/platform';
 import { TauriWindowAdapter } from './TauriWindowAdapter';
 
 export type DisplayMode = 'windowed' | 'fullscreen';

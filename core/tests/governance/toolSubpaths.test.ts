@@ -33,7 +33,6 @@ describe('Phaser taşımayan araç alt-yolları', () => {
   it('alt-yollar beklenen bağımsız APIleri gerçekten ihraç eder', () => {
     expect(Ui.SplitPane).toBeDefined();
     expect(Ui.CanvasViewportController).toBeDefined();
-    expect(Ui.CommandHistory).toBeDefined();
     expect(Ui.Toolbar).toBeDefined();
     expect(Lifecycle.DisposableScope).toBeDefined();
     expect(I18n.I18n).toBeDefined();

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { UIRoot } from '../../src/ui/layout/UIRoot';
 import { Modal } from '../../src/ui/overlays/Modal';
-import { Joystick } from '../../src/ui/controls/Joystick';
-import { SquareJoystick } from '../../src/ui/controls/SquareJoystick';
+import { Joystick } from '../../src/ui/touch/Joystick';
+import { SquareJoystick } from '../../src/ui/touch/SquareJoystick';
 import { Wizard } from '../../src/ui/layout/Wizard';
 
 afterEach(() => {

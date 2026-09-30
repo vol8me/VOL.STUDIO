@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { FullscreenController } from '../../src/ui/controls/FullscreenController';
+import { FullscreenController } from '../../src/platform/FullscreenController';
 
 const originalFullscreenElement = Object.getOwnPropertyDescriptor(document, 'fullscreenElement');
 const originalExitFullscreen = Object.getOwnPropertyDescriptor(document, 'exitFullscreen');

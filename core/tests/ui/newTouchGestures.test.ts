@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { LongPressButton } from '../../src/ui/controls/LongPressButton';
-import { SwipeGestureZone, type SwipeGestureEvent } from '../../src/ui/controls/SwipeGestureZone';
-import { MultiTouchZone } from '../../src/ui/controls/MultiTouchZone';
-import { SquareJoystick } from '../../src/ui/controls/SquareJoystick';
+import { LongPressButton } from '../../src/ui/buttons/LongPressButton';
+import { SwipeGestureZone, type SwipeGestureEvent } from '../../src/ui/touch/SwipeGestureZone';
+import { MultiTouchZone } from '../../src/ui/touch/MultiTouchZone';
+import { SquareJoystick } from '../../src/ui/touch/SquareJoystick';
 
 const tracked: Array<{ destroy(): void }> = [];
 function track<T extends { destroy(): void }>(instance: T): T {

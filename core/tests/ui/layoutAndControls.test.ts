@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Panel } from '../../src/ui/layout/Panel';
 import { ScrollView } from '../../src/ui/layout/ScrollView';
-import { Joystick } from '../../src/ui/controls/Joystick';
-import { PinchZoomController } from '../../src/ui/controls/PinchZoomController';
+import { Joystick } from '../../src/ui/touch/Joystick';
+import { PinchZoomController } from '../../src/ui/camera/PinchZoomController';
 import { ActionBar } from '../../src/ui/hud/ActionBar';
 
 const tracked: Array<{ destroy(): void }> = [];

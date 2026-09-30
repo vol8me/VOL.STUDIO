@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CardTile, CARD_ENTER_ANIMATION_MS } from '../../src/ui/cards/CardTile';
-import { Carousel } from '../../src/ui/controls/Carousel';
-import { SwipeableCardStack } from '../../src/ui/controls/SwipeableCardStack';
+import { Carousel } from '../../src/ui/layout/Carousel';
+import { SwipeableCardStack } from '../../src/ui/cards/SwipeableCardStack';
 import { DataTable } from '../../src/ui/data/DataTable';
 import { ActionBar } from '../../src/ui/hud/ActionBar';
 import { SplitPane } from '../../src/ui/layout/SplitPane';

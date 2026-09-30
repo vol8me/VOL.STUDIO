@@ -19,3 +19,9 @@ export {
   type ShopPickerRerollState,
   type ShopPickerLockOptions,
 } from './ShopPicker';
+export {
+  SwipeableCardStack,
+  type SwipeDirection,
+  type SwipeableCardDefinition,
+  type SwipeableCardStackOptions,
+} from './SwipeableCardStack';

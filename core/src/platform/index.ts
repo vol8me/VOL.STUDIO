@@ -22,3 +22,4 @@ export {
   triggerBack,
   type BackHandler,
 } from './backNavigation';
+export { FullscreenController, type FullscreenControllerOptions } from './FullscreenController';

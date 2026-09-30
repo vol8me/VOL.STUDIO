@@ -7,3 +7,10 @@ export {
   type StatModifierType,
   type StatModifierValue,
 } from './StatBlock';
+export {
+  CommandHistory,
+  CommandTransaction,
+  type HistoryCommand,
+  type CommandHistorySnapshot,
+  type CommandHistoryOptions,
+} from './CommandHistory';

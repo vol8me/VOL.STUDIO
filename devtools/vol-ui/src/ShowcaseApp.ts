@@ -1,4 +1,5 @@
-import { FocusNavController, FullscreenController, Tabs, showConfirm } from '@volstudio/core/ui';
+import { FullscreenController } from '@volstudio/core/platform';
+import { FocusNavController, Tabs, showConfirm } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { buildAdvancedTab } from './sections/advancedTab';

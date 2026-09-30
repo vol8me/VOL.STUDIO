@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CanvasViewportController } from '../../src/ui/controls/CanvasViewportController';
+import { CanvasViewportController } from '../../src/ui/camera/CanvasViewportController';
 
 function setupViewport(width = 400, height = 300): HTMLElement {
   const element = document.createElement('div');

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CanvasViewportController } from '../../src/ui/controls/CanvasViewportController';
-import { CommandHistory } from '../../src/ui/controls/CommandHistory';
+import { CanvasViewportController } from '../../src/ui/camera/CanvasViewportController';
+import { CommandHistory } from '../../src/state/CommandHistory';
 import { KeyedVirtualList } from '../../src/ui/layout/KeyedVirtualList';
 import { SplitPane } from '../../src/ui/layout/SplitPane';
 import { Popover } from '../../src/ui/overlays/Popover';

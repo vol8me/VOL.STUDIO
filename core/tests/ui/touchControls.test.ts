@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { Carousel, type CarouselSlide } from '../../src/ui/controls/Carousel';
-import { ChargeButton } from '../../src/ui/controls/ChargeButton';
-import { DPad } from '../../src/ui/controls/DPad';
-import { DirectionButton } from '../../src/ui/controls/DirectionButton';
-import { DualAxisScrollPanel } from '../../src/ui/controls/DualAxisScrollPanel';
-import { PauseResumeButton } from '../../src/ui/controls/PauseResumeButton';
-import { PullToRefresh } from '../../src/ui/controls/PullToRefresh';
-import { RadialMenu } from '../../src/ui/controls/RadialMenu';
-import { SwipeableCardStack } from '../../src/ui/controls/SwipeableCardStack';
+import { Carousel, type CarouselSlide } from '../../src/ui/layout/Carousel';
+import { ChargeButton } from '../../src/ui/buttons/ChargeButton';
+import { DPad } from '../../src/ui/touch/DPad';
+import { DirectionButton } from '../../src/ui/touch/DirectionButton';
+import { DualAxisScrollPanel } from '../../src/ui/layout/DualAxisScrollPanel';
+import { PauseResumeButton } from '../../src/ui/buttons/PauseResumeButton';
+import { PullToRefresh } from '../../src/ui/touch/PullToRefresh';
+import { RadialMenu } from '../../src/ui/overlays/RadialMenu';
+import { SwipeableCardStack } from '../../src/ui/cards/SwipeableCardStack';
 
 const tracked: Array<{ destroy(): void }> = [];
 function track<T extends { destroy(): void }>(instance: T): T {

@@ -24,3 +24,5 @@ export {
   type VirtualListKey,
   type KeyedVirtualListOptions,
 } from './KeyedVirtualList';
+export { DualAxisScrollPanel, type DualAxisScrollPanelOptions } from './DualAxisScrollPanel';
+export { Carousel, type CarouselSlide, type CarouselOptions } from './Carousel';

@@ -1,4 +1,4 @@
-import { DisposableScope } from '../../lifecycle';
+import { DisposableScope } from '../lifecycle';
 
 interface FullscreenDocument extends Document {
   webkitFullscreenElement?: Element | null;

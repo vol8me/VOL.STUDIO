@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CommandHistory, type HistoryCommand } from '../../src/ui/controls/CommandHistory';
+import { CommandHistory, type HistoryCommand } from '../../src/state/CommandHistory';
 
 function deltaCommand(
   state: { value: number },

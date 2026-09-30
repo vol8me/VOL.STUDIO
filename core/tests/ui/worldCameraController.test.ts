@@ -3,7 +3,7 @@ import {
   WorldCameraController,
   type WorldCamera,
   type WorldCameraControllerOptions,
-} from '../../src/ui/controls/WorldCameraController';
+} from '../../src/ui/camera/WorldCameraController';
 
 function harness(options: Partial<WorldCameraControllerOptions> = {}) {
   const element = document.createElement('canvas');

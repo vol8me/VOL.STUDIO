@@ -142,6 +142,17 @@ export { solveTwoBoneIk, type TwoBoneIkResult } from './math/ik';
 export { StateMachine } from './state/StateMachine';
 export type { StateDefinition, StateMachineOptions } from './state/StateMachine';
 export { ResourcePool, type ResourceCost } from './state/ResourcePool';
+export {
+  CommandHistory,
+  CommandTransaction,
+  type HistoryCommand,
+  type CommandHistorySnapshot,
+  type CommandHistoryOptions,
+} from './state/CommandHistory';
+export {
+  FullscreenController,
+  type FullscreenControllerOptions,
+} from './platform/FullscreenController';
 export { ObjectPool, type ObjectPoolOptions } from './pool/ObjectPool';
 export { SpatialIndex, type SpatialEntity } from './spatial/SpatialIndex';
 export {
@@ -308,7 +319,9 @@ export * from './ui/layout';
 export * from './ui/overlays';
 export * from './ui/data';
 export * from './ui/feedback';
-export * from './ui/controls';
+export * from './ui/touch';
+export * from './ui/camera';
+export * from './ui/buttons';
 export * from './ui/hud';
 export * from './ui/cards';
 export * from './ui/focus';

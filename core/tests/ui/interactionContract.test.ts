@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { HoldButton } from '../../src/ui/controls/HoldButton';
-import { MultiTouchZone } from '../../src/ui/controls/MultiTouchZone';
-import { SwipeGestureZone, type SwipeGestureEvent } from '../../src/ui/controls/SwipeGestureZone';
+import { HoldButton } from '../../src/ui/buttons/HoldButton';
+import { MultiTouchZone } from '../../src/ui/touch/MultiTouchZone';
+import { SwipeGestureZone, type SwipeGestureEvent } from '../../src/ui/touch/SwipeGestureZone';
 import { Button } from '../../src/ui/primitives/Button';
 import { IconButton } from '../../src/ui/primitives/IconButton';
 
