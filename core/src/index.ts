@@ -141,7 +141,7 @@ export { Spring1D, type SpringConfig } from './math/Spring';
 export { solveTwoBoneIk, type TwoBoneIkResult } from './math/ik';
 export { StateMachine } from './state/StateMachine';
 export type { StateDefinition, StateMachineOptions } from './state/StateMachine';
-export { ResourcePool, type ResourceCost } from './economy/ResourcePool';
+export { ResourcePool, type ResourceCost } from './state/ResourcePool';
 export { ObjectPool, type ObjectPoolOptions } from './pool/ObjectPool';
 export { SpatialIndex, type SpatialEntity } from './spatial/SpatialIndex';
 export {
@@ -180,9 +180,9 @@ export {
   type StatModifier,
   type StatModifierType,
   type StatModifierValue,
-} from './stats/StatBlock';
+} from './state/StatBlock';
 
-export type { BaseEntity } from './entities/BaseEntity';
+export type { BaseEntity } from './phaser/entities/BaseEntity';
 export { BaseSprite } from './phaser/entities/BaseSprite';
 export { MovableController, type MovableGameObject } from './phaser/entities/MovableController';
 
@@ -286,7 +286,7 @@ export {
   type GraphicsQualityListener,
   type GraphicsQualityOptions,
   type GraphicsQualityProfiles,
-} from './quality';
+} from './graphics';
 export {
   ViewportManager,
   type ViewportScaleSetting,
@@ -323,4 +323,4 @@ export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';
  * bu ise varyantlı, bütçeli, anlık tetiklemelerdir.
  */
 export { SoundBank, type SoundBankOptions, type PlayOptions } from './audio/sfx';
-export * from './debug';
+export * from './diagnostics';

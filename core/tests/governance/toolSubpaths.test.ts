@@ -19,13 +19,13 @@ describe('Phaser taşımayan araç alt-yolları', () => {
       './lifecycle': { import: './src/lifecycle/index.ts', types: './src/lifecycle/index.ts' },
       './i18n': { import: './src/i18n/index.ts', types: './src/i18n/index.ts' },
       './fonts': { import: './src/fonts/index.ts', types: './src/fonts/index.ts' },
-      './benchmark': { import: './src/benchmark/index.ts', types: './src/benchmark/index.ts' },
       './random': { import: './src/random/random.ts', types: './src/random/random.ts' },
       './spatial': {
         import: './src/spatial/SpatialIndex.ts',
         types: './src/spatial/SpatialIndex.ts',
       },
-      './stats': { import: './src/stats/StatBlock.ts', types: './src/stats/StatBlock.ts' },
+      './state': { import: './src/state/index.ts', types: './src/state/index.ts' },
+      './graphics': { import: './src/graphics/index.ts', types: './src/graphics/index.ts' },
       './rig/metadata': { import: './src/rig/metadata.ts', types: './src/rig/metadata.ts' },
     });
   });
@@ -49,8 +49,8 @@ describe('Phaser taşımayan araç alt-yolları', () => {
      * Aynı dosyaya iki ad vermek, hangisinin kullanılacağına dair bir kural
      * bırakmaz ve tüketiciler kaçınılmaz olarak ayrışır. Tam olarak bu oldu:
      * harita hem `./random` hem `./random/random`, hem `./spatial` hem
-     * `./spatial/SpatialIndex`, hem `./stats` hem `./stats/StatBlock`
-     * taşıyordu; tüketiciler iki biçim arasında ayrışmıştı.
+     * `./spatial/SpatialIndex` taşıyordu; tüketiciler iki biçim arasında
+     * ayrışmıştı.
      *
      * Bir export haritası bir SÖZDÜR: her girdi sonsuza kadar korunmak
      * zorundadır. Mükerrer bir giriş, karşılığı olmayan bir söz demektir.

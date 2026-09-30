@@ -21,7 +21,6 @@ export async function validateCoverageBinding(configPath, expected) {
     const allowedExcludes = new Set([
       'src/**/index.ts',
       'src/**/*.d.ts',
-      'src/@types/**',
       'src/vite-env.d.ts',
     ]);
     if (

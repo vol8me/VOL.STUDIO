@@ -1,11 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Diagnostics, createDiagnostics, isDiagnosticsEnabled } from '../../src/debug/Diagnostics';
+import {
+  Diagnostics,
+  createDiagnostics,
+  isDiagnosticsEnabled,
+} from '../../src/diagnostics/Diagnostics';
 import {
   LocalServerTransport,
   NoopTransport,
   type DiagnosticsTransport,
-} from '../../src/debug/transport';
-import type { DiagnosticsSnapshot } from '../../src/debug/types';
+} from '../../src/diagnostics/transport';
+import type { DiagnosticsSnapshot } from '../../src/diagnostics/types';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 

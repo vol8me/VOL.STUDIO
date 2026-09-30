@@ -3,7 +3,7 @@ import { Cooldown } from '../../src/time/Cooldown';
 import { Clock } from '../../src/time/Clock';
 import { RoundLoop } from '../../src/time/RoundLoop';
 import { Scheduler } from '../../src/time/Scheduler';
-import { ResourcePool } from '../../src/economy/ResourcePool';
+import { ResourcePool } from '../../src/state/ResourcePool';
 import { SpatialIndex } from '../../src/spatial/SpatialIndex';
 import { isFiniteNumber, requireFinite, finiteOr, finitePositiveOr } from '../../src/math/numeric';
 

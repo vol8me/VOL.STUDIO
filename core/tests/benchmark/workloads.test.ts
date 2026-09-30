@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createCoreSimulationWorkloads } from '../../src/benchmark/workloads';
-import { runBenchmarkSuite } from '../../src/benchmark/harness';
+import { createCoreSimulationWorkloads } from '../../scripts/benchmark/workloads';
+import { runBenchmarkSuite } from '../../scripts/benchmark/harness';
 
 describe('CORE simulation workload seti', () => {
   it('standart mekanizma workloadlarını deterministik adlarla sağlar', () => {

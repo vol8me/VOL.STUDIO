@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { GraphicsQuality } from '../../src/quality';
+import { GraphicsQuality } from '../../src/graphics';
 
 interface Profile {
   renderScale: number;

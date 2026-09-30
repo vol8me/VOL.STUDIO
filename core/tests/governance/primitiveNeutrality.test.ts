@@ -17,12 +17,10 @@ import { join, relative } from 'node:path';
 const PRIMITIVE_ROOTS = [
   'time',
   'state',
-  'economy',
   'pool',
   'spatial',
   'lifecycle',
   'random',
-  'stats',
   // `rig` ve `math` bu listeye SONRADAN girdi. İkisi de ilk tüketicisi tek bir
   // yaratık olan alanlar: yürüyüş döngüsü, bakış sürücüsü ve ters kinematik
   // "örümcek" kelimesini hiç bilmemeli, ama tek tüketicinin sözlüğüne kaymak

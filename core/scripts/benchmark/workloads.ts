@@ -1,10 +1,10 @@
-import { ObjectPool } from '../pool/ObjectPool';
-import { PathFinder } from '../grid/findPath';
-import { FlowField } from '../grid/FlowField';
-import { Scheduler } from '../time/Scheduler';
-import { SpatialIndex, type SpatialEntity } from '../spatial/SpatialIndex';
-import { StatBlock } from '../stats/StatBlock';
-import { ResourcePool } from '../economy/ResourcePool';
+import { ObjectPool } from '../../src/pool/ObjectPool';
+import { PathFinder } from '../../src/grid/findPath';
+import { FlowField } from '../../src/grid/FlowField';
+import { Scheduler } from '../../src/time/Scheduler';
+import { SpatialIndex, type SpatialEntity } from '../../src/spatial/SpatialIndex';
+import { StatBlock } from '../../src/state/StatBlock';
+import { ResourcePool } from '../../src/state/ResourcePool';
 import type { BenchmarkScenario, BenchmarkWorkload } from './harness';
 
 export interface CoreBenchmarkWorkloadOptions {

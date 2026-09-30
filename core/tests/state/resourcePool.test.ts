@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ResourcePool } from '../../src/economy/ResourcePool';
+import { ResourcePool } from '../../src/state/ResourcePool';
 
 /**
  * Testin KENDİ kaynak sözlüğü — CORE hiçbir kaynak adı bilmez.

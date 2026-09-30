@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { StatBlock } from '../../src/stats/StatBlock';
+import { StatBlock } from '../../src/state/StatBlock';
 
 /**
  * Testin KENDİ stat sözlüğü — tipik bir oyun kümesinden (`damage`/`speed`/

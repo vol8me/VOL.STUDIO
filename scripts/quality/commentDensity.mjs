@@ -38,7 +38,7 @@ export const ACKNOWLEDGED = {
   'core/src/constants.ts': 'Sabit kataloğu: her sabit birimini ve sınırını tek satırda taşır.',
   'core/src/audio/music/types.ts': 'Tip bildirimi — alan başına tek satır sözleşme.',
   'core/src/rig/types.ts': 'Tip bildirimi; poz sinyallerinin anlamı alan başına yazılır.',
-  'core/src/debug/types.ts': 'Tip bildirimi — snapshot alanlarının anlamı.',
+  'core/src/diagnostics/types.ts': 'Tip bildirimi — snapshot alanlarının anlamı.',
   'core/src/ui/cards/ShopPickerTypes.ts': 'Tip bildirimi — seçenek sözleşmesi.',
   'devtools/audio-synth/src/types.ts':
     'Sentez parametrelerinin tip bildirimi; her alan birimini ve varsayılanını taşır.',

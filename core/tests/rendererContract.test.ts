@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { DiagnosticsSnapshot } from '../src/debug/types';
-import type { DiagnosticsTransport } from '../src/debug/transport';
+import type { DiagnosticsSnapshot } from '../src/diagnostics/types';
+import type { DiagnosticsTransport } from '../src/diagnostics/transport';
 
 /**
  * Renderer SÖZLEŞMESİ.
@@ -85,7 +85,7 @@ describe('renderer sözleşmesi', { timeout: PHASER_TRANSFORM_TIMEOUT_MS }, () =
   it('AUTO iken canvas`a düşülürse teşhis bunu GERİ DÜŞÜŞ olarak işaretler', async () => {
     const Phaser = (await import('phaser')).default;
     const { createVolGame } = await import('../src/phaser/createVolGame');
-    const { createDiagnostics } = await import('../src/debug/Diagnostics');
+    const { createDiagnostics } = await import('../src/diagnostics/Diagnostics');
 
     fakeRendererType = Phaser.CANVAS;
     const capture = captureTransport();
@@ -113,7 +113,7 @@ describe('renderer sözleşmesi', { timeout: PHASER_TRANSFORM_TIMEOUT_MS }, () =
   it('WebGL kurulduğunda geri düşüş İDDİA EDİLMEZ', async () => {
     const Phaser = (await import('phaser')).default;
     const { createVolGame } = await import('../src/phaser/createVolGame');
-    const { createDiagnostics } = await import('../src/debug/Diagnostics');
+    const { createDiagnostics } = await import('../src/diagnostics/Diagnostics');
 
     fakeRendererType = Phaser.WEBGL;
     const capture = captureTransport();
@@ -136,7 +136,7 @@ describe('renderer sözleşmesi', { timeout: PHASER_TRANSFORM_TIMEOUT_MS }, () =
 
   it('ölçülemediğinde `unknown` kalır — canvas ile KARIŞTIRILMAZ', async () => {
     const { createVolGame } = await import('../src/phaser/createVolGame');
-    const { createDiagnostics } = await import('../src/debug/Diagnostics');
+    const { createDiagnostics } = await import('../src/diagnostics/Diagnostics');
 
     fakeRendererType = undefined; // Phaser taklidi / boot öncesi
     const capture = captureTransport();

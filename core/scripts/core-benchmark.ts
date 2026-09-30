@@ -2,7 +2,7 @@ import {
   createCoreSimulationWorkloads,
   runBenchmarkSuite,
   type BenchmarkSuiteResult,
-} from '../src/benchmark/index';
+} from './benchmark/index';
 
 const USAGE = [
   'Kullanım:',
@@ -28,7 +28,7 @@ function fail(message: string): never {
 function parseFlags(args: readonly string[]): Flags {
   let iterations = 1_000;
   let warmupIterations = 100;
-  // bkz. core/src/benchmark/harness.ts DEFAULT_SAMPLES: nearest-rank p95
+  // bkz. core/scripts/benchmark/harness.ts DEFAULT_SAMPLES: nearest-rank p95
   // formülü N < 20'de her zaman maksimumu seçer, "p95" adını taşıyıp onu
   // ÖLÇMEZDİ. CLI kendi varsayılanını taşıdığı için harness'teki değer
   // tek başına yeterli değildi — ikisi birlikte güncellenir.

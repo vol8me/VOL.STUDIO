@@ -16,7 +16,7 @@ pnpm --filter @volstudio/vol-ui dev     # :5174
 | PANELS, YÜKLEME | `core/src/ui/overlays/` (`Sheet`, `Popover`, açılış hata yüzeyi)                            |
 | HUD             | `core/src/ui/feedback/`, `core/src/ui/hud/`                                                 |
 | KARTLAR         | `core/src/ui/cards/`                                                                        |
-| WORKBENCH       | `core/src/ui/primitives/`, `core/src/ui/layout/`, `core/src/quality/`                       |
+| WORKBENCH       | `core/src/ui/primitives/`, `core/src/ui/layout/`, `core/src/graphics/`                      |
 | PALETTE         | `core/src/ui/theme.css`                                                                     |
 | ADVANCED        | `core/src/ui/layout/`, `core/src/ui/data/`, `core/src/ui/hud/`, `core/src/ui/overlays/`     |
 | SCROLL          | `core/src/ui/layout/`                                                                       |

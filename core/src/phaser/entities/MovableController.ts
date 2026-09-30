@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { BaseEntity } from '../../entities/BaseEntity';
+import type { BaseEntity } from './BaseEntity';
 import { Vector2 } from '../../math/Vector2';
 import { TECH } from '../../constants';
 

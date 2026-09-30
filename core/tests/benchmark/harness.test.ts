@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { runBenchmark, runBenchmarkSuite, type BenchmarkWorkload } from '../../src/benchmark';
+import { runBenchmark, runBenchmarkSuite, type BenchmarkWorkload } from '../../scripts/benchmark';
 
 function workload(name = 'test/workload'): BenchmarkWorkload {
   return {

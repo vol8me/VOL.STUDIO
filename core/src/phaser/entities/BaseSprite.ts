@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { BaseEntity } from '../../entities/BaseEntity';
+import type { BaseEntity } from './BaseEntity';
 
 /**
  * Alt sınıflar `destroy(fromScene?)`'ı override ederse kendi temizliklerinden

@@ -63,10 +63,6 @@
       "import": "./src/audio/music/index.ts",
       "types": "./src/audio/music/index.ts"
     },
-    "./benchmark": {
-      "import": "./src/benchmark/index.ts",
-      "types": "./src/benchmark/index.ts"
-    },
     "./random": {
       "import": "./src/random/random.ts",
       "types": "./src/random/random.ts"
@@ -79,17 +75,17 @@
       "import": "./src/time/index.ts",
       "types": "./src/time/index.ts"
     },
-    "./quality": {
-      "import": "./src/quality/index.ts",
-      "types": "./src/quality/index.ts"
+    "./graphics": {
+      "import": "./src/graphics/index.ts",
+      "types": "./src/graphics/index.ts"
     },
     "./persistence": {
       "import": "./src/persistence/index.ts",
       "types": "./src/persistence/index.ts"
     },
-    "./stats": {
-      "import": "./src/stats/StatBlock.ts",
-      "types": "./src/stats/StatBlock.ts"
+    "./state": {
+      "import": "./src/state/index.ts",
+      "types": "./src/state/index.ts"
     },
     "./platform": {
       "import": "./src/platform/index.ts",

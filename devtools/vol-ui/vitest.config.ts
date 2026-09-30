@@ -22,7 +22,7 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       // Tip-only ve barrel dosyalarında çalıştırılabilir satır yok; dahil
       // edilirse kapsam oranını yapay olarak seyreltirler.
-      exclude: ['src/**/index.ts', 'src/**/*.d.ts', 'src/@types/**', 'src/vite-env.d.ts'],
+      exclude: ['src/**/index.ts', 'src/**/*.d.ts', 'src/vite-env.d.ts'],
       // Eşikler kök `quality.json`dan gelir — tek doğruluk kaynağı.
       // Burada sayı yazmak, bekçinin okuduğu değerle ayrışmaya davetiyedir.
       thresholds: quality.packages['@volstudio/vol-ui'],

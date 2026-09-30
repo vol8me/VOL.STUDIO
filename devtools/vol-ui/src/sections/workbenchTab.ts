@@ -14,7 +14,7 @@ import {
   Text,
   type CommandHistorySnapshot,
 } from '@volstudio/core/ui';
-import { GraphicsQuality } from '@volstudio/core/quality';
+import { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid3 } from './shared';
 

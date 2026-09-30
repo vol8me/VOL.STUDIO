@@ -1,4 +1,4 @@
-import { createCoreSimulationWorkloads, runBenchmarkSuite } from '../src/benchmark/index';
+import { createCoreSimulationWorkloads, runBenchmarkSuite } from './benchmark/index';
 
 /**
  * `scaling` kapısının CORE ölçümü: varlık sayısına bağlı iş yükleri iki girdi
