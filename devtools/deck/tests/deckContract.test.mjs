@@ -37,7 +37,7 @@ import {
   sanitizeReport,
   shellQuote,
   toDeckGameId,
-} from '../../deck-contract.mjs';
+} from '../scripts/deck-contract.mjs';
 
 function remote(command) {
   return execFileSync('sh', ['-c', command], {
@@ -133,7 +133,7 @@ test('full yeni release kaydı ile ölçüm flagını açar ve oyun için süre 
     seconds: 60,
   });
   assert.equal(fullMeasurementPlan('games/sample-game', records, 30).seconds, 30);
-  assert.equal(fullMeasurementPlan('devtools/deck-probe', records).seconds, undefined);
+  assert.equal(fullMeasurementPlan('devtools/deck', records).seconds, undefined);
   assert.throws(() => fullMeasurementPlan('games/sample-game', undefined), /release/);
   assert.throws(() => fullMeasurementPlan('games/sample-game', records, 0), /saniye/);
 });
@@ -464,7 +464,7 @@ test('clean CLI onaysizken SSH dahil hicbir uzak islem baslatmaz', () => {
     });
     const result = spawnSync(
       process.execPath,
-      ['scripts/deck.mjs', 'clean', 'devtools/deck-probe'],
+      [join(import.meta.dirname, '../scripts/deck.mjs'), 'clean', 'devtools/deck'],
       {
         encoding: 'utf8',
         env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, DECK_HOST: 'example.test' },

@@ -50,7 +50,7 @@ coverage-shape:
 # Bekçilerin kendi testleri ve workspace sözleşmesi. Testler geçici depolarda
 # git koşar; hook'un GIT_* ortamı onları gerçek depoya yönlendirmesin diye silinir.
 contract:
-    env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_PREFIX node --test scripts/quality/tests/*.test.mjs scripts/linux/tests/*.test.mjs scripts/android/tests/*.test.mjs
+    env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_PREFIX node --test scripts/quality/tests/*.test.mjs scripts/linux/tests/*.test.mjs scripts/android/tests/*.test.mjs devtools/deck/tests/*.test.mjs
     pnpm run contract
 
 build:
@@ -119,7 +119,7 @@ gen-theme:
 clean:
     rm -rf core/dist devtools/*/dist devtools/*/dist-server games/*/dist tauri-v2/dist
     rm -rf core/coverage devtools/*/coverage games/*/coverage tauri-v2/coverage
-    rm -rf devtools/*/test-results devtools/*/playwright-report devtools/deck-probe/web/vendor
+    rm -rf devtools/*/test-results devtools/*/playwright-report devtools/deck/web/vendor
     find . -name '*.tsbuildinfo' -not -path './node_modules/*' -delete
     rm -rf node_modules/.cache/vol-quality
 

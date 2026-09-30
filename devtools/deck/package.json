@@ -1,9 +1,9 @@
 {
-  "name": "@volstudio/deck-probe",
+  "name": "@volstudio/deck",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Deck'te cihaz gerçeklerini ölçen sonda — paylaşılan kabuğun ilk aktif tüketicisi",
+  "description": "Steam Deck araçları: cihaz ölçüm sondası ve devkit otomasyonu",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

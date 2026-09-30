@@ -11,7 +11,7 @@ web-based developer tools into one workspace.
 core/                   # engine and DOM UI catalogue (@volstudio/core)
 tauri-v2/               # shared native shell and plugins; not an app
 devtools/audio-synth/   # deterministic sound and music generation
-devtools/deck-probe/    # Steam Deck measurement probe
+devtools/deck/          # Steam Deck probe and devkit automation
 devtools/pen.dev/       # rig export from Pencil source
 devtools/vol-ui/        # CORE UI showcase and visual contract
 docs/                   # gates, platforms, new game guide

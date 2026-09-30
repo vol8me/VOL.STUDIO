@@ -17,8 +17,8 @@
       "status": "active"
     },
     {
-      "packageName": "@volstudio/deck-probe",
-      "path": "devtools/deck-probe",
+      "packageName": "@volstudio/deck",
+      "path": "devtools/deck",
       "status": "active"
     },
     {

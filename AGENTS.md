@@ -26,7 +26,7 @@ yapısıyla güncellenir.
 | `core/`                 | `@volstudio/core`        | Oyun kelimesi bilmeyen motor ve UI kataloğu: girdi, zaman, durum, kalıcılık, ses, i18n |
 | `tauri-v2/`             | `@volstudio/tauri-v2`    | Paylaşılan native kabuk (Rust kütüphanesi), eklentiler ve JS platform adaptörleri      |
 | `devtools/audio-synth/` | `@volstudio/audio-synth` | Deterministik ses ve müzik üretimi; yayın kapısı, manifest, doğrulama                  |
-| `devtools/deck-probe/`  | `@volstudio/deck-probe`  | Steam Deck ölçüm sondası (Tauri uygulaması)                                            |
+| `devtools/deck/`        | `@volstudio/deck`        | Steam Deck ölçüm sondası ve devkit otomasyonu                                          |
 | `devtools/pen.dev/`     | `@volstudio/pen.dev`     | Pencil kaynağından rig export'u                                                        |
 | `devtools/vol-ui/`      | `@volstudio/vol-ui`      | CORE UI kataloğunun vitrini ve piksel temelli görsel sözleşmesi                        |
 

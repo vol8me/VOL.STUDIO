@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
  * Steam Deck devkit otomasyonu — KAPI DEĞİLDİR, referans ölçümdür.
- * Cihaz her zaman bağlı değildir; çıktı `devtools/deck-probe/records/` altına
+ * Cihaz her zaman bağlı değildir; çıktı `devtools/deck/records/` altına
  * sürümlü kayıt olarak yazılır (depoya girmez).
  *
- *   node scripts/deck.mjs <komut> [seçenekler]
+ *   pnpm deck <komut> [seçenekler]
  *
  *   discover                      Deck'i bulur (→ --host / DECK_HOST / mDNS / Avahi)
  *   deploy   <workspace>          Yeni release yükler; önceki dosyaları korur
  *   run      <workspace> [--release=<kayıt>]  Seçilen kısayolu başlatır
  *   stop     <workspace> [--release=<kayıt>] Seçilen sürece SIGTERM gönderir
  *   log      <workspace>          diagnostics.jsonl kaydını yazdırır
- *   shot     <ad>                 gamescopectl ekran görüntüsü → devtools/deck-probe/records/
+ *   shot     <ad>                 gamescopectl ekran görüntüsü → devtools/deck/records/
  *   power    [saniye]             Güç sayaçları örneği (RAPL enerjisi + hwmon)
  *   measure  <workspace> <etiket> [--until <işaret>] [--seconds <n>]
  *                                   run → bekle → rapor+güç+görüntü → kayıt
@@ -55,11 +55,11 @@ import {
   shellQuote,
   toDeckGameId,
 } from './deck-contract.mjs';
-import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
-import { appImageAppDir, steamrt4TargetDir } from './linux/targets.mjs';
+import { loadRepoLifecycle } from '../../../scripts/quality/workspaceLifecycle.mjs';
+import { appImageAppDir, steamrt4TargetDir } from '../../../scripts/linux/targets.mjs';
 
-const ROOT = resolve(import.meta.dirname, '..');
-const RECORDS = join(ROOT, 'devtools', 'deck-probe', 'records');
+const ROOT = resolve(import.meta.dirname, '../../..');
+const RECORDS = join(ROOT, 'devtools', 'deck', 'records');
 const SSH_KEY =
   process.env.DECK_SSH_KEY ?? join(homedir(), '.config', 'steamos-devkit', 'devkit_rsa');
 const SSH_OPTS = ['-i', SSH_KEY, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8'];
@@ -583,7 +583,7 @@ try {
       const secIdx = positional.indexOf('--seconds');
       const selectedSeconds = secIdx >= 0 ? Number(positional[secIdx + 1]) : undefined;
       validateMeasureSeconds(selectedSeconds);
-      execFileSync('node', [join(ROOT, 'scripts', 'build-linux-steamrt4.mjs'), ws], {
+      execFileSync('node', [join(ROOT, 'scripts', 'linux', 'build-steamrt4.mjs'), ws], {
         stdio: 'inherit',
       });
       const deployment = cmdDeploy(ROOT, ws, host);

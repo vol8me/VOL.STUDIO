@@ -9,7 +9,7 @@ const GENERIC = new Set([
   'com.volstudio.app',
 ]);
 
-/** Paket adının kimlikte aranan biçimi: `@volstudio/deck-probe` → `deckprobe`. */
+/** Paket adının kimlikte aranan biçimi: `@volstudio/vol-test` → `voltest`. */
 export function identitySlug(packageName) {
   return packageName
     .replace(/^@[^/]+\//, '')

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { syncProbeMetrics } from '../../probe-metrics.mjs';
+import { syncProbeMetrics } from '../scripts/probe-metrics.mjs';
 
 test('sonda modülü CORE kaynağından üretilir ve gerçek tarayıcı JS sözleşmesini taşır', async () => {
   const disk = mkdtempSync(join(tmpdir(), 'vol-probe-metrics-'));

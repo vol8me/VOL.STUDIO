@@ -22,7 +22,7 @@ export default tseslint.config(
       '.claude/**',
       'graphify-out/**',
       // Betikle kopyalanan üçüncü parti derlemesi (git dışı).
-      'devtools/deck-probe/web/vendor/**',
+      'devtools/deck/web/vendor/**',
       '**/dist/**',
       '**/target/**',
       '**/build/**',
@@ -83,7 +83,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['devtools/deck-probe/web/**/*.js'],
+    files: ['devtools/deck/web/**/*.js'],
     languageOptions: { globals: { ...globals.browser, Phaser: 'readonly' } },
   },
   {

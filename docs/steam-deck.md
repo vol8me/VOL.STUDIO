@@ -1,7 +1,7 @@
 # Steam Deck ve Valve donanım ailesi
 
 Platformun ölçülmüş gerçekleri, onlardan çıkan kararlar ve devkit sözleşmesi.
-Ölçümler bir LCD Deck üzerinde `devtools/deck-probe` sondasıyla (Phaser 4
+Ölçümler bir LCD Deck üzerinde `devtools/deck` sondasıyla (Phaser 4
 WebGL, Gamepad, ses, yaşam döngüsü kaydı) ve bir oyunun devkit turuyla
 yapılmıştır; gerçek App ID, yayımlanmış Steam Input düzeni ya da Valve onayı
 yerine geçmez. Yapılacak işler kök [TODO.md](../TODO.md)dedir; yeni oyunun
@@ -333,9 +333,9 @@ derlenir (komutlar stub döner, `status.compiled:false`); sonda feature'ı
 
 ## Devkit sözleşmesi
 
-Otomasyon `pnpm deck <komut>` (`scripts/deck.mjs`): `discover`, `deploy`,
+Otomasyon `pnpm deck <komut>` (`devtools/deck/scripts/deck.mjs`): `discover`, `deploy`,
 `run`, `stop`, `log`, `shot`, `power`, `measure`, `mode`, `clean`, `full`.
-Ölçüm kayıtları git dışı devtools/deck-probe/records/ altına yazılır ve depoya
+Ölçüm kayıtları git dışı devtools/deck/records/ altına yazılır ve depoya
 girmez. Deck ölçümü kapı değildir; sonraki ölçümün
 kıyaslandığı referanstır.
 

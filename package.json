@@ -27,7 +27,7 @@
     "contract": "node scripts/quality/cli/workspace-contract.mjs",
     "benchmark:device": "node scripts/android/device-benchmark.mjs",
     "build:linux-steamrt4": "node scripts/linux/build-steamrt4.mjs",
-    "deck": "node scripts/deck.mjs"
+    "deck": "node devtools/deck/scripts/deck.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.0.0",

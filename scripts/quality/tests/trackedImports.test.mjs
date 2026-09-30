@@ -69,9 +69,9 @@ test('sonda generated importu yalnız kaynak, generator ve build çağrısı tam
     mkdirSync(dirname(join(root, file)), { recursive: true });
     writeFileSync(join(root, file), source);
   };
-  write('.gitignore', 'devtools/deck-probe/web/vendor/\n');
+  write('.gitignore', 'devtools/deck/web/vendor/\n');
   write(
-    'devtools/deck-probe/web/probe.js',
+    'devtools/deck/web/probe.js',
     "import { summarizeFrameIntervals } from './vendor/frame-summary.js';",
   );
   write('core/src/time/frameSummary.ts', 'export const summarizeFrameIntervals = () => null;');
@@ -87,23 +87,23 @@ test('sonda generated importu yalnız kaynak, generator ve build çağrısı tam
     }
   `;
   const build = `
-    import { syncProbeMetrics } from '../probe-metrics.mjs';
+    import { syncProbeMetrics } from '../../devtools/deck/scripts/probe-metrics.mjs';
     syncProbeMetrics(ROOT, join(ROOT, workspace, 'web'));
   `;
-  write('scripts/probe-metrics.mjs', generator);
+  write('devtools/deck/scripts/probe-metrics.mjs', generator);
   write('scripts/linux/build-steamrt4.mjs', build);
   assert.deepEqual(validateTrackedImports(root), []);
   write('scripts/linux/build-steamrt4.mjs', build.replace('syncProbeMetrics(ROOT', 'missing(ROOT'));
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
   write('scripts/linux/build-steamrt4.mjs', build);
-  write('scripts/probe-metrics.mjs', generator.replace('ts.transpileModule', 'ts.unrelated'));
+  write('devtools/deck/scripts/probe-metrics.mjs', generator.replace('ts.transpileModule', 'ts.unrelated'));
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
-  write('scripts/probe-metrics.mjs', generator);
+  write('devtools/deck/scripts/probe-metrics.mjs', generator);
   rmSync(join(root, 'core/src/time/frameSummary.ts'));
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
   write('core/src/time/frameSummary.ts', 'export const summarizeFrameIntervals = () => null;');
   write(
-    'devtools/deck-probe/web/probe.js',
+    'devtools/deck/web/probe.js',
     "import { missing } from './vendor/other-generated.js';",
   );
   assert.match(validateTrackedImports(root).join('\n'), /other-generated\.js/);

@@ -11,7 +11,7 @@ aynı çalışma alanında buluşturan çapraz platform monorepo.
 core/                   # motor ve DOM UI kataloğu (@volstudio/core)
 tauri-v2/               # paylaşılan native kabuk ve eklentiler; uygulama değildir
 devtools/audio-synth/   # deterministik ses ve müzik üretimi
-devtools/deck-probe/    # Steam Deck ölçüm sondası
+devtools/deck/          # Steam Deck ölçüm sondası ve devkit otomasyonu
 devtools/pen.dev/       # Pencil kaynağından rig export'u
 devtools/vol-ui/        # CORE UI vitrini ve görsel sözleşmesi
 docs/                   # kapılar, platformlar, yeni oyun rehberi

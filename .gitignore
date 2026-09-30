@@ -84,8 +84,8 @@ research-out/
 dist-audition-prod/
 dist-audition-dev/
 
-# deck-probe: derleme anında kopyalanan motor ve üretilen Tauri şemaları
-/devtools/deck-probe/web/vendor/
-/devtools/deck-probe/src-tauri/gen/
+# Deck araçları: derleme anında kopyalanan motor ve üretilen Tauri şemaları
+/devtools/deck/web/vendor/
+/devtools/deck/src-tauri/gen/
 # `pnpm deck` ölçüm kayıtları ve ekran görüntüleri (yerel referans)
-/devtools/deck-probe/records/
+/devtools/deck/records/

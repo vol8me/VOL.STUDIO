@@ -10,12 +10,6 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 
 ### Hiyerarşi ve temizlik
 
-- [ ] **[P1] SH2 — `scripts/` düzeni.** Linux paketleme, Android cihaz ölçümü ve
-      kapı CLI'ları kendi alt dizinlerine; testleri yanlarına. Kapanır:
-      `scripts/` kökünde yalnız `doctor.mjs` ve alt dizinler kalır.
-- [ ] **[P1] SH3 — Deck araçları tek dizinde.** deck-probe, Deck betikleri ve
-      ölçüm kayıtları devtools/deck altında. Kapanır: Deck'e ait kod tek
-      pakettedir, `pnpm deck` oradan koşar.
 - [ ] **[P1] SH4 — CORE hiyerarşisi.** Tek dosyalı dizinler birleşir,
       `ui/controls` bölünür, CSS bileşen grubunun yanına gider, testler kaynağın
       aynasıdır. Kapanır: tip yüzeyi ve görsel temeller değişmeden kapılar yeşil.
@@ -112,6 +106,8 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
 ## Kapatılanlar
 
+- [x] SH3 — Deck araçları devtools/deck paketinde; `pnpm deck` oradan koşar.
+- [x] SH2 — `scripts/` amaca göre alt dizinlerde; testler yanında.
 - [x] SH1 — Tek Cargo workspace, tek kilit, tek hedef dizini.
 - [x] S3 — Kalıntı; katalog bekçisi; knip export 94 → 43.
 - [x] S2 — audio-synth sağlamlığı.
