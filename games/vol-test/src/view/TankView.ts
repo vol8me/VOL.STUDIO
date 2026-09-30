@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { PoseShadow, type PoseSourceNode } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
 import type { TankPose } from '@/sim/tank/Tank';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
@@ -21,7 +22,8 @@ const MUZZLE_X = 29;
 const BARREL = { kick: -210, stiffness: 420, damping: 22, max: 5 };
 const FEELER_SPRING = { stiffness: 90, damping: 9 };
 /** Gölge ışığın tersine düşer; gövde yaylandıkça gölge de az kayar. */
-const SHADOW_OFFSET = { x: 3, y: 5 };
+/** Gölge ışığın tersine düşer; biçimi parçaların pozundan gelir (CORE `PoseShadow`). */
+const SHADOW = { offsetX: 3, offsetY: 5, alpha: 0.32, depth: 9 };
 const FLASH_MS = 70;
 
 /**
@@ -33,7 +35,9 @@ const FLASH_MS = 70;
  */
 export class TankView {
   readonly root: Phaser.GameObjects.Container;
-  private readonly shadow: Phaser.GameObjects.Image;
+  private readonly shadow: PoseShadow;
+  /** Gölge veren katı parçalar; ışık kaynakları (çekirdek, parlama) dahil değil. */
+  private readonly shadowSource: PoseSourceNode;
   private readonly treads: TreadRig;
   private readonly body: Phaser.GameObjects.Container;
   private readonly feelers: Phaser.GameObjects.Image[];
@@ -42,14 +46,13 @@ export class TankView {
   private readonly turretRig: Phaser.GameObjects.Container;
   private readonly turret: Phaser.GameObjects.Image;
   private readonly flash: Phaser.GameObjects.Image;
-  private barrel = 0;
-  private barrelVelocity = 0;
+  private readonly barrel = new Spring1D();
   private pulse = 0;
   private flashMs = 0;
   private elapsedMs = 0;
 
   constructor(scene: Phaser.Scene) {
-    this.shadow = scene.add.image(0, 0, TEXTURE.shadow).setScale(INV).setDepth(9);
+    this.shadow = new PoseShadow(scene, SHADOW);
 
     this.treads = new TreadRig(scene);
 
@@ -79,12 +82,16 @@ export class TankView {
     this.body = scene.add.container(0, 0, [...this.feelers, hull, this.core, this.turretRig]);
 
     this.root = scene.add.container(0, 0, [...this.treads.parts, this.body]);
+    // CORE `fx` Phaser'sızdır; Phaser nesnesi poz kaynağı sözleşmesine uyar.
+    this.shadowSource = {
+      list: [...this.treads.shadowCasters, ...this.feelers, hull, this.turret],
+    } as unknown as PoseSourceNode;
     this.root.setDepth(10);
   }
 
   /** Atış anında namluyu geri iter ve ağız parlamasını başlatır. */
   fire(): void {
-    this.barrelVelocity += BARREL.kick;
+    this.barrel.velocity += BARREL.kick;
     this.flashMs = FLASH_MS;
     this.flash.setScale(INV * (0.85 + Math.random() * 0.35));
     this.flash.setVisible(true);
@@ -92,23 +99,19 @@ export class TankView {
 
   update(frame: TankFrame, deltaMs: number): void {
     this.elapsedMs += deltaMs;
-    const dt = Math.min(deltaMs, 50) / 1000;
     this.root.setPosition(frame.x, frame.y);
     this.root.setRotation(frame.hull);
-    const lift = Math.hypot(frame.pitch, frame.roll) * 0.35;
-    this.shadow.setPosition(frame.x + SHADOW_OFFSET.x + lift, frame.y + SHADOW_OFFSET.y + lift);
-    this.shadow.setRotation(frame.hull);
 
     this.treads.update(frame.treadLeft, frame.treadRight);
 
     this.body.setPosition(frame.pitch, frame.roll);
+    this.shadow.update(this.shadowSource);
     this.turretRig.setRotation(frame.turret - frame.hull);
 
-    this.barrelVelocity +=
-      (-BARREL.stiffness * this.barrel - BARREL.damping * this.barrelVelocity) * dt;
-    this.barrel = Phaser.Math.Clamp(this.barrel + this.barrelVelocity * dt, -BARREL.max, 0);
-    this.turret.setX(this.barrel);
-    this.flash.setX(MUZZLE_X + this.barrel);
+    this.barrel.update(0, deltaMs, BARREL);
+    this.barrel.value = Phaser.Math.Clamp(this.barrel.value, -BARREL.max, 0);
+    this.turret.setX(this.barrel.value);
+    this.flash.setX(MUZZLE_X + this.barrel.value);
     if (this.flashMs > 0) {
       this.flashMs -= deltaMs;
       this.flash.setAlpha(Math.max(0, this.flashMs / FLASH_MS));

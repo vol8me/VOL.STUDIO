@@ -101,10 +101,24 @@ describe('TankView', () => {
     expect(feeler()).not.toBeCloseTo(rest, 2);
   });
 
-  it('yok edilince gölge ve kök kaldırılır', () => {
-    const { view, byTexture, root } = build();
+  it('gölge CORE PoseShadow ile katı parçaların pozundan üretilir; ışık kaynakları gölge vermez', () => {
+    const scene = fakeScene();
+    const view = new TankView(scene as unknown as Phaser.Scene);
+    const before = scene.created.length;
+    view.update(frame(), 16);
+    const shadows = scene.created.slice(before);
+    // Palet tabanları (2), palet uçları (4), duyargalar (2), gövde, taret.
+    expect(shadows).toHaveLength(10);
+    const keys = shadows.map((sprite) => sprite.args[2]);
+    expect(keys).not.toContain(TEXTURE.core);
+    expect(keys).not.toContain(TEXTURE.flash);
+    expect(keys).not.toContain(TEXTURE.tread);
+    expect(keys).toContain(TEXTURE.treadBase);
+  });
+
+  it('yok edilince kök kaldırılır', () => {
+    const { view, root } = build();
     view.destroy();
     expect(lastCall(root, 'destroy')).toBeDefined();
-    expect(lastCall(byTexture(TEXTURE.shadow)[0], 'destroy')).toBeDefined();
   });
 });

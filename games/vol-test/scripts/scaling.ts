@@ -22,7 +22,7 @@ function load(projectiles: Projectiles, count: number): void {
   projectiles.clear();
   for (let index = 0; index < count; index++) {
     const angle = random.next() * Math.PI * 2;
-    projectiles.spawn(map.width / 2, map.height / 2, Math.cos(angle) * 40, Math.sin(angle) * 40);
+    projectiles.spawn(1, map.width / 2, map.height / 2, Math.cos(angle) * 40, Math.sin(angle) * 40);
   }
 }
 

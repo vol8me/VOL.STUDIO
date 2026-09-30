@@ -121,6 +121,8 @@ export const WEAPON = {
   projectileLifeMs: 1400,
   /** Mermi kütlesi × çıkış hızı: tanka ters yönde uygulanan itki (kg·birim/s). */
   recoilImpulse: 42000,
+  /** İsabet eden merminin hedefe aktardığı itki (kg·birim/s). */
+  hitImpulse: 60000,
   /** Geri tepmenin süspansiyona vuruşu (birim/s). */
   recoilKick: 34,
   capacity: 256,

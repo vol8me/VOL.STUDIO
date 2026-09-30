@@ -10,9 +10,15 @@ vi.mock('@volstudio/core', async (importOriginal) => ({
   vibrate: (pattern: string) => haptics.patterns.push(pattern),
 }));
 
+const PLAYER = 1;
+const OTHER = 2;
+
 function targets() {
+  const fire = { [PLAYER]: vi.fn(), [OTHER]: vi.fn() } as Record<number, () => void>;
   return {
-    tank: { fire: vi.fn() },
+    fire,
+    player: PLAYER,
+    tank: (id: number) => (fire[id] ? { fire: fire[id] } : undefined),
     effects: { muzzle: vi.fn(), impact: vi.fn(), wallHit: vi.fn() },
     arena: { strike: vi.fn() },
     camera: { kick: vi.fn(), addTrauma: vi.fn() },
@@ -24,33 +30,74 @@ afterEach(() => {
 });
 
 describe('routeSimEvents', () => {
-  it('atış: namlu, duman, kamera tepmesi ve hafif titreşim', () => {
+  it('oyuncunun atışı: namlu, duman, kamera tepmesi ve titreşim', () => {
     const t = targets();
-    routeSimEvents([{ kind: 'fired', x: 1, y: 2, angle: 0.5 }], t);
-    expect(t.tank.fire).toHaveBeenCalled();
+    routeSimEvents([{ kind: 'fired', source: PLAYER, x: 1, y: 2, angle: 0.5 }], t);
+    expect(t.fire[PLAYER]).toHaveBeenCalled();
     expect(t.effects.muzzle).toHaveBeenCalledWith(1, 2, 0.5);
     expect(t.camera.kick).toHaveBeenCalledWith(0.5, FEEL.fire.cameraKick);
     expect(haptics.patterns).toEqual(['tap']);
   });
 
-  it('mermi isabeti yalnız kıvılcım üretir', () => {
+  it('başka aracın atışı görünür ama kamerayı ve titreşimi tetiklemez', () => {
     const t = targets();
-    routeSimEvents([{ kind: 'impact', x: 1, y: 2, angle: 3 }], t);
-    expect(t.effects.impact).toHaveBeenCalledWith(1, 2, 3);
+    routeSimEvents([{ kind: 'fired', source: OTHER, x: 1, y: 2, angle: 0 }], t);
+    expect(t.fire[OTHER]).toHaveBeenCalled();
+    expect(t.effects.muzzle).toHaveBeenCalled();
     expect(t.camera.kick).not.toHaveBeenCalled();
     expect(haptics.patterns).toEqual([]);
   });
 
-  it('duvar çarpmasının şiddeti yankıya, sarsıntıya ve titreşim desenine yansır', () => {
+  it('duvar ve yer patlaması kıvılcım üretir; oyuncuya isabet sarsar', () => {
     const t = targets();
-    const hit = (speed: number) =>
-      routeSimEvents([{ kind: 'wallHit', x: 0, y: 0, normalX: -1, normalY: 0, speed }], t);
+    routeSimEvents(
+      [
+        { kind: 'impact', owner: PLAYER, surface: 'wall', x: 1, y: 2, angle: 3 },
+        { kind: 'hit', owner: OTHER, target: PLAYER, x: 4, y: 5, angle: 0 },
+        { kind: 'hit', owner: PLAYER, target: OTHER, x: 4, y: 5, angle: 0 },
+      ],
+      t,
+    );
+    expect(t.effects.impact).toHaveBeenCalledTimes(3);
+    expect(t.camera.addTrauma).toHaveBeenCalledTimes(1);
+    expect(haptics.patterns).toEqual(['warning']);
+  });
+
+  it('duvar çarpmasının şiddeti yankıya, sarsıntıya ve desene yansır', () => {
+    const t = targets();
+    const hit = (speed: number, source = PLAYER) =>
+      routeSimEvents([{ kind: 'wallHit', source, x: 0, y: 0, normalX: -1, normalY: 0, speed }], t);
     hit(FEEL.wall.fullSpeed * 0.2);
     hit(FEEL.wall.fullSpeed * 3);
+    hit(FEEL.wall.fullSpeed, OTHER);
+    expect(t.arena.strike).toHaveBeenCalledTimes(3);
     expect(haptics.patterns).toEqual(['tap', 'warning']);
     const [light, heavy] = t.camera.addTrauma.mock.calls.map(([value]) => value as number);
     expect(heavy).toBeGreaterThan(light);
-    expect(heavy).toBeCloseTo(FEEL.wall.traumaBase + FEEL.wall.traumaScale);
-    expect(t.effects.wallHit.mock.calls[1][4]).toBe(1);
+  });
+
+  it('araç çarpışması yalnız oyuncu tarafsa hissedilir', () => {
+    const t = targets();
+    const bump = (a: number, b: number) =>
+      routeSimEvents(
+        [
+          {
+            kind: 'collision',
+            a,
+            b,
+            x: 0,
+            y: 0,
+            normalX: 1,
+            normalY: 0,
+            speed: FEEL.wall.fullSpeed,
+          },
+        ],
+        t,
+      );
+    bump(OTHER, 3);
+    expect(haptics.patterns).toEqual([]);
+    bump(OTHER, PLAYER);
+    expect(haptics.patterns).toEqual(['warning']);
+    expect(t.effects.wallHit).toHaveBeenCalledTimes(2);
   });
 });

@@ -17,13 +17,15 @@ interface Mark {
 export class TreadMarks {
   private readonly marks = new RingBuffer<Mark>(FX.marks.capacity);
   private readonly pool: Mark[] = [];
-  private readonly lastAt = { left: 0, right: 0 };
+  /** Araç başına son izin bırakıldığı yer yolları. */
+  private readonly lastAt = new Map<number, { left: number; right: number }>();
   private nowMs = 0;
 
   constructor(private readonly scene: Phaser.Scene) {}
 
   /** Yer yolu aralığı her geçildiğinde iki paletin altına iz bırakır. */
   track(
+    key: number,
     x: number,
     y: number,
     hull: number,
@@ -35,15 +37,25 @@ export class TreadMarks {
       ['left', groundLeft, -1],
       ['right', groundRight, 1],
     ];
-    for (const [key, distance, side] of sides) {
-      if (Math.abs(distance - this.lastAt[key]) < FX.marks.spacing) continue;
-      this.lastAt[key] = distance;
+    let last = this.lastAt.get(key);
+    if (!last) {
+      last = { left: groundLeft, right: groundRight };
+      this.lastAt.set(key, last);
+    }
+    for (const [track, distance, side] of sides) {
+      if (Math.abs(distance - last[track]) < FX.marks.spacing) continue;
+      last[track] = distance;
       this.place(
         x - Math.sin(hull) * trackOffset * side,
         y + Math.cos(hull) * trackOffset * side,
         hull,
       );
     }
+  }
+
+  /** Kaldırılan aracın iz durumunu bırakır; zemindeki izler sönerek kalır. */
+  forget(key: number): void {
+    this.lastAt.delete(key);
   }
 
   /** İzleri yaşlarına göre söndürür. */

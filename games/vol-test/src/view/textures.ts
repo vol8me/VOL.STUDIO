@@ -3,7 +3,6 @@ import coreUrl from '@/assets/tank/core.svg?url';
 import feelerUrl from '@/assets/tank/feeler.svg?url';
 import flashUrl from '@/assets/tank/flash.svg?url';
 import hullUrl from '@/assets/tank/hull.svg?url';
-import shadowUrl from '@/assets/tank/shadow.svg?url';
 import treadEndUrl from '@/assets/tank/tread-end.svg?url';
 import treadUrl from '@/assets/tank/tread.svg?url';
 import turretUrl from '@/assets/tank/turret.svg?url';
@@ -21,10 +20,10 @@ export const TEXTURE = {
   treadEnd: 'tank-tread-end',
   core: 'tank-core',
   feeler: 'tank-feeler',
-  shadow: 'tank-shadow',
   flash: 'tank-flash',
   spark: 'fx-spark',
   mark: 'fx-mark',
+  treadBase: 'tank-tread-base',
 } as const;
 
 const SVG_PARTS: ReadonlyArray<readonly [string, string]> = [
@@ -34,7 +33,6 @@ const SVG_PARTS: ReadonlyArray<readonly [string, string]> = [
   [TEXTURE.treadEnd, treadEndUrl],
   [TEXTURE.core, coreUrl],
   [TEXTURE.feeler, feelerUrl],
-  [TEXTURE.shadow, shadowUrl],
   [TEXTURE.flash, flashUrl],
 ];
 
@@ -69,6 +67,12 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
     gradient.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = gradient;
     g.fillRect(0, 0, 16, 16);
+  });
+  // Palet bandının altındaki koyu taban: bandı zeminler ve `PoseShadow`a
+  // paletin gerçek boyunu verir (TileSprite gölgesi tek doku karesidir).
+  canvasTexture(scene, TEXTURE.treadBase, 8, 8, (g) => {
+    g.fillStyle = '#0e1115';
+    g.fillRect(0, 0, 8, 8);
   });
   canvasTexture(scene, TEXTURE.mark, 4, 8, (g) => {
     g.fillStyle = '#ffffff';

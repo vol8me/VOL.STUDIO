@@ -14,6 +14,22 @@ export type FakeObject = Record<string, unknown> & {
 export function fakeObject(kind: string, args: unknown[] = []): FakeObject {
   const calls: Array<[string, unknown[]]> = [];
   const state: Record<string, unknown> = { kind, args, calls, visible: true, emitting: false };
+  // Poz sözleşmesi (CORE `PoseSourceNode`): kapsayıcı çocuk listesi, görüntü
+  // doku ve dünya dönüşümü taşır. Diğer alanlar tanımsız kalır.
+  state.list = kind === 'container' ? args[2] ?? [] : undefined;
+  state.texture = kind === 'image' ? { key: args[2] } : undefined;
+  state.frame = undefined;
+  state.originX = 0.5;
+  state.originY = 0.5;
+  state.getWorldTransformMatrix = () => ({
+    decomposeMatrix: () => ({
+      translateX: Number(state.x ?? args[0] ?? 0),
+      translateY: Number(state.y ?? args[1] ?? 0),
+      rotation: Number(state.rotation ?? 0),
+      scaleX: 1,
+      scaleY: 1,
+    }),
+  });
   const proxy: FakeObject = new Proxy(state, {
     get(target, key: string) {
       if (key in target) return target[key];

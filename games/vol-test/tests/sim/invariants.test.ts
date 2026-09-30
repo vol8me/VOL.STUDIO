@@ -43,7 +43,7 @@ describe('simülasyon değişmezleri', () => {
       for (let step = 0; step < STEPS; step++) {
         current = randomCommand(next, current);
         sim.step(current, STEP_MS);
-        const tank = sim.tank;
+        const tank = sim.player.tank;
         const values = [tank.x, tank.y, tank.vx, tank.vy, tank.hull, tank.angularVelocity];
         for (const value of values) expect(Number.isFinite(value), `adım ${step}`).toBe(true);
 
@@ -87,10 +87,42 @@ describe('simülasyon değişmezleri', () => {
     for (let step = 0; step < 2000; step++) {
       current = randomCommand(() => random.next(), current);
       sim.step(current, STEP_MS);
-      expect(sim.tank.groundLeft).toBeGreaterThanOrEqual(left);
-      expect(sim.tank.groundRight).toBeGreaterThanOrEqual(right);
-      left = sim.tank.groundLeft;
-      right = sim.tank.groundRight;
+      expect(sim.player.tank.groundLeft).toBeGreaterThanOrEqual(left);
+      expect(sim.player.tank.groundRight).toBeGreaterThanOrEqual(right);
+      left = sim.player.tank.groundLeft;
+      right = sim.player.tank.groundRight;
     }
+  });
+
+  it('üç araç rastgele sürülüp çarpışırken iç içe geçmez ve dünyada kalır', () => {
+    const random = createRandom(2024);
+    const sim = simulation(700);
+    const others = [sim.spawn(250, 250, 0), sim.spawn(450, 450, Math.PI)];
+    const commands = new Map<number, TankCommand>();
+    for (const vehicle of sim.vehicles) commands.set(vehicle.id, command());
+    for (let step = 0; step < STEPS; step++) {
+      for (const vehicle of sim.vehicles) {
+        commands.set(
+          vehicle.id,
+          randomCommand(() => random.next(), commands.get(vehicle.id)!),
+        );
+      }
+      sim.step((vehicle) => commands.get(vehicle.id)!, STEP_MS);
+      const tanks = sim.vehicles.map((vehicle) => vehicle.tank);
+      for (const tank of tanks) {
+        expect(Number.isFinite(tank.x) && Number.isFinite(tank.vx), `adım ${step}`).toBe(true);
+        expect(tank.x).toBeGreaterThanOrEqual(0);
+        expect(tank.x).toBeLessThanOrEqual(700);
+      }
+      for (let a = 0; a < tanks.length; a++) {
+        for (let b = a + 1; b < tanks.length; b++) {
+          const gap = Math.hypot(tanks[a].x - tanks[b].x, tanks[a].y - tanks[b].y);
+          // İki ayak izinin iç çemberleri (yarı en) hiçbir karede derin örtüşmez.
+          expect(gap, `adım ${step}`).toBeGreaterThan(TANK.halfWidth * 2 * 0.8);
+        }
+      }
+    }
+    expect(others).toHaveLength(2);
+    sim.drainEvents([]);
   });
 });

@@ -46,14 +46,15 @@ export class Tank extends RigidBody {
   groundRight = 0;
   /** Palet yüzeyi ile zemin arasındaki en büyük hız farkı (birim/s): patinaj. */
   slip = 0;
-  /** Bu adımdaki en sert duvar teması; `speed` 0 ise temas yok. */
+  /** Bu adımdaki en sert DUVAR teması; `speed` 0 ise temas yok. */
   readonly contact: Contact = createContact();
   readonly suspension: Suspension;
   readonly previous: TankPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
   private readonly driver: Driver;
   private readonly turretMount: Turret;
   private readonly reserve: BoostReserve;
-  private readonly shape: ContactShape;
+  /** Ayak izi ve temas malzemesi (duvar ve araç teması aynı şekli kullanır). */
+  readonly shape: ContactShape;
   private readonly targets: TrackTargets = { left: 0, right: 0, forward: false };
   private readonly forces = createTrackForces();
   private readonly substepContact: Contact = createContact();
@@ -101,6 +102,32 @@ export class Tank extends RigidBody {
 
   get reversing(): boolean {
     return this.driver.reversing;
+  }
+
+  /** Nokta tankın ayak izinin içinde mi (mermi isabeti). */
+  contains(px: number, py: number): boolean {
+    const dx = px - this.x;
+    const dy = py - this.y;
+    const fx = Math.cos(this.angle);
+    const fy = Math.sin(this.angle);
+    return (
+      Math.abs(dx * fx + dy * fy) <= this.shape.halfLength &&
+      Math.abs(-dx * fy + dy * fx) <= this.shape.halfWidth
+    );
+  }
+
+  /**
+   * Çarpmanın süspansiyona vuruşu: gövde çarpma yönüne yaylanır. Duvar ve
+   * araç teması aynı yoldan geçer.
+   */
+  kickFrom(hit: Contact): void {
+    const fx = Math.cos(this.angle);
+    const fy = Math.sin(this.angle);
+    const kick = hit.speed * this.config.impactKick;
+    this.suspension.kick(
+      -(hit.normalX * fx + hit.normalY * fy) * kick,
+      -(-hit.normalX * fy + hit.normalY * fx) * kick,
+    );
   }
 
   place(x: number, y: number, hull = -Math.PI / 2): void {
@@ -183,17 +210,11 @@ export class Tank extends RigidBody {
     );
   }
 
-  /** Duvar temasını çözer; en sert çarpmayı kaydeder ve süspansiyonu vurur. */
+  /** Duvar temasını çözer; adımdaki en sert duvar çarpması kaydedilir. */
   private resolveContacts(world: World): void {
     const hit = resolveWallContacts(this, world.walls, this.shape, this.substepContact);
     if (hit.speed <= this.contact.speed) return;
     Object.assign(this.contact, hit);
-    const fx = Math.cos(this.angle);
-    const fy = Math.sin(this.angle);
-    const kick = hit.speed * this.config.impactKick;
-    this.suspension.kick(
-      -(hit.normalX * fx + hit.normalY * fy) * kick,
-      -(-hit.normalX * fy + hit.normalY * fx) * kick,
-    );
+    this.kickFrom(hit);
   }
 }

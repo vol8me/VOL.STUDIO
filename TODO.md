@@ -10,9 +10,44 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 
 ### VOL.TEST — test ortamı oyunu
 
-Analiz: yerel sertleştirme raporu §0.4. Uygulama analizin onayından sonra
-başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
+Analiz ve kararlar: yerel sertleştirme raporu §0.4, §0.4b, §0.4c. Cihazlar
+uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi").
 
+- [ ] **[P1] VT-R1 — Çoklu varlık altyapısı.** Simülasyon tek tanka bağlı:
+      varlık kimliği, araç listesi, kontrol edilen araç, sahibi olan mermi ve
+      olaylar, araç–araç çarpışması, görünüm kaydı (kimlik → görünüm).
+      Kapanır: iki araçlı simülasyon ve sahne testleri.
+- [ ] **[P1] VT-R2 — Fren, drift, patinaj izi.** Fren (PC Space, kol B,
+      dokunmatik düğme) paletleri kilitler; kilitli palet kinetik sürtünmeyle
+      kayar. Yanal sürtünmede statik/kinetik ayrımı: sert dönüşte gerçekçi
+      drift. Kayma izi zeminde uzun süre kalır. Kapanır: hissiyat zarfına fren
+      mesafesi ve drift ölçüleri eklenir.
+- [ ] **[P1] VT-R3 — Dokunmatik ve HUD düzeni.** Sabit CORE joystick
+      (hareket + nişan), fren ve hızlanma düğmeleri; tam ekran yalnız webde ve
+      haritanın altında; minimap'te soluk ızgara. Kapanır: E2E dokunmatik ve
+      telefon ekran görüntüsü.
+- [ ] **[P1] VT-R4 — Silah ve efekt gerçekçiliği.** Mermi gövdesi ve izi,
+      namlu ağzı patlaması ve zemin tozu, menzil sonu/duvar patlaması (şok
+      halkası, parlama, enkaz, kararmış zemin izi), gerçekçi palet izi
+      (palet baskısı dokusu), ateşte kamera okunurluğu bozmaz. Kapanır:
+      görünüm testleri ve ekran görüntüsü.
+- [ ] **[P1] VT-R5 — Ses.** audio-synth ile oyuna özgü, organik, gerçeğe yakın
+      sesler (müzik ve ambiyans yok): motor, palet, taret servosu, top atışı,
+      patlama, duvar çarpması, fren kayması, hızlanma, UI. Sürekli sesler
+      hız/yükle modüle edilir. Kapanır: audio-synth yayın kapısı, verify,
+      oyunda sesler ve kullanıcının dinleme onayı.
+- [ ] **[P1] VT-C — CORE sertleştirme (VOL.TEST'ten).** Envanter: rapor §0.4d.
+      Tekrar edenler CORE'a çevrilir (`Spring1D`, `PoseShadow`, CORE
+      `Joystick`). Eksikler CORE'a eklenir ve testleriyle gelir:
+      `VirtualStickSource`, `FollowCamera`, `math/angle`, `random/noise`,
+      `ActionEdges`, CORE fizik modülü (katı cisim + temaslar), Phaser nesnesini
+      `PoseSourceNode`a güvenli çeviren köprü yardımcısı (bugün tüketiciler
+      `as unknown as` kullanıyor). I1 ve H1 kapanır. Kural: CORE'a eklenen her
+      parçayı VOL.TEST aynı turda tüketir; tüketicisiz ekleme yok.
+      Kapanır: CORE testleri ve kapsam eşiği; VOL.TEST CORE'dan tüketir.
+- [ ] **[P3] VT-S — Test senaryoları.** Boş dünya korunur; açılıp kapanan
+      senaryolar: slalom, hedef atış, fizik sandbox, çoklu tank. Her CORE
+      yeteneği bir senaryoda sınanır.
 - [ ] **[P1] VT2 — Tauri kabuğu (Linux).** Kimlik `com.volstudio.voltest`, ikon
       tank SVG parçalarından üretilir (birleşik çizim üreticisi geri gelir),
       Cargo üyeliği, `gen/schemas` yoksayılır. Kapanır: Rust kapısı yeşil;

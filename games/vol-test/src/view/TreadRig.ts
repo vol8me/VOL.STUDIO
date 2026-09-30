@@ -21,8 +21,10 @@ const TREAD_END_TEXTURE_DIAMETER = 11.2;
  * Uçtaki halkalar aynı yolla döner; patinajda palet döner, tank ilerlemez.
  */
 export class TreadRig {
-  /** Tank kabının alt katmanları: önce uçlar, sonra bantlar. */
+  /** Tank kabının alt katmanları: tabanlar, uçlar, bantlar. */
   readonly parts: readonly Phaser.GameObjects.GameObject[];
+  /** Gölge veren katı parçalar: tabanlar ve uçlar (bant dokusu gölge vermez). */
+  readonly shadowCasters: readonly Phaser.GameObjects.Image[];
   private readonly bands: [Phaser.GameObjects.TileSprite, Phaser.GameObjects.TileSprite];
   private readonly ends: Phaser.GameObjects.Image[];
 
@@ -45,8 +47,14 @@ export class TreadRig {
         )
         .setScale(INV)
         .setTileScale(1, TREAD_HEIGHT / TREAD_TEXTURE_HEIGHT);
+    const bases = [-1, 1].map((side) =>
+      scene.add
+        .image(0, side * TREAD_OFFSET, TEXTURE.treadBase)
+        .setDisplaySize(TREAD_LENGTH, TREAD_HEIGHT),
+    );
     this.bands = [band(-1), band(1)];
-    this.parts = [...this.ends, ...this.bands];
+    this.parts = [...bases, ...this.ends, ...this.bands];
+    this.shadowCasters = [...bases, ...this.ends];
   }
 
   /** Palet yüzey yolları (birim): bant dokusu kayar, uçlar döner. */

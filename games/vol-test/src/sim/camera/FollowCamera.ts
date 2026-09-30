@@ -1,3 +1,4 @@
+import { Spring1D } from '@volstudio/core/math';
 import { clamp } from '@volstudio/core/math/interpolation';
 import { valueNoise } from '../noise';
 import type { CameraConfig } from '@/config/camera';
@@ -21,10 +22,8 @@ export class FollowCamera {
   private targetZoom: number;
   private viewWidth = 1;
   private viewHeight = 1;
-  private kickX = 0;
-  private kickY = 0;
-  private kickVx = 0;
-  private kickVy = 0;
+  private readonly kickX = new Spring1D();
+  private readonly kickY = new Spring1D();
   private trauma = 0;
   private timeMs = 0;
   shakeX = 0;
@@ -66,8 +65,8 @@ export class FollowCamera {
 
   /** Ateş tepmesi: görüntü `angle` yönünün tersine `strength` birim/s ile itilir. */
   kick(angle: number, strength: number): void {
-    this.kickVx -= Math.cos(angle) * strength;
-    this.kickVy -= Math.sin(angle) * strength;
+    this.kickX.velocity -= Math.cos(angle) * strength;
+    this.kickY.velocity -= Math.sin(angle) * strength;
   }
 
   addTrauma(amount: number): void {
@@ -76,11 +75,11 @@ export class FollowCamera {
 
   /** Görüntünün toplam ötelemesi (tepme + sarsıntı). */
   get offsetX(): number {
-    return this.kickX + this.shakeX;
+    return this.kickX.value + this.shakeX;
   }
 
   get offsetY(): number {
-    return this.kickY + this.shakeY;
+    return this.kickY.value + this.shakeY;
   }
 
   update(targetX: number, targetY: number, deltaMs: number): void {
@@ -92,11 +91,10 @@ export class FollowCamera {
     this.clampCenter();
 
     const dt = Math.min(deltaMs, 50) / 1000;
-    const { stiffness, damping, max } = config.kick;
-    this.kickVx += (-stiffness * this.kickX - damping * this.kickVx) * dt;
-    this.kickVy += (-stiffness * this.kickY - damping * this.kickVy) * dt;
-    this.kickX = clamp(this.kickX + this.kickVx * dt, -max, max);
-    this.kickY = clamp(this.kickY + this.kickVy * dt, -max, max);
+    for (const spring of [this.kickX, this.kickY]) {
+      spring.update(0, deltaMs, config.kick);
+      spring.value = clamp(spring.value, -config.kick.max, config.kick.max);
+    }
 
     this.trauma = Math.max(0, this.trauma - config.shakeDecay * dt);
     const shake = this.trauma * this.trauma * config.shakeMax;

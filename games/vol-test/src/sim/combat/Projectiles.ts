@@ -1,3 +1,4 @@
+import type { EntityId } from '../entities/Vehicle';
 import type { SimEvent } from '../events';
 import type { World } from '../world/World';
 
@@ -10,7 +11,18 @@ export interface Projectile {
   vx: number;
   vy: number;
   ageMs: number;
+  /** Ateşleyen araç; kendi aracına isabet etmez. */
+  owner: EntityId;
 }
+
+/** Mermi isabet adayı: aracın kimliği ve noktanın ayak izinde olup olmadığı. */
+export interface ProjectileTarget {
+  readonly id: EntityId;
+  contains(x: number, y: number): boolean;
+}
+
+/** İsabet anında çağrılır; hedefe itki uygulamak simülasyonun işidir. */
+export type ProjectileHit = (projectile: Projectile, target: ProjectileTarget) => void;
 
 /**
  * Sabit kapasiteli mermi kümesi. Canlı mermiler dizinin başında yoğun durur;
@@ -38,6 +50,7 @@ export class Projectiles {
       vx: 0,
       vy: 0,
       ageMs: 0,
+      owner: 0,
     }));
   }
 
@@ -45,7 +58,7 @@ export class Projectiles {
     return this.live;
   }
 
-  spawn(x: number, y: number, vx: number, vy: number): Projectile {
+  spawn(owner: EntityId, x: number, y: number, vx: number, vy: number): Projectile {
     let slot: Projectile;
     if (this.live < this.capacity) {
       slot = this.items[this.live++]!;
@@ -61,6 +74,7 @@ export class Projectiles {
     slot.vx = vx;
     slot.vy = vy;
     slot.ageMs = 0;
+    slot.owner = owner;
     return slot;
   }
 
@@ -69,10 +83,17 @@ export class Projectiles {
   }
 
   /**
-   * Mermileri ilerletir. Dünya duvarını aşan mermi duvarda ölür ve isabet
-   * olayı üretir; ömrü dolan mermi sessizce söner.
+   * Mermileri ilerletir. Yol üzerinde (yarım adım örneklemesiyle) bir araca
+   * değen mermi isabet eder; dünya duvarını aşan mermi duvarda, ömrü dolan
+   * mermi menzil sonunda yerde patlar.
    */
-  step(dtMs: number, world: World, events: SimEvent[]): void {
+  step(
+    dtMs: number,
+    world: World,
+    events: SimEvent[],
+    targets: readonly ProjectileTarget[] = [],
+    onHit?: ProjectileHit,
+  ): void {
     const dt = dtMs / 1000;
     let index = 0;
     while (index < this.live) {
@@ -82,14 +103,31 @@ export class Projectiles {
       projectile.ageMs += dtMs;
       projectile.x += projectile.vx * dt;
       projectile.y += projectile.vy * dt;
-      let alive = projectile.ageMs < this.lifeMs;
-      if (alive && !world.contains(projectile.x, projectile.y)) {
+      const angle = Math.atan2(projectile.vy, projectile.vx);
+      let alive = true;
+
+      const target = this.struck(projectile, targets);
+      if (target) {
+        events.push({
+          kind: 'hit',
+          owner: projectile.owner,
+          target: target.id,
+          x: projectile.x,
+          y: projectile.y,
+          angle,
+        });
+        onHit?.(projectile, target);
+        alive = false;
+      } else if (!world.contains(projectile.x, projectile.y)) {
         projectile.x = Math.min(world.width, Math.max(0, projectile.x));
         projectile.y = Math.min(world.height, Math.max(0, projectile.y));
-        const angle = Math.atan2(projectile.vy, projectile.vx);
-        events.push({ kind: 'impact', x: projectile.x, y: projectile.y, angle });
+        events.push(this.impact(projectile, 'wall', angle));
+        alive = false;
+      } else if (projectile.ageMs >= this.lifeMs) {
+        events.push(this.impact(projectile, 'ground', angle));
         alive = false;
       }
+
       if (alive) {
         index++;
       } else {
@@ -99,5 +137,30 @@ export class Projectiles {
         this.items[index] = last;
       }
     }
+  }
+
+  private impact(projectile: Projectile, surface: 'wall' | 'ground', angle: number): SimEvent {
+    return {
+      kind: 'impact',
+      owner: projectile.owner,
+      surface,
+      x: projectile.x,
+      y: projectile.y,
+      angle,
+    };
+  }
+
+  /** Yol ortası ve uç noktası örneklenir: hızlı mermi ince aracı atlamaz. */
+  private struck(
+    projectile: Projectile,
+    targets: readonly ProjectileTarget[],
+  ): ProjectileTarget | null {
+    const midX = (projectile.px + projectile.x) / 2;
+    const midY = (projectile.py + projectile.y) / 2;
+    for (const target of targets) {
+      if (target.id === projectile.owner) continue;
+      if (target.contains(midX, midY) || target.contains(projectile.x, projectile.y)) return target;
+    }
+    return null;
   }
 }

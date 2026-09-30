@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
 import { TEXTURE } from '../textures';
 
@@ -30,40 +29,15 @@ const EMITTERS = {
       tint: PALETTE.smoke,
     },
   },
-  exhaust: {
-    depth: 9,
-    config: {
-      speed: { min: 20, max: 60 },
-      lifespan: { min: 220, max: 420 },
-      scale: { start: 0.5, end: 0 },
-      alpha: { start: 0.8, end: 0 },
-      tint: PALETTE.energy,
-      blendMode: Phaser.BlendModes.ADD,
-      frequency: 18,
-    },
-  },
-  dust: {
-    depth: 7,
-    config: {
-      speed: { min: 8, max: 30 },
-      lifespan: { min: 500, max: 900 },
-      scale: { start: 0.6, end: 1.6 },
-      alpha: { start: 0.16, end: 0 },
-      tint: PALETTE.dust,
-      frequency: 40,
-    },
-  },
 } satisfies Record<string, { depth: number; config: EmitterConfig }>;
 
 /**
- * Parçacık efektleri: isabet ve çarpma kıvılcımı, namlu ve çarpma dumanı,
- * hızlanma egzozu, hız ya da patinajla kalkan toz. Renkler oyun paletinden.
+ * Paylaşılan parçacık efektleri: isabet ve çarpma kıvılcımı, namlu ve çarpma
+ * dumanı. Renkler oyun paletinden. Araca bağlı egzoz ve toz `VehicleTrail`da.
  */
 export class ParticleFx {
   private readonly sparks: Emitter;
   private readonly smoke: Emitter;
-  private readonly exhaust: Emitter;
-  private readonly dust: Emitter;
 
   constructor(scene: Phaser.Scene) {
     const make = (definition: { depth: number; config: EmitterConfig }): Emitter =>
@@ -72,8 +46,6 @@ export class ParticleFx {
         .setDepth(definition.depth);
     this.sparks = make(EMITTERS.sparks);
     this.smoke = make(EMITTERS.smoke);
-    this.exhaust = make(EMITTERS.exhaust);
-    this.dust = make(EMITTERS.dust);
   }
 
   /** Mermi duvara çarptı: geliş yönünün tersine kıvılcım. */
@@ -99,30 +71,8 @@ export class ParticleFx {
     this.smoke.explode(Math.round(3 + strength * 6), x, y);
   }
 
-  /**
-   * Egzoz ve toz kaynaklarını gövdenin arkasına taşır. Toz hızla ya da palet
-   * patinajıyla (palet dönüyor, tank ilerlemiyor) kalkar.
-   */
-  follow(
-    x: number,
-    y: number,
-    hull: number,
-    speed: number,
-    boosting: boolean,
-    slipping: boolean,
-  ): void {
-    const rearX = x - Math.cos(hull) * FX.exhaustOffset;
-    const rearY = y - Math.sin(hull) * FX.exhaustOffset;
-    const outward = deg(hull + Math.PI);
-    this.exhaust.setPosition(rearX, rearY);
-    this.exhaust.setEmitterAngle({ min: outward - 25, max: outward + 25 });
-    this.exhaust.emitting = boosting;
-    this.dust.setPosition(rearX, rearY);
-    this.dust.setEmitterAngle({ min: outward - 40, max: outward + 40 });
-    this.dust.emitting = speed > FX.dustSpeed || slipping;
-  }
-
   destroy(): void {
-    for (const emitter of [this.sparks, this.smoke, this.exhaust, this.dust]) emitter.destroy();
+    this.sparks.destroy();
+    this.smoke.destroy();
   }
 }

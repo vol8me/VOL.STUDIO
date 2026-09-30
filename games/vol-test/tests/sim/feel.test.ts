@@ -103,18 +103,18 @@ describe('hissiyat zarfı', () => {
 
   it('durarak ateş: tank hissedilir ama kaymadan geri teper, gövde yaylanır', () => {
     const sim = simulation();
-    const start = { x: sim.tank.x, y: sim.tank.y };
+    const start = { x: sim.player.tank.x, y: sim.player.tank.y };
     sim.step(command({ fire: true }), STEP_MS);
     let peak = 0;
     for (let step = 0; step < 30; step++) {
       sim.step(command(), STEP_MS);
-      peak = Math.max(peak, Math.abs(sim.tank.suspension.pitch));
+      peak = Math.max(peak, Math.abs(sim.player.tank.suspension.pitch));
     }
-    const moved = Math.hypot(sim.tank.x - start.x, sim.tank.y - start.y);
+    const moved = Math.hypot(sim.player.tank.x - start.x, sim.player.tank.y - start.y);
     expect(moved).toBeGreaterThan(0.5);
     expect(moved).toBeLessThan(12);
     expect(peak).toBeGreaterThan(0.8);
-    expect(sim.tank.speed).toBeLessThan(1);
+    expect(sim.player.tank.speed).toBeLessThan(1);
   });
 
   it('duvardan sekme enerjiyi sönümler', () => {
@@ -169,7 +169,7 @@ describe('kare hızı bağımsızlığı', () => {
         expect(alpha).toBeGreaterThanOrEqual(0);
         expect(alpha).toBeLessThan(1);
       }
-      const tank = sim.tank;
+      const tank = sim.player.tank;
       return [tank.x, tank.y, tank.hull, tank.turret, tank.suspension.pitch, sim.projectiles.count];
     };
     const reference = run(1000 / 60);
