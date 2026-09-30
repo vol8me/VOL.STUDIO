@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { allUiCss, readUiCss } from '../support/uiCss';
 
 /**
  * Katman (z-index) ölçeği tek doğruluk kaynağı olarak theme.css'te tanımlı
@@ -10,14 +11,14 @@ import { resolve } from 'node:path';
  * kullanıyor — aksi halde tam da düzeltilen hata (Modal'dan yüksek RadialMenu,
  * Tooltip/CommandPalette/Popup'ın aynı değerde çakışması) sessizce geri gelir.
  */
-const theme = readFileSync(resolve(import.meta.dirname, '../../src/ui/theme.css'), 'utf-8');
-const overlays = readFileSync(resolve(import.meta.dirname, '../../src/ui/overlays.css'), 'utf-8');
-const actionControls = readFileSync(
-  resolve(import.meta.dirname, '../../src/ui/action-controls.css'),
+const theme = readUiCss('theme.css');
+const overlays = readUiCss('overlays/overlays.css');
+const actionControls = allUiCss();
+const loading = readUiCss('overlays/loading.css');
+const debugCss = readFileSync(
+  resolve(import.meta.dirname, '../../src/diagnostics/diagnostics.css'),
   'utf-8',
 );
-const loading = readFileSync(resolve(import.meta.dirname, '../../src/ui/loading.css'), 'utf-8');
-const debugCss = readFileSync(resolve(import.meta.dirname, '../../src/ui/debug.css'), 'utf-8');
 
 const TIERS = ['root', 'float', 'toast', 'dialog', 'dialog-content', 'loading', 'debug'] as const;
 

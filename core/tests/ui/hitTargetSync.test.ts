@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { uiCssFiles } from '../support/uiCss';
 
 /**
  * Dokunmatik hedef politikası.
@@ -11,7 +10,6 @@ import { resolve } from 'node:path';
  *
  * jsdom layout/paint hesaplamadığı için doğrulama yapısal (metin tabanlı) yapılır.
  */
-const CSS_DIR = resolve(import.meta.dirname, '../../src/ui');
 
 /**
  * `cursor: pointer` taşımadığı hâlde politikaya dahil edilen seçiciler.
@@ -140,15 +138,6 @@ const EXEMPT: ReadonlyArray<{ selector: string; reason: string }> = [
   },
 ];
 
-function readCss(): Map<string, string> {
-  const files = new Map<string, string>();
-  for (const entry of readdirSync(CSS_DIR)) {
-    if (!entry.endsWith('.css')) continue;
-    files.set(entry, readFileSync(resolve(CSS_DIR, entry), 'utf-8'));
-  }
-  return files;
-}
-
 /** Üst seviye `seçici { … }` bloklarını çıkarır (iç içe blok bu CSS'te yok). */
 function blocks(css: string): Array<{ selector: string; body: string }> {
   const result: Array<{ selector: string; body: string }> = [];
@@ -176,7 +165,7 @@ function consumesToken(body: string): boolean {
   );
 }
 
-const files = readCss();
+const files = uiCssFiles();
 const exemptSelectors = new Set(EXEMPT.map((entry) => entry.selector));
 
 describe('Dokunmatik hedef politikası', () => {

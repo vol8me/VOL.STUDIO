@@ -1,0 +1,284 @@
+.vol-hold-button {
+  pointer-events: auto;
+  touch-action: none;
+  width: var(--vol-hold-button-size);
+  height: var(--vol-hold-button-size);
+  font-size: calc(var(--vol-hold-button-size) * 0.4);
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    background-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast);
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-hold-button--circle {
+  border-radius: 50%;
+}
+
+.vol-hold-button--square {
+  border-radius: var(--vol-radius-md);
+}
+
+.vol-hold-button--pressed {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  transform: scale(0.94);
+}
+
+.vol-hold-button:disabled {
+  cursor: default;
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+  color: var(--vol-ui-disabled-text);
+}
+
+.vol-hold-button__icon {
+  justify-content: center;
+  align-items: center;
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+}
+
+.vol-hold-button__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-long-press-button {
+  pointer-events: auto;
+  touch-action: none;
+  width: var(--vol-long-press-button-size, 72px);
+  height: var(--vol-long-press-button-size, 72px);
+  font-size: calc(var(--vol-long-press-button-size, 72px) * 0.4);
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast);
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  position: relative;
+}
+
+.vol-long-press-button--circle {
+  border-radius: 50%;
+}
+
+.vol-long-press-button--square {
+  border-radius: var(--vol-radius-md);
+}
+
+.vol-long-press-button--pressed {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  transform: scale(0.94);
+}
+
+.vol-long-press-button--long-pressed {
+  background: var(--vol-ui-warning-solid);
+  border-color: var(--vol-ui-warning-border);
+}
+
+.vol-long-press-button:disabled {
+  cursor: default;
+  background: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+  color: var(--vol-ui-disabled-text);
+}
+
+.vol-long-press-button__ring {
+  pointer-events: none;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  position: absolute;
+  inset: -6px;
+  transform: rotate(-90deg);
+}
+
+.vol-long-press-button__ring-track {
+  fill: none;
+  stroke: var(--vol-ui-border-soft);
+  stroke-width: 4px;
+}
+
+.vol-long-press-button__ring-fill {
+  fill: none;
+  stroke: var(--vol-ui-warning-solid);
+  stroke-width: 4px;
+  stroke-linecap: round;
+}
+
+.vol-long-press-button__icon {
+  justify-content: center;
+  align-items: center;
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  position: relative;
+}
+
+.vol-long-press-button__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-charge-button {
+  pointer-events: auto;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  gap: var(--vol-space-xs);
+  width: var(--vol-charge-button-size, 72px);
+  height: var(--vol-charge-button-size, 72px);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  color: var(--vol-ui-text);
+  transition:
+    border-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  border-radius: 50%;
+  flex-direction: column;
+  display: inline-flex;
+  position: relative;
+}
+
+.vol-charge-button--charging {
+  transform: scale(0.94);
+}
+
+@keyframes vol-charge-button-pulse {
+  0% {
+    transform: scale(0.94);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.vol-charge-button__ring {
+  pointer-events: none;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  position: absolute;
+  inset: -6px;
+  transform: rotate(-90deg);
+}
+
+.vol-charge-button__ring-track {
+  fill: none;
+  stroke: var(--vol-ui-border-soft);
+  stroke-width: 4px;
+}
+
+.vol-charge-button__ring-fill {
+  fill: none;
+  stroke: var(--vol-ui-brand-solid);
+  stroke-width: 4px;
+  stroke-linecap: round;
+}
+
+.vol-charge-button--charging .vol-charge-button__ring-fill {
+  stroke: var(--vol-ui-warning-solid);
+}
+
+.vol-charge-button--full .vol-charge-button__ring-fill {
+  stroke: var(--vol-ui-success-solid);
+}
+
+.vol-charge-button--full {
+  border-color: var(--vol-ui-success-border);
+  background: var(--vol-ui-success-subtle);
+  animation: 0.4s ease-out vol-charge-button-pulse;
+}
+
+.vol-charge-button__icon {
+  pointer-events: none;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+}
+
+.vol-charge-button__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-charge-button__label {
+  pointer-events: none;
+  font-size: var(--vol-text-micro);
+  font-weight: 600;
+}
+
+.vol-pause-resume-button {
+  pointer-events: auto;
+  cursor: pointer;
+  width: var(--vol-pause-resume-button-size, 64px);
+  height: var(--vol-pause-resume-button-size, 64px);
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  display: inline-flex;
+  position: relative;
+}
+
+.vol-pause-resume-button--running {
+  border-color: var(--vol-ui-success-border);
+}
+
+.vol-pause-resume-button--pressed {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  color: var(--vol-ui-on-brand);
+  transform: scale(0.94);
+}
+
+.vol-pause-resume-button__icon {
+  pointer-events: none;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+}
+
+.vol-pause-resume-button__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-pause-resume-button__counter {
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-label);
+  font-weight: 700;
+}

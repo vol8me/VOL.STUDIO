@@ -1,4 +1,4 @@
-﻿.vol-bar {
+.vol-bar {
   background: var(--vol-ui-surface-1);
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
@@ -277,113 +277,6 @@
   font-size: var(--vol-text-label);
 }
 
-.vol-selection-panel {
-  pointer-events: auto;
-  align-items: center;
-  gap: var(--vol-space-md);
-  padding: var(--vol-space-md);
-  box-sizing: border-box;
-  background: var(--vol-ui-overlay-panel);
-  border: 1px solid var(--vol-ui-border-strong);
-  border-radius: var(--vol-radius-md);
-  width: 100%;
-  min-height: 230px;
-  display: flex;
-  position: relative;
-}
-
-.vol-selection-panel__empty-state {
-  text-align: center;
-  width: 100%;
-  font-family: var(--vol-font-family);
-  color: var(--vol-ui-text-muted);
-  font-size: var(--vol-text-body);
-  display: none;
-}
-
-.vol-selection-panel--empty .vol-selection-panel__empty-state {
-  display: block;
-}
-
-.vol-selection-panel__portrait {
-  background: var(--vol-ui-surface-2);
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-sm);
-  flex-shrink: 0;
-  justify-content: center;
-  align-items: center;
-  width: 56px;
-  height: 56px;
-  font-size: var(--vol-text-display);
-  display: flex;
-}
-
-.vol-selection-panel__body {
-  justify-content: center;
-  gap: var(--vol-space-sm);
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  display: flex;
-}
-
-.vol-selection-panel--empty .vol-selection-panel__portrait,
-.vol-selection-panel--empty .vol-selection-panel__body {
-  display: none;
-}
-
-.vol-selection-panel--transition .vol-selection-panel__portrait,
-.vol-selection-panel--transition .vol-selection-panel__body,
-.vol-selection-panel--transition .vol-selection-panel__empty-state {
-  animation: vol-selection-panel-fade var(--vol-transition-medium);
-}
-
-@keyframes vol-selection-panel-fade {
-  0% {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.vol-selection-panel__name {
-  font-family: var(--vol-font-family);
-  color: var(--vol-ui-text);
-  font-size: var(--vol-text-lead);
-  font-weight: 700;
-}
-
 .vol-selection-panel__health .vol-bar {
   height: 14px;
-}
-
-.vol-selection-panel__stats {
-  flex-direction: column;
-  gap: 2px;
-  display: flex;
-}
-
-.vol-selection-panel__stat-row {
-  justify-content: space-between;
-  font-size: var(--vol-text-label);
-  display: flex;
-}
-
-.vol-selection-panel__stat-label {
-  color: var(--vol-ui-text-muted);
-}
-
-.vol-selection-panel__stat-value {
-  color: var(--vol-ui-text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-.vol-selection-panel__actions {
-  gap: var(--vol-space-xs);
-  flex-wrap: wrap;
-  display: flex;
 }

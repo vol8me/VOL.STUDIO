@@ -1,4 +1,146 @@
-/* Kart seçim panelleri — level-up ve dükkan. Metin-only kartlar; nadirlik
+.vol-card-stack {
+  pointer-events: auto;
+  align-items: center;
+  gap: var(--vol-space-lg);
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+}
+
+.vol-card-stack__stack {
+  width: 100%;
+  max-width: 320px;
+  height: 220px;
+  position: relative;
+}
+
+.vol-card-stack__card {
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-md);
+  box-shadow: 0 8px 24px var(--vol-ui-scrim);
+  touch-action: none;
+  transform: scale(calc(1 - var(--vol-card-stack-depth, 0) * 0.05))
+    translateY(calc(var(--vol-card-stack-depth, 0) * 10px));
+  transition:
+    transform var(--vol-transition-medium),
+    box-shadow var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  display: flex;
+  position: absolute;
+  inset: 0;
+}
+
+.vol-card-stack__card:last-child {
+  cursor: grab;
+  z-index: 3;
+}
+
+.vol-card-stack__card--dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+.vol-card-stack__card--flying {
+  transition: transform 0.35s ease-out;
+}
+
+.vol-card-stack__card--swipe-right {
+  border-color: var(--vol-ui-success-border);
+  box-shadow:
+    0 8px 24px var(--vol-ui-scrim),
+    0 0 0 3px var(--vol-ui-success-subtle);
+}
+
+.vol-card-stack__card--swipe-left {
+  border-color: var(--vol-ui-danger-border);
+  box-shadow:
+    0 8px 24px var(--vol-ui-scrim),
+    0 0 0 3px var(--vol-ui-danger-subtle);
+}
+
+.vol-card-stack__hint {
+  top: var(--vol-space-md);
+  opacity: 0;
+  pointer-events: none;
+  border: 3px solid;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  transition: opacity 0.1s linear;
+  display: flex;
+  position: absolute;
+}
+
+.vol-card-stack__hint svg {
+  width: 22px;
+  height: 22px;
+}
+
+.vol-card-stack__hint--accept {
+  right: var(--vol-space-md);
+  color: var(--vol-ui-success-border);
+  border-color: var(--vol-ui-success-border);
+  background: var(--vol-ui-success-subtle);
+}
+
+.vol-card-stack__hint--reject {
+  left: var(--vol-space-md);
+  color: var(--vol-ui-danger-border);
+  border-color: var(--vol-ui-danger-border);
+  background: var(--vol-ui-danger-subtle);
+}
+
+.vol-card-stack__actions {
+  gap: var(--vol-space-lg);
+  display: flex;
+}
+
+.vol-card-stack__action {
+  pointer-events: auto;
+  cursor: pointer;
+  width: 52px;
+  height: 52px;
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  transition:
+    border-color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast),
+    color var(--vol-transition-fast);
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.vol-card-stack__action svg {
+  width: 22px;
+  height: 22px;
+}
+
+.vol-card-stack__action:hover {
+  transform: scale(1.08);
+}
+
+.vol-card-stack__action:active {
+  transform: scale(0.94);
+}
+
+.vol-card-stack__action--reject:hover {
+  border-color: var(--vol-ui-danger-border);
+  background: var(--vol-ui-danger-subtle);
+  color: var(--vol-ui-danger-border);
+}
+
+.vol-card-stack__action--accept:hover {
+  border-color: var(--vol-ui-success-border);
+  background: var(--vol-ui-success-subtle);
+  color: var(--vol-ui-success-border);
+} /* Kart seçim panelleri — level-up ve dükkan. Metin-only kartlar; nadirlik
    farkı yalnızca renk/kenarlıkla verilir, ikon veya görsel varlık yoktur. */
 
 .vol-card-picker {

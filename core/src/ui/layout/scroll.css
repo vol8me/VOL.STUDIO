@@ -1,0 +1,147 @@
+.vol-dual-scroll {
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  background: var(--vol-ui-surface-1);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.vol-dual-scroll--dragging {
+  cursor: grabbing;
+}
+
+.vol-dual-scroll__content {
+  position: relative;
+}
+
+.vol-carousel {
+  pointer-events: auto;
+  gap: var(--vol-space-md);
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+  position: relative;
+}
+
+.vol-carousel__viewport {
+  border-radius: var(--vol-radius-md);
+  touch-action: pan-y;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.vol-carousel__track {
+  width: 100%;
+  display: flex;
+}
+
+.vol-carousel__track--animated {
+  transition: transform var(--vol-transition-medium);
+}
+
+.vol-carousel__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  display: flex;
+}
+
+.vol-carousel__arrow {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-overlay-panel);
+  border: 1px solid var(--vol-ui-border-soft);
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-carousel__arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vol-carousel__arrow:hover {
+  background: var(--vol-ui-hover-fill);
+  border-color: var(--vol-ui-border-strong);
+}
+
+.vol-carousel__arrow--left {
+  left: var(--vol-space-sm);
+}
+
+.vol-carousel__arrow--right {
+  right: var(--vol-space-sm);
+}
+
+.vol-carousel__dots {
+  justify-content: center;
+  gap: var(--vol-space-sm);
+  display: flex;
+}
+
+/*
+ * Sayfa noktası. Sistemdeki EN KÜÇÜK dokunma hedefiydi (8×8 px).
+ *
+ * Görsel nokta `::before`e taşındı; buton kutusu dokunmatikte gerçekten
+ * 44px'e büyür. Bu, `.vol-button`da reddedilen "görünmez ::before overlay"
+ * tekniğinin TERSİ: orada sözde-eleman elemanın DIŞINA taşıp komşularla
+ * örtüşüyordu; burada gerçek kutu büyüyor, sözde-eleman İÇERİDE kalıyor —
+ * `.vol-carousel__dots`un flex `gap`i kardeşleri otomatik aralar.
+ */
+.vol-carousel__dot {
+  pointer-events: auto;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  background: 0 0;
+  width: 8px;
+  height: 8px;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-carousel__dot::before {
+  content: '';
+  background: var(--vol-ui-border-strong);
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  transition:
+    background-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast);
+  display: block;
+}
+
+.vol-carousel__dot:hover::before {
+  background: var(--vol-ui-text-muted);
+}
+
+.vol-carousel__dot--active::before {
+  background: var(--vol-ui-brand-solid);
+  transform: scale(1.3);
+}

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readUiCss } from '../support/uiCss';
 import { MODAL_TRANSITION_MS } from '../../src/ui/overlays/Confirm';
 import { TOAST_FADE_OUT_MS } from '../../src/ui/overlays/Toast';
 import { MIN_NODE_WIDTH, NODE_LABEL_FONT } from '../../src/ui/hud/SkillTree';
@@ -18,16 +17,12 @@ import { CARD_ENTER_ANIMATION_MS } from '../../src/ui/cards/CardTile';
  * - Teardown zamanlayıcıları CSS süresinden kısa olamaz.
  * - Geometrik değerler (genişlik, font) birebir eşit olmalı.
  */
-function readCss(name: string): string {
-  return readFileSync(resolve(import.meta.dirname, '../../src/ui', name), 'utf-8');
-}
-
-const theme = readCss('theme.css');
-const overlays = readCss('overlays.css');
-const hud = readCss('hud.css');
-const primitiveChoices = readCss('primitive-choices.css');
-const dataBoards = readCss('data-boards.css');
-const cards = readCss('cards.css');
+const theme = readUiCss('theme.css');
+const overlays = readUiCss('overlays/overlays.css');
+const hud = readUiCss('hud/hud.css');
+const primitiveChoices = readUiCss('primitives/choices.css');
+const dataBoards = readUiCss('data/boards.css');
+const cards = readUiCss('cards/cards.css');
 
 /** `--vol-transition-medium: 0.24s ease` → 240 */
 function cssVarDurationMs(css: string, varName: string): number {

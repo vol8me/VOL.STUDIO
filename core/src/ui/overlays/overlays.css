@@ -1,4 +1,4 @@
-﻿.vol-toast-container {
+.vol-toast-container {
   pointer-events: none;
   bottom: var(--vol-space-xl);
   align-items: center;
@@ -590,135 +590,6 @@
   transform: translateY(0);
 }
 
-.vol-select {
-  pointer-events: auto;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--vol-space-sm);
-  width: 100%;
-  font-family: var(--vol-font-family);
-  color: var(--vol-ui-text);
-  background: var(--vol-ui-surface-1);
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-sm);
-  padding: var(--vol-space-sm) var(--vol-space-md);
-  cursor: pointer;
-  transition:
-    border-color var(--vol-transition-fast),
-    background-color var(--vol-transition-fast),
-    box-shadow var(--vol-transition-fast);
-  font-size: var(--vol-text-lead);
-  display: flex;
-
-  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
-     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
-  min-height: var(--vol-hit-target-min, auto);
-  min-width: var(--vol-hit-target-min, auto);
-}
-
-.vol-select:hover {
-  border-color: var(--vol-ui-border-strong);
-}
-
-.vol-select:focus-visible {
-  outline: 2px solid var(--vol-ui-focus-ring);
-  outline-offset: 2px;
-}
-
-.vol-select[aria-expanded='true'] {
-  border-color: var(--vol-ui-brand-border);
-  background: var(--vol-ui-brand-subtle);
-}
-
-.vol-select:disabled {
-  cursor: default;
-  background: var(--vol-ui-disabled-fill);
-  border-color: var(--vol-ui-disabled-border);
-  color: var(--vol-ui-disabled-text);
-}
-
-.vol-select__label {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.vol-select__caret {
-  color: var(--vol-ui-icon);
-  transition: transform var(--vol-transition-fast);
-  flex-shrink: 0;
-}
-
-.vol-select[aria-expanded='true'] .vol-select__caret {
-  transform: scaleY(-1);
-}
-
-.vol-select__option {
-  pointer-events: auto;
-  text-align: left;
-  font-family: var(--vol-font-family);
-  color: var(--vol-ui-text);
-  border-radius: var(--vol-radius-sm);
-  padding: var(--vol-space-sm) var(--vol-space-md);
-  cursor: pointer;
-  background: 0 0;
-  border: none;
-  font-size: var(--vol-text-body);
-
-  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
-     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
-  min-height: var(--vol-hit-target-min, auto);
-  min-width: var(--vol-hit-target-min, auto);
-}
-
-.vol-select__option:hover {
-  background: var(--vol-ui-hover-fill);
-}
-
-.vol-select__option[aria-selected='true'] {
-  color: var(--vol-ui-brand-hover);
-  background: var(--vol-ui-brand-subtle);
-}
-
-.vol-select__option--danger {
-  color: var(--vol-ui-danger-border);
-}
-
-.vol-select__option--danger[aria-selected='true'] {
-  color: var(--vol-ui-danger-border);
-  background: var(--vol-ui-danger-subtle);
-}
-
-.vol-select__option--success {
-  color: var(--vol-ui-success-border);
-}
-
-.vol-select__option--success[aria-selected='true'] {
-  color: var(--vol-ui-success-border);
-  background: var(--vol-ui-success-subtle);
-}
-
-.vol-select__option--warning {
-  color: var(--vol-ui-accent-solid);
-}
-
-.vol-select__option--warning[aria-selected='true'] {
-  color: var(--vol-ui-accent-solid);
-  background: var(--vol-ui-brand-subtle);
-}
-
-.vol-select__label--danger {
-  color: var(--vol-ui-danger-border);
-}
-
-.vol-select__label--success {
-  color: var(--vol-ui-success-border);
-}
-
-.vol-select__label--warning {
-  color: var(--vol-ui-accent-solid);
-}
-
 .vol-context-menu__item {
   pointer-events: auto;
   align-items: center;
@@ -883,4 +754,115 @@
   font-family: monospace;
   font-size: var(--vol-text-body);
   overflow-wrap: anywhere;
+}
+
+.vol-radial-menu {
+  z-index: var(--vol-z-float);
+  pointer-events: none;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  transition:
+    opacity 0.16s,
+    transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: fixed;
+  transform: scale(0.7);
+}
+
+.vol-radial-menu--visible {
+  pointer-events: auto;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.vol-radial-menu__center {
+  background: var(--vol-ui-overlay-panel);
+  border: 2px solid var(--vol-ui-border-strong);
+  width: 56px;
+  height: 56px;
+  color: var(--vol-ui-icon);
+  pointer-events: none;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.vol-radial-menu__center-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+}
+
+.vol-radial-menu__center-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-radial-menu__item {
+  pointer-events: auto;
+  cursor: pointer;
+  background: var(--vol-ui-surface-1);
+  border: 2px solid var(--vol-ui-border-strong);
+  width: 64px;
+  height: 64px;
+  color: var(--vol-ui-text-secondary);
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast),
+    transform var(--vol-transition-fast),
+    color var(--vol-transition-fast);
+  border-radius: 50%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  margin: -32px 0 0 -32px;
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.vol-radial-menu__item:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.vol-radial-menu__item--hovered {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  color: var(--vol-ui-on-brand);
+  z-index: 1;
+  transform: scale(1.12);
+}
+
+.vol-radial-menu__item-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+}
+
+.vol-radial-menu__item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vol-radial-menu__item-label {
+  text-align: center;
+  font-size: var(--vol-text-micro);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.vol-popover {
+  box-sizing: border-box;
+  gap: var(--vol-space-sm);
+  min-width: 200px;
+  padding: var(--vol-space-sm);
+  font-family: var(--vol-font-family-body);
 }

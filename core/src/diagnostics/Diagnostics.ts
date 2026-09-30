@@ -1,4 +1,4 @@
-import '../ui/debug.css';
+import './diagnostics.css';
 import { FrameRateSampler, RollingWindow } from '../time/FrameRateSampler';
 import { NoopTransport, type DiagnosticsTransport } from './transport';
 import type {

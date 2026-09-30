@@ -41,7 +41,10 @@ describe('Button', () => {
     // `[hidden] { display: none }` UA stilini ezer; `hidden = true` tek
     // başına GÖRSEL olarak gizlemez — bu override'ın primitives.css'te
     // gerçekten var olduğunu doğrular (bkz. .vol-card-picker[hidden] emsali).
-    const css = readFileSync(resolve(import.meta.dirname, '../../src/ui/primitives.css'), 'utf-8');
+    const css = readFileSync(
+      resolve(import.meta.dirname, '../../src/ui/primitives/primitives.css'),
+      'utf-8',
+    );
     expect(css).toMatch(/\.vol-button\[hidden\]\s*\{\s*display:\s*none;?\s*\}/);
   });
 

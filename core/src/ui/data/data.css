@@ -1,0 +1,205 @@
+/*
+ * Tuş atama listesi. Bağ düğmesi SABİT genişliktir: yakalama sırasında metin
+ * "Space"ten "Tuşa bas…"a döner ve sabitlenmezse satırın tamamı kayar.
+ */
+.vol-key-bindings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-xs);
+}
+
+.vol-key-bindings__row {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+}
+
+.vol-key-bindings__label {
+  flex: 1;
+  color: var(--vol-ui-text);
+}
+
+.vol-key-bindings__binding {
+  min-width: 9ch;
+  min-height: var(--vol-hit-target-min, 32px);
+  padding: 4px var(--vol-space-sm);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-surface-2);
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  text-align: center;
+  cursor: pointer;
+}
+
+.vol-key-bindings__binding:disabled {
+  border-color: var(--vol-ui-disabled-border);
+  color: var(--vol-ui-text-muted);
+  cursor: default;
+}
+
+.vol-key-bindings__binding[data-capturing='true'] {
+  border-color: var(--vol-ui-brand-border);
+  color: var(--vol-ui-brand-solid);
+}
+
+.vol-key-bindings__reset {
+  min-height: var(--vol-hit-target-min, 32px);
+  min-width: var(--vol-hit-target-min, auto);
+  padding: 4px var(--vol-space-sm);
+  border: 1px solid transparent;
+  border-radius: var(--vol-radius-sm);
+  background: none;
+  color: var(--vol-ui-text-secondary);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label);
+  cursor: pointer;
+}
+
+.vol-key-bindings__reset:hover {
+  color: var(--vol-ui-text);
+}
+
+.vol-datatable {
+  pointer-events: auto;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  width: 100%;
+  overflow-x: auto;
+}
+
+.vol-datatable--virtualized {
+  overflow-y: auto;
+}
+
+.vol-datatable__header-cell {
+  background: var(--vol-ui-surface-1);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  text-align: left;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.vol-datatable__header-cell--checkbox {
+  width: 36px;
+}
+
+.vol-datatable--virtualized .vol-datatable__header-cell {
+  z-index: 1;
+  position: sticky;
+  top: 0;
+}
+
+.vol-datatable__spacer,
+.vol-datatable__spacer > td {
+  background: 0 0;
+  border: 0;
+  padding: 0;
+}
+
+.vol-datatable__table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-body);
+}
+
+.vol-datatable__sort-button {
+  pointer-events: auto;
+  cursor: pointer;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--vol-space-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  width: 100%;
+  color: var(--vol-ui-text-secondary);
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  text-align: inherit;
+  transition:
+    color var(--vol-transition-fast),
+    background-color var(--vol-transition-fast);
+  background: 0 0;
+  border: none;
+  font-family: inherit;
+  font-size: var(--vol-text-label);
+  font-weight: 700;
+  display: flex;
+
+  /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
+     bir değer taşır; masaüstünde `auto`ya düşer ve görünüm etkilenmez. */
+  min-height: var(--vol-hit-target-min, auto);
+  min-width: var(--vol-hit-target-min, auto);
+}
+
+.vol-datatable__sort-button:hover {
+  color: var(--vol-ui-text);
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-datatable__sort-button:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.vol-datatable__sort-indicator {
+  width: 10px;
+  color: var(--vol-ui-brand-hover);
+  flex-shrink: 0;
+  font-size: var(--vol-text-micro);
+}
+
+.vol-datatable__row {
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  transition: background-color var(--vol-transition-fast);
+}
+
+.vol-datatable__row:last-child {
+  border-bottom: none;
+}
+
+.vol-datatable__row--selectable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.vol-datatable__row--selectable:hover {
+  background: var(--vol-ui-hover-fill);
+}
+
+.vol-datatable__row--selected {
+  background: var(--vol-ui-selected-fill);
+}
+
+.vol-datatable__cell {
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  color: var(--vol-ui-text);
+}
+
+.vol-datatable__cell--checkbox {
+  width: 36px;
+}
+
+.vol-datatable__checkbox {
+  border: 1px solid var(--vol-ui-border-soft);
+  background: var(--vol-ui-surface-1);
+  width: 16px;
+  height: 16px;
+  transition:
+    background-color var(--vol-transition-fast),
+    border-color var(--vol-transition-fast);
+  border-radius: 4px;
+  display: inline-flex;
+}
+
+.vol-datatable__row--selected .vol-datatable__checkbox {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+}
+
+.vol-datatable__empty {
+  padding: var(--vol-space-xl);
+  text-align: center;
+  color: var(--vol-ui-text-muted);
+}
