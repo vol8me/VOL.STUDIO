@@ -1,0 +1,29 @@
+import { defineConfig } from 'vitest/config';
+import { resolve } from 'node:path';
+import { loadQualityConfig } from '../../scripts/quality/config.mjs';
+import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
+
+/** Kapsam eşikleri kök `quality.json`dan okunur; burada sayı yazılmaz. */
+const quality = loadQualityConfig(new URL('../../quality.json', import.meta.url)) as {
+  packages: Record<string, Record<string, number>>;
+};
+
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'lcov'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/index.ts', 'src/**/*.d.ts'],
+      thresholds: quality.packages['@volstudio/vol-test'],
+    },
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.test.ts'],
+    exclude: ['node_modules', 'dist'],
+  },
+  resolve: {
+    alias: [...coreAliases(), { find: '@', replacement: resolve(import.meta.dirname, './src') }],
+  },
+});

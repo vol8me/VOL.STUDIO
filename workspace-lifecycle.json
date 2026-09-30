@@ -30,6 +30,11 @@
       "packageName": "@volstudio/tauri-v2",
       "path": "tauri-v2",
       "status": "active"
+    },
+    {
+      "packageName": "@volstudio/vol-test",
+      "path": "games/vol-test",
+      "status": "active"
     }
   ]
 }

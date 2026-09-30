@@ -1,0 +1,40 @@
+import { defineConfig, devices } from '@playwright/test';
+
+const PORT = Number(process.env.VOL_TEST_E2E_PORT ?? 5186);
+const BASE_URL = `http://127.0.0.1:${PORT}`;
+
+/**
+ * Gönderilen build (`vite preview`) gerçek tarayıcıda açılır. WebKit, Linux ve
+ * Steam Deck kabuğundaki WebView motorudur.
+ */
+export default defineConfig({
+  testDir: './tests/e2e',
+  fullyParallel: false,
+  workers: 1,
+  forbidOnly: true,
+  reporter: [['list']],
+  timeout: 60_000,
+  use: {
+    baseURL: BASE_URL,
+    trace: 'retain-on-failure',
+    viewport: { width: 1280, height: 800 },
+    deviceScaleFactor: 1,
+    locale: 'tr-TR',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 800 } },
+    },
+  ],
+  webServer: {
+    command: `pnpm exec vite preview --port ${PORT} --strictPort --host 127.0.0.1`,
+    url: BASE_URL,
+    reuseExistingServer: false,
+    timeout: 60_000,
+  },
+});

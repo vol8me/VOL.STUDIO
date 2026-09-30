@@ -1,0 +1,33 @@
+{
+  "app": {
+    "title": "VOL.TEST",
+    "fatal": "VOL.TEST başlatılamadı"
+  },
+  "hud": {
+    "boost": "Hızlanma deposu",
+    "map": "Harita",
+    "fullscreen": "Tam ekran",
+    "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",
+    "forward": "İleri",
+    "reverse": "Geri"
+  },
+  "controls": {
+    "move": "Hareket",
+    "aim": "Nişan",
+    "fire": "Ateş",
+    "boost": "Hızlanma",
+    "zoom": "Yakınlaştır",
+    "grid": "Izgara",
+    "pause": "Duraklat"
+  },
+  "touch": {
+    "boost": "Hızlan",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "pause": "Duraklat"
+  },
+  "pause": {
+    "title": "Duraklatıldı",
+    "resume": "Devam et"
+  }
+}

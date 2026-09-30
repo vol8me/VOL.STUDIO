@@ -1,0 +1,33 @@
+{
+  "app": {
+    "title": "VOL.TEST",
+    "fatal": "VOL.TEST failed to start"
+  },
+  "hud": {
+    "boost": "Boost reserve",
+    "map": "Map",
+    "fullscreen": "Fullscreen",
+    "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",
+    "forward": "Forward",
+    "reverse": "Reverse"
+  },
+  "controls": {
+    "move": "Move",
+    "aim": "Aim",
+    "fire": "Fire",
+    "boost": "Boost",
+    "zoom": "Zoom",
+    "grid": "Grid",
+    "pause": "Pause"
+  },
+  "touch": {
+    "boost": "Boost",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "pause": "Pause"
+  },
+  "pause": {
+    "title": "Paused",
+    "resume": "Resume"
+  }
+}

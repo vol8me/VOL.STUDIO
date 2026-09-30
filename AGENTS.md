@@ -29,6 +29,7 @@ yapısıyla güncellenir.
 | `devtools/deck/`        | `@volstudio/deck`        | Steam Deck ölçüm sondası ve devkit otomasyonu                                          |
 | `devtools/pen.dev/`     | `@volstudio/pen.dev`     | Pencil kaynağından rig export'u                                                        |
 | `devtools/vol-ui/`      | `@volstudio/vol-ui`      | CORE UI kataloğunun vitrini ve piksel temelli görsel sözleşmesi                        |
+| `games/vol-test/`       | `@volstudio/vol-test`    | Monorepo'nun test oyunu: CORE ve kabuğu gerçek oyunla her platformda uçtan uca sınar   |
 
 Paket durumu (`active`/`frozen`) `workspace-lifecycle.json`dadır; rutin
 kapılar yalnız `active` paketleri koşar. Yeni oyun `games/<oyun>/` altına

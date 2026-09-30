@@ -44,6 +44,12 @@
       "statements": 93,
       "branches": 90,
       "functions": 100
+    },
+    "@volstudio/vol-test": {
+      "lines": 96,
+      "statements": 96,
+      "branches": 90,
+      "functions": 95
     }
   },
   "coverageShape": {
@@ -59,15 +65,20 @@
     }
   },
   "bundles": {
-    "$comment": "vol-ui vitrini CORE UI'ın gönderilen ağırlığını taşır: ölçülen app 137.6, css 19.8 KB (gzip 9).",
+    "$comment": "vol-ui vitrini CORE UI'ın gönderilen ağırlığını taşır: ölçülen app 137.6, css 19.8 KB (gzip 9). vol-test: app 48.1, vendor (Phaser) 345.1, css 18.1 KB gzip.",
     "devtools/vol-ui": {
       "app": 150,
       "vendor": 1,
       "css": 24
+    },
+    "games/vol-test": {
+      "app": 60,
+      "vendor": 360,
+      "css": 21
     }
   },
   "scaling": {
-    "$comment": "CORE uzamsal indeks 128→512 varlık oranı ~3.3 ölçüldü; karesel büyüme ~16 olur.",
+    "$comment": "CORE uzamsal indeks 128→512 varlık oranı ~3.3; vol-test mermi adımı 128→512 oranı ~3.7 ölçüldü. Karesel büyüme ~16 olur.",
     "core": {
       "$measure": {
         "script": "scripts/scaling.ts",
@@ -76,6 +87,15 @@
         "value": "ms"
       },
       "spatial512Over128": 6.0
+    },
+    "games/vol-test": {
+      "$measure": {
+        "script": "scripts/scaling.ts",
+        "series": "projectiles",
+        "input": "count",
+        "value": "ms"
+      },
+      "projectiles512Over128": 6.0
     }
   }
 }

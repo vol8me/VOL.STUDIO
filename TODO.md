@@ -13,11 +13,10 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 Analiz: yerel sertleştirme raporu §0.4. Uygulama analizin onayından sonra
 başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
-- [ ] **[P1] VT0 — Analiz onayı ve ürün ikonu onayı.**
-- [ ] **[P1] VT1 — Paket iskeleti.** games/vol-test; web açılışı, i18n, kapı
-      girdileri. Kapanır: `pnpm quick` ve paket testleri yeşil.
-- [ ] **[P1] VT2 — Tauri kabuğu (Linux).** Kimlik `com.volstudio.voltest`, ikon,
-      Cargo üyeliği. Kapanır: Rust kapısı yeşil; host'ta açılış ekran görüntüsü.
+- [ ] **[P1] VT2 — Tauri kabuğu (Linux).** Kimlik `com.volstudio.voltest`, ikon
+      tank SVG parçalarından üretilir (birleşik çizim üreticisi geri gelir),
+      Cargo üyeliği, `gen/schemas` yoksayılır. Kapanır: Rust kapısı yeşil;
+      host'ta açılış ekran görüntüsü.
 - [ ] **[P1] VT3 — Açılış servisleri.** Oturum, ekran kipi, girdi ve glif,
       metin girişi, menü süzgeci, kapsamlı kayıt, kapanış ve uyku boşaltması,
       ses, titreşim, Steamworks, Android geri tuşu ve yön, tanı. Tüketilmeyen
@@ -26,6 +25,10 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
       Kapanır: bağlı iki cihazda kurulum, açılış, ekran görüntüsü.
 - [ ] **[P1] VT5 — Steam Deck.** steamrt4 paketi ve `pnpm deck`. Kapanır: glibc
       bekçisi; bağlı Deck'te açılış, ekran görüntüsü ve kare ölçümü.
+- [ ] **[P1] VT-H2 — VOL.TEST cila turu (cihazda).** Hissiyat zarfı cihazda
+      doğrulanır (Deck 90 Hz, Android dokunmatik), titreşim cihazda denenir;
+      bulgular zarfa ve ayara işlenir. Kapanır: her cihazdan ekran görüntüsü
+      ve kullanıcının his onayı.
 - [ ] **[P2] VT6 — Windows.** Yapılandırma ve kod yolu. Kapanır: yapılandırma
       testleri; paket yerelde üretilemediği için "ölçülmedi".
 - [ ] **[P1] VT7 — Yeni oyun iskeleti.** VOL.TEST'ten çıkarılır
@@ -72,6 +75,12 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
 - [ ] **[P1] E1 — Tek girdi hakemi ve tek kol kaynağı.** Kare başına tek kol
       yoklaması ve tek hakem; testli.
+- [ ] **[P2] I1 — Klavye basışı mandalı.** CORE `PCController` tuşu kare başında
+      `isDown` ile okur; bir kareden kısa basış kaybolur (düşük FPS'te hızlı
+      dokunuş). `VirtualActionSource` gibi okunmamış basış bir kare yaşar; testli.
+- [ ] **[P2] H1 — Şiddet parametreli titreşim.** CORE `vibrate` yalnız anlamsal
+      desen alır; kolun güçlü/zayıf motoru ve çarpma şiddeti taşınamıyor.
+      Desenle birlikte şiddet (0–1) ve süre; tüm arka uçlarda testli.
 - [ ] **[P3] A20 — Titreşim darbeleri tek zamanlayıcı iş parçacığından yürür.**
 - [ ] **[P3] S7 — Araç zinciri.** ESLint, Prettier, TypeScript sürüm ve
       yapılandırması.
@@ -85,6 +94,9 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
 ## Kapatılanlar
 
+- [x] VT-H — VOL.TEST sertleştirme: katı cisim fiziği (paylaşılan motor gücü, direksiyon önceliği, hıza bağlı dönme direnci), süspansiyon, oyun/UI renk ayrımı, ayarlar tek yerde, titreşim, değişmez + hissiyat + kare hızı testleri, E2E kol ve dokunmatik.
+- [x] VT1 — VOL.TEST oyun çekirdeği: boş çöl dünyası, organik-robotik SVG tank, arachnid kamerası, yalnız CORE bileşenli HUD, klavye/kol/dokunmatik, kapılar ve E2E.
+- [x] VT0 — VOL.TEST analizi ve kapsamı onaylandı; ikon onaylı.
 - [x] Kod yorumlarında bağlam temizliği; bekçi `scripts/quality/contextComments.mjs`.
 - [x] SC — Kök ve repo temizliği; kök girdileri gerekçesiyle kilitli (`scripts/quality/rootEntries.mjs`).
 - [x] SH5 — audio-synth: v1 emekli (K7), kernel katmanı, testler kaynağın aynası, veri corpus/records/locks altında ve yeniden yayımlandı (K6).

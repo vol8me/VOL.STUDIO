@@ -1,0 +1,146 @@
+/*
+ * HUD yerleşimi. Bileşenlerin görünümü CORE'undur; bu dosya konum, boyut ve
+ * aralık verir. Metin taşıyan bölgeler oyun zemininden bağımsız okunsun diye
+ * UI yüzey tokenıyla (`--vol-ui-overlay-panel`) zeminlenir: HUD yalnız UI
+ * renklerini kullanır, oyun paletine dokunmaz. Güvenli alan payları
+ * (`--vol-safe-*`) çentikli ekranlarda HUD'u kamera deliğinden uzak tutar.
+ */
+.vt-hud {
+  --vt-edge: 16px;
+  --vt-map: 168px;
+  --vt-chip-padding: 6px 10px;
+
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.vt-hud__title,
+.vt-hud__telemetry,
+.vt-hud__hints {
+  padding: var(--vt-chip-padding);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+}
+
+.vt-hud__title {
+  position: absolute;
+  top: calc(var(--vol-safe-top) + 12px);
+  left: calc(var(--vol-safe-left) + 20px);
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+}
+
+.vt-hud__boost-bar {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--vol-safe-left) + 24px);
+  width: 14px;
+  height: min(34vh, 300px);
+  transform: translateY(-50%);
+}
+
+.vt-hud__map {
+  position: absolute;
+  top: calc(var(--vol-safe-top) + 56px);
+  right: calc(var(--vol-safe-right) + var(--vt-edge));
+}
+
+.vt-hud__fullscreen {
+  pointer-events: auto;
+  position: absolute;
+  top: calc(var(--vol-safe-top) + 10px);
+  right: calc(var(--vol-safe-right) + var(--vt-edge));
+}
+
+.vt-hud__telemetry {
+  position: absolute;
+  right: calc(var(--vol-safe-right) + var(--vt-edge));
+  bottom: calc(var(--vol-safe-bottom) + 44px);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+.vt-hud__hints {
+  position: absolute;
+  bottom: calc(var(--vol-safe-bottom) + var(--vt-edge));
+  left: calc(var(--vol-safe-left) + 20px);
+  display: grid;
+  gap: 4px;
+}
+
+.vt-hud__hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vt-hud__hint .vol-glyph {
+  height: 22px;
+}
+
+.vt-hud__hint > :last-child {
+  margin-left: 6px;
+}
+
+.vt-hud__hints[hidden],
+.vt-hud__touch[hidden] {
+  display: none;
+}
+
+.vt-hud__touch > * {
+  pointer-events: auto;
+  touch-action: none;
+  position: absolute;
+}
+
+.vt-hud__pause {
+  top: calc(var(--vol-safe-top) + 10px);
+  left: 50%;
+  translate: -50% 0;
+}
+
+.vt-hud__boost {
+  right: calc(var(--vol-safe-right) + 28px);
+  bottom: calc(var(--vol-safe-bottom) + 64px);
+}
+
+/* Zoom düğmeleri harita sütununun solunda, haritayla aynı hizada. */
+.vt-hud__zoom-in,
+.vt-hud__zoom-out {
+  right: calc(var(--vol-safe-right) + var(--vt-edge) + var(--vt-map) + 12px);
+}
+
+.vt-hud__zoom-in {
+  top: calc(var(--vol-safe-top) + 56px);
+}
+
+.vt-hud__zoom-out {
+  top: calc(var(--vol-safe-top) + 112px);
+}
+
+/* Dokunmatikte sağ sütun düğmelerindir; telemetri başlığın altına geçer. */
+.vt-hud[data-mode='touch'] .vt-hud__telemetry {
+  inset: calc(var(--vol-safe-top) + 56px) auto auto calc(var(--vol-safe-left) + 20px);
+}
+
+.vt-hud[data-mode='touch'] .vt-hud__boost-bar {
+  top: auto;
+  bottom: calc(var(--vol-safe-bottom) + 24px);
+  height: min(28vh, 200px);
+  transform: none;
+}
+
+@media (height <= 520px) {
+  .vt-hud {
+    --vt-map: 120px;
+  }
+
+  .vt-hud__map .vol-minimap__canvas {
+    width: var(--vt-map);
+    height: var(--vt-map);
+  }
+}

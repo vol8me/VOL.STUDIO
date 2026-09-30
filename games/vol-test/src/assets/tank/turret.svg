@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="24" viewBox="0 0 44 24">
+  <defs>
+    <radialGradient id="dome" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#8aa2b8"/>
+      <stop offset="0.5" stop-color="#3f4f5f"/>
+      <stop offset="1" stop-color="#1b232b"/>
+    </radialGradient>
+    <linearGradient id="barrel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7890a6"/>
+      <stop offset="0.5" stop-color="#3a4856"/>
+      <stop offset="1" stop-color="#1c252e"/>
+    </linearGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#effffb"/>
+      <stop offset="0.45" stop-color="#52f5cf"/>
+      <stop offset="1" stop-color="#0c5c4b"/>
+    </radialGradient>
+  </defs>
+  <g fill="none" stroke-linecap="round">
+    <path d="M17.5 9.4C23 7.4 27.6 10.8 34 9.2" stroke="#3a1a26" stroke-width="2.2"/>
+    <path d="M17.5 9.4C23 7.4 27.6 10.8 34 9.2" stroke="#9a5468" stroke-width="1.2"/>
+    <path d="M17.5 14.6C23 16.6 27.6 13.2 34 14.8" stroke="#3a1a26" stroke-width="2.2"/>
+    <path d="M17.5 14.6C23 16.6 27.6 13.2 34 14.8" stroke="#9a5468" stroke-width="1.2"/>
+  </g>
+  <rect x="17" y="10" width="19" height="4" rx="1" fill="url(#barrel)" stroke="#0d1217" stroke-width=".7"/>
+  <rect x="23.6" y="9.3" width="1.8" height="5.4" rx=".4" fill="#26303a" stroke="#0d1217" stroke-width=".4"/>
+  <rect x="29.6" y="9.3" width="1.8" height="5.4" rx=".4" fill="#26303a" stroke="#0d1217" stroke-width=".4"/>
+  <rect x="35" y="8.5" width="6.4" height="7" rx="1.1" fill="#29333d" stroke="#0d1217" stroke-width=".7"/>
+  <g fill="#0b0f13">
+    <rect x="36.6" y="8.9" width=".9" height="1.8"/><rect x="36.6" y="13.3" width=".9" height="1.8"/>
+    <rect x="38.8" y="8.9" width=".9" height="1.8"/><rect x="38.8" y="13.3" width=".9" height="1.8"/>
+  </g>
+  <path d="M12 2.8L20 7.4V16.6L12 21.2L4 16.6V7.4Z" fill="url(#dome)" stroke="#0d1217" stroke-width=".9" stroke-linejoin="round"/>
+  <path d="M4.9 8.8C6.9 5.6 9.9 4.5 12 4.3C11.1 6.8 10.5 9.3 10.1 12C8.1 11 6.4 10.1 4.9 8.8Z" fill="#7a3d50" stroke="#1a0b12" stroke-width=".5"/>
+  <path d="M4.9 15.2C6.9 18.4 9.9 19.5 12 19.7C11.1 17.2 10.5 14.7 10.1 12C8.1 13 6.4 13.9 4.9 15.2Z" fill="#65303f" stroke="#1a0b12" stroke-width=".5"/>
+  <path d="M6 12H9.6" stroke="#52f5cf" stroke-opacity=".6" stroke-width=".5" stroke-linecap="round"/>
+  <circle cx="14.4" cy="12" r="2.9" fill="url(#lens)" stroke="#0d1217" stroke-width=".6"/>
+  <circle cx="13.6" cy="11.2" r=".75" fill="#ffffff" fill-opacity=".85"/>
+  <g fill="#9fb3c6"><circle cx="17.8" cy="8.6" r=".5"/><circle cx="17.8" cy="15.4" r=".5"/></g>
+</svg>

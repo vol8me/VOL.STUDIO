@@ -42,6 +42,8 @@ export const ACKNOWLEDGED = {
   'core/src/ui/cards/ShopPickerTypes.ts': 'Tip bildirimi — seçenek sözleşmesi.',
   'devtools/audio-synth/src/types.ts':
     'Sentez parametrelerinin tip bildirimi; her alan birimini ve varsayılanını taşır.',
+  'games/vol-test/src/config/tank.ts':
+    'Fizik ayar tablosu: her parametre birimini ve fiziksel anlamını taşır; his bu tablodan ayarlanır.',
 };
 
 /**
