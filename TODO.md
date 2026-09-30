@@ -17,16 +17,14 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       varlık kimliği, araç listesi, kontrol edilen araç, sahibi olan mermi ve
       olaylar, araç–araç çarpışması, görünüm kaydı (kimlik → görünüm).
       Kapanır: iki araçlı simülasyon ve sahne testleri.
-- [ ] **[P1] VT-R4 — Silah ve efekt gerçekçiliği.** Mermi gövdesi ve izi,
-      namlu ağzı patlaması ve zemin tozu, menzil sonu/duvar patlaması (şok
-      halkası, parlama, enkaz, kararmış zemin izi), gerçekçi palet izi
-      (palet baskısı dokusu), ateşte kamera okunurluğu bozmaz. Kapanır:
-      görünüm testleri ve ekran görüntüsü.
 - [ ] **[P1] VT-R5 — Ses.** audio-synth ile oyuna özgü, organik, gerçeğe yakın
       sesler (müzik ve ambiyans yok): motor, palet, taret servosu, top atışı,
       patlama, duvar çarpması, fren kayması, hızlanma, UI. Sürekli sesler
       hız/yükle modüle edilir. Kapanır: audio-synth yayın kapısı, verify,
       oyunda sesler ve kullanıcının dinleme onayı.
+- [ ] **[P3] VT-Q — Efekt kalitesi kalıcı.** Duraklatmada seçilen kademe
+      oturumdan oturuma korunur; Deck ve Android'de efekt FPS'i ölçülür ve
+      açılış kademesi ölçüme göre seçilir (VT4/VT5 ölçümüyle birlikte).
 - [ ] **[P3] VT-S — Test senaryoları.** Boş dünya korunur; açılıp kapanan
       senaryolar: slalom, hedef atış, fizik sandbox, çoklu tank. Her CORE
       yeteneği bir senaryoda sınanır.
@@ -105,6 +103,7 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ## Kapatılanlar
 
+- [x] VT-R4 — Mermi gövdesi, hale ve duman izi; namlu patlaması (ateş topu, yan jetler, toz, basınç halkası); patlama (parlama, şok halkası, parça, toz, duman, yanık); pabuç desenli sürekli palet izi; atışta kamera sarsılmaz, patlama sarsıntısı uzaklıkla söner; CORE GraphicsQuality ile iki kademe. Glow filtresi ölçülüp reddedildi.
 - [x] VT-R3 — Sabit CORE joystick'ler, fren ve hızlanma sütunu; tam ekran yalnız webde ve haritanın altında; minimap'te soluk ızgara; telefon yatayında örtüşmezlik E2E kapısı.
 - [x] VT-R2 — Fren (Space, kol B, dokunmatik düğme) paletleri kilitler; Stribeck statik/kinetik sürtünme, birleşik kayma elipsi, tork sınırlı aktarma ve motor freni; keskin dönüşte drift; 20 s yerde kalan kayma çizgisi; hissiyat zarfına fren, drift ve dönüşte fren ölçüleri eklendi.
 - [x] VT-C — VOL.TEST'teki genel parçalar CORE'a taşındı (`FollowCamera`, açı, gürültü, `ActionEdges`, katı cisim ve temaslar, `VirtualStickSource`, `poseSourceOf`); VOL.TEST hepsini CORE'dan tüketiyor.

@@ -6,10 +6,17 @@ import {
   shouldUseTouchControls,
   SimulationClock,
 } from '@volstudio/core';
+import { GraphicsQuality } from '@volstudio/core/graphics';
 import { isTauri } from '@/app/runtime';
 import { CAMERA } from '@/config/camera';
 import { FEEL } from '@/config/feel';
 import { GAME } from '@/config/game';
+import {
+  EFFECT_LEVELS,
+  initialEffectLevel,
+  type EffectLevel,
+  type EffectProfile,
+} from '@/config/quality';
 import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
 import { WORLD } from '@/config/world';
 import { Hud } from '@/hud/Hud';
@@ -59,8 +66,17 @@ export class WorldScene extends Phaser.Scene {
       partialStep: 'defer',
     });
 
+    const quality = this.scope.addDestroyable(
+      new GraphicsQuality<EffectLevel, EffectProfile>({
+        levels: EFFECT_LEVELS,
+        initial: initialEffectLevel(navigator.userAgent),
+      }),
+    );
     this.arena = this.scope.addDestroyable(new ArenaView(this, world));
-    this.effects = this.scope.addDestroyable(new EffectsView(this));
+    this.effects = this.scope.addDestroyable(new EffectsView(this, quality.getProfile()));
+    this.scope.addSubscription(
+      quality.onChange((_level, profile) => this.effects.applyProfile(profile)),
+    );
     this.vehicles = this.scope.addDestroyable(new VehicleViews(this));
     this.camera = new CameraRig(this, CAMERA, world.width, world.height);
     const start = this.sim.player.tank;
@@ -79,6 +95,7 @@ export class WorldScene extends Phaser.Scene {
         touch: shouldUseTouchControls(),
         fullscreen: !isTauri(),
         onResume: () => this.pause.resume(),
+        quality,
       }),
     );
     this.pause = this.scope.addDestroyable(
@@ -124,6 +141,7 @@ export class WorldScene extends Phaser.Scene {
       effects: this.effects,
       arena: this.arena,
       camera: this.camera.model,
+      listener: player.tank,
     });
 
     const alpha = paused ? 1 : this.clock.getInterpolationAlpha();

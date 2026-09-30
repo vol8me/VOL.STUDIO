@@ -25,4 +25,11 @@ export const PALETTE = {
   treadMark: 0x3a2c1e,
   /** Kayan paletin kumu sıyırıp ezdiği koyu çizgi. */
   skidMark: 0x2a1f15,
+  /** Patlamanın bıraktığı yanık kum. */
+  scorch: 0x241a12,
+  /** Havaya savrulan kum ve taş parçaları. */
+  debris: 0x7a6044,
+  /** Patlama parlamasının çekirdeği ve dış halesi. */
+  blastCore: 0xfff6e2,
+  blastHalo: 0xffb45c,
 } as const;

@@ -22,7 +22,10 @@ export const TEXTURE = {
   feeler: 'tank-feeler',
   flash: 'tank-flash',
   spark: 'fx-spark',
-  mark: 'fx-mark',
+  treadPrint: 'fx-tread-print',
+  scorch: 'fx-scorch',
+  blast: 'fx-blast',
+  ring: 'fx-ring',
   skid: 'fx-skid',
   treadBase: 'tank-tread-base',
 } as const;
@@ -84,8 +87,54 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
       g.fillRect(0, row, 16, 1);
     });
   });
-  canvasTexture(scene, TEXTURE.mark, 4, 8, (g) => {
-    g.fillStyle = '#ffffff';
-    g.fillRect(0, 0, 4, 8);
+  // Palet izinin bir pabuç adımı: x yolu, y paletin enidir. Sıkışmış kum
+  // tabanı, enine pabuç (grouser) çukuru ve kenarlara itilmiş kum sırtı.
+  canvasTexture(scene, TEXTURE.treadPrint, 8, 16, (g) => {
+    g.fillStyle = 'rgba(255,255,255,0.45)';
+    g.fillRect(0, 2, 8, 12);
+    g.fillStyle = 'rgba(255,255,255,1)';
+    g.fillRect(0, 3, 3, 10);
+    g.fillStyle = 'rgba(255,255,255,0.75)';
+    g.fillRect(0, 0, 8, 2);
+    g.fillRect(0, 14, 8, 2);
+  });
+  // Yanık: merkezde koyu, dışa doğru lekeli sönen iz. Lekeler sabit bir
+  // karma dizisiyle yerleşir; doku her açılışta aynıdır.
+  canvasTexture(scene, TEXTURE.scorch, 64, 64, (g) => {
+    const core = g.createRadialGradient(32, 32, 2, 32, 32, 30);
+    core.addColorStop(0, 'rgba(255,255,255,0.95)');
+    core.addColorStop(0.45, 'rgba(255,255,255,0.6)');
+    core.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = core;
+    g.fillRect(0, 0, 64, 64);
+    for (let index = 0; index < 18; index++) {
+      const angle = index * 2.39996;
+      const reach = 12 + ((index * 37) % 17);
+      const x = 32 + Math.cos(angle) * reach;
+      const y = 32 + Math.sin(angle) * reach;
+      const blot = g.createRadialGradient(x, y, 0, x, y, 4 + (index % 4));
+      blot.addColorStop(0, 'rgba(255,255,255,0.5)');
+      blot.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = blot;
+      g.fillRect(x - 8, y - 8, 16, 16);
+    }
+  });
+  // Şok halkası: ince, iki yanı yumuşak ışık halkası (dış yarıçap 30 px).
+  canvasTexture(scene, TEXTURE.ring, 64, 64, (g) => {
+    const band = g.createRadialGradient(32, 32, 22, 32, 32, 31);
+    band.addColorStop(0, 'rgba(255,255,255,0)');
+    band.addColorStop(0.6, 'rgba(255,255,255,1)');
+    band.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = band;
+    g.fillRect(0, 0, 64, 64);
+  });
+  // Patlama parlaması: yumuşak kenarlı ışık diski.
+  canvasTexture(scene, TEXTURE.blast, 64, 64, (g) => {
+    const light = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    light.addColorStop(0, 'rgba(255,255,255,1)');
+    light.addColorStop(0.3, 'rgba(255,255,255,0.85)');
+    light.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = light;
+    g.fillRect(0, 0, 64, 64);
   });
 }

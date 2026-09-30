@@ -97,21 +97,58 @@ gövde dönerken nişan korunur. Azami dönüş 5.5 rad/s'dir. Nişan bırakıl�
 
 ## Ateş hissi
 
-Tek atış dört katmanda hissedilir:
+Tek atış beş katmanda hissedilir:
 
 1. Fizik: tanka ters yönde itki; paletler onu birkaç birimde yakalar.
 2. Süspansiyon: gövde atışın tersine yaylanır ve salınarak oturur.
-3. Namlu: geri kayar ve yayla yerine döner; ağız parlaması ve duman.
-4. Kamera ve titreşim: görüntü atışın tersine yaylı tepme yapar; kol ve
-   telefon %70 şiddetle `tap` titreşimi verir.
+3. Namlu: geri kayar ve yayla yerine döner; ağız parlaması.
+4. Namlu patlaması: ileri ateş topu ve kıvılcım, namlu freninin iki yana gaz
+   jetleri, ileri duman, namlu altında yerden kalkan toz ve kısa basınç halkası.
+5. Kamera ve titreşim: kamera SARSILMAZ, yalnız atışın tersine küçük yaylı bir
+   itme yapar (sürekli ateşte görüntü okunur kalır); kol ve telefon %70
+   şiddetle `tap` titreşimi verir.
+
+Mermi parlak bir gövde (kapsül), çevresinde yumuşak hale ve arkasında incelen
+izle uçar; yolunda havada kısa kalan duman kabarcıkları bırakır. Namludan yeni
+çıkan merminin izi tankın içine uzanmaz.
+
+### Patlama
+
+Mermi menzil sonunda yere, ya da duvara çarparak patlar:
+
+- Kısa ışık parlaması ve genişleyen şok halkası (havuzlu tek dörtgenlik
+  görüntüler).
+- Kum ve taş parçaları, kıvılcım: yerde her yöne, duvarda duvardan geri.
+- Toz bulutu ve duman.
+- Zeminde 20 s kalan yanık izi; dönüşü konumdan türer (rastgelelik yok).
+
+Araca isabet yanık bırakmaz; küçük parlama, kıvılcım ve duman verir.
+
+### Efekt kalitesi
+
+CORE `GraphicsQuality` iki kademe taşır (`src/config/quality.ts`): yüksek
+(tam parçacık, mermi halesi, tam iz havuzları) ve düşük (yarı parçacık, hale
+yok, yarı havuz). Android düşük kademeyle açılır; kademe duraklatma
+menüsünden değişir, parçacık ve hale anında uygulanır.
+
+Phaser 4 `Glow` filtresi denendi ve reddedildi: her karede yeniden çizilen,
+dünya boyunca uzanan mermi katmanını tam çerçeve arabelleğe işler; yazılım
+GL'de 60 → 4 FPS ölçüldü (boşta bile). Hale katmanlı yarı saydam dairedir.
 
 ## Kamera
 
 Kamera arachnid modelidir (CORE `FollowCamera`, ayarı `src/config/camera.ts`): hedef ara
 değerli gövde konumudur ve 90 ms zaman sabitli üstel takiple izlenir. İleri
 bakış yoktur; görüntü dünya sınırında kalır. Zoom kademesizdir (0.55–1.9,
-varsayılan 1.5). Üstüne iki öteleme biner: ateşte yaylı tepme, duvar
-çarpmasında sönen sarsıntı. Takip kare hızından bağımsızdır.
+varsayılan 1.5). Üstüne iki öteleme biner: ateşte küçük yaylı itme ve
+çarpma ya da patlamada sönen sarsıntı. Takip kare hızından bağımsızdır.
+
+Okunurluk kuralları (`src/config/feel.ts`):
+
+- Atış sarsıntı üretmez.
+- Patlama sarsıntısı oyuncuya uzaklıkla söner (`(1 − d / 560)²`) ve tavanı
+  0.3'tür; ekranın öbür ucundaki patlama görüntüyü oynatmaz.
+- Oyuncuya isabet sarsıntısı 0.35'te sabittir.
 
 ## Mimari
 
@@ -168,7 +205,11 @@ kat çözünürlükte rasterlenir ve sahnede tersiyle ölçeklenir.
 - Palet, yüzey yoluyla kayan bir banttır. Uçlar paletin döndüğü yarım
   dairedir; uçtaki halkalar aynı yolla döner. Patinajda palet döner, tank
   ilerlemez.
-- Palet izi zemindeki gerçek yoldan bırakılır; patinaj iz uzatmaz, toz kaldırır.
+- Palet izi paletin temas noktasının yoluna serilen sürekli banttır; her
+  parça bir pabuç adımıdır (6 birim) ve enine pabuç izini, kenarlara itilmiş
+  kum sırtını taşır. Dönüşte bant yayı, yerinde dönüşte iki ters yayı izler.
+  İz zemindeki gerçek yolla tetiklenir: patinaj iz uzatmaz, toz kaldırır. İz
+  16 s yaşar.
 - Kayan palet (fren kilidi, drift) desen basmaz; temas noktası yerde kesintisiz
   bir kayma çizgisi bırakır. Çizgi temasın gerçek yolunu izler, koyuluğu kayma
   hızıyla artar, 20 s yerde kalıp söner.
@@ -194,12 +235,14 @@ olarak gelir.
 CORE `vibrate(desen, şiddet)` anlamsal desenleri kullanılır; şiddet telefonda
 darbe süresini, kolda iki motorun gücünü ölçekler. Titreşim açılışta açıktır.
 
-| Olay                 | Desen     |
-| -------------------- | --------- |
-| Atış                 | `tap`     |
-| Hafif duvar çarpması | `tap`     |
-| Sert duvar çarpması  | `warning` |
-| Duraklatma           | iptal     |
+| Olay                   | Desen     | Şiddet                 |
+| ---------------------- | --------- | ---------------------- |
+| Atış                   | `tap`     | 0.7                    |
+| Yakın patlama (280 br) | `tap`     | 0.55, uzaklıkla kareli |
+| Oyuncuya isabet        | `warning` | 1                      |
+| Hafif duvar çarpması   | `tap`     | çarpma hızıyla         |
+| Sert duvar çarpması    | `warning` | çarpma hızıyla         |
+| Duraklatma             | iptal     | —                      |
 
 Web'de Android Vibration API ve kol `vibrationActuator` çalışır. Steam Deck
 (Linux native sürücüsü) ve Android native izni kabukla gelir.
@@ -259,3 +302,6 @@ Zarfı değiştirmek bir tasarım kararıdır ve bu tabloyla birlikte yapılır.
 
 - Ses yoktur.
 - Tauri kabuğu, Android, Steam Deck ve Windows paketleri henüz yoktur.
+- Efekt kalitesi seçimi oturum boyunca geçerlidir; kalıcı değildir.
+- Efektlerin FPS maliyeti masaüstü GPU'da ölçüldü (60/60). Deck ve Android
+  GPU'sunda henüz ölçülmedi.

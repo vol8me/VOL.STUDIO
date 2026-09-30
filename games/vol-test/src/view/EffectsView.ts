@@ -1,6 +1,8 @@
 import type Phaser from 'phaser';
-import type { Projectiles } from '@/sim/combat/Projectiles';
 import { FX } from '@/config/fx';
+import type { EffectProfile } from '@/config/quality';
+import type { Projectiles } from '@/sim/combat/Projectiles';
+import { Blasts } from './effects/Blasts';
 import { ParticleFx } from './effects/ParticleFx';
 import { SkidMarks } from './effects/SkidMarks';
 import { TracerLayer } from './effects/TracerLayer';
@@ -24,37 +26,83 @@ export interface VehicleFxFrame {
 }
 
 /**
- * Sunum efektlerinin tek girişi: mermi izleri, paylaşılan parçacıklar, palet
- * ve kayma izleri, araç başına egzoz/toz. Her katman kendi dosyasındadır; hiçbiri
- * simülasyona geri yazmaz.
+ * Sunum efektlerinin tek girişi: mermiler ve duman izleri, namlu patlaması,
+ * patlamalar, paylaşılan parçacıklar, palet ve kayma izleri, araç başına
+ * egzoz/toz. Her katman kendi dosyasındadır; hiçbiri simülasyona geri yazmaz.
+ *
+ * Kalite profili parçacık sayısını ve mermi ışımasını canlı değiştirir; zemin
+ * izlerinin havuz kapasitesi kurulumda profilden alınır.
  */
 export class EffectsView {
   private readonly tracers: TracerLayer;
   private readonly particles: ParticleFx;
+  private readonly blasts: Blasts;
   private readonly marks: TreadMarks;
   private readonly skids: SkidMarks;
   private readonly trails = new Map<number, VehicleTrail>();
+  private frameMs = 0;
+  private readonly emitTrail = (
+    x: number,
+    y: number,
+    dx: number,
+    dy: number,
+    travelled: number,
+    speed: number,
+  ): void => {
+    const spacing = FX.shell.trailSpacing;
+    const frameTravel = (this.frameMs / 1000) * speed;
+    const before = Math.floor(Math.max(0, travelled - frameTravel) / spacing);
+    const now = Math.floor(travelled / spacing);
+    for (let mark = before + 1; mark <= now; mark++) {
+      const back = travelled - mark * spacing;
+      this.particles.trail(x - dx * back, y - dy * back);
+    }
+  };
 
-  constructor(private readonly scene: Phaser.Scene) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    profile: EffectProfile,
+  ) {
+    this.blasts = new Blasts(scene, profile.decals);
+    this.skids = new SkidMarks(scene, profile.decals);
+    this.marks = new TreadMarks(scene, profile.decals);
     this.tracers = new TracerLayer(scene);
     this.particles = new ParticleFx(scene);
-    this.skids = new SkidMarks(scene);
-    this.marks = new TreadMarks(scene);
+    this.applyProfile(profile);
   }
 
-  impact(x: number, y: number, angle: number): void {
-    this.particles.impact(x, y, angle);
+  /** Kalite değişimi: parçacık çarpanı ve mermi ışıması anında uygulanır. */
+  applyProfile(profile: EffectProfile): void {
+    this.particles.setScale(profile.particles);
+    this.tracers.setGlow(profile.glow);
   }
 
+  /** Atış: namlu patlaması parçacıkları ve basınç halkası. */
   muzzle(x: number, y: number, angle: number): void {
     this.particles.muzzle(x, y, angle);
+    this.blasts.muzzle(x, y);
+  }
+
+  /**
+   * Mermi patladı. Duvarda patlama duvardan geri (`angle`nın tersine) açılır;
+   * yerde her yöne saçılır. İkisi de yanık bırakır.
+   */
+  explode(x: number, y: number, angle: number, surface: 'wall' | 'ground'): void {
+    this.particles.blast(x, y, surface === 'wall' ? angle + Math.PI : null);
+    this.blasts.explode(x, y, true);
+  }
+
+  /** Mermi araca isabet etti: yanıksız küçük patlama. */
+  hit(x: number, y: number, angle: number): void {
+    this.particles.hit(x, y, angle);
+    this.blasts.explode(x, y, false, FX.hit.flashScale);
   }
 
   wallHit(x: number, y: number, normalX: number, normalY: number, strength: number): void {
     this.particles.wallHit(x, y, normalX, normalY, strength);
   }
 
-  /** Aracın egzoz, toz ve palet izini günceller; araç ilk görüldüğünde kurulur. */
+  /** Aracın egzoz, toz, palet ve kayma izini günceller; araç ilk görüldüğünde kurulur. */
   updateVehicle(id: number, frame: VehicleFxFrame): void {
     let trail = this.trails.get(id);
     if (!trail) {
@@ -92,8 +140,11 @@ export class EffectsView {
     this.skids.forget(id);
   }
 
+  /** Sunum karesi: mermiler ve duman izleri, patlama katmanları, iz sönümü. */
   update(projectiles: Projectiles, alpha: number, deltaMs: number): void {
-    this.tracers.draw(projectiles, alpha);
+    this.frameMs = deltaMs;
+    this.tracers.draw(projectiles, alpha, deltaMs > 0 ? this.emitTrail : undefined);
+    this.blasts.update(deltaMs);
     this.marks.fade(deltaMs);
     this.skids.fade(deltaMs);
   }
@@ -101,6 +152,7 @@ export class EffectsView {
   destroy(): void {
     this.tracers.destroy();
     this.particles.destroy();
+    this.blasts.destroy();
     this.marks.destroy();
     this.skids.destroy();
     for (const trail of this.trails.values()) trail.destroy();

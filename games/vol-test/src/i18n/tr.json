@@ -31,6 +31,11 @@
   },
   "pause": {
     "title": "Duraklatıldı",
-    "resume": "Devam et"
+    "resume": "Devam et",
+    "quality": "Efekt kalitesi",
+    "qualityLevel": {
+      "high": "Yüksek",
+      "low": "Düşük"
+    }
   }
 }

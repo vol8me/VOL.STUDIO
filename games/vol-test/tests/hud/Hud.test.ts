@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Vector2, VirtualActionSource, VirtualStickSource } from '@volstudio/core';
+import { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
+import { EFFECT_LEVELS, type EffectLevel, type EffectProfile } from '@/config/quality';
 import { Hud } from '@/hud/Hud';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
 import { hudFrame } from './support';
@@ -11,6 +13,10 @@ function mount(touch = false, fullscreen = true) {
   const onResume = vi.fn();
   const source = new VirtualActionSource<TestAction>();
   const sticks = new VirtualStickSource();
+  const quality = new GraphicsQuality<EffectLevel, EffectProfile>({
+    levels: EFFECT_LEVELS,
+    initial: 'high',
+  });
   const hud = new Hud({
     parent,
     metre: 32,
@@ -22,10 +28,11 @@ function mount(touch = false, fullscreen = true) {
     touch,
     fullscreen,
     onResume,
+    quality,
   });
   const find = <T extends HTMLElement = HTMLElement>(id: string): T =>
     parent.querySelector<T>(`[data-testid="${id}"]`)!;
-  return { hud, parent, onResume, source, sticks, find };
+  return { hud, parent, onResume, source, sticks, find, quality };
 }
 
 function read(source: VirtualActionSource<TestAction>): Record<TestAction, boolean> {
@@ -157,6 +164,17 @@ describe('Hud', () => {
     hud.showPause();
     hud.hidePause();
     expect(onResume).toHaveBeenCalledTimes(1);
+    hud.destroy();
+  });
+
+  it('duraklatmada efekt kalitesi CORE GraphicsQuality kademesini değiştirir', () => {
+    const { hud, find, quality } = mount();
+    hud.showPause();
+    const picker = find('pause-quality');
+    const buttons = [...picker.querySelectorAll<HTMLButtonElement>('button')];
+    expect(buttons.map((button) => button.textContent)).toEqual(['Yüksek', 'Düşük']);
+    buttons[1].click();
+    expect(quality.getLevel()).toBe('low');
     hud.destroy();
   });
 

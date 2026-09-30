@@ -1,15 +1,9 @@
 import type Phaser from 'phaser';
-import { RingBuffer } from '@volstudio/core/collections';
 import { clamp } from '@volstudio/core/math/interpolation';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
 import { TEXTURE } from '../textures';
-
-interface Segment {
-  readonly image: Phaser.GameObjects.Image;
-  bornMs: number;
-  strength: number;
-}
+import { DecalPool } from './DecalPool';
 
 interface Contact {
   x: number;
@@ -25,12 +19,20 @@ interface Contact {
  * ömrünün ilk yarısında tam, sonra doğrusal söner.
  */
 export class SkidMarks {
-  private readonly segments = new RingBuffer<Segment>(FX.skid.capacity);
-  private readonly pool: Segment[] = [];
+  private readonly decals: DecalPool;
   private readonly contacts = new Map<number, [Contact, Contact]>();
-  private nowMs = 0;
 
-  constructor(private readonly scene: Phaser.Scene) {}
+  constructor(scene: Phaser.Scene, capacityScale = 1) {
+    const skid = FX.skid;
+    this.decals = new DecalPool(scene, {
+      texture: TEXTURE.skid,
+      tint: PALETTE.skidMark,
+      capacity: Math.max(1, Math.round(skid.capacity * capacityScale)),
+      depth: skid.depth,
+      lifeMs: skid.lifeMs,
+      holdShare: skid.holdShare,
+    });
+  }
 
   /** Paletlerin kayma hızına göre çizgiyi uzatır ya da keser. */
   track(
@@ -42,6 +44,7 @@ export class SkidMarks {
     slideRight: number,
     trackOffset: number,
   ): void {
+    const skid = FX.skid;
     let pair = this.contacts.get(key);
     if (!pair) {
       pair = [
@@ -57,7 +60,7 @@ export class SkidMarks {
       const px = x - Math.sin(hull) * trackOffset * side;
       const py = y + Math.cos(hull) * trackOffset * side;
       const slide = slides[index];
-      if (slide < FX.skid.minSlide) {
+      if (slide < skid.minSlide) {
         contact.active = false;
         continue;
       }
@@ -68,13 +71,21 @@ export class SkidMarks {
         continue;
       }
       const length = Math.hypot(px - contact.x, py - contact.y);
-      if (length < FX.skid.segment) continue;
+      if (length < skid.segment) continue;
       const strength = clamp(
-        (slide - FX.skid.minSlide) / (FX.skid.fullSlide - FX.skid.minSlide),
-        FX.skid.minStrength,
+        (slide - skid.minSlide) / (skid.fullSlide - skid.minSlide),
+        skid.minStrength,
         1,
       );
-      this.place(contact.x, contact.y, px, py, length, strength);
+      // Parça bir önceki parçanın bittiği yerden başlar: çizgi kesintisizdir.
+      this.decals.place(
+        (contact.x + px) / 2,
+        (contact.y + py) / 2,
+        Math.atan2(py - contact.y, px - contact.x),
+        length + skid.overlap,
+        skid.width,
+        skid.alpha * strength,
+      );
       contact.x = px;
       contact.y = py;
     }
@@ -86,51 +97,10 @@ export class SkidMarks {
   }
 
   fade(deltaMs: number): void {
-    this.nowMs += deltaMs;
-    const hold = FX.skid.lifeMs * FX.skid.holdShare;
-    for (let index = 0; index < this.segments.size; index++) {
-      const segment = this.segments.at(index);
-      if (!segment) continue;
-      const age = this.nowMs - segment.bornMs;
-      const fade = age <= hold ? 1 : 1 - (age - hold) / (FX.skid.lifeMs - hold);
-      segment.image.setAlpha(Math.max(0, fade) * FX.skid.alpha * segment.strength);
-    }
+    this.decals.fade(deltaMs);
   }
 
   destroy(): void {
-    for (const segment of this.pool) segment.image.destroy();
-  }
-
-  private place(
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-    length: number,
-    strength: number,
-  ): void {
-    let segment: Segment;
-    if (this.pool.length < FX.skid.capacity) {
-      segment = {
-        image: this.scene.add
-          .image(fromX, fromY, TEXTURE.skid)
-          .setTint(PALETTE.skidMark)
-          .setDepth(FX.skid.depth),
-        bornMs: this.nowMs,
-        strength,
-      };
-      this.pool.push(segment);
-    } else {
-      segment = this.segments.first!;
-    }
-    // Parça bir önceki parçanın bittiği yerden başlar: çizgi kesintisizdir.
-    segment.image
-      .setPosition((fromX + toX) / 2, (fromY + toY) / 2)
-      .setRotation(Math.atan2(toY - fromY, toX - fromX))
-      .setDisplaySize(length + FX.skid.overlap, FX.skid.width)
-      .setAlpha(FX.skid.alpha * strength);
-    segment.bornMs = this.nowMs;
-    segment.strength = strength;
-    this.segments.push(segment);
+    this.decals.destroy();
   }
 }

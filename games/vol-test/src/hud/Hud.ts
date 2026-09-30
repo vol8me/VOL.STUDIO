@@ -1,7 +1,9 @@
 import type { VirtualActionSource, VirtualStickSource } from '@volstudio/core';
+import type { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { FpsMeter, InputPresentationController, UIRoot } from '@volstudio/core/ui';
+import type { EffectLevel, EffectProfile } from '@/config/quality';
 import type { TestAction } from '@/input/bindings';
 import { ControlHints } from './ControlHints';
 import { FullscreenToggle } from './FullscreenToggle';
@@ -26,6 +28,8 @@ export interface HudOptions {
   /** Tam ekran düğmesi sunulsun mu (native kabuk kendi kipini yönetir). */
   readonly fullscreen: boolean;
   readonly initialInputMode?: string;
+  /** Efekt kalitesi; duraklatma menüsünden seçilir. */
+  readonly quality: GraphicsQuality<EffectLevel, EffectProfile>;
   readonly onResume: () => void;
 }
 
@@ -70,7 +74,7 @@ export class Hud {
       new TouchControls(options.actionSource, options.stickSource),
     );
     const fps = this.scope.addDestroyable(new FpsMeter({ position: 'bottom-right' }));
-    this.pause = this.scope.addDestroyable(new PauseOverlay(options.onResume));
+    this.pause = this.scope.addDestroyable(new PauseOverlay(options.onResume, options.quality));
     this.fullscreen = options.fullscreen ? this.scope.addDestroyable(new FullscreenToggle()) : null;
 
     this.layer.append(
