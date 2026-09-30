@@ -216,9 +216,8 @@ describe('Synth engine', () => {
         { ratio: 7, gain: 1 },
       ],
     });
-    // Nyquist üstü harmonikler tamamen sessiz olmalı — eskiden hepsi aynı
-    // katlanmış (nyquistLimit) frekansa binip fazladan enerji/yapay ton
-    // eklerdi, bu durumda iki çıktı FARKLI olurdu.
+    // Nyquist üstü harmonikler tamamen sessiz olmalı; katlanmış frekansa
+    // binerlerse fazladan enerji/yapay ton ekler ve iki çıktı ayrışır.
     const chA = onlyFundamental.channels[0];
     const chB = withInaudibleHarmonics.channels[0];
     expect(chA.length).toBe(chB.length);

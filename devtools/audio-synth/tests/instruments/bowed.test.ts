@@ -108,7 +108,7 @@ describe('bowedString (yaylı tel fiziksel modeli)', () => {
 describe('bowedString gain yalnız çıkış seviyesidir', () => {
   it('çıktı gain ile orantılıdır — ton/gürültü oranı gain ile değişmez', () => {
     // Değişmez: out(g) = g · out(1). Oran korunmuyorsa gain tınıyı da
-    // değiştiriyordur (eskiden düşük gain'de yay gürültüsü orantısız büyüyordu).
+    // değiştiriyordur (düşük gain'de yay gürültüsü orantısız büyür).
     const base = { frequency: 196, duration: 0.6, bowNoise: 0.3, seed: 5 } as const;
     const reference = bowedString({ ...base, gain: 1 });
     for (const gain of [0.1, 0.35, 0.8]) {

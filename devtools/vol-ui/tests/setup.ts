@@ -7,7 +7,7 @@ i18n.addResources('tr', 'volui', trResources);
 i18n.addResources('en', 'volui', enResources);
 
 // jsdom, HTMLCanvasElement.getContext'i implemente etmez ('canvas' npm
-// paketi kurulu değilse). Showcase artık Phaser taşımıyor; mock CORE'un
+// paketi kurulu değilse). Showcase Phaser taşımaz; mock CORE'un
 // kendi canvas yüzeyleri için duruyor: CanvasViewportController ölçüm için
 // context ister, palet/HUD bölümleri 2D context üzerine çizer. Mock olmadan
 // bu bileşenlere dokunan HERHANGİ bir test kurulum aşamasında çöker.

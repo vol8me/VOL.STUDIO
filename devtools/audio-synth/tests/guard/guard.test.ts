@@ -16,9 +16,8 @@ import type { AudioParamIssue } from '../../src/guard/errors';
 
 /**
  * Render sınırı: iç içe parametre bozukluğu DSP'ye girmeden, alanın TAM
- * yoluyla reddedilir. Eskiden `reverb.decay: NaN` zincirin içinde yayılıyor
- * ve ancak writer "sonlu olmayan örnek" dediğinde fark ediliyordu — hangi
- * alanın bozuk olduğu hatadan okunamıyordu.
+ * yoluyla reddedilir; yoksa `reverb.decay: NaN` zincirde yayılır ve bozuk
+ * alan ancak writer "sonlu olmayan örnek" dediğinde, adı olmadan görülür.
  */
 
 const BASE: SynthParams = { wave: 'sine', frequency: 220, duration: 0.05 };
@@ -201,8 +200,8 @@ describe('filtre tipi kutup sayısından bağımsızdır', () => {
   }
 
   it('1 kutuplu yuvaya istenen tip kurulur — sessiz yuva tipine düşmez', () => {
-    // Eskiden `lowpass` yuvasında 1 kutup, `type` okunmadan alçak geçiren
-    // kuruyordu. DC yanıtı tipi ayırt eder: alçak geçiren DC'yi geçirir,
+    // `type` okunmadan yuva tipine düşülürse 1 kutup alçak geçiren kurulur.
+    // DC yanıtı tipi ayırt eder: alçak geçiren DC'yi geçirir,
     // yüksek geçiren söndürür.
     const high = createFilter({ cutoff: 1000, type: 'highpass', poles: 1 }, SR, 'lowpass');
     const low = createFilter({ cutoff: 1000, poles: 1 }, SR, 'lowpass');

@@ -16,7 +16,7 @@ export interface TauriWindowAdapterOptions {
    * Pencerenin GERÇEK tam ekran durumu; varsayılanı paylaşılan kabuğun
    * `window_fullscreen_state` komutudur. Tauri'nin `Window.isFullscreen()`i
    * Linux'ta yalnız uygulamanın kendi isteğini hatırlar, pencere yöneticisinin
-   * yaptığı değişimi görmez (KDE Plasma'da ölçüldü).
+   * yaptığı değişimi görmez.
    */
   readFullscreen?: () => Promise<boolean>;
 }

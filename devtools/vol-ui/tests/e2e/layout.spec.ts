@@ -210,12 +210,10 @@ test.describe('sürükleme jesti', () => {
     /*
      * Tarayıcı aynı jesti hem sürükleme hem metin seçimi olarak yorumlar:
      * kart mavi vurguya boyanır, imleç I-beam'e döner, mobilde "kopyala"
-     * balonu açılır. Ölçüldü — düzeltmeden önce bir Kanban kartını sürüklemek
-     * 36 karakter seçiyordu.
+     * balonu açılır.
      *
-     * Koruma bir dönem yalnız `.vol-ui-root` üzerindeydi; o oyunların tam ekran
-     * kabuğudur. Bileşen başka bir yere monte edildiğinde korumasız kalıyordu —
-     * yani davranış NEREYE ASILDIĞINA bağlıydı.
+     * Koruma yalnız `.vol-ui-root` üzerinde olsaydı başka bir yere monte edilen
+     * bileşen korumasız kalırdı; davranış nereye asıldığına bağlı olmamalı.
      */
     await openShowcase(page);
     await selectTab(page, 'advanced');
@@ -250,10 +248,8 @@ test.describe('sürükleme jesti', () => {
 
 test.describe('FPS göstergesi', () => {
   /*
-   * Bu kapı gerçek bir hatayla yazıldı. Gösterge bir köşeye SABİTLENİR; kutusu
-   * her okumada yeniden boyutlanırsa karşı kenarı oynar ve gözle "gösterge yer
-   * değiştirdi" diye okunur. Ölçüldü: sol kenar 1214/1211/1208 px arasında
-   * salınıyordu.
+   * Gösterge bir köşeye SABİTLENİR; kutusu her okumada yeniden boyutlanırsa
+   * karşı kenarı oynar ve gözle "gösterge yer değiştirdi" diye okunur.
    *
    * `font-variant-numeric: tabular-nums` tek başına YETMEZ — VOL fontları
    * tabular rakam varyantı taşımaz, yani aynı basamak sayısındaki iki değer

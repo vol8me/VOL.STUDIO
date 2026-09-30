@@ -8,7 +8,7 @@ import type { InputState } from './InputState';
  *
  * Sayılar `Gamepad.buttons` dizisinin indeksleridir; aile adları (A/B/X/Y,
  * LB/RB…) kasıtlı olarak burada YOKTUR — düğme adı göstermek glif sisteminin
- * (D4) işidir, eşleme verisi yalnız dizin taşır. Dizinler değişmez bir
+ * işidir, eşleme verisi yalnız dizin taşır. Dizinler değişmez bir
  * standarttır: `mapping === 'standard'` diyen her kol aynı dizini verir.
  */
 export const GAMEPAD_BUTTON = {

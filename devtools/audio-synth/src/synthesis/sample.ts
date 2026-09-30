@@ -502,7 +502,7 @@ export function processSample(
   const resampleFactor = rateFactor * pitchFactor;
   // Çekirdek, aşağı örnekleme oranıyla uzar (pitchShift +60 ≈ 4000 tap):
   // kesin maliyet kaynak çözüldükten sonra, tamponlardan ÖNCE denetlenir.
-  // Tap ≈ 3.6 ns ölçüldü; iş birimi ≈ 10 ns (bkz. guard/budget.ts).
+  // Tap ≈ 3.6 ns; iş birimi ≈ 10 ns (bkz. guard/budget.ts).
   const taps = 2 * kernelHalfWidth(Math.min(1, 1 / resampleFactor));
   assertRenderBudget(
     {

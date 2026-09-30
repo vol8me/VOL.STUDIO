@@ -57,7 +57,7 @@ export function onsetSharpnessDb(x: Float32Array, sampleRate: number): number {
 /**
  * Beklenen konumun ±30 ms'inde en güçlü 1 ms'yi bulup atak keskinliğini
  * oradan ölçer — gerilmiş çıktıda atağın birkaç ms kayması ölçümü
- * sessizliğe düşürmesin (ilk sürüm hizasız ölçümde −224 dB veriyordu).
+ * sessizliğe düşürmesin.
  */
 export function onsetSharpnessAt(y: Float32Array, sampleRate: number, seconds: number): number {
   const ms = Math.max(1, Math.round(0.001 * sampleRate));

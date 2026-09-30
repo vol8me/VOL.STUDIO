@@ -160,7 +160,7 @@ const STYLE_WORK_PER_FRAME = 140;
 /** Master true-peak sınırlayıcısı: 4× ara değer + ölçüm turları. */
 const LIMITER_WORK_PER_FRAME = 60;
 const LIMITER_BYTES_PER_FRAME = 32;
-/** Treatment turunun düğüm-dışı sabit yükü (kanal-kare başına birim) — R8 ölçümüyle kalibre. */
+/** Treatment turunun düğüm-dışı sabit yükü (kanal-kare başına birim); bench'le kalibre. */
 const TREATMENT_BASE_PER_FRAME = 10;
 
 /**
@@ -234,8 +234,8 @@ function treatmentCost(program: ResolvedProgram): { work: number; bytes: number 
     program.master.loop !== null,
   );
   // İşleme katmanının tabanı: loop'ta ikinci tur render + seviye ölçümü +
-  // tampon kopyaları. Tek-düğümlü zincirde ~110 ns/kanal-kare ölçüldü (R8,
-  // prog-treatment-eq); eski `frames*width` tabanı bunu ~10× küçümsüyordu.
+  // tampon kopyaları: tek-düğümlü zincirde ~110 ns/kanal-kare (bench
+  // `prog-treatment-eq`).
   let work = frames * width * TREATMENT_BASE_PER_FRAME;
   let state = 0;
   for (const node of treatment.chain) {

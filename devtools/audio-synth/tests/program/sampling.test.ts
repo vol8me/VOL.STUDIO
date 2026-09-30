@@ -14,7 +14,7 @@ import { RENDER_BLOCK } from '../support/timeouts';
 import { node } from '../support/program';
 
 /**
- * Dalga 9 kapanış kanıtları: bağımsız perde/süre, sampler bölgeleri, granular
+ * Sampling kanıtları: bağımsız perde/süre, sampler bölgeleri, granular
  * bulut, konvolüsyon yönlendirmesi ve transient/gövde ayrıştırması. Kayıtlar
  * bellek-içi test kütüphanesindendir (sentetik; gerçek kayıt iddiası yok).
  */

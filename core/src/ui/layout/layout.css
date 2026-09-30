@@ -182,10 +182,8 @@
    * block'u olamaz; o torun kabın kırpmasından kaçar ve belgenin kaydırma
    * alanını genişletir.
    *
-   * Tarayıcıda ölçüldü: 393 px genişlikte, panel içeriği yatay taştığında
-   * `.vol-sr-only` açıklamaları kabın dışına, x=449'a düşüyor ve sayfayı 57 px
-   * yatay kaydırılabilir yapıyordu — parmakla boşluğa kayan bir sayfa. Bu
-   * satır eklenince taşma 0'a iniyor (bkz. vol-ui `layout.spec.ts`).
+   * Bu satır olmadan dar ekranda `.vol-sr-only` açıklamaları kabın dışına
+   * düşer ve sayfa yatay kayar (bkz. vol-ui `layout.spec.ts`).
    */
   position: relative;
 }

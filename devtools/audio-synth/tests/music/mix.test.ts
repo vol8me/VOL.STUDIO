@@ -9,7 +9,7 @@ import { clone, unitAdaptiveProgram, unitProgram } from './fixtures';
 import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
- * Müzik bus/send grafiği (Dalga 10): drum/music stem'leri ayrı bus'lara
+ * Müzik bus/send grafiği: drum/music stem'leri ayrı bus'lara
  * yönlenir, ortak return paylaşılır ve stem toplamı referans mix'e −90 dBFS
  * içinde eşit kalır. Doğrusal olmayan bus'a birden çok stem ve adaptive'de
  * stem'ler arası sidechain adıyla reddedilir.

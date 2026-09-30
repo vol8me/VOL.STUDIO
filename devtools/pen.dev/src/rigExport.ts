@@ -117,7 +117,7 @@ export interface RigSyncRequest {
   partsOut: string;
   /**
    * Parçaların çalışma zamanında çözüleceği taban yol. Yazılan metadata'nın
-   * `file` alanlarına bu önek girer; tüketici artık export ağacını değil
+   * `file` alanlarına bu önek girer; tüketici export ağacını değil
    * KENDİ asset yolunu görür.
    */
   publicBase: string;
@@ -184,7 +184,7 @@ export function syncRigExport(request: RigSyncRequest): RigSyncReport {
  * Gönderilmiş bir metadata'nın her parçasının diskte karşılığı var mı?
  *
  * Senkron sonrası tüketici tarafında koşar. `import.meta.glob` bırakıldığında
- * kaybedilen DERLEME ZAMANI garantisinin karşılığıdır: eksik bir PNG artık
+ * kaybedilen DERLEME ZAMANI garantisinin karşılığıdır: eksik bir PNG
  * derlemede değil, bu kapıda görülür.
  */
 export function auditShippedRig(metadataFile: string, partsDir: string): string[] {

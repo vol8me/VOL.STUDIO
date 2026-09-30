@@ -85,7 +85,7 @@ export interface SearchRunOptions {
   /** Worker sayısı; verilmezse toplu tahminden (`batchWorkers`). Sonuç aynıdır. */
   readonly workers?: number;
   /**
-   * Verilirse rapor yazıldıktan sonra harici semantic scorer koşar (F6c).
+   * Verilirse rapor yazıldıktan sonra harici semantic scorer koşar.
    * Danışman sinyaldir: raporu, kararları ve publish kapısını etkilemez.
    */
   readonly semantic?: SemanticRunConfig;

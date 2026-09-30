@@ -10,7 +10,7 @@ import { snakeHiss, tankFire } from './graphFixtures';
 import { node } from '../support/program';
 
 /**
- * SoundGraph (Dalga 7) ve bus/send grafiği (Dalga 10): tank ateşi ile yılan
+ * SoundGraph ve bus/send grafiği: tank ateşi ile yılan
  * tıslaması AYNI altyapıda farklı topolojiyle; mechanism/body ortak room
  * send'ine; izdüşüm deterministik serileştirilir; kurallar render'dan önce.
  */

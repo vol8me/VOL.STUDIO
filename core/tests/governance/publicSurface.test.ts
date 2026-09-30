@@ -329,10 +329,9 @@ describe('CORE public API yüzeyi', () => {
   });
 
   /*
-   * `PlayerController` takma adı KALDIRILDI. CORE'un adları oyun kelimesi
-   * taşımaz: "player" bir oyun kavramıdır, hareket eden şey ise mekanizmadır.
-   * Takma ad hiçbir tüketici tarafından kullanılmıyordu; geri gelmesi adlandırma
-   * sözleşmesinin sessizce gevşemesi olurdu.
+   * CORE'un adları oyun kelimesi taşımaz: "player" bir oyun kavramıdır,
+   * hareket eden şey ise mekanizmadır. `PlayerController` gibi bir takma ad
+   * adlandırma sözleşmesini sessizce gevşetir.
    */
   it('oyun kelimesi taşıyan takma ad yüzeye geri GELMEZ', () => {
     expect('PlayerController' in Core).toBe(false);

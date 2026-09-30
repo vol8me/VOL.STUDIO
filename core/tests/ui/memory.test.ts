@@ -51,9 +51,8 @@ describe('Bellek sızıntısı regresyonları', () => {
     /*
      * Sabit bir sayı (`toHaveBeenCalledTimes(4)`) yerine KÜME karşılaştırması.
      *
-     * Sabit sayı, bileşene meşru bir listener eklendiğinde — klavye desteği
-     * tam olarak bunu yaptı — hiçbir sızıntı olmadığı hâlde kırılıyordu ve
-     * "sayıyı güncelle" refleksiyle geçilmeye açıktı. Asıl sözleşme
+     * Sabit sayı, bileşene meşru bir listener eklendiğinde sızıntı olmadan
+     * kırılır ve "sayıyı güncelle" refleksiyle geçilmeye açıktır. Asıl sözleşme
      * "bağlanan HER tür kaldırılır"; beklenen küme burada açıkça yazılıdır,
      * yani yeni bir listener eklenip kaldırılmazsa test yine kırılır.
      */

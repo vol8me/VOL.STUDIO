@@ -51,8 +51,7 @@ test('ALIAS ile kurulan döngü de yakalanır', (t) => {
 
 /*
  * `import type` derlemede SİLİNİR; başlatma sırası diye bir sorun doğurmaz.
- * Bunu ihlal saymak, bekçiyi yanlış alarmla ölü hale getirirdi — ölçüldü,
- * repoda dört tane tip-only çift var ve hiçbiri hata değil.
+ * Bunu ihlal saymak, bekçiyi yanlış alarmla ölü hale getirir.
  */
 test('tip-only import döngü SAYILMAZ', (t) => {
   const root = fixture(t, {

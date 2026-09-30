@@ -214,8 +214,8 @@ describe('Scheduler', () => {
 
   describe('yeniden giriş (reentrancy)', () => {
     it('callback içinden update() REDDEDİLİR', () => {
-      // Ölçülen eski davranış: tek update(10) çağrısı callback'i ÜÇ kez
-      // çalıştırıyordu, çünkü iç çağrı zamanı yeniden ilerletiyordu.
+      // İç çağrı kabul edilseydi zamanı yeniden ilerletir ve tek update(10)
+      // callback'i birden çok kez çalıştırırdı.
       const scheduler = new Scheduler();
       let calls = 0;
       let innerResult: boolean | null = null;

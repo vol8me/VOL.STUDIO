@@ -11,10 +11,9 @@ import { isFiniteNumber, requireFinite, finiteOr, finitePositiveOr } from '../..
  * Sonlu sayı sözleşmesi — primitiflerin ORTAK giriş bariyeri.
  *
  * `NaN`/`Infinity` bir kez duruma girdiğinde her aritmetiği kirletir ve kaynağı
- * çok sonra, ilgisiz bir yerde fark edilir. Ölçülen eski davranış:
- * `Cooldown.update(NaN)` beklemeyi kalıcı `NaN` yapıyor ve bekleme sonsuza dek
- * bitmiyordu; `ResourcePool.add(NaN)` bakiyeyi zehirliyordu; `spend({x: NaN})`
- * `true` dönüp hiçbir şey düşmüyordu.
+ * çok sonra, ilgisiz bir yerde fark edilir: `Cooldown.update(NaN)` beklemeyi
+ * kalıcı `NaN` yapar, `ResourcePool.add(NaN)` bakiyeyi zehirler,
+ * `spend({x: NaN})` hiçbir şey düşmeden `true` döner.
  *
  * İki politika vardır ve seçim bilinçlidir: yapılandırma değeri REDDEDİLİR
  * (hata çağıranındır), akış değeri (`deltaMs`) YOKSAYILIR (tek bozuk kare
@@ -32,9 +31,8 @@ describe('sonlu sayı sözleşmesi', () => {
 
     it('finitePositiveOr NEGATİFİ de yedeğe düşürür', () => {
       /*
-       * Mutasyonla bulundu: `value >= 0` kontrolü kaldırıldığında hiçbir test
-       * düşmüyordu. Fonksiyonun `finiteOr`dan tek farkı bu koşul — korunmadığı
-       * sürece ikisi arasında ölçülebilir bir fark yoktu.
+       * Fonksiyonun `finiteOr`dan tek farkı `value >= 0` koşuludur; bu test
+       * korumazsa ikisi arasında ölçülebilir fark kalmaz.
        *
        * Sözleşme, dokümanının söylediği şeydir: süre, mesafe, miktar gibi
        * doğası gereği negatif olamayan alanlar. Negatif bir süre, `NaN` kadar
@@ -66,7 +64,7 @@ describe('sonlu sayı sözleşmesi', () => {
 
   describe('yapılandırma REDDEDİLİR', () => {
     it('Cooldown sonlu olmayan süreyi reddeder', () => {
-      // Eskiden kabul ediliyordu ve trigger() sonrası bekleme HİÇ bitmiyordu.
+      // Kabul edilseydi trigger() sonrası bekleme hiç bitmezdi.
       expect(() => new Cooldown(NaN)).toThrow(/sonlu/);
       expect(() => new Cooldown(Infinity)).toThrow(/sonlu/);
       expect(() => new Cooldown(100).setDuration(NaN)).toThrow(/sonlu/);
@@ -94,8 +92,8 @@ describe('sonlu sayı sözleşmesi', () => {
     });
 
     it('SpatialIndex sonlu olmayan konumu reddeder', () => {
-      // Eskiden indekse giriyor (size artıyor) ama hiçbir sorgu bulamıyordu:
-      // indekste görünen ama erişilemeyen bir kara delik.
+      // Kabul edilseydi indekste görünen ama hiçbir sorgunun bulamadığı bir
+      // girdi olurdu.
       const index = new SpatialIndex<{ x: number; y: number }>(50);
       expect(() => index.insert({ x: NaN, y: 0 })).toThrow(/sonlu/);
       expect(() => index.insert({ x: 0, y: Infinity })).toThrow(/sonlu/);
@@ -141,8 +139,8 @@ describe('sonlu sayı sözleşmesi', () => {
 
   describe('sonlu olmayan maliyet BEDAVA ALIŞVERİŞ olmaz', () => {
     it('spend sonlu olmayan kalemi karşılanamaz sayar', () => {
-      // Eskiden `NaN > 0` yanlış olduğu için kalem atlanıyor, spend true
-      // dönüyor ve hiçbir şey düşülmüyordu.
+      // `NaN > 0` yanlış olduğu için kalem atlanırsa spend hiçbir şey
+      // düşmeden true döner.
       const pool = new ResourcePool<'g'>({ g: 100 });
 
       expect(pool.canAfford({ g: NaN })).toBe(false);

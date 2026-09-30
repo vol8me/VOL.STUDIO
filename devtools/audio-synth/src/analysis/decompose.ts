@@ -10,12 +10,11 @@ import { fft } from './spectrum';
  * Araç SESSİZCE kötü sonuç vermez: başlangıç yoksa, transient bileşeninin
  * tepesi orijinal tepenin %20'sinden azsa (ayrılan atak yok), transient
  * zamanda yayılmışsa (10 ms RMS tepe/medyan < 12 dB — durağan gürültüde HPSS
- * iki gürültü üretir, ölçüldü), gövde enerjinin
+ * iki gürültü üretir), gövde enerjinin
  * %2'sinden azsa (değiştirilecek gövde yok) ya da yeniden kurulum hatası
  * −30 dB'den kötüyse `status: 'failed'` ve adlı gerekçe döner. Atak için
  * enerji payı değil TEPE oranı sorulur: çınlayan bir darbede enerjinin çoğu
- * gövdededir, 1 ms'lik tam genlikli atak enerji payında görünmez (ölçüldü:
- * metal–metal temasta %0.06).
+ * gövdededir, 1 ms'lik tam genlikli atak enerji payında görünmez.
  */
 const DECOMPOSE_METHOD = 'hpss-median-v1';
 
@@ -71,7 +70,7 @@ function firstOnset(x: Float32Array, sampleRate: number): number {
 /**
  * 10 ms RMS pencerelerinin en büyüğü / BÜTÜN pencerelerin medyanı (dB):
  * atak sinyal süresine göre zamanda toplanmış mı. Medyan yalnız etkin
- * pencerelerden alınırsa sessizlikteki izole tık "yayılmış" görünür (ölçüldü).
+ * pencerelerden alınırsa sessizlikteki izole tık "yayılmış" görünür.
  */
 function concentrationDb(x: Float32Array, sampleRate: number): number {
   const win = Math.max(8, Math.round(0.01 * sampleRate));

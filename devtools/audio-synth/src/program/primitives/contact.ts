@@ -24,8 +24,8 @@ import { runModes } from './resonance';
  *
  * Kuvvet gövdenin ve vurucunun materyal modlarını uyarır; pürüz temas
  * penceresine gürültü katar — temasın kendisi gibi ≈ 4/t_c'de alçak
- * geçirilir (yumuşak, uzun temas pürüzü de yumuşatır; ölçüldü: süzgeçsiz
- * gürültüde kauçuk vurucu metalden PARLAK çıkıyordu); `debris` temasın ardından küçük parçacık
+ * geçirilir (yumuşak, uzun temas pürüzü de yumuşatır; süzgeçsiz gürültüde
+ * kauçuk vurucu metalden parlak çıkar); `debris` temasın ardından küçük parçacık
  * olaylarını (aynı olay motoru) ekler. `stylize` bilinçli sapmadır: temas
  * süresini 0.3 ms'e doğru kısaltır ve hız bağımlılığını sıkıştırır (abartılı
  * "snap"); 0'da tamamen fiziksel.

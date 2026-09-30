@@ -15,7 +15,7 @@ import type { Vector2 } from '../math/Vector2';
  * if (state.actions.dash) player.tryDash(aim);
  * ```
  *
- * Yan kazanç: eylem → tuş eşlemesi artık veridir (bkz. `PCActionBinding`),
+ * Eylem → tuş eşlemesi veridir (bkz. `PCActionBinding`),
  * yani yeniden atanabilir tuşlar mekanizma değişikliği gerektirmez.
  */
 export interface InputState<TAction extends string> {

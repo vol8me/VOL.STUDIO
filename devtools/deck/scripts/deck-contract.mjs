@@ -66,8 +66,8 @@ export function parseAvahiBrowse(text) {
 
 /**
  * `steam-client-create-shortcut --parms` gövdesi.
- * `env` alanı boş sözlüktür: anahtar ZORUNLUDUR (araç KeyError ile düşer,
- * ölçüldü 2026-09-27) ama değerleri oyuna güvenilir ulaşmaz; değişkenler
+ * `env` alanı boş sözlüktür: anahtar ZORUNLUDUR (araç KeyError ile düşer)
+ * ama değerleri oyuna güvenilir ulaşmaz; değişkenler
  * başlatıcı betiğin okuduğu mode.env dosyasından verilir.
  */
 export function buildShortcutParms({ gameid, directory, argv, settings = {} }) {
@@ -539,7 +539,7 @@ export function assertCleanConfirmation(gameid, confirmation) {
 }
 
 /**
- * İzlenen güç sayaçları — 2026-09-27 LCD Deck ölçümüyle doğrulanmış.
+ * İzlenen güç sayaçları (LCD Deck'te doğrulandı; bkz. docs/steam-deck.md).
  * RAPL `energy_uj` root-readable (açılamaz); paket gücü `amdgpu` hwmon'unun
  * `power*_average` (µW) alanlarından okunur. hwmon numarası sürüme göre
  * değişebilir; `hwmonByName` uzaktaki sayacı ada göre bulur, sabit numara

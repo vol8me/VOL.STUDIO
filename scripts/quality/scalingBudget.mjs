@@ -11,9 +11,8 @@
  * kareselde ~16. Bu oran, donanım ne olursa olsun aynı kalır — yakalanan şey
  * hız değil, KARMAŞIKLIKTIR.
  *
- * Ayırma (bayt/kare) neden kapı değil: ölçüldü, `--expose-gc` ile bile 146 ile
- * 408 bayt arasında salınıyor (2,8 kat). Benchmark'ın kendisi de o alanı
- * "gürültülü" diye etiketliyor. Kapılanamayacak bir sayıyı kapılamak, kapıya
+ * Ayırma (bayt/kare) neden kapı değil: `--expose-gc` ile bile koşudan koşuya
+ * kat kat salınır; benchmark da o alanı "gürültülü" diye etiketler. Kapılanamayacak bir sayıyı kapılamak, kapıya
  * olan güveni bitirir.
  */
 import { execFileSync } from 'node:child_process';

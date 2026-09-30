@@ -8,14 +8,6 @@ kapanış yeni madde olarak açılır.
 
 Sıra yukarıdan aşağıya uygulama sırasıdır.
 
-### Hiyerarşi ve temizlik
-
-- [ ] **[P1] Bağlam ve bağlamlı yorum temizliği.** Belgelerdeki bağlam anlatısı
-      silinir; bütün kaynak türlerinde tarihçe, plan ve faz kimliği, ölçüm
-      günlüğü, karar anlatısı ve kodu tekrar eden yorumlar kalkar. Yorumda
-      yalnız koddan okunamayan gerekçe ve sözleşme kalır. Kapanır: tarama bu
-      kalıplarda sıfır verir; yorum bekçisi kuralı kilitler.
-
 ### VOL.TEST — test ortamı oyunu
 
 Analiz: yerel sertleştirme raporu §0.4. Uygulama analizin onayından sonra
@@ -44,7 +36,8 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
 - [ ] **[P1] SB — Belgeler sıfırdan.** `AGENTS.md`, `CLAUDE.md`, bütün
       README'ler ve `DESIGN.md`ler yeniden yazılır: kısa, net, gerçek. İngilizce
-      README'ler silinir. `docs/` gerçekle doğrulanır; Deck belgesi ölçülmüş
+      README'ler silinir. Belgelerdeki bağlam anlatısı (tarihçe, karar süreci,
+      oturum hikâyesi) kalkar. `docs/` gerçekle doğrulanır; Deck belgesi ölçülmüş
       gerçek, karar ve devkit sözleşmesi olarak yeniden kurulur. Paket
       TODO'larının `Kapatılanlar` bölümleri tek satırlık maddelere iner.
       Kapanır: belge kapıları yeşil, İngilizce kopya kalmaz.
@@ -92,6 +85,7 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
 ## Kapatılanlar
 
+- [x] Kod yorumlarında bağlam temizliği; bekçi `scripts/quality/contextComments.mjs`.
 - [x] SC — Kök ve repo temizliği; kök girdileri gerekçesiyle kilitli (`scripts/quality/rootEntries.mjs`).
 - [x] SH5 — audio-synth: v1 emekli (K7), kernel katmanı, testler kaynağın aynası, veri corpus/records/locks altında ve yeniden yayımlandı (K6).
 - [x] SH4 — CORE hiyerarşisi: amaçlı dizinler, ui/controls bölündü, stiller grubun yanında, testler kaynağın aynası.

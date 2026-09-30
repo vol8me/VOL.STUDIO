@@ -329,8 +329,8 @@ describe('koleksiyon sınır sözleşmeleri', () => {
   });
 
   it('SlotContainer.clearSlot kesirli indekste diziyi KİRLETMEZ', () => {
-    // Ölçülen eski davranış: slots anahtarları ["0","1","1.5"] oluyordu ve
-    // fill() o özelliği temizleyemiyordu.
+    // Kesirli indeks diziye "1.5" adlı bir özellik ekler ve fill() onu
+    // temizleyemez.
     const bag = new SlotContainer<string>({ size: 2 });
     bag.add('a');
 
@@ -348,8 +348,8 @@ describe('koleksiyon sınır sözleşmeleri', () => {
   });
 
   it('Deck.reset BÜYÜK destede patlamaz ve kart kaybetmez', () => {
-    // Ölçülen eski davranış: push(...spread) 200k kartta RangeError
-    // fırlatıyor, splice zaten çalıştığı için TÜM DESTE kayboluyordu.
+    // push(...spread) 200k kartta RangeError fırlatır; splice'tan sonra
+    // fırlarsa bütün deste kaybolur.
     const size = 200_000;
     const cards = Array.from({ length: size }, (_, i) => i);
     const deck = new Deck(cards, createRandom(1));

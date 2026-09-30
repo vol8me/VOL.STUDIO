@@ -167,8 +167,8 @@
  * Oyun bu sırada duraklatıldığı için animasyon oynanışı geciktirmez;
  * amaç, panelin ekrana "çarpması" yerine yerine oturması.
  *
- * `:not(.vol-card-picker--leaving)` BİLEREK eklendi: `hide()` artık
- * `hidden`'ı hemen değil `HIDE_ANIMATION_MS` sonra uyguluyor (bkz.
+ * `:not(.vol-card-picker--leaving)` BİLEREKTİR: `hide()` `hidden`'ı hemen
+ * değil `HIDE_ANIMATION_MS` sonra uygular (bkz.
  * CardPicker.ts) — o ara pencerede eleman hâlâ `:not([hidden])`, bu satır
  * olmasaydı giriş ve çıkış animasyonu AYNI ANDA uygulanıp çakışırdı.
  */

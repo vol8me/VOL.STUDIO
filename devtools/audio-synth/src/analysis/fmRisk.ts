@@ -33,8 +33,7 @@ export type FmModulatorClass =
  * `carrier-*` sınıfları PM'in taşıyıcı kenarına etkisini taşır: BLEP
  * rezidüeli kenar-zamanlamasını sabit faz adımıyla hesaplar, faz modülasyonu
  * kenarı kaydırınca rezidüel katkısı birkaç dB hatayla yerleşir — kenarlı
- * taşıyıcı, kenarlı modülatörden daha sıkı sınırlara sahiptir (F6a
- * kalibrasyonu).
+ * taşıyıcı, kenarlı modülatörden daha sıkı sınırlara sahiptir.
  */
 export const FM_ALIAS_LIMITS = {
   version: 2,

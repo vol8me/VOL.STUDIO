@@ -28,7 +28,7 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
  * alanından girilir.
  *
  * Değer her zaman `#rrggbb` biçiminde ve küçük harfle normalize edilir; palet
- * verisi (D6) bu biçimi bekler ve iki farklı yazımın aynı rengi göstermesi
+ * verisi bu biçimi bekler ve iki farklı yazımın aynı rengi göstermesi
  * karşılaştırmaları sessizce bozardı.
  */
 export class ColorPicker {

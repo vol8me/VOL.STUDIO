@@ -75,8 +75,7 @@ describe('CSS token bütünlüğü', () => {
       /*
        * YEDEĞİ OLAN KULLANIM DA MUAF DEĞİLDİR.
        *
-       * Yorum bir dönem bunun tersini söylüyordu ama kod hiç öyle davranmadı;
-       * doğru olan koddur. `var(--vol-hit-taget-min, auto)` gibi yanlış yazılmış
+       * `var(--vol-hit-taget-min, auto)` gibi yanlış yazılmış
        * bir ad, yedeği yüzünden sayfada hiçbir belirti göstermez — kural sessizce
        * yedeğe düşer. Tanımı ŞART koşmak o yazım hatasını burada yakalar; bir
        * token'ın masaüstünde bilerek değersiz kalması (`--vol-hit-target-min`)

@@ -70,7 +70,7 @@ export class MultiTouchZone {
 
   destroy(): void {
     // Aktif parmaklar varken yok edilirse çağıranın parmak-başına durumu
-    // (seçim, çizim, tuş) ASILI KALIRDI: `onTouchEnd` hiç gelmiyordu. DOM
+    // (seçim, çizim, tuş) `onTouchEnd` gelmediği için asılı kalır. DOM
     // kaldırıldığında tarayıcı capture'ı kendi bırakır ama bu örtük davranışa
     // yaslanmak, tüketiciye bildirim borcunu ödemez.
     for (const pointerId of [...this.activePointers]) {

@@ -26,7 +26,7 @@ import type { SearchCandidateOutput } from './parallelTasks';
 import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
 
 /**
- * Referans-uydurma deneyi (araştırma kapısı F6b). Bir fit dizini
+ * Referans-uydurma deneyi (araştırma kapısı). Bir fit dizini
  * `<fitsRoot>/<fitId>/` altında `spec.json`, `report.json` ve en iyi adayın
  * `best-program.json`'unu taşır. Fit çıktısı production kaydı DEĞİLDİR:
  * manifest/job/publish yüzeyine dokunmaz; uydurulan program yalnız kopya

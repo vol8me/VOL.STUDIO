@@ -18,10 +18,9 @@ import { uiCssFiles } from '../support/uiCss';
  * şeridiyle uygulanır. Bu yüzden `consumesToken`ın "hem min-height hem
  * min-width" kuralı yerine yalnızca token'a DAYANDIKLARI aranır.
  *
- * Önceden liste `.vol-slider__track` / `.vol-range-slider__track` diyordu ve
- * token doğrudan GÖRSEL çubuğa uygulanıyordu; dokunmatik cihazda 16 px'lik
- * çubuk 44 px'e şişip kaydırıcıyı bozuyordu (gerçek cihazda görüldü). Hedef,
- * çubuğun görünümünü değiştirmeyen görünmez yüzeylere taşındı.
+ * Token görsel çubuğa uygulanmaz: dokunmatikte 16 px'lik çubuğu 44 px'e
+ * şişirip kaydırıcıyı bozar. Hedef, çubuğun görünümünü değiştirmeyen
+ * görünmez yüzeylerdedir.
  */
 const ALSO_REQUIRED: ReadonlyArray<{ selector: string; reason: string }> = [
   {

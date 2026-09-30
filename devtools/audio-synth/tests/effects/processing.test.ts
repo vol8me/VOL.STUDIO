@@ -12,7 +12,7 @@ import { crush, saturate } from '../../src/synthesis/saturation';
 import { powerSpectrum } from '../../src/analysis/spectrum';
 
 /**
- * Dalga 10 işleme kapanış kanıtları: EQ standart frekans yanıtı fixture'ları
+ * İşleme kanıtları: EQ standart frekans yanıtı fixture'ları
  * (analitik + ölçülen), kompresör statik/dinamik eğrisi, sessiz sidechain'de
  * bit-eşitlik ve ducking zarfı, true-peak sınırlayıcının tavanı.
  */

@@ -14,10 +14,8 @@ vi.mock('@tauri-apps/api/core', () => ({
 /**
  * Bekleyen promise zincirlerini boşaltır.
  *
- * Testler eskiden sabit sayıda `await Promise.resolve()` ile ilerliyordu; bu,
- * gözlemcinin İÇ mikro-görev sayısına bağımlılıktı — sıralama sertleştirilince
- * (kuyruk + nesil sayacı) davranış aynı kalmasına rağmen testler düştü. Makro
- * göreve düşmek zincirin derinliğinden bağımsızdır.
+ * Sabit sayıda `await Promise.resolve()` gözlemcinin iç mikro-görev sayısına
+ * bağımlı kalır; makro göreve düşmek zincirin derinliğinden bağımsızdır.
  */
 function flushPromises(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));

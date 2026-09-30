@@ -98,7 +98,7 @@ export class PullToRefresh {
     this.pullStartY = event.clientY;
     this.activePointerId = event.pointerId;
     // Capture olmadan, gösterge büyüdükçe scrollArea ekranda aşağı kayar ve pointerup
-    // artık element üzerinde gerçekleşmeyebilir (büyük çekmelerde "ready" fazında takılı kalırdı).
+    // element üzerinde gerçekleşmeyebilir (büyük çekmede "ready" fazında takılı kalır).
     this.scrollArea.setPointerCapture(event.pointerId);
     // "settling" geçişi kapatılır, aksi halde height bir önceki bırakışın geçiş süresi kadar gecikmeli tepki verir.
     this.indicator.classList.remove('vol-pull-refresh__indicator--settling');

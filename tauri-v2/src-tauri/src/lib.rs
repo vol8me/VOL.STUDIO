@@ -33,8 +33,7 @@ fn stop_haptics() {
 ///
 /// Linux'ta `Window::is_fullscreen()` yalnız uygulamanın kendi `set_fullscreen`
 /// isteğini hatırlar (tao 0.35): pencere yöneticisi pencereyi tam ekrana alıp
-/// çıkardığında değer değişmez ve ayar yanlış kipte kalır (KDE Plasma'da
-/// ölçüldü). Durum bu yüzden GDK'dan okunur. Komut `async`tir: GTK nesnesi
+/// çıkardığında değer değişmez ve ayar yanlış kipte kalır. Durum bu yüzden GDK'dan okunur. Komut `async`tir: GTK nesnesi
 /// yalnız ana iş parçacığında kullanılabilir ve senkron komut ana döngüyü
 /// beklerken kilitlenirdi.
 #[tauri::command]
@@ -267,7 +266,7 @@ impl LinuxSession {
 }
 
 /// Gamescope oturumu: SLR4 oyun kabı gamescope soketini ve istatistik
-/// borusunu ortama koyar (2026-09-27 Deck env dökümünde ikisi de vardı).
+/// borusunu ortama koyar.
 /// `SteamDeck=1` tek başına yeterli değildir: masaüstü kipinde de durur.
 #[cfg(target_os = "linux")]
 fn is_gamescope() -> bool {

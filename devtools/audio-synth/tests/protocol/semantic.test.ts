@@ -244,7 +244,7 @@ describe('semantic scorer koşusu', () => {
   });
 });
 
-describe('kabuksuz başlatma (R5)', () => {
+describe('kabuksuz başlatma', () => {
   it('argv içindeki ; $() && kabuk tarafından yorumlanmaz', () => {
     repo = createTestRepo();
     const marker = join(repo.root, 'pwnd');
@@ -269,7 +269,7 @@ describe('kabuksuz başlatma (R5)', () => {
 
   it('eski kabuk-quoted komut metni çalıştırılabilir değildir (toolchain)', () => {
     repo = createTestRepo();
-    // `"node" "script"` gibi kabuk dizisi artık tek argv[0] sayılır ve yoktur.
+    // `"node" "script"` gibi kabuk dizisi tek argv[0] sayılır ve yoktur.
     expect(
       codeOf(() =>
         runSearch(repo!.root, ROOT, programSpec({ searchId: 'sem-shell' }), {

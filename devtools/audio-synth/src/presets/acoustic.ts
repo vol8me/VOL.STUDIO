@@ -5,8 +5,8 @@ import { reach, belowFundamental } from './utils';
  * PERDEYE GÖRE filtre kesimi.
  *
  * Sabit bir kesim, presetin karakterini yalnız bir oktavda doğru kılar: 3400
- * Hz'lik bir lowpass marimbanın 4:1 akordunu C3'te korur ama C7'de yok eder
- * (ölçüldü: kısmi/temel oranı 0,41 → 0,035). Kesim, enstrümanın ULAŞMASI
+ * Hz'lik bir lowpass marimbanın 4:1 akordunu C3'te korur ama C7'de yok eder.
+ * Kesim, enstrümanın ULAŞMASI
  * gereken en üst kısmi tona göre verilir ve mutlak bir tabanı korur — o taban
  * malzemenin kendi parlaklığıdır ve pes kayıtta kaybolmamalıdır.
  *
@@ -60,8 +60,7 @@ export function drawbarOrgan(frequency = 220, duration = 1.6): SynthParams {
       // Bırakış UZUN tutulur (0,45 sn) ve gerekçesi tınlama değil KESİLMEDİR:
       // `synthesize` tamponu tam `duration` kadar üretir, reverb kuyruğunu
       // kesip atar. Kısa bırakışta ses hâlâ yüksekken tampon biter ve son
-      // örnek 0,027'de kalır — art arda dizildiğinde duyulur bir tık. Uzun
-      // bırakışla aynı yer 0,0014'e iner (ölçüldü, 19 kat).
+      // örnekte duyulur bir tık kalır; uzun bırakış o noktayı sessizliğe indirir.
       sustain: Math.max(0, duration - 0.47),
       release: 0.45,
       sustainLevel: 1,
@@ -187,8 +186,8 @@ export function vibraphone(frequency = 349, duration = 2.4): SynthParams {
       sustainLevel: 0.3,
     },
     // Motor genlik LFO'sunu yarılar (`sample *= 1 - lfo * 0.5`), yani buradaki
-    // 0.6 çıkışta ~%22 tepe-dip demektir. 0.34 ölçüldüğünde ~%12 veriyordu ve
-    // enstrümanın imzası olacak kadar belirgin değildi.
+    // 0.6 çıkışta ~%22 tepe-dip demektir; daha sığ derinlik enstrümanın
+    // imzası olacak kadar belirgin değildir.
     lfos: [{ target: 'amplitude', rate: 5.5, depth: 0.6, wave: 'sine' }],
     lowpass: { cutoff: reach(frequency, 12, 6200), resonance: 0.05, poles: 2, type: 'lowpass' },
     reverb: { amount: 0.34, decay: 0.7, roomSize: 0.7, damp: 0.4 },

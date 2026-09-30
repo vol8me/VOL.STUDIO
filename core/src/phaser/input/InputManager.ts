@@ -139,7 +139,7 @@ export class InputManager<TAction extends string> {
   /**
    * Bu karenin girdi durumunu üretir.
    *
-   * Sağlayıcılar artık BİRLEŞTİRİLİR, tek kazanan seçilmez:
+   * Sağlayıcılar BİRLEŞTİRİLİR, tek kazanan seçilmez:
    *
    * - **Eylemler** tüm etkin sağlayıcılar üzerinden VEYALANIR — kol düğmesi
    *   WASD basılıyken de çalışır; hiçbir kip ötekini kilitlemez.

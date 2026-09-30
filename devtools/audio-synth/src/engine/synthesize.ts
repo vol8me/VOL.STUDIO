@@ -79,9 +79,8 @@ function synthesizeAt(
     const startOffset = Math.floor(r * p.repeatTime * internalRate);
     const count = Math.min(durationSamples, internalSampleCount - startOffset);
 
-    // Sesler her tekrar için yeniden kurulur: faz artık birikimli olduğundan
-    // paylaşılan bir ses, tekrarları birbirine kaydırırdı. Zarf ve filtreler
-    // zaten bu deseni kullanıyordu.
+    // Sesler her tekrar için yeniden kurulur: faz birikimli olduğundan
+    // paylaşılan bir ses tekrarları birbirine kaydırır.
     const voices = createVoices(p.waves, p.detune, p.fm, duration, p.harmonics, seed + r * 1013);
 
     const envelope = new Envelope(envelopeParams, duration);

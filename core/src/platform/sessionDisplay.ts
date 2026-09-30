@@ -5,7 +5,7 @@
  * gamescope çerçeve arabelleğini sahiplenir: WebView'ın kendi penceresi ya
  * da iç render çözünürlüğü seçilemez. Bu oturumda pencere kipi ve
  * çözünürlük satırı GÖSTERİLMEZ — işe yaramayan kontrol sunmak ayar
- * ekranının yalan söylemesidir (D5c). Grafik kalitesi geçerliliğini korur;
+ * ekranının yalan söylemesidir. Grafik kalitesi geçerliliğini korur;
  * ekran başına bir tercihtir ve `device` kalıcılık kapsamına aittir.
  *
  * Oturum sınıfını ürün kodu algılamaz: kabuk `getSessionKind` ile bildirir,

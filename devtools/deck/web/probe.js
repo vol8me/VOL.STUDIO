@@ -80,7 +80,7 @@ async function audioProbe(reason) {
 async function start() {
   const env = await invoke('plugin:vol-diagnostics|env_info');
   const sessionKind = await invoke('session_kind').catch(() => 'unknown');
-  // D4 kanıtı: hidraw (Deck HID raporu) ya da evdev FF_RUMBLE — kabuk
+  // Titreşim: hidraw (Deck HID raporu) ya da evdev FF_RUMBLE — kabuk
   // arka ucu ölçülmüş sırayla seçer; 'none' ise scan sayaçları raporda durur.
   const haptics = await invoke('vol_haptics_status').catch(() => ({ backend: 'error' }));
   await log('haptics-status', { haptics });
@@ -97,7 +97,7 @@ async function start() {
   } else {
     show('haptics', `haptik: ${haptics.backend}`);
   }
-  // D6 kanıtı: eklenti kayıtlıdır; `available` ancak Steam istemcisi
+  // Steamworks: eklenti kayıtlıdır; `available` ancak Steam istemcisi
   // bağlantısı kurulabildiyse true. Devkit lansmanında overlay takılı
   // olmayabilir — o zaman diyalog çağrısı `false` döner ve raporda durur.
   const sw = await invoke('plugin:vol-steamworks|status').catch((e) => ({ error: String(e) }));

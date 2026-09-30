@@ -109,7 +109,7 @@ export class TouchStickState<TAction extends string> {
    * o yarı zaten doluysa dokunuş yok sayılır.
    */
   onPointerDown(pointerId: number, x: number, y: number, isRightSide: boolean): void {
-    // `base` ve `current` AYRI nesneler olmalı: `updateStick` artık `current`i
+    // `base` ve `current` AYRI nesneler olmalı: `updateStick` `current`i
     // yerinde günceller (allocation'sız sıcak yol) ve tek nesne paylaşılsaydı
     // parmağın her hareketi stick'in TABANINI da sürükler, joystick ekranda
     // kayardı. Dokunuş başına iki küçük ayırma, kare başına dörtten ucuzdur.

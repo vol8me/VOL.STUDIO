@@ -116,10 +116,9 @@ describe('Grid', () => {
 
   describe('tam sayı sözleşmesi', () => {
     it('KESİRLİ indekse yazmak REDDEDİLİR', () => {
-      // Ölçülen eski davranış: set(1.5, 1, 'x') true dönüyor, get(1.5, 1)
-      // değeri geri veriyor, ama filledCount 0 kalıyordu — değer dizide
-      // "1.5" adlı normal bir ÖZELLİK olarak yaşıyor, forEach/clear onu hiç
-      // görmüyordu. Görünmez, temizlenmeyen veri.
+      // Kesirli indeks kabul edilseydi değer dizide "1.5" adlı bir özellik
+      // olarak yaşar, filledCount/forEach/clear onu görmezdi: görünmez,
+      // temizlenmeyen veri.
       const grid = new Grid<string>(3, 3);
 
       expect(grid.set(1.5, 1, 'x')).toBe(false);

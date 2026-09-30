@@ -64,7 +64,7 @@ export interface RenderOptions extends LoudnessOptions {
    *
    * `tailSeconds` payı en uzun notanın bitişine göre verilir, ama motor her
    * notanın reverb kuyruğunu kendi süresinde keser — pay çoğu zaman tümüyle
-   * boş kalır (ölçüldü: bir parçada sonda 4 saniye tam sessizlik). Kırpılan
+   * boş kalır. Kırpılan
    * aralık yükseklik ölçümüne GİRMEZ.
    */
   trimSilence?: boolean;

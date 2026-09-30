@@ -36,10 +36,9 @@ function cssVarDurationMs(css: string, varName: string): number {
  * Bir kural bloğundaki tek bir bildirimin değerini döndürür.
  *
  * Yorumlar eşleştirmeden ÖNCE atılır ve bildirim bir satır başından da
- * yakalanır. Ayrıştırıcı bir dönem her bildirimin bir `;`den sonra geldiğini
- * varsayıyordu: araya bir açıklama bloğu giren ilk bildirimde sessizce
- * "bulunamadı" demeye başlıyordu — yani test, sınadığı dosyanın YORUMLANMASINA
- * karşı kırılgandı.
+ * yakalanır; yoksa araya açıklama bloğu giren ilk bildirim sessizce
+ * "bulunamadı" olur ve test, sınadığı dosyanın yorumlanmasına karşı kırılgan
+ * kalır.
  */
 function cssDeclaration(css: string, selector: string, property: string): string {
   const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -55,7 +54,7 @@ function cssDeclaration(css: string, selector: string, property: string): string
 /**
  * `var(--x)` biçimindeki bir değeri `theme.css`teki tanımına çözer.
  *
- * Boyutlar tip ölçeğine bağlandığında CSS artık ham piksel taşımaz; sabiti
+ * Boyutlar tip ölçeğine bağlı olduğu için CSS ham piksel taşımaz; sabiti
  * doğrudan `var(...)` metniyle karşılaştırmak testi anlamsız kılardı. Çözerek
  * karşılaştırmak sözleşmeyi GÜÇLENDİRİR: hem sabitin doğru olduğunu hem de
  * bileşenin doğru ölçek kademesini kullandığını aynı anda doğrular.

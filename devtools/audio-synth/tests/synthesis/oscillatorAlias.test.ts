@@ -41,10 +41,7 @@ function aliasDb(x: Float32Array, f: number): number {
 /**
  * Motor osilatör alias'ı ÖLÇÜLEREK kilitlenir: sınır ölçülen değerin 2 dB
  * üstüdür. Tam ızgara `scripts/research/polyblep-alias-report.ts` ile koşulur; bu
- * dosya temsil noktalarını ve F6a'nın sözleşme hedefini taşır.
- *
- * F6a öncesi 3.6 kHz testere ~−47 dB ölçülüyordu; pencerelenmiş-sinc BLEP
- * rezidüeli sonrası −88.3 dB. Retro yolun kilidi `tests/synthesis/retro.test.ts`te.
+ * dosya temsil noktalarını taşır. Retro yolun kilidi `tests/synthesis/retro.test.ts`te.
  */
 describe('motor osilatör alias kilidi', RENDER_BLOCK, () => {
   const limits: [wave: 'sawtooth' | 'square', f: number, limit: number][] = [
@@ -62,16 +59,14 @@ describe('motor osilatör alias kilidi', RENDER_BLOCK, () => {
     expect(aliasDb(sample(wave, f), f)).toBeLessThanOrEqual(limit);
   });
 
-  it('F6a sözleşme hedefi: 3.6 kHz testere < −70 dB', () => {
+  it('sözleşme hedefi: 3.6 kHz testere < −70 dB', () => {
     expect(aliasDb(sample('sawtooth', 3600), 3600)).toBeLessThan(-70);
   });
 });
 
 /**
- * R2e üçgen taşıyıcı: sabit harmonik tablosu yerini naif üçgen + BLAMP
- * (BLEP rezidüelinin integrali) eğim-düzeltmesine bıraktı. 5 kHz'de tablo
- * yolu ~−43.3 dB ölçülüyordu; BLAMP ile −60.4 dB. Sınır ölçülenin 2 dB
- * üstündedir.
+ * Üçgen taşıyıcı: naif üçgen + BLAMP (BLEP rezidüelinin integrali)
+ * eğim-düzeltmesi. Sınır ölçülenin 2 dB üstündedir.
  */
 describe('üçgen BLAMP alias kilidi', RENDER_BLOCK, () => {
   const limits: [f: number, limit: number][] = [

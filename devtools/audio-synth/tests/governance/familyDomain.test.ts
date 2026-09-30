@@ -56,7 +56,7 @@ describe('aile/arama kodu oyun alanından bağımsız', () => {
   });
 
   it('rol sözlüğü kapalı ve genel: eksen listesi bilinçli bir karar olmadan değişmez', () => {
-    // Dalga 12 kararı: üç SIRALI oyun durumu ekseni eklendi. Genel anlamdır
+    // Üç SIRALI oyun durumu ekseni vardır. Genel anlamdır
     // (enerji, aciliyet, bütünlük); silah/motor/yaratık gibi domain nesnesi
     // değildir, eşleme tüketicidedir.
     expect(ROLE_AXES).toEqual({

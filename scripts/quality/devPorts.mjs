@@ -10,9 +10,6 @@ import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mj
  * ancak iki sunucu AYNI ANDA ayaktayken ortaya çıkar ve o an genellikle
  * `pnpm high` koşarken olur. Kapı düşer, sebebi kodun hiçbir yerinde yazmaz.
  *
- * Ölçüldü: 5181 hem `devtools/vol-ui` e2e varsayılanıydı hem de bir oyunun
- * önizleme portu olarak seçilebiliyordu.
- *
  * Bekçi PORT NUMARASINI kaynaktan okur; çalışan bir sunucuya ihtiyaç duymaz.
  */
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', 'target', 'gen']);

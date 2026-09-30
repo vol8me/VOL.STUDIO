@@ -5,8 +5,7 @@ import { masterChannels } from '../engine/master';
  *
  * `normalize()` TEPEYE göre çalışır ve bu, parçaları eşit yükseklikte YAPMAZ:
  * vurmalı bir doku ile sürekli bir doku aynı tepede çalarken aralarında 10
- * dB'lik duyulur bir fark kalır (ölçüldü — klavsen −27,4 dB, org −16,9 dB
- * ortalama, ikisi de tepede −1 dB). Art arda çalınan parçalarda bu, ses
+ * dB'lik duyulur bir fark kalır. Art arda çalınan parçalarda bu, ses
  * düğmesine uzanmak demektir.
  */
 

@@ -4,8 +4,8 @@
  *
  * Şekil kapısı (`coverage-shape`) diskteki `coverage/lcov.info` dosyalarını
  * okur. Bu kayıt olmadan hangi dosyanın bu koşudan, hangisinin eski bir
- * koşudan kaldığını bilemez: ölçüldü, `high` audio-synth'i ölçmüyordu ama şekil
- * kapısı onun önceki bir koşudan kalan lcov'unu değerlendiriyordu.
+ * koşudan kaldığını bilemez ve ölçülmeyen bir paketin bayat lcov'unu
+ * değerlendirir.
  *
  * Ölçülecek paketler `quality.json` → `coverageRuns` içinde yazılıdır; tarif
  * paket listesini tekrarlamaz.

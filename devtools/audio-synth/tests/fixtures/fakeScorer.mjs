@@ -1,5 +1,5 @@
 /**
- * Semantic scorer test kuklası (F6c) — bağımlılıksız Node süreci.
+ * Semantic scorer test kuklası — bağımlılıksız Node süreci.
  *
  * `search run --semantic --scorer '["node","tests/fixtures/fakeScorer.mjs"]'`
  * ile koşulur. stdin'den SemanticScoreRequestV1 okur, stdout'a

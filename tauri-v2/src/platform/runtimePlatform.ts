@@ -17,8 +17,8 @@ const defaultProbe: RuntimePlatformProbe = {
  * dokunmatik değildir ama geri tuşu uygulamaya gelir ve sistem çubukları gizlidir;
  * dokunmatik ekranlı dizüstü ise bir masaüstü penceresidir.
  *
- * Android, Tauri içinde WebView kullanıcı ajanından tanınır (ölçüldü, SM-G990B2:
- * `Linux; Android 16; …; wv`). Tarayıcıdaki Android telefon `web`dir.
+ * Android, Tauri içinde WebView kullanıcı ajanından tanınır
+ * (`Linux; Android 16; …; wv`). Tarayıcıdaki Android telefon `web`dir.
  */
 export function getRuntimePlatform(probe: RuntimePlatformProbe = defaultProbe): RuntimePlatform {
   if (!probe.isTauri()) return 'web';

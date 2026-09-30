@@ -81,7 +81,7 @@ describe('MusicEngine', () => {
 
   it('master volume ve mute çalışır', () => {
     const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
-    // Gain değişimleri artık lineer rampa ile yapılıyor (hedefe TAM varır);
+    // Gain değişimleri lineer rampadır (hedefe TAM varır);
     // değeri okumadan önce rampanın bitiş anına ilerlemek gerekir.
     const gain = engine.mixer.masterGain.gain as unknown as {
       value: number;
@@ -116,8 +116,8 @@ describe('MusicEngine', () => {
       gain.advanceTo(fakeContext.currentTime);
     };
 
-    // Mixer'ın kendi mute()'u — önceden sabit 1 yazıyordu ve kullanıcının
-    // ayarladığı seviyeyi yok sayıp sesi %100'e fırlatıyordu.
+    // Mixer'ın kendi mute()'u kullanıcının ayarladığı seviyeye döner; sabit 1
+    // yazmak sesi %100'e fırlatırdı.
     engine.mixer.setMasterGain(0.3, 0);
     engine.mixer.mute(true);
     settle();
@@ -285,10 +285,8 @@ describe('MusicEngine — eşzamanlılık ve buffer önbelleği', () => {
     const bufferB = makeBuffer(fakeContext, 3);
 
     await engine.loadTrack({ id: 'trackA', bpm: 120, stems: [{ id: 'pad', buffer: bufferA }] });
-    // AYNI stem.id ('pad'), FARKLI buffer — eskiden buffer önbelleği salt
-    // `stem.id` ile anahtarlandığı için `loadTrack` burada sessizce
-    // atlıyordu (`if (buffers.has('pad')) return`) ve trackB, trackA'nın
-    // buffer'ını çalardı.
+    // AYNI stem.id ('pad'), FARKLI buffer: önbellek yalnız `stem.id` ile
+    // anahtarlansaydı trackB, trackA'nın buffer'ını çalardı.
     await engine.loadTrack({ id: 'trackB', bpm: 120, stems: [{ id: 'pad', buffer: bufferB }] });
 
     await engine.play('trackB');
@@ -307,9 +305,8 @@ describe('MusicEngine — eşzamanlılık ve buffer önbelleği', () => {
     await engine.loadTrack({ id: 'trackB', bpm: 120, stems: [{ id: 'b', buffer: bufferB }] });
 
     // İkisi de birbirini beklemeden çağrılır — trackA'nın loadTrack await'i
-    // sırasında trackB gelir. Eskiden hangisinin loadTrack'i önce dönerse o
-    // kazanırdı (çağrı sırasına değil, network/microtask zamanlamasına bağlı
-    // bir yarış); artık her zaman SON çağrı (trackB) kazanmalı.
+    // sırasında trackB gelir. Kazanan, loadTrack zamanlamasına değil çağrı
+    // sırasına bağlıdır: her zaman SON çağrı (trackB).
     const playA = engine.play('trackA');
     const playB = engine.play('trackB');
     await Promise.all([playA, playB]);
@@ -373,9 +370,8 @@ describe('MusicEngine — eşzamanlılık ve buffer önbelleği', () => {
       stems: [{ id: 'missing' }],
     });
 
-    // Eskiden bu, activeStems boşken bile `isPlaying = true` set ederdi —
-    // hiçbir stem başlamadığı için `onended` asla tetiklenmez ve motor
-    // sonsuza dek "çalıyor" durumunda TAKILI kalırdı.
+    // Hiçbir stem başlamadıysa motor "çalıyor" durumuna geçmez; geçseydi
+    // `onended` asla tetiklenmez ve durum takılı kalırdı.
     await expect(engine.play('broken')).rejects.toThrow(/hiçbir stem/);
     expect(engine.getCurrentState().playing).toBe(false);
     expect(engine.getCurrentState().trackId).toBeUndefined();

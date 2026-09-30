@@ -1,5 +1,5 @@
 /**
- * R8a — tohumlu sınır fuzz'ı. Doğrulayıcılar ve çözücüler her bozuk girdiye
+ * Tohumlu sınır fuzz'ı. Doğrulayıcılar ve çözücüler her bozuk girdiye
  * ADLI hata vermelidir (`AudioParamError` ya da `ProtocolError`); asla
  * `TypeError`/`RangeError`/isimsiz `Error` görülmemeli. Mutasyon bazen geçerli
  * bir belge üretebilir — o zaman iddia "çökmedi"dir; fırlatıldığında tip

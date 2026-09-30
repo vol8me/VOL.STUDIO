@@ -263,9 +263,8 @@ describe('ViewportManager — render ölçeği ve dünya ayrımı', () => {
     const high = new ViewportManager({ strategy: 'resize', maxDpr: 2, renderScale: 1 });
     const low = new ViewportManager({ strategy: 'resize', maxDpr: 1, renderScale: 0.7 });
 
-    // Regresyon: dünya eskiden CİHAZ pikseliydi; 2x ekranda arena iki kat
-    // genişliyor ve dünya birimi/saniye sabit olan oyuncu hızı yarıya
-    // düşüyordu. Yani kalite ayarı OYNANIŞI değiştiriyordu.
+    // Dünya cihaz pikseli olsaydı 2x ekranda arena iki kat genişler ve dünya
+    // birimi/saniye sabit hız yarıya düşerdi: kalite ayarı oynanışı değiştirirdi.
     expect(high.getWorldSize()).toEqual(low.getWorldSize());
     expect(high.getWorldSize()).toEqual({ width: 1600, height: 900 });
   });

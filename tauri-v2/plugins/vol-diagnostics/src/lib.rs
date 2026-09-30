@@ -77,8 +77,7 @@ fn append(dir: &std::path::Path, line: &str) {
     {
         // Tek write çağrısı şart: writeln! satırı ve '\n'ı ayrı write'a
         // böler; sinyal işleyici ile JS `report` aynı anda yazarsa iki
-        // kayıt tek satırda birleşir (ölçüldü 2026-09-27, Deck SIGTERM
-        // turu). O_APPEND + tek write_all kaydı atomik tutar.
+        // kayıt tek satırda birleşir. O_APPEND + tek write_all kaydı atomik tutar.
         let _ = file.write_all(format!("{line}\n").as_bytes());
         let _ = file.sync_data();
     }

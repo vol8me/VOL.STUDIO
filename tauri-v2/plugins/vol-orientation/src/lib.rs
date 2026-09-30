@@ -1,7 +1,7 @@
 //! Android ekran yönü köprüsü.
 //!
 //! WebView'ın `screen.orientation.lock()`u Android'de `NotSupportedError`
-//! verir (ölçüldü: SM-G990B2, Android 16, WebView 152); yön ancak Activity
+//! verir (Android 16 WebView'da doğrulandı); yön ancak Activity
 //! üzerinden uygulanabilir. Komutlar JS'ten izinle çağrılır ve Kotlin
 //! eklentisine iletilir. Oyun kelimesi bilmez: hangi yönün sunulacağı ve
 //! varsayılanın ne olduğu uygulamanın kararıdır.

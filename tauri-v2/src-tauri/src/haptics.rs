@@ -122,8 +122,8 @@ mod imp {
      * 65 baytlık FEATURE raporu — [0]=rapor no, [1]=ID_TRIGGER_RUMBLE_CMD
      * (0xEB), [2]=uzunluk (0), [3..]=MsgSimpleRumbleCmd:
      * unRumbleType u8, unIntensity u16, left u16, right u16, lgain i8, rgain i8.
-     * Ölçüm (2026-09-27, LCD Deck): hidraw2 (input2, kontrolcü uç noktası)
-     * raporu rc=65 ile kabul etti; input0/input1 EPIPE verdi.
+     * Raporu yalnız kontrolcü uç noktası (Deck'te input2) kabul eder; diğer
+     * arayüzler EPIPE verir (bkz. docs/steam-deck.md).
      */
     const ID_TRIGGER_RUMBLE_CMD: u8 = 0xEB;
     const FEATURE_REPORT_BYTES: usize = 65;

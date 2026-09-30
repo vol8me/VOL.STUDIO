@@ -6,10 +6,10 @@ import { frozenWorkspacePaths, loadRepoLifecycle } from './workspaceLifecycle.mj
 /**
  * ÜRÜN İKONU — her oyun kendi görünen kimliğini taşır.
  *
- * Kimlik, yapılandırma ve Tauri bağlamı oyunlara taşındıktan sonra ikon
- * paylaşılan runtime'da kalmıştı ve Tauri'nin VARSAYILAN logosuydu: oyunların
- * masaüstü paketi ve Android başlatıcısı bayt bayt aynıydı. `tauri android
- * init` şablonu yeniden ürettiğinde varsayılan ikon sessizce geri gelir.
+ * Paylaşılan runtime'daki ikon Tauri'nin varsayılan logosudur; oyun kendi
+ * ikonunu taşımazsa masaüstü paketi ve Android başlatıcısı başka oyunlarla
+ * bayt bayt aynı olur. `tauri android init` şablonu yeniden ürettiğinde
+ * varsayılan ikon sessizce geri gelir.
  */
 
 /** Tauri şablonunun masaüstü ve Android başlatıcı ikonlarının SHA-256 özetleri. */

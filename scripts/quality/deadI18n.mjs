@@ -35,8 +35,7 @@ export const DYNAMIC_KEYS = [
 
 /*
  * Çalışma ağacı okunur, yalnız indeks değil: bölünüp henüz eklenmemiş bir kod
- * dosyasındaki kullanım görünmezse anahtar sahte biçimde "ölü" sayılır —
- * ölçüldü, 162 anahtar böyle işaretlenmişti.
+ * dosyasındaki kullanım görünmezse anahtar sahte biçimde "ölü" sayılır.
  */
 function gitFiles(root, pattern) {
   return workingTreeFiles(root, [pattern]);

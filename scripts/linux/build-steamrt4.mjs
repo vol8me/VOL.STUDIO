@@ -9,7 +9,7 @@
  *
  *   node scripts/linux/build-steamrt4.mjs <workspace>
  *
- * Kapanış şartları (TODO D1): paketteki hiçbir ELF GLIBC_2.41 üstü sürüm
+ * Sözleşme: paketteki hiçbir ELF GLIBC_2.41 üstü sürüm
  * istemez; bekçi çıktı AppDir'i üzerinde koşar ve ihlalde derleme düşer.
  */
 import { execFileSync } from 'node:child_process';

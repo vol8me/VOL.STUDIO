@@ -19,7 +19,7 @@ import { tankFire } from './graphFixtures';
 import { node } from '../support/program';
 
 /**
- * Stil (Dalga 7 P2) ve materyal (Dalga 7 P2) kapanış kanıtları: aynı tank
+ * Stil ve materyal kanıtları: aynı tank
  * programı üç profilde topolojiyi korur ve ölçülebilir farklı karakter verir;
  * aynı darbe farklı materyalde farklı mod aralığı ve sönüm verir.
  */

@@ -111,9 +111,8 @@ describe('ObjectPool', () => {
 
   describe('sahiplik', () => {
     it('havuzdan ALINMAMIŞ nesnenin iadesi REDDEDİLİR', () => {
-      // Eskiden yabancı nesne havuza giriyor, activeCount'ı sahibi olmadığı
-      // hâlde düşürüyor ve bir sonraki acquire() ile başka bir çağırana
-      // dağıtılıyordu — iki sahip aynı örneği paylaşıyordu.
+      // Kabul edilseydi yabancı nesne activeCount'ı düşürür ve bir sonraki
+      // acquire() ile başka bir çağırana dağıtılırdı: iki sahip, tek örnek.
       const p = pool();
       p.acquire();
       const foreign = { id: 999, owner: null };

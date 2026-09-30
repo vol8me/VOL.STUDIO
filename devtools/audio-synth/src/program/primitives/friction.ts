@@ -22,13 +22,13 @@ import { runModes } from './resonance';
  * - Mikro-temas hızı λ = v / tane aralığı (1 m/sn, 1 mm → 1000 olay/sn),
  *   Poisson; yuvarlanmada AYRI bir akış dönme hızında v/(2π·r) (r = 3 cm)
  *   neredeyse periyodik (düzenlilik 0.9) pes darbe verir — dönen cisim
- *   düzensizliğine turda bir kez çarpar. İlk sürümde iki akış tek akışta
- *   karışıyordu ve dönme periyodu çıktıda ölçülemiyordu (ölçüldü).
+ *   düzensizliğine turda bir kez çarpar. Akışlar ayrıdır; tek akışta
+ *   karışırsa dönme periyodu çıktıda ölçülemez.
  * - Sürekli gürültünün bant merkezi hızla yükselir (300 + 4000·v^0.6 Hz,
  *   materyal parlaklığıyla ölçekli); seviyesi basınç·v^0.7·(1 − 0.7·pürüz).
  *   Pürüz arttıkça ayrık takılma olayları baskınlaşır (olay kazancı
- *   0.2 + 1.2·pürüz): ilk sürümde olaylar sürekli gürültünün altında kalıyor
- *   ve hızla değişen olay hızı çıktıda ölçülemiyordu (ölçüldü).
+ *   0.2 + 1.2·pürüz); daha düşük kazançta olaylar sürekli gürültünün altında
+ *   kalır ve olay hızı çıktıda ölçülemez.
  * - Toplam, materyalin küçük gövde modlarından geçer (renk + kuyruk).
  *
  * Hız gesture ile sürülür; zaman ve spektrum hızla birlikte değişir, bir

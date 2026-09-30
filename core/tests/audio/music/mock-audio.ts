@@ -1,13 +1,12 @@
 /**
  * Zamanlamayi kabaca modelleyen AudioParam sahtesi.
  *
- * `when` parametresi ARTIK yok sayilmiyor: gelecege zamanlanan bir değişiklik
- * `value`'yu anında değiştirmez. Önceki sahte, "simdi kis, 130 ms sonra ac"
- * gibi iki aşamalı bir zamanlamayi tek adima indirgeyip son çağrıyı anında
- * uyguluyordu — gerçek Web Audio'da olmayan bir davranış.
+ * `when` parametresi uygulanır: geleceğe zamanlanan bir değişiklik `value`'yu
+ * anında değiştirmez, "şimdi kıs, 130 ms sonra aç" gibi iki aşamalı bir
+ * zamanlama gerçek Web Audio'daki gibi iki adımda gerçekleşir.
  *
- * `ownerContext` currentTime'i okumak için bağlanır; verilmezse eski davranış
- * (anında uygula) korunur.
+ * `ownerContext` currentTime'i okumak için bağlanır; verilmezse değişiklik
+ * anında uygulanır.
  */
 class FakeAudioParam {
   value = 0;

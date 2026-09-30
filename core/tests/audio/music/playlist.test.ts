@@ -267,10 +267,8 @@ describe('MusicPlaylist', () => {
       await Promise.resolve();
 
       // `queue.length === 1` — bir başarısızlık, listedeki HER parçanın
-      // başarısız olduğu anlamına gelir. Eskiden burada `advanceCursor()`
-      // aynı tek parçayı yeniden seçip bir retry zamanlar, o da başarısız
-      // olur, `gapMs` aralıklarla SONSUZA kadar tekrarlardı (kod yorumu bunu
-      // önlediğini iddia ediyordu ama önlemiyordu).
+      // başarısız olduğu anlamına gelir; aynı parçayı yeniden denemek
+      // `gapMs` aralıklarla sonsuza dek sürerdi.
       expect(t.pendingCount).toBe(0);
       expect(p.isRunning).toBe(false);
       expect(errorSpy).toHaveBeenCalled();

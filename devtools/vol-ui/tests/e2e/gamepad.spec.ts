@@ -3,7 +3,7 @@ import { openShowcase, selectTab } from './support/determinism';
 import { installVirtualPad, pressButton, tiltStick } from './support/gamepad';
 
 /**
- * KOL E2E kapısı — TODO D3'ün kapanış cümlesi: vitrindeki her etkileşimli
+ * KOL E2E kapısı: vitrindeki her etkileşimli
  * bileşen yalnız sanal kolla kullanılır. `installVirtualPad` sayfadan önce
  * tek `standard` kolu takar; vitrin gerçek donanım gördüğünü sanır.
  *

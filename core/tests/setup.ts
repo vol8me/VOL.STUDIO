@@ -153,12 +153,10 @@ beforeAll(async () => {
   await i18next.changeLanguage('tr');
 });
 
-// jsdom Pointer Capture API'sini implemente etmez. Stub'lar bir dönem
-// birbirinden habersizdi: `hasPointerCapture` KOŞULSUZ `false` dönüyordu, yani
+// jsdom Pointer Capture API'sini implemente etmez. Stub'lar ortak bir küme
+// üzerinden tutarlı davranır: `hasPointerCapture` koşulsuz `false` dönseydi
 // `if (el.hasPointerCapture(id)) el.releasePointerCapture(id)` yazan üretim
-// kodu testte hiçbir zaman release etmiyordu — gerçek tarayıcıda çalışan bir
-// akış testte sessizce ölü kalıyordu. Stub'lar artık ortak bir küme üzerinden
-// tutarlı davranır.
+// kodu testte hiç release etmez, gerçek akış testte ölü kalırdı.
 const capturedPointers = new WeakMap<Element, Set<number>>();
 
 for (const ctor of [HTMLElement, Element]) {

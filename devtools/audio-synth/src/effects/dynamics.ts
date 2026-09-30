@@ -114,7 +114,7 @@ const DIFFERENTIAL_RANGE_DB = 6;
  * izleyicilerinin dB farkı atak (hızlı > yavaş) ve sönüm (yavaş > hızlı)
  * bölgelerini ayırır; kazanç bu farkla orantılı ve seviyeden bağımsızdır.
  * Bırakmalar FARKLI olmalıdır: aynı bırakmada kuyrukta iki zarf aynı oranla
- * iner, yavaş olan hızlıyı hiç geçmez ve sönüm bölgesi oluşmaz (ölçüldü).
+ * iner, yavaş olan hızlıyı hiç geçmez ve sönüm bölgesi oluşmaz.
  */
 export function shapeTransients(
   channels: readonly Float32Array[],

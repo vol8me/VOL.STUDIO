@@ -29,6 +29,7 @@ import { validateTauriPlugins } from '../tauriPlugins.mjs';
 import { validateRepoAppIdentity } from '../appIdentity.mjs';
 import { validateRepoCatalog } from '../catalog.mjs';
 import { validateRepoRootEntries } from '../rootEntries.mjs';
+import { validateContextComments } from '../contextComments.mjs';
 import {
   activeWorkspaceNames,
   listWorkspacePackages,
@@ -104,6 +105,7 @@ problems.push(...validatePhaserBoundary(root));
 problems.push(...validateCoreTypeSurface(root));
 problems.push(...validateRepoCatalog(root));
 problems.push(...validateRepoRootEntries(root));
+problems.push(...validateContextComments(root, undefined, lifecycle));
 
 for (const pkg of activePackages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));

@@ -7,8 +7,8 @@ import { join } from 'node:path';
  * sayılmayan yeni dosyalar.
  *
  * Yalnız `git ls-files` okuyan bir bekçi `git add` öncesi koşan `pnpm quick`te
- * yeni dosyayı görmez. Ölçüldü: izlenmeyen 1101 satırlık bir dosya satır
- * sınırından temiz geçti. İndekste duran ama diskten silinmiş dosya okunamaz;
+ * yeni dosyayı görmez; izlenmeyen dev bir dosya satır sınırından temiz
+ * geçer. İndekste duran ama diskten silinmiş dosya okunamaz;
  * listeden düşer.
  *
  * @param root Repo kökü.

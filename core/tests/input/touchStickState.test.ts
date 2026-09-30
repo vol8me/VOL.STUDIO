@@ -261,13 +261,10 @@ describe('TouchStickState', () => {
 
   describe('hibrit cihaz önceliği', () => {
     /*
-     * "Dokunmatik her zaman PC'den önceliklidir" kuralı bir dönem hibrit
-     * cihazlarda fazla agresif sanıldı: dokunmatik ekranlı bir dizüstünde
-     * klavyeyi ikinci plana atıyor gibi görünüyordu. Ölçüldüğünde öncül yanlış
-     * çıktı — öncelik yalnız parmak GERÇEKTEN ekrandayken geçerli.
+     * "Dokunmatik PC'den önceliklidir" kuralı hibrit cihazda klavyeyi ikinci
+     * plana atmaz: öncelik yalnız parmak GERÇEKTEN ekrandayken geçerlidir.
      *
-     * Kuralı "son etkinlik kazansın"a çevirmek, tam da onu var eden hatayı geri
-     * getirirdi: bir dokunuştan miras kalan bayat `activePointer` PC'yi aktif
+     * Kural "son etkinlik kazansın" olsaydı: bir dokunuştan miras kalan bayat `activePointer` PC'yi aktif
      * gösterir ve öncelik ona geçerdi. Bu yüzden sözleşme burada KİLİTLENİR;
      * değiştirilecekse bilinçli olarak değiştirilsin.
      */

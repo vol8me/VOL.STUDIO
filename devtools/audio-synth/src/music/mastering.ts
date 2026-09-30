@@ -28,10 +28,9 @@ export const MASTER_CEILING = 0.95;
 export const MASTER_END_FADE_SECONDS = 0.04;
 const MAX_MASTER_GAIN_DB = 24;
 /**
- * Kodek sonrası −1 dBTP politikası için kaynakta bırakılan pay. Ölçüldü:
- * libvorbis dönüşü true peak'i ~0.2 dB yükseltiyor (kaynakta −1.086 dBTP
- * olan referans cue kodek sonrası −0.88 çıktı ve kapı onu reddetti). 2 dB
- * pay bu büyümeyi sınırlayıcı EKLEMEDEN kapatır.
+ * Kodek sonrası −1 dBTP politikası için kaynakta bırakılan pay: libvorbis
+ * dönüşü true peak'i yaklaşık 0.2 dB yükseltir; 2 dB pay bu büyümeyi
+ * sınırlayıcı EKLEMEDEN kapatır.
  */
 export const TRUE_PEAK_MARGIN_DB = 2;
 

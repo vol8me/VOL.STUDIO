@@ -39,8 +39,6 @@ export const LAYOUT_POLICY = {
      * Mono katlamada kaybedilen yükseklik tavanı (LU). Tam ilintili stereo
      * 0, ilintisiz eşit kanallar ≈3, sert panlı mono kaynak 3; ters fazlı
      * içerik bunun üstüne çıkar: 4 LU eşit seviyede ≈ −0.2 ilintidir.
-     * Referans stereo asset'ler kodek sonrası 0.004–1.40 LU ölçüldü
-     * (DESIGN "Kanal ve yerleşim").
      */
     maxMonoFoldLossDb: 4,
     /** Yan (L−R) enerjisi orta (L+R) enerjisinin bu kadar altındaysa kanallar özdeştir. */

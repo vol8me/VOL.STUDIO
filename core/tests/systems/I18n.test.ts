@@ -185,11 +185,9 @@ describe('I18n — SaveManager entegrasyonu', () => {
     expect(i18n.getLocale()).toBe('en');
 
     /*
-     * Sözleşme: ÖZEL ANAHTAR okunur. İddia bir dönem `load`un ikinci
-     * argümanını da (`'tr'`) kilitliyordu — yani değerin nasıl getirildiğini,
-     * ne getirildiğini değil. Doğrulama depodan gelen değere taşınınca yedek
-     * artık çağrıya geçilmiyor ve test, davranış hiç değişmediği hâlde
-     * kırıldı. Uygulama detayını kilitleyen bir iddia, doğru bir düzeltmeyi
+     * Sözleşme: ÖZEL ANAHTAR okunur. İddia `load`un ikinci argümanını
+     * kilitlemez: o değerin nasıl getirildiğidir, ne getirildiği değil.
+     * Uygulama detayını kilitleyen bir iddia, doğru bir düzeltmeyi
      * yanlışmış gibi gösterir.
      */
     expect(vi.mocked(saveManager.load).mock.calls[0][0]).toBe('oyun-dili');
@@ -418,9 +416,8 @@ describe('I18n — reset', () => {
 
   it('reset, init ÖNCESİ eklenmiş bekleyen kaynakları düşürür', async () => {
     /*
-     * Test bir dönem yalnız `addResources` + `reset` çağırıp hiçbir şey
-     * doğrulamıyordu: `reset` no-op olsa da geçerdi. Bekleyen kaynaklar
-     * `init` sırasında uygulandığı için etki ancak init SONRASI görülür.
+     * Bekleyen kaynaklar `init` sırasında uygulandığı için `reset`in etkisi
+     * ancak init SONRASI görülür; yalnız `reset` çağırmak no-op'u yakalamaz.
      */
     i18n.addResources('tr', 'game', { menu: { start: 'BAŞLA' } });
     i18n.reset();

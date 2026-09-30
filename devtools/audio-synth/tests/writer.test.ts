@@ -212,10 +212,8 @@ describe('writeOgg bayt kararlılığı', () => {
   it('FFmpeg BİTEXACT ile çağrılır', () => {
     /*
      * FFmpeg varsayılanda her çağrıda rastgele bir Ogg akış seri numarası
-     * üretir ve kodlayıcı sürümünü üstveriye yazar. Ölçüldü: sekiz sesi
-     * yeniden üretmek 8/8 farklı DOSYA verdi ama çözülmüş PCM 8/8 birebir
-     * aynıydı ve ilk farklı bayt 15'inciydi — tam da seri numarasının yeri.
-     * Yani sentez zaten deterministikti, kararsız olan kaptı.
+     * üretir ve kodlayıcı sürümünü üstveriye yazar: sentez deterministik
+     * olsa da kap her çağrıda farklı baytlar verir.
      *
      * Bedeli pratikti: her yeniden üretim, hiçbir şey değişmese bile bir git
      * farkı üretiyordu ve ses farklarını görmezden gelmeyi öğrenen bir ekip

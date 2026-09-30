@@ -21,13 +21,10 @@ import { openShowcase, selectTab, SHOWCASE_TABS, type ShowcaseTab } from './supp
 /**
  * Panel KENDİ kaydırıcısıdır (`.vol-tabs__panels` → `overflow: auto`) ve
  * Playwright iç içe bir kaydırıcının görünmeyen kısmını çekemez: kalanı siyah
- * dolgu yapar. Ölçüldü — temellerin içeriği her sekmede ~715. satırda bitiyor,
- * `advanced` sekmesinin %79'u boştu ve `hud` sekmesinin on yedi kartından
- * yalnız ilk yedisi kapılıydı.
+ * dolgu yapar; temel, sekmenin yalnız görünen kısmını kapsardı.
  *
- * Tek öğeyi açmak YETMEZ: ölçüldü, panel 900 px'te kalıyordu çünkü
- * `.vol-showcase-root`, sarmalayıcı ve `body` de 900 px + `overflow: hidden`
- * taşıyor. Zincirin tamamı açılır.
+ * Tek öğeyi açmak YETMEZ: `.vol-showcase-root`, sarmalayıcı ve `body` de
+ * 900 px + `overflow: hidden` taşır. Zincirin tamamı açılır.
  *
  * Kaydırma yalnız EKRAN GÖRÜNTÜSÜ için açılır; `layout.spec.ts` gerçek
  * kaydırıcıyı ölçmeye devam eder, yani taşma/dokunma hedefi iddiaları

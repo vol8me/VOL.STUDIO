@@ -184,8 +184,8 @@ describe('joystick sınır sözleşmesi', () => {
   const full = new Vector2(1, 0);
 
   /*
-   * `deadZone === 1` bir dönem `(ratio - 1) / (1 - 1)` üretiyordu: tam güçle
-   * itilen bir çubukta `0 / 0`, yani NaN bir hareket niyeti. Niyet oradan
+   * `deadZone === 1` `(ratio - 1) / (1 - 1)` üretir: tam güçle itilen bir
+   * çubukta `0 / 0`, yani NaN bir hareket niyeti. Niyet oradan
    * gövdeye, gövdeden konuma geçer ve bir kare sonra hatanın nereden geldiği
    * görülmez. Yapılandırma bu yüzden AKIŞ gibi yok sayılmaz, REDDEDİLİR.
    */

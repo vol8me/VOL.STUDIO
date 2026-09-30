@@ -69,8 +69,7 @@ export class Counter {
    * - `change` yok, `pulse: true` → eski nötr sözleşme korunur.
    * - Hiçbiri yok → yön eski/yeni değerden çıkarılır; değer aynıysa vurgu yok.
    *
-   * Son madde `pulse` opt-in'i olan eski davranıştan farklıdır: yön çıkarımı
-   * artık varsayılandır. Her karede aynı sayacı yazan tüketiciler için
+   * Yön çıkarımı varsayılandır. Her karede aynı sayacı yazan tüketiciler için
    * `change: 'none'` çıkış kapısıdır.
    */
   setValue(value: number, options: CounterSetValueOptions = {}): void {

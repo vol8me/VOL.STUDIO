@@ -5,7 +5,7 @@
  * istendiğinde koşulur. Her modülatör sınıfı için seviyeyi ilk bozan tepe
  * sapmasını (Δf = etkin index × fm) raporlar. Taşıyıcı ızgarası sinüs,
  * üçgen ve kenarlı dalgaları ayrı tarar — `carrier-*` sınıfları PM'in
- * taşıyıcı kenarına etkisini ayrı ölçer (F6a kalibrasyonu).
+ * taşıyıcı kenarına etkisini ayrı ölçer.
  *
  * Kullanım: tsx scripts/research/fm-alias-report.ts [--json]
  */

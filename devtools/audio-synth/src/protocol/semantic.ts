@@ -20,7 +20,7 @@ import type { SearchCandidateOutput } from './parallelTasks';
 import type { SearchLocation } from './search';
 
 /**
- * Semantic scorer adaptörü — İSTEĞE BAĞLI LABORATUVAR KAPISI (F6c).
+ * Semantic scorer adaptörü — İSTEĞE BAĞLI LABORATUVAR KAPISI.
  *
  * Skorer, kullanıcının `AUDIO_SYNTH_SEMANTIC_SCORER` ya da `--scorer` ile
  * verdiği HARİCİ süreçtir: request JSON'u stdin'e yazılır, response JSON'u
@@ -34,7 +34,7 @@ import type { SearchLocation } from './search';
  * GÜVENLİK: komut bir argv dizisidir ve kabuk ASLA araya girmez —
  * `spawnSync(argv[0], argv.slice(1))`. `;`, `$()`, `&&` gibi metakarakterler
  * yalnız literal argüman olarak taşınır; yapılandırmada kabuk metni yazmak
- * artık çalıştırılabilir yolu olmayan bir argv üretir ve `toolchain` olur.
+ * çalıştırılabilir yolu olmayan bir argv üretir ve `toolchain` olur.
  */
 export interface SemanticRunConfig {
   /** Scorer argv'si; verilmezse `AUDIO_SYNTH_SEMANTIC_SCORER` okunur. */

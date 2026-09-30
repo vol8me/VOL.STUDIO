@@ -182,9 +182,8 @@ describe('retro çekirdek', RENDER_BLOCK, () => {
 
 /**
  * Kenar alias'ı ÖLÇÜLEREK kilitlenir (kafes yöntemi, 2× iç oran): ölçülen
- * değerin 2 dB üstü sınırdır. PolyBLEP kenar-zamanı düzeltmesi sonrası tüm
- * ızgara −87 dB altına indi; güncel ızgara `scripts/research/polyblep-alias-report.ts`
- * ile koşulur. F6a hedefi 3.6 kHz testerede −70 dB idi; ölçülen −88.3 dB.
+ * değerin 2 dB üstü sınırdır; ızgara −87 dB altındadır. Tam ızgara
+ * `scripts/research/polyblep-alias-report.ts` ile koşulur.
  */
 describe('retro alias kilidi', RENDER_BLOCK, () => {
   const limits: [RetroWaveform, Partial<RetroOscillatorV1>, number, number][] = [

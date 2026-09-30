@@ -1,4 +1,4 @@
-/* Kolla kullanılan ekran klavyesi — etiketler token'dan gelir (D5 12px
+/* Kolla kullanılan ekran klavyesi — etiketler token'dan gelir (12px
  * tabanı), tuşlar dokunma için de yeterli (>=44px) yüksekliktedir. */
 .vol-osk {
   position: fixed;

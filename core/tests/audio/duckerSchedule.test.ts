@@ -92,10 +92,9 @@ describe('SidechainDucker — zamanlama tek saatte', () => {
     expect(gain.value).toBe(0.2);
 
     // `cancelScheduledValues` her duck() çağrısında ÖNCEKİ release'i (varsa)
-    // her zaman iptal eder. Eskiden bu 2. çağrı `end2 < activeUntil` olduğu
-    // için release'i YENİDEN PLANLAMIYORDU — duck A'nın release'i cancel
-    // edilmiş ama yerine hiçbiri konmamış olurdu, gain sonsuza dek 0.2'de
-    // TAKILI kalırdı. Duck A'nın gerçek release'i (2.01) hâlâ ayakta olmalı.
+    // her zaman iptal eder; `end2 < activeUntil` olsa bile release yeniden
+    // planlanmalı, yoksa gain 0.2'de takılı kalır. Duck A'nın gerçek
+    // release'i (2.01) hâlâ ayakta olmalı.
     gain.advanceTo(1); // duck B'nin kendi release'i geçti ama duck A'nınki değil
     expect(gain.value).toBe(0.2);
 

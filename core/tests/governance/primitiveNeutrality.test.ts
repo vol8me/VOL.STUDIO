@@ -54,9 +54,9 @@ const GENRE_TERMS = [
   'moba',
 
   /*
-   * Aşağıdakiler mutasyonla eklendi: liste yalnızca bu repo'nun ŞİMDİYE KADAR
-   * yaptığı türleri tanıyordu (örümcek, tower defense, roguelike). Katman-1 bir
-   * modüle "nişancı" ya da "platformer" yazmak hiçbir kapıyı düşürmüyordu.
+   * Liste yalnız bu repoda görülmüş türleri değil, yaygın türleri de tanır;
+   * yoksa Katman-1 bir modüle "nişancı" ya da "platformer" yazmak hiçbir
+   * kapıyı düşürmezdi.
    *
    * Bekçinin amacı bir primitifin İLK TÜKETİCİSİNİN sözlüğüne kaymasını
    * engellemek. Gelecek tüketicinin türü bilinmiyor; liste dünün sızıntılarına
@@ -84,8 +84,7 @@ const GENRE_TERMS = [
   /*
    * BİLİNÇLİ OLARAK LİSTEDE YOK: `fps`, `idle`, `yarış`. Üçünün de baskın
    * teknik anlamı var — kare/saniye, havuzdaki boş nesne ve duruş animasyonu,
-   * race condition. Ölçüldü: eklendiklerinde on sekiz dosyada yanlış alarm
-   * ürettiler. Kalıcı yanlış alarm üreten bir bekçi görmezden gelinmeye başlar
+   * race condition; listeye girerlerse çok sayıda yanlış alarm üretirler. Kalıcı yanlış alarm üreten bir bekçi görmezden gelinmeye başlar
    * ve fiilen ölür; kapsamı dar tutmak, güvenilirliği korumaktır.
    */
 ];

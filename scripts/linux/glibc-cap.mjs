@@ -2,7 +2,7 @@
  * ELF glibc üst sınır bekçisi.
  *
  * Deck'in glibc'si 2.41'dir; host (Fedora) 2.43 üretir ve host'ta derlenen
- * AppImage cihazda açılmaz (ölçüldü 2026-09-23). steamrt4 kabında derlenen
+ * AppImage cihazda açılmaz. steamrt4 kabında derlenen
  * paketin hiçbir ELF'i `GLIBC_<cap>` üstü sürüm istemez — bu modül hem saf
  * ayrıştırıcıyı hem dizin tarayıcısını verir; bekçi derlemenin sonunda
  * AppDir üzerinde koşar.

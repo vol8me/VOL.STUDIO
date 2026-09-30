@@ -10,8 +10,7 @@ import { basename, extname, isAbsolute, join, relative, sep } from 'node:path';
  *
  * Büyük ve düşük kapsamlı dosya ya test alır ya da gerekçe VE KANIT yazar.
  * Kanıt, gerekçeyi sınayan test dosyasıdır; bekçi var olduğunu ve modülü
- * adıyla andığını doğrular. Bir dönem gerekçeler serbest metindi ve üçü koda
- * karşı yanlış çıktı ("e2e ile korunur" denen sahneyi e2e hiç açmıyordu).
+ * adıyla andığını doğrular; serbest metin gerekçe koda karşı sınanamaz.
  *
  * Değerlendirilen veri yalnız kaydı olan koşunun ölçtüğü paketlerin ve o
  * koşuda yazılmış lcov'lardır (bkz. `coverageRun.mjs`).

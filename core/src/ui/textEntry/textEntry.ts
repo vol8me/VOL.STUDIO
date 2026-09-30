@@ -4,7 +4,7 @@
  * İki uç vardır:
  *
  * - **Sağlayıcı (provider):** platform katmanı kendi klavyesini sunar
- *   (Steamworks kayan klavyesi — D6, ya da OS IME köprüsü). Kayıtlıysa
+ *   (Steamworks kayan klavyesi ya da OS IME köprüsü). Kayıtlıysa
  *   core'un ekran klavyesi devreye girmez.
  * - **Kip probu (probe):** "şu an kol kipi mi?" sorusunun cevabını uygulama
  *   sahibi verir (`InputModeArbiter`/`InputManager` kaydeder). Kol kipi

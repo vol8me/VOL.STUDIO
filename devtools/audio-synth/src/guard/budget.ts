@@ -25,7 +25,7 @@ export interface RenderBudget {
  * Varsayılan bütçe — ölçüm tablosu ve gerekçesi DESIGN.md "Kaynak bütçesi".
  *
  * Bellek: 1.5 GiB tahmin tavanı. 600 sn / 48 kHz stereo reverb'lü render
- * 550 MiB (ölçülen tepe RSS 628 MiB), sample katmanıyla 881 MiB tahmin
+ * 550 MiB, sample katmanıyla 881 MiB tahmin
  * eder; 16 GiB'lık referans makinede dört eşzamanlı render'a yer kalır.
  * İş: 6e9 birim ≈ referans makinede 60 sn; aynı senaryo 1.41e9 birimdir.
  */

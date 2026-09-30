@@ -60,7 +60,7 @@ function rmsEnvelope(samples: Float32Array, windowSize: number): number[] {
  * Verilen orandaki dalgalanmanın derinliği: PERİYOT İÇİ tepe-dip ortalaması.
  *
  * Zarf spektrumuna bakmak burada işe yaramaz — sönüm ve reverb kabarması düşük
- * frekansları doldurup LFO'yu gömer (ölçüldü). Periyot içinde bakmak yavaş
+ * frekansları doldurup LFO'yu gömer. Periyot içinde bakmak yavaş
  * sürüklenmeyi dışarıda bırakır.
  *
  * Analiz penceresi 20 ms: en pes kısmi tonun periyodundan UZUN (yoksa dalga
@@ -101,7 +101,7 @@ describe('akustik presetler — kısmi ton yapısı ölçülür', () => {
   ];
 
   // Her preset kendi testinde incelenir; tek bir döngüde hepsini sentezlemek
-  // paralel yükte zaman aşımına düşürdü (ölçüldü: 9,5 sn). Tarama düz
+  // paralel yükte zaman aşımına düşer. Tarama düz
   // döngüde yapılır, örnek başına `expect` çağrılmaz.
   it.each(names)('%s sınır içinde kalır ve sonlu örnek üretir', (name) => {
     const { samples } = render(Presets.getPreset(name));

@@ -68,6 +68,7 @@ Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 | `scripts/quality/tauriPlugins.mjs`       | JS `@tauri-apps/plugin-*` → Rust kaydı; Cargo eklenti bağımlılığı → kaynakta kayıt ya da izin; kayıtlı eklenti → izin ya da JS tüketicisi; yetenek izni → kurulu eklenti |
 | `scripts/quality/catalog.mjs`            | CORE kökünden açılan her UI bileşeni vol-ui vitrininde gösterilir ve CORE testinde adıyla geçer; parça ve görsel olmayan katman gerekçeli istisnadır                     |
 | `scripts/quality/rootEntries.mjs`        | Kökteki her girdi gerekçesiyle kayıtlıdır; gerekçesiz yeni girdi ya da karşılıksız kayıt reddedilir                                                                      |
+| `scripts/quality/contextComments.mjs`    | Kaynak yorumları tarihçe ("bir dönem", "eskiden"), ölçüm günlüğü ("ölçüldü:"), tarih ve plan/faz kimliği taşımaz                                                         |
 
 Ürün kalitesi bekçileri (satır, yorum, i18n, döngü, katman, port, ikon, kilit
 paritesi) frozen ağaçları taramaz; bütünlük bekçileri (lifecycle, blob,

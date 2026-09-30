@@ -217,7 +217,7 @@ describe('Değer kontrolleri — input/commit sözleşmesi', () => {
     });
     color.setValue('#123456');
     expect(colorInput).not.toHaveBeenCalled();
-    // Kutucuk artık yerli <input type="color"> değil; hazır renkler
+    // Kutucuk yerli <input type="color"> değildir; hazır renkler
     // Popover'da yaşar ve yalnızca kutucuğa tıklanınca DOM'a girer.
     document.body.appendChild(color.element);
     color.element.querySelector<HTMLButtonElement>('.vol-color-picker__swatch')!.click();

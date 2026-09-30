@@ -434,11 +434,9 @@
 /*
  * Çubuk GÖRSELDİR, dokunma hedefi DEĞİL.
  *
- * Burada `min-height: var(--vol-hit-target-min)` vardı ve dokunmatik cihazda
- * 16 px'lik çubuğu 44 px'e şişiriyordu: kaydırıcı, içinde ince bir tutamağın
- * yüzdüğü kocaman bir bloğa dönüşüyordu (gerçek cihazda görüldü). Hedef
- * büyütmesi görünmez `input` katmanına taşındı — orası zaten tıklamayı alan
- * eleman, bkz. `.vol-slider__input`.
+ * Çubuğa hedef büyütmesi uygulanırsa dokunmatikte kaydırıcı ince tutamaklı
+ * kocaman bir bloğa döner. Hedef büyütmesi görünmez `input` katmanındadır;
+ * tıklamayı alan eleman odur, bkz. `.vol-slider__input`.
  */
 .vol-slider__track {
   border-radius: var(--vol-radius-sm);

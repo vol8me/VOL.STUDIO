@@ -1,5 +1,5 @@
 /**
- * F7b/R7 — tek-komut dinleme paketi. Kilitlenen sözleşme:
+ * Tek-komut dinleme paketi. Kilitlenen sözleşme:
  *
  *  - Paket `export/listening/` altına düşer (git dışı), `listening.json` +
  *    `index.html` + WAV'lar; production ağacına dokunmaz.

@@ -96,8 +96,8 @@ const prog = (extra: Record<string, unknown>, channels = 1): Record<string, unkn
 });
 
 /**
- * `prog-*` senaryoları `AcousticProgramV1` üzerinden koşar: R8'in yeni
- * düğümlerinin (BLEP osilatör, air-absorption, width, treatment, addBurst)
+ * `prog-*` senaryoları `AcousticProgramV1` üzerinden koşar: pahalı
+ * düğümlerin (BLEP osilatör, air-absorption, width, treatment, addBurst)
  * `estimateProgramCost` modelini gerçek render süresiyle karşılaştırır.
  * 10 sn'lik süre JIT ve çözüm sabitlerinin ns/birim oranını şişirmesini
  * sınırlar; oran marjinal birim maliyetine yaklaşır.

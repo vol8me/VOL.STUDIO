@@ -1,5 +1,5 @@
 /**
- * R6 — Ters sentez deneyi: gizli hedeflerden parametre kurtarma.
+ * Ters sentez deneyi: gizli hedeflerden parametre kurtarma.
  *
  * Her hedef için gerçek parametreler bilinir ama optimize ediciye YALNIZ
  * hedef PCM'den ölçülen betimleyici vektörü (ya da manifest) verilir —

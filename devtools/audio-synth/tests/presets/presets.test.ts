@@ -110,8 +110,8 @@ describe('Sekans presetleri', () => {
   /*
    * Sekanslar `SynthParams` değil `SequenceParams` döner ve bu yüzden
    * `PRESET_CATALOG`un dışındadır — `getPreset`in sözleşmesine girmezler.
-   * Katalog dışında olmak TESTSİZ olmayı gerektirmez: iki jingle bir dönem
-   * ne katalogda ne testte yer alıyordu ve sessizce çürüyordu.
+   * Katalog dışında olmak TESTSİZ olmayı gerektirmez; testsiz sekans
+   * sessizce çürür.
    */
   const sequences = {
     arpeggioUp: Presets.arpeggioUp,

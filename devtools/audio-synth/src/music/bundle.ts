@@ -337,8 +337,7 @@ export function planSingle(input: SinglePlanInput): AdaptivePlanV1 {
 /**
  * Sınırlayıcılı yolda true-peak payı ÖLÇEREK bulunur: kazancı kaynaktaki
  * tepeye göre peşinen kısmak, sınırlayıcının açtığı payı geri verir ve
- * parçayı gereksiz kısık bırakır (ölçüldü: referans cue'da −18.9 LUFS'e
- * kadar). Fazlalık kadar indirilip yeniden ölçülür. Sınırlayıcı doğrusal
+ * parçayı gereksiz kısık bırakır. Fazlalık kadar indirilip yeniden ölçülür. Sınırlayıcı doğrusal
  * olmadığı için 2 dB hedefine her zaman yakınsamaz; bağlayıcı olan, QA'nın
  * −1 dBTP eşiği ve kodek SONRASI sınıf politikasıdır.
  */
