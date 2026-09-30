@@ -13,15 +13,11 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 Analiz ve kararlar: yerel sertleştirme raporu §0.4, §0.4b, §0.4c. Cihazlar
 uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi").
 
-- [ ] **[P1] VT-R1 — Çoklu varlık altyapısı.** Simülasyon tek tanka bağlı:
-      varlık kimliği, araç listesi, kontrol edilen araç, sahibi olan mermi ve
-      olaylar, araç–araç çarpışması, görünüm kaydı (kimlik → görünüm).
-      Kapanır: iki araçlı simülasyon ve sahne testleri.
-- [ ] **[P1] VT-R5 — Ses.** audio-synth ile oyuna özgü, organik, gerçeğe yakın
-      sesler (müzik ve ambiyans yok): motor, palet, taret servosu, top atışı,
-      patlama, duvar çarpması, fren kayması, hızlanma, UI. Sürekli sesler
-      hız/yükle modüle edilir. Kapanır: audio-synth yayın kapısı, verify,
-      oyunda sesler ve kullanıcının dinleme onayı.
+- [ ] **[P1] VT-R5 — İnsan dinleme onayı.** 33 ses kanonik yayın ve
+      doğrulama kapılarından geçti; oyun olayları, devir karışımı, konum ve
+      duraklatma gerçek Chromium/WebKit ses bağlamında sınandı. Kapanır:
+      kullanıcının toplu dinleme onayı; üç sürekli katmanda 12 dB altındaki
+      tepe faktörü ve beş patlama tık adayı dinlemede değerlendirilir.
 - [ ] **[P3] VT-Q — Efekt kalitesi kalıcı.** Duraklatmada seçilen kademe
       oturumdan oturuma korunur; Deck ve Android'de efekt FPS'i ölçülür ve
       açılış kademesi ölçüme göre seçilir (VT4/VT5 ölçümüyle birlikte).
@@ -102,6 +98,8 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       kalır.
 
 ## Kapatılanlar
+
+- [x] VT-R1 — Kimlikli çoklu araç, sahibi olan mermi ve olay, araç–araç SAT teması ve kimlikle görünüm kaydı; iki araçlı simülasyon ve sahne testleri.
 
 - [x] VT-R4 — Mermi gövdesi, hale ve duman izi; namlu patlaması (ateş topu, yan jetler, toz, basınç halkası); patlama (parlama, şok halkası, parça, toz, duman, yanık); pabuç desenli sürekli palet izi; atışta kamera sarsılmaz, patlama sarsıntısı uzaklıkla söner; CORE GraphicsQuality ile iki kademe. Glow filtresi ölçülüp reddedildi.
 - [x] VT-R3 — Sabit CORE joystick'ler, fren ve hızlanma sütunu; tam ekran yalnız webde ve haritanın altında; minimap'te soluk ızgara; telefon yatayında örtüşmezlik E2E kapısı.

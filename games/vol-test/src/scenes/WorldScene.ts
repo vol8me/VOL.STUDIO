@@ -7,6 +7,8 @@ import {
   SimulationClock,
 } from '@volstudio/core';
 import { GraphicsQuality } from '@volstudio/core/graphics';
+import { createSceneAudio } from '@/audio/sceneAudio';
+import type { GameAudio } from '@/audio/GameAudio';
 import { isTauri } from '@/app/runtime';
 import { CAMERA } from '@/config/camera';
 import { FEEL } from '@/config/feel';
@@ -39,6 +41,7 @@ import { routeSimEvents } from './world/SimEventRouter';
  * (gerçek kare süresiyle) çalışır.
  */
 export class WorldScene extends Phaser.Scene {
+  private audio: GameAudio | null = null;
   private sim!: Simulation;
   private clock!: SimulationClock;
   private controls!: PlayerControls;
@@ -58,6 +61,11 @@ export class WorldScene extends Phaser.Scene {
   create(): void {
     this.scope = new DisposableScope();
     applyVolViewport(this);
+    this.audio = createSceneAudio(this);
+    if (this.audio) {
+      this.scope.add(this.audio);
+      void this.audio.load();
+    }
     const world = new World(WORLD.width, WORLD.height, WORLD.gridStep);
     this.sim = new Simulation({ world, tank: TANK, suspension: SUSPENSION, weapon: WEAPON });
     this.clock = new SimulationClock({
@@ -101,6 +109,7 @@ export class WorldScene extends Phaser.Scene {
     this.pause = this.scope.addDestroyable(
       new PauseController({
         surface: this.hud,
+        onChange: (paused) => this.audio?.setPaused(paused),
         releaseInput: () => this.controls.release(),
         suppressPauseInput: () => this.controls.suppress('pause'),
       }),
@@ -135,7 +144,10 @@ export class WorldScene extends Phaser.Scene {
       this.effects.removeVehicle(removed);
     }
     this.simEvents.length = 0;
-    routeSimEvents(this.sim.drainEvents(this.simEvents), {
+    const events = this.sim.drainEvents(this.simEvents);
+    this.audio?.route(events, player.tank);
+    void this.audio?.sync(this.sim.vehicles, player.tank);
+    routeSimEvents(events, {
       player: player.id,
       tank: (id) => this.vehicles.get(id),
       effects: this.effects,

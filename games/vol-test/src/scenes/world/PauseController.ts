@@ -14,6 +14,7 @@ export interface PauseSurface {
 
 export interface PauseControllerOptions {
   readonly surface: PauseSurface;
+  readonly onChange?: (paused: boolean) => void;
   /** Duraklatma ve sürdürme geçişinde tutulan girdiyi bırakır. */
   readonly releaseInput: () => void;
   /** Sürdürmeyi tetikleyen basışın yeniden duraklatmaması için. */
@@ -60,6 +61,7 @@ export class PauseController {
   pause(): void {
     if (this.state) return;
     this.state = true;
+    this.options.onChange?.(true);
     cancelHaptics();
     this.options.releaseInput();
     this.options.surface.showPause();
@@ -69,6 +71,7 @@ export class PauseController {
   resume(): void {
     if (!this.state) return;
     this.state = false;
+    this.options.onChange?.(false);
     this.options.suppressPauseInput();
     this.options.releaseInput();
   }

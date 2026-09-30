@@ -285,6 +285,35 @@ Zarfı değiştirmek bir tasarım kararıdır ve bu tabloyla birlikte yapılır.
 | Durarak ateş                 | tank 0.5–12 birim geri teper, gövde ≥ 0.8 birim yaylanır |
 | Duvar sekmesi                | 0 < sekme < çarpma × sekme katsayısı × 1.2               |
 
+## Ses
+
+Sesler audio-synth programlarından kanonik yayın kapısıyla üretilir; müzik
+ve ambiyans yoktur. `audio-manifests` yeniden üretim kimliğini,
+`audio-banks` deterministik aile seçimini taşır. Oyun yalnız bank JSON'unu
+ve `public/assets/audio` teslimlerini okur.
+
+| Durum / olay            | Ses                           | Mekanizma                                    | Çalışma zamanı eşlemesi                                         |
+| ----------------------- | ----------------------------- | -------------------------------------------- | --------------------------------------------------------------- |
+| Motor                   | 780 / 1500 / 2700 rpm         | Makine, metal subap, emiş, çekirdek uğultusu | Hız ve yük karışımı; `LoopBlend.setPitch` ile ortak hedef devir |
+| Palet                   | Bakla ve kum döngüsü          | Makine, temas, sürtünme                      | Palet hızı → seviye ve perde                                    |
+| Kayma                   | Kum sıyırma                   | Sürtünme ve tanecikler                       | İki paletin en büyük kayma hızı → seviye                        |
+| Taret                   | Servo döngüsü                 | Dişli ve motor                               | Açısal hız → seviye ve perde                                    |
+| Hızlanma                | Organik jet                   | Hava akışı ve elektrik                       | Hızlanma durumu → seviye                                        |
+| `fired`                 | Top ailesi (4)                | Basınç, gövde, namlu freni ve deşarj         | Gecikmesiz tek atış                                             |
+| `impact`                | Patlama ailesi (4 × 3 mesafe) | Basınç, gürleme, kum                         | Yakın / orta / uzak teslim; 1/r kazancı                         |
+| `hit`                   | İsabet ailesi (2)             | Dengelenmiş Hertz teması, zırh, deşarj       | Tohum ve olay sırası → varyant                                  |
+| `wallHit` / `collision` | Çarpma ailesi (4)             | Temas, metal gövde, kum                      | Temas hızı → soft/hard rolü ve kazanç                           |
+| Fren başlangıcı         | Fren ailesi (2)               | Sürtünme                                     | Hareket hâlindeki fren kenarı → tek atış                        |
+| Duraklat / devam        | İnen / yükselen UI            | Perde eğrisi ve kabarcık                     | Geçişte bir kez                                                 |
+
+`src/config/audio.ts` kazançları, mesafe sınırlarını ve modülasyonu taşır.
+Konum oyuncuya göredir: stereo pan yatay farktan, seviye yakın yarıçap
+sonrasında 1/r'den gelir. En yakın dört aracın döngüleri çalar; uzaktaki
+araç ve kaldırılan varlık kaynakları sökülür. Tek atışlar CORE `SoundBank`
+bütçesiyle sınırlıdır. Phaser'ın mevcut Web Audio bağlamı ve hedefi
+kullanılır; mobil kilit açmayı Phaser yönetir. Duraklatma döngüleri keser,
+sahne kapanışı bütün ses düğümlerini söker. İnsan dinleme onayı bekler.
+
 ## Kapılar
 
 | Kapı      | Ne ölçer                                                                                                     |
@@ -300,7 +329,6 @@ Zarfı değiştirmek bir tasarım kararıdır ve bu tabloyla birlikte yapılır.
 
 ## Bilinen sınırlar
 
-- Ses yoktur.
 - Tauri kabuğu, Android, Steam Deck ve Windows paketleri henüz yoktur.
 - Efekt kalitesi seçimi oturum boyunca geçerlidir; kalıcı değildir.
 - Efektlerin FPS maliyeti masaüstü GPU'da ölçüldü (60/60). Deck ve Android

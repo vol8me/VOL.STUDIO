@@ -38,6 +38,20 @@ afterEach(() => {
 });
 
 describe('PauseController', () => {
+  it('ses geçişini her durum değişiminde bir kez bildirir', () => {
+    const changes: boolean[] = [];
+    active = new PauseController({
+      surface: { showPause: () => undefined, hidePause: () => undefined },
+      releaseInput: () => undefined,
+      suppressPauseInput: () => undefined,
+      onChange: (paused) => changes.push(paused),
+    });
+    active.pause();
+    active.pause();
+    active.resume();
+    active.resume();
+    expect(changes).toEqual([true, false]);
+  });
   it('duraklatınca katmanı açar, girdiyi bırakır, titreşimi keser; tekrar duraklatmaz', () => {
     const { controller, surface, releaseInput } = build();
     controller.pause();

@@ -33,6 +33,7 @@ pnpm --filter @volstudio/vol-test scaling    # ölçekleme ölçümü (JSON)
 | `src/sim/`          | `Simulation`, araç varlıkları, dünya, mermi, olaylar                       |
 | `src/view/`         | Phaser görünümü: çöl zemini, tank ve palet rig'i, efekt katmanları         |
 | `src/hud/`          | HUD: yalnız CORE UI bileşenleri; her bölge ayrı dosya                      |
+| `src/audio/`        | CORE ses bankları, konum, araç döngüleri ve olay eşlemesi                  |
 | `src/input/`        | Eylem sözlüğü, tuş ve kol eşlemesi                                         |
 | `src/scenes/world/` | Sahne parçaları: girdi, duraklatma, kamera bağlama, olay yönlendirme, kare |
 | `src/scenes/`       | `BootScene` (yükleme), `WorldScene` (yaşam döngüsü ve bağlama)             |
@@ -55,3 +56,10 @@ HUD kipi sınanır, konsolda hata olmamalıdır.
 
 Web build'i ve E2E hazırdır. Tauri kabuğu (Linux, Steam Deck, Android,
 Windows) sırayla eklenir; açık işler kök `TODO.md`de izlenir.
+
+## Ses
+
+Motor, palet, kayma, servo, hızlanma, top, patlama, isabet, çarpma, fren ve
+UI sesleri audio-synth yayın hattından gelir. Ses aileleri ve mesafe
+teslimleri manifestlerle doğrulanır; müzik ve ambiyans yoktur. İnsan
+dinleme onayı kök TODO’da açık kalır.

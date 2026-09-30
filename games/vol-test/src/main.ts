@@ -37,6 +37,7 @@ async function boot(): Promise<void> {
     strategy: 'resize',
     maxDpr: GAME.maxDpr,
     scenes: [BootScene, WorldScene],
+    audio: { noAudio: false, disableWebAudio: false },
   });
   const stopMenus = suppressNativeMenus(document);
   game.events.once('destroy', stopMenus);
