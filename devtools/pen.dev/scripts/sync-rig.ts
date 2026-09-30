@@ -24,7 +24,7 @@ if (!domain || !entityId || !metadataOut || !partsOut || !publicBase) {
 
 const report = syncRigExport({
   source: {
-    exportRoot: resolve(import.meta.dirname, '../pen_export'),
+    exportRoot: resolve(import.meta.dirname, '../exported'),
     domain,
     entityId,
   },

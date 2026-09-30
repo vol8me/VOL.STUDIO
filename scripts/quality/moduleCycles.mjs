@@ -19,7 +19,6 @@ import { excludingFrozenPaths, loadRepoLifecycle } from './workspaceLifecycle.mj
 const SKIP_DIRS = new Set([
   'node_modules',
   'dist',
-  'dist-server',
   'coverage',
   'test-results',
   '.cache',

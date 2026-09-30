@@ -36,9 +36,10 @@ kurulur: [docs/new-game.md](docs/new-game.md). Bitmiş bir ürün annotated
 freeze etiketiyle arşivlenip ağaçtan kaldırılır; ağaçta frozen durmak karar
 bekleyen kısa bir geçiş hâlidir.
 
-Kök dizinler: `docs/` (repo geneli belgeler), `scripts/` (kapılar
-`scripts/quality/`, Linux paketleme, cihaz ölçümü, ortam kontrolü),
-`.github/assets/` (yalnız marka görselleri).
+Kök dizinler: `docs/` (repo geneli belgeler ve marka görselleri),
+`scripts/` (kapılar `scripts/quality/`, Linux paketleme, Android cihaz
+ölçümü, ortam kontrolü). Kökteki her girdinin gerekçesi
+`scripts/quality/rootEntries.mjs`dedir.
 
 ## Çalışma ilkeleri
 
@@ -71,6 +72,7 @@ Kök dizinler: `docs/` (repo geneli belgeler), `scripts/` (kapılar
 | Her Tauri uygulamasının kimliği ürüne özgü ve benzersizdir (kayıt yolu ondan türer)                                                                                                                       | `scripts/quality/appIdentity.mjs`                                                                                                                     |
 | JS eklenti bağımlılığı, Rust kaydı ve uygulama izni birbirine bağlıdır; ölü eklenti kalmaz                                                                                                                | `scripts/quality/tauriPlugins.mjs`                                                                                                                    |
 | Tüketicisiz CORE UI bileşeni katalogdadır: vol-ui vitrininde gösterilir ve CORE testinde adıyla sınanır                                                                                                   | `scripts/quality/catalog.mjs`                                                                                                                         |
+| Kökteki her girdi gerekçesiyle kayıtlıdır; gerekçesiz girdi eklenemez                                                                                                                                     | `scripts/quality/rootEntries.mjs`                                                                                                                     |
 | Deterministik çıktı üreten kod yerel ayara bağlı sıralama (`localeCompare`) kullanmaz                                                                                                                     | `eslint.config.mjs`                                                                                                                                   |
 | Frozen ağaç değişmez; aktif paket frozen pakete bağımlı olamaz                                                                                                                                            | `scripts/quality/workspaceLifecycle.mjs`                                                                                                              |
 | Görünen metin i18n anahtarıdır; `tr.json` ile `en.json` aynı anahtarları taşır; modül düzeyinde `t()` çağrılmaz; ölü anahtar kalmaz                                                                       | paketlerin `keyParity` testleri, `scripts/quality/deadI18n.mjs`                                                                                       |

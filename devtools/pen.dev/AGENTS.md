@@ -19,7 +19,7 @@ bağımlılığı YOKTUR; bu paket bir Node aracıdır.
 ```
 devtools/pen.dev/
   pen/entities.pen                    kaynak (Pencil canvas)
-  pen_export/<domain>/<entityId>/     üretilen ara çıktı (COMMIT'LENİR, bkz. aşağı)
+  exported/<domain>/<entityId>/     üretilen ara çıktı (COMMIT'LENİR, bkz. aşağı)
   scripts/organize-pen-export.mjs     export-organize aracı
   scripts/sync-rig.ts                 tüketiciye gönderim CLI'ı
   src/rigExport.ts                    doğrulama + gönderim (@volstudio/pen.dev)
@@ -55,13 +55,13 @@ zaman `<nodeId>.png` yazar. Script bunları entity düzenine taşır ve metadata
 node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 ```
 
-`pen_export/` **commit'lenir.** Ara çıktı olması onu tek başına silinebilir
+`exported/` **commit'lenir.** Ara çıktı olması onu tek başına silinebilir
 yapmaz: bu çıktı repodan yeniden üretilemez — Pencil uygulamasını, canlı canvas
 belgesini ve elle bir MCP `execute` adımını gerektirir. Deterministik bir
 script'in ürettiği export'lar (`audio-synth`) commit'lenmez;
 buradaki fark üretilebilirliktir, katman değil.
 
-Ara çıktı olması şunu söyler: hiçbir oyun `pen_export/`u DOĞRUDAN okumaz. Oyun
+Ara çıktı olması şunu söyler: hiçbir oyun `exported/`u DOĞRUDAN okumaz. Oyun
 kendi ağacındaki gönderilmiş kopyayı okur; ikisi arasındaki köprü `sync-rig`tir.
 
 Script hatada **yarım çıktı bırakmaz**: tüm manifest (partId deseni, tekrar,

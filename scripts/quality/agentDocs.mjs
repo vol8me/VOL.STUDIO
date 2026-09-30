@@ -26,7 +26,7 @@ const PATH_ROOTS = new Set([
   'docs',
   'games',
   'pen',
-  'pen_export',
+  'exported',
   'scripts',
   'src',
   'tauri-v2',

@@ -41,7 +41,7 @@ function metadataFixture(overrides: Partial<RigMetadata> = {}): RigMetadata {
         positionPx: { x: 10, y: 10 },
         rotationDeg: 0,
         parentPartId: null,
-        file: 'pen_export/enemies/walker/parts/hull.png',
+        file: 'exported/enemies/walker/parts/hull.png',
       },
       {
         partId: 'arm',
@@ -52,7 +52,7 @@ function metadataFixture(overrides: Partial<RigMetadata> = {}): RigMetadata {
         positionPx: { x: 30, y: 14 },
         rotationDeg: 12,
         parentPartId: 'hull',
-        file: 'pen_export/enemies/walker/parts/arm.png',
+        file: 'exported/enemies/walker/parts/arm.png',
       },
     ],
     previews: [
@@ -60,7 +60,7 @@ function metadataFixture(overrides: Partial<RigMetadata> = {}): RigMetadata {
         partId: 'reference_card',
         sourceNodeId: 'n9',
         logicalSizePx: { width: 200, height: 200 },
-        file: 'pen_export/enemies/walker/previews/reference_card.png',
+        file: 'exported/enemies/walker/previews/reference_card.png',
       },
     ],
     ...overrides,
@@ -70,7 +70,7 @@ function metadataFixture(overrides: Partial<RigMetadata> = {}): RigMetadata {
 /** Bir export ağacı kurar; `partFiles` verilmezse metadata ile birebir yazılır. */
 function writeExport(metadata: RigMetadata, partFiles?: string[]): void {
   const paths = resolveRigExportPaths({
-    exportRoot: join(root, 'pen_export'),
+    exportRoot: join(root, 'exported'),
     domain: metadata.domain,
     entityId: metadata.entityId,
   });
@@ -83,7 +83,7 @@ function writeExport(metadata: RigMetadata, partFiles?: string[]): void {
 }
 
 function ref(entityId = 'walker', domain = 'enemies') {
-  return { exportRoot: join(root, 'pen_export'), domain, entityId };
+  return { exportRoot: join(root, 'exported'), domain, entityId };
 }
 
 beforeEach(() => {

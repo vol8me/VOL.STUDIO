@@ -69,8 +69,6 @@ test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kayn
     'games/sample-game/dist/index.js',
     'games/sample-game/coverage/lcov.info',
     'games/sample-game/observer.log',
-    'games/sample-game/src-tauri/gen/apple/project.pbxproj',
-    'games/sample-game/src-tauri/gen/apple/project.pbxproj',
     'games/sample-game/src-tauri/gen/android/app/build/output.apk',
     '.claude/arastirma/rapor.jsonl',
     'graphify-out/graph.json',

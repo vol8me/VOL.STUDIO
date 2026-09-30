@@ -67,6 +67,7 @@ Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 | `scripts/quality/appIdentity.mjs`        | Her aktif Tauri uygulamasının kimliği ürüne özgüdür (paket adını taşır), jenerik değildir ve çakışmaz; veri dizini ve Cloud kökü ondan türer                             |
 | `scripts/quality/tauriPlugins.mjs`       | JS `@tauri-apps/plugin-*` → Rust kaydı; Cargo eklenti bağımlılığı → kaynakta kayıt ya da izin; kayıtlı eklenti → izin ya da JS tüketicisi; yetenek izni → kurulu eklenti |
 | `scripts/quality/catalog.mjs`            | CORE kökünden açılan her UI bileşeni vol-ui vitrininde gösterilir ve CORE testinde adıyla geçer; parça ve görsel olmayan katman gerekçeli istisnadır                     |
+| `scripts/quality/rootEntries.mjs`        | Kökteki her girdi gerekçesiyle kayıtlıdır; gerekçesiz yeni girdi ya da karşılıksız kayıt reddedilir                                                                      |
 
 Ürün kalitesi bekçileri (satır, yorum, i18n, döngü, katman, port, ikon, kilit
 paritesi) frozen ağaçları taramaz; bütünlük bekçileri (lifecycle, blob,
@@ -95,7 +96,7 @@ devtools/*   ──/
 - `frozen` paket için `freezeTag` (annotated etiket), `freezeCommit`,
   `decisionDate` ve `reason` zorunludur; `tag^{commit} === freezeCommit`
   olmalıdır ve ağaçta freeze commit'inden sonra izlenen fark ya da izlenmeyen
-  dosya bulunamaz. Frozen yol `.prettierignore` ve `.stylelintignore`a yazılır;
+  dosya bulunamaz. Frozen yol `.prettierignore`a ve `package.json` → `stylelint.ignoreFiles`a yazılır;
   `scripts/quality/tests/frozenToolSelection.test.mjs` üç aracın aynı kümeyi
   gördüğünü kilitler.
 - Frozen ürünün incelemesi etiketinin worktree'sinde yapılır; dondurma,

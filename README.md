@@ -1,4 +1,4 @@
-<img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
+<img src="./docs/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
 Tauri v2 + Phaser 4 oyun çalışma zamanı ile web tabanlı geliştirici araçlarını
 aynı çalışma alanında buluşturan çapraz platform monorepo.

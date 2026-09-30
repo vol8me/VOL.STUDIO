@@ -25,7 +25,7 @@ if (!manifestPath || !stagingDir) {
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..', '..', '..');
-const outputRoot = resolve(outputRootArg ?? join(scriptDir, '..', 'pen_export'));
+const outputRoot = resolve(outputRootArg ?? join(scriptDir, '..', 'exported'));
 
 // metadata'daki `file` alanları repo köküne göreli yazılır; repo dışına çıkan
 // bir çıktı kökü bunları `../../..` ile başlayan taşınamaz yollara çevirirdi.

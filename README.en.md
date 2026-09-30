@@ -1,4 +1,4 @@
-<img src="./.github/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
+<img src="./docs/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
 Cross-platform monorepo bringing a Tauri v2 + Phaser 4 game runtime and
 web-based developer tools into one workspace.

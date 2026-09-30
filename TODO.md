@@ -10,13 +10,6 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 
 ### Hiyerarşi ve temizlik
 
-- [ ] **[P1] SC — Repo ve kök temizliği.** Kök ve paketlerdeki her dosya ve
-      dizin, yapılandırma, betik, belge ve yerel artık gerekçelendirilir ya da
-      kaldırılır: .idea, .directory, bayat .vscode girdileri,
-      .gitignore'un her satırı, testlerin paket ağacına yazdığı çıktılar,
-      paketlerde kalan coverage, dist ve test-results çıktıları. Kapanır: kökte
-      yalnız gerekçesi belgede yazılı girdiler kalır; bekçi kök girdi listesini
-      kilitler.
 - [ ] **[P1] Bağlam ve bağlamlı yorum temizliği.** Belgelerdeki bağlam anlatısı
       silinir; bütün kaynak türlerinde tarihçe, plan ve faz kimliği, ölçüm
       günlüğü, karar anlatısı ve kodu tekrar eden yorumlar kalkar. Yorumda
@@ -99,6 +92,7 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
 ## Kapatılanlar
 
+- [x] SC — Kök ve repo temizliği; kök girdileri gerekçesiyle kilitli (`scripts/quality/rootEntries.mjs`).
 - [x] SH5 — audio-synth: v1 emekli (K7), kernel katmanı, testler kaynağın aynası, veri corpus/records/locks altında ve yeniden yayımlandı (K6).
 - [x] SH4 — CORE hiyerarşisi: amaçlı dizinler, ui/controls bölündü, stiller grubun yanında, testler kaynağın aynası.
 - [x] SH3 — Deck araçları devtools/deck paketinde; `pnpm deck` oradan koşar.

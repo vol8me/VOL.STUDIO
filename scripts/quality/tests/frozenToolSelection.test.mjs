@@ -32,13 +32,11 @@ test('Prettier frozen ağaçları gerçekten ignore eder (getFileInfo)', async (
   assert.equal(control.ignored, false, 'aktif paket yanlışlıkla ignore edildi');
 });
 
-test('.stylelintignore her frozen ağacı kapsar', () => {
-  const text = readFileSync(join(root, '.stylelintignore'), 'utf8');
+test('stylelint ignoreFiles her frozen ağacı kapsar', () => {
+  const ignoreFiles = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).stylelint
+    .ignoreFiles;
   for (const path of frozen) {
-    assert.ok(
-      text.split('\n').includes(`${path}/**`),
-      `.stylelintignore "${path}/**" içermiyor`,
-    );
+    assert.ok(ignoreFiles.includes(`${path}/**`), `stylelint ignoreFiles "${path}/**" içermiyor`);
   }
 });
 

@@ -6,7 +6,6 @@ import { resolveProgram } from '../program/schema';
 import type { SampleData, SampleDeclV1, SampleResolver } from '../program/samples';
 import { decodeWavChannels } from '../synthesis/sample';
 import { encodeWav } from '../writer';
-import { EXPORT_ROOT } from './audition';
 import { sha256Bytes } from '../kernel/canonical';
 import { ProtocolError } from './errors';
 import { checkRepoRelative, readJsonFile, resolveInside, writeFileAtomic } from './fs';
@@ -21,7 +20,7 @@ import { asProtocol } from './records';
  *   hâli, yazarında), lisans ve kaynak beyanı zorunludur.
  * - `synthetic-fixture`: motorla üretilmiş fixture; WAV'ı deterministik olarak
  *   üretilebildiği için commit EDİLMEZ (asset'in ara hâli) — üretici program
- *   kayıtta gömülüdür, baytlar git-dışı `export/samples/` önbelleğine üretilir
+ *   kayıtta gömülüdür, baytlar git-dışı sample önbelleğine (`node_modules/.cache`) üretilir
  *   ve özet her çözümde doğrulanır. Motor değişip baytlar değişirse çözüm
  *   `identity` hatasıyla durur (sessiz sürüklenme yok).
  *
@@ -31,7 +30,7 @@ import { asProtocol } from './records';
  */
 export const SAMPLE_ASSET_SCHEMA = 'SampleAssetV1';
 export const DEFAULT_SAMPLES_ROOT = 'devtools/audio-synth/corpus/samples';
-export const SAMPLE_CACHE_ROOT = `${EXPORT_ROOT}/samples`;
+export const SAMPLE_CACHE_ROOT = 'node_modules/.cache/audio-synth/samples';
 
 export type SampleOriginV1 =
   | { readonly kind: 'synthetic-fixture'; readonly program: unknown }

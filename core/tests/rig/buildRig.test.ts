@@ -23,14 +23,14 @@ function metadataFixture(): RigMetadata {
         logicalSizePx: { width: 16, height: 6.4 },
         positionPx: { x: 104, y: 32 },
         rotationDeg: 0,
-        file: 'devtools/pen.dev/pen_export/players/test_unit/parts/top_cap.png',
+        file: 'devtools/pen.dev/exported/players/test_unit/parts/top_cap.png',
       },
     ],
     previews: [],
   };
 }
 
-const TOP_CAP_URL = { 'pen_export/players/test_unit/parts/top_cap.png': '/assets/top_cap-abc.png' };
+const TOP_CAP_URL = { 'exported/players/test_unit/parts/top_cap.png': '/assets/top_cap-abc.png' };
 
 describe('buildRigDefinition', () => {
   it('metadata ve URL eşleşmesinden tam bir RigDefinition kurar', () => {
@@ -60,7 +60,7 @@ describe('buildRigDefinition', () => {
 
     const rig = buildRigDefinition(metadata, {
       ...TOP_CAP_URL,
-      'pen_export/players/test_unit/parts/front_top_cap.png': '/assets/front-def.png',
+      'exported/players/test_unit/parts/front_top_cap.png': '/assets/front-def.png',
     });
 
     expect(rig.parts.map((p) => p.textureUrl)).toEqual([
@@ -105,7 +105,7 @@ describe('buildRigDefinition', () => {
     expect(() =>
       buildRigDefinition(metadataFixture(), {
         ...TOP_CAP_URL,
-        'pen_export/players/other_unit/parts/top_cap.png': '/assets/other-xyz.png',
+        'exported/players/other_unit/parts/top_cap.png': '/assets/other-xyz.png',
       }),
     ).toThrow(/birden fazla dosya/);
   });
@@ -113,7 +113,7 @@ describe('buildRigDefinition', () => {
   it('PNG olmayan glob girdilerini yok sayar', () => {
     const rig = buildRigDefinition(metadataFixture(), {
       ...TOP_CAP_URL,
-      'pen_export/players/test_unit/metadata/test_unit.metadata.json': '/assets/meta.json',
+      'exported/players/test_unit/metadata/test_unit.metadata.json': '/assets/meta.json',
     });
 
     expect(rig.parts).toHaveLength(1);
@@ -132,7 +132,7 @@ describe('eklem (parentPartId) doğrulaması', () => {
 
     const rig = buildRigDefinition(metadata, {
       ...TOP_CAP_URL,
-      'pen_export/players/test_unit/parts/barrel.png': '/assets/barrel-def.png',
+      'exported/players/test_unit/parts/barrel.png': '/assets/barrel-def.png',
     });
 
     expect(rig.parts[1].parentPartId).toBe('top_cap');

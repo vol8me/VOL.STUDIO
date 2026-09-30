@@ -1,7 +1,7 @@
 # pen.dev
 
 VOL.STUDIO'nun tasarım kaynağı ve **export/gönderim** hattı: bir Pencil canvas
-dosyası (`pen/entities.pen`), ondan çıkan parça görselleri (`pen_export/`) ve
+dosyası (`pen/entities.pen`), ondan çıkan parça görselleri (`exported/`) ve
 bu çıktıyı doğrulayıp tüketicisine gönderen araç.
 
 **Build-time bir araçtır.** Hiçbir oyunun bundle'ına girmez, Phaser'a bağımlı
@@ -20,7 +20,7 @@ node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 # 2. Tüketici oyun doğrulanmış export'u kendi rig senkron betiğiyle alır
 ```
 
-`pen_export/` bir ARA çıktıdır ve oyunun build'i onu doğrudan okumaz — ama
+`exported/` bir ARA çıktıdır ve oyunun build'i onu doğrudan okumaz — ama
 silinebilir değildir: repodan yeniden üretilemez, bu yüzden commit'lenir.
 
 Gönderim **doğrulanmamış bir export'u kopyalamaz**: metadata'da yazılı ama

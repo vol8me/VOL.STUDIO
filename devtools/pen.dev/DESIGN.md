@@ -48,8 +48,8 @@ Rig'in çalışma zamanı yüzeyi (`validateRigMetadata`, `buildRigDefinition`,
 (`<nodeId>.png`) entity düzenine taşır ve metadata yazar:
 
 ```
-pen_export/<domain>/<entityId>/{parts,previews}/<partId>.png
-pen_export/<domain>/<entityId>/metadata/<entityId>.metadata.json
+exported/<domain>/<entityId>/{parts,previews}/<partId>.png
+exported/<domain>/<entityId>/metadata/<entityId>.metadata.json
 ```
 
 ```json

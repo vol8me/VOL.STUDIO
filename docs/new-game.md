@@ -51,8 +51,8 @@ preview ve e2e portu aynı olabilir; iki ayrı paket aynı portu bildiremez.
 
 - **Dondurma:** paket bitince annotated `<paket>/final-<tarih>` etiketi atılır;
   `workspace-lifecycle.json`da `status: "frozen"` ile `freezeTag`,
-  `freezeCommit`, `decisionDate`, `reason` yazılır; `.prettierignore` ve
-  `.stylelintignore`a `<yol>/**` eklenir (ESLint yok sayma listesi lifecycle'dan
+  `freezeCommit`, `decisionDate`, `reason` yazılır; `.prettierignore`a ve
+  `package.json` → `stylelint.ignoreFiles`a `<yol>/**` eklenir (ESLint yok sayma listesi lifecycle'dan
   türer). Frozen ağaç değişmez. `frozen` kısa bir geçiş hâlidir: frozen
   ağaç rutin kapılarda koşmaz ve CORE değişiklikleriyle sessizce bozulur;
   karar verilince emekliliğe geçer.

@@ -35,7 +35,7 @@ test('yerel E2E yalnız seçilmiş teste veya açık geliştirme sunucusuna güv
       assert.equal(server.reuseExistingServer, false, directory);
       assert.match(
         server.command,
-        /\bvite preview\b|\bnode dist-server\/.* --production\b/,
+        /\bvite preview\b/,
         directory,
       );
     }

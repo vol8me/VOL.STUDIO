@@ -1,7 +1,7 @@
 # pen.dev
 
 VOL.STUDIO's design source and **export/sync** pipeline: a Pencil canvas file
-(`pen/entities.pen`), the part images exported from it (`pen_export/`), and the
+(`pen/entities.pen`), the part images exported from it (`exported/`), and the
 tool that verifies and ships that output to its consumer.
 
 **It is a build-time tool.** It never enters a game bundle, does not depend on
@@ -20,7 +20,7 @@ node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 # 2. The consuming game pulls the verified export with its own rig sync script
 ```
 
-`pen_export/` is an INTERMEDIATE output and no game build reads it directly —
+`exported/` is an INTERMEDIATE output and no game build reads it directly —
 but it is not disposable: it cannot be regenerated from the repository, so it
 is committed.
 

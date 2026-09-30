@@ -14,7 +14,6 @@ const REPO_ROOT = resolve(import.meta.dirname, '../../..');
 const SKIP_DIRECTORIES = new Set([
   'node_modules',
   'dist',
-  'dist-server',
   'coverage',
   '.git',
   'target',

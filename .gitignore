@@ -1,11 +1,9 @@
-# Claude Code'un yerel çalışma dizini: oturum ayarları ve yerel araştırma
-# çıktısı. `AGENTS.md` ve `CLAUDE.md` ise depo sözleşmesidir ve izlenir.
-.claude/
+# Her satır ya bir aracın gerçekten ürettiği çıktıyı ya da açık bir güvenlik
+# nedenini karşılar; üreticisi kalmayan satır silinir.
 
-# Secrets / credentials — asla commit edilmez
+# Gizli bilgi ve imza anahtarları (Android keystore dahil)
 .env
 .env.*
-!.env.example
 *.pem
 *.key
 *.p12
@@ -13,79 +11,45 @@
 *.jks
 secrets.json
 
-# Dependencies
+# Bağımlılıklar ve yerel araç önbellekleri (render/sample önbelleği dahil)
 node_modules/
-.pnpm-store/
-.pnpm-debug.log*
 
-# Build outputs
+# Derleme çıktıları: Vite `dist/`, Cargo workspace `target/`, tsc artımlı bilgisi
 dist/
-dist-server/
-build/
 target/
 *.tsbuildinfo
 
-# Sentez araçlarının yerel çıktısı. Gönderilen asset oyunun `public/` ağacında
-# yaşar; buradaki dosyalar ara üretimdir ve yeniden üretilebilir.
-devtools/*/export/
-
-# graphify'ın ürettiği bilgi grafiği (graph.json, graph.html, GRAPH_REPORT.md).
-# Yerel, yeniden üretilebilir bir analiz çıktısıdır; büyük boyutu ve sık
-# değişkenliği yüzünden commit edilmez.
-graphify-out/
-
-# Test coverage raporlari
+# Test ve kapsam raporları (Vitest, Playwright)
 coverage/
-
-# Playwright artefaktlari (trace, rapor, tarayici indirmeleri)
 test-results/
 playwright-report/
-blob-report/
-.playwright/
-.nyc_output/
 
-# Tauri mobile/desktop generated projects
-#
-# `gen/android` BİLEREK dışarıda tutulmaz: yön kilidi, çentik yerleşimi ve
-# sürükleyici tam ekran Tauri'nin yapılandırmasından ayarlanamıyor (schema
-# yalnızca minSdk/versionCode taşır), bu yüzden AndroidManifest, tema ve
-# MainActivity elle düzenlendi. Yeniden üretilebilir sanılıp yok sayılırsa bu
-# düzenlemeler ilk `android init`te sessizce kaybolur. Derleme çıktıları
-# (`build/`, `.gradle`, `local.properties`, imza anahtarları) `gen/android`
-# içindeki kendi .gitignore'u tarafından zaten dışarıda tutuluyor.
-/tauri-v2/src-tauri/gen/apple/
-/tauri-v2/src-tauri/target/
-/games/*/src-tauri/gen/apple/
-/games/*/src-tauri/target/
+# Yerel ve yeniden üretilebilir çıktılar
+# - Claude Code oturum ayarları ve yerel araştırma kaydı
+# - graphify bilgi grafiği
+# - audio-synth dinleme/inceleme çıktısı
+.claude/
+graphify-out/
+devtools/*/export/
 
-# Editor
-.vscode/*
-!.vscode/extensions.json
+# Tauri'nin ürettiği kodlar; `gen/android` elle düzenlendiği için izlenir,
+# yalnız Gradle derleme çıktısı dışarıdadır.
+/devtools/deck/src-tauri/gen/
+/games/*/src-tauri/gen/android/**/build/
+/games/*/src-tauri/gen/android/.gradle/
+
+# Deck araçları: derleme anında kopyalanan motor ve ölçüm kayıtları
+/devtools/deck/web/vendor/
+/devtools/deck/records/
+
+# Editör ve işletim sistemi
 .idea/
+.vscode/
 *.sw?
-
-# OS
 .DS_Store
 Thumbs.db
 desktop.ini
 .directory
 
-# Logs
+# Günlükler
 *.log
-tauri-v2/src-tauri/android-*.log
-tauri-v2/src-tauri/android-*.png
-tauri-v2/src-tauri/chromium.log
-
-# Araştırma çıktısı: üretilebilir, üretim derlemesine girmez (F5).
-research-out/
-# Araştırma ara durum / checkpoint dosyaları (ara önbellek, repoya girmez)
-**/*-checkpoint.jsonl
-# F5 yokluk testinin geçici derleme dizinleri.
-dist-audition-prod/
-dist-audition-dev/
-
-# Deck araçları: derleme anında kopyalanan motor ve üretilen Tauri şemaları
-/devtools/deck/web/vendor/
-/devtools/deck/src-tauri/gen/
-# `pnpm deck` ölçüm kayıtları ve ekran görüntüleri (yerel referans)
-/devtools/deck/records/

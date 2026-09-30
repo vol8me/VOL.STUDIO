@@ -18,7 +18,7 @@ import { validateRigMetadata, type RigMetadata } from '@volstudio/core/rig/metad
  * `<exportRoot>/<domain>/<entityId>/{parts,previews,metadata}`.
  */
 export interface RigExportRef {
-  /** `pen_export` kökü — mutlak ya da çağıranın cwd'sine göreli. */
+  /** `exported` kökü — mutlak ya da çağıranın cwd'sine göreli. */
   exportRoot: string;
   domain: string;
   entityId: string;
