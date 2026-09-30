@@ -10,9 +10,6 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 
 ### Hiyerarşi ve temizlik
 
-- [ ] **[P1] SH4 — CORE hiyerarşisi.** Tek dosyalı dizinler birleşir,
-      ui/controls bölünür, CSS bileşen grubunun yanına gider, testler kaynağın
-      aynasıdır. Kapanır: tip yüzeyi ve görsel temeller değişmeden kapılar yeşil.
 - [ ] **[P1] SH5 — audio-synth yerleşimi.** v1 render yolları, fikstürü ve
       testi silinir (K7); veri dizinleri taşınır ve manifestler yeniden
       yayımlanır (K6); ortak çekirdek kernel dizinine; kökteki testler alt dizinlere.
@@ -106,6 +103,7 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
 ## Kapatılanlar
 
+- [x] SH4 — CORE hiyerarşisi: amaçlı dizinler, ui/controls bölündü, stiller grubun yanında, testler kaynağın aynası.
 - [x] SH3 — Deck araçları devtools/deck paketinde; `pnpm deck` oradan koşar.
 - [x] SH2 — `scripts/` amaca göre alt dizinlerde; testler yanında.
 - [x] SH1 — Tek Cargo workspace, tek kilit, tek hedef dizini.
