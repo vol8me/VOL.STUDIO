@@ -1,0 +1,332 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -2.6127782351971576e-05
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.8973333333333333,
+        "frames": 43072,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -2.8153847597755073
+        ],
+        "channelRmsDbfs": [
+          -16.006233777972607
+        ],
+        "crestFactorDb": 13.190849018197099,
+        "integratedLufs": -16.09031702964187,
+        "maxMomentaryLufs": -14.767150828831669,
+        "rmsDbfs": -16.006233777972607,
+        "samplePeakDbfs": -2.8153847597755073,
+        "truePeakDbtp": -2.8153847597755073
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -74.78634499201851,
+          "high": -31.099850205439505,
+          "low": -19.453383619446743,
+          "mid": -19.023348401676717,
+          "sub": -36.43135911291304
+        },
+        "centroidHz": 720.6917636954666,
+        "flatness": 6.070736031219659e-07,
+        "peakHz": 492.1875,
+        "rolloff85Hz": 1007.8125
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.9,
+        "attackSeconds": 0,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.34731972777084524,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:cb5e4dbf2e9b241b2a53d88d77008af355813163b6688fbc7b90a8902c4932aa"
+  },
+  "asset": {
+    "bytes": 10826,
+    "encodedHash": "sha256:36569122e3ce146e384935e8dd529ead53dc547cf21b8095ef15b78cb2208c97",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/families/hit/hit-b.ogg"
+  },
+  "assetId": "vt-hit-hit-b",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "weight:heavy",
+        "hit"
+      ],
+      "durationSeconds": {
+        "max": 1.2,
+        "min": 0.5
+      },
+      "id": "vt-hit-hit-b",
+      "intent": "Merminin araca isabeti: iki varyant. Zırh çınlaması ve deşarj perdesi değişir. Varyant hit-b (weight:heavy).",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST isabet — hit-b"
+    },
+    "hash": "sha256:5b5c62b3023fccc0783f7376f7ed8a91ffad1df9776c8a03b4cf81a2cbe65106",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:4ad9888735acd3c7220ee0cbdc4afab01845518b04ad436e785d8a81a47ac063",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:120526b0267fdae5963c04e9a06513ae45c6a2f96215f243c43f4d5f6b0dfdd4",
+          "id": "resonator.material",
+          "version": 1
+        },
+        {
+          "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d",
+          "id": "source.contact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:65aabc71b9f6a460f0abf189dbf93fdbabbce25fa8f91606f71b95585888acf9",
+          "id": "source.electrical",
+          "version": 1
+        },
+        {
+          "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3",
+          "id": "source.pressure-wave",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": "vt-hit/hit-b",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "hit-b",
+    "path": "devtools/audio-synth/records/families/vt-hit/jobs/hit-b",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Merminin araca isabeti: metal-metal Hertz teması, zırh çınlaması, kısa basınç ve biyolüminesans merminin çıtırtılı deşarjı.",
+      "durationSeconds": 0.9,
+      "layers": [
+        {
+          "gainDb": -50,
+          "mechanism": "impact",
+          "name": "strike",
+          "role": "transient",
+          "source": {
+            "params": {
+              "debris": 0.15,
+              "mass": 1,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.9,
+              "velocity": 12
+            },
+            "primitive": "source.contact",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -8,
+          "mechanism": "impact",
+          "name": "ring",
+          "resonators": [
+            {
+              "params": {
+                "damping": 0.79483,
+                "material": "metal",
+                "modes": 16,
+                "size": 0.71886,
+                "thickness": 0.03
+              },
+              "primitive": "resonator.material",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.3
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -6,
+          "mechanism": "pressure",
+          "name": "shock",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.3,
+              "bodyDecay": 0.25,
+              "bodyHz": 70,
+              "decay": 0.8,
+              "positive": 0.004,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "exponential",
+              "decay": 0.28,
+              "release": 0.05,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "durationSeconds": 0.4,
+          "gainDb": -16,
+          "mechanism": "electrical",
+          "name": "zap",
+          "role": "tonal",
+          "source": {
+            "params": {
+              "arcs": 0,
+              "buzz": 0.6,
+              "charge": -1,
+              "hum": 0.5,
+              "instability": 0.3,
+              "mains": 204.179,
+              "ring": 0.35,
+              "ringHz": 900
+            },
+            "primitive": "source.electrical",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 18,
+        "fadeOutSeconds": 0.05,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 3601
+    },
+    "hash": "sha256:a3a1b630504c30171f501113d5621fb4abe055a60143e0f3355f067a006dd8d3",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 43200,
+      "hash": "sha256:28235414ae4164ad12bca39ffac2c315a85e54132e282712417ff3e76d4a80bf",
+      "sampleRate": 48000
+    },
+    "renderId": "r-4de9983042a2e893",
+    "rendererVersion": 2,
+    "seed": 3601
+  },
+  "schema": "AudioAssetManifestV1"
+}

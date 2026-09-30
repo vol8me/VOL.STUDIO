@@ -1,0 +1,31 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "loop",
+    "tracks",
+    "sand",
+    "metal"
+  ],
+  "durationSeconds": {
+    "max": 4.5,
+    "min": 2.5
+  },
+  "id": "vt-tracks",
+  "intent": "Paletli yürüyüş: çelik baklaların makaralar üstünde düzenli takırtısı, kumun palet altında ezilip çıtırdaması ve zeminden gelen gürleme. Oyunda palet yüzey hızıyla perde ve seviye alır.",
+  "kind": "acoustic",
+  "loop": true,
+  "mechanisms": [
+    "rolling",
+    "friction",
+    "noise"
+  ],
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude-code"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST paletler"
+}

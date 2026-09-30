@@ -1,0 +1,224 @@
+{
+  "channels": 1,
+  "description": "Tank motoru yüksek devir döngüsü, 2700 rpm; emiş eğrisi 2/3 s dönemle hizalıdır.",
+  "durationSeconds": 5,
+  "gestures": {
+    "breath": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          0.62
+        ],
+        [
+          0.3333333333333333,
+          0.78
+        ],
+        [
+          0.6666666666666666,
+          0.62
+        ],
+        [
+          1,
+          0.78
+        ],
+        [
+          1.3333333333333333,
+          0.62
+        ],
+        [
+          1.6666666666666667,
+          0.78
+        ],
+        [
+          2,
+          0.62
+        ],
+        [
+          2.3333333333333335,
+          0.78
+        ],
+        [
+          2.6666666666666665,
+          0.62
+        ],
+        [
+          3,
+          0.78
+        ],
+        [
+          3.3333333333333335,
+          0.62
+        ],
+        [
+          3.6666666666666665,
+          0.78
+        ],
+        [
+          4,
+          0.62
+        ],
+        [
+          4.333333333333333,
+          0.78
+        ],
+        [
+          4.666666666666667,
+          0.62
+        ],
+        [
+          5,
+          0.78
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "inserts": [
+        {
+          "params": {
+            "frequency": 38,
+            "order": 1,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "character": "asymmetric",
+            "driveDb": 12,
+            "mix": 0.7
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 480,
+            "gainDb": 3,
+            "q": 0.9
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 5200,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "mechanism": "motor",
+      "name": "engine",
+      "rationale": "Altı silindirin 2700 rpm çalışma katmanı; harmonikler ve gövde aynı motor kimliğini korur.",
+      "role": "body",
+      "source": {
+        "params": {
+          "bearing": 0.12,
+          "count": 6,
+          "harmonics": 36,
+          "imbalance": 0.16,
+          "load": 0.9,
+          "mechanism": "engine",
+          "noise": 0.28,
+          "rpm": 2700,
+          "tilt": 0.34
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -30,
+      "mechanism": "mechanical",
+      "name": "valvetrain",
+      "rationale": "Subap ve zincir tıkırtısı: ateşleme hızına yakın düzenli mikro tıklar, küçük metal gövdeden geçer; rölantiyi küçük hoparlörde de okunur kılar.",
+      "resonators": [
+        {
+          "params": {
+            "damping": 2.8,
+            "material": "metal",
+            "modes": 8,
+            "size": 0.32,
+            "thickness": 0.02
+          },
+          "primitive": "resonator.material",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "clustering": 0,
+          "event": "click",
+          "levelSpread": 5,
+          "pitch": 0.7,
+          "rate": 135,
+          "regularity": 0.85,
+          "sizeSpread": 0.2
+        },
+        "primitive": "source.micro-events",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -7,
+      "mechanism": "airflow",
+      "name": "intake",
+      "rationale": "Biyolojik emiş: geniş ağızlı boşluktan yavaş iki soluk; motorun organik yanı.",
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 34,
+          "cavity": 4,
+          "cavityMix": 0.55,
+          "pressure": {
+            "gesture": "breath"
+          },
+          "sibilance": 0.05,
+          "tilt": -0.25,
+          "turbulence": 0.85
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -24,
+      "mechanism": "electrical",
+      "name": "core",
+      "rationale": "Biyolüminesans çekirdeğin alçak uğultusu: 55 Hz, az buzz, kararsız; duyulandan çok hissedilen alt katman.",
+      "role": "tonal",
+      "source": {
+        "params": {
+          "arcs": 0,
+          "buzz": 0.12,
+          "hum": 0.35,
+          "instability": 0.3,
+          "mains": 55,
+          "ring": 0.05,
+          "ringHz": 220
+        },
+        "primitive": "source.electrical",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 18,
+    "loop": {
+      "crossfadeSeconds": 1
+    },
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 3103
+}

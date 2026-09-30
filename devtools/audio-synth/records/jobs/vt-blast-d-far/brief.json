@@ -1,0 +1,25 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "rarity:alternate",
+    "weight:heavy",
+    "blast",
+    "treatment:distance-far"
+  ],
+  "durationSeconds": {
+    "max": 4.4,
+    "min": 1.5
+  },
+  "id": "vt-blast-blast-d-distance-far",
+  "intent": "Enerji mermisinin çöl zeminindeki patlaması: dört varyant. Şok, gövde, gürleme, blast, döküntü, deşarj ve geri yağan kum kimliği ortak; gövde frekansı, blast sönümü, şok fazı ve deşarj perdesi rollerle yayılır. Varyant blast-d (rarity:alternate, weight:heavy). Teslim profili distance-far: 150 m: ISO 9613-1 hava soğurması, atak -15 dB, yansıma payı 0.55, görüntü ×0.25. 1/r zayıflaması çalışma zamanınındır.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "treatment-profile"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST patlama — blast-d — distance-far"
+}

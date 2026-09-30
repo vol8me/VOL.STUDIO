@@ -1,0 +1,68 @@
+{
+  "channels": 1,
+  "description": "Hızlanma döngüsü: basınçlı jet + biyoelektrik gerilim. 3 s, 0.8 s çapraz geçiş.",
+  "durationSeconds": 3,
+  "layers": [
+    {
+      "inserts": [
+        {
+          "params": {
+            "frequency": 6000,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "mechanism": "airflow",
+      "name": "jet",
+      "rationale": "Basınçlı jet: dar ağız, yüksek basınç, geniş bant türbülans.",
+      "role": "body",
+      "source": {
+        "params": {
+          "aperture": 14,
+          "cavity": 1,
+          "cavityMix": 0.3,
+          "pressure": 0.82,
+          "sibilance": 0.1,
+          "tilt": -0.15,
+          "turbulence": 0.9
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -8,
+      "mechanism": "electrical",
+      "name": "charge",
+      "rationale": "Çekirdek gerilimi: 92 Hz uğultu, halka modülasyonu ve seyrek ark.",
+      "role": "tonal",
+      "source": {
+        "params": {
+          "arcs": 0,
+          "buzz": 0.22,
+          "hum": 0.45,
+          "instability": 0.35,
+          "mains": 92,
+          "ring": 0.25,
+          "ringHz": 460
+        },
+        "primitive": "source.electrical",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 18,
+    "loop": {
+      "crossfadeSeconds": 0.8
+    },
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 3204
+}

@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-535551e73f2bd08c": {
+        "hash": "sha256:96a62744e2b5ca27cc62e98776c77d00cab7e973b81113c2418c139a95a2e579",
+        "path": "analyses/r-535551e73f2bd08c.json"
+      },
+      "r-82126be7a2f5743a": {
+        "hash": "sha256:c938cb422a3c990998d4d9572f235f1b62294b77c32324187c3c71893cf2fe2d",
+        "path": "analyses/r-82126be7a2f5743a.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:dafa3e71508c573439d6f0633bcbfa6340051b6caf4fbe3b7b5101de1a213676",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:dafa3e71508c573439d6f0633bcbfa6340051b6caf4fbe3b7b5101de1a213676",
+      "hash": "sha256:4d2c0cee2a8841f518a8c96fb1b098a93926025bdc4ecb12e94866795602a2e3",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:79ca833b395247ea41515eeee3b9fa177ec4841b61fb428e978be4cd25135639",
+      "path": "games/vol-test/audio-manifests/ui/pause.json"
+    },
+    "renders": {
+      "r-535551e73f2bd08c": {
+        "hash": "sha256:e54ce49c8bdc6ff49174918d14afce750fff4d4769c9a93d17aa7f7f08e3e9bd",
+        "path": "renders/r-535551e73f2bd08c.json"
+      },
+      "r-82126be7a2f5743a": {
+        "hash": "sha256:19f4909612451eb04fb63316a86a85f442959a6e692eeceecb50890008e36d0d",
+        "path": "renders/r-82126be7a2f5743a.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:de8d26b294a9d7d47f7f2d800fea0310673cd3270698017016dddb736523ce66",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-ui-pause",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 13,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/pause.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

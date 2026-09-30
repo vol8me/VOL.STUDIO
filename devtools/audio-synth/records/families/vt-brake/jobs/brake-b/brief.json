@@ -1,0 +1,23 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "brake"
+  ],
+  "durationSeconds": {
+    "max": 1,
+    "min": 0.4
+  },
+  "id": "vt-brake-brake-b",
+  "intent": "Fren kilidi: iki varyant; kavrama kütlesi ve tıslama ağzı değişir. Varyant brake-b (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST fren kilidi — brake-b"
+}

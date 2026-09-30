@@ -1,0 +1,471 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -6.893689830500686e-05
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 4,
+        "frames": 192000,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -6.299156258017364
+        ],
+        "channelRmsDbfs": [
+          -16.966552007105463
+        ],
+        "crestFactorDb": 10.667395749088099,
+        "integratedLufs": -17.03526603693235,
+        "maxMomentaryLufs": -16.389720968681285,
+        "rmsDbfs": -16.966552007105463,
+        "samplePeakDbfs": -6.299156258017364,
+        "truePeakDbtp": -6.264018643661555
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -60.66962268090571,
+          "high": -26.40490337243004,
+          "low": -20.005940972194054,
+          "mid": -22.820312681054595,
+          "sub": -25.83024016431534
+        },
+        "centroidHz": 744.9129361705991,
+        "flatness": 3.800426485138233e-05,
+        "peakHz": 140.625,
+        "rolloff85Hz": 1500
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 4,
+        "attackSeconds": 0,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 3.34,
+        "temporalCentroidSeconds": 2.013043750299253,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:9821d4913e423f0c9f44de104f14089b45d1d48a5fd0444c469a6c60716c5bef"
+  },
+  "asset": {
+    "bytes": 77186,
+    "encodedHash": "sha256:7d6444217d6010c72c034d69eabd457cca2ffa191d75c0991690f5de74c3ece6",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/engine-surge.ogg"
+  },
+  "assetId": "vt-engine-surge",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "loop",
+        "engine",
+        "organic",
+        "surge"
+      ],
+      "durationSeconds": {
+        "max": 4.5,
+        "min": 2.5
+      },
+      "id": "vt-engine-surge",
+      "intent": "Organik-robotik tankın yüksek devir tahrik sesi; rölanti döngüsüyle aynı makine, emiş ve çekirdek kimliği. Oyunda devir karışımının bir katmanıdır, komşu katmanlarla aynı devre çekilerek karışır.",
+      "kind": "acoustic",
+      "loop": true,
+      "mechanisms": [
+        "motor",
+        "airflow",
+        "electrical"
+      ],
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude-code"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST tank motoru — yüksek devir"
+    },
+    "hash": "sha256:1fc876a50737f9668d32658087b158728b7fb63a5f6e1e5159ecda8dc77f99b0",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:468d02a815e714dbee630d04e2fb78d6e538a44cee205979ca9b0a16bbe29f84",
+      "nodes": [
+        {
+          "hash": "sha256:73c932af5fb3389065aa8cf48494308d8bd2e21e5df0e7dda63201f24c11c42b",
+          "id": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07",
+          "id": "effect.saturation",
+          "version": 1
+        },
+        {
+          "hash": "sha256:120526b0267fdae5963c04e9a06513ae45c6a2f96215f243c43f4d5f6b0dfdd4",
+          "id": "resonator.material",
+          "version": 1
+        },
+        {
+          "hash": "sha256:855365ccd9dbee4b07804e871b5bcc31ad44318daf519e32418d8bf6c338d567",
+          "id": "source.airflow",
+          "version": 1
+        },
+        {
+          "hash": "sha256:65aabc71b9f6a460f0abf189dbf93fdbabbce25fa8f91606f71b95585888acf9",
+          "id": "source.electrical",
+          "version": 1
+        },
+        {
+          "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995",
+          "id": "source.machine",
+          "version": 1
+        },
+        {
+          "hash": "sha256:bd51f0a9ca601e1d39bf7681f7a02416ad316404a11fbe95d51cc5715f4e56f4",
+          "id": "source.micro-events",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": "sfx/engine-surge",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-engine-surge",
+    "path": "devtools/audio-synth/records/jobs/vt-engine-surge",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Tank motoru yüksek devir döngüsü, 2700 rpm; emiş eğrisi 2/3 s dönemle hizalıdır.",
+      "durationSeconds": 5,
+      "gestures": {
+        "breath": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              0.62
+            ],
+            [
+              0.3333333333333333,
+              0.78
+            ],
+            [
+              0.6666666666666666,
+              0.62
+            ],
+            [
+              1,
+              0.78
+            ],
+            [
+              1.3333333333333333,
+              0.62
+            ],
+            [
+              1.6666666666666667,
+              0.78
+            ],
+            [
+              2,
+              0.62
+            ],
+            [
+              2.3333333333333335,
+              0.78
+            ],
+            [
+              2.6666666666666665,
+              0.62
+            ],
+            [
+              3,
+              0.78
+            ],
+            [
+              3.3333333333333335,
+              0.62
+            ],
+            [
+              3.6666666666666665,
+              0.78
+            ],
+            [
+              4,
+              0.62
+            ],
+            [
+              4.333333333333333,
+              0.78
+            ],
+            [
+              4.666666666666667,
+              0.62
+            ],
+            [
+              5,
+              0.78
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "inserts": [
+            {
+              "params": {
+                "frequency": 38,
+                "order": 1,
+                "response": "highpass"
+              },
+              "primitive": "effect.eq-pass",
+              "version": 1
+            },
+            {
+              "params": {
+                "character": "asymmetric",
+                "driveDb": 12,
+                "mix": 0.7
+              },
+              "primitive": "effect.saturation",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 480,
+                "gainDb": 3,
+                "q": 0.9
+              },
+              "primitive": "effect.eq-bell",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 5200,
+                "order": 2,
+                "response": "lowpass"
+              },
+              "primitive": "effect.eq-pass",
+              "version": 1
+            }
+          ],
+          "mechanism": "motor",
+          "name": "engine",
+          "rationale": "Altı silindirin 2700 rpm çalışma katmanı; harmonikler ve gövde aynı motor kimliğini korur.",
+          "role": "body",
+          "source": {
+            "params": {
+              "bearing": 0.12,
+              "count": 6,
+              "harmonics": 36,
+              "imbalance": 0.16,
+              "load": 0.9,
+              "mechanism": "engine",
+              "noise": 0.28,
+              "rpm": 2700,
+              "tilt": 0.34
+            },
+            "primitive": "source.machine",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -30,
+          "mechanism": "mechanical",
+          "name": "valvetrain",
+          "rationale": "Subap ve zincir tıkırtısı: ateşleme hızına yakın düzenli mikro tıklar, küçük metal gövdeden geçer; rölantiyi küçük hoparlörde de okunur kılar.",
+          "resonators": [
+            {
+              "params": {
+                "damping": 2.8,
+                "material": "metal",
+                "modes": 8,
+                "size": 0.32,
+                "thickness": 0.02
+              },
+              "primitive": "resonator.material",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "clustering": 0,
+              "event": "click",
+              "levelSpread": 5,
+              "pitch": 0.7,
+              "rate": 135,
+              "regularity": 0.85,
+              "sizeSpread": 0.2
+            },
+            "primitive": "source.micro-events",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -7,
+          "mechanism": "airflow",
+          "name": "intake",
+          "rationale": "Biyolojik emiş: geniş ağızlı boşluktan yavaş iki soluk; motorun organik yanı.",
+          "role": "texture",
+          "source": {
+            "params": {
+              "aperture": 34,
+              "cavity": 4,
+              "cavityMix": 0.55,
+              "pressure": {
+                "gesture": "breath"
+              },
+              "sibilance": 0.05,
+              "tilt": -0.25,
+              "turbulence": 0.85
+            },
+            "primitive": "source.airflow",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -24,
+          "mechanism": "electrical",
+          "name": "core",
+          "rationale": "Biyolüminesans çekirdeğin alçak uğultusu: 55 Hz, az buzz, kararsız; duyulandan çok hissedilen alt katman.",
+          "role": "tonal",
+          "source": {
+            "params": {
+              "arcs": 0,
+              "buzz": 0.12,
+              "hum": 0.35,
+              "instability": 0.3,
+              "mains": 55,
+              "ring": 0.05,
+              "ringHz": 220
+            },
+            "primitive": "source.electrical",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 18,
+        "loop": {
+          "crossfadeSeconds": 1
+        },
+        "normalize": "peak",
+        "peakDbfs": -6
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 3103
+    },
+    "hash": "sha256:ec71c0a2036a135c212b4925e6506a67deade4684593da2917d0382f19c1404e",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 192000,
+      "hash": "sha256:938e7cc84e0ae3a0cd08b3726bbc7de8250db07e719378d05c3364e4b3836cd0",
+      "sampleRate": 48000
+    },
+    "renderId": "r-02e818e4360b6cdb",
+    "rendererVersion": 2,
+    "seed": 3103
+  },
+  "schema": "AudioAssetManifestV1",
+  "seam": {
+    "jumpRatio": 0.3117,
+    "levelStepDb": -0.15,
+    "method": "loop-seam-v1",
+    "pass": true,
+    "reasons": [],
+    "spectralStepDb": -1.155
+  }
+}

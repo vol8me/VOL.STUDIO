@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:b8610fdb68668743f5cd1228bb016f8300e68ad0eb4829ad1ee4ff220e6000fc",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:4b25ce42b78379dc418c961d87cdebf359c3783e0f4f9d5b26e9bd6d76c6f7f9",
+    "familyId": "vt-cannon",
+    "kind": "family-variant",
+    "variantId": "v-6ef5aa02ad1711b0",
+    "variantKey": "shot-c"
+  }
+}

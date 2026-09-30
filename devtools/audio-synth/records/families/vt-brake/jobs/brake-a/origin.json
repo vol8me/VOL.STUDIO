@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:057d358d2cff123b9b2f5e239ceb07439218439194a6ddf0119a49307962f757",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:56a9ee7dc2dac198485f8ed5a153b13d8d948d98589db285ef9b2fe5514c7546",
+    "familyId": "vt-brake",
+    "kind": "family-variant",
+    "variantId": "v-0e15e538bb3abf85",
+    "variantKey": "brake-a"
+  }
+}

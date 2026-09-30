@@ -1,0 +1,123 @@
+{
+  "channels": 1,
+  "description": "Kayma döngüsü: kaba taş/kum sürtünmesi + kum serpintisi + gürleme. 3.5 s, 1 s çapraz geçiş.",
+  "durationSeconds": 3.5,
+  "layers": [
+    {
+      "inserts": [
+        {
+          "params": {
+            "frequency": 3200,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 850,
+            "gainDb": 5,
+            "q": 0.8
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        }
+      ],
+      "mechanism": "scrape",
+      "name": "scrape",
+      "rationale": "Kaba kum sıyırma: yüksek pürüz, ince tane, yüksek basınç.",
+      "role": "body",
+      "source": {
+        "params": {
+          "granularity": 2.5,
+          "material": "stone",
+          "pressure": 0.9,
+          "rolling": 0,
+          "roughness": 0.85,
+          "speed": 2.6
+        },
+        "primitive": "source.friction",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -12,
+      "inserts": [
+        {
+          "params": {
+            "frequency": 500,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 3000,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "mechanism": "noise",
+      "name": "spray",
+      "rationale": "Palet kenarından serpilen kum: bantlı pembe gürültü.",
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -5,
+      "inserts": [
+        {
+          "params": {
+            "frequency": 140,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 30,
+            "order": 1,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
+      "mechanism": "noise",
+      "name": "rumble",
+      "role": "body",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 18,
+    "loop": {
+      "crossfadeSeconds": 1
+    },
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 3202
+}

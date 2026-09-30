@@ -1,0 +1,258 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Merminin araca isabeti: metal-metal Hertz teması, zırh çınlaması, kısa basınç ve biyolüminesans merminin çıtırtılı deşarjı.",
+      "durationSeconds": 0.9,
+      "layers": [
+        {
+          "gainDb": -50,
+          "mechanism": "impact",
+          "name": "strike",
+          "role": "transient",
+          "source": {
+            "params": {
+              "debris": 0.15,
+              "mass": 1,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.9,
+              "velocity": 12
+            },
+            "primitive": "source.contact",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -8,
+          "mechanism": "impact",
+          "name": "ring",
+          "resonators": [
+            {
+              "params": {
+                "damping": 0.9,
+                "material": "metal",
+                "modes": 16,
+                "size": 0.7,
+                "thickness": 0.03
+              },
+              "primitive": "resonator.material",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.3
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -6,
+          "mechanism": "pressure",
+          "name": "shock",
+          "role": "body",
+          "source": {
+            "params": {
+              "body": 0.3,
+              "bodyDecay": 0.25,
+              "bodyHz": 70,
+              "decay": 0.8,
+              "positive": 0.004,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "exponential",
+              "decay": 0.28,
+              "release": 0.05,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "durationSeconds": 0.4,
+          "gainDb": -16,
+          "mechanism": "electrical",
+          "name": "zap",
+          "role": "tonal",
+          "source": {
+            "params": {
+              "arcs": 0,
+              "buzz": 0.6,
+              "charge": -1,
+              "hum": 0.5,
+              "instability": 0.3,
+              "mains": 220,
+              "ring": 0.35,
+              "ringHz": 900
+            },
+            "primitive": "source.electrical",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 18,
+        "fadeOutSeconds": 0.05,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 3601
+    }
+  },
+  "delivery": {
+    "assetClass": "sfx",
+    "assetDir": "public/assets/audio/sfx/families/hit",
+    "durationSeconds": {
+      "max": 1.2,
+      "min": 0.5
+    },
+    "package": "@volstudio/vol-test",
+    "placement": "positional",
+    "subtype": "sfx"
+  },
+  "description": "Merminin araca isabeti: iki varyant. Zırh çınlaması ve deşarj perdesi değişir.",
+  "dimensions": [
+    {
+      "name": "ring-damping",
+      "range": {
+        "max": 1.5,
+        "min": 0.7,
+        "scale": "linear",
+        "unit": "ratio"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "ring",
+        "param": "damping",
+        "primitive": "resonator.material",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "ring-size",
+      "range": {
+        "max": 0.72,
+        "min": 0.68,
+        "scale": "linear",
+        "unit": "m"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "ring",
+        "param": "size",
+        "primitive": "resonator.material",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "zap-hz",
+      "range": {
+        "max": 280,
+        "min": 180,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "zap",
+        "param": "mains",
+        "primitive": "source.electrical",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "vt-hit",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 2
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "ring-damping": {
+          "max": 0.8,
+          "min": 0.7
+        },
+        "ring-size": {
+          "max": 0.72,
+          "min": 0.715
+        },
+        "zap-hz": {
+          "max": 210,
+          "min": 180
+        }
+      },
+      "light": {
+        "ring-damping": {
+          "max": 1.5,
+          "min": 1.35
+        },
+        "ring-size": {
+          "max": 0.685,
+          "min": 0.68
+        },
+        "zap-hz": {
+          "max": 280,
+          "min": 240
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 20261002,
+  "title": "VOL.TEST isabet",
+  "variants": [
+    {
+      "key": "hit-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "hit"
+      ]
+    },
+    {
+      "key": "hit-b",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "hit"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

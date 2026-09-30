@@ -1,0 +1,172 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "vt-blast",
+    "hash": "sha256:8f066f8af2c4077ef3959931300ddc3f46475c0e375df324340a4f73669c255b",
+    "path": "devtools/audio-synth/records/families/vt-blast/family.json",
+    "seed": 20260931,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/vol-test",
+  "quality": {
+    "hash": "sha256:ef8efffef796bba862580855ebbe3a962db9d5386d084697062da35d46a1d3f9",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/vt-blast/quality.json"
+  },
+  "roleAxes": {
+    "rarity": [
+      "alternate",
+      "common"
+    ],
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 31080,
+        "encodedHash": "sha256:875189b08fe9ef7b9cbd937e93e20eaf2038329c0a61ce7af70241eba85af745",
+        "path": "public/assets/audio/sfx/families/blast/blast-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2.29,
+        "centroidHz": 910.0780471059396,
+        "pitchHz": null
+      },
+      "durationSeconds": 2.4,
+      "key": "blast-a",
+      "loudness": {
+        "integratedLufs": -22.630347738186344,
+        "maxMomentaryLufs": -19.75736647249653,
+        "truePeakDbtp": -2.9794356314375303
+      },
+      "manifest": {
+        "hash": "sha256:3afcc97d30b87d71d4ebb071bb648e6f704275cdc31cd6bfcb00ede6c379bff1",
+        "path": "audio-manifests/sfx/families/blast/blast-a.json"
+      },
+      "pcmHash": "sha256:9419faebecffa01b3d86bd8fe7f7c2e39500b1e725c802d6162712693c3b7cc1",
+      "programHash": "sha256:2112577dd592fa58dd74dd774f81b61294c5c0bcc616787a35e15bcc9729e410",
+      "roles": {
+        "rarity": "common",
+        "weight": "light"
+      },
+      "tags": [
+        "blast"
+      ],
+      "variantId": "v-8c037858590ce52e"
+    },
+    {
+      "asset": {
+        "bytes": 31407,
+        "encodedHash": "sha256:33f6205bedfd69e2aa9b38e8cd14fb7df0375110567a8d5de46b78567a1e3324",
+        "path": "public/assets/audio/sfx/families/blast/blast-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2.31,
+        "centroidHz": 802.7063199808132,
+        "pitchHz": null
+      },
+      "durationSeconds": 2.4,
+      "key": "blast-b",
+      "loudness": {
+        "integratedLufs": -22.73149284715975,
+        "maxMomentaryLufs": -19.91395404569815,
+        "truePeakDbtp": -2.9701080144686163
+      },
+      "manifest": {
+        "hash": "sha256:a4a8ca13e3b4640a7a2f8632ea540dce60c35d29cbe38c3c2a7a2c8460452945",
+        "path": "audio-manifests/sfx/families/blast/blast-b.json"
+      },
+      "pcmHash": "sha256:acdb8a2de1589420d93be960884071bfb722b3232544ad57851aa469d2e6bc38",
+      "programHash": "sha256:dda254dc7fab673b335642dee536d9350547d4653826d192fd5e14fbfbfa0b8d",
+      "roles": {
+        "rarity": "common",
+        "weight": "medium"
+      },
+      "tags": [
+        "blast"
+      ],
+      "variantId": "v-b064c78434dba3c4"
+    },
+    {
+      "asset": {
+        "bytes": 32601,
+        "encodedHash": "sha256:96840a5b99fd226a1efb48e4c3ca5239bbe9d14375b7736bb9ba619120214791",
+        "path": "public/assets/audio/sfx/families/blast/blast-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2.32,
+        "centroidHz": 728.3820349395083,
+        "pitchHz": null
+      },
+      "durationSeconds": 2.4,
+      "key": "blast-c",
+      "loudness": {
+        "integratedLufs": -22.683319332979334,
+        "maxMomentaryLufs": -20.028452371178602,
+        "truePeakDbtp": -2.9377980965259236
+      },
+      "manifest": {
+        "hash": "sha256:0024a2d452dfb3cb74aff39d16b2d759d1d579b1872c8c808eecb7d8f3e6a726",
+        "path": "audio-manifests/sfx/families/blast/blast-c.json"
+      },
+      "pcmHash": "sha256:fdecc93b3419f432f391912a23827f9c17eac13b5121e65ebe65a16e5d2a3d32",
+      "programHash": "sha256:7869637f498270796473f256719e0755eec0a37982dd4295c2d50c10d877e8ed",
+      "roles": {
+        "rarity": "common",
+        "weight": "heavy"
+      },
+      "tags": [
+        "blast"
+      ],
+      "variantId": "v-144362c997996487"
+    },
+    {
+      "asset": {
+        "bytes": 32045,
+        "encodedHash": "sha256:932a57f598628b9faf3c32272664c67b2721f96ee4b64e8741c0bbf7ff50b3fe",
+        "path": "public/assets/audio/sfx/families/blast/blast-d.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 2.32,
+        "centroidHz": 706.7083361571332,
+        "pitchHz": null
+      },
+      "durationSeconds": 2.4,
+      "key": "blast-d",
+      "loudness": {
+        "integratedLufs": -22.65945436581768,
+        "maxMomentaryLufs": -20.033361541690713,
+        "truePeakDbtp": -3.0427514091478503
+      },
+      "manifest": {
+        "hash": "sha256:9bcab4150365b70220d6eb214b298d0a548d73e240d7372a13efb969b3ef2dec",
+        "path": "audio-manifests/sfx/families/blast/blast-d.json"
+      },
+      "pcmHash": "sha256:b429f8b0358742f62013cc7b1b006d802b2ea2cf89a75b043cde94f9847e3f6b",
+      "programHash": "sha256:f6069c2a8b0fd58eceddfb2b1ab3be019addec741827475bf1ed281651656d81",
+      "roles": {
+        "rarity": "alternate",
+        "weight": "heavy"
+      },
+      "tags": [
+        "blast"
+      ],
+      "variantId": "v-5807dea975ee1049"
+    }
+  ]
+}

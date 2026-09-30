@@ -1,0 +1,24 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "intensity:soft",
+    "weight:light",
+    "crash"
+  ],
+  "durationSeconds": {
+    "max": 1.5,
+    "min": 0.7
+  },
+  "id": "vt-crash-soft-a",
+  "intent": "Tankın duvara ya da başka araca çarpması: yumuşak ve sert çarpmalar, ikişer varyant. Oyunda çarpma hızıyla rol seçilir, seviye çalışma zamanında ölçeklenir. Varyant soft-a (intensity:soft, weight:light).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST çarpma — soft-a"
+}

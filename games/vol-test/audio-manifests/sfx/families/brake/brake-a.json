@@ -1,0 +1,298 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -9.308372082191582e-06
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.6973333333333334,
+        "frames": 33472,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -2.920788533886669
+        ],
+        "channelRmsDbfs": [
+          -16.63864096802809
+        ],
+        "crestFactorDb": 13.71785243414142,
+        "integratedLufs": -15.12884350524429,
+        "maxMomentaryLufs": -13.486670050250376,
+        "rmsDbfs": -16.63864096802809,
+        "samplePeakDbfs": -2.920788533886669,
+        "truePeakDbtp": -2.7808187781053855
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -44.25495893676806,
+          "high": -23.93920463836029,
+          "low": -74.68784076947094,
+          "mid": -17.522267965221683,
+          "sub": -70.57863371317325
+        },
+        "centroidHz": 1562.8325629152403,
+        "flatness": 3.7061329294448246e-05,
+        "peakHz": 1710.9375,
+        "rolloff85Hz": 2742.1875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.7,
+        "attackSeconds": 0,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.20286533949749955,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:85d8e1d14bed125c3fc9f51dc8903c0766e53acdfb0eefb7ced82682ea008b49"
+  },
+  "asset": {
+    "bytes": 12776,
+    "encodedHash": "sha256:c5525ed7f6aa6c195b91ba1ec5a272d5c6dd551c5e08bad1a48eccb75d71de0a",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/families/brake/brake-a.ogg"
+  },
+  "assetId": "vt-brake-brake-a",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "weight:light",
+        "brake"
+      ],
+      "durationSeconds": {
+        "max": 1,
+        "min": 0.4
+      },
+      "id": "vt-brake-brake-a",
+      "intent": "Fren kilidi: iki varyant; kavrama kütlesi ve tıslama ağzı değişir. Varyant brake-a (weight:light).",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST fren kilidi — brake-a"
+    },
+    "hash": "sha256:678b70d9b68abd3ed65e74ef830881be5c4b1fa537ec66d4f1d218ac249057c9",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:38737192fa72cadf8620dd8b4da31b942dcace76aa0cd951b26dee933814319a",
+      "nodes": [
+        {
+          "hash": "sha256:855365ccd9dbee4b07804e871b5bcc31ad44318daf519e32418d8bf6c338d567",
+          "id": "source.airflow",
+          "version": 1
+        },
+        {
+          "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d",
+          "id": "source.contact",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": "vt-brake/brake-a",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "brake-a",
+    "path": "devtools/audio-synth/records/families/vt-brake/jobs/brake-a",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Fren kilidi: pabucun metal kavrayışı, pnömatik boşalma tıslaması ve mandal.",
+      "durationSeconds": 0.7,
+      "gestures": {
+        "bleed": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0.015,
+              0.75
+            ],
+            [
+              0.25,
+              0.25
+            ],
+            [
+              0.6,
+              0
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "mechanism": "mechanical",
+          "name": "clamp",
+          "role": "transient",
+          "source": {
+            "params": {
+              "debris": 0.05,
+              "mass": 1.71169,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.35,
+              "velocity": 2.5
+            },
+            "primitive": "source.contact",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -8,
+          "mechanism": "hiss",
+          "name": "hiss",
+          "role": "texture",
+          "source": {
+            "params": {
+              "aperture": 2.77916,
+              "cavity": 0.05,
+              "cavityMix": 0.2,
+              "pressure": {
+                "gesture": "bleed"
+              },
+              "sibilance": 0.55,
+              "tilt": 0.3,
+              "turbulence": 0.7
+            },
+            "primitive": "source.airflow",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -14,
+          "mechanism": "mechanical",
+          "name": "pawl",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0,
+              "mass": 0.3,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.12,
+              "velocity": 1.5
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.06
+        }
+      ],
+      "master": {
+        "dcBlockHz": 18,
+        "fadeOutSeconds": 0.05,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 3701
+    },
+    "hash": "sha256:057d358d2cff123b9b2f5e239ceb07439218439194a6ddf0119a49307962f757",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 33600,
+      "hash": "sha256:7844f89b156b50574946155b032db014e9a62d40b6e4d9c323d886b41979f3c0",
+      "sampleRate": 48000
+    },
+    "renderId": "r-dbd031dd19597ac9",
+    "rendererVersion": 2,
+    "seed": 3701
+  },
+  "schema": "AudioAssetManifestV1"
+}

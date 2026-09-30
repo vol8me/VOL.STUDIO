@@ -1,0 +1,129 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 1.1,
+        "measured": 4,
+        "median": 1.1,
+        "min": 1.1,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 950.646,
+        "measured": 4,
+        "median": 815.372,
+        "min": 730.208,
+        "scale": 0.138736
+      },
+      "maxMomentaryLufs": {
+        "max": -17.7023,
+        "measured": 4,
+        "median": -18.2076,
+        "min": -18.8275,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 342.232,
+        "measured": 4,
+        "median": 338.334,
+        "min": 334.315,
+        "scale": 0.05
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.732496,
+    "medianDistance": 0.725078,
+    "minDistance": 0.048974,
+    "nearIdentical": [],
+    "pairs": 6
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 7.666,
+    "medoid": "soft-b",
+    "members": [
+      {
+        "distance": 7.056,
+        "key": "hard-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 3.647,
+        "key": "hard-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 7.666,
+        "key": "soft-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "soft-b",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "hard-a",
+      "nearest": {
+        "distance": 0.104889,
+        "key": "soft-a"
+      },
+      "pcmHash": "sha256:57935fa15bb30885efec6ea1b5b86a4e343b37a530b79abbd1a948d5fb161484"
+    },
+    {
+      "key": "hard-b",
+      "nearest": {
+        "distance": 0.048974,
+        "key": "soft-b"
+      },
+      "pcmHash": "sha256:cdfad3f11ea2353651d5c2f2c930bfd6c73a369888864130c7de59136f275f5a"
+    },
+    {
+      "key": "soft-a",
+      "nearest": {
+        "distance": 0.104889,
+        "key": "hard-a"
+      },
+      "pcmHash": "sha256:c73529586d98b28497b6fb39ca697febec93bf01bea62a304184ee5b1ab8d5b7"
+    },
+    {
+      "key": "soft-b",
+      "nearest": {
+        "distance": 0.048974,
+        "key": "hard-b"
+      },
+      "pcmHash": "sha256:90723c17253b5f32294a2c5765d4d63a5dd619fe51b190e979dd5a97ac45c58c"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 4
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

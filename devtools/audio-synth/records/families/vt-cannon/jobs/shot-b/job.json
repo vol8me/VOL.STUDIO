@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-3d85e7a4f6ec3b37": {
+        "hash": "sha256:8ae51e5b57b23247117c6db2c354063bb4b2b5c78c504c59ac1a3c34d407a766",
+        "path": "analyses/r-3d85e7a4f6ec3b37.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:a5f92b47370344089b0137fb488c197b41bcde43cdcc7b37bb4180ac59a48698",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:a5f92b47370344089b0137fb488c197b41bcde43cdcc7b37bb4180ac59a48698",
+      "hash": "sha256:64870c8882abd593555f17596824a70ff6636598f62be7aaff969309fa2e3eec",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:a18e1eef1fcc4f2846d9938270a7cd3eabfdb88e5ee4f7e42809d687023872a4",
+      "path": "games/vol-test/audio-manifests/sfx/families/cannon/shot-b.json"
+    },
+    "renders": {
+      "r-3d85e7a4f6ec3b37": {
+        "hash": "sha256:c54795e1ef384895980adb7e3a9ff2590a07c75f2db361b922ff196e631a7812",
+        "path": "renders/r-3d85e7a4f6ec3b37.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:90b6817e425326181e901c2a215f8e6bc1b241a7206670ff1bdbb41ab88e0837",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "shot-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/families/cannon/shot-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-cannon/shot-b"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "frequency": 90,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "amount": 1,
+            "damp": 0.45,
+            "decay": 2.726487,
+            "preDelay": 0.0274,
+            "roomSize": 0.8
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        }
+      ],
+      "gainDb": -8.5
+    }
+  },
+  "channels": 1,
+  "description": "VOL.TEST tank topu: fırlatıcı archetype'ının namlu, blast ve gövde katmanları (şarj, tetik, sürgü ve kovan yok: enerji mermisi, gecikmesiz) + namlu freni nefesi + biyoelektrik deşarj.",
+  "durationSeconds": 1.3,
+  "gestures": {
+    "exhale": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0.02,
+          0.85
+        ],
+        [
+          0.3,
+          0.22
+        ],
+        [
+          0.88,
+          0
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "mechanism": "pressure",
+      "name": "muzzle",
+      "rationale": "Namlu basınç dalgası (Friedlander): pozitif faz ve gövde; atış anında başlar (gecikme yok).",
+      "role": "transient",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -6
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.5,
+          "bodyDecay": 0.664,
+          "bodyHz": 55.1035,
+          "decay": 1.4,
+          "positive": 0.014117,
+          "rise": 0.00008
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.005
+    },
+    {
+      "gainDb": -2,
+      "inserts": [
+        {
+          "params": {
+            "edge": "high",
+            "frequency": 2500,
+            "gainDb": 6,
+            "q": 0.707
+          },
+          "primitive": "effect.eq-shelf",
+          "version": 1
+        }
+      ],
+      "mechanism": "explosion",
+      "name": "blast",
+      "rationale": "Namlu ağzı türbülanslı blast.",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -3
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.846562,
+          "crackle": 0,
+          "darkening": 0.25,
+          "decay": 0.663976
+        },
+        "primitive": "source.blast",
+        "version": 1
+      },
+      "startSeconds": 0.005
+    },
+    {
+      "gainDb": -8,
+      "mechanism": "impact",
+      "name": "body",
+      "rationale": "Namlunun metal gövde çınlaması, kısa sönüm.",
+      "resonators": [
+        {
+          "params": {
+            "material": "metal",
+            "modes": 16,
+            "size": 0.60903,
+            "thickness": 0.04
+          },
+          "primitive": "resonator.material",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -10
+        }
+      ],
+      "source": {
+        "params": {
+          "contactTime": 0.0006,
+          "roughness": 0.3
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      },
+      "startSeconds": 0.005
+    },
+    {
+      "durationSeconds": 0.9,
+      "gainDb": -11,
+      "mechanism": "airflow",
+      "name": "exhale",
+      "rationale": "Namlu freninden iki yana boşalan gaz, organik bir soluk gibi söner: tankın canlı yanı.",
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 60.9586,
+          "cavity": 8,
+          "cavityMix": 0.45,
+          "pressure": {
+            "gesture": "exhale"
+          },
+          "sibilance": 0.08,
+          "tilt": -0.3,
+          "turbulence": 0.95
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      },
+      "startSeconds": 0.012
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.22,
+          "release": 0.08,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.32,
+      "gainDb": -17,
+      "mechanism": "electrical",
+      "name": "discharge",
+      "rationale": "Biyolüminesans merminin enerji imzası: perdesi düşen kısa deşarj.",
+      "role": "transient",
+      "source": {
+        "params": {
+          "arcs": 0,
+          "buzz": 0.45,
+          "charge": -0.8,
+          "hum": 0.5,
+          "instability": 0.3,
+          "mains": 128.866,
+          "ring": 0.3,
+          "ringHz": 620
+        },
+        "primitive": "source.electrical",
+        "version": 1
+      },
+      "startSeconds": 0.004
+    }
+  ],
+  "master": {
+    "dcBlockHz": 18,
+    "fadeOutSeconds": 0.05,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 3301
+}

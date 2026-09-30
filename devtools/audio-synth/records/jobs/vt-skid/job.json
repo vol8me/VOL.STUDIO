@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-48505784e61936ef": {
+        "hash": "sha256:b573b0d7ac3f9ce414c7aee4a1a7c87fcab8168c0ed648a59bcc1f02e2f20700",
+        "path": "analyses/r-48505784e61936ef.json"
+      },
+      "r-a6d8a283a8ec2133": {
+        "hash": "sha256:52dd2c7e02f539e66bb314e8be45def90791ce3b3c56a1d39f5153244611881e",
+        "path": "analyses/r-a6d8a283a8ec2133.json"
+      },
+      "r-f23abd1845115ea6": {
+        "hash": "sha256:3adb21134688a71a285eac4283c34343d1a3e440dfdb092f6cfa24fd8fbb0990",
+        "path": "analyses/r-f23abd1845115ea6.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:43dc7f2530cea9cb4af8e338f8d2534642824be94d0466f8729b1ebc0cacc50f",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:43dc7f2530cea9cb4af8e338f8d2534642824be94d0466f8729b1ebc0cacc50f",
+      "hash": "sha256:cb6d5758794967afcf7fe37a38fc910c36a1e6f736d8d937cec233fcd5fae1dc",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:cc9ec0dbb6c19bad51fc6d4a0f4429f1de7615c55691b67abf641e1b00d0224d",
+      "path": "games/vol-test/audio-manifests/sfx/skid.json"
+    },
+    "renders": {
+      "r-48505784e61936ef": {
+        "hash": "sha256:5b91d3e23c62cdeddae97f95c431d642a9301959acd509d752f93a3f54c60c93",
+        "path": "renders/r-48505784e61936ef.json"
+      },
+      "r-a6d8a283a8ec2133": {
+        "hash": "sha256:4ad47dc5c264cedf8dfc1baa7c43e9f9ec194c7529a33c8f139086263bb58353",
+        "path": "renders/r-a6d8a283a8ec2133.json"
+      },
+      "r-f23abd1845115ea6": {
+        "hash": "sha256:0bbe2564a64091fd7616f3d208270f0097ce4e013e60344642dcdd6a139ed89b",
+        "path": "renders/r-f23abd1845115ea6.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:9db92fde62a4aedcbd3a41c44bad3ea1ee77a49705989b703dac99b98504c905",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-skid",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 12,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/skid.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "sfx/skid"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "analysisHash": "sha256:67d4681b8a95780fbc1fe97fdbca3bc15736cf3cedabea3c392bab5e6945b67c",
+  "pcmHash": "sha256:cdca5ac6e01d7fcd2677cb704c2a29ad002515db0a57c162461f7b0923d0aa41",
+  "reason": "Nihai render ve ölçülen oyun ses katmanı; insan dinleme onayı bekliyor.",
+  "renderHash": "sha256:30a2b289106a2257ef7ccde3115f84a590bf6156f931fe90d64b927e59886f66",
+  "renderId": "r-ad834e8d246a0226",
+  "schema": "AudioSelectionV1"
+}

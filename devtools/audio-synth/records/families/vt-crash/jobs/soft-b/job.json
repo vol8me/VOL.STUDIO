@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-8fdd5a7cf283fbdd": {
+        "hash": "sha256:4557bdc7dcdf90eebad1d1323fae3b46020576e1d8668636ddf46c6013ad58b6",
+        "path": "analyses/r-8fdd5a7cf283fbdd.json"
+      },
+      "r-ec69008e0a58daa5": {
+        "hash": "sha256:55bed751ff2c165b49b36bed2b14b1516aecba0eb8fc88066f6e96cd0342c491",
+        "path": "analyses/r-ec69008e0a58daa5.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:ca30ff837ba7894703013c6f04e83c298faad0844b21fb85a6102f4279071b0e",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:ca30ff837ba7894703013c6f04e83c298faad0844b21fb85a6102f4279071b0e",
+      "hash": "sha256:15a29574ac5ee35da5684339970ea000c60c00fae8e51b4af01d78a02032653f",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:927d244e35116be847152bc44b342e97f94721863f65e096cb9315871fdca547",
+      "path": "games/vol-test/audio-manifests/sfx/families/crash/soft-b.json"
+    },
+    "renders": {
+      "r-8fdd5a7cf283fbdd": {
+        "hash": "sha256:b4205be61f763a5ca28254a2dce60c8b66af91b992814e44b1e5b4b1d7d1fb96",
+        "path": "renders/r-8fdd5a7cf283fbdd.json"
+      },
+      "r-ec69008e0a58daa5": {
+        "hash": "sha256:7962f378923acbda739a8cf7615dab6b90e8ea5680cdbc44fc780ca851f063d5",
+        "path": "renders/r-ec69008e0a58daa5.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:c7b6fc0ddb6a30604e9994b656b1b63f9bb0531b761d8844f3b5334612da917e",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "soft-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/families/crash/soft-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-crash/soft-b"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "programHash": "sha256:01a04f8812289fc9b8335d75da49b07ad8bd1064bb2134b1f967e7da806c4a87",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "kind": "treatment",
+    "profile": {
+      "hash": "sha256:a2adad8891aa6d850654c171df32f46fbd99597161f494091ad50be878c93ca5",
+      "id": "distance-far",
+      "version": 1
+    },
+    "source": {
+      "assetId": "vt-blast-blast-a",
+      "manifest": "games/vol-test/audio-manifests/sfx/families/blast/blast-a.json",
+      "pcmHash": "sha256:9419faebecffa01b3d86bd8fe7f7c2e39500b1e725c802d6162712693c3b7cc1",
+      "programHash": "sha256:2112577dd592fa58dd74dd774f81b61294c5c0bcc616787a35e15bcc9729e410",
+      "seed": 3401
+    }
+  }
+}

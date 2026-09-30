@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:2112577dd592fa58dd74dd774f81b61294c5c0bcc616787a35e15bcc9729e410",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:8f066f8af2c4077ef3959931300ddc3f46475c0e375df324340a4f73669c255b",
+    "familyId": "vt-blast",
+    "kind": "family-variant",
+    "variantId": "v-8c037858590ce52e",
+    "variantKey": "blast-a"
+  }
+}

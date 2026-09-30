@@ -1,0 +1,217 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Fren kilidi: pabucun metal kavrayışı, pnömatik boşalma tıslaması ve mandal.",
+      "durationSeconds": 0.7,
+      "gestures": {
+        "bleed": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0.015,
+              0.75
+            ],
+            [
+              0.25,
+              0.25
+            ],
+            [
+              0.6,
+              0
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "mechanism": "mechanical",
+          "name": "clamp",
+          "role": "transient",
+          "source": {
+            "params": {
+              "debris": 0.05,
+              "mass": 3,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.35,
+              "velocity": 2.5
+            },
+            "primitive": "source.contact",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -8,
+          "mechanism": "hiss",
+          "name": "hiss",
+          "role": "texture",
+          "source": {
+            "params": {
+              "aperture": 3.5,
+              "cavity": 0.05,
+              "cavityMix": 0.2,
+              "pressure": {
+                "gesture": "bleed"
+              },
+              "sibilance": 0.55,
+              "tilt": 0.3,
+              "turbulence": 0.7
+            },
+            "primitive": "source.airflow",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -14,
+          "mechanism": "mechanical",
+          "name": "pawl",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0,
+              "mass": 0.3,
+              "materialA": "metal",
+              "materialB": "metal",
+              "size": 0.12,
+              "velocity": 1.5
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.06
+        }
+      ],
+      "master": {
+        "dcBlockHz": 18,
+        "fadeOutSeconds": 0.05,
+        "normalize": "peak",
+        "peakDbfs": -3
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 3701
+    }
+  },
+  "delivery": {
+    "assetClass": "sfx",
+    "assetDir": "public/assets/audio/sfx/families/brake",
+    "durationSeconds": {
+      "max": 1,
+      "min": 0.4
+    },
+    "package": "@volstudio/vol-test",
+    "placement": "positional",
+    "subtype": "sfx"
+  },
+  "description": "Fren kilidi: iki varyant; kavrama kütlesi ve tıslama ağzı değişir.",
+  "dimensions": [
+    {
+      "name": "clamp-mass",
+      "range": {
+        "max": 5,
+        "min": 1.5,
+        "scale": "log",
+        "unit": "kg"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "clamp",
+        "param": "mass",
+        "primitive": "source.contact",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "hiss-aperture",
+      "range": {
+        "max": 6,
+        "min": 2.5,
+        "scale": "linear",
+        "unit": "mm"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "hiss",
+        "param": "aperture",
+        "primitive": "source.airflow",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "vt-brake",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 2
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "clamp-mass": {
+          "max": 5,
+          "min": 3.6
+        },
+        "hiss-aperture": {
+          "max": 6,
+          "min": 4.8
+        }
+      },
+      "light": {
+        "clamp-mass": {
+          "max": 2.2,
+          "min": 1.5
+        },
+        "hiss-aperture": {
+          "max": 3.2,
+          "min": 2.5
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 20261003,
+  "title": "VOL.TEST fren kilidi",
+  "variants": [
+    {
+      "key": "brake-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "brake"
+      ]
+    },
+    {
+      "key": "brake-b",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "brake"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

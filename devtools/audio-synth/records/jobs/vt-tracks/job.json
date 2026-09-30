@@ -1,0 +1,71 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-6610d990bae4a8aa": {
+        "hash": "sha256:c36b721f7ed3a7b8a86d55ea7bcf18d0b2ba995eb05b1391b4252d062ba69427",
+        "path": "analyses/r-6610d990bae4a8aa.json"
+      },
+      "r-8e180522d166ac4a": {
+        "hash": "sha256:dc9a959f663dfdf4a9e1f7aa78c3ee2adbe8cd27fa794d872ec305a98f23a734",
+        "path": "analyses/r-8e180522d166ac4a.json"
+      },
+      "r-c0605986b0371985": {
+        "hash": "sha256:c3aacd69c105bbf5c663d559ce2f999402e9f6a85a3cccb9d5296c35cb098aa9",
+        "path": "analyses/r-c0605986b0371985.json"
+      },
+      "r-ee19928eafebed7b": {
+        "hash": "sha256:7db959f72887b250bc293cb0bbffe6f6f10ee5e07ea471a890ae24cf58837903",
+        "path": "analyses/r-ee19928eafebed7b.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:0b3a12ba064aff96d90c15271ab1a9b5902c2c150a33a1df6d88e48cbab7ead9",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:0b3a12ba064aff96d90c15271ab1a9b5902c2c150a33a1df6d88e48cbab7ead9",
+      "hash": "sha256:a9c16fd388c56df0e38d807fb3a50ee4048b1b4707cd32d5c6bdab0569b1447a",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:b7033ba09e7151c164c2c4ada82ec3469f5ad8f006466d6f78f80ca8021be2bf",
+      "path": "games/vol-test/audio-manifests/sfx/tracks.json"
+    },
+    "renders": {
+      "r-6610d990bae4a8aa": {
+        "hash": "sha256:1caef88c5ca72fdf6a7122e29149e9945dd7a5d6bd175739d15f6e9b79bac534",
+        "path": "renders/r-6610d990bae4a8aa.json"
+      },
+      "r-8e180522d166ac4a": {
+        "hash": "sha256:0521eddb9be34d1af37e76e4ff43626dc4da9a0a9d38e540830dd95a720d5aac",
+        "path": "renders/r-8e180522d166ac4a.json"
+      },
+      "r-c0605986b0371985": {
+        "hash": "sha256:69e114fe266e282e559f43698686f2b92b1e09d9cd258e5bb71a768cfe7044bd",
+        "path": "renders/r-c0605986b0371985.json"
+      },
+      "r-ee19928eafebed7b": {
+        "hash": "sha256:151b40ea183e21ff86c52b6b7fa8c3c7ed8c67ba5be828e0e8fd74a572634f26",
+        "path": "renders/r-ee19928eafebed7b.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:aca07a11ba59f16440e352c8224ec1cd37cb8d2c10db1168222d2d0287c738a9",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-tracks",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 15,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/tracks.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": "sfx/tracks"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -45,3 +45,7 @@ devtools/audio-synth/records/music/*/report.json
 devtools/audio-synth/records/music/*/qa.json
 devtools/audio-synth/records/music/*/search-report.json
 devtools/audio-synth/records/music/*/jobs/
+
+# Oyun yayın hedeflerinde de aynı kanonik audio-synth yazıcısı kullanılır.
+games/*/audio-manifests/
+games/*/audio-banks/

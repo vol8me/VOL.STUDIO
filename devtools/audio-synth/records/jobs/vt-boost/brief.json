@@ -1,0 +1,31 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "loop",
+    "boost",
+    "organic",
+    "energy"
+  ],
+  "durationSeconds": {
+    "max": 3.5,
+    "min": 2
+  },
+  "id": "vt-boost",
+  "intent": "Hızlanmada açılan basınçlı biyojet: türbülanslı hava akışı ve çekirdeğin yükselen biyoelektrik gerilimi. Oyunda hızlanma açıkken yumuşakça açılır.",
+  "kind": "acoustic",
+  "loop": true,
+  "mechanisms": [
+    "airflow",
+    "turbulence",
+    "electrical"
+  ],
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude-code"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST hızlanma"
+}

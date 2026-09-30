@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:527c78f1215f14d68110fb483c22dad086d421cbdf087a9f9b33cd6e08e1a4e2",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:560b3b5fbe971026f88871ee011d1d93bc4c0ac3a74268c219cf0b634523f0f2",
+    "familyId": "vt-crash",
+    "kind": "family-variant",
+    "variantId": "v-40fad362a967d896",
+    "variantKey": "soft-a"
+  }
+}
