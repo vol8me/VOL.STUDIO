@@ -48,7 +48,7 @@ const MUTANTS: readonly Mutant[] = [
     file: 'src/synthesis/waveforms.ts',
     find: 'sum += h * blepResidual((phase - at - k) / inc);',
     replace: 'sum += h * blepResidual((phase - at - k) / inc) * 0;',
-    test: 'tests/fmAlias.test.ts',
+    test: 'tests/synthesis/fmAlias.test.ts',
   },
   {
     id: 'manifest-schema-inverted',
@@ -111,7 +111,7 @@ const MUTANTS: readonly Mutant[] = [
     file: 'src/guard/budget.ts',
     find: 'cost.peakBytes <= budget.maxPeakBytes',
     replace: 'cost.peakBytes <= budget.maxPeakBytes * 10',
-    test: 'tests/budget.test.ts',
+    test: 'tests/guard/budget.test.ts',
   },
 ];
 

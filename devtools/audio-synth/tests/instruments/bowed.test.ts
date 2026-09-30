@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bowedString } from '../src/instruments/strings/bowed';
+import { bowedString } from '../../src/instruments/strings/bowed';
 
 function allFinite(channels: Float32Array[]): boolean {
   return channels.every((ch) => ch.every((s) => Number.isFinite(s)));

@@ -9,7 +9,7 @@ import {
   resample,
   trimSamples,
 } from '@volstudio/audio-synth';
-import { decodeWavChannels } from '../src/synthesis/sample';
+import { decodeWavChannels } from '../../src/synthesis/sample';
 
 function createTestWav(frequency: number, duration: number, sampleRate: number): Uint8Array {
   const sampleCount = Math.floor(sampleRate * duration);

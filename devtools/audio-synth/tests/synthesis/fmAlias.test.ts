@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { measureFmAlias } from '../src/analysis/fmAlias';
-import { FM_ALIAS_LIMITS, assessFmAlias, type FmAliasLevel } from '../src/analysis/fmRisk';
-import type { FmParams, Waveform } from '../src/types';
+import { measureFmAlias } from '../../src/analysis/fmAlias';
+import { FM_ALIAS_LIMITS, assessFmAlias, type FmAliasLevel } from '../../src/analysis/fmRisk';
+import type { FmParams, Waveform } from '../../src/types';
 
 /**
  * FM alias regresyon paketi: risk tahmini her koşuda ÖLÇÜMLE yüzleşir.

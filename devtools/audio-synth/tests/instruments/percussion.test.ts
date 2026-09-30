@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeAudio } from '../src/analysis/report';
-import { withRenderSession } from '../src/engine/session';
-import { AudioParamError } from '../src/guard/errors';
+import { analyzeAudio } from '../../src/analysis/report';
+import { withRenderSession } from '../../src/engine/session';
+import { AudioParamError } from '../../src/guard/errors';
 import {
   CHOKE_FADE_SECONDS,
   drum,
   drumSeconds,
   resolveDrum,
   type DrumParams,
-} from '../src/instruments/percussion/drum';
-import { DRUM_MODELS, type DrumModel } from '../src/instruments/percussion/models';
-import { hashPcm } from '../src/protocol/canonical';
-import { isStrictlyMonotone, peakFrequency, rms } from './support/measure';
-import { RENDER_BLOCK } from './support/timeouts';
+} from '../../src/instruments/percussion/drum';
+import { DRUM_MODELS, type DrumModel } from '../../src/instruments/percussion/models';
+import { hashPcm } from '../../src/protocol/canonical';
+import { isStrictlyMonotone, peakFrequency, rms } from '../support/measure';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
  * Davul ailesi ölçülerek doğrulanır: her makronun yön iddiası yedi modelde

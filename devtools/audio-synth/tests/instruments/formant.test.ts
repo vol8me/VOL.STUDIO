@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formant } from '../src/instruments/voice/formant';
+import { formant } from '../../src/instruments/voice/formant';
 
 function allFinite(channels: Float32Array[]): boolean {
   return channels.every((ch) => ch.every((s) => Number.isFinite(s)));

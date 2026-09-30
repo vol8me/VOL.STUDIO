@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { Presets, pluck } from '../src/index';
-import { synthesize } from '../src/engine';
-import type { SynthParams } from '../src/types';
+import { Presets, pluck } from '../../src/index';
+import { synthesize } from '../../src/engine';
+import type { SynthParams } from '../../src/types';
 
 /**
  * Akustik presetlerin İDDİALARINI ölçer.

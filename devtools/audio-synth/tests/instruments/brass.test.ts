@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { brass } from '../src/instruments/brass/brass';
+import { brass } from '../../src/instruments/brass/brass';
 
 function allFinite(channels: Float32Array[]): boolean {
   return channels.every((ch) => ch.every((s) => Number.isFinite(s)));

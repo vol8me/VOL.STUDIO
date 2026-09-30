@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Reverb } from '../src/index';
-import type { ReverbParams } from '../src/types';
+import { Reverb } from '../../src/index';
+import type { ReverbParams } from '../../src/types';
 import { createRandom } from '@volstudio/core/random';
 
 /**

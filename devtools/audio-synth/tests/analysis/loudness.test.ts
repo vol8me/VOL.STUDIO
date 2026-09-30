@@ -7,15 +7,15 @@ import {
   maxMomentaryLoudness,
   samplePeakDb,
   truePeakDb,
-} from '../src/analysis/loudness';
+} from '../../src/analysis/loudness';
 import {
   ASSET_CLASS_POLICIES,
   classifyAssetPath,
   evaluateAssetPolicy,
   measureAsset,
   type AssetMeasurement,
-} from '../src/analysis/assetQa';
-import { withRenderSession } from '../src/engine/session';
+} from '../../src/analysis/assetQa';
+import { withRenderSession } from '../../src/engine/session';
 
 /**
  * Beklenen değerler uygulamadan DEĞİL, yayımlanmış kaynaklardan gelir:

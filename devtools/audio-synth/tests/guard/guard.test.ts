@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BiquadFilter, Envelope, Reverb, createFilter } from '../src/index';
+import { BiquadFilter, Envelope, Reverb, createFilter } from '../../src/index';
 import {
   Chorus,
   DelayLine,
@@ -9,10 +9,10 @@ import {
   PhaserEffect,
   StereoWidener,
   getPanGains,
-} from '../src/effects';
-import { synthesize } from '../src/engine';
-import type { SynthParams } from '../src/types';
-import type { AudioParamIssue } from '../src/guard/errors';
+} from '../../src/effects';
+import { synthesize } from '../../src/engine';
+import type { SynthParams } from '../../src/types';
+import type { AudioParamIssue } from '../../src/guard/errors';
 
 /**
  * Render sınırı: iç içe parametre bozukluğu DSP'ye girmeden, alanın TAM

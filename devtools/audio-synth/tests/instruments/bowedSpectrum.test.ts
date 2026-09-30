@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { synthesize } from '../src/engine/synthesize';
-import { cello, doubleBass, viola, violin } from '../src/presets/bowed';
-import type { SynthParams } from '../src/types';
+import { synthesize } from '../../src/engine/synthesize';
+import { cello, doubleBass, viola, violin } from '../../src/presets/bowed';
+import type { SynthParams } from '../../src/types';
 
 function toneEnergy(samples: Float32Array, sampleRate: number, frequency: number): number {
   const omega = (2 * Math.PI * frequency) / sampleRate;

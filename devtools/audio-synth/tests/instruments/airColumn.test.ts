@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { airColumn } from '../src/instruments/wind/airColumn';
-import { AIR_COLUMN_CATALOG } from '../src/presets/catalog/airColumn';
+import { airColumn } from '../../src/instruments/wind/airColumn';
+import { AIR_COLUMN_CATALOG } from '../../src/presets/catalog/airColumn';
 
 function allFinite(channels: Float32Array[]): boolean {
   return channels.every((ch) => ch.every((s) => Number.isFinite(s)));

@@ -1,6 +1,6 @@
 /**
- * Kenarlı osilatör alias karakterizasyonu — `tests/retro.test.ts` ve
- * `tests/oscillatorAlias.test.ts` kilitlerinin ölçüm ızgarası.
+ * Kenarlı osilatör alias karakterizasyonu — `tests/synthesis/retro.test.ts` ve
+ * `tests/synthesis/oscillatorAlias.test.ts` kilitlerinin ölçüm ızgarası.
  *
  * Kafes yöntemi: periyodik dalganın harmonikleri `n·f0` kafesine düşer;
  * kafes dışındaki her enerji katlanmadır (FFT kutu genişliği ±5 ana lob

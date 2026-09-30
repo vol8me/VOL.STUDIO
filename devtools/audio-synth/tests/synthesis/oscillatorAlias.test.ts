@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { powerSpectrum } from '../src/analysis/spectrum';
-import { synthesize } from '../src/engine/synthesize';
-import { blampResidual, BLEP_RADIUS } from '../src/synthesis/waveforms';
-import { RENDER_BLOCK } from './support/timeouts';
+import { powerSpectrum } from '../../src/analysis/spectrum';
+import { synthesize } from '../../src/engine/synthesize';
+import { blampResidual, BLEP_RADIUS } from '../../src/synthesis/waveforms';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 const RATE = 44100;
 
@@ -44,7 +44,7 @@ function aliasDb(x: Float32Array, f: number): number {
  * dosya temsil noktalarını ve F6a'nın sözleşme hedefini taşır.
  *
  * F6a öncesi 3.6 kHz testere ~−47 dB ölçülüyordu; pencerelenmiş-sinc BLEP
- * rezidüeli sonrası −88.3 dB. Retro yolun kilidi `tests/retro.test.ts`te.
+ * rezidüeli sonrası −88.3 dB. Retro yolun kilidi `tests/synthesis/retro.test.ts`te.
  */
 describe('motor osilatör alias kilidi', RENDER_BLOCK, () => {
   const limits: [wave: 'sawtooth' | 'square', f: number, limit: number][] = [

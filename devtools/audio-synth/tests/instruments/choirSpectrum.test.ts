@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { Presets } from '../src/index';
-import { synthesize } from '../src/engine';
-import type { SynthParams } from '../src/types';
+import { Presets } from '../../src/index';
+import { synthesize } from '../../src/engine';
+import type { SynthParams } from '../../src/types';
 
 function toneEnergy(samples: Float32Array, sampleRate: number, frequency: number): number {
   const omega = (2 * Math.PI * frequency) / sampleRate;

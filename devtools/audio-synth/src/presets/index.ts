@@ -46,7 +46,7 @@ import * as textures from './textures';
  *
  * `sequences` BİLİNÇLİ olarak dışarıdadır: `SequenceParams` döner, `SynthParams`
  * değil — `getPreset`in sözleşmesine girmez. Bir aileyi buraya eklemek onu aynı
- * anda `PRESET_CATALOG`a da eklemeyi gerektirir; `tests/presets.test.ts`
+ * anda `PRESET_CATALOG`a da eklemeyi gerektirir; `tests/presets/presets.test.ts`
  * içindeki bütünlük bekçisi ikisinin ayrışmasına izin vermez.
  */
 const all = {

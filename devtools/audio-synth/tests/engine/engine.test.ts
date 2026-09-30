@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { Presets } from '@volstudio/audio-synth';
-import { synthesize, synth, normalize, mix } from '../src/engine';
+import { synthesize, synth, normalize, mix } from '../../src/engine';
 import type { SynthParams } from '@volstudio/audio-synth';
-import type { AudioParamIssue } from '../src/guard/errors';
-import { DelayLine, Reverb } from '../src/effects';
+import type { AudioParamIssue } from '../../src/guard/errors';
+import { DelayLine, Reverb } from '../../src/effects';
 
 describe('Synth engine', () => {
   it('üretilen mono örnek sayısı doğru', () => {

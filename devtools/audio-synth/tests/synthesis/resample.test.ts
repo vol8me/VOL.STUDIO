@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { processSample, resample } from '../src/index';
+import { processSample, resample } from '../../src/index';
 
 /**
  * Yeniden örnekleyicinin spektral sözleşmesi, çıkışın KENDİSİNDE ölçülür.

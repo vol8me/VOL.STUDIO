@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { synthesize } from '../src/engine';
-import { trumpet, trombone, frenchHorn, tuba } from '../src/presets/brass';
-import { BRASS_CATALOG } from '../src/presets/catalog/brass';
-import type { SynthParams } from '../src/types';
+import { synthesize } from '../../src/engine';
+import { trumpet, trombone, frenchHorn, tuba } from '../../src/presets/brass';
+import { BRASS_CATALOG } from '../../src/presets/catalog/brass';
+import type { SynthParams } from '../../src/types';
 
 function toneEnergy(samples: Float32Array, sampleRate: number, frequency: number): number {
   const omega = (2 * Math.PI * frequency) / sampleRate;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { powerSpectrum } from '../src/analysis/spectrum';
-import { downsample2x } from '../src/engine/render';
+import { powerSpectrum } from '../../src/analysis/spectrum';
+import { downsample2x } from '../../src/engine/render';
 import {
   NOISE_CLOCK_PER_HZ,
   renderRetro,
@@ -10,9 +10,9 @@ import {
   type RetroOscillatorV1,
   type RetroPitchV1,
   type RetroWaveform,
-} from '../src/synthesis/retro';
-import { autocorrelationPitch, peakFrequency } from './support/measure';
-import { RENDER_BLOCK } from './support/timeouts';
+} from '../../src/synthesis/retro';
+import { autocorrelationPitch, peakFrequency } from '../support/measure';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 const RATE = 44100;
 const FLAT: RetroEnvelopeV1 = { attack: 0, decay: 0, sustain: 1, release: 0, steps: 0 };

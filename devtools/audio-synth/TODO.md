@@ -304,7 +304,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       parametrik model (kick, tom, snare, clap, hat, cymbal, perc); gövde,
       gürültü, tık ve metalik bileşenler; velocity tınıyı açar. Müzikte
       `drum-kit`, akustik programda `source.drum`. Kanıt:
-      `tests/percussion.test.ts` (yön iddiaları yedi modelde ölçülür),
+      `tests/instruments/percussion.test.ts` (yön iddiaları yedi modelde ölçülür),
       `tests/program/chip.test.ts` (kick/snare/hat aileleri aile kalite
       kapısını geçer). (Dalga 11)
 - [x] **[P1] `InstrumentDefinition` standardı.** Aralık, tercih edilen
@@ -315,7 +315,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       eski programlar bit-eşit (production-check). (Dalga 11)
 - [x] **[P1] Retro/arcade synthesis ailesi.** Darbe (duty/süpürme), düz ve
       4-bit üçgen, testere, uzun/kısa LFSR, wavetable, hard sync, arpej,
-      bit/tutma; her süreksizlik PolyBLEP'li. Kanıt: `tests/retro.test.ts`
+      bit/tutma; her süreksizlik PolyBLEP'li. Kanıt: `tests/synthesis/retro.test.ts`
       (perde, duty harmonikleri, LFSR 93 adım, alias ölçülerek kilitli),
       `tests/program/chip.test.ts` (UI arpeji, arcade gürültüsü, bas aynı
       araç setinden). Konsol öykünmesi iddiası yok. (Dalga 11)
@@ -864,7 +864,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       (her comb kendi gecikmesinden); gerçek allpass difüzörler, wet enerji
       normalizasyonu, 20 Hz DC engelleyici; `tailSeconds` = ön gecikme +
       taşıma gecikmesi + RT60. Ölçülen T30: istenen 0.8/1.4/2.2/3.5 sn →
-      0.800/1.400/2.200/3.500 sn; `tests/reverbDecay.test.ts`. (dd44c07)
+      0.800/1.400/2.200/3.500 sn; `tests/effects/reverbDecay.test.ts`. (dd44c07)
 - [x] **[P1] İç içe parametreler tek sınırdan geçiyor (`src/guard/`).**
       NaN/Infinity, yanlış tip, bilinmeyen alan, eksik zorunlu alan ve
       belgelenmiş aralık dışı değer tampon ayrılmadan `AudioParamError` ile
@@ -931,8 +931,8 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       retro tarafında kenar-zamanı semantiği düzeltildi. Ölçüm ızgarası
       `scripts/research/polyblep-alias-report.ts`: 3.6 kHz testere motor ve retro
       −88.3 dB (F6a hedefi −70; eski çekirdek −47 idi), bütün ızgara
-      ≤ −87 dB. Kilitler `tests/oscillatorAlias.test.ts` (motor) ve
-      `tests/retro.test.ts` (retro), ölçülenin 2 dB üstünde.
+      ≤ −87 dB. Kilitler `tests/synthesis/oscillatorAlias.test.ts` (motor) ve
+      `tests/synthesis/retro.test.ts` (retro), ölçülenin 2 dB üstünde.
       `polyblep-alias` sınırlaması ve `limitationRisks` emekliye ayrıldı — >1 kHz risk bayrağı ölçülen değerlerle yanlış pozitif üretiyordu.
       Bilinçli retro kırıntısı (`bits`/`holdHz`, çıkış oranında) korunuyor.
       PM altında rezidüel kenar-zamanı hatası FM alias'ını kenarlı

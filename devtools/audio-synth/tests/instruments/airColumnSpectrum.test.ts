@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { synth } from '../src/engine/synthesize';
-import { flute, clarinet, oboe, bassoon } from '../src/presets/airColumn';
+import { synth } from '../../src/engine/synthesize';
+import { flute, clarinet, oboe, bassoon } from '../../src/presets/airColumn';
 
 function toneEnergy(samples: Float32Array, sampleRate: number, frequency: number): number {
   const omega = (2 * Math.PI * frequency) / sampleRate;

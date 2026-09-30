@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Presets } from '@volstudio/audio-synth';
-import { synth } from '../src/engine';
-import { compose } from '../src/arrange/compose';
+import { synth } from '../../src/engine';
+import { compose } from '../../src/arrange/compose';
 
 const presetNames = Presets.findPresets();
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Arrange, Presets } from '../src/index';
+import { Arrange, Presets } from '../../src/index';
 
 const { noteToHz, transposeNote, SCALES, scaleDegree, scaleChord } = Arrange;
 const { measureRms, measurePeak, softLimit, matchLoudness, Timeline } = Arrange;

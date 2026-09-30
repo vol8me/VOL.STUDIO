@@ -78,18 +78,18 @@ sert çekiç oranı ve gövde rezonansı.
 ### Bir preset ölçülerek doğrulanır
 
 Uydurulmuş bir harmonik dizisi de hatasız sentezlenir; "çalışıyor" bir kalite
-ölçüsü değildir. `tests/acousticSpectrum.test.ts` akustik presetleri,
-`tests/pianoSpectrum.test.ts` piyano presetlerini,
-`tests/bowedSpectrum.test.ts` yaylı presetleri,
-`tests/airColumnSpectrum.test.ts` ahşap üflemeli presetleri,
-`tests/brassSpectrum.test.ts` bakır presetlerini ve
-`tests/choirSpectrum.test.ts` koro presetlerini sesin kendisinde arar.
+ölçüsü değildir. `tests/instruments/acousticSpectrum.test.ts` akustik presetleri,
+`tests/instruments/pianoSpectrum.test.ts` piyano presetlerini,
+`tests/instruments/bowedSpectrum.test.ts` yaylı presetleri,
+`tests/instruments/airColumnSpectrum.test.ts` ahşap üflemeli presetleri,
+`tests/instruments/brassSpectrum.test.ts` bakır presetlerini ve
+`tests/instruments/choirSpectrum.test.ts` koro presetlerini sesin kendisinde arar.
 Her dosya aynı yaklaşımı izler: belgelenmiş fiziksel karakter spektrumda
 ölçülür, bir DSP parametresi tek başına değiştirildiğinde beklenen mutasyon
 görülür.
 
-`tests/bowed.test.ts`, `tests/airColumn.test.ts`, `tests/brass.test.ts` ve
-`tests/formant.test.ts` fiziksel modelleri doğrudan sınar: determinizm,
+`tests/instruments/bowed.test.ts`, `tests/instruments/airColumn.test.ts`, `tests/instruments/brass.test.ts` ve
+`tests/instruments/formant.test.ts` fiziksel modelleri doğrudan sınar: determinizm,
 seed farkı, geçersiz parametre güvenliği, sürdürülebilirlik, kaynak-seçici
 mutasyonlar.
 
@@ -445,7 +445,7 @@ integrande yamuk tamdır, pencere simetrisi uç değeri tam sıfıra döndürür
 (ilk orta-nokta birikmesi uçta ~8e-3 kalıntı ve kenarda basamak
 üretiyordu; ölçülüp düzeltildi). Naif üçgen + iki köşe BLAMP'i ile 5 kHz
 üçgen kafes-dışı tabanı −43.3 dB'den −60.4 dB'ye, ham çekirdekte
-−72.1 dB'ye indi; ızgara −72…−91.5 dB (`tests/oscillatorAlias.test.ts`
+−72.1 dB'ye indi; ızgara −72…−91.5 dB (`tests/synthesis/oscillatorAlias.test.ts`
 kilitleri, motor yolunda ≤ −58 dB).
 
 ## Biyolojik yapı taşları
@@ -1192,7 +1192,7 @@ metalik kare kümesi (hat/zil). Makrolar her modelde aynı anlamdadır
 (`tune`, `decay`, `tone`, `attack`, `noise` çarpanı, `drive`, `open`);
 velocity SEVİYEYİ değil tınıyı değiştirir (seviye enstrümanın velocity
 tepkisidir) ve çıktının tepesi `level`dir. Yön iddiaları yedi modelde ölçülür
-(`tests/percussion.test.ts`): velocity ve ton → spektral merkez, decay →
+(`tests/instruments/percussion.test.ts`): velocity ve ton → spektral merkez, decay →
 −40 dB süresi, noise → spektral düzlük, attack → ilk 50 ms'nin tepe/RMS oranı,
 drive → tepe/RMS düşüşü. Ölçülen örnekler: kick tabanı 45–56 Hz, trampet
 merkezi velocity 0.3→1'de 1.16→2.15 kHz, kapalı hat −40 dB'ye 70 ms, açık hat
@@ -1214,7 +1214,7 @@ bilinçli alias yalnız `bits`/`holdHz` aşamasından ve çıkış oranında gel
 233 Hz −90.7 dB, 3.6 kHz −90.7 dB; testere 917 Hz −89.0 dB, 3.6 kHz
 −88.3 dB; 4-bit üçgen 917 Hz −88.7 dB; org tablosu 3.6 kHz −88.6 dB;
 sync'li testere 917 Hz −89.3 dB. Sınırlar ölçülenin 2 dB üstünde
-kilitlidir (`tests/retro.test.ts`); tam ızgara
+kilitlidir (`tests/synthesis/retro.test.ts`); tam ızgara
 `scripts/research/polyblep-alias-report.ts`. Müzikte `retro` kaynağı,
 akustik programda `source.retro` düğümüdür (UI, arcade SFX, gürültü).
 
@@ -1845,7 +1845,7 @@ gecikmelerini) ölçekler, süreyi değiştirmez.
   olur (ölçülen: crystalBell DC 0.0005 → 0.0144); wet çıkış 20 Hz tek kutuplu
   DC engelleyiciden geçer.
 
-**Ölçüm** (`tests/reverbDecay.test.ts`): impuls yanıtının Schroeder
+**Ölçüm** (`tests/effects/reverbDecay.test.ts`): impuls yanıtının Schroeder
 geri entegrasyonu (EDC), ISO 3382-1 T30 (−5…−35 dB regresyonu, −60 dB'ye
 uzatma). damp = 0'da istenen 0.8 / 1.4 / 2.2 / 3.5 sn → ölçülen 0.799 /
 1.399 / 2.201 / 3.515 sn; roomSize 0.2 ile 0.8 arasında fark < %0.5.
@@ -2106,7 +2106,7 @@ yalnız ~14.5 dB söndürüyordu; FM index koruması yan bantlara iç Nyquist'e
 yeniden örneklenir (J.O. Smith, _Digital Audio Resampling_): kesim kaynak ve
 çıkış Nyquist'inin küçüğüne göre ölçeklenir, geçiş bandı etkin Nyquist'in
 %90–100'ü, durdurma bandı 96 dB (β = 0.1102(A − 8.7), mertebe
-(A − 7.95)/(2.285·Δω)). Ölçülen (`tests/resample.test.ts`):
+(A − 7.95)/(2.285·Δω)). Ölçülen (`tests/synthesis/resample.test.ts`):
 
 | Durum                                   | Eski (kayan ortalama + doğrusal) | Yeni      |
 | --------------------------------------- | -------------------------------- | --------- |
@@ -2189,7 +2189,7 @@ temeli sayar), feedback'te (modülatör harmonik kazanır; ≳ 0.3 döngüde
 periyodikliği kaybeder, kafes dışı enerji kaosu da içerir) ve sinüs olmayan
 taşıyıcıda (PM'in taşıyıcı kenarına / tablo basamağına etkisi) kalır.
 Oversampling'i körlemesine artırmak bu kaynakları çözmez; kural onları
-görünür ve deterministik yapar. `tests/fmAlias.test.ts` her koşuda sınıf
+görünür ve deterministik yapar. `tests/synthesis/fmAlias.test.ts` her koşuda sınıf
 sınırlarını ölçer ve tahminin ölçümden iyimser olmadığını doğrular
 (tam ızgarada yanlış "güvenli" 0, iyimser "dikkat" 0).
 
@@ -2468,7 +2468,7 @@ Gönderilen ses KODEK SONRASI ölçülür (`scripts/audio-qa.ts`: OGG FFmpeg ile
   örneği ve etkilenen çerçeve ayrı.
 
 Doğrulama: EBU Tech 3341 #1/#2/#3/#5 (integrated), #12 (momentary),
-#15–#19 (true peak) `tests/loudness.test.ts`te yayımlanmış beklenenlerle
+#15–#19 (true peak) `tests/analysis/loudness.test.ts`te yayımlanmış beklenenlerle
 geçer. Referans çapraz denetim (`pnpm --filter @volstudio/audio-synth
 audio:reference-check`, `just audio-verify`in parçası): fixture'lar
 `writeOgg` ile encode edilip çözülür, FFmpeg `ebur128` ile karşılaştırılır —

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Presets } from '@volstudio/audio-synth';
-import { PhaserEffect } from '../src/effects';
-import { compose } from '../src/arrange/compose';
+import { PhaserEffect } from '../../src/effects';
+import { compose } from '../../src/arrange/compose';
 import type { SequenceParams } from '@volstudio/audio-synth';
 
 describe('Sequencer', () => {

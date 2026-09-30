@@ -33,7 +33,7 @@ test-pkg pkg:
 
 # audio-synth'in push'ta koşan alt kümesi; tam takım ve kapsamı signoff'tadır.
 audio-test:
-    pnpm --filter @volstudio/audio-synth exec vitest run tests/dspCorrectness.test.ts tests/retro.test.ts tests/program/instrument.test.ts tests/music/delivery.test.ts tests/governance/publishPath.test.ts tests/protocol/context.test.ts tests/protocol/character.test.ts tests/governance/dirLayers.test.ts
+    pnpm --filter @volstudio/audio-synth exec vitest run tests/synthesis/dspCorrectness.test.ts tests/synthesis/retro.test.ts tests/program/instrument.test.ts tests/music/delivery.test.ts tests/governance/publishPath.test.ts tests/protocol/context.test.ts tests/protocol/character.test.ts tests/governance/dirLayers.test.ts
 
 # `quality.json` → `coverageRuns` paketlerini eşikleriyle koşar; eşikten muaf paketin testini düz koşar.
 coverage:
