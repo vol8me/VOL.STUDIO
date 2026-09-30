@@ -22,7 +22,7 @@ import { createTestRepo, type TestRepo } from '../protocol/repo';
 import { musicBrief, unitProgram } from './fixtures';
 import { PIPELINE_BLOCK } from '../support/timeouts';
 
-const MUSIC_ROOT = 'devtools/audio-synth/audio-music';
+const MUSIC_ROOT = 'devtools/audio-synth/records/music';
 
 function spec(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {

@@ -1,7 +1,7 @@
 {
   "brief": {
     "hash": "sha256:db54af9a433a68828da0cb08fba419edac5039d4a4f4f4907819375f01a524fa",
-    "path": "devtools/audio-synth/audio-music/reference-adaptive/brief.json"
+    "path": "devtools/audio-synth/records/music/reference-adaptive/brief.json"
   },
   "engine": {
     "analyzerVersion": 1,
@@ -11,7 +11,7 @@
   "music": {
     "hash": "sha256:4d890f5df7a0c9c0e1402c14aaf490c8ed3a001ad373f25e8dd2a83a6c0889a6",
     "musicId": "reference-adaptive",
-    "path": "devtools/audio-synth/audio-music/reference-adaptive/music.json",
+    "path": "devtools/audio-synth/records/music/reference-adaptive/music.json",
     "playback": "adaptiveLoop",
     "seed": 4242,
     "version": 1
@@ -20,12 +20,12 @@
   "qa": {
     "hash": "sha256:1c49c0d42c12762d41b280d66c56c7c4401b3694c969af6ff10c3933023b3514",
     "pass": true,
-    "path": "devtools/audio-synth/audio-music/reference-adaptive/qa.json"
+    "path": "devtools/audio-synth/records/music/reference-adaptive/qa.json"
   },
   "report": {
     "hash": "sha256:47115360ab33bd945b30e8df069ced3464bc5904510cfc84bc54799dd0abd4cb",
     "pass": true,
-    "path": "devtools/audio-synth/audio-music/reference-adaptive/report.json"
+    "path": "devtools/audio-synth/records/music/reference-adaptive/report.json"
   },
   "schema": "MusicBundleV1",
   "spec": {
@@ -158,7 +158,7 @@
       "id": "bed",
       "integratedLufs": -15.633195918524203,
       "manifest": {
-        "hash": "sha256:8e0b3158ad842c588c61a4930ffca8471a2570ec6c5a0cababda6a2055a3a916",
+        "hash": "sha256:e66abe314a4f682d21a72023f63b942f408c79e2255acc05276893e0d444549a",
         "path": "reference/production/manifests/music/reference-adaptive/bed.json"
       },
       "pcmHash": "sha256:15bdf3f21651ec20966b3f981cf5121c83ba1912023a8ccbf4b8ccb5ed365ce2",
@@ -174,7 +174,7 @@
       "id": "pulse",
       "integratedLufs": -27.650966022515632,
       "manifest": {
-        "hash": "sha256:1e8e1d7a7de66be840182d3361352855e8b71e95a29f3acea9df071c2c82c1e0",
+        "hash": "sha256:1c84a88b3bc63c13f6ba4bb0a078278136593e8cce44db0c8e68c3566e1c8d27",
         "path": "reference/production/manifests/music/reference-adaptive/pulse.json"
       },
       "pcmHash": "sha256:59a5423b260dea556faa36b3a702382e998345a6292d42813841ce53c1b3b82a",
@@ -190,7 +190,7 @@
       "id": "lead",
       "integratedLufs": -20.531015517141675,
       "manifest": {
-        "hash": "sha256:3797f66c0f88994f1fbb3f4f75bacab09174cfe05cacab46f7426a242d20d1ff",
+        "hash": "sha256:6aa747a920ec2ac33c7cb8b4644782f02507c5d85afe89faa63783c7df988916",
         "path": "reference/production/manifests/music/reference-adaptive/lead.json"
       },
       "pcmHash": "sha256:7f5785ba2124a1abd59e00ba227bbb790d7b2926d89c6bf7037a020321afa97c",
@@ -206,7 +206,7 @@
       "id": "mix",
       "integratedLufs": -16.119799806752294,
       "manifest": {
-        "hash": "sha256:323c31e509e0b6c71bc165f897b80e1a0e642d43fbb70bd1e555471c148a5485",
+        "hash": "sha256:c86d29812586ea9e8c457d303f8b5a3c59e409485943217469cb7abfabf44291",
         "path": "reference/production/manifests/music/reference-adaptive/mix.json"
       },
       "pcmHash": "sha256:c0d37d78c61fed2f269a6a27157817de17c950342e6a905621db2ac0f2d480f7",

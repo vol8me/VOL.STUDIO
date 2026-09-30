@@ -8,8 +8,8 @@ import type { MusicProgramV1 } from '../../src/music/program';
  * adaptive) gerçek yayın yolunu sınayan testlerde okunur.
  */
 export const REPO_ROOT = join(import.meta.dirname, '../../../..');
-export const MUSIC_ROOT = 'devtools/audio-synth/audio-music';
-export const THEMEBOOKS_ROOT = 'devtools/audio-synth/audio-themebooks';
+export const MUSIC_ROOT = 'devtools/audio-synth/records/music';
+export const THEMEBOOKS_ROOT = 'devtools/audio-synth/corpus/themebooks';
 
 export function readRepoJson(relative: string): unknown {
   return JSON.parse(readFileSync(join(REPO_ROOT, relative), 'utf8'));

@@ -25,13 +25,13 @@ coverage/
 # inceleme durumu, manifest, sample kütüphanesi kayıtları, kodlama taban çizgisi).
 # Biçimi `prettyCanonicalJson` belirler ve her yazımda aynı baytları verir;
 # elle biçimlendirmek özeti değiştirmez ama bir sonraki yazımda boş diff üretir.
-devtools/audio-synth/audio-families/
-devtools/audio-synth/audio-fits/
-devtools/audio-synth/audio-jobs/
-devtools/audio-synth/audio-samples/
-devtools/audio-synth/audio-searches/
-devtools/audio-synth/canaries/reviews.json
-devtools/audio-synth/encode-profiles.lock.json
+devtools/audio-synth/records/families/
+devtools/audio-synth/records/fits/
+devtools/audio-synth/records/jobs/
+devtools/audio-synth/corpus/samples/
+devtools/audio-synth/records/searches/
+devtools/audio-synth/corpus/canaries/reviews.json
+devtools/audio-synth/locks/encode-profiles.lock.json
 devtools/audio-synth/reference/production/banks/
 devtools/audio-synth/reference/production/manifests/
 
@@ -41,7 +41,7 @@ devtools/audio-synth/reference/production/manifests/
 # birbirinin üstüne yazardı; üretilmiş kanonik belgeler biçim kapısının
 # dışındadır (elle yazılan `music.json`/`brief.json`/`search.json` kapıda kalır).
 devtools/audio-synth/reference/production/music/
-devtools/audio-synth/audio-music/*/report.json
-devtools/audio-synth/audio-music/*/qa.json
-devtools/audio-synth/audio-music/*/search-report.json
-devtools/audio-synth/audio-music/*/jobs/
+devtools/audio-synth/records/music/*/report.json
+devtools/audio-synth/records/music/*/qa.json
+devtools/audio-synth/records/music/*/search-report.json
+devtools/audio-synth/records/music/*/jobs/

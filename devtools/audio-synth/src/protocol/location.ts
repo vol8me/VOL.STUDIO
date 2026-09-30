@@ -5,7 +5,7 @@ import { readJsonFile, resolveInside, writeFileAtomic } from './fs';
 import { asProtocol, JOB_ID, validateJob, type AudioJobV1, type JobStage } from './records';
 
 /** Job'lar varsayılan olarak burada yaşar; `--jobs` ile başka bir repo-göreli köke alınabilir. */
-export const DEFAULT_JOBS_ROOT = 'devtools/audio-synth/audio-jobs';
+export const DEFAULT_JOBS_ROOT = 'devtools/audio-synth/records/jobs';
 /** Dinleme kopyaları git'e girmez (`devtools/*\/export/` yok sayılır). */
 export const AUDITION_ROOT = 'devtools/audio-synth/export/audio-jobs';
 

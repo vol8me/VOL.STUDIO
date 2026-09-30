@@ -14,7 +14,7 @@ import { asProtocol } from './records';
 
 /**
  * Sample kütüphanesi — kayıt verisinin içerik özetiyle adreslenen kaynağı.
- * `audio-samples/<id>.json` (`SampleAssetV1`) kaydın kimliğini, biçimini ve
+ * `corpus/samples/<id>.json` (`SampleAssetV1`) kaydın kimliğini, biçimini ve
  * KÖKENİNİ taşır:
  *
  * - `recorded`: gerçek kayıt; WAV dosyası kütüphanede commit edilir (kaynak
@@ -30,7 +30,7 @@ import { asProtocol } from './records';
  * sürümüne bağlıdır ve reddedilir.
  */
 export const SAMPLE_ASSET_SCHEMA = 'SampleAssetV1';
-export const DEFAULT_SAMPLES_ROOT = 'devtools/audio-synth/audio-samples';
+export const DEFAULT_SAMPLES_ROOT = 'devtools/audio-synth/corpus/samples';
 export const SAMPLE_CACHE_ROOT = `${EXPORT_ROOT}/samples`;
 
 export type SampleOriginV1 =

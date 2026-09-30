@@ -82,7 +82,7 @@ describe('artımlı render: önbellek PCM kimliğini değiştirmez', RENDER_BLOC
     const samples = repoSampleResolver(REPO);
     const programs: unknown[] = loadCanaries(REPO).map((c) => materialize(c.source, [], {}));
     for (const job of ['platform-reference', 'reference-hybrid', 'reference-sampled']) {
-      programs.push(JSON.parse(readFileSync(`${PACKAGE}audio-jobs/${job}/program.json`, 'utf8')));
+      programs.push(JSON.parse(readFileSync(`${PACKAGE}records/jobs/${job}/program.json`, 'utf8')));
     }
     programs.push(mixed());
     const cache = new MemoryRenderCache({ maxBytes: 1 << 30 });

@@ -69,7 +69,7 @@ import { resolveDestination, surveyTargets, type ResolvedDestination } from './t
  * aileye ait bank silinmiştir) ve `family status` onu `incomplete` gösterir;
  * aynı komut tekrarlanınca yayımlanmış varyantlar atlanır, kalanlar sürer.
  */
-export const DEFAULT_FAMILIES_ROOT = 'devtools/audio-synth/audio-families';
+export const DEFAULT_FAMILIES_ROOT = 'devtools/audio-synth/records/families';
 export const FAMILY_STATUS_SCHEMA = 'SoundFamilyStatusV1';
 /** Yayın ön-denetimi: kalite kapısı + job render + analiz yeniden render + publish yeniden render. */
 export const PUBLICATION_RENDER_PASSES = 4;

@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-2c565ce9dbac4bd4": {
+        "hash": "sha256:d3a8a19959c818b45af1330acce0328a083fd929be850d371d52a342b133d75f",
+        "path": "analyses/r-2c565ce9dbac4bd4.json"
+      },
+      "r-e4379750d066c468": {
+        "hash": "sha256:ec7cfd3925c75c18d96cac98ed5dbfa701a96f5a41e31203cf5d38f7bd3bc573",
+        "path": "analyses/r-e4379750d066c468.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:ded96a419c94302aea560523ef0ff448fb393c649567cae14cdf8056be336210",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:ded96a419c94302aea560523ef0ff448fb393c649567cae14cdf8056be336210",
+      "hash": "sha256:531526660a784645eab2ba77eab9d83db566040e8021749f81b44aaf098a07ef",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:ab7073dfb0e7c2c302e49bc224f0f45c2fa7436fa21ec2aef90ad630a2b81590",
+      "path": "devtools/audio-synth/reference/production/manifests/sfx/delivery/reference-impact-distance-mid.json"
+    },
+    "renders": {
+      "r-2c565ce9dbac4bd4": {
+        "hash": "sha256:565a07299a889a8d7e761c8c29d74620dfa661a1480e13b9bc6bb46b74c939e4",
+        "path": "renders/r-2c565ce9dbac4bd4.json"
+      },
+      "r-e4379750d066c468": {
+        "hash": "sha256:01847c353a77b761f05edb887c3f8f05e5b9f42b1cd31eff4a599230ff163275",
+        "path": "renders/r-e4379750d066c468.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:79446f96407fe67e776fdaf3e3b50b24bd458049905911ddde89455a35fb405c",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "reference-impact-distance-mid",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/sfx/delivery/reference-impact-distance-mid.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "reference/impact/distance-mid"
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

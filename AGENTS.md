@@ -175,7 +175,7 @@ silindiğinde oyunların build'i geçer.
 kimliğini kaydeder, doğrulama yeniden render edip karşılaştırır; düğüm
 sözleşmesi sürüm artmadan değişemez
 (`pnpm --filter @volstudio/audio-synth audio:surface-lock`); canary dinlemesi
-yalnız `devtools/audio-synth/canaries/reviews.json`daki insan beyanıyla kapanır.
+yalnız `devtools/audio-synth/corpus/canaries/reviews.json`daki insan beyanıyla kapanır.
 
 **pen.dev:** `.pen` dosyasına yalnız Pencil MCP araçlarıyla erişilir; kurallar
 `devtools/pen.dev/AGENTS.md`dedir.

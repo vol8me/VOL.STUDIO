@@ -95,7 +95,7 @@ describe('SoundFamilyProgramV1 — hata ve kenar dalları', () => {
 describe('aile protokolü — kenar dalları (geçici depo)', () => {
   let repo: TestRepo;
   let loc: FamilyLocation;
-  const ROOT = 'devtools/audio-synth/audio-families';
+  const ROOT = 'devtools/audio-synth/records/families';
   beforeEach(() => {
     repo = createTestRepo();
     loc = { repoRoot: repo.root, familiesRoot: ROOT, familyId: 'droplets' };

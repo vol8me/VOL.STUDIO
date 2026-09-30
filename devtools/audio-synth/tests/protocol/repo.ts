@@ -15,7 +15,7 @@ export interface TestRepo {
   readonly loc: (jobId?: string) => JobLocation;
 }
 
-export const JOBS_ROOT = 'devtools/audio-synth/audio-jobs';
+export const JOBS_ROOT = 'devtools/audio-synth/records/jobs';
 
 export function createTestRepo(): TestRepo {
   const root = mkdtempSync(join(tmpdir(), 'audio-job-repo-'));

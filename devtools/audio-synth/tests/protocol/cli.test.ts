@@ -97,7 +97,7 @@ describe('audio:job — süreçler arası kabul', () => {
   it(
     'program değişince B bayatlığı raporlar ve publish reddedilir (çıkış kodu 2)',
     () => {
-      const file = join(repo.root, 'devtools/audio-synth/audio-jobs/knock/program.json');
+      const file = join(repo.root, 'devtools/audio-synth/records/jobs/knock/program.json');
       const program = JSON.parse(readFileSync(file, 'utf8')) as { seed: number };
       writeFileSync(file, JSON.stringify({ ...program, seed: program.seed + 1 }));
       const status = cli('status', 'knock', '--json').json<JobStatusV1>();

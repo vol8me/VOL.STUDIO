@@ -70,7 +70,7 @@ Dalga 4'ün dört mühendislik maddesi kapandı; kısa kanıtları
 ayrı ve açıktır:
 
 - [ ] **[P3] Organik canary'lerin insan dinlemesi.** 19 canary'nin
-      mekanik beklentileri geçiyor; `canaries/reviews.json`da 13 kabul,
+      mekanik beklentileri geçiyor; `corpus/canaries/reviews.json`da 13 kabul,
       6 sorun beyanı var. Bayat sürüm beyanları etkin `pending-human`dır.
       Kapanır: bir insan her güncel canary'yi
       canary'yi dinleme rehberine göre dinler ve
@@ -142,14 +142,14 @@ eklenmedi (`no-multiband`).
 
 Dalga 11'in sekiz maddesi kapandı; kısa kanıtları `## Kapatılanlar`da,
 gerekçe DESIGN "Enstrüman sözleşmesi ve üretim kapsamı (Dalga 11)". Uçtan uca
-yayın kanıtı `audio-music/reference-arcade`.
+yayın kanıtı `records/music/reference-arcade`.
 
 ### Dalga 12 — Oyun için teslim biçimleri
 
 Dalga 12'nin beş maddesi kapandı; kısa kanıtları `## Kapatılanlar`da,
 gerekçe ve ölçümler DESIGN "Teslim biçimleri (Dalga 12)". Uçtan uca yayın
-kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
-`audio-families/reference-engine-states`.
+kanıtı `records/jobs/reference-impact` + yedi teslim varyantı ve
+`records/families/reference-engine-states`.
 
 ### Dalga 13 — Agent üretim hızını ve güvenilirliğini artırma
 
@@ -165,7 +165,7 @@ kanıtı `audio-jobs/reference-impact` + yedi teslim varyantı ve
       sürümlü görevler olur. Kapanır: her görev mekanik/QA kriterleri ve
       gerekiyorsa audition kaydı taşır; yeni motor sürümü bütün canary'lerin
       durumunu tek raporda gösterir.
-      **Kapandı (F5a):** `benchmarks/` altında 14 `BenchmarkTaskV1` görevi
+      **Kapandı (F5a):** `corpus/benchmarks/` altında 14 `BenchmarkTaskV1` görevi
       (13 akustik/archetype + 2 gömülü müzik; ui-feedback iki parçalı).
       `audio:job benchmark list|run|review` 19 canary + 14 görevi tek
       `BenchmarkReportV1`'de döker; kodek-sonrası dikiş/hiza, müzik QA ve
@@ -228,7 +228,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       lokasyonu `music publish`, 2 aile `family publish` — hepsi
       renderer v2 ile yeniden yayımlandı; `regression run` 36/36
       `unchanged` (yeni manifestler güncel motorla bit-eşit).
-      `audio-searches/reference-shell` arama kanıtı da v1 PCM'leriyle
+      `records/searches/reference-shell` arama kanıtı da v1 PCM'leriyle
       bayatlamıştı; aynı spec'ten v2 motoruyla yeniden koşuldu
       (`search verify reference-shell` → `ok`).
 - [x] **[P3] Tek-komut dinleme paketi (F7b + R7).** `pnpm audio:listen`
@@ -284,7 +284,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       (test kilitli), skorer yokken bütün pipeline eksiksiz çalışır,
       skor hiçbir kapıyı açmaz. Kanıt:
       `tests/protocol/semantic.test.ts` (13) +
-      `audio-searches/semantic-demo/semantic.json`. (Dalga F6)
+      `records/searches/semantic-demo/semantic.json`. (Dalga F6)
 - [x] **[P3] Reference fitting / inverse synthesis araştırma kapısı.**
       `AcousticFitSpecV1` + `audio:job fit run|show|list`
       (`src/search/fit.ts`, `src/protocol/fit.ts`): hedef betimleyici
@@ -293,7 +293,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       Halton + görev sahibi etrafında `shrink` oranında daralan kutu,
       elit taşıma ve program-özeti önbelleğiyle. `target.manifest`
       manifest `analysis.encoded`'ından değer okur. Kapanış kanıtı
-      `audio-fits/`: gizli hedef `hidden-tone-660` 3 turda `converged`
+      `records/fits/`: gizli hedef `hidden-tone-660` 3 turda `converged`
       (uzaklık 0.071 ≤ 0.2; frekans 660→644.99 Hz, %2.3 hata; waveform
       sine doğru) ve aynı hedefe perdesiz taban `exhausted`
       (uzaklık 4.04 — yanlış topoloji başarı sayılmaz). Testler
@@ -692,7 +692,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       rapor; bütçe aşımı `BatchBudgetError` + sıfır dosya
       (`tests/protocol/search.test.ts`); render öncesi geçersizler ve
       filtrelenen adaylar gerekçesiyle raporda (`tests/search/plan.test.ts`).
-      Referans: `audio-searches/reference-shell` (4 boyut, 16 aday; 13 passed,
+      Referans: `records/searches/reference-shell` (4 boyut, 16 aday; 13 passed,
       2 filtered, 1 invalid), `audio:production-check` her koşuda yeniden
       üretir. Terfi (`promote`) onaylı adayın TAM programını `origin.json` ile
       job'a yazar; publish yalnız kanonik akıştan. (Dalga 4)
@@ -705,7 +705,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       raporlanır, sağlıklı 8 üyeli aile geçer. Üretim akışına bağlanması
       Dalga 5'in aile kapısıdır. (Dalga 4)
 - [x] **[P2] Organik canary benchmark paketi (mühendislik).** Sekiz sürümlü
-      görev (`canaries/*.json`): deterministik kaynak + mekanik beklenti +
+      görev (`corpus/canaries/*.json`): deterministik kaynak + mekanik beklenti +
       dinleme rehberi; `audio:job canary run`. Kanıt:
       `tests/canary/canaries.test.ts` — sekizi geçer, deterministik, beklenti
       mutasyonla düşer; o turun dinleme incelemeleri `pending-human` idi.
@@ -852,7 +852,7 @@ run|decide|corpus|decisions` eski/yeni PCM kimliği, betimleyici delta
       ağaçlarda yeni yazıcı yolunu düşürür. Kapanış sapması (dürüst): aktif
       bir oyunun production asset'i YOK ve frozen asset'ler değiştirilemez;
       kapı audio-synth'in kendi üretim-referans işiyle
-      (`audio-jobs/platform-reference`) uçtan uca çalıştırıldı ve
+      (`records/jobs/platform-reference`) uçtan uca çalıştırıldı ve
       `just audio-verify` onu her koşuda manifest'inden yeniden üretip
       kodek sonrası doğrular. (b471e1d)
 - [x] **[P2] Agent/vendor adapter ince.** README "Agent protokolü" bölümü

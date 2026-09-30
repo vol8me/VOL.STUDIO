@@ -92,8 +92,8 @@ import { decodeWithFfmpeg } from './toolchain';
  * Bundle EN SON yazılır: yarım kalan bir yayın bundle'sız kalır, `status`
  * onu `incomplete` gösterir ve aynı komut yayımlanmış stem'leri atlayıp sürer.
  */
-export const DEFAULT_MUSIC_ROOT = 'devtools/audio-synth/audio-music';
-export const DEFAULT_THEMEBOOKS_ROOT = 'devtools/audio-synth/audio-themebooks';
+export const DEFAULT_MUSIC_ROOT = 'devtools/audio-synth/records/music';
+export const DEFAULT_THEMEBOOKS_ROOT = 'devtools/audio-synth/corpus/themebooks';
 export const MUSIC_BUNDLE_SCHEMA = 'MusicBundleV1';
 export const MUSIC_STATUS_SCHEMA = 'MusicStatusV1';
 

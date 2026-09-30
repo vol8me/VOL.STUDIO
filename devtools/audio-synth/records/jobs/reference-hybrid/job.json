@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-151c3cc78b5735cf": {
+        "hash": "sha256:8bd7d79f1197c58704148c68268da1faecddc3b8b189553648d6fb5247febbc3",
+        "path": "analyses/r-151c3cc78b5735cf.json"
+      },
+      "r-2c35b43cbdfdc07e": {
+        "hash": "sha256:7e1b40ce3e6124d901cda32f9b693149db3c31fba0ced2fecba8776ed0ba4303",
+        "path": "analyses/r-2c35b43cbdfdc07e.json"
+      },
+      "r-e1c9be3a8ae28135": {
+        "hash": "sha256:c5f12a36d087f62166612bb2e83c65ca5155f927cd1eaf2f8c3120f92165dd72",
+        "path": "analyses/r-e1c9be3a8ae28135.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:9665731c3046194ef04ffc5c07e4828ba21504c221523f2576c782ea85f47165",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:9665731c3046194ef04ffc5c07e4828ba21504c221523f2576c782ea85f47165",
+      "hash": "sha256:16a43718925890ab9c2f83f527635738769d87f6c16db01a385aa469be0d463d",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:b74a25b73c84b24ea9416869c04aa1d312acb31e71c33a39e3093f1edd14614c",
+      "path": "devtools/audio-synth/reference/production/manifests/sfx/reference-hybrid.json"
+    },
+    "renders": {
+      "r-151c3cc78b5735cf": {
+        "hash": "sha256:642217c1988e3d7f7513bc27f096ff4caecf4164cd7ffd81cc30833985b63879",
+        "path": "renders/r-151c3cc78b5735cf.json"
+      },
+      "r-2c35b43cbdfdc07e": {
+        "hash": "sha256:4fdf5959f52b015dba695dca90bb08588cfc95dd8a79bd926c7723fbabdf1fd5",
+        "path": "renders/r-2c35b43cbdfdc07e.json"
+      },
+      "r-e1c9be3a8ae28135": {
+        "hash": "sha256:3b790874f1453a4fe9020249f24162109f9d01abcde9b762e3888cfac31089dc",
+        "path": "renders/r-e1c9be3a8ae28135.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:d9145a50976262ad3dc5283ea988d137a9bd6bd3d827740ba16f0ded2fda178c",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "reference-hybrid",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 20,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "reference/production/assets/sfx/reference-hybrid.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/audio-synth"
+  }
+}

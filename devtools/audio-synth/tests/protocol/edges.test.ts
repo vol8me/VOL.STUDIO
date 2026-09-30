@@ -33,7 +33,7 @@ import { shellSpec } from '../search/fixtures';
 import { edited } from '../support/json';
 import { createTestRepo, type TestRepo } from './repo';
 
-const ROOT = 'devtools/audio-synth/audio-searches';
+const ROOT = 'devtools/audio-synth/records/searches';
 const code = (fn: () => unknown): string => {
   try {
     fn();
@@ -186,7 +186,7 @@ describe('köken, canary ve inceleme belgeleri', () => {
   });
 
   const canary = JSON.parse(
-    readFileSync(join(__dirname, '../../canaries/bubble.json'), 'utf8'),
+    readFileSync(join(__dirname, '../../corpus/canaries/bubble.json'), 'utf8'),
   ) as unknown;
   it.each([
     ['şema', [['schema'], 'X'], 'schema type'],

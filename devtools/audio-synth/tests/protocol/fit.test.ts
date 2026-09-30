@@ -20,7 +20,7 @@ import type { Sha256 } from '../../src/kernel/canonical';
 import { createTestRepo, type TestRepo } from './repo';
 import { RENDER_TIMEOUT } from '../support/timeouts';
 
-const FITS = 'devtools/audio-synth/audio-fits';
+const FITS = 'devtools/audio-synth/records/fits';
 
 let repo: TestRepo;
 beforeEach(() => (repo = createTestRepo()));

@@ -1,6 +1,6 @@
 /**
  * `audio:encode-baseline` — sınıf bazlı kodlama profilinin taban çizgisini
- * ÖLÇEREK yazar (`encode-profiles.lock.json`).
+ * ÖLÇEREK yazar (`locks/encode-profiles.lock.json`).
  *
  * Korpus (referans manifest'lerin yeniden render'ı + UI/ambiyans preset ve
  * programları) taramadaki her Vorbis kalitesiyle kodlanıp çözülür; bayt ve

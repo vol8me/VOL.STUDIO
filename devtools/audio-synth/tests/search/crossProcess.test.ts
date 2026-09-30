@@ -42,7 +42,7 @@ function cli(repo: TestRepo, ...args: string[]) {
 
 const reportOf = (repo: TestRepo) =>
   readFileSync(
-    join(repo.root, 'devtools/audio-synth/audio-searches/shell-test/report.json'),
+    join(repo.root, 'devtools/audio-synth/records/searches/shell-test/report.json'),
     'utf8',
   );
 

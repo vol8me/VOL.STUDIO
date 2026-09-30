@@ -131,7 +131,7 @@ describe('audio:job context', () => {
     expect(soundDesign.samples).toMatchObject({
       schema: 'SampleAssetV1',
       bankSchema: 'SampleBankV1',
-      root: 'devtools/audio-synth/audio-samples',
+      root: 'devtools/audio-synth/corpus/samples',
     });
     expect(Object.keys(soundDesign.planner.commands).sort()).toEqual(['context', 'graph', 'plan']);
 

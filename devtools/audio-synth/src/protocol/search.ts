@@ -40,7 +40,7 @@ import { asProtocol } from './records';
  * `report.json` en son yazılır: raporu olmayan dizin yarım kalmış bir
  * koşudur ve aynı spec ile yeniden koşulabilir (çıktılar deterministiktir).
  */
-export const DEFAULT_SEARCHES_ROOT = 'devtools/audio-synth/audio-searches';
+export const DEFAULT_SEARCHES_ROOT = 'devtools/audio-synth/records/searches';
 export const SEARCH_AUDITION_ROOT = `${EXPORT_ROOT}/audio-searches`;
 export const SEARCH_STATUS_SCHEMA = 'AcousticSearchStatusV1';
 

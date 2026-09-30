@@ -32,7 +32,7 @@ import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
  * manifest/job/publish yüzeyine dokunmaz; uydurulan program yalnız kopya
  * belgedir — production'a tek giriş yolu her zamanki canonical akıştır.
  */
-export const DEFAULT_FITS_ROOT = 'devtools/audio-synth/audio-fits';
+export const DEFAULT_FITS_ROOT = 'devtools/audio-synth/records/fits';
 
 /** Fit spec'i `planCandidate`'in beklediği arama spec'ine çevirir (tek kaynak). */
 function asSearchSpec(spec: AcousticFitSpecV1): AcousticSearchSpecV1 {

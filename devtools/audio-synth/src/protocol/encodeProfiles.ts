@@ -14,7 +14,7 @@ import { hashCanonical, type Sha256 } from '../kernel/canonical';
  *    Ölçüm kaliteyi YÜKSELTEBİLİR; daha önce yayımlanmış kalitenin altına
  *    inmek kayıtlı bir dinleme kararı ister.
  *
- * Tablo `encode-profiles.lock.json` taban çizgisine bağlıdır: kilit politika
+ * Tablo `locks/encode-profiles.lock.json` taban çizgisine bağlıdır: kilit politika
  * özetini, korpusu, kalite taramasını (bayt + kodek sonrası sadakat) ve
  * kuralın seçtiği kaliteyi taşır. `tests/governance/encodeProfiles.test.ts`
  * tablo ile kilidin ayrışmasını düşürür; kilidi yalnız
@@ -42,7 +42,7 @@ export const ENCODE_POLICY = {
 } as const;
 
 export const ENCODE_BASELINE_SCHEMA = 'EncodeBaselineV1';
-export const ENCODE_BASELINE_FILE = 'encode-profiles.lock.json';
+export const ENCODE_BASELINE_FILE = 'locks/encode-profiles.lock.json';
 
 export function encodePolicyHash(): Sha256 {
   return hashCanonical(ENCODE_POLICY);

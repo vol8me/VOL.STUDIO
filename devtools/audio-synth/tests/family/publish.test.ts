@@ -21,7 +21,7 @@ import { cloneTestRepo, createTestRepo, type TestRepo } from '../protocol/repo';
 import { shellFamily } from './fixtures';
 import { PIPELINE_TIMEOUT, RENDER_TIMEOUT } from '../support/timeouts';
 
-const ROOT = 'devtools/audio-synth/audio-families';
+const ROOT = 'devtools/audio-synth/records/families';
 const BANK = 'devtools/audio-synth/reference/production/banks/shell-hits.json';
 const ASSETS = 'devtools/audio-synth/reference/production/assets/sfx/families/shell-hits';
 const MANIFESTS = 'devtools/audio-synth/reference/production/manifests/sfx/families/shell-hits';

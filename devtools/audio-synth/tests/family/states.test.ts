@@ -105,7 +105,7 @@ describe('durum iddiaları', () => {
 
   it('aile iddiası tanımadığı bir eksene yapılamaz', () => {
     const family = readJson<Record<string, unknown>>(
-      'audio-families/reference-engine-states/family.json',
+      'records/families/reference-engine-states/family.json',
     );
     const quality = family.quality as Record<string, unknown>;
     const bad = {
@@ -151,7 +151,7 @@ describe('tını zarfı', () => {
 
 describe('referans durum ailesi', RENDER_BLOCK, () => {
   const quality = readJson<SoundFamilyQualityReportV1>(
-    'audio-families/reference-engine-states/quality.json',
+    'records/families/reference-engine-states/quality.json',
   );
   const manifest = (rel: string) =>
     readJson<AudioAssetManifestV1>(`reference/production/manifests/sfx/${rel}.json`);

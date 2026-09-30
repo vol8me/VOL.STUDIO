@@ -39,7 +39,7 @@ const LISTENING_DIR = () => join(repo!.root, LISTENING_ROOT);
 const COUNTS = { canary: 0, benchmark: 0, reference: 0, pending: 0 };
 
 function writeCanary(id: string): void {
-  const dir = join(repo!.root, 'devtools/audio-synth/canaries');
+  const dir = join(repo!.root, 'devtools/audio-synth/corpus/canaries');
   mkdirSync(dir, { recursive: true });
   writeFileSync(
     join(dir, `${id}.json`),
@@ -82,7 +82,7 @@ function writeCanary(id: string): void {
 }
 
 function writeBenchmark(id: string): void {
-  const dir = join(repo!.root, 'devtools/audio-synth/benchmarks');
+  const dir = join(repo!.root, 'devtools/audio-synth/corpus/benchmarks');
   mkdirSync(dir, { recursive: true });
   writeFileSync(
     join(dir, `${id}.json`),
@@ -136,7 +136,7 @@ function writeBenchmark(id: string): void {
 
 /** `codec-loop-seam` taşıyan parça → iki-tur dikiş varyantı üretir (twice). */
 function writeLoopBenchmark(id: string): void {
-  const dir = join(repo!.root, 'devtools/audio-synth/benchmarks');
+  const dir = join(repo!.root, 'devtools/audio-synth/corpus/benchmarks');
   mkdirSync(dir, { recursive: true });
   const doc = JSON.stringify({
     schema: 'BenchmarkTaskV1',
@@ -187,8 +187,8 @@ function writeLoopBenchmark(id: string): void {
  * codec-loop-seam. checkMusic yolunu, overlay ve iki-tur varyantını kapsar.
  */
 function copyMusicBenchmark(): void {
-  const src = join(REPO, 'devtools/audio-synth/benchmarks/arcade-theme.json');
-  const dstDir = join(repo!.root, 'devtools/audio-synth/benchmarks');
+  const src = join(REPO, 'devtools/audio-synth/corpus/benchmarks/arcade-theme.json');
+  const dstDir = join(repo!.root, 'devtools/audio-synth/corpus/benchmarks');
   mkdirSync(dstDir, { recursive: true });
   copyFileSync(src, join(dstDir, 'arcade-theme.json'));
 }

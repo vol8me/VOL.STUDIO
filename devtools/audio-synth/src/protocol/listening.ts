@@ -43,7 +43,7 @@ import { readJsonFile, resolveInside, writeFileAtomic } from './fs';
  * sayfasıdır ve her öğede kayıt komutunu açıkça gösterir. Paket YALNIZ dosya
  * ve durum taşır: "iyi ses" kararı insanın; hiçbir dinleme sonucu
  * uydurulmaz. Durumlar gerçek kayıtlardan gelir — canary `reviews.json`,
- * benchmark `benchmarks/reviews.json` (sürüm uyuşmazlığı pending sayılır),
+ * benchmark `corpus/benchmarks/reviews.json` (sürüm uyuşmazlığı pending sayılır),
  * referans `regression/decisions.json` (PCM-hash bağı).
  */
 export const LISTENING_ROOT = `${EXPORT_ROOT}/listening`;

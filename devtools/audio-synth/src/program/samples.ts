@@ -12,7 +12,7 @@ import { checkName } from './names';
 const MAX_SAMPLE_FRAMES = 48000 * 120;
 
 export interface SampleDeclV1 {
-  /** Kütüphane kimliği (`audio-samples/<id>`). */
+  /** Kütüphane kimliği (`corpus/samples/<id>`). */
   readonly id: string;
   /** WAV baytlarının SHA-256 özeti (`sha256:<64 hex>`). */
   readonly hash: string;

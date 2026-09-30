@@ -25,7 +25,7 @@ import { musicBrief, unitProgram } from './fixtures';
  * türeyen cue brief'lerini taşır. Ayrıca bus grafikli bir müzikte ön
  * denetimin render'ı iş render'ıyla birebir aynıdır.
  */
-const MUSIC_ROOT = 'devtools/audio-synth/audio-music';
+const MUSIC_ROOT = 'devtools/audio-synth/records/music';
 
 let repo: TestRepo;
 beforeEach(() => {

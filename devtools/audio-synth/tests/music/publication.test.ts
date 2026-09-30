@@ -22,8 +22,8 @@ import { cloneTestRepo, createTestRepo, type TestRepo } from '../protocol/repo';
 import { musicBrief, referenceThemeBook, unitAdaptiveProgram, unitProgram } from './fixtures';
 import { PIPELINE_BLOCK, PIPELINE_TIMEOUT } from '../support/timeouts';
 
-const MUSIC_ROOT = 'devtools/audio-synth/audio-music';
-const THEMEBOOKS_ROOT = 'devtools/audio-synth/audio-themebooks';
+const MUSIC_ROOT = 'devtools/audio-synth/records/music';
+const THEMEBOOKS_ROOT = 'devtools/audio-synth/corpus/themebooks';
 
 let repo: TestRepo;
 beforeEach(() => {

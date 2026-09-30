@@ -160,27 +160,26 @@
       "-bitexact"
     ],
     "codec": "libvorbis",
-    "fingerprint": "sha256:88fd7a2ee7fa953241bd18f901647268901215fb58debd913cb9dfd26ef43998",
+    "fingerprint": "sha256:776376a3732908172132f1f9bdcf3ec8479b0f819a06259602095d847eeb1923",
     "libraries": {
-      "libavcodec": "62.28.102",
-      "libavformat": "62.12.102",
-      "libavutil": "60.26.102"
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
     },
     "quality": 4,
     "tool": "ffmpeg",
     "unreported": [
       "libvorbis"
     ],
-    "version": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers"
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
   },
   "encoding": {
-    "policyHash": "sha256:4995c93a1714f448fc486b3365eea0d041ecc778f26b7b5b30935a46ec028376",
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
     "quality": 4,
     "scheme": "encode-profile-v1"
   },
   "engine": {
     "package": "@volstudio/audio-synth",
-    "packageVersion": "0.1.0",
     "registryHash": "sha256:23ab9286f4f9d8be3be29151f852cda08122318690621e83c1937fa12722b81f",
     "renderSurface": {
       "hash": "sha256:274933167a51fa736fdb730b7c2656de910fe993fce31bbf67d485d6156edf36",
@@ -200,9 +199,7 @@
     "rendererVersion": 2,
     "runtime": {
       "node": "v22.23.1"
-    },
-    "sourceCommit": "9d1f89d367377a14321836ba5de6a8a75a76c05a",
-    "sourceTreeDirty": true
+    }
   },
   "integration": {
     "loop": false,
@@ -213,7 +210,7 @@
   },
   "job": {
     "jobId": "intro",
-    "path": "devtools/audio-synth/audio-music/reference-arcade/jobs/intro",
+    "path": "devtools/audio-synth/records/music/reference-arcade/jobs/intro",
     "protocolVersion": 1
   },
   "layout": {

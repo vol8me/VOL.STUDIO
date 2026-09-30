@@ -10,10 +10,6 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 
 ### Hiyerarşi ve temizlik
 
-- [ ] **[P1] SH5 — audio-synth yerleşimi.** v1 render yolları, fikstürü ve
-      testi silinir (K7); veri dizinleri taşınır ve manifestler yeniden
-      yayımlanır (K6); ortak çekirdek kernel dizinine; kökteki testler alt dizinlere.
-      Kapanır: `verify --all` her manifesti `identical` bulur, PCM kimliği aynı.
 - [ ] **[P1] SC — Repo ve kök temizliği.** Kök ve paketlerdeki her dosya ve
       dizin, yapılandırma, betik, belge ve yerel artık gerekçelendirilir ya da
       kaldırılır: .idea, .directory, bayat .vscode girdileri,
@@ -103,6 +99,7 @@ başlar; Android ve Deck cihazları uygulama sırasında bağlıdır.
 
 ## Kapatılanlar
 
+- [x] SH5 — audio-synth: v1 emekli (K7), kernel katmanı, testler kaynağın aynası, veri corpus/records/locks altında ve yeniden yayımlandı (K6).
 - [x] SH4 — CORE hiyerarşisi: amaçlı dizinler, ui/controls bölündü, stiller grubun yanında, testler kaynağın aynası.
 - [x] SH3 — Deck araçları devtools/deck paketinde; `pnpm deck` oradan koşar.
 - [x] SH2 — `scripts/` amaca göre alt dizinlerde; testler yanında.

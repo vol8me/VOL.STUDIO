@@ -1,7 +1,7 @@
 {
   "brief": {
     "hash": "sha256:aa14feb1df7dc2eadaf5c2f62cde18b756e6941881e3a6dfb6f7784edd63ec58",
-    "path": "devtools/audio-synth/audio-music/reference-loop/brief.json"
+    "path": "devtools/audio-synth/records/music/reference-loop/brief.json"
   },
   "engine": {
     "analyzerVersion": 1,
@@ -11,7 +11,7 @@
   "music": {
     "hash": "sha256:a752885006ec7b02bba56aab43a40db882bb3eb3e9d47a7dbdddbf4a7988d102",
     "musicId": "reference-loop",
-    "path": "devtools/audio-synth/audio-music/reference-loop/music.json",
+    "path": "devtools/audio-synth/records/music/reference-loop/music.json",
     "playback": "loop",
     "seed": 20260922,
     "version": 2
@@ -20,12 +20,12 @@
   "qa": {
     "hash": "sha256:6225a3006f34df8cee453e904a1db1c016d959c555356300394b16ebcea7a809",
     "pass": true,
-    "path": "devtools/audio-synth/audio-music/reference-loop/qa.json"
+    "path": "devtools/audio-synth/records/music/reference-loop/qa.json"
   },
   "report": {
     "hash": "sha256:edfb901ddb3a3b804cbfa9f26419850979f4b69621da6cda5be9c006866aef29",
     "pass": true,
-    "path": "devtools/audio-synth/audio-music/reference-loop/report.json"
+    "path": "devtools/audio-synth/records/music/reference-loop/report.json"
   },
   "schema": "MusicBundleV1",
   "spec": {
@@ -74,7 +74,7 @@
       "id": "mix",
       "integratedLufs": -16.47310901483837,
       "manifest": {
-        "hash": "sha256:531de4236a66e10f46ab62458677d65eee63a14293c6f526587cb7e03db0b0db",
+        "hash": "sha256:c4bb4c1f649257d40c5fff4d79257c7b4cd8f7b7e45e7585788f128fdd5136f4",
         "path": "reference/production/manifests/music/reference-loop/mix.json"
       },
       "pcmHash": "sha256:78c586b94ed47ea06a62d07eb3d71399b53f4adf5e5e43e9569f3e0b146f2b37",

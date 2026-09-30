@@ -19,7 +19,7 @@ import { PIPELINE_TIMEOUT } from '../support/timeouts';
 import { createTestRepo, testProgram, type TestRepo } from './repo';
 
 const REPO = new URL('../../../../', import.meta.url).pathname;
-const SEARCHES = 'devtools/audio-synth/audio-searches';
+const SEARCHES = 'devtools/audio-synth/records/searches';
 
 const estimate = (over: Partial<BatchEstimate> = {}): BatchEstimate => ({
   items: 32,
@@ -103,7 +103,7 @@ describe('paralel toplu iş seri ile aynı sonucu aynı sırayla verir', () => {
     () => {
       const docs = loadMusicDocuments({
         repoRoot: REPO,
-        musicRoot: 'devtools/audio-synth/audio-music',
+        musicRoot: 'devtools/audio-synth/records/music',
         musicId: 'reference-adaptive',
       });
       const key = (c: ReturnType<typeof checkMusic>) => ({

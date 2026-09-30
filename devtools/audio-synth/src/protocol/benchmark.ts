@@ -69,7 +69,7 @@ import { decodeWithFfmpeg } from './toolchain';
 export const BENCHMARK_SCHEMA = 'BenchmarkTaskV1';
 export const BENCHMARK_REVIEWS_SCHEMA = 'BenchmarkReviewsV1';
 export const BENCHMARK_REPORT_SCHEMA = 'BenchmarkReportV1';
-export const BENCHMARKS_ROOT = 'devtools/audio-synth/benchmarks';
+export const BENCHMARKS_ROOT = 'devtools/audio-synth/corpus/benchmarks';
 export const BENCHMARK_AUDITION_ROOT = `${EXPORT_ROOT}/benchmarks`;
 const REVIEWS_FILE = 'reviews.json';
 const ID = /^[a-z][a-z0-9-]{0,47}$/;

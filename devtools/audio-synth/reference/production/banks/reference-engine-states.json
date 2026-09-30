@@ -4,13 +4,13 @@
   },
   "engine": {
     "analyzerVersion": 1,
-    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
     "rendererVersion": 2
   },
   "family": {
     "familyId": "reference-engine-states",
     "hash": "sha256:3f6908b78d2f6300c3e48b22eddaa469800066415a26e1e2c6761d8ca4332647",
-    "path": "devtools/audio-synth/audio-families/reference-engine-states/family.json",
+    "path": "devtools/audio-synth/records/families/reference-engine-states/family.json",
     "seed": 7,
     "variationPolicy": "role-subrange-v1",
     "version": 1
@@ -21,7 +21,7 @@
   "quality": {
     "hash": "sha256:c9e5c7473726571f7e2e7e5a7c9f68a2e8d514a33b72ed60e99b994077ac8379",
     "pass": true,
-    "path": "devtools/audio-synth/audio-families/reference-engine-states/quality.json"
+    "path": "devtools/audio-synth/records/families/reference-engine-states/quality.json"
   },
   "roleAxes": {
     "energy": [
@@ -55,7 +55,7 @@
         "truePeakDbtp": -2.9165331518144866
       },
       "manifest": {
-        "hash": "sha256:0555de4c2aa6395b0f090a308386610853dcf9319128bc940dbcc4e92f82e8d4",
+        "hash": "sha256:7fe6655cf0b191cd04a0031978493ef621a9fe45fef725a287359dd9f9ee8356",
         "path": "reference/production/manifests/sfx/families/reference-engine-states/high.json"
       },
       "pcmHash": "sha256:a1800c1794e3b8761a79c2ab72154df35dd5cb84963c1838a3d646a732acb8ab",
@@ -86,7 +86,7 @@
         "truePeakDbtp": -3.018373489443909
       },
       "manifest": {
-        "hash": "sha256:1b15aa4dc77e8ff7e19ec5bdf88080793a8b44055fbc0e1921794c0a9603789d",
+        "hash": "sha256:293c87bfe060ce3aa1ed2f46608d901b93558b5636198ae328c16b0b683fb089",
         "path": "reference/production/manifests/sfx/families/reference-engine-states/high-damaged.json"
       },
       "pcmHash": "sha256:30b35562d595dda8c4d6ea5dcb57a9619a5f43ee27ee35d65cacb9763c69878e",
@@ -117,7 +117,7 @@
         "truePeakDbtp": -2.865951454567451
       },
       "manifest": {
-        "hash": "sha256:1b9d7ebbd6eba89a1c6e171cd0ea68fd94d45422425003c920d420592c461028",
+        "hash": "sha256:3595cf9c99c74c090efc08f8f77614e60848ba76ef512e7536bad0607f2640e2",
         "path": "reference/production/manifests/sfx/families/reference-engine-states/idle.json"
       },
       "pcmHash": "sha256:1473ce38dbf3aa1e0cfb57d65d22da56ac46f2940b9ab1e0582cee86dd90ee74",
@@ -148,7 +148,7 @@
         "truePeakDbtp": -2.8942392705461244
       },
       "manifest": {
-        "hash": "sha256:0963e1136f9faab3e21cb698323f2823bfba265696cf5ef2bb29f62d0ed50903",
+        "hash": "sha256:8bbf4427df3c0c161ffb51c9637d02ec84bb9f9339ec557a4bead486038e8f6c",
         "path": "reference/production/manifests/sfx/families/reference-engine-states/idle-damaged.json"
       },
       "pcmHash": "sha256:2118689bfb7ebfd87575cdff4c6146b951575c2eb25d28a94e561e4c6cd2ea98",
@@ -179,7 +179,7 @@
         "truePeakDbtp": -2.8520656910378173
       },
       "manifest": {
-        "hash": "sha256:8d0e585f52ff62a01b23824601a88de65d0603d969b6a681135f73d162d63304",
+        "hash": "sha256:8a444c0a45e6c1fc8f76b5c9e618dd5ee518f03a4c6f773dc8a7966720f3da42",
         "path": "reference/production/manifests/sfx/families/reference-engine-states/normal.json"
       },
       "pcmHash": "sha256:cba7fba2342e105bafd4a9cf973cf7c069c41179dec54565256db903e65d8426",
@@ -210,7 +210,7 @@
         "truePeakDbtp": -2.9770225690546597
       },
       "manifest": {
-        "hash": "sha256:01bf0d10b773fa2387b7d25894a66a78eba610d5982c95c93c870b1c4d613426",
+        "hash": "sha256:2498fd936c89a57f6d899712a223bd2a40dd850adbef03d1265e080c398a6cc7",
         "path": "reference/production/manifests/sfx/families/reference-engine-states/normal-damaged.json"
       },
       "pcmHash": "sha256:90c86a6d211cb72822914d2230d4236f9d08a090f2f07754e1e4b41010682420",

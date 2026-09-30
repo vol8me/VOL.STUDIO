@@ -37,18 +37,18 @@ Bu paket prosedürel ses sentezi, efekt zinciri, WAV/OGG yazma ve ses QA altyap�
   analiz, mastering yolları, stem paketi, bundle segmentleri (giriş, loop,
   bitiş, stinger, geçiş) ve hiyerarşik arama
 - `src/writer.ts` — WAV/OGG yazma (Node-only, FFmpeg gerekir)
-- `audio-jobs/` — job durumları ve referans işler
-- `audio-searches/`, `audio-families/`, `audio-music/`, `audio-themebooks/` —
+- `records/jobs/` — job durumları ve referans işler
+- `records/searches/`, `records/families/`, `records/music/`, `corpus/themebooks/` —
   arama, aile, müzik ve müzik kitabı kayıtları; her birinde bir referans
   fixture yaşar
-- `audio-fits/` — referans-uydurma (inverse synthesis) deney kayıtları:
+- `records/fits/` — referans-uydurma (inverse synthesis) deney kayıtları:
   `audio:job fit run --file <spec>` | `fit show|list`; hedef betimleyici
   vektörüne deterministik zoom taraması, araştırma kanıtıdır (production
   kaydı değil)
-- `audio-samples/` — `SampleAssetV1` kayıtları (sentetik fixture'lar; WAV
+- `corpus/samples/` — `SampleAssetV1` kayıtları (sentetik fixture'lar; WAV
   git-dışı üretilir, JSON repodadır)
-- `canaries/` — sürümlü canary görevleri ve insan dinleme durumu
-- `benchmarks/` — 14 yetenek görevi (canary'nin kardeş şeması; parça,
+- `corpus/canaries/` — sürümlü canary görevleri ve insan dinleme durumu
+- `corpus/benchmarks/` — 14 yetenek görevi (canary'nin kardeş şeması; parça,
   kategori, kodek/QA kriterleri ve dinleme rehberi): `audio:job benchmark
 list|run [--audition] [--json]|review` — 19 canary + görevler tek raporda
 - `audio:capabilities` — ontoloji mekanizmalarının kanıtlanmış kalite
@@ -64,9 +64,9 @@ list|run [--audition] [--json]|review` — 19 canary + görevler tek raporda
   kararı `regression/decisions.json`'a o PCM hash'ine bağlı yazılır
 - `reference/production/` — referans fixture'ların yayımlanan asset'leri,
   manifest'leri, aile bank'ı ve müzik bundle'ları
-- `render-surface.lock.json` — registry render yüzeyi kilidi
+- `locks/render-surface.lock.json` — registry render yüzeyi kilidi
   (`pnpm audio:surface-lock`; aynı sürümde değişen sözleşmeyi reddeder)
-- `encode-profiles.lock.json` — sınıf bazlı kodlama profilinin ölçülmüş taban
+- `locks/encode-profiles.lock.json` — sınıf bazlı kodlama profilinin ölçülmüş taban
   çizgisi (`pnpm audio:encode-baseline`; tablo ölçümden ayrışırsa yazılmaz)
 - `tests/` — birim, özellik, yönetişim (`tests/governance/`) ve protokol
   testleri

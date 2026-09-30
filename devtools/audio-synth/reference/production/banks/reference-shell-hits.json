@@ -4,13 +4,13 @@
   },
   "engine": {
     "analyzerVersion": 1,
-    "registryHash": "sha256:cc9511cc1d40c68d884f0f5735d0a470911e88e764fcec84bccc9edf6eabb867",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
     "rendererVersion": 2
   },
   "family": {
     "familyId": "reference-shell-hits",
     "hash": "sha256:6fe51b9f108c6018a7272857e6d144e8e456cb42ff71960ed2adcba3b1d6fa18",
-    "path": "devtools/audio-synth/audio-families/reference-shell-hits/family.json",
+    "path": "devtools/audio-synth/records/families/reference-shell-hits/family.json",
     "seed": 20260923,
     "variationPolicy": "role-subrange-v1",
     "version": 1
@@ -21,7 +21,7 @@
   "quality": {
     "hash": "sha256:2d3512c5839641792fbaf765dbb9a8ff4b35aea66079c2dc8e0c2083ae180317",
     "pass": true,
-    "path": "devtools/audio-synth/audio-families/reference-shell-hits/quality.json"
+    "path": "devtools/audio-synth/records/families/reference-shell-hits/quality.json"
   },
   "roleAxes": {
     "intensity": [
@@ -59,7 +59,7 @@
         "truePeakDbtp": -2.9011109843391707
       },
       "manifest": {
-        "hash": "sha256:aca04ba781710b2509cecb6d9ac85febbdc5d6ec687bc50921d4f6a7d7c7371d",
+        "hash": "sha256:bf88732ac1750f7d629e69b8a71452f38a3e62c63bcbd27a3157bddd39d70097",
         "path": "reference/production/manifests/sfx/families/reference-shell-hits/hard-heavy.json"
       },
       "pcmHash": "sha256:fe9806b9c5a529d95d808de66ac1c2b09ceee1cdbc82f27de7c80944d3b12eb2",
@@ -93,7 +93,7 @@
         "truePeakDbtp": -2.8806930675578584
       },
       "manifest": {
-        "hash": "sha256:99782aa27f657a86c67febadd375748ef147912b5453f1dc7a017c9dc3f7f075",
+        "hash": "sha256:f872a4f034b28f948cdafab1b7c63bbb316ee845468aa0e8614edfb4b845b03e",
         "path": "reference/production/manifests/sfx/families/reference-shell-hits/hard-heavy-alt.json"
       },
       "pcmHash": "sha256:ba4e83348596cc0230ee2ef2a68d5ea8f87f7db8354103cdc164f234296dc2a6",
@@ -127,7 +127,7 @@
         "truePeakDbtp": -2.8995029228092015
       },
       "manifest": {
-        "hash": "sha256:d423f43b3a265ade1bdb4a674fb7a87a361319e7fba1e0e444dc4918a0b04aa0",
+        "hash": "sha256:e67380c25f35b38938b29b9a231ff0623f61386b9f292780138bd6ca4f408f4f",
         "path": "reference/production/manifests/sfx/families/reference-shell-hits/hard-light.json"
       },
       "pcmHash": "sha256:7f7a5ff3a75549274a619a8fcee8117d5f39048b5b5a1179960310a8e1b56f5e",
@@ -161,7 +161,7 @@
         "truePeakDbtp": -2.929036771206524
       },
       "manifest": {
-        "hash": "sha256:bb5baa084ff9c1188199daa37637de8c333bf7a4cc24abe3f51e87a45a9bd7c2",
+        "hash": "sha256:7922fc51c4953923912cf7c1949e73098e870fca799e7f3b09279106ee8544e0",
         "path": "reference/production/manifests/sfx/families/reference-shell-hits/medium-heavy.json"
       },
       "pcmHash": "sha256:1723aa13950e3dde3cde569a439618b43dbaa89a7fa651dfd6a2144b350ac867",
@@ -195,7 +195,7 @@
         "truePeakDbtp": -2.9905335109537807
       },
       "manifest": {
-        "hash": "sha256:17b5a99cfe5ef93326625a006321ef4ef2f0d270e54c6f009be7c6541f54b5de",
+        "hash": "sha256:8d792dce941b4b2353d87c1c98c9b523f21ba0de8eba8159e141e586516f6a67",
         "path": "reference/production/manifests/sfx/families/reference-shell-hits/medium-light.json"
       },
       "pcmHash": "sha256:cecea4e00ef96ff7e334fa0fc17eb3ac7a024f3717dac50f68f6924df305f065",
@@ -229,7 +229,7 @@
         "truePeakDbtp": -3.0037123800967933
       },
       "manifest": {
-        "hash": "sha256:870629fd559565c7e47e4df16b3f8c394ae43822dc343854e21dd7a38c42c9b8",
+        "hash": "sha256:2b260a020d0da2706194b67d896559e924ade7f9dadf903bc73407ff6b2e256f",
         "path": "reference/production/manifests/sfx/families/reference-shell-hits/medium-light-alt.json"
       },
       "pcmHash": "sha256:2d882099d5ce3cb34af05f3470dd0f0b1efd48ab518b53b2b60c218ca03b0089",
@@ -263,7 +263,7 @@
         "truePeakDbtp": -2.9165719544705153
       },
       "manifest": {
-        "hash": "sha256:7594d709ec39cd611fb9354b7dd5933bc43bf0daf52ed933fcaf8c3b273193a2",
+        "hash": "sha256:c2257cff2141df1ff1edceab119e3dd0f850aab528ad70025ea746e513e8b91d",
         "path": "reference/production/manifests/sfx/families/reference-shell-hits/soft-heavy.json"
       },
       "pcmHash": "sha256:955368fa9765fabd5106004a2dba6f872bb308ebb353956bd431c0afda40296a",
@@ -297,7 +297,7 @@
         "truePeakDbtp": -3.015079554695319
       },
       "manifest": {
-        "hash": "sha256:2d63e5f2615c376eac6c2af4a2d28e7480ea2eb596f29890b643c04113f5bcee",
+        "hash": "sha256:aff2e17c3ce5008a2cc7f785a80a22342b28678e976f4ee51558794f145d1b18",
         "path": "reference/production/manifests/sfx/families/reference-shell-hits/soft-light.json"
       },
       "pcmHash": "sha256:57a19f2d5d4ad885c73678a6c5e90b224c2db9166eec08b66abeb67f3ed04ea1",

@@ -18,7 +18,7 @@ describe('SoundFamilyBankV1 şeması ve referans bank', () => {
   it('referans aile TAMAM: bank, aile, kalite ve bütün varyant bağları doğrulanır', () => {
     const report = verifyFamily({
       repoRoot: REPO,
-      familiesRoot: 'devtools/audio-synth/audio-families',
+      familiesRoot: 'devtools/audio-synth/records/families',
       familyId: 'reference-shell-hits',
     });
     expect(report.checks.filter((c) => !c.ok)).toEqual([]);

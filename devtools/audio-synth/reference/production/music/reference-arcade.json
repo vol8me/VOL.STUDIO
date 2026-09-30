@@ -1,7 +1,7 @@
 {
   "brief": {
     "hash": "sha256:f7fdffa29c18db46f58dc1519daf1e7497a5aed6e5947f7f30699e9b79e60070",
-    "path": "devtools/audio-synth/audio-music/reference-arcade/brief.json"
+    "path": "devtools/audio-synth/records/music/reference-arcade/brief.json"
   },
   "engine": {
     "analyzerVersion": 1,
@@ -11,7 +11,7 @@
   "music": {
     "hash": "sha256:0fc4a5a617043741ced6fa1e0bd6bed5f5e2b36e9506cfe25bfbb2bbc49bf209",
     "musicId": "reference-arcade",
-    "path": "devtools/audio-synth/audio-music/reference-arcade/music.json",
+    "path": "devtools/audio-synth/records/music/reference-arcade/music.json",
     "playback": "loop",
     "seed": 20260924,
     "version": 2
@@ -20,12 +20,12 @@
   "qa": {
     "hash": "sha256:10362dc4d850ec1efd93e34787ba6264a68fa4fd9c648dfc5260036cf69378cd",
     "pass": true,
-    "path": "devtools/audio-synth/audio-music/reference-arcade/qa.json"
+    "path": "devtools/audio-synth/records/music/reference-arcade/qa.json"
   },
   "report": {
     "hash": "sha256:6745624235b5605d04fa5e76a05a8eb0aceff4af4adc7d4c43ae9349f3c56206",
     "pass": true,
-    "path": "devtools/audio-synth/audio-music/reference-arcade/report.json"
+    "path": "devtools/audio-synth/records/music/reference-arcade/report.json"
   },
   "schema": "MusicBundleV1",
   "spec": {
@@ -105,7 +105,7 @@
       "id": "mix",
       "integratedLufs": -15.064670803138965,
       "manifest": {
-        "hash": "sha256:83eca729e481d3c4dd4aa2864f26e9be45848dd822b5e26edb9fc378015aaa34",
+        "hash": "sha256:10bcf70add0f4c3eed5d1d481b1e62dcae45aecfc9a384ee418d12d9a7c66226",
         "path": "reference/production/manifests/music/reference-arcade/mix.json"
       },
       "pcmHash": "sha256:ab46e49fbf1ca7f01797d53df3061bf39336d2ced137120730fdf8dca0c8aab7",
@@ -121,7 +121,7 @@
       "id": "intro",
       "integratedLufs": -26.959217000255606,
       "manifest": {
-        "hash": "sha256:79a681de2df82f4a877819245a7b89708a6801fa6b2e1f5dffd927ca46049605",
+        "hash": "sha256:63588cc3b8e92397c3b2148c7338651f52eb2389a182e16d98e22b417cfacc46",
         "path": "reference/production/manifests/music/reference-arcade/intro.json"
       },
       "pcmHash": "sha256:b5639086b719e4625163409b9a019157b0aeed4bb97accfbe8846765540019d1",
@@ -137,7 +137,7 @@
       "id": "ending",
       "integratedLufs": -16.41429864846112,
       "manifest": {
-        "hash": "sha256:2ae5ef6c735403691c5dbcb12fa251fc061a4f4f66d298583983d62294bcbb5a",
+        "hash": "sha256:6cf6fae195a14049678724f329f2ccd4ec571779d9ac9af81412412ff564cf73",
         "path": "reference/production/manifests/music/reference-arcade/ending.json"
       },
       "pcmHash": "sha256:ef9751bd6e92bdc259b979c8828a99234e267c4187e6d930ba7fe32285238cd6",
@@ -153,7 +153,7 @@
       "id": "power-up",
       "integratedLufs": -24.50527919419693,
       "manifest": {
-        "hash": "sha256:2508268ee2e53c042c2423802d16f90df43a02319876838f177e79a67a8c7d5e",
+        "hash": "sha256:f820cc7002b06e306c7da5fe053c7e5f4d0e0194f4a261c70ba8a3ec770b164a",
         "path": "reference/production/manifests/music/reference-arcade/power-up.json"
       },
       "pcmHash": "sha256:fec90cb91280d8d6ac509bec64cabfcc1aac1d0d995d8454ddb445ae1c35452e",

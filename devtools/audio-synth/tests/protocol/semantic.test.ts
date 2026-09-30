@@ -29,7 +29,7 @@ import { AudioParamError } from '../../src/guard/errors';
 import { programSpec } from '../search/fixtures';
 import { createTestRepo, type TestRepo } from './repo';
 
-const ROOT = 'devtools/audio-synth/audio-searches';
+const ROOT = 'devtools/audio-synth/records/searches';
 const SCORER = fileURLToPath(new URL('../fixtures/fakeScorer.mjs', import.meta.url));
 const scorerArgv = [process.execPath, SCORER];
 const scorerJson = JSON.stringify(scorerArgv);

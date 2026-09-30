@@ -6,7 +6,7 @@ import type { Sha256 } from '../kernel/canonical';
  * birebir eşleşmesini ister. Çok sürümlü düğümlerde anahtar `id@version`
  * çiftidir: dondurulmuş eski sürümler de aynı kilitle izlenir.
  */
-export const RENDER_SURFACE_LOCK_PATH = 'render-surface.lock.json';
+export const RENDER_SURFACE_LOCK_PATH = 'locks/render-surface.lock.json';
 
 export interface RenderSurfaceLockV2 {
   readonly schema: 'RenderSurfaceLockV2';

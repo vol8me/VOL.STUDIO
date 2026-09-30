@@ -188,7 +188,7 @@ export function searchContext(cli: string) {
         'dizisi taşır (JSON dizi ya da tek çalıştırılabilir yol); kabuk yoktur — argv[0] ' +
         "doğrudan başlatılır, `;`/`$()`/`&&` literal argümandır. Request JSON stdin'e yazılır, " +
         "response JSON stdout'tan okunur. " +
-        "Aday WAV'ları export ağacına (`audio-searches/<id>/semantic/`) yazılır; git'e girmez. " +
+        "Aday WAV'ları export ağacına (`export/audio-searches/<id>/semantic/`) yazılır; git'e girmez. " +
         'Core hiçbir model bağımlılığı taşımaz; scorer yokken bütün akış eksiksiz çalışır.',
       rule:
         'Skorlar danışmandır: `semantic.json` + CLI sıralaması dışında hiçbir şeyi etkilemez; ' +

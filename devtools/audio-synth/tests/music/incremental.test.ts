@@ -10,9 +10,9 @@ import { renderMusicStem } from '../../src/music/stem';
 import { hashPcm } from '../../src/kernel/canonical';
 import { RENDER_BLOCK } from '../support/timeouts';
 
-const LOOP = new URL('../../audio-music/reference-loop/music.json', import.meta.url);
+const LOOP = new URL('../../records/music/reference-loop/music.json', import.meta.url);
 const LOOP_STEM = new URL(
-  '../../audio-music/reference-loop/jobs/mix/program.json',
+  '../../records/music/reference-loop/jobs/mix/program.json',
   import.meta.url,
 );
 const reference = () => JSON.parse(readFileSync(LOOP, 'utf8')) as MusicProgramV1;

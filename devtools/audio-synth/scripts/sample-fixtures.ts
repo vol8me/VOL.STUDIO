@@ -1,5 +1,5 @@
 /**
- * Sample kütüphanesinin SENTETİK referans kayıtlarını (`audio-samples/*.json`)
+ * Sample kütüphanesinin SENTETİK referans kayıtlarını (`corpus/samples/*.json`)
  * üretir. Her kayıt üretici programı gömülü taşır; betik programı render
  * edip 16-bit WAV baytlarını özetler ve JSON'a yazar. WAV commit edilmez
  * (deterministik ara çıktı); özet her çözümde yeniden doğrulanır. Gerçek

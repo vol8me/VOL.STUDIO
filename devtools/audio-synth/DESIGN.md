@@ -287,7 +287,7 @@ hangi düğümün sözleşmesinin kaydığını adıyla söyler. Bağlayıcı ka
 kimliğidir. `engine.registryHash` bütün registry'nin render izdüşümünün
 özetidir — motor yüzeyinin sürüm etiketi, programa özgü kanıt değil.
 
-**Aynı sürümde sözleşme değişmez.** `render-surface.lock.json` her düğümün
+**Aynı sürümde sözleşme değişmez.** `locks/render-surface.lock.json` her düğümün
 sürümünü ve izdüşüm özetini tutar; `tests/governance/renderSurface.test.ts`
 kilidin bugünkü registry ile birebir eşleşmesini ister. Kilidi
 `pnpm audio:surface-lock` yazar ve sürümü artmadan değişen bir sözleşmeyi
@@ -321,7 +321,7 @@ sahipsiz publish yolu testi düşürür.
 
 **Üretim-referans fixture'ı.** Kapıyı gerçek kodek QA'sıyla bağımsız
 çalıştırmak için audio-synth'in KENDİ işi
-`audio-jobs/platform-reference` vardır (hiçbir oyun onu çalmaz).
+`records/jobs/platform-reference` vardır (hiçbir oyun onu çalmaz).
 `just audio-verify` her koşuda `audio:production-check` ile manifest'i
 yalnız kendisinden doğrular: gömülü program yeniden render edilir, dosya
 çözülüp politikaya tabi tutulur, güncel araç zinciriyle yeniden kodlanıp fark
@@ -566,13 +566,13 @@ akıştan geçer.
 
 ### Arama yapıtları ve provenance
 
-| Yapıt                    | Yer                                  | İçerik                                                                         |
-| ------------------------ | ------------------------------------ | ------------------------------------------------------------------------------ |
-| `AcousticSearchSpecV1`   | `audio-searches/<id>/spec.json`      | taban, tohum, strateji+sürüm, aday sayısı, boyutlar, dışlama, filtre, bütçe    |
-| aday programı            | `audio-searches/<id>/candidates/c-…` | adayın kendi `AcousticProgramV1` belgesi (production kaydı değil)              |
-| `AcousticSearchReportV1` | `audio-searches/<id>/report.json`    | ön-denetim özeti, sıra, kimlik, değerler, maliyet, risk, PCM, betimleyici, red |
-| `SearchSelectionV1`      | `audio-searches/<id>/selection.json` | aday başına karar (`pending/approved/rejected`), beyan eden, etiket, not       |
-| `ProgramOriginV1`        | `audio-jobs/<job>/origin.json`       | terfi eden adayın arama kimliği, spec/rapor özeti, sıra, strateji, PCM özeti   |
+| Yapıt                    | Yer                                    | İçerik                                                                         |
+| ------------------------ | -------------------------------------- | ------------------------------------------------------------------------------ |
+| `AcousticSearchSpecV1`   | `records/searches/<id>/spec.json`      | taban, tohum, strateji+sürüm, aday sayısı, boyutlar, dışlama, filtre, bütçe    |
+| aday programı            | `records/searches/<id>/candidates/c-…` | adayın kendi `AcousticProgramV1` belgesi (production kaydı değil)              |
+| `AcousticSearchReportV1` | `records/searches/<id>/report.json`    | ön-denetim özeti, sıra, kimlik, değerler, maliyet, risk, PCM, betimleyici, red |
+| `SearchSelectionV1`      | `records/searches/<id>/selection.json` | aday başına karar (`pending/approved/rejected`), beyan eden, etiket, not       |
+| `ProgramOriginV1`        | `records/jobs/<job>/origin.json`       | terfi eden adayın arama kimliği, spec/rapor özeti, sıra, strateji, PCM özeti   |
 
 Spec normalize yazılır (boyutlar ADA göre sıralı): JSON anahtar sırası ve
 boyut dizisi sırası spec özetini, planı ve raporu değiştirmez. Rapor
@@ -648,7 +648,7 @@ seri ya da worker'larda paralel koşar; rapor ve sıra ikisinde aynıdır (bkz.
 "Paralel toplu render"). Tek adayın render bütçesi aşımı o adayı
 `render-budget` ile geçersiz kılar, plan yine bütçe içinde kalabilir.
 
-Referans arama (`audio-searches/reference-shell`, ResonantShell; boyut,
+Referans arama (`records/searches/reference-shell`, ResonantShell; boyut,
 sertlik, sönüm, modal yerleşim — 3 sürekli + 1 seçenek, 16 aday) ölçümü:
 ön-denetim ≈ 14 ms, tahmin 1.26e8 birim ≈ 1.26 sn, gerçek yürütme ≈ 0.6 sn
 (tahmin küçümsemiyor), 13 passed / 2 filtered / 1 invalid, rapor 33 KB, git'e
@@ -723,7 +723,7 @@ daralan kutuyu örnekler ve görev sahibi elit taşınır — rapordaki
 materialize reddi aynı tek kaynaktan gelir; aynı program özeti turlar arasında
 yeniden render edilmez. Sinirsel bağımlılık yoktur.
 
-Kapanış kanıtı (`audio-fits/`): 660 Hz sine + AHDSR gizli hedefi
+Kapanış kanıtı (`records/fits/`): 660 Hz sine + AHDSR gizli hedefi
 `hidden-tone-660` — 30 değerlendirme / 3 turda `converged` (uzaklık 0.071 ≤
 tolerans 0.2; geri yakalanan frekans 644.99 Hz = %2.3 hata, FFT tepe
 çözünürlüğü 46.875 Hz/bin taban; `waveform: sine` doğru). Negatif kanıt
@@ -825,7 +825,7 @@ bulguları `fail` ya da `report` olarak ailenin kendisi seçer. Uzaklık bir
 
 ### Organik canary derlemi
 
-`canaries/<id>.json` (`OrganicCanaryV1`): 19 sürümlü görev — `breath`,
+`corpus/canaries/<id>.json` (`OrganicCanaryV1`): 19 sürümlü görev — `breath`,
 `bubble`, `droplet`, `membrane-pulse`, `wet-squish`, `insect-like-chirp`,
 `cat-like-gesture`, `alien-fluid-call`, `campfire`, `contact-metal`,
 `contact-rubber`, `friction-rolling`, `friction-scrape`, `granular-breath`,
@@ -835,7 +835,7 @@ da archetype isteği + tohum), ucuz mekanik beklentiler ve dinleme rehberi
 taşır; mevcut yapı taşlarından kurulur, asset kütüphanesi değildir. Mekanik
 beklentilerin dişi mutasyonla sınanır (nabız hızı, düz perde eğrisi, nefese
 eklenen ton beklentiyi düşürür; metal teması lastiğe dönünce, bağlı germe
-resample'a dönünce beklenti düşer). İnsan dinleme durumu `canaries/reviews.json`
+resample'a dönünce beklenti düşer). İnsan dinleme durumu `corpus/canaries/reviews.json`
 (`CanaryReviewsV1`) içindedir. 2026-09-28 kaydında 13 `heard-acceptable`,
 6 `heard-problem` beyanı vardır; sürüm uyuşmazlığı olan beyanlar etkin
 durumda yeniden `pending-human` sayılır. Durum yalnız
@@ -844,7 +844,7 @@ bayatlar. Mekanik geçiş sesin "organik" olduğunu kanıtlamaz.
 
 ### Yetenek benchmark derlemi
 
-`benchmarks/<id>.json` (`BenchmarkTaskV1`): canary'nin **kardeş şemasıdır,
+`corpus/benchmarks/<id>.json` (`BenchmarkTaskV1`): canary'nin **kardeş şemasıdır,
 V2'si değildir** — canary tek kaynaklı organik yapı taşı görevidir;
 benchmark görevi birden çok parça (UI onay/hata), yetenek kategorisi
 (`audio:capabilities` bu anahtarla gruplar), gömülü müzik kaynağı ve
@@ -879,7 +879,7 @@ kriterleri `steam` render'ını, `tank-fire` kriterleri `metal-scrape`
 render'ını reddeder. Amaçlı dokuların sınırları da kayıtlıdır: blast
 crackle'ı tık sayacında aday üretir (tank-fire crackle 0), elektrik
 arcları seyrek tutulur (arcs 0.1 → 16 aday, sınır 20). İnsan dinleme
-durumu `benchmarks/reviews.json` (`BenchmarkReviewsV1`) içindedir, hepsi
+durumu `corpus/benchmarks/reviews.json` (`BenchmarkReviewsV1`) içindedir, hepsi
 `pending-human`dır ve yalnız `benchmark review … --by human` ile değişir;
 görev sürümü artınca inceleme bayatlar.
 
@@ -931,7 +931,7 @@ düşer. İnsan dinleme durumu kanıt kayıtlarından toplanıp ayrı sütunda
 taşınır. `audio:job capabilities` taze rapor koşar; `--from-report
 <repo-göreli rapor.json>` kayıtlı `BenchmarkReportV1`'i render etmeden
 okur. Bugünkü taban (koşuyla doğrulanmış): 0 production-ready
-(benchmarks/reviews.json boş — insan kabulü yok), 24 benchmarked, 3
+(corpus/benchmarks/reviews.json boş — insan kabulü yok), 24 benchmarked, 3
 canary (`vocal`, `fire`, `sampled`), 2 research (`tail`, `space` —
 hiçbir görev reverb/delay bus'ı kullanmıyor), 2 unsupported (`speech`,
 `doppler-motion`).
@@ -1042,7 +1042,7 @@ dayanan bir varyant üretti ve kapı onu düşürdü; aralık 0.3–0.45'e taş�
 bütçesi, toplu bütçe = 4 render + 3 analiz geçişi; FFmpeg kodlaması
 modellenmez) → kalite kapısı → aile kilidi → kayıtlı aile içerikçe değiştiyse
 `version` artmış olmalı → değişen ailenin eski bank'ı silinir → `family.json`
-ve `quality.json` → her varyant için `audio-families/<id>/jobs/<key>` işinde
+ve `quality.json` → her varyant için `records/families/<id>/jobs/<key>` işinde
 brief → program + `origin.json` → render → analyze → select → publish (aynı
 `publishJob`; `writeOgg` çağıran yeni bir yol yok, `publishPath.test.ts`
 değişmedi) → en son bank.
@@ -1346,7 +1346,7 @@ Dönüşüm artık `toMusicTrack`'te tek yerdedir: `bpm × 4 / birim`.
 
 `music publish`: sembolik kapı → kombinasyon QA kapısı → müzik kilidi →
 yayımlanmış bundle'ın programı değiştiyse `version` artmış olmalı → rapor ve
-QA belgeleri → her asset için `audio-music/<id>/jobs/<stem>` işinde brief →
+QA belgeleri → her asset için `records/music/<id>/jobs/<stem>` işinde brief →
 program → render → analyze → select → publish (AYNI `publishJob`; müziğe özel
 bir yazıcı yok) → kodlanmış hiza denetimi → en son bundle.
 
@@ -1618,7 +1618,7 @@ transientler (`addBurst`) q4 ölçütünü aşamadı → ambience q6'ya çekildi
 belirler: 10 ms sessizlik mono 3639 B, stereo 4322 B. UI korpusunda q4 → q8
 baytı yalnız ≈%24 büyütür, gürültülü ambiyansta ≈3.3 kat.
 
-`encode-profiles.lock.json` politika özetini, korpusu, taramanın tamamını ve
+`locks/encode-profiles.lock.json` politika özetini, korpusu, taramanın tamamını ve
 kuralın seçimini taşır; `pnpm audio:encode-baseline` onu yeniden ÖLÇEREK
 yazar ve koddaki tablo ölçümün seçiminden farklıysa yazmayı reddeder.
 `tests/governance/encodeProfiles.test.ts` kilidin bugünkü politikayı

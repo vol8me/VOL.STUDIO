@@ -248,8 +248,8 @@ describe('dosya sistemi güvenliği', () => {
   it('sembolik bağ üzerinden job dizinine erişilmez', () => {
     const outside = join(repo.root, '..', `outside-${Date.now()}`);
     mkdirSync(outside, { recursive: true });
-    mkdirSync(join(repo.root, 'devtools/audio-synth/audio-jobs'), { recursive: true });
-    symlinkSync(outside, join(repo.root, 'devtools/audio-synth/audio-jobs/linked'));
+    mkdirSync(join(repo.root, 'devtools/audio-synth/records/jobs'), { recursive: true });
+    symlinkSync(outside, join(repo.root, 'devtools/audio-synth/records/jobs/linked'));
     try {
       expect(code(() => initJob(repo.loc('linked'), { target: REFERENCE_TARGET }))).toBe('symlink');
       expect(existsSync(join(outside, 'job.json'))).toBe(false);

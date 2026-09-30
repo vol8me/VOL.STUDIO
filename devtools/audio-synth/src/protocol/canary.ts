@@ -24,7 +24,7 @@ import type { SampleResolver } from '../program/samples';
  */
 export const CANARY_SCHEMA = 'OrganicCanaryV1';
 export const CANARY_REVIEWS_SCHEMA = 'CanaryReviewsV1';
-export const CANARIES_ROOT = 'devtools/audio-synth/canaries';
+export const CANARIES_ROOT = 'devtools/audio-synth/corpus/canaries';
 export const CANARY_AUDITION_ROOT = `${EXPORT_ROOT}/canaries`;
 const REVIEWS_FILE = 'reviews.json';
 const ID = /^[a-z][a-z0-9-]{0,47}$/;
