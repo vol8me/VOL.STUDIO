@@ -23,4 +23,6 @@ export const PALETTE = {
   dust: 0xe0c9a4,
   smoke: 0xefe7da,
   treadMark: 0x3a2c1e,
+  /** Kayan paletin kumu sıyırıp ezdiği koyu çizgi. */
+  skidMark: 0x2a1f15,
 } as const;

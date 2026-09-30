@@ -9,7 +9,8 @@
     "fullscreen": "Tam ekran",
     "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",
     "forward": "İleri",
-    "reverse": "Geri"
+    "reverse": "Geri",
+    "brake": "Fren"
   },
   "controls": {
     "move": "Hareket",
@@ -18,13 +19,15 @@
     "boost": "Hızlanma",
     "zoom": "Yakınlaştır",
     "grid": "Izgara",
-    "pause": "Duraklat"
+    "pause": "Duraklat",
+    "brake": "Fren"
   },
   "touch": {
     "boost": "Hızlan",
     "zoomIn": "Yakınlaştır",
     "zoomOut": "Uzaklaştır",
-    "pause": "Duraklat"
+    "pause": "Duraklat",
+    "brake": "Fren"
   },
   "pause": {
     "title": "Duraklatıldı",

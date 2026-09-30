@@ -11,7 +11,7 @@ interface Mark {
 
 /**
  * Palet izleri. İz, paletlerin YERDE katettiği yoldan bırakılır: patinaj iz
- * uzatmaz. Havuz dolunca en eski iz yeniden kullanılır; izler ömürleri
+ * uzatmaz. Kayan palet desen basmaz; onun izi `SkidMarks` çizgisidir. Havuz dolunca en eski iz yeniden kullanılır; izler ömürleri
  * boyunca söner.
  */
 export class TreadMarks {
@@ -32,19 +32,22 @@ export class TreadMarks {
     groundLeft: number,
     groundRight: number,
     trackOffset: number,
+    skidLeft = false,
+    skidRight = false,
   ): void {
-    const sides: ReadonlyArray<readonly ['left' | 'right', number, number]> = [
-      ['left', groundLeft, -1],
-      ['right', groundRight, 1],
+    const sides: ReadonlyArray<readonly ['left' | 'right', number, number, boolean]> = [
+      ['left', groundLeft, -1, skidLeft],
+      ['right', groundRight, 1, skidRight],
     ];
     let last = this.lastAt.get(key);
     if (!last) {
       last = { left: groundLeft, right: groundRight };
       this.lastAt.set(key, last);
     }
-    for (const [track, distance, side] of sides) {
+    for (const [track, distance, side, skidding] of sides) {
       if (Math.abs(distance - last[track]) < FX.marks.spacing) continue;
       last[track] = distance;
+      if (skidding) continue;
       this.place(
         x - Math.sin(hull) * trackOffset * side,
         y + Math.cos(hull) * trackOffset * side,

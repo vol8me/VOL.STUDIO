@@ -44,17 +44,19 @@ kabuk, parlayan biyolojik çekirdek, merceği olan taret, arkada iki duyarga.
 Tank bir katı cisimdir (`src/sim/tank/Tank.ts`): kütle 1200 kg, eylemsizlik
 momenti ayak izinden türer. Tank yalnız kuvvetle hareket eder; hız atanmaz.
 
-| Kuvvet                 | Model                                                                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Palet çekişi           | Palet yüzey hızı ile zemin hızı farkı; Coulomb sürtünmesiyle (μ = 1.35) sınırlı, fazlası patinajdır                                   |
-| Direksiyon ünitesi     | Paletler arası itki farkı önceliklidir; ortak itki kalan sürtünme payına sığar. Tam gazda da dönülür                                  |
-| Motor gücü             | İki palet arasında paylaşılan tavan: düşük hızda sürtünme, yüksek hızda güç sınırlar. İç palet frenlerken dış palet daha çok güç alır |
-| Fren                   | Güçle sınırlı değil; yalnız çekiş sürtünmesi                                                                                          |
-| Dönüş (skid-steer)     | İki paletin kuvvet farkı torktur                                                                                                      |
-| Yanal ve dönme direnci | Palet boyu üzerinde yayılmış sürtünme (μ = 0.95). Dönme direnci hızla azalır: hareket hâlinde dönmek yerinde dönmekten kolaydır       |
-| Yuvarlanma direnci     | Yükün %5'i                                                                                                                            |
-| Duvar                  | Gövde köşesinde itki ve sürtünme itkisi; sekme katsayısı 0.35. Açılı çarpma tankı döndürür                                            |
-| Ateş                   | Mermi tankın hızını devralır; tanka ters yönde itki uygulanır                                                                         |
+| Kuvvet                 | Model                                                                                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Palet çekişi           | Palet yüzey hızı ile zemin hızı farkı; Coulomb sürtünmesiyle sınırlı. Tutunan palet statik (μ = 1.35), kayan palet kinetik (μ = 1.0) katsayı görür; geçiş kayma hızıyla üsteldir (Stribeck)       |
+| Direksiyon ünitesi     | Paletler arası itki farkı önceliklidir; ortak itki kalan sürtünme payına sığar. Tam gazda da dönülür                                                                                              |
+| Motor gücü             | İki palet arasında paylaşılan tavan: düşük hızda sürtünme, yüksek hızda güç sınırlar. İç palet frenlerken dış palet daha çok güç alır                                                             |
+| Aktarma                | Tork sınırlı: palet zeminin en çok 26 birim/s önüne ya da gerisine sürülür, tutunma tepesinde çeker. Gaz bırakılınca ortak hız motor freniyle (220 birim/s²) azalır; direksiyon farkı çevik kalır |
+| Fren                   | Paletleri kilitler; tank kinetik sürtünmeyle kayarak durur, direksiyon devre dışıdır. Güçle sınırlı değil                                                                                         |
+| Birleşik kayma         | Palet boylamsal ve yanal sürtünmeyi aynı temastan alır; kayma normalize elipsi aşınca kuvvet kayma yönüne izdüşer. Kilitli ya da kayan palet yanal tutuşunu yitirir                               |
+| Dönüş (skid-steer)     | İki paletin kuvvet farkı torktur                                                                                                                                                                  |
+| Yanal ve dönme direnci | Palet boyu üzerinde yayılmış sürtünme (statik μ = 0.95, kinetik 0.7). Dönme direnci hızla ve paletlerin kaymasıyla azalır: keskin dönüşte tank kayar (drift), kayma sürer ta ki tutunana dek      |
+| Yuvarlanma direnci     | Yükün %5'i                                                                                                                                                                                        |
+| Duvar                  | Gövde köşesinde itki ve sürtünme itkisi; sekme katsayısı 0.35. Açılı çarpma tankı döndürür                                                                                                        |
+| Ateş                   | Mermi tankın hızını devralır; tanka ters yönde itki uygulanır                                                                                                                                     |
 
 Adım 60 Hz sabittir; kuvvetler sert olduğu için her adım iki alt adıma
 bölünür (120 Hz).
@@ -167,12 +169,15 @@ kat çözünürlükte rasterlenir ve sahnede tersiyle ölçeklenir.
   dairedir; uçtaki halkalar aynı yolla döner. Patinajda palet döner, tank
   ilerlemez.
 - Palet izi zemindeki gerçek yoldan bırakılır; patinaj iz uzatmaz, toz kaldırır.
+- Kayan palet (fren kilidi, drift) desen basmaz; temas noktası yerde kesintisiz
+  bir kayma çizgisi bırakır. Çizgi temasın gerçek yolunu izler, koyuluğu kayma
+  hızıyla artar, 20 s yerde kalıp söner.
 - Çekirdek hıza ve hızlanmaya göre daha sık atar; duyargalar dönüşün tersine
   yayla savrulur.
 
 ## Girdi
 
-Eylem sözlüğü `src/input/bindings.ts` içindedir: `fire`, `boost`, `zoomIn`,
+Eylem sözlüğü `src/input/bindings.ts` içindedir: `fire`, `boost`, `brake`, `zoomIn`,
 `zoomOut`, `grid`, `pause`. Hareket ve nişan CORE `InputState.move` ve `aim`
 olarak gelir.
 
@@ -219,7 +224,10 @@ Zarfı değiştirmek bir tasarım kararıdır ve bu tabloyla birlikte yapılır.
 | Ölçü                         | Zarf                                                     |
 | ---------------------------- | -------------------------------------------------------- |
 | Hizalı kalkış, %90 azami hız | 0.8–1.8 s                                                |
-| Azami hızdan fren mesafesi   | 40–140 birim                                             |
+| Gaz bırakınca durma mesafesi | 40–140 birim                                             |
+| Frenle durma mesafesi        | 55–110 birim, düz; gaz bırakmanın %80'inden kısa         |
+| Hızlıyken keskin 90° dönüş   | kayma açısı 15–50°, dönüş hızı tavanın 1.2 katı altında  |
+| Dönüşte fren                 | yanal kayma > 25 birim/s, gövde 5–45° dönmeyi sürdürür   |
 | Dururken 90° dönüş           | 0.5–1.2 s, aşma 5° altında                               |
 | Hızlıyken dönüş              | dururkenkinden yavaş                                     |
 | Seyirden hızlanma            | depo tükenmeden yeni tavanın %90'ı                       |

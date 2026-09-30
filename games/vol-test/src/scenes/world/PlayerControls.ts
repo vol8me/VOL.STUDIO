@@ -65,6 +65,7 @@ export class PlayerControls {
     command.aimY = state.aim.y;
     command.fire = state.actions.fire;
     command.boost = state.actions.boost;
+    command.brake = state.actions.brake;
     return command;
   }
 

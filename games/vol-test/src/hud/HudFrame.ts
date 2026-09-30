@@ -5,6 +5,7 @@ export interface HudFrame {
   readonly hull: number;
   readonly speed: number;
   readonly reversing: boolean;
+  readonly braking: boolean;
   readonly boosting: boolean;
   readonly boost: number;
   readonly boostCapacity: number;

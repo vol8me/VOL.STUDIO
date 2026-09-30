@@ -23,9 +23,37 @@ describe('Tank fiziği', () => {
     const space = world();
     const subject = tank();
     drive(subject, space, { moveX: 1 }, 2);
-    const brakeTime = TANK.maxSpeed / (TANK.tractionFriction * TANK.gravity);
-    drive(subject, space, {}, brakeTime * 2);
+    const coastTime = TANK.maxSpeed / TANK.engineBraking;
+    drive(subject, space, {}, coastTime * 1.5);
     expect(subject.speed).toBeLessThan(1);
+  });
+
+  it('fren paletleri kilitler; direksiyon devre dışı, tank düz kayarak durur', () => {
+    const space = world();
+    const subject = tank();
+    drive(subject, space, { moveX: 1 }, 2);
+    const hull = subject.hull;
+    drive(subject, space, { moveY: 1, brake: true }, 0.1);
+    expect(subject.braking).toBe(true);
+    expect(subject.trackLeft).toBe(0);
+    expect(subject.trackRight).toBe(0);
+    expect(subject.slip).toBeGreaterThan(TANK.slidingSpeed);
+    drive(subject, space, { moveY: 1, brake: true }, 1.5);
+    expect(subject.speed).toBeLessThan(1);
+    expect(Math.abs(subject.hull - hull)).toBeLessThan(0.05);
+    drive(subject, space, { moveX: 1 }, 0.1);
+    expect(subject.braking).toBe(false);
+  });
+
+  it('aktarma paleti zeminden sürüş kaymasından fazla ayrılmaz (tork sınırlı)', () => {
+    const space = world();
+    const subject = tank();
+    for (let step = 0; step < 60; step++) {
+      subject.step(command({ moveX: 1, moveY: step % 20 < 10 ? 0.5 : -0.5 }), space, DT);
+      expect(subject.slip).toBeLessThanOrEqual(
+        TANK.driveSlip + 1e-9 + Math.abs(subject.lateralSpeed),
+      );
+    }
   });
 
   it('yerinde dönüşte paletler ters yöne akar ve gövde hedefe aşmadan oturur', () => {

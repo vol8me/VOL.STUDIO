@@ -18,6 +18,8 @@ describe('textures', () => {
     createRuntimeTextures(scene as unknown as Phaser.Scene);
     createRuntimeTextures(scene as unknown as Phaser.Scene);
     const keys = scene.textures.addCanvas.mock.calls.map((call) => String(call[0]));
-    expect(keys.sort()).toEqual([TEXTURE.mark, TEXTURE.spark, TEXTURE.treadBase].sort());
+    expect(keys.sort()).toEqual(
+      [TEXTURE.mark, TEXTURE.skid, TEXTURE.spark, TEXTURE.treadBase].sort(),
+    );
   });
 });

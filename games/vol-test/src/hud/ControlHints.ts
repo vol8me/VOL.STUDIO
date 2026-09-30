@@ -5,7 +5,7 @@ import {
   type InputPresentationController,
 } from '@volstudio/core/ui';
 
-type HintKey = 'move' | 'aim' | 'fire' | 'boost' | 'zoom' | 'grid' | 'pause';
+type HintKey = 'move' | 'aim' | 'fire' | 'boost' | 'brake' | 'zoom' | 'grid' | 'pause';
 
 /** Eylem → glif bağları; kola özgü olmayan klavye glifleri kol kipinde gizlenir. */
 const HINTS: ReadonlyArray<readonly [HintKey, readonly Omit<ControlGlyphBinding, 'label'>[]]> = [
@@ -21,6 +21,7 @@ const HINTS: ReadonlyArray<readonly [HintKey, readonly Omit<ControlGlyphBinding,
   ['aim', [{ padName: 'stickRight', keyboardName: 'mouseMove' }]],
   ['fire', [{ padName: 'rightTrigger', keyboardName: 'mouseLeft' }]],
   ['boost', [{ padName: 'leftTrigger', keyboardName: 'key', key: 'shift' }]],
+  ['brake', [{ padName: 'faceRight', keyboardName: 'key', key: 'space' }]],
   [
     'zoom',
     [

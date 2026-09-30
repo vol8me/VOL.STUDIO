@@ -7,7 +7,7 @@ import { command, simulation, STEP_MS } from '../support/sim';
 /**
  * Bulanık girdi altında simülasyonun değişmezleri. Örnek tabanlı testler
  * yazarın aklına gelen durumları sınar; burada tohumlu rastgele komutlar
- * (ani yön değişimi, duvara dayanma, sürekli ateş, hızlanma aç/kapa) binlerce
+ * (ani yön değişimi, duvara dayanma, sürekli ateş, hızlanma aç/kapa, fren) binlerce
  * adım boyunca koşar ve hiçbir karede fiziksel olarak imkânsız bir durum
  * oluşmamalıdır.
  */
@@ -27,6 +27,7 @@ function randomCommand(next: () => number, previous: TankCommand): TankCommand {
     aimY: next() < 0.2 ? 0 : Math.sin(aimAngle),
     fire: next() < 0.35,
     boost: next() < 0.4,
+    brake: next() < 0.15,
   });
 }
 

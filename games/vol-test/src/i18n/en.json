@@ -9,7 +9,8 @@
     "fullscreen": "Fullscreen",
     "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",
     "forward": "Forward",
-    "reverse": "Reverse"
+    "reverse": "Reverse",
+    "brake": "Brake"
   },
   "controls": {
     "move": "Move",
@@ -18,13 +19,15 @@
     "boost": "Boost",
     "zoom": "Zoom",
     "grid": "Grid",
-    "pause": "Pause"
+    "pause": "Pause",
+    "brake": "Brake"
   },
   "touch": {
     "boost": "Boost",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
-    "pause": "Pause"
+    "pause": "Pause",
+    "brake": "Brake"
   },
   "pause": {
     "title": "Paused",

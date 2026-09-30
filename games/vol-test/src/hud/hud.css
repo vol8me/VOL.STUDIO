@@ -119,6 +119,15 @@
   bottom: calc(var(--vol-safe-bottom) + 172px);
 }
 
+/*
+ * Fren nişan joystick'inin solunda, alt hizada: sağ başparmak nişandan frene
+ * kayar; sol başparmak sürüşü bırakmaz.
+ */
+.vt-hud__brake {
+  right: calc(var(--vol-safe-right) + 196px);
+  bottom: calc(var(--vol-safe-bottom) + 40px);
+}
+
 /* Zoom düğmeleri harita sütununun solunda, haritayla aynı hizada. */
 .vt-hud__zoom-in,
 .vt-hud__zoom-out {

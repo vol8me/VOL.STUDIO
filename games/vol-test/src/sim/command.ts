@@ -11,8 +11,10 @@ export interface TankCommand {
   aimY: number;
   fire: boolean;
   boost: boolean;
+  /** Paletleri kilitler: tank kinetik sürtünmeyle kayarak durur. */
+  brake: boolean;
 }
 
 export function idleCommand(): TankCommand {
-  return { moveX: 0, moveY: 0, aimX: 0, aimY: 0, fire: false, boost: false };
+  return { moveX: 0, moveY: 0, aimX: 0, aimY: 0, fire: false, boost: false, brake: false };
 }

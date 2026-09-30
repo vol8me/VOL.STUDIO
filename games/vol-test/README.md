@@ -20,6 +20,7 @@ pnpm --filter @volstudio/vol-test scaling    # ölçekleme ölçümü (JSON)
 | Nişan    | Fare            | Sağ çubuk              | Sağ altta sabit joystick |
 | Ateş     | Sol tık         | RT                     | Nişan joystick itilince  |
 | Hızlanma | Shift           | LT                     | Hızlanma düğmesi         |
+| Fren     | Space           | B                      | Fren düğmesi             |
 | Zoom     | Tekerlek, Q / E | LB / RB                | + / − düğmeleri          |
 | Izgara   | G               | View                   | —                        |
 | Duraklat | Esc             | Menu                   | Duraklat düğmesi, geri   |

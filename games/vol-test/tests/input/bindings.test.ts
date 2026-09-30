@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { GAMEPAD_BUTTON } from '@volstudio/core/input/gamepad';
 import {
   AIM_STICK_ACTION,
   EDGE_ACTIONS,
@@ -26,5 +27,11 @@ describe('bindings', () => {
   it('kenar eylemleri sözlükte tanımlıdır', () => {
     for (const action of EDGE_ACTIONS) expect(TEST_ACTIONS).toContain(action);
     expect(EDGE_ACTIONS).not.toContain('fire');
+  });
+
+  it('fren basılı tutulan eylemdir: Space ve kolun sağ yüz düğmesi (B)', () => {
+    expect(PC_BINDINGS.brake).toEqual({ source: 'key', keyCode: 32 });
+    expect(GAMEPAD_BINDINGS.brake.button).toBe(GAMEPAD_BUTTON.secondary);
+    expect(EDGE_ACTIONS).not.toContain('brake');
   });
 });

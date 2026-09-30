@@ -10,7 +10,9 @@ function body(): RigidBody {
   );
 }
 
-const grip = TANK.tractionFriction * ((TANK.mass * TANK.gravity) / 2);
+const load = (TANK.mass * TANK.gravity) / 2;
+const grip = TANK.tractionFriction * load;
+const kineticGrip = TANK.tractionKinetic * load;
 
 describe('computeTrackForces', () => {
   it('çekiş palet başına Coulomb sürtünmesiyle sınırlıdır', () => {
@@ -35,11 +37,39 @@ describe('computeTrackForces', () => {
     expect(boosted.forward).toBeGreaterThan(normal.forward);
   });
 
-  it('fren güçle sınırlı değildir', () => {
+  it('kilitli palet kinetik sürtünmeyle frenler; fren güçle sınırlı değildir', () => {
     const fast = body();
     fast.vx = 200;
     const forces = computeTrackForces(fast, 0, 0, false, TANK, createTrackForces());
-    expect(forces.forward).toBeLessThan(-grip * 1.9);
+    expect(forces.forward).toBeLessThan(-kineticGrip * 1.95);
+    expect(forces.forward).toBeGreaterThan(-grip * 2);
+    expect(-forces.forward * 200).toBeGreaterThan(TANK.enginePower);
+    expect(forces.slideLeft).toBeCloseTo(200);
+    expect(forces.slip).toBeCloseTo(200);
+  });
+
+  it('tutunan palet statik, kayan palet kinetik katsayıyı görür', () => {
+    const rolling = body();
+    rolling.vx = 100;
+    const perSlip = (track: number): number =>
+      computeTrackForces(rolling, track, track, false, TANK, createTrackForces()).forward;
+    // Küçük kaymada kuvvet doğrusal; büyük kaymada tavan kinetiğe iner.
+    expect(perSlip(100 - 5)).toBeLessThan(0);
+    expect(-perSlip(-400)).toBeLessThan(2 * grip * 0.8);
+  });
+
+  it('kilitli palet yanal tutuşunu yitirir: kuvvet kayma yönüne izdüşer', () => {
+    const lateral = (track: number): number => {
+      const subject = body();
+      subject.vx = 200;
+      subject.vy = 20;
+      return computeTrackForces(subject, track, track, false, TANK, createTrackForces()).lateral;
+    };
+    const rolling = lateral(200);
+    const locked = lateral(0);
+    expect(rolling).toBeLessThan(0);
+    expect(locked).toBeLessThan(0);
+    expect(Math.abs(locked)).toBeLessThan(Math.abs(rolling) * 0.3);
   });
 
   it('yanal kaymaya karşı koyar; dönme direnci hızla azalır', () => {

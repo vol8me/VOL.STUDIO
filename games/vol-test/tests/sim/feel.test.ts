@@ -50,6 +50,72 @@ describe('hissiyat zarfı', () => {
     expect(distance).toBeLessThan(140);
   });
 
+  it('fren: azami hızdan 55–110 birimde düz kayarak durur, gaz bırakmaktan kısa', () => {
+    const stop = (brake: boolean): { distance: number; drift: number } => {
+      const space = world(20000);
+      const subject = tank({ x: 2000, y: 10000 });
+      timeUntil(
+        () => subject.speed >= TANK.maxSpeed * 0.99,
+        () => subject.step(command({ moveX: 1 }), space, DT),
+      );
+      const start = { x: subject.x, y: subject.y };
+      timeUntil(
+        () => subject.speed < 1,
+        () => subject.step(command({ brake }), space, DT),
+      );
+      return { distance: subject.x - start.x, drift: Math.abs(subject.y - start.y) };
+    };
+    const braked = stop(true);
+    const coasted = stop(false);
+    expect(braked.distance).toBeGreaterThan(55);
+    expect(braked.distance).toBeLessThan(110);
+    expect(braked.drift).toBeLessThan(1);
+    expect(braked.distance).toBeLessThan(coasted.distance * 0.8);
+  });
+
+  it('keskin dönüşte kayar (drift) ama savrulmaz ve hedefe oturur', () => {
+    const space = world(40000);
+    const subject = tank({ x: 2000, y: 20000 });
+    for (let step = 0; step < 180; step++) subject.step(command({ moveX: 1 }), space, DT);
+    let slipAngle = 0;
+    let spin = 0;
+    for (let step = 0; step < 150; step++) {
+      subject.step(command({ moveY: 1 }), space, DT);
+      if (subject.speed > 30) {
+        slipAngle = Math.max(
+          slipAngle,
+          Math.abs(Math.atan2(subject.lateralSpeed, subject.forwardSpeed)),
+        );
+      }
+      spin = Math.max(spin, Math.abs(subject.angularVelocity));
+    }
+    const degrees = (radians: number): number => (radians * 180) / Math.PI;
+    expect(degrees(slipAngle)).toBeGreaterThan(15);
+    expect(degrees(slipAngle)).toBeLessThan(50);
+    expect(spin).toBeLessThan(TANK.maxTurnRate * 1.2);
+    expect(Math.abs(angleDelta(subject.hull, Math.PI / 2))).toBeLessThan((5 * Math.PI) / 180);
+  });
+
+  it('dönüşte fren: kilitli paletler yanal tutuşu bırakır, gövde dönmeyi sürdürür', () => {
+    const space = world(40000);
+    const subject = tank({ x: 2000, y: 20000 });
+    for (let step = 0; step < 180; step++) subject.step(command({ moveX: 1 }), space, DT);
+    for (let step = 0; step < 15; step++) subject.step(command({ moveY: 1 }), space, DT);
+    const hull = subject.hull;
+    let lateral = 0;
+    const seconds = timeUntil(
+      () => subject.speed < 1,
+      () => {
+        subject.step(command({ moveY: 1, brake: true }), space, DT);
+        lateral = Math.max(lateral, Math.abs(subject.lateralSpeed));
+      },
+    );
+    expect(lateral).toBeGreaterThan(25);
+    expect(subject.hull - hull).toBeGreaterThan((5 * Math.PI) / 180);
+    expect(subject.hull - hull).toBeLessThan((45 * Math.PI) / 180);
+    expect(seconds).toBeLessThan(1.5);
+  });
+
   it('dururken 90° dönüş 0.5–1.2 s, aşma 5° altında', () => {
     const space = world();
     const subject = tank();

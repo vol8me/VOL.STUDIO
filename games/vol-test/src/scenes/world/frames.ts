@@ -38,6 +38,7 @@ export function hudFrame(
     hull: frame.hull,
     speed: tank.speed,
     reversing: tank.reversing,
+    braking: tank.braking,
     boosting: tank.boosting,
     boost: tank.boost,
     boostCapacity,

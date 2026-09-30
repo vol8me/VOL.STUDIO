@@ -1,4 +1,4 @@
-import { approach } from '@volstudio/core/math/interpolation';
+import { approach, clamp } from '@volstudio/core/math/interpolation';
 import {
   createContact,
   resolveWallContacts,
@@ -44,7 +44,10 @@ export class Tank extends RigidBody {
   /** Paletlerin yerde katettiği yol; patinajda yüzey yolundan ayrışır (iz bununla bırakılır). */
   groundLeft = 0;
   groundRight = 0;
-  /** Palet yüzeyi ile zemin arasındaki en büyük hız farkı (birim/s): patinaj. */
+  /** Palet yüzeyinin zemine göre kayma hızı (birim/s); izler ve toz bununla seçilir. */
+  slideLeft = 0;
+  slideRight = 0;
+  /** İki paletin en büyük kayma hızı: patinaj, kilitli kayma ya da yanal kayma. */
   slip = 0;
   /** Bu adımdaki en sert DUVAR teması; `speed` 0 ise temas yok. */
   readonly contact: Contact = createContact();
@@ -55,7 +58,7 @@ export class Tank extends RigidBody {
   private readonly reserve: BoostReserve;
   /** Ayak izi ve temas malzemesi (duvar ve araç teması aynı şekli kullanır). */
   readonly shape: ContactShape;
-  private readonly targets: TrackTargets = { left: 0, right: 0, forward: false };
+  private readonly targets: TrackTargets = { left: 0, right: 0, forward: false, braking: false };
   private readonly forces = createTrackForces();
   private readonly substepContact: Contact = createContact();
 
@@ -102,6 +105,11 @@ export class Tank extends RigidBody {
 
   get reversing(): boolean {
     return this.driver.reversing;
+  }
+
+  /** Fren basılı: paletler kilitli. */
+  get braking(): boolean {
+    return this.targets.braking;
   }
 
   /** Nokta tankın ayak izinin içinde mi (mermi isabeti). */
@@ -175,9 +183,7 @@ export class Tank extends RigidBody {
   }
 
   private integrateTracks(dt: number): void {
-    const accel = this.config.trackAcceleration * dt;
-    this.trackLeft = approach(this.trackLeft, this.targets.left, accel);
-    this.trackRight = approach(this.trackRight, this.targets.right, accel);
+    this.driveTracks(dt);
 
     const forces = computeTrackForces(
       this,
@@ -196,6 +202,8 @@ export class Tank extends RigidBody {
       dt,
     );
 
+    this.slideLeft = forces.slideLeft;
+    this.slideRight = forces.slideRight;
     this.slip = forces.slip;
     this.treadLeft += this.trackLeft * dt;
     this.treadRight += this.trackRight * dt;
@@ -207,6 +215,42 @@ export class Tank extends RigidBody {
       Math.abs(this.forwardSpeed),
       (this.treadLeft + this.treadRight) / 2,
       dt,
+    );
+  }
+
+  /**
+   * Palet yüzey hızlarını hedefe sürer. Fren paletleri kilitler. Sürüşte ortak
+   * hız ve direksiyon farkı ayrı ivmelenir: gaz bırakılınca ortak hız motor
+   * freniyle azalır, direksiyon farkı çevik kalır. Aktarma paleti zeminden
+   * `driveSlip`ten çok ayıramaz (tork sınırlı).
+   */
+  private driveTracks(dt: number): void {
+    const config = this.config;
+    const targets = this.targets;
+    if (targets.braking) {
+      const lock = config.brakeAcceleration * dt;
+      this.trackLeft = approach(this.trackLeft, 0, lock);
+      this.trackRight = approach(this.trackRight, 0, lock);
+      return;
+    }
+    const accel = config.trackAcceleration * dt;
+    const common = (this.trackLeft + this.trackRight) / 2;
+    const spin = (this.trackLeft - this.trackRight) / 2;
+    const targetCommon = (targets.left + targets.right) / 2;
+    const coasting = targetCommon * common >= 0 && Math.abs(targetCommon) < Math.abs(common);
+    const nextCommon = approach(common, targetCommon, coasting ? config.engineBraking * dt : accel);
+    const nextSpin = approach(spin, (targets.left - targets.right) / 2, accel);
+    const forward = this.forwardSpeed;
+    const turning = this.angularVelocity * config.trackOffset;
+    this.trackLeft = clamp(
+      nextCommon + nextSpin,
+      forward + turning - config.driveSlip,
+      forward + turning + config.driveSlip,
+    );
+    this.trackRight = clamp(
+      nextCommon - nextSpin,
+      forward - turning - config.driveSlip,
+      forward - turning + config.driveSlip,
     );
   }
 

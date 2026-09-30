@@ -11,6 +11,8 @@ export interface TrackTargets {
   right: number;
   /** İleri sürüş istendi mi (hızlanma yalnız ileride geçerlidir). */
   forward: boolean;
+  /** Fren: paletler kilitlenir, sürüş ve direksiyon devre dışıdır. */
+  braking: boolean;
 }
 
 /**
@@ -33,6 +35,13 @@ export class Driver {
     out: TrackTargets,
   ): TrackTargets {
     const config = this.config;
+    out.braking = command.brake;
+    if (command.brake) {
+      out.left = 0;
+      out.right = 0;
+      out.forward = false;
+      return out;
+    }
     const magnitude = Math.min(1, Math.hypot(command.moveX, command.moveY));
     let speed = 0;
     let turnRate = 0;

@@ -69,6 +69,8 @@ describe('Hud', () => {
     expect(find('telemetry').textContent).toBe('2.0 m/s · 090° · İleri');
     hud.update(hudFrame({ speed: 128, reversing: true }), 1200);
     expect(find('telemetry').textContent).toBe('4.0 m/s · 090° · Geri');
+    hud.update(hudFrame({ speed: 128, reversing: true, braking: true }), 1400);
+    expect(find('telemetry').textContent).toBe('4.0 m/s · 090° · Fren');
     hud.destroy();
   });
 
@@ -107,6 +109,11 @@ describe('Hud', () => {
     expect(read(source).boost).toBe(true);
     boost.dispatchEvent(pointer('pointerup'));
     expect(read(source).boost).toBe(false);
+    const brake = find('touch-brake');
+    brake.dispatchEvent(pointer('pointerdown'));
+    expect(read(source).brake).toBe(true);
+    brake.dispatchEvent(pointer('pointerup'));
+    expect(read(source).brake).toBe(false);
     find<HTMLButtonElement>('touch-zoomIn').click();
     expect(read(source).zoomIn).toBe(true);
     expect(read(source).zoomIn).toBe(false);
@@ -159,6 +166,7 @@ describe('Hud', () => {
     hud.update(hudFrame(), 0);
     expect(find('telemetry').textContent).toContain('Forward');
     expect(find('touch-boost').getAttribute('aria-label')).toBe('Boost');
+    expect(find('touch-brake').getAttribute('aria-label')).toBe('Brake');
     await i18next.changeLanguage('tr');
     hud.destroy();
     expect(parent.querySelector('[data-testid="hud"]')).toBeNull();

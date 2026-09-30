@@ -1,6 +1,8 @@
 import type Phaser from 'phaser';
 import type { Projectiles } from '@/sim/combat/Projectiles';
+import { FX } from '@/config/fx';
 import { ParticleFx } from './effects/ParticleFx';
+import { SkidMarks } from './effects/SkidMarks';
 import { TracerLayer } from './effects/TracerLayer';
 import { TreadMarks } from './effects/TreadMarks';
 import { VehicleTrail } from './effects/VehicleTrail';
@@ -15,23 +17,28 @@ export interface VehicleFxFrame {
   readonly slipping: boolean;
   readonly groundLeft: number;
   readonly groundRight: number;
+  /** Paletlerin zemine göre kayma hızı (birim/s): kayma izi bununla çizilir. */
+  readonly slideLeft: number;
+  readonly slideRight: number;
   readonly trackOffset: number;
 }
 
 /**
  * Sunum efektlerinin tek girişi: mermi izleri, paylaşılan parçacıklar, palet
- * izleri ve araç başına egzoz/toz. Her katman kendi dosyasındadır; hiçbiri
+ * ve kayma izleri, araç başına egzoz/toz. Her katman kendi dosyasındadır; hiçbiri
  * simülasyona geri yazmaz.
  */
 export class EffectsView {
   private readonly tracers: TracerLayer;
   private readonly particles: ParticleFx;
   private readonly marks: TreadMarks;
+  private readonly skids: SkidMarks;
   private readonly trails = new Map<number, VehicleTrail>();
 
   constructor(private readonly scene: Phaser.Scene) {
     this.tracers = new TracerLayer(scene);
     this.particles = new ParticleFx(scene);
+    this.skids = new SkidMarks(scene);
     this.marks = new TreadMarks(scene);
   }
 
@@ -63,6 +70,17 @@ export class EffectsView {
       frame.groundLeft,
       frame.groundRight,
       frame.trackOffset,
+      frame.slideLeft >= FX.skid.minSlide,
+      frame.slideRight >= FX.skid.minSlide,
+    );
+    this.skids.track(
+      id,
+      frame.x,
+      frame.y,
+      frame.hull,
+      frame.slideLeft,
+      frame.slideRight,
+      frame.trackOffset,
     );
   }
 
@@ -71,17 +89,20 @@ export class EffectsView {
     this.trails.get(id)?.destroy();
     this.trails.delete(id);
     this.marks.forget(id);
+    this.skids.forget(id);
   }
 
   update(projectiles: Projectiles, alpha: number, deltaMs: number): void {
     this.tracers.draw(projectiles, alpha);
     this.marks.fade(deltaMs);
+    this.skids.fade(deltaMs);
   }
 
   destroy(): void {
     this.tracers.destroy();
     this.particles.destroy();
     this.marks.destroy();
+    this.skids.destroy();
     for (const trail of this.trails.values()) trail.destroy();
     this.trails.clear();
   }

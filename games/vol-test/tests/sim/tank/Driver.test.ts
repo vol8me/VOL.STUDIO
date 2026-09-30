@@ -3,12 +3,12 @@ import { TANK } from '@/config/tank';
 import { Driver, type TrackTargets } from '@/sim/tank/Driver';
 import { command } from '../../support/sim';
 
-const out = (): TrackTargets => ({ left: 0, right: 0, forward: false });
+const out = (): TrackTargets => ({ left: 0, right: 0, forward: false, braking: false });
 
 describe('Driver', () => {
   it('girdi yokken paletleri durdurur', () => {
     const targets = new Driver(TANK).plan(command(), 0, 0, 0, false, out());
-    expect(targets).toEqual({ left: 0, right: 0, forward: false });
+    expect(targets).toEqual({ left: 0, right: 0, forward: false, braking: false });
   });
 
   it('hizalı ileri komutta iki palet azami hızı ister', () => {

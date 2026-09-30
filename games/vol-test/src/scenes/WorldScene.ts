@@ -140,6 +140,8 @@ export class WorldScene extends Phaser.Scene {
         slipping: !paused && tank.slip > FEEL.slipSpeed,
         groundLeft: tank.groundLeft,
         groundRight: tank.groundRight,
+        slideLeft: tank.slideLeft,
+        slideRight: tank.slideRight,
         trackOffset: TANK.trackOffset,
       });
     }

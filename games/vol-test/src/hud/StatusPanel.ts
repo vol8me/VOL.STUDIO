@@ -38,7 +38,13 @@ export class StatusPanel {
     const text = i18next.t('voltest:hud.telemetry', {
       speed: formatSpeed(frame.speed, this.metre),
       heading: formatHeading(frame.hull),
-      gear: i18next.t(frame.reversing ? 'voltest:hud.reverse' : 'voltest:hud.forward'),
+      gear: i18next.t(
+        frame.braking
+          ? 'voltest:hud.brake'
+          : frame.reversing
+          ? 'voltest:hud.reverse'
+          : 'voltest:hud.forward',
+      ),
     });
     if (text === this.lastTelemetry) return;
     this.lastTelemetry = text;

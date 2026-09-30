@@ -7,6 +7,7 @@ export function hudFrame(overrides: Partial<HudFrame> = {}): HudFrame {
     hull: 0,
     speed: 0,
     reversing: false,
+    braking: false,
     boosting: false,
     boost: 100,
     boostCapacity: 100,

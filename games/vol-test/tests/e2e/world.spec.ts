@@ -55,6 +55,18 @@ test('klavyeyle sürülen tank dünyada ilerler', async ({ page }) => {
   await page.keyboard.up('d');
 });
 
+test('Space fren: paletler kilitlenir, tank gaz basılıyken bile durur', async ({ page }) => {
+  await open(page);
+  await page.locator('#game > canvas').hover();
+  await page.keyboard.down('d');
+  await expect(page.getByTestId('telemetry')).not.toContainText('0.0 m/s', { timeout: 6000 });
+  await page.keyboard.down('Space');
+  await expect(page.getByTestId('telemetry')).toContainText('Fren');
+  await expect(page.getByTestId('telemetry')).toContainText('0.0 m/s', { timeout: 4000 });
+  await page.keyboard.up('Space');
+  await page.keyboard.up('d');
+});
+
 test('Escape duraklatır, devam düğmesi sürdürür', async ({ page }) => {
   await open(page);
   await tap(page, 'Escape');

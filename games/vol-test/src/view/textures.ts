@@ -23,6 +23,7 @@ export const TEXTURE = {
   flash: 'tank-flash',
   spark: 'fx-spark',
   mark: 'fx-mark',
+  skid: 'fx-skid',
   treadBase: 'tank-tread-base',
 } as const;
 
@@ -73,6 +74,15 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
   canvasTexture(scene, TEXTURE.treadBase, 8, 8, (g) => {
     g.fillStyle = '#0e1115';
     g.fillRect(0, 0, 8, 8);
+  });
+  // Kayma çizgisi boyuna gerilir: satırlar boyunca sabit, enine yumuşak kenarlı
+  // ve damarlı (palet pabuçlarının kumda sürüklenen izleri).
+  canvasTexture(scene, TEXTURE.skid, 16, 8, (g) => {
+    const rows = [0.3, 0.7, 0.85, 1, 0.8, 1, 0.7, 0.3];
+    rows.forEach((alpha, row) => {
+      g.fillStyle = `rgba(255,255,255,${alpha})`;
+      g.fillRect(0, row, 16, 1);
+    });
   });
   canvasTexture(scene, TEXTURE.mark, 4, 8, (g) => {
     g.fillStyle = '#ffffff';
