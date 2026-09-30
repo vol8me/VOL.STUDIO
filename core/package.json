@@ -63,6 +63,10 @@
       "import": "./src/audio/music/index.ts",
       "types": "./src/audio/music/index.ts"
     },
+    "./audio/sfx": {
+      "import": "./src/audio/sfx/index.ts",
+      "types": "./src/audio/sfx/index.ts"
+    },
     "./random": {
       "import": "./src/random/index.ts",
       "types": "./src/random/index.ts"

@@ -25,10 +25,21 @@ class FakeSource extends FakeNode {
   readonly stop = vi.fn();
 }
 
+class FakePanner extends FakeNode {
+  readonly pan = new FakeParam();
+}
+
 class FakeContext {
   currentTime = 0;
   readonly sources: FakeSource[] = [];
   readonly gains: FakeGain[] = [];
+  readonly panners: FakePanner[] = [];
+
+  createStereoPanner(): StereoPannerNode {
+    const panner = new FakePanner();
+    this.panners.push(panner);
+    return panner as unknown as StereoPannerNode;
+  }
 
   createGain(): GainNode {
     const gain = new FakeGain();
@@ -188,5 +199,20 @@ describe('SoundBank', () => {
     expect(() => bank.play('impact')).toThrow(startError);
     expect(context.sources[0]?.disconnect).toHaveBeenCalledTimes(1);
     expect(context.gains[1]?.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('pan verilirse ses stereo konumlanır; merkezde panner kurulmaz, söküm onu da bırakır', async () => {
+    const bank = makeBank();
+    bank.register('shot', ['/shot.ogg']);
+    await bank.loadAll();
+    bank.play('shot');
+    expect(context.panners).toHaveLength(0);
+    bank.play('shot', { pan: -3 });
+    const [panner] = context.panners;
+    expect(panner?.pan.value).toBe(-1);
+    const voiceGain = context.gains.at(-1)!;
+    expect(voiceGain.connect).toHaveBeenCalledWith(panner);
+    bank.stopAll();
+    expect(panner?.disconnect).toHaveBeenCalled();
   });
 });

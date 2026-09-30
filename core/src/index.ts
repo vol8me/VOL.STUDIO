@@ -354,5 +354,15 @@ export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';
  * Tek-atış ses bankası. Müzik motoru katmanlı ve zamanlanmış akış içindir;
  * bu ise varyantlı, bütçeli, anlık tetiklemelerdir.
  */
-export { SoundBank, type SoundBankOptions, type PlayOptions } from './audio/sfx';
+export {
+  SoundBank,
+  type SoundBankOptions,
+  type PlayOptions,
+  SoundFamilyBank,
+  type SoundFamilyQuery,
+  type SoundFamilyVariant,
+  LoopBlend,
+  type LoopBlendLayer,
+  type LoopBlendOptions,
+} from './audio/sfx';
 export * from './diagnostics';

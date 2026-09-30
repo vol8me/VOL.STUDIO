@@ -24,12 +24,18 @@ export interface PlayOptions {
    * ±%6 arasında rastgele bir hızda çalar.
    */
   rateJitter?: number;
+  /**
+   * Stereo konum [-1 sol, 1 sağ]. Konumsal ses için tüketici dinleyiciye
+   * göre hesaplar; tarayıcı `StereoPannerNode` taşımıyorsa yok sayılır.
+   */
+  pan?: number;
 }
 
 interface Voice {
   readonly id: string;
   readonly source: AudioBufferSourceNode;
   readonly gain: GainNode;
+  readonly panner: StereoPannerNode | null;
 }
 
 const DEFAULTS = {
@@ -156,9 +162,20 @@ export class SoundBank {
     const gain = this.context.createGain();
     gain.gain.value = clamp01(finiteOr(options.gain ?? 1, 1));
     source.connect(gain);
-    gain.connect(this.busGain);
+    const pan = clamp(finiteOr(options.pan ?? 0, 0), -1, 1);
+    const panner =
+      pan !== 0 && typeof this.context.createStereoPanner === 'function'
+        ? this.context.createStereoPanner()
+        : null;
+    if (panner) {
+      panner.pan.value = pan;
+      gain.connect(panner);
+      panner.connect(this.busGain);
+    } else {
+      gain.connect(this.busGain);
+    }
 
-    const voice: Voice = { id, source, gain };
+    const voice: Voice = { id, source, gain, panner };
     this.voices.add(voice);
     source.onended = () => this.retire(voice);
     try {
@@ -232,5 +249,6 @@ export class SoundBank {
     }
     voice.source.disconnect();
     voice.gain.disconnect();
+    voice.panner?.disconnect();
   }
 }
