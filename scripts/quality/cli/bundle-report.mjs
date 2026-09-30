@@ -10,9 +10,9 @@
  * Frozen paketler rutin build/bundle kapılarından hariç tutulur; dist
  * varsa ölçülüp raporlanır ancak eksik dist rutin kapıyı düşürmez.
  */
-import { loadQualityConfig } from './quality/config.mjs';
-import { validateBundleSizes, measureBundle } from './quality/bundleSize.mjs';
-import { loadWorkspaceLifecycle, activeWorkspacePaths } from './quality/workspaceLifecycle.mjs';
+import { loadQualityConfig } from '../config.mjs';
+import { validateBundleSizes, measureBundle } from '../bundleSize.mjs';
+import { loadWorkspaceLifecycle, activeWorkspacePaths } from '../workspaceLifecycle.mjs';
 import { join } from 'node:path';
 
 const root = process.cwd();

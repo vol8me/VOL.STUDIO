@@ -213,7 +213,7 @@ function cmdDeploy(root, workspace, host, { compat } = {}) {
   const shell = readShell(root, workspace);
   if (!existsSync(shell.appDir)) {
     throw new Error(
-      `${shell.appDir} yok — önce derleyin: node scripts/build-linux-steamrt4.mjs ${workspace}`,
+      `${shell.appDir} yok — önce derleyin: node scripts/linux/build-steamrt4.mjs ${workspace}`,
     );
   }
 

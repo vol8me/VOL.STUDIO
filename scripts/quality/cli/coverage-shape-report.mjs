@@ -6,9 +6,9 @@
  * koşuda yazılmış `coverage/lcov.info` dosyalarını değerlendirir.
  */
 import { join } from 'node:path';
-import { loadQualityConfig } from './quality/config.mjs';
-import { readStamp } from './quality/coverageRun.mjs';
-import { validateCoverageShape } from './quality/coverageShape.mjs';
+import { loadQualityConfig } from '../config.mjs';
+import { readStamp } from '../coverageRun.mjs';
+import { validateCoverageShape } from '../coverageShape.mjs';
 
 const root = process.cwd();
 const run = process.argv[2] ?? 'coverage';

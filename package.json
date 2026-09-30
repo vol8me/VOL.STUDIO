@@ -23,10 +23,10 @@
     "test:coverage": "node scripts/quality/runActive.mjs test:coverage --if-present",
     "build:all": "node scripts/quality/runActive.mjs build --if-present",
     "benchmark:core": "pnpm --filter @volstudio/core benchmark",
-    "build:linux-appimage": "node scripts/build-linux-appimage.mjs",
-    "contract": "node scripts/workspace-contract.mjs",
-    "benchmark:device": "node scripts/device-benchmark.mjs",
-    "build:linux-steamrt4": "node scripts/build-linux-steamrt4.mjs",
+    "build:linux-appimage": "node scripts/linux/build-appimage.mjs",
+    "contract": "node scripts/quality/cli/workspace-contract.mjs",
+    "benchmark:device": "node scripts/android/device-benchmark.mjs",
+    "build:linux-steamrt4": "node scripts/linux/build-steamrt4.mjs",
     "deck": "node scripts/deck.mjs"
   },
   "devDependencies": {

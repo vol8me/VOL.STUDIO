@@ -7,8 +7,8 @@
  * Frozen paketler rutin ölçekleme kapısından hariç tutulur.
  */
 import { readFileSync } from 'node:fs';
-import { validateScaling } from './quality/scalingBudget.mjs';
-import { loadWorkspaceLifecycle, activeWorkspacePaths } from './quality/workspaceLifecycle.mjs';
+import { validateScaling } from '../scalingBudget.mjs';
+import { loadWorkspaceLifecycle, activeWorkspacePaths } from '../workspaceLifecycle.mjs';
 
 const root = process.cwd();
 const quality = JSON.parse(readFileSync(`${root}/quality.json`, 'utf8'));

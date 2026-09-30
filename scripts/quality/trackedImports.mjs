@@ -28,7 +28,7 @@ function generatedProbeImport(root, available, file, specifier, path) {
     return false;
   const source = resolve(root, 'core/src/time/frameSummary.ts');
   const generator = resolve(root, 'scripts/probe-metrics.mjs');
-  const builder = resolve(root, 'scripts/build-linux-steamrt4.mjs');
+  const builder = resolve(root, 'scripts/linux/build-steamrt4.mjs');
   if (![source, generator, builder].every((entry) => available.has(entry))) return false;
   try {
     const generatedBy = readFileSync(generator, 'utf8');
@@ -42,7 +42,7 @@ function generatedProbeImport(root, available, file, specifier, path) {
       /writeFileSync\s*\(\s*join\s*\(\s*directory\s*,\s*['"]frame-summary\.js['"]\s*\)\s*,\s*result\.outputText/.test(
         generatedBy,
       ) &&
-      sourceImports(builtBy, builder).includes('./probe-metrics.mjs') &&
+      sourceImports(builtBy, builder).includes('../probe-metrics.mjs') &&
       /\bsyncProbeMetrics\s*\(\s*ROOT\s*,\s*join\s*\(\s*ROOT\s*,\s*workspace\s*,\s*['"]web['"]\s*\)\s*\)/.test(
         builtBy,
       )

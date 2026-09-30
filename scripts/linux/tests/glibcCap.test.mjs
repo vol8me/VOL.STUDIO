@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { checkGlibcCap, compareVersions, elfGlibcNeeds, isElf } from '../../glibc-cap.mjs';
+import { checkGlibcCap, compareVersions, elfGlibcNeeds, isElf } from '../glibc-cap.mjs';
 
 const VERNEED_SAMPLE = `
 Version needs section '.gnu.version_r' contains 2 entries:

@@ -41,16 +41,16 @@ coverage:
 
 coverage-audio:
     node scripts/quality/coverageRun.mjs coverage-audio
-    node scripts/coverage-shape-report.mjs coverage-audio
+    node scripts/quality/cli/coverage-shape-report.mjs coverage-audio
 
 # `coverage`den sonra; yalnız o koşunun lcov'unu okur.
 coverage-shape:
-    node scripts/coverage-shape-report.mjs coverage
+    node scripts/quality/cli/coverage-shape-report.mjs coverage
 
 # Bekçilerin kendi testleri ve workspace sözleşmesi. Testler geçici depolarda
 # git koşar; hook'un GIT_* ortamı onları gerçek depoya yönlendirmesin diye silinir.
 contract:
-    env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_PREFIX node --test scripts/quality/tests/*.test.mjs
+    env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_PREFIX node --test scripts/quality/tests/*.test.mjs scripts/linux/tests/*.test.mjs scripts/android/tests/*.test.mjs
     pnpm run contract
 
 build:
@@ -58,11 +58,11 @@ build:
 
 # `build`den sonra; diskteki `dist`in gzip baytını ölçer.
 bundle:
-    node scripts/bundle-report.mjs
+    node scripts/quality/cli/bundle-report.mjs
 
 # Girdi dört katına çıkınca sürenin kaç katına çıktığı; süre değil karmaşıklık.
 scaling:
-    node scripts/scaling-report.mjs
+    node scripts/quality/cli/scaling-report.mjs
 
 # `build`den sonra; Chromium ve WebKit.
 e2e:

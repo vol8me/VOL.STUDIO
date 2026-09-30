@@ -1,7 +1,7 @@
 /**
  * `quality.json`un TEK okuyucusu ve doğrulayıcısı.
  *
- * Dosyayı hem `scripts/workspace-contract.mjs` hem paket `vitest.config.ts`
+ * Dosyayı hem `scripts/quality/cli/workspace-contract.mjs` hem paket `vitest.config.ts`
  * tüketiyor. Doğrulama olmadan bir yazım hatası (`floor` → `flor`) bekçiyi
  * teşhis edilemez bir çökmeye sürüklüyordu:
  *

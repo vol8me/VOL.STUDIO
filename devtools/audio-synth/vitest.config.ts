@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 
 /**
  * Kapsam eşikleri kök `quality.json`dan okunur — kapı sözleşmesinin tek
- * doğruluk kaynağı (bkz. scripts/workspace-contract.mjs).
+ * doğruluk kaynağı (bkz. scripts/quality/cli/workspace-contract.mjs).
  */
 const quality = loadQualityConfig(new URL('../../quality.json', import.meta.url)) as {
   packages: Record<string, Record<string, number>>;

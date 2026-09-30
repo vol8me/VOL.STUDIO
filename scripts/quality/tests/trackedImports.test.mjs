@@ -87,15 +87,15 @@ test('sonda generated importu yalnız kaynak, generator ve build çağrısı tam
     }
   `;
   const build = `
-    import { syncProbeMetrics } from './probe-metrics.mjs';
+    import { syncProbeMetrics } from '../probe-metrics.mjs';
     syncProbeMetrics(ROOT, join(ROOT, workspace, 'web'));
   `;
   write('scripts/probe-metrics.mjs', generator);
-  write('scripts/build-linux-steamrt4.mjs', build);
+  write('scripts/linux/build-steamrt4.mjs', build);
   assert.deepEqual(validateTrackedImports(root), []);
-  write('scripts/build-linux-steamrt4.mjs', build.replace('syncProbeMetrics(ROOT', 'missing(ROOT'));
+  write('scripts/linux/build-steamrt4.mjs', build.replace('syncProbeMetrics(ROOT', 'missing(ROOT'));
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
-  write('scripts/build-linux-steamrt4.mjs', build);
+  write('scripts/linux/build-steamrt4.mjs', build);
   write('scripts/probe-metrics.mjs', generator.replace('ts.transpileModule', 'ts.unrelated'));
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
   write('scripts/probe-metrics.mjs', generator);

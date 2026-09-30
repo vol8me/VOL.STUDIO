@@ -7,7 +7,7 @@
  * ikilisi, AppDir ve AppImage kap içinde üretilir; ön yüzün host'ta derlenmiş
  * olması yeterlidir (JS glibc'den bağımsızdır).
  *
- *   node scripts/build-linux-steamrt4.mjs <workspace>
+ *   node scripts/linux/build-steamrt4.mjs <workspace>
  *
  * Kapanış şartları (TODO D1): paketteki hiçbir ELF GLIBC_2.41 üstü sürüm
  * istemez; bekçi çıktı AppDir'i üzerinde koşar ve ihlalde derleme düşer.
@@ -17,11 +17,11 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, copyFileSync } from '
 import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { checkGlibcCap } from './glibc-cap.mjs';
-import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
-import { appImageAppDir, steamrt4TargetDir } from './linux/targets.mjs';
-import { syncProbeMetrics } from './probe-metrics.mjs';
+import { loadRepoLifecycle } from '../quality/workspaceLifecycle.mjs';
+import { appImageAppDir, steamrt4TargetDir } from './targets.mjs';
+import { syncProbeMetrics } from '../probe-metrics.mjs';
 
-const ROOT = resolve(import.meta.dirname, '..');
+const ROOT = resolve(import.meta.dirname, '../..');
 
 /** Deck'te ölçülen çalışma zamanı sürümü — tek doğruluk kaynağı. */
 export const STEAMRT4_SDK_IMAGE =
@@ -32,7 +32,7 @@ export const GLIBC_CAP = '2.41';
 
 const workspace = process.argv[2];
 if (!workspace) {
-  console.error('Kullanım: node scripts/build-linux-steamrt4.mjs <workspace-yolu>');
+  console.error('Kullanım: node scripts/linux/build-steamrt4.mjs <workspace-yolu>');
   process.exit(2);
 }
 
@@ -168,7 +168,7 @@ if (!imageExists(BUILD_IMAGE_TAG)) {
   console.log(`[steamrt4] derleme imajı kuruluyor: ${BUILD_IMAGE_TAG}`);
   execFileSync(
     'podman',
-    ['build', '-t', BUILD_IMAGE_TAG, '-f', join(ROOT, 'scripts', 'steamrt4.Containerfile'), ROOT],
+    ['build', '-t', BUILD_IMAGE_TAG, '-f', join(ROOT, 'scripts', 'linux', 'steamrt4.Containerfile'), ROOT],
     { stdio: 'inherit' },
   );
 }
@@ -197,7 +197,7 @@ execFileSync(
     ...(frontendPrebuilt ? ['-e', 'VOL_FRONTEND_PREBUILT=1'] : []),
     BUILD_IMAGE_TAG,
     'bash',
-    'scripts/steamrt4-build.sh',
+    'scripts/linux/steamrt4-build.sh',
     workspace,
   ],
   { stdio: 'inherit' },

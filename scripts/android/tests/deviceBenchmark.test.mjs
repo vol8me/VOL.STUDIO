@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseDeviceBenchmarkArgs, selectDevice } from '../../device-benchmark-contract.mjs';
+import { parseDeviceBenchmarkArgs, selectDevice } from '../device-benchmark-contract.mjs';
 
 test('device benchmark CLI seriali ANDROID_SERIAL üzerine yazar', () => {
   assert.deepEqual(parseDeviceBenchmarkArgs(['--serial', 'second', '60'], 'first'), {

@@ -5,17 +5,17 @@ da testlerin sessizce hiç koşmamasına yol açar.
 
 ## Zorunlu
 
-| Ne                                                             | Kapı                                                                  |
-| -------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `workspace-lifecycle.json` → `active` kaydı                    | `scripts/quality/workspaceLifecycle.mjs`                              |
-| `package.json` → `typecheck`, `test`, `test:coverage`          | `scripts/workspace-contract.mjs` (`REQUIRED_SCRIPTS`)                 |
-| `vitest.config.ts`                                             | `test:coverage` varsa `scripts/workspace-contract.mjs` onu da ister   |
-| `quality.json` → paket adı altında kapsam eşikleri             | `scripts/quality/config.mjs`; eşik `floor`un altına inemez            |
-| `quality.json` → `bundles` ve `scaling` girdileri              | `scripts/quality/bundleSize.mjs`, `scripts/quality/scalingBudget.mjs` |
-| `tsconfig.json`, `vite.config.ts`, `index.html`                | `build` ve `typecheck`                                                |
-| `vite.config.ts` + `vitest.config.ts` → `coreAliases()`        | `scripts/vite/coreAliases.mjs`; CORE alt yolları elle yazılmaz        |
-| `<oyun>/src/i18n/tr.json` + `en.json` ve bir `keyParity` testi | [core/docs/i18n.md](../core/docs/i18n.md)                             |
-| `<oyun>/src-tauri/` varsa kendi ikonu ve çakışmayan dev portu  | `scripts/quality/productIcons.mjs`, `scripts/quality/devPorts.mjs`    |
+| Ne                                                             | Kapı                                                                            |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `workspace-lifecycle.json` → `active` kaydı                    | `scripts/quality/workspaceLifecycle.mjs`                                        |
+| `package.json` → `typecheck`, `test`, `test:coverage`          | `scripts/quality/cli/workspace-contract.mjs` (`REQUIRED_SCRIPTS`)               |
+| `vitest.config.ts`                                             | `test:coverage` varsa `scripts/quality/cli/workspace-contract.mjs` onu da ister |
+| `quality.json` → paket adı altında kapsam eşikleri             | `scripts/quality/config.mjs`; eşik `floor`un altına inemez                      |
+| `quality.json` → `bundles` ve `scaling` girdileri              | `scripts/quality/bundleSize.mjs`, `scripts/quality/scalingBudget.mjs`           |
+| `tsconfig.json`, `vite.config.ts`, `index.html`                | `build` ve `typecheck`                                                          |
+| `vite.config.ts` + `vitest.config.ts` → `coreAliases()`        | `scripts/vite/coreAliases.mjs`; CORE alt yolları elle yazılmaz                  |
+| `<oyun>/src/i18n/tr.json` + `en.json` ve bir `keyParity` testi | [core/docs/i18n.md](../core/docs/i18n.md)                                       |
+| `<oyun>/src-tauri/` varsa kendi ikonu ve çakışmayan dev portu  | `scripts/quality/productIcons.mjs`, `scripts/quality/devPorts.mjs`              |
 
 `bundles` ve `scaling` girdisi yazılmazsa ölçüm yapılmaz; `scaling.<paket>.$measure`
 benchmark betiğini, argümanlarını ve rapordaki seri adlarını taşır. Aynı paketin

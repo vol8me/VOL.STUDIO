@@ -17,15 +17,15 @@ import {
   extractGStreamerPluginFilename,
   OPTIONAL_GSTREAMER_ELEMENTS,
   REQUIRED_GSTREAMER_ELEMENTS,
-} from './linux-appimage-media.mjs';
-import { loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
-import { cargoTargetDir } from './linux/targets.mjs';
+} from './appimage-media.mjs';
+import { loadRepoLifecycle } from '../quality/workspaceLifecycle.mjs';
+import { cargoTargetDir } from './targets.mjs';
 
-const root = resolve(import.meta.dirname, '..');
+const root = resolve(import.meta.dirname, '../..');
 
 /**
- * Kullanım: node scripts/build-linux-appimage.mjs <workspace-yolu>
- * Örn:      node scripts/build-linux-appimage.mjs devtools/deck-probe
+ * Kullanım: node scripts/linux/build-appimage.mjs <workspace-yolu>
+ * Örn:      node scripts/linux/build-appimage.mjs devtools/deck-probe
  *
  * Manuel teslim aracıdır, kapı değildir: Tauri'nin AppDir'ini alıp WebKit
  * medya çalışma zamanını bağlayıp yeniden paketler. Hedef workspace
@@ -34,7 +34,7 @@ const root = resolve(import.meta.dirname, '..');
  */
 const workspace = process.argv[2];
 if (!workspace) {
-  console.error('Kullanım: node scripts/build-linux-appimage.mjs <workspace-yolu>');
+  console.error('Kullanım: node scripts/linux/build-appimage.mjs <workspace-yolu>');
   process.exit(2);
 }
 

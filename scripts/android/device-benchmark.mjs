@@ -10,15 +10,15 @@
  * koşulu geliştiricinin masasındaki donanım olamaz. Çıktısı bir REFERANStır —
  * bir sonraki ölçüm bununla kıyaslanır.
  *
- *   node scripts/device-benchmark.mjs [--serial SERIAL] [saniye]
+ *   node scripts/android/device-benchmark.mjs [--serial SERIAL] [saniye]
  */
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { parseDeviceBenchmarkArgs, selectDevice } from './device-benchmark-contract.mjs';
-import { deviceBenchmarkCandidates } from './quality/deviceApps.mjs';
-import { loadWorkspaceLifecycle } from './quality/workspaceLifecycle.mjs';
+import { deviceBenchmarkCandidates } from '../quality/deviceApps.mjs';
+import { loadWorkspaceLifecycle } from '../quality/workspaceLifecycle.mjs';
 
-const ROOT = resolve(import.meta.dirname, '..');
+const ROOT = resolve(import.meta.dirname, '../..');
 const ADB = process.env.ADB ?? 'adb';
 const cli = parseDeviceBenchmarkArgs(process.argv.slice(2), process.env.ANDROID_SERIAL);
 const SECONDS = cli.seconds;

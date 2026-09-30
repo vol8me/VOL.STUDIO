@@ -18,7 +18,7 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 
 | Tarif            | Sınadığı                                                                                                                                                                                                             |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `contract`       | `scripts/quality/tests/*.test.mjs` (bekçilerin kendi testleri) ve `scripts/workspace-contract.mjs` (aşağıda)                                                                                                         |
+| `contract`       | `scripts/quality/tests`, `scripts/linux/tests`, `scripts/android/tests` (bekçi ve betik testleri) ve `scripts/quality/cli/workspace-contract.mjs` (aşağıda)                                                          |
 | `format-check`   | Prettier, `**/*.{ts,css,json,md}`                                                                                                                                                                                    |
 | `typecheck`      | Aktif paketlerin `typecheck` betiği (`tsc --noEmit`, `noImplicitOverride` dahil) ve kök betiklerin JSDoc denetimi (`scripts/tsconfig.json`)                                                                          |
 | `lint`           | ESLint: TS kaynak, betik ve testler tip bilgisiyle (`no-floating-promises` hata); `.js`/`.mjs` betikler `@eslint/js` ile; deterministik kodda `localeCompare` yasak; frozen ağaçlar lifecycle'dan yok sayılır        |
@@ -43,7 +43,7 @@ Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 
 ## Workspace sözleşmesi
 
-`scripts/workspace-contract.mjs` bütün ihlalleri birlikte raporlar:
+`scripts/quality/cli/workspace-contract.mjs` bütün ihlalleri birlikte raporlar:
 
 | Bekçi                                    | Kural                                                                                                                                                                    |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

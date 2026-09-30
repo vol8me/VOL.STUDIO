@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 
 /**
  * Kapsam eşikleri kök `quality.json`dan okunur — kapı sözleşmesinin tek
- * doğruluk kaynağı (bkz. scripts/workspace-contract.mjs).
+ * doğruluk kaynağı (bkz. scripts/quality/cli/workspace-contract.mjs).
  *
  * `import ... with { type: 'json' }` KULLANILMIYOR: Prettier 3.0 import
  * attribute sözdizimini parse edemiyor ve `format-check` kapısı düşüyor.

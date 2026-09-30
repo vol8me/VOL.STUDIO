@@ -46,4 +46,4 @@ if [ -n "${VOL_CARGO_FEATURES:-}" ]; then
 fi
 tauri build --bundles appimage "${FEATURES_ARGS[@]}" "${TAURI_CONFIG_ARGS[@]}"
 
-node /work/scripts/build-linux-appimage.mjs "$WORKSPACE"
+node /work/scripts/linux/build-appimage.mjs "$WORKSPACE"

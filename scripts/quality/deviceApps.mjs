@@ -42,7 +42,7 @@ export function deviceBenchmarkCandidates(root, lifecycle) {
  * @returns Sorun listesi; boşsa ölçüm kapsamı lifecycle ile tutarlı.
  */
 export function validateDeviceApps(root, lifecycle = loadRepoLifecycle(root)) {
-  const script = join(root, 'scripts', 'device-benchmark.mjs');
+  const script = join(root, 'scripts', 'android', 'device-benchmark.mjs');
   if (!existsSync(script)) return [];
   if (!lifecycle) {
     return ['workspace-lifecycle.json yok; cihaz ölçüm kapsamı doğrulanamaz.'];
@@ -53,13 +53,13 @@ export function validateDeviceApps(root, lifecycle = loadRepoLifecycle(root)) {
 
   if (!source.includes('deviceBenchmarkCandidates')) {
     problems.push(
-      'scripts/device-benchmark.mjs `deviceBenchmarkCandidates` keşfini kullanmıyor; ' +
+      'scripts/android/device-benchmark.mjs `deviceBenchmarkCandidates` keşfini kullanmıyor; ' +
         'ölçüm kapsamı lifecycle yerine yerel bir listeden besleniyor olabilir.',
     );
   }
   if (/const\s+\w+\s*=\s*\[[^\]]*\bpkg\s*:/s.test(source)) {
     problems.push(
-      'scripts/device-benchmark.mjs sabit bir uygulama listesi taşıyor; ' +
+      'scripts/android/device-benchmark.mjs sabit bir uygulama listesi taşıyor; ' +
         'adaylar lifecycle + tauri.conf.json üzerinden türetilmeli.',
     );
   }

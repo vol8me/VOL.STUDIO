@@ -10,30 +10,30 @@ import {
   loadQualityConfig,
   validateQualityWorkspaceParity,
   validateActiveGameBudgets,
-} from './quality/config.mjs';
-import { validateBlobSizes } from './quality/blobSize.mjs';
-import { validateLayerBoundaries } from './quality/layers.mjs';
-import { validateTrackedImports } from './quality/trackedImports.mjs';
-import { validateCoverageBinding } from './quality/coverageBinding.mjs';
-import { validateI18nKeys } from './quality/deadI18n.mjs';
-import { validateSourceSize } from './quality/sourceSize.mjs';
-import { validateCommentDensity } from './quality/commentDensity.mjs';
-import { validateDevPorts } from './quality/devPorts.mjs';
-import { validateModuleCycles } from './quality/moduleCycles.mjs';
-import { validateDeviceApps } from './quality/deviceApps.mjs';
-import { validateCargoWorkspace } from './quality/cargoWorkspace.mjs';
-import { validateProductIcons } from './quality/productIcons.mjs';
-import { validatePhaserBoundary } from './quality/phaserBoundary.mjs';
-import { validateCoreTypeSurface } from './quality/publicTypeSurface.mjs';
-import { validateTauriPlugins } from './quality/tauriPlugins.mjs';
-import { validateRepoAppIdentity } from './quality/appIdentity.mjs';
-import { validateRepoCatalog } from './quality/catalog.mjs';
+} from '../config.mjs';
+import { validateBlobSizes } from '../blobSize.mjs';
+import { validateLayerBoundaries } from '../layers.mjs';
+import { validateTrackedImports } from '../trackedImports.mjs';
+import { validateCoverageBinding } from '../coverageBinding.mjs';
+import { validateI18nKeys } from '../deadI18n.mjs';
+import { validateSourceSize } from '../sourceSize.mjs';
+import { validateCommentDensity } from '../commentDensity.mjs';
+import { validateDevPorts } from '../devPorts.mjs';
+import { validateModuleCycles } from '../moduleCycles.mjs';
+import { validateDeviceApps } from '../deviceApps.mjs';
+import { validateCargoWorkspace } from '../cargoWorkspace.mjs';
+import { validateProductIcons } from '../productIcons.mjs';
+import { validatePhaserBoundary } from '../phaserBoundary.mjs';
+import { validateCoreTypeSurface } from '../publicTypeSurface.mjs';
+import { validateTauriPlugins } from '../tauriPlugins.mjs';
+import { validateRepoAppIdentity } from '../appIdentity.mjs';
+import { validateRepoCatalog } from '../catalog.mjs';
 import {
   activeWorkspaceNames,
   listWorkspacePackages,
   loadWorkspaceLifecycle,
   validateWorkspaceLifecycle,
-} from './quality/workspaceLifecycle.mjs';
+} from '../workspaceLifecycle.mjs';
 
 /** Her paketin sahip olması gereken script'ler ve hangi kapının kullandığı. */
 const REQUIRED_SCRIPTS = {

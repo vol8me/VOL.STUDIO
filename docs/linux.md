@@ -7,7 +7,7 @@ pnpm build:linux-appimage <workspace-yolu>    # host'ta AppImage
 pnpm build:linux-steamrt4 <workspace-yolu>    # steamrt4 SDK kabında (Steam, Deck)
 ```
 
-`scripts/build-linux-appimage.mjs`, Tauri'nin AppImage sonlandırması
+`scripts/linux/build-appimage.mjs`, Tauri'nin AppImage sonlandırması
 `linuxdeploy`/ELF strip adımında kırıldığında (`.relr.dyn`) AppDir'i elle
 yeniden paketler: `productName`/`version` hedefin `tauri.conf.json`undan gelir,
 WebKit medya çalışma zamanı (GStreamer elementleri, plugin scanner) AppDir'e

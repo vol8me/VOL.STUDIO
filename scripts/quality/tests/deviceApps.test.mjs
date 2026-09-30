@@ -67,7 +67,7 @@ test('aktif Tauri kabuğu yoksa aday listesi boş — doğrulanmış no-op', (t)
 test('benchmark betiği keşfi kullanmıyorsa bekçi yakalar', (t) => {
   const root = withLifecycle(t, [frozen('@vol/b', 'games/b')], {
     'games/b/src-tauri/tauri.conf.json': shell('com.vol.b'),
-    'scripts/device-benchmark.mjs': 'const OTHER = [];\n',
+    'scripts/android/device-benchmark.mjs': 'const OTHER = [];\n',
   });
 
   assert.match(validateDeviceApps(root)[0], /deviceBenchmarkCandidates/);
@@ -76,7 +76,7 @@ test('benchmark betiği keşfi kullanmıyorsa bekçi yakalar', (t) => {
 test('benchmark betiğinde sabit pkg listesi geri gelirse bekçi yakalar', (t) => {
   const root = withLifecycle(t, [frozen('@vol/b', 'games/b')], {
     'games/b/src-tauri/tauri.conf.json': shell('com.vol.b'),
-    'scripts/device-benchmark.mjs':
+    'scripts/android/device-benchmark.mjs':
       "import { deviceBenchmarkCandidates } from './x.mjs';\n" +
       "const APPS = [{ name: 'b', pkg: 'com.vol.b' }];\n",
   });
@@ -94,7 +94,7 @@ test('aktif kabuk aday kümesiyle birebir örtüşünce sorun yok', (t) => {
     {
       'games/a/src-tauri/tauri.conf.json': shell('com.vol.a'),
       'games/b/src-tauri/tauri.conf.json': shell('com.vol.b'),
-      'scripts/device-benchmark.mjs': BENCHMARK_SCRIPT,
+      'scripts/android/device-benchmark.mjs': BENCHMARK_SCRIPT,
     },
   );
 
@@ -104,7 +104,7 @@ test('aktif kabuk aday kümesiyle birebir örtüşünce sorun yok', (t) => {
 test('lifecycle dosyası yoksa bekçi sessiz geçemez', (t) => {
   const root = fixture(t, {
     'games/a/src-tauri/tauri.conf.json': shell('com.vol.a'),
-    'scripts/device-benchmark.mjs': BENCHMARK_SCRIPT,
+    'scripts/android/device-benchmark.mjs': BENCHMARK_SCRIPT,
   });
 
   assert.match(validateDeviceApps(root, null)[0], /workspace-lifecycle\.json/);
