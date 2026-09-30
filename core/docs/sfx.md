@@ -2,6 +2,9 @@
 
 `@volstudio/core/audio/sfx` mevcut Web Audio bağlamı ve hedef düğümüyle
 çalışır; bağlamı oluşturmak, kilidini açmak ve kapatmak tüketicinindir.
+`createVolGame` sesi varsayılan olarak kapatır. `audio: { noAudio: false,
+disableWebAudio: false }` seçen oyun, Phaser `WebAudioSoundManager` bağlamını
+ve hedefini CORE sesine geçirir; mobil kilit açma ve bağlam ömrü Phaser’da kalır.
 
 `SoundFamilyBank.parse` üretilmiş `SoundFamilyBankV1` JSON'unu doğrular.
 `variant` tam anahtarı, `filter` rol ve etiketleri arar; `choose` UTF-8 token

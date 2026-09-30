@@ -23,6 +23,8 @@ export interface VolGameConfig {
   scenes: Phaser.Types.Core.GameConfig['scene'];
   physics?: Phaser.Types.Core.GameConfig['physics'];
   input?: Phaser.Types.Core.InputConfig;
+  /** Phaser ses bağlamı opt-in'dir; tüketici CORE sesini bu bağlama bağlar. */
+  audio?: Phaser.Types.Core.GameConfig['audio'];
   /** Phaser renderer ayarları; oyun kalite profilinden açıkça verilebilir. */
   render?: Phaser.Types.Core.RenderConfig;
   /**
@@ -129,20 +131,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     input: config.input,
     render: config.render,
     ...(config.fpsLimit === undefined ? {} : { fps: { limit: config.fpsLimit } }),
-    /*
-     * Phaser'ın SES sistemi KAPALIDIR ve bu bilinçli bir sınırdır.
-     *
-     * CORE'un ses katmanı ham Web Audio üzerine kuruludur çünkü Phaser'ın
-     * `SoundManager`'ı adaptive stem mix'i, sidechain ducking'i ve
-     * `AudioContext` yaşam döngüsünün (ilk dokunuşta kilit açma, arka planda
-     * suspend) tek elden yönetimini vermez. İkisi birden açık olsaydı iki ayrı
-     * `AudioContext` doğar, mobilde biri suspend olurken diğeri çalmaya devam
-     * ederdi.
-     *
-     * Bu bir performans kararı DEĞİLDİR: Phaser'ın ses API'si repoda hiç
-     * denenmedi, doğrudan Web Audio'ya gidildi.
-     */
-    audio: { noAudio: true },
+    audio: config.audio ?? { noAudio: true },
   };
 
   const game = new Phaser.Game(gameConfig);

@@ -135,6 +135,16 @@ describe(
       expect(gameConstructorCalls[0]).toMatchObject({ render });
     });
 
+    it('ses varsayılan olarak kapalıdır; açık bağlam seçimi Phaser configine taşınır', async () => {
+      const { createVolGame } = await import('../src/phaser/createVolGame');
+      await createVolGame({ width: 800, height: 600, scenes: [], fonts: [] });
+      expect(gameConstructorCalls[0]).toMatchObject({ audio: { noAudio: true } });
+
+      const audio = { noAudio: false, disableWebAudio: false };
+      await createVolGame({ width: 800, height: 600, scenes: [], fonts: [], audio });
+      expect(gameConstructorCalls[1]).toMatchObject({ audio });
+    });
+
     it('onBeforeSceneInit reddedilirse (throw) oyun başlatılmaz', async () => {
       const { createVolGame } = await import('../src/phaser/createVolGame');
 
