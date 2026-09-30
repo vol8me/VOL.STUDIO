@@ -3,9 +3,11 @@ import { getPreset } from '../../presets';
 import { choiceOf, numberOf } from '../params';
 import type { SourceEntry } from '../registry';
 
-const INSTRUMENTS = ['cello', 'preparedPiano', 'doubleBass', 'additivePad'] as const;
-const INSTRUMENTS_V2 = [
-  ...INSTRUMENTS,
+const INSTRUMENTS = [
+  'cello',
+  'preparedPiano',
+  'doubleBass',
+  'additivePad',
   'brightLead',
   'crystalBell',
   'electricPiano2',
@@ -15,7 +17,7 @@ const INSTRUMENTS_V2 = [
 export const INSTRUMENT: SourceEntry = {
   id: 'source.instrument',
   kind: 'source',
-  version: 1,
+  version: 2,
   description:
     'Sürümlü kısa enstrüman olayı: mevcut preset sentezi, nota süresi ve velocity. ' +
     'Preset stereo çıkışı mono toplanır; konum ve oda programın kararıdır.',
@@ -107,23 +109,5 @@ export const INSTRUMENT: SourceEntry = {
       for (const channel of rendered.channels) sample += channel[i] ?? 0;
       out[i] = (sample / rendered.channels.length) * velocity;
     }
-  },
-};
-
-/** Parlak presetler yeni sürümde açılır; v1'in render sözleşmesi değişmez. */
-export const INSTRUMENT_V2: SourceEntry = {
-  ...INSTRUMENT,
-  version: 2,
-  renderContract: Object.fromEntries(
-    INSTRUMENTS_V2.map((instrument) => [instrument, getPreset(instrument, 220, 1)]),
-  ),
-  params: {
-    ...INSTRUMENT.params,
-    instrument: {
-      type: 'choice',
-      choices: INSTRUMENTS_V2,
-      default: 'preparedPiano',
-      description: 'Sürümlü preset; v2 parlak elektronik enstrümanları da kapsar.',
-    },
   },
 };

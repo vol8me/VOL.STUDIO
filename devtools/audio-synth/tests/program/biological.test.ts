@@ -15,6 +15,7 @@ import {
   peakFrequency,
   peakTrack,
 } from '../support/measure';
+import { node } from '../support/program';
 
 const RATE = 48000;
 
@@ -31,12 +32,6 @@ function layerOf(source: unknown, resonators: unknown[] = [], seconds = 1, extra
   };
   return renderProgramLayers(program).get('probe') as Float32Array;
 }
-
-const node = (primitive: string, params: Record<string, unknown> = {}) => ({
-  primitive,
-  version: 1,
-  params,
-});
 
 describe('akışkan/kabarcık ailesi', () => {
   it('Minnaert: f₀·R ≈ 3.29 m/sn (R = 1 mm → ~3.3 kHz)', () => {

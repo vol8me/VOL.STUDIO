@@ -221,10 +221,6 @@
       "version": 1,
       "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d"
     },
-    "source.drum@1": {
-      "version": 1,
-      "hash": "sha256:cb8196f5af407316bcb04f06d308157e1c7da9a972b844021e197a160eb743bc"
-    },
     "source.drum@2": {
       "version": 2,
       "hash": "sha256:521c6bf3a8c8b86db9a1cbf58732d87ee925f6f8c18b2ad06fef0430a37a974d"
@@ -232,10 +228,6 @@
     "source.electrical@1": {
       "version": 1,
       "hash": "sha256:65aabc71b9f6a460f0abf189dbf93fdbabbce25fa8f91606f71b95585888acf9"
-    },
-    "source.fire@1": {
-      "version": 1,
-      "hash": "sha256:51d75c3c15e111addb0de26fd81e67d8a5353f430874f4b75e7aea8e9fbc1b00"
     },
     "source.fire@2": {
       "version": 2,
@@ -257,10 +249,6 @@
       "version": 1,
       "hash": "sha256:f353e9b1d5eea041f06f576722f541756612a70188f3681ec4da924d9b3f3da9"
     },
-    "source.instrument@1": {
-      "version": 1,
-      "hash": "sha256:c4b9f9c5e223540340b657880d75fe68fd41295f33b41747361abf1b0fe9a450"
-    },
     "source.instrument@2": {
       "version": 2,
       "hash": "sha256:87bb605d4afe7fbd5636fe3f88151af2678c9a5682074e40a5af7b918b031d9d"
@@ -277,10 +265,6 @@
       "version": 1,
       "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6"
     },
-    "source.oscillator@1": {
-      "version": 1,
-      "hash": "sha256:d096d002f9a53f2dcfb7d7cfcc252b523fa03362b2f72af4c80f250a1efe4b03"
-    },
     "source.oscillator@2": {
       "version": 2,
       "hash": "sha256:b0c800b997b33e21c77db26196fffeb7162495c77939084b2b3eb1fd4639561b"
@@ -289,17 +273,9 @@
       "version": 1,
       "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3"
     },
-    "source.rain@1": {
-      "version": 1,
-      "hash": "sha256:dda56b4814e695e00dd50f7ad7c22c3eef3dfb444a133e603beb005f9d3309ee"
-    },
     "source.rain@2": {
       "version": 2,
       "hash": "sha256:3a70cf47244175c5f7606c35b7d920ce90ceccbad122500d60ff4a00ce2b3f50"
-    },
-    "source.retro@1": {
-      "version": 1,
-      "hash": "sha256:5f834353a0e3e2b38cc22d67e2d59602059e74dd8fde11e4688c78b9cfb62aa4"
     },
     "source.retro@2": {
       "version": 2,
@@ -312,10 +288,6 @@
     "source.sampler@1": {
       "version": 1,
       "hash": "sha256:a2c1d4bbb8c3e5f2293b9cb58cfbf3e91e49c068b12c9620636a460022169f3a"
-    },
-    "source.wind@1": {
-      "version": 1,
-      "hash": "sha256:53d347128be7b5d796265ec0e401624161c30a97a195eb98fd149b362a6e8ca5"
     },
     "source.wind@2": {
       "version": 2,

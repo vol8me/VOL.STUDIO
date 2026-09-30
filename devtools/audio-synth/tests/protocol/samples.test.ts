@@ -38,7 +38,7 @@ function toneProgram(frequency: number): Record<string, unknown> {
     layers: [
       {
         name: 'tone',
-        source: { primitive: 'source.oscillator', version: 1, params: { frequency } },
+        source: { primitive: 'source.oscillator', version: 2, params: { frequency } },
       },
     ],
     master: { normalize: 'peak', peakDbfs: -3, fadeOutSeconds: 0.01 },

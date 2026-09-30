@@ -1,13 +1,9 @@
+import { node } from '../support/program';
 /**
  * SoundGraph testlerinin ortak programları: aynı altyapı, farklı topoloji.
  * Tank ateşi = transient + basınç gövdesi + mekanizma + çevre kuyruğu (send);
  * yılan tıslaması = türbülans kaynağı + rezonatör + artikülasyon.
  */
-const node = (primitive: string, params: Record<string, unknown> = {}) => ({
-  primitive,
-  version: 1,
-  params,
-});
 
 export function tankFire(extra: Record<string, unknown> = {}): Record<string, unknown> {
   return {

@@ -3,7 +3,6 @@ import { downsample2x } from '../../engine/render';
 import { qualityProfile } from '../../engine/session';
 import { assertRenderBudget, estimateFrameCost } from '../../guard/budget';
 import { AudioParamError } from '../../guard/errors';
-import type { WaveSampleFn } from '../../synthesis/waveforms';
 import {
   checkChoice,
   checkNumber,
@@ -111,7 +110,6 @@ export function renderDrum(
   d: ResolvedDrum,
   sampleRate: number,
   gateSeconds?: number,
-  wave?: WaveSampleFn,
 ): Float32Array {
   const oversample = qualityProfile().voiceOversample;
   const seconds = drumLength(d, gateSeconds);
@@ -121,7 +119,7 @@ export function renderDrum(
   );
   const rate = sampleRate * oversample;
   const internal = new Float32Array(Math.max(1, Math.ceil(seconds * rate)));
-  DRUM_RENDERERS[d.model](internal, rate, d, wave);
+  DRUM_RENDERERS[d.model](internal, rate, d);
   saturate(internal, d.drive);
   const out = oversample === 2 ? downsample2x(internal, rate, sampleRate) : internal;
   if (gateSeconds !== undefined && gateSeconds < drumSeconds(d)) {

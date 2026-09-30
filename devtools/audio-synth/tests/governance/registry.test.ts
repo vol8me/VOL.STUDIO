@@ -3,7 +3,7 @@ import { expandArchetype } from '../../src/program/archetype';
 import { PROGRAM_REGISTRY } from '../../src/program/catalog';
 import { describeRegistry } from '../../src/program/describe';
 import type { NumberParamSpec } from '../../src/program/params';
-import type { ProgramEntry } from '../../src/program/registry';
+import { Registry, type ProgramEntry } from '../../src/program/registry';
 import { renderProgram } from '../../src/program/render';
 import { TREATMENT_PROFILES } from '../../src/program/treatmentProfiles';
 import { buildContext } from '../../src/protocol/context';
@@ -335,21 +335,16 @@ describe('registry governance', () => {
 });
 
 describe('çok-sürümlü registry', () => {
-  it('latest() ve get(id) varsayılanı EN YENİ sürümü verir', () => {
-    // source.oscillator v1(dondurulmuş PolyBLEP)+v2(BLAMP) — varsayılan çözüm v2 olmalı.
-    const multi = PROGRAM_REGISTRY.entries()
-      .map((e) => e.id)
-      .filter((id, i, all) => all.indexOf(id) !== i);
-    expect(multi).toContain('source.oscillator');
-    for (const id of multi) {
-      const versions = PROGRAM_REGISTRY.entries()
-        .filter((e) => e.id === id)
-        .map((e) => e.version);
-      const max = Math.max(...versions);
-      expect(PROGRAM_REGISTRY.get(id).version, `get(${id})`).toBe(max);
-      expect(PROGRAM_REGISTRY.latest().find((e) => e.id === id)?.version, `latest(${id})`).toBe(
-        max,
-      );
-    }
+  it('latest() ve get(id) varsayılanı EN YENİ sürümü verir; eski sürüm adıyla çözülür', () => {
+    // Mekanizma sentetik girdiyle sınanır: bugün hiçbir yapı taşı iki sürüm taşımaz.
+    const registry = new Registry([
+      { id: 'source.probe', version: 2, kind: 'source' as const },
+      { id: 'source.probe', version: 1, kind: 'source' as const },
+    ]);
+    expect(registry.versions('source.probe')).toEqual([1, 2]);
+    expect(registry.get('source.probe').version).toBe(2);
+    expect(registry.get('source.probe', 1).version).toBe(1);
+    expect(registry.latest().map((e) => e.version)).toEqual([2]);
+    expect(() => registry.get('source.probe', 3)).toThrow(/bilinmeyen sürüm/);
   });
 });

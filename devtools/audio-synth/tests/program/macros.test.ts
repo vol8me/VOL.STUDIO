@@ -9,15 +9,11 @@ import { renderProgram } from '../../src/program/render';
 import { resolveProgram } from '../../src/program/schema';
 import { blackmanHarris, powerSpectrum } from '../../src/analysis/spectrum';
 import { autocorrelationPitch, isStrictlyMonotone, peakFrequency } from '../support/measure';
+import { node } from '../support/program';
 
 const RATE = 48000;
 const POSITIONS = [0.15, 0.35, 0.5, 0.65, 0.85];
 
-const node = (primitive: string, params: Record<string, unknown> = {}) => ({
-  primitive,
-  version: 1,
-  params,
-});
 const impact = node('exciter.impact', { contactTime: 0.0005, roughness: 0 });
 const turbulence = node('exciter.turbulence');
 const modal = (params: Record<string, unknown> = {}) =>

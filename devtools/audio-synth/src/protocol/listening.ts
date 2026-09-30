@@ -38,8 +38,6 @@ import { readJsonFile, resolveInside, writeFileAtomic } from './fs';
  *  - **reference**: yayımlanmış manifest başına kaynak yeniden render +
  *    gönderilen OGG'nin çözümü; `integration.loop` taşıyanlar ayrıca
  *    loop2x varyantı alır. Karar `regression decide`.
- *  - **comparison**: v1↔v2 anti-aliasing çiftleri (PolyBLEP → BLAMP);
- *    dinleme öğesidir, karar komutu yoktur.
  *
  * `listening.json` makine-okunur envanter, `index.html` statik dinleme
  * sayfasıdır ve her öğede kayıt komutunu açıkça gösterir. Paket YALNIZ dosya
@@ -59,11 +57,11 @@ export type ListeningStatus =
   | 'undecided'
   | 'listen-only';
 
-export type ListeningRole = 'source' | 'delivery' | 'loop2x' | 'overlay' | 'v1' | 'v2';
+export type ListeningRole = 'source' | 'delivery' | 'loop2x' | 'overlay';
 
 export interface ListeningItemV1 {
   readonly id: string;
-  readonly kind: 'canary' | 'benchmark' | 'reference' | 'comparison';
+  readonly kind: 'canary' | 'benchmark' | 'reference';
   /** Repo-göreli WAV (export ağacı). */
   readonly file: string;
   readonly title: string;
@@ -86,7 +84,6 @@ export interface ListeningPackageV1 {
     readonly canary: number;
     readonly benchmark: number;
     readonly reference: number;
-    readonly comparison: number;
     readonly pending: number;
   };
   readonly items: readonly ListeningItemV1[];
@@ -163,7 +160,7 @@ function pageHtml(pkg: ListeningPackageV1): string {
 <title>Dinleme paketi</title><style>${PAGE_CSS}</style></head><body>
 <h1>Dinleme paketi — ${pkg.counts.canary} canary, ${pkg.counts.benchmark} benchmark, ${
     pkg.counts.reference
-  } referans, ${pkg.counts.comparison} karşılaştırma</h1>
+  } referans</h1>
 <p>Bu sayfa yalnız dosya ve kayıtlı durum gösterir; her öğenin altında
 karar komutu yazılıdır ve beğeni kararı yalnız insan beyanıyla kaydedilir.
 <code>source</code> = programdan render, <code>delivery</code> = gönderilen
@@ -172,7 +169,6 @@ kodlamanın çözümü, <code>loop2x</code> = iki ardışık döngü turu (diki�
 ${sectionHtml('Organik canary' + "'" + 'ler', items('canary'))}
 ${sectionHtml('Benchmark görevleri', items('benchmark'))}
 ${sectionHtml('Production referansları', items('reference'))}
-${sectionHtml('Karşılaştırmalar (v1 ↔ v2 anti-aliasing)', items('comparison'))}
 </body></html>`;
 }
 
@@ -455,67 +451,6 @@ function referenceItems(repoRoot: string, samples: SampleResolver): ListeningIte
   return items;
 }
 
-/** PolyBLEP(v1) ↔ BLAMP/blepR16(v2) öncesi/sonrası çiftleri. */
-const AA_PAIRS = [
-  { id: 'aa-triangle', waveform: 'triangle', frequency: 5200 },
-  { id: 'aa-sawtooth', waveform: 'sawtooth', frequency: 2400 },
-] as const;
-
-function comparisonItems(repoRoot: string, samples: SampleResolver): ListeningItemV1[] {
-  const items: ListeningItemV1[] = [];
-  for (const pair of AA_PAIRS) {
-    for (const version of [1, 2] as const) {
-      const program = {
-        schema: 'AcousticProgramV1',
-        sampleRate: 48000,
-        channels: 1,
-        durationSeconds: 1.2,
-        seed: 7,
-        layers: [
-          {
-            name: 'tone',
-            source: {
-              primitive: 'source.oscillator',
-              version,
-              params: { waveform: pair.waveform, frequency: pair.frequency },
-            },
-            articulation: {
-              primitive: 'articulation.envelope',
-              version: 1,
-              params: { attack: 0.005, decay: 0.5, sustainLevel: 0.6, sustain: 0.4, release: 0.08 },
-            },
-          },
-        ],
-        master: { normalize: 'peak', peakDbfs: -8 },
-      };
-      const rendered = renderProgram(program, { samples, cache: null });
-      items.push({
-        id: `${pair.id}-v${version}`,
-        kind: 'comparison',
-        file: writePcm(repoRoot, `${LISTENING_ROOT}/comparison/${pair.id}-v${version}.wav`, {
-          channels: rendered.channels,
-          sampleRate: rendered.sampleRate,
-        }),
-        title:
-          version === 1
-            ? `${pair.waveform} ${pair.frequency} Hz — v1 (dondurulmuş PolyBLEP)`
-            : `${pair.waveform} ${pair.frequency} Hz — v2 (BLAMP/blepR16)`,
-        status: 'listen-only',
-        guide: [
-          'v1/v2 anti-aliasing öncesi/sonrası — aynı program, yalnız dalga çekirdeği sürümü değişir.',
-        ],
-        manifest: null,
-        assetClass: null,
-        pcmHash: hashPcm(rendered.channels, rendered.sampleRate),
-        decision: null,
-        group: `aa:${pair.id}`,
-        role: `v${version}` as ListeningRole,
-      });
-    }
-  }
-  return items;
-}
-
 /**
  * Paketi kurar: WAV'ları yazar, `listening.json` ve `index.html`'i üretir.
  * Deterministiktir — tarih/saat yazmaz; aynı repo durumu aynı paketi verir.
@@ -528,7 +463,6 @@ export function buildListeningPackage(repoRoot: string): ListeningPackageV1 {
       ...canaryItems(repoRoot, samples),
       ...benchmarkItems(repoRoot, tmp, samples),
       ...referenceItems(repoRoot, samples),
-      ...comparisonItems(repoRoot, samples),
     ];
     const count = (kind: ListeningItemV1['kind']) => items.filter((i) => i.kind === kind).length;
     const pkg: ListeningPackageV1 = {
@@ -537,7 +471,6 @@ export function buildListeningPackage(repoRoot: string): ListeningPackageV1 {
         canary: count('canary'),
         benchmark: count('benchmark'),
         reference: count('reference'),
-        comparison: count('comparison'),
         pending: items.filter((i) => i.status === 'pending-human' || i.status === 'undecided')
           .length,
       },

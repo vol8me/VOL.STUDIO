@@ -298,13 +298,10 @@ artırır, eski programlar eski sürümü adıyla ister.
 yan yana tutar: `get(id)` en güncel sürümü verir (katalog/üretim yolu),
 `resolve(id, version)` kesin sürümü çözümler ve sürüm uyuşmazlığı açık
 `AudioParamError`'dır; tip denetimi sürüm denetiminden önce gelir. Kilit
-anahtarı `id@version`'dır — iki sürüm aynı anda kilitlenir. Eski davranış
-dondurulmuş modülde yaşar (`synthesis/waveforms-v1.ts`,
-`synthesis/retro-v1.ts`, `program/primitives/environmentV1.ts`) ve eski
-programlar bit-eşit render edilir (`tests/governance/legacyV1.test.ts`,
-2cd8b45 manifestlerinin PCM özetleri); güncel davranış v2'dir. Dondurulmuş
-sürüm silinmez: sürümü kaldırmak onu adıyla isteyen her programı sessizce
-değil ama kesin olarak kırar ve sözleşmenin kendisini geri alır.
+anahtarı `id@version`'dır — iki sürüm aynı anda kilitlenir. Bir sürüm,
+onu adıyla isteyen yayımlanmış program kalmadığında emekliye ayrılır;
+emekli sürümü isteyen program `version` hatasıyla reddedilir, sessizce
+başka sürümle render edilmez. Çok sürümlü düğümlerin güncel sürümü v2'dir.
 
 ### Publish kapısı
 
@@ -543,15 +540,14 @@ Dinleme paketi: `pnpm --filter @volstudio/audio-synth audio:audition` →
 git-dışı `export/audition/` (48 archetype varyasyonu + 3 vokal aile, ölçüm
 tablosu `audition.json`; öznel yargı içermez). Tek-komut insan incelemesi
 paketi `pnpm --filter @volstudio/audio-synth audio:listen` →
-`export/listening/` (R7): dört bölüm — **canary** (kanonik render +
+`export/listening/`: üç bölüm — **canary** (kanonik render +
 rehber + `reviews.json` durumu), **benchmark** (her görev parçası
 `source` + kodekten çözülmüş `delivery` varyantı; `codec-loop-seam`
 taşıyanlar iki ardışık tur `loop2x`; müzik parçalarının stinger'ları döngü
 yatağı üzerine `overlay`), **reference** (manifest başına kaynak yeniden
 render + gönderilen OGG'nin FFmpeg çözümü; `integration.loop` taşıyanlar
 `loop2x`; karar `decisions.json`'daki PCM-hash bağlı beyanla sınırlı, yoksa
-`undecided`), **comparison** (sabit v1↔v2 anti-aliasing çiftleri:
-PolyBLEP → BLAMP/blepR16; dinleme öğesi, karar komutu yok). Varyantlar
+`undecided`). Varyantlar
 `group` alanıyla yan yana gruplanır; her karar bekleyen öğenin sayfasında
 kaydettirme komutu (`canary review` / `benchmark review` /
 `regression decide`) görünür. `listening.json` envanter ve statik

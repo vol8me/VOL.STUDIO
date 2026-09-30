@@ -1,11 +1,10 @@
 import { CURVES } from './curves';
 import { AIRFLOW } from './primitives/airflow';
 import { CONTACT } from './primitives/contact';
-import { INSTRUMENT, INSTRUMENT_V2 } from './primitives/instrument';
+import { INSTRUMENT } from './primitives/instrument';
 import { CONVOLUTION } from './primitives/convolution';
 import { ELECTRICAL } from './primitives/electrical';
 import { ENVIRONMENT } from './primitives/environment';
-import { ENVIRONMENT_V1 } from './primitives/environmentV1';
 import { FRICTION } from './primitives/friction';
 import { MACHINE } from './primitives/machine';
 import { BLAST, PRESSURE_WAVE } from './primitives/pressure';
@@ -50,7 +49,6 @@ export const PROGRAM_REGISTRY = new Registry<ProgramEntry>([
   ...SPATIAL,
   CONTACT,
   INSTRUMENT,
-  INSTRUMENT_V2,
   PRESSURE_WAVE,
   BLAST,
   AIRFLOW,
@@ -58,7 +56,6 @@ export const PROGRAM_REGISTRY = new Registry<ProgramEntry>([
   MACHINE,
   ELECTRICAL,
   ...ENVIRONMENT,
-  ...ENVIRONMENT_V1,
   ...SAMPLING,
   ...CHIP_AND_DRUM,
   CONVOLUTION,

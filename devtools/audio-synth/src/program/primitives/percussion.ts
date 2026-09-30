@@ -7,9 +7,6 @@ import {
   waveformFields,
   type RetroWaveform,
 } from '../../synthesis/retro';
-import { renderRetroV1 } from '../../synthesis/retro-v1';
-import { getWaveSampleWithPhaseV1 } from '../../synthesis/waveforms-v1';
-import type { WaveSampleFn } from '../../synthesis/waveforms';
 import { choiceOf, numberOf, sampleAt, signalOf, type NumberParamSpec } from '../params';
 import type { SourceEntry } from '../registry';
 
@@ -17,8 +14,7 @@ import type { SourceEntry } from '../registry';
  * Müzik ve SFX'in paylaştığı iki kaynak: parametrik davul ve retro
  * osilatör. Müzikteki kit parçası ya da retro enstrüman ile akustik
  * programdaki UI/arcade sesi AYNI çekirdeği çalar; ikinci bir sentez yolu
- * yazılmaz. Her ikisinin v1 girdisi `2cd8b45` anlığındaki PolyBLEP
- * çekirdeğine bağlanır; v2 güncel bant sınırlı rezidüeli kullanır.
+ * yazılmaz.
  */
 const unit = (description: string, fallback: number): NumberParamSpec => ({
   type: 'number',
@@ -93,7 +89,6 @@ function renderDrumInto(
   out: Float32Array,
   params: Parameters<SourceEntry['render']>[1],
   ctx: Parameters<SourceEntry['render']>[2],
-  wave?: WaveSampleFn,
 ): void {
   const model = choiceOf(params, 'model');
   const drum = resolveDrum({
@@ -108,20 +103,8 @@ function renderDrumInto(
     ...(model === 'hat' ? { open: numberOf(params, 'open') } : {}),
     seed: ctx.seed('noise'),
   });
-  writeInto(out, renderDrum(drum, ctx.sampleRate, undefined, wave));
+  writeInto(out, renderDrum(drum, ctx.sampleRate));
 }
-
-/** `source.drum` v1 — metalik kümede PolyBLEP kare (dondurulmuş çekirdek). */
-const DRUM_V1: SourceEntry = {
-  ...DRUM,
-  version: 1,
-  description:
-    'Parametrik davul (v1, PolyBLEP kare metalik): kick, tom, snare, clap, hat, cymbal ya ' +
-    'da perc. Eski programların bit-eşit PCM çıktısı bu sürümle üretilir.',
-  render(out, params, ctx) {
-    renderDrumInto(out, params, ctx, getWaveSampleWithPhaseV1);
-  },
-};
 
 /** Arpej kalıpları (yarım ton); çip müziğinin hızlı akor taklidi. */
 const RETRO_ARPEGGIOS: Readonly<Record<string, readonly number[]>> = {
@@ -231,7 +214,7 @@ const RETRO: SourceEntry = {
   resource: { model: 'O(kare·kenar)', workPerFrame: () => 12, stateBytes: () => 0 },
   probe: { params: { arpeggio: 'fifth', bits: 12, rate: 16000 } },
   render(out, params, ctx) {
-    renderRetroInto(out, params, ctx, renderRetro);
+    renderRetroInto(out, params, ctx);
   },
 };
 
@@ -239,7 +222,6 @@ function renderRetroInto(
   out: Float32Array,
   params: Parameters<SourceEntry['render']>[1],
   ctx: Parameters<SourceEntry['render']>[2],
-  renderCore: typeof renderRetro,
 ): void {
   const frequency = signalOf(params, 'frequency');
   const duty = signalOf(params, 'duty');
@@ -247,7 +229,7 @@ function renderRetroInto(
     sampleAt(signal, Math.min(out.length - 1, Math.floor(t * ctx.sampleRate)));
   const semitones = RETRO_ARPEGGIOS[choiceOf(params, 'arpeggio')];
   const oversample = qualityProfile().voiceOversample;
-  const rendered = renderCore(
+  const rendered = renderRetro(
     {
       ...waveformFields(choiceOf(params, 'waveform') as RetroWaveform),
       duty: 0.25,
@@ -279,18 +261,4 @@ function renderRetroInto(
   writeInto(out, rendered);
 }
 
-/** `source.retro` v1 — iki-örneklik PolyBLEP düzeltmeli dondurulmuş çekirdek. */
-const RETRO_V1: SourceEntry = {
-  ...RETRO,
-  version: 1,
-  description:
-    'Retro/arcade osilatör (v1, iki-örneklik PolyBLEP): darbe (duty), düz ya da 4-bit ' +
-    'üçgen, testere, uzun/kısa LFSR, 4-bit wavetable; hard sync, arpej, bit ve ' +
-    'örnek-tutma. Eski programların bit-eşit PCM çıktısı bu sürümle üretilir.',
-  capabilities: ['pitched', 'periodic', 'retro', 'chip', 'noise', 'polyblep'],
-  render(out, params, ctx) {
-    renderRetroInto(out, params, ctx, renderRetroV1);
-  },
-};
-
-export const CHIP_AND_DRUM = [DRUM, RETRO, DRUM_V1, RETRO_V1] as const;
+export const CHIP_AND_DRUM = [DRUM, RETRO] as const;

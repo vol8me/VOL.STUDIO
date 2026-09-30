@@ -60,7 +60,7 @@ const program = (waveform: string, frequency: number) =>
     layers: [
       {
         name: 'probe',
-        source: { primitive: 'source.oscillator', version: 1, params: { waveform, frequency } },
+        source: { primitive: 'source.oscillator', version: 2, params: { waveform, frequency } },
       },
     ],
   });

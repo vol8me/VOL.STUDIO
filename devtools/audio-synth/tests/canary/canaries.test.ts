@@ -122,7 +122,7 @@ describe('canary beklentilerinin dişi var (mutasyon)', () => {
     const layers = getAt(doc, ['source', 'program', 'layers']) as unknown[];
     const tone = {
       name: 'tone',
-      source: { primitive: 'source.oscillator', version: 1, params: { frequency: 300 } },
+      source: { primitive: 'source.oscillator', version: 2, params: { frequency: 300 } },
     };
     const mutated = validateCanary(
       edited(doc, [

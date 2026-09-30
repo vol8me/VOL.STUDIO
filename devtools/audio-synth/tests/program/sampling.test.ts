@@ -11,6 +11,7 @@ import { shiftAndStretch } from '../../src/synthesis/stretch';
 import { hashPcm } from '../../src/protocol/canonical';
 import { probeResolver, probeSample, probeStereoSample, registerSample } from '../support/samples';
 import { RENDER_BLOCK } from '../support/timeouts';
+import { node } from '../support/program';
 
 /**
  * Dalga 9 kapanış kanıtları: bağımsız perde/süre, sampler bölgeleri, granular
@@ -18,11 +19,6 @@ import { RENDER_BLOCK } from '../support/timeouts';
  * bellek-içi test kütüphanesindendir (sentetik; gerçek kayıt iddiası yok).
  */
 const RATE = 48000;
-const node = (primitive: string, params: Record<string, unknown> = {}) => ({
-  primitive,
-  version: 1,
-  params,
-});
 
 function tone(f: number, seconds: number, rate = RATE): Float32Array {
   return Float32Array.from({ length: Math.round(seconds * rate) }, (_, i) => {

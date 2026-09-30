@@ -47,7 +47,7 @@ beforeAll(() => {
     channels: 1,
     durationSeconds: 0.1,
     seed: 1,
-    layers: [{ name: 't', source: { primitive: 'source.oscillator', version: 1 } }],
+    layers: [{ name: 't', source: { primitive: 'source.oscillator', version: 2 } }],
     master: { normalize: 'peak', peakDbfs: -3 },
   };
   mkdirSync(join(repo.root, DEFAULT_SAMPLES_ROOT), { recursive: true });

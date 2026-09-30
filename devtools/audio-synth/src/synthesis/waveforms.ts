@@ -236,13 +236,6 @@ export function getWaveSampleWithPhase(
 }
 
 /**
- * Periyodik dalga örnekleyicisinin tipi — v1 (`waveforms-v1`) ve v2
- * (`waveforms`) çekirdekleri aynı imzayı taşır; davul gibi çekirdeği
- * parametrik seçen yollar bu tip üzerinden enjekte edilir.
- */
-export type WaveSampleFn = typeof getWaveSampleWithPhase;
-
-/**
  * SABİT frekanslı bir dalga için örnek döner (faz mutlak zamandan türetilir).
  *
  * DİKKAT: Yalnızca frekans zaman içinde DEĞİŞMEDİĞİNDE doğrudur. Değişen

@@ -176,7 +176,7 @@ describe('aynı kaynak üzerinde üç bağımsız gesture', () => {
         name: 'voice',
         source: {
           primitive: 'source.oscillator',
-          version: 1,
+          version: 2,
           params: { waveform: 'sawtooth', frequency: { gesture: 'pitch' } },
         },
         resonators: [

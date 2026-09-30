@@ -168,7 +168,7 @@ describe('arama planı (ön-denetim, render yok)', () => {
                 name: 'tone',
                 source: {
                   primitive: 'source.oscillator',
-                  version: 1,
+                  version: 2,
                   params: { waveform: 'sawtooth', frequency: 200 },
                 },
               },

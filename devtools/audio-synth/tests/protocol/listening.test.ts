@@ -36,7 +36,7 @@ afterEach(() => {
 });
 
 const LISTENING_DIR = () => join(repo!.root, LISTENING_ROOT);
-const COUNTS = { canary: 0, benchmark: 0, reference: 0, comparison: 0, pending: 0 };
+const COUNTS = { canary: 0, benchmark: 0, reference: 0, pending: 0 };
 
 function writeCanary(id: string): void {
   const dir = join(repo!.root, 'devtools/audio-synth/canaries');
@@ -62,7 +62,7 @@ function writeCanary(id: string): void {
               name: 'tone',
               source: {
                 primitive: 'source.oscillator',
-                version: 1,
+                version: 2,
                 params: { waveform: 'sine', frequency: 440 },
               },
               articulation: {
@@ -211,25 +211,12 @@ function writeReference(id: string): void {
 }
 
 describe('dinleme paketi', () => {
-  it('boş depoda yalnız sabit v1/v2 karşılaştırma çiftleri üretilir', () => {
+  it('boş depoda paket boştur; envanter ve sayfa yine yazılır', () => {
     repo = createTestRepo();
     const pkg = buildListeningPackage(repo.root);
     expect(pkg.schema).toBe(LISTENING_SCHEMA);
-    expect(pkg.counts).toEqual({ ...COUNTS, comparison: 4 });
-    expect(pkg.items.every((i) => i.kind === 'comparison')).toBe(true);
-    expect(pkg.items.every((i) => i.decision === null)).toBe(true);
-    expect(pkg.items.every((i) => i.status === 'listen-only')).toBe(true);
-    // Çiftler aynı grup altında v1/v2 rolüyle yan yana durur.
-    const groups = new Map<string, string[]>();
-    for (const item of pkg.items) {
-      const roles = groups.get(item.group ?? '') ?? [];
-      roles.push(item.role ?? '');
-      groups.set(item.group ?? '', roles);
-    }
-    expect([...groups.values()].sort()).toEqual([
-      ['v1', 'v2'],
-      ['v1', 'v2'],
-    ]);
+    expect(pkg.counts).toEqual(COUNTS);
+    expect(pkg.items).toEqual([]);
     expect(existsSync(join(LISTENING_DIR(), 'listening.json'))).toBe(true);
     expect(existsSync(join(LISTENING_DIR(), 'index.html'))).toBe(true);
   });
@@ -238,7 +225,7 @@ describe('dinleme paketi', () => {
     repo = createTestRepo();
     writeCanary('tink');
     const pkg = buildListeningPackage(repo.root);
-    expect(pkg.counts).toEqual({ ...COUNTS, canary: 1, comparison: 4, pending: 1 });
+    expect(pkg.counts).toEqual({ ...COUNTS, canary: 1, pending: 1 });
     const item = pkg.items[0];
     expect(item.kind).toBe('canary');
     expect(item.status).toBe('pending-human');
@@ -267,7 +254,6 @@ describe('dinleme paketi', () => {
       expect(item.pcmHash).toMatch(/^sha256:/);
     }
     expect(pkg.counts.benchmark).toBe(2);
-    expect(pkg.counts.comparison).toBe(4);
     expect(pkg.counts.pending).toBe(2);
   }, 30000);
 
@@ -335,11 +321,6 @@ describe('dinleme paketi', () => {
     const first = buildListeningPackage(repo.root);
     const second = buildListeningPackage(repo.root);
     expect(second).toEqual(first);
-    expect(readdirSync(LISTENING_DIR()).sort()).toEqual([
-      'canary',
-      'comparison',
-      'index.html',
-      'listening.json',
-    ]);
+    expect(readdirSync(LISTENING_DIR()).sort()).toEqual(['canary', 'index.html', 'listening.json']);
   });
 });

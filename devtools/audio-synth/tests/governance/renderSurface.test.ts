@@ -33,7 +33,7 @@ const PROBE = {
   layers: [
     {
       name: 'tone',
-      source: { primitive: 'source.oscillator', version: 1, params: { frequency: 220 } },
+      source: { primitive: 'source.oscillator', version: 2, params: { frequency: 220 } },
       resonators: [{ primitive: 'resonator.modal', version: 1 }],
     },
   ],
@@ -61,31 +61,16 @@ describe('render yüzeyi kilidi', () => {
     expect(problems).toEqual([]);
   });
 
-  it('çok sürümlü düğümler her iki sürümü de adıyla çözer', () => {
-    expect(PROGRAM_REGISTRY.versions('source.oscillator')).toEqual([1, 2]);
-    expect(PROGRAM_REGISTRY.get('source.oscillator').version).toBe(2);
-    expect(PROGRAM_REGISTRY.get('source.oscillator', 1).version).toBe(1);
-    // v1 ve v2 aynı parametre alanını taşır; fark yalnız DSP çekirdeğinde
-    // (yüzey özeti sürüm numarasını da içerdiğinden eşit değildir).
-    expect(nodeSurface('source.oscillator', 1).hash).not.toBe(
-      nodeSurface('source.oscillator', 2).hash,
-    );
-    expect(PROGRAM_REGISTRY.versions('source.wind')).toEqual([1, 2]);
-    expect(PROGRAM_REGISTRY.versions('source.rain')).toEqual([1, 2]);
-    expect(PROGRAM_REGISTRY.versions('source.fire')).toEqual([1, 2]);
-    expect(PROGRAM_REGISTRY.versions('source.retro')).toEqual([1, 2]);
-    expect(PROGRAM_REGISTRY.versions('source.drum')).toEqual([1, 2]);
+  it('emekli sürüm adıyla istenirse açık hatayla reddedilir', () => {
+    expect(PROGRAM_REGISTRY.versions('source.oscillator')).toEqual([2]);
+    expect(() => PROGRAM_REGISTRY.get('source.oscillator', 1)).toThrow(/bilinmeyen sürüm/);
+    expect(() => surfaceOf([{ id: 'source.oscillator', version: 1 }])).toThrow();
   });
 
   it("açık sürüm pinli düğüm ref'i o sürümün yüzeyini taşır", () => {
-    // {id,version} ref'leri sürümü ONUR eder: v2 pinliyse v2 yüzeyi kaydedilir.
     const v2 = surfaceOf([{ id: 'source.oscillator', version: 2 }]);
-    const v1 = surfaceOf([{ id: 'source.oscillator', version: 1 }]);
     expect(v2.nodes[0].version).toBe(2);
-    expect(v1.nodes[0].version).toBe(1);
-    expect(v2.hash).not.toBe(v1.hash);
     expect(v2.nodes[0].hash).toBe(nodeSurface('source.oscillator', 2).hash);
-    expect(v1.nodes[0].hash).toBe(nodeSurface('source.oscillator', 1).hash);
   });
 
   it('belge alanları izdüşüme girmez: açıklama değişince özet değişmez', () => {

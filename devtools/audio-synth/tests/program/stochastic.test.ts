@@ -68,7 +68,7 @@ describe('adla türeyen alt akışlar', () => {
       name: 'voice',
       source: {
         primitive: 'source.oscillator',
-        version: 1,
+        version: 2,
         params: { frequency: { value: 220, modulate: [{ by: 'pitchDrift', depth: 0.03 }] } },
       },
     };
@@ -200,7 +200,7 @@ describe('stokastik yük bütçesi', () => {
           name: 'tone',
           source: {
             primitive: 'source.oscillator',
-            version: 1,
+            version: 2,
             params: {
               frequency: {
                 value: 440,
@@ -213,7 +213,7 @@ describe('stokastik yük bütçesi', () => {
           name: `t${j}`,
           source: {
             primitive: 'source.oscillator',
-            version: 1,
+            version: 2,
             params: {
               frequency: {
                 value: 440,

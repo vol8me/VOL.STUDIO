@@ -39,7 +39,7 @@ function toneProgram(frequency: number, waveform = 'sine'): Record<string, unkno
         name: 'tone',
         source: {
           primitive: 'source.oscillator',
-          version: 1,
+          version: 2,
           params: { waveform, frequency },
         },
         articulation: {

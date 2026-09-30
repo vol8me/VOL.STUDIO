@@ -3,6 +3,7 @@ import { evaluateCheck, validateCheck, type MechanicalCheckV1 } from '../../src/
 import { analyzeAudio } from '../../src/analysis/report';
 import { AudioParamError } from '../../src/guard/errors';
 import { renderProgram } from '../../src/program/render';
+import { node } from '../support/program';
 
 function audio(layers: unknown[], durationSeconds = 0.6, gestures?: unknown) {
   const r = renderProgram({
@@ -18,11 +19,6 @@ function audio(layers: unknown[], durationSeconds = 0.6, gestures?: unknown) {
   return { audio: r, report: analyzeAudio(r.channels, r.sampleRate, 'source-pcm') };
 }
 
-const node = (primitive: string, params: Record<string, unknown> = {}) => ({
-  primitive,
-  version: 1,
-  params,
-});
 const sweep = (points: [number, number][]) => ({
   f: { curve: 'curve.linear', version: 1, points },
 });

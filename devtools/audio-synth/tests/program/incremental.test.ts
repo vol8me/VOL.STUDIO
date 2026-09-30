@@ -8,15 +8,11 @@ import { loadCanaries } from '../../src/protocol/canary';
 import { repoSampleResolver } from '../../src/protocol/samples';
 import { probeResolver, probeSample } from '../support/samples';
 import { RENDER_BLOCK } from '../support/timeouts';
+import { node } from '../support/program';
 
 const REPO = new URL('../../../../', import.meta.url).pathname;
 const PACKAGE = new URL('../../', import.meta.url).pathname;
 
-const node = (primitive: string, params: Record<string, unknown> = {}) => ({
-  primitive,
-  version: 1,
-  params,
-});
 const envelope = node('articulation.envelope', {
   attack: 0.002,
   decay: 0.08,

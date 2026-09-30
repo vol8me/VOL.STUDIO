@@ -16,17 +16,13 @@ import { STYLE_PROFILES } from '../../src/program/styles';
 import { hashCanonical, hashPcm } from '../../src/protocol/canonical';
 import { peakFrequency } from '../support/measure';
 import { tankFire } from './graphFixtures';
+import { node } from '../support/program';
 
 /**
  * Stil (Dalga 7 P2) ve materyal (Dalga 7 P2) kapanış kanıtları: aynı tank
  * programı üç profilde topolojiyi korur ve ölçülebilir farklı karakter verir;
  * aynı darbe farklı materyalde farklı mod aralığı ve sönüm verir.
  */
-const node = (primitive: string, params: Record<string, unknown> = {}) => ({
-  primitive,
-  version: 1,
-  params,
-});
 const report = (program: unknown): AudioAnalysisReportV1 => {
   const r = renderProgram(program);
   return analyzeAudio(r.channels, r.sampleRate, 'source-pcm');

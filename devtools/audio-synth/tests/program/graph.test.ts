@@ -7,17 +7,13 @@ import { outputSeconds, resolveProgram } from '../../src/program/schema';
 import { soundGraph, topologyOf } from '../../src/program/soundGraph';
 import { hashCanonical, hashPcm } from '../../src/protocol/canonical';
 import { snakeHiss, tankFire } from './graphFixtures';
+import { node } from '../support/program';
 
 /**
  * SoundGraph (Dalga 7) ve bus/send grafiği (Dalga 10): tank ateşi ile yılan
  * tıslaması AYNI altyapıda farklı topolojiyle; mechanism/body ortak room
  * send'ine; izdüşüm deterministik serileştirilir; kurallar render'dan önce.
  */
-const node = (primitive: string, params: Record<string, unknown> = {}) => ({
-  primitive,
-  version: 1,
-  params,
-});
 const pcm = (program: unknown) => {
   const r = renderProgram(program);
   return hashPcm(r.channels, r.sampleRate);

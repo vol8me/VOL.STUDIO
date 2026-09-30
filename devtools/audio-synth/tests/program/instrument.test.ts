@@ -16,7 +16,7 @@ const program = (params: Record<string, number | string> = {}) => ({
       name: 'tone',
       source: {
         primitive: 'source.instrument',
-        version: 1,
+        version: 2,
         params: { instrument: 'preparedPiano', frequency: 220, noteSeconds: 0.2, ...params },
       },
     },
@@ -25,13 +25,12 @@ const program = (params: Record<string, number | string> = {}) => ({
 });
 
 describe('kanonik enstrüman kaynağı', () => {
-  it('v2 parlak presetleri açar ve v1 sözleşmesini korur', () => {
+  it('parlak presetler açıktır; emekli v1 adıyla istenirse reddedilir', () => {
     const fresh = program();
-    fresh.layers[0].source.version = 2;
     fresh.layers[0].source.params.instrument = 'crystalBell';
     expect(() => resolveProgram(fresh)).not.toThrow();
     fresh.layers[0].source.version = 1;
-    expect(() => resolveProgram(fresh)).toThrow();
+    expect(() => resolveProgram(fresh)).toThrow(/sürüm/);
   });
   it('çıkıştan uzun nota ayırmadan önce kendi iş ve bellek bütçesine girer', () => {
     const short = estimateProgramCost(resolveProgram(program({ noteSeconds: 0.1 })));
@@ -40,7 +39,7 @@ describe('kanonik enstrüman kaynağı', () => {
     expect(long.peakBytes).toBeGreaterThan(short.peakBytes * 5);
   });
   it('preset parametreleri sürümlü düğümün render sözleşmesine girer', () => {
-    const projection = renderProjection(PROGRAM_REGISTRY.get('source.instrument', 1));
+    const projection = renderProjection(PROGRAM_REGISTRY.get('source.instrument'));
     expect(projection).toHaveProperty('renderContract.preparedPiano');
     expect(projection).toHaveProperty('renderContract.cello');
   });
