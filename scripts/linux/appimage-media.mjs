@@ -66,3 +66,30 @@ export function buildGStreamerScannerCandidates({
   );
   return [...new Set(candidates)];
 }
+
+export function oggDecodePipeline(path) {
+  return [
+    '-q',
+    'filesrc',
+    `location=${path}`,
+    '!',
+    'decodebin',
+    '!',
+    'audioconvert',
+    '!',
+    'audio/x-raw,channels=2',
+    '!',
+    'deinterleave',
+    'name=channels',
+    'channels.src_0',
+    '!',
+    'queue',
+    '!',
+    'fakesink',
+    'channels.src_1',
+    '!',
+    'queue',
+    '!',
+    'fakesink',
+  ];
+}

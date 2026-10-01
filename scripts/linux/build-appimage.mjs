@@ -13,6 +13,7 @@ import {
 import { homedir, tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import {
+  oggDecodePipeline,
   buildGStreamerScannerCandidates,
   extractGStreamerPluginFilename,
   OPTIONAL_GSTREAMER_ELEMENTS,
@@ -40,7 +41,9 @@ if (!workspace) {
 
 const manifestPath = join(root, workspace, 'src-tauri', 'tauri.conf.json');
 if (!existsSync(manifestPath)) {
-  console.error(`${workspace}: src-tauri/tauri.conf.json yok — bu workspace bir Tauri uygulaması değil.`);
+  console.error(
+    `${workspace}: src-tauri/tauri.conf.json yok — bu workspace bir Tauri uygulaması değil.`,
+  );
   process.exit(2);
 }
 const { productName, version } = JSON.parse(readFileSync(manifestPath, 'utf8'));
@@ -55,7 +58,7 @@ const record = loadRepoLifecycle(root)?.workspaces.find((w) => w.path === worksp
 if (record?.status === 'frozen') {
   console.error(
     `${workspace} frozen (${record.freezeTag}). Frozen ürün HEAD'de paketlenmez; ` +
-      'yeniden paketleme freezeTag worktree\'sindedir.',
+      "yeniden paketleme freezeTag worktree'sindedir.",
   );
   process.exit(2);
 }
@@ -185,39 +188,9 @@ function verifyGStreamerRuntime({ pluginDir, scannerTarget }) {
 
     const probeAudio = findProbeAudio(join(root, workspace, 'public/assets/audio'));
     if (probeAudio === null) {
-      console.warn('Pakette OGG asset\'i yok; decode zinciri sondası atlandı.');
+      console.warn("Pakette OGG asset'i yok; decode zinciri sondası atlandı.");
     } else {
-      run(
-        'gst-launch-1.0',
-        [
-          '-q',
-          'filesrc',
-          `location=${probeAudio}`,
-          '!',
-          // WebKit de açık demux/decoder zinciri değil decodebin kullanır. Bu
-          // yol typefindfunctions eksikse üretim sırasında kesin olarak düşer.
-          'decodebin',
-          '!',
-          'audioconvert',
-          '!',
-          // WebKit AudioFileReader ile aynı stereo kanal ayrıştırma yolunu
-          // zorlarız; yalnız decodebin smoke testi interleave eklentisini
-          // kullanmadığı için gerçek uygulamadaki sessizliği kaçırabilir.
-          'deinterleave',
-          'name=channels',
-          'channels.src_0',
-          '!',
-          'queue',
-          '!',
-          'fakesink',
-          'channels.src_1',
-          '!',
-          'queue',
-          '!',
-          'fakesink',
-        ],
-        { env, timeout: 15_000 },
-      );
+      run('gst-launch-1.0', oggDecodePipeline(probeAudio), { env, timeout: 15_000 });
     }
   } finally {
     rmSync(registryDir, { recursive: true, force: true });

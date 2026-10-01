@@ -132,9 +132,6 @@ function ensureProbeAudio() {
         'lavfi',
         '-i',
         'sine=frequency=440:duration=0.5',
-        // Stereo ZORUNLU: decode doğrulaması `deinterleave`'in iki src
-        // pad'ini de bağlar; mono dosyada src_1 bağsız kalır ve
-        // gst-launch EOS'a ulaşmadan asılı kalır.
         '-ac',
         '2',
         '-q:a',
@@ -168,7 +165,14 @@ if (!imageExists(BUILD_IMAGE_TAG)) {
   console.log(`[steamrt4] derleme imajı kuruluyor: ${BUILD_IMAGE_TAG}`);
   execFileSync(
     'podman',
-    ['build', '-t', BUILD_IMAGE_TAG, '-f', join(ROOT, 'scripts', 'linux', 'steamrt4.Containerfile'), ROOT],
+    [
+      'build',
+      '-t',
+      BUILD_IMAGE_TAG,
+      '-f',
+      join(ROOT, 'scripts', 'linux', 'steamrt4.Containerfile'),
+      ROOT,
+    ],
     { stdio: 'inherit' },
   );
 }
