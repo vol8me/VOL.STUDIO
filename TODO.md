@@ -13,11 +13,15 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 Analiz ve kararlar: yerel sertleştirme raporu §0.4, §0.4b, §0.4c. Cihazlar
 uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi").
 
-- [ ] **[P1] VT-R5 — İnsan dinleme onayı.** 33 ses kanonik yayın ve
-      doğrulama kapılarından geçti; oyun olayları, devir karışımı, konum ve
-      duraklatma gerçek Chromium/WebKit ses bağlamında sınandı. Kapanır:
-      kullanıcının toplu dinleme onayı; üç sürekli katmanda 12 dB altındaki
-      tepe faktörü ve beş patlama tık adayı dinlemede değerlendirilir.
+- [ ] **[P1] VT-R5 — Yeni seslerin insan dinleme onayı.** 33 kuru mekanik/metal
+      teslim, sessiz boşta durum ve oyun olayı eşlemeleri hazır. Kapanır:
+      kullanıcının yeni seti toplu dinleyip onaylaması.
+- [ ] **[P1] VT-H3 — Nişan ve dokunmatik hissiyat.** Dünya yönünü koruyan taret,
+      hedefe oturunca ateş, iki bölgeli sağ çubuk ve balistik hedef lazeri.
+      Kapanır: kontrol/fizik ve Chromium/WebKit testleri, bağlı cihaz ölçümü.
+- [ ] **[P1] VT-W — Dünya ve hava olayları.** Toz, yağmur ve kar; su/kar birikimi,
+      zemin tutuşu, rüzgâr/mermi direnci ve görünür yansıma. Kapanır: seedli
+      model, sabit adım determinizmi, fizik/render bağları ve cihaz bütçeleri.
 - [ ] **[P3] VT-Q — Efekt kalitesi kalıcı.** Duraklatmada seçilen kademe
       oturumdan oturuma korunur; Deck ve Android'de efekt FPS'i ölçülür ve
       açılış kademesi ölçüme göre seçilir (VT4/VT5 ölçümüyle birlikte).
@@ -40,8 +44,6 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       doğrulanır (Deck 90 Hz, Android dokunmatik), titreşim cihazda denenir;
       bulgular zarfa ve ayara işlenir. Kapanır: her cihazdan ekran görüntüsü
       ve kullanıcının his onayı.
-- [ ] **[P2] VT6 — Windows.** Yapılandırma ve kod yolu. Kapanır: yapılandırma
-      testleri; paket yerelde üretilemediği için "ölçülmedi".
 - [ ] **[P1] VT7 — Yeni oyun iskeleti.** VOL.TEST'ten çıkarılır
       (tauri-v2/templates/game). Kapanır: iskeletten üretilen paket
       `pnpm signoff`u ilk denemede geçer.
@@ -84,11 +86,13 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ### Kod
 
-- [ ] **[P1] E1 — Tek girdi hakemi ve tek kol kaynağı.** Kare başına tek kol
-      yoklaması ve tek hakem; testli.
 - [ ] **[P3] A20 — Titreşim darbeleri tek zamanlayıcı iş parçacığından yürür.**
-- [ ] **[P3] S7 — Araç zinciri.** ESLint, Prettier, TypeScript sürüm ve
-      yapılandırması.
+- [ ] **[P3] S7 — Ana sürüm geçişleri.** ESLint 10, stylelint 17, jsdom 30,
+      Vitest 5 ve TypeScript 7 için uyumluluk ayrı ayrı doğrulanır. Kapanır:
+      ilgili paketlerin ve kapıların yeni ana sürümde geçmesi.
+- [ ] **[P3] CORE sıkı indeks denetimi.** `noUncheckedIndexedAccess` 610
+      tanı üretir; pen.dev'de etkin ve kapıyla korunur. Kapanır: CORE'da
+      denetim açıkken tip kapısı geçer; indis varsayımları daraltılır.
 
 ### Kullanıcı talebini bekleyenler
 
@@ -98,6 +102,9 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       kalır.
 
 ## Kapatılanlar
+
+- [x] E1 — VOL.TEST girdi yöneticisinin durumu HUD gliflerine gider; paylaşılan yolda ikinci kol yoklaması ve kip hakemi yoktur, regresyon testli.
+- [x] VT6 — Windows NSIS hedefi, ürün kimliği, ikon ve pencere yetenekleri yapılandırma testleriyle kilitli; Windows cihazı ölçülmedi.
 
 - [x] VT-R1 — Kimlikli çoklu araç, sahibi olan mermi ve olay, araç–araç SAT teması ve kimlikle görünüm kaydı; iki araçlı simülasyon ve sahne testleri.
 

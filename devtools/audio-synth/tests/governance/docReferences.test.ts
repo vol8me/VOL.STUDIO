@@ -17,9 +17,7 @@ const DOCS = ['README.md', 'DESIGN.md', 'TODO.md'] as const;
  * frozen ağaca ait bir anlatım burada gerekçesiyle durur; aşağıdaki ters kapı
  * listenin bayat kalmasına izin vermez.
  */
-const HISTORICAL = new Map<string, string>([
-  ['scripts/music-demo.ts', 'Dalga 6’da silindi; kapanış kaydı kaldırıldığını anlatır'],
-]);
+const HISTORICAL = new Map<string, string>();
 
 const PATH_PATTERN =
   /`((?:src|scripts|tests|core|devtools|games|canaries|reference|audio-[a-z]+)\/[A-Za-z0-9_./-]*[A-Za-z0-9_])`/g;
