@@ -1,0 +1,322 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -3.7138762409656324e-7
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.3973333333333333,
+        "frames": 19072,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -5.928654666536898
+        ],
+        "channelRmsDbfs": [
+          -23.42711025909804
+        ],
+        "crestFactorDb": 17.498455592561143,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -20.562707463701184,
+        "rmsDbfs": -23.42711025909804,
+        "samplePeakDbfs": -5.928654666536898,
+        "truePeakDbtp": -5.928654666536898
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -40.3696057892362,
+          "high": -28.358416938452816,
+          "low": -45.335708060238815,
+          "mid": -24.8197744891816,
+          "sub": -51.00148782373803
+        },
+        "centroidHz": 3186.516050108972,
+        "flatness": 0.000008991305843587068,
+        "peakHz": 2390.625,
+        "rolloff85Hz": 4804.6875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.15,
+        "attackSeconds": 0.05,
+        "decay40Seconds": 0.09,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.05,
+        "temporalCentroidSeconds": 0.056688598245455926,
+        "trailingSilenceSeconds": 0.2573333333333333
+      }
+    },
+    "sourceRecordHash": "sha256:2f76c1c32c332098074b34aa9ad6a87ea3039214691faf8b52b0b6ecc4960fc0"
+  },
+  "asset": {
+    "bytes": 5915,
+    "encodedHash": "sha256:c1e670e3c0dda2a5efcff47281da366d33039a3ad23aa4eb9f520eb581c9c667",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/families/brake/brake-a.ogg"
+  },
+  "assetId": "vt-hardsteel-brake-brake-a",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "weight:light",
+        "brake"
+      ],
+      "durationSeconds": {
+        "max": 0.45,
+        "min": 0.35000000000000003
+      },
+      "id": "vt-hardsteel-brake-brake-a",
+      "intent": "Fren kilidi: kuru palet sıyrılması ve kısa mekanik kilit; pnömatik ortam tıslaması yok. Varyant brake-a (weight:light).",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST kuru mekanik brake — brake-a"
+    },
+    "hash": "sha256:0a92b90e0464f453468c0fe003826bd5647093de8b2d9f820af9322921ed5a74",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:995937db0783a10a1bb6781d20e9e9418796ad5b9fa5a0711afc67910efffeb9",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        },
+        {
+          "hash": "sha256:91c81ff2366eae583d7cc0306b88d54c298fe4340b666cdf32ab6099a7037011",
+          "id": "source.friction",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": "vt-hardsteel-brake/brake-a",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "brake-a",
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-brake/jobs/brake-a",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Fren kilidi: kuru palet sıyrılması ve kısa mekanik kilit; pnömatik ortam tıslaması yok.",
+      "durationSeconds": 0.4,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.004,
+              "curve": "cosine",
+              "decay": 0.14,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "scrape",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2916.45,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "granularity": 4.27763,
+              "material": "metal",
+              "pressure": 0.516351,
+              "rolling": 0,
+              "roughness": 0.35,
+              "speed": 0.754669
+            },
+            "primitive": "source.friction",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.08,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -28,
+          "mechanism": "mechanical",
+          "name": "plate",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.45,
+                "damping": 0.6,
+                "decay": 0.044467,
+                "frequency": 923.217,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 2800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.002,
+              "roughness": 0.15
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.018
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "fadeInSeconds": 0.001,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -6
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8205
+    },
+    "hash": "sha256:92dcfef7c156e084c693fdf074a862d9f3893e6b5a242621298c9bf270623fa8",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 19200,
+      "hash": "sha256:7c54eb0fae62fe243fc851c2de0c7eeb76f12b1f0f352d406338797008aea048",
+      "sampleRate": 48000
+    },
+    "renderId": "r-b3afff7aaafa5742",
+    "rendererVersion": 2,
+    "seed": 8205
+  },
+  "schema": "AudioAssetManifestV1"
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:f0888e22b25df3ee4236699a8a7890db6c712e5011e4f8a8d961bfe0b0380ce7",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:ae272b048109926f33b826257c6d7802ec05d8b0bf267d4ae4c5d296e5c9f3e2",
+    "familyId": "vt-hardsteel-cannon",
+    "kind": "family-variant",
+    "variantId": "v-021da7be9b448d34",
+    "variantKey": "cannon-d"
+  }
+}

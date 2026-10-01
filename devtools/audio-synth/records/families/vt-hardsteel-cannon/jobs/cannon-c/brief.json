@@ -1,0 +1,24 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "rarity:rare",
+    "weight:light",
+    "cannon"
+  ],
+  "durationSeconds": {
+    "max": 0.65,
+    "min": 0.5499999999999999
+  },
+  "id": "vt-hardsteel-cannon-cannon-c",
+  "intent": "Kompakt ağır mekanik top: kısa gövde darbesi, namlu kırılması ve kuru kızak. Şarj, organik enerji ve uzun uğultu yok. Varyant cannon-c (rarity:rare, weight:light).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST kuru mekanik cannon — cannon-c"
+}

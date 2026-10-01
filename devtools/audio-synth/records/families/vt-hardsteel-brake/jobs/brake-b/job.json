@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-c38e58d9e18a832a": {
+        "hash": "sha256:668c377bb4749e584be998302d3e76c86dc2e5336caab1348a319c8c0856c135",
+        "path": "analyses/r-c38e58d9e18a832a.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:cb5cddd52740493c9fab4773e0a267e731109b357f9d4f99775c7d9921191aa6",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:cb5cddd52740493c9fab4773e0a267e731109b357f9d4f99775c7d9921191aa6",
+      "hash": "sha256:14bc7063f3c3ebd0f69f07b4c5462280bbf433d636ea09f4aee93486f0d61e69",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:88ecd25fe0d6f134d80936121bef9319f46bfe08c75f58ff67853bd5bebf92cd",
+      "path": "games/vol-test/audio-manifests/sfx/steel/families/brake/brake-b.json"
+    },
+    "renders": {
+      "r-c38e58d9e18a832a": {
+        "hash": "sha256:11080016ded8e46fce74bad5f22989b728175177dcfa8c3f9e913d6c0b9e585c",
+        "path": "renders/r-c38e58d9e18a832a.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:f9a3f2458a3c0d72b4481bdc78dbf9dd470a4a31eb14f715d26647ddb2cf2cec",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "brake-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/families/brake/brake-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-hardsteel-brake/brake-b"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

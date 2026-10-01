@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-333bf380fb6dcd1d": {
+        "hash": "sha256:ab086bc2f7d940a2de375f6009e2225324a8857fa6eda615c8c8288ee933692a",
+        "path": "analyses/r-333bf380fb6dcd1d.json"
+      },
+      "r-b629010f959bd017": {
+        "hash": "sha256:f94710d6342d9b6235c77e356fce3eff2a5b660713191e150714d0db6a5cc58d",
+        "path": "analyses/r-b629010f959bd017.json"
+      },
+      "r-f6e258239d2fc4c0": {
+        "hash": "sha256:5b73f27f652f1e99f5621fc27c5c25d582221ecf4b60ac18ba557b660b385a7b",
+        "path": "analyses/r-f6e258239d2fc4c0.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:c62564f3c6d638eadab28b517e49ff2bed32e2918c9c9dc2828870d6bbcb80a8",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:c62564f3c6d638eadab28b517e49ff2bed32e2918c9c9dc2828870d6bbcb80a8",
+      "hash": "sha256:29b77a86874fa8ddb847e674a4d140bf6e0ddeb64885a397041922f900f380ef",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:06f4582f2113a256feba11bed34e7869437a85bfcffd7641c020ca36f77fec1e",
+      "path": "games/vol-test/audio-manifests/sfx/steel/families/blast/blast-c.json"
+    },
+    "renders": {
+      "r-333bf380fb6dcd1d": {
+        "hash": "sha256:4b0741b84ba20fcc05e8ed0e7f3af6bec7ce48dd694c87a698367e6d1c5af8cc",
+        "path": "renders/r-333bf380fb6dcd1d.json"
+      },
+      "r-b629010f959bd017": {
+        "hash": "sha256:78af05ff1c18480f976a82eefe28a8a1039316e5ceb9f2b6ed4ef50c32db8cf8",
+        "path": "renders/r-b629010f959bd017.json"
+      },
+      "r-f6e258239d2fc4c0": {
+        "hash": "sha256:4c4dff8866e492dacf88279c736267e1d02dc02c1a144a9be898de64793df70a",
+        "path": "renders/r-f6e258239d2fc4c0.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:edf0720d9045848448cfa769035218ddb299e0fb9c828e0c6b4c46168baecfe6",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "blast-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 16,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/families/blast/blast-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-hardsteel-blast/blast-c"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

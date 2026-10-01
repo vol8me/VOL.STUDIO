@@ -48,7 +48,15 @@ export class GameAudio {
       }
     }
     for (const action of ['pause', 'resume'])
-      this.bank.register(`ui:${action}`, [audioUrl(`public/assets/audio/ui/${action}.ogg`)]);
+      this.bank.register(`ui:${action}`, [audioUrl(`${AUDIO.uiAssetRoot}/${action}.ogg`)]);
+  }
+
+  setVolume(volume: number): void {
+    this.bus.gain.setTargetAtTime(
+      AUDIO.masterGain * Math.max(0, Math.min(1, volume)),
+      this.context.currentTime,
+      0.02,
+    );
   }
 
   load(): Promise<void> {

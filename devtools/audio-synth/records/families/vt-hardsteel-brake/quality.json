@@ -1,0 +1,103 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      },
+      "centroidHz": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      },
+      "maxMomentaryLufs": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.497819,
+    "medianDistance": 0.497819,
+    "minDistance": 0.497819,
+    "nearIdentical": [],
+    "pairs": 1
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 6.961,
+    "medoid": "brake-a",
+    "members": [
+      {
+        "distance": 0,
+        "key": "brake-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 6.961,
+        "key": "brake-b",
+        "shiftOctaves": -1.333
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "brake-a",
+      "nearest": {
+        "distance": 0.497819,
+        "key": "brake-b"
+      },
+      "pcmHash": "sha256:7c54eb0fae62fe243fc851c2de0c7eeb76f12b1f0f352d406338797008aea048"
+    },
+    {
+      "key": "brake-b",
+      "nearest": {
+        "distance": 0.497819,
+        "key": "brake-a"
+      },
+      "pcmHash": "sha256:131ae2447d16a91e48b66843703b1432f2983784eef8401cf778b10699a5ce08"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 2
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

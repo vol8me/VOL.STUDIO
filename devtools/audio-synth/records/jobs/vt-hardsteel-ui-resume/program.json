@@ -1,0 +1,116 @@
+{
+  "channels": 1,
+  "description": "Kısa kuru çift röle mandalı: resume. Melodi, kabarcık, ortam ve müzik yok.",
+  "durationSeconds": 0.45,
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.008,
+          "curve": "exponential",
+          "decay": 0.3,
+          "release": 0.04,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.31,
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "latch-first",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.45,
+            "damping": 0.6,
+            "decay": 0.3,
+            "frequency": 680,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2400,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "contactTime": 0.002,
+          "roughness": 0.1
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.008,
+          "curve": "exponential",
+          "decay": 0.3,
+          "release": 0.04,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 0.31,
+      "gainDb": -2,
+      "mechanism": "mechanical",
+      "name": "latch-second",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.45,
+            "damping": 0.6,
+            "decay": 0.3,
+            "frequency": 1150,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2400,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "contactTime": 0.002,
+          "roughness": 0.08
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      },
+      "startSeconds": 0.075
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "fadeInSeconds": 0.001,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8131
+}

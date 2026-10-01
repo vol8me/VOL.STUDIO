@@ -1,9 +1,9 @@
 import { SoundFamilyBank } from '@volstudio/core/audio/sfx';
-import cannon from '../../audio-banks/vt-cannon.json';
-import blast from '../../audio-banks/vt-blast.json';
-import hit from '../../audio-banks/vt-hit.json';
-import crash from '../../audio-banks/vt-crash.json';
-import brake from '../../audio-banks/vt-brake.json';
+import cannon from '../../audio-banks/vt-hardsteel-cannon.json';
+import blast from '../../audio-banks/vt-hardsteel-blast.json';
+import hit from '../../audio-banks/vt-hardsteel-hit.json';
+import crash from '../../audio-banks/vt-hardsteel-crash.json';
+import brake from '../../audio-banks/vt-hardsteel-brake.json';
 
 export const FAMILIES = {
   cannon: SoundFamilyBank.parse(cannon),
@@ -23,5 +23,5 @@ export function blastPath(key: string, distance: 'near' | 'mid' | 'far'): string
   if (!variant) throw new Error(`Patlama varyantı bulunamadı: ${key}`);
   return distance === 'near'
     ? variant.path
-    : `public/assets/audio/sfx/blast-${distance}-${key}.ogg`;
+    : `public/assets/audio/sfx/steel/blast-${distance}-${key}.ogg`;
 }

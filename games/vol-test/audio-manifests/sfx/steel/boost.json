@@ -1,0 +1,285 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.0000015790540806869381
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 3,
+        "frames": 144000,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -6.908495142598065
+        ],
+        "channelRmsDbfs": [
+          -22.674531464617942
+        ],
+        "crestFactorDb": 15.766036322019877,
+        "integratedLufs": -22.730907294016177,
+        "maxMomentaryLufs": -22.700595866322583,
+        "rmsDbfs": -22.674531464617942,
+        "samplePeakDbfs": -6.908495142598065,
+        "truePeakDbtp": -6.9041796920555125
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -83.71515618943889,
+          "high": -46.911140444754395,
+          "low": -30.9526238011105,
+          "mid": -23.523718657808224,
+          "sub": -38.814888969438755
+        },
+        "centroidHz": 861.9166978963239,
+        "flatness": 1.19405215857065e-7,
+        "peakHz": 726.5625,
+        "rolloff85Hz": 1218.75
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 3,
+        "attackSeconds": 0,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 2.98,
+        "temporalCentroidSeconds": 1.4962176197810548,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:8a806f8d69c9bc9483b18b410c45ce0187276fb09ec4f58449f44be1f5a9a8dc"
+  },
+  "asset": {
+    "bytes": 40163,
+    "encodedHash": "sha256:b74095df5d118ed9d0456c936838359be76b5bbc1c8afa3013f041d212a8ac9b",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/boost.ogg"
+  },
+  "assetId": "vt-hardsteel-boost",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 4.05,
+        "min": 2.95
+      },
+      "id": "vt-hardsteel-boost",
+      "intent": "Kuru mekanik boost; yalnız ilgili araç eylemi boyunca çalışır, ortam sesi ve müzik içermez.",
+      "kind": "acoustic",
+      "loop": true,
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "codex"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — kuru mekanik: vt-steel-boost"
+    },
+    "hash": "sha256:3e0e7582e524b9737f3067c51fc0e266e58a096c11ef4014595e04826649339f",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:2d98e3d395fe2d4df8dd54778d1e33fa10a7cab370fcbadbcd269a56b12c8c43",
+      "nodes": [
+        {
+          "hash": "sha256:b9f7f769ee1231cdeb3308f02c54b955be69705286885e0805f92f23f9d56d96",
+          "id": "exciter.membrane",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995",
+          "id": "source.machine",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-boost",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-boost",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Kuru mekanik boost; yalnız ilgili araç eylemi boyunca çalışır, ortam sesi ve müzik içermez.",
+      "durationSeconds": 4,
+      "layers": [
+        {
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "drive-ratchet",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 1800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "buckleDecay": 0.0032,
+              "rate": 80,
+              "tension": 0.5
+            },
+            "primitive": "exciter.membrane",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -25,
+          "mechanism": "mechanical",
+          "name": "loaded-gears",
+          "role": "tonal",
+          "source": {
+            "params": {
+              "bearing": 0.02,
+              "count": 12,
+              "harmonics": 10,
+              "imbalance": 0.01,
+              "load": 0.9,
+              "mechanism": "gear",
+              "noise": 0.03,
+              "rpm": 3600,
+              "tilt": 0.8
+            },
+            "primitive": "source.machine",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "loop": {
+          "crossfadeSeconds": 1
+        },
+        "normalize": "peak",
+        "peakDbfs": -7
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8123
+    },
+    "hash": "sha256:097d616d64ec9aa8a9e7d6ea7c8993f99025af92041ed62d0a2dd0e4375c8f39",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 144000,
+      "hash": "sha256:687acf496ea374f2a433e3798fca7b6eb21d1627229786148108080cb93a7ef6",
+      "sampleRate": 48000
+    },
+    "renderId": "r-5771d064ce5d6c17",
+    "rendererVersion": 2,
+    "seed": 8123
+  },
+  "schema": "AudioAssetManifestV1",
+  "seam": {
+    "jumpRatio": 0.2412,
+    "levelStepDb": -0.096,
+    "method": "loop-seam-v1",
+    "pass": true,
+    "reasons": [],
+    "spectralStepDb": -5.302
+  }
+}

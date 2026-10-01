@@ -1,0 +1,327 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Ağır araç teması: kısa zırh plakası darbesi, sıkı şasi rezonansı ve kuru sürtünme. Uzun ortam kuyruğu yok.",
+      "durationSeconds": 0.45,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.003,
+              "curve": "cosine",
+              "decay": 0.32,
+              "hold": 0.008,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -15,
+          "mechanism": "mechanical",
+          "name": "plate",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.45,
+                "damping": 0.6,
+                "decay": 0.45,
+                "frequency": 760,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 2800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.0023,
+              "roughness": 0.2
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.003,
+              "curve": "cosine",
+              "decay": 0.32,
+              "hold": 0.008,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -27,
+          "mechanism": "mechanical",
+          "name": "body",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.45,
+                "damping": 0.6,
+                "decay": 0.4,
+                "frequency": 520,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 2800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.004,
+              "roughness": 0.1
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.006
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.004,
+              "curve": "cosine",
+              "decay": 0.16,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "grit",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2200,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "fadeInSeconds": 0.001,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -5
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8204
+    }
+  },
+  "delivery": {
+    "assetClass": "sfx",
+    "assetDir": "public/assets/audio/sfx/steel/families/crash",
+    "durationSeconds": {
+      "max": 0.5,
+      "min": 0.4
+    },
+    "package": "@volstudio/vol-test",
+    "placement": "positional",
+    "subtype": "sfx"
+  },
+  "description": "Ağır araç teması: kısa zırh plakası darbesi, sıkı şasi rezonansı ve kuru sürtünme. Uzun ortam kuyruğu yok.",
+  "dimensions": [
+    {
+      "name": "grit-brightness",
+      "range": {
+        "max": 4800,
+        "min": 500,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "grit",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "plate-decay",
+      "range": {
+        "max": 0.5850000000000001,
+        "min": 0.315,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "plate",
+        "param": "decay",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "plate-pitch",
+      "range": {
+        "max": 896.8,
+        "min": 623.1999999999999,
+        "scale": "linear",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "plate",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "vt-hardsteel-crash",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 4
+  },
+  "roles": {
+    "intensity": {
+      "hard": {
+        "plate-decay": {
+          "max": 0.5850000000000001,
+          "min": 0.5040000000000001
+        },
+        "plate-pitch": {
+          "max": 714.4,
+          "min": 623.1999999999999
+        }
+      },
+      "soft": {
+        "plate-decay": {
+          "max": 0.396,
+          "min": 0.315
+        },
+        "plate-pitch": {
+          "max": 896.8,
+          "min": 805.6
+        }
+      }
+    },
+    "rarity": {
+      "common": {
+        "grit-brightness": {
+          "max": 1000,
+          "min": 500
+        }
+      },
+      "rare": {
+        "grit-brightness": {
+          "max": 4800,
+          "min": 3200
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 8303,
+  "title": "VOL.TEST kuru mekanik crash",
+  "variants": [
+    {
+      "key": "hard-a",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "common"
+      },
+      "tags": [
+        "crash"
+      ]
+    },
+    {
+      "key": "hard-b",
+      "roles": {
+        "intensity": "hard",
+        "rarity": "rare"
+      },
+      "tags": [
+        "crash"
+      ]
+    },
+    {
+      "key": "soft-a",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "common"
+      },
+      "tags": [
+        "crash"
+      ]
+    },
+    {
+      "key": "soft-b",
+      "roles": {
+        "intensity": "soft",
+        "rarity": "rare"
+      },
+      "tags": [
+        "crash"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 3
+}

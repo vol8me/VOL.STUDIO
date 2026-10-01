@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-6af8e89b866a9e87": {
+        "hash": "sha256:c598e81d6735261cc424fe4f03a3bc1d352063b0a6dba9fd53a6431da28bf86e",
+        "path": "analyses/r-6af8e89b866a9e87.json"
+      },
+      "r-967b6e771bd10d16": {
+        "hash": "sha256:cb6966a0cf90db52ad51d4ed3cfc1947acf4467e21cb569a7e008acc3fca3379",
+        "path": "analyses/r-967b6e771bd10d16.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:44417fb4863d1e7ad00f978725e7c7183b940e3553b5d6eb1457889c8083c4bd",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:44417fb4863d1e7ad00f978725e7c7183b940e3553b5d6eb1457889c8083c4bd",
+      "hash": "sha256:ae6423ce821d22fe0290e697146691fe0092fd7b325650bc66f496247404d753",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:a135fa673f2794cc82595e47e56b03582f23a204ef5cbde59c32493e92d9b038",
+      "path": "games/vol-test/audio-manifests/sfx/steel/engine-idle.json"
+    },
+    "renders": {
+      "r-6af8e89b866a9e87": {
+        "hash": "sha256:1805e81f43a74611b23a0e7cd8fa925c7b1668d919a40514d909622cfbbdbe0a",
+        "path": "renders/r-6af8e89b866a9e87.json"
+      },
+      "r-967b6e771bd10d16": {
+        "hash": "sha256:db42b9eb1a2c6e293f37b52267ccecabf2cb59c01d6bd7a33cf44ce079b17cdf",
+        "path": "renders/r-967b6e771bd10d16.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:4d7dc563b8237c391acc0bd087321243cda865297854d55791f14096e23a3a47",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-engine-idle",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 18,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/engine-idle.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

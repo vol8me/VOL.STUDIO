@@ -1,4 +1,6 @@
 export const AUDIO = {
+  loopAssetRoot: 'public/assets/audio/sfx/steel',
+  uiAssetRoot: 'public/assets/audio/ui/steel',
   seed: 20261003,
   masterGain: 0.65,
   nearRadius: 160,
@@ -9,6 +11,7 @@ export const AUDIO = {
   hardCrashSpeed: 75,
   fullCrashSpeed: 160,
   brakeMinSpeed: 40,
+  loopMinGain: 0.001,
   maxLoopVehicles: 4,
   maxVoices: 24,
   maxVoicesPerSound: 3,
@@ -21,6 +24,7 @@ export const AUDIO = {
     idleRpm: 780,
     maxRpm: 2700,
     gain: 0.34,
+    motionFloor: 0.015,
     speedWeight: 0.75,
     loadWeight: 0.25,
     boostLoad: 0.15,

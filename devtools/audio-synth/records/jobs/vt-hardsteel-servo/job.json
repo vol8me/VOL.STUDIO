@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-10714e929387467c": {
+        "hash": "sha256:9f983b2c3982fdd671253c576f55dff73073a092e90c3a6e61fb000af74a6234",
+        "path": "analyses/r-10714e929387467c.json"
+      },
+      "r-9649cdd0cb99be40": {
+        "hash": "sha256:bf06adaf5cab9969a6c88b4f7dcf0182f29c7c4b60eecd625969a9c2864a233b",
+        "path": "analyses/r-9649cdd0cb99be40.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:3f09a3bebeded5591d171b9e26afa25fb8cc864e09d378f3fd4c5b0a87be5ce6",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:3f09a3bebeded5591d171b9e26afa25fb8cc864e09d378f3fd4c5b0a87be5ce6",
+      "hash": "sha256:b2cfcd368c37c7abdc11422eb0fbe1ff49deb63a36c857afd35e490f911b25a4",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:15fa30e090d90f1aa0b732f424fc70bd29b90c67d2e415361de72f378dc399ab",
+      "path": "games/vol-test/audio-manifests/sfx/steel/servo.json"
+    },
+    "renders": {
+      "r-10714e929387467c": {
+        "hash": "sha256:3ee87c18ce1735cab5b6d5c629bcb7460147d2c520f7b5816748be778a972daa",
+        "path": "renders/r-10714e929387467c.json"
+      },
+      "r-9649cdd0cb99be40": {
+        "hash": "sha256:7d2abdb5dc925832f98e76a11c01acb67444d269f53464d45fd26c5c576ac1c8",
+        "path": "renders/r-9649cdd0cb99be40.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:5ec9ca91cb117a587a1daa9779e89a88ba1b7792d9ca9580d0fcfa8ddc7e13fb",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-servo",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 14,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/servo.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 0.5,
+    "min": 0.4
+  },
+  "id": "vt-hardsteel-ui-resume",
+  "intent": "Kısa kuru çift röle mandalı: resume. Melodi, kabarcık, ortam ve müzik yok.",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "codex"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — kuru mekanik: vt-steel-ui-resume"
+}

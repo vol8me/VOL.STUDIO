@@ -1,0 +1,370 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          3.1085625205023337e-7
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.5973333333333334,
+        "frames": 28672,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -4.120429544574026
+        ],
+        "channelRmsDbfs": [
+          -22.51996630067697
+        ],
+        "crestFactorDb": 18.399536756102943,
+        "integratedLufs": -22.553411525101563,
+        "maxMomentaryLufs": -22.553411525101563,
+        "rmsDbfs": -22.51996630067697,
+        "samplePeakDbfs": -4.120429544574026,
+        "truePeakDbtp": -4.109437430833496
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -54.46615507723685,
+          "high": -47.04791429997492,
+          "low": -34.69861229479707,
+          "mid": -35.63786882910107,
+          "sub": -23.671115839453222
+        },
+        "centroidHz": 160.65066440077575,
+        "flatness": 0.00007807942820006306,
+        "peakHz": 70.3125,
+        "rolloff85Hz": 117.1875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.16,
+        "attackSeconds": 0.01,
+        "decay40Seconds": 0.14,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.01,
+        "temporalCentroidSeconds": 0.03756261253535594,
+        "trailingSilenceSeconds": 0.43733333333333335
+      }
+    },
+    "sourceRecordHash": "sha256:f26a6d26228ff7f3bcee1b3675cea2f138e7ef4565638cd7d3d9d97e5617c471"
+  },
+  "asset": {
+    "bytes": 5741,
+    "encodedHash": "sha256:04228b7ad482c7043c187b116130a1f70bc49e9b0211ba0fb17d434ca00efac0",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/families/cannon/cannon-a.ogg"
+  },
+  "assetId": "vt-hardsteel-cannon-cannon-a",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "descriptors": [
+        "rarity:common",
+        "weight:light",
+        "cannon"
+      ],
+      "durationSeconds": {
+        "max": 0.65,
+        "min": 0.5499999999999999
+      },
+      "id": "vt-hardsteel-cannon-cannon-a",
+      "intent": "Kompakt ağır mekanik top: kısa gövde darbesi, namlu kırılması ve kuru kızak. Şarj, organik enerji ve uzun uğultu yok. Varyant cannon-a (rarity:common, weight:light).",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST kuru mekanik cannon — cannon-a"
+    },
+    "hash": "sha256:d02b137800a3da677d146f9334ff5c501c04cb5b4db0bdd2843649cc67507daf",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:fb4262675620fc0646f3ec244b036e1f901e30d992aa676701617fde6eccc02f",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        },
+        {
+          "hash": "sha256:b0c800b997b33e21c77db26196fffeb7162495c77939084b2b3eb1fd4639561b",
+          "id": "source.oscillator",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": "vt-hardsteel-cannon/cannon-a",
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "cannon-a",
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-cannon/jobs/cannon-a",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Kompakt ağır mekanik top: kısa gövde darbesi, namlu kırılması ve kuru kızak. Şarj, organik enerji ve uzun uğultu yok.",
+      "durationSeconds": 0.6,
+      "gestures": {
+        "body-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              160
+            ],
+            [
+              0.045,
+              78
+            ],
+            [
+              0.22,
+              70
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.003,
+              "curve": "cosine",
+              "decay": 0.16,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "body",
+          "role": "transient",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "body-pitch"
+              },
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.055,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -3,
+          "mechanism": "mechanical",
+          "name": "crack",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 1170.42,
+                "mode": "bandpass",
+                "q": 0.6
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.1,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -20,
+          "mechanism": "mechanical",
+          "name": "metal",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.45,
+                "damping": 0.6,
+                "decay": 0.0573723,
+                "frequency": 762.383,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 2800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.0015,
+              "roughness": 0.15
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.009
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "fadeInSeconds": 0.001,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -4
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8201
+    },
+    "hash": "sha256:5e11ee6892d4196e45ded8f154f7554c56149ba08ddf8fd2787d1855c90d3bb2",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 28800,
+      "hash": "sha256:4f5ef4a3fcee908acf321f4ff7dd60e0235186c9655ea5fd7af67ced705801be",
+      "sampleRate": 48000
+    },
+    "renderId": "r-482ea005dd8c4c3c",
+    "rendererVersion": 2,
+    "seed": 8201
+  },
+  "schema": "AudioAssetManifestV1"
+}

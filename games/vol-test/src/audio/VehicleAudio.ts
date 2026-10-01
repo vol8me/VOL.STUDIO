@@ -24,7 +24,7 @@ export class VehicleAudio {
     const loop = (name: string): LoopBlend =>
       this.scope.add(
         new LoopBlend(context, destination, [
-          { at: 0, url: audioUrl(`public/assets/audio/sfx/${name}.ogg`) },
+          { at: 0, url: audioUrl(`${AUDIO.loopAssetRoot}/${name}.ogg`) },
         ]),
       );
     this.engine = this.scope.add(
@@ -34,7 +34,7 @@ export class VehicleAudio {
         AUDIO.engineLayers.map((layer) => ({
           at: layer.at,
           pitch: layer.pitch,
-          url: audioUrl(`public/assets/audio/sfx/${layer.name}.ogg`),
+          url: audioUrl(`${AUDIO.loopAssetRoot}/${layer.name}.ogg`),
         })),
       ),
     );
@@ -74,16 +74,19 @@ export class VehicleAudio {
     this.skid.setRate(lerp(AUDIO.skid.rateMin, AUDIO.skid.rateMax, slide));
     this.servo.setRate(lerp(AUDIO.servo.rateMin, AUDIO.servo.rateMax, turning));
     const gains = [
-      AUDIO.engine.gain,
+      motion > AUDIO.engine.motionFloor || load > AUDIO.engine.motionFloor || tank.boosting
+        ? AUDIO.engine.gain
+        : 0,
       AUDIO.tracks.gain * motion,
       AUDIO.skid.gain * slide,
       AUDIO.servo.gain * turning,
       tank.boosting ? AUDIO.boost.gain : 0,
     ];
     this.loops.forEach((voice, index) => {
-      voice.setGain(paused ? 0 : gains[index] * spatial.gain);
+      const gain = paused ? 0 : gains[index] * spatial.gain;
+      voice.setGain(gain);
       voice.setPan(spatial.pan);
-      if (paused) voice.stop();
+      if (gain <= AUDIO.loopMinGain) voice.stop();
       else voice.start();
     });
     const brakeEdge = tank.braking && !this.braking && speed >= AUDIO.brakeMinSpeed;

@@ -1,0 +1,148 @@
+{
+  "channels": 1,
+  "description": "Kompakt ağır mekanik top: kısa gövde darbesi, namlu kırılması ve kuru kızak. Şarj, organik enerji ve uzun uğultu yok.",
+  "durationSeconds": 0.6,
+  "gestures": {
+    "body-pitch": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          160
+        ],
+        [
+          0.045,
+          78
+        ],
+        [
+          0.22,
+          70
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "cosine",
+          "decay": 0.16,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "body",
+      "role": "transient",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "body-pitch"
+          },
+          "waveform": "triangle"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "cosine",
+          "decay": 0.055,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -3,
+      "mechanism": "mechanical",
+      "name": "crack",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1391.62,
+            "mode": "bandpass",
+            "q": 0.6
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "cosine",
+          "decay": 0.1,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -20,
+      "mechanism": "mechanical",
+      "name": "metal",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.45,
+            "damping": 0.6,
+            "decay": 0.0900172,
+            "frequency": 570.916,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "contactTime": 0.0015,
+          "roughness": 0.15
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      },
+      "startSeconds": 0.009
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "fadeInSeconds": 0.001,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8201
+}

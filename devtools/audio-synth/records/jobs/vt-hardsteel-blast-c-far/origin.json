@@ -1,0 +1,19 @@
+{
+  "programHash": "sha256:4b25ed723afc62bd1258e5d4d935aace7b405a979ce0d7d5b4784a4b3be85bfd",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "kind": "treatment",
+    "profile": {
+      "hash": "sha256:a2adad8891aa6d850654c171df32f46fbd99597161f494091ad50be878c93ca5",
+      "id": "distance-far",
+      "version": 1
+    },
+    "source": {
+      "assetId": "vt-hardsteel-blast-blast-c",
+      "manifest": "games/vol-test/audio-manifests/sfx/steel/families/blast/blast-c.json",
+      "pcmHash": "sha256:0fac0e095ae0680805b6c227d1548e42b4911752de451aea3cb272669275383c",
+      "programHash": "sha256:29b77a86874fa8ddb847e674a4d140bf6e0ddeb64885a397041922f900f380ef",
+      "seed": 8202
+    }
+  }
+}

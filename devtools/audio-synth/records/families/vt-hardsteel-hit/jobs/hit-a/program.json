@@ -1,0 +1,125 @@
+{
+  "channels": 1,
+  "description": "Zırh isabeti: kısa tok darbe ve sıkı metal çınlama; elektrik arkı veya organik tını yok.",
+  "durationSeconds": 0.45,
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "cosine",
+          "decay": 0.14,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -20,
+      "mechanism": "mechanical",
+      "name": "plate",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.45,
+            "damping": 0.6,
+            "decay": 0.14825,
+            "frequency": 1169.33,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "contactTime": 0.0018,
+          "roughness": 0.12
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "cosine",
+          "decay": 0.09,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -2,
+      "mechanism": "mechanical",
+      "name": "body",
+      "role": "transient",
+      "source": {
+        "params": {
+          "frequency": 580,
+          "waveform": "triangle"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "cosine",
+          "decay": 0.06,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -23,
+      "mechanism": "mechanical",
+      "name": "grit",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 3200,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "fadeInSeconds": 0.001,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -5
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8203
+}

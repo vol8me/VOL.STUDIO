@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-496eb56547b5d098": {
+        "hash": "sha256:69aa7a8f9d1fd74ddb9af80cdc49bbacfae949abcdeb7e0332050eb964bfb8ea",
+        "path": "analyses/r-496eb56547b5d098.json"
+      },
+      "r-dafc8d6d4879e29d": {
+        "hash": "sha256:a8bc31e26824ad0d400825c542bbc10a85d6f34ebb68774fd17e80cdc1571b84",
+        "path": "analyses/r-dafc8d6d4879e29d.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:42726179cd1dcd5d4885ed591f7278524fe5db9fd74845d99508548055e059ca",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:42726179cd1dcd5d4885ed591f7278524fe5db9fd74845d99508548055e059ca",
+      "hash": "sha256:dde13c6287925fcde088224536457f0c4a9d4c4ab24a5159a58d4271db8be768",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:471f0c55d18d4751ac477388b9923b4181686b468c2abb062fe5ea6506154038",
+      "path": "games/vol-test/audio-manifests/sfx/steel/families/cannon/cannon-b.json"
+    },
+    "renders": {
+      "r-496eb56547b5d098": {
+        "hash": "sha256:0be587da7cdd4a191c56e406ada77028a19a1078f5ea5c6e39fd92966f612163",
+        "path": "renders/r-496eb56547b5d098.json"
+      },
+      "r-dafc8d6d4879e29d": {
+        "hash": "sha256:a8de388217182eb975a3cd72e0070ec213095ed9ab8df06a6940367cf6932064",
+        "path": "renders/r-dafc8d6d4879e29d.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:1d6ac8befd4dd061976d8da7d98da945fc50bca1a29a445254270d48ac571a25",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "cannon-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/families/cannon/cannon-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-hardsteel-cannon/cannon-b"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

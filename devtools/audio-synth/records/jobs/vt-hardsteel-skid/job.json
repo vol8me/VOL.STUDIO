@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-742ff08c6b1897c2": {
+        "hash": "sha256:b88bdd0d1b9b56e6da0ba44386ea62d79979267fcf3d767175301e1f5c2be31b",
+        "path": "analyses/r-742ff08c6b1897c2.json"
+      },
+      "r-a4aeef70bac03a16": {
+        "hash": "sha256:6744cef3559ad9b6c72fac391ced89f61fdc6eaa84d3a5fbf63e75b409cb744b",
+        "path": "analyses/r-a4aeef70bac03a16.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:043ce29edf8e94a05bfdfd084a5b542afd7bf348f0bc7c62888db21b73e3ab67",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:043ce29edf8e94a05bfdfd084a5b542afd7bf348f0bc7c62888db21b73e3ab67",
+      "hash": "sha256:96423eeccfd74d981acb3d7a06056c9b80573e6c74dd353071d94af48fc89eaa",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:baaa75ec3ccd8ca11ea406c0f1362939cd8068f3e142462b5be0f55f2ca894b7",
+      "path": "games/vol-test/audio-manifests/sfx/steel/skid.json"
+    },
+    "renders": {
+      "r-742ff08c6b1897c2": {
+        "hash": "sha256:3d2586409441e8e9ce38ff3b543f54a539e96ece082121bb9a409ccdde30d5c3",
+        "path": "renders/r-742ff08c6b1897c2.json"
+      },
+      "r-a4aeef70bac03a16": {
+        "hash": "sha256:20211cba3894016915873ed003be437262455a62623314a83182738a81ee9381",
+        "path": "renders/r-a4aeef70bac03a16.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:9a1a667d47f9d1f42f5fca0dc1cf3667abd6c69afaf71b1d9b51e8f7aed405c3",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-skid",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 14,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/skid.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

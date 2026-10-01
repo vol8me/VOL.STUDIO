@@ -1,0 +1,8 @@
+{
+  "analysisHash": "sha256:6ad7d60912541a35f8c66593cebc94381e7eda24013aa1f7f2f76c2d2873505d",
+  "pcmHash": "sha256:ba6f390c3261af9f68e73575e6fe6e642e75544cbeb2afe78406721c53eca2dc",
+  "reason": "Sıfırdan kuru mekanik tema; kaynak seviyeleri ve tonal tık sayısı ölçüldü. Yalnız araç eylemlerinde çalar; insan dinleme onayı bekliyor.",
+  "renderHash": "sha256:d992a322bb441d15ae735f5d1b11a88c9b056bbeacebb67838269e1e8532b85a",
+  "renderId": "r-b12cad3a60f88e9a",
+  "schema": "AudioSelectionV1"
+}

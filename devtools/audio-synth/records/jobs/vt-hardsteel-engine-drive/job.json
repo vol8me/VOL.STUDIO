@@ -1,0 +1,63 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-9d6950d674b8c633": {
+        "hash": "sha256:099a84519e7212943e44a3f5980e18317ef15b4ddcf4e7f3fb3e8fee2300fe22",
+        "path": "analyses/r-9d6950d674b8c633.json"
+      },
+      "r-bc2b95f14b75dda2": {
+        "hash": "sha256:0b53cf59e0b795306a5eacbc8bf3daf1599e8c4e8966aa3512c68e022be15434",
+        "path": "analyses/r-bc2b95f14b75dda2.json"
+      },
+      "r-d2f7bf1d983c6a15": {
+        "hash": "sha256:4b3b0e9ed2ff4ae9ee97401f115921361e285dd9cff2ba30cbc08ee277048788",
+        "path": "analyses/r-d2f7bf1d983c6a15.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:1b7e6a81273520d450e89d6b3d199aa3651ae4acb3d01b8c45dddfad2a9c37cb",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:1b7e6a81273520d450e89d6b3d199aa3651ae4acb3d01b8c45dddfad2a9c37cb",
+      "hash": "sha256:b0ab6b57ff22b29445d93b5389ed79fba6363be64da8ae8bcefb566ed371bbad",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:0dea0a84641049b086a39a3144f355bf809df9f98024fae043a3d3c6f6f561e4",
+      "path": "games/vol-test/audio-manifests/sfx/steel/engine-drive.json"
+    },
+    "renders": {
+      "r-9d6950d674b8c633": {
+        "hash": "sha256:59528892621d96d6d786789aefa5411b793e5f7f9e1b73b0e2a23ba0cc755417",
+        "path": "renders/r-9d6950d674b8c633.json"
+      },
+      "r-bc2b95f14b75dda2": {
+        "hash": "sha256:1e3425d490bd8b121cfb43a871631e37a5bb98cff108b2360d788ecd91792482",
+        "path": "renders/r-bc2b95f14b75dda2.json"
+      },
+      "r-d2f7bf1d983c6a15": {
+        "hash": "sha256:fa718d311400828449c49f76953cdcbeda5cf9185a556e02d2f37ed32d179d7e",
+        "path": "renders/r-d2f7bf1d983c6a15.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:fe933c6534317ece4dd275b365afdfc808ee8fa9b2ac91f606b3c3f8d66c59d2",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-engine-drive",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 16,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/engine-drive.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

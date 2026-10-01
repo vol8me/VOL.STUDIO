@@ -1,0 +1,329 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Fren kilidi: kuru palet sıyrılması ve kısa mekanik kilit; pnömatik ortam tıslaması yok.",
+      "durationSeconds": 0.4,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.004,
+              "curve": "cosine",
+              "decay": 0.14,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "scrape",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2400,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "granularity": 8,
+              "material": "metal",
+              "pressure": 0.7,
+              "rolling": 0,
+              "roughness": 0.35,
+              "speed": 0.6
+            },
+            "primitive": "source.friction",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.08,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -28,
+          "mechanism": "mechanical",
+          "name": "plate",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.45,
+                "damping": 0.6,
+                "decay": 0.055,
+                "frequency": 870,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 2800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.002,
+              "roughness": 0.15
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.018
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "fadeInSeconds": 0.001,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -6
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8205
+    }
+  },
+  "delivery": {
+    "assetClass": "sfx",
+    "assetDir": "public/assets/audio/sfx/steel/families/brake",
+    "durationSeconds": {
+      "max": 0.45,
+      "min": 0.35000000000000003
+    },
+    "package": "@volstudio/vol-test",
+    "placement": "positional",
+    "subtype": "sfx"
+  },
+  "description": "Fren kilidi: kuru palet sıyrılması ve kısa mekanik kilit; pnömatik ortam tıslaması yok.",
+  "dimensions": [
+    {
+      "name": "plate-decay",
+      "range": {
+        "max": 0.07150000000000001,
+        "min": 0.0385,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "plate",
+        "param": "decay",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "plate-pitch",
+      "range": {
+        "max": 1026.6,
+        "min": 713.4,
+        "scale": "linear",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "plate",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "scrape-band",
+      "range": {
+        "max": 3000,
+        "min": 900,
+        "scale": "linear",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "scrape",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "scrape-grain",
+      "range": {
+        "max": 14,
+        "min": 4,
+        "scale": "linear",
+        "unit": "mm"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "scrape",
+        "param": "granularity",
+        "primitive": "source.friction",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "scrape-load",
+      "range": {
+        "max": 0.85,
+        "min": 0.45,
+        "scale": "linear",
+        "unit": "normalized"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "scrape",
+        "param": "pressure",
+        "primitive": "source.friction",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "scrape-speed",
+      "range": {
+        "max": 0.9,
+        "min": 0.25,
+        "scale": "linear",
+        "unit": "m/s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "scrape",
+        "param": "speed",
+        "primitive": "source.friction",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "vt-hardsteel-brake",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 2
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "plate-decay": {
+          "max": 0.07150000000000001,
+          "min": 0.06160000000000001
+        },
+        "plate-pitch": {
+          "max": 817.8,
+          "min": 713.4
+        },
+        "scrape-band": {
+          "max": 1300,
+          "min": 900
+        },
+        "scrape-grain": {
+          "max": 14,
+          "min": 10
+        },
+        "scrape-load": {
+          "max": 0.85,
+          "min": 0.75
+        },
+        "scrape-speed": {
+          "max": 0.35,
+          "min": 0.25
+        }
+      },
+      "light": {
+        "plate-decay": {
+          "max": 0.0484,
+          "min": 0.0385
+        },
+        "plate-pitch": {
+          "max": 1026.6,
+          "min": 922.2
+        },
+        "scrape-band": {
+          "max": 3000,
+          "min": 2600
+        },
+        "scrape-grain": {
+          "max": 6,
+          "min": 4
+        },
+        "scrape-load": {
+          "max": 0.55,
+          "min": 0.45
+        },
+        "scrape-speed": {
+          "max": 0.9,
+          "min": 0.75
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 8304,
+  "title": "VOL.TEST kuru mekanik brake",
+  "variants": [
+    {
+      "key": "brake-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "brake"
+      ]
+    },
+    {
+      "key": "brake-b",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "brake"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 2
+}

@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a529ad3dccd8f0fa": {
+        "hash": "sha256:d27e4251f7ba5579b0eaab9317986066336725f108032d46f6d2cc3829927dcc",
+        "path": "analyses/r-a529ad3dccd8f0fa.json"
+      },
+      "r-b12cad3a60f88e9a": {
+        "hash": "sha256:6ad7d60912541a35f8c66593cebc94381e7eda24013aa1f7f2f76c2d2873505d",
+        "path": "analyses/r-b12cad3a60f88e9a.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e7afa987977ba99992b87c5ff88fc9834b87b436e260fa3ff4fd3ebec1111aca",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e7afa987977ba99992b87c5ff88fc9834b87b436e260fa3ff4fd3ebec1111aca",
+      "hash": "sha256:899e08e321d6ec28a7ad1b86bfb92b3993aebc74db40ab8b5535129d4581f26d",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:c6802ae093c52591fe111d5f93d934655e60cdead4a723edc87977c194c36f51",
+      "path": "games/vol-test/audio-manifests/sfx/steel/engine-surge.json"
+    },
+    "renders": {
+      "r-a529ad3dccd8f0fa": {
+        "hash": "sha256:7bec6db822cd9df3ab562bf790137323e3e6a956fd5c8caa10e907f4bfb134a4",
+        "path": "renders/r-a529ad3dccd8f0fa.json"
+      },
+      "r-b12cad3a60f88e9a": {
+        "hash": "sha256:d992a322bb441d15ae735f5d1b11a88c9b056bbeacebb67838269e1e8532b85a",
+        "path": "renders/r-b12cad3a60f88e9a.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:c9ac2ee63ab3ba0adbe660a80cca3e580baabcc191fd0ab28cc1413114f49c55",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-engine-surge",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 14,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/engine-surge.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

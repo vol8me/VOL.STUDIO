@@ -1,0 +1,296 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.000024018024973407314
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 3,
+        "frames": 144000,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -6.935376629416155
+        ],
+        "channelRmsDbfs": [
+          -23.747085264568305
+        ],
+        "crestFactorDb": 16.81170863515215,
+        "integratedLufs": -23.56019001740722,
+        "maxMomentaryLufs": -23.55977872038728,
+        "rmsDbfs": -23.747085264568305,
+        "samplePeakDbfs": -6.935376629416155,
+        "truePeakDbtp": -6.932049244030861
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -117.053846013324,
+          "high": -60.07293196933655,
+          "low": -34.74149437469758,
+          "mid": -24.238100772781298,
+          "sub": -41.66146537634522
+        },
+        "centroidHz": 1004.6349820504093,
+        "flatness": 1.2598192100460266e-8,
+        "peakHz": 1171.875,
+        "rolloff85Hz": 1289.0625
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 3,
+        "attackSeconds": 0,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 1.51,
+        "temporalCentroidSeconds": 1.4900409671218757,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:6ad7d60912541a35f8c66593cebc94381e7eda24013aa1f7f2f76c2d2873505d"
+  },
+  "asset": {
+    "bytes": 54662,
+    "encodedHash": "sha256:b55c5bb96ee595528b15486985829fae984d6765348c3c047a33fbec3bb945f2",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/engine-surge.ogg"
+  },
+  "assetId": "vt-hardsteel-engine-surge",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 4.05,
+        "min": 2.95
+      },
+      "id": "vt-hardsteel-engine-surge",
+      "intent": "Yalnız sürüş komutunda duyulan kuru dişli/palet aktarımı; boşta sessiz. Organik nefes, ortam yatağı ve müzik yok.",
+      "kind": "acoustic",
+      "loop": true,
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "codex"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — kuru mekanik: vt-steel-engine-surge"
+    },
+    "hash": "sha256:e7afa987977ba99992b87c5ff88fc9834b87b436e260fa3ff4fd3ebec1111aca",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "libraries": {
+      "libavcodec": "62.28.103",
+      "libavformat": "62.12.103",
+      "libavutil": "60.26.103"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:2d98e3d395fe2d4df8dd54778d1e33fa10a7cab370fcbadbcd269a56b12c8c43",
+      "nodes": [
+        {
+          "hash": "sha256:b9f7f769ee1231cdeb3308f02c54b955be69705286885e0805f92f23f9d56d96",
+          "id": "exciter.membrane",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995",
+          "id": "source.machine",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-engine-surge",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-engine-surge",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Yalnız sürüş komutunda duyulan kuru dişli/palet aktarımı; boşta sessiz. Organik nefes, ortam yatağı ve müzik yok.",
+      "durationSeconds": 4,
+      "layers": [
+        {
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "drive-pulses",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 1800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1800,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "buckleDecay": 0.007,
+              "rate": 45,
+              "tension": 0.5
+            },
+            "primitive": "exciter.membrane",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -26,
+          "mechanism": "mechanical",
+          "name": "gear-body",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2400,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "bearing": 0.02,
+              "count": 18,
+              "harmonics": 8,
+              "imbalance": 0.015,
+              "load": 0.4,
+              "mechanism": "gear",
+              "noise": 0.015,
+              "rpm": 2700,
+              "tilt": 0.85
+            },
+            "primitive": "source.machine",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "loop": {
+          "crossfadeSeconds": 1
+        },
+        "normalize": "peak",
+        "peakDbfs": -7
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8112
+    },
+    "hash": "sha256:899e08e321d6ec28a7ad1b86bfb92b3993aebc74db40ab8b5535129d4581f26d",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 144000,
+      "hash": "sha256:ba6f390c3261af9f68e73575e6fe6e642e75544cbeb2afe78406721c53eca2dc",
+      "sampleRate": 48000
+    },
+    "renderId": "r-b12cad3a60f88e9a",
+    "rendererVersion": 2,
+    "seed": 8112
+  },
+  "schema": "AudioAssetManifestV1",
+  "seam": {
+    "jumpRatio": 0.0828,
+    "levelStepDb": -0.037,
+    "method": "loop-seam-v1",
+    "pass": true,
+    "reasons": [],
+    "spectralStepDb": -5.657
+  }
+}

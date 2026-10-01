@@ -1,0 +1,192 @@
+{
+  "channels": 1,
+  "description": "Kısa ağır patlama: tok şok, kuru taş tozu ve zırh parçacığı. Uzun ortam kuyruğu veya uğultu yok.",
+  "durationSeconds": 0.7,
+  "gestures": {
+    "body-pitch": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          115
+        ],
+        [
+          0.065,
+          55
+        ],
+        [
+          0.26,
+          48
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.004,
+          "curve": "cosine",
+          "decay": 0.5,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -3,
+      "mechanism": "mechanical",
+      "name": "shock",
+      "role": "transient",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "body-pitch"
+          },
+          "waveform": "triangle"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.003,
+          "curve": "cosine",
+          "decay": 0.5,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 7,
+      "mechanism": "mechanical",
+      "name": "dust",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 3200.47,
+            "mode": "bandpass",
+            "q": 0.55
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "cosine",
+          "decay": 0.13,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -26,
+      "mechanism": "mechanical",
+      "name": "metal",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.45,
+            "damping": 0.6,
+            "decay": 0.0865662,
+            "frequency": 571.303,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "contactTime": 0.0018,
+          "roughness": 0.2
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      },
+      "startSeconds": 0.018
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "fadeInSeconds": 0.001,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8202,
+  "treatment": {
+    "chain": [
+      {
+        "params": {
+          "attackDb": -6,
+          "sustainDb": 0
+        },
+        "primitive": "effect.transient-shaper",
+        "version": 1
+      },
+      {
+        "params": {
+          "amount": 0.3,
+          "damp": 0.6,
+          "decay": 1.6,
+          "preDelay": 0.03,
+          "roomSize": 0.8
+        },
+        "primitive": "effect.reverb",
+        "version": 1
+      },
+      {
+        "params": {
+          "distance": 30,
+          "humidity": 0.5
+        },
+        "primitive": "effect.air-absorption",
+        "version": 1
+      },
+      {
+        "params": {
+          "width": 0.6
+        },
+        "primitive": "effect.width",
+        "version": 1
+      }
+    ],
+    "channels": 1,
+    "levelLu": -3,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "tailSeconds": 1.4
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 4.05,
+    "min": 2.95
+  },
+  "id": "vt-hardsteel-engine-drive",
+  "intent": "Yalnız sürüş komutunda duyulan kuru dişli/palet aktarımı; boşta sessiz. Organik nefes, ortam yatağı ve müzik yok.",
+  "kind": "acoustic",
+  "loop": true,
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "codex"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — kuru mekanik: vt-steel-engine-drive"
+}

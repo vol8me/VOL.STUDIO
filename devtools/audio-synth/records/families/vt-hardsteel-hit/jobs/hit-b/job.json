@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-96c06ce6ce8a0ff5": {
+        "hash": "sha256:402e4d68d8279f3cfd0d46d2b760763527e6ef6f5797519a36697a3feedb2638",
+        "path": "analyses/r-96c06ce6ce8a0ff5.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:0c4b2d509c1dfa9d3fdf363c1a3fa73b4b09fb29eae5dcc0ba479098cbbda894",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:0c4b2d509c1dfa9d3fdf363c1a3fa73b4b09fb29eae5dcc0ba479098cbbda894",
+      "hash": "sha256:a2027475b7d680918958a962f2af051a334f129e66a7289e7117e84d05ffd633",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:6f457ac35f1fa370385814b79d30c446708fb0052c8bb1b919149bb122aacd3b",
+      "path": "games/vol-test/audio-manifests/sfx/steel/families/hit/hit-b.json"
+    },
+    "renders": {
+      "r-96c06ce6ce8a0ff5": {
+        "hash": "sha256:6956ae80af11b74afebccd3c27399adb389167a52b582bc8ff61befe6d410249",
+        "path": "renders/r-96c06ce6ce8a0ff5.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:fcd1fb310c6d9293382bbfa03bffca195f8b82806c823adc635781fee58dbf09",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "hit-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/families/hit/hit-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-hardsteel-hit/hit-b"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

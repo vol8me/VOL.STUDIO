@@ -1,0 +1,23 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "brake"
+  ],
+  "durationSeconds": {
+    "max": 0.45,
+    "min": 0.35000000000000003
+  },
+  "id": "vt-hardsteel-brake-brake-a",
+  "intent": "Fren kilidi: kuru palet sıyrılması ve kısa mekanik kilit; pnömatik ortam tıslaması yok. Varyant brake-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST kuru mekanik brake — brake-a"
+}

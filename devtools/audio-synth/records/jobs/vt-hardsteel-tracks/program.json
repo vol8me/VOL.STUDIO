@@ -1,0 +1,82 @@
+{
+  "channels": 1,
+  "description": "Kuru mekanik tracks; yalnız ilgili araç eylemi boyunca çalışır, ortam sesi ve müzik içermez.",
+  "durationSeconds": 4,
+  "layers": [
+    {
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "links",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "buckleDecay": 0.005,
+          "rate": 36,
+          "tension": 0.3
+        },
+        "primitive": "exciter.membrane",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -25,
+      "mechanism": "mechanical",
+      "name": "rolling",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "granularity": 12,
+          "material": "metal",
+          "pressure": 0.45,
+          "rolling": 0.95,
+          "roughness": 0.25,
+          "speed": 0.8
+        },
+        "primitive": "source.friction",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "loop": {
+      "crossfadeSeconds": 1
+    },
+    "normalize": "peak",
+    "peakDbfs": -7
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8120
+}

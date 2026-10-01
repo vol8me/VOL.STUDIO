@@ -1,0 +1,99 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "vt-hardsteel-hit",
+    "hash": "sha256:6ef57c0b65065979d5fac323e5456b41387c0150feb2b1056669fc6b6f075997",
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-hit/family.json",
+    "seed": 8302,
+    "variationPolicy": "role-subrange-v1",
+    "version": 2
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/vol-test",
+  "quality": {
+    "hash": "sha256:2210c2428c6ca7b3a32a1a0e28efa73860fff6b1b4f5aaf440305b7df26beba4",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/vt-hardsteel-hit/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5240,
+        "encodedHash": "sha256:ec8e348fc6c19bd52f29de87092bc1d3ad9a0cce7b517f38616b9386ed77e909",
+        "path": "public/assets/audio/sfx/steel/families/hit/hit-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.09,
+        "centroidHz": 601.2273542743187,
+        "pitchHz": 580.2342083712671
+      },
+      "durationSeconds": 0.44733333333333336,
+      "key": "hit-a",
+      "loudness": {
+        "integratedLufs": -20.883285237639978,
+        "maxMomentaryLufs": -20.883285237639978,
+        "truePeakDbtp": -4.8483400567600174
+      },
+      "manifest": {
+        "hash": "sha256:445bd22eec80a7b3bb07fba101e69bc0c5db2716b0f913da4b42fdf31cc4eb1f",
+        "path": "audio-manifests/sfx/steel/families/hit/hit-a.json"
+      },
+      "pcmHash": "sha256:b0009cbb522e400cf8b7715214e38ebadbe21e976f9d31bcbc261a303a20e489",
+      "programHash": "sha256:87cf1060e920c4cb91a760984430bb2c6282a41fb380ddff860d80ef2f1173d3",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "hit"
+      ],
+      "variantId": "v-bbf0741a8b552148"
+    },
+    {
+      "asset": {
+        "bytes": 5253,
+        "encodedHash": "sha256:0d85c43b274f884561517c658943729a1b770c94f04b350aeaafb41fec32f3cb",
+        "path": "public/assets/audio/sfx/steel/families/hit/hit-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.12,
+        "centroidHz": 613.7580700147118,
+        "pitchHz": 578.7432348698547
+      },
+      "durationSeconds": 0.44733333333333336,
+      "key": "hit-b",
+      "loudness": {
+        "integratedLufs": -22.399707616176688,
+        "maxMomentaryLufs": -22.399707616176688,
+        "truePeakDbtp": -4.851748692429752
+      },
+      "manifest": {
+        "hash": "sha256:6f457ac35f1fa370385814b79d30c446708fb0052c8bb1b919149bb122aacd3b",
+        "path": "audio-manifests/sfx/steel/families/hit/hit-b.json"
+      },
+      "pcmHash": "sha256:fa593fc019ead791b2563d0972ec24f118b175957d57cc81ac8e0db141acc978",
+      "programHash": "sha256:a2027475b7d680918958a962f2af051a334f129e66a7289e7117e84d05ffd633",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "hit"
+      ],
+      "variantId": "v-3724db42f8483e02"
+    }
+  ]
+}

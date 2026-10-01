@@ -32,6 +32,13 @@ describe('GameAudio', () => {
     vi.unstubAllGlobals();
   });
 
+  it('ses tercihini master kazancına yumuşatır ve susturur', () => {
+    audio.setVolume(0.5);
+    const bus = context.gains[0];
+    expect(bus.gain.value).toBeCloseTo(0.325);
+    audio.setVolume(0);
+    expect(bus.gain.value).toBe(0);
+  });
   it('olayları aileye, mesafeye ve çarpma şiddetine eşler; pan ile 1/r uygular', () => {
     audio.route(
       [
@@ -63,17 +70,18 @@ describe('GameAudio', () => {
       suspension: SUSPENSION,
       weapon: WEAPON,
     });
+    sim.step(command({ moveX: 1 }), STEP_MS);
     await audio.sync(sim.vehicles, sim.player.tank);
-    expect(context.sources.filter((s) => s.loop)).toHaveLength(7);
+    expect(context.sources.filter((s) => s.loop).length).toBeGreaterThan(0);
     audio.setPaused(true);
     audio.setPaused(true);
     expect(context.sources.filter((s) => s.loop).every((s) => s.stopped)).toBe(true);
     expect(context.sources.filter((s) => !s.loop).map((s) => s.buffer?.url)).toEqual([
-      '/assets/audio/ui/pause.ogg',
+      '/assets/audio/ui/steel/pause.ogg',
     ]);
     audio.setPaused(false);
     expect(context.sources.filter((s) => !s.loop).at(-1)?.buffer?.url).toBe(
-      '/assets/audio/ui/resume.ogg',
+      '/assets/audio/ui/steel/resume.ogg',
     );
     await audio.sync([], listener);
     expect(context.sources.filter((s) => s.loop).every((s) => s.stopped)).toBe(true);

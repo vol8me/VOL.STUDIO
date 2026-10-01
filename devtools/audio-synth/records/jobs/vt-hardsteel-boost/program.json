@@ -1,0 +1,74 @@
+{
+  "channels": 1,
+  "description": "Kuru mekanik boost; yalnız ilgili araç eylemi boyunca çalışır, ortam sesi ve müzik içermez.",
+  "durationSeconds": 4,
+  "layers": [
+    {
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "drive-ratchet",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "buckleDecay": 0.0032,
+          "rate": 80,
+          "tension": 0.5
+        },
+        "primitive": "exciter.membrane",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -25,
+      "mechanism": "mechanical",
+      "name": "loaded-gears",
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.02,
+          "count": 12,
+          "harmonics": 10,
+          "imbalance": 0.01,
+          "load": 0.9,
+          "mechanism": "gear",
+          "noise": 0.03,
+          "rpm": 3600,
+          "tilt": 0.8
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "loop": {
+      "crossfadeSeconds": 1
+    },
+    "normalize": "peak",
+    "peakDbfs": -7
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8123
+}

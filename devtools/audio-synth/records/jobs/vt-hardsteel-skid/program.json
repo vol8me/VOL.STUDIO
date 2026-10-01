@@ -1,0 +1,82 @@
+{
+  "channels": 1,
+  "description": "Kuru mekanik skid; yalnız ilgili araç eylemi boyunca çalışır, ortam sesi ve müzik içermez.",
+  "durationSeconds": 4,
+  "layers": [
+    {
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "scrape",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2600,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "granularity": 7,
+          "material": "stone",
+          "pressure": 0.65,
+          "rolling": 0,
+          "roughness": 0.28,
+          "speed": 0.95
+        },
+        "primitive": "source.friction",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -17,
+      "mechanism": "mechanical",
+      "name": "plate-shudder",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "buckleDecay": 0.004,
+          "rate": 20,
+          "tension": 0.24
+        },
+        "primitive": "exciter.membrane",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "loop": {
+      "crossfadeSeconds": 1
+    },
+    "normalize": "peak",
+    "peakDbfs": -7
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8121
+}

@@ -1,0 +1,23 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "hit"
+  ],
+  "durationSeconds": {
+    "max": 0.5,
+    "min": 0.4
+  },
+  "id": "vt-hardsteel-hit-hit-a",
+  "intent": "Zırh isabeti: kısa tok darbe ve sıkı metal çınlama; elektrik arkı veya organik tını yok. Varyant hit-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST kuru mekanik hit — hit-a"
+}

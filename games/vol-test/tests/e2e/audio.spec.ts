@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('OGG çözülür, gerçek döngüler başlar ve duraklatmada durur', async ({ page }) => {
+test('boşta sessiz kalır; OGG araç eyleminde başlar ve duraklatmada durur', async ({ page }) => {
   const failures: string[] = [];
   page.on('pageerror', (error) => failures.push(error.message));
   page.on('console', (message) => {
@@ -39,17 +39,20 @@ test('OGG çözülür, gerçek döngüler başlar ve duraklatmada durur', async 
   await page.goto('/');
   await expect(page.getByTestId('hud')).toBeVisible();
   await page.locator('#game > canvas').click({ position: { x: 640, y: 400 } });
-  await expect
-    .poll(async () => ({ probe: await read(), failures }))
-    .toMatchObject({ probe: { loops: 7 }, failures: [] });
+  await expect.poll(async () => (await read()).loops - (await read()).stopped).toBe(0);
+  await page.keyboard.down('w');
+  await expect.poll(async () => (await read()).loops - (await read()).stopped).toBeGreaterThan(0);
   await page.mouse.down();
   await expect.poll(async () => (await read()).shots).toBeGreaterThan(0);
   await page.mouse.up();
+  await page.keyboard.up('w');
   await page.keyboard.down('Escape');
   await expect(page.locator('.vt-pause.vol-modal--visible')).toHaveCount(1);
   await page.keyboard.up('Escape');
-  await expect.poll(async () => (await read()).stopped).toBe(7);
+  await expect.poll(async () => (await read()).loops - (await read()).stopped).toBe(0);
   await page.getByTestId('pause-resume').click();
-  await expect.poll(async () => (await read()).loops).toBe(14);
+  await page.keyboard.down('w');
+  await expect.poll(async () => (await read()).loops - (await read()).stopped).toBeGreaterThan(0);
+  await page.keyboard.up('w');
   expect(failures).toEqual([]);
 });

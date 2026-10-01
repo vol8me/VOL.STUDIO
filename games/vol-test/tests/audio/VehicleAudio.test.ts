@@ -28,6 +28,17 @@ describe('araç döngüleri', () => {
     voice.dispose();
     vi.unstubAllGlobals();
   });
+  it('boşta hiçbir sürekli ses başlatmaz; hareket bitince bütün döngüler durur', () => {
+    const subject = tank();
+    voice.update(subject, subject, false);
+    expect(context.sources.filter((source) => source.started && !source.stopped)).toHaveLength(0);
+    subject.trackLeft = subject.trackRight = 100;
+    voice.update(subject, subject, false);
+    expect(context.sources.some((source) => source.started && !source.stopped)).toBe(true);
+    subject.trackLeft = subject.trackRight = 0;
+    voice.update(subject, subject, false);
+    expect(context.sources.filter((source) => source.started && !source.stopped)).toHaveLength(0);
+  });
   it('hız ve yük motor devrini, paleti ve kaymayı modüle eder', () => {
     const subject = tank();
     subject.trackLeft = 230;
@@ -36,7 +47,7 @@ describe('araç döngüleri', () => {
     subject.groundRight = 230;
     subject.slideLeft = 120;
     voice.update(subject, subject, false);
-    expect(context.sources).toHaveLength(7);
+    expect(context.sources).toHaveLength(5);
     const byName = (name: string) =>
       context.sources.find((s) => s.buffer?.url?.endsWith(`${name}.ogg`))!;
     expect(byName('engine-idle').playbackRate.value).toBe(2);
@@ -45,7 +56,7 @@ describe('araç döngüleri', () => {
     expect(output(byName('tracks')).gain.value).toBe(0.3);
     expect(byName('tracks').playbackRate.value).toBe(1.6);
     expect(output(byName('skid')).gain.value).toBe(0.32);
-    expect(output(byName('boost')).gain.value).toBe(0);
+    expect(context.sources.some((source) => source.buffer?.url?.endsWith('boost.ogg'))).toBe(false);
     subject.step(command({ moveX: 1, boost: true }), world(), DT);
     voice.update(subject, subject, false);
     expect(output(byName('boost')).gain.value).toBe(0.28);

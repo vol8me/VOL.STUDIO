@@ -1,0 +1,129 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.5,
+        "measured": 4,
+        "median": 0.494975,
+        "min": 0.49,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 811.373,
+        "measured": 4,
+        "median": 464.703,
+        "min": 230.344,
+        "scale": 1.14963
+      },
+      "maxMomentaryLufs": {
+        "max": -18.4631,
+        "measured": 4,
+        "median": -18.8683,
+        "min": -20.1631,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 52.7563,
+        "measured": 4,
+        "median": 52.5559,
+        "min": 51.5366,
+        "scale": 0.05
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.883268,
+    "medianDistance": 0.739283,
+    "minDistance": 0.139342,
+    "nearIdentical": [],
+    "pairs": 6
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 7.956,
+    "medoid": "blast-a",
+    "members": [
+      {
+        "distance": 0,
+        "key": "blast-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 1.458,
+        "key": "blast-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 7.704,
+        "key": "blast-c",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 7.956,
+        "key": "blast-d",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "blast-a",
+      "nearest": {
+        "distance": 0.208563,
+        "key": "blast-b"
+      },
+      "pcmHash": "sha256:b46085efc24fe7be5b77ed520dabd5f916f2577b0771c21da081c674bf9a4cbf"
+    },
+    {
+      "key": "blast-b",
+      "nearest": {
+        "distance": 0.208563,
+        "key": "blast-a"
+      },
+      "pcmHash": "sha256:e6c729f7222ac4ee36c20bbc55da60993d8eb6ec346899ee25cee21df4853349"
+    },
+    {
+      "key": "blast-c",
+      "nearest": {
+        "distance": 0.139342,
+        "key": "blast-d"
+      },
+      "pcmHash": "sha256:0fac0e095ae0680805b6c227d1548e42b4911752de451aea3cb272669275383c"
+    },
+    {
+      "key": "blast-d",
+      "nearest": {
+        "distance": 0.139342,
+        "key": "blast-c"
+      },
+      "pcmHash": "sha256:dbb4224e4839188f11af946ce6d06d1c223674533795a6be97a2848e4a1ea30b"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 4
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

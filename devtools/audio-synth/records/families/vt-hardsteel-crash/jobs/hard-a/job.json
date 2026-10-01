@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-34f9f0f28e27be58": {
+        "hash": "sha256:babb6dd8a2515fcc9a39318d4970ad02443cf47f558dd47a42fcda654d2b7c23",
+        "path": "analyses/r-34f9f0f28e27be58.json"
+      },
+      "r-ef732c8985d45789": {
+        "hash": "sha256:2a5c8e4682370ff7ff162779e97245dcfbe4a0757555e6ce064ed35302b518bb",
+        "path": "analyses/r-ef732c8985d45789.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:309499dc87422482a807468bf6fe6c15b77975c75c82e55c2641c07fa68f4d22",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:309499dc87422482a807468bf6fe6c15b77975c75c82e55c2641c07fa68f4d22",
+      "hash": "sha256:7a55e36e27797e8156a52ece1c5e20b5ead793edbe4ae312063cbe507a493c9f",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:640ad0d8492f9a651ff7416a24fecefe15d5134508f4094f681445d54aa018e1",
+      "path": "games/vol-test/audio-manifests/sfx/steel/families/crash/hard-a.json"
+    },
+    "renders": {
+      "r-34f9f0f28e27be58": {
+        "hash": "sha256:3dc0e3ffc55116dc35da66961ec2ca91bec76b820d6d7c495d2503ff49c3b667",
+        "path": "renders/r-34f9f0f28e27be58.json"
+      },
+      "r-ef732c8985d45789": {
+        "hash": "sha256:7bef64384ea6cfef2b55360ec86da19906881125c6b8f5becd100d02e0a37fd6",
+        "path": "renders/r-ef732c8985d45789.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:13dd6d4153c6ca4729c24e8f21dc6997e8e8ede06fd7292ed2463dfad7c2f62e",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "hard-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/families/crash/hard-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "vt-hardsteel-crash/hard-a"
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

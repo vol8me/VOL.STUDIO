@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:87cf1060e920c4cb91a760984430bb2c6282a41fb380ddff860d80ef2f1173d3",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:6ef57c0b65065979d5fac323e5456b41387c0150feb2b1056669fc6b6f075997",
+    "familyId": "vt-hardsteel-hit",
+    "kind": "family-variant",
+    "variantId": "v-bbf0741a8b552148",
+    "variantKey": "hit-a"
+  }
+}

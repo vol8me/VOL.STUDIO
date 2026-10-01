@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:9d39cbf505b7bb03cafe4d635f0ddb30a37cabd900733d13ec31b1c44d381c05",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:6d59c4c0e31e3a652f1d4deb76a6252e6035e339f0c1befebfab036bc46fe5b7",
+    "familyId": "vt-hardsteel-crash",
+    "kind": "family-variant",
+    "variantId": "v-f361ae08c025bcc7",
+    "variantKey": "soft-a"
+  }
+}
