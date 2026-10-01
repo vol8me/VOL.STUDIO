@@ -3,6 +3,18 @@ import { Cooldown } from '../../src/time/Cooldown';
 import { RoundLoop } from '../../src/time/RoundLoop';
 
 describe('Cooldown', () => {
+  it('kesirli sabit adımlardan sonra yuvarlama artığı fazladan bir kare bekletmez', () => {
+    for (const duration of [6.5, 650, 65000]) {
+      const cd = new Cooldown(duration);
+      cd.trigger();
+      for (let step = 0; step < 38; step++) cd.update(duration / 39);
+      expect(cd.isReady()).toBe(false);
+      cd.update(duration / 39);
+      expect(cd.isReady()).toBe(true);
+      expect(cd.getProgress()).toBe(1);
+    }
+  });
+
   it('başlangıçta hazırdır', () => {
     expect(new Cooldown(100).isReady()).toBe(true);
   });

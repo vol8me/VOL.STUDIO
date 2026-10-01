@@ -63,6 +63,8 @@ export class Cooldown {
   update(deltaMs: number): void {
     const delta = finiteOr(deltaMs, 0);
     if (delta <= 0 || this.remainingMs <= 0) return;
-    this.remainingMs -= delta;
+    this.remainingMs = Math.max(0, this.remainingMs - delta);
+    // Kesirli sabit adımların yuvarlama artığı bir kare daha bekletmemeli.
+    if (this.remainingMs <= this.durationMs * 1e-12) this.remainingMs = 0;
   }
 }
