@@ -1,16 +1,12 @@
 /**
  * Efekt kalite kademeleri (CORE `GraphicsQuality` profilleri). Yüksek kademe
- * masaüstü ve Steam Deck içindir; düşük kademe Android'de açılış kademesidir
+ * masaüstü ve ölçülen cihazlar içindir; düşük kademe diğer Android cihazların açılış kademesidir
  * ve duraklatma menüsünden değiştirilebilir.
  */
 export interface EffectProfile {
   /** Parçacık sayısı çarpanı. */
   readonly particles: number;
-  /**
-   * Mermi gövdesinin çevresinde yumuşak hale (katmanlı daire). Phaser 4 `Glow`
-   * filtresi ölçüldü ve reddedildi: her karede yeniden çizilen, dünya boyunca
-   * uzanan katmanı tam çerçeveye işler; başsız tarayıcıda 60 → 4 FPS.
-   */
+  /** Mermi gövdesinin çevresinde katmanlı dairelerle yumuşak hale. */
   readonly glow: boolean;
   /** Zemindeki iz ve yanık havuzlarının kapasite çarpanı. */
   readonly decals: number;
@@ -23,7 +19,7 @@ export const EFFECT_LEVELS: Readonly<Record<EffectLevel, EffectProfile>> = {
   low: { particles: 0.5, glow: false, decals: 0.5 },
 };
 
-/** Açılış kademesi: Android tarayıcısı ve Android kabuğu düşük başlar. */
 export function initialEffectLevel(userAgent: string): EffectLevel {
-  return /Android/i.test(userAgent) ? 'low' : 'high';
+  if (!/Android/i.test(userAgent)) return 'high';
+  return /(?:^|[;\s])TB350FU(?:[;\s]|$)/i.test(userAgent) ? 'high' : 'low';
 }

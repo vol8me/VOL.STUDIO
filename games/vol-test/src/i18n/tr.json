@@ -10,7 +10,9 @@
     "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",
     "forward": "İleri",
     "reverse": "Geri",
-    "brake": "Fren"
+    "brake": "Fren",
+    "fireReload": "Atış dolumu",
+    "climate": "{{season}} · {{weather}}"
   },
   "controls": {
     "move": "Hareket",
@@ -36,6 +38,34 @@
     "qualityLevel": {
       "high": "Yüksek",
       "low": "Düşük"
+    },
+    "volume": "Ses düzeyi",
+    "haptics": "Titreşim",
+    "display": "Ekran kipi",
+    "displayMode": {
+      "windowed": "Pencereli",
+      "fullscreen": "Tam ekran"
+    },
+    "scenario": "Test senaryosu",
+    "seed": "Tohum",
+    "scenarioMode": {
+      "empty": "Boş dünya",
+      "slalom": "Slalom",
+      "targets": "Hedef atış",
+      "sandbox": "Fizik alanı",
+      "multitank": "Çoklu tank"
     }
+  },
+  "season": {
+    "spring": "İlkbahar",
+    "summer": "Yaz",
+    "autumn": "Sonbahar",
+    "winter": "Kış"
+  },
+  "weather": {
+    "clear": "Açık",
+    "dust": "Toz",
+    "rain": "Yağmur",
+    "snow": "Kar"
   }
 }

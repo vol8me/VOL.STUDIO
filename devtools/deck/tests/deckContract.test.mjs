@@ -138,6 +138,29 @@ test('full yeni release kaydı ile ölçüm flagını açar ve oyun için süre 
   assert.throws(() => fullMeasurementPlan('games/sample-game', records, 0), /saniye/);
 });
 
+test('ölçüm hava, mevsim ve kalite değerleri sıkı izin listesiyle taşınır', () => {
+  for (const [key, allowed] of Object.entries({
+    VOL_DECK_WEATHER: ['clear', 'dust', 'rain', 'snow'],
+    VOL_DECK_SEASON: ['spring', 'summer', 'autumn', 'winter'],
+    VOL_DECK_QUALITY: ['low', 'high'],
+  })) {
+    for (const value of allowed) {
+      assert.equal(renderModeEnv({ [key]: value }), `${key}=${value}`);
+      assert.deepEqual(
+        JSON.parse(sanitizeReport(JSON.stringify({ type: 'info', env: { [key]: value } }))).env,
+        { [key]: value },
+      );
+    }
+    for (const value of ['unknown', allowed[0].toUpperCase(), 'low:high', '1']) {
+      assert.throws(() => renderModeEnv({ [key]: value }));
+      assert.deepEqual(
+        JSON.parse(sanitizeReport(JSON.stringify({ type: 'info', env: { [key]: value } }))).env,
+        {},
+      );
+    }
+  }
+});
+
 test('renderModeEnv: meta karakterler reddedilir', () => {
   assert.equal(
     renderModeEnv({ WEBKIT_DISABLE_DMABUF_RENDERER: '1' }),

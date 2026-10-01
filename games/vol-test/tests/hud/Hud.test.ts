@@ -51,6 +51,22 @@ function pointer(type: string): PointerEvent {
 }
 
 describe('Hud', () => {
+  it('atış dolum barı kalan beklemeyi gösterir ve dil değişiminde erişilebilir adı yenilenir', async () => {
+    const { hud, parent } = mount();
+    const bar = parent.querySelector<HTMLElement>('.vt-hud__fire-bar')!;
+    expect(bar).not.toBeNull();
+    expect(bar.getAttribute('aria-label')).toBe('Atış dolumu');
+    hud.update(hudFrame({ fireProgress: 0.25 }), 0);
+    expect(Number(bar.getAttribute('aria-valuenow'))).toBe(25);
+    hud.update(hudFrame({ fireProgress: 1 }), 1000);
+    expect(Number(bar.getAttribute('aria-valuenow'))).toBe(100);
+    await i18next.changeLanguage('en');
+    expect(bar.getAttribute('aria-label')).toBe('Shot reload');
+    await i18next.changeLanguage('tr');
+    hud.destroy();
+    expect(parent.querySelector('.vt-hud__fire-bar')).toBeNull();
+  });
+
   it('görünen her parça CORE bileşenidir', () => {
     const { hud, parent } = mount();
     const layer = parent.querySelector('.vt-hud')!;

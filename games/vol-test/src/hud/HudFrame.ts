@@ -1,3 +1,5 @@
+import type { ClimateFrame } from './ClimateStatus';
+
 /** HUD'un her güncellemede okuduğu oyun durumu; simülasyon sınıflarına bağlı değildir. */
 export interface HudFrame {
   readonly x: number;
@@ -9,6 +11,8 @@ export interface HudFrame {
   readonly boosting: boolean;
   readonly boost: number;
   readonly boostCapacity: number;
+  readonly fireProgress: number;
+  readonly climate?: ClimateFrame;
   readonly view: {
     readonly x: number;
     readonly y: number;

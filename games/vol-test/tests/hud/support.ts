@@ -11,6 +11,7 @@ export function hudFrame(overrides: Partial<HudFrame> = {}): HudFrame {
     boosting: false,
     boost: 100,
     boostCapacity: 100,
+    fireProgress: 1,
     view: { x: 1600, y: 1700, width: 900, height: 700 },
     ...overrides,
   };

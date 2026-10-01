@@ -31,6 +31,8 @@ export function hudFrame(
   frame: TankFrame,
   boostCapacity: number,
   view: HudFrame['view'],
+  fireProgress = 1,
+  climate?: HudFrame['climate'],
 ): HudFrame {
   return {
     x: frame.x,
@@ -42,6 +44,8 @@ export function hudFrame(
     boosting: tank.boosting,
     boost: tank.boost,
     boostCapacity,
+    fireProgress,
+    climate,
     view,
   };
 }

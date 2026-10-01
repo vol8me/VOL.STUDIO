@@ -135,6 +135,13 @@ oyun dizininin içinde olur, native çalışma seçilir ve ortam gerekli ise
 başlatıcı üzerinden verilir. Cihaz kayıtları devtools/deck/records/
 altında git dışıdır.
 
+VOL.TEST ölçüm oturumu `VOL_DECK_MEASURE=1` ile açılır. Geçici seçimler
+`VOL_DECK_SCENARIO` (0/10/20/30/40), `VOL_DECK_SEED` (uint32),
+`VOL_DECK_WEATHER` (clear/dust/rain/snow), `VOL_DECK_SEASON`
+(spring/summer/autumn/winter) ve `VOL_DECK_QUALITY` (low/high) değişkenleridir.
+Oyun ve rapor aynı izin listesini kullanır. Bu seçimler cihaz tercihini
+değiştirmez; ölçüm modu dışında uygulanmaz.
+
 Teşhis yalnız izin listeli ortam bilgisini toplar; Steam ortamının tamamı
 kaydedilmez. Kullanıcı kimliği, adres ve oturum belirteci belgeye, loga veya
 commit'e girmez. Dağıtımın bıraktığı geçici dosya ve kısayol raporlanır.

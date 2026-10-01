@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { GameServices } from '@/app/GameServices';
+import * as Platform from '@volstudio/tauri-v2';
 import type * as CoreModule from '@volstudio/core';
 import { triggerBack, Vector2, type InputState } from '@volstudio/core';
 import { TANK } from '@/config/tank';
@@ -18,6 +20,10 @@ const controls = vi.hoisted(() => ({
 vi.mock('@volstudio/core', async (importOriginal) => {
   const actual = await importOriginal<typeof CoreModule>();
   class FakeInputManager {
+    readonly inputMode = undefined;
+    getDebugSnapshot() {
+      return { activeProvider: 'none' };
+    }
     update(): void {}
     getState(): InputState<TestAction> {
       return controls.state;
@@ -57,12 +63,12 @@ interface Harness {
 
 let active: Harness | null = null;
 
-function mount(): Harness {
+function mount(services?: GameServices): Harness {
   controls.state = idle();
   controls.vibrate = [];
   controls.cancelled = 0;
   const fake = fakeScene();
-  const scene = new WorldScene();
+  const scene = new WorldScene(services);
   const parent = document.createElement('div');
   document.body.append(parent);
   const camera = fakeObject('camera');
@@ -112,6 +118,68 @@ afterEach(() => {
 });
 
 describe('WorldScene', { timeout: 20_000 }, () => {
+  it('ölçüm oturumunu istenen dünya ve kaliteyle açar, kalıcı tercihleri değiştirmez', async () => {
+    localStorage.clear();
+    const environment = vi.spyOn(Platform, 'getDiagnosticsEnv').mockResolvedValue({
+      VOL_DECK_MEASURE: '1',
+      VOL_DECK_SCENARIO: '40',
+      VOL_DECK_SEED: '817',
+      VOL_DECK_WEATHER: 'snow',
+      VOL_DECK_SEASON: 'winter',
+      VOL_DECK_QUALITY: 'low',
+    });
+    const services = await GameServices.create();
+    environment.mockRestore();
+    const { sim, parent, frame } = mount(services);
+    frame();
+    expect(sim.weather?.frame).toMatchObject({ kind: 'snow', season: 'winter' });
+    expect(sim.vehicles.length).toBeGreaterThan(1);
+    expect(parent.querySelector('.vt-hud__climate')?.textContent).toContain('Kış');
+    expect(services.settings.get()).toMatchObject({
+      quality: 'high',
+      scenario: 'empty',
+      seed: 731,
+    });
+    active?.shutdown();
+    active = null;
+    await services.flush();
+    services.dispose();
+    parent.remove();
+    expect(localStorage.getItem('device.voltest.preferences')).toBeNull();
+  });
+  it('kalite tercihini, ilerlemeyi ve kabuktan gelen duraklatmayı servislerle yürütür', async () => {
+    localStorage.clear();
+    const services = await GameServices.create();
+    let pauseFromShell: () => void = () => undefined;
+    vi.spyOn(services, 'onPause').mockImplementation((listener) => {
+      pauseFromShell = listener;
+      return () => undefined;
+    });
+    const { sim, frame, parent } = mount(services);
+    await services.settings.update({ quality: 'low', volume: 0.25 });
+    for (let i = 0; i < 30; i++) frame({ move: new Vector2(1, 0), press: ['fire'] });
+    expect(services.progress.get().distance).toBeGreaterThan(0);
+    expect(services.progress.get().shots).toBeGreaterThan(0);
+    pauseFromShell();
+    const pausedAt = sim.timeMs;
+    frame({ move: new Vector2(1, 0) });
+    expect(sim.timeMs).toBe(pausedAt);
+    const buttons = parent.querySelectorAll<HTMLButtonElement>(
+      '[data-testid="pause-quality"] button',
+    );
+    buttons[0].click();
+    await services.settings.flush();
+    expect(services.settings.get().quality).toBe('high');
+    parent.querySelector<HTMLButtonElement>('[data-testid="pause-resume"]')!.click();
+    frame();
+    expect(sim.timeMs).toBeGreaterThan(pausedAt);
+    await services.flush();
+    active?.shutdown();
+    active = null;
+    services.dispose();
+    parent.remove();
+  });
+
   it('boş dünyayı kurar, kamerayı tankta açar ve HUD bağlar', () => {
     const { sim, camera, parent, frame } = mount();
     frame();
@@ -167,6 +235,17 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     expect(pauseOpen(parent)).toBeNull();
     for (let step = 0; step < 30; step++) frame({ move: new Vector2(1, 0) });
     expect(sim.player.tank.x).toBeGreaterThan(x);
+  });
+
+  it('hava ve mevsim saati simülasyonla ilerler, duraklatmada durur', () => {
+    const { sim, frame, parent } = mount();
+    for (let step = 0; step < 60; step++) frame();
+    expect(sim.weather?.frame.elapsedMs).toBeCloseTo(sim.timeMs);
+    expect(parent.querySelector('.vt-hud__climate')?.textContent).toContain('İlkbahar');
+    frame({ press: ['pause'] });
+    const elapsed = sim.weather!.frame.elapsedMs;
+    for (let step = 0; step < 60; step++) frame();
+    expect(sim.weather!.frame.elapsedMs).toBe(elapsed);
   });
 
   it('modal düğmesiyle sürdürme aynı basışı yeniden duraklatmaz', () => {

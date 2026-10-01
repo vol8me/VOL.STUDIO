@@ -144,6 +144,12 @@ export function validateMeasureSeconds(seconds) {
     throw new Error('Ölçüm penceresi 0–3600 saniye arasında olmalı');
 }
 
+const MEASUREMENT_ENUMS = {
+  VOL_DECK_WEATHER: /^(clear|dust|rain|snow)$/,
+  VOL_DECK_SEASON: /^(spring|summer|autumn|winter)$/,
+  VOL_DECK_QUALITY: /^(low|high)$/,
+};
+
 /** mode.env gövdesi: yalnız `KEY=VALUE` satırları; kabuk meta karakteri yok. */
 export function renderModeEnv(entries) {
   return Object.entries(entries)
@@ -164,14 +170,16 @@ export function renderModeEnv(entries) {
       const valid = booleans.includes(key)
         ? /^[01]$/.test(String(value))
         : key === 'GDK_BACKEND'
-        ? /^(x11|wayland)$/.test(String(value))
-        : key === 'WEBKIT_DISPLAY_REFRESH_THROTTLE_FPS'
-        ? /^(?:[1-9]\d?|1\d\d|2[0-3]\d|240)$/.test(String(value))
-        : key === 'VOL_DECK_SCENARIO'
-        ? /^(0|10|20|30|40)$/.test(String(value))
-        : key === 'VOL_DECK_SEED'
-        ? /^\d{1,10}$/.test(String(value)) && Number(value) <= 4294967295
-        : false;
+          ? /^(x11|wayland)$/.test(String(value))
+          : key === 'WEBKIT_DISPLAY_REFRESH_THROTTLE_FPS'
+            ? /^(?:[1-9]\d?|1\d\d|2[0-3]\d|240)$/.test(String(value))
+            : key === 'VOL_DECK_SCENARIO'
+              ? /^(0|10|20|30|40)$/.test(String(value))
+              : key === 'VOL_DECK_SEED'
+                ? /^\d{1,10}$/.test(String(value)) && Number(value) <= 4294967295
+                : Object.hasOwn(MEASUREMENT_ENUMS, key)
+                  ? MEASUREMENT_ENUMS[key].test(String(value))
+                  : false;
       if (!valid) throw new Error(`Ölçüm değişkeni veya değeri izin listesinde değil: ${key}`);
       return `${key}=${value}`;
     })
@@ -494,6 +502,8 @@ export function sanitizeReport(text) {
         result.hasError = Boolean(value);
       else if (key === 'env' && value && typeof value === 'object') {
         const env = {};
+        for (const [name, pattern] of Object.entries(MEASUREMENT_ENUMS))
+          if (pattern.test(String(value[name]))) env[name] = String(value[name]);
         for (const name of [
           'WEBKIT_DISABLE_DMABUF_RENDERER',
           'WEBKIT_FORCE_VBLANK_TIMER',

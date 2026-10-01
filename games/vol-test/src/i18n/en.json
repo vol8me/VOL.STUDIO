@@ -10,7 +10,9 @@
     "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",
     "forward": "Forward",
     "reverse": "Reverse",
-    "brake": "Brake"
+    "brake": "Brake",
+    "fireReload": "Shot reload",
+    "climate": "{{season}} · {{weather}}"
   },
   "controls": {
     "move": "Move",
@@ -36,6 +38,34 @@
     "qualityLevel": {
       "high": "High",
       "low": "Low"
+    },
+    "volume": "Volume",
+    "haptics": "Haptics",
+    "display": "Display mode",
+    "displayMode": {
+      "windowed": "Windowed",
+      "fullscreen": "Fullscreen"
+    },
+    "scenario": "Test scenario",
+    "seed": "Seed",
+    "scenarioMode": {
+      "empty": "Empty world",
+      "slalom": "Slalom",
+      "targets": "Target shooting",
+      "sandbox": "Physics sandbox",
+      "multitank": "Multiple tanks"
     }
+  },
+  "season": {
+    "spring": "Spring",
+    "summer": "Summer",
+    "autumn": "Autumn",
+    "winter": "Winter"
+  },
+  "weather": {
+    "clear": "Clear",
+    "dust": "Dust",
+    "rain": "Rain",
+    "snow": "Snow"
   }
 }

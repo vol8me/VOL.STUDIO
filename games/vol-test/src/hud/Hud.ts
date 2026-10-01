@@ -4,7 +4,9 @@ import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { FpsMeter, InputPresentationController, UIRoot } from '@volstudio/core/ui';
 import type { EffectLevel, EffectProfile } from '@/config/quality';
+import type { GameServices } from '@/app/GameServices';
 import type { TestAction } from '@/input/bindings';
+import { ClimateStatus } from './ClimateStatus';
 import { ControlHints } from './ControlHints';
 import { FullscreenToggle } from './FullscreenToggle';
 import type { HudFrame } from './HudFrame';
@@ -28,8 +30,14 @@ export interface HudOptions {
   /** Tam ekran düğmesi sunulsun mu (native kabuk kendi kipini yönetir). */
   readonly fullscreen: boolean;
   readonly initialInputMode?: string;
+  readonly readInputState?: () => {
+    mode: string | undefined;
+    padId: string;
+    padConnected: boolean;
+  };
   /** Efekt kalitesi; duraklatma menüsünden seçilir. */
   readonly quality: GraphicsQuality<EffectLevel, EffectProfile>;
+  readonly services?: GameServices;
   readonly onResume: () => void;
 }
 
@@ -47,6 +55,7 @@ export class Hud {
   private readonly layer: HTMLDivElement;
   private readonly presentation: InputPresentationController;
   private readonly status: StatusPanel;
+  private readonly climate: ClimateStatus;
   private readonly map: MapPanel;
   private readonly hints: ControlHints;
   private readonly touch: TouchControls;
@@ -63,9 +72,14 @@ export class Hud {
     this.layer.dataset.testid = 'hud';
 
     this.presentation = this.scope.addDestroyable(
-      new InputPresentationController({ initialMode: options.initialInputMode }),
+      new InputPresentationController({
+        initialMode: options.initialInputMode,
+        readState: options.readInputState,
+        context: () => options.services?.glyphContext ?? {},
+      }),
     );
     this.status = this.scope.addDestroyable(new StatusPanel(options.metre));
+    this.climate = this.scope.addDestroyable(new ClimateStatus());
     this.map = this.scope.addDestroyable(
       new MapPanel(options.worldWidth, options.worldHeight, options.metre, options.mapGridStep),
     );
@@ -74,11 +88,25 @@ export class Hud {
       new TouchControls(options.actionSource, options.stickSource),
     );
     const fps = this.scope.addDestroyable(new FpsMeter({ position: 'bottom-right' }));
-    this.pause = this.scope.addDestroyable(new PauseOverlay(options.onResume, options.quality));
-    this.fullscreen = options.fullscreen ? this.scope.addDestroyable(new FullscreenToggle()) : null;
+    this.pause = this.scope.addDestroyable(
+      new PauseOverlay(
+        options.onResume,
+        options.quality,
+        options.services?.settings,
+        options.services?.displayAvailable,
+      ),
+    );
+    this.fullscreen = options.fullscreen
+      ? this.scope.addDestroyable(
+          new FullscreenToggle(
+            options.services ? () => options.services?.display?.toggle() : undefined,
+          ),
+        )
+      : null;
 
     this.layer.append(
       ...this.status.elements,
+      this.climate.element,
       this.map.element,
       this.hints.element,
       this.touch.element,
@@ -116,6 +144,7 @@ export class Hud {
   }
 
   update(frame: HudFrame, nowMs: number): void {
+    if (this.presentation) this.presentation.poll();
     const mode = this.presentation.mode;
     if (mode !== undefined && mode !== this.inputMode) {
       this.inputMode = mode;
@@ -125,6 +154,7 @@ export class Hud {
     if (nowMs >= this.statusDueMs) {
       this.statusDueMs = nowMs + STATUS_INTERVAL_MS;
       this.status.update(frame);
+      this.climate.update(frame.climate);
     }
     if (nowMs >= this.mapDueMs) {
       this.mapDueMs = nowMs + MAP_INTERVAL_MS;
@@ -138,6 +168,7 @@ export class Hud {
 
   private refreshLabels(): void {
     this.status.refreshLabels();
+    this.climate.refreshLabels();
     this.statusDueMs = 0;
     this.hints.refreshLabels();
     this.touch.refreshLabels();

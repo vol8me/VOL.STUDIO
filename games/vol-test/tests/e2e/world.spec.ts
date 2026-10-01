@@ -72,6 +72,17 @@ test('Space fren: paletler kilitlenir, tank gaz basılıyken bile durur', async 
   await page.keyboard.up('d');
 });
 
+test('atış barı tek atıştan sonra boşalır, bekler ve yeniden hazır olur', async ({ page }) => {
+  await open(page);
+  const bar = page.locator('.vt-hud__fire-bar');
+  await expect(bar).toHaveAttribute('aria-valuenow', '100');
+  await page.mouse.move(900, 400);
+  await page.mouse.down();
+  await expect.poll(async () => Number(await bar.getAttribute('aria-valuenow'))).toBeLessThan(30);
+  await page.mouse.up();
+  await expect(bar).toHaveAttribute('aria-valuenow', '100');
+});
+
 test('Escape duraklatır, devam düğmesi sürdürür', async ({ page }) => {
   await open(page);
   await tap(page, 'Escape');
@@ -156,6 +167,10 @@ test.describe('dokunmatik', () => {
       '.vt-hud__map',
       '.vt-hud__fullscreen',
       '.vt-hud__telemetry',
+      '.vt-hud__title',
+      '.vt-hud__boost-bar',
+      '.vt-hud__fire-bar',
+      '.vt-hud__climate',
     ];
     const boxes = [];
     for (const selector of selectors) {
@@ -177,10 +192,70 @@ test.describe('dokunmatik', () => {
       }
     }
     expect(overlaps).toEqual([]);
+    const pause = (await page.getByTestId('touch-pause').boundingBox())!;
+    const zoom = (await page.getByTestId('touch-zoomIn').boundingBox())!;
+    const boost = (await page.locator('.vt-hud__boost-bar').boundingBox())!;
+    const fire = (await page.locator('.vt-hud__fire-bar').boundingBox())!;
+    expect(pause.x + pause.width).toBeLessThan(zoom.x);
+    expect(pause.y).toBeCloseTo(zoom.y, 0);
+    expect(zoom.x - pause.x - pause.width).toBeLessThan(20);
+    expect(fire.x).toBeGreaterThan(boost.x + boost.width);
+    expect(fire.y).toBeCloseTo(boost.y, 0);
     for (const box of boxes) {
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.y + box.height).toBeLessThanOrEqual(390);
     }
+  });
+
+  test('sağ çubuğun iç bölgesi nişan alır, dış bölgesi hizalanınca ateş eder', async ({ page }) => {
+    await open(page);
+    await page.touchscreen.tap(640, 400);
+    const box = (await page.getByTestId('stick-aim').locator('.vol-joystick__base').boundingBox())!;
+    const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const bar = page.locator('.vt-hud__fire-bar');
+    await page.evaluate(({ x, y }) => {
+      const target = document.querySelector('[data-testid="stick-aim"] .vol-joystick__base')!;
+      target.dispatchEvent(
+        new PointerEvent('pointerdown', {
+          bubbles: true,
+          pointerId: 12,
+          pointerType: 'touch',
+          clientX: x,
+          clientY: y,
+        }),
+      );
+      window.dispatchEvent(
+        new PointerEvent('pointermove', {
+          bubbles: true,
+          pointerId: 12,
+          pointerType: 'touch',
+          clientX: x - 24,
+          clientY: y,
+        }),
+      );
+    }, center);
+    await page.waitForTimeout(800);
+    await expect(bar).toHaveAttribute('aria-valuenow', '100');
+    await page.evaluate(
+      ({ x, y }) =>
+        window.dispatchEvent(
+          new PointerEvent('pointermove', {
+            bubbles: true,
+            pointerId: 12,
+            pointerType: 'touch',
+            clientX: x - 64,
+            clientY: y,
+          }),
+        ),
+      center,
+    );
+    await expect.poll(async () => Number(await bar.getAttribute('aria-valuenow'))).toBeLessThan(30);
+    await page.evaluate(() =>
+      window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 12, pointerType: 'touch' })),
+    );
+    await expect(bar).toHaveAttribute('aria-valuenow', '100');
+    await page.waitForTimeout(800);
+    await expect(bar).toHaveAttribute('aria-valuenow', '100');
   });
 
   test("sabit hareket joystick'i tankı sürer", async ({ page }) => {

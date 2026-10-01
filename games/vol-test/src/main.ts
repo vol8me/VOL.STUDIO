@@ -3,10 +3,10 @@ import {
   createVolGame,
   i18n,
   i18next,
-  setHapticsEnabled,
   showFatalStartupError,
   suppressNativeMenus,
 } from '@volstudio/core';
+import { GameServices } from '@/app/GameServices';
 import { GAME } from '@/config/game';
 import { PALETTE } from '@/config/palette';
 import en from '@/i18n/en.json';
@@ -27,20 +27,21 @@ async function boot(): Promise<void> {
   await i18n.init();
   document.title = i18next.t('voltest:app.title');
 
-  // CORE titreşimi varsayılan olarak kapatır; test oyununda his sınanır,
-  // bu yüzden açıktır. Kalıcı ayar kabuk servisleriyle gelir.
-  setHapticsEnabled(true);
-
+  const services = await GameServices.create();
   const game = await createVolGame({
     parent: 'game',
     backgroundColor: PALETTE.void,
     strategy: 'resize',
     maxDpr: GAME.maxDpr,
-    scenes: [BootScene, WorldScene],
+    scenes: [BootScene, new WorldScene(services)],
+    diagnostics: services.diagnostics,
     audio: { noAudio: false, disableWebAudio: false },
   });
   const stopMenus = suppressNativeMenus(document);
-  game.events.once('destroy', stopMenus);
+  game.events.once('destroy', () => {
+    stopMenus();
+    services.dispose();
+  });
 }
 
 boot().catch((error: unknown) => {

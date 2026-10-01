@@ -8,13 +8,17 @@ import { Icon, IconButton } from '@volstudio/core/ui';
  */
 export class FullscreenToggle {
   readonly element: HTMLElement;
-  private readonly controller = new FullscreenController();
+  private readonly controller: FullscreenController | null;
   private readonly button: IconButton;
 
-  constructor() {
+  constructor(toggle?: () => unknown) {
+    this.controller = toggle ? null : new FullscreenController();
     this.button = new IconButton(new Icon({ name: 'fullscreen' }).element, {
       label: i18next.t('voltest:hud.fullscreen'),
-      onClick: () => this.controller.toggle(),
+      onClick: () => {
+        if (toggle) toggle();
+        else void this.controller?.toggle();
+      },
     });
     this.element = this.button.element;
     this.element.classList.add('vt-hud__fullscreen');
@@ -26,6 +30,6 @@ export class FullscreenToggle {
 
   destroy(): void {
     this.button.destroy();
-    this.controller.destroy();
+    this.controller?.destroy();
   }
 }

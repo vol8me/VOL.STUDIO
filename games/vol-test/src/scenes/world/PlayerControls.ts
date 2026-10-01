@@ -15,6 +15,7 @@ import {
   type TestAction,
 } from '@/input/bindings';
 import { idleCommand, type TankCommand } from '@/sim/command';
+import { ControlIntent } from '@/input/ControlIntent';
 
 /**
  * Oyuncu girdisinin tek sahibi: CORE `InputManager` (klavye/fare, kol,
@@ -32,10 +33,14 @@ export class PlayerControls {
   private readonly manager: InputManager<TestAction>;
   private readonly edges = new ActionEdges<TestAction>();
   private readonly position = new Vector2();
+  private readonly rawAim = new Vector2();
+  private readonly intent = new ControlIntent();
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, initialMode?: string) {
     this.manager = new InputManager<TestAction>(scene, {
       actions: TEST_ACTIONS,
+      inputMode: { initial: initialMode },
+      restingAimPolicy: 'owner',
       pcActionBindings: PC_BINDINGS,
       gamepad: { actionBindings: GAMEPAD_BINDINGS },
       aimStickAction: AIM_STICK_ACTION,
@@ -66,7 +71,30 @@ export class PlayerControls {
     command.fire = state.actions.fire;
     command.boost = state.actions.boost;
     command.brake = state.actions.brake;
-    return command;
+    const touch = this.manager.inputMode === 'touch';
+    this.stickSource.write('aim', this.rawAim);
+    return this.intent.update(
+      command,
+      deltaMs,
+      touch ? Math.hypot(this.rawAim.x, this.rawAim.y) : undefined,
+    );
+  }
+
+  get aiming(): boolean {
+    return this.stickSource.isHeld('aim') || this.command.aimX !== 0 || this.command.aimY !== 0;
+  }
+
+  snapshot(): ReturnType<InputManager<TestAction>['getDebugSnapshot']> {
+    return this.manager.getDebugSnapshot();
+  }
+
+  presentationState(): { mode: string | undefined; padId: string; padConnected: boolean } {
+    const pad = this.manager.getDebugSnapshot().providers?.gamepad;
+    return {
+      mode: this.manager.inputMode,
+      padId: typeof pad?.padId === 'string' ? pad.padId : '',
+      padConnected: typeof pad?.padIndex === 'number' && pad.padIndex >= 0,
+    };
   }
 
   /** Eylem bu karede basılmaya başladı mı (kenar). */
@@ -82,6 +110,7 @@ export class PlayerControls {
   /** Tutulan çubuk, tuş ve sanal düğme durumunu bırakır (duraklatma geçişi). */
   release(): void {
     this.manager.reset();
+    this.intent.reset();
     this.actionSource.clear();
     this.stickSource.clear();
   }

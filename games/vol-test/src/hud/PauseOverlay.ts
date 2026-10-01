@@ -1,6 +1,9 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import type { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { Button, Modal, SegmentedControl, Text } from '@volstudio/core/ui';
+import type { GameSettings } from '@/app/GameSettings';
+import { SettingsPanel } from './SettingsPanel';
 import type { EffectLevel, EffectProfile } from '@/config/quality';
 
 /**
@@ -10,16 +13,20 @@ import type { EffectLevel, EffectProfile } from '@/config/quality';
  * uyumluluk `click`i yeni açılan scrim'e düşüp katmanı anında kapatırdı.
  */
 export class PauseOverlay {
+  private readonly scope = new DisposableScope();
   private readonly modal: Modal;
   private readonly title: Text;
   private readonly resume: Button;
   private readonly qualityLabel: Text;
   private readonly qualityPicker: SegmentedControl;
+  private readonly settingsPanel: SettingsPanel | null;
   private closingFromGame = false;
 
   constructor(
     onResume: () => void,
     private readonly quality: GraphicsQuality<EffectLevel, EffectProfile>,
+    settings?: GameSettings,
+    displayAvailable = false,
   ) {
     this.modal = new Modal({
       className: 'vt-pause',
@@ -40,7 +47,11 @@ export class PauseOverlay {
       },
     });
     this.qualityPicker.element.dataset.testid = 'pause-quality';
-    this.modal.add(this.title).add(this.qualityLabel).add(this.qualityPicker).add(this.resume);
+    this.scope.addSubscription(quality.onChange((level) => this.qualityPicker.setValue(level)));
+    this.modal.add(this.title).add(this.qualityLabel).add(this.qualityPicker);
+    this.settingsPanel = settings ? new SettingsPanel(settings, displayAvailable) : null;
+    for (const element of this.settingsPanel?.elements ?? []) this.modal.add({ element });
+    this.modal.add(this.resume);
     this.refreshLabels();
   }
 
@@ -66,6 +77,7 @@ export class PauseOverlay {
   }
 
   refreshLabels(): void {
+    this.settingsPanel?.refreshLabels();
     this.title.setContent(i18next.t('voltest:pause.title'));
     this.resume.setLabel(i18next.t('voltest:pause.resume'));
     this.qualityLabel.setContent(i18next.t('voltest:pause.quality'));
@@ -82,6 +94,8 @@ export class PauseOverlay {
   }
 
   destroy(): void {
+    this.scope.dispose();
+    this.settingsPanel?.destroy();
     this.modal.destroy();
     this.title.destroy();
     this.resume.destroy();
