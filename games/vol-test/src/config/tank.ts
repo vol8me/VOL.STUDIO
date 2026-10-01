@@ -101,9 +101,8 @@ export const TANK = {
   /** Çarpmanın süspansiyona vuruşu: normal hızın bu oranı (birim/s). */
   impactKick: 0.12,
 
-  /** Taretin dünya ekseninde azami dönüş hızı ve dinlenmeye dönüş gecikmesi. */
-  turretTurnRate: 5.5,
-  turretRestDelay: 1.4,
+  /** Taretin dünya ekseninde azami dönüş hızı. */
+  turretTurnRate: 3.2,
 } as const;
 
 export type TankConfig = typeof TANK;
@@ -135,10 +134,18 @@ export type SuspensionConfig = typeof SUSPENSION;
 
 /** Taret ateşi. */
 export const WEAPON = {
-  intervalMs: 260,
+  intervalMs: 650,
+  aimTolerance: 0.025,
   muzzleOffset: 30,
   projectileSpeed: 900,
-  projectileLifeMs: 1400,
+  projectileLifeMs: 1200,
+  flight: {
+    muzzleHeight: 24,
+    launchSpeed: 90,
+    gravity: 314,
+    drag: 0.32,
+    maxRange: 620,
+  },
   /** Mermi kütlesi × çıkış hızı: tanka ters yönde uygulanan itki (kg·birim/s). */
   recoilImpulse: 42000,
   /** İsabet eden merminin hedefe aktardığı itki (kg·birim/s). */

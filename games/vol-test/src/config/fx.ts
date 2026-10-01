@@ -1,9 +1,22 @@
 /** Sunum efektlerinin ayarları; renkler `palette.ts`ten gelir. */
 export const FX = {
+  aimGuide: {
+    haloWidth: 2.8,
+    haloAlpha: 0.3,
+    coreWidth: 0.9,
+    markerRadius: 5,
+    alpha: 0.55,
+    pulseMs: 180,
+    pulseAlpha: 0.08,
+    depth: 11,
+  },
   /** Mermi: parlak gövde, incelen iz ve havada kısa kalan duman izi. */
   shell: {
     headLength: 7,
     headWidth: 3.2,
+    heightScale: 0.25,
+    shadowRadius: 3,
+    shadowAlpha: 0.3,
     tracerLength: 34,
     /** Duman izi bu uzaklıkta bir kabarcık bırakır (birim). */
     trailSpacing: 30,

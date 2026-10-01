@@ -142,17 +142,17 @@ describe('Tank fiziği', () => {
     expect(subject.suspension.pitch).toBeLessThan(-0.5);
   });
 
-  it('taret nişana sınırlı hızla döner, bırakılınca bekleyip gövdeye döner', () => {
+  it('taret nişana sınırlı hızla döner, bırakılınca dünya yönünü korur', () => {
     const space = world();
     const subject = tank();
     subject.step(command({ aimY: 1 }), space, DT);
     expect(subject.turret).toBeCloseTo(TANK.turretTurnRate * DT);
     drive(subject, space, { aimY: 1 }, 1);
     expect(subject.turret).toBeCloseTo(Math.PI / 2);
-    drive(subject, space, {}, TANK.turretRestDelay * 0.5);
+    drive(subject, space, {}, 1.5);
     expect(subject.turret).toBeCloseTo(Math.PI / 2);
-    drive(subject, space, {}, TANK.turretRestDelay);
-    expect(subject.turret).toBeCloseTo(subject.hull);
+    drive(subject, space, { moveX: 1 }, 3);
+    expect(subject.turret).toBeCloseTo(Math.PI / 2);
   });
 
   it('poz kaydı adımdan önceki durumu ve süspansiyonu tutar', () => {

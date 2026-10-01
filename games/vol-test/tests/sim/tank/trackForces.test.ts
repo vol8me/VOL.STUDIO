@@ -15,6 +15,24 @@ const grip = TANK.tractionFriction * load;
 const kineticGrip = TANK.tractionKinetic * load;
 
 describe('computeTrackForces', () => {
+  it('zemin çarpanları Coulomb tutuşunu ve yuvarlanmayı değiştirir; config sabit kalır', () => {
+    const original = { ...TANK };
+    const dry = computeTrackForces(body(), 5000, 5000, false, TANK, createTrackForces());
+    const wet = computeTrackForces(body(), 5000, 5000, false, TANK, createTrackForces(), {
+      grip: 0.5,
+      rollingResistance: 1,
+    });
+    expect(wet.forward).toBeCloseTo(dry.forward / 2);
+    const rolling = body();
+    rolling.vx = 100;
+    const base = computeTrackForces(rolling, 100, 100, false, TANK, createTrackForces());
+    const snow = computeTrackForces(rolling, 100, 100, false, TANK, createTrackForces(), {
+      grip: 1,
+      rollingResistance: 2,
+    });
+    expect(snow.forward).toBeCloseTo(base.forward * 2);
+    expect(TANK).toEqual(original);
+  });
   it('çekiş palet başına Coulomb sürtünmesiyle sınırlıdır', () => {
     const forces = computeTrackForces(body(), 5000, 5000, false, TANK, createTrackForces());
     expect(forces.forward).toBeLessThanOrEqual(2 * grip);

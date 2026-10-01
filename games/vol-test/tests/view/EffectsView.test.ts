@@ -71,6 +71,7 @@ describe('EffectsView', () => {
     );
     expect(reach).toBeGreaterThanOrEqual(-FX.shell.headLength - 1e-9);
     fresh.ageMs = 500;
+    fresh.travelled = 450;
     view.update(projectiles, 1, 16);
     const long = Math.min(
       ...layer.calls
@@ -86,6 +87,7 @@ describe('EffectsView', () => {
     const projectiles = new Projectiles(8, 1000);
     const shell = projectiles.spawn(1, 0, 0, 900, 0);
     shell.ageMs = 100;
+    shell.travelled = 90;
     // 100 ms'de 90 birim; son 16 ms'de 14.4 birim → 1 aralık sınırı geçilir ya da geçilmez.
     view.update(projectiles, 1, 100);
     const puffs = burst(trail);
@@ -168,13 +170,13 @@ describe('EffectsView', () => {
       view.update(projectiles, 1, 0);
       return tracers.calls.filter(([name]) => name === 'fillCircle').length;
     };
-    expect(halos()).toBe(2);
+    expect(halos()).toBe(3);
     view.applyProfile(EFFECT_LEVELS.low);
-    expect(halos()).toBe(0);
+    expect(halos()).toBe(1);
     view.explode(0, 0, 0, 'ground');
     expect(burst(debris)).toBe(Math.round(FX.blast.debris * EFFECT_LEVELS.low.particles));
     view.applyProfile(EFFECT_LEVELS.high);
-    expect(halos()).toBe(2);
+    expect(halos()).toBe(3);
   });
 
   it('düşük kademede zemin izi havuzları küçük kurulur', () => {

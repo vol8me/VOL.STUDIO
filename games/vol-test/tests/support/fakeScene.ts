@@ -16,7 +16,7 @@ export function fakeObject(kind: string, args: unknown[] = []): FakeObject {
   const state: Record<string, unknown> = { kind, args, calls, visible: true, emitting: false };
   // Poz sözleşmesi (CORE `PoseSourceNode`): kapsayıcı çocuk listesi, görüntü
   // doku ve dünya dönüşümü taşır. Diğer alanlar tanımsız kalır.
-  state.list = kind === 'container' ? args[2] ?? [] : undefined;
+  state.list = kind === 'container' ? (args[2] ?? []) : undefined;
   state.texture = kind === 'image' ? { key: args[2] } : undefined;
   state.frame = undefined;
   state.originX = 0.5;
@@ -74,9 +74,12 @@ export function fakeScene(): FakeScene {
       created.push(object);
       return object;
     };
-  const add = new Proxy({} as Record<string, (...args: unknown[]) => FakeObject>, {
-    get: (_target, kind: string) => factory(kind),
-  });
+  const add = new Proxy(
+    {},
+    {
+      get: (_target, kind: string) => factory(kind),
+    },
+  );
   const textureKeys = new Set<string>();
   return {
     created,

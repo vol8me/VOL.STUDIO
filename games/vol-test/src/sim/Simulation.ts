@@ -1,16 +1,21 @@
 import type { SuspensionConfig, TankConfig, WeaponConfig } from '@/config/tank';
+import { angleDelta } from '@volstudio/core/math';
 import { idleCommand, type TankCommand } from './command';
 import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
 import type { World } from './world/World';
+import type { WeatherSystem } from './weather/WeatherSystem';
+import { WEATHER } from '@/config/weather';
+import { WORLD } from '@/config/world';
 
 export interface SimulationOptions {
   readonly world: World;
   readonly tank: TankConfig;
   readonly suspension: SuspensionConfig;
   readonly weapon: WeaponConfig;
+  readonly weather?: WeatherSystem;
 }
 
 /** Araç kimliğinden o adımın komutu; verilmeyen araç boşta kalır. */
@@ -28,11 +33,13 @@ const IDLE = idleCommand();
 export class Simulation {
   readonly world: World;
   readonly projectiles: Projectiles;
+  readonly weather: WeatherSystem | undefined;
   private readonly vehicleList: Vehicle[] = [];
   private readonly options: SimulationOptions;
   private readonly events: SimEvent[] = [];
   private readonly contact = createContact();
   private readonly targets: ProjectileTarget[] = [];
+  private readonly inputs = new Map<EntityId, TankCommand>();
   private nextId: EntityId = 1;
   private playerId: EntityId;
   timeMs = 0;
@@ -40,7 +47,13 @@ export class Simulation {
   constructor(options: SimulationOptions) {
     this.options = options;
     this.world = options.world;
-    this.projectiles = new Projectiles(options.weapon.capacity, options.weapon.projectileLifeMs);
+    this.weather = options.weather;
+    this.projectiles = new Projectiles(
+      options.weapon.capacity,
+      options.weapon.projectileLifeMs,
+      options.weapon.flight,
+    );
+    if (this.weather) this.projectiles.setAir(this.weather.frame);
     const center = this.world.center;
     this.playerId = this.spawn(center.x, center.y).id;
   }
@@ -66,6 +79,7 @@ export class Simulation {
     const vehicle = new Vehicle(this.nextId++, options.tank, options.suspension, options.weapon);
     vehicle.tank.place(x, y, hull);
     this.vehicleList.push(vehicle);
+    this.inputs.set(vehicle.id, idleCommand());
     this.targets.push({ id: vehicle.id, contains: (px, py) => vehicle.tank.contains(px, py) });
     return vehicle;
   }
@@ -77,6 +91,7 @@ export class Simulation {
     if (index < 0) return;
     this.vehicleList.splice(index, 1);
     this.targets.splice(index, 1);
+    this.inputs.delete(id);
   }
 
   /**
@@ -85,6 +100,8 @@ export class Simulation {
    * komutunu alır.
    */
   step(input: TankCommand | CommandSource, stepMs: number): void {
+    this.weather?.step(stepMs);
+    if (this.weather) this.projectiles.setAir(this.weather.frame);
     const dt = stepMs / 1000;
     this.timeMs += stepMs;
     const commandFor: CommandSource =
@@ -95,7 +112,28 @@ export class Simulation {
     for (const vehicle of this.vehicleList) {
       const tank = vehicle.tank;
       tank.capturePose();
-      tank.step(commandFor(vehicle), this.world, dt);
+      const command = this.inputs.get(vehicle.id)!;
+      Object.assign(command, commandFor(vehicle));
+      const x = tank.x;
+      const y = tank.y;
+      const groundLeft = tank.groundLeft;
+      const groundRight = tank.groundRight;
+      tank.step(command, this.world, dt, this.weather?.sample(x, y));
+      if (this.weather) {
+        const amountPerUnit = WEATHER.tank.snowCompactionPerMetre / WORLD.metre / 2;
+        const offsetX = -Math.sin(tank.hull) * this.options.tank.trackOffset;
+        const offsetY = Math.cos(tank.hull) * this.options.tank.trackOffset;
+        this.weather.compress(
+          tank.x - offsetX,
+          tank.y - offsetY,
+          (tank.groundLeft - groundLeft) * amountPerUnit,
+        );
+        this.weather.compress(
+          tank.x + offsetX,
+          tank.y + offsetY,
+          (tank.groundRight - groundRight) * amountPerUnit,
+        );
+      }
       const contact = tank.contact;
       if (contact.speed > this.options.tank.impactEventSpeed) {
         this.emit({
@@ -112,13 +150,20 @@ export class Simulation {
     this.collideVehicles();
     for (const vehicle of this.vehicleList) {
       vehicle.gun.update(stepMs);
-      if (commandFor(vehicle).fire && vehicle.gun.tryTrigger()) this.fire(vehicle);
+      const command = this.inputs.get(vehicle.id)!;
+      const aiming = command.aimX !== 0 || command.aimY !== 0;
+      const aligned =
+        !aiming ||
+        Math.abs(angleDelta(vehicle.tank.turret, Math.atan2(command.aimY, command.aimX))) <=
+          this.options.weapon.aimTolerance;
+      if (command.fire && aligned && vehicle.gun.tryTrigger()) this.fire(vehicle);
     }
     this.projectiles.step(stepMs, this.world, this.events, this.targets, (projectile, target) => {
       const struck = this.vehicle(target.id);
       if (!struck) return;
       const speed = Math.hypot(projectile.vx, projectile.vy) || 1;
-      const impulse = this.options.weapon.hitImpulse;
+      const impulse =
+        this.options.weapon.hitImpulse * (speed / this.options.weapon.projectileSpeed);
       struck.tank.applyImpulse(
         (projectile.vx / speed) * impulse,
         (projectile.vy / speed) * impulse,
@@ -127,6 +172,23 @@ export class Simulation {
       );
     });
     if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS);
+  }
+
+  previewAim(vehicle: Vehicle, stepMs: number) {
+    if (this.weather) this.projectiles.setAir(this.weather.frame);
+    const tank = vehicle.tank;
+    const dx = Math.cos(tank.turret);
+    const dy = Math.sin(tank.turret);
+    return this.projectiles.preview(
+      vehicle.id,
+      tank.x + dx * vehicle.weapon.muzzleOffset,
+      tank.y + dy * vehicle.weapon.muzzleOffset,
+      dx * vehicle.weapon.projectileSpeed + tank.vx,
+      dy * vehicle.weapon.projectileSpeed + tank.vy,
+      this.world,
+      this.targets,
+      stepMs,
+    );
   }
 
   /** Birikmiş olayları `out`a aktarır ve kuyruğu boşaltır. */

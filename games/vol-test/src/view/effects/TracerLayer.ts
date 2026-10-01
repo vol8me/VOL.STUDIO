@@ -56,12 +56,17 @@ export class TracerLayer {
       const projectile = projectiles.items[index];
       if (!projectile) continue;
       const x = projectile.px + (projectile.x - projectile.px) * alpha;
-      const y = projectile.py + (projectile.y - projectile.py) * alpha;
+      const groundY = projectile.py + (projectile.y - projectile.py) * alpha;
+      const height =
+        projectile.previousHeight + (projectile.height - projectile.previousHeight) * alpha;
+      const y = groundY - height * shell.heightScale;
+      graphics.fillStyle(PALETTE.shellShadow, shell.shadowAlpha);
+      graphics.fillCircle(x, groundY, shell.shadowRadius);
       const speed = Math.hypot(projectile.vx, projectile.vy) || 1;
       const dx = projectile.vx / speed;
       const dy = projectile.vy / speed;
       // Menzil başında iz kısa: mermi namludan yeni çıktıysa iz tankın içine uzanmaz.
-      const travelled = projectile.ageMs * (speed / 1000);
+      const travelled = projectile.travelled;
       const length = Math.min(shell.tracerLength, travelled + shell.headLength);
       for (let step = 0; step < TAPER_STEPS; step++) {
         const from = (length * step) / TAPER_STEPS;

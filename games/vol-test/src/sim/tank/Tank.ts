@@ -11,7 +11,7 @@ import type { World } from '../world/World';
 import { BoostReserve } from './BoostReserve';
 import { Driver, type TrackTargets } from './Driver';
 import { Suspension } from './Suspension';
-import { computeTrackForces, createTrackForces } from './trackForces';
+import { computeTrackForces, createTrackForces, type TrackSurface } from './trackForces';
 import { Turret } from './Turret';
 import type { SuspensionConfig, TankConfig } from '@/config/tank';
 
@@ -157,7 +157,7 @@ export class Tank extends RigidBody {
     pose.roll = this.suspension.roll;
   }
 
-  step(command: TankCommand, world: World, dt: number): void {
+  step(command: TankCommand, world: World, dt: number, surface?: TrackSurface): void {
     this.contact.speed = 0;
     const forward = this.plan(command, false).forward;
     this.reserve.update(command.boost && forward, dt);
@@ -165,10 +165,10 @@ export class Tank extends RigidBody {
 
     const sub = dt / SUBSTEPS;
     for (let index = 0; index < SUBSTEPS; index++) {
-      this.integrateTracks(sub);
+      this.integrateTracks(sub, surface);
       this.resolveContacts(world);
     }
-    this.turretMount.update(command, this.angle, dt);
+    this.turretMount.update(command, dt);
   }
 
   private plan(command: TankCommand, boosting: boolean): TrackTargets {
@@ -182,7 +182,7 @@ export class Tank extends RigidBody {
     );
   }
 
-  private integrateTracks(dt: number): void {
+  private integrateTracks(dt: number, surface?: TrackSurface): void {
     this.driveTracks(dt);
 
     const forces = computeTrackForces(
@@ -192,6 +192,7 @@ export class Tank extends RigidBody {
       this.reserve.active,
       this.config,
       this.forces,
+      surface,
     );
     const fx = Math.cos(this.angle);
     const fy = Math.sin(this.angle);

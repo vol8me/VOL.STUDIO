@@ -19,6 +19,8 @@ export const PALETTE = {
   spark: [0xffd48a, 0xfff4dc] as const,
   /** Tankın biyolüminesans silahı: mermi izi ve ağız parlaması. */
   energy: 0x52f5cf,
+  aimTurning: 0xe0a34b,
+  shellShadow: 0x2a1f15,
   energyHot: 0xeafff9,
   dust: 0xe0c9a4,
   smoke: 0xefe7da,

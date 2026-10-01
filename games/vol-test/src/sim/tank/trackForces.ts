@@ -2,6 +2,11 @@ import { clamp } from '@volstudio/core/math/interpolation';
 import type { RigidBody } from '@volstudio/core/physics';
 import type { TankConfig } from '@/config/tank';
 
+export interface TrackSurface {
+  readonly grip: number;
+  readonly rollingResistance: number;
+}
+
 /** Bir alt adımda paletlerin gövdeye uyguladığı kuvvetler (gövde çerçevesi). */
 export interface TrackForces {
   /** İleri eksende toplam itki (N karşılığı: kg·birim/s²). */
@@ -65,7 +70,9 @@ export function computeTrackForces(
   boosting: boolean,
   config: TankConfig,
   out: TrackForces,
+  surface?: TrackSurface,
 ): TrackForces {
+  const surfaceGrip = surface?.grip ?? 1;
   const mass = body.mass;
   const forward = body.forwardSpeed;
   const lateralSpeed = body.lateralSpeed;
@@ -79,26 +86,26 @@ export function computeTrackForces(
   const slideLeft = Math.hypot(trackLeft - groundLeft, lateralSpeed);
   const slideRight = Math.hypot(trackRight - groundRight, lateralSpeed);
   const muLeft = friction(
-    config.tractionFriction,
-    config.tractionKinetic,
+    config.tractionFriction * surfaceGrip,
+    config.tractionKinetic * surfaceGrip,
     slideLeft,
     config.slidingSpeed,
   );
   const muRight = friction(
-    config.tractionFriction,
-    config.tractionKinetic,
+    config.tractionFriction * surfaceGrip,
+    config.tractionKinetic * surfaceGrip,
     slideRight,
     config.slidingSpeed,
   );
   const sideLeft = friction(
-    config.lateralFriction,
-    config.lateralKinetic,
+    config.lateralFriction * surfaceGrip,
+    config.lateralKinetic * surfaceGrip,
     slideLeft,
     config.slidingSpeed,
   );
   const sideRight = friction(
-    config.lateralFriction,
-    config.lateralKinetic,
+    config.lateralFriction * surfaceGrip,
+    config.lateralKinetic * surfaceGrip,
     slideRight,
     config.slidingSpeed,
   );
@@ -149,7 +156,8 @@ export function computeTrackForces(
     sideRight * load,
   );
 
-  const rolling = (speed: number): number => config.rollingResistance * load * Math.tanh(speed / 8);
+  const rolling = (speed: number): number =>
+    config.rollingResistance * (surface?.rollingResistance ?? 1) * load * Math.tanh(speed / 8);
   const forceLeft = driveLeft - rolling(groundLeft);
   const forceRight = driveRight - rolling(groundRight);
 

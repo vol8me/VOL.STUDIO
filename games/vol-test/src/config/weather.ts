@@ -1,0 +1,57 @@
+import { WORLD } from './world';
+
+export const WEATHER = {
+  seed: 0x51eaf,
+  transitionMs: 6000,
+  events: { minMs: 30_000, maxMs: 120_000 },
+  profiles: {
+    clear: { dust: 0, rain: 0, snow: 0, windX: 0, windY: 0, airDrag: 1 },
+    dust: {
+      dust: 1,
+      rain: 0,
+      snow: 0,
+      windX: 5 * WORLD.metre,
+      windY: 2 * WORLD.metre,
+      airDrag: 1.12,
+    },
+    rain: { dust: 0, rain: 1, snow: 0, windX: 2 * WORLD.metre, windY: WORLD.metre, airDrag: 1.08 },
+    snow: {
+      dust: 0,
+      rain: 0,
+      snow: 1,
+      windX: WORLD.metre,
+      windY: 0.5 * WORLD.metre,
+      airDrag: 1.04,
+    },
+  },
+  wind: { gustAmount: 0.18, periodMs: 27_000 },
+  tank: { snowCompactionPerMetre: 0.35 },
+  temperature: { snowMaximum: -4, rainMinimum: 3 },
+  surface: {
+    stepMs: 100,
+    cellSize: 128,
+    maxCells: 4096,
+    maxPuddleDepth: 0.035,
+    maxSnowDepth: 0.3,
+    rainMetresPerSecond: 0.00035,
+    snowWaterMetresPerSecond: 0.00014,
+    wetnessPerMetre: 40,
+    wetDryPerSecond: 0.004,
+    puddleDryMetresPerSecond: 0.00008,
+    soilDrainMetresPerSecond: 0.00012,
+    meltMetresPerDegreeSecond: 0.00002,
+    looseSnowDensity: 0.1,
+    packedSnowDensity: 0.45,
+    freshSnowCompactionDecay: 12,
+    wetGripLoss: 0.18,
+    puddleGripLoss: 0.16,
+    snowGripLoss: 0.35,
+    packedSnowGripLoss: 0.15,
+    minGrip: 0.28,
+    puddleRolling: 0.45,
+    snowRolling: 1.8,
+    packedSnowRollingReduction: 0.65,
+  },
+} as const;
+
+export type WeatherKind = keyof typeof WEATHER.profiles;

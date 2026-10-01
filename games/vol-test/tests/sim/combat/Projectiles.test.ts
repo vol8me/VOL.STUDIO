@@ -1,9 +1,115 @@
 import { describe, expect, it } from 'vitest';
+import { WEAPON } from '@/config/tank';
 import { Projectiles } from '@/sim/combat/Projectiles';
 import type { SimEvent } from '@/sim/events';
 import { world } from '../../support/sim';
 
 describe('Projectiles', () => {
+  it('rüzgâr canlı mermi ve önizlemeyi aynı yere taşır; artan hava direnci menzili kısaltır', () => {
+    const run = (windY: number, airDrag: number) => {
+      const projectiles = new Projectiles(4, WEAPON.projectileLifeMs, WEAPON.flight);
+      projectiles.setAir({ windX: 0, windY, airDrag });
+      const space = world();
+      const preview = { ...projectiles.preview(1, 1000, 1000, 700, 0, space) };
+      const shell = projectiles.spawn(1, 1000, 1000, 700, 0);
+      const events: SimEvent[] = [];
+      for (let step = 0; step < 100 && projectiles.count; step++)
+        projectiles.step(1000 / 60, space, events);
+      expect(preview.x).toBeCloseTo(shell.x, 8);
+      expect(preview.y).toBeCloseTo(shell.y, 8);
+      expect(shell.travelled).toBeLessThanOrEqual(WEAPON.flight.maxRange + 1e-8);
+      return shell;
+    };
+    const calm = run(0, 1);
+    const wind = run(200, 1);
+    expect(wind.y).toBeGreaterThan(calm.y);
+    expect(run(0, 2).x).toBeLessThan(calm.x);
+  });
+
+  it('rüzgârlı büyük adım menzili aşmaz ve bozuk hava verisi reddedilir', () => {
+    const projectiles = new Projectiles(2, WEAPON.projectileLifeMs, WEAPON.flight);
+    projectiles.setAir({ windX: 200, windY: 80, airDrag: 1.2 });
+    const shell = projectiles.spawn(1, 100, 100, 1600, 0);
+    projectiles.step(1000, world(), []);
+    expect(shell.travelled).toBeCloseTo(WEAPON.flight.maxRange, 8);
+    expect(projectiles.count).toBe(0);
+    for (const air of [
+      { windX: NaN, windY: 0, airDrag: 1 },
+      { windX: 0, windY: Infinity, airDrag: 1 },
+      { windX: 0, windY: 0, airDrag: -1 },
+    ])
+      expect(() => projectiles.setAir(air)).toThrow(RangeError);
+  });
+  it('uçuş: mermi yükselir, yerçekimiyle düşer ve hava direnciyle yavaşlar', () => {
+    const projectiles = new Projectiles(4, WEAPON.projectileLifeMs, WEAPON.flight);
+    const shell = projectiles.spawn(1, 100, 100, 900, 0);
+    const events: SimEvent[] = [];
+    projectiles.step(200, world(), events);
+    expect(shell.height).toBeGreaterThan(WEAPON.flight.muzzleHeight);
+    expect(shell.vx).toBeLessThan(900);
+    expect(shell.verticalSpeed).toBeLessThan(WEAPON.flight.launchSpeed);
+    for (let step = 0; step < 100 && projectiles.count; step++)
+      projectiles.step(10, world(), events);
+    expect(projectiles.count).toBe(0);
+    expect(shell.height).toBe(0);
+    expect(events).toEqual([expect.objectContaining({ kind: 'impact', surface: 'ground' })]);
+    expect(shell.travelled).toBeGreaterThan(500);
+    expect(shell.travelled).toBeLessThanOrEqual(WEAPON.flight.maxRange);
+  });
+
+  it('hızlanan tanktan çıkan mermi de menzili aşamaz; büyük adım son noktayı taşırmaz', () => {
+    const projectiles = new Projectiles(2, WEAPON.projectileLifeMs, WEAPON.flight);
+    const shell = projectiles.spawn(1, 100, 100, 1600, 0);
+    const events: SimEvent[] = [];
+    projectiles.step(1000, world(), events);
+    expect(projectiles.count).toBe(0);
+    expect(shell.x).toBeCloseTo(100 + WEAPON.flight.maxRange);
+    expect(shell.height).toBe(0);
+    expect(shell.travelled).toBeCloseTo(WEAPON.flight.maxRange);
+    expect(events[0]).toMatchObject({ kind: 'impact', surface: 'ground' });
+    projectiles.spawn(1, 200, 100, 900, 0);
+    expect(projectiles.items[0]).toMatchObject({
+      ageMs: 0,
+      travelled: 0,
+      height: WEAPON.flight.muzzleHeight,
+    });
+  });
+
+  it('nişan önizlemesi gerçek uçuşla aynı yere düşer; canlı havuzu değiştirmez', () => {
+    const projectiles = new Projectiles(4, WEAPON.projectileLifeMs, WEAPON.flight);
+    const space = world();
+    projectiles.spawn(2, 0, 0, 10, 0);
+    const liveBefore = structuredClone(projectiles.items);
+    const preview = { ...projectiles.preview(1, 100, 200, 900, 0, space) };
+    expect(projectiles.items).toEqual(liveBefore);
+    expect(projectiles.count).toBe(1);
+    const shell = projectiles.spawn(1, 100, 200, 900, 0);
+    const events: SimEvent[] = [];
+    for (
+      let step = 0;
+      step < 100 && !events.some((event) => event.kind === 'impact' && event.owner === 1);
+      step++
+    ) {
+      projectiles.step(1000 / 60, space, events);
+    }
+    expect(preview.x).toBeCloseTo(shell.x, 8);
+    expect(preview.y).toBeCloseTo(shell.y, 8);
+    expect(preview.surface).toBe('ground');
+    expect(projectiles.preview(1, 4000, 200, 900, 0, space).surface).toBe('wall');
+  });
+
+  it('önizleme aracı engel olarak gösterir; kendi aracını yok sayar', () => {
+    const projectiles = new Projectiles(2, WEAPON.projectileLifeMs, WEAPON.flight);
+    const targets = [
+      { id: 1, contains: () => true },
+      { id: 2, contains: (x: number) => x >= 190 && x <= 210 },
+    ];
+    const result = projectiles.preview(1, 100, 100, 900, 0, world(), targets);
+    expect(result.targetId).toBe(2);
+    expect(result.surface).toBe('vehicle');
+    expect(result.x).toBeLessThan(220);
+  });
+
   it('geçersiz kapasiteyi reddeder', () => {
     expect(() => new Projectiles(0, 100)).toThrow(RangeError);
   });

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { SimulationClock } from '@volstudio/core/time';
 import { GAME } from '@/config/game';
-import { TANK } from '@/config/tank';
+import { TANK, WEAPON } from '@/config/tank';
 import { angleDelta } from '@volstudio/core/math';
+import type { SimEvent } from '@/sim/events';
 import { command, DT, simulation, STEP_MS, tank, world } from '../support/sim';
 
 /**
@@ -22,6 +23,25 @@ function timeUntil(condition: () => boolean, step: () => void, limit = 10): numb
 }
 
 describe('hissiyat zarfı', () => {
+  it('taret 90° nişana 0.45–0.6 s içinde oturur; sürekli ateş saniyede iki atışı geçmez', () => {
+    const subject = tank();
+    const space = world();
+    const seconds = timeUntil(
+      () => Math.abs(angleDelta(subject.turret, Math.PI / 2)) < 0.01,
+      () => subject.step(command({ aimY: 1 }), space, DT),
+    );
+    expect(seconds).toBeGreaterThan(0.45);
+    expect(seconds).toBeLessThan(0.6);
+    const sim = simulation();
+    const events: SimEvent[] = [];
+    for (let step = 0; step < 60; step++) {
+      sim.step(command({ fire: true }), STEP_MS);
+      sim.drainEvents(events);
+    }
+    expect(events.filter((event) => event.kind === 'fired')).toHaveLength(2);
+    expect(WEAPON.intervalMs).toBeGreaterThanOrEqual(600);
+  });
+
   it('hizalı kalkış: %90 azami hıza 0.8–1.8 s', () => {
     const space = world();
     const subject = tank();
