@@ -239,7 +239,7 @@ function targetEntries(
     // PCM yolunda null ölçüm hedefe giremez (değer zorunlu); manifest yolunda
     // null bırakılır — değer manifest'ten okunur.
     if (!manifest && typeof v !== 'number') continue;
-    out[name] = { value: manifest ? null : (v as number), weight: 1 };
+    out[name] = { value: manifest ? null : v, weight: 1 };
   }
   return out;
 }

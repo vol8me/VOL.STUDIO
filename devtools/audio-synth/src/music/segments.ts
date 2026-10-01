@@ -165,8 +165,8 @@ export function validateSegments(value: unknown, context: SegmentContext): Segme
       marker.kind === 'loop-start'
         ? loop.bars[0]
         : marker.kind === 'loop-end'
-        ? loop.bars[1]
-        : null;
+          ? loop.bars[1]
+          : null;
     if (expected !== null && marker.bar !== expected) {
       throw new AudioParamError(
         'markers',

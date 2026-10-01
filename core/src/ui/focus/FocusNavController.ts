@@ -244,7 +244,7 @@ export class FocusNavController {
       this.options.getGamepads ??
       (() =>
         typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function'
-          ? (navigator.getGamepads() as readonly (PadLike | null)[])
+          ? navigator.getGamepads()
           : []);
     this.previousPad = selectGamepad(getter(), this.previousPad);
     return this.previousPad?.mapping === 'standard' ? this.previousPad : null;

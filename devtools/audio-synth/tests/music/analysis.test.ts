@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { AudioParamError } from '../../src/guard/errors';
 import { analyzeScore, reportHash } from '../../src/music/analyze';
 import { densityBand, MUSIC_ANALYSIS_POLICY } from '../../src/music/policy';
-import { validateMusicProgram, type MusicProgramV1 } from '../../src/music/program';
+import { validateMusicProgram } from '../../src/music/program';
 import { expandProgram } from '../../src/music/score';
 import {
   describeTransitions,
@@ -264,7 +264,7 @@ describe('geçiş sözleşmesi', RENDER_BLOCK, () => {
   });
 
   it('program geçişleri rapora girer', () => {
-    const program = referenceProgram('reference-cue') as unknown as MusicProgramV1;
+    const program = referenceProgram('reference-cue');
     const report = analyze(program as unknown as Record<string, unknown>);
     expect(report.transitions).toHaveLength(1);
     expect(report.transitions[0].id).toBe('to-loop');

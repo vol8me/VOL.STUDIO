@@ -35,8 +35,7 @@ export type PointerButton = 'left';
  * değişikliğidir, kod değişikliği değil.
  */
 export type PCActionBinding =
-  | { source: 'key'; keyCode: number }
-  | { source: 'pointerButton'; button: PointerButton };
+  { source: 'key'; keyCode: number } | { source: 'pointerButton'; button: PointerButton };
 
 /**
  * Eylem eşlemelerini o karenin basılı/basılı değil kaydına çevirir.

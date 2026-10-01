@@ -30,13 +30,7 @@ import { strategyPoints } from './strategy';
  * reddedilir; plan hiçbir dosya yazmaz.
  */
 export type RejectionStage =
-  | 'constraint'
-  | 'materialize'
-  | 'render-budget'
-  | 'duplicate'
-  | 'render'
-  | 'analysis'
-  | 'filter';
+  'constraint' | 'materialize' | 'render-budget' | 'duplicate' | 'render' | 'analysis' | 'filter';
 
 export interface CandidateRejectionV1 {
   readonly stage: RejectionStage;

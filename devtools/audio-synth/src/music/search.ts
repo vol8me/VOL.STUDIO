@@ -152,8 +152,8 @@ function checkDimension(value: unknown, path: string): MusicDimensionV1 {
     kind === 'groove-swing' || kind === 'groove-velocity'
       ? { groove: checkPattern(target.groove, `${path}.target.groove`, MUSIC_KEY) }
       : kind === 'voicing-spread'
-      ? { section: checkPattern(target.section, `${path}.target.section`, MUSIC_KEY) }
-      : { lane: checkPattern(target.lane, `${path}.target.lane`, MUSIC_KEY) };
+        ? { section: checkPattern(target.section, `${path}.target.section`, MUSIC_KEY) }
+        : { lane: checkPattern(target.lane, `${path}.target.lane`, MUSIC_KEY) };
   const range = checkArray(o.range, `${path}.range`);
   if (range.length !== 2)
     throw new AudioParamError(`${path}.range`, 'type', '[min, max]', range.length);

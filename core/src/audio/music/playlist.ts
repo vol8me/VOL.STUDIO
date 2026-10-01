@@ -69,8 +69,7 @@ export class MusicPlaylist {
     this.fadeOutSec = options.fadeOutSec ?? 1;
     this.shuffle = options.shuffle ?? true;
     this.random = options.random ?? Math.random;
-    this.setTimer =
-      options.setTimer ?? ((fn, ms) => globalThis.setTimeout(fn, ms) as unknown as number);
+    this.setTimer = options.setTimer ?? ((fn, ms) => globalThis.setTimeout(fn, ms));
     this.clearTimer = options.clearTimer ?? ((handle) => globalThis.clearTimeout(handle as number));
     this.onTrackChange = options.onTrackChange;
   }

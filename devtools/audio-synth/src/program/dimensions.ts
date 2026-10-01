@@ -425,7 +425,7 @@ export function materialize(
       const node = locateNode(program, target);
       if (typeof node === 'string')
         throw new AudioParamError(dim.name, 'combination', node, target.primitive);
-      node.params = { ...((node.params as Doc | undefined) ?? {}), [target.param]: value };
+      node.params = { ...(node.params ?? {}), [target.param]: value };
     }
   }
   resolveProgram(program);

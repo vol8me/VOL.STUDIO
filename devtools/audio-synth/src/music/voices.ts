@@ -435,10 +435,10 @@ export function voiceSecondsBound(
       source.kind === 'drum-kit'
         ? drumSeconds({ ...piece(plan, source).drum, velocity: plan.velocity, seed: 0 })
         : source.kind === 'retro'
-        ? gateOf(plan, source, {}) + source.envelope.release
-        : source.kind === 'preset'
-        ? Math.max(notated, source.typicalSeconds)
-        : notated + instrument.releaseSeconds + LEGATO_OVERLAP_SECONDS,
+          ? gateOf(plan, source, {}) + source.envelope.release
+          : source.kind === 'preset'
+            ? Math.max(notated, source.typicalSeconds)
+            : notated + instrument.releaseSeconds + LEGATO_OVERLAP_SECONDS,
     ),
   );
 }

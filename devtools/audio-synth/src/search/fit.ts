@@ -234,8 +234,8 @@ export function buildFitReport(
     scored.length === 0
       ? 'no-evaluable'
       : best!.distance <= spec.tolerance
-      ? 'converged'
-      : 'exhausted';
+        ? 'converged'
+        : 'exhausted';
   return {
     schema: FIT_REPORT_SCHEMA,
     fitId: spec.fitId,
@@ -428,7 +428,7 @@ export function validateFitReport(value: unknown): AcousticFitReportV1 {
     throw new AudioParamError('schema', 'type', `"${FIT_REPORT_SCHEMA}" olmalı`, o.schema);
   checkHash(o.specHash, 'specHash');
   checkHash(
-    o.target === undefined ? '' : (o.target as { hash?: string }).hash ?? '',
+    o.target === undefined ? '' : ((o.target as { hash?: string }).hash ?? ''),
     'target.hash',
   );
   checkChoice(o.verdict, 'verdict', ['converged', 'exhausted', 'no-evaluable'] as const);

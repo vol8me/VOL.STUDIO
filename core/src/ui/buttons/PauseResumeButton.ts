@@ -56,7 +56,7 @@ export class PauseResumeButton {
     this.counterOptions = options.counter;
     this.isRunning = !(options.startPaused ?? false);
     this.seconds =
-      this.counterOptions?.direction === 'down' ? this.counterOptions.startSeconds ?? 0 : 0;
+      this.counterOptions?.direction === 'down' ? (this.counterOptions.startSeconds ?? 0) : 0;
 
     this.element = document.createElement('button');
     this.element.type = 'button';

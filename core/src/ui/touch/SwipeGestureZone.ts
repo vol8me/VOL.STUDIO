@@ -182,8 +182,8 @@ export class SwipeGestureZone {
         ? 'right'
         : 'left'
       : dy > 0
-      ? 'down'
-      : 'up';
+        ? 'down'
+        : 'up';
     this.onSwipeHandler?.({ direction, distance, velocity });
   }
 }

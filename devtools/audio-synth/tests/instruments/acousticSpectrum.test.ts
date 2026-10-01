@@ -281,7 +281,7 @@ describe('telli presetler — kısmi ton yapısı ölçülür', () => {
       ...normal,
       lowpass: { ...normal.lowpass, cutoff: 18000, resonance: 0 },
     };
-    const { samples, sampleRate } = render(mutant as unknown as SynthParams);
+    const { samples, sampleRate } = render(mutant);
     const p8 = toneEnergy(samples, sampleRate, f0 * 8);
     const p1 = toneEnergy(samples, sampleRate, f0);
     expect(p8).toBeGreaterThan(p1 * 0.04);
@@ -302,7 +302,7 @@ describe('telli presetler — kısmi ton yapısı ölçülür', () => {
       ...normal,
       lowpass: { ...normal.lowpass, cutoff: 10000, resonance: 0 },
     };
-    const { samples, sampleRate } = render(mutant as unknown as SynthParams);
+    const { samples, sampleRate } = render(mutant);
     const p5 = toneEnergy(samples, sampleRate, f0 * 5);
     const p1 = toneEnergy(samples, sampleRate, f0);
     expect(p5).toBeGreaterThan(p1 * 0.03);
@@ -320,7 +320,7 @@ describe('telli presetler — kısmi ton yapısı ölçülür', () => {
     const f0 = 523.25;
     const normal = Presets.harp(f0, 1.5);
     const mutant = { ...normal, harmonics: [{ ratio: 1, gain: 1.0 }] };
-    const { samples, sampleRate } = render(mutant as unknown as SynthParams);
+    const { samples, sampleRate } = render(mutant);
     const p2 = toneEnergy(samples, sampleRate, f0 * 2);
     const p1 = toneEnergy(samples, sampleRate, f0);
     expect(p2).toBeLessThan(p1 * 0.05);
@@ -331,7 +331,7 @@ describe('telli presetler — kısmi ton yapısı ölçülür', () => {
     // Ölçüm, zarfın sürdürüm bölümünde yapılır; yoksa doğal sönüm tremoloyu
     // bastırır.
     const withLfo = rippleDepth(mandolin, 6.0, 0.2, 0.45);
-    const without = rippleDepth({ ...mandolin, lfos: undefined } as SynthParams, 6.0, 0.2, 0.45);
+    const without = rippleDepth({ ...mandolin, lfos: undefined }, 6.0, 0.2, 0.45);
     expect(without, 'kontrol dalgalanıyor').toBeLessThan(0.14);
     expect(withLfo, 'tremolo enstrümanın imzası değil').toBeGreaterThan(0.22);
   });
@@ -341,7 +341,7 @@ describe('telli presetler — kısmi ton yapısı ölçülür', () => {
     // Ölçüm, zarfın sürdürüm bölümünde yapılır; yoksa doğal sönüm tremoloyu
     // bastırır.
     const withLfo = rippleDepth(mandolin, 6.0, 0.2, 0.45);
-    const without = rippleDepth({ ...mandolin, lfos: undefined } as SynthParams, 6.0, 0.2, 0.45);
+    const without = rippleDepth({ ...mandolin, lfos: undefined }, 6.0, 0.2, 0.45);
     expect(withLfo).toBeGreaterThan(without * 2);
   });
 });

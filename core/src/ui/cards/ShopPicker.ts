@@ -347,8 +347,8 @@ export class ShopPicker extends CardPicker {
       const status = offer.purchased
         ? this.labels.owned
         : offer.affordable
-        ? ''
-        : this.labels.tooExpensive;
+          ? ''
+          : this.labels.tooExpensive;
       const disabled = offer.purchased || !offer.affordable;
 
       const existing = this.offers.get(id);

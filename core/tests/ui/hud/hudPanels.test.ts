@@ -365,7 +365,7 @@ describe('SkillTree', () => {
   /** Durumlar ÇAĞIRANIN sorumluluğu; opsiyonel tarif kuralı uygulanır. */
   function treeWith(unlocked: string[], onNodeClick?: (id: string) => void) {
     const nodes = makeNodes();
-    const tree = track(new SkillTree({ nodes, onNodeClick: onNodeClick as never }));
+    const tree = track(new SkillTree({ nodes, onNodeClick: onNodeClick }));
     tree.setStates(resolveSkillStates(nodes, new Set(unlocked)));
     return tree;
   }

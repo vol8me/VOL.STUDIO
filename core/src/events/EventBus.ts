@@ -19,10 +19,10 @@ export class EventBus<TEvents extends object> {
       set = new Set();
       this.handlers.set(event, set);
     }
-    set.add(handler as (payload: never) => void);
+    set.add(handler);
 
     return () => {
-      set?.delete(handler as (payload: never) => void);
+      set?.delete(handler);
       if (set?.size === 0) this.handlers.delete(event);
     };
   }

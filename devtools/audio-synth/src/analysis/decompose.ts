@@ -181,14 +181,14 @@ export function decomposeTransient(x: Float32Array, sampleRate: number): Decompo
     firstOnset(x, sampleRate) < 0
       ? 'başlangıç (transient) bulunamadı'
       : metrics.transientPeakRatio < 0.2
-      ? 'transient bileşeninin tepesi orijinalin %20’sinden az (ayrılan atak yok)'
-      : metrics.transientConcentrationDb < 12
-      ? 'transient bileşeni zamanda yayılmış (durağan içerik; belirgin atak yok)'
-      : metrics.bodyEnergyRatio < 0.02
-      ? 'gövde bileşeni enerjinin %2’sinden az'
-      : metrics.reconstructionErrorDb > -30
-      ? 'yeniden kurulum hatası −30 dB’den kötü'
-      : null;
+        ? 'transient bileşeninin tepesi orijinalin %20’sinden az (ayrılan atak yok)'
+        : metrics.transientConcentrationDb < 12
+          ? 'transient bileşeni zamanda yayılmış (durağan içerik; belirgin atak yok)'
+          : metrics.bodyEnergyRatio < 0.02
+            ? 'gövde bileşeni enerjinin %2’sinden az'
+            : metrics.reconstructionErrorDb > -30
+              ? 'yeniden kurulum hatası −30 dB’den kötü'
+              : null;
   return {
     method: DECOMPOSE_METHOD,
     status: reason ? 'failed' : 'ok',

@@ -146,7 +146,7 @@ export class Toolbar {
     };
     this.scope.addListener(this.element, 'keydown', this.boundKeydown as EventListener);
     this.scope.addListener(this.element, 'focusin', this.boundFocusIn as EventListener);
-    this.scope.addListener(this.element, ACTIVATE_EVENT, this.boundActivate as EventListener);
+    this.scope.addListener(this.element, ACTIVATE_EVENT, this.boundActivate);
 
     for (const item of options.items ?? []) this.add(item);
     if (options.value !== undefined) this.setValue(options.value);
@@ -197,8 +197,8 @@ export class Toolbar {
       this.selectionMode === 'multiple'
         ? values
         : this.selectionMode === 'single'
-        ? values.slice(0, 1)
-        : [],
+          ? values.slice(0, 1)
+          : [],
     );
     for (const button of this.buttons) {
       if (button.isToggle) button.setPressed(selected.has(button.id));

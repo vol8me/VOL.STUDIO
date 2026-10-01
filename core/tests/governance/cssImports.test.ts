@@ -19,8 +19,8 @@ function sourceFiles(dir: string): string[] {
     entry.isDirectory()
       ? sourceFiles(join(dir, entry.name))
       : entry.name.endsWith('.ts')
-      ? [join(dir, entry.name)]
-      : [],
+        ? [join(dir, entry.name)]
+        : [],
   );
 }
 

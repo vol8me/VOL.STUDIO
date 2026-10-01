@@ -20,21 +20,21 @@ function extractKeys(obj: Record<string, unknown>, prefix = ''): string[] {
 
 describe('Key parity — core', () => {
   it('tr.json ve en.json aynı key yapısına sahip', () => {
-    const trKeys = extractKeys(coreTr as Record<string, unknown>);
-    const enKeys = extractKeys(coreEn as Record<string, unknown>);
+    const trKeys = extractKeys(coreTr);
+    const enKeys = extractKeys(coreEn);
     expect(enKeys).toEqual(trKeys);
   });
 
   it('boş olmayan key kalmamalı', () => {
-    const trKeys = extractKeys(coreTr as Record<string, unknown>);
+    const trKeys = extractKeys(coreTr);
     expect(trKeys.length).toBeGreaterThan(0);
   });
 });
 
 describe('Key parity — vol-ui', () => {
   it('tr.json ve en.json aynı key yapısına sahip', () => {
-    const trKeys = extractKeys(voluiTr as Record<string, unknown>);
-    const enKeys = extractKeys(voluiEn as Record<string, unknown>);
+    const trKeys = extractKeys(voluiTr);
+    const enKeys = extractKeys(voluiEn);
     expect(enKeys).toEqual(trKeys);
   });
 });

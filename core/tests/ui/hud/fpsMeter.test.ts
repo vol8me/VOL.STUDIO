@@ -112,7 +112,7 @@ describe('FpsMeter', () => {
   it('dil değişince erişilebilirlik etiketini de yeniler', () => {
     const meter = new FpsMeter();
     const before = meter.element.getAttribute('aria-label');
-    const spy = vi.spyOn(i18next, 't').mockReturnValue('ÇEVRİLDİ' as never);
+    const spy = vi.spyOn(i18next, 't').mockReturnValue('ÇEVRİLDİ');
     i18next.emit('languageChanged', 'en');
     expect(meter.element.getAttribute('aria-label')).not.toBe(before);
     spy.mockRestore();

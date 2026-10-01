@@ -25,7 +25,7 @@ function withLane(
   return {
     ...program,
     lanes: program.lanes.map((lane) => (lane.id === id ? { ...lane, ...change } : lane)),
-  } as MusicProgramV1;
+  };
 }
 
 function render(program: MusicProgramV1, cache: MemoryRenderCache | null) {

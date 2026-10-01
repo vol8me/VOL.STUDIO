@@ -191,7 +191,7 @@ export function checkFamily(
 
 function variantBrief(family: SoundFamilyProgramV1, v: ExpandedVariant): AudioBriefV1 {
   const roles = Object.entries(v.roles).map(([axis, value]) => `${axis}:${value}`);
-  const state = stateOf(v.roles as Record<string, string>);
+  const state = stateOf(v.roles);
   return {
     schema: 'AudioBriefV1',
     kind: 'acoustic',
@@ -330,7 +330,7 @@ function buildBank(
     return {
       key: v.key,
       variantId: v.variantId,
-      roles: v.roles as Record<string, string>,
+      roles: v.roles,
       tags: v.tags,
       asset: {
         path: withinPackage(packagePath, manifest.asset.path),

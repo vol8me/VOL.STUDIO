@@ -85,7 +85,7 @@ if (typeof globalThis.matchMedia === 'undefined') {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  })) as unknown as typeof matchMedia;
+  }));
 }
 
 // jsdom, CSS Font Loading API'sini (FontFace, document.fonts) implemente

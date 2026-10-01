@@ -187,14 +187,14 @@ describe('SoundBank', () => {
     await bank.load('impact');
     const startError = new Error('start failed');
 
-    context.createBufferSource = (() => {
+    context.createBufferSource = () => {
       const source = new FakeSource();
       source.start.mockImplementationOnce(() => {
         throw startError;
       });
       context.sources.push(source);
       return source as unknown as AudioBufferSourceNode;
-    }) as typeof context.createBufferSource;
+    };
 
     expect(() => bank.play('impact')).toThrow(startError);
     expect(context.sources[0]?.disconnect).toHaveBeenCalledTimes(1);

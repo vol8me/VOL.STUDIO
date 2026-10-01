@@ -46,7 +46,7 @@ vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function 
   const self = this as HTMLCanvasElement & { __context?: CanvasRenderingContext2D };
   self.__context ??= createContextStub();
   return self.__context;
-} as unknown as HTMLCanvasElement['getContext']);
+});
 
 /** jsdom işaretçi yakalamayı uygulamaz; CORE `HoldButton` onu çağırır. */
 for (const method of ['setPointerCapture', 'releasePointerCapture'] as const) {

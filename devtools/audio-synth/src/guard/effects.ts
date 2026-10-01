@@ -1,4 +1,3 @@
-import type { StereoWidthParams } from '../types';
 import { AudioParamError } from './errors';
 import { checkNumber, checkObject, readChoice, readNumber, requireNumber } from './read';
 
@@ -149,7 +148,7 @@ export function resolvePhaserParams(params: unknown, path: string): ResolvedPhas
 
 export function resolveStereoWidth(params: unknown, path: string): number {
   if (typeof params === 'number') return checkNumber(params, path, { min: 0, max: 2 });
-  const o = checkObject(params as StereoWidthParams, path, ['width']);
+  const o = checkObject(params, path, ['width']);
   return requireNumber(o, 'width', path, { min: 0, max: 2 });
 }
 

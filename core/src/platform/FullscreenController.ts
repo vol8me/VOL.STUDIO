@@ -40,7 +40,7 @@ export class FullscreenController {
   private destroyed = false;
 
   constructor(options: FullscreenControllerOptions = {}) {
-    this.target = (options.target ?? document.documentElement) as FullscreenTarget;
+    this.target = options.target ?? document.documentElement;
     this.onChange = options.onChange;
     this.onError = options.onError;
     this.onToggleRequest = options.onToggleRequest;

@@ -190,7 +190,7 @@ function checkMacros(value: unknown, path: string, model: DrumModel): DrumMacros
     if (raw === undefined) continue;
     out[key] = checkNumber(raw, `${path}.${key}`, rules[key] ?? UNIT);
   }
-  return out as DrumMacrosV1;
+  return out;
 }
 
 function checkKit(o: ParamObject, path: string): InstrumentSourceV1 {

@@ -188,7 +188,7 @@ export class CommandHistory {
     const beforeToken = this.stateToken;
     const merged =
       previous?.command.mergeKey && previous.command.mergeKey === command.mergeKey
-        ? previous.command.mergeWith?.(command) ?? null
+        ? (previous.command.mergeWith?.(command) ?? null)
         : null;
     const afterToken = this.allocateStateToken();
     if (merged) {
@@ -201,7 +201,7 @@ export class CommandHistory {
     if (command.byteCost <= this.maxBytes) {
       this.past.push({
         command,
-        beforeToken: merged ? previous?.beforeToken ?? beforeToken : beforeToken,
+        beforeToken: merged ? (previous?.beforeToken ?? beforeToken) : beforeToken,
         afterToken,
       });
       this.totalBytes += command.byteCost;

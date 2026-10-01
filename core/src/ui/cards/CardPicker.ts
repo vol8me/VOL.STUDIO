@@ -112,7 +112,7 @@ export abstract class CardPicker {
     this.startTileEnterAnimations();
     // İlk kartın aksiyon butonu odaklanır: seçim klavyeyle de yapılabilsin.
     const first = this.element.querySelector<HTMLButtonElement>('.vol-card__action');
-    (first ?? (this.modal ? this.modalCandidates()[0] ?? this.element : null))?.focus();
+    (first ?? (this.modal ? (this.modalCandidates()[0] ?? this.element) : null))?.focus();
   }
 
   protected startTileEnterAnimations(): void {

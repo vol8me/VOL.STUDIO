@@ -168,7 +168,7 @@ export class TimerBar {
       this.labelElement.textContent =
         typeof this.label === 'function'
           ? this.label(Math.ceil(remaining), this.durationSeconds)
-          : this.label ?? '';
+          : (this.label ?? '');
     }
   }
 }

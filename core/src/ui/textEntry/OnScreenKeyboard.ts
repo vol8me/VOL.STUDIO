@@ -95,9 +95,10 @@ export class OnScreenKeyboard {
 
   private buildRows(): KeyDef[][] {
     const letters = LETTER_ROWS.map((row) =>
-      row.map(
-        (ch): KeyDef => ({ label: this.shifted ? ch.toLocaleUpperCase('tr') : ch, value: ch }),
-      ),
+      row.map((ch): KeyDef => ({
+        label: this.shifted ? ch.toLocaleUpperCase('tr') : ch,
+        value: ch,
+      })),
     );
     const digits = '1234567890'.split('').map((ch): KeyDef => ({ label: ch, value: ch }));
     const actions: KeyDef[] = [

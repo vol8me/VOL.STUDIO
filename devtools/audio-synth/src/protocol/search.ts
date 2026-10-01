@@ -264,14 +264,14 @@ export function searchStatus(loc: SearchLocation): SearchStatusV1 {
       if (!known.has(entry)) problems.push(`raporda olmayan dosya: candidates/${entry}`);
   }
   const sel = readSelection(loc, reportHash);
-  const decisions = sel.state === 'valid' ? sel.selection?.decisions ?? {} : {};
+  const decisions = sel.state === 'valid' ? (sel.selection?.decisions ?? {}) : {};
   const candidates = report.candidates.map((c): SearchCandidateStatus => {
     const d = c.candidateId ? decisions[c.candidateId] : undefined;
     return {
       ordinal: c.ordinal,
       candidateId: c.candidateId,
       state: c.state,
-      decision: c.state === 'passed' ? d?.state ?? 'pending' : null,
+      decision: c.state === 'passed' ? (d?.state ?? 'pending') : null,
       labels: d?.labels ?? [],
       note: d?.note ?? null,
       by: d?.by ?? null,

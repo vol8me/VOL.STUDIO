@@ -237,10 +237,10 @@ export function buildWizardDemo(disposables: DisposableScope): HTMLElement {
       value === 'warrior'
         ? i18next.t('volui:advanced.warrior')
         : value === 'mage'
-        ? i18next.t('volui:advanced.mage')
-        : value === 'ranger'
-        ? i18next.t('volui:advanced.ranger')
-        : i18next.t('volui:advanced.notSelected');
+          ? i18next.t('volui:advanced.mage')
+          : value === 'ranger'
+            ? i18next.t('volui:advanced.ranger')
+            : i18next.t('volui:advanced.notSelected');
 
     const buildSummary = (): string => {
       const base = i18next.t('volui:advanced.summaryBase', {

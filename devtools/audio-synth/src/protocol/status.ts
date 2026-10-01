@@ -200,8 +200,8 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
     brief.state !== 'valid'
       ? `brief ${brief.state}`
       : a.program?.brief !== brief.hash
-      ? 'brief değişti'
-      : null,
+        ? 'brief değişti'
+        : null,
   );
   const programHash = programResult.loaded?.hash ?? null;
 
@@ -210,18 +210,17 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
     .map(([renderId, ref]): CandidateState => {
       const result = inspect(file(ref.path), ref.path, ref.hash, validateRenderRecord);
       const record = result.loaded?.doc as
-        | { programHash: Sha256; rendererVersion: number }
-        | undefined;
+        { programHash: Sha256; rendererVersion: number } | undefined;
       const reason =
         program.state !== 'valid' && program.state !== 'modified'
           ? `program ${program.state}`
           : record && record.programHash !== programHash
-          ? 'program değişti'
-          : record && record.rendererVersion !== RENDERER_VERSIONS[job.kind]
-          ? `render motoru sürümü ${record.rendererVersion} → ${RENDERER_VERSIONS[job.kind]}`
-          : program.state === 'modified'
-          ? 'program protokol dışında değişti'
-          : null;
+            ? 'program değişti'
+            : record && record.rendererVersion !== RENDERER_VERSIONS[job.kind]
+              ? `render motoru sürümü ${record.rendererVersion} → ${RENDERER_VERSIONS[job.kind]}`
+              : program.state === 'modified'
+                ? 'program protokol dışında değişti'
+                : null;
       return { ...staleIf(result.state, reason), renderId };
     });
   const renderById = new Map(renders.map((r) => [r.renderId, r]));
@@ -231,17 +230,16 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
     .map(([renderId, ref]): CandidateState => {
       const result = inspect(file(ref.path), ref.path, ref.hash, validateAnalysisRecord);
       const record = result.loaded?.doc as
-        | { renderHash: Sha256; report: { analyzerVersion: number } }
-        | undefined;
+        { renderHash: Sha256; report: { analyzerVersion: number } } | undefined;
       const render = renderById.get(renderId);
       const reason =
         render?.state !== 'valid'
           ? `render ${render?.state ?? 'yok'}`
           : record && record.renderHash !== render.hash
-          ? 'başka bir render kaydına ait'
-          : record && record.report.analyzerVersion !== ANALYZER_VERSION
-          ? `analizör sürümü ${record.report.analyzerVersion} → ${ANALYZER_VERSION}`
-          : null;
+            ? 'başka bir render kaydına ait'
+            : record && record.report.analyzerVersion !== ANALYZER_VERSION
+              ? `analizör sürümü ${record.report.analyzerVersion} → ${ANALYZER_VERSION}`
+              : null;
       return { ...staleIf(result.state, reason), renderId };
     });
   const analysisById = new Map(analyses.map((x) => [x.renderId, x]));
@@ -253,20 +251,19 @@ export function jobStatus(loc: JobLocation): JobStatusV1 {
     validateSelection,
   );
   const chosen = selectionResult.loaded?.doc as
-    | { renderId: string; renderHash: Sha256; analysisHash: Sha256 }
-    | undefined;
+    { renderId: string; renderHash: Sha256; analysisHash: Sha256 } | undefined;
   const selection = staleIf(
     selectionResult.state,
     chosen === undefined
       ? null
       : renderById.get(chosen.renderId)?.state !== 'valid'
-      ? `seçilen render (${chosen.renderId}) geçerli değil`
-      : analysisById.get(chosen.renderId)?.state !== 'valid'
-      ? 'seçilen render için geçerli analiz yok'
-      : chosen.renderHash !== renderById.get(chosen.renderId)?.hash ||
-        chosen.analysisHash !== analysisById.get(chosen.renderId)?.hash
-      ? 'seçim başka bir render/analiz kaydına işaret ediyor'
-      : null,
+        ? `seçilen render (${chosen.renderId}) geçerli değil`
+        : analysisById.get(chosen.renderId)?.state !== 'valid'
+          ? 'seçilen render için geçerli analiz yok'
+          : chosen.renderHash !== renderById.get(chosen.renderId)?.hash ||
+              chosen.analysisHash !== analysisById.get(chosen.renderId)?.hash
+            ? 'seçim başka bir render/analiz kaydına işaret ediyor'
+            : null,
   );
 
   const publication = publicationState(loc, job, selection, {

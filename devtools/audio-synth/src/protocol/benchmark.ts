@@ -174,7 +174,7 @@ function assetClassOf(part: BenchmarkPartV1, path: string): AssetClass {
       policies.length,
     );
   }
-  return (policies[0] as MechanicalCheckV1 & { kind: 'asset-policy' }).assetClass;
+  return policies[0].assetClass;
 }
 
 function checkPart(value: unknown, path: string): BenchmarkPartV1 {

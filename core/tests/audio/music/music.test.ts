@@ -10,7 +10,7 @@ function makeBuffer(context: FakeAudioContext, duration = 2, sampleRate = 44100)
   for (let i = 0; i < length; i++) {
     channel[i] = Math.sin((2 * Math.PI * 440 * i) / sampleRate);
   }
-  return buffer as unknown as AudioBuffer;
+  return buffer;
 }
 
 describe('MusicEngine', () => {
@@ -34,7 +34,7 @@ describe('MusicEngine', () => {
     await engine.loadTrack({
       id: 'main-menu',
       bpm: 120,
-      stems: [{ id: 'ambient', buffer: buffer as unknown as AudioBuffer, gain: 0.8 }],
+      stems: [{ id: 'ambient', buffer: buffer, gain: 0.8 }],
     });
 
     await engine.play('main-menu');
@@ -52,7 +52,7 @@ describe('MusicEngine', () => {
       stems: [
         {
           id: 'drums',
-          buffer: buffer as unknown as AudioBuffer,
+          buffer: buffer,
           gain: 1,
           gainMap: {
             intensity: [
@@ -136,7 +136,7 @@ describe('MusicEngine', () => {
     await engine.loadTrack({
       id: 'test',
       bpm: 120,
-      stems: [{ id: 'a', buffer: buffer as unknown as AudioBuffer }],
+      stems: [{ id: 'a', buffer: buffer }],
     });
 
     await engine.play('test');
@@ -152,13 +152,13 @@ describe('MusicEngine', () => {
     await engine.loadTrack({
       id: 'ambient',
       bpm: 120,
-      stems: [{ id: 'pad', buffer: bufferA as unknown as AudioBuffer, gain: 0.7 }],
+      stems: [{ id: 'pad', buffer: bufferA, gain: 0.7 }],
     });
 
     await engine.loadTrack({
       id: 'combat',
       bpm: 130,
-      stems: [{ id: 'pad', buffer: bufferB as unknown as AudioBuffer, gain: 0.9 }],
+      stems: [{ id: 'pad', buffer: bufferB, gain: 0.9 }],
     });
 
     await engine.play('ambient');
@@ -174,13 +174,13 @@ describe('MusicEngine', () => {
     await engine.loadTrack({
       id: 'ambient',
       bpm: 120,
-      stems: [{ id: 'pad', buffer: bufferA as unknown as AudioBuffer, gain: 0.7 }],
+      stems: [{ id: 'pad', buffer: bufferA, gain: 0.7 }],
     });
 
     await engine.loadTrack({
       id: 'combat',
       bpm: 120,
-      stems: [{ id: 'pad', buffer: bufferB as unknown as AudioBuffer, gain: 0.9 }],
+      stems: [{ id: 'pad', buffer: bufferB, gain: 0.9 }],
     });
 
     await engine.play('ambient');
@@ -198,7 +198,7 @@ describe('MusicEngine', () => {
       id: 'loop-test',
       bpm: 120,
       loopEnd: 10,
-      stems: [{ id: 'pad', buffer: buffer as unknown as AudioBuffer, gain: 1 }],
+      stems: [{ id: 'pad', buffer: buffer, gain: 1 }],
     });
 
     await engine.play('loop-test');
@@ -214,7 +214,7 @@ describe('MusicEngine', () => {
       bpm: 120,
       loopStart: NaN,
       loopEnd: -5,
-      stems: [{ id: 'pad', buffer: buffer as unknown as AudioBuffer, gain: 1 }],
+      stems: [{ id: 'pad', buffer: buffer, gain: 1 }],
     });
 
     await engine.play('loop-edge');
@@ -340,9 +340,9 @@ describe('MusicEngine — eşzamanlılık ve buffer önbelleği', () => {
 
     const playA = engine.play('trackA');
     const playB = engine.play('trackB');
-    resolveB(bufferB as unknown as AudioBuffer);
+    resolveB(bufferB);
     await Promise.resolve();
-    resolveA(bufferA as unknown as AudioBuffer);
+    resolveA(bufferA);
     await Promise.all([playA, playB]);
 
     expect(engine.getCurrentState().trackId).toBe('trackB');

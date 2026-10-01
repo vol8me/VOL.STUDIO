@@ -79,7 +79,8 @@
 
 .vol-showcase-workbench-viewport {
   background-color: var(--vol-ui-bg-subtle);
-  background-image: linear-gradient(45deg, var(--vol-ui-surface-1) 25%, transparent 25%),
+  background-image:
+    linear-gradient(45deg, var(--vol-ui-surface-1) 25%, transparent 25%),
     linear-gradient(-45deg, var(--vol-ui-surface-1) 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, var(--vol-ui-surface-1) 75%),
     linear-gradient(-45deg, transparent 75%, var(--vol-ui-surface-1) 75%);

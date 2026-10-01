@@ -199,8 +199,8 @@ try {
       error instanceof ProtocolError
         ? { code: error.code, path: error.path }
         : error instanceof AudioParamError
-        ? { code: error.issue, path: error.path }
-        : { code: error.resource, path: undefined };
+          ? { code: error.issue, path: error.path }
+          : { code: error.resource, path: undefined };
     process.stderr.write(
       `${JSON.stringify({ error: { name: error.name, ...detail, message: error.message } })}\n`,
     );

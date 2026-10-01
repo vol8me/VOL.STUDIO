@@ -208,7 +208,7 @@ describe('syncRigExport', () => {
     syncRigExport({ source: ref(), metadataOut, partsOut, publicBase: 'assets/rig/walker/parts/' });
 
     const shipped = JSON.parse(readFileSync(metadataOut, 'utf8')) as RigMetadata;
-    expect(shipped.parts[0].file).toBe('assets/rig/walker/parts/hull.png');
+    expect(shipped.parts[0]?.file).toBe('assets/rig/walker/parts/hull.png');
   });
 
   it('hedefte kalan FAZLALIĞI siler — yeniden adlandırılan parça iki kez gönderilmez', () => {

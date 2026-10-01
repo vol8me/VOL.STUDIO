@@ -162,7 +162,7 @@ describe('measureSupport', () => {
     },
   ])('dejenere poligonda denge YOKTUR: $ad', ({ feet, center }) => {
     const state = measureSupport(
-      feet.map(([x, y]) => ({ x, y, grounded: true }) as SupportFoot),
+      feet.map(([x, y]) => ({ x, y, grounded: true })),
       { centerX: center[0], centerY: center[1] },
     );
 

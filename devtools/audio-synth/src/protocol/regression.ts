@@ -259,15 +259,13 @@ export function runRegression(
   const outputs = runTasks<RegressionPartOutput>(
     repoRoot,
     'regression-part',
-    entries.map(
-      (e): RegressionPartInput => ({
-        key: e.id,
-        kind: e.kind,
-        document: e.program,
-        seed: e.seed,
-        expectedPcmHash: e.pcmHash,
-      }),
-    ),
+    entries.map((e): RegressionPartInput => ({
+      key: e.id,
+      kind: e.kind,
+      document: e.program,
+      seed: e.seed,
+      expectedPcmHash: e.pcmHash,
+    })),
     batchWorkers(estimate, options.workers),
   );
   const byKey = new Map(outputs.map((o) => [o.key, o]));

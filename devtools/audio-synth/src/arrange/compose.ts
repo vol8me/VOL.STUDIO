@@ -34,7 +34,7 @@ function noteOverrides(params: unknown, path: string): Partial<SynthParams> {
       );
     }
   }
-  return o as Partial<SynthParams>;
+  return o;
 }
 
 /**

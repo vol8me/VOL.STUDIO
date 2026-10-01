@@ -69,8 +69,8 @@ export class RoundCounter {
     this.roundLabelElement.textContent = this.formatRound
       ? this.formatRound(round, this.totalRounds)
       : this.totalRounds !== undefined
-      ? i18next.t('core:roundcounter.roundTotal', { round, total: this.totalRounds })
-      : i18next.t('core:roundcounter.round', { round });
+        ? i18next.t('core:roundcounter.roundTotal', { round, total: this.totalRounds })
+        : i18next.t('core:roundcounter.round', { round });
   }
 
   getRound(): number {

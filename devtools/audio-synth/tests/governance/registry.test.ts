@@ -242,8 +242,8 @@ describe('registry governance', () => {
           spec.type === 'sample'
             ? ['b']
             : spec.type === 'choice'
-            ? spec.choices.filter((c) => c !== (current ?? spec.default))
-            : [alternative(typeof current === 'number' ? { ...spec, default: current } : spec)];
+              ? spec.choices.filter((c) => c !== (current ?? spec.default))
+              : [alternative(typeof current === 'number' ? { ...spec, default: current } : spec)];
         for (const value of values) {
           expect(
             fingerprint(programWith(entry, { [name]: value })),

@@ -151,7 +151,7 @@ describe('SplitPane — pencere daralması kullanıcı tercihini silmez', () => 
       observe(): void {}
       unobserve(): void {}
       disconnect(): void {}
-    } as unknown as typeof ResizeObserver;
+    };
     try {
       return run(() => callback?.([], {} as ResizeObserver));
     } finally {

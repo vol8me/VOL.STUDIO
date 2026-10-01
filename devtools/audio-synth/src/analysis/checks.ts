@@ -307,8 +307,8 @@ export function evaluateCheck(
         check.shape === 'rise-fall'
           ? b >= a * r && b >= c * r
           : check.shape === 'rising'
-          ? c >= a * r
-          : a >= c * r;
+            ? c >= a * r
+            : a >= c * r;
       return {
         check,
         pass,

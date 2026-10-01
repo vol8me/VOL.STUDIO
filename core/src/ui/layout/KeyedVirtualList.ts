@@ -75,7 +75,7 @@ export class KeyedVirtualList<T> {
     this.element.setAttribute('role', 'list');
     if (options.ariaLabel) this.element.setAttribute('aria-label', options.ariaLabel);
     this.element.style.height =
-      typeof options.height === 'number' ? `${options.height}px` : options.height ?? '100%';
+      typeof options.height === 'number' ? `${options.height}px` : (options.height ?? '100%');
 
     this.viewport = document.createElement('div');
     this.viewport.className = 'vol-keyed-virtual-list__viewport';
@@ -127,8 +127,8 @@ export class KeyedVirtualList<T> {
       align === 'center'
         ? (viewportHeight - this.itemHeight) / 2
         : align === 'end'
-        ? viewportHeight - this.itemHeight
-        : 0;
+          ? viewportHeight - this.itemHeight
+          : 0;
     this.element.scrollTop = Math.max(0, clamped * this.itemHeight - offset);
     this.renderVisible();
   }

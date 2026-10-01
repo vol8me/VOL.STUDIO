@@ -247,8 +247,8 @@ export class SplitPane {
   private maximumSize(): number {
     const total =
       this.direction === 'horizontal'
-        ? this.element?.clientWidth ?? 0
-        : this.element?.clientHeight ?? 0;
+        ? (this.element?.clientWidth ?? 0)
+        : (this.element?.clientHeight ?? 0);
     const available =
       total > 0 ? Math.max(this.minPrimary, total - this.minSecondary) : this.maxPrimary;
     return Math.max(this.minPrimary, Math.min(this.maxPrimary, available));

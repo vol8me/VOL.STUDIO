@@ -191,17 +191,16 @@ export function themeBookHash(book: ThemeBookV1): Sha256 {
 export function themeBookRules(book: ThemeBookV1): MusicRuleV1[] {
   return [
     ...book.avoid,
-    ...book.palette.forbid.map(
-      (instrument): MusicRuleV1 => ({ kind: 'forbid-instrument', instrument }),
-    ),
-    ...book.register.map(
-      (band): MusicRuleV1 => ({
-        kind: 'register-limit',
-        role: band.role,
-        lowMidi: band.lowMidi,
-        highMidi: band.highMidi,
-      }),
-    ),
+    ...book.palette.forbid.map((instrument): MusicRuleV1 => ({
+      kind: 'forbid-instrument',
+      instrument,
+    })),
+    ...book.register.map((band): MusicRuleV1 => ({
+      kind: 'register-limit',
+      role: band.role,
+      lowMidi: band.lowMidi,
+      highMidi: band.highMidi,
+    })),
   ];
 }
 

@@ -1,9 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "@volstudio/core": ["../core/src"],
       "@/*": ["./src/*"]
     }
   },

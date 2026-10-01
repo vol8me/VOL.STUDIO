@@ -51,8 +51,8 @@ export function searchContext(cli: string) {
           spec.type === 'number'
             ? { unit: spec.unit, min: spec.min, max: spec.max }
             : spec.type === 'choice'
-            ? { choices: spec.choices }
-            : { sample: true },
+              ? { choices: spec.choices }
+              : { sample: true },
         ]),
       ),
       ownedMacros: e.kind === 'archetype' ? e.macros : [],

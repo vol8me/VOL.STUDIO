@@ -145,7 +145,7 @@ describe('tohumlu fuzz: doğrulayıcılar adlı hata sözleşmesi taşır', () =
         ['validateSources', () => validateSources(bad)],
         ['resolveSynthParams', () => resolveSynthParams(bad)],
       ] as const) {
-        const { threw } = expectNamed(fn as () => unknown);
+        const { threw } = expectNamed(fn);
         expect(threw, `${name} bozuk girdiyi kabul etti`).toBe(true);
       }
     }

@@ -91,7 +91,7 @@ export class GamepadController<TAction extends string> implements InputProvider<
       options.getGamepads ??
       (() =>
         typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function'
-          ? (navigator.getGamepads() as readonly (PadLike | null)[])
+          ? navigator.getGamepads()
           : []);
   }
 

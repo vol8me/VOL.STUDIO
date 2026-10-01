@@ -391,8 +391,8 @@ export class GamepadPointerController {
           value < low + edge
             ? -clamp((low + edge - value) / edge, 0, 1)
             : value > high - edge
-            ? clamp((value - high + edge) / edge, 0, 1)
-            : 0;
+              ? clamp((value - high + edge) / edge, 0, 1)
+              : 0;
         if (vertical)
           element.scrollTop = clamp(
             element.scrollTop + direction(this.point.y, rect.top, rect.bottom) * speed,

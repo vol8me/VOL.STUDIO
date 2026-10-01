@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { nodeRuntimeProblem } from './quality/nodeRuntime.mjs';
 
 const failures = [];
 
@@ -46,7 +47,9 @@ function checkCargoAudit() {
   console.error('cargo-audit: YOK');
 }
 
-command('Node', 'node', ['--version'], 'Node 20.19+ veya 22.12+ kur.');
+const nodeProblem = nodeRuntimeProblem(resolve(import.meta.dirname, '..'));
+console.log(`Node: ${process.versions.node} (.node-version)`);
+if (nodeProblem) failures.push(nodeProblem);
 command(
   'pnpm',
   'pnpm',

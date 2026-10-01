@@ -22,11 +22,7 @@ import { repoSampleResolver } from './samples';
  * render kalitesi ve depo içeriği belirler.
  */
 export type TaskName =
-  | 'family-member'
-  | 'search-candidate'
-  | 'music-raw'
-  | 'benchmark-part'
-  | 'regression-part';
+  'family-member' | 'search-candidate' | 'music-raw' | 'benchmark-part' | 'regression-part';
 
 export interface TaskContext {
   readonly repoRoot: string;

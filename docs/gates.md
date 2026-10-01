@@ -105,12 +105,12 @@ devtools/*   ──/
 
 ## Belge kapıları
 
-| Kapı                                                          | Bağladığı şey                                                                                                                                                   |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core/tests/governance/docSymbols.test.ts`                    | `core/docs/*.md` sembolleri ve `music-engine.md` API tablosu → CORE yüzeyi                                                                                      |
-| `devtools/audio-synth/tests/governance/docReferences.test.ts` | audio-synth README, DESIGN ve TODO'daki yollar ve betik adları → gerçek ağaç                                                                                    |
+| Kapı                                                          | Bağladığı şey                                                                                                                                                  |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/tests/governance/docSymbols.test.ts`                    | `core/docs/*.md` sembolleri ve `music-engine.md` API tablosu → CORE yüzeyi                                                                                     |
+| `devtools/audio-synth/tests/governance/docReferences.test.ts` | audio-synth README, DESIGN ve TODO'daki yollar ve betik adları → gerçek ağaç                                                                                   |
 | `scripts/quality/tests/agentDocs.test.mjs`                    | Bütün `.md` belgelerindeki yollar ve komutlar (audio-synth hariç); agent belgelerinde kapı bileşimleri; `AGENTS.md` repo haritası ↔ `workspace-lifecycle.json` |
-| `devtools/audio-synth/tests/governance/dirLayers.test.ts`     | audio-synth kaynak dizinleri arasında karşılıklı import; bilinen çiftler yalnız azalır                                                                          |
+| `devtools/audio-synth/tests/governance/dirLayers.test.ts`     | audio-synth kaynak dizinleri arasında karşılıklı import; bilinen çiftler yalnız azalır                                                                         |
 
 Ters yön de kapılıdır: ölü muafiyet ya da belgede olmayan istisna kapıyı
 kırar.
@@ -128,3 +128,16 @@ kırar.
   makineden bağımsız ölçekleme oranıdır.
 - **Adlandırma:** pnpm'in yerleşik komutuyla çakışan betik hiç çalışmaz
   (`pnpm doctor` → `pnpm run doctor:env`).
+
+## Ortam ve temizlik
+
+`.node-version` ve `package.json` aynı kesin Node sürümünü taşır; `doctor`
+çalışan sürümün buna uyduğunu denetler. Deterministik ses çıktısı için Node
+çalışma zamanı değiştirilmez.
+
+`pnpm exec just clean`, `scripts/quality/cleanWorkspace.mjs` ile aktif
+workspace'lerin `dist`, `coverage`, `test-results` ve `playwright-report`
+dizinlerini, TypeScript derleme önbelleğini ve kalite kapısı önbelleğini kaldırır.
+Deck'in yeniden kopyalanabilen `web/vendor` çıktısı da temizlenir. Frozen
+paketler, gönderilen asset'ler, export kaynakları ve `node_modules` korunur.
+`pnpm exec just clean-all` aynı temizliğe kökteki Rust `target` dizinini ekler.

@@ -5,14 +5,7 @@ export type PresetCategory = 'combat' | 'ui' | 'movement' | 'reward' | 'texture'
 
 /** Enstrüman / sesin orkestral rolü. */
 export type InstrumentRole =
-  | 'bass'
-  | 'pad'
-  | 'lead'
-  | 'pluck'
-  | 'keys'
-  | 'bell'
-  | 'texture'
-  | 'percussion';
+  'bass' | 'pad' | 'lead' | 'pluck' | 'keys' | 'bell' | 'texture' | 'percussion';
 
 /** Preset'in estetik/genre etiketi. */
 export type PresetGenre = 'retro' | 'sci-fi' | 'fantasy' | 'realistic';

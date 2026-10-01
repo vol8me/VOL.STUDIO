@@ -52,10 +52,7 @@ export const LISTENING_SCHEMA = 'ListeningPackageV1';
 export type ReferenceListenStatus = RegressionDecisionStatus | 'undecided';
 /** Canary/benchmark beyanları aynı üçlüyü taşır; tek birleşik liste. */
 export type ListeningStatus =
-  | CanaryReviewStatus
-  | RegressionDecisionStatus
-  | 'undecided'
-  | 'listen-only';
+  CanaryReviewStatus | RegressionDecisionStatus | 'undecided' | 'listen-only';
 
 export type ListeningRole = 'source' | 'delivery' | 'loop2x' | 'overlay';
 
@@ -239,8 +236,7 @@ function overlayOnBed(bed: Pcm, cue: Pcm): Pcm {
 
 function partAssetClass(part: BenchmarkPartV1): AssetClass {
   const policy = part.expectations.find((e) => e.kind === 'asset-policy') as
-    | { assetClass: AssetClass }
-    | undefined;
+    { assetClass: AssetClass } | undefined;
   if (!policy) throw new Error(`benchmark parçası asset-policy taşımıyor: ${part.id}`);
   return policy.assetClass;
 }

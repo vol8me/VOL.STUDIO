@@ -23,7 +23,7 @@ import type { AudioParamIssue } from '../../src/guard/errors';
 const BASE: SynthParams = { wave: 'sine', frequency: 220, duration: 0.05 };
 
 function rejects(overrides: Partial<SynthParams>, path: string, issue: AudioParamIssue): void {
-  expect(() => synthesize({ ...BASE, ...overrides } as SynthParams), path).toThrow(
+  expect(() => synthesize({ ...BASE, ...overrides }), path).toThrow(
     expect.objectContaining({ name: 'AudioParamError', path, issue }),
   );
 }

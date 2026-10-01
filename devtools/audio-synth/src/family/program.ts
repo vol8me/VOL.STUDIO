@@ -43,8 +43,7 @@ export type FamilyDimensionV1 = DimensionV1 & {
 };
 
 export type RoleConstraintV1 =
-  | { readonly min: number; readonly max: number }
-  | { readonly options: readonly DimensionValue[] };
+  { readonly min: number; readonly max: number } | { readonly options: readonly DimensionValue[] };
 
 export interface FamilyVariantV1 {
   readonly key: string;
@@ -345,7 +344,7 @@ export function validateFamilyProgram(value: unknown): SoundFamilyProgramV1 {
               k,
               checkNumber(v, `budget.${k}`, { above: 0 }),
             ]),
-          ) as Partial<BatchBudget>,
+          ),
         }
       : {}),
     delivery: checkDelivery(o.delivery),

@@ -146,9 +146,9 @@ export class FpsMeter {
       rounded < 0
         ? 'normal'
         : rounded < this.dangerFps
-        ? 'danger'
-        : rounded < this.warnFps
-        ? 'warn'
-        : 'normal';
+          ? 'danger'
+          : rounded < this.warnFps
+            ? 'warn'
+            : 'normal';
   }
 }

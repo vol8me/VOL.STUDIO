@@ -1,14 +1,7 @@
 /** Ses sentez motoru tipleri. */
 
 export type Waveform =
-  | 'sine'
-  | 'triangle'
-  | 'sawtooth'
-  | 'square'
-  | 'pulse'
-  | 'noise'
-  | 'pink'
-  | 'brown';
+  'sine' | 'triangle' | 'sawtooth' | 'square' | 'pulse' | 'noise' | 'pink' | 'brown';
 
 export type Curve = 'linear' | 'exponential' | 'cosine';
 

@@ -74,8 +74,8 @@ describe('tek publish yolu', () => {
       const roots: [string, string][] = workspace.path.startsWith('games/')
         ? [['public/assets/audio', 'audio-manifests']]
         : workspace.path === 'devtools/audio-synth'
-        ? [['reference/production/assets', 'reference/production/manifests']]
-        : [];
+          ? [['reference/production/assets', 'reference/production/manifests']]
+          : [];
       for (const [assets, manifests] of roots) {
         const files: string[] = [];
         const collect = (dir: string) => {

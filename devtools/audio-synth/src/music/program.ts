@@ -112,8 +112,8 @@ function checkSampling(o: ParamObject) {
       d.source.kind === 'sampler'
         ? [d.source.bank]
         : d.source.kind === 'layer'
-        ? d.source.layers.flatMap((l) => (l.source.kind === 'sampler' ? [l.source.bank] : []))
-        : [],
+          ? d.source.layers.flatMap((l) => (l.source.kind === 'sampler' ? [l.source.bank] : []))
+          : [],
     ),
   );
   for (const name of banks.keys()) {

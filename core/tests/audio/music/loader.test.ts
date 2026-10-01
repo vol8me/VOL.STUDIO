@@ -27,7 +27,7 @@ describe('StemLoader — URL yükleme', () => {
 
   it('başarılı yanıt çözülür; tek istek yapılır', async () => {
     const fetchMock = vi.fn(() => Promise.resolve(fakeResponse(true, 200, 'audio/ogg')));
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
 
     const buffer = await new StemLoader(fakeContext()).loadFromUrl('track.ogg');
 
@@ -37,7 +37,7 @@ describe('StemLoader — URL yükleme', () => {
 
   it('başarısız .ogg başka biçime düşmez; hata kaynağı ve durumu adıyla fırlatılır', async () => {
     const fetchMock = vi.fn(() => Promise.resolve(fakeResponse(false, 404, null)));
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
 
     await expect(new StemLoader(fakeContext()).loadFromUrl('track.ogg')).rejects.toThrow(
       /track\.ogg.*404/,
@@ -47,7 +47,7 @@ describe('StemLoader — URL yükleme', () => {
 
   it('signal zaten abort edilmişse fetch hiç denenmez', async () => {
     const fetchMock = vi.fn(() => Promise.reject(new Error('should not reach')));
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
 
     const controller = new AbortController();
     controller.abort();

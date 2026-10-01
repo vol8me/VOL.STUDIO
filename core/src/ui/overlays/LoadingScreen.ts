@@ -1,10 +1,6 @@
 /** Gösterge tipi — orbital-rings, energy-core, particle-orbit, hexagon-pulse veya bar. */
 export type LoadingIndicatorType =
-  | 'orbital-rings'
-  | 'energy-core'
-  | 'particle-orbit'
-  | 'hexagon-pulse'
-  | 'bar';
+  'orbital-rings' | 'energy-core' | 'particle-orbit' | 'hexagon-pulse' | 'bar';
 
 /** Arkaplan tipi — image, video veya CSS gradient (varsayılan). */
 export type LoadingBackgroundType = 'image' | 'video' | 'css';
@@ -14,11 +10,7 @@ export type LoadingTransitionType = 'fade' | 'slide' | 'zoom';
 
 /** İçerik (gösterge + yazı) konumu. */
 export type LoadingContentPosition =
-  | 'center'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right';
+  'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 const CONTENT_POSITION_MAP: Record<LoadingContentPosition, { align: string; justify: string }> = {
   center: { align: 'center', justify: 'center' },

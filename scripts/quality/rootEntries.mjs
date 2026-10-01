@@ -11,6 +11,7 @@ import { workingTreeFiles } from './gitFiles.mjs';
 export const ROOT_ENTRIES = {
   '.gitattributes': 'Satır sonu ve ikili dosya kuralları',
   '.gitignore': 'Üretilen ve yerel çıktının dışlanması',
+  '.node-version': 'Deterministik PCM üretiminin kesin Node çalışma zamanı',
   '.prettierignore': 'Prettier yok sayma listesini yalnız dosyadan okur',
   'AGENTS.md': 'Agent çalışma sözleşmesi',
   'CLAUDE.md': "Claude Code'a özgü pratikler",

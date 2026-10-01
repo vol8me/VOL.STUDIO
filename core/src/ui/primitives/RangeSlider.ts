@@ -180,12 +180,12 @@ export class RangeSlider {
         event.key === 'ArrowRight' || event.key === 'ArrowUp'
           ? this.step
           : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
-          ? -this.step
-          : event.key === 'Home'
-          ? Number.NEGATIVE_INFINITY
-          : event.key === 'End'
-          ? Number.POSITIVE_INFINITY
-          : null;
+            ? -this.step
+            : event.key === 'Home'
+              ? Number.NEGATIVE_INFINITY
+              : event.key === 'End'
+                ? Number.POSITIVE_INFINITY
+                : null;
       if (delta === null) return;
 
       event.preventDefault();

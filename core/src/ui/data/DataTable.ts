@@ -249,11 +249,7 @@ export class DataTable<T extends object> {
     const getValue = (row: T): string | number => {
       if (column.sortValue) return column.sortValue(row);
       const raw = (row as Record<string, unknown>)[column.key] as
-        | string
-        | number
-        | boolean
-        | null
-        | undefined;
+        string | number | boolean | null | undefined;
       return typeof raw === 'number' ? raw : String(raw ?? '');
     };
 
@@ -394,11 +390,7 @@ export class DataTable<T extends object> {
         ? column.render(row)
         : String(
             ((row as Record<string, unknown>)[column.key] as
-              | string
-              | number
-              | boolean
-              | null
-              | undefined) ?? '',
+              string | number | boolean | null | undefined) ?? '',
           );
       if (typeof content === 'string') {
         td.textContent = content;

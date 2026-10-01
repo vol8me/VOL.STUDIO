@@ -261,9 +261,11 @@ function resolveTrim(value: unknown, path: string): ResolvedSample['trim'] {
 export function resolveSample(params: unknown, path: string): ResolvedSample {
   const o = checkObject(params, path, SAMPLE_KEYS);
   const data = o.data;
-  if (
-    !(data instanceof Float32Array || data instanceof ArrayBuffer || data instanceof Uint8Array)
-  ) {
+  if (!(
+    data instanceof Float32Array ||
+    data instanceof ArrayBuffer ||
+    data instanceof Uint8Array
+  )) {
     throw new AudioParamError(
       `${path}.data`,
       'type',

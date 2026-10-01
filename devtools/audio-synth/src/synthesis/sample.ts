@@ -195,7 +195,7 @@ function locateChunks(bytes: Uint8Array, view: DataView) {
   let fmtSize = 0;
   let dataOffset = -1;
   let dataSize = 0;
-  for (let offset = 12; offset < end; ) {
+  for (let offset = 12; offset < end;) {
     if (offset + 8 > end) throw new Error('WAV chunk başlığı kesik (bozuk dosya)');
     const id = text(offset, 4);
     const size = view.getUint32(offset + 4, true);

@@ -344,8 +344,8 @@ function buildChargeButtonDemo(disposables: DisposableScope): HTMLElement {
         progress < 0.34
           ? i18next.t('volui:touch.weak')
           : progress < 0.7
-          ? i18next.t('volui:touch.mediumStrength')
-          : i18next.t('volui:touch.strong');
+            ? i18next.t('volui:touch.mediumStrength')
+            : i18next.t('volui:touch.strong');
       result.setContent(
         i18next.t('volui:touch.strengthHit', { strength, n: Math.round(progress * 100) }),
       );

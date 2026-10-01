@@ -124,8 +124,8 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
       requestedRenderer === 'webgl'
         ? Phaser.WEBGL
         : requestedRenderer === 'canvas'
-        ? Phaser.CANVAS
-        : Phaser.AUTO,
+          ? Phaser.CANVAS
+          : Phaser.AUTO,
     scene: config.scenes,
     physics: config.physics,
     input: config.input,
@@ -184,10 +184,10 @@ function describeRenderer(game: Phaser.Game, requested: RendererRequest): Render
     type === Phaser.WEBGL
       ? 'webgl'
       : type === Phaser.CANVAS
-      ? 'canvas'
-      : type === Phaser.HEADLESS
-      ? 'headless'
-      : 'unknown';
+        ? 'canvas'
+        : type === Phaser.HEADLESS
+          ? 'headless'
+          : 'unknown';
   // `unknown` bir ayrışma DEĞİLDİR: ölçüm yapılamamıştır (Phaser taklidi, boot öncesi).
   const fellBack = kind !== 'unknown' && requested !== 'auto' && kind !== requested;
   return { kind, requested, fellBack: fellBack || (requested === 'auto' && kind === 'canvas') };

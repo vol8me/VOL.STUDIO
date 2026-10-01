@@ -318,8 +318,8 @@ function renderPeriodic(
     const duty = osc.dutyTrack
       ? osc.dutyTrack(t)
       : osc.dutySeconds > 0
-      ? osc.duty + (osc.dutyTo - osc.duty) * Math.min(1, t / osc.dutySeconds)
-      : osc.duty;
+        ? osc.duty + (osc.dutyTo - osc.duty) * Math.min(1, t / osc.dutySeconds)
+        : osc.duty;
     const incM = f / rate;
     const inc = incM * osc.syncRatio;
     const jumps = jumpsOf(osc, duty);

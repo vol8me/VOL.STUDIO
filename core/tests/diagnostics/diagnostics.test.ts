@@ -89,7 +89,7 @@ describe('Diagnostics', () => {
     // olmamalı; adres bilgisi tüketiciye ait.
     const fetchMock = vi.fn();
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
 
     const diag = new Diagnostics({ gameId: 'test', sampleEvery: 1, overlay: false });
     diag.beginFrame();
@@ -222,7 +222,7 @@ describe('DiagnosticsTransport', () => {
 
   it('NoopTransport hiçbir şey yapmaz', () => {
     const fetchMock = vi.fn();
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
 
     new NoopTransport().send();
     expect(fetchMock).not.toHaveBeenCalled();
@@ -248,7 +248,7 @@ describe('DiagnosticsTransport', () => {
       release = () => resolve({ ok: true } as unknown as Response);
     });
     const fetchMock = vi.fn(() => pending);
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
 
     const transport = new LocalServerTransport({ url: 'http://127.0.0.1:1234/x' });
     const snapshot = { gameId: 'test' } as unknown as DiagnosticsSnapshot;
@@ -271,7 +271,7 @@ describe('DiagnosticsTransport', () => {
 
   it('skipWhileInFlight: false verilirse her snapshot kendi isteğini açar', async () => {
     const fetchMock = vi.fn(() => Promise.resolve({ ok: true } as unknown as Response));
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
 
     const transport = new LocalServerTransport({
       url: 'http://127.0.0.1:1234/x',
@@ -284,9 +284,7 @@ describe('DiagnosticsTransport', () => {
   });
 
   it('ağ hatası yutulur — hata ayıklama aracı oyunu düşürmez', async () => {
-    globalThis.fetch = vi.fn(() =>
-      Promise.reject(new Error('bağlantı yok')),
-    ) as unknown as typeof fetch;
+    globalThis.fetch = vi.fn(() => Promise.reject(new Error('bağlantı yok')));
 
     const transport = new LocalServerTransport({ url: 'http://127.0.0.1:1234/x' });
     await expect(

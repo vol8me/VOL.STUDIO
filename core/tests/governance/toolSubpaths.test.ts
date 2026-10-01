@@ -59,7 +59,7 @@ describe('Phaser taşımayan araç alt-yolları', () => {
     const targets = new Map<string, string[]>();
     for (const [subpath, entry] of Object.entries(packageJson.exports)) {
       const target =
-        typeof entry === 'string' ? entry : (entry as { import?: string }).import ?? undefined;
+        typeof entry === 'string' ? entry : ((entry as { import?: string }).import ?? undefined);
       if (target === undefined) continue;
       targets.set(target, [...(targets.get(target) ?? []), subpath]);
     }

@@ -74,7 +74,7 @@ function adaptiveSpec(overrides: Partial<MusicAssetSpecV1> = {}): MusicAssetSpec
       { id: 'peak', intensity: 1 },
     ],
     ...overrides,
-  } as MusicAssetSpecV1;
+  };
 }
 
 describe('MusicAssetSpecV1', () => {
@@ -196,7 +196,7 @@ describe('spec → motor', () => {
     const buffer = context.createBuffer(2, frames, SAMPLE_RATE);
     const channel = buffer.getChannelData(0);
     for (let i = 0; i < frames; i++) channel[i] = Math.sin((2 * Math.PI * 220 * i) / SAMPLE_RATE);
-    return buffer as unknown as AudioBuffer;
+    return buffer;
   }
 
   it('yoğunluk değişimi stemleri YENİDEN BAŞLATMADAN seviyelendirir', async () => {

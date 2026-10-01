@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-import prettierConfig from 'eslint-config-prettier/build/index.js';
+import prettierConfig from 'eslint-config-prettier';
 
 // Frozen workspace ağaçları immutable'dır; rutin lint onları taramaz.
 // Liste `workspace-lifecycle.json`dan türetilir — yeni bir frozen kayıt

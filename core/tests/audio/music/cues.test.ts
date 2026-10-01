@@ -169,7 +169,7 @@ describe('spec cue sözleşmesi', () => {
         },
       ],
       ...overrides,
-    } as MusicAssetSpecV1;
+    };
   }
 
   it('cue’lar track’e çevrilir; giriş ve bitiş ayrı alanlara gider', () => {
