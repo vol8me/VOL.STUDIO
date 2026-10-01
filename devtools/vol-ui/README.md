@@ -1,10 +1,13 @@
 # @volstudio/vol-ui
 
-`core/src/ui` altındaki DOM UI kütüphanesinin canlı showcase'i. Saf DOM üzerinde
-çalışır; Tauri ya da Phaser oyun döngüsü gerekmez.
+CORE DOM UI kataloğunun canlı vitrini. Bileşen, girdi, erişilebilirlik ve
+piksel sözleşmesini gerçek tarayıcıda gösterir. Phaser veya native kabuk
+kurulumu gerektirmez; bileşen uygulamaları CORE'da kalır.
+
+## Geliştirme
 
 ```bash
-pnpm --filter @volstudio/vol-ui dev     # :5174
+pnpm --filter @volstudio/vol-ui dev
 ```
 
 ## Sekmeler
@@ -12,8 +15,8 @@ pnpm --filter @volstudio/vol-ui dev     # :5174
 | Sekme           | CORE kaynağı                                                                                                  |
 | --------------- | ------------------------------------------------------------------------------------------------------------- |
 | BUTTONS, TEXT   | `core/src/ui/primitives/`                                                                                     |
-| FORMS           | `core/src/ui/primitives/`, `core/src/ui/layout/` (`SettingsForm`), `core/src/ui/textEntry/`                   |
-| PANELS, YÜKLEME | `core/src/ui/overlays/` (`Sheet`, `Popover`, açılış hata yüzeyi)                                              |
+| FORMS           | `core/src/ui/primitives/`, `core/src/ui/layout/`, `core/src/ui/textEntry/`                                    |
+| PANELS, YÜKLEME | `core/src/ui/overlays/`                                                                                       |
 | HUD             | `core/src/ui/feedback/`, `core/src/ui/hud/`                                                                   |
 | KARTLAR         | `core/src/ui/cards/`                                                                                          |
 | WORKBENCH       | `core/src/ui/primitives/`, `core/src/ui/layout/`, `core/src/graphics/`                                        |
@@ -22,40 +25,32 @@ pnpm --filter @volstudio/vol-ui dev     # :5174
 | SCROLL          | `core/src/ui/layout/`                                                                                         |
 | TOUCH           | `core/src/ui/touch/`, `core/src/ui/camera/`, `core/src/ui/buttons/`, `core/src/ui/hud/`, `core/src/ui/focus/` |
 
-## Görsel sözleşme kapısı
+Kataloğa eklenen tüketicisiz CORE bileşeni aynı değişiklikte burada gösterilir
+ve CORE testinde adıyla sınanır. Sekme tablosu katalog envanteridir.
+
+## Doğrulama
 
 ```bash
-pnpm --filter @volstudio/vol-ui build      # kapı GÖNDERİLEN çıktıyı sınar
+pnpm --filter @volstudio/vol-ui build
 pnpm --filter @volstudio/vol-ui test:e2e
 ```
 
-Üç katman, üç ayrı soru:
-
-| Dosya                 | Soru                                                  |
-| --------------------- | ----------------------------------------------------- |
-| `determinism.spec.ts` | Kapı güvenilir mi? Rastgelelik ve saat donduruldu mu? |
-| `layout.spec.ts`      | Yerleşim doğru mu? Taşma, dokunma hedefi, ezilme.     |
-| `visual.spec.ts`      | Görünüm değişti mi? Sekme başına piksel temeli.       |
-
-Karşılaştırma SIFIR toleransladır; bunu mümkün kılan şey `determinism.spec.ts`in
-on iki sekmenin ayrı yüklemelerde birebir aynı çizildiğini ÖLÇMESİDİR.
-
-Beklenen bir görsel değişiklikten sonra temeller bilinçli yenilenir:
+E2E gönderilen build'i sınar. Determinizm, yerleşim ve piksel karşılaştırması
+ayrı testlerdir. Chromium ve WebKit çalışır; piksel farkı bilinçli görsel
+değişiklikte temel güncellemesiyle kabul edilir.
 
 ```bash
 pnpm --filter @volstudio/vol-ui test:e2e:update
 ```
 
-Fark beklenmiyorsa güncellemeden ÖNCE sebebi aranır — kapının değeri tam olarak
-o anda ortaya çıkar.
+Beklenmeyen farkta önce neden çözülür. Güncelleme komutunun geçmesi görünüm
+beğenisi ya da insan kabulü değildir.
 
-## Dokunmatik hedef politikası
+## Dokunma ve erişilebilirlik
 
-`--vol-hit-target-min` token'ı yalnız `pointer: coarse` altında değer taşır:
-masaüstünde hiçbir bileşen değişmez, dokunmatikte kutular gerçekten 44px olur.
-`core/tests/ui/hitTargetSync.test.ts` kuralın CSS'te VAR olduğunu doğrular;
-kutunun gerçekten o boyutta ÇİZİLDİĞİNİ tarayıcı kapısı doğrular.
+`--vol-hit-target-min` yalnız pointer coarse altında değer taşır. Hedef kutu
+44 px olur; yalnız geniş padding alanı ilan edilmez. CORE CSS sözleşme testi
+kuralı, tarayıcı yerleşim testi gerçek çizilen kutuyu doğrular. Odak, geri
+yığını ve azaltılmış hareket altında temizlik örneklerin parçasıdır.
 
-## Lisans
-
-[Apache License 2.0](../../LICENSE)
+[Tasarım sözleşmesi](DESIGN.md)

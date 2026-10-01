@@ -1,373 +1,145 @@
-# Steam Deck ve Valve donanım ailesi
-
-Platformun ölçülmüş gerçekleri, onlardan çıkan kararlar ve devkit sözleşmesi.
-Ölçümler bir LCD Deck üzerinde `devtools/deck` sondasıyla (Phaser 4
-WebGL, Gamepad, ses, yaşam döngüsü kaydı) ve bir oyunun devkit turuyla
-yapılmıştır; gerçek App ID, yayımlanmış Steam Input düzeni ya da Valve onayı
-yerine geçmez. Yapılacak işler kök [TODO.md](../TODO.md)dedir; yeni oyunun
-kabul listesi [new-game.md](new-game.md#steam-deck-kabulü)dedir.
-
-Hedef, Valve'ın ortak uyumluluk programıdır: Verified incelemesi Steam Deck,
-Steam Machine ve Steam Frame için tek kriter setiyle yapılır; yeni Steam
-Controller Deck'in kontrol düzenini taşır. Frame (ARM64, VR) kapsam dışıdır.
-
-## Hedef: Verified kriterleri ve bizim eşiklerimiz
-
-| Başlık            | Valve kriteri                                                                                                                | Bizim eşiğimiz                                                    |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Kontrolcü desteği | Fiziksel kontrollerle bütün içeriğe erişim; kontrolcüyü açmak için oyun içi ayar gerekmez                                    | Oyun ilk kareden kolla başlar ve biter                            |
-| Glifler           | Ekrandaki glif kullanılan girdiyle eşleşir (Deck, Steam Controller ya da Xbox); etkin değilken klavye/fare glifi gösterilmez | Glif ailesi gerçek aygıttan çözülür, girdi değişince değişir      |
-| Metin girişi      | Steamworks ekran klavyesi ya da kullanıcının dilini destekleyen, yalnız kolla kullanılan yerleşik giriş                      | Türkçe karakterli yerleşik klavye; Steamworks varsa onun klavyesi |
-| Performans        | Deck'te 800p'de 30 FPS, Steam Machine'de 1080p'de 30 FPS varsayılan ayarla                                                   | 1280×800'de 60 FPS, kare süresi p95 ≤ 18 ms                       |
-| Çözünürlük        | 1280×800 (tercih) ya da 1280×720                                                                                             | 16:10 birincil; 16:9 ve TV çözünürlükleri desteklenir             |
-| Okunabilirlik     | 1280×800'de en küçük karakter 9 px'in altına inmez (öneri 12 px)                                                             | Taban 12 px                                                       |
-| Kesintisizlik     | "Desteklenmeyen cihaz" uyarısı yok; başlatıcı varsa kolla gezilir                                                            | Başlatıcı yok                                                     |
-
-Valve'ın önerileri de bağlayıcıdır:
-
-- Kayıtlar Steam Cloud ile eşitlenir; grafik ayarları cihaza özgü kalır.
-- Tek oyunculu içerik internetsiz oynanır.
-- Fare ile çubuk girdisi aynı anda kabul edilir; biri ötekini kilitlemez.
-- Her oyunun bir FPS sınırı vardır: kendi sınırı (`createVolGame({ fpsLimit })`)
-  ya da sistemin sınırlayıcısı.
-- Uykudan önce kayıt güvenceye alınır.
-
-## Cihaz ve çalışma ortamı
-
-- Steam Deck LCD ("Jupiter"), SteamOS 3.8, çekirdek 6.16, glibc 2.41,
-  gamescope 3.16. Panel fiziksel olarak 800×1280; gamescope 1280×800 sunar,
-  yenileme 40–60 Hz. Oyun Steam "gamepad UI" oturumunda çalışır.
-- Host'ta GTK 3/4, GStreamer ve FUSE 2/3 vardır; **WebKitGTK yoktur.**
-- Logind uykudan önce bir uygulamaya en çok 5 sn gecikme kilidi tanır
-  (`InhibitDelayMaxUSec`).
-
-**Steam'in oyuna verdiği ortam:**
-
-| Değişken                                                 | Değer / anlam                                                       |
-| -------------------------------------------------------- | ------------------------------------------------------------------- |
-| `SteamDeck`, `SteamOS`, `SteamGamepadUI`, `SteamTenfoot` | `1` — Deck'te ve Big Picture oturumunda                             |
-| `SteamAppId`, `SteamGameId`                              | Uygulama kimliği (devkit kısayolunda da atanır)                     |
-| `SteamVirtualGamepadInfo`                                | Sanal kolların arkasındaki gerçek aygıtı listeleyen dosyanın yolu   |
-| `DISPLAY`                                                | `:1` — oyunlar ikinci XWayland'dedir                                |
-| `XDG_SESSION_TYPE`                                       | `x11`; `WAYLAND_DISPLAY` yoktur, `GAMESCOPE_WAYLAND_DISPLAY` vardır |
-| `GDK_BACKEND`                                            | `x11` (linuxdeploy GTK kancası koyar; gamescope'ta doğrudur)        |
-| `SDL_ENABLE_STEAM_SCREEN_KEYBOARD`                       | SDL'e özgüdür; WebView'ı etkilemez                                  |
-
-`SteamVirtualGamepadInfo` biçimi:
-
-```ini
-[slot 0]
-name=Steam Deck Controller
-VID=0x28de
-PID=0x1205
-type=steam
-```
-
-Steam kullanıcı adı ve oturum belirteçleri de aynı ortamda gelir; teşhis kodu
-ortamı izin listesiyle okur, `Steam*` önekiyle toptan kayıt yapılmaz.
-
-**WebView'ın gördüğü cihaz:**
-
-- `maxTouchPoints=0`, `pointer: fine`, `hover: true`, `any-pointer: coarse`;
-  `shouldUseTouchControls()` Deck'te `false` döner.
-- WebGL2 vardır; sürücü adı gizlidir (`"Apple GPU"`), cihaz sınıfı native
-  taraftan okunur. Ayrı GPU süreci yoktur.
-- AudioContext açılışta `running`, 44,1 kHz.
-- Gamepad API vardır; `vibrationActuator` yoktur (WebKitGTK 2.52; 2.54
-  libmanette ile getirir).
-
-**Girdi düğümleri:**
-
-| Düğüm         | Aygıt                               | Yetenek                                                                                    |
-| ------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ |
-| `event4`      | Steam Deck Controller               | Yalnız KEY+MSC+REP (lizard klavye yüzeyi); **ABS yok**                                     |
-| `event12`     | Steam Deck Controller               | REL_X/Y, yüksek çözünürlüklü teker, BTN_LEFT/RIGHT (trackpad fare yüzeyi)                  |
-| `event14`     | `Microsoft X-Box 360 pad 0`         | Steam Input'un sanal kolu; oyun yokken de hazır; ABS eksenleri, HAT, **EV_FF + FF_RUMBLE** |
-| `event18`     | FTS3528 dokunmatik                  | ABS_MT çoklu dokunma                                                                       |
-| `event19`     | FTS3528 ikincil düğüm               | ABS_X/Y                                                                                    |
-| `event21`     | `steamos-manager`                   | Yalnız KEY — Steam/QAM sistem tuşlarını enjekte eder                                       |
-| `hidraw0/2/4` | Steam Deck Controller (`28de:1205`) | Gerçek pad verisi ve haptik komutlarının HID yolu                                          |
-
-Fiziksel kol düğümlerinde force-feedback biti yoktur. `rtcwake` yüklüdür.
-Güç sayaçları uzaktan okunur: BAT1, `steamdeck_hwmon`, `amdgpu` ve RAPL
-`energy_uj`.
-
-## Dağıtım yolu
-
-- Native Linux yapısı; WebKitGTK paketle taşınır.
-- Derleme steamrt4 SDK kabında (podman) yapılır: `pnpm build:linux-steamrt4`.
-- Gönderilen şey açılmış bir AppDir'dir; pressure-vessel kabında FUSE
-  olmadığı için AppImage gönderilmez.
-- Çalışma zamanı Steam Linux Runtime 4.0'dır (Debian 13 tabanlı).
-
-| Deneme                                                                         | Sonuç                                                                                           |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| Fedora 44'te (glibc 2.43) üretilmiş AppImage                                   | Açılmaz: paketlenmiş WebKit, GLib ve ICU `GLIBC_2.42`, `GLIBC_2.43`, `GLIBC_ABI_GNU2_TLS` ister |
-| Debian 13 kabında (glibc 2.41, WebKitGTK 2.52.6) üretilmiş sonda, SteamOS host | Açılır                                                                                          |
-| Aynı sonda, Steam Linux Runtime 4.0 kabında                                    | Açılır; WebGL2, ses ve Gamepad API çalışır                                                      |
-
-**Reddedilen yollar:** Proton + WebView2 (kullanıcı kurulumu ister, Microsoft
-desteklemez); host'un WebKit'i (yoktur); Steam Linux Runtime 3.0 (glibc 2.31,
-Debian 13 ikilisi açılmaz).
-
-**Paket içeriği:**
-
-- Grafik sürücü kütüphaneleri (`libgbm`, `libEGL`, `libGL`, `libdrm`) pakete
-  girmez; host'tan gelir.
-- WebKit, GTK, GLib, ICU, libmanette ve GStreamer eklentileri (ogg, vorbis,
-  opus, pulseaudio, autodetect) pakete girer. Debug ikiliyle açılmış AppDir
-  515 MB'tır.
-- AppDir `AppRun` üzerinden paket bağlanmadan çalışır; kap içinde
-  `linuxdeploy` FUSE'süz koşar (`APPIMAGE_EXTRACT_AND_RUN=1`).
-- Paketteki hiçbir ELF `GLIBC_2.41` üstünü istemez; bekçi çıktı AppDir'inde
-  koşar.
-
-**Kimlik ve kayıt yolu:** veri dizini Tauri kimliğinden türer
-(`~/.local/share/<identifier>`) ve Steam Cloud kökü bu yola bağlanır. Kimlik
-oyuna özgüdür; değiştirmek kayıt yolunu değiştirir ve yedekli tek seferlik
-geçiş ister.
-
-## Çizim ve kare zamanlaması
-
-Koşul: 1280×800, Phaser 4 WebGL; saf `requestAnimationFrame`, boş sahne, 1000
-ve 4000 hareketli sprite.
-
-| Yol                                                | Saf rAF       | 4000 sprite (10 sn) | p50 / p95 / p99     | Web süreci CPU |
-| -------------------------------------------------- | ------------- | ------------------- | ------------------- | -------------- |
-| WebKit varsayılanı (DMA-BUF açık, DRM vblank)      | 50,2 FPS      | 50 FPS              | 20 / 21 / 21 ms     | ~%30           |
-| DMA-BUF kapalı                                     | ölçülmedi     | 49,9 FPS            | 20 / 20 / 25 ms     | ~%76           |
-| DMA-BUF açık + `WEBKIT_FORCE_VBLANK_TIMER=1`, host | 62,3 FPS      | 59,5 FPS            | 16 / 20 / 26 ms     | ölçülmedi      |
-| Aynısı, Steam Linux Runtime 4.0                    | 62,2 FPS      | 59,9 FPS            | 17 / 18 / 19 ms     | ölçülmedi      |
-| Kabuk kuralı (otomatik), SLR4                      | 62,2–62,4 FPS | 58,9–59,2 FPS       | 17 / 19–20 / 21+ ms | ölçülmedi      |
-
-**Kök neden:** WebKit'in DRM vblank izleyicisi (`drmWaitVBlank`) gamescope
-altında yükten bağımsız 50 Hz tempo verir; gamescope'un sınırı ve dinamik
-yenileme hızı 60'tır, oyun odaktayken
-`GAMESCOPE_DISPLAY_REFRESH_RATE_FEEDBACK` 50'ye iner. Zamanlayıcı
-izleyicisine zorlamak 60'ı geri getirir.
-
-**Kural** (`tauri-v2/src-tauri/src/lib.rs`, `linux_webview_plan`; tam tablo
-[linux.md](linux.md#webview-çizim-yolu)):
-
-- gamescope oturumunda (`GAMESCOPE_WAYLAND_DISPLAY` ya da `GAMESCOPE_STATS`)
-  kabuk `WEBKIT_FORCE_VBLANK_TIMER=1` verir ve DMA-BUF çizicisini açık bırakır;
-  kapalı yola göre aynı kare hızında ~2,5 kat daha az CPU harcar.
-- Dışarıdan verilen değişken ezilmez (`set_env_default`).
-- Kabuk oturumu `session_kind` komutuyla bildirir, ön yüz `getSessionKind()`
-  ile okur: `gamescope` (Deck oyun kipi), `bigpicture` (masaüstünde Steam Big
-  Picture: `SteamGamepadUI`/`SteamTenfoot`), `desktop`. İlk ikisi kol kipiyle
-  başlar; gamescope'ta kabuk bütün pencereleri tam ekrana alır.
-
-**Açık zamanlama soruları:**
-
-- Zamanlayıcı ~62 Hz'te serbest koşar, panel 60 Hz; p95 ≤ 18 ms eşiği 4000
-  sprite'ta karşılanmadı, p99 ara sıra kaçan kareyi gösterir. Sunum temposu
-  gamescope istatistikleriyle ölçülmelidir.
-- `WEBKIT_DISPLAY_REFRESH_THROTTLE_FPS` yalnız yenileme hızının bölenlerini
-  kabul eder.
-- OLED Deck 90 Hz'tir; zamanlayıcının orada davranışı ölçülmedi.
-
-## Girdi
-
-**Deck'in verdiği:** Steam Input, API kullanmayan oyuna kolu sanal bir Xbox
-360 kolu olarak sunar; trackpad'ler varsayılan şablonda fare üretir;
-dokunmatik ekran gamescope'un dokunma kipiyle iletilir ama WebView
-`maxTouchPoints=0` bildirir; arka tuşlar, gyro ve trackpad'in kendisi yalnız
-Steam Input API ile ya da kullanıcı eşlemesiyle görünür.
-
-**CORE'un karşılığı:**
-
-- `GamepadController`: standart eşleme, ölü bölge, analog hareket ve nişan;
-  eylem → düğme bağı `GamepadActionBinding` verisidir.
-- `InputModeArbiter`: son anlamlı girdi kazanır, eşit kenarda histerezis
-  görevliyi korur; fare ve çubuk nişanı birbirini kilitlemez.
-  `inputModeForSession('gamescope')` başlangıç kipini kola kurar; Gamepad
-  API'nin kolu ilk basışa kadar göstermemesine bağlanmaz.
-- `FocusNavController`: D-pad ve çubuk uzamsal odak taşır
-  (`pickDirectionalTarget`), A etkinleştirir, Menu `onMenu`, LB/RB sekme
-  değiştirir. Odak halkası (`vol-focusnav-current`) yalnız kol/klavye
-  kipinde görünür.
-- Tek geri yığını: `triggerBack` Android geri, Escape ve kolun B'sini aynı
-  yığına bağlar; `Modal` açıkken kendini kaydeder.
-
-**Oyunun işi:** Menu'yü duraklatmaya, nişanı sağ çubuğa, ateş/atılmayı
-tetiklere bağlamak; bağlar `<oyun>/src/config/` altında veridir.
-
-**Oyun turunda görülen tuzaklar** (her yeni oyunun kabulünde sınanır):
-
-- Glif ailesini bir kez seçen kod hot-plug ve kip değişiminde bayat glif
-  bırakır.
-- 1280×720 sabit pencere 16:10 panelde siyah bant bırakır.
-- Tek fiziksel B basışı iki olaya dönüşüp duraklatmayı aç-kapa yapabilir.
-- Açılır açılmaz ilk eylemine odaklanan seçim ekranı, önceki basışın
-  bırakılmasıyla yanlış seçim yapabilir.
-- UI'da sağ çubuk imleci taşımaz; imleç yalnız işaretçi olaylarından beslenir.
-- Sol trackpad WebKit'in Undo/Print kısayollarını tetikleyebilir; kabuk
-  betiği ve `suppressNativeMenus` yazdırma, yenileme, bul, geri/ileri ve metin
-  alanı dışında geri al/tümünü seç kısayollarının varsayılanını durdurur.
-- Paketlenen libmanette ile süreç SIGSEGV ile düşebilir.
-
-## Glifler
-
-Aile çözüm sırası: Steamworks girdi türü → `SteamVirtualGamepadInfo` üzerinden
-gerçek aygıt (kabuk `steam_virtual_gamepads`, JS `steamVirtualGamepads`; yuva ↔
-Gamepad sırası ölçülmediği için yalnız tek kolda kullanılır) → `Gamepad.id` →
-`SteamDeck=1` → Xbox.
-
-Aileler: Xbox, PlayStation, Nintendo, **Valve** (Deck ve yeni Steam
-Controller: A/B/X/Y, L1/R1, L2/R2, L4/R4/L5/R5, View, Menu, iki trackpad;
-omuz tuşları LB/RB değil **L1/R1**), klavye, fare.
-
-Depo herkese açıktır: Valve'ın partner sitesinden indirilen glif çizimleri
-depoya girmez; Steam istemcisinin glifleri çalışma zamanında Steamworks'ten yol
-olarak alınabilir; depodaki set CC0 kaynaklıdır (Kenney Input Prompts, Xelu);
-marka logoları çizilmez.
-
-Bilinmeyen: Gamepad API sırası ile sanal kol yuvası numarasının eşleşmesi.
-
-## Metin girişi
-
-`core/src/ui/textEntry/`: `Input`/`TextArea` odaklanınca
-`requestTextEntryForElement` çalışır; kip `gamepad` ise native odak
-kaldırılır ve klavye açılır. Sağlayıcı kayıtlıysa (`setTextEntryProvider`)
-platform klavyesi, yoksa `OnScreenKeyboard` açılır: Türkçe Q düzeni,
-ı/İ/ğ/ü/ş/ö/ç birinci sınıf tuş; shift tuşları yeniden yaratmaz, odak yerinde
-kalır; parola ekranda maskelenir; alanın `maxLength`i klavyeye ve Steam'e
-taşınır; B/Escape ortak geri yığınından iptal eder ve başlangıç değeri döner;
-Bitti commit eder ve odak alana döner.
-
-## Titreşim
-
-- `core` haptik katmanının `gamepad` arka ucu `vibrationActuator`'a dayanır;
-  Deck'teki WebKitGTK 2.52'de yoktur.
-- Sanal kolun evdev FF'i oyun sürecinden `EVIOCSFF`'te **EFAULT** verir
-  (uinput yüklemesi devkit oyununa servis edilmez).
-- `hidraw2` Deck'in `ID_TRIGGER_RUMBLE_CMD` (0xEB) feature raporunu kabul eder
-  (SDL `hidapi_steamdeck` biçimi); kabuğun hidraw arka ucu süreç içinden
-  `backend:"hidraw"` ile raporu gönderir, kare zamanlaması bozulmaz. Motorun
-  dönüşü elle hissedilerek doğrulanır.
-- `tauri-v2` Linux sürücüsünün öncelik sırası: Steamworks Steam Input
-  titreşimi (katman varsa) → `hidraw` HID rumble → evdev `FF_RUMBLE` (yalnız
-  yüklemeyi kabul eden ortamlar). Paketlenen WebKit ≥ 2.54 olduğunda
-  tarayıcı yolu kendiliğinden devreye girer.
-
-## Yaşam döngüsü: uyku, kapatma, kayıt
-
-**Ölçülen:** SIGTERM'i Rust yakalar ve JS olayı 2 ms içinde alır; süreç
-tanınan süre sonunda düzgün kapanır (host ve SLR4). Uyku sırasında Wi-Fi
-kesilir. Steamworks'te uyanma bildirimi `AppResumingFromSuspend_t`'dir.
-
-**Kararlar:**
-
-- **Atomik yazıcı** (`tauri-v2/src-tauri/src/store.rs`): geçici dosya →
-  `fsync` → güncel kayıt `.bak` olarak bağlanır → geçici dosya güncelin
-  üstüne `rename` → (Unix'te) dizin `fsync`; güncel dosya hiçbir anda diskten
-  kalkmaz. Disk işi ana iş parçacığı dışında, ad başına sırayla koşar.
-  `tauri-plugin-store` `save()`'i doğrudan `fs::write` yaptığı için
-  kullanılmaz; `TauriStoreAdapter` kabuğun `vol_store_read`/`vol_store_write`
-  komutlarını kullanır.
-- **Kurtarma:** güncel dosya eksik ya da bozuksa tam geçici dosya ya da `.bak`
-  okunur (`recovered`); hiçbiri okunamazsa bozuk dosyalar `.corrupt-<zaman>`
-  adıyla karantinaya alınır ve kayıt boş başlar (`reset`). İkisi de
-  `createScopedStores(gameId, { onIntegrity })` ile tüketiciye bildirilir.
-- **Boşaltma:** paylaşılan kabuk SIGTERM/SIGINT/SIGHUP'ı her kipte yakalayıp
-  `vol:terminate` yayınlar; JS bütün `registerShutdownFlush` kancaları bitince
-  `vol_flush_done` gönderir (sınır 1,5 sn). Çıkış olağan olay yolundan
-  (haptik durdurma dahil) 128+sinyal koduyla yapılır. SIGKILL'e karşı güvence
-  atomikliktir.
-- **Uyku:** kabuk logind'den "delay" uyku kilidi alır; `PrepareForSleep`te
-  `vol:suspending` yayınlar ve `registerSuspendFlush` kancaları bitene kadar
-  (en çok 1,5 sn) uykuyu erteler, uyanışta `vol:resumed` yayınlar
-  (`onSystemResume`); ses bağlamı `resumeAudioAfterWake` ile toparlanır.
-  Deck'te uyku turuyla ölçülmedi.
-- **Cloud stratejisi tektir:** Steam Auto-Cloud yalnız `*-synced.json`
-  dosyalarını eşitler; eklentinin `cloud_*` komutları ölçüm içindir.
-- **Kapsamlar:** `synced` (ilerleme; gerçek App ID'de Auto-Cloud adayı) ve
-  `device` (grafik, pencere, cihaz ses ayarları, dil; Cloud'a konmaz) ayrı
-  dosyalardır.
-- **Zaman:** `performance.now()` uyku süresini saymaz, `Date.now()` uykudan
-  sonra sıçrar; duvar saatine bağlı mantık bu farkla yazılır, simülasyon adımı
-  sınırlanır.
-
-## Görüntü ve okunabilirlik
-
-- gamescope pencereyi çıkış çözünürlüğünde tam ekrana zorlar; pencere kipi ve
-  çözünürlük seçenekleri etkisizdir. `displayCapabilitiesForSession`
-  (`core/src/platform`) gamescope'ta `{ windowMode: false, resolution: false }`
-  döner; ayar ekranı etkisiz satırı gizler.
-- 1280×800'de 9 px metin zar zor seçilir, 12 px okunur; taban 12 px'tir.
-  `devtools/vol-ui/tests/e2e/readability.spec.ts` WebKit'te 1280×800 ve
-  1280×720'de görünen her metnin ≥ 12 px olduğunu, 1920×1080'de 1,5×,
-  3840×2160'ta 3× ölçeklendiğini sınar (`--vol-layout-zoom`).
-- 16:10 birincil orandır; 16:9 ve geniş oranlar letterbox ile yerleşir.
-
-## Steamworks katmanı (oyun başına isteğe bağlı)
-
-Eklenti `tauri-v2/plugins/vol-steamworks`, JS adaptörü
-`tauri-v2/src/platform/steamworks.ts`. `steamworks` cargo feature'ı olmadan da
-derlenir (komutlar stub döner, `status.compiled:false`); sonda feature'ı
-`VOL_CARGO_FEATURES=steamworks` ile açar.
-
-- Deck'te `available`, `deck`, `bigPicture`, `overlayEnabled`,
-  `cloudEnabled`, `inputReady`, `manifestOk` true döner; aksiyon seti
-  aktivasyonu, kontrolcü listesi (`steamworksType:"steamdeck"`) ve Cloud
-  yaz/oku/sil çalışır; eklenti kare zamanlamasını değiştirmez.
-- `SetInputActionManifestFilePath` ilk `RunFrame`den önce çağrılır; dosya
-  `"Action Manifest"` köklü .vdf'dir ve `bundle.resources` ile paketlenir.
-- `GetDigitalActionOrigins` yalnız aktif konfigürasyonda bağlanmış origin
-  döndürür; test App ID 480 altında `[]` gelir. Resmi konfigürasyon gerçek App
-  ID ile oyunun işidir.
-- `ShowGamepadTextInput` `TextEntryProvider` sözleşmesine oturur (sonuç
-  `vol-steamworks:text-input` olayıyla; overlay yoksa yerel klavye).
-  `ShowFloatingGamepadTextInput` metni odaklı alana doğrudan yazar.
-- `steamVibrate(sol, sağ)` bağlı kollara Steam Input titreşimi gönderir (SDK
-  `TriggerVibration`; sarmalayıcıda olmadığı için `raw-bindings`);
-  `steamActionState` ilk kolun dijital/analog aksiyon değerlerini okur. İkisi
-  de cihazda denenmedi.
-- `GameOverlayActivated` JS'e `vol-steamworks:overlay` olarak taşınır;
-  duraklatma kararı oyunundur.
-- `init_app` App ID'yi env'e yazar, `steam_appid.txt` gerekmez.
-  `libsteam_api.so` `steamworks-sys` derleme çıktısından paketlenir; depoya
-  binary girmez.
-- Katmanı taşımayan oyun kol, glif ve klavye yollarıyla eksiksiz çalışır.
-
-## Devkit sözleşmesi
-
-Otomasyon `pnpm deck <komut>` (`devtools/deck/scripts/deck.mjs`): `discover`, `deploy`,
-`run`, `stop`, `log`, `shot`, `power`, `measure`, `mode`, `clean`, `full`.
-Ölçüm kayıtları git dışı devtools/deck/records/ altına yazılır ve depoya
-girmez. Deck ölçümü kapı değildir; sonraki ölçümün
-kıyaslandığı referanstır.
-
-- Devkit anahtarı `~/.config/steamos-devkit/devkit_rsa`, SSH kullanıcısı
-  `deck`. Cihaz mDNS'te `_steamos-devkit._tcp` olarak ilan edilir; adres sabit
-  yazılmaz (`DECK_HOST`).
-
-| Adım              | Komut / kural                                                                                                           |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Hazırlık          | `python3 ~/devkit-utils/steamos-prepare-upload --gameid <id>` → hedef dizin                                             |
-| Yükleme           | rsync ile `~/devkit-game/<id>/`                                                                                         |
-| Kayıt             | `steam-client-create-shortcut --parms <JSON>`; alanlar: `gameid`, `directory`, `argv`, `env`, `settings`, `force_appid` |
-| Oyun kimliği      | `^[A-Za-z_][A-Za-z0-9_.]+$`; tire kabul edilmez                                                                         |
-| Başlatma dosyası  | `argv[0]` yüklenen dizinin içinde olmalıdır                                                                             |
-| Native çalıştırma | `settings.steam_play = "0"`                                                                                             |
-| Kap seçimi        | `settings.compat_tool`: `SteamLinuxRuntime_4`, `SteamLinuxRuntime_sniper`, `proton-stable`…                             |
-| Ortam değişkeni   | Kayıttaki `env` oyuna ulaşmaz; değişkenler yüklenen başlatıcı betikle verilir                                           |
-| Başlatma          | `steam-devkit-rpc run-game gameid=<id>`                                                                                 |
-| Ekran görüntüsü   | `gamescopectl screenshot <yol>` (1280×800 PNG)                                                                          |
-| Uzaktan çıkış     | Yok; sürece sinyal gönderilir                                                                                           |
-| Temizlik          | `steamos-delete`                                                                                                        |
-
-## Açık ölçümler
-
-İnsan eliyle, cihaz başında ölçülür:
-
-- Arka tuşlar; sanal kol yuvası ↔ Gamepad sırası; ölü bölge hissi.
-- Trackpad ve dokunmatiğin ürettiği olay türü (`pointerType`).
-- Steam ve Quick Access düğmesinin `blur`/`visibilitychange` üretip üretmediği.
-- Uyku ve uyanmada `requestAnimationFrame` sürekliliği, AudioContext durumu,
-  saat sıçramaları.
-- Steam arayüzündeki "Oyundan çık" düğmesinin gönderdiği sinyal sırası.
-- Titreşim motorlarının elle hissedilmesi.
-- 60 ve 30 FPS'te güç tüketimi.
-- OLED Deck (90 Hz) ve Steam Machine (TV çıkışı) kare zamanlaması.
+# Steam Deck
+
+Steam Deck dağıtımı native Linux AppDir üzerinden yapılır. Devkit sondası
+ortamı ölçer; ürün kabulü gönderilen oyunun gerçek paketiyle yapılır. Devkit
+başarısı gerçek App ID, yayımlanmış Steam Input düzeni veya Valve incelemesi
+yerine geçmez. Açık işler [TODO.md](../TODO.md), yeni ürün kabulü
+[yeni oyun rehberi](new-game.md) içindedir.
+
+## Ürün hedefleri
+
+| Alan          | Depo sözleşmesi                                                |
+| ------------- | -------------------------------------------------------------- |
+| Kontrolcü     | İlk kareden çıkışa kadar yalnız kolla bütün içeriğe erişim     |
+| Glif          | Gerçek aygıt ve etkin girdiyle değişen glif ailesi             |
+| Metin         | Türkçe destekli gamepad klavyesi; varsa Steamworks sağlayıcısı |
+| Görüntü       | 1280×800 birincil, 16:9 ve TV çözünürlüklerine uyum            |
+| Okunabilirlik | 1280×800 üzerinde en az 12 px görünen metin                    |
+| Zamanlama     | 60 FPS hedefi, kare süresi p95 ≤ 18 ms                         |
+| Yaşam döngüsü | Uyku ve çıkış öncesi güvenli kayıt, uyanınca ses toparlama     |
+| Çevrimdışı    | Tek oyunculu içeriğin internet olmadan çalışması               |
+| Kalıcılık     | İlerleme `synced`, cihaz tercihleri `device` kapsamında        |
+
+Bu eşikler ürün hedefidir; ölçülmemiş ürün ya da donanım geçmiş sayılmaz.
+OLED Deck ve diğer Valve donanımları LCD referansından otomatik kabul almaz.
+
+## Paketleme
+
+Repo kökünden `pnpm build:linux-steamrt4` steamrt4 SDK kabında üretim yapar.
+Çalışma zamanı Steam Linux Runtime 4.0'dır. Pressure-vessel içinde FUSE
+olmaması nedeniyle cihazda açılmış AppDir kullanılır; giriş `AppRun`dur.
+
+WebKitGTK, GTK, GLib, ICU, libmanette ve gerekli ses codec/çıkış eklentileri
+pakete girer. Grafik sürücü kütüphaneleri host'tan alınır. ELF bağımlılık
+kapısı çıktıdaki GLIBC gereksiniminin hedef tabanı aşmadığını doğrular.
+Host'ta üretilmiş daha yeni glibc bağımlı paket aynı hedefte kabul edilmez.
+Paketleme ayrıntıları [Linux rehberindedir](linux.md).
+
+Tauri kimliği veri yolunu belirler. Her ürün kendi kimliğini taşır; kimlik
+geçişi kayıt yolunu da değiştirir ve yedekli veri geçişi gerektirir. Steam
+Auto-Cloud yalnız ilerleme kapsamını eşitler, cihaz ayarını taşımaz.
+
+## Oturum ve çizim
+
+Kabuk gamescope oturumunu ortam yetenekleriyle tanır; JS'e `getSessionKind`
+üzerinden bildirir. Gamescope ve Big Picture başlangıçta kol kipini seçer.
+Gamescope pencereyi tam ekrana zorlar; etkisiz pencere/çözünürlük ayarları
+`displayCapabilitiesForSession` ile gizlenir. Fare ve analog nişan aynı
+oturumda birlikte kullanılabilir.
+
+Ölçülmüş LCD gamescope ortamında WebKit DRM vblank yolu yükten bağımsız
+50 Hz tempo verebilir. Kabuk bu oturumda `WEBKIT_FORCE_VBLANK_TIMER=1`
+kullanır ve DMA-BUF çizimini açık bırakır; dışarıdan verilmiş değişkeni
+üzerine yazmaz. Diğer ortamlara ölçülmeden aynı kural genişletilmez.
+
+Referans sonda koşulu Phaser WebGL, 1280×800 ve 4000 hareketli sprite'tır:
+varsayılan yol yaklaşık 50 FPS; timer yolu Steam Linux Runtime 4.0'da
+59,9 FPS ve p50/p95/p99 17/18/19 ms üretmiştir. Bu sayı ürün ölçümü değildir.
+Timer'ın serbest temposu panel sunumuyla birebir eşit kabul edilmez;
+gamescope sunum istatistikleri ve daha uzun pencereyle doğrulanır. OLED
+90 Hz davranışı ölçülmemiştir.
+
+## Girdi ve glif
+
+Steam Input API'siz oyun fiziksel kolu sanal Xbox aygıtı üzerinden görür;
+trackpad fare girdisi üretebilir. WebView dokunmatik paneli `maxTouchPoints`
+ile tam bildirmeyebilir; cihaz adından dokunma zorunluluğu türetilmez.
+Arka tuş, gyro ve trackpad'in ham durumu ayrı Steam Input yeteneğidir.
+
+CORE `GamepadController` standart eşlemeyi, ölü bölgeyi ve analog eylemleri;
+`InputModeArbiter` anlamlı son girdiyi; `FocusNavController` uzamsal odağı
+sağlar. Eylem bağları oyunun config verisidir. Android geri, Escape ve
+B aynı `triggerBack` yığınına gider; tek basış iki kez tüketilmez.
+
+Glif çözüm sırası Steamworks girdi türü, native sanal kol bilgisi, gamepad
+kimliği, Deck ortam işareti ve Xbox yedeğidir. Sanal kol yuvası ile Gamepad
+sırasının çoklu kol eşlemesi ölçülmediği için native kestirim yalnız tek
+kolda kullanılır. Hot-plug ve kip değişimi glifi yeniler. Valve omuzları
+L1/R1 olarak adlandırılır.
+
+Partner glif çizimleri repoya girmez. Çalışma zamanında Steam istemcisinin
+sağladığı glif yolu ya da depodaki açık lisanslı girdi glifleri kullanılır;
+marka logosu çizilmez.
+
+## Metin ve titreşim
+
+Gamepad kipinde `Input` ve `TextArea` platform metin sağlayıcısına başvurur.
+Steamworks kullanılabilir ise ekran klavyesi açılır; yoksa Türkçe Q düzenli
+`OnScreenKeyboard` çalışır. `maxLength`, parola maskesi, ortak geri yığını,
+iptalde başlangıç değerine dönüş ve commit sonrası alan odağı korunur.
+
+Titreşim yeteneği tarayıcı ve native sürücülerle ayrı bildirilir. WebKit'in
+Gamepad actuator sağlamadığı ortamda kabuk Steamworks Steam Input,
+uyumlu hidraw veya çalışır evdev FF yolunu seçebilir. Sanal kolun FF
+beyan etmesi yükleme komutunun kabul edildiğini kanıtlamaz. Motorun
+hissedilmesi insan kontrolüdür; yalnız komut sonucu üzerinden onaylanmaz.
+
+## Kayıt, uyku ve çıkış
+
+Native depolama geçici dosya, fsync, yedek ve atomik rename ile çalışır.
+Güncel dosya yazma sırasında kaybolmaz; disk işi ana iş parçacığının dışında
+ve ad başına sıralıdır. Eksik/bozuk güncel kayıtta yedek ya da tam geçici
+dosya kurtarılır. Kurtarma olmazsa bozuk veri karantinaya alınır; bütünlük
+durumu `createScopedStores` tüketicisine bildirilir.
+
+SIGTERM, SIGINT ve SIGHUP kapanış olayıyla JS boşaltmasını bekler. Normal
+pencere kapanışı aynı `registerShutdownFlush` yolunu kullanır ve uygulama
+çıkışıyla tamamlanır. SIGKILL altında güvence atomik yazımdır.
+
+Logind uyku geciktirme kilidiyle `registerSuspendFlush` kancalarını bekler;
+uyanış `onSystemResume` üzerinden bildirilir. Bekleme sınırlıdır ve ses
+bağlamı uyanışta toparlanır. Uyku sırasında ağ kaybolabilir; simülasyon adımı
+ve duvar saati aynı kabul edilmez. Gerçek uyku/uyanış ve motor hissi
+cihaz başında ayrıca doğrulanır.
+
+## Steamworks
+
+`tauri-v2/plugins/vol-steamworks` oyun başına opt-in eklentidir. Cargo
+`steamworks` feature'ı kapalıysa native komutlar desteklenmeyen durumu
+bildirir; uygulama kol, glif ve yerel klavyeyle çalışmaya devam eder.
+JS yüzeyi oyunun tükettiği durum, aksiyon seti, glif bağlamı, metin girişi
+ve overlay işlemleridir.
+
+Action Manifest ilk Steam Input frame'inden önce kaydedilir ve ürünün
+resource paketine girer. Digital action origins gerçek App ID ve aktif
+bağlama düzeniyle doğrulanır; devkit test kimliğinde boş origin ürüne
+onay vermez. Overlay olayı taşınır, duraklatma kararı oyunundur. Native
+Steam API kütüphanesi build çıktısından paketlenir; binary repoya girmez.
+
+## Devkit
+
+`pnpm deck` otomasyonu `discover`, `deploy`, `run`, `stop`, `log`, `shot`,
+`power`, `measure`, `mode`, `clean` ve `full` komutlarını sunar. Cihaz
+mDNS/devkit keşfinden seçilir; adres sabit koda yazılmaz. Başlatıcı yüklenen
+oyun dizininin içinde olur, native çalışma seçilir ve ortam gerekli ise
+başlatıcı üzerinden verilir. Cihaz kayıtları devtools/deck/records/
+altında git dışıdır.
+
+Teşhis yalnız izin listeli ortam bilgisini toplar; Steam ortamının tamamı
+kaydedilmez. Kullanıcı kimliği, adres ve oturum belirteci belgeye, loga veya
+commit'e girmez. Dağıtımın bıraktığı geçici dosya ve kısayol raporlanır.
+
+Ürün kabulünde hot-plug, çoklu kol, arka tuşlar, trackpad/dokunma olayları,
+Steam ve Quick Access odağı, uyku/uyanış, ses, kayıt, çıkış, titreşim hissi
+ve güç tüketimi gerçek cihazda ölçülür. Yapılmayan adım bekleyen olarak
+kalır; cihaz ölçümü otomatik kalite kapısı değildir.

@@ -1,25 +1,20 @@
-# VOL.STUDIO — Agent Rehberi
+# VOL.STUDIO çalışma sözleşmesi
 
-Bu depoda çalışan her insanın ve agent'ın ortak sözleşmesi. İki tür içerik
-taşır:
+Bu belge depoda çalışan insan ve agent için kapsam, mimari, doğrulama ve
+raporlama kurallarını tanımlar. Değişmezler yerel kapılarla zorlanır;
+metin ile kapı ayrışırsa ihlal fixture'ı üzerinden doğru sözleşme belirlenir.
+İlkeler muhakemeyle uygulanır; gerekçeli sapma raporlanır.
 
-- **Değişmezler** bir kapıyla zorlanır; ihlal eden değişiklik yerelde
-  reddedilir. Metin ile kapı ayrışırsa ikisi bir ihlal girdisiyle sınanır ve
-  yanlış olan düzeltilir.
-- **İlkeler** muhakemeye bırakılır; gerekçesinin geçmediği bir durumda körü
-  körüne uygulanmaz, sapma raporda söylenir.
-
-Alt dizindeki bir `AGENTS.md` (bugün `devtools/pen.dev/AGENTS.md`) kendi
-alanını daraltır, bu dosyayı gevşetmez. `CLAUDE.md` yalnız Claude Code'a özgü
-pratikleri taşır.
+Alt dizinin AGENTS.md dosyası kendi alanına ek kısıt getirebilir, kök
+sözleşmeyi gevşetemez. `devtools/pen.dev/AGENTS.md` Pencil erişiminin özel
+kurallarını, `CLAUDE.md` Claude Code'un araç kullanımını taşır.
 
 ## Repo haritası
 
 Tauri v2 + Phaser 4 + TypeScript, pnpm workspace. Kapılar yerelde `justfile`
 üzerinden koşar; bulut CI yoktur. Ürün ve belge dili Türkçe'dir; kod
 yorumları ve `.md` dosyaları Türkçe, identifier'lar İngilizce yazılır;
-İngilizce karşılığı olan belge (`README.en.md`) aynı turda ve aynı başlık
-yapısıyla güncellenir.
+Belgeler Türkçe tek kaynaktır; paralel İngilizce README tutulmaz.
 
 | Yol                     | Paket                    | Rol                                                                                    |
 | ----------------------- | ------------------------ | -------------------------------------------------------------------------------------- |
@@ -31,18 +26,17 @@ yapısıyla güncellenir.
 | `devtools/vol-ui/`      | `@volstudio/vol-ui`      | CORE UI kataloğunun vitrini ve piksel temelli görsel sözleşmesi                        |
 | `games/vol-test/`       | `@volstudio/vol-test`    | Monorepo'nun test oyunu: CORE ve kabuğu gerçek oyunla her platformda uçtan uca sınar   |
 
-Paket durumu (`active`/`frozen`) `workspace-lifecycle.json`dadır; rutin
-kapılar yalnız `active` paketleri koşar. Yeni oyun `games/<oyun>/` altına
-kurulur: [docs/new-game.md](docs/new-game.md). Bitmiş bir ürün annotated
-freeze etiketiyle arşivlenip ağaçtan kaldırılır; ağaçta frozen durmak karar
-bekleyen kısa bir geçiş hâlidir.
+Paket durumu `workspace-lifecycle.json` içindeki active/frozen beyanıdır;
+rutin kapılar aktif paketleri çalıştırır. Yeni oyun `games/<oyun>/` altında
+[yeni oyun rehberi](docs/new-game.md) ile kurulur. Tamamlanmış ürün annotated
+freeze etiketiyle arşivlenir; frozen ağaca yeni davranış eklenmez.
 
 Kök dizinler: `docs/` (repo geneli belgeler ve marka görselleri),
 `scripts/` (kapılar `scripts/quality/`, Linux paketleme, Android cihaz
 ölçümü, ortam kontrolü). Kökteki her girdinin gerekçesi
 `scripts/quality/rootEntries.mjs`dedir.
 
-## Çalışma ilkeleri
+## Çalışma ve yetki
 
 - **Önce oku, sonra ölç.** Repo gerçeği (dosya, test, git durumu, cihaz)
   hafızadan önce gelir; bir iddia yazılmadan onu doğrulayan komut koşulur.
@@ -57,8 +51,9 @@ Kök dizinler: `docs/` (repo geneli belgeler ve marka görselleri),
   örnekte doğrulanır; kanıt rapora girer.
 - **İnsan yargısı uydurulmaz.** Dinleme, görsel beğeni ya da elle cihaz
   ölçümü yapılmadıysa "yapılmadı" olarak kalır.
-- **Dışa açık ve geri alınması zor işlemler** (push, merge, etiket, silme,
-  yayın) açık talep ister; commit de yalnız istendiğinde yapılır.
+- **Yetki açıktır.** Push, merge, etiket, silme, yayın ve commit kullanıcı
+  yetkisi içinde yapılır. Geçerli açık yetki aynı oturumda yeniden sorulmaz;
+  kapsamın dışına genişletilmez.
 - **Yarım tur bırakılmaz.** İş bitince çalışma ağacı temizdir ya da durumu
   açıkça yazılmıştır.
 - **Ölçmeden optimize edilmez.** Performans kararı bir ölçümle gösterilir;
@@ -201,7 +196,7 @@ yalnız `devtools/audio-synth/corpus/canaries/reviews.json`daki insan beyanıyla
 
 | Belge                                                  | Sorumluluk                                           |
 | ------------------------------------------------------ | ---------------------------------------------------- |
-| `README.md`, `README.en.md`                            | Monorepo girişi, komutlar, nereye bakılacağı         |
+| `README.md`                                            | Monorepo girişi, komutlar, nereye bakılacağı         |
 | `TODO.md`                                              | Repo geneli iş listesi                               |
 | `docs/`                                                | Kapılar, platformlar, yeni oyun rehberi              |
 | `core/docs/`                                           | CORE primitifleri, i18n, müzik motoru, Phaser sınırı |
@@ -264,7 +259,7 @@ gerekçenin kopyası yazılmaz.
 - **Benchmark:** `pnpm benchmark:core`; kapılanan tek performans ölçüsü
   algoritmik ölçekleme oranıdır.
 
-## Bitti sayma
+## Teslim
 
 - İlgili kapılar koşulmuş ve sonuçları raporlanmıştır.
 - `git status --short` okunmuştur.

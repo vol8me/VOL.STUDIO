@@ -1,72 +1,45 @@
-# CORE ↔ Phaser sınırı
+# CORE ve Phaser sınırı
 
-CORE generic mekanizma ve sunum yetenekleri sağlar; renderer ve sahne grafiği
-Phaser'a aittir. Bu bağımlılık kaynak ağacında tek bir fiziksel sınıra
-toplanır:
+CORE mekanizma ve sunum sözleşmesini, Phaser renderer ve sahne grafiğini
+sağlar. Doğrudan Phaser importları `core/src/phaser/` altındaki kayıtlı
+köprülerle sınırlıdır. Public adlar bu paket içi sahiplik sınırından
+bağımsızdır.
 
-```text
-core/src/phaser/**
-```
+## Köprüler
 
-Doğrudan `phaser` importu bu dizinin dışında yasaktır. Public export adları
-değişmez; dizin paket içi sahipliği gösterir.
+Kesin envanter `scripts/quality/phaserBoundary.mjs` içindeki PHASER_BRIDGES
+kaydıdır. Her kayıt gerçek import taşır; her import kayıtta bulunur. Gizli
+bağımlılık ve bayat kayıt kapıyı düşürür.
 
-## Bridge envanteri
+Köprüler oyun boot/renderer seçimi, viewport/Scale/kamera adaptasyonu,
+GameObject entity ve girdi sağlayıcısı, rig montajı ve poz kaynağı
+adaptasyonunu taşır. Rig layout hesabı saf TypeScript'tir; yalnız scene,
+texture ve GameObject montajı köprüye aittir.
 
-Exact envanter `scripts/quality/phaserBoundary.mjs` içindeki
-`PHASER_BRIDGES` kaydıdır. Her bridge gerçekten Phaser import etmek, her
-doğrudan Phaser importu da bu kayıtta bulunmak zorundadır. Böylece hem gizli
-bağımlılık hem bayat kayıt kapıyı düşürür.
+Kapı TypeScript AST ile normal ve type-only import, export-from, sabit
+dinamik import ve require biçimlerini tarar. Tracked dosyayla birlikte henüz
+stage edilmemiş, ignore edilmeyen kaynak da sınanır. Klasör değiştirerek
+ya da farklı import sözdizimiyle sınır geçilemez.
 
-Bridge rolleri:
+## Saf mekanizmalar
 
-- `createVolGame.ts`: oyun boot ve renderer seçimi
-- `ViewportManager.ts`: Phaser Scale/kamera adaptasyonu
-- `core/src/phaser/entities/`: Phaser GameObject tabanlı entity adaptörleri
-- `core/src/phaser/input/`: Phaser keyboard/pointer sağlayıcıları
-- `core/src/phaser/rig/assembleRig.ts`: saf rig tanımını Phaser container/image ağacına kurma
-- `core/src/phaser/poseSource.ts`: Phaser nesnelerini Phaser'sız `fx` poz kaynağı sözleşmesine bağlama
+Phaser'da benzeri bulunan bazı mekanizmalar kendi uygulamasını taşır;
+bunlar Phaser import etmez. PHASER_REPLACEMENTS gerekçe kaydı yeni bir
+replacement'ı bilinçli mimari karar olarak görünür yapar.
 
-Rig layout hesabı `core/src/rig/partLayout.ts` içinde saf TypeScript'tir.
-Derece-radyan dönüşümü ve ebeveyn-yerel koordinat hesabı Phaser.Math
-kullanmaz. Yalnızca scene, texture ve GameObject montajı bridge tarafındadır.
-
-## AST tabanlı kapı
-
-Workspace contract, repo tarafından zaten kullanılan TypeScript parser'ıyla
-şu biçimlerin tamamını tarar:
-
-- normal ve type-only `import`
-- `export ... from`
-- sabit `import()`
-- `require()`
-
-Tarama tracked dosyaların yanında henüz `git add` yapılmamış, ignore
-edilmeyen yeni TypeScript dosyalarını da görür. Root kaynak dosyası, yasak
-klasör importu, ledger dışı yeni bridge, bayat bridge ve geçerli bridge
-fixture testleriyle ayrı ayrı sınanır.
-
-## Bilinçli replacement yetenekleri
-
-Bazı CORE mekanizmaları Phaser'da benzer bir yüzey olmasına rağmen kendi
-uygulamasını taşır. Bunlar bridge değildir ve Phaser import etmez. Exact
-gerekçe kaydı `PHASER_REPLACEMENTS` içindedir:
-
-| Alan   | Gerekçe                                                     |
-| ------ | ----------------------------------------------------------- |
-| audio  | Adaptive stem, sidechain ve tek AudioContext yaşam döngüsü  |
-| events | Tipli olay/yük sözleşmesi ve abone hata izolasyonu          |
-| math   | Phaser kurulmadan headless çalışma ve sonlu sayı sözleşmesi |
-| pool   | GameObject olmayan değerler için generic havuz              |
-| random | Tohumlanabilir, state aktarılabilir deterministik akış      |
-| time   | Sahne döngüsünden bağımsız sabit adım ve catch-up sınırı    |
-
-Yeni replacement eklemek public bir mimari karardır; gizli bir Phaser importu
-eklemek değildir.
+| Alan   | Sözleşme gerekçesi                                       |
+| ------ | -------------------------------------------------------- |
+| audio  | Ortak AudioContext ömrü, adaptive stem ve sidechain      |
+| events | Tipli payload ve dinleyici hata izolasyonu               |
+| math   | Headless kullanım ve sonlu sayı sözleşmesi               |
+| pool   | GameObject olmayan değerlerde generic sahiplik           |
+| random | Tohum ve state aktarımıyla deterministik akış            |
+| time   | Sahne döngüsünden bağımsız sabit adım ve catch-up sınırı |
 
 ## Renderer
 
-`createVolGame({ renderer })` renderer isteğini açıkça Phaser config'ine
-yazar. Varsayılan `auto`, WebGL kurulamadığında Canvas'a düşebilir; bu durum
-diagnostics snapshot, overlay, konsol ve device benchmark tarafında
-`fellBack` olarak görünür. `webgl` isteği fallback kabul etmez.
+`createVolGame` renderer isteğini config'e açık yazar. Varsayılan auto
+WebGL kurulamadığında Canvas'a düşebilir. Geri düşüş diagnostics snapshot,
+overlay ve cihaz ölçümünde görünür; başarılı WebGL ile aynı kabul edilmez.
+Açık webgl isteği fallback kabul etmez. Phaser sürümünün yeteneği kaynak,
+gerçek boot ve hedef cihazla birlikte doğrulanır.

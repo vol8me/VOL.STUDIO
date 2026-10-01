@@ -1,56 +1,46 @@
-# pen.dev
+# @volstudio/pen.dev
 
-VOL.STUDIO'nun tasarım kaynağı ve **export/gönderim** hattı: bir Pencil canvas
-dosyası (`pen/entities.pen`), ondan çıkan parça görselleri (`exported/`) ve
-bu çıktıyı doğrulayıp tüketicisine gönderen araç.
-
-**Build-time bir araçtır.** Hiçbir oyunun bundle'ına girmez, Phaser'a bağımlı
-değildir ve tüketen paketlerde `devDependencies` altında durur. Rig'i çalışma
-zamanında okuyan katman burada değil, `@volstudio/core/rig`dedir: bu paket
-ÜRETİR ve GÖNDERİR, CORE tüketir.
-
-[English](README.en.md)
+Pencil tasarım kaynağından rig parça görselleri ve metadata üreten,
+doğrulayıp tüketiciye gönderen build aracı. Phaser bağımlılığı ve oyun
+çalışma zamanı kodu taşımaz. Oyunun runtime rig yüzeyi CORE'dadır.
 
 ## Akış
 
-```bash
-# 1. Pencil'den çıkan staging'i entity düzenine taşı ve metadata yaz
-node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
+Pencil kaynağına yalnız MCP araçları erişir. Native Export staging üretir;
+paketin düzenleyicisi staging'i entity ağacına dönüştürür, ardından gönderim
+metadata ile gerçek diski birlikte doğrular.
 
-# 2. Tüketici oyun doğrulanmış export'u kendi rig senkron betiğiyle alır
+Paket dizininden:
+
+```bash
+node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 ```
 
-`exported/` bir ARA çıktıdır ve oyunun build'i onu doğrudan okumaz — ama
-silinebilir değildir: repodan yeniden üretilemez, bu yüzden commit'lenir.
+Tüketici kendi senkron betiğiyle doğrulanmış metadata ve parça assetlerini
+kendi paketine alır. Gönderim sırasında yollar yeniden yazılır, çalışma
+zamanı için gerekmeyen previews çıkarılır ve hedef fazlalıkları temizlenir.
 
-Gönderim **doğrulanmamış bir export'u kopyalamaz**: metadata'da yazılı ama
-diskte olmayan bir parça da, diskte olup metadata'da geçmeyen bir dosya da
-hatadır. Hedefte kalan fazlalıklar silinir.
+## Sahiplik ve yüzey
 
-Oyunda tüketimi ve eklem şeması sözleşmesi için [DESIGN.md](DESIGN.md).
+`pen/entities.pen` yazarlık kaynağıdır. `exported/` Pencil adımı gerektiren
+ara çıktıdır ve commit edilir; oyun build'i onu doğrudan okumaz. Gönderilmiş
+metadata ve statik parçalar tüketici paketinin build girdisidir.
 
-## Paket yüzeyi
+| Fonksiyon               | Sözleşme                                                     |
+| ----------------------- | ------------------------------------------------------------ |
+| `auditRigExport`        | Eksik/yetim parça ve metadata farklarını toplar              |
+| `verifyRigExport`       | Aynı farklar varsa gönderimi reddeder                        |
+| `syncRigExport`         | Doğrulanmış export'u tüketicinin sahipliğine kopyalar        |
+| `auditShippedRig`       | Gönderilmiş metadata ile statik asset dizinini karşılaştırır |
+| `resolveRigExportPaths` | Export referansını doğrulanacak dosya yollarına çözümler     |
 
-| Fonksiyon               | İş                                                               |
-| ----------------------- | ---------------------------------------------------------------- |
-| `auditRigExport`        | Metadata ↔ disk farkını **toplar** (eksik parça, yetim dosya)   |
-| `verifyRigExport`       | Aynı denetim; fark varsa **fırlatır** — yayımlanabilirlik kapısı |
-| `syncRigExport`         | Doğrulanmış export'u tüketicinin sahipliğine kopyalar            |
-| `auditShippedRig`       | Gönderilmiş metadata ↔ statik dizin farkı                       |
-| `resolveRigExportPaths` | Export referansını mutlak dosya yollarına çevirir                |
-
-`auditRigExport` bilinçli olarak fırlatmaz: bozuk bir export'ta eksiklerin
-tamamı tek turda görülsün diye. `verifyRigExport` bir kapıdır ve ilk farkta durur.
-
-## Test
+## Doğrulama
 
 ```bash
+pnpm --filter @volstudio/pen.dev typecheck
 pnpm --filter @volstudio/pen.dev test:coverage
 ```
 
-Testler gerçek bir geçici dizinde koşar; `fs` mock'lamak burada yanlış olurdu —
-doğrulanan şey tam olarak "diskte ne var, metadata ne diyor" farkıdır.
-
-## Lisans
-
-[Apache License 2.0](../../LICENSE)
+Disk sözleşmesi gerçek geçici dizinde sınanır. `.pen` erişimi ve native
+export için [AGENTS.md](AGENTS.md), koordinat ve gönderim ayrıntıları için
+[DESIGN.md](DESIGN.md).

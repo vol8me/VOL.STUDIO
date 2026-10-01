@@ -1,820 +1,292 @@
 # CORE primitifleri
 
-CORE'un **katman 1**'i: sunumdan bağımsız, doğrudan alınıp kullanılan parçalar.
+Primitifler işiyle tanımlanır; tüketicinin oyun kuralını bilmez. Mekanizma
+sunumdan bağımsızdır, sunum durumu çizer ve niyet bildirir, yaygın kurallar
+opt-in tarifte yaşar. Public yüzey paket `exports` haritasıdır.
 
-Her primitif yaptığı işle tanımlanır — nerede kullanılacağıyla değil. Hangi
-oyunun neye ihtiyacı olduğu CORE'un kararı değildir.
+## Sayı, ad ve yokluk sözleşmesi
 
-## Sonlu sayı sözleşmesi
+Yapılandırmanın sonlu olmayan sayısı sınırda reddedilir; akışın bozuk delta
+örneği durumu kirletmeden yoksayılır. `requireFinite` ve `finiteOr` bu iki
+politikanın karşılığıdır. Sessiz düzeltme yapılandırma hatasını gizlemez.
 
-Her primitif dış dünyadan gelen sayıyı **sınırda** doğrular. `NaN`/`Infinity`
-bir kez duruma girdiğinde her aritmetiği kirletir ve kaynağı çok sonra,
-tamamen ilgisiz bir yerde fark edilir.
+`get` durumu okur, `create` değer üretir, `is`/`has`/`should` boolean sorudur.
+Manager kaynak kümesini, Controller tek davranışı koordine eder. Kısaltma
+aynı yüzeyde tek yazım taşır.
 
-İki politika vardır ve seçim bilinçlidir:
+`undefined` arama ya da seçim yokluğudur; `null` hesaplanmış sonuç yokluğudur.
+Örneğin boş kap `undefined`, aranan yolun bulunamaması `null` döndürür.
+Çağıran yokluk anlamını kendiliğinden değiştirmez.
 
-| Politika                     | Nerede                                                                  | Neden                                                                           |
-| ---------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Reddet** (`requireFinite`) | Yapılandırma: `new Cooldown(ms)`, `breakMs`, `cellSize`, kaynak miktarı | Bozuk değer çağıranın hatasıdır; sessizce düzeltmek onu kullanıma kadar erteler |
-| **Yoksay** (`finiteOr`)      | Akış: `update(deltaMs)`                                                 | Tek bozuk kare yüzünden oyunu durdurmak orantısız olurdu                        |
+## Simülasyon ve rastgelelik
 
-`core/tests/governance/numericContract.test.ts` bunu kapıda doğrular.
-
-## Simülasyon saati — determinizm bir SEÇİMDİR
-
-`SimulationClock` render frame süresini sabit simülasyon adımlarına böler.
-Sabit adıma sığmayan ARTIK dilimin ne olacağı tek sözleşme kararıdır ve
-`partialStep` ile açıkça verilir:
-
-| Politika     | Davranış                                          | Bedeli                                                       |
-| ------------ | ------------------------------------------------- | ------------------------------------------------------------ |
-| `'simulate'` | Artık, değişken uzunlukta bir adım olarak koşulur | Aynı girdi farklı render hızında FARKLI sonuç verir          |
-| `'defer'`    | Artık biriktiricide bekler; yalnız tam adım       | Bir adıma kadar girdi gecikmesi; render interpolasyonu ister |
-
-**Varsayılan `'simulate'`** ve bu bilinçlidir: doğrudan oynanan bir sahnede 60
-FPS üstü girdi tepkisini bir sonraki adıma ertelemek hissedilir. Bedeli
-`SimulationClockFrame.partialStepMs` olarak her frame'de RAPORLANIR.
-
-**`'defer'`**, sonucun frame temposundan bağımsız olması gerektiğinde seçilir:
-ölçüm, tekrar oynatma, headless simülasyon. Bu kipte render'ın kesik
-görünmemesi için `getInterpolationAlpha()` önceki ve güncel durum arasında ara
-değer hesaplamayı sağlar.
-
-Sınır ölçülüdür: `core/tests/time/SimulationClock.test.ts` aynı toplam sürenin
-60 ve 120 FPS temposunda `'defer'` ile AYNI, `'simulate'` ile FARKLI çizelge
-ürettiğini kilitler.
-
-## Deterministik rastgelelik
+`SimulationClock` render delta'sını sabit adımlara böler. Varsayılan
+`partialStep: 'simulate'` artık süreyi değişken adım olarak işler; hızlı
+tepki sağlar, sonuç render temposundan bağımsız değildir. `'defer'` yalnız
+bütün adımı işler, artığı biriktirir; replay ve headless simülasyon için
+seçilir. `getInterpolationAlpha()` iki simülasyon durumu arasında render
+ara değerini sağlar. Frame raporu gerçek partial step miktarını taşır.
 
 ### `createStatefulRandom`
 
-`createRandom` ile aynı bit dizisini üretir; ek olarak 32-bit iç durumu
-`getState()` ile verir ve `setState()` ile geri yükler. Böylece kayıt, tekrar
-oynatma ve uzun bir üretim işini sürdürme, rastgele sayı dizisini baştan
-tüketmeye bağlı kalmaz. Durum `0` dâhil bütün 32-bit değerleri kabul eder;
-`NaN` ve sonsuz değerler sınırda reddedilir.
+`createRandom` ile aynı diziyi üretir; `getState` ve `setState` ile 32-bit
+akış yakalanıp geri yüklenir. Sıfır geçerli durumdur, sonlu olmayan durum
+reddedilir. Snapshot sınırını ve isimli oyun akışlarını tüketici belirler.
 
-Durumun NE ZAMAN yakalanacağı tüketicinin işlem sınırıdır. CORE isimli rastgele
-akışlar veya oyun alanı kimlikleri üretmez.
-
-## Kalıcılık koordinasyonu
+## Kalıcılık
 
 ### `AutosaveCoordinator`
 
-Periyodik ve uygulama arka plana geçerken alınan anlık görüntüleri tek yazım
-kuyruğunda toplar. Bir yazım sürerken gelen ara değerler diske sırayla
-yığılmaz; bekleyenlerin en günceli yazılır ve bütün çağıranlar o yazımın
-sonucunu alır. `stop()` yeni tetikleri kapatır. Uygulama kapanmadan son değerin
-gerçekten yazıldığını bilmesi gerekiyorsa `flushAndDispose()` beklenir.
-
-`capture` ve `save` tüketici bağımlılıklarıdır; CORE dosya biçimini, storage
-backend'ini veya kayıt sıklığının ürün politikasını bilmez.
-`capture()` sonucunun `null` olması başarısızlık değil geçerli bir generic
-değerdir; capture hatası yalnızca exception ile bildirilir.
+Anlık görüntüyü periyodik ve arka plan tetiklerinde seri yazıma toplar.
+Yazım sürerken ara snapshotlar birikmez; bekleyen en güncel değer yazılır.
+`capture` ve `save` tüketicinindir. `null` geçerli generic değerdir; capture
+başarısızlığı exception ile bildirilir. `stop` yeni tetikleri kapatır;
+terminal dayanıklılık için `flushAndDispose` beklenir.
 
 ### `PersistedObservableState`
 
-Kopyalanabilir bir state için yükleme, abonelik, isteğe bağlı debounce ve seri
-son-değer-kazanır yazım sağlar. `parse`, `clone`, varsayılan değer ve eşitlik
-politikası zorunlu olarak tüketicide kalır; bu sınıf bozuk verinin nasıl
-onarılacağına veya bir ayarın ne anlama geldiğine karar vermez.
+Yükleme, abonelik, debounce ve seri son-değer-kazanır yazım sağlar. Parse,
+clone, varsayılan ve eşitlik politikası tüketicinindir. `set` değeri,
+`update` fonksiyonu ayrı alır; fonksiyon geçerli state olduğunda belirsizlik
+oluşmaz. Bellek ve dinleyiciler eşzamanlı, kalıcılık Promise ile güncellenir.
 
-`set(value)` doğrudan değeri, `update(fn)` mevcut snapshot'tan üretilen değeri
-belleğe ve dinleyicilere eşzamanlı uygular. Ayrı metotlar, fonksiyonun da
-geçerli bir `T` olabildiği generic durumda değer/updater belirsizliğini önler.
-Dönen Promise ilgili kalıcılık işini izler.
+`dispose` senkron ve idempotenttir; debounce değerini writer'a verir,
+Promise'leri açıkta bırakmaz fakat disk dayanıklılığı vaat etmez. `get`
+son snapshot'ı okumaya devam eder. `flushAndDispose` kuyruğun boşalmasını
+bekleyen terminal bariyerdir.
 
-`dispose()` senkrondur ve idempotenttir: yeni işlemleri kapatır, bekleyen
-debounce değerini writer'a teslim eder ve daha önce verilmiş Promise'leri açıkta
-bırakmaz; fakat diskte dayanıklılık garantisi vermez. `get()` final snapshot'ı
-okumaya devam eder. Terminal dayanıklılık bariyeri `flushAndDispose()`dur;
-pending değeri kuyruğa alır ve writer tamamen idle olana kadar bekler.
+## Zaman
 
-## Phaser sınırı
-
-CORE bir katmandır, motor değil: renderer'ı Phaser yazar. Bu sınırın nasıl
-korunduğu, hangi modülün Phaser karşısında hangi duruşta olduğu ve yerine
-geçilen altı alt sistemin gerekçesi ayrı bir belgede:
-[phaser-boundary.md](phaser-boundary.md).
-
-## Adlandırma sözleşmesi
-
-Tüketici bir adı GÖRMEDEN tahmin edebilmeli. Yüzeyde üç kural geçerlidir:
-
-| Kalıp                      | Ne zaman                           | Örnek                                                             |
-| -------------------------- | ---------------------------------- | ----------------------------------------------------------------- |
-| `get*`                     | O anki durumu okur, yan etkisi yok | `getAppVisibility`, `getHapticsCapability`, `getBackHandlerCount` |
-| `create*`                  | Yeni bir değer/nesne üretir        | `createRandom`, `createIdleActions`, `createIdleSnapshot`         |
-| `is*` / `has*` / `should*` | Boolean soru                       | `isFiniteNumber`, `hasTouchInput`, `shouldUseTouchControls`       |
-
-**Rol sonekleri ayrımı taşır:**
-
-- **`*Manager`** bir KÜMEYİ sahiplenir ve koordine eder — `InputManager`
-  (sağlayıcılar), `FontManager`, `SaveManager`, `ToastManager`.
-- **`*Controller`** TEK bir şeyi sürer — `PinchZoomController` (bir jest),
-  `FullscreenController` (bir API), `CanvasViewportController` (bir tuvalin
-  kamerası).
-
-`ViewportManager` ile `CanvasViewportController` bu yüzden çelişmez: ilki
-oyunun global ölçek/DPR politikasını sahiplenir, ikincisi bir editör tuvalinin
-kamerasını sürer.
-
-**Kısaltmalar TEK yazımlıdır** ve büyük harf kalır: `XP`, `PC`, `UI`, `DPR`.
-`applyXpGain` gibi bir karışım, aynı kavramın iki adı olduğu izlenimi verir.
-
-## Yokluk sözleşmesi — `undefined` mı `null` mı?
-
-Bir tüketicinin ezberleyebileceği TEK kural olmalı; her metodun kendi seçimini
-belgelemesi yetmez, çünkü çağıran o metodu okumadan `?.`/`??` yazar.
-
-| Değer       | Anlamı                                                                         | Örnek                                                                                                   |
-| ----------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `undefined` | **Yokluk.** Arama boşa düştü, kap boş, seçim yapılmamış, sağlayıcı aktif değil | `Grid.get`, `Deck.draw`, `MinHeap.pop`, `Select.getValue`, `getLeftStick`                               |
-| `null`      | **Hesaplanmış yokluk.** İşlem koştu ve sonucun var OLMADIĞINI kanıtladı        | `findPath.find` (yol yok), `SpatialIndex.findNearest` (yarıçapta yok), `FlowField.getNext` (ulaşılamaz) |
-
-Ayrım pratikte şu soruya iner: **çağıran bir hesap ısmarladı mı?** Ismarladıysa
-`null` bir CEVAPTIR ("aradım, yok"). Ismarlamadıysa `undefined` bir yokluktur.
-
-`undefined` varsayılandır çünkü dilin kendisiyle bileşir: `Array.at`, `Map.get`,
-opsiyonel alanlar ve `?.` hep onu üretir. Sınırda `?? null` yazmak zorunda kalan
-bir tüketici, sözleşmenin kaydığının işaretidir.
-
-## CORE'un üç katmanı
-
-| Katman        | Ne yapar                                     | Örnek                                       |
-| ------------- | -------------------------------------------- | ------------------------------------------- |
-| **Mekanizma** | Sunumdan bağımsız, oyun kelimesi bilmez      | `Scheduler`, `StateMachine`, `SpatialIndex` |
-| **Sunum**     | Durumu çizer, niyet bildirir — kural taşımaz | `Bar`, `SkillTree`, `ShopPicker`            |
-| **Tarif**     | Yaygın kuralı hazır verir — ama **opt-in**   | `resolveSkillStates()`, `applyXPGain()`     |
-
-Ayrımın sebebi somuttur: bir kural sunum bileşeninin içinde yaşarsa bileşen
-kendi defterini tutar ve tüketicinin kendi sistemiyle **kayar**. `XPBar` bir
-dönem seviye hesabını kendi yapıyordu; onu tüketen oyun kullanmayı reddedip
-yalnızca `setState()` çağırdı — kural CORE'da dururken tek çalıştıranı showcase
-demosu kaldı.
-
-Tarif katmanı bu yüzden **silinmiş bir kural değil, taşınmış bir kuraldır**:
-yaygın davranış hazır durur, tek satırda çağrılır, ama hiçbir bileşen onu
-arkanda varsaymaz.
-
-## Zamanlama
-
-Üçü de delta-time ile sürülür: `update()` çağrılmadıkça zaman akmaz. Tarayıcı
-zamanlayıcılarından farkı budur — duraklatılmış bir çalıştırmada hiçbiri
-ilerlemez.
+Bu mekanizmalar delta ile ilerler; `update` çağrılmadan zaman akmaz.
+Duraklatma tüketicinin güncelleme akışını durdurmasıyla uygulanabilir.
 
 ### `Scheduler`
 
-Gecikmeli ve tekrarlı işler. Deterministiktir: aynı delta dizisi aynı
-tetiklenme sırasını üretir.
-
-**Yeniden giriş reddedilir:** bir callback içinden `update()` çağrılırsa çağrı
-yok sayılır ve `false` döner. Aksi halde iç çağrı zamanı bir kez daha ilerletir
-(ölçüldü: tek 10ms'lik kare içinde aynı iş üç kez çalışıyordu) ve "yayın
-sırasında eklenen iş bu turda çalışmaz" garantisini kırar.
-
-```ts
-const scheduler = new Scheduler({ maxCatchUp: 32 });
-const cancel = scheduler.every(2000, tick);
-scheduler.after(500, once);
-
-scheduler.update(deltaMs);
-```
-
-Uzun bir karede birikmiş tetiklenmeler **atlanmaz** (aksi halde kare
-düşmelerinde mantık gerçek zamandan geri kalır) ama **sınırsız da değildir**:
-donmuş bir sekmeden dönen tek dev delta, 1ms periyotlu bir işi yüz binlerce kez
-çağırıp kareyi kilitlerdi. `maxCatchUp` aşılınca kalan borç düşülür ve
-`onCatchUpLimit` ile bildirilir.
+Gecikmeli ve tekrarlı işleri aynı delta dizisinde aynı sırayla yürütür.
+Callback içinden yeniden `update` reddedilir. Uzun karede catch-up sınırlıdır;
+`maxCatchUp` aşılınca kalan borç düşer ve `onCatchUpLimit` bildirilir. Yayın
+sırasında eklenen iş aynı turda çalışmaz.
 
 ### `Cooldown`
 
-Bir işlemin yeniden yapılabilir olmasına kalan süre.
-
-```ts
-const cd = new Cooldown(250);
-if (cd.tryTrigger()) act(); // kontrol + tetikleme tek çağrıda
-bar.setValue(cd.getProgress()); // [0,1]
-cd.setDuration(180); // devam eden bekleme KISALIR
-cd.update(deltaMs);
-```
-
-`tryTrigger` tek çağrıdır: kontrol ve tetikleme ayrı adımlar olsaydı araya
-giren bir çağrı ikisinin arasında beklemeyi tüketebilirdi.
+Yeniden kullanılabilirliğe kalan süreyi ve ilerlemeyi tutar. `tryTrigger`
+kontrol ile tetiklemeyi tek çağrıda yapar. `setDuration` devam eden beklemeyi
+kısaltabilir; ilerleme 0–1 aralığındadır.
 
 ### `RoundLoop`
 
-Ardışık turlar ve aralarındaki mola. Toplam tur sınırı opsiyoneldir; verilmezse
-sonsuz sürer.
-
-```ts
-const loop = new RoundLoop({
-  breakMs: 5000,
-  totalRounds: 20,
-  onRoundStart: (round) => begin(round),
-  onComplete: () => finish(),
-});
-loop.start(); // İLK tur hemen başlar, mola aralarda
-
-loop.update(deltaMs);
-loop.getRound();
-loop.getRemainingMs();
-loop.skipBreak(); // molayı atla
-```
+Ardışık tur ve aradaki molayı yürütür. İlk tur `start` ile hemen başlar;
+`totalRounds` yoksa sürer, `skipBreak` aradaki molayı geçer. Turun ürün
+anlamı ve bitiş işlemi callback üzerinden tüketicidedir.
 
 ### `Clock`
 
-Duraklatılabilir, ölçeklenebilir geçen-zaman sayacı. "İçeride geçen zaman"ı
-okuyan her yer gerçek zamanı değil bunu okumalıdır.
+Duraklatılabilir ve ölçeklenebilir geçen süreyi tutar. Ölçek sıfırsa donar.
+Simülasyon içindeki süre bu sayaçtan, duvar saati ayrı kaynaktan alınır.
 
-```ts
-const clock = new Clock();
-clock.setScale(0.5); // yavaş çekim; 0 = dondur
-clock.update(deltaMs);
-clock.getElapsedSeconds();
-```
-
-## Durum
+## Durum ve olay
 
 ### `StateMachine`
 
-Tipli sonlu durum makinesi. Boolean bayrak birleşimlerinin
-(`isPaused && isFinishing`) aksine geçersiz durumu **temsil edilemez** kılar.
-
-```ts
-const machine = new StateMachine<'draft' | 'review' | 'done'>({
-  initial: 'draft',
-  states: {
-    draft: { transitions: ['review'], onEnter: () => prepare() },
-    review: { transitions: ['done'], onUpdate: (dt) => tick(dt) },
-    done: { transitions: [] }, // terminal
-  },
-  onRejected: (from, to) => console.warn(`geçersiz geçiş: ${from} → ${to}`),
-});
-```
-
-`transitions` verilmezse her geçiş serbesttir; boş dizi durumu terminal yapar.
-Kanca sırası `onExit` → durum değişimi → `onEnter`; `onEnter` içinde
-`getState()` YENİ durumu görür.
-
-**Kanca hatası:** bir kanca fırlatırsa makine kaynağa döner ve hata yeniden
-fırlar. Bu geri alma **tam değildir ve olamaz** — `onEnter` fırlamışsa
-`onExit(from)` zaten çalışmıştır, yani makine `from`'da görünürken `from`'un
-çıkış temizliği yapılmıştır. Yırtık durum kaçınılmaz; seçenek yalnızca hangi
-yarısında durulacağı. Doğru çözüm çağırandadır: `onEnter` istisna-güvenli
-yazılmalı ya da `onTransitionError` ile bilinçli bir kurtarma yapılmalıdır.
+Tipli geçiş kümesi kullanır. Geçiş listesi yoksa bütün geçişler serbest,
+boş liste ise terminaldir. Sıra `onExit`, durum değişimi, `onEnter`dir;
+onEnter yeni durumu okur. Kanca fırlarsa state kaynağa döner fakat dış
+etkiler geri alınamaz. İstisna güvenliği ve `onTransitionError` kurtarması
+tüketicinindir.
 
 ### `ResourcePool`
 
-Tipli sayaç cüzdanı. Kaynak kümesini **tüketici** tanımlar —
-`StatBlock<TStat>` ile aynı sözleşme.
-
-```ts
-const wallet = new ResourcePool<'a' | 'b'>({ a: 100, b: 5 }, { b: 10 });
-
-if (wallet.spend({ a: 50, b: 2 })) commit();
-```
-
-`spend` **ya hepsi ya hiçbiri**: bir kalem yetmezse hiçbiri düşmez. Kısmi
-harcama geri alınamaz bir ara duruma yol açardı.
+Tüketicinin tanımladığı kaynak kümesinde toplu harcama atomiktir. Bir kalem
+yetersiz ise hiçbir kalem düşmez; kapasite ve kaynak adları oyun kuralı olarak
+CORE'a gömülmez.
 
 ### `EventBus`
 
-Tipli yayın/abone. Olay kümesini tüketici tanımlar.
+Tipli olay ve payload taşır. Bir dinleyicinin hatası kalanlarını durdurmaz.
+Yayın sırasında abonelik değişimi mevcut yayını bozmaz. Aboneliğin kaldırma
+fonksiyonu tüketicinin yaşam döngüsüne bağlanır.
 
-```ts
-interface Events {
-  changed: { total: number };
-  ended: void;
-}
-
-const bus = new EventBus<Events>();
-const off = bus.on('changed', ({ total }) => hud.set(total));
-bus.emit('changed', { total: 120 });
-```
-
-Yayıncının dinleyicileri tanımaması, bir çıktıya yeni tüketici eklemeyi
-yayıncıya dokunmadan mümkün kılar. Bir dinleyicinin hatası kalanları durdurmaz;
-yayın sırasında yapılan abonelik değişiklikleri o yayını bozmaz.
-
-## Uzam
+## Izgara ve uzam
 
 ### `Grid`
 
-Sabit boyutlu, ayrık 2B ızgara. `SpatialIndex`ten farkı ölçek değil MODEL:
-`SpatialIndex` sürekli uzayda "yakınımda ne var", `Grid` ayrık hücrelerde "şu
-hücrede ne var" sorusunu yanıtlar.
+Ayrık 2B hücre kapıdır. Sınır dışı yazım `false`, okuma `undefined`
+döndürür. Komşu dizi üreten yol tahsis yapar; `forEachNeighbour` sıcak yol
+alternatifidir. `toWorld` hücre merkezine dönüştürür.
 
-```ts
-const grid = new Grid<T>(cols, rows);
-grid.set(col, row, value); // sınır dışı → false, sessiz taşma yok
-grid.get(col, row); // sınır dışı → undefined
-grid.neighbours(col, row, DIAGONAL_NEIGHBOURS); // dizi + nesne tahsis eder
-grid.forEachNeighbour(col, row, (c, r) => {}); // tahsis-sız, sıcak döngüler için
-grid.forEach((value, col, row) => {}); // koordinat SAYI — aliasing imkânsız
-grid.toCell(x, y, cellSize);
-grid.toWorld(col, row, cellSize); // hücre MERKEZİ
-```
+### `findPath`
 
-### `findPath` (A\*)
-
-Izgara üzerinde en kısa yol. Izgaranın içeriğini bilmez: geçilebilirlik ve
-maliyet çağırandan gelen fonksiyonlardır.
-
-Aynı ızgarada tekrar tekrar arama yapılacaksa `PathFinder` kullanılır:
-tamponları bir kez ayırır ve her aramada damga (generation) tekniğiyle
-"temizler", yani hazırlık O(1) olur. `findPath` her çağrıda üç typed array
-tahsis eder — tek seferlik aramada görünmez, çok sayıda birim her kare yol
-arattığında GC takılmaları başlar.
-
-```ts
-const finder = new PathFinder(cols, rows);
-finder.find(start, goal, options);
-
-// tek seferlik:
-const path = findPath({ cols, rows }, start, goal, {
-  isWalkable: (p) => !blocked.has(key(p)),
-  cost: (p) => terrainCost(p),
-  neighbours: DIAGONAL_NEIGHBOURS,
-});
-```
-
-Sezgisel komşuluğa göre seçilir (dört yönde Manhattan, çaprazda Chebyshev);
-sezgiselin gerçek maliyeti aşmaması A\*'ın en kısa yol garantisinin koşuludur.
-Çapraz adım maliyeti √2 sayılır, yoksa yol çaprazlara çarpılırdı.
+A* geçilebilirlik ve maliyeti tüketiciden alır. Tek arama için fonksiyon,
+tekrarlanan arama için tamponları yeniden kullanan `PathFinder` seçilir.
+Sezgisel gerçek maliyeti aşmadığında en kısa yol garantisi vardır. Komşuluk
+ve çapraz adım maliyeti aynı modelle seçilir.
 
 ### `FlowField`
 
-TEK hedefe giden ÇOK birim için. `findPath` bir başlangıçtan bir hedefe arar
-(N birim = N arama); `FlowField` hedeften geriye tek bir Dijkstra taraması
-yapar ve her hücre için "buradan hangi komşuya" bilgisini üretir. 10 birim de
-5000 birim de aynı alanı okur.
+Çok birimin aynı hedefe yönelmesi için hedeften geriye Dijkstra alanı kurar.
+`getNext` ulaşılamaz hücrede `null`, `getCost` sonsuz maliyet verir.
+`compute` tam yeniden hesaplar; incremental dirty repair yüzeyi yoktur.
+Hedef değişince bütün alan geçersizdir. Az birim ve sık hedef değişiminde
+A* farklı maliyet/iş modeli sunar.
 
-```ts
-const field = new FlowField(cols, rows);
-field.compute([goal], { isWalkable, cost });
+Doğru ve görüş `bresenhamLine` ile `hasLineOfSight` üzerindedir. Hücre uçları
+ve engel sayma politikası açık parametreyle seçilir.
 
-field.getNext(col, row); // hedefe doğru komşu; ulaşılamıyorsa null
-field.getCost(col, row); // toplam maliyet; ulaşılamıyorsa Infinity
-field.traceFrom(col, row); // tam yol (alan hazır olduğu için ucuz)
-```
+### `SpatialIndex`
 
-Bedeli: tüm ızgara taranır ve hedef değişince yeniden hesaplanır. Az birim ya
-da sık değişen hedefte A\* daha ucuzdur — ikisi rakip değil, farklı sorulara
-verilen cevaplardır.
+Sürekli uzayda hücre bazlı yakını sorgular. `rebuild` kümeyi baştan kurar,
+`refresh` aynı kümenin konumlarını günceller, `update` tek nesneyi taşır.
+Listeden tamamen çıkan nesne yalnız konum yenilemesiyle temizlenmez;
+doğum/geri dönüşüm sınırında rebuild gerekir.
 
-**Kısmi/dirty yeniden hesap yok — bilinçli.** `compute()` her çağrıda ızgarayı
-sıfırlayıp baştan tarar. Ölçüldü (200×200, engelsiz): **13,7 ms/çağrı**, yani
-tek yeniden hesap bir karenin tamamını yer. Gevşek-silme atlaması eklendikten
-sonra da aynı kaldı — darboğaz yeniden genişletme değil, 40.000 hücrelik tam
-taramanın kendisi.
+`query` sabit 3×3 hücre penceresidir; yarıçap cellSize'ı aşarsa uygun değildir.
+`queryRadius` ve `queryBounds` açık bölgeyi tarar. `findNearest` hesaplanmış
+yokluğu `null` ile bildirir.
 
-Artımlı onarım (D\* Lite tarzı "raise & lower") bu sayıyı düşürür ama yalnız
-tek senaryoda: **hedef sabitken engellerin yerel olarak değişmesi.** Hedef
-değiştiğinde alanın tamamı zaten geçersizdir ve artımlı onarım tam taramadan
-pahalıya gelir. O senaryonun bugün tüketicisi yok; geldiğinde
-`markDirty(points)` + `repair()` olarak eklenmelidir.
-
-### Doğru ve görüş
-
-```ts
-bresenhamLine(from, to); // uçlar dahil, bitişik hücreler
-hasLineOfSight(from, to, { blocks }); // uç hücreler varsayılan olarak sayılmaz
-```
-
-Yalnızca tam sayı aritmetiği kullanır: kayan noktalı adımlarda uzun
-mesafelerde birikimli yuvarlama hatası doğruyu kaydırır ve iki uçtan çizilen
-aynı doğru farklı hücrelerden geçer.
+Sorgu sonucu dört girişli yeniden kullanılan tampon halkasındandır;
+sonraki sorgular eski sonucu değiştirebilir. Saklanan sonuç için çağıranın
+dizisine yazan `queryInto`/`queryRadiusInto` kullanılır. `queryStamp` ve
+`assertQueryValid` geçerlilik denetimi sağlar.
 
 ## Koleksiyonlar
 
 ### `RingBuffer`
 
-Sabit kapasiteli kayan pencere. Dizi + `shift()` yerine: `shift()` kalan tüm
-elemanları kaydırır (O(n)), halka tamponda ekleme/düşürme O(1).
-
-```ts
-const history = new RingBuffer<number>(60);
-const evicted = history.push(value); // dolduysa düşen öğeyi DÖNDÜRÜR
-```
-
-Düşeni döndürmesi, kayan bir toplam/ortalama tutan çağıran için gereklidir.
+Sabit kapasiteli kayan pencere. Ekleme ve düşürme sabit işlidir; `push`
+taşan öğeyi döndürür, çağıran kayan toplamı buna göre günceller.
 
 ### `Deck`
 
-Karılmış çekme yığını, iskarta ve yeniden karma ile. `WeightedPicker`den farkı:
-o her seferinde bağımsız bir zar atar, `Deck` sonlu bir yığından TEKRARSIZ
-çeker. "N çekişte her öğe en az bir kez" garantisini yalnızca ikincisi verir.
-
-```ts
-const deck = new Deck(items, random);
-deck.draw();
-deck.discard(item); // tükenince karılıp geri döner
-deck.putOnTop(item);
-```
-
-Fisher-Yates ile karar. `sort(() => rnd - 0.5)` yaygın ama yanlıştır:
-karşılaştırma tutarsız olduğu için sonuç sıralama algoritmasına bağlıdır ve
-dağılım düzgün değildir.
+Sonlu yığından tekrarsız çekme, iskarta ve yeniden karma sağlar. Fisher-Yates
+karması enjekte edilmiş RNG kullanır; bağımsız ağırlıklı seçimle aynı garanti
+değildir. Boş çekiş yokluk döndürür.
 
 ### `SlotContainer`
 
-Sabit sayıda slot, isteğe bağlı yığınlama, taşıma ve takas.
-
-```ts
-const bag = new SlotContainer<Item>({
-  size: 24,
-  isSameItem: (a, b) => a.id === b.id,
-  maxStack: (item) => item.stackSize,
-});
-
-const leftover = bag.add(item, 25); // KISMİ ekler, sığmayanı döner
-bag.swap(from, to); // aynı yığınlanabilir öğede TAKAS değil BİRLEŞTİRME
-```
-
-Yığınlama varsayılan olarak KAPALIDIR (`maxStack` 1): yığınlanamayan bir öğeyi
-yanlışlıkla bindirmek sessizce kopya üretirdi.
-
-## Performans
-
-### `ObjectPool`
-
-Sık doğup ölen kısa ömürlü nesneler. Amaç allocation'ı değil **çöp toplamayı**
-azaltmak: kare başına yüzlerce nesne, GC'yi görünür takılmalar üretecek
-sıklıkta tetikler.
-
-Havuz **sahiplik** takip eder: `acquire` edilmemiş bir nesnenin iadesi hata
-fırlatır. Aksi halde yabancı nesne havuza girer ve bir sonraki `acquire()` ile
-başka bir çağırana dağıtılırdı — iki sahip aynı örneği paylaşır.
-
-```ts
-const pool = new ObjectPool<T>({
-  create: () => new T(),
-  reset: (item) => {
-    item.ref = null;
-  }, // referansları BIRAK
-  prewarm: 64,
-  maxIdle: 256, // tepe anındaki şişme kalıcı olmasın
-});
-
-const item = pool.acquire();
-pool.release(item); // aynı örneği iki kez iade → hata
-```
-
-`reset` içinde referans bırakmak çağıranın sorumluluğudur: boşta duran bir
-nesne başkasına referans tutuyorsa o da serbest kalmaz.
-
-### `SpatialIndex`
-
-"Şu noktanın yakınında ne var?" sorusunu O(N)'den O(k)'ya düşürür.
-
-```ts
-const index = new SpatialIndex<T>(64, (t) => t.isActive);
-
-index.rebuild(items); // tüm dünyayı yeniden indeksle, O(N)
-index.refresh(items); // KÜME aynı, konumlar değişti — O(hücre değiştiren)
-index.update(item); // yalnızca değişeni bildir; hücre aynıysa false, iş yok
-
-index.query(x, y); // 3×3 hücre — YALNIZCA yarıçap ≤ cellSize iken doğru
-index.queryRadius(x, y, r); // her yarıçapta doğru, daireye göre filtreli
-index.queryBounds(x, y, w, h); // dikdörtgen bölge (negatif boyut normalize)
-index.findNearest(x, y, r, self); // en yakın, kendini hariç tutabilir
-
-index.queryInto(mine, x, y); // ÇAĞIRANIN dizisine yazar — süresiz saklanabilir
-index.queryRadiusInto(mine, x, y, r);
-```
-
-**Sonuç tamponu:** `query*` metodları 4'lük bir halkadan yeniden kullanılan dizi
-döner. Dördüncü sorgudan sonra halka devreder ve saklanan eski bir sonuç
-**uyarısız** başka bir sorgunun verisine dönüşür (ölçüldü: 5 sonuç tutulduğunda
-birincisi beşincinin verisi oluyordu). Sonucu saklaman gerekiyorsa `queryInto`
-kullan; teşhis için `queryStamp()` + `assertQueryValid(stamp)` bozulmayı
-gürültülü hâle getirir.
-
-**Sözleşme farkı önemlidir:** `query()` sabit 3×3 pencere tarar; arama yarıçapı
-`cellSize`'ı aşarsa uzaktaki varlığı **sessizce** kaçırır. Bu, ölçü
-değiştiğinde (menzil artıran bir etki, farklı birim tipi) ortaya çıkan ve fark
-edilmesi zor bir hatadır. Geniş arama için `queryRadius` kullanılır — taranacak
-hücre sayısını yarıçaptan hesaplar.
-
-İki model **aynı sonucu** verir (testle kilitli). Nesnelerin çoğu sabitse ve az
-sayıda öğe hareket ediyorsa artımlı model O(hareket eden)'e düşer; hepsi her
-kare hareket ediyorsa `rebuild` daha basittir.
-
-**`refresh` ikisinin arasıdır:** varlık KÜMESİ değişmeyip yalnız konumlar
-kaydığında (tipik "hareket ettir, sonra çarpışmayı çöz" sırası) `rebuild`
-indeksi boşaltıp her varlığı yeniden ekler — maliyet hareket etmemişlere de
-biner. `refresh` her varlık için `update` çağırır ve hücre değişmediğinde
-hiçbir iş yapmaz; pasif olanları indeksten düşürür. Listeden TAMAMEN çıkan bir
-varlığı yalnız `rebuild` temizler, o yüzden doğum/geri dönüşüm olan geçişte
-`rebuild` kullanılır.
-
-## Rastgelelik
+Sabit slot, opt-in yığın, taşıma ve takas sağlar. `add` kısmi ekler ve kalanı
+döndürür. Aynı yığınlanabilir öğenin takası birleştirebilir. Varsayılan
+maxStack birdir; benzerlik ve kapasite tüketicinindir.
 
 ### `WeightedPicker`
 
-Ağırlıklı seçim; deterministik `Random` ile çalışır, yani aynı tohum aynı
-diziyi üretir.
+Enjekte edilmiş RNG ile ağırlıklı seçim yapar. Sıfır ve negatif ağırlık aday
+olmaz; `pickUnique` tekrarsız seçimdir. Kaynağın adı ve oyun karşılığı generic
+value içinde tüketiciye aittir.
 
-```ts
-const picker = new WeightedPicker([
-  { value: a, weight: 9 },
-  { value: b, weight: 1 },
-]);
+### `ObjectPool`
 
-picker.pick(random);
-picker.pickUnique(random, 3); // tekrarsız
-```
+Kısa ömürlü nesnenin tahsis ve çöp toplama yükünü azaltır. Sahipliği izler;
+yabancı ya da iki kez iade edilen nesneyi reddeder. `reset` içinde tutulmuş
+referansları bırakmak tüketicinindir. `maxIdle` tepe yükünün kalıcı havuz
+boyutuna dönüşmesini önler.
 
-Sıfır/negatif ağırlık havuza girmez — "bu seçenek şu an kapalı" demenin doğal
-yolu ağırlığı sıfırlamaktır.
+## Geometri ve hareket
 
-## Geometri
+Geometri saf sayılar ve yapısal verilerle çalışır. `circlesOverlap`,
+`circleRectOverlap`, `pointInRect` ve `raycastCircles` renderer gerektirmez;
+raycast en yakın ileri isabeti seçer. Süpürülmüş temas için
+`segmentCircleEntryT` ilk 0–1 temasını verir. Birden çok adayda en küçük t
+seçilir; liste sırası sonucu değiştirmez.
 
-Saf sayılarla çalışır, hiçbir nesne tipi tanımaz.
-
-```ts
-circlesOverlap(a, b);
-circleRectOverlap(circle, rect); // KÖŞE temasını yakalar
-pointInRect(x, y, rect);
-raycastCircles(origin, direction, targets, maxDistance); // en YAKIN isabet
-```
-
-Karşılaştırmalarda `distanceSquared` kullanılır: kare kök, sonucu bir eşikle
-karşılaştırırken bilgi eklemez ama kare başına binlerce çağrıda maliyet üretir.
-
-`raycastCircles` ışının arkasındaki hedefleri eler — negatif izdüşüm,
-"arkamdaki hedefi vurdum" hatasının kaynağıdır.
-
-### İnterpolasyon
-
-```ts
-clamp(v, min, max);
-lerp(a, b, t); // t kelepçelenmez (ekstrapolasyon bilinçli)
-inverseLerp(a, b, v);
-remap(v, fromMin, fromMax, toMin, toMax);
-approach(current, target, maxDelta); // hedefi AŞMAZ, ona ULAŞIR
-damp(current, target, smoothing, deltaMs); // kare hızından BAĞIMSIZ
-wrap(v, min, max); // üst sınır dışlayıcı
-```
-
-`damp` ile naif `lerp` arasındaki fark önemlidir: `lerp(cur, target, 0.1)` her
-KAREDE aynı oranı uygular, yani 30 FPS ile 144 FPS'te farklı hızda yumuşatır ve
-his donanıma göre değişir. `damp` oranı delta ile üstel hesaplar.
-
-`approach` ise sabit hızla yaklaşır ve hedefe gerçekten ULAŞIR; `lerp` her
-karede kalan mesafenin bir kısmını kapattığı için teorik olarak hiç varmaz ve
-bir eşitlik kontrolü asla tutmaz.
-
-## Eklemli uzuvlar ve poz-türevi sunum
-
-CORE burada uzuv SÖZLÜĞÜ taşımaz: kaç bacak olduğunu, hangi parçanın gövde
-olduğunu tüketici bilir. Verilen şey mekanizmadır.
+`lerp` t değerini kelepçelemez; ekstrapolasyon geçerlidir. `approach` sabit
+adımla hedefe ulaşır, `damp` delta ile üstel yumuşatır. `wrap` üst sınırı
+dışlar. Kare başına sabit lerp oranı frame hızından bağımsız değildir.
 
 ### `Spring1D`
 
-Hız TAŞIYAN tek boyutlu yay-damper. `damp`ten farkı: `damp` hafızasız üstel
-yumuşatmadır ve hedefi asla aşmaz; yay geriden gelip oturur. Bir kare
-hitch'inde `deltaMs` kelepçelenir, yoksa hız terimi patlar.
+Hız taşıyan yay-damperdır; hedefi aşabilir. Uzun delta sınırlanır, hızın
+sayısal taşması duruma yayılmaz. Hafızasız `damp` ile aynı mekanizma değildir.
 
-### `solveTwoBoneIk(dx, dy, upper, lower, bendSign)`
+### `solveTwoBoneIk`
 
-Kosinüs teoremiyle düzlemsel iki kemikli ters kinematik. Erişilemeyen hedef
-YOK sayılmaz: mesafe erişilebilir aralığa kelepçelenir ve uzuv gerilir. Ayna
-simetrik uzuvlar zıt `bendSign` alır.
+Düzlemsel iki kemikli ters kinematik. Erişilemeyen mesafe erişim aralığına
+kelepçelenir; `bendSign` ayna uzuvların yönünü seçer.
 
 ### `RigMotionModel`
 
-Ham hareket niyetinden sürekli, render-only sinyaller üretir: `motion01`,
-sonsuz ilerleyen `idlePhaseDeg`, yay-sönümlü `facingRad` ve
-`turnVelocityRadPerSec`. Simülasyona dokunmaz.
+Ham hareket niyetinden render sinyalleri üretir: hareket oranı, idle fazı,
+yay-sönümlü bakış yönü ve dönüş hızı. Simülasyon state'ini değiştirmez.
 
 ### `LegGait`
 
-Ayak-sabitleyen yürüyüş döngüsü. Her ayak DÜNYA uzayında bir noktaya basar ve
-gövde ilerlerken orada kalır; evinden `stepTriggerPx` kadar geride kalınca
-adım başlar ve ayak hızın işaret ettiği yere taşınır.
-
-Adım sırası SIRA (turn) modeliyle dizginlenir: hiçbir bacak adımda değilken en
-gergin bacağın grubu sırayı alır ve sıra bitene kadar yalnız o grup adım atar.
-Bir dönem kural "karşı grup adımdayken başlama" idi; aynı gruptaki bacaklar
-kaymalı bittiği sürece kilidi hiç bırakmayabiliyor ve karşı gruptaki bacaklar
-dönüşlere bile tepkisiz biçimde yere yapışık kalıyordu. Sıra ancak adım sayısı
-sıfıra indiğinde yenilendiği ve bekleyen grup her zaman en gergin olduğu için
-açlık artık mümkün değildir.
-
-`maxStrainPx` sırayı delen ACİL eşiktir: gövde bir atılımda bir adım süresinde
-uzuv erişiminden daha çok yol alabilir, o durumda sıra beklemek bacağı yerde
-sürükler.
-
-`setLegHome(index, x, y)` duruşu canlı yeniden yazar (çömelme, atılım payı);
-basılı ayak yerinde kalır, yani ayaklar kaymaz. `justPlanted(index)` yalnız
-adımın bittiği karede doğrudur — temas efektlerinin tetiği.
+Basılı ayağı dünya konumunda tutar, strain eşiğinde adımı başlatır. Hiç ayak
+adımda değilken en gergin grup sırayı alır; sıra bitmeden grup değişmez.
+`maxStrainPx` erişimi koruyan acil eşiktir. `setLegHome` duruşu canlı değiştirir,
+basılı ayağı kaydırmaz; `justPlanted` yalnız temasın bittiği kareyi bildirir.
 
 ### `GazeDriver`
 
-Sıçramalı (saccadic) bakış. Canlı bir bakış sürekli değil KESİKLİ hareket
-eder: bir noktada durur, sonra bir sonrakine atlar. Bakış her zaman verilen
-yarıçapın içinde kalır; odak yönü verilirse hedefler o yaya ağırlıklandırılır
-ama tam kilitlenmez. Rastgelelik enjekte edilebilir, yani aynı tohum aynı
-bakış dizisini verir.
+Duraklamalı bakış hedefleri üretir; yarıçap içinde kalır ve enjekte RNG ile
+tekrarlanabilir. Verilen odak yönü hedef dağılımını ağırlıklandırır.
 
-### `samplePose`, `GhostTrail`, `PoseShadow`
+### `samplePose`
 
-Bir görüntü AĞACININ pozunu okuyup ondan türetilmiş ikinci bir görüntü çizen
-sunum efektleri.
+Görünür poz ağacını dünya uzayına düzleştirir; görünmez alt ağacı atlar,
+`out` verilirse tamponu yeniden kullanır. `GhostTrail` örneklenen gerçek
+pozdan art görüntü, `PoseShadow` aynı pozdan gölge üretir. Yapısal yüzeyleri
+Phaser nesnesi olmadan sınanabilir.
 
-`samplePose(root, out?)` ağacı dünya uzayına düzleştirir; görünmez düğümleri
-ve alt ağaçlarını atlar, `out` verilirse yeniden kullanır (kare başına
-ayırma yapmaz).
+## UI ve yaşam döngüsü
 
-`GhostTrail` sönümlenen art-görüntüler bırakır. Tek bir siluetin kopyası
-DEĞİLDİR: kaynak her yakalamada yeniden örneklendiği için iz, uzuvların o
-andaki gerçek pozunu taşır — bir atılımın hızını okutan şey budur.
+Web araçları kök oyun barrel'ı yerine `@volstudio/core/ui`, i18n, lifecycle
+ve fonts alt yollarını kullanır. `Sheet` Modal geri/odak sözleşmesini ve dış
+ScrollView'ı birleştirir; iç popup önce kendi Escape'ini tüketir. `StatsPanel`
+kimlikli grupları DOM'u yıkmadan günceller; stat hesabı tüketicinindir.
 
-`PoseShadow` kaynağın POZUNDAN gölge üretir. Gövdenin altına konan bir elips
-üstten bakışta yalan söyler: bacaklar gövdeden uzaklaştıkça gölge onları takip
-etmez ve yaratık zeminden kopuk görünür.
+`SplitPane` tercih edilen boyutu dar ekrandaki geçici kısıttan ayrı tutar.
+Toolbar aksiyon düğmesi `toggle: false` ile seçim kümesinden ayrılır.
+Popover dış tıklamayla kapanınca yeni odağı çalmaz. SettingsForm yalnız
+etiket/kontrol düzenidir. `KeyedVirtualList` satırda kurulan bileşeni
+`destroyItem` ile kapatır.
 
-Üçü de Phaser tipine değil, kullandıkları YÜZEYE (yapısal arayüz) bağlanır;
-bir render motoru örneği olmadan test edilebilirler.
+`CanvasViewportController` çizim sol sürüklemesini tüketiciye bırakır;
+kamera orta tuş veya Space+sol ile kayar, tekerlek imleçteki belge noktasını
+korur. `CommandHistory` byte bütçeli transaction/undo/redo mekanizmasıdır.
+Bütçeye tek başına sığmayan komut uygulanabilir fakat saklanmaz ve geçersiz
+undo geçmişi bırakılmaz.
 
-## Web araçları için UI yüzeyi
+Programatik `setValue` ve `setChecked` sessizdir. Kullanıcı canlı değişimi
+`onInput`, tamamlanan değişimi `onCommit` bildirir; özel programatik bildirim
+`setValueAndNotify`/`setCheckedAndNotify` ile yapılır. Seçim/aksiyon bileşeni
+onChange kullanabilir. Semantik haptik niyet primitive'dedir, platform çağrısı
+ve süre değildir; `haptic: false` çift bildirimi önler.
 
-Repo içindeki web araçları, Phaser bağımlılığını bundle'a taşımayan alt yolları
-kullanır:
+Listener, timer, observer, pointer capture ve dil aboneliği kapanışta bırakılır.
+Birden çok kaynak `DisposableScope` kullanır. Animasyon bitişine bağlı
+kapanış azaltılmış hareket altında da tamamlanır.
 
-```ts
-import {
-  CanvasViewportController,
-  CommandHistory,
-  KeyedVirtualList,
-  SplitPane,
-  Toolbar,
-} from '@volstudio/core/ui';
-import { i18next } from '@volstudio/core/i18n';
-import '@volstudio/core/ui/styles.css';
-```
+## Grafik ve platform yeteneği
 
-`@volstudio/core/lifecycle` ve `@volstudio/core/fonts` da aynı nedenle ayrı
-giriş noktalarıdır. Web araçları kök `@volstudio/core` barrel'ını kullanmaz;
-bu barrel oyun runtime yüzeyini de taşır.
+`GraphicsQuality` generic kademe ve profile sahiptir; profil knobları ve
+kalıcılık tüketicinindir. `ViewportManager.renderScale` DPR'den bağımsız
+raster ölçüsüdür. Resize stratejisinde kamera zoom'u görünür dünya alanını
+CSS pikseline sabitler; sahne `applyVolViewport` kullanır. Backing store
+boyutu zoom ve input koordinatlarıyla aynı viewport'a bağlanır.
 
-`Sheet`, sağdan açılan başlıklı çekmecedir. Scrim, odak hapsi, Escape ve
-Android geri hareketi `Modal`dan gelir: açık bir `Modal` geri hareketini tüketir
-ve Escape'teki gibi kapanır. Gövde bir `ScrollView`dır; içerik biriktikçe
-yükseklik değişmez, çekmece kendi içinde kayar. Geniş ekranda en az yarım
-genişlik kaplar ve arkadaki sahne scrim altında görünür kalır; 480 px ve altında
-tam genişliğe çıkar. İçteki `Select` ve `Popup` Escape'i önce kendileri tüketir,
-yani açık liste kapanırken çekmece açık kalır. Bulanıklaştırma eklemez.
+`scrollFactor: 0` kamera ölçeğinden muafiyet değildir. İşaretçi gerektiğinde
+kamera uzayına dönüştürülür. Dokunma joystick ölçüsü CSS pikselinde korunur.
+TouchStickState sıcak yol sonuçları yeniden kullanılan tamponlardır;
+senkron okunur, saklanmaz; base ile current ayrı nesnedir.
 
-`StatsPanel` bu kabuğun üstüne kurulu istatistik çekmecesidir: tüketicinin
-verdiği kimlikli grupları ve satırları DOM'u yıkmadan günceller. `icon` alanı
-`string | Element` kabul eder; CORE oyun ikonlarını bilmez, yalnızca verilen
-elementi güvenli bir kopya olarak yerleştirir. Oyun kuralları ve stat hesapları
-çağıranda kalır.
+`Counter` değişim yönünü vurgular; her kare güncellenen HUD `change: 'none'`
+seçebilir. `FullscreenController` native/web yetenek ve red callback'iyle
+çalışır, destroy bütün abonelikleri kapatır.
 
-### Dokunsal geri bildirim yeteneği
+Haptik `vibrate` niyetini kullanılabilir sürücüye yönlendirir; native,
+uygun mobil tarayıcı ve gamepad yolları ayrı yeteneklerdir. Masaüstünde
+API'nin mevcut olması motor bulunduğunu kanıtlamaz.
+`getHapticsCapability` snapshot, `observeHapticsCapability` hot-plug değişimini
+verir. Platform red ve izin hatası oyun akışını kesmez.
 
-`vibrate()` NİYET alır (`'tap'`, `'error'`) ve kullanılabilir ilk
-katmana yönlenir:
+Phaser köprüleri ve renderer geri düşüşü
+[Phaser sınırı](phaser-boundary.md), metin kaynakları [i18n](i18n.md),
+ses bağlamı [tek atışlar](sfx.md) ve [müzik](music-engine.md) belgelerindedir.
+Yeni oyun kuralı sunum bileşenine eklenmez; test, katalog ve public yüzey
+aynı değişiklikte güncellenir.
 
-- `setHapticsDriver` ile kayıtlı native platform sürücüsü — UA tahmininden
-  önce gelir; Tauri Android/iOS resmi haptics eklentisini burada bağlar.
-- `navigator.vibrate` — mobil tarayıcı fallback'i. Masaüstü Chromium ve
-  WebView2 API'yi tanımlasa da motor sayılmaz.
-- Oyun kolunun `vibrationActuator`'ı — masaüstünde ve Steam Deck'te titreşimin
-  tek gerçek kaynağı; klavye ve fare titremez.
+### Durağan nişan politikası
 
-`getHapticsCapability()` o anki durumu, `observeHapticsCapability()` ise
-DEĞİŞİMLERİ verir (`gamepadconnected`/`gamepaddisconnected`). Tüketici ayarı
-buna bağlar: kol takılınca titreşim kutusu etkinleşir, çıkarılınca pasifleşir.
-Açılışta bir kez ölçüp karar vermek, kolunu sonradan takan oyuncuya ayarı
-sonsuza dek kapalı gösterirdi.
-
-Desen tablosu tek kaynaktır: ms dizisi Vibration API'ye, aynı desenin süre +
-şiddet karşılığı oyun koluna gider. Reddedilen efekt ya da izin hatası asla
-akışı kesmez — titreşimin olmaması bir hata değil, o platformun gerçeğidir.
-
-### Grafik kalitesi
-
-`GraphicsQuality<TLevel, TProfile>` kalite kademelerinin JENERİK kaydıdır:
-kademe listesi, geçerli kademe, değişim bildirimi ve opsiyonel DOM yansıması.
-**CORE profilin içini bilmez** — kademelerin adı ve knob'ların ne olduğu
-tamamen tüketicinindir; bir knob sözlüğü dayatmak bir sonraki oyunun
-ihtiyacını yanlış tahmin ederdi. Kalıcılıktan da habersizdir: tüketici kendi
-`SaveManager`'ı ile yükler ve `setLevel()` çağırır.
-
-```ts
-const quality = new GraphicsQuality({
-  levels: { high: { renderScale: 1 }, low: { renderScale: 0.7 } },
-  initial: 'high',
-  // Opsiyonel: CSS `[data-vol-graphics='low']` ile pahalı boyamayı kapatır.
-  reflect: { element: document.documentElement, attribute: 'vol-graphics' },
-});
-```
-
-`ViewportManager.renderScale` bunun RENDER ayağıdır ve DPR'den bağımsızdır.
-Kritik nokta: `strategy: 'resize'` modunda Phaser'ın dünya birimi doğrudan
-backing store pikselidir, yani çözünürlüğü değiştirmek DÜNYAYI da değiştirir —
-arena küçülür, dünya birimi/saniye cinsinden sabit olan hızlar ekranda
-hızlanır. Bu yüzden `applyToScene()` kamerayı rasterleme çarpanı kadar
-yakınlaştırır: görünen dünya alanı `viewport / zoom` = CSS pikseli olur ve
-çözünürlükten bağımsız kalır. Sahneler `applyVolViewport(scene)` ile bu
-sözleşmeye girer. Pencere yeniden boyutlandığında backing store önce yeni
-ölçüye alınır, ardından zoom tazelenir; bu sıra Phaser'ın `Scale.NONE` inline
-CSS boyutunu ve input koordinatlarında kullanılan canvas sınırını yeni viewport
-oranına göre yeniden hesaplamasını sağlar.
-
-**Ekran uzayına sabitlenen katmanlar (`scrollFactor: 0`) kamera
-yakınlaştırmasından MUAF DEĞİLDİR** (bkz. Phaser `GetCalcMatrix`: scrollFactor
-yalnız ötelemeyi iptal eder, ölçeği değil). Böyle bir katman işaretçi
-konumunu kullanacaksa önce kamera uzayına çevirmelidir:
-`(pointer.x - camera.x) / camera.zoom`. `TouchController` bunu yapar; yan
-kazanç olarak joystick yarıçapları CSS pikseline sabitlenir ve yüksek DPR'li
-telefonlarda `1/dpr` kadar küçülmez.
-
-`Counter.setValue()` **varsayılan olarak değişim yönünü vurgular**: artışta
-`--increase`, azalışta `--decrease` sınıfı oynar. Bu, `pulse: true` opt-in'i
-olan eski davranıştan farklıdır ve `ResourceCounter`/`ResourceBar` üzerinden
-tüm tüketicileri etkiler. Aynı sayacı HER KARE yazan bir HUD (skor, süre,
-mesafe) sürekli animasyon almamak için açıkça `change: 'none'` geçer; yön
-zorlamak için `change: 'increase' | 'decrease'` verilir.
-
-`TouchStickState` dokunmatik SICAK YOLDUR: `getState`, çizim katmanı ve yön
-sorgusu kare başına en az dört kez ham vektör okur. Bu okumalar yeniden
-kullanılan tamponlara yazar, yeni `Vector2` üretmez — mobilde kare başına
-küçük çöp doğrudan GC duraklamasına dönüşür. Sonuçlar SENKRON okunmalıdır:
-bir sonraki çağrıya kadar geçerlidirler, saklanmazlar. Stick'in `base` ve
-`current` alanları AYRI nesnelerdir; tek nesne paylaşılsaydı parmağın her
-hareketi joystick'in tabanını da sürüklerdi.
-
-Süpürülmüş çarpışmada `segmentCircleOverlap` "kesişti mi" der, `segmentCircleEntryT`
-İLK TEMAS parametresini (`0..1`) döndürür. Bir adımda birden fazla daire
-kesişiyorsa çağıran en küçük `t`'yi seçerek sonucu aday listesinin sırasından
-bağımsız kılar — dizideki ilk eşleşmeyi almak, aynı geometride farklı sonuç
-üretir ve mermi öndekinin içinden geçebilir.
-
-`FullscreenController`, web araçları ve Phaser sahneleri için ortak F11/
-programatik tam ekran akışıdır. Standart Fullscreen API'yi, Android WebView
-uyumluluğu için WebKit isimlerini ve API reddedildiğinde hata callback'ini
-destekler. İki veya daha fazla listener'ı olduğu için `DisposableScope` ile
-`destroy()` edildiğinde klavye ve fullscreen listener'larını birlikte kaldırır.
-
-Workbench bileşenleri oyun kuralı tutmaz:
-
-- `SplitPane`, yatay/dikey panel ölçüsünü pointer ve klavye ile değiştirir;
-  daraltma durumunu çağıran yönetir. Kullanıcının seçtiği ölçü ayrı tutulur:
-  pencere daralınca görünen ölçü kısılır, yeniden genişleyince tercih geri gelir.
-- `Toolbar` ve `ToolButton`, roving tabindex, ARIA ve tekli/çoklu seçim
-  davranışını sağlar. Seçimli bir toolbardaki **aksiyon** düğmeleri (menü açan,
-  komut çalıştıran) `toggle: false` almalıdır; aksi halde seçim kümesine girer
-  ve basıldıklarında aktif aracı düşürürler.
-- `PropertyField` etiket, açıklama, durum ve sıfırlama niyetini tek erişilebilir
-  alanda toplar; `Popover` açılma/kapanma ve odağı geri verme işini üstlenir.
-  Odak yalnız popover'ın içindeyken tetikleyiciye döner: dışarı tıklamayla
-  kapanışta kullanıcının odaklandığı alan korunur.
-- `SettingsForm` ve `SettingsRow`, ayar değerini yönetmeden etiket/kontrol
-  yerleşimini ortaklaştırır. Switch kendi etiketini taşıyabilir; geniş kontrol
-  yalnız dar görünümde istiflenir ve yatay taşma üretmez.
-- `KeyedVirtualList`, satır DOM'unu kimliğe göre korur; güncelleme sırasında
-  odağı ve esnek satır ölçülerini kaybetmez. Satırlarında bileşen kuran
-  tüketiciler `destroyItem` vermelidir — satır görünürden çıktığında ve liste
-  yıkıldığında çağrılır, verilmezse her kaydırma dinleyici sızdırır.
-- `CanvasViewportController`, normal sol sürüklemeyi çizim aracına bırakır.
-  Kamera yalnızca orta tuşla veya `Space` + sol tuşla kaydırılır; tekerlek
-  imlecin altındaki belge koordinatını sabit tutarak yakınlaştırır.
-- `CommandHistory`, komutları byte bütçesi içinde tutar; transaction, geri alma
-  ve yineleme mekanizması sunar. Komutların alan anlamı tüketicide kalır.
-  Bütçe aşıldığında en eski komutlar düşer; tek başına bütçeye sığmayan bir
-  komut uygulanır fakat saklanamaz ve o noktadan geriye hiçbir undo geçerli
-  olmadığı için yığın tümüyle bırakılır.
-
-### Değer ve olay sözleşmesi
-
-Form kontrollerinde `setValue()` / `setChecked()` programatik ve **sessizdir**.
-Kullanıcı etkileşiminde `onInput` canlı değeri, `onCommit` tamamlanan hareketi
-bildirir. Değer taşıyan primitiflerde `onChange` geçişi tamamlandı; yeni
-tüketiciler `onInput` / `onCommit` kullanmalıdır. `onChange` yalnızca Toolbar
-ve Tabs gibi değer değil seçim/aksiyon semantiği taşıyan bileşenlerde kalır.
-Özellikle bildirim gereken programatik geçişlerde
-`setValueAndNotify()` / `setCheckedAndNotify()` kullanılır.
-
-Kesikli kullanıcı etkileşimleri semantik dokunsal geri bildirimi primitive
-katmanında üretir: düğmeler `tap`, değer seçen kontroller `select` niyetini
-kullanır. `haptic: false` özel bileşik akışlarda çift geri bildirimi önler;
-ham süre ya da platform çağrısı UI bileşenine yazılmaz.
-
-DOM olayı, dil aboneliği, observer veya pointer capture alan her workbench
-bileşeni `destroy()` ile bunları bırakır. Bu sözleşme, araç yüzeyi yeniden
-kurulduğunda çift listener ve eski DOM'a bildirim sızıntısını önler.
-
-## Ayrımı bozmamak
-
-- Bir bileşene kural eklemek istediğinde önce sor: **başka bir tüketici bunu
-  farklı isteyebilir mi?** Cevap evetse kural tarif katmanına ait.
-- Bir primitif ne kodunda ne dokümanında bir türe (genre) bağlanmaz; örnek
-  vermek gerekiyorsa mekanizmanın kendi terimleriyle verilir.
-  `core/tests/governance/primitiveNeutrality.test.ts` bunu kapıda doğrular.
-- Public API yüzeyi sayılıdır (`publicSurface.test.ts`); yeni export bilinçli
-  bir karardır, kapı kırılınca sayı güncellenir.
+`InputManager` varsayılan olarak etkin olmayan fare sağlayıcısının nişanını
+diğer kiplerle birleştirir. `restingAimPolicy: 'owner'` yalnız fare kipi
+sahipken bu yedeği kullanır; çubuk bırakılınca başka sağlayıcının eski nişanı
+dönmez. Eylemler etkin sağlayıcılar üzerinden birleşmeye devam eder.

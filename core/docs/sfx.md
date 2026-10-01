@@ -1,4 +1,4 @@
-# Tek atışlar ve döngüler
+# Olay sesleri ve mekanik döngüler
 
 `@volstudio/core/audio/sfx` mevcut Web Audio bağlamı ve hedef düğümüyle
 çalışır; bağlamı oluşturmak, kilidini açmak ve kapatmak tüketicinindir.
@@ -11,15 +11,20 @@ ve hedefini CORE sesine geçirir; mobil kilit açma ve bağlam ömrü Phaser’d
 üzerindeki FNV-1a özetiyle sıralı adaylardan deterministik seçim yapar.
 Dosya yolları paket köküne görelidir; URL'ye dönüşümü tüketici yapar.
 
-`SoundBank` tek atışları yükler, eşzamanlı ses sayısını sınırlar ve en eski
-sesi düşürür. `PlayOptions.pan` stereo konumu, `gain` seviyesi ve `rate`
-çalma hızıdır; mesafe ve olay eşlemesi tüketicinindir. `stopAll` çalan
-sesleri durdurur, `dispose` düğümleri söker.
+`SoundBank.register` bir olay kimliğini varyant URL'lerine bağlar;
+`load` ve `loadAll` bunları çözer. Aynı kimlik için eşzamanlı yüklemeler
+birleşir; yüklenmemiş ses oynanışı durdurmadan atlanır. Banka toplam ve
+olay başına ses bütçesini uygular, gerekirse en eski sesi durdurur.
+`PlayOptions.pan` stereo konumu, `gain` seviyeyi ve `rate` çalma hızını
+belirler. Mesafe, olay eşlemesi ve varyant seçimi için verilen RNG
+tüketicinin sorumluluğundadır. `stopAll` çalan sesleri durdurur;
+`dispose` düğümleri söker.
 
 `LoopBlend` katmanları birlikte döndürür. `setLevel` iki komşuyu eşit güçle
 karıştırır; kazanç, pan ve hız değişimleri yumuşar. Katmanın `pitch` değeri
 üretildiği perdeyi belirtir; `setPitch` hedefi aynı birimde alır ve her
 katmanın hızını hedef/üretim oranıyla 0.5–2 aralığında tutar. Perdesiz
 katman son ortak hızı korur. `setRate` perde takibini bırakıp bütün
-katmanlara ortak çarpanı uygular. `stop` sonrası `start` son ayarları korur;
-sahne kapanırken `dispose` çağrılır.
+katmanlara 0.25–4 aralığında ortak çarpanı uygular. Yüklenemeyen katman
+atlanır; kalanlarla karışım sürer. `stop` sonrası `start` son ayarları
+korur. Sahne kapanırken her banka ve döngü için `dispose` çağrılır.

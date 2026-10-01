@@ -1,55 +1,69 @@
 <img src="./docs/assets/banners/vol-studio-horizontal-lockup-transparent-1200x400.png" alt="VOL.STUDIO" />
 
-Tauri v2 + Phaser 4 oyun çalışma zamanı ile web tabanlı geliştirici araçlarını
-aynı çalışma alanında buluşturan çapraz platform monorepo.
+Tauri v2, Phaser 4 ve TypeScript ile geliştirilen çapraz platform oyun
+çalışma alanı. Paylaşılan motor, native kabuk ve geliştirici araçları pnpm
+workspace içinde ayrı sorumluluklarla yaşar. VOL.TEST bu katmanları gerçek
+oyun akışında sınayan test ürünüdür.
 
-[English](README.en.md) · [Kalite kapıları](docs/gates.md) · [Linux](docs/linux.md) · [Steam Deck](docs/steam-deck.md) · [Android](docs/android.md)
+## Paketler
 
-## Yapı
+| Yol                     | Paket                    | Sorumluluk                                      |
+| ----------------------- | ------------------------ | ----------------------------------------------- |
+| `core/`                 | `@volstudio/core`        | Oyunlardan bağımsız motor ve DOM UI kataloğu    |
+| `tauri-v2/`             | `@volstudio/tauri-v2`    | Paylaşılan native kabuk ve platform adaptörleri |
+| `devtools/audio-synth/` | `@volstudio/audio-synth` | Deterministik ses ve müzik üretimi, yayın ve QA |
+| `devtools/deck/`        | `@volstudio/deck`        | Steam Deck sondası ve devkit otomasyonu         |
+| `devtools/pen.dev/`     | `@volstudio/pen.dev`     | Pencil tasarımından rig export ve gönderim      |
+| `devtools/vol-ui/`      | `@volstudio/vol-ui`      | CORE UI vitrini ve görsel sözleşme              |
+| `games/vol-test/`       | `@volstudio/vol-test`    | Motor ve kabuğun uçtan uca test oyunu           |
 
-```
-core/                   # motor ve DOM UI kataloğu (@volstudio/core)
-tauri-v2/               # paylaşılan native kabuk ve eklentiler; uygulama değildir
-devtools/audio-synth/   # deterministik ses ve müzik üretimi
-devtools/deck/          # Steam Deck ölçüm sondası ve devkit otomasyonu
-devtools/pen.dev/       # Pencil kaynağından rig export'u
-devtools/vol-ui/        # CORE UI vitrini ve görsel sözleşmesi
-docs/                   # kapılar, platformlar, yeni oyun rehberi
-scripts/                # kalite kapıları, Linux paketleme, cihaz ölçümü
-```
+Aktif paketler `workspace-lifecycle.json` ile belirlenir. Yeni ürün
+[oyun kurma rehberi](docs/new-game.md) üzerinden `games/` altında oluşturulur.
 
-Bugün ağaçta oyun yoktur; yeni oyun `games/<oyun>/` altına
-[docs/new-game.md](docs/new-game.md) ile kurulur.
+## Kurulum ve geliştirme
 
-## Gereksinimler
-
-Node.js `^20.19.0` veya `>=22.12.0` · pnpm >= 11.18 · Rust + Cargo ·
-Android için Android Studio (SDK + NDK) · Windows'ta Visual Studio C++ Build
-Tools. `pnpm run doctor:env` hepsini denetler.
-
-## Komutlar
+Node.js `22.23.1` sürümü `.node-version` ve `package.json` içinde sabittir; pnpm sürümü `package.json` içindedir. Native build
+Rust ve Cargo; Android SDK ve NDK; Windows C++ Build Tools gerektirir.
+Ortam denetimi eksik gereksinimleri raporlar.
 
 ```bash
 pnpm install
-pnpm dev                 # aktif paketlerin geliştirme sunucuları
-pnpm exec just dev-ui    # UI vitrini
-
-pnpm quick               # commit öncesi kapı
-pnpm high                # push öncesi kapı
-pnpm signoff             # sürüm kapısı
-pnpm exec just --list    # tüm tarifler
+pnpm run doctor:env
+pnpm dev
+pnpm exec just dev-ui
 ```
 
-## Nereye bakmalı
+## Kalite kapıları
 
-| Konu                         | Yer                                                          |
-| ---------------------------- | ------------------------------------------------------------ |
-| Çalışma sözleşmesi           | [AGENTS.md](AGENTS.md)                                       |
-| CORE primitifleri, i18n, ses | [core/docs](core/docs)                                       |
-| Phaser sınırı                | [core/docs/phaser-boundary.md](core/docs/phaser-boundary.md) |
-| Yeni oyun paketi             | [docs/new-game.md](docs/new-game.md)                         |
-| Ses üretimi                  | [devtools/audio-synth](devtools/audio-synth/README.md)       |
-| İş listesi                   | [TODO.md](TODO.md)                                           |
+Kapıların tek kaynağı `justfile`'dır; rutin kapılar yalnız aktif paketlerde
+çalışır. Bulut CI yerine yerel kapılar ve git kancaları kullanılır.
+
+```bash
+pnpm quick                 # commit öncesi
+pnpm fast                  # geliştirme doğrulaması
+pnpm high                  # push öncesi
+pnpm signoff               # sürüm ve kilometre taşı
+pnpm exec just --list      # tekil kapılar
+```
+
+Düşen tek kapı bağımsız yeniden çalıştırılır. Koşulmayan kapı geçmiş sayılmaz;
+cihaz ölçümü ve insan dinlemesi otomatik kapıların yerine geçmez.
+
+## Belgeler
+
+| Konu                | Belge                                                   |
+| ------------------- | ------------------------------------------------------- |
+| Çalışma sözleşmesi  | [AGENTS.md](AGENTS.md)                                  |
+| Kapılar ve raporlar | [docs/gates.md](docs/gates.md)                          |
+| Motor               | [core/README.md](core/README.md)                        |
+| Native kabuk        | [tauri-v2/README.md](tauri-v2/README.md)                |
+| Linux               | [docs/linux.md](docs/linux.md)                          |
+| Steam Deck          | [docs/steam-deck.md](docs/steam-deck.md)                |
+| Android             | [docs/android.md](docs/android.md)                      |
+| Ses üretimi         | [audio-synth/README.md](devtools/audio-synth/README.md) |
+| Rig üretimi         | [pen.dev/README.md](devtools/pen.dev/README.md)         |
+| UI kataloğu         | [vol-ui/README.md](devtools/vol-ui/README.md)           |
+| Açık işler          | [TODO.md](TODO.md)                                      |
 
 ## Lisans
 

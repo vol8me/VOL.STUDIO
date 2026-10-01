@@ -1,56 +1,39 @@
-# CLAUDE.md
+# Claude Code çalışma notları
 
-Claude Code bu dosyayı her oturumda kendiliğinden okur. Deponun çalışma
-sözleşmesi `AGENTS.md`dedir. Burada yalnız Claude Code'a özgü, oturumlardan
-damıtılmış pratikler vardır. Çelişki çıkarsa `AGENTS.md` geçerlidir.
+Depo sözleşmesi [AGENTS.md](AGENTS.md) içindedir. Bu dosya Claude Code'un
+araç kullanımını tarif eder; depo kurallarını gevşetmez.
 
-## Oturum başlangıcı
+## Başlangıç ve kapsam
 
-- Önce `AGENTS.md`, sonra açık işler için `TODO.md` ve ilgili paketin
-  `TODO.md`si okunur.
-- Dal, çalışma ağacı ve son commit'ler kontrol edilir. Önceki oturumdan
-  yarım kalmış bir iş varsa önce o raporlanır.
-- Mimari ve bağımlılık sorularında `graphify-out/` varsa önce ona sorulur.
-- Kalıcı bellek bir önceki oturumun kararlarını taşır. Bellekteki dosya,
-  işlev ya da bayrak kullanılmadan önce hâlâ var olduğu doğrulanır.
+Çalışmaya AGENTS.md, açık iş listesi ve ilgili paketin belgeleriyle başlanır.
+Dal, çalışma ağacı ve son commitler okunur. Yarım kalan iş varsa kapsamı
+belirlenir; kullanıcıya ait değişiklikler üzerine yazılmaz. Mimari sorularda
+mevcut `graphify-out/` çıktısı kontrol edilir, sonucu kaynakla doğrulanır.
 
-## İletişim
+Kapsam ve dışa açık işlem yetkisi kullanıcıya aittir. Geçerli açık yetki aynı
+oturum içinde yeniden sorulmaz; kapsam dışına taşılmaz. Commit, push, merge
+ve etiket yalnız yetkilendirilmişse yapılır. İş bitiminde kendiliğinden commit
+teklifi sunulmaz.
 
-- **Kullanıcıyla her zaman Türkçe konuşulur:** yanıt, soru, özet ve rapor dahil.
-- **Rapor kısa ve kanıtlıdır:** çalıştırılan komut, sonuç, kalan risk. Koşulmayan kapı yazılmaz.
-- **Commit teklif etmek de bir tekliftir.** İş bitince "commit edeyim mi?" diye sorulmaz; kullanıcının açık talebi beklenir.
-  - Bir plan için toplu izin verilmişse izin kapsamının dışına çıkılmaz.
-  - Push, merge ve etiket için ayrıca açık talep gerekir.
-- **Belirsizlikte:** kararı kullanıcıya ait olan yerde sorulur. Makul bir varsayımla ilerlenebiliyorsa varsayım raporda söylenir.
+## Doğrulama ve raporlama
 
-## Uzun işler
+Kullanıcıyla Türkçe konuşulur. Rapor değişikliği, koşulan kapıları, kanıtı ve
+kalan riski söyler. Koşulmayan kontrol, yapılmayan insan dinlemesi ya da cihaz
+ölçümü tamamlanmış gibi yazılmaz. Düşen tek kapı yeniden koşulur; uzun test ve
+build koşuları bağımsız işlere devam edilebilecek biçimde başlatılır.
 
-- **Çok adımlı iş fazlara bölünür.** Her faz kendi kapısı ve commit'iyle kapanır; bağlam penceresi dolsa da iş kaldığı yerden sürer.
-  - Plan ve faz durumu kalıcı belleğe yazılır.
-  - "Plana devam et" talimatı o kayıttan eksiksiz sürdürülür.
-- **Toplu TODO kapatma:** önce madde madde doğrulanmış, dürüst bir analiz sunulur ve onay alınır. Onaydan sonra yarım iş bırakılmaz.
-- **Uzun koşular arka planda başlatılır:** tam audio kapsamı, kap içi derleme, cihaz ölçümü. Tamamlanma bildirimi beklenir; `sleep` zinciri kurulmaz. Bu sırada bağımsız işe devam edilir.
-- **Düşen tek kapı** zincirin tamamı yerine tek başına yeniden koşulur.
+Servis düzeltmesi kullanıcının açık oturumunda, native değişiklik gerçek
+uygulama paketinde doğrulanır. Cihazda bırakılan geçici dosya ve kısayollar
+raporlanır. Görünüm beğenisi ve ses dinleme kararı insanındır.
 
-## Doğrulama pratikleri
+## Araçlar ve kayıtlar
 
-- **Servis ya da sunucu düzeltmesi:** kullanıcının açık portu ya da oturumu yenilenir ve ekran görüntüsüyle doğrulanır.
-- **Android:** native proje, ikon ya da Tauri kabuğu değişince uygulama bağlı her cihaza kurulur, açılır ve ekran görüntüsü alınır.
-- **Steam Deck:**
-  - Ölçüm devkit üzerinden yapılır (`docs/steam-deck.md`).
-  - İnsan eli gereken ölçüm için kullanıcının cihaz başında olması istenir. Değilse sonuç "ölçülmedi" olarak kalır.
-  - Cihazda deneme için bırakılan her şey raporda söylenir: kısayol, geçici dosya.
-- **İnsan yargısı uydurulmaz.** Ses kalitesi ve görsel beğeni kullanıcınındır. Kapının geçmesi iyi ses ya da iyi görünüm demek değildir.
+`.pen` dosyaları yalnız Pencil MCP üzerinden okunur ve değiştirilir.
+Paketin özel AGENTS.md sözleşmesi önce okunur. Kod değişince mevcut graphify
+çıktısı güncellenir. Yerel araç çıktısı paketin git dışı records/ ya da
+export/ dizinine yazılır; geçici çalışma dosyaları scratch dizininde kalır.
+Kalıcı belleğe yalnız kullanıcının açık bellek güncelleme talebiyle yazılır.
 
-## Araçlar ve dosyalar
-
-- **Pencil:** `.pen` dosyaları yalnız Pencil MCP araçlarıyla okunur ve yazılır.
-- **Geçici dosyalar** oturumun scratchpad dizinine yazılır.
-- **Kalıcı yerel çıktı:** oturumdan uzun yaşaması gereken yerel araştırma çıktısı (ölçüm sondası, ham kayıt) git dışı `.claude/` altına konur. Repodaki belge o yola işaret etmez; kalıcı bilgi belgeye özet olarak girer.
-- **Graphify:** kod değiştikten sonra `graphify update .` ile tazelenir.
-
-## Gizlilik
-
-- **Kişisel veriler repoya girmez:** kullanıcının e-postası, platform kullanıcı adları, cihaz adresleri ve oturum belirteçleri koda, belgeye, commit'e ve paylaşılan ölçüm kaydına yazılmaz.
-- **Ham ölçüm çıktısı** saklanmadan önce ayıklanır.
-- **Kardeş projeler:** başka projelerin adları ve iç sınıf adları bu depoya yazılmaz.
+Sır, kimlik, cihaz adresi, oturum belirteci ve ayıklanmamış ham kişisel veri
+koda, belgeye, loga ve commit'e girmez. Teknik belge bugünkü sözleşmeyi anlatır;
+oturum günlüğü, geçici plan ve başka projelerin adı repoda tutulmaz.

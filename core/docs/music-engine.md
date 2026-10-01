@@ -1,351 +1,119 @@
-# Music Engine
+# Müzik çalma
 
-`@volstudio/core/audio/music`, projenin Web Audio tabanlı müzik motorudur. Stem
-(katman) bazlı adaptive müzik, crossfade ve state'e göre gain haritalama sağlar.
-SFX motorundan (build-time ses sentez aracından) ayrıdır; müzik uzun loop'lar ve
-çok kanallı stem mix'i için optimize edilmiştir.
+`@volstudio/core/audio/music` hazır stem ve cue tamponlarını aynı Web Audio
+zamanında çalar. Adaptif kazanç, ölçü/vuruş hizası ve parça geçişi çalışma
+zamanındadır; sentez ve score üretimi audio-synth devtool'undadır.
 
-> **Runtime'da sentez YAPILMAZ.** Motor yalnızca önceden üretilmiş OGG (iOS'ta MP3)
-> stem'leri çalar. Müzik ve SFX `devtools/audio-synth/` ile build-time'da
-> üretilir: runtime sentez CPU maliyeti ve mobilde öngörülemeyen zamanlama
-> getirir.
+## Bağlam ve yükleme
 
-## Mimari
+Oyun tek AudioContext sahibi olabilir; motor `audioContext` ve `destination`
+ile o bağlama ve hedefe bağlanır. Bağlam yaratma, kilit açma ve platform
+yaşam döngüsü tüketiciye aittir. Motor kaynak, mixer, buffer cache ve kendi
+aboneliklerini dispose ile bırakır; dışarıdan verilen bağlamı sahiplenmez.
 
-```
-core/src/audio/music/
-  types.ts             — MusicTrack, Stem, MusicState, MusicContext, gain map tipleri
-  engine.ts            — MusicEngine: yükleme, çalma, durdurma, crossfade, cue zamanlaması
-  cues.ts              — MusicCuePlayer: giriş/bitiş/stinger/geçiş cue'larını yükler ve bir kez çalar
-  mixer.ts             — MusicMixer: her stem için ayrı GainNode + master kompresör
-  scheduler.ts         — MusicScheduler: BPM/ölçü bazlı zaman/bar/beat dönüşümleri
-  loader.ts            — StemLoader: stem yükle ve decode et; OGG başarısızsa MP3 fallback
-  gain-resolver.ts     — state'e göre stem gain'ini çözer
-  index.ts             — public API
-```
+Track kimliği benzersizdir. Stem kaynak URL ya da AudioBuffer taşır;
+OGG çözümü başarısızsa loader MP3 alternatifini deneyebilir. URL cache'i
+kaynakla, doğrudan buffer cache'i track ve stem kimliğiyle kapsamlanır;
+aynı adlı iki stem karışmaz. Reddedilen yükleme Promise'i kalıcı cache
+olmaz.
 
-Pipeline:
+`loadTrack` en az bir çalınabilir stem olup olmadığını bildirir. Tek bozuk
+stem veya cue sağlam olanları kilitlemez. Tüketici liste yüklemesinde
+allSettled benzeri yaklaşım ve yalnız başarılı trackleri kullanır.
 
-1. Track tanımı `MusicEngine.loadTrack(track)` ile yüklenir. Dönüş değeri,
-   en az bir stem'in başarıyla yüklendiğini bildirir; tek bir bozuk stem diğer
-   stem'leri veya diğer track'leri kilitlemez.
-2. Her stem için `StemLoader.loadFromUrl(src)` ile `AudioBuffer` çözülür.
-3. `MusicEngine.play(trackId)` tüm stem'leri aynı `AudioContext` zamanında başlatır.
-4. Her stem kendi `GainNode` kanalından master mix'e bağlanır.
-5. `MusicEngine.setState()` / `setIntensity()` ile stem gain'leri adaptif olarak değişir.
-6. `MusicEngine.crossfadeTo()` yeni track'e geçer — `bars` verilirse bar sınırında,
-   verilmezse hemen.
+```ts
+import { MusicEngine, type MusicTrack } from '@volstudio/core/audio/music';
 
-## Davranış notları
-
-Bu maddeler kolayca yanlış varsayılan, ölçülerek doğrulanmış davranışlardır.
-
-- **`crossfadeTo()` varsayılan olarak HEMEN başlar.** `options.bars` verilirse geçiş
-  o kadar bar sonraki sınıra hizalanır.
-- **Kısmi yükleme başarısı KULLANILABİLİR.** `loadTrack()` "en az bir stem
-  yüklendi mi" döner. Bir listeyi hazırlayan tüketici `Promise.all` yerine
-  `allSettled` kullanmalı ve YALNIZCA yüklenen parçalarla liste kurmalıdır:
-  tek bozuk dosya bütün listeyi düşürürse müzik hiç çalmaz, yüklenmemiş bir id
-  listeye girerse o tur sessiz geçer.
-- **Reddedilen yükleme sözü ÖNBELLEKLENMEZ.** "Bir kez yükle" deseni sözü bir
-  alana yazıyorsa, red durumunda o alan temizlenmelidir; aksi hâlde geçici bir
-  hata süreç ömrü boyunca yeniden denemeyi engeller.
-- **Geçişler İKİ FAZLIDIR ve yarım kalmaz.** `play()` ve `crossfadeTo()` önce
-  hedefin çalınabilir stem'lerini çözer; hiçbiri yoksa ÇALAN müziğe hiç
-  dokunmadan fırlatır; başarısız geçiş mevcut müziği öldürmez ve `isPlaying`
-  takılı kalmaz.
-- **`play()` çalan parçayı yeniden başlatmaz** ama verilen `state`'i uygular.
-  Yoğunluğu değiştirmek için ayrıca `setState()` çağırmak gerekmez.
-- **`mute(false)` ayarlanan seviyeye döner**, 1.0'a değil.
-- **Fade'ler lineer rampadır ve hedefe TAM varır.** Üstel yaklaşım (`setTargetAtTime`)
-  hedefe hiç varmadığı için fade-out sonunda kaynak duyulur seviyedeyken
-  kesiliyordu.
-- **`timeSignature` paydası hesaba katılır.** `[6, 8]` gerçekten sekizlik vuruş
-  demektir; bar süresi `[6, 4]`'ün yarısıdır.
-- **`bpm` pozitif olmalıdır.** Geçersiz tempo/ölçü `MusicScheduler` kurulurken
-  hata fırlatır, sessizce `Infinity` üretmez.
-- **Ducking zinciri `MusicEngineOptions.destination` ile verilir.** Motorun
-  çıkışını dışarıdan koparıp yeniden bağlamak gerekmez.
-- **Buffer önbelleği içerik/track kapsamlıdır.** `src` veren stem'ler kaynak
-  adresiyle, doğrudan `AudioBuffer` veren stem'ler `trackId + stemId` ile
-  anahtarlanır; aynı stem adı iki track'in buffer'ını karıştıramaz.
-- **Eşzamanlı `play()` çağrılarında son çağrı kazanır.** Yükleme beklerken daha
-  yeni bir `play()`, `crossfadeTo()` veya `stop()` gelirse eski asenkron işlem
-  ortak çalma durumunu değiştiremez.
-- **`dispose()` abonelikleri de temizler.** `onTrackEnd()` ile eklenen
-  dinleyiciler motor ömrü bittiğinde tutulmaz; ayrıca buffer cache ve mixer
-  kanalları bırakılır.
-
-## Hızlı Başlangıç
-
-### 1. Track tanımla
-
-```typescript
-import type { MusicTrack } from '@volstudio/core/audio/music';
-
-const mainMenu: MusicTrack = {
-  id: 'hollow-signal',
-  bpm: 60,
-  stems: [
-    {
-      id: 'theme',
-      src: 'assets/audio/music/main-menu/hollow-signal.ogg',
-      gain: 0.75,
-      loop: true,
-    },
-  ],
+const track: MusicTrack = {
+  id: 'track-a',
+  bpm: 90,
+  stems: [{ id: 'layer-a', src: 'assets/audio/music/track-a.ogg', loop: true }],
 };
+const music = new MusicEngine({ audioContext, destination, compressor: false });
+if (await music.loadTrack(track)) await music.play('track-a');
 ```
 
-### 2. Oyun içinde çal
+## State ve kazanç
 
-```typescript
-import { MusicEngine } from '@volstudio/core/audio/music';
+Stem gain temel seviyedir; gainMap sayısal state eşiklerini interpolate eder
+veya sembolik değeri haritalar. `setState` ve `setIntensity` kazancı smooth
+fade ile uygular. State'in oyun anlamını motor bilmez. `mute(false)` son
+ayarlı master seviyesine döner, birim seviyeye sıfırlamaz.
 
-const music = new MusicEngine({ masterVolume: 0.6, compressor: true });
-await music.loadTrack(mainMenu);
-await music.play('main-menu', { fadeIn: 2 });
-```
-
-### 3. Adaptive state güncelle
-
-```typescript
-music.setState({ intensity: 0.8, tension: 0.4 });
-music.setIntensity(0.9, 0.5); // 0.5 saniye fade
-```
-
-## Temel Kavramlar
-
-### Track
-
-Bir müzik parçası. `id`, `bpm`, `stems` ve opsiyonel `timeSignature` (`[4, 4]`), `bars`, `loopStart`, `loopEnd`, `defaultState` içerir.
-
-### Stem
-
-Track'in bir katmanı. Birden fazla stem aynı anda çalarak harmoni/richness oluşturur.
-
-| Alan      | Açıklama                                    |
-| --------- | ------------------------------------------- |
-| `id`      | Benzersiz stem kimliği                      |
-| `src`     | OGG dosya yolu; iOS'ta MP3 fallback denenir |
-| `buffer`  | Önceden yüklenmiş `AudioBuffer`             |
-| `gain`    | Temel gain (0-1)                            |
-| `loop`    | Loop çalışıp çalmayacağı                    |
-| `pan`     | Stereo pan (-1 sol, 1 sağ)                  |
-| `gainMap` | State'e göre adaptif gain haritası          |
-
-### MusicState
-
-Müziği sahneye uyarlamak için kullanılan değerler kümesi.
-
-```typescript
-interface MusicState {
-  intensity?: number; // 0-1 aksiyon yoğunluğu
-  tension?: number; // 0-1 tehdit/gerilim
-  bossPhase?: number | string;
-  location?: string;
-  [key: string]: number | string | undefined;
-}
-```
-
-### MusicContext
-
-Motorun o anki çalma bağlamını verir; `gainMap` çözümlemesinde ve dış dinleyicilerde kullanılabilir.
-
-```typescript
-interface MusicContext {
-  bpm: number;
-  timeSignature: [number, number];
-  bar: number; // 1-based
-  beat: number; // 1-based float
-  time: number; // track başından geçen saniye
-}
-```
-
-## Stem Gain Haritası
-
-Stem'ler `gainMap` ile state değişimlerine yanıt verir.
-
-### Sayısal state (intensity, tension)
-
-```typescript
-const stem: Stem = {
-  id: 'combat-perc',
-  src: '...',
-  gain: 0.6,
-  gainMap: {
-    intensity: [
-      { threshold: 0.0, gain: 0.0 },
-      { threshold: 0.5, gain: 0.5 },
-      { threshold: 1.0, gain: 1.0 },
-    ],
-  },
-};
-```
-
-`intensity = 0.25` için 0.0-0.5 arası interpolasyondan `gain = 0.25` çıkar.
-
-### Sembolik state (bossPhase, location)
-
-```typescript
-gainMap: {
-  bossPhase: {
-    intro: 0.2,
-    enraged: 1.0,
-    defeated: 0.0,
-  },
-}
-```
+Play ve geçişler önce hedefin çalınabilirliğini doğrular. Hedef boşsa mevcut
+parça korunur. Aynı parçada play yeniden başlatmaz fakat verilen state'i
+uygular. Eşzamanlı asenkron play/geçiş/stop içinde son istek kazanır; eski
+istek ortak durumu yeniden yazamaz. Fade lineer rampayla tam hedefe varır.
 
 ## MusicEngine API
 
-| Metot                                       | Açıklama                                                                  |
-| ------------------------------------------- | ------------------------------------------------------------------------- |
-| `loadTrack(track)`                          | Track buffer'larını yükler; `boolean`, en az bir stem başarısını bildirir |
-| `play(trackId, options?)`                   | Track çalmaya başlar                                                      |
-| `stop(options?)`                            | Çalmayı fade out ile durdurur                                             |
-| `crossfadeTo(trackId, duration?, options?)` | Diğer track'e geçer (bkz. aşağıda)                                        |
-| `playStinger(cueId, options?)`              | Loop'u kesmeden sonraki ölçü/vuruşta vurgu çalar; başlama anını döner     |
-| `playOutro()`                               | Sonraki ölçü sınırında loop'u bırakıp bitişi çalar; bitince parça biter   |
-| `transitionTo(trackId, options)`            | Geçiş cue'suyla başka parçaya geçer; hedef cue'nun ölçüsü kadar sonra     |
-| `setState(state, fadeTime?)`                | State günceller                                                           |
-| `setIntensity(value, fadeTime?)`            | Yoğunluk (0-1) ayarlar                                                    |
-| `setMasterVolume(value, fadeTime?)`         | Master seviye ayarlar                                                     |
-| `mute(muted, fadeTime?)`                    | Susturur / ayarlanan seviyeye açar                                        |
-| `getCurrentState()`                         | Track id, state ve çalma durumu                                           |
-| `dispose()`                                 | Tüm kaynakları ve buffer cache'i bırakır                                  |
+| Metot                                       | Sözleşme                                                                   |
+| ------------------------------------------- | -------------------------------------------------------------------------- |
+| `loadTrack(track)`                          | Stem ve cue tamponlarını yükler; en az bir stem başarıyla yüklendiyse true |
+| `play(trackId, options?)`                   | Çalınabilir hedefi doğrular ve ortak zamanda başlatır                      |
+| `stop(options?)`                            | Kaynakları fade ile durdurur                                               |
+| `crossfadeTo(trackId, duration?, options?)` | Hemen veya açık ölçü hizasında parçaya geçer                               |
+| `playStinger(cueId, options?)`              | Loop'u kesmeden hizalı tek vurgu çalar                                     |
+| `playOutro()`                               | Sonraki ölçüde loop'u bırakıp bitiş cue'sunu çalar                         |
+| `transitionTo(trackId, options)`            | Geçiş cue'su sonrası hedefi hizalı başlatır                                |
+| `setState(state, fadeTime?)`                | Adaptif stem state'ini günceller                                           |
+| `setIntensity(value, fadeTime?)`            | Yoğunluk değerini günceller                                                |
+| `setMasterVolume(value, fadeTime?)`         | Master seviyeyi değiştirir                                                 |
+| `mute(muted, fadeTime?)`                    | Susturur veya son ayarlı seviyeye döner                                    |
+| `getCurrentState()`                         | Track, state ve çalma durumunu verir                                       |
+| `dispose()`                                 | Kaynak, cache, mixer ve abonelikleri bırakır                               |
 
-## Çapraz Geçiş (Crossfade)
+## Çapraz Geçiş
 
-```typescript
-await music.crossfadeTo('combat', 2, {
-  bars: 2, // en erken 2 bar sonraki ölçü sınırında başlar
-  state: { intensity: 0.7 },
-});
-```
+`crossfadeTo` varsayılan olarak hemen başlar. `bars` verilirse geçiş
+belirtilen ölçü sınırına hizalanır; duration geçiş süresidir, bekleme süresi
+değildir. Boş hedef mevcut müziği durdurmaz.
 
-`bars` verilmezse geçiş HEMEN başlar (`duration` geçişin kendi süresidir, öncesinde bekleme yoktur).
+## Cue ve müzikal zaman
 
-## Cue'lar: giriş, bitiş, stinger, geçiş
+Giriş cue'su play ile başlar; loop girişin bars uzunluğu sonrasında aynı
+örnek zamanında girer. Ölçü ızgarası giriş başlangıcından sayılır, kuyruk
+loop'un ilk ölçüsüne taşabilir.
 
-Cue, loop'a karışmayan tek seferlik bir sestir (`MusicCue`: `id`, `src`
-ya da `buffer`, müzikal uzunluk `bars`, `gain`, `align`). Track `intro`,
-`outro` ve `cues` (stinger ve geçişler) taşıyabilir; `loadTrack` cue'ları
-da yükler, yüklenemeyen cue parçayı düşürmez.
+Stinger varsayılan ölçü sınırında, seçilirse vuruşta veya lookahead kadar
+sonra çalar. Outro sonraki ölçüde loop'u kısa fade ile bırakır; doğal bitiş
+onTrackEnd bildirir, bu arada stop gelirse doğal bitiş bildirimi yapılmaz.
+Transition hedefi önce doğrular, cue'yu hizalar, hedefi cue uzunluğunun
+ardından başlatır. Yüklenmeyen cue sağlam track'i düşürmez.
 
-- **Giriş.** `play()` girişi başlatır; loop stem'leri girişin `bars` kadar
-  sonrasında örnek-doğru başlar. Ölçü ızgarası girişin başından sayılır;
-  girişin kuyruğu loop'un ilk ölçüsünün üstünde doğal olarak söner.
-- **Stinger.** `playStinger(id, { align })` loop'u kesmeden sonraki ölçü
-  (varsayılan) ya da vuruş sınırında çalar; `align: 'now'` bakış payı kadar
-  sonra.
-- **Bitiş.** `playOutro()` sonraki ölçü sınırında loop'u 30 ms'de bırakır ve
-  bitişi çalar; bitiş kendiliğinden sönünce `onTrackEnd` bildirilir. Bu
-  sırada `stop()` gelirse bildirim yapılmaz.
-- **Geçiş.** `transitionTo(trackId, { cue })` önce hedefin çalınabilirliğini
-  doğrular, sonra cue'yu ölçü sınırında başlatır; hedef parça cue'nun
-  `bars` kadar sonrasında ölçü başında girer.
+MusicScheduler'da bpm dörtlük başınadır:
+beatDuration = (60 / bpm) × (4 / timeSignature[1]),
+barDuration = beatDuration × timeSignature[0]. Tempo pozitif, ölçü geçerli
+olmalıdır. Spec bpm'i ölçü birimi başına vuruştur; 6/8'de sekizliktir.
+`toMusicTrack` dönüşümü tek yerde yapar; iki taraf yuvarlamayı yeniden yazmaz.
 
-Spec tarafında cue'lar `MusicAssetSpecV1.cues` listesidir (`MusicCueSpecV1`:
-`id`, `kind`, `file`, `frames`, `bars`, `align`, `to`); `toMusicTrack` girişi
-ve bitişi ayrı alanlara, stinger ve geçişleri `cues` listesine koyar.
+## Asset sözleşmesi
 
-## Ses üretimi ve kullanım
+`MusicAssetSpecV1` üretim ve runtime'ın ortak tipidir. Ölçüden frame'e
+`barsToFrames`, doğrulamaya `validateMusicAssetSpec`, track dönüşümüne
+`toMusicTrack`, mastering uyumuna `assertEngineCompatible` karşılık gelir.
+`MASTERING_PATHS` ve `MUSIC_RUNTIME_CAPABILITIES` kabul edilen yolları taşır.
+Cue spec'i giriş, bitiş, stinger ve transition alanlarına açılır.
 
-Yeni müzik ve SFX kanonik `devtools/audio-synth` job/müzik yayın kapısından
-geçer. Oyun paketinin `<oyun>/public/assets/audio/` ağacı gönderilen dosyaların tek
-kaynağıdır; manifest ve bundle oyun ağacında kalır, ara WAV ve `dist` Git'e
-girmez. `pnpm exec just audio-verify` manifestleri kaynak programdan yeniden
-render ederek PCM kimliğini doğrular.
+Motor kompresörünün beyanı offline mastering ile eşleşir. Kompresörsüz
+ölçülen asset'i kompresör açık motorla çalmak uyumsuzdur; gönderilen ölçü
+hissedilen output'u temsil etmez. Bundle'ın engine.compressor değeri motor
+kurulumuna taşınır.
 
-Oyun tek bir `AudioContext` yönetir; müzik ve ambiyans için ayrı iki
-`MusicEngine` tutabilir. Sahne geçişini oyunun kendi yöneticisi yapar; track
-yolları ve loop süreleri oyunun `<oyun>/src/config/` ağacındadır.
+Yeni ses kanonik audio-synth müzik yayınından geçer. Bundle ve OGG tüketici
+paketindedir; build'in girdisi gönderilmiş assettir. Kaynak, render ve
+ara WAV çalışma zamanına girmez. Dosya URL dönüşümü tüketicide yapılır;
+`pnpm exec just audio-verify` program kimliği ve teslimi doğrular.
 
-## Müzik asset sözleşmesi
+## Yaşam döngüsü ve sınırlar
 
-Yeni müzik `devtools/audio-synth` müzik hattında üretilir ve çalma
-sözleşmesini `MusicAssetSpecV1` olarak taşır. Spec bu paketin
-`core/src/audio/music/spec.ts` dosyasındadır, çünkü üretim aracı da çalışma
-zamanı da ondan TÜRETİR: ölçü → örnek dönüşümü tek yerdedir ve iki taraf
-ayrışamaz (ayrışma loop dikişinde duyulur, hiçbir test yakalamaz).
+Motor duraklatma, uyanış ve sahne kapanışına tüketici tarafından bağlanır.
+Parça listesi, yollar ve oyun state eşlemesi tüketicinin config verisidir.
+Adaptive gain dışında canlı arrange, MIDI, beatmatching, DAW/VST ve canlı
+sentez yüzeyi yoktur. Dinleme kabulü ve codec desteği gerçek hedefte ayrıca
+doğrulanır.
 
-| Ad (`Music.` altında)                              | Ne yapar                                                                                  |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `barsToFrames(bars, bpm, beatsPerBar, sampleRate)` | Ölçü → örnek; yuvarlamanın TEK yeri                                                       |
-| `validateMusicAssetSpec(value)`                    | Runtime'ın okuyabileceği kadar doğrular (şema, çalma modeli, kare sayısı, mastering yolu) |
-| `toMusicTrack(spec, { resolve })`                  | Spec'i motorun çaldığı `MusicTrack`e çevirir; loop noktaları SANİYE                       |
-| `assertEngineCompatible(spec, options)`            | Spec kompresörsüz ölçüldüyse motor kompresörü açıkken hata verir                          |
-| `MASTERING_PATHS`                                  | Çalma modeli → zorunlu mastering yolu                                                     |
-| `MUSIC_RUNTIME_CAPABILITIES`                       | Motorun GERÇEKTEN yaptığı geçişler, cue türleri ve sınırları (üretim bu listeye bakar)    |
-
-**Kompresör uyumu.** Master kompresörü (−24 dB eşik, 12 oran) varsayılan
-olarak açıktır ve −14 LUFS'e getirilmiş bir parçayı ezer; offline ölçüm
-duyulanı temsil etmez. Spec'in `engine.compressor` beyanı motorun kurulumuyla
-eşleşmelidir.
-
-## Yeni Müzik Ekleme
-
-1. audio-synth'te müzik isteğini (`brief.json`, `AudioBriefV1` `kind: 'music'`)
-   ve programı (`music.json`, `MusicProgramV1`) yaz;
-   audio-synth'in `audio:job music analyze <id>` komutu ses render etmeden
-   sembolik uyumu raporlar. Giriş, bitiş ve stinger isteyen parça programda
-   `segments` bildirir; her cue ayrı asset olarak yayımlanır ve spec'in
-   `cues` listesine girer.
-2. `audio:job music publish <id>`: her stem kanonik publish kapısından geçer,
-   en son `MusicBundleV1` (içinde `MusicAssetSpecV1`) hedef paketin müzik
-   köküne yazılır. Oyun hedefi çalışma zamanı beyanı (`audio-target.json`)
-   ister.
-3. Oyun paketi bundle'ı kendi ağacından okur ve
-   `Music.toMusicTrack(bundle.spec, { resolve })` ile track'e çevirir; motoru
-   `compressor: bundle.spec.engine.compressor` ile kurar.
-4. Doğrula: `audio:job music verify <id>` (ya da `verify --all`) ve oyunun
-   kendi kapıları.
-
-## Scheduler
-
-`MusicScheduler` BPM ve ölçü üzerinden bar/beat hesaplar. `crossfadeTo` içinde kullanılır.
-
-```typescript
-const scheduler = new MusicScheduler(110, [4, 4]);
-const nextBarTime = scheduler.getNextBarTime(ctx.currentTime, trackStartTime);
-```
-
-- `beatDuration = (60 / bpm) * (4 / timeSignature[1])` — `bpm` dörtlük başınadır
-- `barDuration = beatDuration * timeSignature[0]`
-
-Spec'in `bpm`'i ise ölçü BİRİMİ başına vuruştur (6/8'de sekizlik);
-`toMusicTrack` dönüşümü `bpm × 4 / birim` ile tek yerde yapar.
-
-## Sınırlar
-
-İyi sonuç verir:
-
-- Uzun loop'lu ambient / drone
-- Layered müzik temaları
-- Adaptive gain'li stem mix'ler
-- Bar sınırında crossfade
-- Giriş + dikişsiz loop + bitiş; ölçü/vuruş hizalı stinger; cue'lu geçiş
-
-Yetersiz kalır:
-
-- Real-time MIDI zamanlama / ritmik grid
-- Real-time ritim / beatmatching
-- DAW/VST entegrasyonu ve canlı orkestrasyon
-- **Çalışma zamanında sentez.** Motor `AudioBuffer` çalar; enstrümanı üreten
-  taraf build-time'dadır ve bu sınır bilinçlidir.
-
-Adaptif gain dışında real-time arrange yoktur.
-
-## Doğrulama
-
-Müzik değişikliği sonrası:
-
-```bash
-pnpm -r typecheck
-pnpm --filter @volstudio/core test
-pnpm --filter <oyun-paketi> build
-pnpm --filter <oyun-paketi> test
-```
-
-Ayrıca tarayıcıda `?debug` ile ses hataları ve context state gözlemlenebilir.
+CORE testleri çalma, yükleme, cache, geçiş ve scheduler sözleşmesini sınar.
+Üretim değişikliğinde manifest ve bundle doğrulaması ile oyunun build ve
+runtime kontrolleri birlikte yapılır. Debug diagnostics ses hata ve bağlam
+state'ini gözlemlemeyi sağlar.

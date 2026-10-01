@@ -19,7 +19,6 @@ export const ROOT_ENTRIES = {
   LICENSE: 'Apache 2.0 lisans metni',
   NOTICE: 'Apache 2.0 bildirimi ve üçüncü taraf lisansları',
   'README.md': 'Depo girişi',
-  'README.en.md': 'İngilizce giriş (belge fazında kalkacak)',
   'TODO.md': 'Repo geneli iş listesi',
   core: 'CORE paketi',
   devtools: 'Geliştirme araçları paketleri',

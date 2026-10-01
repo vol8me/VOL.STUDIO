@@ -1,82 +1,52 @@
-# pen.dev — tasarım kararları
+# Rig üretim ve gönderim tasarımı
 
-Nasıl çalıştırılacağı [README](README.md)'dedir.
+Tasarım kaynağı yazarındır, Pencil export'u aracındır, gönderilmiş asset
+tüketicinindir. Araç üretir ve doğrular; CORE rig sözleşmesini doğrular ve
+çalışma zamanında monte eder. Oyun üretici aracı runtime'da import etmez.
 
-## Oyunda tüketim
+## Kaynak ve ara çıktı
 
-```typescript
-import {
-  articulateRigDefinition,
-  assembleRig,
-  buildRigDefinition,
-  preloadRigTextures,
-  validateRigMetadata,
-} from '@volstudio/core';
-import metadataRaw from '@/assets/rig/<entity>.metadata.json';
+`.pen` canlı Pencil belgesidir ve yalnız MCP erişimiyle işlenir. Düğüm
+kimlikleri önceden hatırlanan değerle kullanılmaz; her export taze keşif
+ister. Native Export kendi renderer'ını kullanır; elle SVG/raster yeniden
+çizimi native çıktının yerine geçmez.
 
-const metadata = validateRigMetadata(metadataRaw, '<entity>.metadata.json');
-const partUrls = Object.fromEntries(metadata.parts.map((part) => [part.file, part.file]));
+Export staging'de node kimliğiyle PNG üretir. Düzenleyici entity/domain
+manifestinden parça ve preview adlarını, metadata'yı ve dizin yapısını kurar.
+`exported/<domain>/<entityId>/` altındaki ara çıktı repo dışı Pencil adımı
+gerektirdiği için commit edilir. Oyun build'inin girdisi tüketiciye gönderilmiş
+hâldir; export ağacı oyundan doğrudan okunmaz.
 
-// Scene.preload()
-const rig = articulateRigDefinition(buildRigDefinition(metadata, partUrls), ARTICULATION);
-preloadRigTextures(this, rig);
+## Koordinat ve eklem
 
-// Scene.create()
-const { container, parts } = assembleRig(this, rig);
-```
+Manifestte part kimliği benzersizdir. Parent render eklemidir; fizik kütlesi,
+kısıtı veya eklem limiti değildir. Ebeveyn çocuktan önce tanımlanır;
+ileri referans ve döngü reddedilir.
 
-Eklem şeması, pivot sözleşmesi ve montaj kuralları CORE'un rig modülündedir.
+x/y rig kökünün yerel uzayındaki sol üst köşeyi, rotation bu köşe etrafındaki
+CCW dereceyi bildirir. Sheet hücre yerleşimi gerçek rig koordinatı sayılmaz.
+Koordinat yoksa metadata positionPx null taşır; bu çıktı görsel parça olsa
+da rig montajı için yeterli değildir. rootSizePx ve parça yerleşimi birlikte
+rig uzayını tanımlar.
 
-## Gönderimde yol yeniden yazımı
+Raster ölçüsü exportScale × logicalSizePx olmak zorunda değildir: dönüş,
+gölge ve diğer Pencil işlemleri padding üretebilir. Montaj mantıksal boyutu
+ve exportScale'ı kullanır; rasterı mantıksal kutuya sıkıştırmaz. Koordinat ve
+pivot hesabı CORE'un rig sözleşmesindedir.
 
-Gönderilen metadata'nın `file` alanları tüketicinin kendi yoluna göre yeniden
-yazılır (`assets/rig/<entity>/parts/<partId>.png`) ve `previews` DÜŞÜRÜLÜR:
-önizleme bir yazarlık referansıdır, çalışma zamanı yükü değil.
+## Doğrulama ve teslim
 
-Yeniden adlandırılmış bir parçanın eskisi hedefte kalırsa hem bundle'ı şişirir
-hem bir sonraki okuyucuyu yanıltır; bu yüzden fazlalıklar silinir.
+Audit eksik parça, metadata uyuşmazlığı ve yetim dosyanın tamamını toplar;
+verify bozuk export'u göndermez. Diskte bulunan fakat metadata'da olmayan
+parça da hatadır, silinmiş bir bileşenin meşru asset gibi taşınması önlenir.
 
-## Katman sınırı
+Sync metadata file yollarını tüketicinin kendi statik köküne yeniden yazar.
+Previews çalışma zamanı yükü olmadığı için düşürülür. Hedefteki eski parça
+artıkları temizlenir. Gönderilmiş metadata ve asset ağacı tüketici tarafında
+ayrıca audit edilir.
 
-Rig'in çalışma zamanı yüzeyi (`validateRigMetadata`, `buildRigDefinition`,
-`assembleRig`) CORE'dadır, burada değil. Bir oyunun çalışma zamanı asset'ini
-ÜRETEN araca bağlanmamalıdır — sınır PAKET değil ZAMANDIR.
-
-## Export manifest sözleşmesi
-
-`scripts/organize-pen-export.mjs` ham `Export()` çıktısını
-(`<nodeId>.png`) entity düzenine taşır ve metadata yazar:
-
-```
-exported/<domain>/<entityId>/{parts,previews}/<partId>.png
-exported/<domain>/<entityId>/metadata/<entityId>.metadata.json
-```
-
-```json
-{
-  "entityId": "arachnid",
-  "domain": "enemies",
-  "sourcePenFile": "devtools/pen.dev/pen/entities.pen",
-  "sourceSheetNodeId": "bBlFU",
-  "exportScale": 2,
-  "rootSizePx": { "width": 224, "height": 268.8 },
-  "parts": [
-    { "id": "PqKhX", "partId": "top_cap", "type": "rectangle", "width": 16, "height": 10 },
-    { "id": "QrLmY", "partId": "barrel", "parent": "top_cap", "width": 24, "height": 6 }
-  ],
-  "previews": [{ "id": "mjtTL", "partId": "reference_card", "width": 520, "height": 520 }]
-}
-```
-
-**`parent` bir RENDER eklemidir.** Verilirse parça o `partId`nin altına bağlanır
-ve üst parça döndüğünde birlikte döner (kol → önkol → el); ebeveyn manifestte
-bu parçadan ÖNCE tanımlanmalıdır. Eklem limiti, kütle ya da kısıt taşımaz.
-
-**`x`/`y`/`rotation` opsiyoneldir.** Bir export sheet'in hücre düzeninden gelen
-konum gerçek rig yerleşimi DEĞİLDİR; o durumda atlanır ve metadata'ya
-`positionPx: null` yazılır. Verildiğinde `x`/`y` parçanın rig kökünün yerel
-uzayındaki sol-üst köşesi, `rotation` aynı köşe etrafında CCW derecedir.
-
-Bu script Pencil ile konuşmaz; yalnız dosya taşır ve JSON üretir. Export sheet
-düğümlerini bulup native `Export()` çağırma adımı MCP `execute` üzerinden ayrı
-yapılır ve buranın tükettiği staging dizinini üretir.
+Oyunda akış `validateRigMetadata`, `buildRigDefinition`, isteğe bağlı
+`articulateRigDefinition`, preload ve `assembleRig`dir. Rig animasyon politikası,
+uzuv sayısı, oyun fizik kuralı ve tüketici görsel kararı üretim aracına girmez.
+Testler gerçek geçici dizinde kaynak, gönderim ve yetim dosya sözleşmesini
+sınar; mock disk gerçek dosya farkının kanıtı değildir.
