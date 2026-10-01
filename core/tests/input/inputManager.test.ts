@@ -257,6 +257,52 @@ describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
     expect(snapshot.providers).toBeUndefined();
   });
 
+  it('opt-in kip sahibi politikası çubuk bırakılınca bayat fare nişanını kullanmaz', () => {
+    const pc = {
+      ...makeProvider(false, { ...idleState(), aim: new Vector2(1, 0) }, 'pc'),
+      providesRestingState: true,
+    };
+    for (const mode of ['touch', 'gamepad']) {
+      const other = makeProvider(false, idleState(), mode);
+      const manager = new InputManager(fakeScene, {
+        actions: TEST_ACTIONS,
+        pcActionBindings: PC_BINDINGS,
+        providers: [other, pc],
+        inputMode: { initial: mode },
+        restingAimPolicy: 'owner',
+      });
+      expect(manager.getState(Vector2.zero()).aim.length()).toBe(0);
+      manager.destroy();
+    }
+    const manager = new InputManager(fakeScene, {
+      actions: TEST_ACTIONS,
+      pcActionBindings: PC_BINDINGS,
+      providers: [pc],
+      inputMode: { initial: 'pc' },
+      restingAimPolicy: 'owner',
+    });
+    expect(manager.getState(Vector2.zero()).aim.x).toBe(1);
+    manager.destroy();
+  });
+
+  it('opt-in politika etkin kol nişanı boşken de fare nişanına düşmez', () => {
+    const gamepad = makeProvider(true, idleState(), 'gamepad');
+    const pc = {
+      ...makeProvider(false, { ...idleState(), aim: new Vector2(1, 0) }, 'pc'),
+      providesRestingState: true,
+    };
+    const manager = new InputManager(fakeScene, {
+      actions: TEST_ACTIONS,
+      pcActionBindings: PC_BINDINGS,
+      providers: [gamepad, pc],
+      inputMode: { initial: 'gamepad' },
+      restingAimPolicy: 'owner',
+    });
+    manager.update(16);
+    expect(manager.getState(Vector2.zero()).aim.length()).toBe(0);
+    manager.destroy();
+  });
+
   describe('durağan nişan sinyali', () => {
     /** Nişanı olan ama "aktif" olmayan bir fare sağlayıcısı. */
     function makeRestingPc(aim: { x: number; y: number }) {
@@ -288,10 +334,7 @@ describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
       // Regresyon: duran oyuncunun nişanı (0,0) oluyordu; nişana bağlı her
       // mekanik kendi yedeğine düşüyordu (çoklu atış hep sağa, ateş alanı
       // ayağın dibine). Fare durağanken de bir yerdedir.
-      const manager = makeManager([
-        makeIdleTouch() as never,
-        makeRestingPc({ x: -1, y: 0 }) as never,
-      ]);
+      const manager = makeManager([makeIdleTouch(), makeRestingPc({ x: -1, y: 0 })]);
 
       const state = manager.getState(new Vector2(0, 0));
 
@@ -303,7 +346,7 @@ describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
     it('durağan sağlayıcı yoksa gerçekten sıfır durum döner', () => {
       // Dokunmatik cihazda parmak yokken nişan diye bir şey YOKTUR; orada
       // bayat bir yön uydurmak yanlış olurdu.
-      const manager = makeManager([makeIdleTouch() as never]);
+      const manager = makeManager([makeIdleTouch()]);
 
       const state = manager.getState(new Vector2(0, 0));
 
@@ -324,7 +367,7 @@ describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
           actions: { ...createIdleActions(TEST_ACTIONS), engage: true },
         }),
       };
-      const manager = makeManager([active as never, makeRestingPc({ x: -1, y: 0 }) as never]);
+      const manager = makeManager([active, makeRestingPc({ x: -1, y: 0 })]);
 
       const state = manager.getState(new Vector2(0, 0));
 
@@ -348,11 +391,7 @@ describe('Diagnostics snapshot sağlayıcı kümesi AÇIK', () => {
         update: () => {},
         destroy: () => {},
       };
-      const manager = makeManager([
-        makeIdleTouch() as never,
-        makeRestingPc({ x: -1, y: 0 }) as never,
-        gamepad as never,
-      ]);
+      const manager = makeManager([makeIdleTouch(), makeRestingPc({ x: -1, y: 0 }), gamepad]);
 
       const state = manager.getState(new Vector2(0, 0));
 

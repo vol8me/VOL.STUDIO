@@ -6,6 +6,8 @@ import type { GlyphName } from './glyphMap';
 
 export interface InputPresentationOptions {
   initialMode?: string;
+  /** Sahip girdi yöneticisinin durumu; verilince kol ve kip yeniden yoklanmaz. */
+  readState?: () => { mode: string | undefined; padId: string; padConnected: boolean };
   getGamepads?: () => readonly (PadLike | null)[];
   context?: () => GlyphFamilyContext;
   root?: ParentNode;
@@ -21,8 +23,9 @@ export interface ControlGlyphBinding {
 
 export class InputPresentationController {
   private readonly scope = new DisposableScope();
-  private readonly pad: GamepadController<never>;
-  private readonly arbiter: InputModeArbiter;
+  private readonly pad: GamepadController<never> | null;
+  private readonly arbiter: InputModeArbiter | null;
+  private sharedMode: string | undefined;
   private readonly now: () => number;
   private readonly glyphs = new WeakMap<
     HTMLElement,
@@ -37,12 +40,16 @@ export class InputPresentationController {
 
   constructor(private readonly options: InputPresentationOptions = {}) {
     this.now = options.now ?? (() => performance.now());
-    this.pad = new GamepadController({ actions: [], getGamepads: options.getGamepads });
-    this.arbiter = new InputModeArbiter({ initial: options.initialMode, now: this.now });
+    this.pad = options.readState
+      ? null
+      : new GamepadController({ actions: [], getGamepads: options.getGamepads });
+    this.arbiter = options.readState
+      ? null
+      : new InputModeArbiter({ initial: options.initialMode, now: this.now });
   }
 
   get mode(): string | undefined {
-    return this.arbiter.mode;
+    return this.options.readState ? this.sharedMode : this.arbiter?.mode;
   }
 
   createGlyph(binding: ControlGlyphBinding): HTMLElement {
@@ -59,6 +66,7 @@ export class InputPresentationController {
   start(): void {
     if (this.started) return;
     this.started = true;
+    if (this.options.readState) return;
     this.scope.addListener(document, 'keydown', () => {
       this.pcEdge = this.now();
     });
@@ -78,17 +86,25 @@ export class InputPresentationController {
   }
 
   poll(): void {
-    this.pad.update(0);
-    const snapshot = this.pad.getDebugSnapshot().providers?.gamepad;
-    this.padId = typeof snapshot?.padId === 'string' ? snapshot.padId : '';
-    this.padConnected = typeof snapshot?.padIndex === 'number' && snapshot.padIndex >= 0;
-    if (this.padConnected) this.hadPad = true;
-    const now = this.now();
-    this.arbiter.observe([
-      { id: 'touch', active: now - this.touchEdge < 250 },
-      { id: 'pc', active: now - this.pcEdge < 250 },
-      { id: 'gamepad', active: this.pad.isActive },
-    ]);
+    if (this.options.readState) {
+      const state = this.options.readState();
+      this.sharedMode = state.mode;
+      this.padId = state.padId;
+      this.padConnected = state.padConnected;
+      if (this.padConnected) this.hadPad = true;
+    } else {
+      this.pad?.update(0);
+      const snapshot = this.pad?.getDebugSnapshot().providers?.gamepad;
+      this.padId = typeof snapshot?.padId === 'string' ? snapshot.padId : '';
+      this.padConnected = typeof snapshot?.padIndex === 'number' && snapshot.padIndex >= 0;
+      if (this.padConnected) this.hadPad = true;
+      const now = this.now();
+      this.arbiter?.observe([
+        { id: 'touch', active: now - this.touchEdge < 250 },
+        { id: 'pc', active: now - this.pcEdge < 250 },
+        { id: 'gamepad', active: this.pad?.isActive ?? false },
+      ]);
+    }
     for (const element of (this.options.root ?? document).querySelectorAll<HTMLElement>(
       '[data-vol-input-glyph]',
     )) {
@@ -115,6 +131,6 @@ export class InputPresentationController {
   destroy(): void {
     this.started = false;
     this.scope.dispose();
-    this.pad.destroy();
+    this.pad?.destroy();
   }
 }

@@ -53,6 +53,8 @@ export interface InputManagerOptions<TAction extends string> {
    * gamescope oturumunda `'gamepad'`); ayrıntılar `InputModeArbiter`'de.
    */
   inputMode?: InputModePolicyOptions;
+  /** Durağan nişan başka kipte kullanılabilir mi? Varsayılan tüm kiplerde kullanılır. */
+  restingAimPolicy?: 'always' | 'owner';
   /**
    * Provider'lar testler için enjekte edilebilir. Verilmezse gerçek
    * TouchController/PCController/GamepadController kurulur; liste sırası
@@ -64,12 +66,14 @@ export interface InputManagerOptions<TAction extends string> {
 export class InputManager<TAction extends string> {
   private readonly providers: InputProvider<TAction>[];
   private readonly actions: readonly TAction[];
+  private readonly restingAimPolicy: 'always' | 'owner';
   private readonly lifecycle = new DisposableScope();
   private readonly arbiter: InputModeArbiter;
   private readonly textEntryProbe = (): boolean => this.arbiter.mode === 'gamepad';
 
   constructor(scene: Phaser.Scene, options: InputManagerOptions<TAction>) {
     this.actions = options.actions;
+    this.restingAimPolicy = options.restingAimPolicy ?? 'always';
     this.arbiter = new InputModeArbiter(options.inputMode);
     // Input/TextArea focus kancası bu probu okur: kol kipindeyse native
     // odak yerine ekran klavyesi (ya da kayıtlı sağlayıcı) açılır.
@@ -163,7 +167,9 @@ export class InputManager<TAction extends string> {
     const active = this.providers.filter((provider) => provider.isActive);
 
     if (active.length === 0) {
-      const resting = this.providers.find((provider) => provider.providesRestingState === true);
+      const resting = this.providers.find(
+        (provider) => provider.providesRestingState === true && this.canUseRestingAim(provider),
+      );
       if (resting) return resting.getState(playerPosition);
       return {
         move: Vector2.zero(),
@@ -199,7 +205,10 @@ export class InputManager<TAction extends string> {
     let aim = pick('aim');
     if (!aim) {
       const resting = this.providers.find(
-        (provider) => provider.providesRestingState === true && provider.isActive === false,
+        (provider) =>
+          provider.providesRestingState === true &&
+          this.canUseRestingAim(provider) &&
+          provider.isActive === false,
       );
       const restingAim = resting?.getState(playerPosition).aim;
       if (restingAim && restingAim.length() > 0) aim = restingAim;
@@ -210,6 +219,14 @@ export class InputManager<TAction extends string> {
       aim: aim ?? Vector2.zero(),
       actions,
     };
+  }
+
+  private canUseRestingAim(provider: InputProvider<TAction>): boolean {
+    return (
+      this.restingAimPolicy === 'always' ||
+      this.arbiter.mode === undefined ||
+      this.arbiter.mode === provider.id
+    );
   }
 
   /** Aktif input provider'ın ham durum snapshot'ını döner. */

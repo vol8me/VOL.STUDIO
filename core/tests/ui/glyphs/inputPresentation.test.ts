@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { InputPresentationController } from '../../../src/ui/glyphs/InputPresentationController';
 import type { PadLike } from '../../../src/input/GamepadState';
 
@@ -14,6 +14,30 @@ const pad = (id: string, pressed = false): PadLike => ({
 afterEach(() => document.body.replaceChildren());
 
 describe('InputPresentationController', () => {
+  it('paylaşılan girdi durumunda kolu yeniden yoklamaz ve kendi kip hakemini açmaz', () => {
+    const getGamepads = vi.fn(() => []);
+    const state = { mode: 'gamepad' as string | undefined, padId: 'DualSense', padConnected: true };
+    const presentation = new InputPresentationController({ readState: () => state, getGamepads });
+    const glyph = presentation.createGlyph({
+      padName: 'faceDown',
+      keyboardName: 'key',
+      label: 'Onay',
+    });
+    document.body.append(glyph);
+    presentation.start();
+    presentation.poll();
+    expect(getGamepads).not.toHaveBeenCalled();
+    expect(presentation.mode).toBe('gamepad');
+    expect(glyph.querySelector('img')?.getAttribute('src')).toContain('/playstation/');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+    presentation.poll();
+    expect(presentation.mode).toBe('gamepad');
+    state.mode = 'pc';
+    presentation.poll();
+    expect(glyph.querySelector('img')?.getAttribute('src')).toContain('/keyboard/');
+    presentation.destroy();
+  });
+
   it('aynı glif düğümü canlı kol ailesine ve klavye/dokunmatik kipine geçer', () => {
     let now = 0;
     let pads: PadLike[] = [pad('Steam Deck')];
