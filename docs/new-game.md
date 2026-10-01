@@ -3,6 +3,42 @@
 Her madde onu zorlayan kapıdan türetilmiştir. Atlanan madde ya kapıyı kırar ya
 da testlerin sessizce hiç koşmamasına yol açar.
 
+## Üreten şablon
+
+Yeni oyun, mevcut CORE ve paylaşılan native kabuk üzerinden üretilir:
+
+```sh
+pnpm new:game --name orbit --id com.volstudio.orbit --title ORBIT \
+  --port 5191 --hmr-port 1431 --e2e-port 5192
+pnpm install
+NEW_GAME_PACKAGE="@volstudio/orbit"
+pnpm --filter "${NEW_GAME_PACKAGE}" build
+cargo check --manifest-path games/orbit/src-tauri/Cargo.toml --offline
+pnpm signoff
+```
+
+Ad küçük harfli kebab-case, kimlik üç veya daha fazla parçalı ters alan adıdır.
+Üç port farklı olmalıdır; mevcut ürün kimliği, paket adı, yol ve portlar
+reddedilir. Betik `games/<ad>` ağacını kurar; lifecycle'a `active` kaydı,
+`quality.json`a taban kapsam eşiği, bundle ve ölçekleme bütçesi ekler. Mevcut
+kayıtlar korunur; üretim başarısız olursa yeni ağaç ve kayıtlar geri alınır.
+
+Kaynak `tauri-v2/templates/game/`dir. `.template` uzantıları üretimde kaldırılır.
+Şablon Phaser sahnesi, CORE düğmesi, iki dil, kaynakla eşleşen birim testleri,
+Chromium/WebKit E2E, `coreAliases()`, ortak public asset hattı ve uygulamanın
+kendi bağlamını üreten Rust crate'ini taşır. Native crate kökün
+`games/*/src-tauri` workspace glob'una kendiliğinden girer; ayrı Cargo kilidi
+oluşturulmaz. İlk native kontrolü yeni crate kaydını kök Cargo kilidine ekler;
+Rust kapısının `--locked` koşusu bundan sonra yeni paketi de sınar. Kullanılmayan ürün eklentileri ve başka oyunun oynanışı kopyalanmaz.
+
+İkon kimlikten deterministik üretilen bir başlangıç çizimidir; yayın öncesi
+ürün çizimiyle değiştirilir. Android native proje kaynak değildir:
+`pnpm --filter <paket> tauri android init` ardından oyun paketinde
+`pnpm exec tauri icon src-tauri/icons/icon.png` çalıştırılarak ürün ikonları
+üretilir. Başlangıç ölçekleme ölçümü CORE uzamsal indeksini kullanır; oynanış
+eklendiğinde betik ve bütçe gerçek oyun yükünü ölçmelidir. Cihaz kabulü ayrıca
+uygulanır; şablon üretimi cihaz kabulünü kanıtlamaz.
+
 ## Zorunlu
 
 | Ne                                                             | Kapı                                                                            |

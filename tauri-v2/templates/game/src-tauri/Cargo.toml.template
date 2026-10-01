@@ -1,0 +1,21 @@
+[package]
+name = "{{NAME}}-tauri"
+version = "0.1.0"
+description = "{{TITLE}} native kabuğu"
+authors = ["VOL.STUDIO"]
+edition = "2021"
+
+[lib]
+name = "{{LIB_NAME}}"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6", features = [] }
+
+[dependencies]
+volstudio-tauri = { path = "../../../tauri-v2/src-tauri", default-features = false }
+tauri = { version = "2.11", features = ["rustls-tls"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol", "volstudio-tauri/custom-protocol"]

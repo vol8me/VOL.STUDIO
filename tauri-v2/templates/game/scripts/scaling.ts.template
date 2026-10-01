@@ -1,0 +1,13 @@
+import { SpatialIndex } from '@volstudio/core/spatial';
+const spatial = [128, 512].map((count) => {
+  const entities = Array.from({ length: count }, (_, index) => ({ x: index * 10, y: index * 10 }));
+  const index = new SpatialIndex(32);
+  for (let run = 0; run < 100; run++) index.rebuild(entities);
+  const samples = Array.from({ length: 15 }, () => {
+    const started = performance.now();
+    for (let run = 0; run < 200; run++) index.rebuild(entities);
+    return (performance.now() - started) / 200;
+  }).sort((a, b) => a - b);
+  return { count, ms: samples[Math.floor(samples.length / 2)] };
+});
+console.log(JSON.stringify({ spatial }));

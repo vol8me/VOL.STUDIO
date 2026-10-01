@@ -1,0 +1,28 @@
+import { expect, test, vi } from 'vitest';
+const destroy = vi.hoisted(() => ({ listener: (() => {}) as () => void }));
+vi.mock('@volstudio/core', () => ({
+  i18n: { addResources: vi.fn(), init: vi.fn().mockResolvedValue(undefined) },
+  createVolGame: vi.fn().mockResolvedValue({
+    events: {
+      once: (_event: string, listener: () => void) => {
+        destroy.listener = listener;
+      },
+    },
+  }),
+  showFatalStartupError: vi.fn(),
+  suppressNativeMenus: vi.fn(() => vi.fn()),
+}));
+vi.mock('../src/app/App', () => ({
+  App: class {
+    destroy = vi.fn();
+  },
+}));
+vi.mock('../src/scenes/MainScene', () => ({ MainScene: class {} }));
+import { boot } from '../src/main';
+import { i18n, createVolGame } from '@volstudio/core';
+test('çeviri ve CORE açılışını kurar; yaşam döngüsünü kapatır', async () => {
+  await boot();
+  destroy.listener();
+  expect(i18n.init).toHaveBeenCalled();
+  expect(createVolGame).toHaveBeenCalled();
+});

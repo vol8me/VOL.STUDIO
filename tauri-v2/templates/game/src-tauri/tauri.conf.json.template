@@ -1,0 +1,67 @@
+{
+  "productName": "{{TITLE}}",
+  "mainBinaryName": "{{TITLE}}",
+  "version": "0.1.0",
+  "identifier": "{{ID}}",
+  "build": {
+    "beforeDevCommand": "pnpm --filter @volstudio/{{NAME}} dev",
+    "beforeBuildCommand": "pnpm --filter @volstudio/{{NAME}} build",
+    "devUrl": "http://localhost:{{PORT}}",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "{{TITLE}}",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 500,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' customprotocol:",
+        "script-src": "'self'",
+        "style-src": "'unsafe-inline' 'self'",
+        "img-src": "'self' blob: data:",
+        "font-src": "'self'",
+        "connect-src": "'self' ipc: http://ipc.localhost",
+        "media-src": "'self'",
+        "object-src": "'none'",
+        "frame-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'none'",
+        "frame-ancestors": "'none'"
+      },
+      "dangerousDisableAssetCspModification": ["style-src"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["appimage", "nsis"],
+    "category": "Game",
+    "shortDescription": "{{TITLE}}",
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      },
+      "deb": {
+        "desktopTemplate": "linux.desktop.hbs"
+      },
+      "rpm": {
+        "desktopTemplate": "linux.desktop.hbs"
+      }
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "app": {
+    "title": "{{TITLE}}",
+    "ready": "Hazır",
+    "fatal": "Oyun başlatılamadı"
+  }
+}

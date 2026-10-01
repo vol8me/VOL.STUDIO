@@ -1,0 +1,30 @@
+import '@volstudio/core/ui/styles.css';
+import { createVolGame, i18n, showFatalStartupError, suppressNativeMenus } from '@volstudio/core';
+import { App } from './app/App';
+import { MainScene } from './scenes/MainScene';
+import { GAME } from './config/game';
+import en from './i18n/en.json';
+import tr from './i18n/tr.json';
+import './i18n/i18next-augment';
+import './style.css';
+
+export async function boot(): Promise<void> {
+  i18n.addResources('tr', '{{NAMESPACE}}', tr);
+  i18n.addResources('en', '{{NAMESPACE}}', en);
+  await i18n.init();
+  const app = new App(document.getElementById('hud')!);
+  const game = await createVolGame({
+    parent: 'game',
+    backgroundColor: GAME.backgroundColor,
+    strategy: 'resize',
+    maxDpr: GAME.maxDpr,
+    scenes: [MainScene],
+  });
+  const stopMenus = suppressNativeMenus(document);
+  game.events.once('destroy', () => {
+    app.destroy();
+    stopMenus();
+  });
+}
+
+void boot().catch((error: unknown) => showFatalStartupError({ title: tr.app.fatal, error }));

@@ -1,0 +1,13 @@
+import { afterEach, expect, test, vi } from 'vitest';
+vi.mock('@volstudio/core/i18n', () => ({ i18next: { t: (key: string) => key } }));
+import { App } from '../../src/app/App';
+afterEach(() => {
+  document.body.replaceChildren();
+});
+test('CORE düğmesi oluşturulur ve kapatılınca kaldırılır', () => {
+  const app = new App(document.body);
+  expect(document.querySelector('button')?.disabled).toBe(true);
+  expect(document.title).toBe('{{NAMESPACE}}:app.title');
+  app.destroy();
+  expect(document.querySelector('button')).toBeNull();
+});
