@@ -81,7 +81,9 @@ export class ViewportManager {
         parent,
         width: Math.max(1, width * quality),
         height: Math.max(1, height * quality),
-        backgroundColor: this.config.backgroundColor,
+        ...(this.config.backgroundColor === undefined
+          ? {}
+          : { backgroundColor: this.config.backgroundColor }),
         zoom: 1 / quality,
         scale: {
           mode: Phaser.Scale.NONE,
@@ -102,7 +104,9 @@ export class ViewportManager {
       parent,
       width: this.config.width,
       height: this.config.height,
-      backgroundColor: this.config.backgroundColor,
+      ...(this.config.backgroundColor === undefined
+        ? {}
+        : { backgroundColor: this.config.backgroundColor }),
       scale: {
         mode: this.config.strategy === 'envelop' ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,

@@ -87,6 +87,15 @@ afterEach(() => {
 });
 
 describe('ViewportManager — DPR kelepçesi', () => {
+  it('renk verilmezse Phaser varsayılanını undefined alanla ezmez', () => {
+    for (const options of [{ strategy: 'resize' as const }, { width: 800, height: 600 }]) {
+      expect(new ViewportManager(options).getConfig()).not.toHaveProperty('backgroundColor');
+      expect(
+        new ViewportManager({ ...options, backgroundColor: '#123456' }).getConfig(),
+      ).toHaveProperty('backgroundColor', '#123456');
+    }
+  });
+
   it('K2: resize sonrası canvas CSS boyutu pencereyi taşmaz', () => {
     setEnvironment(3, 1000, 800);
 
