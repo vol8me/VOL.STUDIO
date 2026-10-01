@@ -117,15 +117,11 @@ gen-theme:
 
 # JS/TS çıktıları, raporlar ve kapı önbelleği.
 clean:
-    rm -rf core/dist devtools/*/dist games/*/dist tauri-v2/dist
-    rm -rf core/coverage devtools/*/coverage games/*/coverage tauri-v2/coverage
-    rm -rf devtools/*/test-results devtools/*/playwright-report devtools/deck/web/vendor
-    find . -name '*.tsbuildinfo' -not -path './node_modules/*' -delete
-    rm -rf node_modules/.cache/vol-quality
+    node scripts/quality/cleanWorkspace.mjs
 
 # Rust hedefleri de silinir; sonraki derleme sıfırdan başlar.
-clean-all: clean
-    rm -rf target
+clean-all:
+    node scripts/quality/cleanWorkspace.mjs --all
 
 download-fonts:
     pnpm --filter @volstudio/core download-fonts
