@@ -47,12 +47,6 @@ export interface SteamControllerInfo {
   readonly steamworksType: string;
 }
 
-export interface SteamGlyphOrigin {
-  readonly name: string;
-  /** Glif PNG'si base64 — `data:image/png;base64,` öneki ekleyerek kullanılır. */
-  readonly pngBase64: string | null;
-}
-
 export interface SteamworksProbe {
   readonly isTauri: () => boolean;
   readonly invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
@@ -99,14 +93,6 @@ export async function steamworksStatus(): Promise<SteamworksStatus> {
   }
 }
 
-/**
- * Steam Input aksiyon manifestosunu kaydeder. Göreli ad uygulamanın
- * resource dizininde aranır (`.vdf` dosyası `bundle.resources` ile girer).
- */
-export async function setSteamInputManifest(path: string): Promise<boolean> {
-  return (await probe.invoke('set_input_manifest', { path })) as boolean;
-}
-
 /** Aksiyon setini tüm bağlı kollara uygular; uygulanan kol sayısı döner. */
 export async function activateSteamActionSet(name: string): Promise<number> {
   return (await probe.invoke('activate_action_set', { name })) as number;
@@ -114,53 +100,6 @@ export async function activateSteamActionSet(name: string): Promise<number> {
 
 export async function steamControllers(): Promise<SteamControllerInfo[]> {
   return (await probe.invoke('controllers')) as SteamControllerInfo[];
-}
-
-/** İlk bağlı kolun aksiyon değerleri; kol yoksa listeler boştur. */
-export interface SteamActionState {
-  readonly digital: readonly {
-    readonly name: string;
-    readonly pressed: boolean;
-    readonly active: boolean;
-  }[];
-  readonly analog: readonly {
-    readonly name: string;
-    readonly x: number;
-    readonly y: number;
-    readonly active: boolean;
-  }[];
-}
-
-/** Motor hızı 0–1 aralığından Steam'in 0–65535 ölçeğine. */
-function motorSpeed(value: number): number {
-  return Math.round(Math.min(1, Math.max(0, value)) * 65535);
-}
-
-/** Steam Input titreşimi bağlı bütün kollara; (0, 0) durdurur. Kaç kola gittiği döner. */
-export async function steamVibrate(left: number, right: number): Promise<number> {
-  return (await probe.invoke('vibrate', {
-    left: motorSpeed(left),
-    right: motorSpeed(right),
-  })) as number;
-}
-
-/** Adı verilen dijital ve analog aksiyonların anlık değeri. */
-export async function steamActionState(
-  digital: readonly string[],
-  analog: readonly string[] = [],
-): Promise<SteamActionState> {
-  return (await probe.invoke('action_state', { digital, analog })) as SteamActionState;
-}
-
-/** Dijital aksiyonun origin'leri + istemci glif PNG'leri (base64). */
-export async function steamActionGlyph(
-  actionSet: string,
-  action: string,
-): Promise<SteamGlyphOrigin[]> {
-  return (await probe.invoke('action_glyph', {
-    actionSet,
-    action,
-  })) as SteamGlyphOrigin[];
 }
 
 /**
@@ -175,15 +114,6 @@ export async function steamworksGlyphContext(): Promise<GlyphFamilyContext> {
   } catch {
     return {};
   }
-}
-
-/** Steam Input bağlama panelini açar; overlay yoksa `false`. */
-export async function showSteamBindingPanel(): Promise<boolean> {
-  return (await probe.invoke('show_binding_panel')) as boolean;
-}
-
-export interface SteamOverlayProbe {
-  onChange(active: boolean): void;
 }
 
 /**
@@ -278,23 +208,4 @@ export function createSteamworksTextEntryProvider(): TextEntryProvider {
       }
     },
   };
-}
-
-/**
- * Kayan oyun kumandası klavyesini açar — metin odaklı DOM alanına
- * doğrudan yazılır, `blur`'lu `TextEntryProvider` akışına girmez. Oyun
- * alanın ekran dikdörtgenini verir; klavye onu kaplamayacak şekilde
- * konumlanır. Kapanış `vol-steamworks:floating-dismissed` olayıdır.
- */
-export async function showSteamFloatingKeyboard(rect: {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}): Promise<boolean> {
-  return (await probe.invoke('show_floating_input', rect)) as boolean;
-}
-
-export async function onSteamFloatingKeyboardDismissed(onDismiss: () => void): Promise<UnlistenFn> {
-  return probe.listen('vol-steamworks:floating-dismissed', () => onDismiss());
 }

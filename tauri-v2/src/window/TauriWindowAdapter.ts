@@ -36,12 +36,12 @@ export class TauriWindowAdapter {
 
   constructor(options: TauriWindowAdapterOptions = {}) {
     const enabled = options.enabled ?? isTauri();
-    this.window = enabled ? options.window ?? getCurrentWindow() : null;
+    this.window = enabled ? (options.window ?? getCurrentWindow()) : null;
     this.exitApplication = enabled
-      ? options.exitApplication ?? (() => invoke<void>('exit_application'))
+      ? (options.exitApplication ?? (() => invoke<void>('exit_application')))
       : null;
     this.readFullscreen = enabled
-      ? options.readFullscreen ?? (() => invoke<boolean>('window_fullscreen_state'))
+      ? (options.readFullscreen ?? (() => invoke<boolean>('window_fullscreen_state')))
       : null;
     this.createLogicalSize =
       options.createLogicalSize ?? ((width, height) => new LogicalSize(width, height));

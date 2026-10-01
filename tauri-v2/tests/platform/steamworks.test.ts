@@ -2,15 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   activateSteamActionSet,
   createSteamworksTextEntryProvider,
-  onSteamFloatingKeyboardDismissed,
   onSteamOverlay,
-  setSteamInputManifest,
   setSteamworksProbe,
-  showSteamBindingPanel,
-  showSteamFloatingKeyboard,
-  steamActionGlyph,
-  steamActionState,
-  steamVibrate,
   steamworksGlyphContext,
   steamworksStatus,
   type SteamworksProbe,
@@ -384,7 +377,7 @@ describe('glif ipucu ve overlay', () => {
 
   it('kol yoksa ya da eklenti kapalıysa boş bağlam', async () => {
     for (const handlers of [{ controllers: [] }, { controllers: new Error('stub') }]) {
-      const { probe } = fakeProbe(handlers as Record<string, unknown>);
+      const { probe } = fakeProbe(handlers);
       const restore = afterEach(probe);
       expect(await steamworksGlyphContext()).toEqual({});
       restore();
@@ -403,61 +396,12 @@ describe('glif ipucu ve overlay', () => {
   });
 });
 
-describe('Steam Input ve kayan klavye komutları', () => {
-  it('titreşim hızı 0–1 aralığından Steam ölçeğine kısılır; aksiyon durumu okunur', async () => {
-    const state = { digital: [{ name: 'fire', pressed: true, active: true }], analog: [] };
-    const { probe } = fakeProbe({ vibrate: 1, action_state: state });
+describe('Steam aksiyon seti', () => {
+  it('etkinleştirme gerçek komutun kol sayısını döndürür', async () => {
+    const { probe } = fakeProbe({ activate_action_set: 2 });
     const restore = afterEach(probe);
-
-    expect(await steamVibrate(0.5, 2)).toBe(1);
-    expect(probe.invoke).toHaveBeenCalledWith('vibrate', { left: 32768, right: 65535 });
-    await steamVibrate(-1, 0);
-    expect(probe.invoke).toHaveBeenCalledWith('vibrate', { left: 0, right: 0 });
-    expect(await steamActionState(['fire'])).toEqual(state);
-    expect(probe.invoke).toHaveBeenCalledWith('action_state', { digital: ['fire'], analog: [] });
-    restore();
-  });
-
-  it('manifest, aksiyon seti, glif, panel ve klavye komutlarına çevrilir', async () => {
-    const { probe } = fakeProbe({
-      set_input_manifest: true,
-      activate_action_set: 2,
-      action_glyph: [{ name: 'A', pngBase64: null }],
-      show_binding_panel: true,
-      show_floating_input: true,
-    });
-    const restore = afterEach(probe);
-
-    expect(await setSteamInputManifest('steam_input_manifest.vdf')).toBe(true);
     expect(await activateSteamActionSet('Gameplay')).toBe(2);
-    expect(await steamActionGlyph('Gameplay', 'fire')).toEqual([{ name: 'A', pngBase64: null }]);
-    expect(await showSteamBindingPanel()).toBe(true);
-    expect(await showSteamFloatingKeyboard({ x: 1, y: 2, width: 3, height: 4 })).toBe(true);
-
-    expect(probe.invoke).toHaveBeenCalledWith('set_input_manifest', {
-      path: 'steam_input_manifest.vdf',
-    });
     expect(probe.invoke).toHaveBeenCalledWith('activate_action_set', { name: 'Gameplay' });
-    expect(probe.invoke).toHaveBeenCalledWith('action_glyph', {
-      actionSet: 'Gameplay',
-      action: 'fire',
-    });
-    expect(probe.invoke).toHaveBeenCalledWith('show_floating_input', {
-      x: 1,
-      y: 2,
-      width: 3,
-      height: 4,
-    });
-    restore();
-  });
-
-  it('kayan klavye kapanışı abonelikten bildirilir', async () => {
-    const { probe, events } = fakeProbe({});
-    const restore = afterEach(probe);
-    const onDismiss = vi.fn();
-    await onSteamFloatingKeyboardDismissed(onDismiss);
-    events.get('vol-steamworks:floating-dismissed')?.({});
-    expect(onDismiss).toHaveBeenCalledOnce();
     restore();
   });
 });

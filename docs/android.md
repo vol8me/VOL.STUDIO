@@ -44,6 +44,15 @@ yerleşimine uygulanır.
 - **Yön:** WebView'ın `screen.orientation.lock()`u Android'de desteklenmez;
   yön sözleşmesi `tauri-v2/plugins/vol-orientation` eklentisindedir. Yön
   değişimi Activity'yi yeniden yaratmaz (`configChanges`).
+- **Titreşim:** `observeAndroidHaptics` yalnız Android kabuğunda
+  `tauri-v2/plugins/vol-haptics` eklentisini sorgular. `VIBRATE` izni ve
+  `hasVibrator()` birlikte doğrulanır; destek varsa CORE desenleri Android
+  `Vibrator`/`VibratorManager` üzerinden oynatılır. Genlik kontrolü olmayan
+  motor varsayılan genliği kullanır; Android 24–25 aynı deseni aç/kapa
+  sürelerine çevirir. Arka plana geçiş ve aboneliğin kapanışı titreşimi keser.
+  Eklenti yalnız tüketen uygulamanın Android bağımlılığı ve mobil iznidir;
+  telefon tarayıcısı CORE'un Vibration API yolunu kullanır. Native komutun
+  kabul edilmesi fiziksel his onayı değildir.
 - **Oyun kategorisi:** manifest `android:appCategory="game"` taşır; Android 16
   600dp üstü ekranlarda yön kilidini yok sayar, oyun kategorisi muaftır.
 - **Yerel WebView menüleri:** kabuk sağ tık/uzun basış menüsünü ve sürükleme
@@ -59,3 +68,24 @@ eklenti paylaşılan kabukta değil, onu kullanan uygulamanın
 `run_with_context_and` çağrısında kaydedilir; yoksa bağımlılığı olmayan
 uygulama açılışta eklenti sınıfını bulamaz. Eklenti crate'i kök Cargo
 workspace'inin üyesidir ve kökteki tek kilitle derlenir.
+
+## VOL.TEST cihaz referansı
+
+Lenovo TB350FU, Android 14 native WebView; 2000×1199 piksel, CSS alanı
+1569×941, DPR 1,275. Soğuk açılış 1058 ms. Her koşul 8 saniye boyunca gerçek
+`requestAnimationFrame` aralıklarıyla ölçüldü; uzun kareler çıkarılmadı.
+Sürekli ateş dokunmatik sağ çubukla üretildi, ses döngüleri ve atışlar açıktı.
+
+| Kademe | Yük          |   FPS | p95 (ms) | p99 (ms) | En uzun kare (ms) |
+| ------ | ------------ | ----: | -------: | -------: | ----------------: |
+| Düşük  | Boşta        | 120,0 |      8,4 |      8,4 |               8,5 |
+| Düşük  | Sürekli ateş | 113,4 |     16,6 |     16,7 |              25,0 |
+| Yüksek | Boşta        | 119,3 |      8,4 |      8,5 |              16,7 |
+| Yüksek | Sürekli ateş | 115,3 |      8,5 |     16,7 |              16,8 |
+
+İki kademe de 60 FPS hedefini geçtiği için bu model yüksek başlar; diğer
+Android modelleri ölçülene kadar düşük başlar. Kaydedilmiş kullanıcı tercihi
+açılış varsayılanından önce gelir. Kısa pencereler kademe üstünlüğü ya da uzun
+süreli termal kararlılık kanıtı değildir. Samsung cihazı bağlı değildi;
+ölçülmedi. Ses düğümlerinin başlaması doğrulandı; insan dinleme ve dokunmatik
+hissiyat onayı bekler.

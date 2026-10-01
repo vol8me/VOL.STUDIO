@@ -3,7 +3,6 @@ import {
   createLinuxHapticsDriver,
   getLinuxHapticsStatus,
   observeLinuxHaptics,
-  registerLinuxHaptics,
 } from '../../src/platform/linuxHaptics';
 
 /*
@@ -275,11 +274,10 @@ describe('varsayılan prob', () => {
     const events = new EventTarget();
     const p = {
       isTauri: () => true,
-      invoke: vi.fn(
-        (command: string): Promise<unknown> =>
-          command === 'vol_haptics_status'
-            ? Promise.resolve({ backend })
-            : Promise.reject(new Error('iptal yok')),
+      invoke: vi.fn((command: string): Promise<unknown> =>
+        command === 'vol_haptics_status'
+          ? Promise.resolve({ backend })
+          : Promise.reject(new Error('iptal yok')),
       ),
       sleep: () => Promise.resolve(),
       events,
@@ -301,21 +299,5 @@ describe('varsayılan prob', () => {
     second();
     await vi.advanceTimersByTimeAsync(0);
     expect(fakes.setHapticsDriver).toHaveBeenLastCalledWith(null);
-  });
-});
-
-describe('registerLinuxHaptics', () => {
-  it('evdev varsa core sürücüsünü kaydeder', async () => {
-    expect(await registerLinuxHaptics(probe({ backend: 'evdev' }))).toBe(true);
-    const driver = fakes.setHapticsDriver.mock.calls[0]?.[0] as { play?: unknown };
-    expect(typeof driver.play).toBe('function');
-  });
-
-  it('hidraw varsa da kaydeder — Deck için ölçülmüş yol', async () => {
-    expect(await registerLinuxHaptics(probe({ backend: 'hidraw', device: 'hidraw2' }))).toBe(true);
-  });
-
-  it('aygıt yoksa sürücü kaydetmez ve false döner', async () => {
-    expect(await registerLinuxHaptics(probe({ backend: 'none' }))).toBe(false);
   });
 });

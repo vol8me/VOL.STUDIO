@@ -35,8 +35,17 @@ devtools/*/export/
 # Tauri'nin ürettiği kodlar; `gen/android` elle düzenlendiği için izlenir,
 # yalnız Gradle derleme çıktısı dışarıdadır.
 /devtools/deck/src-tauri/gen/
+/games/*/src-tauri/gen/schemas/
+/games/*/src-tauri/app-icon.svg
 /games/*/src-tauri/gen/android/**/build/
 /games/*/src-tauri/gen/android/.gradle/
+/tauri-v2/plugins/*/android/build/
+/tauri-v2/plugins/*/android/.gradle/
+/games/*/src-tauri/gen/android/app/src/main/java/**/generated/
+/games/*/src-tauri/gen/android/app/src/main/jniLibs/
+/games/*/src-tauri/gen/android/app/src/main/assets/tauri.conf.json
+/games/*/src-tauri/gen/android/app/tauri.build.gradle.kts
+/games/*/src-tauri/gen/android/tauri.settings.gradle
 
 # Deck araçları: derleme anında kopyalanan motor ve ölçüm kayıtları
 /devtools/deck/web/vendor/

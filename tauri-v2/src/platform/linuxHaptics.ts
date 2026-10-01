@@ -82,21 +82,6 @@ export function createLinuxHapticsDriver(probe: LinuxHapticsProbe = defaultProbe
   };
 }
 
-/**
- * Linux kabuğundaysa native sürücüyü core'a `native` arka uç olarak kaydeder.
- * Kayıt başarısızlığı (aygıt yok, komut yok) sessizdir — çağıranın koşul
- * yazması gerekmez; `getHapticsCapability` doğru arka ucu bildirmeye devam
- * eder. Titreşim çağrıları desen kısıtını core'da geçer.
- */
-export async function registerLinuxHaptics(
-  probe: LinuxHapticsProbe = defaultProbe,
-): Promise<boolean> {
-  const status = await getLinuxHapticsStatus(probe);
-  if (status.backend === 'none') return false;
-  setHapticsDriver(createLinuxHapticsDriver(probe));
-  return true;
-}
-
 /** Aygıt yokken yoklama aralığı ikiye katlanır; her durum sorgusu tam tarama demektir. */
 const POLL_MIN_MS = 1000;
 const POLL_MAX_MS = 30_000;

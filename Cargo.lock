@@ -3516,6 +3516,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-vol-haptics"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
+]
+
+[[package]]
 name = "tauri-plugin-vol-orientation"
 version = "0.1.0"
 dependencies = [
@@ -4114,6 +4123,19 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-vol-diagnostics",
+ "tauri-plugin-vol-steamworks",
+ "volstudio-tauri",
+]
+
+[[package]]
+name = "vol-test-tauri"
+version = "0.1.0"
+dependencies = [
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-vol-diagnostics",
+ "tauri-plugin-vol-haptics",
+ "tauri-plugin-vol-orientation",
  "tauri-plugin-vol-steamworks",
  "volstudio-tauri",
 ]

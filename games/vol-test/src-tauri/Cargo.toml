@@ -1,0 +1,34 @@
+[package]
+name = "vol-test-tauri"
+version = "0.1.0"
+description = "VOL.TEST native kabuğu (masaüstü ve mobil)"
+authors = ["VOL.STUDIO"]
+edition = "2021"
+
+# Android giriş noktası kütüphaneden gelir; üretilen native proje bu adı arar.
+# Masaüstünde `main.rs` aynı `run()`u çağırır.
+[lib]
+name = "vol_test_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6", features = [] }
+
+[dependencies]
+# Native kabuk paylaşılır; kimlik, pencere ve gömülü ön yüz bu crate'tedir.
+volstudio-tauri = { path = "../../../tauri-v2/src-tauri", default-features = false }
+tauri = { version = "2.11", features = ["rustls-tls"] }
+# Steamworks köprüsü hep bağımlılıktır; istemci SDK'sı yalnız `steamworks`
+# feature'ıyla derlenir, stub yapıda eklenti "kullanılamıyor" bildirir.
+tauri-plugin-vol-steamworks = { path = "../../../tauri-v2/plugins/vol-steamworks" }
+# Cihaz ölçüm köprüsü; izleyici yalnız `VOL_DECK_MEASURE=1` iken başlar.
+tauri-plugin-vol-diagnostics = { path = "../../../tauri-v2/plugins/vol-diagnostics" }
+
+[target.'cfg(target_os = "android")'.dependencies]
+tauri-plugin-vol-orientation = { path = "../../../tauri-v2/plugins/vol-orientation" }
+tauri-plugin-vol-haptics = { path = "../../../tauri-v2/plugins/vol-haptics" }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol", "volstudio-tauri/custom-protocol"]
+steamworks = ["tauri-plugin-vol-steamworks/steamworks"]

@@ -70,6 +70,8 @@ test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kayn
     'games/sample-game/coverage/lcov.info',
     'games/sample-game/observer.log',
     'games/sample-game/src-tauri/gen/android/app/build/output.apk',
+    'tauri-v2/plugins/vol-haptics/android/build/intermediates/plugin.dex',
+    'tauri-v2/plugins/vol-haptics/android/.gradle/cache.bin',
     '.claude/arastirma/rapor.jsonl',
     'graphify-out/graph.json',
   ];
@@ -78,6 +80,8 @@ test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kayn
     'games/sample-game/src/i18n/tr.json',
     'games/sample-game/public/assets/example.ogg',
     'games/sample-game/src-tauri/gen/android/app/src/main/AndroidManifest.xml',
+    'tauri-v2/plugins/vol-haptics/android/build.gradle.kts',
+    'tauri-v2/plugins/vol-haptics/android/src/main/java/com/volstudio/haptics/HapticsPlugin.kt',
     'AGENTS.md',
     'CLAUDE.md',
     'devtools/pen.dev/AGENTS.md',

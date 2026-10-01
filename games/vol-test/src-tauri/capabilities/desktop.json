@@ -1,0 +1,14 @@
+{
+  "identifier": "desktop-capability",
+  "description": "Masaüstü ana pencere izinleri",
+  "platforms": ["linux", "windows", "macOS"],
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-close",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-set-size",
+    "vol-diagnostics:default",
+    "vol-steamworks:default"
+  ]
+}

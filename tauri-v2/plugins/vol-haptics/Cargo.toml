@@ -1,0 +1,18 @@
+[package]
+name = "tauri-plugin-vol-haptics"
+version = "0.1.0"
+description = "VOL.STUDIO Android native titreşim motoru köprüsü"
+authors = ["VOL.STUDIO"]
+edition = "2021"
+links = "tauri-plugin-vol-haptics"
+
+[lib]
+name = "tauri_plugin_vol_haptics"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-plugin = { version = "2.6", features = ["build"] }
+
+[dependencies]
+tauri = { version = "2.11", features = ["rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }

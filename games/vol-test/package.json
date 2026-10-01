@@ -12,14 +12,18 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "scaling": "tsx scripts/scaling.ts"
+    "scaling": "tsx scripts/scaling.ts",
+    "tauri": "tauri",
+    "icon:source": "tsx scripts/app-icon.ts"
   },
   "dependencies": {
     "@volstudio/core": "workspace:*",
-    "phaser": "^4.2.1"
+    "phaser": "^4.2.1",
+    "@volstudio/tauri-v2": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "@tauri-apps/cli": "2.11.4",
     "@types/node": "^26.1.2",
     "i18next": "26.3.6",
     "jsdom": "25.0.1",

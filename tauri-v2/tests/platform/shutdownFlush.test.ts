@@ -14,6 +14,9 @@ const fakes = vi.hoisted(() => ({
 
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri, invoke: fakes.invoke }));
 vi.mock('@tauri-apps/api/event', () => ({ listen: fakes.listen }));
+vi.mock('@tauri-apps/api/window', () => ({
+  getCurrentWindow: () => ({ onCloseRequested: () => Promise.resolve(() => undefined) }),
+}));
 
 function probe(tauri: boolean): ShutdownFlushProbe & { fire: () => Promise<void> } {
   let handler: (() => void) | undefined;
@@ -34,12 +37,57 @@ function probe(tauri: boolean): ShutdownFlushProbe & { fire: () => Promise<void>
 }
 
 describe('registerShutdownFlush', () => {
+  it('pencere köprüsünün reddi sinyal kapanışını ve temizliği engellemez', async () => {
+    const p = probe(true);
+    const hook = vi.fn();
+    const stop = registerShutdownFlush(hook, {
+      ...p,
+      onCloseRequested: () => Promise.reject(new Error('pencere yok')),
+    });
+    await p.fire();
+    await vi.waitFor(() => expect(hook).toHaveBeenCalledOnce());
+    stop();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     fakes.invoke.mockReset();
     fakes.invoke.mockResolvedValue(undefined);
     fakes.handlers.length = 0;
     fakes.isTauri.mockReturnValue(false);
+  });
+  it('pencere kapanışını yazma bitene kadar erteler ve tek uygulama çıkışı ister', async () => {
+    let close: ((event: { preventDefault: () => void }) => void) | undefined;
+    let finish: (() => void) | undefined;
+    const removeClose = vi.fn();
+    const p = {
+      isTauri: () => true,
+      listen: () => () => undefined,
+      onCloseRequested: (handler: typeof close) => {
+        close = handler;
+        return removeClose;
+      },
+      invoke: vi.fn(() => Promise.resolve()),
+    };
+    const stop = registerShutdownFlush(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+      p,
+    );
+    const preventDefault = vi.fn();
+    expect(close).toBeDefined();
+    close?.({ preventDefault });
+    close?.({ preventDefault });
+    expect(preventDefault).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(finish).toBeDefined());
+    expect(p.invoke).not.toHaveBeenCalled();
+    finish?.();
+    await vi.waitFor(() => expect(p.invoke).toHaveBeenCalledWith('exit_application'));
+    expect(p.invoke).toHaveBeenCalledOnce();
+    stop();
+    expect(removeClose).toHaveBeenCalledOnce();
   });
 
   it('bütün kancalar bitmeden vol_flush_done göndermez ve geç kurulan dinleyiciyi temizler', async () => {

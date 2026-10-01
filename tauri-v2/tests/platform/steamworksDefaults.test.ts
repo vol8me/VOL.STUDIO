@@ -29,7 +29,7 @@ vi.mock('@volstudio/core', () => ({ OnScreenKeyboard: { open: vi.fn() } }));
 import {
   onSteamOverlay,
   setSteamworksProbe,
-  steamActionGlyph,
+  activateSteamActionSet,
   steamworksStatus,
 } from '../../src/platform/steamworks';
 
@@ -39,10 +39,9 @@ describe('varsayılan Steamworks probu', () => {
     expect((await steamworksStatus()).available).toBe(true);
     expect(fakes.invoke).toHaveBeenCalledWith('plugin:vol-steamworks|status', undefined);
 
-    await steamActionGlyph('Gameplay', 'fire');
-    expect(fakes.invoke).toHaveBeenCalledWith('plugin:vol-steamworks|action_glyph', {
-      actionSet: 'Gameplay',
-      action: 'fire',
+    await activateSteamActionSet('Gameplay');
+    expect(fakes.invoke).toHaveBeenCalledWith('plugin:vol-steamworks|activate_action_set', {
+      name: 'Gameplay',
     });
   });
 

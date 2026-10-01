@@ -1,0 +1,5 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Android titreşim desteğini sorgulama, desen oynatma ve iptal izni."
+permissions = ["allow-status", "allow-play", "allow-cancel"]

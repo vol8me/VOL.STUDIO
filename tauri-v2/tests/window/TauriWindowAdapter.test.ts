@@ -66,7 +66,7 @@ describe('TauriWindowAdapter', () => {
     const size = { type: 'Logical', width: 1600, height: 900 };
     const adapter = new TauriWindowAdapter({
       enabled: true,
-      window: target as never,
+      window: target,
       createLogicalSize: () => size as never,
     });
 
@@ -84,7 +84,7 @@ describe('TauriWindowAdapter', () => {
     // hatırlar; pencere yöneticisinin değişimini GDK'dan okuyan komut görür.
     fakes.invoke.mockResolvedValue(true);
     const { target } = makeWindow();
-    const adapter = new TauriWindowAdapter({ enabled: true, window: target as never });
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target });
 
     await expect(adapter.isFullscreen()).resolves.toBe(true);
     expect(fakes.invoke).toHaveBeenCalledExactlyOnceWith('window_fullscreen_state');
@@ -92,7 +92,7 @@ describe('TauriWindowAdapter', () => {
 
   it('geçersiz çözünürlüğü reddeder ve varsayılan LogicalSize üreticisi çalışır', async () => {
     const { target } = makeWindow();
-    const adapter = new TauriWindowAdapter({ enabled: true, window: target as never });
+    const adapter = new TauriWindowAdapter({ enabled: true, window: target });
 
     await expect(adapter.setResolution(0, 720)).rejects.toThrow(RangeError);
     await expect(adapter.setResolution(1280.5, 720)).rejects.toThrow(RangeError);
@@ -111,7 +111,7 @@ describe('TauriWindowAdapter', () => {
     const listener = vi.fn();
     const adapter = new TauriWindowAdapter({
       enabled: true,
-      window: target as never,
+      window: target,
       readFullscreen,
     });
     const stop = await adapter.onFullscreenChange(listener);
@@ -137,7 +137,7 @@ describe('TauriWindowAdapter', () => {
     const listener = vi.fn();
     const adapter = new TauriWindowAdapter({
       enabled: true,
-      window: target as never,
+      window: target,
       readFullscreen,
     });
     const stop = await adapter.onFullscreenChange(listener);
@@ -165,7 +165,7 @@ describe('TauriWindowAdapter', () => {
 
     const adapter = new TauriWindowAdapter({
       enabled: true,
-      window: target as never,
+      window: target,
       readFullscreen,
     });
     const subscription = adapter.onFullscreenChange(listener);
@@ -186,7 +186,7 @@ describe('TauriWindowAdapter', () => {
     const listener = vi.fn();
     const adapter = new TauriWindowAdapter({
       enabled: true,
-      window: target as never,
+      window: target,
       readFullscreen,
     });
     const stop = await adapter.onFullscreenChange(listener);

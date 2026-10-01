@@ -7,6 +7,7 @@ members = [
   "tauri-v2/src-tauri",
   "tauri-v2/plugins/*",
   "devtools/*/src-tauri",
+  "games/*/src-tauri",
 ]
 
 # Üye crate'lerdeki profil bölümleri workspace'te yok sayılır; tek yer burası.
