@@ -12,6 +12,8 @@
 export class VirtualActionSource<TAction extends string> {
   /** Parmağın şu an fiziksel olarak üstünde olduğu eylemler. */
   readonly #held = new Set<TAction>();
+  readonly #pending = new Set<TAction>();
+  readonly #suppressed = new Set<TAction>();
   /** Basılıyken en az bir kez okunmuş eylemler — bırakılınca mandal gerekmez. */
   readonly #observed = new Set<TAction>();
   /** Okunmadan bırakılmış eylemler; tam bir kare daha bildirilir. */
@@ -19,11 +21,14 @@ export class VirtualActionSource<TAction extends string> {
 
   /** Düğme basıldı. Aynı eylemi iki kez basmak zararsızdır. */
   press(action: TAction): void {
+    if (this.#suppressed.has(action)) return;
+    if (!this.#held.has(action)) this.#pending.add(action);
     this.#held.add(action);
   }
 
   /** Düğme bırakıldı. Hiç okunmadıysa eylem bir kare daha bildirilir. */
   release(action: TAction): void {
+    this.#suppressed.delete(action);
     const wasHeld = this.#held.delete(action);
     const wasObserved = this.#observed.delete(action);
     if (wasHeld && !wasObserved) {
@@ -36,6 +41,12 @@ export class VirtualActionSource<TAction extends string> {
     this.#held.clear();
     this.#observed.clear();
     this.#latched.clear();
+    this.#pending.clear();
+  }
+
+  /** Opt-in geçiş politikası; yalnız o anda tutulan eylem bırakılana dek bastırılır. */
+  suppressUntilRelease(actions: readonly TAction[]): void {
+    for (const action of actions) if (this.#held.has(action)) this.#suppressed.add(action);
   }
 
   /**
@@ -50,14 +61,21 @@ export class VirtualActionSource<TAction extends string> {
    * Yazar ve mandalı TÜKETİR — tek çağrıda. Ayrı bir `commit()` olsaydı yanlış
    * sıra sessizce yinelenen ya da düşen basım üretirdi.
    */
-  applyTo(actions: Record<TAction, boolean>): void {
+  applyTo(
+    actions: Record<TAction, boolean>,
+    heldActions?: Record<TAction, boolean>,
+    pressedActions?: Record<TAction, boolean>,
+  ): void {
     for (const action of this.#held) {
       actions[action] = true;
+      if (heldActions) heldActions[action] = true;
       this.#observed.add(action);
     }
     for (const action of this.#latched) {
       actions[action] = true;
     }
+    if (pressedActions) for (const action of this.#pending) pressedActions[action] = true;
+    this.#pending.clear();
     this.#latched.clear();
   }
 }

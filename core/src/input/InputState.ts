@@ -25,6 +25,10 @@ export interface InputState<TAction extends string> {
   aim: Vector2;
   /** Eylem adı → o kare basılı mı. Kümenin tamamı her zaman doludur. */
   actions: Readonly<Record<TAction, boolean>>;
+  /** Mandal eklenmemiş fiziksel düzey; yoksa `actions` düzey olarak kullanılır. */
+  heldActions?: Readonly<Record<TAction, boolean>>;
+  /** Son okuma aralığındaki kısa basışlar; tick tamponu bir kez tüketir. */
+  pressedActions?: Readonly<Record<TAction, boolean>>;
 }
 
 /**

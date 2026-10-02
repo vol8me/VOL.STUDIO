@@ -50,7 +50,14 @@ function setup(options: Partial<PCControllerOptions<Action>> = {}) {
   };
   const press = (keyCode: number) => listeners.get('keydown')?.({ keyCode } as KeyboardEvent);
   const scene = {
-    input: { keyboard, activePointer: pointer },
+    input: {
+      keyboard,
+      activePointer: pointer,
+      on: vi.fn((name: string, handler: (event: KeyboardEvent) => void) =>
+        listeners.set(name, handler),
+      ),
+      off: vi.fn((name: string) => listeners.delete(name)),
+    },
     cameras: { main: { getWorldPoint } },
   };
   const controller = new PCController<Action>(scene as unknown as Phaser.Scene, {
@@ -235,4 +242,80 @@ describe('PCController — kısa basış mandalı', () => {
     expect(keyboard.off).toHaveBeenCalledWith('keydown', expect.any(Function));
     expect(listeners.has('keydown')).toBe(false);
   });
+});
+
+describe('PCController — hata altında kaynak temizliği', () => {
+  it('ikinci kayıt atınca ilk dinleyiciyi söker', () => {
+    const keys = new Map<number, { isDown: boolean; reset: () => void }>();
+    const listeners = new Set<unknown>();
+    const keyboard = {
+      addKey: (code: number) => {
+        const key = { isDown: false, reset: () => undefined };
+        keys.set(code, key);
+        return key;
+      },
+      on: (_name: string, handler: unknown) => {
+        listeners.add(handler);
+      },
+      off: (_name: string, handler: unknown) => {
+        listeners.delete(handler);
+      },
+    };
+    const add = vi.spyOn(window, 'addEventListener').mockImplementation(() => {
+      throw new Error('listener');
+    });
+    try {
+      expect(
+        () =>
+          new PCController({ input: { keyboard } } as unknown as Phaser.Scene, {
+            actionBindings: { dash: { source: 'key', keyCode: 32 } },
+          }),
+      ).toThrow('listener');
+      expect(listeners.size).toBe(0);
+    } finally {
+      add.mockRestore();
+    }
+  });
+
+  it('bir temizlik atsa da diğer kaynak sökülür; destroy yinelenebilir', () => {
+    const { controller, keyboard, listeners } = setup();
+    const remove = vi.spyOn(window, 'removeEventListener').mockImplementation(() => {
+      throw new Error('cleanup');
+    });
+    try {
+      expect(() => controller.destroy()).not.toThrow();
+      controller.destroy();
+      expect(listeners.size).toBe(0);
+      expect(keyboard.off).toHaveBeenCalledOnce();
+      expect(remove).toHaveBeenCalledOnce();
+    } finally {
+      remove.mockRestore();
+    }
+  });
+
+  it('kısa basış held değildir ve basış metadata tek okumada tüketilir', () => {
+    const { controller, press } = setup();
+    press(SPACE);
+    const first = controller.getState(Vector2.zero());
+    expect(first.actions.dash).toBe(true);
+    expect(first.heldActions?.dash).toBe(false);
+    expect(first.pressedActions?.dash).toBe(true);
+    expect(controller.getState(Vector2.zero()).pressedActions?.dash).toBe(false);
+  });
+});
+
+it('fare kısa basışı tick metadata taşır, miras dokunuş bunu üretmez', () => {
+  const { controller, pointer, listeners } = setup();
+  pointer.left = true;
+  listeners.get('pointerdown')?.(pointer as unknown as KeyboardEvent);
+  pointer.left = false;
+  const state = controller.getState(Vector2.zero());
+  expect(state.actions.fire).toBe(true);
+  expect(state.heldActions?.fire).toBe(false);
+  expect(state.pressedActions?.fire).toBe(true);
+  expect(controller.getState(Vector2.zero()).actions.fire).toBe(false);
+  pointer.wasTouch = true;
+  pointer.left = true;
+  listeners.get('pointerdown')?.(pointer as unknown as KeyboardEvent);
+  expect(controller.getState(Vector2.zero()).actions.fire).toBe(false);
 });

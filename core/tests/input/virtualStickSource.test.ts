@@ -80,3 +80,15 @@ describe('VirtualStickSource', () => {
     expect(sticks.isActive).toBe(false);
   });
 });
+
+it('opt-in stick baskılama parmak hareketiyle geri açılmaz, bırakıp yeni tutuş gerekir', () => {
+  const source = new VirtualStickSource();
+  source.set('aim', 1, 0);
+  source.suppressUntilRelease('aim');
+  source.clear();
+  source.set('aim', 0, 1);
+  expect(source.write('aim', Vector2.zero()).length()).toBe(0);
+  source.release('aim');
+  source.set('aim', 0, 1);
+  expect(source.write('aim', Vector2.zero()).y).toBe(1);
+});

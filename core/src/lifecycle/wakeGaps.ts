@@ -1,21 +1,11 @@
 /**
- * Uyku/uyanma algısı.
- *
- * Cihaz uykuya girdiğinde zamanlayıcılar ve `performance.now` donar; duvar
- * saati (`Date.now`) saymaya devam eder. Kalp atışı aralığıyla iki saati
- * kıyaslayınca uyku süresi doğrudan okunur — bu, `suspend-gap` native
- * kaydının JS karşılığıdır ve `Date.now`u beklenen ilerleyişle değil yalnız
- * "dona kalmış mı" sorusu için kullanır: sıçrama uyku, sabit kalma normal
- * kare gecikmesidir.
- *
- * Uyanışta `onWake(gapMs)` çağrılır; tüketici (oyun) orada duraklama
- * durumunu ve kuyruklarını toparlar. Otomatik kayıt kuyruğu zaten
- * arka-plan sinyaliyle tetiklenir; bu olay onu uykudan sonra da çalıştırır.
+ * Duvar saatiyle ölçülen timer boşluğu. Uyku, ana iş parçacığı gecikmesi ve
+ * saat sıçramasını ayıramaz; gerçek uyku kanıtı native olaydan gelir.
  */
 export interface WakeGapOptions {
-  /** Kalp atışı aralığı; bu sürede timer koşamadıysa sistem uyumuş sayılır. */
+  /** Timer boşluğunun izlendiği kalp atışı aralığı. */
   readonly heartbeatMs?: number;
-  /** Bu eşiğin üzerindeki duvar-saati boşluğu uyanma sayılır. */
+  /** Bu eşiğin üzerindeki duvar-saati boşluğu bildirilir. */
   readonly gapThresholdMs?: number;
   readonly onWake: (gapMs: number) => void;
   /** Testlerde saat enjeksiyonu; varsayılan `Date.now` + `setInterval`. */

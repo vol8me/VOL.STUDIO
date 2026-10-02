@@ -148,3 +148,19 @@ describe('TouchStickState — sanal eylem kaynağıyla birleşme', () => {
     expect(sticks.getState().actions).toEqual({ fire: false, dash: false });
   });
 });
+
+it('opt-in düğme baskılama bırakılmadan yeniden basmaz; serbest eylemi engellemez', () => {
+  const source = new VirtualActionSource<'fire' | 'boost'>();
+  source.press('fire');
+  source.suppressUntilRelease(['fire', 'boost']);
+  source.clear();
+  source.press('fire');
+  source.press('boost');
+  const actions = { fire: false, boost: false };
+  source.applyTo(actions);
+  expect(actions).toEqual({ fire: false, boost: true });
+  source.release('fire');
+  source.press('fire');
+  source.applyTo(actions);
+  expect(actions.fire).toBe(true);
+});

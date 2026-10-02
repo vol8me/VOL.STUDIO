@@ -22,6 +22,7 @@ interface StickValue {
  * kendi ölü bölgesi 0 verilmelidir, yoksa iki kez uygulanır.
  */
 export class VirtualStickSource {
+  readonly #suppressed = new Set<VirtualStick>();
   readonly #sticks: Record<VirtualStick, StickValue> = {
     move: { x: 0, y: 0, held: false },
     aim: { x: 0, y: 0, held: false },
@@ -29,6 +30,7 @@ export class VirtualStickSource {
 
   /** Çubuğun konumunu yazar ve basılı sayar. Sonlu olmayan eksen 0 okunur. */
   set(stick: VirtualStick, x: number, y: number): void {
+    if (this.#suppressed.has(stick)) return;
     const value = this.#sticks[stick];
     value.x = Number.isFinite(x) ? Math.max(-1, Math.min(1, x)) : 0;
     value.y = Number.isFinite(y) ? Math.max(-1, Math.min(1, y)) : 0;
@@ -36,6 +38,7 @@ export class VirtualStickSource {
   }
 
   release(stick: VirtualStick): void {
+    this.#suppressed.delete(stick);
     const value = this.#sticks[stick];
     value.x = 0;
     value.y = 0;
@@ -44,8 +47,16 @@ export class VirtualStickSource {
 
   /** İkisini de bırakır (duraklatma, arka plana geçiş). */
   clear(): void {
-    this.release('move');
-    this.release('aim');
+    for (const value of Object.values(this.#sticks)) {
+      value.x = 0;
+      value.y = 0;
+      value.held = false;
+    }
+  }
+
+  /** Geçişten önce tutulan çubuk yeni parmak hareketiyle yeniden açılmaz. */
+  suppressUntilRelease(stick: VirtualStick): void {
+    if (this.isHeld(stick)) this.#suppressed.add(stick);
   }
 
   isHeld(stick: VirtualStick): boolean {

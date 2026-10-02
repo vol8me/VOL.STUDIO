@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { Vector2 } from '../../math/Vector2';
 import {
   computePCInputState,
@@ -79,7 +80,7 @@ export class PCController<TAction extends string> implements InputProvider<TActi
   private readonly actionKeys = new Map<number, Phaser.Input.Keyboard.Key>();
   private readonly actionBindings: Readonly<Record<TAction, PCActionBinding>>;
   readonly id: string;
-  private readonly boundBlur: () => void;
+  private readonly lifecycle = new DisposableScope();
   /**
    * Kare içinde basılıp bırakılan tuşlar. `isDown` kare başında okunur: bir
    * kareden kısa basış (düşük FPS'te hızlı dokunuş, otomasyon) okunmadan
@@ -87,7 +88,10 @@ export class PCController<TAction extends string> implements InputProvider<TActi
    * mandalıyla aynı sözleşme.
    */
   private readonly latched = new Set<number>();
-  private readonly keyboard: Phaser.Input.Keyboard.KeyboardPlugin;
+  private pointerLatched = false;
+  private readonly onPointerDown = (pointer: Phaser.Input.Pointer): void => {
+    if (!pointer.wasTouch && pointer.leftButtonDown()) this.pointerLatched = true;
+  };
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (this.actionKeys.has(event.keyCode)) this.latched.add(event.keyCode);
   };
@@ -120,10 +124,22 @@ export class PCController<TAction extends string> implements InputProvider<TActi
       }
     }
 
-    this.keyboard = keyboard;
-    keyboard.on('keydown', this.onKeyDown);
-    this.boundBlur = () => this.resetKeys();
-    window.addEventListener('blur', this.boundBlur);
+    try {
+      keyboard.on('keydown', this.onKeyDown);
+      this.lifecycle.addSubscription(() => keyboard.off('keydown', this.onKeyDown));
+      this.lifecycle.addListener(window, 'blur', () => this.resetKeys());
+      if (
+        (Object.keys(this.actionBindings) as TAction[]).some(
+          (action) => this.actionBindings[action].source === 'pointerButton',
+        )
+      ) {
+        scene.input.on('pointerdown', this.onPointerDown);
+        this.lifecycle.addSubscription(() => scene.input.off('pointerdown', this.onPointerDown));
+      }
+    } catch (error) {
+      this.lifecycle.dispose();
+      throw error;
+    }
   }
 
   private resetKeys(): void {
@@ -135,10 +151,14 @@ export class PCController<TAction extends string> implements InputProvider<TActi
       key.reset();
     }
     this.latched.clear();
+    this.pointerLatched = false;
   }
 
-  reset(): void {
-    this.resetKeys();
+  reset(options?: { preserveHeld?: boolean }): void {
+    if (options?.preserveHeld) {
+      this.latched.clear();
+      this.pointerLatched = false;
+    } else this.resetKeys();
   }
 
   /** activePointer çalışma anında değişebilir; referans saklanmaz. */
@@ -170,7 +190,10 @@ export class PCController<TAction extends string> implements InputProvider<TActi
     return resolvePCActions(
       this.actionBindings,
       (keyCode) => (this.actionKeys.get(keyCode)?.isDown ?? false) || this.latched.has(keyCode),
-      this.pointerState,
+      {
+        ...this.pointerState,
+        leftButtonDown: this.pointerState.leftButtonDown || this.pointerLatched,
+      },
     );
   }
 
@@ -211,14 +234,23 @@ export class PCController<TAction extends string> implements InputProvider<TActi
       playerPosition,
       this.actionState,
     );
+    state.heldActions = resolvePCActions(
+      this.actionBindings,
+      (code) => this.actionKeys.get(code)?.isDown ?? false,
+      this.pointerState,
+    );
+    state.pressedActions = resolvePCActions(this.actionBindings, (code) => this.latched.has(code), {
+      ...this.pointerState,
+      leftButtonDown: this.pointerLatched,
+    });
     this.latched.clear();
+    this.pointerLatched = false;
     return state;
   }
 
   update(_delta: number): void {}
 
   destroy(): void {
-    this.keyboard.off('keydown', this.onKeyDown);
-    window.removeEventListener('blur', this.boundBlur);
+    this.lifecycle.dispose();
   }
 }

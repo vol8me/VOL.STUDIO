@@ -31,6 +31,6 @@ export interface InputProvider<TAction extends string> {
 
   update(delta: number): void;
   /** Geçiş/yeniden başlatma sınırlarında tutulmuş fiziksel girdiyi bırakır. */
-  reset?(): void;
+  reset?(options?: { preserveHeld?: boolean }): void;
   destroy(): void;
 }
