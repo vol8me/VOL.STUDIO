@@ -128,6 +128,31 @@ geçersiz desen reddedildi. Motorun fiziksel hissi insan doğrulaması ister.
 Samsung bu ölçümde erişilebilir değildi; ölçülmedi. Ses dinleme ve kontrol
 hissiyatı insan kabulü olarak ayrı kalır.
 
+## Yeniden kurulan APK ile cihaz turu
+
+İki Android cihazı adb ile yeniden doğrulandı; üretici, Android sürümü ve SDK
+anonimleştirilmiş olarak yazılır, seri ve model kimliği belgeye girmez.
+Kurulum, açılış, yatay yön, tam ekran, HUD, sol joystick sürüşü, sağ joystick
+nişanı, ateş barı, duraklat/devam, arka plana alma-dönüş ve kapanışta kayıt her
+iki cihazda da ekran görüntüsüyle doğrulandı. `device-benchmark` her iki
+cihazda da native Activity süresini "oyun FPS'i" diye yazmaz; app-private
+`diagnostics.jsonl` kaydı olmadığı için oyun FPS'i, oyuna hazır zamanı, ilk
+fiziksel sunum ve renderer `bilinmiyor` olarak kalır.
+
+Kısa dış bölge dokunuşu Lenovo'da kanıtlandı: 60 ms'lik sabit basış
+patlamasında ateş barı ölçülen karelerde tükendi (202 → 5 dolu piksel), aynı
+koordinatlarda iç bölge (deadzone üstü ama giriş eşiği altı) patlamasında ise
+25 karenin tamamında tam kaldı. Samsung'da aynı ölçüm sentetik sabit basışla
+tekrarlanamadı: bu cihazda `adb input` sabit basışta oyunun örneklediği bir
+`pointermove` üretmiyor; merkezden rim'e sürükleme ile ateş doğrulandı
+(bar tükendi, mermi göründü), 60–100 ms sürüklemeler yetersiz kaldı. Bu bir
+cihaz kabulü eksikliği değil, enjeksiyon sınırıdır; Samsung'da kısa basışın
+insan parmağıyla kabulü açık kalır.
+
+Cihazlarda ölçülen tek sayı HUD FPS göstergesinin tek anlık okumasıdır;
+ölçüm penceresi değildir. Uzun oturum bütçesi, kar/çoklu tank yükü ve
+titreşim hissi bu turda yeniden ölçülmedi.
+
 Sistem ekran yakalamasında siyah çıktı ve Mali EGL bellek hatası görüldü.
 Aynı oturumda GPU kare örneği tank piksellerini, açık WebGL bağlamını ve sıfır
 GL hatasını gösterdi. Çalışan simülasyon ya da FPS sayısı tek başına görünür

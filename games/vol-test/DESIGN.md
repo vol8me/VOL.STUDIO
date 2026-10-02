@@ -132,9 +132,14 @@ Tuş ve kol eşlemesi `src/scenes/world/PlayerControls.ts`, hareket yumuşatma
 ve dokunmatik ateş eşikleri `src/config/controls.ts` içindedir.
 `ControlIntent` ham komutu işler; hareket 100 ms içinde hedefin yüzde 90'ına
 yaklaşır, nişan yönü geciktirilmez. Sağ dokunmatik çubuğun iç bölgesi nişan,
-dış bölgesi ateş üretir; giriş ve çıkış eşikleri titremeyi önler.
-Zoom, ızgara ve duraklatma kenar tetiklidir. Dokunmatik düğmeler CORE
-`VirtualActionSource` üzerinden tek karelik dokunuşu da korur.
+dış bölgesi ateş üretir; giriş ve çıkış eşikleri titremeyi önler. Bu eşikler
+oyun katmanında değil, CORE `TouchStickState`'in `aimStickGate` histerezisinde
+tutulur: eşik render karesinde örneklenirse, tick'ten kısa bir çubuk basışı
+kendi tick'ini üretmeden kaybolur. Aynı nedenle `PlayerControls` kare girdisini
+CORE `InputStepBuffer`'a verir; basış kenarı ve sıfıra düşen nişan yönü ilk
+tüketilen tick'e taşınır. Zoom, ızgara ve duraklatma kenar tetiklidir.
+Dokunmatik düğmeler CORE `VirtualActionSource` üzerinden tek karelik dokunuşu
+da korur.
 
 CORE `InputManager` son anlamlı kaynağın kipini seçer; HUD aynı kararı
 `InputPresentationController` ile okur. Steam Input'un standart sanal kolu
@@ -178,7 +183,13 @@ mevsim bağlamıyla pencereler. Bağlam değişince eski pencere kapanır; geçi
 aralığı yeni koşulun karesi sayılmaz. Girdi, simülasyon, olay/ses, araç,
 efekt, nişan, çevre/kamera ve HUD/tanı süreleri ayrı CPU ölçüleridir.
 `updateMs` yalnız sahne güncellemesini ölçer; GPU çizimi veya panel sunumu
-değildir. Deck özeti aynı bağlamı ve izin listeli aşama ölçülerini korur.
+değildir. `RenderMeasurements` CORE `GpuTimer`'ı Phaser `prerender`/`postrender`
+arasına sokar ve `renderSubmitMs` (CPU) ile `gpuTimeMs` (GPU) ayrı örneklerle
+tutar; `presentTimeMs` yalnız gerçek bir sunum ölçümü varsa dolar, aksi hâlde
+`null` kalır. Yavaş kare, `frameId` ile o kareden gelen CPU maliyeti
+çiftidir. Rapor penceresi `runId` + `window` ile ayrılır; kayıp raporlar
+`lostReports` ile sayılır ve `flush()` hataları gizlemez. Deck özeti aynı
+bağlamı ve izin listeli aşama ölçülerini korur.
 
 `GameServices` platform, oturum, ekran kipi, Steam glifi, metin girişi,
 titreşim ve tanı kaynaklarının ömür sahibidir. `GameSettings`,

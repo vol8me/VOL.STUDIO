@@ -47,7 +47,11 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       ses, titreşim, Steamworks, Android geri tuşu ve yön, tanı. Tüketilmeyen
       tauri-v2 export'u silinir (K4). Kapanır: `pnpm high`; E2E Chromium + WebKit.
 - [ ] **[P1] VT4 — Android.** Native proje izlenir, yön/çentik/tam ekran elle.
-      Kapanır: bağlı iki cihazda kurulum, açılış, ekran görüntüsü.
+      İki cihazda kurulum, açılış, yatay/tam ekran, joystick, ateş barı,
+      duraklatma, arka plan dönüşü ve kapanış kaydı yeniden doğrulandı.
+      Kapanır: kısa dış bölge dokunuşu Samsung'da insan parmağıyla kabul edilir
+      (sentetik basış örneklenmedi), uzun oturum bütçesi ve titreşim hissi
+      yeniden ölçülür, görünür panel kabulü ayrı kalır.
 - [ ] **[P1] VT5 — Steam Deck.** steamrt4 paketi ve `pnpm deck`. Kapanır: glibc
       bekçisi; bağlı Deck'te açılış, ekran görüntüsü ve kare ölçümü.
 - [ ] **[P1] VT-H2 — VOL.TEST cila turu (cihazda).** Hissiyat zarfı cihazda
@@ -105,12 +109,17 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ### Kod
 
-- [ ] **[P2] B6 — Ses değişimine göre push doğrulaması.** `high` sesin alt
-      takımını, `signoff` tam takımını koşar. Kapanır: değişen sentez/protokol
-      modüllerinin ilgili regresyonları push kapısında otomatik seçilir;
-      yayın kapısının tam doğrulaması korunur.
+- [x] **[P2] B6 — Ses değişimine göre push doğrulaması.** `high` sesin alt
+      takımını, `signoff` tam takımını koşar. Değişen ses kaynakları CORE
+      dosyalarıyla birlikte `vitest related` ile modül grafiğinden seçilir;
+      silinen kaynak, vitest yapılandırması veya belirsiz değişiklik tam takımı
+      koşar, yayın kapısının tam doğrulaması korunur.
 
 - [ ] **[P3] A20 — Titreşim darbeleri tek zamanlayıcı iş parçacığından yürür.**
+- [ ] **[P3] Samsung kısa dokunuş kabulü.** Cihaz sentetik sabit basışta
+      oyunun örneklediği `pointermove` üretmediği için kısa dış bölge
+      dokunuşunun kabulü bu turda ölçülemedi. Kapanır: kullanıcının Samsung'da
+      kısa nişan/ateş basışını ve iç bölge ayrımını eliyle onaylaması.
 - [ ] **[P3] S7 — Ana sürüm geçişleri.** ESLint 10, stylelint 17, jsdom 30,
       Vitest 5 ve TypeScript 7 için uyumluluk ayrı ayrı doğrulanır. Kapanır:
       ilgili paketlerin ve kapıların yeni ana sürümde geçmesi.
