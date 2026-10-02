@@ -1,4 +1,5 @@
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
+import { TANK_LIGHTS } from '@/config/tankView';
 import { TankView } from './TankView';
 
 /**
@@ -8,14 +9,20 @@ import { TankView } from './TankView';
  */
 export class VehicleViews {
   private readonly views = new Map<number, TankView>();
+  private readonly lighting: Phaser.GameObjects.Container;
 
-  constructor(private readonly scene: Phaser.Scene) {}
+  constructor(private readonly scene: Phaser.Scene) {
+    this.lighting = scene.add
+      .container(0, 0)
+      .setDepth(TANK_LIGHTS.depth)
+      .setBlendMode(Phaser.BlendModes.ADD);
+  }
 
   /** Kayıttaki kimlikleri `ids` ile eşitler; kaldırılan kimlikleri döner. */
   sync(ids: Iterable<number>): number[] {
     const alive = new Set(ids);
     for (const id of alive) {
-      if (!this.views.has(id)) this.views.set(id, new TankView(this.scene));
+      if (!this.views.has(id)) this.views.set(id, new TankView(this.scene, this.lighting));
     }
     const removed: number[] = [];
     for (const [id, view] of this.views) {
@@ -38,5 +45,6 @@ export class VehicleViews {
   destroy(): void {
     for (const view of this.views.values()) view.destroy();
     this.views.clear();
+    this.lighting.destroy();
   }
 }

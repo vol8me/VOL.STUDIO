@@ -1,6 +1,8 @@
 import type Phaser from 'phaser';
 import { TANK } from '@/config/tank';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
+import { TREAD_VIEW } from '@/config/tankView';
+import { treadFrame } from './TreadTexture';
 
 const INV = 1 / TEXTURE_SCALE;
 /**
@@ -12,7 +14,6 @@ const TREAD_HEIGHT = 2 * (TANK.halfWidth - TANK.trackOffset);
 const TREAD_LENGTH = 2 * TANK.halfLength - TREAD_HEIGHT;
 /** Palet ucundaki dönüşün yarıçapı: palet eninin yarısı. */
 const TREAD_END_RADIUS = TREAD_HEIGHT / 2;
-const TREAD_TEXTURE_HEIGHT = 12;
 /** tread-end.svg içindeki dairenin çapı. */
 const TREAD_END_TEXTURE_DIAMETER = 11.2;
 
@@ -25,7 +26,7 @@ export class TreadRig {
   readonly parts: readonly Phaser.GameObjects.GameObject[];
   /** Gölge veren katı parçalar: tabanlar ve uçlar (bant dokusu gölge vermez). */
   readonly shadowCasters: readonly Phaser.GameObjects.Image[];
-  private readonly bands: [Phaser.GameObjects.TileSprite, Phaser.GameObjects.TileSprite];
+  private readonly bands: [Phaser.GameObjects.Image, Phaser.GameObjects.Image];
   private readonly ends: Phaser.GameObjects.Image[];
 
   constructor(scene: Phaser.Scene) {
@@ -36,17 +37,10 @@ export class TreadRig {
           .setScale(INV * (TREAD_HEIGHT / TREAD_END_TEXTURE_DIAMETER)),
       ),
     );
-    const band = (side: number): Phaser.GameObjects.TileSprite =>
+    const band = (side: number): Phaser.GameObjects.Image =>
       scene.add
-        .tileSprite(
-          0,
-          side * TREAD_OFFSET,
-          TREAD_LENGTH * TEXTURE_SCALE,
-          TREAD_HEIGHT * TEXTURE_SCALE,
-          TEXTURE.tread,
-        )
-        .setScale(INV)
-        .setTileScale(1, TREAD_HEIGHT / TREAD_TEXTURE_HEIGHT);
+        .image(0, side * TREAD_OFFSET, TEXTURE.treadBand, 0)
+        .setDisplaySize(TREAD_VIEW.width, TREAD_VIEW.height);
     const bases = [-1, 1].map((side) =>
       scene.add
         .image(0, side * TREAD_OFFSET, TEXTURE.treadBase)
@@ -60,8 +54,8 @@ export class TreadRig {
   /** Palet yüzey yolları (birim): bant dokusu kayar, uçlar döner. */
   update(treadLeft: number, treadRight: number): void {
     const [left, right] = this.bands;
-    left.tilePositionX = -treadLeft * TEXTURE_SCALE;
-    right.tilePositionX = -treadRight * TEXTURE_SCALE;
+    left.setFrame(treadFrame(treadLeft));
+    right.setFrame(treadFrame(treadRight));
     this.ends.forEach((end, index) => {
       end.setRotation((index < 2 ? treadLeft : treadRight) / TREAD_END_RADIUS);
     });

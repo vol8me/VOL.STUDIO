@@ -4,6 +4,17 @@ import { VehicleViews } from '@/view/VehicleViews';
 import { fakeScene, lastCall } from '../support/fakeScene';
 
 describe('VehicleViews', () => {
+  it('araç ışıkları tek ortak katmana ait olur, araç kaldırılınca ışığı da sökülür', () => {
+    const scene = fakeScene();
+    const views = new VehicleViews(scene as unknown as Phaser.Scene);
+    views.sync([1, 2, 3]);
+    const lighting = scene.created.filter(
+      (object) => object.kind === 'container' && object.blendMode === 1,
+    );
+    expect(lighting).toHaveLength(1);
+    views.destroy();
+    expect(lastCall(lighting[0], 'destroy')).toBeDefined();
+  });
   it('kimlikleri eşitler: yeniye görünüm kurar, kaybolanı söker', () => {
     const scene = fakeScene();
     const views = new VehicleViews(scene as unknown as Phaser.Scene);

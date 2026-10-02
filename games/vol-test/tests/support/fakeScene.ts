@@ -34,6 +34,7 @@ export function fakeObject(kind: string, args: unknown[] = []): FakeObject {
     get(target, key: string) {
       if (key in target) return target[key];
       if (key === 'then') return undefined;
+      if (key === 'getAliveParticleCount') return () => Number(target.aliveCount ?? 0);
       const method = (...methodArgs: unknown[]) => {
         calls.push([key, methodArgs]);
         const setter = /^set([A-Z]\w*)$/.exec(key);
@@ -61,7 +62,12 @@ export function lastCall(object: FakeObject, method: string): unknown[] | undefi
 export interface FakeScene {
   readonly created: FakeObject[];
   readonly add: Record<string, (...args: unknown[]) => FakeObject>;
-  readonly textures: { exists: (key: string) => boolean; addCanvas: ReturnType<typeof vi.fn> };
+  readonly textures: {
+    exists: (key: string) => boolean;
+    addCanvas: ReturnType<typeof vi.fn>;
+    addSpriteSheet: ReturnType<typeof vi.fn>;
+    get: (key: string) => { getSourceImage: () => HTMLCanvasElement };
+  };
   readonly load: { svg: ReturnType<typeof vi.fn> };
 }
 
@@ -86,7 +92,12 @@ export function fakeScene(): FakeScene {
     add,
     textures: {
       exists: (key) => textureKeys.has(key),
-      addCanvas: vi.fn((key: string) => textureKeys.add(key)),
+      addCanvas: vi.fn((key: string, canvas: HTMLCanvasElement) => {
+        textureKeys.add(key);
+        return { key, getSourceImage: () => canvas };
+      }),
+      addSpriteSheet: vi.fn((key: string) => textureKeys.add(key)),
+      get: () => ({ getSourceImage: () => document.createElement('canvas') }),
     },
     load: { svg: vi.fn() },
   };

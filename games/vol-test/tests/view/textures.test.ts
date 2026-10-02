@@ -17,6 +17,8 @@ describe('textures', () => {
     const scene = fakeScene();
     createRuntimeTextures(scene as unknown as Phaser.Scene);
     createRuntimeTextures(scene as unknown as Phaser.Scene);
+    expect(scene.textures.addSpriteSheet).toHaveBeenCalledOnce();
+    expect(scene.textures.addSpriteSheet.mock.calls[0][0]).toBe(TEXTURE.treadBand);
     const keys = scene.textures.addCanvas.mock.calls.map((call) => String(call[0]));
     expect(keys.sort()).toEqual(
       [
@@ -26,6 +28,7 @@ describe('textures', () => {
         TEXTURE.skid,
         TEXTURE.spark,
         TEXTURE.treadBase,
+        TEXTURE.treadBand,
         TEXTURE.treadPrint,
       ].sort(),
     );

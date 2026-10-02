@@ -47,6 +47,14 @@ izler; patinajda bant döner fakat tank ilerlemez. Palet izi temas yolunu,
 kayma çizgisi ise kaymanın şiddetini izler. Kar sıkışması görsel izden ayrı,
 modeldeki palet temasıyla hesaplanır.
 
+Palet bandı `TreadTexture` ile aynı SVG'den bir kez üretilen ortak 32 karelik
+dokuyu kullanır; faz aralığı 0,25 dünya birimidir. Her araç kendi pozunu
+seçer, her karede canvas veya GPU dokusu üretmez. Çekirdek gövde içinde
+taretin arkasında normal alfa ile çizilir. Namlu parlamaları `VehicleViews`
+tarafından sahiplenilen tek additive katmandadır; gövde ve taretin dünya
+pozunu izler. Boşalmış ve üretimi durmuş parçacık yayıcıları çizime girmez;
+yaşayan son parçacıklar yaşam süresi bitene kadar kalır.
+
 ## Mevsim, hava ve yüzey
 
 `src/config/seasons.ts` mevsim sırasının, sürelerin ve geçiş oranının tek

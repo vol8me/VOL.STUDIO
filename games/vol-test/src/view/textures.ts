@@ -6,6 +6,7 @@ import hullUrl from '@/assets/tank/hull.svg?url';
 import treadEndUrl from '@/assets/tank/tread-end.svg?url';
 import treadUrl from '@/assets/tank/tread.svg?url';
 import turretUrl from '@/assets/tank/turret.svg?url';
+import { createTreadTexture } from './TreadTexture';
 
 /**
  * SVG parçalar bu çarpanla rasterlenir ve sahnede tersiyle ölçeklenir. En
@@ -17,6 +18,7 @@ export const TEXTURE = {
   hull: 'tank-hull',
   turret: 'tank-turret',
   tread: 'tank-tread',
+  treadBand: 'tank-tread-band',
   treadEnd: 'tank-tread-end',
   core: 'tank-core',
   feeler: 'tank-feeler',
@@ -64,6 +66,7 @@ function canvasTexture(
 
 /** Çalışma anında çizilen efekt dokuları. */
 export function createRuntimeTextures(scene: Phaser.Scene): void {
+  createTreadTexture(scene, TEXTURE.tread, TEXTURE.treadBand, TEXTURE_SCALE);
   canvasTexture(scene, TEXTURE.spark, 16, 16, (g) => {
     const gradient = g.createRadialGradient(8, 8, 0, 8, 8, 8);
     gradient.addColorStop(0, 'rgba(255,255,255,1)');

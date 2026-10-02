@@ -20,10 +20,8 @@ describe('VehicleReflectionPool', () => {
     expect(textures).toContain(TEXTURE.turret);
     expect(textures).toContain(TEXTURE.treadEnd);
     expect(
-      scene.created
-        .filter((object) => object.kind === 'tileSprite')
-        .map((object) => object.args[4]),
-    ).toContain(TEXTURE.tread);
+      scene.created.filter((object) => object.kind === 'image').map((object) => object.args[2]),
+    ).toContain(TEXTURE.treadBand);
     expect(
       pool.update(
         weather(),

@@ -55,9 +55,11 @@ export class VehicleTrail {
     this.exhaust.setPosition(rearX, rearY);
     this.exhaust.setEmitterAngle({ min: outward - 25, max: outward + 25 });
     this.exhaust.emitting = boosting;
+    this.exhaust.setVisible(boosting || this.exhaust.getAliveParticleCount() > 0);
     this.dust.setPosition(rearX, rearY);
     this.dust.setEmitterAngle({ min: outward - 40, max: outward + 40 });
     this.dust.emitting = speed > FX.dustSpeed || slipping;
+    this.dust.setVisible(this.dust.emitting || this.dust.getAliveParticleCount() > 0);
   }
 
   destroy(): void {

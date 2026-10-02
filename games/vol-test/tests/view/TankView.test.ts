@@ -25,14 +25,26 @@ function build() {
   const view = new TankView(scene as unknown as Phaser.Scene);
   const byTexture = (key: string) => scene.created.filter((object) => object.args.includes(key));
   const containers = scene.created.filter((object) => object.kind === 'container');
-  const [turretRig, body, root] = containers;
+  const [turretRig, body, root] = containers.slice(-3);
   return { view, byTexture, turretRig: turretRig, body: body, root: root };
 }
 
 describe('TankView', () => {
+  it('ışıklar gövde ötelemesini ve bağımsız taretin dünya yönünü izler', () => {
+    const { view, byTexture, body, turretRig } = build();
+    view.fire();
+    view.update(frame({ hull: Math.PI / 2, turret: 0, pitch: 2, roll: 3 }), 0);
+    const core = byTexture(TEXTURE.core)[0];
+    const flash = byTexture(TEXTURE.flash)[0];
+    const children = body.list as unknown[];
+    expect(children.indexOf(core)).toBeLessThan(children.indexOf(turretRig));
+    expect(flash.x).toBeCloseTo(126);
+    expect(flash.y).toBeCloseTo(202);
+    expect(flash.rotation).toBeCloseTo(0);
+  });
   it('palet geometrisi fizik ayarından türer', () => {
     const { byTexture } = build();
-    const treads = byTexture(TEXTURE.tread);
+    const treads = byTexture(TEXTURE.treadBand);
     expect(treads).toHaveLength(2);
     expect(treads.map((tread) => tread.args[1])).toEqual([-TANK.trackOffset, TANK.trackOffset]);
     const ends = byTexture(TEXTURE.treadEnd);
@@ -48,9 +60,9 @@ describe('TankView', () => {
     view.update(frame({ treadLeft: 10, treadRight: -5 }), 16);
     expect(lastCall(root, 'setPosition')).toEqual([100, 200]);
     expect(root.rotation).toBe(0.5);
-    const [left, right] = byTexture(TEXTURE.tread);
-    expect(left.tilePositionX).toBe(-10 * TEXTURE_SCALE);
-    expect(right.tilePositionX).toBe(5 * TEXTURE_SCALE);
+    const [left, right] = byTexture(TEXTURE.treadBand);
+    expect(left.frame).toBe(8);
+    expect(right.frame).toBe(12);
     const ends = byTexture(TEXTURE.treadEnd);
     const radius = TANK.halfWidth - TANK.trackOffset;
     expect(ends[0].rotation).toBeCloseTo(10 / radius);
@@ -61,7 +73,7 @@ describe('TankView', () => {
     const { view, body, byTexture } = build();
     view.update(frame({ pitch: -2, roll: 1.5 }), 16);
     expect(lastCall(body, 'setPosition')).toEqual([-2, 1.5]);
-    expect(byTexture(TEXTURE.tread)[0].args[0]).toBe(0);
+    expect(byTexture(TEXTURE.treadBand)[0].args[0]).toBe(0);
   });
 
   it('taret gövdeden bağımsız döner', () => {
