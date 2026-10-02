@@ -1,24 +1,29 @@
 import { describe, expect, it, vi } from 'vitest';
+import {
+  onSystemResume,
+  registerSuspendFlush,
+  type SystemSleepProbe,
+} from '../../src/platform/systemSleep';
 
 const fakes = vi.hoisted(() => ({
   isTauri: vi.fn(() => true),
   invoke: vi.fn(() => Promise.resolve()),
-  handlers: new Map<string, () => void>(),
-  listen: vi.fn((event: string, handler: () => void) => {
+  handlers: new Map<string, (event: { payload: unknown }) => void>(),
+  listen: vi.fn((event: string, handler: (event: { payload: unknown }) => void) => {
     fakes.handlers.set(event, handler);
     return Promise.resolve(() => undefined);
   }),
 }));
-
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri, invoke: fakes.invoke }));
 vi.mock('@tauri-apps/api/event', () => ({ listen: fakes.listen }));
-import { onSystemResume, registerSuspendFlush } from '../../src/platform/systemSleep';
-import type { SystemSleepProbe } from '../../src/platform/systemSleep';
 
+type Request = { requestId: string; reason: 'suspend' };
+type Handler = (event: { payload: unknown }) => void;
 function fakeProbe(tauri = true) {
-  const handlers = new Map<string, () => void>();
+  const handlers = new Map<string, Handler>();
   const unlisten = vi.fn();
   const invoke = vi.fn(() => Promise.resolve());
+  const onError = vi.fn();
   const probe: SystemSleepProbe = {
     isTauri: () => tauri,
     listen: (event, handler) => {
@@ -26,106 +31,147 @@ function fakeProbe(tauri = true) {
       return unlisten;
     },
     invoke,
+    onError,
   };
-  const emit = (event: string) => handlers.get(event)?.();
-  return { probe, emit, invoke, unlisten };
+  return {
+    probe,
+    invoke,
+    onError,
+    unlisten,
+    emit: (event: string, payload: unknown = undefined) => handlers.get(event)?.({ payload }),
+    suspend: (requestId: string) =>
+      handlers.get('vol:suspending')?.({
+        payload: { requestId, reason: 'suspend' } satisfies Request,
+      }),
+  };
 }
-
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
-
 describe('systemSleep', () => {
-  it('her uyku turunda bütün kancalar bitince tek onay gönderir', async () => {
-    const { probe, emit, invoke } = fakeProbe();
-    let release!: () => void;
-    const slow = vi.fn(() => new Promise<void>((resolve) => (release = resolve)));
-    const fast = vi.fn();
-    registerSuspendFlush(slow, probe);
-    registerSuspendFlush(fast, probe);
-
-    emit('vol:suspending');
-    await settle();
-    expect(invoke).not.toHaveBeenCalled();
-    release();
-    await settle();
-    expect(invoke).toHaveBeenCalledTimes(1);
-    expect(invoke).toHaveBeenCalledWith('vol_suspend_ready');
-
-    emit('vol:suspending');
-    await settle();
-    expect(slow).toHaveBeenCalledTimes(2);
-  });
-
-  it('kanca fırlatsa da onay gider; uyanış dinleyicilere ulaşır', async () => {
-    const { probe, emit, invoke } = fakeProbe();
-    registerSuspendFlush(() => {
-      throw new Error('disk');
-    }, probe);
-    const resumed = vi.fn();
-    onSystemResume(resumed, probe);
-    emit('vol:suspending');
-    await settle();
-    expect(invoke).toHaveBeenCalledWith('vol_suspend_ready');
-    emit('vol:resumed');
-    expect(resumed).toHaveBeenCalledTimes(1);
-  });
-
-  it('son kayıt silinince dinleme kapanır; tarayıcıda hiçbir şey kurulmaz', async () => {
-    const { probe, unlisten } = fakeProbe();
-    const stopSuspend = registerSuspendFlush(() => undefined, probe);
-    const stopResume = onSystemResume(() => undefined, probe);
-    await settle();
-    stopSuspend();
-    expect(unlisten).not.toHaveBeenCalled();
-    stopResume();
-    expect(unlisten).toHaveBeenCalledTimes(2);
-
-    const web = fakeProbe(false);
-    registerSuspendFlush(() => undefined, web.probe)();
-    onSystemResume(() => undefined, web.probe)();
-    expect(web.invoke).not.toHaveBeenCalled();
-  });
-
-  it('varsayılan prob Tauri olay ve komut API’sini kullanır', async () => {
+  it('varsayılan köprü uyku isteğinin packet alanlarını onay komutuna taşır', async () => {
     const stop = registerSuspendFlush(() => undefined);
-    await settle();
-    fakes.handlers.get('vol:suspending')?.();
-    await settle();
-    expect(fakes.invoke).toHaveBeenCalledWith('vol_suspend_ready');
-    stop();
-  });
-
-  it('kayıt silindikten sonra çözülen abonelik hemen bırakılır', async () => {
-    let resolveListen!: (unlisten: () => void) => void;
-    const unlisten = vi.fn();
-    const probe: SystemSleepProbe = {
-      isTauri: () => true,
-      listen: () => new Promise((resolve) => (resolveListen = resolve)),
-      invoke: () => Promise.resolve(),
-    };
-    const stop = registerSuspendFlush(() => undefined, probe);
-    stop();
-    resolveListen(unlisten);
-    await settle();
-    expect(unlisten).toHaveBeenCalled();
-  });
-
-  it('onay komutu reddedilirse işlenmemiş ret kalmaz', async () => {
-    const { probe, emit } = fakeProbe();
-    registerSuspendFlush(() => undefined, {
-      ...probe,
-      invoke: () => Promise.reject(new Error('kabuk yok')),
+    fakes.handlers.get('vol:suspending')?.({
+      payload: { requestId: 'suspend-1', reason: 'suspend' },
     });
-    emit('vol:suspending');
     await settle();
+    expect(fakes.invoke).toHaveBeenCalledWith('vol_suspend_ready', {
+      requestId: 'suspend-1',
+      reason: 'suspend',
+      outcome: 'success',
+    });
+    stop();
   });
-
-  it('dinleme kurulamazsa kayıt yine çalışır, hata yutulur', async () => {
+  it('hızlı ikinci uyku turu eski kanca sonucunu yeni onaya dönüştürmez ve tekrar olayı birleştirir', async () => {
+    const p = fakeProbe();
+    const finish: Array<() => void> = [];
+    const hook = vi.fn(() => new Promise<void>((resolve) => finish.push(resolve)));
+    const stop = registerSuspendFlush(hook, p.probe);
+    p.suspend('suspend-1');
+    p.suspend('suspend-1');
+    await settle();
+    expect(hook).toHaveBeenCalledOnce();
+    p.emit('vol:resumed');
+    p.suspend('suspend-2');
+    await settle();
+    expect(hook).toHaveBeenCalledTimes(2);
+    p.suspend('suspend-1');
+    await settle();
+    expect(hook).toHaveBeenCalledTimes(2);
+    finish[0]();
+    await settle();
+    expect(p.invoke).not.toHaveBeenCalled();
+    finish[1]();
+    await settle();
+    expect(p.invoke).toHaveBeenCalledExactlyOnceWith('vol_suspend_ready', {
+      requestId: 'suspend-2',
+      reason: 'suspend',
+      outcome: 'success',
+    });
+    p.suspend('suspend-2');
+    await settle();
+    expect(hook).toHaveBeenCalledTimes(2);
+    stop();
+  });
+  it('bir kanca fırlatsa da geciken diğer kanca tamamlanmadan onaylamaz', async () => {
+    const p = fakeProbe();
+    let finish!: () => void;
+    const stop = registerSuspendFlush(() => {
+      throw new Error('disk');
+    }, p.probe);
+    const stopLast = registerSuspendFlush(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+      p.probe,
+    );
+    p.suspend('suspend-1');
+    await settle();
+    expect(p.invoke).not.toHaveBeenCalled();
+    finish();
+    await settle();
+    expect(p.invoke).toHaveBeenCalledExactlyOnceWith('vol_suspend_ready', {
+      requestId: 'suspend-1',
+      reason: 'suspend',
+      outcome: 'failed',
+    });
+    expect(p.onError).toHaveBeenCalled();
+    stop();
+    stopLast();
+  });
+  it('uyanış dinleyici hatası diğer dinleyicileri engellemez', () => {
+    const p = fakeProbe();
+    const error = new Error('ses');
+    const first = onSystemResume(() => {
+      throw error;
+    }, p.probe);
+    const listener = vi.fn();
+    const last = onSystemResume(listener, p.probe);
+    p.emit('vol:resumed');
+    expect(listener).toHaveBeenCalledOnce();
+    expect(p.onError).toHaveBeenCalledWith(error);
+    first();
+    last();
+  });
+  it('son kayıt kaldırıldıktan sonra çözülen bütün abonelikleri bırakır', async () => {
+    const p = fakeProbe();
+    const pending: Array<(unlisten: () => void) => void> = [];
     const stop = registerSuspendFlush(() => undefined, {
-      isTauri: () => true,
-      listen: () => Promise.reject(new Error('olay yok')),
-      invoke: () => Promise.resolve(),
+      ...p.probe,
+      listen: () => new Promise((resolve) => pending.push(resolve)),
+    });
+    stop();
+    pending.forEach((resolve) => resolve(p.unlisten));
+    await settle();
+    expect(p.unlisten).toHaveBeenCalledTimes(3);
+  });
+  it('dinleme kurulum hatalarını ve native uyku izleyici hatasını görünür kılar', async () => {
+    const p = fakeProbe();
+    const error = new Error('dinleme');
+    const stop = registerSuspendFlush(() => undefined, {
+      ...p.probe,
+      listen: (event, handler) =>
+        event === 'vol:suspending' ? Promise.reject(error) : p.probe.listen(event, handler),
     });
     await settle();
+    expect(p.onError).toHaveBeenCalledWith(error);
+    p.emit('vol:sleep-error', { operation: 'inhibit', error: 'logind kapalı' });
+    expect(p.onError).toHaveBeenCalledWith({ operation: 'inhibit', error: 'logind kapalı' });
     stop();
+  });
+  it('onay komutunun reddini raporlar', async () => {
+    const p = fakeProbe();
+    const error = new Error('kabuk yok');
+    p.invoke.mockRejectedValue(error);
+    const stop = registerSuspendFlush(() => undefined, p.probe);
+    p.suspend('suspend-1');
+    await settle();
+    expect(p.onError).toHaveBeenCalledWith(error);
+    stop();
+  });
+  it('Tauri dışında kayıt kurmaz', () => {
+    const p = fakeProbe(false);
+    registerSuspendFlush(vi.fn(), p.probe)();
+    onSystemResume(vi.fn(), p.probe)();
+    expect(p.unlisten).not.toHaveBeenCalled();
   });
 });

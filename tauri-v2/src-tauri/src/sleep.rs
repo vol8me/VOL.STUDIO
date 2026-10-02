@@ -1,29 +1,24 @@
-//! Uyku sözleşmesi (Linux, logind): kabuk bir "delay" uyku kilidi tutar.
-//! `PrepareForSleep(true)` gelince ön yüze `vol:suspending` yayınlanır, JS
-//! bekleyen yazıları boşaltıp `vol_suspend_ready` çağırır; kabuk en çok
-//! `FLUSH_GRACE` bekleyip kilidi bırakır ve sistem uyur. Uyanışta
-//! (`PrepareForSleep(false)`) `vol:resumed` yayınlanır ve kilit yeniden alınır.
-//! logind'in tanıdığı gecikme sınırı (Deck'te 5 sn) bekleme süresinden büyüktür.
-
-use std::sync::mpsc::{Receiver, Sender};
+#[cfg(target_os = "linux")]
+use crate::flush::{wait_for_flush, FLUSH_GRACE};
+use crate::flush::{FlushGate, FlushOutcome, FlushReason};
 use std::sync::Mutex;
 
-/// Her uyku turunda JS'in boşaltmayı bitirdiğini bildiren kanal.
-pub struct SuspendGate(pub Mutex<Option<Sender<()>>>);
+#[derive(Default)]
+pub struct SuspendGate(pub Mutex<FlushGate>);
 
 #[tauri::command]
-pub fn vol_suspend_ready(gate: tauri::State<'_, SuspendGate>) {
-    if let Some(sender) = gate
-        .0
+pub fn vol_suspend_ready(
+    gate: tauri::State<'_, SuspendGate>,
+    request_id: String,
+    reason: FlushReason,
+    outcome: FlushOutcome,
+) {
+    gate.0
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())
-        .as_ref()
-    {
-        let _ = sender.send(());
-    }
+        .acknowledge(&request_id, reason, outcome);
 }
 
-/// Uyku olayı ne yapar: kilit bırakılmadan önce boşaltma mı, uyanış mı.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SleepStep {
     Suspending,
@@ -38,35 +33,41 @@ pub fn step_of(prepare_for_sleep: bool) -> SleepStep {
     }
 }
 
-/// Önceki turdan kalmış onayları atar; her tur kendi onayını bekler.
-pub fn drain(receiver: &Receiver<()>) {
-    while receiver.try_recv().is_ok() {}
+#[cfg(target_os = "linux")]
+fn report_sleep_error<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    operation: &str,
+    error: &dbus::Error,
+) {
+    use tauri::Emitter;
+    log::warn!("uyku izleyici {operation} hatası: {error}");
+    if let Err(emit_error) = app.emit(
+        "vol:sleep-error",
+        serde_json::json!({
+            "operation": operation, "error": error.to_string(),
+        }),
+    ) {
+        log::warn!("uyku izleyici hatası yayınlanamadı: {emit_error}");
+    }
 }
 
 #[cfg(target_os = "linux")]
 pub fn watch_sleep<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-    use tauri::Manager;
-    let (sender, receiver) = std::sync::mpsc::channel::<()>();
-    app.manage(SuspendGate(Mutex::new(Some(sender))));
     let app = app.clone();
     std::thread::spawn(move || {
-        if let Err(error) = run_logind_loop(&app, &receiver) {
-            log::warn!("uyku izleyici kurulamadı, uykudan önce boşaltma yapılmaz: {error}");
+        if let Err(error) = run_logind_loop(&app) {
+            report_sleep_error(&app, "watch", &error);
         }
     });
 }
 
 #[cfg(target_os = "linux")]
-fn run_logind_loop<R: tauri::Runtime>(
-    app: &tauri::AppHandle<R>,
-    acks: &Receiver<()>,
-) -> Result<(), dbus::Error> {
+fn run_logind_loop<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<(), dbus::Error> {
     use dbus::blocking::Connection;
     use dbus::message::MatchRule;
-    use std::time::Duration;
-    use tauri::Emitter;
+    use std::time::{Duration, Instant};
+    use tauri::{Emitter, Manager};
 
-    const FLUSH_GRACE: Duration = Duration::from_millis(1500);
     let connection = Connection::new_system()?;
     let inhibit = |connection: &Connection| -> Result<dbus::arg::OwnedFd, dbus::Error> {
         let proxy = connection.with_proxy(
@@ -95,21 +96,54 @@ fn run_logind_loop<R: tauri::Runtime>(
             true
         },
     )?;
+    let mut sleeping = false;
     loop {
         connection.process(Duration::from_millis(1000))?;
         while let Ok(start) = incoming.try_recv() {
             match step_of(start) {
                 SleepStep::Suspending => {
-                    drain(acks);
-                    let _ = app.emit("vol:suspending", ());
-                    let flushed = acks.recv_timeout(FLUSH_GRACE).is_ok();
-                    log::info!("uyku öncesi boşaltma: {flushed}");
+                    if sleeping {
+                        continue;
+                    }
+                    sleeping = true;
+                    let gate = app.state::<SuspendGate>();
+                    let Some((request, receiver)) = gate
+                        .0
+                        .lock()
+                        .unwrap_or_else(|poisoned| poisoned.into_inner())
+                        .begin(FlushReason::Suspend)
+                    else {
+                        continue;
+                    };
+                    let deadline = Instant::now() + FLUSH_GRACE;
+                    if let Err(error) = app.emit("vol:suspending", &request) {
+                        log::warn!("uyku boşaltma isteği yayınlanamadı: {error}");
+                    }
+                    let outcome = wait_for_flush(&receiver, deadline);
+                    gate.0
+                        .lock()
+                        .unwrap_or_else(|poisoned| poisoned.into_inner())
+                        .finish(&request.request_id);
+                    if outcome == FlushOutcome::Success {
+                        log::info!("uyku öncesi boşaltma tamamlandı: {}", request.request_id);
+                    } else {
+                        log::warn!(
+                            "uyku öncesi boşaltma tamamlanamadı: {} {outcome:?}",
+                            request.request_id
+                        );
+                    }
                     lock = None;
                 }
                 SleepStep::Resumed => {
-                    let _ = app.emit("vol:resumed", ());
+                    sleeping = false;
+                    if let Err(error) = app.emit("vol:resumed", ()) {
+                        log::warn!("uyanış olayı yayınlanamadı: {error}");
+                    }
                     if lock.is_none() {
-                        lock = inhibit(&connection).ok();
+                        match inhibit(&connection) {
+                            Ok(fd) => lock = Some(fd),
+                            Err(error) => report_sleep_error(app, "inhibit", &error),
+                        }
                     }
                 }
             }
@@ -118,10 +152,7 @@ fn run_logind_loop<R: tauri::Runtime>(
 }
 
 #[cfg(not(target_os = "linux"))]
-pub fn watch_sleep<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-    use tauri::Manager;
-    app.manage(SuspendGate(Mutex::new(None)));
-}
+pub fn watch_sleep<R: tauri::Runtime>(_app: &tauri::AppHandle<R>) {}
 
 #[cfg(test)]
 mod tests {
@@ -134,11 +165,23 @@ mod tests {
     }
 
     #[test]
-    fn eski_onaylar_yeni_turu_erken_bitirmez() {
-        let (sender, receiver) = std::sync::mpsc::channel::<()>();
-        sender.send(()).unwrap();
-        sender.send(()).unwrap();
-        drain(&receiver);
+    fn gec_onay_yeni_uyku_turunu_bitiremez() {
+        let gate = SuspendGate::default();
+        let mut state = gate.0.lock().unwrap();
+        let (first, _) = state.begin(FlushReason::Suspend).unwrap();
+        state.finish(&first.request_id);
+        let (second, receiver) = state.begin(FlushReason::Suspend).unwrap();
+        assert!(!state.acknowledge(
+            &first.request_id,
+            FlushReason::Suspend,
+            FlushOutcome::Success
+        ));
         assert!(receiver.try_recv().is_err());
+        assert!(state.acknowledge(
+            &second.request_id,
+            FlushReason::Suspend,
+            FlushOutcome::Success
+        ));
+        assert_eq!(receiver.try_recv().unwrap(), FlushOutcome::Success);
     }
 }

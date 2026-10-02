@@ -189,6 +189,7 @@ describe('DisplayModeController — native pencere', () => {
     });
 
     await controller.start();
+    await expect(controller.flush()).rejects.toThrow('WM reddetti');
     await preference.setMode('fullscreen');
     await controller.flush();
 
@@ -196,6 +197,26 @@ describe('DisplayModeController — native pencere', () => {
     expect(native.adapter.setFullscreen).toHaveBeenCalledWith(true);
   });
 
+  it('hata gözlemcisi fırlatsa da uygulama kuyruğu sonraki istekte toparlanır', async () => {
+    const preference = makePreference('windowed');
+    const native = makeNativeWindow();
+    const error = new Error('WM reddetti');
+    native.adapter.isFullscreen.mockRejectedValueOnce(error);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const controller = create({
+      ...preference,
+      windowAdapter: native.adapter,
+      onError: () => {
+        throw new Error('tanı kapalı');
+      },
+    });
+    await expect(controller.start()).resolves.toBeUndefined();
+    await expect(controller.flush()).rejects.toBe(error);
+    await preference.setMode('fullscreen');
+    await expect(controller.flush()).resolves.toBeUndefined();
+    expect(native.adapter.setFullscreen).toHaveBeenCalledWith(true);
+    expect(warn).toHaveBeenCalled();
+  });
   it('native izleme kurulamazsa hata varsayılan olarak konsola düşer', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const native = makeNativeWindow();
@@ -234,6 +255,20 @@ describe('DisplayModeController — native pencere', () => {
 });
 
 describe('DisplayModeController — native pencere yokken', () => {
+  it('DOM tam ekran reddi flush sonucunda görünür ve sonraki istek toparlanır', async () => {
+    const target = document.createElement('div');
+    const error = new Error('DOM reddetti');
+    target.requestFullscreen = vi.fn(() => Promise.reject(error));
+    const preference = makePreference('fullscreen');
+    const onError = vi.fn();
+    const controller = create({ ...preference, target, onError });
+    await controller.start();
+    await expect(controller.flush()).rejects.toBe(error);
+    expect(onError).toHaveBeenCalledWith(error);
+    await preference.setMode('windowed');
+    await expect(controller.flush()).resolves.toBeUndefined();
+  });
+
   function fakeDomFullscreen() {
     let element: Element | null = null;
     Object.defineProperty(document, 'fullscreenElement', {

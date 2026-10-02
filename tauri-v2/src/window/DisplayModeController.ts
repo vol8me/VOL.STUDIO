@@ -39,6 +39,7 @@ export class DisplayModeController {
   private readonly onError: (error: unknown) => void;
   private applyQueue: Promise<void> = Promise.resolve();
   private applyGeneration = 0;
+  private applyFailure: { error: unknown } | null = null;
   private stopPreference: (() => void) | null = null;
   private stopNativeWatch: (() => void) | null = null;
   private started = false;
@@ -54,7 +55,7 @@ export class DisplayModeController {
       target: options.target,
       onToggleRequest: native ? () => this.toggleNative() : undefined,
       onChange: native ? undefined : (active) => void options.setMode(toMode(active)),
-      onError: this.onError,
+      onError: (error) => this.recordApplyError(error),
     });
   }
 
@@ -88,6 +89,7 @@ export class DisplayModeController {
   /** Bekleyen uygulamaları tüketir. */
   async flush(): Promise<void> {
     await this.applyQueue;
+    if (this.applyFailure) throw this.applyFailure.error;
   }
 
   destroy(): void {
@@ -106,13 +108,14 @@ export class DisplayModeController {
     const generation = ++this.applyGeneration;
     const run = this.applyQueue
       .then(() => this.applyLatest(generation))
-      .catch((error: unknown) => this.onError(error));
+      .catch((error: unknown) => this.recordApplyError(error));
     this.applyQueue = run;
     return run;
   }
 
   private async applyLatest(generation: number): Promise<void> {
     if (this.isStale(generation)) return;
+    this.applyFailure = null;
     const wantsFullscreen = this.options.getMode() === 'fullscreen';
 
     if (!this.window.isAvailable()) {
@@ -129,6 +132,15 @@ export class DisplayModeController {
 
     const size = this.options.getWindowedSize?.();
     if (size) await this.window.setResolution(size.width, size.height);
+  }
+
+  private recordApplyError(error: unknown): void {
+    this.applyFailure = { error };
+    try {
+      this.onError(error);
+    } catch (reportError) {
+      console.warn('[DisplayModeController] Görüntü kipi tanısı başarısız:', error, reportError);
+    }
   }
 
   private isStale(generation: number): boolean {

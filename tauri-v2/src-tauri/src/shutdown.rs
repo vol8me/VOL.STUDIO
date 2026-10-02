@@ -1,29 +1,98 @@
-//! Kapanış sözleşmesi: SIGTERM/SIGINT/SIGHUP ön yüze `vol:terminate` olarak
-//! iletilir; JS bekleyen yazıları boşaltıp `vol_flush_done` çağırır. Kabuk en
-//! çok `FLUSH_GRACE` bekler, `vol:exiting` yayınlar ve uygulamayı olağan çıkış
-//! yolundan (RunEvent::Exit) 128+sinyal koduyla kapatır. Olay döngüsü takılırsa
-//! süreç `EXIT_GRACE` sonunda doğrudan sonlanır.
-
-use std::sync::mpsc::Sender;
+use crate::flush::{
+    wait_for_flush, FlushGate, FlushOutcome, FlushReason, FlushRequest, FLUSH_GRACE,
+};
+use std::sync::mpsc::Receiver;
 use std::sync::Mutex;
+use std::time::{Duration, Instant};
+use tauri::{Emitter, Manager};
 
-/// JS'in boşaltmayı bitirdiğini bildiren tek atımlık kanal.
-pub struct ShutdownGate(pub Mutex<Option<Sender<()>>>);
+const EXIT_GRACE: Duration = Duration::from_secs(2);
 
-/// Sinyal gelmeden çağrılırsa (ör. sinyalsiz platform) etkisizdir.
-#[tauri::command]
-pub fn vol_flush_done(gate: tauri::State<'_, ShutdownGate>) {
-    if let Some(sender) = gate
-        .0
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
-        .take()
-    {
-        let _ = sender.send(());
+#[derive(Default)]
+pub struct ShutdownState {
+    gate: FlushGate,
+    started: bool,
+}
+
+impl ShutdownState {
+    fn begin(&mut self, reason: FlushReason) -> Option<(FlushRequest, Receiver<FlushOutcome>)> {
+        if self.started {
+            return None;
+        }
+        self.started = true;
+        self.gate.begin(reason)
     }
 }
 
-/// Sinyalden kaynaklanan çıkış kodu (POSIX kabuk sözleşmesi).
+#[derive(Default)]
+pub struct ShutdownGate(pub Mutex<ShutdownState>);
+
+#[tauri::command]
+pub fn vol_flush_done(
+    gate: tauri::State<'_, ShutdownGate>,
+    request_id: String,
+    reason: FlushReason,
+    outcome: FlushOutcome,
+) {
+    gate.0
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .gate
+        .acknowledge(&request_id, reason, outcome);
+}
+
+pub fn request_exit<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    reason: FlushReason,
+    signal: Option<i32>,
+) {
+    let gate = app.state::<ShutdownGate>();
+    let Some((request, receiver)) = gate
+        .0
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .begin(reason)
+    else {
+        return;
+    };
+    let deadline = Instant::now() + FLUSH_GRACE;
+    let code = signal.map(exit_code).unwrap_or(0);
+    std::thread::spawn(move || {
+        std::thread::sleep(FLUSH_GRACE + EXIT_GRACE);
+        std::process::exit(code);
+    });
+    let app = app.clone();
+    std::thread::spawn(move || {
+        let mut packet = serde_json::to_value(&request).expect("boşaltma isteği serileştirilemedi");
+        if let Some(signal) = signal {
+            packet["signal"] = signal.into();
+        }
+        if let Err(error) = app.emit("vol:terminate", packet) {
+            log::warn!("kapanış boşaltma isteği yayınlanamadı: {error}");
+        }
+        let outcome = wait_for_flush(&receiver, deadline);
+        app.state::<ShutdownGate>()
+            .0
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .gate
+            .finish(&request.request_id);
+        let detail = serde_json::json!({
+            "requestId": request.request_id, "reason": request.reason,
+            "signal": signal, "outcome": outcome,
+        });
+        if outcome == FlushOutcome::Success {
+            log::info!("kapanış boşaltması tamamlandı: {detail}");
+        } else {
+            log::warn!("kapanış boşaltması tamamlanamadı: {detail}");
+        }
+        if let Err(error) = app.emit("vol:exiting", detail) {
+            log::warn!("kapanış sonucu yayınlanamadı: {error}");
+        }
+        app.exit(code);
+    });
+}
+
 pub fn exit_code(signal: i32) -> i32 {
     128 + signal
 }
@@ -31,44 +100,20 @@ pub fn exit_code(signal: i32) -> i32 {
 #[cfg(target_os = "linux")]
 pub fn watch_signals<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
     use signal_hook::consts::{SIGHUP, SIGINT, SIGTERM};
-    use std::time::Duration;
-    use tauri::{Emitter, Manager};
-
-    const FLUSH_GRACE: Duration = Duration::from_millis(1500);
-    const EXIT_GRACE: Duration = Duration::from_secs(2);
-
     let Ok(mut signals) = signal_hook::iterator::Signals::new([SIGTERM, SIGINT, SIGHUP]) else {
-        log::warn!("sinyal izleyici kurulamadı; kapanışta boşaltma yapılmaz");
+        log::warn!("sinyal izleyici kurulamadı; sinyal kapanışında boşaltma yapılamaz");
         return;
     };
-    let (sender, receiver) = std::sync::mpsc::channel::<()>();
-    app.manage(ShutdownGate(Mutex::new(Some(sender))));
     let app = app.clone();
     std::thread::spawn(move || {
-        let Some(signal) = signals.forever().next() else {
-            return;
-        };
-        let _ = app.emit("vol:terminate", signal);
-        let flushed = receiver.recv_timeout(FLUSH_GRACE).is_ok();
-        let _ = app.emit(
-            "vol:exiting",
-            serde_json::json!({ "signal": signal, "flushed": flushed }),
-        );
-        let code = exit_code(signal);
-        std::thread::spawn(move || {
-            std::thread::sleep(EXIT_GRACE);
-            std::process::exit(code);
-        });
-        app.exit(code);
+        for signal in signals.forever() {
+            request_exit(&app, FlushReason::Signal, Some(signal));
+        }
     });
 }
 
-/// Sinyal izleyicisi olmayan platformlarda komut yine kayıtlıdır.
 #[cfg(not(target_os = "linux"))]
-pub fn watch_signals<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-    use tauri::Manager;
-    app.manage(ShutdownGate(Mutex::new(None)));
-}
+pub fn watch_signals<R: tauri::Runtime>(_app: &tauri::AppHandle<R>) {}
 
 #[cfg(test)]
 mod tests {
@@ -82,12 +127,18 @@ mod tests {
     }
 
     #[test]
-    fn kapi_tek_atimliktir() {
-        let (sender, receiver) = std::sync::mpsc::channel::<()>();
-        let gate = ShutdownGate(Mutex::new(Some(sender)));
-        let take = || gate.0.lock().unwrap().take();
-        assert!(take().map(|s| s.send(())).is_some());
-        assert!(take().is_none());
-        assert!(receiver.try_recv().is_ok());
+    fn kapanis_ve_sinyal_tek_bariyer_ve_tek_cikis_turu_kullanir() {
+        let mut state = ShutdownState::default();
+        let (request, receiver) = state.begin(FlushReason::Close).unwrap();
+        assert!(state.begin(FlushReason::Signal).is_none());
+        assert!(state.gate.acknowledge(
+            &request.request_id,
+            FlushReason::Close,
+            FlushOutcome::Success
+        ));
+        assert_eq!(receiver.try_recv().unwrap(), FlushOutcome::Success);
+        state.gate.finish(&request.request_id);
+        assert!(state.begin(FlushReason::Close).is_none());
+        assert!(state.begin(FlushReason::Signal).is_none());
     }
 }

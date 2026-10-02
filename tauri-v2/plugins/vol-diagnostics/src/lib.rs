@@ -154,12 +154,8 @@ fn record_shutdown<R: Runtime>(app: &AppHandle<R>, dir: PathBuf) {
     use tauri::Listener;
     let signal_dir = dir.clone();
     app.listen_any("vol:terminate", move |event| {
-        let signal: serde_json::Value = serde_json::from_str(event.payload()).unwrap_or_default();
-        native(
-            &signal_dir,
-            "signal",
-            serde_json::json!({ "signal": signal }),
-        );
+        let detail: serde_json::Value = serde_json::from_str(event.payload()).unwrap_or_default();
+        native(&signal_dir, "signal", detail);
     });
     app.listen_any("vol:exiting", move |event| {
         let detail: serde_json::Value = serde_json::from_str(event.payload()).unwrap_or_default();
@@ -257,5 +253,50 @@ mod privacy_tests {
         ] {
             assert!(allowed_env_name(key));
         }
+    }
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod shutdown_tests {
+    use super::*;
+    use tauri::Emitter;
+
+    #[test]
+    fn kapanis_event_packeti_gercek_kayitta_kimlik_neden_ve_sinyali_korur() {
+        let app = tauri::test::mock_app();
+        let dir =
+            std::env::temp_dir().join(format!("vol-diagnostics-shutdown-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("diagnostics.jsonl");
+        if path.exists() {
+            std::fs::remove_file(&path).unwrap();
+        }
+        record_shutdown(app.handle(), dir.clone());
+        app.emit(
+            "vol:terminate",
+            serde_json::json!({
+                "requestId": "shutdown-1", "reason": "signal", "signal": 15,
+            }),
+        )
+        .unwrap();
+        app.emit(
+            "vol:exiting",
+            serde_json::json!({
+                "requestId": "shutdown-1", "reason": "signal", "signal": 15, "outcome": "failed",
+            }),
+        )
+        .unwrap();
+        let records: Vec<serde_json::Value> = std::fs::read_to_string(&path)
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        assert_eq!(records.len(), 2);
+        assert_eq!(records[0]["requestId"], "shutdown-1");
+        assert_eq!(records[0]["reason"], "signal");
+        assert_eq!(records[0]["signal"], 15);
+        assert_eq!(records[1]["requestId"], "shutdown-1");
+        assert_eq!(records[1]["outcome"], "failed");
+        std::fs::remove_dir_all(dir).unwrap();
     }
 }

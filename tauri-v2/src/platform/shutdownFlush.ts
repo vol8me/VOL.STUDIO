@@ -1,14 +1,20 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import type { UnlistenFn } from '@tauri-apps/api/event';
+import {
+  readFlushRequest,
+  reportFlushError,
+  retainFlushListener,
+  settleFlushHooks,
+  type FlushBridge,
+} from './flushProtocol';
 
 export type ShutdownFlushHook = () => void | Promise<void>;
 
-export interface ShutdownFlushProbe {
+export interface ShutdownFlushProbe extends FlushBridge {
   readonly isTauri: () => boolean;
-  readonly listen: (event: string, handler: () => void) => Promise<UnlistenFn> | UnlistenFn;
-  readonly invoke: (command: string) => Promise<unknown>;
   readonly onCloseRequested?: (
     handler: (event: { preventDefault(): void }) => void,
   ) => Promise<UnlistenFn> | UnlistenFn;
@@ -17,27 +23,24 @@ export interface ShutdownFlushProbe {
 const defaultProbe: ShutdownFlushProbe = {
   isTauri,
   listen: (event, handler) => listen(event, handler),
-  invoke: (command) => invoke(command),
+  invoke: (command, args) => invoke(command, args),
   onCloseRequested: (handler) => getCurrentWindow().onCloseRequested(handler),
 };
 
 interface FlushGroup {
   hooks: Map<object, ShutdownFlushHook>;
-  unlisteners: UnlistenFn[];
+  scope: DisposableScope;
   closed: boolean;
   terminating: boolean;
+  closeRequested: boolean;
 }
 
 const groups = new WeakMap<ShutdownFlushProbe, FlushGroup>();
 
 /**
- * Pencere ve sinyal kapanışında bekleyen yazma kuyruklarını boşaltır.
- * Paylaşılan kabuk SIGTERM/SIGINT/SIGHUP'ı yakalayıp `vol:terminate`
- * yayınlar ve 1.5 sn bekler; kancalar bitince `vol_flush_done` komutu çıkışı
- * öne alır — çıkış her koşulda süre sınırıyla gerçekleşir.
- *
- * `AutosaveCoordinator.flush` gibi tek atımlık kuyruk boşaltıcılar için;
- * dönen fonksiyon kaydı siler.
+ * Kapanışta bütün kancaların sonucunu aynı native requestId ile bildirir.
+ * Süre sınırı native kabuktadır; frontend yanıt vermese de çıkış gerçekleşir.
+ * Dönen fonksiyon kaydı siler.
  */
 export function registerShutdownFlush(
   hook: ShutdownFlushHook,
@@ -46,46 +49,43 @@ export function registerShutdownFlush(
   if (!probe.isTauri()) return () => undefined;
   let group = groups.get(probe);
   if (!group) {
-    group = { hooks: new Map(), unlisteners: [], closed: false, terminating: false };
+    group = {
+      hooks: new Map(),
+      scope: new DisposableScope(),
+      closed: false,
+      terminating: false,
+      closeRequested: false,
+    };
     groups.set(probe, group);
     const current = group;
-    const retain = (unlisten: UnlistenFn): void => {
-      if (current.closed) unlisten();
-      else current.unlisteners.push(unlisten);
-    };
-    const terminate = (command: string): void => {
-      if (current.closed || current.terminating) return;
-      current.terminating = true;
-      void Promise.allSettled(
-        [...current.hooks.values()].map((callback) => Promise.resolve().then(callback)),
-      )
-        .then(() => probe.invoke(command))
-        .catch(() => undefined);
-    };
-    try {
-      void Promise.resolve(
-        probe.listen('vol:terminate', () => {
-          terminate('vol_flush_done');
-        }),
-      )
-        .then(retain)
-        .catch(() => undefined);
-    } catch {
-      // Eklenti bulunmaması uygulamanın açılışını durdurmaz.
-    }
+    retainFlushListener(current.scope, probe, () =>
+      probe.listen('vol:terminate', ({ payload }) => {
+        if (current.closed || current.terminating) return;
+        const request = readFlushRequest(payload);
+        if (!request || request.reason === 'suspend') {
+          reportFlushError(probe, new Error('Geçersiz kapanış boşaltma isteği.'));
+          return;
+        }
+        current.terminating = true;
+        void settleFlushHooks(current.hooks.values(), probe)
+          .then((outcome) => {
+            if (!current.closed) return probe.invoke('vol_flush_done', { ...request, outcome });
+          })
+          .catch((error: unknown) => reportFlushError(probe, error));
+      }),
+    );
     if (probe.onCloseRequested) {
-      try {
-        void Promise.resolve(
-          probe.onCloseRequested((event) => {
-            event.preventDefault();
-            terminate('exit_application');
-          }),
-        )
-          .then(retain)
-          .catch(() => undefined);
-      } catch {
-        // Pencere köprüsü olmayan ortamda sinyal kancası çalışmaya devam eder.
-      }
+      retainFlushListener(current.scope, probe, () =>
+        probe.onCloseRequested!((event) => {
+          if (current.closed) return;
+          event.preventDefault();
+          if (current.closeRequested || current.terminating) return;
+          current.closeRequested = true;
+          void Promise.resolve()
+            .then(() => probe.invoke('exit_application'))
+            .catch((error: unknown) => reportFlushError(probe, error));
+        }),
+      );
     }
   }
   const key = {};
@@ -95,7 +95,7 @@ export function registerShutdownFlush(
     current.hooks.delete(key);
     if (!current.closed && !current.hooks.size) {
       current.closed = true;
-      for (const unlisten of current.unlisteners) unlisten();
+      current.scope.dispose();
       groups.delete(probe);
     }
   };

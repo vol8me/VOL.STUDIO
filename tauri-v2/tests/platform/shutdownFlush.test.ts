@@ -1,190 +1,177 @@
-import { beforeEach, describe, it, expect, vi } from 'vitest';
-import { registerShutdownFlush } from '../../src/platform/shutdownFlush';
-import type { ShutdownFlushProbe } from '../../src/platform/shutdownFlush';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { registerShutdownFlush, type ShutdownFlushProbe } from '../../src/platform/shutdownFlush';
 
+type Request = { requestId: string; reason: 'close' | 'signal' };
+type Handler = (event: { payload: Request }) => void;
 const fakes = vi.hoisted(() => ({
   isTauri: vi.fn(() => false),
   invoke: vi.fn(() => Promise.resolve()),
-  listen: vi.fn((_event: string, handler: () => void) => {
-    fakes.handlers.push(handler);
-    return Promise.resolve(() => undefined);
-  }),
-  handlers: [] as Array<() => void>,
+  listen: vi.fn(),
 }));
-
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri, invoke: fakes.invoke }));
 vi.mock('@tauri-apps/api/event', () => ({ listen: fakes.listen }));
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ onCloseRequested: () => Promise.resolve(() => undefined) }),
 }));
-
-function probe(tauri: boolean): ShutdownFlushProbe & { fire: () => Promise<void> } {
-  let handler: (() => void) | undefined;
-  return {
+function fakeProbe(tauri = true) {
+  let terminate: Handler | undefined;
+  let close: ((event: { preventDefault(): void }) => void) | undefined;
+  const unlisten = vi.fn();
+  const invoke = vi.fn(() => Promise.resolve());
+  const onError = vi.fn();
+  const probe: ShutdownFlushProbe = {
     isTauri: () => tauri,
-    listen: (_event, h) => {
-      handler = h;
-      return () => undefined;
+    listen: (_event, handler) => {
+      terminate = handler;
+      return unlisten;
     },
-    invoke: () => Promise.resolve(),
-    fire: async () => {
-      handler?.();
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
+    onCloseRequested: (handler) => {
+      close = handler;
+      return unlisten;
     },
+    invoke,
+    onError,
+  };
+  return {
+    probe,
+    invoke,
+    onError,
+    unlisten,
+    terminate: (request: Request = { requestId: 'shutdown-1', reason: 'signal' }) =>
+      terminate?.({ payload: request }),
+    close: (event: { preventDefault(): void }) => close?.(event),
   };
 }
-
+const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+beforeEach(() => vi.clearAllMocks());
 describe('registerShutdownFlush', () => {
-  it('pencere köprüsünün reddi sinyal kapanışını ve temizliği engellemez', async () => {
-    const p = probe(true);
-    const hook = vi.fn();
-    const stop = registerShutdownFlush(hook, {
-      ...p,
-      onCloseRequested: () => Promise.reject(new Error('pencere yok')),
-    });
-    await p.fire();
-    await vi.waitFor(() => expect(hook).toHaveBeenCalledOnce());
-    stop();
-  });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    fakes.invoke.mockReset();
-    fakes.invoke.mockResolvedValue(undefined);
-    fakes.handlers.length = 0;
-    fakes.isTauri.mockReturnValue(false);
-  });
-  it('pencere kapanışını yazma bitene kadar erteler ve tek uygulama çıkışı ister', async () => {
-    let close: ((event: { preventDefault: () => void }) => void) | undefined;
-    let finish: (() => void) | undefined;
-    const removeClose = vi.fn();
-    const p = {
-      isTauri: () => true,
-      listen: () => () => undefined,
-      onCloseRequested: (handler: typeof close) => {
-        close = handler;
-        return removeClose;
-      },
-      invoke: vi.fn(() => Promise.resolve()),
-    };
-    const stop = registerShutdownFlush(
-      () =>
-        new Promise<void>((resolve) => {
-          finish = resolve;
-        }),
-      p,
-    );
+  it('kapanış native süre sınırını kancalar başlamadan ister ve yinelenen olayı birleştirir', async () => {
+    const p = fakeProbe();
+    const hook = vi.fn(() => new Promise<void>(() => undefined));
+    const stop = registerShutdownFlush(hook, p.probe);
     const preventDefault = vi.fn();
-    expect(close).toBeDefined();
-    close?.({ preventDefault });
-    close?.({ preventDefault });
+    p.close({ preventDefault });
+    p.close({ preventDefault });
+    await settle();
     expect(preventDefault).toHaveBeenCalledTimes(2);
-    await vi.waitFor(() => expect(finish).toBeDefined());
-    expect(p.invoke).not.toHaveBeenCalled();
-    finish?.();
-    await vi.waitFor(() => expect(p.invoke).toHaveBeenCalledWith('exit_application'));
+    expect(p.invoke).toHaveBeenCalledExactlyOnceWith('exit_application');
+    expect(hook).not.toHaveBeenCalled();
+    p.terminate({ requestId: 'shutdown-1', reason: 'close' });
+    p.terminate({ requestId: 'shutdown-1', reason: 'close' });
+    await settle();
+    expect(hook).toHaveBeenCalledOnce();
     expect(p.invoke).toHaveBeenCalledOnce();
     stop();
-    expect(removeClose).toHaveBeenCalledOnce();
   });
-
-  it('bütün kancalar bitmeden vol_flush_done göndermez ve geç kurulan dinleyiciyi temizler', async () => {
-    const handlers: Array<() => void> = [];
-    let finish: (() => void) | undefined;
-    const unlisten = vi.fn();
-    const listen = vi.fn((_event: string, callback: () => void) => {
-      handlers.push(callback);
-      return Promise.resolve(unlisten);
-    });
-    const p = { isTauri: () => true, listen, invoke: vi.fn(() => Promise.resolve()) };
-    const stopFirst = registerShutdownFlush(() => undefined, p);
+  it('bütün kancaları bekler, hata olsa da diğerlerini çalıştırır ve dürüst sonuç onaylar', async () => {
+    const p = fakeProbe();
+    let finish!: () => void;
+    const error = new Error('disk');
+    const stopFirst = registerShutdownFlush(() => {
+      throw error;
+    }, p.probe);
     const stopLast = registerShutdownFlush(
       () =>
         new Promise<void>((resolve) => {
           finish = resolve;
         }),
-      p,
+      p.probe,
     );
-    handlers.forEach((handler) => handler());
-    await vi.waitFor(() => expect(finish).toBeDefined());
+    p.terminate();
+    p.terminate();
+    await settle();
     expect(p.invoke).not.toHaveBeenCalled();
-    finish?.();
-    await vi.waitFor(() => expect(p.invoke).toHaveBeenCalledOnce());
-    expect(listen).toHaveBeenCalledOnce();
+    finish();
+    await settle();
+    expect(p.invoke).toHaveBeenCalledExactlyOnceWith('vol_flush_done', {
+      requestId: 'shutdown-1',
+      reason: 'signal',
+      outcome: 'failed',
+    });
+    expect(p.onError).toHaveBeenCalled();
     stopFirst();
     stopLast();
-    expect(unlisten).toHaveBeenCalledOnce();
+    expect(p.unlisten).toHaveBeenCalledTimes(2);
   });
-  it('Tauri dışında dinleme kurulmaz, dönen kayıt silme güvenli no-op olur', () => {
-    const p = probe(false);
-    const stop = registerShutdownFlush(vi.fn(), p);
-    expect(() => stop()).not.toThrow();
-    expect(p.listen ?? fakes.listen).toBeDefined();
-    expect(fakes.listen).not.toHaveBeenCalled();
-  });
-
-  it('varsayılan probla dinler ve kancalar bitince vol_flush_done gönderir', async () => {
-    fakes.isTauri.mockReturnValue(true);
-    const stop = registerShutdownFlush(() => undefined);
-    await vi.waitFor(() => expect(fakes.handlers).toHaveLength(1));
-    fakes.handlers[0]();
-    await vi.waitFor(() => expect(fakes.invoke).toHaveBeenCalledWith('vol_flush_done'));
-    stop();
-  });
-
-  it('vol_flush_done reddedilirse kapanış sessizce sürer', async () => {
-    fakes.isTauri.mockReturnValue(true);
-    fakes.invoke.mockRejectedValue(new Error('izleyici yok'));
-    const stop = registerShutdownFlush(() => undefined);
-    await vi.waitFor(() => expect(fakes.handlers).toHaveLength(1));
-    fakes.handlers[0]();
-    await vi.waitFor(() => expect(fakes.invoke).toHaveBeenCalled());
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    stop();
-  });
-
-  it('dinleyici kurulamazsa kayıt sessizce pas kalır', async () => {
-    const listen = vi.fn(() => Promise.reject(new Error('eklenti yok')));
-    registerShutdownFlush(vi.fn(), {
-      isTauri: () => true,
-      listen,
-      invoke: vi.fn(() => Promise.resolve()),
+  it('başarılı sonuç requestId ve reason ile aynı turu onaylar', async () => {
+    const p = fakeProbe();
+    const stop = registerShutdownFlush(() => undefined, p.probe);
+    p.terminate();
+    await settle();
+    expect(p.invoke).toHaveBeenCalledExactlyOnceWith('vol_flush_done', {
+      requestId: 'shutdown-1',
+      reason: 'signal',
+      outcome: 'success',
     });
-    await vi.waitFor(() => expect(listen).toHaveBeenCalled());
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    stop();
   });
-
-  it('vol:terminate gelince kancayi calistirip vol_flush_done bildirir', async () => {
-    let handler: (() => void) | undefined;
-    const p: ShutdownFlushProbe = {
-      isTauri: () => true,
-      listen: (_e, h) => {
-        handler = h;
-        return () => undefined;
-      },
-      invoke: vi.fn(() => Promise.resolve()),
-    };
-    const hook = vi.fn(() => Promise.resolve());
-    registerShutdownFlush(hook, p);
-    handler?.();
-    await vi.waitFor(() => expect(hook).toHaveBeenCalled());
-    await vi.waitFor(() => expect(p.invoke).toHaveBeenCalledWith('vol_flush_done'));
+  it('kayıt silindikten sonra çözülen tüm dinleyicileri bırakır', async () => {
+    const pending: Array<(unlisten: () => void) => void> = [];
+    const unlisten = vi.fn();
+    const p = fakeProbe();
+    const stop = registerShutdownFlush(() => undefined, {
+      ...p.probe,
+      listen: () => new Promise((resolve) => pending.push(resolve)),
+      onCloseRequested: () => new Promise((resolve) => pending.push(resolve)),
+    });
+    stop();
+    pending.forEach((resolve) => resolve(unlisten));
+    await settle();
+    expect(unlisten).toHaveBeenCalledTimes(2);
   });
-
-  it('kanca firlatsa bile vol_flush_done yine bildirilir', async () => {
-    let handler: (() => void) | undefined;
-    const p: ShutdownFlushProbe = {
-      isTauri: () => true,
-      listen: (_e, h) => {
-        handler = h;
-        return () => undefined;
-      },
-      invoke: vi.fn(() => Promise.resolve()),
-    };
-    registerShutdownFlush(() => Promise.reject(new Error('kayit hatasi')), p);
-    handler?.();
-    await vi.waitFor(() => expect(p.invoke).toHaveBeenCalledWith('vol_flush_done'));
+  it('dinleme ve onay reddi görünür hata üretir; pencere dinlemesi kurulmaya devam eder', async () => {
+    const p = fakeProbe();
+    const error = new Error('olay yok');
+    const stop = registerShutdownFlush(() => undefined, {
+      ...p.probe,
+      listen: () => Promise.reject(error),
+    });
+    await settle();
+    expect(p.onError).toHaveBeenCalledWith(error);
+    p.close({ preventDefault: vi.fn() });
+    await settle();
+    expect(p.invoke).toHaveBeenCalledWith('exit_application');
+    stop();
+    const q = fakeProbe();
+    const ackError = new Error('onay yok');
+    q.invoke.mockRejectedValue(ackError);
+    const remove = registerShutdownFlush(() => undefined, q.probe);
+    q.terminate();
+    await settle();
+    expect(q.onError).toHaveBeenCalledWith(ackError);
+    remove();
+  });
+  it('native kapanış isteği reddedilirse hatayı raporlar', async () => {
+    const p = fakeProbe();
+    const error = new Error('çıkış komutu');
+    p.invoke.mockRejectedValue(error);
+    const stop = registerShutdownFlush(() => undefined, p.probe);
+    p.close({ preventDefault: vi.fn() });
+    await settle();
+    expect(p.onError).toHaveBeenCalledWith(error);
+    stop();
+  });
+  it('Tauri dışında dinleyici kurmaz', () => {
+    const p = fakeProbe(false);
+    registerShutdownFlush(vi.fn(), p.probe)();
+    expect(p.unlisten).not.toHaveBeenCalled();
+    expect(p.invoke).not.toHaveBeenCalled();
+  });
+  it('varsayılan köprü Tauri payload ve komut argümanlarını korur', async () => {
+    fakes.isTauri.mockReturnValue(true);
+    let handler!: Handler;
+    fakes.listen.mockImplementation((_event, callback: Handler) => {
+      handler = callback;
+      return Promise.resolve(() => undefined);
+    });
+    const stop = registerShutdownFlush(() => undefined);
+    handler({ payload: { requestId: 'shutdown-1', reason: 'signal' } });
+    await settle();
+    expect(fakes.invoke).toHaveBeenCalledWith('vol_flush_done', {
+      requestId: 'shutdown-1',
+      reason: 'signal',
+      outcome: 'success',
+    });
+    stop();
   });
 });

@@ -1,28 +1,64 @@
-import { expect, test, vi } from 'vitest';
-const destroy = vi.hoisted(() => ({ listener: (() => {}) as () => void }));
+import { beforeEach, expect, test, vi } from 'vitest';
+const resources = vi.hoisted(() => ({
+  listener: (() => {}) as () => void,
+  appDestroy: vi.fn(),
+  gameDestroy: vi.fn(),
+  menus: vi.fn(),
+}));
 vi.mock('@volstudio/core', () => ({
   i18n: { addResources: vi.fn(), init: vi.fn().mockResolvedValue(undefined) },
   createVolGame: vi.fn().mockResolvedValue({
+    destroy: resources.gameDestroy,
     events: {
       once: (_event: string, listener: () => void) => {
-        destroy.listener = listener;
+        resources.listener = listener;
       },
     },
   }),
   showFatalStartupError: vi.fn(),
-  suppressNativeMenus: vi.fn(() => vi.fn()),
+  suppressNativeMenus: vi.fn(() => resources.menus),
 }));
 vi.mock('../src/app/App', () => ({
   App: class {
-    destroy = vi.fn();
+    destroy = resources.appDestroy;
   },
 }));
 vi.mock('../src/scenes/MainScene', () => ({ MainScene: class {} }));
 import { boot } from '../src/main';
-import { i18n, createVolGame } from '@volstudio/core';
-test('çeviri ve CORE açılışını kurar; yaşam döngüsünü kapatır', async () => {
+import { i18n, createVolGame, suppressNativeMenus } from '@volstudio/core';
+
+beforeEach(() => vi.clearAllMocks());
+
+test('çeviri ve CORE açılışını kurar; kaynakları bir kez kapatır', async () => {
   await boot();
-  destroy.listener();
+  resources.listener();
+  resources.listener();
   expect(i18n.init).toHaveBeenCalled();
   expect(createVolGame).toHaveBeenCalled();
+  expect(resources.appDestroy).toHaveBeenCalledTimes(1);
+  expect(resources.menus).toHaveBeenCalledTimes(1);
+});
+
+test('oyun açılışı başarısızsa kurulmuş App geri alınır', async () => {
+  const failure = new Error('boot failed');
+  vi.mocked(createVolGame).mockRejectedValueOnce(failure);
+  await expect(boot()).rejects.toBe(failure);
+  expect(resources.appDestroy).toHaveBeenCalledTimes(1);
+  expect(resources.gameDestroy).not.toHaveBeenCalled();
+  expect(suppressNativeMenus).not.toHaveBeenCalled();
+});
+
+test('oyun kurulduktan sonraki hata oyunu ve App kaynaklarını geri alır', async () => {
+  const failure = new Error('menus failed');
+  vi.mocked(suppressNativeMenus).mockImplementationOnce(() => { throw failure; });
+  await expect(boot()).rejects.toBe(failure);
+  expect(resources.gameDestroy).toHaveBeenCalledWith(true);
+  expect(resources.appDestroy).toHaveBeenCalledTimes(1);
+});
+
+test('oyun destroy hata verse de App kaynakları geri alınır', async () => {
+  vi.mocked(suppressNativeMenus).mockImplementationOnce(() => { throw new Error('menus failed'); });
+  resources.gameDestroy.mockImplementationOnce(() => { throw new Error('destroy failed'); });
+  await expect(boot()).rejects.toThrow('destroy failed');
+  expect(resources.appDestroy).toHaveBeenCalledTimes(1);
 });

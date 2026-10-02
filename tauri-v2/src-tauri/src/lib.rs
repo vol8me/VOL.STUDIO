@@ -5,6 +5,7 @@
 //! platform ayarlarını taşır; her oyun kendi uygulama crate'inde bağlamını
 //! üretip `run_with_context()` çağırır.
 
+mod flush;
 mod haptics;
 mod native_menus;
 mod shutdown;
@@ -19,8 +20,7 @@ mod virtual_gamepads;
 /// ve mobilde aynı kesin semantiği sağlar.
 #[tauri::command]
 fn exit_application(app: tauri::AppHandle) {
-    stop_haptics();
-    app.exit(0);
+    shutdown::request_exit(&app, flush::FlushReason::Close, None);
 }
 
 fn stop_haptics() {
@@ -147,7 +147,14 @@ where
     }
 
     let builder = tauri::Builder::default()
-        .on_window_event(|_window, event| {
+        .manage(shutdown::ShutdownGate::default())
+        .manage(sleep::SuspendGate::default())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                use tauri::Manager;
+                api.prevent_close();
+                shutdown::request_exit(window.app_handle(), flush::FlushReason::Close, None);
+            }
             if matches!(
                 event,
                 tauri::WindowEvent::Focused(false) | tauri::WindowEvent::Destroyed
