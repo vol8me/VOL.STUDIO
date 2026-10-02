@@ -184,12 +184,23 @@ export class GameServices {
     for (const listener of this.pauseListeners) listener();
   }
   async flush(): Promise<void> {
-    await Promise.all([
-      this.settings.flush(),
-      this.progress.flush(),
-      this.display?.flush(),
-      this.measurements?.flush(),
-    ]);
+    const durability = [
+      () => this.settings.flush(),
+      () => this.progress.flush(),
+      () => this.display?.flush(),
+    ];
+    void Promise.resolve()
+      .then(() => this.measurements?.flush())
+      .catch((error: unknown) => console.warn('[VOL.TEST] Ölçüm boşaltılamadı:', error));
+    const results = await Promise.allSettled(
+      durability.map((flush) => Promise.resolve().then(flush)),
+    );
+    const failures = results.filter((result) => result.status === 'rejected');
+    if (failures.length)
+      throw new AggregateError(
+        failures.map((failure) => failure.reason as unknown),
+        'Kalıcılık boşaltılamadı.',
+      );
   }
   dispose(): void {
     if (this.released) return;

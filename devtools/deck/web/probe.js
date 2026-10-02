@@ -314,7 +314,7 @@ window.addEventListener('gamepadconnected', async (e) => {
     buttons: pad.buttons.length,
     axes: pad.axes.length,
     vibrationActuator: pad.vibrationActuator
-      ? pad.vibrationActuator.effects ?? pad.vibrationActuator.type ?? 'var'
+      ? (pad.vibrationActuator.effects ?? pad.vibrationActuator.type ?? 'var')
       : null,
   };
   log('pad-connected', detail);
@@ -400,7 +400,7 @@ setInterval(() => {
 }, 1000);
 
 listen('vol:terminate', async (event) => {
-  await log('terminate-received', { signal: event.payload });
+  await log('terminate-received', event.payload);
 });
 
 start();

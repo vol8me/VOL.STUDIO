@@ -268,3 +268,69 @@ describe('Scheduler', () => {
     });
   });
 });
+
+describe('Scheduler hata kurtarması', () => {
+  it('hata atan işi iptal eder, pending işleri sonraki yayında ve sağlıklı işleri çalıştırır', () => {
+    const scheduler = new Scheduler();
+    const events: string[] = [];
+    scheduler.after(1, () => {
+      scheduler.after(1, () => events.push('yeni'));
+      throw new Error('iş');
+    });
+    scheduler.after(2, () => events.push('sağlıklı'));
+    expect(() => scheduler.update(1)).toThrow('iş');
+    expect(events).toEqual([]);
+    expect(scheduler.update(2)).toBe(true);
+    expect(events).toEqual(['sağlıklı', 'yeni']);
+    expect(scheduler.size).toBe(0);
+  });
+  it('yeniden giriş kancasının hatası yayın durumunu toparlar', () => {
+    const scheduler = new Scheduler({
+      onReentrantUpdate: () => {
+        throw new Error('kanca');
+      },
+    });
+    let done = false;
+    scheduler.after(1, () => scheduler.update(1));
+    scheduler.after(2, () => {
+      done = true;
+    });
+    expect(() => scheduler.update(1)).toThrow('kanca');
+    expect(scheduler.update(2)).toBe(true);
+    expect(done).toBe(true);
+  });
+  it('telafi kancasının hatası sonraki yayını engellemez', () => {
+    const scheduler = new Scheduler({
+      maxCatchUp: 1,
+      onCatchUpLimit: () => {
+        throw new Error('kanca');
+      },
+    });
+    const cancel = scheduler.every(10, () => {});
+    expect(() => scheduler.update(30)).toThrow('kanca');
+    cancel();
+    let done = false;
+    scheduler.after(1, () => {
+      done = true;
+    });
+    expect(scheduler.update(1)).toBe(true);
+    expect(done).toBe(true);
+  });
+  it.each([
+    [20, 1],
+    [30, 2],
+    [31, 2],
+  ])('%i ms telafide %i tetik atlar ve yeni periyodu başlatır', (delta, skipped) => {
+    const reports: number[] = [];
+    let calls = 0;
+    const scheduler = new Scheduler({ maxCatchUp: 1, onCatchUpLimit: (n) => reports.push(n) });
+    scheduler.every(10, () => calls++);
+    scheduler.update(delta);
+    expect(calls).toBe(1);
+    expect(reports).toEqual([skipped]);
+    scheduler.update(9);
+    expect(calls).toBe(1);
+    scheduler.update(1);
+    expect(calls).toBe(2);
+  });
+});

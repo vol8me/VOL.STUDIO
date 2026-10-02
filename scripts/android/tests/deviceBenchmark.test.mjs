@@ -6,6 +6,7 @@ test('device benchmark CLI seriali ANDROID_SERIAL üzerine yazar', () => {
   assert.deepEqual(parseDeviceBenchmarkArgs(['--serial', 'second', '60'], 'first'), {
     serial: 'second',
     seconds: 60,
+    json: false,
   });
 });
 

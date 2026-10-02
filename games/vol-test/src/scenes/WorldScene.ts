@@ -5,6 +5,7 @@ import {
   DisposableScope,
   shouldUseTouchControls,
   SimulationClock,
+  type SimulationClockFrame,
 } from '@volstudio/core';
 import { angleDelta } from '@volstudio/core/math';
 import { AimGuide } from '@/view/effects/AimGuide';
@@ -46,13 +47,14 @@ import { routeSimEvents } from './world/SimEventRouter';
  * Oyun sahnesi: katmanları kurar, her karede sırayla sürer ve kapanışta
  * söker. Simülasyon sabit adımla ilerler; görüntü önceki ve güncel adım
  * arasında ara değerle çizilir. Girdi, kamera ve HUD sunum zamanında
- * (gerçek kare süresiyle) çalışır.
+ * (gerçek kare süresiyle) çalışır; girdi niyeti sabit tickte ilerler.
  */
 export class WorldScene extends Phaser.Scene {
   private audio: GameAudio | null = null;
   private sim!: Simulation;
   private scenarios!: ScenarioRunner;
   private clock!: SimulationClock;
+  private clockFrame: SimulationClockFrame | undefined;
   private controls!: PlayerControls;
   private pause!: PauseController;
   private camera!: CameraRig;
@@ -70,7 +72,12 @@ export class WorldScene extends Phaser.Scene {
     super('World');
   }
 
+  get lastClockFrame(): SimulationClockFrame | undefined {
+    return this.clockFrame;
+  }
+
   create(): void {
+    this.clockFrame = undefined;
     this.scope = new DisposableScope();
     applyVolViewport(this);
     this.audio = createSceneAudio(this);
@@ -237,14 +244,19 @@ export class WorldScene extends Phaser.Scene {
       if (this.controls.pressed('zoomIn')) this.camera.model.zoomBy(1);
       if (this.controls.pressed('zoomOut')) this.camera.model.zoomBy(-1);
       if (this.controls.pressed('grid')) this.arena.setGridVisible(!this.arena.gridVisible);
-      this.clock.advance(clampSimulationStep(delta), (stepMs) => {
+    }
+    this.clockFrame = this.clock.advance(
+      delta,
+      (stepMs) => {
+        const command = this.controls.step(stepMs);
         const { x, y } = player.tank;
         this.sim.step((vehicle) => this.scenarios.commandFor(vehicle, command), stepMs);
         this.services?.progress.travel(
           Math.hypot(player.tank.x - x, player.tank.y - y) / WORLD.metre,
         );
-      });
-    }
+      },
+      { acceptedDeltaMs: clampSimulationStep(delta), paused },
+    );
 
     measurements?.mark('simulation');
 
@@ -267,7 +279,7 @@ export class WorldScene extends Phaser.Scene {
     });
     measurements?.mark('eventsAudio');
 
-    const alpha = paused ? 1 : this.clock.getInterpolationAlpha();
+    const alpha = this.clock.getInterpolationAlpha();
     const presentMs = paused ? 0 : delta;
     for (const vehicle of this.sim.vehicles) {
       const tank = vehicle.tank;
@@ -344,6 +356,19 @@ export class WorldScene extends Phaser.Scene {
         seed: this.scenarios.currentSeed,
         weather: this.environment.climate.kind,
         season: this.environment.climate.season,
+      },
+      {
+        vehicles: this.sim.vehicles.length,
+        weatherParticles: this.environment.counts.particles,
+        weatherSurfaceCells: this.environment.counts.surfaceCells,
+        'simulation.rawDeltaMs': this.clockFrame.rawDeltaMs,
+        'simulation.acceptedDeltaMs': this.clockFrame.acceptedDeltaMs,
+        'simulation.simulatedMs': this.clockFrame.simulatedMs,
+        'simulation.accumulatorMs': this.clockFrame.accumulatorMs,
+        'simulation.droppedMs': this.clockFrame.droppedMs,
+        'simulation.fixedSteps': this.clockFrame.fixedSteps,
+        'simulation.tickStart': this.clockFrame.tickStart,
+        'simulation.tickEnd': this.clockFrame.tickEnd,
       },
     );
   }

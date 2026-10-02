@@ -2,6 +2,58 @@ import { describe, expect, it } from 'vitest';
 import { GameMeasurements } from '@/app/GameMeasurements';
 
 describe('GameMeasurements', () => {
+  it('render gönderimi ve GPU süresini ayrı örneklerle tutar; sunum süresi uydurmaz', async () => {
+    const records: Record<string, unknown>[] = [];
+    const measurement = new GameMeasurements((record) => {
+      records.push(record);
+      return Promise.resolve();
+    }, 30);
+    measurement.frame(0, false, 'low', 0);
+    measurement.renderCpu({ frameId: 1, durationMs: 2 });
+    measurement.frame(16, false, 'low', 0);
+    measurement.renderCpu({ frameId: 2, durationMs: 4 });
+    measurement.renderGpu({ frameId: 1, status: 'ready', durationMs: 7 });
+    measurement.frame(32, false, 'low', 0);
+    measurement.renderGpu({ frameId: 2, status: 'ready', durationMs: 50 });
+    measurement.renderCpu({ frameId: 3, durationMs: 0 });
+    measurement.renderGpu({ frameId: null, status: 'unsupported', durationMs: null });
+    measurement.frame(48, false, 'low', 0);
+    await measurement.flush();
+    expect(records[0]).toMatchObject({
+      gpuTimeMs: 7,
+      presentTimeMs: null,
+      renderFrameStart: 1,
+      renderFrameEnd: 2,
+      metrics: { renderSubmitMs: { samples: 2, avg: 3 }, gpuTimeMs: { samples: 1, p95: 7 } },
+      renderSlowestFrame: { frameId: 2, durationMs: 4 },
+    });
+    expect(records[1]).toMatchObject({
+      gpuTimeMs: null,
+      gpuStatus: 'unsupported',
+      discardedGpuSamples: 1,
+      metrics: { renderSubmitMs: { avg: 0 } },
+    });
+  });
+  it('rapor hatasını flush sonucunda gösterir ve sonraki raporu kayıp sayısıyla gönderir', async () => {
+    const records: Record<string, unknown>[] = [];
+    const failure = new Error('report unavailable');
+    const measurement = new GameMeasurements((record) => {
+      records.push(record);
+      return records.length === 1 ? Promise.reject(failure) : Promise.resolve();
+    }, 10);
+    measurement.frame(0, false, 'high', 0);
+    measurement.frame(16, false, 'high', 0);
+    await expect(measurement.flush()).rejects.toMatchObject({
+      name: 'AggregateError',
+      errors: [failure],
+    });
+    measurement.frame(32, false, 'high', 0);
+    measurement.frame(48, false, 'high', 0);
+    await measurement.flush();
+    expect(records[1]).toMatchObject({ lostReports: 1, window: 2 });
+    expect(records[0]?.runId).toEqual(expect.any(String));
+    expect(records[1]?.runId).toBe(records[0]?.runId);
+  });
   it('senaryo ve hava geçişlerini ayrı pencerelerle, aşama maliyetleriyle kaydeder', async () => {
     const records: Record<string, unknown>[] = [];
     const measurement = new GameMeasurements((record) => {

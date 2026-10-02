@@ -1,148 +1,165 @@
 #!/usr/bin/env node
-/**
- * Bağlı Android cihazda GERÇEK ölçüm.
- *
- * Masaüstü tarayıcı emülasyonu mobil davranışı tahmin eder, ölçmez: kare
- * bütçesi, bellek baskısı, soğuk açılış ve GC duraklamaları ancak cihazda
- * görünür. Bu betik o ölçümü bir araştırma turundan tek komuta indirir.
- *
- * KAPI DEĞİLDİR ve olamaz: cihaz her zaman bağlı değildir, ve bir kapının
- * koşulu geliştiricinin masasındaki donanım olamaz. Çıktısı bir REFERANStır —
- * bir sonraki ölçüm bununla kıyaslanır.
- *
- *   node scripts/android/device-benchmark.mjs [--serial SERIAL] [saniye]
- */
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { parseDeviceBenchmarkArgs, selectDevice } from './device-benchmark-contract.mjs';
+import {
+  appendedDiagnostics,
+  gameDiagnostics,
+  nativeRuntime,
+} from './device-benchmark-records.mjs';
 import { deviceBenchmarkCandidates } from '../quality/deviceApps.mjs';
 import { loadWorkspaceLifecycle } from '../quality/workspaceLifecycle.mjs';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 const ADB = process.env.ADB ?? 'adb';
-const cli = parseDeviceBenchmarkArgs(process.argv.slice(2), process.env.ANDROID_SERIAL);
-const SECONDS = cli.seconds;
 let serial;
 
-// Adaylar elle yazılmaz: active workspace + tauri.conf.json = ölçüm adayı.
-// Frozen kabuklar rutin ölçüme girmez (deviceApps.mjs bekçisi bunu kilitler).
-const APPS = deviceBenchmarkCandidates(
-  ROOT,
-  loadWorkspaceLifecycle(join(ROOT, 'workspace-lifecycle.json')),
-);
-
-if (APPS.length === 0) {
-  console.log(
-    '[device-benchmark] Aktif Tauri uygulama kabuğu yok — ölçülecek aday kalmadı. ' +
-      'Bir workspace `active` olup tauri.conf.json taşıdığında kendiliğinden aday olur.',
-  );
-  process.exit(0);
-}
-
 function adb(args) {
-  const scoped = serial ? ['-s', serial, ...args] : args;
-  return execFileSync(ADB, scoped, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  return execFileSync(ADB, serial ? ['-s', serial, ...args] : args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
 }
 
-function requireDevice() {
-  let output;
+function optionalAdb(args) {
   try {
-    output = execFileSync(ADB, ['devices', '-l'], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    });
+    return adb(args);
   } catch {
-    throw new Error(`'${ADB}' çalıştırılamadı. Android platform-tools PATH'te mi?`);
+    return null;
   }
-  const devices = output
-    .split('\n')
-    .slice(1)
-    .map((line) => line.trim().split(/\s+/))
-    .filter((parts) => parts[0])
-    .map(([deviceSerial, state]) => ({ serial: deviceSerial, state }));
-  return selectDevice(devices, cli.serial);
+}
+
+function requireDevice(requestedSerial) {
+  const output = optionalAdb(['devices', '-l']);
+  if (output === null) throw new Error('Android platform-tools çalıştırılamadı.');
+  return selectDevice(
+    output
+      .split('\n')
+      .slice(1)
+      .map((line) => line.trim().split(/\s+/))
+      .filter((parts) => parts[0])
+      .map(([deviceSerial, state]) => ({ serial: deviceSerial, state })),
+    requestedSerial,
+  );
 }
 
 function pick(text, pattern) {
-  const match = pattern.exec(text);
-  return match === null ? null : match[1];
+  return pattern.exec(text ?? '')?.[1] ?? null;
 }
 
 function coldStart(pkg, runs = 3) {
-  const times = [];
+  const nativeActivityTotalMs = [];
   for (let i = 0; i < runs; i++) {
     adb(['shell', 'am', 'force-stop', pkg]);
     execFileSync('sleep', ['2']);
     const output = adb(['shell', 'am', 'start', '-W', '-n', `${pkg}/.MainActivity`]);
     const total = pick(output, /TotalTime:\s*(\d+)/);
-    if (total !== null) times.push(Number(total));
+    nativeActivityTotalMs.push(total === null ? null : Number(total));
   }
-  return times;
+  return { nativeActivityTotalMs, gameReadyMs: null, firstPresentMs: null };
 }
 
-/**
- * WebGL kurulamayıp Canvas2D'ye düşüldü mü?
- *
- * Cihazdaki sayılar (fps, jank) geri düşüşü GÖSTERMEZ, yalnız sonucunu:
- * "yavaş" görünür, sebebi görünmez. Oyun geri düşüşte konsola uyarı yazar ve
- * WebView bunu logcat'e aktarır; ölçüm o uyarıyı arar.
- */
-function rendererFallback() {
-  try {
-    const log = adb(['shell', 'logcat', '-d', '-t', '400', '-s', 'chromium:*']);
-    return /WebGL kurulamadı/.test(log) ? 'canvas (⚠ WebGL kurulamadı)' : 'webgl';
-  } catch {
-    return 'okunamadı';
-  }
+function readDiagnostics(pkg) {
+  const paths = optionalAdb([
+    'shell',
+    'run-as',
+    pkg,
+    'find',
+    'files',
+    '-name',
+    'diagnostics.jsonl',
+  ]);
+  if (paths === null) return null;
+  const path = paths
+    .trim()
+    .split('\n')
+    .find((file) => /^files\/[\w./-]*diagnostics\.jsonl$/.test(file));
+  if (!path) return '';
+  return optionalAdb(['shell', 'run-as', pkg, 'cat', path]);
 }
 
-function runtimeProfile(pkg) {
+function runtimeProfile(pkg, seconds) {
   adb(['shell', 'am', 'force-stop', pkg]);
-  adb(['shell', 'logcat', '-c']);
-  execFileSync('sleep', ['1']);
+  const before = readDiagnostics(pkg);
+  adb(['shell', 'dumpsys', 'gfxinfo', pkg, 'reset']);
   adb(['shell', 'am', 'start', '-n', `${pkg}/.MainActivity`]);
-  execFileSync('sleep', [String(SECONDS)]);
+  execFileSync('sleep', [String(seconds)]);
+  const game = gameDiagnostics(appendedDiagnostics(before, readDiagnostics(pkg)));
+  const gfx = optionalAdb(['shell', 'dumpsys', 'gfxinfo', pkg]) ?? '';
+  const mem = optionalAdb(['shell', 'dumpsys', 'meminfo', pkg]) ?? '';
+  return { game, ...nativeRuntime(gfx, mem) };
+}
 
-  const gfx = adb(['shell', 'dumpsys', 'gfxinfo', pkg]);
-  const mem = adb(['shell', 'dumpsys', 'meminfo', pkg]);
-
-  const frames = Number(pick(gfx, /Total frames rendered:\s*(\d+)/) ?? 0);
+function buildInfo(pkg) {
+  const info = optionalAdb(['shell', 'dumpsys', 'package', pkg]);
   return {
-    renderer: rendererFallback(),
-    frames,
-    fps: frames === 0 ? 0 : Math.round((frames / SECONDS) * 10) / 10,
-    jankPercent: pick(gfx, /Janky frames:\s*\d+\s*\(([\d.]+)%\)/),
-    p50: pick(gfx, /50th percentile:\s*(\d+)ms/),
-    p90: pick(gfx, /90th percentile:\s*(\d+)ms/),
-    p99: pick(gfx, /99th percentile:\s*(\d+)ms/),
-    missedVsync: pick(gfx, /Number Missed Vsync:\s*(\d+)/),
-    pssMb: Math.round(Number(pick(mem, /TOTAL PSS:\s*(\d+)/) ?? 0) / 1024),
-    graphicsMb: Math.round(Number(pick(mem, /Graphics:\s*(\d+)/) ?? 0) / 1024),
+    versionName: pick(info, /versionName=([^\s]+)/),
+    versionCode: pick(info, /versionCode=(\d+)/),
   };
 }
 
-serial = requireDevice();
-const model = adb(['shell', 'getprop', 'ro.product.model']).trim();
-const sdk = adb(['shell', 'getprop', 'ro.build.version.sdk']).trim();
-console.log(`[device] ${model} (SDK ${sdk}, ${serial}) — ${SECONDS} sn ölçüm\n`);
-
-for (const app of APPS) {
-  const installed = adb(['shell', 'pm', 'list', 'packages', app.pkg]).includes(app.pkg);
-  if (!installed) {
-    console.log(`  ${app.name}: KURULU DEĞİL — atlandı\n`);
-    continue;
+function printReport(report) {
+  const known = (value) => value ?? 'bilinmiyor';
+  console.log(`[device] SDK ${known(report.device.sdk)} — ${report.durationSeconds} sn ölçüm\n`);
+  for (const app of report.apps) {
+    console.log(`  ${app.name}`);
+    const profile = app.runtime;
+    console.log(
+      `    native açılış: ${app.startup.nativeActivityTotalMs.map(known).join(' / ')} ms`,
+    );
+    console.log('    oyuna hazır / ilk fiziksel sunum: bilinmiyor');
+    console.log(`    oyun FPS     : ${known(profile.game.fps)}`);
+    console.log(
+      `    native çizim : ${known(profile.nativeRenderer.totalFrames)} kare, jank %${known(profile.nativeRenderer.jankPercent)}`,
+    );
+    console.log(`    renderer     : ${known(profile.game.renderer)}`);
+    console.log(
+      `    bellek       : PSS ${known(profile.memory.pssMb)} MB (grafik ${known(profile.memory.graphicsMb)} MB)\n`,
+    );
   }
-  const starts = coldStart(app.pkg);
-  const profile = runtimeProfile(app.pkg);
-  console.log(`  ${app.name}`);
-  console.log(`    soğuk açılış : ${starts.join(' / ')} ms`);
-  console.log(
-    `    kare         : ${profile.frames} kare (~${profile.fps} fps), jank %${profile.jankPercent}`,
+  for (const name of report.skipped) console.log(`  ${name}: KURULU DEĞİL — atlandı`);
+}
+
+try {
+  const cli = parseDeviceBenchmarkArgs(process.argv.slice(2), process.env.ANDROID_SERIAL);
+  const candidates = deviceBenchmarkCandidates(
+    ROOT,
+    loadWorkspaceLifecycle(join(ROOT, 'workspace-lifecycle.json')),
   );
-  console.log(
-    `    kare süresi  : p50 ${profile.p50}ms  p90 ${profile.p90}ms  p99 ${profile.p99}ms  ` +
-      `kaçan vsync ${profile.missedVsync}`,
+  /** @type {{ schemaVersion: number, durationSeconds: number, device: { sdk: number | null }, apps: Array<{ name: string, build: ReturnType<typeof buildInfo>, startup: ReturnType<typeof coldStart>, runtime: ReturnType<typeof runtimeProfile> }>, skipped: string[] }} */
+  const report = {
+    schemaVersion: 1,
+    durationSeconds: cli.seconds,
+    device: { sdk: null },
+    apps: [],
+    skipped: [],
+  };
+  if (candidates.length) {
+    serial = requireDevice(cli.serial);
+    const sdk = Number(optionalAdb(['shell', 'getprop', 'ro.build.version.sdk']));
+    report.device.sdk = sdk > 0 && Number.isFinite(sdk) ? sdk : null;
+    for (const app of candidates) {
+      if (
+        !adb(['shell', 'pm', 'list', 'packages', app.pkg])
+          .split('\n')
+          .includes(`package:${app.pkg}`)
+      ) {
+        report.skipped.push(app.name);
+        continue;
+      }
+      report.apps.push({
+        name: app.name,
+        build: buildInfo(app.pkg),
+        startup: coldStart(app.pkg),
+        runtime: runtimeProfile(app.pkg, cli.seconds),
+      });
+    }
+  }
+  if (cli.json) console.log(JSON.stringify(report, null, 2));
+  else printReport(report);
+} catch {
+  console.error(
+    '[device-benchmark] Ölçüm tamamlanamadı; cihaz seçimini, bağlantıyı ve komut seçeneklerini kontrol edin.',
   );
-  console.log(`    renderer     : ${profile.renderer}`);
-  console.log(`    bellek       : PSS ${profile.pssMb} MB (grafik ${profile.graphicsMb} MB)\n`);
+  process.exitCode = 1;
 }

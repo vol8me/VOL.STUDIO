@@ -434,6 +434,47 @@ test('kare penceresi baglami ve izinli sayisal yuk metrikleri raporda kalir', ()
   assert.deepEqual(background.metrics.enemies, { avg: 0, samples: 2 });
 });
 
+test('ayrı oyun oturumları aynı pencere numarasıyla kaybolmaz; yavaş kare ve yüzdelikler korunur', () => {
+  const runIds = ['00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000002'];
+  const records = runIds.map((runId) =>
+    sanitizeReport(
+      JSON.stringify({
+        type: 'perf',
+        runId,
+        window: 1,
+        phase: 'gameplay',
+        lostReports: 2,
+        metrics: {
+          updateMs: { p50: 2, p95: 8, p99: 9 },
+          vehicles: { avg: 4 },
+          'simulation.rawDeltaMs': { max: 5000 },
+        },
+        slowestFrame: { at: 80, intervalMs: 44, metrics: { updateMs: 8, private: 99 } },
+        gpuTimeMs: null,
+        presentTimeMs: null,
+      }),
+    ),
+  );
+  const summary = summarizeReport(records);
+  assert.equal(summary.phases.length, 2);
+  assert.equal(summary.phases[0].runId, runIds[0]);
+  assert.equal(summary.phases[0].lostReports, 2);
+  assert.equal(summary.phases[0].metrics.updateMs.p95, 8);
+  assert.equal(summary.phases[0].metrics.vehicles.avg, 4);
+  assert.equal(summary.phases[0].metrics['simulation.rawDeltaMs'].max, 5000);
+  assert.deepEqual(summary.phases[0].slowestFrame, {
+    at: 80,
+    intervalMs: 44,
+    metrics: { updateMs: 8 },
+  });
+  assert.equal(JSON.parse(records[0]).gpuTimeMs, null);
+  assert.equal(JSON.parse(records[0]).presentTimeMs, null);
+  assert.equal(
+    JSON.parse(sanitizeReport(JSON.stringify({ type: 'perf', runId: 'private-SECRET' }))).runId,
+    undefined,
+  );
+});
+
 test('touchpad kisayol raporu yalniz sabit siniflari ve boolean alanlari tasir', () => {
   const event = JSON.stringify({
     v: 1,

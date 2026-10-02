@@ -101,6 +101,9 @@ export class Scheduler {
    * üstelik `draining` bayrağını erken düşürerek "yayın sırasında eklenen iş
    * bu turda çalışmaz" garantisini de kırar.
    *
+   * İş callback'i hata atarsa iş iptal edilir ve hata çağırana yayılır;
+   * yayın durumu toparlanır, sonraki güncelleme çalışabilir.
+   *
    * @returns Kare işlendiyse `true`; yeniden giriş yüzünden atlandıysa `false`.
    *
    * Ama `maxCatchUp` ile SINIRLIDIR (bkz. `DEFAULT_MAX_CATCH_UP`): sınırsız
@@ -117,41 +120,41 @@ export class Scheduler {
     if (delta <= 0) return true;
 
     this.draining = true;
-    for (const task of this.tasks) {
-      if (task.cancelled) continue;
-
-      task.remainingMs -= delta;
-
-      // `while`: uzun bir karede birikmiş tetiklenmeler atlanmaz — ama
-      // sınırsız değil (bkz. DEFAULT_MAX_CATCH_UP).
-      let runs = 0;
-      while (!task.cancelled && task.remainingMs <= 0) {
-        if (runs >= this.maxCatchUp) {
-          const skipped =
-            task.intervalMs !== null ? Math.ceil(-task.remainingMs / task.intervalMs) : 0;
-          // Borcu düş: telafi edilemeyen tetiklenmeler geride bırakılır,
-          // aksi halde her karede aynı sınıra takılıp asla kapanmaz.
-          task.remainingMs = task.intervalMs ?? 0;
-          this.onCatchUpLimit?.(skipped);
-          break;
+    try {
+      for (const task of this.tasks) {
+        if (task.cancelled) continue;
+        task.remainingMs -= delta;
+        let runs = 0;
+        while (!task.cancelled && task.remainingMs <= 0) {
+          if (runs >= this.maxCatchUp) {
+            const skipped =
+              task.intervalMs !== null ? Math.floor(-task.remainingMs / task.intervalMs) + 1 : 0;
+            task.remainingMs = task.intervalMs ?? 0;
+            this.onCatchUpLimit?.(skipped);
+            break;
+          }
+          runs++;
+          try {
+            task.callback();
+          } catch (error) {
+            task.cancelled = true;
+            throw error;
+          }
+          if (task.intervalMs === null) {
+            task.cancelled = true;
+            break;
+          }
+          task.remainingMs += task.intervalMs;
         }
-        runs++;
-
-        task.callback();
-        if (task.intervalMs === null) {
-          task.cancelled = true;
-          break;
-        }
-        task.remainingMs += task.intervalMs;
       }
+    } finally {
+      this.draining = false;
+      if (this.pending.length > 0) {
+        this.tasks.push(...this.pending);
+        this.pending.length = 0;
+      }
+      this.purge();
     }
-    this.draining = false;
-
-    if (this.pending.length > 0) {
-      this.tasks.push(...this.pending);
-      this.pending.length = 0;
-    }
-    this.purge();
     return true;
   }
 

@@ -2,6 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { FrameWindow } from '../../src/time/FrameWindow';
 
 describe('FrameWindow', () => {
+  it('sıfır maliyetleri yüzdeliklere katar ve en yavaş kareyi aynı örneğin maliyetleriyle bağlar', () => {
+    const window = new FrameWindow();
+    window.push(0, 'game', {});
+    window.push(16, 'game', { updateMs: 0, vehicles: 3 });
+    window.push(60, 'game', { updateMs: 8, vehicles: 7 });
+    window.push(76, 'game', { updateMs: 2, vehicles: 9 });
+    expect(window.flush()).toMatchObject({
+      metrics: { updateMs: { p50: 2, p95: 8, p99: 8, samples: 3 } },
+      slowestFrame: { at: 60, intervalMs: 44, metrics: { updateMs: 8, vehicles: 7 } },
+    });
+  });
   it('sıfır saat başlangıcını ve aynı pencerenin yük örneklerini korur', () => {
     const window = new FrameWindow(30);
     expect(window.push(0, 'game:10', { enemies: 10, updateMs: 0 })).toBeNull();

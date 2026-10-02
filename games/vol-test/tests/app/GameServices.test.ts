@@ -80,6 +80,52 @@ afterEach(() => {
 });
 
 describe('GameServices', () => {
+  it('ayar hatası olsa bile geciken ilerleme ve ekran kalıcılığını bekler, bütün hataları korur', async () => {
+    Object.assign(bridge, {
+      platform: 'web',
+      session: 'web',
+      measure: false,
+      orientationError: false,
+    });
+    services = await GameServices.create();
+    const settingsError = new Error('ayar diski');
+    const displayError = new Error('ekran diski');
+    let finish!: () => void;
+    vi.spyOn(services.settings, 'flush').mockRejectedValue(settingsError);
+    vi.spyOn(services.progress, 'flush').mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    vi.spyOn(services.display!, 'flush').mockRejectedValue(displayError);
+    let settled = false;
+    const result = services.flush().catch((error: unknown) => {
+      settled = true;
+      return error;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(settled).toBe(false);
+    finish();
+    const error = await result;
+    expect(error).toBeInstanceOf(AggregateError);
+    expect((error as AggregateError).errors).toEqual([settingsError, displayError]);
+  });
+  it('ölçüm hatası kalıcılık başarısını bozmaz ve tanıda görünür', async () => {
+    Object.assign(bridge, {
+      platform: 'web',
+      session: 'web',
+      measure: true,
+      orientationError: false,
+    });
+    services = await GameServices.create();
+    const error = new Error('ölçüm aktarımı');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(services.measurements!, 'flush').mockRejectedValue(error);
+    await expect(services.flush()).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalledWith('[VOL.TEST] Ölçüm boşaltılamadı:', error);
+  });
+
   it('uyanış aboneliğini mikro görev öncesinde kaldırırsa eski sahneyi çağırmaz', async () => {
     Object.assign(bridge, {
       platform: 'web',

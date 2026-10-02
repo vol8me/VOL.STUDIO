@@ -340,6 +340,18 @@ export function sanitizeReport(text) {
     'cpuMs.aim',
     'cpuMs.environmentCamera',
     'cpuMs.hudDiagnostics',
+    'vehicles',
+    'weatherParticles',
+    'weatherSurfaceCells',
+    'simulation.rawDeltaMs',
+    'simulation.acceptedDeltaMs',
+    'simulation.simulatedMs',
+    'simulation.accumulatorMs',
+    'simulation.droppedMs',
+    'simulation.fixedSteps',
+    'simulation.tickStart',
+    'simulation.tickEnd',
+    'gpuTimeMs',
     'enemies',
     'bullets',
     'particles',
@@ -373,6 +385,9 @@ export function sanitizeReport(text) {
     'mono',
     'boot',
     'window',
+    'lostReports',
+    'at',
+    'intervalMs',
     'sprites',
     'fps',
     'meanMs',
@@ -483,7 +498,27 @@ export function sanitizeReport(text) {
     for (const [key, value] of Object.entries(record)) {
       if (numeric.has(key) && typeof value === 'number' && Number.isFinite(value))
         result[key] = value;
-      else if (boolean.has(key) && (typeof value === 'boolean' || value === null))
+      else if (
+        ['gpuTimeMs', 'presentTimeMs'].includes(key) &&
+        (value === null || (typeof value === 'number' && Number.isFinite(value)))
+      )
+        result[key] = value;
+      else if (
+        key === 'runId' &&
+        typeof value === 'string' &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+      )
+        result[key] = value;
+      else if (key === 'slowestFrame' && value && typeof value === 'object') {
+        const frame = safe({ at: value.at, intervalMs: value.intervalMs });
+        frame.metrics = Object.fromEntries(
+          Object.entries(value.metrics ?? {}).filter(
+            ([name, metric]) =>
+              metricNames.has(name) && typeof metric === 'number' && Number.isFinite(metric),
+          ),
+        );
+        result[key] = frame;
+      } else if (boolean.has(key) && (typeof value === 'boolean' || value === null))
         result[key] = value;
       else if (enums[key] && typeof value === 'string' && enums[key].test(value))
         result[key] = value;
@@ -497,7 +532,7 @@ export function sanitizeReport(text) {
               Object.fromEntries(
                 Object.entries(metric && typeof metric === 'object' ? metric : {}).filter(
                   ([stat, number]) =>
-                    ['min', 'max', 'avg', 'samples'].includes(stat) &&
+                    ['min', 'max', 'avg', 'samples', 'p50', 'p95', 'p99'].includes(stat) &&
                     typeof number === 'number' &&
                     Number.isFinite(number),
                 ),
@@ -621,7 +656,7 @@ export function summarizeReport(lines) {
   );
   // Sayfa yeniden yüklenirse aynı faz iki kez yazılır — son kayıt günceldir.
   // `perf` pencereleri aynı faz adını taşıdığı için `window` anahtarla ayrılır.
-  const byPhase = new Map(phases.map((p) => [`${p.phase}#${p.window ?? ''}`, p]));
+  const byPhase = new Map(phases.map((p) => [`${p.runId ?? ''}#${p.phase}#${p.window ?? ''}`, p]));
   const info = [...records].reverse().find((r) => r.type === 'info');
   const signals = records.filter((r) => r.type === 'signal');
   const suspendGaps = records.filter((r) => r.type === 'suspend-gap');
@@ -633,6 +668,11 @@ export function summarizeReport(lines) {
     runtime: info?.env?.PRESSURE_VESSEL_RUNTIME ?? 'host',
     phases: [...byPhase.values()].map((p) => ({
       phase: p.phase,
+      runId: p.runId ?? null,
+      lostReports: p.lostReports ?? null,
+      slowestFrame: p.slowestFrame ?? null,
+      gpuTimeMs: p.gpuTimeMs ?? null,
+      presentTimeMs: p.presentTimeMs ?? null,
       window: p.window ?? null,
       quality: p.quality ?? null,
       scenario: p.scenario ?? null,

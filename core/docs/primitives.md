@@ -290,3 +290,26 @@ aynı değişiklikte güncellenir.
 diğer kiplerle birleştirir. `restingAimPolicy: 'owner'` yalnız fare kipi
 sahipken bu yedeği kullanır; çubuk bırakılınca başka sağlayıcının eski nişanı
 dönmez. Eylemler etkin sağlayıcılar üzerinden birleşmeye devam eder.
+
+### Sabit tick'e girdi taşıma
+
+Render karesi ile sabit tick aynı hızda değildir. Bir basış ya da eksen
+değeri, kendisini bildiren karede tick üretilmemişse kaybolmamalıdır.
+`InputStepBuffer` bunu iki yerde taşır:
+
+- **Eylem kenarı.** Karede görülen `pressedActions` ya da yeni basılan
+  `heldActions`, ilk tüketilen tickte bir kez `actions` olur. Basılı düzey
+  catch-up boyunca her tickte okunur; basış tek tick yaşar.
+- **Veksel kenar.** Sıfırdan sıfıra düşen kanalın son değeri, kendisini
+  bildiren karede tick üretilmemişse bir sonraki tickte bir kez daha okunur.
+  Basılı kanal darbasız her tickte güncel değerini taşır.
+
+Çubuk eylemi (`aimStickAction`) için ayrıca `aimStickGate` vardır: ham sapma
+oranı `enter`/`exit` eşikleriyle karşılaştırılır ve karar **çubuğun kendi
+durumunda** tutulur. Eşiği çağıranın karesinde örneklemek aynı kayıp
+sorununu üretirdi; ayrıca `aimStickActivatesOnTouch` ve deadzone eşiği bu
+durumda geçersiz sayılır. `reset` histerezisi düşürür, böylece duraklatma
+sonrası ilk basış yine `enter` eşiğinden geçmek zorundadır.
+
+CORE bu eşikleri oyun kelimesi bilmeden taşır: "ateş", "nişan" ya da "savaş"
+dediği bir kural yoktur, yalnız çubuk → eylem bağlantısı ve iki oran vardır.

@@ -1,10 +1,14 @@
 import { summarizeFrameIntervals, type FrameIntervalSummary } from './frameSummary';
+import { summarizeMetricSamples } from './metricSummary';
 
 export interface MetricSummary {
   min: number;
   max: number;
   avg: number;
   samples: number;
+  p50: number;
+  p95: number;
+  p99: number;
 }
 
 export interface FrameWindowSummary extends FrameIntervalSummary {
@@ -12,6 +16,7 @@ export interface FrameWindowSummary extends FrameIntervalSummary {
   start: number;
   end: number;
   metrics: Record<string, MetricSummary>;
+  slowestFrame: { at: number; intervalMs: number; metrics: Record<string, number> };
 }
 
 export class FrameWindow {
@@ -19,10 +24,8 @@ export class FrameWindow {
   private start = 0;
   private previous: number | null = null;
   private readonly intervals: number[] = [];
-  private readonly metrics = new Map<
-    string,
-    { min: number; max: number; sum: number; samples: number }
-  >();
+  private readonly metrics = new Map<string, number[]>();
+  private slowestFrame: FrameWindowSummary['slowestFrame'] | null = null;
 
   constructor(private readonly durationMs = 10_000) {}
 
@@ -44,14 +47,16 @@ export class FrameWindow {
     if (delta <= 0) return completed;
     this.previous = now;
     this.intervals.push(delta);
+    const finiteValues: Record<string, number> = {};
     for (const [name, value] of Object.entries(values)) {
       if (!Number.isFinite(value)) continue;
-      const metric = this.metrics.get(name) ?? { min: value, max: value, sum: 0, samples: 0 };
-      metric.min = Math.min(metric.min, value);
-      metric.max = Math.max(metric.max, value);
-      metric.sum += value;
-      metric.samples++;
+      finiteValues[name] = value;
+      const metric = this.metrics.get(name) ?? [];
+      metric.push(value);
       this.metrics.set(name, metric);
+    }
+    if (!this.slowestFrame || delta > this.slowestFrame.intervalMs) {
+      this.slowestFrame = { at: now, intervalMs: delta, metrics: finiteValues };
     }
     if (now - this.start >= this.durationMs) {
       completed = this.flush();
@@ -70,22 +75,16 @@ export class FrameWindow {
           context: this.context,
           start: this.start,
           end: this.previous!,
+          slowestFrame: this.slowestFrame!,
           metrics: Object.fromEntries(
-            [...this.metrics].map(([name, value]) => [
-              name,
-              {
-                min: value.min,
-                max: value.max,
-                avg: value.sum / value.samples,
-                samples: value.samples,
-              },
-            ]),
+            [...this.metrics].map(([name, values]) => [name, summarizeMetricSamples(values)!]),
           ),
         }
       : null;
     this.previous = null;
     this.intervals.length = 0;
     this.metrics.clear();
+    this.slowestFrame = null;
     return result;
   }
 }

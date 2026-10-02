@@ -56,11 +56,14 @@ function idle(): InputState<TestAction> & { actions: Record<TestAction, boolean>
 
 interface Harness {
   sim: Simulation;
+  scene: WorldScene;
   camera: ReturnType<typeof fakeObject>;
   parent: HTMLElement;
   wheel: (dy: number) => void;
   shutdown: () => void;
-  frame: (patch?: Partial<InputState<TestAction>> & { press?: TestAction[] }) => void;
+  frame: (
+    patch?: Partial<InputState<TestAction>> & { press?: TestAction[]; deltaMs?: number },
+  ) => void;
   created: ReturnType<typeof fakeScene>['created'];
 }
 
@@ -92,6 +95,7 @@ function mount(services?: GameServices): Harness {
   scene.create();
   let time = 0;
   const harness: Harness = {
+    scene,
     sim: (scene as unknown as { sim: Simulation }).sim,
     camera,
     parent,
@@ -104,8 +108,9 @@ function mount(services?: GameServices): Harness {
       if (patch.aim) state.aim = patch.aim;
       for (const action of patch.press ?? []) state.actions[action] = true;
       controls.state = state;
-      time += 1000 / 60;
-      scene.update(time, 1000 / 60);
+      const delta = patch.deltaMs ?? 1000 / 60;
+      time += delta;
+      scene.update(time, delta);
     },
   };
   active = harness;
@@ -121,6 +126,29 @@ afterEach(() => {
 });
 
 describe('WorldScene', { timeout: 20_000 }, () => {
+  it('ham, kabul edilen ve düşen süreyi gerçek saat raporundan ölçüme taşır', async () => {
+    const frame = vi.fn();
+    const services = await GameServices.create();
+    Object.defineProperty(services, 'measurements', {
+      value: { beginFrame: vi.fn(), mark: vi.fn(), frame },
+    });
+    const harness = mount(services);
+    harness.frame({ deltaMs: 5000 });
+    expect(frame).toHaveBeenLastCalledWith(
+      expect.any(Number),
+      false,
+      expect.any(String),
+      expect.any(Number),
+      expect.any(Object),
+      expect.objectContaining({
+        'simulation.rawDeltaMs': 5000,
+        'simulation.droppedMs': harness.scene.lastClockFrame?.droppedMs,
+        'simulation.tickEnd': harness.scene.lastClockFrame?.tickEnd,
+        vehicles: harness.sim.vehicles.length,
+      }),
+    );
+    services.dispose();
+  });
   it('sayfa terk edilince sesi söker; geri dönüş önbelleği ve kapanmış sahne etkilenmez', () => {
     const context = new FakeAudioContext();
     const audio = new GameAudio(
@@ -224,6 +252,42 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     active = null;
     services.dispose();
     parent.remove();
+  });
+
+  it('pause ilk/son render ve sıfır tick resume tankın son çizilen pozunu korur', () => {
+    const { frame, parent, created, sim } = mount();
+    for (let step = 0; step < 30; step++) frame({ move: new Vector2(1, 0) });
+    const root = created.find(
+      (object) => object.kind === 'container' && lastCall(object, 'setPosition'),
+    )!;
+    const position = () => lastCall(root, 'setPosition');
+    const before = position();
+    const time = sim.timeMs;
+    frame({ press: ['pause'], deltaMs: 0 });
+    expect(position()).toEqual(before);
+    frame({ deltaMs: 5000 });
+    expect(position()).toEqual(before);
+    parent.querySelector<HTMLButtonElement>('[data-testid="pause-resume"]')!.click();
+    frame({ deltaMs: 0 });
+    expect(position()).toEqual(before);
+    expect(sim.timeMs).toBe(time);
+  });
+
+  it('ham uyku süresi ve pause clock raporunda görünür, dönüş saati biriktirmez', () => {
+    const { scene, frame, parent } = mount();
+    frame({ deltaMs: 5000 });
+    expect(scene.lastClockFrame).toMatchObject({ rawDeltaMs: 5000, acceptedDeltaMs: 100 });
+    expect(scene.lastClockFrame!.droppedMs).toBeGreaterThanOrEqual(4900);
+    frame({ press: ['pause'], deltaMs: 5000 });
+    expect(scene.lastClockFrame).toMatchObject({
+      acceptedDeltaMs: 0,
+      simulatedMs: 0,
+      droppedMs: 5000,
+    });
+    const tick = scene.lastClockFrame!.tickEnd;
+    parent.querySelector<HTMLButtonElement>('[data-testid="pause-resume"]')!.click();
+    frame({ deltaMs: 0 });
+    expect(scene.lastClockFrame).toMatchObject({ tickStart: tick, tickEnd: tick });
   });
 
   it('boş dünyayı kurar, kamerayı tankta açar ve HUD bağlar', () => {

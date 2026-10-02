@@ -1,1 +1,1 @@
-export const MEASUREMENTS = { windowMs: 10_000 } as const;
+export const MEASUREMENTS = { windowMs: 10_000, maxRenderSamples: 4096 } as const;
