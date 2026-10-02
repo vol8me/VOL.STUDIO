@@ -65,14 +65,14 @@
     }
   },
   "bundles": {
-    "$comment": "vol-ui vitrini CORE UI'ın gönderilen ağırlığını taşır: ölçülen app 137.6, css 19.8 KB (gzip 9). vol-test app 99.0, vendor 345.1, css 18.3 KiB gzip 9; native servisler, kalıcı CORE ayar/senaryo bileşenleri, kuru ses ve mevsim/hava fiziği bilinçli kapsam artışıdır. App bütçesi 105 KiB; vendor ve CSS sınırları korunur.",
+    "$comment": "vol-ui vitrini CORE UI'ın gönderilen ağırlığını taşır: ölçülen app 138.2, css 19.8 KB (gzip 9). vol-test app 105.3, vendor 345.1, css 18.3 KiB gzip 9; native servisler, kalıcı CORE ayar/senaryo bileşenleri, kuru ses, mevsim/hava fiziği, GPU zamanlayıcısı ve render ölçümü bilinçli kapsam artışıdır. App bütçesi 106 KiB; vendor ve CSS sınırları korunur.",
     "devtools/vol-ui": {
       "app": 150,
       "vendor": 1,
       "css": 24
     },
     "games/vol-test": {
-      "app": 105,
+      "app": 106,
       "vendor": 360,
       "css": 21
     }
