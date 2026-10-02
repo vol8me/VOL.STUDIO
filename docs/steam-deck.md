@@ -26,7 +26,8 @@ OLED Deck ve diğer Valve donanımları LCD referansından otomatik kabul almaz.
 ## Paketleme
 
 Repo kökünden `pnpm build:linux-steamrt4` steamrt4 SDK kabında üretim yapar.
-Çalışma zamanı Steam Linux Runtime 4.0'dır. Pressure-vessel içinde FUSE
+Hedef çalışma zamanı Steam Linux Runtime 4.0'dır; steamrt4 ile derleme
+tek başına oyunun pressure-vessel içinde açıldığını kanıtlamaz. Pressure-vessel içinde FUSE
 olmaması nedeniyle cihazda açılmış AppDir kullanılır; giriş `AppRun`dur.
 
 WebKitGTK, GTK, GLib, ICU, libmanette ve gerekli ses codec/çıkış eklentileri
@@ -58,6 +59,37 @@ varsayılan yol yaklaşık 50 FPS; timer yolu Steam Linux Runtime 4.0'da
 Timer'ın serbest temposu panel sunumuyla birebir eşit kabul edilmez;
 gamescope sunum istatistikleri ve daha uzun pencereyle doğrulanır. OLED
 90 Hz davranışı ölçülmemiştir.
+
+## VOL.TEST cihaz referansı
+
+LCD Deck, gamescope, 1280×800; steamrt4 AppDir ve glibc bağımlılık kapısı
+geçti. Native devkit kısayolunda ölçülen çalışma ortamı **host**tur;
+Steam Linux Runtime 4.0 ürün kabulü açık kalır. `WEBKIT_FORCE_VBLANK_TIMER=1`
+ve DMA-BUF açık, tohum 731. Her koşul 25 saniyelik ölçüm isteğiyle başlatıldı;
+başlatma/sonlandırma aralıkları kayıtta korunur. Tabloda ilk 10 saniyelik
+pencere sonrası tam pencereler verilir; açılış karesi gizlice ayıklanmaz.
+
+| Senaryo / hava       | Kademe |       FPS | p95 (ms) | Güncelleme CPU ort. (ms) |
+| -------------------- | ------ | --------: | -------: | -----------------------: |
+| Boş / açık           | Düşük  | 59,7–60,0 |    18–19 |                  0,8–0,9 |
+| Slalom / açık        | Düşük  | 59,2–59,6 |    18–20 |                  1,1–1,2 |
+| Hedefler / açık      | Düşük  | 59,4–59,5 |    18–19 |                      1,1 |
+| Fizik alanı / açık   | Düşük  |      59,6 |       19 |                      2,0 |
+| Çoklu tank / açık    | Düşük  | 59,3–59,7 |       20 |                  1,7–1,8 |
+| Fizik alanı / yağmur | Yüksek | 59,1–59,5 |    20–21 |                  2,7–2,8 |
+| Fizik alanı / kar    | Yüksek | 59,6–59,7 |       19 |                  2,6–2,7 |
+| Fizik alanı / toz    | Yüksek |      59,5 |       20 |                      2,6 |
+
+İlk pencereler 57,1–59,2 FPS ve p95 19–20 ms verdi. Eski fizik alanı
+referansı ısınmış pencerede 59,4–59,6 FPS / p95 19–20 ms idi. Android'deki
+büyük çizim kazancı Deck'e aynı büyüklükte FPS artışı olarak genellenmez.
+Güncelleme CPU süresi GPU veya panel sunum süresi değildir. Ortalama FPS
+hedefe yakın olsa da **p95 ≤18 ms kabulü bütün koşullarda karşılanmadı**.
+Sunum temposu, host/SLR4 farkı ve uzun süreli ısınma ayrıca ölçülmelidir.
+
+Devkit ölçümü ekran görüntüsü ve SIGTERM kayıtlarını da topladı. Gerçek uyku,
+Steamworks istemci bağlantısı, motor hissi, hot-plug ve Steam/QAM odağı bu
+kare ölçümünün kabulü değildir.
 
 ## Girdi ve glif
 

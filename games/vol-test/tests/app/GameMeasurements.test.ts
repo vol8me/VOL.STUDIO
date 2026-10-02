@@ -2,6 +2,41 @@ import { describe, expect, it } from 'vitest';
 import { GameMeasurements } from '@/app/GameMeasurements';
 
 describe('GameMeasurements', () => {
+  it('senaryo ve hava geçişlerini ayrı pencerelerle, aşama maliyetleriyle kaydeder', async () => {
+    const records: Record<string, unknown>[] = [];
+    const measurement = new GameMeasurements((record) => {
+      records.push(record);
+      return Promise.resolve();
+    }, 100);
+    const first = { scenario: 'empty', seed: 731, weather: 'clear', season: 'summer' };
+    measurement.beginFrame(0);
+    measurement.mark('simulation', 2);
+    measurement.frame(3, false, 'low', 0, first);
+    measurement.beginFrame(16);
+    measurement.mark('simulation', 18);
+    measurement.frame(19, false, 'low', 1, first);
+    const next = { ...first, scenario: 'sandbox', weather: 'rain' };
+    measurement.beginFrame(1000);
+    measurement.mark('simulation', 1005);
+    measurement.frame(1006, false, 'high', 2, next);
+    measurement.beginFrame(1016);
+    measurement.mark('simulation', 1021);
+    measurement.frame(1022, false, 'high', 3, next);
+    await measurement.flush();
+    expect(records).toHaveLength(2);
+    expect(records[0]).toMatchObject({
+      ...first,
+      quality: 'low',
+      p95: 16,
+      metrics: { 'cpuMs.simulation': { avg: 2 }, updateMs: { avg: 3 } },
+    });
+    expect(records[1]).toMatchObject({
+      ...next,
+      quality: 'high',
+      p95: 16,
+      metrics: { 'cpuMs.simulation': { avg: 5 }, updateMs: { avg: 6 } },
+    });
+  });
   it('kare aralıklarını kalite ve duraklatma geçişlerinde ayrı Deck pencerelerine yazar', async () => {
     const records: Record<string, unknown>[] = [];
     const measurement = new GameMeasurements((record) => {

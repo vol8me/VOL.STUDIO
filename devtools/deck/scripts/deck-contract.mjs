@@ -332,6 +332,14 @@ os.close(fd)`,
 
 export function sanitizeReport(text) {
   const metricNames = new Set([
+    'cpuMs.input',
+    'cpuMs.simulation',
+    'cpuMs.eventsAudio',
+    'cpuMs.vehicles',
+    'cpuMs.effects',
+    'cpuMs.aim',
+    'cpuMs.environmentCamera',
+    'cpuMs.hudDiagnostics',
     'enemies',
     'bullets',
     'particles',
@@ -453,6 +461,10 @@ export function sanitizeReport(text) {
     'subsystems',
   ]);
   const enums = {
+    quality: /^(low|high)$/,
+    scenario: /^(empty|slalom|targets|sandbox|multitank)$/,
+    weather: /^(clear|dust|rain|snow)$/,
+    season: /^(spring|summer|autumn|winter)$/,
     src: /^(js|rust)$/,
     backend: /^(none|hidraw|evdev|native|gamepad|vibration|error)$/,
     mapping: /^(standard|)$/,
@@ -622,6 +634,11 @@ export function summarizeReport(lines) {
     phases: [...byPhase.values()].map((p) => ({
       phase: p.phase,
       window: p.window ?? null,
+      quality: p.quality ?? null,
+      scenario: p.scenario ?? null,
+      seed: p.seed ?? null,
+      weather: p.weather ?? null,
+      season: p.season ?? null,
       sprites: p.sprites ?? null,
       fps: p.fps,
       p95: p.p95,

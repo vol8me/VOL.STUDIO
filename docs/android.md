@@ -71,21 +71,47 @@ workspace'inin üyesidir ve kökteki tek kilitle derlenir.
 
 ## VOL.TEST cihaz referansı
 
-Lenovo TB350FU, Android 14 native WebView; 2000×1199 piksel, CSS alanı
-1569×941, DPR 1,275. Soğuk açılış 1058 ms. Her koşul 8 saniye boyunca gerçek
-`requestAnimationFrame` aralıklarıyla ölçüldü; uzun kareler çıkarılmadı.
-Sürekli ateş dokunmatik sağ çubukla üretildi, ses döngüleri ve atışlar açıktı.
+Lenovo TB350FU, Android 14 native WebView ve Mali-G57 MC2; CSS alanı
+1569×941, DPR 1,275. Senaryolar düşük kalitede aynı cihaz ve aynı ölçüm
+betiğiyle 12'şer saniye örneklendi. Gerçek `requestAnimationFrame` aralıkları
+kullanıldı; uzun kareler çıkarılmadı.
 
-| Kademe | Yük          |   FPS | p95 (ms) | p99 (ms) | En uzun kare (ms) |
-| ------ | ------------ | ----: | -------: | -------: | ----------------: |
-| Düşük  | Boşta        | 120,0 |      8,4 |      8,4 |               8,5 |
-| Düşük  | Sürekli ateş | 113,4 |     16,6 |     16,7 |              25,0 |
-| Yüksek | Boşta        | 119,3 |      8,4 |      8,5 |              16,7 |
-| Yüksek | Sürekli ateş | 115,3 |      8,5 |     16,7 |              16,8 |
+| Senaryo     | Önce FPS | Güncel FPS | Güncel p95 (ms) |
+| ----------- | -------: | ---------: | --------------: |
+| Boş         |    120,1 |      120,1 |             8,4 |
+| Slalom      |     15,5 |      120,1 |             8,4 |
+| Hedefler    |     22,7 |      120,0 |             8,4 |
+| Fizik alanı |     12,5 |      119,4 |             8,4 |
+| Çoklu tank  |     23,4 |      120,0 |             8,4 |
 
-İki kademe de 60 FPS hedefini geçtiği için bu model yüksek başlar; diğer
-Android modelleri ölçülene kadar düşük başlar. Kaydedilmiş kullanıcı tercihi
-açılış varsayılanından önce gelir. Kısa pencereler kademe üstünlüğü ya da uzun
-süreli termal kararlılık kanıtı değildir. Samsung cihazı bağlı değildi;
-ölçülmedi. Ses düğümlerinin başlaması doğrulandı; insan dinleme ve dokunmatik
-hissiyat onayı bekler.
+Kontrollü çizim deneyi, araç başına TileSprite palet yolu, gövde içindeki
+karışık blend kipleri ve boş additive yayıcıların maliyetini ayırdı.
+Ortak palet kare dokusu, gövdenin normal alfa çekirdeği ve tek namlu ışığı
+katmanı aynı görsel parçaları korur. Simülasyon davranışı değişmez.
+
+Hava önizlemeleri ayrı 8 saniyelik pencerelerle ve gerçek dokunmatik ateş
+isteğiyle örneklendi; yağış önizlemesinin hazır birikimi bu yüke dahildir.
+
+| Hava / yük            | Düşük FPS | Yüksek FPS | Yüksek p95 (ms) |
+| --------------------- | --------: | ---------: | --------------: |
+| Açık / boşta          |     120,0 |      119,9 |             8,4 |
+| Yağmur / boşta        |     105,4 |       93,2 |            16,7 |
+| Kar / boşta           |      88,9 |       66,3 |            16,8 |
+| Toz / boşta           |     118,5 |      102,5 |            16,7 |
+| Yağmur / sürekli ateş |      95,5 |       89,6 |            16,7 |
+
+İki kademe kısa pencerede 60 FPS'i geçtiği için bu model yüksek başlar;
+diğer Android modelleri ölçülene kadar düşük başlar. Kayıtlı tercih açılış
+varsayılanından önce gelir. Uzun süreli termal kararlılık ve en yoğun birleşik
+hava/çoklu araç yükü bu tablodan çıkarılmaz.
+
+Native titreşim durum sorgusu destek bildirdi; geçerli desen kabul edildi,
+geçersiz desen reddedildi. Motorun fiziksel hissi insan doğrulaması ister.
+Samsung bu ölçümde erişilebilir değildi; ölçülmedi. Ses dinleme ve kontrol
+hissiyatı insan kabulü olarak ayrı kalır.
+
+Sistem ekran yakalamasında siyah çıktı ve Mali EGL bellek hatası görüldü.
+Aynı oturumda GPU kare örneği tank piksellerini, açık WebGL bağlamını ve sıfır
+GL hatasını gösterdi. Çalışan simülasyon ya da FPS sayısı tek başına görünür
+panel kabulü değildir; yakalama sorunu çözülmeden güncel Lenovo görsel kabulü
+kapanmaz.

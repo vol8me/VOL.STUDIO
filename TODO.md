@@ -60,6 +60,15 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ### Cihaz turları
 
+- [ ] **[P1] Lenovo görünür panel ve ekran yakalama.** Sistem yakalaması siyah
+      çıktı; aynı oturumun GPU karesi dolu ve GL hatası sıfır. Kapanır: soğuk
+      açılış ve arka plan dönüşünde gerçek panel ile sistem ekran görüntüsü
+      birlikte doğrulanır; Mali EGL yakalama hatasının nedeni ayrılır.
+- [ ] **[P1] SD3 — libmanette çökme izi.** Tarihsel SIGSEGV için çekirdek
+      dökümü/yeniden üretim yok; yeni ölçümlerin çökmeden çalışması kök neden
+      kabulü değildir. Kapanır: kol hot-plug ve titreşim matrisiyle döküm
+      incelenir, neden düzeltilir veya kanıtla dışlanır.
+
 - [ ] **[P1] Deck'teki kalıntılar.** Eski ürünlerin ve sondanın sürüm dizinleri,
       non-Steam kısayolları, `~/.local/share/<kimlik>/` verileri, deneme
       dosyaları. Kapanır: envanter kullanıcıya gösterilir, onaylı liste silinir,
@@ -68,12 +77,12 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       diske ulaşır, ses uyanışta geri gelir.
 - [ ] **[P1] D0 — Deck'te insan eliyle açık ölçümler.** Kapanır: yalnız eldeki
       cihazla ölçülemeyenler açık kalır.
-- [ ] **[P1] D1 — steamrt4 paketi SteamOS host'unda ve SLR4'te açılıp OGG çalar.**
+- [ ] **[P1] D1 — steamrt4 paketi SteamOS host'unda ve SLR4'te açılıp OGG çalar.** Host ölçümü vardır; gerçek SLR4 kısayolu ve codec/ses doğrulaması açıktır.
 - [ ] **[P1] D1 — `pnpm deck` uçtan uca.** Derler, yükler, başlatır, ölçer, ekran
       görüntüsü alır; komut sözleşmeleri testli.
-- [ ] **[P1] D2 — gamescope kare zamanlaması.** 1280×800'de ≥ 59 FPS, p95 ≤ 18 ms.
+- [ ] **[P1] D2 — gamescope kare zamanlaması.** Isınmış VOL.TEST pencereleri 59–60 FPS, p95 18–21 ms. Kapanır: host/SLR4 ve sunum istatistikleriyle kök neden ayrılır; 1280×800'de ≥59 FPS, p95 ≤18 ms bütün yüklerde sağlanır.
 - [ ] **[P1] D2 — Kayıt ve boşaltma kanıtı.** Yazma ortasında SIGKILL kaydı
-      bozamaz; SIGTERM ve uykuda son değer diske ulaşır.
+      bozamaz; üretim kipinde SIGTERM ve gerçek uykuda son değer diske ulaşır.
 - [ ] **[P1] D2 — `synced` / `device` kapsamı.** Kapsamsız anahtar derlenmez;
       eski tek dosyalı kayıttan yedekli geçiş testli.
 - [ ] **[P2] D2 — Uykudan dönüşte zaman güvenliği.** Saat sıçraması testli;
@@ -85,6 +94,11 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 - [ ] **[P3] OLED Deck ve Steam Machine kare zamanlaması.** Cihaz bulununca.
 
 ### Kod
+
+- [ ] **[P2] B6 — Ses değişimine göre push doğrulaması.** `high` sesin alt
+      takımını, `signoff` tam takımını koşar. Kapanır: değişen sentez/protokol
+      modüllerinin ilgili regresyonları push kapısında otomatik seçilir;
+      yayın kapısının tam doğrulaması korunur.
 
 - [ ] **[P3] A20 — Titreşim darbeleri tek zamanlayıcı iş parçacığından yürür.**
 - [ ] **[P3] S7 — Ana sürüm geçişleri.** ESLint 10, stylelint 17, jsdom 30,
@@ -102,6 +116,8 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       kalır.
 
 ## Kapatılanlar
+
+- [x] VOL.TEST ölçümü gerçek kalite, senaryo, tohum, mevsim/hava ve sekiz CPU aşamasını kaydeder; bağlam geçişi ile Deck rapor zinciri regresyon testli.
 
 - [x] VOL.TEST native uyanışta ortak ses bağlamını toparlar; sökülmüş sahne ve bağlam yaşam döngüsü regresyon testli, gerçek Deck uyku kabulü SD8'de açık.
 

@@ -164,7 +164,7 @@ Başlangıç profili platform ve ölçülmüş cihaz kuralından gelir; kayıtl�
 tercih bunun önüne geçer. Kalite seçimi kalıcıdır ve uygun görünüm kaynaklarına
 uygulanır. Hale yerel yarı saydam geometriyle çizilir.
 
-Gönderilen uygulama kodu 99,0 KiB, Phaser 345,1 KiB ve CSS 18,3 KiB
+Gönderilen uygulama kodu 100,1 KiB, Phaser 345,1 KiB ve CSS 18,3 KiB
 (dosya başına gzip 9) ölçülür. `quality.json` uygulamaya 105 KiB ayırır;
 native servisler, kalıcı CORE ayar/senaryo bileşenleri, kuru ses ve hava
 fiziği bu kapsamın içindedir. Phaser ve CSS bütçeleri ayrı korunur.
@@ -172,6 +172,13 @@ fiziği bu kapsamın içindedir. Phaser ve CSS bütçeleri ayrı korunur.
 `RuntimeOverrides` yalnız `VOL_DECK_MEASURE=1` oturumunda senaryo, tohum,
 hava, mevsim ve kalite seçimini uygular. Geçersiz değerler reddedilir;
 ölçüm seçimleri kalıcı cihaz tercihine yazılmaz.
+
+`GameMeasurements` kare aralıklarını gerçek kalite, senaryo, tohum, hava ve
+mevsim bağlamıyla pencereler. Bağlam değişince eski pencere kapanır; geçiş
+aralığı yeni koşulun karesi sayılmaz. Girdi, simülasyon, olay/ses, araç,
+efekt, nişan, çevre/kamera ve HUD/tanı süreleri ayrı CPU ölçüleridir.
+`updateMs` yalnız sahne güncellemesini ölçer; GPU çizimi veya panel sunumu
+değildir. Deck özeti aynı bağlamı ve izin listeli aşama ölçülerini korur.
 
 `GameServices` platform, oturum, ekran kipi, Steam glifi, metin girişi,
 titreşim ve tanı kaynaklarının ömür sahibidir. `GameSettings`,

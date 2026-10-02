@@ -35,7 +35,8 @@ Kapsam, bundle ve ölçekleme bütçeleri kök `quality.json` içindedir;
 
 Duraklatma paneli kalite, ses, titreşim ve uygun oturumlarda ekran kipini
 ayarlar. Senaryo panelinde boş dünya, slalom, hedefler, fizik alanı ve çoklu
-tank seçilir; aynı senaryo ve tohum aynı başlangıç düzenini üretir.
+tank seçilir; aynı oyuncu başlangıç konumu, senaryo ve tohum aynı araç
+yerleşimini üretir. Senaryo seçimi oyuncuyu başlangıç konumuna taşımaz.
 
 ## Dünya ve hava
 

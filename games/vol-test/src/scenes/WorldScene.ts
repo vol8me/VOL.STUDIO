@@ -62,6 +62,7 @@ export class WorldScene extends Phaser.Scene {
   private aimGuide!: AimGuide;
   private environment!: EnvironmentController;
   private hud!: Hud;
+  private quality!: GraphicsQuality<EffectLevel, EffectProfile>;
   private readonly simEvents: SimEvent[] = [];
   private scope = new DisposableScope();
 
@@ -89,6 +90,7 @@ export class WorldScene extends Phaser.Scene {
           overrides?.quality ?? preferences?.quality ?? initialEffectLevel(navigator.userAgent),
       }),
     );
+    this.quality = quality;
     if (this.services) {
       const services = this.services;
       this.audio?.setVolume(services.settings.get().volume);
@@ -217,6 +219,8 @@ export class WorldScene extends Phaser.Scene {
 
   override update(time: number, delta: number): void {
     const diagnostics = this.services?.diagnostics;
+    const measurements = this.services?.measurements;
+    measurements?.beginFrame();
     diagnostics?.beginFrame();
     diagnostics?.setScene('World');
     diagnostics?.setInput(this.controls.snapshot());
@@ -225,6 +229,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.controls.pressed('pause')) this.pause.toggle();
 
     const paused = this.pause.paused;
+    measurements?.mark('input');
     if (!paused) {
       if (this.controls.pressed('zoomIn')) this.camera.model.zoomBy(1);
       if (this.controls.pressed('zoomOut')) this.camera.model.zoomBy(-1);
@@ -237,6 +242,8 @@ export class WorldScene extends Phaser.Scene {
         );
       });
     }
+
+    measurements?.mark('simulation');
 
     for (const removed of this.vehicles.sync(this.sim.vehicles.map((vehicle) => vehicle.id))) {
       this.effects.removeVehicle(removed);
@@ -255,6 +262,7 @@ export class WorldScene extends Phaser.Scene {
       camera: this.camera.model,
       listener: player.tank,
     });
+    measurements?.mark('eventsAudio');
 
     const alpha = paused ? 1 : this.clock.getInterpolationAlpha();
     const presentMs = paused ? 0 : delta;
@@ -276,8 +284,10 @@ export class WorldScene extends Phaser.Scene {
         trackOffset: TANK.trackOffset,
       });
     }
+    measurements?.mark('vehicles');
     this.arena.update(presentMs);
     this.effects.update(this.sim.projectiles, alpha, presentMs);
+    measurements?.mark('effects');
 
     const aiming = !paused && this.controls.aiming;
     if (aiming) {
@@ -297,11 +307,13 @@ export class WorldScene extends Phaser.Scene {
         time,
       );
     } else this.aimGuide.draw(null, time);
+    measurements?.mark('aim');
 
     const view = tankFrame(player.tank, alpha);
     this.camera.update(view.x, view.y, delta, paused);
     const rect = this.camera.model.visibleRect();
     this.environment.render(this.sim.vehicles, alpha, rect);
+    measurements?.mark('environmentCamera');
     this.hud.update(
       hudFrame(
         player.tank,
@@ -318,11 +330,18 @@ export class WorldScene extends Phaser.Scene {
     diagnostics?.setCount('weatherParticles', this.environment.counts.particles);
     diagnostics?.setCount('weatherSurfaceCells', this.environment.counts.surfaceCells);
     diagnostics?.endFrame();
-    this.services?.measurements?.frame(
+    measurements?.mark('hudDiagnostics');
+    measurements?.frame(
       performance.now(),
       paused,
-      this.services.settings.get().quality,
+      this.quality.getLevel(),
       this.sim.projectiles.count,
+      {
+        scenario: this.scenarios.scenario,
+        seed: this.scenarios.currentSeed,
+        weather: this.environment.climate.kind,
+        season: this.environment.climate.season,
+      },
     );
   }
 }

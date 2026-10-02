@@ -23,6 +23,13 @@ export class ScenarioRunner {
 
   constructor(private readonly sim: Simulation) {}
 
+  get scenario(): ScenarioId {
+    return this.mode;
+  }
+  get currentSeed(): number {
+    return this.seed;
+  }
+
   select(mode: ScenarioId, seed: number): void {
     if (this.mode === mode && this.seed === seed) return;
     this.clear();

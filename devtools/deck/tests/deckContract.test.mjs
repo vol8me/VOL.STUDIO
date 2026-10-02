@@ -386,9 +386,15 @@ test('kare penceresi baglami ve izinli sayisal yuk metrikleri raporda kalir', ()
     start: 100,
     end: 200,
     p99: 23,
+    quality: 'low',
+    scenario: 'sandbox',
+    seed: 731,
+    weather: 'rain',
+    season: 'spring',
     metrics: {
       enemies: { min: 10, max: 20, avg: 15, samples: 30 },
       updateMs: { min: 1, max: 5, avg: 3, samples: 30 },
+      'cpuMs.simulation': { min: 1, max: 4, avg: 2, samples: 30 },
       scenarioEnemies: { min: 10, max: 20, avg: 15, samples: 30 },
       scenarioSeed: { min: 42, max: 42, avg: 42, samples: 30 },
       SteamAppId: { min: 123, max: 123 },
@@ -396,12 +402,20 @@ test('kare penceresi baglami ve izinli sayisal yuk metrikleri raporda kalir', ()
   });
   const record = JSON.parse(sanitizeReport(line));
   assert.equal(record.phase, 'loading');
+  assert.equal(record.scenario, 'sandbox');
+  assert.equal(record.quality, 'low');
+  assert.equal(record.weather, 'rain');
+  assert.equal(record.season, 'spring');
+  assert.equal(record.seed, 731);
+  assert.equal(record.metrics['cpuMs.simulation'].avg, 2);
   assert.deepEqual(record.metrics.enemies, { min: 10, max: 20, avg: 15, samples: 30 });
   assert.deepEqual(record.metrics.updateMs, { min: 1, max: 5, avg: 3, samples: 30 });
   assert.equal(record.metrics.scenarioEnemies.avg, 15);
   assert.equal(record.metrics.scenarioSeed.avg, 42);
   assert.equal(record.metrics.SteamAppId, undefined);
   const summary = summarizeReport([JSON.stringify(record)]);
+  assert.equal(summary.phases[0].scenario, 'sandbox');
+  assert.equal(summary.phases[0].quality, 'low');
   assert.equal(summary.phases[0].p99, 23);
   assert.equal(summary.phases[0].start, 100);
   assert.deepEqual(summary.phases[0].metrics.enemies, record.metrics.enemies);
