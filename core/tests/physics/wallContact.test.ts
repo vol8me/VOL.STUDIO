@@ -83,3 +83,85 @@ describe('resolveWallContacts', () => {
     expect(contact.normalY).toBe(1);
   });
 });
+
+describe('resolveWallContacts giriş bariyeri', () => {
+  it('bozuk şekil cismi ve çıktı tamponunu değiştirmez', () => {
+    for (const patch of [
+      { halfLength: NaN },
+      { halfWidth: -1 },
+      { restitution: Infinity },
+      { restitution: 1.1 },
+      { friction: -1 },
+    ]) {
+      const subject = body(-1, 0);
+      subject.vx = -10;
+      const before = { ...subject },
+        out = { ...createContact(), speed: 7 };
+      expect(() =>
+        resolveWallContacts(subject, [{ nx: 1, ny: 0, offset: 0 }], { ...shape(), ...patch }, out),
+      ).toThrow(RangeError);
+      expect({ ...subject }).toEqual(before);
+      expect(out.speed).toBe(7);
+    }
+  });
+});
+
+describe('resolveWallContacts atomik hata sınırı', () => {
+  it('sonlu hız sekme hesabında taşınca cisim ve çıktı korunur', () => {
+    const subject = body(0, 0);
+    subject.vx = -1e308;
+    const before = { ...subject };
+    const out = { speed: 7, x: 3, y: 4, normalX: 1, normalY: 0 };
+    const beforeOut = { ...out };
+    expect(() =>
+      resolveWallContacts(subject, [{ nx: 1, ny: 0, offset: 0 }], shape(1, 0), out),
+    ).toThrow(RangeError);
+    expect({ ...subject }).toEqual(before);
+    expect(out).toEqual(beforeOut);
+  });
+
+  it.each([
+    { nx: NaN, ny: 0, offset: 0 },
+    { nx: 0, ny: 0, offset: 0 },
+    { nx: 2, ny: 0, offset: 0 },
+    { nx: 1, ny: Infinity, offset: 0 },
+    { nx: 1, ny: 0, offset: Infinity },
+  ])('geçersiz ikinci duvar ilk temastan önce reddedilir: %s', (wall) => {
+    const subject = body(0, 0);
+    subject.vx = -10;
+    const before = { ...subject };
+    const out = { ...createContact(), speed: 7 };
+    expect(() =>
+      resolveWallContacts(subject, [{ nx: 1, ny: 0, offset: 0 }, wall], shape(), out),
+    ).toThrow(RangeError);
+    expect({ ...subject }).toEqual(before);
+    expect(out.speed).toBe(7);
+  });
+
+  it.each(['x', 'y', 'vx', 'vy', 'angle', 'angularVelocity'] as const)(
+    'doğrudan bozulan public %s alanını değişiklikten önce reddeder',
+    (field) => {
+      const subject = body(0, 0);
+      subject[field] = Infinity;
+      const before = { ...subject };
+      const out = { ...createContact(), speed: 7 };
+      expect(() =>
+        resolveWallContacts(subject, [{ nx: 1, ny: 0, offset: 0 }], shape(), out),
+      ).toThrow(RangeError);
+      expect({ ...subject }).toEqual(before);
+      expect(out.speed).toBe(7);
+    },
+  );
+});
+
+it('sonlu duvar izdüşümü taşınca ayrılan cismi taşmış konumda bırakmaz', () => {
+  const subject = body(1e308, 0);
+  subject.vx = -10;
+  const before = { ...subject },
+    out = { ...createContact(), speed: 7 };
+  expect(() =>
+    resolveWallContacts(subject, [{ nx: -1, ny: 0, offset: 1e308 }], shape(), out),
+  ).toThrow(RangeError);
+  expect({ ...subject }).toEqual(before);
+  expect(out.speed).toBe(7);
+});

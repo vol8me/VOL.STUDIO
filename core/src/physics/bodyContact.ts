@@ -1,6 +1,7 @@
 import { clamp } from '../math/interpolation';
 import type { RigidBody } from './RigidBody';
 import type { Contact, ContactShape } from './wallContact';
+import { requireFinitePhysics, validateBodyState, validateContactShape } from './validation';
 
 interface Corner {
   x: number;
@@ -53,6 +54,68 @@ export function resolveBodyContact(
   shapeB: ContactShape,
   out: Contact,
 ): Contact {
+  validateContactShape(shapeA);
+  validateContactShape(shapeB);
+  validateBodyState(a);
+  validateBodyState(b);
+  const ax = a.x,
+    ay = a.y,
+    avx = a.vx,
+    avy = a.vy,
+    aa = a.angle,
+    aw = a.angularVelocity;
+  const bx = b.x,
+    by = b.y,
+    bvx = b.vx,
+    bvy = b.vy,
+    ba = b.angle,
+    bw = b.angularVelocity;
+  const speed = out.speed,
+    x = out.x,
+    y = out.y,
+    nx = out.normalX,
+    ny = out.normalY;
+  try {
+    resolveContact(a, shapeA, b, shapeB, out);
+    validateBodyState(a);
+    validateBodyState(b);
+    requireFinitePhysics(out.speed, 'Temas hızı');
+    if (out.speed > 0) {
+      requireFinitePhysics(out.x, 'Temas x');
+      requireFinitePhysics(out.y, 'Temas y');
+      requireFinitePhysics(out.normalX, 'Temas normalX');
+      requireFinitePhysics(out.normalY, 'Temas normalY');
+    }
+    return out;
+  } catch (error) {
+    a.x = ax;
+    a.y = ay;
+    a.vx = avx;
+    a.vy = avy;
+    a.angle = aa;
+    a.angularVelocity = aw;
+    b.x = bx;
+    b.y = by;
+    b.vx = bvx;
+    b.vy = bvy;
+    b.angle = ba;
+    b.angularVelocity = bw;
+    out.speed = speed;
+    out.x = x;
+    out.y = y;
+    out.normalX = nx;
+    out.normalY = ny;
+    throw error;
+  }
+}
+
+function resolveContact(
+  a: RigidBody,
+  shapeA: ContactShape,
+  b: RigidBody,
+  shapeB: ContactShape,
+  out: Contact,
+): Contact {
   out.speed = 0;
   const cornersA = corners(a, shapeA, scratchA);
   const cornersB = corners(b, shapeB, scratchB);
@@ -69,12 +132,13 @@ export function resolveBodyContact(
   for (const [ax, ay] of axes) {
     const [minA, maxA] = project(cornersA, ax, ay);
     const [minB, maxB] = project(cornersB, ax, ay);
-    const depth = Math.min(maxA, maxB) - Math.max(minA, minB);
-    if (depth <= 0) return out;
+    if (maxA <= minB || maxB <= minA) return out;
+    const towardPositive = maxA - minB;
+    const towardNegative = maxB - minA;
+    const depth = Math.min(towardPositive, towardNegative);
     if (depth < overlap) {
       overlap = depth;
-      // Normal A'dan B'ye bakar.
-      const direction = (b.x - a.x) * ax + (b.y - a.y) * ay >= 0 ? 1 : -1;
+      const direction = towardPositive <= towardNegative ? 1 : -1;
       normalX = ax * direction;
       normalY = ay * direction;
     }

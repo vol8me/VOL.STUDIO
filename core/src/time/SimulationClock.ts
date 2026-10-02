@@ -1,139 +1,174 @@
-/**
- * `stepIndex` bir RENDER FRAME içindeki sıradır, her frame'de 0'dan başlar.
- *
- * Girdi anlık görüntüsü frame başına BİR kez okunur ve tüm adımlara aynı nesne
- * verilir. KENAR tetikli bir eylem böylece N adım boyunca `true` kalır ve tek
- * basış N kez tetiklenir; N düşük FPS'te büyür. Böyle bir eylem eklendiğinde
- * `stepIndex === 0` koşulu yazılır.
- */
-export type SimulationStep = (stepMs: number, stepIndex: number) => void;
+/** `stepIndex` kare içinde sıfırdan, `tickId` koşu içinde birden başlar. */
+export type SimulationStep = (stepMs: number, stepIndex: number, tickId: number) => void;
 
-/**
- * Sabit adıma sığmayan ARTIK dilim ne olsun? Saatin tek sözleşme kararı.
- *
- * - `'simulate'` — artık değişken bir adım olarak koşulur; girdi tepkisi
- *   ertelenmez ama aynı girdi farklı render hızında FARKLI sonuç verir.
- * - `'defer'` — artık biriktiricide bekler, yalnız tam adım ilerler; tempodan
- *   bağımsız aynı sonuç, karşılığında bir adımlık gecikme ve render'da
- *   `getInterpolationAlpha()` ihtiyacı.
- *
- * Ölçüm ya da tekrar oynatma `'defer'`, oynanan sahne `'simulate'` ister.
- */
+/** `defer` sabit tick, `simulate` ilk tam tick oluşmadığında kısmi adım üretir. */
 export type PartialStepPolicy = 'simulate' | 'defer';
 
 export interface SimulationClockConfig {
-  /** Sabit simülasyon adımı (ms). */
   readonly fixedStepMs: number;
-  /** Tek render frame'inde yapılabilecek azami sabit adım sayısı. */
   readonly maxStepsPerFrame: number;
-  /** Varsayılan `'simulate'`; strict davranış için `'defer'`. */
   readonly partialStep?: PartialStepPolicy;
 }
 
-/** Bir frame'de gerçekten ne olduğunu anlatan ölçüm — teşhis ve test için. */
-export interface SimulationClockFrame {
-  /** Tam `fixedStepMs` uzunluğunda kaç adım koşuldu. */
-  readonly fixedSteps: number;
-  /** Artık dilim simüle edildiyse süresi; `'defer'` kipinde her zaman 0. */
-  readonly partialStepMs: number;
-  /** Catch-up sınırına takılıp ATILAN simülasyon zamanı (ms). */
-  readonly droppedMs: number;
+export interface SimulationClockAdvanceOptions {
+  /** Dış kelepçenin kabul ettiği süre; ham süre ayrıca muhasebede kalır. */
+  readonly acceptedDeltaMs?: number;
+  readonly paused?: boolean;
 }
 
-/**
- * Render frame süresini simülasyon adımlarına çeviren biriktirici. Adımlama
- * politikası (catch-up, artık dilim, üst sınır) Phaser kurmadan sürülebilir ve
- * `SimulationClockFrame` her frame'de neyin atıldığını RAPOR eder.
- *
- * Determinizm bir SEÇİMDİR: artık dilimin ne olacağı `partialStep` ile açıkça
- * verilir (bkz. `PartialStepPolicy`).
- */
+export interface SimulationClockFrame {
+  readonly fixedSteps: number;
+  readonly partialStepMs: number;
+  /** Sonlu, negatif olmayan ham süre; geçersiz delta sıfırdır. */
+  readonly rawDeltaMs: number;
+  readonly acceptedDeltaMs: number;
+  readonly simulatedMs: number;
+  readonly accumulatorBeforeMs: number;
+  readonly accumulatorMs: number;
+  /** Dış kelepçe, duraklatma ve catch-up sınırının toplamı. */
+  readonly droppedMs: number;
+  readonly tickStart: number;
+  readonly tickEnd: number;
+}
+
 export class SimulationClock {
   private accumulatorMs = 0;
   private simulationTimeMs = 0;
-  private stepIndexInFrame = 0;
-
+  private tickId = 0;
+  private advancing = false;
+  private readonly config: SimulationClockConfig;
   private readonly partialStepPolicy: PartialStepPolicy;
 
-  constructor(private readonly config: SimulationClockConfig) {
+  constructor(config: SimulationClockConfig) {
+    if (!Number.isFinite(config.fixedStepMs) || config.fixedStepMs <= 0)
+      throw new RangeError('SimulationClock: fixedStepMs pozitif ve sonlu olmalı');
+    if (!Number.isSafeInteger(config.maxStepsPerFrame) || config.maxStepsPerFrame <= 0)
+      throw new RangeError('SimulationClock: maxStepsPerFrame pozitif tam sayı olmalı');
+    this.config = { ...config };
     this.partialStepPolicy = config.partialStep ?? 'simulate';
   }
 
-  /** Yürürlükteki artık dilim politikası. */
   getPartialStepPolicy(): PartialStepPolicy {
     return this.partialStepPolicy;
   }
 
-  /**
-   * Bir sonraki sabit adıma ne kadar yaklaşıldığı: [0, 1).
-   *
-   * `'defer'` kipinde render, simülasyondan geride kalan bu payı kullanarak
-   * ÖNCEKİ ve GÜNCEL durum arasında ara değer hesaplar; aksi halde sabit adım
-   * render hızından yavaşken görüntü kesik kesik ilerler. `'simulate'` kipinde
-   * artık zaten simüle edildiği için değer sıfıra yakın kalır.
-   */
   getInterpolationAlpha(): number {
-    const fixedStep = this.config.fixedStepMs;
-    if (!(fixedStep > 0) || !Number.isFinite(fixedStep)) return 0;
-    return Math.min(0.999999, Math.max(0, this.accumulatorMs / fixedStep));
+    return Math.min(0.999999, Math.max(0, this.accumulatorMs / this.config.fixedStepMs));
   }
 
-  /** Simülasyonun başından beri geçen süre (ms) — koşu içi mantık saati. */
   getSimulationTimeMs(): number {
     return this.simulationTimeMs;
   }
 
-  /** Henüz adıma dönüşmemiş artık süre (ms). */
   getAccumulatorMs(): number {
     return this.accumulatorMs;
   }
 
-  /** Yeni koşu / sahne yeniden başlatma. */
   reset(): void {
+    this.assertNotAdvancing();
     this.accumulatorMs = 0;
     this.simulationTimeMs = 0;
+    this.tickId = 0;
   }
 
-  /** @param realDeltaMs Ölçülmüş frame süresi; çağıran tarafından temizlenmiş olmalı. */
-  advance(realDeltaMs: number, step: SimulationStep): SimulationClockFrame {
+  advance(
+    realDeltaMs: number,
+    step: SimulationStep,
+    options: SimulationClockAdvanceOptions = {},
+  ): SimulationClockFrame {
+    this.assertNotAdvancing();
+    this.advancing = true;
+    try {
+      return this.advanceFrame(realDeltaMs, step, options);
+    } finally {
+      this.advancing = false;
+    }
+  }
+
+  private advanceFrame(
+    realDeltaMs: number,
+    step: SimulationStep,
+    options: SimulationClockAdvanceOptions,
+  ): SimulationClockFrame {
+    const rawDeltaMs = this.cleanDelta(realDeltaMs);
+    const acceptedDeltaMs = options.paused
+      ? 0
+      : Math.min(rawDeltaMs, this.cleanDelta(options.acceptedDeltaMs ?? rawDeltaMs));
+    const accumulatorBeforeMs = this.accumulatorMs;
+    const tickStart = this.tickId;
     const fixedStep = this.config.fixedStepMs;
-    if (!(fixedStep > 0) || !Number.isFinite(fixedStep)) {
-      return { fixedSteps: 0, partialStepMs: 0, droppedMs: 0 };
+    const accumulatorMs = this.accumulatorMs + acceptedDeltaMs;
+    const plannedSteps = options.paused
+      ? 0
+      : Math.min(Math.floor(accumulatorMs / fixedStep), this.config.maxStepsPerFrame);
+    const plannedMs =
+      !options.paused && this.partialStepPolicy === 'simulate' && plannedSteps === 0
+        ? accumulatorMs
+        : plannedSteps * fixedStep;
+    const plannedTicks = plannedSteps + (plannedMs > 0 && plannedSteps === 0 ? 1 : 0);
+    const plannedDrop =
+      rawDeltaMs -
+      acceptedDeltaMs +
+      (plannedSteps === this.config.maxStepsPerFrame ? accumulatorMs - plannedMs : 0);
+    if (
+      !Number.isFinite(accumulatorMs) ||
+      !Number.isFinite(this.simulationTimeMs + plannedMs) ||
+      !Number.isFinite(plannedDrop) ||
+      !Number.isSafeInteger(this.tickId + plannedTicks)
+    ) {
+      throw new RangeError('SimulationClock: süre veya tick hesabı taşamaz');
     }
-
-    this.stepIndexInFrame = 0;
-    this.accumulatorMs += Number.isFinite(realDeltaMs) ? Math.max(0, realDeltaMs) : 0;
-
+    this.accumulatorMs = accumulatorMs;
     let fixedSteps = 0;
-    while (this.accumulatorMs >= fixedStep && fixedSteps < this.config.maxStepsPerFrame) {
-      this.runStep(fixedStep, step);
-      this.accumulatorMs -= fixedStep;
-      fixedSteps++;
-    }
-
-    // `'simulate'`: kalan dilim de simüle edilir, girdi tepkisi ertelenmez.
-    // `'defer'`: artık biriktiricide bekler.
     let partialStepMs = 0;
-    if (this.partialStepPolicy === 'simulate' && fixedSteps === 0 && this.accumulatorMs > 0) {
-      partialStepMs = this.accumulatorMs;
-      this.runStep(partialStepMs, step);
-      this.accumulatorMs = 0;
+    let droppedMs = rawDeltaMs - acceptedDeltaMs;
+    if (!options.paused) {
+      while (this.accumulatorMs >= fixedStep && fixedSteps < this.config.maxStepsPerFrame) {
+        this.runStep(fixedStep, fixedSteps, step);
+        fixedSteps++;
+      }
+      if (this.partialStepPolicy === 'simulate' && fixedSteps === 0 && this.accumulatorMs > 0) {
+        partialStepMs = this.accumulatorMs;
+        this.runStep(partialStepMs, 0, step);
+      }
+      if (fixedSteps >= this.config.maxStepsPerFrame && this.accumulatorMs >= fixedStep) {
+        const remainder = this.accumulatorMs % fixedStep;
+        droppedMs += this.accumulatorMs - remainder;
+        this.accumulatorMs = remainder;
+      }
     }
-
-    // Sekme dönüşü gibi devasa delta sınırsız catch-up'a dönüşmesin: fazlalık
-    // ATILIR ve raporlanır.
-    let droppedMs = 0;
-    if (fixedSteps >= this.config.maxStepsPerFrame && this.accumulatorMs >= fixedStep) {
-      const remainder = this.accumulatorMs % fixedStep;
-      droppedMs = this.accumulatorMs - remainder;
-      this.accumulatorMs = remainder;
-    }
-
-    return { fixedSteps, partialStepMs, droppedMs };
+    return {
+      fixedSteps,
+      partialStepMs,
+      rawDeltaMs,
+      acceptedDeltaMs,
+      simulatedMs: fixedSteps * fixedStep + partialStepMs,
+      accumulatorBeforeMs,
+      accumulatorMs: this.accumulatorMs,
+      droppedMs,
+      tickStart,
+      tickEnd: this.tickId,
+    };
   }
 
-  private runStep(stepMs: number, step: SimulationStep): void {
-    this.simulationTimeMs += stepMs;
-    step(stepMs, this.stepIndexInFrame++);
+  private runStep(stepMs: number, stepIndex: number, step: SimulationStep): void {
+    const timeMs = this.simulationTimeMs + stepMs;
+    const tickId = this.tickId + 1;
+    if (!Number.isFinite(timeMs) || !Number.isSafeInteger(tickId))
+      throw new RangeError('SimulationClock: süre veya tick hesabı taşamaz');
+    // Callback hatası dış dünyayı geri alamaz; saat yalnız başarılı adımı teslim eder.
+    step(stepMs, stepIndex, tickId);
+    this.simulationTimeMs = timeMs;
+    this.accumulatorMs -= stepMs;
+    this.tickId = tickId;
+  }
+
+  private cleanDelta(deltaMs: number): number {
+    return Number.isFinite(deltaMs) ? Math.max(0, deltaMs) : 0;
+  }
+
+  private assertNotAdvancing(): void {
+    if (this.advancing)
+      throw new Error('SimulationClock: advance sırasında yeniden giriş yapılamaz');
   }
 }

@@ -1,4 +1,5 @@
 import { wrapAngle } from '../math/angle';
+import { requireFinitePhysics, requirePositivePhysics } from './validation';
 
 /**
  * Düzlemde katı cisim: konum, yön, doğrusal ve açısal hız. Kuvvet ve itki
@@ -17,14 +18,18 @@ export class RigidBody {
     readonly mass: number,
     readonly inertia: number,
   ) {
-    if (!(mass > 0 && inertia > 0)) {
-      throw new RangeError(`Kütle ve eylemsizlik pozitif olmalı: ${mass}, ${inertia}`);
-    }
+    requirePositivePhysics(mass, 'Kütle');
+    requirePositivePhysics(inertia, 'Eylemsizlik');
   }
 
   /** Dikdörtgen levhanın eylemsizlik momenti: m (a² + b²) / 12. */
   static boxInertia(mass: number, length: number, width: number): number {
-    return (mass * (length * length + width * width)) / 12;
+    requirePositivePhysics(mass, 'Kütle');
+    requirePositivePhysics(length, 'Uzunluk');
+    requirePositivePhysics(width, 'Genişlik');
+    const inertia = (mass * (length * length + width * width)) / 12;
+    requirePositivePhysics(inertia, 'Eylemsizlik');
+    return inertia;
   }
 
   get speed(): number {
@@ -43,6 +48,9 @@ export class RigidBody {
 
   /** Durdurur ve verilen poza yerleştirir. */
   reset(x: number, y: number, angle: number): void {
+    requireFinitePhysics(x, 'x');
+    requireFinitePhysics(y, 'y');
+    requireFinitePhysics(angle, 'angle');
     this.x = x;
     this.y = y;
     this.vx = 0;
@@ -56,20 +64,48 @@ export class RigidBody {
    * merkezinden uzaksa cisim döner.
    */
   applyImpulse(jx: number, jy: number, atX = this.x, atY = this.y): void {
-    this.vx += jx / this.mass;
-    this.vy += jy / this.mass;
+    requireFinitePhysics(jx, 'jx');
+    requireFinitePhysics(jy, 'jy');
+    requireFinitePhysics(atX, 'atX');
+    requireFinitePhysics(atY, 'atY');
+    const vx = this.vx + jx / this.mass;
+    const vy = this.vy + jy / this.mass;
     const rx = atX - this.x;
     const ry = atY - this.y;
-    this.angularVelocity += (rx * jy - ry * jx) / this.inertia;
+    const angularVelocity = this.angularVelocity + (rx * jy - ry * jx) / this.inertia;
+    requireFinitePhysics(vx, 'vx');
+    requireFinitePhysics(vy, 'vy');
+    requireFinitePhysics(angularVelocity, 'angularVelocity');
+    this.vx = vx;
+    this.vy = vy;
+    this.angularVelocity = angularVelocity;
   }
 
   /** Dünya çerçevesinde kuvvet ve tork altında `dt` kadar ilerler. */
   integrate(forceX: number, forceY: number, torque: number, dt: number): void {
-    this.vx += (forceX / this.mass) * dt;
-    this.vy += (forceY / this.mass) * dt;
-    this.angularVelocity += (torque / this.inertia) * dt;
-    this.x += this.vx * dt;
-    this.y += this.vy * dt;
-    this.angle = wrapAngle(this.angle + this.angularVelocity * dt);
+    requireFinitePhysics(forceX, 'forceX');
+    requireFinitePhysics(forceY, 'forceY');
+    requireFinitePhysics(torque, 'torque');
+    requireFinitePhysics(dt, 'dt');
+    if (dt < 0) throw new RangeError('dt negatif olamaz');
+    if (dt === 0) return;
+    const vx = this.vx + (forceX / this.mass) * dt;
+    const vy = this.vy + (forceY / this.mass) * dt;
+    const angularVelocity = this.angularVelocity + (torque / this.inertia) * dt;
+    const x = this.x + vx * dt;
+    const y = this.y + vy * dt;
+    const angle = wrapAngle(this.angle + angularVelocity * dt);
+    requireFinitePhysics(vx, 'vx');
+    requireFinitePhysics(vy, 'vy');
+    requireFinitePhysics(angularVelocity, 'angularVelocity');
+    requireFinitePhysics(x, 'x');
+    requireFinitePhysics(y, 'y');
+    requireFinitePhysics(angle, 'angle');
+    this.vx = vx;
+    this.vy = vy;
+    this.angularVelocity = angularVelocity;
+    this.x = x;
+    this.y = y;
+    this.angle = angle;
   }
 }

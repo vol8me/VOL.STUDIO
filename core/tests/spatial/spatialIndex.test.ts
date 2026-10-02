@@ -222,13 +222,13 @@ describe('SpatialIndex', () => {
       expect(index.queryRadius(0, 0, 130)).toContain(corner);
     });
 
-    it('queryRadius geçersiz yarıçapta boş döner', () => {
+    it('queryRadius sıfır yarıçapta boş döner, bozuk yarıçapı reddeder', () => {
       const index = new SpatialIndex<Unit>(50);
       index.insert(unit(10, 10));
 
       expect(index.queryRadius(0, 0, 0)).toEqual([]);
-      expect(index.queryRadius(0, 0, -5)).toEqual([]);
-      expect(index.queryRadius(0, 0, NaN)).toEqual([]);
+      expect(() => index.queryRadius(0, 0, -5)).toThrow(RangeError);
+      expect(() => index.queryRadius(0, 0, NaN)).toThrow(RangeError);
     });
 
     it('queryRadius pasif varlıkları eler', () => {
@@ -357,12 +357,12 @@ describe('SpatialIndex', () => {
       expect(mine.length).toBeGreaterThan(1);
     });
 
-    it('queryRadiusInto geçersiz yarıçapta boş dizi döner', () => {
+    it('queryRadiusInto geçersiz yarıçapı reddeder', () => {
       const index = seeded();
       const mine: Unit[] = [unit(9, 9)];
 
-      expect(index.queryRadiusInto(mine, 0, 0, -1)).toEqual([]);
-      expect(index.queryRadiusInto(mine, 0, 0, NaN)).toEqual([]);
+      expect(() => index.queryRadiusInto(mine, 0, 0, -1)).toThrow(RangeError);
+      expect(() => index.queryRadiusInto(mine, 0, 0, NaN)).toThrow(RangeError);
     });
 
     it('queryInto ile query AYNI sonucu verir', () => {
@@ -447,3 +447,54 @@ describe('SpatialIndex', () => {
 function byPosition(a: { x: number; y: number }, b: { x: number; y: number }): number {
   return a.x - b.x || a.y - b.y;
 }
+
+describe('SpatialIndex hücre alanı bariyeri', () => {
+  it('uzak iki boyutlu hücreyi tek anahtarda birleştirmez', () => {
+    const index = new SpatialIndex<Unit>(1);
+    const origin = unit(0, 0),
+      far = unit(1, -2_000_000);
+    index.insert(origin);
+    index.insert(far);
+    expect(index.getCellCount()).toBe(2);
+    expect(index.query(0, 0)).toEqual([origin]);
+    far.x = -5;
+    index.update(far);
+    expect(index.query(-5, -2_000_000)).toEqual([far]);
+    expect(index.remove(origin)).toBe(true);
+    expect(index.getCellCount()).toBe(1);
+  });
+  it('bozuk sorgu konumunu tamponu değiştirmeden reddeder', () => {
+    const index = new SpatialIndex<Unit>(1),
+      out = [unit(1, 1)];
+    for (const value of [NaN, Infinity, -Infinity, Number.MAX_VALUE]) {
+      expect(() => index.query(value, 0)).toThrow(RangeError);
+      expect(() => index.query(0, value)).toThrow(RangeError);
+      expect(() => index.queryInto(out, value, 0)).toThrow(RangeError);
+      expect(() => index.queryRadius(value, 0, 1)).toThrow(RangeError);
+      expect(() => index.queryRadiusInto(out, 0, value, 1)).toThrow(RangeError);
+      expect(() => index.queryBounds(value, 0, 1, 1)).toThrow(RangeError);
+    }
+    expect(out).toEqual([unit(1, 1)]);
+  });
+  it('güvensiz hücreyi reddeder, büyük güvenli alanı dolu hücrelerden sorgular', () => {
+    const index = new SpatialIndex<Unit>(1);
+    expect(() => index.insert(unit(Number.MAX_VALUE, 0))).toThrow(RangeError);
+    const center = unit(0, 0),
+      far = unit(1_000_000, 1_000_000);
+    index.insert(center);
+    index.insert(far);
+    expect(index.queryRadius(0, 0, 2_000_000)).toEqual([center, far]);
+    expect(index.queryBounds(-2_000_000, -2_000_000, 4_000_000, 4_000_000)).toEqual([center, far]);
+    expect(index.queryRadiusInto([], 0, 0, 2_000_000)).toEqual([center, far]);
+  });
+  it('bozuk boyutları ve hesaplanan hücre taşmasını reddeder', () => {
+    const index = new SpatialIndex<Unit>(1);
+    for (const value of [NaN, Infinity, -Infinity]) {
+      expect(() => index.queryBounds(0, 0, value, 1)).toThrow(RangeError);
+      expect(() => index.queryBounds(0, 0, 1, value)).toThrow(RangeError);
+      expect(() => index.queryRadius(0, 0, value)).toThrow(RangeError);
+    }
+    expect(() => index.queryBounds(Number.MAX_SAFE_INTEGER, 0, 2, 1)).toThrow(RangeError);
+    expect(() => index.queryRadius(Number.MAX_SAFE_INTEGER, 0, 2)).toThrow(RangeError);
+  });
+});

@@ -1,4 +1,4 @@
-import { isFiniteNumber, requireFinite } from '../math/numeric';
+import { requireFinite } from '../math/numeric';
 
 /** Uzamsal indekse girebilecek en az koşul: bir konum. */
 export interface SpatialEntity {
@@ -6,14 +6,15 @@ export interface SpatialEntity {
   y: number;
 }
 
-/** Negatif hücre indekslerini pozitife taşıyan offset. */
-const CELL_OFFSET = 1_000_000;
-/** Anahtar adımı — offset'in İKİ KATI olmalı ki cy terimi cx hanesine taşmasın. */
-const CELL_STRIDE = CELL_OFFSET * 2;
+interface SpatialCell<T> {
+  readonly column: number;
+  readonly row: number;
+  readonly entities: T[];
+}
 
 /**
  * Hücre bazlı uzamsal indeks — "yakınımda ne var?" sorusunu O(N)'den O(k)'ya
- * düşürür. Sorgu başına sıfır allocation çalışır (numeric key + yeniden
+ * düşürür. Sorgu başına sıfır allocation çalışır (iki boyutlu hücre kaydı + yeniden
  * kullanılan sonuç tamponları).
  *
  * **İki güncelleme modeli vardır ve ayrım bilinçlidir:**
@@ -29,9 +30,10 @@ const CELL_STRIDE = CELL_OFFSET * 2;
  * cezalandırırdı.
  */
 export class SpatialIndex<T extends SpatialEntity> {
-  private readonly cells = new Map<number, T[]>();
-  /** Varlık → içinde bulunduğu hücre anahtarı; artımlı güncelleme için. */
-  private readonly cellOf = new Map<T, number>();
+  private readonly cells = new Map<number, Map<number, SpatialCell<T>>>();
+  private cellCount = 0;
+  /** Varlık → içinde bulunduğu hücre; artımlı güncelleme için. */
+  private readonly cellOf = new Map<T, SpatialCell<T>>();
   /**
    * Yeniden kullanılan sonuç tamponları — iç içe `query` çağrılarında
    * birbirinin üzerine yazmaz. 4'lük halka, oyun mantığında görülebilecek
@@ -71,17 +73,17 @@ export class SpatialIndex<T extends SpatialEntity> {
     }
   }
 
-  /**
-   * Numeric key — string allocation yok. cx/cy negatif olabildiği için offset
-   * eklenir; çarpan offset'in İKİ KATI olmak zorunda, aksi halde cy terimi
-   * cx hanesine taşar ve `key(cx, cy) === key(cx + 1, cy - OFFSET)` olur.
-   */
-  private key(cx: number, cy: number): number {
-    return (cx + CELL_OFFSET) * CELL_STRIDE + (cy + CELL_OFFSET);
+  private coordinate(value: number): number {
+    if (!Number.isFinite(value)) throw new RangeError('SpatialIndex: konum sonlu olmalı');
+    const cell = Math.floor(value / this.cellSize);
+    this.requireCell(cell);
+    return cell;
   }
 
-  private cellKeyFor(entity: T): number {
-    return this.key(Math.floor(entity.x / this.cellSize), Math.floor(entity.y / this.cellSize));
+  private requireCell(cell: number): void {
+    if (!Number.isSafeInteger(cell)) {
+      throw new RangeError('SpatialIndex: hücre koordinatı güvenli bir tamsayı olmalı');
+    }
   }
 
   /**
@@ -91,31 +93,32 @@ export class SpatialIndex<T extends SpatialEntity> {
    * sayılır ama hiçbir hücreye düşmediği için hiçbir sorgu onu bulamazdı.
    */
   insert(entity: T): void {
-    if (!isFiniteNumber(entity.x) || !isFiniteNumber(entity.y)) {
-      throw new TypeError(
-        `SpatialIndex: varlık konumu sonlu olmalı (x=${String(entity.x)}, y=${String(entity.y)})`,
-      );
-    }
-
+    const column = this.coordinate(entity.x);
+    const row = this.coordinate(entity.y);
     const existing = this.cellOf.get(entity);
-    const target = this.cellKeyFor(entity);
-    if (existing === target) return;
-    if (existing !== undefined) this.removeFromCell(entity, existing);
+    if (existing?.column === column && existing.row === row) return;
+    if (existing) this.removeFromCell(entity, existing);
 
-    let cell = this.cells.get(target);
-    if (!cell) {
-      cell = [];
-      this.cells.set(target, cell);
+    let rows = this.cells.get(column);
+    if (!rows) {
+      rows = new Map();
+      this.cells.set(column, rows);
     }
-    cell.push(entity);
-    this.cellOf.set(entity, target);
+    let cell = rows.get(row);
+    if (!cell) {
+      cell = { column, row, entities: [] };
+      rows.set(row, cell);
+      this.cellCount++;
+    }
+    cell.entities.push(entity);
+    this.cellOf.set(entity, cell);
   }
 
   /** Varlığı indeksten çıkarır. Kayıtlı değilse `false`. */
   remove(entity: T): boolean {
-    const cellKey = this.cellOf.get(entity);
-    if (cellKey === undefined) return false;
-    this.removeFromCell(entity, cellKey);
+    const cell = this.cellOf.get(entity);
+    if (cell === undefined) return false;
+    this.removeFromCell(entity, cell);
     this.cellOf.delete(entity);
     return true;
   }
@@ -135,7 +138,9 @@ export class SpatialIndex<T extends SpatialEntity> {
    */
   update(entity: T): boolean {
     const existing = this.cellOf.get(entity);
-    if (existing !== undefined && existing === this.cellKeyFor(entity)) return false;
+    const column = this.coordinate(entity.x);
+    const row = this.coordinate(entity.y);
+    if (existing?.column === column && existing.row === row) return false;
     this.insert(entity);
     return true;
   }
@@ -188,6 +193,7 @@ export class SpatialIndex<T extends SpatialEntity> {
   clear(): void {
     this.cells.clear();
     this.cellOf.clear();
+    this.cellCount = 0;
   }
 
   /** İndekslenmiş varlık sayısı. */
@@ -197,7 +203,7 @@ export class SpatialIndex<T extends SpatialEntity> {
 
   /** Dolu hücre sayısı — teşhis için. */
   getCellCount(): number {
-    return this.cells.size;
+    return this.cellCount;
   }
 
   /**
@@ -210,24 +216,13 @@ export class SpatialIndex<T extends SpatialEntity> {
    * kadar hücre tarar.
    *
    * Dönen dizi YENİDEN KULLANILIR: bir sonraki sorguya kadar geçerlidir,
-   * saklanacaksa kopyalanmalıdır.
+   * saklanacaksa kopyalanmalıdır. Sonlu konum ve güvenli tamsayı hücre
+   * aralığı gerekir; geçersiz sorgu `RangeError` verir.
    */
   query(x: number, y: number): readonly T[] {
-    const cx = Math.floor(x / this.cellSize);
-    const cy = Math.floor(y / this.cellSize);
+    this.validateWindow(x, y, 1);
     const result = this.nextBuffer();
-
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        const cell = this.cells.get(this.key(cx + dx, cy + dy));
-        if (!cell) continue;
-        for (const entity of cell) {
-          if (this.isActive && !this.isActive(entity)) continue;
-          result.push(entity);
-        }
-      }
-    }
-
+    this.collectCells(result, x, y, 1);
     return result;
   }
 
@@ -241,29 +236,13 @@ export class SpatialIndex<T extends SpatialEntity> {
    * hata biçimidir. Burada taranacak hücre sayısı yarıçaptan HESAPLANIR.
    *
    * Sonuç yarıçapa göre de FİLTRELENİR: hücre penceresi kare, arama alanı
-   * dairedir; filtrelemeden köşelerdeki varlıklar da dönerdi.
+   * dairedir; filtrelemeden köşelerdeki varlıklar da dönerdi. Sıfır yarıçap
+   * boş sonuçtur; negatif veya sonlu olmayan yarıçap reddedilir.
    */
   queryRadius(x: number, y: number, radius: number): readonly T[] {
+    const span = this.radiusSpan(x, y, radius);
     const result = this.nextBuffer();
-    if (!(radius > 0) || !Number.isFinite(radius)) return result;
-
-    const span = Math.ceil(radius / this.cellSize);
-    const cx = Math.floor(x / this.cellSize);
-    const cy = Math.floor(y / this.cellSize);
-    const radiusSq = radius * radius;
-
-    for (let dx = -span; dx <= span; dx++) {
-      for (let dy = -span; dy <= span; dy++) {
-        const cell = this.cells.get(this.key(cx + dx, cy + dy));
-        if (!cell) continue;
-        for (const entity of cell) {
-          if (this.isActive && !this.isActive(entity)) continue;
-          const ex = entity.x - x;
-          const ey = entity.y - y;
-          if (ex * ex + ey * ey <= radiusSq) result.push(entity);
-        }
-      }
-    }
+    if (radius > 0) this.collectCells(result, x, y, span, radius);
     return result;
   }
 
@@ -275,30 +254,25 @@ export class SpatialIndex<T extends SpatialEntity> {
    * normalize edilir (sürükleyerek çizilen seçim kutusu her yöne açılabilir).
    */
   queryBounds(x: number, y: number, width: number, height: number): readonly T[] {
-    const result = this.nextBuffer();
-    if (!Number.isFinite(width) || !Number.isFinite(height)) return result;
-
+    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+      throw new RangeError('SpatialIndex: boyutlar sonlu olmalı');
+    }
     const minX = Math.min(x, x + width);
     const maxX = Math.max(x, x + width);
     const minY = Math.min(y, y + height);
     const maxY = Math.max(y, y + height);
-
-    const minCol = Math.floor(minX / this.cellSize);
-    const maxCol = Math.floor(maxX / this.cellSize);
-    const minRow = Math.floor(minY / this.cellSize);
-    const maxRow = Math.floor(maxY / this.cellSize);
-
-    for (let col = minCol; col <= maxCol; col++) {
-      for (let row = minRow; row <= maxRow; row++) {
-        const cell = this.cells.get(this.key(col, row));
-        if (!cell) continue;
-        for (const entity of cell) {
-          if (this.isActive && !this.isActive(entity)) continue;
-          if (entity.x < minX || entity.x > maxX || entity.y < minY || entity.y > maxY) continue;
-          result.push(entity);
-        }
-      }
+    const minCol = this.coordinate(minX);
+    const maxCol = this.coordinate(maxX);
+    const minRow = this.coordinate(minY);
+    const maxRow = this.coordinate(maxY);
+    const result = this.nextBuffer();
+    this.collectRange(result, minCol, maxCol, minRow, maxRow);
+    let count = 0;
+    for (const entity of result) {
+      if (entity.x < minX || entity.x > maxX || entity.y < minY || entity.y > maxY) continue;
+      result[count++] = entity;
     }
+    result.length = count;
     return result;
   }
 
@@ -369,6 +343,7 @@ export class SpatialIndex<T extends SpatialEntity> {
    * Dizi önce temizlenir ve geri döndürülür (zincirleme kullanım için).
    */
   queryInto(out: T[], x: number, y: number): T[] {
+    this.validateWindow(x, y, 1);
     out.length = 0;
     this.collectCells(out, x, y, 1);
     return out;
@@ -376,46 +351,93 @@ export class SpatialIndex<T extends SpatialEntity> {
 
   /** `queryRadius` ile aynı, sonucu çağıranın dizisine yazar. */
   queryRadiusInto(out: T[], x: number, y: number, radius: number): T[] {
+    const span = this.radiusSpan(x, y, radius);
     out.length = 0;
-    if (!isFiniteNumber(radius) || radius <= 0) return out;
-
-    const span = Math.ceil(radius / this.cellSize);
-    this.collectCells(out, x, y, span, radius * radius);
+    if (radius > 0) this.collectCells(out, x, y, span, radius);
     return out;
   }
 
-  /**
-   * Hücre penceresini tarayıp `out`a toplar.
-   *
-   * `radiusSq` verilirse sonuç daireye göre de filtrelenir: taranan pencere
-   * KARE, arama alanı DAİREdir.
-   */
-  private collectCells(out: T[], x: number, y: number, span: number, radiusSq?: number): void {
-    const cx = Math.floor(x / this.cellSize);
-    const cy = Math.floor(y / this.cellSize);
+  private radiusSpan(x: number, y: number, radius: number): number {
+    if (!Number.isFinite(radius) || radius < 0) {
+      throw new RangeError('SpatialIndex: yarıçap sonlu ve negatif olmayan bir sayı olmalı');
+    }
+    const span = Math.ceil(radius / this.cellSize);
+    this.validateWindow(x, y, span);
+    return span;
+  }
 
-    for (let dx = -span; dx <= span; dx++) {
-      for (let dy = -span; dy <= span; dy++) {
-        const cell = this.cells.get(this.key(cx + dx, cy + dy));
-        if (!cell) continue;
-        for (const entity of cell) {
-          if (this.isActive && !this.isActive(entity)) continue;
-          if (radiusSq !== undefined) {
-            const ex = entity.x - x;
-            const ey = entity.y - y;
-            if (ex * ex + ey * ey > radiusSq) continue;
-          }
-          out.push(entity);
+  private validateWindow(x: number, y: number, span: number): void {
+    const column = this.coordinate(x);
+    const row = this.coordinate(y);
+    this.requireCell(column - span);
+    this.requireCell(column + span);
+    this.requireCell(row - span);
+    this.requireCell(row + span);
+  }
+
+  private collectCells(out: T[], x: number, y: number, span: number, radius?: number): void {
+    const column = Math.floor(x / this.cellSize);
+    const row = Math.floor(y / this.cellSize);
+    const start = out.length;
+    this.collectRange(out, column - span, column + span, row - span, row + span);
+    if (radius === undefined) return;
+    const radiusSq = radius * radius;
+    let count = start;
+    for (let i = start; i < out.length; i++) {
+      const entity = out[i];
+      const dx = entity.x - x;
+      const dy = entity.y - y;
+      const inside = Number.isFinite(radiusSq)
+        ? dx * dx + dy * dy <= radiusSq
+        : Math.hypot(dx, dy) <= radius;
+      if (inside) out[count++] = entity;
+    }
+    out.length = count;
+  }
+
+  private collectRange(
+    out: T[],
+    minCol: number,
+    maxCol: number,
+    minRow: number,
+    maxRow: number,
+  ): void {
+    const area = (maxCol - minCol + 1) * (maxRow - minRow + 1);
+    // Seyrek ve geniş alan, boş hücre sayısına bağlı sınırsız tarama yapmaz.
+    if (area > Math.max(1024, this.cellCount * 4)) {
+      for (const rows of this.cells.values()) {
+        for (const cell of rows.values()) {
+          if (cell.column < minCol || cell.column > maxCol) continue;
+          if (cell.row >= minRow && cell.row <= maxRow) this.collectCell(out, cell);
         }
+      }
+      return;
+    }
+    for (let column = minCol; column <= maxCol; column++) {
+      const rows = this.cells.get(column);
+      if (!rows) continue;
+      for (let row = minRow; row <= maxRow; row++) {
+        const cell = rows.get(row);
+        if (cell) this.collectCell(out, cell);
       }
     }
   }
 
-  private removeFromCell(entity: T, cellKey: number): void {
-    const cell = this.cells.get(cellKey);
-    if (!cell) return;
-    const index = cell.indexOf(entity);
-    if (index >= 0) cell.splice(index, 1);
-    if (cell.length === 0) this.cells.delete(cellKey);
+  private collectCell(out: T[], cell: SpatialCell<T>): void {
+    for (const entity of cell.entities) {
+      if (this.isActive && !this.isActive(entity)) continue;
+      out.push(entity);
+    }
+  }
+
+  private removeFromCell(entity: T, cell: SpatialCell<T>): void {
+    const index = cell.entities.indexOf(entity);
+    if (index >= 0) cell.entities.splice(index, 1);
+    if (cell.entities.length === 0) {
+      const rows = this.cells.get(cell.column)!;
+      rows.delete(cell.row);
+      if (rows.size === 0) this.cells.delete(cell.column);
+      this.cellCount--;
+    }
   }
 }

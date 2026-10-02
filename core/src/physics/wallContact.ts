@@ -1,5 +1,6 @@
 import { clamp } from '../math/interpolation';
 import type { RigidBody } from './RigidBody';
+import { requireFinitePhysics, validateBodyState, validateContactShape } from './validation';
 
 /** Düz duvar: iç normali ve konumu. Nokta içerideyse `x·nx + y·ny - offset ≥ 0`. */
 export interface Wall {
@@ -47,6 +48,59 @@ const CORNERS: ReadonlyArray<readonly [number, number]> = [
  * çağrıdaki en yüksek normal hızlı çarpmadır.
  */
 export function resolveWallContacts(
+  body: RigidBody,
+  walls: readonly Wall[],
+  shape: ContactShape,
+  out: Contact,
+): Contact {
+  validateContactShape(shape);
+  validateBodyState(body);
+  for (const wall of walls) {
+    requireFinitePhysics(wall.nx, 'Duvar nx');
+    requireFinitePhysics(wall.ny, 'Duvar ny');
+    requireFinitePhysics(wall.offset, 'Duvar offset');
+    if (Math.abs(Math.hypot(wall.nx, wall.ny) - 1) > 1e-10)
+      throw new RangeError('Duvar normali birim vektör olmalı');
+  }
+  const bx = body.x,
+    by = body.y,
+    vx = body.vx,
+    vy = body.vy;
+  const angle = body.angle,
+    angularVelocity = body.angularVelocity;
+  const speed = out.speed,
+    x = out.x,
+    y = out.y,
+    nx = out.normalX,
+    ny = out.normalY;
+  try {
+    resolveContacts(body, walls, shape, out);
+    validateBodyState(body);
+    requireFinitePhysics(out.speed, 'Temas hızı');
+    if (out.speed > 0) {
+      requireFinitePhysics(out.x, 'Temas x');
+      requireFinitePhysics(out.y, 'Temas y');
+      requireFinitePhysics(out.normalX, 'Temas normalX');
+      requireFinitePhysics(out.normalY, 'Temas normalY');
+    }
+    return out;
+  } catch (error) {
+    body.x = bx;
+    body.y = by;
+    body.vx = vx;
+    body.vy = vy;
+    body.angle = angle;
+    body.angularVelocity = angularVelocity;
+    out.speed = speed;
+    out.x = x;
+    out.y = y;
+    out.normalX = nx;
+    out.normalY = ny;
+    throw error;
+  }
+}
+
+function resolveContacts(
   body: RigidBody,
   walls: readonly Wall[],
   shape: ContactShape,

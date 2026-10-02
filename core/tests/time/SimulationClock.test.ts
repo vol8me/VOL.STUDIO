@@ -120,14 +120,91 @@ describe('SimulationClock', () => {
     expect(clock.getSimulationTimeMs()).toBe(0);
   });
 
-  it('geçersiz sabit adım yapılandırmasında hiç adım koşmaz', () => {
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'geçersiz sabit adımı reddeder: %s',
+    (fixedStepMs) => {
+      expect(() => new SimulationClock({ fixedStepMs, maxStepsPerFrame: 8 })).toThrow(RangeError);
+    },
+  );
+
+  it.each([0, -1, 0.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'geçersiz catch-up sınırını reddeder: %s',
+    (maxStepsPerFrame) => {
+      expect(() => new SimulationClock({ fixedStepMs: 16, maxStepsPerFrame })).toThrow(RangeError);
+    },
+  );
+
+  it('yapılandırmayı kopyalar', () => {
+    const config = { fixedStepMs: 16, maxStepsPerFrame: 2 };
+    const clock = new SimulationClock(config);
+    config.fixedStepMs = 5000;
+    config.maxStepsPerFrame = 0;
     const steps: number[] = [];
-    const clock = new SimulationClock({ fixedStepMs: 0, maxStepsPerFrame: 8 });
+    expect(clock.advance(5000, (ms) => steps.push(ms)).fixedSteps).toBe(2);
+    expect(steps).toEqual([16, 16]);
+  });
 
-    const frame = clock.advance(100, (ms) => steps.push(ms));
+  it('başarısız tick zamanı ve kimliği yeniden yüklemez', () => {
+    const clock = new SimulationClock({
+      fixedStepMs: 16,
+      maxStepsPerFrame: 2,
+      partialStep: 'defer',
+    });
+    expect(() =>
+      clock.advance(32, () => {
+        throw new Error('tick');
+      }),
+    ).toThrow('tick');
+    expect(clock.getSimulationTimeMs()).toBe(0);
+    const ticks: number[] = [];
+    clock.advance(0, (_ms, _index, tickId) => ticks.push(tickId));
+    expect(clock.getSimulationTimeMs()).toBe(32);
+    expect(ticks).toEqual([1, 2]);
+  });
 
-    expect(frame).toEqual({ fixedSteps: 0, partialStepMs: 0, droppedMs: 0 });
-    expect(steps).toHaveLength(0);
+  it('callback içindeki reentry ve reset reddedilir', () => {
+    const { clock } = makeClock();
+    clock.advance(FIXED, () => {
+      expect(() => clock.advance(100, () => undefined)).toThrow(/advance/);
+      expect(() => clock.reset()).toThrow(/advance/);
+    });
+    expect(clock.getSimulationTimeMs()).toBe(FIXED);
+  });
+
+  it('ham, kabul, atılan ve biriken süreyi aynı muhasebede bildirir', () => {
+    const clock = new SimulationClock({
+      fixedStepMs: 16,
+      maxStepsPerFrame: 2,
+      partialStep: 'defer',
+    });
+    clock.advance(7, () => undefined);
+    const frame = clock.advance(5000, () => undefined, { acceptedDeltaMs: 100 });
+    expect(frame).toMatchObject({
+      rawDeltaMs: 5000,
+      acceptedDeltaMs: 100,
+      simulatedMs: 32,
+      accumulatorBeforeMs: 7,
+      accumulatorMs: 11,
+      droppedMs: 4964,
+      tickStart: 0,
+      tickEnd: 2,
+    });
+    expect(frame.accumulatorBeforeMs + frame.rawDeltaMs).toBe(
+      frame.simulatedMs + frame.accumulatorMs + frame.droppedMs,
+    );
+    expect(clock.advance(12, () => undefined, { paused: true })).toMatchObject({
+      acceptedDeltaMs: 0,
+      simulatedMs: 0,
+      droppedMs: 12,
+      accumulatorMs: 11,
+      tickEnd: 2,
+    });
+    expect(clock.advance(0, () => undefined)).toMatchObject({
+      simulatedMs: 0,
+      tickStart: 2,
+      tickEnd: 2,
+    });
+    expect(clock.advance(5, () => undefined)).toMatchObject({ tickStart: 2, tickEnd: 3 });
   });
 });
 
@@ -206,5 +283,101 @@ describe('artık dilim politikası', () => {
     clock.advance(4, () => undefined);
     expect(clock.getInterpolationAlpha()).toBeLessThan(1);
     expect(clock.getInterpolationAlpha()).toBeCloseTo(0, 6);
+  });
+});
+
+it('başarılı adımın ardından hata, yalnız başarısız zamanı yeniden bekletir', () => {
+  const clock = new SimulationClock({ fixedStepMs: 16, maxStepsPerFrame: 3, partialStep: 'defer' });
+  expect(() =>
+    clock.advance(48, (_ms, index) => {
+      if (index === 1) throw new Error('second');
+    }),
+  ).toThrow('second');
+  expect(clock.getSimulationTimeMs()).toBe(16);
+  expect(clock.getAccumulatorMs()).toBe(32);
+  const ticks: number[] = [];
+  expect(clock.advance(0, (_ms, _index, tick) => ticks.push(tick))).toMatchObject({
+    simulatedMs: 32,
+    tickStart: 1,
+    tickEnd: 3,
+  });
+  expect(ticks).toEqual([2, 3]);
+});
+
+it('kısmi adım hatasında da saat ve biriktirici korunur', () => {
+  const clock = new SimulationClock({ fixedStepMs: 16, maxStepsPerFrame: 1 });
+  expect(() =>
+    clock.advance(7, () => {
+      throw new Error('partial');
+    }),
+  ).toThrow('partial');
+  expect(clock.getSimulationTimeMs()).toBe(0);
+  expect(clock.advance(0, () => undefined)).toMatchObject({
+    partialStepMs: 7,
+    simulatedMs: 7,
+    tickStart: 0,
+    tickEnd: 1,
+  });
+});
+
+it.each([Number.NaN, Number.POSITIVE_INFINITY, -10])(
+  'geçersiz ham süre %s muhasebeye sıfır girer',
+  (delta) => {
+    const clock = new SimulationClock({
+      fixedStepMs: 16,
+      maxStepsPerFrame: 2,
+      partialStep: 'defer',
+    });
+    clock.advance(5, () => undefined);
+    expect(clock.advance(delta, () => undefined)).toMatchObject({
+      rawDeltaMs: 0,
+      acceptedDeltaMs: 0,
+      simulatedMs: 0,
+      accumulatorBeforeMs: 5,
+      accumulatorMs: 5,
+      droppedMs: 0,
+      tickStart: 0,
+      tickEnd: 0,
+    });
+  },
+);
+
+describe('SimulationClock taşma bariyeri', () => {
+  it('birikim taşmasını callback ve mutasyondan önce reddeder', () => {
+    const clock = new SimulationClock({
+      fixedStepMs: 1.5e308,
+      maxStepsPerFrame: 1,
+      partialStep: 'defer',
+    });
+    clock.advance(1e308, () => {});
+    let called = false;
+    expect(() =>
+      clock.advance(1e308, () => {
+        called = true;
+      }),
+    ).toThrow(RangeError);
+    expect(called).toBe(false);
+    expect(clock.getAccumulatorMs()).toBe(1e308);
+    expect(clock.getSimulationTimeMs()).toBe(0);
+    expect(clock.advance(5e307, () => {}).tickEnd).toBe(1);
+  });
+
+  it('koşu zamanı taşmasını callback ve mutasyondan önce reddeder', () => {
+    const clock = new SimulationClock({
+      fixedStepMs: 1e308,
+      maxStepsPerFrame: 1,
+      partialStep: 'defer',
+    });
+    clock.advance(1e308, () => {});
+    let called = false;
+    expect(() =>
+      clock.advance(1e308, () => {
+        called = true;
+      }),
+    ).toThrow(RangeError);
+    expect(called).toBe(false);
+    expect(clock.getAccumulatorMs()).toBe(0);
+    expect(clock.getSimulationTimeMs()).toBe(1e308);
+    expect(clock.advance(0, () => {}).tickEnd).toBe(1);
   });
 });
