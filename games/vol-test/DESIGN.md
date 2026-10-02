@@ -151,6 +151,11 @@ dokunmak kapatmaz. Uygulama arka plana geçince ve sistem uyuyunca duraklar.
 Uyanış kendiliğinden devam etmez. Tarayıcı tam ekranı CORE kontrolüyle,
 native pencere kipi platform servisiyle yönetilir.
 
+Native uyanış `GameServices.onResume` aboneliğinden Phaser'ın ortak ses
+bağlamına gider. `GameAudio` CORE `resumeAudioAfterWake` yordamını kullanır;
+aynı anda gelen çağrılar tek toparlanmayı paylaşır. Sökülmüş sahnenin sıradaki
+çağrısı yürütülmez; kapanmış bağlama yeniden kaynak kurulmaz.
+
 ## Kalite, kayıt ve platform ömrü
 
 `src/config/quality.ts` yüksek ve düşük efekt profillerini tanımlar.

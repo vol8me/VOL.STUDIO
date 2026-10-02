@@ -80,6 +80,29 @@ afterEach(() => {
 });
 
 describe('GameServices', () => {
+  it('uyanış aboneliğini mikro görev öncesinde kaldırırsa eski sahneyi çağırmaz', async () => {
+    Object.assign(bridge, {
+      platform: 'web',
+      session: 'web',
+      measure: false,
+      orientationError: false,
+    });
+    services = await GameServices.create();
+    const listener = vi.fn(() => Promise.resolve());
+    const remove = services.onResume(listener);
+    bridge.resume?.();
+    remove();
+    await Promise.resolve();
+    expect(listener).not.toHaveBeenCalled();
+    services.onResume(listener);
+    bridge.resume?.();
+    await Promise.resolve();
+    expect(listener).toHaveBeenCalledOnce();
+    bridge.resume?.();
+    services.dispose();
+    await Promise.resolve();
+    expect(listener).toHaveBeenCalledOnce();
+  });
   it('ölçüm tercihlerini kalıcı cihaz ayarlarından ayrı tutar', async () => {
     localStorage.clear();
     Object.assign(bridge, {

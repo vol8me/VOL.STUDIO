@@ -32,6 +32,24 @@ describe('GameAudio', () => {
     vi.unstubAllGlobals();
   });
 
+  it('uyanışta ortak ses bağlamını açar; çalışır, kapalı ve sökülmüş bağlama dokunmaz', async () => {
+    const resume = vi.fn(() => {
+      context.state = 'running';
+      return Promise.resolve();
+    });
+    Object.assign(context, { resume });
+    context.state = 'suspended';
+    await audio.resumeAfterWake();
+    expect(resume).toHaveBeenCalledOnce();
+    await audio.resumeAfterWake();
+    context.state = 'closed';
+    await audio.resumeAfterWake();
+    audio.dispose();
+    context.state = 'interrupted';
+    await audio.resumeAfterWake();
+    expect(resume).toHaveBeenCalledOnce();
+  });
+
   it('ses tercihini master kazancına yumuşatır ve susturur', () => {
     audio.setVolume(0.5);
     const bus = context.gains[0];

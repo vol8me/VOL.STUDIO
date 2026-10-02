@@ -197,7 +197,12 @@ export class WorldScene extends Phaser.Scene {
       }),
     );
 
-    if (this.services) this.scope.addSubscription(this.services.onPause(() => this.pause.pause()));
+    if (this.services) {
+      this.scope.addSubscription(this.services.onPause(() => this.pause.pause()));
+      this.scope.addSubscription(
+        this.services.onResume(() => this.audio?.resumeAfterWake() ?? Promise.resolve()),
+      );
+    }
     const onWheel = (_pointer: unknown, _objects: unknown, _dx: number, dy: number): void => {
       if (!this.pause.paused && dy !== 0) this.camera.model.zoomBy(-Math.sign(dy));
     };

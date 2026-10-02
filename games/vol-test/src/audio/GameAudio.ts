@@ -1,4 +1,5 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
+import { resumeAudioAfterWake } from '@volstudio/core';
 import { createRandom } from '@volstudio/core/random';
 import { SoundBank } from '@volstudio/core/audio/sfx';
 import { AUDIO } from '@/config/audio';
@@ -16,6 +17,7 @@ export class GameAudio {
   private paused = false;
   private released = false;
   private eventIndex = 0;
+  private waking: Promise<void> | null = null;
 
   constructor(
     private readonly context: AudioContext,
@@ -61,6 +63,16 @@ export class GameAudio {
 
   load(): Promise<void> {
     return this.bank.loadAll();
+  }
+
+  resumeAfterWake(): Promise<void> {
+    if (this.released) return Promise.resolve();
+    this.waking ??= resumeAudioAfterWake(this.context)
+      .then(() => undefined)
+      .finally(() => {
+        this.waking = null;
+      });
+    return this.waking;
   }
 
   async sync(vehicles: readonly Vehicle[], listener: AudioPosition): Promise<void> {

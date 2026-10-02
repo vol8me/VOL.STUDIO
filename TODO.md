@@ -103,6 +103,8 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ## Kapatılanlar
 
+- [x] VOL.TEST native uyanışta ortak ses bağlamını toparlar; sökülmüş sahne ve bağlam yaşam döngüsü regresyon testli, gerçek Deck uyku kabulü SD8'de açık.
+
 - [x] VOL.TEST çoklu araç çizimi ortak palet dokusu, ayrı namlu ışığı katmanı ve boş yayıcı görünürlüğüyle sınırlandı; yaşam döngüsü ve çizim sırası regresyon testli.
 
 - [x] VOL.TEST ölçüm seçimleri ilgisiz cihaz ayarı değişikliklerinde korunur; kalıcı tercihlerle karışmaz.

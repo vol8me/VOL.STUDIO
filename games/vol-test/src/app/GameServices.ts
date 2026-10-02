@@ -48,6 +48,7 @@ export class GameServices {
   readonly displayAvailable: boolean;
   private readonly scope = new DisposableScope();
   private readonly pauseListeners = new Set<() => void>();
+  private readonly resumeListeners = new Set<() => Promise<void>>();
   private released = false;
 
   private constructor(
@@ -134,6 +135,15 @@ export class GameServices {
           services.pause();
           services.measurements?.reset();
           services.diagnostics?.markResume();
+          for (const listener of services.resumeListeners) {
+            void Promise.resolve()
+              .then(() => {
+                if (!services.released && services.resumeListeners.has(listener)) return listener();
+              })
+              .catch((error: unknown) =>
+                console.warn('[VOL.TEST] Uyanış servisi toparlanamadı:', error),
+              );
+          }
         }),
       );
       if (platform !== 'web')
@@ -153,6 +163,11 @@ export class GameServices {
   onPause(listener: () => void): () => void {
     this.pauseListeners.add(listener);
     return () => this.pauseListeners.delete(listener);
+  }
+
+  onResume(listener: () => Promise<void>): () => void {
+    this.resumeListeners.add(listener);
+    return () => this.resumeListeners.delete(listener);
   }
 
   async setPaused(paused: boolean): Promise<void> {
@@ -181,6 +196,7 @@ export class GameServices {
     this.released = true;
     this.scope.dispose();
     this.pauseListeners.clear();
+    this.resumeListeners.clear();
     this.diagnostics?.destroy();
   }
 }
