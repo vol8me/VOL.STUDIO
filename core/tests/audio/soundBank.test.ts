@@ -88,6 +88,24 @@ describe('SoundBank', () => {
     );
   }
 
+  it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'geçersiz ses bütçesi %s kaynak kurmadan reddedilir',
+    (value) => {
+      for (const field of ['maxVoices', 'maxVoicesPerSound'] as const) {
+        expect(() => makeBank({ [field]: value })).toThrow();
+        expect(context.gains).toHaveLength(0);
+      }
+    },
+  );
+
+  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'geçersiz tekrar süresi %s kaynak kurmadan reddedilir',
+    (minRetriggerMs) => {
+      expect(() => makeBank({ minRetriggerMs })).toThrow();
+      expect(context.gains).toHaveLength(0);
+    },
+  );
+
   it('istekleri tek partide birleştirir ve ters tamamlanmada kaynak sırasını korur', async () => {
     const finish: Array<(response: Response) => void> = [];
     const buffers = [{} as AudioBuffer, {} as AudioBuffer];
@@ -290,5 +308,128 @@ describe('SoundBank', () => {
     expect(voiceGain.connect).toHaveBeenCalledWith(panner);
     bank.stopAll();
     expect(panner?.disconnect).toHaveBeenCalled();
+  });
+  describe('düğüm kurulumu hata yolları', () => {
+    async function loadedBank(): Promise<SoundBank> {
+      const bank = makeBank();
+      bank.register('shot', ['/shot.ogg']);
+      await bank.loadAll();
+      return bank;
+    }
+
+    function createdNodes() {
+      return [...context.sources, ...context.gains.slice(1), ...context.panners];
+    }
+
+    it('ses düğümü kurulmazsa hata yayılır ve bütçe bozulmaz', async () => {
+      const bank = await loadedBank();
+      context.createBufferSource = () => {
+        throw new Error('kaynak yok');
+      };
+
+      expect(() => bank.play('shot')).toThrow('kaynak yok');
+      context.createBufferSource = FakeContext.prototype.createBufferSource.bind(context);
+      expect(() => bank.play('shot')).not.toThrow();
+      bank.dispose();
+    });
+
+    it('kazanç düğümü kurulurken hata olursa edinilen kaynak sökülür', async () => {
+      const bank = await loadedBank();
+      context.createGain = () => {
+        throw new Error('kazanç yok');
+      };
+
+      expect(() => bank.play('shot')).toThrow('kazanç yok');
+      expect(context.sources[0]?.disconnect).toHaveBeenCalledTimes(1);
+      expect(context.panners).toHaveLength(0);
+      bank.dispose();
+    });
+
+    it('kaynak-kazanç bağlantısı kurulurken hata olursa iki düğüm de sökülür', async () => {
+      const bank = await loadedBank();
+      context.createBufferSource = () => {
+        const source = new FakeSource();
+        source.connect.mockImplementationOnce(() => {
+          throw new Error('bağlanamadı');
+        });
+        context.sources.push(source);
+        return source as unknown as AudioBufferSourceNode;
+      };
+
+      expect(() => bank.play('shot')).toThrow('bağlanamadı');
+      expect(context.sources[0]?.disconnect).toHaveBeenCalledTimes(1);
+      expect(context.gains[1]?.disconnect).toHaveBeenCalledTimes(1);
+      bank.dispose();
+    });
+
+    it('stereo panner bağlantısı yarıda kalırsa kaynak, kazanç ve panner sökülür', async () => {
+      const bank = await loadedBank();
+      context.createGain = () => {
+        const gain = new FakeGain();
+        gain.connect.mockImplementationOnce(() => {
+          throw new Error('panner bağlanamadı');
+        });
+        context.gains.push(gain);
+        return gain as unknown as GainNode;
+      };
+
+      expect(() => bank.play('shot', { pan: 0.5 })).toThrow('panner bağlanamadı');
+      expect(context.sources[0]?.disconnect).toHaveBeenCalledTimes(1);
+      expect(context.gains[1]?.disconnect).toHaveBeenCalledTimes(1);
+      expect(context.panners[0]?.disconnect).toHaveBeenCalledTimes(1);
+      bank.dispose();
+    });
+
+    it('bus bağlantısı kurulurken hata olursa kurulan bütün düğümler sökülür', () => {
+      context.createGain = () => {
+        const gain = new FakeGain();
+        gain.connect.mockImplementationOnce(() => {
+          throw new Error('bus yok');
+        });
+        context.gains.push(gain);
+        return gain as unknown as GainNode;
+      };
+
+      expect(() => makeBank()).toThrow('bus yok');
+      expect(context.gains[0]?.disconnect).toHaveBeenCalledTimes(1);
+    });
+
+    it('bir sesin sökümü hata verdiğinde diğer seslerin sökümü durmaz', async () => {
+      const bank = await loadedBank();
+      bank.play('shot');
+      bank.play('shot');
+      context.sources[0].disconnect.mockImplementationOnce(() => {
+        throw new Error('sökülemedi');
+      });
+
+      expect(() => bank.stopAll()).not.toThrow();
+      expect(context.sources[1]?.disconnect).toHaveBeenCalledTimes(1);
+      bank.dispose();
+    });
+
+    it('söküm hatası kalan düğümleri temizlemeyi bırakmaz', async () => {
+      const bank = await loadedBank();
+      bank.play('shot', { pan: 0.5 });
+      context.sources[0].disconnect.mockImplementationOnce(() => {
+        throw new Error('sökülemedi');
+      });
+
+      expect(() => bank.stopAll()).not.toThrow();
+      expect(context.gains[1]?.disconnect).toHaveBeenCalledTimes(1);
+      expect(context.panners[0]?.disconnect).toHaveBeenCalledTimes(1);
+      bank.dispose();
+    });
+
+    it('dispose iki kez çağrılsa da düğüm bırakmaz', async () => {
+      const bank = await loadedBank();
+      bank.play('shot', { pan: 0.5 });
+      const nodes = createdNodes();
+
+      bank.dispose();
+      bank.dispose();
+
+      expect(createdNodes()).toHaveLength(nodes.length);
+      for (const node of nodes) expect(node.disconnect).toHaveBeenCalled();
+    });
   });
 });

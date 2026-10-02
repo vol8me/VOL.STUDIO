@@ -115,6 +115,55 @@ describe('LoopBlend', () => {
     );
   }
 
+  it.each([-0.1, 1.1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'geçersiz katman konumu %s kaynak kurmadan reddedilir',
+    (at) => {
+      expect(() => make([{ url: '/layer.ogg', at }])).toThrow();
+      expect(context.gains).toHaveLength(0);
+    },
+  );
+
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'geçersiz yumuşatma %s kaynak kurmadan reddedilir',
+    (smoothingSeconds) => {
+      expect(
+        () =>
+          new LoopBlend(
+            context as unknown as AudioContext,
+            destination as unknown as AudioNode,
+            [{ url: '/layer.ogg', at: 0 }],
+            { smoothingSeconds },
+          ),
+      ).toThrow();
+      expect(context.gains).toHaveLength(0);
+    },
+  );
+
+  it('ikinci katmanın başlatılması reddedilince bütün sesleri kapatır ve yeniden denenebilir', async () => {
+    const blend = make();
+    await blend.load();
+    const createSource = context.createBufferSource.bind(context);
+    vi.spyOn(context, 'createBufferSource')
+      .mockImplementationOnce(createSource)
+      .mockImplementationOnce(() => {
+        const source = createSource();
+        context.sources[1].start.mockImplementationOnce(() => {
+          throw new Error('başlatılamadı');
+        });
+        return source;
+      });
+    expect(() => blend.start()).toThrow('başlatılamadı');
+    expect(blend.isPlaying).toBe(false);
+    for (const source of context.sources) {
+      expect(source.stop).toHaveBeenCalledTimes(1);
+      expect(source.disconnect).toHaveBeenCalledTimes(1);
+    }
+    blend.start();
+    expect(blend.isPlaying).toBe(true);
+    expect(context.sources).toHaveLength(4);
+    blend.dispose();
+  });
+
   it('istekleri tek partide birleştirir ve ters tamamlanmada kaynak sırasını korur', async () => {
     const finish: Array<(response: Response) => void> = [];
     const buffers = [{} as AudioBuffer, {} as AudioBuffer];
@@ -302,5 +351,101 @@ describe('LoopBlend', () => {
 
   it('boş katman listesi kurulmaz', () => {
     expect(() => make([])).toThrow(/LoopBlend/);
+  });
+  describe('düğüm yaşam döngüsü hata yolları', () => {
+    it('çıkış zinciri kurulurken hata olursa kurulan bütün düğümler sökülür', () => {
+      context.createGain = () => {
+        const gain = new FakeGain();
+        gain.connect.mockImplementationOnce(() => {
+          throw new Error('çıktı bağlanamadı');
+        });
+        context.gains.push(gain);
+        return gain as unknown as GainNode;
+      };
+
+      expect(() => make()).toThrow('çıktı bağlanamadı');
+      expect(context.gains[0]?.disconnect).toHaveBeenCalledTimes(1);
+      expect(context.panners[0]?.disconnect).toHaveBeenCalledTimes(1);
+    });
+
+    it('panner çıkışı kurulurken hata olursa çıktı ve panner birlikte sökülür', () => {
+      context.createStereoPanner = () => {
+        const panner = new FakePanner();
+        panner.connect.mockImplementationOnce(() => {
+          throw new Error('çıkış bağlanamadı');
+        });
+        context.panners.push(panner);
+        return panner as unknown as StereoPannerNode;
+      };
+
+      expect(() => make()).toThrow('çıkış bağlanamadı');
+      expect(context.gains[0]?.disconnect).toHaveBeenCalledTimes(1);
+      expect(context.panners[0]?.disconnect).toHaveBeenCalledTimes(1);
+    });
+
+    it('katman kazancı kurulurken hata olursa önceki katmanlar da sökülür', async () => {
+      const blend = make();
+      const createGain = context.createGain.bind(context);
+      let created = 0;
+      vi.spyOn(context, 'createGain').mockImplementation(() => {
+        if (created++ === 1) throw new Error('kazanç yok');
+        return createGain();
+      });
+
+      await expect(blend.load()).rejects.toThrow('kazanç yok');
+      expect(blend.loaded).toBe(false);
+      expect(context.gains[1]?.disconnect).toHaveBeenCalledTimes(1);
+      expect(context.sources).toHaveLength(0);
+    });
+
+    it('başlatma ikinci kaynağın bağlantısında kırılırsa ilk kaynak da durur', async () => {
+      const blend = make();
+      await blend.load();
+      vi.spyOn(context, 'createBufferSource').mockImplementationOnce(() => {
+        const source = new FakeSource();
+        source.connect.mockImplementationOnce(() => {
+          throw new Error('kaynak bağlanamadı');
+        });
+        context.sources.push(source);
+        return source as unknown as AudioBufferSourceNode;
+      });
+
+      expect(() => blend.start()).toThrow('kaynak bağlanamadı');
+      expect(blend.isPlaying).toBe(false);
+      for (const source of context.sources) {
+        expect(source.stop).toHaveBeenCalledTimes(1);
+        expect(source.disconnect).toHaveBeenCalledTimes(1);
+      }
+      blend.start();
+      expect(blend.isPlaying).toBe(true);
+      blend.dispose();
+    });
+
+    it('bir katmanın sökümü hata verdiğinde sonraki katmanlar sökülmeye devam eder', async () => {
+      const blend = make();
+      await blend.load();
+      blend.start();
+      context.sources[0].disconnect.mockImplementationOnce(() => {
+        throw new Error('sökülemedi');
+      });
+
+      expect(() => blend.stop()).not.toThrow();
+      expect(context.sources[1]?.stop).toHaveBeenCalledTimes(1);
+      expect(context.sources[1]?.disconnect).toHaveBeenCalledTimes(1);
+      blend.dispose();
+    });
+
+    it('söküm iki kez çağrılsa da düğüm bırakmaz', async () => {
+      const blend = make();
+      await blend.load();
+      blend.start();
+      blend.dispose();
+      const nodes = [...context.sources, ...context.gains, ...context.panners];
+
+      blend.dispose();
+
+      expect(context.sources).toHaveLength(2);
+      for (const node of nodes) expect(node.disconnect).toHaveBeenCalled();
+    });
   });
 });

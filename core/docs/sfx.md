@@ -31,3 +31,27 @@ katmanlara 0.25–4 aralığında ortak çarpanı uygular. Yüklenemeyen katman
 atlanır; kalanlarla karışım sürer. `stop` sonrası `start` son ayarları
 korur. Sahne kapanırken her banka ve döngü için `dispose` çağrılır;
 bekleyen indirmeler iptal edilir, yeni katman isteği ve düğüm kurulumu durur.
+
+## Düğüm kurulumu hata sözleşmesi
+
+Ses düğümleri bir bağlam üzerinde kurulur; kurulumun hangi adımda kırıldığı
+düğümün kime ait olduğunu belirlememelidir. `SoundBank.play` ve `LoopBlend`
+düğümleri **edinildikleri anda** sahipliğe alır: `createBufferSource`,
+`createGain`, `createStereoPanner` ve `connect` adımlarından biri fırlatırsa
+kurulmuş zincirin tamamı sökülür ve hata çağırana aynen iletilir. Ses yalnız
+`source.start()` geçtiğinde çalma sahipliğine (`SoundBank` voice, `LoopBlend`
+katman kaynağı) geçer; `start()` reddedilirse bütçe ve katman listesi eski
+durumunda kalır.
+
+Söküm de aynı sözleşmeyi paylaşır: bir düğümün `disconnect()` ya da `stop()`
+çağrısı fırlatırsa kalan düğümler yine sökülür (`DisposableScope` sırası ters
+çalışır ve hatayı yutar). Bu yüzden `stopAll`, `LoopBlend.stop` ve `dispose`
+çağrıları tek bir bozuk düğüm yüzünden yarım kalmaz; `dispose` ikinci kez
+çağrıldığında da ek düğüm bırakmaz.
+
+`LoopBlend.load` bir katman düğümü kurulamadığında **reddedilir**: çözülen
+katmanlara sahipsiz düğüm bırakmadan zinciri geri alır, `loaded` false kalır
+ve çağıran yeniden deneyebilir. Yalnız indirme/çözme hataları katman atlanarak
+telafi edilir; bağlam hatası sessizce yutulmaz. `SoundBank` da aynı ayrımı
+korur: çözemeyen varyant uyarıyla atlanır, düğüm kurulamayan ses hataya
+dönüşür.

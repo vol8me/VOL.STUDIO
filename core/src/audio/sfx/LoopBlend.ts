@@ -1,6 +1,7 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { StemLoader } from '../music/loader';
 import { clamp, clamp01 } from '../../math/interpolation';
-import { finiteOr } from '../../math/numeric';
+import { finiteOr, requireFinite } from '../../math/numeric';
 
 export interface LoopBlendLayer {
   readonly url: string;
@@ -28,6 +29,21 @@ interface LayerVoice {
 }
 
 const DEFAULT_SMOOTHING_SECONDS = 0.06;
+
+/** Düğümü `scope`'a bağlar; scope kapanırken bağlantısı sessizce çözülür. */
+function ownNode<T extends AudioNode>(scope: DisposableScope, node: T): T {
+  scope.add({ dispose: () => disconnectQuietly(node) });
+  return node;
+}
+
+/** Bozuk bir düğüm, diğerlerinin temizliğini durdurmaz. */
+function disconnectQuietly(node: AudioNode): void {
+  try {
+    node.disconnect();
+  } catch {
+    // Bkz. yukarıdaki açıklama.
+  }
+}
 
 /**
  * Eşit güçlü çapraz geçiş ağırlıkları. `level` iki komşu katmanın arasında
@@ -81,6 +97,10 @@ export class LoopBlend {
     options: LoopBlendOptions = {},
   ) {
     if (sources.length === 0) throw new Error('LoopBlend: en az bir katman gerekli');
+    for (const layer of sources) {
+      requireFinite(layer.at, 'LoopBlend at');
+      if (layer.at < 0 || layer.at > 1) throw new RangeError('LoopBlend at [0, 1] içinde olmalı');
+    }
     if (
       sources.some(
         (layer) => layer.pitch !== undefined && (!Number.isFinite(layer.pitch) || layer.pitch <= 0),
@@ -88,18 +108,36 @@ export class LoopBlend {
     ) {
       throw new Error('LoopBlend: pitch sonlu ve pozitif olmalı');
     }
+    this.smoothing = requireFinite(
+      options.smoothingSeconds ?? DEFAULT_SMOOTHING_SECONDS,
+      'LoopBlend smoothingSeconds',
+    );
+    if (this.smoothing <= 0) throw new RangeError('LoopBlend smoothingSeconds pozitif olmalı');
     this.loader = new StemLoader(context);
-    this.smoothing = Math.max(0.001, options.smoothingSeconds ?? DEFAULT_SMOOTHING_SECONDS);
-    this.output = context.createGain();
-    this.output.gain.value = 0;
-    this.panner =
-      typeof context.createStereoPanner === 'function' ? context.createStereoPanner() : null;
-    if (this.panner) {
-      this.output.connect(this.panner);
-      this.panner.connect(destination);
-    } else {
-      this.output.connect(destination);
+    // Çıkış zinciri kurulurken hata olursa yarım kalan düğümler sahipsiz
+    // kalmasın diye hepsi tek scope'ta toplanır.
+    const staging = new DisposableScope();
+    let output: GainNode;
+    let panner: StereoPannerNode | null;
+    try {
+      output = ownNode(staging, context.createGain());
+      output.gain.value = 0;
+      panner =
+        typeof context.createStereoPanner === 'function'
+          ? ownNode(staging, context.createStereoPanner())
+          : null;
+      if (panner) {
+        output.connect(panner);
+        panner.connect(destination);
+      } else {
+        output.connect(destination);
+      }
+    } catch (error) {
+      staging.dispose();
+      throw error;
     }
+    this.output = output;
+    this.panner = panner;
   }
 
   get loaded(): boolean {
@@ -133,15 +171,31 @@ export class LoopBlend {
       }),
     );
     if (this.released) return;
-    this.layers = decoded.flatMap((layer): LayerVoice[] => {
-      if (!layer) return [];
-      const gain = this.context.createGain();
-      gain.gain.value = 0;
-      gain.connect(this.output);
-      return [
-        { at: clamp01(layer.at), pitch: layer.pitch, buffer: layer.buffer, gain, source: null },
-      ];
-    });
+    // Katman kazançları EDİNİLDİĞİ AN sahipliğe alınır: ikinci bir kurulum
+    // kırılırsa ilk katman da bağlantısız bırakılmaz.
+    const staging = new DisposableScope();
+    let layers: LayerVoice[];
+    try {
+      layers = decoded.flatMap((layer): LayerVoice[] => {
+        if (!layer) return [];
+        const gain = ownNode(staging, this.context.createGain());
+        gain.gain.value = 0;
+        gain.connect(this.output);
+        return [
+          {
+            at: clamp01(layer.at),
+            pitch: layer.pitch,
+            buffer: layer.buffer,
+            gain,
+            source: null,
+          },
+        ];
+      });
+    } catch (error) {
+      staging.dispose();
+      throw error;
+    }
+    this.layers = layers;
     this.applyWeights(true);
     if (this.playing) this.startSources();
   }
@@ -197,22 +251,29 @@ export class LoopBlend {
     this.released = true;
     this.loading.abort();
     this.stop();
-    for (const layer of this.layers) layer.gain.disconnect();
+    const scope = new DisposableScope();
+    for (const layer of this.layers) ownNode(scope, layer.gain);
+    ownNode(scope, this.output);
+    if (this.panner) ownNode(scope, this.panner);
+    scope.dispose();
     this.layers = [];
-    this.output.disconnect();
-    this.panner?.disconnect();
   }
 
   private startSources(): void {
-    for (const layer of this.layers) {
-      if (layer.source) continue;
-      const source = this.context.createBufferSource();
-      source.buffer = layer.buffer;
-      source.loop = true;
-      source.playbackRate.value = this.layerRate(layer);
-      source.connect(layer.gain);
-      layer.source = source;
-      source.start();
+    try {
+      for (const layer of this.layers) {
+        if (layer.source) continue;
+        const source = this.context.createBufferSource();
+        layer.source = source;
+        source.buffer = layer.buffer;
+        source.loop = true;
+        source.playbackRate.value = this.layerRate(layer);
+        source.connect(layer.gain);
+        source.start();
+      }
+    } catch (error) {
+      this.stop();
+      throw error;
     }
   }
 
@@ -231,7 +292,7 @@ export class LoopBlend {
     } catch {
       // Başlamamış kaynak `stop()`ta fırlatabilir; söküm bunun için durmaz.
     }
-    source.disconnect();
+    disconnectQuietly(source);
   }
 
   private applyWeights(immediate: boolean): void {

@@ -1,6 +1,7 @@
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { StemLoader } from '../music/loader';
 import { clamp, clamp01 } from '../../math/interpolation';
-import { finiteOr } from '../../math/numeric';
+import { finiteOr, requireFinite } from '../../math/numeric';
 import { createRandom, type Random } from '../../random/random';
 
 export interface SoundBankOptions {
@@ -75,17 +76,41 @@ export class SoundBank {
   private released = false;
 
   constructor(context: AudioContext, destination: AudioNode, options: SoundBankOptions = {}) {
+    const maxVoices = requireFinite(options.maxVoices ?? DEFAULTS.maxVoices, 'maxVoices');
+    const maxVoicesPerSound = requireFinite(
+      options.maxVoicesPerSound ?? DEFAULTS.maxVoicesPerSound,
+      'maxVoicesPerSound',
+    );
+    const minRetriggerMs = requireFinite(
+      options.minRetriggerMs ?? DEFAULTS.minRetriggerMs,
+      'minRetriggerMs',
+    );
+    if (
+      !Number.isInteger(maxVoices) ||
+      maxVoices < 1 ||
+      !Number.isInteger(maxVoicesPerSound) ||
+      maxVoicesPerSound < 1 ||
+      minRetriggerMs < 0
+    ) {
+      throw new RangeError(
+        'Ses bütçeleri pozitif tam sayı, tekrar süresi negatif olmayan sayı olmalı',
+      );
+    }
     this.context = context;
     this.loader = new StemLoader(context);
     this.busGain = context.createGain();
-    this.busGain.connect(destination);
+    try {
+      this.busGain.connect(destination);
+    } catch (error) {
+      // Constructor tamamlanamadı; sahipliğe geçmeden edinilen düğüm
+      // bağlantısız kalmamalı.
+      this.disconnectQuietly(this.busGain);
+      throw error;
+    }
     this.options = {
-      maxVoices: Math.max(1, Math.floor(options.maxVoices ?? DEFAULTS.maxVoices)),
-      maxVoicesPerSound: Math.max(
-        1,
-        Math.floor(options.maxVoicesPerSound ?? DEFAULTS.maxVoicesPerSound),
-      ),
-      minRetriggerMs: Math.max(0, options.minRetriggerMs ?? DEFAULTS.minRetriggerMs),
+      maxVoices,
+      maxVoicesPerSound,
+      minRetriggerMs,
     };
     this.random = options.random ?? createRandom();
   }
@@ -156,39 +181,68 @@ export class SoundBank {
       8,
     );
 
-    const source = this.context.createBufferSource();
-    source.buffer = buffer;
-    source.playbackRate.value = rate;
+    this.createVoice(
+      id,
+      buffer,
+      rate,
+      clamp01(finiteOr(options.gain ?? 1, 1)),
+      clamp(finiteOr(options.pan ?? 0, 0), -1, 1),
+    );
+    this.lastPlayedAt.set(id, now);
+  }
 
-    const gain = this.context.createGain();
-    gain.gain.value = clamp01(finiteOr(options.gain ?? 1, 1));
-    source.connect(gain);
-    const pan = clamp(finiteOr(options.pan ?? 0, 0), -1, 1);
-    const panner =
-      pan !== 0 && typeof this.context.createStereoPanner === 'function'
-        ? this.context.createStereoPanner()
-        : null;
-    if (panner) {
-      panner.pan.value = pan;
-      gain.connect(panner);
-      panner.connect(this.busGain);
-    } else {
-      gain.connect(this.busGain);
-    }
+  /**
+   * Bir ses zincirini kurar. Düğümler EDİNİLDİĞİ AN sahipliğe alınır: kurulumun
+   * hangi adımda kırılırsa kırılsın, scope hepsini ters sırada söküp hatayı
+   * yeniden fırlatır. Ses yalnız `start()` geçtiğinde voice sahipliğine geçer.
+   */
+  private createVoice(
+    id: string,
+    buffer: AudioBuffer,
+    rate: number,
+    gainValue: number,
+    pan: number,
+  ): Voice {
+    const staging = new DisposableScope();
+    const own = <T extends AudioNode>(node: T): T => {
+      staging.add({ dispose: () => this.disconnectQuietly(node) });
+      return node;
+    };
 
-    const voice: Voice = { id, source, gain, panner };
-    this.voices.add(voice);
-    source.onended = () => this.retire(voice);
     try {
-      source.start();
-    } catch (error) {
+      const source = own(this.context.createBufferSource());
+      source.buffer = buffer;
+      source.playbackRate.value = rate;
+
+      const gain = own(this.context.createGain());
+      gain.gain.value = gainValue;
+      source.connect(gain);
+
+      const panner =
+        pan !== 0 && typeof this.context.createStereoPanner === 'function'
+          ? own(this.context.createStereoPanner())
+          : null;
+      if (panner) {
+        panner.pan.value = pan;
+        gain.connect(panner);
+        panner.connect(this.busGain);
+      } else {
+        gain.connect(this.busGain);
+      }
+
       // Başlatılamayan bir node bütçeyi sonsuza dek işgal etmemeli. Hata
       // çağırana bırakılır; oyun katmanı sesi isteğe bağlı yan ürün olarak
       // izole edebilir.
-      this.retire(voice);
+      source.start();
+
+      const voice: Voice = { id, source, gain, panner };
+      this.voices.add(voice);
+      source.onended = () => this.retire(voice);
+      return voice;
+    } catch (error) {
+      staging.dispose();
       throw error;
     }
-    this.lastPlayedAt.set(id, now);
   }
 
   /** Çalan tüm sesleri anında durdurur (sahne geçişi, duraklatma). */
@@ -201,7 +255,7 @@ export class SoundBank {
     this.released = true;
     this.loading.abort();
     this.stopAll();
-    this.busGain.disconnect();
+    this.disconnectQuietly(this.busGain);
     this.buffers.clear();
     this.sources.clear();
     this.pending.clear();
@@ -244,16 +298,32 @@ export class SoundBank {
   private retire(voice: Voice, stop = false): void {
     if (!this.voices.delete(voice)) return;
     voice.source.onended = null;
-    if (stop) {
-      try {
-        voice.source.stop();
-      } catch {
-        // Henüz başlamamış ya da bitmiş bir kaynak `stop()`ta fırlatabilir;
-        // temizlik bunun için durmamalı.
-      }
+    if (stop) this.stopQuietly(voice.source);
+    const scope = new DisposableScope();
+    scope.add({ dispose: () => this.disconnectQuietly(voice.source) });
+    scope.add({ dispose: () => this.disconnectQuietly(voice.gain) });
+    if (voice.panner) scope.add({ dispose: () => this.disconnectQuietly(voice.panner!) });
+    scope.dispose();
+  }
+
+  /**
+   * Bir kaynağı susturur. Henüz başlamamış ya da bitmiş bir kaynak `stop()`ta
+   * fırlatabilir; temizlik bunun için durmamalı.
+   */
+  private stopQuietly(source: AudioBufferSourceNode): void {
+    try {
+      source.stop();
+    } catch {
+      // Bkz. yukarıdaki açıklama.
     }
-    voice.source.disconnect();
-    voice.gain.disconnect();
-    voice.panner?.disconnect();
+  }
+
+  /** Bir düğümü çözer. Bozuk bir düğüm, diğerlerinin temizliğini durdurmaz. */
+  private disconnectQuietly(node: AudioNode): void {
+    try {
+      node.disconnect();
+    } catch {
+      // Bkz. yukarıdaki açıklama.
+    }
   }
 }
