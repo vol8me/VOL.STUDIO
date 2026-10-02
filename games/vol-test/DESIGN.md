@@ -164,7 +164,7 @@ Başlangıç profili platform ve ölçülmüş cihaz kuralından gelir; kayıtl�
 tercih bunun önüne geçer. Kalite seçimi kalıcıdır ve uygun görünüm kaynaklarına
 uygulanır. Hale yerel yarı saydam geometriyle çizilir.
 
-Gönderilen uygulama kodu 100,1 KiB, Phaser 345,1 KiB ve CSS 18,3 KiB
+Gönderilen uygulama kodu 100,3 KiB, Phaser 345,1 KiB ve CSS 18,3 KiB
 (dosya başına gzip 9) ölçülür. `quality.json` uygulamaya 105 KiB ayırır;
 native servisler, kalıcı CORE ayar/senaryo bileşenleri, kuru ses ve hava
 fiziği bu kapsamın içindedir. Phaser ve CSS bütçeleri ayrı korunur.

@@ -81,7 +81,7 @@ kullanıldı; uzun kareler çıkarılmadı.
 | Boş         |    120,1 |      120,1 |             8,4 |
 | Slalom      |     15,5 |      120,1 |             8,4 |
 | Hedefler    |     22,7 |      120,0 |             8,4 |
-| Fizik alanı |     12,5 |      119,4 |             8,4 |
+| Fizik alanı |     12,5 |      119,1 |             8,4 |
 | Çoklu tank  |     23,4 |      120,0 |             8,4 |
 
 Kontrollü çizim deneyi, araç başına TileSprite palet yolu, gövde içindeki
@@ -102,8 +102,26 @@ isteğiyle örneklendi; yağış önizlemesinin hazır birikimi bu yüke dahildi
 
 İki kademe kısa pencerede 60 FPS'i geçtiği için bu model yüksek başlar;
 diğer Android modelleri ölçülene kadar düşük başlar. Kayıtlı tercih açılış
-varsayılanından önce gelir. Uzun süreli termal kararlılık ve en yoğun birleşik
-hava/çoklu araç yükü bu tablodan çıkarılmaz.
+varsayılanından önce gelir. Kısa hava tablosu uzun oturum bütçesi değildir.
+
+Yüksek kalite, kış/kar önizlemesi, çoklu tank ve sürekli gerçek dokunmatik
+atış birlikte 10 dakika ölçüldü: 20 adet 30 saniyelik pencere, toplam ortalama
+62,5 FPS ve pencere aralığı 58,9–64,8 FPS. İlk iki pencerenin p95'i 25 ms;
+sonraki pencerelerde 16,7–16,8 ms. Başlangıç PSS belleği 328,2 MiB,
+pencereler 303,5–319,8 MiB, son pencere 313,0 MiB; sürekli artış görülmedi.
+Pil sıcaklığı 29,3 → 29,8 °C; bu sensör GPU sıcaklığı değildir. JavaScript
+hatası görülmedi ve her pencerede atış barı boşaldı. İlk dakikadaki kareler
+sonuçtan çıkarılmadı; bütün pencerelerde ≥60 FPS hedefi geçmedi.
+
+Aynı oturumdan sonraki yüksek kar/boş dünya çizim ayrıştırmasında 512 parçacık
+korundu: tam çizim 102,7 FPS, yağış katmanı görünmezken 120,0 FPS, yalnız
+birikim katmanı görünmezken 109,6 FPS. Model ve parçacık güncellemesi çalışmaya
+devam etti. Bu deney yağış çiziminin kalan maliyetini ayırır; görsel kaliteyi
+düşürme veya bütün cihazlar için optimizasyon kararı değildir.
+
+Son ses yükleme düzeltmesiyle yeniden kurulan APK'nın ayrı 4 saniyelik
+beş senaryo duman testi 118–120 FPS ve p95 8,4 ms verdi. Oyun yüksek kalite,
+boş dünya ve devam eden oturum durumuna geri getirildi.
 
 Native titreşim durum sorgusu destek bildirdi; geçerli desen kabul edildi,
 geçersiz desen reddedildi. Motorun fiziksel hissi insan doğrulaması ister.

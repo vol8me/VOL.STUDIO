@@ -10,7 +10,7 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 
 ### VOL.TEST — test ortamı oyunu
 
-Analiz ve kararlar: yerel sertleştirme raporu §0.4, §0.4b, §0.4c. Cihazlar
+Analiz ve kararlar: yerel sertleştirme raporu §0.6. Cihazlar
 uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi").
 
 - [ ] **[P1] VT-R5 — Yeni seslerin insan dinleme onayı.** 33 kuru mekanik/metal
@@ -18,20 +18,22 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       kullanıcının yeni seti toplu dinleyip onaylaması.
 - [ ] **[P1] VT-H3 — Nişan ve dokunmatik hissiyat.** Dünya yönünü koruyan taret,
       hedefe oturunca ateş, iki bölgeli sağ çubuk ve balistik hedef lazeri.
-      Kapanır: kontrol/fizik ve Chromium/WebKit testleri, bağlı cihaz ölçümü.
+      Kontrol/fizik ve Chromium/WebKit testleri geçer. Kapanır: gerçek
+      cihazda nişan, ateş eşiği ve hareket için insan kabulü.
 - [ ] **[P1] VT-W — Dünya ve hava olayları.** Toz, yağmur ve kar; su/kar birikimi,
       zemin tutuşu, rüzgâr/mermi direnci ve görünür yansıma. Kapanır: seedli
-      model, sabit adım determinizmi, fizik/render bağları ve cihaz bütçeleri.
-- [ ] **[P3] VT-Q — Efekt kalitesi kalıcı.** Duraklatmada seçilen kademe
-      oturumdan oturuma korunur; Deck ve Android'de efekt FPS'i ölçülür ve
-      açılış kademesi ölçüme göre seçilir (VT4/VT5 ölçümüyle birlikte).
-- [ ] **[P3] VT-S — Test senaryoları.** Boş dünya korunur; açılıp kapanan
-      senaryolar: slalom, hedef atış, fizik sandbox, çoklu tank. Her CORE
-      yeteneği bir senaryoda sınanır.
-- [ ] **[P1] VT2 — Tauri kabuğu (Linux).** Kimlik `com.volstudio.voltest`, ikon
-      tank SVG parçalarından üretilir (birleşik çizim üreticisi geri gelir),
-      Cargo üyeliği, `gen/schemas` yoksayılır. Kapanır: Rust kapısı yeşil;
-      host'ta açılış ekran görüntüsü.
+      model, sabit adım determinizmi, fizik/render bağları ve cihaz bütçeleri;
+      Lenovo yüksek kar/çoklu tank/atış 10 dakikada 58,9–64,8 FPS, ilk dakika
+      p95 25 ms olduğundan bütün yüklerde bütçe kabulü halen açık.
+- [ ] **[P3] VT-Q — Kalite ve cihaz bütçesi kabulü.** Kalıcı tercih ve
+      ölçülmüş açılış kademesi hazır. Kapanır: yoğun hava/araç/atış yükünde
+      uzun oturum bütçesi geçer; Deck sunum temposu D2 ile doğrulanır.
+- [ ] **[P3] VT-S — CORE senaryo envanteri.** Boş, slalom, hedef atış,
+      fizik sandbox ve çoklu tank senaryoları hazır. Kapanır: CORE yetenekleri
+      tüketici/senaryo/test kanıtıyla eşlenir; gerekli eksik örnekler tamamlanır.
+- [ ] **[P1] VT2 — Linux görünür açılış kabulü.** Ürüne özgü kimlik/ikon,
+      Cargo üyeliği ve native kaynak sözleşmesi hazır; Rust kapısı geçer.
+      Kapanır: son sürüm host'ta görünür açılır ve ekran görüntüsü alınır.
 - [ ] **[P1] VT3 — Açılış servisleri.** Oturum, ekran kipi, girdi ve glif,
       metin girişi, menü süzgeci, kapsamlı kayıt, kapanış ve uyku boşaltması,
       ses, titreşim, Steamworks, Android geri tuşu ve yön, tanı. Tüketilmeyen
@@ -41,11 +43,11 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 - [ ] **[P1] VT5 — Steam Deck.** steamrt4 paketi ve `pnpm deck`. Kapanır: glibc
       bekçisi; bağlı Deck'te açılış, ekran görüntüsü ve kare ölçümü.
 - [ ] **[P1] VT-H2 — VOL.TEST cila turu (cihazda).** Hissiyat zarfı cihazda
-      doğrulanır (Deck 90 Hz, Android dokunmatik), titreşim cihazda denenir;
+      doğrulanır (eldeki LCD Deck 60 Hz, Android dokunmatik), titreşim cihazda denenir;
       bulgular zarfa ve ayara işlenir. Kapanır: her cihazdan ekran görüntüsü
       ve kullanıcının his onayı.
-- [ ] **[P1] VT7 — Yeni oyun iskeleti.** VOL.TEST'ten çıkarılır
-      (tauri-v2/templates/game). Kapanır: iskeletten üretilen paket
+- [ ] **[P1] VT7 — Yeni oyun iskeleti kabulü.** Üretici ve
+      `tauri-v2/templates/game` sözleşmesi hazır. Kapanır: iskeletten üretilen paket
       `pnpm signoff`u ilk denemede geçer.
 
 ### Belgeler
@@ -117,7 +119,7 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ## Kapatılanlar
 
-- [x] **Ses yüklemesi yaşam döngüsü.** CORE banka/döngü sökümü indirmeyi iptal eder; VOL.TEST sayfa terkinde sesi kapatır ve geri dönüş önbelleğini korur.
+- [x] **Ses yüklemesi yaşam döngüsü.** CORE banka/döngü istekleri aynı partide başlar, eşzamanlı yükleme birleşir; söküm indirmeyi iptal eder ve geç decode kaynak kurmaz.
 
 - [x] VOL.TEST ölçümü gerçek kalite, senaryo, tohum, mevsim/hava ve sekiz CPU aşamasını kaydeder; bağlam geçişi ile Deck rapor zinciri regresyon testli.
 
