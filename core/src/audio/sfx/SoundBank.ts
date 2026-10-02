@@ -62,6 +62,7 @@ const DEFAULTS = {
 export class SoundBank {
   private readonly context: AudioContext;
   private readonly loader: StemLoader;
+  private readonly loading = new AbortController();
   private readonly busGain: GainNode;
   private readonly options: Required<Omit<SoundBankOptions, 'random'>>;
   private readonly random: Random;
@@ -198,6 +199,7 @@ export class SoundBank {
   dispose(): void {
     if (this.released) return;
     this.released = true;
+    this.loading.abort();
     this.stopAll();
     this.busGain.disconnect();
     this.buffers.clear();
@@ -209,11 +211,12 @@ export class SoundBank {
   private async decodeVariants(id: string, urls: readonly string[]): Promise<void> {
     const decoded: AudioBuffer[] = [];
     for (const url of urls) {
+      if (this.released) break;
       try {
-        decoded.push(await this.loader.loadFromUrl(url));
+        decoded.push(await this.loader.loadFromUrl(url, { signal: this.loading.signal }));
       } catch (error) {
         // Bir varyantın düşmesi sesi tamamen susturmamalı; kalanlarla devam.
-        console.warn(`[SoundBank] "${id}" varyantı yüklenemedi: ${url}`, error);
+        if (!this.released) console.warn(`[SoundBank] "${id}" varyantı yüklenemedi: ${url}`, error);
       }
     }
     if (!this.released && decoded.length > 0) this.buffers.set(id, decoded);

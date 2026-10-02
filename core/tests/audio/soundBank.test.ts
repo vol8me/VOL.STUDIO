@@ -88,6 +88,56 @@ describe('SoundBank', () => {
     );
   }
 
+  it('sökümden sonra biten decode tamponu ve düğümü geri kurmaz', async () => {
+    let finish: (buffer: AudioBuffer) => void = () => undefined;
+    let started: () => void = () => undefined;
+    const decoding = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    vi.spyOn(context, 'decodeAudioData').mockImplementation(
+      () =>
+        new Promise<AudioBuffer>((resolve) => {
+          finish = resolve;
+          started();
+        }),
+    );
+    const bank = makeBank();
+    bank.register('step', ['/step-1.ogg', '/step-2.ogg']);
+    const pending = bank.load('step');
+    await decoding;
+    bank.dispose();
+    finish({} as AudioBuffer);
+    await pending;
+    expect(bank.isLoaded('step')).toBe(false);
+    bank.play('step');
+    expect(context.sources).toHaveLength(0);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('söküm bekleyen indirmeyi iptal eder; sonraki varyantı istemez', async () => {
+    let signal: AbortSignal | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string, options: RequestInit) => {
+        signal = options.signal as AbortSignal;
+        return new Promise<Response>((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(new Error('iptal')));
+        });
+      }),
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const bank = makeBank();
+    bank.register('step', ['/step-1.ogg', '/step-2.ogg']);
+    const pending = bank.load('step');
+    bank.dispose();
+    expect(signal?.aborted).toBe(true);
+    await pending;
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(bank.isLoaded('step')).toBe(false);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it('kayıtlı varyantları yükler ve seçilen bufferı çalar', async () => {
     const bank = makeBank({ random: { next: () => 0.99, bipolar: () => 0.5 } });
     bank.register('step', ['/step-1.ogg', '/step-2.ogg']);

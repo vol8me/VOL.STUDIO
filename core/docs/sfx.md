@@ -18,7 +18,7 @@ olay başına ses bütçesini uygular, gerekirse en eski sesi durdurur.
 `PlayOptions.pan` stereo konumu, `gain` seviyeyi ve `rate` çalma hızını
 belirler. Mesafe, olay eşlemesi ve varyant seçimi için verilen RNG
 tüketicinin sorumluluğundadır. `stopAll` çalan sesleri durdurur;
-`dispose` düğümleri söker.
+`dispose` düğümleri söker ve bekleyen indirmeleri iptal eder.
 
 `LoopBlend` katmanları birlikte döndürür. `setLevel` iki komşuyu eşit güçle
 karıştırır; kazanç, pan ve hız değişimleri yumuşar. Katmanın `pitch` değeri
@@ -27,4 +27,5 @@ katmanın hızını hedef/üretim oranıyla 0.5–2 aralığında tutar. Perdesi
 katman son ortak hızı korur. `setRate` perde takibini bırakıp bütün
 katmanlara 0.25–4 aralığında ortak çarpanı uygular. Yüklenemeyen katman
 atlanır; kalanlarla karışım sürer. `stop` sonrası `start` son ayarları
-korur. Sahne kapanırken her banka ve döngü için `dispose` çağrılır.
+korur. Sahne kapanırken her banka ve döngü için `dispose` çağrılır;
+bekleyen indirmeler iptal edilir, yeni katman isteği ve düğüm kurulumu durur.

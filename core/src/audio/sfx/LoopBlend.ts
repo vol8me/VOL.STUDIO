@@ -62,6 +62,7 @@ export function loopBlendWeights(positions: readonly number[], level: number): n
 /** Eşit güçlü karışan döngüler; hedef perde katman başına üretim perdesine oranlanır. */
 export class LoopBlend {
   private readonly loader: StemLoader;
+  private readonly loading = new AbortController();
   private readonly output: GainNode;
   private readonly panner: StereoPannerNode | null;
   private readonly smoothing: number;
@@ -114,14 +115,16 @@ export class LoopBlend {
     const ordered = [...this.sources].sort((a, b) => a.at - b.at);
     const layers: LayerVoice[] = [];
     for (const layer of ordered) {
+      if (this.released) break;
       try {
-        const buffer = await this.loader.loadFromUrl(layer.url);
+        const buffer = await this.loader.loadFromUrl(layer.url, { signal: this.loading.signal });
+        if (this.released) break;
         const gain = this.context.createGain();
         gain.gain.value = 0;
         gain.connect(this.output);
         layers.push({ at: clamp01(layer.at), pitch: layer.pitch, buffer, gain, source: null });
       } catch (error) {
-        console.warn(`[LoopBlend] katman yüklenemedi: ${layer.url}`, error);
+        if (!this.released) console.warn(`[LoopBlend] katman yüklenemedi: ${layer.url}`, error);
       }
     }
     if (this.released) {
@@ -182,6 +185,7 @@ export class LoopBlend {
   dispose(): void {
     if (this.released) return;
     this.released = true;
+    this.loading.abort();
     this.stop();
     for (const layer of this.layers) layer.gain.disconnect();
     this.layers = [];

@@ -117,6 +117,8 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ## Kapatılanlar
 
+- [x] **Ses yüklemesi yaşam döngüsü.** CORE banka/döngü sökümü indirmeyi iptal eder; VOL.TEST sayfa terkinde sesi kapatır ve geri dönüş önbelleğini korur.
+
 - [x] VOL.TEST ölçümü gerçek kalite, senaryo, tohum, mevsim/hava ve sekiz CPU aşamasını kaydeder; bağlam geçişi ile Deck rapor zinciri regresyon testli.
 
 - [x] VOL.TEST native uyanışta ortak ses bağlamını toparlar; sökülmüş sahne ve bağlam yaşam döngüsü regresyon testli, gerçek Deck uyku kabulü SD8'de açık.

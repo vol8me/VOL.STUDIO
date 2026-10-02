@@ -8,6 +8,9 @@ import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
 import type { Simulation } from '@/sim/Simulation';
 import { WorldScene } from '@/scenes/WorldScene';
 import { BootScene } from '@/scenes/BootScene';
+import * as SceneAudio from '@/audio/sceneAudio';
+import { GameAudio } from '@/audio/GameAudio';
+import { FakeAudioContext } from '../support/fakeAudio';
 import { fakeObject, fakeScene, lastCall } from '../support/fakeScene';
 
 const controls = vi.hoisted(() => ({
@@ -118,6 +121,34 @@ afterEach(() => {
 });
 
 describe('WorldScene', { timeout: 20_000 }, () => {
+  it('sayfa terk edilince sesi söker; geri dönüş önbelleği ve kapanmış sahne etkilenmez', () => {
+    const context = new FakeAudioContext();
+    const audio = new GameAudio(
+      context as unknown as AudioContext,
+      context.destination as unknown as AudioNode,
+    );
+    const create = vi.spyOn(SceneAudio, 'createSceneAudio').mockReturnValue(audio);
+    const load = vi.spyOn(audio, 'load').mockResolvedValue(undefined);
+    const dispose = vi.spyOn(audio, 'dispose');
+    try {
+      const { shutdown } = mount();
+      window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }));
+      expect(dispose).not.toHaveBeenCalled();
+      window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false }));
+      expect(dispose).toHaveBeenCalledOnce();
+      expect(context.gains.every((gain) => gain.disconnected)).toBe(true);
+      shutdown();
+      dispose.mockClear();
+      window.dispatchEvent(new PageTransitionEvent('pagehide'));
+      expect(dispose).not.toHaveBeenCalled();
+      expect(load).toHaveBeenCalledOnce();
+    } finally {
+      create.mockRestore();
+      load.mockRestore();
+      dispose.mockRestore();
+    }
+  });
+
   it('ölçüm oturumunu istenen dünya ve kaliteyle açar, kalıcı tercihleri değiştirmez', async () => {
     localStorage.clear();
     const environment = vi.spyOn(Platform, 'getDiagnosticsEnv').mockResolvedValue({

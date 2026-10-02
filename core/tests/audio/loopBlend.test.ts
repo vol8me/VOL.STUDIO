@@ -115,6 +115,54 @@ describe('LoopBlend', () => {
     );
   }
 
+  it('sökümden sonra biten decode tamponu ve düğümü geri kurmaz', async () => {
+    let finish: (buffer: AudioBuffer) => void = () => undefined;
+    let started: () => void = () => undefined;
+    const decoding = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    vi.spyOn(context, 'decodeAudioData').mockImplementation(
+      () =>
+        new Promise<AudioBuffer>((resolve) => {
+          finish = resolve;
+          started();
+        }),
+    );
+    const blend = make();
+    const pending = blend.load();
+    await decoding;
+    blend.dispose();
+    finish({} as AudioBuffer);
+    await pending;
+    expect(blend.loaded).toBe(false);
+    expect(context.gains).toHaveLength(1);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('söküm bekleyen indirmeyi iptal eder; sonraki varyantı istemez', async () => {
+    let signal: AbortSignal | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string, options: RequestInit) => {
+        signal = options.signal as AbortSignal;
+        return new Promise<Response>((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(new Error('iptal')));
+        });
+      }),
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const blend = make();
+    const pending = blend.load();
+    blend.dispose();
+    expect(signal?.aborted).toBe(true);
+    await pending;
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(blend.loaded).toBe(false);
+    expect(context.gains).toHaveLength(1);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it('yüklenen katmanlar döngüde başlar; eksen sırasına dizilir, karışım yumuşar', async () => {
     const blend = make();
     await blend.load();

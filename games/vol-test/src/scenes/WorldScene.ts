@@ -76,6 +76,9 @@ export class WorldScene extends Phaser.Scene {
     this.audio = createSceneAudio(this);
     if (this.audio) {
       this.scope.add(this.audio);
+      this.scope.addListener<PageTransitionEvent>(window, 'pagehide', (event) => {
+        if (!event.persisted) this.audio?.dispose();
+      });
       void this.audio.load();
     }
     const world = new World(WORLD.width, WORLD.height, WORLD.gridStep);
