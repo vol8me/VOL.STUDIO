@@ -103,6 +103,8 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 
 ## Kapatılanlar
 
+- [x] VOL.TEST ölçüm seçimleri ilgisiz cihaz ayarı değişikliklerinde korunur; kalıcı tercihlerle karışmaz.
+
 - [x] E1 — VOL.TEST girdi yöneticisinin durumu HUD gliflerine gider; paylaşılan yolda ikinci kol yoklaması ve kip hakemi yoktur, regresyon testli.
 - [x] VT6 — Windows NSIS hedefi, ürün kimliği, ikon ve pencere yetenekleri yapılandırma testleriyle kilitli; Windows cihazı ölçülmedi.
 

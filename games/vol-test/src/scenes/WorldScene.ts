@@ -94,12 +94,14 @@ export class WorldScene extends Phaser.Scene {
       this.audio?.setVolume(services.settings.get().volume);
       this.scope.addSubscription(
         services.settings.subscribe((value) => {
-          quality.setLevel(value.quality);
+          quality.setLevel(overrides?.quality ?? value.quality);
           this.audio?.setVolume(value.volume);
         }),
       );
       this.scope.addSubscription(
-        quality.onChange((level) => void services.settings.update({ quality: level })),
+        quality.onChange((level) => {
+          if (!overrides?.quality) void services.settings.update({ quality: level });
+        }),
       );
     }
     this.arena = this.scope.addDestroyable(new ArenaView(this, world));
@@ -129,7 +131,10 @@ export class WorldScene extends Phaser.Scene {
     if (this.services)
       this.scope.addSubscription(
         this.services.settings.subscribe((value) => {
-          this.scenarios.select(value.scenario, value.seed);
+          this.scenarios.select(
+            overrides?.scenario ?? value.scenario,
+            overrides?.seed ?? value.seed,
+          );
         }),
       );
     this.clock = new SimulationClock({

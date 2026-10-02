@@ -140,12 +140,27 @@ describe('WorldScene', { timeout: 20_000 }, () => {
       scenario: 'empty',
       seed: 731,
     });
+    const vehicles = sim.vehicles.map((vehicle) => vehicle.id);
+    await services.settings.update({ volume: 0.4, haptics: false });
+    frame();
+    expect(sim.vehicles.map((vehicle) => vehicle.id)).toEqual(vehicles);
+    expect(services.settings.get().quality).toBe('high');
+    expect(
+      parent.querySelector('[data-testid="pause-quality"] button[aria-checked="true"]')
+        ?.textContent,
+    ).toContain('Düşük');
     active?.shutdown();
     active = null;
     await services.flush();
     services.dispose();
     parent.remove();
-    expect(localStorage.getItem('device.voltest.preferences')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('device.voltest.preferences')!)).toMatchObject({
+      quality: 'high',
+      scenario: 'empty',
+      seed: 731,
+      volume: 0.4,
+      haptics: false,
+    });
   });
   it('kalite tercihini, ilerlemeyi ve kabuktan gelen duraklatmayı servislerle yürütür', async () => {
     localStorage.clear();

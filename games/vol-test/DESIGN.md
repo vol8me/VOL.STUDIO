@@ -201,6 +201,10 @@ kararıdır. Tohumlu değişmez testleri NaN, dünya sınırı ve fizik tavanlar
 kare hızı testleri sabit adım sonucunu sınar. Hava testleri mevsim takvimini,
 birikimi, erimeyi, sıkışmayı ve model/sunum ayrımını korur.
 
+Native ölçüm ortamındaki senaryo, tohum ve kalite seçimi
+oturum boyunca kalıcı tercihlerden önce gelir; ses veya titreşim ayarı bu
+koşulları değiştirmez ve ölçüm seçimi kayda yazılmaz.
+
 E2E gönderilen build'i Chromium ve WebKit'te klavye, sanal kol ve dokunmatik
 girdiyle açar; ayarlar, senaryolar, duraklatma, hava görünümü ve temiz konsol
 sınanır. Kapsam, bundle ve algoritmik ölçekleme eşikleri kök `quality.json`
