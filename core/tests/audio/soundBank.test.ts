@@ -53,7 +53,7 @@ class FakeContext {
     return source as unknown as AudioBufferSourceNode;
   }
 
-  decodeAudioData(): Promise<AudioBuffer> {
+  decodeAudioData(_data: ArrayBuffer): Promise<AudioBuffer> {
     return Promise.resolve({ duration: 0.1 } as AudioBuffer);
   }
 }
@@ -88,19 +88,43 @@ describe('SoundBank', () => {
     );
   }
 
+  it('istekleri tek partide birleştirir ve ters tamamlanmada kaynak sırasını korur', async () => {
+    const finish: Array<(response: Response) => void> = [];
+    const buffers = [{} as AudioBuffer, {} as AudioBuffer];
+    vi.spyOn(context, 'decodeAudioData').mockImplementation((data: ArrayBuffer) =>
+      Promise.resolve(buffers[new Uint8Array(data)[0]]),
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>((resolve) => finish.push(resolve))),
+    );
+    const bank = makeBank({ random: { next: () => 0, bipolar: () => 0 } });
+    bank.register('step', ['/step-1.ogg', '/step-2.ogg']);
+    const first = bank.load('step');
+    const second = bank.load('step');
+    expect(fetch).toHaveBeenCalledTimes(2);
+    finish[1](new Response(new Uint8Array([1])));
+    finish[0](new Response(new Uint8Array([0])));
+    await Promise.all([first, second]);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    bank.play('step');
+    expect(context.sources[0]?.buffer).toBe(buffers[0]);
+    bank.dispose();
+  });
+
   it('sökümden sonra biten decode tamponu ve düğümü geri kurmaz', async () => {
     let finish: (buffer: AudioBuffer) => void = () => undefined;
     let started: () => void = () => undefined;
     const decoding = new Promise<void>((resolve) => {
       started = resolve;
     });
-    vi.spyOn(context, 'decodeAudioData').mockImplementation(
-      () =>
-        new Promise<AudioBuffer>((resolve) => {
-          finish = resolve;
-          started();
-        }),
-    );
+    const buffer = new Promise<AudioBuffer>((resolve) => {
+      finish = resolve;
+    });
+    vi.spyOn(context, 'decodeAudioData').mockImplementation(() => {
+      started();
+      return buffer;
+    });
     const bank = makeBank();
     bank.register('step', ['/step-1.ogg', '/step-2.ogg']);
     const pending = bank.load('step');
@@ -111,15 +135,16 @@ describe('SoundBank', () => {
     expect(bank.isLoaded('step')).toBe(false);
     bank.play('step');
     expect(context.sources).toHaveLength(0);
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it('söküm bekleyen indirmeyi iptal eder; sonraki varyantı istemez', async () => {
-    let signal: AbortSignal | undefined;
+  it('söküm bekleyen bütün indirmeleri iptal eder', async () => {
+    const signals: AbortSignal[] = [];
     vi.stubGlobal(
       'fetch',
       vi.fn((_url: string, options: RequestInit) => {
-        signal = options.signal as AbortSignal;
+        const signal = options.signal as AbortSignal;
+        signals.push(signal);
         return new Promise<Response>((_resolve, reject) => {
           signal?.addEventListener('abort', () => reject(new Error('iptal')));
         });
@@ -130,9 +155,10 @@ describe('SoundBank', () => {
     bank.register('step', ['/step-1.ogg', '/step-2.ogg']);
     const pending = bank.load('step');
     bank.dispose();
-    expect(signal?.aborted).toBe(true);
+    expect(signals).toHaveLength(2);
+    expect(signals.every((signal) => signal.aborted)).toBe(true);
     await pending;
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
     expect(bank.isLoaded('step')).toBe(false);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();

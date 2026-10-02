@@ -209,17 +209,19 @@ export class SoundBank {
   }
 
   private async decodeVariants(id: string, urls: readonly string[]): Promise<void> {
-    const decoded: AudioBuffer[] = [];
-    for (const url of urls) {
-      if (this.released) break;
-      try {
-        decoded.push(await this.loader.loadFromUrl(url, { signal: this.loading.signal }));
-      } catch (error) {
-        // Bir varyantın düşmesi sesi tamamen susturmamalı; kalanlarla devam.
-        if (!this.released) console.warn(`[SoundBank] "${id}" varyantı yüklenemedi: ${url}`, error);
-      }
-    }
-    if (!this.released && decoded.length > 0) this.buffers.set(id, decoded);
+    const decoded = await Promise.all(
+      urls.map(async (url) => {
+        try {
+          return await this.loader.loadFromUrl(url, { signal: this.loading.signal });
+        } catch (error) {
+          if (!this.released)
+            console.warn(`[SoundBank] "${id}" varyantı yüklenemedi: ${url}`, error);
+          return null;
+        }
+      }),
+    );
+    const buffers = decoded.filter((buffer): buffer is AudioBuffer => buffer !== null);
+    if (!this.released && buffers.length > 0) this.buffers.set(id, buffers);
   }
 
   /** Bütçeyi açar: önce aynı kimlikten, gerekirse genelden en eskiyi düşürür. */

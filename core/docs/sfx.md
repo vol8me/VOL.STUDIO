@@ -13,14 +13,16 @@ Dosya yolları paket köküne görelidir; URL'ye dönüşümü tüketici yapar.
 
 `SoundBank.register` bir olay kimliğini varyant URL'lerine bağlar;
 `load` ve `loadAll` bunları çözer. Aynı kimlik için eşzamanlı yüklemeler
-birleşir; yüklenmemiş ses oynanışı durdurmadan atlanır. Banka toplam ve
+birleşir; varyant istekleri aynı partide başlar ve kayıt sırası korunur.
+Yüklenmemiş ses oynanışı durdurmadan atlanır. Banka toplam ve
 olay başına ses bütçesini uygular, gerekirse en eski sesi durdurur.
 `PlayOptions.pan` stereo konumu, `gain` seviyeyi ve `rate` çalma hızını
 belirler. Mesafe, olay eşlemesi ve varyant seçimi için verilen RNG
 tüketicinin sorumluluğundadır. `stopAll` çalan sesleri durdurur;
 `dispose` düğümleri söker ve bekleyen indirmeleri iptal eder.
 
-`LoopBlend` katmanları birlikte döndürür. `setLevel` iki komşuyu eşit güçle
+`LoopBlend` katmanları birlikte döndürür. Eşzamanlı `load` çağrıları birleşir;
+bütün istekler başlangıçta açılır, düğümler yükleme sonunda kurulur. `setLevel` iki komşuyu eşit güçle
 karıştırır; kazanç, pan ve hız değişimleri yumuşar. Katmanın `pitch` değeri
 üretildiği perdeyi belirtir; `setPitch` hedefi aynı birimde alır ve her
 katmanın hızını hedef/üretim oranıyla 0.5–2 aralığında tutar. Perdesiz

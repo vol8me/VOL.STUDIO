@@ -67,6 +67,7 @@ export class LoopBlend {
   private readonly panner: StereoPannerNode | null;
   private readonly smoothing: number;
   private layers: LayerVoice[] = [];
+  private pending: Promise<void> | null = null;
   private level = 0;
   private rate = 1;
   private pitch: number | null = null;
@@ -110,28 +111,37 @@ export class LoopBlend {
   }
 
   /** Katmanları çözer; düşen katman atlanır, kalanlarla karışım sürer. */
-  async load(): Promise<void> {
-    if (this.released || this.loaded) return;
+  load(): Promise<void> {
+    if (this.released || this.loaded) return Promise.resolve();
+    this.pending ??= this.loadLayers().finally(() => {
+      this.pending = null;
+    });
+    return this.pending;
+  }
+
+  private async loadLayers(): Promise<void> {
     const ordered = [...this.sources].sort((a, b) => a.at - b.at);
-    const layers: LayerVoice[] = [];
-    for (const layer of ordered) {
-      if (this.released) break;
-      try {
-        const buffer = await this.loader.loadFromUrl(layer.url, { signal: this.loading.signal });
-        if (this.released) break;
-        const gain = this.context.createGain();
-        gain.gain.value = 0;
-        gain.connect(this.output);
-        layers.push({ at: clamp01(layer.at), pitch: layer.pitch, buffer, gain, source: null });
-      } catch (error) {
-        if (!this.released) console.warn(`[LoopBlend] katman yüklenemedi: ${layer.url}`, error);
-      }
-    }
-    if (this.released) {
-      for (const layer of layers) layer.gain.disconnect();
-      return;
-    }
-    this.layers = layers;
+    const decoded = await Promise.all(
+      ordered.map(async (layer) => {
+        try {
+          const buffer = await this.loader.loadFromUrl(layer.url, { signal: this.loading.signal });
+          return { ...layer, buffer };
+        } catch (error) {
+          if (!this.released) console.warn(`[LoopBlend] katman yüklenemedi: ${layer.url}`, error);
+          return null;
+        }
+      }),
+    );
+    if (this.released) return;
+    this.layers = decoded.flatMap((layer): LayerVoice[] => {
+      if (!layer) return [];
+      const gain = this.context.createGain();
+      gain.gain.value = 0;
+      gain.connect(this.output);
+      return [
+        { at: clamp01(layer.at), pitch: layer.pitch, buffer: layer.buffer, gain, source: null },
+      ];
+    });
     this.applyWeights(true);
     if (this.playing) this.startSources();
   }
