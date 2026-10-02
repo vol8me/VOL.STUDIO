@@ -1,7 +1,9 @@
 import type Phaser from 'phaser';
 import {
   ActionEdges,
+  createIdleActions,
   InputManager,
+  InputStepBuffer,
   Vector2,
   VirtualActionSource,
   VirtualStickSource,
@@ -14,26 +16,22 @@ import {
   TEST_ACTIONS,
   type TestAction,
 } from '@/input/bindings';
+import { CONTROLS } from '@/config/controls';
 import { idleCommand, type TankCommand } from '@/sim/command';
 import { ControlIntent } from '@/input/ControlIntent';
 
-/**
- * Oyuncu girdisinin tek sahibi: CORE `InputManager` (klavye/fare, kol,
- * dokunmatik), ekran düğmelerinin ve sabit joystick'lerin sanal kaynakları,
- * kenar algılayıcı. Her
- * kare bir `TankCommand` üretir ve kenar eylemlerini (zoom, ızgara,
- * duraklatma) sorgulanabilir kılar.
- */
+/** Karede sağlayıcıları örnekler; oyun niyeti yalnız sabit tickte ilerler. */
 export class PlayerControls {
   /** HUD'un dokunmatik düğmelerinin yazdığı kaynak. */
   readonly actionSource = new VirtualActionSource<TestAction>();
   /** HUD'un sabit joystick'lerinin (CORE `Joystick`) yazdığı eksen kaynağı. */
   readonly stickSource = new VirtualStickSource();
-  readonly command: TankCommand = idleCommand();
+  private readonly rawCommand = idleCommand();
+  private readonly buffer = new InputStepBuffer<TestAction>(TEST_ACTIONS);
+  private readonly blocked = new Set<TestAction>();
   private readonly manager: InputManager<TestAction>;
   private readonly edges = new ActionEdges<TestAction>();
   private readonly position = new Vector2();
-  private readonly rawAim = new Vector2();
   private readonly intent = new ControlIntent();
 
   constructor(scene: Phaser.Scene, initialMode?: string) {
@@ -44,6 +42,7 @@ export class PlayerControls {
       pcActionBindings: PC_BINDINGS,
       gamepad: { actionBindings: GAMEPAD_BINDINGS },
       aimStickAction: AIM_STICK_ACTION,
+      aimStickGate: { enter: CONTROLS.fireEnter, exit: CONTROLS.fireExit },
       actionSource: this.actionSource,
       stickSource: this.stickSource,
       // Dokunmatikte sabit joystick'ler kullanılır; görünmeyen serbest
@@ -63,7 +62,28 @@ export class PlayerControls {
     this.position.y = tankY;
     const state = this.manager.getState(this.position);
     this.edges.update(state.actions, EDGE_ACTIONS);
-    const command = this.command;
+    const actions = { ...state.actions };
+    const heldActions = { ...(state.heldActions ?? state.actions) };
+    const pressedActions = { ...(state.pressedActions ?? createIdleActions(TEST_ACTIONS)) };
+    for (const action of this.blocked) {
+      if (!actions[action] && !heldActions[action]) this.blocked.delete(action);
+      else {
+        actions[action] = false;
+        heldActions[action] = false;
+        pressedActions[action] = false;
+      }
+    }
+    this.buffer.sample({ ...state, actions, heldActions, pressedActions });
+    return this.command;
+  }
+
+  get command(): TankCommand {
+    return this.intent.command;
+  }
+
+  step(stepMs: number): TankCommand {
+    const state = this.buffer.consume();
+    const command = this.rawCommand;
     command.moveX = state.move.x;
     command.moveY = state.move.y;
     command.aimX = state.aim.x;
@@ -71,13 +91,7 @@ export class PlayerControls {
     command.fire = state.actions.fire;
     command.boost = state.actions.boost;
     command.brake = state.actions.brake;
-    const touch = this.manager.inputMode === 'touch';
-    this.stickSource.write('aim', this.rawAim);
-    return this.intent.update(
-      command,
-      deltaMs,
-      touch ? Math.hypot(this.rawAim.x, this.rawAim.y) : undefined,
-    );
+    return this.intent.update(command, stepMs);
   }
 
   get aiming(): boolean {
@@ -109,7 +123,12 @@ export class PlayerControls {
 
   /** Tutulan çubuk, tuş ve sanal düğme durumunu bırakır (duraklatma geçişi). */
   release(): void {
-    this.manager.reset();
+    this.blocked.add('fire');
+    this.blocked.add('boost');
+    this.actionSource.suppressUntilRelease(['fire', 'boost']);
+    this.stickSource.suppressUntilRelease('aim');
+    this.manager.reset({ preserveHeld: true });
+    this.buffer.reset();
     this.intent.reset();
     this.actionSource.clear();
     this.stickSource.clear();

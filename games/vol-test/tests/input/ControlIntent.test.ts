@@ -16,23 +16,20 @@ describe('ControlIntent', () => {
     expect(run(3).aimY).toBe(-1);
   });
 
-  it('hafif sağ çubuk yalnız nişan alır; dış bölgede ateş ve eşikte histerezis vardır', () => {
+  it('ateş eşiğini filtrelemez — histerezis çubuğun kendi durumundadır', () => {
     const filter = new ControlIntent();
     const input = command({ aimX: -1, fire: true });
-    expect(filter.update(input, 16, 0.4).fire).toBe(false);
-    expect(filter.update(input, 16, 0.85).fire).toBe(true);
-    expect(filter.update(input, 16, 0.72).fire).toBe(true);
-    expect(filter.update(input, 16, 0.5).fire).toBe(false);
-    expect(filter.update(input, 16, 0.72).fire).toBe(false);
+    expect(filter.update(input, 16).fire).toBe(true);
+    expect(filter.update(command({ fire: false }), 16).fire).toBe(false);
     expect(filter.update(input, 16).fire).toBe(true);
   });
 
   it('bırakma/odak kaybı ateşi ve yumuşatma geçmişini anında temizler', () => {
     const filter = new ControlIntent();
-    filter.update(command({ moveX: 1, fire: true }), 100, 1);
+    filter.update(command({ moveX: 1, fire: true }), 100);
     filter.reset();
     expect(filter.command).toEqual(command());
-    expect(filter.update(command(), 16, 0).fire).toBe(false);
+    expect(filter.update(command(), 16).fire).toBe(false);
     expect(filter.command.moveX).toBe(0);
     expect(filter.update(command({ moveX: 1 }), 0).moveX).toBe(0);
   });

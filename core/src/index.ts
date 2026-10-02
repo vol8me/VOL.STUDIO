@@ -99,6 +99,7 @@ export type {
   SimulationClockConfig,
   PartialStepPolicy,
   SimulationClockFrame,
+  SimulationClockAdvanceOptions,
 } from './time';
 export type { SchedulerOptions } from './time/Scheduler';
 export { EventBus, type Unsubscribe } from './events/EventBus';

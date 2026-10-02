@@ -1,4 +1,5 @@
 export { createIdleActions, type InputState } from './InputState';
+export { InputStepBuffer } from './InputStepBuffer';
 export type { InputProvider } from './InputProvider';
 export type {
   PCActionBinding,

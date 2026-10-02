@@ -7,6 +7,7 @@ import type { InputProvider } from '../../input/InputProvider';
 import { createIdleActions, type InputState } from '../../input/InputState';
 import { createIdleSnapshot, type InputSnapshot } from '../../input/InputSnapshot';
 import { TouchController, type TouchControllerOptions } from './TouchController';
+import type { TouchStickOptions } from '../../input/TouchStickState';
 import type { VirtualActionSource } from '../../input/VirtualActionSource';
 import type { VirtualStickSource } from '../../input/VirtualStickSource';
 import { InputModeArbiter, type InputModePolicyOptions } from '../../input/inputMode';
@@ -34,6 +35,8 @@ export interface InputManagerOptions<TAction extends string> {
   aimStickAction?: TAction;
   /** Sağ joystick dokunulduğu anda, deadzone aşılmadan da eylemi etkinleştirir. */
   aimStickActivatesOnTouch?: boolean;
+  /** Sağ joystick'in ham sapması için giriş/çıkış eşiği (bkz. `StickActionGate`). */
+  aimStickGate?: TouchStickOptions<TAction>['aimStickGate'];
   /** Sol stick'in başlayabildiği normalize ekran bölgesi; `null` kapatır. */
   leftStickRegion?: TouchControllerOptions<TAction>['leftStickRegion'];
   /** Sağ stick'in başlayabildiği normalize ekran bölgesi; `null` kapatır. */
@@ -89,6 +92,7 @@ export class InputManager<TAction extends string> {
             actions: options.actions,
             aimStickAction: options.aimStickAction,
             aimStickActivatesOnTouch: options.aimStickActivatesOnTouch,
+            aimStickGate: options.aimStickGate,
             actionSource: options.actionSource,
             stickSource: options.stickSource,
             leftStickRegion: options.leftStickRegion,
@@ -188,9 +192,14 @@ export class InputManager<TAction extends string> {
     );
 
     const actions = createIdleActions(this.actions);
+    const heldActions = createIdleActions(this.actions);
+    const pressedActions = createIdleActions(this.actions);
     for (const state of states.values()) {
       for (const action of this.actions) {
         actions[action] = actions[action] || state.actions[action];
+        heldActions[action] = heldActions[action] || (state.heldActions ?? state.actions)[action];
+        pressedActions[action] =
+          pressedActions[action] || (state.pressedActions?.[action] ?? false);
       }
     }
 
@@ -218,6 +227,8 @@ export class InputManager<TAction extends string> {
       move: pick('move') ?? Vector2.zero(),
       aim: aim ?? Vector2.zero(),
       actions,
+      heldActions,
+      pressedActions,
     };
   }
 
@@ -242,8 +253,8 @@ export class InputManager<TAction extends string> {
   }
 
   /** Provider'ların tuttuğu joystick/tuş durumunu ortak geçiş kapısından bırakır. */
-  reset(): void {
-    for (const provider of this.providers) provider.reset?.();
+  reset(options?: { preserveHeld?: boolean }): void {
+    for (const provider of this.providers) provider.reset?.(options);
   }
 
   destroy(): void {

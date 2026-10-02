@@ -14,6 +14,13 @@ export interface Stick {
 }
 
 /** Sağ stick'in "itildi" durumunu hangi eyleme bağlayacağını belirten ayarlar. */
+export interface StickActionGate {
+  /** Eylemin basılı sayılması için gereken ham sapma oranı (0-1). */
+  enter: number;
+  /** Eylemin bırakılmış sayılması için gereken ham sapma oranı (0-1). */
+  exit: number;
+}
+
 export interface TouchStickOptions<TAction extends string> {
   /** Diagnostics'te görünecek sağlayıcı kimliği. Varsayılan `'touch'`. */
   id?: string;
@@ -30,10 +37,20 @@ export interface TouchStickOptions<TAction extends string> {
    */
   aimStickAction?: TAction;
   /**
-   * Sağ stick yalnız dokunulduğunda da eylemi basılı sayar. Aim deadzone
-   * içinde sıfır kalır; çağıran isterse otomatik hedef seçebilir.
+   * Sağ stick yalnızca dokunulduğunda da eylemi basılı sayar. Aim deadzone
+   * içinde kalır; çağıran isterse otomatik hedef seçebilir.
    */
   aimStickActivatesOnTouch?: boolean;
+  /**
+   * Sağ stick'in ham sapması için giriş/çıkış eşiği. Verilirse
+   * `aimStickActivatesOnTouch` ve deadzone eşiği GEÇERSİZ sayılır: eylem
+   * yalnız `enter`/`exit` oranlarına bakar.
+   *
+   * Histerezis çubuğun kendi durumundadır, çağıranın karesinde değil: eşik
+   * render karesinde örneklenip oynanış tick'inde tüketiliyorsa kısa bir
+   * sapma, üretmediği tick'te kaybolur.
+   */
+  aimStickGate?: StickActionGate;
   /**
    * Ekran üstü düğmelerin yazdığı eylem kaynağı.
    *
@@ -66,6 +83,7 @@ export class TouchStickState<TAction extends string> {
   private readonly actions: readonly TAction[];
   private readonly aimStickAction?: TAction;
   private readonly aimStickActivatesOnTouch: boolean;
+  private readonly aimStickGate?: StickActionGate;
   private readonly actionSource?: VirtualActionSource<TAction>;
   private readonly stickSource?: VirtualStickSource;
   private readonly deadZone: number;
@@ -85,11 +103,14 @@ export class TouchStickState<TAction extends string> {
   private readonly rightRawBuf: Vector2 = Vector2.zero();
   private readonly scratchRawBuf: Vector2 = Vector2.zero();
   private readonly clampedBuf: Vector2 = Vector2.zero();
+  /** Eylemin `aimStickGate` eşiğine göre basılı sayılıp sayılmadığı. */
+  private aimStickEngaged = false;
 
   constructor(options: TouchStickOptions<TAction>) {
     this.actions = options.actions;
     this.aimStickAction = options.aimStickAction;
     this.aimStickActivatesOnTouch = options.aimStickActivatesOnTouch ?? false;
+    this.aimStickGate = options.aimStickGate;
     this.actionSource = options.actionSource;
     this.stickSource = options.stickSource;
     this.deadZone = options.deadZone ?? INPUT.DEAD_ZONE_RATIO;
@@ -164,6 +185,7 @@ export class TouchStickState<TAction extends string> {
   reset(): void {
     this.leftStick = undefined;
     this.rightStick = undefined;
+    this.aimStickEngaged = false;
     this.actionSource?.clear();
     this.stickSource?.clear();
   }
@@ -178,18 +200,23 @@ export class TouchStickState<TAction extends string> {
 
     const actions = createIdleActions(this.actions);
     if (this.aimStickAction !== undefined) {
-      actions[this.aimStickAction] =
-        (this.rightStick !== undefined || aimFromSource) &&
-        (this.aimStickActivatesOnTouch || rightRaw.length() / this.maxRadius > this.deadZone);
+      actions[this.aimStickAction] = this.resolveAimAction(
+        this.rightStick !== undefined || aimFromSource,
+        rightRaw.length() / this.maxRadius,
+      );
     }
     // Düğmeler stick'ten SONRA yazılır: aynı eyleme hem nişan çubuğu hem
     // düğme bağlıysa, düğme basımı nişan çubuğunun `false`unu ezebilmeli.
-    this.actionSource?.applyTo(actions);
+    const heldActions = { ...actions };
+    const pressedActions = createIdleActions(this.actions);
+    this.actionSource?.applyTo(actions, heldActions, pressedActions);
 
     return {
       move: normalizeAnalog(leftRaw, this.deadZone, this.maxRadius),
       aim: normalizeDirection(rightRaw, this.deadZone, this.maxRadius),
       actions,
+      heldActions,
+      pressedActions,
     };
   }
 
@@ -212,6 +239,18 @@ export class TouchStickState<TAction extends string> {
     this.stickSource?.write(stick, out);
     out.x *= this.maxRadius;
     out.y *= this.maxRadius;
+  }
+
+  private resolveAimAction(touched: boolean, deflection: number): boolean {
+    const gate = this.aimStickGate;
+    if (!touched) {
+      this.aimStickEngaged = false;
+      return false;
+    }
+    this.aimStickEngaged = gate
+      ? deflection >= (this.aimStickEngaged ? gate.exit : gate.enter)
+      : this.aimStickActivatesOnTouch || deflection > this.deadZone;
+    return this.aimStickEngaged;
   }
 
   private updateStick(stick: Stick | undefined, pointerId: number, x: number, y: number): void {

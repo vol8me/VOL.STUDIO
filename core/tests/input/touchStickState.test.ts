@@ -34,6 +34,16 @@ function makeTouchArmedSticks(): TouchStickState<TestAction> {
   });
 }
 
+/** Ham sapmaya giriş/çıkış eşiği koyan nişan çubuğu. */
+function makeGatedSticks(): TouchStickState<TestAction> {
+  return new TouchStickState<TestAction>({
+    actions: TEST_ACTIONS,
+    aimStickAction: 'engage',
+    aimStickGate: { enter: 0.8, exit: 0.65 },
+    maxRadius: 100,
+  });
+}
+
 describe('TouchStickState', () => {
   describe('stick atama', () => {
     it("sol yarıya ilk dokunuş sol stick'e atanır", () => {
@@ -210,6 +220,59 @@ describe('TouchStickState', () => {
       expect(state.actions.boost).toBe(false);
     });
 
+    describe('aimStickGate histerezisi', () => {
+      it('deadzone aşan ama giriş eşiğinin altındaki sapma eylemi açmaz', () => {
+        const sticks = makeGatedSticks();
+        sticks.onPointerDown(1, 900, 100, true);
+        sticks.onPointerMove(1, 900 + 40, 100);
+
+        const state = sticks.getState();
+        expect(state.aim.length()).toBeCloseTo(1, 5);
+        expect(state.actions.engage).toBe(false);
+      });
+
+      it('giriş eşiği aşılınca eylem açılır ve çıkış eşiğine kadar açık kalır', () => {
+        const sticks = makeGatedSticks();
+        sticks.onPointerDown(1, 900, 100, true);
+        sticks.onPointerMove(1, 900 + 80, 100);
+        expect(sticks.getState().actions.engage).toBe(true);
+
+        sticks.onPointerMove(1, 900 + 70, 100);
+        expect(sticks.getState().actions.engage).toBe(true);
+      });
+
+      it('çıkış eşiğinin altına inince eylem kapanır', () => {
+        const sticks = makeGatedSticks();
+        sticks.onPointerDown(1, 900, 100, true);
+        sticks.onPointerMove(1, 900 + 80, 100);
+        sticks.onPointerMove(1, 900 + 60, 100);
+        expect(sticks.getState().actions.engage).toBe(false);
+      });
+
+      it('parmak kalkınca eylem kapanır; sonraki basış yine giriş eşiğini ister', () => {
+        const sticks = makeGatedSticks();
+        sticks.onPointerDown(1, 900, 100, true);
+        sticks.onPointerMove(1, 900 + 80, 100);
+        sticks.onPointerUp(1);
+        expect(sticks.getState().actions.engage).toBe(false);
+
+        sticks.onPointerDown(2, 900, 100, true);
+        sticks.onPointerMove(2, 900 + 70, 100);
+        expect(sticks.getState().actions.engage).toBe(false);
+      });
+
+      it('reset histerezisi düşürür', () => {
+        const sticks = makeGatedSticks();
+        sticks.onPointerDown(1, 900, 100, true);
+        sticks.onPointerMove(1, 900 + 80, 100);
+        sticks.reset();
+
+        sticks.onPointerDown(2, 900, 100, true);
+        sticks.onPointerMove(2, 900 + 70, 100);
+        expect(sticks.getState().actions.engage).toBe(false);
+      });
+    });
+
     it('actions kaydı sözlüğün TAMAMINI taşır — eksik anahtar bırakılmaz', () => {
       // Çağıran `state.actions.boost` okuduğunda undefined görmemeli.
       const state = makeSticks().getState();
@@ -301,4 +364,16 @@ describe('TouchStickState', () => {
       expect(sticks.isActive).toBe(false);
     });
   });
+});
+
+it('sanal kısa basış metadata fiziksel düzeyden ayrıdır', () => {
+  const source = new VirtualActionSource<'fire'>();
+  const touch = new TouchStickState({ actions: ['fire'] as const, actionSource: source });
+  source.press('fire');
+  source.release('fire');
+  const state = touch.getState();
+  expect(state.actions.fire).toBe(true);
+  expect(state.heldActions?.fire).toBe(false);
+  expect(state.pressedActions?.fire).toBe(true);
+  expect(touch.getState().pressedActions?.fire).toBe(false);
 });
