@@ -36,8 +36,10 @@ pnpm --filter @volstudio/vol-ui test:e2e
 ```
 
 E2E gönderilen build'i sınar. Determinizm, yerleşim ve piksel karşılaştırması
-ayrı testlerdir. Chromium ve WebKit çalışır; piksel farkı bilinçli görsel
-değişiklikte temel güncellemesiyle kabul edilir.
+ayrı testlerdir. Chromium okunabilirlik dışındaki E2E dosyalarını, WebKit
+yalnız okunabilirliği çalıştırır. Bütün davranışların iki motora yayılması
+[UI-00 işi](../../docs/ui/TODO.md) olarak açıktır. Piksel farkı bilinçli
+görsel değişiklikte temel güncellemesiyle kabul edilir.
 
 ```bash
 pnpm --filter @volstudio/vol-ui test:e2e:update
@@ -50,7 +52,13 @@ beğenisi ya da insan kabulü değildir.
 
 `--vol-hit-target-min` yalnız pointer coarse altında değer taşır. Hedef kutu
 44 px olur; yalnız geniş padding alanı ilan edilmez. CORE CSS sözleşme testi
-kuralı, tarayıcı yerleşim testi gerçek çizilen kutuyu doğrular. Odak, geri
+kuralı, tarayıcı yerleşim testi seçilen çizilmiş kutuları doğrular. Saydam
+native range hedefinin mevcut turda atlanması UI-00/UI-03 kapsamında
+düzeltilecek bir ölçüm açığıdır. Odak, geri
 yığını ve azaltılmış hareket altında temizlik örneklerin parçasıdır.
 
 [Tasarım sözleşmesi](DESIGN.md)
+
+[Nihai UI sözleşmesi ve fazlar](../../docs/ui/README.md) bu vitrinin
+gelecekte tek VOL.SHOWCASE web/native laboratuvarına dönüşmesini tanımlar.
+Paket göçü, tema/ses/metin laboratuvarları ve yeni kapılar henüz uygulanmadı.

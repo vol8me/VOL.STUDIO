@@ -7,7 +7,8 @@ kendi adıyla CORE testinde sınanır.
 
 ## Görsel sözleşme
 
-E2E gönderilen build'i Chromium ve WebKit üzerinde sınar. Yerleşim testi
+E2E gönderilen build'i sınar: Chromium okunabilirlik dışındaki testleri,
+WebKit yalnız okunabilirlik dosyasını çalıştırır. Yerleşim testi
 taşma, ezilme ve dokunma hedefini; görsel test piksel temelini denetler.
 Deterministik çizim testi saatin ve rastgeleliğin sonuçta etkili olmadığını
 ayrı doğrular. Piksel temeli yalnız bilinçli görsel değişiklikte yenilenir;
@@ -21,3 +22,6 @@ kutu ölçüsüyle uygulanır. Azaltılmış hareket kipinde kapanış ve temizl
 animasyon bitişine bağlı kalmaz. Kaydırma dış panelde tanımlanır.
 
 [Sekme kataloğu, komutlar ve hedef politikası](README.md)
+
+[UI sözleşmesi ve uygulama fazları](../../docs/ui/README.md) tasarımın
+hedef halini tanımlar; mevcut paket henüz web vitrini olarak çalışır.

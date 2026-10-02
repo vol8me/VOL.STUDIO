@@ -8,6 +8,14 @@ kapanış yeni madde olarak açılır.
 
 Sıra yukarıdan aşağıya uygulama sırasıdır.
 
+### UI tasarım dili ve VOL.SHOWCASE
+
+- [ ] **[P1] UI — Fazlı arayüz uygulaması.** Onaylı sözleşme, bütün public
+      yüzey envanteri ve uygulama görevleri [UI iş listesinde](docs/ui/TODO.md).
+      Kapanır: UI-00–UI-13 görevleri, ilgili yerel kapılar ve gerçek
+      platform/insan kabulü tamamlanır. Plan belgelerinin teslimi uygulama
+      başlangıcı değildir; VOL.TEST ve cihaz işleri kendi ölçütleriyle açık kalır.
+
 ### VOL.TEST — test ortamı oyunu
 
 Analiz ve kararlar: yerel sertleştirme raporu §0.6. Cihazlar

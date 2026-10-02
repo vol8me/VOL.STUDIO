@@ -51,19 +51,20 @@ cihaz ölçümü ve insan dinlemesi otomatik kapıların yerine geçmez.
 
 ## Belgeler
 
-| Konu                | Belge                                                   |
-| ------------------- | ------------------------------------------------------- |
-| Çalışma sözleşmesi  | [AGENTS.md](AGENTS.md)                                  |
-| Kapılar ve raporlar | [docs/gates.md](docs/gates.md)                          |
-| Motor               | [core/README.md](core/README.md)                        |
-| Native kabuk        | [tauri-v2/README.md](tauri-v2/README.md)                |
-| Linux               | [docs/linux.md](docs/linux.md)                          |
-| Steam Deck          | [docs/steam-deck.md](docs/steam-deck.md)                |
-| Android             | [docs/android.md](docs/android.md)                      |
-| Ses üretimi         | [audio-synth/README.md](devtools/audio-synth/README.md) |
-| Rig üretimi         | [pen.dev/README.md](devtools/pen.dev/README.md)         |
-| UI kataloğu         | [vol-ui/README.md](devtools/vol-ui/README.md)           |
-| Açık işler          | [TODO.md](TODO.md)                                      |
+| Konu                   | Belge                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| Çalışma sözleşmesi     | [AGENTS.md](AGENTS.md)                                  |
+| Kapılar ve raporlar    | [docs/gates.md](docs/gates.md)                          |
+| Motor                  | [core/README.md](core/README.md)                        |
+| Native kabuk           | [tauri-v2/README.md](tauri-v2/README.md)                |
+| Linux                  | [docs/linux.md](docs/linux.md)                          |
+| Steam Deck             | [docs/steam-deck.md](docs/steam-deck.md)                |
+| Android                | [docs/android.md](docs/android.md)                      |
+| Ses üretimi            | [audio-synth/README.md](devtools/audio-synth/README.md) |
+| Rig üretimi            | [pen.dev/README.md](devtools/pen.dev/README.md)         |
+| UI kataloğu            | [vol-ui/README.md](devtools/vol-ui/README.md)           |
+| UI uygulama sözleşmesi | [UI fazları ve nihai plan](docs/ui/README.md)           |
+| Açık işler             | [TODO.md](TODO.md)                                      |
 
 ## Lisans
 

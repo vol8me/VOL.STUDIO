@@ -28,8 +28,8 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | `coverage-shape` | 100 satırın üstünde ve %50 kapsamın altındaki dosya test ister; yalnız aynı koşunun taze lcov'unu okur                                                                                                               |
 | `audio-test`     | audio-synth'in DSP, müzik, yayın yolu, protokol ve dizin katmanı testlerinden hızlı bir alt küme                                                                                                                     |
 | `build`          | Aktif paketlerin `build` betiği                                                                                                                                                                                      |
-| `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-ui: CORE UI'ın gönderilen ağırlığı)                                                                       |
-| `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı (bugün CORE uzamsal indeksi); ölçülen oranı yazar                                                                   |
+| `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-ui ve VOL.TEST)                                                                                           |
+| `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı (bugün CORE uzamsal indeksi ve VOL.TEST mermi modeli); ölçülen oranı yazar                                          |
 | `e2e`            | Aktif paketlerin `test:e2e` betiği; Chromium ve WebKit, üretim derlemesi üzerinde                                                                                                                                    |
 | `rust`           | Kök workspace'in aktif üye manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır |
 | `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                                                                                                                  |
@@ -61,7 +61,7 @@ Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 | `scripts/quality/devPorts.mjs`           | İki ayrı paket aynı geliştirme portunu bildiremez                                                                                                                        |
 | `scripts/quality/deviceApps.mjs`         | Cihaz ölçümü adayları `active` + `<paket>/src-tauri/tauri.conf.json` keşfinden türer                                                                                     |
 | `scripts/quality/cargoWorkspace.mjs`     | Aktif her crate kök Cargo workspace'inin üyesidir; tek kilit kökteki `Cargo.lock`tur; profil yalnız kökte                                                                |
-| `scripts/quality/productIcons.mjs`       | Her aktif Tauri uygulaması kendi ikonunu taşır; şablon ya da başka ürünün ikonu reddedilir                                                                               |
+| `scripts/quality/productIcons.mjs`       | Bugün games altındaki aktif uygulamaların ikonunu sınar; native devtool kapsamı UI-06 görevidir; şablon/başka ürün ikonu reddedilir                                      |
 | `scripts/quality/phaserBoundary.mjs`     | `core` Phaser'ı yalnız kayıtlı köprü dosyalarında import eder                                                                                                            |
 | `scripts/quality/publicTypeSurface.mjs`  | CORE'un public tip yüzeyi `coreTypeSurface.snapshot.json` ile eşittir                                                                                                    |
 | `scripts/quality/appIdentity.mjs`        | Her aktif Tauri uygulamasının kimliği ürüne özgüdür (paket adını taşır), jenerik değildir ve çakışmaz; veri dizini ve Cloud kökü ondan türer                             |
@@ -116,6 +116,10 @@ Ters yön de kapılıdır: ölü muafiyet ya da belgede olmayan istisna kapıyı
 kırar.
 
 ## Ölçüm notları
+
+UI durum matrisi, tema geometrisi, axe ve gerçek UI maliyeti için
+[doğrulama planı](ui/VERIFICATION.md) mevcut kapıyla gelecekteki genişlemeyi
+ayırır. Bu yeni kontroller henüz kapı bileşimine eklenmiş değildir.
 
 - **Kapsam motoru:** Vitest ve `@vitest/coverage-v8` aynı exact sürümdedir;
   V8 kapsamı AST tabanlı yeniden eşleme kullanır. Motor değişiminde eşik
