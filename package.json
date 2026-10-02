@@ -113,6 +113,7 @@
       "**/dist/**",
       "**/coverage/**",
       "**/target/**",
+      "**/android/build/**",
       "devtools/*/export/**"
     ]
   }

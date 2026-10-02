@@ -103,10 +103,10 @@ describe('tek publish yolu', () => {
 
 describe('agent adapter ince kalır', () => {
   const readme = readFileSync(join(REPO, 'devtools/audio-synth/README.md'), 'utf8');
-  const section = readme.slice(readme.indexOf('## Agent protokolü'));
+  const section = readme.slice(readme.indexOf('## Başlangıç'));
 
-  it('README agent bölümü kanonik context komutuna yönlendirir', () => {
-    expect(readme).toContain('## Agent protokolü');
+  it('README başlangıç bölümü kanonik context komutuna yönlendirir', () => {
+    expect(readme).toContain('## Başlangıç');
     expect(section).toContain('audio:job context --json');
   });
 

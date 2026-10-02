@@ -17,10 +17,12 @@ describe('audio:job context', () => {
     const context = buildContext(REPO);
     expect(context.targets.publishable.map((t) => t.packageName)).toEqual([
       '@volstudio/audio-synth',
+      '@volstudio/vol-test',
     ]);
     expect(context.targets.publishable[0].runtime).toBeNull();
     expect(context.targets.frozen).toEqual([]);
-    expect(context.targets.note).toMatch(/oyun hedefi YOK/);
+    expect(context.targets.publishable[1].runtime).not.toBeNull();
+    expect(context.targets.note).not.toMatch(/oyun hedefi YOK/);
     expect(context.schemas.brief.kinds.music.status).toBe('supported');
     expect(context.music.schemas.program).toBe('MusicProgramV1');
     expect(context.music.runtime.capabilities.stingers).toBe('bar-or-beat');

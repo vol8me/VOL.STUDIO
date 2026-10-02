@@ -76,9 +76,21 @@ test('atış barı tek atıştan sonra boşalır, bekler ve yeniden hazır olur'
   await open(page);
   const bar = page.locator('.vt-hud__fire-bar');
   await expect(bar).toHaveAttribute('aria-valuenow', '100');
+  await bar.evaluate((element) => {
+    element.setAttribute('data-observed-min', '100');
+    const observer = new MutationObserver(() => {
+      const value = Number(element.getAttribute('aria-valuenow'));
+      const minimum = Number(element.getAttribute('data-observed-min'));
+      element.setAttribute('data-observed-min', String(Math.min(value, minimum)));
+      if (value < 30) observer.disconnect();
+    });
+    observer.observe(element, { attributes: true, attributeFilter: ['aria-valuenow'] });
+  });
   await page.mouse.move(900, 400);
   await page.mouse.down();
-  await expect.poll(async () => Number(await bar.getAttribute('aria-valuenow'))).toBeLessThan(30);
+  await expect
+    .poll(async () => Number(await bar.getAttribute('data-observed-min')))
+    .toBeLessThan(30);
   await page.mouse.up();
   await expect(bar).toHaveAttribute('aria-valuenow', '100');
 });

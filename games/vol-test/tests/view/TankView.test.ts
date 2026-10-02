@@ -37,6 +37,9 @@ describe('TankView', () => {
     const core = byTexture(TEXTURE.core)[0];
     const flash = byTexture(TEXTURE.flash)[0];
     const children = body.list as unknown[];
+    expect(children).toContain(core);
+    expect(children).toContain(turretRig);
+    expect(children.indexOf(byTexture(TEXTURE.hull)[0])).toBeLessThan(children.indexOf(core));
     expect(children.indexOf(core)).toBeLessThan(children.indexOf(turretRig));
     expect(flash.x).toBeCloseTo(126);
     expect(flash.y).toBeCloseTo(202);
