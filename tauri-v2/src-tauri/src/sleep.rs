@@ -19,12 +19,17 @@ pub fn vol_suspend_ready(
         .acknowledge(&request_id, reason, outcome);
 }
 
+// logind dinleyicisi Linux'a özgüdür; diğer platformlarda karşılığı boş bir
+// `watch_sleep` gövdesidir. İşaretlenmezse tip ve dönüştürücü Windows ve macOS
+// derlemelerinde kullanılmaz kod olarak kalır.
+#[cfg(any(target_os = "linux", test))]
 #[derive(Debug, PartialEq, Eq)]
 pub enum SleepStep {
     Suspending,
     Resumed,
 }
 
+#[cfg(any(target_os = "linux", test))]
 pub fn step_of(prepare_for_sleep: bool) -> SleepStep {
     if prepare_for_sleep {
         SleepStep::Suspending

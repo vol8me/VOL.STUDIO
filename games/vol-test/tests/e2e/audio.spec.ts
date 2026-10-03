@@ -1,6 +1,22 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/**
+ * Ses ölçümü Web Audio gerektirir.
+ *
+ * Playwright'ın WebKit'i Windows'ta `AudioContext` sunmaz (yalnız
+ * `webkitAudioContext` öneki vardır ve Phaser bunu tanımaz); Linux WebKitGTK
+ * motorunda Web Audio vardır. Kapı Linux/Steam Deck WebView'ı hedeflediği için
+ * yetenek yoksa atlanır, yoksa geçmiş sayılmaz.
+ */
+async function hasWebAudio(page: Page): Promise<boolean> {
+  return page.evaluate(
+    () => typeof (globalThis as { AudioContext?: unknown }).AudioContext === 'function',
+  );
+}
 
 test('boşta sessiz kalır; OGG araç eyleminde başlar ve duraklatmada durur', async ({ page }) => {
+  if (!(await hasWebAudio(page)))
+    test.skip(true, 'Web Audio yok; bu motor ses ölçümüne uygun değil');
   const failures: string[] = [];
   page.on('pageerror', (error) => failures.push(error.message));
   page.on('console', (message) => {
