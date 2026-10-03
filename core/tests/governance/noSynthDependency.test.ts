@@ -17,7 +17,9 @@ function walk(dir: string, visit: (relPath: string, code: string) => void): void
     if (st.isDirectory()) {
       walk(fullPath, visit);
     } else if (SCANNED_EXTENSIONS.has(extname(fullPath))) {
-      const relPath = fullPath.replace(CORE_ROOT, '');
+      // Raporlanan göreli yol POSIX'tir: `SKIP_FILES` ve ihlal listesi `/` bekler,
+      // Windows'ta `\` üretilirse test kendi kaynağını da ihlal olarak sayar.
+      const relPath = fullPath.replace(CORE_ROOT, '').split(/[\\/]/).join('/');
       if (SKIP_FILES.has(relPath)) continue;
       const code = readFileSync(fullPath, 'utf-8');
       visit(relPath, code);

@@ -109,6 +109,20 @@ export function normalizeWorkspacePath(root, packagePath, pathModule = path) {
   return rel.split(/[\\/]/).filter(Boolean).join('/');
 }
 
+/**
+ * Bir yolu raporlanabilir POSIX biçimine çevirir.
+ *
+ * Bekçi mesajları, fixture yolları ve doküman eşleşmeleri `/` bekler; Windows'ta
+ * `relative()` ters ayraç üretir ve eşleşme sessizce kırılır. Aynı dönüşümü her
+ * dosya kendi kopyasıyla yapmak yerine burada tek yerde tutulur.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+export function posixPath(value) {
+  return String(value).split(/[\\/]/).join('/');
+}
+
 export function listWorkspacePackages(root = process.cwd(), pathModule = path) {
   const raw = execFileSync('pnpm', ['list', '-r', '--depth', '-1', '--json'], {
     cwd: root,

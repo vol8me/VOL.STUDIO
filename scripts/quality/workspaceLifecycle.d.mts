@@ -48,6 +48,8 @@ export declare function normalizeWorkspacePath(
   packagePath: string,
   pathModule?: unknown,
 ): string;
+/** Raporlanan yolları POSIX biçimine çevirir; Windows ayracını sadeleştirir. */
+export declare function posixPath(value: string): string;
 export declare function validWorkspacePath(
   root: string,
   pkgPath: string,

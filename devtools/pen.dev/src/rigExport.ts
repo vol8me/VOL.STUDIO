@@ -33,12 +33,16 @@ export interface RigExportPaths {
 
 /** Bir export referansını mutlak dosya yollarına çevirir. */
 export function resolveRigExportPaths(ref: RigExportRef): RigExportPaths {
+  // Export ağacı sözleşmesi POSIX yoludur: rig dosyaları `.pen` kaynaklarıyla
+  // ve üretim betikleriyle aynı göreli yolu paylaşır. Windows'ta `join`
+  // ayracı üretirse aynı export farklı yol olarak görünür.
   const entityDir = resolve(ref.exportRoot, ref.domain, ref.entityId);
+  const segment = (path: string): string => path.split(/[\\/]/).join('/');
   return {
-    entityDir,
-    metadataFile: join(entityDir, 'metadata', `${ref.entityId}.metadata.json`),
-    partsDir: join(entityDir, 'parts'),
-    previewsDir: join(entityDir, 'previews'),
+    entityDir: segment(entityDir),
+    metadataFile: segment(join(entityDir, 'metadata', `${ref.entityId}.metadata.json`)),
+    partsDir: segment(join(entityDir, 'parts')),
+    previewsDir: segment(join(entityDir, 'previews')),
   };
 }
 

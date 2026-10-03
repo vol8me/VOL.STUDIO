@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { dirname, extname, relative, resolve } from 'node:path';
 import { sourceImports } from './sourceImports.mjs';
+import { posixPath } from './workspaceLifecycle.mjs';
 
 const SOURCE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
 const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.json'];
@@ -23,7 +24,7 @@ function generatedProbeImport(root, available, file, specifier, path) {
   if (
     file !== 'devtools/deck/web/probe.js' ||
     specifier !== './vendor/frame-summary.js' ||
-    relative(root, path) !== 'devtools/deck/web/vendor/frame-summary.js'
+    posixPath(relative(root, path)) !== 'devtools/deck/web/vendor/frame-summary.js'
   )
     return false;
   const source = resolve(root, 'core/src/time/frameSummary.ts');
@@ -91,11 +92,11 @@ export function validateTrackedImports(root) {
           return false;
         }
       });
-      if (target && available.has(target)) continue;
+      if (target && available.has(resolve(target))) continue;
       if (generatedProbeImport(root, available, file, specifier, path)) continue;
       problems.push(
         `${file}: "${specifier}" klonda bulunamaz (${
-          target ? `git dışında: ${relative(root, target)}` : 'dosya yok'
+          target ? `git dışında: ${posixPath(relative(root, target))}` : 'dosya yok'
         }).`,
       );
     }

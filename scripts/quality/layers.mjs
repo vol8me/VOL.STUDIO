@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { sourceImports } from './sourceImports.mjs';
-import { frozenWorkspacePaths, loadRepoLifecycle } from './workspaceLifecycle.mjs';
+import { frozenWorkspacePaths, loadRepoLifecycle, posixPath } from './workspaceLifecycle.mjs';
 
 /**
  * Devtool → devtool kenarları yalnız burada gerekçesiyle yazılırsa meşrudur.
@@ -163,7 +163,7 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
     for (const directory of roots)
       walk(join(owner.root, directory), (file) => {
         for (const specifier of sourceImports(readFileSync(file, 'utf8'), file)) {
-          const where = relative(root, file);
+          const where = posixPath(relative(root, file));
           const target = targetOf(specifier, file);
           check(owner, target, where, directory !== 'scripts');
           if (target && target !== owner) {
@@ -189,7 +189,7 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
         const target = targetOf(specifier, file);
         if (!target || target === owner) continue;
         const violation = exportViolation(specifier, target);
-        if (violation) problems.push(`${relative(root, file)}: ${violation}`);
+        if (violation) problems.push(`${posixPath(relative(root, file))}: ${violation}`);
       }
     });
   }
