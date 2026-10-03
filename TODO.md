@@ -21,9 +21,9 @@ Sıra yukarıdan aşağıya uygulama sırasıdır.
 Analiz ve kararlar: yerel sertleştirme raporu §0.6. Cihazlar
 uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi").
 
-- [ ] **[P1] VT-R5 — Yeni seslerin insan dinleme onayı.** 33 kuru mekanik/metal
-      teslim, sessiz boşta durum ve oyun olayı eşlemeleri hazır. Kapanır:
-      kullanıcının yeni seti toplu dinleyip onaylaması.
+- [x] **[P1] VT-R5 — Yeni seslerin insan dinleme onayı.** 33 kuru mekanik/metal
+      teslim, sessiz boşta durum ve oyun olayı eşlemeleri hazır. Kullanıcı yeni
+      seti dinleyerek onayladı.
 - [ ] **[P1] VT-H3 — Nişan ve dokunmatik hissiyat.** Dünya yönünü koruyan taret,
       hedefe oturunca ateş, iki bölgeli sağ çubuk ve balistik hedef lazeri.
       Kontrol/fizik ve Chromium/WebKit testleri geçer. Kapanır: gerçek
@@ -54,10 +54,11 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       yeniden ölçülür, görünür panel kabulü ayrı kalır.
 - [ ] **[P1] VT5 — Steam Deck.** steamrt4 paketi ve `pnpm deck`. Kapanır: glibc
       bekçisi; bağlı Deck'te açılış, ekran görüntüsü ve kare ölçümü.
-- [ ] **[P1] VT-H2 — VOL.TEST cila turu (cihazda).** Hissiyat zarfı cihazda
-      doğrulanır (eldeki LCD Deck 60 Hz, Android dokunmatik), titreşim cihazda denenir;
-      bulgular zarfa ve ayara işlenir. Kapanır: her cihazdan ekran görüntüsü
-      ve kullanıcının his onayı.
+- [ ] **[P1] VT-H2 — VOL.TEST cila turu (cihazda).** Kullanıcı dizüstü
+      bilgisayarında görünür pencere açılışını ve ekran kilidi sonrası girdi
+      turunu eliyle yaptığını ve onayladığını bildirdi; ekran kilidi yeniden
+      kilitlendi. Titreşim hissi ve Deck eliyle ölçümler açık. Kapanır: her
+      cihazdan ekran görüntüsü ve kullanıcının his onayı.
 - [ ] **[P1] VT7 — Yeni oyun iskeleti kabulü.** Üretici ve
       `tauri-v2/templates/game` sözleşmesi hazır. Kapanır: iskeletten üretilen paket
       `pnpm signoff`u ilk denemede geçer.
@@ -120,6 +121,11 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       oyunun örneklediği `pointermove` üretmediği için kısa dış bölge
       dokunuşunun kabulü bu turda ölçülemedi. Kapanır: kullanıcının Samsung'da
       kısa nişan/ateş basışını ve iç bölge ayrımını eliyle onaylaması.
+- [ ] **[P2] `braces` advisory'si yayımlanmış düzeltmesiz.** `GHSA-vfj7-8cjw-p6xm`
+      (`pnpm audit` 1240992) `braces <=3.0.3` için stack tükenmesi bildiriyor ve
+      `first_patched_version` boş: yamalı sürümü yok. Yol yalnız geliştirme
+      araç zincirinde (`stylelint → micromatch → braces`), gönderilen oyuna girmez.
+      Kapanır: yama çıktığında kilit yükseltilir; `security-js` o gün yeşile döner.
 - [ ] **[P3] S7 — Ana sürüm geçişleri.** ESLint 10, stylelint 17, jsdom 30,
       Vitest 5 ve TypeScript 7 için uyumluluk ayrı ayrı doğrulanır. Kapanır:
       ilgili paketlerin ve kapıların yeni ana sürümde geçmesi.
