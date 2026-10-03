@@ -5,26 +5,49 @@ import { tmpdir } from 'node:os';
 import { join, relative, resolve, dirname, delimiter } from 'node:path';
 import test from 'node:test';
 import { cargoSteps, checkRust, optionalFeatures, rustManifests } from '../rust.mjs';
+import { resolveCommand, runCommand, writeNodeCommand } from './runCommand.mjs';
+
+// `just`ın `rust` tarifi tek satırdır: `node scripts/quality/rust.mjs`. Tarifin
+// bu komutu çağırdığı burada sözleşmelenir; tarifin kendisi Windows'ta `sh`
+// üzerinden çalıştığı için çalıştırma aşağıda doğrudan `node` ile yapılır.
+const justfile = readFileSync(
+  resolve(import.meta.dirname, '../../../justfile'),
+  'utf8',
+);
 
 test('gerçek just rust tarifi bütün uygulama crate’lerini çalıştırır', () => {
   const temporary = mkdtempSync(join(tmpdir(), 'vol-cargo-command-'));
   try {
+    const recipe = /rust:\s*\n\s*node scripts\/quality\/rust\.mjs/.test(justfile);
+    assert.ok(recipe, 'justfile rust tarifi node scripts/quality/rust.mjs çağırmıyor');
     const log = join(temporary, 'calls.jsonl');
-    writeFileSync(
-      join(temporary, 'cargo'),
+    writeNodeCommand(
+      temporary,
+      'cargo',
       '#!/usr/bin/env node\n' +
         "require('node:fs').appendFileSync(process.env.VOL_RUST_TEST_LOG, JSON.stringify({cwd:process.cwd(),args:process.argv.slice(2)})+'\\n');\n",
-      { mode: 0o755 },
     );
-    execFileSync(resolve('node_modules/.bin/just'), ['rust'], {
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        PATH: temporary + delimiter + process.env.PATH,
-        VOL_RUST_TEST_LOG: log,
+    // `just rust` tarifi yalnız `node scripts/quality/rust.mjs` çağırır. Tarifi
+    // doğrudan çağırmak, Windows'ta `just`ın kendi PATH'ini (ve `shell` katmanını)
+    // devreye sokmadan sahte `cargo`nun PATH'e girmesini sağlar.
+    const childPath = temporary + delimiter + process.env.PATH;
+    runCommand(
+      process.execPath,
+      ['scripts/quality/rust.mjs'],
+      {
+        cwd: process.cwd(),
+        shell: false,
+        env: {
+          ...process.env,
+          PATH: childPath,
+          // Windows `execFileSync` uzantısız POSIX betiği bulamaz; sahte komutun
+          // tam yolu `CARGO` ile açıkça geçilir.
+          CARGO: resolveCommand('cargo', childPath),
+          VOL_RUST_TEST_LOG: log,
+        },
+        stdio: 'pipe',
       },
-      stdio: 'pipe',
-    });
+    );
     const calls = readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
     const projects = rustManifests(process.cwd()).map((p) => resolve(dirname(p)));
     assert.deepEqual([...new Set(calls.map((c) => c.cwd))].sort(), projects.sort());
@@ -52,9 +75,11 @@ test('Rust kapısı aktif manifestleri check/fmt/clippy ile sınar', () => {
     };
     assert.deepEqual(rustManifests(root, lifecycle), projects.map((p) => `${p}/Cargo.toml`).sort());
     const calls = [];
+    // Kapı yolları POSIX olarak raporlanır; Windows'ta `relative()` `\` üretir.
     checkRust(
       root,
-      (command, args, options) => calls.push([command, args, relative(root, options.cwd)]),
+      (command, args, options) =>
+        calls.push([command, args, relative(root, options.cwd).split(/[\\/]/).join('/')]),
       lifecycle,
     );
     assert.equal(calls.length, 6);

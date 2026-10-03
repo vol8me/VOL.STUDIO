@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 import {
   cpSync,
@@ -13,6 +13,8 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import posix from 'node:path/posix';
+import { isWindows, runCommand, writeCommand } from '../../../scripts/quality/tests/runCommand.mjs';
 import {
   assertCleanConfirmation,
   assertInventoryPreserved,
@@ -40,17 +42,75 @@ import {
 } from '../scripts/deck-contract.mjs';
 
 function remote(command) {
-  return execFileSync('sh', ['-c', command], {
+  // `sh` gerçek bir yürütülebilirdir; `shell: true` `cmd.exe` üzerinden çağırır
+  // ve tek tırnaklı Python kodunun argüman sınırını bozar.
+  //
+  // Windows'ta `HOME` tanımsızdır; devkit komutları `os.path.expanduser` ve
+  // `$HOME` ile ev dizinini çözer. HOME geçici diske eşlenir, aksi halde
+  // komutlar gerçek kullanıcı profilini hedefler.
+  return runCommand('sh', ['-c', command], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    shell: false,
+    env: {
+      ...process.env,
+      HOME: process.env.HOME ?? '',
+      USERPROFILE: process.env.USERPROFILE ?? process.env.HOME ?? '',
+    },
   });
+}
+
+// Windows yolları kabuk betiğine gömülürken `\` kaçış karakteridir. Render
+// fonksiyonlarına verilen yerel yol POSIX'a çevrilir; komut her iki platformda
+// aynı yolu görür.
+function shellPath(value) {
+  return String(value).replace(/\\/g, '/');
+}
+
+function shellInventory(...args) {
+  // Yalnız yol ARGÜMANLARI normalize edilir; komutun kendisi (Python kodu)
+  // dokunulmadan kalır.
+  return renderInventoryCommand(...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)));
+}
+
+function shellLogRead(...args) {
+  return renderLogReadCommand(...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)));
+}
+
+function shellAtomicWrite(...args) {
+  return renderAtomicWriteCommand(...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)));
+}
+
+function shellReleaseStop(...args) {
+  return renderReleaseStopCommand(...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)));
+}
+
+// Windows'ta `HOME` tanımsızdır ve Python `expanduser` `USERPROFILE`'ı okur;
+// devkit komutları ikisini de ev dizini olarak kullanır. Test kapsamı
+// boyunca ikisi geçici diske bağlanır ve sonra geri alınır.
+function bindHome(directory) {
+  const posix = directory.replace(/\\/g, '/');
+  const previous = {
+    home: process.env.HOME,
+    userProfile: process.env.USERPROFILE,
+  };
+  process.env.HOME = posix;
+  process.env.USERPROFILE = posix;
+  return () => {
+    if (previous.home === undefined) delete process.env.HOME;
+    else process.env.HOME = previous.home;
+    if (previous.userProfile === undefined) delete process.env.USERPROFILE;
+    else process.env.USERPROFILE = previous.userProfile;
+  };
 }
 
 function inDisk(task) {
   const directory = mkdtempSync(join(tmpdir(), 'vol-deck-contract-'));
+  const restore = bindHome(directory);
   try {
     task(directory);
   } finally {
+    restore();
     rmSync(directory, { recursive: true, force: true });
   }
 }
@@ -108,7 +168,7 @@ test('devkit release kısayolu betiği gameid köküne göre bulur', () => {
   const release = `${root}/.vol-release-2026-unique`;
   const parms = buildReleaseShortcutParms({ gameid: 'SAMPLE.GAME_unique', release });
   assert.equal(parms.directory, root);
-  assert.equal(join(parms.directory, parms.argv[0]), `${release}/run.sh`);
+  assert.equal(posix.join(parms.directory, parms.argv[0]), `${release}/run.sh`);
   assert.throws(() => buildReleaseShortcutParms({ gameid: 'SAMPLE.GAME', release: root }));
 });
 
@@ -303,17 +363,22 @@ test('yeni release eski AppDir, launcher, ortam ve kullanici kaydini korur', () 
       writeFileSync(join(target, file), `previous ${file}`);
     }
     writeFileSync(join(source, 'AppRun'), 'new binary');
-    const before = JSON.parse(remote(renderInventoryCommand(target)));
-    const release = releaseDirectory(target, '2026-09-27-unique');
-    assert.notEqual(release, target);
-    mkdirSync(release);
-    cpSync(source, release, { recursive: true });
-    const after = JSON.parse(remote(renderInventoryCommand(target, release.split('/').at(-1))));
+    const before = JSON.parse(remote(shellInventory(target)));
+    // `releaseDirectory` devkit kökünü ister: mutlak POSIX yol. Sözleşme Linux
+    // yolunu konuşur; yerel diskte yalnız PATH dışında kalan bir kök kullanılır.
+    const releaseRoot = '/home/deck/devkit-game/upload';
+    const release = releaseDirectory(releaseRoot, '2026-09-27-unique');
+    assert.notEqual(release, releaseRoot);
+    const localRelease = join(disk, '.vol-release-2026-09-27-unique');
+    mkdirSync(localRelease);
+    cpSync(source, localRelease, { recursive: true });
+    const after = JSON.parse(remote(shellInventory(target, release.split('/').at(-1))));
     assertInventoryPreserved(before, after);
     assert.equal(readFileSync(join(target, 'AppRun'), 'utf8'), 'previous AppRun');
-    assert.equal(readFileSync(join(release, 'AppRun'), 'utf8'), 'new binary');
+    assert.equal(readFileSync(join(localRelease, 'AppRun'), 'utf8'), 'new binary');
     assert.throws(() => releaseDirectory('/', 'ok'));
-    assert.throws(() => releaseDirectory(target, '../escape'));
+    assert.throws(() => releaseDirectory(releaseRoot, '../escape'));
+    assert.throws(() => releaseDirectory(target, 'ok'));
   });
 });
 
@@ -322,18 +387,18 @@ test('log byte siniri UTF-8 ve yarim satirda onceki kaniti korur', () => {
     const path = join(disk, "log 'quoted'.jsonl");
     const old = '{"type":"info","text":"önceki"}\n{"partial":';
     writeFileSync(path, old);
-    const baseline = JSON.parse(remote(renderLogReadCommand(path)));
+    const baseline = JSON.parse(remote(shellLogRead(path)));
     assert.equal(Buffer.from(baseline.dataBase64, 'base64').toString(), old);
     const full = `${old}true}\n{"type":"signal","signal":15}\n`;
     writeFileSync(path, full);
-    const tail = JSON.parse(remote(renderLogReadCommand(path, baseline)));
+    const tail = JSON.parse(remote(shellLogRead(path, baseline)));
     assert.equal(
       Buffer.from(tail.dataBase64, 'base64').toString(),
       '{"type":"signal","signal":15}\n',
     );
     assert.equal(readFileSync(path, 'utf8'), full);
     writeFileSync(path, 'replacement\n');
-    assert.throws(() => remote(renderLogReadCommand(path, baseline)));
+    assert.throws(() => remote(shellLogRead(path, baseline)));
   });
 });
 
@@ -343,7 +408,7 @@ test('ortam yazma atomik ve kullanicinin onceki kopyasi korunabilir', () => {
     writeFileSync(path, 'VOL_DECK_MEASURE=0\n');
     const previous = readFileSync(path);
     writeFileSync(join(disk, 'previous.env'), previous, { flag: 'wx', mode: 0o600 });
-    remote(renderAtomicWriteCommand(path, 'VOL_DECK_MEASURE=1\n', 'unique'));
+    remote(shellAtomicWrite(path, 'VOL_DECK_MEASURE=1\n', 'unique'));
     assert.equal(readFileSync(path, 'utf8'), 'VOL_DECK_MEASURE=1\n');
     assert.deepEqual(readFileSync(join(disk, 'previous.env')), previous);
     assert.equal(
@@ -536,7 +601,7 @@ test('clean CLI onaysizken SSH dahil hicbir uzak islem baslatmaz', () => {
     const bin = join(disk, 'bin');
     const marker = join(disk, 'ssh-called');
     mkdirSync(bin);
-    writeFileSync(join(bin, 'getent'), '#!/bin/sh\nprintf "fake host\\n"\n', { mode: 0o755 });
+    writeCommand(bin, 'getent', '#!/bin/sh\nprintf "fake host\\n"\n');
     writeFileSync(join(bin, 'ssh'), `#!/bin/sh\nprintf called > ${shellQuote(marker)}\n`, {
       mode: 0o755,
     });
@@ -561,9 +626,11 @@ test('release hazirligi eski dosyalari ve oturum sentinelini korur', () => {
     const sentinel = join(disk, '.config', 'inhibit-short-session-tracker');
     writeFileSync(sentinel, 'previous setting');
     writeFileSync(join(disk, 'devkit-game', 'old_game', 'AppRun'), 'old binary');
-    const command = `HOME=${shellQuote(disk)} ${renderPrepareReleaseCommand('new_game_unique')}`;
+    // Windows yolu kabuk değişken atamasına gömülürken `\` kaçış karakteridir.
+    const command = `HOME=${shellQuote(shellPath(disk))} ${renderPrepareReleaseCommand('new_game_unique')}`;
     const result = JSON.parse(remote(command));
-    assert.equal(result.directory, join(disk, 'devkit-game', 'new_game_unique'));
+    // Komut `HOME` değerini olduğu gibi yankılar; devkit yolları daima POSIX'tir.
+    assert.equal(result.directory, shellPath(join(disk, 'devkit-game', 'new_game_unique')));
     assert.equal(existsSync(sentinel), true);
     assert.equal(readFileSync(sentinel, 'utf8'), 'previous setting');
     assert.equal(
@@ -574,21 +641,37 @@ test('release hazirligi eski dosyalari ve oturum sentinelini korur', () => {
   });
 });
 
-test('release SIGTERM ayni urunun eski surecine ulasmaz', async () => {
+test('release SIGTERM ayni urunun eski surecine ulasmaz', async (t) => {
+  // SIGTERM gönderme `/proc` taramasıyla Linux'a özgüdür; Windows'ta süreç
+  // sinyali farklı çalışır ve bu sözleşme orada ölçülemez.
+  if (isWindows) {
+    t.skip('SIGTERM gönderme /proc taraması gerektirir; Linux sözleşmesidir');
+    return;
+  }
   const disk = mkdtempSync(join(tmpdir(), 'vol-deck-process-'));
   const oldDirectory = join(disk, 'old');
   const newDirectory = join(disk, 'new');
   mkdirSync(oldDirectory);
   mkdirSync(newDirectory);
-  cpSync('/usr/bin/sleep', join(oldDirectory, 'same-game'));
-  cpSync('/usr/bin/sleep', join(newDirectory, 'same-game'));
-  const oldProcess = spawn(join(oldDirectory, 'same-game'), ['30']);
-  const newProcess = spawn(join(newDirectory, 'same-game'), ['30']);
+  // `/usr/bin/sleep` yalnız POSIX'te vardır; testin amacı aynı adlı iki
+  // sürecin ayrı kalması olduğu için platformun kendi kalıcı komutu kopyalanır.
+// Windows kopyalanmış bir `.exe`yi doğrudan başlatamaz (yan yükleme/izin),
+  // bu yüzden kabuk üzerinden `shell: true` ile çalıştırılır.
+  const sleeper = isWindows
+    ? join(process.env.SystemRoot, 'System32', 'ping.exe')
+    : '/usr/bin/sleep';
+  cpSync(sleeper, join(oldDirectory, 'same-game'));
+  cpSync(sleeper, join(newDirectory, 'same-game'));
+  const sleepArgs = isWindows ? ['-n', '30', '127.0.0.1'] : ['30'];
+  const oldProcess = spawn(`"${join(oldDirectory, 'same-game')}"`, sleepArgs, { shell: isWindows });
+  const newProcess = spawn(`"${join(newDirectory, 'same-game')}"`, sleepArgs, { shell: isWindows });
   const oldExit = once(oldProcess, 'exit');
   const newExit = once(newProcess, 'exit');
   try {
     await Promise.all([once(oldProcess, 'spawn'), once(newProcess, 'spawn')]);
-    remote(renderReleaseStopCommand(newDirectory));
+    // `renderReleaseStopCommand` devkit kökünü ister: mutlak POSIX yol. Sözleşme
+    // Linux yolunu konuşur; yerel süreçler geçici diskte tutulur.
+    remote(shellReleaseStop('/home/deck/devkit-game/new'));
     const [, signal] = await newExit;
     assert.equal(signal, 'SIGTERM');
     assert.equal(oldProcess.exitCode, null);

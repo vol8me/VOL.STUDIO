@@ -3,14 +3,16 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
+import { runCommandSync, writeCommand } from '../../quality/tests/runCommand.mjs';
 
 function measure(args = [], env = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'android-metrics-'));
   try {
-    const adb = join(dir, 'adb');
-    writeFileSync(
-      adb,
+    const adb = writeCommand(
+      dir,
+      'adb',
       `#!/bin/sh
 if [ "$1" = "-s" ]; then shift 2; fi
 case "$*" in
@@ -25,7 +27,6 @@ case "$*" in
   *"dumpsys package"*) printf 'versionCode=1\\nversionName=0.1.0\\n' ;;
 esac
 `,
-      { mode: 0o755 },
     );
     const loader = join(dir, 'loader.mjs');
     writeFileSync(
@@ -38,12 +39,18 @@ syncBuiltinESMExports();\n`,
     );
     const childEnv = { ...process.env, ADB: adb, ANDROID_SERIAL: '', ...env };
     delete childEnv.NODE_TEST_CONTEXT;
-    const fixture = spawnSync(adb, ['devices', '-l'], { encoding: 'utf8', env: childEnv });
+    const fixture = runCommandSync(adb, ['devices', '-l'], { encoding: 'utf8', env: childEnv });
     assert.equal(fixture.status, 0, fixture.stderr);
     assert.match(fixture.stdout, /PRIVATE_SERIAL device/, fixture.stderr);
     return spawnSync(
       process.execPath,
-      ['--import', loader, resolve('scripts/android/device-benchmark.mjs'), ...args, '0.001'],
+      [
+        '--import',
+        pathToFileURL(loader).href,
+        resolve('scripts/android/device-benchmark.mjs'),
+        ...args,
+        '0.001',
+      ],
       {
         encoding: 'utf8',
         env: childEnv,

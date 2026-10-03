@@ -10,11 +10,17 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
+import { runCommandSync } from './runCommand.mjs';
 
 const recipe = readFileSync(resolve(import.meta.dirname, '../../../justfile'), 'utf8');
-const just = resolve(import.meta.dirname, '../../../node_modules/.bin/just');
+// pnpm `.bin` altında POSIX'te yürütülebilir dosya, Windows'ta yalnız `.CMD`
+// shim'i üretir; spawnSync uzantısız yolu Windows'ta çalıştıramaz.
+const just = resolve(
+  import.meta.dirname,
+  '../../../node_modules/.bin',
+  process.platform === 'win32' ? 'just.CMD' : 'just',
+);
 
 test('temizlik aktif oyun raporlarını kaldırır; gönderilen asset ve frozen çıktı kalır', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'vol-clean-'));
@@ -69,7 +75,7 @@ test('temizlik aktif oyun raporlarını kaldırır; gönderilen asset ve frozen 
   writeFileSync(join(root, 'games/probe/src/probe.tsbuildinfo'), 'cache');
   writeFileSync(join(root, 'games/frozen/dist/probe.tsbuildinfo'), 'cache');
   writeFileSync(join(root, 'node_modules/library/probe.tsbuildinfo'), 'cache');
-  const run = spawnSync(just, ['clean'], { cwd: root, encoding: 'utf8' });
+  const run = runCommandSync(just, ['clean'], { cwd: root, encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
   for (const path of outputs) assert.equal(existsSync(join(root, path)), false, path);
   for (const path of retained) assert.equal(existsSync(join(root, path)), true, path);
@@ -79,7 +85,7 @@ test('temizlik aktif oyun raporlarını kaldırır; gönderilen asset ve frozen 
   assert.equal(existsSync(join(root, 'target')), true);
   for (const path of protectedFiles)
     assert.equal(readFileSync(join(root, path), 'utf8'), 'user-owned', path);
-  const full = spawnSync(just, ['clean-all'], { cwd: root, encoding: 'utf8' });
+  const full = runCommandSync(just, ['clean-all'], { cwd: root, encoding: 'utf8' });
   assert.equal(full.status, 0, full.stderr);
   assert.equal(existsSync(join(root, 'target')), false);
   for (const path of protectedFiles)

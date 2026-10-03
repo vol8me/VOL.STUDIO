@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { getFileInfo } from 'prettier';
 import { frozenWorkspacePaths, loadRepoLifecycle } from '../workspaceLifecycle.mjs';
 
@@ -41,7 +42,8 @@ test('stylelint ignoreFiles her frozen ağacı kapsar', () => {
 });
 
 test('ESLint config frozen ağaçları ignores listesinde taşır', async () => {
-  const config = (await import(join(root, 'eslint.config.mjs'))).default;
+  // Dinamik import yol değil URL ister; Windows'ta ham yol 'c:' protokolü sayılır.
+  const config = (await import(pathToFileURL(join(root, 'eslint.config.mjs')).href)).default;
   const ignores = config.flatMap((entry) => entry.ignores ?? []);
   for (const path of frozen) {
     assert.ok(

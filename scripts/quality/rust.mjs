@@ -60,12 +60,19 @@ export function checkRust(
     ...process.env,
     CARGO_TARGET_DIR: process.env.CARGO_TARGET_DIR ?? join(root, 'target'),
   };
+  // `CARGO` çalıştırma anında okunur: Windows'ta `execFileSync('cargo')`
+  // uzantısız POSIX betiğini PATH'te bulamaz; sahte komut testleri tam yolu
+  // bu değişkenle geçer. Modül yüklenirken okumak testlerde işe yaramaz.
+  const cargo = String(env['CARGO'] || 'cargo');
   for (const manifest of manifests) {
     console.log(`[rust] ${manifest}`);
     /** @type {import('node:child_process').ExecFileSyncOptions} */
+    // `shell: true` Windows'ta `.CMD`/`.bat` çalıştırmanın tek yoludur (`EINVAL`);
+    // POSIX'te de aynı çağrıyı değiştirmez. Çağıran kendi `shell` değerini
+    // verirse (test sahte komutu) o korunur.
     const options = { cwd: resolve(root, dirname(manifest)), stdio: 'inherit', env };
     for (const args of cargoSteps(readFileSync(join(root, manifest), 'utf8'))) {
-      run('cargo', args, options);
+      run(cargo, args, { ...options, shell: true });
     }
   }
 }

@@ -323,9 +323,12 @@ with open(temp, "xb") as file:
     file.flush()
     os.fsync(file.fileno())
 os.replace(temp, path)
-fd = os.open(os.path.dirname(path), os.O_RDONLY | os.O_DIRECTORY)
-os.fsync(fd)
-os.close(fd)`,
+# Dizin fsync'i POSIX'te rename kalıcılığının parçasıdır. Windows'ta dizin
+# tanıtıcısı fsync'e kapalıdır (PermissionError) ve os.replace zaten atomiktir.
+if hasattr(os, "O_DIRECTORY"):
+    fd = os.open(os.path.dirname(path), os.O_RDONLY | os.O_DIRECTORY)
+    os.fsync(fd)
+    os.close(fd)`,
     [path, Buffer.from(body).toString('base64'), nonce],
   );
 }

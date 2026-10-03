@@ -15,10 +15,23 @@ const ADB = process.env.ADB ?? 'adb';
 let serial;
 
 function adb(args) {
+  // `shell: true` Windows'ta `adb.cmd`/`.CMD` çalıştırmanın tek yoludur
+  // (`EINVAL`); POSIX'te aynı çağrıyı değiştirmez.
   return execFileSync(ADB, serial ? ['-s', serial, ...args] : args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
+    shell: true,
   });
+}
+
+/** Ölçüm beklemeleri kabuk `sleep`ine değil Node saatine bağlıdır. */
+function sleepSeconds(seconds) {
+  Atomics.wait(
+    new Int32Array(new SharedArrayBuffer(4)),
+    0,
+    0,
+    seconds * 1000,
+  );
 }
 
 function optionalAdb(args) {
@@ -51,7 +64,7 @@ function coldStart(pkg, runs = 3) {
   const nativeActivityTotalMs = [];
   for (let i = 0; i < runs; i++) {
     adb(['shell', 'am', 'force-stop', pkg]);
-    execFileSync('sleep', ['2']);
+    sleepSeconds(2);
     const output = adb(['shell', 'am', 'start', '-W', '-n', `${pkg}/.MainActivity`]);
     const total = pick(output, /TotalTime:\s*(\d+)/);
     nativeActivityTotalMs.push(total === null ? null : Number(total));
@@ -83,7 +96,7 @@ function runtimeProfile(pkg, seconds) {
   const before = readDiagnostics(pkg);
   adb(['shell', 'dumpsys', 'gfxinfo', pkg, 'reset']);
   adb(['shell', 'am', 'start', '-n', `${pkg}/.MainActivity`]);
-  execFileSync('sleep', [String(seconds)]);
+  sleepSeconds(seconds);
   const game = gameDiagnostics(appendedDiagnostics(before, readDiagnostics(pkg)));
   const gfx = optionalAdb(['shell', 'dumpsys', 'gfxinfo', pkg]) ?? '';
   const mem = optionalAdb(['shell', 'dumpsys', 'meminfo', pkg]) ?? '';
