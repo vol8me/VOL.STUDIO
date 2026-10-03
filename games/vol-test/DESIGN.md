@@ -221,8 +221,10 @@ sonrasında 1/r'den gelir. En yakın dört aracın döngüleri çalar. Phaser'ı
 mevcut Web Audio bağlamı kullanılır; mobil kilit açmayı Phaser yönetir.
 Duraklatma döngüleri keser, kaldırılan araç ve kapanan sahne sesleri söker.
 Araç hareketsiz ve nişan sabitken canlı döngü kaynağı yoktur. Müzik, ambiyans
-ve hava sesi yüklenmez. Otomatik QA tamamlanmış olsa da insan dinleme onayı
-açıktır; hava görünümü onayı ses beğenisi sayılmaz.
+ve hava sesi yüklenmez. Yük ve kayma, palet yüzeyi ile **zemin hızı**
+arasındaki farktan ölçülür (`Tank.surfaceLeft/surfaceRight`); paletlerin
+katettiği yol (`groundLeft/groundRight`) işaretli bir integraldir ve hız
+değildir. İnsan dinleme onayı kullanıcı tarafından verildi.
 
 ## Doğrulama
 

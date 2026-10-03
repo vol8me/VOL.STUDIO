@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VehicleAudio } from '@/audio/VehicleAudio';
+import { WEAPON } from '@/config/tank';
 import { tank, world, command, DT } from '../support/sim';
 import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext, type FakeAudioSource } from '../support/fakeAudio';
@@ -43,8 +44,8 @@ describe('araç döngüleri', () => {
     const subject = tank();
     subject.trackLeft = 230;
     subject.trackRight = 230;
-    subject.groundLeft = 230;
-    subject.groundRight = 230;
+    subject.surfaceLeft = 230;
+    subject.surfaceRight = 230;
     subject.slideLeft = 120;
     voice.update(subject, subject, false);
     expect(context.sources).toHaveLength(5);
@@ -62,6 +63,26 @@ describe('araç döngüleri', () => {
     expect(output(byName('boost')).gain.value).toBe(0.28);
     voice.stop();
     expect(context.sources.every((s) => s.stopped)).toBe(true);
+  });
+  it('atış geri tepmesinden sonra da motor döngüsü kapanır', () => {
+    // Geri tepme tankı kaydırır ve palet YOLU artığını (`groundLeft`) bırakır.
+    // Yük hız-arası farktan ölçülürse bu artık "yük" sanılır ve döngüler
+    // tank durduktan sonra da açık kalır.
+    const subject = tank();
+    const space = world();
+    const aim = command({ aimX: Math.cos(subject.turret), aimY: Math.sin(subject.turret) });
+    for (let i = 0; i < 30; i++) subject.step(aim, space, DT);
+    subject.applyImpulse(
+      -Math.cos(subject.turret) * WEAPON.recoilImpulse,
+      -Math.sin(subject.turret) * WEAPON.recoilImpulse,
+    );
+    for (let frame = 0; frame < 600; frame++) {
+      subject.step(aim, space, DT);
+      voice.update(subject, subject, false);
+    }
+    expect(subject.groundLeft).toBeGreaterThan(0);
+    expect(subject.speed).toBeCloseTo(0, 6);
+    expect(context.sources.filter((source) => source.started && !source.stopped)).toHaveLength(0);
   });
   it('hareket hâlindeki fren kilidini yalnız başlangıçta bildirir', () => {
     const subject = tank();

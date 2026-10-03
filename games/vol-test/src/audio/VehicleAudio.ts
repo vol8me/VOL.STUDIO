@@ -53,10 +53,13 @@ export class VehicleAudio {
     const motion = clamp01(
       Math.max(Math.abs(tank.trackLeft), Math.abs(tank.trackRight)) / TANK.maxSpeed,
     );
-    const load = clamp01(
-      (Math.abs(tank.trackLeft - tank.groundLeft) + Math.abs(tank.trackRight - tank.groundRight)) /
-        (2 * TANK.driveSlip),
-    );
+    // Yük, palet yüzeyi ile ZEMİN HIZI arasındaki farktandır.
+    // `groundLeft/groundRight` katettiği YOLDUR (işaretli integral), hız
+    // değildir: onunla ölçmek tank durduktan sonra da kalıcı bir "yük" üretir
+    // ve motor döngüsü hiç durmaz.
+    const slipLeft = Math.abs(tank.trackLeft - tank.surfaceLeft);
+    const slipRight = Math.abs(tank.trackRight - tank.surfaceRight);
+    const load = clamp01((slipLeft + slipRight) / (2 * TANK.driveSlip));
     const level = clamp01(
       motion * AUDIO.engine.speedWeight +
         load * AUDIO.engine.loadWeight +

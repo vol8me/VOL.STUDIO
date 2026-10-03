@@ -41,9 +41,19 @@ export class Tank extends RigidBody {
   /** Palet yüzeyinin katettiği yol; görünüm palet dokusunu bununla kaydırır. */
   treadLeft = 0;
   treadRight = 0;
-  /** Paletlerin yerde katettiği yol; patinajda yüzey yolundan ayrışır (iz bununla bırakılır). */
+  /**
+   * Paletlerin yerde katettiği yol (BİRİM CUMHA, işaretli integral); patinajda
+   * yüzey yolundan ayrışır, iz bununla bırakılır.
+   *
+   * Bu ALAN HIZ DEĞİLDİR: yol her zaman artar, geri koşuda bile. Zemin hızı
+   * `surfaceLeft`/`surfaceRight`'tadır; ikisini karıştıran tüketicı, tank
+   * durduktan sonra da "yük" görür.
+   */
   groundLeft = 0;
   groundRight = 0;
+  /** Palet yüzeyinin zemine göre ANLIK hızı (birim/s); hız-arası farkı yüktür. */
+  surfaceLeft = 0;
+  surfaceRight = 0;
   /** Palet yüzeyinin zemine göre kayma hızı (birim/s); izler ve toz bununla seçilir. */
   slideLeft = 0;
   slideRight = 0;
@@ -203,6 +213,8 @@ export class Tank extends RigidBody {
       dt,
     );
 
+    this.surfaceLeft = forces.groundLeft;
+    this.surfaceRight = forces.groundRight;
     this.slideLeft = forces.slideLeft;
     this.slideRight = forces.slideRight;
     this.slip = forces.slip;

@@ -116,13 +116,6 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       koşar, yayın kapısının tam doğrulaması korunur.
 
 - [ ] **[P3] A20 — Titreşim darbeleri tek zamanlayıcı iş parçacığından yürür.**
-- [ ] **[P1] Chromium E2E: boşta ses kaynağı kalmıyor.** `audio.spec.ts`
-      "boşta sessiz kalır" adımı, tuval tıklamasının artık gerçekten ateş
-      üretmesiyle kırılıyor: atışın geri tepmesi tankı ~%2 hızda sürüklüyor,
-      `motion`/`load` motor eşiğinin (`AUDIO.engine.motionFloor`) üstünde
-      kalıcı biçimde durduğu için üç motor döngüsü hiç durmuyor. Kapanır:
-      sıfır girdide tank hızı ve yükü tam sıfıra oturuyor; `loops - stopped`
-      tıklamadan sonra da 0'a dönüyor; Chromium ve WebKit E2E yeşil.
 - [ ] **[P3] Samsung kısa dokunuş kabulü.** Cihaz sentetik sabit basışta
       oyunun örneklediği `pointermove` üretmediği için kısa dış bölge
       dokunuşunun kabulü bu turda ölçülemedi. Kapanır: kullanıcının Samsung'da
