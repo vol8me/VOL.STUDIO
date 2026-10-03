@@ -80,6 +80,10 @@ pencere sonrası tam pencereler verilir; açılış karesi gizlice ayıklanmaz.
 | Fizik alanı / kar    | Yüksek | 59,6–59,7 |       19 |                  2,6–2,7 |
 | Fizik alanı / toz    | Yüksek |      59,5 |       20 |                      2,6 |
 
+Yukarıdaki tablo, koşu kimliği taşımayan önceki oturumun ölçümüdür; tablo
+satırları `runId` ile eşlenemez. Yeni kayıt zinciri (açılış koşulu + `runId`)
+aşağıda ayrıdır.
+
 İlk pencereler 57,1–59,2 FPS ve p95 19–20 ms verdi. Eski fizik alanı
 referansı ısınmış pencerede 59,4–59,6 FPS / p95 19–20 ms idi. Android'deki
 büyük çizim kazancı Deck'e aynı büyüklükte FPS artışı olarak genellenmez.
@@ -90,6 +94,30 @@ Sunum temposu, host/SLR4 farkı ve uzun süreli ısınma ayrıca ölçülmelidir
 Devkit ölçümü ekran görüntüsü ve SIGTERM kayıtlarını da topladı. Gerçek uyku,
 Steamworks istemci bağlantısı, motor hissi, hot-plug ve Steam/QAM odağı bu
 kare ölçümünün kabulü değildir.
+
+### Yeni kayıt zinciri: açılış koşulu
+
+`deck full` akışıyla derlenip dağıtılan steamrt4 sürümü, ölçüm ortamı
+release kısayoluna yazıldıktan sonra çalıştırıldı; sekiz ardışık pencere tek
+koşuya (`runId`) bağlıdır ve `lostReports` sıfırdır.
+
+| Senaryo / hava | Kademe |       FPS | p95 (ms) | GPU/panel süresi |
+| -------------- | ------ | --------: | -------: | ---------------: |
+| Boş / açık     | Yüksek | 57,8–59,5 |    18–20 |       yok (null) |
+
+Paket gücü çalıştırma öncesi 4,08 W, sonrasında 3,23 W; GPU sıcaklığı 49 °C'den
+54 °C'ye çıktı. WebKit Deck'te GPU ve panel sunum zamanlayıcısı vermediği için
+bu değerler `null` olarak kaydedilir, tahmin edilmez. SIGTERM sonrası ilerleme
+kaydı yazıldı; kabuğun `vol:terminate` el sıkışması ise karşılık gelen
+`timedOut` kaydını verdi (bkz. `TODO.md`).
+
+### Ölçüm sırası
+
+`deck mode` dağıtılmış sürümün release kısayoluna değil taban oyun kimliğine
+yazar; `deploy` ise ayrı bir release kısayolu kaydeder. Bu ikisi ayrı çağrıldığında
+ölçüm ortamı hiçbir çalışan kısayola ulaşmaz ve ölçüm yeni kare bulmaz.
+Ölçümün geçerli olması için `deck full` gerekir: derleme, dağıtım, mode ve
+ölçüm tek sırada yürür.
 
 ## Girdi ve glif
 

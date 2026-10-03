@@ -84,10 +84,12 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       kabulü değildir. Kapanır: kol hot-plug ve titreşim matrisiyle döküm
       incelenir, neden düzeltilir veya kanıtla dışlanır.
 
-- [ ] **[P1] Deck'teki kalıntılar.** Eski ürünlerin ve sondanın sürüm dizinleri,
-      non-Steam kısayolları, `~/.local/share/<kimlik>/` verileri, deneme
-      dosyaları. Kapanır: envanter kullanıcıya gösterilir, onaylı liste silinir,
-      sistem bileşenleri yerinde kalır.
+- [x] **[P1] Deck'teki kalıntılar.** Envanter gösterildi: beş `VOL.HELL`
+      kısayolu (taban ve dört sürüm) ve 1,36 GB `devkit-game/VOL.HELL*`
+      ağacı. Kullanıcı onayıyla `steamos-delete` ile kısayollar, sonra
+      sürüm ağacı silindi; `VOL.TEST` kısayolları, devkit araçları ve
+      `vol_deck_probe` yerinde kaldı. Son liste yalnız `VOL.TEST_*` ve
+      `vol_deck_probe` içeriyor.
 - [ ] **[P1] SD8 — Uyku ve uyanma Deck'te.** Kapanır: son değer uyku öncesi
       diske ulaşır, ses uyanışta geri gelir.
 - [ ] **[P1] D0 — Deck'te insan eliyle açık ölçümler.** Kapanır: yalnız eldeki
@@ -96,6 +98,10 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
 - [ ] **[P1] D1 — `pnpm deck` uçtan uca.** Derler, yükler, başlatır, ölçer, ekran
       görüntüsü alır; komut sözleşmeleri testli.
 - [ ] **[P1] D2 — gamescope kare zamanlaması.** Isınmış VOL.TEST pencereleri 59–60 FPS, p95 18–21 ms. Kapanır: host/SLR4 ve sunum istatistikleriyle kök neden ayrılır; 1280×800'de ≥59 FPS, p95 ≤18 ms bütün yüklerde sağlanır.
+- [ ] **[P1] Deck'te `vol:terminate` el sıkışması zaman aşımı.** SIGTERM sonrası
+      ilerleme kaydı diske ulaşıyor, ama kabuk `exit-after-grace` için
+      `timedOut` yazıyor. Kapanır: ya tolere edilen bir süre tanımlanır ya da
+      ön yüz onayı süre dolmadan döner; kayıt nedenini belirtir.
 - [ ] **[P1] D2 — Kayıt ve boşaltma kanıtı.** Yazma ortasında SIGKILL kaydı
       bozamaz; üretim kipinde SIGTERM ve gerçek uykuda son değer diske ulaşır.
 - [ ] **[P1] D2 — `synced` / `device` kapsamı.** Kapsamsız anahtar derlenmez;
