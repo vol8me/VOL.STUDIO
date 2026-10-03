@@ -41,6 +41,11 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 verir; aşamalar `justfile`dan türer. `pnpm run doctor:env` araçları ve
 Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 
+Kapılar Linux ve Windows'ta aynı aşamaları koşar. Windows'ta PATH'te gerçek
+`.exe` aranır (`execFileSync` uzantısız POSIX betiği çalıştıramaz), satır sonu
+`core.autocrlf=input` ile LF korunur ve Linux'a özgü ölçümler gerekçesiyle
+atlanır. Ayrıntı [windows.md](windows.md).
+
 ## Workspace sözleşmesi
 
 `scripts/quality/cli/workspace-contract.mjs` bütün ihlalleri birlikte raporlar:

@@ -190,7 +190,9 @@ yalnız `devtools/audio-synth/corpus/canaries/reviews.json`daki insan beyanıyla
   ölçülmüş gerçekler, kararlar, devkit sözleşmesi (`pnpm deck`).
 - **Android:** [docs/android.md](docs/android.md) — bir oyunun native
   projesinin kurulumu ve cihaz ölçümü (`pnpm benchmark:device`).
-- **Windows:** NSIS/MSI, WebView2.
+- **Windows:** NSIS/MSI, WebView2. Geliştirme ortamı, kapıların Windows'taki
+  davranışı, satır sonu kuralı ve ölçülemeyen Linux sözleşmeleri
+  [docs/windows.md](docs/windows.md).
 
 ## Belgeler
 

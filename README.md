@@ -26,6 +26,13 @@ Node.js `22.23.1` sürümü `.node-version` ve `package.json` içinde sabittir; 
 Rust ve Cargo; Android SDK ve NDK; Windows C++ Build Tools gerektirir.
 Ortam denetimi eksik gereksinimleri raporlar.
 
+Linux ve Windows aynı kapıları çalıştırır. Windows'ta ek olarak `bash` (Git for
+Windows ile gelir), gerçek `pnpm.exe` ve `just.exe` PATH'te olmalıdır: Node'un
+`execFileSync` çağrıları uzantısız POSIX betiği çalıştıramaz, bu yüzden `.CMD`
+shim'i yerine çalıştırılabilir `.exe` aranır. Satır sonu CRLF'e çevrilirse
+Prettier'ın `endOfLine: lf` kuralı ve kapı fixture'ları bozulur; `git` için
+`core.autocrlf=input` kullanılır. Ayrıntı [docs/windows.md](docs/windows.md).
+
 ```bash
 pnpm install
 pnpm run doctor:env
