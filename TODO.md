@@ -114,6 +114,15 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       emülatörde `appCategory="game"` ile ölçülür.
 - [ ] **[P3] OLED Deck ve Steam Machine kare zamanlaması.** Cihaz bulununca.
 
+### Ortam
+
+- [ ] **[P2] MSVC dizini PATH'te kalıcı değil.** Build Tools 2022 kuruldu ve
+      `just rust` ile `pnpm high` bu makinede geçti, ama bağlantı yalnızca MSVC
+      `bin\Hostx64\x64` dizini PATH'te öndeyken çalışıyor; Git for Windows'in GNU
+      coreutils `link`i öndeyse gölgeler. `doctor` bunu ölçüp bildiriyor.
+      Kapanır: MSVC dizini kalıcı PATH'e eklenir ya da geliştirme kabuğu
+      `vcvars64.bat` ile açılır; `doctor` yeşil kalmadan `pnpm high` koşulmaz.
+
 ### Kod
 
 - [x] **[P2] B6 — Ses değişimine göre push doğrulaması.** `high` sesin alt
@@ -147,6 +156,16 @@ uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi
       kalır.
 
 ## Kapatılanlar
+
+- [x] **Visual Studio C++ Build Tools 2022 kuruldu.** PATH'teki `link.exe`in Git for Windows'in GNU coreutils `link`i olması yüzünden bu makinede hiçbir Rust hedefi bağlanamıyordu; Build Tools kuruldu ve MSVC `bin\Hostx64\x64` öndeyken `just rust` ile `pnpm high` yeşil. Kalıcı PATH kaydı ayrı maddede açık.
+
+- [x] **Ortam kök nedeni: kapı kabuğu WSL'e düşüyordu.** `justfile`ın kabuğu PATH'teki `bash`a bağlıydı; Windows'ta bu `WindowsApps\bash.exe` WSL launcher'ına çözülüyor, tarifler Linux node/pnpm altında koşuyor ve `rust-just`/`esbuild` win32 ikilisi bulunamayınca kapılar koddan bağımsız kırılıyordu. Kabuk artık `scripts/quality/gitBash.mjs` ile Git kurulumundan türetiliyor; WSL gölgesi `doctor`da uyarı, kullanılabilir kabuk yoksa blokaj. Linux'a özgü Tauri bağımlılığı denetimi de Linux dışına çıkarıldı, böylece doktor Windows'un Tauri bağımlılığını Linux'un `pkg-config`'iyle yeşile boyamıyor.
+
+- [x] **MSVC linker gölgesi.** `rustc` bağlantı için PATH'ten `link.exe` çağırıyor; Git for Windows'in GNU coreutils `link`i ilk sıraya geldiği için bu makinede hiçbir Rust hedefi bağlanamıyordu. `doctor` artık PATH'teki ilk `link.exe`in gerçekten Microsoft linker olduğunu ölçüyor ve değilse gerekçeli yol gösteriyor.
+
+- [x] **Tauri üretilmiş Android çıktısı ignore dışındaydı.** `tauri-v2/plugins/*/android/.tauri/` kuralı eksikti; üretilen `tauri-api` ağacı izlemeye de girmeye de girmemiş, her `git status`'ta gürültü üretiyordu. Kural eklendi ve `gitFiles.test.mjs` sözleşmesine bağlandı.
+
+- [x] **Steam Cloud adı doğrulanmıyordu.** `cloud_read`/`cloud_write`/`cloud_delete` adı denetimsiz Steam'e veriyordu. Bulut adı artık aksiyon adından daha dar (noktayla başlamaz); `..`, ayraç, boş ve 129 bayt üstü adlar reddediliyor, yazma `MAX_CLOUD_BYTES` sınırını bayta uyguluyor. `store.rs` ile aynı sertlik seviyesi, regresyon testli.
 
 - [x] **Ses yüklemesi yaşam döngüsü.** CORE banka/döngü istekleri aynı partide başlar, eşzamanlı yükleme birleşir; söküm indirmeyi iptal eder ve geç decode kaynak kurmaz.
 
