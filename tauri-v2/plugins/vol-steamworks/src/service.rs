@@ -100,6 +100,30 @@ fn valid_name(name: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'-' | b'.'))
 }
 
+/// Bulut adı, aksiyon adından daha dardır: noktayla başlayamaz. Aksiyon
+/// kuralı `..` ve `.vdf` gibi adlara izin verir; bulutta bu adların tek
+/// anlamı yok ve yazıcının kendi dosyalarıyla karışır.
+#[cfg_attr(not(feature = "steamworks"), allow(dead_code))]
+fn valid_cloud_name(name: &str) -> bool {
+    valid_name(name) && !name.starts_with('.')
+}
+
+/// Bulut dosyası tavanı. Steam'in tek dosya sınırının altında kalır ve bu
+/// kabuğun taşıması beklenen kayıt büyüklüğünü aşan isteği, uzak sunucuya
+/// gitmeden reddeder. Sınır yazılan bayta uygulanır, base64 sarmalayıcısına
+/// değil: sarmalayıcı çözülmeden bayt sayısı bilinmez.
+#[cfg_attr(not(feature = "steamworks"), allow(dead_code))]
+const MAX_CLOUD_BYTES: usize = 1024 * 1024;
+
+#[cfg_attr(not(feature = "steamworks"), allow(dead_code))]
+fn validated_cloud_name(name: &str) -> Result<&str, String> {
+    if valid_cloud_name(name) {
+        Ok(name)
+    } else {
+        Err(format!("geçersiz bulut dosyası adı: {name:?}"))
+    }
+}
+
 pub(crate) mod imp {
     #[cfg(feature = "steamworks")]
     pub use real::*;
@@ -547,6 +571,7 @@ pub(crate) mod imp {
             }
 
             pub fn cloud_read(&self, name: &str) -> Result<Option<String>, String> {
+                let name = validated_cloud_name(name)?;
                 let client = self.client()?;
                 let file = client.remote_storage().file(name);
                 if !file.exists() {
@@ -561,8 +586,15 @@ pub(crate) mod imp {
             }
 
             pub fn cloud_write(&self, name: &str, data_base64: &str) -> Result<bool, String> {
+                let name = validated_cloud_name(name)?;
                 let bytes =
                     b64_decode(data_base64).ok_or_else(|| "bozuk base64 verisi".to_string())?;
+                if bytes.len() > MAX_CLOUD_BYTES {
+                    return Err(format!(
+                        "bulut verisi çok büyük: {} bayt, sınır {MAX_CLOUD_BYTES}",
+                        bytes.len()
+                    ));
+                }
                 let client = self.client()?;
                 let file = client.remote_storage().file(name);
                 use std::io::Write;
@@ -573,6 +605,7 @@ pub(crate) mod imp {
             }
 
             pub fn cloud_delete(&self, name: &str) -> Result<bool, String> {
+                let name = validated_cloud_name(name)?;
                 let client = self.client()?;
                 Ok(client.remote_storage().file(name).delete())
             }
@@ -713,5 +746,72 @@ pub(crate) mod imp {
                 self.unavailable()
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod cloud_name_tests {
+    use super::*;
+
+    #[test]
+    fn bulut_adlari_eylem_adindan_dardir() {
+        // Aksiyon kuralı noktayı kabul eder; bulut kabul etmez.
+        assert!(valid_name(".vdf"));
+        assert!(!valid_cloud_name(".vdf"));
+        assert!(!valid_cloud_name(".."));
+        assert!(!valid_cloud_name("."));
+    }
+
+    #[test]
+    fn dizin_kacisi_ayrac_ve_bos_ad_reddedilir() {
+        for kotu in [
+            "",
+            "..",
+            ".",
+            ".hidden",
+            "a/b",
+            "a\\b",
+            "../x",
+            "x\u{0}y",
+            "x y",
+            &"a".repeat(129),
+        ] {
+            assert!(!valid_cloud_name(kotu), "reddedilmeli: {kotu:?}");
+            assert!(
+                validated_cloud_name(kotu).is_err(),
+                "reddedilmeli: {kotu:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn yedek_dosya_sonekleri_bulutta_ayri_tutulmaz() {
+        // `store.rs` yazıcısının `.tmp`/`.bak` yan dosyaları vardır ve bunları
+        // adlandırmadan dışlar. Steam Cloud düz bir anahtar-değer deposudur,
+        // yan dosya üretmez; bu yüzden aynı ayrıntı burada yanlış olurdu.
+        assert!(valid_cloud_name("x.json.tmp"));
+        assert!(valid_cloud_name("x.json.bak"));
+    }
+
+    #[test]
+    fn tasinabilir_adi_aktarilir() {
+        for iyi in ["game-store.json", "slot-1.sav", "a_b", "x"] {
+            assert!(valid_cloud_name(iyi), "geçmeli: {iyi}");
+            assert_eq!(validated_cloud_name(iyi), Ok(iyi));
+        }
+    }
+
+    #[test]
+    fn uzun_ad_ayni_sinirla_kirpilir() {
+        assert!(valid_cloud_name(&"a".repeat(128)));
+        assert!(!valid_cloud_name(&"a".repeat(129)));
+        assert!(validated_cloud_name(&"a".repeat(129)).is_err());
+    }
+
+    #[test]
+    fn hata_adi_ve_kurali_yeniden_usturur() {
+        let hata = validated_cloud_name("../gizli").unwrap_err();
+        assert!(hata.contains("geçersiz bulut dosyası adı"), "{hata}");
+        assert!(hata.contains("../gizli"), "{hata}");
     }
 }
