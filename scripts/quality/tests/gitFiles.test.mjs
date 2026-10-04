@@ -72,6 +72,8 @@ test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kayn
     'games/sample-game/src-tauri/gen/android/app/build/output.apk',
     'tauri-v2/plugins/vol-haptics/android/build/intermediates/plugin.dex',
     'tauri-v2/plugins/vol-haptics/android/.gradle/cache.bin',
+    'tauri-v2/plugins/vol-haptics/android/.tauri/tauri-api/.gradle/9.2.0/gc.properties',
+    'tauri-v2/plugins/vol-haptics/android/.tauri/tauri-api/src/main/java/app/tauri/plugin/Plugin.kt',
     '.claude/arastirma/rapor.jsonl',
     'graphify-out/graph.json',
   ];

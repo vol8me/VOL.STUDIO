@@ -41,6 +41,7 @@ devtools/*/export/
 /games/*/src-tauri/gen/android/.gradle/
 /tauri-v2/plugins/*/android/build/
 /tauri-v2/plugins/*/android/.gradle/
+/tauri-v2/plugins/*/android/.tauri/
 /games/*/src-tauri/gen/android/app/src/main/java/**/generated/
 /games/*/src-tauri/gen/android/app/src/main/jniLibs/
 /games/*/src-tauri/gen/android/app/src/main/assets/tauri.conf.json
