@@ -152,10 +152,13 @@ try {
     const sdk = Number(optionalAdb(['shell', 'getprop', 'ro.build.version.sdk']));
     report.device.sdk = sdk > 0 && Number.isFinite(sdk) ? sdk : null;
     for (const app of candidates) {
+      // `pm list packages` Windows'ta CRLF satır sonu üretir; paket adı düz
+      // karşılaştırması satır sonunu hesaba katmazsa uygulama "kurulu değil"
+      // sanılır. `trim()` her iki platformda da güvenli.
       if (
         !adb(['shell', 'pm', 'list', 'packages', app.pkg])
           .split('\n')
-          .includes(`package:${app.pkg}`)
+          .some((line) => line.trim() === `package:${app.pkg}`)
       ) {
         report.skipped.push(app.name);
         continue;
