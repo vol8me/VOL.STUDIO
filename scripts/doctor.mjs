@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { nodeRuntimeProblem } from './quality/nodeRuntime.mjs';
+import { bashShell, bashShellWarning } from './quality/gitBash.mjs';
 import { listWorkspacePackages, loadRepoLifecycle } from './quality/workspaceLifecycle.mjs';
 import { selectActivePackages } from './quality/runActive.mjs';
 import { checkPlaywrightRuntime } from './quality/playwrightRuntime.mjs';
@@ -33,6 +34,53 @@ function checkJust() {
   console.error('just: YOK');
 }
 
+function checkBash() {
+  const shell = bashShell();
+  if (!shell.ok) {
+    failures.push(shell.problem);
+    console.error(`bash: SORUN — ${shell.problem}`);
+    return;
+  }
+  console.log(`bash: ${shell.path} (${shell.source})`);
+  // Gölge kapıyı düşürmez: kabuk Git kurulumuna sabitli. Yine de PATH'te
+  // durması ileride başka bir çağıranı Linux'a düşürebileceği için raporlanır.
+  const warning = bashShellWarning();
+  if (warning) console.error(`bash: UYARI — ${warning}`);
+}
+
+function checkNativeLinker() {
+  /*
+   * MSVC linker dışında PATH'teki her `link.exe` bağlantıyı bozar: rustc
+   * bağlantı için PATH'ten `link.exe` çağırır ve Git for Windows'in GNU
+   * coreutils `link`i ilk sıraya gelirse hiçbir bağlanabilir hedef üretilemez
+   * ("linking with link.exe failed: unexpected error"). `docs/windows.md`
+   * Build Tools'u zorunlu sayar; bu denetim o zorunluluğu ölçer.
+   */
+  if (process.platform !== 'win32') return;
+  const where = spawnSync('where.exe', ['link.exe'], { encoding: 'utf8' });
+  const first = `${where.stdout ?? ''}`
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean);
+  if (!first) {
+    failures.push(
+      'MSVC linker: PATH’te `link.exe` yok. Visual Studio C++ Build Tools 2022 kur; `cargo build` bunun olmadan bağlanamaz.',
+    );
+    console.error('MSVC linker: YOK');
+    return;
+  }
+  const probe = spawnSync(first, [], { encoding: 'utf8' });
+  const banner = `${probe.stdout ?? ''}${probe.stderr ?? ''}`;
+  if (/Incremental Linker/i.test(banner)) {
+    console.log(`MSVC linker: ${first}`);
+    return;
+  }
+  failures.push(
+    `MSVC linker: PATH’teki ilk \`link.exe\` Microsoft linker değil — ${first}. rustc bağlantı için bu dosyayı çağırır ve her hedef bağlanamaz. Visual Studio C++ Build Tools 2022 kur ya da Git for Windows dizinini PATH’te MSVC’den sonraya al.`,
+  );
+  console.error(`MSVC linker: GİZLİ — ${first}`);
+}
+
 function checkCargoAudit() {
   const direct = spawnSync('cargo-audit', ['--version'], { encoding: 'utf8' });
   if (direct.status === 0) {
@@ -51,6 +99,7 @@ function checkCargoAudit() {
 const nodeProblem = nodeRuntimeProblem(resolve(import.meta.dirname, '..'));
 console.log(`Node: ${process.versions.node} (.node-version)`);
 if (nodeProblem) failures.push(nodeProblem);
+checkBash();
 command(
   'pnpm',
   'pnpm',
@@ -59,18 +108,27 @@ command(
 );
 command('Rust', 'rustc', ['--version'], 'https://rustup.rs üzerinden Rust kur.');
 command('Cargo', 'cargo', ['--version'], 'https://rustup.rs üzerinden Cargo kur.');
+checkNativeLinker();
 checkJust();
 command('FFmpeg', 'ffmpeg', ['-version'], 'Dağıtım paket yöneticisinden ffmpeg kur.');
 checkCargoAudit();
 
-const tauri = spawnSync('pkg-config', ['--exists', 'gtk+-3.0', 'webkit2gtk-4.1']);
-if (tauri.status === 0) {
-  console.log('Tauri sistem deps: OK');
+// GTK/WebKit derleme bağımlılıkları yalnız Linux'ta gerekir; Windows ve macOS
+// WebView2/WebKit'i işletim sistemi sağlar. Bu denetim Linux dışında koşsaydı
+// ya eksik diye kırmızı verir ya da — WSL'in `pkg-config`'i görünürken —
+// Linux'un yeşilini Windows'a yazardı.
+if (process.platform === 'linux') {
+  const tauri = spawnSync('pkg-config', ['--exists', 'gtk+-3.0', 'webkit2gtk-4.1']);
+  if (tauri.status === 0) {
+    console.log('Tauri sistem deps: OK');
+  } else {
+    failures.push(
+      'Tauri sistem deps: eksik. Fedora için gtk3-devel ve webkit2gtk4.1-devel; Debian/Ubuntu için libgtk-3-dev ve libwebkit2gtk-4.1-dev kur.',
+    );
+    console.error('Tauri sistem deps: YOK');
+  }
 } else {
-  failures.push(
-    'Tauri sistem deps: eksik. Fedora için gtk3-devel ve webkit2gtk4.1-devel; Debian/Ubuntu için libgtk-3-dev ve libwebkit2gtk-4.1-dev kur.',
-  );
-  console.error('Tauri sistem deps: YOK');
+  console.log(`Tauri sistem deps: Linux dışında gerekmiyor (${process.platform})`);
 }
 
 const root = resolve(import.meta.dirname, '..');

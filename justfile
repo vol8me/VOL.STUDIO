@@ -2,7 +2,10 @@
 # global değilse `pnpm exec just <tarif>` ya da `pnpm quick|fast|high|signoff`.
 # Ne sınadıkları: docs/gates.md.
 
-set shell := ["bash", "-euo", "pipefail", "-c"]
+# Windows'ta PATH'teki `bash` WSL launcher'ına çözülürse tarifler Linux node
+# altında koşar ve kapılar koddan bağımsız kırılır; kabuk Git kurulumundan
+# türetilir. Tek kaynak ve teşhis: `scripts/quality/gitBash.mjs`.
+set shell := ["node", "scripts/quality/bashShell.mjs", "-euo", "pipefail", "-c"]
 
 default:
     @just --list

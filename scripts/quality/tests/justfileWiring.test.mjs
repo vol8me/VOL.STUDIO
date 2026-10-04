@@ -26,6 +26,29 @@ test('justfile’ın çağırdığı her script gerçekten var', () => {
   assert.deepEqual(missing, [], `justfile var olmayan script çağırıyor: ${missing.join(', ')}`);
 });
 
+test('tarifler PATH’teki bash’a değil Git kurulumunun kabuğuna bağlanır', () => {
+  /*
+   * Windows'ta PATH'teki `bash`, `WindowsApps\bash.exe` WSL launcher'ına
+   * çözülür. O kabukla her tarif WSL'nin Linux node/pnpm'i altında koşar ve
+   * `rust-just` ile `esbuild` win32 ikilisi bulunamayınca kapılar koddan
+   * bağımsız kırılır. Kabuk sözleşmesi `bashShell.mjs` üzerinden Git
+   * kurulumuna sabitlenir; buradaki `bashShell` çağrısı bu yüzden bir
+   * kazara düşmez.
+   */
+  const shellLine = /^set shell := \[(.*)\]$/m.exec(justfile);
+  assert.ok(shellLine !== null, 'justfile’da `set shell` tanımı bulunamadı');
+  assert.match(
+    shellLine[1],
+    /"node",\s*"scripts\/quality\/bashShell\.mjs",\s*"-euo",\s*"pipefail",\s*"-c"/,
+    'kabuk Git Bash çözümleyicisi üzerinden sabitlenmeli',
+  );
+  assert.doesNotMatch(
+    shellLine[1],
+    /"bash"/,
+    'kabuk doğrudan PATH’teki `bash`a bağlanmamalı',
+  );
+});
+
 test('kapı aşamaları var olan tariflere işaret eder', () => {
   /*
    * `high: quick lint-css coverage build bundle e2e` gibi bir satırdaki her ad

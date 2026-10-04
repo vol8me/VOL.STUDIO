@@ -67,7 +67,9 @@ test('temizlik aktif oyun raporlarını kaldırır; gönderilen asset ve frozen 
     }),
   );
   mkdirSync(join(root, 'scripts/quality'), { recursive: true });
-  for (const file of ['cleanWorkspace.mjs', 'workspaceLifecycle.mjs']) {
+  // `bashShell.mjs` justfile'ın kabuğudur: tarif, temizlik betiğinden önce onu
+  // çalıştırır. `gitBash.mjs` onun çözümleyicisidir.
+  for (const file of ['cleanWorkspace.mjs', 'workspaceLifecycle.mjs', 'bashShell.mjs', 'gitBash.mjs']) {
     copyFileSync(resolve(import.meta.dirname, '..', file), join(root, 'scripts/quality', file));
   }
   writeFileSync(join(root, 'justfile'), recipe);
