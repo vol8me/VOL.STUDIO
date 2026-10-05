@@ -30,7 +30,6 @@ devtools/audio-synth/records/fits/
 devtools/audio-synth/records/jobs/
 devtools/audio-synth/corpus/samples/
 devtools/audio-synth/records/searches/
-devtools/audio-synth/corpus/canaries/reviews.json
 devtools/audio-synth/locks/encode-profiles.lock.json
 devtools/audio-synth/reference/production/banks/
 devtools/audio-synth/reference/production/manifests/

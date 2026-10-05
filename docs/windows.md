@@ -104,6 +104,10 @@ fixture'ı gerçek eksik kaynak veya dosya/dizin çakışması üretir.
 Windows directory fsync desteklemez; bu açık sınır güç kesintisi
 dayanıklılığının POSIX ile aynı olduğu anlamına gelmez.
 
+Doctor tarayıcı probunun JavaScript'ini stdin üzerinden Node'a iletir.
+Çok satırlı program CMD argümanına konmaz; `pnpm.cmd` sessizce boş sonuç
+üretebilir. Başarı için Chromium ve WebKit ayrı ayrı başlatılıp kapanmalıdır.
+
 ## Linux ve Deck sınırı
 
 Linux pkg-config/GTK/WebKitGTK bağımlılığı Windows'ta ölçülmez. Windows

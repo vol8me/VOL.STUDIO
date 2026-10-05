@@ -19,9 +19,11 @@ process.exitCode = failed ? 1 : 0;
 export function checkPlaywrightRuntime(packageName, run = spawnSync) {
   const result = run(
     'pnpm',
-    ['--filter', packageName, 'exec', 'node', '--input-type=module', '-e', PROBE],
+    ['--filter', packageName, 'exec', 'node', '--input-type=module', '-'],
     {
       encoding: 'utf8',
+      // CMD çok satırlı argv'yi keser; Node programı stdin üzerinden taşınır.
+      input: PROBE,
       timeout: 30_000,
     },
   );
