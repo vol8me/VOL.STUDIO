@@ -1,5 +1,5 @@
-import { cpSync, existsSync, createReadStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import { existsSync, createReadStream } from 'node:fs';
+import { cp, stat } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 
 /** Ortak statik dosyaları oyunun public diziniyle birlikte sunar ve paketler. */
@@ -31,8 +31,9 @@ export function sharedPublic(directory) {
         }
       });
     },
-    writeBundle() {
-      if (existsSync(directory)) cpSync(directory, output, { recursive: true });
+    async writeBundle() {
+      // Node 22.23.1 Windows cpSync Unicode yolda native süreci çökertebilir.
+      if (existsSync(directory)) await cp(directory, output, { recursive: true });
     },
   };
 }
