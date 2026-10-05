@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { estimatePitch } from '../../src/analysis/descriptors';
 import { analyzeAudio } from '../../src/analysis/report';
 import { measureLoopSeam } from '../../src/analysis/seam';
@@ -175,7 +175,7 @@ describe('Weapon/Launcher (archetype.launcher)', () => {
       profiles,
     }) as unknown as Record<string, unknown>;
 
-  it('tank topu, arcade taret ve bilimkurgu fırlatıcı aynı archetype + farklı stil/materyal', () => {
+  const variants = () => {
     const tank = launcher(
       { caliber: 0.9, charge: 0, mechanism: 0.7, debris: 0.5, tail: 0.5 },
       {
@@ -197,6 +197,15 @@ describe('Weapon/Launcher (archetype.launcher)', () => {
         material: 'ceramic',
       },
     );
+    return [tank, turret, scifi];
+  };
+  let rendered: Float32Array[];
+  beforeAll(() => {
+    // Üç tam PCM ortak salt okunur fixture'dır; yapısal ve akustik kanıt aynı kalır.
+    rendered = variants().map((program) => render(program));
+  });
+  it('tank topu, arcade taret ve bilimkurgu fırlatıcı aynı archetype + farklı stil/materyal', () => {
+    const [tank, turret, scifi] = variants();
     const graphs = [tank, turret, scifi].map((p) => soundGraph(p));
     expect(graphs.map((g) => g.style?.profile)).toEqual([
       'realistic-heavy',
@@ -217,7 +226,6 @@ describe('Weapon/Launcher (archetype.launcher)', () => {
         }[]
       )[0].params.material;
     expect([tank, turret, scifi].map(bodyMaterial)).toEqual(['metal', 'hard-plastic', 'ceramic']);
-    const rendered = [tank, turret, scifi].map((p) => render(p));
     expect(new Set(rendered.map((x) => hashPcm([x], 24000))).size).toBe(3);
     const peakTime = (x: Float32Array) =>
       x.reduce((best, v, i) => (Math.abs(v) > Math.abs(x[best]) ? i : best), 0) / 24000;

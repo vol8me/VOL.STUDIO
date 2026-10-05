@@ -89,12 +89,15 @@ describe('bowed presetleri', () => {
     }
   });
 
-  it('presets deterministiktir', () => {
-    for (const fn of [violin, viola, cello, doubleBass]) {
-      const a = render(fn(330, 0.8));
-      const b = render(fn(330, 0.8));
-      expect(a.samples).toEqual(b.samples);
-    }
+  it.each([
+    ['violin', violin],
+    ['viola', viola],
+    ['cello', cello],
+    ['doubleBass', doubleBass],
+  ] as const)('%s preset deterministiktir', (_name, fn) => {
+    const a = render(fn(330, 0.8));
+    const b = render(fn(330, 0.8));
+    expect(a.samples).toEqual(b.samples);
   });
 
   it('yaylı karakter vibrato ile zamanla frekans salınımı yaratır', () => {
