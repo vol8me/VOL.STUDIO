@@ -1,10 +1,11 @@
+import { fileURLToPath } from 'node:url';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { coreClosure } from '../../src/protocol/sourceClosure';
 
-const REPO = new URL('../../../../', import.meta.url).pathname;
+const REPO = fileURLToPath(new URL('../../../../', import.meta.url));
 const roots: string[] = [];
 
 function tree(files: Record<string, string>): string {
@@ -36,12 +37,9 @@ describe('coreClosure — önbellek parmak izinin CORE kapsamı', () => {
   it('yalnız tüketicinin yüklediği CORE dosyalarını geçişli olarak toplar', () => {
     const root = tree({ ...core, 'app/src/a.ts': "import { mix } from '@volstudio/core/audio';" });
     const files = coreClosure(join(root, 'app/src'), join(root, 'core'));
-    expect(files.map((file) => relative(join(root, 'core'), file))).toEqual([
-      'src/audio/index.ts',
-      'src/audio/mix.ts',
-      'src/math.ts',
-      'src/types.ts',
-    ]);
+    expect(
+      files.map((file) => relative(join(root, 'core'), file).split(/[\\/]/).join('/')),
+    ).toEqual(['src/audio/index.ts', 'src/audio/mix.ts', 'src/math.ts', 'src/types.ts']);
   });
 
   it('çözülemeyen göreli yol ya da dışa açık olmayan alt yol hata verir', () => {
@@ -59,7 +57,7 @@ describe('coreClosure — önbellek parmak izinin CORE kapsamı', () => {
 
   it('gerçek depoda CORE UI parmak izine girmez, ses ve rastgelelik girer', () => {
     const files = coreClosure(join(REPO, 'devtools/audio-synth/src'), join(REPO, 'core')).map(
-      (file) => relative(join(REPO, 'core'), file),
+      (file) => relative(join(REPO, 'core'), file).split(/[\\/]/).join('/'),
     );
     expect(files).toContain('src/random/random.ts');
     expect(files).toContain('src/audio/music/spec.ts');

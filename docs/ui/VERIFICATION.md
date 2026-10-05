@@ -41,33 +41,16 @@ quick zincirine, tarayıcı axe/durum/geometri/niyet kontrolleri e2e'ye; uzun
 gerçek cihaz performans ölçümü sürüm kabulüne bağlanır. Yeni tarifin ihlal
 örneği, bileşim testi ve docs/gates güncellemesi aynı değişiklikte yapılır.
 
-Mevcut bütçeler: vitrin app/vendor/css **150/1/24 KiB**, VOL.TEST
-**105/360/21 KiB**. İsim göçü bütçe artışı gerekçesi değildir. Gönderilen
+Bundle bütçelerinin tek kaynağı quality.json içindeki bundles kaydıdır. İsim göçü bütçe artışı gerekçesi değildir. Gönderilen
 seslerin indirme/ön yükleme baytları ayrıca ölçülür; gzip JS bütçesi ses
 yükünü içeriyor gibi raporlanmaz. Frozen paket/global CI yaratılmaz.
 
-## Uygulama turunun komut akışı
+## Doğrulama sahibi
 
-```bash
-git status --short
-git rev-parse HEAD
-pnpm run doctor:env
-pnpm --filter @volstudio/core exec vitest run <modül-testleri>
-pnpm --filter <vitrin-paketi> exec playwright test <senaryolar> --project=chromium
-pnpm --filter <vitrin-paketi> exec playwright test <senaryolar> --project=webkit
-pnpm exec just contract
-pnpm quick
-pnpm high
-git status --short
-```
-
-Yer tutucular gerçek görev test dosyasına ve mevcut paket adına çevrilir;
-UI-06 öncesi vitrin `@volstudio/vol-ui`, sonrasında @volstudio/vol-showcase.
-Regresyon testinin önce başarısız, sonra başarılı sonucu görülür. Quick commit,
-high push kancasında da zorunludur; atlanmaz. Tam signoff UI-02 ses yayını ve
-UI-13 sürüm adayında koşulur; yeni native kilometre taşı kendi rust/build/cihaz
-kabulünü de taşır. Düzeltme sonrası yalnız düşen tekil kapı yeniden koşulur;
-başarısız tam zincir geçti denmez.
+Modül testi ve görevin ilgili tekil kapısı teknik teslimi doğrular.
+Repo kapıları/komutlar [gates](../gates.md), ortam desteği
+[Windows](../windows.md) sahibindedir. UI-02 yayın ve UI-13 sürüm adayı
+signoff ister; native kilometre taşı ayrıca kendi rust/build/cihaz kanıtını taşır.
 
 ## Durum matrisi ve test örneği kaydı
 
@@ -191,10 +174,10 @@ kullanıcı jestiyle açılır; arka planda beklemiş kuyruk yoktur; yük/yenide
 tetikleme kritik sonucu susturmaz. Haptik kapalı/sıfır şiddet ve odak kaybı/
 cihaz çıkarma/çıkışta durma gerçek sondada sınanır.
 
-Varsayılan ses karakteri kulaklık, Deck hoparlörü ve eldeki Android
-hoparlörüyle dinlenir; telefonun bas duyumu kulaklık dosyasıyla kanıtlanmaz.
-İnsan canary incelemesi yalnız gerçek beyanla resmî inceleme alanında kapanır;
-plan/kanca/ses baytı eşitliği sesin beğenildiği anlamına gelmez.
+Ses yayını güncel kaynak/PCM/manifest ve codec sonrası teknik QA ile kabul
+edilir; runtime decode/çıkış gerçek hedefte doğrulanır. İsteğe bağlı dinleme
+paketi kulaklık veya cihaz hoparlörü karşılaştırmasına hizmet eder; insan
+beyanı üretim şartı değildir. Dinlenmediği hâlde beğeni iddiası yazılmaz.
 
 ## Gerçek platform matrisi
 

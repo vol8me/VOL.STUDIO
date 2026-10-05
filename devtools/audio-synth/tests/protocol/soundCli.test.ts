@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnTsxSync } from '../support/process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,14 +16,13 @@ import { RENDER_TIMEOUT } from '../support/timeouts';
  * yüzeyinin CLI kabuğu ayrı süreçte, geçici depoda.
  */
 const PACKAGE = fileURLToPath(new URL('../..', import.meta.url));
-const TSX = join(PACKAGE, 'node_modules/.bin/tsx');
 const CLI = join(PACKAGE, 'scripts/audio-job.ts');
 
 let repo: TestRepo;
 const tonePath = () => join(repo.root, DEFAULT_SAMPLES_ROOT, 'tone.json');
 
 function cli(...args: string[]) {
-  const res = spawnSync(TSX, [CLI, ...args], { cwd: repo.root, encoding: 'utf8' });
+  const res = spawnTsxSync(CLI, [...args], { cwd: repo.root, encoding: 'utf8' });
   const last = res.stderr.trim().split('\n').pop() ?? '';
   return {
     status: res.status,

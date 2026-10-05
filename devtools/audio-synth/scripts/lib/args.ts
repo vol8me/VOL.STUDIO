@@ -41,7 +41,6 @@ export const VALUE_FLAGS: ReadonlySet<string> = new Set([
   'negative',
   'note',
   'package',
-  'pcm',
   'port',
   'positive',
   'profile',
@@ -54,7 +53,6 @@ export const VALUE_FLAGS: ReadonlySet<string> = new Set([
   'seed',
   'skeleton',
   'state',
-  'status',
   'workers',
 ]);
 

@@ -1,100 +1,117 @@
 # Windows
 
-Windows geliştirme ortamı ve kapıların Windows'ta nasıl davrandığı. Linux'ta
-çalışan her şey Windows'ta da çalışır; farkı yalnız araç çözümlemesindedir.
+Windows 11 geliştirme hattı; Linux builder ve gerçek ürün kabulü ayrı
+sorumluluklardır. Host araçları `pnpm run doctor:env`, Android profili
+`node scripts/doctor.mjs --android` ile denetlenir.
 
-Ortam denetimi `pnpm run doctor:env` eksik gereksinimleri raporlar.
+## Destek sınırı
 
-## Gereksinimler
+| Yol                                       | Windows sorumluluğu                | Ayrı doğrulama                                    |
+| ----------------------------------------- | ---------------------------------- | ------------------------------------------------- |
+| Web geliştirme, CORE, UI ve yerel kapılar | Native Windows Node/pnpm/Git Bash  | quick/high ve tam audio kapsamı                   |
+| Windows native kabuk                      | MSVC, Windows SDK, WebView2        | NSIS/MSI kurulum, DPI, pencere ve servis kabulü   |
+| Android                                   | JDK/SDK/NDK ile APK üretimi ve adb | Paketli uygulama ve gerçek tablet kabulü          |
+| Deck devkit                               | SSH keşif/transfer/sonda           | Linux builder, host/SLR4 ve gerçek Steam olayları |
+| Linux AppImage/steamrt4                   | Ayrı Linux builder gerekir         | ELF/GLIBC, WebKitGTK/GStreamer ve görünür açılış  |
 
-| Araç                          | Sürüm                                | Neden                                                                                              |
-| ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| Node.js                       | `22.23.1`                            | `.node-version` ve `package.json` aynı kesin sürümü taşır; deterministik ses çıktısı buna bağlıdır |
-| pnpm                          | `11.18.0`                            | `packageManager` alanında sabit                                                                    |
-| Rust                          | stable                               | Tauri kabuğu ve plugin crate'leri                                                                  |
-| Visual Studio C++ Build Tools | 2022                                 | MSVC linker; `cargo build` bunun olmadan bağlanamaz                                                |
-| Python                        | 3.12+                                | Deck komutları (`sh -c python3 -c ...`) bunu çalıştırır                                            |
-| Git for Windows               | son sürüm                            | `bash`, `ssh`, `rsync` yerine geçen Git Bash katmanı                                               |
-| FFmpeg                        | son sürüm                            | audio-synth ses üretimi                                                                            |
-| cargo-audit                   | `cargo install cargo-audit --locked` | `signoff` kapısının `security-rust` aşaması                                                        |
-| JDK                           | 21 LTS                               | Android build; Android Studio'nun JBR'si 25'tir ve hedeflenen sürüm değildir                       |
-| Android SDK                   | platform 36 + build-tools 36         | `compileSdk`/`targetSdk` değerleri                                                                 |
-| Android NDK                   | `27.0.12077973`                      | AGP 8.11'in varsayılanı                                                                            |
-| Android CMake                 | `3.22.1`                             | AGP 8.11'in varsayılanı                                                                            |
-| WebView2                      | son sürüm                            | Tauri masaüstü kabuğu                                                                              |
+Araç denetiminin yeşili installer, oyun performansı, Steam olayları veya
+dokunma/haptik hissi kabulü değildir. Güncel kanıt ve açık işler
+[denetim](monorepo-audit.md#18-f01f03-uygulama-durumu) ve [kök TODO](../TODO.md)
+içindedir.
 
-## PATH'te gerçek çalıştırılabilir dosya
+## Host kurulumu
 
-Node'un `execFileSync`/`spawnSync` çağrıları Windows'ta **uzantısız** komut
-adını çalıştıramaz; yalnız `.exe`, `.cmd` veya `.bat` yollarını çalıştırır.
-Bu iki yerde kapı kodu sahte komut çağırır:
+Node sürümü `.node-version`, pnpm sürümü `package.json#packageManager`
+içindedir. Git for Windows, Rust stable MSVC toolchain, Visual Studio 2022
+C++ Build Tools (masaüstü C++ workload ve Windows SDK), WebView2, FFmpeg ve
+cargo-audit gerekir. Tauri'nin [resmi Windows gereksinimleri](https://v2.tauri.app/start/prerequisites/#windows)
+native bağımlılıkların kurulumunu açıklar. Python yalnız Deck devkit araçları
+için gerekir; host kalite kapılarının gereksinimi değildir.
 
-- `scripts/doctor.mjs` ve `scripts/quality/workspaceLifecycle.mjs` `pnpm`
-  çağırır.
-- `scripts/quality/tests/*.test.mjs` `node_modules/.bin/just` çağırır; pnpm bu
-  dizinde POSIX'te yürütülebilir dosya, Windows'ta yalnız `just.CMD` shim'i
-  üretir.
+Yeni PowerShell oturumunda, repo kökünde:
 
-Bu yüzden PATH'te **gerçek `.exe`** bulunmalıdır; pnpm'in ve `rust-just`
-paketlerinin sunduğu `.exe` dosyaları ayrı bir dizine yerleştirilir. Aynı
-sebeple `.CMD`/`.bat` çalıştırmak `shell: true` gerektirir; `cmd.exe` kendi
-PATH'ini kullandığı için sahte komut testlerinde bu kaçınılır ve komutun tam
-yolu açıkça verilir.
+```powershell
+npm.cmd install --global pnpm@11.18.0
+pnpm.cmd install --frozen-lockfile
+pnpm.cmd --filter @volstudio/vol-test exec playwright install chromium webkit
+cargo install cargo-audit --locked
+pnpm.cmd run doctor:env
+pnpm.cmd quick
+pnpm.cmd high
+```
 
-## Satır sonu
+Corepack ile aynı sabit pnpm sürümünü kurmak da geçerlidir. `pnpm.cmd`
+PowerShell execution-policy nedeniyle ps1 shim'inin engellenmesini önler;
+normal `pnpm` adı çalışıyorsa kullanılabilir. Paket yöneticisinin ürettiği
+shim yeterlidir; pnpm.exe veya just.exe dosyalarını elle kopyalama zorunluluğu
+yoktur. just exact repo devDependency'sidir ve `pnpm exec just` ile çağrılır.
 
-Git for Windows `core.autocrlf=true` varsayılanıyla çalışır ve checkout'ta tüm
-dosyaları CRLF'e çevirir. Bu iki kapıyı bozar:
+Linux node_modules ağacı Windows'ta kullanılmaz; temiz clone'da normal
+install çalıştırılır. pnpm'in store konumu kurulu ağaçtan farklıysa mevcut
+node_modules başka store'a bağlanmış demektir: temiz clone tercih edilir,
+sürüm kilidi değiştirilmez. Araç kurulumundan sonra yeni terminal açılır.
 
-- Prettier `endOfLine: lf` bekler; CRLF'de **tüm** dosyalar `format-check`'ten
-  düşer.
-- Bekçi fixture'ları `/` ile yazılmış yolları `\` ile karşılaştırır; eşleşme
-  sessizce kırılır.
+## Komut ve linker sözleşmesi
 
-Bu yüzden `core.autocrlf=input` kullanılır: commit'te CRLF LF'e çevrilir,
-checkout'ta depodaki LF korunur. `input` değeri `true`'dan güvenlidir çünkü
-hiçbir koşulda depoya CRLF girmez.
+`scripts/quality/command.mjs` süreç sınırının sahibidir. Native exe doğrudan
+argv ile çalışır; cmd/bat shim'leri cross-spawn'ın PATH/PATHEXT çözümü ve
+escaping'iyle çağrılır. Genel `shell: true` kullanılmaz. Boşluk, Unicode,
+tırnak, & işareti, farklı cwd ve PATH gerçek süreç fixture'larında sınanır.
+TS test yardımcıları shim yerine Node ile çözümlenen tsx JS girişini başlatır.
 
-Raporlanan yollar daima POSIX'tir. `node:path` `join`/`relative` platforma
-bağlı ayraç üretir; `scripts/quality/workspaceLifecycle.mjs` içindeki
-`posixPath()` tek dönüşüm noktasıdır ve bekçi mesajları, fixture eşleşmeleri
-ile sözleşme yolları bu primitive'i kullanır.
+Git Bash repo tarafından Git kurulumundan çözülür; WindowsApps/WSL bash
+launcher'ının PATH'te önce gelmesi kapıyı Linux çalışma zamanına geçirmez.
+Doctor bu gölgeyi uyarı olarak raporlar. WSL geliştirmesi ayrı Linux
+bağımlılık ağacı ve builder profilidir.
 
-## Ölçülemeyen platform sözleşmeleri
+Doctor, PATH'teki ilk link.exe banner'ından kesin derleme sonucu çıkarmaz.
+Rust host'unun Windows MSVC olduğunu kontrol eder, küçük bir Rust programını
+bağlar ve çalıştırır. Başarısız gerçek prob kapıyı düşürür; başarılı link
+PATH'teki GNU link'in otomatik olarak kırıcı olduğu varsayımını çürütür.
 
-Bazı kapılar Linux'a özgü davranışı ölçer. Windows'ta bunlar **atlanır** ve
-raporda gerekçesiyle görünür; sessizce geçmiş sayılmaz:
+## Android araç profili
 
-| Aşama                        | Neden                                                                              |
-| ---------------------------- | ---------------------------------------------------------------------------------- |
-| `doctor` → Tauri sistem deps | `pkg-config` ve `webkit2gtk` Linux'ya özgüdür; Windows'ta WebView2 karşılığı gelir |
-| `e2e` → WebKit ses           | Playwright'ın Windows WebKit'i `AudioContext` sunmaz; Linux WebKitGTK sunar        |
-| Deck SIGTERM                 | `/proc` taraması gerektirir                                                        |
-| `linux-steamrt4`             | steamrt4 kabuğu Linux'ta kurulur                                                   |
+Repo profili `scripts/quality/androidToolchain.mjs` içindedir: JDK 21,
+SDK platform 36, build-tools 36.0.0, NDK 27.0.12077973, CMake 3.22.1 ve
+aarch64-linux-android Rust hedefi. Bu repo tercihi Tauri'nin bütün projeler
+için tek sürüm gereksinimi olarak sunulmaz. [Android rehberi](android.md)
+oyun başına native kaynak ve build sözleşmesini taşır.
 
-Windows piksel temelleri `-win32.png` olarak ayrı dosyalarda tutulur; Linux
-temelleriyle karışmaz ve kapı her iki motoru da ayrı ölçer.
+Android Studio SDK Manager ile bu bileşenleri kur; JDK 21'i ayrıca seç.
+Yeni oturumda JAVA_HOME JDK köküne, ANDROID_HOME SDK köküne, NDK_HOME ilgili
+NDK sürüm köküne işaret eder. ANDROID_SDK_ROOT/ANDROID_NDK_HOME gibi aliaslar
+tanımlıysa aynı kökü göstermelidir. Örnek, SDK yolu mevcut ortamdan alınır:
 
-## Steam Deck
+```powershell
+$env:NDK_HOME = Join-Path $env:ANDROID_HOME 'ndk/27.0.12077973'
+rustup target add aarch64-linux-android
+node scripts/doctor.mjs --android
+pnpm.cmd --filter @volstudio/vol-test exec tauri android build --debug --target aarch64
+```
 
-Steam Deck Linux cihazdır; dağıtım AppDir paketi `pnpm build:linux-steamrt4`
-üretir ve bu adım steamrt4 SDK kabuğunda, yani Linux'ta çalışır. Windows'ta
-`pnpm deck` komutları (keşif, dağıtım, ölçüm) cihaz tarafında SSH kullanır ve
-çalışır; paketleme adımı Linux gerektirir.
+Profil java ve javac sürümünü, SDK dosyalarını, NDK revision/clang/sysroot'u
+ve Rust hedefini kontrol eder. Tek source.properties veya JRE yeterli
+sayılmaz. Cihaz adresi/seri kimliği rapora girmez. APK/Activity/panel kabulü
+bu profilin yerine ayrıca yapılır.
 
-Devkit erişimi için SSH anahtarı `~/.config/steamos-devkit/devkit_rsa`
-konumunda beklenir. Cihazın mDNS kaydı çözülebiliyorsa `pnpm deck discover`
-adresi kendi bulur.
+## Satır sonu ve disk yolları
 
-## Android
+`.gitattributes` metinlerde LF'i zorlar; bu kural local autocrlf ayarından
+bağımsızdır. Prettier LF bekler. File URL disk yoluna fileURLToPath ile
+çevrilir; protokol ve karşılaştırma yolları slash ile normalize edilir.
+Windows chmod izin bitleri POSIX yazma reddini taklit etmez: rollback
+fixture'ı gerçek eksik kaynak veya dosya/dizin çakışması üretir.
+Windows directory fsync desteklemez; bu açık sınır güç kesintisi
+dayanıklılığının POSIX ile aynı olduğu anlamına gelmez.
 
-`docs/android.md` oyun başına kurulumu anlatır. Windows'a özgü iki nokta:
+## Linux ve Deck sınırı
 
-- `ANDROID_HOME`, `ANDROID_SDK_ROOT`, `ANDROID_NDK_HOME`, `NDK_HOME` ve
-  `JAVA_HOME` kullanıcı düzeyinde tanımlanır; `platform-tools` ve
-  `cmdline-tools` PATH'e eklenir.
-- Cihaz `adb devices -l` çıktısında `device` durumunda olmalıdır. `unauthorized`
-  durumunda cihaz ekranındaki USB hata ayıklama onayı beklenir.
+Linux pkg-config/GTK/WebKitGTK bağımlılığı Windows'ta ölçülmez. Windows
+Playwright WebKit'in AudioContext sınırı testte gerekçesiyle görünür;
+Chromium/WebKit testleri farklı kabul kaynaklarıdır. Piksel temelleri
+platform ekiyle ayrıdır; sırf kapı yeşillensin diye yenilenmez.
 
-Ölçüm betiği `adb`'yi `shell: true` ile çağırır (Windows'ta `adb.cmd` tek
-çalıştırma yoludur) ve bekleme için kabuk `sleep`ine değil Node saatine bağlıdır.
+`pnpm deck` Windows'ta devkit araç yoludur; paketleme için
+[Linux builder](linux.md) ve [Deck sözleşmesi](steam-deck.md) geçerlidir.
+SSH erişimi oyun/Steam/suspend kabulü değildir. Windows node_modules veya
+Windows binary'si Deck Linux paketi yerine gönderilmez.

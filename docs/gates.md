@@ -18,7 +18,7 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 
 | Tarif            | Sınadığı                                                                                                                                                                                                             |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `contract`       | `scripts/quality/tests`, `scripts/linux/tests`, `scripts/android/tests` (bekçi ve betik testleri) ve `scripts/quality/cli/workspace-contract.mjs` (aşağıda)                                                          |
+| `contract`       | `scripts/quality/tests`, `scripts/linux/tests`, `scripts/android/tests`, `devtools/deck/tests` (bekçi ve betik testleri) ve `scripts/quality/cli/workspace-contract.mjs` (aşağıda)                                   |
 | `format-check`   | Prettier, `**/*.{ts,css,json,md}`                                                                                                                                                                                    |
 | `typecheck`      | Aktif paketlerin `typecheck` betiği (`tsc --noEmit`, `noImplicitOverride` dahil) ve kök betiklerin JSDoc denetimi (`scripts/tsconfig.json`)                                                                          |
 | `lint`           | ESLint: TS kaynak, betik ve testler tip bilgisiyle (`no-floating-promises` hata); `.js`/`.mjs` betikler `@eslint/js` ile; deterministik kodda `localeCompare` yasak; frozen ağaçlar lifecycle'dan yok sayılır        |
@@ -26,11 +26,11 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | `test`           | Aktif paketlerin `test` betiği; kapsam eşiği uygulamaz                                                                                                                                                               |
 | `coverage`       | `quality.json` → `coverageRuns` paketlerini eşikleriyle koşar ve koşu kaydı yazar; eşikten muaf paketin testini düz koşar (`scripts/quality/coverageRun.mjs`)                                                        |
 | `coverage-shape` | 100 satırın üstünde ve %50 kapsamın altındaki dosya test ister; yalnız aynı koşunun taze lcov'unu okur                                                                                                               |
-| `audio-test`     | audio-synth'in DSP, müzik, yayın yolu, protokol ve dizin katmanı testlerinden hızlı bir alt küme                                                                                                                     |
+| `audio-test`     | Sabit temel takım ve değişen kaynakla ilişkili testler; silinen/belirsiz değişimde tam takım                                                                                                                         |
 | `build`          | Aktif paketlerin `build` betiği                                                                                                                                                                                      |
 | `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-ui ve VOL.TEST)                                                                                           |
 | `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı (bugün CORE uzamsal indeksi ve VOL.TEST mermi modeli); ölçülen oranı yazar                                          |
-| `e2e`            | Aktif paketlerin `test:e2e` betiği; Chromium ve WebKit, üretim derlemesi üzerinde                                                                                                                                    |
+| `e2e`            | Aktif paketlerin `test:e2e` betiği, üretim build'i; vol-ui motor kapsamı asimetrik, genişlemesi UI-00                                                                                                                |
 | `rust`           | Kök workspace'in aktif üye manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır |
 | `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                                                                                                                  |
 | `audio-verify`   | Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır                                                                                                                                   |
@@ -41,10 +41,10 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 verir; aşamalar `justfile`dan türer. `pnpm run doctor:env` araçları ve
 Playwright WebKit'in paylaşımlı kütüphanelerini denetler.
 
-Kapılar Linux ve Windows'ta aynı aşamaları koşar. Windows'ta PATH'te gerçek
-`.exe` aranır (`execFileSync` uzantısız POSIX betiği çalıştıramaz), satır sonu
-`core.autocrlf=input` ile LF korunur ve Linux'a özgü ölçümler gerekçesiyle
-atlanır. Ayrıntı [windows.md](windows.md).
+Kapı adı aynı olsa da host desteği ve kanıt kapsamı farklıdır. Windows
+JS/TS, audio ve MSVC Rust işleri ile Linux builder/native ABI işleri
+ayrı profillerdir. Shell/argv/araç hazırlığı [Windows](windows.md)
+sahibindedir; Linux'a özgü atlanan test başarı sayılmaz.
 
 ## Workspace sözleşmesi
 
@@ -137,6 +137,24 @@ ayırır. Bu yeni kontroller henüz kapı bileşimine eklenmiş değildir.
   makineden bağımsız ölçekleme oranıdır.
 - **Adlandırma:** pnpm'in yerleşik komutuyla çakışan betik hiç çalışmaz
   (`pnpm doctor` → `pnpm run doctor:env`).
+
+## Diğer tarifler
+
+Bütün tarifler kalite kapısı değildir. Mutasyon ve geliştirme tariflerinin
+başarısı ürün kabulü olarak raporlanmaz.
+
+| Tarif                         | İşlev                                                     |
+| ----------------------------- | --------------------------------------------------------- |
+| `default`                     | Tarif listesini gösterir                                  |
+| `test-pkg <pkg>`              | Tek paketin düz testini çalıştırır                        |
+| `build-ui`                    | Mevcut vitrin build kolaylığı                             |
+| `report <kapı> --json`        | Kapıyı çalıştırıp aşama/exit/süre raporu verir            |
+| `dev`, `dev-ui`               | Geliştirme uygulamasını açar                              |
+| `fix`                         | Format ve lint düzeltmesi yapar                           |
+| `gen-theme`, `download-fonts` | Sahip üreticiyi çalıştırır                                |
+| `benchmark-core`              | Tanımlı CORE ölçümünü alır                                |
+| `doctor`                      | Ortam hazırlığını denetler                                |
+| `clean`, `clean-all`          | Yerel çıktıları temizler; kaynak ve ölçüm kabulü değildir |
 
 ## Ortam ve temizlik
 

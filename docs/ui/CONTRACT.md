@@ -1,8 +1,8 @@
-# Arayüz tasarım dili ve sunum sözleşmesi — v6 FINAL
+# Arayüz tasarım dili ve sunum sözleşmesi
 
 Bu sözleşme onaylı hedef davranıştır. Henüz mevcut olmayan mekanizmalar
-[iş listesinde](TODO.md) uygulanır; mevcut gerçek ve gerekçe
-[araştırmada](RESEARCH.md), kanıt yöntemi [doğrulamada](VERIFICATION.md) bulunur.
+[iş listesinde](TODO.md) uygulanır; mevcut yüzey [katalogda](CATALOG.md),
+karar gerekçeleri bu belgede, kanıt yöntemi [doğrulamada](VERIFICATION.md) bulunur.
 Sayısal sanat/ses presetleri başlangıç tasarım kararıdır; ölçülmüş optimum
 veya WCAG gereği değildir. Kalibrasyon değişikliği gerekçesiyle bu tek
 kaynakta yapılır. WCAG 2.2 AA tüm uygulanabilir A/AA ölçütlerini kapsar.
@@ -24,12 +24,7 @@ Hiçbir katalog bileşeni bu çalışma nedeniyle silinmez. CORE generic kalır;
 SHOWCASE örnekleri gösterir; VOL.TEST gerçek tüketici entegrasyonudur.
 Aktif kullanım, dolaylı kullanım, katalog kullanımı ve arşiv ayrılır.
 
-Tier-1 tabanı Button, IconButton, Text, Panel, Select, Checkbox, Slider,
-HoldButton, Bar/XPBar, ScrollView ve picker'lardır; aktif tüketimdeki diğer
-sınıflar da tier-1'dir. [Katalog](CATALOG.md) yetkili başlangıç listesidir.
-Tüketilen tier-2 aynı değişiklikte tier-1 durum matrisine terfi eder.
-Button boyutları tüketim sayısından bağımsız vitrin eksenidir; tarihsel
-VOL.HELL sayımı canlı öncelik veya test kanıtı değildir.
+Canlı yüzey, tüketici ve tier sahipliği [CATALOG](CATALOG.md) içindedir.
 
 ## 2. Platform, ölçü ve ergonomi
 
@@ -139,7 +134,8 @@ broadcast LUFS standardı evrensel hedef ilan edilmez. Transient 5–15,
 body 60–160 ms; büyükte isteğe bağlı 60–120 Hz bass. Ana body HPF 150–200
 Hz uygulanırsa bass ayrı düşük-cutoff dalından geçer. Tiny-room presetinde
 30–60 ms erken yansıma/tail tanımı ayrı yazılır, wet gain %8–12 başlangıçtır;
-kuru yedek vardır. Final routing/level gerçek set dinlemesiyle kalibre edilir.
+kuru yedek vardır. Routing/level kabulü gerçek setin teknik QA ve runtime ölçümüne dayanır;
+isteğe bağlı dinleme ölçümün yerine geçmez ve yayın engeli değildir.
 
 UI, VO/müzikle yarışmaz. Yalnız kritik olayın opt-in duck'ı −6 dB
 (lineer ~0.501187), attack/hold/release=120/80/450 ms'dir; overlap, iptal,
@@ -267,7 +263,8 @@ sınanır. Sağlayıcı/probe lifecycle var olan mekanizmalara eklenir.
 Mevcut vol-ui tek atomik göçle devtools/vol-showcase olur; web dev bakışı
 korunur, ikinci vitrin kurulmaz. Aktif paket, benzersiz `studio.vol.showcase`,
 ortak Tauri kabuğunu kullanan kendi crate'i/ikonu/device ayarı/ölçeği vardır.
-Linux/Deck → Android → Windows; tool, oyun şablonunun Game kategorisini
+Windows geliştirme ve ilk native referans önce gelir. Linux/Deck ile
+Android ürün kabulü ayrı gerçek ortamlardadır; tool, oyun şablonunun Game kategorisini
 kopyalamaz. Native ikon keşif kapısı tools'u da kapsayacak şekilde geliştirilir.
 12 sekme korunur + onaylı Ses/Tema/Metin Girişi=15. Üst bar dil/tema/density
 ve capability görünürlüğü; yeni keyfi sekme yoktur. Kart örneği rarity,
@@ -285,66 +282,31 @@ SHOWCASE ikonu mevcut `docs/assets/mark/` marka varlığından özgün türetili
 eski .github/assets/ yolu yoktur. Pencil kaynağı gerekirse özel AGENTS
 ve MCP uygulanır; bu plan `.pen` erişimi gerektirmez.
 
-## 14. Yayılım ve kilometre taşları
+## Yayılım ve kabul sahipliği
 
-[Faz akışı](README.md#faz-akışı) ve TODO tek uygulama sırasıdır. Buton
-pilotunda ses/hareket/frame/focus bütünleşir, sonra kart ve panel/form
-yayılımı gelir. HUD → advanced → touch/loading → text/scroll/workbench/
-palette kapsamı görevlerle tamamlanır; laboratuvarlar native geri bildirim
-için erkene alınabilir. Her kilometre taşında yalnız **bilinçli değişen**
-görsel temel yenilenir; rename veya yeşil test uğruna bütün snapshot yenilenmez.
+[TODO](TODO.md) uygulama bağımlılıkları ve görev kapanışlarını;
+[VERIFICATION](VERIFICATION.md) kanıt profili ve sayısal kabulü taşır.
+Buton pilotu ortak ses/hareket/frame/focus temelini tüketir; sonraki
+aileler aynı grameri kendi davranışlarına uygular. Teknik başlangıç
+Windows önceliklidir; Linux/Deck ve Android gerçek kabulü ayrı kalır.
 
-## 15. Kapılar ve ölçülebilir kabul
+Yeni mekanizma kapı bileşimine girmeden mevcut kapıymış gibi raporlanmaz.
+Piksel temeli yalnız bilinçli değişen sahne/state için yenilenir; rename
+veya yeşil test uğruna bütün temel değiştirilmez. Ses yayını teknik QA
+ile kabul edilir. Görsel, erişilebilirlik ve haptik insan yargısı kendi
+kanıtına bağlıdır. Kök fizik/hava/slalom/çoklu tank işleri UI ile kapanmaz.
 
-Parite/kontrast, tema geometri smoke, axe, durum kayıt bütünlüğü, motion
-token lint, i18n/uzunluk, semantik ses probu, UI perf, glyph okunabilirlik,
-determinizm ve default piksel temeli kabul paketidir. Var olan ile gelecekte
-eklenecek kapılar VERIFICATION'da ayrıdır; justfile tek kapı kaynağıdır.
-İlk görünür cevap p95 <100 ms; max ayrıca raporlanır. UI CPU p95 üst güven
-sınırı + noise guard < hedef frame süresinin %5'i; GPU/presentation ayrıca
-ölçülür. UI %5 CPU geçişi bütün oyun performansı geçti demek değildir.
+## Özgün üretim
 
-Reduced-motion işlev tam; odak görünür; uygulanabilir AA; uzun metin/
-6 hane kırpılmaz; kol-only erişim tam; tema kutuları sabit; ses/haptik
-kapalıyken aynı işlev vardır. Pilot önce/sonra, hareket kaydı ve kanonik
-ses örneği taşır. Gerçek cihaz/dinleme kabulü NOT-RUN bırakılmazsa ancak
-gerçek kanıtla PASS olur; cihaz yokluğu sınırı gevşetmez.
+Her bileşen [katalogdaki](CATALOG.md) ailesinin anchor gerekçesini tüketir.
+Anchor sayısal performans, AA veya ses seviyesi kanıtı değildir.
+Somut görsel örnek ve özgün VOL farkı uygulama kabulünde kaydedilir;
+asset kopyalanmaz. Kaynakların kanıt sınırları aşağıdadır.
 
-## 16. Riskler ve kök neden sınırı
-
-Zevk drifti anchor+görsel incelemeyle; efekt obezitesi bütçe+fallback ile;
-AA regresyonu state/AT matrisiyle; asset borcu üretici kaydıyla;
-native ActionMode/IME riskleri pinli kaynak+cihaz probe'uyla yönetilir.
-Tema sayısı ikiyle sınırlıdır. Font kapsaması, renk dışı anlam, WebGL+DOM
-shared GPU, autoplay, async owner ve sleep/resume gerçek test kapsamındadır.
-Deck/VOL.TEST'in açık fizik/hava/slalom/çoklu tank sunum sorunları UI
-çalışmasında susturulmaz; kök TODO'daki kendi ölçüm işleri korunur.
-
-## 17. Kesinleşmiş kararlar
-
-UI audio tercih default açık; autoplay gesture koşullu. Haptik mevcut
-opt-in davranışında. İkinci tema ember; default korunur. Platform sırası
-Linux/Deck, Android, Windows. Hedef WCAG 2.2 AA; AAA focus appearance ve
-motion ölçütleri ilhamdır. TR birincil, EN parite, deterministik %30 fixture.
-Default UI sound skin ve gelecekte opt-in game skin. Marka kaynağı
-docs/assets/mark. ICU yerine mevcut i18next JSON plural + Intl.
-Onaylı 15 sekme, bir vitrin, bir native kabuk sahibi; yeni oyun menüsü yoktur.
-
-## 18. Anchor ve özgün üretim
-
-Nex Machina HUD; Hades/Dead Cells seçim; Streets of Rage 4 plaka/bevel;
-Control/Diablo IV katman/emissive; Mindustry az renkle okunabilir araç
-yüzeyi; Celeste kısa ses paleti. Her bileşen [katalogdaki](CATALOG.md)
-ailesinin en az bir anchor'ına **işlev gerekçesiyle** bağlıdır. Uygulayıcı
-somut örnek ve özgün VOL farkını görsel/ses incelemesinde kaydeder.
-Anchor sayısal performans/AA/ses seviyesi kanıtı değildir; bu araştırma
-bütün oyun görüntülerini veya seslerini incelemiş olduğu iddiasını taşımaz.
-Asset kopyalanmaz; özgün kaynak üretilir.
-
-## 19. Deprecation ve katalog
+## Public uyum ve katalog
 
 Mark → uyarı → geçiş notu → kaldırma yalnız açık ayrı API işiyle yapılır.
-Bu UI turunda mevcut public sınıf/helper silinmez. Public type lock ve
+Bu UI kapsamıyla mevcut public sınıf/helper silinmez. Public type lock ve
 doc symbol kapıları korunur. Sessiz setter düzeltmesi gibi davranış
 değişiminde tüketici taraması/test ve uyum yolu gerekir. Tier-2 vitrinde
 kalır; sırf üretim tüketicisi yok diye ölmez. Yeni public bileşen kendi
@@ -355,19 +317,121 @@ değiştirilmez: yeni additive sessiz senkronizasyon yolu sunulur, eski
 metot geçiş notuyla callback davranışını korur. Eski setter callback'i
 kullanıcı niyeti diye seslendirilmez. Breaking kaldırma ayrı API işi olur.
 
-## 20. Kalıntı sicili ve dürüst kapanış
+## Sahiplik sınırı
 
-| v5 kaydı                         | Nihai değerlendirme                                          |
-| -------------------------------- | ------------------------------------------------------------ |
-| R1 games glob                    | Gerekli; VOL.TEST aktif. Silme görevi yok.                   |
-| R2 aktif oyun bütçesi açıklaması | Gerekli; VOL.TEST bundle/scaling var. Stale iddiası kapalı.  |
-| R3 D0/D1/D2                      | Gerçek ürün kabul işleri açık; bu UI planı bunları kapatmaz. |
-| R4 AGENTS oyun yolları           | Güncel mimari ve yeni oyun sözleşmesi.                       |
-| R5 .idea                         | Ignored; tracked veya güncel untracked commit adayı değil.   |
+Canlı games glob'u ve oyun bundle/scaling bütçeleri VOL.TEST için gereklidir.
+Eski ürünler arşiv etiketindedir; bu UI işi onları diriltmez. Oyun fiziği,
+Steam App ID/hesap açma, gerçek Cloud revision/merge motoru ve yeni auth
+ürünü kapsam dışıdır. Paket göçünün kalıntı taraması UI-06/UI-13'tedir.
+Kök F08/F09 cihaz işleri UI laboratuvarının kabulüyle kapanmaz.
 
-VOL.HELL/VOL.ARACHNID kaynakları canlı ağaçta yoktur, annotated arşiv
-etiketlerinde korunur. VOL.TEST canlıdır. Sonraki gerçek kalıntı taraması
-UI-06 paket rename referansları ve UI-13 bütünlük kontrolüdür.
-Planın tamamlanması uygulamanın tamamlanması değildir. Her fazın mevcut
-durumu yalnız TODO ve gerçek kanıtla belirlenir; kanıt geçmişi git/private
-records'tadır, kaynak yorumlarında veya sürekli karar günlüğünde değildir.
+## Birincil kaynaklar ve kanıt sınırları
+
+### Erişilebilirlik ve widget davranışı
+
+- [WCAG 2.2 normatif metin](https://www.w3.org/TR/WCAG22/): hedef bütün
+  uygulanabilir A/AA; Understanding ve APG yardımcı açıklamadır.
+- [Target size minimum](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html):
+  24×24 CSS px AA ve istisnalar. 44 CSS px ürün kararı;
+  [Android dokunma önerisi](https://developer.android.com/guide/topics/ui/accessibility/apps)
+  48dp ayrı platform ölçüsüdür; eşit piksel sayılmaz.
+- [Resize text](https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html)
+  ve [reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html):
+  %200 ve dar panel kabulü; Android sistem font ölçeğiyle aynı test değildir.
+- [Hover/focus content](https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus.html):
+  kullanıcı tetik sürerken okuyabilir/hover edebilir/kapatabilir;
+  zorunlu3s timeout uygun bir kural değildir.
+- [Focus not obscured](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html),
+  [dragging](https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html),
+  [status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html):
+  sırasıyla katman örtüşmesi, drag dışı tek pointer alternatifi ve odaksız
+  duyuru; bütün bildirimleri alert yapmak çözüm değildir.
+- [Animation from interactions](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html)
+  AAA'dır; reduced-motion ayrıca ürün gereğidir.
+  [Flash sınırı](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html)
+  yalnız reduced-motion'la otomatik karşılanmaz.
+- [APG modal](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/),
+  [klavye arayüzü](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/),
+  [slider](https://www.w3.org/WAI/ARIA/apg/patterns/slider/),
+  [combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/): focus,
+  roving/edit mode ve ARIA pattern rehberi; görsel grid'e otomatik role=grid yoktur.
+- [axe-core](https://github.com/dequelabs/axe-core): otomasyon sınırlıdır;
+  incomplete manuel yargı ister, jsdom gerçek kontrast ölçmez.
+- [Valve uyumluluk incelemesi](https://partner.steamgames.com/doc/steamhardware/compat):
+  çizilmiş glyph yüksekliği ≥9 px, ≥12 px önerisi; computed font-size bunu
+  tek başına garanti etmez. Kol/klavye akışı native cihazda da sınanır.
+
+### Tema, performans ve ses
+
+- [CLS](https://web.dev/articles/cls) yakın input shift istisnasını,
+  [Layout Instability](https://wicg.github.io/layout-instability/) entry
+  modelini açıklar. [WebKit PerformanceObserver kaynak kodu](https://raw.githubusercontent.com/WebKit/WebKit/main/Source/WebCore/page/PerformanceObserver.cpp)
+  incelenen sürümde layout-shift destek listesi taşımaz. Runtime feature detect
+  zorunludur; undefined0'a çevrilmez.
+- [RenderingNG](https://developer.chrome.com/docs/chromium/renderingng-architecture)
+  style/layout/paint/compositor ayrımını açıklar; transform/opacity kesin
+  GPU hızlanması garantisi değildir. [Event Timing](https://www.w3.org/TR/event-timing/)
+  her gamepad/continuous gesture olayı için evrensel ölçüm sağlamaz.
+- [Web Audio GainNode](https://www.w3.org/TR/webaudio/#GainNode) lineer
+  amplitude'dür; [EBU R128](https://tech.ebu.ch/loudness/) broadcast program
+  ölçüsüdür, evrensel kısa game click hedefi değildir. Uygulanan mixing
+  örneğinin gerçek peak ve burst ölçümü gerekir.
+- [Web Audio highpass](https://www.w3.org/TR/webaudio/#dom-biquadfiltertype-highpass)
+  cutoff altını azaltır; bass/body çelişkisini ayrı dal çözer.
+  [Chrome autoplay](https://developer.chrome.com/blog/autoplay/) ve
+  [Web Audio uygulama önerileri](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices)
+  jest ve kullanıcı kontrolü gerektirir; preference açık diye duyulan ses garantisi verilmez.
+- [i18next plurals](https://www.i18next.com/translation-function/plurals) ve
+  [formatting](https://www.i18next.com/translation-function/formatting):
+  JSON `count`/CLDR ve Intl mevcut çözümü yeterlidir; ICU ayrı plugin tercihidir.
+
+### Native sınırlar
+
+- [Android WebView insets](https://developer.android.com/develop/ui/views/layout/webapps/understand-window-insets):
+  fullscreen safe-area M136, tüm WebView IME visualViewport M139, tüm
+  WebView system/cutout M144 destek geçişleri. Belge sürüm davranışını
+  açıklar; cihazdaki uygulama bayrakları/forwarding ayrıca ölçülür.
+- [Tauri #10631](https://github.com/tauri-apps/tauri/issues/10631) eski
+  beta.25 visualViewport bug raporudur; güncel sürüm düzeltme garantisi
+  veya ActionMode gerekçesi değildir.
+- [Tauri mobil plugin rehberi](https://v2.tauri.app/develop/plugins/develop-mobile/),
+  [Tauri2.11.5 Plugin.kt](https://raw.githubusercontent.com/tauri-apps/tauri/tauri-v2.11.5/crates/tauri/mobile/android/src/main/java/app/tauri/plugin/Plugin.kt),
+  [Wry0.55.1 Activity](https://raw.githubusercontent.com/tauri-apps/wry/wry-v0.55.1/src/android/kotlin/WryActivity.kt):
+  `load(webView)`, `onDestroy(activity)` ve `onWebViewCreate` gerçek pinli
+  API'lerdir; Kotlin Plugin'de hayali `dispose` hook'u kullanılmaz.
+- [ActionMode.Callback](https://developer.android.com/reference/android/view/ActionMode.Callback):
+  create/prepare/click/destroy lifecycle; WebView'a TextView selection API'si
+  uydurulmaz. Önce standart editör davranışı doğrulanır.
+- [Tauri clipboard](https://v2.tauri.app/plugin/clipboard/) setup ve
+  capability ister; [Android sensitive clipboard](https://developer.android.com/privacy-and-security/risks/secure-clipboard-handling)
+  bayrağı upstream'in her sürümünde otomatik uygulanmış sayılmaz.
+- [ISteamUtils](https://partner.steamgames.com/doc/api/ISteamUtils):
+  dialog Normal/Password ve floating field key event yolları farklıdır.
+  [ISteamInput](https://partner.steamgames.com/doc/api/ISteamInput)
+  action-origin glifi/cihaz capability'sidir; Gamepad.id gerçek remap değildir.
+- [Linux FF](https://docs.kernel.org/input/ff.html) fd/effect/stop lifecycle
+  tanımlar; donanım izin/destek garantisi vermez.
+- [Steam Cloud](https://partner.steamgames.com/doc/features/cloud):
+  Auto-Cloud istemci eşitlemesi ve RemoteStorage API ayrı yollar;
+  gösterim widget'ı revision/merge servisi değildir.
+- [Windows installer](https://v2.tauri.app/distribute/windows-installer/):
+  NSIS/MSI/WebView2 seçenekleri; Linux'ta derlenmiş olması Windows kabulü değildir.
+
+## Anchor araştırmasının sınırı
+
+Nex Machina, Hades/Dead Cells, Streets of Rage4, Control/DiabloIV,
+Mindustry ve Celeste onaylı **estetik esin** seçimidir. Buradaki timing,
+voice/gain, partikül ve blur sayıları bu oyunlardan ölçülmedi.
+[Mindustry Styles kaynağı](https://github.com/Anuken/Mindustry/blob/master/core/src/mindustry/ui/Styles.java)
+ve [Hades geliştirici notları](https://www.supergiantgames.com/blog/hades-updates/)
+ürün örnekleridir; kendi renderer/AA bütçemizi doğrulamaz.
+[Diablo IV erişilebilirlik yazısı](https://news.blizzard.com/en-gb/article/23954932/combatting-demons-with-accessibility-in-diablo-iv)
+font/ikon/okuma kararlarına birincil örnektir, depth/blur maliyeti kanıtı değildir.
+[Dotemu Streets of Rage 4 sayfası](https://www.dotemu.com/games/streets-of-rage-4/)
+ve [Remedy Control sayfası](https://www.remedygames.com/games/control)
+resmi ürün/görsel kaynaklarıdır; bevel/depth seçimi bizim estetik yorumumuzdur.
+[FMOD Celeste proje rehberi](https://www.fmod.com/docs/2.03/studio/appendix-a-celeste.html)
+geliştirici event açıklamalarının bulunduğu eğitim projesini doğrular.
+Bu kaynaklardan UI süre/gain ölçümü türetilmez; ürün adı dinleme kanıtı değildir.
+Her ailenin anchor gerekçesi CATALOG'dadır; özgün görsel örnek incelemesi
+uygulamanın kabulüdür, ses yayını teknik QA ile tamamlanır. Eksik kanıtın yerine oyun adı koyulmaz.

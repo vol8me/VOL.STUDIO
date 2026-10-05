@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from './command.mjs';
 import { readFileSync } from 'node:fs';
 import path, { join } from 'node:path';
 

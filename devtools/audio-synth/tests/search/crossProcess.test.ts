@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnTsxSync } from '../support/process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,6 @@ import { PIPELINE_TIMEOUT } from '../support/timeouts';
  * program ve PCM özetleri — ve bayt bayt aynı rapor — beklenir.
  */
 const PACKAGE = fileURLToPath(new URL('../..', import.meta.url));
-const TSX = join(PACKAGE, 'node_modules/.bin/tsx');
 const CLI = join(PACKAGE, 'scripts/audio-job.ts');
 
 let a: TestRepo;
@@ -35,7 +34,7 @@ afterAll(() => {
 });
 
 function cli(repo: TestRepo, ...args: string[]) {
-  const res = spawnSync(TSX, [CLI, ...args], { cwd: repo.root, encoding: 'utf8' });
+  const res = spawnTsxSync(CLI, [...args], { cwd: repo.root, encoding: 'utf8' });
   expect(res.status, res.stderr).toBe(0);
   return JSON.parse(res.stdout) as Record<string, unknown>;
 }

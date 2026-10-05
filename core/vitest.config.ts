@@ -1,5 +1,6 @@
 import { loadQualityConfig } from '../scripts/quality/config.mjs';
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
 
 /**
  * Kapsam eşikleri kök `quality.json`dan okunur — kapı sözleşmesinin tek
@@ -33,7 +34,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': new URL('./src', import.meta.url).pathname,
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
 });

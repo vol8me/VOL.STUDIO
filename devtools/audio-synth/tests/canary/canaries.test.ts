@@ -2,14 +2,7 @@ import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  CANARIES_ROOT,
-  canaryReviews,
-  loadCanaries,
-  recordCanaryReview,
-  runCanary,
-  validateCanary,
-} from '../../src/protocol/canary';
+import { CANARIES_ROOT, loadCanaries, runCanary, validateCanary } from '../../src/protocol/canary';
 import { AudioParamError } from '../../src/guard/errors';
 import { repoSampleResolver } from '../../src/protocol/samples';
 import { edited, getAt } from '../support/json';
@@ -18,8 +11,7 @@ import { RENDER_TIMEOUT } from '../support/timeouts';
 
 /**
  * Organik canary derlemi. Mekanik beklentiler motorun ölçülebilir
- * davranışını kilitler; "organik" kanıtı DEĞİLDİR. İnsan dinleme durumu
- * yalnız insan beyanıyla değişir — bu testler onu hiçbir zaman yazmaz.
+ * davranışını kilitler; "organik" kanıtı DEĞİLDİR. Dinleme aracı isteğe bağlıdır.
  */
 const REPO = fileURLToPath(new URL('../../../..', import.meta.url));
 const IDS = [
@@ -68,14 +60,6 @@ describe('organik canary derlemi (gerçek depo)', () => {
     },
     RENDER_TIMEOUT,
   );
-
-  it('insan dinlemesi bütünlüğü: kayıtlar pending ya da notlu insan kararıdır', () => {
-    const reviews = canaryReviews(REPO);
-    expect(reviews.map((r) => r.id)).toEqual(IDS);
-    for (const r of reviews) {
-      if (r.status !== 'pending-human') expect(r.note?.length ?? 0).toBeGreaterThan(0);
-    }
-  });
 });
 
 describe('canary beklentilerinin dişi var (mutasyon)', () => {
@@ -152,7 +136,7 @@ describe('canary beklentilerinin dişi var (mutasyon)', () => {
   });
 });
 
-describe('canary inceleme kaydı', () => {
+describe('canary tanım yükleme', () => {
   let repo: TestRepo;
   beforeEach(() => {
     repo = createTestRepo();
@@ -161,25 +145,12 @@ describe('canary inceleme kaydı', () => {
   });
   afterEach(() => repo.cleanup());
 
-  it('beyan not ister; canary sürümü artınca inceleme bayatlar ve pending-human sayılır', () => {
-    expect(canaryReviews(repo.root)).toEqual([
-      { id: 'bubble', status: 'pending-human', version: 1, note: null, stale: false },
-    ]);
-    expect(() => recordCanaryReview(repo.root, 'bubble', 'heard-acceptable', null)).toThrow(
-      /not ister/,
-    );
-    expect(() => recordCanaryReview(repo.root, 'yok', 'heard-acceptable', 'x')).toThrow(
-      /canary yok/,
-    );
-    recordCanaryReview(repo.root, 'bubble', 'heard-problem', 'test beyanı');
-    expect(canaryReviews(repo.root)[0]).toMatchObject({ status: 'heard-problem', stale: false });
-
-    const file = join(repo.root, CANARIES_ROOT, 'bubble.json');
+  it('eski yerel inceleme dosyası tanım gibi okunmaz; açık şema hatası verir', () => {
     writeFileSync(
-      file,
-      JSON.stringify({ ...(JSON.parse(readFileSync(file, 'utf8')) as object), version: 2 }),
+      join(repo.root, CANARIES_ROOT, 'reviews.json'),
+      JSON.stringify({ schema: 'CanaryReviewsV1', reviews: {} }),
     );
-    expect(canaryReviews(repo.root)[0]).toMatchObject({ status: 'pending-human', stale: true });
+    expect(() => loadCanaries(repo.root)).toThrow(/OrganicCanaryV1/);
   });
 
   it('dosya adı kimlikle eşleşmeli; bilinmeyen alan reddedilir', () => {

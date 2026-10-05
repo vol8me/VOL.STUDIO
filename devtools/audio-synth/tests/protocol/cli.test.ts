@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnTsxSync } from '../support/process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,7 +16,6 @@ import { RENDER_TIMEOUT } from '../support/timeouts';
  * A'nın belleğini ya da sohbetini görmez; yalnız repo dosyalarını okur.
  */
 const PACKAGE = fileURLToPath(new URL('../..', import.meta.url));
-const TSX = join(PACKAGE, 'node_modules/.bin/tsx');
 const CLI = join(PACKAGE, 'scripts/audio-job.ts');
 
 let repo: TestRepo;
@@ -34,7 +33,7 @@ interface CliError {
 }
 
 function cli(...args: string[]) {
-  const res = spawnSync(TSX, [CLI, ...args], { cwd: repo.root, encoding: 'utf8' });
+  const res = spawnTsxSync(CLI, [...args], { cwd: repo.root, encoding: 'utf8' });
   const lastErr = res.stderr.trim().split('\n').pop() ?? '';
   return {
     status: res.status,

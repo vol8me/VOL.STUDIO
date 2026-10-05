@@ -8,27 +8,22 @@ sırasında uyum gerekçesiyle değişebilir, CONTRACT ve test aynası birlikte 
 Hiçbir görev “diğerlerini de düzelt” şeklinde sınırsız yan yeniden düzenleme yetkisi
 vermez.
 
-Her fazın ortak kapanışı: atanmış [katalog](CATALOG.md) satırları + uygulanabilir durum
-matrisi + önce başarısız, sonra başarılı regresyon testi + belge + bağımsız değişiklik
-incelemesi + quick + push yapılacaksa high + temiz/açıklanmış git durumu. Cihaz veya
-insan kabulü eksikse açık alt görev kalır. **Sonraki fazın ön koşulu teknik
-teslimdir**, henüz yapılamayan cihaz/dinleme kabulü değildir. Bu kabul
-engelleri release kapanışını önler; PASS veya N/A'ya çevrilmez. Her faz
-“teknik hazır / gerçek kabul açık-kapalı” olarak ayrı raporlanır. Bütün
-kapanışların [kanıt biçimi ve komutları](VERIFICATION.md) ortaktır.
+Güncel üst sıra [kök F01–F10](../../TODO.md) ve kararlar
+[monorepo denetimindedir](../monorepo-audit.md). Windows geliştirme/ilk native
+referans önce alınır; UI-06'nın Linux/Deck fiziksel kabulü kök F08'de ayrı yürür.
+UI-00–UI-13'ün 63 alt görevi korunur. Ses yayın kabulü F01'in mekanik QA/verify
+sözleşmesidir; zorunlu insan dinleme bekleme durumu kurulmaz.
 
-UI-00 kayıt kapsamını tamamlar; applicable durumun davranış kanıtı kendi
-aile fazında tamamlanır. Başlangıçtaki bilinen bulgu exact rule+selector+
-fixture+görev+owner phase+yeniden inceleme ölçütüyle açık kalır. UI-00 geçiş
-kapısı yeni/kayıtsız ihlali ve hazır olduğu ilan edilen fazın kalan bulgusunu
-reddeder; eski kayıt PASS değildir. UI-13'te uygulanabilir AA bulgusu ve
-ertelenmiş applicable durum sıfır olmadan nihai kabul kapanmaz.
+Teknik teslim ve gerçek release kabulünün ölçütleri
+[VERIFICATION](VERIFICATION.md) içindedir. Sonraki bağımsız teknik iş,
+yapılamayan cihaz/görsel/erişim/haptik kabulünü PASS saymadan ilerleyebilir.
+Her görev kendi Kapanır ölçütleriyle açıktır; UI-13 tüm release kabulünü toplar.
 
 ## Açık
 
 ### UI-00 — Gerçek başlangıç ve kabul altyapısı
 
-Ön koşul: uygulama turu açıkça başlatılmıştır. Hedef: yanlış başlangıç referansının
+Hedef: yanlış başlangıç referansının
 sonraki fazlarda başarı gibi kullanılmasını engellemek. Sahip: kalite/vitrin. Değişiklik
 alanı: `scripts/quality/`, `devtools/vol-ui/tests/e2e/`, ilgili CORE testleri.
 
@@ -66,8 +61,8 @@ alanı: `scripts/quality/`, `devtools/vol-ui/tests/e2e/`, ilgili CORE testleri.
 - [ ] **UI-00.5 — İlk referans.** 12 sekme/17 doğrudan tüketici/830 vitrin anahtarı
       başlangıcını yeniden say; varsayılan ekranlar, hareket kapalı/açık durumları,
       paket boyutu ve UI maliyetini git dışı özel kayıtlara kaydet. Kapanır: önceki
-      kayıtla karşılaştırma yöntemi vardır; bağlı olmayan cihaz NOT-RUN; kök D0/D1/D2 ve
-      VOL.TEST borçları açık kalır.
+      kayıtla karşılaştırma yöntemi vardır; bağlı olmayan cihaz NOT-RUN; kök F08/F09 ve
+      VOL.TEST kabul işleri açık kalır.
 - [ ] **UI-00.6 — Çalışan ölçüm sondası ve profil uygulanabilirliği.** Vitrin
       kalite sahibi browser için aynı-frame UI JS/DOM atfı, input→visible
       zaman bağı, trace/frame ID ve A/A overhead kalibrasyonunu küçük fixture
@@ -159,7 +154,7 @@ adaptörü. Oyun SFX varsayılanları ve simülasyon RNG'si korunur.
       ürüne müzik eklenmez.
 - [ ] **UI-02.3 — Sıfırdan varsayılan set üretimi.** Mevcut `devtools/audio-synth`
       kanonik job/yayın/manifest sürecinden UI olay ailesi için kuru/oda-yedekli özgün
-      set çıkar; tüketici hedefi şemasını önce oku, gerekirse bilinçli hedef genişlemesi
+      set çıkar; tüketici hedefi şemasına uygun bilinçli hedef genişlemesi
       ve ihlal örneği ekle. Önerilen tüketici CORE'un gönderilen UI sesleridir; çalışma
       zamanında geliştirme aracı içe aktarılmaz. Kapanır: varyant/olay manifesti
       paritesi, PCM yeniden render, bas/gövde ayrı filtre, kodlama sonrası
@@ -174,8 +169,9 @@ adaptörü. Oyun SFX varsayılanları ve simülasyon RNG'si korunur.
 - [ ] **UI-02.5 — Ses laboratuvarı ve yayın kabulü.** Vitrine onaylı Ses sekmesi ekle:
       açık oynatma eylemi, olay/ses kanalı/sessizleştirme/ses sayısı/düşürme/yetenek,
       örnek dışa aktarımı ve kuru/efektli kıyas. Kapanır: anlamsal olay sondası her
-      kabul edilmiş niyeti tek sayar; UI sesleri cihaz hoparlörü/kulaklık/ Deck'te
-      gerçekten dinlenir; kullanıcı beyanı ayrı açık kabulü kapatır.
+      kabul edilmiş niyeti tek sayar; güncel kaynak/PCM/manifest ve kodek sonrası
+      politika gerçek verify ile geçer; cihaz ses çıkışı teknik olarak doğrulanır.
+      İsteğe bağlı dinleme paketi korunur; insan dinleme onayı üretim şartı değildir.
 
 Faz testi: yeni kaynak ağacını yansıtan CORE/audio testleri, audio production-check,
 asset verify ve ilgili audio surface lock; yayın kilometre taşı `pnpm signoff`.
@@ -208,8 +204,8 @@ ailelere kör mekanik CSS yayılımı yapılmaz.
 - [ ] **UI-03.4 — Pilot teslim.** Varsayılan/ember önce-sonra karşılaştırması, 30%
       uzatılmış etiket, 6 hane, hareket videosu/iptal, kanonik ses örneği,
       fare/kol/dokunma. Kapanır: ölçülen ilk yanıt p95<100ms, CPU/ekrana sunum profili,
-      başlangıç referansı farkları tek tek incelenir; kullanıcı beğeni/dinleme
-      yapılmadıysa ayrı açık kabul kalır. Tasarım grameri kanıtı M1'in yayılan
+      başlangıç referansı farkları tek tek incelenir; görsel beğeni
+      yapılmadıysa açık kabul kalır; ses teknik QA ile kabul edilir. Tasarım grameri kanıtı M1'in yayılan
       referansıdır.
 
 Faz testi: primitives/Button/IconButton/Toolbar ve buttons modül adlı yeni testler,
@@ -276,15 +272,13 @@ icat edilmez, mevcut SettingsForm/Row güçlendirilir.
       depolama ve atomik kalıcılık mevcut; görünür form etiketi/yardım metinleri
       çevrilir.
 - [ ] **UI-05.5 — Form kabulü.** Bütün kontrol test örnekleri yalnız kol, yalnız klavye,
-      dokunma, %30 ve 6 hane; V5 “kol-adım eksik” iddiası önce mevcut davranışla çapraz
-      sınanır. Kapanır: bileşik denetimin yön tuşu FocusNav tarafından alınmaz; durum
+      dokunma, %30 ve 6 hane; mevcut kol-adım davranışıyla uyum sınanır. Kapanır: bileşik denetimin yön tuşu FocusNav tarafından alınmaz; durum
       matrisi + axe/eksik değerlendirme + modal örtüşme testi; sessiz setter değişimi
       tüketici uyum testiyle teslim edilir.
 
-### UI-06 — Tek VOL.SHOWCASE ve Linux/Deck native / M4
+### UI-06 — Tek VOL.SHOWCASE ve Windows native temel / M4
 
-Ön koşul UI-05. Sahip vitrin/kalite/platform; isim göçü tek atomik konu, yerel kabuk
-kurulumu ayrı commit. Oyun kaynaklarına bağımlılık kurulmaz.
+Ön koşul UI-05. Sahip vitrin/kalite/platform; isim göçü tek atomik konu, Windows kabuğu ilk teknik referanstır. Oyun kaynaklarına bağımlılık kurulmaz.
 
 - [ ] **UI-06.1 — Atomik paket göçü.** `devtools/vol-ui`→devtools/vol-showcase, paket
       adı, yaşam döngüsü yolu, kalite paketi/paket boyutu ve kilit dosyası importer
@@ -306,7 +300,8 @@ kurulumu ayrı commit. Oyun kaynaklarına bağımlılık kurulmaz.
       yeteneği ve web yedeği. Kapanır: native kaynak taşıyan plugin yalnız gereken
       uygulamada; pnpm dev web bakışı; başlatma/kaynak temizliği/dil değişimi kök veya
       sağlayıcı sızıntısı oluşturmaz.
-- [ ] **UI-06.4 — Linux/Deck gerçek teslim.** AppImage/steamrt4 AppDir,
+- [ ] **UI-06.4 — Windows temel ve ayrı Linux/Deck teslim.** İlk native Windows
+      açılışı ve UI-00.6 WebView2 sondası teknik referanstır. AppImage/steamrt4 AppDir,
       launcher/desktop/binary identity; var olan `pnpm deck` workspace aracı
       deploy/run/shot/measure sözleşmesi kopyalanmadan kullanılır. Kapanır: laptopta
       görünür native pencere, Deck host+SLR4 açılış/OGG/UI sesi, yalnız kol kullanımı,
@@ -441,8 +436,8 @@ bileşenlerinin yaşam döngüsü.
       değil; bütün hareket/Canvas renkleri kapsamlı, parmakla büyütmeye alternatif
       düğme/tuş, destroy/çıktı gözlemcisi temiz.
 - [ ] **UI-10.5 — Palette ve ileri katalog kanıtı.** Her aile durum örneği, public
-      yardımcı sayıları, eylem gezinmesi/grid ARIA gerekçesi. Kapanır: registry 89
-      sınıfın tamamı+yeni exportlar tam; çalışma alanı ve renk paletinde sınırlı renkle
+      yardımcı sayıları, eylem gezinmesi/grid ARIA gerekçesi. Kapanır: registry katalogdaki
+      başlangıç sınıflarının tamamı+yeni exportlar tam; çalışma alanı ve renk paletinde sınırlı renkle
       okunabilirlik; kullanılmayan API yalnız tüketicisiz diye ölü sayılmaz; tier-2
       beklerken erişilebilir kalır.
 
@@ -497,7 +492,7 @@ Chromium+WebKit taklit sağlayıcı E2E cihazın yerine geçmez.
 
 ### UI-12 — Deck metin/glif ve Windows / M7
 
-Ön koşul UI-11, Linux/Android kabulü eksikse platform sırası açık kalır. Sahip
+Ön koşul UI-11 teknik teslimi; Linux/Android fiziksel kabulü ayrı açık kalır. Sahip
 tauri-v2/platform ve native SHOWCASE.
 
 - [ ] **UI-12.1 — Steam metin sağlayıcısı.** Mevcut
@@ -535,7 +530,7 @@ eksik cihaz/insan alt görevleri görülmeden sürüm tamamlandı sayılmaz.
 
 - [ ] **UI-13.1 — Tam tier-1 / M3 ve katalog kapanışı.** CATALOG'daki 89 sınıfın tamamı ve runtime
       yardımcıları yeni dışa aktarımlarla yeniden çıkar; Tier-1 tam durumlar/Tier-2
-      gerekçeli N/A, 15 sekme ve bütün v5 COVERAGE satırları. Kapanır: ertelenmiş applicable durum
+      gerekçeli N/A, 15 sekme ve CONTRACT'taki uygulanabilir gereksinimler. Kapanır: ertelenmiş applicable durum
       ve açık uygulanabilir AA bulgusu sıfır; registry gerçek
       test doğrulaması bağlantısı tam; yeni API/public yüzey kilidi/belgeler/README/i18n
       uyumlu; kaldırılan yollar güncel olmayan referans bırakmaz; kullanılmayan
@@ -554,17 +549,17 @@ eksik cihaz/insan alt görevleri görülmeden sürüm tamamlandı sayılmaz.
       kök neden olarak toplam oyun FPS'inden ayrılır; mevcut Deck p95≤18ms işi veya
       Lenovo ağır yük işi açıkken bütün ürün geçti denmez; 10dk termal
       koşul/oturum/soğuk açılış ve uyku/devam kapsamı açık; bilinmeyen GPU NOT-RUN.
-- [ ] **UI-13.4 — İnsan erişim/görsel/ses.** Yalnız klavye/yalnız kol gerçek akış,
+- [ ] **UI-13.4 — İnsan erişim/görsel/haptik.** Yalnız klavye/yalnız kol gerçek akış,
       seçilen masaüstü AT + Android TalkBack + Windows NVDA/Narrator; TR/EN/200%/yalnız
-      renk/gri tonlama, gerçek glif yüksekliği, cihaz sesi+dokunma haptikleri. Kapanır:
+      renk/gri tonlama, gerçek glif yüksekliği, dokunma haptikleri. Kapanır:
       yapanın gerçek beyanı ve kullanılan profil kaydı; eksik donanım profili açık
-      kabul, otomatik axe sonucu insan kabulü değildir.
+      kabul, otomatik axe sonucu insan kabulü değildir; ses üretimi UI-02.5'in
+      teknik kabulüdür, zorunlu dinleme beyanı bu göreve taşınmaz.
 - [ ] **UI-13.5 — Sürüm adayı teslimi.** `pnpm signoff`, source/manifests/ public
       yüzey/paket boyutu/ölçekleme/yerel kapı bileşimi; değişen varsayılan piksel
       temelleri incelenmiş; bütün belgeler güncel, canlı eski yol referansları sıfır.
-      Kapanır: high/signoff ve gerçek kabul ayrı PASS/FAIL/NOT-RUN raporu; Conventional
-      Commits konu commitleri/push yetkisi/temiz git durumu; freeze/merge/etiket yalnız
-      ayrıca açık yetki; kalan her iş kök/paket TODO'da gerçek ölçütle açık.
+      Kapanır: high/signoff ve gerçek kabul ayrı PASS/FAIL/NOT-RUN raporu;
+      açıklanmış git durumu; kalan her iş kök/paket TODO'da gerçek ölçütle açık.
 
 ## Kapatılanlar
 

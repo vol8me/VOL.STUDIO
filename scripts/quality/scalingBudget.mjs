@@ -15,7 +15,7 @@
  * kat kat salınır; benchmark da o alanı "gürültülü" diye etiketler. Kapılanamayacak bir sayıyı kapılamak, kapıya
  * olan güveni bitirir.
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from './command.mjs';
 
 /**
  * @param root Repo kökü.

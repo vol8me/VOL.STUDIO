@@ -9,7 +9,8 @@ ekler. Ana menü yoktur; HUD ile duraklatma, ayar ve senaryo panelleri vardır.
 
 ## Model ve sunum
 
-Simülasyon `src/sim/` altında Phaser'dan bağımsızdır. CORE `SimulationClock`
+Simülasyon `src/sim/` altında model/sunum ayrımıyla düzenlenir.
+Saf headless import kabulü kök F06'da ayrıca doğrulanacaktır. CORE `SimulationClock`
 60 Hz sabit adımla ilerler; tank kuvvetleri iki alt adımda çözülür. Poz,
 taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
 Çizim hızı fizik saatini değiştirmez; duraklatma simülasyon adımı üretmez.
@@ -132,12 +133,10 @@ Tuş ve kol eşlemesi `src/scenes/world/PlayerControls.ts`, hareket yumuşatma
 ve dokunmatik ateş eşikleri `src/config/controls.ts` içindedir.
 `ControlIntent` ham komutu işler; hareket 100 ms içinde hedefin yüzde 90'ına
 yaklaşır, nişan yönü geciktirilmez. Sağ dokunmatik çubuğun iç bölgesi nişan,
-dış bölgesi ateş üretir; giriş ve çıkış eşikleri titremeyi önler. Bu eşikler
-oyun katmanında değil, CORE `TouchStickState`'in `aimStickGate` histerezisinde
-tutulur: eşik render karesinde örneklenirse, tick'ten kısa bir çubuk basışı
-kendi tick'ini üretmeden kaybolur. Aynı nedenle `PlayerControls` kare girdisini
-CORE `InputStepBuffer`'a verir; basış kenarı ve sıfıra düşen nişan yönü ilk
-tüketilen tick'e taşınır. Zoom, ızgara ve duraklatma kenar tetiklidir.
+dış bölgesi ateş üretir; giriş ve çıkış eşikleri titremeyi önler. Eşik kararını CORE `TouchStickState.aimStickGate` taşır; `PlayerControls`
+kare girdisini `InputStepBuffer`'a verir. Kısa basış kenarı ve nişan yönü
+ilk tüketilen tick'e korunarak gider; mekanizma sözleşmesi
+[primitifler](../../core/docs/primitives.md#sabit-ticke-girdi-taşıma) içindedir. Zoom, ızgara ve duraklatma kenar tetiklidir.
 Dokunmatik düğmeler CORE `VirtualActionSource` üzerinden tek karelik dokunuşu
 da korur.
 
@@ -169,10 +168,8 @@ Başlangıç profili platform ve ölçülmüş cihaz kuralından gelir; kayıtl�
 tercih bunun önüne geçer. Kalite seçimi kalıcıdır ve uygun görünüm kaynaklarına
 uygulanır. Hale yerel yarı saydam geometriyle çizilir.
 
-Gönderilen uygulama kodu 100,3 KiB, Phaser 345,1 KiB ve CSS 18,3 KiB
-(dosya başına gzip 9) ölçülür. `quality.json` uygulamaya 105 KiB ayırır;
-native servisler, kalıcı CORE ayar/senaryo bileşenleri, kuru ses ve hava
-fiziği bu kapsamın içindedir. Phaser ve CSS bütçeleri ayrı korunur.
+Gönderilen app/vendor/css bütçeleri kök quality.json sahibindedir;
+ölçü güncel üretim build'iyle bundle kapısından alınır.
 
 `RuntimeOverrides` yalnız `VOL_DECK_MEASURE=1` oturumunda senaryo, tohum,
 hava, mevsim ve kalite seçimini uygular. Geçersiz değerler reddedilir;
@@ -224,7 +221,8 @@ Araç hareketsiz ve nişan sabitken canlı döngü kaynağı yoktur. Müzik, amb
 ve hava sesi yüklenmez. Yük ve kayma, palet yüzeyi ile **zemin hızı**
 arasındaki farktan ölçülür (`Tank.surfaceLeft/surfaceRight`); paletlerin
 katettiği yol (`groundLeft/groundRight`) işaretli bir integraldir ve hız
-değildir. İnsan dinleme onayı kullanıcı tarafından verildi.
+değildir. Ses yayın kabulü kaynak/PCM/manifest ve codec sonrası teknik QA ile
+verilir; dinleme yapıldığı iddiası teknik sonuçtan türetilmez.
 
 ## Doğrulama
 
@@ -241,5 +239,5 @@ koşulları değiştirmez ve ölçüm seçimi kayda yazılmaz.
 E2E gönderilen build'i Chromium ve WebKit'te klavye, sanal kol ve dokunmatik
 girdiyle açar; ayarlar, senaryolar, duraklatma, hava görünümü ve temiz konsol
 sınanır. Kapsam, bundle ve algoritmik ölçekleme eşikleri kök `quality.json`
-içindedir. Gerçek cihaz performansı ve insan dinlemesi otomatik testlerden
-ayrı kalır. Açık kabul işleri kök [TODO.md](../../TODO.md) içinde izlenir.
+içindedir. Gerçek cihaz performansı, görsel ve haptik kabulü otomatik testlerden
+ayrı kalır; ses yayın kabulü teknik QA sözleşmesidir. Açık kabul işleri kök [TODO.md](../../TODO.md) içinde izlenir.

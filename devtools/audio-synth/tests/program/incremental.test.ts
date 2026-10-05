@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { MemoryRenderCache } from '../../src/engine/renderCache';
@@ -10,8 +11,8 @@ import { probeResolver, probeSample } from '../support/samples';
 import { RENDER_BLOCK } from '../support/timeouts';
 import { node } from '../support/program';
 
-const REPO = new URL('../../../../', import.meta.url).pathname;
-const PACKAGE = new URL('../../', import.meta.url).pathname;
+const REPO = fileURLToPath(new URL('../../../../', import.meta.url));
+const PACKAGE = fileURLToPath(new URL('../../', import.meta.url));
 
 const envelope = node('articulation.envelope', {
   attack: 0.002,

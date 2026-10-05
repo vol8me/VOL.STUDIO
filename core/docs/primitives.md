@@ -1,18 +1,13 @@
 # CORE primitifleri
 
-Primitifler işiyle tanımlanır; tüketicinin oyun kuralını bilmez. Mekanizma
-sunumdan bağımsızdır, sunum durumu çizer ve niyet bildirir, yaygın kurallar
-opt-in tarifte yaşar. Public yüzey paket `exports` haritasıdır.
+CORE mekanizmalarının API ve sınır başvurusu. Katman gerekçesi
+[DESIGN](../DESIGN.md), public girişler paket exports haritasındadır.
 
-## Sayı, ad ve yokluk sözleşmesi
+## Sayı ve yokluk sözleşmesi
 
 Yapılandırmanın sonlu olmayan sayısı sınırda reddedilir; akışın bozuk delta
 örneği durumu kirletmeden yoksayılır. `requireFinite` ve `finiteOr` bu iki
 politikanın karşılığıdır. Sessiz düzeltme yapılandırma hatasını gizlemez.
-
-`get` durumu okur, `create` değer üretir, `is`/`has`/`should` boolean sorudur.
-Manager kaynak kümesini, Controller tek davranışı koordine eder. Kısaltma
-aynı yüzeyde tek yazım taşır.
 
 `undefined` arama ya da seçim yokluğudur; `null` hesaplanmış sonuç yokluğudur.
 Örneğin boş kap `undefined`, aranan yolun bulunamaması `null` döndürür.
@@ -251,10 +246,6 @@ Programatik `setValue` ve `setChecked` sessizdir. Kullanıcı canlı değişimi
 onChange kullanabilir. Semantik haptik niyet primitive'dedir, platform çağrısı
 ve süre değildir; `haptic: false` çift bildirimi önler.
 
-Listener, timer, observer, pointer capture ve dil aboneliği kapanışta bırakılır.
-Birden çok kaynak `DisposableScope` kullanır. Animasyon bitişine bağlı
-kapanış azaltılmış hareket altında da tamamlanır.
-
 ## Grafik ve platform yeteneği
 
 `GraphicsQuality` generic kademe ve profile sahiptir; profil knobları ve
@@ -281,8 +272,8 @@ verir. Platform red ve izin hatası oyun akışını kesmez.
 Phaser köprüleri ve renderer geri düşüşü
 [Phaser sınırı](phaser-boundary.md), metin kaynakları [i18n](i18n.md),
 ses bağlamı [tek atışlar](sfx.md) ve [müzik](music-engine.md) belgelerindedir.
-Yeni oyun kuralı sunum bileşenine eklenmez; test, katalog ve public yüzey
-aynı değişiklikte güncellenir.
+Canlı UI envanteri ve durum kapsamının sahibi
+[CATALOG](../../docs/ui/CATALOG.md) belgesidir.
 
 ### Durağan nişan politikası
 
@@ -304,12 +295,8 @@ değeri, kendisini bildiren karede tick üretilmemişse kaybolmamalıdır.
   bildiren karede tick üretilmemişse bir sonraki tickte bir kez daha okunur.
   Basılı kanal darbasız her tickte güncel değerini taşır.
 
-Çubuk eylemi (`aimStickAction`) için ayrıca `aimStickGate` vardır: ham sapma
-oranı `enter`/`exit` eşikleriyle karşılaştırılır ve karar **çubuğun kendi
-durumunda** tutulur. Eşiği çağıranın karesinde örneklemek aynı kayıp
-sorununu üretirdi; ayrıca `aimStickActivatesOnTouch` ve deadzone eşiği bu
-durumda geçersiz sayılır. `reset` histerezisi düşürür, böylece duraklatma
-sonrası ilk basış yine `enter` eşiğinden geçmek zorundadır.
-
-CORE bu eşikleri oyun kelimesi bilmeden taşır: "ateş", "nişan" ya da "savaş"
-dediği bir kural yoktur, yalnız çubuk → eylem bağlantısı ve iki oran vardır.
+Çubuk eylemi (`aimStickAction`) için `aimStickGate` ham sapmayı
+`enter`/`exit` eşikleriyle karşılaştırır; karar çubuğun kendi durumundadır.
+Çağıranın kare temposunda örneklenmez. Bu kipte `aimStickActivatesOnTouch`
+ve deadzone eşiği geçersizdir. `reset` histerezisi düşürür; sonraki basış
+`enter` eşiğinden geçer. Eylemin ürün anlamı tüketicinindir.

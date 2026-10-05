@@ -7,8 +7,8 @@ kendi adıyla CORE testinde sınanır.
 
 ## Görsel sözleşme
 
-E2E gönderilen build'i sınar: Chromium okunabilirlik dışındaki testleri,
-WebKit yalnız okunabilirlik dosyasını çalıştırır. Yerleşim testi
+E2E gönderilen build'i sınar; mevcut motor kapsamı [README](README.md)
+ve hedef genişleme [UI TODO](../../docs/ui/TODO.md) sahibindedir. Yerleşim testi
 taşma, ezilme ve dokunma hedefini; görsel test piksel temelini denetler.
 Deterministik çizim testi saatin ve rastgeleliğin sonuçta etkili olmadığını
 ayrı doğrular. Piksel temeli yalnız bilinçli görsel değişiklikte yenilenir;

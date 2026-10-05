@@ -25,6 +25,10 @@ OLED Deck ve diğer Valve donanımları LCD referansından otomatik kabul almaz.
 
 ## Paketleme
 
+Native paketleme Linux builder/steamrt4 SDK işidir. Windows kontrol hostu
+JS CLI ve remote devkit akışını yürütür; bu native ABI kabulünü sağlamaz.
+Host hazırlığı [Windows](windows.md) belgesindedir.
+
 Repo kökünden `pnpm build:linux-steamrt4` steamrt4 SDK kabında üretim yapar.
 Hedef çalışma zamanı Steam Linux Runtime 4.0'dır; steamrt4 ile derleme
 tek başına oyunun pressure-vessel içinde açıldığını kanıtlamaz. Pressure-vessel içinde FUSE
@@ -60,7 +64,7 @@ Timer'ın serbest temposu panel sunumuyla birebir eşit kabul edilmez;
 gamescope sunum istatistikleri ve daha uzun pencereyle doğrulanır. OLED
 90 Hz davranışı ölçülmemiştir.
 
-## VOL.TEST cihaz referansı
+## Ölçülmüş VOL.TEST referansı
 
 LCD Deck, gamescope, 1280×800; steamrt4 AppDir ve glibc bağımlılık kapısı
 geçti. Native devkit kısayolunda ölçülen çalışma ortamı **host**tur;
@@ -80,44 +84,25 @@ pencere sonrası tam pencereler verilir; açılış karesi gizlice ayıklanmaz.
 | Fizik alanı / kar    | Yüksek | 59,6–59,7 |       19 |                  2,6–2,7 |
 | Fizik alanı / toz    | Yüksek |      59,5 |       20 |                      2,6 |
 
-Yukarıdaki tablo, koşu kimliği taşımayan önceki oturumun ölçümüdür; tablo
-satırları `runId` ile eşlenemez. Yeni kayıt zinciri (açılış koşulu + `runId`)
-aşağıda ayrıdır.
+Bu tablo önceki LCD host ölçümünün anonim referansıdır; runId ile
+eşlenemez. Güncelleme CPU'su GPU/panel süresi değildir. p95 ≤18 ms
+hedefi bütün koşullarda karşılanmadı; host/SLR4, termal yük ve sunum
+temposu ayrıca doğrulanır. Ölçüm bu tur yeniden yapılmadı.
 
-İlk pencereler 57,1–59,2 FPS ve p95 19–20 ms verdi. Eski fizik alanı
-referansı ısınmış pencerede 59,4–59,6 FPS / p95 19–20 ms idi. Android'deki
-büyük çizim kazancı Deck'e aynı büyüklükte FPS artışı olarak genellenmez.
-Güncelleme CPU süresi GPU veya panel sunum süresi değildir. Ortalama FPS
-hedefe yakın olsa da **p95 ≤18 ms kabulü bütün koşullarda karşılanmadı**.
-Sunum temposu, host/SLR4 farkı ve uzun süreli ısınma ayrıca ölçülmelidir.
+RunId zincirli ayrı boş/yüksek açılış referansı sekiz pencerede
+57,8–59,5 FPS / p95 18–20 ms; lostReports 0 verdi. GPU/panel süreleri
+WebKit yeteneği olmadığından null idi. Güç 4,08→3,23 W, GPU sıcaklığı
+49→54 °C ölçüldü. SIGTERM sonrası kayıt yazıldı; vol:terminate timedOut
+kök F04/F08'de açık kalır. Bu sonuç gerçek uyku, Steam istemci bağlantısı,
+hotplug, QAM odağı veya titreşim hissi kabulü değildir.
 
-Devkit ölçümü ekran görüntüsü ve SIGTERM kayıtlarını da topladı. Gerçek uyku,
-Steamworks istemci bağlantısı, motor hissi, hot-plug ve Steam/QAM odağı bu
-kare ölçümünün kabulü değildir.
+### Ölçüm çağrısı
 
-### Yeni kayıt zinciri: açılış koşulu
-
-`deck full` akışıyla derlenip dağıtılan steamrt4 sürümü, ölçüm ortamı
-release kısayoluna yazıldıktan sonra çalıştırıldı; sekiz ardışık pencere tek
-koşuya (`runId`) bağlıdır ve `lostReports` sıfırdır.
-
-| Senaryo / hava | Kademe |       FPS | p95 (ms) | GPU/panel süresi |
-| -------------- | ------ | --------: | -------: | ---------------: |
-| Boş / açık     | Yüksek | 57,8–59,5 |    18–20 |       yok (null) |
-
-Paket gücü çalıştırma öncesi 4,08 W, sonrasında 3,23 W; GPU sıcaklığı 49 °C'den
-54 °C'ye çıktı. WebKit Deck'te GPU ve panel sunum zamanlayıcısı vermediği için
-bu değerler `null` olarak kaydedilir, tahmin edilmez. SIGTERM sonrası ilerleme
-kaydı yazıldı; kabuğun `vol:terminate` el sıkışması ise karşılık gelen
-`timedOut` kaydını verdi (bkz. `TODO.md`).
-
-### Ölçüm sırası
-
-`deck mode` dağıtılmış sürümün release kısayoluna değil taban oyun kimliğine
-yazar; `deploy` ise ayrı bir release kısayolu kaydeder. Bu ikisi ayrı çağrıldığında
-ölçüm ortamı hiçbir çalışan kısayola ulaşmaz ve ölçüm yeni kare bulmaz.
-Ölçümün geçerli olması için `deck full` gerekir: derleme, dağıtım, mode ve
-ölçüm tek sırada yürür.
+deck mode taban kimliğe, deploy ayrı release kısayoluna yazar.
+Ayrı çağrıldığında ölçüm ortamı çalışan kısayola ulaşmayabilir. deck full
+build/deploy/mode/measure akışını aynı release üzerinde yürütür.
+Devkit çıktısı kendi sonda kabulüdür; ürün için gerçek paket ve build
+kimliğiyle host ve SLR4 ayrı ölçülür. Açık kabul [kök TODO](../TODO.md)'dadır.
 
 ## Girdi ve glif
 

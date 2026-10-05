@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnSync } from './command.mjs';
 
 const PROBE = `
 import { chromium, webkit } from '@playwright/test';

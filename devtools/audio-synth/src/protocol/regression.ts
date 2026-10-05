@@ -1,16 +1,3 @@
-/**
- * Estetik regresyon hafızası — reference/audition korpusu motorun "kabul
- * edilmiş ses karakteri" kaydıdır. Golden-file DEĞİLDİR: PCM sonsuza dek
- * değişemez diye bir kural yok; her manifest kaynağı, motor sürümü ve
- * betimleyiciyle birlikte saklanır ve büyük DSP değişikliğinde hangi
- * accepted asset'lerin etkilendiği `regression run` ile görünür olur.
- *
- * Karar mekaniği: PCM kimliği değişince satır `audition-required` olur —
- * otomatik "regression" sayılmaz (bilinçli iyileştirme de hash değiştirir).
- * İnsan kararı `regression decide` ile makine-okunur yazılır: karar tam o
- * PCM kimliğine bağlanır; sonraki koşu başka bir hash üretirse karar
- * bayatlar ve satır yeniden `audition-required` olur.
- */
 import { existsSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { analyzeAudio, ANALYZER_VERSION, type AudioAnalysisReportV1 } from '../analysis/report';
@@ -19,9 +6,9 @@ import { MUSIC_RENDERER_VERSION } from '../music/render';
 import { PROGRAM_RENDERER_VERSION } from '../program/render';
 import { decodeWithFfmpeg } from './toolchain';
 import { registryHash } from './publish';
-import { prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
+import { type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
-import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
+import { readJsonFile, resolveInside } from './fs';
 import { estimateForKind, kindOfProgramSchema, renderForKind, type JobKind } from './kinds';
 import { validateManifest } from './manifest';
 import { runTasks } from './parallel';
@@ -30,10 +17,7 @@ import { assertBatchBudget, DEFAULT_BATCH_BUDGET, estimateBatch } from '../guard
 import { batchWorkers } from '../guard/parallel';
 import { repoSampleResolver } from './samples';
 
-export const REGRESSION_REPORT_SCHEMA = 'RegressionReportV1';
-export const REGRESSION_DECISIONS_SCHEMA = 'RegressionDecisionsV1';
-export const REGRESSION_ROOT = 'devtools/audio-synth/regression';
-export const DECISIONS_FILE = `${REGRESSION_ROOT}/decisions.json`;
+export const REGRESSION_REPORT_SCHEMA = 'RegressionReportV2';
 export const MANIFESTS_ROOT = 'devtools/audio-synth/reference/production/manifests';
 
 export interface RegressionEntryV1 {
@@ -81,79 +65,7 @@ export function regressionCorpus(repoRoot: string): RegressionEntryV1[] {
   });
 }
 
-export type RegressionDecisionStatus = 'accepted-change' | 'rejected-regression';
-export type RegressionStatus = 'unchanged' | 'audition-required' | RegressionDecisionStatus;
-
-export interface RegressionDecisionV1 {
-  readonly status: RegressionDecisionStatus;
-  /** Kararın bağlandığı YENİ render kimliği; başka hash üretilirse karar bayatlar. */
-  readonly pcmHash: Sha256;
-  readonly note: string;
-}
-
-export interface RegressionDecisionsV1 {
-  readonly schema: typeof REGRESSION_DECISIONS_SCHEMA;
-  readonly decisions: Readonly<Record<string, RegressionDecisionV1>>;
-}
-
-function emptyDecisions(): RegressionDecisionsV1 {
-  return { schema: REGRESSION_DECISIONS_SCHEMA, decisions: {} };
-}
-
-function validateDecision(value: unknown, path: string): RegressionDecisionV1 {
-  const o = (value ?? {}) as Record<string, unknown>;
-  const status = o.status;
-  if (status !== 'accepted-change' && status !== 'rejected-regression') {
-    throw new ProtocolError('invalid', 'karar accepted-change|rejected-regression olmalı', path);
-  }
-  if (typeof o.pcmHash !== 'string' || !o.pcmHash.startsWith('sha256:')) {
-    throw new ProtocolError('invalid', 'pcmHash sha256: önekli olmalı', path);
-  }
-  if (typeof o.note !== 'string' || o.note.trim().length === 0) {
-    throw new ProtocolError('invalid', 'karar notu boş olamaz', path);
-  }
-  return { status, pcmHash: o.pcmHash as Sha256, note: o.note };
-}
-
-/** Karar dosyası; yoksa boş küme. */
-export function regressionDecisions(repoRoot: string): RegressionDecisionsV1 {
-  const file = resolveInside(repoRoot, DECISIONS_FILE, 'decisions');
-  if (!existsSync(file)) return emptyDecisions();
-  const raw = readJsonFile(file, DECISIONS_FILE) as { schema?: unknown; decisions?: unknown };
-  if (
-    raw.schema !== REGRESSION_DECISIONS_SCHEMA ||
-    typeof raw.decisions !== 'object' ||
-    raw.decisions === null
-  ) {
-    throw new ProtocolError('corrupt', `${REGRESSION_DECISIONS_SCHEMA} bekleniyor`, DECISIONS_FILE);
-  }
-  const decisions: Record<string, RegressionDecisionV1> = {};
-  for (const [id, value] of Object.entries(raw.decisions as Record<string, unknown>)) {
-    decisions[id] = validateDecision(value, `decisions.${id}`);
-  }
-  return { schema: REGRESSION_DECISIONS_SCHEMA, decisions };
-}
-
-/** İnsan kararını kaydet — PCM kimliği çağıranın elindeki koşu çıktısıdır. */
-export function decideRegression(
-  repoRoot: string,
-  id: string,
-  status: RegressionDecisionStatus,
-  pcmHash: Sha256,
-  note: string,
-): RegressionDecisionsV1 {
-  const decision = validateDecision({ status, pcmHash, note }, `decisions.${id}`);
-  const file = resolveInside(repoRoot, DECISIONS_FILE, 'decisions');
-  return withLock(resolveInside(repoRoot, REGRESSION_ROOT, 'decisions'), DECISIONS_FILE, () => {
-    const current = regressionDecisions(repoRoot);
-    const next: RegressionDecisionsV1 = {
-      schema: REGRESSION_DECISIONS_SCHEMA,
-      decisions: { ...current.decisions, [id]: decision },
-    };
-    writeFileAtomic(file, prettyCanonicalJson(next));
-    return next;
-  });
-}
+export type RegressionStatus = 'unchanged' | 'pcm-changed';
 
 export interface DescriptorDeltaV1 {
   readonly key: string;
@@ -200,7 +112,7 @@ export function descriptorDeltas(
   return deltas;
 }
 
-export interface RegressionRowV1 {
+export interface RegressionRowV2 {
   readonly id: string;
   readonly manifest: string;
   readonly assetClass: AssetClass;
@@ -209,10 +121,9 @@ export interface RegressionRowV1 {
   readonly current: { readonly programHash: Sha256; readonly pcmHash: Sha256 };
   readonly status: RegressionStatus;
   readonly deltas: readonly DescriptorDeltaV1[];
-  readonly decision: RegressionDecisionV1 | null;
 }
 
-export interface RegressionReportV1 {
+export interface RegressionReportV2 {
   readonly schema: typeof REGRESSION_REPORT_SCHEMA;
   readonly engine: {
     readonly programRenderer: number;
@@ -221,7 +132,7 @@ export interface RegressionReportV1 {
     readonly registryHash: Sha256;
   };
   readonly counts: Readonly<Record<RegressionStatus, number>>;
-  readonly rows: readonly RegressionRowV1[];
+  readonly rows: readonly RegressionRowV2[];
 }
 
 export interface RegressionRunOptions {
@@ -230,16 +141,11 @@ export interface RegressionRunOptions {
   readonly ids?: readonly string[];
 }
 
-/**
- * Korpusu güncel motorla yeniden render eder. PCM kimliği aynıysa
- * `unchanged`; değiştiyse yayımlanmış asset çözülüp betimleyici farkı
- * ölçülür ve satır `audition-required` olur (geçerli bir insan kararı
- * yoksa). Değişiklik ASLA otomatik "regression" sayılmaz.
- */
+/** Güncel PCM ile kayıtlı yayın kimliğinin farkını ölçer; baseline değişmez. */
 export function runRegression(
   repoRoot: string,
   options: RegressionRunOptions = {},
-): RegressionReportV1 {
+): RegressionReportV2 {
   const corpus = regressionCorpus(repoRoot);
   const entries = options.ids ? corpus.filter((e) => options.ids!.includes(e.id)) : corpus;
   if (options.ids) {
@@ -248,7 +154,6 @@ export function runRegression(
       throw new ProtocolError('invalid', `korpusta yok: ${missing.join(', ')}`, 'ids');
     }
   }
-  const decisions = regressionDecisions(repoRoot);
   const estimate = estimateBatch(
     entries.map((e) => ({
       cost: estimateForKind(e.kind, e.program),
@@ -270,7 +175,7 @@ export function runRegression(
   );
   const byKey = new Map(outputs.map((o) => [o.key, o]));
   const resolver = repoSampleResolver(repoRoot);
-  const rows = entries.map((entry): RegressionRowV1 => {
+  const rows = entries.map((entry): RegressionRowV2 => {
     const out = byKey.get(entry.id);
     if (!out) throw new ProtocolError('invalid', 'regression parçası çıktısı eksik', entry.id);
     const baseline = { programHash: entry.programHash, pcmHash: entry.pcmHash };
@@ -285,7 +190,6 @@ export function runRegression(
         current,
         status: 'unchanged',
         deltas: [],
-        decision: null,
       };
     }
     const channels =
@@ -309,9 +213,6 @@ export function runRegression(
         if (!(error instanceof ProtocolError)) throw error;
       }
     }
-    const decision = decisions.decisions[entry.id] ?? null;
-    const status: RegressionStatus =
-      decision && decision.pcmHash === out.pcmHash ? decision.status : 'audition-required';
     return {
       id: entry.id,
       manifest: entry.manifest,
@@ -319,16 +220,13 @@ export function runRegression(
       kind: entry.kind,
       baseline,
       current,
-      status,
+      status: 'pcm-changed',
       deltas,
-      decision,
     };
   });
   const counts: Record<RegressionStatus, number> = {
     unchanged: 0,
-    'audition-required': 0,
-    'accepted-change': 0,
-    'rejected-regression': 0,
+    'pcm-changed': 0,
   };
   for (const row of rows) counts[row.status] += 1;
   return {

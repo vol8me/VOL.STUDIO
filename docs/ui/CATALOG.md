@@ -10,7 +10,10 @@ Yeni regresyonlar modül adıyla test aynasına gider; eski birleşik testler b�
 
 89 public sınıf, 118 runtime export, 205 type-only export vardır.
 17 sınıf VOL.TEST'te doğrudan, Glyph createGlyph üzerinden dolaylı kullanılır.
-Tier-1 ortak taban + aktif kullanım + picker altyapısı; diğerleri tier-2.
+Tier-1 ortak tabanı Button, IconButton, Text, Panel, Select, Checkbox,
+Slider, HoldButton, Bar/XPBar, ScrollView ve picker'lardır; aktif tüketimdeki
+diğer sınıflar da tier-1'dir. Diğerleri tier-2'dir. Boyut/variant/yoğunluk
+tüketim sayısından bağımsız eksenlerdir; arşiv sayımı öncelik belirlemez.
 Yeni üretim tüketimi aynı commit'te state matrisiyle terfi eder.
 ToolButton Toolbar üzerinden, OSK açma eylemiyle bugün vitrindedir;
 eksik olan bağımsız/açık durum fixture'ıdır.
@@ -20,7 +23,7 @@ eksik olan bağımsız/açık durum fixture'ıdır.
 Her sınıfın A kodu aşağıdaki esine bağlanır. Uygulamada somut bileşen
 örneği, işlev gerekçesi ve özgün VOL farkı inceleme kaydında gösterilir.
 Kodun varlığı görsel/dinleme kabulü değildir. Bütün aileler ayrıca A6 ses
-gramerini kullanır; bu tur oyun sesleri dinlenmedi, asset kopyalanmaz.
+gramerini kullanır; oyun adından sayısal ses ölçüsü çıkarılmaz, asset kopyalanmaz.
 
 | Kod | Anchor              | İşlev gerekçesi                                                                   |
 | --- | ------------------- | --------------------------------------------------------------------------------- |

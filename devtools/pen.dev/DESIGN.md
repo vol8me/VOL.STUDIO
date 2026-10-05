@@ -6,10 +6,9 @@ tüketicinindir. Araç üretir ve doğrular; CORE rig sözleşmesini doğrular v
 
 ## Kaynak ve ara çıktı
 
-`.pen` canlı Pencil belgesidir ve yalnız MCP erişimiyle işlenir. Düğüm
-kimlikleri önceden hatırlanan değerle kullanılmaz; her export taze keşif
-ister. Native Export kendi renderer'ını kullanır; elle SVG/raster yeniden
-çizimi native çıktının yerine geçmez.
+Pencil erişim sınırı [AGENTS](AGENTS.md) sahibindedir. Native Export
+kendi renderer'ını kullanır; gölge, gradyan, image-fill, shader ve mirror
+gibi canvas işlemleri elle SVG/raster çizimiyle eşdeğer sayılmaz.
 
 Export staging'de node kimliğiyle PNG üretir. Düzenleyici entity/domain
 manifestinden parça ve preview adlarını, metadata'yı ve dizin yapısını kurar.
@@ -50,3 +49,31 @@ Oyunda akış `validateRigMetadata`, `buildRigDefinition`, isteğe bağlı
 uzuv sayısı, oyun fizik kuralı ve tüketici görsel kararı üretim aracına girmez.
 Testler gerçek geçici dizinde kaynak, gönderim ve yetim dosya sözleşmesini
 sınar; mock disk gerçek dosya farkının kanıtı değildir.
+
+## Canvas keşif başvurusu
+
+Bu desenler kaynak yapısını bulmaya yarar; export öncesi canlı canvas
+üzerinde doğrulanır. Düğüm kimliği sabit bir manifest girdisi değildir.
+
+| Kaynak ailesi      | Parça keşfi                                                               |
+| ------------------ | ------------------------------------------------------------------------- |
+| Yer birimi         | Parts Export Sheet içindeki `_export` son ekli bütün descendants          |
+| Terminal karakteri | `_terminal_character` kökünün text olmayan doğrudan çocukları             |
+| Turret             | Ground Export ve Rotating Head Export container'ları; daha fazla bölünmez |
+| Konveyör           | `ground__`, `belt__`, `vehicle__`, `gauge__` rol ön ekli descendants      |
+| Düz üretim binası  | Tek kök frame; bölünmez                                                   |
+
+Export sheet `row > cells > cell > *_export` biçiminde iç içe olabilir;
+tek depth=1 okuması bütün parçaları bulmaz. Assemble edilmiş karttan alınan
+yerleşim ile export sheet hücresi ayrılır; instance çözümü gerekiyorsa
+canlı Get'in resolveInstances seçeneği kullanılır. Terminal karakterinin
+doğrudan çocuk x/y'si kendi rig yerleşimidir.
+
+Native Export `<nodeId>.png` üretir. Organize manifesti partId, staging
+dosyası ve tekrarları bütün olarak doğrular; şema başvurusu
+`scripts/organize-pen-export.mjs` içindedir. x/y/rotation/rootSizePx yoksa
+positionPx null çıktısı rig montajı için yeterli değildir.
+
+Rig animasyon politikası bu pakette yoktur; binaların runtime rig
+entegrasyonu tamamlanmış sayılmaz. Keşif deseninin varlığı tüketici kabulü
+değildir.

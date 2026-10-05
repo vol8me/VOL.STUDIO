@@ -26,12 +26,10 @@ Node.js `22.23.1` sürümü `.node-version` ve `package.json` içinde sabittir; 
 Rust ve Cargo; Android SDK ve NDK; Windows C++ Build Tools gerektirir.
 Ortam denetimi eksik gereksinimleri raporlar.
 
-Linux ve Windows aynı kapıları çalıştırır. Windows'ta ek olarak `bash` (Git for
-Windows ile gelir), gerçek `pnpm.exe` ve `just.exe` PATH'te olmalıdır: Node'un
-`execFileSync` çağrıları uzantısız POSIX betiği çalıştıramaz, bu yüzden `.CMD`
-shim'i yerine çalıştırılabilir `.exe` aranır. Satır sonu CRLF'e çevrilirse
-Prettier'ın `endOfLine: lf` kuralı ve kapı fixture'ları bozulur; `git` için
-`core.autocrlf=input` kullanılır. Ayrıntı [docs/windows.md](docs/windows.md).
+Windows host kurulumu, native süreç/shim çözümü ve ayrı Android araç profili
+[Windows rehberindedir](docs/windows.md). Git Bash ve MSVC gerekir; standard
+pnpm/just shim'leri yeterlidir. Linux/Deck paketleme ayrı Linux builder'da
+yürür. Metinlerde LF kuralı `.gitattributes` tarafından korunur.
 
 ```bash
 pnpm install
@@ -58,20 +56,21 @@ cihaz ölçümü ve insan dinlemesi otomatik kapıların yerine geçmez.
 
 ## Belgeler
 
-| Konu                   | Belge                                                   |
-| ---------------------- | ------------------------------------------------------- |
-| Çalışma sözleşmesi     | [AGENTS.md](AGENTS.md)                                  |
-| Kapılar ve raporlar    | [docs/gates.md](docs/gates.md)                          |
-| Motor                  | [core/README.md](core/README.md)                        |
-| Native kabuk           | [tauri-v2/README.md](tauri-v2/README.md)                |
-| Linux                  | [docs/linux.md](docs/linux.md)                          |
-| Steam Deck             | [docs/steam-deck.md](docs/steam-deck.md)                |
-| Android                | [docs/android.md](docs/android.md)                      |
-| Ses üretimi            | [audio-synth/README.md](devtools/audio-synth/README.md) |
-| Rig üretimi            | [pen.dev/README.md](devtools/pen.dev/README.md)         |
-| UI kataloğu            | [vol-ui/README.md](devtools/vol-ui/README.md)           |
-| UI uygulama sözleşmesi | [UI fazları ve nihai plan](docs/ui/README.md)           |
-| Açık işler             | [TODO.md](TODO.md)                                      |
+| Konu                   | Belge                                                                |
+| ---------------------- | -------------------------------------------------------------------- |
+| Çalışma sözleşmesi     | [AGENTS.md](AGENTS.md)                                               |
+| Kapılar ve raporlar    | [docs/gates.md](docs/gates.md)                                       |
+| Motor                  | [core/README.md](core/README.md)                                     |
+| Native kabuk           | [tauri-v2/README.md](tauri-v2/README.md)                             |
+| Linux                  | [docs/linux.md](docs/linux.md)                                       |
+| Steam Deck             | [docs/steam-deck.md](docs/steam-deck.md)                             |
+| Android                | [docs/android.md](docs/android.md)                                   |
+| Ses üretimi            | [audio-synth/README.md](devtools/audio-synth/README.md)              |
+| Rig üretimi            | [pen.dev/README.md](devtools/pen.dev/README.md)                      |
+| UI kataloğu            | [vol-ui/README.md](devtools/vol-ui/README.md)                        |
+| UI uygulama sözleşmesi | [UI fazları ve nihai plan](docs/ui/README.md)                        |
+| Açık işler             | [TODO.md](TODO.md)                                                   |
+| Teknik değerlendirme   | [Monorepo denetimi ve iyileştirme kararları](docs/monorepo-audit.md) |
 
 ## Lisans
 

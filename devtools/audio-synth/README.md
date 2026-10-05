@@ -46,7 +46,10 @@ pnpm exec just audio-verify
 Gönderilen dosya kodek sonrası ölçülür. PCM kimliği, render yüzeyi, dosya
 özetleri, sınıf politikası, loop dikişi ve bank/bundle bağları doğrulanır.
 Dinleme paketi `export/` altında git dışıdır. Mekanik QA sesin beğenildiği
-anlamına gelmez; canary kabulü insanın kayıtlı dinleme kararıdır.
+anlamına gelmez. Canary ve benchmark mekanik ölçümleri korur; dinleme
+paketi isteğe bağlı WAV, kaynak/teslim karşılaştırması, loop2x ve rehber sunar.
+`production-ready`, güncel görev başarısı ile bağımsız doğrulanmış yayının
+teknik sözleşmesidir; insanın dinlediği veya sesi beğendiği anlamına gelmez.
 
 ## Yapı
 

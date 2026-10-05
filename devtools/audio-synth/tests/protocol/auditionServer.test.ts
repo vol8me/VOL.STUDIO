@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnTsxSync } from '../support/process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { join } from 'node:path';
@@ -23,7 +23,6 @@ import { RENDER_TIMEOUT } from '../support/timeouts';
 
 const ROOT = 'devtools/audio-synth/records/searches';
 const PACKAGE = fileURLToPath(new URL('../..', import.meta.url));
-const TSX = join(PACKAGE, 'node_modules/.bin/tsx');
 const CLI = join(PACKAGE, 'scripts/audio-job.ts');
 
 let repo: TestRepo;
@@ -202,7 +201,7 @@ describe('dinleme sunucusu — güvenlik sınırı', () => {
   it(
     'sunucudan yazılan karar taze bir süreçte yeniden kurulur (by: human)',
     () => {
-      const res = spawnSync(TSX, [CLI, 'search', 'status', 'shell-test', '--json'], {
+      const res = spawnTsxSync(CLI, ['search', 'status', 'shell-test', '--json'], {
         cwd: repo.root,
         encoding: 'utf8',
       });

@@ -15,20 +15,13 @@ import { ACOUSTIC_PROGRAM_SCHEMA, PROGRAM_LIMITS } from '../program/schema';
 import { hashCanonical } from '../kernel/canonical';
 import {
   BENCHMARK_AUDITION_ROOT,
-  BENCHMARK_REVIEWS_SCHEMA,
   BENCHMARK_SCHEMA,
   BENCHMARKS_ROOT,
-  benchmarkReviews,
+  loadBenchmarkTasks,
 } from './benchmark';
-import {
-  CANARIES_ROOT,
-  CANARY_AUDITION_ROOT,
-  CANARY_REVIEWS_SCHEMA,
-  CANARY_SCHEMA,
-  canaryReviews,
-} from './canary';
+import { CANARIES_ROOT, CANARY_AUDITION_ROOT, CANARY_SCHEMA, loadCanaries } from './canary';
 import { QUALITY_MATRIX_SCHEMA } from './capabilities';
-import { regressionCorpus, regressionDecisions } from './regression';
+import { regressionCorpus, REGRESSION_REPORT_SCHEMA } from './regression';
 import { deliveryContext } from './contextDelivery';
 import { familyContext } from './contextFamily';
 import { soundDesignContext } from './contextSound';
@@ -39,7 +32,7 @@ import { ASSET_MANIFEST_SCHEMA } from './manifest';
 import { AUDIO_JOB_SCHEMA, JOB_STAGES, PROTOCOL_VERSION } from './records';
 import { AUDIO_TARGET_SCHEMA, surveyTargets } from './targets';
 
-export const CONTEXT_SCHEMA = 'AudioAuthoringContextV1';
+export const CONTEXT_SCHEMA = 'AudioAuthoringContextV2';
 
 const CLI = 'pnpm --filter @volstudio/audio-synth audio:job';
 
@@ -157,37 +150,31 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
     music: musicContext(CLI),
     canaries: {
       schema: CANARY_SCHEMA,
-      reviewsSchema: CANARY_REVIEWS_SCHEMA,
       root: CANARIES_ROOT,
       auditionRoot: CANARY_AUDITION_ROOT,
-      entries: canaryReviews(repoRoot).map((r) => ({
+      entries: loadCanaries(repoRoot).map((r) => ({
         id: r.id,
         version: r.version,
-        review: r.status,
       })),
       commands: {
         list: `${CLI} canary list`,
         run: `${CLI} canary run [--audition] [--json]`,
-        review: `${CLI} canary review <id> --status pending-human|heard-acceptable|heard-problem --note <metin> --by human`,
       },
-      rule: 'Mekanik beklentiler motor gerilemesini yakalar, "organik" kanıtı değildir; dinleme durumu yalnız insan beyanıyla değişir.',
+      rule: 'Mekanik beklentiler motor gerilemesini yakalar; dinleme aracı isteğe bağlıdır.',
     },
     benchmark: {
       schema: BENCHMARK_SCHEMA,
-      reviewsSchema: BENCHMARK_REVIEWS_SCHEMA,
       root: BENCHMARKS_ROOT,
       auditionRoot: BENCHMARK_AUDITION_ROOT,
-      entries: benchmarkReviews(repoRoot).map((r) => ({
+      entries: loadBenchmarkTasks(repoRoot).map((r) => ({
         id: r.id,
         version: r.version,
-        review: r.status,
       })),
       commands: {
         list: `${CLI} benchmark list`,
         run: `${CLI} benchmark run [--audition] [--json]  — 19 canary + görevler tek sürümlü raporda`,
-        review: `${CLI} benchmark review <id> --status pending-human|heard-acceptable|heard-problem --note <metin> --by human`,
       },
-      rule: 'Görev kriterleri gerçek davranışı ayırt eder (diğer görevlerin render’ını reddeder); dinleme durumu yalnız insan beyanıyla değişir.',
+      rule: 'Mekanik beklentiler motor gerilemesini yakalar; dinleme aracı isteğe bağlıdır.',
     },
     capabilities: {
       schema: QUALITY_MATRIX_SCHEMA,
@@ -201,19 +188,16 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
         'pipeline',
         'unsupported',
       ],
-      rule: 'Seviye görev/canary kaydından türetilir; registry’de sağlayıcı bulunması kanıt değildir. "production-ready" üç koşul ister: geçen görev + kategoriyi kapsayan doğrulanmış yayımlanmış manifest + güncel görev sürümünde insan heard-acceptable. "benchmarked" yalnız mekanik geçiştir.',
+      rule: 'production-ready güncel görev başarısı ve bağımsız verify ile doğrulanmış yayın ister; kayıtlı rapor güncel üretim kabulü sağlamaz.',
     },
     regression: {
-      schema: 'RegressionReportV1',
-      decisionsSchema: 'RegressionDecisionsV1',
+      schema: REGRESSION_REPORT_SCHEMA,
       corpus: regressionCorpus(repoRoot).map((e) => ({ id: e.id, assetClass: e.assetClass })),
-      decisions: Object.keys(regressionDecisions(repoRoot).decisions).length,
       commands: {
         corpus: `${CLI} regression corpus`,
         run: `${CLI} regression run [--json] [--ids a,b]`,
-        decide: `${CLI} regression decide <id> --status accepted-change|rejected-regression --pcm sha256:… --note <metin> --by human`,
       },
-      rule: 'PCM hash değişimi otomatik gerileme sayılmaz; değişen satır "audition-required" olur ve yalnız insan kararıyla (tam o hash’e bağlı) kapanır.',
+      rule: 'PCM kimliği aynıysa unchanged, farklıysa pcm-changed; baseline otomatik değiştirilmez.',
     },
     registry: { hash: hashCanonical(registry), entries: registry },
     policy: { assetClasses: ASSET_CLASS_POLICIES, renderBudget: DEFAULT_RENDER_BUDGET },

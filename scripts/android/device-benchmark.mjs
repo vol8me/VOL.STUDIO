@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../quality/command.mjs';
 import { join, resolve } from 'node:path';
 import { parseDeviceBenchmarkArgs, selectDevice } from './device-benchmark-contract.mjs';
 import {
@@ -15,23 +15,15 @@ const ADB = process.env.ADB ?? 'adb';
 let serial;
 
 function adb(args) {
-  // `shell: true` Windows'ta `adb.cmd`/`.CMD` çalıştırmanın tek yoludur
-  // (`EINVAL`); POSIX'te aynı çağrıyı değiştirmez.
   return execFileSync(ADB, serial ? ['-s', serial, ...args] : args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
-    shell: true,
   });
 }
 
 /** Ölçüm beklemeleri kabuk `sleep`ine değil Node saatine bağlıdır. */
 function sleepSeconds(seconds) {
-  Atomics.wait(
-    new Int32Array(new SharedArrayBuffer(4)),
-    0,
-    0,
-    seconds * 1000,
-  );
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, seconds * 1000);
 }
 
 function optionalAdb(args) {

@@ -36,6 +36,14 @@ describe('quality.json şema doğrulaması', () => {
     assert.deepEqual(validateQualityConfig(REAL_CONFIG), []);
   });
 
+  it('belge rolü ve bütçesi aynı quality şemasında doğrulanır', () => {
+    const broken = structuredClone(REAL_CONFIG);
+    broken.documentation.paths[0].role = 'unlimited';
+    assert.ok(
+      validateQualityConfig(broken).some((problem) => problem.includes('documentation.paths')),
+    );
+  });
+
   it('floor anahtarındaki yazım hatası teşhis edilebilir mesaj verir', () => {
     // Gerçek senaryo: `floor` yerine `flor` yazıldı.
     const broken = validConfig();

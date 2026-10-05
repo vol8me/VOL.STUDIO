@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { analyzeAudio, countClicks } from '../../src/analysis/report';
 import { renderProgram, renderProgramLayers } from '../../src/program/render';
@@ -5,7 +6,7 @@ import { checkFamily } from '../../src/protocol/family';
 import { autocorrelationPitch, isStrictlyMonotone } from '../support/measure';
 import { PIPELINE_TIMEOUT, RENDER_BLOCK } from '../support/timeouts';
 
-const REPO = new URL('../../../../', import.meta.url).pathname;
+const REPO = fileURLToPath(new URL('../../../../', import.meta.url));
 const RATE = 48000;
 
 function program(layer: Record<string, unknown>, seconds = 0.6, extra: object = {}) {

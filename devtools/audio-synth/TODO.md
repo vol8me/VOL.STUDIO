@@ -7,8 +7,10 @@ repo geneli işler kök [TODO.md](../../TODO.md) içindedir.
 
 ## Açık
 
-- [ ] **[P2] AS20 — Doğrulayıcıları bildirimsel alt şemalara ayır.** Kapanır: uzun doğrulayıcılar ortak şemaları kullanır, fonksiyon boyutu bir bekçiyle izlenir ve kanonik doğrulamanın kabul/ret sonuçları değişmez.
-- [ ] **[P3] Güncel canary'lerin insan dinlemesi.** Kapanır: bir insan dinleme rehberine göre her güncel canary'yi dinler, `audio:job canary review` ile sürümüne bağlı beyanı kaydeder ve sorun beyanı ayrı düzeltme işi açar; otomatik QA insan beğenisinin yerine geçmez.
+Bu iki işin checkbox ve kapanış sahibi kök TODO'dur; burada ikinci defter tutulmaz.
+
+- **AS20 — Doğrulayıcı alt şemaları:** kök [F05.4](../../TODO.md#f05--asset-yayını-metadata-ve-kalıntı-temizliği); yanlış PCM metadata kabulü düzeltilirken doğru kabul/ret ve sürüm sözleşmesi korunur.
+- **Teknik kabulün doğrulanması:** kök [F01](../../TODO.md#f01) ve [envanter](../../docs/monorepo-audit.md#audio-teknik-kabul). Zorunlu dinleme sistemi kaldırılmıştır; faz kapanışı tam kapı kanıtını bekler.
 
 ## Kapatılanlar
 

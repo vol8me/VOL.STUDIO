@@ -77,6 +77,24 @@
       "css": 21
     }
   },
+  "documentation": {
+    "budgets": {
+      "rootReadme": { "lines": 100, "words": 800 },
+      "packageReadme": { "lines": 80, "words": 600 },
+      "hub": { "lines": 40, "words": 250 },
+      "rootAgent": { "lines": 120, "words": 1000 },
+      "pencilAgent": { "lines": 80, "words": 650 },
+      "toolAgent": { "lines": 40, "words": 250 }
+    },
+    "paths": [
+      { "path": "README.md", "role": "rootReadme" },
+      { "path": "AGENTS.md", "role": "rootAgent" },
+      { "path": "CLAUDE.md", "role": "toolAgent" },
+      { "path": "devtools/pen.dev/AGENTS.md", "role": "pencilAgent" },
+      { "path": "docs/ui/README.md", "role": "hub" }
+    ],
+    "exceptions": []
+  },
   "scaling": {
     "$comment": "CORE uzamsal indeks 128→512 varlık oranı ~3.3; vol-test mermi adımı 128→512 oranı ~3.7 ölçüldü. Karesel büyüme ~16 olur.",
     "core": {

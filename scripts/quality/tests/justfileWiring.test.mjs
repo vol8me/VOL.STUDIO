@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../command.mjs';
 import { resolve } from 'node:path';
 import { test } from 'node:test';
 
@@ -42,11 +42,7 @@ test('tarifler PATH’teki bash’a değil Git kurulumunun kabuğuna bağlanır'
     /"node",\s*"scripts\/quality\/bashShell\.mjs",\s*"-euo",\s*"pipefail",\s*"-c"/,
     'kabuk Git Bash çözümleyicisi üzerinden sabitlenmeli',
   );
-  assert.doesNotMatch(
-    shellLine[1],
-    /"bash"/,
-    'kabuk doğrudan PATH’teki `bash`a bağlanmamalı',
-  );
+  assert.doesNotMatch(shellLine[1], /"bash"/, 'kabuk doğrudan PATH’teki `bash`a bağlanmamalı');
 });
 
 test('kapı aşamaları var olan tariflere işaret eder', () => {

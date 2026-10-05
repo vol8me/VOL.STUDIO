@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnTsxSync } from '../support/process';
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,7 +35,6 @@ import { RENDER_TIMEOUT } from '../support/timeouts';
 
 const ROOT = 'devtools/audio-synth/records/searches';
 const PACKAGE = fileURLToPath(new URL('../..', import.meta.url));
-const TSX = join(PACKAGE, 'node_modules/.bin/tsx');
 const CLI = join(PACKAGE, 'scripts/audio-job.ts');
 
 let repo: TestRepo;
@@ -156,7 +155,7 @@ describe('arama kararları (SearchSelectionV1)', () => {
         labels: ['warm', 'short'],
         note: 'kısa ve sıcak',
       });
-      const res = spawnSync(TSX, [CLI, 'search', 'status', 'shell-test', '--json'], {
+      const res = spawnTsxSync(CLI, ['search', 'status', 'shell-test', '--json'], {
         cwd: repo.root,
         encoding: 'utf8',
       });

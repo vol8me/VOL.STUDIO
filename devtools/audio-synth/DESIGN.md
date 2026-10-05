@@ -224,5 +224,27 @@ Yeni yapı taşı davranışı testle, sürümle ve render yüzeyiyle korunur.
 
 `pnpm exec just audio-verify` reçete tazeliğini, referans ölçüm çekirdeğini,
 production provenance'ı, aktif gönderim sınıf politikasını ve izlenen asset
-bütünlüğünü birlikte sınar. Koşulmayan kapı geçmiş sayılmaz; dinleme kararı
-ayrı ve bekleyen durumuyla raporlanır.
+bütünlüğünü birlikte sınar. Koşulmayan kapı geçmiş sayılmaz.
+
+Yetenek seviyeleri kaynağı ve beklentileri özetlenen güncel benchmark/canary
+ölçümünden türetilir. `production-ready` aynı süreçte gerçekten tamamlanmış,
+sonradan değiştirilmemiş benchmark koşusu ve türetme anında `verifyManifest`
+ile yeniden doğrulanan güncel yayın ister. Saf türetmeye dışarıdan eklenen
+manifest etiketi ve diskten okunan rapor bu yetkiyi taşımaz. `--from-report`
+yalnız kayıtlı mekanik bilgiyi sunar; görev sürümü veya kaynak özeti değişince
+başarılı kanıt sayılmaz. PCM farkı araştırma raporunda `pcm-changed` olarak
+ölçülür; üretim doğrulamasını düşürür ve baseline otomatik güncellenmez.
+
+## Yerel raporların geçişi
+
+BenchmarkReport, QualityMatrix, ListeningPackage, RegressionReport ve
+AudioAuthoringContext çıktıları V2'dir. V1 benchmark raporu açık sürüm hatası
+verir; raporlar güncel komutla yeniden oluşturulur. Yerel `export/listening/`
+çıktısını `audio:listen` yeniden üretir; eski JSON/HTML kabul kanıtı değildir.
+İzlenen canary ve benchmark review dosyaları kaldırılmıştır. Yerel kopyalarda
+kalmış `corpus/canaries/reviews.json` ve `corpus/benchmarks/reviews.json`
+silinmelidir; loader bunları sessizce gizlemek yerine tanım şeması hatası
+verir. Eski `regression/decisions.json` hiçbir API tarafından okunmaz veya
+yazılmaz; yerel kullanıcı bu kullanılmayan dosyayı temizleyebilir. Hiçbir
+review mekanik başarıya veya yeni bir insan kabul kaydına dönüştürülmez.
+Job, program, düğüm/render yüzeyi ve asset manifesti bu geçişte sürüm almaz.

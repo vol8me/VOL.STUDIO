@@ -32,7 +32,7 @@ oluşturulmaz. İlk native kontrolü yeni crate kaydını kök Cargo kilidine ek
 Rust kapısının `--locked` koşusu bundan sonra yeni paketi de sınar. Kullanılmayan ürün eklentileri ve başka oyunun oynanışı kopyalanmaz.
 
 İkon kimlikten deterministik üretilen bir başlangıç çizimidir; yayın öncesi
-ürün çizimiyle değiştirilir. Android native proje kaynak değildir:
+ürün çizimiyle değiştirilir. Şablon Android native projesini üretmez; init sonrasında izlenen proje ürün kaynağıdır:
 `pnpm --filter <paket> tauri android init` ardından oyun paketinde
 `pnpm exec tauri icon src-tauri/icons/icon.png` çalıştırılarak ürün ikonları
 üretilir. Başlangıç ölçekleme ölçümü CORE uzamsal indeksini kullanır; oynanış
@@ -74,15 +74,6 @@ preview ve e2e portu aynı olabilir; iki ayrı paket aynı portu bildiremez.
 - `active` + `<paket>/src-tauri/tauri.conf.json` taşıyan paket cihaz ölçümü adayıdır
   (`scripts/quality/deviceApps.mjs`).
 
-## Sıra
-
-1. Paketi kur, `workspace-lifecycle.json`a `active` kaydını ekle, `pnpm install`.
-2. `pnpm --filter <paket> typecheck`.
-3. `quality.json`a eşikleri, bundle ve ölçekleme bütçesini yaz.
-4. `pnpm quick`.
-5. E2E varsa `test:e2e` betiğini ekle.
-6. `pnpm signoff`.
-
 ## Dondurma, emeklilik, yeniden açma
 
 - **Dondurma:** paket bitince annotated `<paket>/final-<tarih>` etiketi atılır;
@@ -111,7 +102,7 @@ belgesindedir; cihaz deneyi kalite kapısı değildir.
 | Kısa/uzun B, Menu, A, RT; bütün ekranlarda odak ve glifler                  | CORE odak testleri, oyun E2E ve fiziksel Steam Input olay izi                       |
 | Metin girişinde Steam kayan klavyesi ve fallback                            | `TextEntryProvider` testi ve Deck'te gerçek giriş                                   |
 | WebView bağlam menüsü, uzun basış balonu ve sürükleme hayaleti kapalı       | `nativeMenus` testleri; Deck'te uzun basış deneyi                                   |
-| Ses: kanonik program, manifest, codec/loop/peak                             | `audio:production-check`, `audio-verify`, Deck WebKit decode, insan dinlemesi       |
+| Ses: kanonik program, manifest, codec/loop/peak                             | `audio:production-check`, `audio-verify`, Deck WebKit decode/çıkış teknik QA        |
 | Titreşim sürücüsü, kalıcı tercih, uyku ve hotplug                           | `tauri-v2` testleri, Deck komut izi ve fiziksel his onayı                           |
 | İlerleme ve cihaz ayarı ayrı store; kapatmada yazı kaybı yok                | kalıcılık regresyonları, SIGTERM/uyku deneyi, gerçek App ID ile Cloud turu          |
 | Yoğunluk etiketli kare ölçümü; 800p hedefi 60 FPS, p95 ≤ 18 ms              | `pnpm deck` ile `full` ölçümü                                                       |

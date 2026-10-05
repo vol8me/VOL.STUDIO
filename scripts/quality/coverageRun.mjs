@@ -10,7 +10,7 @@
  * Ölçülecek paketler `quality.json` → `coverageRuns` içinde yazılıdır; tarif
  * paket listesini tekrarlamaz.
  */
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from './command.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';

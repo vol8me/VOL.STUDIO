@@ -1,11 +1,3 @@
-/**
- * `pnpm audio:listen` — tek-komut dinleme paketi. İnsan
- * incelemesi bekleyen her ses `export/listening/` altına toplanır:
- * canary kanonik render'ı, benchmark kaynak+teslim+loop2x+overlay
- * varyantları, referans kaynak/gönderim çiftleri ve v1↔v2 karşılaştırma
- * çiftleri WAV olur; `listening.json` envanter + `index.html` statik
- * sayfa yazılır. Karar komutları öğede görünür; beğeni insanınındır.
- */
 import { buildListeningPackage, LISTENING_ROOT } from '../src/protocol/listening';
 import { findRepoRoot } from './lib/args';
 

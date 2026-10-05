@@ -10,7 +10,31 @@
 /** Her paketin taşımak zorunda olduğu kapsam metrikleri. */
 export declare const COVERAGE_KEYS: readonly ['lines', 'statements', 'branches', 'functions'];
 
+export type DocumentationRole =
+  | 'rootReadme'
+  | 'packageReadme'
+  | 'hub'
+  | 'rootAgent'
+  | 'pencilAgent'
+  | 'toolAgent'
+  | 'reference'
+  | 'legal'
+  | 'generated';
+
+export interface DocumentationConfig {
+  budgets: Record<string, { lines: number; words: number }>;
+  paths: { path: string; role: DocumentationRole }[];
+  exceptions: {
+    path: string;
+    role: DocumentationRole;
+    lines: number;
+    words: number;
+    reason: string;
+  }[];
+}
+
 export interface QualityConfig {
+  documentation?: DocumentationConfig;
   floor: Record<string, number>;
   packages: Record<string, Record<string, number>>;
   exempt?: Record<string, string>;

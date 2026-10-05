@@ -1,11 +1,3 @@
-/**
- * Estetik regresyon hafızası testleri. Korpus = production manifest'leri;
- * koşu manifest'teki programı güncel motorla yeniden render eder. Testin
- * ayırt edici kanıtı geçici bir depo kökündeki mutasyondur: program belgesi
- * değişince satır `audition-required` olur, insan kararı o PCM hash'ine
- * bağlanır, yeni mutasyon kararı bayatlatır. Altın-dosya DEĞİLDİR: PCM
- * değişimi tek başına regresyon sayılmaz.
- */
 import {
   copyFileSync,
   existsSync,
@@ -21,16 +13,13 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 import { analyzeAudio } from '../../src/analysis/report';
 import {
-  DECISIONS_FILE,
-  decideRegression,
   descriptorDeltas,
   MANIFESTS_ROOT,
   regressionCorpus,
-  regressionDecisions,
   runRegression,
 } from '../../src/protocol';
 import { ProtocolError } from '../../src/protocol/errors';
-import { hashCanonical, type Sha256 } from '../../src/kernel/canonical';
+import { hashCanonical } from '../../src/kernel/canonical';
 import { withRenderSession } from '../../src/kernel/session';
 import { repoRenderCache } from '../../src/protocol/renderCacheStore';
 import { CORPUS_TIMEOUT } from '../support/timeouts';
@@ -109,7 +98,7 @@ describe('regresyon korpusu', () => {
       expect(row.current.pcmHash).toBe(row.baseline.pcmHash);
       expect(row.deltas).toHaveLength(0);
     }
-    expect(report.counts['audition-required']).toBe(0);
+    expect(report.counts['pcm-changed']).toBe(0);
   }, 120_000);
 
   it(
@@ -156,54 +145,22 @@ describe('betimleyici farkları', () => {
   });
 });
 
-describe('insan kararı akışı', () => {
-  it('mutasyon → audition-required → karar → accepted-change → yeni hash → bayat', () => {
+describe('PCM değişim ölçümü', () => {
+  it('program mutasyonu eski PCM kimliğini korur ve değişimi kabul kaydı olmadan ölçer', () => {
     const root = tempRepo();
     corpusFixture(root, 3);
     const first = runRegression(root, { ids: [IMPACT] });
     const row = first.rows[0];
-    expect(row.status).toBe('audition-required');
+    expect(first.schema).toBe('RegressionReportV2');
+    expect(row.status).toBe('pcm-changed');
     expect(row.current.pcmHash).not.toBe(row.baseline.pcmHash);
-    // Program kimliği manifest kaydıyla aynı belgeyi işaret eder (yeni belge
-    // yayımlanmış sayılır); ayırt edici kanıt PCM kimliği + betimleyici farkı.
-    expect(row.current.programHash).toBe(row.baseline.programHash);
-    // Asset kopyalandı: yayımlanmış dosya ile yeni PCM arasında betimleyici fark ölçülür.
     expect(row.deltas.length).toBeGreaterThan(0);
-
-    // İnsan kararı tam bu PCM kimliğine bağlanır.
-    decideRegression(
-      root,
-      IMPACT,
-      'accepted-change',
-      row.current.pcmHash,
-      'yeni kazanç karakteri insan tarafından onaylandı',
-    );
-    const second = runRegression(root, { ids: [IMPACT] });
-    expect(second.rows[0].status).toBe('accepted-change');
-    expect(second.rows[0].decision?.status).toBe('accepted-change');
-
-    // Başka bir hash üreten değişiklik kararı bayatlatır.
+    expect(row).not.toHaveProperty('decision');
+    expect(first.counts).toEqual({ unchanged: 0, 'pcm-changed': 1 });
     corpusFixture(root, 7);
-    const third = runRegression(root, { ids: [IMPACT] });
-    expect(third.rows[0].status).toBe('audition-required');
-    expect(third.rows[0].current.pcmHash).not.toBe(row.current.pcmHash);
+    const second = runRegression(root, { ids: [IMPACT] });
+    expect(second.rows[0].status).toBe('pcm-changed');
+    expect(second.rows[0].baseline.pcmHash).toBe(row.baseline.pcmHash);
+    expect(second.rows[0].current.pcmHash).not.toBe(row.current.pcmHash);
   }, 240_000);
-
-  it('karar doğrulaması: geçersiz durum/hash/not reddedilir', () => {
-    const root = tempRepo();
-    corpusFixture(root, 0);
-    const hash = ('sha256:' + '0'.repeat(64)) as Sha256;
-    expect(() => decideRegression(root, IMPACT, 'heard-acceptable' as never, hash, 'not')).toThrow(
-      ProtocolError,
-    );
-    expect(() =>
-      decideRegression(root, IMPACT, 'accepted-change', 'bozuk-hash' as Sha256, 'not'),
-    ).toThrow(ProtocolError);
-    expect(() => decideRegression(root, IMPACT, 'accepted-change', hash, '   ')).toThrow();
-    // Geçerli karar yazılır ve makine-okunur kalır.
-    const written = decideRegression(root, IMPACT, 'rejected-regression', hash, 'kanıt notu');
-    expect(written.decisions[IMPACT].status).toBe('rejected-regression');
-    expect(regressionDecisions(root).decisions[IMPACT].pcmHash).toBe(hash);
-    expect(existsSync(join(root, DECISIONS_FILE))).toBe(true);
-  });
 });

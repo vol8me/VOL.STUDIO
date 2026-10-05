@@ -2,31 +2,20 @@ import { existsSync, readdirSync } from 'node:fs';
 import { evaluateChecks, validateCheck, type MechanicalCheckV1 } from '../analysis/checks';
 import { analyzeAudio } from '../analysis/report';
 import { AudioParamError } from '../guard/errors';
-import { checkArray, checkChoice, checkNumber, checkObject } from '../guard/read';
+import { checkArray, checkNumber, checkObject } from '../guard/read';
 import { checkBase, materialize, type ProgramBaseV1 } from '../program/dimensions';
 import { renderProgram, type ProgramRender } from '../program/render';
 import { writeAuditionCopy, EXPORT_ROOT } from './audition';
-import { hashCanonical, hashPcm, prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
+import { hashCanonical, hashPcm, type Sha256 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
-import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
+import { readJsonFile, resolveInside } from './fs';
 import { asProtocol } from './records';
 import { repoSampleResolver } from './samples';
 import type { SampleResolver } from '../program/samples';
 
-/**
- * Organik canary derlemi — motorun organik yapı taşları için küçük, sürümlü
- * GÖREVLER. Bir canary asset kütüphanesi değildir: deterministik bir kaynak
- * (program ya da archetype isteği), ucuz mekanik beklentiler ve insan için
- * dinleme rehberi taşır. Mekanik beklentiler geçmesi sesin "organik"
- * olduğunu KANITLAMAZ; yalnız motorun ölçülebilir davranışının
- * gerilemediğini söyler. İnsan dinleme durumu ayrı `reviews.json`dadır ve
- * yalnız bir insan beyanıyla `pending-human` dışına çıkar.
- */
 export const CANARY_SCHEMA = 'OrganicCanaryV1';
-export const CANARY_REVIEWS_SCHEMA = 'CanaryReviewsV1';
 export const CANARIES_ROOT = 'devtools/audio-synth/corpus/canaries';
 export const CANARY_AUDITION_ROOT = `${EXPORT_ROOT}/canaries`;
-const REVIEWS_FILE = 'reviews.json';
 const ID = /^[a-z][a-z0-9-]{0,47}$/;
 
 export interface OrganicCanaryV1 {
@@ -40,20 +29,6 @@ export interface OrganicCanaryV1 {
   readonly listeningGuide: readonly string[];
 }
 
-export type CanaryReviewStatus = 'pending-human' | 'heard-acceptable' | 'heard-problem';
-
-export interface CanaryReviewV1 {
-  readonly status: CanaryReviewStatus;
-  /** Değerlendirilen canary sürümü; sürüm artınca inceleme bayatlar. */
-  readonly version: number;
-  readonly note: string | null;
-}
-
-export interface CanaryReviewsV1 {
-  readonly schema: typeof CANARY_REVIEWS_SCHEMA;
-  readonly reviews: Readonly<Record<string, CanaryReviewV1>>;
-}
-
 function text(value: unknown, path: string, max: number): string {
   if (typeof value !== 'string' || value.trim().length === 0 || value.length > max) {
     throw new AudioParamError(path, 'type', `boş olmayan, en çok ${max} karakter`, value);
@@ -62,6 +37,14 @@ function text(value: unknown, path: string, max: number): string {
 }
 
 export function validateCanary(value: unknown): OrganicCanaryV1 {
+  if ((value as { schema?: unknown } | null)?.schema !== CANARY_SCHEMA) {
+    throw new AudioParamError(
+      'schema',
+      'type',
+      `"${CANARY_SCHEMA}" olmalı`,
+      (value as { schema?: unknown } | null)?.schema,
+    );
+  }
   const o = checkObject(value, '', [
     'schema',
     'id',
@@ -72,8 +55,6 @@ export function validateCanary(value: unknown): OrganicCanaryV1 {
     'expectations',
     'listeningGuide',
   ]);
-  if (o.schema !== CANARY_SCHEMA)
-    throw new AudioParamError('schema', 'type', `"${CANARY_SCHEMA}" olmalı`, o.schema);
   if (typeof o.id !== 'string' || !ID.test(o.id))
     throw new AudioParamError('id', 'type', ID.source, o.id);
   const expectations = checkArray(o.expectations, 'expectations');
@@ -103,7 +84,7 @@ export function loadCanaries(repoRoot: string): OrganicCanaryV1[] {
   const dir = resolveInside(repoRoot, CANARIES_ROOT, 'canaries');
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
-    .filter((name) => name.endsWith('.json') && name !== REVIEWS_FILE)
+    .filter((name) => name.endsWith('.json'))
     .sort()
     .map((name) => {
       const canary = asProtocol(name, () =>
@@ -169,74 +150,5 @@ export function runCanaries(
     if (options.audition)
       writeAuditionCopy(repoRoot, `${CANARY_AUDITION_ROOT}/${canary.id}.wav`, render);
     return result;
-  });
-}
-
-export function validateReviews(value: unknown): CanaryReviewsV1 {
-  const o = checkObject(value, 'reviews', ['schema', 'reviews']);
-  if (o.schema !== CANARY_REVIEWS_SCHEMA)
-    throw new AudioParamError('schema', 'type', `"${CANARY_REVIEWS_SCHEMA}" olmalı`, o.schema);
-  const raw = checkObject(o.reviews, 'reviews', Object.keys((o.reviews as object) ?? {}));
-  const reviews: Record<string, CanaryReviewV1> = {};
-  for (const id of Object.keys(raw).sort()) {
-    const r = checkObject(raw[id], `reviews.${id}`, ['status', 'version', 'note']);
-    const status = checkChoice(r.status, `reviews.${id}.status`, [
-      'pending-human',
-      'heard-acceptable',
-      'heard-problem',
-    ] as const);
-    if (status !== 'pending-human' && r.note === null) {
-      throw new AudioParamError(`reviews.${id}.note`, 'required', 'dinleme beyanı not ister', null);
-    }
-    reviews[id] = {
-      status,
-      version: checkNumber(r.version, `reviews.${id}.version`, { min: 1, integer: true }),
-      note: r.note === null ? null : text(r.note, `reviews.${id}.note`, 1000),
-    };
-  }
-  return { schema: CANARY_REVIEWS_SCHEMA, reviews };
-}
-
-export interface CanaryReviewState extends CanaryReviewV1 {
-  readonly id: string;
-  /** İnceleme canary'nin güncel sürümüne ait değilse `pending-human` sayılır. */
-  readonly stale: boolean;
-}
-
-export function canaryReviews(repoRoot: string): CanaryReviewState[] {
-  const file = canaryFile(repoRoot, REVIEWS_FILE);
-  const stored = existsSync(file) ? validateReviews(readJsonFile(file, REVIEWS_FILE)).reviews : {};
-  return loadCanaries(repoRoot).map((c) => {
-    const r = stored[c.id];
-    if (!r)
-      return { id: c.id, status: 'pending-human', version: c.version, note: null, stale: false };
-    const stale = r.version !== c.version;
-    return { id: c.id, ...r, status: stale ? 'pending-human' : r.status, stale };
-  });
-}
-
-/** İnsan dinleme beyanını kaydeder (yalnız bu komutla; agent kendi dinlemesini yazamaz). */
-export function recordCanaryReview(
-  repoRoot: string,
-  id: string,
-  status: CanaryReviewStatus,
-  note: string | null,
-): CanaryReviewsV1 {
-  const canary = loadCanaries(repoRoot).find((c) => c.id === id);
-  if (!canary) throw new ProtocolError('not-found', `canary yok: ${id}`, CANARIES_ROOT);
-  const dir = resolveInside(repoRoot, CANARIES_ROOT, 'canaries');
-  return withLock(dir, CANARIES_ROOT, () => {
-    const file = canaryFile(repoRoot, REVIEWS_FILE);
-    const current = existsSync(file)
-      ? validateReviews(readJsonFile(file, REVIEWS_FILE)).reviews
-      : {};
-    const next = asProtocol('review', () =>
-      validateReviews({
-        schema: CANARY_REVIEWS_SCHEMA,
-        reviews: { ...current, [id]: { status, version: canary.version, note } },
-      }),
-    );
-    writeFileAtomic(file, prettyCanonicalJson(next));
-    return next;
   });
 }

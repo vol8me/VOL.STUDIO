@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { existsSync, readFileSync } from 'node:fs';
 import { once } from 'node:events';
 import { join } from 'node:path';
@@ -18,7 +19,7 @@ import { shellSpec } from '../search/fixtures';
 import { PIPELINE_TIMEOUT } from '../support/timeouts';
 import { createTestRepo, testProgram, type TestRepo } from './repo';
 
-const REPO = new URL('../../../../', import.meta.url).pathname;
+const REPO = fileURLToPath(new URL('../../../../', import.meta.url));
 const SEARCHES = 'devtools/audio-synth/records/searches';
 
 const estimate = (over: Partial<BatchEstimate> = {}): BatchEstimate => ({

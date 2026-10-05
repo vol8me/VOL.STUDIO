@@ -108,6 +108,12 @@ test('yol tanıma yer tutucuyu, paket belirtecini ve oran ifadesini dışarıda 
   assert.deepEqual(paths, ['core/src/ui/', 'docs/android.md', 'tauri-v2/src-tauri']);
 });
 
+test('filter ile run komutu gerçek paket betiğini seçer', () => {
+  assert.deepEqual(commandRefs('`pnpm --filter @vol/a run typecheck`'), [
+    { kind: 'package', pkg: '@vol/a', name: 'typecheck' },
+  ]);
+});
+
 test('yol çözümü belge dizinine ya da köke göre, dosya ya da dizin olarak yapılır', () => {
   const files = new Set(['devtools/pen.dev/src/rigExport.ts', 'docs/android.md']);
   assert.equal(resolvesInTree('src/rigExport.ts', 'devtools/pen.dev', files), true);
@@ -145,8 +151,8 @@ test('agent belgelerindeki her komut gerçekten vardır', () => {
         ref.kind === 'recipe'
           ? recipes.has(ref.name)
           : ref.kind === 'root'
-          ? rootScripts.has(ref.name)
-          : packages.get(ref.pkg)?.has(ref.name) === true;
+            ? rootScripts.has(ref.name)
+            : packages.get(ref.pkg)?.has(ref.name) === true;
       if (!known) missing.push(`${doc}: ${ref.kind} ${ref.pkg ?? ''} ${ref.name}`.trim());
     }
   }
@@ -226,8 +232,8 @@ test('repo belgelerindeki her komut gerçekten vardır', () => {
         ref.kind === 'recipe'
           ? recipes.has(ref.name)
           : ref.kind === 'root'
-          ? rootScripts.has(ref.name)
-          : packages.get(ref.pkg)?.has(ref.name) === true;
+            ? rootScripts.has(ref.name)
+            : packages.get(ref.pkg)?.has(ref.name) === true;
       if (!known) missing.push(`${doc}: ${ref.kind} ${ref.pkg ?? ''} ${ref.name}`.trim());
     }
   }

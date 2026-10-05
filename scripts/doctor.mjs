@@ -1,4 +1,6 @@
-import { spawnSync } from 'node:child_process';
+import { spawnSync } from './quality/command.mjs';
+import { checkNativeLink } from './quality/nativeLink.mjs';
+import { checkAndroidToolchain } from './quality/androidToolchain.mjs';
 import { resolve } from 'node:path';
 import { nodeRuntimeProblem } from './quality/nodeRuntime.mjs';
 import { bashShell, bashShellWarning } from './quality/gitBash.mjs';
@@ -49,36 +51,14 @@ function checkBash() {
 }
 
 function checkNativeLinker() {
-  /*
-   * MSVC linker dışında PATH'teki her `link.exe` bağlantıyı bozar: rustc
-   * bağlantı için PATH'ten `link.exe` çağırır ve Git for Windows'in GNU
-   * coreutils `link`i ilk sıraya gelirse hiçbir bağlanabilir hedef üretilemez
-   * ("linking with link.exe failed: unexpected error"). `docs/windows.md`
-   * Build Tools'u zorunlu sayar; bu denetim o zorunluluğu ölçer.
-   */
   if (process.platform !== 'win32') return;
-  const where = spawnSync('where.exe', ['link.exe'], { encoding: 'utf8' });
-  const first = `${where.stdout ?? ''}`
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .find(Boolean);
-  if (!first) {
-    failures.push(
-      'MSVC linker: PATH’te `link.exe` yok. Visual Studio C++ Build Tools 2022 kur; `cargo build` bunun olmadan bağlanamaz.',
-    );
-    console.error('MSVC linker: YOK');
+  const result = checkNativeLink();
+  if (result.ok) {
+    console.log(`MSVC: ${result.output}`);
     return;
   }
-  const probe = spawnSync(first, [], { encoding: 'utf8' });
-  const banner = `${probe.stdout ?? ''}${probe.stderr ?? ''}`;
-  if (/Incremental Linker/i.test(banner)) {
-    console.log(`MSVC linker: ${first}`);
-    return;
-  }
-  failures.push(
-    `MSVC linker: PATH’teki ilk \`link.exe\` Microsoft linker değil — ${first}. rustc bağlantı için bu dosyayı çağırır ve her hedef bağlanamaz. Visual Studio C++ Build Tools 2022 kur ya da Git for Windows dizinini PATH’te MSVC’den sonraya al.`,
-  );
-  console.error(`MSVC linker: GİZLİ — ${first}`);
+  failures.push(`MSVC: Rust link probu başarısız. C++ Build Tools ve Windows SDK kurulumunu kontrol et. ${result.output}`);
+  console.error('MSVC: Rust link probu BAŞARISIZ');
 }
 
 function checkCargoAudit() {
@@ -112,6 +92,12 @@ checkNativeLinker();
 checkJust();
 command('FFmpeg', 'ffmpeg', ['-version'], 'Dağıtım paket yöneticisinden ffmpeg kur.');
 checkCargoAudit();
+
+if (process.argv.includes('--android')) {
+  const android = checkAndroidToolchain();
+  failures.push(...android.problems.map((problem) => `Android: ${problem}`));
+  console.log(`Android toolchain: ${android.problems.length ? 'SORUN' : 'OK'}`);
+}
 
 // GTK/WebKit derleme bağımlılıkları yalnız Linux'ta gerekir; Windows ve macOS
 // WebView2/WebKit'i işletim sistemi sağlar. Bu denetim Linux dışında koşsaydı

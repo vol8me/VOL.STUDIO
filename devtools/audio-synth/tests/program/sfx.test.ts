@@ -12,7 +12,7 @@ import { centroid, envelopeRate, peakFrequency } from '../support/measure';
 /**
  * SFX ailesi kanıtları. Her aile registry yapı taşıdır; bu
  * dosya ölçülen yönleri sınar — "gerçekçi" iddiası yoktur, insan dinlemesi
- * ayrı ve `pending-human`dır.
+ * isteğe bağlıdır.
  */
 const node = (primitive: string, params: Record<string, unknown> = {}) => ({
   primitive,

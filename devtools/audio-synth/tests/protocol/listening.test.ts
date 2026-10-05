@@ -1,17 +1,3 @@
-/**
- * Tek-komut dinleme paketi. Kilitlenen sözleşme:
- *
- *  - Paket `export/listening/` altına düşer (git dışı), `listening.json` +
- *    `index.html` + WAV'lar; production ağacına dokunmaz.
- *  - Canary'ler kanonik `runCanary` render'ından gelir (guide + review
- *    durumu gerçek kayıtlarla aynı).
- *  - Referanslar gönderilen OGG'nin çözümüdür; karar durumu
- *    `regression/decisions.json`'daki PCM-hash bağlı beyanla sınırlıdır,
- *    yoksa `undecided`.
- *  - Benchmark öğeleri kaynak + gönderim varyantı ve (loop taşıyorsa)
- *    iki-turluk dikiş dinlemesi sunar; karar komutu öğede görünür.
- *  - Karşılaştırma öğeleri (v1/v2) dinleme amaçlıdır, karar komutu taşımaz.
- */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,7 +22,7 @@ afterEach(() => {
 });
 
 const LISTENING_DIR = () => join(repo!.root, LISTENING_ROOT);
-const COUNTS = { canary: 0, benchmark: 0, reference: 0, pending: 0 };
+const COUNTS = { canary: 0, benchmark: 0, reference: 0 };
 
 function writeCanary(id: string): void {
   const dir = join(repo!.root, 'devtools/audio-synth/corpus/canaries');
@@ -221,27 +207,27 @@ describe('dinleme paketi', () => {
     expect(existsSync(join(LISTENING_DIR(), 'index.html'))).toBe(true);
   });
 
-  it('canary pakete kanonik render + rehber + pending-human ile girer', () => {
+  it('canary pakete kanonik render + rehber + kabul alanı olmadan girer', () => {
     repo = createTestRepo();
     writeCanary('tink');
     const pkg = buildListeningPackage(repo.root);
-    expect(pkg.counts).toEqual({ ...COUNTS, canary: 1, pending: 1 });
+    expect(pkg.counts).toEqual({ ...COUNTS, canary: 1 });
     const item = pkg.items[0];
     expect(item.kind).toBe('canary');
-    expect(item.status).toBe('pending-human');
+    expect(item).not.toHaveProperty('status');
     expect(item.guide).toEqual(['Tekrar etmeyen bir ton beklenir.']);
     expect(item.pcmHash).toMatch(/^sha256:/);
-    expect(item.decision).toContain('canary review tink');
+    expect(item).not.toHaveProperty('decision');
     const wav = join(repo.root, item.file);
     expect(item.file.startsWith(`${LISTENING_ROOT}/canary/`)).toBe(true);
     expect(readFileSync(wav).subarray(0, 4).toString('ascii')).toBe('RIFF');
     // Karar yazılmamışsa sayfa yine de üretilir ve kimliği taşır.
     const html = readFileSync(join(LISTENING_DIR(), 'index.html'), 'utf8');
     expect(html).toContain('tink');
-    expect(html).toContain('canary review');
+    expect(html).not.toContain('canary review');
   });
 
-  it('benchmark parçası kaynak+teslim varyantını karar komutuyla sunar', () => {
+  it('benchmark parçası kaynak+teslim varyantını kabul alanı olmadan sunar', () => {
     repo = createTestRepo();
     writeBenchmark('bench-x');
     const pkg = buildListeningPackage(repo.root);
@@ -249,12 +235,12 @@ describe('dinleme paketi', () => {
     expect(items.map((i) => i.role)).toEqual(['source', 'delivery']);
     for (const item of items) {
       expect(item.group).toBe('task:bench-x');
-      expect(item.status).toBe('pending-human');
-      expect(item.decision).toContain('benchmark review bench-x');
+      expect(item).not.toHaveProperty('status');
+      expect(item).not.toHaveProperty('decision');
       expect(item.pcmHash).toMatch(/^sha256:/);
     }
     expect(pkg.counts.benchmark).toBe(2);
-    expect(pkg.counts.pending).toBe(2);
+    expect(pkg.counts).not.toHaveProperty('pending');
   }, 30000);
 
   it('codec-loop-seam taşıyan parça iki-tur dikiş varyantı üretir', () => {
@@ -301,10 +287,10 @@ describe('dinleme paketi', () => {
       expect(impact.map((i) => i.role)).toEqual(['source', 'delivery']);
       expect(ambience.map((i) => i.role)).toEqual(['source', 'delivery', 'loop2x']);
       for (const item of refs) {
-        expect(item.status).toBe('undecided');
-        expect(item.decision).toContain('regression decide');
+        expect(item).not.toHaveProperty('status');
+        expect(item).not.toHaveProperty('decision');
         expect(item.manifest).toContain(MANIFESTS_ROOT);
-        // Türetilmiş loop2x öğesi karar hedefi değildir: pcmHash null kalır.
+        // Türetilmiş loop2x öğesinde pcmHash null kalır.
         if (item.role === 'loop2x') expect(item.pcmHash).toBeNull();
         else expect(item.pcmHash).toMatch(/^sha256:/);
       }

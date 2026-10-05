@@ -21,7 +21,7 @@
  * Bütün workspace'lerin (frozen dahil) izlenen ses dosyalarının diff'siz
  * olduğu ayrıca doğrulanır — bu ASSET BÜTÜNLÜĞÜDÜR, üretim kanıtı değildir.
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from './command.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { loadWorkspaceLifecycle } from './workspaceLifecycle.mjs';
@@ -43,8 +43,8 @@ for (const pkg of active) {
   const script = scripts['audio:generate']
     ? 'audio:generate'
     : scripts['generate:audio']
-    ? 'generate:audio'
-    : null;
+      ? 'generate:audio'
+      : null;
   if (script) {
     console.log(`[audio-verify] ${pkg.packageName}: ses reçetesi yeniden koşuluyor (${script})...`);
     execFileSync('pnpm', ['--filter', pkg.packageName, script], { cwd: root, stdio: 'inherit' });

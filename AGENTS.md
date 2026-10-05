@@ -1,269 +1,96 @@
 # VOL.STUDIO çalışma sözleşmesi
 
-Bu belge depoda çalışan insan ve agent için kapsam, mimari, doğrulama ve
-raporlama kurallarını tanımlar. Değişmezler yerel kapılarla zorlanır;
-metin ile kapı ayrışırsa ihlal fixture'ı üzerinden doğru sözleşme belirlenir.
-İlkeler muhakemeyle uygulanır; gerekçeli sapma raporlanır.
-
-Alt dizinin AGENTS.md dosyası kendi alanına ek kısıt getirebilir, kök
-sözleşmeyi gevşetemez. `devtools/pen.dev/AGENTS.md` Pencil erişiminin özel
-kurallarını, `CLAUDE.md` Claude Code'un araç kullanımını taşır.
+Tauri v2, Phaser 4, TypeScript ve pnpm workspace. Ürün, belgeler ve kod
+yorumları Türkçe; identifier'lar İngilizce'dir. Belgeler tek Türkçe kaynaktır.
+Bu dosya repo sınırlarını ve ilgili sözleşmenin yerini gösterir.
+Alt dizindeki AGENTS.md kendi alanını daraltabilir, kök sınırlarını gevşetemez.
 
 ## Repo haritası
 
-Tauri v2 + Phaser 4 + TypeScript, pnpm workspace. Kapılar yerelde `justfile`
-üzerinden koşar; bulut CI yoktur. Ürün ve belge dili Türkçe'dir; kod
-yorumları ve `.md` dosyaları Türkçe, identifier'lar İngilizce yazılır;
-Belgeler Türkçe tek kaynaktır; paralel İngilizce README tutulmaz.
+| Yol                     | Paket                    | Rol                                              |
+| ----------------------- | ------------------------ | ------------------------------------------------ |
+| `core/`                 | `@volstudio/core`        | Oyundan bağımsız mekanizmalar ve UI kataloğu     |
+| `tauri-v2/`             | `@volstudio/tauri-v2`    | Paylaşılan native kabuk ve platform adaptörleri  |
+| `devtools/audio-synth/` | `@volstudio/audio-synth` | Deterministik ses üretimi ve teknik yayın kabulü |
+| `devtools/deck/`        | `@volstudio/deck`        | Deck ölçüm sondası ve devkit otomasyonu          |
+| `devtools/pen.dev/`     | `@volstudio/pen.dev`     | Pencil kaynağından rig export'u                  |
+| `devtools/vol-ui/`      | `@volstudio/vol-ui`      | CORE UI vitrini ve piksel sözleşmesi             |
+| `games/vol-test/`       | `@volstudio/vol-test`    | CORE ve kabuğun gerçek oyun tüketicisi           |
 
-| Yol                     | Paket                    | Rol                                                                                    |
-| ----------------------- | ------------------------ | -------------------------------------------------------------------------------------- |
-| `core/`                 | `@volstudio/core`        | Oyun kelimesi bilmeyen motor ve UI kataloğu: girdi, zaman, durum, kalıcılık, ses, i18n |
-| `tauri-v2/`             | `@volstudio/tauri-v2`    | Paylaşılan native kabuk (Rust kütüphanesi), eklentiler ve JS platform adaptörleri      |
-| `devtools/audio-synth/` | `@volstudio/audio-synth` | Deterministik ses ve müzik üretimi; yayın kapısı, manifest, doğrulama                  |
-| `devtools/deck/`        | `@volstudio/deck`        | Steam Deck ölçüm sondası ve devkit otomasyonu                                          |
-| `devtools/pen.dev/`     | `@volstudio/pen.dev`     | Pencil kaynağından rig export'u                                                        |
-| `devtools/vol-ui/`      | `@volstudio/vol-ui`      | CORE UI kataloğunun vitrini ve piksel temelli görsel sözleşmesi                        |
-| `games/vol-test/`       | `@volstudio/vol-test`    | Monorepo'nun test oyunu: CORE ve kabuğu gerçek oyunla her platformda uçtan uca sınar   |
+Paket durumu `workspace-lifecycle.json` içindedir; frozen ağaç değişmez ve
+aktif paket frozen pakete bağımlı olamaz. Yeni ürün: [yeni oyun rehberi](docs/new-game.md).
+Kök girdilerin gerekçesi `scripts/quality/rootEntries.mjs` içindedir.
 
-Paket durumu `workspace-lifecycle.json` içindeki active/frozen beyanıdır;
-rutin kapılar aktif paketleri çalıştırır. Yeni oyun `games/<oyun>/` altında
-[yeni oyun rehberi](docs/new-game.md) ile kurulur. Tamamlanmış ürün annotated
-freeze etiketiyle arşivlenir; frozen ağaca yeni davranış eklenmez.
+## Mimari sınırlar
 
-Kök dizinler: `docs/` (repo geneli belgeler ve marka görselleri),
-`scripts/` (kapılar `scripts/quality/`, Linux paketleme, Android cihaz
-ölçümü, ortam kontrolü). Kökteki her girdinin gerekçesi
-`scripts/quality/rootEntries.mjs`dedir.
+- Bağımlılık tek yönlüdür: CORE oyun/devtool import etmez; oyun runtime'ı
+  yalnız CORE, kabuk ve dış bağımlılıkları kullanır. Devtool yalnız devDependency'dir.
+  Paketler birbirine yalnız exports haritasından girer.
+- CORE mekanizma, sunum ve opt-in tarif katmanlarını ayırır; sunum oyun kuralı
+  veya kendi durum defterini taşımaz. [CORE tasarımı](core/DESIGN.md),
+  [primitifler](core/docs/primitives.md), [Phaser köprüleri](core/docs/phaser-boundary.md).
+- Tüketicisiz UI bileşeni bilinçli katalogdur: kendi testi ve vol-ui örneği
+  gerekir. Oyunlar ortak UI kullanır; [UI sözleşmesi](docs/ui/CONTRACT.md).
+- Listener, timer ve abonelik kapanışta kaldırılır; birden fazla bağımsız
+  kaynak `DisposableScope` kullanır. Oynanış sayıları oyunun config ağacındadır.
+- Görünen metin i18n anahtarıdır; dil anahtarları eşittir, modül düzeyinde
+  `t()` çağrılmaz. [i18n sözleşmesi](core/docs/i18n.md).
+- Simülasyon saati, RNG ve audio çıktısı deterministiktir. Kalıcılık adapter
+  arkasındadır; ilerleme `synced`, cihaz ayarı `device` kapsamındadır.
+- Native kabuk uygulama değildir; bağlam ürün crate'inde üretilir. Eklenti
+  JS bağımlılığı, Rust kaydı ve uygulama izniyle birlikte yaşar.
+- Asset kaynağı yazara, ara çıktısı üreticiye, gönderilen hâli tüketiciye
+  aittir. Oyun build'i devtools olmadan geçer. Audio teknik kabulü
+  [audio tasarımındadır](devtools/audio-synth/DESIGN.md); dinleme yayın kapısı değildir.
+- `.pen` dosyalarına yalnız Pencil MCP ile erişilir; özel kurallar
+  [pen.dev/AGENTS.md](devtools/pen.dev/AGENTS.md) içindedir.
 
-## Çalışma ve yetki
+## Kapılar ve kanıt
 
-- **Önce oku, sonra ölç.** Repo gerçeği (dosya, test, git durumu, cihaz)
-  hafızadan önce gelir; bir iddia yazılmadan onu doğrulayan komut koşulur.
-- **Kök neden.** Belirtiyi susturan geçici çözüm yerine neden düzeltilir;
-  her düzeltme bir regresyon testi bırakır.
-- **Kapsam kullanıcınındır.** İstenmeyen yan refactor yapılmaz; görülen sorun
-  raporlanır ya da `TODO.md`ye yazılır.
-- **Ölü kod ve ölü bağımlılık bırakılmaz.** Silinen bir sistemin yapılandırma
-  girdisi, bağımlılığı, tipi ve belge satırı aynı turda silinir.
-- **Kanıt iddiadan önce gelir.** Koşulmayan kapı "geçti" diye raporlanmaz.
-  Servis, cihaz ya da görsel düzeltmesi kullanıcının gerçekten kullandığı
-  örnekte doğrulanır; kanıt rapora girer.
-- **İnsan yargısı uydurulmaz.** Dinleme, görsel beğeni ya da elle cihaz
-  ölçümü yapılmadıysa "yapılmadı" olarak kalır.
-- **Yetki açıktır.** Push, merge, etiket, silme, yayın ve commit kullanıcı
-  yetkisi içinde yapılır. Geçerli açık yetki aynı oturumda yeniden sorulmaz;
-  kapsamın dışına genişletilmez.
-- **Yarım tur bırakılmaz.** İş bitince çalışma ağacı temizdir ya da durumu
-  açıkça yazılmıştır.
-- **Ölçmeden optimize edilmez.** Performans kararı bir ölçümle gösterilir;
-  sayı ilgili belgeye yazılır, kaynak yorumuna değil.
+Kapıların tek kaynağı `justfile`, eşik ve bütçelerin kaynağı `quality.json`'dır.
+Kapılar aktif workspace'ten türer; kapsam ratchet'i düşürülmez.
+[Kapı sözleşmesi](docs/gates.md) kompozisyonu ve rapor biçimini açıklar.
 
-## Değişmezler ve onları zorlayan kapılar
+| Kapı           | Bileşim                                                                                             |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| `pnpm quick`   | `contract` `format-check` `typecheck` `lint`                                                        |
+| `pnpm fast`    | `quick` `test`                                                                                      |
+| `pnpm high`    | `quick` `rust` `lint-css` `coverage` `coverage-shape` `audio-test` `build` `bundle` `scaling` `e2e` |
+| `pnpm signoff` | `high` `coverage-audio` `audio-verify` `security-js` `security-rust`                                |
 
-| Değişmez                                                                                                                                                                                                  | Kapı                                                                                                                                                  |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bağımlılık tek yönlüdür: `core` hiçbir oyunu ya da devtool'u import etmez; bir oyunun çalışma zamanı yalnız `core`, `tauri-v2` ve dış bağımlılıkları kullanır; devtool oyuna yalnız `devDependency` girer | `scripts/quality/layers.mjs`                                                                                                                          |
-| Başka bir pakete yalnız `exports` haritasındaki yoldan girilir                                                                                                                                            | `scripts/quality/layers.mjs`                                                                                                                          |
-| Her Tauri uygulamasının kimliği ürüne özgü ve benzersizdir (kayıt yolu ondan türer)                                                                                                                       | `scripts/quality/appIdentity.mjs`                                                                                                                     |
-| JS eklenti bağımlılığı, Rust kaydı ve uygulama izni birbirine bağlıdır; ölü eklenti kalmaz                                                                                                                | `scripts/quality/tauriPlugins.mjs`                                                                                                                    |
-| Tüketicisiz CORE UI bileşeni katalogdadır: vol-ui vitrininde gösterilir ve CORE testinde adıyla sınanır                                                                                                   | `scripts/quality/catalog.mjs`                                                                                                                         |
-| Kökteki her girdi gerekçesiyle kayıtlıdır; gerekçesiz girdi eklenemez                                                                                                                                     | `scripts/quality/rootEntries.mjs`                                                                                                                     |
-| Kod yorumu tarihçe, ölçüm günlüğü, tarih ya da plan kimliği taşımaz; ölçüm belgeye yazılır                                                                                                                | `scripts/quality/contextComments.mjs`                                                                                                                 |
-| Deterministik çıktı üreten kod yerel ayara bağlı sıralama (`localeCompare`) kullanmaz                                                                                                                     | `eslint.config.mjs`                                                                                                                                   |
-| Frozen ağaç değişmez; aktif paket frozen pakete bağımlı olamaz                                                                                                                                            | `scripts/quality/workspaceLifecycle.mjs`                                                                                                              |
-| Görünen metin i18n anahtarıdır; `tr.json` ile `en.json` aynı anahtarları taşır; modül düzeyinde `t()` çağrılmaz; ölü anahtar kalmaz                                                                       | paketlerin `keyParity` testleri, `scripts/quality/deadI18n.mjs`                                                                                       |
-| Kaynak dosya en çok 1000 satırdır (kod, test, betik, stil, native); sınıra yakın dosyaya yeni davranış eklenmeden önce dosya bölünür                                                                      | `scripts/quality/sourceSize.mjs`                                                                                                                      |
-| Dosyada yorum oranı en çok %40, tek yorum bloğu en çok 24 satırdır; oran aşımı yalnız gerekçe listesine yazılarak kabul edilir                                                                            | `scripts/quality/commentDensity.mjs`                                                                                                                  |
-| Paket içinde çalışma zamanı modül döngüsü yoktur                                                                                                                                                          | `scripts/quality/moduleCycles.mjs`                                                                                                                    |
-| `core` Phaser'ı yalnız kayıtlı köprü dosyalarında import eder                                                                                                                                             | `scripts/quality/phaserBoundary.mjs`, `core/docs/phaser-boundary.md`                                                                                  |
-| CORE'un public tip yüzeyi kilitlidir; değişiklik bilinçlidir, tarihçe git'tedir                                                                                                                           | `scripts/quality/publicTypeSurface.mjs`, `core/tests/governance/publicSurface.test.ts`                                                                |
-| Kapsam eşikleri ratchet'tir; büyük ve düşük kapsamlı dosya test ya da kanıtlı gerekçe ister                                                                                                               | `quality.json`, `scripts/quality/coverageBinding.mjs`, `scripts/quality/coverageShape.mjs`                                                            |
-| Gönderilen bundle ve algoritmik ölçekleme her aktif oyun için bütçelidir                                                                                                                                  | `scripts/quality/bundleSize.mjs`, `scripts/quality/scalingBudget.mjs`                                                                                 |
-| Geliştirme portları çakışmaz; her oyun kendi ikonunu taşır; Rust tek workspace ve tek kilittir                                                                                                            | `scripts/quality/devPorts.mjs`, `scripts/quality/productIcons.mjs`, `scripts/quality/cargoWorkspace.mjs`                                              |
-| Sır ve üretilmiş çıktı commit edilmez                                                                                                                                                                     | `.gitignore`, `scripts/quality/tests/gitFiles.test.mjs`                                                                                               |
-| Belgeler gerçeğe bağlıdır: anlatılan sembol, yol, betik ve kapı bileşimi vardır                                                                                                                           | `core/tests/governance/docSymbols.test.ts`, `devtools/audio-synth/tests/governance/docReferences.test.ts`, `scripts/quality/tests/agentDocs.test.mjs` |
-| Aynı program, tohum ve sürüm her zaman aynı PCM'i verir                                                                                                                                                   | `devtools/audio-synth/tests/governance/`, `pnpm --filter @volstudio/audio-synth audio:production-check`                                               |
+Pre-commit quick ve pre-push high kancaları atlanmaz. Ortam:
+`pnpm run doctor:env`. Tek düşen kapı `pnpm exec just <tarif>` ile yeniden
+koşulur; `pnpm exec just report <kapı> --json` makine-okunur kanıttır.
 
-Depo herkese açıktır; `.env`, anahtar, keystore, token, kişisel tanımlayıcı
-(kullanıcı adı, cihaz adresi, oturum belirteci) ve başka projelerin adları
-koda, belgeye ve günlüğe girmez. Şüphe varsa commit edilmez, sorulur.
+Yeni davranış ve hata düzeltmesi anlamlı regresyon testi bırakır; tests ağacı
+src ağacını yansıtır. Disk testleri gerçek geçici dizindedir. Genel timeout
+büyütülmez; kapsam yalnız çalıştırılabilir satırı olmayan dosyaları dışlar.
+E2E Chromium ve WebKit'tedir; piksel temeli bilinçli görsel değişiklikle yenilenir.
+Koşulmayan kapı, yapılmayan cihaz kabulü veya insan beğenisi tamamlandı sayılmaz.
+Performans kararı ölçüm ister; cihaz referansı otomatik kapı değildir.
 
-## Kalite kapıları
+## Belge ve teslim
 
-Kapıların tek kaynağı `justfile`'dır. `just` global değildir; `pnpm exec just
-<tarif>` ya da aşağıdaki `pnpm` betikleriyle çağrılır. Ayrıntı:
-[docs/gates.md](docs/gates.md).
+README amaç, başlangıç ve yönlendirmedir; DESIGN gerekçedir; docs teknik
+sözleşmedir. İş ve kısa “Kapanır:” ölçütü TODO'dadır; biten iş Kapatılanlar'a
+tek satır taşınır. Geçici plan belgesi açılmaz. Belgeler bugünü anlatır,
+tarihçe git'tedir. Yorum yalnız koddan çıkarılamayan sözleşme veya tuzağı söyler.
+Kodla belge aynı değişiklikte güncellenir; ayrıntılı denetim [rapordadır](docs/monorepo-audit.md).
 
-| Kapı           | Ne zaman              | Bileşim                                                                                             |
-| -------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
-| `pnpm quick`   | pre-commit            | `contract` `format-check` `typecheck` `lint`                                                        |
-| `pnpm fast`    | yerel geliştirme      | `quick` `test`                                                                                      |
-| `pnpm high`    | pre-push              | `quick` `rust` `lint-css` `coverage` `coverage-shape` `audio-test` `build` `bundle` `scaling` `e2e` |
-| `pnpm signoff` | sürüm, kilometre taşı | `high` `coverage-audio` `audio-verify` `security-js` `security-rust`                                |
+Platform sahipleri: [Windows](docs/windows.md), [Linux](docs/linux.md),
+[Steam Deck](docs/steam-deck.md), [Android](docs/android.md).
+Ölçülmemiş ortama platform kuralı veya destek kabulü yazılmaz.
 
-- Kancalar `simple-git-hooks` ile kurulur (pre-commit `pnpm quick`, pre-push
-  `pnpm high`) ve atlanmaz; `SKIP_SIMPLE_GIT_HOOKS=1` kaçınılmazsa raporlanır.
-- Düşen tek kapı zincirin tamamı yerine yeniden koşulur:
-  `pnpm exec just typecheck`, `pnpm exec just lint`, `pnpm exec just coverage`,
-  `pnpm exec just rust`, `pnpm exec just contract`, `pnpm exec just --list`.
-- `pnpm exec just report <kapı> --json` sonucu makine-okunur verir.
-- Kapılar workspace'ten türer (`scripts/quality/runActive.mjs`); hiçbir kapıda
-  elle paket listesi tutulmaz. `quality.json` tek kaynaktır ve her okunuşta
-  şemayla doğrulanır; eşik yalnız kapsam artınca yükselir, muafiyet
-  gerekçesiyle `exempt`e girer.
-- `pnpm exec just test` kapsam eşiği uygulamaz; yeşil görünüp `high`'ı kırabilir.
-- pnpm'in yerleşik komutuyla çakışan betik adı hiç çalışmaz; ortam kontrolü bu
-  yüzden `pnpm run doctor:env`dir.
-- Cihaz ölçümü (Android, Steam Deck) kapı değildir; sonraki ölçümün
-  kıyaslandığı referans kayıttır.
+Kapsam ve dışa açık işlem yetkisi kullanıcınındır; aynı oturumdaki açık yetki
+yeniden sorulmaz. Kullanıcı değişiklikleri korunur. `main` kararlı, `dev`
+entegrasyon dalıdır; iş feature/bugfix dalında yürür, merge yalnız istenince yapılır.
+Commit başlığı İngilizce Conventional Commits, gerekçe gövdesi Türkçe'dir.
+Bulut CI yoktur; `.github/workflows/` altına onaysız pipeline eklenmez.
+Sır, keystore, token, kullanıcı/cihaz/oturum kimliği ve başka proje adı
+halka açık koda, belgeye veya kayda girmez.
+Teslim değişiklik, koşulan kapı, kalan risk ve çalışma ağacı durumunu söyler.
 
-## Mimari ilkeler
-
-**CORE'un üç katmanı** ([core/docs/primitives.md](core/docs/primitives.md)):
-mekanizma oyun kelimesi bilmez; sunum durumu çizer ve niyeti bildirir, kural
-taşımaz; tarif yaygın kuralı hazır verir ama opt-in'dir. Bir bileşene kural
-eklemeden önce sorulan soru: _başka bir oyun bunu farklı isteyebilir mi?_
-Evetse kural tarif katmanına gider. Bir sunum bileşeni kendi defterini tutmaz.
-
-**Katalog:** CORE'da hiçbir üründe tüketicisi olmayan bileşenler bilinçli
-olarak bekletilir; her biri vol-ui vitrininde gösterilir ve kendi testleriyle
-korunur (bekçi: `scripts/quality/catalog.mjs`). Kataloğa giren bileşen oyuna özgü varsayım taşımaz ve aynı turda
-vitrine ve `devtools/vol-ui/README.md` sekme tablosuna eklenir.
-
-**Kaynak yaşam döngüsü:** eklenen her listener, timer ve abonelik
-`destroy()` ya da sahne kapanışında kaldırılır; iki ya da daha fazla bağımsız
-kaynağı olan bileşen `DisposableScope` kullanır.
-
-**Ölçüler veridir:** oynanış sayıları `games/<oyun>/src/config/` ağacında yaşar.
-
-**UI:** oyunlar kendi bileşenini icat etmez, `core/src/ui/` kullanır; listeler
-kimliğe göre diff'lenir; `prefers-reduced-motion` altında animasyona bağlı
-temizlik bir zamanlayıcıyla yedeklenir; kaydırma en dış panelde tanımlanır;
-dokunma hedefi politikası vol-ui README'sindedir.
-
-**i18n:** [core/docs/i18n.md](core/docs/i18n.md).
-
-**Determinizm korunur:** simülasyon saati ve durumu alınabilir RNG
-`core/docs/primitives.md`de; audio-synth aynı girdiden aynı baytı üretir.
-
-**Kalıcılık:** depolama `IStorageAdapter` arkasındadır (web'de
-`localStorage`, Tauri'de kabuğun atomik yazıcısı); yazma koordinasyonu
-`AutosaveCoordinator` ve `PersistedObservableState` iledir; ilerleme `synced`, cihaz ayarları `device`
-kapsamındadır.
-
-**Platform katmanı:** `tauri-v2/src-tauri` bir uygulama değil paylaşılan
-kabuktur; bağlam her oyunun kendi crate'inde üretilir. Native kaynak taşıyan
-eklenti yalnız onu kullanan uygulamada kaydedilir. Linux WebView çizim yolu
-ölçüme dayalı kurallarla seçilir ([docs/linux.md](docs/linux.md)); ölçülmemiş
-ortama kural yazılmaz. JS'de platform soruları ayrı yüklemlerle cevaplanır:
-kabuk türü (`getRuntimePlatform`), oturum (`getSessionKind`), işaretçi türü
-(`shouldUseTouchControls`), titreşim sürücüsü, geri hareketi yığını.
-
-## Asset'ler ve üretim hatları
-
-Bir asset'in kaynağı yazarındır, ara çıktısı onu üreten aracındır, gönderilen
-hâli tüketen paketindir ve build'in tek girdisidir. Deterministik betiğin
-ürettiği ara çıktı commit'lenmez; repo dışı araç ya da elle adım gerektiren
-ara çıktı commit'lenir ama hiçbir oyun onu doğrudan okumaz. `devtools/`
-silindiğinde oyunların build'i geçer.
-
-**audio-synth** ([README](devtools/audio-synth/README.md),
-[DESIGN](devtools/audio-synth/DESIGN.md)): sesler kanonik yayın yolundan geçer
-(job → yayın kapısı → manifest); manifest programı, render yüzeyini ve PCM
-kimliğini kaydeder, doğrulama yeniden render edip karşılaştırır; düğüm
-sözleşmesi sürüm artmadan değişemez
-(`pnpm --filter @volstudio/audio-synth audio:surface-lock`); canary dinlemesi
-yalnız `devtools/audio-synth/corpus/canaries/reviews.json`daki insan beyanıyla kapanır.
-
-**pen.dev:** `.pen` dosyasına yalnız Pencil MCP araçlarıyla erişilir; kurallar
-`devtools/pen.dev/AGENTS.md`dedir.
-
-**Tema ve fontlar:** tema `pnpm gen:theme` ile üretilir; fontlar
-`pnpm --filter @volstudio/core download-fonts` ile indirilir.
-
-## Platformlar
-
-- **Linux:** [docs/linux.md](docs/linux.md) — AppImage/AppDir paketleme ve
-  WebView çizim yolu (`pnpm build:linux-appimage`, `pnpm build:linux-steamrt4`).
-- **Steam Deck ve Valve donanımı:** [docs/steam-deck.md](docs/steam-deck.md) —
-  ölçülmüş gerçekler, kararlar, devkit sözleşmesi (`pnpm deck`).
-- **Android:** [docs/android.md](docs/android.md) — bir oyunun native
-  projesinin kurulumu ve cihaz ölçümü (`pnpm benchmark:device`).
-- **Windows:** NSIS/MSI, WebView2. Geliştirme ortamı, kapıların Windows'taki
-  davranışı, satır sonu kuralı ve ölçülemeyen Linux sözleşmeleri
-  [docs/windows.md](docs/windows.md).
-
-## Belgeler
-
-| Belge                                                  | Sorumluluk                                           |
-| ------------------------------------------------------ | ---------------------------------------------------- |
-| `README.md`                                            | Monorepo girişi, komutlar, nereye bakılacağı         |
-| `TODO.md`                                              | Repo geneli iş listesi                               |
-| `docs/`                                                | Kapılar, platformlar, yeni oyun rehberi              |
-| `core/docs/`                                           | CORE primitifleri, i18n, müzik motoru, Phaser sınırı |
-| `<paket>/README.md`                                    | Paketin ne olduğu ve komutları                       |
-| `<paket>/DESIGN.md`                                    | Paketin neden böyle olduğu                           |
-| `<paket>/TODO.md`                                      | Paketin kendi iş listesi                             |
-| `justfile`, `quality.json`, `workspace-lifecycle.json` | Kapılar, eşikler ve paket durumu için tek kaynaklar  |
-
-- **Belge bugünü anlatır.** Sözleşme, karar ve kullanım yazılır; geçmiş,
-  dalga/tur anlatısı ve ölçüm günlüğü yazılmaz (geçmiş git'tedir). Kod
-  değişince onu anlatan belge aynı turda güncellenir.
-- **Geçici planlama belgesi açılmaz.** Yapılacak iş `TODO.md`ye gider; kod
-  yorumları geçici bir belgeye işaret etmez.
-- **TODO dosyaları iş listesidir.** Madde işi ve "Kapanır:" ölçütünü kısa
-  söyler; biten madde `[x]` olup `## Kapatılanlar`a tek satırla taşınır;
-  eksik çıkan kapanış yeni madde olarak açılır.
-
-**Yorum doktrini: varsayılan yorumsuzluktur.** Yorum yalnız koddan
-çıkarılamayanı söyler: sessiz bir tuzak, tüketicinin varsayamayacağı bir
-sözleşme, dış dünyanın dayattığı bir gariplik. Kodu tekrar eden cümle,
-"eskiden şöyleydi" anlatısı, ölçüm günlüğü, bölüm başlığı ve başka dosyadaki
-gerekçenin kopyası yazılmaz.
-
-## Test disiplini
-
-- Yeni davranışın testi aynı turda yazılır; düzeltilen hata regresyon testi
-  bırakır.
-- Test kaynağın aynasıdır: `<paket>/tests/` ağacı `<paket>/src/` ağacını
-  yansıtır ve test dosyası sınadığı modülün adını taşır.
-- Ağır testler süre büyütülerek değil yapıyla ucuzlatılır; genel
-  `testTimeout` büyütülmez.
-- Kapsam dışlaması yalnız çalıştırılabilir satırı olmayan dosyalar içindir.
-- Disk gerçeğini sınayan testler gerçek geçici dizinde koşar.
-- E2E Chromium ve WebKit'te koşar; vol-ui'nin piksel temelleri yalnız bilinçli
-  bir görsel değişiklikte yenilenir.
-
-## Git
-
-- `main` kararlı, `dev` entegrasyon dalıdır; yeni iş `feature/<konu>` ya da
-  `bugfix/<konu>` ile başlar; merge yalnız istendiğinde yapılır.
-- Commit mesajı İngilizce Conventional Commits başlığı ve nedeni anlatan
-  Türkçe gövdedir. Bir commit tek konuyu taşır.
-- Commit öncesi `git status` okunur; izlenmeyen dosyalar tek tek doğrulanır.
-- Freeze etiketleri değişmez; yeniden dondurma yeni bir annotated etiketle yapılır.
-- `.github/workflows/` altına onaysız pipeline eklenmez.
-
-## Araçlar
-
-- **graphify:** `graphify-out/` varsa mimari ve bağımlılık sorularında önce
-  ona sorulur (`graphify query`, `graphify affected`); kod değişince
-  `graphify update .`. Çıktı yereldir.
-- **Claude Code yerel dizini:** `.claude/` git dışıdır; araç çıktısı oraya
-  değil, paketin git dışı `<paket>/records/` ya da `<paket>/export/`
-  dizinine yazılır.
-- **Ortam:** `pnpm run doctor:env`. **Geliştirme:** `pnpm dev`, vitrin için
-  `pnpm exec just dev-ui`. **Temizlik:** `pnpm exec just clean`,
-  `pnpm exec just clean-all`.
-- **Teşhis:** CORE'un Diagnostics katmanı `?debug` ve `?perf` kiplerinde ölçüm
-  toplar; `core/scripts/debug-server.mjs` bunları yerel bir sunucuda toplar.
-- **Benchmark:** `pnpm benchmark:core`; kapılanan tek performans ölçüsü
-  algoritmik ölçekleme oranıdır.
-
-## Teslim
-
-- İlgili kapılar koşulmuş ve sonuçları raporlanmıştır.
-- `git status --short` okunmuştur.
-- Değişen davranışın belgesi ve TODO maddesi günceldir.
-- Kalan risk ve bilinçli olarak yapılmayanlar yazılmıştır.
+`graphify-out/` varsa mimari sorusunda önce graphify query/affected kullanılır,
+sonuç kaynakla doğrulanır; kod değişince graphify update uygulanır. Çıktı yereldir.
+`.claude/` git dışıdır; araç çıktısı paketin git dışı records/export alanına
+yazılır. Claude'a özgü farklar [CLAUDE.md](CLAUDE.md) içindedir.

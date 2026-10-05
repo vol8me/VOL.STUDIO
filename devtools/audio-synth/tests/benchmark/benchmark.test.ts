@@ -15,9 +15,7 @@ import { renderProgram } from '../../src/program/render';
 import { REFERENCE_MIX_ID } from '../../src/music/stem';
 import {
   BENCHMARKS_ROOT,
-  benchmarkReviews,
   loadBenchmarkTasks,
-  recordBenchmarkReview,
   runBenchmarks,
   validateBenchmarkTask,
   type BenchmarkPartV1,
@@ -37,7 +35,7 @@ import { CORPUS_TIMEOUT, PIPELINE_TIMEOUT, RENDER_TIMEOUT } from '../support/tim
 /**
  * Sürümlü benchmark derlemi: 14 görev + 19 canary tek raporda. Mekanik
  * kriterler gerçek davranışı kilitler; "kalite" ya da "organik" kanıtı
- * DEĞİLDİR ve dinleme durumu yalnız insan beyanıyla değişir.
+ * DEĞİLDİR; dinleme aracı isteğe bağlıdır.
  */
 const REPO = fileURLToPath(new URL('../../../..', import.meta.url));
 const IDS = [
@@ -113,10 +111,8 @@ describe('benchmark görev derlemi (gerçek depo)', () => {
         expect(report.tasks.map((t) => t.id)).toEqual(IDS);
         for (const c of report.canaries) {
           expect(failingKinds(c.checks), `canary ${c.id}`).toEqual([]);
-          expect(['pending-human', 'heard-acceptable', 'heard-problem']).toContain(c.review);
         }
         for (const t of report.tasks) {
-          expect(t.review).toBe('pending-human');
           for (const p of t.parts) {
             expect(failingKinds(p.checks), `${t.id}/${p.id}`).toEqual([]);
             expect(p.programHash).toMatch(/^sha256:[0-9a-f]{64}$/);
@@ -147,12 +143,6 @@ describe('benchmark görev derlemi (gerçek depo)', () => {
     },
     RENDER_TIMEOUT,
   );
-
-  it('insan dinlemesi uydurulmaz: bütün görev incelemeleri pending-human', () => {
-    expect(benchmarkReviews(REPO).map((r) => [r.id, r.status, r.note])).toEqual(
-      IDS.map((id) => [id, 'pending-human', null]),
-    );
-  });
 });
 
 describe('benchmark kriterleri gerçek davranışı ayırt eder', () => {
@@ -264,7 +254,7 @@ describe('benchmark kriterleri gerçek davranışı ayırt eder', () => {
   );
 });
 
-describe('benchmark inceleme kaydı', () => {
+describe('benchmark görev yükleme', () => {
   let repo: TestRepo;
   beforeEach(() => {
     repo = createTestRepo();
@@ -276,31 +266,12 @@ describe('benchmark inceleme kaydı', () => {
   });
   afterEach(() => repo.cleanup());
 
-  it('beyan not ister; görev sürümü artınca inceleme bayatlar ve pending-human sayılır', () => {
-    expect(benchmarkReviews(repo.root)).toEqual([
-      { id: 'ui-feedback', status: 'pending-human', version: 1, note: null, stale: false },
-    ]);
-    expect(() => recordBenchmarkReview(repo.root, 'ui-feedback', 'heard-acceptable', null)).toThrow(
-      /not ister/,
-    );
-    expect(() => recordBenchmarkReview(repo.root, 'yok', 'heard-problem', 'x')).toThrow(
-      /benchmark görevi yok/,
-    );
-    recordBenchmarkReview(repo.root, 'ui-feedback', 'heard-problem', 'test beyanı');
-    expect(benchmarkReviews(repo.root)[0]).toMatchObject({
-      status: 'heard-problem',
-      stale: false,
-    });
-
-    const file = join(repo.root, BENCHMARKS_ROOT, 'ui-feedback.json');
+  it('eski yerel inceleme dosyası görev gibi okunmaz; açık şema hatası verir', () => {
     writeFileSync(
-      file,
-      JSON.stringify({ ...(JSON.parse(readFileSync(file, 'utf8')) as object), version: 2 }),
+      join(repo.root, BENCHMARKS_ROOT, 'reviews.json'),
+      JSON.stringify({ schema: 'BenchmarkReviewsV1', reviews: {} }),
     );
-    expect(benchmarkReviews(repo.root)[0]).toMatchObject({
-      status: 'pending-human',
-      stale: true,
-    });
+    expect(() => loadBenchmarkTasks(repo.root)).toThrow(/BenchmarkTaskV1/);
   });
 
   it('dosya adı kimlikle eşleşmeli; bilinmeyen alan ve şema ihlalleri reddedilir', () => {

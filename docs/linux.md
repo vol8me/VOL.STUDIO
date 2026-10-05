@@ -1,6 +1,10 @@
 # Linux
 
-## Paketleme
+## Destek ve paketleme
+
+Bu komutlar Linux builder, Linux native kütüphaneleri ve ilgili SDK ister.
+Windows JS/Rust kapılarının geçmesi Linux ABI/paket kabulü değildir.
+Host araç matrisi [Windows](windows.md) belgesindedir.
 
 ```bash
 pnpm build:linux-appimage <workspace-yolu>    # host'ta AppImage
@@ -18,7 +22,7 @@ etiketinin worktree'sinde paketlenir.
 Host'ta üretilen paket host'un glibc'sine bağlanır; daha yeni glibc'li bir
 host'ta üretilen AppImage SteamOS'ta açılmaz. Steam ve Deck için derleme
 steamrt4 SDK kabında yapılır ve paketteki ELF'lerin glibc tavanı denetlenir
-([steam-deck.md](steam-deck.md#dağıtım-yolu)).
+([steam-deck.md](steam-deck.md#paketleme)).
 
 ## WebView çizim yolu
 
@@ -26,11 +30,11 @@ Kabuk (`configure_linux_webview`, kural tablosu `linux_webview_plan`)
 WebView yaratılmadan önce çizim yolunu seçer; dışarıdan verilen değişkeni
 ezmez, elle verilen değişken kuralı devre dışı bırakır.
 
-| Oturum                                    | Karar                                                                                                  |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Varsayılan                                | DMA-BUF çizicisi kapalı (bazı sürücülerde boş WebView), CPU kopyası                                    |
-| Yerel Wayland, ekranı yalnız NVIDIA sürer | çizici açık + `__NV_DISABLE_EXPLICIT_SYNC=1`                                                           |
-| gamescope                                 | çizici açık + `WEBKIT_FORCE_VBLANK_TIMER=1` ([steam-deck.md](steam-deck.md#çizim-ve-kare-zamanlaması)) |
+| Oturum                                    | Karar                                                                                        |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Varsayılan                                | DMA-BUF çizicisi kapalı (bazı sürücülerde boş WebView), CPU kopyası                          |
+| Yerel Wayland, ekranı yalnız NVIDIA sürer | çizici açık + `__NV_DISABLE_EXPLICIT_SYNC=1`                                                 |
+| gamescope                                 | çizici açık + `WEBKIT_FORCE_VBLANK_TIMER=1` ([steam-deck.md](steam-deck.md#oturum-ve-çizim)) |
 
 Ölçüm (RTX 3050, KDE Plasma 6, WebKitGTK 2.52, 1920×1080, boş sahne):
 

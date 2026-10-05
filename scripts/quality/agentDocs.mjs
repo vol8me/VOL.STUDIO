@@ -65,11 +65,11 @@ export function commandRefs(markdown) {
     if (tokens[0] === 'just' && tokens[1]) {
       refs.push({ kind: 'recipe', name: tokens[1] });
     } else if (tokens[0] === 'pnpm' && tokens[1]) {
-      const [first, second, third] = tokens.slice(1);
+      const [first, second, third, fourth] = tokens.slice(1);
       if (first === 'exec' && second === 'just' && third) {
         refs.push({ kind: 'recipe', name: third });
       } else if (first === '--filter' && second && third && !PNPM_BUILTINS.has(third)) {
-        if (third !== 'exec') refs.push({ kind: 'package', pkg: second, name: third });
+        if (third !== 'exec') refs.push({ kind: 'package', pkg: second, name: third === 'run' ? fourth ?? '' : third });
       } else if (first === 'run' && second) {
         refs.push({ kind: 'root', name: second });
       } else if (!first.startsWith('-') && !PNPM_BUILTINS.has(first) && first !== 'exec') {

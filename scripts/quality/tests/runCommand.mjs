@@ -1,24 +1,15 @@
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from '../command.mjs';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/**
- * Testlerin sahte komut çalıştırmak için kullandığı ortak koşucu.
- *
- * Windows'ta `execFileSync` bir `.CMD`/`.bat` dosyasını `shell: true` olmadan
- * çalıştıramaz (`EINVAL`); POSIX'te aynı dosya doğrudan çalışır. `shell: true`
- * her iki platformda da çalıştığı için tek seçenek odur.
- */
+/** Testlerin sahte komutlarını üretim süreç adaptörü üzerinden çalıştırır. */
 export function runCommand(command, args, options = {}) {
-  // `shell: true` `cmd.exe`'nin kendi PATH'ini kullanır; çağıranın PATH'ini
-  // (ör. sahte `cargo` eklenen testler) geçersiz kılar. Çağıran shell'i
-  // bilerek kapatmak istiyorsa `shell: false` geçebilir.
-  return execFileSync(command, args, { ...options, shell: options.shell ?? true });
+  return execFileSync(command, args, options);
 }
 
 /** `runCommand`ın `spawnSync` karşılığı; sonuç `status`'u döndürür. */
 export function runCommandSync(command, args, options = {}) {
-  return spawnSync(command, args, { ...options, shell: options.shell ?? true });
+  return spawnSync(command, args, options);
 }
 
 export const isWindows = process.platform === 'win32';
@@ -32,9 +23,7 @@ export const isWindows = process.platform === 'win32';
  */
 export function resolveCommand(name, pathValue = process.env.PATH ?? '') {
   const extensions = isWindows
-    ? (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD')
-        .split(';')
-        .filter(Boolean)
+    ? (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean)
     : [''];
   for (const directory of pathValue.split(isWindows ? ';' : ':')) {
     if (!directory) continue;
@@ -50,8 +39,8 @@ export function resolveCommand(name, pathValue = process.env.PATH ?? '') {
  * `body` içindeki POSIX kabuk betiğini çalıştırılabilir bir komuta yazar.
  *
  * POSIX'te doğrudan çalıştırılabilir dosya yazılır. Windows'ta `spawnSync` shell
- * betiğini çalıştıramaz; `.CMD` shim'i yazılır ve `runCommand` (`shell: true`)
- * onu çağırır. Dönen yol her iki platformda doğrudan çalıştırılabilir.
+ * betiğini çalıştıramaz; `.CMD` shim'i yazılır ve adaptör gerekli kaçışı yapar.
+ * Dönen yol her iki platformda çalıştırılabilir.
  */
 export function writeCommand(dir, name, body) {
   const script = join(dir, name);

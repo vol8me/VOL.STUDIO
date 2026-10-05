@@ -23,46 +23,32 @@ export type { AuditionServer, AuditionServerOptions, AuditionStateV1 } from './a
 export {
   CANARIES_ROOT,
   CANARY_AUDITION_ROOT,
-  CANARY_REVIEWS_SCHEMA,
   CANARY_SCHEMA,
-  canaryReviews,
   loadCanaries,
-  recordCanaryReview,
   runCanaries,
   runCanary,
   validateCanary,
 } from './canary';
-export type {
-  CanaryResultV1,
-  CanaryReviewState,
-  CanaryReviewStatus,
-  CanaryReviewsV1,
-  OrganicCanaryV1,
-} from './canary';
+export type { CanaryResultV1, OrganicCanaryV1 } from './canary';
 export {
   BENCHMARK_AUDITION_ROOT,
   BENCHMARK_REPORT_SCHEMA,
-  BENCHMARK_REVIEWS_SCHEMA,
   BENCHMARK_SCHEMA,
   BENCHMARKS_ROOT,
-  benchmarkReviews,
   loadBenchmarkTasks,
-  recordBenchmarkReview,
   runBenchmarks,
   validateBenchmarkTask,
+  validateBenchmarkReport,
 } from './benchmark';
 export type {
-  BenchmarkCanaryEntryV1,
+  BenchmarkCanaryEntryV2,
   BenchmarkCheckV1,
   BenchmarkPartResultV1,
   BenchmarkPartV1,
-  BenchmarkReportV1,
-  BenchmarkReviewState,
-  BenchmarkReviewStatus,
-  BenchmarkReviewsV1,
+  BenchmarkReportV2,
   BenchmarkRunOptions,
   BenchmarkSourceV1,
-  BenchmarkTaskResultV1,
+  BenchmarkTaskResultV2,
   BenchmarkTaskV1,
   CheckOutcomeV1,
 } from './benchmark';
@@ -73,34 +59,25 @@ export {
   qualityMatrix,
 } from './capabilities';
 export type {
-  CapabilityEvidenceV1,
+  CapabilityEvidenceV2,
   CapabilityLevel,
-  CapabilityListening,
-  CapabilityRowV1,
+  CapabilityRowV2,
   PublishedRefV1,
   QualityMatrixInput,
-  QualityMatrixV1,
+  QualityMatrixV2,
 } from './capabilities';
 export {
-  decideRegression,
-  DECISIONS_FILE,
   MANIFESTS_ROOT,
   descriptorDeltas,
   regressionCorpus,
-  regressionDecisions,
-  REGRESSION_DECISIONS_SCHEMA,
   REGRESSION_REPORT_SCHEMA,
-  REGRESSION_ROOT,
   runRegression,
 } from './regression';
 export type {
   DescriptorDeltaV1,
-  RegressionDecisionStatus,
-  RegressionDecisionsV1,
-  RegressionDecisionV1,
   RegressionEntryV1,
-  RegressionReportV1,
-  RegressionRowV1,
+  RegressionReportV2,
+  RegressionRowV2,
   RegressionRunOptions,
   RegressionStatus,
 } from './regression';
@@ -222,7 +199,7 @@ export type {
 export { runSemanticScoring } from './semantic';
 export type { SemanticRunConfig, SemanticRunOutcome } from './semantic';
 export { buildListeningPackage, LISTENING_ROOT, LISTENING_SCHEMA } from './listening';
-export type { ListeningItemV1, ListeningPackageV1, ReferenceListenStatus } from './listening';
+export type { ListeningItemV2, ListeningPackageV2 } from './listening';
 export {
   decodeSample,
   DEFAULT_SAMPLES_ROOT,

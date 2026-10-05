@@ -26,7 +26,8 @@ pnpm --filter @volstudio/vol-ui dev
 | TOUCH           | `core/src/ui/touch/`, `core/src/ui/camera/`, `core/src/ui/buttons/`, `core/src/ui/hud/`, `core/src/ui/focus/` |
 
 Kataloğa eklenen tüketicisiz CORE bileşeni aynı değişiklikte burada gösterilir
-ve CORE testinde adıyla sınanır. Sekme tablosu katalog envanteridir.
+ve CORE testinde adıyla sınanır. Sekme tablosu vitrin yönlendirmesidir; canlı public envanter
+[CATALOG](../../docs/ui/CATALOG.md) sahibindedir.
 
 ## Doğrulama
 

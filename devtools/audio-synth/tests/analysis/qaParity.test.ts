@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnTsxSync } from '../support/process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -18,11 +18,9 @@ describe('audio-qa CLI ↔ analyzeAudio kütüphanesi', () => {
   it('aynı kodlanmış fixture için rapor BİREBİR aynı (tek çekirdek)', () => {
     const file = join(dir, 'sfx', 'knock.ogg');
     writeOgg(file, renderProgram(testProgram()));
-    const res = spawnSync(
-      join(PACKAGE, 'node_modules/.bin/tsx'),
-      [join(PACKAGE, 'scripts/audio-qa.ts'), dir, '--json', '--policy'],
-      { encoding: 'utf8' },
-    );
+    const res = spawnTsxSync(join(PACKAGE, 'scripts/audio-qa.ts'), [dir, '--json', '--policy'], {
+      encoding: 'utf8',
+    });
     expect(res.status).toBe(0);
     const cli = JSON.parse(res.stdout) as {
       analyzerVersion: number;

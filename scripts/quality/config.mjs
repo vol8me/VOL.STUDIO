@@ -18,6 +18,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { validateDocumentationConfig } from './documentationConfig.mjs';
 
 /** Her paketin taşımak zorunda olduğu kapsam metrikleri. */
 export const COVERAGE_KEYS = ['lines', 'statements', 'branches', 'functions'];
@@ -67,6 +68,10 @@ export function validateQualityConfig(raw) {
 
   if (!isPlainObject(raw)) {
     return ['quality.json: kök bir JSON nesnesi olmalı'];
+  }
+
+  if (raw.documentation !== undefined) {
+    problems.push(...validateDocumentationConfig(raw.documentation));
   }
 
   checkMetricBlock(raw.floor, 'floor', problems);

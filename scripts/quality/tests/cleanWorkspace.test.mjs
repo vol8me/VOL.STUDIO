@@ -6,10 +6,12 @@ import {
   mkdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { runCommandSync } from './runCommand.mjs';
 
@@ -69,9 +71,20 @@ test('temizlik aktif oyun raporlarını kaldırır; gönderilen asset ve frozen 
   mkdirSync(join(root, 'scripts/quality'), { recursive: true });
   // `bashShell.mjs` justfile'ın kabuğudur: tarif, temizlik betiğinden önce onu
   // çalıştırır. `gitBash.mjs` onun çözümleyicisidir.
-  for (const file of ['cleanWorkspace.mjs', 'workspaceLifecycle.mjs', 'bashShell.mjs', 'gitBash.mjs']) {
+  for (const file of [
+    'cleanWorkspace.mjs',
+    'workspaceLifecycle.mjs',
+    'command.mjs',
+    'bashShell.mjs',
+    'gitBash.mjs',
+  ]) {
     copyFileSync(resolve(import.meta.dirname, '..', file), join(root, 'scripts/quality', file));
   }
+  symlinkSync(
+    dirname(createRequire(import.meta.url).resolve('cross-spawn/package.json')),
+    join(root, 'node_modules/cross-spawn'),
+    process.platform === 'win32' ? 'junction' : 'dir',
+  );
   writeFileSync(join(root, 'justfile'), recipe);
   mkdirSync(join(root, 'target'), { recursive: true });
   writeFileSync(join(root, 'games/probe/src/probe.tsbuildinfo'), 'cache');

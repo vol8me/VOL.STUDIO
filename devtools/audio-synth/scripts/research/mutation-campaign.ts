@@ -79,13 +79,6 @@ const MUTANTS: readonly Mutant[] = [
     test: 'tests/protocol/parallel.test.ts',
   },
   {
-    id: 'canary-defaults-heard',
-    file: 'src/protocol/canary.ts',
-    find: "status: 'pending-human', version: c.version",
-    replace: "status: 'heard-acceptable', version: c.version",
-    test: 'tests/protocol/listening.test.ts',
-  },
-  {
     id: 'surface-pins-version-1',
     file: 'src/program/surface.ts',
     find: 'nodeSurface(ref.id, ref.version)',

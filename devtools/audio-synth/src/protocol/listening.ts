@@ -3,14 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Sha256 } from '../kernel/canonical';
 import { hashPcm, prettyCanonicalJson } from '../kernel/canonical';
-import { canaryReviews, loadCanaries, runCanary, type CanaryReviewStatus } from './canary';
-import {
-  benchmarkReviews,
-  loadBenchmarkTasks,
-  type BenchmarkPartV1,
-  type BenchmarkTaskV1,
-} from './benchmark';
-import { regressionCorpus, regressionDecisions, type RegressionDecisionStatus } from './regression';
+import { loadCanaries, runCanary } from './canary';
+import { loadBenchmarkTasks, type BenchmarkPartV1, type BenchmarkTaskV1 } from './benchmark';
+import { regressionCorpus } from './regression';
 import { renderForKind } from './kinds';
 import { repoSampleResolver } from './samples';
 import type { SampleResolver } from '../program/samples';
@@ -25,70 +20,36 @@ import type { AssetClass } from '../analysis/assetQa';
 import { writeAuditionCopy, EXPORT_ROOT } from './audition';
 import { readJsonFile, resolveInside, writeFileAtomic } from './fs';
 
-/**
- * Tek-komut dinleme paketi: insan incelemesi bekleyen her ses
- * `export/listening/` altına toplanır:
- *
- *  - **canary**: kanonik `runCanary` render'ı; karar `canary review`.
- *  - **benchmark**: 14 görevin her parçası kaynak PCM + encode/decode edilmiş
- *    "gönderim" varyantı yan yana; `codec-loop-seam` taşıyan parçalar iki
- *    ardışık tur (loop2x) olarak da verilir; müzik parçalarında stinger
- *    cue'ları döngü yatağı üzerine bindirilmiş `overlay` öğeleri üretir.
- *    Karar `benchmark review <taskId>` (görev başına tek beyan).
- *  - **reference**: yayımlanmış manifest başına kaynak yeniden render +
- *    gönderilen OGG'nin çözümü; `integration.loop` taşıyanlar ayrıca
- *    loop2x varyantı alır. Karar `regression decide`.
- *
- * `listening.json` makine-okunur envanter, `index.html` statik dinleme
- * sayfasıdır ve her öğede kayıt komutunu açıkça gösterir. Paket YALNIZ dosya
- * ve durum taşır: "iyi ses" kararı insanın; hiçbir dinleme sonucu
- * uydurulmaz. Durumlar gerçek kayıtlardan gelir — canary `reviews.json`,
- * benchmark `corpus/benchmarks/reviews.json` (sürüm uyuşmazlığı pending sayılır),
- * referans `regression/decisions.json` (PCM-hash bağı).
- */
 export const LISTENING_ROOT = `${EXPORT_ROOT}/listening`;
-export const LISTENING_SCHEMA = 'ListeningPackageV1';
-
-export type ReferenceListenStatus = RegressionDecisionStatus | 'undecided';
-/** Canary/benchmark beyanları aynı üçlüyü taşır; tek birleşik liste. */
-export type ListeningStatus =
-  CanaryReviewStatus | RegressionDecisionStatus | 'undecided' | 'listen-only';
+export const LISTENING_SCHEMA = 'ListeningPackageV2';
 
 export type ListeningRole = 'source' | 'delivery' | 'loop2x' | 'overlay';
 
-export interface ListeningItemV1 {
+export interface ListeningItemV2 {
   readonly id: string;
   readonly kind: 'canary' | 'benchmark' | 'reference';
   /** Repo-göreli WAV (export ağacı). */
   readonly file: string;
   readonly title: string;
-  readonly status: ListeningStatus;
   readonly guide: readonly string[];
   readonly manifest: string | null;
   readonly assetClass: string | null;
   readonly pcmHash: Sha256 | null;
-  /** index.html'de gösterilen karar komutu; kararsız öğelerde null. */
-  readonly decision: string | null;
   /** Yan yana varyant grubu (`ref:…`, `task:…`, `aa:…`). */
   readonly group: string | null;
   /** Grup içi rol; tekil öğelerde null. */
   readonly role: ListeningRole | null;
 }
 
-export interface ListeningPackageV1 {
+export interface ListeningPackageV2 {
   readonly schema: typeof LISTENING_SCHEMA;
   readonly counts: {
     readonly canary: number;
     readonly benchmark: number;
     readonly reference: number;
-    readonly pending: number;
   };
-  readonly items: readonly ListeningItemV1[];
+  readonly items: readonly ListeningItemV2[];
 }
-
-const CLI = 'pnpm --filter @volstudio/audio-synth audio:job';
-const REVIEW_STATUSES = 'heard-acceptable|heard-problem';
-const DECIDE_STATUSES = 'accepted-change|rejected-regression';
 
 function escapeHtml(text: string): string {
   return text
@@ -103,17 +64,13 @@ h1{font-size:1.3rem}h2{font-size:1.05rem;margin-top:2rem;border-bottom:1px solid
 .item{margin:.9rem 0;padding:.6rem .8rem;border:1px solid #ddd;border-radius:6px}
 .item header{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
 .item .id{font-family:ui-monospace,monospace;font-size:.85rem}
-.badge{padding:.05rem .5rem;border-radius:10px;font-size:.75rem;border:1px solid #999}
 .role{font-size:.7rem;color:#fff;background:#607d8b;border-radius:8px;padding:.05rem .45rem}
-.pending-human,.undecided{background:#fff8e1}.heard-acceptable,.accepted-change{background:#e8f5e9}
-.heard-problem,.rejected-regression{background:#ffebee}
 .guide{color:#555;font-size:.85rem;margin:.3rem 0}.meta{color:#777;font-size:.75rem}
-.cmd{font-family:ui-monospace,monospace;font-size:.72rem;color:#444;background:#f5f5f5;display:block;padding:.3rem .45rem;border-radius:4px;margin-top:.35rem;overflow-x:auto}
 .group{border-left:3px solid #90a4ae;margin:1rem 0;padding-left:.8rem}
 .group h3{font-size:.9rem;color:#37474f;margin:.4rem 0}
 audio{display:block;width:100%;margin-top:.4rem}`;
 
-function itemHtml(item: ListeningItemV1): string {
+function itemHtml(item: ListeningItemV2): string {
   const rel = item.file.slice(`${LISTENING_ROOT}/`.length);
   const guide = item.guide.map((g) => `<div class="guide">${escapeHtml(g)}</div>`).join('');
   const meta =
@@ -122,18 +79,17 @@ function itemHtml(item: ListeningItemV1): string {
       : `<div class="meta">${escapeHtml(item.manifest)} · ${escapeHtml(
           item.assetClass ?? '',
         )} · <code>${escapeHtml(item.pcmHash ?? '')}</code></div>`;
-  const cmd = item.decision === null ? '' : `<code class="cmd">${escapeHtml(item.decision)}</code>`;
   const role = item.role === null ? '' : `<span class="role">${escapeHtml(item.role)}</span>`;
   return `<div class="item">
 <header><span class="id">${escapeHtml(item.id)}</span>${role}
 <span>${escapeHtml(item.title)}</span>
-<span class="badge ${escapeHtml(item.status)}">${escapeHtml(item.status)}</span></header>
-${guide}<audio controls preload="none" src="${escapeHtml(rel)}"></audio>${meta}${cmd}
+</header>
+${guide}<audio controls preload="none" src="${escapeHtml(rel)}"></audio>${meta}
 </div>`;
 }
 
-function sectionHtml(title: string, items: readonly ListeningItemV1[]): string {
-  const groups = new Map<string | null, ListeningItemV1[]>();
+function sectionHtml(title: string, items: readonly ListeningItemV2[]): string {
+  const groups = new Map<string | null, ListeningItemV2[]>();
   for (const item of items) {
     const list = groups.get(item.group) ?? [];
     list.push(item);
@@ -151,15 +107,14 @@ function sectionHtml(title: string, items: readonly ListeningItemV1[]): string {
   return `<h2>${escapeHtml(title)}</h2>\n${rows || '<p>yok</p>'}`;
 }
 
-function pageHtml(pkg: ListeningPackageV1): string {
-  const items = (kind: ListeningItemV1['kind']) => pkg.items.filter((i) => i.kind === kind);
+function pageHtml(pkg: ListeningPackageV2): string {
+  const items = (kind: ListeningItemV2['kind']) => pkg.items.filter((i) => i.kind === kind);
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8">
 <title>Dinleme paketi</title><style>${PAGE_CSS}</style></head><body>
 <h1>Dinleme paketi — ${pkg.counts.canary} canary, ${pkg.counts.benchmark} benchmark, ${
     pkg.counts.reference
   } referans</h1>
-<p>Bu sayfa yalnız dosya ve kayıtlı durum gösterir; her öğenin altında
-karar komutu yazılıdır ve beğeni kararı yalnız insan beyanıyla kaydedilir.
+<p>Bu isteğe bağlı dinleme aracı kaynak ve teslim varyantlarını sunar.
 <code>source</code> = programdan render, <code>delivery</code> = gönderilen
 kodlamanın çözümü, <code>loop2x</code> = iki ardışık döngü turu (dikiş),
 <code>overlay</code> = stinger'ın döngü yatağı üzerindeki hali.</p>
@@ -249,8 +204,7 @@ function manifestLoops(repoRoot: string, manifestPath: string): boolean {
   return doc.integration?.loop === true;
 }
 
-function canaryItems(repoRoot: string, samples: SampleResolver): ListeningItemV1[] {
-  const reviews = new Map(canaryReviews(repoRoot).map((r) => [r.id, r]));
+function canaryItems(repoRoot: string, samples: SampleResolver): ListeningItemV2[] {
   return loadCanaries(repoRoot).map((canary) => {
     const { result, render } = runCanary(canary, samples);
     const file = writeAuditionCopy(repoRoot, `${LISTENING_ROOT}/canary/${canary.id}.wav`, render);
@@ -259,21 +213,18 @@ function canaryItems(repoRoot: string, samples: SampleResolver): ListeningItemV1
       kind: 'canary' as const,
       file,
       title: canary.title,
-      status: reviews.get(canary.id)?.status ?? 'pending-human',
       guide: canary.listeningGuide,
       manifest: null,
       assetClass: null,
       pcmHash: result.pcmHash,
-      decision: `${CLI} canary review ${canary.id} --by human --status ${REVIEW_STATUSES} --note "<metin>"`,
       group: null,
       role: null,
     };
   });
 }
 
-function benchmarkItems(repoRoot: string, tmp: string, samples: SampleResolver): ListeningItemV1[] {
-  const items: ListeningItemV1[] = [];
-  const reviews = new Map(benchmarkReviews(repoRoot).map((r) => [r.id, r]));
+function benchmarkItems(repoRoot: string, tmp: string, samples: SampleResolver): ListeningItemV2[] {
+  const items: ListeningItemV2[] = [];
   const add = (
     task: BenchmarkTaskV1,
     part: BenchmarkPartV1,
@@ -288,12 +239,10 @@ function benchmarkItems(repoRoot: string, tmp: string, samples: SampleResolver):
       kind: 'benchmark',
       file: writePcm(repoRoot, rel, pcm),
       title: task.title,
-      status: reviews.get(task.id)?.status ?? 'pending-human',
       guide,
       manifest: null,
       assetClass: part.source.kind === 'music' ? 'music' : partAssetClass(part),
       pcmHash: hashPcm(pcm.channels, pcm.sampleRate),
-      decision: `${CLI} benchmark review ${task.id} --by human --status ${REVIEW_STATUSES} --note "<metin>"`,
       group: `task:${task.id}`,
       role,
     });
@@ -383,14 +332,9 @@ function benchmarkItems(repoRoot: string, tmp: string, samples: SampleResolver):
   return items;
 }
 
-function referenceItems(repoRoot: string, samples: SampleResolver): ListeningItemV1[] {
-  const items: ListeningItemV1[] = [];
-  const decisions = regressionDecisions(repoRoot).decisions;
+function referenceItems(repoRoot: string, samples: SampleResolver): ListeningItemV2[] {
+  const items: ListeningItemV2[] = [];
   for (const entry of regressionCorpus(repoRoot)) {
-    const decision = decisions[entry.id];
-    const status: ReferenceListenStatus =
-      decision && decision.pcmHash === entry.pcmHash ? decision.status : 'undecided';
-    const cmd = `${CLI} regression decide ${entry.id} --by human --status ${DECIDE_STATUSES} --pcm ${entry.pcmHash} --note "<metin>"`;
     const base = `${LISTENING_ROOT}/reference/${slug(entry.id)}`;
     const decoded = decodeWithFfmpeg(resolveInside(repoRoot, entry.assetPath, 'asset'), entry.id);
     const delivery: Pcm = { channels: decoded.channels, sampleRate: decoded.sampleRate };
@@ -404,12 +348,10 @@ function referenceItems(repoRoot: string, samples: SampleResolver): ListeningIte
       kind: 'reference',
       file: writePcm(repoRoot, `${base}.wav`, source),
       title: `${entry.id} — kaynak render`,
-      status,
       guide: ['Programdan yeniden render (kaynak).'],
       manifest: entry.manifest,
       assetClass: entry.assetClass,
       pcmHash: hashPcm(source.channels, source.sampleRate),
-      decision: cmd,
       group: `ref:${entry.id}`,
       role: 'source',
     });
@@ -418,12 +360,10 @@ function referenceItems(repoRoot: string, samples: SampleResolver): ListeningIte
       kind: 'reference',
       file: writePcm(repoRoot, `${base}--delivery.wav`, delivery),
       title: `${entry.id} — gönderilen çözüm`,
-      status,
       guide: ['Yayımlanmış assetin kodek çözümü.'],
       manifest: entry.manifest,
       assetClass: entry.assetClass,
       pcmHash: hashPcm(delivery.channels, delivery.sampleRate),
-      decision: cmd,
       group: `ref:${entry.id}`,
       role: 'delivery',
     });
@@ -433,12 +373,10 @@ function referenceItems(repoRoot: string, samples: SampleResolver): ListeningIte
         kind: 'reference',
         file: writePcm(repoRoot, `${base}--loop2x.wav`, twice(delivery)),
         title: `${entry.id} — iki tur (dikiş)`,
-        status,
         guide: ['Gönderim iki ardışık tur; döngü dikişi duyulmalı.'],
         manifest: entry.manifest,
         assetClass: entry.assetClass,
         pcmHash: null,
-        decision: cmd,
         group: `ref:${entry.id}`,
         role: 'loop2x',
       });
@@ -451,24 +389,22 @@ function referenceItems(repoRoot: string, samples: SampleResolver): ListeningIte
  * Paketi kurar: WAV'ları yazar, `listening.json` ve `index.html`'i üretir.
  * Deterministiktir — tarih/saat yazmaz; aynı repo durumu aynı paketi verir.
  */
-export function buildListeningPackage(repoRoot: string): ListeningPackageV1 {
+export function buildListeningPackage(repoRoot: string): ListeningPackageV2 {
   const samples = repoSampleResolver(repoRoot);
   const tmp = mkdtempSync(join(tmpdir(), 'listening-'));
   try {
-    const items: ListeningItemV1[] = [
+    const items: ListeningItemV2[] = [
       ...canaryItems(repoRoot, samples),
       ...benchmarkItems(repoRoot, tmp, samples),
       ...referenceItems(repoRoot, samples),
     ];
-    const count = (kind: ListeningItemV1['kind']) => items.filter((i) => i.kind === kind).length;
-    const pkg: ListeningPackageV1 = {
+    const count = (kind: ListeningItemV2['kind']) => items.filter((i) => i.kind === kind).length;
+    const pkg: ListeningPackageV2 = {
       schema: LISTENING_SCHEMA,
       counts: {
         canary: count('canary'),
         benchmark: count('benchmark'),
         reference: count('reference'),
-        pending: items.filter((i) => i.status === 'pending-human' || i.status === 'undecided')
-          .length,
       },
       items,
     };

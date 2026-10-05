@@ -1,213 +1,163 @@
 # VOL.STUDIO — iş listesi
 
-Repo geneli işler; paket işleri paketin kendi `TODO.md`sindedir. Açık iş `[ ]`,
-biten iş `[x]` olur ve `## Kapatılanlar`a tek satırla taşınır. Eksik çıkan
-kapanış yeni madde olarak açılır.
+Repo geneli işlerin tek kaydıdır. Karar, kanıt ve kapsam
+[monorepo denetiminde](docs/monorepo-audit.md); UI alt görevleri
+[UI TODO](docs/ui/TODO.md), audio ayrıntıları
+[audio TODO](devtools/audio-synth/TODO.md) içindedir. Sahip görev burada
+tekrar kopyalanmaz. Açık iş `[ ]`; biten iş tek satırla `## Kapatılanlar`a
+taşınır. Eksik kapanış yeni görevdir.
+
+Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
+yetkilendirdi. Güncel teslim F01–F03 uygulamasıdır; sonuçları rapor §18'de kanıtla ayrılır.
+**F01–F03 uygulanıyor; kalan fazlar açıktır.** Faz numarası bağımsız işleri gereksiz seri bekletmez;
+gerçek ön koşul ve kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
+Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 
 ## Açık
 
-Sıra yukarıdan aşağıya uygulama sırasıdır.
+<a id="f01"></a>
 
-### UI tasarım dili ve VOL.SHOWCASE
+### F01 — İnsan bekleyen ses kabulünü kaldır
 
-- [ ] **[P1] UI — Fazlı arayüz uygulaması.** Onaylı sözleşme, bütün public
-      yüzey envanteri ve uygulama görevleri [UI iş listesinde](docs/ui/TODO.md).
-      Kapanır: UI-00–UI-13 görevleri, ilgili yerel kapılar ve gerçek
-      platform/insan kabulü tamamlanır. Plan belgelerinin teslimi uygulama
-      başlangıcı değildir; VOL.TEST ve cihaz işleri kendi ölçütleriyle açık kalır.
+Ön koşul: ilk uygulama turu. Teknik QA ve kaynak yazarlığı korunur.
 
-### VOL.TEST — test ortamı oyunu
+- [ ] **[P1] F01.1 — Kabul sistemini kaldır.** Canary/benchmark review, capability listening, regression decide, pending/status/komut/export/context ve review dosyaları birlikte kalkar. Kapanır: rapor §11 envanteri eksiksiz; üretim seviyesi güncel mekanik QA ve gerçek verify ile bağlı; yeni insan bekleme durumu yok.
+- [ ] **[P1] F01.2 — Sürümlü geçiş ve regresyon.** Rapor JSON'u yeni semantiğe göre sürümlenir; isteğe bağlı dinleme çıktısı korunur. Kapanır: silinmiş API/CLI/alan yok, eski rapor sahte güncel kabul üretmez; review olmadan render/publish/verify ve PCM/asset/policy negatif testleri geçer; ilgili belge/quick güncel.
 
-Analiz ve kararlar: yerel sertleştirme raporu §0.6. Cihazlar
-uygulama sırasında bağlıdır (Samsung bağlı değilse o cihaz "ölçülmedi").
+Tam audio Windows redleri F02'nin işidir; F01 kapanışı bunları geçti diye
+yazmaz. Tam üretim/sürüm kabulü F02 ve güvenlik kapanışlarını da ister.
 
-- [x] **[P1] VT-R5 — Yeni seslerin insan dinleme onayı.** 33 kuru mekanik/metal
-      teslim, sessiz boşta durum ve oyun olayı eşlemeleri hazır. Kullanıcı yeni
-      seti dinleyerek onayladı.
-- [ ] **[P1] VT-H3 — Nişan ve dokunmatik hissiyat.** Dünya yönünü koruyan taret,
-      hedefe oturunca ateş, iki bölgeli sağ çubuk ve balistik hedef lazeri.
-      Kontrol/fizik ve Chromium/WebKit testleri geçer. Kapanır: gerçek
-      cihazda nişan, ateş eşiği ve hareket için insan kabulü.
-- [ ] **[P1] VT-W — Dünya ve hava olayları.** Toz, yağmur ve kar; su/kar birikimi,
-      zemin tutuşu, rüzgâr/mermi direnci ve görünür yansıma. Kapanır: seedli
-      model, sabit adım determinizmi, fizik/render bağları ve cihaz bütçeleri;
-      Lenovo yüksek kar/çoklu tank/atış 10 dakikada 58,9–64,8 FPS, ilk dakika
-      p95 25 ms olduğundan bütün yüklerde bütçe kabulü halen açık.
-- [ ] **[P3] VT-Q — Kalite ve cihaz bütçesi kabulü.** Kalıcı tercih ve
-      ölçülmüş açılış kademesi hazır. Kapanır: yoğun hava/araç/atış yükünde
-      uzun oturum bütçesi geçer; Deck sunum temposu D2 ile doğrulanır.
-- [ ] **[P3] VT-S — CORE senaryo envanteri.** Boş, slalom, hedef atış,
-      fizik sandbox ve çoklu tank senaryoları hazır. Kapanır: CORE yetenekleri
-      tüketici/senaryo/test kanıtıyla eşlenir; gerekli eksik örnekler tamamlanır.
-- [ ] **[P1] VT2 — Linux görünür açılış kabulü.** Ürüne özgü kimlik/ikon,
-      Cargo üyeliği ve native kaynak sözleşmesi hazır; Rust kapısı geçer.
-      Kapanır: son sürüm host'ta görünür açılır ve ekran görüntüsü alınır.
-- [ ] **[P1] VT3 — Açılış servisleri.** Oturum, ekran kipi, girdi ve glif,
-      metin girişi, menü süzgeci, kapsamlı kayıt, kapanış ve uyku boşaltması,
-      ses, titreşim, Steamworks, Android geri tuşu ve yön, tanı. Tüketilmeyen
-      tauri-v2 export'u silinir (K4). Kapanır: `pnpm high`; E2E Chromium + WebKit.
-- [ ] **[P1] VT4 — Android.** Native proje izlenir, yön/çentik/tam ekran elle.
-      İki cihazda kurulum, açılış, yatay/tam ekran, joystick, ateş barı,
-      duraklatma, arka plan dönüşü ve kapanış kaydı yeniden doğrulandı.
-      Kapanır: kısa dış bölge dokunuşu Samsung'da insan parmağıyla kabul edilir
-      (sentetik basış örneklenmedi), uzun oturum bütçesi ve titreşim hissi
-      yeniden ölçülür, görünür panel kabulü ayrı kalır.
-- [ ] **[P1] VT5 — Steam Deck.** steamrt4 paketi ve `pnpm deck`. Kapanır: glibc
-      bekçisi; bağlı Deck'te açılış, ekran görüntüsü ve kare ölçümü.
-- [ ] **[P1] VT-H2 — VOL.TEST cila turu (cihazda).** Kullanıcı dizüstü
-      bilgisayarında görünür pencere açılışını ve ekran kilidi sonrası girdi
-      turunu eliyle yaptığını ve onayladığını bildirdi; ekran kilidi yeniden
-      kilitlendi. Titreşim hissi ve Deck eliyle ölçümler açık. Kapanır: her
-      cihazdan ekran görüntüsü ve kullanıcının his onayı.
-- [ ] **[P1] VT7 — Yeni oyun iskeleti kabulü.** Üretici ve
-      `tauri-v2/templates/game` sözleşmesi hazır. Kapanır: iskeletten üretilen paket
-      `pnpm signoff`u ilk denemede geçer.
+### F02 — Windows geliştirme hattını güvenilir yap
 
-### Belgeler
+Ön koşul: F01 teknik teslimi. Eski MSVC/PATH işinin yeni sahibi bu fazdır.
 
-- [ ] **[P1] SB — Belgeler sıfırdan.** `AGENTS.md`, `CLAUDE.md`, bütün
-      README'ler ve `DESIGN.md`ler yeniden yazılır: kısa, net, gerçek. İngilizce
-      README'ler silinir. Belgelerdeki bağlam anlatısı (tarihçe, karar süreci,
-      oturum hikâyesi) kalkar. `docs/` gerçekle doğrulanır; Deck belgesi ölçülmüş
-      gerçek, karar ve devkit sözleşmesi olarak yeniden kurulur. Paket
-      TODO'larının `Kapatılanlar` bölümleri tek satırlık maddelere iner.
-      Kapanır: belge kapıları yeşil, İngilizce kopya kalmaz.
+- [ ] **[P1] F02.1 — Temiz Windows bootstrap ve doğru doctor.** Git Bash, Node/pnpm/just, Rust/MSVC, JDK/SDK/NDK profili tekrar üretilebilir olur. Kapanır: temiz/boşluklu clone ve yeni kabukta install/doctor/quick/high; linker için gerçek küçük link probu, warning/failure ayrımı; kalıcı elle executable/PATH taşıma zorunluluğu yok (B12).
+- [ ] **[P2] F02.2 — Argüman sınırı ve komut adaptörü.** Gerçek exe native argv; cmd/bat dar testli adaptör; TS yardımcıları Node+JS giriş kullanır. Kapanır: boşluk/Unicode/tırnak/`&`/cwd/PATH fixture'ı; rust/Android/test çağrıları doğru, shell sonucu değiştiremez (B14/B16).
+- [ ] **[P2] F02.3 — Windows test dosya/disk sözleşmesi.** fileURLToPath, normalleştirilmiş karşılaştırma ve gerçek dosya işlemi hata enjeksiyonu. Kapanır: B13/B15'in 11 hedefli redi kapanır; rollback/cleanup Windows/POSIX'te gerçekten sınanır; genel timeout veya geniş skip ile susturulmaz.
+- [ ] **[P1] F02.4 — Tam audio takımının kapanışı.** İlk tam koşunun sfx hatası nedeni ayrıca bulunur. Kapanır: B13–B15'in 24 tekrar hatası ve açıklanmamış hata doğru regresyonla kapanır; coverage-audio güncel LCOV+shape ile geçer; high/başarısız signoff aşamaları açık raporlanır.
 
-### Cihaz turları
+### F03 — Belgeleri minimal ve doğrulanabilir yap
 
-- [ ] **[P1] Lenovo görünür panel ve ekran yakalama.** Sistem yakalaması siyah
-      çıktı; aynı oturumun GPU karesi dolu ve GL hatası sıfır. Kapanır: soğuk
-      açılış ve arka plan dönüşünde gerçek panel ile sistem ekran görüntüsü
-      birlikte doğrulanır; Mali EGL yakalama hatasının nedeni ayrılır.
-- [ ] **[P1] SD3 — libmanette çökme izi.** Tarihsel SIGSEGV için çekirdek
-      dökümü/yeniden üretim yok; yeni ölçümlerin çökmeden çalışması kök neden
-      kabulü değildir. Kapanır: kol hot-plug ve titreşim matrisiyle döküm
-      incelenir, neden düzeltilir veya kanıtla dışlanır.
+Ön koşul: F01 kabul anlamı, F02 platform profili. Eski SB işi burada.
 
-- [x] **[P1] Deck'teki kalıntılar.** Envanter gösterildi: beş `VOL.HELL`
-      kısayolu (taban ve dört sürüm) ve 1,36 GB `devkit-game/VOL.HELL*`
-      ağacı. Kullanıcı onayıyla `steamos-delete` ile kısayollar, sonra
-      sürüm ağacı silindi; `VOL.TEST` kısayolları, devkit araçları ve
-      `vol_deck_probe` yerinde kaldı. Son liste yalnız `VOL.TEST_*` ve
-      `vol_deck_probe` içeriyor.
-- [ ] **[P1] SD8 — Uyku ve uyanma Deck'te.** Kapanır: son değer uyku öncesi
-      diske ulaşır, ses uyanışta geri gelir.
-- [ ] **[P1] D0 — Deck'te insan eliyle açık ölçümler.** Kapanır: yalnız eldeki
-      cihazla ölçülemeyenler açık kalır.
-- [ ] **[P1] D1 — steamrt4 paketi SteamOS host'unda ve SLR4'te açılıp OGG çalar.** Host ölçümü vardır; gerçek SLR4 kısayolu ve codec/ses doğrulaması açıktır.
-- [ ] **[P1] D1 — `pnpm deck` uçtan uca.** Derler, yükler, başlatır, ölçer, ekran
-      görüntüsü alır; komut sözleşmeleri testli.
-- [ ] **[P1] D2 — gamescope kare zamanlaması.** Isınmış VOL.TEST pencereleri 59–60 FPS, p95 18–21 ms. Kapanır: host/SLR4 ve sunum istatistikleriyle kök neden ayrılır; 1280×800'de ≥59 FPS, p95 ≤18 ms bütün yüklerde sağlanır.
-- [ ] **[P1] Deck'te `vol:terminate` el sıkışması zaman aşımı.** SIGTERM sonrası
-      ilerleme kaydı diske ulaşıyor, ama kabuk `exit-after-grace` için
-      `timedOut` yazıyor. Kapanır: ya tolere edilen bir süre tanımlanır ya da
-      ön yüz onayı süre dolmadan döner; kayıt nedenini belirtir.
-- [ ] **[P1] D2 — Kayıt ve boşaltma kanıtı.** Yazma ortasında SIGKILL kaydı
-      bozamaz; üretim kipinde SIGTERM ve gerçek uykuda son değer diske ulaşır.
-- [ ] **[P1] D2 — `synced` / `device` kapsamı.** Kapsamsız anahtar derlenmez;
-      eski tek dosyalı kayıttan yedekli geçiş testli.
-- [ ] **[P2] D2 — Uykudan dönüşte zaman güvenliği.** Saat sıçraması testli;
-      Deck'te uyku turu ölçülür.
-- [ ] **[P2] Windows kayıt yazıcısı.** `vol_store_write` hatasız yazar, bozuk
-      kayıt yedekten okunur.
-- [ ] **[P3] Android 16 geniş ekranda yön kilidi.** 600dp üstü cihaz ya da
-      emülatörde `appCategory="game"` ile ölçülür.
-- [ ] **[P3] OLED Deck ve Steam Machine kare zamanlaması.** Cihaz bulununca.
+- [ ] **[P1] F03.1 — README/agent kapısı.** Rapor §12 rol/satır/sözcük bütçesi mevcut quality şemasına ve contract'a bağlanır; paket keşfi lifecycle'dan türer. Kapanır: uzun/eksik giriş, kırık bağlantı/başlık, sahte komut ve bayat istisna negatif fixture'ı düşer; yeni kök config yok.
+- [ ] **[P1] F03.2 — 43 belgenin sahiplik kararı.** Rapor tablosundaki her belge işlenir; README yalnız giriş, DESIGN gerekçe, TODO iş, rehber kullanım taşır. Kapanır: tekrar/tarihçe/oturum anlatısı gider; AGENTS/CLAUDE/Pencil kısa ve projeye özgü; hukuk/üretilmiş izin istisnaları korunur.
+- [ ] **[P1] F03.3 — UI belge birleştirmesi.** COVERAGE canlı bilgisi CATALOG/TODO'ya, RESEARCH güncel gerekçesi CONTRACT'a gider; sonra iki kaynak dosyası silinir. Kapanır: eski canlı bağlantı sıfır; 63 görev ve yüzey/kanıt sahipliği eksiksiz; UI README kısa yönlendirici.
+- [ ] **[P1] F03.4 — Platform ve kapanış doğruluğu.** Windows/Linux/Deck/Android destek matrisi ve tek kapı kaynağı netleşir. Kapanır: Linux builder Windows desteği gibi anlatılmaz; kod/test/cihaz ayrı; paket kapatılanları tek satır; paralel İngilizce README yok; belge kapıları geçer.
 
-### Ortam
+### F04 — Kalıcılık, async sahiplik ve native yaşam döngüsü
 
-- [ ] **[P2] MSVC dizini PATH'te kalıcı değil.** Build Tools 2022 kuruldu ve
-      `just rust` ile `pnpm high` bu makinede geçti, ama bağlantı yalnızca MSVC
-      `bin\Hostx64\x64` dizini PATH'te öndeyken çalışıyor; Git for Windows'in GNU
-      coreutils `link`i öndeyse gölgeler. `doctor` bunu ölçüp bildiriyor.
-      Kapanır: MSVC dizini kalıcı PATH'e eklenir ya da geliştirme kabuğu
-      `vcvars64.bat` ile açılır; `doctor` yeşil kalmadan `pnpm high` koşulmaz.
+Ön koşul: F02 doğrulama zemini; UI yeniden tasarımı beklenmez. VT3/SD8/D2
+servis borçları ilgili cihaz kabulüyle birlikte kalır.
 
-### Kod
+- [ ] **[P1] F04.1 — Flush hata bariyeri.** Devam eden yazımın reddi flush/flushAndDispose/shutdown'a ulaşır. Kapanır: B01 regresyonu hata ve başarı sıralarını sınar; ACK başarısız kaydı başarı saymaz; son-değer koordinasyonu korunur.
+- [ ] **[P2] F04.2 — Geç cevap sonrası kaynak/commit.** GameProgress yüklemesi dispose sonrası autosave doğurmaz; Input/TextArea geç native cevabı eski/yok edilmiş owner'a commit etmez. Kapanır: B02/B03 load-reject/destroy/abort/generation yarışları, UI-11 oturum bağı ve kaynak temizliği testli.
+- [ ] **[P1] F04.3 — Store kapsamı ve Windows writer.** synced/device ayrımı ve eski tek dosyadan yedekli geçiş doğrulanır. Kapanır: kapsamsız anahtar derlenmez; disk migration/bozuk ana kayıt/backup/atomik yazım/hata geri bildirimi Windows native kabulüyle testli.
+- [ ] **[P1] F04.4 — Kapanış protokolü ve Steam callback sahibi.** CallbackHandle hizmet ömründe tutulur; requestId/reason/outcome ACK sözleşmesi korunur. Kapanır: B07 gerçek feature harness, overlay/text callback yaşamı ve drop testi; timedOut kök nedeni/süre gerekçesi; üretim SIGTERM son değer, yazım ortası SIGKILL toparlanması.
+- [ ] **[P1] F04.5 — Uyku/uyanış ve servis tüketimi.** Saat/input/audio/haptik yaşam döngüsü; kullanılmayan tauri-v2 export/config/izin bağları kaldırılır (VT3/K4). Kapanır: clock-jump/geç decode/tekrarlı suspend regresyonları ve ilgili gerçek cihaz turu; high + Chromium/WebKit; SD8 fiziksel sonucu F08.6'da.
 
-- [x] **[P2] B6 — Ses değişimine göre push doğrulaması.** `high` sesin alt
-      takımını, `signoff` tam takımını koşar. Değişen ses kaynakları CORE
-      dosyalarıyla birlikte `vitest related` ile modül grafiğinden seçilir;
-      silinen kaynak, vitest yapılandırması veya belirsiz değişiklik tam takımı
-      koşar, yayın kapısının tam doğrulaması korunur.
+### F05 — Asset yayını, metadata ve kalıntı temizliği
 
-- [ ] **[P3] A20 — Titreşim darbeleri tek zamanlayıcı iş parçacığından yürür.**
-- [ ] **[P3] Samsung kısa dokunuş kabulü.** Cihaz sentetik sabit basışta
-      oyunun örneklediği `pointermove` üretmediği için kısa dış bölge
-      dokunuşunun kabulü bu turda ölçülemedi. Kapanır: kullanıcının Samsung'da
-      kısa nişan/ateş basışını ve iç bölge ayrımını eliyle onaylaması.
-- [ ] **[P2] `braces` advisory'si yayımlanmış düzeltmesiz.** `GHSA-vfj7-8cjw-p6xm`
-      (`pnpm audit` 1240992) `braces <=3.0.3` için stack tükenmesi bildiriyor ve
-      `first_patched_version` boş: yamalı sürümü yok. Yol yalnız geliştirme
-      araç zincirinde (`stylelint → micromatch → braces`), gönderilen oyuna girmez.
-      Kapanır: yama çıktığında kilit yükseltilir; `security-js` o gün yeşile döner.
-- [ ] **[P3] S7 — Ana sürüm geçişleri.** ESLint 10, stylelint 17, jsdom 30,
-      Vitest 5 ve TypeScript 7 için uyumluluk ayrı ayrı doğrulanır. Kapanır:
-      ilgili paketlerin ve kapıların yeni ana sürümde geçmesi.
-- [ ] **[P3] CORE sıkı indeks denetimi.** `noUncheckedIndexedAccess` 610
-      tanı üretir; pen.dev'de etkin ve kapıyla korunur. Kapanır: CORE'da
-      denetim açıkken tip kapısı geçer; indis varsayımları daraltılır.
+Ön koşul: F01/F02. Sırf insan sistemini kaldırmak için mevcut sesler yeniden
+yayımlanmaz; her temizlik erişilebilirlik kanıtıyla yapılır.
 
-### Kullanıcı talebini bekleyenler
+- [ ] **[P2] F05.1 — Ortak yayın hedefi sahipliği.** Job kilidine ek hedef transaction sahipliği. Kapanır: B04 iki bağımsız süreçte tek kazanan, kaybedende açık hata; asset/manifest/bank/bundle tutarlı; crash/stale lock/rollback regresyonu.
+- [ ] **[P2] F05.2 — Gerçek PCM/manifest doğrulaması.** bytes/sampleRate/channels/frames/format ve decode sonucu bağlanır. Kapanır: B05 imkânsız metadata ve encoded/PCM drift reddedilir; geçerli identical/encoder-only sınıfları korunur.
+- [ ] **[P2] F05.3 — Pencil export geri alınabilirliği.** Çakışan node/part kimliği tüketimden önce doğrulanır, staging atomik kalır. Kapanır: B11 sentetik duplicate/missing/write-failure tekrarı kaynağı tüketmez, yarım hedef bırakmaz; .pen erişimi yalnız Pencil MCP.
+- [ ] **[P2] F05.4 — AS20 şema ayrımı.** Ayrıntı audio TODO'da. Kapanır: uzun validator'lar ortak alt şemaya bölünür; B05'in yanlış kabulü düzeltilir, doğru kabul/ret ve sürüm sözleşmesi korunur; ölçülen hotspot azalır, anlamsız wrapper yok.
+- [ ] **[P2] F05.5 — Eski yayın ve ölü bağı temizliği.** 17 kırık publication ve 103 eski render için aktif tüketici/manifest/bank/bundle/fixture/provenance grafiği. Kapanır: B20 emekli iş publish önermez; gerekçesiz kayıt/export/dosya/bağımlılık gider; Fallow public/katalog/native/research ayrımı belgeli; production diff'i yalnız beklenen değişim.
+- [ ] **[P2] F05.6 — Araştırma/kanonik ve yerel çıktı ayrımı.** Fit/semantic/mutation çıktıları kabul kanıtı değildir; yerel eski workspace/build kalıntısı sahibi clean ile temizlenir. Kapanır: izlenen her örneğin kaynak/fixture gerekçesi; referans kırığı sıfır; oyun build'i devtools runtime bağı olmadan geçer; hedef yollar doğrulanır.
 
-- [ ] **K3 — Birleştirme.** `dev` ve `main` birleştirmesi kullanıcı talebine kadar
-      yapılmaz (S8).
-- [ ] **K5 — Silme.** Uzak eski dallar ve yerel `feature/asset-studio` yerinde
-      kalır.
+### F06 — CORE/Phaser sınırı ve VOL.TEST doğruluğu
+
+Ön koşul: F02. Önce fizik doğruluğu; ölçümsüz optimizasyon yok.
+
+- [ ] **[P1] F06.1 — Sürekli mermi/gövde kesişimi.** Segment–OBB ilk temas; önizleme/live aynı doğru model. Kapanır: B17 gerçek Tank+WEAPON 60 Hz köşe/graze/hız/sahip/çoklu hedef regresyonu; VT-H3 balistik eşleme korunur.
+- [ ] **[P1] F06.2 — Duvar/araç birleşik kısıtı.** Sınırlı deterministik temas çözümü. Kapanır: B18 iki/üç araç ve köşelerde bütün OBB köşeleri dünya içinde; mevcut fren/drift/süspansiyon/seed testleri ve bütçe korunur; VT-W tutuş bağı testli.
+- [ ] **[P2] F06.3 — Saf simülasyon importu ve VT-S matrisi.** Mevcut public random/spatial alt yüzeyleri; her gerekli CORE yeteneğine tüketici/senaryo/test sahibi. Kapanır: B19 Node'da DOM/CSS olmadan seedli ScenarioRunner; empty/slalom/targets/sandbox/multitank; dokuz Phaser köprüsü/public kilit korunur.
+- [ ] **[P2] F06.4 — Gerçek birleşik yük ölçümü.** Araç+mermi+hava aşamaları, başlangıç/uzun oturum ve kalite seçimi. Kapanır: VT-Q/W cihaz profiliyle bütçe; scaling dar mermi döngüsü tüm oyun kabulü sayılmaz; gerekli algoritmik iyileştirme önce/sonra ölçülü, ölçümsüz broadphase yok.
+
+### F07 — UI'nin 14 fazı ve tek VOL.SHOWCASE
+
+Ön koşul: F01/F02 ve ilgili F04 düzeltmesi. Bütün 63 açık alt işin sahibi
+[UI TODO](docs/ui/TODO.md); ayrıntı burada tekrar checkbox'a çevrilmez.
+Windows geliştirme/ilk native referans önce; Linux/Deck kabulü F08'dir.
+
+Aşağıdaki satırlar indekstir; kapanış checkbox'ı ve ölçütleri yalnız UI TODO'dadır.
+
+- **F07.1 — Kanıt zemini ve temel dil:** UI-00–UI-02; ölçüm/durum, tema/hareket ve teknik ses kabulü.
+- **F07.2 — Pilot ve atomik native vitrin:** UI-03–UI-06; buton/kart/form ve SHOWCASE göçü, Linux/Deck kabulü F08.
+- **F07.3 — Katalog ve platform oturumu:** UI-07–UI-12; i18n/font/HUD/overlay/touch/IME/Android/Steam/Windows.
+- **F07.4 — Tam ve gerçek kabul:** UI-13; bütün durumlar, erişilebilirlik/stres/gerçek cihaz ve sürüm teslimi.
+
+### F08 — Linux builder ve Deck kabulünü yeniden kur
+
+Ön koşul: F02/F04/F06'nın ilgili teknik teslimi. Genel controller/Steam/
+kalıcılık mekanizmaları silinmez; frozen lifecycle ile askıya alma taklit edilmez.
+
+- [ ] **[P1] F08.1 — Linux üretim profili ve fail-closed ELF.** Windows'tan ayrı bağımlılık ağacı/builder; AppDir/steamrt4/GStreamer. Kapanır: B08 readelf eksik/okunamayan ELF açık red; doğru GLIBC/ABI pozitif fixture ve gerçek paket.
+- [ ] **[P2] F08.2 — Paylaşılabilir doğru kanıt.** B09 outcome/requestId/normalize reason ve B10 runtime ortamı korunur. Kapanır: sanitizer roundtrip success/failed/timedOut ayrımı; host/SLR4 yanlış etiketlenmez; gizli adres/seri/kullanıcı yok; schema/runId/stamp zinciri.
+- [ ] **[P1] F08.3 — Host ve SLR4 gerçek açılış.** VOL.TEST Linux görünür pencere/screenshot, ayrı SLR4 kısayolu/OGG. Kapanır: VT2/VT5 ve eski D1-codec gerçek paket/commit/runtime kaydı; host kabulü SLR4 yerine sayılmaz.
+- [ ] **[P1] F08.4 — Windows'tan devkit uçtan uca.** Keşif/DNS/SSH/transfer/builder açık preflight. Kapanır: eski D1-deck zinciri gerçek build→yükleme→launch→ölçüm→screenshot; mevcut shell-kapalı SSH quoting korunur.
+- [ ] **[P1] F08.5 — Gamescope ve ürün yük bütçesi.** Sonda kontrol grubu, UI laboratuvarı ve VOL.TEST ayrı. Kapanır: host/SLR4 1280×800 bütün yüklerde ≥59 FPS/p95≤18 ms; sunum/CPU kök nedeni ve eşli önce/sonra profil; sıcak tek pencere tüm kabul sayılmaz.
+- [ ] **[P1] F08.6 — Gerçek Steam/kayıt/uyku ve açık cihaz işleri.** Overlay/QAM/kol/metin/haptik, SD3/SD8/D0/VT-H2 ve terminate/SIGKILL. Kapanır: gerçek olay/son değer/saat/ses/uyanış; libmanette nedeni dump/tekrar veya karşıt kanıtla ayrılır; yapılmayan his/elle işlem açık kalır.
+
+### F09 — Windows/Android ürün kabulü ve yeni oyun
+
+Ön koşul: F04/F06 ve gerekli UI teknik yüzeyi. Bağlı tablet/Deck hazır
+erişim sağlar; kurulu uygulamanın mevcut commit olması ayrıca doğrulanır.
+
+- [ ] **[P1] F09.1 — Windows gerçek ürün.** NSIS/WebView2 kurulum/açılış/kaldırma, DPI125/150/200, klavye/kol/metin/clipboard/ekran kipi/ses/kayıt/kapanış. Kapanır: installer ve paketli native profil; B01/K4/store sonuçları gerçek örnekte; konfigürasyon testi fiziksel kabul yerine sayılmaz.
+- [ ] **[P1] F09.2 — Android görünür/native profil.** Windows toolchain'den APK, tablet Activity/ActionMode/insets/yön/arka plan dönüşü/geri/titreşim. Kapanır: Lenovo gerçek panel ve sistem screenshot siyah-kare kök nedeni; Android 16/600dp yön iddiası uygun cihaz/emülatörde; Android14 tablet buna eşdeğer sayılmaz.
+- [ ] **[P1] F09.3 — Oyun hissi ve uzun oturum.** VT-H3/VT-W/VT-Q/VT4/VT-H2 ve Samsung kısa dış dokunma. Kapanır: gerçek nişan/ateş eşiği/iç-dış bölge/hareket/kar-çoklu tank-atış bütçesi; ses olay/oynatma/uyanış teknik doğrulaması; insan beyanı nişan/dokunma/haptik hissi içindir, ses dinleme kabulü değildir; Samsung olmadan onun kabulü yazılmaz.
+- [ ] **[P1] F09.4 — VT7 ilk ürün doğrulaması.** Yeni oyun rehberi/template üretimi. Kapanır: temiz alanda üretilen özgün kimlikli paket ilk signoff'u geçer; Cargo/lifecycle/quality/ikon/port/i18n ve devtools'suz build sözleşmesi; mevcut advisory redi atlanmaz.
+
+### F10 — Güvenlik, ratchet ve koşullu bakım
+
+Güvenlik F02'den itibaren bağımsız erken yürütülür; bu fazın son sıra numarası
+release redini ertelemek için gerekçe değildir.
+
+- [ ] **[P2] F10.1 — JS/Rust bağımlılık riski.** braces yayımlanmış düzeltmesi/uyumlu zincir veya gerçek güvenli alternatif; glib unsound, yanked ve unmaintained sahipliği/erişilebilirlik. Kapanır: yok sürüme override yok; security-js ve gerekçeli Rust risk politikası doğrulanır; gate seviyesi düşürülmez.
+- [ ] **[P3] F10.2 — S7 majör geçişler.** ESLint/stylelint/jsdom/Vitest/TypeScript hedefleri gerçekten yayımlanmış destek matrisiyle tek tek. Kapanır: her geçiş ilgili paket/test/kapıyla; toplu latest ve ilgisiz mimari göç yok.
+- [ ] **[P3] F10.3 — Sıkı indeks ve teknik ratchet.** CORE noUncheckedIndexedAccess varsayımları daraltılır; kalite eşiklerinin geçmiş base-ref ve gerekçeli istisna denetimi; scaling ortak şemalı okuyucu. Kapanır: tip kapısı, eşik düşürme/bozuk config negatif fixture'ı; ölçülen kapsam korunur.
+- [ ] **[P3] F10.4 — A20 haptik yürütme kararı.** Mevcut scheduler/driver gecikme, eşzamanlılık ve iptal ölçülür. Kapanır: worker gerekliyse tek scheduler geçişi regresyon+önce/sonra ölçüm; gerekmiyorsa kanıtlı koruma kararı; sırf önerilmiş diye worker eklenmez.
+- [ ] **[P3] F10.5 — Yeni donanım kapsamı.** OLED Deck/Steam Machine. Kapanır: ilgili donanım bulunduğunda ayrı frame/runtime profili; eldeki cihaz kabulü bu işi sahte kapatmaz, Windows devamını bloke etmez.
+- [ ] **F10.6 — K3/K5 dal bakımı.** Birleştirme hedefleri ve eski yerel/uzak dalların erişilebilir işi ayrı git operasyonu olarak ele alınır. Kapanır: kayıp commit/çalışma sıfır, açık hedef ve test/snapshot kanıtı; rapor teslimi merge/branch silme yapılmış sayılmaz.
 
 ## Kapatılanlar
 
-- [x] **Visual Studio C++ Build Tools 2022 kuruldu.** PATH'teki `link.exe`in Git for Windows'in GNU coreutils `link`i olması yüzünden bu makinede hiçbir Rust hedefi bağlanamıyordu; Build Tools kuruldu ve MSVC `bin\Hostx64\x64` öndeyken `just rust` ile `pnpm high` yeşil. Kalıcı PATH kaydı ayrı maddede açık.
-
-- [x] **Ortam kök nedeni: kapı kabuğu WSL'e düşüyordu.** `justfile`ın kabuğu PATH'teki `bash`a bağlıydı; Windows'ta bu `WindowsApps\bash.exe` WSL launcher'ına çözülüyor, tarifler Linux node/pnpm altında koşuyor ve `rust-just`/`esbuild` win32 ikilisi bulunamayınca kapılar koddan bağımsız kırılıyordu. Kabuk artık `scripts/quality/gitBash.mjs` ile Git kurulumundan türetiliyor; WSL gölgesi `doctor`da uyarı, kullanılabilir kabuk yoksa blokaj. Linux'a özgü Tauri bağımlılığı denetimi de Linux dışına çıkarıldı, böylece doktor Windows'un Tauri bağımlılığını Linux'un `pkg-config`'iyle yeşile boyamıyor.
-
-- [x] **MSVC linker gölgesi.** `rustc` bağlantı için PATH'ten `link.exe` çağırıyor; Git for Windows'in GNU coreutils `link`i ilk sıraya geldiği için bu makinede hiçbir Rust hedefi bağlanamıyordu. `doctor` artık PATH'teki ilk `link.exe`in gerçekten Microsoft linker olduğunu ölçüyor ve değilse gerekçeli yol gösteriyor.
-
-- [x] **Tauri üretilmiş Android çıktısı ignore dışındaydı.** `tauri-v2/plugins/*/android/.tauri/` kuralı eksikti; üretilen `tauri-api` ağacı izlemeye de girmeye de girmemiş, her `git status`'ta gürültü üretiyordu. Kural eklendi ve `gitFiles.test.mjs` sözleşmesine bağlandı.
-
-- [x] **Steam Cloud adı doğrulanmıyordu.** `cloud_read`/`cloud_write`/`cloud_delete` adı denetimsiz Steam'e veriyordu. Bulut adı artık aksiyon adından daha dar (noktayla başlamaz); `..`, ayraç, boş ve 129 bayt üstü adlar reddediliyor, yazma `MAX_CLOUD_BYTES` sınırını bayta uyguluyor. `store.rs` ile aynı sertlik seviyesi, regresyon testli.
-
-- [x] **Ses yüklemesi yaşam döngüsü.** CORE banka/döngü istekleri aynı partide başlar, eşzamanlı yükleme birleşir; söküm indirmeyi iptal eder ve geç decode kaynak kurmaz.
-
-- [x] VOL.TEST ölçümü gerçek kalite, senaryo, tohum, mevsim/hava ve sekiz CPU aşamasını kaydeder; bağlam geçişi ile Deck rapor zinciri regresyon testli.
-
-- [x] VOL.TEST native uyanışta ortak ses bağlamını toparlar; sökülmüş sahne ve bağlam yaşam döngüsü regresyon testli, gerçek Deck uyku kabulü SD8'de açık.
-
-- [x] VOL.TEST çoklu araç çizimi ortak palet dokusu, ayrı namlu ışığı katmanı ve boş yayıcı görünürlüğüyle sınırlandı; yaşam döngüsü ve çizim sırası regresyon testli.
-
-- [x] VOL.TEST ölçüm seçimleri ilgisiz cihaz ayarı değişikliklerinde korunur; kalıcı tercihlerle karışmaz.
-
-- [x] E1 — VOL.TEST girdi yöneticisinin durumu HUD gliflerine gider; paylaşılan yolda ikinci kol yoklaması ve kip hakemi yoktur, regresyon testli.
-- [x] VT6 — Windows NSIS hedefi, ürün kimliği, ikon ve pencere yetenekleri yapılandırma testleriyle kilitli; Windows cihazı ölçülmedi.
-
-- [x] VT-R1 — Kimlikli çoklu araç, sahibi olan mermi ve olay, araç–araç SAT teması ve kimlikle görünüm kaydı; iki araçlı simülasyon ve sahne testleri.
-
-- [x] VT-R4 — Mermi gövdesi, hale ve duman izi; namlu patlaması (ateş topu, yan jetler, toz, basınç halkası); patlama (parlama, şok halkası, parça, toz, duman, yanık); pabuç desenli sürekli palet izi; atışta kamera sarsılmaz, patlama sarsıntısı uzaklıkla söner; CORE GraphicsQuality ile iki kademe. Glow filtresi ölçülüp reddedildi.
-- [x] VT-R3 — Sabit CORE joystick'ler, fren ve hızlanma sütunu; tam ekran yalnız webde ve haritanın altında; minimap'te soluk ızgara; telefon yatayında örtüşmezlik E2E kapısı.
-- [x] VT-R2 — Fren (Space, kol B, dokunmatik düğme) paletleri kilitler; Stribeck statik/kinetik sürtünme, birleşik kayma elipsi, tork sınırlı aktarma ve motor freni; keskin dönüşte drift; 20 s yerde kalan kayma çizgisi; hissiyat zarfına fren, drift ve dönüşte fren ölçüleri eklendi.
-- [x] VT-C — VOL.TEST'teki genel parçalar CORE'a taşındı (`FollowCamera`, açı, gürültü, `ActionEdges`, katı cisim ve temaslar, `VirtualStickSource`, `poseSourceOf`); VOL.TEST hepsini CORE'dan tüketiyor.
-- [x] I1 — `PCController` kare arasında düşen tuş basışını bir okuma boyunca tutar; testli.
-- [x] H1 — `vibrate(desen, şiddet)`: telefonda darbe süresi, kolda motor gücü, native sürücüye şiddet iletilir; testli. Ayrı süre parametresi eklenmedi, şiddet süreyi ölçekler.
-- [x] VT-H — VOL.TEST sertleştirme: katı cisim fiziği (paylaşılan motor gücü, direksiyon önceliği, hıza bağlı dönme direnci), süspansiyon, oyun/UI renk ayrımı, ayarlar tek yerde, titreşim, değişmez + hissiyat + kare hızı testleri, E2E kol ve dokunmatik.
-- [x] VT1 — VOL.TEST oyun çekirdeği: boş çöl dünyası, organik-robotik SVG tank, arachnid kamerası, yalnız CORE bileşenli HUD, klavye/kol/dokunmatik, kapılar ve E2E.
-- [x] VT0 — VOL.TEST analizi ve kapsamı onaylandı; ikon onaylı.
-- [x] Kod yorumlarında bağlam temizliği; bekçi `scripts/quality/contextComments.mjs`.
-- [x] SC — Kök ve repo temizliği; kök girdileri gerekçesiyle kilitli (`scripts/quality/rootEntries.mjs`).
-- [x] SH5 — audio-synth: v1 emekli (K7), kernel katmanı, testler kaynağın aynası, veri corpus/records/locks altında ve yeniden yayımlandı (K6).
-- [x] SH4 — CORE hiyerarşisi: amaçlı dizinler, ui/controls bölündü, stiller grubun yanında, testler kaynağın aynası.
-- [x] SH3 — Deck araçları devtools/deck paketinde; `pnpm deck` oradan koşar.
-- [x] SH2 — `scripts/` amaca göre alt dizinlerde; testler yanında.
-- [x] SH1 — Tek Cargo workspace, tek kilit, tek hedef dizini.
-- [x] S3 — Kalıntı; katalog bekçisi; knip export 94 → 43.
-- [x] S2 — audio-synth sağlamlığı.
-- [x] SD — Deck kol ve kabuk boşlukları, Steamworks, uyku, glif.
-- [x] S1 — Kayıt, kapanış boşaltması ve audio-synth yayını atomik.
-- [x] S0 — Kapılar denetlendi; `pnpm signoff` yeşil.
-- [x] SK — vol-hell ve vol-arachnid arşiv etiketiyle ağaçtan kaldırıldı.
-- [x] K4, K6, K7, K8, K9, K10, K11 — Kararlar verildi (2026-09-30).
-- [x] D3–D8 — Deck girdi, glif, metin girişi, görüntü ve Steamworks katmanları.
-- [x] Deneysel paketler emekliye ayrıldı; mekanizmalar CORE'a taşındı.
-- [x] Büyük ve kritik dosyalar test kanıtına bağlandı.
-- [x] 1000 satır sınırı bütün kaynak türlerinde.
-- [x] Her uygulama kendi ürün kimliğini taşır.
-- [x] Rust push kapısında.
+- [x] Monorepo denetim raporu docs'a yerleştirildi; 20 bulgu, 43 belge kararı ve bütün açık işler F01–F10'a eşlendi.
+- [x] Visual Studio C++ Build Tools kuruldu; güncel doctor/bootstrap doğruluğu F02'de açık.
+- [x] Just kabuğu Git kurulumundan seçilir; WSL gölgesi ortam teşhisinde ayrılır.
+- [x] Üretilmiş Android eklenti API ağacı ignore sözleşmesine bağlandı.
+- [x] Steam Cloud ad ve decoded boyut sınırı regresyonla korundu.
+- [x] Audio yükleme iptal/birleşme ve geç decode yaşam döngüsü testli.
+- [x] VOL.TEST tanısı kalite/senaryo/seed/hava ve CPU aşamalarını kaydeder.
+- [x] Native ses uyanışı kaynak testleri var; fiziksel Deck kabulü F08'de açık.
+- [x] Çoklu araç çizimi, namlu ışığı ve yayıcı görünürlüğü sınırlandı.
+- [x] Ölçüm seçimleri kalıcı cihaz tercihlerinden ayrıldı.
+- [x] E1 — Girdi sunumu tek kol yoklamasını ve kip hakemini tüketir.
+- [x] VT6 — Windows NSIS kimlik/ikon/yetenek yapılandırması testli; native kabul F09'da.
+- [x] VT-R1 — Kimlikli araç/mermi/olay ve SAT teması var; yeni B17/B18 F06'da açık.
+- [x] VT-R2 — Fren/sürtünme/drift/aktarma modeli ve hissiyat zarfı testli.
+- [x] VT-R3 — Joystick/fren/hızlanma/minimap ve mobil örtüşme E2E'si var.
+- [x] VT-R4 — Mermi/patlama/palet izi ve kalite kademeli efektler uygulandı.
+- [x] VT-R5 — Önceki oyun ses setinin kullanıcı dinleme beyanı kaydedildi; yeni üretim şartı değildir.
+- [x] VT-H2 alt kabulü — Kullanıcı dizüstünde görünür pencere ve ekran kilidi sonrası girdi turunu eliyle onayladı; Deck/haptik kalanları F08/F09'da açık.
+- [x] VT4 alt kabulü — İki Android cihazda kurulum/açılış/yatay/tam ekran/joystick/ateş/duraklatma/arka plan/kapanış turu kaydedildi; görünür panel, kısa Samsung dokunuşu ve uzun oturum F09'da açık.
+- [x] VT-C — Genel camera/math/input/physics/pose mekanizmaları CORE'a taşındı.
+- [x] VT-H — Fizik/süspansiyon/renk/ayar/haptik ve oyun sertleştirme uygulandı.
+- [x] VT0/VT1 — VOL.TEST kapsamı, ikon ve oyun çekirdeği kuruldu.
+- [x] B6 — Push audio seçimi diff/import grafiğiyle; belirsizlikte tam takım.
+- [x] Kod yorumu bağlam bekçisi ve bütün kaynaklarda 1000 satır sınırı var.
+- [x] Kök girdileri gerekçeli rootEntries sözleşmesiyle kilitli.
+- [x] Tek Cargo workspace/kilit/hedef; Rust push kapısında.
+- [x] CORE, scripts ve devtools sorumluluk hiyerarşisi kuruldu.
+- [x] Audio-synth kernel/kanonik yayın, kaynak aynası test ve veri ayrımı kuruldu.
+- [x] Deneysel ürünler freeze etiketleriyle emekliye ayrıldı; mekanizmalar korundu.
+- [x] Deck araçları devtools/deck'e taşındı; eski cihaz dağıtım kalıntıları temizlendi.
+- [x] Katalog bekçisi, public yüzey ve büyük/düşük kapsamlı kaynak koruması var.
+- [x] Ürün kimliği/ikon/port ve native plugin sahipliği kapılara bağlandı.
+- [x] Kayıt/kapanış/asset transaction mekanizmaları kuruldu; yeni güvence kusurları F04/F05'te açık.
+- [x] Deck girdi/glif/metin/görüntü/Steamworks katmanları var; gerçek kabul F08'de açık.
+- [x] Önceki kalite kapanışları kaydedildi; güncel signoff başarısızlığı raporda ve F02/F10'da açık.

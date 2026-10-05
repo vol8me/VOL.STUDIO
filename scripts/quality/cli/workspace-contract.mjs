@@ -30,6 +30,7 @@ import { validateRepoAppIdentity } from '../appIdentity.mjs';
 import { validateRepoCatalog } from '../catalog.mjs';
 import { validateRepoRootEntries } from '../rootEntries.mjs';
 import { validateContextComments } from '../contextComments.mjs';
+import { validateDocumentation } from '../documentation.mjs';
 import {
   activeWorkspaceNames,
   listWorkspacePackages,
@@ -106,6 +107,7 @@ problems.push(...validateCoreTypeSurface(root));
 problems.push(...validateRepoCatalog(root));
 problems.push(...validateRepoRootEntries(root));
 problems.push(...validateContextComments(root, undefined, lifecycle));
+problems.push(...validateDocumentation(root, quality.documentation, lifecycle));
 
 for (const pkg of activePackages) {
   const manifest = readJson(join(root, pkg.dir, 'package.json'));

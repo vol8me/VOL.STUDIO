@@ -13,7 +13,7 @@ import { analyzeAudio } from '../../src/analysis/report';
 import { AudioParamError } from '../../src/guard/errors';
 import { renderProgram } from '../../src/program/render';
 import { startAuditionServer } from '../../src/protocol/auditionServer';
-import { validateCanary, validateReviews } from '../../src/protocol/canary';
+import { validateCanary } from '../../src/protocol/canary';
 import { prettyCanonicalJson } from '../../src/kernel/canonical';
 import { ProtocolError } from '../../src/protocol/errors';
 import { validateOrigin } from '../../src/protocol/origin';
@@ -196,19 +196,6 @@ describe('köken, canary ve inceleme belgeleri', () => {
     ['boş başlık', [['title'], ''], 'title type'],
   ] as const)('canary: %s', (_, edit, expected) => {
     expect(code(() => validateCanary(edited(canary, edit as never)))).toBe(expected);
-  });
-
-  it('inceleme belgesi: şema ve durum denetlenir', () => {
-    expect(code(() => validateReviews({ schema: 'X', reviews: {} }))).toBe('schema type');
-    expect(
-      code(() =>
-        validateReviews({
-          schema: 'CanaryReviewsV1',
-          reviews: { a: { status: 'loved', version: 1, note: null } },
-        }),
-      ),
-    ).toBe('reviews.a.status type');
-    expect(validateReviews({ schema: 'CanaryReviewsV1', reviews: {} }).reviews).toEqual({});
   });
 });
 

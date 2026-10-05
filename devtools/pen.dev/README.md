@@ -6,9 +6,9 @@ doğrulayıp tüketiciye gönderen build aracı. Phaser bağımlılığı ve oyu
 
 ## Akış
 
-Pencil kaynağına yalnız MCP araçları erişir. Native Export staging üretir;
-paketin düzenleyicisi staging'i entity ağacına dönüştürür, ardından gönderim
-metadata ile gerçek diski birlikte doğrular.
+Native Export staging üretir; düzenleyici entity ağacını kurar.
+Pencil erişim sınırı [AGENTS](AGENTS.md), veri ve disk sözleşmesi
+[DESIGN](DESIGN.md) içindedir.
 
 Paket dizininden:
 
@@ -19,6 +19,15 @@ node scripts/organize-pen-export.mjs <manifest.json> <stagingDir> [outputRoot]
 Tüketici kendi senkron betiğiyle doğrulanmış metadata ve parça assetlerini
 kendi paketine alır. Gönderim sırasında yollar yeniden yazılır, çalışma
 zamanı için gerekmeyen previews çıkarılır ve hedef fazlalıkları temizlenir.
+
+Tüketici paket dizininden senkron CLI örneği:
+
+```bash
+tsx ../../devtools/pen.dev/scripts/sync-rig.ts <domain> <entityId> \
+  src/assets/rig/<entityId>.metadata.json \
+  public/assets/rig/<entityId>/parts \
+  assets/rig/<entityId>/parts
+```
 
 ## Sahiplik ve yüzey
 

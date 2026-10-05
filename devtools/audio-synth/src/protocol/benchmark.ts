@@ -34,18 +34,11 @@ import { estimateProgramCost, PROGRAM_RENDERER_VERSION } from '../program/render
 import { resolveProgram } from '../program/schema';
 import { writeOgg } from '../writer';
 import { EXPORT_ROOT, writeAuditionCopy } from './audition';
-import {
-  CANARY_AUDITION_ROOT,
-  canaryReviews,
-  loadCanaries,
-  runCanary,
-  type CanaryResultV1,
-  type CanaryReviewStatus,
-} from './canary';
-import { prettyCanonicalJson, type Sha256 } from '../kernel/canonical';
+import { CANARY_AUDITION_ROOT, loadCanaries, runCanary, type CanaryResultV1 } from './canary';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
 import { encodeQualityOf } from './encodeProfiles';
 import { ProtocolError } from './errors';
-import { readJsonFile, resolveInside, withLock, writeFileAtomic } from './fs';
+import { readJsonFile, resolveInside } from './fs';
 import { checkMusic } from './music';
 import { runTasks } from './parallel';
 import type { BenchmarkPartInput, BenchmarkPartOutput } from './parallelTasks';
@@ -54,24 +47,10 @@ import { asProtocol } from './records';
 import { repoSampleResolver } from './samples';
 import { decodeWithFfmpeg } from './toolchain';
 
-/**
- * Sürümlü benchmark görev derlemi — canary'nin kardeş şeması (canary V2
- * DEĞİL): canary tek kaynaklı organik yapı taşı görevidir; benchmark görevi
- * birden çok parça (UI onay/hata gibi), yetenek kategorisi, gömülü müzik
- * kaynağı ve kodek-sonrası/QA kriterleri taşır. İki şema ayrı sürümlenir:
- * bir görev eklemek organik derlemi etkilemez, bir canary sürümü görev
- * raporunu değiştirmez.
- *
- * Mekanik kriterlerin geçmesi "iyi ses" kanıtı DEĞİLDİR — yalnız motor
- * davranışının gerilemediğini söyler. Dinleme durumu ayrı `reviews.json`da
- * ve yalnız insan beyanıyla `pending-human` dışına çıkar.
- */
 export const BENCHMARK_SCHEMA = 'BenchmarkTaskV1';
-export const BENCHMARK_REVIEWS_SCHEMA = 'BenchmarkReviewsV1';
-export const BENCHMARK_REPORT_SCHEMA = 'BenchmarkReportV1';
+export const BENCHMARK_REPORT_SCHEMA = 'BenchmarkReportV2';
 export const BENCHMARKS_ROOT = 'devtools/audio-synth/corpus/benchmarks';
 export const BENCHMARK_AUDITION_ROOT = `${EXPORT_ROOT}/benchmarks`;
-const REVIEWS_FILE = 'reviews.json';
 const ID = /^[a-z][a-z0-9-]{0,47}$/;
 
 const EXTENDED_KINDS = ['codec-loop-seam', 'codec-stem-sync', 'music-qa', 'bar-align'] as const;
@@ -79,7 +58,6 @@ const MUSIC_ONLY_KINDS = ['music-qa', 'bar-align'] as const;
 
 type ExtendedCheckV1 = { readonly kind: (typeof EXTENDED_KINDS)[number] };
 export type BenchmarkCheckV1 = MechanicalCheckV1 | ExtendedCheckV1;
-export type BenchmarkReviewStatus = CanaryReviewStatus;
 
 export type BenchmarkSourceV1 =
   | ProgramBaseV1
@@ -101,17 +79,6 @@ export interface BenchmarkTaskV1 {
   readonly category: string;
   readonly parts: readonly BenchmarkPartV1[];
   readonly listeningGuide: readonly string[];
-}
-
-export interface BenchmarkReviewV1 {
-  readonly status: BenchmarkReviewStatus;
-  readonly version: number;
-  readonly note: string | null;
-}
-
-export interface BenchmarkReviewsV1 {
-  readonly schema: typeof BENCHMARK_REVIEWS_SCHEMA;
-  readonly reviews: Readonly<Record<string, BenchmarkReviewV1>>;
 }
 
 function text(value: unknown, path: string, max: number): string {
@@ -204,6 +171,14 @@ function checkPart(value: unknown, path: string): BenchmarkPartV1 {
 }
 
 export function validateBenchmarkTask(value: unknown): BenchmarkTaskV1 {
+  if ((value as { schema?: unknown } | null)?.schema !== BENCHMARK_SCHEMA) {
+    throw new AudioParamError(
+      'schema',
+      'type',
+      `"${BENCHMARK_SCHEMA}" olmalı`,
+      (value as { schema?: unknown } | null)?.schema,
+    );
+  }
   const o = checkObject(value, '', [
     'schema',
     'id',
@@ -214,8 +189,6 @@ export function validateBenchmarkTask(value: unknown): BenchmarkTaskV1 {
     'parts',
     'listeningGuide',
   ]);
-  if (o.schema !== BENCHMARK_SCHEMA)
-    throw new AudioParamError('schema', 'type', `"${BENCHMARK_SCHEMA}" olmalı`, o.schema);
   if (typeof o.id !== 'string' || !ID.test(o.id))
     throw new AudioParamError('id', 'type', ID.source, o.id);
   if (typeof o.category !== 'string' || !ID.test(o.category))
@@ -257,7 +230,7 @@ export function loadBenchmarkTasks(repoRoot: string): BenchmarkTaskV1[] {
   const dir = resolveInside(repoRoot, BENCHMARKS_ROOT, 'benchmarks');
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
-    .filter((name) => name.endsWith('.json') && name !== REVIEWS_FILE)
+    .filter((name) => name.endsWith('.json'))
     .sort()
     .map((name) => {
       const task = asProtocol(name, () =>
@@ -284,20 +257,18 @@ export interface BenchmarkPartResultV1 {
   readonly checks: readonly CheckOutcomeV1[];
 }
 
-export interface BenchmarkTaskResultV1 {
+export interface BenchmarkTaskResultV2 {
   readonly id: string;
   readonly version: number;
   readonly category: string;
   readonly pass: boolean;
   readonly parts: readonly BenchmarkPartResultV1[];
-  readonly review: BenchmarkReviewStatus;
+  readonly sourceHash: Sha256;
 }
 
-export interface BenchmarkCanaryEntryV1 extends CanaryResultV1 {
-  readonly review: BenchmarkReviewStatus;
-}
+export type BenchmarkCanaryEntryV2 = CanaryResultV1 & { readonly sourceHash: Sha256 };
 
-export interface BenchmarkReportV1 {
+export interface BenchmarkReportV2 {
   readonly schema: typeof BENCHMARK_REPORT_SCHEMA;
   readonly engine: {
     readonly programRenderer: number;
@@ -307,8 +278,8 @@ export interface BenchmarkReportV1 {
     readonly registryHash: Sha256;
     readonly instrumentRegistryHash: Sha256;
   };
-  readonly canaries: readonly BenchmarkCanaryEntryV1[];
-  readonly tasks: readonly BenchmarkTaskResultV1[];
+  readonly canaries: readonly BenchmarkCanaryEntryV2[];
+  readonly tasks: readonly BenchmarkTaskResultV2[];
 }
 
 const outcomeOf = (r: CheckResult): CheckOutcomeV1 => ({
@@ -472,9 +443,8 @@ export interface BenchmarkRunOptions {
 export function runBenchmarks(
   repoRoot: string,
   options: BenchmarkRunOptions = {},
-): BenchmarkReportV1 {
+): BenchmarkReportV2 {
   const tasks = loadBenchmarkTasks(repoRoot);
-  const reviews = benchmarkReviews(repoRoot);
   const dir = mkdtempSync(join(tmpdir(), 'benchmark-'));
   try {
     const acoustic: AcousticWork[] = [];
@@ -517,7 +487,7 @@ export function runBenchmarks(
       batchWorkers(estimate, options.workers),
     );
     const byKey = new Map(outputs.map((o) => [o.key, o]));
-    const results: BenchmarkTaskResultV1[] = [];
+    const results: BenchmarkTaskResultV2[] = [];
     for (const task of tasks) {
       const parts: BenchmarkPartResultV1[] = [];
       for (const part of task.parts) {
@@ -557,17 +527,15 @@ export function runBenchmarks(
           });
         }
       }
-      const review = reviews.find((r) => r.id === task.id)?.status ?? 'pending-human';
       results.push({
         id: task.id,
         version: task.version,
         category: task.category,
+        sourceHash: hashCanonical(task),
         pass: parts.every((p) => p.checks.every((c) => c.pass)),
         parts,
-        review,
       });
     }
-    const canaryStates = canaryReviews(repoRoot);
     const samples = repoSampleResolver(repoRoot);
     const canaries = loadCanaries(repoRoot).map((canary) => {
       const { result, render } = runCanary(canary, samples);
@@ -576,10 +544,10 @@ export function runBenchmarks(
       }
       return {
         ...result,
-        review: canaryStates.find((r) => r.id === canary.id)?.status ?? 'pending-human',
+        sourceHash: hashCanonical(canary),
       };
     });
-    return {
+    const report: BenchmarkReportV2 = {
       schema: BENCHMARK_REPORT_SCHEMA,
       engine: {
         programRenderer: PROGRAM_RENDERER_VERSION,
@@ -592,77 +560,106 @@ export function runBenchmarks(
       canaries,
       tasks: results,
     };
+    freshReports.set(report, hashCanonical(report));
+    return report;
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 }
 
-function validateBenchmarkReviews(value: unknown): BenchmarkReviewsV1 {
-  const o = checkObject(value, 'reviews', ['schema', 'reviews']);
-  if (o.schema !== BENCHMARK_REVIEWS_SCHEMA)
-    throw new AudioParamError('schema', 'type', `"${BENCHMARK_REVIEWS_SCHEMA}" olmalı`, o.schema);
-  const raw = checkObject(o.reviews, 'reviews', Object.keys((o.reviews as object) ?? {}));
-  const reviews: Record<string, BenchmarkReviewV1> = {};
-  for (const id of Object.keys(raw).sort()) {
-    const r = checkObject(raw[id], `reviews.${id}`, ['status', 'version', 'note']);
-    const status = checkChoice(r.status, `reviews.${id}.status`, [
-      'pending-human',
-      'heard-acceptable',
-      'heard-problem',
-    ] as const);
-    if (status !== 'pending-human' && r.note === null) {
-      throw new AudioParamError(`reviews.${id}.note`, 'required', 'dinleme beyanı not ister', null);
-    }
-    reviews[id] = {
-      status,
-      version: checkNumber(r.version, `reviews.${id}.version`, { min: 1, integer: true }),
-      note: r.note === null ? null : text(r.note, `reviews.${id}.note`, 1000),
-    };
+const freshReports = new WeakMap<BenchmarkReportV2, Sha256>();
+
+/** Diskten gelen veya koşudan sonra değiştirilmiş kayıt güncel koşu kanıtı değildir. */
+export function isFreshBenchmarkReport(report: BenchmarkReportV2): boolean {
+  return freshReports.get(report) === hashCanonical(report);
+}
+
+/** Kayıtlı rapor okunabilir bilgidir; doğrulamak ona güncel koşu yetkisi vermez. */
+export function validateBenchmarkReport(value: unknown): BenchmarkReportV2 {
+  const o = checkObject(value, 'report', ['schema', 'engine', 'canaries', 'tasks']);
+  if (o.schema !== BENCHMARK_REPORT_SCHEMA) {
+    throw new ProtocolError('invalid', `${BENCHMARK_REPORT_SCHEMA} rapor sürümü gerekir`, 'schema');
   }
-  return { schema: BENCHMARK_REVIEWS_SCHEMA, reviews };
-}
-
-export interface BenchmarkReviewState extends BenchmarkReviewV1 {
-  readonly id: string;
-  readonly stale: boolean;
-}
-
-export function benchmarkReviews(repoRoot: string): BenchmarkReviewState[] {
-  const file = benchmarkFile(repoRoot, REVIEWS_FILE);
-  const stored = existsSync(file)
-    ? validateBenchmarkReviews(readJsonFile(file, REVIEWS_FILE)).reviews
-    : {};
-  return loadBenchmarkTasks(repoRoot).map((t) => {
-    const r = stored[t.id];
-    if (!r)
-      return { id: t.id, status: 'pending-human', version: t.version, note: null, stale: false };
-    const stale = r.version !== t.version;
-    return { id: t.id, ...r, status: stale ? 'pending-human' : r.status, stale };
-  });
-}
-
-/** İnsan dinleme beyanını kaydeder (yalnız bu komutla; agent kendi dinlemesini yazamaz). */
-export function recordBenchmarkReview(
-  repoRoot: string,
-  id: string,
-  status: BenchmarkReviewStatus,
-  note: string | null,
-): BenchmarkReviewsV1 {
-  const task = loadBenchmarkTasks(repoRoot).find((t) => t.id === id);
-  if (!task) throw new ProtocolError('not-found', `benchmark görevi yok: ${id}`, BENCHMARKS_ROOT);
-  const dir = resolveInside(repoRoot, BENCHMARKS_ROOT, 'benchmarks');
-  return withLock(dir, BENCHMARKS_ROOT, () => {
-    const file = benchmarkFile(repoRoot, REVIEWS_FILE);
-    const current = existsSync(file)
-      ? validateBenchmarkReviews(readJsonFile(file, REVIEWS_FILE)).reviews
-      : {};
-    const next = asProtocol('review', () =>
-      validateBenchmarkReviews({
-        schema: BENCHMARK_REVIEWS_SCHEMA,
-        reviews: { ...current, [id]: { status, version: task.version, note } },
-      }),
-    );
-    writeFileAtomic(file, prettyCanonicalJson(next));
-    return next;
-  });
+  const engine = checkObject(o.engine, 'engine', [
+    'programRenderer',
+    'musicRenderer',
+    'analyzer',
+    'checks',
+    'registryHash',
+    'instrumentRegistryHash',
+  ]);
+  for (const field of ['programRenderer', 'musicRenderer', 'analyzer', 'checks']) {
+    checkNumber(engine[field], `engine.${field}`, { min: 0, integer: true });
+  }
+  const hash = (value: unknown, path: string) => {
+    if (typeof value !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(value)) {
+      throw new AudioParamError(path, 'type', 'sha256 kimliği', value);
+    }
+  };
+  hash(engine.registryHash, 'engine.registryHash');
+  hash(engine.instrumentRegistryHash, 'engine.instrumentRegistryHash');
+  const checks = (value: unknown, path: string): boolean => {
+    return checkArray(value, path)
+      .map((value, i) => {
+        const c = checkObject(value, `${path}[${i}]`, ['kind', 'pass', 'measured', 'reason']);
+        text(c.kind, `${path}[${i}].kind`, 80);
+        if (typeof c.pass !== 'boolean' || (c.reason !== null && typeof c.reason !== 'string')) {
+          throw new AudioParamError(path, 'type', 'geçerli kontrol sonucu', value);
+        }
+        return c.pass;
+      })
+      .every(Boolean);
+  };
+  for (const kind of ['canaries', 'tasks'] as const) {
+    const ids = new Set<string>();
+    for (const [i, value] of checkArray(o[kind], kind).entries()) {
+      const path = `${kind}[${i}]`;
+      const fields =
+        kind === 'tasks'
+          ? ['id', 'version', 'category', 'pass', 'sourceHash', 'parts']
+          : ['id', 'version', 'programHash', 'pcmHash', 'pass', 'checks', 'sourceHash'];
+      const row = checkObject(value, path, fields);
+      const id = text(row.id, `${path}.id`, 48);
+      if (ids.has(id)) throw new ProtocolError('identity', 'yinelenen kimlik', path);
+      ids.add(id);
+      checkNumber(row.version, `${path}.version`, { min: 1, integer: true });
+      hash(row.sourceHash, `${path}.sourceHash`);
+      let pass: boolean;
+      if (kind === 'tasks') {
+        text(row.category, `${path}.category`, 48);
+        const parts = checkArray(row.parts, `${path}.parts`);
+        if (parts.length === 0)
+          throw new AudioParamError(`${path}.parts`, 'range', 'en az bir parça', 0);
+        pass = parts
+          .map((value, j) => {
+            const partPath = `${path}.parts[${j}]`;
+            const part = checkObject(value, partPath, [
+              'id',
+              'source',
+              'programHash',
+              'pcmHash',
+              'checks',
+            ]);
+            text(part.id, `${partPath}.id`, 48);
+            checkChoice(part.source, `${partPath}.source`, ['acoustic', 'music'] as const);
+            hash(part.programHash, `${partPath}.programHash`);
+            hash(part.pcmHash, `${partPath}.pcmHash`);
+            return checks(part.checks, `${partPath}.checks`);
+          })
+          .every(Boolean);
+      } else {
+        hash(row.programHash, `${path}.programHash`);
+        hash(row.pcmHash, `${path}.pcmHash`);
+        pass = checks(row.checks, `${path}.checks`);
+      }
+      if (row.pass !== pass)
+        throw new AudioParamError(
+          `${path}.pass`,
+          'combination',
+          'kontrollerle tutarlı sonuç',
+          row.pass,
+        );
+    }
+  }
+  return value as BenchmarkReportV2;
 }

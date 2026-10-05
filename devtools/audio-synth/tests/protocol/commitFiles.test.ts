@@ -1,5 +1,4 @@
 import {
-  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -37,7 +36,6 @@ function layout() {
 }
 afterEach(() => {
   for (const root of roots.splice(0)) {
-    chmodSync(join(root, 'manifests'), 0o755);
     rmSync(root, { recursive: true, force: true });
   }
 });
@@ -55,19 +53,20 @@ describe('commitFiles', () => {
     expect(readFileSync(manifest, 'utf8')).toBe('{"v":2}');
   });
 
-  it('manifest yerleşemezse asset eski hâline döner, artık kalmaz', () => {
+  it('yedek ayrılamazsa hedefler değişmez, ayrılan yedekler temizlenir', () => {
     const { root, asset, manifest, stage } = layout();
     writeFileSync(asset, 'eski-ses');
     writeFileSync(manifest, '{"v":1}');
     const files = [
       { staged: stage('a.ogg', 'yeni-ses'), target: asset },
       { staged: stage('a.json', '{"v":2}'), target: manifest },
+      { staged: stage('invalid.json', '{}'), target: join(root, 'manifests') },
     ];
-    chmodSync(join(root, 'manifests'), 0o555);
     expect(() => commitFiles(files)).toThrow();
     expect(readFileSync(asset, 'utf8')).toBe('eski-ses');
     expect(readFileSync(manifest, 'utf8')).toBe('{"v":1}');
     expect(leftovers(join(root, 'public'))).toEqual([]);
+    expect(leftovers(join(root, 'manifests'))).toEqual([]);
   });
 
   it('asset yerleştikten sonra manifest düşerse asset geri döner', () => {
@@ -89,14 +88,17 @@ describe('commitFiles', () => {
   });
 
   it('ilk yayında manifest yerleşemezse yeni asset geri alınır', () => {
-    const { root, asset, manifest, stage } = layout();
+    const { root, asset, stage } = layout();
+    const blocked = join(root, 'blocked');
+    writeFileSync(blocked, 'dizin değil');
+    const manifest = join(blocked, 'a.json');
     const files = [
       { staged: stage('a.ogg', 'yeni-ses'), target: asset },
       { staged: stage('a.json', '{"v":1}'), target: manifest },
     ];
-    chmodSync(join(root, 'manifests'), 0o555);
     expect(() => commitFiles(files)).toThrow();
     expect(existsSync(asset)).toBe(false);
+    expect(leftovers(join(root, 'public'))).toEqual([]);
   });
 });
 
@@ -126,8 +128,10 @@ describe('writeAllSync / writeFileAtomic', () => {
     expect(() => fsyncDir(join(root, 'out'))).not.toThrow();
   });
 
-  it('olmayan dizinin fsync hatası yutulmaz', () => {
+  it('Windows dizin fsync desteklemez; POSIX olmayan dizin hatasını korur', () => {
     const { root } = layout();
-    expect(() => fsyncDir(join(root, 'yok'))).toThrow(/ENOENT/);
+    const syncMissing = () => fsyncDir(join(root, 'yok'));
+    if (process.platform === 'win32') expect(syncMissing).not.toThrow();
+    else expect(syncMissing).toThrow(/ENOENT/);
   });
 });

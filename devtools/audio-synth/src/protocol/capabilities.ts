@@ -1,39 +1,24 @@
-/**
- * QualityMatrixV1 — `audio:capabilities` çıktısı. Ontolojinin kapalı
- * mekanizma sözlüğünün her satırı için motorun KANITLANMIŞ seviyesini
- * türetir: registry'de sağlayıcı var demek yetmez; seviye, sürümlü
- * benchmark görevleri ve organik canary kayıtlarından (BenchmarkReportV1)
- * mekanik olarak okunur.
- *
- * Kapsam türetmesi de kayıttan gelir: bir görev/canary, kaynak programında
- * mekanizmanın `providers` kimliğinden en az birini kullanıyorsa (ya da
- * katman `mechanism` etiketini taşıyorsa) o mekanizmanın kanıtıdır. Elle
- * yazılmış aile↔görev tablosu yoktur; yeni görev ya da sağlayıcı matrise
- * kendiliğinden düşer.
- *
- * Seviyeler: `production-ready` = geçen benchmark kanıtı VE kategoriyi
- * kapsayan doğrulanmış yayımlanmış manifest VE güncel görev sürümü için
- * insan `heard-acceptable` beyanı; `benchmarked` = geçen benchmark kanıtı
- * var ama yayın ya da kabul kanıtı eksik (mekanik geçiş, üretim onayı
- * değil); `canary` = yalnız geçen canary kanıtı; `regressed` = kanıt var
- * ama hepsi düşüyor; `research` = sağlayıcı registry'de var, render
- * kanıtı yok; `pipeline` = ayrı üretim hattı (MusicProgramV1) henüz
- * kanıtlanmadı; `unsupported` = sağlayıcısız. Görev sürümü artınca eski
- * sürüme yapılmış kabul bayatlar ve raporda `pending-human` görünür —
- * statü kendiliğinden düşer. İnsan dinleme durumu satırda ayrıca taşınır.
- */
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { MECHANISMS, ONTOLOGY_VERSION, type MechanismV1 } from '../program/ontology';
 import type { ProgramBaseV1 } from '../program/dimensions';
 import type { AcousticProgramV1 } from '../program/schema';
 import type { LayerRole } from '../program/roles';
-import { loadBenchmarkTasks, type BenchmarkReportV1, type BenchmarkTaskV1 } from './benchmark';
+import {
+  isFreshBenchmarkReport,
+  BENCHMARK_REPORT_SCHEMA,
+  loadBenchmarkTasks,
+  type BenchmarkReportV2,
+  type BenchmarkTaskV1,
+} from './benchmark';
 import { loadCanaries, type OrganicCanaryV1 } from './canary';
 import { readJsonFile } from './fs';
+import { hashCanonical, type Sha256 } from '../kernel/canonical';
+import { ProtocolError } from './errors';
+import { verifyManifest } from './publish';
 import { surveyTargets } from './targets';
 
-export const QUALITY_MATRIX_SCHEMA = 'QualityMatrixV1';
+export const QUALITY_MATRIX_SCHEMA = 'QualityMatrixV2';
 
 export type CapabilityLevel =
   | 'production-ready'
@@ -44,40 +29,36 @@ export type CapabilityLevel =
   | 'pipeline'
   | 'unsupported';
 
-export type CapabilityListening = 'heard-acceptable' | 'heard-problem' | 'pending-human' | 'none';
-
-export interface CapabilityEvidenceV1 {
+export interface CapabilityEvidenceV2 {
   readonly kind: 'benchmark' | 'canary';
   readonly id: string;
   readonly version: number;
   readonly pass: boolean;
-  readonly review: CapabilityListening;
 }
 
-/** Yayımlanmış bir manifest'in (kanonik kapıdan geçmiş kayıt) kapsadığı tag kümesi. */
+/** Keşfedilmiş yayın kaynağının etiketleri; üretim için türetme anında doğrulanır. */
 export interface PublishedRefV1 {
   readonly manifest: string;
   readonly tags: ReadonlySet<string>;
 }
 
-export interface CapabilityRowV1 {
+export interface CapabilityRowV2 {
   readonly mechanism: string;
   readonly role: LayerRole;
   readonly description: string;
   readonly level: CapabilityLevel;
   readonly providers: readonly string[];
-  readonly evidence: readonly CapabilityEvidenceV1[];
+  readonly evidence: readonly CapabilityEvidenceV2[];
   /** Kategoriyi kapsayan doğrulanmış yayımlanmış manifestler. */
   readonly published: readonly string[];
-  readonly listening: CapabilityListening;
 }
 
-export interface QualityMatrixV1 {
+export interface QualityMatrixV2 {
   readonly schema: typeof QUALITY_MATRIX_SCHEMA;
   readonly ontology: number;
-  readonly engine: BenchmarkReportV1['engine'];
+  readonly engine: BenchmarkReportV2['engine'];
   readonly counts: Readonly<Record<CapabilityLevel, number>>;
-  readonly rows: readonly CapabilityRowV1[];
+  readonly rows: readonly CapabilityRowV2[];
 }
 
 /** Program kaynağında anılan registry kimlikleri + bildirilmiş mekanizma etiketleri. */
@@ -121,22 +102,15 @@ function covers(mechanism: MechanismV1, tags: ReadonlySet<string>): boolean {
   return (mechanism.pipelines ?? []).some((p) => tags.has(`pipeline:${p}`));
 }
 
-function listeningOf(evidence: readonly CapabilityEvidenceV1[]): CapabilityListening {
-  if (evidence.some((e) => e.review === 'heard-problem')) return 'heard-problem';
-  if (evidence.some((e) => e.review === 'pending-human')) return 'pending-human';
-  if (evidence.some((e) => e.review === 'heard-acceptable')) return 'heard-acceptable';
-  return 'none';
-}
-
 function levelOf(
   mechanism: MechanismV1,
-  evidence: readonly CapabilityEvidenceV1[],
+  evidence: readonly CapabilityEvidenceV2[],
   published: readonly string[],
+  fresh: boolean,
 ): CapabilityLevel {
   const benches = evidence.filter((e) => e.kind === 'benchmark' && e.pass);
   if (benches.length > 0) {
-    const accepted = benches.some((e) => e.review === 'heard-acceptable');
-    if (accepted && published.length > 0) return 'production-ready';
+    if (fresh && published.length > 0) return 'production-ready';
     return 'benchmarked';
   }
   if (evidence.some((e) => e.kind === 'canary' && e.pass)) return 'canary';
@@ -148,19 +122,28 @@ function levelOf(
 export interface QualityMatrixInput {
   readonly tasks: readonly BenchmarkTaskV1[];
   readonly canaries: readonly OrganicCanaryV1[];
-  readonly report: BenchmarkReportV1;
+  readonly report: BenchmarkReportV2;
   readonly mechanisms?: readonly MechanismV1[];
-  /** Doğrulanmış yayımlanmış referanslar; verilmezse hiçbir satır production-ready olamaz. */
+  /** loadPublishedReferences çıktısı; verilmezse üretim seviyesine çıkılmaz. */
   readonly published?: readonly PublishedRefV1[];
 }
 
-/** Saf türetme: görev/canary kaynakları + koşu kaydı → seviye matrisi. */
-export function deriveQualityMatrix(input: QualityMatrixInput): QualityMatrixV1 {
+/** Görev/canary kaydı ve güncel yayın doğrulamasından seviye türetir. */
+export function deriveQualityMatrix(input: QualityMatrixInput): QualityMatrixV2 {
+  if (String(input.report.schema) !== BENCHMARK_REPORT_SCHEMA) {
+    throw new ProtocolError('invalid', `${BENCHMARK_REPORT_SCHEMA} rapor sürümü gerekir`, 'schema');
+  }
+  const fresh = isFreshBenchmarkReport(input.report);
+  const verified = new Map<PublishedRefV1, boolean>();
+  const currentPublication = (ref: PublishedRefV1): boolean => {
+    if (!verified.has(ref)) verified.set(ref, verifyReference(ref));
+    return verified.get(ref) === true;
+  };
   const mechanisms = input.mechanisms ?? MECHANISMS;
   const taskTagsBy = new Map(input.tasks.map((t) => [t.id, taskTags(t)]));
   const canaryTagsBy = new Map(input.canaries.map((c) => [c.id, baseTags(c.source)]));
   const rows = mechanisms.map((mechanism) => {
-    const evidence: CapabilityEvidenceV1[] = [];
+    const evidence: CapabilityEvidenceV2[] = [];
     for (const task of input.report.tasks) {
       const tags = taskTagsBy.get(task.id);
       if (tags !== undefined && covers(mechanism, tags)) {
@@ -168,8 +151,14 @@ export function deriveQualityMatrix(input: QualityMatrixInput): QualityMatrixV1 
           kind: 'benchmark',
           id: task.id,
           version: task.version,
-          pass: task.pass,
-          review: task.review,
+          pass:
+            task.pass &&
+            input.tasks.some(
+              (t) =>
+                t.id === task.id &&
+                t.version === task.version &&
+                hashCanonical(t) === task.sourceHash,
+            ),
         });
       }
     }
@@ -180,8 +169,14 @@ export function deriveQualityMatrix(input: QualityMatrixInput): QualityMatrixV1 
           kind: 'canary',
           id: canary.id,
           version: canary.version,
-          pass: canary.pass,
-          review: canary.review,
+          pass:
+            canary.pass &&
+            input.canaries.some(
+              (c) =>
+                c.id === canary.id &&
+                c.version === canary.version &&
+                hashCanonical(c) === canary.sourceHash,
+            ),
         });
       }
     }
@@ -191,18 +186,17 @@ export function deriveQualityMatrix(input: QualityMatrixInput): QualityMatrixV1 
         (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
     );
     const published = (input.published ?? [])
-      .filter((ref) => covers(mechanism, ref.tags))
+      .filter((ref) => covers(mechanism, ref.tags) && currentPublication(ref))
       .map((ref) => ref.manifest)
       .sort();
     return {
       mechanism: mechanism.id,
       role: mechanism.role,
       description: mechanism.description,
-      level: levelOf(mechanism, evidence, published),
+      level: levelOf(mechanism, evidence, published, fresh),
       providers: [...mechanism.providers].sort(),
       evidence,
       published,
-      listening: listeningOf(evidence),
     };
   });
   const counts: Record<CapabilityLevel, number> = {
@@ -224,15 +218,29 @@ export function deriveQualityMatrix(input: QualityMatrixInput): QualityMatrixV1 
   };
 }
 
-/**
- * `reference/production/manifests/**` altındaki yayımlanmış manifestleri
- * okur; her biri `asset` + `analysis.encoded` kaydı taşımak zorundadır —
- * bu kayıt yalnız kanonik yayın kapısından geçen (yeniden render + encode
- * + post-codec QA) çıktıda vardır. Sürekli doğrulama `audio:verify`'nin
- * işidir; burada manifest kapının yazdığı kayıt sayılır. Müzik
- * manifestleri `pipeline:MusicProgramV1` etiketi üretir; akustik
- * manifestler program düğümlerinin sağlayıcı kimliklerini taşır.
- */
+const discoveredReferences = new WeakMap<
+  PublishedRefV1,
+  { hash: Sha256; repoRoot: string; manifestHash: Sha256 }
+>();
+const referenceHash = (ref: PublishedRefV1) =>
+  hashCanonical({ manifest: ref.manifest, tags: [...ref.tags].sort() });
+
+function verifyReference(ref: PublishedRefV1): boolean {
+  const proof = discoveredReferences.get(ref);
+  if (!proof || proof.hash !== referenceHash(ref)) return false;
+  try {
+    const current = readJsonFile(join(proof.repoRoot, ref.manifest), ref.manifest);
+    return (
+      hashCanonical(current) === proof.manifestHash &&
+      verifyManifest(proof.repoRoot, ref.manifest).ok
+    );
+  } catch (error) {
+    if (!(error instanceof ProtocolError)) throw error;
+    return false;
+  }
+}
+
+/** Referansları keşfeder; üretim kanıtı türetme anındaki bağımsız verify sonucudur. */
 export function loadPublishedReferences(repoRoot: string): readonly PublishedRefV1[] {
   const refs: PublishedRefV1[] = [];
   for (const target of surveyTargets(repoRoot).publishable) {
@@ -271,12 +279,18 @@ export function loadPublishedReferences(repoRoot: string): readonly PublishedRef
         for (const t of programTags(doc as AcousticProgramV1)) tags.add(t);
       } else if ('music' in doc || 'stem' in doc) tags.add('pipeline:MusicProgramV1');
     }
-    return { manifest, tags };
+    const ref = { manifest, tags };
+    discoveredReferences.set(ref, {
+      hash: referenceHash(ref),
+      repoRoot,
+      manifestHash: hashCanonical(raw),
+    });
+    return ref;
   }
 }
 
 /** Fixture'ları diskten okuyup rapora bağlayan kolaylık sarmalayıcısı. */
-export function qualityMatrix(repoRoot: string, report: BenchmarkReportV1): QualityMatrixV1 {
+export function qualityMatrix(repoRoot: string, report: BenchmarkReportV2): QualityMatrixV2 {
   return deriveQualityMatrix({
     tasks: loadBenchmarkTasks(repoRoot),
     canaries: loadCanaries(repoRoot),

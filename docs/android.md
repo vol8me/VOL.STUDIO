@@ -14,7 +14,8 @@ korur (yön, `appCategory`, `VIBRATE` izni, geri çağrısı, tam ekran, kimlik)
 
 ## Build
 
-JDK 21 LTS gerekir.
+JDK 21 LTS gerekir. Windows araç/bootstrap kurulumu
+[Windows](windows.md) belgesindedir; aşağıdaki ortam örneği Linux içindir.
 
 ```bash
 export ANDROID_HOME="$HOME/Android/Sdk"
@@ -69,7 +70,7 @@ eklenti paylaşılan kabukta değil, onu kullanan uygulamanın
 uygulama açılışta eklenti sınıfını bulamaz. Eklenti crate'i kök Cargo
 workspace'inin üyesidir ve kökteki tek kilitle derlenir.
 
-## VOL.TEST cihaz referansı
+## Ölçülmüş VOL.TEST referansı
 
 Lenovo TB350FU, Android 14 native WebView ve Mali-G57 MC2; CSS alanı
 1569×941, DPR 1,275. Senaryolar düşük kalitede aynı cihaz ve aynı ölçüm
@@ -119,22 +120,16 @@ birikim katmanı görünmezken 109,6 FPS. Model ve parçacık güncellemesi çal
 devam etti. Bu deney yağış çiziminin kalan maliyetini ayırır; görsel kaliteyi
 düşürme veya bütün cihazlar için optimizasyon kararı değildir.
 
-Son ses yükleme düzeltmesiyle yeniden kurulan APK'nın ayrı 4 saniyelik
-beş senaryo duman testi 118–120 FPS ve p95 8,4 ms verdi. Oyun yüksek kalite,
-boş dünya ve devam eden oturum durumuna geri getirildi.
-
 Native titreşim durum sorgusu destek bildirdi; geçerli desen kabul edildi,
 geçersiz desen reddedildi. Motorun fiziksel hissi insan doğrulaması ister.
-Samsung bu ölçümde erişilebilir değildi; ölçülmedi. Ses dinleme ve kontrol
-hissiyatı insan kabulü olarak ayrı kalır.
+Samsung bu ölçümde erişilebilir değildi; ölçülmedi. Kontrol ve titreşim hissiyatı gerçek insan kabulü olarak ayrı kalır;
+ses yayını teknik QA, runtime decode/çıkış ise hedef cihaz doğrulamasıdır.
 
-## Yeniden kurulan APK ile cihaz turu
+## Fiziksel kabulün kanıt sınırı
 
-İki Android cihazı adb ile yeniden doğrulandı; üretici, Android sürümü ve SDK
-anonimleştirilmiş olarak yazılır, seri ve model kimliği belgeye girmez.
-Kurulum, açılış, yatay yön, tam ekran, HUD, sol joystick sürüşü, sağ joystick
-nişanı, ateş barı, duraklat/devam, arka plana alma-dönüş ve kapanışta kayıt her
-iki cihazda da ekran görüntüsüyle doğrulandı. `device-benchmark` her iki
+İki Android profilindeki ekran görüntüsü referansı kurulum/açılış, yatay
+HUD, joystick sürüş/nişan, ateş, duraklat/devam, arka plan dönüşü ve kayıt
+akışını kapsar. Seri numarası, adres ve kullanıcı kimliği repoya girmez. `device-benchmark` her iki
 cihazda da native Activity süresini "oyun FPS'i" diye yazmaz; app-private
 `diagnostics.jsonl` kaydı olmadığı için oyun FPS'i, oyuna hazır zamanı, ilk
 fiziksel sunum ve renderer `bilinmiyor` olarak kalır.
@@ -145,13 +140,12 @@ koordinatlarda iç bölge (deadzone üstü ama giriş eşiği altı) patlamasın
 25 karenin tamamında tam kaldı. Samsung'da aynı ölçüm sentetik sabit basışla
 tekrarlanamadı: bu cihazda `adb input` sabit basışta oyunun örneklediği bir
 `pointermove` üretmiyor; merkezden rim'e sürükleme ile ateş doğrulandı
-(bar tükendi, mermi göründü), 60–100 ms sürüklemeler yetersiz kaldı. Bu bir
-cihaz kabulü eksikliği değil, enjeksiyon sınırıdır; Samsung'da kısa basışın
-insan parmağıyla kabulü açık kalır.
+(bar tükendi, mermi göründü), 60–100 ms sürüklemeler yetersiz kaldı. Enjeksiyon sınırı fiziksel kısa basış kabulünü kanıtlamaz;
+Samsung'da insan parmağıyla kabul açık kalır.
 
 Cihazlarda ölçülen tek sayı HUD FPS göstergesinin tek anlık okumasıdır;
 ölçüm penceresi değildir. Uzun oturum bütçesi, kar/çoklu tank yükü ve
-titreşim hissi bu turda yeniden ölçülmedi.
+titreşim hissi yeniden kabul edilmiş değildir.
 
 Sistem ekran yakalamasında siyah çıktı ve Mali EGL bellek hatası görüldü.
 Aynı oturumda GPU kare örneği tank piksellerini, açık WebGL bağlamını ve sıfır

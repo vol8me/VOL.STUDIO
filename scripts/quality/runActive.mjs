@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
+import { spawnSync } from './command.mjs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
@@ -31,7 +31,9 @@ function main() {
   const root = process.cwd();
   const script = process.argv[2];
   if (!script) {
-    console.error('Kullanım: node scripts/quality/runActive.mjs <script> [--if-present] [--parallel]');
+    console.error(
+      'Kullanım: node scripts/quality/runActive.mjs <script> [--if-present] [--parallel]',
+    );
     return 2;
   }
   const lifecycle = loadWorkspaceLifecycle(join(root, 'workspace-lifecycle.json'));

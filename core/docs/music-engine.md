@@ -110,10 +110,9 @@ ara WAV çalışma zamanına girmez. Dosya URL dönüşümü tüketicide yapıl�
 Motor duraklatma, uyanış ve sahne kapanışına tüketici tarafından bağlanır.
 Parça listesi, yollar ve oyun state eşlemesi tüketicinin config verisidir.
 Adaptive gain dışında canlı arrange, MIDI, beatmatching, DAW/VST ve canlı
-sentez yüzeyi yoktur. Dinleme kabulü ve codec desteği gerçek hedefte ayrıca
-doğrulanır.
+sentez yüzeyi yoktur. Codec/decode ve ses çıkışı gerçek hedefte ayrıca
+doğrulanır; ses yayınının teknik QA sahibi audio-synth paketidir.
 
-CORE testleri çalma, yükleme, cache, geçiş ve scheduler sözleşmesini sınar.
-Üretim değişikliğinde manifest ve bundle doğrulaması ile oyunun build ve
-runtime kontrolleri birlikte yapılır. Debug diagnostics ses hata ve bağlam
-state'ini gözlemlemeyi sağlar.
+Çalma, yükleme, cache, geçiş ve scheduler CORE testleriyle korunur.
+Üretim/yayın doğrulaması [audio-synth](../../devtools/audio-synth/README.md)
+sorumluluğundadır.
