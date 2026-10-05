@@ -108,6 +108,11 @@ Doctor tarayıcı probunun JavaScript'ini stdin üzerinden Node'a iletir.
 Çok satırlı program CMD argümanına konmaz; `pnpm.cmd` sessizce boş sonuç
 üretebilir. Başarı için Chromium ve WebKit ayrı ayrı başlatılıp kapanmalıdır.
 
+`high`, frontend build'ini Rust'tan önce çalıştırır: Tauri bağlamı derlenirken
+`frontendDist` diskte bulunmalıdır. Boş bir `dist` oluşturmak kabul değildir.
+Rust kapısını tek başına temiz ağaçta çalıştırmadan önce `pnpm exec just build`
+gerekir; birleşik kapı bu sırayı kendi sağlar.
+
 ## Linux ve Deck sınırı
 
 Linux pkg-config/GTK/WebKitGTK bağımlılığı Windows'ta ölçülmez. Windows

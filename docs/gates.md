@@ -11,7 +11,7 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `quick`   | pre-commit       | `contract` + `format-check` + `typecheck` + `lint`                                                                    |
 | `fast`    | yerel geliştirme | `quick` + `test`                                                                                                      |
-| `high`    | pre-push         | `quick` + `rust` + `lint-css` + `coverage` + `coverage-shape` + `audio-test` + `build` + `bundle` + `scaling` + `e2e` |
+| `high`    | pre-push         | `quick` + `build` + `rust` + `lint-css` + `coverage` + `coverage-shape` + `audio-test` + `bundle` + `scaling` + `e2e` |
 | `signoff` | sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`                                          |
 
 ## Tekil kapılar

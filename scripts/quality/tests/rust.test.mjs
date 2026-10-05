@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, relative, resolve, dirname, delimiter } from 'node:path';
 import test from 'node:test';
 import { cargoSteps, checkRust, optionalFeatures, rustManifests } from '../rust.mjs';
+import { gateStages, parseJustRecipes } from '../justfile.mjs';
 import { resolveCommand, runCommand, writeNodeCommand } from './runCommand.mjs';
 
 // `just`ın `rust` tarifi tek satırdır: `node scripts/quality/rust.mjs`. Tarifin
@@ -14,6 +15,13 @@ const justfile = readFileSync(
   resolve(import.meta.dirname, '../../../justfile'),
   'utf8',
 );
+
+test('high temiz klonda Tauri bağlamından önce frontend çıktısını üretir', () => {
+  const stages = gateStages(parseJustRecipes(justfile), 'high');
+  assert.ok(stages.indexOf('build') >= 0);
+  assert.ok(stages.indexOf('build') < stages.indexOf('rust'));
+  assert.equal(stages.filter((stage) => stage === 'build').length, 1);
+});
 
 test('gerçek just rust tarifi bütün uygulama crate’lerini çalıştırır', () => {
   const temporary = mkdtempSync(join(tmpdir(), 'vol-cargo-command-'));

@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { estimatePitch } from '../../src/analysis/descriptors';
 import { analyzeAudio } from '../../src/analysis/report';
 import { measureLoopSeam } from '../../src/analysis/seam';
@@ -199,11 +199,6 @@ describe('Weapon/Launcher (archetype.launcher)', () => {
     );
     return [tank, turret, scifi];
   };
-  let rendered: Float32Array[];
-  beforeAll(() => {
-    // Üç tam PCM ortak salt okunur fixture'dır; yapısal ve akustik kanıt aynı kalır.
-    rendered = variants().map((program) => render(program));
-  });
   it('tank topu, arcade taret ve bilimkurgu fırlatıcı aynı archetype + farklı stil/materyal', () => {
     const [tank, turret, scifi] = variants();
     const graphs = [tank, turret, scifi].map((p) => soundGraph(p));
@@ -226,11 +221,22 @@ describe('Weapon/Launcher (archetype.launcher)', () => {
         }[]
       )[0].params.material;
     expect([tank, turret, scifi].map(bodyMaterial)).toEqual(['metal', 'hard-plastic', 'ceramic']);
-    expect(new Set(rendered.map((x) => hashPcm([x], 24000))).size).toBe(3);
+  });
+
+  it.each([
+    ['tank', 'turret', 0, 1],
+    ['tank', 'scifi', 0, 2],
+    ['turret', 'scifi', 1, 2],
+  ] as const)('%s ve %s tam PCM kimlikleri ayrışır', (_a, _b, a, b) => {
+    const programs = variants();
+    const rendered = [render(programs[a]), render(programs[b])];
+    expect(hashPcm([rendered[0]], 24000)).not.toBe(hashPcm([rendered[1]], 24000));
     const peakTime = (x: Float32Array) =>
       x.reduce((best, v, i) => (Math.abs(v) > Math.abs(x[best]) ? i : best), 0) / 24000;
-    expect(peakTime(rendered[0])).toBeLessThan(0.3);
-    expect(peakTime(rendered[2])).toBeGreaterThan(0.6);
+    for (const [slot, index] of [a, b].entries()) {
+      if (index === 0) expect(peakTime(rendered[slot])).toBeLessThan(0.3);
+      if (index === 2) expect(peakTime(rendered[slot])).toBeGreaterThan(0.6);
+    }
   });
 
   it('profil kabul etmeyen archetype’a materyal verilemez; bilinmeyen materyal reddedilir', () => {

@@ -574,6 +574,14 @@ test('touchpad kisayol raporu yalniz sabit siniflari ve boolean alanlari tasir',
   assert.equal(invalid.target, undefined);
 });
 
+test('rapor eski insan bekleme durumu taşımaz; teknik sonuçlar korunur', () => {
+  const record = (result) =>
+    JSON.parse(sanitizeReport(JSON.stringify({ type: 'perf', result })));
+  assert.equal(record('pending-human').result, undefined);
+  for (const result of ['ok', 'error', 'unavailable'])
+    assert.equal(record(result).result, result);
+});
+
 test('silme acik oyun kimligi onayi olmadan reddedilir', () => {
   assert.throws(() => assertCleanConfirmation('vol_deck_probe', undefined), /onay/);
   assert.throws(() => assertCleanConfirmation('vol_deck_probe', 'other'), /onay/);

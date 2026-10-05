@@ -55,7 +55,7 @@ Kapılar aktif workspace'ten türer; kapsam ratchet'i düşürülmez.
 | -------------- | --------------------------------------------------------------------------------------------------- |
 | `pnpm quick`   | `contract` `format-check` `typecheck` `lint`                                                        |
 | `pnpm fast`    | `quick` `test`                                                                                      |
-| `pnpm high`    | `quick` `rust` `lint-css` `coverage` `coverage-shape` `audio-test` `build` `bundle` `scaling` `e2e` |
+| `pnpm high`    | `quick` `build` `rust` `lint-css` `coverage` `coverage-shape` `audio-test` `bundle` `scaling` `e2e` |
 | `pnpm signoff` | `high` `coverage-audio` `audio-verify` `security-js` `security-rust`                                |
 
 Pre-commit quick ve pre-push high kancaları atlanmaz. Ortam:

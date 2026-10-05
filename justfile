@@ -95,7 +95,9 @@ quick: contract format-check typecheck lint
 fast: quick test
 
 # `coverage` aynı testleri eşikleriyle koştuğu için düz `test` tekrarlanmaz.
-high: quick rust lint-css coverage coverage-shape audio-test build bundle scaling e2e
+# Tauri generate_context! frontendDist'i derleme sırasında okur; temiz klonda
+# frontend çıktısı Rust'tan önce üretilir.
+high: quick build rust lint-css coverage coverage-shape audio-test bundle scaling e2e
 
 signoff: high coverage-audio audio-verify security-js security-rust
 

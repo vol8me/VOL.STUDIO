@@ -487,7 +487,7 @@ export function sanitizeReport(text) {
     backend: /^(none|hidraw|evdev|native|gamepad|vibration|error)$/,
     mapping: /^(standard|)$/,
     state: /^(running|suspended|closed)$/,
-    result: /^(ok|error|unavailable|pending-human)$/,
+    result: /^(ok|error|unavailable)$/,
     sessionKind: /^(gamescope|desktop|web|unknown)$/,
     phase:
       /^(oyun|\d+ sprite|boş|empty|gameplay|menu|pause|settings|cards|shop|boss|death|loading|unclassified|background)$/u,
