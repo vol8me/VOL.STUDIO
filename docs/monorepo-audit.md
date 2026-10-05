@@ -1,7 +1,9 @@
 # Monorepo durumu ve iyileştirme kararları
 
-**İncelenen durum:** `feature/core-hardening`, `538e46cf93739872b13a8dc98616c06e4ad5eb7d`  
-**Yöntem:** kaynak ve kilitli bağımlılıklardan tersine mühendislik, Fallow 3.31.0, yerel kalite kapıları, izole hata ve eşzamanlılık tekrarları.  
+**Başlangıç snapshot'ı:** `feature/core-hardening`, `538e46cf93739872b13a8dc98616c06e4ad5eb7d`
+
+**Yöntem:** kaynak ve kilitli bağımlılıklardan tersine mühendislik, Fallow 3.31.0, yerel kalite kapıları, izole hata ve eşzamanlılık tekrarları.
+
 **Teslim kapsamı:** teknik değerlendirme ve F01–F03 uygulaması. Başlangıç bulguları aşağıda korunur; güncel uygulama ve kapı durumu §18'de ayrılır.
 
 Kullanıcı; mimari, kök düzeni, belge, silme/taşıma/birleştirme ve büyük değişiklik kararlarını bu kapsam içinde açıkça yetkilendirdi. Bu kararlar için tekrar onay beklenmez. İlk teslim rapor ve fazlı TODO idi; kullanıcının devam talebi F01–F03 uygulamasını, commit ve push'u da kapsar. İnsan bekleyen ses kabulünün kaldırılması F01'dir. İş listesi [kök TODO](../TODO.md), ayrıntılı UI görevleri [UI TODO](ui/TODO.md) üzerinden yürür.
@@ -477,7 +479,7 @@ F08'de sırasıyla Linux builder ve fail-closed GLIBC, Windows'tan kontrollü da
 
 ## 11. İnsan bekleyen ses kabulünün kaldırılması
 
-**Kesin karar:** human-pending, canary/benchmark dinleme onayı ve estetik regresyon kararının üretim seviyesine kapı olması kaldırılacak. İlk uygulama fazı F01'dir. Yeni adla aynı bekleme sistemini üretmek, bütün kayıtları “heard-acceptable” yapmak veya otomatik QA'yı insan beğenisi diye sunmak bu kararın uygulanması değildir.
+**Uygulanan karar:** human-pending, canary/benchmark dinleme onayı ve estetik regresyon kararının üretim seviyesine kapı olması F01'de kaldırıldı. Yeni adla aynı bekleme sistemini üretmek, bütün kayıtları “heard-acceptable” yapmak veya otomatik QA'yı insan beğenisi diye sunmak bu kararın uygulanması değildir. Envanter aşağıdadır; tam kapı kanıtı §18'dedir.
 
 Yeni üretim kabulü geçerli/sürümlü kaynak, deterministik nihai render, güncel surface/runtime bağı, bütçe ve kodek sonrası politika, gerçek asset/manifest bütünlüğü ve bağımsız yeniden üretime dayanır. `production-ready`, bu teknik sözleşmenin sağlandığını söyler; doğal tını, estetik başarı veya bir insanın dinlediğini söylemez. Opsiyonel dinleme paketi WAV, kaynak/teslim karşılaştırması, loop2x, guide ve ölçüler sunmaya devam eder; beğeni onayı veya pending sayacı taşımaz.
 
@@ -497,7 +499,7 @@ Yeni üretim kabulü geçerli/sürümlü kaynak, deterministik nihai render, gü
 | Canary/benchmark loader filtreleri                                                                    | Reviews dosyası istisnası ve eski dosyanın yanlış görev gibi okunma olasılığı giderilir                                                |
 | Governance ve ürün belgeleri                                                                          | Kök AGENTS, audio README/DESIGN/TODO, CLI context ve UI ses kabulü aynı teknik anlamı taşır                                            |
 
-`AudioAssetManifestV1`, publish ve verify insan review alanı taşımıyor; sırf kaldırma için mevcut OGG, program, seed, surface veya production manifestleri yeniden üretilmeyecek.
+`AudioAssetManifestV1`, publish ve verify insan review alanı taşımıyor; sırf kaldırma için mevcut OGG, program, seed, surface veya production manifestleri yeniden üretilmedi.
 
 Kaynak yazarı provenance'ı, search aday seçim yazarı/terfi kökeni ve tohumlu `humanizeSeed` korunur. Bunlar dinleme kabul sistemi değildir. Aday seçiminin pending/approved/rejected durumunu da sözcük benzerliğiyle silmek yanlış olur. İnsan/agent tarafından açılan gerçek sorun normal hata işi olarak kalır; sahte dinleme kaydı oluşturulmaz.
 
@@ -507,9 +509,9 @@ BenchmarkReport, QualityMatrix, ListeningPackage, RegressionReport ve context JS
 
 `capabilities --from-report` tek başına güncel kabul sağlamaz. Kaynak/engine/surface/runtime/manifest kimlikleri ve gerçek verify sonucu bağlı değilse yalnız kayıtlı bilgi sunabilir. PCM değişimi production verify'da başarısızlıktır; research karşılaştırması değişimi raporlayabilir. Yeni baseline'ı otomatik olarak mevcut hash'e eşitlemek deterministik güvenceyi yok eder.
 
-Değişecek test aileleri: canary/canaries, benchmark/benchmark, regression/regression, protocol/listening, protocol/edges, protocol/context, governance/capabilities, governance/cliFlags ve program/sfx. Kabul yalnız `rg` sonucuna dayanmaz: kaldırılmış API/CLI erişilemez; JSON eski alan taşımaz; review dosyası olmadan render/publish/verify çalışır; stale/corrupt/başarısız kaynak production-ready olamaz; PCM/asset/policy mutasyonu teknik kapıyı düşürür.
+Güncellenen test aileleri: canary/canaries, benchmark/benchmark, regression/regression, protocol/listening, protocol/edges, protocol/context, governance/capabilities, governance/cliFlags ve program/sfx. Kabul yalnız `rg` sonucuna dayanmaz: kaldırılmış API/CLI erişilemez; JSON eski alan taşımaz; review dosyası olmadan render/publish/verify çalışır; stale/corrupt/başarısız kaynak production-ready olamaz; PCM/asset/policy mutasyonu teknik kapıyı düşürür.
 
-F01 seçili regresyonlar ve quick ile kapanabilir; önceden bilinen tam audio Windows hataları F02'nin zorunlu bağıdır. Tam coverage-audio ve signoff kapanışı F01+F02+güvenlik işleri tamamlanınca ayrıca aranır. Böylece mevcut redler gizlenmez ve ilk faza ilgisiz bir “insan bekleme” engeli eklenmez.
+F01 seçili regresyonlarla, F02 tam audio kapsamı ve Windows klon kapılarıyla kapandı; güncel sonuçlar §18'dedir. Güvenlik işleri kapanmadığı için signoff başarılı sayılmaz. Teknik audio kabulüne yeni bir insan bekleme engeli eklenmedi.
 
 ## 12. Belge kalitesi, video ilkeleri ve minimalleşme
 
@@ -531,11 +533,11 @@ Bu rapor ayrıntılı, isteğe bağlı denetim başvurusudur; README veya her g�
 
 ### README ve agent dosyası kapısı
 
-F03'te mevcut quality şemasında role/path/bütçe kaydı ve mevcut contract akışında belge doğrulaması kurulacak; yeni kök config gerekmiyor. Başlangıç politikası: kök README ≤100 satır/800 sözcük, aktif paket README ≤80/600, dokümantasyon yönlendiricisi ≤40/250; kök AGENTS ≤120/1.000, Pencil AGENTS ≤80/650. Satır ve sözcük ikisi de ölçülür. Bunlar bütün Markdown'a uygulanan keyfî boyut sınırı değildir; rapor, başvuru, lisans ve üretilmiş izin dosyaları kendi rolündedir.
+F03'te mevcut quality şemasında role/path/bütçe kaydı ve mevcut contract akışında belge doğrulaması kuruldu; yeni kök config açılmadı. Politika: kök README ≤100 satır/800 sözcük, aktif paket README ≤80/600, dokümantasyon yönlendiricisi ≤40/250; kök AGENTS ≤120/1.000, Pencil AGENTS ≤80/650. Satır ve sözcük ikisi de ölçülür. Bunlar bütün Markdown'a uygulanan keyfî boyut sınırı değildir; rapor, başvuru, lisans ve üretilmiş izin dosyaları kendi rolündedir.
 
 Paket README keşfi lifecycle'dan türetilir. Yol/yerel bağlantı/başlık, gerçek komut ve belgelenen public sembol denetimi devam eder. Girişte amaç/çalıştırma/ayrıntı bağlantısı ve izinli rol istisnaları gerekçeli, şemalı ve bayatlık kontrollü olur. Uzun satırla ölçüyü aşmak veya tüm belgeyi gerekçesiz exempt etmek kabul edilmez. Hatalı örnek fixture'ı düşmeli. F03'te bu politika quality.json ve üretim contract akışına bağlandı; negatif disk fixture'ları ve rol değiştirme yoluyla bütçe bypass testleri vardır.
 
-Bugünkü paket README'lerinin çoğu giriş boyutunda; hepsini suçlamak doğru olmaz. Öncelikli taşma VOL.TEST ve docs/ui yönlendiricisinde. Audio README sınırı geçmiyor; yine de tekrar ve human-review komutları F01/F03'te temizlenecek.
+Başlangıç paket README'lerinin çoğu giriş boyutundaydı; hepsini suçlamak doğru olmaz. Öncelikli taşma VOL.TEST ve docs/ui yönlendiricisindeydi. Audio README sınırı geçmiyordu; tekrar ve human-review komutları F01/F03'te temizlendi.
 
 ### Bütün mevcut Markdown için karar
 
@@ -794,13 +796,13 @@ Rapor, tekrarların tetikleyici/sonuç/kaynak ve kapanışını metin içinde ta
 
 Faz sonunda değişen kaynak, yeni doğru davranış, ilgili test/kapı komutu+exit sonucu, cihaz profili ve kalan risk güncellenir. Eski ölçü current PASS olarak taşınmaz; build/kurulu paket commit eşliği belirtilmeden cihaz kabulü yazılmaz. Kaldırılan bir sistemin type/export/config/CLI/test/veri/belge bağları aynı fazda gider. Git durumu temiz veya açıkça belgeli olur.
 
-Bu tur uygulama yapıldığı iddia edilmiyor. Teslim; kanıta dayalı rapor, bütün işleri koruyan fazlı kök TODO ve çelişen ses kabul görevlerinin düzeltilmesidir. Ayrı ağır kaynak snapshot kapılarıyla bu belge diff'inin doğrulaması birbirine karıştırılmaz.
+Başlangıç raporunun teslimi; kanıta dayalı denetim, bütün işleri koruyan fazlı kök TODO ve çelişen ses kabul görevlerinin düzeltilmesiydi. Aşağıdaki belge teslimi kanıtı o snapshot'a aittir. Güncel F01–F03 kaynak uygulaması ve kapıları bölüm 18'de ayrıca gösterilir.
 
 **Belge teslimi doğrulaması:** quick'ın dört bileşeni ayrı komutlarla yeniden doğrulandı: contract, format-check, typecheck ve lint exit 0. Contract'ta 296 testin 294'ü geçti, iki platform testi atlandı; workspace sözleşmesi yedi aktif paketi doğruladı. CORE docSymbols ve audio docReferences hedefli testleri ayrı ayrı 8/8 geçti. Yerel bağlantı/başlık kontrolünde 128 bağlantı, bulgu kontrolünde 20 tekil kimlik ve UI görev karşılaştırmasında 63/63 kimlik, sıfır hata çıktı. Bağımsız belge incelemesinin dört bulgusu düzeltildi ve tekrar incelemede kapandı. Bu doğrulama high/signoff'un yeniden çalıştırıldığı anlamına gelmez; bölüm 6'daki audio ve güvenlik redleri açık kalır.
 
 ## 18. F01–F03 uygulama durumu
 
-Bu bölüm başlangıç denetimindeki bulguyla güncel teslimi ayırır. F04–F10
+**F01–F03 tamamlandı.** Bu bölüm başlangıç denetimindeki bulguyla güncel teslimi ayırır. F04–F10
 işleri açık kalır; bu fazlar CORE kayıt, fizik, metadata veya gerçek Deck
 ürün kabulünü çözmüş sayılmaz.
 
@@ -827,10 +829,108 @@ bütçesi ve tek sahipli belgeyle karşılandı. Sabit süreç tekrarları çık
 repo değişmezleri ve gerçek bitiş ölçütleri korundu. Bu değişikliğin model
 başarısını veya maliyeti yüzdeyle artırdığı ölçülmedi.
 
-**Doğrulama:** F01 hedef takımı 11 dosya/137 test; Windows audio hedef takımı
-11 dosya/67 test başarılı. Host doctor, gerçek Rust link probu ve Android
-araç profili başarılı. Bağımsız inceleme sahte komut, eksik compiler ve yanlış
-Rust host kabulünü yakaladı; anlamlı negatif fixture'larla üçü de kapandı.
-İncelemecinin dar takımları 28/28 ve 26/26 başarılıdır. Tam coverage-audio,
-quick/high ve temiz Windows clone sonuçları henüz sonlandırılmadı; faz checkbox'ları bu
-kanıtlar gelmeden kapatılmaz. İnsan dinlemesi veya gerçek cihaz kabulü yoktur.
+### Uygulamada bulunan ek tetikleyiciler
+
+Temiz klon denetimi yalnız mevcut çalışma ağacındaki yeşil kapıyı tekrarlamadı:
+
+- Standart npm kurulumunun `pnpm.cmd` girişinde çok satırlı `node -e` programı
+  sessizce kesildi; doctor iki tarayıcıdan da boş çıktı aldı. Prob artık
+  `node --input-type=module -` ve stdin kullanır. İki motorun gerçek açılış
+  işaretleri ve exit 0 birlikte zorunludur; sahte başarıya çevrilmedi.
+- Frontend çıktısı bulunmayan klonda Rust önce çalıştığı için Tauri
+  `generate_context!` makrosu `frontendDist` hatası verdi. `high` artık
+  build'i Rust'tan önce çalıştırır; aynı 13 tekil aşama korunur. Boş `dist`
+  veya makroyu testten çıkarma kullanılmadı. Gerçek tarif sırası regresyonludur.
+- Eski SFX tekrarının kapsam açık tanısı 24 başarılı/1 başarısız test verdi:
+  launcher'ın üç tam render'ı aynı testte 6.892 ms sürdü ve 5.000 ms bütçesini
+  aştı. Üç PCM'nin ayrışması artık üç bağımsız ikili karşılaştırmadır; 24 kHz,
+  2,5 saniye, seed/profil, graph/materyal ve tepe zamanı kontrolleri korunur.
+  Ağır hesap daha uzun hook süresine saklanmaz. Bağımsız inceleme ilk hook
+  yaklaşımını reddetti; son kaynakta bu yaklaşım yoktur.
+- İlk uygulama kapsam koşusunda kabul pozitif testi 5.250 ms, dört yaylı
+  preset döngüsü 5.969 ms ile süreyi aştı. Yaylılar ayrı vakadır. Kabul
+  deposu bir kez gerçek yayınlanır; her negatif bağımsız gerçek disk kopyası
+  ve o kopyada yeni benchmark koşusu kullanır. Eski rapor veya paylaşılan
+  değişebilir fixture kabul sağlamaz. Genel timeout, skip ve eşikler değişmedi.
+- Deck rapor filtresindeki tüketicisiz eski insan bekleme enum'u kaldırıldı.
+  `ok`, `error`, `unavailable` korunur; bu temizlik fiziksel Deck kabulü değildir.
+- Node 22.23.1 Windows profilinde Unicode klon yolunda ortak public
+  `cpSync` kopyası 0xC0000409 ile native süreci çökertti. Vite dışındaki
+  aynı kopyada da tekrarlandı; minification ve chunk ayrımı kök neden değildi.
+  [Node'un asenkron cp API'si](https://nodejs.org/docs/latest-v22.x/api/fs.html#fspromisescpsrc-dest-options)
+  ile aynı dosyalar kopyalandı. Build hook'u Promise'i bekler; binary byte
+  kimliği, mevcut app dosyasının korunması ve gerçek disk hatasının build'e
+  ulaşması testlidir. Unicode/boşluk/`&` klonundaki gerçek VOL.TEST build'i
+  exit 0 verdi. Bu ölçü bütün Node sürümlerine genellenmez.
+
+### Belge teslimi
+
+43 kaynak belgenin kararları uygulandı; iki UI kaynağı birleştirilip silindi.
+Denetim raporuyla birlikte bugün 42 Markdown vardır. Aynı üretim ölçüm
+fonksiyonuyla F03 başlangıcı ve teslim karşılaştırmasında dokuz README
+573 satır/3.371 sözcükten 420 satır/2.063 sözcüğe indi. Kök README giriş
+olarak kaldı; rapor, sözleşme ve lisanslara README bütçesi uygulanmaz.
+
+| Giriş             | Güncel satır/sözcük |     Sınır |
+| ----------------- | ------------------: | --------: |
+| Kök AGENTS        |              96/677 | 120/1.000 |
+| Pencil AGENTS     |              34/211 |    80/650 |
+| CLAUDE            |               10/49 |    40/250 |
+| UI yönlendiricisi |              23/148 |    40/250 |
+| VOL.TEST README   |              51/292 |    80/600 |
+
+Başlangıç tablosundaki ham sayımla bu karşılaştırmanın son boş satır/sözcük
+ayrımı farklıdır; yüzde kazanç iddiası üretilmedi. Beş lisans/üretilmiş izin
+kaynağı değiştirilmedi. UI'nin 63 açık ID'si tek sahibinde korundu; bu görevler
+uygulanmış veya cihazda kabul edilmiş sayılmadı.
+
+### Kapı kanıtı ve sınırlar
+
+F01 hedef takımı 11 dosya/137 test; Windows audio hedef takımı 11 dosya/67
+test başarılıdır. Son üç ses dosyasının V8 açık dar tanısında **44/44 test**
+başarılı; en uzun test 2.875 ms'dir. Dar tanı bütün paketi kapsamadığından
+genel kapsam eşikleri RED kaldı; bu çıktı tam kapı başarısı değildir.
+
+Bağımsız incelemenin sahte komut, eksik compiler, yanlış Rust host ve
+tek tüketicili ağır hook bulguları kapandı. Dar takımlar 28/28, 26/26 ve
+9/9 başarılı; kapı sırası/report takımı 18/18 başarılıdır. Son kaynak
+incelemesinde açık Critical/Important bulgu yoktur.
+
+Standart npm pnpm 11.18.0 shim'iyle boş dependency ağacına frozen-lockfile
+kurulumu yapıldı. Klon yolu boşluk, Unicode ve `&` içerir; yeni PowerShell
+kabuğunda doctor ve quick başarılıdır. Browser/cache ve kurulu MSVC/Android
+araçları bu makinenin mevcut profilidir; yeni kurulmuş işletim sistemi veya
+yeni fiziksel cihaz kabulü diye sunulmaz.
+
+Tam `coverage-audio` exit 0: **129 dosya/2.221 test**, başarısız/atlanan test
+yok. V8 statement %96,05, branch %89,07, function %97,73 ve line %96,82;
+mevcut %94/%88/%95/%95 eşikleri korunur. Koşu kaydının bitişi ve 408.291
+baytlık LCOV aynı taze koşuya aittir; devamındaki coverage-shape exit 0.
+
+| Doğrulama                               | Sonuç ve kapsam                                                                                                      |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Kaynak commitlerinin pre-commit quick'ı | Exit 0; contract, format, typecheck ve lint birlikte                                                                 |
+| Ana çalışma ağacındaki high             | Exit 0; asenkron public kopya düzeltmesinden önceki kaynak; son kopya düzeltmesi aşağıdaki eşlenen klonda doğrulandı |
+| Temiz Windows klonu                     | Frozen install, doctor, yeni PowerShell quick ve high exit 0; Node 22.23.1, standart pnpm 11.18.0 shim'i             |
+| Klonun tam audio takımı                 | 129 dosya/2.221 test; kapsam kapısından ayrı düz koşu başarılı                                                       |
+| Klon Chromium/WebKit E2E                | UI 40 başarılı; VOL.TEST 27 başarılı/1 mevcut gerekçeli WebKit AudioContext atlaması                                 |
+| Audio-verify                            | Exit 0; iki ses ağacı diff'siz, kodek sonrası politika ihlali 0/33 oyun dosyası                                      |
+| Son klon belge/contract denetimi        | Exit 0; 330 testin 328'i başarılı, iki mevcut platform testi atlandı; yedi aktif workspace                           |
+| Güncel kaynak ve belge incelemesi       | Açık Critical/Important yok; 43 karar, 42 Markdown, 63 UI ID ve giriş ölçüleri bağımsız doğrulandı                   |
+
+Klonun kaynak değişiklikleri `f326de6c` ile blob düzeyinde eşlendi. Son
+Windows açıklamasındaki dört satır klona alındı, klon commit'e hizalandı ve
+contract yeniden geçti; kod değişmediği için tam high tekrar edilmedi.
+İlk high scaling ölçümü 6,262 ile 6 tavanını aştı; tekil tekrar 4,198 ile
+geçti. Son klon core 3,207/oyun 4,800 ile geçti. Bütçe değiştirilmedi;
+bu tekrarlar performans iyileştirmesi kanıtı değildir.
+
+B06 sistemi kaldırılarak; B12–B16 gerçek MSVC, argv, yol/disk regresyonları
+ve tam audio/Windows kapılarıyla kapandı. Kök TODO'nun on F01–F03 maddesi
+tek satırlık kapanışa taşındı. B01–B05, B07–B11 ve B17–B20 kendi F04–F10
+sahiplerinde açıktır; kaldırılan Deck enum'u B09/B10'u çözmüş sayılmaz.
+
+Güvenlik yeniden doğrulandı: security-js exit 1, braces high advisory;
+registry 3.0.4 için hâlâ eşleşen sürüm bulamadı. security-rust exit 0,
+9 izinli uyarı. Bunların sahibi F10'dur; signoff başarılı ilan edilmez.
+F04–F10, gerçek native/Deck/Android kabulü ve UI'nin açık işleri sürer.

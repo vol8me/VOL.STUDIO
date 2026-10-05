@@ -9,41 +9,11 @@ taşınır. Eksik kapanış yeni görevdir.
 
 Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
 yetkilendirdi. Güncel teslim F01–F03 uygulamasıdır; sonuçları rapor §18'de kanıtla ayrılır.
-**F01–F03 uygulanıyor; kalan fazlar açıktır.** Faz numarası bağımsız işleri gereksiz seri bekletmez;
+**F01–F03 tamamlandı; F04–F10 açıktır.** Faz numarası bağımsız işleri gereksiz seri bekletmez;
 gerçek ön koşul ve kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
 Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 
 ## Açık
-
-<a id="f01"></a>
-
-### F01 — İnsan bekleyen ses kabulünü kaldır
-
-Ön koşul: ilk uygulama turu. Teknik QA ve kaynak yazarlığı korunur.
-
-- [ ] **[P1] F01.1 — Kabul sistemini kaldır.** Canary/benchmark review, capability listening, regression decide, pending/status/komut/export/context ve review dosyaları birlikte kalkar. Kapanır: rapor §11 envanteri eksiksiz; üretim seviyesi güncel mekanik QA ve gerçek verify ile bağlı; yeni insan bekleme durumu yok.
-- [ ] **[P1] F01.2 — Sürümlü geçiş ve regresyon.** Rapor JSON'u yeni semantiğe göre sürümlenir; isteğe bağlı dinleme çıktısı korunur. Kapanır: silinmiş API/CLI/alan yok, eski rapor sahte güncel kabul üretmez; review olmadan render/publish/verify ve PCM/asset/policy negatif testleri geçer; ilgili belge/quick güncel.
-
-Tam audio Windows redleri F02'nin işidir; F01 kapanışı bunları geçti diye
-yazmaz. Tam üretim/sürüm kabulü F02 ve güvenlik kapanışlarını da ister.
-
-### F02 — Windows geliştirme hattını güvenilir yap
-
-Ön koşul: F01 teknik teslimi. Eski MSVC/PATH işinin yeni sahibi bu fazdır.
-
-- [ ] **[P1] F02.1 — Temiz Windows bootstrap ve doğru doctor.** Git Bash, Node/pnpm/just, Rust/MSVC, JDK/SDK/NDK profili tekrar üretilebilir olur. Kapanır: temiz/boşluklu clone ve yeni kabukta install/doctor/quick/high; linker için gerçek küçük link probu, warning/failure ayrımı; kalıcı elle executable/PATH taşıma zorunluluğu yok (B12).
-- [ ] **[P2] F02.2 — Argüman sınırı ve komut adaptörü.** Gerçek exe native argv; cmd/bat dar testli adaptör; TS yardımcıları Node+JS giriş kullanır. Kapanır: boşluk/Unicode/tırnak/`&`/cwd/PATH fixture'ı; rust/Android/test çağrıları doğru, shell sonucu değiştiremez (B14/B16).
-- [ ] **[P2] F02.3 — Windows test dosya/disk sözleşmesi.** fileURLToPath, normalleştirilmiş karşılaştırma ve gerçek dosya işlemi hata enjeksiyonu. Kapanır: B13/B15'in 11 hedefli redi kapanır; rollback/cleanup Windows/POSIX'te gerçekten sınanır; genel timeout veya geniş skip ile susturulmaz.
-- [ ] **[P1] F02.4 — Tam audio takımının kapanışı.** İlk tam koşunun sfx hatası nedeni ayrıca bulunur. Kapanır: B13–B15'in 24 tekrar hatası ve açıklanmamış hata doğru regresyonla kapanır; coverage-audio güncel LCOV+shape ile geçer; high/başarısız signoff aşamaları açık raporlanır.
-
-### F03 — Belgeleri minimal ve doğrulanabilir yap
-
-Ön koşul: F01 kabul anlamı, F02 platform profili. Eski SB işi burada.
-
-- [ ] **[P1] F03.1 — README/agent kapısı.** Rapor §12 rol/satır/sözcük bütçesi mevcut quality şemasına ve contract'a bağlanır; paket keşfi lifecycle'dan türer. Kapanır: uzun/eksik giriş, kırık bağlantı/başlık, sahte komut ve bayat istisna negatif fixture'ı düşer; yeni kök config yok.
-- [ ] **[P1] F03.2 — 43 belgenin sahiplik kararı.** Rapor tablosundaki her belge işlenir; README yalnız giriş, DESIGN gerekçe, TODO iş, rehber kullanım taşır. Kapanır: tekrar/tarihçe/oturum anlatısı gider; AGENTS/CLAUDE/Pencil kısa ve projeye özgü; hukuk/üretilmiş izin istisnaları korunur.
-- [ ] **[P1] F03.3 — UI belge birleştirmesi.** COVERAGE canlı bilgisi CATALOG/TODO'ya, RESEARCH güncel gerekçesi CONTRACT'a gider; sonra iki kaynak dosyası silinir. Kapanır: eski canlı bağlantı sıfır; 63 görev ve yüzey/kanıt sahipliği eksiksiz; UI README kısa yönlendirici.
-- [ ] **[P1] F03.4 — Platform ve kapanış doğruluğu.** Windows/Linux/Deck/Android destek matrisi ve tek kapı kaynağı netleşir. Kapanır: Linux builder Windows desteği gibi anlatılmaz; kod/test/cihaz ayrı; paket kapatılanları tek satır; paralel İngilizce README yok; belge kapıları geçer.
 
 ### F04 — Kalıcılık, async sahiplik ve native yaşam döngüsü
 
@@ -126,8 +96,20 @@ release redini ertelemek için gerekçe değildir.
 
 ## Kapatılanlar
 
+<a id="f01"></a>
+
+- [x] F01.1 — Zorunlu ses dinleme kabulü, API/CLI/rapor bağları ve review dosyaları kaldırıldı; üretim kabulü güncel teknik QA ve gerçek verify'a bağlı.
+- [x] F01.2 — V2 rapor geçişi ve eski/bozuk/mutasyona uğramış kabul negatifleri testli; isteğe bağlı dinleme ve mevcut PCM/asset yüzeyi korundu.
+- [x] F02.1 — Standart pnpm shim'iyle temiz Unicode/boşluklu klonda install/doctor/quick/high geçti; gerçek MSVC link probu ve Android araç profili doğrulandı.
+- [x] F02.2 — Native argv ve cmd/bat adaptörü gerçek yol/argüman/PATH fixture'larıyla testli; audio CLI Node+JS girişini kullanıyor.
+- [x] F02.3 — File URL, separator, gerçek disk hatası ve rollback regresyonları Windows'ta geçti; platforma aykırı izin fixture'ları kaldırıldı.
+- [x] F02.4 — Tam audio 129 dosya/2.221 test ve güncel LCOV/shape geçti; süre kusurları eşik/timeout/skip gevşetmeden düzeltildi.
+- [x] F03.1 — README/agent rol bütçesi, bağlantı/başlık/komut ve bayat istisna denetimleri mevcut quality/contract'a bağlandı.
+- [x] F03.2 — 43 kaynak belgenin sahiplik kararı uygulandı; agent girişleri ve README'ler kısaldı, hukuk/üretilmiş izin kaynakları korundu.
+- [x] F03.3 — UI COVERAGE/RESEARCH sahiplerine birleştirilip silindi; 63 açık UI görevi ve kapanış ölçütleri korundu.
+- [x] F03.4 — Platform araç/kapı/native/cihaz sınırları ve tek sahipli belge düzeni doğrulandı; yapılmayan cihaz kabulü açık bırakıldı.
 - [x] Monorepo denetim raporu docs'a yerleştirildi; 20 bulgu, 43 belge kararı ve bütün açık işler F01–F10'a eşlendi.
-- [x] Visual Studio C++ Build Tools kuruldu; güncel doctor/bootstrap doğruluğu F02'de açık.
+- [x] Visual Studio C++ Build Tools kuruldu; güncel doctor/bootstrap doğruluğu F02.1 ile tamamlandı.
 - [x] Just kabuğu Git kurulumundan seçilir; WSL gölgesi ortam teşhisinde ayrılır.
 - [x] Üretilmiş Android eklenti API ağacı ignore sözleşmesine bağlandı.
 - [x] Steam Cloud ad ve decoded boyut sınırı regresyonla korundu.
@@ -160,4 +142,4 @@ release redini ertelemek için gerekçe değildir.
 - [x] Ürün kimliği/ikon/port ve native plugin sahipliği kapılara bağlandı.
 - [x] Kayıt/kapanış/asset transaction mekanizmaları kuruldu; yeni güvence kusurları F04/F05'te açık.
 - [x] Deck girdi/glif/metin/görüntü/Steamworks katmanları var; gerçek kabul F08'de açık.
-- [x] Önceki kalite kapanışları kaydedildi; güncel signoff başarısızlığı raporda ve F02/F10'da açık.
+- [x] Önceki kalite kapanışları kaydedildi; güncel güvenlik/signoff engeli raporda ve F10'da açık.

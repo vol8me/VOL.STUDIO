@@ -5,12 +5,14 @@ Açık iş `[ ]`, biten iş `[x]` olur. Biten madde tek satırla
 Sözleşmeler ve sınırlar [DESIGN.md](DESIGN.md), kullanım [README.md](README.md),
 repo geneli işler kök [TODO.md](../../TODO.md) içindedir.
 
+Zorunlu dinleme kabulü kaldırıldı; teknik kabulün tam kapı kanıtı kök
+[F01](../../TODO.md#f01) kapanışında ve [denetimde](../../docs/monorepo-audit.md#audio-teknik-kabul).
+
 ## Açık
 
-Bu iki işin checkbox ve kapanış sahibi kök TODO'dur; burada ikinci defter tutulmaz.
+Bu işin checkbox ve kapanış sahibi kök TODO'dur; burada ikinci defter tutulmaz.
 
 - **AS20 — Doğrulayıcı alt şemaları:** kök [F05.4](../../TODO.md#f05--asset-yayını-metadata-ve-kalıntı-temizliği); yanlış PCM metadata kabulü düzeltilirken doğru kabul/ret ve sürüm sözleşmesi korunur.
-- **Teknik kabulün doğrulanması:** kök [F01](../../TODO.md#f01) ve [envanter](../../docs/monorepo-audit.md#audio-teknik-kabul). Zorunlu dinleme sistemi kaldırılmıştır; faz kapanışı tam kapı kanıtını bekler.
 
 ## Kapatılanlar
 
