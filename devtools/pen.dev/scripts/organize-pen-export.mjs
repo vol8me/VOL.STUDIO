@@ -6,8 +6,10 @@
 import {
   copyFileSync,
   existsSync,
+  linkSync,
   mkdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   unlinkSync,
   writeFileSync,
@@ -16,7 +18,11 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const PART_ID_PATTERN = /^[a-z0-9][a-z0-9_]*$/;
+// Pencil düğüm kimliği dosya adı olur: ayraç, sürücü iki noktası ve nokta
+// bileşenleri yolu kaçırır ya da başka dosyaya bağlar.
+const NODE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 
+let tempCounter = 0;
 const [, , manifestPath, stagingDir, outputRootArg] = process.argv;
 
 if (!manifestPath || !stagingDir) {
@@ -61,17 +67,17 @@ const entityRoot = join(outputRoot, domain, entityId);
 
 console.log(`${domain}/${entityId} export'u düzenleniyor`);
 
-// Önce tüm manifest doğrulanır, sonra tek bir dosya bile kopyalanır: bir
-// hata yarım taşınmış bir çıktı bırakmasın.
-const partPlan = planMoves(manifest.parts, join(entityRoot, 'parts'));
-const previewPlan = planMoves(manifest.previews, join(entityRoot, 'previews'));
+// Parça ve önizleme TEK plandır: kaynak PNG'ler birlikte doğrulanır, sonra
+// hiçbir kaynak silinmeden önce bütün hedefler yerleşir. Bir hata kaynağı
+// tüketmez ve yarım hedef bırakmaz.
+const partPlan = planMoves(manifest.parts, join(entityRoot, 'parts'), 'parça');
+const previewPlan = planMoves(manifest.previews, join(entityRoot, 'previews'), 'önizleme');
+rejectSharedSources([...partPlan.moves, ...previewPlan.moves]);
 
-const parts = executeMoves(partPlan);
-const previews = executeMoves(previewPlan);
+const parts = partPlan.moves.map(({ item, dest }) => ({ ...item, file: dest }));
+const previews = previewPlan.moves.map(({ item, dest }) => ({ ...item, file: dest }));
 
-const metadataDir = join(entityRoot, 'metadata');
-mkdirSync(metadataDir, { recursive: true });
-
+const metadataPath = join(entityRoot, 'metadata', `${entityId}.metadata.json`);
 const metadata = {
   schemaVersion: 1,
   entityId,
@@ -104,10 +110,18 @@ const metadata = {
   })),
 };
 
-const metadataPath = join(metadataDir, `${entityId}.metadata.json`);
-writeFileSync(metadataPath, JSON.stringify(metadata, null, 2) + '\n');
+const moves = [...partPlan.moves, ...previewPlan.moves];
+try {
+  placeAll(moves, metadataPath, JSON.stringify(metadata, null, 2) + '\n');
+} catch (error) {
+  fail(`export yerleştirilemedi, önceki hedef geri yüklendi: ${error.message}`);
+}
+
+for (const { item, dest } of moves) console.log(`  ${item.id}.png -> ${dest}`);
 console.log(`  yazıldı: ${metadataPath}`);
 
+// Kaynaklar yalnız her hedef yerleştikten SONRA silinir.
+for (const { src } of moves) unlinkSync(src);
 if (existsSync(stagingDir)) {
   rmSync(stagingDir, { recursive: true, force: true });
   console.log(`  staging dizini temizlendi: ${stagingDir}`);
@@ -116,11 +130,11 @@ if (existsSync(stagingDir)) {
 console.log(`Bitti: ${parts.length} parça, ${previews.length} önizleme -> ${entityRoot}`);
 
 /**
- * Taşıma planını doğrular. Eksik dosya, tekrar eden ya da kurala uymayan
- * partId sessizce geçilmez: hatası fark edilmeyen bir rig, hiç üretilmemiş
- * olandan kötüdür.
+ * Bir listenin taşıma planını doğrular. Eksik dosya, tekrar eden ya da
+ * kurala uymayan partId sessizce geçilmez: hatası fark edilmeyen bir rig,
+ * hiç üretilmemiş olandan kötüdür. Hiçbir dosyaya dokunmaz.
  */
-function planMoves(list, targetDir) {
+function planMoves(list, targetDir, label) {
   if (!list?.length) return { targetDir, moves: [] };
 
   const moves = [];
@@ -129,6 +143,9 @@ function planMoves(list, targetDir) {
   for (const item of list) {
     if (!PART_ID_PATTERN.test(item.partId ?? '')) {
       fail(`partId lowercase snake_case olmalı (gelen: "${item.partId}")`);
+    }
+    if (typeof item.id !== 'string' || !NODE_ID_PATTERN.test(item.id)) {
+      fail(`"${item.partId}" ${label}nın düğüm kimliği geçersiz (gelen: "${item.id}")`);
     }
     if (seen.has(item.partId)) {
       fail(`"${item.partId}" partId'si manifest içinde birden fazla kez var`);
@@ -163,17 +180,76 @@ function planMoves(list, targetDir) {
   return { targetDir, moves };
 }
 
-function executeMoves({ targetDir, moves }) {
-  if (!moves.length) return [];
+/**
+ * Aynı kaynak PNG iki hedefe yazılamaz: ilk taşıma kaynağı tüketirdi ve
+ * ikincisi yarım hedef bırakarak düşerdi. Ayrıca iki parçanın aynı Pencil
+ * düğümünü iddia etmesi metadata kökenini belirsizleştirir; yazımdan önce
+ * reddedilir.
+ */
+function rejectSharedSources(all) {
+  const owners = new Map();
+  for (const { item } of all) {
+    const owner = owners.get(item.id);
+    if (owner) {
+      fail(
+        `düğüm "${item.id}" hem "${owner}" hem "${item.partId}" tarafından kullanılıyor; ` +
+          `bir kaynak PNG iki hedefe yazılamaz`,
+      );
+    }
+    owners.set(item.id, item.partId);
+  }
+}
 
-  mkdirSync(targetDir, { recursive: true });
+/**
+ * Bütün hedefleri ve metadata'yı bir birim olarak yerleştirir. Önce hepsi
+ * hedefin yanında geçici adla hazırlanır (kaynak dokunulmadan kalır), sonra
+ * mevcut hedefler sabit bağla ayrılıp geçici dosyalar rename ile yerine geçer.
+ * Herhangi bir adım düşerse yerleşenler geri alınır: eski hedef eski hâlinde,
+ * yeni olan yoksa silinir. Geçici ve yedek dosyalar her durumda temizlenir.
+ */
+function placeAll(plan, metadataTarget, metadataText) {
+  const entries = [
+    ...plan.map(({ src, dest }) => ({ kind: 'copy', src, dest })),
+    { kind: 'text', text: metadataText, dest: metadataTarget },
+  ];
+  const staged = [];
+  const previous = new Map();
+  const placed = [];
+  try {
+    for (const entry of entries) {
+      mkdirSync(dirname(entry.dest), { recursive: true });
+      const temp = tempName(entry.dest);
+      staged.push(temp);
+      if (entry.kind === 'copy') copyFileSync(entry.src, temp);
+      else writeFileSync(temp, entry.text);
+      entry.temp = temp;
+    }
+    for (const { dest } of entries) {
+      if (!existsSync(dest)) continue;
+      const keep = tempName(dest);
+      linkSync(dest, keep);
+      previous.set(dest, keep);
+    }
+    for (const { temp, dest } of entries) {
+      renameSync(temp, dest);
+      placed.push(dest);
+    }
+  } catch (error) {
+    for (const dest of placed.reverse()) {
+      const keep = previous.get(dest);
+      if (keep) renameSync(keep, dest);
+      else rmSync(dest, { force: true });
+    }
+    throw error;
+  } finally {
+    for (const temp of staged) rmSync(temp, { force: true });
+    for (const keep of previous.values()) rmSync(keep, { force: true });
+  }
+}
 
-  return moves.map(({ item, src, dest }) => {
-    copyFileSync(src, dest);
-    unlinkSync(src);
-    console.log(`  ${item.id}.png -> ${dest}`);
-    return { ...item, file: dest };
-  });
+/** Hedefin yanında benzersiz geçici ad. */
+function tempName(target) {
+  return `${target}.tmp-${process.pid}-${++tempCounter}`;
 }
 
 function fail(message) {
