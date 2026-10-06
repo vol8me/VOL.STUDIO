@@ -54,13 +54,13 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      // Okunabilirlik kapısı Deck'in motoru WebKit'te koşar (webkit projesi).
-      testIgnore: /readability\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'], deviceScaleFactor: 1 },
-      testMatch: /readability\.spec\.ts/,
+      // Piksel temeli yalnız Chromium'dadır; WebKit temeli bilinçli olarak ayrıca
+      // kalibre edilmeden kurulmaz ve otomatik güncellemeyle saklanmaz.
+      testIgnore: /visual\.spec\.ts/,
     },
   ],
   webServer: {

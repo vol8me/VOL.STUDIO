@@ -239,7 +239,10 @@ test.describe('sürükleme jesti', () => {
     const leaked = await page.evaluate(() =>
       ['.vol-kanban-wrap', '.vol-skill-tree', '.vol-carousel'].filter((selector) => {
         const element = document.querySelector<HTMLElement>(selector);
-        return element !== null && getComputedStyle(element).userSelect !== 'none';
+        if (element === null) return false;
+        // WebKit hesaplı stilde yalnız ön ekli özelliği gösterir; CSS ikisini de yazar.
+        const style = getComputedStyle(element);
+        return (style.userSelect ?? style.webkitUserSelect) !== 'none';
       }),
     );
     expect(leaked).toEqual([]);

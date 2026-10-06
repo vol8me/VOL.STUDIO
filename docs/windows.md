@@ -129,6 +129,14 @@ Playwright WebKit'in AudioContext sınırı testte gerekçesiyle görünür;
 Chromium/WebKit testleri farklı kabul kaynaklarıdır. Piksel temelleri
 platform ekiyle ayrıdır; sırf kapı yeşillensin diye yenilenmez.
 
+Vitrin Chromium temelleri `win32` kanoniktir. `linux` temelleri bu makinede WSL
+Ubuntu 24.04 + Playwright Chromium 151 ile denendi (`git archive` çıktısı ext4'e açılır,
+`pnpm install --filter "@volstudio/vol-showcase..."`, `playwright install --with-deps
+chromium`, vitrin build'i, `visual.spec.ts`): 12 sekmeden 6'sı bayt eşit yeniden üretildi,
+6'sı (buttons, panels, hud, forms, advanced, touch) üretilemedi. Linux hücresi bu yüzden
+**doğrulanmamıştır**; bu temeller bu makineden yenilenmez ve gerçek Linux ortamında
+yeniden üretilebilirlik ölçülene kadar kabul sayılmaz.
+
 `pnpm deck` Windows'ta devkit araç yoludur; paketleme için
 [Linux builder](linux.md) ve [Deck sözleşmesi](steam-deck.md) geçerlidir.
 SSH erişimi oyun/Steam/suspend kabulü değildir. Windows node_modules veya

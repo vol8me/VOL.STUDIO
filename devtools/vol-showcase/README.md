@@ -37,10 +37,11 @@ pnpm --filter @volstudio/vol-showcase test:e2e
 ```
 
 E2E gönderilen build'i sınar. Determinizm, yerleşim ve piksel karşılaştırması
-ayrı testlerdir. Chromium okunabilirlik dışındaki E2E dosyalarını, WebKit
-yalnız okunabilirliği çalıştırır. Bütün davranışların iki motora yayılması
-[UI-00 işi](../../docs/ui/TODO.md) olarak açıktır. Piksel farkı bilinçli
-görsel değişiklikte temel güncellemesiyle kabul edilir.
+ayrı testlerdir. Her E2E dosyası Chromium ve WebKit'te koşar; tek istisna piksel
+temelidir (yalnız Chromium) ve `e2eConfig` bekçisi bunu gerekçeli tutar. WebKit
+piksel temeli bilinçli kalibrasyon olmadan kurulmaz. Piksel farkı bilinçli görsel
+değişiklikte temel güncellemesiyle kabul edilir; Linux Chromium temelleri
+[Windows belgesindeki](../../docs/windows.md) sınırla doğrulanmamıştır.
 
 ```bash
 pnpm --filter @volstudio/vol-showcase test:e2e:update
