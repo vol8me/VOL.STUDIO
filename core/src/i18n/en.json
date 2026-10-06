@@ -113,5 +113,12 @@
     "rebind": "Rebind {{action}}",
     "reset": "Reset",
     "resetAction": "Reset {{action}} to default"
+  },
+  "xp": {
+    "progress": "Lv. {{level}} — {{value}} / {{max}}"
+  },
+  "dialogue": {
+    "fastForward": "Speed up typing",
+    "skipLine": "Finish the line"
   }
 }

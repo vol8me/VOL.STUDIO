@@ -93,7 +93,7 @@ test('root package.json script yüzeyi frozen paket adı taşımaz', () => {
 const PRODUCT_QUALITY_SCANNERS = [
   'sourceSize.mjs',
   'commentDensity.mjs',
-  'deadI18n.mjs',
+  'i18nSurface.mjs',
   'moduleCycles.mjs',
   'layers.mjs',
   'devPorts.mjs',

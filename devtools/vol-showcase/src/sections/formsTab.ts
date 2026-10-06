@@ -243,7 +243,7 @@ function buildRangeSliderDemo(disposables: DisposableScope): HTMLElement {
     min: 1,
     max: 50,
     value: { min: 5, max: 30 },
-    formatValue: (v) => `Lv.${v}`,
+    formatValue: (v) => i18next.t('volui:forms.enemyLevelValue', { value: v }),
   });
   disposables.addDestroyables(range);
 

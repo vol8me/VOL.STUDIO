@@ -397,7 +397,8 @@
     "onScreenKeyboard": "Ekran klavyesi",
     "onScreenKeyboardOpen": "Klavyeyi aç",
     "onScreenKeyboardValue": "Değer: {{value}}",
-    "onScreenKeyboardCanceled": "İptal edildi, değer korundu: {{value}}"
+    "onScreenKeyboardCanceled": "İptal edildi, değer korundu: {{value}}",
+    "enemyLevelValue": "Sv.{{value}}"
   },
   "palette": {
     "surface": "Surface",
@@ -742,10 +743,6 @@
     "selectedItem": "Seçildi.",
     "contextMenuOpened": "Bağlam menüsü açıldı (Kullan / At / İncele).",
     "swipeZoneHint": "Alanı herhangi bir yöne kaydır.",
-    "dir_up": "Yukarı",
-    "dir_down": "Aşağı",
-    "dir_left": "Sol",
-    "dir_right": "Sağ",
     "cameraPanned": "Kamera {{dir}} yönde pan edildi — mesafe: {{distance}}px, hız: {{velocity}}px/ms.",
     "multiTouchHint": "Alana birden fazla parmakla/tıklamayla dokun.",
     "activeTouches": "Aktif dokunuş: {{n}}",
@@ -763,7 +760,13 @@
     "bindingDash": "Atılım",
     "bindingFire": "Ateş",
     "bindingHint": "Bir bağa tıkla ve yeni tuşa bas. Esc iptal eder; çakışma olursa tuşlar takas edilir.",
-    "bindingSwapped": "{{action}} ile takas edildi."
+    "bindingSwapped": "{{action}} ile takas edildi.",
+    "directions": {
+      "up": "Yukarı",
+      "down": "Aşağı",
+      "left": "Sol",
+      "right": "Sağ"
+    }
   },
   "loading": {
     "indicatorTypes": "Gösterge Tipleri",

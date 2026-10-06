@@ -1,3 +1,4 @@
+import { i18next } from '../../i18n/I18n';
 import { Bar, type BarLabel } from './Bar';
 import { UI_TIMING } from '../../constants';
 
@@ -8,7 +9,7 @@ export interface XPBarOptions {
   xp?: number;
   /** Bir sonraki seviyeye geçmek için gereken XP miktarını hesaplar. */
   xpForLevel: (level: number) => number;
-  /** Bar üzerindeki metin; varsayılan "xp / xpForLevel". */
+  /** Bar üzerindeki metin; varsayılan çevrilmiş "Sv. n — xp / xpForLevel" (`core:xp.progress`). */
   label?: BarLabel;
   animateMs?: number;
 }
@@ -45,7 +46,8 @@ export class XPBar {
       // XP dolan bir değerdir: seviye başında bar boş olur. Tükenen kaynaklara
       // ait "düşük = kritik" kırmızısı burada yanlış algı yaratırdı; bar tek renk.
       lowThreshold: null,
-      label: label ?? ((v, m) => `Lv.${this.level} — ${v} / ${m}`),
+      label:
+        label ?? ((value, max) => i18next.t('core:xp.progress', { level: this.level, value, max })),
     });
     this.bar.element.classList.add('vol-xp-bar');
     this.element = this.bar.element;

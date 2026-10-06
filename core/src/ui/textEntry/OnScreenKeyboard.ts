@@ -47,6 +47,7 @@ export class OnScreenKeyboard {
   private value: string;
   private shifted = false;
   private closed = false;
+  private readonly onLanguageChanged = (): void => this.relabelActionKeys();
 
   private constructor(request: TextEntryRequest, resolve: (r: TextEntryResult) => void) {
     this.value = request.value;
@@ -75,6 +76,10 @@ export class OnScreenKeyboard {
       if (key) this.onKey(key.dataset);
     });
     this.renderKeys();
+
+    // Açık klavyede dil değişirse işlev tuşlarının etiketi güncellenir (odak yerinde kalır).
+    i18next.on('languageChanged', this.onLanguageChanged);
+    this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
 
     // B / Escape / Android geri — ortak yığın iptal eder.
     this.scope.addSubscription(
@@ -152,6 +157,17 @@ export class OnScreenKeyboard {
         rowEl.appendChild(key);
       }
       this.keyGrid.appendChild(rowEl);
+    }
+  }
+
+  /** İşlev tuşları ve boşluk etiketini geçerli dile çevirir; harf tuşlarına dokunmaz. */
+  private relabelActionKeys(): void {
+    for (const key of this.keyGrid.querySelectorAll<HTMLButtonElement>('.vol-osk__key')) {
+      if (key.dataset.action === 'shift') key.textContent = i18next.t('core:keyboard.shift');
+      else if (key.dataset.action === 'backspace') {
+        key.textContent = i18next.t('core:keyboard.backspace');
+      } else if (key.dataset.action === 'done') key.textContent = i18next.t('core:keyboard.done');
+      else if (key.dataset.value === ' ') key.textContent = i18next.t('core:keyboard.space');
     }
   }
 

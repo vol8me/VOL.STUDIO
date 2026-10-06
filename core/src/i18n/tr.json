@@ -113,5 +113,12 @@
     "rebind": "{{action}} için yeni tuş ata",
     "reset": "Sıfırla",
     "resetAction": "{{action}} tuşunu varsayılana döndür"
+  },
+  "xp": {
+    "progress": "Sv. {{level}} — {{value}} / {{max}}"
+  },
+  "dialogue": {
+    "fastForward": "Yazımı hızlandır",
+    "skipLine": "Satırı tamamla"
   }
 }

@@ -15,7 +15,7 @@ import { validateBlobSizes } from '../blobSize.mjs';
 import { validateLayerBoundaries } from '../layers.mjs';
 import { validateTrackedImports } from '../trackedImports.mjs';
 import { validateCoverageBinding } from '../coverageBinding.mjs';
-import { validateI18nKeys } from '../deadI18n.mjs';
+import { validateI18nSurface } from '../i18nSurface.mjs';
 import { validateSourceSize } from '../sourceSize.mjs';
 import { validateCommentDensity } from '../commentDensity.mjs';
 import { validateDevPorts } from '../devPorts.mjs';
@@ -95,7 +95,7 @@ problems.push(
 problems.push(...validateLayerBoundaries(root, lifecycle));
 problems.push(...validateBlobSizes(root));
 problems.push(...validateTrackedImports(root));
-problems.push(...validateI18nKeys(root, undefined, lifecycle));
+problems.push(...validateI18nSurface(root, { lifecycle }));
 problems.push(...validateSourceSize(root, undefined, undefined, lifecycle));
 problems.push(...validateDevPorts(root, lifecycle));
 problems.push(...validateModuleCycles(root, lifecycle));

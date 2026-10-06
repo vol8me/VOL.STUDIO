@@ -747,7 +747,7 @@ function buildSwipeGestureZoneDemo(disposables: DisposableScope): HTMLElement {
     },
     onSwipe: (event) => {
       surface.style.transform = '';
-      const dirKey = `volui:touch.dir_${event.direction}`;
+      const dirKey = `volui:touch.directions.${event.direction}`;
       const directionLabel = i18n.tDynamic(dirKey);
       result.setContent(
         i18next.t('volui:touch.cameraPanned', {

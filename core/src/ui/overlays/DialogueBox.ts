@@ -1,3 +1,5 @@
+import { i18next } from '../../i18n/I18n';
+
 export interface DialogueChoice {
   label: string;
   onSelect: () => void;
@@ -39,6 +41,9 @@ export class DialogueBox {
   private readonly textLabel: HTMLDivElement;
   private readonly choicesContainer: HTMLDivElement;
   private readonly continueIndicator: HTMLDivElement;
+  private fastForwardButton: HTMLButtonElement | null = null;
+  private skipLineButton: HTMLButtonElement | null = null;
+  private readonly onLanguageChanged = (): void => this.labelControls();
   private readonly normalTypeSpeedMs: number;
   private readonly fastTypeSpeedMs: number;
   private typeSpeedMs: number;
@@ -92,6 +97,8 @@ export class DialogueBox {
 
     if (options.showControls) {
       this.element.appendChild(this.buildControls());
+      // Açık kutuda dil değişince kontrol etiketleri güncellenir; destroy'da söküldü.
+      i18next.on('languageChanged', this.onLanguageChanged);
     }
 
     // Seçimler gösteriliyorken kutuya tıklamak ilerletmemeli (next()) — oyuncu
@@ -157,6 +164,7 @@ export class DialogueBox {
   }
 
   destroy(): void {
+    i18next.off('languageChanged', this.onLanguageChanged);
     clearInterval(this.typingTimer);
     this.element.removeEventListener('click', this.boundClick);
     this.element.remove();
@@ -175,7 +183,7 @@ export class DialogueBox {
     fastForwardButton.type = 'button';
     fastForwardButton.className = 'vol-dialogue__control';
     fastForwardButton.appendChild(this.buildControlIcon('fast-forward'));
-    fastForwardButton.setAttribute('aria-label', 'Yazımı hızlandır');
+    this.fastForwardButton = fastForwardButton;
     fastForwardButton.setAttribute('aria-pressed', 'false');
     fastForwardButton.addEventListener('click', (event) => {
       event.stopPropagation();
@@ -190,14 +198,21 @@ export class DialogueBox {
     skipLineButton.type = 'button';
     skipLineButton.className = 'vol-dialogue__control';
     skipLineButton.appendChild(this.buildControlIcon('skip'));
-    skipLineButton.setAttribute('aria-label', 'Satırı tamamla');
+    this.skipLineButton = skipLineButton;
     skipLineButton.addEventListener('click', (event) => {
       event.stopPropagation();
       this.next();
     });
     controls.appendChild(skipLineButton);
+    this.labelControls();
 
     return controls;
+  }
+
+  /** Kontrol düğmelerinin erişilebilir adları (çevrilmiş); dil değişince yeniden uygulanır. */
+  private labelControls(): void {
+    this.fastForwardButton?.setAttribute('aria-label', i18next.t('core:dialogue.fastForward'));
+    this.skipLineButton?.setAttribute('aria-label', i18next.t('core:dialogue.skipLine'));
   }
 
   /** 'fast-forward': çift ok (▶▶). 'skip': ok + çubuk (▶|), "tamamla/sonraki" için standart medya sembolü. */

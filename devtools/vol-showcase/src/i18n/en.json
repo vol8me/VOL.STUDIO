@@ -397,7 +397,8 @@
     "onScreenKeyboard": "On-screen keyboard",
     "onScreenKeyboardOpen": "Open keyboard",
     "onScreenKeyboardValue": "Value: {{value}}",
-    "onScreenKeyboardCanceled": "Canceled, value kept: {{value}}"
+    "onScreenKeyboardCanceled": "Canceled, value kept: {{value}}",
+    "enemyLevelValue": "Lv.{{value}}"
   },
   "palette": {
     "surface": "Surface",
@@ -742,10 +743,6 @@
     "selectedItem": "Selected.",
     "contextMenuOpened": "Context menu opened (Use / Drop / Inspect).",
     "swipeZoneHint": "Swipe the area in any direction.",
-    "dir_up": "Up",
-    "dir_down": "Down",
-    "dir_left": "Left",
-    "dir_right": "Right",
     "cameraPanned": "Camera panned {{dir}} — distance: {{distance}}px, velocity: {{velocity}}px/ms.",
     "multiTouchHint": "Touch the area with multiple fingers/clicks.",
     "activeTouches": "Active touches: {{n}}",
@@ -763,7 +760,13 @@
     "bindingDash": "Dash",
     "bindingFire": "Fire",
     "bindingHint": "Click a binding and press a new key. Esc cancels; conflicting keys are swapped.",
-    "bindingSwapped": "Swapped with {{action}}."
+    "bindingSwapped": "Swapped with {{action}}.",
+    "directions": {
+      "up": "Up",
+      "down": "Down",
+      "left": "Left",
+      "right": "Right"
+    }
   },
   "loading": {
     "indicatorTypes": "Indicator Types",
