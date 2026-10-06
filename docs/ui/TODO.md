@@ -176,7 +176,7 @@ erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4 beğeni, UI-13.4). Bu 
 
 1. **Ortam (D6/R4).** Gate shell'inde Node 22.23.1; WSL'de Playwright Chromium kurulumu ve vitrin temelinin Linux'ta yeniden üretilmesi. Kabul: `doctor:env` OK; Linux temeli ya bayt eşit üretilir ya da NOT-RUN gerekçesi kayıtlıdır.
 2. **UI-06.1 atomik göç (tamam).** Dizin, paket adı, lifecycle, quality (paket+bütçe), kilit importer'ı, `justfile`, katalog sabit yolu, testler, belgeler ve PNG'ler aynı değişiklikte; `.gitignore`'a vitrin records alanı. Kabul: eski vitrin yolu ve paket adı başvurusu sıfır, PNG'ler yalnız taşındı (özet eşit), build/bundle 150/1/24, contract/high yeşil.
-3. **UI-00.1 registry (tamam)**, 4. **UI-00.2 (tamam)**, 5. **UI-00.3 (tamam)**, 6. **UI-00.4** ölçüm kör noktaları, 7. **UI-00.7** bank çalışma zamanı görünümü, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
+3. **UI-00.1 registry (tamam)**, 4. **UI-00.2 (tamam)**, 5. **UI-00.3 (tamam)**, 6. **UI-00.4 (tamam)**, 7. **UI-00.7** bank çalışma zamanı görünümü, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
 
 ## Açık
 
@@ -186,15 +186,6 @@ Hedef: yanlış başlangıç referansının
 sonraki fazlarda başarı gibi kullanılmasını engellemek. Sahip: kalite/vitrin. Değişiklik
 alanı: `scripts/quality/`, `devtools/vol-showcase/tests/e2e/`, ilgili CORE testleri.
 
-- [ ] **UI-00.4 — Ölçümün kör noktaları.** `devtools/vol-showcase/tests/e2e/layout.spec.ts`
-      saydam ama tıklanabilir yerel range girişini dışlamasın; katmanın kapalı ve test
-      örneğinin açık olduğu durumlar ayrı değerlendirilir; gerçek tıklama alanı, örtüşme
-      ve kaydırma kabı ölçülsün. Okunabilirlik sınaması CSS alt sınırını Valve glif
-      yüksekliği kanıtından ayırsın. Önerilen
-      devtools/vol-showcase/tests/e2e/latency.spec.ts/devtools/vol-showcase/tests/e2e/performance.spec.ts
-      rapor şeması: UI JS/DOM/GPU, ekrana sunum ve desteklenmeyen ölçüler ayrı. Kapanır:
-      A/A gürültü, temanın geometriyi kaydırması ve desteklenmeyen ölçü sahte PASS
-      üretmez.
 - [ ] **UI-00.5 — İlk referans.** 12 sekme/17 doğrudan tüketici/821 vitrin anahtarı
       başlangıcını yeniden say; varsayılan ekranlar, hareket kapalı/açık durumları,
       paket boyutu ve UI maliyetini git dışı özel kayıtlara kaydet. Kapanır: önceki
@@ -707,5 +698,6 @@ Planın hazırlanmış olması bir üretim görevini kapatmaz; yalnız kapıdan 
 
 - [x] UI-00.1 — `core/src/ui/index.ts` yüzeyi (89 sınıf, 29 yardımcı, 205 tip) AST'den çıkarılır; her sınıf/yardımcı `registry.json`'da tekil kayıtlıdır ve kapı kaydı yüzeyle, VOL.TEST tüketimiyle (17 sınıf doğrudan), vitrin kullanımıyla ve gerçek `it`+`expect` kanıtıyla karşılaştırır. Eski isim-geçişi bekçisinin yorum/metin mention'ını gösterim saydığı 9 yer ve kanıtsız 5 öğe (sahip görevli gap) ortaya çıktı.
 - [x] UI-00.2 — Vitrinin 7 E2E dosyası Chromium ve WebKit'te koşar (40 → 68 test, 2,1 dk); tek istisna Chromium piksel temelidir ve `e2eConfig` bekçisi dosya listesini raporlar, gerekçesiz asimetriyi ve ölü istisnayı reddeder. WebKit'te çıkan tek kusur (`user-select` hesaplı stili yalnız ön ekli) testin motor farkıydı, CSS doğruydu. Linux temelleri WSL'de 6/12 yeniden üretildi: Linux hücresi doğrulanmamış.
+- [x] UI-00.4 — Ölçüm kör noktaları kapandı. Dokunma hedefi ölçümü (`devtools/vol-showcase/tests/e2e/support/geometry.ts`) saydam ama tıklanabilir yerel girişi (kaydırıcı) dışlamaz, gerçek vuruş noktasını `elementFromPoint` ile sınar, `overflow` atasının kırpmasını ve örtüşmeyi ölçer; çizilmediği için ölçülemeyen örnekler ayrı sayılır ve açık altı katman ayrıca ölçülür. Düzeneğin kendisi saydam/örtülü/kırpılan/hayalet hedef fixture'ıyla sınanır. İlk gerçek ölçümde iki motorda aynı 10 kusur çıktı (telefonda sekme şeridi içeriğe 173 px bırakır; kart/BuildMenu/Slider/OSK/EventLog/SplitPane) ve `geometryExceptions.json`'a sahip görevle bağlandı; bayat kayıt testi düşürür. Okunabilirlik: CSS 12 px alt sınırı ile çizilmiş glif yüksekliği ayrı kapıdır; büyük harf mürekkep yüksekliği (tarayıcı kestirimi, Deck ölçümü değildir) Jura 12 px normal/yarı kalın ağırlıkta 9 ekran px altında (UI-07.3). Rapor şeması (`devtools/vol-showcase/tests/e2e/support/perfReport.ts`, `performance.spec.ts`, `latency.spec.ts`): kapsamlar ayrı durumlu (ölçüldü/desteklenmiyor/çalışmadı), `basis` ekrana sunulan kare değilse PASS yok, A/A gürültü ve zamanlayıcı çözünürlüğü 0.05F eşiğini aşarsa yetersiz, NaN 0 sayılmaz. Başsız ölçüm: işaretçi/klavye p95 Chromium ≈31/44 ms, WebKit ≈96/73 ms (olay→sonraki kare yaklaşımı, kabul değil); GPU/sunum/atıflı iz desteklenmiyor; WebKit zamanlayıcı çözünürlüğü 1 ms, Hz bilinen hızlara uymuyor. Tema geometri kayma sondası A/A ve kasıtlı kayma kontrolleriyle hazır; renk tokenı değişimi iki motorda 12 sekmede geometriyi kaydırmaz.
 - [x] UI-00.3 — axe (`@axe-core/playwright`, yalnız vitrin devDependency) 5 WCAG etiketiyle 12 sekmede ve 6 açık katmanda (Modal, Sheet, Popup, Popover, Select, OSK) iki motorda koşar; sonuç `axeExceptions.json` ile birebir eşleşmek zorundadır (yeni ve bayat bulgu düşer), her kayıt açık UI görevine bağlı: 50 ihlal ve 39 incomplete. Düzenek bilerek adsız bırakılan girişi ve örtülen odağı yakalar (negatif testler). Durum fixture'ları (`stateFixtures.json`, registry'ye bağlı) 6 katmanda odak ve Escape/odak geri dönüşünü sınar; bilinen kusurlar motor bazında `test.fail` ile izlenir (Modal/Sheet Chromium odak geri yüklemesi UI-09.1, OSK UI-11.1). `ui-check` tarifi eklendi.
 - [x] UI-06.1 — Eski vol-ui paketi tek atomik göçle `devtools/vol-showcase` / `@volstudio/vol-showcase` oldu; lifecycle, quality (paket ve bütçe), kilit importer'ı, `justfile`, katalog yolu, testler ve belgeler birlikte taşındı. Eski yol ve paket başvurusu sıfır; CSS `.vol-ui-root` ve `--vol-ui-*` tokenları değişmedi; 24 piksel temeli yalnız taşındı; bütçe 150/1/24 aynı.

@@ -1,4 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
+import { LAYER_SCENARIOS, openLayer, reconcile } from './support/accessibility';
+import { writeFileSync } from 'node:fs';
+import {
+  coverage,
+  geometryShifts,
+  hitTargetProblems,
+  loadGeometryRecords,
+  measureTargets,
+  snapshotGeometry,
+  type HitProblem,
+  type TargetMeasure,
+} from './support/geometry';
 import { hitTargetSelectors } from './support/policy';
 import { openShowcase, PHONE_VIEWPORT, selectTab, SHOWCASE_TABS } from './support/determinism';
 
@@ -12,6 +24,34 @@ import { openShowcase, PHONE_VIEWPORT, selectTab, SHOWCASE_TABS } from './suppor
  * Hepsi jsdom'un göremediği şeyleri ölçer: gerçek yerleşim, gerçek kırpma,
  * gerçek kutu boyutu.
  */
+
+/*
+ * Bilinen kusur kaydı (`support/geometryExceptions.json`): her kayıt sahip UI
+ * görevine bağlıdır. Bulgu kayıtta yoksa test düşer; kaydı olup artık bulunmayan
+ * (düzelmiş) bulgu da düşer, böylece kayıt görev kapanınca silinir.
+ * `GEOMETRY_RECORD=<dosya>` yalnız yeni kayıt taslağı için ham bulguları yazar.
+ */
+const geometryRecords = loadGeometryRecords();
+const recordPath = process.env.GEOMETRY_RECORD;
+const recorded: Record<string, HitProblem[]> = {};
+
+test.afterAll(() => {
+  if (recordPath) writeFileSync(recordPath, JSON.stringify(recorded, null, 2));
+});
+
+function reconcileHitTargets(scope: string, measures: TargetMeasure[]): void {
+  const found = hitTargetProblems(measures);
+  if (recordPath) {
+    recorded[`${test.info().project.name}/${scope}`] = found;
+    return;
+  }
+  const result = reconcile(found, geometryRecords, scope);
+  expect(
+    result.unexpected,
+    `${scope}: kayıtsız hedef bulgusu (44 px çizilmiyor, örtülü ya da kırpılıyor)`,
+  ).toEqual([]);
+  expect(result.stale, `${scope}: bayat kayıt (bulgu düzelmiş, kaydı sil)`).toEqual([]);
+}
 
 /** Sayfanın kendisi yatay kaymamalı — panel içi kaydırma meşrudur. */
 async function documentOverflow(page: Page): Promise<number> {
@@ -91,47 +131,113 @@ test.describe('telefon genişliği', () => {
     expect((await close.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   });
 
-  test('politika kapsamındaki dokunma hedefleri GERÇEKTEN 44 px çizilir', async ({ page }) => {
+  test('politika kapsamındaki dokunma hedefleri GERÇEKTEN 44 px çizilir', async ({
+    page,
+  }, info) => {
     /*
      * `hitTargetSync.test.ts` kuralın CSS'te var olduğunu doğrular ve kendi
      * yorumunda sınırını yazar: jsdom yerleşim hesaplamaz. Kural doğruyken
      * kutunun yine de küçük kalması mümkündür — rakip bir `max-height`,
      * kırpan bir ata ya da eşleşmeyen bir medya sorgusu yüzünden. Ölçüm ancak
      * gerçek tarayıcıda yapılabilir.
+     *
+     * Ölçüm `support/geometry.ts`dedir: saydam ama tıklanabilir yerel giriş
+     * (kaydırıcı) dışlanmaz, örtülen ya da kırpılan hedef küçük sayılır ve
+     * çizilmediği için ölçülemeyenler ayrı raporlanır.
      */
     const selectors = hitTargetSelectors();
     expect(selectors.length, 'Politika seçicileri CSS’ten okunamadı').toBeGreaterThan(20);
 
     await openShowcase(page);
-    const violations: string[] = [];
+    let measured = 0;
+    let transparent = 0;
+    let unrendered = 0;
     for (const tab of SHOWCASE_TABS) {
       await selectTab(page, tab);
-      const small = await page.evaluate((list) => {
-        const bad: string[] = [];
-        for (const selector of list) {
-          for (const element of document.querySelectorAll<HTMLElement>(selector)) {
-            const style = getComputedStyle(element);
-            if (style.display === 'none' || style.visibility === 'hidden') continue;
-            if (Number(style.opacity) === 0) continue;
-            const rect = element.getBoundingClientRect();
-            // Hiç çizilmemiş (kapalı bir katmanın içindeki) eleman ölçülmez.
-            if (rect.width === 0 && rect.height === 0) continue;
-            // Yarım piksel payı: tarayıcı kutuyu alt piksele yuvarlayabilir.
-            if (rect.width < 43.5 || rect.height < 43.5) {
-              bad.push(`${selector} → ${Math.round(rect.width)}x${Math.round(rect.height)}`);
-            }
-          }
-        }
-        return [...new Set(bad)];
-      }, selectors);
-      if (small.length) violations.push(`${tab}: ${small.join(' | ')}`);
+      const measures = await measureTargets(page.locator('body'), selectors);
+      const counts = coverage(measures);
+      measured += counts.measured;
+      transparent += counts.transparentHit;
+      unrendered += counts.unrendered;
+      reconcileHitTargets(`tab/${tab}`, measures);
     }
+    info.annotations.push({
+      type: 'kapsam',
+      description: `ölçülen ${measured} (saydam-vuruş ${transparent}), çizilmediği için ölçülemeyen ${unrendered}`,
+    });
+    expect(measured, 'hiç hedef ölçülmedi').toBeGreaterThan(0);
+    expect(transparent, 'saydam yerel giriş (kaydırıcı) ölçüme girmeli').toBeGreaterThan(0);
+  });
 
-    expect(
-      violations,
-      'Bu hedefler `--vol-hit-target-min` tüketiyor ama kaba işaretçide 44 px ' +
-        'çizilmiyor. Kural doğru olsa bile kutu küçük kalabilir.',
-    ).toEqual([]);
+  test('açık katmanların içindeki hedefler de ölçülür', async ({ page }, info) => {
+    /*
+     * Kapalı katmanın içi çizilmez, bu yüzden sekme taraması onları hiç
+     * ölçemez ("ölçülemedi", "geçti" değildir). Katman açılıp kökü ayrıca
+     * ölçülür ve kapalı örnekle açık örnek ayrı sayılır.
+     */
+    const selectors = hitTargetSelectors();
+    const lines: string[] = [];
+    for (const scenario of LAYER_SCENARIOS) {
+      await openShowcase(page);
+      await openLayer(page, scenario);
+      const measures = await measureTargets(scenario.root(page), selectors);
+      const counts = coverage(measures);
+      expect(
+        counts.measured,
+        `${scenario.scope}: açık katmanda hiç hedef ölçülmedi`,
+      ).toBeGreaterThan(0);
+      lines.push(`${scenario.scope}: ölçülen ${counts.measured}, ölçülemeyen ${counts.unrendered}`);
+      reconcileHitTargets(`layer/${scenario.scope}`, measures);
+    }
+    info.annotations.push({ type: 'kapsam', description: lines.join('; ') });
+  });
+
+  test('ölçüm düzeneği saydam, örtülü ve kırpılan hedefi yakalar', async ({ page }) => {
+    // Düzeneğin kendisi sınanır: kör nokta geri gelirse bu test düşer.
+    await openShowcase(page);
+    await page.evaluate(() => {
+      const host = document.createElement('div');
+      host.id = 'geometry-fixture';
+      host.style.cssText =
+        'position:fixed;left:0;top:0;width:600px;height:400px;z-index:2147483647';
+      host.innerHTML = [
+        // Saydam ama vuruş alan küçük giriş: ölçülmeli ve küçük sayılmalı.
+        '<input id="fx-transparent" type="range" style="position:absolute;left:10px;top:10px;width:30px;height:12px;opacity:0;margin:0">',
+        // Büyük düğme, üstünü başka bir kutu örtüyor.
+        '<button id="fx-covered" style="position:absolute;left:100px;top:10px;width:60px;height:60px">a</button>',
+        '<div style="position:absolute;left:100px;top:10px;width:60px;height:60px;background:#000"></div>',
+        // Büyük düğme, overflow:hidden atası 20 px'e kırpıyor.
+        '<div style="position:absolute;left:200px;top:10px;width:20px;height:20px;overflow:hidden"><button id="fx-clipped" style="width:60px;height:60px">c</button></div>',
+        // Saydam ve vuruş almayan: hiç hedef değil.
+        '<button id="fx-ghost" style="position:absolute;left:300px;top:10px;width:10px;height:10px;opacity:0;pointer-events:none">g</button>',
+        // Düzgün hedef: sorunsuz.
+        '<button id="fx-good" style="position:absolute;left:100px;top:100px;width:60px;height:60px">ok</button>',
+      ].join('');
+      document.body.append(host);
+    });
+    const measures = await measureTargets(page.locator('#geometry-fixture'), [
+      '#fx-transparent',
+      '#fx-covered',
+      '#fx-clipped',
+      '#fx-ghost',
+      '#fx-good',
+    ]);
+    const by = Object.fromEntries(measures.map((m) => [m.selector, m]));
+
+    expect(by['#fx-transparent'].render).toBe('transparent-hit');
+    expect(by['#fx-ghost'].render).toBe('hidden');
+    expect(by['#fx-good'].render).toBe('painted');
+    expect(by['#fx-clipped'].width).toBe(60);
+    expect(by['#fx-clipped'].visibleWidth).toBe(20);
+
+    const problems = Object.fromEntries(
+      hitTargetProblems(measures).map((problem) => [problem.target, problem.rule]),
+    );
+    expect(problems).toEqual({
+      '#fx-transparent': 'size',
+      '#fx-covered': 'covered',
+      '#fx-clipped': 'clipped',
+    });
   });
 
   test('Kanban sütunları ezilmez, pano kayar', async ({ page }) => {
@@ -202,6 +308,75 @@ test.describe('telefon genişliği', () => {
       if (zero.length) broken.push(`${tab}: ${zero.join(', ')}`);
     }
     expect(broken).toEqual([]);
+  });
+});
+
+test.describe('geometri kayma sondası (tema/mod değişimi için)', () => {
+  /*
+   * Tema yöneticisi (UI-01) gelmeden önce sonda ve kontrolleri hazırdır: renk
+   * ve kenarlık TOKEN değişimi hiçbir kutuyu oynatmamalı. Sonda kendi kör
+   * noktalarını sınar — A/A (değişiklik yok) sıfır kayma, kasıtlı enjekte
+   * kayma ise yakalanır — böylece "kayma yok" iddiası sondanın körlüğünden
+   * değil gerçek sabitlikten gelir. Kayma kayıpsız bir A/A olmadan okunmaz.
+   */
+  const ALL = '[class^="vol-"], [class*=" vol-"]';
+
+  test('A/A: değişiklik yokken hiçbir kutu kaymaz', async ({ page }) => {
+    await openShowcase(page);
+    for (const tab of SHOWCASE_TABS) {
+      await selectTab(page, tab);
+      const first = await snapshotGeometry(page, [ALL]);
+      const second = await snapshotGeometry(page, [ALL]);
+      expect(first[ALL].length, `${tab}: hiç eleman ölçülmedi`).toBeGreaterThan(5);
+      expect(geometryShifts(first, second), tab).toEqual([]);
+    }
+  });
+
+  test('kontrol: kasıtlı yerleşim değişimi sonda tarafından yakalanır', async ({ page }) => {
+    await openShowcase(page);
+    await selectTab(page, 'buttons');
+    const before = await snapshotGeometry(page, [ALL]);
+    await page.addStyleTag({ content: '.vol-button { padding: 30px !important; }' });
+    const shifts = geometryShifts(before, await snapshotGeometry(page, [ALL]));
+    expect(shifts.length).toBeGreaterThan(0);
+  });
+
+  test('renk/kenarlık tokenı değişimi hiçbir sekmede geometriyi kaydırmaz', async ({ page }) => {
+    await openShowcase(page);
+    const offenders: string[] = [];
+    for (const tab of SHOWCASE_TABS) {
+      await selectTab(page, tab);
+      const before = await snapshotGeometry(page, [ALL]);
+      const paint = (): Promise<string> =>
+        page.evaluate((selector) => {
+          const parts: string[] = [];
+          for (const element of document.querySelectorAll(selector)) {
+            const style = getComputedStyle(element);
+            parts.push(`${style.color}|${style.backgroundColor}|${style.borderTopColor}`);
+          }
+          return parts.join(';');
+        }, ALL);
+      const paintBefore = await paint();
+      await page.evaluate(() => {
+        const root = document.documentElement.style;
+        for (const name of [
+          '--vol-ui-text',
+          '--vol-ui-surface-1',
+          '--vol-ui-surface-2',
+          '--vol-ui-border-soft',
+          '--vol-ui-focus-ring',
+        ])
+          root.setProperty(name, '#ff00ff');
+      });
+      // Kontrol: token gerçekten boyayı değiştirdi; yoksa "kayma yok" boş bir iddiadır.
+      expect(await paint(), `${tab}: token değişimi hiçbir rengi değiştirmedi`).not.toBe(
+        paintBefore,
+      );
+      const shifts = geometryShifts(before, await snapshotGeometry(page, [ALL]));
+      await page.evaluate(() => document.documentElement.removeAttribute('style'));
+      if (shifts.length) offenders.push(`${tab}: ${shifts.slice(0, 3).join(' | ')}`);
+    }
+    expect(offenders).toEqual([]);
   });
 });
 

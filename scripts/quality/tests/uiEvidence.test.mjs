@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import {
   validateAxeRecords,
+  validateGeometryRecords,
   validateRepoUiEvidence,
   validateStateFixtures,
 } from '../uiEvidence.mjs';
@@ -82,6 +83,62 @@ test("N/A duruma, kayıtsız export'a ve kapanmış sahibe yazılan fixture redd
   assert.ok(problems.some((p) => /known sahibi açık UI görevi olmalı/.test(p)));
   assert.ok(problems.some((p) => /bilinmeyen motor "firefox"/.test(p)));
   assert.ok(problems.some((p) => /known "press" fixture'ın durumu değil/.test(p)));
+});
+
+const geometry = (over = {}) => ({
+  scope: 'tab/panels',
+  rule: 'clipped',
+  target: '.vol-button',
+  owner: 'UI-03.1',
+  reason: 'kırpılıyor',
+  ...over,
+});
+
+test('geçerli geometri kaydı ihlal üretmez', () => {
+  assert.deepEqual(validateGeometryRecords({ hitTargets: [geometry()] }, tasks), []);
+});
+
+test('geometri: kapanmış sahip, bilinmeyen kural, yinelenen ve gerekçesiz kayıt reddedilir', () => {
+  const problems = validateGeometryRecords(
+    {
+      hitTargets: [
+        geometry({ owner: 'UI-99.9' }),
+        geometry({ rule: 'tiny', target: '.b' }),
+        geometry({ reason: '', target: '.c' }),
+        geometry({ target: '.d', scope: 'her-yer' }),
+        geometry({ target: '.e' }),
+        geometry({ target: '.e' }),
+      ],
+    },
+    tasks,
+  );
+  assert.ok(problems.some((p) => /sahip görev açık bir UI görevi olmalı \(UI-99\.9\)/.test(p)));
+  assert.ok(problems.some((p) => /bilinmeyen kural/.test(p)));
+  assert.ok(problems.some((p) => /gerekçe boş/.test(p)));
+  assert.ok(problems.some((p) => /geçersiz kapsam/.test(p)));
+  assert.ok(problems.some((p) => /yinelenen kayıt/.test(p)));
+});
+
+test('glif kaydı: geçerli geçer; biçim, motor, sahip ve gerekçe hatası reddedilir', () => {
+  const ok = { font: 'Jura 12px w400', owner: 'UI-03.1', reason: 'düşük' };
+  assert.deepEqual(validateGeometryRecords({ hitTargets: [], glyphHeights: [ok] }, tasks), []);
+  const problems = validateGeometryRecords(
+    {
+      hitTargets: [],
+      glyphHeights: [
+        ok,
+        { ...ok, font: 'Jura 12' },
+        { ...ok, font: 'A 9px w400', engines: ['firefox'] },
+        { ...ok, font: 'B 9px w400', owner: 'UI-99.9' },
+        { ...ok, font: 'C 9px w400', reason: '' },
+      ],
+    },
+    tasks,
+  );
+  assert.ok(problems.some((p) => /Aile boyutpx/.test(p)));
+  assert.ok(problems.some((p) => /bilinmeyen motor "firefox"/.test(p)));
+  assert.ok(problems.some((p) => /UI-99\.9/.test(p)));
+  assert.ok(problems.some((p) => /gerekçe boş/.test(p)));
 });
 
 test('depodaki axe kaydı ve durum fixture verisi geçerlidir', () => {

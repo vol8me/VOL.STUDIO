@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openShowcase, selectTab, SHOWCASE_TABS } from './support/determinism';
+import { loadGlyphRecords } from './support/geometry';
 
 /**
  * OKUNABİLİRLİK kapısı — Deck'in motoru (WebKit) projesinde koşar.
@@ -15,6 +16,14 @@ import { openShowcase, selectTab, SHOWCASE_TABS } from './support/determinism';
  *    (`--vol-layout-zoom` medya sorgusu → `.vol-showcase-root` zoom). İddia hem
  *    zoom katsayısı hem de gerçekten BÜYÜYEN bir metin kutusuyla yapılır —
  *    katsayı yalan söyleyemez çünkü kutu yüksekliği de ölçülür.
+ *
+ * 3. ÇİZİLMİŞ GLİF YÜKSEKLİĞİ: Valve alt sınırı hesaplanan `font-size`a değil
+ *    ekranda çizilen glife bağlıdır (CONTRACT: ≥9 ekran px, ≥12 hedef). 12 px
+ *    iki yazı tipinde aynı glif boyunu vermez; bu yüzden CSS alt sınırı (1.) ile
+ *    glif ölçümü (3.) ayrı kapılardır ve biri diğerinin yerine geçmez. Ölçü,
+ *    tarayıcının canvas `actualBoundingBoxAscent` değeriyle 'H' (büyük harf)
+ *    mürekkep yüksekliğidir: bir TARAYICI KESTİRİMİDİR, Deck panelindeki gerçek
+ *    ekran örneği değildir ve o kabul UI-07.3'te açık kalır.
  *
  * İhlal raporu `sekme | seçici | hesaplanan px` biçimindedir: satır
  * doğrudan düzeltilecek kuralı gösterir.
@@ -143,4 +152,93 @@ test.describe('oturma mesafesi ölçeği (1080p / 2160p)', () => {
       expect(scaledHeight).toBeLessThanOrEqual(baseHeight * size.zoom * 1.05);
     });
   }
+});
+
+/** Valve çizilmiş glif alt sınırı (ekran px); büyük harf mürekkep yüksekliği ile ölçülür. */
+const MIN_GLYPH_PX = 9;
+
+interface GlyphMeasure {
+  /** `Aile boyutpx w<ağırlık>`: aynı üçlü tek kez ölçülür. */
+  font: string;
+  capHeightPx: number;
+}
+
+function collectGlyphHeights(): GlyphMeasure[] {
+  const canvas = document.createElement('canvas').getContext('2d');
+  if (canvas === null) throw new Error('canvas bağlamı yok: glif yüksekliği ölçülemez');
+  const seen = new Map<string, number>();
+  for (const el of document.querySelectorAll('body *')) {
+    let text = '';
+    for (const node of el.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) text += node.textContent ?? '';
+    }
+    if (!text.trim()) continue;
+    const style = getComputedStyle(el);
+    if (style.visibility === 'hidden' || style.display === 'none') continue;
+    if (Number.parseFloat(style.opacity) === 0) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 3 || rect.height < 3) continue;
+    const size = Number.parseFloat(style.fontSize);
+    const family = style.fontFamily.split(',')[0].replaceAll('"', '').trim();
+    const key = `${family} ${size}px w${style.fontWeight}`;
+    if (seen.has(key)) continue;
+    canvas.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    // Ekran pikseli = CSS px × cihaz ölçeği (vitrin 1'e sabitler).
+    seen.set(key, canvas.measureText('H').actualBoundingBoxAscent * window.devicePixelRatio);
+  }
+  return [...seen].map(([font, capHeightPx]) => ({ font, capHeightPx }));
+}
+
+test.describe('çizilmiş glif yüksekliği (tarayıcı kestirimi, 1280×800)', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+  const records = loadGlyphRecords();
+
+  test(`büyük harf mürekkep yüksekliği ≥ ${MIN_GLYPH_PX} ekran px`, async ({ page }, info) => {
+    await openShowcase(page);
+    const low = new Map<string, number>();
+    let measured = 0;
+    for (const tab of SHOWCASE_TABS) {
+      await selectTab(page, tab);
+      for (const item of await page.evaluate(collectGlyphHeights)) {
+        measured += 1;
+        expect(item.capHeightPx, `${item.font}: ölçü alınamadı`).toBeGreaterThan(0);
+        if (item.capHeightPx < MIN_GLYPH_PX) low.set(item.font, item.capHeightPx);
+      }
+    }
+    info.annotations.push({
+      type: 'kapsam',
+      description: `${measured} yazı tipi örneği ölçüldü; <${MIN_GLYPH_PX}px: ${[...low.keys()].join(', ') || 'yok'}`,
+    });
+    expect(measured, 'hiç metin ölçülmedi').toBeGreaterThan(0);
+
+    const engine = info.project.name;
+    const known = new Set(
+      records
+        .filter((record) => record.engines === undefined || record.engines.includes(engine))
+        .map((record) => record.font),
+    );
+    expect(
+      [...low.keys()].filter((font) => !known.has(font)),
+      'kayıtsız: çizilen glif Valve alt sınırının altında (font-size ≥12 bunu garanti etmez)',
+    ).toEqual([]);
+    expect(
+      [...known].filter((font) => !low.has(font)),
+      'bayat glif kaydı (ölçü düzelmiş, kaydı sil)',
+    ).toEqual([]);
+  });
+
+  test('glif ölçümü yazı tipine duyarlıdır (kontrol)', async ({ page }) => {
+    // Ölçümün gerçekten glif boyu okuduğunu gösterir: aynı 12 px'te küçük harfli
+    // bir yedek yazı tipi ile büyük bir ekran yazı tipi farklı yükseklik verir.
+    await openShowcase(page);
+    const [small, large] = await page.evaluate(() => {
+      const canvas = document.createElement('canvas').getContext('2d')!;
+      const measure = (font: string): number => {
+        canvas.font = font;
+        return canvas.measureText('H').actualBoundingBoxAscent;
+      };
+      return [measure('12px monospace'), measure('48px monospace')];
+    });
+    expect(large).toBeGreaterThan(small * 3);
+  });
 });

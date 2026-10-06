@@ -35,8 +35,12 @@ geriletmeme eşiklerinin kaynağıdır.
 | `signoff`                                       | high + tam ses kapsamı/doğrulaması + JS/Rust güvenlik                                | Yayınlanan UI sesleri ve nihai kilometre taşı; gerçek cihaz/insan kabulü ayrıca                          |
 
 Yerel UI doğrulama tarifi `ui-check`tir (UI-00.3): yüzey kaydı ve vitrinin iki
-motorlu tam E2E'si; `high` aynı E2E'yi zaten içerir. Tema geometrisi, gerçek UI
-maliyeti ve tam durum matrisi sonraki UI görevlerinde bu tarife bağlanır. Hızlı contract/tip/token kontrolleri
+motorlu tam E2E'si (axe, durum fixture'ları, dokunma hedefi geometrisi, glif
+yüksekliği, gecikme/performans rapor düzeneği); `high` aynı E2E'yi zaten içerir.
+Geometri ve glif bulguları `geometryExceptions.json`da sahip görevle izlenir;
+rapor vitrin paketinin git dışı records alanına yazılır ve
+ekrana sunulan kare ölçülmedikçe PASS olamaz. Tam durum matrisi ve gerçek UI
+maliyeti sonraki UI görevlerinde bu tarife bağlanır. Hızlı contract/tip/token kontrolleri
 quick zincirine, tarayıcı axe/durum/geometri/niyet kontrolleri e2e'ye; uzun
 gerçek cihaz performans ölçümü sürüm kabulüne bağlanır. Yeni tarifin ihlal
 örneği, bileşim testi ve docs/gates güncellemesi aynı değişiklikte yapılır.
