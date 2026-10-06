@@ -91,6 +91,11 @@ audio-verify:
 # UI kanıtı: yüzey kaydı ve kanıt verisi, ardından vitrinin iki motorlu tam E2E'si
 # (axe, durum fixture'ları, yerleşim, piksel). `high` bu bileşimi zaten içerir;
 # tarif UI işinde bu kısa yolu tek komutta verir. Gerçek cihaz/insan kabulü değildir.
+# UI ilk referans kaydı (git dışı): just ui-baseline <etiket>; karşılaştırma için
+# node scripts/quality/cli/ui-baseline.mjs compare <önceki> <sonraki> --strict
+ui-baseline label:
+    node scripts/quality/cli/ui-baseline.mjs record {{label}}
+
 ui-check:
     node scripts/quality/cli/ui-registry.mjs --check
     pnpm --filter @volstudio/vol-showcase build

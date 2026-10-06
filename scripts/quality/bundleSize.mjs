@@ -59,24 +59,34 @@ function collect(directory, found = []) {
   return found;
 }
 
-/** Bir dist klasörünü ölçer; `vendor` dışındaki JS `app`tır. */
-export function measureBundle(distDir) {
+/** Bir dist klasörünün telden geçen (gzip) baytı; `vendor` dışındaki JS `app`tır. */
+export function measureBundleBytes(distDir) {
   const files = collect(distDir);
   if (files.length === 0) return null;
-
   const { app, vendor, css } = classifyBundleFiles(files);
+  return {
+    appBytes: gzippedBytes(app),
+    vendorBytes: gzippedBytes(vendor),
+    cssBytes: gzippedBytes(css),
+  };
+}
+
+/** Bir dist klasörünü ölçer; `vendor` dışındaki JS `app`tır. */
+export function measureBundle(distDir) {
+  const bytes = measureBundleBytes(distDir);
+  if (bytes === null) return null;
 
   /*
    * Tam sayı KB'a yuvarlamak küçük bir parçayı 0 gösteriyordu ve "ölçülmedi"
    * ile "çok küçük" ayırt edilemez hâle geliyordu. Bir ondalık, raporu
    * okunur tutarken bu belirsizliği kaldırır.
    */
-  const kb = (bytes) => Math.round((bytes / 1024) * 10) / 10;
+  const kb = (value) => Math.round((value / 1024) * 10) / 10;
 
   return {
-    appKb: kb(gzippedBytes(app)),
-    vendorKb: kb(gzippedBytes(vendor)),
-    cssKb: kb(gzippedBytes(css)),
+    appKb: kb(bytes.appBytes),
+    vendorKb: kb(bytes.vendorBytes),
+    cssKb: kb(bytes.cssBytes),
   };
 }
 

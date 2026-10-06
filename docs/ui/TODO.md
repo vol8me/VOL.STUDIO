@@ -28,16 +28,16 @@ sayı değişince bu bölüm güncellenir, tarihçe git'tedir.
 
 ### Ölçülen başlangıç
 
-| Alan                           | Ölçü                                                                                                                                         |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| CORE UI                        | 117 TS dosyası, 21,1 bin satır; 89 sınıf/118 runtime/205 tip export; 60 renk tokenı, 238 satır `theme.css`                                   |
-| Vitrin                         | 12 sekme, **821** TR/EN anahtar (eski kayıttaki 830 yanlıştı) + CORE 63; 7 E2E dosyası, 40 test (≈1,6 dk); WebKit yalnız `readability`       |
-| Piksel temeli                  | 12 sekme × Chromium `win32` + `linux` = 24 PNG, sıfır tolerans; WebKit temeli yok; Linux temeli WSL'de 6/12 yeniden üretildi (doğrulanmamış) |
-| Gönderilen boyut               | vitrin app 138,7/150, css 19,8/24 KiB; **VOL.TEST app 106,3/106,3 (pay sıfır)**, vendor 345,6/360, css 18,2/21                               |
-| Eksik altyapı                  | axe-core kurulu değil; `ui-check` tarifi yok; kayıt/registry yok; native ölçüm sondası yok                                                   |
-| Göç maliyeti (taşınmadan önce) | eski vitrin yolu için 26 yol + 15 paket başvurusu, 81 izlenen dosya, 24 PNG; `.vol-ui-root` CSS sınıfı 944 geçişte ve **değişmez**           |
-| Cihaz                          | Windows dizüstü (bu makine) ve Lenovo Android 14 tablet erişilebilir; Steam Deck, Samsung ve Android 16 cihaz yok                            |
-| Ortam                          | `doctor:env` Node **22.23.1** ister; kapılar bu sürümle koşturulur                                                                           |
+| Alan                           | Ölçü                                                                                                                                                                                     |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CORE UI                        | 117 TS dosyası, 21,1 bin satır; 89 sınıf/118 runtime/205 tip export; 60 renk tokenı, 238 satır `theme.css`                                                                               |
+| Vitrin                         | 12 sekme, **830** TR/EN anahtar (yaprak sayımı, UI-00.5 yeniden sayımı; plandaki ilk "821" yeniden üretilemedi) + CORE 63; 7 E2E dosyası, 40 test (≈1,6 dk); WebKit yalnız `readability` |
+| Piksel temeli                  | 12 sekme × Chromium `win32` + `linux` = 24 PNG, sıfır tolerans; WebKit temeli yok; Linux temeli WSL'de 6/12 yeniden üretildi (doğrulanmamış)                                             |
+| Gönderilen boyut               | vitrin app 138,7/150, css 19,8/24 KiB; **VOL.TEST app 106,3/106,3 (pay sıfır)**, vendor 345,6/360, css 18,2/21                                                                           |
+| Eksik altyapı                  | axe-core kurulu değil; `ui-check` tarifi yok; kayıt/registry yok; native ölçüm sondası yok                                                                                               |
+| Göç maliyeti (taşınmadan önce) | eski vitrin yolu için 26 yol + 15 paket başvurusu, 81 izlenen dosya, 24 PNG; `.vol-ui-root` CSS sınıfı 944 geçişte ve **değişmez**                                                       |
+| Cihaz                          | Windows dizüstü (bu makine) ve Lenovo Android 14 tablet erişilebilir; Steam Deck, Samsung ve Android 16 cihaz yok                                                                        |
+| Ortam                          | `doctor:env` Node **22.23.1** ister; kapılar bu sürümle koşturulur                                                                                                                       |
 
 ### Kararlar
 
@@ -176,7 +176,7 @@ erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4 beğeni, UI-13.4). Bu 
 
 1. **Ortam (D6/R4).** Gate shell'inde Node 22.23.1; WSL'de Playwright Chromium kurulumu ve vitrin temelinin Linux'ta yeniden üretilmesi. Kabul: `doctor:env` OK; Linux temeli ya bayt eşit üretilir ya da NOT-RUN gerekçesi kayıtlıdır.
 2. **UI-06.1 atomik göç (tamam).** Dizin, paket adı, lifecycle, quality (paket+bütçe), kilit importer'ı, `justfile`, katalog sabit yolu, testler, belgeler ve PNG'ler aynı değişiklikte; `.gitignore`'a vitrin records alanı. Kabul: eski vitrin yolu ve paket adı başvurusu sıfır, PNG'ler yalnız taşındı (özet eşit), build/bundle 150/1/24, contract/high yeşil.
-3. **UI-00.1 registry (tamam)**, 4. **UI-00.2 (tamam)**, 5. **UI-00.3 (tamam)**, 6. **UI-00.4 (tamam)**, 7. **UI-00.7 (tamam)**, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
+3. **UI-00.1 registry (tamam)**, 4. **UI-00.2 (tamam)**, 5. **UI-00.3 (tamam)**, 6. **UI-00.4 (tamam)**, 7. **UI-00.7 (tamam)**, 8. **UI-00.5 (tamam)**, 9. **UI-00.6** browser probu ve native araştırma.
 
 ## Açık
 
@@ -186,11 +186,6 @@ Hedef: yanlış başlangıç referansının
 sonraki fazlarda başarı gibi kullanılmasını engellemek. Sahip: kalite/vitrin. Değişiklik
 alanı: `scripts/quality/`, `devtools/vol-showcase/tests/e2e/`, ilgili CORE testleri.
 
-- [ ] **UI-00.5 — İlk referans.** 12 sekme/17 doğrudan tüketici/821 vitrin anahtarı
-      başlangıcını yeniden say; varsayılan ekranlar, hareket kapalı/açık durumları,
-      paket boyutu ve UI maliyetini git dışı özel kayıtlara kaydet. Kapanır: önceki
-      kayıtla karşılaştırma yöntemi vardır; bağlı olmayan cihaz NOT-RUN; kök F08/F09 ve
-      VOL.TEST kabul işleri açık kalır.
 - [ ] **UI-00.6 — Çalışan ölçüm sondası ve profil uygulanabilirliği.** Vitrin
       kalite sahibi browser için aynı-frame UI JS/DOM atfı, input→visible
       zaman bağı, trace/frame ID ve A/A overhead kalibrasyonunu küçük fixture
@@ -439,7 +434,7 @@ contract/rust/build/bundle, iki motor web E2E, gerçek native sonda.
 
 Ön koşul: UI-07.1–07.3 için UI-00.1; UI-07.4 için UI-01.2 ve UI-06.1. Sahip core i18n/UI/vitrin, mevcut motor yeniden yazılmaz.
 
-- [ ] **UI-07.1 — Görünen metin sıfır açık.** 821 vitrin/63 CORE başlangıç anahtarını
+- [ ] **UI-07.1 — Görünen metin sıfır açık.** 830 vitrin/63 CORE başlangıç anahtarını
       AST/fixture üzerinden yeniden tara; adlandırma/ölü anahtarlar, çalışma anındaki
       dinamik önek gerekçesi; XPBar Lv ve erişilebilirlik etiketi dahil. Kapanır: TR/EN
       parite/ölü/hardcoded kapıları; modül düzeyinde t() çağrısı yok; açık
@@ -688,6 +683,7 @@ Planın hazırlanmış olması bir üretim görevini kapatmaz; yalnız kapıdan 
 
 - [x] UI-00.1 — `core/src/ui/index.ts` yüzeyi (89 sınıf, 29 yardımcı, 205 tip) AST'den çıkarılır; her sınıf/yardımcı `registry.json`'da tekil kayıtlıdır ve kapı kaydı yüzeyle, VOL.TEST tüketimiyle (17 sınıf doğrudan), vitrin kullanımıyla ve gerçek `it`+`expect` kanıtıyla karşılaştırır. Eski isim-geçişi bekçisinin yorum/metin mention'ını gösterim saydığı 9 yer ve kanıtsız 5 öğe (sahip görevli gap) ortaya çıktı.
 - [x] UI-00.2 — Vitrinin 7 E2E dosyası Chromium ve WebKit'te koşar (40 → 68 test, 2,1 dk); tek istisna Chromium piksel temelidir ve `e2eConfig` bekçisi dosya listesini raporlar, gerekçesiz asimetriyi ve ölü istisnayı reddeder. WebKit'te çıkan tek kusur (`user-select` hesaplı stili yalnız ön ekli) testin motor farkıydı, CSS doğruydu. Linux temelleri WSL'de 6/12 yeniden üretildi: Linux hücresi doğrulanmamış.
+- [x] UI-00.5 — İlk referans alındı ve kayıt yöntemi kuruldu: `node scripts/quality/cli/ui-baseline.mjs record <etiket>` (tarif `just ui-baseline`) vitrini ve VOL.TEST'i derler, iki motorda 12 sekmenin dondurulmuş ekran özetini (sha256) ve hareket azaltma kapalı/açık sürekli animasyon kümesini toplar, gönderilen gzip baytlarını ve `ui-perf` özetini ekler ve vitrin paketinin git dışı records alanına yazar; `compare <önceki> <sonraki> [--strict]` bundle büyümesini, ekran değişimini, yeni sürekli animasyonu ve ölçü yitimini kötüleşme sayar. Yeniden sayım: 12 sekme (E2E listesiyle aynı), 17 doğrudan sınıf tüketicisi (+4 yardımcı), vitrin anahtarı **830** (EN=TR; plandaki "821" yeniden üretilemedi, geri alındı), CORE 63. Tekrarlanabilirlik kanıtı: art arda iki kayıt 0 fark verir (24 ekran özeti, bundle baytları dahil). İlk kayıt: vitrin app 141979, css 20241 B; VOL.TEST app 103266, vendor 353881, css 18662 B; hareket azaltma açıkken iki motorun hiçbir sekmesinde sürekli animasyon yok, kapalıyken `vol-dialogue-bounce` her sekmede, `vol-spin` (buttons) ve altı glif animasyonu (text) sürüyor. Cihaz hücreleri: Steam Deck bağlı değil, Samsung ve Android 16 cihaz yok, Android tablet için yerel vitrin ölçümü henüz yok → hepsi NOT-RUN gerekçeli; kök F08/F09 ve VOL.TEST kabul işleri açık kalır.
 - [x] UI-00.7 — Gönderilen boyut payı açıldı. Oyuna giden ses bank'ları `scripts/vite/audioBankRuntime.mjs` ile çalışma zamanı görünümüne indirgenir (anahtar, rol, etiket, süre, varlık yolu); hash, manifest, program/PCM özeti, ölçüm ve kalite kaydı yalnız kanonik dosyada kalır, `SoundFamilyBank`, `verifyFamily` ve üretici hattı değişmedi. Ölçülmüş kazanç (VOL.TEST app, gzip, dosya başına ayrı sıkıştırma): 108840 → 103266 bayt, −5574 B ≈ 5,4 KiB (hedef ≥4 KiB); ölçülen app 106,3 → 100,8 KiB. Bütçe 106,3'te bırakıldı: ≈5,5 KiB pay UI-02/UI-03 tüketicisi için ayrıldı (`quality.json` gerekçesi güncel). Sözleşme iki testle korunur: görünüm yalnız çalışma zamanının okuduğu alanları taşır ve provenance sızdırmaz (düğüm testi, her kanonik bank için), `parse(kanonik)` ile `parse(görünüm)` aynı aileyi, filtreyi ve 96 jetonluk deterministik seçimi verir (vitest). Vitrin için iş başına boyut notu UI-02'de vitrin ses bank'ları geldiğinde tutulur; bugün vitrin bank göndermez.
 - [x] UI-00.4 — Ölçüm kör noktaları kapandı. Dokunma hedefi ölçümü (`devtools/vol-showcase/tests/e2e/support/geometry.ts`) saydam ama tıklanabilir yerel girişi (kaydırıcı) dışlamaz, gerçek vuruş noktasını `elementFromPoint` ile sınar, `overflow` atasının kırpmasını ve örtüşmeyi ölçer; çizilmediği için ölçülemeyen örnekler ayrı sayılır ve açık altı katman ayrıca ölçülür. Düzeneğin kendisi saydam/örtülü/kırpılan/hayalet hedef fixture'ıyla sınanır. İlk gerçek ölçümde iki motorda aynı 10 kusur çıktı (telefonda sekme şeridi içeriğe 173 px bırakır; kart/BuildMenu/Slider/OSK/EventLog/SplitPane) ve `geometryExceptions.json`'a sahip görevle bağlandı; bayat kayıt testi düşürür. Okunabilirlik: CSS 12 px alt sınırı ile çizilmiş glif yüksekliği ayrı kapıdır; büyük harf mürekkep yüksekliği (tarayıcı kestirimi, Deck ölçümü değildir) Jura 12 px normal/yarı kalın ağırlıkta 9 ekran px altında (UI-07.3). Rapor şeması (`devtools/vol-showcase/tests/e2e/support/perfReport.ts`, `performance.spec.ts`, `latency.spec.ts`): kapsamlar ayrı durumlu (ölçüldü/desteklenmiyor/çalışmadı), `basis` ekrana sunulan kare değilse PASS yok, A/A gürültü ve zamanlayıcı çözünürlüğü 0.05F eşiğini aşarsa yetersiz, NaN 0 sayılmaz. Başsız ölçüm: işaretçi/klavye p95 Chromium ≈31/44 ms, WebKit ≈96/73 ms (olay→sonraki kare yaklaşımı, kabul değil); GPU/sunum/atıflı iz desteklenmiyor; WebKit zamanlayıcı çözünürlüğü 1 ms, Hz bilinen hızlara uymuyor. Tema geometri kayma sondası A/A ve kasıtlı kayma kontrolleriyle hazır; renk tokenı değişimi iki motorda 12 sekmede geometriyi kaydırmaz.
 - [x] UI-00.3 — axe (`@axe-core/playwright`, yalnız vitrin devDependency) 5 WCAG etiketiyle 12 sekmede ve 6 açık katmanda (Modal, Sheet, Popup, Popover, Select, OSK) iki motorda koşar; sonuç `axeExceptions.json` ile birebir eşleşmek zorundadır (yeni ve bayat bulgu düşer), her kayıt açık UI görevine bağlı: 50 ihlal ve 39 incomplete. Düzenek bilerek adsız bırakılan girişi ve örtülen odağı yakalar (negatif testler). Durum fixture'ları (`stateFixtures.json`, registry'ye bağlı) 6 katmanda odak ve Escape/odak geri dönüşünü sınar; bilinen kusurlar motor bazında `test.fail` ile izlenir (Modal/Sheet Chromium odak geri yüklemesi UI-09.1, OSK UI-11.1). `ui-check` tarifi eklendi.

@@ -1079,7 +1079,7 @@ Kod uygulanmadı; plan UI belgelerinin (CONTRACT, VERIFICATION, CATALOG, TODO), 
 platform, kapı, audio-synth ve vitrin belgelerinin tamamı okunarak ve çalışma ağacıyla
 karşılaştırılarak yazıldı.
 
-**Düzeltilen kayıtlar.** Vitrin anahtar sayısı 830 değil **821**'dir (CORE 63 ayrı). Görev
+**Düzeltilen kayıtlar.** Vitrin anahtar sayısı **830**'dur (EN ve TR eşit, yaprak sayımı; CORE 63 ayrı). Bu planın ilk yazımındaki "821" düzeltmesi yeniden üretilemedi ve UI-00.5 yeniden sayımıyla geri alındı. Görev
 sayısı 63'ten **64**'e çıktı: UI-00.7 yeni, F05'te bulunan bir önkoşuldur. VOL.TEST app
 payı sıfırdır (106,3/106,3 KiB) ve UI'nın gönderilen ses/tema/hareket kodu o bütçeyi
 düşürür; payın büyük bir kalemi (≈5,6 KiB gzip) bank JSON'larının çalışma zamanında

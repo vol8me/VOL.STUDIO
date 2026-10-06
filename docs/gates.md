@@ -147,19 +147,20 @@ matrisi UI görevlerinde eklenir.
 Bütün tarifler kalite kapısı değildir. Mutasyon ve geliştirme tariflerinin
 başarısı ürün kabulü olarak raporlanmaz.
 
-| Tarif                         | İşlev                                                                                          |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `default`                     | Tarif listesini gösterir                                                                       |
-| `test-pkg <pkg>`              | Tek paketin düz testini çalıştırır                                                             |
-| `build-ui`                    | Mevcut vitrin build kolaylığı                                                                  |
-| `ui-check`                    | UI yüzey kaydı + vitrinin iki motorlu tam E2E'si; `high` içinde zaten var, tek komut kısa yolu |
-| `report <kapı> --json`        | Kapıyı çalıştırıp aşama/exit/süre raporu verir                                                 |
-| `dev`, `dev-ui`               | Geliştirme uygulamasını açar                                                                   |
-| `fix`                         | Format ve lint düzeltmesi yapar                                                                |
-| `gen-theme`, `download-fonts` | Sahip üreticiyi çalıştırır                                                                     |
-| `benchmark-core`              | Tanımlı CORE ölçümünü alır                                                                     |
-| `doctor`                      | Ortam hazırlığını denetler                                                                     |
-| `clean`, `clean-all`          | Yerel çıktıları temizler; kaynak ve ölçüm kabulü değildir                                      |
+| Tarif                         | İşlev                                                                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `default`                     | Tarif listesini gösterir                                                                                                                                     |
+| `test-pkg <pkg>`              | Tek paketin düz testini çalıştırır                                                                                                                           |
+| `build-ui`                    | Mevcut vitrin build kolaylığı                                                                                                                                |
+| `ui-baseline <etiket>`        | UI ilk referans kaydı (git dışı): sayımlar, ekran özetleri, hareket, gönderilen bayt, cihaz NOT-RUN hücreleri; `ui-baseline.mjs compare` ile karşılaştırılır |
+| `ui-check`                    | UI yüzey kaydı + vitrinin iki motorlu tam E2E'si; `high` içinde zaten var, tek komut kısa yolu                                                               |
+| `report <kapı> --json`        | Kapıyı çalıştırıp aşama/exit/süre raporu verir                                                                                                               |
+| `dev`, `dev-ui`               | Geliştirme uygulamasını açar                                                                                                                                 |
+| `fix`                         | Format ve lint düzeltmesi yapar                                                                                                                              |
+| `gen-theme`, `download-fonts` | Sahip üreticiyi çalıştırır                                                                                                                                   |
+| `benchmark-core`              | Tanımlı CORE ölçümünü alır                                                                                                                                   |
+| `doctor`                      | Ortam hazırlığını denetler                                                                                                                                   |
+| `clean`, `clean-all`          | Yerel çıktıları temizler; kaynak ve ölçüm kabulü değildir                                                                                                    |
 
 ## Ortam ve temizlik
 
