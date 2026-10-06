@@ -5,12 +5,12 @@ uygulama işlerini ayıran başvuru kümesi. Mevcut vitrin
 [vol-ui](../../devtools/vol-ui/README.md), gerçek oyun tüketicisi VOL.TEST'tir.
 VOL.SHOWCASE göçü ve yeni UI mekanizmaları henüz uygulanmadı.
 
-| Gereksinim                                       | Sahip belge                     |
-| ------------------------------------------------ | ------------------------------- |
-| Görünüm, etkileşim, mimari ve karar gerekçeleri  | [CONTRACT](CONTRACT.md)         |
-| Canlı sınıf/export yüzeyi, tüketici ve tier      | [CATALOG](CATALOG.md)           |
-| 14 fazın 63 açık görevi ve kapanışları           | [TODO](TODO.md)                 |
-| Test profilleri, ölçüler ve gerçek kabul yöntemi | [VERIFICATION](VERIFICATION.md) |
+| Gereksinim                                            | Sahip belge                     |
+| ----------------------------------------------------- | ------------------------------- |
+| Görünüm, etkileşim, mimari ve karar gerekçeleri       | [CONTRACT](CONTRACT.md)         |
+| Canlı sınıf/export yüzeyi, tüketici ve tier           | [CATALOG](CATALOG.md)           |
+| 14 fazın 64 açık görevi, yürütme planı ve kapanışları | [TODO](TODO.md)                 |
+| Test profilleri, ölçüler ve gerçek kabul yöntemi      | [VERIFICATION](VERIFICATION.md) |
 
 UI-00–02 ortak temeli kurar; buton, kart ve form pilotları bunu tüketir.
 Windows geliştirme ve ilk native referans önceliklidir. Linux/Deck,

@@ -1070,3 +1070,37 @@ mevcut atlama. `audio-verify` ayrıca koşuldu; 17 emekli iş kaydı kaldırıld
 sonra **exit 0**: 69/69 manifest, 2/2 arama, 7/7 aile, 4/4 müzik, 69/69 iş
 yayın kaydı, 8/8 sample geçti. `signoff`un `coverage-audio`, `security-js` ve
 `security-rust` aşamaları koşulmadı; `signoff` bütününe yeşil denmez.
+
+## 21. F07 yürütme planı
+
+F07'nin kaynak planı [docs/ui/TODO.md](ui/TODO.md) içindeki **Yürütme planı**dır; bu bölüm
+planın dayandığı ölçümü, rapor önceki bölümleriyle uzlaşmayı ve ortam bulgusunu kaydeder.
+Kod uygulanmadı; plan UI belgelerinin (CONTRACT, VERIFICATION, CATALOG, TODO), CORE,
+platform, kapı, audio-synth ve vitrin belgelerinin tamamı okunarak ve çalışma ağacıyla
+karşılaştırılarak yazıldı.
+
+**Düzeltilen kayıtlar.** Vitrin anahtar sayısı 830 değil **821**'dir (CORE 63 ayrı). Görev
+sayısı 63'ten **64**'e çıktı: UI-00.7 yeni, F05'te bulunan bir önkoşuldur. VOL.TEST app
+payı sıfırdır (106,3/106,3 KiB) ve UI'nın gönderilen ses/tema/hareket kodu o bütçeyi
+düşürür; payın büyük bir kalemi (≈5,6 KiB gzip) bank JSON'larının çalışma zamanında
+okunmayan provenance özetleridir. Bu yüzden UI-02/UI-03 öncesinde ölçülmüş boyut payı
+açmak ayrı görevdir.
+
+**§16 ile uzlaşma.** §16'daki "UI-00→01→02→03/04/05 temel yüzey sırası korunur" ifadesi
+korunur: UI-01/UI-02 UI-03'ü, UI-03.4 (M1) aileleri açar. Gevşetilen tek şey seri
+bekletmedir: UI-04/05/08/09/10 M1 sonrası paralel koşabilir; UI-06.1 göçü şimdi 26 yol ve
+15 paket başvurusu ve 24 piksel temeli taşırken (her faz bunu büyütür) ilk iş olur;
+UI-07.1–07.3 tema işinden bağımsız hattır; Windows native vitrin UI-06.1 sonrası
+paralel platform hattıdır. Linux/Deck fiziksel kabulü F08'de kalır, hiçbir ID silinmedi.
+
+**Ortam bulgusu.** `doctor:env` Node 22.23.1 ister; önceki F05–F06 kapıları Node 24.19.0
+ile koşmuştu. Aynı kaynak Node 22.23.1 ile yeniden doğrulandı: `just high` **exit 0**
+(contract 328, CORE 2.271, VOL.TEST 341, audio-synth 2.255 test; bundle 106,3 KiB aynı;
+scaling CORE 3,715/oyun 4,474; E2E vitrin 40, oyun 27) ve `audio-verify` **exit 0** (69/69
+manifest, 69/69 iş yayın kaydı). Bundan sonraki bütün kanıt Node
+22.23.1 ile alınır ve kayıt sürümü taşır.
+
+**Başlangıç.** İlk dilimler: ortam ve Linux piksel temelinin yeniden üretilebilirliği
+(WSL'de Node/pnpm var, Playwright kurulu değil), UI-06.1 atomik göç, ardından UI-00.1–00.7.
+Yapılamayan kabuller (Deck, Samsung, Android 16, insan AT/görsel/haptik) planda NOT-RUN
+olarak adlandırıldı ve kod fazlarını bloklamaz, sürümü bloklar.

@@ -11,13 +11,172 @@ vermez.
 Güncel üst sıra [kök F01–F10](../../TODO.md) ve kararlar
 [monorepo denetimindedir](../monorepo-audit.md). Windows geliştirme/ilk native
 referans önce alınır; UI-06'nın Linux/Deck fiziksel kabulü kök F08'de ayrı yürür.
-UI-00–UI-13'ün 63 alt görevi korunur. Ses yayın kabulü F01'in mekanik QA/verify
+UI-00–UI-13'ün 64 alt görevi (önceki 63 + UI-00.7) korunur; sıra ve bağımlılık [yürütme planındadır](#yürütme-planı). Ses yayın kabulü F01'in mekanik QA/verify
 sözleşmesidir; zorunlu insan dinleme bekleme durumu kurulmaz.
 
 Teknik teslim ve gerçek release kabulünün ölçütleri
 [VERIFICATION](VERIFICATION.md) içindedir. Sonraki bağımsız teknik iş,
 yapılamayan cihaz/görsel/erişim/haptik kabulünü PASS saymadan ilerleyebilir.
 Her görev kendi Kapanır ölçütleriyle açıktır; UI-13 tüm release kabulünü toplar.
+
+## Yürütme planı
+
+Bu bölüm 14 faz ve 64 görevin **sırasını, bağımlılığını, paralelliğini ve kapı
+stratejisini** belirler; görev ID'leri ve kapanış ölçütleri aşağıdaki `Açık`
+bölümündedir ve değişmez. Ölçüler 2026-10-06'da çalışma ağacından alındı;
+sayı değişince bu bölüm güncellenir, tarihçe git'tedir.
+
+### Ölçülen başlangıç
+
+| Alan                 | Ölçü                                                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CORE UI              | 117 TS dosyası, 21,1 bin satır; 89 sınıf/118 runtime/205 tip export; 60 renk tokenı, 238 satır `theme.css`                                                     |
+| Vitrin               | 12 sekme, **821** TR/EN anahtar (eski kayıttaki 830 yanlıştı) + CORE 63; 7 E2E dosyası, 40 test (≈1,6 dk); WebKit yalnız `readability`                         |
+| Piksel temeli        | 12 sekme × Chromium `win32` + `linux` = 24 PNG, sıfır tolerans; WebKit temeli yok; Linux temeli bu makinede doğrulanmadı (WSL kapalı, Playwright kurulu değil) |
+| Gönderilen boyut     | vitrin app 138,7/150, css 19,8/24 KiB; **VOL.TEST app 106,3/106,3 (pay sıfır)**, vendor 345,6/360, css 18,2/21                                                 |
+| Eksik altyapı        | axe-core kurulu değil; `ui-check` tarifi yok; kayıt/registry yok; native ölçüm sondası yok                                                                     |
+| Göç maliyeti (şimdi) | `devtools/vol-ui` için 26 yol + 15 paket başvurusu, 81 izlenen dosya, 24 PNG; `.vol-ui-root` CSS sınıfı 944 geçişte ve **değişmez**                            |
+| Cihaz                | Windows dizüstü (bu makine) ve Lenovo Android 14 tablet erişilebilir; Steam Deck, Samsung ve Android 16 cihaz yok                                              |
+| Ortam                | `doctor:env` Node **22.23.1** ister; kapılar bu sürümle koşturulur                                                                                             |
+
+### Kararlar
+
+| #   | Karar                                                                                                                                                                                                                                                                   | Gerekçe                                                                                                                                                                             |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | **UI-06.1 paket göçü ilk iş olur** (ID aynı kalır).                                                                                                                                                                                                                     | Mekanik ve görselden bağımsız; şimdi 26+15 başvuru, her faz yeni başvuru ve PNG ekler. Sonraki bütün fazlar yeni yolda çalışır, temel dosyaları iki kez taşınmaz.                   |
+| D2  | Sıra zinciri **bağımlılık grafiğine** çevrilir (aşağıda). Aynı dosyaya dokunan görevler seri, farklı dizinlere dokunanlar paralel koşar.                                                                                                                                | 14 faz seri bekletmek kritik yolu şişirir; gerçek ön koşullar (UI-00.6→UI-03, UI-03.4→aileler) korunur.                                                                             |
+| D3  | UI-07.1–07.3 (anahtar sağlığı, çoğul/RTL, font) tema işinden ayrı hatta koşar; UI-07.4 UI-01.2 sonrasıdır.                                                                                                                                                              | i18n/font tokenlara bağlı değil; tema laboratuvarı bağlı.                                                                                                                           |
+| D4  | Windows native vitrin (UI-06.2–06.4 Windows kısmı) UI-06.1 hemen sonrası **paralel platform hattıdır**.                                                                                                                                                                 | İlk gerçek WebView2 referansı sonraki piksel/performans işlerine erken zemin verir; Linux/Deck kısmı F08 donanımına bağlı kalır.                                                    |
+| D5  | **UI-00.7 (yeni):** UI'nın VOL.TEST'e gireceği her iş için boyut payı açılır; ilk adım ses bank'larının çalışma zamanı görünümüdür (≈4–5 KiB gzip provenance özeti).                                                                                                    | VOL.TEST app payı sıfır; UI-02/03 tüketicisi bütçeyi düşürür. Bank sınıfı ve oyun hash/manifest alanlarını okumaz; gönderilen hâl tüketiciye aittir (kök AGENTS).                   |
+| D6  | Piksel temeli: Windows `win32` kanonik; Linux temeli UI-00.2'de WSL'de **yeniden üretilebilirlik ölçülür**. Bilinçli her görsel değişim iki ailenin temelini aynı commit'te yeniler; üretilemiyorsa Linux hücresi kayıtlı NOT-RUN'dır. Tolerans açılmaz.                | Linux temelleri doğrulanmadan bayatlayabilir; sessiz bayatlama sıfır tolerans kapısını anlamsızlaştırır.                                                                            |
+| D7  | E2E kapıları **katmanlıdır**: `high` smoke + kritik etkileşim (vitrin ≤4 dk), tam durum/tema/dil/yoğunluk matrisi yeni `ui-check` tarifinde ve `signoff`ta; genel ikili tarama, kritik akış tam çarpım.                                                                 | 15 sekme × durum × 2 motor × tema/dil/yoğunluk yüzlerce testtir; pre-push süresi (bugün ≈35 dk) kontrolsüz büyürse kapı atlanmaya başlar. Süre bütçesi ölçülür, timeout büyütülmez. |
+| D8  | UI sesleri CORE'un **gönderilen** varlığıdır: audio-synth'e yeni "kütüphane" hedef türü (ihlal örneğiyle) eklenir; çalışma zamanında audio-synth içe aktarılmaz.                                                                                                        | `targets.ts` bugün yalnız referans ve oyun hedefini tanır; CORE hedefi yok. İlk dilim hedef kararı + negatif test.                                                                  |
+| D9  | UI-11.1/UI-12.1 F04 çıktısını **tekrarlamaz**: eski async sonuç/odak/sağlayıcı temizliği (F04.2) ve Steam iptal/callback sahipliği (F04.4) kabuldür; görevler yalnız kalanı kapsar.                                                                                     | Aynı davranışı ikinci kez yazmak çelişen iki sahip doğurur. Kalan: `TextEntrySession`, OSK yerleşim/dil, grafem/maxLength, IME Enter, public iptal, OSK ekran örneği.               |
+| D10 | Kanıt kaydı vitrin paketinin git dışı records alanındadır (UI-06.1'de ignore edilir); public belge anonim özet taşır.                                                                                                                                                   | Kök AGENTS: araç çıktısı paketin git dışı alanına; cihaz/kullanıcı kimliği kayda girmez.                                                                                            |
+| D11 | Dilim kuralı: bir dilim tek mantıksal değişiklik + kendi ihlal (kırmızı) testi + belge/katalog/registry güncellemesi; `quick` commit'te, `fast` görev sonunda, `high` faz sonunda, `signoff` UI-02 ve UI-13'te.                                                         | "Diğerlerini de düzelt" kayması ve uzun, geri alınamaz değişiklik riskini keser.                                                                                                    |
+| D12 | Belge kapıları UI işini bağlar: yeni public export `core/docs` sembolü (`docSymbols`), katalog+vitrin+test (`catalog.mjs`), i18n anahtarı (`deadI18n`/`keyParity`), 1000 satır ve yorum yoğunluğu sınırını taşır; sınıra yaklaşan dosya mekanizma/sunum olarak bölünür. | Kapılar zaten bağlayıcı (docs/gates.md); dilim kalıbına yazılmazsa her faz sonu toplu onarım borcu doğar.                                                                           |
+
+### Bağımlılık grafiği
+
+Sert ön koşul (→) kapı veya veri bağıdır; yumuşak sıra aynı dosyaya dokunmaktan gelir.
+
+| Görev/faz          | Ön koşul                                                            | Aynı dosya sırası                                   |
+| ------------------ | ------------------------------------------------------------------- | --------------------------------------------------- |
+| UI-06.1            | yok (Dalga 0)                                                       | —                                                   |
+| UI-00.1–00.4       | UI-06.1                                                             | registry → durum matrisi                            |
+| UI-00.5, UI-00.7   | UI-00.2 (iki motorlu ölçüm), UI-06.1                                | —                                                   |
+| UI-00.6            | UI-00.2, UI-00.4                                                    | —                                                   |
+| UI-01.1–01.5       | UI-00.1, UI-00.5                                                    | `colors.ts`/`theme.css`: 01.1 → 07.4                |
+| UI-02.1            | UI-00.1                                                             | `buttonBehavior`: 02.1 → 03.1                       |
+| UI-02.2–02.4       | UI-02.1, UI-00.7 (bütçe), F05 (tamam)                               | —                                                   |
+| UI-02.3            | D8 hedef türü; UI-02.1 olay listesi                                 | audio-synth kayıtları                               |
+| UI-02.5            | UI-02.2, UI-01.2, UI-06.1                                           | vitrin `ShowcaseApp`                                |
+| UI-03              | UI-01.1–01.4, UI-02.1–02.2, UI-00.6                                 | Button/IconButton                                   |
+| UI-04, 05, 08, 09  | **UI-03.4 (M1 pilot kabulü)**; 09 ayrıca UI-05.1; 08 ayrıca UI-07.1 | Input/TextArea: 05.1 → 11.1; Modal/OSK: 09.1 → 11.1 |
+| UI-10.1–10.4       | UI-03.4; 10.1 ayrıca UI-03.2                                        | PauseResume: 10.3 tek sahip                         |
+| UI-06.2–06.4 (Win) | UI-06.1; 06.4 ayrıca UI-00.6                                        | —                                                   |
+| UI-07.1–07.3       | UI-00.1                                                             | —                                                   |
+| UI-07.4            | UI-01.2, UI-06.1                                                    | `theme.css`                                         |
+| UI-11.1–11.2       | UI-05.1; F04.2 (tamam)                                              | Input/TextArea                                      |
+| UI-11.3–11.4       | UI-06.2, UI-11.1; **Android cihazı**                                | `MainActivity`, vitrin crate'i                      |
+| UI-12.1            | UI-11.1; F04.4'ün cihaz turu                                        | `steamworks.ts`, `service.rs`                       |
+| UI-12.2–12.3       | UI-03; 12.3 ayrıca UI-02.4                                          | —                                                   |
+| UI-12.4            | UI-06.2, UI-11.2                                                    | —                                                   |
+| UI-13              | bütün kod/kapı kapanışları                                          | —                                                   |
+
+### Hatlar ve dalgalar
+
+| Hat | Konu             | Sıra                                                                                                   |
+| --- | ---------------- | ------------------------------------------------------------------------------------------------------ |
+| A   | Görsel çekirdek  | UI-00.1 → UI-00.5 → UI-01 → UI-03 (M1) → UI-04 / 05 / 08 / 09 / 10 (fan-out) → UI-13                   |
+| B   | Ses/haptik       | UI-00.7 → UI-02.1 → 02.2 → 02.3 → 02.4 → 02.5                                                          |
+| C   | i18n/font        | UI-07.1 → 07.2 → 07.3 → 07.4                                                                           |
+| D   | Platform/native  | UI-06.1 → 06.2 → 06.3 → 06.4 (Win) → UI-11.3/11.4 (Android) → UI-12.4; UI-12.1–12.3 kendi cihazlarıyla |
+| E   | Kalite altyapısı | UI-00.2 → 00.3 → 00.4 → 00.6 (UI-03'ün kapısı)                                                         |
+
+| Dalga | Kapsam                                                                  | Çıkış ölçütü (hepsi gerçek kapı)                                                                                                                |
+| ----- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0     | UI-06.1, UI-00.1–00.7                                                   | Eski yol başvurusu sıfır (tarihçe notları hariç); registry ihlal testi; iki motor; axe; ilk referans; çalışan browser probu; VOL.TEST bank payı |
+| 1     | Hat A (UI-01), B (UI-02), C (UI-07.1–.3), D (UI-06.2–06.4 Win)          | `pnpm signoff` UI-02 yayını için; native Windows açılış; tema/hareket ihlal örnekleri                                                           |
+| 2     | UI-03 (M1) → UI-04, 05, 08, 09, 10; UI-07.4; UI-11.1–11.2; UI-12.2–12.3 | Her aile kendi durum matrisi ve iki motor; M1 kabul eşikleri (p95<100 ms, bütçeler)                                                             |
+| 3     | UI-11.3–11.4, UI-12.1, UI-12.4, UI-13                                   | Gerçek cihaz/insan kabulleri PASS/FAIL/NOT-RUN ayrı raporda; `signoff`                                                                          |
+
+**Kritik yol:** UI-06.1 → UI-00.1/.2/.4/.5 → UI-00.6 + UI-01.1–01.4 + UI-02.1–02.2 →
+UI-03.4 → en uzun aile (UI-05 + UI-09) → UI-13.1/13.2 → cihaz ve insan kabulleri.
+Hat B'nin üretim kısmı (UI-02.3) ve Hat C kritik yolda değildir; ama UI-02 yayını
+`signoff` süresi ve UI-07 tema laboratuvarı UI-13'ü bekletebilir.
+
+### Göreli ağırlık ve dilimleme
+
+Ağırlık S=1, M=2, L=3, XL=5 (dosya/test/kapı etkisi; takvim sözü değildir).
+
+| Faz   | Görev | Ağırlık | Not                                                                               |
+| ----- | ----- | ------- | --------------------------------------------------------------------------------- |
+| UI-00 | 7     | 12      | Altyapı; sonraki bütün kapıların zemini. En riskli: 00.6 (native ölçülebilirlik). |
+| UI-01 | 5     | 12      | Tema/hareket/doku üreticisi; varsayılan piksel temeli bilinçli değişir.           |
+| UI-02 | 5     | 13      | Ses seti üretimi + audio-synth hedef türü + `signoff`.                            |
+| UI-03 | 4     | 8       | Pilot; yayılımın referansı.                                                       |
+| UI-04 | 4     | 8       | Kart/picker/drag alternatifleri.                                                  |
+| UI-05 | 5     | 12      | Form/ayar; Input/TextArea kritik.                                                 |
+| UI-06 | 4     | 12      | Atomik göç + native crate + Windows açılışı.                                      |
+| UI-07 | 4     | 10      | Anahtar sağlığı/çoğul/RTL/font/tema laboratuvarı.                                 |
+| UI-08 | 4     | 8       | HUD ailesi.                                                                       |
+| UI-09 | 4     | 10      | Overlay/bildirim/veri; en çok durum.                                              |
+| UI-10 | 5     | 12      | Dokunma/kaydırma/çalışma alanı.                                                   |
+| UI-11 | 4     | 12      | Metin oturumu + Android native.                                                   |
+| UI-12 | 4     | 10      | Deck metin/glif/haptik + Windows yükleyici.                                       |
+| UI-13 | 5     | 12      | Tam kabul; cihaz/insan bağımlı.                                                   |
+
+Her görev şu **dilim kalıbıyla** bölünür: (1) kontrat ve ihlal (kırmızı) testi,
+(2) mekanizma, (3) vitrin örneği ve durum fixture'ı, (4) belge/katalog/registry/public
+kilit (`core/docs` sembolü, `catalog.mjs`, anahtar kapıları, satır sınırı), (5) kapı ve temel yenileme. Dilimlerin her biri kendi commit'idir ve geri
+alınabilir; piksel temeli yalnız (5)'te yenilenir.
+
+### Kapı ve süre stratejisi
+
+| Kapı       | UI işindeki yeri                                                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `quick`    | Her commit: contract (registry/tema/hareket ihlali), tip, lint, biçim.                                                                           |
+| `fast`     | Görev sonu: modül adlı testler, katalog/public kilit.                                                                                            |
+| `ui-check` | **Yeni tarif (UI-00.3):** contract UI kuralları + vitrin tam durum/tema/dil/yoğunluk matrisi + axe. `signoff` bileşimine girer, `high`'a girmez. |
+| `high`     | Faz sonu/push: vitrin smoke + kritik etkileşim ≤4 dk, bundle (vitrin 150/1/24, VOL.TEST 106,3 → UI-00.7 sonrası ölçülmüş), kapsam, scaling.      |
+| `signoff`  | UI-02 yayını ve UI-13; gerçek cihaz/insan kabulü bunun dışında ayrı rapordur.                                                                    |
+
+Kapsam eşikleri yükselir, düşmez (CORE bugün %93,7/85,9/94,4/95,4; vitrin %94/60/84).
+Yeni davranış kapsam artışıyla birlikte gelir; eşik yükseltmesi ölçülmüş değerle
+aynı commit'tedir.
+
+### Risk kaydı
+
+| #   | Risk                                                                          | Tetik/ölçü                          | Önlem                                                                                            |
+| --- | ----------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ |
+| R1  | Piksel temeli çift OS ve sıfır tolerans; Linux temeli doğrulanmamış           | Her görsel değişim 24 PNG           | D6; WSL Playwright yeniden üretimi UI-00.2'de; tolerans açılmaz                                  |
+| R2  | VOL.TEST app payı sıfır                                                       | `bundle` kapısı                     | UI-00.7 bank görünümü; her tüketici değişiminde ölçülü bütçe notu; vendor/css payları ayrı       |
+| R3  | E2E ve pre-push süresi kontrolsüz büyür                                       | high süresi, vitrin e2e süresi      | D7 katmanlı kapı; süre bütçesi; timeout büyütülmez                                               |
+| R4  | Yanlış Node ile alınan kanıt                                                  | `doctor:env`                        | Kapılar Node 22.23.1 ile; kanıt kaydı sürümü taşır                                               |
+| R5  | Native ölçülebilirlik (WebView2/WebKitGTK/Android) belirsiz                   | UI-00.6 araştırması                 | Desteksiz hücre açık release engeli; sıfır/tahmin PASS değil; browser emülasyonu native sayılmaz |
+| R6  | Cihaz yokluğu: Deck, Samsung, Android 16                                      | UI-06.4/11.4/12/13.3                | NOT-RUN matrisi; kod fazlarını bloklamaz, nihai release'i bloklar                                |
+| R7  | Public yüzey/katalog/registry sürüklenmesi                                    | `publicTypeSurface`, katalog kapısı | Her export aynı commit'te snapshot+registry+README; UI-00.1 bunu otomatikler                     |
+| R8  | UI sesleri için gönderilen varlık hedefi yok                                  | `targets.ts` yalnız referans/oyun   | D8 ilk dilimi; çalışma zamanında audio-synth bağı yok                                            |
+| R9  | `audio-verify`/`signoff` süresi yeni seslerle uzar (bugün 69 manifest ≈10 dk) | audio-verify süresi                 | Ölçüm; yalnız UI hedefi diff'ine bağlı seçilim mevcut `audio-test` mantığıyla                    |
+| R10 | Kapsam kayması ve geniş yeniden düzenleme                                     | Dilim diff'i                        | D11; görevin değişiklik alanı dışındaki dosya kırmızı bayrak; her dilimin geri alma yolu var     |
+| R11 | Android/Tauri API pinleri ve Windows Gradle zinciri                           | UI-11.3 derleme                     | `Plugin.kt`/`WryActivity` pinli API'leri; F02 Android profili; üretilmiş Activity düzenlenmez    |
+
+### Yapılamayan/NOT-RUN kalacak kabuller
+
+Bu kabuller kod fazını bloklamaz; **sürümü bloklar** ve PASS sayılmaz:
+Steam Deck host/SLR4 açılış, kol-only, glif yüksekliği ve ısınmış performans
+(UI-06.4, UI-12.2–12.3, UI-13.3; F08); Windows Playwright WebKit'in AudioContext sınırı yüzünden WebKit ses hücreleri (ses E2E Chromium'da, WebKit sınırı belgeli); Samsung ve Android 16 hücreleri (UI-11.4,
+UI-13.3); gerçek Steam runtime metin sağlayıcısı (UI-12.1; F04.4/F08.6); insan
+erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4 beğeni, UI-13.4). Bu makinede
+**yapılabilir**: iki motorlu tarayıcı kabulü, Windows native vitrin ve yükleyici
+(DPI 125/150/200), Lenovo Android 14 tablet profili.
+
+### Başlangıç dilimleri
+
+1. **Ortam (D6/R4).** Gate shell'inde Node 22.23.1; WSL'de Playwright Chromium kurulumu ve vitrin temelinin Linux'ta yeniden üretilmesi. Kabul: `doctor:env` OK; Linux temeli ya bayt eşit üretilir ya da NOT-RUN gerekçesi kayıtlıdır.
+2. **UI-06.1 atomik göç.** `git mv devtools/vol-ui devtools/vol-showcase`; paket adı, lifecycle, quality (paket+bütçe), kilit importer'ı, `justfile`, katalog sabit yolu, testler, belgeler ve PNG'ler aynı değişiklikte; `.gitignore`'a vitrin records alanı. Kabul: canlı `devtools/vol-ui`/`@volstudio/vol-ui` başvurusu sıfır, PNG'ler yalnız taşındı (özet eşit), build/bundle 150/1/24, contract/high yeşil.
+3. **UI-00.1 registry** (AST tabanlı sınıf/runtime/tip kaydı + ihlal testi), 4. **UI-00.2** iki motor kapsamı ve Linux temeli kararı, 5. **UI-00.3** axe + durum düzeneği + `ui-check`, 6. **UI-00.4** ölçüm kör noktaları, 7. **UI-00.7** bank çalışma zamanı görünümü, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
 
 ## Açık
 
@@ -58,7 +217,7 @@ alanı: `scripts/quality/`, `devtools/vol-ui/tests/e2e/`, ilgili CORE testleri.
       rapor şeması: UI JS/DOM/GPU, ekrana sunum ve desteklenmeyen ölçüler ayrı. Kapanır:
       A/A gürültü, temanın geometriyi kaydırması ve desteklenmeyen ölçü sahte PASS
       üretmez.
-- [ ] **UI-00.5 — İlk referans.** 12 sekme/17 doğrudan tüketici/830 vitrin anahtarı
+- [ ] **UI-00.5 — İlk referans.** 12 sekme/17 doğrudan tüketici/821 vitrin anahtarı
       başlangıcını yeniden say; varsayılan ekranlar, hareket kapalı/açık durumları,
       paket boyutu ve UI maliyetini git dışı özel kayıtlara kaydet. Kapanır: önceki
       kayıtla karşılaştırma yöntemi vardır; bağlı olmayan cihaz NOT-RUN; kök F08/F09 ve
@@ -75,12 +234,22 @@ alanı: `scripts/quality/`, `devtools/vol-ui/tests/e2e/`, ilgili CORE testleri.
       somut eksik araç/owner/bağlama görevi vardır. Desteksiz total CPU/GPU/
       sunum hücresi açık release engeli, sıfır veya tahmini PASS değildir.
 
+- [ ] **UI-00.7 — Gönderilen boyut payı.** VOL.TEST app payı bugün sıfırdır (106,3/106,3 KiB
+      gzip); UI'nin VOL.TEST'e gireceği her iş bütçeyi düşürür. Önce gönderilen ses
+      bank'larının çalışma zamanı görünümü kurulur: `SoundFamilyBank` ve oyunun hiç
+      okumadığı provenance özetleri (hash, manifest, program/PCM özeti) gönderilen
+      pakete girmez; kanonik bank ve `verifyFamily` değişmez. Vitrin için iş başına
+      boyut notu tutulur. Kapanır: ölçülmüş kazanç (önce/sonra gzip bayt) kayıtlıdır,
+      hedef ≥4 KiB; bank sınıfı, deterministik varyant seçimi ve oyun davranışı aynı;
+      üretici/doğrulayıcı hattı değişmez ve `audio-verify` yeşil; bütçe yükseltilmez,
+      kazanç UI-02/UI-03 tüketicisi için ayrılır ve `quality.json` gerekçesi günceldir.
+
 Faz testi: kalite ihlal örnekleri ve CORE yönetişim testleri, iki motordaki mevcut E2E
 testleri, bundle; `pnpm exec just contract`, `pnpm exec just e2e`.
 
 ### UI-01 — Ortak görsel/hareket altyapısı
 
-Ön koşul UI-00. Sahip CORE UI; yardımcı varlık üreticisi sahibi ayrı. Mevcut hedefler
+Ön koşul UI-00.1, UI-00.2 ve UI-00.5. Sahip CORE UI; yardımcı varlık üreticisi sahibi ayrı. Mevcut hedefler
 `core/src/ui/colors.ts`, `core/src/ui/theme.css`, `core/src/constants.ts`,
 `core/src/ui/animation.ts`, `core/scripts/gen-theme.mjs`,
 `core/src/ui/layout/UIRoot.ts`. Önerilen modüller themes/, motion/, skin/; tek
@@ -124,7 +293,7 @@ mevcut colorSync/cssConstantSync/publicSurface; tema geometrisi E2E.
 
 ### UI-02 — Semantik UI ses/haptik ve kanonik varsayılan ses karakteri
 
-Ön koşul UI-01. Sahip CORE genel geri bildirim + audio-synth üreticisi + uygulama
+Ön koşul UI-00.1 ve UI-00.7; UI-02.5 ayrıca UI-01.2 ve UI-06.1. Sahip CORE genel geri bildirim + audio-synth üreticisi + uygulama
 adaptörü. Oyun SFX varsayılanları ve simülasyon RNG'si korunur.
 
 - [ ] **UI-02.1 — Tek niyet/tek olay.** `core/src/ui/primitives/buttonBehavior.ts`,
@@ -213,7 +382,7 @@ interactionContract/valueInteractionContract, gerçek oyun E2E.
 
 ### UI-04 — KARTLAR / M2
 
-Ön koşul UI-03. Sahip `core/src/ui/cards/`, ilgili HUD nadirlik tokenı tüketicisi.
+Ön koşul UI-03.4 (M1 pilot kabulü). Sahip `core/src/ui/cards/`, ilgili HUD nadirlik tokenı tüketicisi.
 
 - [ ] **UI-04.1 — Kart yüzeyi ve CardTile sözleşmesi.** Rarity bağımsız nötr kart
       mevcut Panel/Text/Button bileşimi ve ortak CORE card skin'iyle gösterilir;
@@ -244,7 +413,7 @@ interactionContract/valueInteractionContract, gerçek oyun E2E.
 
 ### UI-05 — PANEL + FORM + AYARLAR
 
-Ön koşul UI-04; tier-1 kısmi M3. Sahip primitives/layout/overlays; yeni oyun ayar paneli
+Ön koşul UI-03.4 (M1); tier-1 kısmi M3. Sahip primitives/layout/overlays; yeni oyun ayar paneli
 icat edilmez, mevcut SettingsForm/Row güçlendirilir.
 
 - [ ] **UI-05.1 — Adlandırılmış editör ve değer niyeti.** Input/TextArea/NumberStepper/
@@ -278,7 +447,7 @@ icat edilmez, mevcut SettingsForm/Row güçlendirilir.
 
 ### UI-06 — Tek VOL.SHOWCASE ve Windows native temel / M4
 
-Ön koşul UI-05. Sahip vitrin/kalite/platform; isim göçü tek atomik konu, Windows kabuğu ilk teknik referanstır. Oyun kaynaklarına bağımlılık kurulmaz.
+UI-06.1 ön koşulsuz ilk iştir (Dalga 0); UI-06.2–06.4 yalnız UI-06.1'e bağlıdır, UI-05'i beklemez. Sahip vitrin/kalite/platform; isim göçü tek atomik konu, Windows kabuğu ilk teknik referanstır. Oyun kaynaklarına bağımlılık kurulmaz.
 
 - [ ] **UI-06.1 — Atomik paket göçü.** `devtools/vol-ui`→devtools/vol-showcase, paket
       adı, yaşam döngüsü yolu, kalite paketi/paket boyutu ve kilit dosyası importer
@@ -316,9 +485,9 @@ contract/rust/build/bundle, iki motor web E2E, gerçek native sonda.
 
 ### UI-07 — i18n, font ve tema yayılımı / M5 + M6
 
-Ön koşul UI-06. Sahip core i18n/UI/vitrin, mevcut motor yeniden yazılmaz.
+Ön koşul: UI-07.1–07.3 için UI-00.1; UI-07.4 için UI-01.2 ve UI-06.1. Sahip core i18n/UI/vitrin, mevcut motor yeniden yazılmaz.
 
-- [ ] **UI-07.1 — Görünen metin sıfır açık.** 830 vitrin/63 CORE başlangıç anahtarını
+- [ ] **UI-07.1 — Görünen metin sıfır açık.** 821 vitrin/63 CORE başlangıç anahtarını
       AST/fixture üzerinden yeniden tara; adlandırma/ölü anahtarlar, çalışma anındaki
       dinamik önek gerekçesi; XPBar Lv ve erişilebilirlik etiketi dahil. Kapanır: TR/EN
       parite/ölü/hardcoded kapıları; modül düzeyinde t() çağrısı yok; açık
@@ -344,7 +513,7 @@ contract/rust/build/bundle, iki motor web E2E, gerçek native sonda.
 
 ### UI-08 — HUD ve erken tier-1 kapsam kontrolü
 
-Ön koşul UI-07. Sahip feedback/hud/tarif; oyun durumunu sunum tutmaz.
+Ön koşul UI-03.4 ve UI-07.1. Sahip feedback/hud/tarif; oyun durumunu sunum tutmaz.
 
 - [ ] **UI-08.1 — Bar/XPBar/Counter/ResourceCounter/ResourceBar/TimerBar/
       RoundCounter/FloatingTextManager.** Boş/dolu/geçersiz eşik/çoklu kazanım/6 haneli
@@ -371,7 +540,7 @@ contract/rust/build/bundle, iki motor web E2E, gerçek native sonda.
 
 ### UI-09 — Overlay, bildirim ve veri yüzeyleri
 
-Ön koşul UI-08. Sahip overlays/data/layout; bütün ailelerin katalog karşılığı.
+Ön koşul UI-03.4 ve UI-05.1. Sahip overlays/data/layout; bütün ailelerin katalog karşılığı.
 
 - [ ] **UI-09.1 — Modal/Sheet/Popup/Popover/ContextMenu/CommandPalette/
       RadialMenu/DialogueBox/showConfirm/showFatalStartupError.** Katmanın ilk
@@ -401,7 +570,7 @@ contract/rust/build/bundle, iki motor web E2E, gerçek native sonda.
 
 ### UI-10 — Dokunma, yükleme, kaydırma ve çalışma alanı
 
-Ön koşul UI-09. Sahip touch/camera/layout/text; kalan aktif ve katalog
+Ön koşul UI-03.4; UI-10.1 ayrıca UI-03.2. Sahip touch/camera/layout/text; kalan aktif ve katalog
 bileşenlerinin yaşam döngüsü.
 
 - [ ] **UI-10.1 — DirectionButton/DPad/Joystick/SquareJoystick/SwipeGestureZone/
@@ -443,7 +612,7 @@ bileşenlerinin yaşam döngüsü.
 
 ### UI-11 — Metin oturumu ve Android / M7 alt faz
 
-Ön koşul UI-10; native sözleşme tasarımı UI-06'da okunmuş olmalıdır. Sahip CORE
+Ön koşul: UI-11.1–11.2 için UI-05.1, UI-11.3–11.4 için UI-06.2 ve Android cihazı. F04.2'nin karşıladığı eski sonuç/odak/sağlayıcı temizliği tekrarlanmaz (D9). Sahip CORE
 textEntry/platform + Tauri adaptörü + vitrin Metin Girişi laboratuvarı.
 
 - [ ] **UI-11.1 — Sahip/oturum/IME bileşimi.** Mevcut
@@ -492,7 +661,7 @@ Chromium+WebKit taklit sağlayıcı E2E cihazın yerine geçmez.
 
 ### UI-12 — Deck metin/glif ve Windows / M7
 
-Ön koşul UI-11 teknik teslimi; Linux/Android fiziksel kabulü ayrı açık kalır. Sahip
+Ön koşul: UI-12.1 için UI-11.1, UI-12.2–12.3 için UI-03 (12.3 ayrıca UI-02.4), UI-12.4 için UI-06.2 ve UI-11.2; Linux/Android fiziksel kabulü ayrı açık kalır. Sahip
 tauri-v2/platform ve native SHOWCASE.
 
 - [ ] **UI-12.1 — Steam metin sağlayıcısı.** Mevcut

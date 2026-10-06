@@ -33,16 +33,16 @@ servis borçları ilgili cihaz kabulüyle birlikte kalır.
 
 ### F07 — UI'nin 14 fazı ve tek VOL.SHOWCASE
 
-Ön koşul: F01/F02 ve ilgili F04 düzeltmesi. Bütün 63 açık alt işin sahibi
+Ön koşul: F01/F02 ve ilgili F04 düzeltmesi. Bütün 64 açık alt işin sahibi
 [UI TODO](docs/ui/TODO.md); ayrıntı burada tekrar checkbox'a çevrilmez.
 Windows geliştirme/ilk native referans önce; Linux/Deck kabulü F08'dir.
 
 Aşağıdaki satırlar indekstir; kapanış checkbox'ı ve ölçütleri yalnız UI TODO'dadır.
 
-- **F07.1 — Kanıt zemini ve temel dil:** UI-00–UI-02; ölçüm/durum, tema/hareket ve teknik ses kabulü.
-- **F07.2 — Pilot ve atomik native vitrin:** UI-03–UI-06; buton/kart/form ve SHOWCASE göçü, Linux/Deck kabulü F08.
-- **F07.3 — Katalog ve platform oturumu:** UI-07–UI-12; i18n/font/HUD/overlay/touch/IME/Android/Steam/Windows.
-- **F07.4 — Tam ve gerçek kabul:** UI-13; bütün durumlar, erişilebilirlik/stres/gerçek cihaz ve sürüm teslimi.
+- **F07.1 — Dalga 0, zemin ve kanıt:** UI-06.1 (ilk iş), UI-00.1–00.7; registry, iki motor, axe, ölçüm, boyut payı, çalışan browser probu.
+- **F07.2 — Dalga 1, temel hatlar:** UI-01 tema/hareket, UI-02 ses/haptik, UI-07.1–07.3 i18n/font, UI-06.2–06.4 Windows native vitrin; paralel.
+- **F07.3 — Dalga 2, pilot ve aileler:** UI-03 (M1) sonrası UI-04/05/08/09/10 fan-out, UI-07.4, UI-11.1–11.2, UI-12.2–12.3.
+- **F07.4 — Dalga 3, platform ve tam kabul:** UI-11.3–11.4, UI-12.1, UI-12.4, UI-13; cihaz/insan kabulleri ayrı PASS/FAIL/NOT-RUN.
 
 ### F08 — Linux builder ve Deck kabulünü yeniden kur
 
