@@ -9,11 +9,26 @@ export interface ThemeToken {
   value: string;
 }
 
+export declare const MOTION_BEGIN: string;
+export declare const MOTION_END: string;
+
+export interface MotionSource {
+  durations: Record<string, number>;
+  easings: Record<string, string>;
+  presets: Record<string, { ms: number; easing: string; offsetPx?: number }>;
+  interaction: Record<string, number>;
+  loadingMinVisibleMs: number;
+}
+
 export interface ThemeSource {
   colors: Record<string, string>;
   semantic: Record<string, string>;
   themes: Record<string, Record<string, string>>;
+  motion?: MotionSource;
 }
+
+export declare function validateMotion(motion: MotionSource): string[];
+export declare function renderMotion(motion: MotionSource): string;
 
 export declare function kebab(name: string): string;
 export declare function defaultTokens(

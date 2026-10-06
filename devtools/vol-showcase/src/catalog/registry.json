@@ -640,11 +640,12 @@
         "via": null,
         "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
       },
-      "tests": [],
-      "gap": {
-        "task": "UI-01.3",
-        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
-      }
+      "tests": [
+        {
+          "file": "core/tests/ui/animation.test.ts",
+          "title": "Easing eğrileri uç noktaları korur ve easeOutBack hedefi aşar"
+        }
+      ]
     },
     {
       "export": "EventLog",
@@ -1003,6 +1004,26 @@
       ]
     },
     {
+      "export": "LOADING_MIN_VISIBLE_MS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/presets.test.ts",
+          "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
+        }
+      ]
+    },
+    {
       "export": "LevelUpPicker",
       "kind": "class",
       "tier": 1,
@@ -1057,6 +1078,106 @@
       ]
     },
     {
+      "export": "MOTION_BUDGET",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/presets.test.ts",
+          "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
+        }
+      ]
+    },
+    {
+      "export": "MOTION_DURATIONS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/presets.test.ts",
+          "title": "dört temel süre 120/200/320/480 ms"
+        }
+      ]
+    },
+    {
+      "export": "MOTION_EASINGS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/presets.test.ts",
+          "title": "her presetin eğrisi tanımlı eğrilerdendir"
+        }
+      ]
+    },
+    {
+      "export": "MOTION_INTERACTION",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/presets.test.ts",
+          "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
+        }
+      ]
+    },
+    {
+      "export": "MOTION_PRESETS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/presets.test.ts",
+          "title": "özel koreografi sözleşmedeki adlı sürelerdir; gizli sayısal istisna yok"
+        }
+      ]
+    },
+    {
       "export": "MinimapPanel",
       "kind": "class",
       "tier": 1,
@@ -1092,6 +1213,30 @@
         }
       ],
       "extraStates": ["disabled"]
+    },
+    {
+      "export": "MotionController",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": "A3",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan hareket bütçesi sahibi; pilot UI-03.1 tüketir"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/motionController.test.ts",
+          "title": "eşzamanlı grup sınırı 3: aynı öncelikte fazlası hareketsiz (null) ve son duruma gider"
+        },
+        {
+          "file": "core/tests/ui/motion/motionController.test.ts",
+          "title": "olay salkımı: 30 olay (grup + 10 parçacık + blur) bütçeyi hiçbir anda aşmaz ve hepsi bir kez temizlenir"
+        }
+      ]
     },
     {
       "export": "MultiTouchZone",

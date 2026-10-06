@@ -122,6 +122,29 @@
   --vol-ui-rarity-legendary-border: #a67c25;
   --vol-ui-rarity-legendary-glow: #e3b24d66;
   /* @generated:tokens:end */
+  /* @generated:motion:begin */
+  --vol-motion-duration-fast: 120ms;
+  --vol-motion-duration-base: 200ms;
+  --vol-motion-duration-slow: 320ms;
+  --vol-motion-duration-cinematic: 480ms;
+  --vol-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --vol-motion-ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --vol-motion-ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --vol-motion-preset-scrim-in: 120ms;
+  --vol-motion-preset-dialog-in: 200ms;
+  --vol-motion-preset-modal-out: 140ms;
+  --vol-motion-preset-card-stagger: 40ms;
+  --vol-motion-preset-hud-gain: 200ms;
+  --vol-motion-preset-hud-loss: 80ms;
+  --vol-motion-preset-tab-switch: 160ms;
+  --vol-motion-preset-tab-switch-offset: 6px;
+  --vol-motion-preset-scene-out: 200ms;
+  --vol-motion-preset-scene-in: 320ms;
+  --vol-motion-hover-scale: 1.02;
+  --vol-motion-press-scale: 0.96;
+  --vol-motion-card-select-scale: 1.04;
+  --vol-motion-loading-min-visible: 500ms;
+  /* @generated:motion:end */
   --vol-font-family: 'Jura', sans-serif;
   --vol-font-family-body: 'Exo 2', sans-serif;
 

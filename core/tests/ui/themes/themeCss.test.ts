@@ -2,6 +2,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { VOL_COLORS } from '../../../src/ui/colors';
+import {
+  LOADING_MIN_VISIBLE_MS,
+  MOTION_DURATIONS,
+  MOTION_EASINGS,
+  MOTION_INTERACTION,
+  MOTION_PRESETS,
+} from '../../../src/ui/motion/presets';
 import { VOL_EMBER_OVERRIDES } from '../../../src/ui/themes/ember';
 import { VOL_SEMANTIC_COLORS } from '../../../src/ui/themes/semanticColors';
 import {
@@ -20,6 +27,15 @@ const source = {
   colors: { ...VOL_COLORS } as Record<string, string>,
   semantic: { ...VOL_SEMANTIC_COLORS } as Record<string, string>,
   themes: { ember: { ...VOL_EMBER_OVERRIDES } as Record<string, string> },
+  motion: {
+    durations: { ...MOTION_DURATIONS },
+    easings: { ...MOTION_EASINGS },
+    presets: Object.fromEntries(
+      Object.entries(MOTION_PRESETS).map(([name, preset]) => [name, { ...preset }]),
+    ),
+    interaction: { ...MOTION_INTERACTION },
+    loadingMinVisibleMs: LOADING_MIN_VISIBLE_MS,
+  },
 };
 
 describe('theme.css ↔ tema kaynağı', () => {

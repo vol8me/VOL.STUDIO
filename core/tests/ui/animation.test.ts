@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { animateValue } from '../../src/ui/animation';
+import { Easing, animateValue } from '../../src/ui/animation';
 
 /** Birkaç gerçek animasyon karesi geçmesini bekler. */
 function waitFrames(ms = 120): Promise<void> {
@@ -74,6 +74,36 @@ describe('animateValue — iptal sözleşmesi', () => {
     animateValue({ from: 0, to: 7, durationMs: 0, onUpdate, onComplete });
 
     expect(onUpdate).toHaveBeenCalledWith(7);
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Easing eğrileri', () => {
+  it('Easing eğrileri uç noktaları korur ve easeOutBack hedefi aşar', () => {
+    for (const curve of [Easing.linear, Easing.easeOutCubic, Easing.easeOutBack]) {
+      expect(curve(0)).toBeCloseTo(0, 10);
+      expect(curve(1)).toBeCloseTo(1, 10);
+    }
+    // easeOutCubic tekdüze artar ve linear'dan önce ilerler.
+    const samples = [0, 0.25, 0.5, 0.75, 1].map((t) => Easing.easeOutCubic(t));
+    expect([...samples].sort((a, b) => a - b)).toEqual(samples);
+    expect(Easing.easeOutCubic(0.5)).toBeGreaterThan(Easing.linear(0.5));
+    // easeOutBack bilinçli aşar: 1'in üstüne çıkıp geri döner.
+    expect(Math.max(...[0.5, 0.6, 0.7, 0.8].map((t) => Easing.easeOutBack(t)))).toBeGreaterThan(1);
+  });
+
+  it('animateValue sıfır sürede son değeri hemen verir ve verilen eğriyi kullanır', () => {
+    const values: number[] = [];
+    const onComplete = vi.fn();
+    animateValue({
+      from: 2,
+      to: 8,
+      durationMs: 0,
+      easing: Easing.linear,
+      onUpdate: (v) => values.push(v),
+      onComplete,
+    });
+    expect(values).toEqual([8]);
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 });

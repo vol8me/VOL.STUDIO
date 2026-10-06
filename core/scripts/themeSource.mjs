@@ -9,6 +9,8 @@ export const TOKENS_BEGIN = '/* @generated:tokens:begin */';
 export const TOKENS_END = '/* @generated:tokens:end */';
 export const THEMES_BEGIN = '/* @generated:themes:begin */';
 export const THEMES_END = '/* @generated:themes:end */';
+export const MOTION_BEGIN = '/* @generated:motion:begin */';
+export const MOTION_END = '/* @generated:motion:end */';
 
 const COLOR_VALUE = /^#(?:[0-9a-f]{6}|[0-9a-f]{8})$/;
 const THEME_ID = /^[a-z][a-z0-9-]*$/;
@@ -107,6 +109,60 @@ export function renderThemes(colors, semantic, themes) {
   return blocks.join('\n\n');
 }
 
+const PRESET_KEY = /^[a-z][A-Za-z0-9]*$/;
+
+/**
+ * Hareket tokenları (`motion/presets.ts`) → `--vol-motion-*` CSS değişkenleri.
+ * Bütçe sınırları CSS'e girmez; yalnız süre, eğri, ölçek ve preset değerleri.
+ * @param {{ durations: Record<string,number>, easings: Record<string,string>, presets: Record<string, {ms:number,easing:string,offsetPx?:number}>, interaction: Record<string,number>, loadingMinVisibleMs: number }} motion
+ */
+export function validateMotion(motion) {
+  const problems = [];
+  const positive = (label, value) => {
+    if (!Number.isInteger(value) || value <= 0)
+      problems.push(`hareket: ${label} pozitif tam sayı (ms) olmalı: ${value}`);
+  };
+  for (const [name, ms] of Object.entries(motion.durations)) positive(`süre ${name}`, ms);
+  for (const [name, curve] of Object.entries(motion.easings))
+    if (!/^cubic-bezier\(\s*[0-9.]+,\s*[0-9.]+,\s*[0-9.]+,\s*[0-9.]+\s*\)$/.test(curve))
+      problems.push(`hareket: eğri ${name} cubic-bezier(a, b, c, d) olmalı: ${curve}`);
+  for (const [name, preset] of Object.entries(motion.presets)) {
+    if (!PRESET_KEY.test(name)) problems.push(`hareket: preset adı camelCase olmalı: ${name}`);
+    positive(`preset ${name}`, preset.ms);
+    if (!(preset.easing in motion.easings))
+      problems.push(`hareket: preset ${name} bilinmeyen eğri kullanıyor: ${preset.easing}`);
+    if (preset.offsetPx !== undefined && !Number.isInteger(preset.offsetPx))
+      problems.push(`hareket: preset ${name} offsetPx tam sayı olmalı`);
+  }
+  for (const [name, scale] of Object.entries(motion.interaction))
+    if (!(typeof scale === 'number' && scale > 0 && scale < 2))
+      problems.push(`hareket: ölçek ${name} 0 ile 2 arasında olmalı: ${scale}`);
+  positive('loading asgari süre', motion.loadingMinVisibleMs);
+  return problems;
+}
+
+/** `scrimIn` → `scrim-in` (kebab, `ui` öneki yok). */
+function presetCss(name) {
+  return name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+export function renderMotion(motion) {
+  const lines = [];
+  for (const [name, ms] of Object.entries(motion.durations))
+    lines.push(`  --vol-motion-duration-${presetCss(name)}: ${ms}ms;`);
+  for (const [name, curve] of Object.entries(motion.easings))
+    lines.push(`  --vol-motion-ease-${presetCss(name)}: ${curve};`);
+  for (const [name, preset] of Object.entries(motion.presets)) {
+    lines.push(`  --vol-motion-preset-${presetCss(name)}: ${preset.ms}ms;`);
+    if (preset.offsetPx !== undefined)
+      lines.push(`  --vol-motion-preset-${presetCss(name)}-offset: ${preset.offsetPx}px;`);
+  }
+  for (const [name, scale] of Object.entries(motion.interaction))
+    lines.push(`  --vol-motion-${presetCss(name)}: ${scale};`);
+  lines.push(`  --vol-motion-loading-min-visible: ${motion.loadingMinVisibleMs}ms;`);
+  return lines.join('\n');
+}
+
 function replaceRegion(css, begin, end, body, indent) {
   const start = css.indexOf(begin);
   const stop = css.indexOf(end);
@@ -119,8 +175,9 @@ function replaceRegion(css, begin, end, body, indent) {
  * Üretilen bölgeleri `css` içinde yeniden yazar; elle yazılan kısımlara dokunmaz.
  * Aynı kaynakla tekrar çalıştırmak çıktıyı değiştirmez (idempotent).
  */
-export function applyGenerated(css, { colors, semantic, themes }) {
+export function applyGenerated(css, { colors, semantic, themes, motion }) {
   let next = replaceRegion(css, TOKENS_BEGIN, TOKENS_END, renderTokens(colors, semantic), '  ');
+  if (motion) next = replaceRegion(next, MOTION_BEGIN, MOTION_END, renderMotion(motion), '  ');
   next = replaceRegion(next, THEMES_BEGIN, THEMES_END, renderThemes(colors, semantic, themes), '');
   return next;
 }

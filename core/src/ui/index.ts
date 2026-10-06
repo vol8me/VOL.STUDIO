@@ -34,4 +34,22 @@ export {
   type ThemeState,
   type ThemeStore,
 } from './themes/ThemeController';
+export {
+  MotionController,
+  type MotionControllerOptions,
+  type MotionGrant,
+  type MotionGroupRequest,
+  type MotionKind,
+  type MotionParticleGrant,
+  type MotionPriority,
+  type MotionUsage,
+} from './motion/MotionController';
+export {
+  LOADING_MIN_VISIBLE_MS,
+  MOTION_BUDGET,
+  MOTION_DURATIONS,
+  MOTION_EASINGS,
+  MOTION_INTERACTION,
+  MOTION_PRESETS,
+} from './motion/presets';
 export { Easing, animateValue, type AnimateValueOptions } from './animation';
