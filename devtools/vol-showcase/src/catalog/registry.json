@@ -291,6 +291,26 @@
       "extraStates": ["loading", "error"]
     },
     {
+      "export": "CARD_DRAG_MIME",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-04",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/cards/cardTile.test.ts",
+          "title": "dragData verilince kart sürüklenebilir olur ve kimliği taşır"
+        }
+      ]
+    },
+    {
       "export": "CanvasViewportController",
       "kind": "class",
       "tier": 2,
@@ -499,6 +519,26 @@
       ]
     },
     {
+      "export": "DENSITY_IDS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/themes/registry.test.ts",
+          "title": "her yoğunluk için kök ve kapsamlı seçici vardır"
+        }
+      ]
+    },
+    {
       "export": "DPad",
       "kind": "class",
       "tier": 2,
@@ -588,6 +628,25 @@
       ]
     },
     {
+      "export": "Easing",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [],
+      "gap": {
+        "task": "UI-01.3",
+        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
+      }
+    },
+    {
       "export": "EventLog",
       "kind": "class",
       "tier": 2,
@@ -607,6 +666,45 @@
         }
       ],
       "extraStates": ["empty"]
+    },
+    {
+      "export": "FOCUSABLE_SELECTOR",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [],
+      "gap": {
+        "task": "UI-05.5",
+        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
+      }
+    },
+    {
+      "export": "FOCUS_NAV_CLASS",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/focus/focusNav.test.ts",
+          "title": "ilk yön basımı ilk odaklanabilir elemana odaklanır"
+        }
+      ]
     },
     {
       "export": "FloatingTextManager",
@@ -694,6 +792,22 @@
         {
           "file": "core/tests/ui/glyphs/glyphs.test.ts",
           "title": "aile/slot için img src kurar"
+        }
+      ]
+    },
+    {
+      "export": "HIDE_ANIMATION_MS",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-04",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/cardsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cards/cardTile.test.ts",
+          "title": "hide() sonrası isVisible() HEMEN false olur, element.hidden ise HIDE_ANIMATION_MS sonra"
         }
       ]
     },
@@ -861,6 +975,30 @@
         {
           "file": "core/tests/ui/workbenchRegressions.test.ts",
           "title": "kaydırmada düşen satır için destroyItem çağrılır"
+        }
+      ]
+    },
+    {
+      "export": "LEAVE_ANIMATION_MS",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-04",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/cards/shopPicker.test.ts",
+          "title": "İLK KEZ satın alınan teklif kısa bir \"başarı\" vurgusu classı alır"
+        },
+        {
+          "file": "core/tests/ui/cssConstantSync.test.ts",
+          "title": "LEAVE_ANIMATION_MS, .vol-card--leaving animasyonundan kısa değil"
         }
       ]
     },
@@ -1558,6 +1696,26 @@
       ]
     },
     {
+      "export": "THEME_IDS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/themes/registry.test.ts",
+          "title": "THEME_IDS: default + üretilen her tema; theme.css her biri için blok taşır"
+        }
+      ]
+    },
+    {
       "export": "Tabs",
       "kind": "class",
       "tier": 2,
@@ -1630,6 +1788,30 @@
         }
       ],
       "extraStates": ["error", "empty"]
+    },
+    {
+      "export": "ThemeController",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": "A4",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan tema/yoğunluk sahibi; vitrin üst bar seçicisi UI-07.4'te bağlanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/themes/themeController.test.ts",
+          "title": "attach yalnız o alt ağacı etkiler; değişim tüm bağlı köklere yayılır"
+        },
+        {
+          "file": "core/tests/ui/themes/themeController.test.ts",
+          "title": "bilinmeyen değer varsayılana döner: kurucuda ve ayarlarken"
+        }
+      ]
     },
     {
       "export": "TimerBar",
@@ -1767,6 +1949,38 @@
       ]
     },
     {
+      "export": "VOL_COLORS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "direct",
+      "showcase": ["sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/colorSync.test.ts",
+          "title": "colors.ts'teki her token theme.css'te --vol-ui-* olarak var"
+        }
+      ]
+    },
+    {
+      "export": "VOL_ICONS",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/workbenchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "güvenli SVG registry üretir ve dekoratif/etiketli kipleri ayırır"
+        }
+      ]
+    },
+    {
       "export": "VirtualList",
       "kind": "class",
       "tier": 2,
@@ -1834,156 +2048,6 @@
         }
       ],
       "extraStates": ["empty"]
-    },
-    {
-      "export": "CARD_DRAG_MIME",
-      "kind": "helper",
-      "tier": 2,
-      "phase": "UI-04",
-      "anchor": null,
-      "archetype": "helper",
-      "consumer": "catalog",
-      "showcase": [],
-      "shownVia": {
-        "via": null,
-        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
-      },
-      "tests": [
-        {
-          "file": "core/tests/ui/cards/cardTile.test.ts",
-          "title": "dragData verilince kart sürüklenebilir olur ve kimliği taşır"
-        }
-      ]
-    },
-    {
-      "export": "Easing",
-      "kind": "helper",
-      "tier": 2,
-      "phase": "UI-01",
-      "anchor": null,
-      "archetype": "helper",
-      "consumer": "catalog",
-      "showcase": [],
-      "shownVia": {
-        "via": null,
-        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
-      },
-      "tests": [],
-      "gap": {
-        "task": "UI-01.3",
-        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
-      }
-    },
-    {
-      "export": "FOCUSABLE_SELECTOR",
-      "kind": "helper",
-      "tier": 2,
-      "phase": "UI-05",
-      "anchor": null,
-      "archetype": "helper",
-      "consumer": "catalog",
-      "showcase": [],
-      "shownVia": {
-        "via": null,
-        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
-      },
-      "tests": [],
-      "gap": {
-        "task": "UI-05.5",
-        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
-      }
-    },
-    {
-      "export": "FOCUS_NAV_CLASS",
-      "kind": "helper",
-      "tier": 2,
-      "phase": "UI-05",
-      "anchor": null,
-      "archetype": "helper",
-      "consumer": "catalog",
-      "showcase": [],
-      "shownVia": {
-        "via": null,
-        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
-      },
-      "tests": [
-        {
-          "file": "core/tests/ui/focus/focusNav.test.ts",
-          "title": "ilk yön basımı ilk odaklanabilir elemana odaklanır"
-        }
-      ]
-    },
-    {
-      "export": "HIDE_ANIMATION_MS",
-      "kind": "helper",
-      "tier": 2,
-      "phase": "UI-04",
-      "anchor": null,
-      "archetype": "helper",
-      "consumer": "catalog",
-      "showcase": ["sections/cardsTab.ts"],
-      "tests": [
-        {
-          "file": "core/tests/ui/cards/cardTile.test.ts",
-          "title": "hide() sonrası isVisible() HEMEN false olur, element.hidden ise HIDE_ANIMATION_MS sonra"
-        }
-      ]
-    },
-    {
-      "export": "LEAVE_ANIMATION_MS",
-      "kind": "helper",
-      "tier": 2,
-      "phase": "UI-04",
-      "anchor": null,
-      "archetype": "helper",
-      "consumer": "catalog",
-      "showcase": [],
-      "shownVia": {
-        "via": null,
-        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
-      },
-      "tests": [
-        {
-          "file": "core/tests/ui/cards/shopPicker.test.ts",
-          "title": "İLK KEZ satın alınan teklif kısa bir \"başarı\" vurgusu classı alır"
-        },
-        {
-          "file": "core/tests/ui/cssConstantSync.test.ts",
-          "title": "LEAVE_ANIMATION_MS, .vol-card--leaving animasyonundan kısa değil"
-        }
-      ]
-    },
-    {
-      "export": "VOL_COLORS",
-      "kind": "helper",
-      "tier": 1,
-      "phase": "UI-01",
-      "anchor": null,
-      "archetype": "helper",
-      "consumer": "direct",
-      "showcase": ["sections/hudPanelCards.ts"],
-      "tests": [
-        {
-          "file": "core/tests/ui/colorSync.test.ts",
-          "title": "colors.ts'teki her token theme.css'te --vol-ui-* olarak var"
-        }
-      ]
-    },
-    {
-      "export": "VOL_ICONS",
-      "kind": "helper",
-      "tier": 2,
-      "phase": "UI-01",
-      "anchor": null,
-      "archetype": "helper",
-      "consumer": "catalog",
-      "showcase": ["sections/workbenchTab.ts"],
-      "tests": [
-        {
-          "file": "core/tests/ui/workbenchPrimitives.test.ts",
-          "title": "güvenli SVG registry üretir ve dekoratif/etiketli kipleri ayırır"
-        }
-      ]
     },
     {
       "export": "animateValue",
@@ -2245,6 +2309,26 @@
       ]
     },
     {
+      "export": "resolveDensityId",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/themes/registry.test.ts",
+          "title": "bilinmeyen değer varsayılana döner"
+        }
+      ]
+    },
+    {
       "export": "resolveGlyphFamily",
       "kind": "helper",
       "tier": 2,
@@ -2277,6 +2361,26 @@
         {
           "file": "core/tests/ui/hud/hudPanels.test.ts",
           "title": "durum haritasına göre --unlocked / --available / --locked class alır"
+        }
+      ]
+    },
+    {
+      "export": "resolveThemeId",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/themes/registry.test.ts",
+          "title": "bilinmeyen değer varsayılana döner"
         }
       ]
     },

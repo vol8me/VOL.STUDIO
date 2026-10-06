@@ -4,6 +4,7 @@
 @import url('./primitives/views.css');
 @import url('./glyphs/glyphs.css');
 @import url('./layout/layout.css');
+@import url('./layout/density.css');
 @import url('./overlays/overlays.css');
 @import url('./overlays/loading.css');
 @import url('./feedback/feedback.css');
@@ -220,7 +221,111 @@
 }
 
 /* @generated:themes:begin */
-:root[data-vol-theme='ember'] {
+:root[data-vol-theme='default'],
+[data-vol-theme='default'] {
+  --vol-ui-bg: #0d1115;
+  --vol-ui-bg-subtle: #12181e;
+  --vol-ui-surface-1: #182028;
+  --vol-ui-surface-2: #212a33;
+  --vol-ui-surface-3: #2a3540;
+  --vol-ui-border-soft: #34414d;
+  --vol-ui-border-strong: #495865;
+  --vol-ui-text: #e8eef5;
+  --vol-ui-text-secondary: #b5c1cc;
+  --vol-ui-text-muted: #83919d;
+  --vol-ui-text-disabled: #5d6a75;
+  --vol-ui-icon: #9aa7b3;
+  --vol-ui-brand-solid: #b85518;
+  --vol-ui-brand-hover: #d67434;
+  --vol-ui-brand-pressed: #a04a18;
+  --vol-ui-brand-subtle: #352217;
+  --vol-ui-brand-border: #864a2c;
+  --vol-ui-on-brand: #fff6f0;
+  --vol-ui-support-solid: #246a79;
+  --vol-ui-support-hover: #2c7483;
+  --vol-ui-support-pressed: #1b505c;
+  --vol-ui-support-subtle: #15292f;
+  --vol-ui-support-border: #2d5863;
+  --vol-ui-on-support: #eafbfd;
+  --vol-ui-accent-solid: #565dbe;
+  --vol-ui-accent-hover: #5c63c8;
+  --vol-ui-accent-pressed: #3d438f;
+  --vol-ui-accent-subtle: #23274d;
+  --vol-ui-accent-border: #6269c4;
+  --vol-ui-on-accent: #f5f6ff;
+  --vol-ui-success-solid: #307a57;
+  --vol-ui-success-subtle: #163126;
+  --vol-ui-success-border: #2c6b4d;
+  --vol-ui-on-success: #eaf7f0;
+  --vol-ui-warning-solid: #d2a03c;
+  --vol-ui-warning-subtle: #3b2c12;
+  --vol-ui-warning-border: #6e5526;
+  --vol-ui-on-warning: #1e1605;
+  --vol-ui-danger-solid: #b94a4a;
+  --vol-ui-danger-subtle: #3a1e21;
+  --vol-ui-danger-border: #8e3636;
+  --vol-ui-on-danger: #fff0f0;
+  --vol-ui-info-solid: #356eb0;
+  --vol-ui-info-subtle: #18283e;
+  --vol-ui-info-border: #2c557f;
+  --vol-ui-on-info: #eaf3fb;
+  --vol-ui-hover-fill: #19222a;
+  --vol-ui-pressed-fill: #202b34;
+  --vol-ui-selected-fill: #2a3844;
+  --vol-ui-focus-ring: #ffd37a;
+  --vol-ui-focus-halo: #fff1c133;
+  --vol-ui-disabled-fill: #1b2128;
+  --vol-ui-disabled-border: #2a333c;
+  --vol-ui-disabled-text: #5c6772;
+  --vol-ui-inverse-surface: #eaf0f6;
+  --vol-ui-inverse-text: #11161a;
+  --vol-ui-overlay-panel: #11171dd9;
+  --vol-ui-scrim: #05070ab8;
+  --vol-ui-hairline-alpha: #ffffff14;
+  --vol-ui-selection-glow: #7c84ff33;
+  --vol-ui-page: #0d1115;
+  --vol-ui-well: #0a0d11;
+  --vol-ui-panel: #182028;
+  --vol-ui-plate: #212a33;
+  --vol-ui-plate-top-light: #ffffff1f;
+  --vol-ui-well-inner-shadow: #00000066;
+  --vol-ui-frame-hairline: #34414d;
+  --vol-ui-frame-corner: #864a2c;
+  --vol-ui-frame-header: #1d252d;
+  --vol-ui-frame-divider: #2a3540;
+  --vol-ui-glow-brand: #d6743459;
+  --vol-ui-glow-support: #2c748359;
+  --vol-ui-glow-success: #307a5759;
+  --vol-ui-glow-warning: #d2a03c59;
+  --vol-ui-glow-danger: #b94a4a59;
+  --vol-ui-rarity-common-solid: #83919d;
+  --vol-ui-rarity-common-hover: #9aa7b3;
+  --vol-ui-rarity-common-selected: #b5c1cc;
+  --vol-ui-rarity-common-disabled: #4a5560;
+  --vol-ui-rarity-common-border: #34414d;
+  --vol-ui-rarity-common-glow: #9aa7b340;
+  --vol-ui-rarity-rare-solid: #356eb0;
+  --vol-ui-rarity-rare-hover: #4580c4;
+  --vol-ui-rarity-rare-selected: #5a95d9;
+  --vol-ui-rarity-rare-disabled: #2a3d55;
+  --vol-ui-rarity-rare-border: #2c557f;
+  --vol-ui-rarity-rare-glow: #4580c459;
+  --vol-ui-rarity-epic-solid: #565dbe;
+  --vol-ui-rarity-epic-hover: #6a71d4;
+  --vol-ui-rarity-epic-selected: #7f86e6;
+  --vol-ui-rarity-epic-disabled: #363a66;
+  --vol-ui-rarity-epic-border: #6269c4;
+  --vol-ui-rarity-epic-glow: #6a71d459;
+  --vol-ui-rarity-legendary-solid: #d2a03c;
+  --vol-ui-rarity-legendary-hover: #e3b24d;
+  --vol-ui-rarity-legendary-selected: #f0c568;
+  --vol-ui-rarity-legendary-disabled: #5e4a22;
+  --vol-ui-rarity-legendary-border: #a67c25;
+  --vol-ui-rarity-legendary-glow: #e3b24d66;
+}
+
+:root[data-vol-theme='ember'],
+[data-vol-theme='ember'] {
   --vol-ui-bg: #140e0b;
   --vol-ui-bg-subtle: #1a120e;
   --vol-ui-surface-1: #221813;

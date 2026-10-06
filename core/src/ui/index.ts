@@ -19,4 +19,19 @@ export * from './textEntry';
 export * from './glyphs';
 export { suppressNativeMenus } from './nativeMenus';
 export { VOL_COLORS, type VolColorToken } from './colors';
+export {
+  THEME_IDS,
+  DENSITY_IDS,
+  resolveThemeId,
+  resolveDensityId,
+  type ThemeId,
+  type DensityId,
+} from './themes/registry';
+export type { VolThemeToken } from './themes/types';
+export {
+  ThemeController,
+  type ThemeControllerOptions,
+  type ThemeState,
+  type ThemeStore,
+} from './themes/ThemeController';
 export { Easing, animateValue, type AnimateValueOptions } from './animation';

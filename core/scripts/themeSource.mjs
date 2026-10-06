@@ -79,17 +79,32 @@ export function renderTokens(colors, semantic) {
     .join('\n');
 }
 
-/** Temaların `:root[data-vol-theme]` blokları; satır sırası varsayılan token sırasıdır. */
+/**
+ * Tema blokları. `default` bloğu (tüm varsayılan değerler) kapsamlı önizleme için
+ * vardır: ember bir kökün içindeki varsayılan önizleme, tokenları varsayılana
+ * geri alabilmelidir. Her seçici `:root[...]` ve yalın `[...]` biçimini birlikte
+ * taşır: kökte `:root` varsayılanını özgüllükle yener, alt ağaçta kapsamlı çalışır.
+ * Satır sırası geçersiz kılma anahtarı sırasından değil varsayılan token sırasındandır.
+ */
 export function renderThemes(colors, semantic, themes) {
   const order = defaultTokens(colors, semantic);
-  return Object.entries(themes)
-    .map(([id, overrides]) => {
-      const lines = order
-        .filter(({ key }) => key in overrides)
-        .map(({ cssVar, key }) => `  ${cssVar}: ${overrides[key]};`);
-      return `:root[data-vol-theme='${id}'] {\n${lines.join('\n')}\n}`;
-    })
-    .join('\n\n');
+  const block = (id, picked) => {
+    const selector = [`:root[data-vol-theme='${id}']`, `[data-vol-theme='${id}']`].join(',\n');
+    const lines = picked.map(({ cssVar, value }) => `  ${cssVar}: ${value};`);
+    return [`${selector} {`, ...lines, '}'].join('\n');
+  };
+  const blocks = [block('default', order)];
+  for (const [id, overrides] of Object.entries(themes)) {
+    blocks.push(
+      block(
+        id,
+        order
+          .filter(({ key }) => key in overrides)
+          .map(({ cssVar, key }) => ({ cssVar, value: overrides[key] })),
+      ),
+    );
+  }
+  return blocks.join('\n\n');
 }
 
 function replaceRegion(css, begin, end, body, indent) {

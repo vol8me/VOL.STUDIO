@@ -54,14 +54,31 @@ describe('theme.css ↔ tema kaynağı', () => {
     expect(Object.keys(VOL_EMBER_OVERRIDES).filter((key) => key.startsWith('rarity'))).toEqual([]);
   });
 
-  it('tema bloğu dosyada tek ve doğru seçiciyle durur; üretilen bölgelerin dışında renk satırı yok', () => {
+  it('tema blokları dosyada default + ember, ikişer seçiciyle durur; üretilen bölgelerin dışında renk satırı yok', () => {
     const themes = extractRegion(css, THEMES_BEGIN, THEMES_END)!;
-    expect(themes.match(/:root\[data-vol-theme='[a-z-]+'\]/g)).toEqual([
-      ":root[data-vol-theme='ember']",
+    expect(themes.match(/^:root\[data-vol-theme='[a-z-]+'\],$/gm)).toEqual([
+      ":root[data-vol-theme='default'],",
+      ":root[data-vol-theme='ember'],",
+    ]);
+    expect(themes.match(/^\[data-vol-theme='[a-z-]+'\] \{$/gm)).toEqual([
+      "[data-vol-theme='default'] {",
+      "[data-vol-theme='ember'] {",
     ]);
     const outside = css
       .replace(extractRegion(css, TOKENS_BEGIN, TOKENS_END)!, '')
       .replace(themes, '');
     expect(outside.match(/--vol-ui-[a-z0-9-]+:\s*#/g) ?? []).toEqual([]);
+  });
+
+  it('default bloğu varsayılan token bölgesiyle birebir aynı değerleri taşır', () => {
+    const tokens = extractRegion(css, TOKENS_BEGIN, TOKENS_END)!;
+    const themes = extractRegion(css, THEMES_BEGIN, THEMES_END)!;
+    const defaultBlock = /\[data-vol-theme='default'\] \{([^}]*)\}/.exec(themes)![1];
+    const norm = (text: string): string[] =>
+      text
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+    expect(norm(defaultBlock)).toEqual(norm(tokens));
   });
 });

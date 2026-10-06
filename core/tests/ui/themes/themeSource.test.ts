@@ -104,7 +104,7 @@ describe('tema kaynağı üretimi', () => {
     });
   });
 
-  it('tema satırları geçersiz kılma anahtarı sırasından değil varsayılan token sırasından gelir', () => {
+  it('tema blokları: önce default (tüm değerler), sonra her tema; satır sırası varsayılan token sırasındandır', () => {
     const forward = renderThemes(colors, semantic, {
       ember: { uiBg: '#140e0b', plateTopLight: '#ffd8b81f' },
     });
@@ -114,7 +114,17 @@ describe('tema kaynağı üretimi', () => {
     expect(reverse).toBe(forward);
     expect(forward).toBe(
       [
-        ":root[data-vol-theme='ember'] {",
+        ":root[data-vol-theme='default'],",
+        "[data-vol-theme='default'] {",
+        '  --vol-ui-bg: #0d1115;',
+        '  --vol-ui-surface-1: #182028;',
+        '  --vol-ui-brand-solid: #b85518;',
+        '  --vol-ui-plate-top-light: #ffffff1f;',
+        '  --vol-ui-rarity-rare-solid: #356eb0;',
+        '}',
+        '',
+        ":root[data-vol-theme='ember'],",
+        "[data-vol-theme='ember'] {",
         '  --vol-ui-bg: #140e0b;',
         '  --vol-ui-plate-top-light: #ffd8b81f;',
         '}',
@@ -125,7 +135,8 @@ describe('tema kaynağı üretimi', () => {
   it('applyGenerated yalnız işaretli bölgeleri yazar, elle yazılanı korur ve idempotenttir', () => {
     const once = applyGenerated(css, source);
     expect(once).toContain(renderTokens(colors, semantic));
-    expect(once).toContain(":root[data-vol-theme='ember']");
+    expect(once).toContain(":root[data-vol-theme='ember'],");
+    expect(once).toContain(":root[data-vol-theme='default'],");
     expect(once).toContain('--vol-font-family: Jura;');
     expect(once).toContain('--vol-hit-target-min: 44px;');
     expect(once).not.toContain('--eski');

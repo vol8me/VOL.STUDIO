@@ -380,6 +380,87 @@ test.describe('geometri kayma sondası (tema/mod değişimi için)', () => {
   });
 });
 
+test.describe('tema, yoğunluk ve hedef tabanı (ThemeController nitelikleri)', () => {
+  const ALL = '[class^="vol-"], [class*=" vol-"]';
+  const setRoot = (page: Page, name: string, value: string | null): Promise<void> =>
+    page.evaluate(
+      ([attribute, next]) => {
+        if (next === null) document.documentElement.removeAttribute(attribute);
+        else document.documentElement.setAttribute(attribute, next);
+      },
+      [name, value] as const,
+    );
+
+  test('ember teması gerçekten renk değiştirir ve hiçbir sekmede kutuyu kaydırmaz', async ({
+    page,
+  }) => {
+    await openShowcase(page);
+    const offenders: string[] = [];
+    for (const tab of SHOWCASE_TABS) {
+      await selectTab(page, tab);
+      const before = await snapshotGeometry(page, [ALL]);
+      const background = (): Promise<string> =>
+        page.evaluate(() =>
+          getComputedStyle(document.documentElement).getPropertyValue('--vol-ui-bg').trim(),
+        );
+      const defaultBg = await background();
+      await setRoot(page, 'data-vol-theme', 'ember');
+      expect(await background(), `${tab}: ember --vol-ui-bg uygulanmadı`).not.toBe(defaultBg);
+      const shifts = geometryShifts(before, await snapshotGeometry(page, [ALL]));
+      await setRoot(page, 'data-vol-theme', null);
+      if (shifts.length) offenders.push(`${tab}: ${shifts.slice(0, 3).join(' | ')}`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test('yoğunluk yalnız boşluk ölçeğini değiştirir ve geri dönünce geometri birebir aynıdır', async ({
+    page,
+  }) => {
+    await openShowcase(page);
+    await selectTab(page, 'buttons');
+    const read = (): Promise<{ space: string; text: string }> =>
+      page.evaluate(() => {
+        const style = getComputedStyle(document.documentElement);
+        return {
+          space: style.getPropertyValue('--vol-space-md').trim(),
+          text: style.getPropertyValue('--vol-text-body').trim(),
+        };
+      });
+    const base = await read();
+    const geometry = await snapshotGeometry(page, [ALL]);
+
+    await setRoot(page, 'data-vol-density', 'compact');
+    const compact = await read();
+    expect(compact.space).toBe('12px');
+    expect(compact.text, 'yoğunluk yazı boyunu değiştirmemeli').toBe(base.text);
+    await setRoot(page, 'data-vol-density', 'spacious');
+    expect((await read()).space).toBe('20px');
+
+    await setRoot(page, 'data-vol-density', 'comfortable');
+    expect((await read()).space).toBe(base.space);
+    expect(geometryShifts(geometry, await snapshotGeometry(page, [ALL]))).toEqual([]);
+    await setRoot(page, 'data-vol-density', null);
+  });
+
+  test('büyük hedef tabanı ince işaretçide de 44 px verir; niteliksiz token tanımsız kalır', async ({
+    page,
+  }) => {
+    await openShowcase(page);
+    const token = (): Promise<string> =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue('--vol-hit-target-min').trim(),
+      );
+    // Masaüstü (ince işaretçi) projesi: taban yok, token tanımsız.
+    expect(await page.evaluate(() => matchMedia('(pointer: fine)').matches)).toBe(true);
+    expect(await token()).toBe('');
+    await setRoot(page, 'data-vol-target', 'large');
+    expect(await token()).toBe('44px');
+    // İç içe kapsam: nitelik yalnız bağlı alt ağaçta geçerlidir.
+    await setRoot(page, 'data-vol-target', null);
+    expect(await token()).toBe('');
+  });
+});
+
 test.describe('sürükleme jesti', () => {
   test('sürüklemek METİN SEÇMEZ', async ({ page }) => {
     /*
