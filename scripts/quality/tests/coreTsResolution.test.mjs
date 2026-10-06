@@ -9,7 +9,7 @@ const consumers = [
   'core',
   'tauri-v2',
   'devtools/audio-synth',
-  'devtools/vol-ui',
+  'devtools/vol-showcase',
   'devtools/pen.dev',
   'games/vol-test',
 ];

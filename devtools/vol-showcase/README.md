@@ -1,4 +1,4 @@
-# @volstudio/vol-ui
+# @volstudio/vol-showcase
 
 CORE DOM UI kataloğunun canlı vitrini. Bileşen, girdi, erişilebilirlik ve
 piksel sözleşmesini gerçek tarayıcıda gösterir. Phaser veya native kabuk
@@ -7,7 +7,7 @@ kurulumu gerektirmez; bileşen uygulamaları CORE'da kalır.
 ## Geliştirme
 
 ```bash
-pnpm --filter @volstudio/vol-ui dev
+pnpm --filter @volstudio/vol-showcase dev
 ```
 
 ## Sekmeler
@@ -32,8 +32,8 @@ ve CORE testinde adıyla sınanır. Sekme tablosu vitrin yönlendirmesidir; canl
 ## Doğrulama
 
 ```bash
-pnpm --filter @volstudio/vol-ui build
-pnpm --filter @volstudio/vol-ui test:e2e
+pnpm --filter @volstudio/vol-showcase build
+pnpm --filter @volstudio/vol-showcase test:e2e
 ```
 
 E2E gönderilen build'i sınar. Determinizm, yerleşim ve piksel karşılaştırması
@@ -43,7 +43,7 @@ yalnız okunabilirliği çalıştırır. Bütün davranışların iki motora yay
 görsel değişiklikte temel güncellemesiyle kabul edilir.
 
 ```bash
-pnpm --filter @volstudio/vol-ui test:e2e:update
+pnpm --filter @volstudio/vol-showcase test:e2e:update
 ```
 
 Beklenmeyen farkta önce neden çözülür. Güncelleme komutunun geçmesi görünüm

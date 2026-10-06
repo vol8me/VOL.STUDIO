@@ -1,7 +1,7 @@
 /*
  * Phaser taşımayan kol yüzeyi — `@volstudio/core/input/gamepad` alt yolu.
  * `input/index.ts` köprüleri de ihraç ettiği için tarayıcı araçları
- * (vol-ui) bu dar kapıyı kullanır.
+ * (vol-showcase) bu dar kapıyı kullanır.
  */
 export {
   GAMEPAD_BUTTON,

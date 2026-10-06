@@ -31,7 +31,7 @@ State değişimi dinleyiciye bildirilmeden kuyruğa girer; dinleyicinin başlatt
 DOM UI durumu tüketiciden alır. Listeler kimlikle güncellenir, kaydırma dış
 panelde tanımlanır ve animasyona bağlı temizlik azaltılmış hareket kipinde de
 biter. Tüketicisiz bileşenler katalogda, vitrin ve adıyla test altında kalır.
-Dokunma hedefi politikası [vol-ui](../devtools/vol-ui/README.md) içindedir.
+Dokunma hedefi politikası [vol-showcase](../devtools/vol-showcase/README.md) içindedir.
 Görünen metin i18n anahtarıdır; dil değişimi modül yüklenirken kilitlenmez.
 
 ## Ses ve assetler

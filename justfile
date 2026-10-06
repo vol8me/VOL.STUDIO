@@ -72,7 +72,7 @@ e2e:
     node scripts/quality/runActive.mjs test:e2e --if-present
 
 build-ui:
-    pnpm --filter @volstudio/vol-ui build
+    pnpm --filter @volstudio/vol-showcase build
 
 # Aktif Cargo manifestleri: fmt, clippy (all-targets, feature'lı), test.
 rust:
@@ -111,7 +111,7 @@ dev:
     pnpm dev
 
 dev-ui:
-    pnpm --filter @volstudio/vol-ui dev
+    pnpm --filter @volstudio/vol-showcase dev
 
 fix:
     pnpm format

@@ -183,7 +183,7 @@
    * alanını genişletir.
    *
    * Bu satır olmadan dar ekranda `.vol-sr-only` açıklamaları kabın dışına
-   * düşer ve sayfa yatay kayar (bkz. vol-ui `layout.spec.ts`).
+   * düşer ve sayfa yatay kayar (bkz. vol-showcase `layout.spec.ts`).
    */
   position: relative;
 }

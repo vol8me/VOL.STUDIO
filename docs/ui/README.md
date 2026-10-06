@@ -2,7 +2,7 @@
 
 CORE UI'nin hedef görünüm ve davranışını, mevcut public yüzeyini ve
 uygulama işlerini ayıran başvuru kümesi. Mevcut vitrin
-[vol-ui](../../devtools/vol-ui/README.md), gerçek oyun tüketicisi VOL.TEST'tir.
+[vol-showcase](../../devtools/vol-showcase/README.md), gerçek oyun tüketicisi VOL.TEST'tir.
 VOL.SHOWCASE göçü ve yeni UI mekanizmaları henüz uygulanmadı.
 
 | Gereksinim                                            | Sahip belge                     |

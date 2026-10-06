@@ -7,15 +7,15 @@ oyun akışında sınayan test ürünüdür.
 
 ## Paketler
 
-| Yol                     | Paket                    | Sorumluluk                                      |
-| ----------------------- | ------------------------ | ----------------------------------------------- |
-| `core/`                 | `@volstudio/core`        | Oyunlardan bağımsız motor ve DOM UI kataloğu    |
-| `tauri-v2/`             | `@volstudio/tauri-v2`    | Paylaşılan native kabuk ve platform adaptörleri |
-| `devtools/audio-synth/` | `@volstudio/audio-synth` | Deterministik ses ve müzik üretimi, yayın ve QA |
-| `devtools/deck/`        | `@volstudio/deck`        | Steam Deck sondası ve devkit otomasyonu         |
-| `devtools/pen.dev/`     | `@volstudio/pen.dev`     | Pencil tasarımından rig export ve gönderim      |
-| `devtools/vol-ui/`      | `@volstudio/vol-ui`      | CORE UI vitrini ve görsel sözleşme              |
-| `games/vol-test/`       | `@volstudio/vol-test`    | Motor ve kabuğun uçtan uca test oyunu           |
+| Yol                      | Paket                     | Sorumluluk                                      |
+| ------------------------ | ------------------------- | ----------------------------------------------- |
+| `core/`                  | `@volstudio/core`         | Oyunlardan bağımsız motor ve DOM UI kataloğu    |
+| `tauri-v2/`              | `@volstudio/tauri-v2`     | Paylaşılan native kabuk ve platform adaptörleri |
+| `devtools/audio-synth/`  | `@volstudio/audio-synth`  | Deterministik ses ve müzik üretimi, yayın ve QA |
+| `devtools/deck/`         | `@volstudio/deck`         | Steam Deck sondası ve devkit otomasyonu         |
+| `devtools/pen.dev/`      | `@volstudio/pen.dev`      | Pencil tasarımından rig export ve gönderim      |
+| `devtools/vol-showcase/` | `@volstudio/vol-showcase` | CORE UI vitrini ve görsel sözleşme              |
+| `games/vol-test/`        | `@volstudio/vol-test`     | Motor ve kabuğun uçtan uca test oyunu           |
 
 Aktif paketler `workspace-lifecycle.json` ile belirlenir. Yeni ürün
 [oyun kurma rehberi](docs/new-game.md) üzerinden `games/` altında oluşturulur.
@@ -67,7 +67,7 @@ cihaz ölçümü ve insan dinlemesi otomatik kapıların yerine geçmez.
 | Android                | [docs/android.md](docs/android.md)                                   |
 | Ses üretimi            | [audio-synth/README.md](devtools/audio-synth/README.md)              |
 | Rig üretimi            | [pen.dev/README.md](devtools/pen.dev/README.md)                      |
-| UI kataloğu            | [vol-ui/README.md](devtools/vol-ui/README.md)                        |
+| UI kataloğu            | [vol-showcase/README.md](devtools/vol-showcase/README.md)            |
 | UI uygulama sözleşmesi | [UI fazları ve nihai plan](docs/ui/README.md)                        |
 | Açık işler             | [TODO.md](TODO.md)                                                   |
 | Teknik değerlendirme   | [Monorepo denetimi ve iyileştirme kararları](docs/monorepo-audit.md) |

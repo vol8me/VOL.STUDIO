@@ -39,7 +39,7 @@ flowchart TD
     GameNative --> Plugins["Uygulamaya özgü native eklentiler"]
     Audio["audio-synth: üretim ve yayın"] --> Core
     Pen["pen.dev: rig export ve sync"] --> Core
-    UI["vol-ui: vitrin ve tarayıcı kabulü"] --> Core
+    UI["vol-showcase: vitrin ve tarayıcı kabulü"] --> Core
     Deck["Deck araçları: ölçüm ve devkit"] -. "build sırasında ölçüm kaynağı" .-> Core
     Audio -. "gönderilen asset" .-> Game
     Pen -. "gönderilen rig" .-> Game
@@ -66,7 +66,7 @@ Git envanterinde **2.860 izlenen dosya** var. Aşağıdaki kaynak sayımı TS/JS
 | audio-synth  |         1.400 |                         290 |            55.658 |          144 |          26.097 |
 | Deck         |            29 |                           8 |             1.812 |            4 |             904 |
 | pen.dev      |            87 |                           5 |               501 |            1 |             266 |
-| vol-ui       |            81 |                          29 |             8.013 |           21 |           2.386 |
+| vol-showcase |            81 |                          29 |             8.013 |           21 |           2.386 |
 | VOL.TEST     |           338 |                         104 |             8.511 |           74 |           6.582 |
 | Kök betikler |           117 |                          63 |             6.090 |           50 |           4.349 |
 
@@ -346,13 +346,13 @@ Dolayısıyla “high yeşil” doğrudur; “signoff yeşil”, “bütün audi
 
 Aşağıdaki değerler bu koşunun tamamlanmış coverage kaydıyla eşleşen LCOV pay/paydasından hesaplandı. Çalıştırılabilir satır, fonksiyon ve dal yüzdesidir; ham fiziksel satır değildir. Statement metriği LCOV'dan yeniden üretilmedi.
 
-| Paket       |  Satır | Fonksiyon |    Dal |
-| ----------- | -----: | --------: | -----: |
-| CORE        | %95,28 |    %93,95 | %85,77 |
-| pen.dev     |   %100 |      %100 |   %100 |
-| tauri-v2 JS | %99,11 |      %100 | %92,88 |
-| VOL.TEST    | %99,39 |    %97,91 | %93,88 |
-| vol-ui      | %94,63 |    %83,99 | %60,17 |
+| Paket        |  Satır | Fonksiyon |    Dal |
+| ------------ | -----: | --------: | -----: |
+| CORE         | %95,28 |    %93,95 | %85,77 |
+| pen.dev      |   %100 |      %100 |   %100 |
+| tauri-v2 JS  | %99,11 |      %100 | %92,88 |
+| VOL.TEST     | %99,39 |    %97,91 | %93,88 |
+| vol-showcase | %94,63 |    %83,99 | %60,17 |
 
 tauri-v2 yüzdesi Rust/Kotlin kapsamı değildir; pen.dev yüzdesi düzenleyici .mjs CLI'nin bütün hata yollarını kanıtlamaz. Denominatörler Vitest src/**/*.ts kapsamıdır. Deck kapsamı gerekçeli muafiyet taşıyor; contract/probe testleri ayrı güvence sağlar.
 
@@ -368,10 +368,10 @@ Audit çıktısı patched >=3.0.4 yazdı, ancak pnpm paket kayıt sorgusu (`view
 
 Build sonrasında bundle kapısı ayrıca ölçüldü ve exit 0 verdi. Ölçü gzip level 9, 1 KiB = 1.024 byte üzerinden:
 
-| Paket    |       App |    Vendor |      CSS |
-| -------- | --------: | --------: | -------: |
-| vol-ui   | 138,4 KiB |     0 KiB | 19,8 KiB |
-| VOL.TEST | 105,1 KiB | 345,6 KiB | 18,2 KiB |
+| Paket        |       App |    Vendor |      CSS |
+| ------------ | --------: | --------: | -------: |
+| vol-showcase | 138,4 KiB |     0 KiB | 19,8 KiB |
+| VOL.TEST     | 105,1 KiB | 345,6 KiB | 18,2 KiB |
 
 VOL.TEST app bütçesi 106 KiB; yuvarlanmış ölçüyle yaklaşık 0,9 KiB pay var. Bu tek başına performans hatası değil; sonraki runtime özellikleri için bütçe artışı veya ölçüme dayalı boyut çalışması bilinçli karar gerektirir. Render/FPS için bu sayılardan sonuç çıkarılmadı. Kaynak: bundle.log.
 
@@ -383,7 +383,7 @@ Audio-verify ayrı koşuda exit 0 verdi: 5/5 referans ölçüm fixture'ı tolera
 
 **Fiziksel boundary'ler mock'larla kapanmış değil.** JS testinde overlay olayı elle göndermek native callback'ın yaşadığını sınamaz. WebKit projesi GTK WebView sürücüsü/gamescope zamanlamasıyla aynı ortam değildir. Linux, Android, Deck ve Windows native kabuller mevcut TODO'da da ayrı tutuluyor. Bu ayrım korunmalı.
 
-**İki browser etiketi iki tam takım demek değil.** [vol-ui Playwright:60](../devtools/vol-ui/playwright.config.ts) Chromium'da readability dışındaki dosyaları, WebKit'te yalnız readability dosyasını koşar. README ve UI-00 bunu açıkça kabul ediyor. VOL.TEST iki projede davranış takımını tanımlıyor. Raporlarken bu iki farklı kapsam birleştirilmemeli. Piksel baseline'ları bu incelemede güncellenmedi.
+**İki browser etiketi iki tam takım demek değil.** [vol-showcase Playwright:60](../devtools/vol-showcase/playwright.config.ts) Chromium'da readability dışındaki dosyaları, WebKit'te yalnız readability dosyasını koşar. README ve UI-00 bunu açıkça kabul ediyor. VOL.TEST iki projede davranış takımını tanımlıyor. Raporlarken bu iki farklı kapsam birleştirilmemeli. Piksel baseline'ları bu incelemede güncellenmedi.
 
 **Test çalıştırıcısının kendisi Windows'ta güvenilir değil.** Taze süreç helper'ları ve URL→dosya yolu dönüşümü ayrıca B14–B15'teki 21 hatayı üretir. Hata helper'da gizlenince görünen JSON/parser reddi ürün kusuru sanılabilir. Süreç başlatma ve fixture yolunun doğruluğu testin ön koşuludur.
 
@@ -565,8 +565,8 @@ Satır/sözcük sayıları denetlenen kaynak snapshot'ına aittir. Tablo başlan
 | [devtools/pen.dev/AGENTS.md](../devtools/pen.dev/AGENTS.md)                                                                                           |     187/1022 | Kısalt: Pencil MCP erişimi ve geri alınabilir export; uzun kullanım ayrı sahibinde                             |
 | [devtools/pen.dev/DESIGN.md](../devtools/pen.dev/DESIGN.md)                                                                                           |       53/330 | Koru: kaynak/ara çıktı/teslim ve rig gerekçesi                                                                 |
 | [devtools/pen.dev/README.md](../devtools/pen.dev/README.md)                                                                                           |       47/212 | Koru: paket girişi; AGENTS erişim yasağını kopyalama                                                           |
-| [devtools/vol-ui/DESIGN.md](../devtools/vol-ui/DESIGN.md)                                                                                             |       28/153 | Koru/taşı: atomik SHOWCASE göçünde aynı sorumluluk; theme/state teknik gerekçe                                 |
-| [devtools/vol-ui/README.md](../devtools/vol-ui/README.md)                                                                                             |       65/284 | Koru/taşı: kısa komut/sekme tablosu; katalog ayrıntısı CATALOG'da                                              |
+| [devtools/vol-showcase/DESIGN.md](../devtools/vol-showcase/DESIGN.md)                                                                                 |       28/153 | Koru/taşı: atomik SHOWCASE göçünde aynı sorumluluk; theme/state teknik gerekçe                                 |
+| [devtools/vol-showcase/README.md](../devtools/vol-showcase/README.md)                                                                                 |       65/284 | Koru/taşı: kısa komut/sekme tablosu; katalog ayrıntısı CATALOG'da                                              |
 | [docs/android.md](../docs/android.md)                                                                                                                 |     161/1095 | Kısalt: kurulum ve cihaz ölçümü; genel Tauri/gate tekrarı kalkar                                               |
 | [docs/gates.md](../docs/gates.md)                                                                                                                     |     153/1294 | Koru/kısalt: kapı bileşimi/rapor anlamı; mevcut justfile tek kaynak                                            |
 | [docs/linux.md](../docs/linux.md)                                                                                                                     |       48/267 | Koru: builder ve ölçüme bağlı WebView sözleşmesi                                                               |
@@ -966,7 +966,7 @@ kaldırıldı. Genel Steam Cloud/Input mekanizmaları F08 sözleşmesi gereği k
 
 Fallow review dört sözleşme kararını güncel grafikte doğruladı; audit exit 1:
 beş katalog üyesi kullanım uyarısı, beş karmaşıklık bulgusu, sıfır kopya grubu.
-Input/TextArea üyeleri kendi testleri ve vol-ui örnekleriyle korunur. Yeni
+Input/TextArea üyeleri kendi testleri ve vol-showcase örnekleriyle korunur. Yeni
 Steam oturum fonksiyonu 64 satır ve bilişsel karmaşıklık 13; yeni test
 matrisinin çevrimsel karmaşıklığı 14. Bunlar gizlenmedi veya otomatik silmeye gerekçe yapılmadı. Fallow'da
 mimari sınır ayarı yoktur; sınır kanıtı repo contract kapısından gelir.
@@ -1062,7 +1062,7 @@ bunu aşarsa ayrı ölçümle yeniden belirlenmelidir.
 
 **Kapı kanıtı.** Son kaynakta `just high` **exit 0**: contract 328 geçti/iki mevcut
 platform atlaması; CORE 2.271, tauri-v2 160, VOL.TEST 341, audio-synth 2.255,
-pen.dev 27, vol-ui 68, deck 22 test geçti. Kapsam eşikleri korundu (VOL.TEST
+pen.dev 27, vol-showcase 68, deck 22 test geçti. Kapsam eşikleri korundu (VOL.TEST
 satır %99,39, pen.dev %100). Bundle bütçeleri sınırda; app 106,3 KiB. Scaling
 CORE 3,789 ve oyun 4,446, tavan 6 (önceki 3,723/4,227: mermi döngüsünde hedef
 yoktur, fark ölçüm bandıdır). Chromium/WebKit E2E: vitrin 40, oyun 27 geçti; bir

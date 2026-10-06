@@ -51,6 +51,7 @@ devtools/*/export/
 # Deck araçları: derleme anında kopyalanan motor ve ölçüm kayıtları
 /devtools/deck/web/vendor/
 /devtools/deck/records/
+/devtools/vol-showcase/records/
 
 # Editör ve işletim sistemi
 .idea/

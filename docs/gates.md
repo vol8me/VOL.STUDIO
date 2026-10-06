@@ -28,9 +28,9 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | `coverage-shape` | 100 satırın üstünde ve %50 kapsamın altındaki dosya test ister; yalnız aynı koşunun taze lcov'unu okur                                                                                                               |
 | `audio-test`     | Sabit temel takım ve değişen kaynakla ilişkili testler; silinen/belirsiz değişimde tam takım                                                                                                                         |
 | `build`          | Aktif paketlerin `build` betiği                                                                                                                                                                                      |
-| `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-ui ve VOL.TEST)                                                                                           |
+| `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-showcase ve VOL.TEST)                                                                                     |
 | `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı (bugün CORE uzamsal indeksi ve VOL.TEST mermi modeli); ölçülen oranı yazar                                          |
-| `e2e`            | Aktif paketlerin `test:e2e` betiği, üretim build'i; vol-ui motor kapsamı asimetrik, genişlemesi UI-00                                                                                                                |
+| `e2e`            | Aktif paketlerin `test:e2e` betiği, üretim build'i; vol-showcase motor kapsamı asimetrik, genişlemesi UI-00                                                                                                          |
 | `rust`           | Kök workspace'in aktif üye manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır |
 | `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                                                                                                                  |
 | `audio-verify`   | Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır                                                                                                                                   |
@@ -71,7 +71,7 @@ sahibindedir; Linux'a özgü atlanan test başarı sayılmaz.
 | `scripts/quality/publicTypeSurface.mjs`  | CORE'un public tip yüzeyi `coreTypeSurface.snapshot.json` ile eşittir                                                                                                    |
 | `scripts/quality/appIdentity.mjs`        | Her aktif Tauri uygulamasının kimliği ürüne özgüdür (paket adını taşır), jenerik değildir ve çakışmaz; veri dizini ve Cloud kökü ondan türer                             |
 | `scripts/quality/tauriPlugins.mjs`       | JS `@tauri-apps/plugin-*` → Rust kaydı; Cargo eklenti bağımlılığı → kaynakta kayıt ya da izin; kayıtlı eklenti → izin ya da JS tüketicisi; yetenek izni → kurulu eklenti |
-| `scripts/quality/catalog.mjs`            | CORE kökünden açılan her UI bileşeni vol-ui vitrininde gösterilir ve CORE testinde adıyla geçer; parça ve görsel olmayan katman gerekçeli istisnadır                     |
+| `scripts/quality/catalog.mjs`            | CORE kökünden açılan her UI bileşeni vol-showcase vitrininde gösterilir ve CORE testinde adıyla geçer; parça ve görsel olmayan katman gerekçeli istisnadır               |
 | `scripts/quality/rootEntries.mjs`        | Kökteki her girdi gerekçesiyle kayıtlıdır; gerekçesiz yeni girdi ya da karşılıksız kayıt reddedilir                                                                      |
 | `scripts/quality/contextComments.mjs`    | Kaynak yorumları tarihçe ("bir dönem", "eskiden"), ölçüm günlüğü ("ölçüldü:"), tarih ve plan/faz kimliği taşımaz                                                         |
 
@@ -129,7 +129,7 @@ ayırır. Bu yeni kontroller henüz kapı bileşimine eklenmiş değildir.
 - **Kapsam motoru:** Vitest ve `@vitest/coverage-v8` aynı exact sürümdedir;
   V8 kapsamı AST tabanlı yeniden eşleme kullanır. Motor değişiminde eşik
   geçişi ölçülen LCOV pay/paydalarıyla yapılır; sonrasında ratchet sürer.
-- **Piksel temeli tam paneli çeker:** vol-ui sekme paneli kendi
+- **Piksel temeli tam paneli çeker:** vol-showcase sekme paneli kendi
   kaydırıcısıdır ve Playwright iç içe kaydırıcının görünmeyen kısmını çekemez;
   `visual.spec.ts` ekran görüntüsünden önce kap zincirinin taşmasını açar.
   `layout.spec.ts` gerçek kaydırıcıyı ölçmeye devam eder.

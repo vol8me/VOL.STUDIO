@@ -260,7 +260,7 @@ sınanır. Sağlayıcı/probe lifecycle var olan mekanizmalara eklenir.
 
 ## 12. VOL.SHOWCASE uygulaması
 
-Mevcut vol-ui tek atomik göçle devtools/vol-showcase olur; web dev bakışı
+Eski vol-ui tek atomik göçle devtools/vol-showcase oldu; web dev bakışı
 korunur, ikinci vitrin kurulmaz. Aktif paket, benzersiz `studio.vol.showcase`,
 ortak Tauri kabuğunu kullanan kendi crate'i/ikonu/device ayarı/ölçeği vardır.
 Windows geliştirme ve ilk native referans önce gelir. Linux/Deck ile

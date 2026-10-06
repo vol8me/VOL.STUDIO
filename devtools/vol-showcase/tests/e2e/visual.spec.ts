@@ -14,7 +14,7 @@ import { openShowcase, selectTab, SHOWCASE_TABS, type ShowcaseTab } from './supp
  * dosyayı birden kirletirdi.
  *
  * Temel güncellemesi bilinçli bir eylemdir:
- *   pnpm --filter @volstudio/vol-ui test:e2e:update
+ *   pnpm --filter @volstudio/vol-showcase test:e2e:update
  * Fark beklenmiyorsa güncellemeden önce sebebi bulunur — kapının değeri tam
  * olarak burada, "beklemiyordum" anındadır.
  */

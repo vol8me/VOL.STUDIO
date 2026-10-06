@@ -3,7 +3,7 @@
  * `core/src/ui/base.css` — `.vol-ui-root *`), ama o kural yalnızca `UIRoot`
  * (oyun tarafı) mount ettiği `.vol-ui-root` kapsamında çalışır. Showcase
  * kendi kökünü (`.vol-showcase-root`) kullanır ve bu kurala hiç girmez —
- * Bağımsız web yüzeyleri bunu kendi kökünde kurar; vol-ui'de bu satır hiç
+ * Bağımsız web yüzeyleri bunu kendi kökünde kurar; vol-showcase'de bu satır hiç
  * yazılmamıştı. Sonuç: `width:100%` +
  * `padding` taşıyan her primitif (TextArea, Input, PropertyField içindeki
  * kontroller, Checkbox track'i) content-box'ta gerçek genişliğin üstüne

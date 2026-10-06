@@ -6,7 +6,7 @@ import { buildPanelsTab } from '../../src/sections/panelsTab';
 import { card, cardGrid, svgIcon, paletteGrid } from '../../src/sections/shared';
 import { buildWorkbenchTab } from '../../src/sections/workbenchTab';
 
-describe('vol-ui sekme builderları', () => {
+describe('vol-showcase sekme builderları', () => {
   let uiRoot: HTMLDivElement;
 
   beforeEach(() => {

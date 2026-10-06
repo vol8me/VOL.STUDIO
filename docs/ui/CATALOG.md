@@ -2,8 +2,8 @@
 
 Başlangıç public yüzeyinin tamamı ve faz sahibi; durumların uygulanmış
 olduğu iddiası değildir. Kaynak yolları repo köküne, vitrin kolonu
-`devtools/vol-ui/src/`, test kolonu `core/tests/ui/` altına göredir.
-UI-06 sonrasında vitrin kökü devtools/vol-showcase/src/ olur.
+`devtools/vol-showcase/src/`, test kolonu `core/tests/ui/` altına göredir.
+Vitrin kökü UI-06.1 ile taşındı.
 Yeni regresyonlar modül adıyla test aynasına gider; eski birleşik testler büyütülmez.
 
 ## Kapsam ve terfi

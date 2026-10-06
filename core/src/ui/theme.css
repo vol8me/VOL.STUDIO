@@ -92,7 +92,7 @@
    *   title   panel/kart başlığı
    *   heading bölüm başlığı
    *   display ekran başlığı, hasar sayısı
-   * Taban 12 px'tir (Steam Deck okunabilirliği; vol-ui readability kapısı).
+   * Taban 12 px'tir (Steam Deck okunabilirliği; vol-showcase readability kapısı).
    */
   --vol-text-micro: 12px;
   --vol-text-label: 12px;

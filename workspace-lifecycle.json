@@ -22,8 +22,8 @@
       "status": "active"
     },
     {
-      "packageName": "@volstudio/vol-ui",
-      "path": "devtools/vol-ui",
+      "packageName": "@volstudio/vol-showcase",
+      "path": "devtools/vol-showcase",
       "status": "active"
     },
     {

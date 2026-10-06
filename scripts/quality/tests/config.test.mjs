@@ -94,7 +94,7 @@ describe('quality.json şema doğrulaması', () => {
 
   it('gerekçesiz muafiyet reddedilir', () => {
     const broken = validConfig();
-    broken.exempt = { '@volstudio/vol-ui': '' };
+    broken.exempt = { '@volstudio/vol-showcase': '' };
 
     const problems = validateQualityConfig(broken);
     assert.ok(problems.some((p) => p.includes('Sessiz muafiyet yok')));

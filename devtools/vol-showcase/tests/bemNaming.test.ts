@@ -18,7 +18,7 @@ function extractClassSelectors(css: string): string[] {
   return [...new Set(selectors)];
 }
 
-describe('vol-ui BEM naming', () => {
+describe('vol-showcase BEM naming', () => {
   it('tüm class isimleri vol- prefix taşımalı', () => {
     const classes = extractClassSelectors(stylesContent);
     const violations = classes.filter((cls) => !cls.startsWith('vol-'));

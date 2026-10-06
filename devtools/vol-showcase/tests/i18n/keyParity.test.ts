@@ -16,7 +16,7 @@ function extractKeys(obj: Record<string, unknown>, prefix = ''): string[] {
   return keys.sort();
 }
 
-describe('Key parity — vol-ui', () => {
+describe('Key parity — vol-showcase', () => {
   it('tr.json ve en.json aynı key yapısına sahip', () => {
     const trKeys = extractKeys(voluiTr);
     const enKeys = extractKeys(voluiEn);

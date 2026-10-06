@@ -7,15 +7,15 @@ Alt dizindeki AGENTS.md kendi alanını daraltabilir, kök sınırlarını gevş
 
 ## Repo haritası
 
-| Yol                     | Paket                    | Rol                                              |
-| ----------------------- | ------------------------ | ------------------------------------------------ |
-| `core/`                 | `@volstudio/core`        | Oyundan bağımsız mekanizmalar ve UI kataloğu     |
-| `tauri-v2/`             | `@volstudio/tauri-v2`    | Paylaşılan native kabuk ve platform adaptörleri  |
-| `devtools/audio-synth/` | `@volstudio/audio-synth` | Deterministik ses üretimi ve teknik yayın kabulü |
-| `devtools/deck/`        | `@volstudio/deck`        | Deck ölçüm sondası ve devkit otomasyonu          |
-| `devtools/pen.dev/`     | `@volstudio/pen.dev`     | Pencil kaynağından rig export'u                  |
-| `devtools/vol-ui/`      | `@volstudio/vol-ui`      | CORE UI vitrini ve piksel sözleşmesi             |
-| `games/vol-test/`       | `@volstudio/vol-test`    | CORE ve kabuğun gerçek oyun tüketicisi           |
+| Yol                      | Paket                     | Rol                                              |
+| ------------------------ | ------------------------- | ------------------------------------------------ |
+| `core/`                  | `@volstudio/core`         | Oyundan bağımsız mekanizmalar ve UI kataloğu     |
+| `tauri-v2/`              | `@volstudio/tauri-v2`     | Paylaşılan native kabuk ve platform adaptörleri  |
+| `devtools/audio-synth/`  | `@volstudio/audio-synth`  | Deterministik ses üretimi ve teknik yayın kabulü |
+| `devtools/deck/`         | `@volstudio/deck`         | Deck ölçüm sondası ve devkit otomasyonu          |
+| `devtools/pen.dev/`      | `@volstudio/pen.dev`      | Pencil kaynağından rig export'u                  |
+| `devtools/vol-showcase/` | `@volstudio/vol-showcase` | CORE UI vitrini ve piksel sözleşmesi             |
+| `games/vol-test/`        | `@volstudio/vol-test`     | CORE ve kabuğun gerçek oyun tüketicisi           |
 
 Paket durumu `workspace-lifecycle.json` içindedir; frozen ağaç değişmez ve
 aktif paket frozen pakete bağımlı olamaz. Yeni ürün: [yeni oyun rehberi](docs/new-game.md).
@@ -29,7 +29,7 @@ Kök girdilerin gerekçesi `scripts/quality/rootEntries.mjs` içindedir.
 - CORE mekanizma, sunum ve opt-in tarif katmanlarını ayırır; sunum oyun kuralı
   veya kendi durum defterini taşımaz. [CORE tasarımı](core/DESIGN.md),
   [primitifler](core/docs/primitives.md), [Phaser köprüleri](core/docs/phaser-boundary.md).
-- Tüketicisiz UI bileşeni bilinçli katalogdur: kendi testi ve vol-ui örneği
+- Tüketicisiz UI bileşeni bilinçli katalogdur: kendi testi ve vol-showcase örneği
   gerekir. Oyunlar ortak UI kullanır; [UI sözleşmesi](docs/ui/CONTRACT.md).
 - Listener, timer ve abonelik kapanışta kaldırılır; birden fazla bağımsız
   kaynak `DisposableScope` kullanır. Oynanış sayıları oyunun config ağacındadır.

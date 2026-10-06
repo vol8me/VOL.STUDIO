@@ -28,16 +28,16 @@ sayı değişince bu bölüm güncellenir, tarihçe git'tedir.
 
 ### Ölçülen başlangıç
 
-| Alan                 | Ölçü                                                                                                                                                           |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CORE UI              | 117 TS dosyası, 21,1 bin satır; 89 sınıf/118 runtime/205 tip export; 60 renk tokenı, 238 satır `theme.css`                                                     |
-| Vitrin               | 12 sekme, **821** TR/EN anahtar (eski kayıttaki 830 yanlıştı) + CORE 63; 7 E2E dosyası, 40 test (≈1,6 dk); WebKit yalnız `readability`                         |
-| Piksel temeli        | 12 sekme × Chromium `win32` + `linux` = 24 PNG, sıfır tolerans; WebKit temeli yok; Linux temeli bu makinede doğrulanmadı (WSL kapalı, Playwright kurulu değil) |
-| Gönderilen boyut     | vitrin app 138,7/150, css 19,8/24 KiB; **VOL.TEST app 106,3/106,3 (pay sıfır)**, vendor 345,6/360, css 18,2/21                                                 |
-| Eksik altyapı        | axe-core kurulu değil; `ui-check` tarifi yok; kayıt/registry yok; native ölçüm sondası yok                                                                     |
-| Göç maliyeti (şimdi) | `devtools/vol-ui` için 26 yol + 15 paket başvurusu, 81 izlenen dosya, 24 PNG; `.vol-ui-root` CSS sınıfı 944 geçişte ve **değişmez**                            |
-| Cihaz                | Windows dizüstü (bu makine) ve Lenovo Android 14 tablet erişilebilir; Steam Deck, Samsung ve Android 16 cihaz yok                                              |
-| Ortam                | `doctor:env` Node **22.23.1** ister; kapılar bu sürümle koşturulur                                                                                             |
+| Alan                           | Ölçü                                                                                                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CORE UI                        | 117 TS dosyası, 21,1 bin satır; 89 sınıf/118 runtime/205 tip export; 60 renk tokenı, 238 satır `theme.css`                                                     |
+| Vitrin                         | 12 sekme, **821** TR/EN anahtar (eski kayıttaki 830 yanlıştı) + CORE 63; 7 E2E dosyası, 40 test (≈1,6 dk); WebKit yalnız `readability`                         |
+| Piksel temeli                  | 12 sekme × Chromium `win32` + `linux` = 24 PNG, sıfır tolerans; WebKit temeli yok; Linux temeli bu makinede doğrulanmadı (WSL kapalı, Playwright kurulu değil) |
+| Gönderilen boyut               | vitrin app 138,7/150, css 19,8/24 KiB; **VOL.TEST app 106,3/106,3 (pay sıfır)**, vendor 345,6/360, css 18,2/21                                                 |
+| Eksik altyapı                  | axe-core kurulu değil; `ui-check` tarifi yok; kayıt/registry yok; native ölçüm sondası yok                                                                     |
+| Göç maliyeti (taşınmadan önce) | eski vitrin yolu için 26 yol + 15 paket başvurusu, 81 izlenen dosya, 24 PNG; `.vol-ui-root` CSS sınıfı 944 geçişte ve **değişmez**                             |
+| Cihaz                          | Windows dizüstü (bu makine) ve Lenovo Android 14 tablet erişilebilir; Steam Deck, Samsung ve Android 16 cihaz yok                                              |
+| Ortam                          | `doctor:env` Node **22.23.1** ister; kapılar bu sürümle koşturulur                                                                                             |
 
 ### Kararlar
 
@@ -175,7 +175,7 @@ erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4 beğeni, UI-13.4). Bu 
 ### Başlangıç dilimleri
 
 1. **Ortam (D6/R4).** Gate shell'inde Node 22.23.1; WSL'de Playwright Chromium kurulumu ve vitrin temelinin Linux'ta yeniden üretilmesi. Kabul: `doctor:env` OK; Linux temeli ya bayt eşit üretilir ya da NOT-RUN gerekçesi kayıtlıdır.
-2. **UI-06.1 atomik göç.** `git mv devtools/vol-ui devtools/vol-showcase`; paket adı, lifecycle, quality (paket+bütçe), kilit importer'ı, `justfile`, katalog sabit yolu, testler, belgeler ve PNG'ler aynı değişiklikte; `.gitignore`'a vitrin records alanı. Kabul: canlı `devtools/vol-ui`/`@volstudio/vol-ui` başvurusu sıfır, PNG'ler yalnız taşındı (özet eşit), build/bundle 150/1/24, contract/high yeşil.
+2. **UI-06.1 atomik göç (tamam).** Dizin, paket adı, lifecycle, quality (paket+bütçe), kilit importer'ı, `justfile`, katalog sabit yolu, testler, belgeler ve PNG'ler aynı değişiklikte; `.gitignore`'a vitrin records alanı. Kabul: eski vitrin yolu ve paket adı başvurusu sıfır, PNG'ler yalnız taşındı (özet eşit), build/bundle 150/1/24, contract/high yeşil.
 3. **UI-00.1 registry** (AST tabanlı sınıf/runtime/tip kaydı + ihlal testi), 4. **UI-00.2** iki motor kapsamı ve Linux temeli kararı, 5. **UI-00.3** axe + durum düzeneği + `ui-check`, 6. **UI-00.4** ölçüm kör noktaları, 7. **UI-00.7** bank çalışma zamanı görünümü, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
 
 ## Açık
@@ -184,12 +184,12 @@ erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4 beğeni, UI-13.4). Bu 
 
 Hedef: yanlış başlangıç referansının
 sonraki fazlarda başarı gibi kullanılmasını engellemek. Sahip: kalite/vitrin. Değişiklik
-alanı: `scripts/quality/`, `devtools/vol-ui/tests/e2e/`, ilgili CORE testleri.
+alanı: `scripts/quality/`, `devtools/vol-showcase/tests/e2e/`, ilgili CORE testleri.
 
 - [ ] **UI-00.1 — Yeniden üretilebilir yüzey kaydı.** UI toplu dışa aktarım yüzeyini
       TypeScript AST/tip denetleyicisi ile sınıf/runtime/type olarak ayır; aktif
       doğrudan, dolaylı ve katalog tüketimini kaydet. Önerilen
-      devtools/vol-ui/src/catalog/registry.ts yalnız test örneği kimliği, sahibi ve
+      devtools/vol-showcase/src/catalog/registry.ts yalnız test örneği kimliği, sahibi ve
       durum uygulanabilirliği bilgisi taşır; CORE uygulama kodunu içe aktarmak yeni
       kural katmanı olmaz. Kapanır: başlangıç 89 sınıf ve yardımcılar tekil kapsanır;
       eklenen export kayıtsızsa ihlal test örneği kapıyı düşürür; doğrulayıcı isim geçen
@@ -201,19 +201,19 @@ alanı: `scripts/quality/`, `devtools/vol-ui/tests/e2e/`, ilgili CORE testleri.
       keşfedilen/çalışan dosya listesi raporlanır, olmayan WebKit piksel temeli otomatik
       güncellemeyle saklanmaz.
 - [ ] **UI-00.3 — Axe ve durum sınama düzeneği.** Önerilen
-      devtools/vol-ui/tests/e2e/accessibility.spec.ts ve
-      devtools/vol-ui/tests/e2e/stateMatrix.spec.ts; axe bağımlılığı yalnız geliştirme
+      devtools/vol-showcase/tests/e2e/accessibility.spec.ts ve
+      devtools/vol-showcase/tests/e2e/stateMatrix.spec.ts; axe bağımlılığı yalnız geliştirme
       aracının devDependency alanına eklenir. Açık diyalog/OSK/açılır liste/form ve
       devre dışı/hata durumu örnekleri, 5 WCAG etiketi, eksik değerlendirme kayıtları ve
       tam kapsamı belirli istisna politikası. Kapanır: bilerek adsız giriş alanı veya
       örtülen odak örneği testi düşürür; N/A gerekçesi olmayan durum başarısız sayılır;
       mevcut bilinen hatalar sınırlı açık görevleriyle izlenir, genel muafiyet verilmez.
-- [ ] **UI-00.4 — Ölçümün kör noktaları.** `devtools/vol-ui/tests/e2e/layout.spec.ts`
+- [ ] **UI-00.4 — Ölçümün kör noktaları.** `devtools/vol-showcase/tests/e2e/layout.spec.ts`
       saydam ama tıklanabilir yerel range girişini dışlamasın; katmanın kapalı ve test
       örneğinin açık olduğu durumlar ayrı değerlendirilir; gerçek tıklama alanı, örtüşme
       ve kaydırma kabı ölçülsün. Okunabilirlik sınaması CSS alt sınırını Valve glif
       yüksekliği kanıtından ayırsın. Önerilen
-      devtools/vol-ui/tests/e2e/latency.spec.ts/devtools/vol-ui/tests/e2e/performance.spec.ts
+      devtools/vol-showcase/tests/e2e/latency.spec.ts/devtools/vol-showcase/tests/e2e/performance.spec.ts
       rapor şeması: UI JS/DOM/GPU, ekrana sunum ve desteklenmeyen ölçüler ayrı. Kapanır:
       A/A gürültü, temanın geometriyi kaydırması ve desteklenmeyen ölçü sahte PASS
       üretmez.
@@ -447,15 +447,8 @@ icat edilmez, mevcut SettingsForm/Row güçlendirilir.
 
 ### UI-06 — Tek VOL.SHOWCASE ve Windows native temel / M4
 
-UI-06.1 ön koşulsuz ilk iştir (Dalga 0); UI-06.2–06.4 yalnız UI-06.1'e bağlıdır, UI-05'i beklemez. Sahip vitrin/kalite/platform; isim göçü tek atomik konu, Windows kabuğu ilk teknik referanstır. Oyun kaynaklarına bağımlılık kurulmaz.
+UI-06.1 tamamlandı (Kapatılanlar); UI-06.2–06.4 UI-05'i beklemez. Sahip vitrin/kalite/platform; isim göçü tek atomik konu, Windows kabuğu ilk teknik referanstır. Oyun kaynaklarına bağımlılık kurulmaz.
 
-- [ ] **UI-06.1 — Atomik paket göçü.** `devtools/vol-ui`→devtools/vol-showcase, paket
-      adı, yaşam döngüsü yolu, kalite paketi/paket boyutu ve kilit dosyası importer
-      kaydı, justfile build-ui/dev-ui filtreleri, katalog sabit yolu, kök/CORE
-      belgeleri, test yolu beklentileri ve ekran görüntüsü dosyalarını aynı değişiklikte
-      taşı. Kapanır: canlı eski yol/paket referansı sıfır; CSS `.vol-ui-root` ve public
-      UI tokenları isim göçü bahanesiyle değiştirilmez; piksel temelleri yalnız taşınır;
-      mevcut 150/1/24 KiB bütçesi bilinçsiz gevşetilmez.
 - [ ] **UI-06.2 — Aracın native crate'i ve kapı kapsamı.** Yeni
       devtools/vol-showcase/src-tauri/ ortak `tauri-v2` kütüphanesini tüketir; kendi
       bağlamı/kimliği/ikonu/asgari yetenekleri. Yaşam döngüsü kaydına bulunmayan `kind`
@@ -732,5 +725,6 @@ eksik cihaz/insan alt görevleri görülmeden sürüm tamamlandı sayılmaz.
 
 ## Kapatılanlar
 
-Uygulama fazı henüz kapanmadı. Planın hazırlanmış olması yukarıdaki bir üretim görevini
-kapatmaz.
+Planın hazırlanmış olması bir üretim görevini kapatmaz; yalnız kapıdan geçmiş iş buraya taşınır.
+
+- [x] UI-06.1 — Eski vol-ui paketi tek atomik göçle `devtools/vol-showcase` / `@volstudio/vol-showcase` oldu; lifecycle, quality (paket ve bütçe), kilit importer'ı, `justfile`, katalog yolu, testler ve belgeler birlikte taşındı. Eski yol ve paket başvurusu sıfır; CSS `.vol-ui-root` ve `--vol-ui-*` tokenları değişmedi; 24 piksel temeli yalnız taşındı; bütçe 150/1/24 aynı.

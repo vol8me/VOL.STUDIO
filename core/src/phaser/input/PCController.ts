@@ -43,7 +43,7 @@ export interface MoveKeyBindings {
  * **Değerler ham `KeyboardEvent.keyCode` sayılarıdır, `Phaser.Input.Keyboard.KeyCodes`
  * DEĞİL.** İki gerekçe:
  * 1. `KeyCodes`'u modül seviyesinde okumak, Phaser'ı mock'layan bir tüketicide
- *    (ör. vol-ui showcase testleri) import anında `Cannot read properties of
+ *    (ör. vol-showcase testleri) import anında `Cannot read properties of
  *    undefined` ile patlar — i18next'in modül seviyesinde çağrılmaması ile
  *    aynı sınıf hata.
  * 2. Eşleme SAF VERİ olmalı: bir tuş atama ekranı/kayıt dosyası da aynı

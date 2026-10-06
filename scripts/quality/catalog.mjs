@@ -4,7 +4,7 @@ import ts from 'typescript';
 
 /**
  * KATALOG: CORE UI bileşenlerinin çoğunun bir üründe tüketicisi yoktur ve
- * bilinçli olarak bekletilir. Bekletilen bileşen iki kanıt taşır: vol-ui
+ * bilinçli olarak bekletilir. Bekletilen bileşen iki kanıt taşır: vol-showcase
  * vitrininde gösterilir ve CORE testlerinde adıyla sınanır. İkisi yoksa
  * bileşen katalog değil kalıntıdır.
  *
@@ -70,7 +70,7 @@ export function validateCatalog({ components, showcaseText, testText, shownVia =
     }
     if (!mentions(showcaseText, name)) {
       problems.push(
-        `${name} (${file}): vol-ui vitrininde gösterilmiyor. Vitrine ekle ya da parça/katman ise SHOWN_VIA'ya gerekçesiyle yaz.`,
+        `${name} (${file}): vol-showcase vitrininde gösterilmiyor. Vitrine ekle ya da parça/katman ise SHOWN_VIA'ya gerekçesiyle yaz.`,
       );
     }
   }
@@ -84,7 +84,7 @@ export function validateCatalog({ components, showcaseText, testText, shownVia =
 export function validateRepoCatalog(root) {
   return validateCatalog({
     components: coreUiComponents(root),
-    showcaseText: sourceText(resolve(root, 'devtools/vol-ui/src')),
+    showcaseText: sourceText(resolve(root, 'devtools/vol-showcase/src')),
     testText: sourceText(resolve(root, 'core/tests')),
   });
 }

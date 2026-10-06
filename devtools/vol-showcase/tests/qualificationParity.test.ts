@@ -8,11 +8,11 @@ import * as Core from '@volstudio/core';
  * Mimari Sözleşme:
  * 1. `@volstudio/core`: UI bileşenlerinin (Button, Input, Panel, Dialog, Tabs,
  *    CardTile, RangeSlider, DataTable, SplitPane vb.) tek kanonik kaynak kodudur.
- * 2. `devtools/vol-ui`: Bu bileşenlerin tarayıcı ortamında (DOM, tema, CSS değişkenleri,
+ * 2. `devtools/vol-showcase`: Bu bileşenlerin tarayıcı ortamında (DOM, tema, CSS değişkenleri,
  *    dokunma ve klavye etkileşimleri) görsel olarak doğrulandığı, test edildiği
  *    ve Playwright visual regresyon testlerine tabi tutulduğu DEVTOOL / QUALIFICATION
  *    yüzeyidir.
- * 3. Oyunlar vol-ui'ye bağımlı DEĞİLDİR; vol-ui bir çalışma
+ * 3. Oyunlar vol-showcase'e bağımlı DEĞİLDİR; vol-showcase bir çalışma
  *    zamanı (production) kütüphanesi değil, geliştirme ve kabul test tezgahıdır.
  */
 describe('VOL.UI Qualification Parity Invariant', () => {
@@ -27,7 +27,7 @@ describe('VOL.UI Qualification Parity Invariant', () => {
     document.body.replaceChildren();
   });
 
-  it('CORE UI görsel bileşen sınıfları dışa aktarılır ve vol-ui tarafından tüketilir', () => {
+  it('CORE UI görsel bileşen sınıfları dışa aktarılır ve vol-showcase tarafından tüketilir', () => {
     const expectedCoreComponents = [
       'Button',
       'Checkbox',

@@ -5,7 +5,7 @@ import { DEFAULT_MOVE_KEYS } from '../../src/phaser/input/PCController';
 /**
  * `DEFAULT_MOVE_KEYS` bilinçli olarak HAM SAYI taşır, `Phaser.Input.Keyboard.KeyCodes`
  * referansı değil (gerekçe orada yazılı: modül seviyesinde Phaser okumak, Phaser'ı
- * mock'layan bir tüketicide import anında patlıyordu — vol-ui showcase testleri).
+ * mock'layan bir tüketicide import anında patlıyordu — vol-showcase testleri).
  *
  * Ham sayının bedeli sessiz sapma riskidir: biri `up: 87`'yi yanlış yazarsa
  * hiçbir şey uyarmaz. Bu test o riski kapatır — sayılar Phaser'ın kendi

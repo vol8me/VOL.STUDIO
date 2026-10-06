@@ -133,7 +133,7 @@ test('lightweight freeze etiketi annotated kanıt yerine geçmez', (t) => {
 test('normalizeWorkspacePath POSIX yollarını doğru normalize eder', () => {
   assert.equal(normalizeWorkspacePath('/repo', '/repo/core', posix), 'core');
   assert.equal(normalizeWorkspacePath('/repo', '/repo/games/sample-game', posix), 'games/sample-game');
-  assert.equal(normalizeWorkspacePath('/repo', '/repo/devtools/vol-ui', posix), 'devtools/vol-ui');
+  assert.equal(normalizeWorkspacePath('/repo', '/repo/devtools/vol-showcase', posix), 'devtools/vol-showcase');
   assert.equal(normalizeWorkspacePath('/repo', '/repo', posix), '');
   assert.equal(
     normalizeWorkspacePath('/repo', '/repo/devtools/nested/tool', posix),
@@ -144,7 +144,7 @@ test('normalizeWorkspacePath POSIX yollarını doğru normalize eder', () => {
 test('normalizeWorkspacePath Windows sürücü harfi, backslash ve mixed separator yollarını doğru normalize eder', () => {
   assert.equal(normalizeWorkspacePath('C:\\repo', 'C:\\repo\\core', win32), 'core');
   assert.equal(normalizeWorkspacePath('C:\\repo', 'C:\\repo\\games\\sample-game', win32), 'games/sample-game');
-  assert.equal(normalizeWorkspacePath('D:\\vol.studio', 'D:\\vol.studio\\devtools\\vol-ui', win32), 'devtools/vol-ui');
+  assert.equal(normalizeWorkspacePath('D:\\vol.studio', 'D:\\vol.studio\\devtools\\vol-showcase', win32), 'devtools/vol-showcase');
   assert.equal(normalizeWorkspacePath('C:/repo', 'C:\\repo\\games\\other-game', win32), 'games/other-game');
   assert.equal(normalizeWorkspacePath('C:\\repo', 'C:/repo/devtools/audio-synth', win32), 'devtools/audio-synth');
   assert.equal(normalizeWorkspacePath('c:\\repo', 'C:\\repo\\core', win32), 'core');

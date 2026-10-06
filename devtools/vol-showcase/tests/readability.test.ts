@@ -32,7 +32,7 @@ function scan(): string[] {
   const violations: string[] = [];
   for (const dir of CSS_DIRS) {
     for (const file of readdirSync(dir).filter((f) => f.endsWith('.css'))) {
-      const rel = `${dir.includes('core') ? 'core' : 'vol-ui'}/${file}`;
+      const rel = `${dir.includes('core') ? 'core' : 'vol-showcase'}/${file}`;
       const lines = readFileSync(join(dir, file), 'utf8').split('\n');
       // En yakın seçici bloğunu hatırla — rapor "hangi kural"ı göstersin.
       let lastSelector = '?';

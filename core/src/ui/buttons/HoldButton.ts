@@ -23,7 +23,7 @@ export interface HoldButtonOptions {
  *
  * **Adı yanıltıcıdır: bu bileşen dokunmatiğe ÖZEL DEĞİLDİR.** Taşıdığı şey
  * press/hold semantiğidir; fare, kalem ve klavye de aynı semantiği kullanır.
- * Ad korunuyor çünkü public API, `vol-ui` showcase'i, README ve i18n
+ * Ad korunuyor çünkü public API, `vol-showcase`, README ve i18n
  * anahtarları ona bağlı — yeniden adlandırmanın kazancı estetik, bedeli dört
  * yüzeyde churn.
  *

@@ -25,7 +25,7 @@ export default defineConfig({
       exclude: ['src/**/index.ts', 'src/**/*.d.ts', 'src/vite-env.d.ts'],
       // Eşikler kök `quality.json`dan gelir — tek doğruluk kaynağı.
       // Burada sayı yazmak, bekçinin okuduğu değerle ayrışmaya davetiyedir.
-      thresholds: quality.packages['@volstudio/vol-ui'],
+      thresholds: quality.packages['@volstudio/vol-showcase'],
     },
     environment: 'jsdom',
     globals: true,

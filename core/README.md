@@ -18,7 +18,7 @@ pnpm --filter @volstudio/core download-fonts
 ```
 
 UI teması repo kökünden `pnpm gen:theme` ile üretilir. Bileşenlerin canlı
-örnekleri [vol-ui](../devtools/vol-ui/README.md) paketindedir.
+örnekleri [vol-showcase](../devtools/vol-showcase/README.md) paketindedir.
 
 ## Belgeler
 

@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-// tests/e2e/support → tests/e2e → tests → vol-ui → devtools → repo kökü.
+// tests/e2e/support → tests/e2e → tests → vol-showcase → devtools → repo kökü.
 const REPO_ROOT = resolve(import.meta.dirname, '../../../../..');
 const CORE_UI_CSS = resolve(REPO_ROOT, 'core/src/ui');
 
