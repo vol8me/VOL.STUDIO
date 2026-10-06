@@ -469,4 +469,29 @@ describe('niyet veriyolu, sonuç ve kaynak temizliği', () => {
     instance.dispose();
     expect(context.close).not.toHaveBeenCalled();
   });
+
+  it('ses erişimi kilitliyken ve resume reddedilse bile eylem aynen yapılır; ses yalnız eksik kalır', async () => {
+    const bus = uiIntentBusFor(document.body);
+    const locked = new FakeContext();
+    locked.resume.mockImplementation(() => Promise.reject(new Error('jest yok')));
+    const onError = vi.fn();
+    const instance = new UiSoundKit({
+      assets: ASSETS,
+      context: locked as unknown as AudioContext,
+      now,
+      onError,
+    });
+    await instance.preload();
+    instance.attach(bus.bus);
+    const handler = vi.fn();
+    const button = new Button('Kaydet', { onClick: handler });
+    document.body.append(button.element);
+    expect(() => button.element.click()).not.toThrow();
+    await Promise.resolve();
+    // Eylem (işlev ve görsel durum) sesten bağımsız gerçekleşti.
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(button.element.getAttribute('aria-busy')).toBe('false');
+    expect(onError).toHaveBeenCalledTimes(1);
+    bus.release();
+  });
 });

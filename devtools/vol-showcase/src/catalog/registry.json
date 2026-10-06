@@ -2094,6 +2094,30 @@
       ]
     },
     {
+      "export": "UiHapticProvider",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-02",
+      "anchor": "A3",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan titreşim sağlayıcısı; UI-02.5 ses laboratuvarı gösterir"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/uiHapticProvider.test.ts",
+          "title": "bir niyet bileşen deseniyle TEK darbe üretir; bileşenin kendi yolu susar"
+        },
+        {
+          "file": "core/tests/ui/feedback/uiHapticProvider.test.ts",
+          "title": "dispose: süren titreşimi keser, dinleyicileri ve niyet aboneliğini söker, bir kez çalışır"
+        }
+      ]
+    },
+    {
       "export": "UiIntentBus",
       "kind": "class",
       "tier": 1,

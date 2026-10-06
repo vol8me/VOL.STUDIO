@@ -11,6 +11,8 @@ export {
   type UiSoundLoadReport,
 } from './UiSoundKit';
 export {
+  UI_CRITICAL_DUCK,
+  uiDuckProfiles,
   UI_CRITICAL_EVENTS,
   UI_INTENT_SOUND,
   UI_MAX_VARIANTS,

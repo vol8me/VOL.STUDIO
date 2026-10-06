@@ -50,6 +50,18 @@ export const UI_OUTCOME_SOUND = {
   error: 'error',
 } as const satisfies Record<string, UiSoundEvent>;
 
+/**
+ * Kritik olayın müzik/ambiyans otobüsünü kısma profili (saniye): −6 dB (kazanç 0.5),
+ * 120 ms iniş, 80 ms bekleme, 450 ms çıkış. Yalnız kit bir `ducker` ile kurulduysa
+ * uygulanır (isteğe bağlı); varsayılan olarak kısma yoktur.
+ */
+export const UI_CRITICAL_DUCK = { target: 0.5, attack: 0.12, hold: 0.08, release: 0.45 } as const;
+
+/** Kritik olay → kısma profili; kritik olmayan olayda profil yoktur. */
+export function uiDuckProfiles(): Partial<Record<UiSoundEvent, typeof UI_CRITICAL_DUCK>> {
+  return Object.fromEntries(UI_CRITICAL_EVENTS.map((event) => [event, UI_CRITICAL_DUCK]));
+}
+
 export const UI_MAX_VARIANTS = 3;
 /** UI sesleri toplamda en çok bu kadar eşzamanlı ses açar. */
 export const UI_MAX_VOICES = 4;

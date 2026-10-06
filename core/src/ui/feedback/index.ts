@@ -21,6 +21,7 @@ export {
   type FloatingTextVariant,
   type FloatingTextOptions,
 } from './FloatingText';
+export { UiHapticProvider, type UiHapticProviderOptions } from './UiHapticProvider';
 export {
   UiIntentBus,
   emitUiIntent,

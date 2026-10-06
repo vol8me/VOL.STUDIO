@@ -14,6 +14,7 @@ import {
   UI_RATE_JITTER,
   UI_SOUND_EVENTS,
   UI_SOUND_SEED,
+  uiDuckProfiles,
   type UiSoundAssets,
   type UiSoundEvent,
 } from './events';
@@ -48,8 +49,12 @@ export interface UiSoundKitOptions {
   /** UI RNG akışının tohumu: simülasyon RNG'sinden bağımsızdır. */
   seed?: number;
   now?: () => number;
-  /** Kritik olayların müzik/ambiyans otobüsünü kısması (profil tablosu UI-02.4'tedir). */
-  duck?: { ducker: SidechainDucker; profiles: Partial<Record<UiSoundEvent, DuckingProfile>> };
+  /**
+   * Kritik olayların müzik/ambiyans otobüsünü kısması (isteğe bağlı). Profil verilmezse
+   * `uiDuckProfiles()` (−6 dB, 120/80/450 ms). Kit ducker'a SAHİP DEĞİLDİR: yalnız
+   * kısar ve iptal/askıya alma/sessizlik/söküm anında `reset()` ile eski seviyeye döndürür.
+   */
+  duck?: { ducker: SidechainDucker; profiles?: Partial<Record<UiSoundEvent, DuckingProfile>> };
   /** Sayfa gizlenince sesler durur ve bağlam askıya alınır. */
   visibilityTarget?: Document;
   onError?: (error: unknown) => void;
@@ -223,8 +228,9 @@ export class UiSoundKit implements Disposable {
       if (!started) return false;
       this.cursors.set(event, (index + 1) % variants);
       if (micro) this.lastMicroAt = now;
-      const profile = this.options.duck?.profiles[event];
-      if (profile) this.options.duck?.ducker.duck(profile);
+      const duck = this.options.duck;
+      const profile = duck ? (duck.profiles ?? uiDuckProfiles())[event] : undefined;
+      if (duck && profile) duck.ducker.duck(profile);
       return true;
     }
     return false;
@@ -235,7 +241,7 @@ export class UiSoundKit implements Disposable {
     if (this.disposed) return this.current;
     this.current = normalizeUiAudioSettings({ ...this.current, ...patch }, this.current);
     this.applyBusGain();
-    if (this.current.muted) this.bank?.stopAll();
+    if (this.current.muted) this.stopAll();
     const store = this.options.store;
     if (store) {
       const value = this.current;
@@ -265,6 +271,8 @@ export class UiSoundKit implements Disposable {
   /** Çalan bütün UI seslerini keser (iptal, sahne geçişi). */
   stopAll(): void {
     this.bank?.stopAll();
+    // Kesilen kritik ses yüzünden otobüs kısık kalmasın.
+    this.options.duck?.ducker.reset();
   }
 
   /** Gizlenme/arka plan: sesler kesilir ve bağlam askıya alınır; kuyruk tutulmaz. */
@@ -289,6 +297,7 @@ export class UiSoundKit implements Disposable {
     if (this.disposed) return;
     this.disposed = true;
     this.scope.dispose();
+    this.options.duck?.ducker.reset();
     this.bank?.dispose();
     this.bank = null;
     if (this.ownsContext) void this.context?.close?.().catch(() => undefined);
