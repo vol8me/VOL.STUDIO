@@ -26,8 +26,10 @@ export class TextArea {
   private onCommitHandler?: (value: string) => void;
   private committedValue: string;
   private readonly scope = new DisposableScope();
+  private cancelTextEntry: (() => void) | undefined;
 
   constructor(options: TextAreaOptions = {}) {
+    this.scope.add({ dispose: () => this.cancelTextEntry?.() });
     const {
       placeholder,
       value = '',
@@ -77,7 +79,7 @@ export class TextArea {
     // Kol kipinde native odak metin yazdıramaz; kolla klavye istenir
     // (Input ile aynı kanca; `multiline` klavyeye satırsonu tuşu ekler).
     this.scope.addListener(this.textarea, 'focus', () => {
-      requestTextEntryForElement(this.textarea, {
+      this.cancelTextEntry = requestTextEntryForElement(this.textarea, {
         multiline: true,
         apply: (value) => {
           this.textarea.value = value.slice(0, this.maxLength);
@@ -111,12 +113,14 @@ export class TextArea {
   }
 
   setValue(value: string): void {
+    this.cancelTextEntry?.();
     this.textarea.value = value;
     this.committedValue = value;
     this.renderCounter();
   }
 
   setValueAndNotify(value: string): void {
+    this.cancelTextEntry?.();
     const changed = value !== this.textarea.value;
     this.textarea.value = value;
     this.committedValue = value;
@@ -128,6 +132,7 @@ export class TextArea {
   }
 
   setDisabled(disabled: boolean): void {
+    if (disabled) this.cancelTextEntry?.();
     this.textarea.disabled = disabled;
   }
 

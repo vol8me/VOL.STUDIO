@@ -1,4 +1,4 @@
-export { createScopedStores } from './adapters/scopedStores';
+export { createScopedStores, migrateScopedStores } from './adapters/scopedStores';
 export { DisplayModeController } from './window/DisplayModeController';
 export { getRuntimePlatform, type RuntimePlatform } from './platform/runtimePlatform';
 export { getSessionKind, type SessionKind } from './platform/sessionKind';

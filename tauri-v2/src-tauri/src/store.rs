@@ -38,16 +38,25 @@ fn store_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 /// Dosya adı tek parçadır; dizin ayracı, `..`, gizli ad ve yazıcının kendi
 /// yan dosyalarının sonekleri reddedilir.
 fn validate_name(name: &str) -> Result<(), String> {
+    let lower = name.to_ascii_lowercase();
+    let stem = lower.split('.').next().unwrap_or_default();
+    let device = matches!(stem, "con" | "prn" | "aux" | "nul")
+        || ["com", "lpt"].iter().any(|prefix| {
+            stem.strip_prefix(prefix)
+                .is_some_and(|tail| tail.len() == 1 && matches!(tail.as_bytes()[0], b'1'..=b'9'))
+        });
     let ok = !name.is_empty()
         && name.len() <= 128
         && name
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
         && !name.starts_with('.')
-        && !name.contains(".corrupt-")
+        && !name.ends_with('.')
+        && !device
+        && !lower.contains(".corrupt-")
         && !RESERVED_SUFFIXES
             .iter()
-            .any(|suffix| name.ends_with(suffix));
+            .any(|suffix| lower.ends_with(suffix));
     if ok {
         Ok(())
     } else {
@@ -64,17 +73,17 @@ fn name_lock(name: &str) -> Arc<Mutex<()>> {
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
     locks
-        .entry(name.to_string())
+        .entry(name.to_ascii_lowercase())
         .or_insert_with(|| Arc::new(Mutex::new(())))
         .clone()
 }
 
-fn read_raw(path: &Path) -> Option<Result<String, String>> {
+fn read_raw(path: &Path) -> Option<Result<Vec<u8>, String>> {
     match File::open(path) {
         Ok(mut file) => {
-            let mut data = String::new();
+            let mut data = Vec::new();
             Some(
-                file.read_to_string(&mut data)
+                file.read_to_end(&mut data)
                     .map(|_| data)
                     .map_err(|error| format!("okuma: {error}")),
             )
@@ -89,10 +98,13 @@ fn parses_as_object(data: &str) -> bool {
     serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(data).is_ok()
 }
 
-fn valid(path: &Path) -> Option<String> {
+fn valid(path: &Path) -> Result<Option<String>, String> {
     match read_raw(path) {
-        Some(Ok(data)) if parses_as_object(&data) => Some(data),
-        _ => None,
+        Some(Ok(bytes)) => Ok(String::from_utf8(bytes)
+            .ok()
+            .filter(|data| parses_as_object(data))),
+        Some(Err(error)) => Err(error),
+        _ => Ok(None),
     }
 }
 
@@ -114,7 +126,7 @@ fn read_in(dir: &Path, name: &str) -> Result<StoreRead, String> {
     let temp = side(dir, name, ".tmp");
     let backup = side(dir, name, ".bak");
 
-    if let Some(data) = valid(&current) {
+    if let Some(data) = valid(&current)? {
         return Ok(StoreRead {
             data: Some(data),
             recovered: false,
@@ -125,7 +137,7 @@ fn read_in(dir: &Path, name: &str) -> Result<StoreRead, String> {
     // Geçici dosya ancak fsync'ten sonra güncelin yerine geçer; güncel yokken
     // ya da bozukken tam bir geçici dosya en yeni jenerasyondur.
     for candidate in [&temp, &backup] {
-        if let Some(data) = valid(candidate) {
+        if let Some(data) = valid(candidate)? {
             return Ok(StoreRead {
                 data: Some(data),
                 recovered: true,
@@ -133,7 +145,7 @@ fn read_in(dir: &Path, name: &str) -> Result<StoreRead, String> {
             });
         }
     }
-    if !current_present && !backup.exists() {
+    if !current_present && !backup.exists() && !temp.exists() {
         return Ok(StoreRead {
             data: None,
             recovered: false,
@@ -188,8 +200,9 @@ fn write_in(dir: &Path, name: &str, data: &str) -> Result<(), String> {
     let backup = side(dir, name, ".bak");
     let temp = side(dir, name, ".tmp");
 
+    let current_valid = valid(&current)?.is_some();
     write_file(&temp, data.as_bytes())?;
-    if valid(&current).is_some() {
+    if current_valid {
         preserve_backup(&current, &backup, dir, name)?;
     }
     // Rename güncelin üstüne atomik yazar: güncel dosya hiçbir anda eksik değildir.
@@ -197,8 +210,8 @@ fn write_in(dir: &Path, name: &str, data: &str) -> Result<(), String> {
     sync_dir(dir)
 }
 
-/// Rename'in kalıcılığı dizin girdisinin fsync'ini ister. Windows'ta dizin
-/// tanıtıcısı bu yolla açılamaz; orada NTFS günlüğüne güvenilir.
+/// Rename'in kalıcılığı dizin girdisinin fsync'ini ister. Windows'ta bu
+/// yolla dizin fsync'i uygulanmaz; güç kesintisi dayanıklılığı iddia edilmez.
 #[cfg(unix)]
 fn sync_dir(dir: &Path) -> Result<(), String> {
     File::open(dir)
@@ -270,6 +283,106 @@ mod store_tests {
     fn read(dir: &Path, name: &str) -> (Option<String>, bool, bool) {
         let result = read_in(dir, name).unwrap();
         (result.data, result.recovered, result.reset)
+    }
+
+    #[test]
+    fn guncel_okuma_hatasi_kurtarma_gecicisini_ezmez() {
+        let dir = temp_dir();
+        fs::create_dir(dir.join("a.json")).unwrap();
+        fs::write(dir.join("a.json.tmp"), r#"{"v":1}"#).unwrap();
+        assert!(write_in(&dir, "a.json", r#"{"v":2}"#).is_err());
+        assert_eq!(
+            fs::read_to_string(dir.join("a.json.tmp")).unwrap(),
+            r#"{"v":1}"#
+        );
+    }
+
+    #[test]
+    fn bozuk_utf8_kayit_yedekten_kurtarilir() {
+        let dir = temp_dir();
+        fs::write(dir.join("a.json"), [0xff, 0xfe]).unwrap();
+        fs::write(dir.join("a.json.bak"), r#"{"v":1}"#).unwrap();
+        assert_eq!(
+            read(&dir, "a.json"),
+            (Some(r#"{"v":1}"#.into()), true, false)
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_rename_reddi_son_gecerli_kaydi_korur() {
+        use std::os::windows::fs::OpenOptionsExt;
+        let dir = temp_dir();
+        write_in(&dir, "a.json", r#"{"v":1}"#).unwrap();
+        // FILE_SHARE_DELETE verilmez: Windows gerçek rename çağrısını reddeder.
+        let held = OpenOptions::new()
+            .read(true)
+            .share_mode(3)
+            .open(dir.join("a.json"))
+            .unwrap();
+        assert!(write_in(&dir, "a.json", r#"{"v":2}"#).is_err());
+        assert_eq!(
+            read(&dir, "a.json"),
+            (Some(r#"{"v":1}"#.into()), false, false)
+        );
+        assert_eq!(
+            fs::read_to_string(dir.join("a.json.tmp")).unwrap(),
+            r#"{"v":2}"#
+        );
+        drop(held);
+        write_in(&dir, "a.json", r#"{"v":2}"#).unwrap();
+        assert_eq!(
+            read(&dir, "a.json"),
+            (Some(r#"{"v":2}"#.into()), false, false)
+        );
+    }
+
+    #[test]
+    fn tek_bozuk_gecici_dosya_sessizce_yok_sayilmaz() {
+        let dir = temp_dir();
+        fs::write(dir.join("a.json.tmp"), "{yarim").unwrap();
+        assert_eq!(read(&dir, "a.json"), (None, false, true));
+        assert!(!dir.join("a.json.tmp").exists());
+    }
+
+    #[test]
+    fn dizin_okuma_hatasi_veri_bozulmasi_sayilmaz() {
+        let dir = temp_dir();
+        fs::create_dir(dir.join("a.json")).unwrap();
+        assert!(read_in(&dir, "a.json").is_err());
+        assert!(dir.join("a.json").is_dir());
+    }
+
+    #[test]
+    fn windows_alias_adlari_ve_buyuk_harf_yan_dosyalari_reddedilir() {
+        for name in [
+            "CON",
+            "nul.json",
+            "COM1.json",
+            "lpt9",
+            "a.",
+            "a.JSON.TMP",
+            "a.CORRUPT-1",
+        ] {
+            assert!(validate_name(name).is_err(), "{name}");
+        }
+    }
+
+    #[test]
+    fn yazma_hatasi_saglam_gunceli_ve_yedegi_korur() {
+        let dir = temp_dir();
+        write_in(&dir, "a.json", r#"{"v":1}"#).unwrap();
+        write_in(&dir, "a.json", r#"{"v":2}"#).unwrap();
+        fs::create_dir(dir.join("a.json.tmp")).unwrap();
+        assert!(write_in(&dir, "a.json", r#"{"v":3}"#).is_err());
+        assert_eq!(
+            fs::read_to_string(dir.join("a.json")).unwrap(),
+            r#"{"v":2}"#
+        );
+        assert_eq!(
+            fs::read_to_string(dir.join("a.json.bak")).unwrap(),
+            r#"{"v":1}"#
+        );
     }
 
     #[test]

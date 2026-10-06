@@ -99,6 +99,11 @@ impl FlushGate {
 }
 
 pub fn wait_for_flush(receiver: &Receiver<FlushOutcome>, deadline: Instant) -> FlushOutcome {
+    // Süre kontrolü ACK kabulünde yapılır; zamanında kuyruğa alınan sonuç,
+    // bekleyen iş parçacığı geç zamanlansa da kaybolmamalıdır.
+    if let Ok(outcome) = receiver.try_recv() {
+        return outcome;
+    }
     let Some(remaining) = deadline.checked_duration_since(Instant::now()) else {
         return FlushOutcome::TimedOut;
     };
@@ -110,6 +115,17 @@ pub fn wait_for_flush(receiver: &Receiver<FlushOutcome>, deadline: Instant) -> F
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn zamaninda_kabul_edilen_onay_gec_baslayan_bekleyicide_kaybolmaz() {
+        let mut gate = FlushGate::default();
+        let (request, receiver) = gate.begin(FlushReason::Close).unwrap();
+        assert!(gate.acknowledge(&request.request_id, request.reason, FlushOutcome::Failed));
+        assert_eq!(
+            wait_for_flush(&receiver, Instant::now() - Duration::from_secs(1)),
+            FlushOutcome::Failed
+        );
+    }
 
     #[test]
     fn onay_aktif_kimlik_ve_nedeni_eslestirir_tek_atimlidir() {

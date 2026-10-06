@@ -83,8 +83,10 @@ export class PersistedObservableState<T> {
     const equals = this.options.equals ?? Object.is;
     if (equals(this.state, next)) return this.pendingPersist ?? Promise.resolve();
     this.state = next;
+    // Dinleyici kapanış başlatabilir; o bariyerden önce bu snapshot kuyruğa girmeli.
+    const persisted = this.schedulePersist();
     this.notify();
-    return this.schedulePersist();
+    return persisted;
   }
 
   subscribe(listener: (state: T) => void): () => void {
@@ -95,16 +97,13 @@ export class PersistedObservableState<T> {
 
   async flush(): Promise<void> {
     this.assertActive();
-    const pending = this.pendingPersist;
     this.commitPendingPersist();
-    if (pending) await pending;
-    await this.writer.whenIdle();
+    await this.writer.flush();
   }
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    this.generation++;
     this.commitPendingPersist();
     this.scope.dispose();
     this.listeners.clear();
@@ -112,24 +111,8 @@ export class PersistedObservableState<T> {
 
   async flushAndDispose(): Promise<void> {
     this.assertActive();
-    const pending = this.pendingPersist;
-    this.disposed = true;
-    this.generation++;
-    this.commitPendingPersist();
-    this.scope.dispose();
-    this.listeners.clear();
-    let failure: unknown;
-    try {
-      if (pending) await pending;
-    } catch (error) {
-      failure = error;
-    }
-    await this.writer.whenIdle();
-    if (failure !== undefined) {
-      throw failure instanceof Error
-        ? failure
-        : new Error('Persistence writer rejected with a non-Error value.', { cause: failure });
-    }
+    this.dispose();
+    await this.writer.flush();
   }
 
   private schedulePersist(): Promise<void> {
@@ -140,6 +123,7 @@ export class PersistedObservableState<T> {
       this.resolvePending = resolve;
       this.rejectPending = reject;
     });
+    void this.pendingPersist.catch(() => undefined);
     this.timer = this.scope.addTimeout(() => {
       this.timer = null;
       this.commitPendingPersist();

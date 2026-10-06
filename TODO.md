@@ -8,7 +8,7 @@ tekrar kopyalanmaz. Açık iş `[ ]`; biten iş tek satırla `## Kapatılanlar`a
 taşınır. Eksik kapanış yeni görevdir.
 
 Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
-yetkilendirdi. Güncel teslim F01–F03 uygulamasıdır; sonuçları rapor §18'de kanıtla ayrılır.
+yetkilendirdi. F01–F03 sonuçları rapor §18, F04 kaynak uygulaması ve açık native kabul rapor §19'dadır.
 **F01–F03 tamamlandı; F04–F10 açıktır.** Faz numarası bağımsız işleri gereksiz seri bekletmez;
 gerçek ön koşul ve kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
 Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
@@ -20,11 +20,9 @@ Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 Ön koşul: F02 doğrulama zemini; UI yeniden tasarımı beklenmez. VT3/SD8/D2
 servis borçları ilgili cihaz kabulüyle birlikte kalır.
 
-- [ ] **[P1] F04.1 — Flush hata bariyeri.** Devam eden yazımın reddi flush/flushAndDispose/shutdown'a ulaşır. Kapanır: B01 regresyonu hata ve başarı sıralarını sınar; ACK başarısız kaydı başarı saymaz; son-değer koordinasyonu korunur.
-- [ ] **[P2] F04.2 — Geç cevap sonrası kaynak/commit.** GameProgress yüklemesi dispose sonrası autosave doğurmaz; Input/TextArea geç native cevabı eski/yok edilmiş owner'a commit etmez. Kapanır: B02/B03 load-reject/destroy/abort/generation yarışları, UI-11 oturum bağı ve kaynak temizliği testli.
-- [ ] **[P1] F04.3 — Store kapsamı ve Windows writer.** synced/device ayrımı ve eski tek dosyadan yedekli geçiş doğrulanır. Kapanır: kapsamsız anahtar derlenmez; disk migration/bozuk ana kayıt/backup/atomik yazım/hata geri bildirimi Windows native kabulüyle testli.
-- [ ] **[P1] F04.4 — Kapanış protokolü ve Steam callback sahibi.** CallbackHandle hizmet ömründe tutulur; requestId/reason/outcome ACK sözleşmesi korunur. Kapanır: B07 gerçek feature harness, overlay/text callback yaşamı ve drop testi; timedOut kök nedeni/süre gerekçesi; üretim SIGTERM son değer, yazım ortası SIGKILL toparlanması.
-- [ ] **[P1] F04.5 — Uyku/uyanış ve servis tüketimi.** Saat/input/audio/haptik yaşam döngüsü; kullanılmayan tauri-v2 export/config/izin bağları kaldırılır (VT3/K4). Kapanır: clock-jump/geç decode/tekrarlı suspend regresyonları ve ilgili gerçek cihaz turu; high + Chromium/WebKit; SD8 fiziksel sonucu F08.6'da.
+- [ ] **[P1] F04.3 — Store kapsamı ve Windows writer.** Göç/durable cache/compiler ve gerçek Rust disk regresyonları uygulandı; ürün IPC turu açık. Kapanır: kapsamsız anahtar derlenmez; disk migration/bozuk ana kayıt/backup/atomik yazım/hata geri bildirimi Windows native kabulüyle testli.
+- [ ] **[P1] F04.4 — Kapanış protokolü ve Steam callback sahibi.** Gerçek SDK guard/pump/drop ve ACK yarışı düzeltildi; fiziksel popup, tarihsel timeout ve kill turları açık. Kapanır: B07 gerçek feature harness, overlay/text callback yaşamı ve drop testi; timedOut kök nedeni/süre gerekçesi; üretim SIGTERM son değer, yazım ortası SIGKILL toparlanması.
+- [ ] **[P1] F04.5 — Uyku/uyanış ve servis tüketimi.** Saat/input/audio/haptik ve export tüketicileri denetlendi; clock-jump/geç decode/tekrarlı suspend testli, ilgili gerçek cihaz turu açık. Kapanır: tüketicisiz tauri-v2 export/config/izin bağları kaldırılır (VT3/K4); high + Chromium/WebKit; SD8 fiziksel sonucu F08.6'da.
 
 ### F05 — Asset yayını, metadata ve kalıntı temizliği
 
@@ -102,12 +100,14 @@ release redini ertelemek için gerekçe değildir.
 - [x] F01.2 — V2 rapor geçişi ve eski/bozuk/mutasyona uğramış kabul negatifleri testli; isteğe bağlı dinleme ve mevcut PCM/asset yüzeyi korundu.
 - [x] F02.1 — Standart pnpm shim'iyle temiz Unicode/boşluklu klonda install/doctor/quick/high geçti; gerçek MSVC link probu ve Android araç profili doğrulandı.
 - [x] F02.2 — Native argv ve cmd/bat adaptörü gerçek yol/argüman/PATH fixture'larıyla testli; audio CLI Node+JS girişini kullanıyor.
-- [x] F02.3 — File URL, separator, gerçek disk hatası ve rollback regresyonları Windows'ta geçti; platforma aykırı izin fixture'ları kaldırıldı.
+- [x] F02.3 — File URL, separator ve gerçek disk/rollback regresyonları Windows'ta; aynı commitFiles kaynakları ayrı WSL Linux ağacında 8/8 geçti.
 - [x] F02.4 — Tam audio 129 dosya/2.221 test ve güncel LCOV/shape geçti; süre kusurları eşik/timeout/skip gevşetmeden düzeltildi.
 - [x] F03.1 — README/agent rol bütçesi, bağlantı/başlık/komut ve bayat istisna denetimleri mevcut quality/contract'a bağlandı.
 - [x] F03.2 — 43 kaynak belgenin sahiplik kararı uygulandı; agent girişleri ve README'ler kısaldı, hukuk/üretilmiş izin kaynakları korundu.
 - [x] F03.3 — UI COVERAGE/RESEARCH sahiplerine birleştirilip silindi; 63 açık UI görevi ve kapanış ölçütleri korundu.
 - [x] F03.4 — Platform araç/kapı/native/cihaz sınırları ve tek sahipli belge düzeni doğrulandı; yapılmayan cihaz kabulü açık bırakıldı.
+- [x] F04.1 — Son telafisiz yazım reddi flush/flushAndDispose ve failed ACK'ye ulaşır; reentrant son snapshot ve başarılı telafi regresyonları ile tam high geçti.
+- [x] F04.2 — Geç load/destroy/abort/generation/gerçek dış odak eski kaynak ve commit'i açamaz; Input/TextArea ve Steam oturum regresyonları ile tam high geçti.
 - [x] Monorepo denetim raporu docs'a yerleştirildi; 20 bulgu, 43 belge kararı ve bütün açık işler F01–F10'a eşlendi.
 - [x] Visual Studio C++ Build Tools kuruldu; güncel doctor/bootstrap doğruluğu F02.1 ile tamamlandı.
 - [x] Just kabuğu Git kurulumundan seçilir; WSL gölgesi ortam teşhisinde ayrılır.

@@ -18,7 +18,7 @@ const fakes = vi.hoisted(() => ({
   OnScreenKeyboard: { open: vi.fn() },
 }));
 
-vi.mock('@volstudio/core', () => fakes);
+vi.mock('@volstudio/core/ui', () => fakes);
 
 function fakeProbe(handlers: Record<string, unknown>): {
   probe: SteamworksProbe;
@@ -27,10 +27,11 @@ function fakeProbe(handlers: Record<string, unknown>): {
   const events = new Map<string, (payload: unknown) => void>();
   const probe: SteamworksProbe = {
     isTauri: () => true,
-    invoke: vi.fn((cmd: string): Promise<unknown> => {
+    invoke: vi.fn((cmd: string, args?: Record<string, unknown>): Promise<unknown> => {
       const h = handlers[cmd];
       if (h instanceof Error) return Promise.reject(h);
-      if (typeof h === 'function') return Promise.resolve((h as () => unknown)());
+      if (typeof h === 'function')
+        return Promise.resolve((h as (args?: Record<string, unknown>) => unknown)(args));
       return Promise.resolve(h);
     }),
     listen: vi.fn((event: string, handler: (payload: unknown) => void) => {
@@ -45,6 +46,13 @@ function afterEach(probe: SteamworksProbe) {
   setSteamworksProbe(probe);
   return () => setSteamworksProbe(null);
 }
+
+const requestId = (probe: SteamworksProbe) =>
+  vi
+    .mocked(probe.invoke)
+    .mock.calls.slice()
+    .reverse()
+    .find(([command]) => command === 'show_text_input')?.[1]?.requestId;
 
 const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -89,8 +97,12 @@ describe('steamworksStatus', () => {
 describe('createSteamworksTextEntryProvider', () => {
   it('show sırasında gelen hızlı kapanışı kaçırmaz ve aboneliği kaldırır', async () => {
     const { probe, events } = fakeProbe({
-      show_text_input: () => {
-        events.get('vol-steamworks:text-input')?.({ submitted: true, text: 'hızlı' });
+      show_text_input: (args: Record<string, unknown>) => {
+        events.get('vol-steamworks:text-input')?.({
+          requestId: args.requestId,
+          submitted: true,
+          text: 'hızlı',
+        });
         return true;
       },
     });
@@ -103,7 +115,7 @@ describe('createSteamworksTextEntryProvider', () => {
       expect(result).toEqual({ value: 'hızlı', canceled: false });
       expect(events.size).toBe(0);
     } finally {
-      events.get('vol-steamworks:text-input')?.({ submitted: false });
+      events.get('vol-steamworks:text-input')?.({ requestId: requestId(probe), submitted: false });
       await opened;
       restore();
     }
@@ -130,7 +142,7 @@ describe('createSteamworksTextEntryProvider', () => {
       expect(result).toEqual({ value: 'b', canceled: true });
       expect(probe.invoke).toHaveBeenCalledTimes(1);
     } finally {
-      for (const handler of handlers) handler({ submitted: false });
+      for (const handler of handlers) handler({ requestId: requestId(probe), submitted: false });
       await Promise.all([first, second]);
       expect(events.size).toBe(0);
       restore();
@@ -177,23 +189,31 @@ describe('createSteamworksTextEntryProvider', () => {
     }
   });
 
-  it('abonelik tutuşu çözülmeden gelen olayın dinleyicisini de kaldırır', async () => {
+  it('show öncesi eski olayı yok sayar; geç abonelik tutuşunu kapanışta bırakır', async () => {
     const unlisten = vi.fn();
-    const { probe } = fakeProbe({ show_text_input: true });
+    let handler!: (payload: unknown) => void;
+    const { probe } = fakeProbe({
+      show_text_input: (args: Record<string, unknown>) => {
+        handler({ requestId: args.requestId, submitted: true, text: 'güncel' });
+        return true;
+      },
+    });
     const restore = afterEach({
       ...probe,
-      listen: async (_, handler) => {
-        handler({ submitted: true, text: 'erken' });
-        await Promise.resolve();
+      listen: async (event, nextHandler) => {
+        if (event === 'vol-steamworks:text-input') {
+          handler = nextHandler;
+          handler({ requestId: 'eski', submitted: true, text: 'erken' });
+        }
+        await nextTurn();
         return unlisten;
       },
     });
     try {
       expect(await createSteamworksTextEntryProvider().open({ value: 'ilk' })).toEqual({
-        value: 'erken',
+        value: 'güncel',
         canceled: false,
       });
-      // Sonuç ve overlay abonelikleri ikisi de bırakılır.
       expect(unlisten).toHaveBeenCalledTimes(2);
     } finally {
       restore();
@@ -214,7 +234,11 @@ describe('createSteamworksTextEntryProvider', () => {
 
       const next = provider.open({ value: 'ikinci' });
       await vi.advanceTimersByTimeAsync(0);
-      events.get('vol-steamworks:text-input')?.({ submitted: true, text: 'tamam' });
+      events.get('vol-steamworks:text-input')?.({
+        requestId: requestId(probe),
+        submitted: true,
+        text: 'tamam',
+      });
       await expect(next).resolves.toEqual({ value: 'tamam', canceled: false });
     } finally {
       restore();
@@ -245,7 +269,11 @@ describe('createSteamworksTextEntryProvider', () => {
     const opened = createSteamworksTextEntryProvider().open({ value: 'ilk' });
     try {
       await nextTurn();
-      events.get('vol-steamworks:text-input')?.({ submitted: true, text: 'beklenen' });
+      events.get('vol-steamworks:text-input')?.({
+        requestId: requestId(probe),
+        submitted: true,
+        text: 'beklenen',
+      });
       show(true);
       expect(await opened).toEqual({ value: 'beklenen', canceled: false });
       expect(events.size).toBe(0);
@@ -297,8 +325,9 @@ describe('createSteamworksTextEntryProvider', () => {
     const restore = afterEach(probe);
     const provider = createSteamworksTextEntryProvider();
     const promise = provider.open({ value: 'merhaba' });
-    await Promise.resolve();
+    await nextTurn();
     events.get('vol-steamworks:text-input')?.({
+      requestId: requestId(probe),
       submitted: true,
       text: 'dünya',
     });
@@ -312,8 +341,12 @@ describe('createSteamworksTextEntryProvider', () => {
     const restore = afterEach(probe);
     const provider = createSteamworksTextEntryProvider();
     const promise = provider.open({ value: 'eskisi' });
-    await Promise.resolve();
-    events.get('vol-steamworks:text-input')?.({ submitted: false, text: 'iptal metni' });
+    await nextTurn();
+    events.get('vol-steamworks:text-input')?.({
+      requestId: requestId(probe),
+      submitted: false,
+      text: 'iptal metni',
+    });
     const result = await promise;
     expect(result).toEqual({ value: 'eskisi', canceled: true });
     restore();
@@ -329,7 +362,7 @@ describe('createSteamworksTextEntryProvider', () => {
     const result = await createSteamworksTextEntryProvider().open({
       value: 'x',
     });
-    expect(fakes.OnScreenKeyboard.open).toHaveBeenCalledWith({ value: 'x' });
+    expect(fakes.OnScreenKeyboard.open).toHaveBeenCalledWith({ value: 'x' }, undefined);
     expect(result.value).toBe('yerel');
     restore();
   });
@@ -354,10 +387,10 @@ describe('createSteamworksTextEntryProvider', () => {
     const restore = afterEach(probe);
     const provider = createSteamworksTextEntryProvider();
     const first = provider.open({ value: 'a' });
-    await Promise.resolve();
+    await nextTurn();
     const second = await provider.open({ value: 'b' });
     expect(second.canceled).toBe(true);
-    events.get('vol-steamworks:text-input')?.({ submitted: false });
+    events.get('vol-steamworks:text-input')?.({ requestId: requestId(probe), submitted: false });
     await first;
     restore();
   });

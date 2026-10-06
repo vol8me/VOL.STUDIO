@@ -24,7 +24,7 @@ const fakes = vi.hoisted(() => ({
 
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri, invoke: fakes.invoke }));
 vi.mock('@tauri-apps/api/event', () => ({ listen: fakes.listen }));
-vi.mock('@volstudio/core', () => ({ OnScreenKeyboard: { open: vi.fn() } }));
+vi.mock('@volstudio/core/ui', () => ({ OnScreenKeyboard: { open: vi.fn() } }));
 
 import {
   onSteamOverlay,

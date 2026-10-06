@@ -7,9 +7,9 @@ const fakes = vi.hoisted(() => ({
 }));
 
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: fakes.isTauri, invoke: fakes.invoke }));
-vi.mock('@volstudio/core', () => ({ LocalStorageAdapter: fakes.LocalStorageAdapter }));
+vi.mock('@volstudio/core/persistence', () => ({ LocalStorageAdapter: fakes.LocalStorageAdapter }));
 
-import { LocalStorageAdapter } from '@volstudio/core';
+import { LocalStorageAdapter } from '@volstudio/core/persistence';
 import { createScopedStores } from '../../src/adapters/scopedStores';
 import { TauriStoreAdapter } from '../../src/adapters/TauriStoreAdapter';
 

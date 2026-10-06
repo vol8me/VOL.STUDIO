@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import {
@@ -6,7 +7,7 @@ import {
   type TextEntryProvider,
   type TextEntryRequest,
   type TextEntryResult,
-} from '@volstudio/core';
+} from '@volstudio/core/ui';
 
 /**
  * İsteğe bağlı Steamworks katmanının JS yüzü. `vol-steamworks` Tauri
@@ -41,7 +42,7 @@ export interface SteamworksStatus {
   readonly error?: string | null;
 }
 
-export interface SteamControllerInfo {
+interface SteamControllerInfo {
   readonly handle: number;
   /** `resolveGlyphFamily` çözümleyicisinin `steamworksType` alanı. */
   readonly steamworksType: string;
@@ -98,10 +99,6 @@ export async function activateSteamActionSet(name: string): Promise<number> {
   return (await probe.invoke('activate_action_set', { name })) as number;
 }
 
-export async function steamControllers(): Promise<SteamControllerInfo[]> {
-  return (await probe.invoke('controllers')) as SteamControllerInfo[];
-}
-
 /**
  * Glif çözümleyicisine beslenecek Steamworks ipucu — ilk bağlı kolun
  * `InputType`'ı. Bağlı kol yoksa ya da eklenti kapalıysa boş bağlam döner
@@ -109,7 +106,7 @@ export async function steamControllers(): Promise<SteamControllerInfo[]> {
  */
 export async function steamworksGlyphContext(): Promise<GlyphFamilyContext> {
   try {
-    const [first] = await steamControllers();
+    const [first] = (await probe.invoke('controllers')) as SteamControllerInfo[];
     return first ? { steamworksType: first.steamworksType } : {};
   } catch {
     return {};
@@ -128,6 +125,7 @@ export async function onSteamOverlay(onChange: (active: boolean) => void): Promi
 }
 
 interface TextInputPayload {
+  requestId: string;
   submitted: boolean;
   text?: string | null;
 }
@@ -146,65 +144,109 @@ const DISMISS_GRACE_MS = 750;
 /** Sonuç ve overlay olayı hiç gelmezse girişin açık kalabileceği en uzun süre. */
 const TEXT_INPUT_LIMIT_MS = 10 * 60 * 1000;
 
+let textRequestSequence = 0n;
+
 export function createSteamworksTextEntryProvider(): TextEntryProvider {
-  let pending = false;
+  let pending: string | undefined;
   return {
-    async open(request: TextEntryRequest): Promise<TextEntryResult> {
-      if (pending) return { value: request.value, canceled: true };
-      pending = true;
+    async open(request: TextEntryRequest, signal?: AbortSignal): Promise<TextEntryResult> {
+      const canceled: TextEntryResult = { value: request.value, canceled: true };
+      if (pending || signal?.aborted) return canceled;
+      const requestId = `text-${++textRequestSequence}`;
+      pending = requestId;
       const currentProbe = probe;
-      const unlisteners: UnlistenFn[] = [];
-      const timers: ReturnType<typeof setTimeout>[] = [];
-      const cleanup = () => {
-        for (const timer of timers.splice(0)) clearTimeout(timer);
-        for (const remove of unlisteners.splice(0)) remove();
+      const scope = new DisposableScope();
+      const nativeScope = scope.add(new DisposableScope());
+      let stopped = false;
+      let showStarted = false;
+      let resolveAbort!: (result: TextEntryResult) => void;
+      const aborted = new Promise<TextEntryResult>((resolve) => (resolveAbort = resolve));
+      const cancelNative = async (): Promise<void> => {
+        if (!showStarted) return;
+        // İptal, geç show yanıtından sonra da denenir; eski requestId yeni sahibi silmez.
+        try {
+          await currentProbe.invoke('cancel_text_input', { requestId });
+        } catch (error) {
+          console.warn('Steam metni iptal edilemedi:', error);
+        }
       };
-      try {
+      const abort = (): void => {
+        stopped = true;
+        void cancelNative();
+        scope.dispose();
+        resolveAbort(canceled);
+      };
+      if (signal) scope.addListener(signal, 'abort', abort, { once: true });
+      const run = async (): Promise<TextEntryResult> => {
         let dismiss!: (payload: TextInputPayload) => void;
         const dismissed = new Promise<TextInputPayload>((resolve) => (dismiss = resolve));
+        const scheduleDismiss = (delay: number): void => {
+          nativeScope.addTimeout(() => dismiss({ requestId, submitted: false }), delay);
+        };
         let shown = false;
         try {
-          unlisteners.push(
-            await currentProbe.listen('vol-steamworks:text-input', (payload) => {
-              dismiss((payload ?? {}) as TextInputPayload);
-            }),
-          );
-          // Steam sonuç olayı göndermeden overlay'i kapatabilir; o zaman giriş
-          // iptal sayılır, yoksa sonraki bütün girişler kilitli kalırdı.
-          unlisteners.push(
-            await currentProbe.listen('vol-steamworks:overlay', (payload) => {
-              if ((payload as { active?: boolean } | null)?.active === false) {
-                timers.push(setTimeout(() => dismiss({ submitted: false }), DISMISS_GRACE_MS));
-              }
-            }),
-          );
+          const handlers: ReadonlyArray<readonly [string, (payload: unknown) => void]> = [
+            [
+              'vol-steamworks:text-input',
+              (payload) => {
+                const result = payload as TextInputPayload | null;
+                if (!stopped && showStarted && result?.requestId === requestId) dismiss(result);
+              },
+            ],
+            [
+              'vol-steamworks:overlay',
+              (payload) => {
+                if (
+                  !stopped &&
+                  showStarted &&
+                  (payload as { active?: boolean } | null)?.active === false
+                ) {
+                  scheduleDismiss(DISMISS_GRACE_MS);
+                }
+              },
+            ],
+          ];
+          for (const [event, handler] of handlers) {
+            nativeScope.addSubscription(await currentProbe.listen(event, handler));
+            if (stopped) return canceled;
+          }
+          showStarted = true;
           shown =
             (await currentProbe.invoke('show_text_input', {
+              requestId,
               description: '',
               existingText: request.value,
               maxCharacters: request.maxLength ?? 4096,
               multiline: request.multiline ?? false,
             })) === true;
         } catch {
-          shown = false;
+          // Native açılış reddi yerel klavyeye düşer; iptal aşağıda ayrı korunur.
+        }
+        if (stopped) {
+          if (shown) void cancelNative();
+          return canceled;
         }
         if (!shown) {
-          cleanup();
-          return await OnScreenKeyboard.open(request);
+          nativeScope.dispose();
+          return OnScreenKeyboard.open(request, signal);
         }
-        timers.push(setTimeout(() => dismiss({ submitted: false }), TEXT_INPUT_LIMIT_MS));
+        scheduleDismiss(TEXT_INPUT_LIMIT_MS);
         const payload = await dismissed;
-        const submitted = payload.submitted === true;
+        if (!payload.submitted) void cancelNative();
         return {
-          value: submitted && typeof payload.text === 'string' ? payload.text : request.value,
-          canceled: !submitted,
+          value:
+            payload.submitted === true && typeof payload.text === 'string'
+              ? payload.text
+              : request.value,
+          canceled: payload.submitted !== true,
         };
+      };
+      try {
+        // Geç listen/show/fallback sonucu gözlenir, fakat iptal owner'ı bekletmez.
+        return await Promise.race([run(), aborted]);
       } finally {
-        try {
-          cleanup();
-        } finally {
-          pending = false;
-        }
+        scope.dispose();
+        if (pending === requestId) pending = undefined;
       }
     },
   };

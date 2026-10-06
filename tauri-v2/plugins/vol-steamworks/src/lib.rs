@@ -13,12 +13,14 @@
 //! JS'e dönen olaylar:
 //! - `vol-steamworks:overlay` `{active: bool}` — overlay açılma/kapanma;
 //!   duraklatma kararı oyunundur.
-//! - `vol-steamworks:text-input` `{submitted, text}` — Big Picture metin
+//! - `vol-steamworks:text-input` `{requestId, submitted, text}` — Big Picture metin
 //!   diyaloğunun sonucu.
-//! - `vol-steamworks:floating-dismissed` — kayan klavye kapandı (metin
+//! - `vol-steamworks:floating-dismissed` `{requestId}` — kayan klavye kapandı (metin
 //!   odaklı alana doğrudan yazılmıştır).
 
 mod b64;
+#[cfg(feature = "steamworks")]
+mod callbacks;
 mod service;
 
 pub use service::{
@@ -117,27 +119,40 @@ async fn action_glyph<R: Runtime>(
 #[tauri::command]
 fn show_text_input<R: Runtime>(
     app: AppHandle<R>,
+    request_id: String,
     description: String,
     existing_text: String,
     max_characters: u32,
     multiline: bool,
 ) -> Result<bool, Error> {
     service(&app)
-        .show_text_input(&description, &existing_text, max_characters, multiline)
+        .show_text_input(
+            &request_id,
+            &description,
+            &existing_text,
+            max_characters,
+            multiline,
+        )
         .map_err(Error)
 }
 
 #[tauri::command]
 fn show_floating_input<R: Runtime>(
     app: AppHandle<R>,
+    request_id: String,
     x: i32,
     y: i32,
     width: i32,
     height: i32,
 ) -> Result<bool, Error> {
     service(&app)
-        .show_floating_input(x, y, width, height)
+        .show_floating_input(&request_id, x, y, width, height)
         .map_err(Error)
+}
+
+#[tauri::command]
+fn cancel_text_input<R: Runtime>(app: AppHandle<R>, request_id: String) -> Result<(), Error> {
+    service(&app).cancel_text_input(&request_id).map_err(Error)
 }
 
 #[tauri::command]
@@ -206,6 +221,7 @@ pub fn init<R: Runtime>(app_id: u32, manifest_resource: Option<&str>) -> TauriPl
             action_glyph,
             show_text_input,
             show_floating_input,
+            cancel_text_input,
             show_binding_panel,
             vibrate,
             action_state,
@@ -229,6 +245,11 @@ pub fn init<R: Runtime>(app_id: u32, manifest_resource: Option<&str>) -> TauriPl
             service.connect(app_id, manifest);
             app.manage(service);
             Ok(())
+        })
+        .on_event(|app, event| {
+            if matches!(event, tauri::RunEvent::Exit) {
+                service(app).shutdown();
+            }
         })
         .build()
 }

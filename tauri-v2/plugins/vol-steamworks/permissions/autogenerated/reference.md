@@ -11,6 +11,7 @@
 - `allow-action-glyph`
 - `allow-show-text-input`
 - `allow-show-floating-input`
+- `allow-cancel-text-input`
 - `allow-show-binding-panel`
 - `allow-vibrate`
 - `allow-action-state`
@@ -102,6 +103,32 @@ Enables the activate_action_set command without any pre-configured scope.
 <td>
 
 Denies the activate_action_set command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vol-steamworks:allow-cancel-text-input`
+
+</td>
+<td>
+
+Enables the cancel_text_input command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`vol-steamworks:deny-cancel-text-input`
+
+</td>
+<td>
+
+Denies the cancel_text_input command without any pre-configured scope.
 
 </td>
 </tr>

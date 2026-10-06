@@ -80,6 +80,50 @@ afterEach(() => {
 });
 
 describe('GameServices', () => {
+  it('kapanış snapshotından önce oyun girdisini duraklatır; listener hatası kayıt kancasını kesmez', async () => {
+    localStorage.clear();
+    Object.assign(bridge, {
+      platform: 'web',
+      session: 'web',
+      measure: false,
+      orientationError: false,
+    });
+    services = await GameServices.create();
+    const error = new Error('duraklatma dinleyicisi');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    services.onPause(() => {
+      throw error;
+    });
+    services.onPause(() => {
+      services!.progress.fired();
+    });
+    await expect(bridge.shutdown?.()).resolves.toBeUndefined();
+    expect(JSON.parse(localStorage.getItem('synced.voltest.progress')!)).toEqual({
+      distance: 0,
+      shots: 1,
+    });
+    expect(warn).toHaveBeenCalledWith('[VOL.TEST] Duraklatılamadı:', error);
+  });
+  it('eski kayıt göçü bitmeden ayar ve ilerleme yüklemez; kaynağı korur', async () => {
+    localStorage.clear();
+    Object.assign(bridge, {
+      platform: 'web',
+      session: 'web',
+      measure: false,
+      orientationError: false,
+    });
+    const preferences = JSON.stringify({ volume: 0.42, haptics: false });
+    const progress = JSON.stringify({ distance: 17, shots: 4 });
+    localStorage.setItem('voltest.preferences', preferences);
+    localStorage.setItem('voltest.progress', progress);
+    services = await GameServices.create();
+    expect(services.settings.get()).toMatchObject({ volume: 0.42, haptics: false });
+    expect(services.progress.get()).toEqual({ distance: 17, shots: 4 });
+    expect(localStorage.getItem('voltest.preferences')).toBe(preferences);
+    expect(localStorage.getItem('voltest.progress')).toBe(progress);
+    expect(localStorage.getItem('device.device.voltest.preferences')).toBeNull();
+    localStorage.clear();
+  });
   it('ayar hatası olsa bile geciken ilerleme ve ekran kalıcılığını bekler, bütün hataları korur', async () => {
     Object.assign(bridge, {
       platform: 'web',
@@ -226,10 +270,10 @@ describe('GameServices', () => {
     bridge.overlay?.(false);
     bridge.overlay?.(true);
     bridge.resume?.();
-    expect(pause).toHaveBeenCalledTimes(3);
+    expect(pause).toHaveBeenCalledTimes(4);
     remove();
     bridge.resume?.();
-    expect(pause).toHaveBeenCalledTimes(3);
+    expect(pause).toHaveBeenCalledTimes(4);
     services.dispose();
     services.dispose();
     expect(bridge.stops).toBe(6);

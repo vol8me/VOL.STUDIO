@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   isScopedKey,
   migrateLegacyStore,
@@ -6,6 +6,7 @@ import {
   ScopedSaveManager,
   type IStorageAdapter,
   type KeyEnumerable,
+  type ScopedKey,
 } from '../../src';
 
 class MemoryAdapter implements IStorageAdapter, KeyEnumerable {
@@ -31,6 +32,13 @@ function scopedPair() {
 }
 
 describe('ScopedKey', () => {
+  it('load/save/delete derleme sözleşmesi kapsamsız string kabul etmez', () => {
+    expectTypeOf<Parameters<ScopedSaveManager['load']>[0]>().toEqualTypeOf<ScopedKey>();
+    expectTypeOf<Parameters<ScopedSaveManager['save']>[0]>().toEqualTypeOf<ScopedKey>();
+    expectTypeOf<Parameters<ScopedSaveManager['delete']>[0]>().toEqualTypeOf<ScopedKey>();
+    expectTypeOf<'progress'>().not.toExtend<ScopedKey>();
+    expectTypeOf<string>().not.toExtend<ScopedKey>();
+  });
   it('kapsam önekini tanır ve ayırt eder', () => {
     expect(isScopedKey('synced.progress')).toBe(true);
     expect(isScopedKey('device.video')).toBe(true);
@@ -66,6 +74,30 @@ describe('ScopedSaveManager', () => {
 });
 
 describe('migrateLegacyStore', () => {
+  it('kaynak öneki aynı depodaki başka oyunu eşleme bulunsa da taşımaz veya silmez', async () => {
+    const legacy = new MemoryAdapter();
+    legacy.data.set('game.progress', 5);
+    legacy.data.set('other.progress', 9);
+    legacy.data.set('gamex.extra', 11);
+    const manager = new ScopedSaveManager(scopedPair());
+    const options = {
+      legacy,
+      scoped: manager,
+      keyPrefix: 'game.',
+      mappings: [{ key: 'other.progress', scope: 'synced' as const }],
+    };
+    expect(await migrateLegacyStore(options)).toEqual({
+      moved: ['game.progress'],
+      defaulted: ['game.progress'],
+      unknownLeftBehind: false,
+    });
+    expect(await manager.load('device.game.progress', null)).toBe(5);
+    expect(await manager.load('synced.other.progress', null)).toBeNull();
+    expect([...legacy.data.entries()]).toEqual([
+      ['other.progress', 9],
+      ['gamex.extra', 11],
+    ]);
+  });
   it('retainSource eski kaydı ve mevcut hedefi değiştirmeden yeni hedefi doğrular', async () => {
     const legacy = new MemoryAdapter();
     legacy.data.set('progress', { level: 5 });

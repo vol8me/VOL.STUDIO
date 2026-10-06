@@ -12,6 +12,29 @@ const parse = (value: unknown): State => {
 };
 
 describe('PersistedObservableState', () => {
+  it.each([0, 100])(
+    'dinleyici kapanışı başlatsa da son yazım reddi bariyere ulaşır (%d ms)',
+    async (debounceMs) => {
+      const error = new Error('son disk reddi');
+      const state = new PersistedObservableState({
+        store: {
+          load: () => Promise.resolve(undefined),
+          save: () => Promise.reject(error),
+        },
+        key: 'settings',
+        initial: { value: 0 },
+        parse,
+        clone,
+        debounceMs,
+      });
+      let closing: Promise<unknown> | undefined;
+      state.subscribe(() => {
+        closing = state.flushAndDispose().catch((failure: unknown) => failure);
+      });
+      await expect(state.set({ value: 7 })).rejects.toBe(error);
+      expect(await closing).toBe(error);
+    },
+  );
   it('yüklemeyi doğrular, kopya döndürür ve değişikliği yayınlar', async () => {
     const listener = vi.fn();
     const store = {
@@ -304,4 +327,133 @@ describe('PersistedObservableState', () => {
         }),
     ).toThrow(RangeError);
   });
+});
+
+describe('kalıcılık hata bariyeri', () => {
+  it.each(['flush', 'flushAndDispose'] as const)(
+    '%s devam eden yazımın reddini taşır',
+    async (method) => {
+      let reject!: (error: unknown) => void;
+      const failure = new Error('disk');
+      const state = new PersistedObservableState({
+        store: {
+          load: () => Promise.resolve(undefined),
+          save: () =>
+            new Promise<void>((_ok, fail) => {
+              reject = fail;
+            }),
+        },
+        key: 'settings',
+        initial: { value: 0 },
+        parse,
+        clone,
+      });
+      const setter = expect(state.set({ value: 1 })).rejects.toBe(failure);
+      const barrier = expect(state[method]()).rejects.toBe(failure);
+      reject(failure);
+      await Promise.all([setter, barrier]);
+      state.dispose();
+    },
+  );
+
+  it.each([undefined, null, 'disk'])(
+    'geçmiş telafisiz ret kayıpsız taşınır: %s',
+    async (failure) => {
+      const state = new PersistedObservableState({
+        store: {
+          load: () => Promise.resolve(undefined),
+          save: vi.fn<() => Promise<void>>().mockRejectedValue(failure),
+        },
+        key: 'settings',
+        initial: { value: 0 },
+        parse,
+        clone,
+      });
+      await expect(state.set({ value: 1 })).rejects.toBe(failure);
+      await expect(state.flush()).rejects.toBe(failure);
+      await expect(state.flushAndDispose()).rejects.toBe(failure);
+    },
+  );
+
+  it('yeni başarılı son değer geçmiş hatayı telafi eder', async () => {
+    const state = new PersistedObservableState({
+      store: {
+        load: () => Promise.resolve(undefined),
+        save: (_key, value: State) =>
+          value.value === 1 ? Promise.reject(new Error('disk')) : Promise.resolve(),
+      },
+      key: 'settings',
+      initial: { value: 0 },
+      parse,
+      clone,
+    });
+    await expect(state.set({ value: 1 })).rejects.toThrow('disk');
+    await state.set({ value: 2 });
+    await expect(state.flush()).resolves.toBeUndefined();
+    await expect(state.flushAndDispose()).resolves.toBeUndefined();
+  });
+});
+
+it('debounce kapanışı undefined reddini kaybetmez', async () => {
+  const state = new PersistedObservableState({
+    store: {
+      load: () => Promise.resolve(undefined),
+      save: vi.fn<() => Promise<void>>().mockRejectedValue(undefined),
+    },
+    key: 'settings',
+    initial: { value: 0 },
+    parse,
+    clone,
+    debounceMs: 100,
+  });
+  const setter = expect(state.set({ value: 1 })).rejects.toBeUndefined();
+  await expect(state.flushAndDispose()).rejects.toBeUndefined();
+  await setter;
+});
+
+it('başarısız ara yazımdan sonra son başarılı değer bariyeri telafi eder', async () => {
+  let reject!: (error: unknown) => void;
+  const writes: number[] = [];
+  const failure = new Error('ilk yazım');
+  const state = new PersistedObservableState({
+    store: {
+      load: () => Promise.resolve(undefined),
+      save: async (_key, value: State) => {
+        writes.push(value.value);
+        if (value.value === 1)
+          await new Promise<void>((_ok, fail) => {
+            reject = fail;
+          });
+      },
+    },
+    key: 'settings',
+    initial: { value: 0 },
+    parse,
+    clone,
+  });
+  const first = expect(state.set({ value: 1 })).rejects.toBe(failure);
+  const second = state.set({ value: 2 });
+  const last = state.set({ value: 3 });
+  const barriers = Promise.all([state.flush(), state.flush()]);
+  reject(failure);
+  await Promise.all([first, second, last, barriers]);
+  expect(writes).toEqual([1, 3]);
+  await state.flushAndDispose();
+});
+
+it('çağıranın beklemediği setter reddi bariyerde gözlenir', async () => {
+  const failure = new Error('arka plan yazımı');
+  const state = new PersistedObservableState({
+    store: {
+      load: () => Promise.resolve(undefined),
+      save: vi.fn<() => Promise<void>>().mockRejectedValue(failure),
+    },
+    key: 'settings',
+    initial: { value: 0 },
+    parse,
+    clone,
+    debounceMs: 100,
+  });
+  void state.set({ value: 1 });
+  await expect(state.flushAndDispose()).rejects.toBe(failure);
 });

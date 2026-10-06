@@ -1,5 +1,9 @@
-import { LocalStorageAdapter } from '@volstudio/core';
-import type { ScopedStores } from '@volstudio/core';
+import {
+  LocalStorageAdapter,
+  migrateLegacyStore,
+  ScopedSaveManager,
+} from '@volstudio/core/persistence';
+import type { LegacyKeyMapping, MigrationReport, ScopedStores } from '@volstudio/core/persistence';
 import { isTauri } from '@tauri-apps/api/core';
 import { TauriStoreAdapter } from './TauriStoreAdapter';
 import type { StoreIntegrityEvent } from './TauriStoreAdapter';
@@ -30,4 +34,27 @@ export function createScopedStores(
     };
   }
   return { synced: new LocalStorageAdapter(), device: new LocalStorageAdapter() };
+}
+
+/** Eski kaynağı korur; göç tamamlanmadan oyun state'i yüklenmez. */
+export function migrateScopedStores(
+  gameId: string,
+  stores: ScopedStores,
+  mappings: readonly LegacyKeyMapping[],
+  options: ScopedStoresOptions = {},
+): Promise<MigrationReport> {
+  const native = isTauri();
+  const source = native
+    ? new TauriStoreAdapter({ gameId, onIntegrity: options.onIntegrity })
+    : new LocalStorageAdapter();
+  return migrateLegacyStore({
+    legacy: source,
+    scoped: new ScopedSaveManager(stores),
+    mappings,
+    defaultScope: 'device',
+    retainSource: true,
+    skipScopedKeys: !native,
+    // localStorage origin'e aittir; başka oyunun kayıtları bu oyunun göçü değildir.
+    keyPrefix: native ? undefined : `${gameId}.`,
+  });
 }

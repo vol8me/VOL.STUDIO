@@ -140,7 +140,10 @@ describe('textEntry — kolla metin girişi', () => {
     input.maxLength = 12;
     focus();
     await flush();
-    expect(open).toHaveBeenCalledWith(expect.objectContaining({ maxLength: 12 }));
+    expect(open).toHaveBeenCalledWith(
+      expect.objectContaining({ maxLength: 12 }),
+      expect.any(AbortSignal),
+    );
   });
 
   it('sağlayıcı reddederse değer değişmez ve işlenmemiş ret kalmaz', async () => {

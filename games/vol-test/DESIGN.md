@@ -195,6 +195,14 @@ ilerlemeyi `AutosaveCoordinator` ile yazar. `ScopedSaveManager` cihaz ve
 ilerleme kapsamlarını ayrı depolar. Uyku ve kapanış kayıt kuyruklarını
 boşaltır; kaynaklar sahne kapanışında sökülür.
 
+Açılış iki scope adapter'ını bir kez kurar ve eski kayıt göçünü state
+yüklemeden bekler. `voltest.preferences` cihaz, `voltest.progress` ilerleme
+uyumluluk eşlemesidir; geçmişte kapsamsız sürüm yayımlandığı iddiası değildir.
+Geç ilerleme yüklemesi kapatılmış serviste autosave kurmaz. Flush bütün
+kalıcılık sonuçlarını bekler; ölçüm hatası kayıt başarısı yerine geçirilmez.
+Kapanış snapshot'ından önce oyun duraklatılır. Bir duraklatma dinleyicisinin
+hatası tanıya gider; diğer dinleyicileri ve son kayıt boşaltmasını kesmez.
+
 Android native geri hareketi CORE geri yığınına gider. gamescope ve Android
 pencere kipi seçeneği sunmaz. Steamworks isteğe bağlıdır; varsayılan stub
 Steam istemci kabulünün kanıtı değildir. Native ve Android kaynakları,

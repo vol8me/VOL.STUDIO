@@ -26,7 +26,7 @@ function fakeClock() {
 }
 
 describe('observeWakeGaps', () => {
-  it('timer donması uyku sayılır ve uyanma bildirilir', () => {
+  it('timer boşluğunu bildirir; native uyku sonucu üretmez', () => {
     const clock = fakeClock();
     const onWake = vi.fn();
     observeWakeGaps({
@@ -48,6 +48,26 @@ describe('observeWakeGaps', () => {
     clock.tick();
     expect(onWake).toHaveBeenCalledTimes(1);
     expect(onWake.mock.calls[0][0]).toBeGreaterThanOrEqual(65_000);
+  });
+
+  it('geri saat sıçramasını uyku saymaz; yeni referanstan normal tik ve gerçek boşluğu ölçer', () => {
+    const clock = fakeClock();
+    const onWake = vi.fn();
+    const stop = observeWakeGaps({
+      onWake,
+      now: clock.now,
+      setIntervalFn: clock.setIntervalFn,
+      clearIntervalFn: clock.clearIntervalFn,
+    });
+    clock.advance(-60_000);
+    clock.tick();
+    clock.advance(1_000);
+    clock.tick();
+    expect(onWake).not.toHaveBeenCalled();
+    clock.advance(5_000);
+    clock.tick();
+    expect(onWake).toHaveBeenCalledExactlyOnceWith(5_000);
+    stop();
   });
 
   it('eşik altındaki gecikme uyku sayılmaz', () => {

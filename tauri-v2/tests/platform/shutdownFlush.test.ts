@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerShutdownFlush, type ShutdownFlushProbe } from '../../src/platform/shutdownFlush';
+import { PersistedObservableState } from '@volstudio/core/persistence';
 
 type Request = { requestId: string; reason: 'close' | 'signal' };
 type Handler = (event: { payload: Request }) => void;
@@ -45,6 +46,42 @@ function fakeProbe(tauri = true) {
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 beforeEach(() => vi.clearAllMocks());
 describe('registerShutdownFlush', () => {
+  it('gerçek state yazımının undefined reddini başarı ACKine çeviremez', async () => {
+    const p = fakeProbe();
+    let fail!: (error: unknown) => void;
+    const state = new PersistedObservableState({
+      store: {
+        load: () => Promise.resolve(undefined),
+        save: () =>
+          new Promise<void>((_resolve, reject) => {
+            fail = reject;
+          }),
+      },
+      key: 'settings',
+      initial: 0,
+      parse: (value) => Number(value ?? 0),
+      clone: (value) => value,
+    });
+    const setting = state.set(1).catch((error: unknown) => error);
+    const stop = registerShutdownFlush(() => state.flush(), p.probe);
+    try {
+      p.terminate();
+      await settle();
+      expect(p.invoke).not.toHaveBeenCalled();
+      fail(undefined);
+      await setting;
+      await settle();
+      expect(p.invoke).toHaveBeenCalledExactlyOnceWith('vol_flush_done', {
+        requestId: 'shutdown-1',
+        reason: 'signal',
+        outcome: 'failed',
+      });
+      expect(p.onError).toHaveBeenCalledExactlyOnceWith(undefined);
+    } finally {
+      stop();
+      state.dispose();
+    }
+  });
   it('kapanış native süre sınırını kancalar başlamadan ister ve yinelenen olayı birleştirir', async () => {
     const p = fakeProbe();
     const hook = vi.fn(() => new Promise<void>(() => undefined));

@@ -16,6 +16,7 @@
  */
 
 import { OnScreenKeyboard } from './OnScreenKeyboard';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export interface TextEntryRequest {
   /** Alanın mevcut değeri — klavye düzenlemeye bundan başlar. */
@@ -37,27 +38,35 @@ export interface TextEntryResult {
 /**
  * Platform klavyesi sözleşmesi. `open` kullanıcı kapatana kadar açık kalır
  * ve sonucu tek seferde döndürür (Steamworks `ShowGamepadTextInput`
- * davranışının aynası).
+ * davranışının aynası). İptal sinyali geldiğinde sağlayıcı bekleyen kaynaklarını
+ * kapatır; sinyali desteklemeyen eski sağlayıcının geç sonucu UI'a uygulanmaz.
  */
 export interface TextEntryProvider {
-  open(request: TextEntryRequest): Promise<TextEntryResult>;
+  open(request: TextEntryRequest, signal?: AbortSignal): Promise<TextEntryResult>;
 }
 
 let provider: TextEntryProvider | null = null;
+const noop = (): void => undefined;
+let cancelActiveSession: (() => void) | undefined;
 let modeProbe: (() => boolean) | null = null;
 const modeOwners: Array<() => boolean> = [];
 
 export function registerTextEntryModeProbe(probe: () => boolean): () => void {
+  cancelActiveSession?.();
   const owner = () => probe();
   modeOwners.push(owner);
   return () => {
     const index = modeOwners.indexOf(owner);
-    if (index >= 0) modeOwners.splice(index, 1);
+    if (index >= 0) {
+      if (modeOwners.at(-1) === owner) cancelActiveSession?.();
+      modeOwners.splice(index, 1);
+    }
   };
 }
 
 /** Platform katmanı kendi klavyesini kaydeder; `null` yerel klavyeye döner. */
 export function setTextEntryProvider(next: TextEntryProvider | null): void {
+  cancelActiveSession?.();
   provider = next;
 }
 
@@ -67,11 +76,15 @@ export function setTextEntryProvider(next: TextEntryProvider | null): void {
  * `clear` yalnız kendi fonksiyonunu kaldırır.
  */
 export function setTextEntryModeProbe(fn: (() => boolean) | null): void {
+  if (modeOwners.length === 0 && modeProbe !== fn) cancelActiveSession?.();
   modeProbe = fn;
 }
 
 export function clearTextEntryModeProbe(fn: () => boolean): void {
-  if (modeProbe === fn) modeProbe = null;
+  if (modeProbe === fn) {
+    if (modeOwners.length === 0) cancelActiveSession?.();
+    modeProbe = null;
+  }
 }
 
 /** Kol kipi etkin mi? Probu kaydeden yoksa `false` — klavye hiç açılmaz. */
@@ -86,10 +99,12 @@ export function isGamepadTextEntryActive(): boolean {
  */
 export async function requestGamepadTextEntry(
   request: TextEntryRequest,
+  signal?: AbortSignal,
 ): Promise<TextEntryResult | null> {
   if (!isGamepadTextEntryActive()) return null;
-  if (provider) return provider.open(request);
-  return OnScreenKeyboard.open(request);
+  if (signal?.aborted) return null;
+  if (provider) return provider.open(request, signal);
+  return OnScreenKeyboard.open(request, signal);
 }
 
 /**
@@ -110,32 +125,71 @@ export interface ElementTextEntryOptions {
  * `Input`/`TextArea`'nın `focus` kancası. Kol kipindeyse elemanın native
  * odağını kaldırıp klavyeyi açar; kapanınca odağı geri verir ve onaylanan
  * değeri `apply`'a iletir. Kol kipi değilse hiçbir şey yapmaz — native
- * metin girişi sürer.
+ * metin girişi sürer. Dönen iptal fonksiyonu alan sahibinin destroy/değer
+ * değişimi/devre dışı bırakma ömrüne bağlanır; DOM bağlantısı sahiplik değildir.
  */
 export function requestTextEntryForElement(
   element: HTMLInputElement | HTMLTextAreaElement,
   options: ElementTextEntryOptions,
-): void {
+): () => void {
   if (refocusSuppress.has(element)) {
     refocusSuppress.delete(element);
-    return;
+    return noop;
   }
-  if (!isGamepadTextEntryActive()) return;
+  if (!isGamepadTextEntryActive() || element.disabled) return noop;
+  cancelActiveSession?.();
+  // Klavyeye odak aktarımının blur'u iptal değildir; dinleyici sonra kurulur.
   element.blur();
+  const controller = new AbortController();
+  const scope = new DisposableScope();
+  let expectedValue = element.value;
+  const cleanup = (): void => {
+    scope.dispose();
+    if (cancelActiveSession === cancel) cancelActiveSession = undefined;
+  };
+  const cancel = (): void => {
+    cleanup();
+    controller.abort();
+  };
+  cancelActiveSession = cancel;
+  scope.addListener(element, 'blur', cancel);
+  scope.addListener(element.ownerDocument, 'focusin', (event) => {
+    const target = event.target;
+    // Yerel klavye odağı devralır; başka UI'a geçiş alanın oturumunu bırakır.
+    if (target !== element && !(target instanceof Element && target.closest('.vol-osk'))) cancel();
+  });
   const request: TextEntryRequest = {
-    value: element.value,
+    value: expectedValue,
     multiline: options.multiline,
     purpose: options.purpose,
     ...(element.maxLength > 0 ? { maxLength: element.maxLength } : {}),
   };
-  void requestGamepadTextEntry(request)
-    .then((result) => {
-      if (result && !result.canceled) options.apply(result.value);
-    })
-    // Sağlayıcı hatası girişi iptal sayar; değer değişmez, odak yine döner.
-    .catch(() => undefined)
-    .finally(() => {
-      refocusSuppress.add(element);
-      element.focus({ preventScroll: true });
-    });
+  const isCurrent = (): boolean =>
+    !controller.signal.aborted &&
+    !element.disabled &&
+    element.isConnected &&
+    element.value === expectedValue &&
+    cancelActiveSession === cancel;
+  const settle = async (): Promise<void> => {
+    try {
+      const result = await requestGamepadTextEntry(request, controller.signal);
+      if (isCurrent() && result && !result.canceled) {
+        options.apply(result.value);
+        expectedValue = element.value;
+      }
+    } finally {
+      const restoreFocus = isCurrent();
+      cleanup();
+      if (restoreFocus) {
+        refocusSuppress.add(element);
+        try {
+          element.focus({ preventScroll: true });
+        } finally {
+          refocusSuppress.delete(element);
+        }
+      }
+    }
+  };
+  void settle().catch(() => undefined);
+  return cancel;
 }

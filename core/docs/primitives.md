@@ -246,6 +246,14 @@ Programatik `setValue` ve `setChecked` sessizdir. Kullanıcı canlı değişimi
 onChange kullanabilir. Semantik haptik niyet primitive'dedir, platform çağrısı
 ve süre değildir; `haptic: false` çift bildirimi önler.
 
+`Input`/`TextArea` kol metin oturumu alan sahibine bağlıdır. `destroy`,
+`setValue`, `setValueAndNotify`, devre dışı bırakma ve başka UI'a gerçek odak geçişi bekleyen
+oturumu iptal eder; sağlayıcı/kip sahibi veya yeni oturum eski sonucu geçersiz
+kılar. Geç sonuç değer, `onInput`, `onCommit` ve odağı değiştirmez.
+`TextEntryProvider.open(request, signal?)` iptal sinyalinde native kaynakları
+kapatır; eski tek argümanlı sağlayıcılar çalışır, geç sonuçları uygulanmaz.
+Yerel ekran klavyesi iptalde modal ve geri aboneliğini kapatır.
+
 ## Grafik ve platform yeteneği
 
 `GraphicsQuality` generic kademe ve profile sahiptir; profil knobları ve

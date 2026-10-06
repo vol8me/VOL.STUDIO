@@ -1,5 +1,6 @@
 import { i18next } from '../../i18n/I18n';
 import { pushBackHandler } from '../../platform/backNavigation';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
 import type { TextEntryRequest, TextEntryResult } from './textEntry';
 
 /**
@@ -37,7 +38,7 @@ export class OnScreenKeyboard {
   readonly element: HTMLDivElement;
   private readonly valueView: HTMLDivElement;
   private readonly keyGrid: HTMLDivElement;
-  private readonly removeBack: () => void;
+  private readonly scope = new DisposableScope();
   private readonly resolve: (result: TextEntryResult) => void;
   private readonly original: string;
   private readonly isMultiline: boolean;
@@ -76,16 +77,24 @@ export class OnScreenKeyboard {
     this.renderKeys();
 
     // B / Escape / Android geri — ortak yığın iptal eder.
-    this.removeBack = pushBackHandler(() => {
-      this.close(true);
-      return true;
-    });
+    this.scope.addSubscription(
+      pushBackHandler(() => {
+        this.close(true);
+        return true;
+      }),
+    );
   }
 
   /** Klavyeyi açar; kullanıcı bitirince çözülen promise döner. */
-  static open(request: TextEntryRequest): Promise<TextEntryResult> {
+  static open(request: TextEntryRequest, signal?: AbortSignal): Promise<TextEntryResult> {
     return new Promise((resolve) => {
       const kb = new OnScreenKeyboard(request, resolve);
+      const cancel = (): void => kb.close(true);
+      if (signal) kb.scope.addListener(signal, 'abort', cancel, { once: true });
+      if (signal?.aborted) {
+        kb.close(true);
+        return;
+      }
       document.body.appendChild(kb.element);
       // İlk tuşu odakla: FocusNavController'ın halkası ilk D-pad kenarında
       // o tuşa oturur; odaksız açılışta ilk basış "ilk aday"a düşerdi.
@@ -193,7 +202,7 @@ export class OnScreenKeyboard {
   private close(canceled: boolean): void {
     if (this.closed) return;
     this.closed = true;
-    this.removeBack();
+    this.scope.dispose();
     this.element.remove();
     // İptal, sözleşme gereği başlangıç değerini döndürür.
     this.resolve({ value: canceled ? this.original : this.value, canceled });

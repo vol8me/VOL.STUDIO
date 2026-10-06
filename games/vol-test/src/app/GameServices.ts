@@ -8,6 +8,7 @@ import {
   setTextEntryProvider,
   type Diagnostics,
   type GlyphFamilyContext,
+  type ScopedStores,
 } from '@volstudio/core';
 import {
   androidScreenOrientation,
@@ -19,6 +20,7 @@ import {
   getRuntimePlatform,
   getSessionKind,
   isDeckMeasureRequested,
+  migrateScopedStores,
   observeLinuxHaptics,
   observeAndroidHaptics,
   onSteamOverlay,
@@ -39,6 +41,10 @@ import { GameSettings } from './GameSettings';
 import { GameMeasurements } from './GameMeasurements';
 import { parseRuntimeOverrides, type RuntimeOverrides } from './RuntimeOverrides';
 
+const storeOptions: NonNullable<Parameters<typeof createScopedStores>[1]> = {
+  onIntegrity: (event) => console.warn('[VOL.TEST] Kayıt bütünlüğü:', event),
+};
+
 export class GameServices {
   readonly settings: GameSettings;
   readonly progress: GameProgress;
@@ -50,6 +56,7 @@ export class GameServices {
   private readonly pauseListeners = new Set<() => void>();
   private readonly resumeListeners = new Set<() => Promise<void>>();
   private released = false;
+  private readonly stores: ScopedStores;
 
   private constructor(
     readonly platform: RuntimePlatform,
@@ -59,11 +66,8 @@ export class GameServices {
     measure: boolean,
     readonly overrides: RuntimeOverrides,
   ) {
-    const store = new ScopedSaveManager(
-      createScopedStores('voltest', {
-        onIntegrity: (event) => console.warn('[VOL.TEST] Kayıt bütünlüğü:', event),
-      }),
-    );
+    this.stores = createScopedStores('voltest', storeOptions);
+    const store = new ScopedSaveManager(this.stores);
     this.settings = new GameSettings(store, navigator.userAgent);
     this.progress = new GameProgress(store);
     this.scope.addSubscription(() => this.settings.dispose());
@@ -112,6 +116,15 @@ export class GameServices {
       parseRuntimeOverrides(env),
     );
     try {
+      await migrateScopedStores(
+        'voltest',
+        services.stores,
+        [
+          { key: 'voltest.preferences', scope: 'device' },
+          { key: 'voltest.progress', scope: 'synced' },
+        ],
+        storeOptions,
+      );
       if (services.measurements) await reportDiagnostics({ type: 'info', env });
       await Promise.all([services.settings.load(), services.progress.load()]);
       await services.display?.start();
@@ -123,13 +136,12 @@ export class GameServices {
       services.scope.addSubscription(observeAndroidHaptics());
       setTextEntryProvider(createSteamworksTextEntryProvider());
       services.scope.addSubscription(() => setTextEntryProvider(null));
-      services.scope.addSubscription(registerShutdownFlush(() => services.flush()));
-      services.scope.addSubscription(
-        registerSuspendFlush(() => {
-          services.pause();
-          return services.flush();
-        }),
-      );
+      const flushPaused = (): Promise<void> => {
+        services.pause();
+        return services.flush();
+      };
+      services.scope.addSubscription(registerShutdownFlush(flushPaused));
+      services.scope.addSubscription(registerSuspendFlush(flushPaused));
       services.scope.addSubscription(
         onSystemResume(() => {
           services.pause();
@@ -181,20 +193,20 @@ export class GameServices {
   }
 
   private pause(): void {
-    for (const listener of this.pauseListeners) listener();
+    for (const listener of this.pauseListeners) {
+      try {
+        listener();
+      } catch (error) {
+        console.warn('[VOL.TEST] Duraklatılamadı:', error);
+      }
+    }
   }
   async flush(): Promise<void> {
-    const durability = [
-      () => this.settings.flush(),
-      () => this.progress.flush(),
-      () => this.display?.flush(),
-    ];
+    const durability = [this.settings, this.progress, this.display];
     void Promise.resolve()
       .then(() => this.measurements?.flush())
       .catch((error: unknown) => console.warn('[VOL.TEST] Ölçüm boşaltılamadı:', error));
-    const results = await Promise.allSettled(
-      durability.map((flush) => Promise.resolve().then(flush)),
-    );
+    const results = await Promise.allSettled(durability.map(async (service) => service?.flush()));
     const failures = results.filter((result) => result.status === 'rejected');
     if (failures.length)
       throw new AggregateError(

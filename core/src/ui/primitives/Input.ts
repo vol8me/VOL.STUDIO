@@ -20,8 +20,10 @@ export class Input {
   private onEnterHandler?: (value: string) => void;
   private committedValue: string;
   private readonly scope = new DisposableScope();
+  private cancelTextEntry: (() => void) | undefined;
 
   constructor(options: InputOptions = {}) {
+    this.scope.add({ dispose: () => this.cancelTextEntry?.() });
     const {
       placeholder,
       value = '',
@@ -57,7 +59,7 @@ export class Input {
     // Kol kipinde native odak metin yazdıramaz; kolla klavye istenir.
     // Kip kapalıysa yardımcı hiçbir şey yapmaz ve native davranış sürer.
     this.scope.addListener(this.element, 'focus', () => {
-      requestTextEntryForElement(this.element, {
+      this.cancelTextEntry = requestTextEntryForElement(this.element, {
         purpose: this.element.type === 'password' ? 'password' : 'default',
         apply: (value) => {
           this.element.value = value;
@@ -77,12 +79,14 @@ export class Input {
   }
 
   setValue(value: string): void {
+    this.cancelTextEntry?.();
     this.element.value = value;
     this.committedValue = value;
   }
 
   /** Eski "değeri ayarla ve kullanıcıyı taklit et" ihtiyaçları için açık API. */
   setValueAndNotify(value: string): void {
+    this.cancelTextEntry?.();
     const changed = value !== this.element.value;
     this.element.value = value;
     if (changed) this.onInputHandler?.(value);
@@ -91,6 +95,7 @@ export class Input {
   }
 
   setDisabled(disabled: boolean): void {
+    if (disabled) this.cancelTextEntry?.();
     this.element.disabled = disabled;
   }
 

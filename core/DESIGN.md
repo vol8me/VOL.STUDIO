@@ -21,6 +21,11 @@ Depolama `IStorageAdapter` arkasındadır. `AutosaveCoordinator` ile
 `PersistedObservableState` yazma sırası ve hata durumunu koordine eder;
 ilerleme `synced`, cihaz tercihi `device` kapsamındadır.
 
+`LatestValueWriter.whenIdle()` yalnız kuyruk koordinasyonudur; `flush()` son
+telafisiz yazım reddini taşır. Yeni başarılı son yazım önceki hatayı temizler.
+State değişimi dinleyiciye bildirilmeden kuyruğa girer; dinleyicinin başlattığı
+`flushAndDispose()` aynı son değeri ve hata sonucunu bekler.
+
 ## Sunum ve erişilebilirlik
 
 DOM UI durumu tüketiciden alır. Listeler kimlikle güncellenir, kaydırma dış

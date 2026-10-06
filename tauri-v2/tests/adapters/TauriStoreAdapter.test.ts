@@ -30,6 +30,37 @@ function wireStore(overrides?: {
 }
 
 describe('TauriStoreAdapter', () => {
+  it('reddedilen yazım ve silme önbellekte dayanıklı değer gibi görünmez', async () => {
+    const adapter = new TauriStoreAdapter();
+    await adapter.set('keep', 1);
+    wireStore({
+      write: () => {
+        throw new Error('disk reddi');
+      },
+    });
+    await expect(adapter.set('new', 2)).rejects.toThrow('disk reddi');
+    await expect(adapter.get('new')).resolves.toBeUndefined();
+    await expect(adapter.remove('keep')).rejects.toThrow('disk reddi');
+    await expect(adapter.get('keep')).resolves.toBe(1);
+    wireStore();
+    await adapter.set('new', 3);
+    expect(JSON.parse(store.get('volstudio-store.json')!)).toEqual({ keep: 1, new: 3 });
+  });
+
+  it('eşzamanlı değişimleri kendi sıradaki snapshotlarıyla yazar', async () => {
+    const adapter = new TauriStoreAdapter();
+    const snapshots: unknown[] = [];
+    wireStore({
+      write: (name, data) => {
+        snapshots.push(JSON.parse(data));
+        store.set(name, data);
+      },
+    });
+    await Promise.all([adapter.set('a', 1), adapter.set('b', 2), adapter.remove('a')]);
+    expect(snapshots).toEqual([{ a: 1 }, { a: 1, b: 2 }, { b: 2 }]);
+    await expect(adapter.keys()).resolves.toEqual(['b']);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     store.clear();

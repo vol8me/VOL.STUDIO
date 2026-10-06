@@ -331,6 +331,18 @@
           "markdownDescription": "Denies the activate_action_set command without any pre-configured scope."
         },
         {
+          "description": "Enables the cancel_text_input command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-cancel-text-input",
+          "markdownDescription": "Enables the cancel_text_input command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the cancel_text_input command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-cancel-text-input",
+          "markdownDescription": "Denies the cancel_text_input command without any pre-configured scope."
+        },
+        {
           "description": "Enables the cloud_delete command without any pre-configured scope.",
           "type": "string",
           "const": "allow-cloud-delete",
@@ -463,10 +475,10 @@
           "markdownDescription": "Denies the vibrate command without any pre-configured scope."
         },
         {
-          "description": "İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, titreşim, aksiyon verisi, metin girişi, bağlama paneli ve Steam Cloud dosyaları.\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-set-input-manifest`\n- `allow-activate-action-set`\n- `allow-controllers`\n- `allow-action-glyph`\n- `allow-show-text-input`\n- `allow-show-floating-input`\n- `allow-show-binding-panel`\n- `allow-vibrate`\n- `allow-action-state`\n- `allow-cloud-list`\n- `allow-cloud-read`\n- `allow-cloud-write`\n- `allow-cloud-delete`",
+          "description": "İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, titreşim, aksiyon verisi, metin girişi, bağlama paneli ve Steam Cloud dosyaları.\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-set-input-manifest`\n- `allow-activate-action-set`\n- `allow-controllers`\n- `allow-action-glyph`\n- `allow-show-text-input`\n- `allow-show-floating-input`\n- `allow-cancel-text-input`\n- `allow-show-binding-panel`\n- `allow-vibrate`\n- `allow-action-state`\n- `allow-cloud-list`\n- `allow-cloud-read`\n- `allow-cloud-write`\n- `allow-cloud-delete`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, titreşim, aksiyon verisi, metin girişi, bağlama paneli ve Steam Cloud dosyaları.\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-set-input-manifest`\n- `allow-activate-action-set`\n- `allow-controllers`\n- `allow-action-glyph`\n- `allow-show-text-input`\n- `allow-show-floating-input`\n- `allow-show-binding-panel`\n- `allow-vibrate`\n- `allow-action-state`\n- `allow-cloud-list`\n- `allow-cloud-read`\n- `allow-cloud-write`\n- `allow-cloud-delete`"
+          "markdownDescription": "İsteğe bağlı Steamworks köprüsü: durum, Steam Input manifestosu ve aksiyon seti, kol listesi, glif, titreşim, aksiyon verisi, metin girişi, bağlama paneli ve Steam Cloud dosyaları.\n#### This default permission set includes:\n\n- `allow-status`\n- `allow-set-input-manifest`\n- `allow-activate-action-set`\n- `allow-controllers`\n- `allow-action-glyph`\n- `allow-show-text-input`\n- `allow-show-floating-input`\n- `allow-cancel-text-input`\n- `allow-show-binding-panel`\n- `allow-vibrate`\n- `allow-action-state`\n- `allow-cloud-list`\n- `allow-cloud-read`\n- `allow-cloud-write`\n- `allow-cloud-delete`"
         }
       ]
     }

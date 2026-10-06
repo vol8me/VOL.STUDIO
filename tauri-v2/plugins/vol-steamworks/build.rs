@@ -6,6 +6,7 @@ const COMMANDS: &[&str] = &[
     "action_glyph",
     "show_text_input",
     "show_floating_input",
+    "cancel_text_input",
     "show_binding_panel",
     "vibrate",
     "action_state",

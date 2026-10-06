@@ -113,6 +113,11 @@ Doctor tarayıcı probunun JavaScript'ini stdin üzerinden Node'a iletir.
 Rust kapısını tek başına temiz ağaçta çalıştırmadan önce `pnpm exec just build`
 gerekir; birleşik kapı bu sırayı kendi sağlar.
 
+`steamworks` feature'lı Cargo binary'si SDK runtime DLL'ini de gerektirir;
+yalnız Cargo derlemesi paketli açılış kanıtı değildir. DLL ve izin bağının
+NSIS tesliminde doğrulanması F09.1, store/flush native ürün turu F04 sahibindedir.
+Güncel kaynak, Rust disk ve SDK sahiplik kanıtı [F04 raporundadır](monorepo-audit.md#19-f04-uygulama-durumu).
+
 Ölçülen Node 22.23.1 profilinde Unicode yolda senkron public kopyası native
 süreci çökertebildi. Ortak public hook'u asenkron kopyayı tamamlanana kadar
 bekler; font/glifler ve oyun public dosyaları aynı build'de korunur.

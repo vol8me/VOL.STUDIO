@@ -47,3 +47,11 @@ describe('LatestValueWriter', () => {
     expect(onError).toHaveBeenCalledWith(failure);
   });
 });
+
+it('beklenmeyen yazım reddini idle yutarken flush kayıpsız taşır', async () => {
+  const failure = new Error('disk');
+  const writer = new LatestValueWriter<number>(() => Promise.reject(failure));
+  void writer.enqueue(1);
+  await expect(writer.whenIdle()).resolves.toBeUndefined();
+  await expect(writer.flush()).rejects.toBe(failure);
+});

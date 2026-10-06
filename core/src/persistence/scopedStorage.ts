@@ -88,38 +88,37 @@ export async function migrateLegacyStore(options: {
   readonly defaultScope?: StorageScope;
   /** Kaynağı saklar; mevcut hedef anahtarları yeniden yazmaz. */
   readonly retainSource?: boolean;
+  /** Kaynak hedeflerle aynı depoyu paylaşırsa kapsamlı anahtarları atlar (varsayılan). */
+  readonly skipScopedKeys?: boolean;
+  /** Paylaşılan kaynakta yalnız bu öneke ait anahtarlar taşınır. */
+  readonly keyPrefix?: string;
 }): Promise<MigrationReport> {
+  const { legacy, scoped, mappings, keyPrefix, skipScopedKeys, retainSource } = options;
   const defaultScope = options.defaultScope ?? 'device';
-  const table = new Map(options.mappings.map((m) => [m.key, m.scope]));
-
-  let keys: readonly string[];
-  let unknownLeftBehind = false;
-  if (typeof options.legacy.keys === 'function') {
-    keys = await options.legacy.keys();
-  } else {
-    keys = options.mappings.map((m) => m.key);
-    unknownLeftBehind = true;
-  }
+  const table = new Map(mappings.map((m) => [m.key, m.scope]));
+  const unknownLeftBehind = typeof legacy.keys !== 'function';
+  const keys = unknownLeftBehind ? mappings.map((m) => m.key) : await legacy.keys!();
 
   const moved: string[] = [];
   const defaulted: string[] = [];
   for (const key of keys) {
+    if (keyPrefix && !key.startsWith(keyPrefix)) continue;
     // Tarayıcı yolunda eski ve yeni kayıtlar aynı localStorage'ı paylaşır;
     // kapsamlı anahtarlar zaten hedef düzendir, `device.device.x` üretilemez.
-    if (isScopedKey(key)) continue;
-    const value = await options.legacy.get<unknown>(key);
+    const scopedKey = isScopedKey(key);
+    if (scopedKey && skipScopedKeys !== false) continue;
+    const value = await legacy.get<unknown>(key);
     if (value === undefined) continue; // hiç yazılmamış ya da zaten taşınmış
-    const scope = table.get(key) ?? defaultScope;
-    if (!table.has(key)) defaulted.push(key);
-    const target: ScopedKey = `${scope}.${key}`;
-    if (options.retainSource && (await options.scoped.load(target, undefined)) !== undefined)
-      continue;
-    await options.scoped.save(target, value);
-    const back = await options.scoped.load(target, undefined);
+    const scope = table.get(key);
+    if (!scopedKey && scope === undefined) defaulted.push(key);
+    const target: ScopedKey = scopedKey ? key : `${scope ?? defaultScope}.${key}`;
+    if (retainSource && (await scoped.load(target, undefined)) !== undefined) continue;
+    await scoped.save(target, value);
+    const back = await scoped.load(target, undefined);
     if (JSON.stringify(back) !== JSON.stringify(value)) {
       throw new Error(`Taşıma doğrulanamadı: ${key}`);
     }
-    if (!options.retainSource) await options.legacy.remove(key);
+    if (!retainSource) await legacy.remove(key);
     moved.push(key);
   }
   return { moved, defaulted, unknownLeftBehind };

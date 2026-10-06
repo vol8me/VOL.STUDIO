@@ -10,6 +10,7 @@ permissions = [
   "allow-action-glyph",
   "allow-show-text-input",
   "allow-show-floating-input",
+  "allow-cancel-text-input",
   "allow-show-binding-panel",
   "allow-vibrate",
   "allow-action-state",

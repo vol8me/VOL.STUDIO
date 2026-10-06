@@ -13,6 +13,7 @@ interface PendingWrite<T> {
 export class LatestValueWriter<T> {
   private pending: PendingWrite<T> | null = null;
   private running: Promise<void> | null = null;
+  private failure: { readonly error: unknown } | null = null;
   private readonly idleWaiters = new Set<() => void>();
 
   constructor(
@@ -37,6 +38,12 @@ export class LatestValueWriter<T> {
     return new Promise((resolve) => this.idleWaiters.add(resolve));
   }
 
+  /** Boşalma koordinasyonundan farklı olarak son yazımın dayanıklılık sonucunu taşır. */
+  async flush(): Promise<void> {
+    await this.whenIdle();
+    if (this.failure) throw this.failure.error;
+  }
+
   private startDrain(): void {
     if (this.running) return;
     this.running = this.drain().finally(() => {
@@ -52,8 +59,10 @@ export class LatestValueWriter<T> {
       this.pending = null;
       try {
         await this.write(batch.value);
+        this.failure = null;
         batch.deferred.resolve();
       } catch (error) {
+        this.failure = { error };
         this.reportError(error);
         batch.deferred.reject(error);
       }
@@ -80,6 +89,7 @@ export class LatestValueWriter<T> {
       resolve = ok;
       reject = fail;
     });
+    void promise.catch(() => undefined);
     return { promise, resolve, reject };
   }
 }

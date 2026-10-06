@@ -4,9 +4,9 @@
 
 **Yöntem:** kaynak ve kilitli bağımlılıklardan tersine mühendislik, Fallow 3.31.0, yerel kalite kapıları, izole hata ve eşzamanlılık tekrarları.
 
-**Teslim kapsamı:** teknik değerlendirme ve F01–F03 uygulaması. Başlangıç bulguları aşağıda korunur; güncel uygulama ve kapı durumu §18'de ayrılır.
+**Teslim kapsamı:** teknik değerlendirme ve F01–F04 kaynak uygulaması. Başlangıç bulguları aşağıda korunur; güncel uygulama, kapı ve açık cihaz kabulü §18–§19'da ayrılır.
 
-Kullanıcı; mimari, kök düzeni, belge, silme/taşıma/birleştirme ve büyük değişiklik kararlarını bu kapsam içinde açıkça yetkilendirdi. Bu kararlar için tekrar onay beklenmez. İlk teslim rapor ve fazlı TODO idi; kullanıcının devam talebi F01–F03 uygulamasını, commit ve push'u da kapsar. İnsan bekleyen ses kabulünün kaldırılması F01'dir. İş listesi [kök TODO](../TODO.md), ayrıntılı UI görevleri [UI TODO](ui/TODO.md) üzerinden yürür.
+Kullanıcı; mimari, kök düzeni, belge, silme/taşıma/birleştirme ve büyük değişiklik kararlarını bu kapsam içinde açıkça yetkilendirdi. Bu kararlar için tekrar onay beklenmez. İlk teslim rapor ve fazlı TODO idi; kullanıcının devam talebi F01–F04 uygulamasını, commit ve push'u da kapsar. İnsan bekleyen ses kabulünün kaldırılması F01'dir. İş listesi [kök TODO](../TODO.md), ayrıntılı UI görevleri [UI TODO](ui/TODO.md) üzerinden yürür.
 
 ## 1. Yönetici değerlendirmesi
 
@@ -934,3 +934,64 @@ Güvenlik yeniden doğrulandı: security-js exit 1, braces high advisory;
 registry 3.0.4 için hâlâ eşleşen sürüm bulamadı. security-rust exit 0,
 9 izinli uyarı. Bunların sahibi F10'dur; signoff başarılı ilan edilmez.
 F04–F10, gerçek native/Deck/Android kabulü ve UI'nin açık işleri sürer.
+
+## 19. F04 uygulama durumu
+
+F04'ün kalıcılık ve oturum düzeltmeleri uygulandı; native ürün ve cihaz
+kapanış ölçütleri ayrıca açıktır. B01–B03 kaynak kusurları kapandı; B07'nin
+SDK sahiplik kusuru düzeltildi. Aşağıdaki kanıt fiziksel popup, güç kesintisi
+veya üretim SIGTERM/SIGKILL kabulü yerine geçirilmez.
+
+| Alan              | Güncel davranış ve kanıt                                                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Flush             | Son telafisiz ret, `undefined` dahil, flush/flushAndDispose ve failed ACK'ye ulaşır; yeni başarılı son yazım hatayı temizler. `whenIdle` koordinasyondur.                                                     |
+| Reentrant kapanış | State dinleyicisi kapanışı başlatsa da son snapshot önce kuyruğa girer; debounce 0/100 ms ret regresyonları testli.                                                                                           |
+| İlerleme          | Dispose sonrası ve ters sıralı yüklemeler autosave kurmaz; eski coordinator yeni yüklemeyle durdurulur.                                                                                                       |
+| Metin             | Destroy/değer/owner/provider/gerçek dış odak eski commit ve refocus'u iptal eder. Abort sırasında geç listen/show/fallback kaynakları bırakılır; native requestId başka oturuma uygulanmaz.                   |
+| Göç               | Native ayrı dosyada kapsamlı anahtar korunur; browser yalnız oyun önekini taşır. Kaynak korunur, mevcut hedef ezilmez, bilinmeyen oyun anahtarı device olur. Aynı adapter ile başarısız yazım tekrar denenir. |
+| Windows writer    | Rust gerçek geçici diskte ana/tmp/bak, bozuk UTF-8, yetkisiz okuma ve reserved/case alias testlerini geçti; IPC adapter disk fixture'ı Rust atomikliği gibi sunulmaz.                                         |
+| Native ACK        | Süreden önce kabul edilen sonuç, waiter geç çalışsa da timeout'a dönüşmez. ID/reason/duplicate/late ret korunur. 1.500 ms kayıt ve 2.000 ms çıkış koruması büyütülmedi.                                       |
+| Steam             | Gerçek SDK 0.13.1 testinde üç callback guard, gerçek pump ve session drop doğrulandı. İptal terminal callback'e kadar native busy sahibi tutar; geç SDK sonucu yeni popup'a bağlanmaz.                        |
+
+Bağımsız incelemede gerçek dış odak ve dinleyiciden kapanış başlatma kusurları
+ayrıca RED ile tekrarlandı, düzeltildi ve 62 hedefli CORE testiyle doğrulandı.
+Steam/göç hedefleri ve oyun açılış tüketimi de ayrı testlerle geçti. Kapsamsız
+load/save/delete derleme sözleşmesi test ağacında TypeScript ile denetlenir.
+Kapanış snapshot'ından önce oyun duraklatılır; bir listener hatası diğer
+listener'ları ve kayıt kancasını kesmez. Bu son-değer sırası ayrıca RED ile
+tekrarlandı ve 10 oyun servis testiyle doğrulandı.
+JS index'in mevcut native servis export'ları gerçek oyun tüketicilerine
+bağlıdır; yalnız dosya içinde kullanılan controller yardımcısının export'u
+kaldırıldı. Genel Steam Cloud/Input mekanizmaları F08 sözleşmesi gereği korunur.
+
+Fallow review dört sözleşme kararını güncel grafikte doğruladı; audit exit 1:
+beş katalog üyesi kullanım uyarısı, beş karmaşıklık bulgusu, sıfır kopya grubu.
+Input/TextArea üyeleri kendi testleri ve vol-ui örnekleriyle korunur. Yeni
+Steam oturum fonksiyonu 64 satır ve bilişsel karmaşıklık 13; yeni test
+matrisinin çevrimsel karmaşıklığı 14. Bunlar gizlenmedi veya otomatik silmeye gerekçe yapılmadı. Fallow'da
+mimari sınır ayarı yoktur; sınır kanıtı repo contract kapısından gelir.
+
+F02.3'ün eksik POSIX kanıtı tamamlandı: aynı üç kaynak dosyası byte/hash
+eşitliğiyle WSL Ubuntu 24.04 Linux `/tmp` fixture'ına alındı; Node 22.23.1,
+ayrı pnpm 11.18.0/Vitest 4.1.11 ağacında commitFiles **8/8** geçti. Windows
+node_modules kullanılmadı. Bu sonuç Deck/SteamOS veya Linux ürün kabulü değildir.
+
+Windows frontend ve varsayılan/Steam feature'lı native crate derlendi. SDK
+DLL'i Cargo build çıktısındadır; doğrudan binary açılışı ve paketli dağıtım
+kabulü ayrı tutulur. Native ürün IPC probunu başlatma otomatik onay denetimi
+tarafından reddedildi; Rust disk testleri ürün üzerinden IPC kabulü sayılmaz.
+Tablet ADB preflight'ında erişilebilir; yeni APK/Activity kabulü yapılmadı.
+Deck DNS/SSH bağlantısı kurulamadı; güncel adres beklenirken kaynak işi sürdü.
+
+F04.3'ün Windows ürün IPC turu, F04.4'ün gerçek popup/üretim SIGTERM/ortada
+SIGKILL ve tarihsel timeout tanısı, F04.5'in ilgili cihaz uyanış turu açıktır.
+SDK guard testi tarihsel `vol:terminate timedOut` kök nedeni bulundu demek
+değildir. Saat/girdi/ses/haptik mekanizmaları ve tekrar suspend sözleşmesi
+kendi regresyonlarıyla korunur; SD8 fiziksel sonuç F08.6 sahibindedir.
+Son kaynakta **high exit 0**: contract 328 geçti/iki mevcut platform atlaması;
+CORE 2.259, tauri-v2 160, VOL.TEST 325 test geçti. Kapsam/shape, Rust,
+audio alt kümesi, bundle ve scaling geçti; Tauri fonksiyon kapsamı %100.
+Chromium/WebKit E2E: vitrin 40, oyun 27 geçti; bir mevcut WebKit ses atlaması.
+VOL.TEST app kapıda 106,0 KB; ham gzip 108.591 byte. Tek ondalık ölçümün
+payı çok dardır; bütçe yükseltilmedi. Scaling CORE 3,723/oyun 4,227, tavan 6.
+F04.1–F04.2 kapandı; cihaz maddeleri ve F10 güvenlik/signoff kabulü açıktır.

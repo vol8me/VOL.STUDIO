@@ -136,11 +136,12 @@ pub(crate) mod imp {
     #[cfg(feature = "steamworks")]
     mod real {
         use super::*;
+        use crate::callbacks::{register_callbacks, Event, InputKind, PendingInput};
         use std::sync::atomic::{AtomicBool, Ordering};
         use std::sync::{Arc, Mutex};
         use std::time::Duration;
         use steamworks::{
-            Client, FloatingGamepadTextInputMode, GameOverlayActivated, GamepadTextInputLineMode,
+            CallbackHandle, Client, FloatingGamepadTextInputMode, GamepadTextInputLineMode,
             GamepadTextInputMode, InputType,
         };
         use tauri::{AppHandle, Emitter, Runtime};
@@ -160,7 +161,7 @@ pub(crate) mod imp {
         pub struct Service<R: Runtime> {
             app: AppHandle<R>,
             state: Mutex<State>,
-            stop: Arc<AtomicBool>,
+            closed: AtomicBool,
             /// Bağlantı hedefi ve son deneme; Steam geç açılırsa yeniden denenir.
             retry: Mutex<Option<Retry>>,
         }
@@ -178,16 +179,42 @@ pub(crate) mod imp {
             /// Hiç denenmedi veya son deneme başarısız — neden saklanır.
             Down { error: String },
             Up {
-                client: Client,
+                session: Session,
                 manifest_ok: Option<bool>,
             },
+        }
+
+        struct Session {
+            // Pompa durup join edildikten sonra kayıtlar, en son istemci düşer.
+            callbacks: Vec<CallbackHandle>,
+            client: Client,
+            pending: Arc<Mutex<PendingInput>>,
+            stop: Arc<AtomicBool>,
+            pump: Option<std::thread::JoinHandle<()>>,
+        }
+
+        impl Drop for Session {
+            fn drop(&mut self) {
+                self.stop.store(true, Ordering::Release);
+                if let Some(pump) = self.pump.take() {
+                    let _ = pump.join();
+                }
+                self.callbacks.clear();
+            }
         }
 
         #[derive(Clone, Serialize)]
         #[serde(rename_all = "camelCase")]
         struct TextInputPayload {
+            request_id: String,
             submitted: bool,
             text: Option<String>,
+        }
+
+        #[derive(Clone, Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct FloatingPayload {
+            request_id: String,
         }
 
         #[derive(Clone, Serialize)]
@@ -203,7 +230,7 @@ pub(crate) mod imp {
                     state: Mutex::new(State::Down {
                         error: "steamworks henüz başlatılmadı".into(),
                     }),
-                    stop: Arc::new(AtomicBool::new(false)),
+                    closed: AtomicBool::new(false),
                     retry: Mutex::new(None),
                 }
             }
@@ -246,58 +273,88 @@ pub(crate) mod imp {
             }
 
             fn attempt(&self, app_id: u32, manifest: Option<String>) {
+                let mut state = self.state.lock().unwrap();
+                // Aynı SDK bağlamında ikinci init/pompa veya aynı ID için ikinci
+                // callback kaydı açılamaz. Bağlı oturum tekrar connect ile değişmez.
+                if self.closed.load(Ordering::Acquire) || matches!(&*state, State::Up { .. }) {
+                    return;
+                }
                 match Client::init_app(app_id) {
                     Ok(client) => {
                         client.input().init(false);
                         let manifest_ok = manifest
                             .map(|path| client.input().set_input_action_manifest_file_path(&path));
-                        self.register_callbacks(&client);
-                        self.spawn_pump(client.clone());
-                        *self.state.lock().unwrap() = State::Up {
-                            client,
+                        let pending = Arc::new(Mutex::new(PendingInput::default()));
+                        let callbacks = self.register_callbacks(&client, pending.clone());
+                        let stop = Arc::new(AtomicBool::new(false));
+                        let pump = Self::spawn_pump(client.clone(), stop.clone());
+                        *state = State::Up {
+                            session: Session {
+                                callbacks,
+                                client,
+                                pending,
+                                stop,
+                                pump: Some(pump),
+                            },
                             manifest_ok,
                         };
                     }
                     Err(error) => {
-                        *self.state.lock().unwrap() = State::Down {
+                        *state = State::Down {
                             error: format!("steamworks init başarısız: {error}"),
                         };
                     }
                 }
             }
 
-            fn register_callbacks(&self, client: &Client) {
+            fn register_callbacks(
+                &self,
+                client: &Client,
+                pending: Arc<Mutex<PendingInput>>,
+            ) -> Vec<CallbackHandle> {
                 let app = self.app.clone();
-                // CallbackHandle kaydı Client'ın içindedir; handle düşse bile
-                // kayıt yaşar (crate sözleşmesi).
-                client.register_callback(move |event: GameOverlayActivated| {
-                    let _ = app.emit(
-                        OVERLAY_EVENT,
-                        OverlayPayload {
-                            active: event.active,
-                        },
-                    );
-                });
+                register_callbacks(
+                    client,
+                    pending,
+                    Arc::new(move |event| match event {
+                        Event::Overlay(active) => {
+                            let _ = app.emit(OVERLAY_EVENT, OverlayPayload { active });
+                        }
+                        Event::Text { request_id, text } => {
+                            let _ = app.emit(
+                                TEXT_INPUT_EVENT,
+                                TextInputPayload {
+                                    request_id,
+                                    submitted: text.is_some(),
+                                    text,
+                                },
+                            );
+                        }
+                        Event::Floating { request_id } => {
+                            let _ =
+                                app.emit(FLOATING_DISMISSED_EVENT, FloatingPayload { request_id });
+                        }
+                    }),
+                )
             }
 
-            fn spawn_pump(&self, client: Client) {
-                let stop = Arc::clone(&self.stop);
+            fn spawn_pump(client: Client, stop: Arc<AtomicBool>) -> std::thread::JoinHandle<()> {
                 std::thread::Builder::new()
                     .name("vol-steamworks-pump".into())
                     .spawn(move || {
-                        while !stop.load(Ordering::Relaxed) {
+                        while !stop.load(Ordering::Acquire) {
                             client.run_callbacks();
                             std::thread::sleep(Duration::from_millis(10));
                         }
                     })
-                    .expect("steamworks pompa iş parçacığı açılamadı");
+                    .expect("steamworks pompa iş parçacığı açılamadı")
             }
 
             fn client(&self) -> Result<Client, String> {
                 self.ensure_connected();
                 let state = self.state.lock().unwrap();
                 match &*state {
-                    State::Up { client, .. } => Ok(client.clone()),
+                    State::Up { session, .. } => Ok(session.client.clone()),
                     State::Down { error } => Err(error.clone()),
                 }
             }
@@ -319,9 +376,10 @@ pub(crate) mod imp {
                         error: Some(error.clone()),
                     },
                     State::Up {
-                        client,
+                        session,
                         manifest_ok,
                     } => {
+                        let client = &session.client;
                         let utils = client.utils();
                         let remote = client.remote_storage();
                         Status {
@@ -489,60 +547,100 @@ pub(crate) mod imp {
             /// tarafı yerel ekran klavyesine düşer.
             pub fn show_text_input(
                 &self,
+                request_id: &str,
                 description: &str,
                 existing_text: &str,
                 max_characters: u32,
                 multiline: bool,
             ) -> Result<bool, String> {
-                let client = self.client()?;
-                let utils = client.utils();
-                let app = self.app.clone();
-                let cb_client = client.clone();
-                Ok(utils.show_gamepad_text_input(
-                    GamepadTextInputMode::Normal,
-                    if multiline {
-                        GamepadTextInputLineMode::MultipleLines
-                    } else {
-                        GamepadTextInputLineMode::SingleLine
-                    },
-                    description,
-                    max_characters,
-                    Some(existing_text),
-                    move |dismissed| {
-                        let text = cb_client.utils().get_entered_gamepad_text_input(&dismissed);
-                        let _ = app.emit(
-                            TEXT_INPUT_EVENT,
-                            TextInputPayload {
-                                submitted: text.is_some(),
-                                text,
-                            },
-                        );
-                    },
-                ))
+                use std::ffi::CString;
+                let description =
+                    CString::new(description).map_err(|_| "metin açıklaması NUL içeremez")?;
+                let existing = CString::new(existing_text).map_err(|_| "metin NUL içeremez")?;
+                self.show_input(request_id, InputKind::Text, || {
+                    // SAFETY: state kilidi istemciyi ve arayüzü çağrı boyunca yaşatır.
+                    // Crate yardımcıları guard'ı düşürdüğü için yalnız raw show kullanılır.
+                    unsafe {
+                        steamworks::sys::SteamAPI_ISteamUtils_ShowGamepadTextInput(
+                            steamworks::sys::SteamAPI_SteamUtils_v010(),
+                            GamepadTextInputMode::Normal.into(),
+                            if multiline {
+                                GamepadTextInputLineMode::MultipleLines
+                            } else {
+                                GamepadTextInputLineMode::SingleLine
+                            }
+                            .into(),
+                            description.as_ptr(),
+                            max_characters,
+                            existing.as_ptr(),
+                        )
+                    }
+                })
             }
 
-            /// Kayan klavye: metni odaklı alana doğrudan yazar. Konum oyun
-            /// penceresine göre pikseldir; alanın üstünü kapamaması için
-            /// çağıran alan dikdörtgenini verir.
+            /// Kayan klavye odaklı alana yazar; terminal olay kimliği JS
+            /// oturumuna aittir. İptal edilen popup bitmeden yenisi açılmaz.
             pub fn show_floating_input(
                 &self,
+                request_id: &str,
                 x: i32,
                 y: i32,
                 width: i32,
                 height: i32,
             ) -> Result<bool, String> {
-                let client = self.client()?;
-                let app = self.app.clone();
-                Ok(client.utils().show_floating_gamepad_text_input(
-                    FloatingGamepadTextInputMode::SingleLine,
-                    x,
-                    y,
-                    width,
-                    height,
-                    move || {
-                        let _ = app.emit(FLOATING_DISMISSED_EVENT, ());
-                    },
-                ))
+                self.show_input(request_id, InputKind::Floating, || {
+                    // SAFETY: state kilidi SDK bağlamını yaşatır.
+                    unsafe {
+                        steamworks::sys::SteamAPI_ISteamUtils_ShowFloatingGamepadTextInput(
+                            steamworks::sys::SteamAPI_SteamUtils_v010(),
+                            FloatingGamepadTextInputMode::SingleLine.into(),
+                            x,
+                            y,
+                            width,
+                            height,
+                        )
+                    }
+                })
+            }
+
+            fn show_input(
+                &self,
+                id: &str,
+                kind: InputKind,
+                show: impl FnOnce() -> bool,
+            ) -> Result<bool, String> {
+                self.ensure_connected();
+                let state = self.state.lock().unwrap();
+                let session = match &*state {
+                    State::Up { session, .. } => session,
+                    State::Down { error } => return Err(error.clone()),
+                };
+                let mut pending = session.pending.lock().unwrap();
+                if !pending.begin(id, kind)? {
+                    return Ok(false);
+                }
+                let shown = show();
+                if !shown {
+                    pending.finish(kind);
+                }
+                Ok(shown)
+            }
+
+            pub fn cancel_text_input(&self, request_id: &str) -> Result<(), String> {
+                // Bağlantı kurmaya çalışmaz: iptal yeni kaynak açamaz.
+                let state = self.state.lock().unwrap();
+                if let State::Up { session, .. } = &*state {
+                    session.pending.lock().unwrap().cancel(request_id);
+                }
+                Ok(())
+            }
+
+            pub fn shutdown(&self) {
+                self.closed.store(true, Ordering::Release);
+                *self.retry.lock().unwrap() = None;
+                *self.state.lock().unwrap() = State::Down {
+                    error: "steamworks kapatıldı".into(),
+                };
             }
 
             /// Steam Input bağlama paneli — kullanıcının kendi atamalarını
@@ -611,12 +709,6 @@ pub(crate) mod imp {
             }
         }
 
-        impl<R: Runtime> Drop for Service<R> {
-            fn drop(&mut self) {
-                self.stop.store(true, Ordering::Relaxed);
-            }
-        }
-
         /// `steamworks::InputType` → `core` çözümleyicisinin tanıdığı
         /// `steamworksType` dizeleri (bkz. `core/src/ui/glyphs/glyphFamily.ts`).
         pub fn input_type_name(input_type: InputType) -> &'static str {
@@ -645,6 +737,37 @@ pub(crate) mod imp {
         fn b64_decode(text: &str) -> Option<Vec<u8>> {
             crate::b64::decode(text)
         }
+        #[cfg(test)]
+        mod native_tests {
+            use super::*;
+
+            #[test]
+            #[ignore = "Çalışan Steam istemcisi ve test App ID 480 gerekir; stub değildir"]
+            fn sdk_callback_kaydi_sahibi_dusene_kadar_yasar() {
+                let client = Client::init_app(480).expect("gerçek Steam SDK init");
+                let pending = Arc::new(Mutex::new(PendingInput::default()));
+                let emit: Arc<dyn Fn(Event) + Send + Sync> = Arc::new(|_| {});
+                let callbacks = register_callbacks(&client, pending.clone(), emit.clone());
+                assert_eq!(Arc::strong_count(&emit), 4, "üç gerçek SDK kaydı yaşamalı");
+                let stop = Arc::new(AtomicBool::new(false));
+                let pump = Service::<tauri::Wry>::spawn_pump(client.clone(), stop.clone());
+                let session = Session {
+                    callbacks,
+                    client,
+                    pending,
+                    stop: stop.clone(),
+                    pump: Some(pump),
+                };
+                drop(session);
+                assert!(stop.load(Ordering::Acquire));
+                assert_eq!(
+                    Arc::strong_count(&stop),
+                    1,
+                    "pompa join olmadan sahip düşemez"
+                );
+                assert_eq!(Arc::strong_count(&emit), 1, "üç kayıt da kaldırılmalı");
+            }
+        }
     }
 
     #[cfg(not(feature = "steamworks"))]
@@ -666,6 +789,8 @@ pub(crate) mod imp {
             }
 
             pub fn connect(&self, _app_id: u32, _manifest: Option<String>) {}
+
+            pub fn shutdown(&self) {}
 
             pub fn status(&self) -> Status {
                 Status {
@@ -704,6 +829,7 @@ pub(crate) mod imp {
             }
             pub fn show_text_input(
                 &self,
+                _request_id: &str,
                 _d: &str,
                 _e: &str,
                 _m: u32,
@@ -713,11 +839,15 @@ pub(crate) mod imp {
             }
             pub fn show_floating_input(
                 &self,
+                _request_id: &str,
                 _x: i32,
                 _y: i32,
                 _w: i32,
                 _h: i32,
             ) -> Result<bool, String> {
+                self.unavailable()
+            }
+            pub fn cancel_text_input(&self, _request_id: &str) -> Result<(), String> {
                 self.unavailable()
             }
             pub fn show_binding_panel(&self) -> Result<bool, String> {

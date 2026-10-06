@@ -60,11 +60,15 @@ export class TauriStoreAdapter implements IStorageAdapter {
     return result.data ? (JSON.parse(result.data) as Record<string, unknown>) : {};
   }
 
-  private persist(data: Record<string, unknown>): Promise<void> {
-    const write = () =>
-      invoke<void>('vol_store_write', { name: this.name, data: JSON.stringify(data) });
-    // Hata sonraki yazmayı bloklamasın diye kuyrukta yutulur, çağırana döner.
-    const next = this.queue.then(write);
+  private mutate(
+    change: (data: Record<string, unknown>) => Record<string, unknown>,
+  ): Promise<void> {
+    const next = this.queue.then(async () => {
+      const data = change(await this.load());
+      await invoke<void>('vol_store_write', { name: this.name, data: JSON.stringify(data) });
+      // Yalnız native yazım onayı önbelleği ilerletir; reddedilen göç tekrar denenebilir.
+      this.loading = Promise.resolve(data);
+    });
     this.queue = next.catch(() => undefined);
     return next;
   }
@@ -74,16 +78,16 @@ export class TauriStoreAdapter implements IStorageAdapter {
     return data[key] as T | undefined;
   }
 
-  async set<T>(key: string, value: T): Promise<void> {
-    const data = await this.load();
-    data[key] = value;
-    await this.persist(data);
+  set<T>(key: string, value: T): Promise<void> {
+    return this.mutate((data) => ({ ...data, [key]: value }));
   }
 
-  async remove(key: string): Promise<void> {
-    const data = await this.load();
-    delete data[key];
-    await this.persist(data);
+  remove(key: string): Promise<void> {
+    return this.mutate((data) => {
+      const next = { ...data };
+      delete next[key];
+      return next;
+    });
   }
 
   /** Tüm anahtarlar — tek dosyadan kapsamlı store'a kayıpsız taşımada kullanılır. */
