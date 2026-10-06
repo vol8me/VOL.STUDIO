@@ -234,7 +234,10 @@ dağıtım ve Steam Cloud kabulü ayrı doğrulama işleridir.
 33 teslim kuru mekanik programlardan kanonik yayın kapısıyla üretilir.
 `audio-manifests` yeniden üretim kimliğini, `audio-banks` aile seçimini taşır.
 Oyun yalnız bank JSON'unu ve `public/assets/audio` teslimlerini okur;
-audio-synth çalışma zamanı bağımlılığı değildir.
+audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayıt değil,
+`scripts/vite/audioBankRuntime.mjs` ile indirgenmiş çalışma zamanı görünümü
+girer (anahtar, rol, etiket, süre, varlık yolu): hash, manifest, ölçüm ve kalite
+kaydı yalnız kanonik dosyada kalır ve `verifyFamily` onu okur.
 
 Yedi döngü motorun üç devri, palet, kayma, servo ve hızlanmadır. Top,
 patlama, isabet, çarpma ve fren aileleri olaydan seçilir; patlamanın yakın,

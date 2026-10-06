@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
+import { audioBankRuntime } from '../../scripts/vite/audioBankRuntime.mjs';
 import { sharedPublic } from '../../scripts/vite/sharedPublic.mjs';
 
 const host = process.env.TAURI_DEV_HOST;
@@ -11,7 +12,7 @@ const corePublicDir = resolve(import.meta.dirname, '../../core/public');
 export default defineConfig({
   base: './',
   publicDir: 'public',
-  plugins: [sharedPublic(corePublicDir)],
+  plugins: [audioBankRuntime(), sharedPublic(corePublicDir)],
   clearScreen: false,
   server: {
     port: 5175,

@@ -65,7 +65,7 @@
     }
   },
   "bundles": {
-    "$comment": "vol-showcase vitrini CORE UI'ın gönderilen ağırlığını taşır: ölçülen app 138.2, css 19.8 KB (gzip 9). vol-test app 106.3, vendor 345.6, css 18.2 KiB gzip 9; native servisler, kalıcı CORE ayar/senaryo bileşenleri, kuru ses, mevsim/hava fiziği, GPU zamanlayıcısı ve render ölçümü bilinçli kapsam artışıdır. App bütçesi ölçülen 106.3 KiB'a eşitlendi: 106.0'dan gelen +0.3 KiB (≈245 bayt gzip) sürekli mermi/gövde kesişimi ile duvarı sert sınır yapan araç/duvar temas çözümünün doğruluk düzeltmesidir (F06). Vendor ve CSS sınırları korunur.",
+    "$comment": "vol-showcase vitrini CORE UI'ın gönderilen ağırlığını taşır: ölçülen app 138.7, css 19.8 KB (gzip 9). vol-test app 106.3, vendor 345.6, css 18.2 KiB gzip 9; native servisler, kalıcı CORE ayar/senaryo bileşenleri, kuru ses, mevsim/hava fiziği, GPU zamanlayıcısı ve render ölçümü bilinçli kapsam artışıdır. App bütçesi ölçülen 106.3 KiB'a eşitlendi: 106.0'dan gelen +0.3 KiB (≈245 bayt gzip) sürekli mermi/gövde kesişimi ile duvarı sert sınır yapan araç/duvar temas çözümünün doğruluk düzeltmesidir (F06). Vendor ve CSS sınırları korunur. Ses bank'ları çalışma zamanı görünümüne indirgendi (UI-00.7): gzip app 108840 → 103266 bayt (−5574 B ≈ 5.4 KiB), ölçülen app 100.8 KiB. Bütçe 106.3'te BIRAKILDI; kazanılan ≈5.5 KiB pay UI-02/UI-03 tüketicisi için ayrılmıştır, başka işe harcanmaz.",
     "devtools/vol-showcase": {
       "app": 150,
       "vendor": 1,

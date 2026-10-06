@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
 import { loadQualityConfig } from '../../scripts/quality/config.mjs';
+import { audioBankRuntime } from '../../scripts/vite/audioBankRuntime.mjs';
 import { coreAliases } from '../../scripts/vite/coreAliases.mjs';
 
 /** Kapsam eşikleri kök `quality.json`dan okunur; burada sayı yazılmaz. */
@@ -9,6 +10,7 @@ const quality = loadQualityConfig(new URL('../../quality.json', import.meta.url)
 };
 
 export default defineConfig({
+  plugins: [audioBankRuntime()],
   test: {
     coverage: {
       provider: 'v8',
