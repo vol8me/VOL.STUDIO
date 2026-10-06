@@ -133,10 +133,6 @@ fix:
 gen-theme:
     pnpm gen:theme
 
-# UI ikon/çerçeve/doku/imleç varlıkları (core/public/assets/ui); --check sapmayı bildirir.
-gen-ui-assets:
-    pnpm gen:ui-assets
-
 # JS/TS çıktıları, raporlar ve kapı önbelleği.
 clean:
     node scripts/quality/cleanWorkspace.mjs

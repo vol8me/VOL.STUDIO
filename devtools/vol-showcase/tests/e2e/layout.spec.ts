@@ -391,7 +391,7 @@ test.describe('tema, yoğunluk ve hedef tabanı (ThemeController nitelikleri)', 
       [name, value] as const,
     );
 
-  test('ember teması gerçekten renk değiştirir ve hiçbir sekmede kutuyu kaydırmaz', async ({
+  test('aurum teması gerçekten renk değiştirir ve hiçbir sekmede kutuyu kaydırmaz', async ({
     page,
   }) => {
     await openShowcase(page);
@@ -404,8 +404,8 @@ test.describe('tema, yoğunluk ve hedef tabanı (ThemeController nitelikleri)', 
           getComputedStyle(document.documentElement).getPropertyValue('--vol-ui-bg').trim(),
         );
       const defaultBg = await background();
-      await setRoot(page, 'data-vol-theme', 'ember');
-      expect(await background(), `${tab}: ember --vol-ui-bg uygulanmadı`).not.toBe(defaultBg);
+      await setRoot(page, 'data-vol-theme', 'aurum');
+      expect(await background(), `${tab}: aurum --vol-ui-bg uygulanmadı`).not.toBe(defaultBg);
       const shifts = geometryShifts(before, await snapshotGeometry(page, [ALL]));
       await setRoot(page, 'data-vol-theme', null);
       if (shifts.length) offenders.push(`${tab}: ${shifts.slice(0, 3).join(' | ')}`);

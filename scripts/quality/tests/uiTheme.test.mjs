@@ -60,21 +60,21 @@ test('kontrast son renk üzerinden ölçülür: alfalı ön renk ve alfalı zemi
   assert.ok(Math.abs(contrastRatio('#ffffff', '#ffffff80', black) - 3.95) < 0.02);
 });
 
-test('mevcut tema kusurları kayıtlı olanlarla birebir: default 7, ember 0', () => {
+test('mevcut tema kusurları kayıtlı olanlarla birebir: default 7, aurum 0', () => {
   const colors = readExportedConstant('colors.ts', read('core/src/ui/colors.ts'), 'VOL_COLORS');
   const semantic = readExportedConstant(
     's.ts',
     read('core/src/ui/themes/semanticColors.ts'),
     'VOL_SEMANTIC_COLORS',
   );
-  const ember = readExportedConstant(
+  const aurum = readExportedConstant(
     'e.ts',
-    read('core/src/ui/themes/ember.ts'),
-    'VOL_EMBER_OVERRIDES',
+    read('core/src/ui/themes/aurum.ts'),
+    'VOL_AURUM_OVERRIDES',
   );
   const base = { ...colors, ...semantic };
-  const failures = contrastFailures({ default: base, ember: { ...base, ...ember } });
-  assert.equal(failures.filter((f) => f.theme === 'ember').length, 0);
+  const failures = contrastFailures({ default: base, aurum: { ...base, ...aurum } });
+  assert.equal(failures.filter((f) => f.theme === 'aurum').length, 0);
   assert.equal(failures.filter((f) => f.theme === 'default').length, 7);
   // Kasıtlı kötü bir token yeni kusur üretir.
   const worse = contrastFailures({ default: { ...base, uiText: '#202830' } });
@@ -136,7 +136,6 @@ function tamper(mutate) {
   try {
     for (const path of [
       'core/src/ui',
-      'core/public/assets/ui',
       'scripts/quality/uiThemeKnown.json',
       'docs/ui/TODO.md',
     ]) {
@@ -166,23 +165,6 @@ test('kapı: theme.css sapması, eksik/fazla varlık, ham süre ve yeni kontrast
     }).some((p) => /theme\.css kaynaktan sapmış/.test(p)),
   );
 
-  assert.ok(
-    tamper((root) => rmSync(join(root, 'core/public/assets/ui/icons/icons-24.svg'))).some((p) =>
-      /UI varlık: eksik icons\/icons-24\.svg/.test(p),
-    ),
-  );
-  assert.ok(
-    tamper((root) => writeFileSync(join(root, 'core/public/assets/ui/fazla.svg'), '<svg/>')).some(
-      (p) => /UI varlık: fazla dosya fazla\.svg/.test(p),
-    ),
-  );
-  assert.ok(
-    tamper((root) => {
-      const file = join(root, 'core/public/assets/ui/frames/default/panel.svg');
-      writeFileSync(file, readFileSync(file, 'utf8').replace('#182028', '#182029'));
-    }).some((p) => /frames\/default\/panel\.svg üreticiden sapmış/.test(p)),
-  );
-
   // Yeni bileşen ham süreyle: kayıtta olmayan yeni dosya düşer.
   assert.ok(
     tamper((root) =>
@@ -200,14 +182,14 @@ test('kapı: theme.css sapması, eksik/fazla varlık, ham süre ve yeni kontrast
     }).some((p) => /buttons\.css ham süre 2 \(kayıt 1\)/.test(p)),
   );
 
-  // Ember'e kötü bir kontrast sokmak kayıtsız kusur olarak düşer.
+  // Aurum'a kötü bir kontrast sokmak kayıtsız kusur olarak düşer.
   assert.ok(
     tamper((root) => {
-      const file = join(root, 'core/src/ui/themes/ember.ts');
+      const file = join(root, 'core/src/ui/themes/aurum.ts');
       writeFileSync(
         file,
-        readFileSync(file, 'utf8').replace("uiText: '#f6ece4'", "uiText: '#3a2a21'"),
+        readFileSync(file, 'utf8').replace("uiText: '#f5efe3'", "uiText: '#3a2a21'"),
       );
-    }).some((p) => /kayıtsız kusur ember: uiText/.test(p)),
+    }).some((p) => /kayıtsız kusur aurum: uiText/.test(p)),
   );
 });

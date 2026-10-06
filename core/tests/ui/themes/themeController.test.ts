@@ -54,7 +54,7 @@ describe('ThemeController', () => {
     const controller = new ThemeController({ theme: 'neon', density: 42 });
     expect(controller.state.theme).toBe('default');
     expect(controller.state.density).toBe('comfortable');
-    expect(controller.setTheme('ember')).toBe('ember');
+    expect(controller.setTheme('aurum')).toBe('aurum');
     expect(controller.setTheme({ bozuk: true })).toBe('default');
     expect(controller.setDensity('compact')).toBe('compact');
     expect(controller.setDensity(null)).toBe('comfortable');
@@ -69,21 +69,21 @@ describe('ThemeController', () => {
     controller.attach(b);
     expect(a.getAttribute('data-vol-theme')).toBe('default');
     expect(a.getAttribute('data-vol-density')).toBe('comfortable');
-    controller.setTheme('ember');
+    controller.setTheme('aurum');
     controller.setDensity('spacious');
     for (const node of [a, b]) {
-      expect(node.getAttribute('data-vol-theme')).toBe('ember');
+      expect(node.getAttribute('data-vol-theme')).toBe('aurum');
       expect(node.getAttribute('data-vol-density')).toBe('spacious');
     }
     expect(other.hasAttribute('data-vol-theme')).toBe(false);
   });
 
   it('bağlantı kesilince önceki nitelikler geri yazılır; ikinci dispose etkisiz', () => {
-    const controller = new ThemeController({ theme: 'ember' });
+    const controller = new ThemeController({ theme: 'aurum' });
     const node = element();
     node.setAttribute('data-vol-theme', 'elle');
     const handle = controller.attach(node);
-    expect(node.getAttribute('data-vol-theme')).toBe('ember');
+    expect(node.getAttribute('data-vol-theme')).toBe('aurum');
     handle.dispose();
     expect(node.getAttribute('data-vol-theme')).toBe('elle');
     expect(node.hasAttribute('data-vol-density')).toBe(false);
@@ -93,12 +93,12 @@ describe('ThemeController', () => {
   });
 
   it('aynı eleman iki kez bağlanırsa tek kayıt tutulur ve son dispose geri yazar', () => {
-    const controller = new ThemeController({ theme: 'ember' });
+    const controller = new ThemeController({ theme: 'aurum' });
     const node = element();
     const first = controller.attach(node);
     const second = controller.attach(node);
     first.dispose();
-    expect(node.getAttribute('data-vol-theme')).toBe('ember');
+    expect(node.getAttribute('data-vol-theme')).toBe('aurum');
     controller.setTheme('default');
     expect(node.getAttribute('data-vol-theme')).toBe('default');
     second.dispose();
@@ -106,18 +106,18 @@ describe('ThemeController', () => {
   });
 
   it('paylaşılan UIRoot parent: iki UIRoot tek sağlayıcı kaydıyla temalanır, ikincisi kaynak sızdırmaz', () => {
-    const controller = new ThemeController({ theme: 'ember' });
+    const controller = new ThemeController({ theme: 'aurum' });
     const parent = element();
     const one = new UIRoot(parent);
     const two = new UIRoot(parent);
     expect(one.element).toBe(two.element);
     const a = controller.attach(one.element);
     const b = controller.attach(two.element);
-    expect(one.element.getAttribute('data-vol-theme')).toBe('ember');
+    expect(one.element.getAttribute('data-vol-theme')).toBe('aurum');
     one.destroy();
     a.dispose();
     expect(two.element.isConnected).toBe(true);
-    expect(two.element.getAttribute('data-vol-theme')).toBe('ember');
+    expect(two.element.getAttribute('data-vol-theme')).toBe('aurum');
     two.destroy();
     b.dispose();
     expect(two.element.isConnected).toBe(false);
@@ -138,7 +138,7 @@ describe('ThemeController', () => {
     window.getSelection()!.removeAllRanges();
     window.getSelection()!.addRange(range);
     const before = root.innerHTML;
-    controller.setTheme('ember');
+    controller.setTheme('aurum');
     controller.setDensity('compact');
     expect(document.activeElement).toBe(button);
     expect(scroll.scrollTop).toBe(7);
@@ -162,24 +162,24 @@ describe('ThemeController', () => {
     const subscription = controller.onChange((state) =>
       seen.push(`${state.theme}/${state.density}`),
     );
-    controller.setTheme('ember');
-    controller.setTheme('ember');
+    controller.setTheme('aurum');
+    controller.setTheme('aurum');
     controller.setDensity('compact');
     subscription.dispose();
     controller.setTheme('default');
-    expect(seen).toEqual(['ember/comfortable', 'ember/compact']);
+    expect(seen).toEqual(['aurum/comfortable', 'aurum/compact']);
   });
 
   describe('kalıcılık (cihaz kapsamı)', () => {
     it('ayarlar device.volui:* anahtarlarına yazılır', async () => {
       const { store, saves } = memoryStore();
       const controller = new ThemeController({ store });
-      controller.setTheme('ember');
+      controller.setTheme('aurum');
       controller.setDensity('spacious');
       controller.setLargeTargets(true);
       await controller.whenSaved;
       expect(saves).toEqual([
-        [THEME_STORAGE_KEY, 'ember'],
+        [THEME_STORAGE_KEY, 'aurum'],
         [DENSITY_STORAGE_KEY, 'spacious'],
         [LARGE_TARGETS_STORAGE_KEY, true],
       ]);
@@ -188,7 +188,7 @@ describe('ThemeController', () => {
 
     it('restore kayıtlı değerleri uygular; bozuk kayıt varsayılana döner', async () => {
       const good = memoryStore({
-        [THEME_STORAGE_KEY]: 'ember',
+        [THEME_STORAGE_KEY]: 'aurum',
         [DENSITY_STORAGE_KEY]: 'compact',
         [LARGE_TARGETS_STORAGE_KEY]: true,
       });
@@ -196,8 +196,8 @@ describe('ThemeController', () => {
       const controller = new ThemeController({ store: good.store });
       controller.attach(node);
       await controller.restore();
-      expect(controller.state).toEqual({ theme: 'ember', density: 'compact', largeTargets: true });
-      expect(node.getAttribute('data-vol-theme')).toBe('ember');
+      expect(controller.state).toEqual({ theme: 'aurum', density: 'compact', largeTargets: true });
+      expect(node.getAttribute('data-vol-theme')).toBe('aurum');
 
       const bad = memoryStore({
         [THEME_STORAGE_KEY]: { x: 1 },
@@ -214,7 +214,7 @@ describe('ThemeController', () => {
     });
 
     it('restore sürerken kullanıcı seçimi yapıldıysa kayıtlı eski değer onu ezmez', async () => {
-      const { store } = memoryStore({ [THEME_STORAGE_KEY]: 'ember' }, 15);
+      const { store } = memoryStore({ [THEME_STORAGE_KEY]: 'aurum' }, 15);
       const controller = new ThemeController({ store });
       const restoring = controller.restore();
       controller.setTheme('default');
@@ -233,15 +233,15 @@ describe('ThemeController', () => {
         onError: (error) => errors.push(error),
       });
       await controller.restore();
-      controller.setTheme('ember');
+      controller.setTheme('aurum');
       await controller.whenSaved;
-      expect(controller.state.theme).toBe('ember');
+      expect(controller.state.theme).toBe('aurum');
       expect(errors.map((error) => (error as Error).message)).toEqual(['okuma', 'yazma']);
     });
 
     it('store yokken restore sessizce mevcut durumu verir', async () => {
-      const controller = new ThemeController({ theme: 'ember' });
-      expect((await controller.restore()).theme).toBe('ember');
+      const controller = new ThemeController({ theme: 'aurum' });
+      expect((await controller.restore()).theme).toBe('aurum');
     });
   });
 
@@ -255,7 +255,7 @@ describe('ThemeController', () => {
     controller.dispose();
     controller.dispose();
     expect(node.hasAttribute('data-vol-theme')).toBe(false);
-    expect(controller.setTheme('ember')).toBe('default');
+    expect(controller.setTheme('aurum')).toBe('default');
     await controller.whenSaved;
     expect(saves).toEqual([]);
     expect(listener).not.toHaveBeenCalled();

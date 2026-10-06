@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { VOL_COLORS } from '../../../src/ui/colors';
-import { VOL_EMBER_OVERRIDES } from '../../../src/ui/themes/ember';
+import { VOL_AURUM_OVERRIDES } from '../../../src/ui/themes/aurum';
 import {
   DEFAULT_DENSITY,
   DEFAULT_THEME,
@@ -21,7 +21,7 @@ const densityCss = readFileSync(resolve(uiDir, 'layout/density.css'), 'utf-8');
 
 describe('tema ve yoğunluk kimlikleri', () => {
   it('THEME_IDS: default + üretilen her tema; theme.css her biri için blok taşır', () => {
-    expect([...THEME_IDS]).toEqual([DEFAULT_THEME, ...Object.keys({ ember: VOL_EMBER_OVERRIDES })]);
+    expect([...THEME_IDS]).toEqual([DEFAULT_THEME, ...Object.keys({ aurum: VOL_AURUM_OVERRIDES })]);
     for (const id of THEME_IDS) {
       expect(themeCss, id).toContain(`:root[data-vol-theme='${id}']`);
       expect(themeCss, id).toContain(`\n[data-vol-theme='${id}'] {`);
@@ -30,11 +30,11 @@ describe('tema ve yoğunluk kimlikleri', () => {
   });
 
   it('bilinmeyen değer varsayılana döner', () => {
-    for (const value of ['', 'Ember', 'x', 3, null, undefined, {}, ['ember']]) {
+    for (const value of ['', 'Aurum', 'x', 3, null, undefined, {}, ['aurum']]) {
       expect(resolveThemeId(value)).toBe(DEFAULT_THEME);
       expect(resolveDensityId(value)).toBe(DEFAULT_DENSITY);
     }
-    expect(resolveThemeId('ember')).toBe('ember');
+    expect(resolveThemeId('aurum')).toBe('aurum');
     expect(resolveDensityId('spacious')).toBe('spacious');
   });
 

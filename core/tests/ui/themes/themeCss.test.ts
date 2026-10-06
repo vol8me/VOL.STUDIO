@@ -9,7 +9,7 @@ import {
   MOTION_INTERACTION,
   MOTION_PRESETS,
 } from '../../../src/ui/motion/presets';
-import { VOL_EMBER_OVERRIDES } from '../../../src/ui/themes/ember';
+import { VOL_AURUM_OVERRIDES } from '../../../src/ui/themes/aurum';
 import { VOL_SEMANTIC_COLORS } from '../../../src/ui/themes/semanticColors';
 import {
   THEMES_BEGIN,
@@ -26,7 +26,7 @@ const css = readFileSync(resolve(import.meta.dirname, '../../../src/ui/theme.css
 const source = {
   colors: { ...VOL_COLORS } as Record<string, string>,
   semantic: { ...VOL_SEMANTIC_COLORS } as Record<string, string>,
-  themes: { ember: { ...VOL_EMBER_OVERRIDES } as Record<string, string> },
+  themes: { aurum: { ...VOL_AURUM_OVERRIDES } as Record<string, string> },
   motion: {
     durations: { ...MOTION_DURATIONS },
     easings: { ...MOTION_EASINGS },
@@ -58,27 +58,27 @@ describe('theme.css ↔ tema kaynağı', () => {
     }
   });
 
-  it('ember yalnız bilinen tokenları geçersiz kılar ve varsayılandan gerçekten farklıdır', () => {
+  it('aurum yalnız bilinen tokenları geçersiz kılar ve varsayılandan gerçekten farklıdır', () => {
     const defaults: Record<string, string> = { ...VOL_COLORS, ...VOL_SEMANTIC_COLORS };
-    for (const [key, value] of Object.entries(VOL_EMBER_OVERRIDES)) {
+    for (const [key, value] of Object.entries(VOL_AURUM_OVERRIDES)) {
       expect(key in defaults, `${key} bilinmiyor`).toBe(true);
       expect(value, `${key} varsayılanla aynı: gereksiz geçersiz kılma`).not.toBe(defaults[key]);
     }
   });
 
   it('nadirlik renkleri kimliktir: hiçbir tema onları değiştirmez', () => {
-    expect(Object.keys(VOL_EMBER_OVERRIDES).filter((key) => key.startsWith('rarity'))).toEqual([]);
+    expect(Object.keys(VOL_AURUM_OVERRIDES).filter((key) => key.startsWith('rarity'))).toEqual([]);
   });
 
-  it('tema blokları dosyada default + ember, ikişer seçiciyle durur; üretilen bölgelerin dışında renk satırı yok', () => {
+  it('tema blokları dosyada default + aurum, ikişer seçiciyle durur; üretilen bölgelerin dışında renk satırı yok', () => {
     const themes = extractRegion(css, THEMES_BEGIN, THEMES_END)!;
     expect(themes.match(/^:root\[data-vol-theme='[a-z-]+'\],$/gm)).toEqual([
       ":root[data-vol-theme='default'],",
-      ":root[data-vol-theme='ember'],",
+      ":root[data-vol-theme='aurum'],",
     ]);
     expect(themes.match(/^\[data-vol-theme='[a-z-]+'\] \{$/gm)).toEqual([
       "[data-vol-theme='default'] {",
-      "[data-vol-theme='ember'] {",
+      "[data-vol-theme='aurum'] {",
     ]);
     const outside = css
       .replace(extractRegion(css, TOKENS_BEGIN, TOKENS_END)!, '')

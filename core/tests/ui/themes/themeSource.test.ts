@@ -24,7 +24,7 @@ const semantic: Record<string, string> = {
   rarityRareSolid: '#356eb0',
 };
 const themes: Record<string, Record<string, string>> = {
-  ember: { uiBg: '#140e0b', plateTopLight: '#ffd8b81f' },
+  aurum: { uiBg: '#140e0b', plateTopLight: '#ffd8b81f' },
 };
 const source: ThemeSource = { colors, semantic, themes };
 
@@ -72,15 +72,15 @@ describe('tema kaynağı üretimi', () => {
       validateThemeSource({ ...source, ...patch }).join('\n');
 
     it('desteklenmeyen (bilinmeyen) tema tokenını reddeder', () => {
-      expect(problems({ themes: { ember: { uiYok: '#000000' } } })).toContain(
-        'ember: desteklenmeyen token: uiYok',
+      expect(problems({ themes: { aurum: { uiYok: '#000000' } } })).toContain(
+        'aurum: desteklenmeyen token: uiYok',
       );
     });
 
     it('geçersiz renk biçimini reddeder (büyük harf, kısa, ad)', () => {
       expect(problems({ colors: { uiBg: '#0D1115' } })).toContain('uiBg');
       expect(problems({ colors: { uiBg: '#fff' } })).toContain('uiBg');
-      expect(problems({ themes: { ember: { uiBg: 'red' } } })).toContain('ember.uiBg');
+      expect(problems({ themes: { aurum: { uiBg: 'red' } } })).toContain('aurum.uiBg');
     });
 
     it('iki kümede aynı anahtarı ve kebab çakışmasını reddeder', () => {
@@ -93,10 +93,10 @@ describe('tema kaynağı üretimi', () => {
     });
 
     it('geçersiz tema kimliğini ve boş temayı reddeder', () => {
-      expect(problems({ themes: { 'Ember!': { uiBg: '#000000' } } })).toContain(
+      expect(problems({ themes: { 'Aurum!': { uiBg: '#000000' } } })).toContain(
         'tema kimliği geçersiz',
       );
-      expect(problems({ themes: { ember: {} } })).toContain('hiçbir token geçersiz kılmıyor');
+      expect(problems({ themes: { aurum: {} } })).toContain('hiçbir token geçersiz kılmıyor');
     });
 
     it('hiç renk yoksa reddeder', () => {
@@ -106,10 +106,10 @@ describe('tema kaynağı üretimi', () => {
 
   it('tema blokları: önce default (tüm değerler), sonra her tema; satır sırası varsayılan token sırasındandır', () => {
     const forward = renderThemes(colors, semantic, {
-      ember: { uiBg: '#140e0b', plateTopLight: '#ffd8b81f' },
+      aurum: { uiBg: '#140e0b', plateTopLight: '#ffd8b81f' },
     });
     const reverse = renderThemes(colors, semantic, {
-      ember: { plateTopLight: '#ffd8b81f', uiBg: '#140e0b' },
+      aurum: { plateTopLight: '#ffd8b81f', uiBg: '#140e0b' },
     });
     expect(reverse).toBe(forward);
     expect(forward).toBe(
@@ -123,8 +123,8 @@ describe('tema kaynağı üretimi', () => {
         '  --vol-ui-rarity-rare-solid: #356eb0;',
         '}',
         '',
-        ":root[data-vol-theme='ember'],",
-        "[data-vol-theme='ember'] {",
+        ":root[data-vol-theme='aurum'],",
+        "[data-vol-theme='aurum'] {",
         '  --vol-ui-bg: #140e0b;',
         '  --vol-ui-plate-top-light: #ffd8b81f;',
         '}',
@@ -135,7 +135,7 @@ describe('tema kaynağı üretimi', () => {
   it('applyGenerated yalnız işaretli bölgeleri yazar, elle yazılanı korur ve idempotenttir', () => {
     const once = applyGenerated(css, source);
     expect(once).toContain(renderTokens(colors, semantic));
-    expect(once).toContain(":root[data-vol-theme='ember'],");
+    expect(once).toContain(":root[data-vol-theme='aurum'],");
     expect(once).toContain(":root[data-vol-theme='default'],");
     expect(once).toContain('--vol-font-family: Jura;');
     expect(once).toContain('--vol-hit-target-min: 44px;');

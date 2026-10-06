@@ -4,7 +4,7 @@
  * Kaynaklar (düz sabit modüller, Node tür soyma ile doğrudan yüklenir):
  *   core/src/ui/colors.ts                 genel 60 renk tokenı (public VOL_COLORS)
  *   core/src/ui/themes/semanticColors.ts  anlamsal roller (yüzey/çerçeve/ışıma/nadirlik)
- *   core/src/ui/themes/ember.ts           ember teması geçersiz kılmaları
+ *   core/src/ui/themes/aurum.ts           aurum teması geçersiz kılmaları
  *   core/src/ui/motion/presets.ts         hareket süreleri/eğrileri/presetleri (--vol-motion-*)
  *
  * `theme.css` içindeki `@generated` işaretli iki bölge yeniden yazılır; font,
@@ -21,18 +21,18 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const themePath = resolve(root, 'src/ui/theme.css');
 const load = (path) => import(pathToFileURL(resolve(root, path)).href);
 
-const [{ VOL_COLORS }, { VOL_SEMANTIC_COLORS }, { VOL_EMBER_OVERRIDES }, presets] =
+const [{ VOL_COLORS }, { VOL_SEMANTIC_COLORS }, { VOL_AURUM_OVERRIDES }, presets] =
   await Promise.all([
     load('src/ui/colors.ts'),
     load('src/ui/themes/semanticColors.ts'),
-    load('src/ui/themes/ember.ts'),
+    load('src/ui/themes/aurum.ts'),
     load('src/ui/motion/presets.ts'),
   ]);
 
 const source = {
   colors: VOL_COLORS,
   semantic: VOL_SEMANTIC_COLORS,
-  themes: { ember: VOL_EMBER_OVERRIDES },
+  themes: { aurum: VOL_AURUM_OVERRIDES },
   motion: {
     durations: presets.MOTION_DURATIONS,
     easings: presets.MOTION_EASINGS,

@@ -28,28 +28,28 @@
       "fg": "onBrand",
       "bg": "brandHover",
       "owner": "UI-03.1",
-      "reason": "marka hover dolgusunda onBrand metni 4,5:1 altında; buton hover tonu pilotta ayarlanır (ember'de çözüldü)"
+      "reason": "marka hover dolgusunda onBrand metni 4,5:1 altında; buton hover tonu pilotta ayarlanır (aurum'da çözüldü)"
     },
     {
       "theme": "default",
       "fg": "uiBorderStrong",
       "bg": "uiBg",
       "owner": "UI-03.1",
-      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (ember'de çözüldü)"
+      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (aurum'da çözüldü)"
     },
     {
       "theme": "default",
       "fg": "uiBorderStrong",
       "bg": "uiSurface1",
       "owner": "UI-03.1",
-      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (ember'de çözüldü)"
+      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (aurum'da çözüldü)"
     },
     {
       "theme": "default",
       "fg": "uiBorderStrong",
       "bg": "uiSurface2",
       "owner": "UI-03.1",
-      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (ember'de çözüldü)"
+      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (aurum'da çözüldü)"
     }
   ],
   "rawDurations": {

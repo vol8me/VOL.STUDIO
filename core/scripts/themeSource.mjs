@@ -83,7 +83,7 @@ export function renderTokens(colors, semantic) {
 
 /**
  * Tema blokları. `default` bloğu (tüm varsayılan değerler) kapsamlı önizleme için
- * vardır: ember bir kökün içindeki varsayılan önizleme, tokenları varsayılana
+ * vardır: aurum bir kökün içindeki varsayılan önizleme, tokenları varsayılana
  * geri alabilmelidir. Her seçici `:root[...]` ve yalın `[...]` biçimini birlikte
  * taşır: kökte `:root` varsayılanını özgüllükle yener, alt ağaçta kapsamlı çalışır.
  * Satır sırası geçersiz kılma anahtarı sırasından değil varsayılan token sırasındandır.

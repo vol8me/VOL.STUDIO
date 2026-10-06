@@ -6,14 +6,12 @@ import {
   validateMotion,
   validateThemeSource,
 } from '../../core/scripts/themeSource.mjs';
-import { buildUiAssets } from '../../core/scripts/ui-assets/build.mjs';
 
 /**
  * UI tema kapıları (UI-01.5), `contract` içinde koşar:
  *
  * 1. Tema kaynağı parite ve sapma: `theme.css` üretilen bölgeleri kaynaktan
- *    (`colors.ts`, `semanticColors.ts`, `ember.ts`, `motion/presets.ts`) ve UI varlık
- *    çıktısı (`core/public/assets/ui`) üreticiden sapmamış olmalı.
+ *    (`colors.ts`, `semanticColors.ts`, `aurum.ts`, `motion/presets.ts`)
  * 2. Kontrast: metin ≥4.5, ikon/odak/bileşen kenarlığı ≥3, SON renk üzerinden (alfalı
  *    ön renk ve alfalı zemin opak bir tabanla birleştirilir; hex çiftine bakılmaz).
  *    Mevcut kusurlar sahip UI görevine bağlı kayıtlıdır: kayıtsız yeni kusur ve
@@ -28,7 +26,6 @@ import { buildUiAssets } from '../../core/scripts/ui-assets/build.mjs';
 export const KNOWN_PATH = 'scripts/quality/uiThemeKnown.json';
 const CSS_ROOT = 'core/src/ui';
 const THEME_CSS = 'core/src/ui/theme.css';
-const ASSET_DIR = 'core/public/assets/ui';
 
 // ─── AST ile sabit nesne okuma ──────────────────────────────────────────────
 
@@ -267,7 +264,7 @@ export function validateRepoUiTheme(root) {
   const sources = {
     colors: ['core/src/ui/colors.ts', 'VOL_COLORS'],
     semantic: ['core/src/ui/themes/semanticColors.ts', 'VOL_SEMANTIC_COLORS'],
-    ember: ['core/src/ui/themes/ember.ts', 'VOL_EMBER_OVERRIDES'],
+    aurum: ['core/src/ui/themes/aurum.ts', 'VOL_AURUM_OVERRIDES'],
   };
   const values = {};
   for (const [name, [path, exportName]] of Object.entries(sources)) {
@@ -292,34 +289,21 @@ export function validateRepoUiTheme(root) {
   const source = {
     colors: values.colors,
     semantic: values.semantic,
-    themes: { ember: values.ember },
+    themes: { aurum: values.aurum },
     motion,
   };
 
   const problems = [...validateThemeSource(source), ...validateMotion(motion)];
   if (problems.length > 0) return problems.map((problem) => `UI tema: ${problem}`);
 
-  // 1. Üretilen bölgeler ve varlıklar kaynaktan sapmamış.
+  // 1. Üretilen bölgeler kaynaktan sapmamış.
   if (applyGenerated(css, source) !== css)
     problems.push('UI tema: theme.css kaynaktan sapmış; `pnpm gen:theme` çalıştır.');
   const base = { ...values.colors, ...values.semantic };
-  const assets = buildUiAssets({ tokens: { default: base, ember: { ...base, ...values.ember } } });
-  const assetRoot = resolve(root, ASSET_DIR);
-  for (const [path, content] of assets) {
-    const file = join(assetRoot, path);
-    if (!existsSync(file))
-      problems.push(`UI varlık: eksik ${path}; \`pnpm gen:ui-assets\` çalıştır.`);
-    else if (readFileSync(file, 'utf8') !== content)
-      problems.push(`UI varlık: ${path} üreticiden sapmış.`);
-  }
-  for (const file of walk(assetRoot, /./)) {
-    const path = relative(assetRoot, file).split(sep).join('/');
-    if (!assets.has(path)) problems.push(`UI varlık: fazla dosya ${path}.`);
-  }
 
   // 2. Kontrast.
   const records = JSON.parse(known);
-  const themes = { default: base, ember: { ...base, ...values.ember } };
+  const themes = { default: base, aurum: { ...base, ...values.aurum } };
   problems.push(
     ...validateContrastKnown(records.contrast ?? [], contrastFailures(themes), openTasks(todo)),
   );

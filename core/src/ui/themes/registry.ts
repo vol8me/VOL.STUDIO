@@ -6,7 +6,7 @@ import type { VolThemeToken } from './types';
  * tarafından üretilen `[data-vol-theme]` bloklarıdır (parite testi bu listenin
  * üretilen temalarla aynı olduğunu doğrular).
  */
-export const THEME_IDS = ['default', 'ember'] as const;
+export const THEME_IDS = ['default', 'aurum'] as const;
 export type ThemeId = (typeof THEME_IDS)[number];
 export const DEFAULT_THEME: ThemeId = 'default';
 
