@@ -995,3 +995,81 @@ Chromium/WebKit E2E: vitrin 40, oyun 27 geçti; bir mevcut WebKit ses atlaması.
 VOL.TEST app kapıda 106,0 KB; ham gzip 108.591 byte. Tek ondalık ölçümün
 payı çok dardır; bütçe yükseltilmedi. Scaling CORE 3,723/oyun 4,227, tavan 6.
 F04.1–F04.2 kapandı; cihaz maddeleri ve F10 güvenlik/signoff kabulü açıktır.
+
+## 20. F05–F06 uygulama durumu
+
+F06'nın üç doğruluk kusuru (B17–B19) ve F05'in yayın/metadata/export kusurları
+(B04, B05, B11) kapandı. B20 envanter denetimi eklendi ve gerçek artığı buldu;
+temizliği açık. Cihaz kare süresi, tablet/Deck oturumu ve insan değerlendirmesi
+yapılmadı.
+
+| Bulgu | Kök neden ve düzeltme                                                                                                                                                                                                                                      | Kanıt                                                                                                                                                                                                  |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| B17   | İsabet yalnız yol ortasını ve uç noktayı örnekliyordu. CORE'a `segmentOrientedBoxEntryT` (slab) eklendi; mermi adımın süpürdüğü parçayı gövdenin yönlü ayak iziyle keser, en erken temas kazanır, olay/itki/önizleme temas noktasını görür.                | 45° 26×21 gövdede dar kiriş, graze, tek adımda gövdeyi aşan hız, sahip dışlaması, aday sırası bağımsızlığı, önizleme paritesi ve gerçek `Simulation` atışı. Eski örnekleme modelinde 5/7 test kırmızı. |
+| B18   | Duvar çözümü araç–araç SAT itmesinden önce koşuyordu. Araç turundan sonra duvar yeniden çözülür; döngü 4 geçişle sınırlı ve daima duvarla biter. `wallHit` olayları çözüm sonrası emilir.                                                                  | Tam denetim tekrarı (106. adımda 2,276 birim dışarı) birebir üretildi ve kapandı. Üç araç köşe yığını ve 4 tohum × 4000 adımda köşe taşması sıfır; kalan araç örtüşmesi en çok ≈0,05 birim.            |
+| B19   | `ScenarioRunner` kök CORE barrel'ını alıyor, o da `theme.css`e uzanıyordu. `random` ve `spatial` alt yüzeylerine alındı.                                                                                                                                   | Node'da `ERR_UNKNOWN_FILE_EXTENSION .css` tekrarlandı; gerçek Node sürecinde beş senaryo koşar ve vitest sonucuyla birebir aynıdır. Eski barrel'da bu test kırmızı.                                    |
+| B04   | Job kilidi yalnız job dizinini koruyordu. Job kilidinden sonra asset+manifest hedef kilidi (sabit sıra, bekleme yok) render'dan önce alınır; sahiplik commit öncesi yeniden sınanır.                                                                       | Gerçek iki Node süreci aynı hedefte: eski kodda `[ok, ok]`, yeni kodda tek kazanan ve kaybedende `locked`/`overwrite`. Canlı/ölü kilit, kilit adı ve sıra testleri.                                    |
+| B05   | Manifest PCM/asset skalarlarını doğrulamıyordu. Her alan tip/enum/aralıkta denetlenir; PCM betimi render kaydıyla ortak alt şemadadır; kodlanmış rapor, yerleşim ve brief çelişemez. Verify bayt boyutu, bağımsız render ve çözülen dosyayı karşılaştırır. | Denetimdeki beş imkânsız değer ve geçerli ama yalan kayıtlar eski doğrulayıcıda kabul, yenide ret. 69 gerçek manifest ve isteğe bağlı eski alanlar kabul. `audio-verify` 69/69.                        |
+| B11   | Kaynak PNG her kopyadan sonra siliniyor, parça ve önizleme ayrı planlanıyordu. Tek plan, çakışan düğüm ret, hedef+metadata geri alınabilir yerleştirme, kaynak en son silinir. Düğüm kimliği dosya yolunu kaçıramaz.                                       | Gerçek süreç ve gerçek diskte 12 test; eski betikte 9'u kırmızı. Gerçek `arachnid` export'unun 73 düğüm kimliği yeni desene uyar.                                                                      |
+| AS20  | `validateManifest` tek 165 satırlık fonksiyondu. Alt doğrulayıcılara bölündü.                                                                                                                                                                              | Fallow: 20/22/165 (siklomatik/bilişsel/satır) → 6/5/23; en büyük parça yeni PCM semantiğini taşıyan `validateAnalysis` 8/7/69.                                                                         |
+
+**Paket bütçesi.** Düzeltmeler gönderilen app payını 108.591 → 108.840 bayt gzip'e
+(106,0 → 106,3 KiB) çıkardı; `bundle` kapısı 106 bütçesinde düştü. `Vehicle`'ın
+doğrudan mermi hedefi olması paralel hedef dizisini ve closure'ları kaldırdı
+(≈35 bayt), geometri yardımcısı sıkıştırıldı; kalan ≈245 bayt yeni doğruluk
+davranışının kendisidir. Kapı kendi mesajıyla ölçülen değerle birlikte gerekçeli
+yükseltmeyi öngörür ve emsal vardır (`02152f12`); `quality.json` app bütçesi
+106,3'e eşitlendi; vendor ve CSS sınırlarına dokunulmadı. Bu
+bütçe gevşetmesidir ve açıkça kayıtlıdır; payın büyük kalemlerinden biri (`assets` modülü, 5 ses bank'ı, ≈5,6 KiB gzip)
+çalışma zamanı kodunun hiç okumadığı provenance özetlerini (bank sınıfı ve oyun
+bunlara başvurmaz) taşır, ama bunu kırpmak bank sözleşmesi ve yayın hattı değişikliğidir ve bu işin
+kapsamı dışında bırakıldı.
+
+**F06.4 kısmen.** `games/vol-test/scripts/combinedLoad.ts` birleşik `Simulation.step` süresini
+ölçer (araç + mermi + hava). 13 araç ve kar altında medyan ≈0,23 ms, p95
+≈0,48 ms; boş dünya ≈0,006 ms, 7 araç ≈0,05 ms. Bu 16,7 ms karenin yüzde
+birkaçıdır; eski ve yeni kod arasındaki fark ölçüm bandındadır (13 araç
+≈0,105 → ≈0,11 ms). **Geniş faz/quadtree seçilmedi; ölçüm gerekçesi yok.** 10
+dakikalık (36.000 adım) oturumda büyüme yok. Bir koşuda adım süresi ani 2×
+sıçradı; aşamalar ayrı ölçülünce alakasız komut üretimi ve mermi adımı da aynı
+oranda yavaşlamış, aynı anda sabit referans iş de 2× sürmüştü: ana makine
+saati/zamanlayıcı seviyesi değişimi, simülasyon kusuru değil. Betik her pencereyi
+referans işe oranlar. Bu yalnız CPU simülasyonudur; çizim, GPU ve cihaz
+kare süresi yeni kodla ölçülmedi, Lenovo tablet ADB'de bağlı olsa da yeni APK
+profili alınmadı (F09). Android referans tablosu önceki commit'e aittir.
+
+**B20 ve F05.5/F05.6 açık.** Yeni iş envanteri (`audio:production-check`) 86
+işi tarar ve 17 emekli `vt-*` işi bulur: yayın hedefleri `65d0b1f3`'te
+"reddedilen ses"in yerine kuru mekanik set konurken silinmiş, yerlerini
+yayımlanmış `vt-hardsteel-*` işleri almış, depoda bu kimliklere sıfır atıf
+var; 17 iş 36 render taşır. Aktif işlerin 84 seçilmeyen render'ı silinmedi:
+manifest programı gömülü taşıdığından yeniden üretim onlara bağlı değil, ancak
+seçim kökeni için aday geçmişi olarak kalır ve hiçbirine dışarıdan atıf yok.
+**17 kaydın silinmesi bu oturumda otomatik izin denetimi tarafından
+reddedildi**; dolanılmadı. Envanter kontrolü bu yüzden kırmızıdır
+(`audio-verify`: 69/86 iş) ve silme yapılana dek öyle kalır; bu gerçek durumdur,
+kapı gevşetilmedi. Araştırma örneklerinden `hidden-tone-660` ve
+`hidden-tone-wrong-topology` fit'lerinin hiçbir test, kapı veya belge
+tüketicisi yoktur; aynı nedenle kaldırılmadı. `reference-shell` ve
+`semantic-demo` arama kayıtları gerekçelidir (aile kökeni ve `audio-verify`
+yeniden üretimi). Eski vol-ui workspace'inden yerel kalan `node_modules` dizini sahip temizliğinin
+(`clean`) kapsamı dışındadır; silinmedi.
+
+**Sınırlar.** Windows'ta çalıştırıldı; Linux/Deck ve Android kabulü yapılmadı.
+Hedef kilidi aynı depo kökü içindir; ağ dosya sistemi üzerinde ayrı checkout'lar
+arasında koordinasyon sağlamaz. Aile bank'ı ve müzik bundle yolu kimlikten
+türediği için kendi kilitleriyle korunur; ortak hedef yarışı yalnız kullanıcının
+seçtiği asset yoluyla oluşur ve burada kapatıldı. Sıkı frame toleransı (2048)
+mevcut 69 yayında ölçülen ≤128 sapmaya dayanır; farklı bir kodlayıcı profili
+bunu aşarsa ayrı ölçümle yeniden belirlenmelidir.
+
+**Kapı kanıtı.** Son kaynakta `just high` **exit 0**: contract 328 geçti/iki mevcut
+platform atlaması; CORE 2.271, tauri-v2 160, VOL.TEST 341, audio-synth 2.255,
+pen.dev 27, vol-ui 68, deck 22 test geçti. Kapsam eşikleri korundu (VOL.TEST
+satır %99,39, pen.dev %100). Bundle bütçeleri sınırda; app 106,3 KiB. Scaling
+CORE 3,789 ve oyun 4,446, tavan 6 (önceki 3,723/4,227: mermi döngüsünde hedef
+yoktur, fark ölçüm bandıdır). Chromium/WebKit E2E: vitrin 40, oyun 27 geçti; bir
+mevcut atlama. `audio-verify` ayrıca koşuldu: 69/69 manifest, 2/2 arama, 7/7 aile,
+4/4 müzik, 8/8 sample geçti; iş envanteri 69/86'dır (17 emekli iş) ve bu yüzden
+`signoff` bu oturumda yeşil değildir. `signoff`un güvenlik ve audio kapsam
+aşamaları koşulmadı.

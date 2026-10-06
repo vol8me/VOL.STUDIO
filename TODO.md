@@ -8,8 +8,9 @@ tekrar kopyalanmaz. Açık iş `[ ]`; biten iş tek satırla `## Kapatılanlar`a
 taşınır. Eksik kapanış yeni görevdir.
 
 Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
-yetkilendirdi. F01–F03 sonuçları rapor §18, F04 kaynak uygulaması ve açık native kabul rapor §19'dadır.
-**F01–F03 tamamlandı; F04–F10 açıktır.** Faz numarası bağımsız işleri gereksiz seri bekletmez;
+yetkilendirdi. F01–F03 sonuçları rapor §18, F04 kaynak uygulaması ve açık native kabul rapor §19, F05–F06 kaynak
+uygulaması ve kalan işler rapor §20'dedir.
+**F01–F03 tamamlandı; F04–F10 açıktır (F05/F06'da yalnız aşağıdaki kalanlar).** Faz numarası bağımsız işleri gereksiz seri bekletmez;
 gerçek ön koşul ve kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
 Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 
@@ -29,21 +30,14 @@ servis borçları ilgili cihaz kabulüyle birlikte kalır.
 Ön koşul: F01/F02. Sırf insan sistemini kaldırmak için mevcut sesler yeniden
 yayımlanmaz; her temizlik erişilebilirlik kanıtıyla yapılır.
 
-- [ ] **[P2] F05.1 — Ortak yayın hedefi sahipliği.** Job kilidine ek hedef transaction sahipliği. Kapanır: B04 iki bağımsız süreçte tek kazanan, kaybedende açık hata; asset/manifest/bank/bundle tutarlı; crash/stale lock/rollback regresyonu.
-- [ ] **[P2] F05.2 — Gerçek PCM/manifest doğrulaması.** bytes/sampleRate/channels/frames/format ve decode sonucu bağlanır. Kapanır: B05 imkânsız metadata ve encoded/PCM drift reddedilir; geçerli identical/encoder-only sınıfları korunur.
-- [ ] **[P2] F05.3 — Pencil export geri alınabilirliği.** Çakışan node/part kimliği tüketimden önce doğrulanır, staging atomik kalır. Kapanır: B11 sentetik duplicate/missing/write-failure tekrarı kaynağı tüketmez, yarım hedef bırakmaz; .pen erişimi yalnız Pencil MCP.
-- [ ] **[P2] F05.4 — AS20 şema ayrımı.** Ayrıntı audio TODO'da. Kapanır: uzun validator'lar ortak alt şemaya bölünür; B05'in yanlış kabulü düzeltilir, doğru kabul/ret ve sürüm sözleşmesi korunur; ölçülen hotspot azalır, anlamsız wrapper yok.
-- [ ] **[P2] F05.5 — Eski yayın ve ölü bağı temizliği.** 17 kırık publication ve 103 eski render için aktif tüketici/manifest/bank/bundle/fixture/provenance grafiği. Kapanır: B20 emekli iş publish önermez; gerekçesiz kayıt/export/dosya/bağımlılık gider; Fallow public/katalog/native/research ayrımı belgeli; production diff'i yalnız beklenen değişim.
-- [ ] **[P2] F05.6 — Araştırma/kanonik ve yerel çıktı ayrımı.** Fit/semantic/mutation çıktıları kabul kanıtı değildir; yerel eski workspace/build kalıntısı sahibi clean ile temizlenir. Kapanır: izlenen her örneğin kaynak/fixture gerekçesi; referans kırığı sıfır; oyun build'i devtools runtime bağı olmadan geçer; hedef yollar doğrulanır.
+- [ ] **[P2] F05.5 — Eski yayın ve ölü bağı temizliği.** Envanter denetimi (`audio:production-check` iş taraması) eklendi ve 86 işten 17 emekli `vt-*` işi buldu: hedefleri `65d0b1f3`'te silinmiş, yerlerini yayımlanmış `vt-hardsteel-*` işleri almış, repoda sıfır atıf. Kapanır: bu 17 iş kaydı (36 render) kaldırılır ve `audio-verify` yeşile döner; 84 seçilmeyen render aktif işlerin aday geçmişidir, silinmez.
+- [ ] **[P2] F05.6 — Araştırma/kanonik ve yerel çıktı ayrımı.** İzlenen `reference-shell` (yayımlanmış ailenin kökeni) ve `semantic-demo` (`audio-verify` yeniden üretir) aramaları fixture gerekçelidir; `hidden-tone-660` ve `hidden-tone-wrong-topology` fit'lerinin test/kapı/belge tüketicisi yoktur. Eski vol-ui workspace'inden yerel kalan `node_modules` dizini sahip temizliğinin dışındadır. Kapanır: iki fit kaldırılır ya da bir tüketiciye bağlanır; kalıntı temizlenir; oyun build'i devtools bağı olmadan yeşil.
 
 ### F06 — CORE/Phaser sınırı ve VOL.TEST doğruluğu
 
 Ön koşul: F02. Önce fizik doğruluğu; ölçümsüz optimizasyon yok.
 
-- [ ] **[P1] F06.1 — Sürekli mermi/gövde kesişimi.** Segment–OBB ilk temas; önizleme/live aynı doğru model. Kapanır: B17 gerçek Tank+WEAPON 60 Hz köşe/graze/hız/sahip/çoklu hedef regresyonu; VT-H3 balistik eşleme korunur.
-- [ ] **[P1] F06.2 — Duvar/araç birleşik kısıtı.** Sınırlı deterministik temas çözümü. Kapanır: B18 iki/üç araç ve köşelerde bütün OBB köşeleri dünya içinde; mevcut fren/drift/süspansiyon/seed testleri ve bütçe korunur; VT-W tutuş bağı testli.
-- [ ] **[P2] F06.3 — Saf simülasyon importu ve VT-S matrisi.** Mevcut public random/spatial alt yüzeyleri; her gerekli CORE yeteneğine tüketici/senaryo/test sahibi. Kapanır: B19 Node'da DOM/CSS olmadan seedli ScenarioRunner; empty/slalom/targets/sandbox/multitank; dokuz Phaser köprüsü/public kilit korunur.
-- [ ] **[P2] F06.4 — Gerçek birleşik yük ölçümü.** Araç+mermi+hava aşamaları, başlangıç/uzun oturum ve kalite seçimi. Kapanır: VT-Q/W cihaz profiliyle bütçe; scaling dar mermi döngüsü tüm oyun kabulü sayılmaz; gerekli algoritmik iyileştirme önce/sonra ölçülü, ölçümsüz broadphase yok.
+- [ ] **[P2] F06.4 — Gerçek birleşik yük ölçümü.** CPU simülasyon yükü ölçüldü: 13 araç + kar + sürekli ateşte `Simulation.step` medyan ≈0,23 ms, p95 ≈0,48 ms, 10 dakikada büyüme yok; geniş faz gerekmez. Çizim/GPU ve cihaz kare süresi yeni kodla ölçülmedi. Kapanır: VT-Q/W cihaz profili güncel commit ile (tablet ve Deck kare süresi, uzun oturum); scaling dar mermi döngüsü tüm oyun kabulü sayılmaz.
 
 ### F07 — UI'nin 14 fazı ve tek VOL.SHOWCASE
 
@@ -108,6 +102,13 @@ release redini ertelemek için gerekçe değildir.
 - [x] F03.4 — Platform araç/kapı/native/cihaz sınırları ve tek sahipli belge düzeni doğrulandı; yapılmayan cihaz kabulü açık bırakıldı.
 - [x] F04.1 — Son telafisiz yazım reddi flush/flushAndDispose ve failed ACK'ye ulaşır; reentrant son snapshot ve başarılı telafi regresyonları ile tam high geçti.
 - [x] F04.2 — Geç load/destroy/abort/generation/gerçek dış odak eski kaynak ve commit'i açamaz; Input/TextArea ve Steam oturum regresyonları ile tam high geçti.
+- [x] F05.1 — Yayın, job kilidinden sonra asset+manifest hedef kilidini sabit sırayla alır; iki gerçek süreç yarışında tek kazanan, kaybeden `locked`/`overwrite`, bayat kilit devralınır.
+- [x] F05.2 — Manifest her alanı tip/enum/aralıkta doğrular; PCM betimi kayıt, kodlanmış rapor, yerleşim ve brief ile çelişemez; verify bayt boyutu, bağımsız render ve çözülmüş dosyayı karşılaştırır.
+- [x] F05.3 — Pencil düzenleyici parça ve önizlemeyi tek planda doğrular, çakışan düğümü yazımdan önce reddeder, hedef+metadata'yı geri alınabilir yerleştirir; kaynak en son silinir.
+- [x] F05.4 — `validateManifest` 20/22/165 (siklomatik/bilişsel/satır) iken 6/5/23'e bölündü; ortak PCM alt şeması render kaydıyla paylaşılır, 69 gerçek manifest ve isteğe bağlı eski alanlar kabul edilir.
+- [x] F06.1 — Mermi, adımın süpürdüğü parçayı gövdenin yönlü ayak iziyle keser (segment–OBB ilk temas); olay/itki/önizleme temas noktasını görür, en erken hedef ve sahip dışlaması deterministik.
+- [x] F06.2 — Duvar sert sınırdır: araç teması sonrası duvar yeniden çözülür (en çok 4 geçiş); 4×4000 adım ve köşe yığınında hiçbir gövde köşesi dünya dışında kalmaz, kalan örtüşme ≈0,05 birim.
+- [x] F06.3 — Saf simülasyon CORE'a yalnız alt yüzeylerle bağlanır; beş senaryo Node'da DOM/CSS yükleyicisi olmadan seedli koşar ve vitest sonucuyla birebir aynıdır.
 - [x] Monorepo denetim raporu docs'a yerleştirildi; 20 bulgu, 43 belge kararı ve bütün açık işler F01–F10'a eşlendi.
 - [x] Visual Studio C++ Build Tools kuruldu; güncel doctor/bootstrap doğruluğu F02.1 ile tamamlandı.
 - [x] Just kabuğu Git kurulumundan seçilir; WSL gölgesi ortam teşhisinde ayrılır.
