@@ -111,7 +111,9 @@ async function main() {
     success++;
   }
 
-  console.log(`\nİndirme tamamlandı: ${success} dosya, ${(totalBytes / 1024).toFixed(1)} KB, ${failed} hata.`);
+  console.log(
+    `\nİndirme tamamlandı: ${success} dosya, ${(totalBytes / 1024).toFixed(1)} KB, ${failed} hata.`,
+  );
 
   if (failed > 0) {
     process.exit(1);

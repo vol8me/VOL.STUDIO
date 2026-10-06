@@ -17,7 +17,8 @@ pnpm benchmark:core
 pnpm --filter @volstudio/core download-fonts
 ```
 
-UI teması repo kökünden `pnpm gen:theme` ile üretilir. Bileşenlerin canlı
+UI teması repo kökünden `pnpm gen:theme` ile üretilir (`--check` yazmadan sapmayı bildirir):
+kaynaklar `src/ui/colors.ts`, `src/ui/themes/semanticColors.ts` ve `src/ui/themes/ember.ts`'tir. Bileşenlerin canlı
 örnekleri [vol-showcase](../devtools/vol-showcase/README.md) paketindedir.
 
 ## Belgeler

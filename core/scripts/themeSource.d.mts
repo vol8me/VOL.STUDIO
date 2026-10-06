@@ -1,0 +1,34 @@
+export declare const TOKENS_BEGIN: string;
+export declare const TOKENS_END: string;
+export declare const THEMES_BEGIN: string;
+export declare const THEMES_END: string;
+
+export interface ThemeToken {
+  key: string;
+  cssVar: string;
+  value: string;
+}
+
+export interface ThemeSource {
+  colors: Record<string, string>;
+  semantic: Record<string, string>;
+  themes: Record<string, Record<string, string>>;
+}
+
+export declare function kebab(name: string): string;
+export declare function defaultTokens(
+  colors: Record<string, string>,
+  semantic: Record<string, string>,
+): ThemeToken[];
+export declare function validateThemeSource(source: ThemeSource): string[];
+export declare function renderTokens(
+  colors: Record<string, string>,
+  semantic: Record<string, string>,
+): string;
+export declare function renderThemes(
+  colors: Record<string, string>,
+  semantic: Record<string, string>,
+  themes: Record<string, Record<string, string>>,
+): string;
+export declare function applyGenerated(css: string, source: ThemeSource): string;
+export declare function extractRegion(css: string, begin: string, end: string): string | null;

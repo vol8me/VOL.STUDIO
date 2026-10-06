@@ -18,8 +18,9 @@
 @import url('./primitives/workbench.css');
 @import url('./textEntry/keyboard.css');
 
-/* RENKLER — colors.ts'ten generate edilir (pnpm gen:theme). Manuel düzenleme yapma. */
+/* RENKLER — colors.ts, themes/semanticColors.ts ve themes/ember.ts'ten üretilir (pnpm gen:theme). Elle düzenleme yapma. */
 :root {
+  /* @generated:tokens:begin */
   --vol-ui-bg: #0d1115;
   --vol-ui-bg-subtle: #12181e;
   --vol-ui-surface-1: #182028;
@@ -80,6 +81,46 @@
   --vol-ui-scrim: #05070ab8;
   --vol-ui-hairline-alpha: #ffffff14;
   --vol-ui-selection-glow: #7c84ff33;
+  --vol-ui-page: #0d1115;
+  --vol-ui-well: #0a0d11;
+  --vol-ui-panel: #182028;
+  --vol-ui-plate: #212a33;
+  --vol-ui-plate-top-light: #ffffff1f;
+  --vol-ui-well-inner-shadow: #00000066;
+  --vol-ui-frame-hairline: #34414d;
+  --vol-ui-frame-corner: #864a2c;
+  --vol-ui-frame-header: #1d252d;
+  --vol-ui-frame-divider: #2a3540;
+  --vol-ui-glow-brand: #d6743459;
+  --vol-ui-glow-support: #2c748359;
+  --vol-ui-glow-success: #307a5759;
+  --vol-ui-glow-warning: #d2a03c59;
+  --vol-ui-glow-danger: #b94a4a59;
+  --vol-ui-rarity-common-solid: #83919d;
+  --vol-ui-rarity-common-hover: #9aa7b3;
+  --vol-ui-rarity-common-selected: #b5c1cc;
+  --vol-ui-rarity-common-disabled: #4a5560;
+  --vol-ui-rarity-common-border: #34414d;
+  --vol-ui-rarity-common-glow: #9aa7b340;
+  --vol-ui-rarity-rare-solid: #356eb0;
+  --vol-ui-rarity-rare-hover: #4580c4;
+  --vol-ui-rarity-rare-selected: #5a95d9;
+  --vol-ui-rarity-rare-disabled: #2a3d55;
+  --vol-ui-rarity-rare-border: #2c557f;
+  --vol-ui-rarity-rare-glow: #4580c459;
+  --vol-ui-rarity-epic-solid: #565dbe;
+  --vol-ui-rarity-epic-hover: #6a71d4;
+  --vol-ui-rarity-epic-selected: #7f86e6;
+  --vol-ui-rarity-epic-disabled: #363a66;
+  --vol-ui-rarity-epic-border: #6269c4;
+  --vol-ui-rarity-epic-glow: #6a71d459;
+  --vol-ui-rarity-legendary-solid: #d2a03c;
+  --vol-ui-rarity-legendary-hover: #e3b24d;
+  --vol-ui-rarity-legendary-selected: #f0c568;
+  --vol-ui-rarity-legendary-disabled: #5e4a22;
+  --vol-ui-rarity-legendary-border: #a67c25;
+  --vol-ui-rarity-legendary-glow: #e3b24d66;
+  /* @generated:tokens:end */
   --vol-font-family: 'Jura', sans-serif;
   --vol-font-family-body: 'Exo 2', sans-serif;
 
@@ -177,6 +218,58 @@
   --vol-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--vol-safe-area-base));
   --vol-safe-left: max(env(safe-area-inset-left, 0px), var(--vol-safe-area-base));
 }
+
+/* @generated:themes:begin */
+:root[data-vol-theme='ember'] {
+  --vol-ui-bg: #140e0b;
+  --vol-ui-bg-subtle: #1a120e;
+  --vol-ui-surface-1: #221813;
+  --vol-ui-surface-2: #2c1f18;
+  --vol-ui-surface-3: #382820;
+  --vol-ui-border-soft: #5a4434;
+  --vol-ui-border-strong: #8c6c55;
+  --vol-ui-text: #f6ece4;
+  --vol-ui-text-secondary: #d2c0b2;
+  --vol-ui-text-muted: #b3a193;
+  --vol-ui-text-disabled: #7a6a5d;
+  --vol-ui-icon: #c9b4a4;
+  --vol-ui-brand-solid: #a8420f;
+  --vol-ui-brand-hover: #b84c16;
+  --vol-ui-brand-pressed: #8f380b;
+  --vol-ui-brand-subtle: #3a1e12;
+  --vol-ui-brand-border: #8c4a2a;
+  --vol-ui-on-brand: #fff7f1;
+  --vol-ui-hover-fill: #271b15;
+  --vol-ui-pressed-fill: #33231a;
+  --vol-ui-selected-fill: #3a2a21;
+  --vol-ui-focus-ring: #ffc761;
+  --vol-ui-focus-halo: #ffc76133;
+  --vol-ui-disabled-fill: #1e1511;
+  --vol-ui-disabled-border: #3a2a20;
+  --vol-ui-disabled-text: #7a6a5d;
+  --vol-ui-inverse-surface: #f3e6da;
+  --vol-ui-inverse-text: #1c120d;
+  --vol-ui-overlay-panel: #1a110dd9;
+  --vol-ui-scrim: #0a0605b8;
+  --vol-ui-hairline-alpha: #ffd8b814;
+  --vol-ui-selection-glow: #ff8a3d33;
+  --vol-ui-page: #140e0b;
+  --vol-ui-well: #0f0a08;
+  --vol-ui-panel: #221813;
+  --vol-ui-plate: #2c1f18;
+  --vol-ui-plate-top-light: #ffd8b81f;
+  --vol-ui-well-inner-shadow: #00000080;
+  --vol-ui-frame-hairline: #5a4434;
+  --vol-ui-frame-corner: #b4673a;
+  --vol-ui-frame-header: #2a1d16;
+  --vol-ui-frame-divider: #3a2a21;
+  --vol-ui-glow-brand: #ff8a3d66;
+  --vol-ui-glow-support: #3f8b9a4d;
+  --vol-ui-glow-success: #4a9a704d;
+  --vol-ui-glow-warning: #e3b24d66;
+  --vol-ui-glow-danger: #d2605a66;
+}
+/* @generated:themes:end */
 
 /*
  * pointer: coarse — dokunmatik ekran, kalem gibi kaba işaretçi cihazlar.
