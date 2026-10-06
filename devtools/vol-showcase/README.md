@@ -37,7 +37,9 @@ pnpm --filter @volstudio/vol-showcase test:e2e
 ```
 
 E2E gönderilen build'i sınar. Determinizm, yerleşim ve piksel karşılaştırması
-ayrı testlerdir. Her E2E dosyası Chromium ve WebKit'te koşar; tek istisna piksel
+ayrı testlerdir. `accessibility.spec.ts` axe sonucunu `tests/e2e/support/axeExceptions.json` ile,
+`stateMatrix.spec.ts` katman durumlarını `tests/e2e/support/stateFixtures.json` ile eşleştirir; kayıtlar
+sahip UI görevine bağlıdır ve düzelen bulgu kaydı bayatlatıp testi düşürür. Her E2E dosyası Chromium ve WebKit'te koşar; tek istisna piksel
 temelidir (yalnız Chromium) ve `e2eConfig` bekçisi bunu gerekçeli tutar. WebKit
 piksel temeli bilinçli kalibrasyon olmadan kurulmaz. Piksel farkı bilinçli görsel
 değişiklikte temel güncellemesiyle kabul edilir; Linux Chromium temelleri

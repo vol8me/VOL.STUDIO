@@ -62,10 +62,10 @@ function packagesAt(root) {
         kind: dir.startsWith('games/')
           ? 'game'
           : dir.startsWith('devtools/')
-          ? 'tool'
-          : dir === 'core'
-          ? 'core'
-          : 'platform',
+            ? 'tool'
+            : dir === 'core'
+              ? 'core'
+              : 'platform',
       };
     });
 }

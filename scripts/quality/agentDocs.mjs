@@ -69,7 +69,12 @@ export function commandRefs(markdown) {
       if (first === 'exec' && second === 'just' && third) {
         refs.push({ kind: 'recipe', name: third });
       } else if (first === '--filter' && second && third && !PNPM_BUILTINS.has(third)) {
-        if (third !== 'exec') refs.push({ kind: 'package', pkg: second, name: third === 'run' ? fourth ?? '' : third });
+        if (third !== 'exec')
+          refs.push({
+            kind: 'package',
+            pkg: second,
+            name: third === 'run' ? (fourth ?? '') : third,
+          });
       } else if (first === 'run' && second) {
         refs.push({ kind: 'root', name: second });
       } else if (!first.startsWith('-') && !PNPM_BUILTINS.has(first) && first !== 'exec') {

@@ -3,10 +3,7 @@ import test from 'node:test';
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { getFileInfo } from 'prettier';
-import {
-  activeWorkspacePaths,
-  loadRepoLifecycle,
-} from '../workspaceLifecycle.mjs';
+import { activeWorkspacePaths, loadRepoLifecycle } from '../workspaceLifecycle.mjs';
 
 const root = resolve(import.meta.dirname, '../../..');
 const lifecycle = loadRepoLifecycle(root);

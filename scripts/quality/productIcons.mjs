@@ -100,7 +100,9 @@ export function validateProductIcons(
       const hash = sha256(path);
       const shown = relative(root, path).split(sep).join('/');
       if (templateHashes.has(hash)) {
-        problems.push(`${shown}: Tauri'nin varsayılan ikonu — ürün ikonu \`tauri icon\` ile üretilmeli.`);
+        problems.push(
+          `${shown}: Tauri'nin varsayılan ikonu — ürün ikonu \`tauri icon\` ile üretilmeli.`,
+        );
       }
       const seen = owners.get(hash) ?? new Set();
       seen.add(game);

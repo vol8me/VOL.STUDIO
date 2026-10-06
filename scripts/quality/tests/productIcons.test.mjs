@@ -23,7 +23,10 @@ function fixture(t, games) {
   return root;
 }
 
-const own = (tag) => ({ 'src-tauri/icons/32x32.png': `desktop-${tag}`, [LAUNCHER]: `launcher-${tag}` });
+const own = (tag) => ({
+  'src-tauri/icons/32x32.png': `desktop-${tag}`,
+  [LAUNCHER]: `launcher-${tag}`,
+});
 
 test('her oyun kendi ikonunu taşıyorsa geçer', (t) => {
   const root = fixture(t, { a: { files: own('a') }, b: { files: own('b') } });

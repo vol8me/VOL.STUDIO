@@ -46,10 +46,7 @@ test('ESLint config frozen ağaçları ignores listesinde taşır', async () => 
   const config = (await import(pathToFileURL(join(root, 'eslint.config.mjs')).href)).default;
   const ignores = config.flatMap((entry) => entry.ignores ?? []);
   for (const path of frozen) {
-    assert.ok(
-      ignores.includes(`${path}/**`),
-      `eslint.config.mjs ignores "${path}/**" içermiyor`,
-    );
+    assert.ok(ignores.includes(`${path}/**`), `eslint.config.mjs ignores "${path}/**" içermiyor`);
   }
 });
 

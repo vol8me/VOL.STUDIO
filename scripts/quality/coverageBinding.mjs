@@ -18,11 +18,7 @@ export async function validateCoverageBinding(configPath, expected) {
     if (!isDeepStrictEqual(coverage?.include, ['src/**/*.ts'])) {
       problems.push(`${configPath}: coverage.include yalnız src/**/*.ts olmalı.`);
     }
-    const allowedExcludes = new Set([
-      'src/**/index.ts',
-      'src/**/*.d.ts',
-      'src/vite-env.d.ts',
-    ]);
+    const allowedExcludes = new Set(['src/**/index.ts', 'src/**/*.d.ts', 'src/vite-env.d.ts']);
     if (
       !Array.isArray(coverage?.exclude) ||
       coverage.exclude.some((entry) => !allowedExcludes.has(entry))

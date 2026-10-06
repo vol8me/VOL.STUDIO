@@ -80,7 +80,9 @@ test('WSL gölgesi Git Bash’ı gölgelemez: kapı çalışır, gölge uyarıd�
   const options = {
     platform: 'win32',
     env: windowsEnv({
-      PATH: ['C:\\Users\\dev\\AppData\\Local\\Microsoft\\WindowsApps', `${GIT_ROOT}\\cmd`].join(';'),
+      PATH: ['C:\\Users\\dev\\AppData\\Local\\Microsoft\\WindowsApps', `${GIT_ROOT}\\cmd`].join(
+        ';',
+      ),
     }),
     exists: tree([launcher, `${GIT_ROOT}\\cmd\\git.exe`, `${GIT_ROOT}\\bin\\bash.exe`]),
   };
@@ -126,7 +128,11 @@ test('POSIX’te PATH’teki bash kullanılır, PATH boşsa /bin/bash denenir', 
   });
   assert.deepEqual(onPath, { path: '/usr/local/bin/bash', source: 'path' });
 
-  const well = resolveBashShell({ platform: 'linux', env: { PATH: '' }, exists: tree(['/bin/bash']) });
+  const well = resolveBashShell({
+    platform: 'linux',
+    env: { PATH: '' },
+    exists: tree(['/bin/bash']),
+  });
   assert.deepEqual(well, { path: '/bin/bash', source: 'well-known' });
 });
 
@@ -134,7 +140,10 @@ test('POSIX’te WSL gölgesi aranmaz', () => {
   const options = {
     platform: 'linux',
     env: { PATH: '/usr/bin' },
-    exists: tree(['/usr/bin/bash', '/mnt/c/Users/dev/AppData/Local/Microsoft/WindowsApps/bash.exe']),
+    exists: tree([
+      '/usr/bin/bash',
+      '/mnt/c/Users/dev/AppData/Local/Microsoft/WindowsApps/bash.exe',
+    ]),
   };
   assert.equal(wslBashLauncher(options), null);
   assert.equal(bashShellProblem(options), null);
@@ -211,9 +220,13 @@ test('sarmalayıcı gerçek kabuğu çalıştırır ve WindowsApps gölgesine d�
     assert.equal(bashShellProblem(), null);
   }
 
-  const result = spawnSync(process.execPath, [join(ROOT, 'scripts/quality/bashShell.mjs'), '-c', 'echo VOL_OK'], {
-    encoding: 'utf8',
-  });
+  const result = spawnSync(
+    process.execPath,
+    [join(ROOT, 'scripts/quality/bashShell.mjs'), '-c', 'echo VOL_OK'],
+    {
+      encoding: 'utf8',
+    },
+  );
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /VOL_OK/);
 });

@@ -73,6 +73,7 @@ sahibindedir; Linux'a özgü atlanan test başarı sayılmaz.
 | `scripts/quality/tauriPlugins.mjs`       | JS `@tauri-apps/plugin-*` → Rust kaydı; Cargo eklenti bağımlılığı → kaynakta kayıt ya da izin; kayıtlı eklenti → izin ya da JS tüketicisi; yetenek izni → kurulu eklenti                                                                             |
 | `scripts/quality/catalog.mjs`            | CORE kökünden açılan her UI bileşeni vol-showcase vitrininde gösterilir ve CORE testinde adıyla geçer; parça ve görsel olmayan katman gerekçeli istisnadır                                                                                           |
 | `scripts/quality/uiRegistry.mjs`         | CORE UI alt yolunun her sınıf ve yardımcısı `devtools/vol-showcase/src/catalog/registry.json` içinde tekil kayıtlıdır; tier/faz/anchor/arketip, tüketici (AST), vitrin kullanımı ve gerçek `it` + `expect` kanıtı ya da sahip görevli gap doğrulanır |
+| `scripts/quality/uiEvidence.mjs`         | Vitrinin axe istisna kaydı ve durum fixture verisi: her kayıt açık bir UI görevine bağlı, gerekçeli ve yinelenmez; fixture registry'de uygulanabilir bir durumu sınar                                                                                |
 | `scripts/quality/rootEntries.mjs`        | Kökteki her girdi gerekçesiyle kayıtlıdır; gerekçesiz yeni girdi ya da karşılıksız kayıt reddedilir                                                                                                                                                  |
 | `scripts/quality/contextComments.mjs`    | Kaynak yorumları tarihçe ("bir dönem", "eskiden"), ölçüm günlüğü ("ölçüldü:"), tarih ve plan/faz kimliği taşımaz                                                                                                                                     |
 
@@ -125,7 +126,9 @@ kırar.
 
 UI durum matrisi, tema geometrisi, axe ve gerçek UI maliyeti için
 [doğrulama planı](ui/VERIFICATION.md) mevcut kapıyla gelecekteki genişlemeyi
-ayırır. Bu yeni kontroller henüz kapı bileşimine eklenmiş değildir.
+ayırır. Yüzey kaydı, axe (5 WCAG etiketi) ve katman durum fixture'ları kapıdadır
+(`contract` + vitrin E2E); tema geometrisi, gerçek UI maliyeti ve tam durum
+matrisi UI görevlerinde eklenir.
 
 - **Kapsam motoru:** Vitest ve `@vitest/coverage-v8` aynı exact sürümdedir;
   V8 kapsamı AST tabanlı yeniden eşleme kullanır. Motor değişiminde eşik
@@ -144,18 +147,19 @@ ayırır. Bu yeni kontroller henüz kapı bileşimine eklenmiş değildir.
 Bütün tarifler kalite kapısı değildir. Mutasyon ve geliştirme tariflerinin
 başarısı ürün kabulü olarak raporlanmaz.
 
-| Tarif                         | İşlev                                                     |
-| ----------------------------- | --------------------------------------------------------- |
-| `default`                     | Tarif listesini gösterir                                  |
-| `test-pkg <pkg>`              | Tek paketin düz testini çalıştırır                        |
-| `build-ui`                    | Mevcut vitrin build kolaylığı                             |
-| `report <kapı> --json`        | Kapıyı çalıştırıp aşama/exit/süre raporu verir            |
-| `dev`, `dev-ui`               | Geliştirme uygulamasını açar                              |
-| `fix`                         | Format ve lint düzeltmesi yapar                           |
-| `gen-theme`, `download-fonts` | Sahip üreticiyi çalıştırır                                |
-| `benchmark-core`              | Tanımlı CORE ölçümünü alır                                |
-| `doctor`                      | Ortam hazırlığını denetler                                |
-| `clean`, `clean-all`          | Yerel çıktıları temizler; kaynak ve ölçüm kabulü değildir |
+| Tarif                         | İşlev                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| `default`                     | Tarif listesini gösterir                                                                       |
+| `test-pkg <pkg>`              | Tek paketin düz testini çalıştırır                                                             |
+| `build-ui`                    | Mevcut vitrin build kolaylığı                                                                  |
+| `ui-check`                    | UI yüzey kaydı + vitrinin iki motorlu tam E2E'si; `high` içinde zaten var, tek komut kısa yolu |
+| `report <kapı> --json`        | Kapıyı çalıştırıp aşama/exit/süre raporu verir                                                 |
+| `dev`, `dev-ui`               | Geliştirme uygulamasını açar                                                                   |
+| `fix`                         | Format ve lint düzeltmesi yapar                                                                |
+| `gen-theme`, `download-fonts` | Sahip üreticiyi çalıştırır                                                                     |
+| `benchmark-core`              | Tanımlı CORE ölçümünü alır                                                                     |
+| `doctor`                      | Ortam hazırlığını denetler                                                                     |
+| `clean`, `clean-all`          | Yerel çıktıları temizler; kaynak ve ölçüm kabulü değildir                                      |
 
 ## Ortam ve temizlik
 

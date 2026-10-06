@@ -176,7 +176,7 @@ erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4 beğeni, UI-13.4). Bu 
 
 1. **Ortam (D6/R4).** Gate shell'inde Node 22.23.1; WSL'de Playwright Chromium kurulumu ve vitrin temelinin Linux'ta yeniden üretilmesi. Kabul: `doctor:env` OK; Linux temeli ya bayt eşit üretilir ya da NOT-RUN gerekçesi kayıtlıdır.
 2. **UI-06.1 atomik göç (tamam).** Dizin, paket adı, lifecycle, quality (paket+bütçe), kilit importer'ı, `justfile`, katalog sabit yolu, testler, belgeler ve PNG'ler aynı değişiklikte; `.gitignore`'a vitrin records alanı. Kabul: eski vitrin yolu ve paket adı başvurusu sıfır, PNG'ler yalnız taşındı (özet eşit), build/bundle 150/1/24, contract/high yeşil.
-3. **UI-00.1 registry (tamam)**, 4. **UI-00.2 (tamam)**, 5. **UI-00.3** axe + durum düzeneği + `ui-check`, 6. **UI-00.4** ölçüm kör noktaları, 7. **UI-00.7** bank çalışma zamanı görünümü, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
+3. **UI-00.1 registry (tamam)**, 4. **UI-00.2 (tamam)**, 5. **UI-00.3 (tamam)**, 6. **UI-00.4** ölçüm kör noktaları, 7. **UI-00.7** bank çalışma zamanı görünümü, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
 
 ## Açık
 
@@ -186,14 +186,6 @@ Hedef: yanlış başlangıç referansının
 sonraki fazlarda başarı gibi kullanılmasını engellemek. Sahip: kalite/vitrin. Değişiklik
 alanı: `scripts/quality/`, `devtools/vol-showcase/tests/e2e/`, ilgili CORE testleri.
 
-- [ ] **UI-00.3 — Axe ve durum sınama düzeneği.** Önerilen
-      devtools/vol-showcase/tests/e2e/accessibility.spec.ts ve
-      devtools/vol-showcase/tests/e2e/stateMatrix.spec.ts; axe bağımlılığı yalnız geliştirme
-      aracının devDependency alanına eklenir. Açık diyalog/OSK/açılır liste/form ve
-      devre dışı/hata durumu örnekleri, 5 WCAG etiketi, eksik değerlendirme kayıtları ve
-      tam kapsamı belirli istisna politikası. Kapanır: bilerek adsız giriş alanı veya
-      örtülen odak örneği testi düşürür; N/A gerekçesi olmayan durum başarısız sayılır;
-      mevcut bilinen hatalar sınırlı açık görevleriyle izlenir, genel muafiyet verilmez.
 - [ ] **UI-00.4 — Ölçümün kör noktaları.** `devtools/vol-showcase/tests/e2e/layout.spec.ts`
       saydam ama tıklanabilir yerel range girişini dışlamasın; katmanın kapalı ve test
       örneğinin açık olduğu durumlar ayrı değerlendirilir; gerçek tıklama alanı, örtüşme
@@ -715,4 +707,5 @@ Planın hazırlanmış olması bir üretim görevini kapatmaz; yalnız kapıdan 
 
 - [x] UI-00.1 — `core/src/ui/index.ts` yüzeyi (89 sınıf, 29 yardımcı, 205 tip) AST'den çıkarılır; her sınıf/yardımcı `registry.json`'da tekil kayıtlıdır ve kapı kaydı yüzeyle, VOL.TEST tüketimiyle (17 sınıf doğrudan), vitrin kullanımıyla ve gerçek `it`+`expect` kanıtıyla karşılaştırır. Eski isim-geçişi bekçisinin yorum/metin mention'ını gösterim saydığı 9 yer ve kanıtsız 5 öğe (sahip görevli gap) ortaya çıktı.
 - [x] UI-00.2 — Vitrinin 7 E2E dosyası Chromium ve WebKit'te koşar (40 → 68 test, 2,1 dk); tek istisna Chromium piksel temelidir ve `e2eConfig` bekçisi dosya listesini raporlar, gerekçesiz asimetriyi ve ölü istisnayı reddeder. WebKit'te çıkan tek kusur (`user-select` hesaplı stili yalnız ön ekli) testin motor farkıydı, CSS doğruydu. Linux temelleri WSL'de 6/12 yeniden üretildi: Linux hücresi doğrulanmamış.
+- [x] UI-00.3 — axe (`@axe-core/playwright`, yalnız vitrin devDependency) 5 WCAG etiketiyle 12 sekmede ve 6 açık katmanda (Modal, Sheet, Popup, Popover, Select, OSK) iki motorda koşar; sonuç `axeExceptions.json` ile birebir eşleşmek zorundadır (yeni ve bayat bulgu düşer), her kayıt açık UI görevine bağlı: 50 ihlal ve 39 incomplete. Düzenek bilerek adsız bırakılan girişi ve örtülen odağı yakalar (negatif testler). Durum fixture'ları (`stateFixtures.json`, registry'ye bağlı) 6 katmanda odak ve Escape/odak geri dönüşünü sınar; bilinen kusurlar motor bazında `test.fail` ile izlenir (Modal/Sheet Chromium odak geri yüklemesi UI-09.1, OSK UI-11.1). `ui-check` tarifi eklendi.
 - [x] UI-06.1 — Eski vol-ui paketi tek atomik göçle `devtools/vol-showcase` / `@volstudio/vol-showcase` oldu; lifecycle, quality (paket ve bütçe), kilit importer'ı, `justfile`, katalog yolu, testler ve belgeler birlikte taşındı. Eski yol ve paket başvurusu sıfır; CSS `.vol-ui-root` ve `--vol-ui-*` tokenları değişmedi; 24 piksel temeli yalnız taşındı; bütçe 150/1/24 aynı.

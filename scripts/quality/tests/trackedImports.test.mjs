@@ -96,15 +96,15 @@ test('sonda generated importu yalnız kaynak, generator ve build çağrısı tam
   write('scripts/linux/build-steamrt4.mjs', build.replace('syncProbeMetrics(ROOT', 'missing(ROOT'));
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
   write('scripts/linux/build-steamrt4.mjs', build);
-  write('devtools/deck/scripts/probe-metrics.mjs', generator.replace('ts.transpileModule', 'ts.unrelated'));
+  write(
+    'devtools/deck/scripts/probe-metrics.mjs',
+    generator.replace('ts.transpileModule', 'ts.unrelated'),
+  );
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
   write('devtools/deck/scripts/probe-metrics.mjs', generator);
   rmSync(join(root, 'core/src/time/frameSummary.ts'));
   assert.match(validateTrackedImports(root).join('\n'), /frame-summary\.js/);
   write('core/src/time/frameSummary.ts', 'export const summarizeFrameIntervals = () => null;');
-  write(
-    'devtools/deck/web/probe.js',
-    "import { missing } from './vendor/other-generated.js';",
-  );
+  write('devtools/deck/web/probe.js', "import { missing } from './vendor/other-generated.js';");
   assert.match(validateTrackedImports(root).join('\n'), /other-generated\.js/);
 });

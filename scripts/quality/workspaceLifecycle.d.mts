@@ -55,7 +55,10 @@ export declare function validWorkspacePath(
   pkgPath: string,
   pathModule?: unknown,
 ): boolean;
-export declare function listWorkspacePackages(root?: string, pathModule?: unknown): WorkspacePackage[];
+export declare function listWorkspacePackages(
+  root?: string,
+  pathModule?: unknown,
+): WorkspacePackage[];
 export declare function validateWorkspaceLifecycle(
   root: string,
   lifecycle: WorkspaceLifecycle,

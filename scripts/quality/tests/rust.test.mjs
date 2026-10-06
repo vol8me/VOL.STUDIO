@@ -11,10 +11,7 @@ import { resolveCommand, runCommand, writeNodeCommand } from './runCommand.mjs';
 // `just`ın `rust` tarifi tek satırdır: `node scripts/quality/rust.mjs`. Tarifin
 // bu komutu çağırdığı burada sözleşmelenir; tarifin kendisi Windows'ta `sh`
 // üzerinden çalıştığı için çalıştırma aşağıda doğrudan `node` ile yapılır.
-const justfile = readFileSync(
-  resolve(import.meta.dirname, '../../../justfile'),
-  'utf8',
-);
+const justfile = readFileSync(resolve(import.meta.dirname, '../../../justfile'), 'utf8');
 
 test('high temiz klonda Tauri bağlamından önce frontend çıktısını üretir', () => {
   const stages = gateStages(parseJustRecipes(justfile), 'high');
@@ -39,23 +36,19 @@ test('gerçek just rust tarifi bütün uygulama crate’lerini çalıştırır',
     // doğrudan çağırmak, Windows'ta `just`ın kendi PATH'ini (ve `shell` katmanını)
     // devreye sokmadan sahte `cargo`nun PATH'e girmesini sağlar.
     const childPath = temporary + delimiter + process.env.PATH;
-    runCommand(
-      process.execPath,
-      ['scripts/quality/rust.mjs'],
-      {
-        cwd: process.cwd(),
-        shell: false,
-        env: {
-          ...process.env,
-          PATH: childPath,
-          // Windows `execFileSync` uzantısız POSIX betiği bulamaz; sahte komutun
-          // tam yolu `CARGO` ile açıkça geçilir.
-          CARGO: resolveCommand('cargo', childPath),
-          VOL_RUST_TEST_LOG: log,
-        },
-        stdio: 'pipe',
+    runCommand(process.execPath, ['scripts/quality/rust.mjs'], {
+      cwd: process.cwd(),
+      shell: false,
+      env: {
+        ...process.env,
+        PATH: childPath,
+        // Windows `execFileSync` uzantısız POSIX betiği bulamaz; sahte komutun
+        // tam yolu `CARGO` ile açıkça geçilir.
+        CARGO: resolveCommand('cargo', childPath),
+        VOL_RUST_TEST_LOG: log,
       },
-    );
+      stdio: 'pipe',
+    });
     const calls = readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
     const projects = rustManifests(process.cwd()).map((p) => resolve(dirname(p)));
     assert.deepEqual([...new Set(calls.map((c) => c.cwd))].sort(), projects.sort());

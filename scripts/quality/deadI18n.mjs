@@ -54,7 +54,11 @@ function flatten(value, path = []) {
  * @param dynamic Çalışma zamanında kurulan anahtarlar; testler kendi listesini verir.
  * @returns Sorun listesi; boşsa yüzey temizdir.
  */
-export function validateI18nKeys(root, dynamic = DYNAMIC_KEYS, lifecycle = loadRepoLifecycle(root)) {
+export function validateI18nKeys(
+  root,
+  dynamic = DYNAMIC_KEYS,
+  lifecycle = loadRepoLifecycle(root),
+) {
   const problems = [];
 
   const codeFiles = excludingFrozenPaths(

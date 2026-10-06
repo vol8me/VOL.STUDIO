@@ -34,9 +34,9 @@ geriletmeme eşiklerinin kaynağıdır.
 | `rust`                                          | Aktif crate fmt/clippy/test                                                          | Native vitrin crate/eklenti yaşam döngüsü ve politika testleri                                           |
 | `signoff`                                       | high + tam ses kapsamı/doğrulaması + JS/Rust güvenlik                                | Yayınlanan UI sesleri ve nihai kilometre taşı; gerçek cihaz/insan kabulü ayrıca                          |
 
-Yeni yerel UI doğrulama tarifinin **önerilen adı** ui-check'tir. UI-00/UI-01
-fazında justfile ve aktif paket betiklerinin keşfi üzerinden bağlanır; bugün
-bu tarif mevcut değildir, çalıştı denemez. Hızlı contract/tip/token kontrolleri
+Yerel UI doğrulama tarifi `ui-check`tir (UI-00.3): yüzey kaydı ve vitrinin iki
+motorlu tam E2E'si; `high` aynı E2E'yi zaten içerir. Tema geometrisi, gerçek UI
+maliyeti ve tam durum matrisi sonraki UI görevlerinde bu tarife bağlanır. Hızlı contract/tip/token kontrolleri
 quick zincirine, tarayıcı axe/durum/geometri/niyet kontrolleri e2e'ye; uzun
 gerçek cihaz performans ölçümü sürüm kabulüne bağlanır. Yeni tarifin ihlal
 örneği, bileşim testi ve docs/gates güncellemesi aynı değişiklikte yapılır.

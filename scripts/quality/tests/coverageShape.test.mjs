@@ -40,7 +40,10 @@ const stamp = (dirs, patch = {}) => ({
 
 const LOW = { 'src/Scene.ts': { total: 120, covered: 20 } };
 const config = (acknowledged = {}) => ({ minLines: 100, floorPct: 50, acknowledged });
-const evidence = (path) => ({ reason: 'Phaser sahnesi; gerçek tarayıcıda sınanır.', evidence: [path] });
+const evidence = (path) => ({
+  reason: 'Phaser sahnesi; gerçek tarayıcıda sınanır.',
+  evidence: [path],
+});
 
 test('büyük ve düşük kapsamlı dosya gerekçesizse kapı düşer', (t) => {
   const root = fixture(t, { 'games/a': LOW });
@@ -51,7 +54,11 @@ test('büyük ve düşük kapsamlı dosya gerekçesizse kapı düşer', (t) => {
 });
 
 test('kanıtı modülü anan test dosyası olan gerekçe geçer', (t) => {
-  const root = fixture(t, { 'games/a': LOW }, { 'games/a/tests/e2e/run.spec.ts': "test.describe('Scene')" });
+  const root = fixture(
+    t,
+    { 'games/a': LOW },
+    { 'games/a/tests/e2e/run.spec.ts': "test.describe('Scene')" },
+  );
   const problems = validateCoverageShape(
     root,
     config({ 'games/a/src/Scene.ts': evidence('games/a/tests/e2e/run.spec.ts') }),
@@ -111,7 +118,10 @@ test('koşu kaydı yoksa ya da tamamlanmamışsa kapı değerlendirmez', (t) => 
 test('koşunun ölçtüğü paketin lcov’u yoksa sessiz geçmez', (t) => {
   const root = fixture(t, { 'games/a': LOW });
   const problems = validateCoverageShape(root, config(), stamp(['games/a', 'games/b']));
-  assert.match(problems.join('\n'), /@t\/b: bu koşuda ölçüldü ama games\/b\/coverage\/lcov\.info yok/);
+  assert.match(
+    problems.join('\n'),
+    /@t\/b: bu koşuda ölçüldü ama games\/b\/coverage\/lcov\.info yok/,
+  );
 });
 
 test('koşudan ESKİ lcov değerlendirilmez', (t) => {
@@ -119,14 +129,21 @@ test('koşudan ESKİ lcov değerlendirilmez', (t) => {
   const past = new Date(Date.now() - 3_600_000);
   utimesSync(join(root, 'games/a/coverage/lcov.info'), past, past);
 
-  const problems = validateCoverageShape(root, config(), stamp(['games/a'], { startedAt: Date.now() - 1_000 }));
+  const problems = validateCoverageShape(
+    root,
+    config(),
+    stamp(['games/a'], { startedAt: Date.now() - 1_000 }),
+  );
 
   assert.equal(problems.length, 1);
   assert.match(problems[0], /ESKİ/);
 });
 
 test('koşuya girmeyen paket ne değerlendirilir ne de gerekçesi ölü sayılır', (t) => {
-  const root = fixture(t, { 'games/a': { 'src/ok.ts': { total: 120, covered: 120 } }, 'devtools/b': LOW });
+  const root = fixture(t, {
+    'games/a': { 'src/ok.ts': { total: 120, covered: 120 } },
+    'devtools/b': LOW,
+  });
   const problems = validateCoverageShape(
     root,
     config({ 'devtools/b/src/Scene.ts': evidence('devtools/b/tests/x.test.ts') }),
@@ -144,5 +161,8 @@ test('mutlak SF yolları repo köküne göre anahtarlanır', (t) => {
   mkdirSync(join(root, 'games/a/coverage'), { recursive: true });
   writeFileSync(join(root, 'games/a/coverage/lcov.info'), `${lcov}end_of_record\n`);
 
-  assert.match(validateCoverageShape(root, config(), stamp(['games/a']))[0], /^games\/a\/src\/Scene\.ts:/);
+  assert.match(
+    validateCoverageShape(root, config(), stamp(['games/a']))[0],
+    /^games\/a\/src\/Scene\.ts:/,
+  );
 });

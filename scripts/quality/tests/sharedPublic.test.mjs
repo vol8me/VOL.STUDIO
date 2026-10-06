@@ -22,9 +22,13 @@ test('ortak public Unicode kaynak ve hedefte byte kimliğiyle build çıktısın
       const plugin=sharedPublic(process.argv[1]);
       plugin.configResolved({root:process.argv[2],build:{outDir:'dist'}});
       await plugin.writeBundle();`;
-    const result = spawnSync(process.execPath, ['--input-type=module', '-e', script, source, target], {
-      encoding: 'utf8',
-    });
+    const result = spawnSync(
+      process.execPath,
+      ['--input-type=module', '-e', script, source, target],
+      {
+        encoding: 'utf8',
+      },
+    );
     assert.equal(result.status, 0, result.stderr || `child status ${result.status}`);
     assert.deepEqual(readFileSync(join(target, 'dist', 'fonts', 'alt', 'test.woff2')), bytes);
     assert.equal(readFileSync(join(target, 'dist', 'glyph.svg'), 'utf8'), '<svg>Türkçe Ω</svg>');
@@ -43,7 +47,10 @@ test('ortak public kopyalama hatası build hook’undan reddedilir', async () =>
     writeFileSync(join(root, 'blocked'), 'dosya');
     const plugin = sharedPublic(source);
     plugin.configResolved({ root, build: { outDir: 'blocked/dist' } });
-    await assert.rejects(Promise.resolve().then(() => plugin.writeBundle()), /ENOENT|ENOTDIR|EEXIST/);
+    await assert.rejects(
+      Promise.resolve().then(() => plugin.writeBundle()),
+      /ENOENT|ENOTDIR|EEXIST/,
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

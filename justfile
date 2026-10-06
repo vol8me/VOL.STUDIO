@@ -88,6 +88,14 @@ security-rust:
 audio-verify:
     node scripts/quality/audioVerify.mjs
 
+# UI kanıtı: yüzey kaydı ve kanıt verisi, ardından vitrinin iki motorlu tam E2E'si
+# (axe, durum fixture'ları, yerleşim, piksel). `high` bu bileşimi zaten içerir;
+# tarif UI işinde bu kısa yolu tek komutta verir. Gerçek cihaz/insan kabulü değildir.
+ui-check:
+    node scripts/quality/cli/ui-registry.mjs --check
+    pnpm --filter @volstudio/vol-showcase build
+    pnpm --filter @volstudio/vol-showcase test:e2e
+
 # === BİRLEŞİK KAPILAR ===
 
 quick: contract format-check typecheck lint

@@ -57,7 +57,9 @@ function checkNativeLinker() {
     console.log(`MSVC: ${result.output}`);
     return;
   }
-  failures.push(`MSVC: Rust link probu başarısız. C++ Build Tools ve Windows SDK kurulumunu kontrol et. ${result.output}`);
+  failures.push(
+    `MSVC: Rust link probu başarısız. C++ Build Tools ve Windows SDK kurulumunu kontrol et. ${result.output}`,
+  );
   console.error('MSVC: Rust link probu BAŞARISIZ');
 }
 

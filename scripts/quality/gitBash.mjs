@@ -66,10 +66,7 @@ function findOnPath(join, name, extensions, pathValue, separator, exists) {
  * duyarsızdır, `PATHEXT` büyük harf verebilir.
  */
 function isWslLauncher(candidate) {
-  return candidate
-    .toLowerCase()
-    .split(/[\\/]/)
-    .includes('windowsapps');
+  return candidate.toLowerCase().split(/[\\/]/).includes('windowsapps');
 }
 
 /**
@@ -79,9 +76,7 @@ function isWslLauncher(candidate) {
  * gölgeyi kaçırır; `where.exe` kaçırmaz.
  */
 function whereFirst(env, exists, run) {
-  const where = env.SystemRoot
-    ? win32.join(env.SystemRoot, 'System32', 'where.exe')
-    : 'where.exe';
+  const where = env.SystemRoot ? win32.join(env.SystemRoot, 'System32', 'where.exe') : 'where.exe';
   if (!exists(where)) return null;
   const result = run(where, ['bash']);
   if (result.status !== 0 || !result.stdout) return null;
@@ -157,9 +152,7 @@ export function pathBash(options = {}) {
     if (viaWhere) return viaWhere;
   }
   const extensions =
-    platform === 'win32'
-      ? (env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean)
-      : [''];
+    platform === 'win32' ? (env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean) : [''];
   const separator = platform === 'win32' ? ';' : ':';
   return findOnPath(joinFor(platform), 'bash', extensions, env.PATH ?? '', separator, exists);
 }

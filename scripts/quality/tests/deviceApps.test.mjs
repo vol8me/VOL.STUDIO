@@ -88,15 +88,11 @@ test('benchmark betiğinde sabit pkg listesi geri gelirse bekçi yakalar', (t) =
 });
 
 test('aktif kabuk aday kümesiyle birebir örtüşünce sorun yok', (t) => {
-  const root = withLifecycle(
-    t,
-    [active('@vol/a', 'games/a'), frozen('@vol/b', 'games/b')],
-    {
-      'games/a/src-tauri/tauri.conf.json': shell('com.vol.a'),
-      'games/b/src-tauri/tauri.conf.json': shell('com.vol.b'),
-      'scripts/android/device-benchmark.mjs': BENCHMARK_SCRIPT,
-    },
-  );
+  const root = withLifecycle(t, [active('@vol/a', 'games/a'), frozen('@vol/b', 'games/b')], {
+    'games/a/src-tauri/tauri.conf.json': shell('com.vol.a'),
+    'games/b/src-tauri/tauri.conf.json': shell('com.vol.b'),
+    'scripts/android/device-benchmark.mjs': BENCHMARK_SCRIPT,
+  });
 
   assert.deepEqual(validateDeviceApps(root), []);
 });
