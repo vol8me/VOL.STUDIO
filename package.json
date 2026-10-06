@@ -20,6 +20,7 @@
     "format": "prettier --write \"**/*.{ts,css,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,css,json,md}\"",
     "gen:theme": "node core/scripts/gen-theme.mjs",
+    "gen:ui-assets": "node core/scripts/ui-assets/index.mjs",
     "test:coverage": "node scripts/quality/runActive.mjs test:coverage --if-present",
     "build:all": "node scripts/quality/runActive.mjs build --if-present",
     "benchmark:core": "pnpm --filter @volstudio/core benchmark",

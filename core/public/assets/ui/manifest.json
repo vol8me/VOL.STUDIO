@@ -1,0 +1,217 @@
+{
+  "schema": "UiAssetsV1",
+  "generator": {
+    "name": "core/scripts/ui-assets",
+    "version": 1
+  },
+  "seed": 5656396,
+  "themes": [
+    "default",
+    "ember"
+  ],
+  "icons": {
+    "names": [
+      "close",
+      "check",
+      "plus",
+      "minus",
+      "menu",
+      "chevronUp",
+      "chevronDown",
+      "chevronLeft",
+      "chevronRight",
+      "arrowLeft",
+      "arrowRight",
+      "search",
+      "settings",
+      "warning",
+      "info",
+      "error",
+      "play",
+      "pause",
+      "stop",
+      "lock",
+      "unlock",
+      "star",
+      "refresh",
+      "volume",
+      "volumeOff",
+      "gamepad"
+    ],
+    "sizes": [
+      16,
+      24,
+      32,
+      48
+    ],
+    "grid": 24,
+    "color": "currentColor",
+    "strokePx": {
+      "16": 1.5,
+      "24": 2,
+      "32": 2.5,
+      "48": 3
+    },
+    "sprite": "icons/icons-<boyut>.svg#<ad>"
+  },
+  "frames": {
+    "pieces": [
+      "panel",
+      "plate",
+      "well",
+      "header",
+      "divider"
+    ],
+    "slice": {
+      "panel": 12,
+      "plate": 12,
+      "well": 12,
+      "header": 8
+    },
+    "path": "frames/<tema>/<parça>.svg"
+  },
+  "textures": {
+    "grain": {
+      "size": 64,
+      "specks": 160,
+      "seeded": true
+    },
+    "scanlines": {
+      "seeded": false
+    },
+    "dots": {
+      "seeded": false
+    }
+  },
+  "cursors": {
+    "size": 24,
+    "hotspot": {
+      "x": 3,
+      "y": 2
+    },
+    "names": [
+      "arrow",
+      "pointer"
+    ],
+    "path": "cursors/<tema>/<ad>.svg"
+  },
+  "density": {
+    "unit": "CSS px",
+    "note": "vektör; 1x tasarım ölçüsü, 2x ve 3x ekranda keskin kalır"
+  },
+  "fallbacks": {
+    "blur": {
+      "token": "--vol-ui-scrim",
+      "rule": "bulanıklık yok ya da bütçe doluysa düz scrim kullanılır"
+    },
+    "motion": "varlıklar durağandır; azaltılmış harekette değişen bir şey yoktur"
+  },
+  "files": [
+    {
+      "path": "cursors/default/arrow.svg",
+      "bytes": 219,
+      "sha256": "3344f5a273caa3d6819bfd7ba1192e3f365fecef1b6132a19ee5a955700b4808"
+    },
+    {
+      "path": "cursors/default/pointer.svg",
+      "bytes": 219,
+      "sha256": "349be5a9dd8e7495aab1ab0bc7ec75b018e6530c01469f7f6b669e9741926703"
+    },
+    {
+      "path": "cursors/ember/arrow.svg",
+      "bytes": 219,
+      "sha256": "2201af2057d33e0895f5b3b0b14de9eb17792d2c6f15cef1fbf5ccaedb079f5c"
+    },
+    {
+      "path": "cursors/ember/pointer.svg",
+      "bytes": 219,
+      "sha256": "9c01c214278521361ea8702b5a51336c657fc01c0bd40f7caba6660a23f6ab95"
+    },
+    {
+      "path": "frames/default/divider.svg",
+      "bytes": 218,
+      "sha256": "f17fb96ad2ba530c65d6031efb32353b58310c5a87862e0610cb1bb7d6244663"
+    },
+    {
+      "path": "frames/default/header.svg",
+      "bytes": 203,
+      "sha256": "359dac082cf1694b6b21e48a974092d0dd81a647902fa390cdd854183ac27c9e"
+    },
+    {
+      "path": "frames/default/panel.svg",
+      "bytes": 684,
+      "sha256": "a05eab09180feb5623d55b459ee02057b937483d42e25994145f326119fd8f98"
+    },
+    {
+      "path": "frames/default/plate.svg",
+      "bytes": 371,
+      "sha256": "9302e55aa2609de4287ebd10eb832c8d38a1b16059d88db555642bdc94168a62"
+    },
+    {
+      "path": "frames/default/well.svg",
+      "bytes": 267,
+      "sha256": "38fef5f4c522face0b3e21dad586db3601e7b9e8265f7f19e28c51fe341ce14a"
+    },
+    {
+      "path": "frames/ember/divider.svg",
+      "bytes": 218,
+      "sha256": "e0088f55aaac345a05a1a185660254b064c9b30971567841bdc32b6d870b2f32"
+    },
+    {
+      "path": "frames/ember/header.svg",
+      "bytes": 203,
+      "sha256": "575e364699bec12618e68b854fb5dc5b3fd07c7f0dc242b623d105f91cb2891f"
+    },
+    {
+      "path": "frames/ember/panel.svg",
+      "bytes": 684,
+      "sha256": "5b5ccc0844ecf0fbf344a55ff70311213146f968ceba80f0d246c15612fe5857"
+    },
+    {
+      "path": "frames/ember/plate.svg",
+      "bytes": 373,
+      "sha256": "24e4e81a2c632b2f62068c25803295b1ddb11cf93f2466dee773b6b269f89510"
+    },
+    {
+      "path": "frames/ember/well.svg",
+      "bytes": 269,
+      "sha256": "22615c3cd58abab5f2fa0954a071cacbe71803eb737be369ef9c23d850af303a"
+    },
+    {
+      "path": "icons/icons-16.svg",
+      "bytes": 5391,
+      "sha256": "0a79b2a4f91fbdc20476122893bc05662546378cc2c3c8aeeebcad8d47ed9547"
+    },
+    {
+      "path": "icons/icons-24.svg",
+      "bytes": 5313,
+      "sha256": "494c6bfcc5c811d078cd3aa0796d9642b061fba80ff11155a83ac800c2613762"
+    },
+    {
+      "path": "icons/icons-32.svg",
+      "bytes": 5417,
+      "sha256": "90ef88f188fc39a1e855101d1e1665f1dc056d346f43bbb4c8cc129fe9291370"
+    },
+    {
+      "path": "icons/icons-48.svg",
+      "bytes": 5365,
+      "sha256": "6b43a7d1e2188dda40cf6d4d56da998554f8c4de84ed5404fb4b5ecd85301799"
+    },
+    {
+      "path": "textures/dots.svg",
+      "bytes": 152,
+      "sha256": "1b021bbebf5ca899ade37c5694d3b4ae18c3d73fc2e6166b2a33585e0680eb58"
+    },
+    {
+      "path": "textures/grain.svg",
+      "bytes": 12355,
+      "sha256": "0eb3c24029580677b34cf144a60e2df3511b40aa5e6228ced5dee602b5ba3030"
+    },
+    {
+      "path": "textures/scanlines.svg",
+      "bytes": 155,
+      "sha256": "525e8c6b100ed786840b1e9b9b033a3397c6cd771b667342569a28bfca13d7f1"
+    }
+  ],
+  "totalBytes": 38514
+}

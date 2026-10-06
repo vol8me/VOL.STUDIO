@@ -7,6 +7,10 @@ build/
 **/*.min.css
 core/public/assets/fonts/
 
+# `pnpm gen:ui-assets` YAZDIĞI üretilmiş varlıklar (SVG, manifest, kaynak kaydı); biçimi
+# üretici belirler ve --check bayt eşitliğine bakar.
+core/public/assets/ui/
+
 # Tauri CLI/Gradle tarafından üretilir; elle düzenlenen Android kaynakları
 # (manifest, Kotlin, tema) bu kapsamın dışında kalır ve normal kapılardan geçer.
 **/src-tauri/gen/schemas/
