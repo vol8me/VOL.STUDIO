@@ -132,7 +132,11 @@ HUD, joystick sürüş/nişan, ateş, duraklat/devam, arka plan dönüşü ve ka
 akışını kapsar. Seri numarası, adres ve kullanıcı kimliği repoya girmez. `device-benchmark` her iki
 cihazda da native Activity süresini "oyun FPS'i" diye yazmaz; app-private
 `diagnostics.jsonl` kaydı olmadığı için oyun FPS'i, oyuna hazır zamanı, ilk
-fiziksel sunum ve renderer `bilinmiyor` olarak kalır.
+fiziksel sunum ve renderer `bilinmiyor` olarak kalır. Sunulan kare ayrıca
+`scripts/android/frame-stats.mjs` ile örneklenir: `dumpsys gfxinfo framestats`
+`DisplayPresentTime`, `GpuCompleted` ve girdi satırlarını verir (Android 14
+tablette VOL.TEST: 120 Hz, sunum p50 32,2 ms). Sütun yoksa kapsam
+`unsupported` yazılır; çekirdek girdi zamanı bu yola dahil değildir.
 
 Kısa dış bölge dokunuşu Lenovo'da kanıtlandı: 60 ms'lik sabit basış
 patlamasında ateş barı ölçülen karelerde tükendi (202 → 5 dolu piksel), aynı

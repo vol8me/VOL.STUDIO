@@ -164,6 +164,38 @@ tam cihaz kabulü değildir. İzleyici/başsız tarayıcı emülasyonu fiziksel 
 kabulünün yerine koyulmaz. GPU ve sunumun CPU ile örtüşen paralel süreleri
 toplanarak sahte tek “UI%” sayısı üretilmez.
 
+### Ölçüm sondası ve profil uygulanabilirliği (UI-00.6)
+
+**Tarayıcı probu (çalışıyor).** `devtools/vol-showcase/tests/e2e/support/frameProbe.ts`
+sayfa katmanında (iki motor) girdi `timeStamp`ini, her girdiden sonraki ilk karenin
+rAF başlangıcını ve çizim sonrası turunu; Chromium'da CDP izinden her ana iş
+parçacığı karesini `BeginMainThreadFrame.frameId` ile kimliklenmiş olarak, JS
+(olay/rAF/zamanlayıcı), stil, yerleşim, boyama ve commit sürelerini önceki
+commit sonu ile bu karenin commit sonu arasındaki pencerede AYNI kareye atfeder.
+Iz saati sayfa saatine `performance.mark` ile hizalanır ve girdi, işlendiği iz
+karesine bağlanır; JS içinde zorlanan yerleşim ayrıca (`forcedMs`) görünür.
+Playwright'ın kendi araç olayları JS'e girmez. WebKit'te iz API'si yoktur: iz
+kapsamı `unsupported`, sayfa katmanı çalışır. Kalibrasyon (`probe.spec.ts`,
+bilinen 5 ms ve 25 ms yük): izden okunan JS 5 ms yükü 5–9 ms aralığında verir,
+boşta karelerin medyanı 1 ms altındadır, 20 ms iş farkı A/A gürültü ve iz maliyeti
+payı içinde ayrılır; A/A gürültü ve iz maliyeti her koşuda `ui-perf` kaydına
+yazılır. Başsız ortam gerçek panele sunum yapmaz: `PipelineReporter` sayacı
+yalnız gözlemdir, sunum kanıtı değildir. UI-03 pilotu bu probun uygulama
+programlama yüzüne (`attributeFrames`, `linkInputs`, `startTrace`) dayanır.
+
+**Native uygulanabilirlik.** Her runtime için resmi yol, bu oturumda denenip
+denenmediği ve eksik olan açıkça yazılır; denenmeyen hücre ölçülmüş sayılmaz.
+
+| Runtime                                      | Resmi kare/izleme yolu                                                                                                                        | Bu oturumda                                                                                                                                                       | Eksik araç / sahip                                                                                                                                    |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Android 14 WebView (Lenovo tablet, VOL.TEST) | `dumpsys gfxinfo <paket> framestats`: `DisplayPresentTime` (sunum), `GpuCompleted`, `InputEventId`/`HandleInputStart`, `FrameTimelineVsyncId` | **Denendi, çalışıyor**: 530 kare, 120 Hz, sunum p50 32,2 ms, işleme p95 8,8 ms, girdi işleme→sunum p50 31,4 ms (7 örnek). Araç: `scripts/android/frame-stats.mjs` | Çekirdek girdi zamanı ve sürücü gecikmesi dahil değil; WebView içi JS/DOM atfı için uzak CDP izi (adb) ve Perfetto FrameTimeline eksik; sahip UI-11.4 |
+| Android 16 / Samsung                         | aynı yol                                                                                                                                      | **NOT-RUN**: cihaz yok                                                                                                                                            | cihaz; UI-11.4                                                                                                                                        |
+| Windows WebView2 (Tauri)                     | WebView2 DevTools Protocol `Tracing`/`Performance` (aynı Chromium izi); sunum için ETW/PresentMon                                             | **Denenmedi**: yerel vitrin yok, PresentMon kurulu değil                                                                                                          | PresentMon ya da ETW ayrıştırıcısı ve yerel vitrin bağlama; UI-06.4                                                                                   |
+| Steam Deck (Gamescope + WebKitGTK)           | WebKitGTK uzak inspector; sunum için Gamescope/MangoHud                                                                                       | **NOT-RUN**: cihaz bağlı değil. Mevcut Deck sondası (`devtools/deck`) oyun içi kare pencerelerini ve hwmon gücünü okur, sunulan kareyi ölçmez                     | cihaz, sunulan kare aracı ve yerel vitrin; UI-12.4                                                                                                    |
+
+Desteksiz toplam CPU/GPU/sunum hücresi açık bir SÜRÜM ENGELİDİR; sıfır ya da
+tahmini PASS değildir.
+
 ## Ses ve haptik kabulü
 
 Kanonik iş/program/render/PCM özeti/manifest ve kodlama/gönderilen varlık
