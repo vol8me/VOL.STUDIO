@@ -56,6 +56,18 @@ test('depodaki başlangıç sayımı yeniden üretilir: sekme, anahtar, doğruda
   assert.equal(counts.directConsumers.classes, 17);
 });
 
+test('cihaz hücreleri: bağlı cihaz "yok" yazılmaz, bağlı ama ölçülmemiş yazılır', () => {
+  const none = deviceCells();
+  assert.equal(none.steamDeck.connected, false);
+  assert.match(none.steamDeck.reason, /bağlı değil/);
+  const some = deviceCells({ steamDeck: true, samsung: true });
+  assert.equal(some.steamDeck.status, 'NOT-RUN');
+  assert.equal(some.steamDeck.connected, true);
+  assert.match(some.steamDeck.reason, /cihaz bağlı; yerel vitrin/);
+  assert.equal(some.samsung.connected, true);
+  assert.equal(some.android16.connected, false);
+});
+
 test('cihaz hücreleri: Steam Deck ve ölçümsüz cihazlar gerekçeli NOT-RUN', () => {
   const cells = deviceCells();
   assert.equal(cells.steamDeck.status, 'NOT-RUN');

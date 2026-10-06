@@ -12,7 +12,7 @@
  * döner. Bağlı olmayan ya da yerel ölçümü olmayan cihaz hücresi NOT-RUN yazılır.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { measureBundleBytes } from '../bundleSize.mjs';
 import { execFileSync, spawnSync } from '../command.mjs';
@@ -44,6 +44,45 @@ function run(args, options = {}) {
     console.error(`[ui-baseline] başarısız: pnpm ${args.join(' ')}`);
     process.exit(result.status ?? 1);
   }
+}
+
+/** Erişilebilir cihazlar. Seri numarası ve adres okunur ama KAYDA GİRMEZ: yalnız sınıf. */
+function detectDevices() {
+  const connected = {};
+  const adb = process.env.ADB ?? 'adb';
+  try {
+    const listing = execFileSync(adb, ['devices'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    for (const line of listing.split(/\r?\n/).slice(1)) {
+      const [serial, state] = line.trim().split(/\s+/);
+      if (!serial || state !== 'device') continue;
+      const prop = (name) =>
+        execFileSync(adb, ['-s', serial, 'shell', 'getprop', name], {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim();
+      const sdk = Number(prop('ro.build.version.sdk'));
+      if (prop('ro.product.manufacturer').toLowerCase() === 'samsung') connected.samsung = true;
+      if (sdk >= 36) connected.android16 = true;
+      if (sdk === 34 && prop('ro.product.manufacturer').toLowerCase() === 'lenovo')
+        connected.androidTablet = true;
+    }
+  } catch {
+    // adb yok ya da çalışmadı: Android hücreleri "bağlı değil" kalır.
+  }
+  const host = process.env.DECK_HOST;
+  if (host) {
+    const key = process.env.DECK_SSH_KEY ?? join(homedir(), '.config/steamos-devkit/devkit_rsa');
+    const result = spawnSync(
+      'ssh',
+      ['-i', key, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', `deck@${host}`, 'true'],
+      { stdio: 'ignore' },
+    );
+    if (result.status === 0) connected.steamDeck = true;
+  }
+  return connected;
 }
 
 function record(label) {
@@ -88,7 +127,7 @@ function record(label) {
       screens,
       motion,
       perf: readPerfSummary(root),
-      devices: deviceCells(),
+      devices: deviceCells(detectDevices()),
     };
     const problems = validateBaseline(document);
     if (problems.length > 0) {

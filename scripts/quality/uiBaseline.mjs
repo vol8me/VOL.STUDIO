@@ -51,18 +51,26 @@ export function countStatic(root) {
   };
 }
 
-/** Ölçülmeyen cihaz hücreleri: bağlı olsa da yerel vitrin ölçümü yoksa NOT-RUN. */
-export function deviceCells() {
+/**
+ * Ölçülmeyen cihaz hücreleri: bağlı olsa da yerel vitrin ölçümü yoksa NOT-RUN.
+ * `connected` hangi cihazların o an erişilebilir olduğunu söyler (kimlik taşımaz);
+ * bağlı cihaz "cihaz yok" diye yazılmaz, bağlı ama ölçülmemiş diye yazılır.
+ */
+export function deviceCells(connected = {}) {
   const native = 'yerel vitrin ölçümü UI-06.4/UI-11.4/UI-12.4 teslimiyle gelir';
+  const cell = (name, absent) =>
+    connected[name]
+      ? { status: 'NOT-RUN', connected: true, reason: `cihaz bağlı; ${native}` }
+      : { status: 'NOT-RUN', connected: false, reason: `${absent}; ${native}` };
   return {
     windowsLaptop: {
       status: 'measured-host',
       note: 'başsız tarayıcı koşusu; fiziksel panel ölçümü değildir',
     },
-    androidTablet: { status: 'NOT-RUN', reason: native },
-    steamDeck: { status: 'NOT-RUN', reason: `cihaz bağlı değil; ${native}` },
-    samsung: { status: 'NOT-RUN', reason: `cihaz yok; ${native}` },
-    android16: { status: 'NOT-RUN', reason: `cihaz yok; ${native}` },
+    androidTablet: cell('androidTablet', 'cihaz bağlı değil'),
+    steamDeck: cell('steamDeck', 'cihaz bağlı değil'),
+    samsung: cell('samsung', 'cihaz bağlı değil'),
+    android16: cell('android16', 'cihaz bağlı değil'),
   };
 }
 

@@ -28,16 +28,16 @@ sayı değişince bu bölüm güncellenir, tarihçe git'tedir.
 
 ### Ölçülen başlangıç
 
-| Alan                           | Ölçü                                                                                                                                                                                     |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CORE UI                        | 117 TS dosyası, 21,1 bin satır; 89 sınıf/118 runtime/205 tip export; 60 renk tokenı, 238 satır `theme.css`                                                                               |
-| Vitrin                         | 12 sekme, **830** TR/EN anahtar (yaprak sayımı, UI-00.5 yeniden sayımı; plandaki ilk "821" yeniden üretilemedi) + CORE 63; 7 E2E dosyası, 40 test (≈1,6 dk); WebKit yalnız `readability` |
-| Piksel temeli                  | 12 sekme × Chromium `win32` + `linux` = 24 PNG, sıfır tolerans; WebKit temeli yok; Linux temeli WSL'de 6/12 yeniden üretildi (doğrulanmamış)                                             |
-| Gönderilen boyut               | vitrin app 138,7/150, css 19,8/24 KiB; **VOL.TEST app 106,3/106,3 (pay sıfır)**, vendor 345,6/360, css 18,2/21                                                                           |
-| Eksik altyapı (başlangıçta)    | axe-core kurulu değildi; `ui-check` tarifi, kayıt/registry ve native ölçüm sondası yoktu — UI-00.1–UI-00.6 ile kapandı (Windows/Deck/Android 16 native hücreleri açık)                   |
-| Göç maliyeti (taşınmadan önce) | eski vitrin yolu için 26 yol + 15 paket başvurusu, 81 izlenen dosya, 24 PNG; `.vol-ui-root` CSS sınıfı 944 geçişte ve **değişmez**                                                       |
-| Cihaz                          | Windows dizüstü (bu makine) ve Lenovo Android 14 tablet erişilebilir; Steam Deck, Samsung ve Android 16 cihaz yok                                                                        |
-| Ortam                          | `doctor:env` Node **22.23.1** ister; kapılar bu sürümle koşturulur                                                                                                                       |
+| Alan                           | Ölçü                                                                                                                                                                                                                        |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CORE UI                        | 117 TS dosyası, 21,1 bin satır; 89 sınıf/118 runtime/205 tip export; 60 renk tokenı, 238 satır `theme.css`                                                                                                                  |
+| Vitrin                         | 12 sekme, **830** TR/EN anahtar (yaprak sayımı, UI-00.5 yeniden sayımı; plandaki ilk "821" yeniden üretilemedi) + CORE 63; 7 E2E dosyası, 40 test (≈1,6 dk); WebKit yalnız `readability`                                    |
+| Piksel temeli                  | 12 sekme × Chromium `win32` + `linux` = 24 PNG, sıfır tolerans; WebKit temeli yok; Linux temeli WSL'de 6/12 yeniden üretildi (doğrulanmamış)                                                                                |
+| Gönderilen boyut               | vitrin app 138,7/150, css 19,8/24 KiB; **VOL.TEST app 106,3/106,3 (pay sıfır)**, vendor 345,6/360, css 18,2/21                                                                                                              |
+| Eksik altyapı (başlangıçta)    | axe-core kurulu değildi; `ui-check` tarifi, kayıt/registry ve native ölçüm sondası yoktu — UI-00.1–UI-00.6 ile kapandı (Windows/Deck/Android 16 native hücreleri açık)                                                      |
+| Göç maliyeti (taşınmadan önce) | eski vitrin yolu için 26 yol + 15 paket başvurusu, 81 izlenen dosya, 24 PNG; `.vol-ui-root` CSS sınıfı 944 geçişte ve **değişmez**                                                                                          |
+| Cihaz                          | **Dört cihaz erişilebilir:** Windows dizüstü (bu makine), Lenovo Android 14 tablet, Samsung Galaxy S21 FE (Android 16) ve Steam Deck (SteamOS, SSH). Yerel vitrin henüz yok: cihaz hücreleri bağlı ama ölçülmemiş (NOT-RUN) |
+| Ortam                          | `doctor:env` Node **22.23.1** ister; kapılar bu sürümle koşturulur                                                                                                                                                          |
 
 ### Kararlar
 
@@ -164,13 +164,18 @@ aynı commit'tedir.
 
 ### Yapılamayan/NOT-RUN kalacak kabuller
 
-Bu kabuller kod fazını bloklamaz; **sürümü bloklar** ve PASS sayılmaz:
-Steam Deck host/SLR4 açılış, kol-only, glif yüksekliği ve ısınmış performans
-(UI-06.4, UI-12.2–12.3, UI-13.3; F08); Windows Playwright WebKit'in AudioContext sınırı yüzünden WebKit ses hücreleri (ses E2E Chromium'da, WebKit sınırı belgeli); Samsung ve Android 16 hücreleri (UI-11.4,
-UI-13.3); gerçek Steam runtime metin sağlayıcısı (UI-12.1; F04.4/F08.6); insan
-erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4 beğeni, UI-13.4). Bu makinede
-**yapılabilir**: iki motorlu tarayıcı kabulü, Windows native vitrin ve yükleyici
-(DPI 125/150/200), Lenovo Android 14 tablet profili.
+Bu kabuller kod fazını bloklamaz; **sürümü bloklar** ve PASS sayılmaz.
+Dört cihaz (Windows dizüstü, Lenovo Android 14, Samsung Android 16, Steam Deck)
+erişilebilir olduğundan hücreler "cihaz yok" değil, **yerel vitrin ya da ölçüm
+aracı gelene kadar ölçülmedi**dir: Steam Deck host/SLR4 açılış, kol-only, glif
+yüksekliği ve ısınmış performans (UI-06.4, UI-12.2–12.3, UI-13.3; F08); Samsung
+ve Android 16 hücreleri (UI-11.4, UI-13.3); gerçek Steam runtime metin sağlayıcısı
+(UI-12.1; F04.4/F08.6). Cihazdan bağımsız sınırlar: Windows Playwright WebKit'in
+AudioContext sınırı yüzünden WebKit ses hücreleri (ses E2E Chromium'da, WebKit
+sınırı belgeli) ve insan erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4
+beğeni, UI-13.4). Bu makinede ve bağlı cihazlarda **yapılabilir**: iki motorlu
+tarayıcı kabulü, Windows native vitrin ve yükleyici (DPI 125/150/200), Android 14 ve
+Android 16 profilleri, Steam Deck host ölçümü.
 
 ### Başlangıç dilimleri
 
