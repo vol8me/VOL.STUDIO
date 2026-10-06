@@ -127,7 +127,7 @@
   padding: 0;
   border: 1px solid var(--vol-ui-border-strong);
   border-radius: var(--vol-radius-sm);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   min-height: var(--vol-hit-target-min, auto);
   min-width: var(--vol-hit-target-min, auto);
 }
@@ -142,7 +142,7 @@
 }
 
 .vol-color-picker__swatch:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   opacity: 0.5;
 }
 
@@ -169,7 +169,7 @@
   padding: 0;
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: 3px;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
 }
 
 .vol-color-picker__preset:hover {
@@ -193,6 +193,6 @@
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
   background: var(--vol-ui-bg-subtle);
-  cursor: crosshair;
+  cursor: var(--vol-cursor-aim-small, crosshair);
   touch-action: none;
 }

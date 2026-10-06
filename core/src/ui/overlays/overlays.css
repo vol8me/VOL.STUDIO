@@ -201,7 +201,7 @@
   border-radius: var(--vol-radius-md);
   width: min(720px, 90vw);
   padding: var(--vol-space-lg) var(--vol-space-xl);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   opacity: 0;
   box-shadow: 0 12px 32px var(--vol-ui-scrim);
   transition:
@@ -299,7 +299,7 @@
 
 .vol-dialogue__control {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   width: 34px;
   height: 34px;
   color: var(--vol-ui-icon);
@@ -360,7 +360,7 @@
 
 .vol-dialogue__choice {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   text-align: left;
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text);
@@ -483,7 +483,7 @@
 
 .vol-command-palette__item {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   align-items: center;
   gap: var(--vol-space-sm);
   padding: var(--vol-space-sm) var(--vol-space-md);
@@ -600,7 +600,7 @@
   color: var(--vol-ui-text);
   border-radius: var(--vol-radius-sm);
   padding: var(--vol-space-sm) var(--vol-space-md);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   background: 0 0;
   border: none;
   font-size: var(--vol-text-body);
@@ -617,7 +617,7 @@
 }
 
 .vol-context-menu__item:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   color: var(--vol-ui-disabled-text);
   background: 0 0;
 }
@@ -805,7 +805,7 @@
 
 .vol-radial-menu__item {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   background: var(--vol-ui-surface-1);
   border: 2px solid var(--vol-ui-border-strong);
   width: 64px;
@@ -829,7 +829,7 @@
 }
 
 .vol-radial-menu__item:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   opacity: 0.4;
 }
 

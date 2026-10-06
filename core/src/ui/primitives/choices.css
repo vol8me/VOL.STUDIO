@@ -2,7 +2,7 @@
   pointer-events: auto;
   align-items: center;
   gap: var(--vol-space-sm);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   display: inline-flex;
 
   /* bkz. .vol-button — aynı gerekçe: yalnızca pointer:coarse'da devreye girer. */
@@ -89,7 +89,7 @@
   pointer-events: auto;
   align-items: center;
   gap: var(--vol-space-sm);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   display: inline-flex;
 
   /* Dokunmatik hedef politikası — bkz. theme.css. Yalnızca pointer:coarse'da
@@ -185,7 +185,7 @@
 .vol-segmented__item {
   z-index: 1;
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text-secondary);
   border-radius: var(--vol-radius-sm);
@@ -213,7 +213,7 @@
 }
 
 .vol-segmented__item:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   color: var(--vol-ui-disabled-text);
 }
 
@@ -267,7 +267,7 @@
 
 .vol-stepper__button {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   width: 40px;
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text-secondary);
@@ -296,7 +296,7 @@
 }
 
 .vol-stepper__button:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   color: var(--vol-ui-disabled-text);
   background: 0 0;
 }
@@ -407,7 +407,7 @@
   background: var(--vol-ui-on-brand);
   border: 2px solid var(--vol-ui-brand-solid);
   border-radius: var(--vol-radius-sm);
-  cursor: grab;
+  cursor: var(--vol-cursor-grab, grab);
   touch-action: none;
   width: 18px;
   height: 26px;
@@ -426,7 +426,7 @@
 }
 
 .vol-range-slider__handle:active {
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
 }
 
 .vol-range-slider__handle:focus-visible {
@@ -436,7 +436,7 @@
 }
 
 .vol-range-slider--disabled .vol-range-slider__handle {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   background: var(--vol-ui-disabled-fill);
   border-color: var(--vol-ui-disabled-border);
 }

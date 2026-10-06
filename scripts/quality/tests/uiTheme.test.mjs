@@ -134,11 +134,7 @@ test('depo UI tema kapısı yeşildir', () => {
 function tamper(mutate) {
   const root = mkdtempSync(join(tmpdir(), 'vol-ui-theme-'));
   try {
-    for (const path of [
-      'core/src/ui',
-      'scripts/quality/uiThemeKnown.json',
-      'docs/ui/TODO.md',
-    ]) {
+    for (const path of ['core/src/ui', 'scripts/quality/uiThemeKnown.json', 'docs/ui/TODO.md']) {
       mkdirSync(dirname(join(root, path)), { recursive: true });
       cpSync(join(ROOT, path), join(root, path), { recursive: true });
     }

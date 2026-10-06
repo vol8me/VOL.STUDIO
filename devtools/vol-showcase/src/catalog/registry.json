@@ -503,6 +503,26 @@
       "extraStates": ["empty"]
     },
     {
+      "export": "CursorController",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": "A1",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikCursors.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cursors/cursors.test.ts",
+          "title": "arayüz imleçleri kökte CSS değişkeni olarak kurulur ve dispose ile kalkar"
+        },
+        {
+          "file": "core/tests/ui/cursors/cursors.test.ts",
+          "title": "nişangâh kipi yerel imleci gizler, işaretçiyi aynı olayda izler ve dokunmada saklanır"
+        }
+      ]
+    },
+    {
       "export": "CurveEditor",
       "kind": "class",
       "tier": 2,
@@ -1442,6 +1462,38 @@
       ]
     },
     {
+      "export": "RETICLES",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikCursors.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cursors/cursors.test.ts",
+          "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
+        }
+      ]
+    },
+    {
+      "export": "RTS_CURSORS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikCursors.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cursors/cursors.test.ts",
+          "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
+        }
+      ]
+    },
+    {
       "export": "RadialMenu",
       "kind": "class",
       "tier": 2,
@@ -2114,6 +2166,22 @@
       ]
     },
     {
+      "export": "UI_CURSORS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikCursors.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cursors/cursors.test.ts",
+          "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
+        }
+      ]
+    },
+    {
       "export": "UiHapticProvider",
       "kind": "class",
       "tier": 1,
@@ -2303,6 +2371,26 @@
         {
           "file": "core/tests/ui/textEntry/textEntry.test.ts",
           "title": "probu yoksa ya da kip kapalıysa klavye açmaz"
+        }
+      ]
+    },
+    {
+      "export": "configureCursorAssets",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan imleç kaydı kökü ayarı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/cursors/cursors.test.ts",
+          "title": "configureCursorAssets kökü değiştirir, sondaki eğik çizgiyi atar ve kaydı o kökten getirir"
         }
       ]
     },
@@ -2670,6 +2758,22 @@
       ]
     },
     {
+      "export": "rtsCursorFor",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikCursors.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cursors/cursors.test.ts",
+          "title": "dost, düşman, kaynak ve engelli bağlam ayrı şekil ve tonla eşlenir; renk tek kanal değildir"
+        }
+      ]
+    },
+    {
       "export": "runButtonClick",
       "kind": "helper",
       "tier": 2,
@@ -2690,6 +2794,22 @@
         {
           "file": "core/tests/ui/primitives/buttonBehavior.test.ts",
           "title": "asenkron handler beklenir; süresince loading açıktır ve yeniden giriş reddedilir"
+        }
+      ]
+    },
+    {
+      "export": "scrollContextAt",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikCursors.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cursors/cursors.test.ts",
+          "title": "ekran kenarı kaydırma bölgesi köşe ve kenarlara göre sekiz yönü verir"
         }
       ]
     },

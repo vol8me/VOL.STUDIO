@@ -891,3 +891,76 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Kimlik sekmesi: imleç önizlemesi ve test alanları */
+.vol-showcase-cursor-preview {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--vol-radius-sm, 4px);
+  background: var(--vol-ui-surface-3);
+}
+
+.vol-showcase-cursor-preview--reticle {
+  color: var(--vol-ui-text);
+}
+
+.vol-showcase-cursor-preview svg {
+  width: 48px;
+  height: 48px;
+}
+
+.vol-showcase-arena {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm, 4px);
+  background:
+    linear-gradient(var(--vol-ui-hairline-alpha) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--vol-ui-hairline-alpha) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--vol-ui-bg-subtle);
+  touch-action: none;
+}
+
+.vol-showcase-arena__thing {
+  position: absolute;
+  padding: 6px 10px;
+  border: 2px solid var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm, 4px);
+  background: var(--vol-ui-surface-2);
+  color: var(--vol-ui-text);
+  font-size: 12px;
+}
+
+.vol-showcase-arena__thing--friendly,
+.vol-showcase-arena__thing--garrison,
+.vol-showcase-arena__thing--repair {
+  border-color: var(--vol-ui-success-solid);
+}
+
+.vol-showcase-arena__thing--hostile,
+.vol-showcase-arena__thing--blocked {
+  border-color: var(--vol-ui-danger-solid);
+}
+
+.vol-showcase-arena__thing--resource,
+.vol-showcase-arena__thing--tree {
+  border-color: var(--vol-ui-warning-solid);
+}
+
+.vol-showcase-arena__thing--build {
+  border-color: var(--vol-ui-brand-solid);
+  border-style: dashed;
+}
+
+.vol-showcase-arena__target {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--vol-ui-danger-solid);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--vol-ui-danger-solid) 0 28%, transparent 30%);
+}

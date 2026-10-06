@@ -155,7 +155,7 @@
   border: 2px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
   pointer-events: auto;
-  cursor: grab;
+  cursor: var(--vol-cursor-grab, grab);
   box-sizing: border-box;
   transition:
     transform var(--vol-transition-fast),
@@ -170,7 +170,7 @@
 
 .vol-slot-grid__item--dragging {
   opacity: 0.4;
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
 }
 
 .vol-slot-grid__item--rarity-common {
@@ -190,7 +190,7 @@
   pointer-events: none;
   opacity: 0.95;
   box-shadow: 0 12px 28px var(--vol-ui-scrim);
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
   will-change: transform;
   position: fixed;
   transform: translate(0, 0);
@@ -246,7 +246,7 @@
 
 .vol-action-bar__slot {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   width: var(--vol-action-bar-size, 68px);
   height: var(--vol-action-bar-size, 68px);
   color: var(--vol-ui-text);
@@ -280,7 +280,7 @@
 }
 
 .vol-action-bar__slot:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   opacity: 0.45;
 }
 
@@ -387,7 +387,7 @@
   background: var(--vol-ui-surface-1);
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   transition:
     border-color var(--vol-transition-fast),
     background-color var(--vol-transition-fast);
@@ -424,7 +424,7 @@
 }
 
 .vol-build-menu__item:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   opacity: 0.5;
 }
 
@@ -474,7 +474,7 @@
 }
 
 .vol-minimap__canvas {
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   display: block;
 }
 
@@ -500,11 +500,11 @@
 }
 
 .vol-skill-tree--zoomable .vol-skill-tree__viewport {
-  cursor: grab;
+  cursor: var(--vol-cursor-grab, grab);
 }
 
 .vol-skill-tree__viewport--panning {
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
 }
 
 .vol-skill-tree__canvas {
@@ -556,7 +556,7 @@
 
 .vol-skill-tree__node {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   min-width: 88px;
   height: 44px;
   padding: 0 var(--vol-space-sm);
@@ -579,7 +579,7 @@
 }
 
 .vol-skill-tree__node--locked {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   opacity: 0.45;
 }
 

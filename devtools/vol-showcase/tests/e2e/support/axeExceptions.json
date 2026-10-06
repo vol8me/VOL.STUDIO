@@ -398,6 +398,13 @@
       "target": ".vol-slider--horizontal.vol-slider:nth-child(12) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "label",
+      "target": "input[min=\"50\"]",
+      "owner": "UI-05.1",
+      "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (nişangâh açılım kaydırıcısı aynı kusuru paylaşır)"
     }
   ],
   "incomplete": [

@@ -1,0 +1,320 @@
+{
+  "cursors": [
+    {
+      "id": "default",
+      "set": "ui",
+      "source": "pointer_a",
+      "hotspot": "tipTL"
+    },
+    {
+      "id": "link",
+      "set": "ui",
+      "source": "hand_point",
+      "hotspot": "top"
+    },
+    {
+      "id": "text",
+      "set": "ui",
+      "source": "bracket_a_vertical",
+      "hotspot": "center"
+    },
+    {
+      "id": "busy",
+      "set": "ui",
+      "source": "busy_circle",
+      "hotspot": "center"
+    },
+    {
+      "id": "wait",
+      "set": "ui",
+      "source": "busy_hourglass",
+      "hotspot": "center"
+    },
+    {
+      "id": "denied",
+      "set": "ui",
+      "source": "disabled",
+      "hotspot": "center"
+    },
+    {
+      "id": "help",
+      "set": "ui",
+      "source": "cursor_help",
+      "hotspot": [9, 7]
+    },
+    {
+      "id": "grab",
+      "set": "ui",
+      "source": "hand_open",
+      "hotspot": "center"
+    },
+    {
+      "id": "grabbing",
+      "set": "ui",
+      "source": "hand_closed",
+      "hotspot": "center"
+    },
+    {
+      "id": "resizeH",
+      "set": "ui",
+      "source": "resize_a_horizontal",
+      "hotspot": "center"
+    },
+    {
+      "id": "resizeV",
+      "set": "ui",
+      "source": "resize_a_vertical",
+      "hotspot": "center"
+    },
+    {
+      "id": "resizeNWSE",
+      "set": "ui",
+      "source": "resize_a_diagonal_mirror",
+      "hotspot": "center"
+    },
+    {
+      "id": "resizeNESW",
+      "set": "ui",
+      "source": "resize_a_diagonal",
+      "hotspot": "center"
+    },
+    {
+      "id": "moveAll",
+      "set": "ui",
+      "source": "resize_a_cross",
+      "hotspot": "center"
+    },
+    {
+      "id": "zoomIn",
+      "set": "ui",
+      "source": "zoom_in",
+      "hotspot": "center"
+    },
+    {
+      "id": "zoomOut",
+      "set": "ui",
+      "source": "zoom_out",
+      "hotspot": "center"
+    },
+    {
+      "id": "copy",
+      "set": "ui",
+      "source": "cursor_copy",
+      "hotspot": [9, 7]
+    },
+    {
+      "id": "alias",
+      "set": "ui",
+      "source": "cursor_alias",
+      "hotspot": [9, 7]
+    },
+    {
+      "id": "aimSmall",
+      "set": "ui",
+      "source": "target_a",
+      "hotspot": "center"
+    },
+    {
+      "id": "select",
+      "set": "rts",
+      "source": "pointer_toon_a",
+      "hotspot": "tipTL"
+    },
+    {
+      "id": "attack",
+      "set": "rts",
+      "source": "tool_sword_a",
+      "hotspot": "center"
+    },
+    {
+      "id": "walk",
+      "set": "rts",
+      "source": "steps",
+      "hotspot": "center"
+    },
+    {
+      "id": "build",
+      "set": "rts",
+      "source": "tool_hammer",
+      "hotspot": "center"
+    },
+    {
+      "id": "repair",
+      "set": "rts",
+      "source": "tool_wrench",
+      "hotspot": "center"
+    },
+    {
+      "id": "mine",
+      "set": "rts",
+      "source": "tool_pickaxe",
+      "hotspot": "center"
+    },
+    {
+      "id": "chop",
+      "set": "rts",
+      "source": "tool_axe",
+      "hotspot": "center"
+    },
+    {
+      "id": "rally",
+      "set": "rts",
+      "source": "target_round_a",
+      "hotspot": "center"
+    },
+    {
+      "id": "patrol",
+      "set": "rts",
+      "source": "rotate_cw",
+      "hotspot": "center"
+    },
+    {
+      "id": "garrison",
+      "set": "rts",
+      "source": "door_enter",
+      "hotspot": "center"
+    },
+    {
+      "id": "cancelOrder",
+      "set": "rts",
+      "source": "cross_large",
+      "hotspot": "center"
+    },
+    {
+      "id": "scrollN",
+      "set": "rts",
+      "source": "arrow_n",
+      "hotspot": "center"
+    },
+    {
+      "id": "scrollNE",
+      "set": "rts",
+      "source": "arrow_ne",
+      "hotspot": "center"
+    },
+    {
+      "id": "scrollE",
+      "set": "rts",
+      "source": "arrow_e",
+      "hotspot": "center"
+    },
+    {
+      "id": "scrollSE",
+      "set": "rts",
+      "source": "arrow_se",
+      "hotspot": "center"
+    },
+    {
+      "id": "scrollS",
+      "set": "rts",
+      "source": "arrow_s",
+      "hotspot": "center"
+    },
+    {
+      "id": "scrollSW",
+      "set": "rts",
+      "source": "arrow_sw",
+      "hotspot": "center"
+    },
+    {
+      "id": "scrollW",
+      "set": "rts",
+      "source": "arrow_w",
+      "hotspot": "center"
+    },
+    {
+      "id": "scrollNW",
+      "set": "rts",
+      "source": "arrow_nw",
+      "hotspot": "center"
+    },
+    {
+      "id": "look",
+      "set": "rts",
+      "source": "look_a",
+      "hotspot": "center"
+    }
+  ],
+  "reticles": [
+    {
+      "id": "dot",
+      "source": "crosshair-000"
+    },
+    {
+      "id": "plus",
+      "source": "crosshair-001"
+    },
+    {
+      "id": "cross",
+      "source": "crosshair-004"
+    },
+    {
+      "id": "ring",
+      "source": "crosshair-086"
+    },
+    {
+      "id": "ringDot",
+      "source": "crosshair-087"
+    },
+    {
+      "id": "ringPlus",
+      "source": "crosshair-088"
+    },
+    {
+      "id": "ringTicks",
+      "source": "crosshair-046"
+    },
+    {
+      "id": "ringGap",
+      "source": "crosshair-012"
+    },
+    {
+      "id": "doubleRing",
+      "source": "crosshair-174"
+    },
+    {
+      "id": "sniper",
+      "source": "crosshair-113"
+    },
+    {
+      "id": "ticks",
+      "source": "crosshair-020"
+    },
+    {
+      "id": "ticksDot",
+      "source": "crosshair-023"
+    },
+    {
+      "id": "gapPlus",
+      "source": "crosshair-016"
+    },
+    {
+      "id": "corners",
+      "source": "crosshair-080"
+    },
+    {
+      "id": "cornersPlus",
+      "source": "crosshair-082"
+    },
+    {
+      "id": "squareTicks",
+      "source": "crosshair-104"
+    },
+    {
+      "id": "target",
+      "source": "crosshair-109"
+    },
+    {
+      "id": "xCorners",
+      "source": "crosshair-035"
+    },
+    {
+      "id": "chevrons",
+      "source": "crosshair-045"
+    },
+    {
+      "id": "triangle",
+      "source": "crosshair-055"
+    }
+  ]
+}

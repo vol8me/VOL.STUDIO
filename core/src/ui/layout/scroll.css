@@ -1,7 +1,7 @@
 .vol-dual-scroll {
   pointer-events: auto;
   touch-action: none;
-  cursor: grab;
+  cursor: var(--vol-cursor-grab, grab);
   background: var(--vol-ui-surface-1);
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-md);
@@ -10,7 +10,7 @@
 }
 
 .vol-dual-scroll--dragging {
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
 }
 
 .vol-dual-scroll__content {
@@ -51,7 +51,7 @@
 
 .vol-carousel__arrow {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   z-index: 2;
   width: 36px;
   height: 36px;
@@ -108,7 +108,7 @@
  */
 .vol-carousel__dot {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   justify-content: center;
   align-items: center;
   background: 0 0;

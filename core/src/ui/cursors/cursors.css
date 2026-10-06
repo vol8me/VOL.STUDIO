@@ -1,0 +1,51 @@
+/*
+ * Nişangâh (yazılım imleci): işaretçiyi izleyen çizilmiş imleç. Konum satır içi `transform` ile
+ * verilir; renk `currentColor`dır (ton), parıltı ve dış gölge bunu izler. Etkileşimi engellemez.
+ */
+.vol-reticle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483000;
+  color: #fff;
+  contain: layout paint;
+  filter: drop-shadow(0 0 1px #10141a) drop-shadow(0 0 5px currentcolor);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.vol-reticle svg {
+  display: block;
+}
+
+/* Metin girişi imleci (I-beam); değişken yoksa sistem imleci kalır. */
+input:not([type='range'], [type='checkbox'], [type='radio'], [type='button']),
+textarea {
+  cursor: var(--vol-cursor-text, text);
+}
+
+/*
+ * Arayüz imleçlerinin varsayılanı sistem imlecidir; CursorController yüklendiğinde kökte bu
+ * değişkenleri oyun imleçleriyle (veri URL'si + etkin nokta + aynı sistem yedeği) değiştirir.
+ */
+:root {
+  --vol-cursor-default: default;
+  --vol-cursor-link: pointer;
+  --vol-cursor-text: text;
+  --vol-cursor-busy: progress;
+  --vol-cursor-wait: wait;
+  --vol-cursor-denied: not-allowed;
+  --vol-cursor-help: help;
+  --vol-cursor-grab: grab;
+  --vol-cursor-grabbing: grabbing;
+  --vol-cursor-resize-h: ew-resize;
+  --vol-cursor-resize-v: ns-resize;
+  --vol-cursor-resize-nwse: nwse-resize;
+  --vol-cursor-resize-nesw: nesw-resize;
+  --vol-cursor-move-all: move;
+  --vol-cursor-zoom-in: zoom-in;
+  --vol-cursor-zoom-out: zoom-out;
+  --vol-cursor-copy: copy;
+  --vol-cursor-alias: alias;
+  --vol-cursor-aim-small: crosshair;
+}

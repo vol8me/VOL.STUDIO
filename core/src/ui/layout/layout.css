@@ -133,7 +133,7 @@
   letter-spacing: 0.03em;
   color: var(--vol-ui-text-muted);
   padding: var(--vol-space-sm) var(--vol-space-md);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   transition:
     color var(--vol-transition-fast),
     border-color var(--vol-transition-fast);
@@ -361,7 +361,7 @@
   gap: var(--vol-space-sm);
   padding: var(--vol-space-sm);
   border-radius: var(--vol-radius-sm);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   color: var(--vol-ui-text-secondary);
   transition:
     background-color var(--vol-transition-fast),
@@ -386,7 +386,7 @@
 }
 
 .vol-tree__row--disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   color: var(--vol-ui-disabled-text);
 }
 
@@ -416,7 +416,7 @@
 }
 
 .vol-tree__item[aria-expanded] .vol-tree__caret {
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
 }
 
 .vol-tree__item[aria-expanded] .vol-tree__caret:hover {
@@ -485,7 +485,7 @@
   color: var(--vol-ui-text);
   background: var(--vol-ui-surface-1);
   padding: var(--vol-space-md) var(--vol-space-lg);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   text-align: left;
   transition:
     background-color var(--vol-transition-fast),
@@ -685,7 +685,7 @@
 
 .vol-wizard__nav-button {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text);
   background: var(--vol-ui-surface-1);
@@ -709,7 +709,7 @@
 }
 
 .vol-wizard__nav-button:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   opacity: 0.5;
 }
 
@@ -789,7 +789,7 @@
 }
 
 .vol-split-pane--horizontal .vol-split-pane__separator {
-  cursor: col-resize;
+  cursor: var(--vol-cursor-resize-h, col-resize);
 }
 
 .vol-split-pane--horizontal .vol-split-pane__separator::after {
@@ -798,7 +798,7 @@
 }
 
 .vol-split-pane--vertical .vol-split-pane__separator {
-  cursor: row-resize;
+  cursor: var(--vol-cursor-resize-v, row-resize);
 }
 
 .vol-split-pane--vertical .vol-split-pane__separator::after {

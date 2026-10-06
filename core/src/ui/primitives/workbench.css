@@ -32,7 +32,7 @@
   min-height: var(--vol-hit-target-min, 32px);
   padding: 6px;
   font: 600 var(--vol-text-body) / 1 var(--vol-font-family-body);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   justify-content: center;
   align-items: center;
   gap: var(--vol-space-xs);
@@ -62,7 +62,7 @@
 .vol-tool-button:disabled {
   color: var(--vol-ui-disabled-text);
   background: transparent;
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
 }
 
 .vol-property-field {
@@ -100,7 +100,7 @@
   min-width: var(--vol-hit-target-min, 28px);
   min-height: var(--vol-hit-target-min, 28px);
   padding: 6px;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
 }
 
 .vol-property-field__reset:hover {

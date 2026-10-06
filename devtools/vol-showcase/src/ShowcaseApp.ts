@@ -1,5 +1,5 @@
 import { FullscreenController } from '@volstudio/core/platform';
-import { FocusNavController, Tabs, showConfirm } from '@volstudio/core/ui';
+import { CursorController, FocusNavController, Tabs, showConfirm } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { buildAdvancedTab } from './sections/advancedTab';
@@ -84,6 +84,8 @@ export class ShowcaseApp {
       }),
     );
     this.focusNav.start();
+    // Uygulama genelinde oyun imleçleri: düğme eli, metin, sürükleme, boyutlandırma.
+    this.lifecycle.add(new CursorController({ mode: 'ui' }));
     this.rebuild();
   }
 

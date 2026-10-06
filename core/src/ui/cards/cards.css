@@ -32,12 +32,12 @@
 }
 
 .vol-card-stack__card:last-child {
-  cursor: grab;
+  cursor: var(--vol-cursor-grab, grab);
   z-index: 3;
 }
 
 .vol-card-stack__card--dragging {
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
   transition: none;
 }
 
@@ -100,7 +100,7 @@
 
 .vol-card-stack__action {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   width: 52px;
   height: 52px;
   color: var(--vol-ui-text);
@@ -381,7 +381,7 @@
 }
 
 .vol-card--draggable {
-  cursor: grab;
+  cursor: var(--vol-cursor-grab, grab);
 }
 
 .vol-card--dragging {
@@ -417,7 +417,7 @@
 }
 
 .vol-card__action {
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   letter-spacing: 0.06em;
   color: var(--vol-ui-text);
   background: var(--vol-ui-surface-3);
@@ -444,7 +444,7 @@
 }
 
 .vol-card__action:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   color: var(--vol-ui-disabled-text);
   background: var(--vol-ui-disabled-fill);
   border-color: var(--vol-ui-disabled-border);
@@ -563,7 +563,7 @@
 }
 
 .vol-card-shop__reroll {
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   letter-spacing: 0.06em;
   color: var(--vol-ui-text);
   background: var(--vol-ui-surface-2);
@@ -589,7 +589,7 @@
 }
 
 .vol-card-shop__reroll:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   color: var(--vol-ui-disabled-text);
   background: var(--vol-ui-disabled-fill);
   border-color: var(--vol-ui-disabled-border);
@@ -681,7 +681,7 @@
 }
 
 .vol-card-shop__close {
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   letter-spacing: 0.08em;
   color: var(--vol-ui-on-brand);
   background: var(--vol-ui-brand-solid);

@@ -977,6 +977,21 @@
       "item": "Eşyalar",
       "meta": "Genel",
       "chrome": "Kabuk (yön, onay, medya)"
+    },
+    "cursors": {
+      "ui": "Arayüz imleçleri",
+      "rts": "RTS imleçleri",
+      "reticles": "Nişangâhlar (bullet hell / nişancı)",
+      "rtsArena": "RTS test alanı",
+      "shooterArena": "Nişangâh test alanı"
+    },
+    "arena": {
+      "state": "Bağlam: {{kind}} → {{cursor}} · {{tone}}",
+      "shots": "Atış: {{shots}} · İsabet: {{hits}}",
+      "rtsHint": "İmleci birimlerin, kaynakların ve kenarların üzerinde gezdir: şekil ve renk bağlama göre değişir; renk tek taşıyıcı değildir.",
+      "shooterHint": "Nişangâh işaretçiyi izler; tık atıştır (büyür), hedefe isabet vuruş işareti verir.",
+      "reticle": "Nişangâh",
+      "spread": "Açılım"
     }
   }
 }

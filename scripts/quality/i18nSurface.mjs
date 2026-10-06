@@ -151,6 +151,11 @@ export const INDIRECT_KEYS = [
  */
 export const TEXT_ALLOW = [
   {
+    file: 'core/src/ui/cursors/cursorImage.ts',
+    text: 'text',
+    reason: 'CSS cursor anahtar sözcüğü (metin imleci); kullanıcıya gösterilen metin değil',
+  },
+  {
     file: 'games/vol-test/src/config/game.ts',
     text: 'VOL.TEST',
     reason: 'ürün/oyun adı; çevrilmez ve pencere başlığı olarak sabittir',

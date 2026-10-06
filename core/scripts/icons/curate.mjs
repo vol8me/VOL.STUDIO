@@ -16,6 +16,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { format, resolveConfig } from 'prettier';
+import { roundPath } from '../svgPath.mjs';
 import { CHROME_ICONS, CHROME_STROKE } from './chrome.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -65,72 +66,14 @@ const DISPLAY = {
   seregacthtuf: 'SeregaCthtuf',
 };
 
+export { roundPath };
+
 export function authorOf(folder) {
   return {
     folder,
     name: DISPLAY[folder] ?? folder,
     license: CC0_AUTHORS.has(folder) ? 'CC0 1.0' : 'CC BY 3.0',
   };
-}
-
-const ARITY = { m: 2, l: 2, h: 1, v: 1, c: 6, s: 4, q: 4, t: 2, a: 7, z: 0 };
-const NUMBER = /^[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/;
-
-const round1 = (value) => {
-  const rounded = Math.round(value * 10) / 10;
-  return Object.is(rounded, -0) ? '0' : String(rounded);
-};
-
-/**
- * Yol verisini 1 ondalığa yuvarlar. Sıkıştırılmış yazım ("5.5.5", "a1 1 0 01.5-3") komut
- * ayrıştırılarak okunur: yay bayrakları (0/1) tek karakterdir ve yuvarlamaya girmez; sayıyı
- * körü körüne yeniden yazmak bayrağı bir sonraki sayıya yapıştırıp şekli bozardı.
- */
-export function roundPath(d) {
-  let rest = d.trim();
-  let out = '';
-  while (rest.length > 0) {
-    const command = rest[0];
-    const arity = ARITY[command.toLowerCase()];
-    if (arity === undefined) throw new Error(`yol komutu tanınmıyor: ${command}`);
-    rest = rest.slice(1);
-    const numbers = [];
-    const read = () => {
-      rest = rest.replace(/^[\s,]+/, '');
-      const match = NUMBER.exec(rest);
-      if (!match) return null;
-      rest = rest.slice(match[0].length);
-      return match[0];
-    };
-    const readFlag = () => {
-      rest = rest.replace(/^[\s,]+/, '');
-      const flag = rest[0];
-      if (flag !== '0' && flag !== '1') return null;
-      rest = rest.slice(1);
-      return flag;
-    };
-    if (arity === 0) {
-      out += command;
-      rest = rest.replace(/^[\s,]+/, '');
-      continue;
-    }
-    for (;;) {
-      const group = [];
-      for (let index = 0; index < arity; index += 1) {
-        const isFlag = command.toLowerCase() === 'a' && (index === 3 || index === 4);
-        const token = isFlag ? readFlag() : read();
-        if (token === null) {
-          if (index === 0) break;
-          throw new Error(`yol parametresi eksik: ${command}`);
-        }
-        group.push(isFlag ? token : round1(Number.parseFloat(token)));
-      }
-      if (group.length === 0) break;
-      numbers.push(group.join(' '));
-    }
-    out += command + numbers.join(' ');
-  }
-  return out;
 }
 
 /** game-icons SVG'sinden gerçek şekil yollarını çıkarır; siyah zemin atılır. */

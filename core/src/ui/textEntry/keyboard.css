@@ -51,7 +51,7 @@
   color: var(--vol-ui-text);
   font-size: var(--vol-text-body);
   font-family: var(--vol-font-family-body);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   user-select: none;
 }
 

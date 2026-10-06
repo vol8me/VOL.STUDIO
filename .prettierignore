@@ -53,3 +53,4 @@ devtools/audio-synth/records/music/*/jobs/
 games/*/audio-manifests/
 games/*/audio-banks/
 core/public/assets/icons/CREDITS.md
+core/public/assets/cursors/cursors.json

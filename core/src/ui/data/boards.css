@@ -19,7 +19,7 @@
 
 .vol-event-log__filter {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text-muted);
   border: 1px solid var(--vol-ui-border-soft);
@@ -175,7 +175,7 @@
 
 .vol-event-log__pin {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   width: 20px;
   height: 20px;
   color: var(--vol-ui-text-disabled);
@@ -363,7 +363,7 @@
 
 .vol-kanban__card {
   pointer-events: auto;
-  cursor: grab;
+  cursor: var(--vol-cursor-grab, grab);
   background: var(--vol-ui-surface-1);
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
@@ -377,16 +377,16 @@
 
 .vol-kanban__card:hover {
   border-color: var(--vol-ui-border-strong);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
 }
 
 .vol-kanban__card:active {
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
 }
 
 .vol-kanban__card--dragging {
   opacity: 0.4;
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
 }
 
 .vol-kanban__card:focus-visible {
@@ -407,7 +407,7 @@
   pointer-events: none;
   opacity: 0;
   box-shadow: 0 12px 28px var(--vol-ui-scrim);
-  cursor: grabbing;
+  cursor: var(--vol-cursor-grabbing, grabbing);
   position: fixed;
   transform: rotate(-2deg) scale(1.03);
 }

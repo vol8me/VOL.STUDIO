@@ -7,7 +7,7 @@
   color: var(--vol-ui-text);
   background: var(--vol-ui-surface-1);
   border: 2px solid var(--vol-ui-border-strong);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   -webkit-user-select: none;
   user-select: none;
   transition:
@@ -33,7 +33,7 @@
 }
 
 .vol-hold-button:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   background: var(--vol-ui-disabled-fill);
   border-color: var(--vol-ui-disabled-border);
   color: var(--vol-ui-disabled-text);
@@ -61,7 +61,7 @@
   color: var(--vol-ui-text);
   background: var(--vol-ui-surface-1);
   border: 2px solid var(--vol-ui-border-strong);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   -webkit-user-select: none;
   user-select: none;
   transition:
@@ -94,7 +94,7 @@
 }
 
 .vol-long-press-button:disabled {
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
   background: var(--vol-ui-disabled-fill);
   border-color: var(--vol-ui-disabled-border);
   color: var(--vol-ui-disabled-text);
@@ -138,7 +138,7 @@
 
 .vol-charge-button {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   justify-content: center;
   align-items: center;
   gap: var(--vol-space-xs);
@@ -231,7 +231,7 @@
 
 .vol-pause-resume-button {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   width: var(--vol-pause-resume-button-size, 64px);
   height: var(--vol-pause-resume-button-size, 64px);
   color: var(--vol-ui-text);

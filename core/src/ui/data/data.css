@@ -30,13 +30,13 @@
   font-family: var(--vol-font-family);
   font-size: var(--vol-text-label);
   text-align: center;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
 }
 
 .vol-key-bindings__binding:disabled {
   border-color: var(--vol-ui-disabled-border);
   color: var(--vol-ui-text-muted);
-  cursor: default;
+  cursor: var(--vol-cursor-default, default);
 }
 
 .vol-key-bindings__binding[data-capturing='true'] {
@@ -54,7 +54,7 @@
   color: var(--vol-ui-text-secondary);
   font-family: var(--vol-font-family);
   font-size: var(--vol-text-label);
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
 }
 
 .vol-key-bindings__reset:hover {
@@ -107,7 +107,7 @@
 
 .vol-datatable__sort-button {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
   justify-content: space-between;
   align-items: center;
   gap: var(--vol-space-xs);
@@ -161,7 +161,7 @@
 
 .vol-datatable__row--selectable {
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--vol-cursor-link, pointer);
 }
 
 .vol-datatable__row--selectable:hover {

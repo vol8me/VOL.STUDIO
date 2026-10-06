@@ -977,6 +977,21 @@
       "item": "Items",
       "meta": "General",
       "chrome": "Chrome (direction, confirm, media)"
+    },
+    "cursors": {
+      "ui": "Interface cursors",
+      "rts": "RTS cursors",
+      "reticles": "Reticles (bullet hell / shooter)",
+      "rtsArena": "RTS test area",
+      "shooterArena": "Reticle test area"
+    },
+    "arena": {
+      "state": "Context: {{kind}} → {{cursor}} · {{tone}}",
+      "shots": "Shots: {{shots}} · Hits: {{hits}}",
+      "rtsHint": "Move over units, resources and the edges: the shape and colour follow the context; colour is never the only carrier.",
+      "shooterHint": "The reticle follows the pointer; a click is a shot (it swells), a hit gives a hit marker.",
+      "reticle": "Reticle",
+      "spread": "Spread"
     }
   }
 }

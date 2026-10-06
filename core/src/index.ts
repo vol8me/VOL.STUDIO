@@ -349,6 +349,7 @@ export * from './ui/focus';
 export * from './ui/textEntry';
 export * from './ui/glyphs';
 export * from './ui/icons';
+export * from './ui/cursors';
 export { suppressNativeMenus } from './ui/nativeMenus';
 export { VOL_COLORS, type VolColorToken } from './ui/colors';
 export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';
