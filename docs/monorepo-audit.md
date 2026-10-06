@@ -715,7 +715,7 @@ Uygulama [kök TODO](../TODO.md) içindeki F01–F10 görevleriyle yürür. Bu r
 | F04 | Kayıt/async kaynak/Steam callback/kapanış güvenilirliği           | F02 doğrulama zemini; UI tasarımının bitmesini beklemez                                         |
 | F05 | Audio/Pencil transaction, metadata ve kalıntı temizliği           | F01/F02; AS20 doğru kabul/ret semantiğiyle                                                      |
 | F06 | Fizik doğruluğu, saf sim importu, CORE senaryo/bütçe              | F02; platform mock'u değil gerçek model regresyonu                                              |
-| F07 | Mevcut 14 UI fazı/63 görev, Windows önce                          | F01/F02 ve ilgili F04; UI alt görevleri kendi sahibinde                                         |
+| F07 | UI oyun arayüzü kimliği (54 açık alt iş), Windows önce            | F01/F02 ve ilgili F04; UI alt görevleri kendi sahibinde                                         |
 | F08 | Linux builder + ayrı Deck laboratuvar/oyun kabulü                 | F02/F04/F06; donanım son kabul için, erken teknik işleri bloke etmez                            |
 | F09 | Windows native/Android görünür kabul ve yeni oyun                 | F04/F06; ilgili F07 yüzeyleri; Deck F08'in kabulü yerine sayılmaz                               |
 | F10 | Bağımlılık/ratchet/strict index ve koşullu bakım                  | Güvenlik işleri erken paralel; yeni donanım sonradan; sürüm signoff'u bunları geçmeden kapanmaz |
@@ -765,15 +765,15 @@ D1/D2 gibi çakışan eski kimlikler aşağıdaki tekil görevlerle ayrılır; t
 
 İki audio işi de korunarak karara bağlandı: AS20 F05.4/F10 ile doğru semantiği koruyan şema bölünmesidir; zorunlu güncel canary insan dinlemesi F01 ile **kaldırma işine dönüştürüldü**, dinlendi diye kapatılmadı.
 
-### UI'nin 63 açık alt maddesi
+### UI alt maddeleri (2026-10-07 yeniden yazımı: 54 açık)
 
-Aşağıdaki ID kümesi kaynak TODO ile karşılaştırıldı: 63 planlanan/63 eşlenen; eksik/fazla/tekrar sıfır. Metin ve kapanışların sahibi UI TODO'dur; kök F07 bu işi tekrar yazmaz. UI-02.5 ve UI-13.4 ses kabulü, F01'in teknik kabul kararıyla güncellendi; gerçek erişilebilirlik/görsel/haptik insan yargısı ayrı kaldı.
+UI TODO 2026-10-07'de yeniden yazıldı: önceki kimlikler korunup UI-01.6–01.10 ve UI-02.6–02.9 eklendi (kabul edilmeyen UI-01.4/UI-02.3 yeniden yapılır); UI-00.1–00.7, UI-01.1–01.5, UI-02.1–02.5, UI-06.1, UI-07.1 kapanmıştır. Metin ve kapanışların sahibi UI TODO'dur; kök F07 bu işi tekrar yazmaz. UI-02.5 ve UI-13.4 ses kabulü, F01'in teknik kabul kararıyla güncellendi; gerçek erişilebilirlik/görsel/haptik insan yargısı ayrı kaldı.
 
 | UI fazı | Korunan alt kimlikler                                | Kök bağlantı      |
 | ------- | ---------------------------------------------------- | ----------------- |
 | UI-00   | UI-00.1, UI-00.2, UI-00.3, UI-00.4, UI-00.5, UI-00.6 | F07               |
-| UI-01   | UI-01.1, UI-01.2, UI-01.3, UI-01.4, UI-01.5          | F07               |
-| UI-02   | UI-02.1, UI-02.2, UI-02.3, UI-02.4, UI-02.5          | F07 + F01/F05     |
+| UI-01   | UI-01.1–01.5 (tamam), UI-01.6–01.10                  | F07               |
+| UI-02   | UI-02.1–02.5 (tamam), UI-02.6–02.9                   | F07 + F01/F05     |
 | UI-03   | UI-03.1, UI-03.2, UI-03.3, UI-03.4                   | F07               |
 | UI-04   | UI-04.1, UI-04.2, UI-04.3, UI-04.4                   | F07               |
 | UI-05   | UI-05.1, UI-05.2, UI-05.3, UI-05.4, UI-05.5          | F07               |

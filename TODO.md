@@ -31,17 +31,18 @@ servis borçları ilgili cihaz kabulüyle birlikte kalır.
 
 - [ ] **[P2] F06.4 — Gerçek birleşik yük ölçümü.** CPU simülasyon yükü ölçüldü: 13 araç + kar + sürekli ateşte `Simulation.step` medyan ≈0,23 ms, p95 ≈0,48 ms, 10 dakikada büyüme yok; geniş faz gerekmez. Çizim/GPU ve cihaz kare süresi yeni kodla ölçülmedi. Kapanır: VT-Q/W cihaz profili güncel commit ile (tablet ve Deck kare süresi, uzun oturum); scaling dar mermi döngüsü tüm oyun kabulü sayılmaz.
 
-### F07 — UI'nin 14 fazı ve tek VOL.SHOWCASE
+### F07 — UI oyun arayüzü kimliği ve tek VOL.SHOWCASE
 
-Ön koşul: F01/F02 ve ilgili F04 düzeltmesi. Bütün 64 açık alt işin sahibi
-[UI TODO](docs/ui/TODO.md); ayrıntı burada tekrar checkbox'a çevrilmez.
-Windows geliştirme/ilk native referans önce; Linux/Deck kabulü F08'dir.
+Ön koşul: F01/F02 ve ilgili F04 düzeltmesi. Bütün açık alt işin sahibi
+[UI TODO](docs/ui/TODO.md) (2026-10-07'de yeniden yazıldı: tema çifti, malzeme, ikon, imleç ve
+ses sıfırdan; kimlik önce, aileler sonra); ayrıntı burada tekrar checkbox'a çevrilmez.
+Windows geliştirme/ilk native referans önce; Linux/Deck kabulü F08'dir. **F07 kapanır:** UI-13.5.
 
 Aşağıdaki satırlar indekstir; kapanış checkbox'ı ve ölçütleri yalnız UI TODO'dadır.
 
-- **F07.1 — Dalga 0, zemin ve kanıt:** UI-06.1 (ilk iş), UI-00.1–00.7; registry, iki motor, axe, ölçüm, boyut payı, çalışan browser probu.
-- **F07.2 — Dalga 1, temel hatlar:** UI-01 tema/hareket, UI-02 ses/haptik, UI-07.1–07.3 i18n/font, UI-06.2–06.4 Windows native vitrin; paralel.
-- **F07.3 — Dalga 2, pilot ve aileler:** UI-03 (M1) sonrası UI-04/05/08/09/10 fan-out, UI-07.4, UI-11.1–11.2, UI-12.2–12.3.
+- **F07.1 — Dalga 0, zemin ve kanıt (tamam):** UI-06.1, UI-00.1–00.7; registry, iki motor, axe, ölçüm, boyut payı, browser probu.
+- **F07.2 — Dalga 1, kimlik:** UI-01.6–01.9 tema çifti/malzeme/ikon/imleç, UI-02.6–02.8 yeni ses, UI-07.2–07.3 i18n/font, UI-06.2–06.4 Windows native vitrin; paralel.
+- **F07.3 — Dalga 2, dikey dilim ve aileler:** UI-01.10 + UI-02.9 → UI-03 (Button) → UI-04/05/08/09/10 fan-out, UI-07.4, UI-11.1–11.2, UI-12.2–12.3.
 - **F07.4 — Dalga 3, platform ve tam kabul:** UI-11.3–11.4, UI-12.1, UI-12.4, UI-13; cihaz/insan kabulleri ayrı PASS/FAIL/NOT-RUN.
 
 ### F08 — Linux builder ve Deck kabulünü yeniden kur

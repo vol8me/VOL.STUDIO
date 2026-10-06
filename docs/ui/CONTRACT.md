@@ -1,19 +1,19 @@
 # Arayüz tasarım dili ve sunum sözleşmesi
 
-Bu sözleşme onaylı hedef davranıştır. Henüz mevcut olmayan mekanizmalar
-[iş listesinde](TODO.md) uygulanır; mevcut yüzey [katalogda](CATALOG.md),
-karar gerekçeleri bu belgede, kanıt yöntemi [doğrulamada](VERIFICATION.md) bulunur.
-Sayısal sanat/ses presetleri başlangıç tasarım kararıdır; ölçülmüş optimum
-veya WCAG gereği değildir. Kalibrasyon değişikliği gerekçesiyle bu tek
-kaynakta yapılır. WCAG 2.2 AA tüm uygulanabilir A/AA ölçütlerini kapsar.
+Bu sözleşme onaylı hedef davranıştır ve **oyun arayüzü kimliğini** tarif eder: web paneli
+değil, katmanlı malzeme, tok ses, imleç ve hareket hissi. Henüz mevcut olmayan mekanizmalar
+[iş listesinde](TODO.md) uygulanır; mevcut yüzey [katalogda](CATALOG.md), karar gerekçeleri
+bu belgede, kanıt yöntemi [doğrulamada](VERIFICATION.md) bulunur. Sayısal sanat/ses presetleri
+başlangıç tasarım kararıdır; ölçülmüş optimum veya WCAG gereği değildir ve gerekçesiyle bu tek
+kaynakta değiştirilir; kimlik kararlarında sahibi uygulayıcıdır. WCAG 2.2 AA tüm uygulanabilir
+A/AA ölçütlerini kapsar.
 
 ## Sözlük
 
 **Ton basamağı:** page < well < panel < plate. **Tier-1:** aktif ürünün
 tükettiği veya ortak temel olarak belirlenen öncelikli bileşen. **Tier-2:**
 katalogda bekleyen bileşen. **Semantik olay:** kabul edilmiş UI niyeti veya
-durum sonucu. **Density:** compact/comfy/touch. **Skin:** görsel/ses
-tercihlerinin uygulama tarafından bağlanan seti. **Anchor:** özgün üretime
+durum sonucu. **Density:** compact/comfy/touch. **Skin:** tema + malzeme + ses paleti + imleç aksanı + ikon plakası. **Anchor:** özgün üretime
 yön veren esin. **CLS:** standart layout-shift ölçütü; tüm geometri testi
 değildir. **Kalıntı:** artık geçerli olmayan canlı referans.
 
@@ -43,148 +43,161 @@ aynı geriyle paneli kapatmaz. Klavye-only ve kol-only her işlevin eşdeğeridi
 320 CSS px panel reflow'u, portre/yatay, 21:9, çentik ve system-bar güvenli
 alanları sınanır; zorunlu iki boyutlu canvas WCAG istisnası tekil gerekçelenir.
 
-## 3. Görsel dil
+## 3. Görsel dil ve malzeme
 
-Page/well/panel/plate, ton farkı + iç gölge + hairline + üst ışık ile ayrılır.
-Gövde metni karmaşık malzeme üstünde backplate olmadan durmaz. Etkileşim
-radyusu 2–4 px, sunum radyusu 6–10 px presetidir. Basış bevel'i ters çevirir.
-Çerçeve dış boşluk, iç hairline, köşe vurgusu, başlık şeridi ve ayraçtan oluşur;
-tek `--vol-frame-*` ailesi, SVG/9-slice üretimi ve aynı state grameri kullanılır.
+CORE UI bir **oyun arayüzüdür**: düz kutu, ince çizgi ve gri şerit değil; katmanlı malzeme,
+derinlik, kalın silüet ve tok geri bildirim. Hedef oyun türleri bullet hell ve RTS'tir: HUD
+bakışı kesmeden okunur, sayılar büyük ve yüksek kontrastlıdır, komut yüzeyleri
+dokunsal bir ağırlık taşır. Bileşenler jenerik kalır; kimlik skin'den gelir (bkz. 6).
 
-Renk rolleri brand, semantic, accent, rarity ve emissive'dir. Rarity ×
-normal/hover/selected/disabled dört durumuyla sınanır; locked/error ayrı
-anlam taşır. CardTile ve SlotGrid rarity tipleri otomatik birleştirilmez.
-Rarity bağımsız nötr kart yüzeyi mevcut Panel/Text/Button bileşimi ve ortak
-CORE card skin'iyle sunulur; CardTile aynı yüzeye rarity katmanı ekler.
-Bu nedenle bütün kartların oyun nadirliği taşımaya zorlanması veya ikinci
-kart uygulamasının vitrinde icat edilmesi gerekmez.
-Renk tek taşıyıcı değildir: metin/ikon/desen/seçim işareti birlikte kullanılır.
-Text rol ölçeği, tabular sayılar, HUD backplate ve uzun label tasarlanır.
-UI ikonları oyun rig/sprite'ından ayrı 16/24/32/48 ölçülerde, uygun plakayla
-sunulur; ikon-only eylemin erişilebilir adı bulunur. İmleç tema parçasıdır;
-sistem metin imleci ve OS seçim tutamaçları taklit edilmez.
-Tema geçişi animasyonsuzdur; odağı, scroll'u, seçimi ve kutu ölçülerini korur.
+**Yüzey ailesi.** Page < well < panel < plate. Her basamak ton farkı + iç gölge + rim
+ışığı + ince grain ile ayrılır; ışık yönü tektir (üstten). Gövde metni karmaşık malzeme
+üstünde backplate olmadan durmaz. Etkileşim radyusu 2–4 px, sunum radyusu 6–10 px
+başlangıç presetidir.
 
-## 4. Hareket ve kaynak yaşam döngüsü
+**Çerçeve.** Dış boşluk, iç hairline, köşe aksanı, başlık şeridi, ayraç, çentik/perçin;
+CSS-öncelikli, gerekirse SVG 9-dilim. Tek `--vol-frame-*` ailesi ve aynı durum grameri.
 
-Temel duration tokenları fast/base/slow/cinematic=120/200/320/480 ms;
-easing ailesi standard/decelerate/accelerate olarak tek kaynakta tanımlanır.
-Özel koreografi de adlandırılmış preset'tir: scrim/dialog giriş 120/200,
-modal çıkış 140, kart stagger 40, HUD artış/azalış 200/80, sekme 160 +6 px,
-sahne çıkış/giriş 200/320 ms. Böylece dört temel tokenla çelişen gizli
-sayısal istisna kalmaz. Loading minimum görünür süre 500 ms opt-in tarif
-kararıdır; bloklamayan hazır içerik sırf animasyon için bekletilmez.
+**Düğme.** Yükseltilmiş yüzey: üst ışık, alt kenar gölgesi, 2–4 px basış yolu; basış bevel'i
+ters çevirir; primary'de skin renginde glow. **Bar.** Dolu hissi: segment çentikleri, parlak
+üst bant, dolgu kenarı parıltısı, hasar gecikme şeridi; azalma/artış farklı hızda (bkz. 4).
 
-Mouse hover scale 1.02 + emissive, press 0.96 + ters bevel, kart seçim
-1.04 + parıltı başlangıç presetidir. Ring/selected bilgi hareketsiz de kalır.
-`<100 ms` olaydan ilk görünür cevabın başlamasıdır; toplam animasyon süresi
-değildir. Asenkron iş hemen busy/ack gösterir, sonuç ayrıca bildirilir.
+**Renk rolleri:** brand, semantic, accent, rarity, emissive. Rarity × normal/hover/selected/
+disabled dört durumuyla sınanır; locked/error ayrı anlam taşır; rarity renkleri kimliktir
+ve temayla değişmez. CardTile ve SlotGrid rarity tipleri otomatik birleştirilmez; rarity
+bağımsız nötr kart mevcut Panel/Text/Button bileşimi ve ortak card skin'iyle sunulur,
+CardTile aynı yüzeye rarity katmanı ekler. Renk tek taşıyıcı değildir: metin/ikon/desen/
+seçim işareti birlikte kullanılır.
 
-UI root başına en çok 3 eşzamanlı **semantik geçiş grubu**, toplam 64 UI
-dekor parçacığı ve 1 etkin blur yüzeyi vardır. Bir grubun sınırsız alt
-animasyonla sınırı delmesi yasaktır; child/layer/pixel alanı probu da tutulur.
-Öncelik kritik/odak > kullanıcının eylemi > dekor; burst'te dekor düşürülür.
-Blur performans/capability yedeği düz scrim'dir. Sürekli dikkat dağıtan
-parıltı ve kontrolsüz flash yoktur; tüm sahnede WCAG flash sınırı korunur.
+**Metin.** Rol ölçeği, tabular sayılar, HUD backplate, uzun label; başlık ve sayı yazı tipi
+oyun hissine göre seçilir (UI-07.3), Türkçe glif kapsamı zorunludur.
 
-Reduced-motion dekor sürelerini 0 yapar; anlam opacity/etiket/ring ile
-korunur. Hold/charge/oyun sayacı gibi işlev süresi sıfırlanmaz. Cancel,
-interruption, destroy, dil/tema değişimi ve hidden/suspend son durumunu
-deterministik verir. Animasyon olayı gelmese de temizlik tamamlanır.
-İki bağımsız kaynak varsa DisposableScope; listener/timer/abonelik/voice
-sahipsiz kalmaz. Lint yalnız UI hareket süreleri içindir; domain timeout,
-rate-limit ve genel animateValue numeric API'si yanlışlıkla yasaklanmaz.
+**İkon.** Tek stil: dolu, kalın, yuvarlak köşeli tek renk siluet, ikon plakası üstünde;
+16/24/32/48 ölçülerinde; oyun rig/sprite'ından ayrı. Kaynak kürate setlerdir (bkz. 13).
+İkon-only eylemin erişilebilir adı bulunur.
+
+**İmleç.** Skin parçasıdır ve üç settir: **ui**, **rts**, **shooter** (bkz. 14). Sistem
+metin imleci ve OS seçim tutamakları taklit edilmez. Tema geçişi animasyonsuzdur; odağı,
+scroll'u, seçimi ve kutu ölçülerini korur.
+
+## 4. Hareket, juice ve kaynak yaşam döngüsü
+
+Temel duration tokenları fast/base/slow/cinematic=120/200/320/480 ms; easing ailesi
+standard/decelerate/accelerate tek kaynakta tanımlanır. Özel koreografi adlandırılmış
+preset'tir: scrim/dialog giriş 120/200, modal çıkış 140, kart stagger 40, HUD artış/azalış
+200/80, sekme 160 + 6 px, sahne çıkış/giriş 200/320 ms. Loading minimum görünür süre 500 ms
+opt-in tarif kararıdır; bloklamayan hazır içerik animasyon için bekletilmez.
+
+**Juice ilkelleri** (başlangıç presetleri, ölçülerek ayarlanır): basma yolu + hafif squash,
+hover kaldırma 1.02 + parıltı süpürmesi, odak nabzı, değer tween'i (overshoot), sayı pop,
+hasar/ödül flaşı, panel girişi (ölçek + stagger), sınırlı UI sarsıntısı, kart seçimi 1.04
+
+- parıltı. Ring/selected bilgi hareketsiz de kalır. `<100 ms` olaydan ilk görünür cevabın
+  başlamasıdır; toplam animasyon süresi değildir. Asenkron iş hemen busy/ack gösterir.
+
+UI root başına en çok 3 eşzamanlı semantik geçiş grubu, toplam 64 dekor parçacığı ve 1 etkin
+blur yüzeyi vardır; bir grubun sınırsız alt animasyonla sınırı delmesi yasaktır. Öncelik
+kritik/odak > kullanıcı eylemi > dekor; burst'te dekor düşürülür. Blur için performans
+yedeği düz scrim'dir. Sürekli dikkat dağıtan parıltı ve kontrolsüz flash yoktur; WCAG flash
+sınırı tüm sahnede korunur.
+
+Reduced-motion dekor sürelerini 0 yapar; anlam opacity/etiket/ring ile korunur. Hold/charge/
+oyun sayacı gibi işlev süresi sıfırlanmaz. Cancel, interruption, destroy, dil/tema değişimi ve
+hidden/suspend son durumu deterministik verir; animasyon olayı gelmese de temizlik tamamlanır.
+İki bağımsız kaynak varsa DisposableScope; listener/timer/abonelik/voice sahipsiz kalmaz.
+Lint yalnız UI hareket süreleri içindir; domain timeout, rate-limit ve genel animateValue
+yanlışlıkla yasaklanmaz.
 
 ## 5. Ses, semantik niyet ve haptik
 
-Primitive ses motorunu kurmaz; kabul edilmiş niyeti bir kez bildirir.
-Uygulamanın tek UiSoundKit/geri bildirim sahibi seti çalar. Shared UIRoot
-aynı parent'ta ikinci feedback listener kurmaz. Örnek olay ailesi
-`ui.press`, `ui.value.commit`, `ui.select`, `ui.open`, `ui.close`,
-`ui.success`, `ui.warning`, `ui.error`dir; final typed olaylar UI-02'de kilitlenir.
-Programatik sessiz setter ses/commit üretmez; iptal rollback'i başarı sayılmaz.
-Promise'in çözülmesi tek başına oyun/ürün başarısı değildir; başarı/uyarı
-sonucunu host bildirir. Primitive yalnız kendi accepted intent ve busy
-durumunu bilir. Mevcut primitive haptik yolu korunuyorsa merkezi provider
-ikinci darbe üretmez; olay ve driver sahipliği tekildir.
+Primitive ses motorunu kurmaz; kabul edilmiş niyeti bir kez bildirir. Uygulama kökündeki tek
+UiSoundKit/geri bildirim sahibi seti çalar (UIRoot düzeyi); shared UIRoot aynı parent'ta ikinci
+listener kurmaz. Programatik sessiz setter ses/commit üretmez; iptal rollback'i başarı sayılmaz.
+Promise'in çözülmesi tek başına oyun/ürün başarısı değildir; sonucu host bildirir. Mevcut
+primitive haptik yolu korunuyorsa merkezi sağlayıcı ikinci darbe üretmez.
 
-UiSoundKit için Phaser taşımayan dedicated public audio/UI subpath
-tanımlanır; SHOWCASE CORE kök barrel'ını açmak zorunda kalmaz. Mevcut
-SidechainDucker yalnız kökte export edilir; yeni kit iç modülden kullanır,
-dış tüketim gerekiyorsa ilgili subpath bilinçli public surface değişimidir.
+**Karakter.** UI sesi **gövdeli, malzemeli ve tok** olmalıdır; ince "bip"ler ve genel
+çalışma-zamanı klikleri değil. Her ses üç katmandan kurulur: _vurgu_ (2–6 ms transient, 2–5 kHz
+tık), _gövde_ (90–250 Hz temel + harmonikler, 40–140 ms düşüş; küçük hoparlörde bu harmonikler
+ağırlığı taşır) ve _malzeme/kuyruk_ (metal, cam, lake, ahşap partilleri; 30–400 ms). Büyük
+olaylarda masaüstü/kulaklık için isteğe bağlı sub katmanı (50–90 Hz) eklenir; küçük hoparlörün
+çalamadığı enerji "olmadığı" varsayılıp gövde kesilmez. Her skin bir **ses paleti** taşır:
+`default` çelik donanım (metalik vuruş, kalın gövde, kısa mekanik kuyruk), `aurum` yaldızlı cam
+ve lake (çan/kristal partiller + yumuşak gövde). Olay sözlüğü paletler arasında aynıdır.
 
-UI ses tercihi varsayılan açık, **gerçek kullanıcı jestiyle** audio açılır.
-Master/UI/SFX/music/VO device ayarları mevcut kalıcılık arkasındadır.
-Görsel/semantik geri bildirim garantidir; ses ve haptik mute, sürücü yokluğu,
-autoplay veya bütçe nedeniyle best-effort'tür. Haptik mevcut opt-in/default
-kapalı davranışını korur. VOL.TEST'te müzik/ambiyans eklenmez.
+**Olay sözlüğü v2** (UI-02.6): hover, focus, press, release, back, confirm, toggleOn/toggleOff,
+select, tabSwitch, sliderTick (değere bağlı perde), valueCommit, panelOpen/panelClose,
+dragPick/dragDrop, equip, purchase, reward, levelUp, notify, denied ("yapılamaz": kuru ve kısa),
+alert (kritik). Yön dili: yukarı perde evet/ileri, aşağı perde hayır/geri, düz ve kuru ton
+reddedilmiş; confirm yükselir, back/cancel düşer. Hover çoğu bağlamda neredeyse sessizdir ve
+yalnız gerçek farede çalar; yüzüncü tekrarda da hoş olmayan ses yayınlanmaz.
 
 | Olay sınıfı | Başlangıç süre (ms) | Başlangıç lineer gain |
 | ----------- | ------------------- | --------------------- |
-| Mikro       | 50–120              | 0.2–0.3               |
-| Tık         | 100–180             | 0.25–0.35             |
-| Başarı      | 200–400             | 0.3–0.5               |
-| Uyarı       | 250–500             | 0.4–0.5               |
-| Kilometre   | 400–800             | 0.5–0.6               |
-| Büyük sonuç | 600–1200            | 0.6–0.8               |
+| Mikro       | 40–120              | 0.2–0.35              |
+| Tık         | 80–200              | 0.3–0.45              |
+| Onay        | 150–400             | 0.35–0.55             |
+| Uyarı/alert | 200–500             | 0.4–0.6               |
+| Kilometre   | 400–900             | 0.5–0.7               |
+| Büyük sonuç | 600–1400            | 0.6–0.85              |
 
-Bu gain tablosu LUFS/dBTP hedefi değildir. Kanonik yayın hattı süre,
-finite/clipping/DC/peak/codec-sonrası true peak'i ölçer; kısa click için
-broadcast LUFS standardı evrensel hedef ilan edilmez. Transient 5–15,
-body 60–160 ms; büyükte isteğe bağlı 60–120 Hz bass. Ana body HPF 150–200
-Hz uygulanırsa bass ayrı düşük-cutoff dalından geçer. Tiny-room presetinde
-30–60 ms erken yansıma/tail tanımı ayrı yazılır, wet gain %8–12 başlangıçtır;
-kuru yedek vardır. Routing/level kabulü gerçek setin teknik QA ve runtime ölçümüne dayanır;
-isteğe bağlı dinleme ölçümün yerine geçmez ve yayın engeli değildir.
+Sayılar başlangıç tasarım kararıdır; LUFS/dBTP hedefi değildir. **Ölçüt:** UI sınıfı politikası
+referans setlere (Kenney Interface Sounds/UI Audio; yalnız yerel ölçüm, depoya girmez) göre
+bant dağılımı ve yükseklikle belirlenir: gövde bandı zorunlu, kısa tıkta bile geniş bantlı;
+yüksek geçiren sınırı ve sub bastırma kuralı yoktur; true peak ≤ −1 dBTP; DC/kırpılma/sonluluk
+ölçülür. Kulakla karar kullanıcıya aittir (UI-02.9); reddedilen ses yeniden tasarlanır. Yayın
+hattı job → yayın kapısı → manifest → tüketici'dir; CORE runtime audio-synth'e bağlanmaz.
 
-UI, VO/müzikle yarışmaz. Yalnız kritik olayın opt-in duck'ı −6 dB
-(lineer ~0.501187), attack/hold/release=120/80/450 ms'dir; overlap, iptal,
-suspend ve kaynak kapanışında müzik geri gelir. Mevcut SidechainDucker
-kullanılır; uygulamada müzik/VO yoksa bus veya sahte içerik yaratılmaz.
+**Slider ve değer sesi.** Sürüklemede değer detent'lere bölünür; her detent bir tık çalar,
+perde değerle birlikte yükselir (örn. ±7 yarım ton aralığı), taşma/üst-alt sınırda farklı tık.
+Mikro olaylar 60–80 ms'den sık çalmaz; commit ayrı ve daha dolu bir sestir.
 
-Micro/hover tekrarı 120 ms throttle/drop, olay başına 3 varyant
-round-robin ve ±%5 playback-rate tasarım presetidir; kritik sonuç ayrı
-önceliklidir, aynı throttle onu yutmaz. UI toplam voice ≤4; genel SoundBank
-varsayılanları değiştirilmez. Varyant/RNG simülasyon akışını tüketmez.
-Press tok, primary isteğe bağlı alt gövde, danger çatlak, icon kısa/parlak;
-disabled sessiz. Hover yalnız gerçek mouse. Boyuta bağlı ±1–2 dB değişim
-varsayılan kapalıdır. Loading başlangıç/bitiş birer olay; sürekli loop genel
-varsayılan değildir. Skin `default`; oyun skin'i gelecekte opt-in'dir.
+**Ducking ve yarışma.** UI, VO/müzikle yarışmaz: yalnız kritik olayın opt-in duck'ı −6 dB,
+attack/hold/release 120/80/450 ms; mevcut SidechainDucker; müzik/VO yoksa bus yaratılmaz.
+Olay başına 3 varyant sırayla ve ±%5 rate; UI toplam voice sınırı genel SoundBank varsayılanını
+değiştirmez; varyant/RNG simülasyon akışını tüketmez. Kullanıcı jestiyle audio açılır; arka
+planda bekleyen ses kuyruğu yoktur. Master/UI/SFX/music/VO ayarları mevcut kalıcılık arkasındadır.
+Görsel/semantik geri bildirim garantidir; ses ve haptik mute, sürücü yokluğu, autoplay veya
+bütçe nedeniyle best-effort'tür. Haptik opt-in/default kapalı kalır; desen/anahtar/şiddet tavanı/
+rate-limit; tek backend; blur/sleep/unplug/destroy darbeyi durdurur. Ses/haptik tek bilgi
+kanalı olamaz.
 
-Haptik press/onay/hata/kritik eşlemesi mevcut desenlerin üzerindedir;
-yeni desen gerekiyorsa public sözleşme bilinçli genişler. Anahtar, şiddet
-tavanı ve rate-limit vardır. Tek backend seçilir; blur/sleep/unplug/destroy
-darbenin sahibini durdurur. Ekran üzerinde ses/haptik tek bilgi kanalı olmaz.
+## 6. Skin: tema, malzeme, palet, density
 
-## 6. Tema, density ve seçici
+**Skin = tema + malzeme parametresi + ses paleti + imleç aksanı + ikon plakası.** İki skin
+vardır ve bir bakışta ve bir dinlemede ayrılır:
 
-Default VOL_COLORS public uyumu korunur. TS renk tanımları → `gen:theme`
-→ default `:root` ve `:root[data-vol-theme='ember']` üretir. Tema renk,
-doku, edge intensity ve scrim'i değiştirir; font/geometri tokenlarını
-tema bazında değiştirmez. Registry ve üretici regex'e bağımlı genişletilmez;
-tip/anahtar paritesi ve deterministik sıralama gerekir.
-Scoped preview aynı token sözleşmesini kullanır; body overlay yanlış
-kökten tema almaz. Canvas okuyucusu değişimi gözler, literal renk sızıntısı
-kalmaz. Default CSS renkleriyle uyum geriye dönük korunur.
+- `default`: bugünkü `VOL_COLORS` değerleri **aynen** (çelik gri zemin, kor turuncusu marka,
+  camgöbeği destek, indigo vurgu). Public renk uyumu korunur.
+- `aurum`: premium, bambaşka kimlik. Mor-siyah mürekkep yüzeyler (zemin tonu ~290°), fildişi
+  metin, şampanya altını marka (koyu mürekkep `onBrand`), yeşim destek, ametist vurgu, yakut
+  tehlike. Renkler OKLCH'de tasarlanır ve ölçülerek ayarlanır; `default`'a ΔE eşiğiyle uzaktır.
 
-Default + `ember` için gerçek final foreground/background üzerinde AA
-kontrast, durum/focus/non-text kontrolleri vardır. Default piksel ratchet'i
-korunur; ember computed-style + geometri + etkileşim + kontrast ve seçilmiş
-kanonik görsel insan kontrolüyle kabul edilir. Switch standard CLS hedefi
-0 ve bütün motorlarda kutu sabitliğidir; unsupported CLS “0” sayılmaz.
-Üst barda canlı tema/dil seçici; tercih device, bilinmeyen tema default'a döner.
+TS renk tanımları → `gen:theme` → `:root` ve `:root[data-vol-theme='aurum']` üretir. Tema renk,
+malzeme parametresi (bevel, grain, glow, köşe aksanı), edge yoğunluğu ve scrim'i değiştirir;
+font/geometri tokenlarını tema bazında değiştirmez. Tip/anahtar paritesi ve deterministik
+sıralama gerekir. Scoped preview aynı token sözleşmesini kullanır; body overlay yanlış kökten
+tema almaz; canvas okuyucusu değişimi gözler, literal renk sızıntısı kalmaz.
+
+İki skin için gerçek final foreground/background üzerinde AA kontrast, durum/focus/non-text
+kontrolleri vardır. Piksel ratchet'i bilinçli kimlik değişiminde yenilenir (D6). Switch CLS hedefi
+0 ve bütün motorlarda kutu sabitliğidir; unsupported CLS "0" sayılmaz. Üst barda canlı
+tema/dil seçici; tercih device; bilinmeyen/kaldırılmış tema (`ember` dahil) default'a döner.
+Skin seçimi ses paletini ve imleç aksanını da değiştirir.
+
+Yoğunluk `data-vol-density` ile açık seçilir (bkz. 2).
 
 ## 7. i18n ve font
 
 “Sıfırdan” görünür UI metni/anahtar sağlığıdır; çalışan i18next,
-depolama ve dil motoru yeniden yazılmaz. `<alan>.<bileşen>.<öğe>` adlandırma;
-TR tek ürün dili, EN aynı key kümesi. JSON key listesi kaynak, ikinci
+depolama ve dil motoru yeniden yazılmaz. Anahtar parçaları camelCase; TR tek ürün dili,
+EN aynı key kümesi; AST kapısı (`i18nSurface`) pariteyi, ölü anahtarı, eksik anahtarı, modül
+düzeyi çeviriyi ve kodlanmış metni denetler. JSON key listesi kaynak, ikinci
 elle key defteri yoktur. i18next JSON çoğul `count` ve Intl sayı/ölçü/tarih
 biçimleme kullanılır; mevcut olmayan ICU eklentisi varmış sayılmaz.
 
-Modül düzeyinde t() yok; açık overlay/OSK dahil dil değişimi günceldir.
-TR/EN parite + ölü anahtar + hardcoded görünen metin kontrolü + sentetik
-%30 genişleme testi vardır. Eksik anahtar vitrin/testte görünür hatadır;
+Modül düzeyinde t() yok; açık overlay/OSK dahil dil değişimi günceldir ve abonelik
+sökülünce bırakılır. Sentetik %30 genişleme testi vardır. Eksik anahtar vitrin/testte görünür hatadır;
 üretimde kontrollü fallback ve tanı uygulanır. `lang` ve `dir` güncellenir;
 RTL sentetik fixture'la logical layout/caret/navigasyon sınanır, henüz
 olmayan Arapça çeviri veya bütün RTL dilleri destekleniyor denmez.
@@ -202,8 +215,8 @@ Tier-1 tam matris, tier-2 kendi uygulanabilir durum/lifecycle matrisi;
 89 public sınıf ve public yardımcılar kayıt dışı kalmaz.
 
 Select açıkken disabled/recommit, Slider adı/saydam hit alanı, Checkbox
-semantiği, XPBar Lv etiketi, PauseResume sayaç sahipliği, DualAxis child
-jestleri, OSK abort/locale ve ToolButton ayrı örneği açık görevlerdir.
+semantiği, PauseResume sayaç sahipliği, DualAxis child jestleri, OSK abort ve
+ToolButton ayrı örneği açık görevlerdir.
 Normal vitrin kartında adının bulunması durumların sınandığı anlamına gelmez.
 
 ## 9. Erişilebilirlik
@@ -260,41 +273,72 @@ sınanır. Sağlayıcı/probe lifecycle var olan mekanizmalara eklenir.
 
 ## 12. VOL.SHOWCASE uygulaması
 
-Eski vol-ui tek atomik göçle devtools/vol-showcase oldu; web dev bakışı
-korunur, ikinci vitrin kurulmaz. Aktif paket, benzersiz `studio.vol.showcase`,
-ortak Tauri kabuğunu kullanan kendi crate'i/ikonu/device ayarı/ölçeği vardır.
-Windows geliştirme ve ilk native referans önce gelir. Linux/Deck ile
-Android ürün kabulü ayrı gerçek ortamlardadır; tool, oyun şablonunun Game kategorisini
-kopyalamaz. Native ikon keşif kapısı tools'u da kapsayacak şekilde geliştirilir.
-12 sekme korunur + onaylı Ses/Tema/Metin Girişi=15. Üst bar dil/tema/density
-ve capability görünürlüğü; yeni keyfi sekme yoktur. Kart örneği rarity,
-frame/plate, stagger/seçim, uzun sayı/metin ve her girdi yolunu kapsar.
+Eski vol-ui tek atomik göçle devtools/vol-showcase oldu; web dev bakışı korunur, ikinci vitrin
+kurulmaz. Aktif paket, benzersiz `studio.vol.showcase`, ortak Tauri kabuğunu kullanan kendi
+crate'i/ikonu/device ayarı/ölçeği vardır. Windows geliştirme ve ilk native referans önce gelir;
+Linux/Deck ve Android ürün kabulü ayrı gerçek ortamlardadır; tool, oyun şablonunun Game
+kategorisini kopyalamaz. 12 sekme korunur; onaylı eklemeler **Ses** (var), **Tema**,
+**Metin Girişi** ve **Kimlik** (malzeme, ikon, imleç bölümleri) = 16. Üst bar dil/tema/density
+ve capability görünürlüğü; keyfi sekme yoktur. Kart örneği rarity, frame/plate, stagger/seçim,
+uzun sayı/metin ve her girdi yolunu kapsar.
 
-## 13. Asset ve üretim hattı
+## 13. Varlık kaynağı ve üretim hattı
 
-SVG/9-slice frame/plaka, token renkli özgün UI ikonları, deterministik doku
-üreticisi ve source→producer→shipped kaydı gerekir. Deterministik ara çıktı
-commit edilmez; build yalnız tüketicideki shipped asset'i kullanır.
-UI sesleri job → yayın kapısı → manifest → consumer hattıyla teslim edilir;
-CORE runtime audio-synth'e bağımlı olmaz. WAAPI/CSS önceliklidir;
-video/Rive yeni bağımlılık ancak ölçülen ihtiyaca ve bütçeye dayanır.
-SHOWCASE ikonu mevcut `docs/assets/mark/` marka varlığından özgün türetilir;
-eski .github/assets/ yolu yoktur. Pencil kaynağı gerekirse özel AGENTS
-ve MCP uygulanır; bu plan `.pen` erişimi gerektirmez.
+**Önce kaynak, sonra icat.** Glif setimiz Kenney Input Prompts'tur (CC0). Aynı yazarın ve
+stilin ürünleri ikon ve imleç için temel alınır: Game Icons (CC0), Cursor Pack (CC0, ~180 imleç,
+vektör), Crosshair Pack (CC0, ~200 nişangâh, vektör). Oyun ikonu zenginliği için game-icons.net
+(CC BY 3.0, 4 binden fazla tek renk siluet, yazar atfı gerekli) kürate edilir. Stile uymayan
+yer aynı dille özgün çizilir; çizgi (outline) web ikon setleri kullanılmaz. Kullanılmayan
+varlık gönderilmez.
+
+**Kayıt.** Her varlık dizininde kaynak kaydı: URL, sürüm, lisans, tarih, alt küme listesi ve
+(CC BY için) ikon başına yazar. CC BY atıfı depodaki atıf dosyasında, manifestte ve uygulama
+içi kredi yüzeyinde bulunur; CC0 atıf istemez ama kaydedilir. Kürasyon deterministiktir
+(liste → çıktı); elle düzenlenen/çizilen varlık kaynağını ve yazarını belirtir.
+
+**Gönderim.** Yalnız kullanılan alt küme sprite/atlas olarak gönderilir; ikon ve imleç
+ihtiyaç anında yüklenir; bundle bütçeleri korunur. Deterministik ara çıktı commit edilmez;
+build yalnız tüketicideki shipped asset'i kullanır.
+
+**Ses.** UI sesleri job → yayın kapısı → manifest → tüketici hattıyla teslim edilir; CORE
+runtime audio-synth'e bağımlı olmaz. Referans setler yalnız yerel ölçüm içindir.
+
+WAAPI/CSS önceliklidir; video/Rive yeni bağımlılık ancak ölçülen ihtiyaca ve bütçeye dayanır.
+SHOWCASE ikonu mevcut `docs/assets/mark/` marka varlığından özgün türetilir. Pencil kaynağı
+gerekirse özel AGENTS ve MCP uygulanır; bu plan `.pen` erişimi gerektirmez.
+
+## 14. İmleç sistemi
+
+Üç set ve bağlamsal durumlar:
+
+- **ui:** ok, el (tıklanabilir), metin, meşgul, yasak, yardım, yeniden boyutlandır, sürükle.
+- **rts:** seç/kutu seç, taşı, saldır, inşa et, onar, topla/kaz, toplanma noktası, devriye,
+  geçersiz hedef, ekran kenarı kaydırma okları. Renk anlamı: düşman kırmızı, dost
+  yeşilimsi-mavi, belirsiz sarı, nötr gri; imleç durumu hedef türünden gelir.
+- **shooter:** nokta/artı/halka/açılan halka nişangâhları, yakın/uzak, vurgu/parlama, vuruş
+  işareti; açılım ve parıltı oyun durumundan beslenir.
+
+**Mekanizma.** Küçük imleçler CSS `cursor` ile verilir: hotspot görsel sınırları içindedir,
+32×32 piksel önerilir (tarayıcılar 128×128 üstünü yok sayar), SVG doğal boyut taşır, yüksek
+yoğunlukta `image-set`. Büyük, animasyonlu veya dinamik açılımlı nişangâh çizilen **yazılım
+imleçtir**: yerel imleç gizlenir, ≤1 kare gecikmeyle işaretçiyi izler, pointer lock ile uyumludur.
+Dokunmatik girdide imleç yoktur. Kol işaretçisi (mevcut) ile tek sahip vardır. İmleç skin
+aksanını taşır, hareket azaltılmışta animasyonsuz durağan kalır, tek bilgi kanalı olamaz.
+WebView2/WebKitGTK/Android'de davranış ölçülür; ölçülemeyen hücre NOT-RUN yazılır.
 
 ## Yayılım ve kabul sahipliği
 
 [TODO](TODO.md) uygulama bağımlılıkları ve görev kapanışlarını;
 [VERIFICATION](VERIFICATION.md) kanıt profili ve sayısal kabulü taşır.
-Buton pilotu ortak ses/hareket/frame/focus temelini tüketir; sonraki
+Buton dikey dilimi malzeme/ikon/imleç/ses/juice temelini uçtan uca tüketir; sonraki
 aileler aynı grameri kendi davranışlarına uygular. Teknik başlangıç
 Windows önceliklidir; Linux/Deck ve Android gerçek kabulü ayrı kalır.
 
 Yeni mekanizma kapı bileşimine girmeden mevcut kapıymış gibi raporlanmaz.
 Piksel temeli yalnız bilinçli değişen sahne/state için yenilenir; rename
-veya yeşil test uğruna bütün temel değiştirilmez. Ses yayını teknik QA
-ile kabul edilir. Görsel, erişilebilirlik ve haptik insan yargısı kendi
-kanıtına bağlıdır. Kök fizik/hava/slalom/çoklu tank işleri UI ile kapanmaz.
+veya yeşil test uğruna bütün temel değiştirilmez. Ses yayını teknik QA ile
+doğrulanır ve kullanıcının dinleme kararıyla kabul edilir. Görsel, imleç,
+erişilebilirlik ve haptik insan yargısı kendi kanıtına bağlıdır. Kök fizik/hava/slalom/çoklu tank işleri UI ile kapanmaz.
 
 ## Özgün üretim
 
@@ -377,13 +421,30 @@ Kök F08/F09 cihaz işleri UI laboratuvarının kabulüyle kapanmaz.
   ölçüsüdür, evrensel kısa game click hedefi değildir. Uygulanan mixing
   örneğinin gerçek peak ve burst ölçümü gerekir.
 - [Web Audio highpass](https://www.w3.org/TR/webaudio/#dom-biquadfiltertype-highpass)
-  cutoff altını azaltır; bass/body çelişkisini ayrı dal çözer.
+  cutoff altını azaltır; UI seslerinde gövde bandı kesilmez, sub ayrı isteğe bağlı dalıdır.
   [Chrome autoplay](https://developer.chrome.com/blog/autoplay/) ve
   [Web Audio uygulama önerileri](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices)
   jest ve kullanıcı kontrolü gerektirir; preference açık diye duyulan ses garantisi verilmez.
 - [i18next plurals](https://www.i18next.com/translation-function/plurals) ve
   [formatting](https://www.i18next.com/translation-function/formatting):
   JSON `count`/CLDR ve Intl mevcut çözümü yeterlidir; ICU ayrı plugin tercihidir.
+
+### Varlık, imleç ve oyun arayüzü kaynakları
+
+- [Kenney Input Prompts](https://kenney.nl/assets/input-prompts), [Game Icons](https://kenney.nl/assets/game-icons),
+  [Cursor Pack](https://kenney.nl/assets/cursor-pack), [Crosshair Pack](https://kenney.nl/assets/crosshair-pack),
+  [Interface Sounds](https://kenney.nl/assets/interface-sounds), [UI Audio](https://kenney.nl/assets/ui-audio):
+  CC0; atıf istenmez. Paket içerikleri (180 imleç, 200 nişangâh, 105 ikon, 100/50 ses) indirilip
+  incelendi; ses paketleri yalnız yerel ölçüm referansıdır.
+- [game-icons.net](https://game-icons.net/about.html): CC BY 3.0; ticari kullanım serbest, yazar
+  atfı zorunlu. Atıf kaydı varlıkla birlikte tutulur.
+- [MDN cursor](https://developer.mozilla.org/en-US/docs/Web/CSS/cursor): görsel imleç boyut
+  sınırı (128×128 üstü yok sayılır, 32×32 önerilir), hotspot ve biçim kuralları.
+- [Audiokinetic UI ses rehberi](https://www.audiokinetic.com/en/approaching-ui-audio-ui-design-perspective-2):
+  basma/bırakma/iptal ayrımı, durum başına varlık. Perde yönü ve hover ölçülülüğü gibi ilkeler
+  tasarım rehberidir; sayısal hedef değildir.
+- RTS imleç durumları (Age of Empires, Command & Conquer, StarCraft) ve Spring RTS kavram
+  çalışması bağlamsal imleç sözlüğünün kaynağıdır; renk anlamı (düşman/dost/belirsiz) oradandır.
 
 ### Native sınırlar
 

@@ -101,18 +101,19 @@ yeni kimlik doğrulama sistemi eklemez.
 
 ## Tema, yerleşim ve piksel
 
-Default/ember × TR/EN/sentetik RTL × compact/comfy/touch kapsamında genel
+Default/aurum × TR/EN/sentetik RTL × compact/comfy/touch kapsamında genel
 tarama ikili kombinasyonlarla yapılır; kritik etkileşimler tam çaprazdır.
 Her tema/durum kontrastı hesaplanan son renk/alfa/kenarlık/glif/Canvas üzerinden
 ölçülür; kapsamlı portallar ve Canvas yeniden çizimi kontrol edilir. Ekran
 görüntüsü motor/font/DPR/görüntü alanı sabittir.
 
-Vitrinin varsayılan 12 mevcut piksel temeli başlangıçtır; sonunda 15 sekmenin
-varsayılan temeli aynı geriletmeme politikasıyla korunur. Açık OSK/Modal/Popup/
+Vitrinin varsayılan 12 mevcut piksel temeli başlangıçtır; sonunda 16 sekmenin
+varsayılan temeli aynı geriletmeme politikasıyla korunur; kimlik değişimi (malzeme,
+ikon, ikinci tema) temelleri bilinçli yeniler ve her yenileme tek tek incelenir. Açık OSK/Modal/Popup/
 seçici ve seçili/devre dışı/hata durumları ayrı görüntülerdir. Chromium mevcut
 temeli, WebKit davranış/geometriyi korur. WebKit için piksel temeli ancak
 bilinçli olarak ayrıca kalibre edilen örnekle kurulur; motorlar arasında aynı
-PNG eşitliği beklenmez. Ember için bütün durumların stili/yerleşimi/kontrastı/
+PNG eşitliği beklenmez. Aurum için bütün durumların stili/yerleşimi/kontrastı/
 etkileşimi ve seçilmiş kanonik görseller incelenir; ikinci temanın tam PNG
 matrisi otomatik kapsam şişirmesi değildir.
 
@@ -210,8 +211,19 @@ kullanıcı jestiyle açılır; arka planda beklemiş kuyruk yoktur; yük/yenide
 tetikleme kritik sonucu susturmaz. Haptik kapalı/sıfır şiddet ve odak kaybı/
 cihaz çıkarma/çıkışta durma gerçek sondada sınanır.
 
-Ses yayını güncel kaynak/PCM/manifest ve codec sonrası teknik QA ile kabul
-edilir; runtime decode/çıkış gerçek hedefte doğrulanır. İsteğe bağlı dinleme
+**Referans ölçümü ve kulak.** Gövde ve karakter, referans setlerle (Kenney Interface Sounds ve
+UI Audio; yalnız yerel ölçüm) bant dağılımı, yükseklik ve gövde/vurgu oranı karşılaştırmasıyla
+doğrulanır: örnek ölçümde referansın iyi seslerinde sub −17…−40, low −14…−30, mid −15…−30,
+high −20…−35 dB iken önceki setimizde low/sub −45…−75 dB idi (gövde yok) ve yükseklik −20 LUFS
+iken referans −10…−25 LUFS idi. Yeni set bu aralıkla karşılaştırılır; ölçüm karar vermez, kulak
+verir. **Dinleme notları** kullanıcıdan tarihli olarak aşağıya işlenir; reddedilen ses yeniden
+tasarlanır, kabul edilen UI-02.9'da kapanır.
+
+Dinleme notları: 2026-10-07 — kullanıcı ilk seti reddetti ("tok değil, hissiyat kötü, kullanım
+alanları yanlış, slider'da ses yok"); set sıfırdan yeniden yapılır (UI-02.6–02.9).
+
+Ses yayını güncel kaynak/PCM/manifest ve codec sonrası teknik QA ile doğrulanır;
+runtime decode/çıkış gerçek hedefte doğrulanır. İsteğe bağlı dinleme
 paketi kulaklık veya cihaz hoparlörü karşılaştırmasına hizmet eder; insan
 beyanı üretim şartı değildir. Dinlenmediği hâlde beğeni iddiası yazılmaz.
 
