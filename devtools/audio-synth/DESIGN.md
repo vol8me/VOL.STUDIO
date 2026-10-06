@@ -85,6 +85,13 @@ Seçim gerekçesi teknik karardır; insan dinleme onayı gibi sunulmaz. Asset
 önce staging'de hazırlanır, kapıyı geçince hedefe ve manifestine taşınır.
 İşin kimliği farklı bir asset'in üzerine sessizce yazamaz.
 
+Job kilidi yalnız job dizinini korur; iki ayrı job aynı hedefe yönelebilir. Bu
+yüzden yayın, job kilidinden sonra asset ve manifest yolları için ortak hedef
+kilidini sabit sırayla alır ve render'dan önce tutar. Kilit beklemez: kaybeden
+süreç `locked` ya da kazanan bitirdiyse `overwrite` ile açık hata alır, başarı
+kaydı bırakmaz. Sahiplik yerleşmeden hemen önce kilit altında yeniden sınanır.
+Bayat kilit ölü süreçten devralınır.
+
 ## Manifest ve doğrulama
 
 `AudioAssetManifestV1` brief ve programı gömülü taşır. Kaynak tohumunu,
@@ -98,8 +105,18 @@ kimliğindeki bayt sapmasını ayrı sınıflar. FFmpeg libvorbis sürümünü t
 raporlamadığından encoder parmak izinin körlüğü manifestte açık taşınır.
 PCM kimliği ses değişiminin bağlayıcı kanıtıdır.
 
+Manifestin her zorunlu alanı tip, enum, aralık ve varlık denetiminden geçer;
+PCM betimi (oran, kanal, kare) render kaydıyla aynı alt şemayı kullanır ve
+kodlanmış rapor, yerleşim ile brief ile çelişemez. Doğrulama kaydedilen
+skalarları bağımsız render ve diskteki dosya ile de karşılaştırır: bayt boyutu,
+render betimi ve çözülmüş dosyanın oranı, kanalı ve kare sayısı. Çözülmüş kare
+sayısı bir Vorbis uzun bloğu (2048) kadar sapabilir; ölçülen gerçek sapma ≤128'dir.
+
 `audio:production-check` bütün manifestleri, aramaları, kayıtlı aileleri,
-müzik bundle'larını ve sample kayıtlarını doğrular. Kayıtlı ailede bank
+müzik bundle'larını, sample kayıtlarını ve iş envanterini doğrular. Envanter
+doğrudan, aile ve müzik altındaki bütün işleri tarar: yayın kaydı olan iş,
+kaydın gösterdiği geçerli manifest ve asset'e bağlı kalmalıdır; kaybolmuş
+hedefin manifesti bulunmayacağından aktif manifest doğrulaması bunu görmez. Kayıtlı ailede bank
 bulunmaması eksik yayın sayılır. Kullanımı biten aile ve bank aktif üretim
 kaydında ölü bağ bırakmaz; geçmiş git veya git dışı koruma kaydında tutulur.
 

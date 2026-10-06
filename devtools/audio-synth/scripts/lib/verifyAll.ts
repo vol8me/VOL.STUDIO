@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { DEFAULT_FAMILIES_ROOT, listFamilies, verifyFamily } from '../../src/protocol/family';
 import { checkRepoRelative } from '../../src/protocol/fs';
 import { DEFAULT_MUSIC_ROOT, listMusic, verifyMusic } from '../../src/protocol/music';
+import { verifyJobPublications } from '../../src/protocol/jobInventory';
 import { verifyManifest } from '../../src/protocol/publish';
 import { verifySampleLibrary } from '../../src/protocol/samples';
 import { DEFAULT_SEARCHES_ROOT, listSearches, verifySearch } from '../../src/protocol/search';
@@ -53,12 +54,14 @@ export function runVerifyCommand(parsed: Parsed, repoRoot: string): number {
       )
     : [];
   const samples = all ? verifySampleLibrary(repoRoot) : [];
+  const jobs = all ? verifyJobPublications(repoRoot) : [];
   if (parsed.flags.has('json'))
     print([
       ...manifests,
       ...searches,
       ...families,
       ...music,
+      ...jobs,
       ...samples.map((r) => ({ schema: 'SampleVerificationV1', ...r })),
     ]);
   else {
@@ -72,6 +75,10 @@ export function runVerifyCommand(parsed: Parsed, repoRoot: string): number {
       for (const check of r.checks.filter((c) => !c.ok))
         console.log(`    ✗ ${check.name}: ${check.detail}`);
     }
+    for (const r of jobs.filter((job) => !job.ok))
+      console.log(
+        `✗ iş ${r.job}  yayın ${r.publication}: ${r.reason ?? '—'}  (sonraki: ${r.next})`,
+      );
     for (const r of searches)
       console.log(`${r.ok ? '✓' : '✗'} ${r.search}  ${r.checks.map((c) => c.detail).join(' · ')}`);
     for (const r of families)
@@ -93,6 +100,7 @@ export function runVerifyCommand(parsed: Parsed, repoRoot: string): number {
       console.log(
         `${music.filter((r) => r.complete).length}/${music.length} müzik bundle'ı tamam.`,
       );
+      console.log(`${jobs.filter((r) => r.ok).length}/${jobs.length} iş yayın kaydı tutarlı.`);
       for (const r of samples)
         console.log(`${r.ok ? '✓' : '✗'} sample ${r.id} (${r.origin})  ${r.detail}`);
       console.log(
@@ -104,6 +112,7 @@ export function runVerifyCommand(parsed: Parsed, repoRoot: string): number {
     searches.every((r) => r.ok) &&
     families.every((r) => r.complete) &&
     music.every((r) => r.complete) &&
+    jobs.every((r) => r.ok) &&
     samples.every((r) => r.ok)
     ? 0
     : 1;

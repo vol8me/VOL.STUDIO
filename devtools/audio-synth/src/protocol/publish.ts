@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -45,7 +46,7 @@ import {
   type Sha256,
 } from '../kernel/canonical';
 import { ProtocolError } from './errors';
-import { commitFiles, readJsonFile, resolveInside, withLock, writeStaged } from './fs';
+import { commitFiles, readJsonFile, resolveInside, withLock, withLocks, writeStaged } from './fs';
 import {
   advance,
   artifactFile,
@@ -58,6 +59,8 @@ import {
 import {
   ASSET_MANIFEST_SCHEMA,
   classifyAssetChange,
+  encodedFormatIssues,
+  pcmMetadataIssues,
   validateManifest,
   type AssetChange,
   type AudioAssetManifestV1,
@@ -276,180 +279,238 @@ export function publishJob(loc: JobLocation): PublishOutcome {
       );
     }
     const assetClass = policyClassOf(job.kind, programDocument, pathClass);
-    // Yayındaki PCM kimliği bağımsız bir render'dan gelir; önbellek ilk
-    // render'ın yazdığını geri okuyup denetimi kendi kendine doğrulatırdı.
-    const rendered = renderForKind(job.kind, programDocument, {
-      seed: record.seed,
-      samples: repoSampleResolver(loc.repoRoot),
-      quality: 'final',
-      cache: null,
-    });
-    const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
-    if (pcmHash !== record.pcm.hash) {
-      throw new ProtocolError(
-        'identity',
-        `yeniden render PCM özeti kayıttan farklı (${pcmHash})`,
-        renderPath(record.renderId),
-      );
-    }
-    checkRuntime(destination, brief, rendered, job.target.integration.loop);
-
-    const assetFile = resolveInside(loc.repoRoot, destination.assetPath, 'asset');
-    const manifestFile = resolveInside(loc.repoRoot, destination.manifestPath, 'manifest');
-    const assetId = assetIdOf(job.kind, brief, programDocument);
-    guardOverwrite(assetFile, manifestFile, assetId, job.jobId, destination.assetPath);
-
-    const quality = encodeQualityOf(assetClass);
-    const toolchain = readEncoderToolchain(quality);
-    // Hazırlık dosyaları hedef paketin gönderilen ağacı dışında, aynı depo
-    // dosya sisteminde durur: yarım kalan yayın build'e girmez.
-    const stagingDir = join(loc.repoRoot, PUBLISH_STAGING_ROOT);
-    mkdirSync(stagingDir, { recursive: true });
-    const stagingId = `${process.pid}-${Date.now()}`;
-    const staging = join(stagingDir, `.tmp-publish-${stagingId}.ogg`);
-    const manifestStaging = join(stagingDir, `.tmp-publish-${stagingId}.json`);
-    try {
-      const encoded = encodeAndMeasure(staging, rendered, quality);
-      const verdict = evaluateAssetPolicy(measurementOf(encoded.report), assetClass);
-      if (verdict.violations.length > 0) {
-        throw new ProtocolError(
-          'policy',
-          `kodek sonrası ${assetClass} politikası: ${verdict.violations.join('; ')}`,
-          destination.assetPath,
-        );
-      }
-      const placement = placementFor(brief, assetClass);
-      if (brief.character) {
-        const character = evaluateCharacterPolicy(
-          encoded.decoded.channels,
-          encoded.decoded.sampleRate,
-          encoded.report,
-          brief.character,
-        );
-        if (!character.pass) {
-          throw new ProtocolError(
-            'policy',
-            `kodek sonrası karakter: ${character.violations.join('; ')}`,
-            destination.assetPath,
-          );
-        }
-      }
-      const image = measureStereoImage(encoded.decoded.channels, encoded.decoded.sampleRate);
-      const layoutIssues = layoutViolations(
+    return withTargetLocks(loc.repoRoot, destination, destination.assetPath, () =>
+      executePublish(loc, {
+        job,
+        brief,
+        programDocument,
+        programHash,
+        record,
+        destination,
         assetClass,
-        placement,
-        encoded.decoded.channels.length,
-        image,
-      );
-      if (layoutIssues.length > 0) {
-        throw new ProtocolError(
-          'policy',
-          `kodek sonrası yerleşim (${placement}): ${layoutIssues.join('; ')}`,
-          destination.assetPath,
-        );
-      }
-      const origin = readOrigin(loc)?.source;
-      const derivation =
-        origin?.kind === 'treatment'
-          ? derivationOf(loc.repoRoot, programDocument, origin, encoded.decoded)
-          : null;
-      const seam = loopSeamOf(brief, encoded.decoded);
-      if (seam && !seam.pass) {
-        throw new ProtocolError(
-          'policy',
-          `loop dikişi: ${seam.reasons.join('; ')}`,
-          destination.assetPath,
-        );
-      }
-      const sources = sourcesOf(job.kind, programDocument, loc.repoRoot);
-      const manifest: AudioAssetManifestV1 = {
-        schema: ASSET_MANIFEST_SCHEMA,
-        assetId,
-        asset: {
-          path: destination.assetPath,
-          format: 'ogg-vorbis',
-          bytes: encoded.bytes.length,
-          encodedHash: encoded.hash,
-        },
-        job: { jobId: job.jobId, protocolVersion: PROTOCOL_VERSION, path: jobLabel(loc) },
-        brief: {
-          schema: 'AudioBriefV1',
-          kind: brief.kind,
-          hash: hashCanonical(brief),
-          document: brief,
-        },
-        program: {
-          schema: PROGRAM_SCHEMAS[job.kind] as 'AcousticProgramV1' | 'MusicStemProgramV1',
-          hash: programHash,
-          document: programDocument,
-        },
-        render: {
-          renderId: record.renderId,
-          seed: record.seed,
-          rendererVersion: record.rendererVersion,
-          pcm: {
-            hash: pcmHash,
-            format: 'f32le-interleaved-clamped',
-            sampleRate: record.pcm.sampleRate,
-            channels: record.pcm.channels,
-            frames: record.pcm.frames,
-          },
-        },
-        engine: {
-          package: PACKAGE_NAME,
-          rendererVersion: RENDERER_VERSIONS[job.kind],
-          registryHash: job.kind === 'music' ? instrumentRegistryHash() : registryHash(),
-          renderSurface: surfaceForKind(job.kind, programDocument),
-          runtime: { node: process.version },
-        },
-        encoder: toolchain,
-        encoding: { scheme: ENCODE_POLICY.scheme, policyHash: encodePolicyHash(), quality },
-        analysis: {
-          analyzerVersion: ANALYZER_VERSION,
-          sourceRecordHash: job.artifacts.analyses[record.renderId].hash,
-          encoded: encoded.report,
-        },
-        policy: {
-          assetClass,
-          policyVersion: ASSET_CLASS_POLICIES.version,
-          verdict: 'pass',
-          violations: [],
-        },
-        integration: {
-          package: destination.target.packageName,
-          targetKind: destination.target.kind,
-          runtimeKey: job.target.integration.runtimeKey,
-          loop: job.target.integration.loop,
-          runtimeDeclaration: destination.target.runtime?.declaredIn ?? null,
-        },
-        layout: {
-          scheme: LAYOUT_POLICY.scheme,
-          placement,
-          channels: encoded.decoded.channels.length,
-          image,
-        },
-        ...(sources ? { sources } : {}),
-        ...(seam ? { seam } : {}),
-        ...(derivation ? { derivation } : {}),
-      };
-      asProtocol('manifest', () => validateManifest(JSON.parse(canonicalJson(manifest))));
-      writeStaged(manifestStaging, prettyCanonicalJson(manifest));
-      commitFiles([
-        { staged: staging, target: assetFile },
-        { staged: manifestStaging, target: manifestFile },
-      ]);
-      saveJob(
-        loc,
-        advance(job, 'published', {
-          publication: { path: destination.manifestPath, hash: hashCanonical(manifest) },
-        }),
-      );
-      return { manifestPath: destination.manifestPath, manifest };
-    } finally {
-      rmSync(staging, { force: true });
-      rmSync(manifestStaging, { force: true });
-    }
+      }),
+    );
   });
+}
+
+/** Ön koşulları geçmiş bir yayının, hedef kilidi altında yürütülecek girdileri. */
+interface PublishPlan {
+  readonly job: ReturnType<typeof loadJob>;
+  readonly brief: AudioBriefV1;
+  readonly programDocument: unknown;
+  readonly programHash: Sha256;
+  readonly record: ReturnType<typeof validateRenderRecord>;
+  readonly destination: ResolvedDestination;
+  readonly assetClass: AssetClass;
+}
+
+/**
+ * Hedef yazma sahipliği: asset ve manifest yolları için ortak kilit. Job
+ * kilidi yalnız job dizinini korur; iki ayrı job aynı hedefe yönelebilir.
+ * Sıra sabittir: önce job kilidi, sonra hedef kilitleri (ada göre artan).
+ * Kilit alma beklemez; kaybeden süreç hedef yoluyla `locked` ya da (kazanan
+ * bitirdiyse) `overwrite` ile açık hata alır, başarı kaydı bırakmaz.
+ */
+function withTargetLocks<T>(
+  repoRoot: string,
+  destination: ResolvedDestination,
+  label: string,
+  fn: () => T,
+): T {
+  const { dir, names } = publishTargetLocks(repoRoot, destination);
+  return withLocks(dir, names, label, fn);
+}
+
+/** Bir hedefin kilit dizini ve dosya adları; asset ve manifest yolundan türer. */
+export function publishTargetLocks(
+  repoRoot: string,
+  destination: Pick<ResolvedDestination, 'assetPath' | 'manifestPath'>,
+): { readonly dir: string; readonly names: readonly string[] } {
+  // Windows ve macOS'ta büyük/küçük harf aynı dosyadır; anahtar ona göre katlanır.
+  const names = [destination.assetPath, destination.manifestPath].map(
+    (path) =>
+      `target-${createHash('sha256').update(path.toLowerCase()).digest('hex').slice(0, 24)}.lock`,
+  );
+  return { dir: join(repoRoot, PUBLISH_STAGING_ROOT, 'locks'), names };
+}
+
+function executePublish(loc: JobLocation, plan: PublishPlan): PublishOutcome {
+  const { job, brief, programDocument, programHash, record, destination, assetClass } = plan;
+  // Yayındaki PCM kimliği bağımsız bir render'dan gelir; önbellek ilk
+  // render'ın yazdığını geri okuyup denetimi kendi kendine doğrulatırdı.
+  const rendered = renderForKind(job.kind, programDocument, {
+    seed: record.seed,
+    samples: repoSampleResolver(loc.repoRoot),
+    quality: 'final',
+    cache: null,
+  });
+  const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
+  if (pcmHash !== record.pcm.hash) {
+    throw new ProtocolError(
+      'identity',
+      `yeniden render PCM özeti kayıttan farklı (${pcmHash})`,
+      renderPath(record.renderId),
+    );
+  }
+  checkRuntime(destination, brief, rendered, job.target.integration.loop);
+
+  const assetFile = resolveInside(loc.repoRoot, destination.assetPath, 'asset');
+  const manifestFile = resolveInside(loc.repoRoot, destination.manifestPath, 'manifest');
+  const assetId = assetIdOf(job.kind, brief, programDocument);
+  guardOverwrite(assetFile, manifestFile, assetId, job.jobId, destination.assetPath);
+
+  const quality = encodeQualityOf(assetClass);
+  const toolchain = readEncoderToolchain(quality);
+  // Hazırlık dosyaları hedef paketin gönderilen ağacı dışında, aynı depo
+  // dosya sisteminde durur: yarım kalan yayın build'e girmez.
+  const stagingDir = join(loc.repoRoot, PUBLISH_STAGING_ROOT);
+  mkdirSync(stagingDir, { recursive: true });
+  const stagingId = `${process.pid}-${Date.now()}`;
+  const staging = join(stagingDir, `.tmp-publish-${stagingId}.ogg`);
+  const manifestStaging = join(stagingDir, `.tmp-publish-${stagingId}.json`);
+  try {
+    const encoded = encodeAndMeasure(staging, rendered, quality);
+    const verdict = evaluateAssetPolicy(measurementOf(encoded.report), assetClass);
+    if (verdict.violations.length > 0) {
+      throw new ProtocolError(
+        'policy',
+        `kodek sonrası ${assetClass} politikası: ${verdict.violations.join('; ')}`,
+        destination.assetPath,
+      );
+    }
+    const placement = placementFor(brief, assetClass);
+    if (brief.character) {
+      const character = evaluateCharacterPolicy(
+        encoded.decoded.channels,
+        encoded.decoded.sampleRate,
+        encoded.report,
+        brief.character,
+      );
+      if (!character.pass) {
+        throw new ProtocolError(
+          'policy',
+          `kodek sonrası karakter: ${character.violations.join('; ')}`,
+          destination.assetPath,
+        );
+      }
+    }
+    const image = measureStereoImage(encoded.decoded.channels, encoded.decoded.sampleRate);
+    const layoutIssues = layoutViolations(
+      assetClass,
+      placement,
+      encoded.decoded.channels.length,
+      image,
+    );
+    if (layoutIssues.length > 0) {
+      throw new ProtocolError(
+        'policy',
+        `kodek sonrası yerleşim (${placement}): ${layoutIssues.join('; ')}`,
+        destination.assetPath,
+      );
+    }
+    const origin = readOrigin(loc)?.source;
+    const derivation =
+      origin?.kind === 'treatment'
+        ? derivationOf(loc.repoRoot, programDocument, origin, encoded.decoded)
+        : null;
+    const seam = loopSeamOf(brief, encoded.decoded);
+    if (seam && !seam.pass) {
+      throw new ProtocolError(
+        'policy',
+        `loop dikişi: ${seam.reasons.join('; ')}`,
+        destination.assetPath,
+      );
+    }
+    const sources = sourcesOf(job.kind, programDocument, loc.repoRoot);
+    const manifest: AudioAssetManifestV1 = {
+      schema: ASSET_MANIFEST_SCHEMA,
+      assetId,
+      asset: {
+        path: destination.assetPath,
+        format: 'ogg-vorbis',
+        bytes: encoded.bytes.length,
+        encodedHash: encoded.hash,
+      },
+      job: { jobId: job.jobId, protocolVersion: PROTOCOL_VERSION, path: jobLabel(loc) },
+      brief: {
+        schema: 'AudioBriefV1',
+        kind: brief.kind,
+        hash: hashCanonical(brief),
+        document: brief,
+      },
+      program: {
+        schema: PROGRAM_SCHEMAS[job.kind] as 'AcousticProgramV1' | 'MusicStemProgramV1',
+        hash: programHash,
+        document: programDocument,
+      },
+      render: {
+        renderId: record.renderId,
+        seed: record.seed,
+        rendererVersion: record.rendererVersion,
+        pcm: {
+          hash: pcmHash,
+          format: 'f32le-interleaved-clamped',
+          sampleRate: record.pcm.sampleRate,
+          channels: record.pcm.channels,
+          frames: record.pcm.frames,
+        },
+      },
+      engine: {
+        package: PACKAGE_NAME,
+        rendererVersion: RENDERER_VERSIONS[job.kind],
+        registryHash: job.kind === 'music' ? instrumentRegistryHash() : registryHash(),
+        renderSurface: surfaceForKind(job.kind, programDocument),
+        runtime: { node: process.version },
+      },
+      encoder: toolchain,
+      encoding: { scheme: ENCODE_POLICY.scheme, policyHash: encodePolicyHash(), quality },
+      analysis: {
+        analyzerVersion: ANALYZER_VERSION,
+        sourceRecordHash: job.artifacts.analyses[record.renderId].hash,
+        encoded: encoded.report,
+      },
+      policy: {
+        assetClass,
+        policyVersion: ASSET_CLASS_POLICIES.version,
+        verdict: 'pass',
+        violations: [],
+      },
+      integration: {
+        package: destination.target.packageName,
+        targetKind: destination.target.kind,
+        runtimeKey: job.target.integration.runtimeKey,
+        loop: job.target.integration.loop,
+        runtimeDeclaration: destination.target.runtime?.declaredIn ?? null,
+      },
+      layout: {
+        scheme: LAYOUT_POLICY.scheme,
+        placement,
+        channels: encoded.decoded.channels.length,
+        image,
+      },
+      ...(sources ? { sources } : {}),
+      ...(seam ? { seam } : {}),
+      ...(derivation ? { derivation } : {}),
+    };
+    asProtocol('manifest', () => validateManifest(JSON.parse(canonicalJson(manifest))));
+    writeStaged(manifestStaging, prettyCanonicalJson(manifest));
+    // Kilit altında da hedef protokol dışından değişmiş olabilir: yerleşmeden hemen önce yeniden bak.
+    guardOverwrite(assetFile, manifestFile, assetId, job.jobId, destination.assetPath);
+    commitFiles([
+      { staged: staging, target: assetFile },
+      { staged: manifestStaging, target: manifestFile },
+    ]);
+    saveJob(
+      loc,
+      advance(job, 'published', {
+        publication: { path: destination.manifestPath, hash: hashCanonical(manifest) },
+      }),
+    );
+    return { manifestPath: destination.manifestPath, manifest };
+  } finally {
+    rmSync(staging, { force: true });
+    rmSync(manifestStaging, { force: true });
+  }
 }
 
 /**
@@ -559,6 +620,11 @@ export function verifyManifest(repoRoot: string, manifestPath: string): AssetVer
     ok: assetHash === manifest.asset.encodedHash,
     detail: assetHash ?? 'dosya yok',
   });
+  checks.push({
+    name: 'asset-size',
+    ok: bytes !== null && bytes.length === manifest.asset.bytes,
+    detail: `kayıt ${manifest.asset.bytes} bayt, disk ${bytes?.length ?? 'yok'}`,
+  });
 
   const kind = kindOfProgramSchema(manifest.program.schema, manifestPath);
   const rendered = renderForKind(kind, manifest.program.document, {
@@ -569,12 +635,33 @@ export function verifyManifest(repoRoot: string, manifestPath: string): AssetVer
   });
   const pcmHash = hashPcm(rendered.channels, rendered.sampleRate);
   checks.push({ name: 'pcm-identity', ok: pcmHash === manifest.render.pcm.hash, detail: pcmHash });
+  const renderedShape = {
+    sampleRate: rendered.sampleRate,
+    channels: rendered.channels.length,
+    frames: rendered.channels[0]?.length ?? 0,
+  };
+  const metadataIssues = pcmMetadataIssues(manifest.render.pcm, renderedShape);
+  checks.push({
+    name: 'pcm-metadata',
+    ok: metadataIssues.length === 0,
+    detail: metadataIssues.join('; ') || 'kayıt render betimiyle aynı',
+  });
   checks.push(surfaceCheck(manifest, pcmHash === manifest.render.pcm.hash));
 
   const decoded = bytes ? decodeOrNull(assetFile, manifest.asset.path) : null;
   if (!decoded) {
     checks.push({ name: 'encoded-policy', ok: false, detail: 'asset çözülemedi' });
   } else {
+    const formatIssues = encodedFormatIssues(manifest.render.pcm, {
+      sampleRate: decoded.sampleRate,
+      channels: decoded.channels.length,
+      frames: decoded.channels[0]?.length ?? 0,
+    });
+    checks.push({
+      name: 'encoded-format',
+      ok: formatIssues.length === 0,
+      detail: formatIssues.join('; ') || 'çözülen betim kaynak PCM ile uyumlu',
+    });
     const report = analyzeAudio(decoded.channels, decoded.sampleRate, 'decoded-encoded');
     const verdict = evaluateAssetPolicy(measurementOf(report), manifest.policy.assetClass);
     const brief = validateBrief(manifest.brief.document);

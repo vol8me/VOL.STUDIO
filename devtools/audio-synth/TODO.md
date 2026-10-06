@@ -10,12 +10,11 @@ Zorunlu dinleme kabulü kaldırıldı; teknik kabulün tam kapı kanıtı kök
 
 ## Açık
 
-Bu işin checkbox ve kapanış sahibi kök TODO'dur; burada ikinci defter tutulmaz.
-
-- **AS20 — Doğrulayıcı alt şemaları:** kök [F05.4](../../TODO.md#f05--asset-yayını-metadata-ve-kalıntı-temizliği); yanlış PCM metadata kabulü düzeltilirken doğru kabul/ret ve sürüm sözleşmesi korunur.
+Açık audio işi yoktur; repo geneli kalan işler kök [TODO](../../TODO.md) F05.5–F05.6 sahibindedir.
 
 ## Kapatılanlar
 
+- [x] AS20 — Manifest doğrulayıcısı ortak alt şemalara bölündü; yanlış PCM metadata kabulü kapandı.
 - [x] Genel ses benchmark ve canary korpusu.
 - [x] `audio:capabilities` kalite matrisi var.
 - [x] Referans ve dinleme korpusu estetik regresyonları izler.

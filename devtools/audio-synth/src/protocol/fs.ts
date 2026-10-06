@@ -315,9 +315,8 @@ function acquireLock(lock: string, label: string): void {
   }
 }
 
-export function withLock<T>(dir: string, label: string, fn: () => T): T {
-  const lock = join(dir, '.lock');
-  mkdirSync(dir, { recursive: true });
+function withLockFile<T>(lock: string, label: string, fn: () => T): T {
+  mkdirSync(dirname(lock), { recursive: true });
   acquireLock(lock, label);
   try {
     return fn();
@@ -325,4 +324,24 @@ export function withLock<T>(dir: string, label: string, fn: () => T): T {
     // Yalnız kendi kilidini bırakır.
     if (readOwner(lock) === process.pid) rmSync(lock, { force: true });
   }
+}
+
+export function withLock<T>(dir: string, label: string, fn: () => T): T {
+  return withLockFile(join(dir, '.lock'), label, fn);
+}
+
+/**
+ * Aynı dizinde adlandırılmış kilitleri BELİRLİ SIRAYLA (ada göre artan) alır
+ * ve ters sırada bırakır. Birden çok süreç aynı küme için ters sırada
+ * beklemez: kilit alma bekleme yapmadığından (`locked` ile hemen düşer)
+ * kilitlenme olmaz; sıra ise kısmen alınmış kümeyi öngörülebilir kılar.
+ * Yinelenen ad bir kez alınır.
+ */
+export function withLocks<T>(dir: string, names: readonly string[], label: string, fn: () => T): T {
+  const ordered = [...new Set(names)].sort();
+  const hold = (index: number): T =>
+    index === ordered.length
+      ? fn()
+      : withLockFile(join(dir, ordered[index]), label, () => hold(index + 1));
+  return hold(0);
 }

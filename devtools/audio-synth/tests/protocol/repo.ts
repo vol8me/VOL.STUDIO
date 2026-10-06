@@ -1,6 +1,14 @@
 import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import {
+  analyzeCandidate,
+  initJob,
+  registerBrief,
+  registerProgram,
+  renderCandidate,
+  selectCandidate,
+} from '../../src/protocol/job';
 import type { JobLocation } from '../../src/protocol/location';
 import type { JobTargetV1 } from '../../src/protocol/records';
 
@@ -129,4 +137,20 @@ export function cloneTestRepo(source: TestRepo): TestRepo {
     cleanup: () => rmSync(root, { recursive: true, force: true }),
     loc: (jobId = 'knock') => ({ repoRoot: root, jobsRoot: JOBS_ROOT, jobId }),
   };
+}
+
+/** Seçilmiş (yayına hazır) bir iş kurar: init → brief → program → render → analiz → seçim. */
+export function prepareSelectedJob(
+  repo: TestRepo,
+  jobId: string,
+  options: { jobsRoot?: string; target?: JobTargetV1 } = {},
+): JobLocation {
+  const loc = { ...repo.loc(jobId), ...(options.jobsRoot ? { jobsRoot: options.jobsRoot } : {}) };
+  initJob(loc, { target: options.target ?? REFERENCE_TARGET });
+  registerBrief(loc, testBrief());
+  registerProgram(loc, testProgram());
+  renderCandidate(loc);
+  analyzeCandidate(loc);
+  selectCandidate(loc, undefined, 'tek aday');
+  return loc;
 }

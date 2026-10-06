@@ -87,8 +87,18 @@ describe('audio:job — süreçler arası kabul', () => {
       const manifestText = readFileSync(join(repo.root, published.manifest), 'utf8');
       const manifest = JSON.parse(manifestText) as AudioAssetManifestV1;
       expect(manifest.encoder.version).toMatch(/^ffmpeg version/);
-      expect(cli('verify', '--all', '--json').json<unknown[]>()).toHaveLength(1);
-      expect(cli('verify', '--all').text).toMatch(/1\/1 manifest doğrulandı/);
+      // Bir manifest ve o manifesti yayımlayan işin envanter satırı.
+      const everything = cli('verify', '--all', '--json').json<
+        { schema: string; ok?: boolean }[]
+      >();
+      expect(everything.map((item) => item.schema)).toEqual([
+        'AudioAssetVerificationV1',
+        'AudioJobPublicationV1',
+      ]);
+      expect(everything.every((item) => item.ok)).toBe(true);
+      const text = cli('verify', '--all').text;
+      expect(text).toMatch(/1\/1 manifest doğrulandı/);
+      expect(text).toMatch(/1\/1 iş yayın kaydı tutarlı/);
     },
     RENDER_TIMEOUT,
   );

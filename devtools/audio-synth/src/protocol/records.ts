@@ -100,7 +100,7 @@ export interface SelectionV1 {
 }
 
 export const JOB_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
-const RENDER_ID = /^r-[0-9a-f]{16}$/;
+export const RENDER_ID = /^r-[0-9a-f]{16}$/;
 
 /** Belge doğrulama hatasını dosya etiketiyle `invalid` protokol hatasına çevirir. */
 export function asProtocol<T>(label: string, fn: () => T): T {
@@ -119,7 +119,7 @@ export function checkHash(value: unknown, path: string): Sha256 {
   return value as Sha256;
 }
 
-function checkId(value: unknown, path: string, pattern: RegExp): string {
+export function checkId(value: unknown, path: string, pattern: RegExp): string {
   if (typeof value !== 'string' || !pattern.test(value)) {
     throw new AudioParamError(path, 'type', `${pattern.source} kalıbına uymalı`, value);
   }
@@ -243,6 +243,29 @@ function asProtocolPath(value: unknown, path: string): void {
   }
 }
 
+/**
+ * PCM betimi: render kaydı ve manifest aynı alt şemayı kullanır; `keys` üst
+ * belgeye özgü alanları (manifest'te `format`) kapsar. Dönen nesne
+ * doğrulanmış skalarları taşır.
+ */
+export function checkPcmDescriptor(
+  value: unknown,
+  path: string,
+  keys: readonly string[],
+): { readonly sampleRate: number; readonly channels: number; readonly frames: number } {
+  const pcm = checkObject(value, path, keys);
+  checkHash(pcm.hash, `${path}.hash`);
+  return {
+    sampleRate: checkNumber(pcm.sampleRate, `${path}.sampleRate`, {
+      min: 8000,
+      max: 384000,
+      integer: true,
+    }),
+    channels: checkNumber(pcm.channels, `${path}.channels`, { min: 1, max: 2, integer: true }),
+    frames: checkNumber(pcm.frames, `${path}.frames`, { min: 1, integer: true }),
+  };
+}
+
 export function validateRenderRecord(value: unknown): RenderRecordV1 {
   const o = checkObject(value, '', [
     'schema',
@@ -260,11 +283,7 @@ export function validateRenderRecord(value: unknown): RenderRecordV1 {
   checkHash(o.programHash, 'programHash');
   checkNumber(o.seed, 'seed', { min: 0, max: 0xffff_ffff, integer: true });
   checkNumber(o.rendererVersion, 'rendererVersion', { min: 1, integer: true });
-  const pcm = checkObject(o.pcm, 'pcm', ['hash', 'sampleRate', 'channels', 'frames']);
-  checkHash(pcm.hash, 'pcm.hash');
-  checkNumber(pcm.sampleRate, 'pcm.sampleRate', { min: 8000, max: 384000, integer: true });
-  checkNumber(pcm.channels, 'pcm.channels', { min: 1, max: 2, integer: true });
-  checkNumber(pcm.frames, 'pcm.frames', { min: 1, integer: true });
+  checkPcmDescriptor(o.pcm, 'pcm', ['hash', 'sampleRate', 'channels', 'frames']);
   const cost = checkObject(o.cost, 'cost', ['peakBytes', 'workUnits']);
   checkNumber(cost.peakBytes, 'cost.peakBytes', { min: 0 });
   checkNumber(cost.workUnits, 'cost.workUnits', { min: 0 });
