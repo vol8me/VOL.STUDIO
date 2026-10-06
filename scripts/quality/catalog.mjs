@@ -19,6 +19,18 @@ export const SHOWN_VIA = {
     via: null,
     reason: 'görsel olmayan bağlama katmanı; vitrin kendi kökünü kurar',
   },
+  ThemeController: {
+    via: null,
+    reason: "görsel olmayan tema/yoğunluk sahibi; vitrin üst bar seçicisi UI-07.4'te bağlanır",
+  },
+  MotionController: {
+    via: null,
+    reason: 'görsel olmayan hareket bütçesi sahibi; ilk tüketici UI-03.1 pilotudur',
+  },
+  UiIntentBus: {
+    via: null,
+    reason: 'görsel olmayan niyet veriyolu; UI-02.5 ses laboratuvarı gösterir',
+  },
 };
 
 function sourceText(dir) {

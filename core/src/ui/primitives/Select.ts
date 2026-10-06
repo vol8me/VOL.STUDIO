@@ -1,7 +1,8 @@
 import { Popup } from '../overlays/Popup';
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
-import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
+import { emitUiIntent } from '../feedback/uiIntent';
+import type { HapticFeedback } from './hapticFeedback';
 
 export type SelectOptionTone = 'danger' | 'success' | 'warning';
 
@@ -163,7 +164,7 @@ export class Select {
     this.element.remove();
   }
 
-  private selectValue(value: string, opts: { silent?: boolean } = {}): void {
+  private selectValue(value: string, opts: { silent?: boolean; event?: Event } = {}): void {
     const previousButton = this.value ? this.optionButtons.get(this.value) : undefined;
     previousButton?.setAttribute('aria-selected', 'false');
 
@@ -174,7 +175,14 @@ export class Select {
     this.popup.close();
 
     if (!opts.silent) {
-      playHapticFeedback(this.haptic, 'select');
+      emitUiIntent({
+        kind: 'select',
+        origin: 'Select',
+        target: this.element,
+        event: opts.event,
+        haptic: this.haptic,
+        defaultHaptic: 'select',
+      });
       this.onInputHandler?.(value);
       this.onCommitHandler?.(value);
     }
@@ -193,7 +201,9 @@ export class Select {
       optionButton.setAttribute('aria-selected', String(item.value === this.value));
       optionButton.tabIndex = -1;
 
-      this.optionScope.addListener(optionButton, 'click', () => this.selectValue(item.value));
+      this.optionScope.addListener(optionButton, 'click', (event: Event) =>
+        this.selectValue(item.value, { event }),
+      );
       this.optionScope.addListener(optionButton, 'keydown', (event: Event) =>
         this.handleOptionKeydown(event as KeyboardEvent, index),
       );

@@ -1,3 +1,4 @@
+import { emitUiIntent } from '../feedback/uiIntent';
 import { UI_SIZE } from '../../constants';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 
@@ -119,17 +120,25 @@ export class Slider {
 
     this.element.appendChild(track);
 
-    const boundInput = (): void => {
+    const boundInput = (event: Event): void => {
       const value = Number(this.input.value);
       this.gestureStartValue ??= this.committedValue;
       this.render(value);
+      emitUiIntent({
+        kind: 'valuePreview',
+        origin: 'Slider',
+        target: this.input,
+        event,
+        persistent: false,
+      });
       this.onInputHandler?.(value);
     };
-    const boundChange = (): void => {
+    const boundChange = (event: Event): void => {
       const value = this.getValue();
       this.gestureStartValue = null;
       if (value === this.committedValue) return;
       this.committedValue = value;
+      emitUiIntent({ kind: 'valueCommit', origin: 'Slider', target: this.input, event });
       this.onCommitHandler?.(value);
     };
     const boundKeydown = (event: KeyboardEvent): void => {

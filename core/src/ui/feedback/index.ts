@@ -21,3 +21,15 @@ export {
   type FloatingTextVariant,
   type FloatingTextOptions,
 } from './FloatingText';
+export {
+  UiIntentBus,
+  emitUiIntent,
+  uiIntentBusFor,
+  type UiIntent,
+  type UiIntentKind,
+  type UiIntentListener,
+  type UiIntentRequest,
+  type UiIntentSource,
+  type UiIntentSubscription,
+  type UiOutcome,
+} from './uiIntent';

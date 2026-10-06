@@ -1,5 +1,6 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
-import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
+import { emitUiIntent } from '../feedback/uiIntent';
+import type { HapticFeedback } from './hapticFeedback';
 
 export interface SegmentedControlOption {
   value: string;
@@ -142,7 +143,9 @@ export class SegmentedControl {
       button.classList.toggle('vol-segmented__item--active', item.value === this.value);
       if (item.disabled) this.itemDisabled.add(item.value);
 
-      this.itemScope.addListener(button, 'click', () => this.commitUser(item.value));
+      this.itemScope.addListener(button, 'click', (event: Event) =>
+        this.commitUser(item.value, event),
+      );
       this.buttons.set(item.value, button);
       this.element.appendChild(button);
     }
@@ -214,7 +217,7 @@ export class SegmentedControl {
 
     event.preventDefault();
     const next = enabled[(target + enabled.length) % enabled.length];
-    this.commitUser(next);
+    this.commitUser(next, event);
     this.buttons.get(next)?.focus();
   }
 
@@ -231,10 +234,17 @@ export class SegmentedControl {
     this.moveThumb();
   }
 
-  private commitUser(value: string): void {
+  private commitUser(value: string, event?: Event): void {
     if (this.value === value || this.buttons.get(value)?.disabled) return;
     this.select(value);
-    playHapticFeedback(this.haptic, 'select');
+    emitUiIntent({
+      kind: 'select',
+      origin: 'SegmentedControl',
+      target: this.element,
+      event,
+      haptic: this.haptic,
+      defaultHaptic: 'select',
+    });
     this.onInputHandler?.(value);
     this.onCommitHandler?.(value);
   }

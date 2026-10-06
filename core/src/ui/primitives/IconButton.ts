@@ -1,6 +1,7 @@
 import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
-import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
+import { emitUiIntent } from '../feedback/uiIntent';
+import type { HapticFeedback } from './hapticFeedback';
 
 export type IconButtonVariant = 'default' | 'primary' | 'success' | 'danger';
 export type IconButtonSize = 'sm' | 'md' | 'lg';
@@ -30,7 +31,7 @@ export class IconButton {
   readonly element: HTMLButtonElement;
   private readonly iconWrapper: HTMLSpanElement;
   private onClickHandler?: ButtonClickHandler;
-  private readonly boundHandleClick: () => void;
+  private readonly boundHandleClick: (event: Event) => void;
   private readonly scope = new DisposableScope();
   private loading = false;
 
@@ -53,8 +54,15 @@ export class IconButton {
     // Handler'ın kendisi listener olsaydı ikinci `onClick()` çağrısında eskisini
     // kaldırmak çağıranın referansı saklamasına bağlı kalır ve asenkron
     // sarmalayıcı (loading, hata yakalama) hiç eklenemezdi.
-    this.boundHandleClick = () => {
-      playHapticFeedback(options.haptic, 'tap');
+    this.boundHandleClick = (event: Event) => {
+      emitUiIntent({
+        kind: 'press',
+        origin: 'IconButton',
+        target: this.element,
+        event,
+        haptic: options.haptic,
+        defaultHaptic: 'tap',
+      });
       void this.handleClick();
     };
     this.scope.addListener(this.element, 'click', this.boundHandleClick);

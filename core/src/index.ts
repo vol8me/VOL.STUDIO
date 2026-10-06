@@ -351,6 +351,39 @@ export * from './ui/glyphs';
 export { suppressNativeMenus } from './ui/nativeMenus';
 export { VOL_COLORS, type VolColorToken } from './ui/colors';
 export { Easing, animateValue, type AnimateValueOptions } from './ui/animation';
+export {
+  THEME_IDS,
+  DENSITY_IDS,
+  resolveThemeId,
+  resolveDensityId,
+  type ThemeId,
+  type DensityId,
+} from './ui/themes/registry';
+export type { VolThemeToken } from './ui/themes/types';
+export {
+  ThemeController,
+  type ThemeControllerOptions,
+  type ThemeState,
+  type ThemeStore,
+} from './ui/themes/ThemeController';
+export {
+  MotionController,
+  type MotionControllerOptions,
+  type MotionGrant,
+  type MotionGroupRequest,
+  type MotionKind,
+  type MotionParticleGrant,
+  type MotionPriority,
+  type MotionUsage,
+} from './ui/motion/MotionController';
+export {
+  LOADING_MIN_VISIBLE_MS,
+  MOTION_BUDGET,
+  MOTION_DURATIONS,
+  MOTION_EASINGS,
+  MOTION_INTERACTION,
+  MOTION_PRESETS,
+} from './ui/motion/presets';
 
 /*
  * Tek-atış ses bankası. Müzik motoru katmanlı ve zamanlanmış akış içindir;

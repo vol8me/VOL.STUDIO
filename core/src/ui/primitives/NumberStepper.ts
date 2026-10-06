@@ -1,3 +1,4 @@
+import { emitUiIntent } from '../feedback/uiIntent';
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 
@@ -88,19 +89,28 @@ export class NumberStepper {
 
     this.element.appendChild(control);
 
-    const boundDecrement = (): void => this.commitUser(this.value - this.step);
-    const boundIncrement = (): void => this.commitUser(this.value + this.step);
-    const boundInput = (): void => {
+    const boundDecrement = (event: Event): void =>
+      this.commitUser(this.value - this.step, true, event);
+    const boundIncrement = (event: Event): void =>
+      this.commitUser(this.value + this.step, true, event);
+    const boundInput = (event: Event): void => {
       const parsed = Number(this.input.value);
       if (Number.isFinite(parsed)) {
         this.previewValue = this.clamp(parsed);
+        emitUiIntent({
+          kind: 'valuePreview',
+          origin: 'NumberStepper',
+          target: this.input,
+          event,
+          persistent: false,
+        });
         this.onInputHandler?.(this.previewValue);
       }
     };
-    const boundInputChange = (): void => {
+    const boundInputChange = (event: Event): void => {
       const parsed = Number(this.input.value);
       const clamped = this.clamp(parsed);
-      this.commitUser(parsed, this.previewValue !== clamped);
+      this.commitUser(parsed, this.previewValue !== clamped, event);
       this.previewValue = null;
     };
 
@@ -149,9 +159,10 @@ export class NumberStepper {
     return changed;
   }
 
-  private commitUser(value: number, emitInput = true): void {
+  private commitUser(value: number, emitInput = true, event?: Event): void {
     const changed = this.applyValue(value);
     if (!changed) return;
+    emitUiIntent({ kind: 'valueCommit', origin: 'NumberStepper', target: this.input, event });
     if (emitInput) this.onInputHandler?.(this.value);
     this.onCommitHandler?.(this.value);
   }

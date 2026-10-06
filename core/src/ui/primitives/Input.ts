@@ -1,3 +1,4 @@
+import { emitUiIntent } from '../feedback/uiIntent';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { requestTextEntryForElement } from '../textEntry/textEntry';
 
@@ -44,12 +45,21 @@ export class Input {
       this.element.placeholder = placeholder;
     }
 
-    const boundInput = (): void => this.onInputHandler?.(this.element.value);
-    const boundChange = (): void => this.commitUserValue();
+    const boundInput = (event: Event): void => {
+      emitUiIntent({
+        kind: 'valuePreview',
+        origin: 'Input',
+        target: this.element,
+        event,
+        persistent: false,
+      });
+      this.onInputHandler?.(this.element.value);
+    };
+    const boundChange = (event: Event): void => this.commitUserValue(event);
     const boundKeydown = (event: KeyboardEvent): void => {
       if (event.key === 'Enter') {
         this.onEnterHandler?.(this.element.value);
-        this.commitUserValue();
+        this.commitUserValue(event);
       }
     };
 
@@ -108,10 +118,11 @@ export class Input {
     this.element.remove();
   }
 
-  private commitUserValue(): void {
+  private commitUserValue(event?: Event): void {
     const value = this.element.value;
     if (value === this.committedValue) return;
     this.committedValue = value;
+    emitUiIntent({ kind: 'valueCommit', origin: 'Input', target: this.element, event });
     this.onCommitHandler?.(value);
   }
 }

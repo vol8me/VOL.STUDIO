@@ -1,4 +1,5 @@
 import '../theme.css';
+import { uiIntentBusFor, type UiIntentBus } from '../feedback/uiIntent';
 
 const ROOT_CLASS = 'vol-ui-root';
 /** Aynı DOM element'ini paylasan UIRoot ornek sayısı (dataset üzerinde tutulur). */
@@ -12,6 +13,7 @@ const REF_COUNT_ATTR = 'volUiRootRefs';
  */
 export class UIRoot {
   readonly element: HTMLDivElement;
+  private readonly intentHandle: { bus: UiIntentBus; release(): void };
   private released = false;
 
   constructor(parent: HTMLElement | string = document.body) {
@@ -25,14 +27,19 @@ export class UIRoot {
     const existing = target.querySelector<HTMLDivElement>(`:scope > .${ROOT_CLASS}`);
     if (existing) {
       this.element = existing;
-      this.retain();
-      return;
+    } else {
+      this.element = document.createElement('div');
+      this.element.className = ROOT_CLASS;
+      target.appendChild(this.element);
     }
-
-    this.element = document.createElement('div');
-    this.element.className = ROOT_CLASS;
-    target.appendChild(this.element);
     this.retain();
+    // Paylaşılan kök tek niyet veriyolunu paylaşır: ikinci UIRoot dinleyici/ses çoğaltmaz.
+    this.intentHandle = uiIntentBusFor(this.element);
+  }
+
+  /** Bu kökün anlamsal UI niyet veriyolu (ses/titreşim/ölçüm sağlayıcıları buna abone olur). */
+  get intents(): UiIntentBus {
+    return this.intentHandle.bus;
   }
 
   private retain(): void {
@@ -58,6 +65,7 @@ export class UIRoot {
   destroy(): void {
     if (this.released) return;
     this.released = true;
+    this.intentHandle.release();
 
     const remaining = Number(this.element.dataset[REF_COUNT_ATTR] ?? '1') - 1;
     if (remaining > 0) {

@@ -2094,6 +2094,30 @@
       ]
     },
     {
+      "export": "UiIntentBus",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-02",
+      "anchor": "A3",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan niyet veriyolu; UI-02.5 ses laboratuvarı gösterir"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/uiIntent.test.ts",
+          "title": "aynı olay nesnesi yeniden işlenirse ikinci üretim sessizdir"
+        },
+        {
+          "file": "core/tests/ui/feedback/uiIntent.test.ts",
+          "title": "niyet kimlikleri artan ve tekildir"
+        }
+      ]
+    },
+    {
       "export": "VOL_COLORS",
       "kind": "helper",
       "tier": 1,
@@ -2243,6 +2267,26 @@
         {
           "file": "core/tests/ui/textEntry/textEntry.test.ts",
           "title": "probu yoksa ya da kip kapalıysa klavye açmaz"
+        }
+      ]
+    },
+    {
+      "export": "emitUiIntent",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-02",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/uiIntent.test.ts",
+          "title": "aynı yerel olayı iki bileşen işlerse yalnız içteki sahiplenir (iki kez üretilmez)"
         }
       ]
     },
@@ -2542,11 +2586,16 @@
         "via": null,
         "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
       },
-      "tests": [],
-      "gap": {
-        "task": "UI-02.1",
-        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
-      }
+      "tests": [
+        {
+          "file": "core/tests/ui/primitives/buttonBehavior.test.ts",
+          "title": "senkron handler SENKRON kalır: loading açılıp kapanır, bir microtask geciktirmez"
+        },
+        {
+          "file": "core/tests/ui/primitives/buttonBehavior.test.ts",
+          "title": "asenkron handler beklenir; süresince loading açıktır ve yeniden giriş reddedilir"
+        }
+      ]
     },
     {
       "export": "setTextEntryModeProbe",
@@ -2641,6 +2690,26 @@
         {
           "file": "core/tests/ui/nativeMenus.test.ts",
           "title": "bağlam menüsünü metin alanı dahil her yerde engeller"
+        }
+      ]
+    },
+    {
+      "export": "uiIntentBusFor",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-02",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/uiIntent.test.ts",
+          "title": "release ikinci çağrıda etkisizdir ve son bırakış kaydı siler"
         }
       ]
     }

@@ -1,6 +1,7 @@
 import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
-import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
+import { emitUiIntent } from '../feedback/uiIntent';
+import type { HapticFeedback } from './hapticFeedback';
 
 export type ButtonVariant = 'default' | 'primary' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -26,7 +27,7 @@ export class Button {
   private readonly labelElement: HTMLSpanElement;
   private readonly spinnerElement: HTMLSpanElement;
   private onClickHandler?: ButtonClickHandler;
-  private boundHandleClick: () => void;
+  private boundHandleClick: (event: Event) => void;
   private readonly scope = new DisposableScope();
   private loading = false;
 
@@ -61,8 +62,15 @@ export class Button {
     this.spinnerElement.className = 'vol-button__spinner';
     this.spinnerElement.hidden = true;
 
-    this.boundHandleClick = () => {
-      playHapticFeedback(options.haptic, 'tap');
+    this.boundHandleClick = (event: Event) => {
+      emitUiIntent({
+        kind: 'press',
+        origin: 'Button',
+        target: this.element,
+        event,
+        haptic: options.haptic,
+        defaultHaptic: 'tap',
+      });
       void this.handleClick();
     };
     this.scope.addListener(this.element, 'click', this.boundHandleClick);

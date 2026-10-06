@@ -1,5 +1,6 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
-import { playHapticFeedback, type HapticFeedback } from './hapticFeedback';
+import { emitUiIntent } from '../feedback/uiIntent';
+import type { HapticFeedback } from './hapticFeedback';
 
 export interface CheckboxOptions {
   checked?: boolean;
@@ -57,7 +58,9 @@ export class Checkbox {
       this.labelText = null;
     }
 
-    this.scope.addListener(this.input, 'change', () => this.commitUser(this.input.checked));
+    this.scope.addListener(this.input, 'change', (event: Event) =>
+      this.commitUser(this.input.checked, event),
+    );
   }
 
   isChecked(): boolean {
@@ -87,11 +90,18 @@ export class Checkbox {
     this.element.remove();
   }
 
-  private commitUser(checked: boolean): void {
+  private commitUser(checked: boolean, event?: Event): void {
     if (checked === this.checked) return;
     this.checked = checked;
     this.input.checked = checked;
-    playHapticFeedback(this.haptic, 'select');
+    emitUiIntent({
+      kind: 'toggle',
+      origin: 'Checkbox',
+      target: this.element,
+      event,
+      haptic: this.haptic,
+      defaultHaptic: 'select',
+    });
     this.onInputHandler?.(checked);
     this.onCommitHandler?.(checked);
   }
