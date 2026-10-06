@@ -1,0 +1,236 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Kapat: kısa, alçalan hışırtı ve yumuşak ton.",
+      "durationSeconds": 0.18,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.01,
+              "curve": "cosine",
+              "decay": 0.12,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -14,
+          "mechanism": "mechanical",
+          "name": "air",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 240,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1800,
+                "mode": "bandpass",
+                "q": 0.8
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "texture",
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.11,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -12,
+          "mechanism": "mechanical",
+          "name": "drop",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 470,
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -6
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9180
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui",
+    "durationSeconds": {
+      "max": 0.21,
+      "min": 0.15
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "Kapat: kısa, alçalan hışırtı ve yumuşak ton.",
+  "dimensions": [
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.1265,
+        "min": 0.0935,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "drop",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 507.6,
+        "min": 432.4,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "drop",
+        "param": "frequency",
+        "primitive": "source.oscillator",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "ui-close",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "decay": {
+          "max": 0.1265,
+          "min": 0.1155
+        },
+        "pitch": {
+          "max": 457.31,
+          "min": 432.4
+        }
+      },
+      "light": {
+        "decay": {
+          "max": 0.1045,
+          "min": 0.0935
+        },
+        "pitch": {
+          "max": 507.6,
+          "min": 482.69
+        }
+      },
+      "medium": {
+        "decay": {
+          "max": 0.1155,
+          "min": 0.1045
+        },
+        "pitch": {
+          "max": 482.69,
+          "min": 457.31
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9180,
+  "title": "UI close",
+  "variants": [
+    {
+      "key": "close-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "close"
+      ]
+    },
+    {
+      "key": "close-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "close"
+      ]
+    },
+    {
+      "key": "close-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "close"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 2
+}

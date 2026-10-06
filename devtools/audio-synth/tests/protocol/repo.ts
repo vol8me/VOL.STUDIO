@@ -25,7 +25,12 @@ export interface TestRepo {
 
 export const JOBS_ROOT = 'devtools/audio-synth/records/jobs';
 
-export function createTestRepo(): TestRepo {
+export interface TestRepoOptions {
+  /** `@volstudio/core` kütüphane hedefi: beyanlı ya da beyansız (varsayılan: yok). */
+  readonly library?: 'declared' | 'bare';
+}
+
+export function createTestRepo(options: TestRepoOptions = {}): TestRepo {
   const root = mkdtempSync(join(tmpdir(), 'audio-job-repo-'));
   writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: []\n');
   writeFileSync(
@@ -37,9 +42,25 @@ export function createTestRepo(): TestRepo {
         { packageName: '@volstudio/declared-game', path: 'games/declared-game', status: 'active' },
         { packageName: '@volstudio/bare-game', path: 'games/bare-game', status: 'active' },
         { packageName: '@volstudio/old-game', path: 'games/old-game', status: 'frozen' },
+        ...(options.library
+          ? [{ packageName: '@volstudio/core', path: 'core', status: 'active' }]
+          : []),
       ],
     }),
   );
+  if (options.library === 'declared') {
+    mkdirSync(join(root, 'core'), { recursive: true });
+    writeFileSync(
+      join(root, 'core/audio-target.json'),
+      JSON.stringify({
+        schema: 'AudioTargetV1',
+        formats: ['ogg'],
+        sampleRates: [48000],
+        channels: [1],
+        loop: false,
+      }),
+    );
+  }
   mkdirSync(join(root, 'games/declared-game'), { recursive: true });
   writeFileSync(
     join(root, 'games/declared-game/audio-target.json'),

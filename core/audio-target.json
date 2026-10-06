@@ -1,0 +1,7 @@
+{
+  "schema": "AudioTargetV1",
+  "formats": ["ogg"],
+  "sampleRates": [48000],
+  "channels": [1],
+  "loop": false
+}

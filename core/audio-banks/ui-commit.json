@@ -1,0 +1,122 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-commit",
+    "hash": "sha256:940e30a88245b9446460c45a9e79679368d858e11e35ad4ee11ab76f24de6a59",
+    "path": "devtools/audio-synth/records/families/ui-commit/family.json",
+    "seed": 9140,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:a1d0c0ec1472b0e38307fe0edfbf556562356962e30b26803795161d0bbafee3",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-commit/quality.json"
+  },
+  "roleAxes": {
+    "weight": ["heavy", "light", "medium"]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5257,
+        "encodedHash": "sha256:b951c3db53b8b4b7b9cb1d295a4909b52000cf71d92345b084ab6d4572e58227",
+        "path": "public/assets/audio/ui/commit-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.11,
+        "centroidHz": 564.8245485939497,
+        "pitchHz": 544.69641026645
+      },
+      "durationSeconds": 0.15733333333333333,
+      "key": "commit-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -20.227913163825978,
+        "truePeakDbtp": -2.8084586302895587
+      },
+      "manifest": {
+        "hash": "sha256:bf226ada0d47f028229d72fb5d55988a9065d623db29bbb72ed557ec503235ff",
+        "path": "audio-manifests/ui/commit-a.json"
+      },
+      "pcmHash": "sha256:4fb4ca92672fd9487edbb04ba2a3467a760eedad192853050cf26f0020120843",
+      "programHash": "sha256:bdc8d966bfae348a07d742b4c7dc1a8bb538290d450c8e4d740cf740f36ab3f3",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": ["commit"],
+      "variantId": "v-dea74482da06c518"
+    },
+    {
+      "asset": {
+        "bytes": 5380,
+        "encodedHash": "sha256:5ba4558f6f54c0c03a29cf8a20111685d536d7d18fd1f8dd16aa53750ad1c584",
+        "path": "public/assets/audio/ui/commit-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.11,
+        "centroidHz": 528.7584791541552,
+        "pitchHz": 509.65500886893005
+      },
+      "durationSeconds": 0.15733333333333333,
+      "key": "commit-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -19.95226317344675,
+        "truePeakDbtp": -2.772418009038762
+      },
+      "manifest": {
+        "hash": "sha256:e04d0b942db3c3c0a3eb751869f27328b339949c8c326ce5d66aef3cb9438d64",
+        "path": "audio-manifests/ui/commit-b.json"
+      },
+      "pcmHash": "sha256:ae95420d4beda505634d873c922d5fd092181ee2f418ea65ad1b4a532bd5702f",
+      "programHash": "sha256:6dbe1e9f0f923dd999911a90de3542fef557896723825730b7c36dc4ae979684",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": ["commit"],
+      "variantId": "v-3e52b63a420e2fe8"
+    },
+    {
+      "asset": {
+        "bytes": 5548,
+        "encodedHash": "sha256:2265bad3456468bbab4e43f8c8fd4fdd33f1339548d2d6e69a88790c993bb6af",
+        "path": "public/assets/audio/ui/commit-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.13,
+        "centroidHz": 497.45933685161697,
+        "pitchHz": 479.31162619215183
+      },
+      "durationSeconds": 0.15733333333333333,
+      "key": "commit-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -19.349879340170116,
+        "truePeakDbtp": -2.7752661680960786
+      },
+      "manifest": {
+        "hash": "sha256:325a1693d7cfc0c7030b411d6224060a96c7f5e3f3bad54ae77220008670e914",
+        "path": "audio-manifests/ui/commit-c.json"
+      },
+      "pcmHash": "sha256:982ed41061f4df1f249a75f245599eddc7dee78a5c4c521173ded430b36d8a23",
+      "programHash": "sha256:3f315ee8c793e2256942adc2f35230bac7ff6474a0fa2abbccb4746650828a2c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": ["commit"],
+      "variantId": "v-80a4c9e6086dbaa4"
+    }
+  ]
+}

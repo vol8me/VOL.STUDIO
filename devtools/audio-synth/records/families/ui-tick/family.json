@@ -1,0 +1,240 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Mikro tık: kaydırıcı ve sürükleme için çok kısa, hafif.",
+      "durationSeconds": 0.045,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0005,
+              "curve": "cosine",
+              "decay": 0.018,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -3,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.5,
+                "decay": 0.02,
+                "frequency": 4200,
+                "layout": "bar",
+                "modes": 4
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.0006,
+              "roughness": 0.14
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.02,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -16,
+          "mechanism": "mechanical",
+          "name": "body",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 1400,
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -2
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9130
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui",
+    "durationSeconds": {
+      "max": 0.075,
+      "min": 0.015
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "Mikro tık: kaydırıcı ve sürükleme için çok kısa, hafif.",
+  "dimensions": [
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.023,
+        "min": 0.017,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "body",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 1512,
+        "min": 1288,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "body",
+        "param": "frequency",
+        "primitive": "source.oscillator",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "ui-tick",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "decay": {
+          "max": 0.023,
+          "min": 0.021
+        },
+        "pitch": {
+          "max": 1362.2,
+          "min": 1288
+        }
+      },
+      "light": {
+        "decay": {
+          "max": 0.019,
+          "min": 0.017
+        },
+        "pitch": {
+          "max": 1512,
+          "min": 1437.8
+        }
+      },
+      "medium": {
+        "decay": {
+          "max": 0.021,
+          "min": 0.019
+        },
+        "pitch": {
+          "max": 1437.8,
+          "min": 1362.2
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9130,
+  "title": "UI tick",
+  "variants": [
+    {
+      "key": "tick-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "tick"
+      ]
+    },
+    {
+      "key": "tick-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "tick"
+      ]
+    },
+    {
+      "key": "tick-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "tick"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

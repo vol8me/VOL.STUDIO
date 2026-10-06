@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "cancel"
+  ],
+  "durationSeconds": {
+    "max": 0.23,
+    "min": 0.17
+  },
+  "id": "ui-cancel-cancel-b",
+  "intent": "İptal: alçalan iki kısa nota. Varyant cancel-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI cancel — cancel-b"
+}

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-b9d33895b7062254": {
+        "hash": "sha256:4a506552a44a82b0f1d09d4da703418f39d7614ffc91ea2383b36fbec4b93f6e",
+        "path": "analyses/r-b9d33895b7062254.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:bbc0d84da7834f765afec1dc79d90c061ddeb4ede026513ee9711d14c0016871",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:bbc0d84da7834f765afec1dc79d90c061ddeb4ede026513ee9711d14c0016871",
+      "hash": "sha256:4d8e9cbc4a4ce18c6f5a355be4e2fcfd809df6394da7091ad31dc96005147504",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:4f8a3cc7871d93e36dfc2e59ad8c6c3570f68112100c56eb6ffb6a273e81f3c4",
+      "path": "core/audio-manifests/ui/confirm-b.json"
+    },
+    "renders": {
+      "r-b9d33895b7062254": {
+        "hash": "sha256:e8c3606e4851a0c258d9ad4b38bcf3873d5e7275c3ffc4cb98ee18e43e6d686e",
+        "path": "renders/r-b9d33895b7062254.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:da64784f5135f83d633ed3980aaff54a452bd7f23f57736116d05dca14d3dcc6",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "confirm-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/confirm-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-confirm/confirm-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

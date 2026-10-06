@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "open"
+  ],
+  "durationSeconds": {
+    "max": 0.25,
+    "min": 0.19
+  },
+  "id": "ui-open-open-c",
+  "intent": "Aç: yükselen filtreli hışırtı ve yumuşak ton. Varyant open-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI open — open-c"
+}

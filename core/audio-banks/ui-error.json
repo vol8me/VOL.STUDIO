@@ -1,0 +1,122 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-error",
+    "hash": "sha256:f1444deb594eaef2e28a3346f3f7c87d4d5f9d313f41afbbaa145ec841ca2ff8",
+    "path": "devtools/audio-synth/records/families/ui-error/family.json",
+    "seed": 9210,
+    "variationPolicy": "role-subrange-v1",
+    "version": 2
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:4f25d3cab58c52ebb0bff8681663b141164ff1858412b3da736652732feff824",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-error/quality.json"
+  },
+  "roleAxes": {
+    "weight": ["heavy", "light", "medium"]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 6711,
+        "encodedHash": "sha256:544aa4f90c20711e6d9b203679ecd5a60093e6b1e4615c601ce4173196660264",
+        "path": "public/assets/audio/ui/error-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.25,
+        "centroidHz": 519.4349883134613,
+        "pitchHz": 450.9632071328796
+      },
+      "durationSeconds": 0.35733333333333334,
+      "key": "error-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -20.42928896487935,
+        "truePeakDbtp": -5.9903577559110674
+      },
+      "manifest": {
+        "hash": "sha256:c43906d5d75c46145390a96b251ce7dd1308fcce964d05b693e68356c9a9145f",
+        "path": "audio-manifests/ui/error-a.json"
+      },
+      "pcmHash": "sha256:40931a6198204e4127872f8c239daf7c5a0194466a0ad7442c70d4e21de94965",
+      "programHash": "sha256:7df278a50ff8142e24edaecba5e48cfa474df4a3f659ccb631ebf96c55d4c4ca",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": ["error"],
+      "variantId": "v-40f994faaaacb8db"
+    },
+    {
+      "asset": {
+        "bytes": 6910,
+        "encodedHash": "sha256:aa6030ce7c05f2f72bcee32167186a401e90344f334f5d64ac81765718afbc91",
+        "path": "public/assets/audio/ui/error-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.27,
+        "centroidHz": 503.96116497517625,
+        "pitchHz": 450.85075620208585
+      },
+      "durationSeconds": 0.35733333333333334,
+      "key": "error-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -19.7745475903498,
+        "truePeakDbtp": -5.945771857061314
+      },
+      "manifest": {
+        "hash": "sha256:79abda40fa3683524c0dc08ff0bceb09b307d535964b1a5c7033e15e3d1685d4",
+        "path": "audio-manifests/ui/error-b.json"
+      },
+      "pcmHash": "sha256:80b9f39c6d1ea86ff5f9ddbdc9afaa5fd7c17ef87a550e2ebc683e4c00e3a4de",
+      "programHash": "sha256:baa14339a6e6db5b162f8d2da93dadd7faa5c3b0c30e72ee09741398dc2b99f5",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": ["error"],
+      "variantId": "v-5bdd428c71e62353"
+    },
+    {
+      "asset": {
+        "bytes": 6973,
+        "encodedHash": "sha256:e790dbd6c49e69081fe45324491069f90af8fd2124af7e9fdb8ac0e44adf483c",
+        "path": "public/assets/audio/ui/error-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.27,
+        "centroidHz": 491.8296997131277,
+        "pitchHz": 450.8503507504775
+      },
+      "durationSeconds": 0.35733333333333334,
+      "key": "error-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -19.16646256909769,
+        "truePeakDbtp": -5.960948251472554
+      },
+      "manifest": {
+        "hash": "sha256:1adcfb1c87cd6de8d33cdaa37c1f62d819535c859b26c8fc0d3a4ec339395879",
+        "path": "audio-manifests/ui/error-c.json"
+      },
+      "pcmHash": "sha256:b6353aa29b8a005f6634dc867ddc6d6a398df53bf4c53016d9e9d8b5d4618555",
+      "programHash": "sha256:accca28e7f40de0afdb76a7e04cef375c1b9e3cd17b161627d04929fd8e81a80",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": ["error"],
+      "variantId": "v-dc5b0559b1efef6e"
+    }
+  ]
+}

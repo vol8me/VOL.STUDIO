@@ -1,0 +1,122 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-press",
+    "hash": "sha256:608c78c0b6b98a8ca60b91f1477fba0cf3bbb6171f41739610c13974c6f4b6e6",
+    "path": "devtools/audio-synth/records/families/ui-press/family.json",
+    "seed": 9100,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:27f1bc698528ce3da7eccabbfbf2b9184d116bb794cc5498b2ebc74b07dd86b3",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-press/quality.json"
+  },
+  "roleAxes": {
+    "weight": ["heavy", "light", "medium"]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4684,
+        "encodedHash": "sha256:66b5e7f9761e1584cd5c96f3bccb8488c564cac601bb452560e8f403559c71c3",
+        "path": "public/assets/audio/ui/press-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.05,
+        "centroidHz": 948.2141022782145,
+        "pitchHz": 919.0430905682061
+      },
+      "durationSeconds": 0.09733333333333333,
+      "key": "press-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -24.408899590803127,
+        "truePeakDbtp": -2.1573396846277335
+      },
+      "manifest": {
+        "hash": "sha256:b224e90f532664fb565dfb08a07455fc1771628d21da6f82a7e9440f7ef68d31",
+        "path": "audio-manifests/ui/press-a.json"
+      },
+      "pcmHash": "sha256:1ce2bf48cf945862098a010250b1b80deee4d8c277b2cf9b2280632573c98ab9",
+      "programHash": "sha256:2c8f6d7806b4f7adf08a302b0c04c3b72e23cc8305947ae1fda8aac3ae2278b4",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": ["press"],
+      "variantId": "v-4199f672553199e4"
+    },
+    {
+      "asset": {
+        "bytes": 4658,
+        "encodedHash": "sha256:1823059ed3e7d124b29105197a4210ac6b12e65819ee24de70d9d1fefd427855",
+        "path": "public/assets/audio/ui/press-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.06,
+        "centroidHz": 910.0110917275945,
+        "pitchHz": 879.3273657617648
+      },
+      "durationSeconds": 0.09733333333333333,
+      "key": "press-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -24.066730007969436,
+        "truePeakDbtp": -2.132266748087385
+      },
+      "manifest": {
+        "hash": "sha256:e91c4f58600eba862765938cab6984a1a5ef193439242cb8973c487481bdb02b",
+        "path": "audio-manifests/ui/press-b.json"
+      },
+      "pcmHash": "sha256:7e62c398d671bc126b18dbab28b3f3f524d51bc4e30b8c104fc6803c61cf3169",
+      "programHash": "sha256:992ef520dcedfd54946d9d2530f3c5058e0ab75d5c8c528ef90f9224b0e522e3",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": ["press"],
+      "variantId": "v-858dcefd093a64a0"
+    },
+    {
+      "asset": {
+        "bytes": 4687,
+        "encodedHash": "sha256:6f89863e62e047791fee54139bca092cee142e0194afc473dcdeac15e2828429",
+        "path": "public/assets/audio/ui/press-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.06,
+        "centroidHz": 871.1370309221569,
+        "pitchHz": 841.6503388142373
+      },
+      "durationSeconds": 0.09733333333333333,
+      "key": "press-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -23.887878130552227,
+        "truePeakDbtp": -2.1545108601233656
+      },
+      "manifest": {
+        "hash": "sha256:f8bf047908590e5949d0d9f1c06e118a3bb64be33673f7784e0be977029b2b50",
+        "path": "audio-manifests/ui/press-c.json"
+      },
+      "pcmHash": "sha256:9663ec987163dfabae824fd6dec25fbc4c82abdcc3c808cb61f93da065991a60",
+      "programHash": "sha256:64aa574165bc4e551eea0594aa6ec49eb6bc2481499cee159f0ca53b3fa528a9",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": ["press"],
+      "variantId": "v-d3c4962574513697"
+    }
+  ]
+}

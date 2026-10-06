@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "confirm"
+  ],
+  "durationSeconds": {
+    "max": 0.27,
+    "min": 0.21
+  },
+  "id": "ui-confirm-confirm-c",
+  "intent": "Onay: yükselen iki nota (beşli). Varyant confirm-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI confirm — confirm-c"
+}

@@ -1,0 +1,307 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Anahtar: iki kademeli kısa tık (aç/kapa).",
+      "durationSeconds": 0.13,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0005,
+              "curve": "cosine",
+              "decay": 0.018,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -5,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.5,
+                "decay": 0.02,
+                "frequency": 2800,
+                "layout": "bar",
+                "modes": 4
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.0006,
+              "roughness": 0.14
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.04,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -9,
+          "mechanism": "mechanical",
+          "name": "low",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 740,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          },
+          "startSeconds": 0.002
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.05,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -9,
+          "mechanism": "mechanical",
+          "name": "high",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 1110,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          },
+          "startSeconds": 0.045
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -2
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9110
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui",
+    "durationSeconds": {
+      "max": 0.16,
+      "min": 0.1
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "Anahtar: iki kademeli kısa tık (aç/kapa).",
+  "dimensions": [
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.046,
+        "min": 0.034,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "low",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 828.8,
+        "min": 651.2,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "low",
+        "param": "frequency",
+        "primitive": "source.oscillator",
+        "slot": "source"
+      }
+    },
+    {
+      "name": "pitch2",
+      "range": {
+        "max": 1243.2,
+        "min": 976.8,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "high",
+        "param": "frequency",
+        "primitive": "source.oscillator",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "ui-toggle",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "decay": {
+          "max": 0.046,
+          "min": 0.042
+        },
+        "pitch": {
+          "max": 710.4,
+          "min": 651.2
+        },
+        "pitch2": {
+          "max": 1243.2,
+          "min": 1154.4
+        }
+      },
+      "light": {
+        "decay": {
+          "max": 0.038,
+          "min": 0.034
+        },
+        "pitch": {
+          "max": 828.8,
+          "min": 769.6
+        },
+        "pitch2": {
+          "max": 1065.6,
+          "min": 976.8
+        }
+      },
+      "medium": {
+        "decay": {
+          "max": 0.042,
+          "min": 0.038
+        },
+        "pitch": {
+          "max": 769.6,
+          "min": 710.4
+        },
+        "pitch2": {
+          "max": 1154.4,
+          "min": 1065.6
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9110,
+  "title": "UI toggle",
+  "variants": [
+    {
+      "key": "toggle-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "toggle"
+      ]
+    },
+    {
+      "key": "toggle-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "toggle"
+      ]
+    },
+    {
+      "key": "toggle-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "toggle"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:3f315ee8c793e2256942adc2f35230bac7ff6474a0fa2abbccb4746650828a2c",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:940e30a88245b9446460c45a9e79679368d858e11e35ad4ee11ab76f24de6a59",
+    "familyId": "ui-commit",
+    "kind": "family-variant",
+    "variantId": "v-80a4c9e6086dbaa4",
+    "variantKey": "commit-c"
+  }
+}

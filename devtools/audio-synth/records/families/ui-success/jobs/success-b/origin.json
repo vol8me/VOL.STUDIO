@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:cc032b8cfd8936b6c58ce4e817a5b20484beb1b0903226428aaa8574c8045ff1",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:fca0add14c6386d3396645621971bd7cba40d0d3c303ae32457625aeb6ff6868",
+    "familyId": "ui-success",
+    "kind": "family-variant",
+    "variantId": "v-5df3fe2c009a00df",
+    "variantKey": "success-b"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "toggle"
+  ],
+  "durationSeconds": {
+    "max": 0.16,
+    "min": 0.1
+  },
+  "id": "ui-toggle-toggle-a",
+  "intent": "Anahtar: iki kademeli kısa tık (aç/kapa). Varyant toggle-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI toggle — toggle-a"
+}

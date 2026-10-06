@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "warning"
+  ],
+  "durationSeconds": {
+    "max": 0.35,
+    "min": 0.29
+  },
+  "id": "ui-warning-warning-b",
+  "intent": "Uyarı: iki kısa orta perde vuruş. Varyant warning-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI warning — warning-b"
+}

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-e80bfd301bbe0135": {
+        "hash": "sha256:f844fe8198bbc3eb949dcbcb8932c4b066c31331eeb9a41b52ee999ef2b0cd90",
+        "path": "analyses/r-e80bfd301bbe0135.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e4004743dff881679f83b9759498bb23189153c2a4865741acea2646cca057fe",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e4004743dff881679f83b9759498bb23189153c2a4865741acea2646cca057fe",
+      "hash": "sha256:25fb00ce594493ddf016ac81bfa912e4fa735372523407ccc186ded9c2b92e72",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:243cb7c8028e119e5dcf063bbb3e7fd344afe4b8f6cb2be792e5d5f2ccc0a44f",
+      "path": "core/audio-manifests/ui/cancel-a.json"
+    },
+    "renders": {
+      "r-e80bfd301bbe0135": {
+        "hash": "sha256:2153eaa61d420cc0ed73e304ce92eb02d1bd9ccd1261cc424c9d9bd02d55f0cf",
+        "path": "renders/r-e80bfd301bbe0135.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:6759029097a6e4082c7cddc6f2eb645e7bd6e81984f402900b42c82c69794dd6",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "cancel-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/cancel-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-cancel/cancel-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

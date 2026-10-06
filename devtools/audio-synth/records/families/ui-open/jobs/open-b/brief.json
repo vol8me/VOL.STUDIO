@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "open"
+  ],
+  "durationSeconds": {
+    "max": 0.25,
+    "min": 0.19
+  },
+  "id": "ui-open-open-b",
+  "intent": "Aç: yükselen filtreli hışırtı ve yumuşak ton. Varyant open-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI open — open-b"
+}

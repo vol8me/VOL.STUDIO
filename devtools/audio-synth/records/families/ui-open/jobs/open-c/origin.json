@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:c9975d2582da9e4f30ac60016d1486326263dc711374739628f221ecb8b8de3e",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:69370e5820b486c71b08be733df222251c82a475bb8ff0964bf1f14436d5c1ad",
+    "familyId": "ui-open",
+    "kind": "family-variant",
+    "variantId": "v-a209e42f7aa5a5ef",
+    "variantKey": "open-c"
+  }
+}

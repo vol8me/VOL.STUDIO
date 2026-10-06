@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "success"
+  ],
+  "durationSeconds": {
+    "max": 0.45,
+    "min": 0.39
+  },
+  "id": "ui-success-success-c",
+  "intent": "Başarı: yükselen üç nota arpej. Varyant success-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI success — success-c"
+}

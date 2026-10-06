@@ -15,13 +15,16 @@ const REPO = fileURLToPath(new URL('../../../..', import.meta.url));
 describe('audio:job context', () => {
   it('gerçek repo: aktif oyun hedefi beyanlıdır; frozen oyun ayrı listelenir', () => {
     const context = buildContext(REPO);
-    expect(context.targets.publishable.map((t) => t.packageName)).toEqual([
-      '@volstudio/audio-synth',
-      '@volstudio/vol-test',
+    expect(context.targets.publishable.map((t) => [t.packageName, t.kind])).toEqual([
+      ['@volstudio/audio-synth', 'reference'],
+      ['@volstudio/core', 'library'],
+      ['@volstudio/vol-test', 'game'],
     ]);
     expect(context.targets.publishable[0].runtime).toBeNull();
     expect(context.targets.frozen).toEqual([]);
     expect(context.targets.publishable[1].runtime).not.toBeNull();
+    expect(context.targets.publishable[2].runtime).not.toBeNull();
+    expect(context.targets.undeclaredActiveLibraries).toEqual([]);
     expect(context.targets.note).not.toMatch(/oyun hedefi YOK/);
     expect(context.schemas.brief.kinds.music.status).toBe('supported');
     expect(context.music.schemas.program).toBe('MusicProgramV1');
@@ -161,6 +164,65 @@ describe('audio:job context', () => {
       ]);
       expect(context.targets.undeclaredActiveGames).toEqual(['@volstudio/bare-game']);
       expect(context.targets.note).toBe('1 aktif oyun hedefi beyanlı.');
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('kütüphane hedefi (library): beyanlı yayımlanabilir, beyansız reddedilir ve ayrıca raporlanır', () => {
+    const declared = createTestRepo({ library: 'declared' });
+    try {
+      const context = buildContext(declared.root);
+      expect(context.targets.publishable.map((t) => [t.packageName, t.kind])).toEqual([
+        ['@volstudio/audio-synth', 'reference'],
+        ['@volstudio/core', 'library'],
+        ['@volstudio/declared-game', 'game'],
+      ]);
+      expect(context.targets.note).toBe(
+        '1 aktif oyun hedefi beyanlı. 1 aktif kütüphane hedefi beyanlı.',
+      );
+      const destination = resolveDestination(
+        surveyTargets(declared.root),
+        '@volstudio/core',
+        'public/assets/audio/ui/press-a.ogg',
+      );
+      expect(destination).toMatchObject({
+        assetPath: 'core/public/assets/audio/ui/press-a.ogg',
+        manifestPath: 'core/audio-manifests/ui/press-a.json',
+        withinRoot: 'ui/press-a.ogg',
+      });
+      expect(destination.target.kind).toBe('library');
+    } finally {
+      declared.cleanup();
+    }
+
+    // İHLAL ÖRNEĞİ: beyansız kütüphane hedef olamaz.
+    const bare = createTestRepo({ library: 'bare' });
+    try {
+      const survey = surveyTargets(bare.root);
+      expect(survey.undeclaredLibraries).toEqual(['@volstudio/core']);
+      expect(survey.publishable.map((t) => t.packageName)).not.toContain('@volstudio/core');
+      expect(() =>
+        resolveDestination(survey, '@volstudio/core', 'public/assets/audio/ui/press-a.ogg'),
+      ).toThrow(/çalışma zamanı beyanı \(AudioTargetV1\) yok/);
+    } finally {
+      bare.cleanup();
+    }
+  });
+
+  it('kütüphane hedefinde asset kökün dışına ya da .ogg olmayan yola yazılamaz', () => {
+    const repo = createTestRepo({ library: 'declared' });
+    try {
+      const survey = surveyTargets(repo.root);
+      expect(() => resolveDestination(survey, '@volstudio/core', 'src/ui/press.ogg')).toThrow(
+        /public\/assets\/audio\/ altında olmalı/,
+      );
+      expect(() =>
+        resolveDestination(survey, '@volstudio/core', 'public/assets/audio/ui/press.wav'),
+      ).toThrow(/\.ogg olmalı/);
+      expect(() =>
+        resolveDestination(survey, '@volstudio/core', 'public/assets/audio/../x.ogg'),
+      ).toThrow(ProtocolError);
     } finally {
       repo.cleanup();
     }

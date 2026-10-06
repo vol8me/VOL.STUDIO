@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:24e6a94c33228b007763db853f5687674f5dfe74e52039a285e9270447a5c733",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:3b9e569c8a8cd6288a071b0cd4514efc5f9c7cfe396eb326c1af97ffe452d391",
+    "familyId": "ui-tick",
+    "kind": "family-variant",
+    "variantId": "v-d297c92036ff06ff",
+    "variantKey": "tick-b"
+  }
+}

@@ -1,0 +1,333 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [-0.000029214680511787094]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [0]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.31733333333333336,
+        "frames": 15232,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [-6.9030067473640075],
+        "channelRmsDbfs": [-18.319425642957423],
+        "crestFactorDb": 11.416418895593416,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -19.927783054969346,
+        "rmsDbfs": -18.319425642957423,
+        "samplePeakDbfs": -6.9030067473640075,
+        "truePeakDbtp": -6.869847913416188
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -64.03197772700105,
+          "high": -49.647661851240734,
+          "low": -18.37873912012104,
+          "mid": -35.87030467610524,
+          "sub": -57.13657611824078
+        },
+        "centroidHz": 459.75019199904153,
+        "flatness": 3.863759421008624e-7,
+        "peakHz": 445.3125,
+        "rolloff85Hz": 468.75
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.2,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.08,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.15,
+        "temporalCentroidSeconds": 0.0917677568819139,
+        "trailingSilenceSeconds": 0.07733333333333337
+      }
+    },
+    "sourceRecordHash": "sha256:96406557a3c62d008a6b4720c3422fc1267ae09e54efdddba61b12f7b17aae9a"
+  },
+  "asset": {
+    "bytes": 6390,
+    "encodedHash": "sha256:940a7610d75d0edd25279b70e897a95f62ad0440f89e7405f0c31f974aab18ef",
+    "format": "ogg-vorbis",
+    "path": "core/public/assets/audio/ui/warning-b.ogg"
+  },
+  "assetId": "ui-warning-warning-b",
+  "brief": {
+    "document": {
+      "assetClass": "ui",
+      "channels": 1,
+      "descriptors": ["weight:medium", "warning"],
+      "durationSeconds": {
+        "max": 0.35,
+        "min": 0.29
+      },
+      "id": "ui-warning-warning-b",
+      "intent": "Uyarı: iki kısa orta perde vuruş. Varyant warning-b (weight:medium).",
+      "kind": "acoustic",
+      "placement": "screen",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "UI warning — warning-b"
+    },
+    "hash": "sha256:d514e58225662cf4f6a495acf89f783e5cdf1139d6b48300e290f0ec07df2ef2",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": ["-f", "f32le", "-c:a", "libvorbis", "-q:a", "6", "-bitexact"],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:bc4a390a2bf21a203aec467181016f9b63b511faa9ece7dd3979ff2d5573a275",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 6,
+    "tool": "ffmpeg",
+    "unreported": ["libvorbis"],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 6,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:3362bd10b7eb682e3225240e2618aded54d431e28e4ba254837f591f28805474",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        },
+        {
+          "hash": "sha256:b0c800b997b33e21c77db26196fffeb7162495c77939084b2b3eb1fd4639561b",
+          "id": "source.oscillator",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/core",
+    "runtimeDeclaration": "core/audio-target.json",
+    "runtimeKey": "ui-warning/warning-b",
+    "targetKind": "library"
+  },
+  "job": {
+    "jobId": "warning-b",
+    "path": "devtools/audio-synth/records/families/ui-warning/jobs/warning-b",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "screen",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "ui",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Uyarı: iki kısa orta perde vuruş.",
+      "durationSeconds": 0.32,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.1,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -7,
+          "mechanism": "mechanical",
+          "name": "p1",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 447.298,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.0954863,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -7,
+          "mechanism": "mechanical",
+          "name": "p2",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 440,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          },
+          "startSeconds": 0.14
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0005,
+              "curve": "cosine",
+              "decay": 0.018,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -12,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.5,
+                "decay": 0.02,
+                "frequency": 2400,
+                "layout": "bar",
+                "modes": 4
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.0006,
+              "roughness": 0.14
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -7
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9200
+    },
+    "hash": "sha256:7075ee95fd7430e7b86a9e3b230912bf879eb6c16da5cd7c1b439fa4908a890e",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 15360,
+      "hash": "sha256:b9376cc0deccf200308dd6b3c28a4c9330001a1e58a0e3a2a2673423a98cb02d",
+      "sampleRate": 48000
+    },
+    "renderId": "r-beab045533e7db6e",
+    "rendererVersion": 2,
+    "seed": 9200
+  },
+  "schema": "AudioAssetManifestV1"
+}

@@ -1,0 +1,277 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Hata: iki kısa, sert olmayan alçak vuruş (küçük hoparlörde duyulur).",
+      "durationSeconds": 0.36,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.12,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -6,
+          "mechanism": "mechanical",
+          "name": "p1",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 540,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.14,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -6,
+          "mechanism": "mechanical",
+          "name": "p2",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 450,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          },
+          "startSeconds": 0.16
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0005,
+              "curve": "cosine",
+              "decay": 0.018,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -12,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.5,
+                "decay": 0.02,
+                "frequency": 1800,
+                "layout": "bar",
+                "modes": 4
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.0006,
+              "roughness": 0.14
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -6
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9210
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui",
+    "durationSeconds": {
+      "max": 0.39,
+      "min": 0.33
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "Hata: iki kısa, sert olmayan alçak vuruş (küçük hoparlörde duyulur).",
+  "dimensions": [
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.161,
+        "min": 0.119,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "p2",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 583.2,
+        "min": 496.8,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "p1",
+        "param": "frequency",
+        "primitive": "source.oscillator",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "ui-error",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "decay": {
+          "max": 0.161,
+          "min": 0.147
+        },
+        "pitch": {
+          "max": 525.42,
+          "min": 496.8
+        }
+      },
+      "light": {
+        "decay": {
+          "max": 0.133,
+          "min": 0.119
+        },
+        "pitch": {
+          "max": 583.2,
+          "min": 554.58
+        }
+      },
+      "medium": {
+        "decay": {
+          "max": 0.147,
+          "min": 0.133
+        },
+        "pitch": {
+          "max": 554.58,
+          "min": 525.42
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9210,
+  "title": "UI error",
+  "variants": [
+    {
+      "key": "error-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "error"
+      ]
+    },
+    {
+      "key": "error-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "error"
+      ]
+    },
+    {
+      "key": "error-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "error"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 2
+}

@@ -12,9 +12,13 @@ import { checkRepoRelative } from './fs';
  *   çalıştırmak için vardır (runtime yok).
  * - `game`: aktif bir oyun paketi, kökünde `audio-target.json`
  *   (`AudioTargetV1`) ile çalışma zamanı ses kabiliyetini beyan ettiyse.
+ * - `library`: oyunlara GÖNDERİLEN ortak kütüphane (`@volstudio/core`: UI sesleri).
+ *   Aynı beyan sözleşmesi geçerlidir; beyansız kütüphane hedef olamaz. Çalışma
+ *   zamanında audio-synth içe aktarılmaz: kütüphane yalnız üretilmiş OGG'yi taşır.
  */
 export const AUDIO_TARGET_SCHEMA = 'AudioTargetV1';
 const REFERENCE_PACKAGE = '@volstudio/audio-synth';
+const LIBRARY_PACKAGES: readonly string[] = ['@volstudio/core'];
 
 export interface TargetRuntime {
   readonly formats: readonly 'ogg'[];
@@ -28,7 +32,7 @@ export interface TargetRuntime {
 export interface PublishTarget {
   readonly packageName: string;
   readonly packagePath: string;
-  readonly kind: 'reference' | 'game';
+  readonly kind: 'reference' | 'game' | 'library';
   readonly assetRoot: string;
   readonly manifestRoot: string;
   /** Ses ailesi bank'ları (`SoundFamilyBankV1`); asset ve manifest köklerinden ayrı. */
@@ -48,6 +52,8 @@ export interface TargetSurvey {
   readonly publishable: readonly PublishTarget[];
   /** Aktif oyun ama çalışma zamanı beyanı yok — publish reddedilir. */
   readonly undeclaredGames: readonly string[];
+  /** Aktif kütüphane ama çalışma zamanı beyanı yok — publish reddedilir. */
+  readonly undeclaredLibraries: readonly string[];
   readonly frozen: readonly string[];
 }
 
@@ -100,6 +106,7 @@ export function surveyTargets(repoRoot: string): TargetSurvey {
   const lifecycle = readLifecycle(repoRoot);
   const publishable: PublishTarget[] = [];
   const undeclaredGames: string[] = [];
+  const undeclaredLibraries: string[] = [];
   const frozen: string[] = [];
   for (const entry of [...lifecycle].sort((a, b) =>
     a.packageName < b.packageName ? -1 : a.packageName > b.packageName ? 1 : 0,
@@ -123,6 +130,22 @@ export function surveyTargets(repoRoot: string): TargetSurvey {
         musicRoot: 'reference/production/music',
         runtime: null,
       });
+    } else if (LIBRARY_PACKAGES.includes(entry.packageName)) {
+      const runtime = readRuntime(repoRoot, packagePath);
+      if (runtime) {
+        publishable.push({
+          packageName: entry.packageName,
+          packagePath,
+          kind: 'library',
+          assetRoot: 'public/assets/audio',
+          manifestRoot: 'audio-manifests',
+          bankRoot: 'audio-banks',
+          musicRoot: 'audio-music',
+          runtime,
+        });
+      } else {
+        undeclaredLibraries.push(entry.packageName);
+      }
     } else if (packagePath.startsWith('games/')) {
       const runtime = readRuntime(repoRoot, packagePath);
       if (runtime) {
@@ -141,7 +164,7 @@ export function surveyTargets(repoRoot: string): TargetSurvey {
       }
     }
   }
-  return { publishable, undeclaredGames, frozen };
+  return { publishable, undeclaredGames, undeclaredLibraries, frozen };
 }
 
 export interface ResolvedDestination {
@@ -169,9 +192,11 @@ export function resolveDestination(
   }
   const target = survey.publishable.find((t) => t.packageName === packageName);
   if (!target) {
-    const reason = survey.undeclaredGames.includes(packageName)
-      ? `çalışma zamanı beyanı (${AUDIO_TARGET_SCHEMA}) yok`
-      : 'aktif publish hedefi değil';
+    const reason =
+      survey.undeclaredGames.includes(packageName) ||
+      survey.undeclaredLibraries.includes(packageName)
+        ? `çalışma zamanı beyanı (${AUDIO_TARGET_SCHEMA}) yok`
+        : 'aktif publish hedefi değil';
     throw new ProtocolError('destination', `${packageName}: ${reason}`, label);
   }
   checkRepoRelative(asset, label);

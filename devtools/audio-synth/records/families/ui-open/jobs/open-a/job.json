@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-3ef06ce41ab5b800": {
+        "hash": "sha256:0e358e0fc0603612bb7de33191023f00a04c6a5e91238e8f2d4f3ba8ad042365",
+        "path": "analyses/r-3ef06ce41ab5b800.json"
+      },
+      "r-df31e78253dab6b9": {
+        "hash": "sha256:5cea79e22259d81b6ffd2895284a5443dacfe90364044338ed9465ef154ad369",
+        "path": "analyses/r-df31e78253dab6b9.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:cb34045ea2f581cb82f53b940ea4fe20bbe31dddabcf28b98a84846359408635",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:cb34045ea2f581cb82f53b940ea4fe20bbe31dddabcf28b98a84846359408635",
+      "hash": "sha256:74b81eee92f065c911c4394e18cac495142562dad81dab9345a576408586f48d",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:2632a5b1a8565ac7dd6870cd956e506bc960d888786f76ed38df45aca48937f0",
+      "path": "core/audio-manifests/ui/open-a.json"
+    },
+    "renders": {
+      "r-3ef06ce41ab5b800": {
+        "hash": "sha256:478a98ff53128d6429530469d0f7c3c030c0c3debd6e56514cb482b246ab333d",
+        "path": "renders/r-3ef06ce41ab5b800.json"
+      },
+      "r-df31e78253dab6b9": {
+        "hash": "sha256:d3c2d987493e79b0c5cf10da37a9529e86ced7ec62dc7ec642e7c44aa6485ba2",
+        "path": "renders/r-df31e78253dab6b9.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:aa7df5330fedb0438ab0488d2c8e513b4f9b5a68b95c59c7892fb3a10919ef48",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "open-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/open-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-open/open-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

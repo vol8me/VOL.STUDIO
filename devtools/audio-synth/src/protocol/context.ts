@@ -52,6 +52,7 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
   const brief = options.brief === undefined ? null : validateBrief(options.brief);
   const survey = surveyTargets(repoRoot);
   const games = survey.publishable.filter((t) => t.kind === 'game');
+  const libraries = survey.publishable.filter((t) => t.kind === 'library');
   return {
     schema: CONTEXT_SCHEMA,
     protocol: {
@@ -205,11 +206,17 @@ export function buildContext(repoRoot: string, options: ContextOptions = {}) {
     targets: {
       publishable: survey.publishable,
       undeclaredActiveGames: survey.undeclaredGames,
+      undeclaredActiveLibraries: survey.undeclaredLibraries,
       frozen: survey.frozen,
       note:
-        games.length === 0
-          ? 'Aktif, çalışma zamanı beyanlı bir oyun hedefi YOK; yalnız audio-synth referans fixture hedefi yayımlanabilir.'
-          : `${games.length} aktif oyun hedefi beyanlı.`,
+        games.length === 0 && libraries.length === 0
+          ? 'Aktif, çalışma zamanı beyanlı bir oyun ya da kütüphane hedefi YOK; yalnız audio-synth referans fixture hedefi yayımlanabilir.'
+          : [
+              games.length > 0 ? `${games.length} aktif oyun hedefi beyanlı.` : null,
+              libraries.length > 0 ? `${libraries.length} aktif kütüphane hedefi beyanlı.` : null,
+            ]
+              .filter((part) => part !== null)
+              .join(' '),
     },
   };
 }

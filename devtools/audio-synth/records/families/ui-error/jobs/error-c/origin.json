@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:accca28e7f40de0afdb76a7e04cef375c1b9e3cd17b161627d04929fd8e81a80",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:f1444deb594eaef2e28a3346f3f7c87d4d5f9d313f41afbbaa145ec841ca2ff8",
+    "familyId": "ui-error",
+    "kind": "family-variant",
+    "variantId": "v-dc5b0559b1efef6e",
+    "variantKey": "error-c"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "commit"
+  ],
+  "durationSeconds": {
+    "max": 0.19,
+    "min": 0.13
+  },
+  "id": "ui-commit-commit-b",
+  "intent": "Kalıcı değişiklik: tık ve oturmuş, hafif alçak ton. Varyant commit-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI commit — commit-b"
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:f8f9b23c39ec22b6f971157b389bff0eaa7aa1623118d8b5b4b364601ffb3ef9",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:fb6945f94f537b69c8ab12448eddc7ccd82385c4106c4a2dc3a4d6d1a14ab38c",
+    "familyId": "ui-select",
+    "kind": "family-variant",
+    "variantId": "v-6e4175c950cca3df",
+    "variantKey": "select-b"
+  }
+}

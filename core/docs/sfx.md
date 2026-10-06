@@ -75,6 +75,14 @@ topluca çalmaz. Bağlam ilk kullanıcı jestinde (ilk niyet) oluşturulup açı
 Bir Promise'in çözülmesi başarı sesi değildir; başarıyı host `reportOutcome` ile
 bildirir.
 
+### `uiSoundAssets`
+
+CORE'un gönderdiği varsayılan UI ses setinin URL'lerini verir: 12 olay × 3 varyant
+(`press-a.ogg`…), `core/public/assets/audio/ui` altında, `audio-synth` ile özgün üretilmiş
+mono 48 kHz kısa OGG'ler (kütüphane hedefi). Set mekanik QA'dan geçmiştir (kodlama sonrası
+tepe ≤ −1 dBTP, yükseklik −28…−14 LUFS, DC, kırpma, süre; PCM yeniden render özdeş;
+küçük hoparlör için sub bandı ve alçak enerji süzülmüş); **insan dinlemesi yapılmamıştır**.
+
 ### `channelGain`
 
 Ana, UI, SFX, müzik ve konuşma seviyeleri ile sessizlik cihaz kapsamlıdır

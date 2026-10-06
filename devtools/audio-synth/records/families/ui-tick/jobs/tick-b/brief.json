@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "tick"
+  ],
+  "durationSeconds": {
+    "max": 0.075,
+    "min": 0.015
+  },
+  "id": "ui-tick-tick-b",
+  "intent": "Mikro tık: kaydırıcı ve sürükleme için çok kısa, hafif. Varyant tick-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI tick — tick-b"
+}

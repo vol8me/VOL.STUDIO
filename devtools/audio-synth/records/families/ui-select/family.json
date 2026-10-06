@@ -1,0 +1,254 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Seçim: yumuşak, kısa çınlama.",
+      "durationSeconds": 0.14,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.11,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -8,
+          "mechanism": "mechanical",
+          "name": "ping",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.5,
+                "damping": 0.5,
+                "decay": 0.09,
+                "frequency": 1760,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 260,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.08
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0005,
+              "curve": "cosine",
+              "decay": 0.018,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -12,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.8,
+                "damping": 0.5,
+                "decay": 0.02,
+                "frequency": 3600,
+                "layout": "bar",
+                "modes": 4
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.0006,
+              "roughness": 0.14
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -2
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9120
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui",
+    "durationSeconds": {
+      "max": 0.17,
+      "min": 0.11
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "Seçim: yumuşak, kısa çınlama.",
+  "dimensions": [
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.1035,
+        "min": 0.0765,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "ping",
+        "param": "decay",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 1900.8,
+        "min": 1619.2,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "ping",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "ui-select",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "decay": {
+          "max": 0.1035,
+          "min": 0.0945
+        },
+        "pitch": {
+          "max": 1712.48,
+          "min": 1619.2
+        }
+      },
+      "light": {
+        "decay": {
+          "max": 0.0855,
+          "min": 0.0765
+        },
+        "pitch": {
+          "max": 1900.8,
+          "min": 1807.52
+        }
+      },
+      "medium": {
+        "decay": {
+          "max": 0.0945,
+          "min": 0.0855
+        },
+        "pitch": {
+          "max": 1807.52,
+          "min": 1712.48
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9120,
+  "title": "UI select",
+  "variants": [
+    {
+      "key": "select-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "select"
+      ]
+    },
+    {
+      "key": "select-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "select"
+      ]
+    },
+    {
+      "key": "select-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "select"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

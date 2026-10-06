@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-8f8854c4a8975127": {
+        "hash": "sha256:f2de618fa43337203d08f1e83839118d1b5a76389b359c5e2f172d02cd3a5a20",
+        "path": "analyses/r-8f8854c4a8975127.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:27c4dda5962559fd1d7586213bc34b1c4e488e6d247dd0413fcb91e363345e3d",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:27c4dda5962559fd1d7586213bc34b1c4e488e6d247dd0413fcb91e363345e3d",
+      "hash": "sha256:24e6a94c33228b007763db853f5687674f5dfe74e52039a285e9270447a5c733",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:3be60d302d70be374ca6b565433cb2aff1b5e7dafe44fb813c39e50a2a30cf90",
+      "path": "core/audio-manifests/ui/tick-b.json"
+    },
+    "renders": {
+      "r-8f8854c4a8975127": {
+        "hash": "sha256:0899be5a18adf1c148eef58f641f08b04ca5744696c995c08a4b5c238afc709a",
+        "path": "renders/r-8f8854c4a8975127.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:e34577d66798f23ce8757c9b7a0c24198fe5f896510e0824cfab8b1d951eb378",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "tick-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/tick-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-tick/tick-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

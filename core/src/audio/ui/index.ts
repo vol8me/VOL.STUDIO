@@ -3,6 +3,7 @@
  * olaylarının sesi ve cihaz kapsamlı ses ayarları. Web araçları (vitrin) ve oyunlar
  * bu alt yolu kullanır; kök barrel oyun runtime'ını da ihraç eder.
  */
+export { UI_SOUND_PUBLIC_DIR, UI_SOUND_VARIANT_KEYS, uiSoundAssets } from './assets';
 export {
   UiSoundKit,
   type UiSoundKitOptions,

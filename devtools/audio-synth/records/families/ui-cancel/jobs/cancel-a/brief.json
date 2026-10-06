@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "cancel"
+  ],
+  "durationSeconds": {
+    "max": 0.23,
+    "min": 0.17
+  },
+  "id": "ui-cancel-cancel-a",
+  "intent": "İptal: alçalan iki kısa nota. Varyant cancel-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI cancel — cancel-a"
+}

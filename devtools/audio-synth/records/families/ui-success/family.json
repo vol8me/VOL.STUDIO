@@ -1,0 +1,334 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "Başarı: yükselen üç nota arpej.",
+      "durationSeconds": 0.42,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.16,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -9,
+          "mechanism": "mechanical",
+          "name": "n1",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.5,
+                "damping": 0.5,
+                "decay": 0.14,
+                "frequency": 784,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 260,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.08
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.18,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -9,
+          "mechanism": "mechanical",
+          "name": "n2",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.5,
+                "damping": 0.5,
+                "decay": 0.16,
+                "frequency": 988,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 260,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.08
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.1
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.24,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -8,
+          "mechanism": "mechanical",
+          "name": "n3",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.5,
+                "damping": 0.5,
+                "decay": 0.22,
+                "frequency": 1175,
+                "layout": "bar",
+                "modes": 5
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 260,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.0008,
+              "roughness": 0.08
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.2
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -5
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9190
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui",
+    "durationSeconds": {
+      "max": 0.45,
+      "min": 0.39
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "Başarı: yükselen üç nota arpej.",
+  "dimensions": [
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.253,
+        "min": 0.187,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "n3",
+        "param": "decay",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 878.08,
+        "min": 689.92,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "n1",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "pitch2",
+      "range": {
+        "max": 1316,
+        "min": 1034,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "n3",
+        "param": "frequency",
+        "primitive": "resonator.modal",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "ui-success",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "decay": {
+          "max": 0.253,
+          "min": 0.231
+        },
+        "pitch": {
+          "max": 752.64,
+          "min": 689.92
+        },
+        "pitch2": {
+          "max": 1316,
+          "min": 1222
+        }
+      },
+      "light": {
+        "decay": {
+          "max": 0.209,
+          "min": 0.187
+        },
+        "pitch": {
+          "max": 878.08,
+          "min": 815.36
+        },
+        "pitch2": {
+          "max": 1128,
+          "min": 1034
+        }
+      },
+      "medium": {
+        "decay": {
+          "max": 0.231,
+          "min": 0.209
+        },
+        "pitch": {
+          "max": 815.36,
+          "min": 752.64
+        },
+        "pitch2": {
+          "max": 1222,
+          "min": 1128
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9190,
+  "title": "UI success",
+  "variants": [
+    {
+      "key": "success-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "success"
+      ]
+    },
+    {
+      "key": "success-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "success"
+      ]
+    },
+    {
+      "key": "success-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "success"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

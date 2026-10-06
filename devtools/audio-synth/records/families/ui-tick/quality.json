@@ -1,0 +1,123 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.03,
+        "measured": 3,
+        "median": 0.03,
+        "min": 0.02,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 1466.63,
+        "measured": 3,
+        "median": 1405.06,
+        "min": 1324.32,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -26.7288,
+        "measured": 3,
+        "median": -26.8355,
+        "min": -27.0693,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 0,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [
+      {
+        "descriptor": "activeSeconds",
+        "key": "tick-a",
+        "robustZ": -5.84963,
+        "value": 0.02
+      }
+    ],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.288746,
+    "medianDistance": 0.200548,
+    "minDistance": 0.198991,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 5.413,
+    "medoid": "tick-b",
+    "members": [
+      {
+        "distance": 2.253,
+        "key": "tick-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "tick-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 5.413,
+        "key": "tick-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "tick-a",
+      "nearest": {
+        "distance": 0.198991,
+        "key": "tick-b"
+      },
+      "pcmHash": "sha256:c8ca8782cdea74c4bcae5d9ba4aea25d428c1c26643aab1b3f7d10acb1705655"
+    },
+    {
+      "key": "tick-b",
+      "nearest": {
+        "distance": 0.198991,
+        "key": "tick-a"
+      },
+      "pcmHash": "sha256:4c23fe5881f92d7ada54d6cd3a9e63c12653aad6692ae90737d7d8b491d0831a"
+    },
+    {
+      "key": "tick-c",
+      "nearest": {
+        "distance": 0.200548,
+        "key": "tick-b"
+      },
+      "pcmHash": "sha256:5cb49443e53ce94575371ebe9e2cfdca470e06668e1a11c5d04cd0b79c1f16f4"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

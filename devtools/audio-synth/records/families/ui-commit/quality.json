@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.13,
+        "measured": 3,
+        "median": 0.11,
+        "min": 0.11,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 564.825,
+        "measured": 3,
+        "median": 528.758,
+        "min": 497.459,
+        "scale": 0.130514
+      },
+      "maxMomentaryLufs": {
+        "max": -19.4177,
+        "measured": 3,
+        "median": -20.0126,
+        "min": -20.3025,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 544.696,
+        "measured": 3,
+        "median": 509.655,
+        "min": 479.312,
+        "scale": 0.131295
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.169682,
+    "medianDistance": 0.11051,
+    "minDistance": 0.0768175,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 8.732,
+    "medoid": "commit-a",
+    "members": [
+      {
+        "distance": 0,
+        "key": "commit-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 8.732,
+        "key": "commit-b",
+        "shiftOctaves": -0.167
+      },
+      {
+        "distance": 3.445,
+        "key": "commit-c",
+        "shiftOctaves": -0.167
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "commit-a",
+      "nearest": {
+        "distance": 0.0768175,
+        "key": "commit-b"
+      },
+      "pcmHash": "sha256:4fb4ca92672fd9487edbb04ba2a3467a760eedad192853050cf26f0020120843"
+    },
+    {
+      "key": "commit-b",
+      "nearest": {
+        "distance": 0.0768175,
+        "key": "commit-a"
+      },
+      "pcmHash": "sha256:ae95420d4beda505634d873c922d5fd092181ee2f418ea65ad1b4a532bd5702f"
+    },
+    {
+      "key": "commit-c",
+      "nearest": {
+        "distance": 0.11051,
+        "key": "commit-b"
+      },
+      "pcmHash": "sha256:982ed41061f4df1f249a75f245599eddc7dee78a5c4c521173ded430b36d8a23"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

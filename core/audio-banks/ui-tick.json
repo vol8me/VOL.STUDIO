@@ -1,0 +1,122 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-tick",
+    "hash": "sha256:3b9e569c8a8cd6288a071b0cd4514efc5f9c7cfe396eb326c1af97ffe452d391",
+    "path": "devtools/audio-synth/records/families/ui-tick/family.json",
+    "seed": 9130,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:f6f498b22dc62aa0984129b934a3fdc788440660d45a5b318db7e87790727b04",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-tick/quality.json"
+  },
+  "roleAxes": {
+    "weight": ["heavy", "light", "medium"]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4336,
+        "encodedHash": "sha256:3c69d5bc5ec45f384bf566d4b25ed6303e12cc498a8cbc412c3847273e576be0",
+        "path": "public/assets/audio/ui/tick-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.02,
+        "centroidHz": 1466.6274195391738,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.042333333333333334,
+      "key": "tick-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -27.198986276502907,
+        "truePeakDbtp": -1.8032203039518646
+      },
+      "manifest": {
+        "hash": "sha256:781fb248cb72771cec30442471b7b50870a5319afd9eff48dba23e3cdaca6592",
+        "path": "audio-manifests/ui/tick-a.json"
+      },
+      "pcmHash": "sha256:c8ca8782cdea74c4bcae5d9ba4aea25d428c1c26643aab1b3f7d10acb1705655",
+      "programHash": "sha256:6aef69116f75bee8ed3817a16899c3a00fd4d1b42b25a6a9796528d78a3421f2",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": ["tick"],
+      "variantId": "v-e9b4c0e9c7cbad8a"
+    },
+    {
+      "asset": {
+        "bytes": 4345,
+        "encodedHash": "sha256:cc79e3fd6f1fe904c125ede17ec41c4ec7f9b43eda33dce37b9ac6243af257a7",
+        "path": "public/assets/audio/ui/tick-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 1405.0578978930278,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.042333333333333334,
+      "key": "tick-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.82920974613269,
+        "truePeakDbtp": -1.7469054151868115
+      },
+      "manifest": {
+        "hash": "sha256:3be60d302d70be374ca6b565433cb2aff1b5e7dafe44fb813c39e50a2a30cf90",
+        "path": "audio-manifests/ui/tick-b.json"
+      },
+      "pcmHash": "sha256:4c23fe5881f92d7ada54d6cd3a9e63c12653aad6692ae90737d7d8b491d0831a",
+      "programHash": "sha256:24e6a94c33228b007763db853f5687674f5dfe74e52039a285e9270447a5c733",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": ["tick"],
+      "variantId": "v-d297c92036ff06ff"
+    },
+    {
+      "asset": {
+        "bytes": 4344,
+        "encodedHash": "sha256:89c6d9e8c15c4db0427a4db6a8ba84aacd9a10b9999be44a7fb3739fd2d1c61e",
+        "path": "public/assets/audio/ui/tick-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 1324.3163143675833,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.042333333333333334,
+      "key": "tick-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.799767081691563,
+        "truePeakDbtp": -1.688328937600698
+      },
+      "manifest": {
+        "hash": "sha256:5ab7005927551bc98bd26b3bf977b3827a77f95a3a777232dd9a9bebb81926eb",
+        "path": "audio-manifests/ui/tick-c.json"
+      },
+      "pcmHash": "sha256:5cb49443e53ce94575371ebe9e2cfdca470e06668e1a11c5d04cd0b79c1f16f4",
+      "programHash": "sha256:227bdbcd1a87399a1893409c7b680780ec9a93413bd0609eaab1287fc8134600",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": ["tick"],
+      "variantId": "v-354dab7d86bb476b"
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-toggle",
+    "hash": "sha256:c9d575c56d87620ce08305fa7dd9c55646ae4ef1957c71901b3522c844a16d1c",
+    "path": "devtools/audio-synth/records/families/ui-toggle/family.json",
+    "seed": 9110,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:ebb6c71e3215840ceb61b4d30f52f25ee19ceabdf1649df6cee9c49997a13a60",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-toggle/quality.json"
+  },
+  "roleAxes": {
+    "weight": ["heavy", "light", "medium"]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5364,
+        "encodedHash": "sha256:84ed3db2c1a781d096d1fd545926931c89b2f4a49a46ecdb2a5ee81a2a852c5b",
+        "path": "public/assets/audio/ui/toggle-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.1,
+        "centroidHz": 1007.4865676285277,
+        "pitchHz": 1032.258064516129
+      },
+      "durationSeconds": 0.12733333333333333,
+      "key": "toggle-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -21.80022462840167,
+        "truePeakDbtp": -1.9833410675913217
+      },
+      "manifest": {
+        "hash": "sha256:00c7f5880e2dfb53a145a3526eb2cfbbe8334a15c1f65579fa0fcdd52fb8a51c",
+        "path": "audio-manifests/ui/toggle-a.json"
+      },
+      "pcmHash": "sha256:5257a3981db33068ec3562d331c152b5d89dbd0ab4ccff6967e772c5bda53141",
+      "programHash": "sha256:45cf621f77098db95ca9143e62e8e28d9480f74d653c37e3013e5f198fc27031",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": ["toggle"],
+      "variantId": "v-8440828866b60c39"
+    },
+    {
+      "asset": {
+        "bytes": 5326,
+        "encodedHash": "sha256:f1d4cb9f790338ce11d43de6a4be3f8b7f289006ae71aef9b10f1fbd145ab894",
+        "path": "public/assets/audio/ui/toggle-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.1,
+        "centroidHz": 1020.549991735257,
+        "pitchHz": 552.5097695764779
+      },
+      "durationSeconds": 0.12733333333333333,
+      "key": "toggle-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -21.580564106637357,
+        "truePeakDbtp": -2.0137793245468796
+      },
+      "manifest": {
+        "hash": "sha256:d8446578b7288c94412e679d53ebe2737692662f9896ba7848cd8a802c5ce089",
+        "path": "audio-manifests/ui/toggle-b.json"
+      },
+      "pcmHash": "sha256:2050dd252650612409e036e28b36503c98d3dc3f98f6ce2347172dae01cf2629",
+      "programHash": "sha256:db143bca1d19e3eb80e1224d937a1acde6e953e96364cc8eb1f086308c1df145",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": ["toggle"],
+      "variantId": "v-26efe7529e4677db"
+    },
+    {
+      "asset": {
+        "bytes": 5291,
+        "encodedHash": "sha256:d160a5f0919c6f1432d47b754461ffd265bf6126797f85471534af7a8f5fc4c6",
+        "path": "public/assets/audio/ui/toggle-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.1,
+        "centroidHz": 1087.1183465611782,
+        "pitchHz": 620.3379156227248
+      },
+      "durationSeconds": 0.12733333333333333,
+      "key": "toggle-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -21.189981637644536,
+        "truePeakDbtp": -2.0288269616600942
+      },
+      "manifest": {
+        "hash": "sha256:afb8c65fe33de5b74c69883b4077a9f60e6e9adf91a829c00ac61d6bdb06eccf",
+        "path": "audio-manifests/ui/toggle-c.json"
+      },
+      "pcmHash": "sha256:8b457475679e24c75630f0fecbe9b5f2865b2fa562d772bbd987ddbae97dae6f",
+      "programHash": "sha256:fcc79c7c25e5319ca44501d8827454be5839d1c1c05776304d7f34501f25fbee",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": ["toggle"],
+      "variantId": "v-d5b1a05019320651"
+    }
+  ]
+}

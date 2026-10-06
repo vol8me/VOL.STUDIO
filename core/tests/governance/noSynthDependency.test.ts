@@ -8,6 +8,12 @@ const FORBIDDEN_PACKAGES = ['@volstudio/audio-synth'] as const;
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.cache', 'test-results', 'coverage']);
 const SCANNED_EXTENSIONS = new Set(['.ts', '.js', '.json', '.md']);
 const SKIP_FILES = new Set(['tests/governance/noSynthDependency.test.ts']);
+/**
+ * Üretilmiş ses manifestleri KÖKEN kaydıdır: `engine.package` varlığı üreten aracı
+ * adlandırır (kaynak izi). Bu bir bağımlılık değildir; çalışma zamanı kodu manifest
+ * okumaz, yalnız üretilmiş OGG'yi çalar. Kod, belge ve paket bağımlılıkları taranır.
+ */
+const SKIP_PREFIXES = ['audio-manifests/'] as const;
 
 function walk(dir: string, visit: (relPath: string, code: string) => void): void {
   for (const entry of readdirSync(dir)) {
@@ -20,7 +26,8 @@ function walk(dir: string, visit: (relPath: string, code: string) => void): void
       // Raporlanan göreli yol POSIX'tir: `SKIP_FILES` ve ihlal listesi `/` bekler,
       // Windows'ta `\` üretilirse test kendi kaynağını da ihlal olarak sayar.
       const relPath = fullPath.replace(CORE_ROOT, '').split(/[\\/]/).join('/');
-      if (SKIP_FILES.has(relPath)) continue;
+      if (SKIP_FILES.has(relPath) || SKIP_PREFIXES.some((prefix) => relPath.startsWith(prefix)))
+        continue;
       const code = readFileSync(fullPath, 'utf-8');
       visit(relPath, code);
     }

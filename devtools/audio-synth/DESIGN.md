@@ -76,9 +76,11 @@ ya da yarım yazılan dosya geçerli kabul edilmez.
 Yazımlar aynı dizindeki geçici dosya üzerinden atomiktir. Tek yazıcı kilidi
 çakışan üretimi önler; ölü sürecin kilidi devralınabilir. Yol sözleşmesi
 repo göreli ve normalize edilmiş yoldur. Mutlak yol, traversal, sürücü
-harfi ve sembolik bağ reddedilir. Yayın yalnız kendi referans köküne veya
-`audio-target.json` ile yeteneğini beyan eden aktif oyuna yapılır; frozen
-paket hedef olamaz.
+harfi ve sembolik bağ reddedilir. Yayın yalnız kendi referans köküne,
+`audio-target.json` ile yeteneğini beyan eden aktif oyuna ya da oyunlara gönderilen
+ortak kütüphaneye (`@volstudio/core`, hedef türü `library`: UI sesleri) yapılır;
+beyansız kütüphane ve frozen paket hedef olamaz. Kütüphane çalışma zamanında
+audio-synth içe aktarmaz, yalnız üretilmiş OGG'yi taşır.
 
 Yayın nihai render'ı yeniden üretir ve kodek sonrası politikayı sınar.
 Seçim gerekçesi teknik karardır; insan dinleme onayı gibi sunulmaz. Asset

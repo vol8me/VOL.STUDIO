@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-2e06e849a1765c3b": {
+        "hash": "sha256:480db52db838d232c61c386fde7d54f20ba456e56aeff8cf3256380dcb10f0ad",
+        "path": "analyses/r-2e06e849a1765c3b.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:727613f7fd9a587918d71e34a6b050fa8de436d00a09101d9878cded7dc6f075",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:727613f7fd9a587918d71e34a6b050fa8de436d00a09101d9878cded7dc6f075",
+      "hash": "sha256:fcc79c7c25e5319ca44501d8827454be5839d1c1c05776304d7f34501f25fbee",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:afb8c65fe33de5b74c69883b4077a9f60e6e9adf91a829c00ac61d6bdb06eccf",
+      "path": "core/audio-manifests/ui/toggle-c.json"
+    },
+    "renders": {
+      "r-2e06e849a1765c3b": {
+        "hash": "sha256:33abf9e8c5346866bc6a8c65cb5218ee0c17ee5661e222bed6678a39206fa332",
+        "path": "renders/r-2e06e849a1765c3b.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:1b8cb6745bd2f24939fc6981f00c36590a2fc22377a7e16e508e28dc037b31d0",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "toggle-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/toggle-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-toggle/toggle-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

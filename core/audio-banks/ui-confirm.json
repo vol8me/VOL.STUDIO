@@ -1,0 +1,122 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-confirm",
+    "hash": "sha256:882451966c1885f1d60df534ceb19f4c083492ff126a80417c9fe70a4c7e462f",
+    "path": "devtools/audio-synth/records/families/ui-confirm/family.json",
+    "seed": 9150,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:ddad4f8cd059b88baef91845ee88a1cbc95bf6a7b380b313853183f4bea765b6",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-confirm/quality.json"
+  },
+  "roleAxes": {
+    "weight": ["heavy", "light", "medium"]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 6287,
+        "encodedHash": "sha256:987587838d656fdef7e019d8346cce74a823205d4fe8401d857408fa709626be",
+        "path": "public/assets/audio/ui/confirm-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.22,
+        "centroidHz": 854.3895581755993,
+        "pitchHz": 882.4318123050465
+      },
+      "durationSeconds": 0.23733333333333334,
+      "key": "confirm-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -19.662993334868165,
+        "truePeakDbtp": -7.839449153314687
+      },
+      "manifest": {
+        "hash": "sha256:a3fc66dcd1cb57ecfc3f3021fa61f23a7aa5d25c15dad04aae6737286a968a52",
+        "path": "audio-manifests/ui/confirm-a.json"
+      },
+      "pcmHash": "sha256:dbd37ef8913d1b4a7cda0fedc27ba49c93475b02cebe0550a700e0bfd7fedfc9",
+      "programHash": "sha256:ccee0538f766f25bb3789ddc8858c40fc3aa65ef1243ae2e14ec7128b52365d7",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": ["confirm"],
+      "variantId": "v-850c549045141b2d"
+    },
+    {
+      "asset": {
+        "bytes": 6326,
+        "encodedHash": "sha256:52039d800e606f97440e80218b0e0f0eb86c5759ccfb9117205f39012dbbd787",
+        "path": "public/assets/audio/ui/confirm-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.22,
+        "centroidHz": 922.2070764507347,
+        "pitchHz": 999.0381923292383
+      },
+      "durationSeconds": 0.23733333333333334,
+      "key": "confirm-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -19.43933547508267,
+        "truePeakDbtp": -7.878463055029075
+      },
+      "manifest": {
+        "hash": "sha256:4f8a3cc7871d93e36dfc2e59ad8c6c3570f68112100c56eb6ffb6a273e81f3c4",
+        "path": "audio-manifests/ui/confirm-b.json"
+      },
+      "pcmHash": "sha256:bec218f251d87c14bf19ec266b93b303c8fbec22f4b47860719d299e5816e105",
+      "programHash": "sha256:4d8e9cbc4a4ce18c6f5a355be4e2fcfd809df6394da7091ad31dc96005147504",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": ["confirm"],
+      "variantId": "v-b6b6450d001d65e5"
+    },
+    {
+      "asset": {
+        "bytes": 6290,
+        "encodedHash": "sha256:1ddd0790f9f10dc609766ee38c7180ad093876426f844c5a5ce659216dd92dfc",
+        "path": "public/assets/audio/ui/confirm-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.22,
+        "centroidHz": 953.201438374357,
+        "pitchHz": 1032.258064516129
+      },
+      "durationSeconds": 0.23733333333333334,
+      "key": "confirm-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -19.455589813087293,
+        "truePeakDbtp": -7.923522042777952
+      },
+      "manifest": {
+        "hash": "sha256:bd31a1c50c745492f1a8ffc7176d6a11bb6ad95073b8e2b63701f315dacb8b9d",
+        "path": "audio-manifests/ui/confirm-c.json"
+      },
+      "pcmHash": "sha256:61630e7ca7d557821dd9f2ead25c4d6b4c7ac05cf283815c38116e7e852c205c",
+      "programHash": "sha256:7fe2eb46b2c3456c09be4742fc7f2cf9bc05e6b7ee494c64253ec8643383b32c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": ["confirm"],
+      "variantId": "v-613a0beb7c86a563"
+    }
+  ]
+}

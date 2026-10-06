@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:db143bca1d19e3eb80e1224d937a1acde6e953e96364cc8eb1f086308c1df145",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:c9d575c56d87620ce08305fa7dd9c55646ae4ef1957c71901b3522c844a16d1c",
+    "familyId": "ui-toggle",
+    "kind": "family-variant",
+    "variantId": "v-26efe7529e4677db",
+    "variantKey": "toggle-b"
+  }
+}

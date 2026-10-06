@@ -1,0 +1,229 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "İptal: alçalan iki kısa nota.",
+      "durationSeconds": 0.2,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.08,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -9,
+          "mechanism": "mechanical",
+          "name": "first",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 740,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.1,
+              "release": 0.02,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -9,
+          "mechanism": "mechanical",
+          "name": "second",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 220,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": 554,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          },
+          "startSeconds": 0.07
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -8
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9160
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui",
+    "durationSeconds": {
+      "max": 0.23,
+      "min": 0.17
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "İptal: alçalan iki kısa nota.",
+  "dimensions": [
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.115,
+        "min": 0.085,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "second",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "pitch",
+      "range": {
+        "max": 799.2,
+        "min": 680.8,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "first",
+        "param": "frequency",
+        "primitive": "source.oscillator",
+        "slot": "source"
+      }
+    }
+  ],
+  "familyId": "ui-cancel",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.05,
+      "minNearestDistance": 0.02,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "decay": {
+          "max": 0.115,
+          "min": 0.105
+        },
+        "pitch": {
+          "max": 720.02,
+          "min": 680.8
+        }
+      },
+      "light": {
+        "decay": {
+          "max": 0.095,
+          "min": 0.085
+        },
+        "pitch": {
+          "max": 799.2,
+          "min": 759.98
+        }
+      },
+      "medium": {
+        "decay": {
+          "max": 0.105,
+          "min": 0.095
+        },
+        "pitch": {
+          "max": 759.98,
+          "min": 720.02
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9160,
+  "title": "UI cancel",
+  "variants": [
+    {
+      "key": "cancel-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "cancel"
+      ]
+    },
+    {
+      "key": "cancel-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "cancel"
+      ]
+    },
+    {
+      "key": "cancel-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "cancel"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

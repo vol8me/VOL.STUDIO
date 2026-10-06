@@ -89,7 +89,7 @@ export interface AudioAssetManifestV1 {
   };
   readonly integration: {
     readonly package: string;
-    readonly targetKind: 'reference' | 'game';
+    readonly targetKind: 'reference' | 'game' | 'library';
     readonly runtimeKey: string | null;
     readonly loop: boolean;
     /** Çalışma zamanı beyanının yeri; referans hedefte `null` (hiçbir oyun çalmaz). */
@@ -486,7 +486,11 @@ function validateIntegration(value: unknown): void {
     'runtimeDeclaration',
   ]);
   checkText(integration.package, 'integration.package');
-  checkChoice(integration.targetKind, 'integration.targetKind', ['reference', 'game'] as const);
+  checkChoice(integration.targetKind, 'integration.targetKind', [
+    'reference',
+    'game',
+    'library',
+  ] as const);
   for (const key of ['runtimeKey', 'runtimeDeclaration'] as const) {
     if (integration[key] !== null) checkText(integration[key], `integration.${key}`);
   }

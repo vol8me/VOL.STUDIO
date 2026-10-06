@@ -1,0 +1,55 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-c105de5bbb43f2a0": {
+        "hash": "sha256:7c918c2577c6118dcdeaf09c1bd643f868863e4fcdebea2e9bc95fd65ad2769a",
+        "path": "analyses/r-c105de5bbb43f2a0.json"
+      },
+      "r-c903ab89b6aafd5f": {
+        "hash": "sha256:63a5bbf37aa92e497d9c5ecf5d369631c1b0549b4b0fc9910db9185f867a51ed",
+        "path": "analyses/r-c903ab89b6aafd5f.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:b437676d810dee304833175efe97dfb459cd4c8cbb86d335fdb16adc2c576b12",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:b437676d810dee304833175efe97dfb459cd4c8cbb86d335fdb16adc2c576b12",
+      "hash": "sha256:29e04ba456e9bd34d7df4ed3bc29942108c6abf7f6ee1c05f97bb428ebbc1ca4",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:1b1c984f88ced7da810bf9db4827c3a99489f53d51e4ee8653296581147a681b",
+      "path": "core/audio-manifests/ui/close-c.json"
+    },
+    "renders": {
+      "r-c105de5bbb43f2a0": {
+        "hash": "sha256:51fbafe80eeee4cddbbe72932365e1ef35d33f789ff915ed6c706a3b79417ff4",
+        "path": "renders/r-c105de5bbb43f2a0.json"
+      },
+      "r-c903ab89b6aafd5f": {
+        "hash": "sha256:b805592b3b9f3d1e495aca9a7ecd561d31a80eb7276848d5563746df36274206",
+        "path": "renders/r-c903ab89b6aafd5f.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:966779aed705241486f7d3fb207d4ba78ee23eb4f57bcddb9be3e33b215c5713",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "close-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 11,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/close-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-close/close-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

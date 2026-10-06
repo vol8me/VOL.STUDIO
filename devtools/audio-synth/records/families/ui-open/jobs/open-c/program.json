@@ -1,0 +1,98 @@
+{
+  "channels": 1,
+  "description": "Aç: yükselen filtreli hışırtı ve yumuşak ton.",
+  "durationSeconds": 0.22,
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.04,
+          "curve": "cosine",
+          "decay": 0.14,
+          "release": 0.02,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -14,
+      "mechanism": "mechanical",
+      "name": "air",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 240,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2400,
+            "mode": "bandpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "cosine",
+          "decay": 0.149253,
+          "release": 0.02,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -12,
+      "mechanism": "mechanical",
+      "name": "lift",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 220,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "frequency": 588.109,
+          "waveform": "sine"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      },
+      "startSeconds": 0.03
+    }
+  ],
+  "master": {
+    "dcBlockHz": 40,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.02,
+    "normalize": "peak",
+    "peakDbfs": -7
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 9170
+}
