@@ -180,8 +180,10 @@ boyutuna dönüşmesini önler.
 Geometri saf sayılar ve yapısal verilerle çalışır. `circlesOverlap`,
 `circleRectOverlap`, `pointInRect` ve `raycastCircles` renderer gerektirmez;
 raycast en yakın ileri isabeti seçer. Süpürülmüş temas için
-`segmentCircleEntryT` ilk 0–1 temasını verir. Birden çok adayda en küçük t
-seçilir; liste sırası sonucu değiştirmez.
+`segmentCircleEntryT` ve yönlü dikdörtgen için `segmentOrientedBoxEntryT`
+ilk 0–1 temasını verir; uç noktaları örnekleyen test dar kirişi, köşeyi ve
+tek adımda gövdeyi aşan parçayı kaçırır. Birden çok adayda en küçük t seçilir;
+liste sırası sonucu değiştirmez.
 
 `lerp` t değerini kelepçelemez; ekstrapolasyon geçerlidir. `approach` sabit
 adımla hedefe ulaşır, `damp` delta ile üstel yumuşatır. `wrap` üst sınırı

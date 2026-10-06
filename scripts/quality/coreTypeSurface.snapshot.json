@@ -636,6 +636,7 @@
   "seedFromString",
   "segmentCircleEntryT",
   "segmentCircleOverlap",
+  "segmentOrientedBoxEntryT",
   "selectGamepad",
   "setHapticsDriver",
   "setHapticsEnabled",

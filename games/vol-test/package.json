@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "scaling": "tsx scripts/scaling.ts",
+    "load": "tsx scripts/combinedLoad.ts",
     "tauri": "tauri",
     "icon:source": "tsx scripts/app-icon.ts"
   },

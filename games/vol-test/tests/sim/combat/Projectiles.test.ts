@@ -1,8 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { WEAPON } from '@/config/tank';
-import { Projectiles } from '@/sim/combat/Projectiles';
+import { Projectiles, type ProjectileTarget } from '@/sim/combat/Projectiles';
 import type { SimEvent } from '@/sim/events';
 import { world } from '../../support/sim';
+
+/** y ekseninden bağımsız dikey şerit: x∈[minX, maxX] aralığına ilk giriş. */
+function band(id: number, minX: number, maxX = Infinity): ProjectileTarget {
+  return {
+    id,
+    entryT(startX, _startY, endX) {
+      if (startX >= minX && startX <= maxX) return 0;
+      const edge = startX < minX ? minX : maxX;
+      if (startX === endX) return null;
+      const t = (edge - startX) / (endX - startX);
+      return t >= 0 && t <= 1 ? t : null;
+    },
+  };
+}
 
 describe('Projectiles', () => {
   it('rüzgâr canlı mermi ve önizlemeyi aynı yere taşır; artan hava direnci menzili kısaltır', () => {
@@ -100,10 +114,7 @@ describe('Projectiles', () => {
 
   it('önizleme aracı engel olarak gösterir; kendi aracını yok sayar', () => {
     const projectiles = new Projectiles(2, WEAPON.projectileLifeMs, WEAPON.flight);
-    const targets = [
-      { id: 1, contains: () => true },
-      { id: 2, contains: (x: number) => x >= 190 && x <= 210 },
-    ];
+    const targets = [band(1, -Infinity), band(2, 190, 210)];
     const result = projectiles.preview(1, 100, 100, 900, 0, world(), targets);
     expect(result.targetId).toBe(2);
     expect(result.surface).toBe('vehicle');
@@ -137,10 +148,7 @@ describe('Projectiles', () => {
 
   it('başka aracın ayak izine değen mermi isabet eder; sahibine etmez', () => {
     const projectiles = new Projectiles(4, 5000);
-    const targets = [
-      { id: 1, contains: () => true },
-      { id: 2, contains: (x: number) => x > 150 },
-    ];
+    const targets = [band(1, -Infinity), band(2, 150)];
     const hits: number[] = [];
     const events: SimEvent[] = [];
     projectiles.spawn(1, 100, 100, 900, 0);

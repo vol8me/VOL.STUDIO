@@ -1,3 +1,4 @@
+import { segmentOrientedBoxEntryT } from '@volstudio/core/math';
 import { Cooldown } from '@volstudio/core/time';
 import type { SuspensionConfig, TankConfig, WeaponConfig } from '@/config/tank';
 import { Tank } from '../tank/Tank';
@@ -22,5 +23,25 @@ export class Vehicle {
   ) {
     this.tank = new Tank(tank, suspension);
     this.gun = new Cooldown(weapon.intervalMs);
+  }
+
+  /**
+   * Mermi hedefi sözleşmesi: doğru parçasının gövdenin yönlü ayak iziyle ilk
+   * temas parametresi (`0..1`), yoksa `null`. Uç noktaları örnekleyen test dar
+   * kirişi ve köşeyi kaçırırdı. Gövde adımın sonundaki pozunda sabit sayılır.
+   */
+  entryT(startX: number, startY: number, endX: number, endY: number): number | null {
+    const { x, y, angle, shape } = this.tank;
+    return segmentOrientedBoxEntryT(
+      startX,
+      startY,
+      endX,
+      endY,
+      x,
+      y,
+      angle,
+      shape.halfLength,
+      shape.halfWidth,
+    );
   }
 }

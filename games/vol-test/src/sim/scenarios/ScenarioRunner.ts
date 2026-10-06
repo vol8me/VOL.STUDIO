@@ -1,4 +1,5 @@
-import { createRandom, SpatialIndex } from '@volstudio/core';
+import { createRandom } from '@volstudio/core/random';
+import { SpatialIndex } from '@volstudio/core/spatial';
 import { TANK } from '@/config/tank';
 import { SCENARIO, SCENARIOS, type ScenarioId } from '@/config/scenarios';
 import type { Vehicle } from '../entities/Vehicle';

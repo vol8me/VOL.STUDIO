@@ -5,6 +5,7 @@ import {
   distanceSquared,
   segmentCircleEntryT,
   segmentCircleOverlap,
+  segmentOrientedBoxEntryT,
   circlesOverlap,
   pointInCircle,
   pointInRect,
@@ -175,6 +176,133 @@ describe('raycastCircles', () => {
         if (segmentCircleEntryT(...args) !== null) {
           expect(segmentCircleOverlap(...args)).toBe(true);
         }
+      }
+    });
+  });
+
+  describe('segmentOrientedBoxEntryT — yönlü dikdörtgene ilk temas', () => {
+    const box = (
+      start: [number, number],
+      end: [number, number],
+      angle = 0,
+      center: [number, number] = [0, 0],
+      halves: [number, number] = [20, 10],
+    ) =>
+      segmentOrientedBoxEntryT(
+        start[0],
+        start[1],
+        end[0],
+        end[1],
+        center[0],
+        center[1],
+        angle,
+        halves[0],
+        halves[1],
+      );
+
+    it('hizalı kutuya giriş yüzünü segment oranı olarak verir', () => {
+      expect(box([-120, 0], [80, 0])).toBeCloseTo(0.5, 12);
+      expect(box([120, 0], [-80, 0])).toBeCloseTo(0.5, 12);
+    });
+
+    it('uç noktaları dışarıda kalan parçayı da yakalar (tünelleme yok)', () => {
+      // Orta ve son nokta kutunun dışında; parça kutuyu baştan başa geçer.
+      expect(box([-500, 0], [500, 0])).toBeCloseTo(0.48, 12);
+    });
+
+    it('döndürülmüş kutunun köşesini kaçırmaz: orta ve uç örnekleri dışarıdadır', () => {
+      // 45° dönmüş 26×21 kutunun üst köşesi (3,54; 33,23): y=32 doğrusu köşeyi
+      // yaklaşık 2,5 birimlik dar bir kirişle keser.
+      const angle = Math.PI / 4;
+      const inside = (x: number, y: number) =>
+        Math.abs(x * Math.cos(angle) + y * Math.sin(angle)) <= 26 &&
+        Math.abs(-x * Math.sin(angle) + y * Math.cos(angle)) <= 21;
+      expect(inside(-30, 32)).toBe(false);
+      expect(inside(5, 32)).toBe(false);
+      expect(inside(40, 32)).toBe(false);
+
+      const t = box([-30, 32], [40, 32], angle, [0, 0], [26, 21]);
+      expect(t).not.toBeNull();
+      const x = -30 + 70 * t!;
+      expect(inside(x + 1e-6, 32)).toBe(true);
+      expect(inside(x - 1e-6, 32)).toBe(false);
+    });
+
+    it('yoğun örnekleme referansıyla her açıda aynı ilk temasa varır', () => {
+      const halves: [number, number] = [26, 21];
+      for (let degrees = 0; degrees < 360; degrees += 15) {
+        const angle = (degrees * Math.PI) / 180;
+        for (let offset = -50; offset <= 50; offset += 5) {
+          const start: [number, number] = [-80, offset];
+          const end: [number, number] = [90, offset * 0.4];
+          let reference: number | null = null;
+          for (let step = 0; step <= 20000 && reference === null; step++) {
+            const u = step / 20000;
+            const x = start[0] + (end[0] - start[0]) * u;
+            const y = start[1] + (end[1] - start[1]) * u;
+            const forward = x * Math.cos(angle) + y * Math.sin(angle);
+            const side = -x * Math.sin(angle) + y * Math.cos(angle);
+            if (Math.abs(forward) <= halves[0] && Math.abs(side) <= halves[1]) reference = u;
+          }
+          const t = box(start, end, angle, [0, 0], halves);
+          if (reference === null) expect(t).toBeNull();
+          else expect(t).toBeCloseTo(reference, 3);
+        }
+      }
+    });
+
+    it('kutu içinde başlayan parçada 0 döner', () => {
+      expect(box([5, 3], [500, 3])).toBe(0);
+      expect(box([5, 3], [5, 3])).toBe(0);
+    });
+
+    it('ıskalayan, kısa kalan ve uzaklaşan parçada null döner', () => {
+      expect(box([-120, 40], [80, 40])).toBeNull();
+      expect(box([-120, 0], [-40, 0])).toBeNull();
+      expect(box([40, 0], [200, 0])).toBeNull();
+      expect(box([0, 50], [0, 50])).toBeNull();
+    });
+
+    it('eksene paralel parça yalnız levhanın içindeyse kesişir; teğet sayılır', () => {
+      expect(box([-120, 10], [80, 10])).toBeCloseTo(0.5, 12);
+      expect(box([-120, 10.0001], [80, 10.0001])).toBeNull();
+      expect(box([0, -80], [0, 80])).toBeCloseTo(70 / 160, 12);
+    });
+
+    it('çapraz parça köşeyi sıyırır; hemen yanından geçen parça ıskalar', () => {
+      // Köşe (20, 10); (0, 30)→(40, -10) doğrusu x + y = 30 köşeden geçer.
+      expect(box([0, 30], [40, -10])).toBeCloseTo(0.5, 12);
+      expect(box([0, 30.5], [40, -9.5])).toBeNull();
+    });
+
+    it('merkez ve açı dünya çerçevesinde uygulanır', () => {
+      const angle = Math.PI / 2; // ileri eksen +y
+      expect(box([100, 0], [100, 200], angle, [100, 100], [30, 5])).toBeCloseTo(0.35, 12);
+      expect(box([100, 0], [100, 200], 0, [100, 100], [30, 5])).toBeCloseTo(0.475, 12);
+    });
+
+    it('en küçük t sıralamadan bağımsız ilk kutuyu seçer', () => {
+      const near = box([-300, 0], [300, 0], 0, [-100, 0]);
+      const far = box([-300, 0], [300, 0], 0, [100, 0]);
+      expect(near!).toBeLessThan(far!);
+    });
+
+    it('sonlu olmayan girdi ve negatif yarı boyda null döner', () => {
+      expect(box([NaN, 0], [80, 0])).toBeNull();
+      expect(box([0, 0], [Infinity, 0])).toBeNull();
+      expect(box([-120, 0], [80, 0], Number.NaN)).toBeNull();
+      expect(box([-120, 0], [80, 0], 0, [0, 0], [-1, 10])).toBeNull();
+      expect(box([-120, 0], [80, 0], 0, [0, 0], [20, -1])).toBeNull();
+    });
+
+    it('overlap sonuçlarıyla tutarlıdır: kutuyu bir çevreleyen daireyle karşılaştır', () => {
+      // Kutuyu içine alan daireyi ıskalayan parça kutuyu da ıskalar.
+      const radius = Math.hypot(20, 10);
+      for (let offset = -60; offset <= 60; offset += 7) {
+        const hitsCircle = segmentCircleOverlap(-200, offset, 200, offset, 0, 0, radius);
+        const t = box([-200, offset], [200, offset]);
+        if (!hitsCircle) expect(t).toBeNull();
+        else expect(t === null || (t >= 0 && t <= 1)).toBe(true);
       }
     });
   });

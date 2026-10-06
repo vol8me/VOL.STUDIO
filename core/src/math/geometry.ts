@@ -140,6 +140,68 @@ export function segmentCircleEntryT(
   return t;
 }
 
+/**
+ * Doğru parçasının yönlü dikdörtgene (OBB) İLK temas ettiği parametre
+ * (`0..1`), yoksa `null`.
+ *
+ * Parça dikdörtgenin yerel uzayına döndürülür ve eksen hizalı iki levha
+ * (slab) aralığının kesişimi alınır; böylece çapraz/döndürülmüş gövdede ve
+ * köşeyi sıyıran (graze) parçada, yalnız uç noktaları örnekleyen testlerin
+ * kaçırdığı temas bulunur. `angle` ileri ekseni (`halfLength` yönü) verir.
+ *
+ * Parça dikdörtgenin İÇİNDE başlıyorsa `0` döner. Bir eksene paralel parça
+ * yalnız o eksendeki levhanın içindeyse kesişebilir. Teğet temas sayılır.
+ * Allocation yapmaz.
+ */
+export function segmentOrientedBoxEntryT(
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  centerX: number,
+  centerY: number,
+  angle: number,
+  halfLength: number,
+  halfWidth: number,
+): number | null {
+  // Toplam yalnız bütün girdiler sonluysa sonludur (NaN ve ±Infinity yayılır).
+  if (
+    !Number.isFinite(
+      startX + startY + endX + endY + centerX + centerY + angle + halfLength + halfWidth,
+    ) ||
+    halfLength < 0 ||
+    halfWidth < 0
+  ) {
+    return null;
+  }
+
+  const fx = Math.cos(angle);
+  const fy = Math.sin(angle);
+  const originX = startX - centerX;
+  const originY = startY - centerY;
+  const dx = endX - startX;
+  const dy = endY - startY;
+
+  let enter = 0;
+  let leave = 1;
+  for (let axis = 0; axis < 2; axis++) {
+    const along = axis === 0;
+    const origin = along ? originX * fx + originY * fy : originY * fx - originX * fy;
+    const delta = along ? dx * fx + dy * fy : dy * fx - dx * fy;
+    const half = along ? halfLength : halfWidth;
+    if (delta === 0) {
+      if (Math.abs(origin) > half) return null;
+      continue;
+    }
+    const first = (-half - origin) / delta;
+    const second = (half - origin) / delta;
+    enter = Math.max(enter, Math.min(first, second));
+    leave = Math.min(leave, Math.max(first, second));
+    if (enter > leave) return null;
+  }
+  return enter;
+}
+
 /** İki daire kesişiyor mu? (Teğet durumu kesişme SAYILIR.) */
 export function circlesOverlap(a: Circle, b: Circle): boolean {
   const reach = a.radius + b.radius;

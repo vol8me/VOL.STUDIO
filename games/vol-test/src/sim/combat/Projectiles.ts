@@ -57,10 +57,14 @@ function createProjectile(): Projectile {
   };
 }
 
-/** Mermi isabet adayı: aracın kimliği ve noktanın ayak izinde olup olmadığı. */
+/**
+ * Mermi isabet adayı: aracın kimliği ve süpürülen parçanın ayak izine İLK
+ * temas parametresi. `entryT` `0..1` arasında bir oran ya da temas yoksa
+ * `null` döner; parça ayak izinin içinde başlıyorsa `0`.
+ */
 export interface ProjectileTarget {
   readonly id: EntityId;
-  contains(x: number, y: number): boolean;
+  entryT(startX: number, startY: number, endX: number, endY: number): number | null;
 }
 
 /** İsabet anında çağrılır; hedefe itki uygulamak simülasyonun işidir. */
@@ -180,7 +184,7 @@ export class Projectiles {
   }
 
   /**
-   * Mermileri ilerletir. Yol üzerinde (yarım adım örneklemesiyle) bir araca
+   * Mermileri ilerletir. Adımın süpürdüğü yol üzerinde bir aracın ayak izine
    * değen mermi isabet eder; dünya duvarını aşan mermi duvarda, ömrü dolan
    * mermi menzil sonunda yerde patlar.
    */
@@ -307,17 +311,31 @@ export class Projectiles {
     };
   }
 
-  /** Yol ortası ve uç noktası örneklenir: hızlı mermi ince aracı atlamaz. */
+  /**
+   * Adımın süpürdüğü parça (`px,py → x,y`) ile araç ayak izlerinin kesişimi.
+   * Aynı adımda birden çok araç kesişirse en küçük `t` kazanır; eşitlikte
+   * aday sırası belirler. İsabet olursa mermi temas noktasına çekilir: olay,
+   * itki ve önizleme adımın bittiği yeri değil gerçek ilk teması görür.
+   */
   private struck(
     projectile: Projectile,
     targets: readonly ProjectileTarget[],
   ): ProjectileTarget | null {
-    const midX = (projectile.px + projectile.x) / 2;
-    const midY = (projectile.py + projectile.y) / 2;
+    const { px, py, x, y } = projectile;
+    let nearest: ProjectileTarget | null = null;
+    let nearestT = Infinity;
     for (const target of targets) {
       if (target.id === projectile.owner) continue;
-      if (target.contains(midX, midY) || target.contains(projectile.x, projectile.y)) return target;
+      const t = target.entryT(px, py, x, y);
+      if (t !== null && t < nearestT) {
+        nearest = target;
+        nearestT = t;
+      }
     }
-    return null;
+    if (nearest) {
+      projectile.x = px + (x - px) * nearestT;
+      projectile.y = py + (y - py) * nearestT;
+    }
+    return nearest;
   }
 }

@@ -179,6 +179,7 @@ export {
   distanceSquared,
   segmentCircleEntryT,
   segmentCircleOverlap,
+  segmentOrientedBoxEntryT,
   circlesOverlap,
   pointInCircle,
   pointInRect,

@@ -291,6 +291,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'seedFromString',
   'segmentCircleEntryT',
   'segmentCircleOverlap',
+  'segmentOrientedBoxEntryT',
   'selectGamepad',
   'setHapticsDriver',
   'setHapticsEnabled',

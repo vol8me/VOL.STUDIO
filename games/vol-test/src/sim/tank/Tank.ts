@@ -122,18 +122,6 @@ export class Tank extends RigidBody {
     return this.targets.braking;
   }
 
-  /** Nokta tankın ayak izinin içinde mi (mermi isabeti). */
-  contains(px: number, py: number): boolean {
-    const dx = px - this.x;
-    const dy = py - this.y;
-    const fx = Math.cos(this.angle);
-    const fy = Math.sin(this.angle);
-    return (
-      Math.abs(dx * fx + dy * fy) <= this.shape.halfLength &&
-      Math.abs(-dx * fy + dy * fx) <= this.shape.halfWidth
-    );
-  }
-
   /**
    * Çarpmanın süspansiyona vuruşu: gövde çarpma yönüne yaylanır. Duvar ve
    * araç teması aynı yoldan geçer.
@@ -176,7 +164,7 @@ export class Tank extends RigidBody {
     const sub = dt / SUBSTEPS;
     for (let index = 0; index < SUBSTEPS; index++) {
       this.integrateTracks(sub, surface);
-      this.resolveContacts(world);
+      this.settleAgainst(world);
     }
     this.turretMount.update(command, dt);
   }
@@ -267,8 +255,12 @@ export class Tank extends RigidBody {
     );
   }
 
-  /** Duvar temasını çözer; adımdaki en sert duvar çarpması kaydedilir. */
-  private resolveContacts(world: World): void {
+  /**
+   * Duvar temasını çözer; adımdaki en sert duvar çarpması kaydedilir. Araç
+   * teması gövdeyi duvara geri itebilir: çağıran, itme sonrası bunu yeniden
+   * çağırarak duvarı son sözü söyleyen sert sınır yapar.
+   */
+  settleAgainst(world: World): void {
     const hit = resolveWallContacts(this, world.walls, this.shape, this.substepContact);
     if (hit.speed <= this.contact.speed) return;
     Object.assign(this.contact, hit);

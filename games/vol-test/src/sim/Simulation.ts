@@ -1,7 +1,7 @@
 import type { SuspensionConfig, TankConfig, WeaponConfig } from '@/config/tank';
 import { angleDelta } from '@volstudio/core/math';
 import { idleCommand, type TankCommand } from './command';
-import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
+import { Projectiles } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
@@ -23,6 +23,8 @@ export type CommandSource = (vehicle: Vehicle) => TankCommand;
 
 /** Olay kuyruğunun tavanı: boşaltılmayan kuyruk belleği büyütmez. */
 const MAX_EVENTS = 512;
+/** Araç/duvar temas çözümünün üst sınırı: sıkışık kümede de adım süresi sabit kalır. */
+const CONTACT_PASSES = 4;
 const IDLE = idleCommand();
 
 /**
@@ -38,7 +40,6 @@ export class Simulation {
   private readonly options: SimulationOptions;
   private readonly events: SimEvent[] = [];
   private readonly contact = createContact();
-  private readonly targets: ProjectileTarget[] = [];
   private readonly inputs = new Map<EntityId, TankCommand>();
   private nextId: EntityId = 1;
   private playerId: EntityId;
@@ -80,7 +81,6 @@ export class Simulation {
     vehicle.tank.place(x, y, hull);
     this.vehicleList.push(vehicle);
     this.inputs.set(vehicle.id, idleCommand());
-    this.targets.push({ id: vehicle.id, contains: (px, py) => vehicle.tank.contains(px, py) });
     return vehicle;
   }
 
@@ -90,7 +90,6 @@ export class Simulation {
     const index = this.vehicleList.findIndex((vehicle) => vehicle.id === id);
     if (index < 0) return;
     this.vehicleList.splice(index, 1);
-    this.targets.splice(index, 1);
     this.inputs.delete(id);
   }
 
@@ -134,7 +133,10 @@ export class Simulation {
           (tank.groundRight - groundRight) * amountPerUnit,
         );
       }
-      const contact = tank.contact;
+    }
+    this.settleContacts();
+    for (const vehicle of this.vehicleList) {
+      const contact = vehicle.tank.contact;
       if (contact.speed > this.options.tank.impactEventSpeed) {
         this.emit({
           kind: 'wallHit',
@@ -147,7 +149,6 @@ export class Simulation {
         });
       }
     }
-    this.collideVehicles();
     for (const vehicle of this.vehicleList) {
       vehicle.gun.update(stepMs);
       const command = this.inputs.get(vehicle.id)!;
@@ -158,19 +159,25 @@ export class Simulation {
           this.options.weapon.aimTolerance;
       if (command.fire && aligned && vehicle.gun.tryTrigger()) this.fire(vehicle);
     }
-    this.projectiles.step(stepMs, this.world, this.events, this.targets, (projectile, target) => {
-      const struck = this.vehicle(target.id);
-      if (!struck) return;
-      const speed = Math.hypot(projectile.vx, projectile.vy) || 1;
-      const impulse =
-        this.options.weapon.hitImpulse * (speed / this.options.weapon.projectileSpeed);
-      struck.tank.applyImpulse(
-        (projectile.vx / speed) * impulse,
-        (projectile.vy / speed) * impulse,
-        projectile.x,
-        projectile.y,
-      );
-    });
+    this.projectiles.step(
+      stepMs,
+      this.world,
+      this.events,
+      this.vehicleList,
+      (projectile, target) => {
+        const struck = this.vehicle(target.id);
+        if (!struck) return;
+        const speed = Math.hypot(projectile.vx, projectile.vy) || 1;
+        const impulse =
+          this.options.weapon.hitImpulse * (speed / this.options.weapon.projectileSpeed);
+        struck.tank.applyImpulse(
+          (projectile.vx / speed) * impulse,
+          (projectile.vy / speed) * impulse,
+          projectile.x,
+          projectile.y,
+        );
+      },
+    );
     if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS);
   }
 
@@ -186,7 +193,7 @@ export class Simulation {
       dx * vehicle.weapon.projectileSpeed + tank.vx,
       dy * vehicle.weapon.projectileSpeed + tank.vy,
       this.world,
-      this.targets,
+      this.vehicleList,
       stepMs,
     );
   }
@@ -202,14 +209,36 @@ export class Simulation {
     this.events.push(event);
   }
 
-  /** Araç çiftleri arasındaki teması çözer (SAT + iki cisimli itki). */
-  private collideVehicles(): void {
+  /**
+   * Adımın temaslarını çözer. Duvar sert sınırdır: araç teması bir gövdeyi
+   * duvara geri itebildiği için her araç turundan sonra duvarlar yeniden
+   * çözülür. Döngü sınırlıdır ve her zaman duvar geçişiyle biter; sıkışık
+   * kümede araçlar tam ayrılamasa da hiçbir gövde köşesi dünya dışında kalmaz.
+   */
+  private settleContacts(): void {
+    for (let pass = 0; pass < CONTACT_PASSES; pass++) {
+      if (!this.collideVehicles()) return;
+      for (const vehicle of this.vehicleList) vehicle.tank.settleAgainst(this.world);
+    }
+  }
+
+  /**
+   * Araç çiftleri arasındaki teması çözer (SAT + iki cisimli itki). Herhangi
+   * bir gövdenin konumu değiştiyse `true` döner.
+   */
+  private collideVehicles(): boolean {
     const list = this.vehicleList;
+    let moved = false;
     for (let first = 0; first < list.length; first++) {
       for (let second = first + 1; second < list.length; second++) {
         const a = list[first];
         const b = list[second];
+        const ax = a.tank.x;
+        const ay = a.tank.y;
+        const bx = b.tank.x;
+        const by = b.tank.y;
         const hit = resolveBodyContact(a.tank, a.tank.shape, b.tank, b.tank.shape, this.contact);
+        if (a.tank.x !== ax || a.tank.y !== ay || b.tank.x !== bx || b.tank.y !== by) moved = true;
         if (hit.speed <= this.options.tank.impactEventSpeed) continue;
         a.tank.kickFrom(hit);
         b.tank.kickFrom({ ...hit, normalX: -hit.normalX, normalY: -hit.normalY });
@@ -225,6 +254,7 @@ export class Simulation {
         });
       }
     }
+    return moved;
   }
 
   /**

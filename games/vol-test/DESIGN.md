@@ -109,6 +109,12 @@ fren, viraj, atış ve çarpma gövdeyi kuvvet yönüne göre iter. Deterministi
 titreşimi palet yolundan türer. Paletler yerde kalır; üst parçalar gövdeyle
 hareket eder. Görünüm ara değerle çizilir.
 
+Duvar sert sınırdır: araç teması bir gövdeyi duvara geri itebildiği için
+araç çifti çözümünden sonra duvarlar yeniden çözülür. Döngü sınırlı (4 geçiş)
+ve daima duvar geçişiyle biter; sıkışık kümede araçlar tam ayrılamasa da
+adım sonunda hiçbir gövde köşesi dünya dışında kalmaz. Ölçülen en kötü kalan
+araç örtüşmesi ≈0,05 birimdir (4 tohum, 48 000 araç çifti ve köşe yığını).
+
 ## Nişan ve ateş
 
 Taret gövdeden bağımsız dünya yönünü korur; gövde dönünce veya nişan çubuğu
@@ -121,6 +127,12 @@ Düşey uçuş, yatay hava direnci, rüzgâr, yer teması ve menzil sonu aynı
 balistik çözümle hesaplanır. Yer ve menzil bitişi adımın içindeki kesin
 zamanda çözülür. Nişan önizlemesi aynı uçuş hesabını, araçları ve dünya
 sınırını kullanır; gelecekteki hava olayını tahmin etmez.
+
+İsabet, adımın süpürdüğü doğru parçasının gövdenin yönlü ayak iziyle ilk
+kesişimidir; uç noktaları örnekleyen test dönmüş gövdenin köşesini ve dar
+kirişi kaçırırdı. Aynı adımda birden çok araç kesişirse en erken temas
+kazanır, sahibi dışlanır. Olay, itki ve önizleme adımın bittiği yeri değil
+temas noktasını görür; araç adımın sonundaki pozunda sabit sayılır.
 
 Atış gövde ve namluyu yaylandırır; parlama, kısa gaz jetleri, kıvılcım,
 duman ve toz üretir. Kamera atışta sarsılmaz, küçük yaylı itme yapar.
@@ -170,6 +182,14 @@ uygulanır. Hale yerel yarı saydam geometriyle çizilir.
 
 Gönderilen app/vendor/css bütçeleri kök quality.json sahibindedir;
 ölçü güncel üretim build'iyle bundle kapısından alınır.
+
+Saf simülasyon (`Simulation`, `ScenarioRunner`) CORE'a yalnız `random`,
+`spatial`, `math` ve `physics` alt yüzeyleriyle bağlanır; Node'da DOM ve CSS
+yükleyicisi olmadan seedli koşar. `pnpm --filter @volstudio/vol-test load`
+araç, mermi ve hava yüküyle tek `Simulation.step` süresini başlangıç ve uzun
+oturum pencereleri için ölçer. Yalnız CPU simülasyonudur; çizim ve cihaz
+kare süresini kapsamaz. Ana makine saati bir koşu sırasında ani seviye
+değiştirebildiğinden her pencere sabit bir referans işe oranlanır.
 
 `RuntimeOverrides` yalnız `VOL_DECK_MEASURE=1` oturumunda senaryo, tohum,
 hava, mevsim ve kalite seçimini uygular. Geçersiz değerler reddedilir;
