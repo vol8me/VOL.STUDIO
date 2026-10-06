@@ -1,0 +1,2399 @@
+{
+  "schema": "UiRegistryV1",
+  "surface": "core/src/ui/index.ts",
+  "states": [
+    "normal",
+    "hover",
+    "press",
+    "focusVisible",
+    "disabled",
+    "loading",
+    "error",
+    "empty",
+    "keyboard",
+    "gamepad",
+    "touch",
+    "reducedMotion",
+    "long30",
+    "digits6"
+  ],
+  "archetypes": {
+    "control": {
+      "applicable": [
+        "normal",
+        "hover",
+        "press",
+        "focusVisible",
+        "disabled",
+        "keyboard",
+        "gamepad",
+        "touch",
+        "reducedMotion",
+        "long30"
+      ],
+      "na": {
+        "loading": "türe bağlı: yalnız eşzamansız eylemi olan denetim extraStates ile bildirir",
+        "error": "türe bağlı: yalnız doğrulama/ret durumu olan denetim extraStates ile bildirir",
+        "empty": "türe bağlı: yalnız değer ya da seçenek kümesi boşalabilen denetim extraStates ile bildirir",
+        "digits6": "türe bağlı: yalnız sayı gösteren denetim extraStates ile bildirir"
+      }
+    },
+    "display": {
+      "applicable": ["normal", "reducedMotion", "long30", "digits6"],
+      "na": {
+        "hover": "etkileşimsiz sunum; hedef olmadığı için hover durumu yok",
+        "press": "etkileşimsiz sunum; basılma durumu yok",
+        "focusVisible": "odak almayan sunum; erişilebilir adı/rolü ayrıca sınanır",
+        "disabled": "etkileşimsiz sunum; devre dışı kavramı yok",
+        "loading": "türe bağlı: yalnız yükleme gösteren sunum extraStates ile bildirir (Text/Icon sahte loading almaz)",
+        "error": "türe bağlı: yalnız hata gösteren sunum extraStates ile bildirir",
+        "empty": "türe bağlı: yalnız boş durumu olan sunum extraStates ile bildirir",
+        "keyboard": "etkileşimsiz sunum; klavye eşdeğeri gerekmez",
+        "gamepad": "etkileşimsiz sunum; kol eşdeğeri gerekmez",
+        "touch": "etkileşimsiz sunum; dokunma hedefi yok"
+      }
+    },
+    "container": {
+      "applicable": [
+        "normal",
+        "focusVisible",
+        "keyboard",
+        "gamepad",
+        "touch",
+        "reducedMotion",
+        "long30",
+        "empty"
+      ],
+      "na": {
+        "hover": "kapsayıcı kendi başına hedef değil; hover çocuk denetimlerde sınanır",
+        "press": "kapsayıcı kendi başına basılmaz; çocuk denetimlerde sınanır",
+        "disabled": "türe bağlı: yalnız devre dışı kalabilen kapsayıcı extraStates ile bildirir",
+        "loading": "türe bağlı: yalnız yükleme gösteren kapsayıcı extraStates ile bildirir",
+        "error": "türe bağlı: yalnız hata gösteren kapsayıcı extraStates ile bildirir",
+        "digits6": "türe bağlı: yalnız sayı gösteren kapsayıcı extraStates ile bildirir"
+      }
+    },
+    "overlay": {
+      "applicable": [
+        "normal",
+        "focusVisible",
+        "keyboard",
+        "gamepad",
+        "touch",
+        "reducedMotion",
+        "long30"
+      ],
+      "na": {
+        "hover": "katman kendi başına hover hedefi değil; içindeki denetimlerde sınanır",
+        "press": "katman kendi başına basılmaz; içindeki denetimlerde sınanır",
+        "disabled": "türe bağlı: yalnız devre dışı kalabilen katman extraStates ile bildirir",
+        "loading": "türe bağlı: yalnız yükleme gösteren katman extraStates ile bildirir",
+        "error": "türe bağlı: yalnız hata gösteren katman extraStates ile bildirir",
+        "empty": "türe bağlı: yalnız boş içeriği olan katman extraStates ile bildirir",
+        "digits6": "türe bağlı: yalnız sayı gösteren katman extraStates ile bildirir"
+      }
+    },
+    "collection": {
+      "applicable": [
+        "normal",
+        "hover",
+        "press",
+        "focusVisible",
+        "disabled",
+        "keyboard",
+        "gamepad",
+        "touch",
+        "reducedMotion",
+        "long30",
+        "digits6",
+        "empty"
+      ],
+      "na": {
+        "loading": "türe bağlı: yalnız yükleme gösteren koleksiyon extraStates ile bildirir",
+        "error": "türe bağlı: yalnız hata gösteren koleksiyon extraStates ile bildirir"
+      }
+    },
+    "touch": {
+      "applicable": ["normal", "press", "disabled", "touch", "reducedMotion"],
+      "na": {
+        "hover": "dokunma yüzeyi; hover yok (pointer coarse)",
+        "focusVisible": "dokunma jesti; odak halkası yok, klavye/kol eşdeğeri ayrı denetimdedir",
+        "loading": "dokunma yüzeyinde yükleme durumu yok",
+        "error": "dokunma yüzeyinde hata durumu yok",
+        "empty": "dokunma yüzeyinde boş durum yok",
+        "keyboard": "dokunma jesti; klavye eşdeğeri tüketici denetimlerindedir (UI-10.1)",
+        "gamepad": "dokunma jesti; kol eşdeğeri tüketici denetimlerindedir (UI-10.1)",
+        "long30": "etiketsiz yüzey; uzatma uygulanmaz",
+        "digits6": "sayı göstermez"
+      }
+    },
+    "mechanism": {
+      "applicable": ["normal"],
+      "na": {
+        "hover": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "press": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "focusVisible": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "disabled": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "loading": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "error": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "empty": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "keyboard": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "gamepad": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "touch": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "reducedMotion": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "long30": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "digits6": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır"
+      }
+    },
+    "helper": {
+      "applicable": ["normal"],
+      "na": {
+        "hover": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "press": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "focusVisible": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "disabled": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "loading": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "error": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "empty": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "keyboard": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "gamepad": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "touch": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "reducedMotion": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "long30": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır",
+        "digits6": "görsel olmayan mekanizma ya da yardımcı; davranış ve yaşam döngüsü testiyle sınanır"
+      }
+    }
+  },
+  "entries": [
+    {
+      "export": "Accordion",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedDataCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layout/layoutStructures.test.ts",
+          "title": "singleOpen:true (varsayılan) iken bir bölüm açılınca diğerleri kapanır"
+        }
+      ],
+      "extraStates": ["disabled"]
+    },
+    {
+      "export": "ActionBar",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "string/Node/fallback ikonları, aktif durum ve boyut değişkenini çizer"
+        },
+        {
+          "file": "core/tests/ui/layoutAndControls.test.ts",
+          "title": "slotları oluşturur ve tıklama onActivate çağırır"
+        }
+      ]
+    },
+    {
+      "export": "AnimatedLabel",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/textTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/dataAndText.test.ts",
+          "title": "varsayılan effect=fade ile oluşturulur"
+        }
+      ]
+    },
+    {
+      "export": "Bar",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "direct",
+      "showcase": ["sections/hudFeedbackCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "Bar aria-label (label yoksa) dil degisiminde guncellenir"
+        },
+        {
+          "file": "core/tests/ui/feedback/feedback.test.ts",
+          "title": "dikey yönelimde dolgu YÜKSEKLİKTEN büyür ve eksen erişilebilirlik ağacına yazılır"
+        }
+      ],
+      "extraStates": ["loading", "error", "empty"]
+    },
+    {
+      "export": "BuildMenu",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": ["sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/hudPanels.test.ts",
+          "title": "bir öğeye tıklamak seçer ve onSelect çağırır"
+        }
+      ]
+    },
+    {
+      "export": "Button",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-03",
+      "anchor": "A3",
+      "archetype": "control",
+      "consumer": "direct",
+      "showcase": [
+        "sections/advancedDataCards.ts",
+        "sections/advancedFlowCards.ts",
+        "sections/buttonsTab.ts",
+        "sections/cardsTab.ts",
+        "sections/formsTab.ts",
+        "sections/hudFeedbackCards.ts",
+        "sections/hudPanelCards.ts",
+        "sections/loadingTab.ts",
+        "sections/panelsTab.ts",
+        "sections/textTab.ts",
+        "sections/touchGamepadDemo.ts",
+        "sections/touchTab.ts",
+        "sections/workbenchTab.ts"
+      ],
+      "tests": [
+        {
+          "file": "core/tests/ui/interactionContract.test.ts",
+          "title": "Button thenable döndüren handler’ı bekler"
+        },
+        {
+          "file": "core/tests/ui/primitives/primitives.test.ts",
+          "title": "oluşturma ve yok etme"
+        }
+      ],
+      "extraStates": ["loading", "error"]
+    },
+    {
+      "export": "CanvasViewportController",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": ["sections/workbenchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchRegressions.test.ts",
+          "title": "ekran ve belge dönüşümü kenarlık kalınlığını hesaba katar"
+        },
+        {
+          "file": "core/tests/ui/camera/canvasViewportController.test.ts",
+          "title": "screen/document dönüşümleri birbirinin tersidir ve setter zoomu sınırlar"
+        }
+      ]
+    },
+    {
+      "export": "CardPicker",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-04",
+      "anchor": "A2",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": "LevelUpPicker",
+        "reason": "soyut taban sınıf; vitrinde türevleri LevelUpPicker ve ShopPicker çizer"
+      },
+      "tests": [],
+      "gap": {
+        "task": "UI-04.2",
+        "reason": "soyut taban sınıf yalnız LevelUpPicker/ShopPicker türevleri üzerinden sınanıyor; doğrudan test yok"
+      },
+      "extraStates": ["loading", "error"]
+    },
+    {
+      "export": "CardTile",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-04",
+      "anchor": "A2",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": ["sections/cardsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "rozet ve fiyatı yoktan ekler, günceller ve yeniden kaldırır"
+        },
+        {
+          "file": "core/tests/ui/cards/cardTile.test.ts",
+          "title": "başlık, açıklama, nadirlik ve tip rozetini yazar"
+        }
+      ]
+    },
+    {
+      "export": "Carousel",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/scrollTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "dot/ok kontrolleri ve dil güncellemesi erişilebilir etiketleri korur"
+        },
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "Carousel arrow aria-label'leri dil degisiminde guncellenir"
+        }
+      ]
+    },
+    {
+      "export": "ChargeButton",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-03",
+      "anchor": "A3",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/touchControls.test.ts",
+          "title": "tam dolum tamamlanınca onCharged bir kez tetiklenir, sonra bırakınca onRelease(1) çağrılır"
+        }
+      ]
+    },
+    {
+      "export": "Checkbox",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "direct",
+      "showcase": [
+        "sections/advancedFlowCards.ts",
+        "sections/formsTab.ts",
+        "sections/workbenchTab.ts"
+      ],
+      "tests": [
+        {
+          "file": "core/tests/ui/primitives/inputControls.test.ts",
+          "title": "Checkbox.setChecked sessizdir"
+        },
+        {
+          "file": "core/tests/ui/primitives/semanticHaptics.test.ts",
+          "title": "Checkbox, Select ve SegmentedControl yalnız değer commitinde select üretir"
+        }
+      ]
+    },
+    {
+      "export": "ColorPicker",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/primitives/colorPicker.test.ts",
+          "title": "değeri #rrggbb ve KÜÇÜK HARF olarak normalize eder"
+        },
+        {
+          "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+          "title": "Select ve ColorPicker programatik setterda sessiz, kullanıcıda input+commit üretir"
+        }
+      ],
+      "extraStates": ["error"]
+    },
+    {
+      "export": "CommandPalette",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedFlowCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/overlaysExtra.test.ts",
+          "title": "open() input'u temizler, odaklanır ve inert kaldırır"
+        }
+      ],
+      "extraStates": ["empty", "error"]
+    },
+    {
+      "export": "ContextMenu",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/overlays.test.ts",
+          "title": "oluştur ve yok et"
+        }
+      ],
+      "extraStates": ["disabled"]
+    },
+    {
+      "export": "Counter",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/hudFeedbackCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/feedback.test.ts",
+          "title": "oluşturma ve yok etme"
+        }
+      ],
+      "extraStates": ["empty"]
+    },
+    {
+      "export": "CurveEditor",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/primitives/curveEditor.test.ts",
+          "title": "varsayılan kimlik eğrisidir"
+        }
+      ]
+    },
+    {
+      "export": "DPad",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "touch",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "DPad direction button label'lari dil degisiminde guncellenir"
+        },
+        {
+          "file": "core/tests/ui/touchControls.test.ts",
+          "title": "her yön bağımsız çalışır, çoklu dokunma (aynı anda iki yön) desteklenir"
+        }
+      ]
+    },
+    {
+      "export": "DataTable",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedDataCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "boş/custom metin, sütun stilleri, string ve Node render yollarını uygular"
+        },
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "DataTable emptyText i18n default ise dil degisiminde guncellenir"
+        }
+      ],
+      "extraStates": ["loading", "error", "digits6"]
+    },
+    {
+      "export": "DialogueBox",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedFlowCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/overlaysExtra.test.ts",
+          "title": "show() ilk satırı sırayla karakter-karakter yazar"
+        }
+      ]
+    },
+    {
+      "export": "DirectionButton",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "touch",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/touchControls.test.ts",
+          "title": "press/release döngüsünde doğru sırayla tetiklenir"
+        }
+      ]
+    },
+    {
+      "export": "DualAxisScrollPanel",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/touchControls.test.ts",
+          "title": "sürükleme scrollLeft/scrollTop'ı ters yönde günceller (pan davranışı)"
+        }
+      ]
+    },
+    {
+      "export": "EventLog",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedDataCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/dataAndText.test.ts",
+          "title": "push yeni bir satır ekler, en yeni satır DOM sırasında en sonda olur"
+        },
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "EventLog filter button label'lari dil degisiminde guncellenir"
+        }
+      ],
+      "extraStates": ["empty"]
+    },
+    {
+      "export": "FloatingTextManager",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/hudFeedbackCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
+          "title": "spawn bir metin elementi oluşturur, durationMs + fade süresi sonunda kaldırır"
+        }
+      ]
+    },
+    {
+      "export": "FocusNavController",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": "A5",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": ["ShowcaseApp.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cardPickerIntent.test.ts",
+          "title": "koldan bilinçli A niyeti aynı senkron click için izin verir"
+        },
+        {
+          "file": "core/tests/ui/gamepadPointer.test.ts",
+          "title": "pointer sahibi A focus activation yolunu tüketir ve çift click üretmez"
+        }
+      ]
+    },
+    {
+      "export": "FpsMeter",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "direct",
+      "showcase": ["sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/fpsMeter.test.ts",
+          "title": "varsayılan köşe sağ üsttür ve konum data attribute ile gelir"
+        }
+      ]
+    },
+    {
+      "export": "GamepadPointerController",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": "A5",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": ["sections/touchGamepadDemo.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/gamepadPointer.test.ts",
+          "title": "mount öncesi sıfır ölçülü kök ilk hareketi canlı kök merkezinden başlatır"
+        }
+      ]
+    },
+    {
+      "export": "Glyph",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-12",
+      "anchor": "A5",
+      "archetype": "display",
+      "consumer": "indirect",
+      "via": "createGlyph",
+      "showcase": [],
+      "shownVia": {
+        "via": "createGlyph",
+        "reason": "glif sunum denetleyicisi üzerinden üretilir"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/glyphs/glyphs.test.ts",
+          "title": "aile/slot için img src kurar"
+        }
+      ]
+    },
+    {
+      "export": "HoldButton",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-03",
+      "anchor": "A3",
+      "archetype": "control",
+      "consumer": "direct",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/interactionContract.test.ts",
+          "title": "Space basılı tutmak onPress, bırakmak onRelease üretir"
+        },
+        {
+          "file": "core/tests/ui/memory.test.ts",
+          "title": "HoldButton pointer capture serbest bırakılır ve listenerlar SİMETRİK temizlenir"
+        }
+      ]
+    },
+    {
+      "export": "Icon",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "display",
+      "consumer": "direct",
+      "showcase": ["sections/buttonsTab.ts", "sections/workbenchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "güvenli SVG registry üretir ve dekoratif/etiketli kipleri ayırır"
+        }
+      ]
+    },
+    {
+      "export": "IconButton",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-03",
+      "anchor": "A3",
+      "archetype": "control",
+      "consumer": "direct",
+      "showcase": ["sections/buttonsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/interactionContract.test.ts",
+          "title": "IconButton da asenkron handler bekler ve aria-busy yazar"
+        },
+        {
+          "file": "core/tests/ui/primitives/primitives.test.ts",
+          "title": "oluşturma ve yok etme"
+        }
+      ],
+      "extraStates": ["loading"]
+    },
+    {
+      "export": "Input",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "direct",
+      "showcase": [
+        "sections/formsTab.ts",
+        "sections/touchGamepadDemo.ts",
+        "sections/workbenchTab.ts"
+      ],
+      "tests": [
+        {
+          "file": "core/tests/ui/primitives/inputControls.test.ts",
+          "title": "Input.setValue sessizdir"
+        },
+        {
+          "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+          "title": "Input canlı input ve tek commit üretir; setter sessiz baseline kurar"
+        }
+      ],
+      "extraStates": ["error", "empty", "digits6"]
+    },
+    {
+      "export": "InputPresentationController",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-12",
+      "anchor": "A5",
+      "archetype": "mechanism",
+      "consumer": "direct",
+      "showcase": ["sections/touchGamepadDemo.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/glyphs/inputPresentation.test.ts",
+          "title": "paylaşılan girdi durumunda kolu yeniden yoklamaz ve kendi kip hakemini açmaz"
+        }
+      ]
+    },
+    {
+      "export": "Joystick",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "touch",
+      "consumer": "direct",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layoutAndControls.test.ts",
+          "title": "oluşturulur ve yok edilir"
+        }
+      ]
+    },
+    {
+      "export": "Kanban",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedDataCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/data/kanban.test.ts",
+          "title": "zengin kart metadata, WIP meta ve arama filtresini birlikte çizer"
+        }
+      ],
+      "extraStates": ["loading", "error"]
+    },
+    {
+      "export": "KeyBindingList",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/data/keyBindingList.test.ts",
+          "title": "her eylemi etiketi ve okunur bağıyla çizer"
+        }
+      ]
+    },
+    {
+      "export": "KeyedVirtualList",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/workbenchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "key aynıysa DOM ve odak korunur, içerik update callbackiyle yenilenir"
+        },
+        {
+          "file": "core/tests/ui/workbenchRegressions.test.ts",
+          "title": "kaydırmada düşen satır için destroyItem çağrılır"
+        }
+      ]
+    },
+    {
+      "export": "LevelUpPicker",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-04",
+      "anchor": "A2",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": ["sections/cardsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cardPickerIntent.test.ts",
+          "title": "UI→UI sunumda aynı %s jesti yeni kartı seçmez"
+        },
+        {
+          "file": "core/tests/ui/gamepadPointer.test.ts",
+          "title": "kart hide animasyonu sırasında daha önce basılan A seçimi tamamlayamaz"
+        }
+      ],
+      "extraStates": ["loading"]
+    },
+    {
+      "export": "LoadingScreen",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/loadingTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/loadingScreen.test.ts",
+          "title": "varsayılan class ve transition tipini uygular"
+        }
+      ],
+      "extraStates": ["loading", "error"]
+    },
+    {
+      "export": "LongPressButton",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-03",
+      "anchor": "A3",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/newTouchGestures.test.ts",
+          "title": "eşik dolmadan bırakılırsa onTap tetiklenir, onLongPress tetiklenmez"
+        }
+      ]
+    },
+    {
+      "export": "MinimapPanel",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "direct",
+      "showcase": ["sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/hudPanels.test.ts",
+          "title": "canvas tıklaması dünya koordinatını hesaplayıp onClick çağırır"
+        }
+      ]
+    },
+    {
+      "export": "Modal",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "direct",
+      "showcase": ["sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cardPickerIntent.test.ts",
+          "title": "üst Modal odağı ve geri alır, kapanınca kart modalına geri döner"
+        },
+        {
+          "file": "core/tests/ui/lifecycleFixes.test.ts",
+          "title": "açık modal destroy edilince kilit kalkar"
+        }
+      ],
+      "extraStates": ["disabled"]
+    },
+    {
+      "export": "MultiTouchZone",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "touch",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/interactionContract.test.ts",
+          "title": "MultiTouchZone: aktif parmaklarla destroy her parmak için onTouchEnd üretir"
+        },
+        {
+          "file": "core/tests/ui/newTouchGestures.test.ts",
+          "title": "birden fazla parmak bağımsız olarak takip edilir, her biri kendi pointerId'siyle raporlanır"
+        }
+      ]
+    },
+    {
+      "export": "NumberStepper",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "NumberStepper aria-label'leri dil degisiminde guncellenir"
+        },
+        {
+          "file": "core/tests/ui/primitives/inputControls.test.ts",
+          "title": "NumberStepper.setValue sessizdir"
+        }
+      ],
+      "extraStates": ["error", "digits6"]
+    },
+    {
+      "export": "OnScreenKeyboard",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-11",
+      "anchor": "A5",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/textEntry.test.ts",
+          "title": "parola ekranda maskelenir, değer olduğu gibi döner; alan sınırı aşılmaz"
+        }
+      ]
+    },
+    {
+      "export": "Panel",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layoutAndControls.test.ts",
+          "title": "oluşturulur, gösterilir, gizlenir ve yok edilir"
+        }
+      ],
+      "extraStates": ["disabled"]
+    },
+    {
+      "export": "PauseResumeButton",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "PauseResumeButton aria-label dil degisiminde guncellenir"
+        },
+        {
+          "file": "core/tests/ui/touchControls.test.ts",
+          "title": "varsayılan olarak çalışır durumda başlar, tıklayınca duraklatılmış duruma geçer"
+        }
+      ],
+      "extraStates": ["loading"]
+    },
+    {
+      "export": "PinchZoomController",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layoutAndControls.test.ts",
+          "title": "oluşturulur ve içeriği sarar"
+        }
+      ]
+    },
+    {
+      "export": "Popover",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "popover aria durumunu, odağı ve dışarı tıklamayla kapanmayı yönetir"
+        },
+        {
+          "file": "core/tests/ui/workbenchRegressions.test.ts",
+          "title": "dışarıdaki alana tıklayınca odak orada kalır"
+        }
+      ]
+    },
+    {
+      "export": "Popup",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/overlays.test.ts",
+          "title": "oluştur ve yok et"
+        },
+        {
+          "file": "core/tests/ui/overlays/popupBackNavigation.test.ts",
+          "title": "açık Popup geri hareketini tüketir, alttaki işleyiciye sızdırmaz"
+        }
+      ]
+    },
+    {
+      "export": "PropertyField",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts", "sections/workbenchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "label ilişkisi, açıklama, disabled nedeni ve reset yaşam döngüsünü kurar"
+        }
+      ]
+    },
+    {
+      "export": "PullToRefresh",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "touch",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/touchControls.test.ts",
+          "title": "içerik en üstteyken aşağı çekip eşiği aşınca onRefresh tetiklenir"
+        }
+      ]
+    },
+    {
+      "export": "RadialMenu",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/touchControls.test.ts",
+          "title": "basılı-tut + sürükle + bırak akışında en yakın item seçilir"
+        }
+      ]
+    },
+    {
+      "export": "RadioGroup",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedFlowCards.ts", "sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/primitives/inputControls.test.ts",
+          "title": "RadioGroup.setValue sessizdir"
+        },
+        {
+          "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+          "title": "ayrık kontroller kullanıcı değişiminde input/commit callbacklerini birer kez üretir"
+        }
+      ],
+      "extraStates": ["error", "empty"]
+    },
+    {
+      "export": "RangeSlider",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "başlangıcı normalize eder, geçersiz step/değerleri ve sessiz setValue davranışını sınırlar"
+        },
+        {
+          "file": "core/tests/ui/primitives/inputControls.test.ts",
+          "title": "RangeSlider.setValue sessizdir ve step=0 çökmez"
+        }
+      ],
+      "extraStates": ["digits6"]
+    },
+    {
+      "export": "ResourceBar",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/hudFeedbackCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "ResourceBar aria-label dil degisiminde guncellenir"
+        },
+        {
+          "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
+          "title": "birden fazla kaynağı key ile bağımsız günceller"
+        }
+      ],
+      "extraStates": ["empty"]
+    },
+    {
+      "export": "ResourceCounter",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/hudFeedbackCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
+          "title": "ikon dekoratif (aria-hidden), label erişilebilirlik için element'e uygulanır"
+        }
+      ],
+      "extraStates": ["empty"]
+    },
+    {
+      "export": "RichTooltip",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedFlowCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/overlaysExtra.test.ts",
+          "title": "mouseenter sonrası delayMs geçince görünür olur, içerik render edilir"
+        }
+      ]
+    },
+    {
+      "export": "RoundCounter",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "RoundCounter tur metni dil degisiminde guncellenir"
+        },
+        {
+          "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
+          "title": "setRound/getRound totalRounds ile birlikte doğru metni üretir"
+        }
+      ]
+    },
+    {
+      "export": "ScrollView",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/scrollTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layoutAndControls.test.ts",
+          "title": "oluşturulur, yön sınıfını taşır, çocuk eklenir ve temizlenir"
+        }
+      ]
+    },
+    {
+      "export": "SegmentedControl",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "direct",
+      "showcase": ["sections/formsTab.ts", "sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/primitives/inputControls.test.ts",
+          "title": "SegmentedControl.setValue sessizdir"
+        },
+        {
+          "file": "core/tests/ui/primitives/segmentedControl.test.ts",
+          "title": "setOptions etiketleri yeniler, seçimi korur ve geri çağrı üretmez"
+        }
+      ]
+    },
+    {
+      "export": "Select",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "direct",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/languageChange.test.ts",
+          "title": "Select placeholder i18n default ise dil degisiminde guncellenir"
+        },
+        {
+          "file": "core/tests/ui/overlays/sheet.test.ts",
+          "title": "iç Select Escape ile önce kendi listesini kapatır, Sheet açık kalır"
+        }
+      ],
+      "extraStates": ["error", "empty"]
+    },
+    {
+      "export": "SelectionInfoPanel",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/hudPanels.test.ts",
+          "title": "başlangıçta boş durumdadır"
+        }
+      ]
+    },
+    {
+      "export": "SettingsForm",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layout/settingsForm.test.ts",
+          "title": "etiketli kontrolleri ortak satır ve kontrol yuvasında toplar"
+        }
+      ]
+    },
+    {
+      "export": "SettingsRow",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layout/settingsForm.test.ts",
+          "title": "etiketli kontrolleri ortak satır ve kontrol yuvasında toplar"
+        }
+      ]
+    },
+    {
+      "export": "Sheet",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/sheet.test.ts",
+          "title": "başlık, görünür kapatma düğmesi ve klavyeyle kaydırılabilir gövde kurar"
+        }
+      ]
+    },
+    {
+      "export": "ShopPicker",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-04",
+      "anchor": "A2",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": ["sections/cardsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cardPickerIntent.test.ts",
+          "title": "modal shop geri yoluyla kendi kapanma akışını çalıştırır"
+        },
+        {
+          "file": "core/tests/ui/cards/shopPicker.test.ts",
+          "title": "teklifleri fiyatlarıyla ve bakiyeyle gösterir"
+        }
+      ],
+      "extraStates": ["loading", "error"]
+    },
+    {
+      "export": "SkillTree",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedFlowCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/hudPanels.test.ts",
+          "title": "durum haritasına göre --unlocked / --available / --locked class alır"
+        }
+      ]
+    },
+    {
+      "export": "Slider",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "direct",
+      "showcase": ["sections/formsTab.ts", "sections/workbenchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/primitives/inputControls.test.ts",
+          "title": "Slider.setValue değeri sınırlandırır ve callback TETİKLEMEZ"
+        },
+        {
+          "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+          "title": "Slider input sırasında canlı, change sırasında tek commit üretir"
+        }
+      ],
+      "extraStates": ["digits6"]
+    },
+    {
+      "export": "SlotGrid",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/slotGrid.test.ts",
+          "title": "doğru sayıda hücre ile grid oluşturur"
+        }
+      ]
+    },
+    {
+      "export": "SplitPane",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/workbenchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "vertical drag, keyboard, collapse ve callback yollarını uygular"
+        },
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "pointer/klavye resize, clamp, collapse ve sessiz programatik setter sağlar"
+        }
+      ]
+    },
+    {
+      "export": "SquareJoystick",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "touch",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/newTouchGestures.test.ts",
+          "title": "sürükleme her eksende AYRI AYRI kare sınıra (halfSize) kenetlenir — dairesel clamp uygulanmaz"
+        }
+      ]
+    },
+    {
+      "export": "StatsPanel",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/hudPanels.test.ts",
+          "title": "başlangıçta kapalıdır ve grupları render eder"
+        }
+      ]
+    },
+    {
+      "export": "SwipeGestureZone",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "touch",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/interactionContract.test.ts",
+          "title": "SwipeGestureZone: sürükleme ortasında destroy sonrası eski pointer olayları jest üretmez"
+        },
+        {
+          "file": "core/tests/ui/newTouchGestures.test.ts",
+          "title": "eşik mesafeyi aşan yatay sürükleme doğru yönü ve mesafeyi raporlar"
+        }
+      ]
+    },
+    {
+      "export": "SwipeableCardStack",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-04",
+      "anchor": "A2",
+      "archetype": "collection",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "boş deste ve action button durumunu bildirir"
+        },
+        {
+          "file": "core/tests/ui/touchControls.test.ts",
+          "title": "eşiği aşan sürükleme onSwipe tetikler ve bir sonraki karta geçer"
+        }
+      ]
+    },
+    {
+      "export": "Tabs",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["ShowcaseApp.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "boş tanımı reddeder; dikey başlık, seçim ve cleanup sözleşmesini uygular"
+        },
+        {
+          "file": "core/tests/ui/memory.test.ts",
+          "title": "Tabs.destroy tab içeriklerinin destroy metodunu çağırır"
+        }
+      ],
+      "extraStates": ["disabled"]
+    },
+    {
+      "export": "Text",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "display",
+      "consumer": "direct",
+      "showcase": [
+        "sections/advancedDataCards.ts",
+        "sections/advancedFlowCards.ts",
+        "sections/cardsTab.ts",
+        "sections/formsTab.ts",
+        "sections/hudFeedbackCards.ts",
+        "sections/hudPanelCards.ts",
+        "sections/loadingTab.ts",
+        "sections/paletteTab.ts",
+        "sections/panelsTab.ts",
+        "sections/scrollTab.ts",
+        "sections/shared.ts",
+        "sections/textTab.ts",
+        "sections/touchGamepadDemo.ts",
+        "sections/touchTab.ts",
+        "sections/workbenchTab.ts"
+      ],
+      "tests": [
+        {
+          "file": "core/tests/ui/dataAndText.test.ts",
+          "title": "varsayılan tag=p, variant=body ile oluşturulur"
+        }
+      ]
+    },
+    {
+      "export": "TextArea",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/memory.test.ts",
+          "title": "TextArea destroy edildiğinde ResizeObserver disconnect olur"
+        },
+        {
+          "file": "core/tests/ui/primitives/inputControls.test.ts",
+          "title": "TextArea.setValue sessizdir"
+        }
+      ],
+      "extraStates": ["error", "empty"]
+    },
+    {
+      "export": "TimerBar",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/feedback.test.ts",
+          "title": "oluşturma ve yok etme"
+        }
+      ],
+      "extraStates": ["empty"]
+    },
+    {
+      "export": "ToastManager",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/overlays.test.ts",
+          "title": "oluştur ve yok et"
+        }
+      ],
+      "extraStates": ["error"]
+    },
+    {
+      "export": "ToolButton",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-03",
+      "anchor": "A3",
+      "archetype": "control",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": "Toolbar",
+        "reason": "araç çubuğunun öğesi; çubukla birlikte çizilir"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "standalone toggle pressed durumunu callbackten önce günceller"
+        }
+      ],
+      "extraStates": ["loading"]
+    },
+    {
+      "export": "Toolbar",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-03",
+      "anchor": "A3",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "tek seçim, roving tabindex ve yatay klavye gezinmesini yönetir"
+        },
+        {
+          "file": "core/tests/ui/workbenchRegressions.test.ts",
+          "title": "seçimli toolbarda toggle:false düğmeye basmak aktif aracı düşürmez"
+        }
+      ]
+    },
+    {
+      "export": "Tooltip",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": "A4",
+      "archetype": "overlay",
+      "consumer": "catalog",
+      "showcase": ["sections/buttonsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/overlays.test.ts",
+          "title": "oluştur ve yok et"
+        }
+      ]
+    },
+    {
+      "export": "Tree",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedDataCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/edgeContracts.test.ts",
+          "title": "ikon çeşitleri, expanded başlangıcı ve programatik tekli seçim güvenlidir"
+        },
+        {
+          "file": "core/tests/ui/layout/layoutStructures.test.ts",
+          "title": "bir yaprak düğüme (children olmayan) tıklamak seçer ve onSelect çağırır"
+        }
+      ]
+    },
+    {
+      "export": "UIRoot",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "mechanism",
+      "consumer": "direct",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan bağlama katmanı; vitrin kendi kökünü kurar"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/lifecycleFixes.test.ts",
+          "title": "ikinci UIRoot aynı elementi kullanır"
+        },
+        {
+          "file": "core/tests/ui/layout/layoutStructures.test.ts",
+          "title": "parent altında .vol-ui-root elementi oluşturur"
+        }
+      ]
+    },
+    {
+      "export": "VirtualList",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/scrollTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layout/layoutStructures.test.ts",
+          "title": "yalnızca görünür + overscan aralığındaki satırları render eder"
+        }
+      ]
+    },
+    {
+      "export": "Wizard",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "container",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedFlowCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/lifecycleFixes.test.ts",
+          "title": "constructor onStepChange tetiklemez"
+        },
+        {
+          "file": "core/tests/ui/layout/layoutStructures.test.ts",
+          "title": "İleri butonuna tıklamak sonraki adıma geçer, onStepChange çağırır"
+        }
+      ]
+    },
+    {
+      "export": "WorldCameraController",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-10",
+      "anchor": "A5",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": ["sections/touchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/camera/worldCameraController.test.ts",
+          "title": "açılışta dünyayı boşluk bırakmadan görüntü alanına kaplar ve ortalar"
+        }
+      ]
+    },
+    {
+      "export": "XPBar",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "catalog",
+      "showcase": ["sections/hudFeedbackCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
+          "title": "setState barı dışarıdaki duruma eşitler"
+        }
+      ],
+      "extraStates": ["empty"]
+    },
+    {
+      "export": "CARD_DRAG_MIME",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-04",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/cards/cardTile.test.ts",
+          "title": "dragData verilince kart sürüklenebilir olur ve kimliği taşır"
+        }
+      ]
+    },
+    {
+      "export": "Easing",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [],
+      "gap": {
+        "task": "UI-01.3",
+        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
+      }
+    },
+    {
+      "export": "FOCUSABLE_SELECTOR",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [],
+      "gap": {
+        "task": "UI-05.5",
+        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
+      }
+    },
+    {
+      "export": "FOCUS_NAV_CLASS",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/focus/focusNav.test.ts",
+          "title": "ilk yön basımı ilk odaklanabilir elemana odaklanır"
+        }
+      ]
+    },
+    {
+      "export": "HIDE_ANIMATION_MS",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-04",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/cardsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/cards/cardTile.test.ts",
+          "title": "hide() sonrası isVisible() HEMEN false olur, element.hidden ise HIDE_ANIMATION_MS sonra"
+        }
+      ]
+    },
+    {
+      "export": "LEAVE_ANIMATION_MS",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-04",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/cards/shopPicker.test.ts",
+          "title": "İLK KEZ satın alınan teklif kısa bir \"başarı\" vurgusu classı alır"
+        },
+        {
+          "file": "core/tests/ui/cssConstantSync.test.ts",
+          "title": "LEAVE_ANIMATION_MS, .vol-card--leaving animasyonundan kısa değil"
+        }
+      ]
+    },
+    {
+      "export": "VOL_COLORS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "direct",
+      "showcase": ["sections/hudPanelCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/colorSync.test.ts",
+          "title": "colors.ts'teki her token theme.css'te --vol-ui-* olarak var"
+        }
+      ]
+    },
+    {
+      "export": "VOL_ICONS",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/workbenchTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/workbenchPrimitives.test.ts",
+          "title": "güvenli SVG registry üretir ve dekoratif/etiketli kipleri ayırır"
+        }
+      ]
+    },
+    {
+      "export": "animateValue",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/animation.test.ts",
+          "title": "K3: onUpdate içinden iptal edilirse animasyon durur"
+        }
+      ]
+    },
+    {
+      "export": "applyXPGain",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/hudFeedbackCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
+          "title": "ilerleme kuralı applyXPGain tarifinde, bar yalnızca çizer"
+        }
+      ]
+    },
+    {
+      "export": "clearTextEntryModeProbe",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/touchGamepadDemo.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/textEntry.test.ts",
+          "title": "probu yoksa ya da kip kapalıysa klavye açmaz"
+        }
+      ]
+    },
+    {
+      "export": "glyphFile",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/glyphs/glyphs.test.ts",
+          "title": "eşleme tablosundaki her dosya diskte var"
+        }
+      ]
+    },
+    {
+      "export": "glyphNameForButton",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/glyphs/glyphs.test.ts",
+          "title": "standart düğme dizinlerini slota çevirir"
+        }
+      ]
+    },
+    {
+      "export": "glyphUrl",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/glyphs/glyphs.test.ts",
+          "title": "aile ve dosya ile yol üretir"
+        }
+      ]
+    },
+    {
+      "export": "isGamepadTextEntryActive",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/textEntry.test.ts",
+          "title": "sahne kapanınca önceki kip sahibi geri gelir; eski sahibin sökülmesi yeniyi silmez"
+        }
+      ]
+    },
+    {
+      "export": "keyboardKeyFile",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/glyphs/glyphs.test.ts",
+          "title": "harf, rakam ve adlı tuşları çözer"
+        }
+      ]
+    },
+    {
+      "export": "listFocusable",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/cardPickerIntent.test.ts",
+          "title": "modal adayları yalnız paneldeki butonlardır"
+        },
+        {
+          "file": "core/tests/ui/focus/focusNav.test.ts",
+          "title": "inert alt ağaçtaki elemanlar aday olmaz"
+        }
+      ]
+    },
+    {
+      "export": "pickDirectionalTarget",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/focus/focusNav.test.ts",
+          "title": "yönün ilerisindeki en yakın aday kazanır"
+        }
+      ]
+    },
+    {
+      "export": "registerTextEntryModeProbe",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/session.test.ts",
+          "title": "%s eski cevabı ve bildirimleri iptal eder"
+        },
+        {
+          "file": "core/tests/ui/textEntry/textEntry.test.ts",
+          "title": "sahne kapanınca önceki kip sahibi geri gelir; eski sahibin sökülmesi yeniyi silmez"
+        }
+      ]
+    },
+    {
+      "export": "requestGamepadTextEntry",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [],
+      "gap": {
+        "task": "UI-11.1",
+        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
+      }
+    },
+    {
+      "export": "requestTextEntryForElement",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/textEntry.test.ts",
+          "title": "probu yoksa ya da kip kapalıysa klavye açmaz"
+        }
+      ]
+    },
+    {
+      "export": "resolveGlyphFamily",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/glyphs/glyphs.test.ts",
+          "title": "pc-benzeri kimlikler keyboard, touch ve tanınmayanlar null verir"
+        }
+      ]
+    },
+    {
+      "export": "resolveSkillStates",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/advancedFlowCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/hudPanels.test.ts",
+          "title": "durum haritasına göre --unlocked / --available / --locked class alır"
+        }
+      ]
+    },
+    {
+      "export": "runButtonClick",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-02",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [],
+      "gap": {
+        "task": "UI-02.1",
+        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
+      }
+    },
+    {
+      "export": "setTextEntryModeProbe",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/touchGamepadDemo.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/session.test.ts",
+          "title": "başka düğmeye gerçek odak geçişi eski cevabı ve odak çalmayı iptal eder"
+        },
+        {
+          "file": "core/tests/ui/textEntry/textEntry.test.ts",
+          "title": "probu yoksa ya da kip kapalıysa klavye açmaz"
+        }
+      ]
+    },
+    {
+      "export": "setTextEntryProvider",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "direct",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/session.test.ts",
+          "title": "başka düğmeye gerçek odak geçişi eski cevabı ve odak çalmayı iptal eder"
+        },
+        {
+          "file": "core/tests/ui/textEntry/textEntry.test.ts",
+          "title": "alanın maxLength değeri isteğe taşınır"
+        }
+      ]
+    },
+    {
+      "export": "showConfirm",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["ShowcaseApp.ts", "sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/overlaysExtra.test.ts",
+          "title": "confirm butonuna tıklanınca Promise true ile çözülür"
+        }
+      ]
+    },
+    {
+      "export": "showFatalStartupError",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "direct",
+      "showcase": ["sections/panelsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/fatalStartupError.test.ts",
+          "title": "başlık ve hata ayrıntısını erişilebilir yüzeye yazar"
+        }
+      ]
+    },
+    {
+      "export": "suppressNativeMenus",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "direct",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/nativeMenus.test.ts",
+          "title": "bağlam menüsünü metin alanı dahil her yerde engeller"
+        }
+      ]
+    }
+  ]
+}

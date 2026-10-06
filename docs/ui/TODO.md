@@ -176,7 +176,7 @@ erişilebilirlik/görsel/haptik değerlendirmesi (UI-03.4 beğeni, UI-13.4). Bu 
 
 1. **Ortam (D6/R4).** Gate shell'inde Node 22.23.1; WSL'de Playwright Chromium kurulumu ve vitrin temelinin Linux'ta yeniden üretilmesi. Kabul: `doctor:env` OK; Linux temeli ya bayt eşit üretilir ya da NOT-RUN gerekçesi kayıtlıdır.
 2. **UI-06.1 atomik göç (tamam).** Dizin, paket adı, lifecycle, quality (paket+bütçe), kilit importer'ı, `justfile`, katalog sabit yolu, testler, belgeler ve PNG'ler aynı değişiklikte; `.gitignore`'a vitrin records alanı. Kabul: eski vitrin yolu ve paket adı başvurusu sıfır, PNG'ler yalnız taşındı (özet eşit), build/bundle 150/1/24, contract/high yeşil.
-3. **UI-00.1 registry** (AST tabanlı sınıf/runtime/tip kaydı + ihlal testi), 4. **UI-00.2** iki motor kapsamı ve Linux temeli kararı, 5. **UI-00.3** axe + durum düzeneği + `ui-check`, 6. **UI-00.4** ölçüm kör noktaları, 7. **UI-00.7** bank çalışma zamanı görünümü, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
+3. **UI-00.1 registry (tamam)**, 4. **UI-00.2** iki motor kapsamı ve Linux temeli kararı, 5. **UI-00.3** axe + durum düzeneği + `ui-check`, 6. **UI-00.4** ölçüm kör noktaları, 7. **UI-00.7** bank çalışma zamanı görünümü, 8. **UI-00.5** ilk referans, 9. **UI-00.6** browser probu ve native araştırma.
 
 ## Açık
 
@@ -186,14 +186,6 @@ Hedef: yanlış başlangıç referansının
 sonraki fazlarda başarı gibi kullanılmasını engellemek. Sahip: kalite/vitrin. Değişiklik
 alanı: `scripts/quality/`, `devtools/vol-showcase/tests/e2e/`, ilgili CORE testleri.
 
-- [ ] **UI-00.1 — Yeniden üretilebilir yüzey kaydı.** UI toplu dışa aktarım yüzeyini
-      TypeScript AST/tip denetleyicisi ile sınıf/runtime/type olarak ayır; aktif
-      doğrudan, dolaylı ve katalog tüketimini kaydet. Önerilen
-      devtools/vol-showcase/src/catalog/registry.ts yalnız test örneği kimliği, sahibi ve
-      durum uygulanabilirliği bilgisi taşır; CORE uygulama kodunu içe aktarmak yeni
-      kural katmanı olmaz. Kapanır: başlangıç 89 sınıf ve yardımcılar tekil kapsanır;
-      eklenen export kayıtsızsa ihlal test örneği kapıyı düşürür; doğrulayıcı isim geçen
-      kaynak metnini gerçek test doğrulaması sanmaz.
 - [ ] **UI-00.2 — Çift motor gerçek kapsamı.** Mevcut Playwright Chromium/ WebKit
       testMatch asimetrisini gider; etkileşim, yerleşim, geçici katman, azaltılmış
       hareket, oyun kolu ve i18n davranışı iki motorda çalışsın. Okunabilirlik iki
@@ -727,4 +719,5 @@ eksik cihaz/insan alt görevleri görülmeden sürüm tamamlandı sayılmaz.
 
 Planın hazırlanmış olması bir üretim görevini kapatmaz; yalnız kapıdan geçmiş iş buraya taşınır.
 
+- [x] UI-00.1 — `core/src/ui/index.ts` yüzeyi (89 sınıf, 29 yardımcı, 205 tip) AST'den çıkarılır; her sınıf/yardımcı `registry.json`'da tekil kayıtlıdır ve kapı kaydı yüzeyle, VOL.TEST tüketimiyle (17 sınıf doğrudan), vitrin kullanımıyla ve gerçek `it`+`expect` kanıtıyla karşılaştırır. Eski isim-geçişi bekçisinin yorum/metin mention'ını gösterim saydığı 9 yer ve kanıtsız 5 öğe (sahip görevli gap) ortaya çıktı.
 - [x] UI-06.1 — Eski vol-ui paketi tek atomik göçle `devtools/vol-showcase` / `@volstudio/vol-showcase` oldu; lifecycle, quality (paket ve bütçe), kilit importer'ı, `justfile`, katalog yolu, testler ve belgeler birlikte taşındı. Eski yol ve paket başvurusu sıfır; CSS `.vol-ui-root` ve `--vol-ui-*` tokenları değişmedi; 24 piksel temeli yalnız taşındı; bütçe 150/1/24 aynı.

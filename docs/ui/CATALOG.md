@@ -174,6 +174,19 @@ widget uydurulmaz. Yeni export bu tablo ve registry'de aynı commit'te görünü
 | glyphFile / glyphUrl / keyboardKeyFile / glyphNameForButton / resolveGlyphFamily                                                                                                      | UI-12.2; action origin ve aile fallback ayrımı                      |
 | Bütün option/union/model tipleri                                                                                                                                                      | Aile fazı; public type surface/typecheck/doc symbols/tüketici uyumu |
 
+## Yüzey kaydı
+
+Bu belgenin tablolarındaki tier, faz, anchor ve tüketici bilgisinin makine-okunur karşılığı
+`devtools/vol-showcase/src/catalog/registry.json` dosyasıdır; sınıf ve yardımcıların tamamı
+(89 + 29) tekil kayıtlıdır ve `scripts/quality/uiRegistry.mjs` kapısı kaydı AST'den çıkarılan
+yüzeyle karşılaştırır. Test kanıtı isim geçen metin değildir: bağlanan `it` bloğu adı
+tanımlayıcı olarak kullanmalı ve `expect` çağırmalıdır. Kanıtı olmayan satır sahip görevli
+`gap` taşır (bugün CardPicker, Easing, FOCUSABLE_SELECTOR, requestGamepadTextEntry,
+runButtonClick); görev kapanınca gap silinir. Yeni export için aday test
+`node scripts/quality/cli/ui-registry.mjs --suggest <Ad>` ile bulunur. Durum arketipleri
+(control, display, container, overlay, collection, touch, mechanism, helper) her durum eksenini
+uygulanabilir ya da gerekçeli N/A tutar; UI-00.3 bu matrisi vitrin fixture'larına bağlar.
+
 ## Her satırın kapanış verisi
 
 Registry: class/export ID, tier, owner phase, fixture ID, applicable state,
