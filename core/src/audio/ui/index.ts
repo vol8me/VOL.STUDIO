@@ -9,6 +9,7 @@ export {
   type UiSoundKitOptions,
   type UiSoundKitState,
   type UiSoundLoadReport,
+  type UiSoundMetrics,
 } from './UiSoundKit';
 export {
   UI_CRITICAL_DUCK,

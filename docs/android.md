@@ -138,6 +138,13 @@ fiziksel sunum ve renderer `bilinmiyor` olarak kalır. Sunulan kare ayrıca
 tablette VOL.TEST: 120 Hz, sunum p50 32,2 ms). Sütun yoksa kapsam
 `unsupported` yazılır; çekirdek girdi zamanı bu yola dahil değildir.
 
+Ses çıkışı `scripts/android/audio-players.mjs <paket>` ile örneklenir: `dumpsys audio`
+oynatıcılarını uygulamanın uid'ine süzer ve oynatıcının AudioFlinger'a ulaşıp ulaşmadığını
+(`started`, tür, örnekleme hızı) ayrıca sessize alınıp alınmadığını (`mutedState`) verir. Kanıt
+"çıkışa ulaştı" ile sınırlıdır; sesin duyulduğunu göstermez. Android 14 tablette Chrome 154 ile
+vitrin ses laboratuvarı sürülürken 48 kHz AAudio oynatıcısı `started` göründü; cihazın medya
+akış seviyesi 0 olduğundan `mutedState` `streamVolume`dı (cihaz ayarı değiştirilmedi).
+
 Kısa dış bölge dokunuşu Lenovo'da kanıtlandı: 60 ms'lik sabit basış
 patlamasında ateş barı ölçülen karelerde tükendi (202 → 5 dolu piksel), aynı
 koordinatlarda iç bölge (deadzone üstü ama giriş eşiği altı) patlamasında ise

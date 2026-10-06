@@ -37,6 +37,16 @@ export interface UiSoundLoadReport {
   readonly failed: readonly UiSoundEvent[];
 }
 
+/** Kitin ölçüsü: çalan ses sayısı ile başlayan/düşen istek toplamları. */
+export interface UiSoundMetrics {
+  /** Şu an çalan UI sesi (üst sınır `UI_MAX_VOICES`). */
+  readonly active: number;
+  /** Gerçekten başlayan sesler. */
+  readonly played: number;
+  /** Çalınamayan istekler: sessiz, kilitli, gizli, mikro aralığı, bütçe ya da yüklenmemiş. */
+  readonly dropped: number;
+}
+
 export interface UiSoundKitOptions {
   assets?: UiSoundAssets;
   /** Verilirse kit sahibi DEĞİLDİR ve bağlamı kapatmaz. */
@@ -87,6 +97,8 @@ export class UiSoundKit implements Disposable {
   private hidden = false;
   private unlocking = false;
   private lastMicroAt = -Infinity;
+  private played = 0;
+  private dropped = 0;
   private pending: Promise<void> = Promise.resolve();
 
   constructor(private readonly options: UiSoundKitOptions = {}) {
@@ -112,6 +124,10 @@ export class UiSoundKit implements Disposable {
 
   get settings(): UiAudioSettings {
     return this.current;
+  }
+
+  get metrics(): UiSoundMetrics {
+    return { active: this.bank?.activeVoices ?? 0, played: this.played, dropped: this.dropped };
   }
 
   /** Bekleyen kalıcılık yazmalarının bitişi. */
@@ -195,6 +211,13 @@ export class UiSoundKit implements Disposable {
 
   /** Bir olayın sesini çalar; gerçekten başladıysa `true`. Hiçbir koşulda sıraya almaz. */
   play(event: UiSoundEvent): boolean {
+    const started = this.tryPlay(event);
+    if (started) this.played += 1;
+    else this.dropped += 1;
+    return started;
+  }
+
+  private tryPlay(event: UiSoundEvent): boolean {
     if (this.disposed || this.inert || this.hidden || this.current.muted) return false;
     const urls = this.options.assets?.[event];
     if (!urls || urls.length === 0) return false;

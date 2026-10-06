@@ -155,6 +155,11 @@ export class SoundBank {
     return task;
   }
 
+  /** Şu an çalan ses sayısı (teşhis ve laboratuvar göstergesi). */
+  get activeVoices(): number {
+    return this.voices.size;
+  }
+
   /** Yüklü mü? Yüklenmemiş bir kimlik sessizce atlanır. */
   isLoaded(id: string): boolean {
     return (this.buffers.get(id)?.length ?? 0) > 0;

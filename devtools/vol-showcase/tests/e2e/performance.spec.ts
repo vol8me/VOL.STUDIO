@@ -225,7 +225,8 @@ test.describe('vitrin etkileşiminin UI JS maliyeti (gerçek tarayıcı)', () =>
       },
     });
 
-    expect(run.a1.length).toBe(60);
+    // 5 tur × sekme sayısı; sekme eklenince sabit değil listeden türer.
+    expect(run.a1.length).toBe(SHOWCASE_TABS.length * 5);
     expect(Number.isFinite(noise)).toBe(true);
     expect(run.a1.every((value) => Number.isFinite(value) && value >= 0)).toBe(true);
     // Başsız ortamda GPU/sunum/atıflı iz yok: rapor PASS olamaz.

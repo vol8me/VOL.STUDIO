@@ -27,14 +27,6 @@ export const SHOWN_VIA = {
     via: null,
     reason: 'görsel olmayan hareket bütçesi sahibi; ilk tüketici UI-03.1 pilotudur',
   },
-  UiHapticProvider: {
-    via: null,
-    reason: 'görsel olmayan titreşim sağlayıcısı; UI-02.5 ses laboratuvarı gösterir',
-  },
-  UiIntentBus: {
-    via: null,
-    reason: 'görsel olmayan niyet veriyolu; UI-02.5 ses laboratuvarı gösterir',
-  },
 };
 
 function sourceText(dir) {

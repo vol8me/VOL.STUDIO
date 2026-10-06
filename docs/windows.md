@@ -137,6 +137,10 @@ chromium`, vitrin build'i, `visual.spec.ts`): 12 sekmeden 6'sı bayt eşit yenid
 **doğrulanmamıştır**; bu temeller bu makineden yenilenmez ve gerçek Linux ortamında
 yeniden üretilebilirlik ölçülene kadar kabul sayılmaz.
 
+Ses sekmesinin (UI-02.5) yalnız `win32` temeli vardır; `linux` temeli bu makineden
+üretilmedi ve gerçek Linux ortamında `test:e2e:update` ile üretilene kadar eksik kalır
+(Playwright eksik temeli yazıp testi düşürür; bu bilinçlidir).
+
 `pnpm deck` Windows'ta devkit araç yoludur; paketleme için
 [Linux builder](linux.md) ve [Deck sözleşmesi](steam-deck.md) geçerlidir.
 SSH erişimi oyun/Steam/suspend kabulü değildir. Windows node_modules veya

@@ -18,7 +18,8 @@
     "touch": "DOKUNMATİK",
     "loading": "YÜKLEME",
     "cards": "KARTLAR",
-    "workbench": "ÇALIŞMA ALANI"
+    "workbench": "ÇALIŞMA ALANI",
+    "ses": "SES"
   },
   "workbench": {
     "propertyFields": "Özellik alanları ve değer sözleşmesi",
@@ -890,5 +891,73 @@
     "unlock": "KİLİDİ AÇ",
     "slotsTitle": "Yetenek slotları (Q/E)",
     "slotEmpty": "Boş"
+  },
+  "ses": {
+    "events": {
+      "title": "Olay sesleri",
+      "hint": "Her düğme ilgili UI olayını kitin ses yolundan çalar. Ses bağlamı ilk jestte açılır."
+    },
+    "components": {
+      "title": "Gerçek bileşenler",
+      "hint": "Sesi bileşenlerin niyeti üretir; sonda her kabul edilmiş niyeti bir kez sayar.",
+      "press": "Düğme",
+      "toggle": "Onay kutusu",
+      "option": "Seçenek {{value}}",
+      "slider": "Kaydırıcı",
+      "outcome": {
+        "success": "Kaydet (başarılı)",
+        "warning": "Kaydet (uyarı)",
+        "error": "Kaydet (hata)"
+      }
+    },
+    "channels": {
+      "title": "Kanal ve sessizleştirme",
+      "master": "Ana seviye",
+      "ui": "Arayüz",
+      "sfx": "Efekt",
+      "music": "Müzik",
+      "speech": "Konuşma",
+      "muted": "Tümünü sustur",
+      "gain": "Etkin kazanç: {{value}}",
+      "haptics": "Titreşim",
+      "hapticsIntensity": "Titreşim şiddeti"
+    },
+    "status": {
+      "title": "Durum ve yetenek",
+      "state": "Kit durumu: {{state}}",
+      "states": {
+        "idle": "hazırlanmadı",
+        "inert": "ses desteklenmiyor",
+        "locked": "kilitli",
+        "ready": "hazır",
+        "suspended": "askıda",
+        "disposed": "sökülmüş"
+      },
+      "voices": "Çalan ses: {{active}} / {{max}}",
+      "counts": "Çalınan: {{played}} · düşen: {{dropped}}",
+      "context": "Bağlam: {{state}} · {{rate}} Hz · gecikme {{latency}} ms",
+      "contextIdle": "Bağlam: ilk jestte kurulur",
+      "contextNone": "Bağlam: bu ortamda yok",
+      "haptics": "Titreşim: {{value}} · {{state}}",
+      "hapticsNone": "yok",
+      "on": "açık",
+      "off": "kapalı"
+    },
+    "probe": {
+      "title": "Anlamsal olay sondası",
+      "hint": "Kabul edilen niyet türü başına sayaç; programatik değişiklikler ve devre dışı hedefler sayılmaz.",
+      "total": "Kabul edilen niyet: {{count}}",
+      "outcomes": "Bildirilen sonuç: {{count}}",
+      "last": "Son niyet: {{kind}} · {{origin}} · {{source}}",
+      "none": "Henüz niyet yok"
+    },
+    "compare": {
+      "title": "Dışa aktarma ve kıyas",
+      "hint": "Kuru: işlenmemiş örnek, kanal ayarı ve perde değişimi yok. Kit: ±%5 perde, kanal kazancı ve ses bütçesi uygulanır.",
+      "variant": "Varyant {{value}}",
+      "dry": "Kuru çal",
+      "kit": "Kit ile çal",
+      "download": "Örneği indir"
+    }
   }
 }

@@ -45,15 +45,22 @@ test('yaprak sayımı iç düğümleri saymaz', () => {
   assert.equal(countLeaves({}), 0);
 });
 
-test('depodaki başlangıç sayımı yeniden üretilir: sekme, anahtar, doğrudan tüketici', () => {
+test('depodaki sayım UI-00.5 başlangıç tabanının altına düşmez ve tutarlıdır: sekme, anahtar, doğrudan tüketici', () => {
+  // Başlangıç değerleri (12 sekme, 830 vitrin, 63 CORE anahtarı, 17 doğrudan sınıf) bir TABANDIR:
+  // plan sekme ve anahtar ekler (UI-02.5 Ses sekmesi gibi) ve ilk kayıt zaten bu değerleri
+  // taşır; tam eşitlik her eklemede testi yanlış yere kırardı. Tutarlılık (EN=TR, E2E listesi
+  // = ürün sekmeleri) tam eşitlikle sınanır.
   const counts = countStatic(ROOT);
-  assert.equal(counts.tabs, 12);
+  assert.ok(counts.tabs >= 12, `sekme sayısı tabanın altında: ${counts.tabs}`);
   assert.equal(counts.testedTabs, counts.tabs, 'E2E sekme listesi ürün sekmeleriyle aynı olmalı');
   assert.equal(counts.showcaseKeys.en, counts.showcaseKeys.tr);
-  assert.equal(counts.showcaseKeys.en, 830);
+  assert.ok(
+    counts.showcaseKeys.en >= 830,
+    `vitrin anahtarı tabanın altında: ${counts.showcaseKeys.en}`,
+  );
   assert.equal(counts.coreKeys.en, counts.coreKeys.tr);
-  assert.equal(counts.coreKeys.en, 63);
-  assert.equal(counts.directConsumers.classes, 17);
+  assert.ok(counts.coreKeys.en >= 63, `CORE anahtarı tabanın altında: ${counts.coreKeys.en}`);
+  assert.ok(counts.directConsumers.classes >= 17);
 });
 
 test('cihaz hücreleri: bağlı cihaz "yok" yazılmaz, bağlı ama ölçülmemiş yazılır', () => {

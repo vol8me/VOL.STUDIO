@@ -108,6 +108,7 @@ export const SHOWCASE_TABS = [
   'scroll',
   'touch',
   'loading',
+  'ses',
 ] as const;
 
 export type ShowcaseTab = (typeof SHOWCASE_TABS)[number];

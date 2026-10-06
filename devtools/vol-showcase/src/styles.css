@@ -851,3 +851,15 @@ body {
   pointer-events: none;
   z-index: var(--vol-z-dialog-content);
 }
+
+/* Ses laboratuvarı: düğme/seçici satırları ve makine tarafından okunan göstergeler */
+.vol-showcase-ses__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vol-space-sm);
+}
+
+.vol-showcase-ses__readout {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}

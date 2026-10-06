@@ -494,4 +494,19 @@ describe('niyet veriyolu, sonuç ve kaynak temizliği', () => {
     expect(onError).toHaveBeenCalledTimes(1);
     bus.release();
   });
+
+  it('ölçüler: çalan ses, başlayan ve düşen istekler ayrı sayılır', async () => {
+    const { kit: instance } = await ready();
+    expect(instance.metrics).toEqual({ active: 0, played: 0, dropped: 0 });
+    expect(instance.play('press')).toBe(true);
+    expect(instance.metrics).toEqual({ active: 1, played: 1, dropped: 0 });
+    // Sözlükte yüklü varyantı olmayan olay düşer; başlayan sayısı değişmez.
+    expect(instance.play('commit')).toBe(false);
+    expect(instance.metrics.dropped).toBe(1);
+    instance.stopAll();
+    expect(instance.metrics.active).toBe(0);
+    instance.setSettings({ muted: true });
+    expect(instance.play('press')).toBe(false);
+    expect(instance.metrics).toMatchObject({ played: 1, dropped: 2 });
+  });
 });

@@ -349,6 +349,55 @@
       "target": ".vol-select__option--danger",
       "owner": "UI-05.2",
       "reason": "Select tehlike seçeneği AA kontrastının altında"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "label",
+      "target": ".vol-showcase-panel-demo > .vol-slider--horizontal.vol-slider:nth-child(1) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "owner": "UI-05.1",
+      "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "label",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(2) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "owner": "UI-05.1",
+      "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "label",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(4) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "owner": "UI-05.1",
+      "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "label",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(6) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "owner": "UI-05.1",
+      "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "label",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(8) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "owner": "UI-05.1",
+      "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "label",
+      "target": "div[data-ses-comp=\"slider\"] > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "owner": "UI-05.1",
+      "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "label",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(12) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "owner": "UI-05.1",
+      "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
     }
   ],
   "incomplete": [
@@ -623,6 +672,20 @@
       "rule": "color-contrast",
       "target": "button[data-action=\"shift\"]",
       "owner": "UI-11.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "color-contrast",
+      "target": ".vol-showcase-fullscreen-button",
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "color-contrast",
+      "target": "button[data-ses-comp=\"select\"] > .vol-select__caret",
+      "owner": "UI-05.2",
       "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     }
   ]

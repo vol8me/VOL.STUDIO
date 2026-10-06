@@ -18,7 +18,8 @@
     "touch": "TOUCH",
     "loading": "LOADING",
     "cards": "CARDS",
-    "workbench": "WORKBENCH"
+    "workbench": "WORKBENCH",
+    "ses": "SOUND"
   },
   "workbench": {
     "propertyFields": "Property fields and value contract",
@@ -890,5 +891,73 @@
     "unlock": "UNLOCK",
     "slotsTitle": "Ability slots (Q/E)",
     "slotEmpty": "Empty"
+  },
+  "ses": {
+    "events": {
+      "title": "Event sounds",
+      "hint": "Each button plays its UI event through the kit's audio path. The audio context opens on the first gesture."
+    },
+    "components": {
+      "title": "Real components",
+      "hint": "Components raise the intents that make the sound; the probe counts every accepted intent once.",
+      "press": "Button",
+      "toggle": "Checkbox",
+      "option": "Option {{value}}",
+      "slider": "Slider",
+      "outcome": {
+        "success": "Save (success)",
+        "warning": "Save (warning)",
+        "error": "Save (error)"
+      }
+    },
+    "channels": {
+      "title": "Channels and mute",
+      "master": "Master level",
+      "ui": "Interface",
+      "sfx": "Effects",
+      "music": "Music",
+      "speech": "Speech",
+      "muted": "Mute everything",
+      "gain": "Effective gain: {{value}}",
+      "haptics": "Haptics",
+      "hapticsIntensity": "Haptics intensity"
+    },
+    "status": {
+      "title": "State and capability",
+      "state": "Kit state: {{state}}",
+      "states": {
+        "idle": "not prepared",
+        "inert": "audio unsupported",
+        "locked": "locked",
+        "ready": "ready",
+        "suspended": "suspended",
+        "disposed": "disposed"
+      },
+      "voices": "Voices playing: {{active}} / {{max}}",
+      "counts": "Played: {{played}} · dropped: {{dropped}}",
+      "context": "Context: {{state}} · {{rate}} Hz · latency {{latency}} ms",
+      "contextIdle": "Context: created on the first gesture",
+      "contextNone": "Context: not available here",
+      "haptics": "Haptics: {{value}} · {{state}}",
+      "hapticsNone": "none",
+      "on": "on",
+      "off": "off"
+    },
+    "probe": {
+      "title": "Semantic event probe",
+      "hint": "Counter per accepted intent kind; programmatic changes and disabled targets are not counted.",
+      "total": "Accepted intents: {{count}}",
+      "outcomes": "Reported outcomes: {{count}}",
+      "last": "Last intent: {{kind}} · {{origin}} · {{source}}",
+      "none": "No intent yet"
+    },
+    "compare": {
+      "title": "Export and comparison",
+      "hint": "Dry: the unprocessed sample, no channel setting and no pitch shift. Kit: ±5% pitch, channel gain and the voice budget apply.",
+      "variant": "Variant {{value}}",
+      "dry": "Play dry",
+      "kit": "Play through kit",
+      "download": "Download sample"
+    }
   }
 }

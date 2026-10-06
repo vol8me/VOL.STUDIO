@@ -2101,11 +2101,7 @@
       "anchor": "A3",
       "archetype": "mechanism",
       "consumer": "catalog",
-      "showcase": [],
-      "shownVia": {
-        "via": null,
-        "reason": "görsel olmayan titreşim sağlayıcısı; UI-02.5 ses laboratuvarı gösterir"
-      },
+      "showcase": ["sections/sesTab.ts"],
       "tests": [
         {
           "file": "core/tests/ui/feedback/uiHapticProvider.test.ts",
@@ -2125,11 +2121,7 @@
       "anchor": "A3",
       "archetype": "mechanism",
       "consumer": "catalog",
-      "showcase": [],
-      "shownVia": {
-        "via": null,
-        "reason": "görsel olmayan niyet veriyolu; UI-02.5 ses laboratuvarı gösterir"
-      },
+      "showcase": ["sections/sesTab.ts"],
       "tests": [
         {
           "file": "core/tests/ui/feedback/uiIntent.test.ts",

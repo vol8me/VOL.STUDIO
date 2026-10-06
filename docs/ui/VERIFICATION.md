@@ -215,6 +215,23 @@ edilir; runtime decode/çıkış gerçek hedefte doğrulanır. İsteğe bağlı 
 paketi kulaklık veya cihaz hoparlörü karşılaştırmasına hizmet eder; insan
 beyanı üretim şartı değildir. Dinlenmediği hâlde beğeni iddiası yazılmaz.
 
+**Ses laboratuvarı kanıtı (UI-02.5).** Vitrin Ses sekmesi olay düğmelerini, gerçek
+bileşenleri (düğme, onay kutusu, seçici, kaydırıcı, ürün sonucu bildirimi), kanal/sessizleştirme/
+titreşim ayarlarını, ses sayısı/düşen istek/yetenek durumunu, niyet sondasını ve kuru/kit kıyası
+ile örnek dışa aktarımını taşır; makine okunur değerler `data-value`dadır.
+
+| Katman                           | Yol                                                                                                     | Sonuç                                                                                                                                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Anlamsal olay sondası            | `ses.spec.ts` (Chromium + WebKit) ve birim testleri                                                     | Düğme tıklaması, Enter ve Space eylem başına TEK niyet; onay kutusu tek `toggle`; olay düğmeleri doğrudan çalar ve niyet sayımını çoğaltmaz                                                                        |
+| Ses zinciri (Chromium)           | jest → bağlam `running` → örnekler yüklenir → `played > 0`; sessizlikte `played` sabit, `dropped` artar | Geçti                                                                                                                                                                                                              |
+| WebKit (Playwright/Win)          | aynı spec                                                                                               | Bu derlemede Web Audio ve Ogg Vorbis YOK: zincir testleri SKIP (gerekçeli), laboratuvarın dürüst "ses desteklenmiyor" durumu ve niyet sondası geçti                                                                |
+| Gerçek Safari/iOS Ogg            | —                                                                                                       | **NOT-RUN**: UI sesleri OGG; Safari/WKWebView çözümü ve çıkışı bu makinede doğrulanamadı (açık risk, sahip UI-12.4/F09)                                                                                            |
+| Üretim doğrulaması               | `just audio-verify`                                                                                     | 36 UI manifestinin PCM kimliği `identical`, kodek sonrası politika ihlali 0/33 dosya (core ağacı), bütünlük diff'siz                                                                                               |
+| Cihaz çıkışı (Android 14 tablet) | Chrome 154 + vitrin; CDP dokunuşu; `scripts/android/audio-players.mjs`                                  | Bağlam `running` 48 kHz, gecikme 32 ms, 7 ses çalındı; AAudio oynatıcısı `started` (USAGE_MEDIA); `mutedState: streamVolume` (cihaz medya seviyesi 0, değiştirilmedi): çıkışa ulaşma KANITLI, duyulabilirlik DEĞİL |
+| Samsung / Deck / titreşim        | —                                                                                                       | **NOT-RUN**: Samsung o anda bağlı değildi; Deck'te yerel vitrin yok; titreşim cihaz sürücüsü bu oturumda sürülmedi                                                                                                 |
+
+İnsan dinleme onayı üretim şartı değildir ve bu tabloda iddia edilmez.
+
 ## Gerçek platform matrisi
 
 | Profil                                 | Görüntü/girdi                                                     | Zorunlu örnek                                                                                       |

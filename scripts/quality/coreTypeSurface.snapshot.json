@@ -558,6 +558,7 @@
   "UiSoundKitOptions",
   "UiSoundKitState",
   "UiSoundLoadReport",
+  "UiSoundMetrics",
   "Unsubscribe",
   "VIEWPORT_REGISTRY_KEY",
   "VOL_COLORS",

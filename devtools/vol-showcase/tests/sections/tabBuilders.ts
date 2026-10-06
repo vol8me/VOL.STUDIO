@@ -9,6 +9,7 @@ import { buildLoadingTab } from '../../src/sections/loadingTab';
 import { buildPaletteTab } from '../../src/sections/paletteTab';
 import { buildPanelsTab } from '../../src/sections/panelsTab';
 import { buildScrollTab } from '../../src/sections/scrollTab';
+import { buildSesTab } from '../../src/sections/sesTab';
 import { buildTextTab } from '../../src/sections/textTab';
 import { buildTouchTab } from '../../src/sections/touchTab';
 import { buildWorkbenchTab } from '../../src/sections/workbenchTab';
@@ -57,6 +58,7 @@ export function tabBuilders(getRoot: () => HTMLElement): TabBuilder[] {
     { name: 'scroll', build: () => buildScrollTab() },
     { name: 'touch', build: () => buildTouchTab() },
     { name: 'loading', build: () => buildLoadingTab() },
+    { name: 'ses', build: () => buildSesTab() },
   ];
 }
 
