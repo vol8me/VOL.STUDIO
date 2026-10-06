@@ -15,6 +15,14 @@ export interface SoundBankOptions {
   random?: Random;
 }
 
+/**
+ * Ses önceliği. Bütçe dolduğunda `critical` ses en eski `normal` sesi düşürür;
+ * `normal` ses ise `critical` bir sesi DÜŞÜRMEZ, yerine kendisi atlanır. Varsayılan
+ * `normal`: yalnız `normal` sesler içeren bir bankada davranış eskisiyle aynıdır
+ * (en eski ses düşer).
+ */
+export type VoicePriority = 'normal' | 'critical';
+
 export interface PlayOptions {
   /** Bu tetikleme için kazanç çarpanı [0,1]. */
   gain?: number;
@@ -30,10 +38,13 @@ export interface PlayOptions {
    * göre hesaplar; tarayıcı `StereoPannerNode` taşımıyorsa yok sayılır.
    */
   pan?: number;
+  /** Bütçe dolduğundaki düşürme önceliği; varsayılan `normal`. */
+  priority?: VoicePriority;
 }
 
 interface Voice {
   readonly id: string;
+  readonly priority: VoicePriority;
   readonly source: AudioBufferSourceNode;
   readonly gain: GainNode;
   readonly panner: StereoPannerNode | null;
@@ -158,22 +169,24 @@ export class SoundBank {
 
   /**
    * Bir sesi çalar. Yüklü değilse ya da bütçe doluysa sessizce atlanır —
-   * ses, oynanışı durdurmaya değmeyecek bir yan üründür.
+   * ses, oynanışı durdurmaya değmeyecek bir yan üründür. Sesin gerçekten
+   * başlayıp başlamadığı dönüş değeridir.
    */
-  play(id: string, options: PlayOptions = {}): void {
-    if (this.released) return;
+  play(id: string, options: PlayOptions = {}): boolean {
+    if (this.released) return false;
     const variants = this.buffers.get(id);
-    if (!variants || variants.length === 0) return;
+    if (!variants || variants.length === 0) return false;
 
     const now = finiteOr(this.context.currentTime, 0) * 1000;
     const last = this.lastPlayedAt.get(id);
-    if (last !== undefined && now - last < this.options.minRetriggerMs) return;
+    if (last !== undefined && now - last < this.options.minRetriggerMs) return false;
 
-    this.enforceBudget(id);
+    const priority = options.priority ?? 'normal';
+    if (!this.enforceBudget(id, priority)) return false;
 
     const index = Math.min(variants.length - 1, Math.floor(this.random.next() * variants.length));
     const buffer = variants[index];
-    if (!buffer) return;
+    if (!buffer) return false;
     const jitter = Math.max(0, finiteOr(options.rateJitter ?? 0, 0));
     const rate = clamp(
       finiteOr(options.rate ?? 1, 1) * (1 + this.random.bipolar() * jitter),
@@ -187,8 +200,10 @@ export class SoundBank {
       rate,
       clamp01(finiteOr(options.gain ?? 1, 1)),
       clamp(finiteOr(options.pan ?? 0, 0), -1, 1),
+      priority,
     );
     this.lastPlayedAt.set(id, now);
+    return true;
   }
 
   /**
@@ -202,6 +217,7 @@ export class SoundBank {
     rate: number,
     gainValue: number,
     pan: number,
+    priority: VoicePriority,
   ): Voice {
     const staging = new DisposableScope();
     const own = <T extends AudioNode>(node: T): T => {
@@ -235,7 +251,7 @@ export class SoundBank {
       // izole edebilir.
       source.start();
 
-      const voice: Voice = { id, source, gain, panner };
+      const voice: Voice = { id, priority, source, gain, panner };
       this.voices.add(voice);
       source.onended = () => this.retire(voice);
       return voice;
@@ -278,21 +294,41 @@ export class SoundBank {
     if (!this.released && buffers.length > 0) this.buffers.set(id, buffers);
   }
 
-  /** Bütçeyi açar: önce aynı kimlikten, gerekirse genelden en eskiyi düşürür. */
-  private enforceBudget(id: string): void {
+  /**
+   * Bütçeyi açar: önce aynı kimlikten, gerekirse genelden DÜŞÜK ya da EŞİT
+   * öncelikli en eski sesi düşürür. Yer açılamazsa (hepsi daha yüksek öncelikli)
+   * `false` döner ve çağıran ses atlanır.
+   */
+  private enforceBudget(id: string, priority: VoicePriority): boolean {
     let sameId = 0;
     for (const voice of this.voices) if (voice.id === id) sameId++;
     while (sameId >= this.options.maxVoicesPerSound) {
-      const oldest = [...this.voices].find((voice) => voice.id === id);
-      if (!oldest) break;
-      this.retire(oldest, true);
+      const victim = this.pickVictim(priority, (voice) => voice.id === id);
+      if (!victim) return false;
+      this.retire(victim, true);
       sameId--;
     }
     while (this.voices.size >= this.options.maxVoices) {
-      const oldest = this.voices.values().next().value;
-      if (!oldest) break;
-      this.retire(oldest, true);
+      const victim = this.pickVictim(priority);
+      if (!victim) return false;
+      this.retire(victim, true);
     }
+    return true;
+  }
+
+  /** En düşük öncelikli, onlar arasında en eski ses; gelen sesten yüksek öncelikliler seçilmez. */
+  private pickVictim(
+    priority: VoicePriority,
+    filter?: (voice: Voice) => boolean,
+  ): Voice | undefined {
+    const rank = (value: VoicePriority): number => (value === 'critical' ? 1 : 0);
+    let victim: Voice | undefined;
+    for (const voice of this.voices) {
+      if (filter && !filter(voice)) continue;
+      if (rank(voice.priority) > rank(priority)) continue;
+      if (!victim || rank(voice.priority) < rank(victim.priority)) victim = voice;
+    }
+    return victim;
   }
 
   private retire(voice: Voice, stop = false): void {

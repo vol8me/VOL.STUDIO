@@ -393,6 +393,7 @@ export {
   SoundBank,
   type SoundBankOptions,
   type PlayOptions,
+  type VoicePriority,
   SoundFamilyBank,
   type SoundFamilyQuery,
   type SoundFamilyVariant,
@@ -400,4 +401,6 @@ export {
   type LoopBlendLayer,
   type LoopBlendOptions,
 } from './audio/sfx';
+/* UI geri bildirim sesi: anlamsal niyetlerin sesi ve cihaz kapsamlı ses ayarları. */
+export * from './audio/ui';
 export * from './diagnostics';

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import ts from 'typescript';
 
 export const CORE_TYPE_SURFACE_SHA256 =
-  '2526c9ddd57ab96fe30cd98ef9464c5805e6f25455b62beb13e93f94e282672f';
+  '32319f0d97bc8e48e3509addebcd2513a95397a7b8b78987801c7f0d56102bf5';
 
 export function loadCoreTypeSurfaceSnapshot(root) {
   const snapshotPath = resolve(root, 'scripts/quality/coreTypeSurface.snapshot.json');

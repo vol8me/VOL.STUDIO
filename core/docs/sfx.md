@@ -55,3 +55,29 @@ ve çağıran yeniden deneyebilir. Yalnız indirme/çözme hataları katman atla
 telafi edilir; bağlam hatası sessizce yutulmaz. `SoundBank` da aynı ayrımı
 korur: çözemeyen varyant uyarıyla atlanır, düğüm kurulamayan ses hataya
 dönüşür.
+
+## UI geri bildirim sesi
+
+`@volstudio/core/audio/ui` Phaser taşımayan alt yoldur; kök barrel de aynı adları
+ihraç eder. `SoundBank` bütçesini ve `SidechainDucker`ı tüketir, UI için ayrı bir
+mixer ya da müzik motoru kurmaz.
+
+### `UiSoundKit`
+
+Anlamsal UI niyetlerinin (`UiIntentBus`) ve host'un bildirdiği ürün sonuçlarının
+sesi. Toplam en çok 4 eşzamanlı UI sesi çalar; kritik olaylar (`error`, `warning`)
+`normal` sesleri düşürerek çalar, `normal` ses kritiği düşüremez. Mikro olaylar
+(`tick`) 120 ms aralıkla sınırlıdır. Her olayın en çok 3 varyantı sırayla seçilir
+ve perde ±%5 değişir; seçim ve değişim kitin kendi tohumlu RNG akışından gelir,
+simülasyon RNG'sine dokunmaz. Gecikmeli çalma yoktur: bağlam kilitliyse, sayfa
+gizliyse, sessizse ya da bağlam yoksa ses atlanır ve geri dönüşte biriken sesler
+topluca çalmaz. Bağlam ilk kullanıcı jestinde (ilk niyet) oluşturulup açılır.
+Bir Promise'in çözülmesi başarı sesi değildir; başarıyı host `reportOutcome` ile
+bildirir.
+
+### `channelGain`
+
+Ana, UI, SFX, müzik ve konuşma seviyeleri ile sessizlik cihaz kapsamlıdır
+(`device.volui:audio`). Kit yalnız UI yolunu (`master × ui`) uygular; ürün diğer
+kanalları `channelGain` ile kendi otobüslerine bağlar. Bozuk kayıt sessizce
+varsayılana iner.

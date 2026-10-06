@@ -1,4 +1,9 @@
-export { SoundBank, type SoundBankOptions, type PlayOptions } from './SoundBank';
+export {
+  SoundBank,
+  type SoundBankOptions,
+  type PlayOptions,
+  type VoicePriority,
+} from './SoundBank';
 export {
   fnv1a32,
   SoundFamilyBank,
