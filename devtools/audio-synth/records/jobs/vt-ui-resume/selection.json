@@ -1,8 +1,0 @@
-{
-  "analysisHash": "sha256:533e0f436592ea22f828e891d38826511eab19351bf1d57524a1d087218d9094",
-  "pcmHash": "sha256:ab93c2aa7d1dbd47ad2b95402957cbfeed654ef745d2a685d604a116d8b9d004",
-  "reason": "UI sınıfı ölçümü; yumuşak perde geçişi; dinleme onayı bekliyor.",
-  "renderHash": "sha256:66154ded61a78e8fb3f5a4a5a9793d3bdab80e30787877f93c8d5a372a922c92",
-  "renderId": "r-8d1179271213f447",
-  "schema": "AudioSelectionV1"
-}

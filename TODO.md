@@ -10,7 +10,7 @@ taşınır. Eksik kapanış yeni görevdir.
 Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
 yetkilendirdi. F01–F03 sonuçları rapor §18, F04 kaynak uygulaması ve açık native kabul rapor §19, F05–F06 kaynak
 uygulaması ve kalan işler rapor §20'dedir.
-**F01–F03 tamamlandı; F04–F10 açıktır (F05/F06'da yalnız aşağıdaki kalanlar).** Faz numarası bağımsız işleri gereksiz seri bekletmez;
+**F01–F03 ve F05 tamamlandı; F04 ve F06–F10 açıktır (F06'da yalnız F06.4).** Faz numarası bağımsız işleri gereksiz seri bekletmez;
 gerçek ön koşul ve kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
 Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 
@@ -24,14 +24,6 @@ servis borçları ilgili cihaz kabulüyle birlikte kalır.
 - [ ] **[P1] F04.3 — Store kapsamı ve Windows writer.** Göç/durable cache/compiler ve gerçek Rust disk regresyonları uygulandı; ürün IPC turu açık. Kapanır: kapsamsız anahtar derlenmez; disk migration/bozuk ana kayıt/backup/atomik yazım/hata geri bildirimi Windows native kabulüyle testli.
 - [ ] **[P1] F04.4 — Kapanış protokolü ve Steam callback sahibi.** Gerçek SDK guard/pump/drop ve ACK yarışı düzeltildi; fiziksel popup, tarihsel timeout ve kill turları açık. Kapanır: B07 gerçek feature harness, overlay/text callback yaşamı ve drop testi; timedOut kök nedeni/süre gerekçesi; üretim SIGTERM son değer, yazım ortası SIGKILL toparlanması.
 - [ ] **[P1] F04.5 — Uyku/uyanış ve servis tüketimi.** Saat/input/audio/haptik ve export tüketicileri denetlendi; clock-jump/geç decode/tekrarlı suspend testli, ilgili gerçek cihaz turu açık. Kapanır: tüketicisiz tauri-v2 export/config/izin bağları kaldırılır (VT3/K4); high + Chromium/WebKit; SD8 fiziksel sonucu F08.6'da.
-
-### F05 — Asset yayını, metadata ve kalıntı temizliği
-
-Ön koşul: F01/F02. Sırf insan sistemini kaldırmak için mevcut sesler yeniden
-yayımlanmaz; her temizlik erişilebilirlik kanıtıyla yapılır.
-
-- [ ] **[P2] F05.5 — Eski yayın ve ölü bağı temizliği.** Envanter denetimi (`audio:production-check` iş taraması) eklendi ve 86 işten 17 emekli `vt-*` işi buldu: hedefleri `65d0b1f3`'te silinmiş, yerlerini yayımlanmış `vt-hardsteel-*` işleri almış, repoda sıfır atıf. Kapanır: bu 17 iş kaydı (36 render) kaldırılır ve `audio-verify` yeşile döner; 84 seçilmeyen render aktif işlerin aday geçmişidir, silinmez.
-- [ ] **[P2] F05.6 — Araştırma/kanonik ve yerel çıktı ayrımı.** İzlenen `reference-shell` (yayımlanmış ailenin kökeni) ve `semantic-demo` (`audio-verify` yeniden üretir) aramaları fixture gerekçelidir; `hidden-tone-660` ve `hidden-tone-wrong-topology` fit'lerinin test/kapı/belge tüketicisi yoktur. Eski vol-ui workspace'inden yerel kalan `node_modules` dizini sahip temizliğinin dışındadır. Kapanır: iki fit kaldırılır ya da bir tüketiciye bağlanır; kalıntı temizlenir; oyun build'i devtools bağı olmadan yeşil.
 
 ### F06 — CORE/Phaser sınırı ve VOL.TEST doğruluğu
 
@@ -106,6 +98,8 @@ release redini ertelemek için gerekçe değildir.
 - [x] F05.2 — Manifest her alanı tip/enum/aralıkta doğrular; PCM betimi kayıt, kodlanmış rapor, yerleşim ve brief ile çelişemez; verify bayt boyutu, bağımsız render ve çözülmüş dosyayı karşılaştırır.
 - [x] F05.3 — Pencil düzenleyici parça ve önizlemeyi tek planda doğrular, çakışan düğümü yazımdan önce reddeder, hedef+metadata'yı geri alınabilir yerleştirir; kaynak en son silinir.
 - [x] F05.4 — `validateManifest` 20/22/165 (siklomatik/bilişsel/satır) iken 6/5/23'e bölündü; ortak PCM alt şeması render kaydıyla paylaşılır, 69 gerçek manifest ve isteğe bağlı eski alanlar kabul edilir.
+- [x] F05.5 — 17 emekli `vt-*` iş kaydı (36 render) kaldırıldı; hedefleri `65d0b1f3`'te silinmiş, yerlerini `vt-hardsteel-*` almıştı. İş envanteri 69/69; 84 seçilmeyen render aktif işlerin aday geçmişi olarak kaldı.
+- [x] F05.6 — Atıfsız iki araştırma fit'i (`fit-experiment` yeniden üretir) ve yerel eski vol-ui kalıntısı kaldırıldı; `reference-shell` ve `semantic-demo` arama kayıtları fixture gerekçeli kaldı.
 - [x] F06.1 — Mermi, adımın süpürdüğü parçayı gövdenin yönlü ayak iziyle keser (segment–OBB ilk temas); olay/itki/önizleme temas noktasını görür, en erken hedef ve sahip dışlaması deterministik.
 - [x] F06.2 — Duvar sert sınırdır: araç teması sonrası duvar yeniden çözülür (en çok 4 geçiş); 4×4000 adım ve köşe yığınında hiçbir gövde köşesi dünya dışında kalmaz, kalan örtüşme ≈0,05 birim.
 - [x] F06.3 — Saf simülasyon CORE'a yalnız alt yüzeylerle bağlanır; beş senaryo Node'da DOM/CSS yükleyicisi olmadan seedli koşar ve vitest sonucuyla birebir aynıdır.

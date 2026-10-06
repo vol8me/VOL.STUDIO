@@ -1038,22 +1038,19 @@ referans işe oranlar. Bu yalnız CPU simülasyonudur; çizim, GPU ve cihaz
 kare süresi yeni kodla ölçülmedi, Lenovo tablet ADB'de bağlı olsa da yeni APK
 profili alınmadı (F09). Android referans tablosu önceki commit'e aittir.
 
-**B20 ve F05.5/F05.6 açık.** Yeni iş envanteri (`audio:production-check`) 86
-işi tarar ve 17 emekli `vt-*` işi bulur: yayın hedefleri `65d0b1f3`'te
-"reddedilen ses"in yerine kuru mekanik set konurken silinmiş, yerlerini
-yayımlanmış `vt-hardsteel-*` işleri almış, depoda bu kimliklere sıfır atıf
-var; 17 iş 36 render taşır. Aktif işlerin 84 seçilmeyen render'ı silinmedi:
-manifest programı gömülü taşıdığından yeniden üretim onlara bağlı değil, ancak
-seçim kökeni için aday geçmişi olarak kalır ve hiçbirine dışarıdan atıf yok.
-**17 kaydın silinmesi bu oturumda otomatik izin denetimi tarafından
-reddedildi**; dolanılmadı. Envanter kontrolü bu yüzden kırmızıdır
-(`audio-verify`: 69/86 iş) ve silme yapılana dek öyle kalır; bu gerçek durumdur,
-kapı gevşetilmedi. Araştırma örneklerinden `hidden-tone-660` ve
-`hidden-tone-wrong-topology` fit'lerinin hiçbir test, kapı veya belge
-tüketicisi yoktur; aynı nedenle kaldırılmadı. `reference-shell` ve
-`semantic-demo` arama kayıtları gerekçelidir (aile kökeni ve `audio-verify`
-yeniden üretimi). Eski vol-ui workspace'inden yerel kalan `node_modules` dizini sahip temizliğinin
-(`clean`) kapsamı dışındadır; silinmedi.
+**B20, F05.5 ve F05.6 kapandı.** İş envanteri (`audio:production-check`) 86 işi
+tarar ve 17 emekli `vt-*` işi buldu: yayın hedefleri `65d0b1f3`'te "reddedilen
+ses"in yerine kuru mekanik set konurken silinmiş, yerlerini yayımlanmış
+`vt-hardsteel-*` işleri almış, depoda bu kimliklere sıfır atıf var. Kullanıcı
+onayıyla 17 iş kaydı (36 render) kaldırıldı; envanter 69/69. Aktif işlerin 84
+seçilmeyen render'ı silinmedi: manifest programı gömülü taşıdığından yeniden
+üretim onlara bağlı değil, ancak seçim kökeni için aday geçmişidir ve hiçbirine
+dışarıdan atıf yok. İzlenen araştırma örneklerinden `hidden-tone-660` ve
+`hidden-tone-wrong-topology` fit'lerinin test, kapı veya belge tüketicisi
+yoktu (`fit-experiment` yeniden üretir); kaldırıldı. `reference-shell`
+(yayımlanmış ailenin kökeni) ve `semantic-demo` (`audio-verify` yeniden üretir)
+arama kayıtları gerekçeli kaldı. Eski vol-ui workspace'inden yerel kalan
+`node_modules` dizini silindi.
 
 **Sınırlar.** Windows'ta çalıştırıldı; Linux/Deck ve Android kabulü yapılmadı.
 Hedef kilidi aynı depo kökü içindir; ağ dosya sistemi üzerinde ayrı checkout'lar
@@ -1069,7 +1066,7 @@ pen.dev 27, vol-ui 68, deck 22 test geçti. Kapsam eşikleri korundu (VOL.TEST
 satır %99,39, pen.dev %100). Bundle bütçeleri sınırda; app 106,3 KiB. Scaling
 CORE 3,789 ve oyun 4,446, tavan 6 (önceki 3,723/4,227: mermi döngüsünde hedef
 yoktur, fark ölçüm bandıdır). Chromium/WebKit E2E: vitrin 40, oyun 27 geçti; bir
-mevcut atlama. `audio-verify` ayrıca koşuldu: 69/69 manifest, 2/2 arama, 7/7 aile,
-4/4 müzik, 8/8 sample geçti; iş envanteri 69/86'dır (17 emekli iş) ve bu yüzden
-`signoff` bu oturumda yeşil değildir. `signoff`un güvenlik ve audio kapsam
-aşamaları koşulmadı.
+mevcut atlama. `audio-verify` ayrıca koşuldu; 17 emekli iş kaydı kaldırıldıktan
+sonra **exit 0**: 69/69 manifest, 2/2 arama, 7/7 aile, 4/4 müzik, 69/69 iş
+yayın kaydı, 8/8 sample geçti. `signoff`un `coverage-audio`, `security-js` ve
+`security-rust` aşamaları koşulmadı; `signoff` bütününe yeşil denmez.
