@@ -57,7 +57,7 @@ describe('VOL.UI Qualification Parity Invariant', () => {
 
   it('Showcase 12 temel sekmede tüm bileşen ailelerini nitelendirir ve temizler', () => {
     const builders = tabBuilders(() => uiRoot);
-    expect(builders.length).toBe(13);
+    expect(builders.length).toBe(14);
 
     const registeredTabs = builders.map((b) => b.name);
     const expectedTabs = [
@@ -74,6 +74,7 @@ describe('VOL.UI Qualification Parity Invariant', () => {
       'touch',
       'loading',
       'ses',
+      'kimlik',
     ];
     expect(registeredTabs).toEqual(expectedTabs);
 

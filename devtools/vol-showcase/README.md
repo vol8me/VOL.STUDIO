@@ -25,6 +25,7 @@ pnpm --filter @volstudio/vol-showcase dev
 | SCROLL          | `core/src/ui/layout/`                                                                                         |
 | TOUCH           | `core/src/ui/touch/`, `core/src/ui/camera/`, `core/src/ui/buttons/`, `core/src/ui/hud/`, `core/src/ui/focus/` |
 | SES             | `core/src/audio/ui/`, `core/src/ui/feedback/`                                                                 |
+| KİMLİK          | `core/src/ui/icons/`, `core/public/assets/icons/`                                                             |
 
 Kataloğa eklenen tüketicisiz CORE bileşeni aynı değişiklikte burada gösterilir
 ve CORE testinde adıyla sınanır. Sekme tablosu vitrin yönlendirmesidir; canlı public envanter

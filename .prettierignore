@@ -52,3 +52,4 @@ devtools/audio-synth/records/music/*/jobs/
 # Oyun yayın hedeflerinde de aynı kanonik audio-synth yazıcısı kullanılır.
 games/*/audio-manifests/
 games/*/audio-banks/
+core/public/assets/icons/CREDITS.md

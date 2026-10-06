@@ -687,6 +687,13 @@
       "target": "button[data-ses-comp=\"select\"] > .vol-select__caret",
       "owner": "UI-05.2",
       "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-showcase-fullscreen-button",
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     }
   ]
 }

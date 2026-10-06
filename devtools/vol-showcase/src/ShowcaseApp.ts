@@ -7,6 +7,7 @@ import { buildButtonsTab } from './sections/buttonsTab';
 import { buildCardsTab } from './sections/cardsTab';
 import { buildFormsTab } from './sections/formsTab';
 import { buildHudTab } from './sections/hudTab';
+import { buildKimlikTab } from './sections/kimlikTab';
 import { buildLoadingTab } from './sections/loadingTab';
 import { buildPaletteTab } from './sections/paletteTab';
 import { buildPanelsTab } from './sections/panelsTab';
@@ -29,7 +30,8 @@ type ShowcaseTabId =
   | 'scroll'
   | 'touch'
   | 'loading'
-  | 'ses';
+  | 'ses'
+  | 'kimlik';
 
 interface TabSpec {
   id: ShowcaseTabId;
@@ -149,6 +151,7 @@ export class ShowcaseApp {
       { id: 'touch', labelKey: 'touch', builder: buildTouchTab },
       { id: 'loading', labelKey: 'loading', builder: buildLoadingTab },
       { id: 'ses', labelKey: 'ses', builder: buildSesTab },
+      { id: 'kimlik', labelKey: 'kimlik', builder: buildKimlikTab },
     ];
     const entries = specs.map((spec) => ({
       id: spec.id,

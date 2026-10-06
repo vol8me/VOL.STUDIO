@@ -833,6 +833,22 @@
       ]
     },
     {
+      "export": "ICON_CATEGORIES",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/icons/icons.test.ts",
+          "title": "RTS komutları, yapılar, birimler, kaynaklar ve bullet hell ikonları yeterince geniştir"
+        }
+      ]
+    },
+    {
       "export": "Icon",
       "kind": "class",
       "tier": 1,
@@ -840,11 +856,15 @@
       "anchor": "A5",
       "archetype": "display",
       "consumer": "direct",
-      "showcase": ["sections/buttonsTab.ts", "sections/workbenchTab.ts"],
+      "showcase": ["sections/buttonsTab.ts", "sections/kimlikTab.ts", "sections/workbenchTab.ts"],
       "tests": [
         {
           "file": "core/tests/ui/workbenchPrimitives.test.ts",
           "title": "güvenli SVG registry üretir ve dekoratif/etiketli kipleri ayırır"
+        },
+        {
+          "file": "core/tests/ui/icons/icons.test.ts",
+          "title": "katalog adı, simge bağı ve erişilebilirlik: süs gizli, etiketli anlamlı"
         }
       ]
     },
@@ -2287,6 +2307,26 @@
       ]
     },
     {
+      "export": "configureIcons",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan ikon sprite kökü ayarı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/icons/icons.test.ts",
+          "title": "configureIcons kökü değiştirir, sondaki eğik çizgiyi atar ve yalnız sonraki yüklemeleri etkiler"
+        }
+      ]
+    },
+    {
       "export": "emitUiIntent",
       "kind": "helper",
       "tier": 1,
@@ -2431,6 +2471,26 @@
       ]
     },
     {
+      "export": "loadIconSprite",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/icons/icons.test.ts",
+          "title": "eşzamanlı çağrılar tek istekte birleşir, bir kez yerleşir; sonrası istek yapmaz"
+        },
+        {
+          "file": "core/tests/ui/icons/icons.test.ts",
+          "title": "ağ hatası uyarıyla bildirilir, fırlatmaz ve sonraki çağrıda yeniden denenir"
+        }
+      ]
+    },
+    {
       "export": "pickDirectionalTarget",
       "kind": "helper",
       "tier": 2,
@@ -2447,6 +2507,26 @@
         {
           "file": "core/tests/ui/focus/focusNav.test.ts",
           "title": "yönün ilerisindeki en yakın aday kazanır"
+        }
+      ]
+    },
+    {
+      "export": "registerIconSprite",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan sprite yerleştirici (sunucusuz ortam ve test); davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/icons/icons.test.ts",
+          "title": "geçersiz sprite metni reddedilir"
         }
       ]
     },

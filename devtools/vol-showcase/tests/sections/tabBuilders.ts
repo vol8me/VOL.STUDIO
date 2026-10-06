@@ -5,6 +5,7 @@ import { buildButtonsTab } from '../../src/sections/buttonsTab';
 import { buildCardsTab } from '../../src/sections/cardsTab';
 import { buildFormsTab } from '../../src/sections/formsTab';
 import { buildHudTab } from '../../src/sections/hudTab';
+import { buildKimlikTab } from '../../src/sections/kimlikTab';
 import { buildLoadingTab } from '../../src/sections/loadingTab';
 import { buildPaletteTab } from '../../src/sections/paletteTab';
 import { buildPanelsTab } from '../../src/sections/panelsTab';
@@ -59,6 +60,7 @@ export function tabBuilders(getRoot: () => HTMLElement): TabBuilder[] {
     { name: 'touch', build: () => buildTouchTab() },
     { name: 'loading', build: () => buildLoadingTab() },
     { name: 'ses', build: () => buildSesTab() },
+    { name: 'kimlik', build: () => buildKimlikTab() },
   ];
 }
 

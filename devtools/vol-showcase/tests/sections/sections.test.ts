@@ -149,10 +149,10 @@ describe('vol-showcase sekme builderları', () => {
       expect(grid.children.length).toBe(1);
     });
 
-    it('svgIcon bir SVG üretir', () => {
-      const icon = svgIcon('M0 0');
+    it('svgIcon katalog ikonunu sprite simgesine bağlayan bir SVG üretir', () => {
+      const icon = svgIcon('attack');
       expect(icon.tagName.toLowerCase()).toBe('svg');
-      expect(icon.querySelector('path')).not.toBeNull();
+      expect(icon.querySelector('use')?.getAttribute('href')).toBe('#vol-icon-attack');
     });
   });
 

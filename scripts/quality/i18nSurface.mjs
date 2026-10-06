@@ -78,6 +78,12 @@ export const DYNAMIC_FAMILIES = [
   },
   {
     ns: 'volui',
+    prefix: 'kimlik.categories.',
+    suffix: '',
+    reason: 'ikon galerisi kart başlığı kategori kimliğinden türer',
+  },
+  {
+    ns: 'volui',
     prefix: 'ses.channels.',
     suffix: '',
     reason: 'kanal kaydırıcı etiketi kanal adından türer',

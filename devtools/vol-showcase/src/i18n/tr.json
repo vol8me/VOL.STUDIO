@@ -19,7 +19,8 @@
     "loading": "YÜKLEME",
     "cards": "KARTLAR",
     "workbench": "ÇALIŞMA ALANI",
-    "ses": "SES"
+    "ses": "SES",
+    "kimlik": "KİMLİK"
   },
   "workbench": {
     "propertyFields": "Özellik alanları ve değer sözleşmesi",
@@ -961,6 +962,21 @@
       "dry": "Kuru çal",
       "kit": "Kit ile çal",
       "download": "Örneği indir"
+    }
+  },
+  "kimlik": {
+    "iconSize": "İkon boyutu",
+    "iconHint": "Tek stil: dolu, kalın, tek renk siluet; renk metin renginden gelir. Oyun ikonları game-icons.net (CC BY 3.0), kabuk ikonları özgündür.",
+    "categories": {
+      "command": "Komutlar",
+      "building": "Yapılar",
+      "unit": "Birimler",
+      "resource": "Kaynaklar",
+      "projectile": "Mermi ve bullet hell",
+      "status": "Durumlar",
+      "item": "Eşyalar",
+      "meta": "Genel",
+      "chrome": "Kabuk (yön, onay, medya)"
     }
   }
 }

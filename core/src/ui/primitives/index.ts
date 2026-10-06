@@ -35,7 +35,14 @@ export {
   type SegmentedControlOptions,
 } from './SegmentedControl';
 export { Select, type SelectOption, type SelectOptionTone, type SelectOptions } from './Select';
-export { Icon, VOL_ICONS, type IconName, type IconDefinition, type IconOptions } from './Icon';
+export {
+  Icon,
+  VOL_ICONS,
+  type IconName,
+  type LegacyIconName,
+  type IconDefinition,
+  type IconOptions,
+} from './Icon';
 export {
   Toolbar,
   ToolButton,

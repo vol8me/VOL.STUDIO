@@ -1,0 +1,251 @@
+// Üretilmiştir: core/scripts/icons/curate.mjs. Elle düzenlenmez.
+
+export const COMMAND_ICONS = [
+  'aim',
+  'attack',
+  'build',
+  'cancel',
+  'defend',
+  'formation',
+  'halt',
+  'harvest',
+  'mine',
+  'move',
+  'patrol',
+  'rally',
+  'recycle',
+  'repair',
+  'retreat',
+  'scout',
+  'select',
+  'sell',
+  'target',
+  'upgrade',
+] as const;
+export type CommandIconName = (typeof COMMAND_ICONS)[number];
+
+export const ITEM_ICONS = [
+  'amulet',
+  'axe',
+  'backpack',
+  'book',
+  'boots',
+  'bow',
+  'chest',
+  'coin',
+  'gem',
+  'gloves',
+  'helmet',
+  'key',
+  'map',
+  'potion',
+  'ring',
+  'scroll',
+  'staff',
+  'sword',
+  'torch',
+] as const;
+export type ItemIconName = (typeof ITEM_ICONS)[number];
+
+export const UNIT_ICONS = [
+  'archer',
+  'cavalry',
+  'helicopter',
+  'mage',
+  'robot',
+  'siege',
+  'spearman',
+  'starship',
+  'swordman',
+  'tank',
+] as const;
+export type UnitIconName = (typeof UNIT_ICONS)[number];
+
+export const BUILDING_ICONS = [
+  'archerTower',
+  'ballista',
+  'barracks',
+  'bunker',
+  'camp',
+  'cannon',
+  'castle',
+  'farm',
+  'fireTower',
+  'forge',
+  'gate',
+  'guardTower',
+  'house',
+  'lighthouse',
+  'lumberMill',
+  'mageTower',
+  'market',
+  'observatory',
+  'shrine',
+  'siegeWorkshop',
+  'stable',
+  'wall',
+  'watchtower',
+  'well',
+  'windmill',
+] as const;
+export type BuildingIconName = (typeof BUILDING_ICONS)[number];
+
+export const STATUS_ICONS = [
+  'armor',
+  'bleed',
+  'burn',
+  'cooldown',
+  'critical',
+  'freeze',
+  'health',
+  'level',
+  'luck',
+  'poison',
+  'range',
+  'regen',
+  'shock',
+  'speed',
+  'stamina',
+  'stun',
+  'wound',
+  'xp',
+] as const;
+export type StatusIconName = (typeof STATUS_ICONS)[number];
+
+export const META_ICONS = [
+  'bell',
+  'cart',
+  'clock',
+  'copy',
+  'crown',
+  'exit',
+  'eye',
+  'eyedropper',
+  'flag',
+  'fullscreen',
+  'gamepad',
+  'gears',
+  'gift',
+  'help',
+  'info',
+  'keyboard',
+  'language',
+  'load',
+  'lock',
+  'medal',
+  'mouse',
+  'music',
+  'paintBucket',
+  'palette',
+  'pencil',
+  'save',
+  'search',
+  'settings',
+  'share',
+  'skull',
+  'speaker',
+  'speakerOff',
+  'star',
+  'touch',
+  'trash',
+  'trophy',
+  'tune',
+  'unlock',
+] as const;
+export type MetaIconName = (typeof META_ICONS)[number];
+
+export const PROJECTILE_ICONS = [
+  'bomb',
+  'boss',
+  'bullet',
+  'clearScreen',
+  'combo',
+  'danger',
+  'extraLife',
+  'heart',
+  'homing',
+  'invulnerable',
+  'laser',
+  'magnet',
+  'missile',
+  'orbit',
+  'overdrive',
+  'pierce',
+  'rush',
+  'slowTime',
+  'speedUp',
+  'spread',
+] as const;
+export type ProjectileIconName = (typeof PROJECTILE_ICONS)[number];
+
+export const RESOURCE_ICONS = [
+  'crystal',
+  'energy',
+  'food',
+  'gold',
+  'iron',
+  'mana',
+  'oil',
+  'population',
+  'stone',
+  'water',
+  'wood',
+] as const;
+export type ResourceIconName = (typeof RESOURCE_ICONS)[number];
+
+export const CHROME_ICONS = [
+  'close',
+  'check',
+  'plus',
+  'minus',
+  'menu',
+  'more',
+  'dot',
+  'play',
+  'pause',
+  'stop',
+  'fastForward',
+  'rewind',
+  'zoomIn',
+  'zoomOut',
+  'undo',
+  'redo',
+  'chevronUp',
+  'chevronDown',
+  'chevronLeft',
+  'chevronRight',
+  'arrowUp',
+  'arrowDown',
+  'arrowLeft',
+  'arrowRight',
+  'warning',
+  'error',
+  'checkCircle',
+  'infoCircle',
+  'dragHandle',
+  'refresh',
+] as const;
+export type ChromeIconName = (typeof CHROME_ICONS)[number];
+
+export type IconName =
+  | CommandIconName
+  | ItemIconName
+  | UnitIconName
+  | BuildingIconName
+  | StatusIconName
+  | MetaIconName
+  | ProjectileIconName
+  | ResourceIconName
+  | ChromeIconName;
+
+export const ICON_CATEGORIES = {
+  command: COMMAND_ICONS,
+  item: ITEM_ICONS,
+  unit: UNIT_ICONS,
+  building: BUILDING_ICONS,
+  status: STATUS_ICONS,
+  meta: META_ICONS,
+  projectile: PROJECTILE_ICONS,
+  resource: RESOURCE_ICONS,
+  chrome: CHROME_ICONS,
+} as const;

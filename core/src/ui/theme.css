@@ -3,6 +3,7 @@
 @import url('./primitives/choices.css');
 @import url('./primitives/views.css');
 @import url('./glyphs/glyphs.css');
+@import url('./icons/icons.css');
 @import url('./layout/layout.css');
 @import url('./layout/density.css');
 @import url('./overlays/overlays.css');

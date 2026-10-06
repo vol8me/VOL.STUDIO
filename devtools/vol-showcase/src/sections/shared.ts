@@ -1,4 +1,4 @@
-import { Text } from '@volstudio/core/ui';
+import { Icon, Text, type IconName } from '@volstudio/core/ui';
 
 /** Grid için başlıklı demo kartı. İçerik .vol-showcase-card__body'e sarılır — flex çakışması olmaz. spanAll tam genişlik, span:2 iki sütun, span:3/4/6 yalnızca paletteGrid'de, center her iki eksende ortalar. */
 export function card(
@@ -58,18 +58,7 @@ export function cardGrid3(cards: HTMLElement[]): HTMLElement {
   return grid;
 }
 
-export function svgIcon(path: string): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('stroke-linecap', 'round');
-  svg.setAttribute('stroke-linejoin', 'round');
-
-  const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  el.setAttribute('d', path);
-  svg.appendChild(el);
-
-  return svg;
+/** Katalog ikonu (sprite simgesi); ikon adları `./icons`tedir. */
+export function svgIcon(name: IconName, size?: number): SVGSVGElement {
+  return new Icon({ name, size }).element;
 }

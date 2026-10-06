@@ -19,7 +19,8 @@
     "loading": "LOADING",
     "cards": "CARDS",
     "workbench": "WORKBENCH",
-    "ses": "SOUND"
+    "ses": "SOUND",
+    "kimlik": "IDENTITY"
   },
   "workbench": {
     "propertyFields": "Property fields and value contract",
@@ -961,6 +962,21 @@
       "dry": "Play dry",
       "kit": "Play through kit",
       "download": "Download sample"
+    }
+  },
+  "kimlik": {
+    "iconSize": "Icon size",
+    "iconHint": "One style: filled, bold, single-colour silhouettes; the colour comes from the text colour. Game icons are from game-icons.net (CC BY 3.0), chrome icons are original.",
+    "categories": {
+      "command": "Commands",
+      "building": "Buildings",
+      "unit": "Units",
+      "resource": "Resources",
+      "projectile": "Projectiles and bullet hell",
+      "status": "Status",
+      "item": "Items",
+      "meta": "General",
+      "chrome": "Chrome (direction, confirm, media)"
     }
   }
 }

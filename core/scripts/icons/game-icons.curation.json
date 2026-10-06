@@ -1,0 +1,807 @@
+[
+  {
+    "id": "attack",
+    "category": "command",
+    "source": "lorc/crossed-swords"
+  },
+  {
+    "id": "defend",
+    "category": "command",
+    "source": "sbed/shield"
+  },
+  {
+    "id": "move",
+    "category": "command",
+    "source": "delapouite/move"
+  },
+  {
+    "id": "patrol",
+    "category": "command",
+    "source": "lorc/walking-boot"
+  },
+  {
+    "id": "halt",
+    "category": "command",
+    "source": "delapouite/stop-sign"
+  },
+  {
+    "id": "repair",
+    "category": "command",
+    "source": "lorc/auto-repair"
+  },
+  {
+    "id": "build",
+    "category": "command",
+    "source": "lorc/hammer-nails"
+  },
+  {
+    "id": "harvest",
+    "category": "command",
+    "source": "lorc/wood-axe"
+  },
+  {
+    "id": "mine",
+    "category": "command",
+    "source": "lorc/mining"
+  },
+  {
+    "id": "rally",
+    "category": "command",
+    "source": "lorc/rally-the-troops"
+  },
+  {
+    "id": "target",
+    "category": "command",
+    "source": "lorc/target-arrows"
+  },
+  {
+    "id": "aim",
+    "category": "command",
+    "source": "delapouite/crosshair"
+  },
+  {
+    "id": "select",
+    "category": "command",
+    "source": "sbed/select"
+  },
+  {
+    "id": "upgrade",
+    "category": "command",
+    "source": "delapouite/upgrade"
+  },
+  {
+    "id": "sell",
+    "category": "command",
+    "source": "lorc/cash"
+  },
+  {
+    "id": "recycle",
+    "category": "command",
+    "source": "lorc/recycle"
+  },
+  {
+    "id": "cancel",
+    "category": "command",
+    "source": "sbed/cancel"
+  },
+  {
+    "id": "formation",
+    "category": "command",
+    "source": "delapouite/star-formation"
+  },
+  {
+    "id": "scout",
+    "category": "command",
+    "source": "delapouite/walking-scout"
+  },
+  {
+    "id": "retreat",
+    "category": "command",
+    "source": "lorc/run"
+  },
+  {
+    "id": "castle",
+    "category": "building",
+    "source": "delapouite/castle"
+  },
+  {
+    "id": "barracks",
+    "category": "building",
+    "source": "delapouite/barracks"
+  },
+  {
+    "id": "watchtower",
+    "category": "building",
+    "source": "delapouite/watchtower"
+  },
+  {
+    "id": "guardTower",
+    "category": "building",
+    "source": "lorc/guarded-tower"
+  },
+  {
+    "id": "archerTower",
+    "category": "building",
+    "source": "lorc/archery-target"
+  },
+  {
+    "id": "fireTower",
+    "category": "building",
+    "source": "lorc/fire-bowl"
+  },
+  {
+    "id": "wall",
+    "category": "building",
+    "source": "delapouite/stone-wall"
+  },
+  {
+    "id": "gate",
+    "category": "building",
+    "source": "delapouite/gate"
+  },
+  {
+    "id": "farm",
+    "category": "building",
+    "source": "lorc/wheat"
+  },
+  {
+    "id": "lumberMill",
+    "category": "building",
+    "source": "skoll/logging"
+  },
+  {
+    "id": "market",
+    "category": "building",
+    "source": "delapouite/shop"
+  },
+  {
+    "id": "shrine",
+    "category": "building",
+    "source": "delapouite/crystal-shrine"
+  },
+  {
+    "id": "stable",
+    "category": "building",
+    "source": "delapouite/stable"
+  },
+  {
+    "id": "siegeWorkshop",
+    "category": "building",
+    "source": "heavenly-dog/catapult"
+  },
+  {
+    "id": "mageTower",
+    "category": "building",
+    "source": "delapouite/evil-tower"
+  },
+  {
+    "id": "bunker",
+    "category": "building",
+    "source": "quoting/bunker"
+  },
+  {
+    "id": "lighthouse",
+    "category": "building",
+    "source": "delapouite/lighthouse"
+  },
+  {
+    "id": "well",
+    "category": "building",
+    "source": "delapouite/well"
+  },
+  {
+    "id": "observatory",
+    "category": "building",
+    "source": "delapouite/observatory"
+  },
+  {
+    "id": "ballista",
+    "category": "building",
+    "source": "skoll/ballista"
+  },
+  {
+    "id": "cannon",
+    "category": "building",
+    "source": "lorc/cannon"
+  },
+  {
+    "id": "windmill",
+    "category": "building",
+    "source": "delapouite/windmill"
+  },
+  {
+    "id": "forge",
+    "category": "building",
+    "source": "lorc/anvil"
+  },
+  {
+    "id": "house",
+    "category": "building",
+    "source": "delapouite/house"
+  },
+  {
+    "id": "camp",
+    "category": "building",
+    "source": "delapouite/camping-tent"
+  },
+  {
+    "id": "swordman",
+    "category": "unit",
+    "source": "cathelineau/swordman"
+  },
+  {
+    "id": "archer",
+    "category": "unit",
+    "source": "delapouite/archer"
+  },
+  {
+    "id": "cavalry",
+    "category": "unit",
+    "source": "skoll/mounted-knight"
+  },
+  {
+    "id": "spearman",
+    "category": "unit",
+    "source": "lorc/spear-hook"
+  },
+  {
+    "id": "mage",
+    "category": "unit",
+    "source": "delapouite/wizard-face"
+  },
+  {
+    "id": "siege",
+    "category": "unit",
+    "source": "delapouite/trebuchet"
+  },
+  {
+    "id": "tank",
+    "category": "unit",
+    "source": "lorc/tank"
+  },
+  {
+    "id": "helicopter",
+    "category": "unit",
+    "source": "delapouite/helicopter"
+  },
+  {
+    "id": "starship",
+    "category": "unit",
+    "source": "delapouite/spaceship"
+  },
+  {
+    "id": "robot",
+    "category": "unit",
+    "source": "lorc/robot-golem"
+  },
+  {
+    "id": "wood",
+    "category": "resource",
+    "source": "delapouite/wood-pile"
+  },
+  {
+    "id": "stone",
+    "category": "resource",
+    "source": "delapouite/stone-pile"
+  },
+  {
+    "id": "gold",
+    "category": "resource",
+    "source": "willdabeast/gold-bar"
+  },
+  {
+    "id": "food",
+    "category": "resource",
+    "source": "lorc/meat"
+  },
+  {
+    "id": "iron",
+    "category": "resource",
+    "source": "faithtoken/ore"
+  },
+  {
+    "id": "crystal",
+    "category": "resource",
+    "source": "lorc/crystal-cluster"
+  },
+  {
+    "id": "mana",
+    "category": "resource",
+    "source": "lorc/potion-ball"
+  },
+  {
+    "id": "energy",
+    "category": "resource",
+    "source": "sbed/battery-pack"
+  },
+  {
+    "id": "water",
+    "category": "resource",
+    "source": "sbed/water-drop"
+  },
+  {
+    "id": "oil",
+    "category": "resource",
+    "source": "skoll/oil-drum"
+  },
+  {
+    "id": "population",
+    "category": "resource",
+    "source": "delapouite/team-idea"
+  },
+  {
+    "id": "bullet",
+    "category": "projectile",
+    "source": "lorc/bullets"
+  },
+  {
+    "id": "bomb",
+    "category": "projectile",
+    "source": "lorc/time-bomb"
+  },
+  {
+    "id": "missile",
+    "category": "projectile",
+    "source": "delapouite/missile-launcher"
+  },
+  {
+    "id": "laser",
+    "category": "projectile",
+    "source": "lorc/laser-blast"
+  },
+  {
+    "id": "spread",
+    "category": "projectile",
+    "source": "delapouite/shotgun-rounds"
+  },
+  {
+    "id": "homing",
+    "category": "projectile",
+    "source": "lorc/missile-swarm"
+  },
+  {
+    "id": "pierce",
+    "category": "projectile",
+    "source": "lorc/arrow-flights"
+  },
+  {
+    "id": "orbit",
+    "category": "projectile",
+    "source": "lorc/orbital"
+  },
+  {
+    "id": "heart",
+    "category": "projectile",
+    "source": "lorc/heart-inside"
+  },
+  {
+    "id": "extraLife",
+    "category": "projectile",
+    "source": "zeromancer/heart-plus"
+  },
+  {
+    "id": "speedUp",
+    "category": "projectile",
+    "source": "delapouite/speedometer"
+  },
+  {
+    "id": "magnet",
+    "category": "projectile",
+    "source": "lorc/magnet"
+  },
+  {
+    "id": "rush",
+    "category": "projectile",
+    "source": "lorc/fire-dash"
+  },
+  {
+    "id": "slowTime",
+    "category": "projectile",
+    "source": "lorc/hourglass"
+  },
+  {
+    "id": "invulnerable",
+    "category": "projectile",
+    "source": "lorc/shield-echoes"
+  },
+  {
+    "id": "overdrive",
+    "category": "projectile",
+    "source": "lorc/lightning-trio"
+  },
+  {
+    "id": "combo",
+    "category": "projectile",
+    "source": "lorc/cycle"
+  },
+  {
+    "id": "boss",
+    "category": "projectile",
+    "source": "lorc/skull-crossed-bones"
+  },
+  {
+    "id": "clearScreen",
+    "category": "projectile",
+    "source": "lorc/explosion-rays"
+  },
+  {
+    "id": "danger",
+    "category": "projectile",
+    "source": "delapouite/radar-cross-section"
+  },
+  {
+    "id": "wound",
+    "category": "status",
+    "source": "lorc/sword-wound"
+  },
+  {
+    "id": "armor",
+    "category": "status",
+    "source": "lorc/armor-vest"
+  },
+  {
+    "id": "speed",
+    "category": "status",
+    "source": "lorc/winged-leg"
+  },
+  {
+    "id": "range",
+    "category": "status",
+    "source": "delapouite/bow-arrow"
+  },
+  {
+    "id": "critical",
+    "category": "status",
+    "source": "skoll/bullseye"
+  },
+  {
+    "id": "health",
+    "category": "status",
+    "source": "sbed/health-normal"
+  },
+  {
+    "id": "stamina",
+    "category": "status",
+    "source": "delapouite/lungs"
+  },
+  {
+    "id": "luck",
+    "category": "status",
+    "source": "lorc/clover"
+  },
+  {
+    "id": "xp",
+    "category": "status",
+    "source": "delapouite/star-medal"
+  },
+  {
+    "id": "level",
+    "category": "status",
+    "source": "delapouite/level-end-flag"
+  },
+  {
+    "id": "cooldown",
+    "category": "status",
+    "source": "lorc/stopwatch"
+  },
+  {
+    "id": "regen",
+    "category": "status",
+    "source": "sbed/health-increase"
+  },
+  {
+    "id": "poison",
+    "category": "status",
+    "source": "lorc/poison-bottle"
+  },
+  {
+    "id": "burn",
+    "category": "status",
+    "source": "sbed/fire"
+  },
+  {
+    "id": "freeze",
+    "category": "status",
+    "source": "lorc/ice-cube"
+  },
+  {
+    "id": "shock",
+    "category": "status",
+    "source": "lorc/lightning-bow"
+  },
+  {
+    "id": "bleed",
+    "category": "status",
+    "source": "skoll/blood"
+  },
+  {
+    "id": "stun",
+    "category": "status",
+    "source": "lorc/star-swirl"
+  },
+  {
+    "id": "sword",
+    "category": "item",
+    "source": "lorc/broadsword"
+  },
+  {
+    "id": "axe",
+    "category": "item",
+    "source": "lorc/battle-axe"
+  },
+  {
+    "id": "bow",
+    "category": "item",
+    "source": "delapouite/bow-arrow"
+  },
+  {
+    "id": "staff",
+    "category": "item",
+    "source": "lorc/wizard-staff"
+  },
+  {
+    "id": "potion",
+    "category": "item",
+    "source": "delapouite/health-potion"
+  },
+  {
+    "id": "scroll",
+    "category": "item",
+    "source": "lorc/scroll-unfurled"
+  },
+  {
+    "id": "key",
+    "category": "item",
+    "source": "lorc/key"
+  },
+  {
+    "id": "chest",
+    "category": "item",
+    "source": "delapouite/chest"
+  },
+  {
+    "id": "coin",
+    "category": "item",
+    "source": "delapouite/coins"
+  },
+  {
+    "id": "gem",
+    "category": "item",
+    "source": "lorc/gems"
+  },
+  {
+    "id": "ring",
+    "category": "item",
+    "source": "delapouite/ring"
+  },
+  {
+    "id": "amulet",
+    "category": "item",
+    "source": "lorc/gem-pendant"
+  },
+  {
+    "id": "helmet",
+    "category": "item",
+    "source": "delapouite/viking-helmet"
+  },
+  {
+    "id": "boots",
+    "category": "item",
+    "source": "lorc/boots"
+  },
+  {
+    "id": "gloves",
+    "category": "item",
+    "source": "delapouite/gloves"
+  },
+  {
+    "id": "backpack",
+    "category": "item",
+    "source": "delapouite/backpack"
+  },
+  {
+    "id": "map",
+    "category": "item",
+    "source": "lorc/treasure-map"
+  },
+  {
+    "id": "book",
+    "category": "item",
+    "source": "delapouite/book-cover"
+  },
+  {
+    "id": "torch",
+    "category": "item",
+    "source": "delapouite/torch"
+  },
+  {
+    "id": "trophy",
+    "category": "meta",
+    "source": "lorc/trophy"
+  },
+  {
+    "id": "medal",
+    "category": "meta",
+    "source": "lorc/medal"
+  },
+  {
+    "id": "crown",
+    "category": "meta",
+    "source": "lorc/crown"
+  },
+  {
+    "id": "flag",
+    "category": "meta",
+    "source": "delapouite/flag-objective"
+  },
+  {
+    "id": "skull",
+    "category": "meta",
+    "source": "sbed/death-skull"
+  },
+  {
+    "id": "star",
+    "category": "meta",
+    "source": "delapouite/round-star"
+  },
+  {
+    "id": "bell",
+    "category": "meta",
+    "source": "lorc/ringing-bell"
+  },
+  {
+    "id": "gift",
+    "category": "meta",
+    "source": "delapouite/present"
+  },
+  {
+    "id": "cart",
+    "category": "meta",
+    "source": "delapouite/shopping-cart"
+  },
+  {
+    "id": "lock",
+    "category": "meta",
+    "source": "lorc/padlock"
+  },
+  {
+    "id": "unlock",
+    "category": "meta",
+    "source": "delapouite/padlock-open"
+  },
+  {
+    "id": "eye",
+    "category": "meta",
+    "source": "delapouite/eye-target"
+  },
+  {
+    "id": "speaker",
+    "category": "meta",
+    "source": "delapouite/speaker"
+  },
+  {
+    "id": "speakerOff",
+    "category": "meta",
+    "source": "delapouite/speaker-off"
+  },
+  {
+    "id": "music",
+    "category": "meta",
+    "source": "delapouite/musical-notes"
+  },
+  {
+    "id": "gamepad",
+    "category": "meta",
+    "source": "delapouite/gamepad"
+  },
+  {
+    "id": "keyboard",
+    "category": "meta",
+    "source": "delapouite/keyboard"
+  },
+  {
+    "id": "mouse",
+    "category": "meta",
+    "source": "delapouite/mouse"
+  },
+  {
+    "id": "touch",
+    "category": "meta",
+    "source": "skoll/click"
+  },
+  {
+    "id": "gears",
+    "category": "meta",
+    "source": "lorc/gears"
+  },
+  {
+    "id": "save",
+    "category": "meta",
+    "source": "delapouite/save"
+  },
+  {
+    "id": "load",
+    "category": "meta",
+    "source": "delapouite/load"
+  },
+  {
+    "id": "exit",
+    "category": "meta",
+    "source": "delapouite/exit-door"
+  },
+  {
+    "id": "search",
+    "category": "meta",
+    "source": "lorc/magnifying-glass"
+  },
+  {
+    "id": "info",
+    "category": "meta",
+    "source": "delapouite/info"
+  },
+  {
+    "id": "help",
+    "category": "meta",
+    "source": "sbed/help"
+  },
+  {
+    "id": "fullscreen",
+    "category": "meta",
+    "source": "delapouite/expand"
+  },
+  {
+    "id": "language",
+    "category": "meta",
+    "source": "delapouite/earth-america"
+  },
+  {
+    "id": "palette",
+    "category": "meta",
+    "source": "delapouite/palette"
+  },
+  {
+    "id": "clock",
+    "category": "meta",
+    "source": "delapouite/alarm-clock"
+  },
+  {
+    "id": "settings",
+    "category": "meta",
+    "source": "lorc/cog"
+  },
+  {
+    "id": "tune",
+    "category": "meta",
+    "source": "delapouite/settings-knobs"
+  },
+  {
+    "id": "trash",
+    "category": "meta",
+    "source": "delapouite/trash-can"
+  },
+  {
+    "id": "pencil",
+    "category": "meta",
+    "source": "delapouite/pencil"
+  },
+  {
+    "id": "paintBucket",
+    "category": "meta",
+    "source": "delapouite/paint-bucket"
+  },
+  {
+    "id": "eyedropper",
+    "category": "meta",
+    "source": "lorc/eyedropper"
+  },
+  {
+    "id": "copy",
+    "category": "meta",
+    "source": "lorc/papers"
+  },
+  {
+    "id": "share",
+    "category": "meta",
+    "source": "delapouite/share"
+  }
+]

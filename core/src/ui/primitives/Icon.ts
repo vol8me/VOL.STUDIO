@@ -1,6 +1,20 @@
+import {
+  SPRITE_PREFIX,
+  loadIconSprite,
+  isIconSpriteLoaded,
+  resolveCatalogIcon,
+  spriteOf,
+  type CatalogIconName,
+} from '../icons/sprite';
+
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
-export type IconName =
+/**
+ * Eski çizgi ikon adları (kebab-case). Çoğunun kataloğun kalın dolu karşılığı vardır ve
+ * (`LEGACY_ICON_ALIASES`) otomatik oraya yönlenir; geri kalanı (editör araçları) eski
+ * çizgi gövdesiyle çizilir.
+ */
+export type LegacyIconName =
   | 'apps'
   | 'audio'
   | 'chevron-down'
@@ -48,6 +62,9 @@ export type IconName =
   | 'zoom-in'
   | 'zoom-out';
 
+/** Katalog ikonu (oyun/kabuk ikonları, camelCase) ya da eski çizgi ikon adı. */
+export type IconName = LegacyIconName | CatalogIconName;
+
 export interface IconDefinition {
   /** SVG viewBox; bütün yerleşik ikonlarda 24×24 koordinat sistemi kullanılır. */
   viewBox: string;
@@ -60,7 +77,7 @@ export interface IconDefinition {
  * birinci taraf ikon kaydı. Path verisi inert SVG attribute'larına yazılır;
  * `innerHTML` kullanılmaz.
  */
-export const VOL_ICONS: Readonly<Record<IconName, IconDefinition>> = {
+export const VOL_ICONS: Readonly<Record<LegacyIconName, IconDefinition>> = {
   apps: {
     viewBox: '0 0 24 24',
     paths: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M14 14h6v6h-6z'],
@@ -209,23 +226,14 @@ export interface IconOptions {
 
 export class Icon {
   readonly element: SVGSVGElement;
+  private size?: number;
 
   constructor(options: IconOptions) {
-    const definition = VOL_ICONS[options.name];
+    this.size = options.size;
     this.element = document.createElementNS(SVG_NAMESPACE, 'svg');
     this.element.classList.add('vol-icon');
     if (options.className) this.element.classList.add(options.className);
-    this.element.setAttribute('viewBox', definition.viewBox);
-    this.element.setAttribute('fill', 'none');
-    this.element.setAttribute('stroke', 'currentColor');
-    this.element.setAttribute('stroke-width', '1.75');
-    this.element.setAttribute('stroke-linecap', 'round');
-    this.element.setAttribute('stroke-linejoin', 'round');
     this.element.setAttribute('focusable', 'false');
-    if (options.size !== undefined) {
-      this.element.setAttribute('width', String(options.size));
-      this.element.setAttribute('height', String(options.size));
-    }
 
     if (options.label) {
       this.element.setAttribute('role', 'img');
@@ -233,26 +241,78 @@ export class Icon {
     } else {
       this.element.setAttribute('aria-hidden', 'true');
     }
-
-    for (const pathData of definition.paths) {
-      const path = document.createElementNS(SVG_NAMESPACE, 'path');
-      path.setAttribute('d', pathData);
-      this.element.appendChild(path);
-    }
+    this.render(options.name);
   }
 
   setName(name: IconName): void {
-    const definition = VOL_ICONS[name];
-    this.element.setAttribute('viewBox', definition.viewBox);
-    this.element.replaceChildren();
-    for (const pathData of definition.paths) {
-      const path = document.createElementNS(SVG_NAMESPACE, 'path');
-      path.setAttribute('d', pathData);
-      this.element.appendChild(path);
-    }
+    this.render(name);
+  }
+
+  /** Piksel boyutu; ilk kurulumdaki `size` ile aynı ağırlıkta uygulanır. */
+  setSize(size: number): void {
+    this.size = size;
+    this.applySize(this.element.classList.contains('vol-icon--sprite'));
   }
 
   destroy(): void {
     this.element.remove();
+  }
+
+  private applySize(sprite: boolean): void {
+    const dimension = this.size ?? (sprite ? 24 : undefined);
+    if (dimension === undefined) return;
+    this.element.setAttribute('width', String(dimension));
+    this.element.setAttribute('height', String(dimension));
+    // Sprite ikonunun boyutu satır içi verilir: genel `.vol-icon` kutusu (1em) bunu ezemez.
+    if (sprite) {
+      this.element.style.width = `${dimension}px`;
+      this.element.style.height = `${dimension}px`;
+    }
+  }
+
+  /** Katalog ikonu sprite simgesine bağlanır; eski ad eski çizgi gövdesiyle çizilir. */
+  private render(name: IconName): void {
+    this.element.replaceChildren();
+    for (const attribute of [
+      'fill',
+      'stroke',
+      'stroke-width',
+      'stroke-linecap',
+      'stroke-linejoin',
+    ]) {
+      this.element.removeAttribute(attribute);
+    }
+    const catalogName = resolveCatalogIcon(name);
+    this.element.style.removeProperty('width');
+    this.element.style.removeProperty('height');
+    if (catalogName) {
+      this.element.classList.add('vol-icon--sprite');
+      this.applySize(true);
+      this.element.setAttribute('viewBox', '0 0 512 512');
+      const use = document.createElementNS(SVG_NAMESPACE, 'use');
+      const href = `#${SPRITE_PREFIX}${catalogName}`;
+      use.setAttribute('href', href);
+      this.element.appendChild(use);
+      const kind = spriteOf(catalogName);
+      if (!isIconSpriteLoaded(kind)) {
+        // İlk kullanım: sprite arka planda gelir; bazı motorlar `use` bağını yeniden çözmez, yeniden ata.
+        void loadIconSprite(kind).then(() => use.setAttribute('href', href));
+      }
+      return;
+    }
+    this.element.classList.remove('vol-icon--sprite');
+    this.applySize(false);
+    const definition = VOL_ICONS[name as LegacyIconName];
+    this.element.setAttribute('viewBox', definition.viewBox);
+    this.element.setAttribute('fill', 'none');
+    this.element.setAttribute('stroke', 'currentColor');
+    this.element.setAttribute('stroke-width', '1.75');
+    this.element.setAttribute('stroke-linecap', 'round');
+    this.element.setAttribute('stroke-linejoin', 'round');
+    for (const pathData of definition.paths) {
+      const path = document.createElementNS(SVG_NAMESPACE, 'path');
+      path.setAttribute('d', pathData);
+      this.element.appendChild(path);
+    }
   }
 }

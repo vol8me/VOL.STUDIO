@@ -8,7 +8,7 @@ Yeni regresyonlar modül adıyla test aynasına gider; eski birleşik testler b�
 
 ## Kapsam ve terfi
 
-93 public sınıf, 134 runtime export, 227 type-only export vardır.
+93 public sınıf, 138 runtime export, 230 type-only export vardır.
 17 sınıf VOL.TEST'te doğrudan, Glyph createGlyph üzerinden dolaylı kullanılır.
 Tier-1 ortak tabanı Button, IconButton, Text, Panel, Select, Checkbox,
 Slider, HoldButton, Bar/XPBar, ScrollView ve picker'lardır; aktif tüketimdeki
@@ -185,7 +185,7 @@ widget uydurulmaz. Yeni export bu tablo ve registry'de aynı commit'te görünü
 
 Bu belgenin tablolarındaki tier, faz, anchor ve tüketici bilgisinin makine-okunur karşılığı
 `devtools/vol-showcase/src/catalog/registry.json` dosyasıdır; sınıf ve yardımcıların tamamı
-(93 + 41) tekil kayıtlıdır ve `scripts/quality/uiRegistry.mjs` kapısı kaydı AST'den çıkarılan
+(93 + 45) tekil kayıtlıdır ve `scripts/quality/uiRegistry.mjs` kapısı kaydı AST'den çıkarılan
 yüzeyle karşılaştırır. Test kanıtı isim geçen metin değildir: bağlanan `it` bloğu adı
 tanımlayıcı olarak kullanmalı ve `expect` çağırmalıdır. Kanıtı olmayan satır sahip görevli
 `gap` taşır (bugün CardPicker, FOCUSABLE_SELECTOR ve

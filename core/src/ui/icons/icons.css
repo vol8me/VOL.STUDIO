@@ -1,0 +1,11 @@
+/*
+ * İkon: sprite simgesine `<use>` ile bağlanan SVG. Boya `currentColor`dır (oyun ikonları
+ * dolu siluet, kabuk ikonları kalın çizgi); renk metin renginden ya da `color`dan gelir.
+ */
+.vol-icon--sprite {
+  display: inline-block;
+  flex: none;
+  fill: currentColor;
+  vertical-align: middle;
+  pointer-events: none;
+}

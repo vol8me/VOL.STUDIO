@@ -109,6 +109,7 @@ export const SHOWCASE_TABS = [
   'touch',
   'loading',
   'ses',
+  'kimlik',
 ] as const;
 
 export type ShowcaseTab = (typeof SHOWCASE_TABS)[number];
