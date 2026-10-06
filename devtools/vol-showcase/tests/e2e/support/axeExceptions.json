@@ -32,36 +32,36 @@
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-card--epic.vol-card:nth-child(2) > .vol-card__badges > .vol-card__rarity",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-card--epic.vol-card:nth-child(5) > .vol-card__badges > .vol-card__rarity",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-card--rare.vol-card:nth-child(4) > .vol-card__badges > .vol-card__rarity",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-card--rare.vol-card:nth-child(6) > .vol-card__badges > .vol-card__rarity",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-showcase-card-row > .vol-card--rare.vol-card:nth-child(1) > .vol-card__badges > .vol-card__rarity",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/forms",
@@ -377,22 +377,22 @@
       "scope": "tab/buttons",
       "rule": "color-contrast",
       "target": ".vol-button--auto-width.vol-button:nth-child(3) > .vol-button__icon",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-03.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/buttons",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/text",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/panels",
@@ -405,8 +405,8 @@
       "scope": "tab/panels",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/hud",
@@ -440,43 +440,43 @@
       "scope": "tab/hud",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-showcase-card-row > .vol-card--legendary.vol-card > .vol-card__badges > .vol-card__rarity",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-showcase-card-row > .vol-card--legendary.vol-card > .vol-card__badges > .vol-card__type",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-showcase-card-row > .vol-card--legendary.vol-card > .vol-card__description",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-showcase-card-row > .vol-card--legendary.vol-card > .vol-card__title",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-04.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/forms",
@@ -489,92 +489,92 @@
       "scope": "tab/forms",
       "rule": "color-contrast",
       "target": ".vol-showcase-card__body > .vol-select[aria-haspopup=\"listbox\"] > .vol-select__caret",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-05.2",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/forms",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/workbench",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/palette",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/advanced",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/advanced",
       "rule": "color-contrast",
       "target": ".vol-tree > li:nth-child(2) > .vol-tree__row > .vol-tree__caret",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-05.3",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/advanced",
       "rule": "color-contrast",
       "target": ".vol-tree__caret--open",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-05.3",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/advanced",
       "rule": "color-contrast",
       "target": "#vol-accordion-1-audio-header > .vol-accordion__caret",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-05.3",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/advanced",
       "rule": "color-contrast",
       "target": "#vol-accordion-1-controls-header > .vol-accordion__caret",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-05.3",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/advanced",
       "rule": "color-contrast",
       "target": "#vol-accordion-1-graphics-header > .vol-accordion__caret",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-05.3",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/scroll",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/scroll",
       "rule": "color-contrast",
       "target": ".vol-text--body:nth-child(6)",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-10.2",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/scroll",
       "rule": "color-contrast",
       "target": ".vol-text--body:nth-child(7)",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-10.2",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/touch",
@@ -594,36 +594,36 @@
       "scope": "tab/touch",
       "rule": "color-contrast",
       "target": ".vol-charge-button__label",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-03.2",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/touch",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "tab/loading",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "layer/forms/osk",
       "rule": "color-contrast",
       "target": "button[data-action=\"backspace\"]",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-11.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
       "scope": "layer/forms/osk",
       "rule": "color-contrast",
       "target": "button[data-action=\"shift\"]",
-      "owner": "UI-01.5",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak"
+      "owner": "UI-11.1",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     }
   ]
 }

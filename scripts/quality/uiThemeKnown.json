@@ -1,0 +1,69 @@
+{
+  "schema": "UiThemeKnownV1",
+  "note": "Tema kapısının bilinen kusur kaydı. contrast: sahip açık UI görevine bağlı; kusur düzelince kayıt bayatlar ve kapı düşer. rawDurations: dosya başına ham (var dışı) hareket süresi sayısı; yalnız azalır, bileşenler UI-03+ ile var(--vol-motion-*)'a geçtikçe düşürülür.",
+  "contrast": [
+    {
+      "theme": "default",
+      "fg": "uiTextMuted",
+      "bg": "uiSurface3",
+      "owner": "UI-05.3",
+      "reason": "soluk metin bu yüzeyde 4,5:1 altında; yüzey/metin tonu seçili satır ve sekme durumlarında bileşenle birlikte düzeltilir"
+    },
+    {
+      "theme": "default",
+      "fg": "uiTextMuted",
+      "bg": "selectedFill",
+      "owner": "UI-05.3",
+      "reason": "soluk metin bu yüzeyde 4,5:1 altında; yüzey/metin tonu seçili satır ve sekme durumlarında bileşenle birlikte düzeltilir"
+    },
+    {
+      "theme": "default",
+      "fg": "uiTextMuted",
+      "bg": "pressedFill",
+      "owner": "UI-05.3",
+      "reason": "soluk metin bu yüzeyde 4,5:1 altında; yüzey/metin tonu seçili satır ve sekme durumlarında bileşenle birlikte düzeltilir"
+    },
+    {
+      "theme": "default",
+      "fg": "onBrand",
+      "bg": "brandHover",
+      "owner": "UI-03.1",
+      "reason": "marka hover dolgusunda onBrand metni 4,5:1 altında; buton hover tonu pilotta ayarlanır (ember'de çözüldü)"
+    },
+    {
+      "theme": "default",
+      "fg": "uiBorderStrong",
+      "bg": "uiBg",
+      "owner": "UI-03.1",
+      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (ember'de çözüldü)"
+    },
+    {
+      "theme": "default",
+      "fg": "uiBorderStrong",
+      "bg": "uiSurface1",
+      "owner": "UI-03.1",
+      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (ember'de çözüldü)"
+    },
+    {
+      "theme": "default",
+      "fg": "uiBorderStrong",
+      "bg": "uiSurface2",
+      "owner": "UI-03.1",
+      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (ember'de çözüldü)"
+    }
+  ],
+  "rawDurations": {
+    "core/src/ui/buttons/buttons.css": 1,
+    "core/src/ui/camera/camera.css": 1,
+    "core/src/ui/cards/cards.css": 7,
+    "core/src/ui/data/boards.css": 3,
+    "core/src/ui/feedback/feedback.css": 6,
+    "core/src/ui/hud/hud.css": 7,
+    "core/src/ui/layout/layout.css": 5,
+    "core/src/ui/overlays/loading.css": 12,
+    "core/src/ui/overlays/overlays.css": 3,
+    "core/src/ui/primitives/primitives.css": 1,
+    "core/src/ui/primitives/views.css": 11,
+    "core/src/ui/touch/touch.css": 2
+  }
+}
