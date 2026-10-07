@@ -518,7 +518,7 @@
 }
 
 .vol-card--rare .vol-card__rarity {
-  color: var(--vol-ui-info-solid);
+  color: var(--vol-ui-rarity-rare-selected);
 }
 
 .vol-card--epic {
@@ -526,7 +526,8 @@
 }
 
 .vol-card--epic .vol-card__rarity {
-  color: var(--vol-ui-accent-border);
+  /* Salt epic tonu surface-1 üzerinde 4,46:1 kalıyordu; metne doğru bir miktar açıldı. */
+  color: color-mix(in srgb, var(--vol-ui-rarity-epic-selected) 82%, var(--vol-ui-text));
 }
 
 .vol-card--legendary {

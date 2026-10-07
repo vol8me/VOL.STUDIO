@@ -504,12 +504,17 @@
   background: var(--vol-ui-brand-subtle);
 }
 
+/* Tehlike metni: koyu açılır yüzeyde 4,5:1 için kırmızı, metin rengine doğru açılır (kenarlık tonu okunmuyordu). */
+.vol-select__listbox {
+  --vol-select-danger-text: color-mix(in srgb, var(--vol-ui-danger-solid) 55%, var(--vol-ui-text));
+}
+
 .vol-select__option--danger {
-  color: var(--vol-ui-danger-border);
+  color: var(--vol-select-danger-text);
 }
 
 .vol-select__option--danger[aria-selected='true'] {
-  color: var(--vol-ui-danger-border);
+  color: var(--vol-select-danger-text);
   background: var(--vol-ui-danger-subtle);
 }
 

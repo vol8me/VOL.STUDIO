@@ -18,6 +18,8 @@ export interface SelectOptions {
   options: SelectOption[];
   value?: string;
   placeholder?: string;
+  /** Açılan listenin erişilebilir adı; verilmezse ortak `core:select.listbox`. */
+  listboxLabel?: string;
   disabled?: boolean;
   onInput?: (value: string) => void;
   onCommit?: (value: string) => void;
@@ -95,6 +97,10 @@ export class Select {
     });
     this.popup.element.classList.add('vol-select__listbox');
     this.popup.element.setAttribute('role', 'listbox');
+    this.popup.element.setAttribute(
+      'aria-label',
+      options.listboxLabel ?? i18next.t('core:select.listbox'),
+    );
     this.scope.addDestroyable(this.popup);
     this.scope.add({ dispose: () => this.optionScope.dispose() });
     this.renderOptions();

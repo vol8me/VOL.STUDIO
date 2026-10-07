@@ -234,7 +234,7 @@
         },
         {
           "file": "core/tests/ui/feedback/feedback.test.ts",
-          "title": "dikey yönelimde dolgu YÜKSEKLİKTEN büyür ve eksen erişilebilirlik ağacına yazılır"
+          "title": "dikey yönelimde dolgu YÜKSEKLİKTEN büyür; progressbar rolünde geçersiz aria-orientation yazılmaz"
         }
       ],
       "extraStates": ["loading", "error", "empty"]

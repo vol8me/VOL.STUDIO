@@ -116,9 +116,8 @@ export class Bar {
       .join(' ');
     this.element.setAttribute('role', 'progressbar');
     this.element.setAttribute('aria-valuemin', '0');
-    // Dikey bir progressbar'ın okuma yönü ekran okuyucuya ayrıca bildirilir;
-    // görsel eksen tek başına erişilebilirlik ağacına yansımaz.
-    if (orientation === 'vertical') this.element.setAttribute('aria-orientation', 'vertical');
+    // `aria-orientation` progressbar rolünde GEÇERSİZ bir öznitelik (axe aria-allowed-attr); dikey eksen
+    // yalnız görseldir, okuma yönü değer/ad ile verilir.
 
     // Hasar gecikme şeridi: değer düşünce eski seviye kısa süre kalır, sonra erir (gecikme ve süre
     // `MOTION_JUICE`); artışta anında izler. Yalnız tükenen kaynaklarda (can, dayanıklılık) varsayılan açık.

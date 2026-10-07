@@ -4,12 +4,16 @@ import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export type SliderOrientation = 'horizontal' | 'vertical';
 
+let sliderInstanceCounter = 0;
+
 export interface SliderOptions {
   min?: number;
   max?: number;
   step?: number;
   value?: number;
   label?: string;
+  /** Görünür etiket yokken (ör. dışarıdan çizilen sütun başlığı) erişilebilir ad; çevrilmiş metin. */
+  ariaLabel?: string;
   orientation?: SliderOrientation;
   /** Dikey slider için sabit yükseklik (piksel). Varsayılan 160. */
   length?: number;
@@ -50,6 +54,7 @@ export class Slider {
       step = 1,
       value = min,
       label,
+      ariaLabel,
       orientation = 'horizontal',
       length = UI_SIZE.SLIDER_DEFAULT_LENGTH_PX,
       formatValue = (v) => String(v),
@@ -78,6 +83,7 @@ export class Slider {
 
       const labelText = document.createElement('span');
       labelText.className = 'vol-slider__label';
+      labelText.id = `vol-slider-label-${++sliderInstanceCounter}`;
       labelText.textContent = label;
       labelRow.appendChild(labelText);
       this.labelText = labelText;
@@ -116,6 +122,9 @@ export class Slider {
     if (orientation === 'vertical') {
       this.input.setAttribute('orient', 'vertical');
     }
+    // Erişilebilir ad: görünür etiket varsa ona bağlanır (dil değişimiyle birlikte güncellenir), yoksa verilen ad.
+    if (this.labelText) this.input.setAttribute('aria-labelledby', this.labelText.id);
+    else if (ariaLabel) this.input.setAttribute('aria-label', ariaLabel);
     track.appendChild(this.input);
 
     this.element.appendChild(track);
@@ -224,6 +233,8 @@ export class Slider {
       this.handle.style.left = `${percent}%`;
     }
 
+    // Ekran okuyucu biçimlenmiş değeri okur ("%70"), ham sayıyı değil.
+    this.input.setAttribute('aria-valuetext', this.formatValue(value));
     if (this.valueLabel) {
       this.valueLabel.textContent = this.formatValue(value);
     }

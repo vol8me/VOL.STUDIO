@@ -55,6 +55,8 @@ export class PullToRefresh {
 
     this.scrollArea = document.createElement('div');
     this.scrollArea.className = 'vol-pull-refresh__scroll-area';
+    // Kaydırılabilen bölge klavyeyle de kaydırılabilmeli (axe scrollable-region-focusable).
+    this.scrollArea.tabIndex = 0;
     this.scrollArea.appendChild(options.content);
     this.element.appendChild(this.scrollArea);
 

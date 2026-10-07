@@ -58,6 +58,9 @@
   "bar": {
     "ariaLabel": "ilerleme çubuğu"
   },
+  "timerBar": {
+    "ariaLabel": "zamanlayıcı"
+  },
   "datatable": {
     "empty": "Kayıt yok"
   },
@@ -72,7 +75,8 @@
     "no": "Hayır"
   },
   "select": {
-    "placeholder": "Seçiniz"
+    "placeholder": "Seçiniz",
+    "listbox": "Seçenekler"
   },
   "stepper": {
     "decrement": "Azalt",

@@ -3,12 +3,16 @@ import { emitUiIntent } from '../feedback/uiIntent';
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 
+let stepperInstanceCounter = 0;
+
 export interface NumberStepperOptions {
   min?: number;
   max?: number;
   step?: number;
   value?: number;
   label?: string;
+  /** Görünür etiket yokken erişilebilir ad; çevrilmiş metin. */
+  ariaLabel?: string;
   disabled?: boolean;
   onInput?: (value: number) => void;
   onCommit?: (value: number) => void;
@@ -40,6 +44,7 @@ export class NumberStepper {
       step = 1,
       value = min,
       label,
+      ariaLabel,
       disabled = false,
       onInput,
       onCommit,
@@ -55,9 +60,12 @@ export class NumberStepper {
     this.element = document.createElement('div');
     this.element.className = 'vol-stepper';
 
+    let labelId: string | null = null;
     if (label) {
       const labelText = document.createElement('span');
       labelText.className = 'vol-stepper__label';
+      labelId = `vol-stepper-label-${++stepperInstanceCounter}`;
+      labelText.id = labelId;
       labelText.textContent = label;
       this.element.appendChild(labelText);
     }
@@ -79,6 +87,8 @@ export class NumberStepper {
     this.input.max = String(max);
     this.input.step = String(this.step);
     this.input.value = String(this.value);
+    if (labelId) this.input.setAttribute('aria-labelledby', labelId);
+    else if (ariaLabel) this.input.setAttribute('aria-label', ariaLabel);
     control.appendChild(this.input);
 
     this.incrementButton = document.createElement('button');

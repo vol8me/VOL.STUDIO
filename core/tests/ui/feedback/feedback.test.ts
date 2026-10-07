@@ -13,13 +13,13 @@ afterEach(() => {
 });
 
 describe('Bar', () => {
-  it('dikey yönelimde dolgu YÜKSEKLİKTEN büyür ve eksen erişilebilirlik ağacına yazılır', () => {
+  it('dikey yönelimde dolgu YÜKSEKLİKTEN büyür; progressbar rolünde geçersiz aria-orientation yazılmaz', () => {
     const bar = new Bar({ max: 100, value: 40, orientation: 'vertical', animateMs: 0 });
     document.body.appendChild(bar.element);
     const fill = bar.element.querySelector<HTMLElement>('.vol-bar__fill');
 
     expect(bar.element.classList.contains('vol-bar--vertical')).toBe(true);
-    expect(bar.element.getAttribute('aria-orientation')).toBe('vertical');
+    expect(bar.element.hasAttribute('aria-orientation')).toBe(false);
     expect(fill?.style.height).toBe('40%');
     expect(fill?.style.width).toBe('');
 
@@ -607,5 +607,33 @@ describe('Bar: hasar gecikme şeridi', () => {
     const verticalTrail = vertical.element.querySelector<HTMLElement>('.vol-bar__trail')!;
     vertical.setValue(5);
     expect(verticalTrail.style.height).toBe('50%');
+  });
+});
+
+describe('TimerBar erişilebilir ad', () => {
+  it('ad verilmezse ortak çeviri anahtarı, verilirse verilen ad kullanılır', () => {
+    const plain = new TimerBar({ durationSeconds: 4 });
+    const named = new TimerBar({ durationSeconds: 4, ariaLabel: 'Bekleme' });
+    expect(plain.element.getAttribute('aria-label')).toBeTruthy();
+    expect(named.element.getAttribute('aria-label')).toBe('Bekleme');
+    plain.destroy();
+    named.destroy();
+  });
+});
+
+describe('Erişilebilirlik sözleşmeleri', () => {
+  it('Select listbox adı taşır; Tabs panel kabı klavye odaklanabilir', async () => {
+    const { Select } = await import('../../../src/ui/primitives/Select');
+    const { Tabs } = await import('../../../src/ui/layout/Tabs');
+    const select = new Select({ options: [{ value: 'a', label: 'A' }], listboxLabel: 'Dil' });
+    select.element.click();
+    expect(document.querySelector('.vol-select__listbox')?.getAttribute('aria-label')).toBe('Dil');
+    const tabs = new Tabs(
+      [{ id: 'a', label: 'A', content: { element: document.createElement('div') } }],
+      {},
+    );
+    expect(tabs.element.querySelector<HTMLElement>('.vol-tabs__panels')?.tabIndex).toBe(0);
+    select.destroy();
+    tabs.destroy();
   });
 });

@@ -65,6 +65,8 @@ export class Tabs {
 
     this.panelContainer = document.createElement('div');
     this.panelContainer.className = 'vol-tabs__panels';
+    // Kaydırılabilen bölge klavyeyle de kaydırılabilmeli (axe scrollable-region-focusable).
+    this.panelContainer.tabIndex = 0;
 
     for (const [index, tab] of tabs.entries()) {
       // id çifti sekme ve paneli çift yönlü bağlar: aria-controls (sekme->panel) ve aria-labelledby (panel->sekme).

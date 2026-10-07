@@ -58,6 +58,9 @@
   "bar": {
     "ariaLabel": "progress bar"
   },
+  "timerBar": {
+    "ariaLabel": "timer"
+  },
   "datatable": {
     "empty": "No records"
   },
@@ -72,7 +75,8 @@
     "no": "No"
   },
   "select": {
-    "placeholder": "Select…"
+    "placeholder": "Select…",
+    "listbox": "Options"
   },
   "stepper": {
     "decrement": "Decrease",

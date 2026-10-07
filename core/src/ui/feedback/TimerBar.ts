@@ -1,3 +1,4 @@
+import { i18next } from '../../i18n/I18n';
 import { Easing, animateValue } from '../animation';
 import { UI_TIMING } from '../../constants';
 
@@ -7,6 +8,8 @@ export interface TimerBarOptions {
   mode?: 'fill' | 'drain';
   /** Sabit metin veya `(remainingSeconds, totalSeconds) => string` formatter. */
   label?: string | ((remainingSeconds: number, totalSeconds: number) => string);
+  /** Erişilebilir ad; verilmezse ortak `core:timerBar.ariaLabel`. */
+  ariaLabel?: string;
   /** true ise constructor'da hemen başlar. Varsayılan false. */
   autoStart?: boolean;
   /** true ise süre dolunca otomatik sıfırlanıp yeniden başlar. Varsayılan false. */
@@ -34,6 +37,7 @@ export class TimerBar {
       durationSeconds,
       mode = 'fill',
       label,
+      ariaLabel,
       autoStart = false,
       loop = false,
       onComplete,
@@ -47,6 +51,7 @@ export class TimerBar {
     this.element = document.createElement('div');
     this.element.className = 'vol-timer-bar';
     this.element.setAttribute('role', 'progressbar');
+    this.element.setAttribute('aria-label', ariaLabel ?? i18next.t('core:timerBar.ariaLabel'));
     this.element.setAttribute('aria-valuemin', '0');
     this.element.setAttribute('aria-valuemax', String(durationSeconds));
 

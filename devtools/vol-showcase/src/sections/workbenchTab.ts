@@ -33,7 +33,13 @@ function buildPropertyDemo(disposables: DisposableScope): HTMLElement {
     resetLabel: i18next.t('volui:workbench.reset'),
     onReset: () => input.setValue(i18next.t('volui:workbench.nameValue')),
   });
-  const opacity = new Slider({ min: 0, max: 100, value: 82, step: 1 });
+  const opacity = new Slider({
+    min: 0,
+    max: 100,
+    value: 82,
+    step: 1,
+    ariaLabel: i18next.t('volui:workbench.opacity'),
+  });
   const opacityField = new PropertyField({
     label: i18next.t('volui:workbench.opacity'),
     control: opacity,
@@ -120,6 +126,7 @@ function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
   const viewport = document.createElement('div');
   viewport.className = 'vol-showcase-workbench-viewport';
   viewport.tabIndex = 0;
+  viewport.setAttribute('role', 'region');
   viewport.setAttribute('aria-label', i18next.t('volui:workbench.viewport'));
   const artwork = document.createElement('div');
   artwork.className = 'vol-showcase-workbench-artwork';

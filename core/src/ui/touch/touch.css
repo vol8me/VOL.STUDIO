@@ -135,6 +135,11 @@
   font-weight: 600;
 }
 
+.vol-pull-refresh__scroll-area:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
 .vol-pull-refresh__scroll-area {
   touch-action: pan-y;
   overflow-y: auto;

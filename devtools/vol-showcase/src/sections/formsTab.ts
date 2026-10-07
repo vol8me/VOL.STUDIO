@@ -210,6 +210,7 @@ function buildVerticalSliderDemo(disposables: DisposableScope): HTMLElement {
 
     const slider = new Slider({
       orientation: 'vertical',
+      ariaLabel: channel,
       min: 0,
       max: 100,
       value: 60,
