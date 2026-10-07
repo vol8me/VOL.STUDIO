@@ -825,6 +825,21 @@
     "source": "phosphor/arrow-up"
   },
   {
+    "id": "backspace",
+    "category": "chrome",
+    "source": "phosphor/backspace"
+  },
+  {
+    "id": "enter",
+    "category": "chrome",
+    "source": "phosphor/arrow-elbow-down-left"
+  },
+  {
+    "id": "shift",
+    "category": "chrome",
+    "source": "phosphor/arrow-fat-up"
+  },
+  {
     "id": "check",
     "category": "chrome",
     "source": "phosphor/check"

@@ -1,4 +1,5 @@
 import { UI_TIMING } from '../../constants';
+import { Icon, type IconName } from '../primitives/Icon';
 
 /**
  * .vol-toast'un CSS geçiş süresi (--vol-transition-medium) kadar beklenir.
@@ -11,6 +12,14 @@ export const TOAST_FADE_OUT_MS = 240;
 const MAX_VISIBLE_TOASTS = 4;
 
 export type ToastVariant = 'default' | 'success' | 'warning' | 'danger';
+
+/** Varyant simgesi: renk tek taşıyıcı olmasın (şekil de anlam taşır). */
+const TOAST_ICONS: Record<ToastVariant, IconName> = {
+  default: 'infoCircle',
+  success: 'checkCircle',
+  warning: 'warning',
+  danger: 'error',
+};
 
 export interface ToastOptions {
   variant?: ToastVariant;
@@ -60,7 +69,14 @@ export class ToastManager {
     toast.className = [`vol-toast vol-toast--${variant}`, options.className]
       .filter(Boolean)
       .join(' ');
-    toast.textContent = message;
+    const icon = document.createElement('span');
+    icon.className = 'vol-toast__icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.appendChild(new Icon({ name: TOAST_ICONS[variant], size: 20 }).element);
+    const text = document.createElement('span');
+    text.className = 'vol-toast__message';
+    text.textContent = message;
+    toast.append(icon, text);
 
     this.container.appendChild(toast);
 

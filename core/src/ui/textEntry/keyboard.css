@@ -1,24 +1,62 @@
-/* Kolla kullanılan ekran klavyesi — etiketler token'dan gelir (12px
- * tabanı), tuşlar dokunma için de yeterli (>=44px) yüksekliktedir. */
+/*
+ * Ekran klavyesi: çekirdeğin çerçeve ve düğme dilini konuşur. Kabuk bir PANEL plakasıdır (başlık şeridi,
+ * keyline, sert gölge), değer alanı bir KUYU, tuşlar basılabilir plakalar (`material.css` basılabilir
+ * yüzey grubuna `.vol-osk__key` dahildir), Bitti tuşu marka renkli ana eylemdir. Tuş boyutu parmak ve
+ * kol için yeterlidir (>= 44px); satırlar genişliğe oturur, dar ekranda tuşlar daralır ama taşmaz.
+ */
 .vol-osk {
+  --vol-osk-key-height: 52px;
+  --vol-osk-gap: var(--vol-space-sm);
+
   position: fixed;
   inset: auto 0 0;
   z-index: var(--vol-z-dialog);
   display: flex;
   flex-direction: column;
   gap: var(--vol-space-md);
-  padding: var(--vol-space-md);
-  background: color-mix(in srgb, var(--vol-ui-surface-2) 96%, transparent);
-  border-top: 1px solid var(--vol-ui-border-soft);
-  box-shadow: 0 -8px 32px rgb(0 0 0 / 45%);
+  padding: 0 0 max(var(--vol-space-md), var(--vol-safe-bottom, 0px));
+  pointer-events: auto;
+  background-color: var(--vol-ui-panel);
+  border-top: 1px solid var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    0 -4px 0 var(--vol-mat-drop);
+}
+
+.vol-osk__header {
+  padding: var(--vol-space-sm) max(var(--vol-space-lg), var(--vol-safe-left, 0px));
+}
+
+.vol-osk__title {
+  text-align: left;
+}
+
+/* Karakter sayacı: başlık şeridinin sağında, tabular rakam; sınıra yaklaşınca vurgulanır (renk tek taşıyıcı değil: sayı yazıyla da görünür). */
+.vol-osk__counter {
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--vol-ui-text-secondary);
+}
+
+.vol-osk__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-md);
+  width: min(100%, 980px);
+  margin-inline: auto;
+  padding-inline: var(--vol-space-md);
 }
 
 .vol-osk__value {
-  min-height: 44px;
+  min-height: 52px;
   padding: var(--vol-space-sm) var(--vol-space-md);
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-md);
-  background: var(--vol-ui-bg);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  border-radius: var(--vol-radius-sm);
+  background-color: var(--vol-ui-well);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
   color: var(--vol-ui-text);
   font-size: var(--vol-text-body);
   font-family: var(--vol-font-family-body);
@@ -26,47 +64,116 @@
   overflow-wrap: anywhere;
 }
 
+/* İmleç: değerin içinde yanıp sönen marka renkli blok; hareket azaltılmışta sabit durur. */
+.vol-osk__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.15em;
+  margin-inline: 1px;
+  vertical-align: text-bottom;
+  background-color: var(--vol-ui-brand-solid);
+  animation: vol-osk-caret calc(var(--vol-motion-duration-cinematic) * 2) steps(1) infinite;
+}
+
+@keyframes vol-osk-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
 .vol-osk__grid {
   display: flex;
   flex-direction: column;
-  gap: var(--vol-space-sm);
-  align-items: center;
+  gap: var(--vol-osk-gap);
+  align-items: stretch;
 }
 
 .vol-osk__row {
   display: flex;
-  gap: var(--vol-space-sm);
+  gap: var(--vol-osk-gap);
   justify-content: center;
   max-width: 100%;
 }
 
 .vol-osk__key {
-  min-width: var(--vol-hit-target-min, 44px);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 76px;
   min-height: var(--vol-hit-target-min, 44px);
-  height: 44px;
-  padding: 0 var(--vol-space-sm);
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-md);
-  background: var(--vol-ui-surface-1);
-  color: var(--vol-ui-text);
-  font-size: var(--vol-text-body);
-  font-family: var(--vol-font-family-body);
+  height: var(--vol-osk-key-height);
+  padding: 0 var(--vol-space-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--vol-text-lead);
+  font-family: var(--vol-font-family);
+  font-weight: 600;
   cursor: var(--vol-cursor-link, pointer);
   user-select: none;
+  touch-action: manipulation;
+}
+
+.vol-osk__key--wide {
+  flex: 3 1 0;
+  max-width: 280px;
+  padding: 0 var(--vol-space-md);
+}
+
+/* İşlev tuşları (shift, sil, imleç, katman) harf tuşlarından bir ton ayrılır: biraz daha geniş ve koyu plaka. */
+.vol-osk__key--action {
+  --vol-btn-base: var(--vol-ui-surface-2);
+
+  flex: 1.5 1 0;
+  max-width: 112px;
+  letter-spacing: 0.04em;
+}
+
+.vol-osk__key--wide.vol-osk__key--action {
+  flex: 3 1 0;
+  max-width: 280px;
+}
+
+.vol-osk__key--primary {
+  --vol-btn-base: var(--vol-ui-brand-solid);
+  --vol-btn-hover: var(--vol-ui-brand-hover);
+  --vol-btn-pressed: var(--vol-ui-brand-pressed);
+  --vol-btn-border: var(--vol-ui-brand-border);
+  --vol-btn-text: var(--vol-ui-on-brand);
+  --vol-btn-glow: var(--vol-ui-glow-brand);
+  --vol-mat-gloss: 0.04;
+}
+
+/* Shift basılı: çökmüş plaka + marka çizgisi (renk tek taşıyıcı değil: `aria-pressed` ve çökme). */
+.vol-osk__key[aria-pressed='true'] {
+  background-color: var(--vol-btn-pressed);
+  box-shadow:
+    inset 0 2px 0 var(--vol-mat-edge-dark),
+    inset 0 -3px 0 var(--vol-ui-brand-solid);
 }
 
 .vol-osk__key:focus-visible {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 1px;
-  background: var(--vol-ui-accent-subtle);
 }
 
-.vol-osk__key--wide {
-  min-width: 132px;
-  padding: 0 var(--vol-space-md);
+.vol-osk .vol-icon {
+  pointer-events: none;
 }
 
-.vol-osk__key--action {
-  background: var(--vol-ui-accent-solid);
-  color: var(--vol-ui-on-accent);
+@media (prefers-reduced-motion: reduce) {
+  .vol-osk__caret {
+    animation: none;
+  }
+}
+
+/* Dar ekran (telefon): tuşlar alçalır ve yan boşluklar daralır; dokunma hedefi taban değerde kalır. */
+@media (width <= 640px) {
+  .vol-osk {
+    --vol-osk-key-height: 44px;
+    --vol-osk-gap: 4px;
+  }
+
+  .vol-osk__body {
+    padding-inline: var(--vol-space-xs);
+  }
 }

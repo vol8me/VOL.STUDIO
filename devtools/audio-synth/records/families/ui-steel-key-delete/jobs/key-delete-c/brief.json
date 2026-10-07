@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "key-delete"
+  ],
+  "durationSeconds": {
+    "max": 0.22,
+    "min": 0.048
+  },
+  "id": "ui-steel-key-delete-key-delete-c",
+  "intent": "çelik donanım: key-delete Varyant key-delete-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel key-delete — key-delete-c"
+}

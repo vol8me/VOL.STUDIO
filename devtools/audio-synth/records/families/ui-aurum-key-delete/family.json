@@ -1,0 +1,362 @@
+{
+  "base": {
+    "kind": "program",
+    "program": {
+      "channels": 1,
+      "description": "yaldızlı cam ve lake · key-delete",
+      "durationSeconds": 0.13,
+      "gestures": {
+        "fall-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              430
+            ],
+            [
+              0.06,
+              290
+            ]
+          ],
+          "version": 1
+        },
+        "thump-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              135.29999999999998
+            ],
+            [
+              0.04,
+              72.16
+            ],
+            [
+              0.08,
+              69.27359999999999
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0002,
+              "curve": "exponential",
+              "decay": 0.008,
+              "release": 0.004,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 4,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 3360,
+                "mode": "bandpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1176,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0015,
+              "curve": "exponential",
+              "decay": 0.055,
+              "release": 0.025,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -1,
+          "inserts": [
+            {
+              "params": {
+                "character": "tanh",
+                "driveDb": 5.6000000000000005,
+                "mix": 1,
+                "outputDb": -3
+              },
+              "primitive": "effect.saturation",
+              "version": 1
+            }
+          ],
+          "mechanism": "mechanical",
+          "name": "thump",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 50,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 900,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "thump-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.003,
+              "curve": "cosine",
+              "decay": 0.06,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -11,
+          "mechanism": "mechanical",
+          "name": "fall",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 160,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "fall-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0003,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -8
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9828
+    }
+  },
+  "delivery": {
+    "assetClass": "ui",
+    "assetDir": "public/assets/audio/ui/aurum",
+    "durationSeconds": {
+      "max": 0.22,
+      "min": 0.048
+    },
+    "package": "@volstudio/core",
+    "placement": "screen",
+    "subtype": "sfx"
+  },
+  "description": "yaldızlı cam ve lake: key-delete",
+  "dimensions": [
+    {
+      "name": "bright",
+      "range": {
+        "max": 4099.2,
+        "min": 2620.8,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 0,
+        "kind": "node-param",
+        "layer": "click",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    },
+    {
+      "name": "decay",
+      "range": {
+        "max": 0.0693,
+        "min": 0.0407,
+        "scale": "linear",
+        "unit": "s"
+      },
+      "scope": "all",
+      "target": {
+        "kind": "node-param",
+        "layer": "thump",
+        "param": "decay",
+        "primitive": "articulation.envelope",
+        "slot": "articulation"
+      }
+    },
+    {
+      "name": "warmth",
+      "range": {
+        "max": 1100,
+        "min": 720,
+        "scale": "log",
+        "unit": "Hz"
+      },
+      "scope": "all",
+      "target": {
+        "index": 1,
+        "kind": "node-param",
+        "layer": "thump",
+        "param": "frequency",
+        "primitive": "resonator.biquad",
+        "slot": "resonator"
+      }
+    }
+  ],
+  "familyId": "ui-aurum-key-delete",
+  "quality": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "roles": {
+    "weight": {
+      "heavy": {
+        "bright": {
+          "max": 3113.6,
+          "min": 2620.8
+        },
+        "decay": {
+          "max": 0.0693,
+          "min": 0.05977
+        },
+        "warmth": {
+          "max": 846.66667,
+          "min": 720
+        }
+      },
+      "light": {
+        "bright": {
+          "max": 4099.2,
+          "min": 3606.4
+        },
+        "decay": {
+          "max": 0.05023,
+          "min": 0.0407
+        },
+        "warmth": {
+          "max": 1100,
+          "min": 973.33333
+        }
+      },
+      "medium": {
+        "bright": {
+          "max": 3606.4,
+          "min": 3113.6
+        },
+        "decay": {
+          "max": 0.05977,
+          "min": 0.05023
+        },
+        "warmth": {
+          "max": 973.33333,
+          "min": 846.66667
+        }
+      }
+    }
+  },
+  "schema": "SoundFamilyProgramV1",
+  "seed": 9828,
+  "title": "UI aurum key-delete",
+  "variants": [
+    {
+      "key": "key-delete-a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "key-delete"
+      ]
+    },
+    {
+      "key": "key-delete-b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "key-delete"
+      ]
+    },
+    {
+      "key": "key-delete-c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "key-delete"
+      ]
+    }
+  ],
+  "variation": {
+    "policy": "role-subrange-v1"
+  },
+  "version": 1
+}

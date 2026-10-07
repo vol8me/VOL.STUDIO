@@ -5,10 +5,23 @@
     "page": "Page {{n}}"
   },
   "keyboard": {
-    "shift": "⇧",
-    "backspace": "⌫",
     "space": "Space",
-    "done": "Done"
+    "done": "Done",
+    "cancel": "Cancel",
+    "symbols": "#+=",
+    "letters": "ABC",
+    "shiftLabel": "Shift",
+    "backspaceLabel": "Backspace",
+    "leftLabel": "Move cursor left",
+    "rightLabel": "Move cursor right",
+    "newlineLabel": "New line",
+    "symbolsLabel": "Symbols and punctuation",
+    "lettersLabel": "Letters",
+    "title": {
+      "default": "Text entry",
+      "password": "Password",
+      "search": "Search"
+    }
   },
   "dpad": {
     "up": "Up",

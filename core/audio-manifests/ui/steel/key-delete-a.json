@@ -1,0 +1,408 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -0.000008161923959929634
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.12733333333333333,
+        "frames": 6112,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -7.956804465142232
+        ],
+        "channelRmsDbfs": [
+          -24.244904582608502
+        ],
+        "crestFactorDb": 16.28810011746627,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -30.334779032253333,
+        "rmsDbfs": -24.244904582608502,
+        "samplePeakDbfs": -7.956804465142232,
+        "truePeakDbtp": -7.948572162703385
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -89.00249954665797,
+          "high": -81.7942352541703,
+          "low": -30.480129730902004,
+          "mid": -66.67873350735496,
+          "sub": -35.73309500449982
+        },
+        "centroidHz": 252.1509385075867,
+        "flatness": 5.097331998156712e-7,
+        "peakHz": 375,
+        "rolloff85Hz": 398.4375
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.06,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.06,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.008274521195525497,
+        "trailingSilenceSeconds": 0.06733333333333333
+      }
+    },
+    "sourceRecordHash": "sha256:79085202ada28beafb99ab4647f99e96f88b457a15bdf3ba4515692674e044d7"
+  },
+  "asset": {
+    "bytes": 4500,
+    "encodedHash": "sha256:b86ffd06e4a5893d417a5cda0c3543e09411d92309f8dd26f432332c3e75c18a",
+    "format": "ogg-vorbis",
+    "path": "core/public/assets/audio/ui/steel/key-delete-a.ogg"
+  },
+  "assetId": "ui-steel-key-delete-key-delete-a",
+  "brief": {
+    "document": {
+      "assetClass": "ui",
+      "channels": 1,
+      "descriptors": [
+        "weight:light",
+        "key-delete"
+      ],
+      "durationSeconds": {
+        "max": 0.22,
+        "min": 0.048
+      },
+      "id": "ui-steel-key-delete-key-delete-a",
+      "intent": "çelik donanım: key-delete Varyant key-delete-a (weight:light).",
+      "kind": "acoustic",
+      "placement": "screen",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "UI steel key-delete — key-delete-a"
+    },
+    "hash": "sha256:e70ce1186aeb1486fdf052b42f081e77dbaf526fb2c93c692fa95311ee236077",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "6",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:bc4a390a2bf21a203aec467181016f9b63b511faa9ece7dd3979ff2d5573a275",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 6,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 6,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:e8610fd76f09afaa5036fd00823c65c2e47174410173d3eaea4806fa869e4158",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07",
+          "id": "effect.saturation",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        },
+        {
+          "hash": "sha256:b0c800b997b33e21c77db26196fffeb7162495c77939084b2b3eb1fd4639561b",
+          "id": "source.oscillator",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/core",
+    "runtimeDeclaration": "core/audio-target.json",
+    "runtimeKey": "ui-steel-key-delete/key-delete-a",
+    "targetKind": "library"
+  },
+  "job": {
+    "jobId": "key-delete-a",
+    "path": "devtools/audio-synth/records/families/ui-steel-key-delete/jobs/key-delete-a",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "screen",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "ui",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "çelik donanım · key-delete",
+      "durationSeconds": 0.13,
+      "gestures": {
+        "fall-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              430
+            ],
+            [
+              0.06,
+              290
+            ]
+          ],
+          "version": 1
+        },
+        "thump-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              165
+            ],
+            [
+              0.04,
+              88
+            ],
+            [
+              0.08,
+              84.47999999999999
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0002,
+              "curve": "exponential",
+              "decay": 0.008,
+              "release": 0.004,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 4,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2559.73,
+                "mode": "bandpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 756,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0015,
+              "curve": "exponential",
+              "decay": 0.0423449,
+              "release": 0.025,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -1,
+          "inserts": [
+            {
+              "params": {
+                "character": "asymmetric",
+                "driveDb": 11.200000000000001,
+                "mix": 1,
+                "outputDb": -3
+              },
+              "primitive": "effect.saturation",
+              "version": 1
+            }
+          ],
+          "mechanism": "mechanical",
+          "name": "thump",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 50,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 994.68,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "thump-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.003,
+              "curve": "cosine",
+              "decay": 0.06,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -11,
+          "mechanism": "mechanical",
+          "name": "fall",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 160,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "fall-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0003,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -8
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9814
+    },
+    "hash": "sha256:f251de3c210a62e47bdfd3dd956770f27602350e4c7521df829c86730cdd9bc0",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 6240,
+      "hash": "sha256:d3ded42b13a4b0649681ab9064f28ecb86a324c37159253bc0bf47535042b4ba",
+      "sampleRate": 48000
+    },
+    "renderId": "r-bc08ff46d4318b2c",
+    "rendererVersion": 2,
+    "seed": 9814
+  },
+  "schema": "AudioAssetManifestV1"
+}

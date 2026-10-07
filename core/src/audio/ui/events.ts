@@ -22,6 +22,8 @@ export const UI_SOUND_EVENTS = [
   'tabSwitch',
   'sliderTick',
   'valueCommit',
+  'keyTap',
+  'keyDelete',
   'panelOpen',
   'panelClose',
   'dragPick',
@@ -85,6 +87,9 @@ export const UI_INTENT_SOUND = {
   cancel: 'back',
   open: 'panelOpen',
   close: 'panelClose',
+  type: 'keyTap',
+  erase: 'keyDelete',
+  reject: 'denied',
 } as const satisfies Record<string, UiSoundEvent>;
 
 /** Host'un bildirdiği ürün sonucu → ses olayı (Promise çözülmesi değil). */

@@ -5,10 +5,23 @@
     "page": "Sayfa {{n}}"
   },
   "keyboard": {
-    "shift": "⇧",
-    "backspace": "⌫",
     "space": "Boşluk",
-    "done": "Bitti"
+    "done": "Bitti",
+    "cancel": "Vazgeç",
+    "symbols": "#+=",
+    "letters": "ABC",
+    "shiftLabel": "Büyük harf",
+    "backspaceLabel": "Geri sil",
+    "leftLabel": "İmleci sola taşı",
+    "rightLabel": "İmleci sağa taşı",
+    "newlineLabel": "Yeni satır",
+    "symbolsLabel": "Semboller ve noktalama",
+    "lettersLabel": "Harfler",
+    "title": {
+      "default": "Metin girişi",
+      "password": "Parola",
+      "search": "Arama"
+    }
   },
   "dpad": {
     "up": "Yukarı",

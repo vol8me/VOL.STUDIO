@@ -140,8 +140,12 @@ describe('languageChanged: sökülünce abonelik bırakılır', () => {
     expect(label('done')).toBe(i18next.t('core:keyboard.done'));
     expect(label('done')).not.toBe('Bitti');
     expect(space()).toBe(i18next.t('core:keyboard.space'));
-    // Etiket güncellemesi tuşları yeniden kurmaz: odak yerinde kalır.
-    expect(document.activeElement).toBe(focused);
+    // Düzen dile bağlıdır (tr: Türkçe Q, diğerleri: QWERTY); dil değişince tuşlar yeniden kurulabilir,
+    // ama odak AYNI anlamlı tuşta kalır (yazı odağı kaybolmaz).
+    expect(document.activeElement).toBeInstanceOf(HTMLButtonElement);
+    expect((document.activeElement as HTMLButtonElement).dataset.value).toBe(
+      (focused as HTMLButtonElement).dataset.value,
+    );
 
     controller.abort();
     await result;

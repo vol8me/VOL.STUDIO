@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:662598542e4b6df59b0d715db4420a5743a1ba343065ae9a06fdf922f575f7cb",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:8eb46927b8bb262d0da8af848f7b49c780d6bf98ef2d1d6f92f418a5a0c8ec20",
+    "familyId": "ui-aurum-key-delete",
+    "kind": "family-variant",
+    "variantId": "v-9c969f0901d5d89d",
+    "variantKey": "key-delete-a"
+  }
+}

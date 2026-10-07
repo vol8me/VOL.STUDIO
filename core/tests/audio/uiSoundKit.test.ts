@@ -157,7 +157,7 @@ describe('olay sözlüğü', () => {
     expect(UI_INTENT_SOUND.valuePreview).toBe('sliderTick');
     expect([...UI_MICRO_EVENTS].sort()).toEqual(['focus', 'hover', 'sliderTick']);
     expect(UI_CRITICAL_EVENTS).toEqual(['alert', 'denied']);
-    expect(UI_SOUND_EVENTS.length).toBe(23);
+    expect(UI_SOUND_EVENTS.length).toBe(25);
   });
 });
 

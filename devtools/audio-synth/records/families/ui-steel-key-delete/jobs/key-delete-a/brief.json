@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "key-delete"
+  ],
+  "durationSeconds": {
+    "max": 0.22,
+    "min": 0.048
+  },
+  "id": "ui-steel-key-delete-key-delete-a",
+  "intent": "çelik donanım: key-delete Varyant key-delete-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel key-delete — key-delete-a"
+}

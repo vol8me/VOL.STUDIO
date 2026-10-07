@@ -198,20 +198,6 @@
       "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     },
     {
-      "scope": "layer/forms/osk",
-      "rule": "color-contrast",
-      "target": "button[data-action=\"backspace\"]",
-      "owner": "UI-11.1",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
-    },
-    {
-      "scope": "layer/forms/osk",
-      "rule": "color-contrast",
-      "target": "button[data-action=\"shift\"]",
-      "owner": "UI-11.1",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
-    },
-    {
       "scope": "tab/ses",
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",

@@ -508,7 +508,9 @@ export class UiSoundKit implements Disposable {
 function isChecked(target: Element): boolean {
   const input = target instanceof HTMLInputElement ? target : target.querySelector('input');
   if (input && (input.type === 'checkbox' || input.type === 'radio')) return input.checked;
-  return target.getAttribute('aria-checked') === 'true';
+  return (
+    target.getAttribute('aria-checked') === 'true' || target.getAttribute('aria-pressed') === 'true'
+  );
 }
 
 /** Kaydırıcı değerinin [0, 1] konumu; aralık girdisi değilse ya da sonsuzsa `null`. */

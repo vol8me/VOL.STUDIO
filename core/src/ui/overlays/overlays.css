@@ -380,7 +380,7 @@
 }
 
 .vol-dialogue__choice::before {
-  content: 'â–¸ ';
+  content: '\25B8 ';
   color: var(--vol-ui-brand-hover);
 }
 

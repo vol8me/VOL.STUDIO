@@ -65,8 +65,9 @@ mixer ya da müzik motoru kurmaz.
 ### `UiSoundKit`
 
 Anlamsal UI niyetlerinin (`UiIntentBus`) ve host'un bildirdiği ürün sonuçlarının
-sesi; 23 olaylık oyun arayüzü sözlüğü (`hover`, `press`, `toggleOn`/`toggleOff`,
-`sliderTick`, `panelOpen`, `equip`, `purchase`, `reward`, `levelUp`, `denied`...).
+sesi; 25 olaylık oyun arayüzü sözlüğü (`hover`, `press`, `toggleOn`/`toggleOff`,
+`sliderTick`, `keyTap`/`keyDelete` (ekran klavyesi), `panelOpen`, `equip`, `purchase`, `reward`,
+`levelUp`, `denied`...).
 Toplam en çok 4 eşzamanlı UI sesi çalar; kritik olaylar (`alert`, `denied`) `normal`
 sesleri düşürerek çalar, `normal` ses kritiği düşüremez. Mikro olaylar (`hover`,
 `focus` 70 ms, `sliderTick` 45 ms) kendi aralıklarıyla sınırlıdır. Her olayın en çok 3
@@ -77,7 +78,10 @@ biriken sesler topluca çalmaz. Bağlam ilk kullanıcı jestinde (ilk niyet) olu
 açılır. Bir Promise'in çözülmesi başarı sesi değildir; başarıyı host `reportOutcome`
 ile bildirir (`success` → `confirm`, `warning` → `alert`, `error` → `denied`).
 
-- `toggle` niyeti hedefin durumuna göre `toggleOn`/`toggleOff` çalar.
+- `toggle` niyeti hedefin durumuna göre `toggleOn`/`toggleOff` çalar (`aria-checked` ya da
+  `aria-pressed`).
+- `type` niyeti `keyTap`, `erase` niyeti `keyDelete`, `reject` niyeti (bileşenin kendi sınırı
+  kullanıcı eylemini reddetti: dolu `maxLength`) `denied` çalar. Ekran klavyesi bu üçünü yayar.
 - `valuePreview` (kaydırıcı) perdeyi değerin konumuna bağlar: alçak değer alçak ses.
 - `observe(root)` gerçek fare üzerine gelmesini (`hover`) ve klavye odağını (`focus`)
   dinler; dokunma ve fare odağı ses çalmaz.
@@ -85,7 +89,7 @@ ile bildirir (`success` → `confirm`, `warning` → `alert`, `error` → `denie
 
 ### `uiSoundAssets`
 
-CORE'un gönderdiği UI ses setlerinin URL'lerini verir: 23 olay × 3 varyant × 2 palet
+CORE'un gönderdiği UI ses setlerinin URL'lerini verir: 25 olay × 3 varyant × 2 palet
 (dosya adı `<olay>-a.ogg` ve palet alt dizini `steel`/`aurum`), `core/public/assets/audio/ui`
 altında, `audio-synth` ile özgün üretilmiş mono 48 kHz kısa OGG'ler (kütüphane hedefi).
 Palet ses malzemesidir: `steel` çelik donanım (varsayılan kaplama), `aurum` yaldızlı cam

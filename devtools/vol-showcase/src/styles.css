@@ -524,9 +524,14 @@ body {
   align-items: flex-start;
   width: 220px;
   padding: var(--vol-space-md);
-  background: var(--vol-ui-overlay-panel);
-  border: 1px solid var(--vol-ui-border-strong);
-  border-radius: var(--vol-radius-md);
+  background-color: var(--vol-ui-panel);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  border-radius: var(--vol-radius-sm);
+  box-shadow:
+    inset 4px 0 0 var(--vol-ui-brand-solid),
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
 }
 
 .vol-showcase-vertical-sliders {

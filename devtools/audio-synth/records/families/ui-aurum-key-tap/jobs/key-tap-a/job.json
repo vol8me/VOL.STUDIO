@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-b8eb609b029819dc": {
+        "hash": "sha256:038cbf847cb30920cb89d896da8fe686832f0f78a5c0bd53c88d64370edf54da",
+        "path": "analyses/r-b8eb609b029819dc.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:96ca286e597d57214e2bd14dec6eee3cf8fdb1bc46bf5a8f315a083514d53440",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:96ca286e597d57214e2bd14dec6eee3cf8fdb1bc46bf5a8f315a083514d53440",
+      "hash": "sha256:3a45fcdb6cfc5272311540a40c1255e74121374680a3e6a2a1a54ac7093e1cd5",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:01685e30658fa0e5a3107e578a8109090bb5011a1fe3cd2b10ca8b75d1739c6c",
+      "path": "core/audio-manifests/ui/aurum/key-tap-a.json"
+    },
+    "renders": {
+      "r-b8eb609b029819dc": {
+        "hash": "sha256:93dd66011ad1893bbd06375059fed20d49c330614f5a13fe080db0c7022fd1f6",
+        "path": "renders/r-b8eb609b029819dc.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:ea9e42e1008d01172eb4098d0f7b97d47efdbcc79871a88e88be7f81ee77cf52",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "key-tap-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/key-tap-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-key-tap/key-tap-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

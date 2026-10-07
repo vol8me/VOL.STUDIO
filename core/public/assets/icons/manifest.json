@@ -6,9 +6,9 @@
   "sprites": {
     "chrome": {
       "file": "chrome.svg",
-      "count": 45,
-      "bytes": 14408,
-      "sha256": "dd7eac38bb9d76beaaa713ba4d9af82cb847768babf1fa1246532428a37994a6"
+      "count": 48,
+      "bytes": 15316,
+      "sha256": "b88e7d96cbfc929ce1f949651ea61d4ceca45e14d4215c7927bd2cd58e305a6a"
     },
     "game": {
       "file": "game.svg",
@@ -129,6 +129,14 @@
       "author": "Phosphor Icons",
       "license": "MIT",
       "source": "phosphor-icons/core@2.1.1/backpack"
+    },
+    {
+      "id": "backspace",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/backspace"
     },
     {
       "id": "ballista",
@@ -465,6 +473,14 @@
       "author": "Phosphor Icons",
       "license": "MIT",
       "source": "phosphor-icons/core@2.1.1/battery-charging"
+    },
+    {
+      "id": "enter",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-elbow-down-left"
     },
     {
       "id": "eraser",
@@ -1321,6 +1337,14 @@
       "author": "Phosphor Icons",
       "license": "MIT",
       "source": "phosphor-icons/core@2.1.1/share-network"
+    },
+    {
+      "id": "shift",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-fat-up"
     },
     {
       "id": "shock",

@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-steel-key-tap",
+    "hash": "sha256:82dcd97a2c2697d261dab56f2eb39d7504945d095d08a11d19e7b00592e0ce39",
+    "path": "devtools/audio-synth/records/families/ui-steel-key-tap/family.json",
+    "seed": 9807,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:19feb72bd827d4269fd5ea1a1bf33a6e66cdb444f5c66f2cd58e08d94e3ce787",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-steel-key-tap/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4385,
+        "encodedHash": "sha256:62239f70ff7554c7a3fae1a5426b08ecbc0c93622607d2c30a5b67ebf39ad6a9",
+        "path": "public/assets/audio/ui/steel/key-tap-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 176.331758283607,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.10733333333333334,
+      "key": "key-tap-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -34.00588591417338,
+        "truePeakDbtp": -8.857613247019565
+      },
+      "manifest": {
+        "hash": "sha256:ae4f4f4f3e54185ff8a3fe7ed298e243648ab7748eaaf4e351ebf844230881c3",
+        "path": "audio-manifests/ui/steel/key-tap-a.json"
+      },
+      "pcmHash": "sha256:e5ce06b43b678532b459b44544a0007b5afedda2ed4bcca5b29c1d469b216b19",
+      "programHash": "sha256:ff520b8e7a63fe4ef5a22e46b151e5af30674acae085fa90d4ecaa0cfc8300fe",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "key-tap"
+      ],
+      "variantId": "v-0e826d7b3efa5fc7"
+    },
+    {
+      "asset": {
+        "bytes": 4382,
+        "encodedHash": "sha256:4f117b0c092c266668cf5d649a8063f00be2c616c58eeb3226a13d5db76ecf12",
+        "path": "public/assets/audio/ui/steel/key-tap-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.04,
+        "centroidHz": 173.4088753099627,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.10733333333333334,
+      "key": "key-tap-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -33.501139466382305,
+        "truePeakDbtp": -9.060383816535998
+      },
+      "manifest": {
+        "hash": "sha256:fed98fd0e2c2fd932f5751dcd3d514947809f714d07cfd3598def618efe56566",
+        "path": "audio-manifests/ui/steel/key-tap-b.json"
+      },
+      "pcmHash": "sha256:cc99db21cc97b8d93de56d6ebe2c40c1003711e0916ebb268284d67651aeadf1",
+      "programHash": "sha256:2c4513c57823087f936b6389bcf8c3643d24e814a8eee01ffeb35155ed82644c",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "key-tap"
+      ],
+      "variantId": "v-f55fc7717137c04f"
+    },
+    {
+      "asset": {
+        "bytes": 4404,
+        "encodedHash": "sha256:7a8cebc1ad2ae5ca6d1c3b04a942d8adcaf304dc41139f639858c5afe4ec99a8",
+        "path": "public/assets/audio/ui/steel/key-tap-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.04,
+        "centroidHz": 171.16094722259146,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.10733333333333334,
+      "key": "key-tap-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -32.80605240669753,
+        "truePeakDbtp": -9.002935350372937
+      },
+      "manifest": {
+        "hash": "sha256:2cd7cd0dfc6de375b29180b3fa73933a032407400760200368309385b173eee4",
+        "path": "audio-manifests/ui/steel/key-tap-c.json"
+      },
+      "pcmHash": "sha256:a0b3c62b00d1456c04902a594fe813848d5d7db1034714cf484390e2dbdc4689",
+      "programHash": "sha256:4f17c51550463936d0143113f239843c43b90c9fb3b8ffd267bd6722270286a9",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "key-tap"
+      ],
+      "variantId": "v-c3894a4e94d9e92c"
+    }
+  ]
+}

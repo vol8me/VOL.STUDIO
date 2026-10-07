@@ -29,7 +29,13 @@ export type UiIntentKind =
   | 'confirm'
   | 'cancel'
   | 'open'
-  | 'close';
+  | 'close'
+  /** Metin girişi: bir karakter yazıldı (ekran klavyesi tuşu). */
+  | 'type'
+  /** Metin girişi: imleçten önceki karakter silindi. */
+  | 'erase'
+  /** Bileşenin kendi sınırı kullanıcı eylemini reddetti (örn. `maxLength` dolu). */
+  | 'reject';
 
 /** Girdi yolu: işaretçi (fare), dokunma/kalem, klavye ya da yapay (kol/odak etkinleştirmesi). */
 export type UiIntentSource = 'pointer' | 'touch' | 'keyboard' | 'synthetic';
@@ -201,6 +207,14 @@ export function uiIntentBusFor(root: Element): { bus: UiIntentBus; release(): vo
       if (held.count <= 0 && registry.get(root) === held) registry.delete(root);
     },
   };
+}
+
+/** Elemanı kapsayan en yakın kayıtlı UI kökü; yoksa `null`. Gövdeye eklenen katmanlar köke taşınır ki ses/niyet kapsamı dışında kalmasın. */
+export function findUiIntentRoot(element: Element): Element | null {
+  for (let node: Element | null = element; node; node = node.parentElement) {
+    if (registry.has(node)) return node;
+  }
+  return null;
 }
 
 /** Elemanın en yakın kayıtlı kökteki veriyolu; kayıtlı kök yoksa `null`. */

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:2c4513c57823087f936b6389bcf8c3643d24e814a8eee01ffeb35155ed82644c",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:82dcd97a2c2697d261dab56f2eb39d7504945d095d08a11d19e7b00592e0ce39",
+    "familyId": "ui-steel-key-tap",
+    "kind": "family-variant",
+    "variantId": "v-f55fc7717137c04f",
+    "variantKey": "key-tap-b"
+  }
+}

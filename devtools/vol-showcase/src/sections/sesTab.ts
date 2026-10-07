@@ -45,6 +45,9 @@ const INTENT_KINDS: readonly UiIntentKind[] = [
   'cancel',
   'open',
   'close',
+  'type',
+  'erase',
+  'reject',
 ];
 const OUTCOMES: readonly UiOutcome[] = ['success', 'warning', 'error'];
 
@@ -258,7 +261,7 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
   };
 
   // ── 1. Olay sesleri ───────────────────────────────────────────────────────
-  // Olaylar anlamlı gruplara bölünür: 23 düğmeyi tek sütunda dizmek taranamıyordu.
+  // Olaylar anlamlı gruplara bölünür: 25 düğmeyi tek sütunda dizmek taranamıyordu.
   const EVENT_GROUPS: ReadonlyArray<{ title: string; events: readonly UiSoundEvent[] }> = [
     {
       title: i18next.t('volui:ses.groups.contact'),
@@ -271,6 +274,10 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
     {
       title: i18next.t('volui:ses.groups.value'),
       events: ['toggleOn', 'toggleOff', 'sliderTick', 'valueCommit'],
+    },
+    {
+      title: i18next.t('volui:ses.groups.typing'),
+      events: ['keyTap', 'keyDelete'],
     },
     {
       title: i18next.t('volui:ses.groups.inventory'),

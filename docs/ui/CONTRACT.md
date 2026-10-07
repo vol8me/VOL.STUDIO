@@ -125,9 +125,9 @@ olaylarda masaüstü/kulaklık için isteğe bağlı sub katmanı (50–90 Hz) e
 `default` çelik donanım (metalik vuruş, kalın gövde, kısa mekanik kuyruk), `aurum` yaldızlı cam
 ve lake (çan/kristal partiller + yumuşak gövde). Olay sözlüğü paletler arasında aynıdır.
 
-**Olay sözlüğü v2** (UI-02.6): hover, focus, press, release, back, confirm, toggleOn/toggleOff,
-select, tabSwitch, sliderTick (değere bağlı perde), valueCommit, panelOpen/panelClose,
-dragPick/dragDrop, equip, purchase, reward, levelUp, notify, denied ("yapılamaz": kuru ve kısa),
+**Olay sözlüğü v2** (UI-02.6; UI-11.1 ile +2 olay: 25 toplam): hover, focus, press, release, back, confirm, toggleOn/toggleOff,
+select, tabSwitch, sliderTick (değere bağlı perde), valueCommit, keyTap/keyDelete (metin girişi),
+panelOpen/panelClose, dragPick/dragDrop, equip, purchase, reward, levelUp, notify, denied ("yapılamaz": kuru ve kısa),
 alert (kritik). Yön dili: yukarı perde evet/ileri, aşağı perde hayır/geri, düz ve kuru ton
 reddedilmiş; confirm yükselir, back/cancel düşer. Hover çoğu bağlamda neredeyse sessizdir ve
 yalnız gerçek farede çalar; yüzüncü tekrarda da hoş olmayan ses yayınlanmaz.

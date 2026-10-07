@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-8fb1a01fbba0947e": {
+        "hash": "sha256:3aa73ef4388da8b7237f3654ce158db8e4913394bde987e3c57e0f491ffd4f79",
+        "path": "analyses/r-8fb1a01fbba0947e.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:20cb56e59336b59a297f75d7505d316e3ea7aa380e8b9c383f127e1dbc825a07",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:20cb56e59336b59a297f75d7505d316e3ea7aa380e8b9c383f127e1dbc825a07",
+      "hash": "sha256:0edf88d642afa0d2ecb7e93d7f46b3ff02bedf5b99bd7bc4c26d0287bcf07377",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:db5b905c77b11002e5065ad65ffedafebe0ce3d15dc2116d6160b461ac8558f0",
+      "path": "core/audio-manifests/ui/steel/key-delete-b.json"
+    },
+    "renders": {
+      "r-8fb1a01fbba0947e": {
+        "hash": "sha256:174acc88f16f13f77e7a169088c3255a62af009ebf39a2c571f5b65d5d0d754d",
+        "path": "renders/r-8fb1a01fbba0947e.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:d9035d947d9820b01295bdf08af7a3bd4cf45602c02c1ef5f7f6c232f5b89b2c",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "key-delete-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/key-delete-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-key-delete/key-delete-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

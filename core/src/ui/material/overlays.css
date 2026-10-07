@@ -1,0 +1,357 @@
+/*
+ * KATMAN DİLİ. Diyalog, bildirim, komut paleti, sheet/modal, beceri ağacı ve sihirbaz aynı çerçeve
+ * dilini konuşur: düz panel rengi + üst ışık + alt kenar + 4 px içeride keyline + sert dış gölge.
+ * Hepsi düz renk ve bulanıksız gölgedir (axe kontrastı ölçebilsin; WebKit gösterimi yavaşlamasın).
+ *
+ * Yığın sırası (token): kök 10 < float 15 (diyalog kutusu) < toast 20 < dialog 30 (modal/sheet/palet)
+ * < dialog-content 40 < loading 50. Diyalog kutusu sayfa içeriğinin ÜSTÜNDE, modalın ALTINDADIR;
+ * z-index'siz mutlak konum, sonradan boyanan konumlu atalarının arkasında kalıyordu.
+ */
+
+/* ── Diyalog kutusu (NPC/hikaye) ─────────────────────────────────────────── */
+.vol-dialogue {
+  z-index: var(--vol-z-float);
+  background: var(--vol-ui-panel);
+  border-color: var(--vol-ui-frame-hairline);
+  padding: var(--vol-space-xl);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    inset 0 0 0 4px var(--vol-ui-panel),
+    inset 0 0 0 5px var(--vol-mat-keyline),
+    0 4px 0 var(--vol-mat-drop);
+}
+
+/* Konuşmacı: köşeye oturan isim plakası (çerçeve başlık dili); alt çizgi yerine plaka. */
+.vol-dialogue__speaker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  padding: 4px var(--vol-space-md);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  background-color: var(--vol-ui-frame-header);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    0 2px 0 var(--vol-mat-drop);
+  color: var(--vol-ui-text);
+  letter-spacing: 0.14em;
+  font-size: 12px;
+}
+
+.vol-dialogue__speaker::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--vol-ui-brand-solid);
+  transform: rotate(45deg);
+}
+
+/* Portre: resim çerçevesi (iç kuyu + keyline halkası + sert gölge). */
+.vol-dialogue__portrait {
+  border: 1px solid var(--vol-ui-frame-hairline);
+  background-color: var(--vol-ui-well);
+  color: var(--vol-ui-text);
+  box-shadow:
+    0 0 0 3px var(--vol-ui-panel),
+    0 0 0 4px var(--vol-mat-keyline),
+    0 3px 0 4px var(--vol-mat-drop);
+}
+
+.vol-dialogue__portrait--placeholder {
+  color: var(--vol-ui-text-secondary);
+}
+
+/* Devam göstergesi: marka renkli küçük plaka (zıplama animasyonu korunur). */
+.vol-dialogue__continue {
+  border-radius: var(--vol-radius-sm);
+  box-shadow: 0 2px 0 var(--vol-mat-drop);
+}
+
+/* Seçimler: basılabilir plakalar (grup `material.css`te); sol işaret elmas. */
+.vol-dialogue__choices {
+  gap: var(--vol-space-sm);
+}
+
+.vol-dialogue__choice {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+}
+
+.vol-dialogue__choice::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--vol-ui-brand-solid);
+  transform: rotate(45deg);
+}
+
+/* ── Bildirimler (toast) ─────────────────────────────────────────────────── */
+.vol-toast {
+  --vol-toast-accent: var(--vol-ui-frame-corner);
+
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  min-width: 220px;
+  max-width: min(440px, 90vw);
+  padding: var(--vol-space-sm) var(--vol-space-lg) var(--vol-space-sm) var(--vol-space-md);
+  background-color: var(--vol-ui-panel);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  border-radius: var(--vol-radius-sm);
+  color: var(--vol-ui-text);
+  font-weight: 600;
+  box-shadow:
+    inset 4px 0 0 var(--vol-toast-accent),
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-toast__icon {
+  flex: none;
+  display: inline-flex;
+  margin-inline-start: var(--vol-space-xs);
+  color: var(--vol-toast-accent);
+}
+
+.vol-toast__message {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.vol-toast--success {
+  --vol-toast-accent: var(--vol-ui-success-solid);
+
+  color: var(--vol-ui-text);
+  background-color: color-mix(in srgb, var(--vol-ui-success-solid) 13%, var(--vol-ui-panel));
+  border-color: var(--vol-ui-success-border);
+}
+
+.vol-toast--warning {
+  --vol-toast-accent: var(--vol-ui-warning-solid);
+
+  color: var(--vol-ui-text);
+  background-color: color-mix(in srgb, var(--vol-ui-warning-solid) 13%, var(--vol-ui-panel));
+  border-color: var(--vol-ui-warning-border);
+}
+
+.vol-toast--danger {
+  --vol-toast-accent: var(--vol-ui-danger-solid);
+
+  color: var(--vol-ui-text);
+  background-color: color-mix(in srgb, var(--vol-ui-danger-solid) 13%, var(--vol-ui-panel));
+  border-color: var(--vol-ui-danger-border);
+}
+
+/* ── Komut paleti ────────────────────────────────────────────────────────── */
+.vol-command-palette__panel {
+  background-color: var(--vol-ui-panel);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 0 0 4px var(--vol-ui-panel),
+    inset 0 0 0 5px var(--vol-mat-keyline),
+    0 6px 0 var(--vol-mat-drop);
+}
+
+/* Arama satırı bir kuyudur; sorgu yazılırken içine "yazılıyormuş" gibi oturur. */
+.vol-command-palette__input-row {
+  margin: var(--vol-space-md) var(--vol-space-md) 0;
+  border: 1px solid var(--vol-ui-frame-hairline);
+  border-radius: var(--vol-radius-sm);
+  background-color: var(--vol-ui-well);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-command-palette__results {
+  padding: var(--vol-space-sm) var(--vol-space-md) var(--vol-space-md);
+}
+
+/* Grup başlığı: çerçeve başlık dili (elmas + geniş aralıklı büyük harf). */
+.vol-command-palette__group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  color: var(--vol-ui-text-secondary);
+  letter-spacing: 0.14em;
+}
+
+.vol-command-palette__group-header::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: var(--vol-ui-brand-solid);
+  transform: rotate(45deg);
+}
+
+/* Seçili satır: kuyu içinde marka çubuğu; renk tek taşıyıcı değil (çubuk + dolgu). */
+.vol-command-palette__item[aria-selected='true'] {
+  background-color: var(--vol-ui-surface-2);
+  box-shadow: inset 3px 0 0 var(--vol-ui-brand-solid);
+}
+
+/* Kısayol: klavye tuşu plakası (üst ışık + sert alt kenar). */
+.vol-command-palette__item-shortcut {
+  min-width: 26px;
+  text-align: center;
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  color: var(--vol-ui-text-secondary);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+/* ── Sheet / Modal ───────────────────────────────────────────────────────── */
+.vol-sheet__header {
+  gap: var(--vol-space-sm);
+  border-bottom-color: var(--vol-ui-frame-divider);
+  box-shadow: 0 1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-sheet__title {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.vol-sheet__title::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--vol-ui-brand-solid);
+  transform: rotate(45deg);
+}
+
+/* Sheet kenarı: açılan yüzün keyline'ı yalnız panel tarafında; kenar bir kalın ışık çizgisidir. */
+.vol-sheet .vol-modal__content {
+  border-right: none;
+  box-shadow:
+    inset 1px 0 0 var(--vol-ui-plate-top-light),
+    inset 0 0 0 4px var(--vol-ui-panel),
+    inset 0 0 0 5px var(--vol-mat-keyline),
+    -4px 0 0 var(--vol-mat-drop);
+}
+
+/* Onay satırı: eylemler içerikten ince bir hatla ayrılır. */
+.vol-confirm__actions {
+  padding-top: var(--vol-space-md);
+  border-top: 1px solid var(--vol-ui-frame-divider);
+  box-shadow: 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+/* ── Beceri ağacı ────────────────────────────────────────────────────────── */
+/* Bağlantılar daha kalın ve belirgin; aktif bağlantı marka çizgisidir. */
+.vol-skill-tree__connection {
+  stroke: var(--vol-ui-border-strong);
+  stroke-width: 3px;
+  stroke-linecap: round;
+}
+
+.vol-skill-tree__connection--active {
+  stroke: var(--vol-ui-brand-solid);
+  stroke-width: 4px;
+}
+
+.vol-skill-tree__connection--branch-primary.vol-skill-tree__connection--active {
+  stroke: var(--vol-ui-danger-border);
+}
+
+.vol-skill-tree__connection--branch-support.vol-skill-tree__connection--active {
+  stroke: var(--vol-ui-support-border);
+}
+
+.vol-skill-tree__connection--branch-accent.vol-skill-tree__connection--active {
+  stroke: var(--vol-ui-accent-border);
+}
+
+/* Düğümler plaka: kilitli oyuk (kuyu), açılabilir kabartma + halka, açılmış dolu plaka. */
+.vol-skill-tree__node {
+  background-color: var(--vol-ui-plate);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 6px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-skill-tree__node--locked {
+  background-color: var(--vol-ui-well);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+  opacity: 0.6;
+}
+
+.vol-skill-tree__node--available {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 6px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    inset 0 -3px 0 var(--vol-ui-brand-solid),
+    0 2px 0 var(--vol-mat-drop),
+    0 0 0 3px var(--vol-ui-focus-halo);
+}
+
+.vol-skill-tree__node--available:hover {
+  background-color: var(--vol-ui-surface-3);
+}
+
+.vol-skill-tree__node--unlocked {
+  background-color: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 30%),
+    inset 0 6px 0 rgb(255 255 255 / 8%),
+    inset 0 -3px 0 rgb(0 0 0 / 28%),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-skill-tree__node--branch-primary.vol-skill-tree__node--unlocked {
+  background-color: var(--vol-ui-danger-solid);
+  border-color: var(--vol-ui-danger-border);
+}
+
+.vol-skill-tree__node--branch-support.vol-skill-tree__node--unlocked {
+  background-color: var(--vol-ui-support-solid);
+  border-color: var(--vol-ui-support-border);
+}
+
+.vol-skill-tree__node--branch-accent.vol-skill-tree__node--unlocked {
+  background-color: var(--vol-ui-accent-solid);
+  border-color: var(--vol-ui-accent-border);
+}
+
+.vol-skill-tree__node-label {
+  letter-spacing: 0.04em;
+}
+
+.vol-skill-tree__node--locked .vol-skill-tree__node-label {
+  color: var(--vol-ui-text-secondary);
+}
+
+/* ── Sihirbaz ve olay günlüğü ────────────────────────────────────────────── */
+.vol-wizard__footer {
+  padding-top: var(--vol-space-md);
+  border-top: 1px solid var(--vol-ui-frame-divider);
+  box-shadow: 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-toast {
+    transition: opacity var(--vol-transition-fast);
+  }
+}

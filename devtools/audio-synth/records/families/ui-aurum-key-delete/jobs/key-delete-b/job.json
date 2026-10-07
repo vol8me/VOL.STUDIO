@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a1869cafe7030921": {
+        "hash": "sha256:600885b1e006695e9ac72f0d26370a3ae971458ace52303d61180709d11035e3",
+        "path": "analyses/r-a1869cafe7030921.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:20fc3dce02b46c2a430a183f76a2631bb996d1189ee18bcd9263decdbeb6c4e2",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:20fc3dce02b46c2a430a183f76a2631bb996d1189ee18bcd9263decdbeb6c4e2",
+      "hash": "sha256:7f88dcb81dc9e34631455aef849981251e0601f8866ddce53ac926b712b55e20",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:160557ddf08855e46768e88737dea1450c75a7cf0c3f81a1000369d617e575b4",
+      "path": "core/audio-manifests/ui/aurum/key-delete-b.json"
+    },
+    "renders": {
+      "r-a1869cafe7030921": {
+        "hash": "sha256:339715bc1c54a24c9589e41f467621dac61cf647d5b5e5abb8cd4846ed822981",
+        "path": "renders/r-a1869cafe7030921.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:351f770456eb2e35108cc94f265b830ebe695dd0bfe8b04b3760d6014df0f1c9",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "key-delete-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/key-delete-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-key-delete/key-delete-b"
+    },
+    "package": "@volstudio/core"
+  }
+}
