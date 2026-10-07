@@ -1,8 +1,12 @@
 import { FullscreenController } from '@volstudio/core/platform';
 import { startAppSound } from './appSound';
 import {
+  Button,
   CursorController,
   FocusNavController,
+  Icon,
+  IconButton,
+  type IconName,
   THEME_IDS,
   Tabs,
   ThemeController,
@@ -43,6 +47,30 @@ type ShowcaseTabId =
   | 'ses'
   | 'kimlik';
 
+/**
+ * Dar pencerede (telefon, küçük tablet dikey) kenar çubuğu 220 px kaplar ve içeriğe 173 px bırakır;
+ * bu genişlikten itibaren sekmeler üstte tek satırda kayan şeride, üst çubuk tek satıra iner.
+ */
+const COMPACT_QUERY = '(max-width: 720px)';
+
+/** Sekme kimliği → ikon (süs; sekme adı metindedir). */
+const TAB_ICONS: ReadonlyArray<readonly [ShowcaseTabId, IconName]> = [
+  ['buttons', 'select'],
+  ['text', 'font'],
+  ['panels', 'layers'],
+  ['hud', 'health'],
+  ['cards', 'crown'],
+  ['forms', 'tune'],
+  ['workbench', 'gears'],
+  ['palette', 'palette'],
+  ['advanced', 'apps'],
+  ['scroll', 'moveDown'],
+  ['touch', 'touch'],
+  ['loading', 'refresh'],
+  ['ses', 'speaker'],
+  ['kimlik', 'star'],
+];
+
 interface TabSpec {
   id: ShowcaseTabId;
   labelKey: ShowcaseTabId;
@@ -82,8 +110,9 @@ export class ShowcaseApp {
   readonly element: HTMLDivElement;
 
   private tabs: Tabs | null = null;
-  private langButton: HTMLButtonElement | null = null;
-  private skinButton: HTMLButtonElement | null = null;
+  private langButton: Button | null = null;
+  private skinButton: Button | null = null;
+  private fullscreenButton: IconButton | null = null;
   private readonly theme: ThemeController;
   private readonly cursors: CursorController;
   private renderScope: DisposableScope | null = null;
@@ -93,6 +122,7 @@ export class ShowcaseApp {
   private activeTabId: ShowcaseTabId = 'buttons';
   private tabOrder: ShowcaseTabId[] = [];
   private destroyed = false;
+  private compact = false;
   private readonly onLangButtonClick = (): void => {
     void i18next.changeLanguage(i18next.language === 'tr' ? 'en' : 'tr');
   };
@@ -141,7 +171,22 @@ export class ShowcaseApp {
     this.onThemeChanged(this.theme.state.theme);
     // Uygulama genelinde arayüz sesi: niyetler, hover ve odak; bağlam ilk jestte kurulur.
     this.lifecycle.add(startAppSound(this.element, this.theme));
+    this.watchCompact();
     this.rebuild();
+  }
+
+  /** Pencere dar eşiği geçince kabuk yeniden kurulur (aktif sekme korunur). */
+  private watchCompact(): void {
+    if (typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia(COMPACT_QUERY);
+    this.compact = query.matches;
+    const onChange = (): void => {
+      if (this.destroyed || query.matches === this.compact) return;
+      this.compact = query.matches;
+      this.rebuild();
+    };
+    query.addEventListener('change', onChange);
+    this.lifecycle.addSubscription(() => query.removeEventListener('change', onChange));
   }
 
   /** Skin değişince imleç vurgusu ve düğme etiketi yenilenir (ses paleti `followTheme` ile kendiliğinden). */
@@ -156,9 +201,9 @@ export class ShowcaseApp {
     const label = i18next.t('volui:app.skin', {
       skin: i18next.t(theme === 'aurum' ? 'volui:app.skinAurum' : 'volui:app.skinDefault'),
     });
-    this.skinButton.textContent = label;
-    this.skinButton.setAttribute('aria-label', label);
-    this.skinButton.dataset.skin = theme;
+    this.skinButton.setLabel(label);
+    this.skinButton.element.setAttribute('aria-label', label);
+    this.skinButton.element.dataset.skin = theme;
   }
 
   private stepTab(delta: number): void {
@@ -177,6 +222,7 @@ export class ShowcaseApp {
     this.tabs = null;
     this.langButton = null;
     this.skinButton = null;
+    this.fullscreenButton = null;
     this.element.remove();
   }
 
@@ -188,33 +234,52 @@ export class ShowcaseApp {
 
     const header = document.createElement('header');
     header.className = 'vol-showcase-header';
-    const title = document.createElement('span');
-    title.textContent = i18next.t('volui:app.title');
-    header.appendChild(title);
 
-    this.langButton = document.createElement('button');
-    this.langButton.type = 'button';
-    this.langButton.className = 'vol-showcase-lang-button';
-    this.langButton.textContent = i18next.t('volui:app.language');
-    this.langButton.setAttribute('aria-label', i18next.t('volui:app.language'));
-    renderScope.addListener(this.langButton, 'click', this.onLangButtonClick);
+    // Marka bloğu: elmas işareti (marka rengi; skin ile değişir), ad ve alt yazı.
+    const brand = document.createElement('div');
+    brand.className = 'vol-showcase-brand';
+    const mark = document.createElement('span');
+    mark.className = 'vol-showcase-brand__mark';
+    mark.setAttribute('aria-hidden', 'true');
+    const name = document.createElement('span');
+    name.className = 'vol-showcase-brand__name';
+    name.textContent = i18next.t('volui:app.title');
+    const tagline = document.createElement('span');
+    tagline.className = 'vol-showcase-brand__tagline';
+    tagline.textContent = i18next.t('volui:app.tagline');
+    brand.append(mark, name, tagline);
+    header.appendChild(brand);
 
-    this.skinButton = document.createElement('button');
-    this.skinButton.type = 'button';
-    this.skinButton.className = 'vol-showcase-lang-button vol-showcase-skin-button';
-    renderScope.addListener(this.skinButton, 'click', this.onSkinButtonClick);
+    // Üst çubuk düğmeleri çekirdeğin gerçek bileşenleridir: malzeme, ses, titreşim ve odak aynı yoldan gelir.
+    this.langButton = renderScope.addDestroyable(
+      new Button(i18next.t('volui:app.language'), {
+        size: 'sm',
+        iconLeft: new Icon({ name: 'language', size: 16 }).element,
+        onClick: () => this.onLangButtonClick(),
+      }),
+    );
+    this.langButton.element.classList.add('vol-showcase-lang-button');
+    this.langButton.element.setAttribute('aria-label', i18next.t('volui:app.language'));
+
+    this.skinButton = renderScope.addDestroyable(
+      new Button('', { size: 'sm', onClick: () => this.onSkinButtonClick() }),
+    );
+    this.skinButton.element.classList.add('vol-showcase-skin-button');
     this.renderSkinLabel();
 
-    const fullscreenButton = document.createElement('button');
-    fullscreenButton.type = 'button';
-    fullscreenButton.className = 'vol-showcase-fullscreen-button';
-    fullscreenButton.textContent = '⛶';
-    renderScope.addListener(fullscreenButton, 'click', () => void this.fullscreen.toggle());
-    this.renderFullscreenLabel(fullscreenButton);
+    this.fullscreenButton = renderScope.addDestroyable(
+      new IconButton(new Icon({ name: 'fullscreen', size: 18 }).element, {
+        size: 'sm',
+        label: i18next.t('volui:app.fullscreen'),
+        onClick: () => void this.fullscreen.toggle(),
+      }),
+    );
+    this.fullscreenButton.element.classList.add('vol-showcase-fullscreen-button');
+    this.renderFullscreenLabel(this.fullscreenButton.element);
 
     const actions = document.createElement('div');
     actions.className = 'vol-showcase-header__actions';
-    actions.append(this.skinButton, this.langButton, fullscreenButton);
+    actions.append(this.skinButton.element, this.langButton.element, this.fullscreenButton.element);
     header.appendChild(actions);
 
     const specs: TabSpec[] = [
@@ -234,14 +299,31 @@ export class ShowcaseApp {
       { id: 'ses', labelKey: 'ses', builder: buildSesTab },
       { id: 'kimlik', labelKey: 'kimlik', builder: buildKimlikTab },
     ];
-    const entries = specs.map((spec) => ({
-      id: spec.id,
-      label: i18next.t(`volui:tabs.${spec.labelKey}`),
-      content: spec.builder(),
-    }));
+    const entries = specs.map((spec) => {
+      const label = i18next.t(`volui:tabs.${spec.labelKey}`);
+      const built = spec.builder();
+      // Her sayfa başlık şeridiyle açılır: ne olduğu ve neyi gösterdiği ilk bakışta okunur.
+      const page = document.createElement('div');
+      page.className = 'vol-showcase-page';
+      const pageHeader = document.createElement('div');
+      pageHeader.className = 'vol-showcase-page__header';
+      const pageTitle = document.createElement('h1');
+      pageTitle.className = 'vol-showcase-page__title';
+      pageTitle.textContent = label;
+      const pageDescription = document.createElement('p');
+      pageDescription.className = 'vol-showcase-page__description';
+      pageDescription.textContent = i18next.t(`volui:tabDescriptions.${spec.id}`);
+      pageHeader.append(pageTitle, pageDescription);
+      page.append(pageHeader, built.element);
+      return {
+        id: spec.id,
+        label,
+        content: { element: page, destroy: () => built.destroy?.() },
+      };
+    });
     this.tabOrder = specs.map((spec) => spec.id);
     const tabs = new Tabs(entries, {
-      orientation: 'vertical',
+      orientation: this.compact ? 'horizontal' : 'vertical',
       listHeader: header,
       onChange: (id) => {
         const selected = specs.find((spec) => spec.id === id);
@@ -249,6 +331,7 @@ export class ShowcaseApp {
       },
     });
     this.tabs = renderScope.addDestroyable(tabs);
+    this.decorateTabs(tabs);
     if (entries.some((entry) => entry.id === this.activeTabId)) {
       this.tabs.select(this.activeTabId);
     } else {
@@ -257,6 +340,18 @@ export class ShowcaseApp {
     this.element.appendChild(this.tabs.element);
     document.documentElement.lang = i18next.language ?? 'tr';
     document.title = i18next.t('volui:app.title');
+  }
+
+  /** Sekme düğmelerine ikon ekler (`-tab-<id>` kimliğinden): ikon süstür, ad metindedir. */
+  private decorateTabs(tabs: Tabs): void {
+    for (const tab of tabs.element.querySelectorAll<HTMLElement>('[role="tab"]')) {
+      const id = TAB_ICONS.find(([tabId]) => tab.id.endsWith(`-tab-${tabId}`));
+      if (!id) continue;
+      const icon = new Icon({ name: id[1], size: 18 }).element;
+      icon.classList.add('vol-showcase-tab-icon');
+      icon.setAttribute('aria-hidden', 'true');
+      tab.prepend(icon);
+    }
   }
 
   private renderFullscreenLabel(button?: HTMLButtonElement): void {

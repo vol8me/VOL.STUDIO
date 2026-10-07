@@ -3,46 +3,11 @@
   "note": "Dokunma hedefi geometri bulgularının bilinen kusur kaydı. Her kayıt sahip açık UI görevine bağlıdır; bulgu düzelince kayıt bayatlar ve layout.spec.ts düşer. rule: size (görünür kutu <44 px), clipped (kutu büyük ama atası kırpıyor), covered (merkez başka elemanda).",
   "hitTargets": [
     {
-      "scope": "tab/panels",
-      "rule": "clipped",
-      "target": ".vol-button",
-      "owner": "UI-05.3",
-      "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; panel sahnesi 44 px'lik düğmeyi kırpar"
-    },
-    {
-      "scope": "tab/workbench",
-      "rule": "clipped",
-      "target": ".vol-button",
-      "owner": "UI-10.2",
-      "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; SplitPane ikincil bölmesi düğmeyi kırpar"
-    },
-    {
-      "scope": "tab/advanced",
-      "rule": "clipped",
-      "target": ".vol-accordion__header",
-      "owner": "UI-05.3",
-      "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; Accordion başlığı kırpılır"
-    },
-    {
       "scope": "tab/advanced",
       "rule": "clipped",
       "target": ".vol-tree__row",
       "owner": "UI-05.3",
       "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; Tree alt listesi satırı kırpar"
-    },
-    {
-      "scope": "tab/advanced",
-      "rule": "clipped",
-      "target": ".vol-event-log__filter",
-      "owner": "UI-09.3",
-      "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; EventLog süzgeç düğmesi kırpılır"
-    },
-    {
-      "scope": "tab/advanced",
-      "rule": "clipped",
-      "target": ".vol-event-log__pin",
-      "owner": "UI-09.3",
-      "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; EventLog sabitleme düğmesi kırpılır"
     },
     {
       "scope": "tab/cards",
@@ -59,18 +24,11 @@
       "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; BuildMenu öğeleri 16 px aralıkla üst üste biner, komşu öğe merkezi örter"
     },
     {
-      "scope": "tab/forms",
-      "rule": "size",
-      "target": ".vol-slider--horizontal .vol-slider__input",
-      "owner": "UI-05.1",
-      "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; yatay kaydırıcı girişi 9 px genişliğe iner; gerçek vuruş alanı parmakla vurulamaz"
-    },
-    {
       "scope": "layer/forms/osk",
-      "rule": "clipped",
+      "rule": "size",
       "target": ".vol-osk__key",
-      "owner": "UI-11.1",
-      "reason": "ekran klavyesi tuşları dar görüntü alanında kabın dışına taşıp kırpılır"
+      "owner": "UI-11.3",
+      "reason": "393 px genişlikte 12 tuşluk satır 44 px genişliğe sığmaz; tuşlar taşmadan daralır (≥ 28 px, WCAG 2.5.8 AA 24 px) ve yükseklik 44 px kalır. Telefonda metin girişi yerel IME ile yapılır; ekran klavyesi kol ve tablet içindir. Android IME köprüsü ve kenar boşlukları UI-11.3 ile kapanır."
     }
   ],
   "glyphHeights": [

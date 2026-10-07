@@ -7,14 +7,14 @@
       "export": "Modal",
       "focus": "inside",
       "states": ["focusVisible", "keyboard"],
-      "known": { "keyboard": { "chromium": "UI-09.1" } }
+      "known": {}
     },
     {
       "scope": "panels/sheet",
       "export": "Sheet",
       "focus": "inside",
       "states": ["focusVisible", "keyboard"],
-      "known": { "keyboard": { "chromium": "UI-09.1" } }
+      "known": {}
     },
     {
       "scope": "panels/popup",
@@ -42,7 +42,7 @@
       "export": "OnScreenKeyboard",
       "focus": "inside",
       "states": ["focusVisible", "keyboard"],
-      "known": { "keyboard": { "*": "UI-11.1" } }
+      "known": {}
     }
   ]
 }

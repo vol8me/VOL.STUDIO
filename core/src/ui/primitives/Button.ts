@@ -133,6 +133,7 @@ export class Button {
         setError: (error) => this.setError(error),
         isLoading: () => this.loading,
         logLabel: 'Button',
+        element: this.element,
       },
       this.onClickHandler,
     );

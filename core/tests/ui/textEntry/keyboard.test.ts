@@ -89,6 +89,28 @@ describe('ekran klavyesi katmanları ve düzeni', () => {
     expect(document.activeElement).toBe(key('[data-value="q"]'));
   });
 
+  it('dil tuşu klavye düzenini arayüz dilinden bağımsız çevirir ve elle seçim dil değişiminde korunur', async () => {
+    const pending = OnScreenKeyboard.open({ value: '' });
+    const code = (): string | undefined =>
+      document.querySelector('.vol-osk__key[data-action="layout"] .vol-osk__layout-code')
+        ?.textContent ?? undefined;
+    expect(code()).toBe('TR');
+    key('[data-action="layout"]').click();
+    expect(code()).toBe('EN');
+    expect(document.querySelector('.vol-osk__key[data-value="ş"]')).toBeNull();
+    press('[data-action="shift"]');
+    press('[data-value="i"]');
+    // Arayüz dili Türkçe kalsa da EN düzeninde i → I.
+    expect(shown().trim()).toBe('I');
+    await i18next.changeLanguage('en');
+    await i18next.changeLanguage('tr');
+    expect(code()).toBe('EN');
+    key('[data-action="layout"]').click();
+    expect(code()).toBe('TR');
+    press('[data-action="done"]');
+    await expect(pending).resolves.toMatchObject({ value: 'I' });
+  });
+
   it('çok satırlı istekte yeni satır tuşu vardır, tek satırda yoktur', () => {
     void OnScreenKeyboard.open({ value: '', multiline: true });
     expect(document.querySelector('.vol-osk__key[data-action="newline"]')).not.toBeNull();
@@ -106,7 +128,7 @@ describe('ekran klavyesi erişilebilirliği ve sayacı', () => {
     expect(document.getElementById(titleId)?.textContent).toBe(
       i18next.t('core:keyboard.title.password'),
     );
-    for (const action of ['shift', 'backspace', 'left', 'right', 'symbols']) {
+    for (const action of ['shift', 'backspace', 'left', 'right', 'symbols', 'layout']) {
       expect(key(`[data-action="${action}"]`).getAttribute('aria-label')).toBeTruthy();
     }
     const value = document.querySelector('.vol-osk__value')!;

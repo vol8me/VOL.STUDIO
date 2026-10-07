@@ -12,6 +12,7 @@
     "letters": "ABC",
     "shiftLabel": "Büyük harf",
     "backspaceLabel": "Geri sil",
+    "layoutLabel": "Klavye dilini değiştir",
     "leftLabel": "İmleci sola taşı",
     "rightLabel": "İmleci sağa taşı",
     "newlineLabel": "Yeni satır",

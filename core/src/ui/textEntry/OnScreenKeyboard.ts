@@ -3,6 +3,7 @@ import { pushBackHandler } from '../../platform/backNavigation';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { Icon, type IconName } from '../primitives/Icon';
 import { emitUiIntent, findUiIntentRoot, type UiIntentKind } from '../feedback/uiIntent';
+import { previousFocusTarget } from '../primitives/buttonBehavior';
 import type { TextEntryRequest, TextEntryResult } from './textEntry';
 
 /**
@@ -22,7 +23,16 @@ import type { TextEntryRequest, TextEntryResult } from './textEntry';
  */
 
 type KeyAction =
-  'backspace' | 'shift' | 'done' | 'cancel' | 'newline' | 'symbols' | 'letters' | 'left' | 'right';
+  | 'backspace'
+  | 'shift'
+  | 'done'
+  | 'cancel'
+  | 'newline'
+  | 'symbols'
+  | 'letters'
+  | 'layout'
+  | 'left'
+  | 'right';
 
 interface KeyDef {
   label: string;
@@ -64,7 +74,6 @@ let keyboardInstanceCounter = 0;
 
 /** Etkin arayüz dili Türkçe ise Türkçe Q düzeni ve Türkçe büyük harf kuralları kullanılır. */
 const isTurkish = (): boolean => (i18next.language ?? 'tr').toLowerCase().startsWith('tr');
-const upper = (text: string): string => text.toLocaleUpperCase(isTurkish() ? 'tr' : 'en');
 
 export class OnScreenKeyboard {
   readonly element: HTMLDivElement;
@@ -85,13 +94,15 @@ export class OnScreenKeyboard {
   private shifted = false;
   private layer: 'letters' | 'symbols' = 'letters';
   private layoutIsTurkish = isTurkish();
+  /** Kullanıcı düzeni elle seçtiyse arayüz dili değişse de düzen yerinde kalır. */
+  private layoutPinned = false;
   private closed = false;
   /** Klavyeyi açan öğe: ses/niyet veriyolu ve kök, ona göre bulunur (klavye gövdeye değil köke eklenir). */
   private readonly anchor: Element;
   private readonly onLanguageChanged = (): void => this.handleLanguageChanged();
 
   private constructor(request: TextEntryRequest, resolve: (r: TextEntryResult) => void) {
-    this.anchor = document.activeElement ?? document.body;
+    this.anchor = previousFocusTarget() ?? document.body;
     this.value = request.value;
     this.caret = [...request.value].length;
     this.original = request.value;
@@ -184,6 +195,11 @@ export class OnScreenKeyboard {
     });
   }
 
+  /** Büyük harf, görünen düzenin diline göre (tr: i→İ, ı→I; en: i→I). */
+  private upper(text: string): string {
+    return text.toLocaleUpperCase(this.layoutIsTurkish ? 'tr' : 'en');
+  }
+
   private letterRows(): LetterLayout {
     return this.layoutIsTurkish ? TR_LETTERS : EN_LETTERS;
   }
@@ -196,8 +212,15 @@ export class OnScreenKeyboard {
       icon: 'backspace',
       aria: i18next.t('core:keyboard.backspaceLabel'),
     };
+    const layoutKey: KeyDef = {
+      label: this.layoutIsTurkish ? 'TR' : 'EN',
+      action: 'layout',
+      icon: 'language',
+      aria: i18next.t('core:keyboard.layoutLabel'),
+    };
     const bottomCommon = (toggle: KeyDef): KeyDef[] => [
       toggle,
+      layoutKey,
       { label: '.', value: '.' },
       { label: ',', value: ',' },
       { label: i18next.t('core:keyboard.space'), value: ' ', wide: true },
@@ -247,7 +270,7 @@ export class OnScreenKeyboard {
 
     const rows = this.letterRows();
     const letters = rows.map((row) =>
-      row.map((ch): KeyDef => ({ label: this.shifted ? upper(ch) : ch, value: ch })),
+      row.map((ch): KeyDef => ({ label: this.shifted ? this.upper(ch) : ch, value: ch })),
     );
     const shift: KeyDef = {
       label: '',
@@ -285,6 +308,12 @@ export class OnScreenKeyboard {
           (def.primary ? ' vol-osk__key--primary' : '');
         if (def.icon) {
           key.appendChild(new Icon({ name: def.icon, size: 22 }).element);
+          if (def.action === 'layout') {
+            const code = document.createElement('span');
+            code.className = 'vol-osk__layout-code';
+            code.textContent = def.label;
+            key.appendChild(code);
+          }
         } else {
           key.textContent = def.label;
         }
@@ -325,7 +354,7 @@ export class OnScreenKeyboard {
 
   private handleLanguageChanged(): void {
     const turkish = isTurkish();
-    if (turkish !== this.layoutIsTurkish) {
+    if (!this.layoutPinned && turkish !== this.layoutIsTurkish) {
       this.layoutIsTurkish = turkish;
       this.rerenderKeepingFocus();
     } else {
@@ -347,6 +376,7 @@ export class OnScreenKeyboard {
       backspace: () => i18next.t('core:keyboard.backspaceLabel'),
       left: () => i18next.t('core:keyboard.leftLabel'),
       right: () => i18next.t('core:keyboard.rightLabel'),
+      layout: () => i18next.t('core:keyboard.layoutLabel'),
       newline: () => i18next.t('core:keyboard.newlineLabel'),
       symbols: () => i18next.t('core:keyboard.symbolsLabel'),
       letters: () => i18next.t('core:keyboard.lettersLabel'),
@@ -376,7 +406,7 @@ export class OnScreenKeyboard {
       const value = key.dataset.value;
       if (key.dataset.action === 'shift') key.setAttribute('aria-pressed', String(shifted));
       else if (value && /\p{L}/u.test(value)) {
-        key.textContent = shifted ? upper(value) : value;
+        key.textContent = shifted ? this.upper(value) : value;
       }
     }
   }
@@ -411,6 +441,14 @@ export class OnScreenKeyboard {
         this.shifted = false;
         this.rerenderKeepingFocus();
         return;
+      case 'layout':
+        // Klavye dili arayüz dilinden bağımsız seçilir (TR ⇄ EN); niyet tuş DOM'dan kalkmadan yayılır.
+        this.intent('select', key, event, 'select');
+        this.layoutIsTurkish = !this.layoutIsTurkish;
+        this.layoutPinned = true;
+        this.shifted = false;
+        this.rerenderKeepingFocus();
+        return;
       case 'left':
       case 'right': {
         const next = this.caret + (data.action === 'left' ? -1 : 1);
@@ -432,7 +470,7 @@ export class OnScreenKeyboard {
         return;
       default:
         if (data.value !== undefined) {
-          if (!this.insert(this.shifted ? upper(data.value) : data.value, key, event)) return;
+          if (!this.insert(this.shifted ? this.upper(data.value) : data.value, key, event)) return;
           if (this.shifted) this.applyShift(false);
         }
     }
@@ -477,6 +515,20 @@ export class OnScreenKeyboard {
     this.closed = true;
     this.scope.dispose();
     this.element.remove();
+    // Odak, klavyeyi açan DÜĞMEYE geri döner (metin alanlarının odak dönüşünü oturum katmanı yürütür:
+    // alana odak vermek klavyeyi yeniden açardı).
+    const anchor = this.anchor;
+    if (
+      anchor instanceof HTMLElement &&
+      anchor.isConnected &&
+      !(
+        anchor instanceof HTMLInputElement ||
+        anchor instanceof HTMLTextAreaElement ||
+        anchor.isContentEditable
+      )
+    ) {
+      anchor.focus({ preventScroll: true });
+    }
     // İptal, sözleşme gereği başlangıç değerini döndürür.
     this.resolve({ value: canceled ? this.original : this.value, canceled });
   }

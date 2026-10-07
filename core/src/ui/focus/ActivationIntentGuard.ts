@@ -132,7 +132,7 @@ export class ActivationIntentGuard {
   private actionTarget(target: EventTarget | null): HTMLElement | null {
     if (!(target instanceof Element)) return null;
     const element = target.closest<HTMLElement>(
-      'button, [href], input[type="button"], input[type="submit"], input[type="reset"], [role="button"]',
+      'button, a[href], area[href], input[type="button"], input[type="submit"], input[type="reset"], [role="button"]',
     );
     return element && this.root.contains(element) ? element : null;
   }

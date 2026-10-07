@@ -1,6 +1,7 @@
 {
   "app": {
     "title": "VOL.UI",
+    "tagline": "OYUN ARAYÜZ SETİ",
     "language": "English",
     "fullscreen": "Tam ekranı aç",
     "leaveFullscreen": "Tam ekrandan çık",
@@ -8,6 +9,22 @@
     "skin": "Kaplama: {{skin}}",
     "skinDefault": "Çelik",
     "skinAurum": "Aurum"
+  },
+  "tabDescriptions": {
+    "buttons": "Basılabilir yüzeyler, ikon düğmeleri ve durumlar",
+    "text": "Yazı ölçeği, efektler ve hareketli metin",
+    "panels": "Paneller, açılır pencereler, modallar, sheet ve bildirimler",
+    "hud": "Barlar, sayaçlar ve oyun içi göstergeler",
+    "cards": "Kartlar, seviye atlama ve mağaza seçicileri",
+    "forms": "Girişler, kaydırıcılar, seçiciler ve ekran klavyesi",
+    "workbench": "Editör yüzeyleri: özellik alanları, geçmiş, ikonlar",
+    "palette": "Tema token'ları ve renk rolleri",
+    "advanced": "Diyalog, komut paleti, ağaçlar, tablolar ve akışlar",
+    "scroll": "Kaydırma, karuseller ve sanal listeler",
+    "touch": "Joystick, basılı tutma düğmeleri ve dokunmatik kontroller",
+    "loading": "Yükleme ekranları ve ilerleme",
+    "ses": "UI ses laboratuvarı: olaylar, paletler, mikser",
+    "kimlik": "Malzeme dili: yüzeyler, çerçeve, barlar, ikonlar, imleçler"
   },
   "tabs": {
     "buttons": "BUTONLAR",

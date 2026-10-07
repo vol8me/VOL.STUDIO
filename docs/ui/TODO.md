@@ -93,8 +93,23 @@ Sahip CORE UI. Tema/yoğunluk/hareket sahipleri (UI-01.1–01.3, 01.5) hazırdı
       kenar, sert dış gölge, düz arka plan renkli: kontrast araçla ölçülebilir), girinti/panel/basılı
       yüzey sınıfları, çerçeve (köşe aksanları, başlık şeridi, ayraç), HUD barı (segment
       çentikleri, parlak üst bant, kenar ışığı); vitrinde KİMLİK sekmesinde "Malzeme" bölümü.
-      Kalan: panel/kart/diyalog/girdi yüzeylerine yayılım (UI-04, UI-05, UI-09 aileleriyle),
-      bar hasar gecikme şeridi, bulanık gölge ve gölge katmanı bütçesinin ölçümü, metin
+      **Çerçeve dili v2 (2026-10-08):** panel, kart, modal, sheet, popup, açıklamalı ipucu,
+      komut paleti, diyalog kutusu, toast ve kart seçici aynı "plaka çerçevesi" dilini konuşur:
+      düz panel rengi + üst ışık + alt kenar + 4 px içeride ikinci hat (`--vol-mat-keyline`; aurum'da
+      altın) + sert dış gölge; başlıklar çerçeve şeridi (marka elması + display büyük harf);
+      sekmeler plaka (seçili: üst ışık + marka çubuğu, dikeyde sol çubuk); kaydırıcı ve aralık
+      kaydırıcı kuyu çubuk + kesikli dolgu + çelik tutamaç; ağaç/günlük/zaman çubuğu/sayı girişi/
+      radyo kuyu; tablo başlığı çerçeve şeridi + zebra; beceri ağacı düğümleri plaka (kilitli kuyu,
+      açılabilir halka, açılmış dolu). Katman kuralları `core/src/ui/material/overlays.css`te; yığın sırası
+      (kök 10 < float 15 diyalog kutusu < toast 20 < dialog 30 < içerik 40 < yükleme 50) belgelenir.
+      Vitrin kabuğu yeniden kuruldu: marka bloğu, çekirdeğin gerçek `Button`/`IconButton` bileşenleri
+      (skin, dil, tam ekran), sekme ikonları, sayfa başlığı şeridi (ad + açıklama), vitrinin kendi
+      demo yüzeyleri plaka/kuyu; 720 px altında üst şerit + yatay kayan sekme şeridi (kenar çubuğu
+      telefonda içeriğe 173 px bırakıyordu; `tab/panels`, `tab/workbench`, Accordion, EventLog
+      kırpma kayıtları bu yüzden silindi). İkon: "kapat" çarpısı inceltilmiş yuvarlak uçlu özgün
+      çizim (Phosphor `x` düğme içinde kaba duruyordu), sessiz ikon düğmesi (`vol-sheet__close`,
+      `vol-icon-button--quiet`).
+      Kalan: bar hasar gecikme şeridi ölçümü, bulanık gölge ve gölge katmanı bütçesinin ölçümü, metin
       backplate'li karmaşık yüzeyler, axe'in hesaplayamadığı bar etiketi ve malzeme örneği
       kontrastlarının son renk ölçümü (kayıtlı: `axeExceptions.json`, sahip UI-01.7).
 - [ ] **UI-01.10 — Juice ve hareket ilkelleri (kalan).** Yapıldı: `MOTION_JUICE` adlı ilkeller
@@ -115,7 +130,7 @@ Sahip CORE geri bildirim + audio-synth üreticisi + uygulama adaptörü. Niyet k
 titreşim sağlayıcısı, kısma ve laboratuvar mekanizması hazırdır (Kapatılanlar); **ses setinin
 kendisi sıfırdan yeniden yapılır.**
 
-- [ ] **UI-02.8 — Uygulama genelinde bağlama (kalan).** Yapıldı: kit yeni sözlükle (23 olay,
+- [ ] **UI-02.8 — Uygulama genelinde bağlama (kalan).** Yapıldı: kit yeni sözlükle (23 olay; 2026-10-08'de ekran klavyesi için `keyTap`/`keyDelete` ile 25,
       iki palet), `toggleOn/Off`, kaydırıcıda değere bağlı perde, hover/focus gözlemcisi,
       `setAssets`/`followTheme`, vitrin kökünde uygulama geneli bağlama; vitrin üst çubuğundaki skin
       düğmesi ses paletini (çelik ↔ aurum) ve imleç vurgusunu değiştirir; VOL.TEST HUD kökünde kit
@@ -262,7 +277,7 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
 - [ ] **UI-07.4 — Tema laboratuvarı ve üst bar (kalan).** Yapıldı: vitrin üst çubuğunda skin
       düğmesi (`ThemeController`, kök `data-vol-theme`, seçim `localStorage`'da kalır, bilinmeyen
       kayıt varsayılana döner; `skin.spec.ts` iki motorda), skin ses paletini ve imleç aksanını
-      değiştirir. Kalan: Tema sekmesi ve genel tema/dil/yoğunluk seçici; önizleme kapsamları/body
+      değiştirir; üst çubuk çekirdek bileşenleriyle yeniden kuruldu (UI-01.7 notuna bakın). Kalan: Tema sekmesi ve genel tema/dil/yoğunluk seçici; önizleme kapsamları/body
       portalları/canvas sabit renkleri (CurveEditor/Minimap). Kapanır: 2 skin × 3 yoğunlukta
       kontrast/odak; Chromium CLS ve tüm motor geometrisi; geçiş anlık, durum/kaydırma/odak/seçim
       sabit.
@@ -299,6 +314,17 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       odak sınırı/etkileşimsizlik/adı/odak geri yükleme/tek geri olayı. Kapanır: 3 katmanlı yığın
       LIFO; iptalde kaynak temizliği; %200/IME'de odak örtülmez; fatal klavye/AT bağımsız;
       destroy sonrası body katmanı/dinleyici kalmaz.
+      Yapıldı (2026-10-08): **DialogueBox sayfa içeriğinin arkasında kalıyordu** (z-index'siz mutlak
+      konum; gerçek ekran görüntüsüyle bulundu) → `--vol-z-float`; konuşmacı isim plakası, portre
+      çerçevesi, plaka seçimler; seçim glifi bozuk karakterdi (`â–¸`) → `B8` + elmas işareti.
+      **Modal/Sheet/OSK kapanınca odak gövdeye düşüyordu** (düğme tıklama sırasında `disabled`
+      olur, tarayıcı odağı gövdeye atar; katman o anki `activeElement`e baktığı için tetikleyiciyi
+      kaybediyordu) → `previousFocusTarget()`; `stateFixtures.json`taki UI-09.1 Chromium ve UI-11.1
+      OSK bilinen-kusur kayıtları silindi (26/26 iki motor). **`FOCUSABLE_SELECTOR` çıplak `[href]`
+      içeriyordu**: sprite ikon `<use href>` öğeleri kol gezinmesine ve modal odak tuzağına aday
+      oluyordu → `a[href], area[href]`. Toast: varyant ikonu (renk tek taşıyıcı değil) + vurgu çubuğu.
+      Kalan: ContextMenu/RadialMenu/Popover/FatalStartupError aynı dile yayılım ve ince ayar;
+      giriş/çıkış juice'u ve sesin tam kapsamı; 3 katmanlı yığın kanıtı.
 - [ ] **UI-09.2 — Tooltip/RichTooltip ve ToastManager.** Hover/odak kalıcılığı, Esc, balona geçiş,
       dokunma/kol alternatifi; 3 bildirimlik kuyruk, kritik öncelik/eylem; bildirim sesleri.
       Kapanır: 3 s zorunlu gizleme yok; acil bildirim sessizce düşmez; AT dinler; HUD üstüne
@@ -343,7 +369,19 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
 - [ ] **UI-11.1 — Sahip/oturum/IME bileşimi.** `core/src/ui/textEntry/textEntry.ts` sağlayıcı/kip
       sondası yeniden kullanılır; oturum sınıfı ve abort/selection gruplama. OSK Türkçe/İngilizce
       düzen, Unicode grafem/silme ve maxLength, multiline/password/readOnly/disabled; sahibin
-      public iptal yolu. Kapanır: eski async sonuç yeni/yok edilmiş alana yazamaz ve odak veremez;
+      public iptal yolu.
+      Yapıldı (2026-10-08): **OSK baştan kuruldu** (`OnScreenKeyboard.ts`, `keyboard.css`): çerçeve
+      başlık şeridi + karakter sayacı, kuyu değer alanı ve gerçek imleç (← → ile hareket; yazma ve
+      silme imleç konumunda), basılabilir plaka tuşlar (Bitti marka rengi), sembol katmanı (`@ # ₺ € / \`
+      …), dile bağlı düzen (tr: Türkçe Q, diğer: QWERTY) ve TR⇄EN dil tuşu (arayüz dilinden bağımsız;
+      elle seçim dil değişiminde korunur), Vazgeç tuşu, erişilebilir adlar (diyalog başlığa bağlı,
+      ikon tuşların adı, değer alanı salt okunur metin kutusu), UI köküne takılır (ses ve niyet
+      kapsamı), niyetler `type`/`erase`/`reject` (+ `toggle`/`select`/`confirm`/`cancel`), iki yeni ses
+      `keyTap`/`keyDelete` (iki palet), alçak ekranda sıkılaşma ve `100dvh` sınırı, kolda son satır
+      (Vazgeç·Bitti) uzamsal gezinme düzeltmesi. Kanıt: `keyboard.test.ts` (13), `osk.spec.ts`
+      (dikey/yatay telefon, dikey/yatay tablet, işaretçi, klavye; iki motor).
+      Kalan: Unicode grafem kümesi (şimdi kod noktası), IME bileşimi, readOnly/disabled tuşları,
+      gerçek cihaz kanıtı (Deck kolu, Android) — NOT-RUN. Kapanır: eski async sonuç yeni/yok edilmiş alana yazamaz ve odak veremez;
       sağlayıcı değişiminde eski temizlik yeni sahibi silmez; tek bekleyen istek/zaman aşımı/geri/
       Escape; IME'de Enter göndermez; OSK diyalog adı/odak sınırı ve ekran görüntüsü.
 - [ ] **UI-11.2 — Native menü ve pano.** `core/src/ui/nativeMenus.ts` + `tauri-v2/src-tauri/src/native_menus.js`

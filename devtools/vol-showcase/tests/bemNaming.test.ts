@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const stylesPath = resolve(import.meta.dirname, '../src/styles.css');
-const stylesContent = readFileSync(stylesPath, 'utf-8');
+// İskelet (styles.css) ve kabuk (shell.css) aynı adlandırma kuralına tabidir.
+const stylesContent = ['styles.css', 'shell.css']
+  .map((name) => readFileSync(resolve(import.meta.dirname, '../src', name), 'utf-8'))
+  .join(String.fromCharCode(10));
 
 /** CSS kaynağındaki tüm class selector'leri çıkarır. */
 function extractClassSelectors(css: string): string[] {

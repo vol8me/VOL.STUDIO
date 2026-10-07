@@ -15,6 +15,21 @@ export interface ButtonBehaviorHost {
   /** Yeniden giriş bu bayrakla engellenir. */
   isLoading(): boolean;
   readonly logLabel: string;
+  /** Tıklanan düğme: handler çalışırken odağın "önceki sahibi" olarak bilinir (bkz. `previousFocusTarget`). */
+  readonly element?: Element;
+}
+
+/**
+ * Handler çalışırken düğme `disabled` olur ve tarayıcı odağı gövdeye düşürür; handler'ın açtığı bir
+ * katman (modal, sheet, klavye) o anda `document.activeElement`e bakarsa tetikleyiciyi KAYBEDER ve kapanınca
+ * odağı geri veremez. Katmanlar odağın önceki sahibini buradan sorar: odak gövdede ise o an tıklanan düğme.
+ */
+let activatingElement: Element | null = null;
+
+export function previousFocusTarget(): Element | null {
+  const active = document.activeElement;
+  if (active && active !== document.body) return active;
+  return activatingElement;
 }
 
 /**
@@ -44,6 +59,8 @@ export async function runButtonClick(
   }
 
   host.setError?.(false);
+  const outerActivating = activatingElement;
+  activatingElement = host.element ?? null;
   host.setLoading(true);
   let failed = false;
   try {
@@ -55,6 +72,7 @@ export async function runButtonClick(
     failed = true;
     console.error(`[${host.logLabel}] onClick handler hatası:`, error);
   } finally {
+    activatingElement = outerActivating;
     host.setLoading(false);
     if (failed) host.setError?.(true);
   }

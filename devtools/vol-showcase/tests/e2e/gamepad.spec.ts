@@ -206,6 +206,8 @@ test('kol kipinde metin alanı odaklanınca ekran klavyesi açılır; yazılan d
   await pressButton(page, PAD.dpadDown);
   await pressButton(page, PAD.primary);
   for (let i = 0; i < 4; i += 1) await pressButton(page, PAD.dpadDown);
+  // Son satırda iki geniş tuş var (Vazgeç solda, Bitti sağda); 'q' hizasından Vazgeç'e inilir, sağa bir adım Bitti'dir.
+  await pressButton(page, PAD.dpadRight);
   await pressButton(page, PAD.primary); // odak 'Bitti'de → commit
   await expect(osk).toHaveCount(0);
   const typed = await input.inputValue();

@@ -111,6 +111,7 @@ export class IconButton {
         setError: (error) => this.setError(error),
         isLoading: () => this.loading,
         logLabel: 'IconButton',
+        element: this.element,
       },
       this.onClickHandler,
     );

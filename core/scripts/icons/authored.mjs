@@ -18,6 +18,8 @@ const TOWER = 'M56 52H92V76H112V52H144V76H164V52H200V108H184V216H72V108H56Z';
 const tower = (cutout) => hole(`${TOWER}${cutout}`);
 
 export const AUTHORED_ICONS = {
+  // Kapat: yuvarlak uçlu, inceltilmiş çarpı; Phosphor `x` düğme içinde kaba ve ağır duruyordu.
+  close: line('M66 66L190 190', 22) + line('M190 66L66 190', 22),
   mine: line('M60 196L168 88', 22) + line('M104 48Q216 40 208 152', 22),
   amulet:
     line('M72 40L128 132L184 40', 12) +

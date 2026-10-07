@@ -12,6 +12,7 @@
     "letters": "ABC",
     "shiftLabel": "Shift",
     "backspaceLabel": "Backspace",
+    "layoutLabel": "Switch keyboard language",
     "leftLabel": "Move cursor left",
     "rightLabel": "Move cursor right",
     "newlineLabel": "New line",

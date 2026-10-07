@@ -6,7 +6,13 @@
  * da tersi yaşanır; tek kaynak ikisini hizalı tutar.
  */
 export const FOCUSABLE_SELECTOR =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'button:not([disabled]), a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/*
+ * `[href]` yalnız bağlantı öğelerinde (`a`, `area`) odaklanabilirdir. Çıplak `[href]` her sprite ikonun
+ * içindeki SVG `<use href="#…">` öğesini de eşliyordu: kol gezinmesi ve modal odak tuzağı görünmez ikon
+ * parçalarını "odaklanabilir" sayıp D-pad'i ve Tab sınırlarını bozuyordu.
+ */
 
 /** Açık bir modal diyalogun görünür ve inert-olmayan hâli. */
 const DIALOG_SELECTOR = '[role="dialog"][aria-modal="true"]';

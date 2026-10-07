@@ -2,6 +2,7 @@ import { playJuice } from '../motion/juice';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { pushBackHandler } from '../../platform/backNavigation';
 import { FOCUSABLE_SELECTOR } from '../focus/focusable';
+import { previousFocusTarget } from '../primitives/buttonBehavior';
 
 export interface ModalOptions {
   /** Scrim'e (arka plan karartması) tıklayınca kapat. Varsayılan true. */
@@ -91,7 +92,7 @@ export class Modal {
     if (this.isOpen()) {
       return;
     }
-    this.previouslyFocused = document.activeElement as (HTMLOrSVGElement & Element) | null;
+    this.previouslyFocused = previousFocusTarget() as (HTMLOrSVGElement & Element) | null;
     this.element.classList.add('vol-modal--visible');
     // Panel girişi: içerik hafif küçükten oturur (hareket azaltılmışta CSS çevirisiz).
     if (!this.element.classList.contains('vol-sheet')) playJuice(this.content, 'enter');

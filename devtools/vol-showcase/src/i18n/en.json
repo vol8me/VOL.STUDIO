@@ -1,6 +1,7 @@
 {
   "app": {
     "title": "VOL.UI",
+    "tagline": "GAME UI KIT",
     "language": "Türkçe",
     "fullscreen": "Enter fullscreen",
     "leaveFullscreen": "Leave fullscreen",
@@ -8,6 +9,22 @@
     "skin": "Skin: {{skin}}",
     "skinDefault": "Steel",
     "skinAurum": "Aurum"
+  },
+  "tabDescriptions": {
+    "buttons": "Press surfaces, icon buttons and states",
+    "text": "Type scale, effects and animated text",
+    "panels": "Panels, popups, modals, sheets and notifications",
+    "hud": "Bars, counters and in-game readouts",
+    "cards": "Cards, level-up and shop pickers",
+    "forms": "Inputs, sliders, selects and the on-screen keyboard",
+    "workbench": "Editor surfaces: property fields, history, icons",
+    "palette": "Theme tokens and colour roles",
+    "advanced": "Dialogue, command palette, trees, tables and flows",
+    "scroll": "Scrolling, carousels and virtual lists",
+    "touch": "Joystick, hold buttons and touch controls",
+    "loading": "Loading screens and progress",
+    "ses": "UI sound lab: events, palettes, mixer",
+    "kimlik": "Material language: surfaces, frame, bars, icons, cursors"
   },
   "tabs": {
     "buttons": "BUTTONS",

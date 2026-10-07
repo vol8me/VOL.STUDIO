@@ -25,7 +25,7 @@ describe('ses laboratuvarı', () => {
   });
 
   it('her olay için bir düğme ve gerçek bileşenler vardır', () => {
-    expect(tab.element.querySelectorAll('[data-ses-event]')).toHaveLength(23);
+    expect(tab.element.querySelectorAll('[data-ses-event]')).toHaveLength(25);
     expect(tab.element.querySelectorAll('[data-ses-outcome]')).toHaveLength(3);
   });
 

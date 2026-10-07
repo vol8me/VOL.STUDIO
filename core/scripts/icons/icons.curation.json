@@ -872,7 +872,7 @@
   {
     "id": "close",
     "category": "chrome",
-    "source": "phosphor/x"
+    "source": "authored"
   },
   {
     "id": "dot",

@@ -97,14 +97,18 @@
 }
 
 .vol-showcase-workbench-artwork {
-  background: var(--vol-ui-surface-2);
-  border: 2px solid var(--vol-ui-border-strong);
+  background-color: var(--vol-ui-well);
+  border: 1px solid var(--vol-ui-frame-hairline);
   width: 256px;
   height: 256px;
   transform-origin: 0 0;
   position: absolute;
   inset: 0 auto auto 0;
-  box-shadow: 0 16px 42px var(--vol-ui-scrim);
+
+  /* Tuval bir kuyudur: derin gölge yerine sert iç gölge (bulanık gölge WebKit'i yavaşlatıyordu). */
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    0 4px 0 var(--vol-mat-drop);
 }
 
 .vol-showcase-workbench-artwork__block {

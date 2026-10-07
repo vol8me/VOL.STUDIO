@@ -41,6 +41,12 @@ export const DYNAMIC_FAMILIES = [
   { ns: 'volui', prefix: 'tabs.', suffix: '', reason: 'sekme etiketi sekme kimliğinden türer' },
   {
     ns: 'volui',
+    prefix: 'tabDescriptions.',
+    suffix: '',
+    reason: 'sayfa alt başlığı sekme kimliğinden türer',
+  },
+  {
+    ns: 'volui',
     prefix: 'cards.',
     suffix: '.title',
     reason: 'kart başlığı kart kimliğinden türer',

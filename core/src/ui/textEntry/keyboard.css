@@ -15,6 +15,8 @@
   flex-direction: column;
   gap: var(--vol-space-md);
   padding: 0 0 max(var(--vol-space-md), var(--vol-safe-bottom, 0px));
+  max-height: 100dvh;
+  overflow-y: auto;
   pointer-events: auto;
   background-color: var(--vol-ui-panel);
   border-top: 1px solid var(--vol-ui-frame-hairline);
@@ -156,6 +158,12 @@
   outline-offset: 1px;
 }
 
+/* Son satır (Vazgeç · Bitti): iki yakın, orta genişlikte tuş; uzak geniş tuşlar kolda "sağa" basınca üstteki satıra kayıyordu. */
+.vol-osk__row:last-child .vol-osk__key {
+  flex: 0 1 200px;
+  max-width: 200px;
+}
+
 .vol-osk .vol-icon {
   pointer-events: none;
 }
@@ -163,6 +171,36 @@
 @media (prefers-reduced-motion: reduce) {
   .vol-osk__caret {
     animation: none;
+  }
+}
+
+.vol-osk__layout-code {
+  margin-inline-start: 4px;
+  font-size: var(--vol-text-label);
+  letter-spacing: 0.06em;
+}
+
+/* Alçak ekran (telefon yatay, küçük pencere): klavye ekrandan taşmasın, satırlar sıkılaşır ve gerekirse kayar. */
+@media (height <= 520px) {
+  .vol-osk {
+    --vol-osk-key-height: 34px;
+    --vol-osk-gap: 3px;
+
+    gap: var(--vol-space-sm);
+  }
+
+  .vol-osk__header {
+    padding-block: 2px;
+  }
+
+  .vol-osk__value {
+    min-height: 36px;
+    padding-block: 4px;
+  }
+
+  .vol-osk__key {
+    min-height: 0;
+    font-size: var(--vol-text-body);
   }
 }
 

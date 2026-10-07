@@ -225,7 +225,10 @@
 .vol-icon-button,
 .vol-osk__key,
 .vol-dialogue__choice,
-.vol-dialogue__control {
+.vol-dialogue__control,
+.vol-wizard__nav-button,
+.vol-card__action,
+.vol-card-shop__reroll {
   --vol-btn-base: var(--vol-ui-plate);
   --vol-btn-hover: var(--vol-ui-surface-3);
   --vol-btn-pressed: var(--vol-ui-surface-1);
@@ -257,7 +260,10 @@
 .vol-osk__key:hover,
 .vol-osk__key.vol-gamepad-hover,
 .vol-dialogue__choice:hover,
-.vol-dialogue__control:hover {
+.vol-dialogue__control:hover,
+.vol-wizard__nav-button:hover,
+.vol-card__action:hover,
+.vol-card-shop__reroll:hover {
   background-color: var(--vol-btn-hover);
   transform: translateY(calc(var(--vol-mat-lift) * -1));
   box-shadow:
@@ -270,7 +276,10 @@
 .vol-icon-button:active,
 .vol-osk__key:active,
 .vol-dialogue__choice:active,
-.vol-dialogue__control:active {
+.vol-dialogue__control:active,
+.vol-wizard__nav-button:active,
+.vol-card__action:active,
+.vol-card-shop__reroll:active {
   background-color: var(--vol-btn-pressed);
   transform: translateY(var(--vol-mat-press)) scale(var(--vol-mat-squash));
   box-shadow:
@@ -282,7 +291,10 @@
 .vol-button:disabled,
 .vol-icon-button:disabled,
 .vol-osk__key:disabled,
-.vol-dialogue__choice:disabled {
+.vol-dialogue__choice:disabled,
+.vol-wizard__nav-button:disabled,
+.vol-card__action:disabled,
+.vol-card-shop__reroll:disabled {
   cursor: var(--vol-cursor-default, default);
   color: var(--vol-ui-disabled-text);
   background-color: var(--vol-ui-disabled-fill);
@@ -305,7 +317,8 @@
 
 /* Varyantlar. */
 .vol-button--primary,
-.vol-icon-button--primary {
+.vol-icon-button--primary,
+.vol-wizard__nav-button--next {
   --vol-btn-base: var(--vol-ui-brand-solid);
   --vol-btn-hover: var(--vol-ui-brand-hover);
   --vol-btn-pressed: var(--vol-ui-brand-pressed);
@@ -404,8 +417,8 @@
 /* Dolgu ve seçili parça: kabartma (üst bant ışığı, alt kenar). */
 .vol-slider__fill {
   box-shadow:
-    inset 0 3px 0 rgb(255 255 255 / 20%),
-    inset 0 -3px 0 rgb(0 0 0 / 22%);
+    inset 0 2px 0 rgb(255 255 255 / 26%),
+    inset 0 -2px 0 rgb(0 0 0 / 28%);
 }
 
 .vol-segmented__thumb {
@@ -470,6 +483,8 @@
 }
 
 .vol-tabs__tab {
+  display: inline-flex;
+  align-items: center;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-size: 13px;
@@ -558,7 +573,10 @@
   .vol-icon-button,
   .vol-osk__key,
   .vol-dialogue__choice,
-  .vol-dialogue__control {
+  .vol-dialogue__control,
+  .vol-wizard__nav-button,
+  .vol-card__action,
+  .vol-card-shop__reroll {
     transition: none;
   }
 
@@ -573,7 +591,13 @@
   .vol-dialogue__choice:hover,
   .vol-dialogue__choice:active,
   .vol-dialogue__control:hover,
-  .vol-dialogue__control:active {
+  .vol-wizard__nav-button:hover,
+  .vol-card__action:hover,
+  .vol-card-shop__reroll:hover,
+  .vol-dialogue__control:active,
+  .vol-wizard__nav-button:active,
+  .vol-card__action:active,
+  .vol-card-shop__reroll:active {
     transform: none;
   }
 }
@@ -583,7 +607,10 @@
 .vol-icon-button:focus-visible,
 .vol-osk__key:focus-visible,
 .vol-dialogue__choice:focus-visible,
-.vol-dialogue__control:focus-visible {
+.vol-dialogue__control:focus-visible,
+.vol-wizard__nav-button:focus-visible,
+.vol-card__action:focus-visible,
+.vol-card-shop__reroll:focus-visible {
   animation: vol-juice-focus var(--vol-motion-juice-focus-pulse) ease-in-out 2;
 }
 
@@ -661,6 +688,9 @@
   .vol-osk__key:focus-visible,
   .vol-dialogue__choice:focus-visible,
   .vol-dialogue__control:focus-visible,
+  .vol-wizard__nav-button:focus-visible,
+  .vol-card__action:focus-visible,
+  .vol-card-shop__reroll:focus-visible,
   .vol-juice--pop,
   .vol-juice--enter {
     animation: none;
@@ -713,12 +743,6 @@
   box-shadow:
     inset 0 2px 0 var(--vol-ui-well-inner-shadow),
     inset 0 -1px 0 var(--vol-ui-plate-top-light);
-}
-
-.vol-slider__fill {
-  box-shadow:
-    inset 0 2px 0 rgb(255 255 255 / 26%),
-    inset 0 -2px 0 rgb(0 0 0 / 28%);
 }
 
 .vol-slider--horizontal .vol-slider__fill {
@@ -839,4 +863,37 @@
   background-color: var(--vol-ui-disabled-fill);
   border-color: var(--vol-ui-disabled-border);
   box-shadow: none;
+}
+
+/* Sekmeler ikon taşır: düğme yatay hizalanır (ikon + ad); `.vol-tabs__tab` ilk kuralda. */
+.vol-tabs--vertical .vol-tabs__tab {
+  display: flex;
+}
+
+/*
+ * Sessiz ikon düğmesi (kapat, küçük eylemler): ham plaka yerine yalnız ikon görünür, üzerine gelince
+ * plaka belirir. Kapat düğmesi içeriğin üstüne bastırıp dikkat çalmasın diye varsayılan budur.
+ */
+.vol-sheet__close,
+.vol-icon-button--quiet {
+  --vol-btn-base: transparent;
+  --vol-btn-raised: none;
+  --vol-btn-border: transparent;
+  --vol-btn-text: var(--vol-ui-text-secondary);
+
+  width: var(--vol-hit-target-min, 36px);
+  height: var(--vol-hit-target-min, 36px);
+  min-width: var(--vol-hit-target-min, 36px);
+  min-height: var(--vol-hit-target-min, 36px);
+  box-shadow: none;
+}
+
+.vol-sheet__close:hover,
+.vol-icon-button--quiet:hover {
+  --vol-btn-base: var(--vol-ui-plate);
+  --vol-btn-hover: var(--vol-ui-plate);
+  --vol-btn-border: var(--vol-ui-frame-hairline);
+  --vol-btn-text: var(--vol-ui-text);
+  --vol-btn-raised:
+    inset 0 1px 0 var(--vol-ui-plate-top-light), inset 0 -2px 0 var(--vol-mat-edge-dark);
 }

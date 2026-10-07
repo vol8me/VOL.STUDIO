@@ -7,8 +7,8 @@
     "chrome": {
       "file": "chrome.svg",
       "count": 48,
-      "bytes": 15316,
-      "sha256": "b88e7d96cbfc929ce1f949651ea61d4ceca45e14d4215c7927bd2cd58e305a6a"
+      "bytes": 15275,
+      "sha256": "b88df155b8c8cd53e9c5e85608401dbc326b84fd0ed0d2dcc31775d36076175b"
     },
     "game": {
       "file": "game.svg",
@@ -366,9 +366,9 @@
       "id": "close",
       "sprite": "chrome",
       "category": "chrome",
-      "author": "Phosphor Icons",
-      "license": "MIT",
-      "source": "phosphor-icons/core@2.1.1/x"
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
     },
     {
       "id": "coin",
