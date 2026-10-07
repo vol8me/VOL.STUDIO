@@ -10,6 +10,8 @@ export type ButtonClickHandler = () => void | Promise<void>;
 /** Tıklama süresince görsel/erişilebilirlik durumunu uygulayan geri çağrı. */
 export interface ButtonBehaviorHost {
   setLoading(loading: boolean): void;
+  /** Handler hata fırlatınca çağrılır (hata durumu); sonraki tıklamada `false` ile temizlenir. */
+  setError?(error: boolean): void;
   /** Yeniden giriş bu bayrakla engellenir. */
   isLoading(): boolean;
   readonly logLabel: string;
@@ -41,15 +43,19 @@ export async function runButtonClick(
     return;
   }
 
+  host.setError?.(false);
   host.setLoading(true);
+  let failed = false;
   try {
     const result: unknown = handler();
     if (isThenable(result)) {
       await result;
     }
   } catch (error) {
+    failed = true;
     console.error(`[${host.logLabel}] onClick handler hatası:`, error);
   } finally {
     host.setLoading(false);
+    if (failed) host.setError?.(true);
   }
 }

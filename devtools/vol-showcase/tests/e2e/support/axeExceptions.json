@@ -1,13 +1,6 @@
 {
   "violations": [
     {
-      "scope": "tab/buttons",
-      "rule": "button-name",
-      "target": ".vol-button--loading",
-      "owner": "UI-03.1",
-      "reason": "yükleme durumundaki düğmenin erişilebilir adı yok; meşgul durumda ad ve aria-busy korunmalı"
-    },
-    {
       "scope": "tab/hud",
       "rule": "aria-allowed-attr",
       "target": "div[aria-label=\"Cooldown\"]",

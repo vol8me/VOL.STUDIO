@@ -1,3 +1,4 @@
+import { playJuice } from '../motion/juice';
 import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { emitUiIntent } from '../feedback/uiIntent';
@@ -30,6 +31,7 @@ export class Button {
   private boundHandleClick: (event: Event) => void;
   private readonly scope = new DisposableScope();
   private loading = false;
+  private errored = false;
 
   constructor(label: string, options: ButtonOptions = {}) {
     const {
@@ -105,6 +107,20 @@ export class Button {
     }
   }
 
+  /** Hata durumu: handler hata fırlatınca görünür ve tekrar denenebilir; sonraki tıklamada temizlenir. */
+  get hasError(): boolean {
+    return this.errored;
+  }
+
+  setError(error: boolean): void {
+    this.errored = error;
+    this.element.classList.toggle('vol-button--error', error);
+    if (error) {
+      this.element.dataset.state = 'error';
+      playJuice(this.element, 'shake');
+    } else delete this.element.dataset.state;
+  }
+
   destroy(): void {
     this.scope.dispose();
     this.element.remove();
@@ -114,6 +130,7 @@ export class Button {
     return runButtonClick(
       {
         setLoading: (loading) => this.setLoading(loading),
+        setError: (error) => this.setError(error),
         isLoading: () => this.loading,
         logLabel: 'Button',
       },

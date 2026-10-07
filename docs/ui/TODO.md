@@ -142,17 +142,18 @@ Faz testi: CORE/audio testleri, audio production-check, asset verify, public yü
 Ön koşul UI-01.7, UI-01.8, UI-02.8 ve UI-00.6 probu; sahip primitives/buttons. Kimliğin ilk uçtan
 uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer ailelere kör CSS yayılımı yok.
 
-- [ ] **UI-03.1 — Button/IconButton/ToolButton.** Varyant×boyut×yoğunluk, normal/hover/
-      basılma/odak/devre dışı/yükleme/hata, yeni malzeme ve juice ile; erişilebilir ad/başlık,
-      asenkron ret/yeniden giriş, Toolbar gezici tabindex. ToolButton bağımsız/çoklu seçim/
-      dikey/tümü devre dışı. Kapanır: aynı niyet mekanizması; yüklemenin erişilebilir meşgul
-      durumu ve odak korunumu; async bitişinde dışarıdan gelen disabled korunur; yerel
-      button Enter/Space tek olay; hata sonrası yeniden kullanılır; ses/imleç açık-kapalı
-      eşdeğer işlev.
-- [ ] **UI-03.2 — Hold/Charge/LongPress.** İşlevsel zaman eşiği korunur; pointercancel/
-      capture kaybı/ikinci işaretçi/görünürlük/devre dışı iptal. Kapanır: odak/kol eşdeğeri ve
-      ilerleme durumu, azaltılmış harekette basılı tutma işlevi, erken bırakma/başarılı
-      eşik/tekrar tekil; şarj sesi/titreşimi ilerlemeyle (UI-02 sözlüğünden).
+- [ ] **UI-03.1 — Button/IconButton/ToolButton (kalan).** Yapıldı: yeni malzeme ve juice (kaldırma,
+      bastırma, odak nabzı), varyant×boyut×durum (normal/hover/basılı/odak/devre dışı/yükleme/hata);
+      hata durumu (handler hata fırlatınca danger kenarı, sarsıntı, `data-state="error"`, düğme
+      yeniden kullanılabilir, sonraki tıklamada temizlenir); yükleme sırasında etiket erişilebilirlik
+      ağacında kalır (axe `button-name` kaydı kapandı). Kalan: ToolButton/Toolbar gezici tabindex
+      (bağımsız/çoklu seçim/dikey/tümü devre dışı), async bitişinde dışarıdan gelen `disabled`
+      korunumu, yerel button Enter/Space tek olay kanıtı, sesin açık/kapalı eşdeğer işlevi.
+- [ ] **UI-03.2 — Hold/Charge/LongPress (kalan).** Yapıldı: basılı tut, uzun bas, şarj, duraklat/sürdür
+      ve yön tuşları aynı yüzey malzemesiyle (kabartma, gömülü basılı durum, devre dışı); işlevsel zaman
+      eşikleri değişmedi. Kalan: pointercancel/capture kaybı/ikinci işaretçi/görünürlük/devre dışı iptal
+      kanıtı, odak/kol eşdeğeri ve ilerleme durumu, azaltılmış harekette basılı tutma işlevi, erken
+      bırakma/başarılı eşik/tekrar tekil; şarj sesi/titreşimi ilerlemeyle (UI-02 sözlüğünden).
 - [ ] **UI-03.3 — Aktif oyun regresyonları.** VOL.TEST duraklatma/ayarlar tüketicisinde
       Button/IconButton/Hold gerçek yerleşim/geri/Slider adı ve hit-test; yeni menü yok.
       Kapanır: gerçek ayarlar/duraklatma Chromium+WebKit ve eldeki cihazda; eski duraklatma

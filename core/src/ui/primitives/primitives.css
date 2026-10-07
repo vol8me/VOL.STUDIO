@@ -118,7 +118,8 @@
 
 .vol-button--loading .vol-button__label,
 .vol-button--loading .vol-button__icon {
-  visibility: hidden;
+  /* Gizleme erişilebilir adı da siliyordu (görünürlük kapatma); ad ağaçta kalır, yalnız saydamlaşır. */
+  opacity: 0;
 }
 
 .vol-button__spinner {

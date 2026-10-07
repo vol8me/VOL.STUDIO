@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { runButtonClick, type ButtonBehaviorHost } from '../../../src/ui/primitives/buttonBehavior';
 
-function host(): ButtonBehaviorHost & { states: boolean[] } {
+function host(): ButtonBehaviorHost & { states: boolean[]; errors: boolean[] } {
   let loading = false;
   const states: boolean[] = [];
+  const errors: boolean[] = [];
   return {
     states,
+    errors,
+    setError: (value) => errors.push(value),
     logLabel: 'Deneme',
     isLoading: () => loading,
     setLoading: (value) => {
@@ -84,5 +87,15 @@ describe('runButtonClick — paylaşılan tıklama sözleşmesi', () => {
     const after = vi.fn();
     await runButtonClick(target, after);
     expect(after).toHaveBeenCalledTimes(1);
+  });
+
+  it('hata durumu: her tıklamada temizlenir, handler hata fırlatınca (loading bittikten sonra) kurulur', async () => {
+    const target = host();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await runButtonClick(target, () => Promise.reject(new Error('ret')));
+    expect(target.errors).toEqual([false, true]);
+    await runButtonClick(target, () => undefined);
+    // Başarılı tıklama hata durumunu temizler ve yenisini kurmaz.
+    expect(target.errors).toEqual([false, true, false]);
   });
 });

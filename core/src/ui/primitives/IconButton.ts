@@ -1,3 +1,4 @@
+import { playJuice } from '../motion/juice';
 import { runButtonClick, type ButtonClickHandler } from './buttonBehavior';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { emitUiIntent } from '../feedback/uiIntent';
@@ -34,6 +35,7 @@ export class IconButton {
   private readonly boundHandleClick: (event: Event) => void;
   private readonly scope = new DisposableScope();
   private loading = false;
+  private errored = false;
 
   constructor(icon: string | Node, options: IconButtonOptions) {
     const { variant = 'default', size = 'md', label, onClick, disabled = false } = options;
@@ -88,10 +90,25 @@ export class IconButton {
     this.element.setAttribute('aria-busy', String(loading));
   }
 
+  /** Hata durumu: `Button.setError` ile aynı sözleşme. */
+  get hasError(): boolean {
+    return this.errored;
+  }
+
+  setError(error: boolean): void {
+    this.errored = error;
+    this.element.classList.toggle('vol-icon-button--error', error);
+    if (error) {
+      this.element.dataset.state = 'error';
+      playJuice(this.element, 'shake');
+    } else delete this.element.dataset.state;
+  }
+
   private handleClick(): Promise<void> {
     return runButtonClick(
       {
         setLoading: (loading) => this.setLoading(loading),
+        setError: (error) => this.setError(error),
         isLoading: () => this.loading,
         logLabel: 'IconButton',
       },

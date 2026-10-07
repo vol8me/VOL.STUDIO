@@ -240,6 +240,18 @@
   transform: none;
 }
 
+/* Hata durumu: handler hata fırlatınca danger kenarı ve parıltısı; renk tek taşıyıcı değil (shake + data-state). */
+.vol-button--error,
+.vol-icon-button--error {
+  --vol-btn-border: var(--vol-ui-danger-border);
+  --vol-btn-glow: var(--vol-ui-glow-danger);
+
+  box-shadow:
+    var(--vol-btn-raised),
+    0 2px 0 var(--vol-mat-drop),
+    0 0 0 2px var(--vol-btn-glow);
+}
+
 /* Varyantlar. */
 .vol-button--primary,
 .vol-icon-button--primary {
@@ -271,6 +283,54 @@
   --vol-btn-text: var(--vol-ui-on-success);
   --vol-btn-glow: var(--vol-ui-glow-success);
   --vol-mat-gloss: 0.04;
+}
+
+/*
+ * Oyun kontrolleri (basılı tut, uzun bas, şarj, duraklat/sürdür, yön tuşu): aynı yüzey malzemesi.
+ * Şekilleri (daire/kare) ve ilerleme halkaları kendi dosyalarındadır; burada yalnız yüzey, kenar ve
+ * basılı durum verilir. Basılı durum marka rengine döner ve içeri gömülür.
+ */
+.vol-hold-button,
+.vol-long-press-button,
+.vol-charge-button,
+.vol-pause-resume-button,
+.vol-direction-button {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -8px 0 rgb(0 0 0 / 14%),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-hold-button--pressed,
+.vol-long-press-button--pressed,
+.vol-charge-button--charging,
+.vol-pause-resume-button--pressed,
+.vol-direction-button--pressed {
+  background-color: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 2px 0 var(--vol-mat-edge-dark),
+    inset 0 10px 0 rgb(0 0 0 / 18%),
+    0 0 0 3px var(--vol-ui-glow-brand);
+}
+
+.vol-long-press-button--long-pressed {
+  background-color: var(--vol-ui-warning-solid);
+  border-color: var(--vol-ui-warning-border);
+}
+
+.vol-hold-button:disabled,
+.vol-long-press-button:disabled,
+.vol-charge-button:disabled,
+.vol-pause-resume-button:disabled,
+.vol-direction-button:disabled {
+  background-color: var(--vol-ui-disabled-fill);
+  border-color: var(--vol-ui-disabled-border);
+  box-shadow: none;
 }
 
 /* Düğme içi ikon: etiketle aynı ağırlıkta okunur (1 em kutu küçük kalıyordu). */

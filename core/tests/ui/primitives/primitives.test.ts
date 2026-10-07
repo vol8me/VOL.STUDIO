@@ -701,3 +701,53 @@ describe('Select', () => {
     expect(document.body.querySelector('.vol-select__listbox')).toBeNull();
   });
 });
+
+describe('Button/IconButton: hata durumu ve yükleme adı', () => {
+  it('handler hata fırlatınca hata durumu kurulur, sonraki başarılı tıklamada kalkar', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    let fail = true;
+    const button = new Button('Gönder', {
+      onClick: () => {
+        if (fail) throw new Error('ret');
+      },
+    });
+    const icon = new IconButton('x', {
+      label: 'Sil',
+      onClick: () => {
+        if (fail) throw new Error('ret');
+      },
+    });
+    instances.push(button, icon);
+    document.body.append(button.element, icon.element);
+    button.element.click();
+    icon.element.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(button.hasError).toBe(true);
+    expect(button.element.dataset.state).toBe('error');
+    expect(button.element.classList.contains('vol-button--error')).toBe(true);
+    expect(icon.hasError).toBe(true);
+    expect(icon.element.classList.contains('vol-icon-button--error')).toBe(true);
+    // Hata sonrası düğme yeniden kullanılabilir (devre dışı kalmaz).
+    expect(button.element.disabled).toBe(false);
+    fail = false;
+    button.element.click();
+    icon.element.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(button.hasError).toBe(false);
+    expect(button.element.dataset.state).toBeUndefined();
+    expect(icon.hasError).toBe(false);
+    vi.restoreAllMocks();
+  });
+
+  it('yükleme sırasında etiket erişilebilirlik ağacında kalır (visibility:hidden değil)', () => {
+    const css = readFileSync(
+      resolve(import.meta.dirname, '../../../src/ui/primitives/primitives.css'),
+      'utf8',
+    );
+    const block = /\.vol-button--loading \.vol-button__label,[^{]*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(block).toContain('opacity: 0');
+    expect(block).not.toMatch(/visibility\s*:/);
+  });
+});
