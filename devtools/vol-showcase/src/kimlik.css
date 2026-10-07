@@ -32,7 +32,7 @@
 }
 
 .vol-showcase-material__swatch .vol-text,
-.vol-showcase-material__frame .vol-text {
+.vol-showcase-material__frame > .vol-text {
   color: var(--vol-ui-text-secondary);
 }
 

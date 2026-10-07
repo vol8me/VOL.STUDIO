@@ -25,6 +25,9 @@
   --vol-mat-lift: var(--vol-motion-juice-hover-lift);
   --vol-mat-press: var(--vol-motion-juice-press-drop);
 
+  /* Çerçeve iç çizgisi (keyline): panel kenarından 4 px içeride ikinci bir ince hat; plaka çerçevesi hissi. */
+  --vol-mat-keyline: var(--vol-ui-frame-divider);
+
   /* Yüzey köşesi ve çentik (HUD barı segmenti) aralığı. */
   --vol-mat-radius: var(--vol-radius-sm);
   --vol-mat-notch: 10px;
@@ -51,6 +54,11 @@
 :root[data-vol-theme='aurum'] {
   --vol-mat-gloss: 0.16;
   --vol-mat-grain-alpha: 0.2;
+  --vol-mat-keyline: color-mix(
+    in srgb,
+    var(--vol-ui-brand-solid) 46%,
+    var(--vol-ui-frame-hairline)
+  );
   --vol-mat-edge-dark: #0000009e;
 }
 
@@ -161,9 +169,40 @@
 }
 
 .vol-frame__header {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-sm);
   background: var(--vol-ui-frame-header);
   border-bottom: 1px solid var(--vol-ui-frame-divider);
-  box-shadow: inset 0 1px 0 var(--vol-ui-plate-top-light);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -1px 0 rgb(0 0 0 / 38%);
+}
+
+/* Başlık dili: ekran yazısı (display ailesi), geniş aralıklı büyük harf, parlak metin rengi. */
+.vol-frame__header,
+.vol-frame__header .vol-text {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Başlık işareti: marka renginde elmas; metne binmez, flex öğesidir. */
+.vol-frame__header .vol-text {
+  text-align: left;
+}
+
+.vol-frame__header::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--vol-ui-brand-solid);
+  box-shadow: 0 0 0 2px var(--vol-ui-frame-header);
+  transform: rotate(45deg);
 }
 
 .vol-frame__divider {
@@ -370,12 +409,30 @@
  * Işık üstten: rim çizgisi + üst bant + alt kenar; dış gölge sert.
  */
 .vol-card {
-  background-color: var(--vol-ui-plate);
+  /* Nadirlik tonu üst ışığa karışır; ton yoksa nötr ışık. */
+  --vol-card-accent: var(--vol-ui-plate-top-light);
+  --vol-card-bg: var(--vol-ui-plate);
+
+  background-color: var(--vol-card-bg);
   box-shadow:
-    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 2px 0 var(--vol-card-accent),
     inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
     inset 0 -2px 0 var(--vol-mat-edge-dark),
+    inset 0 0 0 4px var(--vol-card-bg),
+    inset 0 0 0 5px var(--vol-mat-keyline),
     0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-card--rare {
+  --vol-card-accent: color-mix(in srgb, var(--vol-ui-rarity-rare-solid) 70%, transparent);
+}
+
+.vol-card--epic {
+  --vol-card-accent: color-mix(in srgb, var(--vol-ui-rarity-epic-solid) 70%, transparent);
+}
+
+.vol-card--legendary {
+  --vol-card-accent: color-mix(in srgb, var(--vol-ui-warning-solid) 80%, transparent);
 }
 
 .vol-modal__content,
@@ -385,7 +442,56 @@
   box-shadow:
     inset 0 1px 0 var(--vol-ui-plate-top-light),
     inset 0 -2px 0 var(--vol-mat-edge-dark),
+    inset 0 0 0 4px var(--vol-ui-panel),
+    inset 0 0 0 5px var(--vol-mat-keyline),
     0 4px 0 var(--vol-mat-drop);
+}
+
+/*
+ * Sekmeler: sidebar ve üst şerit aynı dili konuşur. Seçili sekme "plaka" olur (üst ışık + marka
+ * çubuğu), üzerine gelinen sekme hafif kalkar; metin ile zemin düz renk kalır (kontrast ölçülebilir).
+ */
+.vol-tabs__list {
+  background-color: var(--vol-ui-panel);
+  border-bottom-color: var(--vol-ui-frame-divider);
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 40%);
+}
+
+.vol-tabs__tab {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.vol-tabs__tab:hover {
+  background-color: var(--vol-ui-surface-1);
+}
+
+.vol-tabs__tab[aria-selected='true'] {
+  background-color: var(--vol-ui-plate);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -3px 0 var(--vol-ui-brand-solid);
+}
+
+.vol-tabs--vertical .vol-tabs__list {
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.vol-tabs--vertical .vol-tabs__sidebar {
+  background-color: var(--vol-ui-panel);
+  border-right-color: var(--vol-ui-frame-divider);
+  box-shadow: inset -1px 0 0 rgb(0 0 0 / 40%);
+}
+
+.vol-tabs--vertical .vol-tabs__tab[aria-selected='true'] {
+  background-color: var(--vol-ui-plate);
+  border-right-color: transparent;
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -1px 0 rgb(0 0 0 / 40%),
+    inset 4px 0 0 var(--vol-ui-brand-solid);
 }
 
 /* Düğme içi ikon: etiketle aynı ağırlıkta okunur (1 em kutu küçük kalıyordu). */
@@ -568,4 +674,104 @@
   .vol-bar__trail {
     transition: none;
   }
+}
+
+/*
+ * Kaydırıcı: çubuk bir KUYU (oyuk), dolgu kesikli enerji şeridi, tutamaç çelik bir plaka;
+ * ortasındaki marka çizgisi değer yönünü gösterir. Hepsi düz renk + sert iç gölge (blur yok).
+ */
+.vol-slider__track {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-slider__fill {
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 26%),
+    inset 0 -2px 0 rgb(0 0 0 / 28%);
+}
+
+.vol-slider--horizontal .vol-slider__fill {
+  background-image: repeating-linear-gradient(90deg, transparent 0 9px, rgb(0 0 0 / 30%) 9px 10px);
+}
+
+.vol-slider--vertical .vol-slider__fill {
+  background-image: repeating-linear-gradient(0deg, transparent 0 9px, rgb(0 0 0 / 30%) 9px 10px);
+}
+
+.vol-slider__handle {
+  background-color: color-mix(in srgb, var(--vol-ui-plate) 62%, var(--vol-ui-text));
+  border: 1px solid var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 55%),
+    inset 0 -2px 0 rgb(0 0 0 / 32%),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-slider--horizontal .vol-slider__handle {
+  background-image: linear-gradient(
+    90deg,
+    transparent calc(50% - 1px),
+    var(--vol-ui-brand-solid) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+
+.vol-slider--vertical .vol-slider__handle {
+  background-image: linear-gradient(
+    0deg,
+    transparent calc(50% - 1px),
+    var(--vol-ui-brand-solid) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+
+/*
+ * Veri yüzeyleri: ağaç bir kuyu, tablo başlığı bir çerçeve şeridi, satırlar dönüşümlü iki düz ton,
+ * ipucu kutusu panel + keyline. Zebra ve seçili işareti düz renk/sert gölgedir (blur yok).
+ */
+.vol-tree {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-tree__row--selected {
+  box-shadow: inset 3px 0 0 var(--vol-ui-brand-solid);
+}
+
+.vol-datatable {
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow: 0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-datatable__header-cell {
+  background-color: var(--vol-ui-frame-header);
+  border-bottom-color: var(--vol-ui-frame-divider);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--vol-font-family);
+  font-size: 12px;
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -1px 0 rgb(0 0 0 / 38%);
+}
+
+.vol-datatable__row:nth-child(even) .vol-datatable__cell {
+  background-color: color-mix(in srgb, var(--vol-ui-well) 22%, transparent);
+}
+
+.vol-rich-tooltip {
+  background-color: var(--vol-ui-panel);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 0 0 3px var(--vol-ui-panel),
+    inset 0 0 0 4px var(--vol-mat-keyline),
+    0 4px 0 var(--vol-mat-drop);
 }

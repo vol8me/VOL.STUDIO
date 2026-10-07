@@ -88,34 +88,6 @@
     {
       "scope": "tab/cards",
       "rule": "color-contrast",
-      "target": ".vol-showcase-card-row > .vol-card--legendary.vol-card > .vol-card__badges > .vol-card__rarity",
-      "owner": "UI-04.1",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
-    },
-    {
-      "scope": "tab/cards",
-      "rule": "color-contrast",
-      "target": ".vol-showcase-card-row > .vol-card--legendary.vol-card > .vol-card__badges > .vol-card__type",
-      "owner": "UI-04.1",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
-    },
-    {
-      "scope": "tab/cards",
-      "rule": "color-contrast",
-      "target": ".vol-showcase-card-row > .vol-card--legendary.vol-card > .vol-card__description",
-      "owner": "UI-04.1",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
-    },
-    {
-      "scope": "tab/cards",
-      "rule": "color-contrast",
-      "target": ".vol-showcase-card-row > .vol-card--legendary.vol-card > .vol-card__title",
-      "owner": "UI-04.1",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
-    },
-    {
-      "scope": "tab/cards",
-      "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
       "owner": "UI-07.4",
       "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
@@ -298,9 +270,9 @@
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
-      "target": ".vol-frame__header > .vol-text--muted.vol-text",
+      "target": ".vol-showcase-material__frame-header > .vol-text--muted.vol-text",
       "owner": "UI-01.7",
-      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Başlık metni ana metin rengiyle (#e8eef5) düz çerçeve şeridi tonunun (#1d252d) üstünde: elle incelendi (≈ 13:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
     },
     {
       "scope": "tab/kimlik",

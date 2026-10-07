@@ -400,7 +400,9 @@
 
 .vol-card__badges {
   align-items: center;
-  gap: var(--vol-space-sm);
+  flex-wrap: wrap;
+  gap: 0 var(--vol-space-sm);
+  min-width: 0;
   display: flex;
 }
 
@@ -531,7 +533,7 @@
 }
 
 .vol-card--legendary {
-  background: linear-gradient(180deg, var(--vol-ui-warning-subtle) 0%, var(--vol-ui-surface-1) 60%);
+  /* Zemin tonu (`--vol-card-bg`) malzeme katmanında: gradyan değil düz renk. */
   border-left-color: var(--vol-ui-warning-solid);
 }
 

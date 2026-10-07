@@ -16,7 +16,11 @@ export function card(
 
   const heading = new Text(title, { variant: 'muted', tag: 'span' });
   heading.element.classList.add('vol-showcase-card__title');
-  wrapper.appendChild(heading.element);
+  // Başlık, çekirdeğin çerçeve şeridine (`vol-frame__header`) oturur: marka elması + display yazısı.
+  const header = document.createElement('div');
+  header.className = 'vol-frame__header vol-showcase-card__header';
+  header.appendChild(heading.element);
+  wrapper.appendChild(header);
 
   const body = document.createElement('div');
   body.className = 'vol-showcase-card__body';
