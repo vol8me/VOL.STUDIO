@@ -39,6 +39,7 @@ const source = {
     presets: presets.MOTION_PRESETS,
     interaction: presets.MOTION_INTERACTION,
     loadingMinVisibleMs: presets.LOADING_MIN_VISIBLE_MS,
+    juice: presets.MOTION_JUICE,
   },
 };
 

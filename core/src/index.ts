@@ -384,8 +384,10 @@ export {
   MOTION_DURATIONS,
   MOTION_EASINGS,
   MOTION_INTERACTION,
+  MOTION_JUICE,
   MOTION_PRESETS,
 } from './ui/motion/presets';
+export { JUICE_KINDS, playJuice, type JuiceKind } from './ui/motion/juice';
 
 /*
  * Tek-atış ses bankası. Müzik motoru katmanlı ve zamanlanmış akış içindir;

@@ -1,0 +1,957 @@
+[
+  {
+    "id": "aim",
+    "category": "command",
+    "source": "phosphor/crosshair"
+  },
+  {
+    "id": "attack",
+    "category": "command",
+    "source": "phosphor/sword"
+  },
+  {
+    "id": "build",
+    "category": "command",
+    "source": "phosphor/hammer"
+  },
+  {
+    "id": "cancel",
+    "category": "command",
+    "source": "phosphor/prohibit"
+  },
+  {
+    "id": "defend",
+    "category": "command",
+    "source": "phosphor/shield"
+  },
+  {
+    "id": "formation",
+    "category": "command",
+    "source": "phosphor/squares-four"
+  },
+  {
+    "id": "halt",
+    "category": "command",
+    "source": "phosphor/hand-palm"
+  },
+  {
+    "id": "harvest",
+    "category": "command",
+    "source": "phosphor/grains"
+  },
+  {
+    "id": "mine",
+    "category": "command",
+    "source": "authored"
+  },
+  {
+    "id": "move",
+    "category": "command",
+    "source": "phosphor/navigation-arrow"
+  },
+  {
+    "id": "patrol",
+    "category": "command",
+    "source": "phosphor/repeat"
+  },
+  {
+    "id": "rally",
+    "category": "command",
+    "source": "phosphor/flag-pennant"
+  },
+  {
+    "id": "recycle",
+    "category": "command",
+    "source": "phosphor/recycle"
+  },
+  {
+    "id": "repair",
+    "category": "command",
+    "source": "phosphor/wrench"
+  },
+  {
+    "id": "retreat",
+    "category": "command",
+    "source": "phosphor/arrow-u-down-left"
+  },
+  {
+    "id": "scout",
+    "category": "command",
+    "source": "phosphor/binoculars"
+  },
+  {
+    "id": "select",
+    "category": "command",
+    "source": "phosphor/selection"
+  },
+  {
+    "id": "sell",
+    "category": "command",
+    "source": "phosphor/hand-coins"
+  },
+  {
+    "id": "target",
+    "category": "command",
+    "source": "phosphor/target"
+  },
+  {
+    "id": "upgrade",
+    "category": "command",
+    "source": "phosphor/arrow-fat-lines-up"
+  },
+  {
+    "id": "amulet",
+    "category": "item",
+    "source": "authored"
+  },
+  {
+    "id": "axe",
+    "category": "item",
+    "source": "phosphor/axe"
+  },
+  {
+    "id": "backpack",
+    "category": "item",
+    "source": "phosphor/backpack"
+  },
+  {
+    "id": "book",
+    "category": "item",
+    "source": "phosphor/book"
+  },
+  {
+    "id": "boots",
+    "category": "item",
+    "source": "phosphor/boot"
+  },
+  {
+    "id": "bow",
+    "category": "item",
+    "source": "authored"
+  },
+  {
+    "id": "chest",
+    "category": "item",
+    "source": "phosphor/treasure-chest"
+  },
+  {
+    "id": "coin",
+    "category": "item",
+    "source": "phosphor/coin"
+  },
+  {
+    "id": "gem",
+    "category": "item",
+    "source": "phosphor/diamond"
+  },
+  {
+    "id": "gloves",
+    "category": "item",
+    "source": "phosphor/hand-fist"
+  },
+  {
+    "id": "helmet",
+    "category": "item",
+    "source": "authored"
+  },
+  {
+    "id": "key",
+    "category": "item",
+    "source": "phosphor/key"
+  },
+  {
+    "id": "map",
+    "category": "item",
+    "source": "phosphor/map-trifold"
+  },
+  {
+    "id": "potion",
+    "category": "item",
+    "source": "phosphor/flask"
+  },
+  {
+    "id": "ring",
+    "category": "item",
+    "source": "authored"
+  },
+  {
+    "id": "scroll",
+    "category": "item",
+    "source": "phosphor/scroll"
+  },
+  {
+    "id": "staff",
+    "category": "item",
+    "source": "phosphor/magic-wand"
+  },
+  {
+    "id": "sword",
+    "category": "item",
+    "source": "phosphor/sword"
+  },
+  {
+    "id": "torch",
+    "category": "item",
+    "source": "phosphor/flashlight"
+  },
+  {
+    "id": "archer",
+    "category": "unit",
+    "source": "phosphor/crosshair-simple"
+  },
+  {
+    "id": "cavalry",
+    "category": "unit",
+    "source": "phosphor/horse"
+  },
+  {
+    "id": "helicopter",
+    "category": "unit",
+    "source": "authored"
+  },
+  {
+    "id": "mage",
+    "category": "unit",
+    "source": "phosphor/sparkle"
+  },
+  {
+    "id": "robot",
+    "category": "unit",
+    "source": "phosphor/robot"
+  },
+  {
+    "id": "siege",
+    "category": "unit",
+    "source": "authored"
+  },
+  {
+    "id": "spearman",
+    "category": "unit",
+    "source": "authored"
+  },
+  {
+    "id": "starship",
+    "category": "unit",
+    "source": "phosphor/rocket"
+  },
+  {
+    "id": "swordman",
+    "category": "unit",
+    "source": "phosphor/shield-chevron"
+  },
+  {
+    "id": "tank",
+    "category": "unit",
+    "source": "authored"
+  },
+  {
+    "id": "archerTower",
+    "category": "building",
+    "source": "authored"
+  },
+  {
+    "id": "ballista",
+    "category": "building",
+    "source": "authored"
+  },
+  {
+    "id": "barracks",
+    "category": "building",
+    "source": "phosphor/buildings"
+  },
+  {
+    "id": "bunker",
+    "category": "building",
+    "source": "phosphor/vault"
+  },
+  {
+    "id": "camp",
+    "category": "building",
+    "source": "phosphor/tent"
+  },
+  {
+    "id": "cannon",
+    "category": "building",
+    "source": "authored"
+  },
+  {
+    "id": "castle",
+    "category": "building",
+    "source": "phosphor/castle-turret"
+  },
+  {
+    "id": "farm",
+    "category": "building",
+    "source": "phosphor/barn"
+  },
+  {
+    "id": "fireTower",
+    "category": "building",
+    "source": "authored"
+  },
+  {
+    "id": "forge",
+    "category": "building",
+    "source": "phosphor/factory"
+  },
+  {
+    "id": "gate",
+    "category": "building",
+    "source": "phosphor/door"
+  },
+  {
+    "id": "guardTower",
+    "category": "building",
+    "source": "authored"
+  },
+  {
+    "id": "house",
+    "category": "building",
+    "source": "phosphor/house"
+  },
+  {
+    "id": "lighthouse",
+    "category": "building",
+    "source": "phosphor/lighthouse"
+  },
+  {
+    "id": "lumberMill",
+    "category": "building",
+    "source": "phosphor/tree"
+  },
+  {
+    "id": "mageTower",
+    "category": "building",
+    "source": "authored"
+  },
+  {
+    "id": "market",
+    "category": "building",
+    "source": "phosphor/storefront"
+  },
+  {
+    "id": "observatory",
+    "category": "building",
+    "source": "phosphor/planet"
+  },
+  {
+    "id": "shrine",
+    "category": "building",
+    "source": "phosphor/church"
+  },
+  {
+    "id": "siegeWorkshop",
+    "category": "building",
+    "source": "phosphor/crane"
+  },
+  {
+    "id": "stable",
+    "category": "building",
+    "source": "phosphor/garage"
+  },
+  {
+    "id": "wall",
+    "category": "building",
+    "source": "phosphor/wall"
+  },
+  {
+    "id": "watchtower",
+    "category": "building",
+    "source": "authored"
+  },
+  {
+    "id": "well",
+    "category": "building",
+    "source": "phosphor/jar"
+  },
+  {
+    "id": "windmill",
+    "category": "building",
+    "source": "phosphor/windmill"
+  },
+  {
+    "id": "armor",
+    "category": "status",
+    "source": "phosphor/shield-check"
+  },
+  {
+    "id": "bleed",
+    "category": "status",
+    "source": "phosphor/drop-half"
+  },
+  {
+    "id": "burn",
+    "category": "status",
+    "source": "phosphor/fire"
+  },
+  {
+    "id": "cooldown",
+    "category": "status",
+    "source": "phosphor/hourglass-medium"
+  },
+  {
+    "id": "critical",
+    "category": "status",
+    "source": "phosphor/asterisk"
+  },
+  {
+    "id": "freeze",
+    "category": "status",
+    "source": "phosphor/snowflake"
+  },
+  {
+    "id": "health",
+    "category": "status",
+    "source": "phosphor/heartbeat"
+  },
+  {
+    "id": "level",
+    "category": "status",
+    "source": "phosphor/medal-military"
+  },
+  {
+    "id": "luck",
+    "category": "status",
+    "source": "phosphor/clover"
+  },
+  {
+    "id": "poison",
+    "category": "status",
+    "source": "phosphor/biohazard"
+  },
+  {
+    "id": "range",
+    "category": "status",
+    "source": "phosphor/arrows-out"
+  },
+  {
+    "id": "regen",
+    "category": "status",
+    "source": "phosphor/first-aid"
+  },
+  {
+    "id": "shock",
+    "category": "status",
+    "source": "phosphor/cloud-lightning"
+  },
+  {
+    "id": "speed",
+    "category": "status",
+    "source": "phosphor/gauge"
+  },
+  {
+    "id": "stamina",
+    "category": "status",
+    "source": "phosphor/battery-high"
+  },
+  {
+    "id": "stun",
+    "category": "status",
+    "source": "phosphor/spiral"
+  },
+  {
+    "id": "wound",
+    "category": "status",
+    "source": "phosphor/bandaids"
+  },
+  {
+    "id": "xp",
+    "category": "status",
+    "source": "phosphor/star-four"
+  },
+  {
+    "id": "bell",
+    "category": "meta",
+    "source": "phosphor/bell"
+  },
+  {
+    "id": "cart",
+    "category": "meta",
+    "source": "phosphor/shopping-cart"
+  },
+  {
+    "id": "clock",
+    "category": "meta",
+    "source": "phosphor/clock"
+  },
+  {
+    "id": "copy",
+    "category": "meta",
+    "source": "phosphor/copy"
+  },
+  {
+    "id": "crown",
+    "category": "meta",
+    "source": "phosphor/crown"
+  },
+  {
+    "id": "exit",
+    "category": "meta",
+    "source": "phosphor/sign-out"
+  },
+  {
+    "id": "eye",
+    "category": "meta",
+    "source": "phosphor/eye"
+  },
+  {
+    "id": "eyedropper",
+    "category": "meta",
+    "source": "phosphor/eyedropper"
+  },
+  {
+    "id": "flag",
+    "category": "meta",
+    "source": "phosphor/flag"
+  },
+  {
+    "id": "fullscreen",
+    "category": "meta",
+    "source": "phosphor/corners-out"
+  },
+  {
+    "id": "gamepad",
+    "category": "meta",
+    "source": "phosphor/game-controller"
+  },
+  {
+    "id": "gears",
+    "category": "meta",
+    "source": "phosphor/gear"
+  },
+  {
+    "id": "gift",
+    "category": "meta",
+    "source": "phosphor/gift"
+  },
+  {
+    "id": "help",
+    "category": "meta",
+    "source": "phosphor/question"
+  },
+  {
+    "id": "info",
+    "category": "meta",
+    "source": "phosphor/info"
+  },
+  {
+    "id": "keyboard",
+    "category": "meta",
+    "source": "phosphor/keyboard"
+  },
+  {
+    "id": "language",
+    "category": "meta",
+    "source": "phosphor/translate"
+  },
+  {
+    "id": "load",
+    "category": "meta",
+    "source": "phosphor/download-simple"
+  },
+  {
+    "id": "lock",
+    "category": "meta",
+    "source": "phosphor/lock"
+  },
+  {
+    "id": "medal",
+    "category": "meta",
+    "source": "phosphor/medal"
+  },
+  {
+    "id": "mouse",
+    "category": "meta",
+    "source": "phosphor/mouse"
+  },
+  {
+    "id": "music",
+    "category": "meta",
+    "source": "phosphor/music-notes"
+  },
+  {
+    "id": "paintBucket",
+    "category": "meta",
+    "source": "phosphor/paint-bucket"
+  },
+  {
+    "id": "palette",
+    "category": "meta",
+    "source": "phosphor/palette"
+  },
+  {
+    "id": "pencil",
+    "category": "meta",
+    "source": "phosphor/pencil"
+  },
+  {
+    "id": "save",
+    "category": "meta",
+    "source": "phosphor/floppy-disk"
+  },
+  {
+    "id": "search",
+    "category": "meta",
+    "source": "phosphor/magnifying-glass"
+  },
+  {
+    "id": "settings",
+    "category": "meta",
+    "source": "phosphor/gear-six"
+  },
+  {
+    "id": "share",
+    "category": "meta",
+    "source": "phosphor/share-network"
+  },
+  {
+    "id": "skull",
+    "category": "meta",
+    "source": "phosphor/skull"
+  },
+  {
+    "id": "speaker",
+    "category": "meta",
+    "source": "phosphor/speaker-high"
+  },
+  {
+    "id": "speakerOff",
+    "category": "meta",
+    "source": "phosphor/speaker-slash"
+  },
+  {
+    "id": "star",
+    "category": "meta",
+    "source": "phosphor/star"
+  },
+  {
+    "id": "touch",
+    "category": "meta",
+    "source": "phosphor/hand-tap"
+  },
+  {
+    "id": "trash",
+    "category": "meta",
+    "source": "phosphor/trash"
+  },
+  {
+    "id": "trophy",
+    "category": "meta",
+    "source": "phosphor/trophy"
+  },
+  {
+    "id": "tune",
+    "category": "meta",
+    "source": "phosphor/sliders"
+  },
+  {
+    "id": "unlock",
+    "category": "meta",
+    "source": "phosphor/lock-open"
+  },
+  {
+    "id": "bomb",
+    "category": "projectile",
+    "source": "phosphor/bomb"
+  },
+  {
+    "id": "boss",
+    "category": "projectile",
+    "source": "phosphor/alien"
+  },
+  {
+    "id": "bullet",
+    "category": "projectile",
+    "source": "authored"
+  },
+  {
+    "id": "clearScreen",
+    "category": "projectile",
+    "source": "phosphor/broom"
+  },
+  {
+    "id": "combo",
+    "category": "projectile",
+    "source": "phosphor/chart-line-up"
+  },
+  {
+    "id": "danger",
+    "category": "projectile",
+    "source": "phosphor/warning-diamond"
+  },
+  {
+    "id": "extraLife",
+    "category": "projectile",
+    "source": "phosphor/plus-circle"
+  },
+  {
+    "id": "heart",
+    "category": "projectile",
+    "source": "phosphor/heart"
+  },
+  {
+    "id": "homing",
+    "category": "projectile",
+    "source": "phosphor/arrow-arc-right"
+  },
+  {
+    "id": "invulnerable",
+    "category": "projectile",
+    "source": "phosphor/shield-star"
+  },
+  {
+    "id": "laser",
+    "category": "projectile",
+    "source": "phosphor/line-segment"
+  },
+  {
+    "id": "magnet",
+    "category": "projectile",
+    "source": "phosphor/magnet"
+  },
+  {
+    "id": "missile",
+    "category": "projectile",
+    "source": "phosphor/rocket-launch"
+  },
+  {
+    "id": "orbit",
+    "category": "projectile",
+    "source": "phosphor/atom"
+  },
+  {
+    "id": "overdrive",
+    "category": "projectile",
+    "source": "phosphor/lightning"
+  },
+  {
+    "id": "pierce",
+    "category": "projectile",
+    "source": "phosphor/arrow-fat-line-right"
+  },
+  {
+    "id": "rush",
+    "category": "projectile",
+    "source": "phosphor/caret-double-right"
+  },
+  {
+    "id": "slowTime",
+    "category": "projectile",
+    "source": "phosphor/timer"
+  },
+  {
+    "id": "speedUp",
+    "category": "projectile",
+    "source": "phosphor/arrows-out-line-horizontal"
+  },
+  {
+    "id": "spread",
+    "category": "projectile",
+    "source": "phosphor/arrows-split"
+  },
+  {
+    "id": "crystal",
+    "category": "resource",
+    "source": "phosphor/hexagon"
+  },
+  {
+    "id": "energy",
+    "category": "resource",
+    "source": "phosphor/battery-charging"
+  },
+  {
+    "id": "food",
+    "category": "resource",
+    "source": "phosphor/bread"
+  },
+  {
+    "id": "gold",
+    "category": "resource",
+    "source": "phosphor/coins"
+  },
+  {
+    "id": "iron",
+    "category": "resource",
+    "source": "authored"
+  },
+  {
+    "id": "mana",
+    "category": "resource",
+    "source": "phosphor/moon-stars"
+  },
+  {
+    "id": "oil",
+    "category": "resource",
+    "source": "phosphor/gas-can"
+  },
+  {
+    "id": "population",
+    "category": "resource",
+    "source": "phosphor/users-three"
+  },
+  {
+    "id": "stone",
+    "category": "resource",
+    "source": "phosphor/mountains"
+  },
+  {
+    "id": "water",
+    "category": "resource",
+    "source": "phosphor/drop"
+  },
+  {
+    "id": "wood",
+    "category": "resource",
+    "source": "phosphor/tree-evergreen"
+  },
+  {
+    "id": "arrowDown",
+    "category": "chrome",
+    "source": "phosphor/arrow-down"
+  },
+  {
+    "id": "arrowLeft",
+    "category": "chrome",
+    "source": "phosphor/arrow-left"
+  },
+  {
+    "id": "arrowRight",
+    "category": "chrome",
+    "source": "phosphor/arrow-right"
+  },
+  {
+    "id": "arrowUp",
+    "category": "chrome",
+    "source": "phosphor/arrow-up"
+  },
+  {
+    "id": "check",
+    "category": "chrome",
+    "source": "phosphor/check"
+  },
+  {
+    "id": "checkCircle",
+    "category": "chrome",
+    "source": "phosphor/check-circle"
+  },
+  {
+    "id": "chevronDown",
+    "category": "chrome",
+    "source": "phosphor/caret-down"
+  },
+  {
+    "id": "chevronLeft",
+    "category": "chrome",
+    "source": "phosphor/caret-left"
+  },
+  {
+    "id": "chevronRight",
+    "category": "chrome",
+    "source": "phosphor/caret-right"
+  },
+  {
+    "id": "chevronUp",
+    "category": "chrome",
+    "source": "phosphor/caret-up"
+  },
+  {
+    "id": "close",
+    "category": "chrome",
+    "source": "phosphor/x"
+  },
+  {
+    "id": "dot",
+    "category": "chrome",
+    "source": "phosphor/dot"
+  },
+  {
+    "id": "dragHandle",
+    "category": "chrome",
+    "source": "phosphor/dots-six-vertical"
+  },
+  {
+    "id": "error",
+    "category": "chrome",
+    "source": "phosphor/x-circle"
+  },
+  {
+    "id": "fastForward",
+    "category": "chrome",
+    "source": "phosphor/fast-forward"
+  },
+  {
+    "id": "infoCircle",
+    "category": "chrome",
+    "source": "phosphor/info"
+  },
+  {
+    "id": "menu",
+    "category": "chrome",
+    "source": "phosphor/list"
+  },
+  {
+    "id": "minus",
+    "category": "chrome",
+    "source": "phosphor/minus"
+  },
+  {
+    "id": "more",
+    "category": "chrome",
+    "source": "phosphor/dots-three"
+  },
+  {
+    "id": "pause",
+    "category": "chrome",
+    "source": "phosphor/pause"
+  },
+  {
+    "id": "play",
+    "category": "chrome",
+    "source": "phosphor/play"
+  },
+  {
+    "id": "plus",
+    "category": "chrome",
+    "source": "phosphor/plus"
+  },
+  {
+    "id": "redo",
+    "category": "chrome",
+    "source": "phosphor/arrow-clockwise"
+  },
+  {
+    "id": "refresh",
+    "category": "chrome",
+    "source": "phosphor/arrows-clockwise"
+  },
+  {
+    "id": "rewind",
+    "category": "chrome",
+    "source": "phosphor/rewind"
+  },
+  {
+    "id": "stop",
+    "category": "chrome",
+    "source": "phosphor/stop"
+  },
+  {
+    "id": "undo",
+    "category": "chrome",
+    "source": "phosphor/arrow-counter-clockwise"
+  },
+  {
+    "id": "warning",
+    "category": "chrome",
+    "source": "phosphor/warning"
+  },
+  {
+    "id": "zoomIn",
+    "category": "chrome",
+    "source": "phosphor/magnifying-glass-plus"
+  },
+  {
+    "id": "zoomOut",
+    "category": "chrome",
+    "source": "phosphor/magnifying-glass-minus"
+  }
+]

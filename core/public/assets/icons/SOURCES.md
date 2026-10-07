@@ -1,10 +1,9 @@
 # İkon varlıkları — kaynak kaydı
 
 Bu dizindeki dosyalar **üretilir**; elle düzenlenmez. Üretici: `core/scripts/icons/curate.mjs`;
-seçim: `core/scripts/icons/game-icons.curation.json`; kabuk ikonları: `core/scripts/icons/chrome.mjs`.
+seçim: `core/scripts/icons/icons.curation.json`; özgün ikonlar: `core/scripts/icons/authored.mjs`.
 
-- Oyun ikonları: [game-icons.net](https://game-icons.net) (depo: github.com/game-icons/icons), CC BY 3.0
-  (iki yazar CC0). Atıf: `CREDITS.md`, `manifest.json` ve uygulama içi krediler.
-- Kabuk ikonları: özgün (yön, kapat, onay, uyarı vb.).
+- Phosphor Icons Fill (sürüm 2.1.1, github.com/phosphor-icons/core), MIT. Atıf: `CREDITS.md` ve `manifest.json`.
+- Özgün ikonlar: Phosphor setinde karşılığı olmayan RTS ve bullet hell nesneleri; aynı 256 ızgarada.
 - Sprite: `chrome.svg` (30 ikon) ve `game.svg` (161 ikon); simge kimliği `vol-icon-<ad>`.
-- Boya: hepsi `currentColor`; oyun ikonları dolu siluet, kabuk ikonları kalın yuvarlak çizgi.
+- Boya: hepsi `currentColor`; dolu, yuvarlak, minimal siluet.

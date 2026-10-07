@@ -951,6 +951,22 @@
       ]
     },
     {
+      "export": "JUICE_KINDS",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikMaterial.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/juice.test.ts",
+          "title": "her tür kendi sınıfını ekler ve emniyet payı sonunda kaldırır"
+        }
+      ]
+    },
+    {
       "export": "Joystick",
       "kind": "class",
       "tier": 1,
@@ -1194,6 +1210,26 @@
         {
           "file": "core/tests/ui/motion/presets.test.ts",
           "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
+        }
+      ]
+    },
+    {
+      "export": "MOTION_JUICE",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/presets.test.ts",
+          "title": "juice ilkelleri adlı, birim son ekli ve sınırlıdır"
         }
       ]
     },
@@ -2595,6 +2631,22 @@
         {
           "file": "core/tests/ui/focus/focusNav.test.ts",
           "title": "yönün ilerisindeki en yakın aday kazanır"
+        }
+      ]
+    },
+    {
+      "export": "playJuice",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikMaterial.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/juice.test.ts",
+          "title": "her tür kendi sınıfını ekler ve emniyet payı sonunda kaldırır"
         }
       ]
     },

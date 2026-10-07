@@ -112,6 +112,40 @@ export const STATUS_ICONS = [
 ] as const;
 export type StatusIconName = (typeof STATUS_ICONS)[number];
 
+export const CHROME_ICONS = [
+  'arrowDown',
+  'arrowLeft',
+  'arrowRight',
+  'arrowUp',
+  'check',
+  'checkCircle',
+  'chevronDown',
+  'chevronLeft',
+  'chevronRight',
+  'chevronUp',
+  'close',
+  'dot',
+  'dragHandle',
+  'error',
+  'fastForward',
+  'infoCircle',
+  'menu',
+  'minus',
+  'more',
+  'pause',
+  'play',
+  'plus',
+  'redo',
+  'refresh',
+  'rewind',
+  'stop',
+  'undo',
+  'warning',
+  'zoomIn',
+  'zoomOut',
+] as const;
+export type ChromeIconName = (typeof CHROME_ICONS)[number];
+
 export const META_ICONS = [
   'bell',
   'cart',
@@ -193,50 +227,16 @@ export const RESOURCE_ICONS = [
 ] as const;
 export type ResourceIconName = (typeof RESOURCE_ICONS)[number];
 
-export const CHROME_ICONS = [
-  'close',
-  'check',
-  'plus',
-  'minus',
-  'menu',
-  'more',
-  'dot',
-  'play',
-  'pause',
-  'stop',
-  'fastForward',
-  'rewind',
-  'zoomIn',
-  'zoomOut',
-  'undo',
-  'redo',
-  'chevronUp',
-  'chevronDown',
-  'chevronLeft',
-  'chevronRight',
-  'arrowUp',
-  'arrowDown',
-  'arrowLeft',
-  'arrowRight',
-  'warning',
-  'error',
-  'checkCircle',
-  'infoCircle',
-  'dragHandle',
-  'refresh',
-] as const;
-export type ChromeIconName = (typeof CHROME_ICONS)[number];
-
 export type IconName =
   | CommandIconName
   | ItemIconName
   | UnitIconName
   | BuildingIconName
   | StatusIconName
+  | ChromeIconName
   | MetaIconName
   | ProjectileIconName
-  | ResourceIconName
-  | ChromeIconName;
+  | ResourceIconName;
 
 export const ICON_CATEGORIES = {
   command: COMMAND_ICONS,
@@ -244,8 +244,8 @@ export const ICON_CATEGORIES = {
   unit: UNIT_ICONS,
   building: BUILDING_ICONS,
   status: STATUS_ICONS,
+  chrome: CHROME_ICONS,
   meta: META_ICONS,
   projectile: PROJECTILE_ICONS,
   resource: RESOURCE_ICONS,
-  chrome: CHROME_ICONS,
 } as const;

@@ -7,6 +7,7 @@ import {
   MOTION_DURATIONS,
   MOTION_EASINGS,
   MOTION_INTERACTION,
+  MOTION_JUICE,
   MOTION_PRESETS,
 } from '../../../src/ui/motion/presets';
 import { VOL_AURUM_OVERRIDES } from '../../../src/ui/themes/aurum';
@@ -34,6 +35,7 @@ const source = {
       Object.entries(MOTION_PRESETS).map(([name, preset]) => [name, { ...preset }]),
     ),
     interaction: { ...MOTION_INTERACTION },
+    juice: { ...MOTION_JUICE },
     loadingMinVisibleMs: LOADING_MIN_VISIBLE_MS,
   },
 };

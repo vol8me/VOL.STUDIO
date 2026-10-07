@@ -18,6 +18,7 @@ export interface MotionSource {
   presets: Record<string, { ms: number; easing: string; offsetPx?: number }>;
   interaction: Record<string, number>;
   loadingMinVisibleMs: number;
+  juice?: Record<string, number>;
 }
 
 export interface ThemeSource {

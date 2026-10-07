@@ -138,6 +138,13 @@ export function validateMotion(motion) {
     if (!(typeof scale === 'number' && scale > 0 && scale < 2))
       problems.push(`hareket: ölçek ${name} 0 ile 2 arasında olmalı: ${scale}`);
   positive('loading asgari süre', motion.loadingMinVisibleMs);
+  for (const [name, value] of Object.entries(motion.juice ?? {})) {
+    if (!PRESET_KEY.test(name)) problems.push(`hareket: juice adı camelCase olmalı: ${name}`);
+    if (!(typeof value === 'number' && value > 0 && Number.isFinite(value)))
+      problems.push(`hareket: juice ${name} pozitif sayı olmalı: ${value}`);
+    if (/(Ms|Px)$/.test(name) && !Number.isInteger(value))
+      problems.push(`hareket: juice ${name} tam sayı olmalı`);
+  }
   return problems;
 }
 
@@ -160,6 +167,11 @@ export function renderMotion(motion) {
   for (const [name, scale] of Object.entries(motion.interaction))
     lines.push(`  --vol-motion-${presetCss(name)}: ${scale};`);
   lines.push(`  --vol-motion-loading-min-visible: ${motion.loadingMinVisibleMs}ms;`);
+  for (const [name, value] of Object.entries(motion.juice ?? {})) {
+    const unit = name.endsWith('Ms') ? 'ms' : name.endsWith('Px') ? 'px' : '';
+    const stem = name.replace(/(Ms|Px)$/, '');
+    lines.push(`  --vol-motion-juice-${presetCss(stem)}: ${value}${unit};`);
+  }
   return lines.join('\n');
 }
 

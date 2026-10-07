@@ -133,7 +133,7 @@ export class Bar {
     }
 
     if (options.fillColor) {
-      this.fillElement.style.background = options.fillColor;
+      this.fillElement.style.backgroundColor = options.fillColor;
     }
 
     this.renderFill(this.value);

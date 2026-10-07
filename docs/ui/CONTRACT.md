@@ -286,9 +286,10 @@ uzun sayı/metin ve her girdi yolunu kapsar.
 
 **Önce kaynak, sonra icat.** Glif setimiz Kenney Input Prompts'tur (CC0). Aynı yazarın ve
 stilin ürünleri ikon ve imleç için temel alınır: Game Icons (CC0), Cursor Pack (CC0, ~180 imleç,
-vektör), Crosshair Pack (CC0, ~200 nişangâh, vektör). Oyun ikonu zenginliği için game-icons.net
-(CC BY 3.0, 4 binden fazla tek renk siluet, yazar atfı gerekli) kürate edilir. Stile uymayan
-yer aynı dille özgün çizilir; çizgi (outline) web ikon setleri kullanılmaz. Kullanılmayan
+vektör), Crosshair Pack (CC0, ~200 nişangâh, vektör). İkonlar için Phosphor Icons Fill
+(MIT, 1500 dolu, yuvarlak, minimal ikon; telif notu korunur) kürate edilir; game-icons.net
+ortaçağ temalı ve süslü olduğu için kullanıcı tarafından reddedildi. Stile uymayan yer aynı
+256 ızgarasında özgün çizilir; çizgi (outline) web ikon setleri kullanılmaz. Kullanılmayan
 varlık gönderilmez.
 
 **Kayıt.** Her varlık dizininde kaynak kaydı: URL, sürüm, lisans, tarih, alt küme listesi ve
@@ -436,8 +437,8 @@ Kök F08/F09 cihaz işleri UI laboratuvarının kabulüyle kapanmaz.
   [Interface Sounds](https://kenney.nl/assets/interface-sounds), [UI Audio](https://kenney.nl/assets/ui-audio):
   CC0; atıf istenmez. Paket içerikleri (180 imleç, 200 nişangâh, 105 ikon, 100/50 ses) indirilip
   incelendi; ses paketleri yalnız yerel ölçüm referansıdır.
-- [game-icons.net](https://game-icons.net/about.html): CC BY 3.0; ticari kullanım serbest, yazar
-  atfı zorunlu. Atıf kaydı varlıkla birlikte tutulur.
+- [Phosphor Icons](https://phosphoricons.com): MIT; ticari kullanım serbest, telif ve lisans notu
+  korunur. Atıf kaydı varlıkla birlikte tutulur.
 - [MDN cursor](https://developer.mozilla.org/en-US/docs/Web/CSS/cursor): görsel imleç boyut
   sınırı (128×128 üstü yok sayılır, 32×32 önerilir), hotspot ve biçim kuralları.
 - [Audiokinetic UI ses rehberi](https://www.audiokinetic.com/en/approaching-ui-audio-ui-design-perspective-2):

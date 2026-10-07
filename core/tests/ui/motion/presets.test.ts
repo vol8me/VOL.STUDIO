@@ -7,6 +7,7 @@ import {
   MOTION_DURATIONS,
   MOTION_EASINGS,
   MOTION_INTERACTION,
+  MOTION_JUICE,
   MOTION_PRESETS,
   MOTION_SAFETY_MARGIN_MS,
 } from '../../../src/ui/motion/presets';
@@ -29,9 +30,22 @@ const source: MotionSource = {
   ),
   interaction: { ...MOTION_INTERACTION },
   loadingMinVisibleMs: LOADING_MIN_VISIBLE_MS,
+  juice: { ...MOTION_JUICE },
 };
 
 describe('hareket presetleri (CONTRACT §4)', () => {
+  it('juice ilkelleri adlı, birim son ekli ve sınırlıdır', () => {
+    for (const [name, value] of Object.entries(MOTION_JUICE)) {
+      expect(value, name).toBeGreaterThan(0);
+      if (/(Ms|Px)$/.test(name)) expect(Number.isInteger(value), name).toBe(true);
+    }
+    // Basma yolu hafif; sarsıntı en çok 6 px ve 300 ms; flaş tek vuruşluk.
+    expect(MOTION_JUICE.pressSquash).toBeGreaterThan(0.95);
+    expect(MOTION_JUICE.shakeDistancePx).toBeLessThanOrEqual(6);
+    expect(MOTION_JUICE.shakeDurationMs).toBeLessThanOrEqual(300);
+    expect(MOTION_JUICE.hitFlashMs).toBeLessThanOrEqual(200);
+  });
+
   it('dört temel süre 120/200/320/480 ms', () => {
     expect(MOTION_DURATIONS).toEqual({ fast: 120, base: 200, slow: 320, cinematic: 480 });
   });
@@ -103,6 +117,9 @@ describe('hareket presetleri (CONTRACT §4)', () => {
       ).toContain('offsetPx');
       expect(problems({ interaction: { hoverScale: 3 } })).toContain('ölçek hoverScale');
       expect(problems({ loadingMinVisibleMs: 0 })).toContain('loading asgari süre');
+      expect(problems({ juice: { pressSquash: 0 } })).toContain('juice pressSquash');
+      expect(problems({ juice: { hoverLiftPx: 1.5 } })).toContain('hoverLiftPx tam sayı');
+      expect(problems({ juice: { Kötü: 1 } })).toContain('juice adı');
     });
   });
 });

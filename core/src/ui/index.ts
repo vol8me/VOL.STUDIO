@@ -52,6 +52,8 @@ export {
   MOTION_DURATIONS,
   MOTION_EASINGS,
   MOTION_INTERACTION,
+  MOTION_JUICE,
   MOTION_PRESETS,
 } from './motion/presets';
+export { JUICE_KINDS, playJuice, type JuiceKind } from './motion/juice';
 export { Easing, animateValue, type AnimateValueOptions } from './animation';

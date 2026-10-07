@@ -285,6 +285,7 @@ export function validateRepoUiTheme(root) {
     presets: preset('MOTION_PRESETS'),
     interaction: preset('MOTION_INTERACTION'),
     loadingMinVisibleMs: preset('LOADING_MIN_VISIBLE_MS'),
+    juice: preset('MOTION_JUICE'),
   };
   const source = {
     colors: values.colors,

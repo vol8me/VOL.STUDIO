@@ -14,7 +14,7 @@ import {
   spriteOf,
 } from '../../../src/ui/icons/sprite';
 import { Icon, VOL_ICONS } from '../../../src/ui/primitives/Icon';
-import { authorOf, buildIcons, parseGameIcon, roundPath } from '../../../scripts/icons/curate.mjs';
+import { buildIcons, parsePhosphorIcon, roundPath } from '../../../scripts/icons/curate.mjs';
 
 const assets = resolve(import.meta.dirname, '../../../public/assets/icons');
 const read = (name: string): string => readFileSync(join(assets, name), 'utf8');
@@ -50,30 +50,31 @@ describe('ikon varlıkları: manifest, sprite ve kimlik listesi aynı kümeyi an
     expect(manifest.sprites.game.bytes).toBe(read('game.svg').length);
   });
 
-  it('her oyun ikonu yazar ve lisans taşır; atıf dosyası hepsini anar', () => {
+  it('her ikon kaynak, yazar ve lisans taşır; atıf dosyası Phosphor lisansını ve özgün ikonları anar', () => {
     const credits = read('CREDITS.md');
-    const games = manifest.icons.filter((icon) => icon.sprite === 'game');
-    expect(games.length).toBeGreaterThan(100);
-    for (const icon of games) {
+    expect(manifest.icons.length).toBe(all.length);
+    for (const icon of manifest.icons) {
       expect(icon.author, icon.id).toBeTruthy();
-      expect(['CC BY 3.0', 'CC0 1.0']).toContain(icon.license);
-      expect(credits, icon.id).toContain(icon.author);
+      expect(['MIT', 'proje'], icon.id).toContain(icon.license);
       expect(credits, icon.id).toContain(icon.id);
     }
-    expect(credits).toContain('Icons made by');
+    expect(manifest.icons.filter((icon) => icon.author === 'VOL.STUDIO').length).toBeLessThan(25);
+    expect(credits).toContain('Phosphor Icons');
+    expect(credits).toContain('MIT');
   });
 
-  it('oyun ikonları currentColor ile boyanır: sabit renk ve siyah zemin yok', () => {
+  it('oyun ikonları currentColor ile boyanır: sabit renk yok, 256 ızgarası', () => {
     const game = read('game.svg');
-    expect(game).not.toMatch(/fill="#/i);
-    expect(game).not.toContain('M0 0h512v512H0z');
-    expect(game).not.toMatch(/stroke=/);
+    expect(game).not.toMatch(/(fill|stroke)="#/i);
+    expect(game).not.toMatch(/(fill|stroke)="(?!currentColor|none)/);
+    expect(game).toContain('viewBox="0 0 256 256"');
+    expect(game).not.toContain('viewBox="0 0 512 512"');
   });
 
-  it('kabuk ikonları aynı 512 ızgarada kalın yuvarlak çizgiyle çizilir', () => {
+  it('kabuk ikonları da aynı dolu dilde, 256 ızgarasında ve tek renkli', () => {
     const chrome = read('chrome.svg');
-    expect(chrome).toContain('stroke-width="56"');
-    expect(chrome).toContain('stroke-linecap="round"');
+    expect(chrome).toContain('viewBox="0 0 256 256"');
+    expect(chrome).not.toContain('stroke-width="56"');
     expect(chrome).not.toMatch(/#[0-9a-f]{3,8}/i);
   });
 
@@ -120,34 +121,43 @@ describe('kürasyon üreticisi', () => {
     expect(() => roundPath('M1 1X')).toThrow('tanınmıyor');
   });
 
-  it('siyah zemini atar, beyaz şekilleri alır; dönüşüm, renkli dolgu ve boş ikonu reddeder', () => {
-    const svg = (body: string): string => `<svg viewBox="0 0 512 512">${body}</svg>`;
-    expect(
-      parseGameIcon(svg('<path d="M0 0h512v512H0z"/><path fill="#fff" d="M1.26 2z"/>')),
-    ).toEqual(['M1.3 2z']);
-    expect(() => parseGameIcon(svg('<g><path d="M1 1z"/></g>'), 'x')).toThrow('grup');
-    expect(() => parseGameIcon(svg('<path fill="#f00" d="M1 1z"/>'), 'x')).toThrow('beyaz olmayan');
-    expect(() => parseGameIcon(svg('<path d="M0 0h512v512H0z"/>'), 'x')).toThrow('şekil yok');
+  it('Phosphor şekil yollarını alır; ızgara dışı, grup, çizgi ve boş ikonu reddeder', () => {
+    const svg = (body: string, box = '0 0 256 256'): string =>
+      `<svg viewBox="${box}">${body}</svg>`;
+    expect(parsePhosphorIcon(svg('<path d="M1.26,2z"/><path d="M5 5z"/>'))).toEqual([
+      'M1.26,2z',
+      'M5 5z',
+    ]);
+    expect(() => parsePhosphorIcon(svg('<path d="M1 1z"/>', '0 0 512 512'), 'x')).toThrow('256');
+    expect(() => parsePhosphorIcon(svg('<g><path d="M1 1z"/></g>'), 'x')).toThrow('yalnız path');
+    expect(() => parsePhosphorIcon(svg('<path stroke="red" d="M1 1z"/>'), 'x')).toThrow('çizgi');
+    expect(() => parsePhosphorIcon(svg(''), 'x')).toThrow('şekil yok');
   });
 
-  it('yinelenen kimlik, camelCase dışı ad ve kabuk çakışması reddedilir; çıktı deterministiktir', () => {
-    const source = (): string =>
-      '<svg><path d="M0 0h512v512H0z"/><path fill="#fff" d="M1 1z"/></svg>';
-    const entry = (id: string) => ({ id, category: 'item', source: 'lorc/a' });
+  it('yinelenen kimlik, camelCase dışı ad ve bilinmeyen kaynak reddedilir; çıktı deterministiktir', () => {
+    const source = (): string => '<svg viewBox="0 0 256 256"><path d="M1 1z"/></svg>';
+    const entry = (id: string) => ({ id, category: 'item', source: 'phosphor/a' });
     expect(() => buildIcons({ curation: [entry('a'), entry('a')], readSource: source })).toThrow(
       'yinelenen',
     );
     expect(() => buildIcons({ curation: [entry('Kötü-ad')], readSource: source })).toThrow(
       'camelCase',
     );
-    expect(() => buildIcons({ curation: [entry('close')], readSource: source })).toThrow(
-      'çakışıyor',
-    );
+    expect(() =>
+      buildIcons({
+        curation: [{ id: 'x', category: 'item', source: 'baska/yer' }],
+        readSource: source,
+      }),
+    ).toThrow('bilinmeyen kaynak');
+    expect(() =>
+      buildIcons({
+        curation: [{ id: 'yokIkon', category: 'item', source: 'authored' }],
+        readSource: source,
+      }),
+    ).toThrow('çizimi yok');
     const one = buildIcons({ curation: [entry('zeta'), entry('alfa')], readSource: source });
     const two = buildIcons({ curation: [entry('alfa'), entry('zeta')], readSource: source });
     expect([...one]).toEqual([...two]);
-    expect(authorOf('viscious-speed').license).toBe('CC0 1.0');
-    expect(authorOf('lorc').license).toBe('CC BY 3.0');
   });
 });
 

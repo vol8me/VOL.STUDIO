@@ -1,18 +1,12 @@
 # İkon atıfları
 
-Oyun ikonları [game-icons.net](https://game-icons.net) kaynağındandır ve aşağıdaki yazarlara aittir.
-Lisans: Creative Commons BY 3.0 (belirtilen iki yazar CC0). "Icons made by {yazar}".
-Kabuk ikonları (yön, kapat, onay vb.) bu projeye aittir.
+İkonların çoğu [Phosphor Icons](https://phosphoricons.com) (Fill ağırlığı, sürüm 2.1.1) setindendir.
+Telif: Copyright (c) 2023 Phosphor Icons. Lisans: MIT. Lisans metni paketle birlikte gelir:
+https://github.com/phosphor-icons/core/blob/main/LICENSE
 
-| Yazar | Lisans | İkon |
-| ----- | ------ | ---- |
-| Cathelineau | CC BY 3.0 | swordman |
-| Delapouite | CC BY 3.0 | aim, archer, backpack, barracks, book, bow, camp, cart, castle, chest, clock, coin, danger, exit, eye, flag, formation, fullscreen, gamepad, gate, gift, gloves, halt, helicopter, helmet, house, info, keyboard, language, level, lighthouse, load, mage, mageTower, market, missile, mouse, move, music, observatory, paintBucket, palette, pencil, population, potion, range, ring, save, scout, share, shrine, siege, speaker, speakerOff, speedUp, spread, stable, stamina, star, starship, stone, torch, trash, tune, unlock, upgrade, wall, watchtower, well, windmill, wood, xp |
-| Faithtoken | CC BY 3.0 | iron |
-| HeavenlyDog | CC BY 3.0 | siegeWorkshop |
-| Lorc | CC BY 3.0 | amulet, archerTower, armor, attack, axe, bell, bomb, boots, boss, build, bullet, cannon, clearScreen, combo, cooldown, copy, crown, crystal, eyedropper, farm, fireTower, food, forge, freeze, gears, gem, guardTower, harvest, heart, homing, invulnerable, key, laser, lock, luck, magnet, mana, map, medal, mine, orbit, overdrive, patrol, pierce, poison, rally, recycle, repair, retreat, robot, rush, scroll, search, sell, settings, shock, slowTime, spearman, speed, staff, stun, sword, tank, target, trophy, wound |
-| Quoting | CC BY 3.0 | bunker |
-| Sbed | CC BY 3.0 | burn, cancel, defend, energy, health, help, regen, select, skull, water |
-| Skoll | CC BY 3.0 | ballista, bleed, cavalry, critical, lumberMill, oil, touch |
-| Willdabeast | CC BY 3.0 | gold |
-| Zeromancer | CC0 1.0 | extraLife |
+Phosphor setinde karşılığı olmayan oyun nesneleri bu projeye aittir (aynı ızgara ve dilde çizildi).
+
+| Kaynak | Lisans | Sayı | İkon |
+| ------ | ------ | ---- | ---- |
+| Phosphor Icons | MIT | 173 | aim, archer, armor, arrowDown, arrowLeft, arrowRight, arrowUp, attack, axe, backpack, barracks, bell, bleed, bomb, book, boots, boss, build, bunker, burn, camp, cancel, cart, castle, cavalry, check, checkCircle, chest, chevronDown, chevronLeft, chevronRight, chevronUp, clearScreen, clock, close, coin, combo, cooldown, copy, critical, crown, crystal, danger, defend, dot, dragHandle, energy, error, exit, extraLife, eye, eyedropper, farm, fastForward, flag, food, forge, formation, freeze, fullscreen, gamepad, gate, gears, gem, gift, gloves, gold, halt, harvest, health, heart, help, homing, house, info, infoCircle, invulnerable, key, keyboard, language, laser, level, lighthouse, load, lock, luck, lumberMill, mage, magnet, mana, map, market, medal, menu, minus, missile, more, mouse, move, music, observatory, oil, orbit, overdrive, paintBucket, palette, patrol, pause, pencil, pierce, play, plus, poison, population, potion, rally, range, recycle, redo, refresh, regen, repair, retreat, rewind, robot, rush, save, scout, scroll, search, select, sell, settings, share, shock, shrine, siegeWorkshop, skull, slowTime, speaker, speakerOff, speed, speedUp, spread, stable, staff, stamina, star, starship, stone, stop, stun, sword, swordman, target, torch, touch, trash, trophy, tune, undo, unlock, upgrade, wall, warning, water, well, windmill, wood, wound, xp, zoomIn, zoomOut |
+| VOL.STUDIO | proje | 18 | amulet, archerTower, ballista, bow, bullet, cannon, fireTower, guardTower, helicopter, helmet, iron, mageTower, mine, ring, siege, spearman, tank, watchtower |

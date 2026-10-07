@@ -1,0 +1,37 @@
+/* Malzeme bölümü (KİMLİK): yüzey örnekleri ve çerçeve. */
+.vol-showcase-material__surfaces {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: var(--vol-space-md);
+}
+
+.vol-showcase-material__swatch {
+  display: flex;
+  align-items: flex-end;
+  min-height: 72px;
+  padding: var(--vol-space-sm);
+  border-radius: var(--vol-radius-sm);
+}
+
+.vol-showcase-material__frame {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-md);
+  padding: 0 0 var(--vol-space-md);
+  border-radius: var(--vol-radius-sm);
+}
+
+.vol-showcase-material__frame > :not(.vol-frame__header, .vol-frame__divider) {
+  padding-inline: var(--vol-space-lg);
+}
+
+.vol-showcase-material__frame-header {
+  padding: var(--vol-space-sm) var(--vol-space-lg);
+}
+
+.vol-showcase-material__swatch .vol-text,
+.vol-showcase-material__frame .vol-text {
+  color: var(--vol-ui-text-secondary);
+}

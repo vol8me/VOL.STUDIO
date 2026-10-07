@@ -9,6 +9,7 @@ import {
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { buildCursorSection } from './kimlikCursors';
+import { buildMaterialSection } from './kimlikMaterial';
 import { card, paletteGrid } from './shared';
 
 const SIZES = [24, 32, 48] as const;
@@ -26,7 +27,7 @@ const CATEGORY_ORDER = [
 
 /**
  * Kimlik sekmesi: skin'in görünür parçaları. İkon galerisi ve imleç bölümü (galeriler, RTS ve
- * nişangâh test alanları) burada; malzeme bölümü UI-01.7'de eklenir.
+ * nişangâh test alanları) ve malzeme bölümü (yüzeyler, çerçeve, bar, düğme) burada.
  */
 export function buildKimlikTab(): { element: HTMLElement; destroy: () => void } {
   const container = document.createElement('div');
@@ -99,6 +100,8 @@ export function buildKimlikTab(): { element: HTMLElement; destroy: () => void } 
   }
   const cursors = buildCursorSection();
   cards.push(...cursors.cards);
+  const material = buildMaterialSection();
+  cards.unshift(...material.cards);
   gallery.appendChild(paletteGrid(cards));
   container.appendChild(gallery);
 
@@ -106,6 +109,7 @@ export function buildKimlikTab(): { element: HTMLElement; destroy: () => void } 
     element: container,
     destroy: () => {
       cursors.destroy();
+      material.destroy();
       for (const icon of cells) icon.destroy();
       cells.length = 0;
       disposables.dispose();

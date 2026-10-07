@@ -2,19 +2,19 @@
   "schema": "VolIconsV1",
   "note": "Üretilmiştir (core/scripts/icons/curate.mjs); elle düzenlenmez.",
   "prefix": "vol-icon-",
-  "grid": 512,
+  "grid": 256,
   "sprites": {
     "chrome": {
       "file": "chrome.svg",
       "count": 30,
-      "bytes": 7402,
-      "sha256": "7872bf778cfb3837e11c1ac85e5eccf986a7c5ee69cad986472712cb4cd76fdf"
+      "bytes": 8478,
+      "sha256": "34719219bdd09eeb894b221b0870bebdcbd5f0b32d65463d3c7027d42f3fe12c"
     },
     "game": {
       "file": "game.svg",
       "count": 161,
-      "bytes": 185837,
-      "sha256": "b6cea08e69c03ae7a4997bfcc20d1c1739196de6ffcbecfbe6f874c062e1ffd5"
+      "bytes": 73523,
+      "sha256": "a8c868a7f5ea0631e56d9231fbe0279cd268f6a64675d40ccf0bee9a8932425f"
     }
   },
   "icons": [
@@ -22,1499 +22,1529 @@
       "id": "aim",
       "sprite": "game",
       "category": "command",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/crosshair"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/crosshair"
     },
     {
       "id": "amulet",
       "sprite": "game",
       "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/gem-pendant"
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
     },
     {
       "id": "archer",
       "sprite": "game",
       "category": "unit",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/archer"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/crosshair-simple"
     },
     {
       "id": "archerTower",
       "sprite": "game",
       "category": "building",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/archery-target"
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
     },
     {
       "id": "armor",
       "sprite": "game",
       "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/armor-vest"
-    },
-    {
-      "id": "attack",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/crossed-swords"
-    },
-    {
-      "id": "axe",
-      "sprite": "game",
-      "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/battle-axe"
-    },
-    {
-      "id": "backpack",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/backpack"
-    },
-    {
-      "id": "ballista",
-      "sprite": "game",
-      "category": "building",
-      "author": "Skoll",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/skoll/ballista"
-    },
-    {
-      "id": "barracks",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/barracks"
-    },
-    {
-      "id": "bell",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/ringing-bell"
-    },
-    {
-      "id": "bleed",
-      "sprite": "game",
-      "category": "status",
-      "author": "Skoll",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/skoll/blood"
-    },
-    {
-      "id": "bomb",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/time-bomb"
-    },
-    {
-      "id": "book",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/book-cover"
-    },
-    {
-      "id": "boots",
-      "sprite": "game",
-      "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/boots"
-    },
-    {
-      "id": "boss",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/skull-crossed-bones"
-    },
-    {
-      "id": "bow",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/bow-arrow"
-    },
-    {
-      "id": "build",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/hammer-nails"
-    },
-    {
-      "id": "bullet",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/bullets"
-    },
-    {
-      "id": "bunker",
-      "sprite": "game",
-      "category": "building",
-      "author": "Quoting",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/quoting/bunker"
-    },
-    {
-      "id": "burn",
-      "sprite": "game",
-      "category": "status",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/fire"
-    },
-    {
-      "id": "camp",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/camping-tent"
-    },
-    {
-      "id": "cancel",
-      "sprite": "game",
-      "category": "command",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/cancel"
-    },
-    {
-      "id": "cannon",
-      "sprite": "game",
-      "category": "building",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/cannon"
-    },
-    {
-      "id": "cart",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/shopping-cart"
-    },
-    {
-      "id": "castle",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/castle"
-    },
-    {
-      "id": "cavalry",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Skoll",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/skoll/mounted-knight"
-    },
-    {
-      "id": "chest",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/chest"
-    },
-    {
-      "id": "clearScreen",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/explosion-rays"
-    },
-    {
-      "id": "clock",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/alarm-clock"
-    },
-    {
-      "id": "coin",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/coins"
-    },
-    {
-      "id": "combo",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/cycle"
-    },
-    {
-      "id": "cooldown",
-      "sprite": "game",
-      "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/stopwatch"
-    },
-    {
-      "id": "copy",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/papers"
-    },
-    {
-      "id": "critical",
-      "sprite": "game",
-      "category": "status",
-      "author": "Skoll",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/skoll/bullseye"
-    },
-    {
-      "id": "crown",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/crown"
-    },
-    {
-      "id": "crystal",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/crystal-cluster"
-    },
-    {
-      "id": "danger",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/radar-cross-section"
-    },
-    {
-      "id": "defend",
-      "sprite": "game",
-      "category": "command",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/shield"
-    },
-    {
-      "id": "energy",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/battery-pack"
-    },
-    {
-      "id": "exit",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/exit-door"
-    },
-    {
-      "id": "extraLife",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Zeromancer",
-      "license": "CC0 1.0",
-      "source": "game-icons.net/zeromancer/heart-plus"
-    },
-    {
-      "id": "eye",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/eye-target"
-    },
-    {
-      "id": "eyedropper",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/eyedropper"
-    },
-    {
-      "id": "farm",
-      "sprite": "game",
-      "category": "building",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/wheat"
-    },
-    {
-      "id": "fireTower",
-      "sprite": "game",
-      "category": "building",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/fire-bowl"
-    },
-    {
-      "id": "flag",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/flag-objective"
-    },
-    {
-      "id": "food",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/meat"
-    },
-    {
-      "id": "forge",
-      "sprite": "game",
-      "category": "building",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/anvil"
-    },
-    {
-      "id": "formation",
-      "sprite": "game",
-      "category": "command",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/star-formation"
-    },
-    {
-      "id": "freeze",
-      "sprite": "game",
-      "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/ice-cube"
-    },
-    {
-      "id": "fullscreen",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/expand"
-    },
-    {
-      "id": "gamepad",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/gamepad"
-    },
-    {
-      "id": "gate",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/gate"
-    },
-    {
-      "id": "gears",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/gears"
-    },
-    {
-      "id": "gem",
-      "sprite": "game",
-      "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/gems"
-    },
-    {
-      "id": "gift",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/present"
-    },
-    {
-      "id": "gloves",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/gloves"
-    },
-    {
-      "id": "gold",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Willdabeast",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/willdabeast/gold-bar"
-    },
-    {
-      "id": "guardTower",
-      "sprite": "game",
-      "category": "building",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/guarded-tower"
-    },
-    {
-      "id": "halt",
-      "sprite": "game",
-      "category": "command",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/stop-sign"
-    },
-    {
-      "id": "harvest",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/wood-axe"
-    },
-    {
-      "id": "health",
-      "sprite": "game",
-      "category": "status",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/health-normal"
-    },
-    {
-      "id": "heart",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/heart-inside"
-    },
-    {
-      "id": "helicopter",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/helicopter"
-    },
-    {
-      "id": "helmet",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/viking-helmet"
-    },
-    {
-      "id": "help",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/help"
-    },
-    {
-      "id": "homing",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/missile-swarm"
-    },
-    {
-      "id": "house",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/house"
-    },
-    {
-      "id": "info",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/info"
-    },
-    {
-      "id": "invulnerable",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/shield-echoes"
-    },
-    {
-      "id": "iron",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Faithtoken",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/faithtoken/ore"
-    },
-    {
-      "id": "key",
-      "sprite": "game",
-      "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/key"
-    },
-    {
-      "id": "keyboard",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/keyboard"
-    },
-    {
-      "id": "language",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/earth-america"
-    },
-    {
-      "id": "laser",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/laser-blast"
-    },
-    {
-      "id": "level",
-      "sprite": "game",
-      "category": "status",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/level-end-flag"
-    },
-    {
-      "id": "lighthouse",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/lighthouse"
-    },
-    {
-      "id": "load",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/load"
-    },
-    {
-      "id": "lock",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/padlock"
-    },
-    {
-      "id": "luck",
-      "sprite": "game",
-      "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/clover"
-    },
-    {
-      "id": "lumberMill",
-      "sprite": "game",
-      "category": "building",
-      "author": "Skoll",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/skoll/logging"
-    },
-    {
-      "id": "mage",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/wizard-face"
-    },
-    {
-      "id": "mageTower",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/evil-tower"
-    },
-    {
-      "id": "magnet",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/magnet"
-    },
-    {
-      "id": "mana",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/potion-ball"
-    },
-    {
-      "id": "map",
-      "sprite": "game",
-      "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/treasure-map"
-    },
-    {
-      "id": "market",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/shop"
-    },
-    {
-      "id": "medal",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/medal"
-    },
-    {
-      "id": "mine",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/mining"
-    },
-    {
-      "id": "missile",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/missile-launcher"
-    },
-    {
-      "id": "mouse",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/mouse"
-    },
-    {
-      "id": "move",
-      "sprite": "game",
-      "category": "command",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/move"
-    },
-    {
-      "id": "music",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/musical-notes"
-    },
-    {
-      "id": "observatory",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/observatory"
-    },
-    {
-      "id": "oil",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Skoll",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/skoll/oil-drum"
-    },
-    {
-      "id": "orbit",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/orbital"
-    },
-    {
-      "id": "overdrive",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/lightning-trio"
-    },
-    {
-      "id": "paintBucket",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/paint-bucket"
-    },
-    {
-      "id": "palette",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/palette"
-    },
-    {
-      "id": "patrol",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/walking-boot"
-    },
-    {
-      "id": "pencil",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/pencil"
-    },
-    {
-      "id": "pierce",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/arrow-flights"
-    },
-    {
-      "id": "poison",
-      "sprite": "game",
-      "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/poison-bottle"
-    },
-    {
-      "id": "population",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/team-idea"
-    },
-    {
-      "id": "potion",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/health-potion"
-    },
-    {
-      "id": "rally",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/rally-the-troops"
-    },
-    {
-      "id": "range",
-      "sprite": "game",
-      "category": "status",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/bow-arrow"
-    },
-    {
-      "id": "recycle",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/recycle"
-    },
-    {
-      "id": "regen",
-      "sprite": "game",
-      "category": "status",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/health-increase"
-    },
-    {
-      "id": "repair",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/auto-repair"
-    },
-    {
-      "id": "retreat",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/run"
-    },
-    {
-      "id": "ring",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/ring"
-    },
-    {
-      "id": "robot",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/robot-golem"
-    },
-    {
-      "id": "rush",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/fire-dash"
-    },
-    {
-      "id": "save",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/save"
-    },
-    {
-      "id": "scout",
-      "sprite": "game",
-      "category": "command",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/walking-scout"
-    },
-    {
-      "id": "scroll",
-      "sprite": "game",
-      "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/scroll-unfurled"
-    },
-    {
-      "id": "search",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/magnifying-glass"
-    },
-    {
-      "id": "select",
-      "sprite": "game",
-      "category": "command",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/select"
-    },
-    {
-      "id": "sell",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/cash"
-    },
-    {
-      "id": "settings",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/cog"
-    },
-    {
-      "id": "share",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/share"
-    },
-    {
-      "id": "shock",
-      "sprite": "game",
-      "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/lightning-bow"
-    },
-    {
-      "id": "shrine",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/crystal-shrine"
-    },
-    {
-      "id": "siege",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/trebuchet"
-    },
-    {
-      "id": "siegeWorkshop",
-      "sprite": "game",
-      "category": "building",
-      "author": "HeavenlyDog",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/heavenly-dog/catapult"
-    },
-    {
-      "id": "skull",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/death-skull"
-    },
-    {
-      "id": "slowTime",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/hourglass"
-    },
-    {
-      "id": "speaker",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/speaker"
-    },
-    {
-      "id": "speakerOff",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/speaker-off"
-    },
-    {
-      "id": "spearman",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/spear-hook"
-    },
-    {
-      "id": "speed",
-      "sprite": "game",
-      "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/winged-leg"
-    },
-    {
-      "id": "speedUp",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/speedometer"
-    },
-    {
-      "id": "spread",
-      "sprite": "game",
-      "category": "projectile",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/shotgun-rounds"
-    },
-    {
-      "id": "stable",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/stable"
-    },
-    {
-      "id": "staff",
-      "sprite": "game",
-      "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/wizard-staff"
-    },
-    {
-      "id": "stamina",
-      "sprite": "game",
-      "category": "status",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/lungs"
-    },
-    {
-      "id": "star",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/round-star"
-    },
-    {
-      "id": "starship",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/spaceship"
-    },
-    {
-      "id": "stone",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/stone-pile"
-    },
-    {
-      "id": "stun",
-      "sprite": "game",
-      "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/star-swirl"
-    },
-    {
-      "id": "sword",
-      "sprite": "game",
-      "category": "item",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/broadsword"
-    },
-    {
-      "id": "swordman",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Cathelineau",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/cathelineau/swordman"
-    },
-    {
-      "id": "tank",
-      "sprite": "game",
-      "category": "unit",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/tank"
-    },
-    {
-      "id": "target",
-      "sprite": "game",
-      "category": "command",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/target-arrows"
-    },
-    {
-      "id": "torch",
-      "sprite": "game",
-      "category": "item",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/torch"
-    },
-    {
-      "id": "touch",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Skoll",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/skoll/click"
-    },
-    {
-      "id": "trash",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/trash-can"
-    },
-    {
-      "id": "trophy",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/trophy"
-    },
-    {
-      "id": "tune",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/settings-knobs"
-    },
-    {
-      "id": "unlock",
-      "sprite": "game",
-      "category": "meta",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/padlock-open"
-    },
-    {
-      "id": "upgrade",
-      "sprite": "game",
-      "category": "command",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/upgrade"
-    },
-    {
-      "id": "wall",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/stone-wall"
-    },
-    {
-      "id": "watchtower",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/watchtower"
-    },
-    {
-      "id": "water",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Sbed",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/sbed/water-drop"
-    },
-    {
-      "id": "well",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/well"
-    },
-    {
-      "id": "windmill",
-      "sprite": "game",
-      "category": "building",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/windmill"
-    },
-    {
-      "id": "wood",
-      "sprite": "game",
-      "category": "resource",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/wood-pile"
-    },
-    {
-      "id": "wound",
-      "sprite": "game",
-      "category": "status",
-      "author": "Lorc",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/lorc/sword-wound"
-    },
-    {
-      "id": "xp",
-      "sprite": "game",
-      "category": "status",
-      "author": "Delapouite",
-      "license": "CC BY 3.0",
-      "source": "game-icons.net/delapouite/star-medal"
-    },
-    {
-      "id": "close",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "check",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "plus",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "minus",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "menu",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "more",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "dot",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "play",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "pause",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "stop",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "fastForward",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "rewind",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "zoomIn",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "zoomOut",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "undo",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "redo",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "chevronUp",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "chevronDown",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "chevronLeft",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "chevronRight",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
-    },
-    {
-      "id": "arrowUp",
-      "sprite": "chrome",
-      "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/shield-check"
     },
     {
       "id": "arrowDown",
       "sprite": "chrome",
       "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-down"
     },
     {
       "id": "arrowLeft",
       "sprite": "chrome",
       "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-left"
     },
     {
       "id": "arrowRight",
       "sprite": "chrome",
       "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-right"
     },
     {
-      "id": "warning",
+      "id": "arrowUp",
       "sprite": "chrome",
       "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-up"
     },
     {
-      "id": "error",
+      "id": "attack",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/sword"
+    },
+    {
+      "id": "axe",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/axe"
+    },
+    {
+      "id": "backpack",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/backpack"
+    },
+    {
+      "id": "ballista",
+      "sprite": "game",
+      "category": "building",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "barracks",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/buildings"
+    },
+    {
+      "id": "bell",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/bell"
+    },
+    {
+      "id": "bleed",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/drop-half"
+    },
+    {
+      "id": "bomb",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/bomb"
+    },
+    {
+      "id": "book",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/book"
+    },
+    {
+      "id": "boots",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/boot"
+    },
+    {
+      "id": "boss",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/alien"
+    },
+    {
+      "id": "bow",
+      "sprite": "game",
+      "category": "item",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "build",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/hammer"
+    },
+    {
+      "id": "bullet",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "bunker",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/vault"
+    },
+    {
+      "id": "burn",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/fire"
+    },
+    {
+      "id": "camp",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/tent"
+    },
+    {
+      "id": "cancel",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/prohibit"
+    },
+    {
+      "id": "cannon",
+      "sprite": "game",
+      "category": "building",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "cart",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/shopping-cart"
+    },
+    {
+      "id": "castle",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/castle-turret"
+    },
+    {
+      "id": "cavalry",
+      "sprite": "game",
+      "category": "unit",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/horse"
+    },
+    {
+      "id": "check",
       "sprite": "chrome",
       "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/check"
     },
     {
       "id": "checkCircle",
       "sprite": "chrome",
       "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/check-circle"
     },
     {
-      "id": "infoCircle",
+      "id": "chest",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/treasure-chest"
+    },
+    {
+      "id": "chevronDown",
       "sprite": "chrome",
       "category": "chrome",
-      "author": "VOL.STUDIO",
-      "license": "proje"
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/caret-down"
+    },
+    {
+      "id": "chevronLeft",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/caret-left"
+    },
+    {
+      "id": "chevronRight",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/caret-right"
+    },
+    {
+      "id": "chevronUp",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/caret-up"
+    },
+    {
+      "id": "clearScreen",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/broom"
+    },
+    {
+      "id": "clock",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/clock"
+    },
+    {
+      "id": "close",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/x"
+    },
+    {
+      "id": "coin",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/coin"
+    },
+    {
+      "id": "combo",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/chart-line-up"
+    },
+    {
+      "id": "cooldown",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/hourglass-medium"
+    },
+    {
+      "id": "copy",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/copy"
+    },
+    {
+      "id": "critical",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/asterisk"
+    },
+    {
+      "id": "crown",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/crown"
+    },
+    {
+      "id": "crystal",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/hexagon"
+    },
+    {
+      "id": "danger",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/warning-diamond"
+    },
+    {
+      "id": "defend",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/shield"
+    },
+    {
+      "id": "dot",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/dot"
     },
     {
       "id": "dragHandle",
       "sprite": "chrome",
       "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/dots-six-vertical"
+    },
+    {
+      "id": "energy",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/battery-charging"
+    },
+    {
+      "id": "error",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/x-circle"
+    },
+    {
+      "id": "exit",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/sign-out"
+    },
+    {
+      "id": "extraLife",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/plus-circle"
+    },
+    {
+      "id": "eye",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/eye"
+    },
+    {
+      "id": "eyedropper",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/eyedropper"
+    },
+    {
+      "id": "farm",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/barn"
+    },
+    {
+      "id": "fastForward",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/fast-forward"
+    },
+    {
+      "id": "fireTower",
+      "sprite": "game",
+      "category": "building",
       "author": "VOL.STUDIO",
-      "license": "proje"
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "flag",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/flag"
+    },
+    {
+      "id": "food",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/bread"
+    },
+    {
+      "id": "forge",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/factory"
+    },
+    {
+      "id": "formation",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/squares-four"
+    },
+    {
+      "id": "freeze",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/snowflake"
+    },
+    {
+      "id": "fullscreen",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/corners-out"
+    },
+    {
+      "id": "gamepad",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/game-controller"
+    },
+    {
+      "id": "gate",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/door"
+    },
+    {
+      "id": "gears",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/gear"
+    },
+    {
+      "id": "gem",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/diamond"
+    },
+    {
+      "id": "gift",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/gift"
+    },
+    {
+      "id": "gloves",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/hand-fist"
+    },
+    {
+      "id": "gold",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/coins"
+    },
+    {
+      "id": "guardTower",
+      "sprite": "game",
+      "category": "building",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "halt",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/hand-palm"
+    },
+    {
+      "id": "harvest",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/grains"
+    },
+    {
+      "id": "health",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/heartbeat"
+    },
+    {
+      "id": "heart",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/heart"
+    },
+    {
+      "id": "helicopter",
+      "sprite": "game",
+      "category": "unit",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "helmet",
+      "sprite": "game",
+      "category": "item",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "help",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/question"
+    },
+    {
+      "id": "homing",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-arc-right"
+    },
+    {
+      "id": "house",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/house"
+    },
+    {
+      "id": "info",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/info"
+    },
+    {
+      "id": "infoCircle",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/info"
+    },
+    {
+      "id": "invulnerable",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/shield-star"
+    },
+    {
+      "id": "iron",
+      "sprite": "game",
+      "category": "resource",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "key",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/key"
+    },
+    {
+      "id": "keyboard",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/keyboard"
+    },
+    {
+      "id": "language",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/translate"
+    },
+    {
+      "id": "laser",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/line-segment"
+    },
+    {
+      "id": "level",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/medal-military"
+    },
+    {
+      "id": "lighthouse",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/lighthouse"
+    },
+    {
+      "id": "load",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/download-simple"
+    },
+    {
+      "id": "lock",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/lock"
+    },
+    {
+      "id": "luck",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/clover"
+    },
+    {
+      "id": "lumberMill",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/tree"
+    },
+    {
+      "id": "mage",
+      "sprite": "game",
+      "category": "unit",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/sparkle"
+    },
+    {
+      "id": "mageTower",
+      "sprite": "game",
+      "category": "building",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "magnet",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/magnet"
+    },
+    {
+      "id": "mana",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/moon-stars"
+    },
+    {
+      "id": "map",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/map-trifold"
+    },
+    {
+      "id": "market",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/storefront"
+    },
+    {
+      "id": "medal",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/medal"
+    },
+    {
+      "id": "menu",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/list"
+    },
+    {
+      "id": "mine",
+      "sprite": "game",
+      "category": "command",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "minus",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/minus"
+    },
+    {
+      "id": "missile",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/rocket-launch"
+    },
+    {
+      "id": "more",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/dots-three"
+    },
+    {
+      "id": "mouse",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/mouse"
+    },
+    {
+      "id": "move",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/navigation-arrow"
+    },
+    {
+      "id": "music",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/music-notes"
+    },
+    {
+      "id": "observatory",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/planet"
+    },
+    {
+      "id": "oil",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/gas-can"
+    },
+    {
+      "id": "orbit",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/atom"
+    },
+    {
+      "id": "overdrive",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/lightning"
+    },
+    {
+      "id": "paintBucket",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/paint-bucket"
+    },
+    {
+      "id": "palette",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/palette"
+    },
+    {
+      "id": "patrol",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/repeat"
+    },
+    {
+      "id": "pause",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/pause"
+    },
+    {
+      "id": "pencil",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/pencil"
+    },
+    {
+      "id": "pierce",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-fat-line-right"
+    },
+    {
+      "id": "play",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/play"
+    },
+    {
+      "id": "plus",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/plus"
+    },
+    {
+      "id": "poison",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/biohazard"
+    },
+    {
+      "id": "population",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/users-three"
+    },
+    {
+      "id": "potion",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/flask"
+    },
+    {
+      "id": "rally",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/flag-pennant"
+    },
+    {
+      "id": "range",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrows-out"
+    },
+    {
+      "id": "recycle",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/recycle"
+    },
+    {
+      "id": "redo",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-clockwise"
     },
     {
       "id": "refresh",
       "sprite": "chrome",
       "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrows-clockwise"
+    },
+    {
+      "id": "regen",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/first-aid"
+    },
+    {
+      "id": "repair",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/wrench"
+    },
+    {
+      "id": "retreat",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-u-down-left"
+    },
+    {
+      "id": "rewind",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/rewind"
+    },
+    {
+      "id": "ring",
+      "sprite": "game",
+      "category": "item",
       "author": "VOL.STUDIO",
-      "license": "proje"
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "robot",
+      "sprite": "game",
+      "category": "unit",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/robot"
+    },
+    {
+      "id": "rush",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/caret-double-right"
+    },
+    {
+      "id": "save",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/floppy-disk"
+    },
+    {
+      "id": "scout",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/binoculars"
+    },
+    {
+      "id": "scroll",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/scroll"
+    },
+    {
+      "id": "search",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/magnifying-glass"
+    },
+    {
+      "id": "select",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/selection"
+    },
+    {
+      "id": "sell",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/hand-coins"
+    },
+    {
+      "id": "settings",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/gear-six"
+    },
+    {
+      "id": "share",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/share-network"
+    },
+    {
+      "id": "shock",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/cloud-lightning"
+    },
+    {
+      "id": "shrine",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/church"
+    },
+    {
+      "id": "siege",
+      "sprite": "game",
+      "category": "unit",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "siegeWorkshop",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/crane"
+    },
+    {
+      "id": "skull",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/skull"
+    },
+    {
+      "id": "slowTime",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/timer"
+    },
+    {
+      "id": "speaker",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/speaker-high"
+    },
+    {
+      "id": "speakerOff",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/speaker-slash"
+    },
+    {
+      "id": "spearman",
+      "sprite": "game",
+      "category": "unit",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "speed",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/gauge"
+    },
+    {
+      "id": "speedUp",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrows-out-line-horizontal"
+    },
+    {
+      "id": "spread",
+      "sprite": "game",
+      "category": "projectile",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrows-split"
+    },
+    {
+      "id": "stable",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/garage"
+    },
+    {
+      "id": "staff",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/magic-wand"
+    },
+    {
+      "id": "stamina",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/battery-high"
+    },
+    {
+      "id": "star",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/star"
+    },
+    {
+      "id": "starship",
+      "sprite": "game",
+      "category": "unit",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/rocket"
+    },
+    {
+      "id": "stone",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/mountains"
+    },
+    {
+      "id": "stop",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/stop"
+    },
+    {
+      "id": "stun",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/spiral"
+    },
+    {
+      "id": "sword",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/sword"
+    },
+    {
+      "id": "swordman",
+      "sprite": "game",
+      "category": "unit",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/shield-chevron"
+    },
+    {
+      "id": "tank",
+      "sprite": "game",
+      "category": "unit",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "target",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/target"
+    },
+    {
+      "id": "torch",
+      "sprite": "game",
+      "category": "item",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/flashlight"
+    },
+    {
+      "id": "touch",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/hand-tap"
+    },
+    {
+      "id": "trash",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/trash"
+    },
+    {
+      "id": "trophy",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/trophy"
+    },
+    {
+      "id": "tune",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/sliders"
+    },
+    {
+      "id": "undo",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-counter-clockwise"
+    },
+    {
+      "id": "unlock",
+      "sprite": "game",
+      "category": "meta",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/lock-open"
+    },
+    {
+      "id": "upgrade",
+      "sprite": "game",
+      "category": "command",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-fat-lines-up"
+    },
+    {
+      "id": "wall",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/wall"
+    },
+    {
+      "id": "warning",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/warning"
+    },
+    {
+      "id": "watchtower",
+      "sprite": "game",
+      "category": "building",
+      "author": "VOL.STUDIO",
+      "license": "proje",
+      "source": "authored"
+    },
+    {
+      "id": "water",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/drop"
+    },
+    {
+      "id": "well",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/jar"
+    },
+    {
+      "id": "windmill",
+      "sprite": "game",
+      "category": "building",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/windmill"
+    },
+    {
+      "id": "wood",
+      "sprite": "game",
+      "category": "resource",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/tree-evergreen"
+    },
+    {
+      "id": "wound",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/bandaids"
+    },
+    {
+      "id": "xp",
+      "sprite": "game",
+      "category": "status",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/star-four"
+    },
+    {
+      "id": "zoomIn",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/magnifying-glass-plus"
+    },
+    {
+      "id": "zoomOut",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/magnifying-glass-minus"
     }
   ]
 }

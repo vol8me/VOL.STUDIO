@@ -94,28 +94,28 @@
     {
       "scope": "tab/forms",
       "rule": "label",
-      "target": ".vol-showcase-card__body > .vol-slider--horizontal.vol-slider > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "target": ".vol-showcase-card__body > .vol-slider--horizontal.vol-slider > .vol-slider__track > .vol-slider__input[min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor"
     },
     {
       "scope": "tab/forms",
       "rule": "label",
-      "target": ".vol-showcase-vertical-sliders__column:nth-child(1) > .vol-slider--vertical.vol-slider > .vol-slider__track > .vol-slider__input[orient=\"vertical\"][type=\"range\"]",
+      "target": ".vol-showcase-vertical-sliders__column:nth-child(1) > .vol-slider--vertical.vol-slider > .vol-slider__track > input[orient=\"vertical\"][min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor"
     },
     {
       "scope": "tab/forms",
       "rule": "label",
-      "target": ".vol-showcase-vertical-sliders__column:nth-child(2) > .vol-slider--vertical.vol-slider > .vol-slider__track > .vol-slider__input[orient=\"vertical\"][type=\"range\"]",
+      "target": ".vol-showcase-vertical-sliders__column:nth-child(2) > .vol-slider--vertical.vol-slider > .vol-slider__track > input[orient=\"vertical\"][min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor"
     },
     {
       "scope": "tab/forms",
       "rule": "label",
-      "target": ".vol-showcase-vertical-sliders__column:nth-child(3) > .vol-slider--vertical.vol-slider > .vol-slider__track > .vol-slider__input[orient=\"vertical\"][type=\"range\"]",
+      "target": ".vol-showcase-vertical-sliders__column:nth-child(3) > .vol-slider--vertical.vol-slider > .vol-slider__track > input[orient=\"vertical\"][min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor"
     },
@@ -353,49 +353,49 @@
     {
       "scope": "tab/ses",
       "rule": "label",
-      "target": ".vol-showcase-panel-demo > .vol-slider--horizontal.vol-slider:nth-child(1) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "target": ".vol-showcase-panel-demo > .vol-slider--horizontal.vol-slider:nth-child(1) > .vol-slider__track > .vol-slider__input[min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
     },
     {
       "scope": "tab/ses",
       "rule": "label",
-      "target": ".vol-slider--horizontal.vol-slider:nth-child(2) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(2) > .vol-slider__track > .vol-slider__input[min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
     },
     {
       "scope": "tab/ses",
       "rule": "label",
-      "target": ".vol-slider--horizontal.vol-slider:nth-child(4) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(4) > .vol-slider__track > .vol-slider__input[min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
     },
     {
       "scope": "tab/ses",
       "rule": "label",
-      "target": ".vol-slider--horizontal.vol-slider:nth-child(6) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(6) > .vol-slider__track > .vol-slider__input[min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
     },
     {
       "scope": "tab/ses",
       "rule": "label",
-      "target": ".vol-slider--horizontal.vol-slider:nth-child(8) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(8) > .vol-slider__track > .vol-slider__input[min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
     },
     {
       "scope": "tab/ses",
       "rule": "label",
-      "target": "div[data-ses-comp=\"slider\"] > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "target": "div[data-ses-comp=\"slider\"] > .vol-slider__track > .vol-slider__input[min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
     },
     {
       "scope": "tab/ses",
       "rule": "label",
-      "target": ".vol-slider--horizontal.vol-slider:nth-child(12) > .vol-slider__track > .vol-slider__input[type=\"range\"][min=\"0\"]",
+      "target": ".vol-slider--horizontal.vol-slider:nth-child(12) > .vol-slider__track > .vol-slider__input[min=\"0\"][max=\"100\"]",
       "owner": "UI-05.1",
       "reason": "Slider ve NumberStepper yerel girişleri etiket/ad bağı taşımıyor (ses laboratuvarı kanal kaydırıcıları aynı kusuru paylaşır)"
     },
@@ -700,6 +700,97 @@
       "rule": "color-contrast",
       "target": ".vol-showcase-fullscreen-button",
       "owner": "UI-07.4",
+      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
+    },
+    {
+      "scope": "tab/hud",
+      "rule": "color-contrast",
+      "target": "#vol-bar-label-1",
+      "owner": "UI-01.7",
+      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/hud",
+      "rule": "color-contrast",
+      "target": "#vol-bar-label-2",
+      "owner": "UI-01.7",
+      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/hud",
+      "rule": "color-contrast",
+      "target": "#vol-bar-label-3",
+      "owner": "UI-01.7",
+      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/hud",
+      "rule": "color-contrast",
+      "target": "#vol-bar-label-4",
+      "owner": "UI-01.7",
+      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": "#vol-bar-label-6",
+      "owner": "UI-01.7",
+      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": "#vol-bar-label-7",
+      "owner": "UI-01.7",
+      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-frame__header > .vol-text--muted.vol-text",
+      "owner": "UI-01.7",
+      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-mat--pressed > .vol-text--muted.vol-text",
+      "owner": "UI-01.7",
+      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-mat--well > .vol-text--muted.vol-text",
+      "owner": "UI-01.7",
+      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": ".vol-showcase-material__frame > p",
+      "owner": "UI-01.7",
+      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": "div[data-material=\"Panel\"] > .vol-text--muted.vol-text",
+      "owner": "UI-01.7",
+      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/kimlik",
+      "rule": "color-contrast",
+      "target": "div[data-material=\"Plate\"] > .vol-text--muted.vol-text",
+      "owner": "UI-01.7",
+      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+    },
+    {
+      "scope": "tab/ses",
+      "rule": "color-contrast",
+      "target": "button[data-ses=\"palette\"] > .vol-select__caret",
+      "owner": "UI-05.2",
       "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
     }
   ]

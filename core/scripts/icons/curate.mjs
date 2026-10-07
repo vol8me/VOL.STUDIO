@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 /**
- * İkon kürasyonu: game-icons.net arşivinden seçilmiş oyun ikonları + özgün kabuk ikonları,
- * iki sprite ve kayıt olarak `core/public/assets/icons/` altına yazılır.
+ * İkon kürasyonu: Phosphor Fill setinden seçilmiş dolu, minimal ikonlar + aynı dilde çizilmiş
+ * özgün oyun ikonları; iki sprite ve kayıt olarak `core/public/assets/icons/` altına yazılır.
  *
- *   node core/scripts/icons/curate.mjs --source <game-icons depo kökü> [--check]
+ *   node core/scripts/icons/curate.mjs --source <@phosphor-icons/core paket kökü> [--check]
  *
- * Kaynak: https://github.com/game-icons/icons (Creative Commons BY 3.0; iki yazar CC0).
- * Arşiv depoda DEĞİL, yerelde indirilir; seçim `game-icons.curation.json`dadır, çıktı
- * deterministiktir. `--check` yazmadan, mevcut çıktının üretilenle aynı olduğunu bildirir.
- * Her ikon `currentColor` ile boyanır; siyah arka plan dikdörtgeni atılır, sayılar 1
- * ondalığa yuvarlanır. Atıf (yazar adı) `CREDITS.md` ve manifestte tutulur.
+ * Kaynak: https://github.com/phosphor-icons/core (MIT). Paket depoda DEĞİL, yerelde indirilir
+ * (`npm pack @phosphor-icons/core`); seçim `icons.curation.json`dadır, çıktı deterministiktir.
+ * `--check` yazmadan, mevcut çıktının üretilenle aynı olduğunu bildirir. Her ikon 256
+ * ızgarasında ve `currentColor` ile boyanır; özgün ikonlar `authored.mjs`dedir.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -17,95 +16,32 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { format, resolveConfig } from 'prettier';
 import { roundPath } from '../svgPath.mjs';
-import { CHROME_ICONS, CHROME_STROKE } from './chrome.mjs';
+import { AUTHORED_ICONS } from './authored.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const OUT = join(root, 'public/assets/icons');
 const NAMES_TS = join(root, 'src/ui/icons/iconNames.ts');
 export const SPRITE_PREFIX = 'vol-icon-';
-
-/** Klasör adı → görünen yazar ve lisans (arşivin `license.txt` kaydından). */
-const CC0_AUTHORS = new Set(['viscious-speed', 'zeromancer']);
-const DISPLAY = {
-  lorc: 'Lorc',
-  delapouite: 'Delapouite',
-  'john-colburn': 'John Colburn',
-  felbrigg: 'Felbrigg',
-  'john-redman': 'John Redman',
-  'carl-olsen': 'Carl Olsen',
-  sbed: 'Sbed',
-  priorblue: 'PriorBlue',
-  willdabeast: 'Willdabeast',
-  'viscious-speed': 'Viscious Speed',
-  'lord-berandas': 'Lord Berandas',
-  irongamer: 'Irongamer',
-  'heavenly-dog': 'HeavenlyDog',
-  lucasms: 'Lucas',
-  faithtoken: 'Faithtoken',
-  skoll: 'Skoll',
-  'andy-meneely': 'Andy Meneely',
-  andymeneely: 'Andy Meneely',
-  cathelineau: 'Cathelineau',
-  'kier-heyl': 'Kier Heyl',
-  aussiesim: 'Aussiesim',
-  sparker: 'Sparker',
-  zeromancer: 'Zeromancer',
-  rihlsul: 'Rihlsul',
-  quoting: 'Quoting',
-  guard13007: 'Guard13007',
-  darkzaitzev: 'DarkZaitzev',
-  spencerdub: 'SpencerDub',
-  generalace135: 'GeneralAce135',
-  zajkonur: 'Zajkonur',
-  catsu: 'Catsu',
-  starseeker: 'Starseeker',
-  'pepijn-poolman': 'Pepijn Poolman',
-  'pierre-leducq': 'Pierre Leducq',
-  'caro-asercion': 'Caro Asercion',
-  seregacthtuf: 'SeregaCthtuf',
-};
+export const ICON_GRID = 256;
+const PHOSPHOR_VERSION = '2.1.1';
 
 export { roundPath };
 
-export function authorOf(folder) {
-  return {
-    folder,
-    name: DISPLAY[folder] ?? folder,
-    license: CC0_AUTHORS.has(folder) ? 'CC0 1.0' : 'CC BY 3.0',
-  };
-}
-
-/** game-icons SVG'sinden gerçek şekil yollarını çıkarır; siyah zemin atılır. */
-export function parseGameIcon(svg, label = 'ikon') {
-  if (/<g[\s>]/.test(svg) || /transform=/.test(svg))
-    throw new Error(`${label}: grup/dönüşüm içeren ikon desteklenmiyor`);
-  const paths = [...svg.matchAll(/<path\b([^>]*?)\/>/g)].map((match) => match[1]);
-  const shapes = [];
-  for (const attributes of paths) {
-    const d = /\bd="([^"]+)"/.exec(attributes)?.[1];
-    if (!d) throw new Error(`${label}: yolsuz path`);
-    if (d.replace(/\s+/g, '') === 'M0 0h512v512H0z'.replace(/\s+/g, '')) continue;
-    const fill = /\bfill="([^"]+)"/.exec(attributes)?.[1];
-    if (fill !== undefined && fill.toLowerCase() !== '#fff')
-      throw new Error(`${label}: beyaz olmayan dolgu (${fill})`);
-    if (/opacity=|stroke=/.test(attributes)) throw new Error(`${label}: saydamlık/çizgi var`);
-    shapes.push(roundPath(d));
-  }
+/** Phosphor SVG'sinden şekil yollarını çıkarır; yalnız dolu yol kabul edilir. */
+export function parsePhosphorIcon(svg, label = 'ikon') {
+  if (!svg.includes('viewBox="0 0 256 256"')) throw new Error(`${label}: 256 ızgarası değil`);
+  if (/<(g|rect|circle|ellipse|polygon|polyline|line|mask|clipPath)[\s>]/.test(svg))
+    throw new Error(`${label}: yalnız path içeren ikon desteklenir`);
+  if (/transform=|opacity=|stroke=/.test(svg))
+    throw new Error(`${label}: dönüşüm/saydamlık/çizgi var`);
+  const shapes = [...svg.matchAll(/<path\b[^>]*?\bd="([^"]+)"[^>]*\/>/g)].map((match) => match[1]);
   if (shapes.length === 0) throw new Error(`${label}: şekil yok`);
   return shapes;
 }
 
-function gameSymbol(id, shapes) {
-  const body = shapes.map((d) => `<path d="${d}"/>`).join('');
-  return `<symbol id="${SPRITE_PREFIX}${id}" viewBox="0 0 512 512">${body}</symbol>`;
-}
-
-function chromeSymbol(id, body) {
-  return (
-    `<symbol id="${SPRITE_PREFIX}${id}" viewBox="0 0 512 512" fill="none" stroke="currentColor" ` +
-    `stroke-width="${CHROME_STROKE}" stroke-linecap="round" stroke-linejoin="round">${body}</symbol>`
-  );
+function symbol(id, body) {
+  return `<symbol id="${SPRITE_PREFIX}${id}" viewBox="0 0 ${ICON_GRID} ${ICON_GRID}" fill="currentColor">${body}</symbol>`;
 }
 
 function sprite(symbols) {
@@ -126,86 +62,87 @@ const sha = (text) => createHash('sha256').update(text).digest('hex');
  */
 export function buildIcons({ curation, readSource }) {
   const seen = new Set();
-  const gameSymbols = [];
+  const sprites = { chrome: [], game: [] };
   const icons = [];
-  const authors = new Map();
   for (const entry of [...curation].sort((a, b) => compare(a.id, b.id))) {
     if (seen.has(entry.id)) throw new Error(`yinelenen ikon kimliği: ${entry.id}`);
     if (!/^[a-z][a-zA-Z0-9]*$/.test(entry.id))
       throw new Error(`ikon kimliği camelCase değil: ${entry.id}`);
     seen.add(entry.id);
-    const folder = entry.source.split('/')[0];
-    const author = authorOf(folder);
-    authors.set(folder, author);
-    gameSymbols.push(gameSymbol(entry.id, parseGameIcon(readSource(entry.source), entry.id)));
-    icons.push({
-      id: entry.id,
-      sprite: 'game',
-      category: entry.category,
-      author: author.name,
-      license: author.license,
-      source: `game-icons.net/${entry.source}`,
-    });
+    let body;
+    let author;
+    let license;
+    let source;
+    if (entry.source === 'authored') {
+      body = AUTHORED_ICONS[entry.id];
+      if (!body) throw new Error(`özgün ikon çizimi yok: ${entry.id}`);
+      author = 'VOL.STUDIO';
+      license = 'proje';
+      source = 'authored';
+    } else if (entry.source.startsWith('phosphor/')) {
+      body = parsePhosphorIcon(readSource(entry.source), entry.id)
+        .map((d) => `<path d="${d}"/>`)
+        .join('');
+      author = 'Phosphor Icons';
+      license = 'MIT';
+      source = `phosphor-icons/core@${PHOSPHOR_VERSION}/${entry.source.slice('phosphor/'.length)}`;
+    } else {
+      throw new Error(`bilinmeyen kaynak: ${entry.source}`);
+    }
+    const kind = entry.category === 'chrome' ? 'chrome' : 'game';
+    sprites[kind].push(symbol(entry.id, body));
+    icons.push({ id: entry.id, sprite: kind, category: entry.category, author, license, source });
   }
-  const chromeSymbols = [];
-  for (const [id, body] of Object.entries(CHROME_ICONS)) {
-    if (seen.has(id)) throw new Error(`kabuk ikonu oyun ikonuyla çakışıyor: ${id}`);
-    seen.add(id);
-    chromeSymbols.push(chromeSymbol(id, Array.isArray(body) ? body.join('') : body));
-    icons.push({
-      id,
-      sprite: 'chrome',
-      category: 'chrome',
-      author: 'VOL.STUDIO',
-      license: 'proje',
-    });
-  }
-  const game = sprite(gameSymbols);
-  const chrome = sprite(chromeSymbols);
+  const chrome = sprite(sprites.chrome);
+  const game = sprite(sprites.game);
   const manifest = {
     schema: 'VolIconsV1',
     note: 'Üretilmiştir (core/scripts/icons/curate.mjs); elle düzenlenmez.',
     prefix: SPRITE_PREFIX,
-    grid: 512,
+    grid: ICON_GRID,
     sprites: {
       chrome: {
         file: 'chrome.svg',
-        count: chromeSymbols.length,
+        count: sprites.chrome.length,
         bytes: chrome.length,
         sha256: sha(chrome),
       },
-      game: { file: 'game.svg', count: gameSymbols.length, bytes: game.length, sha256: sha(game) },
+      game: {
+        file: 'game.svg',
+        count: sprites.game.length,
+        bytes: game.length,
+        sha256: sha(game),
+      },
     },
     icons,
   };
+  const phosphor = icons.filter((icon) => icon.author === 'Phosphor Icons').map((icon) => icon.id);
+  const authored = icons.filter((icon) => icon.author === 'VOL.STUDIO').map((icon) => icon.id);
   const credits = [
     '# İkon atıfları',
     '',
-    'Oyun ikonları [game-icons.net](https://game-icons.net) kaynağındandır ve aşağıdaki yazarlara aittir.',
-    'Lisans: Creative Commons BY 3.0 (belirtilen iki yazar CC0). "Icons made by {yazar}".',
-    'Kabuk ikonları (yön, kapat, onay vb.) bu projeye aittir.',
+    `İkonların çoğu [Phosphor Icons](https://phosphoricons.com) (Fill ağırlığı, sürüm ${PHOSPHOR_VERSION}) setindendir.`,
+    'Telif: Copyright (c) 2023 Phosphor Icons. Lisans: MIT. Lisans metni paketle birlikte gelir:',
+    'https://github.com/phosphor-icons/core/blob/main/LICENSE',
     '',
-    '| Yazar | Lisans | İkon |',
-    '| ----- | ------ | ---- |',
-    ...[...authors.values()]
-      .sort((a, b) => compare(a.name, b.name))
-      .map((author) => {
-        const mine = icons.filter((icon) => icon.author === author.name).map((icon) => icon.id);
-        return `| ${author.name} | ${author.license} | ${mine.join(', ')} |`;
-      }),
+    'Phosphor setinde karşılığı olmayan oyun nesneleri bu projeye aittir (aynı ızgara ve dilde çizildi).',
+    '',
+    '| Kaynak | Lisans | Sayı | İkon |',
+    '| ------ | ------ | ---- | ---- |',
+    `| Phosphor Icons | MIT | ${phosphor.length} | ${phosphor.join(', ')} |`,
+    `| VOL.STUDIO | proje | ${authored.length} | ${authored.join(', ')} |`,
     '',
   ].join('\n');
   const sources = [
     '# İkon varlıkları — kaynak kaydı',
     '',
     'Bu dizindeki dosyalar **üretilir**; elle düzenlenmez. Üretici: `core/scripts/icons/curate.mjs`;',
-    'seçim: `core/scripts/icons/game-icons.curation.json`; kabuk ikonları: `core/scripts/icons/chrome.mjs`.',
+    'seçim: `core/scripts/icons/icons.curation.json`; özgün ikonlar: `core/scripts/icons/authored.mjs`.',
     '',
-    '- Oyun ikonları: [game-icons.net](https://game-icons.net) (depo: github.com/game-icons/icons), CC BY 3.0',
-    '  (iki yazar CC0). Atıf: `CREDITS.md`, `manifest.json` ve uygulama içi krediler.',
-    '- Kabuk ikonları: özgün (yön, kapat, onay, uyarı vb.).',
-    `- Sprite: \`chrome.svg\` (${chromeSymbols.length} ikon) ve \`game.svg\` (${gameSymbols.length} ikon); simge kimliği \`${SPRITE_PREFIX}<ad>\`.`,
-    '- Boya: hepsi `currentColor`; oyun ikonları dolu siluet, kabuk ikonları kalın yuvarlak çizgi.',
+    `- Phosphor Icons Fill (sürüm ${PHOSPHOR_VERSION}, github.com/phosphor-icons/core), MIT. Atıf: \`CREDITS.md\` ve \`manifest.json\`.`,
+    '- Özgün ikonlar: Phosphor setinde karşılığı olmayan RTS ve bullet hell nesneleri; aynı 256 ızgarada.',
+    `- Sprite: \`chrome.svg\` (${sprites.chrome.length} ikon) ve \`game.svg\` (${sprites.game.length} ikon); simge kimliği \`${SPRITE_PREFIX}<ad>\`.`,
+    '- Boya: hepsi `currentColor`; dolu, yuvarlak, minimal siluet.',
     '',
   ].join('\n');
 
@@ -247,13 +184,17 @@ async function main() {
   const sourceIndex = argv.indexOf('--source');
   const source = sourceIndex >= 0 ? resolve(argv[sourceIndex + 1]) : null;
   if (!source || !existsSync(source)) {
-    console.error('Kullanım: curate.mjs --source <game-icons depo kökü> [--check]');
+    console.error('Kullanım: curate.mjs --source <@phosphor-icons/core paket kökü> [--check]');
     process.exit(2);
   }
-  const curation = JSON.parse(readFileSync(join(here, 'game-icons.curation.json'), 'utf8'));
+  const curation = JSON.parse(readFileSync(join(here, 'icons.curation.json'), 'utf8'));
   const files = buildIcons({
     curation,
-    readSource: (entry) => readFileSync(join(source, `${entry}.svg`), 'utf8'),
+    readSource: (entry) =>
+      readFileSync(
+        join(source, 'assets/fill', `${entry.slice('phosphor/'.length)}-fill.svg`),
+        'utf8',
+      ),
   });
   // Üretilen TypeScript deponun biçimleyicisiyle yazılır: elle biçimleme sapması `--check`i kırmasın.
   const namesPath = NAMES_TS;

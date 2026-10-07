@@ -288,7 +288,7 @@ export class Icon {
     if (catalogName) {
       this.element.classList.add('vol-icon--sprite');
       this.applySize(true);
-      this.element.setAttribute('viewBox', '0 0 512 512');
+      this.element.setAttribute('viewBox', '0 0 256 256');
       const use = document.createElementNS(SVG_NAMESPACE, 'use');
       const href = `#${SPRITE_PREFIX}${catalogName}`;
       use.setAttribute('href', href);

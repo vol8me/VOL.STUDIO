@@ -20,6 +20,7 @@
 @import url('./data/boards.css');
 @import url('./primitives/workbench.css');
 @import url('./textEntry/keyboard.css');
+@import url('./material/material.css');
 
 /* RENKLER — colors.ts, themes/semanticColors.ts ve themes/ember.ts'ten üretilir (pnpm gen:theme). Elle düzenleme yapma. */
 :root {
@@ -146,6 +147,16 @@
   --vol-motion-press-scale: 0.96;
   --vol-motion-card-select-scale: 1.04;
   --vol-motion-loading-min-visible: 500ms;
+  --vol-motion-juice-press-squash: 0.985;
+  --vol-motion-juice-hover-lift: 1px;
+  --vol-motion-juice-press-drop: 1px;
+  --vol-motion-juice-focus-pulse: 1100ms;
+  --vol-motion-juice-number-pop-scale: 1.18;
+  --vol-motion-juice-number-pop-duration: 260ms;
+  --vol-motion-juice-hit-flash: 140ms;
+  --vol-motion-juice-panel-in-scale: 0.96;
+  --vol-motion-juice-shake-distance: 4px;
+  --vol-motion-juice-shake-duration: 220ms;
   /* @generated:motion:end */
   --vol-font-family: 'Jura', sans-serif;
   --vol-font-family-body: 'Exo 2', sans-serif;

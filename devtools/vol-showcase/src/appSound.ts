@@ -22,7 +22,13 @@ export function startAppSound(root: HTMLElement): Disposable {
     });
     kit.attach(bus);
     kit.observe(root);
-    void kit.unlock().then(() => kit?.preload());
+    // Örnek yükleme ve çözme ilk etkileşimin kareleriyle yarışmasın: boşta zamana ertelenir.
+    const preload = (): void => void kit?.preload();
+    void kit.unlock().then(() => {
+      if (typeof requestIdleCallback === 'function')
+        requestIdleCallback(preload, { timeout: 3000 });
+      else setTimeout(preload, 1500);
+    });
   };
   // Jest yakalama aşaması: bileşenin kendi tıklamasından ÖNCE kit kurulur.
   root.addEventListener('pointerdown', start, { capture: true });

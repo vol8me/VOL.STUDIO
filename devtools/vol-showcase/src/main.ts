@@ -1,5 +1,6 @@
 import '@volstudio/core/ui/styles.css';
 import './styles.css';
+import './kimlik.css';
 import './workbench.css';
 import { bootShowcase } from './bootstrap';
 

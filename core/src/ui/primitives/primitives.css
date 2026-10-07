@@ -39,16 +39,9 @@
   width: 100%;
   font-family: var(--vol-font-family);
   letter-spacing: 0.04em;
-  color: var(--vol-ui-text);
-  background: var(--vol-ui-surface-1);
-  border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
   padding: var(--vol-space-sm) var(--vol-space-lg);
   cursor: var(--vol-cursor-link, pointer);
-  transition:
-    border-color var(--vol-transition-fast),
-    color var(--vol-transition-fast),
-    background-color var(--vol-transition-fast);
   font-size: var(--vol-text-lead);
   font-weight: 600;
   display: inline-flex;
@@ -89,68 +82,9 @@
   align-items: flex-start;
 }
 
-.vol-button:hover,
-.vol-button.vol-gamepad-hover {
-  background: var(--vol-ui-hover-fill);
-  border-color: var(--vol-ui-border-strong);
-  color: var(--vol-ui-text);
-}
-
-.vol-button:active {
-  background: var(--vol-ui-pressed-fill);
-  border-color: var(--vol-ui-border-strong);
-  color: var(--vol-ui-text);
-}
-
 .vol-button:focus-visible {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
-}
-
-.vol-button:disabled {
-  opacity: 1;
-  cursor: var(--vol-cursor-default, default);
-  background: var(--vol-ui-disabled-fill);
-  border-color: var(--vol-ui-disabled-border);
-  color: var(--vol-ui-disabled-text);
-}
-
-.vol-button--primary {
-  background: var(--vol-ui-brand-solid);
-  border-color: var(--vol-ui-brand-border);
-  color: var(--vol-ui-on-brand);
-}
-
-.vol-button--primary:hover,
-.vol-button--primary.vol-gamepad-hover {
-  background: var(--vol-ui-brand-hover);
-  border-color: var(--vol-ui-brand-hover);
-  color: var(--vol-ui-on-brand);
-}
-
-.vol-button--primary:active {
-  background: var(--vol-ui-brand-pressed);
-  border-color: var(--vol-ui-brand-pressed);
-  color: var(--vol-ui-on-brand);
-}
-
-.vol-button--danger {
-  background: var(--vol-ui-danger-solid);
-  border-color: var(--vol-ui-danger-border);
-  color: var(--vol-ui-on-danger);
-}
-
-.vol-button--danger:hover,
-.vol-button--danger.vol-gamepad-hover {
-  background: var(--vol-ui-danger-border);
-  border-color: var(--vol-ui-danger-border);
-  color: var(--vol-ui-on-danger);
-}
-
-.vol-button--danger:active {
-  background: var(--vol-ui-danger-subtle);
-  border-color: var(--vol-ui-danger-border);
-  color: var(--vol-ui-on-danger);
 }
 
 .vol-button--sm {
@@ -201,16 +135,8 @@
   pointer-events: auto;
   width: 40px;
   height: 40px;
-  color: var(--vol-ui-text);
-  background: var(--vol-ui-surface-1);
-  border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
   cursor: var(--vol-cursor-link, pointer);
-  transition:
-    border-color var(--vol-transition-fast),
-    color var(--vol-transition-fast),
-    background-color var(--vol-transition-fast),
-    transform var(--vol-transition-fast);
   flex-shrink: 0;
   justify-content: center;
   align-items: center;
@@ -236,74 +162,9 @@
   height: 100%;
 }
 
-.vol-icon-button:hover,
-.vol-icon-button.vol-gamepad-hover {
-  background: var(--vol-ui-hover-fill);
-  border-color: var(--vol-ui-border-strong);
-}
-
-.vol-icon-button:active {
-  background: var(--vol-ui-pressed-fill);
-}
-
 .vol-icon-button:focus-visible {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
-}
-
-.vol-icon-button:disabled {
-  opacity: 1;
-  cursor: var(--vol-cursor-default, default);
-  background: var(--vol-ui-disabled-fill);
-  border-color: var(--vol-ui-disabled-border);
-  color: var(--vol-ui-disabled-text);
-}
-
-.vol-icon-button--primary {
-  background: var(--vol-ui-brand-solid);
-  border-color: var(--vol-ui-brand-border);
-  color: var(--vol-ui-on-brand);
-}
-
-.vol-icon-button--primary:hover,
-.vol-icon-button--primary.vol-gamepad-hover {
-  background: var(--vol-ui-brand-hover);
-}
-
-.vol-icon-button--primary:active {
-  background: var(--vol-ui-brand-pressed);
-}
-
-.vol-icon-button--success {
-  background: var(--vol-ui-success-solid);
-  border-color: var(--vol-ui-success-border);
-  color: var(--vol-ui-on-success);
-}
-
-.vol-icon-button--success:hover,
-.vol-icon-button--success.vol-gamepad-hover {
-  background: var(--vol-ui-success-border);
-}
-
-.vol-icon-button--success:active {
-  background: var(--vol-ui-success-border);
-  filter: brightness(0.85);
-}
-
-.vol-icon-button--danger {
-  background: var(--vol-ui-danger-solid);
-  border-color: var(--vol-ui-danger-border);
-  color: var(--vol-ui-on-danger);
-}
-
-.vol-icon-button--danger:hover,
-.vol-icon-button--danger.vol-gamepad-hover {
-  background: var(--vol-ui-danger-border);
-}
-
-.vol-icon-button--danger:active {
-  background: var(--vol-ui-danger-border);
-  filter: brightness(0.85);
 }
 
 .vol-icon-button--sm {

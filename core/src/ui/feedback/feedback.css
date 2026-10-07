@@ -9,25 +9,25 @@
 }
 
 .vol-bar__fill {
-  background: var(--vol-ui-support-solid);
+  background-color: var(--vol-ui-support-solid);
   height: 100%;
   transition: background-color var(--vol-transition-fast);
 }
 
 .vol-bar--health .vol-bar__fill {
-  background: var(--vol-ui-success-solid);
+  background-color: var(--vol-ui-success-solid);
 }
 
 .vol-bar--stamina .vol-bar__fill {
-  background: var(--vol-ui-info-solid);
+  background-color: var(--vol-ui-info-solid);
 }
 
 .vol-bar--cooldown .vol-bar__fill {
-  background: var(--vol-ui-accent-solid);
+  background-color: var(--vol-ui-accent-solid);
 }
 
 .vol-bar--low .vol-bar__fill {
-  background: var(--vol-ui-danger-solid);
+  background-color: var(--vol-ui-danger-solid);
 }
 
 .vol-bar__label {

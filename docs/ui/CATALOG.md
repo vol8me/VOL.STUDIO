@@ -186,7 +186,7 @@ widget uydurulmaz. Yeni export bu tablo ve registry'de aynı commit'te görünü
 
 Bu belgenin tablolarındaki tier, faz, anchor ve tüketici bilgisinin makine-okunur karşılığı
 `devtools/vol-showcase/src/catalog/registry.json` dosyasıdır; sınıf ve yardımcıların tamamı
-(94 + 51) tekil kayıtlıdır ve `scripts/quality/uiRegistry.mjs` kapısı kaydı AST'den çıkarılan
+(94 + 54) tekil kayıtlıdır ve `scripts/quality/uiRegistry.mjs` kapısı kaydı AST'den çıkarılan
 yüzeyle karşılaştırır. Test kanıtı isim geçen metin değildir: bağlanan `it` bloğu adı
 tanımlayıcı olarak kullanmalı ve `expect` çağırmalıdır. Kanıtı olmayan satır sahip görevli
 `gap` taşır (bugün CardPicker, FOCUSABLE_SELECTOR ve

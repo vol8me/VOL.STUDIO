@@ -971,7 +971,7 @@
   },
   "kimlik": {
     "iconSize": "İkon boyutu",
-    "iconHint": "Tek stil: dolu, kalın, tek renk siluet; renk metin renginden gelir. Oyun ikonları game-icons.net (CC BY 3.0), kabuk ikonları özgündür.",
+    "iconHint": "Tek stil: dolu, yuvarlak, minimal siluet; renk metin renginden gelir. İkonlar Phosphor Icons (MIT) setindendir; karşılığı olmayan oyun nesneleri özgün çizilmiştir.",
     "categories": {
       "command": "Komutlar",
       "building": "Yapılar",
@@ -997,6 +997,26 @@
       "shooterHint": "Nişangâh işaretçiyi izler; tık atıştır (büyür), hedefe isabet vuruş işareti verir.",
       "reticle": "Nişangâh",
       "spread": "Açılım"
+    },
+    "material": {
+      "surfaces": "Yüzeyler",
+      "frame": "Çerçeve",
+      "bars": "Barlar",
+      "buttons": "Düğmeler",
+      "plate": "Plaka",
+      "panel": "Panel",
+      "well": "Kuyu",
+      "pressed": "Basılı",
+      "frameTitle": "Çerçeve başlığı",
+      "frameBody": "Köşe aksanı, başlık şeridi ve ayraç aynı yüzeyde; ışık üstten gelir.",
+      "buttonDefault": "Varsayılan",
+      "buttonPrimary": "Birincil",
+      "buttonDanger": "Tehlike",
+      "buttonDisabled": "Pasif",
+      "juicePop": "Sayı patlaması",
+      "juiceFlash": "Vuruş flaşı",
+      "juiceShake": "Sarsıntı",
+      "juiceEnter": "Panel girişi"
     }
   }
 }

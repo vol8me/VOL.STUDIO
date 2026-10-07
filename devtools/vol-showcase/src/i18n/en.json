@@ -971,7 +971,7 @@
   },
   "kimlik": {
     "iconSize": "Icon size",
-    "iconHint": "One style: filled, bold, single-colour silhouettes; the colour comes from the text colour. Game icons are from game-icons.net (CC BY 3.0), chrome icons are original.",
+    "iconHint": "One style: filled, rounded, minimal silhouettes; the colour comes from the text colour. Icons come from Phosphor Icons (MIT); game objects it lacks are drawn in-house.",
     "categories": {
       "command": "Commands",
       "building": "Buildings",
@@ -997,6 +997,26 @@
       "shooterHint": "The reticle follows the pointer; a click is a shot (it swells), a hit gives a hit marker.",
       "reticle": "Reticle",
       "spread": "Spread"
+    },
+    "material": {
+      "surfaces": "Surfaces",
+      "frame": "Frame",
+      "bars": "Bars",
+      "buttons": "Buttons",
+      "plate": "Plate",
+      "panel": "Panel",
+      "well": "Well",
+      "pressed": "Pressed",
+      "frameTitle": "Frame title",
+      "frameBody": "Corner accent, header strip and divider share one surface; light comes from above.",
+      "buttonDefault": "Default",
+      "buttonPrimary": "Primary",
+      "buttonDanger": "Danger",
+      "buttonDisabled": "Disabled",
+      "juicePop": "Number pop",
+      "juiceFlash": "Hit flash",
+      "juiceShake": "Shake",
+      "juiceEnter": "Panel enter"
     }
   }
 }
