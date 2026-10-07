@@ -4,7 +4,10 @@
     "language": "English",
     "fullscreen": "Tam ekranı aç",
     "leaveFullscreen": "Tam ekrandan çık",
-    "paused": "Duraklatıldı"
+    "paused": "Duraklatıldı",
+    "skin": "Kaplama: {{skin}}",
+    "skinDefault": "Çelik",
+    "skinAurum": "Aurum"
   },
   "tabs": {
     "buttons": "BUTONLAR",

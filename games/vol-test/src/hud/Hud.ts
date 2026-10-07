@@ -2,7 +2,12 @@ import type { VirtualActionSource, VirtualStickSource } from '@volstudio/core';
 import type { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { FpsMeter, InputPresentationController, UIRoot } from '@volstudio/core/ui';
+import {
+  FpsMeter,
+  InputPresentationController,
+  UIRoot,
+  type UiIntentBus,
+} from '@volstudio/core/ui';
 import type { EffectLevel, EffectProfile } from '@/config/quality';
 import type { GameServices } from '@/app/GameServices';
 import type { TestAction } from '@/input/bindings';
@@ -53,6 +58,7 @@ const MAP_INTERVAL_MS = 100;
 export class Hud {
   private readonly scope = new DisposableScope();
   private readonly layer: HTMLDivElement;
+  private readonly uiRoot: UIRoot;
   private readonly presentation: InputPresentationController;
   private readonly status: StatusPanel;
   private readonly climate: ClimateStatus;
@@ -65,8 +71,19 @@ export class Hud {
   private statusDueMs = 0;
   private mapDueMs = 0;
 
+  /** HUD kökünün anlamsal UI niyet veriyolu: arayüz sesi ve titreşim buna abone olur. */
+  get intents(): UiIntentBus {
+    return this.uiRoot.intents;
+  }
+
+  /** HUD kök elemanı: hover/odak sesi bu kökten dinlenir. */
+  get rootElement(): HTMLElement {
+    return this.uiRoot.element;
+  }
+
   constructor(options: HudOptions) {
     const root = this.scope.addDestroyable(new UIRoot(options.parent));
+    this.uiRoot = root;
     this.layer = document.createElement('div');
     this.layer.className = 'vt-hud';
     this.layer.dataset.testid = 'hud';

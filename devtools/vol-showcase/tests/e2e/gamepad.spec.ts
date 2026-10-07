@@ -39,11 +39,12 @@ test('D-pad ilk basışta ilk odaklanabilir elemana halka takar', async ({ page 
   const ring = page.locator(RING);
   await expect(ring).toHaveCount(1);
   await expect(ring).toBeFocused();
-  // DOM sırasında ilk aday başlıktaki dil düğmesidir.
-  await expect(ring).toHaveClass(/vol-showcase-lang-button/);
+  // DOM sırasında ilk aday başlıktaki kaplama düğmesidir.
+  await expect(ring).toHaveClass(/vol-showcase-skin-button/);
 });
 
 test('D-pad odağı uzamsal taşır; A odaktaki elemanı etkinleştirir', async ({ page }) => {
+  await pressButton(page, PAD.dpadDown);
   await pressButton(page, PAD.dpadDown);
   await pressButton(page, PAD.dpadRight);
   // Dil düğmesinin sağındaki uzamsal komşu tam ekran düğmesidir.

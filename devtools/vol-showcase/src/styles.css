@@ -72,6 +72,10 @@ body {
   gap: var(--vol-space-xs);
 }
 
+.vol-showcase-skin-button {
+  grid-column: 1 / -1;
+}
+
 .vol-showcase-header > span {
   display: block;
   min-width: 0;

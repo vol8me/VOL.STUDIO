@@ -6,6 +6,7 @@ import { World } from '@/sim/world/World';
 import { TANK, SUSPENSION, WEAPON } from '@/config/tank';
 import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext } from '../support/fakeAudio';
+import { Button, uiIntentBusFor } from '@volstudio/core/ui';
 
 describe('GameAudio', () => {
   let context: FakeAudioContext;
@@ -153,5 +154,33 @@ describe('GameAudio', () => {
       otherContext.sources.map((s) => s.buffer?.url),
     );
     other.dispose();
+  });
+
+  it('arayüz sesi niyet veriyoluna bağlanır; duraklatma paneli onunla çalar ve eski sesle çift çalmaz', async () => {
+    context.state = 'running';
+    const root = document.createElement('div');
+    document.body.append(root);
+    const button = new Button('Tamam');
+    root.append(button.element);
+    const { bus, release } = uiIntentBusFor(root);
+    audio.attachUi(bus, root);
+    audio.attachUi(bus, root); // ikinci çağrı ikinci kit kurmaz
+    // Örnekler yüklenene dek ses düşer; yükleme bitince düğme niyeti çalar.
+    await vi.waitFor(() => {
+      const before = context.sources.length;
+      button.element.click();
+      expect(context.sources.length).toBeGreaterThan(before);
+    });
+    expect(context.sources.at(-1)?.buffer?.url).toMatch(
+      /\/assets\/audio\/ui\/steel\/press-[abc]\.ogg$/,
+    );
+    const before = context.sources.length;
+    audio.setPaused(true);
+    const urls = context.sources.slice(before).map((source) => source.buffer?.url);
+    expect(urls).toHaveLength(1);
+    expect(urls[0]).toMatch(/\/ui\/steel\/panel-open-[abc]\.ogg$/);
+    expect(urls.some((url) => url?.endsWith('/pause.ogg'))).toBe(false);
+    release();
+    root.remove();
   });
 });

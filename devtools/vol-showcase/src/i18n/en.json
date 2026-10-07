@@ -4,7 +4,10 @@
     "language": "Türkçe",
     "fullscreen": "Enter fullscreen",
     "leaveFullscreen": "Leave fullscreen",
-    "paused": "Paused"
+    "paused": "Paused",
+    "skin": "Skin: {{skin}}",
+    "skinDefault": "Steel",
+    "skinAurum": "Aurum"
   },
   "tabs": {
     "buttons": "BUTTONS",

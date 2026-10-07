@@ -2,6 +2,8 @@ import { DisposableScope } from '@volstudio/core/lifecycle';
 import { resumeAudioAfterWake } from '@volstudio/core';
 import { createRandom } from '@volstudio/core/random';
 import { SoundBank } from '@volstudio/core/audio/sfx';
+import { UiSoundKit, uiSoundAssets } from '@volstudio/core/audio/ui';
+import type { UiIntentBus } from '@volstudio/core/ui';
 import { AUDIO } from '@/config/audio';
 import type { SimEvent } from '@/sim/events';
 import type { Vehicle } from '@/sim/entities/Vehicle';
@@ -18,6 +20,7 @@ export class GameAudio {
   private released = false;
   private eventIndex = 0;
   private waking: Promise<void> | null = null;
+  private ui: UiSoundKit | null = null;
 
   constructor(
     private readonly context: AudioContext,
@@ -51,6 +54,27 @@ export class GameAudio {
     }
     for (const action of ['pause', 'resume'])
       this.bank.register(`ui:${action}`, [audioUrl(`${AUDIO.uiAssetRoot}/${action}.ogg`)]);
+  }
+
+  /**
+   * Arayüz sesini (CORE `UiSoundKit`) HUD niyet veriyoluna ve köküne bağlar: düğme, kaydırıcı, onay
+   * ve seçim niyetleri sese döner; hover/odak kökten dinlenir. Kit oyunun ses bağlamını ve ana
+   * otobüsünü kullanır; oyun SFX'i ve ambiyansı değişmez. Çağrı ikinci kez kit kurmaz.
+   */
+  attachUi(bus: UiIntentBus, root: HTMLElement): void {
+    if (this.released || this.ui) return;
+    const kit = new UiSoundKit({
+      assets: uiSoundAssets(import.meta.env.BASE_URL),
+      context: this.context,
+      destination: this.bus,
+      visibilityTarget: document,
+      onError: (error) => console.warn('[VOL.TEST] Arayüz sesi:', error),
+    });
+    kit.attach(bus);
+    kit.observe(root);
+    this.ui = kit;
+    this.scope.add(kit);
+    void kit.preload();
   }
 
   setVolume(volume: number): void {
@@ -131,6 +155,8 @@ export class GameAudio {
     this.paused = paused;
     this.bank.stopAll();
     if (paused) for (const voice of this.vehicles.values()) voice.stop();
+    // Arayüz sesi bağlıysa duraklatma/sürdürme paneli onunla çalar (eski sesle çift çalmaz).
+    if (this.ui?.play(paused ? 'panelOpen' : 'panelClose')) return;
     this.bank.play(`ui:${paused ? 'pause' : 'resume'}`, { gain: AUDIO.shotGain.ui });
   }
 

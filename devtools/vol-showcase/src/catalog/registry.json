@@ -2244,7 +2244,7 @@
       "phase": "UI-02",
       "anchor": "A3",
       "archetype": "mechanism",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/sesTab.ts"],
       "tests": [
         {

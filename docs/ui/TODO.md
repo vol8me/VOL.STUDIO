@@ -116,14 +116,17 @@ kendisi sıfırdan yeniden yapılır.**
 
 - [ ] **UI-02.8 — Uygulama genelinde bağlama (kalan).** Yapıldı: kit yeni sözlükle (23 olay,
       iki palet), `toggleOn/Off`, kaydırıcıda değere bağlı perde, hover/focus gözlemcisi,
-      `setAssets`/`followTheme`, vitrin kökünde uygulama geneli bağlama. Kalan: VOL.TEST kökünde
-      bağlama ve paket payı ölçümü; skin değiştirici gelince `followTheme` bağı (UI-07.2);
-      stepper/slider detent (adım başına tık) ve kaydırıcı sürüklemesinde kısık ses ayarı;
+      `setAssets`/`followTheme`, vitrin kökünde uygulama geneli bağlama; vitrin üst çubuğundaki skin
+      düğmesi ses paletini (çelik ↔ aurum) ve imleç vurgusunu değiştirir; VOL.TEST HUD kökünde kit
+      (oyunun ses bağlamı ve ana otobüsü üstünde; oyun SFX'i değişmedi) ve duraklatma/sürdürme paneli
+      kitin `panelOpen`/`panelClose` sesiyle çalar, eski duraklatma sesi yalnız kit yokken yedektir
+      (çift çalmaz). Paket payı ölçüldü: VOL.TEST app +5,8 KiB (bütçe 107,0).
+      Kalan: stepper/slider detent (adım başına tık) ve kaydırıcı sürüklemesinde kısık ses ayarı;
       sürükle/bırak, panel ve envanter olaylarının bileşenlere bağlanması (host olayları:
       `dragPick`, `dragDrop`, `equip`, `purchase`, `reward`, `levelUp`, `notify`); seviyeler,
-      sessiz ve palet seçiminin mevcut kalıcılığa bağlanması; eski duraklatma sesi çift çalmaz.
-      Kapanır: vitrinde her etkileşim duyulur (olay→bileşen tablosu testli); ses yokken/kapalıyken
-      işlev ve görsel durum aynı; VOL.TEST paket payı bütçe içinde; oyun SFX/ambiyans değişmez.
+      sessiz ve palet seçiminin mevcut kalıcılığa bağlanması (VOL.TEST ayar paneli). Kapanır:
+      vitrinde her etkileşim duyulur (olay→bileşen tablosu testli); ses yokken/kapalıyken işlev ve
+      görsel durum aynı; oyun SFX/ambiyans değişmez.
 - [ ] **UI-02.9 — Laboratuvar ve kulak notları.** Ses laboratuvarı yeni sözlüğe göre
       güncellenir: her olay, palet, kuru/kit, eski/yeni A/B, dinleme paketi dışa aktarımı.
       Kullanıcının dinleme notları tarihli olarak VERIFICATION'a işlenir; reddedilen ses
@@ -245,11 +248,13 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
       hissine uygun başlık/sayı yazı tipi seçimi gözden geçirilir. Kapanır: font-ready ve yükleme
       hatası örneği; asenkron font yerleşimi kaydırmaz; Deck glif yüksekliği gerçek ekranda;
       Android %200 font ölçeği ayrı native sonda.
-- [ ] **UI-07.4 — Tema laboratuvarı ve üst bar.** Tema sekmesi + genel tema/dil/yoğunluk
-      seçici; önizleme kapsamları/body portalları/canvas sabit renkleri (CurveEditor/Minimap).
-      Kapanır: 2 skin × 3 yoğunlukta kontrast/odak; Chromium CLS ve tüm motor geometrisi; geçiş
-      anlık, durum/kaydırma/odak/seçim sabit; bilinmeyen kayıtlı tema varsayılana döner;
-      skin değişimi ses paleti ve imleç aksanını da değiştirir.
+- [ ] **UI-07.4 — Tema laboratuvarı ve üst bar (kalan).** Yapıldı: vitrin üst çubuğunda skin
+      düğmesi (`ThemeController`, kök `data-vol-theme`, seçim `localStorage`'da kalır, bilinmeyen
+      kayıt varsayılana döner; `skin.spec.ts` iki motorda), skin ses paletini ve imleç aksanını
+      değiştirir. Kalan: Tema sekmesi ve genel tema/dil/yoğunluk seçici; önizleme kapsamları/body
+      portalları/canvas sabit renkleri (CurveEditor/Minimap). Kapanır: 2 skin × 3 yoğunlukta
+      kontrast/odak; Chromium CLS ve tüm motor geometrisi; geçiş anlık, durum/kaydırma/odak/seçim
+      sabit.
 
 ### UI-08 — HUD ve erken tier-1 kapsam kontrolü
 

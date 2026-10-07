@@ -1,6 +1,15 @@
 import { FullscreenController } from '@volstudio/core/platform';
 import { startAppSound } from './appSound';
-import { CursorController, FocusNavController, Tabs, showConfirm } from '@volstudio/core/ui';
+import {
+  CursorController,
+  FocusNavController,
+  THEME_IDS,
+  Tabs,
+  ThemeController,
+  showConfirm,
+  type ThemeId,
+  type ThemeStore,
+} from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { buildAdvancedTab } from './sections/advancedTab';
@@ -40,12 +49,43 @@ interface TabSpec {
   builder: () => { element: HTMLElement; destroy?: () => void };
 }
 
+/** Skin → imleç vurgu rengi (RTS komut vurgusu); varsayılan skin çekirdek rengini korur. */
+const SKIN_CURSOR_ACCENT: Readonly<Record<string, string>> = {
+  default: '#ffb27a',
+  aurum: '#f0c568',
+};
+
+/** Skin seçimi bu tarayıcıda kalıcıdır; depolama yoksa ya da bozuksa varsayılan skin açılır. */
+function localThemeStore(): ThemeStore {
+  return {
+    load: <T>(key: string, fallback: T): Promise<T> => {
+      try {
+        const raw = localStorage.getItem(key);
+        return Promise.resolve(raw === null ? fallback : (JSON.parse(raw) as T));
+      } catch {
+        return Promise.resolve(fallback);
+      }
+    },
+    save: <T>(key: string, value: T): Promise<void> => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch {
+        // depolama kapalı: seçim oturumla sınırlı kalır
+      }
+      return Promise.resolve();
+    },
+  };
+}
+
 /** CORE bileşen kataloğunun Phaser ve oyun döngüsü taşımayan web kabuğu. */
 export class ShowcaseApp {
   readonly element: HTMLDivElement;
 
   private tabs: Tabs | null = null;
   private langButton: HTMLButtonElement | null = null;
+  private skinButton: HTMLButtonElement | null = null;
+  private readonly theme: ThemeController;
+  private readonly cursors: CursorController;
   private renderScope: DisposableScope | null = null;
   private readonly lifecycle = new DisposableScope();
   private readonly fullscreen: FullscreenController;
@@ -55,6 +95,10 @@ export class ShowcaseApp {
   private destroyed = false;
   private readonly onLangButtonClick = (): void => {
     void i18next.changeLanguage(i18next.language === 'tr' ? 'en' : 'tr');
+  };
+  private readonly onSkinButtonClick = (): void => {
+    const index = THEME_IDS.indexOf(this.theme.state.theme);
+    this.theme.setTheme(THEME_IDS[(index + 1) % THEME_IDS.length]);
   };
   private readonly onLanguageChanged = (): void => {
     if (!this.destroyed) this.rebuild();
@@ -85,11 +129,36 @@ export class ShowcaseApp {
       }),
     );
     this.focusNav.start();
+    // Skin (tema): kök elemana `data-vol-theme` yazar; ses paleti ve imleç vurgusu ona bağlanır.
+    this.theme = new ThemeController({ store: localThemeStore() });
+    this.lifecycle.add(this.theme.attach(document.documentElement));
+    this.lifecycle.add(this.theme);
+    this.lifecycle.add(this.theme.onChange((state) => this.onThemeChanged(state.theme)));
+    void this.theme.restore();
     // Uygulama genelinde oyun imleçleri: düğme eli, metin, sürükleme, boyutlandırma.
-    this.lifecycle.add(new CursorController({ mode: 'ui' }));
+    this.cursors = new CursorController({ mode: 'ui' });
+    this.lifecycle.add(this.cursors);
+    this.onThemeChanged(this.theme.state.theme);
     // Uygulama genelinde arayüz sesi: niyetler, hover ve odak; bağlam ilk jestte kurulur.
-    this.lifecycle.add(startAppSound(this.element));
+    this.lifecycle.add(startAppSound(this.element, this.theme));
     this.rebuild();
+  }
+
+  /** Skin değişince imleç vurgusu ve düğme etiketi yenilenir (ses paleti `followTheme` ile kendiliğinden). */
+  private onThemeChanged(theme: ThemeId): void {
+    this.cursors.setPalette({ accent: SKIN_CURSOR_ACCENT[theme] ?? '#ffb27a' });
+    this.renderSkinLabel();
+  }
+
+  private renderSkinLabel(): void {
+    if (!this.skinButton) return;
+    const theme = this.theme.state.theme;
+    const label = i18next.t('volui:app.skin', {
+      skin: i18next.t(theme === 'aurum' ? 'volui:app.skinAurum' : 'volui:app.skinDefault'),
+    });
+    this.skinButton.textContent = label;
+    this.skinButton.setAttribute('aria-label', label);
+    this.skinButton.dataset.skin = theme;
   }
 
   private stepTab(delta: number): void {
@@ -107,6 +176,7 @@ export class ShowcaseApp {
     this.lifecycle.dispose();
     this.tabs = null;
     this.langButton = null;
+    this.skinButton = null;
     this.element.remove();
   }
 
@@ -129,6 +199,12 @@ export class ShowcaseApp {
     this.langButton.setAttribute('aria-label', i18next.t('volui:app.language'));
     renderScope.addListener(this.langButton, 'click', this.onLangButtonClick);
 
+    this.skinButton = document.createElement('button');
+    this.skinButton.type = 'button';
+    this.skinButton.className = 'vol-showcase-lang-button vol-showcase-skin-button';
+    renderScope.addListener(this.skinButton, 'click', this.onSkinButtonClick);
+    this.renderSkinLabel();
+
     const fullscreenButton = document.createElement('button');
     fullscreenButton.type = 'button';
     fullscreenButton.className = 'vol-showcase-fullscreen-button';
@@ -138,7 +214,7 @@ export class ShowcaseApp {
 
     const actions = document.createElement('div');
     actions.className = 'vol-showcase-header__actions';
-    actions.append(this.langButton, fullscreenButton);
+    actions.append(this.skinButton, this.langButton, fullscreenButton);
     header.appendChild(actions);
 
     const specs: TabSpec[] = [

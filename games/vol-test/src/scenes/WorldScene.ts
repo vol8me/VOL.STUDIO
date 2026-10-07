@@ -196,6 +196,7 @@ export class WorldScene extends Phaser.Scene {
         quality,
       }),
     );
+    this.audio?.attachUi(this.hud.intents, this.hud.rootElement);
     this.pause = this.scope.addDestroyable(
       new PauseController({
         surface: this.hud,
