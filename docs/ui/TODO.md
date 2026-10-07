@@ -161,6 +161,8 @@ uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer aileler
       hareket kaydı, ses ve imleç örnekleri, fare/kol/dokunma. Kapanır: ilk yanıt p95<100 ms,
       CPU/sunum profili, başlangıç farkları tek tek incelenir; **kullanıcı görsel + ses
       kabulü kayıtlı** (reddedilirse yayılım durur, kimlik düzeltilir).
+      Görsel kimlik kabulü 2026-10-07'de kayıtlıdır ([VERIFICATION](VERIFICATION.md)); bu görevde kalan
+      kabul ses (kulak) kararı ve cihazda canlı histir.
       Açık ölçüm bulgusu: başsız WebKit'te girdi→kare p95 ≈105–115 ms (`latency.spec.ts` bunu `fail` kararıyla
       rapora yazar, kapı yapmaz; ölçüm kendi harnesinde ≈85 ms çıkar, izleme maliyeti dahil spec'te yüksek).
       İlk bulgudan sonra KİMLİK sekmesi hafifletildi (hücre başına veri URL'li imleç yerine üzerine gelince

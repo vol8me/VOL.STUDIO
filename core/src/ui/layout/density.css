@@ -11,8 +11,8 @@
  * Kol/trackpad ile kullanılan Deck'te fareye geçiş (ince işaretçi) kol hedeflerini
  * küçültmemeli; bu yüzden hedef tabanı anlık işaretçiye değil cihaz profiline bağlanır.
  */
-:root[data-vol-density='compact'],
-[data-vol-density='compact'] {
+[data-vol-density='compact'],
+:root[data-vol-density='compact'] {
   --vol-space-xs: 3px;
   --vol-space-sm: 6px;
   --vol-space-md: 12px;
@@ -20,8 +20,8 @@
   --vol-space-xl: 36px;
 }
 
-:root[data-vol-density='comfortable'],
-[data-vol-density='comfortable'] {
+[data-vol-density='comfortable'],
+:root[data-vol-density='comfortable'] {
   --vol-space-xs: 4px;
   --vol-space-sm: 8px;
   --vol-space-md: 16px;
@@ -29,8 +29,8 @@
   --vol-space-xl: 48px;
 }
 
-:root[data-vol-density='spacious'],
-[data-vol-density='spacious'] {
+[data-vol-density='spacious'],
+:root[data-vol-density='spacious'] {
   --vol-space-xs: 5px;
   --vol-space-sm: 10px;
   --vol-space-md: 20px;
@@ -38,7 +38,7 @@
   --vol-space-xl: 60px;
 }
 
-:root[data-vol-target='large'],
-[data-vol-target='large'] {
+[data-vol-target='large'],
+:root[data-vol-target='large'] {
   --vol-hit-target-min: 44px;
 }

@@ -276,6 +276,10 @@
 }
 
 .vol-pause-resume-button__counter {
+  /* Sayaç basamakları arasında yazı tipi tabular desteklemese de genişlik sabit kalır (WebKit'te 1 px oynama). */
+  display: inline-block;
+  min-width: 4ch;
+  text-align: center;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
   color: var(--vol-ui-text-secondary);

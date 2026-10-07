@@ -7,7 +7,7 @@
   top: 0;
   left: 0;
   z-index: 2147483000;
-  color: #fff;
+  color: var(--vol-ui-text);
   contain: layout paint;
   filter: drop-shadow(0 0 1px #10141a) drop-shadow(0 0 5px currentcolor);
   pointer-events: none;

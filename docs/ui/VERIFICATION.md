@@ -271,3 +271,12 @@ Piksel temelini güncellemek insan kabulü değildir. Native kaynak temizliği,
 Sonraki faz, doğrudan kapısı düşen ön koşulu atlamaz. Kapanış şartı yetkili
 TODO görevinin her kabul satırıdır; kapı yeşilliği kapsam eksikliğini örtmez.
 Kalan VT/SD işleri yanlışlıkla UI başarısı üzerinden kapatılmaz.
+
+## İnsan kabul kayıtları
+
+Yalnız güncel karar durumu; kişisel tanımlayıcı yok.
+
+| Tarih      | Kapsam                                                                                                       | Karar                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-07 | Görsel kimlik: iki skin (çelik, aurum), malzeme dili (düğme, bar, çerçeve), ikon seti (Phosphor Fill), imleç | **Kabul** (ekran görüntüleriyle, "çok hoşuma gitti, tam onay"). Cihazda canlı his, dokunma/kol ve native WebView ayrı kalır. |
+| 2026-10-07 | UI sesleri (23 olay, iki palet)                                                                              | **Açık**: kulakla karar henüz yok (UI-02.9); ses ekran görüntüsüyle kabul edilemez.                                          |
