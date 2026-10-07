@@ -39,12 +39,32 @@ export function buildKimlikTab(): { element: HTMLElement; destroy: () => void } 
   void loadIconSprite('game');
 
   let size: number = SIZES[2];
-  const cells: Icon[] = [];
+  let category: (typeof CATEGORY_ORDER)[number] = CATEGORY_ORDER[0];
+  let cells: Icon[] = [];
   const gallery = document.createElement('div');
   gallery.className = 'vol-showcase-icon-gallery';
+  const grid = document.createElement('div');
+  grid.className = 'vol-showcase-icon-grid';
 
-  const renderSize = (): void => {
-    for (const icon of cells) icon.setSize(size);
+  // Yalnız seçili kategorinin ikonları DOM'dadır: 191 ikonu birden boyamak sekme geçişini yavaşlatıyordu.
+  const renderGrid = (): void => {
+    for (const icon of cells) icon.destroy();
+    cells = [];
+    grid.dataset.kimlikCategory = category;
+    const names: readonly CatalogIconName[] = ICON_CATEGORIES[category];
+    grid.replaceChildren(
+      ...names.map((name) => {
+        const cell = document.createElement('div');
+        cell.className = 'vol-showcase-icon-cell';
+        const icon = new Icon({ name, size, label: name });
+        cells.push(icon);
+        const label = document.createElement('span');
+        label.className = 'vol-showcase-icon-cell__name';
+        label.textContent = name;
+        cell.append(icon.element, label);
+        return cell;
+      }),
+    );
   };
 
   const sizePicker = new SegmentedControl({
@@ -53,51 +73,42 @@ export function buildKimlikTab(): { element: HTMLElement; destroy: () => void } 
     ariaLabel: i18next.t('volui:kimlik.iconSize'),
     onInput: (value) => {
       size = Number(value);
-      renderSize();
+      for (const icon of cells) icon.setSize(size);
     },
   });
-  disposables.addDestroyables(sizePicker);
+  const categoryPicker = new SegmentedControl({
+    options: CATEGORY_ORDER.map((value) => ({
+      value,
+      label: i18next.t(`volui:kimlik.categories.${value}`),
+    })),
+    value: category,
+    ariaLabel: i18next.t('volui:kimlik.iconCategory'),
+    onInput: (value) => {
+      category = value as (typeof CATEGORY_ORDER)[number];
+      renderGrid();
+    },
+  });
+  disposables.addDestroyables(sizePicker, categoryPicker);
   const hint = new Text(i18next.t('volui:kimlik.iconHint'), { variant: 'muted' });
   disposables.addDestroyables(hint);
   const toolbar = document.createElement('div');
   toolbar.className = 'vol-showcase-ses__row';
   toolbar.append(sizePicker.element);
+  renderGrid();
 
   const cards = [
     card(
-      i18next.t('volui:kimlik.iconSize'),
+      i18next.t('volui:kimlik.iconGallery'),
       (() => {
         const body = document.createElement('div');
         body.className = 'vol-showcase-panel-demo';
-        body.append(hint.element, toolbar);
+        body.append(hint.element, toolbar, categoryPicker.element, grid);
         return body;
       })(),
-      { span: 6 },
+      { spanAll: true },
     ),
   ];
 
-  for (const category of CATEGORY_ORDER) {
-    const names: readonly CatalogIconName[] = ICON_CATEGORIES[category];
-    const grid = document.createElement('div');
-    grid.className = 'vol-showcase-icon-grid';
-    grid.dataset.kimlikCategory = category;
-    for (const name of names) {
-      const cell = document.createElement('div');
-      cell.className = 'vol-showcase-icon-cell';
-      const icon = new Icon({ name, size, label: name });
-      cells.push(icon);
-      const label = document.createElement('span');
-      label.className = 'vol-showcase-icon-cell__name';
-      label.textContent = name;
-      cell.append(icon.element, label);
-      grid.appendChild(cell);
-    }
-    cards.push(
-      card(i18next.t(`volui:kimlik.categories.${category}`), grid, {
-        span: 6,
-      }),
-    );
-  }
   const cursors = buildCursorSection();
   cards.push(...cursors.cards);
   const material = buildMaterialSection();
@@ -111,7 +122,7 @@ export function buildKimlikTab(): { element: HTMLElement; destroy: () => void } 
       cursors.destroy();
       material.destroy();
       for (const icon of cells) icon.destroy();
-      cells.length = 0;
+      cells = [];
       disposables.dispose();
     },
   };

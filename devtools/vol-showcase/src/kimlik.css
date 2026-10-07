@@ -35,3 +35,17 @@
 .vol-showcase-material__frame .vol-text {
   color: var(--vol-ui-text-secondary);
 }
+
+/* Galeri kartı: seçici uzun kalsa da ızgara sütunlarını genişletmez, yatay kayar. */
+.vol-showcase-icon-gallery .vol-showcase-card {
+  min-width: 0;
+}
+
+.vol-showcase-icon-gallery .vol-segmented {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.vol-showcase-icon-gallery .vol-palette-grid .vol-showcase-card--span-all {
+  grid-column: 1 / -1;
+}

@@ -37,8 +37,16 @@ function cursorCell(
   preview.className = 'vol-showcase-cursor-preview';
   const svg = controller.previewSvg(id, tone, 48);
   if (svg) preview.innerHTML = svg;
-  const css = controller.cssValue(id, tone);
-  if (css) cell.style.cursor = css;
+  // Gerçek imleç görseli üzerine gelince kurulur: 60 hücreye baştan veri URL'si yazmak sekmenin ilk
+  // gösterimini (başsız WebKit'te ≈150 ms) yavaşlatıyordu.
+  cell.addEventListener(
+    'pointerenter',
+    () => {
+      const css = controller.cssValue(id, tone);
+      if (css) cell.style.cursor = css;
+    },
+    { once: true },
+  );
   cell.append(preview, labelOf(id));
   return cell;
 }

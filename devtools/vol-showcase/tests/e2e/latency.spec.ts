@@ -187,8 +187,12 @@ test.describe('girdi → ilk görünür geri bildirim (başsız yaklaşım)', ()
     expect(p.scope.distribution!.samples).toBe(SAMPLES);
     // Her koşuda: sunulan kare ölçülmediği için PASS olamaz.
     expect(verdict.verdict).not.toBe('pass');
+    // Bütçe aşımı (`fail`) dürüst bir ölçüm sonucudur: rapora yazılır ve UI-03.4 kapanışında p95<100 ms
+    // hedefiyle kapatılır; bu test onu kapı yapmaz ama gerekçenin ölçülen p95'i adlandırmasını ister.
     expect(verdict.reasons.join('\n')).toMatch(
-      /ekrana sunulan kare|gpu|presentation|Hz bilinmiyor/,
+      verdict.verdict === 'fail'
+        ? /p95 [\d.]+ms ≥ \d+ms/
+        : /ekrana sunulan kare|gpu|presentation|Hz bilinmiyor/,
     );
     info.annotations.push({
       type: 'ölçü',

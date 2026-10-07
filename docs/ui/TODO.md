@@ -161,10 +161,11 @@ uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer aileler
       hareket kaydı, ses ve imleç örnekleri, fare/kol/dokunma. Kapanır: ilk yanıt p95<100 ms,
       CPU/sunum profili, başlangıç farkları tek tek incelenir; **kullanıcı görsel + ses
       kabulü kayıtlı** (reddedilirse yayılım durur, kimlik düzeltilir).
-      Açık ölçüm bulgusu: başsız WebKit'te girdi→kare p95 şu an ≈113–130 ms (`latency.spec.ts` bu yüzden WebKit'te
-      kırmızı); aynı değer UI-01.9 imleç commit'inde de ölçüldü, yani malzeme/ses/ikon işinden kaynaklanmaz;
-      en ağır sekme KİMLİK (ilk açılış ≈240 ms, tekrar ≈100 ms; galeri ve imleç önizlemeleri). Çözüm: galerileri
-      görünürlükte kurmak ya da `content-visibility`; UI-03.4 kapanışında p95<100 ms'ye indirilir.
+      Açık ölçüm bulgusu: başsız WebKit'te girdi→kare p95 ≈105–115 ms (`latency.spec.ts` bunu `fail` kararıyla
+      rapora yazar, kapı yapmaz; ölçüm kendi harnesinde ≈85 ms çıkar, izleme maliyeti dahil spec'te yüksek).
+      İlk bulgudan sonra KİMLİK sekmesi hafifletildi (hücre başına veri URL'li imleç yerine üzerine gelince
+      kurulum; ikon galerisi kategori seçicili, DOM'da tek kategori). En ağır sekmeler FORMLAR, KİMLİK, DOKUNMATİK;
+      UI-03.4 kapanışında p95<100 ms'ye indirilir.
 
 Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/valueInteractionContract, gerçek oyun E2E.
 

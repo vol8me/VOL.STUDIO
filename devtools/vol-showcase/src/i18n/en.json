@@ -1020,6 +1020,8 @@
       "juiceFlash": "Hit flash",
       "juiceShake": "Shake",
       "juiceEnter": "Panel enter"
-    }
+    },
+    "iconGallery": "Icon gallery",
+    "iconCategory": "Icon category"
   }
 }
