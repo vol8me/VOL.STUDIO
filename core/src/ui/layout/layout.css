@@ -168,11 +168,6 @@
   outline-offset: -2px;
 }
 
-.vol-tabs__panels:focus-visible {
-  outline: 2px solid var(--vol-ui-focus-ring);
-  outline-offset: -2px;
-}
-
 .vol-tabs__panels {
   min-height: 0;
   padding: var(--vol-space-xl);
@@ -191,6 +186,11 @@
    * düşer ve sayfa yatay kayar (bkz. vol-showcase `layout.spec.ts`).
    */
   position: relative;
+}
+
+.vol-tabs__panels:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
 }
 
 .vol-tabs--vertical {
