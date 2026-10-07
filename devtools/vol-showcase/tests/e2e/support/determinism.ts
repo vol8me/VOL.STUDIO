@@ -133,6 +133,14 @@ export async function selectTab(page: Page, tab: ShowcaseTab): Promise<void> {
   // sabit önek yerine sonek eşleşmesi kullanılır.
   await page.locator(`[role="tab"][id$="-tab-${tab}"]`).click();
   await page.locator(`[role="tabpanel"][id$="-panel-${tab}"]:not([aria-hidden="true"])`).waitFor();
+  // Yerleşim otursun: sanal liste ve ölçüm gözlemcileri satırlarını ilk karelerde kurar; geometri/eleman
+  // sayısı sondaları bu oturmadan ÖNCE anlık görüntü alırsa sahte "kayma" görür.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
 }
 
 /**
