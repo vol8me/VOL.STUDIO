@@ -446,3 +446,35 @@
   white-space: nowrap;
   padding-inline: var(--vol-space-md);
 }
+
+/* ── Açılır yüzeyler (popup, popover, bağlam menüsü) ─────────────────────── */
+
+/* Keyline halkası 5 px içeridedir; içerik halkaya yapışmasın diye iç boşluk halkayı aşar. */
+.vol-popup {
+  padding: var(--vol-space-sm);
+  --vol-popup-danger-text: color-mix(in srgb, var(--vol-ui-danger-solid) 55%, var(--vol-ui-text));
+}
+
+.vol-popover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-md);
+  max-width: min(320px, 90vw);
+}
+
+/* Bağlam menüsü satırı: üzerine gelince kuyuda marka çubuğu (palet satırıyla aynı dil). */
+.vol-context-menu__item:hover:not(:disabled) {
+  background-color: var(--vol-ui-surface-2);
+  box-shadow: inset 3px 0 0 var(--vol-ui-brand-solid);
+}
+
+.vol-context-menu__item--danger,
+.vol-context-menu__item--danger .vol-context-menu__item-icon {
+  color: var(--vol-popup-danger-text);
+}
+
+.vol-context-menu__item--danger:hover:not(:disabled) {
+  background-color: var(--vol-ui-danger-subtle);
+  box-shadow: inset 3px 0 0 var(--vol-ui-danger-solid);
+}
