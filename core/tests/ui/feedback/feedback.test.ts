@@ -573,3 +573,39 @@ describe('TimerBar', () => {
     clearSpy.mockRestore();
   });
 });
+
+describe('Bar: hasar gecikme şeridi', () => {
+  it('can ve dayanıklılıkta varsayılan açık, diğerlerinde kapalı; trail:false ile kapanır', () => {
+    expect(
+      new Bar({ variant: 'health', max: 100 }).element.querySelector('.vol-bar__trail'),
+    ).not.toBeNull();
+    expect(
+      new Bar({ variant: 'stamina', max: 100 }).element.querySelector('.vol-bar__trail'),
+    ).not.toBeNull();
+    expect(
+      new Bar({ variant: 'cooldown', max: 100 }).element.querySelector('.vol-bar__trail'),
+    ).toBeNull();
+    expect(
+      new Bar({ variant: 'health', max: 100, trail: false }).element.querySelector(
+        '.vol-bar__trail',
+      ),
+    ).toBeNull();
+  });
+
+  it('düşüşte şerit hedefe geçişli (gecikmeli) iner, artışta anında izler; dikeyde yükseklik kullanır', () => {
+    const bar = new Bar({ variant: 'health', max: 100, value: 100, animateMs: 0 });
+    const trail = bar.element.querySelector<HTMLElement>('.vol-bar__trail')!;
+    expect(trail.style.width).toBe('100%');
+    bar.setValue(40);
+    expect(trail.style.width).toBe('40%');
+    expect(trail.classList.contains('vol-bar__trail--instant')).toBe(false);
+    bar.setValue(70);
+    expect(trail.style.width).toBe('70%');
+    expect(trail.classList.contains('vol-bar__trail--instant')).toBe(true);
+
+    const vertical = new Bar({ variant: 'health', max: 10, value: 10, orientation: 'vertical' });
+    const verticalTrail = vertical.element.querySelector<HTMLElement>('.vol-bar__trail')!;
+    vertical.setValue(5);
+    expect(verticalTrail.style.height).toBe('50%');
+  });
+});

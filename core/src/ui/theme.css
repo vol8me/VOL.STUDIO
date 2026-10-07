@@ -158,6 +158,8 @@
   --vol-motion-juice-panel-in-scale: 0.96;
   --vol-motion-juice-shake-distance: 4px;
   --vol-motion-juice-shake-duration: 220ms;
+  --vol-motion-juice-trail-delay: 420ms;
+  --vol-motion-juice-trail-duration: 380ms;
   /* @generated:motion:end */
   --vol-font-family: 'Jura', sans-serif;
   --vol-font-family-body: 'Exo 2', sans-serif;

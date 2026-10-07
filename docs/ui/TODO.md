@@ -98,12 +98,13 @@ Sahip CORE UI. Tema/yoğunluk/hareket sahipleri (UI-01.1–01.3, 01.5) hazırdı
       backplate'li karmaşık yüzeyler, axe'in hesaplayamadığı bar etiketi ve malzeme örneği
       kontrastlarının son renk ölçümü (kayıtlı: `axeExceptions.json`, sahip UI-01.7).
 - [ ] **UI-01.10 — Juice ve hareket ilkelleri (kalan).** Yapıldı: `MOTION_JUICE` adlı ilkeller
-      (basma squash'ı, kaldırma, odak nabzı süresi, sayı patlaması, vuruş flaşı, panel girişi,
-      sınırlı sarsıntı; `--vol-motion-juice-*`), düğmelerde kaldırma/bastırma/odak nabzı,
-      `playJuice` ile sayı patlaması/flaş/sarsıntı/panel girişi (sınıf tabanlı, hareket
-      azaltılmışta ölçek ve sarsıntı yok, flaş kalır); vitrinde KİMLİK sekmesinde denenir.
-      Kalan: Bar/Counter/Panel bileşenlerine bağlanma (hasar/ödül flaşı, değer tween'i),
-      eşzamanlı grup bütçesi, WCAG flaş sınırı ve CPU/GPU maliyet ölçümü.
+      (basma squash'ı, kaldırma, odak nabzı, sayı patlaması, vuruş flaşı, panel girişi, sınırlı
+      sarsıntı, hasar şeridi gecikmesi; `--vol-motion-juice-*`), düğmelerde kaldırma/bastırma/odak
+      nabzı, `playJuice` (pop/flash/shake/enter; hareket azaltılmışta ölçek ve sarsıntı yok, flaş
+      kalır); Bar hasar gecikme şeridi (düşüşte eski seviye kısa süre kalır, sonra erir) ve vuruş
+      flaşı (`health`/`stamina` varsayılan, `trail` seçeneği); düğme hata durumu sarsıntısı.
+      Kalan: Counter sayı patlaması/değer tween'i (overshoot), panel giriş stagger'ı, eşzamanlı
+      grup bütçesi, WCAG flaş sınırının ölçümü ve CPU/GPU maliyeti.
 
 Faz testi: tema/malzeme/ikon/imleç modül adlı testleri, colorSync/cssConstantSync/publicSurface,
 iki motor E2E (geometri, axe, kare ölçümü), piksel temeli (win32).

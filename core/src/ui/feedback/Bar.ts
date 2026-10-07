@@ -1,3 +1,4 @@
+import { playJuice } from '../motion/juice';
 import { animateValue } from '../animation';
 import { UI_RATIO, UI_TIMING } from '../../constants';
 import { i18next } from '../../i18n/I18n';
@@ -46,6 +47,8 @@ export interface BarOptions {
    * Düz string dinamik olarak güncellenecekse `setLabel()` kullanılmalıdır.
    */
   label?: BarLabel;
+  /** Hasar gecikme şeridi; verilmezse `health` ve `stamina` varyantlarında açık. */
+  trail?: boolean;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
   /**
@@ -62,6 +65,7 @@ let barInstanceCounter = 0;
 export class Bar {
   readonly element: HTMLDivElement;
   private readonly fillElement: HTMLDivElement;
+  private trailElement: HTMLDivElement | null = null;
   private labelElement: HTMLSpanElement | null;
   private readonly variant: BarVariant;
   private readonly orientation: BarOrientation;
@@ -116,6 +120,14 @@ export class Bar {
     // görsel eksen tek başına erişilebilirlik ağacına yansımaz.
     if (orientation === 'vertical') this.element.setAttribute('aria-orientation', 'vertical');
 
+    // Hasar gecikme şeridi: değer düşünce eski seviye kısa süre kalır, sonra erir (gecikme ve süre
+    // `MOTION_JUICE`); artışta anında izler. Yalnız tükenen kaynaklarda (can, dayanıklılık) varsayılan açık.
+    if (options.trail ?? (variant === 'health' || variant === 'stamina')) {
+      this.trailElement = document.createElement('div');
+      this.trailElement.className = 'vol-bar__trail';
+      this.element.appendChild(this.trailElement);
+    }
+
     this.fillElement = document.createElement('div');
     this.fillElement.className = 'vol-bar__fill';
     this.element.appendChild(this.fillElement);
@@ -137,6 +149,7 @@ export class Bar {
     }
 
     this.renderFill(this.value);
+    this.renderTrail(this.value, true);
     this.renderAria();
 
     i18next.on('languageChanged', this.onLanguageChanged);
@@ -155,6 +168,9 @@ export class Bar {
     const from = this.value;
     this.value = clamped;
     this.renderAria();
+    this.renderTrail(clamped, clamped >= from);
+    // Vuruş flaşı: şeritli (tükenen) barlarda düşüş kısa bir parlama taşır; tek vuruşta tek flaş.
+    if (this.trailElement && clamped < from) playJuice(this.element, 'flash');
 
     this.cancelAnimation?.();
 
@@ -204,6 +220,17 @@ export class Bar {
    */
   private resolveAriaLabel(): string {
     return this.ariaLabel ?? i18next.t('core:bar.ariaLabel');
+  }
+
+  /** Şerit hedef değeri izler: düşüşte geciktirilmiş erime (CSS geçişi), artışta anında. */
+  private renderTrail(value: number, instant: boolean): void {
+    const trail = this.trailElement;
+    if (!trail) return;
+    const ratio = this.max > 0 ? value / this.max : 0;
+    const percent = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
+    trail.classList.toggle('vol-bar__trail--instant', instant);
+    if (this.orientation === 'vertical') trail.style.height = percent;
+    else trail.style.width = percent;
   }
 
   private renderFill(value: number): void {

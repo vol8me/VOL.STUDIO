@@ -69,6 +69,8 @@ export const MOTION_JUICE = {
   panelInScale: 0.96,
   shakeDistancePx: 4,
   shakeDurationMs: 220,
+  trailDelayMs: 420,
+  trailDurationMs: 380,
 } as const;
 
 /** UI kökü başına eşzamanlı sınırlar: semantik geçiş grubu, dekor parçacığı, etkin blur. */

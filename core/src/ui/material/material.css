@@ -408,6 +408,8 @@
 }
 
 .vol-bar__fill {
+  position: relative;
+  z-index: 1;
   background-image:
     linear-gradient(180deg, rgb(255 255 255 / 34%) 0, rgb(255 255 255 / 6%) 46%, transparent 52%),
     repeating-linear-gradient(
@@ -533,5 +535,37 @@
 
   .vol-juice--shake {
     animation: vol-juice-flash var(--vol-motion-juice-hit-flash) var(--vol-motion-ease-decelerate);
+  }
+}
+
+/* Hasar gecikme şeridi: dolgunun arkasında; düşüşte eski seviye kısa süre kalır, sonra erir. */
+.vol-bar__trail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 0;
+  background-color: var(--vol-ui-danger-solid);
+  opacity: 0.7;
+  transition: width var(--vol-motion-juice-trail-duration) var(--vol-motion-ease-standard)
+    var(--vol-motion-juice-trail-delay);
+}
+
+.vol-bar--vertical .vol-bar__trail {
+  inset: auto 0 0;
+  width: 100%;
+  transition-property: height;
+}
+
+.vol-bar__trail--instant {
+  transition-duration: 0s;
+  transition-delay: 0s;
+}
+
+.vol-bar__label {
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-bar__trail {
+    transition: none;
   }
 }
