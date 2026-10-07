@@ -331,6 +331,7 @@ function buildChargeButtonDemo(disposables: DisposableScope): HTMLElement {
 
   const chargeButton = new ChargeButton({
     label: i18next.t('volui:touch.hit'),
+    icon: svgIcon('sword'),
     chargeDurationMs: DEMO_TIMEOUTS.chargeDuration,
     onChargeProgress: (progress) => {
       result.setContent(i18next.t('volui:touch.charging', { n: Math.round(progress * 100) }));
@@ -764,7 +765,7 @@ function buildSwipeGestureZoneDemo(disposables: DisposableScope): HTMLElement {
 
   const surface = document.createElement('div');
   surface.className = 'vol-showcase-swipe-zone-surface';
-  surface.textContent = '⇅ ⇄';
+  surface.append(svgIcon('range', 44));
 
   const zone = new SwipeGestureZone({
     content: surface,

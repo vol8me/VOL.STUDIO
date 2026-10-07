@@ -618,10 +618,8 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  background: var(--vol-ui-surface-2);
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-md);
-  color: var(--vol-ui-text-muted);
+  background: transparent;
+  color: var(--vol-ui-text-secondary);
   font-size: 28px;
   transition: transform var(--vol-transition-fast);
 }

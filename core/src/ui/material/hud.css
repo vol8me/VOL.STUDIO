@@ -248,3 +248,58 @@
     inset 0 2px 0 var(--vol-mat-edge-dark),
     0 0 0 3px var(--vol-ui-glow-brand);
 }
+
+/* Kart yığını ve karusel: aynı plaka malzemesi; kabul/ret düğmeleri durum rengini ikonda taşır. */
+.vol-card-stack__card {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 4px 0 var(--vol-mat-drop);
+}
+
+.vol-card-stack__action,
+.vol-carousel__arrow {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-card-stack__action {
+  width: 58px;
+  height: 58px;
+}
+
+.vol-card-stack__action svg {
+  width: 28px;
+  height: 28px;
+}
+
+.vol-card-stack__action--reject {
+  color: var(--vol-ui-danger-border);
+}
+
+.vol-card-stack__action--accept {
+  color: var(--vol-ui-success-border);
+}
+
+.vol-carousel__arrow svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Kaydırma ve çoklu dokunma alanları: oyuk kuyu. */
+.vol-swipe-zone,
+.vol-multitouch-zone {
+  background-color: var(--vol-ui-well);
+  border: 1px solid var(--vol-ui-frame-hairline);
+  border-radius: var(--vol-radius-sm);
+  box-shadow:
+    inset 0 3px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
