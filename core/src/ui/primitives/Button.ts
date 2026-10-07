@@ -31,6 +31,8 @@ export class Button {
   private boundHandleClick: (event: Event) => void;
   private readonly scope = new DisposableScope();
   private loading = false;
+  /** Sahibin (çağıranın) istediği devre dışı durumu; yükleme bunu ezmez, bitince geri verir. */
+  private ownerDisabled: boolean;
   private errored = false;
 
   constructor(label: string, options: ButtonOptions = {}) {
@@ -46,6 +48,7 @@ export class Button {
     this.element.type = 'button';
     this.element.className = this.buildClassName(variant, size, fullWidth);
     this.element.disabled = disabled;
+    this.ownerDisabled = disabled;
 
     if (options.iconLeft) {
       this.element.appendChild(this.buildIcon(options.iconLeft));
@@ -91,13 +94,15 @@ export class Button {
   }
 
   setDisabled(disabled: boolean): void {
-    this.element.disabled = disabled;
+    this.ownerDisabled = disabled;
+    this.element.disabled = disabled || this.loading;
   }
 
   setLoading(loading: boolean): void {
     this.loading = loading;
     this.element.classList.toggle('vol-button--loading', loading);
-    this.element.disabled = loading;
+    // Yükleme biterken dışarıdan verilmiş `disabled` korunur (async handler sırasında devre dışı bırakılan düğme açılmaz).
+    this.element.disabled = loading || this.ownerDisabled;
     // `disabled` görsel/etkileşim durumunu anlatır ama "meşgul"ü anlatmaz:
     // ekran okuyucu, işlemin sürdüğünü yalnızca aria-busy ile bildirir.
     this.element.setAttribute('aria-busy', String(loading));

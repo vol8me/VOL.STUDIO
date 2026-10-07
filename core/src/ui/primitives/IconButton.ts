@@ -35,6 +35,8 @@ export class IconButton {
   private readonly boundHandleClick: (event: Event) => void;
   private readonly scope = new DisposableScope();
   private loading = false;
+  /** Sahibin (çağıranın) istediği devre dışı durumu; yükleme bunu ezmez, bitince geri verir. */
+  private ownerDisabled: boolean;
   private errored = false;
 
   constructor(icon: string | Node, options: IconButtonOptions) {
@@ -46,6 +48,7 @@ export class IconButton {
     this.element.setAttribute('aria-label', label);
     this.element.title = label;
     this.element.disabled = disabled;
+    this.ownerDisabled = disabled;
 
     this.iconWrapper = document.createElement('span');
     this.iconWrapper.className = 'vol-icon-button__icon';
@@ -79,14 +82,16 @@ export class IconButton {
   }
 
   setDisabled(disabled: boolean): void {
-    this.element.disabled = disabled;
+    this.ownerDisabled = disabled;
+    this.element.disabled = disabled || this.loading;
   }
 
   /** Asenkron tıklama sürerken meşgul durumu — `Button.setLoading` ile aynı sözleşme. */
   setLoading(loading: boolean): void {
     this.loading = loading;
     this.element.classList.toggle('vol-icon-button--loading', loading);
-    this.element.disabled = loading;
+    // Yükleme biterken dışarıdan verilmiş `disabled` korunur (async handler sırasında devre dışı bırakılan düğme açılmaz).
+    this.element.disabled = loading || this.ownerDisabled;
     this.element.setAttribute('aria-busy', String(loading));
   }
 

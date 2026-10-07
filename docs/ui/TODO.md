@@ -162,9 +162,13 @@ uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer aileler
       bastırma, odak nabzı), varyant×boyut×durum (normal/hover/basılı/odak/devre dışı/yükleme/hata);
       hata durumu (handler hata fırlatınca danger kenarı, sarsıntı, `data-state="error"`, düğme
       yeniden kullanılabilir, sonraki tıklamada temizlenir); yükleme sırasında etiket erişilebilirlik
-      ağacında kalır (axe `button-name` kaydı kapandı). Kalan: ToolButton/Toolbar gezici tabindex
-      (bağımsız/çoklu seçim/dikey/tümü devre dışı), async bitişinde dışarıdan gelen `disabled`
-      korunumu, yerel button Enter/Space tek olay kanıtı, sesin açık/kapalı eşdeğer işlevi.
+      ağacında kalır (axe `button-name` kaydı kapandı). Yapıldı (2026-10-08): async bitişinde
+      dışarıdan verilmiş `disabled` korunur (handler sürerken kapatılan düğme bitişte açılmaz;
+      sürerken açılan, bitene kadar kapalı kalır; Button ve IconButton), Toolbar gezici tabindex uç
+      durumları testli (tümü devre dışı → durak yok, biri açılınca durak o; dikey çoklu seçimde
+      yalnız etkin düğmeler dolaşılır, yatay ok dikeyde gezinmez; odaklı düğme kapanınca durak
+      komşuya geçer) — `buttonDisabledContract.test.ts`; yerel button Enter ve Space tek niyet
+      kanıtı `ses.spec.ts`te iki motorda var. Kalan: sesin açık/kapalı eşdeğer işlevi (UI-02.8 ile).
 - [ ] **UI-03.2 — Hold/Charge/LongPress (kalan).** Yapıldı: aynı yüzey malzemesi (kabartma, gömülü
       basılı durum, devre dışı); iptal sözleşmesi kanıtlı (`holdButtons.test.ts`): pointercancel,
       yakalama kaybı, sayfa gizlenmesi, devre dışı ve söküm basışı bırakır, iptal ASLA eylem sayılmaz
