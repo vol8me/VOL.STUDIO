@@ -953,5 +953,80 @@
     "id": "zoomOut",
     "category": "chrome",
     "source": "phosphor/magnifying-glass-minus"
+  },
+  {
+    "id": "apps",
+    "category": "chrome",
+    "source": "phosphor/squares-four"
+  },
+  {
+    "id": "audio",
+    "category": "chrome",
+    "source": "phosphor/waveform"
+  },
+  {
+    "id": "collapse",
+    "category": "chrome",
+    "source": "phosphor/arrows-in-simple"
+  },
+  {
+    "id": "expand",
+    "category": "chrome",
+    "source": "phosphor/arrows-out-simple"
+  },
+  {
+    "id": "file",
+    "category": "chrome",
+    "source": "phosphor/file"
+  },
+  {
+    "id": "font",
+    "category": "chrome",
+    "source": "phosphor/text-aa"
+  },
+  {
+    "id": "grid",
+    "category": "chrome",
+    "source": "phosphor/grid-four"
+  },
+  {
+    "id": "image",
+    "category": "chrome",
+    "source": "phosphor/image"
+  },
+  {
+    "id": "layers",
+    "category": "chrome",
+    "source": "phosphor/stack"
+  },
+  {
+    "id": "layerAdd",
+    "category": "chrome",
+    "source": "phosphor/stack-plus"
+  },
+  {
+    "id": "moveUp",
+    "category": "chrome",
+    "source": "phosphor/arrow-line-up"
+  },
+  {
+    "id": "moveDown",
+    "category": "chrome",
+    "source": "phosphor/arrow-line-down"
+  },
+  {
+    "id": "eyeOff",
+    "category": "chrome",
+    "source": "phosphor/eye-slash"
+  },
+  {
+    "id": "eraser",
+    "category": "chrome",
+    "source": "phosphor/eraser"
+  },
+  {
+    "id": "fit",
+    "category": "chrome",
+    "source": "phosphor/frame-corners"
   }
 ]

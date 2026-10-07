@@ -47,6 +47,55 @@ export const ITEM_ICONS = [
 ] as const;
 export type ItemIconName = (typeof ITEM_ICONS)[number];
 
+export const CHROME_ICONS = [
+  'apps',
+  'arrowDown',
+  'arrowLeft',
+  'arrowRight',
+  'arrowUp',
+  'audio',
+  'check',
+  'checkCircle',
+  'chevronDown',
+  'chevronLeft',
+  'chevronRight',
+  'chevronUp',
+  'close',
+  'collapse',
+  'dot',
+  'dragHandle',
+  'eraser',
+  'error',
+  'expand',
+  'eyeOff',
+  'fastForward',
+  'file',
+  'fit',
+  'font',
+  'grid',
+  'image',
+  'infoCircle',
+  'layerAdd',
+  'layers',
+  'menu',
+  'minus',
+  'more',
+  'moveDown',
+  'moveUp',
+  'pause',
+  'play',
+  'plus',
+  'redo',
+  'refresh',
+  'rewind',
+  'stop',
+  'undo',
+  'warning',
+  'zoomIn',
+  'zoomOut',
+] as const;
+export type ChromeIconName = (typeof CHROME_ICONS)[number];
+
 export const UNIT_ICONS = [
   'archer',
   'cavalry',
@@ -111,40 +160,6 @@ export const STATUS_ICONS = [
   'xp',
 ] as const;
 export type StatusIconName = (typeof STATUS_ICONS)[number];
-
-export const CHROME_ICONS = [
-  'arrowDown',
-  'arrowLeft',
-  'arrowRight',
-  'arrowUp',
-  'check',
-  'checkCircle',
-  'chevronDown',
-  'chevronLeft',
-  'chevronRight',
-  'chevronUp',
-  'close',
-  'dot',
-  'dragHandle',
-  'error',
-  'fastForward',
-  'infoCircle',
-  'menu',
-  'minus',
-  'more',
-  'pause',
-  'play',
-  'plus',
-  'redo',
-  'refresh',
-  'rewind',
-  'stop',
-  'undo',
-  'warning',
-  'zoomIn',
-  'zoomOut',
-] as const;
-export type ChromeIconName = (typeof CHROME_ICONS)[number];
 
 export const META_ICONS = [
   'bell',
@@ -230,10 +245,10 @@ export type ResourceIconName = (typeof RESOURCE_ICONS)[number];
 export type IconName =
   | CommandIconName
   | ItemIconName
+  | ChromeIconName
   | UnitIconName
   | BuildingIconName
   | StatusIconName
-  | ChromeIconName
   | MetaIconName
   | ProjectileIconName
   | ResourceIconName;
@@ -241,10 +256,10 @@ export type IconName =
 export const ICON_CATEGORIES = {
   command: COMMAND_ICONS,
   item: ITEM_ICONS,
+  chrome: CHROME_ICONS,
   unit: UNIT_ICONS,
   building: BUILDING_ICONS,
   status: STATUS_ICONS,
-  chrome: CHROME_ICONS,
   meta: META_ICONS,
   projectile: PROJECTILE_ICONS,
   resource: RESOURCE_ICONS,

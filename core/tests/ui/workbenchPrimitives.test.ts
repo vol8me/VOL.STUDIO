@@ -9,13 +9,17 @@ import { KeyedVirtualList } from '../../src/ui/layout/KeyedVirtualList';
 describe('Icon', () => {
   it('güvenli SVG registry üretir ve dekoratif/etiketli kipleri ayırır', () => {
     expect(Object.keys(VOL_ICONS).length).toBeGreaterThan(10);
+    // Katalogda karşılığı olan eski ad (görsel) sprite simgesine bağlanır.
     const decorative = new Icon({ name: 'image', size: 20 });
     expect(decorative.element.getAttribute('aria-hidden')).toBe('true');
-    expect(decorative.element.querySelectorAll('path').length).toBeGreaterThan(0);
+    expect(decorative.element.querySelector('use')).not.toBeNull();
     expect(decorative.element.getAttribute('width')).toBe('20');
 
-    decorative.setName('audio');
-    expect(decorative.element.querySelectorAll('path')).toHaveLength(VOL_ICONS.audio.paths.length);
+    // Eşlemesiz tek eski ad eski çizgi gövdesiyle çizilir.
+    decorative.setName('merge-down');
+    expect(decorative.element.querySelectorAll('path')).toHaveLength(
+      VOL_ICONS['merge-down'].paths.length,
+    );
     const labelled = new Icon({ name: 'save', label: 'Kaydet', className: 'test-icon' });
     expect(labelled.element.getAttribute('role')).toBe('img');
     expect(labelled.element.getAttribute('aria-label')).toBe('Kaydet');

@@ -189,7 +189,7 @@ function buildIconRegistry(disposables: DisposableScope): HTMLElement {
   for (const name of Object.keys(VOL_ICONS) as (keyof typeof VOL_ICONS)[]) {
     const cell = document.createElement('div');
     cell.className = 'vol-showcase-workbench-icons__cell';
-    const instance = new Icon({ name, label: name });
+    const instance = new Icon({ name, label: name, size: 36 });
     disposables.addDestroyables(instance);
     const caption = document.createElement('span');
     caption.textContent = name;

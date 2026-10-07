@@ -6,9 +6,9 @@
   "sprites": {
     "chrome": {
       "file": "chrome.svg",
-      "count": 30,
-      "bytes": 8478,
-      "sha256": "34719219bdd09eeb894b221b0870bebdcbd5f0b32d65463d3c7027d42f3fe12c"
+      "count": 45,
+      "bytes": 14408,
+      "sha256": "dd7eac38bb9d76beaaa713ba4d9af82cb847768babf1fa1246532428a37994a6"
     },
     "game": {
       "file": "game.svg",
@@ -33,6 +33,14 @@
       "author": "VOL.STUDIO",
       "license": "proje",
       "source": "authored"
+    },
+    {
+      "id": "apps",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/squares-four"
     },
     {
       "id": "archer",
@@ -97,6 +105,14 @@
       "author": "Phosphor Icons",
       "license": "MIT",
       "source": "phosphor-icons/core@2.1.1/sword"
+    },
+    {
+      "id": "audio",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/waveform"
     },
     {
       "id": "axe",
@@ -355,6 +371,14 @@
       "source": "phosphor-icons/core@2.1.1/coin"
     },
     {
+      "id": "collapse",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrows-in-simple"
+    },
+    {
       "id": "combo",
       "sprite": "game",
       "category": "projectile",
@@ -443,6 +467,14 @@
       "source": "phosphor-icons/core@2.1.1/battery-charging"
     },
     {
+      "id": "eraser",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/eraser"
+    },
+    {
       "id": "error",
       "sprite": "chrome",
       "category": "chrome",
@@ -459,6 +491,14 @@
       "source": "phosphor-icons/core@2.1.1/sign-out"
     },
     {
+      "id": "expand",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrows-out-simple"
+    },
+    {
       "id": "extraLife",
       "sprite": "game",
       "category": "projectile",
@@ -473,6 +513,14 @@
       "author": "Phosphor Icons",
       "license": "MIT",
       "source": "phosphor-icons/core@2.1.1/eye"
+    },
+    {
+      "id": "eyeOff",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/eye-slash"
     },
     {
       "id": "eyedropper",
@@ -499,6 +547,14 @@
       "source": "phosphor-icons/core@2.1.1/fast-forward"
     },
     {
+      "id": "file",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/file"
+    },
+    {
       "id": "fireTower",
       "sprite": "game",
       "category": "building",
@@ -507,12 +563,28 @@
       "source": "authored"
     },
     {
+      "id": "fit",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/frame-corners"
+    },
+    {
       "id": "flag",
       "sprite": "game",
       "category": "meta",
       "author": "Phosphor Icons",
       "license": "MIT",
       "source": "phosphor-icons/core@2.1.1/flag"
+    },
+    {
+      "id": "font",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/text-aa"
     },
     {
       "id": "food",
@@ -611,6 +683,14 @@
       "source": "phosphor-icons/core@2.1.1/coins"
     },
     {
+      "id": "grid",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/grid-four"
+    },
+    {
       "id": "guardTower",
       "sprite": "game",
       "category": "building",
@@ -691,6 +771,14 @@
       "source": "phosphor-icons/core@2.1.1/house"
     },
     {
+      "id": "image",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/image"
+    },
+    {
       "id": "info",
       "sprite": "game",
       "category": "meta",
@@ -753,6 +841,22 @@
       "author": "Phosphor Icons",
       "license": "MIT",
       "source": "phosphor-icons/core@2.1.1/line-segment"
+    },
+    {
+      "id": "layerAdd",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/stack-plus"
+    },
+    {
+      "id": "layers",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/stack"
     },
     {
       "id": "level",
@@ -913,6 +1017,22 @@
       "author": "Phosphor Icons",
       "license": "MIT",
       "source": "phosphor-icons/core@2.1.1/navigation-arrow"
+    },
+    {
+      "id": "moveDown",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-line-down"
+    },
+    {
+      "id": "moveUp",
+      "sprite": "chrome",
+      "category": "chrome",
+      "author": "Phosphor Icons",
+      "license": "MIT",
+      "source": "phosphor-icons/core@2.1.1/arrow-line-up"
     },
     {
       "id": "music",

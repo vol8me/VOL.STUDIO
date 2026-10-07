@@ -1,0 +1,250 @@
+/*
+ * OYUN HUD VE KONTROL MALZEMESİ. `material.css`teki yüzey dilini oyun bileşenlerine yayar: HUD
+ * plakaları, yuva (slot) kuyuları, eylem çubuğu, inşa menüsü, joystick, tuş atama. Hepsi aynı
+ * kurallara uyar: düz arka plan rengi, bulanıksız iç gölgeler, tek ışık yönü (üstten), ikonlar
+ * 28 px altına inmez (büyük hedef, okunur siluet).
+ */
+
+/* HUD plakaları: yarı saydam overlay zemini korunur (oyun görünür), kenar ve kalınlık verilir. */
+.vol-resource-bar,
+.vol-round-counter,
+.vol-build-menu,
+.vol-selection-panel,
+.vol-minimap {
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-resource-counter__icon {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.vol-round-counter__round,
+.vol-counter {
+  letter-spacing: 0.03em;
+}
+
+/* Yuvalar: oyuk kuyu; içindeki öğe plaka gibi kabarık. */
+.vol-slot-grid__cell {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-slot-grid__cell--empty {
+  background-color: var(--vol-ui-well);
+}
+
+.vol-slot-grid__item {
+  background-color: var(--vol-ui-plate);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 6px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-slot-grid__item-icon {
+  width: 68%;
+  height: 68%;
+}
+
+/* Eylem çubuğu: plaka düğme gibi; etkin yuva marka rengine gömülür. */
+.vol-action-bar__slot {
+  background: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-action-bar__slot:hover:not(:disabled, .vol-action-bar__slot--active) {
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop),
+    0 0 0 2px var(--vol-ui-glow-brand);
+}
+
+.vol-action-bar__slot--active {
+  background: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 2px 0 var(--vol-mat-edge-dark),
+    inset 0 10px 0 rgb(0 0 0 / 18%),
+    0 0 0 3px var(--vol-ui-glow-brand);
+}
+
+.vol-action-bar__icon {
+  width: 46%;
+  height: 46%;
+}
+
+/* İnşa menüsü: öğeler plaka, seçili öğe markaya gömülür; ikon büyük ve okunur. */
+.vol-build-menu__item {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 6px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-build-menu__item:hover {
+  background-color: var(--vol-ui-surface-3);
+}
+
+.vol-build-menu__item:active {
+  background-color: var(--vol-ui-surface-1);
+}
+
+.vol-build-menu__item--selected,
+.vol-build-menu__item--selected:hover {
+  background-color: var(--vol-ui-brand-subtle);
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 2px 0 var(--vol-mat-edge-dark),
+    0 0 0 2px var(--vol-ui-glow-brand);
+}
+
+.vol-build-menu__item:disabled {
+  box-shadow: none;
+}
+
+.vol-build-menu__icon {
+  width: 34px;
+  height: 34px;
+  color: var(--vol-ui-text-secondary);
+}
+
+.vol-build-menu__item--selected .vol-build-menu__icon {
+  color: var(--vol-ui-text);
+}
+
+/* Joystick: oyuk halka + kabarık başlık; ortada hafif nişan çizgisi. */
+.vol-joystick__base,
+.vol-square-joystick__base {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 3px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-joystick__base--active,
+.vol-square-joystick__base--active {
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 3px 0 var(--vol-ui-well-inner-shadow),
+    0 0 0 3px var(--vol-ui-glow-brand);
+}
+
+.vol-joystick__thumb,
+.vol-square-joystick__thumb {
+  border: 2px solid var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / 10%),
+    inset 0 -3px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+/* Tuş atama: tuş başlığı klavye tuşu gibi (kabarık plaka); yakalama sırasında gömülür. */
+.vol-key-bindings__binding {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 6px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-key-bindings__binding[data-capturing='true'] {
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    0 0 0 2px var(--vol-ui-glow-brand);
+}
+
+.vol-key-bindings__binding:disabled {
+  box-shadow: none;
+}
+
+/* Yön tuşu oku: katalog ikonu (dolgu), kutuyu doldurur. */
+.vol-direction-button__icon > .vol-icon {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/*
+ * Düğme/yuva içi ikonlar: sprite ikonu satır içi piksel boyutuyla gelir; sarmalayıcı kutuyu DOLDURMALI
+ * (aksi hâlde 24 px'te kalıp zayıf ve uyumsuz görünür). Sarmalayıcılar da büyütüldü.
+ */
+:is(
+    .vol-hold-button__icon,
+    .vol-long-press-button__icon,
+    .vol-charge-button__icon,
+    .vol-pause-resume-button__icon,
+    .vol-action-bar__icon,
+    .vol-build-menu__icon,
+    .vol-slot-grid__item-icon,
+    .vol-radial-menu__item-icon,
+    .vol-radial-menu__center-icon
+  )
+  > .vol-icon--sprite {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.vol-hold-button__icon,
+.vol-long-press-button__icon {
+  width: 1.35em;
+  height: 1.35em;
+}
+
+.vol-radial-menu__item-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.vol-radial-menu__center-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.vol-charge-button__icon {
+  width: 34px;
+  height: 34px;
+}
+
+.vol-radial-menu__item,
+.vol-radial-menu__center {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 3px 0 var(--vol-mat-drop);
+}
+
+.vol-radial-menu__item--hovered {
+  background-color: var(--vol-ui-brand-solid);
+  border-color: var(--vol-ui-brand-border);
+  box-shadow:
+    inset 0 2px 0 var(--vol-mat-edge-dark),
+    0 0 0 3px var(--vol-ui-glow-brand);
+}

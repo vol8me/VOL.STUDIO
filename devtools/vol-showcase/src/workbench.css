@@ -165,10 +165,15 @@
   flex-direction: column;
   align-items: center;
   gap: var(--vol-space-xs);
-  padding: var(--vol-space-sm);
-  border: 1px solid var(--vol-ui-border-soft);
+  padding: var(--vol-space-md) var(--vol-space-sm);
+  border: 1px solid var(--vol-ui-frame-hairline);
   border-radius: var(--vol-radius-sm);
-  color: var(--vol-ui-text-muted);
+  background-color: var(--vol-ui-plate);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+  color: var(--vol-ui-text-secondary);
   font-size: var(--vol-text-label);
   text-align: center;
   word-break: break-all;

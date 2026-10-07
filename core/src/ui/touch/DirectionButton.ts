@@ -1,3 +1,4 @@
+import { Icon } from '../primitives/Icon';
 export type DirectionButtonArrow = 'up' | 'down' | 'left' | 'right';
 
 export interface DirectionButtonOptions {
@@ -100,6 +101,7 @@ export class DirectionButton {
     }
   }
 
+  /** Ok: katalog `chevronUp` (dolu üçgen) yöne göre döndürülür; sprite ikonuyla aynı dil. */
   private buildArrowIcon(arrow: DirectionButtonArrow): SVGSVGElement {
     const rotation: Record<DirectionButtonArrow, number> = {
       up: 0,
@@ -107,17 +109,8 @@ export class DirectionButton {
       down: 180,
       left: 270,
     };
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('fill', 'none');
-    svg.setAttribute('stroke', 'currentColor');
-    svg.setAttribute('stroke-width', '2.5');
-    svg.setAttribute('stroke-linecap', 'round');
-    svg.setAttribute('stroke-linejoin', 'round');
-    svg.style.transform = `rotate(${rotation[arrow]}deg)`;
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', 'M12 5l-7 7h4v7h6v-7h4l-7-7Z');
-    svg.appendChild(path);
-    return svg;
+    const icon = new Icon({ name: 'chevronUp' }).element;
+    icon.style.transform = `rotate(${rotation[arrow]}deg)`;
+    return icon;
   }
 }

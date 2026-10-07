@@ -333,6 +333,61 @@
   box-shadow: none;
 }
 
+/*
+ * Girinti yüzeyleri: girdi, metin alanı, seçici, kaydırıcı rayı, anahtar yuvası, segment çubuğu.
+ * Oyuk kuyu: üstten iç gölge, altta ince ışık çizgisi. Arka plan düz renk kalır (kontrast ölçülebilir).
+ */
+.vol-input,
+.vol-textarea__input,
+.vol-select,
+.vol-slider__track,
+.vol-checkbox__track,
+.vol-segmented {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+/* Dolgu ve seçili parça: kabartma (üst bant ışığı, alt kenar). */
+.vol-slider__fill {
+  box-shadow:
+    inset 0 3px 0 rgb(255 255 255 / 20%),
+    inset 0 -3px 0 rgb(0 0 0 / 22%);
+}
+
+.vol-segmented__thumb {
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 6px 0 rgb(255 255 255 / 8%),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 1px 0 var(--vol-mat-drop);
+}
+
+/*
+ * Plaka ve panel yüzeyleri: kart, kalıcı panel içerikleri, modal, çekmece, açılır pencere.
+ * Işık üstten: rim çizgisi + üst bant + alt kenar; dış gölge sert.
+ */
+.vol-card {
+  background-color: var(--vol-ui-plate);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 8px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+}
+
+.vol-modal__content,
+.vol-popup {
+  background-color: var(--vol-ui-panel);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 4px 0 var(--vol-mat-drop);
+}
+
 /* Düğme içi ikon: etiketle aynı ağırlıkta okunur (1 em kutu küçük kalıyordu). */
 .vol-button__icon,
 .vol-icon-button__icon {

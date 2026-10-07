@@ -478,21 +478,51 @@ function buildSlotGridDemo(disposables: DisposableScope): HTMLElement {
   disposables.addDestroyables(result);
 
   const items: Record<number, SlotItem> = {
-    0: { id: 'i1', label: i18next.t('volui:touch.sword'), rarity: 'rare' },
-    2: { id: 'i2', label: i18next.t('volui:touch.shield'), rarity: 'common' },
-    3: { id: 'i3', label: i18next.t('volui:touch.potion'), quantity: 5, rarity: 'common' },
-    4: { id: 'i4', label: i18next.t('volui:touch.scroll'), quantity: 2, rarity: 'epic' },
+    0: { id: 'i1', label: i18next.t('volui:touch.sword'), icon: svgIcon('sword'), rarity: 'rare' },
+    2: {
+      id: 'i2',
+      label: i18next.t('volui:touch.shield'),
+      icon: svgIcon('defend'),
+      rarity: 'common',
+    },
+    3: {
+      id: 'i3',
+      label: i18next.t('volui:touch.potion'),
+      icon: svgIcon('potion'),
+      quantity: 5,
+      rarity: 'common',
+    },
+    4: {
+      id: 'i4',
+      label: i18next.t('volui:touch.scroll'),
+      icon: svgIcon('scroll'),
+      quantity: 2,
+      rarity: 'epic',
+    },
     6: {
       id: 'i5',
       label: i18next.t('volui:touch.twoHandedSword'),
+      icon: svgIcon('axe'),
       rarity: 'epic',
       span: { cols: 2, rows: 1 },
     },
-    9: { id: 'i6', label: i18next.t('volui:touch.arrow'), quantity: 24, rarity: 'common' },
-    11: { id: 'i7', label: i18next.t('volui:touch.armor'), rarity: 'rare' },
+    9: {
+      id: 'i6',
+      label: i18next.t('volui:touch.arrow'),
+      icon: svgIcon('bullet'),
+      quantity: 24,
+      rarity: 'common',
+    },
+    11: {
+      id: 'i7',
+      label: i18next.t('volui:touch.armor'),
+      icon: svgIcon('helmet'),
+      rarity: 'rare',
+    },
     12: {
       id: 'i8',
       label: i18next.t('volui:touch.chest'),
+      icon: svgIcon('chest'),
       rarity: 'epic',
       span: { cols: 2, rows: 2 },
     },
