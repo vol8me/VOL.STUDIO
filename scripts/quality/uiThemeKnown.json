@@ -57,7 +57,7 @@
     "core/src/ui/camera/camera.css": 1,
     "core/src/ui/cards/cards.css": 7,
     "core/src/ui/data/boards.css": 3,
-    "core/src/ui/feedback/feedback.css": 6,
+    "core/src/ui/feedback/feedback.css": 3,
     "core/src/ui/hud/hud.css": 7,
     "core/src/ui/layout/layout.css": 5,
     "core/src/ui/overlays/loading.css": 12,

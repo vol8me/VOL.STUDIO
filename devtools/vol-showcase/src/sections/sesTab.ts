@@ -32,6 +32,7 @@ import {
   type UiIntentKind,
   type UiOutcome,
 } from '@volstudio/core/ui';
+import { getAppSoundKit, localAudioStore } from '../appSound';
 import { card, paletteGrid } from './shared';
 
 const INTENT_KINDS: readonly UiIntentKind[] = [
@@ -226,9 +227,14 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
         context,
         settings,
         visibilityTarget: document,
+        store: localAudioStore(),
         onError: (error) => console.warn('[VOL.UI] Ses laboratuvarı:', error),
       });
       kit.attach(bus);
+      void kit.restore().then((restored) => {
+        settings = restored;
+        renderGain();
+      });
       void kit.preload().then(renderStatus);
     } catch (error) {
       console.warn('[VOL.UI] Ses bağlamı kurulamadı:', error);
@@ -246,6 +252,8 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
 
   const apply = (patch: Partial<UiAudioSettings>): void => {
     settings = kit ? kit.setSettings(patch) : { ...settings, ...patch };
+    // Uygulama geneli kit de aynı ayarı alır: seviye ve sessiz tüm arayüzü etkiler.
+    getAppSoundKit()?.setSettings(patch);
     renderGain();
   };
 

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeController } from '@volstudio/core/ui';
-import { startAppSound } from '../src/appSound';
+import { getAppSoundKit, localAudioStore, startAppSound } from '../src/appSound';
 
 /** Uygulama geneli arayüz sesi: bağlam ilk kullanıcı jestine kadar KURULMAZ, tek kez kurulur, sökülünce susar. */
 class StubContext {
@@ -84,5 +84,33 @@ describe('startAppSound', () => {
     expect(StubContext.created).toBe(1);
     theme.setTheme('default');
     handle.dispose();
+  });
+
+  it('ayarlar kalıcıdır: değişiklik cihaz anahtarına yazılır, yeni kit onu geri okur; bozuk kayıt varsayılana düşer', async () => {
+    vi.stubGlobal('AudioContext', StubContext);
+    localStorage.clear();
+    const handle = startAppSound(root, new ThemeController());
+    expect(getAppSoundKit()).toBeNull();
+    root.dispatchEvent(new Event('pointerdown'));
+    const kit = getAppSoundKit();
+    expect(kit).not.toBeNull();
+    kit?.setSettings({ muted: true, master: 0.5 });
+    await kit?.whenSaved;
+    expect(JSON.parse(localStorage.getItem('device.volui:audio') ?? '{}')).toMatchObject({
+      muted: true,
+      master: 0.5,
+    });
+    handle.dispose();
+    expect(getAppSoundKit()).toBeNull();
+
+    const second = startAppSound(root, new ThemeController());
+    root.dispatchEvent(new Event('pointerdown'));
+    const restored = await getAppSoundKit()?.restore();
+    expect(restored).toMatchObject({ muted: true, master: 0.5 });
+    second.dispose();
+
+    localStorage.setItem('device.volui:audio', '{bozuk');
+    await expect(localAudioStore().load('device.volui:audio', 7)).resolves.toBe(7);
+    localStorage.clear();
   });
 });

@@ -1,3 +1,4 @@
+import { playJuice } from '../motion/juice';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { pushBackHandler } from '../../platform/backNavigation';
 import { FOCUSABLE_SELECTOR } from '../focus/focusable';
@@ -92,6 +93,8 @@ export class Modal {
     }
     this.previouslyFocused = document.activeElement as (HTMLOrSVGElement & Element) | null;
     this.element.classList.add('vol-modal--visible');
+    // Panel girişi: içerik hafif küçükten oturur (hareket azaltılmışta CSS çevirisiz).
+    if (!this.element.classList.contains('vol-sheet')) playJuice(this.content, 'enter');
     this.element.inert = false;
 
     this.sessionScope = new DisposableScope();
