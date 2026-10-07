@@ -250,21 +250,51 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
   };
 
   // ── 1. Olay sesleri ───────────────────────────────────────────────────────
-  const eventButtons = row();
-  for (const event of UI_SOUND_EVENTS) {
-    const button = new Button(event, {
-      variant: 'default',
-      haptic: false,
-      onClick: () => {
-        prepare();
-        void kit?.unlock();
-        kit?.play(event);
-        renderStatus();
-      },
-    });
-    button.element.dataset.sesEvent = event;
-    disposables.addDestroyables(button);
-    eventButtons.appendChild(button.element);
+  // Olaylar anlamlı gruplara bölünür: 23 düğmeyi tek sütunda dizmek taranamıyordu.
+  const EVENT_GROUPS: ReadonlyArray<{ title: string; events: readonly UiSoundEvent[] }> = [
+    {
+      title: i18next.t('volui:ses.groups.contact'),
+      events: ['hover', 'focus', 'press', 'release'],
+    },
+    {
+      title: i18next.t('volui:ses.groups.navigation'),
+      events: ['back', 'confirm', 'select', 'tabSwitch', 'panelOpen', 'panelClose'],
+    },
+    {
+      title: i18next.t('volui:ses.groups.value'),
+      events: ['toggleOn', 'toggleOff', 'sliderTick', 'valueCommit'],
+    },
+    {
+      title: i18next.t('volui:ses.groups.inventory'),
+      events: ['dragPick', 'dragDrop', 'equip', 'purchase'],
+    },
+    { title: i18next.t('volui:ses.groups.reward'), events: ['reward', 'levelUp', 'notify'] },
+    { title: i18next.t('volui:ses.groups.warning'), events: ['denied', 'alert'] },
+  ];
+  const eventButtons = document.createElement('div');
+  eventButtons.className = 'vol-showcase-ses__groups';
+  for (const group of EVENT_GROUPS) {
+    const heading = new Text(group.title, { variant: 'muted', tag: 'span' });
+    disposables.addDestroyables(heading);
+    const groupRow = row();
+    for (const event of group.events) {
+      const button = new Button(event, {
+        variant: 'default',
+        size: 'sm',
+        fullWidth: false,
+        haptic: false,
+        onClick: () => {
+          prepare();
+          void kit?.unlock();
+          kit?.play(event);
+          renderStatus();
+        },
+      });
+      button.element.dataset.sesEvent = event;
+      disposables.addDestroyables(button);
+      groupRow.appendChild(button.element);
+    }
+    eventButtons.append(heading.element, groupRow);
   }
   const eventsBody = document.createElement('div');
   eventsBody.className = 'vol-showcase-panel-demo';

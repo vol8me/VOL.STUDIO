@@ -49,3 +49,10 @@
 .vol-showcase-icon-gallery .vol-palette-grid .vol-showcase-card--span-all {
   grid-column: 1 / -1;
 }
+
+/* Ses laboratuvarı: olay grupları. */
+.vol-showcase-ses__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+}

@@ -970,6 +970,14 @@
       "label": "Sound palette",
       "steel": "Steel hardware",
       "aurum": "Gilded glass and lacquer"
+    },
+    "groups": {
+      "contact": "Contact",
+      "navigation": "Navigation",
+      "value": "Value",
+      "inventory": "Inventory",
+      "reward": "Reward",
+      "warning": "Warning"
     }
   },
   "kimlik": {

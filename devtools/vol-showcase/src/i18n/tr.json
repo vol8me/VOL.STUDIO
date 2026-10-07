@@ -970,6 +970,14 @@
       "label": "Ses paleti",
       "steel": "Çelik donanım",
       "aurum": "Yaldızlı cam ve lake"
+    },
+    "groups": {
+      "contact": "Temas",
+      "navigation": "Gezinme",
+      "value": "Değer",
+      "inventory": "Envanter",
+      "reward": "Ödül",
+      "warning": "Uyarı"
     }
   },
   "kimlik": {
