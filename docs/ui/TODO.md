@@ -170,6 +170,9 @@ uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer aileler
       İlk bulgudan sonra KİMLİK sekmesi hafifletildi (hücre başına veri URL'li imleç yerine üzerine gelince
       kurulum; ikon galerisi kategori seçicili, DOM'da tek kategori). En ağır sekmeler FORMLAR, KİMLİK, DOKUNMATİK;
       UI-03.4 kapanışında p95<100 ms'ye indirilir.
+      Prob kalibrasyonu notu: WebKit'te (iz yok) 20 ms'lik iş farkı büyüklük olarak doğrulanamaz (kare sınırı ve
+      olay damgası); `probe.spec.ts` orada yalnız yönü (ağır > hafif) kanıtlar, Chromium'da büyüklüğü (≥12 ms) ve
+      ortalama kullanır. İlk eşik makine durumuna göre sınırda oynuyordu.
 
 Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/valueInteractionContract, gerçek oyun E2E.
 
