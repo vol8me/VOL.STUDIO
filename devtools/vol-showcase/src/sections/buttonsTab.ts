@@ -297,7 +297,10 @@ export function buildButtonsTab(uiRootElement: HTMLElement): {
             iconLeft: svgIcon(ICON_TRASH),
             variant: 'danger',
           }),
-          new Button(i18next.t('volui:buttons.forward'), { ...auto, iconRight: '→' }),
+          new Button(i18next.t('volui:buttons.forward'), {
+            ...auto,
+            iconRight: svgIcon('arrowRight'),
+          }),
         ],
         disposables,
       ),

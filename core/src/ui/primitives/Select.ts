@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import { Popup } from '../overlays/Popup';
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
@@ -84,7 +85,8 @@ export class Select {
 
     const caret = document.createElement('span');
     caret.className = 'vol-select__caret';
-    caret.textContent = '▾';
+    caret.setAttribute('aria-hidden', 'true');
+    caret.appendChild(new Icon({ name: 'chevronDown', size: 14 }).element);
     this.element.appendChild(caret);
 
     this.popup = new Popup(this.element, {

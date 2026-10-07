@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import { emitUiIntent } from '../feedback/uiIntent';
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
@@ -67,7 +68,7 @@ export class NumberStepper {
     this.decrementButton = document.createElement('button');
     this.decrementButton.type = 'button';
     this.decrementButton.className = 'vol-stepper__button';
-    this.decrementButton.textContent = '−';
+    this.decrementButton.appendChild(new Icon({ name: 'minus', size: 18 }).element);
     this.decrementButton.setAttribute('aria-label', i18next.t('core:stepper.decrement'));
     control.appendChild(this.decrementButton);
 
@@ -83,7 +84,7 @@ export class NumberStepper {
     this.incrementButton = document.createElement('button');
     this.incrementButton.type = 'button';
     this.incrementButton.className = 'vol-stepper__button';
-    this.incrementButton.textContent = '+';
+    this.incrementButton.appendChild(new Icon({ name: 'plus', size: 18 }).element);
     this.incrementButton.setAttribute('aria-label', i18next.t('core:stepper.increment'));
     control.appendChild(this.incrementButton);
 

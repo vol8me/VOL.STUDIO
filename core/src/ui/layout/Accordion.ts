@@ -1,3 +1,4 @@
+import { Icon } from '../primitives/Icon';
 export interface AccordionSectionContent {
   element: HTMLElement;
   /** Accordion.destroy() tarafından çağrılır (verilirse). */
@@ -98,7 +99,8 @@ export class Accordion {
 
     const caret = document.createElement('span');
     caret.className = 'vol-accordion__caret';
-    caret.textContent = '▸';
+    caret.setAttribute('aria-hidden', 'true');
+    caret.appendChild(new Icon({ name: 'chevronRight', size: 14 }).element);
     header.appendChild(caret);
 
     if (section.icon) {

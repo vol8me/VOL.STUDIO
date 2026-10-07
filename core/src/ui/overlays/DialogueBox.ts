@@ -1,3 +1,4 @@
+import { Icon } from '../primitives/Icon';
 import { i18next } from '../../i18n/I18n';
 
 export interface DialogueChoice {
@@ -92,7 +93,7 @@ export class DialogueBox {
 
     this.continueIndicator = document.createElement('div');
     this.continueIndicator.className = 'vol-dialogue__continue';
-    this.continueIndicator.textContent = '▼';
+    this.continueIndicator.appendChild(new Icon({ name: 'chevronDown', size: 12 }).element);
     this.element.appendChild(this.continueIndicator);
 
     if (options.showControls) {

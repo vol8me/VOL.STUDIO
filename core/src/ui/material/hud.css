@@ -303,3 +303,45 @@
     inset 0 3px 0 var(--vol-ui-well-inner-shadow),
     inset 0 -1px 0 var(--vol-ui-plate-top-light);
 }
+
+/* Küçük işaret ikonları (seçici oku, açılır başlık oku, adım düğmeleri, diyalog devam oku): sprite kutuyu doldurur. */
+.vol-select__caret,
+.vol-accordion__caret,
+.vol-stepper__button,
+.vol-dialogue__continue {
+  align-items: center;
+  justify-content: center;
+  display: inline-flex;
+}
+
+/* Veri yüzeyleri: tablo başlığı ve açılır başlıklar plaka; kanban sütunu kuyu, kartı plaka. */
+.vol-datatable__header-cell,
+.vol-accordion__header {
+  background-color: var(--vol-ui-plate);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 -2px 0 var(--vol-mat-edge-dark);
+}
+
+.vol-datatable,
+.vol-accordion {
+  border-color: var(--vol-ui-frame-hairline);
+}
+
+.vol-kanban__column {
+  background-color: var(--vol-ui-well);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 2px 0 var(--vol-ui-well-inner-shadow),
+    inset 0 -1px 0 var(--vol-ui-plate-top-light);
+}
+
+.vol-kanban__card {
+  background-color: var(--vol-ui-plate);
+  border-color: var(--vol-ui-frame-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--vol-ui-plate-top-light),
+    inset 0 6px 0 rgb(255 255 255 / var(--vol-mat-gloss)),
+    inset 0 -2px 0 var(--vol-mat-edge-dark),
+    0 2px 0 var(--vol-mat-drop);
+}
