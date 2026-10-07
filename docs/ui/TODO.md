@@ -137,9 +137,23 @@ kendisi sıfırdan yeniden yapılır.**
       (oyunun ses bağlamı ve ana otobüsü üstünde; oyun SFX'i değişmedi) ve duraklatma/sürdürme paneli
       kitin `panelOpen`/`panelClose` sesiyle çalar, eski duraklatma sesi yalnız kit yokken yedektir
       (çift çalmaz). Paket payı ölçüldü: VOL.TEST app +5,8 KiB (bütçe 107,0).
+      **Olay→bileşen kapsamı (2026-10-08):** önceden `open`/`close`/`confirm`/`cancel` niyetlerini
+      hiçbir bileşen yaymıyordu (`panelOpen`/`panelClose`/`back`/`confirm` vitrinde hiç duyulmuyordu,
+      `tabSwitch`/`dragPick`/`dragDrop`/`notify`/`alert` için niyet bile yoktu). Eklendi: niyet türleri
+      `navigate`→`tabSwitch`, `pick`→`dragPick`, `drop`→`dragDrop`, `notify`→`notify`, `alert`→`alert`
+      (+ `type`/`erase`/`reject`); `Tabs` (tıklama, ok tuşları, LB/RB), `Modal`/`Sheet`/`Confirm`
+      (tetikleyiciden açılış ve kapanış; söküm ve tetikleyicisiz oyun açışı sessiz), `Accordion`,
+      `DialogueBox` (satır ilerletme `select`, seçim `confirm`), `SlotGrid` (kaldırma/bırakma/geri
+      çevirme), `ToastManager` (varyanta göre `notify`/`alert`) ve ekran klavyesi niyet yayar. **Yedek
+      katman:** kök, bileşenin kendisi niyet yaymadıysa (`claim` ile yinelenmez) her düğme/sekme/menü/
+      seçenek tıklamasını `press`/`navigate`/`select` olarak duyurur; `data-vol-silent` ile susturulur.
+      Oynanış denetimleri (Hold/LongPress/Charge/DirectionButton) bilinçli sessizdir: ateş/şarj/yön sesi
+      oyunun SFX'idir. Host olayları vitrinde bağlandı: seviye atlama (`levelUp`), satın alma
+      (`purchase`). Kanıt: `soundCoverage.test.ts` (25 olayın sahibi tablosu + 9 bileşen davranışı).
       Kalan: stepper/slider detent (adım başına tık) ve kaydırıcı sürüklemesinde kısık ses ayarı;
-      sürükle/bırak, panel ve envanter olaylarının bileşenlere bağlanması (host olayları:
-      `dragPick`, `dragDrop`, `equip`, `purchase`, `reward`, `levelUp`, `notify`); seviyeler,
+      `equip`/`reward` host bağlaması ve `release` (basılı tutmada bırakış), SlotGrid sürükleme niyeti
+      için gerçek işaretçi testi; ContextMenu/CommandPalette/Popup açılış sesi (tetikleyicisiz tuş
+      kısayolu açılışı için sahipsiz-niyet kararı); seviyeler,
       sessiz ve palet seçiminin mevcut kalıcılığa bağlanması (VOL.TEST ayar paneli). Kapanır:
       vitrinde her etkileşim duyulur (olay→bileşen tablosu testli); ses yokken/kapalıyken işlev ve
       görsel durum aynı; oyun SFX/ambiyans değişmez.

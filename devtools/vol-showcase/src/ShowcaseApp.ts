@@ -210,7 +210,8 @@ export class ShowcaseApp {
     if (this.tabOrder.length === 0 || !this.tabs) return;
     const index = this.tabOrder.indexOf(this.activeTabId);
     const next = this.tabOrder[(index + delta + this.tabOrder.length) % this.tabOrder.length];
-    this.tabs.select(next);
+    // LB/RB bir kullanıcı eylemidir: sekme geçişi tıklamayla aynı `navigate` sesini alır.
+    this.tabs.select(next, new Event('vol-navigate'));
   }
 
   destroy(): void {

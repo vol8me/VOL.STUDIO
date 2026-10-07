@@ -1,5 +1,6 @@
 import { UI_TIMING } from '../../constants';
 import { Icon, type IconName } from '../primitives/Icon';
+import { emitUiSignal } from '../feedback/uiIntent';
 
 /**
  * .vol-toast'un CSS geçiş süresi (--vol-transition-medium) kadar beklenir.
@@ -79,6 +80,12 @@ export class ToastManager {
     toast.append(icon, text);
 
     this.container.appendChild(toast);
+    // Bildirim bir sistem olayıdır (kullanıcı eylemi değil): uyarı/tehlike kritik sesle, diğerleri `notify` ile duyulur.
+    emitUiSignal({
+      kind: variant === 'warning' || variant === 'danger' ? 'alert' : 'notify',
+      origin: 'ToastManager',
+      target: this.container,
+    });
 
     const entry: ActiveToast = { element: toast, rafId: 0, timeoutIds: [] };
     this.active.push(entry);

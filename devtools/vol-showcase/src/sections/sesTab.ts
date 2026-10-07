@@ -48,6 +48,11 @@ const INTENT_KINDS: readonly UiIntentKind[] = [
   'type',
   'erase',
   'reject',
+  'navigate',
+  'pick',
+  'drop',
+  'notify',
+  'alert',
 ];
 const OUTCOMES: readonly UiOutcome[] = ['success', 'warning', 'error'];
 

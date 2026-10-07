@@ -35,7 +35,17 @@ export type UiIntentKind =
   /** Metin girişi: imleçten önceki karakter silindi. */
   | 'erase'
   /** Bileşenin kendi sınırı kullanıcı eylemini reddetti (örn. `maxLength` dolu). */
-  | 'reject';
+  | 'reject'
+  /** Sayfa/sekme/bölüm geçişi (sekme değişimi). */
+  | 'navigate'
+  /** Bir nesne kaldırıldı (sürükleme başladı). */
+  | 'pick'
+  /** Bir nesne bırakıldı (geçerli hedefe). */
+  | 'drop'
+  /** Oyun/uygulama bildirimi gösterildi (toast); kullanıcı eylemi değil, sistem olayıdır. */
+  | 'notify'
+  /** Kritik bildirim (uyarı/tehlike toast'u). */
+  | 'alert';
 
 /** Girdi yolu: işaretçi (fare), dokunma/kalem, klavye ya da yapay (kol/odak etkinleştirmesi). */
 export type UiIntentSource = 'pointer' | 'touch' | 'keyboard' | 'synthetic';
@@ -182,8 +192,46 @@ export class UiIntentBus {
 interface Entry {
   bus: UiIntentBus;
   count: number;
+  /** Kök dinleyicisini söker (son sahip bırakınca). */
+  detach: () => void;
 }
 const registry = new WeakMap<Element, Entry>();
+
+/**
+ * Kök içindeki etkileşimli denetimi, bileşenin kendisi niyet yaymadıysa YEDEK olarak niyete çevirir.
+ * Bileşenler (`Button`, `Select`, `Slider`…) kendi niyetini aynı yerel olayla yayar ve olayı sahiplenir
+ * (`claim`); kök dinleyicisi baloncuk aşamasında SONRA çalıştığından yinelenmez. Böylece niyet yaymayan
+ * her düğme benzeri öğe (Hold/Charge, ToolButton, Wizard, sekme noktası, bağlam menüsü satırı…) en az bir
+ * `press`/`select`/`navigate` sesi alır. Susturmak için `data-vol-silent` (öğe ya da atası).
+ */
+function fallbackKind(control: Element): UiIntentKind {
+  const role = control.getAttribute('role');
+  if (role === 'tab') return 'navigate';
+  if (role === 'menuitem' || role === 'option' || role === 'treeitem') return 'select';
+  if (role === 'checkbox' || role === 'switch') return 'toggle';
+  return 'press';
+}
+
+const FALLBACK_CONTROLS =
+  'button, a[href], [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="treeitem"]';
+
+function attachFallback(root: Element, bus: UiIntentBus): () => void {
+  const onClick = (event: Event): void => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const control = target.closest(FALLBACK_CONTROLS);
+    if (!control || !root.contains(control) || control.closest('[data-vol-silent]')) return;
+    bus.emit({
+      kind: fallbackKind(control),
+      origin: 'auto',
+      target: control,
+      event,
+      defaultHaptic: 'tap',
+    });
+  };
+  root.addEventListener('click', onClick);
+  return () => root.removeEventListener('click', onClick);
+}
 
 /**
  * Kök eleman için paylaşılan niyet veriyolunu alır (referans sayımlı). Aynı elemanı
@@ -192,7 +240,8 @@ const registry = new WeakMap<Element, Entry>();
 export function uiIntentBusFor(root: Element): { bus: UiIntentBus; release(): void } {
   let entry = registry.get(root);
   if (!entry) {
-    entry = { bus: new UiIntentBus(), count: 0 };
+    const bus = new UiIntentBus();
+    entry = { bus, count: 0, detach: attachFallback(root, bus) };
     registry.set(root, entry);
   }
   entry.count += 1;
@@ -204,7 +253,10 @@ export function uiIntentBusFor(root: Element): { bus: UiIntentBus; release(): vo
       if (released) return;
       released = true;
       held.count -= 1;
-      if (held.count <= 0 && registry.get(root) === held) registry.delete(root);
+      if (held.count <= 0 && registry.get(root) === held) {
+        held.detach();
+        registry.delete(root);
+      }
     },
   };
 }
@@ -224,6 +276,16 @@ export function findUiIntentBus(element: Element): UiIntentBus | null {
     if (entry) return entry.bus;
   }
   return null;
+}
+
+/**
+ * Sistem sinyali: bir bileşenin KENDİ ürettiği geçiş (katman açıldı/kapandı, bildirim göründü). Yerel
+ * olay yoktur; sentetik olayla yayılır. Yalnız kullanıcı eyleminin doğrudan sonucu olan katman geçişleri
+ * ve sistem bildirimleri için kullanılır; programatik değer atamaları (`setValue` vb.) sinyal DEĞİLDİR
+ * ve sessiz kalır. Kayıtlı kök yoksa hiçbir şey olmaz.
+ */
+export function emitUiSignal(request: Omit<UiIntentRequest, 'event'>): UiIntent | null {
+  return emitUiIntent({ ...request, event: new Event(`vol-${request.kind}`) });
 }
 
 /**

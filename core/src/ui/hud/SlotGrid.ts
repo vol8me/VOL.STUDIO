@@ -1,3 +1,4 @@
+import { emitUiIntent } from '../feedback/uiIntent';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_THRESHOLD } from '../../constants';
 import { i18next } from '../../i18n/I18n';
@@ -515,6 +516,7 @@ export class SlotGrid {
       if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START_PX) return;
       drag.moved = true;
       drag.itemView.toggleDragging(true);
+      emitUiIntent({ kind: 'pick', origin: 'SlotGrid', target: this.element, event });
       this.dragContainer.appendChild(drag.ghostEl);
     }
 
@@ -538,11 +540,13 @@ export class SlotGrid {
     this.clearDropTarget();
 
     if (toIndex !== null && this.handleDrop(drag.fromIndex, toIndex)) {
+      emitUiIntent({ kind: 'drop', origin: 'SlotGrid', target: this.element, event });
       this.endDrag();
       return;
     }
 
     // Drop reddedildi veya geçersiz: item eski yerine geri döner.
+    emitUiIntent({ kind: 'reject', origin: 'SlotGrid', target: this.element, event });
     drag.itemView.toggleDragging(false);
     this.endDrag();
   };

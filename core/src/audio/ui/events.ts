@@ -90,6 +90,11 @@ export const UI_INTENT_SOUND = {
   type: 'keyTap',
   erase: 'keyDelete',
   reject: 'denied',
+  navigate: 'tabSwitch',
+  pick: 'dragPick',
+  drop: 'dragDrop',
+  notify: 'notify',
+  alert: 'alert',
 } as const satisfies Record<string, UiSoundEvent>;
 
 /** Host'un bildirdiği ürün sonucu → ses olayı (Promise çözülmesi değil). */

@@ -59,6 +59,8 @@ export class ChargeButton {
     this.element = document.createElement('button');
     this.element.type = 'button';
     this.element.className = 'vol-charge-button';
+    // Oynanış denetimi: arayüz sesi çalmaz (ateş/şarj/yön sesi oyunun kendi SFX'idir); kök yedek `press` sesi de almaz.
+    this.element.dataset.volSilent = '';
     this.element.style.setProperty('--vol-charge-button-size', `${size}px`);
     this.element.style.touchAction = 'none';
 

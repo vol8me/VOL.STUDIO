@@ -31,6 +31,8 @@ export class DirectionButton {
     this.onReleaseHandler = options.onRelease;
 
     this.element = document.createElement('button');
+    // Oynanış denetimi: arayüz sesi çalmaz (ateş/şarj/yön sesi oyunun kendi SFX'idir); kök yedek `press` sesi de almaz.
+    this.element.dataset.volSilent = '';
     this.element.type = 'button';
     this.element.className = 'vol-direction-button';
     if (options.arrow) {

@@ -3,6 +3,7 @@ import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { pushBackHandler } from '../../platform/backNavigation';
 import { FOCUSABLE_SELECTOR } from '../focus/focusable';
 import { previousFocusTarget } from '../primitives/buttonBehavior';
+import { emitUiSignal } from '../feedback/uiIntent';
 
 export interface ModalOptions {
   /** Scrim'e (arka plan karartması) tıklayınca kapat. Varsayılan true. */
@@ -47,6 +48,8 @@ export class Modal {
   private onScrimClick?: () => void;
   /** Yalnızca modal açıkken yaşar: yığın üyeliği + `document` keydown dinleyicisi. */
   private sessionScope: DisposableScope | null = null;
+  /** `destroy()` sırasında kapanış sinyali yayılmaz (söküm kullanıcı eylemi değildir). */
+  private destroying = false;
 
   constructor(options: ModalOptions = {}) {
     const { closeOnScrimClick = true, onClose } = options;
@@ -94,6 +97,7 @@ export class Modal {
     }
     this.previouslyFocused = previousFocusTarget() as (HTMLOrSVGElement & Element) | null;
     this.element.classList.add('vol-modal--visible');
+    this.signal('open');
     // Panel girişi: içerik hafif küçükten oturur (hareket azaltılmışta CSS çevirisiz).
     if (!this.element.classList.contains('vol-sheet')) playJuice(this.content, 'enter');
     this.element.inert = false;
@@ -125,6 +129,7 @@ export class Modal {
     this.sessionScope?.dispose();
     this.sessionScope = null;
     syncBodyLock();
+    if (!this.destroying) this.signal('close');
     this.previouslyFocused?.focus();
     this.onClose?.();
   }
@@ -133,7 +138,16 @@ export class Modal {
     return !this.element.inert;
   }
 
+  /** Açma/kapama sesi: tetikleyici (odağın önceki sahibi) kayıtlı bir UI kökündeyse niyet yayılır. */
+  private signal(kind: 'open' | 'close'): void {
+    const target = this.previouslyFocused;
+    if (target instanceof Element && target.isConnected) {
+      emitUiSignal({ kind, origin: 'Modal', target });
+    }
+  }
+
   destroy(): void {
+    this.destroying = true;
     this.close();
     if (this.onScrimClick) {
       this.scrim.removeEventListener('click', this.onScrimClick);

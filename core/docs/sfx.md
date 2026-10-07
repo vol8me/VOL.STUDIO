@@ -85,6 +85,17 @@ ile bildirir (`success` → `confirm`, `warning` → `alert`, `error` → `denie
 - `valuePreview` (kaydırıcı) perdeyi değerin konumuna bağlar: alçak değer alçak ses.
 - `observe(root)` gerçek fare üzerine gelmesini (`hover`) ve klavye odağını (`focus`)
   dinler; dokunma ve fare odağı ses çalmaz.
+- **Olay sahipliği.** 25 olayın her biri bir niyetten, kökün gözlemcisinden ya da host'un açık
+  `play` çağrısından gelir (`soundCoverage.test.ts` sahipsiz olay bırakmaz). Niyetler:
+  `press` (düğme), `toggle`→`toggleOn`/`toggleOff`, `select` (seçim, sekme dışı menü, diyalog satırı),
+  `navigate`→`tabSwitch` (sekme), `open`/`close`→`panelOpen`/`panelClose` (modal, sheet, onay,
+  akordeon), `confirm`/`cancel`→`confirm`/`back`, `valuePreview`/`valueCommit`, `pick`/`drop`→
+  `dragPick`/`dragDrop`, `notify`/`alert` (bildirim; sistem olayı), `type`/`erase`→`keyTap`/`keyDelete`,
+  `reject`→`denied`. Host olayları: `equip`, `purchase`, `reward`, `levelUp`, `release`.
+- **Yedek niyet.** Kök, bileşen niyet yaymadıysa her düğme/sekme/menü/seçenek tıklamasını
+  `press`/`navigate`/`select` olarak duyurur (aynı olay iki kez sayılmaz); `data-vol-silent` susturur.
+  Oynanış denetimleri (Hold, LongPress, Charge, DirectionButton) susturulmuştur: ateş/şarj/yön sesi
+  oyunun kendi SFX'idir.
 - `setAssets` / `followTheme` paleti çalışırken değiştirir (aşağıda).
 
 ### `uiSoundAssets`
@@ -97,7 +108,8 @@ ve lake (aurum teması); `uiSoundPaletteFor(temaKimliği)` tema → palet eşlem
 Her olay tok bir gövde (düşen perdeli sinüs + doygunluk), ayrı süzülmüş bir temas tıkı
 ve gerektiğinde çınlama/melodik katman taşır. Set mekanik QA'dan geçmiştir (kodlama
 sonrası tepe ≤ −1 dBTP, yükseklik −42…−8 LUFS, DC, kırpma, süre; PCM yeniden render
-özdeş; gövde bandı üst bantlardan zayıf değil); **insan dinlemesi yapılmamıştır**.
+özdeş; gövde bandı üst bantlardan zayıf değil). İlk 23 olay kullanıcı tarafından kulakla kabul edildi
+(`docs/ui/VERIFICATION.md`, 2026-10-07); `keyTap` ve `keyDelete` henüz **dinlenmedi**.
 
 ### `channelGain`
 

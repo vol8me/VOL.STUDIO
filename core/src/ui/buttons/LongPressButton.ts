@@ -59,6 +59,8 @@ export class LongPressButton {
     this.element.style.setProperty('--vol-long-press-button-size', `${size}px`);
     this.element.style.touchAction = 'none';
     this.element.setAttribute('aria-label', label);
+    // Oynanış denetimi: arayüz sesi çalmaz (ateş/şarj/yön sesi oyunun kendi SFX'idir); kök yedek `press` sesi de almaz.
+    this.element.dataset.volSilent = '';
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.classList.add('vol-long-press-button__ring');

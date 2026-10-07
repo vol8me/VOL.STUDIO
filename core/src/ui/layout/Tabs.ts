@@ -1,3 +1,4 @@
+import { emitUiIntent } from '../feedback/uiIntent';
 export interface TabContent {
   element: HTMLElement;
   /** Tabs.destroy() tarafından çağrılır (verilirse). */
@@ -35,7 +36,7 @@ export class Tabs {
   private readonly panelContainer: HTMLDivElement;
   private readonly tabs: TabDefinition[];
   private readonly tabButtons = new Map<string, HTMLButtonElement>();
-  private readonly boundClickHandlers = new Map<string, () => void>();
+  private readonly boundClickHandlers = new Map<string, (event: Event) => void>();
   private readonly boundKeydownHandlers = new Map<string, (event: KeyboardEvent) => void>();
   private activeId: string;
   private readonly onChange?: (id: string) => void;
@@ -83,7 +84,7 @@ export class Tabs {
       button.setAttribute('aria-controls', panelId);
       button.tabIndex = tab.id === this.activeId ? 0 : -1;
 
-      const onClick = (): void => this.select(tab.id);
+      const onClick = (event: Event): void => this.select(tab.id, event);
       const onKeydown = (event: KeyboardEvent): void => this.handleKeydown(event, index);
       button.addEventListener('click', onClick);
       button.addEventListener('keydown', onKeydown);
@@ -113,7 +114,8 @@ export class Tabs {
     this.element.appendChild(this.panelContainer);
   }
 
-  select(id: string): void {
+  /** `event` verilirse (kullanıcı etkinleştirmesi) sekme geçişi `navigate` niyeti olarak duyulur. */
+  select(id: string, event?: Event): void {
     if (id === this.activeId || !this.tabButtons.has(id)) {
       return;
     }
@@ -140,6 +142,9 @@ export class Tabs {
       nextTab.content.element.classList.remove('vol-tabs__panel--hidden');
     }
 
+    if (event && nextButton) {
+      emitUiIntent({ kind: 'navigate', origin: 'Tabs', target: nextButton, event });
+    }
     this.onChange?.(id);
   }
 
@@ -178,7 +183,7 @@ export class Tabs {
 
     event.preventDefault();
     const nextTab = this.tabs[nextIndex];
-    this.select(nextTab.id);
+    this.select(nextTab.id, event);
     this.tabButtons.get(nextTab.id)?.focus();
   }
 }

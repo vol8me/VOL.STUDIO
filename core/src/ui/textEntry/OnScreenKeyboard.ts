@@ -118,6 +118,8 @@ export class OnScreenKeyboard {
     this.element.setAttribute('role', 'dialog');
     this.element.setAttribute('aria-modal', 'true');
     this.element.setAttribute('aria-labelledby', titleId);
+    // Tuşlar kendi niyetini yayar; etkisiz basışlar (uçta imleç, boşta silme) yedek `press` sesi almaz.
+    this.element.dataset.volSilent = '';
 
     // Başlık şeridi çekirdeğin çerçeve dilini (`vol-frame__header`) taşır: marka elması + display yazısı.
     const header = document.createElement('div');

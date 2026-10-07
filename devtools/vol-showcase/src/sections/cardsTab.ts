@@ -12,6 +12,7 @@ import {
   type ShopPickerState,
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
+import { getAppSoundKit } from '../appSound';
 import { card } from './shared';
 
 /** Bir kapatma fonksiyonunu ortak listeye kaydeder (bkz. `buildCardsTab`). */
@@ -186,6 +187,8 @@ function buildLevelUpCard(
     hint: i18next.t('volui:cards.levelUpHint'),
     selectLabel: i18next.t('volui:cards.select'),
     onSelect: (id) => {
+      // Yetenek seçimi host olayıdır: oyun, seviye atlama ödülünü kendi sesiyle duyurur.
+      getAppSoundKit()?.play('levelUp');
       result.setContent(i18next.t('volui:cards.selected', { id }));
       controller.close();
     },
@@ -327,6 +330,7 @@ function buildShopCard(
       const demo = DEMO_CARDS[cardId];
       if (!demo || purchased.has(cardId) || balance < demo.price) return;
 
+      getAppSoundKit()?.play('purchase');
       balance -= demo.price;
       purchased.add(cardId);
       // Satın alınan kart teklif değil — kilit anlamsız kalır.

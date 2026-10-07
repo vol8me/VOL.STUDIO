@@ -20,6 +20,7 @@ import {
 } from '@volstudio/core/ui';
 import type { BarVariant } from '@volstudio/core/ui';
 import { i18n, i18next } from '@volstudio/core/i18n';
+import { getAppSoundKit } from '../appSound';
 import { card, svgIcon } from './shared';
 import { ICON_AMMO, ICON_GOLD, ICON_MANA, ICON_WOOD } from './icons';
 
@@ -216,6 +217,8 @@ export function buildXPBarCard(disposables: DisposableScope): HTMLElement {
 
   const gainXp = (amount: number): void => {
     const next = applyXPGain(progress.level, progress.xp, amount, xpForLevel);
+    // Seviye atlandıysa host duyurur (XPBar ses çalmaz; olay oyundadır).
+    if (next.level > progress.level) getAppSoundKit()?.play('levelUp');
     progress = { level: next.level, xp: next.xp };
     xpBar.setState(progress.level, progress.xp);
   };

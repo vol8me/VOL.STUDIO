@@ -1,5 +1,6 @@
 import { Icon } from '../primitives/Icon';
 import { i18next } from '../../i18n/I18n';
+import { emitUiIntent } from '../feedback/uiIntent';
 
 export interface DialogueChoice {
   label: string;
@@ -105,8 +106,10 @@ export class DialogueBox {
     // Seçimler gösteriliyorken kutuya tıklamak ilerletmemeli (next()) — oyuncu
     // önce seçmeli. awaitingChoice bunu merkezden kontrol eder, çünkü seçim
     // butonu tıklamaları da buraya bubble eder.
-    this.boundClick = () => {
+    this.boundClick = (event) => {
       if (this.awaitingChoice) return;
+      // Satır ilerletme (yazımı bitir ya da sonraki satır) duyulur; seçim bekleyen kutuda ses seçimin kendisindedir.
+      emitUiIntent({ kind: 'select', origin: 'DialogueBox', target: this.element, event });
       this.next();
     };
     this.element.addEventListener('click', this.boundClick);
@@ -323,6 +326,7 @@ export class DialogueBox {
         // Bunun kutunun click listener'ına (next()) bubble olmasına izin verme —
         // seçim sonrası ilerleme burada açıkça ele alınır.
         event.stopPropagation();
+        emitUiIntent({ kind: 'confirm', origin: 'DialogueBox', target: button, event });
         this.awaitingChoice = false;
         this.choicesContainer.hidden = true;
         this.choicesContainer.replaceChildren();

@@ -1,3 +1,4 @@
+import { emitUiIntent } from '../feedback/uiIntent';
 import { Icon } from '../primitives/Icon';
 export interface AccordionSectionContent {
   element: HTMLElement;
@@ -30,7 +31,7 @@ export class Accordion {
   private readonly openIds = new Set<string>();
   private readonly headerElements = new Map<string, HTMLButtonElement>();
   private readonly panelElements = new Map<string, HTMLDivElement>();
-  private readonly boundHeaderClicks = new Map<string, () => void>();
+  private readonly boundHeaderClicks = new Map<string, (event: Event) => void>();
   private readonly instanceId = `vol-accordion-${++accordionInstanceCounter}`;
 
   constructor(sections: AccordionSection[], options: AccordionOptions = {}) {
@@ -46,11 +47,22 @@ export class Accordion {
     }
   }
 
-  toggle(id: string): void {
-    if (this.openIds.has(id)) {
-      this.close(id);
-    } else {
+  /** `event` verilirse (kullanıcı etkinleştirmesi) bölüm açma/kapama `open`/`close` niyeti olarak duyulur. */
+  toggle(id: string, event?: Event): void {
+    const opening = !this.openIds.has(id);
+    const header = this.headerElements.get(id);
+    if (event && header) {
+      emitUiIntent({
+        kind: opening ? 'open' : 'close',
+        origin: 'Accordion',
+        target: header,
+        event,
+      });
+    }
+    if (opening) {
       this.open(id);
+    } else {
+      this.close(id);
     }
   }
 
@@ -119,7 +131,7 @@ export class Accordion {
     title.textContent = section.title;
     header.appendChild(title);
 
-    const onClick = (): void => this.toggle(section.id);
+    const onClick = (event: Event): void => this.toggle(section.id, event);
     header.addEventListener('click', onClick);
     this.boundHeaderClicks.set(section.id, onClick);
     this.headerElements.set(section.id, header);

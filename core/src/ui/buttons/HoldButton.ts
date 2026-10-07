@@ -62,6 +62,8 @@ export class HoldButton {
     this.element.className = `vol-hold-button vol-hold-button--${shape}`;
     this.element.style.setProperty('--vol-hold-button-size', `${size}px`);
     this.element.setAttribute('aria-label', label);
+    // Oynanış denetimi: arayüz sesi çalmaz (ateş/şarj/yön sesi oyunun kendi SFX'idir); kök yedek `press` sesi de almaz.
+    this.element.dataset.volSilent = '';
 
     if (icon) this.setIcon(icon);
 
