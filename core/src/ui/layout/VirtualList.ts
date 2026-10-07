@@ -49,10 +49,13 @@ export class VirtualList<T> {
 
     this.spacer = document.createElement('div');
     this.spacer.className = 'vol-virtual-list__spacer';
+    // Düzen sarmalayıcıları listitem zincirini kesmesin (axe aria-required-children).
+    this.spacer.setAttribute('role', 'presentation');
     this.element.appendChild(this.spacer);
 
     this.viewport = document.createElement('div');
     this.viewport.className = 'vol-virtual-list__viewport';
+    this.viewport.setAttribute('role', 'presentation');
     this.element.appendChild(this.viewport);
 
     this.boundScroll = () => this.scheduleRender();
@@ -132,6 +135,9 @@ export class VirtualList<T> {
     for (let i = start; i < end; i++) {
       const row = document.createElement('div');
       row.className = 'vol-virtual-list__row';
+      row.setAttribute('role', 'listitem');
+      row.setAttribute('aria-posinset', String(i + 1));
+      row.setAttribute('aria-setsize', String(this.items.length));
       row.style.height = `${this.itemHeight}px`;
       row.appendChild(this.renderItemFn(this.items[i], i));
       fragment.appendChild(row);

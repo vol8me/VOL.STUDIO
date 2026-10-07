@@ -91,7 +91,7 @@ class ItemView {
 
     this.element = document.createElement('div');
     this.element.className = 'vol-slot-grid__item';
-    this.element.setAttribute('role', 'gridcell');
+    this.element.setAttribute('role', 'listitem');
     this.element.setAttribute('aria-label', this.ariaLabel());
     this.element.dataset.itemId = item.id;
     this.element.dataset.slotIndex = String(index);
@@ -270,7 +270,9 @@ export class SlotGrid {
 
     this.element = document.createElement('div');
     this.element.className = 'vol-slot-grid';
-    this.element.setAttribute('role', 'grid');
+    // Izgara klavye ok gezinmesi sunmaz; `grid` rolü satır/hücre yapısı ve ok tuşu sözleşmesi ister.
+    // Doğru anlam: dolu slotlar bir liste, boş hücreler ve yerleşim katmanları dekordur.
+    this.element.setAttribute('role', 'list');
     this.element.style.setProperty('--vol-slot-grid-columns', String(this.columns));
     if (options.size) {
       this.element.style.setProperty('--vol-slot-grid-size', `${options.size}px`);
@@ -278,10 +280,12 @@ export class SlotGrid {
 
     this.cellsEl = document.createElement('div');
     this.cellsEl.className = 'vol-slot-grid__cells';
+    this.cellsEl.setAttribute('aria-hidden', 'true');
     this.element.appendChild(this.cellsEl);
 
     this.itemsEl = document.createElement('div');
     this.itemsEl.className = 'vol-slot-grid__items';
+    this.itemsEl.setAttribute('role', 'presentation');
     this.itemsEl.style.pointerEvents = 'none';
     this.element.appendChild(this.itemsEl);
 

@@ -76,13 +76,14 @@ export class Tree {
     }
 
     const previous = this.selectedId ? this.itemElements.get(this.selectedId) : undefined;
-    previous?.querySelector(':scope > .vol-tree__row')?.setAttribute('aria-selected', 'false');
+    // `aria-selected` treeitem (li) üzerindedir; satır (div) rolsüzdür ve özniteliği taşıyamaz (axe aria-allowed-attr).
+    previous?.setAttribute('aria-selected', 'false');
     previous?.querySelector(':scope > .vol-tree__row')?.classList.remove('vol-tree__row--selected');
 
     this.selectedId = id;
     const next = this.itemElements.get(id);
     const row = next?.querySelector(':scope > .vol-tree__row');
-    row?.setAttribute('aria-selected', 'true');
+    next?.setAttribute('aria-selected', 'true');
     row?.classList.add('vol-tree__row--selected');
   }
 
@@ -103,11 +104,11 @@ export class Tree {
 
     if (this.selectedIds.has(id)) {
       this.selectedIds.delete(id);
-      row.setAttribute('aria-selected', 'false');
+      item?.setAttribute('aria-selected', 'false');
       row.classList.remove('vol-tree__row--selected');
     } else {
       this.selectedIds.add(id);
-      row.setAttribute('aria-selected', 'true');
+      item?.setAttribute('aria-selected', 'true');
       row.classList.add('vol-tree__row--selected');
     }
     this.onSelectionChangeHandler?.(this.getSelectedIds());
@@ -126,11 +127,11 @@ export class Tree {
     const row = document.createElement('div');
     row.className = 'vol-tree__row';
     row.style.setProperty('--vol-tree-depth', String(depth));
-    row.setAttribute('aria-selected', 'false');
+    item.setAttribute('aria-selected', 'false');
     row.tabIndex = -1;
     if (node.disabled) {
       row.classList.add('vol-tree__row--disabled');
-      row.setAttribute('aria-disabled', 'true');
+      item.setAttribute('aria-disabled', 'true');
     }
 
     const caret = document.createElement('span');
@@ -168,9 +169,12 @@ export class Tree {
     if (hasChildren) {
       childListOuter = document.createElement('div');
       childListOuter.className = 'vol-tree__children-outer';
+      // Sarmalayıcı yalnız düzen içindir; treeitem -> group -> treeitem zincirini kesmemesi için rolsüz geçer.
+      childListOuter.setAttribute('role', 'presentation');
 
       childList = document.createElement('ul');
       childList.className = 'vol-tree__children';
+      childList.setAttribute('role', 'group');
       for (const child of node.children ?? []) {
         childList.appendChild(this.buildNode(child, depth + 1));
       }
