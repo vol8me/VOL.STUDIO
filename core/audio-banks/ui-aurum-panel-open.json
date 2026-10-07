@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-panel-open",
+    "hash": "sha256:f26f4b008c3fd7f913e9470b166044d26ddfb9a385fb5b164dda1bf353aeaaf1",
+    "path": "devtools/audio-synth/records/families/ui-aurum-panel-open/family.json",
+    "seed": 9391,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:e073acabffa8cc19cae2b81679644f60b0a06d77e7a326b1c2bf7ea4b8c5ca8f",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-panel-open/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 6716,
+        "encodedHash": "sha256:7dc3a2372797a0be5829e6626a631260e827428db182a0c7b000ac1b6f021260",
+        "path": "public/assets/audio/ui/aurum/panel-open-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.22,
+        "centroidHz": 258.1110329241415,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.34,
+      "key": "panel-open-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -23.266534410244525,
+        "truePeakDbtp": -5.029023009863039
+      },
+      "manifest": {
+        "hash": "sha256:add246e934b7e32606e336740c33bab6a641743594e8c3276e20fc794de26583",
+        "path": "audio-manifests/ui/aurum/panel-open-a.json"
+      },
+      "pcmHash": "sha256:7aa6bd37335fdbecd08eb5ad83e3d27a1c6d7ec3c27fc87b8328f6cc3e443446",
+      "programHash": "sha256:40bf13d3bbba67c1809e1d965da7b241140861254ad913be331cedd8938c9d83",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "panel-open"
+      ],
+      "variantId": "v-ec4ea466ec9a2812"
+    },
+    {
+      "asset": {
+        "bytes": 6706,
+        "encodedHash": "sha256:0cd0471945b94b74ef6ad8b5251b0416334cf3fa01fc79eaec223fb9dcfdfae4",
+        "path": "public/assets/audio/ui/aurum/panel-open-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.22,
+        "centroidHz": 238.77707705388298,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.34,
+      "key": "panel-open-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -22.647129815441332,
+        "truePeakDbtp": -4.953440594249444
+      },
+      "manifest": {
+        "hash": "sha256:9a7480e99c628c8ac948680161adc77d1873464475346658cad26aaf54a18baf",
+        "path": "audio-manifests/ui/aurum/panel-open-b.json"
+      },
+      "pcmHash": "sha256:6c2642a3fea5f2d321cd1c23417386c8a8685af60eb1e8a7fa8a1f80f26f5b38",
+      "programHash": "sha256:54e56ed130155f88424a143ece2c6943ddaf58aba7492b39dc0d2e6087866085",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "panel-open"
+      ],
+      "variantId": "v-edb844e38a3d0899"
+    },
+    {
+      "asset": {
+        "bytes": 6707,
+        "encodedHash": "sha256:9aabebc68dc8359d33095ae0905975dcd6ac1a4e4c37d80df86fbc76c77e93e0",
+        "path": "public/assets/audio/ui/aurum/panel-open-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.22,
+        "centroidHz": 223.20797871553916,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.34,
+      "key": "panel-open-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -22.43761022464757,
+        "truePeakDbtp": -4.945825979455314
+      },
+      "manifest": {
+        "hash": "sha256:68792842623433dad279fedd511896d2d10361c0df47af0ccfc482eb8d0c57b9",
+        "path": "audio-manifests/ui/aurum/panel-open-c.json"
+      },
+      "pcmHash": "sha256:336a102eddf2afc23dad09a377e5ad1ebe6409e33a9a1497b660708658422921",
+      "programHash": "sha256:0865a71b1a299fc45160857d444e36204ff702b6fb47ee6322ff574f6a14ac77",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "panel-open"
+      ],
+      "variantId": "v-d69318b1ed321bc0"
+    }
+  ]
+}

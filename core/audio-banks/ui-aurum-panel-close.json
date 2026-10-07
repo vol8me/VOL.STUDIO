@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-panel-close",
+    "hash": "sha256:f371f1b935f76e41a7414f67488bcaa746b9dfaf3f74c6169969444a2a423a0b",
+    "path": "devtools/audio-synth/records/families/ui-aurum-panel-close/family.json",
+    "seed": 9398,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:33007b23c0d8cbf053977ca361b32349cbc987c895da182a56b842cee53550a4",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-panel-close/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5673,
+        "encodedHash": "sha256:b4f84ad591b5ed35d521d01f21e8396f15ddbae3f2062fd0d4ad3bb3ac8ca265",
+        "path": "public/assets/audio/ui/aurum/panel-close-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.13,
+        "centroidHz": 222.17769027013662,
+        "pitchHz": 356.39305313018485
+      },
+      "durationSeconds": 0.22733333333333333,
+      "key": "panel-close-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.86834825269921,
+        "truePeakDbtp": -6.700635646546256
+      },
+      "manifest": {
+        "hash": "sha256:70b253be50eedda00edbb6d3d503a158a762a6a357d1780ce36b764897e85c31",
+        "path": "audio-manifests/ui/aurum/panel-close-a.json"
+      },
+      "pcmHash": "sha256:813140397b1c7f4458a6dbad6f255429c9574339cbc5fcc8f324fb144b9d6a3b",
+      "programHash": "sha256:3553a88a3e2a164a70c5eef5f8e6b3eb1c336e541a35e59c74f36af4340fbad1",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "panel-close"
+      ],
+      "variantId": "v-471613953e10f1c3"
+    },
+    {
+      "asset": {
+        "bytes": 5677,
+        "encodedHash": "sha256:28d4cfa375ffe79f4cdcf20bb7ab48d70e48756dc8a4e97fddfa4380a946a5b8",
+        "path": "public/assets/audio/ui/aurum/panel-close-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.13,
+        "centroidHz": 208.79693424220017,
+        "pitchHz": 356.5368676910472
+      },
+      "durationSeconds": 0.22733333333333333,
+      "key": "panel-close-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.43457684638871,
+        "truePeakDbtp": -7.028375191052367
+      },
+      "manifest": {
+        "hash": "sha256:ea6a32bfbe7087873ccf4645793c03f76c50d40158894d91f3673dd160b56a2c",
+        "path": "audio-manifests/ui/aurum/panel-close-b.json"
+      },
+      "pcmHash": "sha256:73d85afb2ff53bf99cdf63827f5a4c4d00acd2ff27be96a9d0e97d4890dd888c",
+      "programHash": "sha256:7d6c0dd98cb8fa27eba1c5eabc8e74e29a66cbae03871844721b2c19b15a472b",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "panel-close"
+      ],
+      "variantId": "v-9447044e3883c0e2"
+    },
+    {
+      "asset": {
+        "bytes": 5690,
+        "encodedHash": "sha256:ad5b37f79e32aabc62e40b2a611c9e13f8dbcff3a5a27888e2af568ba4fa6186",
+        "path": "public/assets/audio/ui/aurum/panel-close-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.14,
+        "centroidHz": 189.63394439221142,
+        "pitchHz": 341.2325171992544
+      },
+      "durationSeconds": 0.22733333333333333,
+      "key": "panel-close-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.221439697361628,
+        "truePeakDbtp": -6.9251964118132285
+      },
+      "manifest": {
+        "hash": "sha256:9d9ade01756c71c1025b63567c76f9642a62511e89a16a04d2e535181511e215",
+        "path": "audio-manifests/ui/aurum/panel-close-c.json"
+      },
+      "pcmHash": "sha256:c60c73304e869e492c2619a9ef39ac28488607aa3d731f5beddebc9a0d5afa69",
+      "programHash": "sha256:e4d1b4d5185f9c5c59c29868b9ce083dca5f080717abb3a2ca11e4207acfa087",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "panel-close"
+      ],
+      "variantId": "v-cc588e2110e7cd20"
+    }
+  ]
+}

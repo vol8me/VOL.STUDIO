@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-level-up",
+    "hash": "sha256:4f3d205092ff9bec71511b78940d014682a6067d80830dc5c9b5f3a1c8d31afd",
+    "path": "devtools/audio-synth/records/families/ui-aurum-level-up/family.json",
+    "seed": 9440,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:37c39eeb1d4d026d34c5c82e1ad0d214a335b3a38493ddfbd7d9419289b888fa",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-level-up/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 10657,
+        "encodedHash": "sha256:175b847c35da250eae639ea2c82a93bfdc13430f90c25dffe044b76c3e0f82e8",
+        "path": "public/assets/audio/ui/aurum/level-up-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.83,
+        "centroidHz": 1119.658025202083,
+        "pitchHz": 413.13684536975023
+      },
+      "durationSeconds": 1.1120208333333332,
+      "key": "level-up-a",
+      "loudness": {
+        "integratedLufs": -15.878998254045497,
+        "maxMomentaryLufs": -13.082870881692871,
+        "truePeakDbtp": -1.791443869550199
+      },
+      "manifest": {
+        "hash": "sha256:6db44dc888a13805bd0aee44cc04ba5320b121cabfee8d98f2c363ccde641889",
+        "path": "audio-manifests/ui/aurum/level-up-a.json"
+      },
+      "pcmHash": "sha256:e055b979779979608e226b715b10c682bc86cd763a8ef66407ee3742b4829a02",
+      "programHash": "sha256:cb43f68fed5e4be040d640e4602b43af151263bfff2c9ecd88b188b32d1bc1f0",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "level-up"
+      ],
+      "variantId": "v-32b9573c97b3e44f"
+    },
+    {
+      "asset": {
+        "bytes": 10705,
+        "encodedHash": "sha256:b2d96c8c1da0ca8fc85e3926f3a0e0c7a6b186969f71f0106ecddc73ce4ec8b6",
+        "path": "public/assets/audio/ui/aurum/level-up-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.83,
+        "centroidHz": 1049.9592416956605,
+        "pitchHz": 551.8675778017894
+      },
+      "durationSeconds": 1.1120208333333332,
+      "key": "level-up-b",
+      "loudness": {
+        "integratedLufs": -15.775380416433096,
+        "maxMomentaryLufs": -13.02020403213761,
+        "truePeakDbtp": -1.9883779709415625
+      },
+      "manifest": {
+        "hash": "sha256:ffa88f9d9fd4c8875ca8805ea7b922097e0b0361c5d11f7b72bf591453ac820e",
+        "path": "audio-manifests/ui/aurum/level-up-b.json"
+      },
+      "pcmHash": "sha256:71c23718878bd77dcc4b58196266eb0a2a7e64d331804dd0a89168eae18f2016",
+      "programHash": "sha256:ec4648a81996af61e405b0f4063b069b23fece25597b366d3071b1d2b67334ef",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "level-up"
+      ],
+      "variantId": "v-46193dd78122297a"
+    },
+    {
+      "asset": {
+        "bytes": 10678,
+        "encodedHash": "sha256:1c9052eb2129570eb190f89402c0a276c7a44680a078b3c502517ec1afcafc9b",
+        "path": "public/assets/audio/ui/aurum/level-up-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.84,
+        "centroidHz": 998.632455015806,
+        "pitchHz": 718.7448419234163
+      },
+      "durationSeconds": 1.1120208333333332,
+      "key": "level-up-c",
+      "loudness": {
+        "integratedLufs": -15.227766611708228,
+        "maxMomentaryLufs": -12.614470500302467,
+        "truePeakDbtp": -2.0489605507617235
+      },
+      "manifest": {
+        "hash": "sha256:8e57ec932ac3dec6e3b4d08e2009633b17f04e431abae100575d7c19930e81a4",
+        "path": "audio-manifests/ui/aurum/level-up-c.json"
+      },
+      "pcmHash": "sha256:865ad394e2a5178d78b7e8c3c9b27bad58cb9d355a7a0ec4ab302004d04d05a6",
+      "programHash": "sha256:89f83839830fa600a02f3d3235262a549bae7883d43e99f52cf275e6c14bb40a",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "level-up"
+      ],
+      "variantId": "v-9a090c27f8254c65"
+    }
+  ]
+}

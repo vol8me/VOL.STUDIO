@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:94c84fb2c693f76177223b897a46f9657a4ccf4473b7e18aa817f956e0110c77",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:ec7c04555ee8587a98e3a5c6bb757e13fe9c033249c3395c7a1fac17d71d67ad",
+    "familyId": "ui-aurum-drag-drop",
+    "kind": "family-variant",
+    "variantId": "v-919d5dedf0ffe94d",
+    "variantKey": "drag-drop-c"
+  }
+}

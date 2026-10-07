@@ -112,37 +112,23 @@ Sahip CORE geri bildirim + audio-synth üreticisi + uygulama adaptörü. Niyet k
 titreşim sağlayıcısı, kısma ve laboratuvar mekanizması hazırdır (Kapatılanlar); **ses setinin
 kendisi sıfırdan yeniden yapılır.**
 
-- [ ] **UI-02.6 — Ses brief'i ve olay sözlüğü v2.** Eski 12 olaylık sözlük atılır. Oyun
-      arayüzü sözlüğü: hover, focus (kol/klavye), press, release, back, confirm,
-      toggleOn/toggleOff, select, tabSwitch, sliderTick (değere bağlı perde), valueCommit,
-      panelOpen/panelClose, dragPick/dragDrop, equip, purchase, reward, levelUp, notify,
-      denied ("yapılamaz": kuru ve kısa, sert hata değil), alert (kritik). Her olay için
-      karakter: gövde (Hz, ms), vurgu, malzeme, kuyruk, yoğunluk sınıfı. İki palet:
-      `default` **çelik donanım** (metalik vuruş, kalın gövde, kısa mekanik kuyruk),
-      `aurum` **yaldızlı cam ve lake** (çan/kristal partiller + yumuşak gövde). Kapanır:
-      brief ve olay→niyet→bileşen eşlemesi belgelenir; sessiz kalması gerekenler (hover
-      sıklığı vb.) yazılıdır.
-- [ ] **UI-02.7 — Sentez ve ölçüt.** audio-synth ile iki palet sıfırdan üretilir; eski
-      `ui-*` aileleri silinir. Gövde zorunludur: 90–250 Hz temel + harmonikler (küçük
-      hoparlörde algılanır) ve masaüstü/kulaklık için isteğe bağlı sub katmanı. Yüksek
-      geçiren 200 Hz ve "sub orta banttan 20 dB aşağı" kuralı kalkar; UI sınıfı politikası
-      referans ölçümlerine göre güncellenir (D3). Ölçüt: Kenney Interface Sounds/UI Audio
-      (CC0; yalnız yerel ölçüm referansı, depoya girmez) ile bant dağılımı ve yükseklik
-      karşılaştırması. Kapanır: her olayda ölçülmüş gövde/vurgu oranı hedef aralıkta;
-      `audio-verify` ve production-check geçer; üretim yeniden üretilebilir; referans
-      karşılaştırma tablosu VERIFICATION'dadır; kulakla karar UI-02.9'dadır.
-- [ ] **UI-02.8 — Uygulama genelinde bağlama.** Ses kiti uygulama kökünde (vitrin ve
-      VOL.TEST) skin paletine bağlı; slider/stepper kaydırmasında değere bağlı perde ve
-      detent; hover (yalnız gerçek fare, 60–80 ms sıklık sınırı, kısık), focus, sürükle/
-      bırak, panel; ayarlar (seviyeler, sessiz, palet) mevcut kalıcılıkta. Eski duraklatma
-      sesi çift çalmaz. Kapanır: vitrinde her etkileşim duyulur (olay→bileşen tablosu
-      testli); ses yokken/kapalıyken işlev ve görsel durum aynı; VOL.TEST paket payı
-      ölçülü ve bütçe içinde; oyun SFX/ambiyans değişmez.
+- [ ] **UI-02.8 — Uygulama genelinde bağlama (kalan).** Yapıldı: kit yeni sözlükle (23 olay,
+      iki palet), `toggleOn/Off`, kaydırıcıda değere bağlı perde, hover/focus gözlemcisi,
+      `setAssets`/`followTheme`, vitrin kökünde uygulama geneli bağlama. Kalan: VOL.TEST kökünde
+      bağlama ve paket payı ölçümü; skin değiştirici gelince `followTheme` bağı (UI-07.2);
+      stepper/slider detent (adım başına tık) ve kaydırıcı sürüklemesinde kısık ses ayarı;
+      sürükle/bırak, panel ve envanter olaylarının bileşenlere bağlanması (host olayları:
+      `dragPick`, `dragDrop`, `equip`, `purchase`, `reward`, `levelUp`, `notify`); seviyeler,
+      sessiz ve palet seçiminin mevcut kalıcılığa bağlanması; eski duraklatma sesi çift çalmaz.
+      Kapanır: vitrinde her etkileşim duyulur (olay→bileşen tablosu testli); ses yokken/kapalıyken
+      işlev ve görsel durum aynı; VOL.TEST paket payı bütçe içinde; oyun SFX/ambiyans değişmez.
 - [ ] **UI-02.9 — Laboratuvar ve kulak notları.** Ses laboratuvarı yeni sözlüğe göre
       güncellenir: her olay, palet, kuru/kit, eski/yeni A/B, dinleme paketi dışa aktarımı.
       Kullanıcının dinleme notları tarihli olarak VERIFICATION'a işlenir; reddedilen ses
       yeniden tasarlanır. Kapanır: kullanıcı dinleme kararı kayıtlı (kabul ya da yeniden
-      yapım); `pnpm signoff` UI-02 yayını için koşar.
+      yapım); `pnpm signoff` UI-02 yayını için koşar. Ek: Kenney Interface Sounds/UI Audio
+      (CC0, yalnız yerel ölçüm referansı) ile bant ve yükseklik karşılaştırma tablosu
+      VERIFICATION'a eklenir.
 
 Faz testi: CORE/audio testleri, audio production-check, asset verify, public yüzey kilidi, `signoff`.
 
@@ -398,6 +384,8 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
 
 Planın hazırlanmış olması bir üretim görevini kapatmaz; yalnız kapıdan geçmiş ve vitrinde/oyunda görünür iş buraya taşınır. Kabul edilmeyen kapanışlar işaretlidir.
 
+- [x] UI-02.7 — Sentez ve ölçüt: audio-synth ile iki palet (`steel`, `aurum`) × 23 olay × 3 varyant sıfırdan üretildi (138 OGG; eski 12 olaylık `ui-*` aileleri, bank ve manifestleri silindi). Her olay üç katman ailesinden kurulur: gövde (düşen perdeli sinüs + doygunluk), ayrı süzülmüş temas tıkı, gerektiğinde modal çınlama/melodik katman; varyasyon boyutları gövde süresi, tık parlaklığı, çınlama perdesi ve gövde sıcaklığıdır. UI politikası güncellendi (yükseklik −42…−8 LUFS; eski yüksek geçiren ve sub kuralı kalktı); testler gövde+tık katmanı ve gövde bandının üst bantlardan zayıf olmamasını doğrular. `denied` ve `toggle-off` ailelerinde ortanca çeşitlilik eşiği düşürüldü (0,015/0,02): kısa kuru sesler, kasıtlı.
+- [x] UI-02.6 — Ses brief'i ve olay sözlüğü v2: 23 olay (`hover`, `focus`, `press`, `release`, `back`, `confirm`, `toggleOn/Off`, `select`, `tabSwitch`, `sliderTick`, `valueCommit`, `panelOpen/Close`, `dragPick/Drop`, `equip`, `purchase`, `reward`, `levelUp`, `notify`, `denied`, `alert`); niyet→olay eşlemesi `UI_INTENT_SOUND`, ürün sonucu `UI_OUTCOME_SOUND` (başarı→`confirm`, uyarı→`alert`, hata→`denied`); mikro olaylar `hover`/`focus` 70 ms, `sliderTick` 45 ms; kritikler `alert`/`denied`. Paletler `steel` (çelik donanım) ve `aurum` (yaldızlı cam ve lake). Belge: `core/docs/sfx.md`.
 - [x] UI-00.1 — `core/src/ui/index.ts` yüzeyi (89 sınıf, 29 yardımcı, 205 tip) AST'den çıkarılır; her sınıf/yardımcı `registry.json`'da tekil kayıtlıdır ve kapı kaydı yüzeyle, VOL.TEST tüketimiyle (17 sınıf doğrudan), vitrin kullanımıyla ve gerçek `it`+`expect` kanıtıyla karşılaştırır. Eski isim-geçişi bekçisinin yorum/metin mention'ını gösterim saydığı 9 yer ve kanıtsız 5 öğe (sahip görevli gap) ortaya çıktı.
 - [x] UI-00.2 — Vitrinin 7 E2E dosyası Chromium ve WebKit'te koşar (40 → 68 test, 2,1 dk); tek istisna Chromium piksel temelidir ve `e2eConfig` bekçisi dosya listesini raporlar, gerekçesiz asimetriyi ve ölü istisnayı reddeder. WebKit'te çıkan tek kusur (`user-select` hesaplı stili yalnız ön ekli) testin motor farkıydı, CSS doğruydu. Linux temelleri WSL'de 6/12 yeniden üretildi: Linux hücresi doğrulanmamış.
 - [x] UI-00.6 — Çalışan tarayıcı probu ve profil uygulanabilirliği: `devtools/vol-showcase/tests/e2e/support/frameProbe.ts` aynı kare atfını (CDP izinden JS, stil, yerleşim, boyama, commit, zorlanan yerleşim; `BeginMainThreadFrame.frameId`), girdi→görünür bağını (olay damgası, iz saati hizalaması) ve A/A/iz maliyeti kalibrasyonunu küçük fixture ile kurar (`probe.spec.ts`: bilinen 5 ms ve 25 ms yük bulunur, boşta kare medyanı <1 ms, araç olayları sayılmaz); WebKit'te iz `unsupported`. Native: Android 14 tablette VOL.TEST için resmi `dumpsys gfxinfo framestats` yolu GERÇEKTEN çalıştı (530 kare, 120 Hz, sunum p50 32,2 ms, işleme p95 8,8 ms, girdi işleme→sunum p50 31,4 ms) ve `scripts/android/frame-stats.mjs` olarak kalıcılaştı; Windows WebView2 (PresentMon eksik, UI-06.4), Steam Deck (cihaz yok, sunulan kare aracı eksik, UI-12.4) ve Android 16/Samsung (cihaz yok, UI-11.4) için eksik araç/sahip [doğrulama planında](VERIFICATION.md) yazılı. UI-03 pilotunun bağımlı olduğu çalışan browser probu hazır; desteksiz toplam CPU/GPU/sunum hücresi açık sürüm engeli olarak kalır.

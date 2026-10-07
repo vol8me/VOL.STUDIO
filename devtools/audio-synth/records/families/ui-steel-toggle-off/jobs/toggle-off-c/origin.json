@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:1f1da245733f4929ba72432e8a4947057e0310e569c8c80979f9b7dabdda3159",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:7ea00a93b6f0a8bb129101c305618a3950cd80983699c70448f1e4e040adfe3d",
+    "familyId": "ui-steel-toggle-off",
+    "kind": "family-variant",
+    "variantId": "v-27e84e47ff3b1d2a",
+    "variantKey": "toggle-off-c"
+  }
+}

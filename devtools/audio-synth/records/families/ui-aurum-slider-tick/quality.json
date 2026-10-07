@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.03,
+        "measured": 3,
+        "median": 0.03,
+        "min": 0.03,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 236.558,
+        "measured": 3,
+        "median": 225.065,
+        "min": 218.275,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -35.7981,
+        "measured": 3,
+        "median": -36.5359,
+        "min": -37.0047,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 0,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.230791,
+    "medianDistance": 0.205714,
+    "minDistance": 0.0679615,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 1.53,
+    "medoid": "slider-tick-b",
+    "members": [
+      {
+        "distance": 1.417,
+        "key": "slider-tick-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "slider-tick-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 1.53,
+        "key": "slider-tick-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "slider-tick-a",
+      "nearest": {
+        "distance": 0.0679615,
+        "key": "slider-tick-b"
+      },
+      "pcmHash": "sha256:ea5643157a38da906ed354e388b98f67b80afb05d2eb84d60c0e671f837795cf"
+    },
+    {
+      "key": "slider-tick-b",
+      "nearest": {
+        "distance": 0.0679615,
+        "key": "slider-tick-a"
+      },
+      "pcmHash": "sha256:3a707dd9cf52ec9aeca8b7c67bf68e94c0d0c0fe9e403222c5fb9ff863496a5c"
+    },
+    {
+      "key": "slider-tick-c",
+      "nearest": {
+        "distance": 0.205714,
+        "key": "slider-tick-b"
+      },
+      "pcmHash": "sha256:8ce3747aac920020f00ff0d02c4566dde60329d9d0ffff99dee3784666133c3d"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:7ba1ba380c7863c10aae158fcb7c0c8b95f4fc13b85de9dd0818704e6b63eacc",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:7a17671220508524b6cad000569bea1eda9d853e06c73620616e6d6d542c982b",
+    "familyId": "ui-steel-value-commit",
+    "kind": "family-variant",
+    "variantId": "v-9c0d377a800cebea",
+    "variantKey": "value-commit-c"
+  }
+}

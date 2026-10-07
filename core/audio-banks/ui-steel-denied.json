@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-steel-denied",
+    "hash": "sha256:ec34efd141f895fdd162ed1e3dc6bc21c64c275dfbf55f3ccb53099108695e7b",
+    "path": "devtools/audio-synth/records/families/ui-steel-denied/family.json",
+    "seed": 9307,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:5297032e3dcc9152b49c682e7a1f32ab985612672cd5a3c02a33b8a3df6ee5bb",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-steel-denied/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5615,
+        "encodedHash": "sha256:d94d9c33886d3198cfcaa782853dee5914d1adb374d03c06dcbe1797db0901c5",
+        "path": "public/assets/audio/ui/steel/denied-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.14,
+        "centroidHz": 141.96789382655234,
+        "pitchHz": 181.10208789461066
+      },
+      "durationSeconds": 0.22033333333333333,
+      "key": "denied-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.356438589109178,
+        "truePeakDbtp": -5.105024347974069
+      },
+      "manifest": {
+        "hash": "sha256:d67392f32ccae32ca28c66a4d7bfcbae9dd951b270b43621ee4cb93c5daed2a5",
+        "path": "audio-manifests/ui/steel/denied-a.json"
+      },
+      "pcmHash": "sha256:4d4a6661ebf840f4d2d89562cbaf7a434448222374d2d75fe64c00dbdddad7c4",
+      "programHash": "sha256:bd1af22fb6146b7f5f18745307ad22d193e2fb553d30a9588c9f89e408a8700a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "denied"
+      ],
+      "variantId": "v-55a2b5d61bdc78f3"
+    },
+    {
+      "asset": {
+        "bytes": 5622,
+        "encodedHash": "sha256:124b1b4894484f8d3354b66eef9011d4ece0cb85123cb37bfab407b3086b09b2",
+        "path": "public/assets/audio/ui/steel/denied-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.14,
+        "centroidHz": 135.47412247930495,
+        "pitchHz": 177.4128091444531
+      },
+      "durationSeconds": 0.22033333333333333,
+      "key": "denied-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.294971923884855,
+        "truePeakDbtp": -4.999206528629341
+      },
+      "manifest": {
+        "hash": "sha256:60da263158f92b6aa3fcc8689b4df3a4015edc98b8aa5db64049c53f0cff9e59",
+        "path": "audio-manifests/ui/steel/denied-b.json"
+      },
+      "pcmHash": "sha256:ba452d0a97f49a847149133650cd5dbdd794fd83d3d51e87ced4ec7869028298",
+      "programHash": "sha256:a32d051a92dd73e364e5337e9d1e5ab2d903e820c7e970fd09e55c0016ff2864",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "denied"
+      ],
+      "variantId": "v-15eba20539948758"
+    },
+    {
+      "asset": {
+        "bytes": 5618,
+        "encodedHash": "sha256:9632f9abb2a764396b1cac5ea40263101164d08121494eb012b969a7e605521b",
+        "path": "public/assets/audio/ui/steel/denied-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.14,
+        "centroidHz": 133.53132906892372,
+        "pitchHz": 97.65213540240222
+      },
+      "durationSeconds": 0.22033333333333333,
+      "key": "denied-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.187153784605613,
+        "truePeakDbtp": -5.038294659331735
+      },
+      "manifest": {
+        "hash": "sha256:8d73eea78b14a8abfded057cf5a4d47cdbd08487fd09704c42aa5ec86ace3cad",
+        "path": "audio-manifests/ui/steel/denied-c.json"
+      },
+      "pcmHash": "sha256:3aaf20145cf17cb2721df3f4d07caf4ccf995727eb17ce874889d0fcfde0bf3a",
+      "programHash": "sha256:b858a6274e13ea56c381df8d7afb18151e6843b1f7305aa781010cbd3c020a66",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "denied"
+      ],
+      "variantId": "v-500de06cb8e8d3f0"
+    }
+  ]
+}

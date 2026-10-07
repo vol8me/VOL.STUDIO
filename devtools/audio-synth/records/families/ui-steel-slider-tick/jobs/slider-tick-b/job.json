@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-c47fa89b1535328d": {
+        "hash": "sha256:dd68f0c7a63d5d24b144acc310973b45dc86f4ffec484b19f2ca184ea2e59c3a",
+        "path": "analyses/r-c47fa89b1535328d.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:4e731828c0255d0de43573bd24dbbf18a0c0bb8fa11309a1af41079bc41b7939",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:4e731828c0255d0de43573bd24dbbf18a0c0bb8fa11309a1af41079bc41b7939",
+      "hash": "sha256:f9da7069eeedee71611ccee09ace47eed6551279e1b01cedc523e19b8e38f5b4",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:6657b6941ae035e4d9f72e5bba4e3f9d87ca6042bc2e9adae838150673fd2a32",
+      "path": "core/audio-manifests/ui/steel/slider-tick-b.json"
+    },
+    "renders": {
+      "r-c47fa89b1535328d": {
+        "hash": "sha256:d4a6ade62cd02ce3f12c9810f5ade62b58462e61e3ca61f32336e8013948246b",
+        "path": "renders/r-c47fa89b1535328d.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:d05a7400d48f5e247ba19d69cc81c541a3a34d6109feebd75e37490baea01a26",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "slider-tick-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/slider-tick-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-slider-tick/slider-tick-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

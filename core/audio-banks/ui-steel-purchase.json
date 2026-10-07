@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-steel-purchase",
+    "hash": "sha256:bdc1414adc5cfd0da0814353b3437433b1a0ae27aef1acab7a27b212930eb1ba",
+    "path": "devtools/audio-synth/records/families/ui-steel-purchase/family.json",
+    "seed": 9426,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:edefa40f0631e8ba514bb1e36628edd9df8d2c86d4e1e818f27aaf692d6df49a",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-steel-purchase/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5198,
+        "encodedHash": "sha256:fc744d9c6af7debea87804100601485e112734d680c3f916914acaa0d689afab",
+        "path": "public/assets/audio/ui/steel/purchase-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.12,
+        "centroidHz": 186.63326751702706,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.28733333333333333,
+      "key": "purchase-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -23.57397574475109,
+        "truePeakDbtp": -3.9408349283606245
+      },
+      "manifest": {
+        "hash": "sha256:bcae4457346360a15a351d001d8caafe722031c490ae60af5693e052d0f84cd5",
+        "path": "audio-manifests/ui/steel/purchase-a.json"
+      },
+      "pcmHash": "sha256:eea59346ce4e0b6c1fcfe6ec1854f01d0c91c95a8207eea2f78daa034e0a6464",
+      "programHash": "sha256:57ad896e44b91449d8a9c5b5b4598ce0a5f1f9019a5a17ba35efb3af6e0f4a75",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "purchase"
+      ],
+      "variantId": "v-65e029f2fbd55e43"
+    },
+    {
+      "asset": {
+        "bytes": 5236,
+        "encodedHash": "sha256:7186d15b2a4cf13bde45fd328ac4c5ec9114d02ac78edc5105e65d3dd5b21785",
+        "path": "public/assets/audio/ui/steel/purchase-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.12,
+        "centroidHz": 204.49190276588575,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.28733333333333333,
+      "key": "purchase-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -23.025427194972337,
+        "truePeakDbtp": -3.7576517629456676
+      },
+      "manifest": {
+        "hash": "sha256:f3f5365a6b8c67acf773f6c78e8ab66340fadcb44ad7220fb3bccb1624888226",
+        "path": "audio-manifests/ui/steel/purchase-b.json"
+      },
+      "pcmHash": "sha256:ccafa033e4bf4989f906b4b928d9f0b30ad905247a7d77e850058695d4926a8e",
+      "programHash": "sha256:29db3180378af08fcb47868985f30b597b6acd31f66b0ac5adcdc22ef50a1d2f",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "purchase"
+      ],
+      "variantId": "v-a4ef816084b06043"
+    },
+    {
+      "asset": {
+        "bytes": 5218,
+        "encodedHash": "sha256:fac04154d16b3d7502c3be816bd6009ef06538be74ba0add7545335fce32d279",
+        "path": "public/assets/audio/ui/steel/purchase-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.12,
+        "centroidHz": 267.5203772473623,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.28733333333333333,
+      "key": "purchase-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -22.316204652899174,
+        "truePeakDbtp": -3.833179928324099
+      },
+      "manifest": {
+        "hash": "sha256:0567ae1047503e3b92b6f62d7f78ac387f3959f9731824db3983ac6124b4bf6f",
+        "path": "audio-manifests/ui/steel/purchase-c.json"
+      },
+      "pcmHash": "sha256:a30b4be04eb394d407bc1f18909ecc16dac253e23a4bff1ebeb675ec253fd940",
+      "programHash": "sha256:5b03a24e2f71b13f5a7af5a00e1a29c06855717e59a291a2e0a8af61513f6530",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "purchase"
+      ],
+      "variantId": "v-ecf25d7cb71d11d6"
+    }
+  ]
+}

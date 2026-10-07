@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-reward",
+    "hash": "sha256:b85dfa2c2dfdcd0fd2a1adb8a512e35c7038d5dcae31697dbae425c62f5284b9",
+    "path": "devtools/audio-synth/records/families/ui-aurum-reward/family.json",
+    "seed": 9433,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:d44db1a8f4adbf8a9769353318c21ee43d069e28a9232d9d2454600fd36aa465",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-reward/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 8076,
+        "encodedHash": "sha256:c80e05b513df5fae2defaf1208770ece67d5aaea6798edd2ae127491562653b1",
+        "path": "public/assets/audio/ui/aurum/reward-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.57,
+        "centroidHz": 1414.8771498425779,
+        "pitchHz": 487.2814938452558
+      },
+      "durationSeconds": 0.8093333333333333,
+      "key": "reward-a",
+      "loudness": {
+        "integratedLufs": -20.701568531785863,
+        "maxMomentaryLufs": -17.350124005891395,
+        "truePeakDbtp": -2.8594858065754094
+      },
+      "manifest": {
+        "hash": "sha256:54579ddcd3d06d68a3a7a0205869dfcad8b5b170ea6222a7d8f887afe8648ebb",
+        "path": "audio-manifests/ui/aurum/reward-a.json"
+      },
+      "pcmHash": "sha256:4467f52d36c0bb8931d97b352f27cd407500474fefdfff08382164601f7e4167",
+      "programHash": "sha256:35bdf920a3c6fdf8f93cdc9e5a0079a7d391cc4aa29d3ef05befcdff5f711ebf",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "reward"
+      ],
+      "variantId": "v-e776bae001c881c8"
+    },
+    {
+      "asset": {
+        "bytes": 7995,
+        "encodedHash": "sha256:e1e4fd2e1328f3c9f4b4f4d31e49ece5c3d5aeed332a2d83eacfc1171eeb986b",
+        "path": "public/assets/audio/ui/aurum/reward-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.58,
+        "centroidHz": 1337.1066396143633,
+        "pitchHz": 884.313522940093
+      },
+      "durationSeconds": 0.8093333333333333,
+      "key": "reward-b",
+      "loudness": {
+        "integratedLufs": -19.84639154602254,
+        "maxMomentaryLufs": -16.697354581348954,
+        "truePeakDbtp": -2.9830875192630084
+      },
+      "manifest": {
+        "hash": "sha256:ec8aca366a3fe0bacfb362b63d2580bda393f694bca403a2cfa4423dc4be4aae",
+        "path": "audio-manifests/ui/aurum/reward-b.json"
+      },
+      "pcmHash": "sha256:146a742673c97126ef68f3c07608a87fe7972ae4dde5cadf6ac31a8cddb9910a",
+      "programHash": "sha256:f812c32b0b15a8577e5313de20938b24522775a6fde124d317eb54f38eacbf75",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "reward"
+      ],
+      "variantId": "v-78b346b977ee4b3a"
+    },
+    {
+      "asset": {
+        "bytes": 7953,
+        "encodedHash": "sha256:6c16251fbc1771f745f601537833e01d944718b14f3fb90699d63e252d1a8c50",
+        "path": "public/assets/audio/ui/aurum/reward-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.59,
+        "centroidHz": 1271.1222042843037,
+        "pitchHz": 554.375319117954
+      },
+      "durationSeconds": 0.8093333333333333,
+      "key": "reward-c",
+      "loudness": {
+        "integratedLufs": -18.717386706339763,
+        "maxMomentaryLufs": -15.85613440605354,
+        "truePeakDbtp": -2.939553841820015
+      },
+      "manifest": {
+        "hash": "sha256:b2ab93cbc43d0e76848366642efdd8851fd1c1b1c93038207ce0b14c5c884b73",
+        "path": "audio-manifests/ui/aurum/reward-c.json"
+      },
+      "pcmHash": "sha256:e78a0948859a5a1dfb588bd23386ebaadcf9ed09673a76cece0661b1d5f85468",
+      "programHash": "sha256:2bc6def68156723fb17e2328a95d0a5d3486740fd7ea558d1d49179c39509985",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "reward"
+      ],
+      "variantId": "v-bf4f051c705489e3"
+    }
+  ]
+}

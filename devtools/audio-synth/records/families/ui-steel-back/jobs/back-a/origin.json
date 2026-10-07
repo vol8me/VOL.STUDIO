@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:b2935f65ed94a34bbdc3387a66dc90a5d5950db8c32cf433150e9ace50a5c880",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:b2f84bfdd12bbe6f885b96d1adf9678701cdfa9bde346e96174a8c825dd3a731",
+    "familyId": "ui-steel-back",
+    "kind": "family-variant",
+    "variantId": "v-0dd701a53dcee752",
+    "variantKey": "back-a"
+  }
+}

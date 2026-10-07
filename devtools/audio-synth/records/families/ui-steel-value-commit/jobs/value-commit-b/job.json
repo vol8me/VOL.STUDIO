@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-0bda7fe6ae344e65": {
+        "hash": "sha256:d98fca7a13b4e5787ae99dc0bf631029df525ed8e65d91771ee71eefbd5a2515",
+        "path": "analyses/r-0bda7fe6ae344e65.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:fe29cca0e00dacb7a4e9e68a67dd839cdf0138c8de08aa4d694ed6477e2eaa67",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:fe29cca0e00dacb7a4e9e68a67dd839cdf0138c8de08aa4d694ed6477e2eaa67",
+      "hash": "sha256:36ef8ba6b4266c6a7e7c365a5b3248bde4ca1c0a39decae6563287a11dcf81d8",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:0a6294de0d8d911a81d1bb94883f6f16c88abbf687966df00a8b502ad267152c",
+      "path": "core/audio-manifests/ui/steel/value-commit-b.json"
+    },
+    "renders": {
+      "r-0bda7fe6ae344e65": {
+        "hash": "sha256:c0ce1a02b1d7f4216b2fb50c2111a03be7fe71e9febaa72baed0d9a768469ea3",
+        "path": "renders/r-0bda7fe6ae344e65.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:887cda2bb514cd31835682a32e219801395a47398eba29274c657afe1a4f9bfe",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "value-commit-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/value-commit-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-value-commit/value-commit-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-equip",
+    "hash": "sha256:c31348d910d5cad6867b87e42556c4996a0a4570e89cb52a06eee3013046fe31",
+    "path": "devtools/audio-synth/records/families/ui-aurum-equip/family.json",
+    "seed": 9419,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:d21ddde096bb18aa7079af256d129e90e21084d9e44517b2ffc8fc74779a13d5",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-equip/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 6394,
+        "encodedHash": "sha256:d20001d364c8872550aba32282d59fe3ac45112eb0aefb9b73d1e575ac77715d",
+        "path": "public/assets/audio/ui/aurum/equip-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.27,
+        "centroidHz": 798.3110345290173,
+        "pitchHz": 738.9602277254689
+      },
+      "durationSeconds": 0.4583333333333333,
+      "key": "equip-a",
+      "loudness": {
+        "integratedLufs": -27.200682884811133,
+        "maxMomentaryLufs": -27.200682884811133,
+        "truePeakDbtp": -2.648927573482692
+      },
+      "manifest": {
+        "hash": "sha256:ed947fcc9d96dbfd6ea0fb7c54359eeb8c8efc2d3dc903ec7db2e5e3c0a705e4",
+        "path": "audio-manifests/ui/aurum/equip-a.json"
+      },
+      "pcmHash": "sha256:91c89ea6d9dde1779d987fe5777b594e7388b3b0834163f4c0f542c5321d9912",
+      "programHash": "sha256:5e5c9e4feda8cb16272159559206757f282f70ff809fceb0620db166b35e099f",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "equip"
+      ],
+      "variantId": "v-026dce3a79b3edd7"
+    },
+    {
+      "asset": {
+        "bytes": 6442,
+        "encodedHash": "sha256:edd23f6e810236541212c992d6f467394f188d65a6ac3bac0804801e4dd9e82d",
+        "path": "public/assets/audio/ui/aurum/equip-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.28,
+        "centroidHz": 917.0745350718108,
+        "pitchHz": 699.241274696045
+      },
+      "durationSeconds": 0.4583333333333333,
+      "key": "equip-b",
+      "loudness": {
+        "integratedLufs": -25.946180833207126,
+        "maxMomentaryLufs": -25.946180833207126,
+        "truePeakDbtp": -2.95853495773331
+      },
+      "manifest": {
+        "hash": "sha256:a6f66853f5266384fd5f8f734a1018f520063ff427ae639a0a65d9eeba781268",
+        "path": "audio-manifests/ui/aurum/equip-b.json"
+      },
+      "pcmHash": "sha256:325b414c1358d8247438567142a02562963e49f612f6a8f31f744093f6d168a8",
+      "programHash": "sha256:847e020af0bbcab5090f55f942aa2c7455290496505ca99b8cccd7cfd9da3d87",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "equip"
+      ],
+      "variantId": "v-4a05ca995393bba5"
+    },
+    {
+      "asset": {
+        "bytes": 6509,
+        "encodedHash": "sha256:bbb6a76d756a38f18e42727e3400482ef82548f31e58985f9c5532f774674c45",
+        "path": "public/assets/audio/ui/aurum/equip-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.29,
+        "centroidHz": 1020.3496045236901,
+        "pitchHz": 977.0572942756041
+      },
+      "durationSeconds": 0.4583333333333333,
+      "key": "equip-c",
+      "loudness": {
+        "integratedLufs": -24.2925691368784,
+        "maxMomentaryLufs": -24.2925691368784,
+        "truePeakDbtp": -2.9632803876566522
+      },
+      "manifest": {
+        "hash": "sha256:4aec6af9b87b154ccec2ec84247c83c65adefd980275b872cad14977e2cd38cf",
+        "path": "audio-manifests/ui/aurum/equip-c.json"
+      },
+      "pcmHash": "sha256:1bb1136858d95d4d0038e7e16277e18d2aee248acec50a87c656b0bdaccbdf68",
+      "programHash": "sha256:9711ef830fda38bd843cf1acfec2526232057796a4163397d267071ea0df9655",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "equip"
+      ],
+      "variantId": "v-63ff44728fc19054"
+    }
+  ]
+}

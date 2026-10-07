@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-steel-panel-close",
+    "hash": "sha256:eb4ec30d634db304112f9ae17c57d7d5e69a67f4921f635a81b5631de443e987",
+    "path": "devtools/audio-synth/records/families/ui-steel-panel-close/family.json",
+    "seed": 9398,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:b1a7c5eccee90f9f9d19c01698a373f47096887fe70776a4a5276a44a79b1369",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-steel-panel-close/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5637,
+        "encodedHash": "sha256:6102c5825f6d631ee0a237af13b3630000692ecdcf151cbd2d81de9971bd30c5",
+        "path": "public/assets/audio/ui/steel/panel-close-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.13,
+        "centroidHz": 151.53076956798162,
+        "pitchHz": 340.3508717978578
+      },
+      "durationSeconds": 0.22733333333333333,
+      "key": "panel-close-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.77387603267388,
+        "truePeakDbtp": -6.856774762653042
+      },
+      "manifest": {
+        "hash": "sha256:494bf77fa8c8d48f03167ea69867fdacaf8d1b1741ac9d48b073d435de9a15a2",
+        "path": "audio-manifests/ui/steel/panel-close-a.json"
+      },
+      "pcmHash": "sha256:00a02e27a37db5c824e96e21c6c3511881357aadf07dcb0e241dfec0d7c50967",
+      "programHash": "sha256:2b3e6a26c4147656989556c239ac65d8dd70737da14e049ef09efde7643c680a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "panel-close"
+      ],
+      "variantId": "v-5fd97d70aab53b19"
+    },
+    {
+      "asset": {
+        "bytes": 5622,
+        "encodedHash": "sha256:ee23dfb7e75263bee224f734de2ac1ab3257844c2e730cf1e91fddacfe7c7a65",
+        "path": "public/assets/audio/ui/steel/panel-close-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.13,
+        "centroidHz": 131.17755255348666,
+        "pitchHz": 98.12630196434928
+      },
+      "durationSeconds": 0.22733333333333333,
+      "key": "panel-close-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.682931020996723,
+        "truePeakDbtp": -6.9447013316288695
+      },
+      "manifest": {
+        "hash": "sha256:6dabe69d66ac3f9a44e12b28a9ff8b8fc548ad43e9f3055a00dc0a7037214a28",
+        "path": "audio-manifests/ui/steel/panel-close-b.json"
+      },
+      "pcmHash": "sha256:916bd02adef9eb7c6c0ef03f1b5262b6a7e0dc2d7e731a903c9c66ce2afdfbf0",
+      "programHash": "sha256:9e1032ae5122d7f59c7ab4892ffa32b0509eba83c56b912f2320e4552c073e7c",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "panel-close"
+      ],
+      "variantId": "v-aabb8adf260a7a63"
+    },
+    {
+      "asset": {
+        "bytes": 5632,
+        "encodedHash": "sha256:9efd2ba4d3e198e178a651edfcc3b456728799059b6909531ce78b7bb1fd96b5",
+        "path": "public/assets/audio/ui/steel/panel-close-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.13,
+        "centroidHz": 128.6601087566526,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.22733333333333333,
+      "key": "panel-close-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.314917798711303,
+        "truePeakDbtp": -6.948914024046209
+      },
+      "manifest": {
+        "hash": "sha256:2e1af2a2fa44b08e552833c2b5dc4cde815f7df80825e50d3fc520958bb39bbe",
+        "path": "audio-manifests/ui/steel/panel-close-c.json"
+      },
+      "pcmHash": "sha256:86f3a0040bfea97fa71c12ea7d62f4193bada1550539b5968731a2406a3ff2bd",
+      "programHash": "sha256:a88020909a8eb38e5c8ab56b0212312b5e9434df49f9886143021cab1c119e7e",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "panel-close"
+      ],
+      "variantId": "v-4e7b840260192f60"
+    }
+  ]
+}

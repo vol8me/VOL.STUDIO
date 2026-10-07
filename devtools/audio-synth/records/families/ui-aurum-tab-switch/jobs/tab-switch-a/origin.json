@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:cc856e9b8e9cb5fafdeb07118e7ce136c8d7c9a5e90fe2a02d489d97c921ccf9",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:64d92578bc4928d173ed8a78b1c2da2694473e64da3f23b0effe10c7ab78f5fc",
+    "familyId": "ui-aurum-tab-switch",
+    "kind": "family-variant",
+    "variantId": "v-47b905189c554aae",
+    "variantKey": "tab-switch-a"
+  }
+}

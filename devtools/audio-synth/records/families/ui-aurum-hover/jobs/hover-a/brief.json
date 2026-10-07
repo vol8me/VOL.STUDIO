@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "hover"
+  ],
+  "durationSeconds": {
+    "max": 0.17,
+    "min": 0.032
+  },
+  "id": "ui-aurum-hover-hover-a",
+  "intent": "yaldızlı cam ve lake: hover Varyant hover-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum hover — hover-a"
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:1e9a06798c0074566853981e7a98c82dbf6af1c230471166e54f3a084c1762fd",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:22e4fbc1c897b24e1d23d1bc0aa885344634e3406a99319b5bd1394d65dcccfa",
+    "familyId": "ui-steel-alert",
+    "kind": "family-variant",
+    "variantId": "v-6ae223e5caf84203",
+    "variantKey": "alert-c"
+  }
+}

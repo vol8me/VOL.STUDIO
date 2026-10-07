@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-863517f4897da96a": {
+        "hash": "sha256:4e453d145696b36dfe4239f8427a631ca22311a06c29c78f82995af82ac2a353",
+        "path": "analyses/r-863517f4897da96a.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:108b221d6ce6e746e5fd303e50991a354130a7c5969fee17cb5eeec5586156d1",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:108b221d6ce6e746e5fd303e50991a354130a7c5969fee17cb5eeec5586156d1",
+      "hash": "sha256:7206f699d794813017cd3cba385dd20dfb782da980d0b99fab2f63cfa26dccbe",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:c3e0dbd1f358bf0d0dafe84a37b88cfc19bb5f6a530464d164d9a3331d951644",
+      "path": "core/audio-manifests/ui/aurum/slider-tick-c.json"
+    },
+    "renders": {
+      "r-863517f4897da96a": {
+        "hash": "sha256:33feafd993ee75faa8dcf455ae40497a4c4fc3b7a79c844edff84a1199e6154a",
+        "path": "renders/r-863517f4897da96a.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:53099d7acd68960755a9c49042259ace0e792dd2ef4fc57933887ac67ac66716",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "slider-tick-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/slider-tick-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-slider-tick/slider-tick-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

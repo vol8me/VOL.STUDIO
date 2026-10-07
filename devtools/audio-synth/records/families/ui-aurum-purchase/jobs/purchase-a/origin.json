@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:3e6b6c51d05ccc3cb8175b7c5ed8084de6d035fde041fd5063e04bc226177229",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:672014d9ee04d840ce5a9d6e4e8cbdc88b371359de71a7cb305333a739c8f56e",
+    "familyId": "ui-aurum-purchase",
+    "kind": "family-variant",
+    "variantId": "v-494e3873678d189e",
+    "variantKey": "purchase-a"
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.14,
+        "measured": 3,
+        "median": 0.14,
+        "min": 0.14,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 887.621,
+        "measured": 3,
+        "median": 787.498,
+        "min": 765.642,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -24.8182,
+        "measured": 3,
+        "median": -25.0391,
+        "min": -25.4455,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 731.519,
+        "measured": 3,
+        "median": 654.966,
+        "min": 600.757,
+        "scale": 0.184789
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.125873,
+    "medianDistance": 0.0852784,
+    "minDistance": 0.0434459,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 5.423,
+    "medoid": "confirm-b",
+    "members": [
+      {
+        "distance": 5.423,
+        "key": "confirm-a",
+        "shiftOctaves": 0.167
+      },
+      {
+        "distance": 0,
+        "key": "confirm-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 4.606,
+        "key": "confirm-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "confirm-a",
+      "nearest": {
+        "distance": 0.0852784,
+        "key": "confirm-b"
+      },
+      "pcmHash": "sha256:3ad024965133d8b58f4a59894bd02d7ddade8f158ac405f285458ac03995f204"
+    },
+    {
+      "key": "confirm-b",
+      "nearest": {
+        "distance": 0.0434459,
+        "key": "confirm-c"
+      },
+      "pcmHash": "sha256:5927635a4ee03326e2b73ade7ab8302877a044ec69d012bc5809ae40444af547"
+    },
+    {
+      "key": "confirm-c",
+      "nearest": {
+        "distance": 0.0434459,
+        "key": "confirm-b"
+      },
+      "pcmHash": "sha256:f488feaeb95843400919a4a0603336dd37501c72b71808023bed9c0e0d0693b4"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:642d70fe4458d03e5bf4d5d6b36789f0c9aa8abce17fbd6b8276b080382106fc",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:2b18ae503830457e94aebf61f19014d64541927cc97e2abc6bd2e2bfb41760f2",
+    "familyId": "ui-steel-hover",
+    "kind": "family-variant",
+    "variantId": "v-d7704ddfe6982cbc",
+    "variantKey": "hover-b"
+  }
+}

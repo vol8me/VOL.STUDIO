@@ -21,9 +21,9 @@ import { FakeContext, playedUrls, stubFetch } from '../support/fakeAudio';
 
 const ASSETS: UiSoundAssets = {
   press: ['p0.ogg', 'p1.ogg', 'p2.ogg'],
-  tick: ['t0.ogg', 't1.ogg', 't2.ogg'],
-  error: ['e0.ogg', 'e1.ogg', 'e2.ogg'],
-  success: ['s0.ogg'],
+  sliderTick: ['t0.ogg', 't1.ogg', 't2.ogg'],
+  denied: ['e0.ogg', 'e1.ogg', 'e2.ogg'],
+  confirm: ['s0.ogg'],
 };
 
 let clock = 0;
@@ -154,10 +154,10 @@ describe('olay sözlüğü', () => {
     for (const event of [...Object.values(UI_INTENT_SOUND), ...Object.values(UI_OUTCOME_SOUND)]) {
       expect(UI_SOUND_EVENTS).toContain(event);
     }
-    expect(UI_INTENT_SOUND.valuePreview).toBe('tick');
-    expect(UI_MICRO_EVENTS).toEqual(['tick']);
-    expect(UI_CRITICAL_EVENTS).toEqual(['error', 'warning']);
-    expect(UI_SOUND_EVENTS.length).toBe(12);
+    expect(UI_INTENT_SOUND.valuePreview).toBe('sliderTick');
+    expect([...UI_MICRO_EVENTS].sort()).toEqual(['focus', 'hover', 'sliderTick']);
+    expect(UI_CRITICAL_EVENTS).toEqual(['alert', 'denied']);
+    expect(UI_SOUND_EVENTS.length).toBe(23);
   });
 });
 
@@ -217,21 +217,21 @@ describe('çalma: sıralı varyant, ±%5 perde, bağımsız RNG', () => {
     expect(playedUrls(context)).not.toContain('p1.ogg');
     stubFetch(['t0.ogg', 't1.ogg', 't2.ogg']);
     const none = await ready();
-    expect(none.kit.play('tick')).toBe(false);
+    expect(none.kit.play('sliderTick')).toBe(false);
   });
 });
 
 describe('sıklık sınırı ve öncelik', () => {
-  it('mikro olay 120 ms aralıkla sınırlıdır; kritik olay sınırdan muaftır', async () => {
+  it('mikro olay 45 ms aralıkla sınırlıdır; kritik olay sınırdan muaftır', async () => {
     const { kit: instance, context } = await ready();
-    expect(instance.play('tick')).toBe(true);
-    clock += 100;
-    expect(instance.play('tick')).toBe(false);
+    expect(instance.play('sliderTick')).toBe(true);
+    clock += 30;
+    expect(instance.play('sliderTick')).toBe(false);
     clock += 20;
-    expect(instance.play('tick')).toBe(true);
+    expect(instance.play('sliderTick')).toBe(true);
     // Kritik olay arka arkaya çalar.
-    expect(instance.play('error')).toBe(true);
-    expect(instance.play('error')).toBe(true);
+    expect(instance.play('denied')).toBe(true);
+    expect(instance.play('denied')).toBe(true);
     expect(playedUrls(context).filter((url) => url.startsWith('e'))).toHaveLength(2);
   });
 
@@ -243,11 +243,11 @@ describe('sıklık sınırı ve öncelik', () => {
     }
     expect(context.active.length).toBeLessThanOrEqual(4);
     // Normaller doluyken kritik gelir: bir normal düşer, kritik çalar.
-    expect(instance.play('error')).toBe(true);
+    expect(instance.play('denied')).toBe(true);
     expect(context.active.length).toBeLessThanOrEqual(4);
     expect(playedUrls(context).at(-1)).toMatch(/^e/);
     // Dört kritikle doldur; normal ses artık girmez.
-    for (let i = 0; i < 4; i++) instance.play('error');
+    for (let i = 0; i < 4; i++) instance.play('denied');
     const before = context.sources.length;
     clock += 500;
     expect(instance.play('press')).toBe(false);
@@ -284,9 +284,9 @@ describe('hata ve kısıt durumları', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const { kit: instance } = kit();
     const report = await instance.preload();
-    expect(report.loaded).toEqual(['press', 'tick']);
-    expect(report.failed).toEqual(['success', 'error']);
-    expect(instance.play('error')).toBe(false);
+    expect(report.loaded).toEqual(['press', 'sliderTick']);
+    expect(report.failed).toEqual(['confirm', 'denied']);
+    expect(instance.play('denied')).toBe(false);
     expect(instance.play('press')).toBe(true);
     expect(warn).toHaveBeenCalled();
   });
@@ -307,7 +307,7 @@ describe('hata ve kısıt durumları', () => {
 
   it('asset olmayan olay sessizdir', async () => {
     const { kit: instance } = await ready();
-    expect(instance.play('close')).toBe(false);
+    expect(instance.play('panelClose')).toBe(false);
   });
 });
 
@@ -433,10 +433,10 @@ describe('niyet veriyolu, sonuç ve kaynak temizliği', () => {
     const profile: DuckingProfile = { target: 0.5, attack: 0.12, hold: 0.08, release: 0.45 };
     const duck = vi.fn();
     const ducker = { duck } as unknown as SidechainDucker;
-    const { kit: instance } = await ready({ duck: { ducker, profiles: { error: profile } } });
+    const { kit: instance } = await ready({ duck: { ducker, profiles: { denied: profile } } });
     instance.play('press');
     expect(duck).not.toHaveBeenCalled();
-    instance.play('error');
+    instance.play('denied');
     expect(duck).toHaveBeenCalledWith(profile);
   });
 
@@ -501,7 +501,7 @@ describe('niyet veriyolu, sonuç ve kaynak temizliği', () => {
     expect(instance.play('press')).toBe(true);
     expect(instance.metrics).toEqual({ active: 1, played: 1, dropped: 0 });
     // Sözlükte yüklü varyantı olmayan olay düşer; başlayan sayısı değişmez.
-    expect(instance.play('commit')).toBe(false);
+    expect(instance.play('valueCommit')).toBe(false);
     expect(instance.metrics.dropped).toBe(1);
     instance.stopAll();
     expect(instance.metrics.active).toBe(0);

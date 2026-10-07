@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-c4ebd73836c0a094": {
+        "hash": "sha256:b16e1d949cf5c9dbe5b545e529b7311e294888a8150f75bfb5d9b362f27d4e32",
+        "path": "analyses/r-c4ebd73836c0a094.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:84dc711ee53d98e112ea76faaf61bf69eaadfdd796328d115634878ff9183fc5",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:84dc711ee53d98e112ea76faaf61bf69eaadfdd796328d115634878ff9183fc5",
+      "hash": "sha256:86985cd1c46b16e945aa36949ae6a16f6459fe513cfe67eabbf50e27e757561a",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:2cbf567d4599dc2c03fdd8302f441ffc06b831cc52c341acbcc689e51c71fafc",
+      "path": "core/audio-manifests/ui/aurum/drag-drop-b.json"
+    },
+    "renders": {
+      "r-c4ebd73836c0a094": {
+        "hash": "sha256:90169ca5b9f5e99d6099976a3a315fc56147ace7a784e1078d09646fa6001d89",
+        "path": "renders/r-c4ebd73836c0a094.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:32a8f99bc0e849fa04adf2f45488908e4e79e9e0d221580ce6fbc0f80c60b35d",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "drag-drop-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/drag-drop-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-drag-drop/drag-drop-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

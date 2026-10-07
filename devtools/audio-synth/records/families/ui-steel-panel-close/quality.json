@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.13,
+        "measured": 3,
+        "median": 0.13,
+        "min": 0.13,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 151.531,
+        "measured": 3,
+        "median": 131.178,
+        "min": 128.66,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -25.3991,
+        "measured": 3,
+        "median": -25.7595,
+        "min": -26.8519,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.220664,
+    "medianDistance": 0.202576,
+    "minDistance": 0.0310686,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 3.542,
+    "medoid": "panel-close-b",
+    "members": [
+      {
+        "distance": 3.542,
+        "key": "panel-close-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "panel-close-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0.49,
+        "key": "panel-close-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "panel-close-a",
+      "nearest": {
+        "distance": 0.202576,
+        "key": "panel-close-b"
+      },
+      "pcmHash": "sha256:00a02e27a37db5c824e96e21c6c3511881357aadf07dcb0e241dfec0d7c50967"
+    },
+    {
+      "key": "panel-close-b",
+      "nearest": {
+        "distance": 0.0310686,
+        "key": "panel-close-c"
+      },
+      "pcmHash": "sha256:916bd02adef9eb7c6c0ef03f1b5262b6a7e0dc2d7e731a903c9c66ce2afdfbf0"
+    },
+    {
+      "key": "panel-close-c",
+      "nearest": {
+        "distance": 0.0310686,
+        "key": "panel-close-b"
+      },
+      "pcmHash": "sha256:86f3a0040bfea97fa71c12ea7d62f4193bada1550539b5968731a2406a3ff2bd"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

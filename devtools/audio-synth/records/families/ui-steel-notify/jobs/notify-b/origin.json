@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:8ead0e6f3921d1cc6fcb16890b73a59602fe8f4b86992c70c96181fdca85801a",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:09f72354074cd35357d2bad214f730bec8682a2c20968dfaf5d5541f0fabb796",
+    "familyId": "ui-steel-notify",
+    "kind": "family-variant",
+    "variantId": "v-e74210ed049c1fa1",
+    "variantKey": "notify-b"
+  }
+}

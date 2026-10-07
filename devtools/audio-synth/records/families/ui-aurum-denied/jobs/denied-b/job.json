@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-8289e06a494ea0c9": {
+        "hash": "sha256:ce278eb5911d81abf34884cba0cfd051abec31e6689afec0a868748cab900bd9",
+        "path": "analyses/r-8289e06a494ea0c9.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:d5cdbf40c2ab50c2d1a773f4df3a58baef9136e0e1a8690b933d1f75ce32e9f9",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:d5cdbf40c2ab50c2d1a773f4df3a58baef9136e0e1a8690b933d1f75ce32e9f9",
+      "hash": "sha256:e82ba70b800173d33817726d73a9d2b74b3a4371a6912e976c695facd773677c",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:785af18c403c32af67400d4000d2e22571b96fbd330b58c44f502ecbe8f1be1f",
+      "path": "core/audio-manifests/ui/aurum/denied-b.json"
+    },
+    "renders": {
+      "r-8289e06a494ea0c9": {
+        "hash": "sha256:09e42590f460f17f37ca6a225183959f289f1fcf7e1184e3253adb983281bc18",
+        "path": "renders/r-8289e06a494ea0c9.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:73b31460d8ee932b91e2729c4186543f4cb98e07dab5be011766d569a2b5221d",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "denied-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/denied-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-denied/denied-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-press",
+    "hash": "sha256:b296352ece39fdcbeb21d1a8a7d5b1dbc8480e9eaaca77251086d689ea382b99",
+    "path": "devtools/audio-synth/records/families/ui-aurum-press/family.json",
+    "seed": 9321,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:5cda037829b7ddfc5de0ab384dcc8c963a595da848ab8663714771d0e2bd0dc2",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-press/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4970,
+        "encodedHash": "sha256:753830aa9985a2eb94a90b86a3613ef47dfb8d39278f6f7b053f21bc4e72e277",
+        "path": "public/assets/audio/ui/aurum/press-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.12,
+        "centroidHz": 419.71548808990065,
+        "pitchHz": 978.9648299483495
+      },
+      "durationSeconds": 0.20733333333333334,
+      "key": "press-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.973135254552496,
+        "truePeakDbtp": -2.669021874382702
+      },
+      "manifest": {
+        "hash": "sha256:5cfa73ea879a343097d660583cc21f14488fcad475a9b6beacfd5e6895f7b2b7",
+        "path": "audio-manifests/ui/aurum/press-a.json"
+      },
+      "pcmHash": "sha256:f24d04d3cb703c477c6833960d874d56a80259ba6d762cfef88d25f020bcbde8",
+      "programHash": "sha256:91d9223329338448ffa59ddba10ed4ff535fbb703d95fb049962c42c166d0bae",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "press"
+      ],
+      "variantId": "v-df65e909bcb528dc"
+    },
+    {
+      "asset": {
+        "bytes": 4982,
+        "encodedHash": "sha256:35eb71c4532122828a230faa0eac06697474f501f20cd8045015c19c633b873a",
+        "path": "public/assets/audio/ui/aurum/press-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.12,
+        "centroidHz": 582.61207697517,
+        "pitchHz": 884.2531822721536
+      },
+      "durationSeconds": 0.20733333333333334,
+      "key": "press-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.49640467700628,
+        "truePeakDbtp": -2.8450815182131435
+      },
+      "manifest": {
+        "hash": "sha256:a8074809043c6f79552536d97066d2e1c9d531b304d4b30ee32bd9bd71a9d14e",
+        "path": "audio-manifests/ui/aurum/press-b.json"
+      },
+      "pcmHash": "sha256:00ce360171552cbc910bfb73e86a376c509dcaf3fc6453ea4d2788c61f0bcf50",
+      "programHash": "sha256:63f2b4f52c0a33b9de86e6998f6eb4ce44e94397cf479e79c163391524c476d6",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "press"
+      ],
+      "variantId": "v-ead699b8e734f265"
+    },
+    {
+      "asset": {
+        "bytes": 4967,
+        "encodedHash": "sha256:90c311c5ac0ec4ba630c340cb1c5eb7d2b504dc8a39bb4e0ff9b1cbfdf1bcfcd",
+        "path": "public/assets/audio/ui/aurum/press-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.13,
+        "centroidHz": 589.7657241774767,
+        "pitchHz": 790.0089755024663
+      },
+      "durationSeconds": 0.20733333333333334,
+      "key": "press-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -24.92031005787424,
+        "truePeakDbtp": -2.8814274048988735
+      },
+      "manifest": {
+        "hash": "sha256:baf070767c877050e89eaf5009a1a9c4168b7eb5c29347cb9e55aca108d05c93",
+        "path": "audio-manifests/ui/aurum/press-c.json"
+      },
+      "pcmHash": "sha256:bb6093055baf80ea77ef25b904dee07daf3748f0bcfae2e75d55be8b5737deed",
+      "programHash": "sha256:360fe833d98b8ee430fd7b86028c04edd279f1400b4b7571c02794e60286242c",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "press"
+      ],
+      "variantId": "v-584197101d822683"
+    }
+  ]
+}

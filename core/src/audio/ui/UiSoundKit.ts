@@ -1,6 +1,6 @@
 import { DisposableScope, type Disposable } from '../../lifecycle/DisposableScope';
 import { createRandom, type Random } from '../../random/random';
-import type { UiIntentBus } from '../../ui/feedback/uiIntent';
+import type { UiIntent, UiIntentBus } from '../../ui/feedback/uiIntent';
 import { SoundBank } from '../sfx/SoundBank';
 import type { DuckingProfile, SidechainDucker } from '../sidechain';
 import {
@@ -8,15 +8,17 @@ import {
   UI_INTENT_SOUND,
   UI_MAX_VARIANTS,
   UI_MAX_VOICES,
-  UI_MICRO_EVENTS,
   UI_MICRO_GAP_MS,
   UI_OUTCOME_SOUND,
   UI_RATE_JITTER,
+  UI_SLIDER_RATE_RANGE,
   UI_SOUND_EVENTS,
   UI_SOUND_SEED,
   uiDuckProfiles,
+  uiSoundPaletteFor,
   type UiSoundAssets,
   type UiSoundEvent,
+  type UiSoundPalette,
 } from './events';
 import {
   DEFAULT_UI_AUDIO_SETTINGS,
@@ -46,6 +48,21 @@ export interface UiSoundMetrics {
   /** Çalınamayan istekler: sessiz, kilitli, gizli, mikro aralığı, bütçe ya da yüklenmemiş. */
   readonly dropped: number;
 }
+
+/** Tema denetleyicisinin yapısal yüzü (`ThemeController` bunu karşılar); ses paketi tema paketine bağlanmaz. */
+export interface UiSoundThemeSource {
+  readonly state: { readonly theme: string };
+  onChange(listener: (state: { readonly theme: string }) => void): Disposable;
+}
+
+export interface UiSoundPlayOptions {
+  /** Oynatma hızı çarpanı (perde); kaydırıcı değeri gibi sürekli değerler için. */
+  rate?: number;
+}
+
+/** Üzerine gelme ve odak sesi için etkileşimli hedefler. */
+const HOVER_TARGETS =
+  'button, a[href], select, summary, input[type="range"], input[type="checkbox"], [role="tab"], [role="option"], [role="menuitem"], [role="switch"], [data-ui-sound="hover"]';
 
 export interface UiSoundKitOptions {
   assets?: UiSoundAssets;
@@ -87,7 +104,9 @@ export class UiSoundKit implements Disposable {
   private readonly scope = new DisposableScope();
   private readonly random: Random;
   private readonly attached = new WeakMap<UiIntentBus, Disposable>();
+  private readonly observed = new WeakMap<HTMLElement, Disposable>();
   private readonly cursors = new Map<UiSoundEvent, number>();
+  private assets: UiSoundAssets | undefined;
   private context: AudioContext | null;
   private ownsContext = false;
   private bank: SoundBank | null = null;
@@ -96,13 +115,14 @@ export class UiSoundKit implements Disposable {
   private disposed = false;
   private hidden = false;
   private unlocking = false;
-  private lastMicroAt = -Infinity;
+  private readonly lastMicroAt = new Map<UiSoundEvent, number>();
   private played = 0;
   private dropped = 0;
   private pending: Promise<void> = Promise.resolve();
 
   constructor(private readonly options: UiSoundKitOptions = {}) {
     this.random = createRandom(options.seed ?? UI_SOUND_SEED);
+    this.assets = options.assets;
     this.current = normalizeUiAudioSettings(options.settings, DEFAULT_UI_AUDIO_SETTINGS);
     this.context = options.context ?? null;
     const target = options.visibilityTarget;
@@ -153,7 +173,7 @@ export class UiSoundKit implements Disposable {
           // Niyet kullanıcı jestidir: ilk niyette bağlam açılır ve açma sürerken
           // bu tek ses çalınabilir; bundan sonrası bağlam çalışırken çalar.
           void this.unlock();
-          this.play(UI_INTENT_SOUND[intent.kind]);
+          this.playIntent(intent);
         },
         onOutcome: (_intent, outcome) => {
           this.play(UI_OUTCOME_SOUND[outcome]);
@@ -199,7 +219,7 @@ export class UiSoundKit implements Disposable {
     const loaded: UiSoundEvent[] = [];
     const failed: UiSoundEvent[] = [];
     for (const event of UI_SOUND_EVENTS) {
-      const urls = this.options.assets?.[event];
+      const urls = this.assets?.[event];
       if (!urls || urls.length === 0) continue;
       const ok = urls
         .slice(0, UI_MAX_VARIANTS)
@@ -210,16 +230,16 @@ export class UiSoundKit implements Disposable {
   }
 
   /** Bir olayın sesini çalar; gerçekten başladıysa `true`. Hiçbir koşulda sıraya almaz. */
-  play(event: UiSoundEvent): boolean {
-    const started = this.tryPlay(event);
+  play(event: UiSoundEvent, options: UiSoundPlayOptions = {}): boolean {
+    const started = this.tryPlay(event, options);
     if (started) this.played += 1;
     else this.dropped += 1;
     return started;
   }
 
-  private tryPlay(event: UiSoundEvent): boolean {
+  private tryPlay(event: UiSoundEvent, options: UiSoundPlayOptions): boolean {
     if (this.disposed || this.inert || this.hidden || this.current.muted) return false;
-    const urls = this.options.assets?.[event];
+    const urls = this.assets?.[event];
     if (!urls || urls.length === 0) return false;
     const bank = this.ensureBank();
     const context = this.context;
@@ -228,9 +248,11 @@ export class UiSoundKit implements Disposable {
     if (context.state !== 'running' && !this.unlocking) return false;
 
     const critical = UI_CRITICAL_EVENTS.includes(event);
-    const micro = UI_MICRO_EVENTS.includes(event);
+    const gap = (UI_MICRO_GAP_MS as Partial<Record<UiSoundEvent, number>>)[event];
     const now = this.now();
-    if (micro && !critical && now - this.lastMicroAt < UI_MICRO_GAP_MS) return false;
+    if (gap !== undefined && !critical && now - (this.lastMicroAt.get(event) ?? -Infinity) < gap) {
+      return false;
+    }
 
     const variants = Math.min(urls.length, UI_MAX_VARIANTS);
     const start = this.cursors.get(event) ?? Math.floor(this.random.next() * variants);
@@ -241,6 +263,7 @@ export class UiSoundKit implements Disposable {
       let started = false;
       try {
         started = bank.play(id, {
+          rate: options.rate,
           rateJitter: UI_RATE_JITTER,
           priority: critical ? 'critical' : 'normal',
         });
@@ -250,13 +273,107 @@ export class UiSoundKit implements Disposable {
       }
       if (!started) return false;
       this.cursors.set(event, (index + 1) % variants);
-      if (micro) this.lastMicroAt = now;
+      if (gap !== undefined) this.lastMicroAt.set(event, now);
       const duck = this.options.duck;
       const profile = duck ? (duck.profiles ?? uiDuckProfiles())[event] : undefined;
       if (duck && profile) duck.ducker.duck(profile);
       return true;
     }
     return false;
+  }
+
+  /**
+   * Niyeti sese çevirir: `toggle` hedefin durumuna göre açma/kapama, `valuePreview`
+   * kaydırıcıda değerin konumuna bağlı perde (alçak değer alçak ses) taşır.
+   */
+  private playIntent(intent: UiIntent): void {
+    if (intent.kind === 'toggle') {
+      this.play(isChecked(intent.target) ? 'toggleOn' : 'toggleOff');
+      return;
+    }
+    if (intent.kind === 'valuePreview') {
+      const fraction = rangeFraction(intent.target);
+      const [low, high] = UI_SLIDER_RATE_RANGE;
+      this.play(UI_INTENT_SOUND.valuePreview, {
+        rate: fraction === null ? undefined : low + (high - low) * fraction,
+      });
+      return;
+    }
+    this.play(UI_INTENT_SOUND[intent.kind]);
+  }
+
+  /**
+   * Bir kökte GERÇEK fare üzerine gelmesi (`hover`) ve klavye odağı (`focus`) seslerini
+   * dinler. Dokunma ve kalem hover üretmez; fare hedefe girince bir kez çalar (içindeki
+   * çocuk geçişleri tekrar etmez). Aynı köke ikinci çağrı ikinci dinleyici açmaz.
+   */
+  observe(root: HTMLElement): Disposable {
+    const existing = this.observed.get(root);
+    if (existing) return existing;
+    const scope = new DisposableScope();
+    const targetOf = (event: Event): Element | null =>
+      event.target instanceof Element ? event.target.closest(HOVER_TARGETS) : null;
+    scope.addListener(root, 'pointerover', (event) => {
+      const pointer = event as PointerEvent;
+      if (pointer.pointerType !== 'mouse') return;
+      const target = targetOf(event);
+      if (!target || isInert(target)) return;
+      const from = pointer.relatedTarget;
+      if (from instanceof Node && target.contains(from)) return;
+      this.play('hover');
+    });
+    scope.addListener(root, 'focusin', (event) => {
+      const target = targetOf(event);
+      // Yalnız klavye/kol odağı (`:focus-visible`); fare tıklaması odak sesi çalmaz.
+      if (!target || isInert(target) || !target.matches(':focus-visible')) return;
+      this.play('focus');
+    });
+    const handle: Disposable = {
+      dispose: () => {
+        scope.dispose();
+        this.observed.delete(root);
+      },
+    };
+    this.observed.set(root, handle);
+    this.scope.add(handle);
+    return handle;
+  }
+
+  /**
+   * Paleti temaya bağlar: şimdiki tema ve sonraki her değişimde ses seti o temanın
+   * paletine geçer (`uiSoundPaletteFor`). Bağlam zaten kuruluysa yeni set hemen yüklenir;
+   * değilse ilk `preload()` yükler. Dönen kayıt bağı keser, kit ile birlikte de sökülür.
+   */
+  followTheme(
+    source: UiSoundThemeSource,
+    assetsFor: (palette: UiSoundPalette) => UiSoundAssets,
+  ): Disposable {
+    let applied: UiSoundPalette | null = null;
+    const apply = (theme: string): void => {
+      const palette = uiSoundPaletteFor(theme);
+      if (palette === applied) return;
+      const first = applied === null;
+      applied = palette;
+      this.setAssets(assetsFor(palette));
+      if (!first && this.context) void this.preload();
+    };
+    apply(source.state.theme);
+    const subscription = source.onChange((state) => apply(state.theme));
+    this.scope.add(subscription);
+    return subscription;
+  }
+
+  /**
+   * Ses setini (palet) değiştirir: çalanlar kesilir, banka yeniden kurulur. Çağıran
+   * ardından `preload()` bekler; yüklenene dek istekler sessizce düşer.
+   */
+  setAssets(assets: UiSoundAssets | undefined): void {
+    if (this.disposed) return;
+    this.stopAll();
+    this.bank?.dispose();
+    this.bank = null;
+    this.cursors.clear();
+    this.assets = assets;
   }
 
   /** Ayar değiştirir (geçersiz değer varsayılana iner), UI otobüsüne uygular ve kalıcılaştırır. */
@@ -366,7 +483,7 @@ export class UiSoundKit implements Disposable {
         random: this.random,
       });
       for (const event of UI_SOUND_EVENTS) {
-        const urls = this.options.assets?.[event];
+        const urls = this.assets?.[event];
         if (!urls || urls.length === 0) continue;
         urls.slice(0, UI_MAX_VARIANTS).forEach((url, index) => {
           bank.register(this.soundId(event, index), [url]);
@@ -385,4 +502,29 @@ export class UiSoundKit implements Disposable {
   private applyBusGain(): void {
     this.bank?.setBusVolume(channelGain(this.current, 'ui'));
   }
+}
+
+/** Anahtar/onay kutusunun durumu: iç `input` ya da `aria-checked`. */
+function isChecked(target: Element): boolean {
+  const input = target instanceof HTMLInputElement ? target : target.querySelector('input');
+  if (input && (input.type === 'checkbox' || input.type === 'radio')) return input.checked;
+  return target.getAttribute('aria-checked') === 'true';
+}
+
+/** Kaydırıcı değerinin [0, 1] konumu; aralık girdisi değilse ya da sonsuzsa `null`. */
+function rangeFraction(target: Element): number | null {
+  if (!(target instanceof HTMLInputElement) || target.type !== 'range') return null;
+  const min = Number(target.min === '' ? 0 : target.min);
+  const max = Number(target.max === '' ? 100 : target.max);
+  const value = Number(target.value);
+  if (![min, max, value].every(Number.isFinite) || max <= min) return null;
+  return Math.min(1, Math.max(0, (value - min) / (max - min)));
+}
+
+function isInert(target: Element): boolean {
+  return (
+    (target as HTMLButtonElement).disabled === true ||
+    target.getAttribute('aria-disabled') === 'true' ||
+    target.closest('[inert]') !== null
+  );
 }

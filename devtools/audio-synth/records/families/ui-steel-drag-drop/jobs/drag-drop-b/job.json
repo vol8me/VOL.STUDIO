@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-ed20bc18094aa828": {
+        "hash": "sha256:9b588425a1b6b7ece81b6e1b552392f5c4980c707a78caa88dda54f59e953b0a",
+        "path": "analyses/r-ed20bc18094aa828.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:2bee6addfa82f9235cf88d93cf42dadc3b1fe3ee0d265891655c626c18e6bd1b",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:2bee6addfa82f9235cf88d93cf42dadc3b1fe3ee0d265891655c626c18e6bd1b",
+      "hash": "sha256:1cefc05d171c98ce3e459f05dabfc06d89899394a47c5781c9274493930f8e09",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:fd32d7d17db0737fb40bac057971ca3205f62b81bd242d3ef921d737114ecd55",
+      "path": "core/audio-manifests/ui/steel/drag-drop-b.json"
+    },
+    "renders": {
+      "r-ed20bc18094aa828": {
+        "hash": "sha256:8314ea328bc96f32ff0310a906d3821c9ff9dc20c187cfcb07a0e1690b2b1916",
+        "path": "renders/r-ed20bc18094aa828.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:931793b323e06ee819c6f981afc9fcd25e686c78ee86fbacb9ad73bb5f8d4256",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "drag-drop-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/drag-drop-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-drag-drop/drag-drop-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

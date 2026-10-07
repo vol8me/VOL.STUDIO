@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-71da60a89ee70634": {
+        "hash": "sha256:a31089976c140c5aa1e2ff7adbb0e99653797bddcecee5d3a121a8a7bb95c127",
+        "path": "analyses/r-71da60a89ee70634.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:7e5adc86d20382bcbea12acc711693c4849f07f3d81b7fb2fc461ed05f9b214f",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:7e5adc86d20382bcbea12acc711693c4849f07f3d81b7fb2fc461ed05f9b214f",
+      "hash": "sha256:ed70f8008affe8ac3d6e15b3def977725060181bad79bf041bc14b162485a48e",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:d626c7f97217522fbb2155d16db61100754ccec029f9a813c4b1a9d485206c45",
+      "path": "core/audio-manifests/ui/steel/alert-b.json"
+    },
+    "renders": {
+      "r-71da60a89ee70634": {
+        "hash": "sha256:d5904b9d46e0da31248bbeeb80a701f52ec4afc2d69d26f123d9249400b67d7a",
+        "path": "renders/r-71da60a89ee70634.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:b9290a93d79fd4670d5aa4196ffcf03018caf5128c5eb235baa1d6f090f53124",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "alert-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/alert-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-alert/alert-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

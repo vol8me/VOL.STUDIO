@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-purchase",
+    "hash": "sha256:672014d9ee04d840ce5a9d6e4e8cbdc88b371359de71a7cb305333a739c8f56e",
+    "path": "devtools/audio-synth/records/families/ui-aurum-purchase/family.json",
+    "seed": 9426,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:366b9b8cf4c5dee9f4eb2f6581579f303bd1894fcc533fdb456a826dd4bbb4f1",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-purchase/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 6825,
+        "encodedHash": "sha256:1c60448c99ccd4a9e724a4f5c3564ecff5065b1d952e011454f04acc8e2f8275",
+        "path": "public/assets/audio/ui/aurum/purchase-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.31,
+        "centroidHz": 973.8613531333737,
+        "pitchHz": 999.464706870219
+      },
+      "durationSeconds": 0.5763333333333334,
+      "key": "purchase-a",
+      "loudness": {
+        "integratedLufs": -25.834900069060758,
+        "maxMomentaryLufs": -25.834900069060758,
+        "truePeakDbtp": -3.9710701146671217
+      },
+      "manifest": {
+        "hash": "sha256:5df2215bffee59e26e8e3322a6bc32263a49383124d3ac18ee2ec46703da3391",
+        "path": "audio-manifests/ui/aurum/purchase-a.json"
+      },
+      "pcmHash": "sha256:75720ab72bb50fe8ed4ec8c40ffeed0f4e1ca66bd9d4706474f23aa916da3a0e",
+      "programHash": "sha256:3e6b6c51d05ccc3cb8175b7c5ed8084de6d035fde041fd5063e04bc226177229",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "purchase"
+      ],
+      "variantId": "v-494e3873678d189e"
+    },
+    {
+      "asset": {
+        "bytes": 6729,
+        "encodedHash": "sha256:f8ae7cdeb5d80307a74364b690d2edf7fb297c6f76ca6ae6ab18d5889e3a6e63",
+        "path": "public/assets/audio/ui/aurum/purchase-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.33,
+        "centroidHz": 899.332843195326,
+        "pitchHz": 515.1227373673728
+      },
+      "durationSeconds": 0.5763333333333334,
+      "key": "purchase-b",
+      "loudness": {
+        "integratedLufs": -24.836875814277654,
+        "maxMomentaryLufs": -24.836875814277654,
+        "truePeakDbtp": -3.704139819167463
+      },
+      "manifest": {
+        "hash": "sha256:f67418bc039982058a2cf2ef5cf81588423c74964225e0881c03faff126c3880",
+        "path": "audio-manifests/ui/aurum/purchase-b.json"
+      },
+      "pcmHash": "sha256:69b5942658ddd398ce55a4f898f43a077db967522678da2a27d5bfdacea76191",
+      "programHash": "sha256:f64eb61e113687757efa02df199a87d1c7d70a54a0f16b9d9069754ea9484df8",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "purchase"
+      ],
+      "variantId": "v-6c9fc7d4c8801283"
+    },
+    {
+      "asset": {
+        "bytes": 6863,
+        "encodedHash": "sha256:836c904b1f2361748ea9e2870af99a3d829dde07672d04a2fee9d2c2cf1bf53f",
+        "path": "public/assets/audio/ui/aurum/purchase-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.33,
+        "centroidHz": 985.2497646550875,
+        "pitchHz": 595.9595428439876
+      },
+      "durationSeconds": 0.5763333333333334,
+      "key": "purchase-c",
+      "loudness": {
+        "integratedLufs": -23.80706073567433,
+        "maxMomentaryLufs": -23.80706073567433,
+        "truePeakDbtp": -3.8814337575901012
+      },
+      "manifest": {
+        "hash": "sha256:6480f70a06a69198dfd596a66bdc2d5a3a11daae3800b67d2a1d9a645b9fb780",
+        "path": "audio-manifests/ui/aurum/purchase-c.json"
+      },
+      "pcmHash": "sha256:0a7345e13dba7495aa263be465c1991820754722baf1ecdf91035c4e1ddc595a",
+      "programHash": "sha256:de8e3b6ee6f537d75182cf8d39ac5dec4ed8a9685c21d2bb27459517723dfd43",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "purchase"
+      ],
+      "variantId": "v-4bccded81d92e380"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-b33699407a46b6ce": {
+        "hash": "sha256:34d9b55489e1983de7965864262cf09a14636eb935b6ddeac5bec9a5c6f0868e",
+        "path": "analyses/r-b33699407a46b6ce.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:a028b30454aa588e82ccc1a7535ce8b0f16eb59b8c077eee4f3822fe6574e4af",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:a028b30454aa588e82ccc1a7535ce8b0f16eb59b8c077eee4f3822fe6574e4af",
+      "hash": "sha256:20dd29dc2b11d718ab5f8b7871f24d88b177aaf3b2081d3eb5b61226f2c99b08",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:351cadc2f22fa32f0aef7adc8dcb376a10cd99c4c21eaf03da096377cfa02315",
+      "path": "core/audio-manifests/ui/aurum/value-commit-a.json"
+    },
+    "renders": {
+      "r-b33699407a46b6ce": {
+        "hash": "sha256:74bc498fc3509c9c2288f6984b011f09d9cad35b6751a47e90df54b51ad19df4",
+        "path": "renders/r-b33699407a46b6ce.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:0de9cc9f471bf76274a4cef09c06eb3a59a0c825811cd993130d72f7cf7add3c",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "value-commit-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/value-commit-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-value-commit/value-commit-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

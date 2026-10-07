@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-c4e2bc856e031391": {
+        "hash": "sha256:af4de51deaff08377f26a0cf7751e5a1d4c89d8df1303c4b203b47e969399daf",
+        "path": "analyses/r-c4e2bc856e031391.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:eac71b2fb9d5e393fe22977ec415375a810545dca743c3eb4c7b40a44e0b7423",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:eac71b2fb9d5e393fe22977ec415375a810545dca743c3eb4c7b40a44e0b7423",
+      "hash": "sha256:09e289455052ba6b1b7364d58010558b701d69a52b677c6737779b5e8a098815",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:9a657214e184ade74426b7b6fde23948d01ff051e59e83fa7a050dc9e98b1bd5",
+      "path": "core/audio-manifests/ui/aurum/toggle-on-a.json"
+    },
+    "renders": {
+      "r-c4e2bc856e031391": {
+        "hash": "sha256:42d7089a404b05e752d38659ecd8e4c7a4dafa6e31e94a4c9bff1013b627fd81",
+        "path": "renders/r-c4e2bc856e031391.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:6c46e747530ca8fc1d4af142c7a866c4ecfd551919c0cd52a3123b206e5fe05d",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "toggle-on-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/toggle-on-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-toggle-on/toggle-on-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

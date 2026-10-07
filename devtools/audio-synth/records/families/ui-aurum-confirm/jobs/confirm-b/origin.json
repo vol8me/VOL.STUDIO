@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:c852d8a9ad6ec63c518155a5f21a087b869cc5b32b7462c8ec546fb333523eff",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:23355a199c5a370368bd0e1b41f76c69279527c57fc486f6ef8e43fbeb73d9b9",
+    "familyId": "ui-aurum-confirm",
+    "kind": "family-variant",
+    "variantId": "v-dffea3f8ffe107da",
+    "variantKey": "confirm-b"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "notify"
+  ],
+  "durationSeconds": {
+    "max": 0.68,
+    "min": 0.224
+  },
+  "id": "ui-steel-notify-notify-a",
+  "intent": "çelik donanım: notify Varyant notify-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel notify — notify-a"
+}

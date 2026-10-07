@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-hover",
+    "hash": "sha256:a869e929ab9720a14df343eca1abf9b3f139987e452a9dcd40f74f8654e41b93",
+    "path": "devtools/audio-synth/records/families/ui-aurum-hover/family.json",
+    "seed": 9307,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:214ce3e65cac2c15e6a6c3a93e8bbe22663bd81f4b260992d47f8e17b3104b8f",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-hover/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4386,
+        "encodedHash": "sha256:d774e1f2a35045fa095239e0de53c71a844e00fbdee813c15fc317d0b3bbd43a",
+        "path": "public/assets/audio/ui/aurum/hover-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.02,
+        "centroidHz": 251.5626187376014,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.07733333333333334,
+      "key": "hover-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -39.40081565240299,
+        "truePeakDbtp": -9.749062368625616
+      },
+      "manifest": {
+        "hash": "sha256:e60b5a75bbccdea5d40ac38f3d19936db575d5da7cc7be299696082f73d22809",
+        "path": "audio-manifests/ui/aurum/hover-a.json"
+      },
+      "pcmHash": "sha256:aa96870d029428482253ca6583a296350075a34bdfd151ee4517ee0c787312b5",
+      "programHash": "sha256:f810a8a62687b972b45013cb8cfa5f3e036e61acb0618ee83a05912b4b34c43f",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "hover"
+      ],
+      "variantId": "v-7fad9f54cbc265b5"
+    },
+    {
+      "asset": {
+        "bytes": 4403,
+        "encodedHash": "sha256:f23637444d76ca1f1a56b39fdc627f82b006472b51b74414871e90fff608dcfc",
+        "path": "public/assets/audio/ui/aurum/hover-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 192.4935535116773,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.07733333333333334,
+      "key": "hover-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -38.316981426844855,
+        "truePeakDbtp": -9.056993291385078
+      },
+      "manifest": {
+        "hash": "sha256:2a43a36935d9e265d0320b46702470cf1e0ebae670a92706d3429ffaa3007c04",
+        "path": "audio-manifests/ui/aurum/hover-b.json"
+      },
+      "pcmHash": "sha256:57d0c11f91c034560d327df0ff514cf11eeade12aa4303949a018e251cabb414",
+      "programHash": "sha256:2f1e24f46582ba553d467c0661a673040dd71162dd4d12d89084b4c9cdb20224",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "hover"
+      ],
+      "variantId": "v-cc277601c2cdf5ff"
+    },
+    {
+      "asset": {
+        "bytes": 4408,
+        "encodedHash": "sha256:a96501920aea3a828e2c413ac0d55b2640153fe7be06ba1b3e9764c57deea78a",
+        "path": "public/assets/audio/ui/aurum/hover-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 168.48752608285355,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.07733333333333334,
+      "key": "hover-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -38.33054325012721,
+        "truePeakDbtp": -9.058791211704346
+      },
+      "manifest": {
+        "hash": "sha256:ce95db83c0f4536c8f3a8cc394dc4fade69182ecabef73a9a566fe6d7e5a25ba",
+        "path": "audio-manifests/ui/aurum/hover-c.json"
+      },
+      "pcmHash": "sha256:1467803f881144b450010d290b6ff815e65ed72e531fcc9fec38ca509ca7966f",
+      "programHash": "sha256:1182f872428120170ea0e1679f41dcc920656d78da89ef23ccde561b67c8abcd",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "hover"
+      ],
+      "variantId": "v-6dfce2a5b2fadd56"
+    }
+  ]
+}

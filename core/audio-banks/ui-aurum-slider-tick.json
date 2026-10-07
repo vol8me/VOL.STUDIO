@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-slider-tick",
+    "hash": "sha256:843042d63f246a2e1121c354c325e5de79e0b1c74591de78bacbf434d4f268b5",
+    "path": "devtools/audio-synth/records/families/ui-aurum-slider-tick/family.json",
+    "seed": 9377,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:3a6b44e6339fca23f75a789c67814fca77d1a453ebae561c7ac00488ff83e1ef",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-slider-tick/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4413,
+        "encodedHash": "sha256:f80793058641787226da01448e5cd249d2faafd0f465753ffa464c58b67864c0",
+        "path": "public/assets/audio/ui/aurum/slider-tick-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 236.5580978706379,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.08733333333333333,
+      "key": "slider-tick-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -36.9602326986109,
+        "truePeakDbtp": -9.29724266100817
+      },
+      "manifest": {
+        "hash": "sha256:5882409cccc7fb4257b997ac1bd7dddf02dd8b2d30c67933ad865bc74318fe1a",
+        "path": "audio-manifests/ui/aurum/slider-tick-a.json"
+      },
+      "pcmHash": "sha256:ea5643157a38da906ed354e388b98f67b80afb05d2eb84d60c0e671f837795cf",
+      "programHash": "sha256:c2091fae0d748bea049596b12d6388d3fb6fedbbcf43090bc069ded73741b759",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "slider-tick"
+      ],
+      "variantId": "v-6a27d1cf47656b83"
+    },
+    {
+      "asset": {
+        "bytes": 4437,
+        "encodedHash": "sha256:fed2ff170e8a6d5f19ff2d84bed9fb86b20f7279f0b4265e7576bc26427b5c1d",
+        "path": "public/assets/audio/ui/aurum/slider-tick-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 225.0649096620713,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.08733333333333333,
+      "key": "slider-tick-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -36.548195651944376,
+        "truePeakDbtp": -9.293408057936844
+      },
+      "manifest": {
+        "hash": "sha256:202f65b267ca3da65c361368236185336d56e141ff70600ef52ad57f9bd72f59",
+        "path": "audio-manifests/ui/aurum/slider-tick-b.json"
+      },
+      "pcmHash": "sha256:3a707dd9cf52ec9aeca8b7c67bf68e94c0d0c0fe9e403222c5fb9ff863496a5c",
+      "programHash": "sha256:e803f97521fd3687ac1c70a3eb24c8bce465dcb7aa902ac4088126409008d3ff",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "slider-tick"
+      ],
+      "variantId": "v-0ad4d668162c503c"
+    },
+    {
+      "asset": {
+        "bytes": 4440,
+        "encodedHash": "sha256:421d48fec1380cfd1e4409fb1be1db4cfe25da2beecc93aa6fc02d06af42ece6",
+        "path": "public/assets/audio/ui/aurum/slider-tick-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 218.2751516897989,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.08733333333333333,
+      "key": "slider-tick-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -35.78132962065582,
+        "truePeakDbtp": -9.235291678330816
+      },
+      "manifest": {
+        "hash": "sha256:c3e0dbd1f358bf0d0dafe84a37b88cfc19bb5f6a530464d164d9a3331d951644",
+        "path": "audio-manifests/ui/aurum/slider-tick-c.json"
+      },
+      "pcmHash": "sha256:8ce3747aac920020f00ff0d02c4566dde60329d9d0ffff99dee3784666133c3d",
+      "programHash": "sha256:7206f699d794813017cd3cba385dd20dfb782da980d0b99fab2f63cfa26dccbe",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "slider-tick"
+      ],
+      "variantId": "v-3390d83f2c0fd4ac"
+    }
+  ]
+}

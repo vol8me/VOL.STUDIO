@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:c808ed655a64e225499ce6cccd2e1b3fba07f7c63248702d6efadc9a8923e847",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:5db7622344103206cf1fb9c78881435d555bac44dfbbb8fdd8c80cbfad23a602",
+    "familyId": "ui-aurum-focus",
+    "kind": "family-variant",
+    "variantId": "v-633b3591bb51cb87",
+    "variantKey": "focus-c"
+  }
+}

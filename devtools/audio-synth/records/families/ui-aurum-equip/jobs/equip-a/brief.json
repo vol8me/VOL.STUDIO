@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "equip"
+  ],
+  "durationSeconds": {
+    "max": 0.58,
+    "min": 0.176
+  },
+  "id": "ui-aurum-equip-equip-a",
+  "intent": "yaldızlı cam ve lake: equip Varyant equip-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum equip — equip-a"
+}

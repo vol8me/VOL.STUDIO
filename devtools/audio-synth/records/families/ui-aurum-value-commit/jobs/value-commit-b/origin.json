@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:94fac553e8807bfc3cf1c2e2bc8f7fa5df39f6243cb3ef028176d3dd7c1655ee",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:4a7f95794b0a121141576298117539814b0f929d427acb76e2270173a3ab05ad",
+    "familyId": "ui-aurum-value-commit",
+    "kind": "family-variant",
+    "variantId": "v-eefeb535c5375d81",
+    "variantKey": "value-commit-b"
+  }
+}

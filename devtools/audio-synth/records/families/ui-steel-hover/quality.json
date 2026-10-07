@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.03,
+        "measured": 3,
+        "median": 0.03,
+        "min": 0.03,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 194.059,
+        "measured": 3,
+        "median": 175.751,
+        "min": 165.732,
+        "scale": 0.125551
+      },
+      "maxMomentaryLufs": {
+        "max": -37.7809,
+        "measured": 3,
+        "median": -38.028,
+        "min": -38.3933,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 0,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.158559,
+    "medianDistance": 0.104871,
+    "minDistance": 0.0624803,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 2.186,
+    "medoid": "hover-b",
+    "members": [
+      {
+        "distance": 1.437,
+        "key": "hover-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "hover-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 2.186,
+        "key": "hover-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "hover-a",
+      "nearest": {
+        "distance": 0.0624803,
+        "key": "hover-b"
+      },
+      "pcmHash": "sha256:49db8fd6fd98a219b41f7b587e0fcf953c7bd36b8a25eaf1e2b8cd69222c2f53"
+    },
+    {
+      "key": "hover-b",
+      "nearest": {
+        "distance": 0.0624803,
+        "key": "hover-a"
+      },
+      "pcmHash": "sha256:813d71efb58b6374f103b8cc00652a09ee39e257707a4d1acf5ce183b159343f"
+    },
+    {
+      "key": "hover-c",
+      "nearest": {
+        "distance": 0.104871,
+        "key": "hover-b"
+      },
+      "pcmHash": "sha256:a1c93d071f4a54b92583721f2317bcf27adb2de162936db097c193e529aea425"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

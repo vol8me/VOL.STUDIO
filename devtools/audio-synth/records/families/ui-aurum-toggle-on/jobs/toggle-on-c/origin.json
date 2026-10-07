@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:fdade6a44a00c568e4e9fae5ae9c3a7989001c0e4e7a3a1b4bea6601960a6c2a",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:74de8b29b34acbace8963f18d4becb46b2562b45bf36c44952c48761dde50eb0",
+    "familyId": "ui-aurum-toggle-on",
+    "kind": "family-variant",
+    "variantId": "v-659e876c0e99f475",
+    "variantKey": "toggle-on-c"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-tab-switch",
+    "hash": "sha256:64d92578bc4928d173ed8a78b1c2da2694473e64da3f23b0effe10c7ab78f5fc",
+    "path": "devtools/audio-synth/records/families/ui-aurum-tab-switch/family.json",
+    "seed": 9370,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:7b1c1944f914fd1b866d19ab5a95199629c8be1c40c55fecb332da7b912dffe6",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-tab-switch/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5138,
+        "encodedHash": "sha256:3f359a114445271a9a6fb83823e7e7828b7cc3d46e3b1a51059aeb93968014e4",
+        "path": "public/assets/audio/ui/aurum/tab-switch-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.08,
+        "centroidHz": 200.44939318815383,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.16933333333333334,
+      "key": "tab-switch-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -31.744380186100297,
+        "truePeakDbtp": -6.058795683478126
+      },
+      "manifest": {
+        "hash": "sha256:a274ca3373fab59bc4b5fbb9171623de7059e57aa47875f744aaed700fec210d",
+        "path": "audio-manifests/ui/aurum/tab-switch-a.json"
+      },
+      "pcmHash": "sha256:7e5ec7cafa3818eef6e697acd78397bb845673b27604605896d56e6cc2463ede",
+      "programHash": "sha256:cc856e9b8e9cb5fafdeb07118e7ce136c8d7c9a5e90fe2a02d489d97c921ccf9",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "tab-switch"
+      ],
+      "variantId": "v-47b905189c554aae"
+    },
+    {
+      "asset": {
+        "bytes": 5132,
+        "encodedHash": "sha256:c17bf6e19b1f19c8ad67aa87c0992050d6ffa3cbbd2fc68603c0375649d07f1f",
+        "path": "public/assets/audio/ui/aurum/tab-switch-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.08,
+        "centroidHz": 186.81670975928117,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.16933333333333334,
+      "key": "tab-switch-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -31.342736486042114,
+        "truePeakDbtp": -6.169654551739536
+      },
+      "manifest": {
+        "hash": "sha256:778c2ff9e9a0281d144ad092d184b67f342f61ee27b2156978ae3b8d90bbef8d",
+        "path": "audio-manifests/ui/aurum/tab-switch-b.json"
+      },
+      "pcmHash": "sha256:2c80cad95a89eb117d701f0d44aadacac1f1ce86d1d0b4981327cbfd62d2e6df",
+      "programHash": "sha256:1bfbd9d297b036c7064f84d71bf33a49fe5aceb89c2c7a1a4e9edd8617005692",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "tab-switch"
+      ],
+      "variantId": "v-0a21183f5c131b7a"
+    },
+    {
+      "asset": {
+        "bytes": 5138,
+        "encodedHash": "sha256:38e6f189b2f929afd57f1aeb5db278ba528b66c48d68aeabad670f7a2457b20c",
+        "path": "public/assets/audio/ui/aurum/tab-switch-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.08,
+        "centroidHz": 169.61492556925495,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.16933333333333334,
+      "key": "tab-switch-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -29.803414175438135,
+        "truePeakDbtp": -5.720797036996968
+      },
+      "manifest": {
+        "hash": "sha256:b6ba3cca4c55dd2dd4b2a7dd5433aed6b160988cf707e62dff91ab98039220f8",
+        "path": "audio-manifests/ui/aurum/tab-switch-c.json"
+      },
+      "pcmHash": "sha256:ed3b5e15ed8848e15663d7248a842ac4245b3b7d8524390ad760b3a00cd1b83a",
+      "programHash": "sha256:57a12a17d0cd11f257814ecdc9ca426b83f71292b6eb74b3038a954305a6d5fc",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "tab-switch"
+      ],
+      "variantId": "v-03daf8683f55acb0"
+    }
+  ]
+}

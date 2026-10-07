@@ -1,0 +1,123 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.04,
+        "measured": 3,
+        "median": 0.03,
+        "min": 0.03,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 175.48,
+        "measured": 3,
+        "median": 159.481,
+        "min": 152.401,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -37.6429,
+        "measured": 3,
+        "median": -38.6375,
+        "min": -38.9384,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 0,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [
+      {
+        "descriptor": "activeSeconds",
+        "key": "focus-c",
+        "robustZ": 4.15037,
+        "value": 0.04
+      }
+    ],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.256032,
+    "medianDistance": 0.220658,
+    "minDistance": 0.144395,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 1.535,
+    "medoid": "focus-b",
+    "members": [
+      {
+        "distance": 1.535,
+        "key": "focus-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "focus-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 1.318,
+        "key": "focus-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "focus-a",
+      "nearest": {
+        "distance": 0.220658,
+        "key": "focus-b"
+      },
+      "pcmHash": "sha256:93b3e6f1caf1d219fbf46fcc453cbf0246daf42b00364c8402720980188174c4"
+    },
+    {
+      "key": "focus-b",
+      "nearest": {
+        "distance": 0.144395,
+        "key": "focus-c"
+      },
+      "pcmHash": "sha256:63db242f358e7c1905741a6ee8bac06f13ac8429a9760246e8b55c0f826f3174"
+    },
+    {
+      "key": "focus-c",
+      "nearest": {
+        "distance": 0.144395,
+        "key": "focus-b"
+      },
+      "pcmHash": "sha256:ffecc22681a9511899e0b9b4e476989b12d1ab7c76258629434a7e7dc5fe38c0"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

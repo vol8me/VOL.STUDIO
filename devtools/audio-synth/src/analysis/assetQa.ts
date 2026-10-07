@@ -33,7 +33,9 @@ export interface AssetClassPolicy {
 export const ASSET_CLASS_POLICIES = {
   version: 1,
   classes: {
-    ui: { loudness: 'maxMomentary', loudnessRange: [-28, -14], truePeakMax: -1 },
+    // Kısa sesin 400 ms momentary değeri süreyle düşer; aralık Kenney Interface/UI Audio ölçümleriyle
+    // (−32…−9 LUFS) ve oyun UI'ının tok/yüksek karakteriyle uyumlu açıktır (UI-02.7).
+    ui: { loudness: 'maxMomentary', loudnessRange: [-42, -8], truePeakMax: -1 },
     sfx: { loudness: 'maxMomentary', loudnessRange: [-30, -8], truePeakMax: -1 },
     ambience: { loudness: 'integrated', loudnessRange: [-26, -16], truePeakMax: -1 },
     music: { loudness: 'integrated', loudnessRange: [-20, -12], truePeakMax: -1 },

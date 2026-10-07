@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "equip"
+  ],
+  "durationSeconds": {
+    "max": 0.58,
+    "min": 0.176
+  },
+  "id": "ui-steel-equip-equip-b",
+  "intent": "çelik donanım: equip Varyant equip-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel equip — equip-b"
+}

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:light",
+    "reward"
+  ],
+  "durationSeconds": {
+    "max": 0.98,
+    "min": 0.36
+  },
+  "id": "ui-aurum-reward-reward-a",
+  "intent": "yaldızlı cam ve lake: reward Varyant reward-a (weight:light).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum reward — reward-a"
+}

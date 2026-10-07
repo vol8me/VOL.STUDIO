@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-drag-pick",
+    "hash": "sha256:b2f5cf53390e9e03fe72d9b0fc1adbc60bd0fbf84cab6099b758d0509f9be5e0",
+    "path": "devtools/audio-synth/records/families/ui-aurum-drag-pick/family.json",
+    "seed": 9405,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:1a2be01ef1378f1da659fa1862341f61bb4bdfcfbf8ea0b6f0ae71318023fab9",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-drag-pick/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4616,
+        "encodedHash": "sha256:a6ef3519cdc6ffa10849c64ef8c872d8bf7f9a6b00e5859f3fb34ebb05f8462a",
+        "path": "public/assets/audio/ui/aurum/drag-pick-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.09,
+        "centroidHz": 362.0674875547663,
+        "pitchHz": 439.50336043871994
+      },
+      "durationSeconds": 0.17033333333333334,
+      "key": "drag-pick-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -27.343388360560617,
+        "truePeakDbtp": -5.47988696122668
+      },
+      "manifest": {
+        "hash": "sha256:f3bdf40589abfe36082f9db5c5377afd6eeafe5c6f046e384612824285ff49a3",
+        "path": "audio-manifests/ui/aurum/drag-pick-a.json"
+      },
+      "pcmHash": "sha256:812751fd215802e7e40be6a7d31ffb393b05e57c87f8b7322b1a22e2d4c5b6fd",
+      "programHash": "sha256:827192b9a8c98a114bb25523134503eeff6d2145af30f0a7a09b9fc7f2ed136a",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "drag-pick"
+      ],
+      "variantId": "v-62055a020d488837"
+    },
+    {
+      "asset": {
+        "bytes": 4603,
+        "encodedHash": "sha256:7899a588e32f4ab04a66d1298a55ab3757f16af9b4412e0108496f289a135781",
+        "path": "public/assets/audio/ui/aurum/drag-pick-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.09,
+        "centroidHz": 328.0285226002793,
+        "pitchHz": 439.4265273502692
+      },
+      "durationSeconds": 0.17033333333333334,
+      "key": "drag-pick-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.49210977901631,
+        "truePeakDbtp": -5.272661192312738
+      },
+      "manifest": {
+        "hash": "sha256:1e7d144f8093c3494c56a07e003ba541435957d78b1a62222f01cb1b7bb74fb8",
+        "path": "audio-manifests/ui/aurum/drag-pick-b.json"
+      },
+      "pcmHash": "sha256:b8a2cddd009ff6b4051743e35725371cb84aaa029174fd4b8f2eddb2e0823e2d",
+      "programHash": "sha256:5464f0869facc67cf2ef421432f9cf343cc21346d21c26ee669b454976c57186",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "drag-pick"
+      ],
+      "variantId": "v-4fba2ab656fb3000"
+    },
+    {
+      "asset": {
+        "bytes": 4594,
+        "encodedHash": "sha256:096247f76c06beb20b4ab37ca02082d78acd52739486267b3614f4c045742e07",
+        "path": "public/assets/audio/ui/aurum/drag-pick-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.09,
+        "centroidHz": 310.6745297936911,
+        "pitchHz": 439.46024029196303
+      },
+      "durationSeconds": 0.17033333333333334,
+      "key": "drag-pick-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.557287791415327,
+        "truePeakDbtp": -5.295173747002288
+      },
+      "manifest": {
+        "hash": "sha256:d4534b140e159a608ffe89076ffb70eb8d351388c2414c86340bc90a2d0a18f3",
+        "path": "audio-manifests/ui/aurum/drag-pick-c.json"
+      },
+      "pcmHash": "sha256:a6cde776445e919a531a180c7945d2de0955dd9fff21a5d28b0d3764ac1ede49",
+      "programHash": "sha256:54b4354d748ac671cdfc9d7eea4a2ec95d061d57bc0dbd0e9a344f999c31d714",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "drag-pick"
+      ],
+      "variantId": "v-8e67474f57cc58f7"
+    }
+  ]
+}

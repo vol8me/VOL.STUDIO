@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:b858a6274e13ea56c381df8d7afb18151e6843b1f7305aa781010cbd3c020a66",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:ec34efd141f895fdd162ed1e3dc6bc21c64c275dfbf55f3ccb53099108695e7b",
+    "familyId": "ui-steel-denied",
+    "kind": "family-variant",
+    "variantId": "v-500de06cb8e8d3f0",
+    "variantKey": "denied-c"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:64a1342f6b5a35139d4eb5de72f1080003de8854454b1f1a0e6119fd87eeccf9",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:2b7788c7b79a1af7e20c22a5406e83c625cf85992e9b96936561beaa1720771d",
+    "familyId": "ui-steel-select",
+    "kind": "family-variant",
+    "variantId": "v-2d007f221a71f551",
+    "variantKey": "select-c"
+  }
+}

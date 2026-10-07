@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "level-up"
+  ],
+  "durationSeconds": {
+    "max": 1.38,
+    "min": 0.56
+  },
+  "id": "ui-aurum-level-up-level-up-c",
+  "intent": "yaldızlı cam ve lake: level-up Varyant level-up-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum level-up — level-up-c"
+}

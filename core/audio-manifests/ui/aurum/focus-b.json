@@ -1,0 +1,356 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.000016811179572109263
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 1,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.08733333333333333,
+        "frames": 4192,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -8.1417315631229
+        ],
+        "channelRmsDbfs": [
+          -34.005764839429546
+        ],
+        "crestFactorDb": 25.864033276306646,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -39.06314324185146,
+        "rmsDbfs": -34.005764839429546,
+        "samplePeakDbfs": -8.1417315631229,
+        "truePeakDbtp": -7.903590721237565
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -80.04302965387788,
+          "high": -78.1381237178086,
+          "low": -49.96016201811678,
+          "mid": -86.26479518280455,
+          "sub": -54.810557553162184
+        },
+        "centroidHz": 158.99918810392853,
+        "flatness": 0.00019375089703597314,
+        "peakHz": 140.625,
+        "rolloff85Hz": 164.0625
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.04,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.03,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.005236919840226972,
+        "trailingSilenceSeconds": 0.06733333333333333
+      }
+    },
+    "sourceRecordHash": "sha256:7f1ff9c33f34b182b20e0985cec6f9920a1fcb4fb40dce7a878f3c238e8527a8"
+  },
+  "asset": {
+    "bytes": 4427,
+    "encodedHash": "sha256:6bb54cd1e484c3e7ecd462e2f865ea5a1d09979ca3e51a81e80768fa7c70f210",
+    "format": "ogg-vorbis",
+    "path": "core/public/assets/audio/ui/aurum/focus-b.ogg"
+  },
+  "assetId": "ui-aurum-focus-focus-b",
+  "brief": {
+    "document": {
+      "assetClass": "ui",
+      "channels": 1,
+      "descriptors": [
+        "weight:medium",
+        "focus"
+      ],
+      "durationSeconds": {
+        "max": 0.18,
+        "min": 0.032
+      },
+      "id": "ui-aurum-focus-focus-b",
+      "intent": "yaldızlı cam ve lake: focus Varyant focus-b (weight:medium).",
+      "kind": "acoustic",
+      "placement": "screen",
+      "provenance": {
+        "author": "agent",
+        "by": "sound-family"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "UI aurum focus — focus-b"
+    },
+    "hash": "sha256:db90db1917218923b03f1d0695cd9f89c331edd0b6160096b9fba64e10b4d9e5",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "6",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:bc4a390a2bf21a203aec467181016f9b63b511faa9ece7dd3979ff2d5573a275",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 6,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 6,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:e8610fd76f09afaa5036fd00823c65c2e47174410173d3eaea4806fa869e4158",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07",
+          "id": "effect.saturation",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        },
+        {
+          "hash": "sha256:b0c800b997b33e21c77db26196fffeb7162495c77939084b2b3eb1fd4639561b",
+          "id": "source.oscillator",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/core",
+    "runtimeDeclaration": "core/audio-target.json",
+    "runtimeKey": "ui-aurum-focus/focus-b",
+    "targetKind": "library"
+  },
+  "job": {
+    "jobId": "focus-b",
+    "path": "devtools/audio-synth/records/families/ui-aurum-focus/jobs/focus-b",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "screen",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "ui",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "yaldızlı cam ve lake · focus",
+      "durationSeconds": 0.09,
+      "gestures": {
+        "thump-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              155.79999999999998
+            ],
+            [
+              0.04,
+              122.99999999999999
+            ],
+            [
+              0.08,
+              118.07999999999998
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0002,
+              "curve": "exponential",
+              "decay": 0.008,
+              "release": 0.004,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 6,
+          "mechanism": "mechanical",
+          "name": "click",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 5949.01,
+                "mode": "bandpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 1500,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.0015,
+              "curve": "exponential",
+              "decay": 0.0302611,
+              "release": 0.025,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -8,
+          "inserts": [
+            {
+              "params": {
+                "character": "tanh",
+                "driveDb": 8,
+                "mix": 1,
+                "outputDb": -3
+              },
+              "primitive": "effect.saturation",
+              "version": 1
+            }
+          ],
+          "mechanism": "mechanical",
+          "name": "thump",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 50,
+                "mode": "highpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 933.349,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "thump-pitch"
+              },
+              "waveform": "sine"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 40,
+        "fadeInSeconds": 0.0003,
+        "fadeOutSeconds": 0.02,
+        "normalize": "peak",
+        "peakDbfs": -8
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9314
+    },
+    "hash": "sha256:953da41214bc067f78641d6b1e0d0b702457159b3f115341ab243f4f3a9bff90",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 4320,
+      "hash": "sha256:63db242f358e7c1905741a6ee8bac06f13ac8429a9760246e8b55c0f826f3174",
+      "sampleRate": 48000
+    },
+    "renderId": "r-effe538867f2cce0",
+    "rendererVersion": 2,
+    "seed": 9314
+  },
+  "schema": "AudioAssetManifestV1"
+}

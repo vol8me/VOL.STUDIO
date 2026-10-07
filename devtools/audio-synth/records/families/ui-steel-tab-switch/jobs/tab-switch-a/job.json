@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-69a7d5bfcdc8bcbf": {
+        "hash": "sha256:ac3bf2b32983aacb80c86eef47d2a1b64eb66e5964344ae9b056ccbbd9d403f3",
+        "path": "analyses/r-69a7d5bfcdc8bcbf.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:d758e28afb4c8f32c84361e603bfbbf90866065c416be1d59574a35826b87aaf",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:d758e28afb4c8f32c84361e603bfbbf90866065c416be1d59574a35826b87aaf",
+      "hash": "sha256:f6665a71cccf22b6fdbdb7f9424ac2a6e5a24516aeaf0f343664b1516637d12c",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:96f8b9dfa8e9114aef13adefb46b0e5fa2244fbe40787fa739c3d563498ba249",
+      "path": "core/audio-manifests/ui/steel/tab-switch-a.json"
+    },
+    "renders": {
+      "r-69a7d5bfcdc8bcbf": {
+        "hash": "sha256:566d10b1ae1b07be920f5b9dd158bded18be51d7fcf1796112a977ad9a5c816a",
+        "path": "renders/r-69a7d5bfcdc8bcbf.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:94eda1b4ca0b975a927d05524a6a4f057a971ff090b400fcc6dfe3af668d1bc6",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "tab-switch-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/tab-switch-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-tab-switch/tab-switch-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-866a25c184a927f2": {
+        "hash": "sha256:c9f9923fb5165f889c4621fadf58ce3b504a86101480d002c47f51d497a66039",
+        "path": "analyses/r-866a25c184a927f2.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:4450e4bcbb2baa89687b85c46f7821d3a17605cf420b8e20a252bd5cc16ae431",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:4450e4bcbb2baa89687b85c46f7821d3a17605cf420b8e20a252bd5cc16ae431",
+      "hash": "sha256:0e0a7f867fe723260a462a72e6d9705442e689cc227fe875c8e11f2754cb9c22",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:5a9715e3d5c2c48ab9f795f2ad7897b0e8963326dab5665fd8fe8bcb3b359460",
+      "path": "core/audio-manifests/ui/steel/toggle-on-b.json"
+    },
+    "renders": {
+      "r-866a25c184a927f2": {
+        "hash": "sha256:63b2d5e90966869d091e77936c5b01eea14a21b0654f5a03b34ba4e911e2e721",
+        "path": "renders/r-866a25c184a927f2.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:aea5d8f34cd368adbda928be6940bdb6d2823d0b3375fcc42488797dd23c4f56",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "toggle-on-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/toggle-on-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-toggle-on/toggle-on-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

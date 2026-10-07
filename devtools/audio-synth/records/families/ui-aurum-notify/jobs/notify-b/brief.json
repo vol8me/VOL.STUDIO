@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "notify"
+  ],
+  "durationSeconds": {
+    "max": 0.68,
+    "min": 0.224
+  },
+  "id": "ui-aurum-notify-notify-b",
+  "intent": "yaldızlı cam ve lake: notify Varyant notify-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum notify — notify-b"
+}

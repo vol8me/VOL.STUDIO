@@ -1,4 +1,5 @@
 import { FullscreenController } from '@volstudio/core/platform';
+import { startAppSound } from './appSound';
 import { CursorController, FocusNavController, Tabs, showConfirm } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
@@ -86,6 +87,8 @@ export class ShowcaseApp {
     this.focusNav.start();
     // Uygulama genelinde oyun imleçleri: düğme eli, metin, sürükleme, boyutlandırma.
     this.lifecycle.add(new CursorController({ mode: 'ui' }));
+    // Uygulama genelinde arayüz sesi: niyetler, hover ve odak; bağlam ilk jestte kurulur.
+    this.lifecycle.add(startAppSound(this.element));
     this.rebuild();
   }
 

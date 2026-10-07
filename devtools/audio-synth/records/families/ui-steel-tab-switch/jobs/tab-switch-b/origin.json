@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:d48f9b08187e2626f7d652ce5ea96913d90b751581560cacf898b7ef2e7ae966",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:25bbd427feaaf110bc8ad59c8289262c0acb0821cd2755731ae2f4d6f2f098dc",
+    "familyId": "ui-steel-tab-switch",
+    "kind": "family-variant",
+    "variantId": "v-27862653afab5f1f",
+    "variantKey": "tab-switch-b"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:ba13268ad8f7b344956ec92cfbf9f7c3f8e17dc21ce9e15867828067f9c27efa",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:3e5e371e1967c91884fbb06511a8cbf53cd902d16e654ccc32881cbd20d79d8b",
+    "familyId": "ui-steel-confirm",
+    "kind": "family-variant",
+    "variantId": "v-b7e9a279f7748d09",
+    "variantKey": "confirm-c"
+  }
+}

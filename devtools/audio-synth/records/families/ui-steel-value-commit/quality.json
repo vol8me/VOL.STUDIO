@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.13,
+        "measured": 3,
+        "median": 0.12,
+        "min": 0.09,
+        "scale": 0.171207
+      },
+      "centroidHz": {
+        "max": 174.275,
+        "measured": 3,
+        "median": 168.318,
+        "min": 167.829,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -25.7287,
+        "measured": 3,
+        "median": -25.9641,
+        "min": -26.1223,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 101.395,
+        "measured": 3,
+        "median": 99.4053,
+        "min": 99.0369,
+        "scale": 0.05
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.219735,
+    "medianDistance": 0.187741,
+    "minDistance": 0.0427811,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 5.553,
+    "medoid": "value-commit-b",
+    "members": [
+      {
+        "distance": 5.553,
+        "key": "value-commit-a",
+        "shiftOctaves": 0.167
+      },
+      {
+        "distance": 0,
+        "key": "value-commit-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 3.352,
+        "key": "value-commit-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "value-commit-a",
+      "nearest": {
+        "distance": 0.187741,
+        "key": "value-commit-b"
+      },
+      "pcmHash": "sha256:0cf053c53c6e9d5d6c07d7a85570e11ebd68ae6f05f47af875051a9b84137ca3"
+    },
+    {
+      "key": "value-commit-b",
+      "nearest": {
+        "distance": 0.0427811,
+        "key": "value-commit-c"
+      },
+      "pcmHash": "sha256:4d0a91f65d75b6fff73b7d198d58fcc335e1119a28d3997285479f1a0622f32a"
+    },
+    {
+      "key": "value-commit-c",
+      "nearest": {
+        "distance": 0.0427811,
+        "key": "value-commit-b"
+      },
+      "pcmHash": "sha256:eb0ee2c80897eb6bb6f39a6d07e339fed49ad696a77e63ee960c8f5773bcd595"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:7206f699d794813017cd3cba385dd20dfb782da980d0b99fab2f63cfa26dccbe",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:843042d63f246a2e1121c354c325e5de79e0b1c74591de78bacbf434d4f268b5",
+    "familyId": "ui-aurum-slider-tick",
+    "kind": "family-variant",
+    "variantId": "v-3390d83f2c0fd4ac",
+    "variantKey": "slider-tick-c"
+  }
+}

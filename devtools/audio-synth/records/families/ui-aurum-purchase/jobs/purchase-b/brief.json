@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "purchase"
+  ],
+  "durationSeconds": {
+    "max": 0.68,
+    "min": 0.224
+  },
+  "id": "ui-aurum-purchase-purchase-b",
+  "intent": "yaldızlı cam ve lake: purchase Varyant purchase-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI aurum purchase — purchase-b"
+}

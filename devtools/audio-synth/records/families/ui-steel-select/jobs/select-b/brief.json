@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "select"
+  ],
+  "durationSeconds": {
+    "max": 0.26,
+    "min": 0.056
+  },
+  "id": "ui-steel-select-select-b",
+  "intent": "çelik donanım: select Varyant select-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel select — select-b"
+}

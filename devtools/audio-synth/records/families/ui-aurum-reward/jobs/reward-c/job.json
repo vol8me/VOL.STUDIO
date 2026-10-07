@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-9609c1f6db842ad7": {
+        "hash": "sha256:355f6313f99f1ea0bf7d2ef7562366196a613c798c38f28833f96487ed1fe77e",
+        "path": "analyses/r-9609c1f6db842ad7.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:f9bfe3b441756fbfe12f05123562ea1557615c376633d3e4254a106322174f50",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:f9bfe3b441756fbfe12f05123562ea1557615c376633d3e4254a106322174f50",
+      "hash": "sha256:2bc6def68156723fb17e2328a95d0a5d3486740fd7ea558d1d49179c39509985",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:b2ab93cbc43d0e76848366642efdd8851fd1c1b1c93038207ce0b14c5c884b73",
+      "path": "core/audio-manifests/ui/aurum/reward-c.json"
+    },
+    "renders": {
+      "r-9609c1f6db842ad7": {
+        "hash": "sha256:bb947f889e2e928e0141b711f3e6323de2df5a314e530e549a126cf4c46cbdde",
+        "path": "renders/r-9609c1f6db842ad7.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:3284af5bb6cc58213b4fa0738b954c6a275771baa2ff1375a5cfa1a2c4439869",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "reward-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/reward-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-reward/reward-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

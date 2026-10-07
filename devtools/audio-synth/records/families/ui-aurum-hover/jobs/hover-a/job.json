@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-57f202b6393538f3": {
+        "hash": "sha256:8343810c9b1c47a7d718cc40643340e6be336a6606b1076aa870ad583d89e48c",
+        "path": "analyses/r-57f202b6393538f3.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:e97cf7acc4ae15e319f15b4bce86ce972c7a3d4d529cfce65d1e536e6c9f4cfc",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:e97cf7acc4ae15e319f15b4bce86ce972c7a3d4d529cfce65d1e536e6c9f4cfc",
+      "hash": "sha256:f810a8a62687b972b45013cb8cfa5f3e036e61acb0618ee83a05912b4b34c43f",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:e60b5a75bbccdea5d40ac38f3d19936db575d5da7cc7be299696082f73d22809",
+      "path": "core/audio-manifests/ui/aurum/hover-a.json"
+    },
+    "renders": {
+      "r-57f202b6393538f3": {
+        "hash": "sha256:af63775d974b4adb653390a92922a2d982e2de547ce541745b9263a78c14d6ad",
+        "path": "renders/r-57f202b6393538f3.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:a0adef7a7a553917006ad7843dee9690deb3f0199d0e155538f65b78baba6757",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "hover-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/hover-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-hover/hover-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-steel-press",
+    "hash": "sha256:f43b1d3a78dd2030d254902180ac2f8a8c852010b4f307a596e4e15cf3512aed",
+    "path": "devtools/audio-synth/records/families/ui-steel-press/family.json",
+    "seed": 9321,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:bdcab503628d9626bf51f57bcf3a875627c73268adc41a72e6fdbe8ca1281b83",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-steel-press/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4705,
+        "encodedHash": "sha256:b712d4face98e5c4afa67cfb0d3df1327ce1b0c143ba3989524a0ab7b6a8f031",
+        "path": "public/assets/audio/ui/steel/press-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.08,
+        "centroidHz": 170.44364918840782,
+        "pitchHz": 119.81265976608584
+      },
+      "durationSeconds": 0.17433333333333334,
+      "key": "press-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.587919345317395,
+        "truePeakDbtp": -2.9040176735008565
+      },
+      "manifest": {
+        "hash": "sha256:6c49794dc2ef9a37b2c28a40cbe2dee62dff2b070223b7dcebfbec8163efe4dd",
+        "path": "audio-manifests/ui/steel/press-a.json"
+      },
+      "pcmHash": "sha256:e7102858b6260c3f02e07ebf93ee91c710ee6fe156987cf1e16f8b591dbce218",
+      "programHash": "sha256:90252ab1ed1dd03985f50db341b8ce8a926aea4f423adfc759be5871a2f7e979",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "press"
+      ],
+      "variantId": "v-3f1c1708ca8c72a5"
+    },
+    {
+      "asset": {
+        "bytes": 4691,
+        "encodedHash": "sha256:12246c50d43ea2ab841780d24facc24925a1afeccf94e5e26fb77e72d5687d1e",
+        "path": "public/assets/audio/ui/steel/press-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.1,
+        "centroidHz": 162.55515840247512,
+        "pitchHz": 105.82045620961952
+      },
+      "durationSeconds": 0.17433333333333334,
+      "key": "press-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.175611091395687,
+        "truePeakDbtp": -2.959637305663679
+      },
+      "manifest": {
+        "hash": "sha256:2960bdb9357987238fc9f62f9eaf3e470e346e81a04f8be9f4ee5f220d636cc6",
+        "path": "audio-manifests/ui/steel/press-b.json"
+      },
+      "pcmHash": "sha256:21f13e2484319b1986fae0e0ce9aeaabd99b8018c68056ae1fb76d836cc31f45",
+      "programHash": "sha256:ef5250b54fb52958974fbab2e44c31d937804a71bc8ddab541198d610d1dc161",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "press"
+      ],
+      "variantId": "v-e29a8e207387e3f2"
+    },
+    {
+      "asset": {
+        "bytes": 4703,
+        "encodedHash": "sha256:0aac18656a71423ad0a98f258e8949a19abca79a413d1c052b6a08b8295ae875",
+        "path": "public/assets/audio/ui/steel/press-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.11,
+        "centroidHz": 156.66497279003633,
+        "pitchHz": 104.26912205840844
+      },
+      "durationSeconds": 0.17433333333333334,
+      "key": "press-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -24.311487898937802,
+        "truePeakDbtp": -3.06158788108422
+      },
+      "manifest": {
+        "hash": "sha256:d4e8a5c85b416af5cdd151ca4bca0b3cdf42dd9ed03b1d4166c23a9c17c83e91",
+        "path": "audio-manifests/ui/steel/press-c.json"
+      },
+      "pcmHash": "sha256:a5d83a5776e6bdfecb97da954dd77c0e2228f06ccfa763580ecabf3e072ed337",
+      "programHash": "sha256:ec01d63e1a2713ecd1a502e8301e94a89a92e1424c148d84f29707a85c4d1abb",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "press"
+      ],
+      "variantId": "v-d4dfb51091a19a1f"
+    }
+  ]
+}

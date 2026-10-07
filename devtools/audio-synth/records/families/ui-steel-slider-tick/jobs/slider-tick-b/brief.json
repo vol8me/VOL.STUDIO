@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "slider-tick"
+  ],
+  "durationSeconds": {
+    "max": 0.18,
+    "min": 0.032
+  },
+  "id": "ui-steel-slider-tick-slider-tick-b",
+  "intent": "çelik donanım: slider-tick Varyant slider-tick-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel slider-tick — slider-tick-b"
+}

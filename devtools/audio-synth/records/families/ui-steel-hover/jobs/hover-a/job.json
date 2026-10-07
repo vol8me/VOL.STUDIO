@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-569e70a1e13fdd64": {
+        "hash": "sha256:d3025304c54d80973ff6a126dfb763d9663a67a2ac87dfcaa9c10d9bcd49d520",
+        "path": "analyses/r-569e70a1e13fdd64.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:ec2ccf8078145b720490f589304b62809252f47580b72db475617d82f0a8e674",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:ec2ccf8078145b720490f589304b62809252f47580b72db475617d82f0a8e674",
+      "hash": "sha256:cb09f9a1a1b62da63d03b29fd81527a51562f81f0320034040e2fa2ca9ea71c0",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:1c1cea713ff1115beaf739d76f6752cdd2f0cc84bb64ea09156852de80ce2008",
+      "path": "core/audio-manifests/ui/steel/hover-a.json"
+    },
+    "renders": {
+      "r-569e70a1e13fdd64": {
+        "hash": "sha256:47c265a59f49a4194349ab93ac64d60a9c2b14c735c494071e6eb336eed7c213",
+        "path": "renders/r-569e70a1e13fdd64.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:deb0f5a961c178ea76b25e618c8e8ff0abd0b32b8b32daaf2b42c68ac1bddb5a",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "hover-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/hover-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-hover/hover-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "toggle-on"
+  ],
+  "durationSeconds": {
+    "max": 0.3,
+    "min": 0.08
+  },
+  "id": "ui-steel-toggle-on-toggle-on-b",
+  "intent": "çelik donanım: toggle-on Varyant toggle-on-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel toggle-on — toggle-on-b"
+}

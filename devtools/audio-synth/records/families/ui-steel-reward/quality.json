@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.26,
+        "measured": 3,
+        "median": 0.26,
+        "min": 0.26,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 971.062,
+        "measured": 3,
+        "median": 883.99,
+        "min": 823.8,
+        "scale": 0.150834
+      },
+      "maxMomentaryLufs": {
+        "max": -20.7891,
+        "measured": 3,
+        "median": -20.8347,
+        "min": -21.2781,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 587.979,
+        "measured": 3,
+        "median": 587.979,
+        "min": 587.124,
+        "scale": 0.05
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.0836958,
+    "medianDistance": 0.0487246,
+    "minDistance": 0.0463599,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 4.346,
+    "medoid": "reward-b",
+    "members": [
+      {
+        "distance": 4.346,
+        "key": "reward-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "reward-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 2.586,
+        "key": "reward-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "reward-a",
+      "nearest": {
+        "distance": 0.0463599,
+        "key": "reward-b"
+      },
+      "pcmHash": "sha256:2e2c3682e9e152fd263ecd0b6a2447bcfe7a655c74bd8b064199fa48d308850e"
+    },
+    {
+      "key": "reward-b",
+      "nearest": {
+        "distance": 0.0463599,
+        "key": "reward-a"
+      },
+      "pcmHash": "sha256:93e19504013fa4850ad887e924dd29812cba3be8a666b5b7862870306f293ff8"
+    },
+    {
+      "key": "reward-c",
+      "nearest": {
+        "distance": 0.0487246,
+        "key": "reward-b"
+      },
+      "pcmHash": "sha256:08ea8c66dcb6b1c091b703a7f21479ee5ce78c0b76e1a04c2097475af310c747"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

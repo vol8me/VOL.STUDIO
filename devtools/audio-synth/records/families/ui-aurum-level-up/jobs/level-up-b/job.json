@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-d8bb2445b3b1eb86": {
+        "hash": "sha256:48386b296b219be81a15477dc9adf0f7c9c181deea7cf5e9cb48d56abd523415",
+        "path": "analyses/r-d8bb2445b3b1eb86.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:945e04a02de6027328801743ec86fc43243f3b35928842ebe0f2866e1d411a28",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:945e04a02de6027328801743ec86fc43243f3b35928842ebe0f2866e1d411a28",
+      "hash": "sha256:ec4648a81996af61e405b0f4063b069b23fece25597b366d3071b1d2b67334ef",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:ffa88f9d9fd4c8875ca8805ea7b922097e0b0361c5d11f7b72bf591453ac820e",
+      "path": "core/audio-manifests/ui/aurum/level-up-b.json"
+    },
+    "renders": {
+      "r-d8bb2445b3b1eb86": {
+        "hash": "sha256:6d9c8395bbd9f9f49aca0c85b2fbaaeedb28815fb3712710645e25e943a6ae48",
+        "path": "renders/r-d8bb2445b3b1eb86.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:b48a566e804f1a39aa4a745e5674718f888b5d12edf8ae0b3459ee9860dede70",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "level-up-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/aurum/level-up-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-aurum-level-up/level-up-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

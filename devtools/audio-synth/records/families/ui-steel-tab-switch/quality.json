@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.07,
+        "measured": 3,
+        "median": 0.07,
+        "min": 0.07,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 187.302,
+        "measured": 3,
+        "median": 180.966,
+        "min": 172.601,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -26.9056,
+        "measured": 3,
+        "median": -27.7255,
+        "min": -28.012,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": null,
+        "measured": 2,
+        "median": null,
+        "min": null,
+        "scale": null
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.133891,
+    "medianDistance": 0.112743,
+    "minDistance": 0.0309903,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 2.908,
+    "medoid": "tab-switch-b",
+    "members": [
+      {
+        "distance": 1.632,
+        "key": "tab-switch-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 0,
+        "key": "tab-switch-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 2.908,
+        "key": "tab-switch-c",
+        "shiftOctaves": 0
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "tab-switch-a",
+      "nearest": {
+        "distance": 0.0309903,
+        "key": "tab-switch-b"
+      },
+      "pcmHash": "sha256:91a7b13b538eb4f14ff6919edfdcee9dfef83ceeb5bb270209ae42cd9e84482e"
+    },
+    {
+      "key": "tab-switch-b",
+      "nearest": {
+        "distance": 0.0309903,
+        "key": "tab-switch-a"
+      },
+      "pcmHash": "sha256:564524b2b26d855f0301115fc9fdf71fa18214d812df99a74d7255b004ebee8b"
+    },
+    {
+      "key": "tab-switch-c",
+      "nearest": {
+        "distance": 0.112743,
+        "key": "tab-switch-b"
+      },
+      "pcmHash": "sha256:049d2c4bfec1464ab01f0bc362545ece51bcbac099a0316112a7a6de743058b2"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

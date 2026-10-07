@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:5464f0869facc67cf2ef421432f9cf343cc21346d21c26ee669b454976c57186",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:b2f5cf53390e9e03fe72d9b0fc1adbc60bd0fbf84cab6099b758d0509f9be5e0",
+    "familyId": "ui-aurum-drag-pick",
+    "kind": "family-variant",
+    "variantId": "v-4fba2ab656fb3000",
+    "variantKey": "drag-pick-b"
+  }
+}

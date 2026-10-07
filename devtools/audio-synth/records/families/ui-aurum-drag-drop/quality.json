@@ -1,0 +1,116 @@
+{
+  "coherence": {
+    "distributions": {
+      "activeSeconds": {
+        "max": 0.16,
+        "measured": 3,
+        "median": 0.15,
+        "min": 0.15,
+        "scale": 0.1
+      },
+      "centroidHz": {
+        "max": 755.044,
+        "measured": 3,
+        "median": 669.06,
+        "min": 647.098,
+        "scale": 0.1
+      },
+      "maxMomentaryLufs": {
+        "max": -23.6142,
+        "measured": 3,
+        "median": -23.7345,
+        "min": -24.4528,
+        "scale": 1
+      },
+      "pitchHz": {
+        "max": 765.928,
+        "measured": 3,
+        "median": 720.819,
+        "min": 668.726,
+        "scale": 0.129833
+      }
+    },
+    "outliers": [],
+    "ratioViolations": []
+  },
+  "descriptorSpace": "family-descriptors-v1",
+  "diversity": {
+    "collapsed": false,
+    "maxDistance": 0.130138,
+    "medianDistance": 0.111452,
+    "minDistance": 0.0546306,
+    "nearIdentical": [],
+    "pairs": 3
+  },
+  "duplicates": [],
+  "identity": {
+    "limit": 13,
+    "maxDistance": 7.864,
+    "medoid": "drag-drop-a",
+    "members": [
+      {
+        "distance": 0,
+        "key": "drag-drop-a",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 7.443,
+        "key": "drag-drop-b",
+        "shiftOctaves": 0
+      },
+      {
+        "distance": 7.864,
+        "key": "drag-drop-c",
+        "shiftOctaves": -0.167
+      }
+    ],
+    "method": "timbre-envelope-v1",
+    "pass": true
+  },
+  "members": [
+    {
+      "key": "drag-drop-a",
+      "nearest": {
+        "distance": 0.111452,
+        "key": "drag-drop-b"
+      },
+      "pcmHash": "sha256:c4c8cb4bb1afde1d720803a0e686083c1c3efbc5203c2e979e1344cb94dcf827"
+    },
+    {
+      "key": "drag-drop-b",
+      "nearest": {
+        "distance": 0.0546306,
+        "key": "drag-drop-c"
+      },
+      "pcmHash": "sha256:e007072c278f6354374d57413a5cf73b4ddead2a85194db3819138f7c3c32de7"
+    },
+    {
+      "key": "drag-drop-c",
+      "nearest": {
+        "distance": 0.0546306,
+        "key": "drag-drop-b"
+      },
+      "pcmHash": "sha256:e53cfe17d990842c54fcf2f9a1a12ee91cec971972962dface36431c3a5c3de3"
+    }
+  ],
+  "policy": {
+    "coherence": {
+      "maxRobustZ": 4,
+      "outliers": "report"
+    },
+    "diversity": {
+      "minMedianDistance": 0.04,
+      "minNearestDistance": 0.015,
+      "nearIdentical": "fail"
+    },
+    "identity": {
+      "maxTimbreDistance": 13
+    },
+    "minMembers": 3
+  },
+  "schema": "SoundFamilyQualityReportV1",
+  "verdict": {
+    "failures": [],
+    "pass": true
+  }
+}

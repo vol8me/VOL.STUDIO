@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "focus"
+  ],
+  "durationSeconds": {
+    "max": 0.18,
+    "min": 0.032
+  },
+  "id": "ui-steel-focus-focus-b",
+  "intent": "çelik donanım: focus Varyant focus-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel focus — focus-b"
+}

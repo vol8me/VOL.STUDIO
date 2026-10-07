@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:2bc6def68156723fb17e2328a95d0a5d3486740fd7ea558d1d49179c39509985",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:b85dfa2c2dfdcd0fd2a1adb8a512e35c7038d5dcae31697dbae425c62f5284b9",
+    "familyId": "ui-aurum-reward",
+    "kind": "family-variant",
+    "variantId": "v-bf4f051c705489e3",
+    "variantKey": "reward-c"
+  }
+}

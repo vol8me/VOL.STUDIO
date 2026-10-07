@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "level-up"
+  ],
+  "durationSeconds": {
+    "max": 1.38,
+    "min": 0.56
+  },
+  "id": "ui-steel-level-up-level-up-b",
+  "intent": "çelik donanım: level-up Varyant level-up-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel level-up — level-up-b"
+}

@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "hover"
+  ],
+  "durationSeconds": {
+    "max": 0.17,
+    "min": 0.032
+  },
+  "id": "ui-steel-hover-hover-b",
+  "intent": "çelik donanım: hover Varyant hover-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel hover — hover-b"
+}

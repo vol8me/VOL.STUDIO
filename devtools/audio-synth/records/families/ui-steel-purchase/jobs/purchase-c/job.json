@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a492da4416594093": {
+        "hash": "sha256:0210c717079529aa258a5996899a6403984ba8c92dca61cda0be892fcb2b4a64",
+        "path": "analyses/r-a492da4416594093.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:88bd4f1cd12559625d55e3bba7afd15c2d4d1754ca6a5849d59a2fec8cf5e259",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:88bd4f1cd12559625d55e3bba7afd15c2d4d1754ca6a5849d59a2fec8cf5e259",
+      "hash": "sha256:5b03a24e2f71b13f5a7af5a00e1a29c06855717e59a291a2e0a8af61513f6530",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:0567ae1047503e3b92b6f62d7f78ac387f3959f9731824db3983ac6124b4bf6f",
+      "path": "core/audio-manifests/ui/steel/purchase-c.json"
+    },
+    "renders": {
+      "r-a492da4416594093": {
+        "hash": "sha256:29aee023d7c929d1d5f20d48768a822bea2d222bc8beec1040004346b377f009",
+        "path": "renders/r-a492da4416594093.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:d0c3aa575fb7b648040d213339d16649223a506487c75f88eeb31680c3be2c00",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "purchase-c",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/purchase-c.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-purchase/purchase-c"
+    },
+    "package": "@volstudio/core"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:90252ab1ed1dd03985f50db341b8ce8a926aea4f423adfc759be5871a2f7e979",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:f43b1d3a78dd2030d254902180ac2f8a8c852010b4f307a596e4e15cf3512aed",
+    "familyId": "ui-steel-press",
+    "kind": "family-variant",
+    "variantId": "v-3f1c1708ca8c72a5",
+    "variantKey": "press-a"
+  }
+}

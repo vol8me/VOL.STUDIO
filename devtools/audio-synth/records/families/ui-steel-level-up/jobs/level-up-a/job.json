@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-59facb6df4280628": {
+        "hash": "sha256:fa7e9fb7664fd9ec4805916e98c0d2c8aa9aeb5ed6d6db90654775dc03acfe8f",
+        "path": "analyses/r-59facb6df4280628.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:106c5db83fec2da31fc87f0566abe16f373bda37978518af0170a46e5a32ad87",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:106c5db83fec2da31fc87f0566abe16f373bda37978518af0170a46e5a32ad87",
+      "hash": "sha256:0dc80e7900ead80163fdc89b4df647842c9db5e897d84a0c070b148e033c5e59",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:6cea5720425fbe8dbd0d446471811f2f79f0e7c3c69274c42a1e99ddb0affd77",
+      "path": "core/audio-manifests/ui/steel/level-up-a.json"
+    },
+    "renders": {
+      "r-59facb6df4280628": {
+        "hash": "sha256:c0682e8e22c4d4904e11a70b77c6588def6cc34dcc6b81c0afb22977e268c07d",
+        "path": "renders/r-59facb6df4280628.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:b809b8d8c7b135bf5f938927c5b2d7a0332b70247c1222a97cb27539608eb41e",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "level-up-a",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/level-up-a.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-level-up/level-up-a"
+    },
+    "package": "@volstudio/core"
+  }
+}

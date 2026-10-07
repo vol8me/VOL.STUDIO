@@ -957,11 +957,16 @@
     },
     "compare": {
       "title": "Export and comparison",
-      "hint": "Dry: the unprocessed sample, no channel setting and no pitch shift. Kit: ±5% pitch, channel gain and the voice budget apply.",
+      "hint": "Dry: the unprocessed sample, no channel setting and no pitch shift. Kit: ±4% pitch, channel gain and the voice budget apply.",
       "variant": "Variant {{value}}",
       "dry": "Play dry",
       "kit": "Play through kit",
       "download": "Download sample"
+    },
+    "palette": {
+      "label": "Sound palette",
+      "steel": "Steel hardware",
+      "aurum": "Gilded glass and lacquer"
     }
   },
   "kimlik": {

@@ -12,8 +12,8 @@ import { FakeAudioContext } from './music/mock-audio';
 
 const ASSETS: UiSoundAssets = {
   press: ['p0.ogg', 'p1.ogg', 'p2.ogg'],
-  error: ['e0.ogg', 'e1.ogg', 'e2.ogg'],
-  warning: ['w0.ogg', 'w1.ogg', 'w2.ogg'],
+  denied: ['e0.ogg', 'e1.ogg', 'e2.ogg'],
+  alert: ['w0.ogg', 'w1.ogg', 'w2.ogg'],
 };
 
 let clock = 0;
@@ -58,7 +58,7 @@ describe('kritik olay kısması (isteğe bağlı, −6 dB, 120/80/450 ms)', () =
     expect(kit.play('press')).toBe(true);
     expect(gain.value).toBe(1);
     clock += 500;
-    expect(kit.play('error')).toBe(true);
+    expect(kit.play('denied')).toBe(true);
     expect(gain.value).toBe(0.5);
 
     // Kısma yapılandırılmamış kitte kritik olay da kısmaz.
@@ -70,13 +70,13 @@ describe('kritik olay kısması (isteğe bağlı, −6 dB, 120/80/450 ms)', () =
       now: () => clock,
     });
     await plain.preload();
-    expect(plain.play('error')).toBe(true);
+    expect(plain.play('denied')).toBe(true);
   });
 
   it('örtüşen kritik olaylarda en güçlü kısma korunur ve son olay bitene kadar çıkılmaz', async () => {
     const { kit, gain } = setup();
     await kit.preload();
-    kit.play('error');
+    kit.play('denied');
     expect(gain.value).toBe(0.5);
     // Kullanıcı daha güçlü bir profil isteyen özel bir kit kurarsa (örtüşme) en düşük hedef kazanır.
     const context = new FakeContext();
@@ -92,17 +92,17 @@ describe('kritik olay kısması (isteğe bağlı, −6 dB, 120/80/450 ms)', () =
       now: () => clock,
       duck: {
         ducker,
-        profiles: { error: UI_CRITICAL_DUCK, warning: { ...UI_CRITICAL_DUCK, target: 0.25 } },
+        profiles: { denied: UI_CRITICAL_DUCK, alert: { ...UI_CRITICAL_DUCK, target: 0.25 } },
       },
     });
     await strong.preload();
-    strong.play('error');
+    strong.play('denied');
     clock += 500;
-    strong.play('warning');
+    strong.play('alert');
     const strongGain = (ducker.gain as unknown as { gain: { value: number } }).gain;
     expect(strongGain.value).toBe(0.25);
     clock += 500;
-    strong.play('error');
+    strong.play('denied');
     // Daha zayıf olay gelse de kısma güçlü hedefte kalır.
     expect(strongGain.value).toBe(0.25);
   });
@@ -111,7 +111,7 @@ describe('kritik olay kısması (isteğe bağlı, −6 dB, 120/80/450 ms)', () =
     for (const release of ['stopAll', 'suspend', 'mute', 'dispose'] as const) {
       const { kit, gain, ducker } = setup();
       await kit.preload();
-      kit.play('error');
+      kit.play('denied');
       expect(gain.value, release).toBe(0.5);
       if (release === 'stopAll') kit.stopAll();
       else if (release === 'suspend') kit.suspend();
@@ -127,7 +127,7 @@ describe('kritik olay kısması (isteğe bağlı, −6 dB, 120/80/450 ms)', () =
     const { kit, gain } = setup();
     await kit.preload();
     kit.setSettings({ muted: true });
-    expect(kit.play('error')).toBe(false);
+    expect(kit.play('denied')).toBe(false);
     expect(gain.value).toBe(1);
   });
 });

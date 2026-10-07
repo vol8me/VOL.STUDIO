@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:687670a2added12aadea0bed2e14526a8e10390e49ef6229d89a259af066b328",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:90ed309643a9d0202a9791fdce61ac050e5913e3c3bdc76a6880d60ace0044b5",
+    "familyId": "ui-steel-drag-pick",
+    "kind": "family-variant",
+    "variantId": "v-be4b653945cef3b3",
+    "variantKey": "drag-pick-c"
+  }
+}

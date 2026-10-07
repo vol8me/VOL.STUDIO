@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-steel-toggle-off",
+    "hash": "sha256:7ea00a93b6f0a8bb129101c305618a3950cd80983699c70448f1e4e040adfe3d",
+    "path": "devtools/audio-synth/records/families/ui-steel-toggle-off/family.json",
+    "seed": 9356,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:f63f6123c125f8855292b3f21321a3a7cf0cf4e1a2c438a157d8d7a9ca344f40",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-steel-toggle-off/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4619,
+        "encodedHash": "sha256:83b4b1c453fb398fc74db089e577bc608e962e164ac87d6252590d728bf3bb34",
+        "path": "public/assets/audio/ui/steel/toggle-off-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.08,
+        "centroidHz": 269.17581963381633,
+        "pitchHz": 409.6588633929799
+      },
+      "durationSeconds": 0.16033333333333333,
+      "key": "toggle-off-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.982170976398525,
+        "truePeakDbtp": -5.902535029890825
+      },
+      "manifest": {
+        "hash": "sha256:86e77085d16e725d60022a053e019212cd9f683ee83194a8578183e05cb99c69",
+        "path": "audio-manifests/ui/steel/toggle-off-a.json"
+      },
+      "pcmHash": "sha256:5ee5d1de7c82e4e1b22387a9df86b0ad96d26d94ec4e0b828e9d32457d6347e6",
+      "programHash": "sha256:9bbb8222728da20c620156671d370b800b6dfcee1b863230353052ac0ab48966",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "toggle-off"
+      ],
+      "variantId": "v-aa56bd5385c8cfe2"
+    },
+    {
+      "asset": {
+        "bytes": 4612,
+        "encodedHash": "sha256:216f37cb3240f9d1524fae7f57bfbfa68adb81753b113eb539a545dda39bf805",
+        "path": "public/assets/audio/ui/steel/toggle-off-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.08,
+        "centroidHz": 258.0125850640717,
+        "pitchHz": 384.74162643506077
+      },
+      "durationSeconds": 0.16033333333333333,
+      "key": "toggle-off-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.58639551955677,
+        "truePeakDbtp": -5.921273023926197
+      },
+      "manifest": {
+        "hash": "sha256:3de0e351dd82a9f7a03c48df31d274824c89887761c4cafd894f669a5658a5c9",
+        "path": "audio-manifests/ui/steel/toggle-off-b.json"
+      },
+      "pcmHash": "sha256:e0d4bfdfc993a0b46b38b60c504436dabc2fa1b418ddfde2bf51217bcbe5b73d",
+      "programHash": "sha256:b2799f5a672b1ae1791ce736b656234497497ac09874c1096ebeace136a2914d",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "toggle-off"
+      ],
+      "variantId": "v-a7b9d9c57e53f91b"
+    },
+    {
+      "asset": {
+        "bytes": 4621,
+        "encodedHash": "sha256:ba8e9c3e325700de18b2ad5ed7597faed033a00579ec577c3c0378b7420d7ff0",
+        "path": "public/assets/audio/ui/steel/toggle-off-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.08,
+        "centroidHz": 235.52939278519918,
+        "pitchHz": 388.9417048027066
+      },
+      "durationSeconds": 0.16033333333333333,
+      "key": "toggle-off-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.344786194140948,
+        "truePeakDbtp": -5.9653868071314795
+      },
+      "manifest": {
+        "hash": "sha256:6fdebf60f4e8082a3922002ec3c4edb2ce1327519595457c2053f57e012be09d",
+        "path": "audio-manifests/ui/steel/toggle-off-c.json"
+      },
+      "pcmHash": "sha256:9624e077e1e585a577689ed49aa33479440f71afe9c6c43b87bb5a6fb4415d06",
+      "programHash": "sha256:1f1da245733f4929ba72432e8a4947057e0310e569c8c80979f9b7dabdda3159",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "toggle-off"
+      ],
+      "variantId": "v-27e84e47ff3b1d2a"
+    }
+  ]
+}

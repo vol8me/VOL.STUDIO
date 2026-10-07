@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-steel-focus",
+    "hash": "sha256:5b439fe4bba8d8ffbf4da21b548d5305f5a01019032fbc198a4d7290e17ec6ec",
+    "path": "devtools/audio-synth/records/families/ui-steel-focus/family.json",
+    "seed": 9314,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:45628fe7bd3c5f71a93a57563f57dcf0b074493f57132a47562f1aa802529bba",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-steel-focus/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4399,
+        "encodedHash": "sha256:ae18881099309d4c925e1ed7828114ed470fde9ab7c08191dee5950c58c38392",
+        "path": "public/assets/audio/ui/steel/focus-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.03,
+        "centroidHz": 181.4257615895767,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.08733333333333333,
+      "key": "focus-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -36.707859511959015,
+        "truePeakDbtp": -8.243282884939136
+      },
+      "manifest": {
+        "hash": "sha256:c39f93d959e91160682c5189356a5d5334a6686a48a0e8a545d0a4218033ed8c",
+        "path": "audio-manifests/ui/steel/focus-a.json"
+      },
+      "pcmHash": "sha256:619c8a560974ad45314c8eef2558f900080f249e7139fe45ca3d10bc59b84d90",
+      "programHash": "sha256:7d374be7579b8d92994d5fa1d003fb62de022edfd179aefd6492cfb472ff8f0b",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "focus"
+      ],
+      "variantId": "v-86e88f5d7cfd0454"
+    },
+    {
+      "asset": {
+        "bytes": 4417,
+        "encodedHash": "sha256:0ddf915d36af335bb83433791398edc876e560ddf60d9db66575d0f5d05a4f9a",
+        "path": "public/assets/audio/ui/steel/focus-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.04,
+        "centroidHz": 177.99685771548494,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.08733333333333333,
+      "key": "focus-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -34.94659015957455,
+        "truePeakDbtp": -8.104322961028863
+      },
+      "manifest": {
+        "hash": "sha256:747865cdbe8505896339c80d7858a150c6d7c4d43db7317d9bbe674602cbbf86",
+        "path": "audio-manifests/ui/steel/focus-b.json"
+      },
+      "pcmHash": "sha256:438ca6848ad09831fda5bcdbb4a8dccf3258153914f145c58035d500492c9642",
+      "programHash": "sha256:ded11a8d306f9630535d2dcf66367051ea440796f270c78b2fedfc3c5a3418f9",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "focus"
+      ],
+      "variantId": "v-9bfc5d77a87ac7cf"
+    },
+    {
+      "asset": {
+        "bytes": 4413,
+        "encodedHash": "sha256:beb97409d7e7cc5b7ff121ec915abe21f5c01c3474c2ee721b139a85804163af",
+        "path": "public/assets/audio/ui/steel/focus-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.04,
+        "centroidHz": 176.61269835614692,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.08733333333333333,
+      "key": "focus-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -34.464882956165894,
+        "truePeakDbtp": -8.392212318147385
+      },
+      "manifest": {
+        "hash": "sha256:216371eaa38952b4dd74f0130f8b2347a6416e91962c9e85f7785976006aae01",
+        "path": "audio-manifests/ui/steel/focus-c.json"
+      },
+      "pcmHash": "sha256:c1853b807149317bbbcb7a0152dd2ebf01e1b30e158fdbcc17b513670e730fe4",
+      "programHash": "sha256:eefce31c813427e05bf4e69df1742187dbb76d9825835637184d63a6dd2c47dd",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "focus"
+      ],
+      "variantId": "v-9373691e821173d5"
+    }
+  ]
+}

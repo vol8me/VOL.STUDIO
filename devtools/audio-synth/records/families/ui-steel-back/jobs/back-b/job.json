@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-9b98406c1e9e5a05": {
+        "hash": "sha256:e91cafa445420e529064fdc76d1b703c4325ae59cfa0453ec0c551ea88f8c6f3",
+        "path": "analyses/r-9b98406c1e9e5a05.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:525ac3d4bf9892e86171244bd50c3924328b82155324be0f64a653348d8703c4",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:525ac3d4bf9892e86171244bd50c3924328b82155324be0f64a653348d8703c4",
+      "hash": "sha256:0d84c59703208dec25bf40fba437980ce09145ac13f4d2a7569bb0a1e137ed06",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:3190d7d9c6e9d9bde1355cd3c1271704c918444d2348623c37d4dcdcc316f59a",
+      "path": "core/audio-manifests/ui/steel/back-b.json"
+    },
+    "renders": {
+      "r-9b98406c1e9e5a05": {
+        "hash": "sha256:4c475664d31785e48e0e69317aefe4f1f9501e13fb8d04a28fec68b020942ca4",
+        "path": "renders/r-9b98406c1e9e5a05.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:0a1a9aa7f8ebe16895daec9b2f07791a4ac251e0f1635dc89cb01d0f9b41736e",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "back-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/back-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-back/back-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

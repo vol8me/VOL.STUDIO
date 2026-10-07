@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-value-commit",
+    "hash": "sha256:4a7f95794b0a121141576298117539814b0f929d427acb76e2270173a3ab05ad",
+    "path": "devtools/audio-synth/records/families/ui-aurum-value-commit/family.json",
+    "seed": 9384,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:030aeba5717735478f868fd0c91a3fc2df2e9fa9f6dfdcc4c14faeade7a39cca",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-value-commit/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5137,
+        "encodedHash": "sha256:acea0e2a70ddfec6012bb69088fcbe2ef06bf248cffcfa31709d8074dc097c89",
+        "path": "public/assets/audio/ui/aurum/value-commit-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.13,
+        "centroidHz": 172.85069514222366,
+        "pitchHz": 106.5622373389085
+      },
+      "durationSeconds": 0.30733333333333335,
+      "key": "value-commit-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -27.508937185310597,
+        "truePeakDbtp": -3.885876879164188
+      },
+      "manifest": {
+        "hash": "sha256:351cadc2f22fa32f0aef7adc8dcb376a10cd99c4c21eaf03da096377cfa02315",
+        "path": "audio-manifests/ui/aurum/value-commit-a.json"
+      },
+      "pcmHash": "sha256:71b01029944bd860293fa731d183ba6a9a80545564ac30a5e6553b7eb3bdbfd4",
+      "programHash": "sha256:20dd29dc2b11d718ab5f8b7871f24d88b177aaf3b2081d3eb5b61226f2c99b08",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "value-commit"
+      ],
+      "variantId": "v-69aecc1e207217e7"
+    },
+    {
+      "asset": {
+        "bytes": 5174,
+        "encodedHash": "sha256:5e8b09192bea50bd9ebafd65eae6de40b6c62c5452708c942087d10f0e34e8da",
+        "path": "public/assets/audio/ui/aurum/value-commit-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.16,
+        "centroidHz": 266.7675250509575,
+        "pitchHz": 99.66298903950728
+      },
+      "durationSeconds": 0.30733333333333335,
+      "key": "value-commit-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.756564145163342,
+        "truePeakDbtp": -3.8465298918263056
+      },
+      "manifest": {
+        "hash": "sha256:387c0713911ffbf9ae0d3a8dfe864b8f55055d4b5e37c46b716fda6a39f7f38e",
+        "path": "audio-manifests/ui/aurum/value-commit-b.json"
+      },
+      "pcmHash": "sha256:8a1459cd98c3f30a4280ca1973bff3e0853cf685ff2299f42852b5983381608e",
+      "programHash": "sha256:94fac553e8807bfc3cf1c2e2bc8f7fa5df39f6243cb3ef028176d3dd7c1655ee",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "value-commit"
+      ],
+      "variantId": "v-eefeb535c5375d81"
+    },
+    {
+      "asset": {
+        "bytes": 5179,
+        "encodedHash": "sha256:f8dcba7d85c408c27a921c4b1e79b521b4b00c333da226d9c5b0a62ed94bb276",
+        "path": "public/assets/audio/ui/aurum/value-commit-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.17,
+        "centroidHz": 308.8620785654941,
+        "pitchHz": 85.2008816001227
+      },
+      "durationSeconds": 0.30733333333333335,
+      "key": "value-commit-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.619625509872066,
+        "truePeakDbtp": -3.7209359542509817
+      },
+      "manifest": {
+        "hash": "sha256:7dc7b706345859f0d0db0990988c665a4efb1c520701427d005384fe79943c54",
+        "path": "audio-manifests/ui/aurum/value-commit-c.json"
+      },
+      "pcmHash": "sha256:b3e8992f2c04dfc60c6d313f4d291b2b61f2243f6d9f495932197cd5b684a24b",
+      "programHash": "sha256:090ec31b5bcc40423b4c5f066bbe5c14bdb5ecff1546b34ac50873e91df1f6b3",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "value-commit"
+      ],
+      "variantId": "v-a2dc7f307fef41a7"
+    }
+  ]
+}

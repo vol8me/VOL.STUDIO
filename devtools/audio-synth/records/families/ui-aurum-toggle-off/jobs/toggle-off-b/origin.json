@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:71e85d279646714409db2dd46e21ac32e726e55cf29e1601be05cc7109abb7b8",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:ff3087e124191d6652c4f9bd10f55dfb0471db6e1d8779b1d0016b2e39638679",
+    "familyId": "ui-aurum-toggle-off",
+    "kind": "family-variant",
+    "variantId": "v-24de21093124e606",
+    "variantKey": "toggle-off-b"
+  }
+}

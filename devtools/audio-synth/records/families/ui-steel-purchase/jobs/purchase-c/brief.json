@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:heavy",
+    "purchase"
+  ],
+  "durationSeconds": {
+    "max": 0.68,
+    "min": 0.224
+  },
+  "id": "ui-steel-purchase-purchase-c",
+  "intent": "çelik donanım: purchase Varyant purchase-c (weight:heavy).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel purchase — purchase-c"
+}

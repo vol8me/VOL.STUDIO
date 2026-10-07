@@ -65,23 +65,35 @@ mixer ya da müzik motoru kurmaz.
 ### `UiSoundKit`
 
 Anlamsal UI niyetlerinin (`UiIntentBus`) ve host'un bildirdiği ürün sonuçlarının
-sesi. Toplam en çok 4 eşzamanlı UI sesi çalar; kritik olaylar (`error`, `warning`)
-`normal` sesleri düşürerek çalar, `normal` ses kritiği düşüremez. Mikro olaylar
-(`tick`) 120 ms aralıkla sınırlıdır. Her olayın en çok 3 varyantı sırayla seçilir
-ve perde ±%5 değişir; seçim ve değişim kitin kendi tohumlu RNG akışından gelir,
-simülasyon RNG'sine dokunmaz. Gecikmeli çalma yoktur: bağlam kilitliyse, sayfa
-gizliyse, sessizse ya da bağlam yoksa ses atlanır ve geri dönüşte biriken sesler
-topluca çalmaz. Bağlam ilk kullanıcı jestinde (ilk niyet) oluşturulup açılır.
-Bir Promise'in çözülmesi başarı sesi değildir; başarıyı host `reportOutcome` ile
-bildirir.
+sesi; 23 olaylık oyun arayüzü sözlüğü (`hover`, `press`, `toggleOn`/`toggleOff`,
+`sliderTick`, `panelOpen`, `equip`, `purchase`, `reward`, `levelUp`, `denied`...).
+Toplam en çok 4 eşzamanlı UI sesi çalar; kritik olaylar (`alert`, `denied`) `normal`
+sesleri düşürerek çalar, `normal` ses kritiği düşüremez. Mikro olaylar (`hover`,
+`focus` 70 ms, `sliderTick` 45 ms) kendi aralıklarıyla sınırlıdır. Her olayın en çok 3
+varyantı sırayla seçilir ve perde ±%4 değişir; seçim ve değişim kitin kendi tohumlu
+RNG akışından gelir, simülasyon RNG'sine dokunmaz. Gecikmeli çalma yoktur: bağlam
+kilitliyse, sayfa gizliyse, sessizse ya da bağlam yoksa ses atlanır ve geri dönüşte
+biriken sesler topluca çalmaz. Bağlam ilk kullanıcı jestinde (ilk niyet) oluşturulup
+açılır. Bir Promise'in çözülmesi başarı sesi değildir; başarıyı host `reportOutcome`
+ile bildirir (`success` → `confirm`, `warning` → `alert`, `error` → `denied`).
+
+- `toggle` niyeti hedefin durumuna göre `toggleOn`/`toggleOff` çalar.
+- `valuePreview` (kaydırıcı) perdeyi değerin konumuna bağlar: alçak değer alçak ses.
+- `observe(root)` gerçek fare üzerine gelmesini (`hover`) ve klavye odağını (`focus`)
+  dinler; dokunma ve fare odağı ses çalmaz.
+- `setAssets` / `followTheme` paleti çalışırken değiştirir (aşağıda).
 
 ### `uiSoundAssets`
 
-CORE'un gönderdiği varsayılan UI ses setinin URL'lerini verir: 12 olay × 3 varyant
-(`press-a.ogg`…), `core/public/assets/audio/ui` altında, `audio-synth` ile özgün üretilmiş
-mono 48 kHz kısa OGG'ler (kütüphane hedefi). Set mekanik QA'dan geçmiştir (kodlama sonrası
-tepe ≤ −1 dBTP, yükseklik −28…−14 LUFS, DC, kırpma, süre; PCM yeniden render özdeş;
-küçük hoparlör için sub bandı ve alçak enerji süzülmüş); **insan dinlemesi yapılmamıştır**.
+CORE'un gönderdiği UI ses setlerinin URL'lerini verir: 23 olay × 3 varyant × 2 palet
+(dosya adı `<olay>-a.ogg` ve palet alt dizini `steel`/`aurum`), `core/public/assets/audio/ui`
+altında, `audio-synth` ile özgün üretilmiş mono 48 kHz kısa OGG'ler (kütüphane hedefi).
+Palet ses malzemesidir: `steel` çelik donanım (varsayılan kaplama), `aurum` yaldızlı cam
+ve lake (aurum teması); `uiSoundPaletteFor(temaKimliği)` tema → palet eşlemesidir.
+Her olay tok bir gövde (düşen perdeli sinüs + doygunluk), ayrı süzülmüş bir temas tıkı
+ve gerektiğinde çınlama/melodik katman taşır. Set mekanik QA'dan geçmiştir (kodlama
+sonrası tepe ≤ −1 dBTP, yükseklik −42…−8 LUFS, DC, kırpma, süre; PCM yeniden render
+özdeş; gövde bandı üst bantlardan zayıf değil); **insan dinlemesi yapılmamıştır**.
 
 ### `channelGain`
 

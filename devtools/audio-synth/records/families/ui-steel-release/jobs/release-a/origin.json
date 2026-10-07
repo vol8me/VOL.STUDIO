@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:e542c34ad820b938753e8ae8e4d9b7e3292b9d81e70f429c7e332bba84da010b",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:ea70c34345658a99a43acfdf3a01e875446c70262994564d283f2b2d09e982a3",
+    "familyId": "ui-steel-release",
+    "kind": "family-variant",
+    "variantId": "v-95b261684ed4ecf7",
+    "variantKey": "release-a"
+  }
+}

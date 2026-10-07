@@ -86,7 +86,7 @@ test('ses laboratuvarı: her kabul edilmiş niyet tek sayılır', async ({ page 
   await page.locator('[data-ses-comp="toggle"]').click();
   await expect(readout(page, 'probe-toggle')).toHaveAttribute('data-value', '1');
   // Olay düğmeleri doğrudan çalar ve sayımı değiştirmez.
-  await page.locator('[data-ses-event="error"]').click();
+  await page.locator('[data-ses-event="denied"]').click();
   expect(await total()).toBe(7);
 });
 

@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-d30a3c59d394af31": {
+        "hash": "sha256:82eba12149a04c7cbae1606d5b02097b833be3671bbbaca6e6d4d2cf9ce67657",
+        "path": "analyses/r-d30a3c59d394af31.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:2c9cc9b3df11b80917833b116221c3ec8c0c7459e92015919835bc890d6f7653",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:2c9cc9b3df11b80917833b116221c3ec8c0c7459e92015919835bc890d6f7653",
+      "hash": "sha256:ef5250b54fb52958974fbab2e44c31d937804a71bc8ddab541198d610d1dc161",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:2960bdb9357987238fc9f62f9eaf3e470e346e81a04f8be9f4ee5f220d636cc6",
+      "path": "core/audio-manifests/ui/steel/press-b.json"
+    },
+    "renders": {
+      "r-d30a3c59d394af31": {
+        "hash": "sha256:71a60c74c12e48ea7edac6a526ab53d9e17158657c1d4fac3ada91ed22b9f0f4",
+        "path": "renders/r-d30a3c59d394af31.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:a76b355d855461bde7bd159e45c6896df088e0661183c1e6649d73d5fca671cb",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "press-b",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/ui/steel/press-b.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": "ui-steel-press/press-b"
+    },
+    "package": "@volstudio/core"
+  }
+}

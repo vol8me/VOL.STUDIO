@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-denied",
+    "hash": "sha256:2e42e6a6eddd1ff6c1285cd055c7bed4cc99ee055c229e7e74844c19bd9b53be",
+    "path": "devtools/audio-synth/records/families/ui-aurum-denied/family.json",
+    "seed": 9454,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:e5140821144168cdc1f49261d4d5a33d3bb62cf57e1f5f11e71837b723018fcc",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-denied/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 5677,
+        "encodedHash": "sha256:1e4defa2c6d39d8c380105b9c934103e9a66784168213fdcf377e89146b3fd74",
+        "path": "public/assets/audio/ui/aurum/denied-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.15,
+        "centroidHz": 574.544981914475,
+        "pitchHz": 177.07710710160467
+      },
+      "durationSeconds": 0.2683333333333333,
+      "key": "denied-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.368632507677955,
+        "truePeakDbtp": -4.910398989251514
+      },
+      "manifest": {
+        "hash": "sha256:06fdd15dcce73f7df56e39d79cc48372d25c378ee5b52f0ead0877cb1fe2002c",
+        "path": "audio-manifests/ui/aurum/denied-a.json"
+      },
+      "pcmHash": "sha256:d51d66c37f79091577d6bb235379acebf9ba0a3281a4326d0027ef626253be84",
+      "programHash": "sha256:cceee97a6d31a7dce62cc6fa9a11b8acbed6282159766f52b540b43a2c7c3ebe",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "denied"
+      ],
+      "variantId": "v-72b90ee1bd672f4e"
+    },
+    {
+      "asset": {
+        "bytes": 5648,
+        "encodedHash": "sha256:3970581307cb8bddac81a7e1ed2c8c5555ed0a9f15a4821f9a98f70555736399",
+        "path": "public/assets/audio/ui/aurum/denied-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.15,
+        "centroidHz": 536.225525677211,
+        "pitchHz": 194.64707565676397
+      },
+      "durationSeconds": 0.2683333333333333,
+      "key": "denied-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -26.166772664076763,
+        "truePeakDbtp": -4.914640797423998
+      },
+      "manifest": {
+        "hash": "sha256:785af18c403c32af67400d4000d2e22571b96fbd330b58c44f502ecbe8f1be1f",
+        "path": "audio-manifests/ui/aurum/denied-b.json"
+      },
+      "pcmHash": "sha256:273877e54f7483712188a8e1f7690e7d5ac24997f479b02da10577d8ae9dd7ed",
+      "programHash": "sha256:e82ba70b800173d33817726d73a9d2b74b3a4371a6912e976c695facd773677c",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "denied"
+      ],
+      "variantId": "v-a7252da77a6e510a"
+    },
+    {
+      "asset": {
+        "bytes": 5657,
+        "encodedHash": "sha256:6acee239914c328f45861de7b11c5b2988cc83047bea4b559d8f7518b6f5bf1f",
+        "path": "public/assets/audio/ui/aurum/denied-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.15,
+        "centroidHz": 490.91690050661794,
+        "pitchHz": 187.15269639207494
+      },
+      "durationSeconds": 0.2683333333333333,
+      "key": "denied-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -25.769861976213814,
+        "truePeakDbtp": -5.032048744868462
+      },
+      "manifest": {
+        "hash": "sha256:a0322b48aea3fcafa26259c297e15b84f342d39c711d39c2a5b8d4fa4236893b",
+        "path": "audio-manifests/ui/aurum/denied-c.json"
+      },
+      "pcmHash": "sha256:13c8a612da6c49cb57b775b99aab9c0afa7a380d0cc5999b9060913c680cc810",
+      "programHash": "sha256:da66679aca755b86930b798a454f71ea2cc1834a749e1603f3e61ee76a7337d4",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "denied"
+      ],
+      "variantId": "v-c13b255b66f86d19"
+    }
+  ]
+}

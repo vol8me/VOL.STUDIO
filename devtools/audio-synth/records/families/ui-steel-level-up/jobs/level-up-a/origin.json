@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:0dc80e7900ead80163fdc89b4df647842c9db5e897d84a0c070b148e033c5e59",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:962aea1176764597feda4c343df139d0bee9c99c3ec5f33de19bd42270c5b7de",
+    "familyId": "ui-steel-level-up",
+    "kind": "family-variant",
+    "variantId": "v-671f3b963582d37e",
+    "variantKey": "level-up-a"
+  }
+}

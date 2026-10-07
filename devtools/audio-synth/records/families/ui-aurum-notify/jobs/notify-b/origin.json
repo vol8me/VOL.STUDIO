@@ -1,0 +1,12 @@
+{
+  "programHash": "sha256:483ff940d2d9ea01115d384dd3167cc38498d22af6a6e84e0a1d242fd6f46ce2",
+  "schema": "ProgramOriginV1",
+  "source": {
+    "familiesRoot": "devtools/audio-synth/records/families",
+    "familyHash": "sha256:3b7059cada82c1285b7a39a67c0c842c2b78765de116d40f82f081e1a2b2ca8a",
+    "familyId": "ui-aurum-notify",
+    "kind": "family-variant",
+    "variantId": "v-755605ab6ebd8116",
+    "variantKey": "notify-b"
+  }
+}

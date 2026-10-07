@@ -957,11 +957,16 @@
     },
     "compare": {
       "title": "Dışa aktarma ve kıyas",
-      "hint": "Kuru: işlenmemiş örnek, kanal ayarı ve perde değişimi yok. Kit: ±%5 perde, kanal kazancı ve ses bütçesi uygulanır.",
+      "hint": "Kuru: işlenmemiş örnek, kanal ayarı ve perde değişimi yok. Kit: ±%4 perde, kanal kazancı ve ses bütçesi uygulanır.",
       "variant": "Varyant {{value}}",
       "dry": "Kuru çal",
       "kit": "Kit ile çal",
       "download": "Örneği indir"
+    },
+    "palette": {
+      "label": "Ses paleti",
+      "steel": "Çelik donanım",
+      "aurum": "Yaldızlı cam ve lake"
     }
   },
   "kimlik": {

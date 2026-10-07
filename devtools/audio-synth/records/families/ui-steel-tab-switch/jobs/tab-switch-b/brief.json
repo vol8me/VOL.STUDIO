@@ -1,0 +1,23 @@
+{
+  "assetClass": "ui",
+  "channels": 1,
+  "descriptors": [
+    "weight:medium",
+    "tab-switch"
+  ],
+  "durationSeconds": {
+    "max": 0.3,
+    "min": 0.08
+  },
+  "id": "ui-steel-tab-switch-tab-switch-b",
+  "intent": "çelik donanım: tab-switch Varyant tab-switch-b (weight:medium).",
+  "kind": "acoustic",
+  "placement": "screen",
+  "provenance": {
+    "author": "agent",
+    "by": "sound-family"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "UI steel tab-switch — tab-switch-b"
+}

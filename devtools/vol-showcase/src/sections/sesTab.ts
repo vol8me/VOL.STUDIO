@@ -4,6 +4,7 @@ import {
   UI_AUDIO_CHANNELS,
   UI_MAX_VOICES,
   UI_SOUND_EVENTS,
+  UI_SOUND_PALETTES,
   UI_SOUND_VARIANT_KEYS,
   UiSoundKit,
   channelGain,
@@ -11,6 +12,7 @@ import {
   type UiAudioChannel,
   type UiAudioSettings,
   type UiSoundEvent,
+  type UiSoundPalette,
 } from '@volstudio/core/audio/ui';
 import { i18next } from '@volstudio/core/i18n';
 import {
@@ -95,6 +97,7 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
   disposables.add({ dispose: release });
 
   let settings: UiAudioSettings = DEFAULT_UI_AUDIO_SETTINGS;
+  let palette: UiSoundPalette = 'steel';
   let kit: UiSoundKit | null = null;
   let context: AudioContext | null = null;
   let preparing = false;
@@ -219,7 +222,7 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
     try {
       context = new AudioContext();
       kit = new UiSoundKit({
-        assets: uiSoundAssets(baseUrl()),
+        assets: uiSoundAssets(baseUrl(), palette),
         context,
         settings,
         visibilityTarget: document,
@@ -267,7 +270,26 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
   eventsBody.className = 'vol-showcase-panel-demo';
   const eventsHint = new Text(i18next.t('volui:ses.events.hint'), { variant: 'muted' });
   disposables.addDestroyables(eventsHint);
-  eventsBody.append(eventsHint.element, eventButtons);
+  const paletteSelect = new Select({
+    options: UI_SOUND_PALETTES.map((value) => ({
+      value,
+      label: i18next.t(value === 'steel' ? 'volui:ses.palette.steel' : 'volui:ses.palette.aurum'),
+    })),
+    value: palette,
+    container,
+    haptic: false,
+    onInput: (value) => {
+      palette = value as UiSoundPalette;
+      if (kit) {
+        kit.setAssets(uiSoundAssets(baseUrl(), palette));
+        void kit.preload().then(renderStatus);
+      }
+    },
+  });
+  paletteSelect.element.dataset.ses = 'palette';
+  paletteSelect.element.setAttribute('aria-label', i18next.t('volui:ses.palette.label'));
+  disposables.addDestroyables(paletteSelect);
+  eventsBody.append(eventsHint.element, paletteSelect.element, eventButtons);
 
   // ── 2. Gerçek bileşenler: ses niyetten gelir ──────────────────────────────
   const componentsHint = new Text(i18next.t('volui:ses.components.hint'), { variant: 'muted' });
@@ -395,7 +417,8 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
   // ── 6. Dışa aktarma ve kuru/kit kıyası ────────────────────────────────────
   let compareEvent: UiSoundEvent = 'press';
   let compareVariant = 0;
-  const sampleUrl = (): string => uiSoundAssets(baseUrl())[compareEvent]?.[compareVariant] ?? '';
+  const sampleUrl = (): string =>
+    uiSoundAssets(baseUrl(), palette)[compareEvent]?.[compareVariant] ?? '';
   const load = (url: string): Promise<AudioBuffer> => {
     let pending = decoded.get(url);
     if (!pending) {

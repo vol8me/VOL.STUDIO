@@ -1,0 +1,132 @@
+{
+  "choice": {
+    "method": "fnv1a32-mod-v1"
+  },
+  "engine": {
+    "analyzerVersion": 1,
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "rendererVersion": 2
+  },
+  "family": {
+    "familyId": "ui-aurum-release",
+    "hash": "sha256:c11a9b8df49d14764a79f3ca0543bc190d08edba0ffbf865ebc6206e8d29923c",
+    "path": "devtools/audio-synth/records/families/ui-aurum-release/family.json",
+    "seed": 9328,
+    "variationPolicy": "role-subrange-v1",
+    "version": 1
+  },
+  "lookupContract": "sound-family-lookup-v1",
+  "ordering": "key",
+  "package": "@volstudio/core",
+  "quality": {
+    "hash": "sha256:77f6788607019004022015ea757c5db360f791c231e6042a119c4eb4c4fae452",
+    "pass": true,
+    "path": "devtools/audio-synth/records/families/ui-aurum-release/quality.json"
+  },
+  "roleAxes": {
+    "weight": [
+      "heavy",
+      "light",
+      "medium"
+    ]
+  },
+  "schema": "SoundFamilyBankV1",
+  "variants": [
+    {
+      "asset": {
+        "bytes": 4557,
+        "encodedHash": "sha256:58cddfeb3c2187a0598c3be4cd67a88f25fb99a4afc37194d47f2e192d31a44f",
+        "path": "public/assets/audio/ui/aurum/release-a.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.04,
+        "centroidHz": 136.78502157804962,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.11933333333333333,
+      "key": "release-a",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -34.54675307600978,
+        "truePeakDbtp": -7.7745300976593406
+      },
+      "manifest": {
+        "hash": "sha256:c719a849b1233f4bb906289a1b33a95fca77c2294687dc7e3be27cfd2a60241f",
+        "path": "audio-manifests/ui/aurum/release-a.json"
+      },
+      "pcmHash": "sha256:b902ddca160e1f71a5612874b87e729eb379036db02092314a7b6c364692b47a",
+      "programHash": "sha256:a24b8b7db07fec9a3c2b0dbafc9a7f049a17e8fccfdaf7f4e3095af9ad4ee2f5",
+      "roles": {
+        "weight": "light"
+      },
+      "tags": [
+        "release"
+      ],
+      "variantId": "v-d01663b4b088b8c0"
+    },
+    {
+      "asset": {
+        "bytes": 4571,
+        "encodedHash": "sha256:ad6f7309c39ec7d5f9f19bf67b66e5c7977d6a542df53466c26b46a8bdfd52cb",
+        "path": "public/assets/audio/ui/aurum/release-b.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.05,
+        "centroidHz": 129.94521837111634,
+        "pitchHz": null
+      },
+      "durationSeconds": 0.11933333333333333,
+      "key": "release-b",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -34.21495170996703,
+        "truePeakDbtp": -7.986701127033664
+      },
+      "manifest": {
+        "hash": "sha256:df884561bb90d77857064604e1d382cb23fcc37591d41c9e81993d6e5b3ac76a",
+        "path": "audio-manifests/ui/aurum/release-b.json"
+      },
+      "pcmHash": "sha256:fbb54e7148ea604a518091201af88fbab1d56d6567f6f0b28f69df9359fa87ea",
+      "programHash": "sha256:f646a86bacdeef463f99eb336b0da17bd044a9dc2c26350730aff25a404b3ab8",
+      "roles": {
+        "weight": "medium"
+      },
+      "tags": [
+        "release"
+      ],
+      "variantId": "v-d0d7221decdc4bbe"
+    },
+    {
+      "asset": {
+        "bytes": 4571,
+        "encodedHash": "sha256:e06dfc17d4fda60c502556afb55adea93a5de1955fb8b488a14df7a51d065cc2",
+        "path": "public/assets/audio/ui/aurum/release-c.ogg"
+      },
+      "descriptors": {
+        "activeSeconds": 0.06,
+        "centroidHz": 127.3286035543484,
+        "pitchHz": 124.8081444401516
+      },
+      "durationSeconds": 0.11933333333333333,
+      "key": "release-c",
+      "loudness": {
+        "integratedLufs": null,
+        "maxMomentaryLufs": -33.63772335168624,
+        "truePeakDbtp": -8.025021447069072
+      },
+      "manifest": {
+        "hash": "sha256:11e7de80b627f0f782143c4eaf4f7ac39995dabdac268bc7759b584717f89f29",
+        "path": "audio-manifests/ui/aurum/release-c.json"
+      },
+      "pcmHash": "sha256:62a1c2cf0374a03421f8e75fe8e063e3a15df80e67916fde534f612e765ba334",
+      "programHash": "sha256:aa2440450435349313aad6166ce28781c0473a6c249954fd625d85a00990fe93",
+      "roles": {
+        "weight": "heavy"
+      },
+      "tags": [
+        "release"
+      ],
+      "variantId": "v-5412906a081b6d56"
+    }
+  ]
+}
