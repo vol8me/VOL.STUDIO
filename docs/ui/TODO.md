@@ -327,6 +327,12 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       OSK bilinen-kusur kayıtları silindi (26/26 iki motor). **`FOCUSABLE_SELECTOR` çıplak `[href]`
       içeriyordu**: sprite ikon `<use href>` öğeleri kol gezinmesine ve modal odak tuzağına aday
       oluyordu → `a[href], area[href]`. Toast: varyant ikonu (renk tek taşıyıcı değil) + vurgu çubuğu.
+      Katman piksel temeli (`visual.spec.ts`, Chromium win32): modal, sheet, popup, popover, select, ekran
+      klavyesi, diyalog kutusu (başka yüzeyin arkasında kalmadığı `elementFromPoint` ile de iddia
+      edilir), bildirim ve komut paleti iki kaplamada (varsayılan, aurum) 1280×720 tam görüntüyle +
+      aurum için buttons/cards/panels/forms sekmeleri (20 görüntü; yalnız katman görüntülerine ≤24
+      piksel payı: arka sayfanın alt piksel kayması). Önceden diyalogun arkada kalması hiçbir temelde
+      görünmüyordu.
       Kalan: ContextMenu/RadialMenu/Popover/FatalStartupError aynı dile yayılım ve ince ayar;
       giriş/çıkış juice'u ve sesin tam kapsamı; 3 katmanlı yığın kanıtı.
 - [ ] **UI-09.2 — Tooltip/RichTooltip ve ToastManager.** Hover/odak kalıcılığı, Esc, balona geçiş,
