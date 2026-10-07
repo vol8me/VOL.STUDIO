@@ -60,6 +60,7 @@ describe('Bellek sızıntısı regresyonları', () => {
       'pointerdown',
       'pointerup',
       'pointercancel',
+      'lostpointercapture',
       'pointerleave',
       'keydown',
       'keyup',

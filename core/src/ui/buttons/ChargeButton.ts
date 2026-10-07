@@ -17,6 +17,8 @@ export interface ChargeButtonOptions {
   onCharged?: () => void;
   /** Bırakıldığında çağrılır; progress 0-1 arası doluluk oranıdır. */
   onRelease?: (progress: number) => void;
+  /** Dolum iptal edildi (pointercancel, yakalama kaybı, sayfa gizlendi, söküm): `onRelease`/`onCharged` ÇAĞRILMAZ. */
+  onCancel?: () => void;
   size?: number;
 }
 
@@ -34,6 +36,7 @@ export class ChargeButton {
   private readonly onChargeProgressHandler?: (progress: number) => void;
   private readonly onChargedHandler?: () => void;
   private readonly onReleaseHandler?: (progress: number) => void;
+  private readonly onCancelHandler?: () => void;
   private chargeStartTime = 0;
   private isCharging = false;
   private isFullyCharged = false;
@@ -41,12 +44,15 @@ export class ChargeButton {
   private activePointerId: number | null = null;
   private boundPointerDown: (event: PointerEvent) => void;
   private boundPointerUp: (event: PointerEvent) => void;
+  private readonly boundCancel: () => void;
+  private readonly boundVisibility: () => void;
 
   constructor(options: ChargeButtonOptions) {
     this.chargeDurationMs = options.chargeDurationMs ?? UI_TIMING.CHARGE_DURATION_MS;
     this.allowPartialRelease = options.allowPartialRelease ?? true;
     this.onChargeProgressHandler = options.onChargeProgress;
     this.onChargedHandler = options.onCharged;
+    this.onCancelHandler = options.onCancel;
     this.onReleaseHandler = options.onRelease;
 
     const size = options.size ?? UI_SIZE.BUTTON_DEFAULT_PX;
@@ -98,10 +104,16 @@ export class ChargeButton {
     }
 
     this.boundPointerDown = (event) => this.handlePointerDown(event);
+    this.boundCancel = () => this.cancel();
+    this.boundVisibility = () => {
+      if (document.visibilityState === 'hidden') this.cancel();
+    };
     this.boundPointerUp = (event) => this.handlePointerUp(event);
     this.element.addEventListener('pointerdown', this.boundPointerDown);
     this.element.addEventListener('pointerup', this.boundPointerUp);
-    this.element.addEventListener('pointercancel', this.boundPointerUp);
+    this.element.addEventListener('pointercancel', this.boundCancel);
+    this.element.addEventListener('lostpointercapture', this.boundCancel);
+    document.addEventListener('visibilitychange', this.boundVisibility);
     // pointerleave kasıtlı olarak dinlenmiyor — parmak dışarı kayarsa dolum iptal edilmemeli.
   }
 
@@ -111,16 +123,27 @@ export class ChargeButton {
     return Math.min(1, (performance.now() - this.chargeStartTime) / this.chargeDurationMs);
   }
 
+  /** Dolumu iptal eder: ne `onCharged` ne `onRelease`; durum ve halka sıfırlanır. Dolum yoksa etkisiz. */
+  cancel(): void {
+    if (!this.isCharging) return;
+    this.activePointerId = null;
+    this.stopCharging();
+    this.onCancelHandler?.();
+  }
+
   destroy(): void {
     if (this.rafHandle !== null) cancelAnimationFrame(this.rafHandle);
     this.element.removeEventListener('pointerdown', this.boundPointerDown);
     this.element.removeEventListener('pointerup', this.boundPointerUp);
-    this.element.removeEventListener('pointercancel', this.boundPointerUp);
+    this.element.removeEventListener('pointercancel', this.boundCancel);
+    this.element.removeEventListener('lostpointercapture', this.boundCancel);
+    document.removeEventListener('visibilitychange', this.boundVisibility);
     this.element.remove();
   }
 
   private handlePointerDown(event: PointerEvent): void {
-    if (this.element.disabled) return;
+    // Devam eden dolumda ikinci işaretçi yok sayılır.
+    if (this.element.disabled || this.isCharging) return;
     this.activePointerId = event.pointerId;
     this.element.setPointerCapture(event.pointerId);
     this.isCharging = true;
@@ -132,7 +155,9 @@ export class ChargeButton {
 
   private handlePointerUp(event: PointerEvent): void {
     if (this.activePointerId !== event.pointerId) return;
-    this.element.releasePointerCapture(event.pointerId);
+    if (this.element.hasPointerCapture(event.pointerId)) {
+      this.element.releasePointerCapture(event.pointerId);
+    }
     this.activePointerId = null;
     if (!this.isCharging) return;
 

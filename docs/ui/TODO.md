@@ -150,11 +150,14 @@ uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer aileler
       ağacında kalır (axe `button-name` kaydı kapandı). Kalan: ToolButton/Toolbar gezici tabindex
       (bağımsız/çoklu seçim/dikey/tümü devre dışı), async bitişinde dışarıdan gelen `disabled`
       korunumu, yerel button Enter/Space tek olay kanıtı, sesin açık/kapalı eşdeğer işlevi.
-- [ ] **UI-03.2 — Hold/Charge/LongPress (kalan).** Yapıldı: basılı tut, uzun bas, şarj, duraklat/sürdür
-      ve yön tuşları aynı yüzey malzemesiyle (kabartma, gömülü basılı durum, devre dışı); işlevsel zaman
-      eşikleri değişmedi. Kalan: pointercancel/capture kaybı/ikinci işaretçi/görünürlük/devre dışı iptal
-      kanıtı, odak/kol eşdeğeri ve ilerleme durumu, azaltılmış harekette basılı tutma işlevi, erken
-      bırakma/başarılı eşik/tekrar tekil; şarj sesi/titreşimi ilerlemeyle (UI-02 sözlüğünden).
+- [ ] **UI-03.2 — Hold/Charge/LongPress (kalan).** Yapıldı: aynı yüzey malzemesi (kabartma, gömülü
+      basılı durum, devre dışı); iptal sözleşmesi kanıtlı (`holdButtons.test.ts`): pointercancel,
+      yakalama kaybı, sayfa gizlenmesi, devre dışı ve söküm basışı bırakır, iptal ASLA eylem sayılmaz
+      (düzeltilen kusur: uzun bas düğmesinde pointercancel dokunma sayılıyordu; şarj düğmesinde
+      pointercancel şarjlı bırakış üretiyordu → `onCancel`), ikinci işaretçi yok sayılır (ikinci
+      zamanlayıcı sızıntısı kapandı), söküm belge dinleyicisini kaldırır. Kalan: odak/kol eşdeğeri ve
+      ilerleme durumunun erişilebilir duyurusu, azaltılmış harekette basılı tutma işlevi kanıtı, şarj
+      sesi/titreşimi ilerlemeyle (UI-02 sözlüğünden).
 - [ ] **UI-03.3 — Aktif oyun regresyonları.** VOL.TEST duraklatma/ayarlar tüketicisinde
       Button/IconButton/Hold gerçek yerleşim/geri/Slider adı ve hit-test; yeni menü yok.
       Kapanır: gerçek ayarlar/duraklatma Chromium+WebKit ve eldeki cihazda; eski duraklatma

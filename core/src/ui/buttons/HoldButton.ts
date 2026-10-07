@@ -47,6 +47,7 @@ export class HoldButton {
   private boundPointerDown!: (event: PointerEvent) => void;
   private boundPointerUp!: (event: PointerEvent) => void;
   private boundPointerLeave!: () => void;
+  private boundVisibility!: () => void;
   private boundKeyDown!: (event: KeyboardEvent) => void;
   private boundKeyUp!: (event: KeyboardEvent) => void;
   private boundClick!: (event: MouseEvent) => void;
@@ -65,7 +66,8 @@ export class HoldButton {
     if (icon) this.setIcon(icon);
 
     this.boundPointerDown = (event) => {
-      if (this.element.disabled) return;
+      // Zaten basılıyken ikinci işaretçi yok sayılır (tek basış, tek onPress).
+      if (this.element.disabled || this.pressed) return;
       event.preventDefault();
       this.setPressed(true, 'pointer');
       this.element.setPointerCapture(event.pointerId);
@@ -76,6 +78,12 @@ export class HoldButton {
       }
       if (this.pressSource !== 'pointer') return;
       this.setPressed(false, 'pointer');
+    };
+    this.boundVisibility = () => {
+      // Sayfa gizlenince basış bırakılır: gizliyken pointerup hiç gelmeyebilir (mandallı "basılı").
+      if (document.visibilityState === 'hidden' && this.pressed) {
+        this.setPressed(false, this.pressSource ?? 'pointer');
+      }
     };
     this.boundPointerLeave = () => {
       // Klavyeyle basılı tutulurken imlecin butondan çıkması basımı bozmamalı.
@@ -108,7 +116,9 @@ export class HoldButton {
     this.element.addEventListener('pointerdown', this.boundPointerDown);
     this.element.addEventListener('pointerup', this.boundPointerUp);
     this.element.addEventListener('pointercancel', this.boundPointerUp);
+    this.element.addEventListener('lostpointercapture', this.boundPointerLeave);
     this.element.addEventListener('pointerleave', this.boundPointerLeave);
+    document.addEventListener('visibilitychange', this.boundVisibility);
     this.element.addEventListener('keydown', this.boundKeyDown);
     this.element.addEventListener('keyup', this.boundKeyUp);
     this.element.addEventListener('click', this.boundClick);
@@ -161,7 +171,9 @@ export class HoldButton {
     this.element.removeEventListener('pointerdown', this.boundPointerDown);
     this.element.removeEventListener('pointerup', this.boundPointerUp);
     this.element.removeEventListener('pointercancel', this.boundPointerUp);
+    this.element.removeEventListener('lostpointercapture', this.boundPointerLeave);
     this.element.removeEventListener('pointerleave', this.boundPointerLeave);
+    document.removeEventListener('visibilitychange', this.boundVisibility);
     this.element.removeEventListener('keydown', this.boundKeyDown);
     this.element.removeEventListener('keyup', this.boundKeyUp);
     this.element.removeEventListener('click', this.boundClick);

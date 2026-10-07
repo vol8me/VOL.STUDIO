@@ -43,6 +43,7 @@ export class LongPressButton {
   private boundPointerDown: (event: PointerEvent) => void;
   private boundPointerUp: (event: PointerEvent) => void;
   private boundPointerLeave: () => void;
+  private boundVisibility: () => void;
 
   constructor(options: LongPressButtonOptions) {
     const { shape = 'circle', size = UI_SIZE.BUTTON_DEFAULT_PX, icon, label } = options;
@@ -121,7 +122,8 @@ export class LongPressButton {
     }
 
     this.boundPointerDown = (event) => {
-      if (this.element.disabled) return;
+      // Devam eden basışta ikinci işaretçi yok sayılır (ikinci zamanlayıcı ilkini sızdırırdı).
+      if (this.element.disabled || this.activePointerId !== null) return;
       event.preventDefault();
       this.activePointerId = event.pointerId;
       this.element.setPointerCapture(event.pointerId);
@@ -151,6 +153,10 @@ export class LongPressButton {
       this.onReleaseHandler?.();
     };
 
+    this.boundVisibility = () => {
+      if (document.visibilityState === 'hidden') this.boundPointerLeave();
+    };
+
     this.boundPointerLeave = () => {
       if (this.activePointerId === null) return;
       // Parmak dışarı kayarsa basış iptal sayılır — ne onTap ne onLongPress tetiklenir.
@@ -161,8 +167,10 @@ export class LongPressButton {
 
     this.element.addEventListener('pointerdown', this.boundPointerDown);
     this.element.addEventListener('pointerup', this.boundPointerUp);
-    this.element.addEventListener('pointercancel', this.boundPointerUp);
+    this.element.addEventListener('pointercancel', this.boundPointerLeave);
+    this.element.addEventListener('lostpointercapture', this.boundPointerLeave);
     this.element.addEventListener('pointerleave', this.boundPointerLeave);
+    document.addEventListener('visibilitychange', this.boundVisibility);
   }
 
   isPressed(): boolean {
@@ -182,8 +190,10 @@ export class LongPressButton {
     if (this.progressRafHandle !== null) cancelAnimationFrame(this.progressRafHandle);
     this.element.removeEventListener('pointerdown', this.boundPointerDown);
     this.element.removeEventListener('pointerup', this.boundPointerUp);
-    this.element.removeEventListener('pointercancel', this.boundPointerUp);
+    this.element.removeEventListener('pointercancel', this.boundPointerLeave);
+    this.element.removeEventListener('lostpointercapture', this.boundPointerLeave);
     this.element.removeEventListener('pointerleave', this.boundPointerLeave);
+    document.removeEventListener('visibilitychange', this.boundVisibility);
     this.element.remove();
   }
 
