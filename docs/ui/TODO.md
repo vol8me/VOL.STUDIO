@@ -204,6 +204,14 @@ uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer aileler
       Button/IconButton/Hold gerçek yerleşim/geri/Slider adı ve hit-test; yeni menü yok.
       Kapanır: gerçek ayarlar/duraklatma Chromium+WebKit ve eldeki cihazda; eski duraklatma
       sesleri yeni sağlayıcıyla çift çalmaz; oyun SFX/ambiyans değişmez.
+      Yapıldı (2026-10-08): `games/vol-test/tests/e2e/pause.spec.ts` (iki motor, 1280×800): her denetim
+      adlı, ekrana sığar ve merkezi hit-test ile kendisidir; odak katmanda açılır, Escape kapatır ve
+      oyun devam eder; Devam Enter ile kapatır ve yeniden açılır. **Gerçek kusur bulundu ve kapandı:**
+      800 px yükseklikte (Deck) panel içeriği taşıyor (757 > 678) ve "Devam et" düğmesi panelin altında
+      kırpılıp tuvalin altında kalıyordu → düğme panel içinde sabit (`position: sticky`). Tabletle
+      (Android 14, dikey/yatay) aynı ölçüm: tüm denetimler 44 px, "Devam et" görünür. Çift ses
+      `GameAudio.test.ts` ile kanıtlı; tüm vol-test e2e 33 geçti. Kalan: Deck host koşusunda (VOL.TEST
+      yerel paketi) aynı hit-test, Slider adı için gerçek AT (UI-13.4).
 - [ ] **UI-03.4 — Dikey dilim teslimi.** İki skin önce/sonra, %30 uzatılmış etiket, 6 hane,
       hareket kaydı, ses ve imleç örnekleri, fare/kol/dokunma. Kapanır: ilk yanıt p95<100 ms,
       CPU/sunum profili, başlangıç farkları tek tek incelenir; **kullanıcı görsel + ses

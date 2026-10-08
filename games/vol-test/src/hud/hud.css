@@ -192,3 +192,11 @@
   line-height: 16px;
   white-space: nowrap;
 }
+
+/* Duraklatma paneli 800 px yüksekliğte (Deck) taşar ve kayar; devam düğmesi kayarken de erişilebilir kalır. */
+.vt-pause__resume {
+  position: sticky;
+  bottom: var(--vol-space-md);
+  flex: none;
+  box-shadow: 0 0 0 var(--vol-space-md) var(--vol-ui-panel);
+}

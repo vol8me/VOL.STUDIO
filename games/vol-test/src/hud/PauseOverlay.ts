@@ -38,6 +38,7 @@ export class PauseOverlay {
     this.title = new Text('', { variant: 'heading', tag: 'h2' });
     this.resume = new Button('', { variant: 'primary', onClick: () => this.modal.close() });
     this.resume.element.dataset.testid = 'pause-resume';
+    this.resume.element.classList.add('vt-pause__resume');
     this.qualityLabel = new Text('', { variant: 'muted', tag: 'span' });
     this.qualityPicker = new SegmentedControl({
       options: this.qualityOptions(),
