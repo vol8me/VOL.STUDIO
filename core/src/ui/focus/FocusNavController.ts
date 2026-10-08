@@ -137,6 +137,14 @@ export class FocusNavController {
     // İşaretçiyle odaklanınca nav halkasını temizle: halka yalnız kol/klavye
     // gezinmesinin işaretidir.
     this.scope.addListener(document, 'pointerdown', () => this.clearRing());
+    // Odağı başka bir kod yolu taşıdıysa (örn. Tabs'in kendi ok tuşu) eski halka asılı kalmasın: yalnız
+    // halkayı taşıyan eleman odaktayken halka geçerlidir.
+    this.scope.addListener(document, 'focusin', (event: FocusEvent) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && !target.classList.contains(FOCUS_NAV_CLASS)) {
+        this.clearRing();
+      }
+    });
     const pump = (): void => {
       if (this.started) {
         this.pollPad();

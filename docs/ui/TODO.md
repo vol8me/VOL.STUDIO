@@ -602,7 +602,11 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       komut paleti, kısayol düğmesi) marka tonlu seçim plakası + 4 px sol şerit; sekme/segment alt şerit;
       girdi kuyuları aydınlanır; klavye (`:focus-visible`) ve kol aynı görünür. **Kutu kımıldamaz**
       (transform yok): uzamsal kol gezintisi odaklı öğenin dikdörtgenini okur, 1 px kaldırma ekran
-      klavyesi turunu bozdu (e2e yakaladı, kaldırıldı). Fiziksel Deck'te görsel kabul kullanıcı turunda.
+      klavyesi turunu bozdu (e2e yakaladı, kaldırıldı). **Gerçek Deck'te (host AppImage, xdotool ok tuşları;
+      sanal kol bu turda `sudo` parolası olmadığından kurulamadı) görülen hata:** yan menünün `Tabs` ok
+      tuşu odağı kendisi taşıdığı için `FocusNavController` halkası önceki öğede asılı kalıyordu (eski
+      hata, yeni seçim plakasıyla görünür oldu) → halka yalnız onu taşıyan eleman odaktayken geçerli
+      (`focusin` temizliği, `focusRingHandoff.test.ts`). Fiziksel Deck'te görsel kabul kullanıcı turunda.
 - [ ] **UI-12.3 — Haptik/native yaşam döngüsü.** Mevcut hidraw/evdev/Steam/Android sürücüleri;
       açık Test düğmesi/durum; yanlış yetenek bildirimi. Kapanır: sıfır/kapalı sessiz, tek sürücü;
       uyku/odak kaybı/cihaz çıkarma/çıkışta durma gerçek sonda; hissiyat kullanıcı beyanı ayrı.
