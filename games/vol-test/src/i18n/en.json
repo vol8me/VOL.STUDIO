@@ -31,6 +31,10 @@
     "pause": "Pause",
     "brake": "Brake"
   },
+  "integrity": {
+    "recovered": "Your save was damaged and restored from its backup.",
+    "reset": "Your save was damaged and could not be restored; a fresh save was started (the damaged file was kept)."
+  },
   "pause": {
     "title": "Paused",
     "resume": "Resume",

@@ -2086,11 +2086,11 @@
     {
       "export": "ToastManager",
       "kind": "class",
-      "tier": 2,
+      "tier": 1,
       "phase": "UI-09",
       "anchor": "A4",
       "archetype": "overlay",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/panelsTab.ts"],
       "tests": [
         {

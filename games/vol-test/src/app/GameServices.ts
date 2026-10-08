@@ -38,12 +38,9 @@ import {
 } from '@volstudio/tauri-v2';
 import { GameProgress } from './GameProgress';
 import { GameSettings } from './GameSettings';
+import { IntegrityFeed } from './IntegrityFeed';
 import { GameMeasurements } from './GameMeasurements';
 import { parseRuntimeOverrides, type RuntimeOverrides } from './RuntimeOverrides';
-
-const storeOptions: NonNullable<Parameters<typeof createScopedStores>[1]> = {
-  onIntegrity: (event) => console.warn('[VOL.TEST] Kayıt bütünlüğü:', event),
-};
 
 export class GameServices {
   readonly settings: GameSettings;
@@ -52,6 +49,14 @@ export class GameServices {
   readonly diagnostics?: Diagnostics;
   readonly measurements?: GameMeasurements;
   readonly displayAvailable: boolean;
+  /** Kayıt kurtarma/sıfırlama olayları; HUD abone olunca geçmişi de alır. */
+  readonly integrity = new IntegrityFeed();
+  private readonly storeOptions: NonNullable<Parameters<typeof createScopedStores>[1]> = {
+    onIntegrity: (event) => {
+      console.warn('[VOL.TEST] Kayıt bütünlüğü:', event);
+      this.integrity.record(event);
+    },
+  };
   private readonly scope = new DisposableScope();
   private readonly pauseListeners = new Set<() => void>();
   private readonly resumeListeners = new Set<() => Promise<void>>();
@@ -66,7 +71,7 @@ export class GameServices {
     measure: boolean,
     readonly overrides: RuntimeOverrides,
   ) {
-    this.stores = createScopedStores('voltest', storeOptions);
+    this.stores = createScopedStores('voltest', this.storeOptions);
     const store = new ScopedSaveManager(this.stores);
     this.settings = new GameSettings(store, navigator.userAgent);
     this.progress = new GameProgress(store);
@@ -123,7 +128,7 @@ export class GameServices {
           { key: 'voltest.preferences', scope: 'device' },
           { key: 'voltest.progress', scope: 'synced' },
         ],
-        storeOptions,
+        services.storeOptions,
       );
       if (services.measurements) await reportDiagnostics({ type: 'info', env });
       await Promise.all([services.settings.load(), services.progress.load()]);

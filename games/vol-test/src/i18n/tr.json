@@ -31,6 +31,10 @@
     "pause": "Duraklat",
     "brake": "Fren"
   },
+  "integrity": {
+    "recovered": "Kaydınız bozulmuştu ve yedeğinden geri yüklendi.",
+    "reset": "Kaydınız bozulmuştu ve geri yüklenemedi; yeni kayıt başlatıldı (bozuk dosya saklandı)."
+  },
   "pause": {
     "title": "Duraklatıldı",
     "resume": "Devam et",

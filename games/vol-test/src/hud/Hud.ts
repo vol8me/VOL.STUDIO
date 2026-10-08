@@ -5,6 +5,7 @@ import { DisposableScope } from '@volstudio/core/lifecycle';
 import {
   FpsMeter,
   InputPresentationController,
+  ToastManager,
   UIRoot,
   type UiIntentBus,
 } from '@volstudio/core/ui';
@@ -132,6 +133,23 @@ export class Hud {
     if (this.fullscreen) this.layer.append(this.fullscreen.element);
     root.mount(this.layer);
     root.mount(this.pause.element);
+    // Kayıt kurtarma/sıfırlama oyuncuya söylenir (yalnız konsola değil); geç abone olan HUD geçmişi de alır.
+    const toasts = this.scope.addDestroyable(new ToastManager(root.element));
+    const integrity = options.services?.integrity;
+    if (integrity) {
+      this.scope.addSubscription(
+        integrity.subscribe((event) => {
+          toasts.show(
+            i18next.t(
+              event.kind === 'recovered'
+                ? 'voltest:integrity.recovered'
+                : 'voltest:integrity.reset',
+            ),
+            { variant: event.kind === 'recovered' ? 'warning' : 'danger', critical: true },
+          );
+        }),
+      );
+    }
     this.scope.addSubscription(() => this.layer.remove());
 
     this.setTouchMode(options.touch);

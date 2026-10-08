@@ -3,6 +3,8 @@ import { Vector2, VirtualActionSource, VirtualStickSource } from '@volstudio/cor
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { EFFECT_LEVELS, type EffectLevel, type EffectProfile } from '@/config/quality';
+import { IntegrityFeed } from '@/app/IntegrityFeed';
+import type { GameServices } from '@/app/GameServices';
 import { Hud } from '@/hud/Hud';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
 import { hudFrame } from './support';
@@ -34,6 +36,51 @@ function mount(touch = false, fullscreen = true) {
     parent.querySelector<T>(`[data-testid="${id}"]`)!;
   return { hud, parent, onResume, source, sticks, find, quality };
 }
+
+describe('Hud kayıt bütünlüğü bildirimi', () => {
+  function mountWithFeed(feed: IntegrityFeed) {
+    const parent = document.createElement('div');
+    document.body.append(parent);
+    const hud = new Hud({
+      parent,
+      metre: 32,
+      worldWidth: 4096,
+      worldHeight: 4096,
+      mapGridStep: 1024,
+      actionSource: new VirtualActionSource<TestAction>(),
+      stickSource: new VirtualStickSource(),
+      touch: false,
+      fullscreen: false,
+      onResume: vi.fn(),
+      quality: new GraphicsQuality<EffectLevel, EffectProfile>({
+        levels: EFFECT_LEVELS,
+        initial: 'high',
+      }),
+      services: { integrity: feed } as unknown as GameServices,
+    });
+    return { hud, parent };
+  }
+
+  it('HUD kurulmadan önce olan kurtarma ve sıfırlama oyuncuya görünür kalıcı bildirim olur', () => {
+    const feed = new IntegrityFeed();
+    feed.record({ name: 'voltest-device.json', kind: 'recovered' });
+    feed.record({ name: 'voltest-synced.json', kind: 'reset' });
+    const { parent } = mountWithFeed(feed);
+    const alerts = [...parent.querySelectorAll('.vol-toast')].map((el) => el.textContent ?? '');
+    expect(alerts).toHaveLength(2);
+    expect(alerts[0]).toContain('yedeğinden geri yüklendi');
+    expect(alerts[1]).toContain('yeni kayıt başlatıldı');
+    expect(parent.querySelectorAll('.vol-toast__dismiss')).toHaveLength(2);
+  });
+
+  it('HUD kurulduktan sonra gelen olay da bildirilir', () => {
+    const feed = new IntegrityFeed();
+    const { parent } = mountWithFeed(feed);
+    expect(parent.querySelectorAll('.vol-toast')).toHaveLength(0);
+    feed.record({ name: 'voltest-device.json', kind: 'reset' });
+    expect(parent.querySelectorAll('.vol-toast')).toHaveLength(1);
+  });
+});
 
 function read(source: VirtualActionSource<TestAction>): Record<TestAction, boolean> {
   const actions = Object.fromEntries(TEST_ACTIONS.map((action) => [action, false])) as Record<

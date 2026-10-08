@@ -94,6 +94,15 @@ ve Rust hedefini kontrol eder. Tek source.properties veya JRE yeterli
 sayılmaz. Cihaz adresi/seri kimliği rapora girmez. APK/Activity/panel kabulü
 bu profilin yerine ayrıca yapılır.
 
+## Yerel ürün turu (kayıt ve kapanış)
+
+`pnpm --filter @volstudio/vol-test tauri build --no-bundle` ardından
+`node games/vol-test/scripts/native-store-tour.mjs target/release/VOL.TEST.exe` gerçek WebView2 penceresini
+uzak hata ayıklama portuyla sürer: eski depodan göç, kalıcılık, `TerminateProcess`, `.bak` jenerasyonu, bozuk ana
+kayıt, iki jenerasyon bozukken karantina, oyuncuya görünür bildirim, `WM_CLOSE` ile temiz çıkış ve yazım
+ortasında sert öldürme. Tur kapı değildir, kabul kaydıdır; kullanıcı kayıtlarına dokunmaz (veri dizini turdan
+önce yedeklenir, sonra geri yüklenir) ve çıkışta temizler.
+
 ## Satır sonu ve disk yolları
 
 `.gitattributes` metinlerde LF'i zorlar; bu kural local autocrlf ayarından

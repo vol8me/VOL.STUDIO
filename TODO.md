@@ -10,7 +10,7 @@ taşınır. Eksik kapanış yeni görevdir.
 Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
 yetkilendirdi. F01–F03 sonuçları rapor §18, F04 kaynak uygulaması ve açık native kabul rapor §19, F05–F06 kaynak
 uygulaması ve kalan işler rapor §20'dedir.
-**F01–F03 ve F05 tamamlandı; F04 ve F06–F10 açıktır (F06'da yalnız F06.4).** Faz numarası bağımsız işleri gereksiz seri bekletmez;
+**F01–F03 ve F05 tamamlandı; F04 (yalnız F04.4) ve F06–F10 açıktır (F06'da yalnız F06.4).** Faz numarası bağımsız işleri gereksiz seri bekletmez;
 gerçek ön koşul ve kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
 Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 
@@ -21,9 +21,7 @@ Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 Ön koşul: F02 doğrulama zemini; UI yeniden tasarımı beklenmez. VT3/SD8/D2
 servis borçları ilgili cihaz kabulüyle birlikte kalır.
 
-- [ ] **[P1] F04.3 — Store kapsamı ve Windows writer.** Göç/durable cache/compiler ve gerçek Rust disk regresyonları uygulandı; ürün IPC turu açık. Kapanır: kapsamsız anahtar derlenmez; disk migration/bozuk ana kayıt/backup/atomik yazım/hata geri bildirimi Windows native kabulüyle testli.
-- [ ] **[P1] F04.4 — Kapanış protokolü ve Steam callback sahibi.** Gerçek SDK guard/pump/drop ve ACK yarışı düzeltildi; fiziksel popup, tarihsel timeout ve kill turları açık. Kapanır: B07 gerçek feature harness, overlay/text callback yaşamı ve drop testi; timedOut kök nedeni/süre gerekçesi; üretim SIGTERM son değer, yazım ortası SIGKILL toparlanması.
-- [ ] **[P1] F04.5 — Uyku/uyanış ve servis tüketimi.** Saat/input/audio/haptik ve export tüketicileri denetlendi; clock-jump/geç decode/tekrarlı suspend testli, ilgili gerçek cihaz turu açık. Kapanır: tüketicisiz tauri-v2 export/config/izin bağları kaldırılır (VT3/K4); high + Chromium/WebKit; SD8 fiziksel sonucu F08.6'da.
+- [ ] **[P1] F04.4 — Kapanış protokolü ve Steam callback sahibi.** Gerçek SDK guard/pump/drop ve ACK yarışı düzeltildi; Windows yerel turunda pencere kapatma isteği (WM_CLOSE) sonrası son değer ve temiz çıkış, yazım ortasında sert öldürme (5 tur, onaylanan her yazım kalıcı) kanıtlandı (`games/vol-test/scripts/native-store-tour.mjs`). Kapanır: fiziksel Steam popup/overlay ve text callback yaşamı + drop testi (Steam istemcisi ve cihaz gerekir, F08.6); timedOut kök nedeni/süre gerekçesi (Deck SIGTERM turu, F08.6).
 
 ### F06 — CORE/Phaser sınırı ve VOL.TEST doğruluğu
 
@@ -95,6 +93,8 @@ release redini ertelemek için gerekçe değildir.
 - [x] F03.4 — Platform araç/kapı/native/cihaz sınırları ve tek sahipli belge düzeni doğrulandı; yapılmayan cihaz kabulü açık bırakıldı.
 - [x] F04.1 — Son telafisiz yazım reddi flush/flushAndDispose ve failed ACK'ye ulaşır; reentrant son snapshot ve başarılı telafi regresyonları ile tam high geçti.
 - [x] F04.2 — Geç load/destroy/abort/generation/gerçek dış odak eski kaynak ve commit'i açamaz; Input/TextArea ve Steam oturum regresyonları ile tam high geçti.
+- [x] F04.3 — Windows yerel ürün turu 15/15: eski depodan göç (kaynak korunur), ayarın IPC→store→diske yazımı, sert öldürme sonrası geri gelme, ikinci jenerasyonun `.bak` olması, bozuk ana kayıtta yedekten geri yükleme, iki jenerasyon bozukken karantina + korunan eski depodan yeniden göç, oyuncuya görünür kurtarma/sıfırlama bildirimi (önceden yalnız konsola yazılıyordu), WM_CLOSE temiz çıkış ve son değer; atomik yazım Rust regresyonlarıyla.
+- [x] F04.5 — Tüketicisiz `core:window:allow-close` izni (hiçbir JS `Window.close/destroy` çağırmaz; kapanış `exit_application` komutundan) VOL.TEST ve vitrin yeteneklerinden kaldırıldı; yerel tur izinsiz sürümde geçti. Kalan tauri-v2 export/komutlarının hepsinin tüketicisi var; fiziksel SD8 sonucu F08.6'dadır.
 - [x] F05.1 — Yayın, job kilidinden sonra asset+manifest hedef kilidini sabit sırayla alır; iki gerçek süreç yarışında tek kazanan, kaybeden `locked`/`overwrite`, bayat kilit devralınır.
 - [x] F05.2 — Manifest her alanı tip/enum/aralıkta doğrular; PCM betimi kayıt, kodlanmış rapor, yerleşim ve brief ile çelişemez; verify bayt boyutu, bağımsız render ve çözülmüş dosyayı karşılaştırır.
 - [x] F05.3 — Pencil düzenleyici parça ve önizlemeyi tek planda doğrular, çakışan düğümü yazımdan önce reddeder, hedef+metadata'yı geri alınabilir yerleştirir; kaynak en son silinir.
