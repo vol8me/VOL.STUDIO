@@ -188,9 +188,18 @@ uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer aileler
       yakalama kaybı, sayfa gizlenmesi, devre dışı ve söküm basışı bırakır, iptal ASLA eylem sayılmaz
       (düzeltilen kusur: uzun bas düğmesinde pointercancel dokunma sayılıyordu; şarj düğmesinde
       pointercancel şarjlı bırakış üretiyordu → `onCancel`), ikinci işaretçi yok sayılır (ikinci
-      zamanlayıcı sızıntısı kapandı), söküm belge dinleyicisini kaldırır. Kalan: odak/kol eşdeğeri ve
-      ilerleme durumunun erişilebilir duyurusu, azaltılmış harekette basılı tutma işlevi kanıtı, şarj
-      sesi/titreşimi ilerlemeyle (UI-02 sözlüğünden).
+      zamanlayıcı sızıntısı kapandı), söküm belge dinleyicisini kaldırır. Yapıldı (2026-10-08): **klavye ve
+      kol eşdeğeri** — ChargeButton ve LongPressButton'da klavye hiç yoktu (yalnız işaretçi), HoldButton'da
+      Space/Enter vardı ama kol A `click` gönderdiği için (bilinçli yutulur) kolla basılı tutmak
+      imkânsızdı. Ortak `holdInput.ts`: Space/Enter ve kol A aynı basış/bırakış çifti, native `click`
+      yutulur, odak kaybı iptal eder; `FocusNavController` A'yı basılı-tutma denetimine (`data-vol-hold`)
+      `vol:focuspress`/`vol:focusrelease` olarak iletir (A bırakılınca, kol çıkınca, gezinme kapanınca,
+      söküm anında bırakılır; sıradan düğme `click` yolunda kalır); basılı durum `aria-pressed`. Kanıt:
+      `holdInput.test.ts` (7), `holdInput.spec.ts` (iki motor: Space/Enter dolum ve bırakış, **azaltılmış
+      hareket altında aynı işlev**, sanal kolda A basılı tutma). Karar: şarj/ateş/yön sesi oyunun SFX'idir
+      (denetimler bilinçli sessiz). Kalan: şarj yüzdesinin ekran okuyucuya duyurulması (çekirdekte yalnız
+      `onChargeProgress` geri çağrısı var; metin ve canlı bölge host'tadır) ve gerçek AT ile doğrulama
+      (UI-13.4).
 - [ ] **UI-03.3 — Aktif oyun regresyonları.** VOL.TEST duraklatma/ayarlar tüketicisinde
       Button/IconButton/Hold gerçek yerleşim/geri/Slider adı ve hit-test; yeni menü yok.
       Kapanır: gerçek ayarlar/duraklatma Chromium+WebKit ve eldeki cihazda; eski duraklatma

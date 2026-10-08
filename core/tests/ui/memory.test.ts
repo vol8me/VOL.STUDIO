@@ -65,6 +65,9 @@ describe('Bellek sızıntısı regresyonları', () => {
       'keydown',
       'keyup',
       'click',
+      'blur',
+      'vol:focuspress',
+      'vol:focusrelease',
     ];
     const removedTypes = removeListenerSpy.mock.calls.map((call) => call[0]);
     expect([...new Set(removedTypes)].sort()).toEqual([...boundTypes].sort());

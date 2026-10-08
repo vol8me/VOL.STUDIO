@@ -1,7 +1,4 @@
-/** Space/Enter — `<button>`ın native aktivasyon tuşları. */
-function isActivationKey(event: KeyboardEvent): boolean {
-  return event.key === ' ' || event.key === 'Enter' || event.key === 'Spacebar';
-}
+import { bindHoldInput } from './holdInput';
 
 export type HoldButtonShape = 'circle' | 'square';
 
@@ -48,9 +45,7 @@ export class HoldButton {
   private boundPointerUp!: (event: PointerEvent) => void;
   private boundPointerLeave!: () => void;
   private boundVisibility!: () => void;
-  private boundKeyDown!: (event: KeyboardEvent) => void;
-  private boundKeyUp!: (event: KeyboardEvent) => void;
-  private boundClick!: (event: MouseEvent) => void;
+  private unbindHoldInput: (() => void) | null = null;
 
   constructor(options: HoldButtonOptions) {
     const { shape = 'circle', size = 72, icon, label, onPress, onRelease } = options;
@@ -64,6 +59,7 @@ export class HoldButton {
     this.element.setAttribute('aria-label', label);
     // Oynanış denetimi: arayüz sesi çalmaz (ateş/şarj/yön sesi oyunun kendi SFX'idir); kök yedek `press` sesi de almaz.
     this.element.dataset.volSilent = '';
+    this.element.setAttribute('aria-pressed', 'false');
 
     if (icon) this.setIcon(icon);
 
@@ -92,38 +88,19 @@ export class HoldButton {
       if (this.pressSource !== 'pointer') return;
       this.setPressed(false, 'pointer');
     };
-    this.boundKeyDown = (event) => {
-      if (this.element.disabled) return;
-      if (!isActivationKey(event)) return;
-      // Space sayfayı kaydırır, Enter form gönderir; ikisi de bastırılır.
-      event.preventDefault();
-      // Basılı tutmada tarayıcı keydown'ı TEKRARLAR — her tekrar yeni bir
-      // onPress sayılırsa çağıran her karede bir "basıldı" olayı görür.
-      if (event.repeat) return;
-      this.setPressed(true, 'keyboard');
-    };
-    this.boundKeyUp = (event) => {
-      if (!isActivationKey(event)) return;
-      event.preventDefault();
-      if (this.pressSource !== 'keyboard') return;
-      this.setPressed(false, 'keyboard');
-    };
-    this.boundClick = (event) => {
-      // `<button>` Space/Enter'da native `click` de üretir. Bu bileşenin
-      // sözleşmesi press/release olduğu için click YUTULUR; aksi halde tek bir
-      // tuş basımı hem keydown/keyup çiftini hem click'i tetiklerdi.
-      event.preventDefault();
-    };
-
     this.element.addEventListener('pointerdown', this.boundPointerDown);
     this.element.addEventListener('pointerup', this.boundPointerUp);
     this.element.addEventListener('pointercancel', this.boundPointerUp);
     this.element.addEventListener('lostpointercapture', this.boundPointerLeave);
     this.element.addEventListener('pointerleave', this.boundPointerLeave);
     document.addEventListener('visibilitychange', this.boundVisibility);
-    this.element.addEventListener('keydown', this.boundKeyDown);
-    this.element.addEventListener('keyup', this.boundKeyUp);
-    this.element.addEventListener('click', this.boundClick);
+    // Klavye (Space/Enter) ve kol A aynı basış/bırakış çiftini üretir; native `click` yutulur.
+    this.unbindHoldInput = bindHoldInput(this.element, {
+      down: () => this.setPressed(true, 'keyboard'),
+      up: () => this.setPressed(false, 'keyboard'),
+      cancel: () => this.setPressed(false, 'keyboard'),
+      isBusy: () => this.pressed,
+    });
   }
 
   isPressed(): boolean {
@@ -176,9 +153,7 @@ export class HoldButton {
     this.element.removeEventListener('lostpointercapture', this.boundPointerLeave);
     this.element.removeEventListener('pointerleave', this.boundPointerLeave);
     document.removeEventListener('visibilitychange', this.boundVisibility);
-    this.element.removeEventListener('keydown', this.boundKeyDown);
-    this.element.removeEventListener('keyup', this.boundKeyUp);
-    this.element.removeEventListener('click', this.boundClick);
+    this.unbindHoldInput?.();
     this.element.remove();
   }
 
@@ -189,6 +164,7 @@ export class HoldButton {
     this.pressed = pressed;
     this.pressSource = pressed ? source : null;
     this.element.classList.toggle('vol-hold-button--pressed', pressed);
+    this.element.setAttribute('aria-pressed', String(pressed));
     if (pressed) {
       this.onPressHandler?.();
     } else {

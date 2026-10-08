@@ -1,4 +1,5 @@
 import { UI_SIZE, UI_TIMING } from '../../constants';
+import { bindHoldInput } from './holdInput';
 
 export interface ChargeButtonOptions {
   label?: string;
@@ -46,6 +47,7 @@ export class ChargeButton {
   private boundPointerUp: (event: PointerEvent) => void;
   private readonly boundCancel: () => void;
   private readonly boundVisibility: () => void;
+  private readonly unbindHoldInput: () => void;
 
   constructor(options: ChargeButtonOptions) {
     this.chargeDurationMs = options.chargeDurationMs ?? UI_TIMING.CHARGE_DURATION_MS;
@@ -61,6 +63,7 @@ export class ChargeButton {
     this.element.className = 'vol-charge-button';
     // Oynanış denetimi: arayüz sesi çalmaz (ateş/şarj/yön sesi oyunun kendi SFX'idir); kök yedek `press` sesi de almaz.
     this.element.dataset.volSilent = '';
+    this.element.setAttribute('aria-pressed', 'false');
     this.element.style.setProperty('--vol-charge-button-size', `${size}px`);
     this.element.style.touchAction = 'none';
 
@@ -117,6 +120,13 @@ export class ChargeButton {
     this.element.addEventListener('lostpointercapture', this.boundCancel);
     document.addEventListener('visibilitychange', this.boundVisibility);
     // pointerleave kasıtlı olarak dinlenmiyor — parmak dışarı kayarsa dolum iptal edilmemeli.
+    // Klavye (Space/Enter) ve kol A aynı dolum/bırakış çiftini üretir; odak kaybı dolumu iptal eder.
+    this.unbindHoldInput = bindHoldInput(this.element, {
+      down: () => this.beginCharge(),
+      up: () => this.finishCharge(),
+      cancel: () => this.cancel(),
+      isBusy: () => this.isCharging,
+    });
   }
 
   /** Şu an dolum yüzdesi (0-1). */
@@ -140,6 +150,7 @@ export class ChargeButton {
     this.element.removeEventListener('pointercancel', this.boundCancel);
     this.element.removeEventListener('lostpointercapture', this.boundCancel);
     document.removeEventListener('visibilitychange', this.boundVisibility);
+    this.unbindHoldInput();
     this.element.remove();
   }
 
@@ -148,11 +159,7 @@ export class ChargeButton {
     if (this.element.disabled || this.isCharging) return;
     this.activePointerId = event.pointerId;
     this.element.setPointerCapture(event.pointerId);
-    this.isCharging = true;
-    this.isFullyCharged = false;
-    this.chargeStartTime = performance.now();
-    this.element.classList.add('vol-charge-button--charging');
-    this.tick();
+    this.beginCharge();
   }
 
   private handlePointerUp(event: PointerEvent): void {
@@ -161,6 +168,21 @@ export class ChargeButton {
       this.element.releasePointerCapture(event.pointerId);
     }
     this.activePointerId = null;
+    this.finishCharge();
+  }
+
+  private beginCharge(): void {
+    if (this.element.disabled || this.isCharging) return;
+    this.isCharging = true;
+    this.isFullyCharged = false;
+    this.chargeStartTime = performance.now();
+    this.element.classList.add('vol-charge-button--charging');
+    this.element.setAttribute('aria-pressed', 'true');
+    this.tick();
+  }
+
+  /** Bırakış (işaretçi, klavye ya da kol): tam dolumda `onRelease(1)`, erken bırakışta kısmi ya da hiçbiri. */
+  private finishCharge(): void {
     if (!this.isCharging) return;
 
     const progress = this.getProgress();
@@ -209,6 +231,7 @@ export class ChargeButton {
       this.rafHandle = null;
     }
     this.element.classList.remove('vol-charge-button--charging', 'vol-charge-button--full');
+    this.element.setAttribute('aria-pressed', 'false');
     this.ring.style.strokeDashoffset = String(this.ringCircumference);
   }
 }

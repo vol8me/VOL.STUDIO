@@ -231,6 +231,12 @@ auth varsa tekrar giriş/yapıştırma/parola yöneticisi ölçütleri geçerlid
 Renk körlüğü/grayscale fixture'ı ve renk dışı anlam kontrolü bulunur;
 simülasyonun geçmesi otomatik WCAG renk körlüğü sertifikası değildir.
 
+Basılı-tutma denetimleri (Hold, Charge, LongPress) yalnız işaretçiyle çalışmaz: Space/Enter ve kol A
+aynı basış/bırakış çiftini üretir (`data-vol-hold` işareti, kontrolcünün `vol:focuspress` /
+`vol:focusrelease` olayları; native `click` eylem sayılmaz), odak kaybı basışı iptal eder, basılı durum
+`aria-pressed` ile açıklanır ve işlev `prefers-reduced-motion` altında değişmez (halka dekorasyondur).
+Bu denetimler arayüz sesi çalmaz: ateş/şarj/yön sesi oyunun SFX'idir.
+
 ## 10. UI yüzey ailesi
 
 Diyaloglar yıkıcı onay, çıkış, izin, fatal ve save conflict sunumudur.

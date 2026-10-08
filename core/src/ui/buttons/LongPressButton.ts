@@ -1,4 +1,8 @@
 import { UI_SIZE, UI_TIMING } from '../../constants';
+import { bindHoldInput } from './holdInput';
+
+/** Klavye/kol basışının `activePointerId` yerine tuttuğu sahte kimlik (gerçek işaretçi kimlikleri ≥ 0). */
+const NON_POINTER_PRESS = -1;
 
 export interface LongPressButtonOptions {
   shape?: 'circle' | 'square';
@@ -44,6 +48,7 @@ export class LongPressButton {
   private boundPointerUp: (event: PointerEvent) => void;
   private boundPointerLeave: () => void;
   private boundVisibility: () => void;
+  private readonly unbindHoldInput: () => void;
 
   constructor(options: LongPressButtonOptions) {
     const { shape = 'circle', size = UI_SIZE.BUTTON_DEFAULT_PX, icon, label } = options;
@@ -61,6 +66,7 @@ export class LongPressButton {
     this.element.setAttribute('aria-label', label);
     // Oynanış denetimi: arayüz sesi çalmaz (ateş/şarj/yön sesi oyunun kendi SFX'idir); kök yedek `press` sesi de almaz.
     this.element.dataset.volSilent = '';
+    this.element.setAttribute('aria-pressed', 'false');
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.classList.add('vol-long-press-button__ring');
@@ -127,32 +133,14 @@ export class LongPressButton {
       // Devam eden basışta ikinci işaretçi yok sayılır (ikinci zamanlayıcı ilkini sızdırırdı).
       if (this.element.disabled || this.activePointerId !== null) return;
       event.preventDefault();
-      this.activePointerId = event.pointerId;
       this.element.setPointerCapture(event.pointerId);
-      this.longPressFired = false;
-      this.pressStartTime = performance.now();
-      this.element.classList.add('vol-long-press-button--pressed');
-      this.onPressStartHandler?.();
-      this.tickProgress();
-
-      this.longPressTimeout = window.setTimeout(() => {
-        this.longPressTimeout = null;
-        this.longPressFired = true;
-        this.element.classList.add('vol-long-press-button--long-pressed');
-        this.onLongPressHandler?.();
-      }, this.longPressDurationMs);
+      this.beginPress(event.pointerId);
     };
 
     this.boundPointerUp = (event) => {
       if (this.activePointerId !== event.pointerId) return;
       this.element.releasePointerCapture(event.pointerId);
-      this.clearPressState();
-
-      // Eşik dolduysa (longPressFired) onTap tetiklenmez — iki eylem birbirini dışlar.
-      if (!this.longPressFired) {
-        this.onTapHandler?.();
-      }
-      this.onReleaseHandler?.();
+      this.endPress();
     };
 
     this.boundVisibility = () => {
@@ -160,7 +148,8 @@ export class LongPressButton {
     };
 
     this.boundPointerLeave = () => {
-      if (this.activePointerId === null) return;
+      // Klavye/kol basışı imlecin çıkışından etkilenmez.
+      if (this.activePointerId === null || this.activePointerId === NON_POINTER_PRESS) return;
       // Parmak dışarı kayarsa basış iptal sayılır — ne onTap ne onLongPress tetiklenir.
       this.clearPressState();
       this.activePointerId = null;
@@ -173,6 +162,13 @@ export class LongPressButton {
     this.element.addEventListener('lostpointercapture', this.boundPointerLeave);
     this.element.addEventListener('pointerleave', this.boundPointerLeave);
     document.addEventListener('visibilitychange', this.boundVisibility);
+    // Klavye (Space/Enter) ve kol A: kısa basış `onTap`, eşik dolarsa `onLongPress`; odak kaybı iptaldir.
+    this.unbindHoldInput = bindHoldInput(this.element, {
+      down: () => this.beginPress(NON_POINTER_PRESS),
+      up: () => this.endPress(),
+      cancel: () => this.boundPointerLeave(),
+      isBusy: () => this.activePointerId !== null,
+    });
   }
 
   isPressed(): boolean {
@@ -196,7 +192,34 @@ export class LongPressButton {
     this.element.removeEventListener('lostpointercapture', this.boundPointerLeave);
     this.element.removeEventListener('pointerleave', this.boundPointerLeave);
     document.removeEventListener('visibilitychange', this.boundVisibility);
+    this.unbindHoldInput();
     this.element.remove();
+  }
+
+  private beginPress(pointerId: number): void {
+    this.activePointerId = pointerId;
+    this.longPressFired = false;
+    this.pressStartTime = performance.now();
+    this.element.classList.add('vol-long-press-button--pressed');
+    this.element.setAttribute('aria-pressed', 'true');
+    this.onPressStartHandler?.();
+    this.tickProgress();
+
+    this.longPressTimeout = window.setTimeout(() => {
+      this.longPressTimeout = null;
+      this.longPressFired = true;
+      this.element.classList.add('vol-long-press-button--long-pressed');
+      this.onLongPressHandler?.();
+    }, this.longPressDurationMs);
+  }
+
+  /** Bırakış (işaretçi, klavye ya da kol): eşik dolduysa `onTap` tetiklenmez — iki eylem birbirini dışlar. */
+  private endPress(): void {
+    this.clearPressState();
+    if (!this.longPressFired) {
+      this.onTapHandler?.();
+    }
+    this.onReleaseHandler?.();
   }
 
   /** Basılı tutulduğu sürece halkayı eşiğe doğru dolduran rAF döngüsü (ChargeButton.tick()'in aynı deseni, yalnızca görsel). */
@@ -229,6 +252,7 @@ export class LongPressButton {
       'vol-long-press-button--pressed',
       'vol-long-press-button--long-pressed',
     );
+    this.element.setAttribute('aria-pressed', 'false');
     this.ring.style.strokeDashoffset = String(this.ringLength);
   }
 }

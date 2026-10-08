@@ -4,6 +4,7 @@ import { GAMEPAD_BUTTON, readStick, type PadLike } from '../../input/GamepadStat
 import { pickDirectionalTarget, type NavDirection } from './directional';
 import { listFocusable } from './focusable';
 import { activateWithIntent } from './activationIntent';
+import { FOCUS_PRESS_EVENT, FOCUS_RELEASE_EVENT, HOLD_MARKER } from '../buttons/holdInput';
 import { selectGamepad } from '../../input/selectGamepad';
 
 /**
@@ -114,6 +115,8 @@ export class FocusNavController {
   private activationArmed = true;
   private started = false;
   private previousPad: PadLike | null = null;
+  /** A basılıyken odaktaki basılı-tutma denetimi: A bırakılınca, odak değişince ya da söküm anında bırakılır. */
+  private heldTarget: HTMLElement | null = null;
 
   constructor(options: FocusNavOptions = {}) {
     this.options = options;
@@ -187,6 +190,32 @@ export class FocusNavController {
     } else {
       this.focusElement(candidates[0] ?? null);
     }
+  }
+
+  /**
+   * Kol A tuşu. Basılı-tutma denetimi (`data-vol-hold`) `click` yerine basış ve bırakış alır: kenar
+   * tetikli tek `click` Hold/Charge/LongPress'i çalıştıramaz. Diğer her öğe `activate` yolunu izler.
+   */
+  private pressPrimary(): void {
+    const current = this.focused;
+    if (
+      current &&
+      current.dataset[HOLD_MARKER] !== undefined &&
+      this.options.isNavigationActive?.() !== false &&
+      !this.options.onActivate?.() &&
+      listFocusable(this.root).includes(current)
+    ) {
+      this.heldTarget = current;
+      current.dispatchEvent(new Event(FOCUS_PRESS_EVENT));
+      return;
+    }
+    this.activate();
+  }
+
+  private releaseHeld(): void {
+    const target = this.heldTarget;
+    this.heldTarget = null;
+    target?.dispatchEvent(new Event(FOCUS_RELEASE_EVENT));
   }
 
   /** Geri yığınına düşürür (B / Escape / Android geri). */
@@ -291,6 +320,12 @@ export class FocusNavController {
     }
     this.padBackHeld = pressed.has(GAMEPAD_BUTTON.secondary);
     this.prevButtons = pressed;
+    if (
+      this.heldTarget &&
+      (!pressed.has(GAMEPAD_BUTTON.primary) || this.options.isNavigationActive?.() === false)
+    ) {
+      this.releaseHeld();
+    }
   }
 
   private dominantStickDir(x: number, y: number): NavDirection | null {
@@ -303,7 +338,7 @@ export class FocusNavController {
     if (dir) return this.move(dir);
     switch (index) {
       case GAMEPAD_BUTTON.primary:
-        if (this.activationArmed) this.activate();
+        if (this.activationArmed) this.pressPrimary();
         return;
       case GAMEPAD_BUTTON.secondary:
         if (!this.escapeHeld && !this.padBackHeld) this.back();
@@ -320,6 +355,7 @@ export class FocusNavController {
   }
 
   destroy(): void {
+    this.releaseHeld();
     this.started = false;
     this.clearRing();
     this.scope.dispose();
