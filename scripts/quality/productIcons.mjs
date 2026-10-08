@@ -64,33 +64,39 @@ export function validateProductIcons(
   const problems = [];
   const owners = new Map();
   const gamesDir = join(root, 'games');
-  if (!existsSync(gamesDir)) return problems;
 
   const frozen = new Set(lifecycle ? frozenWorkspacePaths(lifecycle) : []);
-  const games = readdirSync(gamesDir, { withFileTypes: true })
+  const games = (existsSync(gamesDir) ? readdirSync(gamesDir, { withFileTypes: true }) : [])
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .filter((name) => !frozen.has(`games/${name}`))
     .sort();
+  const targets = games.map((game) => ({ key: game, label: `games/${game}` }));
+  // Oyun olmayan aktif native uygulamalar (vitrin) aynı kurala tabidir: kabuk yaşam döngüsünden bulunur.
+  for (const workspace of lifecycle?.workspaces ?? []) {
+    if (workspace.status !== 'active' || workspace.path.startsWith('games/')) continue;
+    if (!existsSync(join(root, workspace.path, 'src-tauri', 'tauri.conf.json'))) continue;
+    targets.push({ key: workspace.path, label: workspace.path });
+  }
 
-  for (const game of games) {
-    const shell = join(gamesDir, game, 'src-tauri');
+  for (const { key: game, label } of targets) {
+    const shell = join(root, label, 'src-tauri');
     const config = join(shell, 'tauri.conf.json');
     if (!existsSync(config)) continue;
 
     const icons = JSON.parse(readFileSync(config, 'utf8')).bundle?.icon ?? [];
     if (icons.length === 0) {
-      problems.push(`games/${game}: bundle.icon boş — paket ikonsuz üretilir.`);
+      problems.push(`${label}: bundle.icon boş — paket ikonsuz üretilir.`);
     }
     const files = [];
     for (const icon of icons) {
       const path = resolve(shell, icon);
       if (!path.startsWith(shell + sep)) {
         problems.push(
-          `games/${game}: ikon "${icon}" oyunun kendi src-tauri'si dışında — ürün kimliği başka pakette yaşamaz.`,
+          `${label}: ikon "${icon}" oyunun kendi src-tauri'si dışında — ürün kimliği başka pakette yaşamaz.`,
         );
       } else if (!existsSync(path)) {
-        problems.push(`games/${game}: ikon "${icon}" yok.`);
+        problems.push(`${label}: ikon "${icon}" yok.`);
       } else {
         files.push(path);
       }

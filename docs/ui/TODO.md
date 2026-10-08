@@ -262,7 +262,7 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
 
 UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağımlılık kurulmaz.
 
-- [ ] **UI-06.2 — Native crate ve kapı kapsamı.** vitrinin kendi `src-tauri` dizini ortak
+- [x] **UI-06.2 — Native crate ve kapı kapsamı.** vitrinin kendi `src-tauri` dizini ortak
       `tauri-v2` kütüphanesini tüketir; kendi kimliği/ikonu/asgari yetenekleri; kök Cargo
       glob/tek lock. AppIdentity, plugin üçlü kayıt ve productIcons native uygulama keşfi.
       Kapanır: yinelenen/eksik kayıt örneği düşer; bundle.category/desktop Categories Game
@@ -271,8 +271,10 @@ UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağım
       VOL.UI, masaüstü/mobil capability, `tauri.dev.conf.json`, Linux `.desktop`/AppRun şablonu, ikon
       kaynağı) ortak `volstudio_tauri_lib::run_with_context_and` kütüphanesini tüketir; `tauri` betiği
       ve `@tauri-apps/cli` 2.11.4 pakette. Windows'ta derlenir ve açılır (ekran görüntüsü), WSL Ubuntu
-      24.04'te Linux AppImage üretilir. Kalan: kapı kümesinin (appIdentity, plugin üçlü kayıt, productIcons,
-      bundle.category) bu crate üzerinde yeşil koşusu `just high` ile kanıtlanacak; tamamlanınca işaretlenir.
+      24.04'te Linux AppImage üretilir. Kapı kapsamı: appIdentity, cihaz adayı ve eklenti üçlü kaydı
+      yaşam döngüsü/manifest keşfinden vitrini zaten kapsar (`just quick` yeşil); `productIcons` yalnız
+      `games/` altına bakıyordu, artık aktif her native kabuğu (vitrin dahil) tarar ve birim testle sınanır;
+      `bundle.category` DeveloperTool, masaüstü `Categories=Development` (oyun kopyası değil); `just rust` yeşil.
 - [ ] **UI-06.3 — Platform ayarı ve görünür kabuk.** Mevcut oturum/DisplayModeController/
       scopedStores/haptik adaptörleri; gamescope etkisiz seçenekler capability'den; web yedeği.
       Kapanır: native kaynak taşıyan plugin yalnız gereken uygulamada; `pnpm dev` web bakışı;

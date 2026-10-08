@@ -65,3 +65,23 @@ test('Tauri şablon ikonu geri gelirse yakalanır', (t) => {
   const template = createHash('sha256').update('launcher-a').digest('hex');
   assert.match(validateProductIcons(root, new Set([template])).join('\n'), /varsayılan ikonu/);
 });
+
+test('oyun olmayan aktif native uygulama (vitrin) da kendi ikonunu taşımak zorundadır', (t) => {
+  const root = fixture(t, { a: { files: own('a') } });
+  const base = join(root, 'devtools/showcase/src-tauri');
+  mkdirSync(join(base, 'icons'), { recursive: true });
+  writeFileSync(
+    join(base, 'tauri.conf.json'),
+    JSON.stringify({ bundle: { icon: ['icons/32x32.png'] } }),
+  );
+  writeFileSync(join(base, 'icons/32x32.png'), 'desktop-a');
+  const lifecycle = {
+    workspaces: [
+      { path: 'games/a', status: 'active', packageName: 'a' },
+      { path: 'devtools/showcase', status: 'active', packageName: 's' },
+    ],
+  };
+  const problems = validateProductIcons(root, new Set(), lifecycle);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /^a, devtools\/showcase: aynı ikon/);
+});
