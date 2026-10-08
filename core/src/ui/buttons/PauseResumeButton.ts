@@ -1,4 +1,5 @@
 import { i18next } from '../../i18n/I18n';
+import { emitUiIntent } from '../feedback/uiIntent';
 
 export interface PauseResumeButtonOptions {
   /** Duraklat durumundayken (oyun çalışırken) gösterilecek erişilebilirlik etiketi. Varsayılan 'Duraklat'. */
@@ -81,10 +82,11 @@ export class PauseResumeButton {
     }
 
     this.element.setAttribute('aria-label', this.isRunning ? this.pauseLabel : this.resumeLabel);
-    this.element.addEventListener('click', () => this.handleClick());
+    this.element.addEventListener('click', (event) => this.handleClick(event));
     this.element.addEventListener('pointerdown', () => this.setPressed(true));
     this.element.addEventListener('pointerup', () => this.setPressed(false));
     this.element.addEventListener('pointerleave', () => this.setPressed(false));
+    this.element.addEventListener('pointercancel', () => this.setPressed(false));
 
     if (this.isRunning) this.startInterval();
 
@@ -107,11 +109,20 @@ export class PauseResumeButton {
     return this.seconds;
   }
 
-  /** Durumu programatik olarak değiştirir — click ile aynı yolu izler, onToggle da tetiklenir. */
+  /** Durumu programatik olarak değiştirir — click ile aynı yolu izler, onToggle da tetiklenir (geriye uyumlu). */
   setRunning(running: boolean): void {
     if (this.isRunning === running) return;
     this.applyState(running);
     this.onToggleHandler?.(this.isRunning);
+  }
+
+  /**
+   * Durumu dışarıdaki kaynaktan (oyun duraklatması, sekme gizlenmesi) SESSİZCE eşitler: `onToggle`
+   * çağrılmaz, niyet/ses/titreşim yoktur; döngü ve sayaç durumla birlikte senkron kalır.
+   */
+  syncRunning(running: boolean): void {
+    if (this.isRunning === running) return;
+    this.applyState(running);
   }
 
   destroy(): void {
@@ -120,7 +131,14 @@ export class PauseResumeButton {
     this.element.remove();
   }
 
-  private handleClick(): void {
+  private handleClick(event: Event): void {
+    emitUiIntent({
+      kind: 'toggle',
+      origin: 'PauseResumeButton',
+      target: this.element,
+      event,
+      defaultHaptic: 'tap',
+    });
     this.applyState(!this.isRunning);
     this.onToggleHandler?.(this.isRunning);
   }

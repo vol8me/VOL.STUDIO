@@ -650,7 +650,9 @@ describe('SwipeableCardStack gesture sınırları', () => {
     top.dispatchEvent(pointer('pointerdown', { pointerId: 4, clientX: 80 }));
     top.dispatchEvent(pointer('pointermove', { pointerId: 4, clientX: 20 }));
     top.dispatchEvent(pointer('pointercancel', { pointerId: 4, clientX: 20 }));
-    expect(onSwipe).toHaveBeenLastCalledWith('c1', 'left');
+    // İptal edilen sürükleme eşiği aşsa da kabul/ret değildir: kart yerine döner.
+    expect(onSwipe).toHaveBeenCalledTimes(1);
+    expect(top.style.transform).toBe('');
   });
 });
 

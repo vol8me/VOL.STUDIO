@@ -331,6 +331,39 @@ describe('Kanban - pointer sürükleme', () => {
     kanban.destroy();
   });
 
+  it('pointercancel ne taşıma ne tıklama sayılır ve ghost/vurgu temizlenir', () => {
+    const onCardMove = vi.fn();
+    const onCardClick = vi.fn();
+    const kanban = new Kanban({
+      columns: [
+        { id: 'pending', title: 'Beklemede', cards: makeCards('p', 2) },
+        { id: 'active', title: 'İşlemde', cards: [] },
+      ],
+      onCardMove,
+      onCardClick,
+    });
+    mockBoardGeometry(kanban, ['pending', 'active']);
+    const cancel = (): void => {
+      document.dispatchEvent(
+        new PointerEvent('pointercancel', { pointerId: 1, bubbles: true, cancelable: true }),
+      );
+    };
+    const card = kanban.element.querySelector<HTMLDivElement>('[data-card-id="p-0"]')!;
+
+    pointerDown(card, 100, 30);
+    pointerMove(300, 30);
+    cancel();
+    expect(onCardMove).not.toHaveBeenCalled();
+    expect(card.classList.contains('vol-kanban__card--dragging')).toBe(false);
+    expect(document.querySelector('.vol-kanban__card--ghost-active')).toBeNull();
+
+    pointerDown(card, 100, 30);
+    pointerMove(101, 30); // eşik altı
+    cancel();
+    expect(onCardClick).not.toHaveBeenCalled();
+    kanban.destroy();
+  });
+
   it('WIP limiti dolu bir sütuna bırakma reddedilir ve onWipLimitExceeded çağrılır', () => {
     const onCardMove = vi.fn();
     const onWipLimitExceeded = vi.fn();

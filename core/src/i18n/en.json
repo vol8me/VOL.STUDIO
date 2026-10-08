@@ -1,4 +1,10 @@
 {
+  "loading": {
+    "failed": "Loading failed",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "progress": "Loading progress"
+  },
   "carousel": {
     "prev": "Previous",
     "next": "Next",
@@ -144,6 +150,7 @@
     "ariaLabel": "Frame rate"
   },
   "keyBindings": {
+    "listeningFor": "Press a key for {{action}}. Escape cancels.",
     "listening": "Press a key…",
     "rebind": "Rebind {{action}}",
     "reset": "Reset",

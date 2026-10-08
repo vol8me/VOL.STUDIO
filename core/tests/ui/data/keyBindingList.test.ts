@@ -36,6 +36,28 @@ describe('KeyBindingList', () => {
     list.destroy();
   });
 
+  it('klavyeyle başlatılan dinleme, Esc ve atama boyunca odak aynı düğmede kalır; durum aria-pressed ile duyulur', () => {
+    const list = new KeyBindingList({ rows: ROWS, onRebind: vi.fn(), onReset: vi.fn() });
+    document.body.appendChild(list.element);
+    bindingButtons(list)[1].focus();
+    bindingButtons(list)[1].click();
+    expect(document.activeElement).toBe(bindingButtons(list)[1]);
+    expect(bindingButtons(list)[1].getAttribute('aria-pressed')).toBe('true');
+    expect(bindingButtons(list)[1].getAttribute('aria-label')).toContain('Ateş');
+    expect(bindingButtons(list)[0].getAttribute('aria-pressed')).toBe('false');
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(document.activeElement).toBe(bindingButtons(list)[1]);
+    expect(bindingButtons(list)[1].getAttribute('aria-pressed')).toBe('false');
+    // Sıfırla düğmesinde odak, setRows ile yeniden çizimde de korunur
+    const reset = list.element.querySelectorAll<HTMLButtonElement>('.vol-key-bindings__reset')[0];
+    reset.focus();
+    list.setRows(ROWS);
+    expect(document.activeElement).toBe(
+      list.element.querySelectorAll<HTMLButtonElement>('.vol-key-bindings__reset')[0],
+    );
+    list.destroy();
+  });
+
   it('yakalanan tuşu niyet olarak bildirir; KENDİ defterini tutmaz', () => {
     const onRebind = vi.fn();
     const list = new KeyBindingList({ rows: ROWS, onRebind });

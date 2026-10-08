@@ -748,6 +748,13 @@ export class SlotGrid {
     const drag = this.drag;
     if (!drag || event.pointerId !== drag.pointerId) return;
 
+    // İptal edilen sürükleme ne tıklama ne bırakma sayılır; öğe yerinde kalır.
+    if (event.type === 'pointercancel') {
+      this.clearDropTarget();
+      this.endDrag();
+      return;
+    }
+
     if (!drag.moved) {
       // Tıklama
       this.onSlotClickHandler?.(drag.itemView.getItem(), drag.fromIndex);

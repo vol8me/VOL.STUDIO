@@ -309,7 +309,8 @@ export class RadialMenu {
     }
     // Menüyü açan parmaktan başkası bırakıldığında (ör. diğer elle basılan ateş butonu) menü etkilenmemeli.
     if (this.activePointerId !== null && event.pointerId !== this.activePointerId) return;
-    this.close();
+    // Sistem iptali (ör. Android geri jesti) bir bırakma değildir: üzerindeki öğe seçilmez.
+    this.close(event.type !== 'pointercancel');
   }
 
   private updateHoverVisuals(): void {

@@ -5,6 +5,7 @@ import { DPad } from '../../src/ui/touch/DPad';
 import { DirectionButton } from '../../src/ui/touch/DirectionButton';
 import { DualAxisScrollPanel } from '../../src/ui/layout/DualAxisScrollPanel';
 import { PauseResumeButton } from '../../src/ui/buttons/PauseResumeButton';
+import { uiIntentBusFor } from '../../src/ui/feedback/uiIntent';
 import { PullToRefresh } from '../../src/ui/touch/PullToRefresh';
 import { RadialMenu } from '../../src/ui/overlays/RadialMenu';
 import { SwipeableCardStack } from '../../src/ui/cards/SwipeableCardStack';
@@ -219,6 +220,53 @@ describe('PauseResumeButton', () => {
     expect(button.getIsRunning()).toBe(false);
     expect(onToggle).toHaveBeenCalledWith(false);
     expect(button.element.getAttribute('aria-label')).toBe('Devam Et');
+  });
+
+  it('syncRunning sessizdir: onToggle çağrılmaz, durum ve sayaç eşitlenir; setRunning geriye uyumlu bildirir', () => {
+    vi.useFakeTimers();
+    const onToggle = vi.fn();
+    const onTick = vi.fn();
+    const button = track(new PauseResumeButton({ onToggle, counter: { direction: 'up', onTick } }));
+    button.syncRunning(false);
+    expect(button.getIsRunning()).toBe(false);
+    expect(button.element.getAttribute('aria-label')).toBe('Devam Et');
+    vi.advanceTimersByTime(3000);
+    expect(onTick).not.toHaveBeenCalled();
+    button.syncRunning(true);
+    vi.advanceTimersByTime(1000);
+    expect(onTick).toHaveBeenCalledWith(1);
+    expect(onToggle).not.toHaveBeenCalled();
+    button.setRunning(false);
+    expect(onToggle).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it('kullanıcı tıklaması toggle niyeti yayar; programatik değişim yaymaz', () => {
+    const { bus, release } = uiIntentBusFor(document.body);
+    const kinds: string[] = [];
+    const sub = bus.subscribe({
+      onIntent: (intent) => kinds.push(`${intent.kind}:${intent.origin}`),
+    });
+    const button = track(new PauseResumeButton());
+    document.body.appendChild(button.element);
+    button.setRunning(false);
+    button.syncRunning(true);
+    expect(kinds).toEqual([]);
+    button.element.click();
+    expect(kinds).toEqual(['toggle:PauseResumeButton']);
+    sub.dispose();
+    release();
+  });
+
+  it('pointercancel basılı görünümü temizler', () => {
+    const button = track(new PauseResumeButton());
+    button.element.dispatchEvent(
+      pointerEvent('pointerdown', { pointerId: 1, clientX: 0, clientY: 0 }),
+    );
+    expect(button.element.classList.contains('vol-pause-resume-button--pressed')).toBe(true);
+    button.element.dispatchEvent(
+      pointerEvent('pointercancel', { pointerId: 1, clientX: 0, clientY: 0 }),
+    );
+    expect(button.element.classList.contains('vol-pause-resume-button--pressed')).toBe(false);
   });
 
   it('startPaused:true ile duraklatılmış başlar', () => {

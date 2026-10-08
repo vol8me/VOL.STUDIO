@@ -288,6 +288,35 @@
   overflow-wrap: break-word;
 }
 
+/* Başarısızlık: gösterge durur, hata ve eylemler okunur */
+.vol-loading--failed .vol-loading__indicator,
+.vol-loading--failed .vol-loading__indicator * {
+  animation-play-state: paused !important;
+}
+
+.vol-loading__failure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-md);
+  align-items: center;
+  max-width: min(32rem, 90vw);
+}
+
+.vol-loading__failure-message {
+  font-family: var(--vol-font-family-body);
+  font-size: var(--vol-loading-subtitle-size);
+  color: var(--vol-ui-text);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.vol-loading__failure-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vol-space-sm);
+  justify-content: center;
+}
+
 /* Alt başlık */
 .vol-loading__subtitle {
   font-family: var(--vol-font-family-body);

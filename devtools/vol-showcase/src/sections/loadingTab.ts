@@ -328,6 +328,66 @@ function buildProgressSpeedDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
+/** Hata ve yeniden deneme: ilerleme yarıda kesilir, "Tekrar dene" kaldığı yerden değil baştan yükler. */
+function buildFailureDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const info = new Text(i18next.t('volui:loading.failureHint'), { variant: 'muted' });
+  disposables.addDestroyables(info);
+  wrap.appendChild(info.element);
+
+  const run = (loading: LoadingScreen): void => {
+    let percent = 0;
+    const preview = activePreview;
+    if (!preview) return;
+    preview.interval?.cancel();
+    preview.interval = disposables.addInterval(() => {
+      percent = Math.min(100, percent + 15);
+      loading.update(percent);
+      if (percent >= 45 && !retried) {
+        preview.interval?.cancel();
+        preview.interval = null;
+        loading.fail({
+          message: i18next.t('volui:loading.failureMessage'),
+          onRetry: () => {
+            retried = true;
+            run(loading);
+          },
+          onCancel: () => loading.hide(),
+        });
+      } else if (percent >= 100) {
+        preview.interval?.cancel();
+        preview.interval = null;
+        preview.hideTimeout = disposables.addTimeout(() => loading.hide(), 200);
+      }
+    }, 200);
+  };
+  let retried = false;
+
+  const btn = new Button(i18next.t('volui:loading.failureButton'), {
+    variant: 'primary',
+    onClick: () => {
+      clearActivePreview();
+      retried = false;
+      const loading = new LoadingScreen({
+        indicator: { type: 'orbital-rings' },
+        showPercent: true,
+        title: i18next.t('volui:loading.loading'),
+        transitionMs: 300,
+        onComplete: () => clearActivePreview(),
+      });
+      document.body.appendChild(loading.element);
+      loading.show();
+      activePreview = { loading, interval: null, hideTimeout: null };
+      run(loading);
+    },
+  });
+  disposables.addDestroyables(btn);
+  wrap.appendChild(btn.element);
+  return wrap;
+}
+
 export function buildLoadingTab(): {
   element: HTMLElement;
   destroy: () => void;
@@ -343,11 +403,12 @@ export function buildLoadingTab(): {
     card(i18next.t('volui:loading.minDisplayTime'), buildMinDisplayDemo(disposables), { span: 4 }),
     card(i18next.t('volui:loading.titleSubtitle'), buildTextDemo(disposables), { span: 4 }),
     card(i18next.t('volui:loading.contentPosition'), buildContentPositionDemo(disposables), {
-      span: 6,
+      span: 4,
     }),
     card(i18next.t('volui:loading.progressSpeed'), buildProgressSpeedDemo(disposables), {
-      span: 6,
+      span: 4,
     }),
+    card(i18next.t('volui:loading.failure'), buildFailureDemo(disposables), { span: 4 }),
   ];
 
   container.appendChild(paletteGrid(cards));

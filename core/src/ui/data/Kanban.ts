@@ -456,6 +456,12 @@ export class Kanban {
     document.removeEventListener('pointerup', this.boundPointerUp);
     document.removeEventListener('pointercancel', this.boundPointerUp);
 
+    // Sistem iptali (kesilen dokunma, çağrı, hareket tanıyıcı) bir bırakma değildir: ne tıklama ne taşıma sayılır.
+    if (event.type === 'pointercancel') {
+      this.cancelDrag();
+      return;
+    }
+
     if (!drag.moved) {
       // Eşik aşılmadı — tıklamaydı, sürükleme değil.
       this.drag = null;

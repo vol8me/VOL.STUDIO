@@ -217,7 +217,8 @@ export class SwipeableCardStack {
       topCardEl.releasePointerCapture(event.pointerId);
       topCardEl.classList.remove('vol-card-stack__card--dragging');
 
-      if (Math.abs(this.dragOffsetX) >= this.swipeThreshold) {
+      // İptal edilen sürükleme (sistem jesti, kesilen dokunma) asla kabul/ret sayılmaz: kart yerine döner.
+      if (event.type !== 'pointercancel' && Math.abs(this.dragOffsetX) >= this.swipeThreshold) {
         this.commitSwipe(this.dragOffsetX > 0 ? 'right' : 'left');
       } else {
         topCardEl.style.transform = '';

@@ -129,7 +129,19 @@ export class KeyBindingList {
     this.render();
   }
 
+  /** Odaklı denetimi (eylem + tür) bulur: satırlar yeniden kurulunca odak aynı denetime geri verilir. */
+  private focusedControl(): { action: string; kind: 'binding' | 'reset' } | null {
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement) || !this.element.contains(active)) return null;
+    const action = active.dataset.action;
+    const kind = active.dataset.kind;
+    return action !== undefined && (kind === 'binding' || kind === 'reset')
+      ? { action, kind }
+      : null;
+  }
+
   private render(): void {
+    const keep = this.focusedControl();
     this.element.textContent = '';
 
     for (const row of this.rows) {
@@ -153,10 +165,16 @@ export class KeyBindingList {
       trigger.textContent = active
         ? i18next.t('core:keyBindings.listening')
         : this.formatBinding(row.binding);
+      trigger.dataset.action = row.action;
+      trigger.dataset.kind = 'binding';
+      // Dinleme durumu odaklı düğmenin adında ve basılı durumunda duyulur (görünür metin aria-label'e ezilir).
       trigger.setAttribute(
         'aria-label',
-        i18next.t('core:keyBindings.rebind', { action: row.label }),
+        active
+          ? i18next.t('core:keyBindings.listeningFor', { action: row.label })
+          : i18next.t('core:keyBindings.rebind', { action: row.label }),
       );
+      if (editable) trigger.setAttribute('aria-pressed', String(active));
       if (editable) {
         trigger.addEventListener('click', () =>
           active ? this.stopCapture() : this.startCapture(row.action),
@@ -167,6 +185,8 @@ export class KeyBindingList {
       if (this.onReset && editable) {
         const reset = document.createElement('button');
         reset.type = 'button';
+        reset.dataset.action = row.action;
+        reset.dataset.kind = 'reset';
         reset.className = 'vol-key-bindings__reset';
         reset.textContent = i18next.t('core:keyBindings.reset');
         reset.setAttribute(
@@ -178,6 +198,13 @@ export class KeyBindingList {
       }
 
       this.element.appendChild(item);
+    }
+
+    if (keep) {
+      const target = [
+        ...this.element.querySelectorAll<HTMLElement>(`[data-kind="${keep.kind}"]`),
+      ].find((control) => control.dataset.action === keep.action);
+      target?.focus({ preventScroll: true });
     }
   }
 }

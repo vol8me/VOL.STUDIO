@@ -459,6 +459,16 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       seçimi, `aria-selected`, yeniden çizimde odak aynı satırda, `aria-rowcount`/`aria-rowindex`, onay
       kutusu görsel işaret (`aria-hidden`). Kanıt: `dataTableKeyboard.test.ts` (6). Kalan: Kanban/EventLog/
       KeyBindingList için aynı denetim, %30/%200/RTL ölçümleri, gerçek AT.
+      İkinci tur (2026-10-08): EventLog liste her push'ta yeniden kurulduğundan canlı bölge bütün satırları
+      yeniden okurdu → liste `aria-live=off`, yeni kayıt ayrı sr-only `status`tan duyulur (süzgeçle
+      eşleşmeyen susar, yinelenen ×N ile); süzgeç düğmeleri `aria-pressed`; kaydırma alanı klavyeyle
+      odaklanır; klavyeyle sabitleyince odak aynı kaydın yeni düğmesinde kalır. KeyBindingList dinlemeyi
+      başlatan/Esc/atama yeniden çizimlerinde odağı yitiriyordu → aynı denetime geri verilir; dinleme
+      durumu `aria-pressed` + `aria-label`dadır. **`pointercancel` bırakma sayılıyordu**: Kanban iptali
+      tıklama/taşıma, SwipeableCardStack eşik üstünde kabul/ret, SwipeGestureZone jest, SlotGrid tıklama/
+      bırakma, RadialMenu hover'daki öğeyi seçme, Carousel sayfa değiştirme üretiyordu → hepsinde iptal
+      sessiz (`pointerCancelContract.test.ts`, `kanban.test.ts`; eski test iptalde kabulü sabitliyordu,
+      düzeltildi). Kanban/SlotGrid tıklayarak taşıma ve klavye yolu önceki turlarda kanıtlı.
 - [ ] **UI-09.4 — Diyalog deseni/yönlendirici işaret/yasal metin.** Mevcut Modal/Panel/Button/
       Text bileşimi ile yıkıcı işlem/çıkış/izin/yerel-uzak çakışma/ilk kullanım yönlendirmesi/
       kredi ve yasal metin (ikon atıf ekranı dahil). Kapanır: çakışmada niyet/hata/bekleme/
@@ -494,11 +504,23 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       `setRunning` korunur; yeni additive sessiz senkron ve ayrı kullanıcı niyet yolu; opt-in sayaç
       tarifi. Kapanır: legacy setter/callback, sessiz sync, user toggle, counter completion,
       freeze, pointercancel, destroy ayrı regresyon; public sınıf silinmez.
+      Yapıldı (2026-10-08): `syncRunning` (sessiz, `onToggle`/niyet yok), kullanıcı tıklaması `toggle`
+      niyeti yayar (programatik değişim yaymaz), `pointercancel` basılı görünümü temizler; `setRunning`
+      ve constructor/callback sözleşmesi aynen (`touchControls.test.ts`). Sayaç tamamlanma yolu ve
+      destroy önceki testlerle kapsanır; tarif ayrımı (opt-in sayaç tarifi) açık.
 - [ ] **UI-10.4 — LoadingScreen/Text/AnimatedLabel/Icon/Toolbar/PropertyField/CanvasViewportController/
       WorldCameraController/PinchZoomController.** Hazır/hata/yeniden deneme/iptal ve ilerleme;
       yüklemede yeni malzeme. Kapanır: asgari yükleme süresi 500 ms isteğe bağlı, meşgul durum
       <100 ms, iptal güvenli; yüklemede sürekli ses varsayılan değil; parmakla büyütmeye alternatif;
       destroy temiz.
+      Yapıldı (2026-10-08): `LoadingScreen` varsayılan asgari süre 2000→0 ms (500 önerilen seçenek);
+      ilerleme `role=progressbar` + yalnız hedef değerle `aria-valuenow` (yüzde metni `aria-hidden`,
+      kare kare okuyucuya yağmaz); yeni `fail({message,onRetry,onCancel})`/`clearFailure()`: hata
+      `role=alert`, odak Tekrar dene düğmesinde, bekleyen gizleme iptal, Tekrar dene ilerlemeyi sıfırlar
+      ve `onRetry` çağırır, Vazgeç yalnız `onCancel` (karar tüketicide), göstergeler durur, dil değişince
+      metin güncellenir. Vitrin Loading sekmesine hata kartı; kanıt `loadingScreen.test.ts` +
+      `devtools/vol-showcase/tests/e2e/loadingFailure.spec.ts` (Chromium+WebKit). CanvasViewport/WorldCamera/PinchZoom
+      alternatifi, Toolbar/PropertyField ve meşgul <100 ms ölçümü açık.
 - [ ] **UI-10.5 — Palette ve ileri katalog kanıtı.** Her aile durum örneği, public yardımcılar,
       grid ARIA gerekçesi. Kapanır: registry başlangıç sınıfları + yeni exportlar tam; palet
       okunabilirliği; tier-2 erişilebilir.

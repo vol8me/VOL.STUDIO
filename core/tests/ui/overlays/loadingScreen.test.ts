@@ -513,3 +513,72 @@ describe('LoadingScreen — video autoplay', () => {
     expect(loading.element.querySelector('video')).toBeNull();
   });
 });
+
+describe('LoadingScreen — ilerleme anlamı, hata ve yeniden deneme', () => {
+  it('ilerleme progressbar olarak yalnız hedef değerle bildirilir; yüzde metni okuyucudan gizlidir', () => {
+    const loading = createLoading({ showPercent: true });
+    const bar = loading.element.querySelector('[role="progressbar"]')!;
+    expect(bar.hasAttribute('aria-valuenow')).toBe(false);
+    loading.update(40);
+    expect(bar.getAttribute('aria-valuenow')).toBe('40');
+    expect(
+      loading.element.querySelector('.vol-loading__percent')!.getAttribute('aria-hidden'),
+    ).toBe('true');
+  });
+
+  it('varsayılan asgari gösterim süresi kapalıdır (hide hemen uygulanır)', () => {
+    const onComplete = vi.fn();
+    const loading = createLoading({ transitionMs: 100, onComplete });
+    loading.show();
+    loading.hide();
+    vi.advanceTimersByTime(100);
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('fail(): alert, meşgul değil, odak Tekrar dene düğmesinde; bekleyen gizleme iptal olur', () => {
+    const onComplete = vi.fn();
+    const loading = createLoading({ minDisplayMs: 1000, transitionMs: 100, onComplete });
+    loading.show();
+    loading.hide();
+    loading.fail({ message: 'Ağ yok', onRetry: vi.fn(), onCancel: vi.fn() });
+    vi.advanceTimersByTime(5000);
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(loading.element.getAttribute('aria-busy')).toBe('false');
+    const alert = loading.element.querySelector('[role="alert"]')!;
+    expect(alert.textContent).toContain('Ağ yok');
+    const buttons = alert.querySelectorAll('button');
+    expect(buttons).toHaveLength(2);
+    expect(document.activeElement).toBe(buttons[0]);
+  });
+
+  it('Tekrar dene hatayı temizler, ilerlemeyi sıfırlar ve onRetry çağırır; Vazgeç yalnız onCancel çağırır', () => {
+    const onRetry = vi.fn();
+    const onCancel = vi.fn();
+    const loading = createLoading({ showPercent: true });
+    loading.update(80);
+    loading.fail({ onRetry, onCancel });
+    const [retry, cancel] = [
+      ...loading.element.querySelectorAll<HTMLButtonElement>('.vol-loading__failure button'),
+    ];
+    cancel.click();
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(loading.element.querySelector('.vol-loading__failure')).not.toBeNull();
+    retry.click();
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(loading.element.querySelector('.vol-loading__failure')).toBeNull();
+    expect(loading.element.getAttribute('aria-busy')).toBe('true');
+    expect(
+      loading.element.querySelector('[role="progressbar"]')!.hasAttribute('aria-valuenow'),
+    ).toBe(false);
+    expect(loading.element.querySelector('.vol-loading__percent')!.textContent).toBe('0%');
+  });
+
+  it('eylemsiz hata yalnız mesaj gösterir; destroy düğmeleri temizler', () => {
+    const loading = createLoading();
+    loading.fail();
+    expect(loading.element.querySelector('.vol-loading__failure-actions')).toBeNull();
+    expect(loading.element.querySelector('[role="alert"]')!.textContent).toBeTruthy();
+    loading.destroy();
+    expect(loading.element.isConnected).toBe(false);
+  });
+});

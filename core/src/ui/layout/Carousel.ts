@@ -265,7 +265,10 @@ export class Carousel {
       this.track.classList.remove('vol-carousel__track--dragging');
 
       const threshold = viewport.clientWidth * UI_RATIO.CAROUSEL_SWIPE_THRESHOLD;
-      if (this.dragDeltaX > threshold) {
+      if (event.type === 'pointercancel') {
+        // İptal sayfa değiştirmez: bulunduğu sayfaya geri oturur.
+        this.updatePosition(true);
+      } else if (this.dragDeltaX > threshold) {
         this.goTo(this.currentIndex - 1);
       } else if (this.dragDeltaX < -threshold) {
         this.goTo(this.currentIndex + 1);

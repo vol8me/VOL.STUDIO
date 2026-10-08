@@ -1,3 +1,6 @@
+import { i18next } from '../../i18n/I18n';
+import { Button } from '../primitives/Button';
+
 /** Gösterge tipi — orbital-rings, energy-core, particle-orbit, hexagon-pulse veya bar. */
 export type LoadingIndicatorType =
   'orbital-rings' | 'energy-core' | 'particle-orbit' | 'hexagon-pulse' | 'bar';
@@ -40,7 +43,7 @@ export interface LoadingFontSizeOptions {
 }
 
 export interface LoadingScreenOptions {
-  /** Min. gösterim süresi (ms). Gerçek yükleme hızlı olsa bile en az bu kadar göster. Varsayılan: 2000. */
+  /** Min. gösterim süresi (ms): çok kısa yüklemede ekranın yanıp sönmesini önler (öneri: 500). Varsayılan: 0 (kapalı). */
   minDisplayMs?: number;
 
   /** Arkaplan. Varsayılan: CSS gradient. */
@@ -86,6 +89,15 @@ export interface LoadingScreenOptions {
   onComplete?: () => void;
 }
 
+export interface LoadingFailure {
+  /** Hata metni; verilmezse yerelleştirilmiş "Yükleme başarısız". */
+  message?: string;
+  /** Verilirse "Tekrar dene" düğmesi çıkar; basınca hata temizlenir, ilerleme sıfırlanır, bu çağrılır. */
+  onRetry?: () => void;
+  /** Verilirse "Vazgeç" düğmesi çıkar; karar (kapat/geri dön) tüketicidedir, ekran kendini gizlemez. */
+  onCancel?: () => void;
+}
+
 /**
  * Tam ekran yükleme ekranı — saf DOM + TypeScript.
  *
@@ -109,6 +121,10 @@ export class LoadingScreen {
   private readonly progressDurationMs: number;
   private readonly onComplete?: () => void;
   private hideCompleted = false;
+  private titleIsI18n = false;
+  private failureEl: HTMLDivElement | null = null;
+  private failureButtons: Button[] = [];
+  private failure: LoadingFailure | null = null;
 
   private showTime = 0;
   private animatedPercent = 0;
@@ -123,7 +139,7 @@ export class LoadingScreen {
 
   constructor(options: LoadingScreenOptions = {}) {
     const {
-      minDisplayMs = 2000,
+      minDisplayMs = 0,
       transitionMs = 400,
       transitionType = 'fade',
       progressMs = 300,
@@ -197,6 +213,15 @@ export class LoadingScreen {
     // Gösterge
     this.indicatorEl = document.createElement('div');
     this.indicatorEl.className = 'vol-loading__indicator';
+    // İlerleme okuyucuya yalnız hedef değerle (kare kare animasyon değeriyle değil) bildirilir; ilk güncellemeye kadar belirsizdir.
+    this.indicatorEl.setAttribute('role', 'progressbar');
+    this.indicatorEl.setAttribute('aria-valuemin', '0');
+    this.indicatorEl.setAttribute('aria-valuemax', '100');
+    this.indicatorEl.setAttribute(
+      'aria-label',
+      options.title ?? i18next.t('core:loading.progress'),
+    );
+    this.titleIsI18n = !options.title;
     this.applyIndicator(options.indicator);
     this.contentEl.appendChild(this.indicatorEl);
 
@@ -204,6 +229,7 @@ export class LoadingScreen {
     if (options.showPercent) {
       this.percentEl = document.createElement('div');
       this.percentEl.className = 'vol-loading__percent';
+      this.percentEl.setAttribute('aria-hidden', 'true');
       this.percentEl.textContent = '0%';
       this.contentEl.appendChild(this.percentEl);
     }
@@ -225,6 +251,99 @@ export class LoadingScreen {
     }
 
     this.element.appendChild(this.contentEl);
+    i18next.on('languageChanged', this.onLanguageChanged);
+  }
+
+  private readonly onLanguageChanged = (): void => {
+    if (this.titleIsI18n) {
+      this.indicatorEl.setAttribute('aria-label', i18next.t('core:loading.progress'));
+    }
+    if (this.failure) this.renderFailure();
+  };
+
+  /**
+   * Yüklemeyi başarısız gösterir: ilerleme durur, hata `role="alert"` ile okunur, verilen eylemlere göre
+   * "Tekrar dene"/"Vazgeç" düğmeleri çıkar ve odak ilk düğmeye gider. Bekleyen gizleme iptal olur.
+   */
+  fail(failure: LoadingFailure = {}): void {
+    if (this.hideCompleted) return;
+    this.hideRequested = false;
+    if (this.hideTimer) {
+      clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+    }
+    cancelAnimationFrame(this.progressRafId);
+    this.failure = failure;
+    this.element.setAttribute('aria-busy', 'false');
+    this.element.classList.add('vol-loading--failed');
+    this.renderFailure();
+    this.failureButtons[0]?.element.focus();
+  }
+
+  /** Başarısızlık görünümünü kaldırır (yeniden denemede kendiliğinden çağrılır). */
+  clearFailure(): void {
+    if (!this.failure) return;
+    this.failure = null;
+    this.disposeFailureUi();
+    this.element.classList.remove('vol-loading--failed');
+    this.element.setAttribute('aria-busy', 'true');
+  }
+
+  private renderFailure(): void {
+    const failure = this.failure;
+    if (!failure) return;
+    const hadFocus = this.failureEl?.contains(document.activeElement) ?? false;
+    const focusedIndex = this.failureButtons.findIndex((b) => b.element === document.activeElement);
+    this.disposeFailureUi();
+
+    const box = document.createElement('div');
+    box.className = 'vol-loading__failure';
+    box.setAttribute('role', 'alert');
+    const message = document.createElement('div');
+    message.className = 'vol-loading__failure-message';
+    message.textContent = failure.message ?? i18next.t('core:loading.failed');
+    box.appendChild(message);
+
+    const actions = document.createElement('div');
+    actions.className = 'vol-loading__failure-actions';
+    if (failure.onRetry) {
+      const onRetry = failure.onRetry;
+      const retry = new Button(i18next.t('core:loading.retry'), {
+        variant: 'primary',
+        fullWidth: false,
+        onClick: () => {
+          this.clearFailure();
+          this.progressTarget = 0;
+          this.animatedPercent = 0;
+          this.element.style.setProperty('--vol-loading-progress', '0%');
+          if (this.percentEl) this.percentEl.textContent = '0%';
+          this.indicatorEl.removeAttribute('aria-valuenow');
+          onRetry();
+        },
+      });
+      this.failureButtons.push(retry);
+      actions.appendChild(retry.element);
+    }
+    if (failure.onCancel) {
+      const onCancel = failure.onCancel;
+      const cancel = new Button(i18next.t('core:loading.cancel'), {
+        fullWidth: false,
+        onClick: () => onCancel(),
+      });
+      this.failureButtons.push(cancel);
+      actions.appendChild(cancel.element);
+    }
+    if (this.failureButtons.length > 0) box.appendChild(actions);
+    this.failureEl = box;
+    this.contentEl.appendChild(box);
+    if (hadFocus) this.failureButtons[Math.max(0, focusedIndex)]?.element.focus();
+  }
+
+  private disposeFailureUi(): void {
+    for (const button of this.failureButtons) button.destroy();
+    this.failureButtons = [];
+    this.failureEl?.remove();
+    this.failureEl = null;
   }
 
   /** Yükleme ekranını görünür yapar. */
@@ -269,6 +388,7 @@ export class LoadingScreen {
   /** Progress günceller (0-100). Değer yumuşak animasyonla hedefe ulaşır. */
   update(percent: number): void {
     const target = Math.max(0, Math.min(100, percent));
+    this.indicatorEl.setAttribute('aria-valuenow', String(Math.round(target)));
 
     // prefers-reduced-motion: animasyonu atla, değeri anında uygula
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -310,6 +430,7 @@ export class LoadingScreen {
    */
   hide(): void {
     if (this.hideRequested) return;
+    this.clearFailure();
     this.hideRequested = true;
 
     const elapsed = performance.now() - this.showTime;
@@ -559,6 +680,8 @@ export class LoadingScreen {
     }
     cancelAnimationFrame(this.progressRafId);
     cancelAnimationFrame(this.showRafId);
+    i18next.off('languageChanged', this.onLanguageChanged);
+    this.disposeFailureUi();
     this.cleanupBackgroundMedia();
     this.element.remove();
   }

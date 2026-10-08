@@ -1,4 +1,10 @@
 {
+  "loading": {
+    "failed": "Yükleme başarısız",
+    "retry": "Tekrar dene",
+    "cancel": "Vazgeç",
+    "progress": "Yükleme ilerlemesi"
+  },
   "carousel": {
     "prev": "Önceki",
     "next": "Sonraki",
@@ -144,6 +150,7 @@
     "ariaLabel": "Kare hızı"
   },
   "keyBindings": {
+    "listeningFor": "{{action}} için bir tuşa bas. Escape iptal eder.",
     "listening": "Tuşa bas…",
     "rebind": "{{action}} için yeni tuş ata",
     "reset": "Sıfırla",

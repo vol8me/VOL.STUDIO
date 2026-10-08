@@ -159,6 +159,8 @@ export class SwipeGestureZone {
       this.element.releasePointerCapture(event.pointerId);
     }
     this.drag = null;
+    // İptal edilen sürükleme bir kaydırma jesti değildir.
+    if (event.type === 'pointercancel') return;
 
     const dx = drag.lastX - drag.startX;
     const dy = drag.lastY - drag.startY;
