@@ -1,5 +1,8 @@
 {
   "loading": {
+    "title": "Loading",
+    "stalled": "Still working… this is taking longer than usual.",
+    "tip": "Tip",
     "failed": "Loading failed",
     "retry": "Try again",
     "cancel": "Cancel",

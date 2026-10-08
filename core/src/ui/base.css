@@ -103,8 +103,4 @@ body {
   box-shadow: 0 0 0 7px var(--vol-ui-focus-halo);
 }
 
-.vol-button.vol-focusnav-current,
-.vol-card__action.vol-focusnav-current {
-  background: var(--vol-ui-accent-subtle);
-  border-color: var(--vol-ui-focus-ring);
-}
+/* Seçili öğenin yüzey durumu (düğme, satır, girdi) `material/selection.css`tedir. */

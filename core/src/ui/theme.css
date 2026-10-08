@@ -23,6 +23,7 @@
 @import url('./material/material.css');
 @import url('./material/hud.css');
 @import url('./material/overlays.css');
+@import url('./material/selection.css');
 
 /* RENKLER — colors.ts, themes/semanticColors.ts ve themes/ember.ts'ten üretilir (pnpm gen:theme). Elle düzenleme yapma. */
 :root {

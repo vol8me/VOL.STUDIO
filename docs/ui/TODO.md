@@ -521,6 +521,23 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       metin güncellenir. Vitrin Loading sekmesine hata kartı; kanıt `loadingScreen.test.ts` +
       `devtools/vol-showcase/tests/e2e/loadingFailure.spec.ts` (Chromium+WebKit). CanvasViewport/WorldCamera/PinchZoom
       alternatifi, Toolbar/PropertyField ve meşgul <100 ms ölçümü açık.
+      **Yükleme yeniden tasarımı (2026-10-08, kullanıcı ara geri bildirimi: "sağlamlaştır; his, sunum,
+      sorumluluk, performans; temalarla aynı estetik")**. Analiz: eski ekran tema dilinden bağımsız neon
+      bir döndürücüydü (indigo/eflatun vurgu, `drop-shadow` parlaması, maske ve ilerlemeye bağlı
+      `conic-gradient`, kare başına kök değişken yazımı), aşama/ipucu/takılma/hata yolu, arka plan
+      kilidi ve odak yönetimi yoktu, VOL.TEST açılışta boş ekranla açılıyordu. Karar ve uygulama:
+      `LoadingScreen` artık çekirdeğin çerçeve (`vol-frame`) ve HUD barı (`vol-bar`) malzemesiyle çelik
+      plaka (başlık şeridi + segmentli çubuk; steel/aurum tokenlarından, ayrı bir yükleme dili yok);
+      çubuk tek elemanın genişliği (belirsiz başlar, ilk `update` ile kesinleşir), yüzde yalnız tam sayı
+      değişince yazılır; süs göstergeler (`loadingEmblems.ts`) yalnız transform/opacity ile (parlama,
+      maske, conic yok — `loadingPerformance.test.ts` yasaklar), hareket azaltılmışta durur;
+      `setStage` (okuyucuya duyulur), dönen ipuçları, `stallMs` takılma bildirimi + `onStall`,
+      `showDelayMs` (kısa yükleme hiç görünmez; asgari süre görünür olduktan sonra), `blockBackground`
+      (arka sayfa `inert`, odak ekrana, kapanınca geri). **Gerçek tüketici:** VOL.TEST açılışı
+      (`games/vol-test/src/app/bootLoading.ts`; 200 ms gecikme, 400 ms asgari, hizmetler → Phaser varlık oranı →
+      dünya) ve vitrin Loading sekmesinde aşama/ipucu/takılma ve hata kartları. Kanıt:
+      `loadingScreen.test.ts` (72), `bootLoading.test.ts`, VOL.TEST e2e 17/17 Chromium, vitrin
+      görsel temel çizgisi. Cihazda (Deck/tablet) görsel kabul kullanıcı turuna bırakıldı.
 - [ ] **UI-10.5 — Palette ve ileri katalog kanıtı.** Her aile durum örneği, public yardımcılar,
       grid ARIA gerekçesi. Kapanır: registry başlangıç sınıfları + yeni exportlar tam; palet
       okunabilirliği; tier-2 erişilebilir.
@@ -577,6 +594,15 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       demosu kol bağlanınca "Input mode: gamepad" ve eylem glifini fare/Space'ten RT/A'ya çevirir, fare
       hareketi "pc" glifine geri döndürür. Fiziksel Deck düğmeleri, Steam Input yeniden bağlaması ve çoklu
       kol önceliği ölçülmedi (NOT-RUN).
+      **Seçili durum (2026-10-08, kullanıcı ara geri bildirimi: "kolla gezerken yalnız kenarlık olmasın")**:
+      eski `.vol-focusnav-current` düğmeyi `accent-subtle` (lacivert) bir bloğa çeviriyor, satır/ağaç/
+      tablo/akordeon/girdide yalnız ince halka bırakıyordu. Yeni `core/src/ui/material/selection.css`:
+      düğme ailesi kendi rengini koruyup hover'dan parlak, altın tonlu yanık yüzey + altın kenar + hale
+      alır; satır benzeri öğeler (ağaç satırı, tablo satırı, akordeon başlığı, seçenek, menü satırı,
+      komut paleti, kısayol düğmesi) marka tonlu seçim plakası + 4 px sol şerit; sekme/segment alt şerit;
+      girdi kuyuları aydınlanır; klavye (`:focus-visible`) ve kol aynı görünür. **Kutu kımıldamaz**
+      (transform yok): uzamsal kol gezintisi odaklı öğenin dikdörtgenini okur, 1 px kaldırma ekran
+      klavyesi turunu bozdu (e2e yakaladı, kaldırıldı). Fiziksel Deck'te görsel kabul kullanıcı turunda.
 - [ ] **UI-12.3 — Haptik/native yaşam döngüsü.** Mevcut hidraw/evdev/Steam/Android sürücüleri;
       açık Test düğmesi/durum; yanlış yetenek bildirimi. Kapanır: sıfır/kapalı sessiz, tek sürücü;
       uyku/odak kaybı/cihaz çıkarma/çıkışta durma gerçek sonda; hissiyat kullanıcı beyanı ayrı.

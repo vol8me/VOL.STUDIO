@@ -68,7 +68,7 @@ export interface FakeScene {
     addSpriteSheet: ReturnType<typeof vi.fn>;
     get: (key: string) => { getSourceImage: () => HTMLCanvasElement };
   };
-  readonly load: { svg: ReturnType<typeof vi.fn> };
+  readonly load: { svg: ReturnType<typeof vi.fn>; on: ReturnType<typeof vi.fn> };
 }
 
 export function fakeScene(): FakeScene {
@@ -99,6 +99,6 @@ export function fakeScene(): FakeScene {
       addSpriteSheet: vi.fn((key: string) => textureKeys.add(key)),
       get: () => ({ getSourceImage: () => document.createElement('canvas') }),
     },
-    load: { svg: vi.fn() },
+    load: { svg: vi.fn(), on: vi.fn() },
   };
 }

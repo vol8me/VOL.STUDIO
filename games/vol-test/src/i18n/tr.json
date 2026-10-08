@@ -3,6 +3,12 @@
     "title": "VOL.TEST",
     "fatal": "VOL.TEST başlatılamadı"
   },
+  "boot": {
+    "title": "VOL.TEST",
+    "services": "Hizmetler başlatılıyor",
+    "assets": "Tank parçaları yükleniyor",
+    "world": "Dünya kuruluyor"
+  },
   "hud": {
     "boost": "Hızlanma deposu",
     "map": "Harita",

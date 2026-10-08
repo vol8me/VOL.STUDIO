@@ -1,5 +1,8 @@
 {
   "loading": {
+    "title": "Yükleniyor",
+    "stalled": "Hâlâ çalışıyor… beklenenden uzun sürüyor.",
+    "tip": "İpucu",
     "failed": "Yükleme başarısız",
     "retry": "Tekrar dene",
     "cancel": "Vazgeç",

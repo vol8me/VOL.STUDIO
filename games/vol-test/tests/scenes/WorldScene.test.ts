@@ -427,9 +427,19 @@ describe('BootScene', () => {
     const fake = fakeScene();
     const scene = new BootScene();
     const start = vi.fn();
-    Object.assign(scene, { load: fake.load, textures: fake.textures, scene: { start } });
+    const emit = vi.fn();
+    Object.assign(scene, {
+      load: fake.load,
+      textures: fake.textures,
+      scene: { start },
+      game: { events: { emit } },
+    });
     scene.preload();
+    const onProgress = fake.load.on.mock.calls[0][1] as (value: number) => void;
+    onProgress(0.4);
+    expect(emit).toHaveBeenCalledWith('vol-test:boot-progress', 0.4);
     scene.create();
+    expect(emit).toHaveBeenCalledWith('vol-test:boot-ready');
     expect(fake.load.svg).toHaveBeenCalled();
     expect(fake.textures.addCanvas).toHaveBeenCalled();
     expect(start).toHaveBeenCalledWith('World');

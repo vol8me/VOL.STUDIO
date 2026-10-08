@@ -3,6 +3,12 @@
     "title": "VOL.TEST",
     "fatal": "VOL.TEST failed to start"
   },
+  "boot": {
+    "title": "VOL.TEST",
+    "services": "Starting services",
+    "assets": "Loading tank parts",
+    "world": "Building the world"
+  },
   "hud": {
     "boost": "Boost reserve",
     "map": "Map",

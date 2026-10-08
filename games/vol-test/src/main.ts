@@ -7,6 +7,7 @@ import {
   showFatalStartupError,
   suppressNativeMenus,
 } from '@volstudio/core';
+import { BootLoading } from '@/app/bootLoading';
 import { GameServices } from '@/app/GameServices';
 import { RenderMeasurements } from '@/app/RenderMeasurements';
 import { GAME } from '@/config/game';
@@ -15,6 +16,7 @@ import en from '@/i18n/en.json';
 import tr from '@/i18n/tr.json';
 import '@/i18n/i18next-augment';
 import { BootScene } from '@/scenes/BootScene';
+import { BOOT_EVENT } from '@/scenes/bootEvents';
 import { WorldScene } from '@/scenes/WorldScene';
 
 /** i18n hazır olmadan da okunabilen hata başlığı. */
@@ -31,8 +33,10 @@ async function boot(): Promise<void> {
 
   const scope = new DisposableScope();
   let game: Awaited<ReturnType<typeof createVolGame>> | undefined;
+  const loading = new BootLoading();
   try {
     const services = scope.add(await GameServices.create());
+    loading.servicesReady();
     game = await createVolGame({
       parent: 'game',
       backgroundColor: PALETTE.void,
@@ -42,6 +46,8 @@ async function boot(): Promise<void> {
       diagnostics: services.diagnostics,
       audio: { noAudio: false, disableWebAudio: false },
     });
+    game.events.on(BOOT_EVENT.progress, (ratio: number) => loading.assets(ratio));
+    game.events.once(BOOT_EVENT.ready, () => loading.worldReady());
     if (services.measurements)
       scope.addDestroyable(
         new RenderMeasurements(game, {
@@ -52,6 +58,7 @@ async function boot(): Promise<void> {
     scope.addSubscription(suppressNativeMenus(document));
     game.events.once('destroy', () => scope.dispose());
   } catch (error) {
+    loading.abort();
     try {
       game?.destroy(true);
     } finally {

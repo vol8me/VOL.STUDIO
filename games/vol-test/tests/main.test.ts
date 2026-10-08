@@ -16,6 +16,14 @@ vi.mock('@volstudio/core', () => ({
   showFatalStartupError: boundary.fatal,
   suppressNativeMenus: boundary.suppressMenus,
 }));
+vi.mock('@/app/bootLoading', () => ({
+  BootLoading: class {
+    servicesReady = vi.fn();
+    assets = vi.fn();
+    worldReady = vi.fn();
+    abort = vi.fn();
+  },
+}));
 vi.mock('@/app/GameServices', () => ({ GameServices: { create: boundary.createServices } }));
 vi.mock('@/scenes/BootScene', () => ({ BootScene: class {} }));
 vi.mock('@/scenes/WorldScene', () => ({ WorldScene: class {} }));
@@ -40,7 +48,7 @@ describe('oyun açılış sahipliği', () => {
 
   it('oyun sonrası bağlama hatasında oyun ve servisleri bırakır', async () => {
     const destroy = vi.fn();
-    boundary.createGame.mockResolvedValue({ events: { once: vi.fn() }, destroy });
+    boundary.createGame.mockResolvedValue({ events: { on: vi.fn(), once: vi.fn() }, destroy });
     boundary.suppressMenus.mockImplementationOnce(() => {
       throw new Error('bağlama reddi');
     });

@@ -1103,11 +1103,11 @@
     {
       "export": "LoadingScreen",
       "kind": "class",
-      "tier": 2,
+      "tier": 1,
       "phase": "UI-10",
       "anchor": "A5",
       "archetype": "overlay",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/loadingTab.ts"],
       "tests": [
         {

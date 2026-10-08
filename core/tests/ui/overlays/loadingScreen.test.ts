@@ -582,3 +582,152 @@ describe('LoadingScreen — ilerleme anlamı, hata ve yeniden deneme', () => {
     expect(loading.element.isConnected).toBe(false);
   });
 });
+
+describe('LoadingScreen — plaka, aşama, ipucu, takılma, gecikme, arka plan', () => {
+  it('plaka başlık şeridi, belirsiz çubuk ve çerçeve sınıfını taşır; ilk update çubuğu kesinleştirir', () => {
+    const loading = createLoading({ title: 'Dünya' });
+    expect(loading.element.querySelector('.vol-loading__content')!.classList).toContain(
+      'vol-frame',
+    );
+    expect(
+      loading.element.querySelector('.vol-loading__header .vol-loading__title')!.textContent,
+    ).toBe('Dünya');
+    const fill = loading.element.querySelector('.vol-loading__fill')!;
+    expect(fill.classList).toContain('vol-loading__fill--indeterminate');
+    loading.update(30);
+    expect(fill.classList).not.toContain('vol-loading__fill--indeterminate');
+  });
+
+  it('başlık verilmezse yerelleştirilmiş varsayılan başlık çizilir (title öğesi yok)', () => {
+    const loading = createLoading();
+    expect(loading.element.querySelector('.vol-loading__title')).toBeNull();
+    expect(loading.element.querySelector('.vol-loading__heading')!.textContent).toBeTruthy();
+  });
+
+  it('setStage aşama satırını yazar; boşken gizlidir', () => {
+    const loading = createLoading({ stage: 'Hizmetler 1 / 3' });
+    const stage = loading.element.querySelector('.vol-loading__stage')!;
+    expect(stage.textContent).toBe('Hizmetler 1 / 3');
+    loading.setStage('Varlıklar 2 / 3');
+    expect(stage.textContent).toBe('Varlıklar 2 / 3');
+  });
+
+  it('ipuçları aralıkla döner, hide ile durur ve okuyucudan gizlidir', () => {
+    const loading = createLoading({ tips: ['bir', 'iki', 'üç'], tipIntervalMs: 1000 });
+    loading.show();
+    const tip = loading.element.querySelector('.vol-loading__tip')!;
+    expect(tip.getAttribute('aria-hidden')).toBe('true');
+    const first = tip.textContent;
+    vi.advanceTimersByTime(1000 + 200);
+    expect(tip.textContent).not.toBe(first);
+    loading.hide();
+    const frozen = tip.textContent;
+    vi.advanceTimersByTime(5000);
+    expect(tip.textContent).toBe(frozen);
+  });
+
+  it('ilerleme stallMs boyunca değişmezse bir kez bildirilir; ilerleyince temizlenir ve yeniden silahlanır', () => {
+    const onStall = vi.fn();
+    const loading = createLoading({ stallMs: 1000, onStall });
+    loading.show();
+    loading.update(10);
+    const stall = loading.element.querySelector<HTMLElement>('.vol-loading__stall')!;
+    expect(stall.hidden).toBe(true);
+    vi.advanceTimersByTime(1000);
+    expect(stall.hidden).toBe(false);
+    expect(stall.textContent).toBeTruthy();
+    expect(onStall).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(5000);
+    expect(onStall).toHaveBeenCalledTimes(1);
+    loading.update(20);
+    expect(stall.hidden).toBe(true);
+    vi.advanceTimersByTime(1000);
+    expect(onStall).toHaveBeenCalledTimes(2);
+  });
+
+  it('aynı hedef tekrar gelirse takılma sayacı sıfırlanmaz; stallMs:0 kapatır', () => {
+    const onStall = vi.fn();
+    const loading = createLoading({ stallMs: 1000, onStall });
+    loading.show();
+    loading.update(10);
+    vi.advanceTimersByTime(600);
+    loading.update(10);
+    vi.advanceTimersByTime(500);
+    expect(onStall).toHaveBeenCalledTimes(1);
+    const off = createLoading({ stallMs: 0, onStall });
+    off.show();
+    vi.advanceTimersByTime(60_000);
+    expect(onStall).toHaveBeenCalledTimes(1);
+  });
+
+  it('showDelayMs dolmadan biten yükleme hiç görünmez ve onComplete hemen çağrılır', () => {
+    const onComplete = vi.fn();
+    const loading = createLoading({ showDelayMs: 200, minDisplayMs: 1000, onComplete });
+    loading.show();
+    expect(loading.element.classList).toContain('vol-loading--pending');
+    vi.advanceTimersByTime(100);
+    loading.hide();
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(loading.element.classList).toContain('vol-loading--hidden');
+    vi.advanceTimersByTime(5000);
+    expect(loading.element.classList).not.toContain('vol-loading--visible');
+  });
+
+  it('showDelayMs dolunca görünür olur; asgari süre görünür olduktan sonra ölçülür', () => {
+    const onComplete = vi.fn();
+    const loading = createLoading({
+      showDelayMs: 200,
+      minDisplayMs: 500,
+      transitionMs: 100,
+      onComplete,
+    });
+    loading.show();
+    vi.advanceTimersByTime(200);
+    flushRaf();
+    expect(loading.element.classList).not.toContain('vol-loading--pending');
+    expect(loading.element.classList).toContain('vol-loading--visible');
+    vi.advanceTimersByTime(300);
+    loading.hide();
+    vi.advanceTimersByTime(199);
+    expect(onComplete).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(101 + 100);
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('görünürken arka sayfa inert olur, odak ekrana geçer; kapanınca ikisi de geri gelir', () => {
+    const page = document.createElement('main');
+    const button = document.createElement('button');
+    page.appendChild(button);
+    document.body.appendChild(page);
+    button.focus();
+    const loading = createLoading({ transitionMs: 100 });
+    loading.show();
+    expect(page.inert).toBe(true);
+    expect(Boolean(loading.element.inert)).toBe(false);
+    expect(document.activeElement).toBe(loading.element);
+    loading.hide();
+    expect(Boolean(page.inert)).toBe(false);
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('blockBackground:false arka sayfaya dokunmaz', () => {
+    const page = document.createElement('main');
+    document.body.appendChild(page);
+    const loading = createLoading({ blockBackground: false });
+    loading.show();
+    expect(Boolean(page.inert)).toBe(false);
+  });
+
+  it('destroy arka sayfayı açar ve zamanlayıcıları temizler', () => {
+    const page = document.createElement('main');
+    document.body.appendChild(page);
+    const onStall = vi.fn();
+    const loading = createLoading({ stallMs: 500, onStall, tips: ['a', 'b'] });
+    loading.show();
+    expect(page.inert).toBe(true);
+    loading.destroy();
+    expect(Boolean(page.inert)).toBe(false);
+    vi.advanceTimersByTime(60_000);
+    expect(onStall).not.toHaveBeenCalled();
+  });
+});

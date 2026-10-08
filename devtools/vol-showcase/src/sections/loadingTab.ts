@@ -33,6 +33,7 @@ function startPreview(
   progressStep: number,
   progressIntervalMs: number,
   hideDelayMs = 200,
+  script?: { stageAt: (percent: number) => string; stallAt?: { percent: number; ms: number } },
 ): void {
   clearActivePreview();
 
@@ -52,9 +53,20 @@ function startPreview(
     hideTimeout: null,
   };
   activePreview = preview;
+  if (script) loading.setStage(script.stageAt(0));
+  let stalledUntil = 0;
+  let stalledOnce = false;
   preview.interval = disposables.addInterval(() => {
+    if (performance.now() < stalledUntil) return;
     percent = Math.min(100, percent + progressStep);
     loading.update(percent);
+    if (script) {
+      loading.setStage(script.stageAt(percent));
+      if (script.stallAt && !stalledOnce && percent >= script.stallAt.percent) {
+        stalledOnce = true;
+        stalledUntil = performance.now() + script.stallAt.ms;
+      }
+    }
     if (percent >= 100) {
       preview.interval?.cancel();
       preview.interval = null;
@@ -79,7 +91,7 @@ function buildIndicatorTypeDemo(disposables: DisposableScope): HTMLElement {
   btnRow.style.gap = 'var(--vol-space-sm)';
   btnRow.style.flexWrap = 'wrap';
 
-  let currentType: LoadingIndicatorType = 'orbital-rings';
+  let currentType: LoadingIndicatorType = 'bar';
   let currentTransition: LoadingTransitionType = 'fade';
 
   const typeLabels: Record<LoadingIndicatorType, string> = {
@@ -91,14 +103,14 @@ function buildIndicatorTypeDemo(disposables: DisposableScope): HTMLElement {
   };
 
   const typeOrder: LoadingIndicatorType[] = [
+    'bar',
     'orbital-rings',
     'energy-core',
     'particle-orbit',
     'hexagon-pulse',
-    'bar',
   ];
 
-  const typeBtn = new Button(i18next.t('volui:loading.orbitalRings'), {
+  const typeBtn = new Button(i18next.t('volui:loading.bar'), {
     variant: 'default',
     onClick: () => {
       const idx = typeOrder.indexOf(currentType);
@@ -133,7 +145,8 @@ function buildIndicatorTypeDemo(disposables: DisposableScope): HTMLElement {
       startPreview(
         disposables,
         {
-          indicator: { type: currentType, size: 140 },
+          indicator: { type: currentType },
+          title: i18next.t('volui:loading.loading'),
           showPercent: true,
           transitionType: currentTransition,
           transitionMs: 500,
@@ -328,6 +341,53 @@ function buildProgressSpeedDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
+/** Aşama, ipucu ve takılma bildirimi: gerçek bir yükleme akışının sunumu. */
+function buildStageDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const info = new Text(i18next.t('volui:loading.stageHint'), { variant: 'muted' });
+  disposables.addDestroyables(info);
+  wrap.appendChild(info.element);
+
+  const stages = [
+    i18next.t('volui:loading.stageServices'),
+    i18next.t('volui:loading.stageAssets'),
+    i18next.t('volui:loading.stageWorld'),
+    i18next.t('volui:loading.stageReady'),
+  ];
+  const btn = new Button(i18next.t('volui:loading.stageButton'), {
+    variant: 'primary',
+    onClick: () => {
+      startPreview(
+        disposables,
+        {
+          title: i18next.t('volui:loading.worldLoading'),
+          showPercent: true,
+          showDelayMs: 150,
+          stallMs: 1800,
+          tips: [
+            i18next.t('volui:loading.tip1'),
+            i18next.t('volui:loading.tip2'),
+            i18next.t('volui:loading.tip3'),
+          ],
+          tipIntervalMs: 2500,
+        },
+        10,
+        250,
+        400,
+        {
+          stageAt: (percent) => stages[Math.min(stages.length - 1, Math.floor(percent / 26))],
+          stallAt: { percent: 60, ms: 2600 },
+        },
+      );
+    },
+  });
+  disposables.addDestroyables(btn);
+  wrap.appendChild(btn.element);
+  return wrap;
+}
+
 /** Hata ve yeniden deneme: ilerleme yarıda kesilir, "Tekrar dene" kaldığı yerden değil baştan yükler. */
 function buildFailureDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
@@ -403,12 +463,13 @@ export function buildLoadingTab(): {
     card(i18next.t('volui:loading.minDisplayTime'), buildMinDisplayDemo(disposables), { span: 4 }),
     card(i18next.t('volui:loading.titleSubtitle'), buildTextDemo(disposables), { span: 4 }),
     card(i18next.t('volui:loading.contentPosition'), buildContentPositionDemo(disposables), {
-      span: 4,
+      span: 6,
     }),
     card(i18next.t('volui:loading.progressSpeed'), buildProgressSpeedDemo(disposables), {
-      span: 4,
+      span: 6,
     }),
-    card(i18next.t('volui:loading.failure'), buildFailureDemo(disposables), { span: 4 }),
+    card(i18next.t('volui:loading.failure'), buildFailureDemo(disposables), { span: 6 }),
+    card(i18next.t('volui:loading.stages'), buildStageDemo(disposables), { span: 6 }),
   ];
 
   container.appendChild(paletteGrid(cards));
