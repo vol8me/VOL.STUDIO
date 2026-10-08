@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Sanal Xbox 360 kolu (uinput). Kullanim: vpad.py <adim>... ; adim = bekleme(sn) ya da dugme[:sure]
-Dugmeler: A B X Y LB RB SELECT START UP DOWN LEFT RIGHT. Ornek: vpad.py 2 DOWN A:1.5 RB"""
+Dugmeler: A B X Y LB RB SELECT START UP DOWN LEFT RIGHT; eksenler: RT LT LS_UP LS_DOWN LS_LEFT LS_RIGHT;
+birlikte basili tutma: RT+LS_RIGHT:60. Ornek: PAD_WARMUP=8 vpad.py DOWN A:1.5 RB"""
 import ctypes, fcntl, os, struct, sys, time
 
 EV_SYN, EV_KEY, EV_ABS = 0, 1, 3
@@ -47,7 +48,23 @@ def sync():
     emit(EV_SYN, 0, 0)
 
 
+AXES = {'RT': (0x05, 255), 'LT': (0x02, 255), 'LS_RIGHT': (0x00, 32767), 'LS_LEFT': (0x00, -32768),
+        'LS_UP': (0x01, -32768), 'LS_DOWN': (0x01, 32767)}
+
+
 def press(name, hold=0.12):
+    if '+' in name:  # birlikte basılı tutulan düğme/eksen: RT+LS_RIGHT:60
+        parts = name.split('+')
+        for part in parts:
+            set_state(part, True)
+        time.sleep(hold)
+        for part in parts:
+            set_state(part, False)
+        time.sleep(0.25)
+        return
+    if name in AXES:
+        set_state(name, True); time.sleep(hold); set_state(name, False); time.sleep(0.25)
+        return
     if name in BTN:
         emit(EV_KEY, BTN[name], 1); sync(); time.sleep(hold)
         emit(EV_KEY, BTN[name], 0); sync()
@@ -56,6 +73,18 @@ def press(name, hold=0.12):
         emit(EV_ABS, axis, value); sync(); time.sleep(hold)
         emit(EV_ABS, axis, 0); sync()
     time.sleep(0.25)
+
+
+def set_state(name, on):
+    if name in BTN:
+        emit(EV_KEY, BTN[name], 1 if on else 0)
+    elif name in AXES:
+        axis, value = AXES[name]
+        emit(EV_ABS, axis, value if on else 0)
+    else:
+        axis, value = HAT[name]
+        emit(EV_ABS, axis, value if on else 0)
+    sync()
 
 
 time.sleep(float(os.environ.get("PAD_WARMUP", "2.5")))

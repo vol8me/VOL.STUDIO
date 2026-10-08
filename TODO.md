@@ -10,7 +10,7 @@ taşınır. Eksik kapanış yeni görevdir.
 Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
 yetkilendirdi. F01–F03 sonuçları rapor §18, F04 kaynak uygulaması ve açık native kabul rapor §19, F05–F06 kaynak
 uygulaması ve kalan işler rapor §20'dedir.
-**F01–F03 ve F05 tamamlandı; F04 (yalnız F04.4) ve F06–F10 açıktır (F06'da yalnız F06.4).** Faz numarası bağımsız işleri gereksiz seri bekletmez;
+**F01–F03, F05 ve F06 tamamlandı; F04 (yalnız F04.4) ve F07–F10 açıktır.** Faz numarası bağımsız işleri gereksiz seri bekletmez;
 gerçek ön koşul ve kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
 Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 
@@ -22,12 +22,6 @@ Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 servis borçları ilgili cihaz kabulüyle birlikte kalır.
 
 - [ ] **[P1] F04.4 — Kapanış protokolü ve Steam callback sahibi.** Gerçek SDK guard/pump/drop ve ACK yarışı düzeltildi; Windows yerel turunda pencere kapatma isteği (WM_CLOSE) sonrası son değer ve temiz çıkış, yazım ortasında sert öldürme (5 tur, onaylanan her yazım kalıcı) kanıtlandı (`games/vol-test/scripts/native-store-tour.mjs`). Kapanır: fiziksel Steam popup/overlay ve text callback yaşamı + drop testi (Steam istemcisi ve cihaz gerekir, F08.6); timedOut kök nedeni/süre gerekçesi (Deck SIGTERM turu, F08.6).
-
-### F06 — CORE/Phaser sınırı ve VOL.TEST doğruluğu
-
-Ön koşul: F02. Önce fizik doğruluğu; ölçümsüz optimizasyon yok.
-
-- [ ] **[P2] F06.4 — Gerçek birleşik yük ölçümü.** CPU simülasyon yükü ölçüldü: 13 araç + kar + sürekli ateşte `Simulation.step` medyan ≈0,23 ms, p95 ≈0,48 ms, 10 dakikada büyüme yok; geniş faz gerekmez. Çizim/GPU ve cihaz kare süresi yeni kodla ölçülmedi. Kapanır: VT-Q/W cihaz profili güncel commit ile (tablet ve Deck kare süresi, uzun oturum); scaling dar mermi döngüsü tüm oyun kabulü sayılmaz.
 
 ### F07 — UI oyun arayüzü kimliği ve tek VOL.SHOWCASE
 
@@ -104,6 +98,7 @@ release redini ertelemek için gerekçe değildir.
 - [x] F06.1 — Mermi, adımın süpürdüğü parçayı gövdenin yönlü ayak iziyle keser (segment–OBB ilk temas); olay/itki/önizleme temas noktasını görür, en erken hedef ve sahip dışlaması deterministik.
 - [x] F06.2 — Duvar sert sınırdır: araç teması sonrası duvar yeniden çözülür (en çok 4 geçiş); 4×4000 adım ve köşe yığınında hiçbir gövde köşesi dünya dışında kalmaz, kalan örtüşme ≈0,05 birim.
 - [x] F06.3 — Saf simülasyon CORE'a yalnız alt yüzeylerle bağlanır; beş senaryo Node'da DOM/CSS yükleyicisi olmadan seedli koşar ve vitest sonucuyla birebir aynıdır.
+- [x] F06.4 — Güncel commit (`093e4c8d`) ile cihaz profili: Deck host AppImage 10 dk çoklu tank/kar/yüksek + sanal kolla sürekli ateş ve dönüş = 60 FPS medyan, p95 19 ms (hedef 18 ms'nin 1 ms üstünde, F08.5'e devredildi), 5 kare >34 ms; Lenovo tablet 10 dk boş jank %0,04 / çoklu tank jank %3,97, bellek büyümesi yok (`docs/steam-deck.md`, `docs/android.md`).
 - [x] Monorepo denetim raporu docs'a yerleştirildi; 20 bulgu, 43 belge kararı ve bütün açık işler F01–F10'a eşlendi.
 - [x] Visual Studio C++ Build Tools kuruldu; güncel doctor/bootstrap doğruluğu F02.1 ile tamamlandı.
 - [x] Just kabuğu Git kurulumundan seçilir; WSL gölgesi ortam teşhisinde ayrılır.

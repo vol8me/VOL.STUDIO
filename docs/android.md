@@ -120,6 +120,15 @@ birikim katmanı görünmezken 109,6 FPS. Model ve parçacık güncellemesi çal
 devam etti. Bu deney yağış çiziminin kalan maliyetini ayırır; görsel kaliteyi
 düşürme veya bütün cihazlar için optimizasyon kararı değildir.
 
+### Güncel commit, 10 dakikalık uzun oturum
+
+`093e4c8d` commit'inden üretilen debug APK, Lenovo TB350FU (120 Hz), yüksek başlangıç kalitesi,
+`scripts/android/device-benchmark.mjs 600`. Dokunma girdisi verilmedi (araçlar kendi yolunda). Boş dünya: 71.642 kare,
+jank %0,04, p50/p90/p99 9/14/17 ms, kaçan vsync 4, PSS 295 MB (grafik 151 MB), soğuk açılış 735–978 ms. Çoklu tank:
+61.528 kare, jank %3,97, p50/p90/p99 12/16/23 ms, kaçan vsync 11, PSS 303 MB (grafik 151 MB), soğuk açılış 678–689 ms.
+Bellek büyümesi yok. Oyun içi FPS örneği yok (ölçüm kipi yalnız Deck ortamıyla açılır), değerler native çizimdir.
+Çoklu tank yükünde jank oranı belirgin; hava önizlemesi ve sürekli dokunmatik ateş bu turda eklenmedi.
+
 Native titreşim durum sorgusu destek bildirdi; geçerli desen kabul edildi,
 geçersiz desen reddedildi. Motorun fiziksel hissi insan doğrulaması ister.
 Samsung bu ölçümde erişilebilir değildi; ölçülmedi. Kontrol ve titreşim hissiyatı gerçek insan kabulü olarak ayrı kalır;

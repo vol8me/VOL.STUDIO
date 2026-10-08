@@ -126,6 +126,17 @@ WebKit yeteneği olmadığından null idi. Güç 4,08→3,23 W, GPU sıcaklığ�
 kök F04/F08'de açık kalır. Bu sonuç gerçek uyku, Steam istemci bağlantısı,
 hotplug, QAM odağı veya titreşim hissi kabulü değildir.
 
+### Güncel commit, 10 dakikalık uzun oturum
+
+`093e4c8d` commit'inden WSL Ubuntu 24.04'te üretilen **host** AppImage (SLR4 değil), gamescope, LCD Deck,
+çoklu tank, kar, yüksek kalite, tohum 731; işletim sistemi düzeyinde sanal Xbox kolu (`devtools/deck/scripts/virtual-pad.py`)
+ateş tetiğini sürekli basılı tutup sol çubuğu dört yönde döndürdü. 60 pencerede (toplam 600 sn): FPS medyan 60,0
+(en düşük 58,9), p95 19 ms (pencere aralığı 19–20), p99 medyan 21 ms (en çok 25); 34 ms'yi aşan kare toplam 5,
+20 ms'yi aşan 662 (≈%1,8). Paket gücü 7,2 → 6,1 W, GPU sıcaklığı 56 → 61 °C, pil bağlı değildi. **p95 ≤18 ms hedefi
+1 ms farkla karşılanmadı** (kare aralığı 16,7/20 ms basamaklarında kümelenir; vsync zamanlayıcısı ve host/SLR4 farkı
+SLR4 derlemesiyle yeniden ölçülür, F08.5). GPU/panel süreleri `null`. Bu, fiziksel kol, gerçek uyku ve Steam
+istemci kabulü değildir.
+
 ### Ölçüm çağrısı
 
 deck mode taban kimliğe, deploy ayrı release kısayoluna yazar.
