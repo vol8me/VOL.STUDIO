@@ -648,6 +648,9 @@ export class LoadingScreen {
     this.hideRequested = true;
     this.armStall();
     this.stopTips();
+    // İş bitti: sayfa HEMEN etkileşime açılır. Asgari gösterim ve solma yalnız ekranı görsel olarak tutar;
+    // arkadaki arayüzün klavyesi o süre boyunca ölü kalmamalı (ilk tuş vuruşu kaybolurdu).
+    this.unblockPage();
 
     // Gösterim gecikmesi dolmadan biten yükleme hiç görünmez: animasyon ve asgari süre atlanır.
     if (this.showDelayTimer) {

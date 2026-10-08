@@ -79,11 +79,20 @@
     inset 0 1px 0 var(--vol-ui-plate-top-light);
 }
 
-/* Sekme: alt şerit kalınlaşır ve plaka yanar. */
-.vol-tabs__tab:is(:focus-visible, .vol-focusnav-current) {
+/*
+ * Sekme: plaka yanar. Seçili sekmenin kendi kuralı (`[aria-selected]`) daha özgül olduğundan seçici
+ * ikiletilir; seçili VE odaklı satır da yanık görünür (yalnız halka kalmaz). Yatay sekme alt, dikey sekme sol şerit alır.
+ */
+.vol-tabs__tab.vol-tabs__tab:is(:focus-visible, .vol-focusnav-current) {
   background-color: var(--vol-sel-tint);
   outline-offset: -2px;
   box-shadow: inset 0 calc(var(--vol-sel-bar) * -1) 0 var(--vol-ui-brand-solid);
+}
+
+.vol-tabs--vertical .vol-tabs__tab.vol-tabs__tab:is(:focus-visible, .vol-focusnav-current) {
+  box-shadow:
+    inset var(--vol-sel-bar) 0 0 var(--vol-ui-brand-solid),
+    inset 0 1px 0 var(--vol-ui-plate-top-light);
 }
 
 /* Girdi kuyuları: kuyu aydınlanır, kenar altına döner. */

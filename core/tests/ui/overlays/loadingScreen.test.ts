@@ -731,3 +731,18 @@ describe('LoadingScreen — plaka, aşama, ipucu, takılma, gecikme, arka plan',
     expect(onStall).not.toHaveBeenCalled();
   });
 });
+
+describe('LoadingScreen — iş bitince sayfa hemen açılır', () => {
+  it('hide() asgari gösterim dolmadan da arka sayfayı etkileşime açar; ekran yalnız görsel olarak kalır', () => {
+    const page = document.createElement('main');
+    document.body.appendChild(page);
+    const loading = createLoading({ minDisplayMs: 1000, transitionMs: 100 });
+    loading.show();
+    expect(page.inert).toBe(true);
+    loading.hide();
+    expect(Boolean(page.inert)).toBe(false);
+    expect(loading.element.classList).not.toContain('vol-loading--exit');
+    vi.advanceTimersByTime(1200);
+    expect(loading.element.classList).toContain('vol-loading--hidden');
+  });
+});

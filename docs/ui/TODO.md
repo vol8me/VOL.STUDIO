@@ -606,7 +606,10 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       sanal kol bu turda `sudo` parolası olmadığından kurulamadı) görülen hata:** yan menünün `Tabs` ok
       tuşu odağı kendisi taşıdığı için `FocusNavController` halkası önceki öğede asılı kalıyordu (eski
       hata, yeni seçim plakasıyla görünür oldu) → halka yalnız onu taşıyan eleman odaktayken geçerli
-      (`focusin` temizliği, `focusRingHandoff.test.ts`). Fiziksel Deck'te görsel kabul kullanıcı turunda.
+      (`focusin` temizliği, `focusRingHandoff.test.ts`). Aynı turda seçili+odaklı sekme satırı yalnız halka
+      gösteriyordu (kabuğun `[aria-selected]` kuralı daha özgüldü) → sekme seçicisi güçlendirildi.
+      Yükleme ekranı `hide()` anında arka sayfayı hemen açar (asgari gösterim boyunca klavye ölü
+      kalıyordu; VOL.TEST WebKit duraklatma e2e'si yakaladı). Fiziksel Deck'te görsel kabul kullanıcı turunda.
 - [ ] **UI-12.3 — Haptik/native yaşam döngüsü.** Mevcut hidraw/evdev/Steam/Android sürücüleri;
       açık Test düğmesi/durum; yanlış yetenek bildirimi. Kapanır: sıfır/kapalı sessiz, tek sürücü;
       uyku/odak kaybı/cihaz çıkarma/çıkışta durma gerçek sonda; hissiyat kullanıcı beyanı ayrı.
