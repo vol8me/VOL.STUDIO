@@ -510,6 +510,10 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       kaynağı; remap, hotplug/çoklu kol/Steam Input kapalı/trackpad/fare/klavye. Kapanır: gerçek
       bağlama glifi ile aile yedeği ayrı; çift işaretçi sahibi yok; Deck ekran klavyesi/menü/diyaloglar
       yalnız kolla erişilir; kol modunda imleç davranışı UI-01.9 ile uyumlu.
+      Kısmi kanıt (2026-10-08, Deck host derlemesi, OS düzeyi sanal Xbox kolu): vitrinde Touch → Gamepad
+      demosu kol bağlanınca "Input mode: gamepad" ve eylem glifini fare/Space'ten RT/A'ya çevirir, fare
+      hareketi "pc" glifine geri döndürür. Fiziksel Deck düğmeleri, Steam Input yeniden bağlaması ve çoklu
+      kol önceliği ölçülmedi (NOT-RUN).
 - [ ] **UI-12.3 — Haptik/native yaşam döngüsü.** Mevcut hidraw/evdev/Steam/Android sürücüleri;
       açık Test düğmesi/durum; yanlış yetenek bildirimi. Kapanır: sıfır/kapalı sessiz, tek sürücü;
       uyku/odak kaybı/cihaz çıkarma/çıkışta durma gerçek sonda; hissiyat kullanıcı beyanı ayrı.
