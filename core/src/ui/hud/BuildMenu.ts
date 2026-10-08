@@ -37,6 +37,8 @@ export class BuildMenu {
       button.disabled = Boolean(item.disabled);
       button.setAttribute('aria-label', item.cost ? `${item.label}, ${item.cost}` : item.label);
       button.title = item.label;
+      // Seçim açma-kapama niteliğindedir (aynı öğeye tekrar basmak kaldırır): seçili durum okuyucuya da duyulur.
+      button.setAttribute('aria-pressed', 'false');
 
       const iconWrapper = document.createElement('span');
       iconWrapper.className = 'vol-build-menu__icon';
@@ -92,16 +94,18 @@ export class BuildMenu {
 
   /** Bir öğeyi programatik olarak seçili işaretler. */
   selectItem(id: string): void {
-    if (this.selectedId) {
-      this.buttons.get(this.selectedId)?.classList.remove('vol-build-menu__item--selected');
-    }
+    this.clearSelection();
     this.selectedId = id;
-    this.buttons.get(id)?.classList.add('vol-build-menu__item--selected');
+    const selected = this.buttons.get(id);
+    selected?.classList.add('vol-build-menu__item--selected');
+    selected?.setAttribute('aria-pressed', 'true');
   }
 
   clearSelection(): void {
     if (this.selectedId) {
-      this.buttons.get(this.selectedId)?.classList.remove('vol-build-menu__item--selected');
+      const previous = this.buttons.get(this.selectedId);
+      previous?.classList.remove('vol-build-menu__item--selected');
+      previous?.setAttribute('aria-pressed', 'false');
     }
     this.selectedId = null;
   }

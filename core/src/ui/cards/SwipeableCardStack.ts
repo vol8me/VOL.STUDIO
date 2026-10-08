@@ -143,16 +143,23 @@ export class SwipeableCardStack {
       cardEl.className = 'vol-card-stack__card';
       cardEl.style.setProperty('--vol-card-stack-depth', String(i));
       cardEl.appendChild(def.element);
+      // Yalnız üstteki kart etkileşimli ve okunur; alttakiler dekor (okuyucu ve Tab oraya girmez).
+      if (i > 0) {
+        cardEl.inert = true;
+        cardEl.setAttribute('aria-hidden', 'true');
+      }
 
       // Kabul/red ipucu rozetleri yalnızca en üst karta eklenir — alttaki kartlar henüz sürüklenemez.
       if (i === 0) {
         const rejectHint = document.createElement('div');
         rejectHint.className = 'vol-card-stack__hint vol-card-stack__hint--reject';
+        rejectHint.setAttribute('aria-hidden', 'true');
         rejectHint.appendChild(this.buildXIcon());
         cardEl.appendChild(rejectHint);
 
         const acceptHint = document.createElement('div');
         acceptHint.className = 'vol-card-stack__hint vol-card-stack__hint--accept';
+        acceptHint.setAttribute('aria-hidden', 'true');
         acceptHint.appendChild(this.buildCheckIcon());
         cardEl.appendChild(acceptHint);
       }
@@ -166,8 +173,14 @@ export class SwipeableCardStack {
       // Yeni kart geldi — action button'ları tekrar tıklanabilir yap.
       for (const btn of this.actionButtons) btn.disabled = false;
     } else {
-      // Deste boşaldı — butonlar kalıcı disable kalsın, tıklanacak kart yok.
+      // Deste boşaldı — butonlar kalıcı disable kalsın, tıklanacak kart yok. Odaktaki düğme kilitlenirse
+      // tarayıcı odağı gövdeye atar (klavye/kol kullanıcısı yerini yitirir): odak destenin kendisine alınır.
+      const focusedAction = this.actionButtons.some((btn) => btn === document.activeElement);
       for (const btn of this.actionButtons) btn.disabled = true;
+      if (focusedAction) {
+        this.stackEl.tabIndex = -1;
+        this.stackEl.focus({ preventScroll: true });
+      }
       this.onEmptyHandler?.();
     }
   }

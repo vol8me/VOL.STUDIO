@@ -73,6 +73,12 @@ export class ActionBar {
     const clamped = Math.max(0, Math.min(1, progress));
     overlay.style.setProperty('--vol-action-bar-cooldown', String(clamped));
     overlay.classList.toggle('vol-action-bar__cooldown--active', clamped > 0);
+    // Soğurken slot okuyucuya "kullanılamaz" görünür (yalnız durum değişince yazılır; her karede çağrılabilir).
+    const slotButton = this.slotElements.get(id);
+    const cooling = String(clamped > 0);
+    if (slotButton && slotButton.getAttribute('aria-disabled') !== cooling) {
+      slotButton.setAttribute('aria-disabled', cooling);
+    }
 
     const textEl = this.cooldownTexts.get(id);
     if (textEl && totalSeconds !== undefined) {
@@ -89,7 +95,9 @@ export class ActionBar {
   /** Bir slotun kalıcı "aktif" (açık mod) görsel durumunu günceller — bkz. ActionBarSlot.active. */
   setActive(id: string, active: boolean): void {
     const button = this.slotElements.get(id);
-    if (button) button.classList.toggle('vol-action-bar__slot--active', active);
+    if (!button) return;
+    button.classList.toggle('vol-action-bar__slot--active', active);
+    button.setAttribute('aria-pressed', String(active));
   }
 
   destroy(): void {
@@ -123,6 +131,9 @@ export class ActionBar {
     button.classList.toggle('vol-action-bar__slot--active', Boolean(slot.active));
     button.disabled = Boolean(slot.disabled);
     button.setAttribute('aria-label', slot.label);
+    // Açık/kapalı mod taşıyan slot açma-kapama düğmesidir: durum renk dışında da duyulur.
+    if (slot.active !== undefined) button.setAttribute('aria-pressed', String(slot.active));
+    if ((slot.cooldownProgress ?? 0) > 0) button.setAttribute('aria-disabled', 'true');
     if (slot.shortcut) {
       button.setAttribute('aria-keyshortcuts', slot.shortcut);
     }

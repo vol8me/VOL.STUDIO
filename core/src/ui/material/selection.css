@@ -119,3 +119,42 @@
   background-color: var(--vol-sel-tint);
   box-shadow: 0 0 0 3px var(--vol-ui-focus-halo);
 }
+
+/*
+ * Onay kutusu, anahtar ve radyo: satır plakası (kutuyu 6 px aşan, düzeni kımıldatmayan gölge) + sol marka
+ * şeridi; izin/noktanın kendisi de aydınlanır. Girdi gizli olduğundan durum kardeş seçicileriyle taşınır.
+ */
+:is(.vol-checkbox, .vol-radio):has(
+  :is(.vol-checkbox__input, .vol-radio__input):is(:focus-visible, .vol-focusnav-current)
+) {
+  border-radius: var(--vol-radius-sm);
+  box-shadow:
+    0 0 0 6px var(--vol-sel-tint),
+    -6px 0 0 0 var(--vol-ui-brand-solid);
+  background-color: var(--vol-sel-tint);
+}
+
+:is(.vol-checkbox__input, .vol-radio__input):is(:focus-visible, .vol-focusnav-current)
+  ~ :is(.vol-checkbox__track, .vol-radio__dot) {
+  background-color: var(--vol-sel-well);
+  border-color: var(--vol-ui-focus-ring);
+}
+
+/* Kaydırıcı: iz aydınlanır, tutamaç büyür (bağımsız `scale`; konum dönüşümüne dokunmaz). */
+.vol-slider__track:has(.vol-slider__input:is(:focus-visible, .vol-focusnav-current)) {
+  background-color: var(--vol-sel-well);
+}
+
+.vol-slider__track:has(.vol-slider__input:is(:focus-visible, .vol-focusnav-current))
+  .vol-slider__handle {
+  scale: 1.18;
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-slider__track:has(.vol-slider__input:is(:focus-visible, .vol-focusnav-current))
+    .vol-slider__handle {
+    scale: 1;
+  }
+}

@@ -6,7 +6,15 @@ export interface CounterOptions {
   format?: (value: number) => string;
   /** Değer değişimini akıcı sayma animasyonu süresi. 0 = anında. */
   animateMs?: number;
+  /** Okuyucu duyurusunun başına eklenen ad ("Mermi 12"); ikonlu sayaçlar adını buradan taşır. */
+  announcePrefix?: string;
 }
+
+/**
+ * Okuyucu duyuruları arasındaki asgari aralık (ms). Skor/süre gibi sık yazılan sayaç her değişimde
+ * duyurulsaydı okuyucu boğulurdu: ilk değişim hemen, sonrakiler birleşip aralık sonunda SON değerle duyulur.
+ */
+export const COUNTER_ANNOUNCE_GAP_MS = 1000;
 
 /** Sayı değişiminin kullanıcıya görsel olarak anlatılan yönü. */
 export type CounterValueChange = 'increase' | 'decrease' | 'none';
@@ -33,9 +41,18 @@ export class Counter {
   private readonly animateMs: number;
   private cancelAnimation?: () => void;
   private feedbackTimeout?: ReturnType<typeof setTimeout>;
+  private readonly announcePrefix: string;
+  private lastAnnounceAt = Number.NEGATIVE_INFINITY;
+  private pendingAnnounce?: ReturnType<typeof setTimeout>;
 
   constructor(options: CounterOptions = {}) {
-    const { value = 0, format = (v) => String(Math.round(v)), animateMs = 150 } = options;
+    const {
+      value = 0,
+      format = (v) => String(Math.round(v)),
+      animateMs = 150,
+      announcePrefix = '',
+    } = options;
+    this.announcePrefix = announcePrefix;
 
     this.value = value;
     this.format = format;
@@ -56,7 +73,7 @@ export class Counter {
     this.announceElement.className = 'vol-sr-only';
     this.announceElement.setAttribute('role', 'status');
     this.announceElement.setAttribute('aria-live', 'polite');
-    this.announceElement.textContent = this.format(value);
+    this.announceElement.textContent = this.announceText();
     this.element.appendChild(this.announceElement);
   }
 
@@ -91,7 +108,7 @@ export class Counter {
       });
     }
 
-    this.announceElement.textContent = this.format(value);
+    this.announce();
 
     const change = options.change ?? inferValueChange(from, value);
     if (options.change !== undefined) {
@@ -148,9 +165,32 @@ export class Counter {
     }, 400);
   }
 
+  private announceText(): string {
+    const text = this.format(this.value);
+    return this.announcePrefix ? `${this.announcePrefix} ${text}` : text;
+  }
+
+  /** İlk duyuru hemen, sıkışık olanlar aralık sonunda son değerle (bkz. `COUNTER_ANNOUNCE_GAP_MS`). */
+  private announce(): void {
+    const wait = COUNTER_ANNOUNCE_GAP_MS - (Date.now() - this.lastAnnounceAt);
+    if (wait <= 0) {
+      clearTimeout(this.pendingAnnounce);
+      this.pendingAnnounce = undefined;
+      this.announceElement.textContent = this.announceText();
+      this.lastAnnounceAt = Date.now();
+    } else if (this.pendingAnnounce === undefined) {
+      this.pendingAnnounce = setTimeout(() => {
+        this.pendingAnnounce = undefined;
+        this.announceElement.textContent = this.announceText();
+        this.lastAnnounceAt = Date.now();
+      }, wait);
+    }
+  }
+
   destroy(): void {
     this.cancelAnimation?.();
     clearTimeout(this.feedbackTimeout);
+    clearTimeout(this.pendingAnnounce);
     this.element.remove();
   }
 }

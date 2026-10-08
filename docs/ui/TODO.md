@@ -247,6 +247,9 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
 - [ ] **UI-04.3 — SwipeableCardStack ve drag alternatifleri.** Eşik/alt düğme niyeti, iptal/
       capture kaybı, yön/RTL; klavye/kol/dokunma önce-sonra-seç. Kapanır: sürükleme tek yol
       değil; yerleşim kayması yok; azaltılmış harekette son seçim aynı; ARIA seçimi odaktan ayrı.
+      Yapıldı (2026-10-08): SwipeableCardStack'te yalnız üst kart etkileşimli/okunur (alttakiler `inert` +
+      `aria-hidden`), ipucu rozetleri dekor, son kart düğmeyle verilince odak gövdeye düşmez (desteye alınır).
+      CardPicker modal odak tuzağı/geri dönüş zaten sağlam.
 - [ ] **UI-04.4 — Kart kabulü.** Üç nadirlik × iki skin; açık/boş/disabled/ayrılma durumları iki
       motorda; %30/%200/6 hane. Kapanır: kullanıcı görsel kabulü; referans ve özgün fark incelenir.
 
@@ -381,6 +384,10 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       opt-in applyXPGain. Kapanır: reduced-motion sayı/son durum tam; havuzlama/kaynak
       temizliği; TimerBar işlevsel zamanı hareket tokenı sayılmaz; ekran okuyucuya aşırı duyuru yok;
       ödül/hasar sesleri.
+      Yapıldı (2026-10-08): `Counter` okuyucu duyurusu birleştirilir (ilk değişim hemen, sıkışıklar 1 sn
+      sonunda SON değerle; skor/süre gibi sık yazılan sayaç okuyucuyu boğmaz), `ResourceCounter` kökü artık
+      adlı `group` (rolsüz öğedeki `aria-label` yok sayılıyordu) ve duyuru kaynak adını taşır ("Mermi 12")
+      (`counterAnnounce.test.ts`). Bar/TimerBar/RoundCounter semantiği zaten `progressbar`/`status`.
 - [ ] **UI-08.2 — FpsMeter/MinimapPanel/SelectionInfoPanel/StatsPanel.** VOL.TEST gerçek örnek;
       boyut/zoom/skin; işaretçi kontrastı, renk dışı işaret, ikon. Kapanır: HUD işaretçi/girdi
       katmanı örtüşmesi doğru; mini harita görünümü tüketici modeli; oyun fiziği/performans bu
@@ -397,6 +404,9 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       (fare tıklaması çift sayılmaz); canlı bölge duyurusu (`core:slotGrid.*`, TR/EN), `pick`/`drop`/`reject`
       niyetleri. Kanıt: `slotGridKeyboard.test.ts` (6). Kalan: kolla tutma/bırakma (A tıklama yoluna ayrılmıştır;
       host `onSlotClick` menüsünde "Taşı" sunar), ActionBar/BuildMenu/SkillTree klavye denetimi, resolveSkillStates.
+      Yapıldı (2026-10-08): BuildMenu seçimi (açma-kapama) `aria-pressed` ile, ActionBar mod slotu
+      `aria-pressed` ile, soğuyan slot `aria-disabled` ile duyulur (yalnız durum değişince yazılır)
+      (`core/tests/ui/hud/hudSemantics.test.ts`).
 - [ ] **UI-08.4 — Erken tier-1 kapsam kontrolü.** ScrollView referans klavye/odak/overscroll
       kanıtı; UI-10 ileri pan ayrı. Kapanır: UI-03/04/05/08 applicable durumları assertion'a bağlı;
       kalanlar görünür kalan iş; tam tier-1/M3 kapanışı yalnız UI-13.1'de.

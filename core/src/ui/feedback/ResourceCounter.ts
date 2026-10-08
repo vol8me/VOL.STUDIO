@@ -21,6 +21,8 @@ export class ResourceCounter {
 
     this.element = document.createElement('span');
     this.element.className = 'vol-resource-counter';
+    // `aria-label` yalnız rolü olan öğede geçerlidir; ad kaynağı gruba, değer duyurusu da adı taşır.
+    this.element.setAttribute('role', 'group');
     this.element.setAttribute('aria-label', label);
 
     const iconWrapper = document.createElement('span');
@@ -33,7 +35,7 @@ export class ResourceCounter {
     }
     this.element.appendChild(iconWrapper);
 
-    this.counter = new Counter(counterOptions);
+    this.counter = new Counter({ ...counterOptions, announcePrefix: label });
     this.element.appendChild(this.counter.element);
   }
 
