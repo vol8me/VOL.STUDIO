@@ -32,6 +32,7 @@
   padding: 2px;
   display: inline-flex;
   position: relative;
+  max-width: 100%;
 }
 
 .vol-checkbox__thumb {
@@ -443,4 +444,11 @@
 
 .vol-range-slider--disabled .vol-range-slider__track {
   pointer-events: none;
+}
+
+/* Telefon genişliğinde tek uzun sözcük de kırılır (etiket kutudan taşmaz ya da kesilmez). */
+@media (width <= 480px) {
+  .vol-segmented__item {
+    overflow-wrap: anywhere;
+  }
 }

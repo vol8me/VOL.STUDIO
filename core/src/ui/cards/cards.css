@@ -408,6 +408,8 @@
 
 .vol-card__rarity,
 .vol-card__type {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   letter-spacing: 0.14em;
   font-family: var(--vol-font-family);
   font-size: var(--vol-text-micro);
@@ -493,6 +495,7 @@
 }
 
 .vol-card__footer {
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
   gap: var(--vol-space-sm);

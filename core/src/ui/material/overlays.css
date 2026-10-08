@@ -26,6 +26,8 @@
 /* Konuşmacı: köşeye oturan isim plakası (çerçeve başlık dili); alt çizgi yerine plaka. */
 .vol-dialogue__speaker {
   display: inline-flex;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   align-items: center;
   gap: var(--vol-space-sm);
   padding: 4px var(--vol-space-md);

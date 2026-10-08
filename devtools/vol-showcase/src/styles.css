@@ -314,7 +314,9 @@ body {
 /* Kart demoları — nadirlik kademeleri yan yana karşılaştırılabilsin. */
 .vol-showcase-card-row {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+
+  /* Altı kart geniş kutuda tek satırda kalır; dar ekranda sarar (önceden 40 px'lik sütunlara sıkışıp harfler dikey diziliyordu). */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--vol-space-sm);
 }
 

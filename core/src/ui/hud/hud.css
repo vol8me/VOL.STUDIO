@@ -377,7 +377,9 @@
   background: var(--vol-ui-overlay-panel);
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-md);
-  grid-template-columns: repeat(10, minmax(0, 1fr));
+
+  /* Hücre en az 72 px: dar ekranda sütun sayısı düşer, etiket/maliyet düğmesinden taşmaz; geniş yerde 10 sütuna ulaşır. */
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
   display: grid;
 }
 
@@ -447,11 +449,20 @@
   color: var(--vol-ui-text);
   text-align: center;
   font-size: var(--vol-text-label);
+
+  /* Metin düğmenin dolgu alanını kullanabilir (önceki görünüm); yalnız kenara dayanınca kırılır. */
+  max-width: calc(100% + var(--vol-space-sm) * 2 - 2px);
+  margin-inline: calc(var(--vol-space-sm) * -1 + 1px);
+  overflow-wrap: anywhere;
 }
 
 .vol-build-menu__cost {
   color: var(--vol-ui-text-muted);
   font-size: var(--vol-text-micro);
+  max-width: calc(100% + var(--vol-space-sm) * 2 - 2px);
+  margin-inline: calc(var(--vol-space-sm) * -1 + 1px);
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .vol-build-menu__hotkey {

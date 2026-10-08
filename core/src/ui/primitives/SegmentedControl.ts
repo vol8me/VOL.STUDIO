@@ -138,6 +138,7 @@ export class SegmentedControl {
       button.type = 'button';
       button.className = 'vol-segmented__item';
       button.textContent = item.label;
+      button.title = item.label;
       button.setAttribute('role', 'radio');
       button.setAttribute('aria-checked', String(item.value === this.value));
       button.classList.toggle('vol-segmented__item--active', item.value === this.value);

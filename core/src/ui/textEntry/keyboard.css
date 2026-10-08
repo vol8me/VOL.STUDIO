@@ -180,6 +180,20 @@
   letter-spacing: 0.06em;
 }
 
+/* Telefon dikeyinde dil tuşu ~37 px'tir: simge ve kod yan yana sığmaz, üst üste dizilir. */
+@media (width <= 480px) {
+  .vol-osk__key[data-action='layout'] {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .vol-osk__layout-code {
+    margin-inline-start: 0;
+    font-size: 10px;
+    line-height: 1;
+  }
+}
+
 /* Alçak ekran (telefon yatay, küçük pencere): klavye ekrandan taşmasın, satırlar sıkılaşır ve gerekirse kayar. */
 @media (height <= 520px) {
   .vol-osk {

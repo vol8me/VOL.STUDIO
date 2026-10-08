@@ -4,6 +4,7 @@ import { DisposableScope } from '@volstudio/core/lifecycle';
 import trResources from './i18n/tr.json';
 import enResources from './i18n/en.json';
 import './i18next-augment';
+import { applyDirectionFromUrl, applyPseudoLocaleFromUrl } from './pseudoLocale';
 import { ShowcaseApp } from './ShowcaseApp';
 
 export interface ShowcaseSession {
@@ -20,6 +21,9 @@ export async function bootShowcase(
   i18n.addResources('tr', 'volui', trResources);
   i18n.addResources('en', 'volui', enResources);
   await i18n.init();
+  // `?lang=pseudo`: deterministik %30 uzatılmış sahte dil (taşma taraması için).
+  await applyPseudoLocaleFromUrl();
+  applyDirectionFromUrl();
 
   if (typeof FontFace !== 'undefined' && document.fonts) {
     await new FontManager({ fonts: [VOL_FONTS.Jura, VOL_FONTS['Exo 2']] }).load();

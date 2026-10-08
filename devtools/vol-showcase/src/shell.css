@@ -181,6 +181,10 @@
     padding-bottom: var(--vol-space-sm);
   }
 
+  .vol-showcase-card__body {
+    padding: var(--vol-space-md);
+  }
+
   .vol-showcase-page__title {
     font-size: 16px;
   }

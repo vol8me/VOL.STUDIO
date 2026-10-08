@@ -223,6 +223,8 @@ export class Select {
   private renderLabel(): void {
     const selected = this.options.find((o) => o.value === this.value);
     this.labelElement.textContent = selected ? selected.label : this.placeholder;
+    // Dar kutuda üç nokta ile kısalan seçili metin yine okunabilir kalsın (fare bekleyince, AT için ad zaten ayrı).
+    this.labelElement.title = this.labelElement.textContent ?? '';
     this.labelElement.className = selected?.tone
       ? `vol-select__label vol-select__label--${selected.tone}`
       : 'vol-select__label';

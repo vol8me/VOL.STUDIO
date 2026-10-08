@@ -10,20 +10,6 @@
       "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; Tree alt listesi satırı kırpar"
     },
     {
-      "scope": "tab/cards",
-      "rule": "covered",
-      "target": ".vol-card__action",
-      "owner": "UI-04.1",
-      "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; kart 36 px'e ezilir, 44 px'lik eylem taşar ve komşu kart merkezi örter"
-    },
-    {
-      "scope": "tab/hud",
-      "rule": "covered",
-      "target": ".vol-build-menu__item",
-      "owner": "UI-08.3",
-      "reason": "telefon genişliğinde (393 px) sekme şeridi 220 px kaplar ve içeriğe 173 px kalır; BuildMenu öğeleri 16 px aralıkla üst üste biner, komşu öğe merkezi örter"
-    },
-    {
       "scope": "layer/forms/osk",
       "rule": "size",
       "target": ".vol-osk__key",

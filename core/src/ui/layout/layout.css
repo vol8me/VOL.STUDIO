@@ -188,6 +188,13 @@
   position: relative;
 }
 
+/* Dar ekranda (320 px'e kadar) 48 px'lik yan boşluk içeriği ~160 px'e sıkıştırırdı; panel yan boşluğu küçülür. */
+@media (width <= 480px) {
+  .vol-tabs__panels {
+    padding: var(--vol-space-md);
+  }
+}
+
 .vol-tabs__panels:focus-visible {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: -2px;
@@ -683,6 +690,7 @@
 }
 
 .vol-wizard__footer {
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--vol-space-sm);
   display: flex;

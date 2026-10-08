@@ -183,6 +183,8 @@ class ItemView {
     }
 
     this.labelEl.textContent = item.label;
+    // Etiket sabit hücrede üç nokta ile kısalır; tam ad (ve adet) yine okunabilir kalır.
+    this.element.title = this.ariaLabel();
     this.quantityEl.textContent =
       item.quantity !== undefined && item.quantity > 1 ? `×${item.quantity}` : '';
   }

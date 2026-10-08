@@ -322,6 +322,18 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
       deterministik %30 uzatılan yapay dil; `lang`/`dir`, logical CSS/ok/picker/swipe; RTL sınaması
       gerçek çeviri iddiası taşımaz. Kapanır: 0/1/çok, tarih/birim/6 hane, Türkçe ı/İ;
       görüntüleme sıralaması manifest/replay sırasına sızmaz; %200/320 px etiketler kırpılmaz.
+      Yapıldı (2026-10-08): vitrine `?lang=pseudo` (deterministik %30 uzun, aksanlı sahte dil; gerçek çeviri
+      değil) ve `?dir=rtl` eklendi; `pseudoLocale.spec.ts` (iki motor) 14 sekmeyi 1280/360/320 px ve LTR/RTL'de,
+      altı açık katmanı (modal, sheet, onay, popup, popover, seviye/mağaza seçici, diyalog, komut paleti, OSK)
+      360/1280 px'te kırpılma ve kapsayıcıdan taşma için tarar. Bulunan ve kapanan gerçek kusurlar: telefonda
+      sekme paneli 48 px yan boşlukla içeriği ~160 px'e sıkıştırıyordu (dar ekranda 16 px), altı kart 40 px'lik
+      sütunlara ezilip harfler dikey diziliyordu (`auto-fit` + 140 px), BuildMenu 10 sabit sütunda etiket ve
+      maliyet düğmesinden taşıyordu (`auto-fill` 72 px, dolgu alanı kullanımı), KeyBinding Reset düğmesi,
+      kart nadirlik etiketi, diyalog konuşmacı plakası, kart ve sihirbaz alt çubuğu, segmented kontrol ve OSK dil
+      tuşu (telefon dikeyinde üst üste) taşıyordu; SlotGrid etiketi ve Select değeri üç nokta ile kısalır ve tam
+      metin `title`dadır. İki eski geometri kaydı (BuildMenu, kart eylemi telefon örtülmesi) bayatladığı için
+      silindi. Kalan: `ı/İ` ve 0/1/çok çoğul biçim testleri, tarih/birim biçimi, gerçek çeviriyle uzunluk,
+      %200 yakınlaştırma ölçümü, RTL'de ok/picker/swipe yönü.
 - [ ] **UI-07.3 — Font varlığı.** Mevcut font hattı ve subset manifesti; lisans/kaynak, gerçek
       glif sınırları, Türkçe kapsamı, yedek font tabanı/satır yüksekliği, soğuk önbellek; oyun
       hissine uygun başlık/sayı yazı tipi seçimi gözden geçirilir. Kapanır: font-ready ve yükleme
@@ -534,6 +546,10 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       değişimi, hızlı tekrar/yükleme iptali, %200/RTL/multidokunma/kol↔dokunma/hotplug,
       askıya alma/devam, sessizleştirme/ses erişimi. Kapanır: kayıp odak/yinelenen kalıcı
       değişiklik/kalan kaynak/eski sonuç yok; iki motor testleri başarılı.
+      Kısmi kanıt (2026-10-08): `stress.spec.ts` (iki motor): OSK açıkken dil ve tema değişimi, Modal/Sheet
+      açıkken sistem kaynaklı dil değişimi, altı kez art arda modal aç/kapat → konsol hatası yok, yetim
+      katman/gövde kilidi/inert kalmaz, açık kalan klavye çalışır. Kalan: modal→Select→OSK→IME zinciri
+      (gerçek IME gerekir), istek beklerken tema değişimi, %200/RTL altında aynı akışlar.
 - [ ] **UI-13.3 — Gerçek cihaz/performans.** Windows, Deck host/SLR4, Android profilleri aynı
       örnekle A/B; VOL.TEST yükleri sabit tohumla. Kapanır: CPU gürültü sınırı ve ekrana sunum
       ayrı; UI maliyeti toplam FPS'ten ayrı kök neden; 10 dk termal; bilinmeyen NOT-RUN.
