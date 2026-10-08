@@ -263,6 +263,10 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
       yükler; aynı değer seçimi tekrar kalıcı değişiklik üretmez; Checkbox/switch kararı;
       RadioGroup/SegmentedControl; ColorPicker/CurveEditor klavye/tap karşılığı. Kapanır:
       popup/layer geri önceliği; boş/hata/devre dışı/i18n; iptal edilen sürükleme sessiz.
+      Yapıldı (2026-10-08): Select aynı değeri yeniden seçince değişiklik üretmez, açıkken
+      devre dışı bırakılınca listeyi kapatır, harf yazınca eşleşen etikete gider
+      (`core/tests/ui/primitives/selectContract.test.ts`); SegmentedControl/RadioGroup zaten aynı
+      değeri yutuyordu. ColorPicker/CurveEditor klavye karşılığı, popup geri önceliği açık.
 - [ ] **UI-05.3 — Panel/yerleşim.** Panel/Tabs/Accordion/Tree/Wizard/Carousel, UIRoot; yeni
       çerçeve dili; gezici odak/seçim ayrı; gizli içerik etkileşimsiz. Kapanır: çift kök kaynak
       temizliği, sekme değişiminde temizlik, 320 px/ultra geniş/%200/RTL; uzun panelde odak
@@ -276,6 +280,11 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
       meşgul deseni model ve tarif olarak ayrılır; ses/müzik ayarı satırları ses sistemine bağlı.
       Kapanır: Escape/geri sırasında kaydedilmemiş değişim kararı tüketicide; kaydediliyor
       sırasında tekrar commit yok; device/synced kapsamlı atomik kalıcılık.
+      Yapıldı (2026-10-08): `SettingsRow` görünür etiketi/açıklamayı denetime bağlar
+      (`aria-labelledby`/`aria-describedby`; düğmede değer adın parçası kalır, kendi adı olana
+      dokunmaz), `setError` satırda `role=alert` hata + `aria-invalid` verir, `SettingsForm.runExclusive`
+      kaydederken `aria-busy` yapar ve ikinci commit'i başlatmaz. Reset/uygula/geri al modeli ve
+      sese bağlı satırlar açık.
 - [ ] **UI-05.5 — Form kabulü.** Her kontrol yalnız kol, yalnız klavye, dokunma, %30, 6 hane.
       Kapanır: bileşik denetimin yön tuşu FocusNav tarafından alınmaz; durum matrisi + axe;
       modal örtüşme; kullanıcı görsel kabulü.
@@ -475,6 +484,12 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       Etkileşimli alt öğe istisnası, sürükleme eşiği, birincil işaretçi, sanal öğeler, resize.
       Kapanır: pointerdown anında alt düğme niyeti alınmaz; iptal edilen sürükleme tıklama üretmez;
       %200 dış panel kaydırması; 24/44 kaydırma tutamağı.
+      Yapıldı (2026-10-08): `DualAxisScrollPanel` ve `PullToRefresh` işaretçiyi artık basış anında değil
+      `UI_THRESHOLD.DRAG_START_PX` eşiği aşılınca yakalar (önceden içerikteki düğmenin tıklaması
+      viewport'a çalınıyordu), yalnız birincil işaretçi/ana düğme başlatır, gerçek sürüklemeyi bitiren
+      bırakma altındaki öğeye tıklama üretmez, iptal (`pointercancel`) tıklama yutmaz; Carousel slayt
+      içi denetime basınca sürükleme başlatmaz; SkillTree zaten düğümü hariç tutar. Testler:
+      `touchControls.test.ts`. SplitPane/ScrollView/VirtualList kanıtı, %200 ve tutamak boyutu açık.
 - [ ] **UI-10.3 — PauseResumeButton sunum/tarif ayrımı.** Constructor ve callback bildiren
       `setRunning` korunur; yeni additive sessiz senkron ve ayrı kullanıcı niyet yolu; opt-in sayaç
       tarifi. Kapanır: legacy setter/callback, sessiz sync, user toggle, counter completion,

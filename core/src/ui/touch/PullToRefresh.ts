@@ -25,6 +25,8 @@ export class PullToRefresh {
   private pullStartY = 0;
   private pullDistance = 0;
   private activePointerId: number | null = null;
+  /** Çekme eşiği aşıldı ve işaretçi yakalandı. */
+  private captured = false;
   private boundPointerDown: (event: PointerEvent) => void;
   private boundPointerMove: (event: PointerEvent) => void;
   private boundPointerUp: (event: PointerEvent) => void;
@@ -97,11 +99,10 @@ export class PullToRefresh {
     if (this.phase === 'refreshing') return;
     // Yalnızca içerik en üstteyken çekme başlayabilir, aksi halde normal scroll'la karışır.
     if (this.scrollArea.scrollTop > 0) return;
+    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
     this.pullStartY = event.clientY;
     this.activePointerId = event.pointerId;
-    // Capture olmadan, gösterge büyüdükçe scrollArea ekranda aşağı kayar ve pointerup
-    // element üzerinde gerçekleşmeyebilir (büyük çekmede "ready" fazında takılı kalır).
-    this.scrollArea.setPointerCapture(event.pointerId);
+    this.captured = false;
     // "settling" geçişi kapatılır, aksi halde height bir önceki bırakışın geçiş süresi kadar gecikmeli tepki verir.
     this.indicator.classList.remove('vol-pull-refresh__indicator--settling');
   }
@@ -121,6 +122,14 @@ export class PullToRefresh {
       return;
     }
 
+    if (!this.captured) {
+      if (delta < UI_THRESHOLD.DRAG_START_PX) return;
+      // Capture olmadan, gösterge büyüdükçe scrollArea ekranda aşağı kayar ve pointerup
+      // element üzerinde gerçekleşmeyebilir (büyük çekmede "ready" fazında takılı kalır).
+      // Yalnız eşik aşılınca alınır: içerikteki düğmenin basış/tıklaması çalınmaz.
+      this.captured = true;
+      this.scrollArea.setPointerCapture(event.pointerId);
+    }
     event.preventDefault();
     // Direnç eğrisi (kare kök): çekme arttıkça büyüme yavaşlar, native pull-to-refresh hissi verir.
     const resisted = Math.sqrt(delta) * UI_THRESHOLD.PULL_RESISTANCE_FACTOR;
@@ -130,8 +139,21 @@ export class PullToRefresh {
 
   private handlePointerUp(event: PointerEvent): void {
     if (this.activePointerId !== event.pointerId) return;
-    this.scrollArea.releasePointerCapture(event.pointerId);
+    const pulled = this.captured;
+    if (pulled && this.scrollArea.hasPointerCapture(event.pointerId)) {
+      this.scrollArea.releasePointerCapture(event.pointerId);
+    }
+    this.captured = false;
     this.activePointerId = null;
+    if (pulled && event.type === 'pointerup') {
+      // Çekme hareketini bitiren bırakma, altındaki öğeye tıklama sayılmaz.
+      const swallow = (click: Event): void => {
+        click.stopPropagation();
+        click.preventDefault();
+      };
+      this.scrollArea.addEventListener('click', swallow, { capture: true, once: true });
+      window.setTimeout(() => this.scrollArea.removeEventListener('click', swallow, true), 0);
+    }
 
     if (this.phase === 'ready') {
       void this.commitRefresh();

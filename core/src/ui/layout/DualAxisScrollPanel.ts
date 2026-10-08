@@ -1,3 +1,5 @@
+import { UI_THRESHOLD } from '../../constants';
+
 export interface DualAxisScrollPanelOptions {
   /** Görünür alan genişliği/yüksekliği (piksel). Belirtilmezse parent'a esner. */
   width?: number;
@@ -12,6 +14,8 @@ export interface DualAxisScrollPanelOptions {
 export class DualAxisScrollPanel {
   readonly element: HTMLDivElement;
   private readonly content: HTMLDivElement;
+  /** Basıldı ama eşik aşılmadı: tıklama alt öğeye gider. Eşik aşılınca sürükleme başlar. */
+  private isPressed = false;
   private isDragging = false;
   private startX = 0;
   private startY = 0;
@@ -56,22 +60,30 @@ export class DualAxisScrollPanel {
   }
 
   private onPointerDown(event: PointerEvent): void {
-    this.isDragging = true;
+    // Yalnız birincil işaretçi ve ana düğme; ikinci parmak/sağ tık pan başlatmaz.
+    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    this.isPressed = true;
+    this.isDragging = false;
     this.activePointerId = event.pointerId;
     this.startX = event.clientX;
     this.startY = event.clientY;
     this.scrollStartX = this.element.scrollLeft;
     this.scrollStartY = this.element.scrollTop;
-    this.element.setPointerCapture(event.pointerId);
-    this.element.classList.add('vol-dual-scroll--dragging');
   }
 
   private onPointerMove(event: PointerEvent): void {
-    if (!this.isDragging || event.pointerId !== this.activePointerId) {
+    if (!this.isPressed || event.pointerId !== this.activePointerId) {
       return;
     }
     const dx = event.clientX - this.startX;
     const dy = event.clientY - this.startY;
+    if (!this.isDragging) {
+      if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START_PX) return;
+      // Yakalama yalnız eşik aşılınca: alt düğmenin basış/tıklaması çalınmaz.
+      this.isDragging = true;
+      this.element.setPointerCapture(event.pointerId);
+      this.element.classList.add('vol-dual-scroll--dragging');
+    }
     this.element.scrollLeft = this.scrollStartX - dx;
     this.element.scrollTop = this.scrollStartY - dy;
   }
@@ -80,9 +92,25 @@ export class DualAxisScrollPanel {
     if (event.pointerId !== this.activePointerId) {
       return;
     }
+    const wasDragging = this.isDragging;
+    this.isPressed = false;
     this.isDragging = false;
     this.activePointerId = null;
-    this.element.releasePointerCapture(event.pointerId);
+    if (!wasDragging) return;
+    if (this.element.hasPointerCapture(event.pointerId)) {
+      this.element.releasePointerCapture(event.pointerId);
+    }
     this.element.classList.remove('vol-dual-scroll--dragging');
+    if (event.type === 'pointerup') this.swallowNextClick();
+  }
+
+  /** Sürüklemeyi bitiren bırakma, altındaki düğmeye tıklama sayılmaz (iptal edilen sürükleme sessiz). */
+  private swallowNextClick(): void {
+    const swallow = (click: Event): void => {
+      click.stopPropagation();
+      click.preventDefault();
+    };
+    this.element.addEventListener('click', swallow, { capture: true, once: true });
+    window.setTimeout(() => this.element.removeEventListener('click', swallow, true), 0);
   }
 }

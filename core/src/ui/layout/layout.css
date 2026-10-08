@@ -268,6 +268,28 @@
   overflow-wrap: anywhere;
 }
 
+.vol-settings-row__description,
+.vol-settings-row__error {
+  grid-column: 1 / -1;
+  min-width: 0;
+  font-size: var(--vol-text-micro);
+  overflow-wrap: anywhere;
+}
+
+.vol-settings-row__description {
+  color: var(--vol-ui-text-muted);
+}
+
+.vol-settings-row__error {
+  color: var(--vol-ui-text-secondary);
+  font-weight: 600;
+}
+
+.vol-settings-row--invalid {
+  border-left: 3px solid var(--vol-ui-danger-solid);
+  padding-left: var(--vol-space-sm);
+}
+
 .vol-settings-row__control {
   display: flex;
   justify-content: flex-end;

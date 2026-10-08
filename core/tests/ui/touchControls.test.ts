@@ -352,6 +352,78 @@ describe('DualAxisScrollPanel', () => {
     expect(panel.element.scrollTop).toBe(130);
   });
 
+  it('eşik altı hareket sürükleme sayılmaz; alt düğmenin tıklaması çalınmaz', () => {
+    const panel = track(new DualAxisScrollPanel({ width: 200, height: 200 }));
+    const button = document.createElement('button');
+    panel.add({ element: button });
+    document.body.appendChild(panel.element);
+    const clicked = vi.fn();
+    button.addEventListener('click', clicked);
+    panel.element.scrollLeft = 10;
+    panel.element.dispatchEvent(
+      pointerEvent('pointerdown', { pointerId: 1, clientX: 50, clientY: 50 }),
+    );
+    panel.element.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 1, clientX: 48, clientY: 51 }),
+    );
+    panel.element.dispatchEvent(
+      pointerEvent('pointerup', { pointerId: 1, clientX: 48, clientY: 51 }),
+    );
+    button.click();
+    expect(panel.element.scrollLeft).toBe(10);
+    expect(clicked).toHaveBeenCalledTimes(1);
+    expect(panel.element.classList.contains('vol-dual-scroll--dragging')).toBe(false);
+  });
+
+  it('eşiği aşan sürüklemenin bıraktığı tıklama yutulur; sonraki tıklama normaldir', () => {
+    vi.useFakeTimers();
+    const panel = track(new DualAxisScrollPanel({ width: 200, height: 200 }));
+    const button = document.createElement('button');
+    panel.add({ element: button });
+    document.body.appendChild(panel.element);
+    const clicked = vi.fn();
+    button.addEventListener('click', clicked);
+    panel.element.dispatchEvent(
+      pointerEvent('pointerdown', { pointerId: 1, clientX: 50, clientY: 50 }),
+    );
+    panel.element.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 1, clientX: 20, clientY: 50 }),
+    );
+    expect(panel.element.classList.contains('vol-dual-scroll--dragging')).toBe(true);
+    panel.element.dispatchEvent(
+      pointerEvent('pointerup', { pointerId: 1, clientX: 20, clientY: 50 }),
+    );
+    button.click();
+    expect(clicked).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    button.click();
+    expect(clicked).toHaveBeenCalledTimes(1);
+  });
+
+  it('iptal edilen sürükleme tıklamayı yutmaz; ikinci işaretçi ve sağ tık pan başlatmaz', () => {
+    const panel = track(new DualAxisScrollPanel({ width: 200, height: 200 }));
+    panel.element.scrollLeft = 5;
+    const move = () =>
+      panel.element.dispatchEvent(
+        pointerEvent('pointermove', { pointerId: 1, clientX: 0, clientY: 0 }),
+      );
+    panel.element.dispatchEvent(
+      pointerEvent('pointerdown', {
+        pointerId: 1,
+        clientX: 50,
+        clientY: 0,
+        button: 2,
+        pointerType: 'mouse',
+      }),
+    );
+    move();
+    panel.element.dispatchEvent(
+      pointerEvent('pointerdown', { pointerId: 1, clientX: 50, clientY: 0, isPrimary: false }),
+    );
+    move();
+    expect(panel.element.scrollLeft).toBe(5);
+  });
+
   it('add() içerik ekler, clear() temizler', () => {
     const panel = track(new DualAxisScrollPanel());
     const child = document.createElement('div');
@@ -410,6 +482,40 @@ describe('PullToRefresh', () => {
     await Promise.resolve();
 
     expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('çekme eşiğine varmadan içerikteki düğme tıklanır; gerçek çekmeden sonraki bırakma tıklamayı yutar', () => {
+    vi.useFakeTimers();
+    const content = document.createElement('div');
+    const button = document.createElement('button');
+    content.appendChild(button);
+    const panel = track(new PullToRefresh({ content, onRefresh: vi.fn() }));
+    const scrollArea = panel.element.querySelector<HTMLDivElement>(
+      '.vol-pull-refresh__scroll-area',
+    )!;
+    const capture = vi.spyOn(scrollArea, 'setPointerCapture');
+    capture.mockClear();
+    const clicked = vi.fn();
+    button.addEventListener('click', clicked);
+
+    scrollArea.dispatchEvent(pointerEvent('pointerdown', { pointerId: 1, clientX: 0, clientY: 0 }));
+    scrollArea.dispatchEvent(pointerEvent('pointermove', { pointerId: 1, clientX: 0, clientY: 2 }));
+    expect(capture).not.toHaveBeenCalled();
+    scrollArea.dispatchEvent(pointerEvent('pointerup', { pointerId: 1, clientX: 0, clientY: 2 }));
+    button.click();
+    expect(clicked).toHaveBeenCalledTimes(1);
+
+    scrollArea.dispatchEvent(pointerEvent('pointerdown', { pointerId: 2, clientX: 0, clientY: 0 }));
+    scrollArea.dispatchEvent(
+      pointerEvent('pointermove', { pointerId: 2, clientX: 0, clientY: 40 }),
+    );
+    expect(capture).toHaveBeenCalledTimes(1);
+    scrollArea.dispatchEvent(pointerEvent('pointerup', { pointerId: 2, clientX: 0, clientY: 40 }));
+    button.click();
+    expect(clicked).toHaveBeenCalledTimes(1);
+    vi.runAllTimers();
+    button.click();
+    expect(clicked).toHaveBeenCalledTimes(2);
   });
 
   it("eşik aşılmadan bırakılırsa onRefresh tetiklenmez, idle'a döner", () => {

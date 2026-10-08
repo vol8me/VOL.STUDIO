@@ -49,9 +49,14 @@ if (typeof HTMLCanvasElement !== 'undefined') {
 if (typeof globalThis.PointerEvent === 'undefined') {
   globalThis.PointerEvent = class PointerEvent extends MouseEvent {
     public readonly pointerId: number;
+    // Testlerde bir işaretçi varsayılan olarak birincildir (tarayıcıda ilk fare/parmak öyledir).
+    public readonly isPrimary: boolean;
+    public readonly pointerType: string;
     constructor(type: string, eventInitDict?: PointerEventInit) {
       super(type, eventInitDict);
       this.pointerId = eventInitDict?.pointerId ?? 0;
+      this.isPrimary = eventInitDict?.isPrimary ?? true;
+      this.pointerType = eventInitDict?.pointerType ?? '';
     }
   } as unknown as typeof PointerEvent;
 }
