@@ -164,6 +164,12 @@ export class Select {
   }
 
   setDisabled(disabled: boolean): void {
+    if (disabled && this.popup.isOpen()) {
+      // Açık liste yetim kalmasın; odak listeden tetikleyiciye döner, sonra tetikleyici kilitlenir.
+      if (this.popup.element.contains(document.activeElement)) this.element.focus();
+      this.popup.close();
+      this.element.setAttribute('aria-expanded', 'false');
+    }
     this.element.disabled = disabled;
   }
 
@@ -173,6 +179,13 @@ export class Select {
   }
 
   private selectValue(value: string, opts: { silent?: boolean; event?: Event } = {}): void {
+    if (!opts.silent && value === this.value) {
+      // Aynı değeri yeniden seçmek kalıcı değişiklik değildir: yalnız listeyi kapat.
+      this.popup.close();
+      this.element.setAttribute('aria-expanded', 'false');
+      this.element.focus();
+      return;
+    }
     const previousButton = this.value ? this.optionButtons.get(this.value) : undefined;
     previousButton?.setAttribute('aria-selected', 'false');
 
@@ -264,6 +277,13 @@ export class Select {
       this.popup.close();
       this.element.setAttribute('aria-expanded', 'false');
       return;
+    } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      // Yazarak ilk eşleşen seçeneğe git (yerel <select> gibi, etiketin ilk harfi).
+      const typed = event.key.toLocaleLowerCase();
+      const order = [...this.options.keys()];
+      const start = [...order.slice(index + 1), ...order.slice(0, index + 1)];
+      nextIndex =
+        start.find((i) => this.options[i].label.toLocaleLowerCase().startsWith(typed)) ?? null;
     }
 
     if (nextIndex === null) {

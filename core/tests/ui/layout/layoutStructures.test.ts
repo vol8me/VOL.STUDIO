@@ -46,6 +46,20 @@ describe('Accordion', () => {
     expect(headers[1].getAttribute('aria-expanded')).toBe('true');
   });
 
+  it('kapalı panel inert olur (içindeki denetime Tab ve okuyucu ulaşmaz), açılınca geri gelir', () => {
+    const accordion = track(new Accordion(makeSections(2), { defaultOpen: ['s0'] }));
+    const panels = accordion.element.querySelectorAll('.vol-accordion__panel');
+    expect([panels[0].hasAttribute('inert'), panels[1].hasAttribute('inert')]).toEqual([
+      false,
+      true,
+    ]);
+    accordion.open('s1'); // singleOpen: s0 kapanır
+    expect([panels[0].hasAttribute('inert'), panels[1].hasAttribute('inert')]).toEqual([
+      true,
+      false,
+    ]);
+  });
+
   it('header tıklaması toggle davranışı gösterir', () => {
     const accordion = track(new Accordion(makeSections(1)));
     const header = accordion.element.querySelector<HTMLButtonElement>('.vol-accordion__header')!;

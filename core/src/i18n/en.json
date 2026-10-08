@@ -2,6 +2,7 @@
   "carousel": {
     "prev": "Previous",
     "next": "Next",
+    "slide": "{{n}} / {{total}}",
     "page": "Page {{n}}"
   },
   "keyboard": {
@@ -118,6 +119,7 @@
     "reset": "Reset to default"
   },
   "wizard": {
+    "step": "Step {{n}} of {{total}}: {{title}}",
     "back": "Back",
     "next": "Next",
     "finish": "Finish"

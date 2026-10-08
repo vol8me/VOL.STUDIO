@@ -30,6 +30,7 @@ export class Wizard {
   private readonly contentSlot: HTMLDivElement;
   private readonly backButton: HTMLButtonElement;
   private readonly nextButton: HTMLButtonElement;
+  private readonly status: HTMLDivElement;
   private finishLabel: string;
   private readonly finishLabelIsI18n: boolean;
   private readonly onFinishHandler?: () => void;
@@ -67,6 +68,12 @@ export class Wizard {
       indicatorRow.appendChild(this.buildIndicator(index, step));
     }
     this.element.appendChild(indicatorRow);
+
+    // Adım değişimi görsel kayma dışında okuyucuya da duyulur (ilk açılışta susar).
+    this.status = document.createElement('div');
+    this.status.className = 'vol-sr-only';
+    this.status.setAttribute('role', 'status');
+    this.element.appendChild(this.status);
 
     this.contentViewport = document.createElement('div');
     this.contentViewport.className = 'vol-wizard__content-viewport';
@@ -169,6 +176,8 @@ export class Wizard {
   private async handleNext(): Promise<void> {
     if (this.advancing) return;
     this.advancing = true;
+    // Kilitlenen düğme odaktaysa tarayıcı odağı gövdeye atar; bitince geri verilir.
+    const hadFocus = document.activeElement === this.nextButton;
     this.nextButton.disabled = true;
 
     try {
@@ -191,6 +200,9 @@ export class Wizard {
     } finally {
       this.advancing = false;
       this.nextButton.disabled = false;
+      if (hadFocus && this.element.isConnected && document.activeElement === document.body) {
+        this.nextButton.focus();
+      }
     }
   }
 
@@ -248,13 +260,22 @@ export class Wizard {
     for (const [index, indicator] of this.stepIndicators.entries()) {
       indicator.classList.toggle('vol-wizard__indicator--active', index === this.currentIndex);
       indicator.classList.toggle('vol-wizard__indicator--done', index < this.currentIndex);
+      if (index === this.currentIndex) indicator.setAttribute('aria-current', 'step');
+      else indicator.removeAttribute('aria-current');
     }
 
-    this.backButton.disabled = this.currentIndex === 0;
+    const backLocks = this.currentIndex === 0;
+    if (backLocks && document.activeElement === this.backButton) this.nextButton.focus();
+    this.backButton.disabled = backLocks;
     const isLast = this.currentIndex === this.steps.length - 1;
     this.nextButton.textContent = isLast ? this.finishLabel : i18next.t('core:wizard.next');
 
     if (options.notify !== false) {
+      this.status.textContent = i18next.t('core:wizard.step', {
+        n: this.currentIndex + 1,
+        total: this.steps.length,
+        title: step.title,
+      });
       this.onStepChangeHandler?.(this.currentIndex, step);
     }
   }

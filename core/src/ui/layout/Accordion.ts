@@ -74,13 +74,18 @@ export class Accordion {
     }
     this.openIds.add(id);
     this.headerElements.get(id)?.setAttribute('aria-expanded', 'true');
-    this.panelElements.get(id)?.classList.add('vol-accordion__panel--open');
+    const panel = this.panelElements.get(id);
+    panel?.classList.add('vol-accordion__panel--open');
+    panel?.removeAttribute('inert');
   }
 
   close(id: string): void {
     this.openIds.delete(id);
     this.headerElements.get(id)?.setAttribute('aria-expanded', 'false');
-    this.panelElements.get(id)?.classList.remove('vol-accordion__panel--open');
+    const panel = this.panelElements.get(id);
+    panel?.classList.remove('vol-accordion__panel--open');
+    // Kapalı panel yalnız sıfır yüksekliğe iner; içindeki denetimlere Tab ve okuyucu ulaşmasın.
+    panel?.setAttribute('inert', '');
   }
 
   /** DOM'u, başlık listener'larını ve `content.destroy` sağlayan bölümleri temizler. */
@@ -147,6 +152,7 @@ export class Accordion {
     panel.setAttribute('role', 'region');
     panel.setAttribute('aria-labelledby', headerId);
     if (isOpen) panel.classList.add('vol-accordion__panel--open');
+    else panel.setAttribute('inert', '');
     const panelInner = document.createElement('div');
     panelInner.className = 'vol-accordion__panel-inner';
     panelInner.appendChild(section.content.element);

@@ -266,7 +266,12 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
 - [ ] **UI-05.3 — Panel/yerleşim.** Panel/Tabs/Accordion/Tree/Wizard/Carousel, UIRoot; yeni
       çerçeve dili; gezici odak/seçim ayrı; gizli içerik etkileşimsiz. Kapanır: çift kök kaynak
       temizliği, sekme değişiminde temizlik, 320 px/ultra geniş/%200/RTL; uzun panelde odak
-      sheet/modal altında kalmaz.
+      sheet/modal altında kalmaz. Yapıldı (2026-10-08): Carousel pasif slaytları `inert`+`aria-hidden`
+      yapar (gizli slaytın düğmesine Tab ulaşmaz), noktalar gezici odaklı sekme olur (ok/Home/End,
+      sekme↔slayt `aria-controls`/`aria-labelledby`), slayt içi denetime basmak sürükleme yakalamasını
+      başlatmaz, otomatik geçiş odakla da durur ve azaltılmış harekette başlamaz, aynı sayfaya geçiş
+      `onSlideChange` üretmez (`core/tests/ui/layout/carouselKeyboard.test.ts`). Tabs/Tree zaten APG
+      klavyesindedir; Wizard/Accordion/UIRoot ve genişlik/RTL kanıtı açık.
 - [ ] **UI-05.4 — SettingsForm/SettingsRow.** Bölüm/satır/açıklama/reset/uygula/geri al/hata/
       meşgul deseni model ve tarif olarak ayrılır; ses/müzik ayarı satırları ses sistemine bağlı.
       Kapanır: Escape/geri sırasında kaydedilmemiş değişim kararı tüketicide; kaydediliyor

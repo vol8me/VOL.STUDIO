@@ -2,6 +2,13 @@ import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_RATIO } from '../../constants';
 import { i18next } from '../../i18n/I18n';
 
+const INTERACTIVE = 'button, a[href], input, select, textarea, [role="slider"], [contenteditable]';
+let carouselSeq = 0;
+
+function prefersReducedMotion(): boolean {
+  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export interface CarouselSlide {
   id: string;
   element: HTMLElement;
@@ -29,6 +36,8 @@ export class Carousel {
   private readonly slides: CarouselSlide[];
   private readonly onSlideChangeHandler?: (index: number) => void;
   private readonly autoPlayIntervalMs?: number;
+  private readonly idBase = `vol-carousel-${++carouselSeq}`;
+  private readonly slideElements: HTMLDivElement[] = [];
   private currentIndex = 0;
   private autoPlayTimer: number | null = null;
   private dragStartX = 0;
@@ -60,6 +69,7 @@ export class Carousel {
         dot.setAttribute('aria-label', i18next.t('core:carousel.page', { n: i + 1 }));
       });
     }
+    this.labelSlides();
   };
 
   constructor(options: CarouselOptions) {
@@ -76,10 +86,13 @@ export class Carousel {
 
     this.track = document.createElement('div');
     this.track.className = 'vol-carousel__track';
+    const showDots = options.showDots ?? true;
     for (const slide of this.slides) {
       const slideEl = document.createElement('div');
       slideEl.className = 'vol-carousel__slide';
+      slideEl.setAttribute('role', showDots ? 'tabpanel' : 'group');
       slideEl.appendChild(slide.element);
+      this.slideElements.push(slideEl);
       this.track.appendChild(slideEl);
     }
     viewport.appendChild(this.track);
@@ -91,7 +104,7 @@ export class Carousel {
       this.element.appendChild(nextBtn);
     }
 
-    if (options.showDots ?? true) {
+    if (showDots) {
       this.dotsEl = this.buildDots();
       this.element.appendChild(this.dotsEl);
     } else {
@@ -101,16 +114,29 @@ export class Carousel {
     this.attachDragHandlers(viewport);
     this.updatePosition(false);
 
-    if (this.autoPlayIntervalMs) {
+    this.labelSlides();
+
+    // WCAG 2.2.2: işaretçi veya klavye odağı içerideyken otomatik geçiş durur; azaltılmış harekette hiç başlamaz.
+    if (this.autoPlayIntervalMs && !prefersReducedMotion()) {
       this.startAutoPlay();
       const onEnter = (): void => this.stopAutoPlay();
-      const onLeave = (): void => this.startAutoPlay();
+      const onLeave = (): void => {
+        if (!this.element.matches(':focus-within')) this.startAutoPlay();
+      };
+      const onFocusOut = (event: FocusEvent): void => {
+        const next = event.relatedTarget;
+        if (!(next instanceof Node && this.element.contains(next))) this.startAutoPlay();
+      };
       this.element.addEventListener('pointerenter', onEnter);
       this.element.addEventListener('pointerleave', onLeave);
+      this.element.addEventListener('focusin', onEnter);
+      this.element.addEventListener('focusout', onFocusOut);
       this.scope.add({
         dispose: () => {
           this.element.removeEventListener('pointerenter', onEnter);
           this.element.removeEventListener('pointerleave', onLeave);
+          this.element.removeEventListener('focusin', onEnter);
+          this.element.removeEventListener('focusout', onFocusOut);
         },
       });
     }
@@ -120,9 +146,11 @@ export class Carousel {
 
   /** Belirtilen sayfaya geçer (aralık dışına taşarsa en yakın uca kenetlenir). */
   goTo(index: number): void {
-    this.currentIndex = Math.max(0, Math.min(this.slides.length - 1, index));
+    const next = Math.max(0, Math.min(this.slides.length - 1, index));
+    const changed = next !== this.currentIndex;
+    this.currentIndex = next;
     this.updatePosition(true);
-    this.onSlideChangeHandler?.(this.currentIndex);
+    if (changed) this.onSlideChangeHandler?.(next);
   }
 
   getCurrentIndex(): number {
@@ -168,15 +196,54 @@ export class Carousel {
       dot.type = 'button';
       dot.className = 'vol-carousel__dot';
       dot.setAttribute('role', 'tab');
+      dot.id = `${this.idBase}-tab-${i}`;
+      dot.setAttribute('aria-controls', `${this.idBase}-slide-${i}`);
       dot.setAttribute('aria-label', i18next.t('core:carousel.page', { n: i + 1 }));
       dot.addEventListener('click', () => this.goTo(i));
       dots.appendChild(dot);
     }
+    const onKeydown = (event: KeyboardEvent): void => {
+      const last = this.slides.length - 1;
+      const target: Record<string, number> = {
+        ArrowLeft: this.currentIndex - 1,
+        ArrowRight: this.currentIndex + 1,
+        Home: 0,
+        End: last,
+      };
+      const index = target[event.key];
+      if (index === undefined) return;
+      event.preventDefault();
+      this.goTo(index);
+      this.dotElements()[this.currentIndex]?.focus();
+    };
+    dots.addEventListener('keydown', onKeydown);
+    this.scope.add({ dispose: () => dots.removeEventListener('keydown', onKeydown) });
     return dots;
+  }
+
+  private dotElements(): HTMLButtonElement[] {
+    return this.dotsEl
+      ? [...this.dotsEl.querySelectorAll<HTMLButtonElement>('.vol-carousel__dot')]
+      : [];
+  }
+
+  /** Slayt kimliği ve (noktalar varsa) sekme bağı; dil değişince etiket yenilenir. */
+  private labelSlides(): void {
+    this.slideElements.forEach((slideEl, index) => {
+      slideEl.id = `${this.idBase}-slide-${index}`;
+      if (this.dotsEl) slideEl.setAttribute('aria-labelledby', `${this.idBase}-tab-${index}`);
+      else
+        slideEl.setAttribute(
+          'aria-label',
+          i18next.t('core:carousel.slide', { n: index + 1, total: this.slides.length }),
+        );
+    });
   }
 
   private attachDragHandlers(viewport: HTMLDivElement): void {
     const onPointerDown = (event: PointerEvent): void => {
+      // Slayt içindeki denetim kendi tıklamasını alır; yakalama onu viewport'a çalmaz.
+      if (event.target instanceof Element && event.target.closest(INTERACTIVE)) return;
       this.isDragging = true;
       this.dragStartX = event.clientX;
       this.dragDeltaX = 0;
@@ -227,13 +294,24 @@ export class Carousel {
     this.track.classList.toggle('vol-carousel__track--animated', animate);
     this.track.style.transform = `translateX(${-this.currentIndex * 100}%)`;
 
-    if (this.dotsEl) {
-      const dots = this.dotsEl.querySelectorAll('.vol-carousel__dot');
-      dots.forEach((dot, index) => {
-        dot.classList.toggle('vol-carousel__dot--active', index === this.currentIndex);
-        dot.setAttribute('aria-selected', String(index === this.currentIndex));
-      });
-    }
+    this.slideElements.forEach((slideEl, index) => {
+      const active = index === this.currentIndex;
+      slideEl.toggleAttribute('inert', !active);
+      slideEl.setAttribute('aria-hidden', String(!active));
+    });
+    this.dotElements().forEach((dot, index) => {
+      const active = index === this.currentIndex;
+      dot.classList.toggle('vol-carousel__dot--active', active);
+      dot.setAttribute('aria-selected', String(active));
+      dot.tabIndex = active ? 0 : -1;
+    });
+    const arrows = this.element.querySelectorAll<HTMLButtonElement>('.vol-carousel__arrow');
+    arrows.forEach((arrow) => {
+      const atEdge = arrow.classList.contains('vol-carousel__arrow--left')
+        ? this.currentIndex === 0
+        : this.currentIndex === this.slides.length - 1;
+      arrow.setAttribute('aria-disabled', String(atEdge));
+    });
   }
 
   private startAutoPlay(): void {
