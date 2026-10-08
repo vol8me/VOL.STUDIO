@@ -228,6 +228,9 @@ export class ShowcaseApp {
   }
 
   private rebuild(): void {
+    // Belge dili sayfa kurulmadan önce yazılır: WebKit büyük harf dönüşümünü ilk yerleşimdeki dil
+    // kuralıyla yapar (index.html varsayılanı `tr`; İngilizce başlık "SETTİNGS" olmasın).
+    document.documentElement.lang = i18next.language ?? 'tr';
     this.renderScope?.dispose();
     const renderScope = new DisposableScope();
     this.renderScope = renderScope;
@@ -339,7 +342,6 @@ export class ShowcaseApp {
       this.activeTabId = entries[0].id;
     }
     this.element.appendChild(this.tabs.element);
-    document.documentElement.lang = i18next.language ?? 'tr';
     document.title = i18next.t('volui:app.title');
   }
 

@@ -1,0 +1,12 @@
+{
+  "identifier": "mobile-capability",
+  "description": "Mobil ana pencere izinleri",
+  "platforms": ["android"],
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-close",
+    "vol-orientation:default",
+    "vol-haptics:default"
+  ]
+}

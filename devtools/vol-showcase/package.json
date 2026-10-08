@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:update": "playwright test --project=chromium --update-snapshots"
+    "test:e2e:update": "playwright test --project=chromium --update-snapshots",
+    "tauri": "tauri"
   },
   "dependencies": {
     "@volstudio/core": "workspace:*"
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
+    "@tauri-apps/cli": "2.11.4",
     "@types/node": "^26.1.2",
     "i18next": "26.3.6",
     "jsdom": "25.0.1",

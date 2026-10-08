@@ -226,6 +226,25 @@ run(deploy, ['--appdir', appDir, '--output', 'appimage'], {
 
 verifyGStreamerRuntime(gStreamerRuntime);
 
+// GPU yığınına bağlı kütüphaneler host'tan gelmelidir. linuxdeploy bunların bir kısmını (wayland,
+// xcb-render/shm) paketleyen sistemden kopyalar; Mesa'nın EGL/GBM katmanı host sürümünü bekler ve
+// karışık yığında WebKitWebProcess "Could not create default EGL display: EGL_BAD_PARAMETER"
+// ile düşer (SteamOS Deck'te boş pencere olarak ölçüldü). GTK zaten host'ta wayland ister.
+const HOST_GRAPHICS_LIBS = [
+  /^libwayland-(client|server|cursor|egl)\.so/,
+  /^libxcb-(render|shm)\.so/,
+];
+for (const libDir of ['usr/lib', 'usr/lib64', 'usr/lib/x86_64-linux-gnu']) {
+  const absolute = join(appDir, libDir);
+  if (!existsSync(absolute)) continue;
+  for (const entry of readdirSync(absolute)) {
+    if (HOST_GRAPHICS_LIBS.some((pattern) => pattern.test(entry))) {
+      rmSync(join(absolute, entry), { force: true });
+      console.log(`Host GPU yığınına bırakıldı (pakete girmez): ${libDir}/${entry}`);
+    }
+  }
+}
+
 // linuxdeploy AppRun'ı otomatik ürettiği için VOL launcher'ını bundan sonra
 // yerleştiriyoruz. appimagetool aynı AppDir'ı yeniden paketler.
 copyFileSync(launcher, join(appDir, 'AppRun'));

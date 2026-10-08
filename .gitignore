@@ -35,6 +35,7 @@ devtools/*/export/
 # Tauri'nin ürettiği kodlar; `gen/android` elle düzenlendiği için izlenir,
 # yalnız Gradle derleme çıktısı dışarıdadır.
 /devtools/deck/src-tauri/gen/
+/devtools/vol-showcase/src-tauri/gen/
 /games/*/src-tauri/gen/schemas/
 /games/*/src-tauri/app-icon.svg
 /games/*/src-tauri/gen/android/**/build/

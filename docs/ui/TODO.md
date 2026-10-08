@@ -267,6 +267,12 @@ UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağım
       glob/tek lock. AppIdentity, plugin üçlü kayıt ve productIcons native uygulama keşfi.
       Kapanır: yinelenen/eksik kayıt örneği düşer; bundle.category/desktop Categories Game
       kopyası değildir.
+      Yapıldı (2026-10-08): `devtools/vol-showcase/src-tauri` (kimlik `studio.vol.showcase`, ürün adı
+      VOL.UI, masaüstü/mobil capability, `tauri.dev.conf.json`, Linux `.desktop`/AppRun şablonu, ikon
+      kaynağı) ortak `volstudio_tauri_lib::run_with_context_and` kütüphanesini tüketir; `tauri` betiği
+      ve `@tauri-apps/cli` 2.11.4 pakette. Windows'ta derlenir ve açılır (ekran görüntüsü), WSL Ubuntu
+      24.04'te Linux AppImage üretilir. Kalan: kapı kümesinin (appIdentity, plugin üçlü kayıt, productIcons,
+      bundle.category) bu crate üzerinde yeşil koşusu `just high` ile kanıtlanacak; tamamlanınca işaretlenir.
 - [ ] **UI-06.3 — Platform ayarı ve görünür kabuk.** Mevcut oturum/DisplayModeController/
       scopedStores/haptik adaptörleri; gamescope etkisiz seçenekler capability'den; web yedeği.
       Kapanır: native kaynak taşıyan plugin yalnız gereken uygulamada; `pnpm dev` web bakışı;
@@ -276,6 +282,16 @@ UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağım
       sözleşmesi. Kapanır: laptopta görünür native pencere; Deck host+SLR4 açılış/OGG/UI sesi,
       yalnız kol, ekran görüntüsü ve ısınmış performans (cihaz bağlıysa ölçülür, değilse NOT-RUN);
       compile/devkit stub PASS sayılmaz; desteksiz metrik açık engeldir.
+      Yapıldı (2026-10-08): **Deck'te yerel vitrin açıldı** (HOST derlemesi; SLR4 DEĞİL): AppDir `pnpm deck deploy` `appdir` seçeneğiyle
+      (+ `compat_tool` kısayol düzeltmesi) ile yüklenir, Game Mode'da 1280×800 çizilir; 14 sekme,
+      iki skin, OSK ve katmanlar `gamescopectl` ekran görüntüsüyle incelendi (`docs/ui/VERIFICATION.md`).
+      Bulunan ve kapanan: AppImage'a giren Ubuntu libwayland/xcb Deck Mesa'sıyla karışıp WebKitWebProcess'i
+      EGL hatasıyla düşürüyor (pencere boş) → `build-appimage.mjs` bu kütüphaneleri pakete koymaz; vitrin
+      `lang` özniteliği yerleşimden sonra atandığı için WebKit'te "SETTİNGS" (Türkçe İ) çıkıyordu → atama
+      sayfa kurulmadan önce. **Açık bulgu:** gamescope kuralındaki DMA-BUF açık yolunda HOST derlemesinde 2D
+      canvas boş (Curve Editor), kapalıyken çiziliyor; SLR4 derlemesinde yeniden ölçülecek (UI-12 / F08).
+      Kalan: SLR4 (steamrt4) derlemesi, kol ile gezinme (gerçek D-pad/A/B), OGG/UI sesi çıkışı, ısınmış
+      performans/MangoHud, Windows kare sondası → NOT-RUN, sahip UI-12.4/F08.
 
 Faz testi: quality/appIdentity/productIcons/catalog/layers/ports/cargo/plugin fixtures, contract/rust/build/bundle, iki motor E2E, gerçek native sonda.
 

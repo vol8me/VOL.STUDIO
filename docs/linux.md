@@ -46,6 +46,11 @@ ezmez, elle verilen değişken kuralı devre dışı bırakır.
 | Çizici açık + explicit sync kapalı (Wayland) | 60 FPS, web işlemi %12       |
 
 Boş pencere görülen sürücüde `WEBKIT_DISABLE_DMABUF_RENDERER=1` verilir.
+
+`build-appimage.mjs` paketleyici sonrası `libwayland-*` ile `libxcb-render/shm`
+dosyalarını AppDir'den siler: GPU yığınına bağlı bu kütüphaneler host'tan
+gelmelidir. Paketlenirse karışık yığın WebKitWebProcess'i EGL hatasıyla düşürür
+(Deck'te boş pencere; ayrıntı [steam-deck.md](steam-deck.md#host-derlemesiyle-vitrin-slr4-kabı-yokken)).
 AppImage başlatıcısı bu değişkeni dayatmaz ve linuxdeploy GTK kancasının
 `GDK_BACKEND=x11` dayatmasını oturum türüne ve kullanıcı tercihine göre
 Wayland'e çevirir; `GDK_BACKEND=x11` verilerek XWayland yolu seçilebilir.

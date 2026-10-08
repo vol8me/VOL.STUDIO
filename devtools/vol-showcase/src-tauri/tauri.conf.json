@@ -1,0 +1,67 @@
+{
+  "productName": "VOL.UI",
+  "mainBinaryName": "VOL.UI",
+  "version": "0.1.0",
+  "identifier": "studio.vol.showcase",
+  "build": {
+    "beforeDevCommand": "pnpm --filter @volstudio/vol-showcase dev",
+    "beforeBuildCommand": "pnpm --filter @volstudio/vol-showcase build",
+    "devUrl": "http://localhost:5174",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "VOL.UI",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 360,
+        "minHeight": 360,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' customprotocol:",
+        "script-src": "'self'",
+        "style-src": "'unsafe-inline' 'self'",
+        "img-src": "'self' blob: data:",
+        "font-src": "'self'",
+        "connect-src": "'self' ipc: http://ipc.localhost",
+        "media-src": "'self' blob:",
+        "object-src": "'none'",
+        "frame-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'none'",
+        "frame-ancestors": "'none'"
+      },
+      "dangerousDisableAssetCspModification": ["style-src"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["appimage", "nsis"],
+    "category": "DeveloperTool",
+    "shortDescription": "VOL.UI oyun arayüzü vitrini",
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      },
+      "deb": {
+        "desktopTemplate": "linux.desktop.hbs"
+      },
+      "rpm": {
+        "desktopTemplate": "linux.desktop.hbs"
+      }
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ]
+  }
+}

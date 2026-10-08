@@ -7,7 +7,7 @@
  *   pnpm deck <komut> [seçenekler]
  *
  *   discover                      Deck'i bulur (→ --host / DECK_HOST / mDNS / Avahi)
- *   deploy   <workspace>          Yeni release yükler; önceki dosyaları korur
+ *   deploy   <workspace> [--appdir <AppDir>]  Yeni release yükler (--appdir: HOST derlemesi, SLR4 değil)
  *   run      <workspace> [--release=<kayıt>]  Seçilen kısayolu başlatır
  *   stop     <workspace> [--release=<kayıt>] Seçilen sürece SIGTERM gönderir
  *   log      <workspace>          diagnostics.jsonl kaydını yazdırır
@@ -207,10 +207,11 @@ function cmdDiscover(argv) {
 
 /**
  * @param {string} root @param {string} workspace @param {string} host
- * @param {{ compat?: string }} [options]
+ * @param {{ compat?: string, appdir?: string }} [options]
  */
-function cmdDeploy(root, workspace, host, { compat } = {}) {
+function cmdDeploy(root, workspace, host, { compat, appdir } = {}) {
   const shell = readShell(root, workspace);
+  if (appdir) shell.appDir = resolve(appdir);
   if (!existsSync(shell.appDir)) {
     throw new Error(
       `${shell.appDir} yok — önce derleyin: node scripts/linux/build-steamrt4.mjs ${workspace}`,
@@ -254,7 +255,9 @@ function cmdDeploy(root, workspace, host, { compat } = {}) {
   const parms = buildReleaseShortcutParms({
     gameid,
     release: directory,
-    settings: compat ? { compat_tool: compat } : {},
+    // Valve'in kısayol aracı `settings.compat_tool` anahtarını ZORUNLU okur (yoksa KeyError);
+    // yerel Linux çalışmasında (`steam_play: 0`) değer boş bırakılır ve yok sayılır.
+    settings: { compat_tool: compat ?? '' },
   });
   const out = ssh(
     host,
@@ -274,7 +277,14 @@ function cmdDeploy(root, workspace, host, { compat } = {}) {
     throw new Error('Yeni kısayol kaydedilemedi; mevcut kısayol korunuyor');
   privateFile(
     join(records, 'deployment.private.json'),
-    JSON.stringify({ baseGameid: shell.gameid, gameid, directory, workspace }),
+    JSON.stringify({
+      baseGameid: shell.gameid,
+      gameid,
+      directory,
+      workspace,
+      // Kabuk sahibi ortamı: steamrt4 kabı mı, host derlemesi mi (ölçüm raporu bunu taşır).
+      build: appdir ? 'host' : 'steamrt4',
+    }),
   );
   console.log(`[deploy] ${shell.gameid}: ayrı yeni kısayol kaydedildi; mevcut kısayol korundu`);
   console.log(`[deploy] kayıt: ${relative(ROOT, records)}`);
@@ -544,6 +554,9 @@ try {
       cmdDeploy(ROOT, positional[0], host, {
         compat: positional.includes('--compat')
           ? positional[positional.indexOf('--compat') + 1]
+          : undefined,
+        appdir: positional.includes('--appdir')
+          ? positional[positional.indexOf('--appdir') + 1]
           : undefined,
       });
       break;

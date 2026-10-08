@@ -157,6 +157,9 @@ importers:
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
+      '@tauri-apps/cli':
+        specifier: 2.11.4
+        version: 2.11.4
       '@types/node':
         specifier: ^26.1.2
         version: 26.1.2

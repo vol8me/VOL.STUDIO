@@ -40,6 +40,31 @@ kapısı çıktıdaki GLIBC gereksiniminin hedef tabanı aşmadığını doğrul
 Host'ta üretilmiş daha yeni glibc bağımlı paket aynı hedefte kabul edilmez.
 Paketleme ayrıntıları [Linux rehberindedir](linux.md).
 
+### Host derlemesiyle vitrin (SLR4 kabı yokken)
+
+UI vitrini (`devtools/vol-showcase`) steamrt4 kabı olmadan Deck'te açılabilir;
+bu **HOST derlemesidir**, SLR4 kabulü değildir ve ürün kanıtı sayılmaz.
+WSL Ubuntu 24.04 (veya başka Linux) içinde `tauri build --bundles appimage`
+ardından `node scripts/linux/build-appimage.mjs devtools/vol-showcase`
+çalıştırılır; `pnpm deck deploy devtools/vol-showcase --appdir <AppDir>` açık
+AppDir'i yükler, `pnpm deck run … --release <kayıt>` Steam kısayolundan
+başlatır. Ortam değişkeni `pnpm deck mode … A=B` ile bir sonraki koşuya yazılır
+(elle `ssh … ./AppRun` Game Mode'da odak almaz, ekran görüntüsünde Steam
+arayüzü kalır).
+
+Ölçülmüş tuzaklar (2026-10-08, Deck LCD, Mesa host):
+
+- Paketleyici wayland ve xcb-render/shm kütüphanelerini **pakete koymaz**
+  (`HOST_GRAPHICS_LIBS`, `scripts/linux/build-appimage.mjs`). Ubuntu'dan
+  kopyalanan bu kütüphaneler host Mesa'sıyla karışınca `WebKitWebProcess`
+  `Could not create default EGL display: EGL_BAD_PARAMETER` ile düşer ve pencere
+  boş kalır; `WEBKIT_DISABLE_DMABUF_RENDERER` bunu çözmez.
+- gamescope kuralı (DMA-BUF açık) altında HOST derlemesinde **2D canvas boş
+  kalır** (vitrinde Curve Editor); `WEBKIT_DISABLE_DMABUF_RENDERER=1` ile aynı
+  sayfa çizer. Bunun SLR4 derlemesinde de olup olmadığı **ölçülmedi**; canvas
+  2D/WebGL kullanan oyun, kabuğun gamescope kuralını bu ölçümle yeniden
+  sınamadan teslim edilmez (UI-12 / F08).
+
 Tauri kimliği veri yolunu belirler. Her ürün kendi kimliğini taşır; kimlik
 geçişi kayıt yolunu da değiştirir ve yedekli veri geçişi gerektirir. Steam
 Auto-Cloud yalnız ilerleme kapsamını eşitler, cihaz ayarını taşımaz.

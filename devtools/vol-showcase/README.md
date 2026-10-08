@@ -10,6 +10,9 @@ kurulumu gerektirmez; bileşen uygulamaları CORE'da kalır.
 pnpm --filter @volstudio/vol-showcase dev
 ```
 
+Yerel pencere (`tauri dev|build`), Linux/Deck paketi ve gerçek cihazda sınama
+[DESIGN.md](DESIGN.md) içindedir.
+
 ## Sekmeler
 
 | Sekme           | CORE kaynağı                                                                                                  |
