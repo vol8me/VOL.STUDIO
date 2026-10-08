@@ -1537,7 +1537,7 @@
       "anchor": "A4",
       "archetype": "overlay",
       "consumer": "catalog",
-      "showcase": ["sections/touchTab.ts"],
+      "showcase": ["sections/touchRadialDemo.ts"],
       "tests": [
         {
           "file": "core/tests/ui/touchControls.test.ts",

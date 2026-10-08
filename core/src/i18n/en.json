@@ -84,6 +84,21 @@
     "placeholder": "Search commands…",
     "general": "General"
   },
+  "toast": {
+    "dismiss": "Dismiss"
+  },
+  "slotGrid": {
+    "grabbed": "{{label}} picked up. Arrow keys choose a slot, Space drops, Escape cancels.",
+    "targetEmpty": "Slot {{n}}, empty",
+    "targetSwap": "Slot {{n}}, swap with {{label}}",
+    "targetBlocked": "Slot {{n}}, not allowed",
+    "dropped": "{{label}} moved to slot {{n}}",
+    "rejected": "Cannot place {{label}} in slot {{n}}",
+    "cancelled": "Move cancelled"
+  },
+  "joystick": {
+    "label": "Virtual stick"
+  },
   "confirm": {
     "yes": "Yes",
     "no": "No"

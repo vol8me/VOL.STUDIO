@@ -84,6 +84,21 @@
     "placeholder": "Komut ara…",
     "general": "Genel"
   },
+  "toast": {
+    "dismiss": "Kapat"
+  },
+  "slotGrid": {
+    "grabbed": "{{label}} alındı. Ok tuşları yuva seçer, Boşluk bırakır, Escape iptal eder.",
+    "targetEmpty": "Yuva {{n}}, boş",
+    "targetSwap": "Yuva {{n}}, {{label}} ile yer değiştir",
+    "targetBlocked": "Yuva {{n}}, izin yok",
+    "dropped": "{{label}} yuva {{n}}'e taşındı",
+    "rejected": "{{label}} yuva {{n}}'e konamaz",
+    "cancelled": "Taşıma iptal edildi"
+  },
+  "joystick": {
+    "label": "Sanal çubuk"
+  },
   "confirm": {
     "yes": "Evet",
     "no": "Hayır"

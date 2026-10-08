@@ -2,27 +2,6 @@
   "violations": [],
   "incomplete": [
     {
-      "scope": "tab/buttons",
-      "rule": "aria-valid-attr-value",
-      "target": ".vol-icon-button--lg",
-      "owner": "UI-03.1",
-      "reason": "aria-controls/aria-* hedefi DOM'da bulunamadı; elle inceleme"
-    },
-    {
-      "scope": "tab/buttons",
-      "rule": "aria-valid-attr-value",
-      "target": "button[aria-label=\"Small (sm)\"]",
-      "owner": "UI-03.1",
-      "reason": "aria-controls/aria-* hedefi DOM'da bulunamadı; elle inceleme"
-    },
-    {
-      "scope": "tab/buttons",
-      "rule": "aria-valid-attr-value",
-      "target": "button[aria-label=\"Medium (md)\"]",
-      "owner": "UI-03.1",
-      "reason": "aria-controls/aria-* hedefi DOM'da bulunamadı; elle inceleme"
-    },
-    {
       "scope": "tab/panels",
       "rule": "aria-valid-attr-value",
       "target": "button[aria-controls=\"vol-popover-1\"]",

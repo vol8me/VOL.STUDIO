@@ -1,3 +1,5 @@
+import { bindBubble, type BubbleBinding } from './tooltipBehavior';
+
 export type TooltipPlacement = 'top' | 'bottom';
 
 export interface RichTooltipStat {
@@ -31,20 +33,10 @@ export interface RichTooltipOptions {
  */
 export class RichTooltip {
   private readonly bubble: HTMLDivElement;
-  private readonly target: HTMLElement;
-  private readonly placement: TooltipPlacement;
-  private readonly delayMs: number;
-  private readonly container: HTMLElement;
-  private showTimeout?: ReturnType<typeof setTimeout>;
-  private boundShow: () => void;
-  private boundHide: () => void;
+  private readonly binding: BubbleBinding;
 
   constructor(target: HTMLElement, content: RichTooltipContent, options: RichTooltipOptions = {}) {
     const { placement = 'top', delayMs = 300, container = document.body } = options;
-    this.target = target;
-    this.placement = placement;
-    this.delayMs = delayMs;
-    this.container = container;
 
     this.bubble = document.createElement('div');
     this.bubble.className = [`vol-rich-tooltip vol-rich-tooltip--${placement}`, options.className]
@@ -52,14 +44,14 @@ export class RichTooltip {
       .join(' ');
     this.bubble.setAttribute('role', 'tooltip');
     this.renderContent(content);
-
-    this.boundShow = () => this.scheduleShow();
-    this.boundHide = () => this.hide();
-
-    this.target.addEventListener('mouseenter', this.boundShow);
-    this.target.addEventListener('mouseleave', this.boundHide);
-    this.target.addEventListener('focus', this.boundShow);
-    this.target.addEventListener('blur', this.boundHide);
+    this.binding = bindBubble({
+      target,
+      bubble: this.bubble,
+      placement,
+      delayMs,
+      container,
+      visibleClass: 'vol-rich-tooltip--visible',
+    });
   }
 
   setContent(content: RichTooltipContent): void {
@@ -67,11 +59,7 @@ export class RichTooltip {
   }
 
   destroy(): void {
-    clearTimeout(this.showTimeout);
-    this.target.removeEventListener('mouseenter', this.boundShow);
-    this.target.removeEventListener('mouseleave', this.boundHide);
-    this.target.removeEventListener('focus', this.boundShow);
-    this.target.removeEventListener('blur', this.boundHide);
+    this.binding.destroy();
     this.bubble.remove();
   }
 
@@ -113,31 +101,5 @@ export class RichTooltip {
       }
       this.bubble.appendChild(statsList);
     }
-  }
-
-  private scheduleShow(): void {
-    clearTimeout(this.showTimeout);
-    this.showTimeout = setTimeout(() => this.show(), this.delayMs);
-  }
-
-  private show(): void {
-    if (!this.bubble.isConnected) {
-      this.container.appendChild(this.bubble);
-    }
-
-    const targetRect = this.target.getBoundingClientRect();
-    const bubbleRect = this.bubble.getBoundingClientRect();
-    const left = targetRect.left + targetRect.width / 2 - bubbleRect.width / 2;
-    const top =
-      this.placement === 'top' ? targetRect.top - bubbleRect.height - 8 : targetRect.bottom + 8;
-
-    this.bubble.style.left = `${Math.max(4, left)}px`;
-    this.bubble.style.top = `${top}px`;
-    this.bubble.classList.add('vol-rich-tooltip--visible');
-  }
-
-  private hide(): void {
-    clearTimeout(this.showTimeout);
-    this.bubble.classList.remove('vol-rich-tooltip--visible');
   }
 }

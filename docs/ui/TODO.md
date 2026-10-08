@@ -354,6 +354,14 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       seçim/kilitli/kullanılamayan/bekleme/boş/nadirlik; klavye/kol/dokunma; RTS bağlamsal
       imleç (UI-01.9) ile. Kapanır: resolveSkillStates isteğe bağlı kalır; hover/Tooltip ve
       dokunma alternatifi; sunumda altın/yetenek defteri yok; anlamsal olay tekil; uzun 6 haneli fiyat.
+      Yapıldı (2026-10-08): **SlotGrid yalnız sürüklemeyle çalışıyordu** (CONTRACT §9: sürükleme tek
+      alternatif olamaz; item'lar odaklanamıyordu) → roving tabindex, ok tuşlarıyla item arası gezinme,
+      **Space tutar, ok tuşları hedef hücreyi seçer (sürüklemeyle aynı `drag-over`/`drag-rejected`
+      işaretleri), Space/Enter bırakır, Escape iptal eder** (tuş yutulur), geçersiz hedefte item tutulmaya
+      devam eder, odak dışına çıkınca iptal; Enter ve kol A (`click`, detail 0) `onSlotClick`'i çalıştırır
+      (fare tıklaması çift sayılmaz); canlı bölge duyurusu (`core:slotGrid.*`, TR/EN), `pick`/`drop`/`reject`
+      niyetleri. Kanıt: `slotGridKeyboard.test.ts` (6). Kalan: kolla tutma/bırakma (A tıklama yoluna ayrılmıştır;
+      host `onSlotClick` menüsünde "Taşı" sunar), ActionBar/BuildMenu/SkillTree klavye denetimi, resolveSkillStates.
 - [ ] **UI-08.4 — Erken tier-1 kapsam kontrolü.** ScrollView referans klavye/odak/overscroll
       kanıtı; UI-10 ileri pan ayrı. Kapanır: UI-03/04/05/08 applicable durumları assertion'a bağlı;
       kalanlar görünür kalan iş; tam tier-1/M3 kapanışı yalnız UI-13.1'de.
@@ -388,9 +396,34 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       dokunma/kol alternatifi; 3 bildirimlik kuyruk, kritik öncelik/eylem; bildirim sesleri.
       Kapanır: 3 s zorunlu gizleme yok; acil bildirim sessizce düşmez; AT dinler; HUD üstüne
       kontrol kapatılmaz.
+      Yapıldı (2026-10-08): **RadialMenu yalnız "basılı tut → sürükle → bırak" ile çalışıyordu** (klavye/kol
+      ile seçim imkânsız, rol/ad yoktu) → `openFocused`: ilk etkin item'a odak, ok/D-pad döner (devre dışı
+      atlanır), Enter/Space/A seçer, Escape/Tab/dışarı tıklama seçmeden kapatır, odak açan öğeye döner;
+      `role=menu`/`menuitem` + `label`; işaretçi akışı (`open`, vitrin HoldButton demosu) değişmedi. Kanıt:
+      `radialMenuKeyboard.test.ts` (7).
+      Yapıldı (2026-10-08): **Tooltip/RichTooltip ortak çekirdek** (`tooltipBehavior.ts`, WCAG 1.4.13):
+      Escape işaretçiyi oynatmadan kapatır ve tuşu yutar (üstteki katman aynı basışla kapanmaz), balon
+      üzerine gelinebilir (120 ms hoşgörü), RichTooltip `aria-describedby` taşımıyordu (ekran okuyucu hiç
+      okumuyordu) ve yalnız soldan sınırlıydı → iki eksende sınır + dikey çevirme, kaydırma/yeniden
+      boyutlanmada yeniden konum; kol/klavye yolu odak olayıdır. **ToastManager yeniden tasarlandı:** en
+      çok 3 görünür, fazlası kaybolmadan sırada (önceden 4'ü aşan en eski bildirim — kritik dahil —
+      SESSİZCE siliniyordu); kritik (varsayılan `danger`) `role="alert"`, sırada öne geçer ve görünen geçici
+      bildirimin yerine geçer, kalıcıdır, sıra sınırında yalnız kritik olmayan düşer; eylemli bildirim
+      kalıcıdır (eylem çalışınca kapanır); kalıcı bildirimde adlı kapatma düğmesi (`core:toast.dismiss`);
+      fare/odak üzerindeyken süre durur (3 sn zorunlu gizleme kalktı). Kanıt: `tooltipBehavior.test.ts`
+      (7), `toastQueue.test.ts` (7), vitrinde eylemli/kritik örnek. Kalan: dokunmatik tooltip alternatifi
+      (hover yok; uzun basma kararı UI-10), bildirim sesleri kulakla (UI-02.9), AT ile gerçek duyuru
+      (UI-13.4), HUD üstü yerleşim ölçümü Deck/tablette.
 - [ ] **UI-09.3 — DataTable/Kanban/EventLog/KeyBindingList.** Hizalama/zebra/sıralama/sayfalama/
       sanal öğe; Kanban sürükleme + tıklayarak taşıma; tuş bağlama çakışması/boş durum. Kapanır:
       Tab/yön tuşu semantiği mantıksal; %30/%200/RTL; sanal öğe odağı kaybolmaz; pointercancel.
+      Yapıldı (2026-10-08): **DataTable seçilebilir satırlar yalnız fareyle çalışıyordu** (`tabindex`,
+      klavye ve `aria-selected` yoktu; seçim/sıralama/pencereleme satırları yeniden yarattığı için odak
+      gövdeye düşüyordu; sanal tabloda satır sayısı AT'ye bildirilmiyordu) → tek `tabindex=0` satırı
+      (roving), ok/Home/End gezinmesi (pencerede hedefi görünür kılıp hemen yeniden kurar), Enter/Space
+      seçimi, `aria-selected`, yeniden çizimde odak aynı satırda, `aria-rowcount`/`aria-rowindex`, onay
+      kutusu görsel işaret (`aria-hidden`). Kanıt: `dataTableKeyboard.test.ts` (6). Kalan: Kanban/EventLog/
+      KeyBindingList için aynı denetim, %30/%200/RTL ölçümleri, gerçek AT.
 - [ ] **UI-09.4 — Diyalog deseni/yönlendirici işaret/yasal metin.** Mevcut Modal/Panel/Button/
       Text bileşimi ile yıkıcı işlem/çıkış/izin/yerel-uzak çakışma/ilk kullanım yönlendirmesi/
       kredi ve yasal metin (ikon atıf ekranı dahil). Kapanır: çakışmada niyet/hata/bekleme/
@@ -404,6 +437,14 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       PullToRefresh.** Birinci/ikinci işaretçi sahipliği, iptal/capture kaybı/görünürlük;
       deadzone/smooth tüketici politikası. Kapanır: VOL.TEST joystick/hold; yalnız dokunma ve
       klavye/kol eşdeğer; gesture süresi reduced-motion'da bozulmaz.
+      Yapıldı (2026-10-08): **DirectionButton ve Joystick yalnız işaretçiyle çalışıyordu** → DirectionButton
+      Space/Enter/kol A basış-bırakış (ortak `holdInput`, `aria-pressed`); Joystick odaklanabilir (`role=group`,
+      adlı, `core:joystick.label`), ok tuşları basılı tutuldukça birim uzunlukta vektör üretir, son tuş
+      bırakılınca/odak kaybında `onRelease`, işaretçi basılıyken tuşlar yok sayılır. Kanıt: `holdInput.test.ts`.
+      PullToRefresh'in klavye yolu bileşende yoktu (yalnız çekme jesti): vitrin demosuna `refresh()`'i çağıran
+      düğme eklendi (host sorumluluğu: jest tek yol olamaz). RadialMenu için `openFocused` ve vitrinde
+      "Tuşla Aç" düğmesi (`holdInput.spec.ts` iki motor). Kalan: SquareJoystick/SwipeGestureZone/MultiTouchZone
+      klavye karşılığı kararı, gesture süresi reduced-motion, VOL.TEST joystick/hold cihaz koşusu.
 - [ ] **UI-10.2 — DualAxisScrollPanel/ScrollView/VirtualList/KeyedVirtualList/SplitPane.**
       Etkileşimli alt öğe istisnası, sürükleme eşiği, birincil işaretçi, sanal öğeler, resize.
       Kapanır: pointerdown anında alt düğme niyeti alınmaz; iptal edilen sürükleme tıklama üretmez;

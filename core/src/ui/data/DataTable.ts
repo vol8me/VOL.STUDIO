@@ -67,6 +67,8 @@ export class DataTable<T extends object> {
   private sortKey: string | null = null;
   private sortDirection: DataTableSortDirection = 'asc';
   private selectedKey: string | null = null;
+  /** Dolaşma (roving tabindex) hedefi: Tab'ın indiği tek satır; ok tuşları bunu taşır. */
+  private focusKey: string | null = null;
   private readonly selectedKeys = new Set<string>();
   /** Satır (tbody) listener temizlikleri — her renderRows() çağrısında sıfırlanır. */
   /**
@@ -126,6 +128,11 @@ export class DataTable<T extends object> {
 
     this.tbody = document.createElement('tbody');
     this.table.appendChild(this.tbody);
+    if (this.selectable) {
+      const onKeyDown = (event: KeyboardEvent): void => this.onRowKeyDown(event);
+      this.tbody.addEventListener('keydown', onKeyDown);
+      this.headerScope.add({ dispose: () => this.tbody.removeEventListener('keydown', onKeyDown) });
+    }
 
     this.element.appendChild(this.table);
 
@@ -172,6 +179,7 @@ export class DataTable<T extends object> {
 
   private buildHeaderRow(): HTMLTableRowElement {
     const row = document.createElement('tr');
+    if (this.virtualize) row.setAttribute('aria-rowindex', '1');
 
     if (this.multiSelect) {
       const th = document.createElement('th');
@@ -265,7 +273,92 @@ export class DataTable<T extends object> {
     });
   }
 
+  /**
+   * Satırları yeniden kurar ve odağı korur: seçim, sıralama ve pencereleme satırları sıfırdan
+   * yarattığı için odaktaki satır yok olur, odak gövdeye düşerdi (klavye/kol kullanıcısı yerini kaybeder).
+   */
   private renderRows(): void {
+    const active = document.activeElement;
+    const focusedKey =
+      active instanceof HTMLElement && this.tbody.contains(active)
+        ? (active.closest<HTMLElement>('tr')?.dataset.key ?? null)
+        : null;
+    if (focusedKey !== null) this.focusKey = focusedKey;
+    this.renderRowsNow();
+    this.applyRovingTabindex();
+    if (focusedKey !== null) this.rowElement(focusedKey)?.focus({ preventScroll: true });
+  }
+
+  private rowElement(key: string): HTMLTableRowElement | null {
+    for (const tr of this.tbody.querySelectorAll<HTMLTableRowElement>('tr.vol-datatable__row')) {
+      if (tr.dataset.key === key) return tr;
+    }
+    return null;
+  }
+
+  /** Seçilebilir tabloda tek satır `tabindex=0` alır: odak anahtarı, seçili satır ya da ilk satır. */
+  private applyRovingTabindex(): void {
+    if (!this.selectable) return;
+    const rows = [...this.tbody.querySelectorAll<HTMLTableRowElement>('tr.vol-datatable__row')];
+    if (rows.length === 0) return;
+    const keys = new Set(rows.map((tr) => tr.dataset.key));
+    const candidates = [
+      this.focusKey,
+      this.selectedKey,
+      ...this.selectedKeys,
+      rows[0].dataset.key ?? null,
+    ];
+    const preferred = candidates.find((key) => key !== null && keys.has(key));
+    for (const tr of rows) tr.tabIndex = tr.dataset.key === preferred ? 0 : -1;
+  }
+
+  private onRowKeyDown(event: KeyboardEvent): void {
+    const row = (event.target as HTMLElement).closest<HTMLElement>('tr.vol-datatable__row');
+    const key = row?.dataset.key;
+    if (key === undefined) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.selectRow(key);
+      return;
+    }
+    const rows = this.sortedRows();
+    const index = rows.findIndex((item) => this.keyOf(item) === key);
+    let target = index;
+    if (event.key === 'ArrowDown') target = index + 1;
+    else if (event.key === 'ArrowUp') target = index - 1;
+    else if (event.key === 'Home') target = 0;
+    else if (event.key === 'End') target = rows.length - 1;
+    else return;
+    event.preventDefault();
+    this.focusIndex(target);
+  }
+
+  private focusIndex(index: number): void {
+    const rows = this.sortedRows();
+    if (rows.length === 0) return;
+    const clamped = Math.min(Math.max(0, index), rows.length - 1);
+    const key = this.keyOf(rows[clamped]);
+    this.focusKey = key;
+    if (this.virtualize) {
+      // Hedef pencerenin dışındaysa önce görünür kıl ve pencereyi hemen yeniden kur.
+      const { rowHeight } = this.virtualize;
+      const viewport = this.element.clientHeight || this.virtualize.height;
+      const top = clamped * rowHeight;
+      if (top < this.element.scrollTop) this.element.scrollTop = top;
+      else if (top + rowHeight > this.element.scrollTop + viewport) {
+        this.element.scrollTop = top + rowHeight - viewport;
+      }
+      this.renderRowsNow();
+    }
+    this.applyRovingTabindex();
+    this.rowElement(key)?.focus({ preventScroll: !this.virtualize });
+  }
+
+  private keyOf(row: T): string {
+    return String((row as Record<string, unknown>)[this.rowKey]);
+  }
+
+  private renderRowsNow(): void {
     // Yalnızca satır listener'ları temizlenir — başlık scope'una dokunulmaz.
     this.rowScope.dispose();
     this.rowScope = new DisposableScope();
@@ -286,6 +379,7 @@ export class DataTable<T extends object> {
     }
 
     const rows = this.sortedRows();
+    if (this.virtualize) this.table.setAttribute('aria-rowcount', String(rows.length + 1));
 
     if (rows.length === 0) {
       const tr = document.createElement('tr');
@@ -314,7 +408,7 @@ export class DataTable<T extends object> {
       this.tbody.appendChild(this.buildSpacerRow(start * rowHeight, colSpan));
     }
     for (let i = start; i < end; i++) {
-      const tr = this.buildRow(rows[i]);
+      const tr = this.buildRow(rows[i], i);
       tr.style.height = `${rowHeight}px`;
       this.tbody.appendChild(tr);
     }
@@ -363,20 +457,26 @@ export class DataTable<T extends object> {
     });
   }
 
-  private buildRow(row: T): HTMLTableRowElement {
-    const key = String((row as Record<string, unknown>)[this.rowKey]);
+  private buildRow(row: T, index?: number): HTMLTableRowElement {
+    const key = this.keyOf(row);
     const tr = document.createElement('tr');
     tr.className = 'vol-datatable__row';
+    tr.dataset.key = key;
+    // Pencerelemede satırın gerçek sırası AT'ye bildirilir (başlık 1. satırdır).
+    if (index !== undefined) tr.setAttribute('aria-rowindex', String(index + 2));
     if (this.selectable) tr.classList.add('vol-datatable__row--selectable');
 
     const isSelected = this.multiSelect ? this.selectedKeys.has(key) : this.selectedKey === key;
     if (isSelected) tr.classList.add('vol-datatable__row--selected');
+    if (this.selectable) tr.setAttribute('aria-selected', String(isSelected));
 
     if (this.multiSelect) {
       const td = document.createElement('td');
       td.className = 'vol-datatable__cell vol-datatable__cell--checkbox';
       const checkbox = document.createElement('span');
       checkbox.className = 'vol-datatable__checkbox';
+      // Durum satırın aria-selected'ında; işaret yalnız görseldir.
+      checkbox.setAttribute('aria-hidden', 'true');
       td.appendChild(checkbox);
       tr.appendChild(td);
     }

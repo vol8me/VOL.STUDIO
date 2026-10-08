@@ -548,35 +548,6 @@ describe('ToastManager', () => {
     expect(document.body.contains(element)).toBe(false);
   });
 
-  it('fazla toast eskisini kaldırır', () => {
-    const toast = track(new ToastManager(document.body));
-    toast.show('1', { durationMs: 10000 });
-    vi.advanceTimersToNextFrame();
-    vi.advanceTimersToNextFrame();
-    toast.show('2', { durationMs: 10000 });
-    vi.advanceTimersToNextFrame();
-    vi.advanceTimersToNextFrame();
-    toast.show('3', { durationMs: 10000 });
-    vi.advanceTimersToNextFrame();
-    vi.advanceTimersToNextFrame();
-    toast.show('4', { durationMs: 10000 });
-    vi.advanceTimersToNextFrame();
-    vi.advanceTimersToNextFrame();
-
-    let toasts = document.body.querySelectorAll('.vol-toast');
-    expect(toasts.length).toBe(4);
-    expect(toasts[0].textContent).toBe('1');
-
-    toast.show('5', { durationMs: 10000 });
-    vi.advanceTimersToNextFrame();
-    vi.advanceTimersToNextFrame();
-
-    toasts = document.body.querySelectorAll('.vol-toast');
-    expect(toasts.length).toBe(4);
-    expect(toasts[0].textContent).toBe('2');
-    expect(toasts[3].textContent).toBe('5');
-  });
-
   it('destroy sırasında timer ve container temizlenir', () => {
     const toast = track(new ToastManager(document.body));
     toast.show('A', { durationMs: 0 });
@@ -607,8 +578,11 @@ describe('Tooltip', () => {
     const tooltip = track(new Tooltip(target, 'Açıklama'));
     const id = target.getAttribute('aria-describedby');
     expect(id).toBeTruthy();
-    expect(document.getElementById(id!)).toBeNull();
+    const bubble = document.getElementById(id!);
+    expect(bubble).not.toBeNull();
+    expect(bubble?.classList.contains('vol-tooltip--visible')).toBe(false);
     tooltip.destroy();
+    expect(document.getElementById(id!)).toBeNull();
     expect(target.getAttribute('aria-describedby')).toBeNull();
   });
 
@@ -627,6 +601,7 @@ describe('Tooltip', () => {
     expect(bubble.classList.contains('vol-tooltip--top')).toBe(true);
 
     target.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    vi.advanceTimersByTime(150);
     expect(bubble.classList.contains('vol-tooltip--visible')).toBe(false);
 
     target.dispatchEvent(new FocusEvent('focus', { bubbles: true }));

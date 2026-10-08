@@ -237,6 +237,17 @@ aynı basış/bırakış çiftini üretir (`data-vol-hold` işareti, kontrolcün
 `aria-pressed` ile açıklanır ve işlev `prefers-reduced-motion` altında değişmez (halka dekorasyondur).
 Bu denetimler arayüz sesi çalmaz: ateş/şarj/yön sesi oyunun SFX'idir.
 
+Hover/odak içeriği (Tooltip, RichTooltip) WCAG 1.4.13'e uyar: Escape kapatır (tuş yutulur), balon
+üzerine gelinebilir, hedefe `aria-describedby` bağlanır, konum iki eksende sınırlanır. Bildirim
+(ToastManager) en çok 3 görünür, fazlası kaybolmadan sıradadır; kritik bildirim `role="alert"`,
+öncelikli ve kalıcıdır, sessizce düşmez; eylemli bildirim kalıcıdır; fare/odak süreyi durdurur.
+
+Sürükleme ve basılı-tut/sürükle desenleri tek yol olamaz: SlotGrid (Space tutar, oklar hedef seçer,
+Space/Enter bırakır, Escape iptal), RadialMenu (`openFocused`: oklar döner, Enter seçer, Escape/Tab seçmeden
+kapatır), Joystick (ok tuşları vektör üretir), seçilebilir DataTable (roving `tabindex`, ok/Home/End,
+Enter/Space, `aria-selected`) klavye ve kol karşılığını taşır; durum değişimi canlı bölgeyle duyurulur ve
+yeniden çizim odağı düşürmez.
+
 ## 10. UI yüzey ailesi
 
 Diyaloglar yıkıcı onay, çıkış, izin, fatal ve save conflict sunumudur.

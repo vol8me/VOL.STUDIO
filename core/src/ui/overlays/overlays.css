@@ -175,10 +175,12 @@
   letter-spacing: 0.02em;
   padding: var(--vol-space-xs) var(--vol-space-sm);
   border-radius: var(--vol-radius-sm);
+  visibility: hidden;
   opacity: 0;
   transition:
     opacity var(--vol-transition-fast),
-    transform var(--vol-transition-fast);
+    transform var(--vol-transition-fast),
+    visibility 0s linear var(--vol-transition-fast);
   font-size: var(--vol-text-body);
   font-weight: 600;
   position: fixed;
@@ -186,8 +188,11 @@
 }
 
 .vol-tooltip--visible {
+  pointer-events: auto;
+  visibility: visible;
   opacity: 1;
   transform: translateY(0);
+  transition-delay: 0s;
 }
 
 .vol-dialogue {
@@ -665,9 +670,12 @@
   max-width: 280px;
   padding: var(--vol-space-sm) var(--vol-space-md);
   box-shadow: 0 12px 32px var(--vol-ui-scrim);
+  visibility: hidden;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--vol-transition-fast);
+  transition:
+    opacity var(--vol-transition-fast),
+    visibility 0s linear var(--vol-transition-fast);
   flex-direction: column;
   gap: 6px;
   display: flex;
@@ -675,7 +683,10 @@
 }
 
 .vol-rich-tooltip--visible {
+  pointer-events: auto;
+  visibility: visible;
   opacity: 1;
+  transition-delay: 0s;
 }
 
 .vol-rich-tooltip__title {

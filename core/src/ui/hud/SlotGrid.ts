@@ -92,7 +92,10 @@ class ItemView {
 
     this.element = document.createElement('div');
     this.element.className = 'vol-slot-grid__item';
-    this.element.setAttribute('role', 'listitem');
+    // Öğeler etkinleştirilebilir/taşınabilir denetimdir (Enter/A etkinleştirir, Space tutar): düğme rolü.
+    this.element.setAttribute('role', 'button');
+    // Klavye/kol erişimi: dolaşma (roving tabindex) SlotGrid tarafından ayarlanır.
+    this.element.tabIndex = -1;
     this.element.setAttribute('aria-label', this.ariaLabel());
     this.element.dataset.itemId = item.id;
     this.element.dataset.slotIndex = String(index);
@@ -243,6 +246,11 @@ export class SlotGrid {
   private readonly dragContainer: HTMLElement;
 
   private drag: DragState | null = null;
+  /** Klavyeyle tutulan item: kaynak hücre ve imlecin dolaştığı hedef hücre. */
+  private keyboardMove: { fromIndex: number; target: number; itemView: ItemView } | null = null;
+  /** Dolaşma hedefi: Tab'ın indiği tek item (kök hücre indeksi). */
+  private focusIndex: number | null = null;
+  private readonly announcer: HTMLDivElement;
   /**
    * Bu bileşenin ömrüne bağlı kaynaklar.
    *
@@ -271,9 +279,8 @@ export class SlotGrid {
 
     this.element = document.createElement('div');
     this.element.className = 'vol-slot-grid';
-    // Izgara klavye ok gezinmesi sunmaz; `grid` rolü satır/hücre yapısı ve ok tuşu sözleşmesi ister.
-    // Doğru anlam: dolu slotlar bir liste, boş hücreler ve yerleşim katmanları dekordur.
-    this.element.setAttribute('role', 'list');
+    // Dolu slotlar odaklanabilir düğmelerdir (ok tuşlarıyla gezinilir); boş hücreler ve yerleşim katmanları dekordur.
+    this.element.setAttribute('role', 'group');
     this.element.style.setProperty('--vol-slot-grid-columns', String(this.columns));
     if (options.size) {
       this.element.style.setProperty('--vol-slot-grid-size', `${options.size}px`);
@@ -290,6 +297,13 @@ export class SlotGrid {
     this.itemsEl.style.pointerEvents = 'none';
     this.element.appendChild(this.itemsEl);
 
+    this.announcer = document.createElement('div');
+    this.announcer.className = 'vol-sr-only';
+    // Rolsüz canlı bölge: duyurular ekran okuyucuya iletilir, grup yapısı bozulmaz.
+    this.announcer.setAttribute('aria-live', 'polite');
+    this.announcer.setAttribute('aria-atomic', 'true');
+    this.element.appendChild(this.announcer);
+
     this.buildCells();
     this.refreshGeometry();
     this.syncItems();
@@ -297,10 +311,40 @@ export class SlotGrid {
     const pointerDown = (event: PointerEvent) => this.onPointerDown(event);
     this.itemsEl.addEventListener('pointerdown', pointerDown);
     this.scope.add({ dispose: () => this.itemsEl.removeEventListener('pointerdown', pointerDown) });
+
+    const keyDown = (event: KeyboardEvent): void => this.onKeyDown(event);
+    // Klavye ve kol A odaktaki öğede `click` (detail 0) üretir: etkinleştirme. Fare tıklaması pointerup'ta işlenir.
+    const click = (event: MouseEvent): void => {
+      if (event.detail !== 0 || this.keyboardMove) return;
+      this.activateFromElement(event.target);
+    };
+    const focusIn = (event: FocusEvent): void => {
+      const index = this.indexOfElement(event.target);
+      if (index !== null) this.setFocusIndex(index);
+    };
+    const focusOut = (event: FocusEvent): void => {
+      // Odak öğe dışına çıkınca tutulan öğe bırakılmadan iptal edilir.
+      if (this.keyboardMove && !this.itemsEl.contains(event.relatedTarget as Node | null)) {
+        this.cancelKeyboardMove();
+      }
+    };
+    this.itemsEl.addEventListener('keydown', keyDown);
+    this.itemsEl.addEventListener('click', click);
+    this.itemsEl.addEventListener('focusin', focusIn);
+    this.itemsEl.addEventListener('focusout', focusOut);
+    this.scope.add({
+      dispose: () => {
+        this.itemsEl.removeEventListener('keydown', keyDown);
+        this.itemsEl.removeEventListener('click', click);
+        this.itemsEl.removeEventListener('focusin', focusIn);
+        this.itemsEl.removeEventListener('focusout', focusOut);
+      },
+    });
   }
 
   destroy(): void {
     this.endDrag();
+    this.endKeyboardMove();
     this.scope.dispose();
     for (const view of this.itemViews.values()) this.itemsEl.removeChild(view.element);
     this.itemViews.clear();
@@ -441,6 +485,7 @@ export class SlotGrid {
     this.occupancy = nextOccupancy;
     this.items = nextItems;
     this.updateEmptyCells();
+    this.applyRovingTabindex();
   }
 
   private updateEmptyCells(): void {
@@ -449,6 +494,178 @@ export class SlotGrid {
       if (!cell) continue;
       cell.classList.toggle('vol-slot-grid__cell--empty', !this.occupancy.has(i));
     }
+  }
+
+  /* ── Klavye / kol ──────────────────────────────────────────────────────── */
+
+  private indexOfElement(target: EventTarget | null): number | null {
+    const itemEl = (target as HTMLElement | null)?.closest?.<HTMLElement>('.vol-slot-grid__item');
+    const value = itemEl?.dataset.slotIndex;
+    return value === undefined ? null : Number(value);
+  }
+
+  private setFocusIndex(index: number): void {
+    this.focusIndex = index;
+    this.applyRovingTabindex();
+  }
+
+  /** Tek item `tabindex=0` alır: son odaklanan, yoksa ilk dolu hücre. */
+  private applyRovingTabindex(): void {
+    const indexes = [...this.itemViews.keys()].sort((a, b) => a - b);
+    if (indexes.length === 0) return;
+    const active =
+      this.focusIndex !== null && this.itemViews.has(this.focusIndex)
+        ? this.focusIndex
+        : indexes[0];
+    for (const [index, view] of this.itemViews) view.element.tabIndex = index === active ? 0 : -1;
+  }
+
+  private activateFromElement(target: EventTarget | null): void {
+    const index = this.indexOfElement(target);
+    const view = index === null ? undefined : this.itemViews.get(index);
+    if (view && index !== null) this.onSlotClickHandler?.(view.getItem(), index);
+  }
+
+  private announce(message: string): void {
+    this.announcer.textContent = message;
+  }
+
+  private stepFor(key: string): number {
+    if (key === 'ArrowLeft') return -1;
+    if (key === 'ArrowRight') return 1;
+    return key === 'ArrowUp' ? -this.columns : this.columns;
+  }
+
+  /** Ok yönünde (hücre adımlarıyla, ızgara sınırında durarak) bir sonraki dolu item'ı bulur. */
+  private neighborIndex(from: number, key: string): number | null {
+    const step = this.stepFor(key);
+    const horizontal = key === 'ArrowLeft' || key === 'ArrowRight';
+    const row = Math.floor(from / this.columns);
+    for (let i = from + step; i >= 0 && i < this.slotCount; i += step) {
+      if (horizontal && Math.floor(i / this.columns) !== row) return null;
+      const root = this.occupancy.get(i);
+      if (root !== undefined && root !== from) return root;
+    }
+    return null;
+  }
+
+  private onKeyDown(event: KeyboardEvent): void {
+    const index = this.indexOfElement(event.target);
+    if (index === null) return;
+    const arrow = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key);
+
+    if (this.keyboardMove) {
+      this.onGrabbedKeyDown(event, arrow);
+      return;
+    }
+    if (arrow) {
+      event.preventDefault();
+      const next = this.neighborIndex(index, event.key);
+      if (next !== null) this.itemViews.get(next)?.element.focus();
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      this.startKeyboardMove(index, event);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      this.activateFromElement(event.target);
+    }
+  }
+
+  private startKeyboardMove(index: number, event: KeyboardEvent): void {
+    const itemView = this.itemViews.get(index);
+    if (!itemView) return;
+    this.keyboardMove = { fromIndex: index, target: index, itemView };
+    itemView.toggleDragging(true);
+    emitUiIntent({ kind: 'pick', origin: 'SlotGrid', target: this.element, event });
+    this.announce(i18next.t('core:slotGrid.grabbed', { label: itemView.getItem().label }));
+  }
+
+  private onGrabbedKeyDown(event: KeyboardEvent, arrow: boolean): void {
+    const move = this.keyboardMove;
+    if (!move) return;
+    if (event.key === 'Escape') {
+      // Tutulan öğeyi bırakır; üstteki katman (modal) aynı basışla kapanmaz.
+      event.preventDefault();
+      event.stopPropagation();
+      this.cancelKeyboardMove();
+      return;
+    }
+    if (arrow) {
+      event.preventDefault();
+      const next = move.target + this.stepFor(event.key);
+      const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
+      const sameRow = Math.floor(next / this.columns) === Math.floor(move.target / this.columns);
+      if (next >= 0 && next < this.slotCount && (!horizontal || sameRow)) {
+        move.target = next;
+        this.showKeyboardTarget();
+      }
+      return;
+    }
+    if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      this.dropKeyboardMove(event);
+    }
+  }
+
+  /** İmlecin hedef hücresini sürükleme ile aynı işaretlerle gösterir ve duyurur. */
+  private showKeyboardTarget(): void {
+    const move = this.keyboardMove;
+    if (!move) return;
+    this.clearDropTarget();
+    const cells = this.resolveTargetCells(move.fromIndex, move.target);
+    const n = move.target + 1;
+    if (!cells) {
+      this.announce(i18next.t('core:slotGrid.targetBlocked', { n }));
+      return;
+    }
+    const occupant = this.items[move.target];
+    const free = this.isTargetFree(cells, move.fromIndex);
+    const singleSwap =
+      cells.length === 1 && Boolean(this.onSwapRequestHandler) && occupant !== undefined;
+    const rejected = !free && !singleSwap;
+    for (const cell of cells) {
+      const cellEl = this.cellsEl.children[cell] as HTMLDivElement | undefined;
+      if (!cellEl) continue;
+      cellEl.classList.toggle('vol-slot-grid__cell--drag-over', !rejected);
+      cellEl.classList.toggle('vol-slot-grid__cell--drag-rejected', rejected);
+    }
+    let message: string;
+    if (rejected) message = i18next.t('core:slotGrid.targetBlocked', { n });
+    else if (free) message = i18next.t('core:slotGrid.targetEmpty', { n });
+    else message = i18next.t('core:slotGrid.targetSwap', { n, label: occupant?.label ?? '' });
+    this.announce(message);
+  }
+
+  private dropKeyboardMove(event: KeyboardEvent): void {
+    const move = this.keyboardMove;
+    if (!move) return;
+    const label = move.itemView.getItem().label;
+    const n = move.target + 1;
+    if (this.handleDrop(move.fromIndex, move.target)) {
+      emitUiIntent({ kind: 'drop', origin: 'SlotGrid', target: this.element, event });
+      this.endKeyboardMove();
+      this.setFocusIndex(move.target);
+      this.itemViews.get(move.target)?.element.focus();
+      this.announce(i18next.t('core:slotGrid.dropped', { label, n }));
+      return;
+    }
+    // Geçersiz hedef: öğe tutulmaya devam eder, kullanıcı başka hücre seçebilir.
+    emitUiIntent({ kind: 'reject', origin: 'SlotGrid', target: this.element, event });
+    this.announce(i18next.t('core:slotGrid.rejected', { label, n }));
+  }
+
+  private cancelKeyboardMove(): void {
+    if (!this.keyboardMove) return;
+    this.endKeyboardMove();
+    this.announce(i18next.t('core:slotGrid.cancelled'));
+  }
+
+  private endKeyboardMove(): void {
+    const move = this.keyboardMove;
+    if (!move) return;
+    move.itemView.toggleDragging(false);
+    this.clearDropTarget();
+    this.keyboardMove = null;
   }
 
   private onPointerDown(event: PointerEvent): void {

@@ -28,6 +28,17 @@ let activatingElement: Element | null = null;
 
 export function previousFocusTarget(): Element | null {
   const active = document.activeElement;
+  // WebKit/Safari fare tıklamasında düğmeye odak vermez; odak en yakın odaklanabilir ATAYA düşer. O durumda
+  // kullanıcının etkinleştirdiği düğme (daha özgül hedef) geri verilecek yerdir.
+  if (
+    activatingElement &&
+    active &&
+    active !== activatingElement &&
+    active !== document.body &&
+    active.contains(activatingElement)
+  ) {
+    return activatingElement;
+  }
   if (active && active !== document.body) return active;
   return activatingElement;
 }

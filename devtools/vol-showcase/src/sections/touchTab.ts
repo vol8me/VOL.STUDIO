@@ -14,7 +14,6 @@ import {
   WorldCameraController,
   type WorldCamera,
   PullToRefresh,
-  RadialMenu,
   SlotGrid,
   type SlotItem,
   SquareJoystick,
@@ -28,6 +27,7 @@ import {
 import { i18n, i18next } from '@volstudio/core/i18n';
 import { findBindingConflicts } from '@volstudio/core/input/bindings';
 import { buildGamepadDemo } from './touchGamepadDemo';
+import { buildRadialMenuDemo } from './touchRadialDemo';
 import { card, cardGrid, svgIcon } from './shared';
 import {
   ICON_DASH,
@@ -191,7 +191,15 @@ function buildPullToRefreshDemo(disposables: DisposableScope): HTMLElement {
   disposables.addDestroyables(pullToRefresh);
   pullToRefresh.element.style.height = '220px';
 
+  // Çekme jesti tek yol olamaz: aynı yenileme klavye ve kolla düğmeden çalışır.
+  const refreshButton = new Button(i18next.t('volui:touch.refreshButton'), {
+    size: 'sm',
+    onClick: () => pullToRefresh.refresh(),
+  });
+  disposables.addDestroyables(refreshButton);
+
   wrap.appendChild(pullToRefresh.element);
+  wrap.appendChild(refreshButton.element);
   wrap.appendChild(status.element);
 
   return wrap;
@@ -266,54 +274,6 @@ function buildSwipeableCardStackDemo(disposables: DisposableScope): HTMLElement 
   disposables.addDestroyables(stack);
 
   wrap.appendChild(stack.element);
-  wrap.appendChild(result.element);
-
-  return wrap;
-}
-
-/** RadialMenu demosu: "Envanter" butonuna basılı tutarak 5 seçenekli radyal menü. Hızlı dokunuş bir şey seçmez. */
-function buildRadialMenuDemo(disposables: DisposableScope): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'vol-showcase-panel-demo';
-  // card({ center: true }) panel-demo'yu kart içinde ortalar, çocuklarını değil — align-items:center gerekir.
-  wrap.style.alignItems = 'center';
-
-  const result = new Text(i18next.t('volui:touch.radialMenuHint'), {
-    variant: 'muted',
-  });
-  disposables.addDestroyables(result);
-
-  const menu = new RadialMenu({
-    items: [
-      { id: 'sword', label: i18next.t('volui:touch.sword') },
-      { id: 'shield', label: i18next.t('volui:touch.shield') },
-      { id: 'potion', label: i18next.t('volui:touch.potion') },
-      { id: 'bow', label: i18next.t('volui:touch.bow') },
-      { id: 'scroll', label: i18next.t('volui:touch.scroll') },
-    ],
-    onSelect: (id) => {
-      result.setContent(i18next.t('volui:touch.selected', { id }));
-    },
-  });
-  disposables.addDestroyables(menu);
-  document.body.appendChild(menu.element);
-  const menuElement = menu.element;
-
-  const openButton = new HoldButton({
-    shape: 'circle',
-    label: i18next.t('volui:touch.inventory'),
-    icon: svgIcon(ICON_INVENTORY),
-    size: 72,
-    onPress: () => {
-      // HoldButton.onPress koordinat vermez, butonun merkezi kullanılır.
-      const rect = openButton.element.getBoundingClientRect();
-      menu.open(rect.left + rect.width / 2, rect.top + rect.height / 2);
-    },
-  });
-  disposables.addDestroyables(openButton);
-  disposables.addDestroyables({ destroy: () => menuElement.remove() });
-
-  wrap.appendChild(openButton.element);
   wrap.appendChild(result.element);
 
   return wrap;

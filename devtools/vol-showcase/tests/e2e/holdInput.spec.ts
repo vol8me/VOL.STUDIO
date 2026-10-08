@@ -64,6 +64,26 @@ test.describe('klavye', () => {
   });
 });
 
+test('RadialMenu tuşla açılır; oklar döner, Enter seçer, odak açan düğmeye döner', async ({
+  page,
+}) => {
+  await openLive(page);
+  await selectTab(page, 'touch');
+  const opener = page
+    .locator('.vol-showcase-panel-demo button', { hasText: /keys|Tuşla/i })
+    .first();
+  await opener.scrollIntoViewIfNeeded();
+  await opener.click();
+  const menu = page.locator('.vol-radial-menu');
+  await expect(menu).toHaveClass(/vol-radial-menu--visible/);
+  await expect(menu.locator('.vol-radial-menu__item').first()).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(menu.locator('.vol-radial-menu__item').nth(1)).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(menu).not.toHaveClass(/vol-radial-menu--visible/);
+  await expect(opener).toBeFocused();
+});
+
 test.describe('kol', () => {
   test.beforeEach(async ({ page }) => {
     await installVirtualPad(page);

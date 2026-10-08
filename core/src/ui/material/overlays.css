@@ -119,8 +119,20 @@
 }
 
 .vol-toast__message {
+  flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* Eylem ve kapatma düğmeleri bildirimin içinde kalır; kapsayıcı tıklamayı yine geçirir. */
+.vol-toast__action,
+.vol-toast__dismiss {
+  flex: none;
+  width: auto;
+}
+
+.vol-toast__dismiss {
+  margin-inline-start: auto;
 }
 
 .vol-toast--success {

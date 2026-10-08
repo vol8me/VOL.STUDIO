@@ -3,6 +3,7 @@ import { GAMEPAD_BUTTON, type PadLike } from '../../src/input/GamepadState';
 import { ChargeButton } from '../../src/ui/buttons/ChargeButton';
 import { HoldButton } from '../../src/ui/buttons/HoldButton';
 import { LongPressButton } from '../../src/ui/buttons/LongPressButton';
+import { DirectionButton } from '../../src/ui/touch/DirectionButton';
 import { FocusNavController } from '../../src/ui/focus/FocusNavController';
 
 /**
@@ -92,6 +93,20 @@ describe('klavye eşdeğeri', () => {
     button.destroy();
   });
 
+  it('DirectionButton: Space basış/bırakış üretir ve aria-pressed izler', () => {
+    const onPress = vi.fn();
+    const onRelease = vi.fn();
+    const button = new DirectionButton({ label: 'Sağa', arrow: 'right', onPress, onRelease });
+    document.body.append(button.element);
+    key(button.element, 'keydown');
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(button.element.getAttribute('aria-pressed')).toBe('true');
+    key(button.element, 'keyup');
+    expect(onRelease).toHaveBeenCalledTimes(1);
+    expect(button.element.getAttribute('aria-pressed')).toBe('false');
+    button.destroy();
+  });
+
   it('devre dışı denetim klavyeyle basılmaz', () => {
     const onPress = vi.fn();
     const button = new HoldButton({ label: 'Ateş', onPress });
@@ -172,5 +187,32 @@ describe('kol eşdeğeri (FocusNavController A)', () => {
     place(plain);
     nav.pollPad(pad(true));
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Joystick klavye eşdeğeri', () => {
+  it('ok tuşları vektör üretir (çapraz birim uzunluk), son tuş bırakılınca onRelease çağrılır', async () => {
+    const { Joystick } = await import('../../src/ui/touch/Joystick');
+    const onMove = vi.fn();
+    const onRelease = vi.fn();
+    const stick = new Joystick({ onMove, onRelease, label: 'Sol çubuk' });
+    document.body.append(stick.element);
+    const base = stick.element.querySelector<HTMLElement>('.vol-joystick__base')!;
+    expect(base.tabIndex).toBe(0);
+    expect(base.getAttribute('aria-label')).toBe('Sol çubuk');
+    key(base, 'keydown', 'ArrowRight');
+    expect(onMove).toHaveBeenLastCalledWith({ x: 1, y: 0 });
+    key(base, 'keydown', 'ArrowDown');
+    const diagonal = onMove.mock.calls.at(-1)?.[0] as { x: number; y: number };
+    expect(Math.hypot(diagonal.x, diagonal.y)).toBeCloseTo(1, 5);
+    key(base, 'keyup', 'ArrowRight');
+    expect(onMove).toHaveBeenLastCalledWith({ x: 0, y: 1 });
+    expect(onRelease).not.toHaveBeenCalled();
+    key(base, 'keyup', 'ArrowDown');
+    expect(onRelease).toHaveBeenCalledTimes(1);
+    key(base, 'keydown', 'ArrowUp');
+    base.dispatchEvent(new FocusEvent('blur'));
+    expect(onRelease).toHaveBeenCalledTimes(2);
+    stick.destroy();
   });
 });

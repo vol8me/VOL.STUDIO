@@ -1,4 +1,6 @@
 import { Icon } from '../primitives/Icon';
+import { bindHoldInput } from '../buttons/holdInput';
+
 export type DirectionButtonArrow = 'up' | 'down' | 'left' | 'right';
 
 export interface DirectionButtonOptions {
@@ -25,6 +27,7 @@ export class DirectionButton {
   private pressed = false;
   private boundPointerDown: (event: PointerEvent) => void;
   private boundPointerUp: (event: PointerEvent) => void;
+  private readonly unbindHoldInput: () => void;
 
   constructor(options: DirectionButtonOptions) {
     this.onPressHandler = options.onPress;
@@ -43,6 +46,7 @@ export class DirectionButton {
       this.element.style.setProperty('--vol-direction-button-size', `${options.size}px`);
     }
     this.element.setAttribute('aria-label', options.label);
+    this.element.setAttribute('aria-pressed', 'false');
 
     if (options.icon) {
       const iconSlot = document.createElement('span');
@@ -70,6 +74,13 @@ export class DirectionButton {
     this.element.addEventListener('pointerdown', this.boundPointerDown);
     this.element.addEventListener('pointerup', this.boundPointerUp);
     this.element.addEventListener('pointercancel', this.boundPointerUp);
+    // Klavye (Space/Enter) ve kol A aynı basış/bırakış çiftini üretir; native `click` yutulur.
+    this.unbindHoldInput = bindHoldInput(this.element, {
+      down: () => this.setPressed(true),
+      up: () => this.setPressed(false),
+      cancel: () => this.setPressed(false),
+      isBusy: () => this.pressed,
+    });
   }
 
   isPressed(): boolean {
@@ -89,6 +100,7 @@ export class DirectionButton {
     this.element.removeEventListener('pointerdown', this.boundPointerDown);
     this.element.removeEventListener('pointerup', this.boundPointerUp);
     this.element.removeEventListener('pointercancel', this.boundPointerUp);
+    this.unbindHoldInput();
     this.element.remove();
   }
 
@@ -96,6 +108,7 @@ export class DirectionButton {
     if (this.pressed === pressed) return;
     this.pressed = pressed;
     this.element.classList.toggle('vol-direction-button--pressed', pressed);
+    this.element.setAttribute('aria-pressed', String(pressed));
     if (pressed) {
       this.onPressHandler?.();
     } else {

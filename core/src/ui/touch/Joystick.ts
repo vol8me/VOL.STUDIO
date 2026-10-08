@@ -1,5 +1,8 @@
 import { INPUT, UI_SIZE } from '../../constants';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { i18next } from '../../i18n/I18n';
+
+const ARROWS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
 
 export interface JoystickVector {
   x: number;
@@ -13,6 +16,8 @@ export interface JoystickOptions {
   deadZone?: number;
   onMove?: (vector: JoystickVector) => void;
   onRelease?: () => void;
+  /** Erişilebilir ad (klavyeyle odaklanan çubuk için); verilmezse `core:joystick.label`. */
+  label?: string;
 }
 
 /**
@@ -20,6 +25,9 @@ export interface JoystickOptions {
  * (Phaser canvas'ta çizilen gerçek oyun input'u) ile karıştırılmamalı — bu
  * component menü önizlemesi veya DOM tabanlı bir HUD için kullanılır.
  * `onMove` vektörü -1..1 aralığında normalize edilmiş x/y döndürür.
+ *
+ * **Klavye:** çubuk odaklanabilir; ok tuşları basılı tutuldukça vektör üretir (çapraz birim uzunluğa
+ * normalize), son tuş bırakılınca ya da odak kaybında `onRelease` çağrılır. İşaretçi basılıyken tuşlar yok sayılır.
  */
 export class Joystick {
   readonly element: HTMLDivElement;
@@ -40,6 +48,7 @@ export class Joystick {
   private readonly scope = new DisposableScope();
   /** Yalnızca bir sürükleme oturumu boyunca yaşar — bkz. `attachDragListeners`. */
   private dragScope: DisposableScope | null = null;
+  private readonly heldKeys = new Set<string>();
 
   constructor(options: JoystickOptions = {}) {
     const {
@@ -48,6 +57,7 @@ export class Joystick {
       onMove,
       onRelease,
     } = options;
+    const label = options.label;
     this.radius = radius;
     this.deadZone = deadZone;
     this.onMoveHandler = onMove;
@@ -59,6 +69,10 @@ export class Joystick {
 
     this.base = document.createElement('div');
     this.base.className = 'vol-joystick__base';
+    this.base.tabIndex = 0;
+    this.base.setAttribute('role', 'group');
+    this.base.setAttribute('aria-label', label ?? i18next.t('core:joystick.label'));
+    this.base.setAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown ArrowLeft ArrowRight');
     this.element.appendChild(this.base);
 
     this.thumb = document.createElement('div');
@@ -73,12 +87,55 @@ export class Joystick {
     // bağlamak, hiç dokunulmayan bir joystick için bile sayfadaki her pointermove'u
     // handler'a sokardı (bkz. RadialMenu/Kanban aynı deseni kullanır).
     this.scope.addListener(this.base, 'pointerdown', this.boundPointerDown as EventListener);
+    this.scope.addListener(this.base, 'keydown', ((event: KeyboardEvent) =>
+      this.onKeyDown(event)) as EventListener);
+    this.scope.addListener(this.base, 'keyup', ((event: KeyboardEvent) =>
+      this.onKeyUp(event)) as EventListener);
+    this.scope.addListener(this.base, 'blur', () => this.releaseKeys());
   }
 
   destroy(): void {
     this.dragScope?.dispose();
     this.scope.dispose();
     this.element.remove();
+  }
+
+  private onKeyDown(event: KeyboardEvent): void {
+    if (!ARROWS.includes(event.key) || this.activePointerId !== null) return;
+    event.preventDefault();
+    if (event.repeat) return;
+    this.heldKeys.add(event.key);
+    this.applyKeys();
+  }
+
+  private onKeyUp(event: KeyboardEvent): void {
+    if (!this.heldKeys.delete(event.key)) return;
+    event.preventDefault();
+    if (this.heldKeys.size === 0) this.releaseKeys();
+    else this.applyKeys();
+  }
+
+  /** Tutulan ok tuşlarını birim uzunlukta bir vektöre çevirir ve başparmağı oraya taşır. */
+  private applyKeys(): void {
+    const x = (this.heldKeys.has('ArrowRight') ? 1 : 0) - (this.heldKeys.has('ArrowLeft') ? 1 : 0);
+    const y = (this.heldKeys.has('ArrowDown') ? 1 : 0) - (this.heldKeys.has('ArrowUp') ? 1 : 0);
+    const length = Math.hypot(x, y);
+    const vx = length === 0 ? 0 : x / length;
+    const vy = length === 0 ? 0 : y / length;
+    this.base.classList.toggle('vol-joystick__base--active', length > 0);
+    this.thumb.style.transform = `translate(calc(-50% + ${vx * this.radius}px), calc(-50% + ${vy * this.radius}px))`;
+    this.onMoveHandler?.({ x: vx, y: vy });
+  }
+
+  private releaseKeys(): void {
+    if (this.heldKeys.size === 0 && !this.base.classList.contains('vol-joystick__base--active')) {
+      return;
+    }
+    this.heldKeys.clear();
+    if (this.activePointerId !== null) return;
+    this.base.classList.remove('vol-joystick__base--active');
+    this.thumb.style.transform = 'translate(-50%, -50%)';
+    this.onReleaseHandler?.();
   }
 
   private attachDragListeners(): void {

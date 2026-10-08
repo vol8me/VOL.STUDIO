@@ -308,13 +308,25 @@ function buildToastDemo(uiRootElement: HTMLElement, disposables: DisposableScope
   });
   const dangerButton = new Button(i18next.t('volui:panels.showDanger'), {
     variant: 'danger',
-    onClick: () => toasts.show(i18next.t('volui:panels.healthCritical'), { variant: 'danger' }),
+    onClick: () =>
+      toasts.show(i18next.t('volui:panels.healthCritical'), {
+        variant: 'danger',
+        dismissLabel: i18next.t('volui:panels.close'),
+      }),
   });
-  disposables.addDestroyables(infoButton, successButton, dangerButton);
+  const actionButton = new Button(i18next.t('volui:panels.showAction'), {
+    onClick: () =>
+      toasts.show(i18next.t('volui:panels.itemDeleted'), {
+        action: { label: i18next.t('volui:panels.undo'), onAction: () => undefined },
+        dismissLabel: i18next.t('volui:panels.close'),
+      }),
+  });
+  disposables.addDestroyables(infoButton, successButton, dangerButton, actionButton);
 
   buttons.appendChild(infoButton.element);
   buttons.appendChild(successButton.element);
   buttons.appendChild(dangerButton.element);
+  buttons.appendChild(actionButton.element);
   wrap.appendChild(buttons);
 
   return wrap;
