@@ -59,6 +59,11 @@ arayüzü kalır).
   kopyalanan bu kütüphaneler host Mesa'sıyla karışınca `WebKitWebProcess`
   `Could not create default EGL display: EGL_BAD_PARAMETER` ile düşer ve pencere
   boş kalır; `WEBKIT_DISABLE_DMABUF_RENDERER` bunu çözmez.
+- Kol yolu cihazda denenebilir: `devtools/deck/scripts/virtual-pad.py` (Deck'e `scp` ile kopyalanır,
+  `PAD_WARMUP=8 python3 virtual-pad.py DOWN A:1.0 RB`) `/dev/uinput` ile sanal Xbox 360 kolu
+  yaratır; Steam Input onu tanır ve kendi sanal kollarını açar (kol görünmeden önce **en az 8 sn**
+  beklenir, kısa beklemede girdi sayfaya ulaşmaz). Bu işletim sistemi düzeyinde sanal koldur,
+  **fiziksel Deck düğmeleri değildir**; Steam Input → WebKitGTK Gamepad API → gezinme zincirini sınar.
 - gamescope kuralı (DMA-BUF açık) altında HOST derlemesinde **2D canvas boş
   kalır** (vitrinde Curve Editor); `WEBKIT_DISABLE_DMABUF_RENDERER=1` ile aynı
   sayfa çizer. Bunun SLR4 derlemesinde de olup olmadığı **ölçülmedi**; canvas

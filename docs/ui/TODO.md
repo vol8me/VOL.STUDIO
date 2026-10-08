@@ -301,7 +301,7 @@ UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağım
       `lang` özniteliği yerleşimden sonra atandığı için WebKit'te "SETTİNGS" (Türkçe İ) çıkıyordu → atama
       sayfa kurulmadan önce. **Açık bulgu:** gamescope kuralındaki DMA-BUF açık yolunda HOST derlemesinde 2D
       canvas boş (Curve Editor), kapalıyken çiziliyor; SLR4 derlemesinde yeniden ölçülecek (UI-12 / F08).
-      Kalan: SLR4 (steamrt4) derlemesi, kol ile gezinme (gerçek D-pad/A/B), OGG/UI sesi çıkışı, ısınmış
+      Kol: OS düzeyi sanal Xbox kolu (`devtools/deck/scripts/virtual-pad.py`) Steam Input üzerinden D-pad/RB/A ve OSK yazımını sürdü (fiziksel düğme değil). Kalan: SLR4 (steamrt4) derlemesi, fiziksel kol/arka tuş ve glif, OGG/UI sesi çıkışı, ısınmış
       performans/MangoHud, Windows kare sondası → NOT-RUN, sahip UI-12.4/F08.
 
 Faz testi: quality/appIdentity/productIcons/catalog/layers/ports/cargo/plugin fixtures, contract/rust/build/bundle, iki motor E2E, gerçek native sonda.
