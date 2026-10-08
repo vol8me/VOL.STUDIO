@@ -379,7 +379,10 @@ function buildContextMenuDemo(
   const result = new Text(i18next.t('volui:panels.awaitingAction'), { variant: 'muted' });
   disposables.addDestroyables(result);
 
-  const trigger = new Button(i18next.t('volui:panels.actions'), { fullWidth: false });
+  const trigger = new Button(i18next.t('volui:panels.actions'), {
+    fullWidth: false,
+    iconRight: svgIcon('chevronDown', 16),
+  });
   disposables.addDestroyables(trigger);
 
   const menu = new ContextMenu(

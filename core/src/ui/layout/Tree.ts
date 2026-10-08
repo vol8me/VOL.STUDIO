@@ -135,8 +135,8 @@ export class Tree {
     }
 
     const caret = document.createElement('span');
-    caret.className = 'vol-tree__caret';
-    caret.textContent = hasChildren ? '▸' : '';
+    // Ok glifi yazı tiplerinde yok: üçgen CSS ile çizilir (platformdan bağımsız).
+    caret.className = hasChildren ? 'vol-tree__caret vol-tree__caret--parent' : 'vol-tree__caret';
     row.appendChild(caret);
 
     if (this.multiSelect) {

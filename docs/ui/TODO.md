@@ -339,6 +339,15 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
       hissine uygun başlık/sayı yazı tipi seçimi gözden geçirilir. Kapanır: font-ready ve yükleme
       hatası örneği; asenkron font yerleşimi kaydırmaz; Deck glif yüksekliği gerçek ekranda;
       Android %200 font ölçeği ayrı native sonda.
+      Yapıldı (2026-10-08): **glif kapsamı ölçüldü** (`scripts/quality/fontCoverage.mjs`, TTF `cmap`
+      ayrıştırması; `fontCoverage.test.ts` her yerel dosyayı tarar): Jura ve Exo 2'de Türkçe harfler
+      (ÇĞİıÖŞÜçğöşü), rakamlar, noktalama, ₺ € $ ve − tam; **ok ve üçgen glifleri (→ ← ↑ ↓ ▸ ▾ ▲ ▼) yok**,
+      bunlar arayüzde kullanılıyordu ve sistem yedek fontuna düşüp platforma göre farklı çiziliyordu →
+      sıralama göstergesi ve ağaç oku CSS üçgeni, tuş etiketleri sözcük ("Left Arrow"), vitrin metinlerinde ok yerine
+      sözcük ve bağlam menüsü tetikleyicisinde ikon. Eksik glif yeni metinde kapıyı düşürür. Lisans dosyaları
+      (OFL) pakette. Kalan: değişken TTF'lerin boyutu/subset kararı, yedek font tabanı/satır yüksekliği ölçümü,
+      font yükleme hatası örneği, asenkron font yerleşimi kaydırmaz kanıtı, Deck glif yüksekliği ve Android %200
+      ölçek.
 - [ ] **UI-07.4 — Tema laboratuvarı ve üst bar (kalan).** Yapıldı: vitrin üst çubuğunda skin
       düğmesi (`ThemeController`, kök `data-vol-theme`, seçim `localStorage`'da kalır, bilinmeyen
       kayıt varsayılana döner; `skin.spec.ts` iki motorda), skin ses paletini ve imleç aksanını

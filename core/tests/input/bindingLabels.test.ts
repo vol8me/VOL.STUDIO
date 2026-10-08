@@ -15,7 +15,7 @@ describe('describePCBinding', () => {
   it('adlandırılmış tuşları tablodan okur', () => {
     expect(describePCBinding({ source: 'key', keyCode: 32 })).toBe('Space');
     expect(describePCBinding({ source: 'key', keyCode: 27 })).toBe('Esc');
-    expect(describePCBinding({ source: 'key', keyCode: 38 })).toBe('↑');
+    expect(describePCBinding({ source: 'key', keyCode: 38 })).toBe('Up Arrow');
   });
 
   it('fonksiyon ve numpad tuşlarını aralıktan türetir', () => {

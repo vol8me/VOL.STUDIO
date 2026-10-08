@@ -368,7 +368,9 @@ export class DataTable<T extends object> {
       const isSorted = this.sortKey === key;
       const indicator = th.querySelector('.vol-datatable__sort-indicator');
       if (indicator) {
-        indicator.textContent = isSorted ? (this.sortDirection === 'asc' ? '▲' : '▼') : '';
+        // Üçgen CSS ile çizilir (▲▼ yazı tiplerinde yok); yön `data-direction`dadır.
+        if (isSorted) indicator.setAttribute('data-direction', this.sortDirection);
+        else indicator.removeAttribute('data-direction');
       }
       if (th.querySelector('.vol-datatable__sort-button')) {
         th.setAttribute(

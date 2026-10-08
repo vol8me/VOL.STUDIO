@@ -44,20 +44,6 @@
       "reason": "ColorPicker örneği aria değeri otomatik doğrulanamadı; elle inceleme"
     },
     {
-      "scope": "tab/advanced",
-      "rule": "color-contrast",
-      "target": ".vol-tree > li:nth-child(2) > .vol-tree__row > .vol-tree__caret",
-      "owner": "UI-05.3",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
-    },
-    {
-      "scope": "tab/advanced",
-      "rule": "color-contrast",
-      "target": ".vol-tree__caret--open",
-      "owner": "UI-05.3",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
-    },
-    {
       "scope": "tab/scroll",
       "rule": "color-contrast",
       "target": ".vol-text--body:nth-child(6)",

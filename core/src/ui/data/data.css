@@ -153,6 +153,21 @@
   font-size: var(--vol-text-micro);
 }
 
+.vol-datatable__sort-indicator[data-direction]::before {
+  content: '';
+  display: block;
+  border-style: solid;
+  border-color: currentcolor transparent;
+}
+
+.vol-datatable__sort-indicator[data-direction='asc']::before {
+  border-width: 0 4px 6px;
+}
+
+.vol-datatable__sort-indicator[data-direction='desc']::before {
+  border-width: 6px 4px 0;
+}
+
 .vol-datatable__row {
   border-bottom: 1px solid var(--vol-ui-border-soft);
   transition: background-color var(--vol-transition-fast);
