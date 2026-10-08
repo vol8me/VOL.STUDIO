@@ -11,6 +11,7 @@
   },
   "hud": {
     "boost": "Hızlanma deposu",
+    "mapSummary": "Harita: siz ve {{vehicles}} diğer araç, yakınlaştırma {{zoom}}x",
     "map": "Harita",
     "fullscreen": "Tam ekran",
     "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",

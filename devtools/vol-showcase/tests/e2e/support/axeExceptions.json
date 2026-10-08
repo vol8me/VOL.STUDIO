@@ -9,34 +9,6 @@
       "reason": "Popover aria-controls hedefi kapalıyken DOM'da yok; elle inceleme"
     },
     {
-      "scope": "tab/hud",
-      "rule": "aria-prohibited-attr",
-      "target": "span[aria-label=\"Ammo\"]",
-      "owner": "UI-08.1",
-      "reason": "HUD ikon span'ı rolsüz aria-label taşıyor; elle inceleme"
-    },
-    {
-      "scope": "tab/hud",
-      "rule": "aria-prohibited-attr",
-      "target": "span[aria-label=\"Gold\"]",
-      "owner": "UI-08.1",
-      "reason": "HUD ikon span'ı rolsüz aria-label taşıyor; elle inceleme"
-    },
-    {
-      "scope": "tab/hud",
-      "rule": "aria-prohibited-attr",
-      "target": "span[aria-label=\"Mana\"]",
-      "owner": "UI-08.1",
-      "reason": "HUD ikon span'ı rolsüz aria-label taşıyor; elle inceleme"
-    },
-    {
-      "scope": "tab/hud",
-      "rule": "aria-prohibited-attr",
-      "target": "span[aria-label=\"Wood\"]",
-      "owner": "UI-08.1",
-      "reason": "HUD ikon span'ı rolsüz aria-label taşıyor; elle inceleme"
-    },
-    {
       "scope": "tab/forms",
       "rule": "aria-valid-attr-value",
       "target": ".vol-color-picker__swatch",

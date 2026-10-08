@@ -34,7 +34,7 @@ import { ArenaView } from '@/view/ArenaView';
 import { EffectsView } from '@/view/EffectsView';
 import { VehicleViews } from '@/view/VehicleViews';
 import { CameraRig } from './world/CameraRig';
-import { hudFrame, tankFrame } from './world/frames';
+import { hudFrame, hudVehicles, tankFrame } from './world/frames';
 import { PauseController } from './world/PauseController';
 import { EnvironmentController } from './world/EnvironmentController';
 import { SEASONS } from '@/config/seasons';
@@ -185,7 +185,8 @@ export class WorldScene extends Phaser.Scene {
         metre: WORLD.metre,
         worldWidth: world.width,
         worldHeight: world.height,
-        mapGridStep: WORLD.gridStep * WORLD.gridMajorEvery,
+        mapGridStep: WORLD.gridStep,
+        mapGridMajorEvery: WORLD.gridMajorEvery,
         actionSource: this.controls.actionSource,
         stickSource: this.controls.stickSource,
         touch,
@@ -338,6 +339,7 @@ export class WorldScene extends Phaser.Scene {
         rect,
         player.gun.getProgress(),
         this.environment.climate,
+        () => hudVehicles(this.sim.vehicles, player.id),
       ),
       time,
     );

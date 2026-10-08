@@ -43,12 +43,17 @@ beforeAll(() => {
     translate: vi.fn(),
     rotate: vi.fn(),
     scale: vi.fn(),
+    setTransform: vi.fn(),
+    fillText: vi.fn(),
     drawImage: vi.fn(),
     measureText: vi.fn().mockReturnValue({ width: 42 }),
     set fillStyle(_v: unknown) {},
     set strokeStyle(_v: unknown) {},
     set lineWidth(_v: unknown) {},
     set font(_v: unknown) {},
+    set globalAlpha(_v: unknown) {},
+    set textAlign(_v: unknown) {},
+    set textBaseline(_v: unknown) {},
   };
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
     fakeContext as unknown as CanvasRenderingContext2D,

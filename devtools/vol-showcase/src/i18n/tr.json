@@ -323,7 +323,10 @@
     "selected": "Seçildi: {{name}} (tekrar tıkla: iptal)",
     "selectionCancelled": "Seçim iptal edildi.",
     "minimap": "Minimap",
-    "minimapHint": "Minimap üzerinde bir noktaya tıkla.",
+    "minimapHint": "Haritaya tıkla ya da sürükle. Odaklanınca: oklar imleci taşır, Enter oraya zıplar, + ve - yakınlaştırır, Home sıfırlar. Tekerlek imleçte yakınlaştırır.",
+    "minimapFollow": "Oyuncuyu izle",
+    "minimapPing": "Düşmanı işaretle",
+    "minimapSummary": "Harita: {{enemies}} düşman, {{structures}} yapı, yakınlaştırma {{zoom}}x",
     "cameraJumped": "Kamera zıplatıldı: ({{x}}, {{y}})",
     "zoomIn2x": "Yakınlaştır (2x)",
     "fpsMeterTitle": "FPS Göstergesi",
@@ -1068,5 +1071,23 @@
     },
     "iconGallery": "İkon galerisi",
     "iconCategory": "İkon kategorisi"
+  },
+  "bench": {
+    "title": "Kare ölçümü",
+    "running": "{{tab}} ölçülüyor ({{index}}/{{total}})…",
+    "summary": "Ortanca {{fps}} FPS; en zayıf: {{tab}} ({{weak}} FPS). Sayfa kaydırılırken sunulan kareler.",
+    "tab": "Sekme",
+    "fps": "FPS",
+    "p50": "p50 ms",
+    "p95": "p95 ms",
+    "worst": "En kötü ms",
+    "slow": ">20 ms",
+    "env": "{{viewport}} · DPR {{dpr}} · {{cores}} çekirdek · {{agent}}",
+    "close": "Kapat (Esc)",
+    "bisecting": "{{tab}}: pahalı kart aranıyor…",
+    "bisectTitle": "{{tab}} ({{fps}} FPS): bir kart gizlenince kazanılan FPS",
+    "bisectRow": "{{title}}: +{{gain}} FPS ({{fps}}'e)",
+    "styleTitle": "{{tab}} ({{fps}} FPS): bir CSS özelliği kapatılınca kazanılan FPS",
+    "styleRow": "{{id}}: +{{gain}} FPS ({{fps}}'e)"
   }
 }

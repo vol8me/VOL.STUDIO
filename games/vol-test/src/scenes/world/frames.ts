@@ -1,4 +1,5 @@
-import type { HudFrame } from '@/hud/HudFrame';
+import type { HudFrame, HudVehicle } from '@/hud/HudFrame';
+import type { Vehicle } from '@/sim/entities/Vehicle';
 import { lerpAngle } from '@volstudio/core/math';
 import type { Tank } from '@/sim/tank/Tank';
 import type { TankFrame } from '@/view/TankView';
@@ -33,6 +34,7 @@ export function hudFrame(
   view: HudFrame['view'],
   fireProgress = 1,
   climate?: HudFrame['climate'],
+  vehicles?: HudFrame['vehicles'],
 ): HudFrame {
   return {
     x: frame.x,
@@ -46,6 +48,18 @@ export function hudFrame(
     boostCapacity,
     fireProgress,
     climate,
+    vehicles,
     view,
   };
+}
+
+/** Harita için araç listesi: poz simülasyonun güncel adımıdır (harita 10 Hz, ara değer gerekmez). */
+export function* hudVehicles(
+  vehicles: readonly Vehicle[],
+  playerId: number,
+): Generator<HudVehicle> {
+  for (const vehicle of vehicles) {
+    const { x, y, hull } = vehicle.tank;
+    yield { id: vehicle.id, x, y, hull, player: vehicle.id === playerId };
+  }
 }

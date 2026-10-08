@@ -31,6 +31,7 @@ const noopCtx2d = {
   putImageData: vi.fn(),
   createImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
   setTransform: vi.fn(),
+  fillText: vi.fn(),
   drawImage: vi.fn(),
   save: vi.fn(),
   restore: vi.fn(),

@@ -68,7 +68,8 @@ beğenisi ya da insan kabulü değildir.
 kuralı, tarayıcı yerleşim testi seçilen çizilmiş kutuları doğrular. Saydam
 native range hedefinin mevcut turda atlanması UI-00/UI-03 kapsamında
 düzeltilecek bir ölçüm açığıdır. Odak, geri
-yığını ve azaltılmış hareket altında temizlik örneklerin parçasıdır.
+yığını ve azaltılmış hareket altında temizlik örneklerin parçasıdır. Cihazda gerçek kare hızı için `Shift+B`
+(ya da `?bench`) her sekmeyi kaydırarak ölçer; yöntem ve Deck bulguları [Deck belgesindedir](../../docs/steam-deck.md).
 
 [Tasarım sözleşmesi](DESIGN.md)
 

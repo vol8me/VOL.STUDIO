@@ -52,6 +52,9 @@
   min-height: 48px;
   padding: var(--vol-space-sm);
   display: flex;
+
+  /* Dar bölmede (telefon dikey) etiket ve iki düğme sığmazsa alt satıra iner; kart kırpmasının arkasında kalmaz. */
+  flex-wrap: wrap;
 }
 
 .vol-showcase-workbench-viewport-bar > :first-child {

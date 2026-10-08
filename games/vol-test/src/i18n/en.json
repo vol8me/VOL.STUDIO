@@ -11,6 +11,7 @@
   },
   "hud": {
     "boost": "Boost reserve",
+    "mapSummary": "Map: you and {{vehicles}} other vehicles, zoom {{zoom}}x",
     "map": "Map",
     "fullscreen": "Fullscreen",
     "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",

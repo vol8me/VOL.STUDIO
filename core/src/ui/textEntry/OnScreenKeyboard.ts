@@ -75,6 +75,9 @@ let keyboardInstanceCounter = 0;
 /** Etkin arayüz dili Türkçe ise Türkçe Q düzeni ve Türkçe büyük harf kuralları kullanılır. */
 const isTurkish = (): boolean => (i18next.language ?? 'tr').toLowerCase().startsWith('tr');
 
+/** Alçak görüntü alanı eşiği: tarayıcı çubuklarıyla yatay telefon (≈ 283–380 px) bunun altındadır. */
+const SHORT_VIEWPORT = '(height <= 420px)';
+
 export class OnScreenKeyboard {
   readonly element: HTMLDivElement;
   private readonly valueView: HTMLDivElement;
@@ -164,6 +167,14 @@ export class OnScreenKeyboard {
       if (key) this.onKey(key, event);
     });
     this.renderKeys();
+
+    // Çok alçak görüntü alanında (telefon yatay + tarayıcı çubukları) son iki satır birleşir; eşik geçilince yeniden kurulur.
+    if (typeof matchMedia === 'function') {
+      const short = matchMedia(SHORT_VIEWPORT);
+      const onChange = (): void => this.rerenderKeepingFocus();
+      short.addEventListener('change', onChange);
+      this.scope.addSubscription(() => short.removeEventListener('change', onChange));
+    }
 
     // Açık klavyede dil değişirse etiketler (ve düzen gerekiyorsa tuşlar) güncellenir; odak korunur.
     i18next.on('languageChanged', this.onLanguageChanged);
@@ -297,7 +308,16 @@ export class OnScreenKeyboard {
   /** Geçerli katmanın tuşlarını kurar; shift yalnız etiketleri değiştirir (odak yerinde kalır). */
   private renderKeys(): void {
     this.keyGrid.replaceChildren();
-    for (const row of this.buildRows()) {
+    let rows = this.buildRows();
+    if (
+      typeof matchMedia === 'function' &&
+      matchMedia(SHORT_VIEWPORT).matches &&
+      rows.length >= 2
+    ) {
+      // Vazgeç/Bitti ayrı bir satırda kalırsa 283 px'lik alana sığmaz ve görünmez olurdu: alt iki satır tek satır.
+      rows = [...rows.slice(0, -2), [...rows[rows.length - 2], ...rows[rows.length - 1]]];
+    }
+    for (const row of rows) {
       const rowEl = document.createElement('div');
       rowEl.className = 'vol-osk__row';
       for (const def of row) {

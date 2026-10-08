@@ -323,7 +323,10 @@
     "selected": "Selected: {{name}} (click again to cancel)",
     "selectionCancelled": "Selection cancelled.",
     "minimap": "Minimap",
-    "minimapHint": "Click a point on the minimap.",
+    "minimapHint": "Click or drag on the map. Focus it: arrows move the cursor, Enter jumps, + and - zoom, Home resets. Wheel zooms at the cursor.",
+    "minimapFollow": "Follow player",
+    "minimapPing": "Ping enemy",
+    "minimapSummary": "Map: {{enemies}} enemies, {{structures}} structures, zoom {{zoom}}x",
     "cameraJumped": "Camera jumped to: ({{x}}, {{y}})",
     "zoomIn2x": "Zoom In (2x)",
     "fpsMeterTitle": "FPS Meter",
@@ -1068,5 +1071,23 @@
     },
     "iconGallery": "Icon gallery",
     "iconCategory": "Icon category"
+  },
+  "bench": {
+    "title": "Frame benchmark",
+    "running": "Measuring {{tab}} ({{index}}/{{total}})…",
+    "summary": "Median {{fps}} FPS; weakest: {{tab}} at {{weak}} FPS. Presented frames while the page scrolls.",
+    "tab": "Tab",
+    "fps": "FPS",
+    "p50": "p50 ms",
+    "p95": "p95 ms",
+    "worst": "Worst ms",
+    "slow": ">20 ms",
+    "env": "{{viewport}} · DPR {{dpr}} · {{cores}} cores · {{agent}}",
+    "close": "Close (Esc)",
+    "bisecting": "{{tab}}: finding the expensive card…",
+    "bisectTitle": "{{tab}} ({{fps}} FPS): FPS gained by hiding one card",
+    "bisectRow": "{{title}}: +{{gain}} FPS (to {{fps}})",
+    "styleTitle": "{{tab}} ({{fps}} FPS): FPS gained with one CSS feature switched off",
+    "styleRow": "{{id}}: +{{gain}} FPS (to {{fps}})"
   }
 }

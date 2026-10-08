@@ -428,33 +428,95 @@ export function buildMinimapCard(disposables: DisposableScope): HTMLElement {
   disposables.addDestroyables(result);
 
   const minimap = new MinimapPanel({
-    width: 200,
-    height: 200,
+    width: 240,
+    height: 240,
     backgroundImage: buildMinimapBackgroundTexture(),
     // Orijini merkezde olan dünya örneği: -1000..1000 aralığı, sol-üst köşeye offsetli.
     worldWidth: 2000,
     worldHeight: 2000,
     worldOffsetX: -1000,
     worldOffsetY: -1000,
+    grid: { step: 100, majorEvery: 5 },
+    scaleBar: { unitsPerMetre: 10, unit: 'm' },
+    north: true,
+    wheelZoom: true,
+    controls: true,
+    maxZoom: 6,
     onClick: (worldX, worldY) => {
       result.setContent(
         i18next.t('volui:hud.cameraJumped', { x: Math.round(worldX), y: Math.round(worldY) }),
       );
     },
+    onNavigate: (worldX, worldY) => {
+      result.setContent(
+        i18next.t('volui:hud.cameraJumped', { x: Math.round(worldX), y: Math.round(worldY) }),
+      );
+    },
+    describe: (counts, zoom) =>
+      i18next.t('volui:hud.minimapSummary', {
+        enemies: counts.enemy ?? 0,
+        structures: counts.structure ?? 0,
+        zoom,
+      }),
   });
   disposables.addDestroyables(minimap);
   minimap.element.style.alignSelf = 'center';
-  minimap.setMarker('player', {
-    worldX: 0,
-    worldY: 0,
-    color: VOL_COLORS.onSupport,
-    radius: 4,
-    shape: 'arrow',
-    rotation: -Math.PI / 4,
+
+  // Canlı örnek: düşmanlar yörüngede döner (durağan harita çizim istemez; hareket yalnız değişen kareyi çizdirir).
+  const enemies = [
+    { id: 'enemy-1', radius: 650, speed: 0.4, phase: 0 },
+    { id: 'enemy-2', radius: 820, speed: -0.3, phase: 2 },
+    { id: 'enemy-3', radius: 380, speed: 0.7, phase: 4 },
+  ];
+  let playerTurn = 0;
+  const frame = (time: number): void => {
+    playerTurn = time / 4000;
+    minimap.batch(() => {
+      minimap.setMarker('player', {
+        worldX: Math.cos(playerTurn) * 220,
+        worldY: Math.sin(playerTurn) * 220,
+        color: VOL_COLORS.brandHover,
+        radius: 5,
+        shape: 'arrow',
+        rotation: playerTurn + Math.PI / 2,
+        kind: 'player',
+        priority: 10,
+      });
+      for (const enemy of enemies) {
+        const angle = enemy.phase + (time / 1000) * enemy.speed;
+        minimap.setMarker(enemy.id, {
+          worldX: Math.cos(angle) * enemy.radius,
+          worldY: Math.sin(angle) * enemy.radius,
+          color: VOL_COLORS.dangerSolid,
+          radius: 3.5,
+          kind: 'enemy',
+          edge: true,
+        });
+      }
+    });
+  };
+  minimap.setMarker('base', {
+    worldX: -700,
+    worldY: -600,
+    color: VOL_COLORS.supportSolid,
+    shape: 'square',
+    radius: 4.5,
+    kind: 'structure',
   });
-  minimap.setMarker('enemy-1', { worldX: -600, worldY: 600, color: VOL_COLORS.dangerSolid });
-  minimap.setMarker('enemy-2', { worldX: 700, worldY: -700, color: VOL_COLORS.dangerSolid });
+  minimap.setMarker('objective', {
+    worldX: 650,
+    worldY: 700,
+    color: VOL_COLORS.warningSolid,
+    shape: 'diamond',
+    radius: 4,
+    kind: 'structure',
+    priority: 5,
+  });
   minimap.setViewport(-300, -300, 600, 600);
+  const started = performance.now();
+  frame(0);
+  const animation = disposables.addInterval(() => frame(performance.now() - started), 100);
+  disposables.add({ dispose: () => animation.cancel() });
 
   wrap.appendChild(minimap.element);
 
@@ -470,6 +532,27 @@ export function buildMinimapCard(disposables: DisposableScope): HTMLElement {
   });
   disposables.addDestroyables(zoomButton);
   controls.appendChild(zoomButton.element);
+
+  let following = false;
+  const followButton = new Button(i18next.t('volui:hud.minimapFollow'), {
+    onClick: () => {
+      following = !following;
+      followButton.element.setAttribute('aria-pressed', String(following));
+      if (following && minimap.getZoom() === 1) minimap.setZoom(3);
+      minimap.follow(following ? 'player' : null);
+    },
+  });
+  followButton.element.setAttribute('aria-pressed', 'false');
+  disposables.addDestroyables(followButton);
+  controls.appendChild(followButton.element);
+
+  const pingButton = new Button(i18next.t('volui:hud.minimapPing'), {
+    onClick: () => {
+      minimap.ping(Math.cos(2) * 820, Math.sin(2) * 820, VOL_COLORS.dangerSolid);
+    },
+  });
+  disposables.addDestroyables(pingButton);
+  controls.appendChild(pingButton.element);
   wrap.appendChild(controls);
 
   wrap.appendChild(result.element);

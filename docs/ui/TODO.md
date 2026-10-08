@@ -392,6 +392,29 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       boyut/zoom/skin; işaretçi kontrastı, renk dışı işaret, ikon. Kapanır: HUD işaretçi/girdi
       katmanı örtüşmesi doğru; mini harita görünümü tüketici modeli; oyun fiziği/performans bu
       göreve karıştırılmaz.
+      **Mini harita yeniden yazımı (2026-10-08, kullanıcı ara geri bildirimi: "yüzeysel; geliştirilmeli
+      ve VOL.TEST sağlıklı tüketmeli")**. Analiz: her `setMarker`/`setViewport` tüm tuvali yeniden
+      çiziyordu (VOL.TEST kare başına iki tam çizim, hareket olmasa da), tuval cihaz piksel oranını
+      bilmiyordu (tablette bulanık), renkler sabit beyazdı (tema/kaplama yok), ızgara tüketicide elle
+      üretilen bir görüntüydü, dünya sınırı/ölçek/kuzey/kenar göstergesi/halka dalgası yoktu, etkileşim
+      yalnız tıklamaydı (sürükleme, tekerlek, klavye imleci, yakınlaştırma düğmesi yok), okuyucuya
+      içerik özeti verilmiyordu ve VOL.TEST yalnız oyuncuyu gösteriyordu. Karar ve uygulama:
+      `MinimapPanel` (çizim `minimapDraw.ts`ye ayrıldı; eski API aynen): değişiklikler mikro görevle
+      çerçeve başına BİR çizime birleşir (`batch`/`flush`), yarım pikselden küçük değişim ve aynı işaret
+      hiç çizim istemez (durağan harita CPU harcamaz), tuval DPR'ye göre (en çok 2) ölçeklenir ve boyutu
+      CSS değişkeniyle tüketiciye açıktır; palet tema tokenlarından okunur ve kaplama değişince
+      yeniden çizilir; yerleşik ızgara (ince çizgiler 9 px altında bırakılır), dünya sınırı, kamera
+      görüş alanı (hafif dolgu + köşe ayraçları), işaret şekilleri (nokta/ok/kare/baklava), koyu kenar,
+      öncelik, kenar göstergesi, ölçek çubuğu (1-2-5 dizisi), kuzey, `follow`, `ping` (hareket
+      azaltılmışta halka büyümez), sürükleme (`onNavigate`), imleç altında tekerlek yakınlaştırma,
+      klavye imleci (ok/Enter/+/−/Home), köşe yakınlaştırma düğmeleri (dokunmatikte 44 px, yan yana),
+      okuyucu özeti (`describe`, yalnız değişince yazılır). VOL.TEST `MapPanel` artık tüm araçları
+      (oyuncu vurgulu), yerleşik ızgara/ölçek/kuzey, oyuncuyu izleyen yakınlaştırma ve özet kullanır;
+      HUD karesi araç listesini tembel verir (yalnız 10 Hz harita güncellemesinde kurulur). Vitrin
+      kartı canlı döner düşmanlar, takip, ping, kenar göstergesi ve sürükleme örneğiyle yenilendi.
+      Kanıt: `core/tests/ui/hud/minimapPanel.test.ts` (19), `games/vol-test/tests/hud/MapPanel.test.ts`,
+      gerçek oyun ekran görüntüsü (çoklu tank, 3 yakınlaştırma düzeyi), vitrin görsel temel çizgisi.
+      Açık: fiziksel Deck/tablet görsel kabulü ve dokunma sürükleme hissi (kullanıcı turu).
 - [ ] **UI-08.3 — ActionBar/BuildMenu/SkillTree/SlotGrid.** Gerçek oyun ikonları (UI-01.8),
       seçim/kilitli/kullanılamayan/bekleme/boş/nadirlik; klavye/kol/dokunma; RTS bağlamsal
       imleç (UI-01.9) ile. Kapanır: resolveSkillStates isteğe bağlı kalır; hover/Tooltip ve
@@ -647,6 +670,20 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
 - [ ] **UI-13.3 — Gerçek cihaz/performans.** Windows, Deck host/SLR4, Android profilleri aynı
       örnekle A/B; VOL.TEST yükleri sabit tohumla. Kapanır: CPU gürültü sınırı ve ekrana sunum
       ayrı; UI maliyeti toplam FPS'ten ayrı kök neden; 10 dk termal; bilinmeyen NOT-RUN.
+      **Gerçek cihaz turu (2026-10-08, kullanıcı: "Samsung bağlandı; dikey ve yatay, tek tek tüm sekmeler";
+      "Deck'te neden 60 FPS sabit değil / 30–40"; "APK'larda FPS")**. Yeni araç: vitrinde kare ölçer
+      (`Shift+B`/`?bench`, `frameBench.ts`; sekme sekme kaydırarak SUNULAN kareyi ölçer, yavaş sekmede kart kart
+      gizleme + CSS özelliği kapatma/ekleme ayrıştırması, `window.__volFrameBench`). **Samsung S21 FE** (Android 16, Chrome
+      137; ilk açılışta hesapsız devam seçildi): dikey 384×725, yatay 796×283 CSS px; 14 sekmenin 14'ü iki yönde de
+      **59,9–60 FPS kilitli, 0 yavaş kare**; cihaz kabulü dikey 6/6, yatay 5/6 → yatayda **ekran klavyesinin Vazgeç/Bitti
+      satırı kırpılıyordu** (tuş 34 px, <40): ≤420 px yükseklikte son iki satır birleşir, başlık gizlenir, tuş 40 px
+      (`OnScreenKeyboard`, `keyboard.test.ts`). Sekme sekme kaydırma incelemesi (dikey tam, yatay örnek) yeni bulgular:
+      Workbench bölünebilir panelinde görüntü çubuğu kart kırpmasının arkasında kalıyordu (flex-wrap), Kimlik ikon galerisi
+      `align-self: flex-start` yüzünden tek dar sütuna düşüyordu (masaüstünde de), SlotGrid 6×56 px telefon dikeyinde sağdan
+      kırpılıyordu (44 px hücre). **Lenovo tablet**: iki yönde ≈60 FPS (Text sekmesi 57,7–58,3). **Steam Deck**: ölçüm ve
+      kök neden `docs/steam-deck.md`'dedir (Forms 42,9 / Touch 46,5 → kart başına bileşik katman ile 60,0 / 59,4; 14 sekme
+      57–60,6, ortanca 60,2; kök neden CPU boyama, GPU %0). Bir de gerçek hata: Tabs'in kendi ok tuşu odağı taşıyınca
+      `FocusNavController` halkası eski öğede kalıyordu (düzeltildi).
 - [ ] **UI-13.4 — İnsan erişim/görsel/haptik/ses.** Yalnız klavye/kol gerçek akış, seçilen AT +
       TalkBack + NVDA/Narrator, TR/EN/%200/gri ton, glif yüksekliği, haptik; kullanıcının
       görsel/ses/imleç kabulü. Kapanır: gerçek beyan ve profil kaydı; eksik profil açık kabul.

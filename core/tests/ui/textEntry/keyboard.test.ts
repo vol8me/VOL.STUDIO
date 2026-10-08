@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { i18next } from '../../../src/i18n/I18n';
 import { uiIntentBusFor, type UiIntent } from '../../../src/ui/feedback/uiIntent';
 import { OnScreenKeyboard } from '../../../src/ui/textEntry/OnScreenKeyboard';
@@ -196,5 +196,37 @@ describe('ekran klavyesi niyetleri (ses ve titreşim kapsamı)', () => {
     expect(document.querySelector('.vol-osk')?.parentElement).toBe(document.body);
     press('[data-value="a"]');
     expect(shown().trim()).toBe('a');
+  });
+});
+
+describe('ekran klavyesi alçak görüntü alanında', () => {
+  const stubShort = (short: boolean): void => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: short && query.includes('height <= 420px'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+  };
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('son iki satır birleşir: Vazgeç/Bitti boşluk tuşuyla aynı satırdadır (kaydırmasız basılabilir)', async () => {
+    stubShort(false);
+    const tall = OnScreenKeyboard.open({ value: '' });
+    const tallRows = document.querySelectorAll('.vol-osk__row').length;
+    press('[data-action="cancel"]');
+    await tall;
+    document.body.replaceChildren();
+
+    stubShort(true);
+    const pending = OnScreenKeyboard.open({ value: '' });
+    const rows = [...document.querySelectorAll('.vol-osk__row')];
+    expect(rows).toHaveLength(tallRows - 1);
+    const last = rows[rows.length - 1];
+    expect(last.querySelector('[data-action="done"]')).not.toBeNull();
+    expect(last.querySelector('[data-action="cancel"]')).not.toBeNull();
+    expect(last.querySelector('[data-value=" "], [data-action="space"]')).not.toBeNull();
+    press('[data-action="done"]');
+    await expect(pending).resolves.toEqual({ value: '', canceled: false });
   });
 });

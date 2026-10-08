@@ -134,6 +134,9 @@
     "finish": "Bitir"
   },
   "minimap": {
+    "summary": "{{label}}: {{count}} işaret, yakınlaştırma {{zoom}}x",
+    "zoomIn": "Haritayı yakınlaştır",
+    "zoomOut": "Haritayı uzaklaştır",
     "label": "Harita",
     "interactive": "{{label}}, etkileşimli — Enter ile merkeze zıpla"
   },

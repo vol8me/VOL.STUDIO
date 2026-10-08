@@ -424,15 +424,72 @@ const LAYERS = [
     },
   ],
   [
-    'loading-full',
-    'Yükleme ekranı',
+    'loading-bar',
+    'Yükleme ekranı · çelik plaka (çubuk)',
     async (p) => {
       await selectTab(p, 'loading');
       await p
         .getByRole('button', { name: /Full Screen Preview/ })
         .first()
         .click();
-      await sleep(400);
+      await sleep(1100);
+    },
+  ],
+  ...[
+    ['orbital', 'Halkalar', 1],
+    ['energy', 'Enerji çekirdeği', 2],
+    ['particle', 'Parçacık yörüngesi', 3],
+    ['hexagon', 'Altıgen', 4],
+  ].map(([id, title, clicks]) => [
+    `loading-${id}`,
+    `Yükleme ekranı · süs göstergesi: ${title}`,
+    async (p) => {
+      await selectTab(p, 'loading');
+      const cycle = p
+        .locator('[role="tabpanel"]:not([aria-hidden="true"]) .vol-showcase-panel-demo button')
+        .first();
+      for (let k = 0; k < clicks; k += 1) await cycle.evaluate((e) => e.click());
+      await p
+        .getByRole('button', { name: /Full Screen Preview/ })
+        .first()
+        .click();
+      await sleep(1100);
+    },
+  ]),
+  [
+    'loading-stages',
+    'Yükleme ekranı · aşama + ipucu',
+    async (p) => {
+      await selectTab(p, 'loading');
+      await p
+        .getByRole('button', { name: /Preview full flow/ })
+        .first()
+        .click();
+      await sleep(1700);
+    },
+  ],
+  [
+    'loading-stall',
+    'Yükleme ekranı · takılma bildirimi',
+    async (p) => {
+      await selectTab(p, 'loading');
+      await p
+        .getByRole('button', { name: /Preview full flow/ })
+        .first()
+        .click();
+      await sleep(4200);
+    },
+  ],
+  [
+    'loading-failed',
+    'Yükleme ekranı · hata, Tekrar dene / Vazgeç',
+    async (p) => {
+      await selectTab(p, 'loading');
+      await p
+        .getByRole('button', { name: /Simulate failed loading/ })
+        .first()
+        .click();
+      await p.locator('.vol-loading [role="alert"]').waitFor({ timeout: 10_000 });
     },
   ],
 ];

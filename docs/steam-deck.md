@@ -145,6 +145,34 @@ build/deploy/mode/measure akışını aynı release üzerinde yürütür.
 Devkit çıktısı kendi sonda kabulüdür; ürün için gerçek paket ve build
 kimliğiyle host ve SLR4 ayrı ölçülür. Açık kabul [kök TODO](../TODO.md)'dadır.
 
+## Vitrin kare ölçümü: Deck'te neden 60 FPS sabit değildi
+
+Vitrinde (`Shift+B` ya da `?bench`; `devtools/vol-showcase/src/frameBench.ts`) her sekme sabit hızla ileri-geri
+kaydırılır ve **sunulan** kareler (rAF aralığı) ölçülür; aynı yöntem Deck'te (WebKitGTK), Android'de (Chrome) ve
+masaüstünde koşar. Durağan bir sayfa kare üretmez (gamescope `fps` değeri boşta 0,3'e düşer), bu yüzden bu sayı
+oyun FPS'i değil "sayfa kaydırılırken kaç kare sunuluyor"dur. Yavaş sekmelerde ölçer kendiliğinden kart kart gizleyip
+ve CSS özelliklerini tek tek kapatıp yeniden ölçer (maliyetin kaynağı).
+
+**Ölçüm (2026-10-08, LCD Deck, host AppImage, 1280×800, gamescope sınırı 60 Hz / 60 FPS):** 14 sekmenin 12'si 60 FPS
+verdi; **Forms 42,9 FPS** (kare başına p50 23 ms, kareler %93 oranında 20 ms üstü) ve **Touch 46,5 FPS** (%72). Aynı
+sayfalar Samsung S21 FE ve Lenovo tablette (Chrome) 60 FPS kilitli. Ölçüm sırasında web süreci ≈ %150 CPU, GPU
+meşguliyeti %0 ve GPU saati en alt kademede: sayfa **CPU'da boyanıyordu** (gamescope yenileme ve FPS sınırı değil,
+bunlar 60'tı). Aynı sayfanın FPS'i koşudan koşuya 43–54 arasında salındı (CPU governor `powersave`, 2,4 GHz); gözle
+görülen "30–40" bu salınım ile ağır sekmenin birleşimidir.
+
+Kaynak ayrıştırması (aynı cihazda): tek kart gizlenince FPS 55–61'e çıktı (Timer Bar +18, Radio Group +13, Checkbox +13,
+Select +12, Color Picker +12): maliyet tek karta değil **birçok yüzeye yayılmış boyama**. CSS özelliği kapatma:
+`box-shadow` +4,5…+6, `border-radius` +2,5…+4,7, karışım/gradyan ≈ 0. Katman terfisi: **her kart `will-change: transform`**
+Forms'u 54 → 60,1, Touch'ı 55 → 60,0 yaptı; sayfa ya da kaydırıcı ölçeğinde terfi tersine etki etti (−6…−14 FPS, dev
+dokular). Karar: `.vol-showcase-card` kendi bileşik katmanı (tasarım değişmez); kural yalnız WebKitGTK'de açılır (`data-vol-engine='webkitgtk'`, `devtools/vol-showcase/src/engine.ts`), çünkü Chromium bileşik katmanda LCD metin yumuşatmasını kaybedip görünümü değiştirir. Sonuç: 14 sekmenin tamamı **57–60,6 FPS,
+ortanca 60,2**; Forms 60,0, Touch 59,4. Motor-kapsamlı kuralla yeniden dağıtım ve ölçüm sonucu aynı: 14 sekme 57,3–60,6 FPS, ortanca 60,2; Forms 60,0, Touch 59,1. Kalan: HUD sekmesinde tek 129–130 ms kare (en kötü kare, %2 yavaş; neden ölçülmedi),
+Text sekmesinin 53–59 ms'lik tek kareleri.
+
+Sınırlar: bu, host derlemesi (Ubuntu WebKitGTK 2.4x, Cairo CPU boyama) ölçümüdür; **SLR4 derlemesinde** (farklı
+WebKitGTK/Skia olasılığı) yeniden ölçülmeden aynı sayılmaz (F08.5). CPU governor/termal etkisi ve oyun (Phaser/WebGL)
+FPS'i ayrıdır (VOL.TEST 60 medyan, p95 19 ms; yukarıdaki bölüm). Oyun arayüzüne taşınırken aynı ilke geçerlidir:
+bağımsız HUD plakalarını (kart boyunda) katmana terfi ettir, devasa tek katman kurma.
+
 ## Girdi ve glif
 
 Steam Input API'siz oyun fiziksel kolu sanal Xbox aygıtı üzerinden görür;

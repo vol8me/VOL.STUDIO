@@ -5,6 +5,7 @@ import trResources from './i18n/tr.json';
 import enResources from './i18n/en.json';
 import './i18next-augment';
 import { applyDirectionFromUrl, applyPseudoLocaleFromUrl } from './pseudoLocale';
+import { detectEngine } from './engine';
 import { ShowcaseApp } from './ShowcaseApp';
 
 export interface ShowcaseSession {
@@ -24,6 +25,8 @@ export async function bootShowcase(
   // `?lang=pseudo`: deterministik %30 uzatılmış sahte dil (taşma taraması için).
   await applyPseudoLocaleFromUrl();
   applyDirectionFromUrl();
+  // Motor sınıfı CSS'e verilir (`html[data-vol-engine]`): WebKitGTK'de kart başına katman terfisi ölçümle doğrulandı.
+  document.documentElement.dataset.volEngine = detectEngine(navigator.userAgent);
 
   if (typeof FontFace !== 'undefined' && document.fonts) {
     await new FontManager({ fonts: [VOL_FONTS.Jura, VOL_FONTS['Exo 2']] }).load();

@@ -476,6 +476,7 @@
 
 .vol-minimap {
   pointer-events: auto;
+  position: relative;
   background: var(--vol-ui-surface-1);
   border: 1px solid var(--vol-ui-border-strong);
   border-radius: var(--vol-radius-md);
@@ -486,7 +487,52 @@
 
 .vol-minimap__canvas {
   cursor: var(--vol-cursor-link, pointer);
+  width: var(--vol-minimap-width);
+  height: var(--vol-minimap-height);
   display: block;
+}
+
+.vol-minimap__canvas--navigable {
+  cursor: var(--vol-cursor-aim-small, crosshair);
+  touch-action: none;
+}
+
+/* Yakınlaştırma düğmeleri: köşede dikey çift; sınırda sönükleşir (disabled değil, odak yitmesin). */
+.vol-minimap__controls {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/*
+ * Düğmeler haritanın küçük bir köşesidir: işaretçi hassasken kompakt kare. Dokunmatikte (pointer: coarse) kendi
+ * boyut kuralımız yoktur: IconButton'ın 44 px hedef tabanı geçerlidir ve düğmeler yan yana dizilir (köşeyi az örter).
+ */
+@media (pointer: fine) {
+  .vol-minimap__controls .vol-minimap__zoom {
+    width: 22px;
+    height: 22px;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+  }
+}
+
+@media (pointer: coarse) {
+  .vol-minimap__controls {
+    flex-direction: row;
+  }
+}
+
+.vol-minimap__zoom {
+  opacity: 0.88;
+}
+
+.vol-minimap__zoom[aria-disabled='true'] {
+  opacity: 0.4;
 }
 
 .vol-minimap__canvas:focus-visible {

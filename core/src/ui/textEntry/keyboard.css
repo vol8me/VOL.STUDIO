@@ -218,6 +218,39 @@
   }
 }
 
+/*
+ * Çok alçak görüntü alanı (≤ 420 px: tarayıcı çubuklu yatay telefon): başlık şeridi gizlenir (ad `aria-labelledby` ile
+ * kalır), değer alanı tek satır, 5 tuş satırı 40 px ve klavye ekrandan TAŞMAZ; Vazgeç/Bitti kaydırmadan basılabilir.
+ */
+@media (height <= 420px) {
+  .vol-osk {
+    --vol-osk-key-height: 40px;
+    --vol-osk-gap: 2px;
+
+    gap: 2px;
+    padding-bottom: 2px;
+    overflow-y: hidden;
+  }
+
+  .vol-osk__header {
+    display: none;
+  }
+
+  .vol-osk__body {
+    gap: 3px;
+  }
+
+  .vol-osk__value {
+    min-height: 32px;
+    padding-block: 2px;
+  }
+
+  .vol-osk__key {
+    max-width: 96px;
+    font-size: var(--vol-text-body);
+  }
+}
+
 /* Dar ekran (telefon): tuşlar alçalır ve yan boşluklar daralır; dokunma hedefi taban değerde kalır. */
 @media (width <= 640px) {
   .vol-osk {

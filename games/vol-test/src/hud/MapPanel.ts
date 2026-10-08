@@ -4,47 +4,87 @@ import { formatMetres } from './format';
 import type { HudFrame } from './HudFrame';
 
 const SIZE = 168;
-/** Izgara dokusu harita boyunun bu katı çizilir: yüksek DPR'de de ince kalır. */
-const GRID_RESOLUTION = 2;
+
+export interface MapPanelOptions {
+  readonly worldWidth: number;
+  readonly worldHeight: number;
+  readonly metre: number;
+  /** Izgara aralığı (dünya birimi) ve kaç aralıkta bir belirgin çizgi çekildiği. */
+  readonly gridStep: number;
+  readonly gridMajorEvery: number;
+}
 
 /**
- * Harita: CORE `MinimapPanel` üzerinde soluk ızgara, oyuncu oku ve kameranın
- * görünen alanı. Harita HUD'dur: ızgara oyun paletiyle değil UI tokenıyla
- * çizilir ve yön bulmaya yeter, dikkat çekmez.
+ * Harita: CORE `MinimapPanel` üzerinde tema renginde ızgara, dünya sınırı, ölçek çubuğu, kuzey işareti,
+ * kameranın görünen alanı, oyuncunun oku ve diğer araçlar. Harita HUD'dur: yön bulmaya yeter, dikkat çekmez.
+ *
+ * Yakınlaştırma (tekerlek ya da köşedeki +/−) oyuncuyu ortada tutar; yakınlaşınca görüş dışındaki araçlar
+ * kenarda yön oku olarak kalır. Okuyucuya "siz ve N araç, yakınlaştırma Nx" özeti verilir.
  * Konum (metre) E2E ve teşhis için `data-position` olarak da yazılır.
  */
 export class MapPanel {
   readonly element: HTMLElement;
   private readonly minimap: MinimapPanel;
+  private readonly metre: number;
 
-  constructor(
-    worldWidth: number,
-    worldHeight: number,
-    private readonly metre: number,
-    gridStep: number,
-  ) {
+  constructor(options: MapPanelOptions) {
+    this.metre = options.metre;
     this.minimap = new MinimapPanel({
       width: SIZE,
       height: SIZE,
-      worldWidth,
-      worldHeight,
-      backgroundImage: gridImage(worldWidth, worldHeight, gridStep),
+      worldWidth: options.worldWidth,
+      worldHeight: options.worldHeight,
+      grid: { step: options.gridStep, majorEvery: options.gridMajorEvery },
+      scaleBar: { unitsPerMetre: options.metre, unit: 'm' },
+      north: true,
+      wheelZoom: true,
+      controls: true,
+      maxZoom: 6,
       label: i18next.t('voltest:hud.map'),
+      describe: (counts, zoom) =>
+        i18next.t('voltest:hud.mapSummary', { vehicles: counts.vehicle ?? 0, zoom }),
     });
     this.element = this.minimap.element;
     this.element.classList.add('vt-hud__map');
   }
 
   update(frame: HudFrame): void {
-    this.minimap.setMarker('player', {
-      worldX: frame.x,
-      worldY: frame.y,
-      color: VOL_COLORS.supportSolid,
-      shape: 'arrow',
-      rotation: frame.hull,
-      radius: 5,
+    this.minimap.batch(() => {
+      const entries: Array<[string, Parameters<MinimapPanel['setMarker']>[1]]> = [
+        [
+          'player',
+          {
+            worldX: frame.x,
+            worldY: frame.y,
+            color: VOL_COLORS.brandHover,
+            shape: 'arrow',
+            rotation: frame.hull,
+            radius: 5,
+            kind: 'player',
+            priority: 10,
+          },
+        ],
+      ];
+      for (const vehicle of frame.vehicles?.() ?? []) {
+        if (vehicle.player) continue;
+        entries.push([
+          `v${vehicle.id}`,
+          {
+            worldX: vehicle.x,
+            worldY: vehicle.y,
+            color: VOL_COLORS.uiTextSecondary,
+            shape: 'arrow',
+            rotation: vehicle.hull,
+            radius: 3.5,
+            kind: 'vehicle',
+            edge: true,
+          },
+        ]);
+      }
+      this.minimap.setMarkers(entries);
+      this.minimap.follow('player');
+      this.minimap.setViewport(frame.view.x, frame.view.y, frame.view.width, frame.view.height);
     });
-    this.minimap.setViewport(frame.view.x, frame.view.y, frame.view.width, frame.view.height);
     this.element.dataset.position = `${formatMetres(frame.x, this.metre)},${formatMetres(
       frame.y,
       this.metre,
@@ -54,32 +94,4 @@ export class MapPanel {
   destroy(): void {
     this.minimap.destroy();
   }
-}
-
-/** Dünyayı `step` aralıkla bölen soluk ızgara; dünya kenarları çizilmez. */
-export function gridImage(
-  worldWidth: number,
-  worldHeight: number,
-  step: number,
-): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = SIZE * GRID_RESOLUTION;
-  canvas.height = SIZE * GRID_RESOLUTION;
-  const g = canvas.getContext('2d');
-  if (!g) return canvas;
-  g.strokeStyle = VOL_COLORS.uiBorderSoft;
-  g.lineWidth = 1;
-  g.beginPath();
-  for (let x = step; x < worldWidth; x += step) {
-    const px = Math.round((x / worldWidth) * canvas.width) + 0.5;
-    g.moveTo(px, 0);
-    g.lineTo(px, canvas.height);
-  }
-  for (let y = step; y < worldHeight; y += step) {
-    const py = Math.round((y / worldHeight) * canvas.height) + 0.5;
-    g.moveTo(0, py);
-    g.lineTo(canvas.width, py);
-  }
-  g.stroke();
-  return canvas;
 }

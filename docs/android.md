@@ -134,6 +134,23 @@ geçersiz desen reddedildi. Motorun fiziksel hissi insan doğrulaması ister.
 Samsung bu ölçümde erişilebilir değildi; ölçülmedi. Kontrol ve titreşim hissiyatı gerçek insan kabulü olarak ayrı kalır;
 ses yayını teknik QA, runtime decode/çıkış ise hedef cihaz doğrulamasıdır.
 
+### Dikey ve yatay native kare ölçümü (2026-10-08)
+
+Güncel çalışma ağacından üretilen debug APK (`vol-test`), iki cihaz × iki yön, `scripts/android/device-benchmark.mjs 90`
+(90 sn, dokunma girdisi yok, boş dünya; değerler native `gfxinfo` karesidir, oyun FPS'i değildir):
+
+| Cihaz                   | Yön   | Kare                   | Jank          | p50/p90/p99 (ms) | PSS    |
+| ----------------------- | ----- | ---------------------- | ------------- | ---------------- | ------ |
+| Lenovo TB350FU (120 Hz) | dikey | 9040 / 8952 (iki koşu) | %2,07 / %2,33 | 10/14/20         | 298 MB |
+| Lenovo TB350FU (120 Hz) | yatay | 9071                   | %1,89         | —                | 306 MB |
+| Samsung (R5CXA3KZWNK)   | dikey | 5280                   | %0,44         | —                | —      |
+| Samsung (R5CXA3KZWNK)   | yatay | 5312                   | %0,36         | —                | —      |
+
+Okuma: Samsung'da jank %0,5 altında. Lenovo'da %1,9–2,3 ve iki koşuda tutarlı; yukarıdaki 600 sn'lik %0,04 ölçümüne göre
+yüksek. Fark **açıklanmadı**: ölçüm süresi (90 sn, açılış kareleri payı büyük), farklı commit (yeni dakika haritası ve
+yükleme ekranı) ya da cihaz durumu olabilir; hangisi olduğu ayrı bir 600 sn koşuyla ayrıştırılmadı. "—" hücreleri bu
+turda not alınmadı. Dikey ve yatay arasında anlamlı fark yok. Çoklu tank ve dokunma yüklü oturum bu turda koşulmadı.
+
 ## Fiziksel kabulün kanıt sınırı
 
 İki Android profilindeki ekran görüntüsü referansı kurulum/açılış, yatay

@@ -492,6 +492,8 @@ function buildSlotGridDemo(disposables: DisposableScope): HTMLElement {
   const grid = new SlotGrid({
     slotCount: 24,
     columns: 6,
+    // Telefon dikeyinde kart ~318 px'tir: 6×56 sütun taşar ve sağdaki hücreler kırpılırdı; 44 px hücreler (6×44 + 5×8) sığar.
+    size: window.matchMedia?.('(max-width: 480px)').matches ? 44 : undefined,
     items,
     onMove: (itemId, from, to) => {
       result.setContent(i18next.t('volui:touch.itemMoved', { itemId, from, to }));

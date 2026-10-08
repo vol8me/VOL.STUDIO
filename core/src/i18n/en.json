@@ -134,6 +134,9 @@
     "finish": "Finish"
   },
   "minimap": {
+    "summary": "{{label}}: {{count}} markers, zoom {{zoom}}x",
+    "zoomIn": "Zoom map in",
+    "zoomOut": "Zoom map out",
     "label": "Map",
     "interactive": "{{label}}, interactive — press Enter to jump to center"
   },

@@ -22,6 +22,7 @@ import { buildCardsTab } from './sections/cardsTab';
 import { buildFormsTab } from './sections/formsTab';
 import { buildHudTab } from './sections/hudTab';
 import { buildKimlikTab } from './sections/kimlikTab';
+import { FrameBenchController } from './frameBenchController';
 import { buildLoadingTab } from './sections/loadingTab';
 import { buildPaletteTab } from './sections/paletteTab';
 import { buildPanelsTab } from './sections/panelsTab';
@@ -172,6 +173,14 @@ export class ShowcaseApp {
     // Uygulama genelinde arayüz sesi: niyetler, hover ve odak; bağlam ilk jestte kurulur.
     this.lifecycle.add(startAppSound(this.element, this.theme));
     this.watchCompact();
+    // Kare ölçer: `Shift+B` ya da `?bench` (cihazda gerçek FPS, aynı yöntemle her platformda).
+    this.lifecycle.addDestroyable(
+      new FrameBenchController(() => ({
+        tabs: this.tabOrder,
+        select: (tab) => this.tabs?.select(tab),
+        scroller: () => this.element.querySelector<HTMLElement>('.vol-tabs__panels'),
+      })),
+    );
     this.rebuild();
   }
 
