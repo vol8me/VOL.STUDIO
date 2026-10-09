@@ -32,7 +32,7 @@ export function audioTestPlan(changes) {
   return plan;
 }
 
-function changedFiles() {
+export function changedFiles() {
   const git = (/** @type {string[]} */ args) =>
     execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   try {

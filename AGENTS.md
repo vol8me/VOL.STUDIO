@@ -51,16 +51,20 @@ Kapıların tek kaynağı `justfile`, eşik ve bütçelerin kaynağı `quality.j
 Kapılar aktif workspace'ten türer; kapsam ratchet'i düşürülmez.
 [Kapı sözleşmesi](docs/gates.md) kompozisyonu ve rapor biçimini açıklar.
 
-| Kapı           | Bileşim                                                                                             |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| `pnpm quick`   | `node-pin` `contract` `format-check` `typecheck` `lint`                                             |
-| `pnpm fast`    | `quick` `test`                                                                                      |
-| `pnpm high`    | `quick` `build` `rust` `lint-css` `coverage` `coverage-shape` `audio-test` `bundle` `scaling` `e2e` |
-| `pnpm signoff` | `high` `coverage-audio` `audio-verify` `security-js` `security-rust`                                |
+| Kapı           | Bileşim                                                                                  |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `pnpm quick`   | `node-pin` `contract` `format-check` `typecheck` `lint` `lint-css`                       |
+| `pnpm fast`    | `quick` `test`                                                                           |
+| `pnpm high`    | `quick` `build` `bundle` `scaling` `audio-test` `rust` `coverage` `coverage-shape` `e2e` |
+| `pnpm signoff` | `high` `coverage-audio` `audio-verify` `security-js` `security-rust`                     |
 
 Pre-commit quick ve pre-push high kancaları atlanmaz. Ortam:
-`pnpm run doctor:env`. Tek düşen kapı `pnpm exec just <tarif>` ile yeniden
-koşulur; `pnpm exec just report <kapı> --json` makine-okunur kanıttır.
+`pnpm run doctor:env`. Kapıları `scripts/quality/gate.mjs` koşar: statik aşamalar
+birlikte, ağır aşamalar tek tek, ucuzdan pahalıya; girdisi bayt bayt aynı kalan
+aşama makbuzdan atlanır (`signoff` her zaman taze). Neden koştuğu/atlandığı
+çıktıda yazar; `pnpm high --fresh` makbuzu yok sayar. Tek düşen kapı
+`pnpm exec just <tarif>` ile yeniden koşulur; makine-okunur kanıt
+`pnpm high --json`dır.
 
 Yeni davranış ve hata düzeltmesi anlamlı regresyon testi bırakır; tests ağacı
 src ağacını yansıtır. Disk testleri gerçek geçici dizindedir. Genel timeout

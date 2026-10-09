@@ -7,36 +7,91 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 
 ## Birleşik kapılar
 
-| Kapı      | Ne zaman         | Bileşim                                                                                                               |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `quick`   | pre-commit       | `node-pin` + `contract` + `format-check` + `typecheck` + `lint`                                                       |
-| `fast`    | yerel geliştirme | `quick` + `test`                                                                                                      |
-| `high`    | pre-push         | `quick` + `build` + `rust` + `lint-css` + `coverage` + `coverage-shape` + `audio-test` + `bundle` + `scaling` + `e2e` |
-| `signoff` | sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`                                          |
+| Kapı      | Ne zaman         | Bileşim                                                                                                  |
+| --------- | ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `quick`   | pre-commit       | `node-pin` + `contract` + `format-check` + `typecheck` + `lint` + `lint-css`                             |
+| `fast`    | yerel geliştirme | `quick` + `test`                                                                                         |
+| `high`    | pre-push         | `quick` + `build` + `bundle` + `scaling` + `audio-test` + `rust` + `coverage` + `coverage-shape` + `e2e` |
+| `signoff` | sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`                             |
+
+## Kapı koşucusu
+
+`pnpm quick`, `pnpm fast`, `pnpm high`, `pnpm signoff` ve git kancaları `scripts/quality/gate.mjs`yi çağırır.
+`justfile` yalnız bileşimi söyler; `just <kapı>` aynı aşamaları önbelleksiz ve art arda
+koşan düz yoldur. Koşucu üç şey yapar:
+
+1. **Sıra ve paralellik** ([`gatePlan.mjs`](../scripts/quality/gatePlan.mjs)). Aşamalar
+   ucuzdan pahalıya dizilir; düşecek kapı dakikalar harcanmadan düşer. Birbirinin
+   ölçümünü bozmayan statik aşamalar (`contract`, `format-check`, `typecheck`, `lint`,
+   `lint-css`) birlikte koşar. Süre ölçen (`scaling`) ve tarayıcı süren (`e2e`) aşamalar
+   tek başına koşar. `justfile`daki her aşamanın planda kaydı olmak zorundadır.
+2. **Makbuz** ([`gateCache.mjs`](../scripts/quality/gateCache.mjs)). Girdisi bayt bayt
+   aynı kalan aşama yeniden koşmaz. Anahtar git durumundan değil çalışma ağacının
+   gerçek içeriğinden türer: commit, stage ya da dal fark etmez. Makbuz yalnız
+   atlama içindir; sahte geçiş üretemez. Makbuz yoksa, anahtar uyuşmazsa ya da okunamazsa
+   aşama koşar. Makbuzlar `node_modules` altındaki kapı önbelleğindedir (repoya girmez, `just clean` siler).
+3. **Okunur çıktı.** Geçen aşama tek satırdır; koşan aşamanın NEDEN koştuğu yazılır
+   (`girdi değişti`, `makbuz yok`, `önbelleksiz aşama`, `--fresh`). Düşen aşamanın sonu,
+   sınıflandırması, tam günlüğün yolu ve tekrar komutu basılır. `--json` `just report` ile aynı şekli verir.
+
+```
+pnpm high                 # makbuzdan atlayarak
+pnpm high --fresh         # makbuzu yok say (yine de yazar)
+pnpm high --json          # makine-okunur özet (insan günlüğü stderr'e gider)
+pnpm high --verbose       # aşama çıktısını canlı akıtır
+```
+
+### Makbuz kapsamı
+
+Dar kapsam kapıyı hızlandırır, eksik kapsam sessizce yanlış atlar. İkincisi çok daha
+pahalıdır; bu yüzden kapsam geniş tutulur ve gizli okumalar bekçilenir
+([`gateScope.mjs`](../scripts/quality/gateScope.mjs)):
+
+| Kapsam    | Girdi                                                                 | Aşamalar                                                              |
+| --------- | --------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `repo`    | ağaçtaki her dosya (belge dahil)                                      | `contract`, `format-check`, `coverage-audio`, `audio-verify`          |
+| `code`    | paket dizinleri + paket dışı kod/yapılandırma (kök belgeler hariç)    | `typecheck`, `lint`, `lint-css`, `rust`, `coverage`, `coverage-shape` |
+| `closure` | paketin kendisi + `@volstudio/*` bağımlılık kapanışı + paket dışı kod | `test` ve `e2e` (paket başına makbuz)                                 |
+
+- `test` ve `e2e` **paket paket** makbuzlanır: yalnız girdisi değişen paket koşar.
+  Sonuç: VOL.TEST'e dokunulmadıysa VOL.TEST'in testi de e2e'si de koşmaz.
+- `@volstudio/core` (`code`) ve `@volstudio/audio-synth` (`repo`) kapanıştan geniştir:
+  core'un yönetişim testleri bütün repoyu tarar; audio-synth testleri repo kökünden
+  oyunların ses varlıklarını, manifestleri ve belgeleri okur. Gerekçe
+  `gatePlan.mjs` → `SCOPE_OVERRIDES`tedir.
+- **Gizli bağımlılık bekçisi** (`gatePlan.test.mjs`): kapanıştaki bir paketin kaynağında
+  kapanış dışına uzanan göreli yol sabiti varsa test düşer. Çözüm ya paketi
+  `SCOPE_OVERRIDES`a almak ya da okumayı gerekçeyle `REVIEWED_ESCAPES`a yazmaktır.
+  Kaçışı kalmayan kayıt da düşer.
+- **Önbelleksiz aşamalar:** `node-pin` (1 sn, ortamı doğrular), `build` ve `bundle` (çıktıları
+  sonraki aşamaların girdisi), `scaling` (süre oranı ölçer), `audio-test` (kapsamı git
+  farkından türer), `security-js` ve `security-rust` (sonuç zamana bağlı).
+- **`signoff` hiçbir makbuza güvenmez**; yine de geçen aşamalara makbuz yazar.
+- Aşama koşarken ağaç değişirse (örn. düzenleme) o dalganın makbuzu yazılmaz.
 
 ## Tekil kapılar
 
-| Tarif            | Sınadığı                                                                                                                                                                                                             |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `node-pin`       | Çalışan Node, `.node-version` ve `package.json` `engines.node` ile aynı kesin sürüm; değilse ilk adımda açık mesajla durur (`doctor` aynı denetimi kullanır)                                                         |
-| `contract`       | `scripts/quality/tests`, `scripts/linux/tests`, `scripts/android/tests`, `devtools/deck/tests` (bekçi ve betik testleri) ve `scripts/quality/cli/workspace-contract.mjs` (aşağıda)                                   |
-| `format-check`   | Prettier, `**/*.{ts,mts,cts,js,mjs,cjs,css,json,md,yaml,yml,html}`                                                                                                                                                   |
-| `typecheck`      | Aktif paketlerin `typecheck` betiği (`tsc --noEmit`, `noImplicitOverride` dahil) ve kök betiklerin JSDoc denetimi (`scripts/tsconfig.json`)                                                                          |
-| `lint`           | ESLint: TS kaynak, betik ve testler tip bilgisiyle (`no-floating-promises` hata); `.js`/`.mjs` betikler `@eslint/js` ile; deterministik kodda `localeCompare` yasak; frozen ağaçlar lifecycle'dan yok sayılır        |
-| `lint-css`       | Stylelint, `**/*.css`                                                                                                                                                                                                |
-| `test`           | Aktif paketlerin `test` betiği; kapsam eşiği uygulamaz                                                                                                                                                               |
-| `coverage`       | `quality.json` → `coverageRuns` paketlerini eşikleriyle koşar ve koşu kaydı yazar; eşikten muaf paketin testini düz koşar (`scripts/quality/coverageRun.mjs`)                                                        |
-| `coverage-shape` | 100 satırın üstünde ve %50 kapsamın altındaki dosya test ister; yalnız aynı koşunun taze lcov'unu okur                                                                                                               |
-| `audio-test`     | Sabit temel takım ve değişen kaynakla ilişkili testler; silinen/belirsiz değişimde tam takım                                                                                                                         |
-| `build`          | Aktif paketlerin `build` betiği                                                                                                                                                                                      |
-| `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-showcase ve VOL.TEST)                                                                                     |
-| `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı (bugün CORE uzamsal indeksi ve VOL.TEST mermi modeli); ölçülen oranı yazar                                          |
-| `e2e`            | Aktif paketlerin `test:e2e` betiği, üretim build'i; vol-showcase her spec'i iki motorda koşar (piksel temeli yalnız Chromium; bekçi `e2eConfig`)                                                                     |
-| `rust`           | Kök workspace'in aktif üye manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır |
-| `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                                                                                                                  |
-| `audio-verify`   | Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır                                                                                                                                   |
-| `security-js`    | `pnpm audit --audit-level moderate`                                                                                                                                                                                  |
-| `security-rust`  | Kökteki tek `Cargo.lock` üzerinde cargo-audit                                                                                                                                                                        |
+| Tarif            | Sınadığı                                                                                                                                                                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node-pin`       | Çalışan Node, `.node-version` ve `package.json` `engines.node` ile aynı kesin sürüm; değilse ilk adımda açık mesajla durur (`doctor` aynı denetimi kullanır)                                                                                       |
+| `contract`       | `scripts/quality/tests`, `scripts/linux/tests`, `scripts/android/tests`, `devtools/deck/tests` (bekçi ve betik testleri) ve `scripts/quality/cli/workspace-contract.mjs` (aşağıda)                                                                 |
+| `format-check`   | Prettier, `**/*.{ts,mts,cts,js,mjs,cjs,css,json,md,yaml,yml,html}`                                                                                                                                                                                 |
+| `typecheck`      | Aktif paketlerin `typecheck` betiği (`tsc --noEmit`, `noImplicitOverride` dahil) ve kök betiklerin JSDoc denetimi (`scripts/tsconfig.json`)                                                                                                        |
+| `lint`           | ESLint: TS kaynak, betik ve testler tip bilgisiyle (`no-floating-promises` hata); `.js`/`.mjs` betikler `@eslint/js` ile; deterministik kodda `localeCompare` yasak; frozen ağaçlar lifecycle'dan yok sayılır                                      |
+| `lint-css`       | Stylelint, `**/*.css`                                                                                                                                                                                                                              |
+| `test`           | Aktif paketlerin `test` betiği; kapsam eşiği uygulamaz                                                                                                                                                                                             |
+| `coverage`       | `quality.json` → `coverageRuns` paketlerini eşikleriyle koşar ve koşu kaydı yazar; eşikten muaf paketin testini düz koşar (`scripts/quality/coverageRun.mjs`)                                                                                      |
+| `coverage-shape` | 100 satırın üstünde ve %50 kapsamın altındaki dosya test ister; yalnız aynı koşunun taze lcov'unu okur                                                                                                                                             |
+| `audio-test`     | Sabit temel takım ve değişen kaynakla ilişkili testler; silinen/belirsiz değişimde tam takım                                                                                                                                                       |
+| `build`          | Aktif paketlerin `build` betiği                                                                                                                                                                                                                    |
+| `bundle`         | `dist` altındaki gzip'li `app`/`vendor`/`css` baytı, `quality.json` → `bundles` bütçesine karşı (bugün vol-showcase ve VOL.TEST)                                                                                                                   |
+| `scaling`        | Girdi dört katına çıkınca sürenin kaç katına çıktığı, `quality.json` → `scaling` bütçesine karşı (bugün CORE uzamsal indeksi ve VOL.TEST mermi modeli); ölçülen oranı yazar                                                                        |
+| `e2e`            | Aktif paketlerin `test:e2e` betiği, üretim build'i; vol-showcase her spec'i iki motorda koşar ve motorlar eşzamanlı, ayrı süreç ve ayrı portta çalışır (`devtools/vol-showcase/scripts/e2e.mjs`; piksel temeli yalnız Chromium; bekçi `e2eConfig`) |
+| `rust`           | Kök workspace'in aktif üye manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır                               |
+| `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                                                                                                                                                |
+| `audio-verify`   | Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır                                                                                                                                                                 |
+| `security-js`    | `pnpm audit --audit-level moderate`                                                                                                                                                                                                                |
+| `security-rust`  | Kökteki tek `Cargo.lock` üzerinde cargo-audit                                                                                                                                                                                                      |
 
 `pnpm exec just report <kapı> --json` kapıyı koşup sonucu makine-okunur
 verir; aşamalar `justfile`dan türer. `pnpm run doctor:env` araçları ve
@@ -123,6 +178,57 @@ devtools/*   ──/
 
 Ters yön de kapılıdır: ölü muafiyet ya da belgede olmayan istisna kapıyı
 kırar.
+
+## Süre bütçesi
+
+Windows 11, 8 mantıksal çekirdek, boş makine, ısınmış araç önbellekleri; her aşama
+tek başına ölçülmüştür. Yük altında süreler uzar (statik aşamalar birlikte koşunca
+her biri belirgin yavaşlar, toplam duvar süresi yine kısalır).
+
+| Aşama                   | Süre        | Not                                                                    |
+| ----------------------- | ----------- | ---------------------------------------------------------------------- |
+| `node-pin`              | 1 sn        |                                                                        |
+| `contract`              | 46 sn       | bekçi testleri ve workspace sözleşmesi                                 |
+| `format-check`          | 21 sn       |                                                                        |
+| `typecheck`             | 26 sn       |                                                                        |
+| `lint`                  | 51 sn       | tip bilgili ESLint                                                     |
+| `lint-css`              | 5 sn        |                                                                        |
+| `build` / `bundle`      | 4 / 1 sn    |                                                                        |
+| `scaling`               | 4 sn        |                                                                        |
+| `audio-test`            | 12–144 sn   | alt küme 12 sn; yapılandırma/silme değişiminde tam takım 144 sn        |
+| `rust`                  | 34 sn       | sıcak hedef dizini; soğuk derleme (kilit/araç zinciri değişimi) 4,4 dk |
+| `test`                  | 245 sn      | audio-synth 141, core 55, vol-test 29, vitrin 12, diğerleri 4 sn altı  |
+| `coverage`              | 113 sn      | audio-synth hariç                                                      |
+| `e2e` vitrin / vol-test | 447 / 85 sn | vitrinde iki motor eşzamanlı; seri koşu 719 sn                         |
+| `coverage-audio`        | 532 sn      | kapsam ölçümü sentezi yavaşlatır                                       |
+| `audio-verify`          | 98 sn       |                                                                        |
+| `security-js`           | 2 sn        |                                                                        |
+| `security-rust`         | 4 sn        |                                                                        |
+
+Birleşik kapılar makbuzsuz (soğuk) koşuda: `quick` yaklaşık 1,5 dk, `fast` 5,6 dk,
+`high` 15 dk; `signoff`, `high` ile `coverage-audio`, `audio-verify` ve güvenlik
+aşamalarının toplamı olarak yaklaşık 26 dk'dır (tek koşu olarak ölçülmemiştir).
+Girdisi hiç değişmemiş ağaçta `high` yaklaşık 13 sn sürer (yalnız önbelleksiz aşamalar).
+
+Süre ölçen testler yük altında kararsızlaşır; bu yüzden `scaling` ve `e2e` tek başına
+koşar, audio-synth işçi sayısı sınırlıdır (`devtools/audio-synth/vitest.config.ts`) ve
+vitrin motorları yalnız birbirleriyle eşzamanlıdır.
+
+## Kapı sağlığı: ne yakalar, ne yakalamaz
+
+| Kapı                                            | Yakaladığı                                                                     | Bilinen sınır                                                                                                                   |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `contract`                                      | katman, döngü, i18n, port, ikon, kilit, belge-gerçek uyumu, bekçilerin kendisi | repo geneline bakar; yalnız yazılmış bekçiyi zorlar                                                                             |
+| `typecheck`, `lint`, `lint-css`, `format-check` | tip, kural ve biçim ihlalleri                                                  | çalışma zamanı davranışını sınamaz                                                                                              |
+| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşiği ve şekli ratchet'tir                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir)                                                                        |
+| `audio-test`                                    | audio-synth'in sabit alt kümesi + değişenle ilişkili testler                   | alt küme tam takımın yerini tutmaz; tam kanıt `test` ve `coverage-audio`'dadır                                                  |
+| `rust`                                          | `fmt`, `clippy -D warnings`, `test`                                            | yalnız host hedefi; Linux/Android native kanıtı ayrı                                                                            |
+| `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına; WebKit'te Web Audio olmayan derlemede iki ses testi atlanır (2 atlama) |
+| `scaling`, `bundle`                             | algoritmik ölçekleme oranı, gzip bütçesi                                       | süre eşiği yoktur; cihaz performansı kapı değildir                                                                              |
+| `coverage-audio`, `audio-verify`                | tam audio kapsamı; yayınlanmış her sesin yeniden render kimliği                | dinleme kanıtı değildir (insan beyanı gerekir)                                                                                  |
+| `security-js`, `security-rust`                  | bilinen advisory                                                               | `braces` için yama yayımlanmadığından `security-js` kırmızıdır (`TODO.md` F10.1); `signoff` bu çözülene kadar yeşil olamaz      |
+
+Cihaz kabulü, insan beğenisi ve fiziksel ölçüm hiçbir kapının konusu değildir.
 
 ## Ölçüm notları
 

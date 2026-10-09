@@ -106,15 +106,20 @@ ui-check:
     pnpm --filter @volstudio/vol-showcase test:e2e
 
 # === BİRLEŞİK KAPILAR ===
+# Burası yalnız BİLEŞİMİ söyler. `pnpm quick|fast|high|signoff` ve git kancaları
+# aşamaları `scripts/quality/gate.mjs` ile koşar: sıra ve paralellik
+# `gatePlan.mjs`de, girdisi değişmeyen aşamanın atlanması `gateCache.mjs`dedir.
+# `just <kapı>` aynı aşamaları önbelleksiz ve art arda koşar (düz yol).
+# Aşamalar ucuzdan pahalıya yazılır: düşecek kapı dakikalar harcanmadan düşer.
 
-quick: node-pin contract format-check typecheck lint
+quick: node-pin contract format-check typecheck lint lint-css
 
 fast: quick test
 
 # `coverage` aynı testleri eşikleriyle koştuğu için düz `test` tekrarlanmaz.
 # Tauri generate_context! frontendDist'i derleme sırasında okur; temiz klonda
 # frontend çıktısı Rust'tan önce üretilir.
-high: quick build rust lint-css coverage coverage-shape audio-test bundle scaling e2e
+high: quick build bundle scaling audio-test rust coverage coverage-shape e2e
 
 signoff: high coverage-audio audio-verify security-js security-rust
 
