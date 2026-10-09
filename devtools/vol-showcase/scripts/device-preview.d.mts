@@ -8,3 +8,5 @@ export function startPreview(options: {
   port: number;
   entry?: string;
 }): Promise<PreviewServer>;
+
+export function previewReady(output: string, port: number): boolean;

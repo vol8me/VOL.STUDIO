@@ -135,7 +135,13 @@ export class RangeSlider {
     // Track tüm pointer olaylarını dinler (iki native range input üst üste koymak
     // yerine); boş track tıklaması ve doğrudan handle basışını tek tip ele alır.
     const boundPointerDown = (event: PointerEvent): void => {
-      if (this.disabled) return;
+      if (
+        this.disabled ||
+        this.activePointerId !== null ||
+        !event.isPrimary ||
+        (event.pointerType === 'mouse' && event.button !== 0)
+      )
+        return;
       // Handle'a doğrudan basış her zaman o handle'ı seçer — yakınlık tahmini
       // handle'lar yakınken (ör. Lv.22-Lv.24) güvenilmezdir. Boş track tıklaması
       // mesafe bazlı seçime düşer.
@@ -158,7 +164,7 @@ export class RangeSlider {
       event.preventDefault();
     };
     const boundPointerMove = (event: PointerEvent): void => {
-      if (!this.activeHandle) return;
+      if (!this.activeHandle || this.activePointerId !== event.pointerId) return;
       this.commitUserInput(this.activeHandle, this.valueFromClientX(event.clientX));
     };
     const boundPointerUp = (event: PointerEvent): void => {

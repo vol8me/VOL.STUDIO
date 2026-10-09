@@ -458,6 +458,7 @@ export function sanitizeReport(text) {
     'fullscreen',
     'ok',
     'hasError',
+    'hasRequestId',
     'trusted',
     'repeat',
   ]);
@@ -488,6 +489,9 @@ export function sanitizeReport(text) {
     mapping: /^(standard|)$/,
     state: /^(running|suspended|closed)$/,
     result: /^(ok|error|unavailable)$/,
+    outcome: /^(success|failed|timedOut)$/,
+    reason: /^(close|signal|suspend)$/,
+    runtime: /^(host|unknown|steamrt[34]_[A-Za-z0-9_.-]+)$/,
     sessionKind: /^(gamescope|desktop|web|unknown)$/,
     phase:
       /^(oyun|\d+ sprite|boş|empty|gameplay|menu|pause|settings|cards|shop|boss|death|loading|unclassified|background)$/u,
@@ -512,6 +516,9 @@ export function sanitizeReport(text) {
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
       )
         result[key] = value;
+      else if (key === 'requestId')
+        result.hasRequestId =
+          typeof value === 'string' && /^(shutdown|suspend)-[1-9][0-9]{0,19}$/.test(value);
       else if (key === 'slowestFrame' && value && typeof value === 'object') {
         const frame = safe({ at: value.at, intervalMs: value.intervalMs });
         frame.metrics = Object.fromEntries(
@@ -521,7 +528,9 @@ export function sanitizeReport(text) {
           ),
         );
         result[key] = frame;
-      } else if (boolean.has(key) && (typeof value === 'boolean' || value === null))
+      } else if (key === 'hasError' && (typeof value === 'boolean' || value === null))
+        result.hasError = result.hasError === true || value;
+      else if (boolean.has(key) && (typeof value === 'boolean' || value === null))
         result[key] = value;
       else if (enums[key] && typeof value === 'string' && enums[key].test(value))
         result[key] = value;
@@ -549,8 +558,8 @@ export function sanitizeReport(text) {
       )
         result[key] = value;
       else if (key === 'error' || key === 'lastError' || key === 'message' || key === 'reason')
-        result.hasError = Boolean(value);
-      else if (key === 'env' && value && typeof value === 'object') {
+        result.hasError = result.hasError === true || Boolean(value);
+      else if (key === 'env' && value && typeof value === 'object' && !Array.isArray(value)) {
         const env = {};
         for (const [name, pattern] of Object.entries(MEASUREMENT_ENUMS))
           if (pattern.test(String(value[name]))) env[name] = String(value[name]);
@@ -576,6 +585,14 @@ export function sanitizeReport(text) {
         if (runtime) env.PRESSURE_VESSEL_RUNTIME = runtime[0];
         result.env = env;
       }
+    }
+    if (record.type === 'info' && result.env) {
+      // Ortam dökümünde değişkenin açık yokluğu host kanıtıdır. Ayıklanmış
+      // ya da tanınmayan bir değer aynı kanıtı taşımaz. Tekrar temizlenen
+      // rapor kendi açık sınıfını korur.
+      result.runtime = Object.hasOwn(record.env, 'PRESSURE_VESSEL_RUNTIME')
+        ? (result.env.PRESSURE_VESSEL_RUNTIME ?? 'unknown')
+        : (result.runtime ?? 'host');
     }
     return result;
   };
@@ -693,7 +710,7 @@ export function summarizeReport(lines) {
   return {
     complete,
     env: info?.env ?? null,
-    runtime: info?.env?.PRESSURE_VESSEL_RUNTIME ?? 'host',
+    runtime: info?.runtime ?? info?.env?.PRESSURE_VESSEL_RUNTIME ?? 'unknown',
     phases: [...byPhase.values()].map((p) => ({
       phase: p.phase,
       runId: p.runId ?? null,

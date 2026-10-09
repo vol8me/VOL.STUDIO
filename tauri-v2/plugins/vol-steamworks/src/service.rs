@@ -4,6 +4,7 @@
 //!
 //! Gerçek impl `imp` modülündedir ve yalnız feature açıkken derlenir.
 
+pub use crate::text_input::TextInputMode;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
@@ -552,6 +553,7 @@ pub(crate) mod imp {
                 existing_text: &str,
                 max_characters: u32,
                 multiline: bool,
+                mode: TextInputMode,
             ) -> Result<bool, String> {
                 use std::ffi::CString;
                 let description =
@@ -563,7 +565,7 @@ pub(crate) mod imp {
                     unsafe {
                         steamworks::sys::SteamAPI_ISteamUtils_ShowGamepadTextInput(
                             steamworks::sys::SteamAPI_SteamUtils_v010(),
-                            GamepadTextInputMode::Normal.into(),
+                            GamepadTextInputMode::from(mode).into(),
                             if multiline {
                                 GamepadTextInputLineMode::MultipleLines
                             } else {
@@ -834,6 +836,7 @@ pub(crate) mod imp {
                 _e: &str,
                 _m: u32,
                 _ml: bool,
+                _mode: TextInputMode,
             ) -> Result<bool, String> {
                 self.unavailable()
             }

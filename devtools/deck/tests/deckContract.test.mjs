@@ -612,6 +612,92 @@ test('rapor eski insan bekleme durumu taşımaz; teknik sonuçlar korunur', () =
   for (const result of ['ok', 'error', 'unavailable']) assert.equal(record(result).result, result);
 });
 
+test('kapanış sonucu ve sabit neden korunur; istek kimliği paylaşılmaz', () => {
+  for (const outcome of ['success', 'failed', 'timedOut']) {
+    const record = JSON.parse(
+      sanitizeReport(
+        JSON.stringify({
+          type: 'flush-completed',
+          requestId: 'shutdown-1',
+          reason: 'signal',
+          outcome,
+        }),
+      ),
+    );
+    assert.equal(record.outcome, outcome);
+    assert.equal(record.reason, 'signal');
+    assert.equal(record.hasRequestId, true);
+    assert.equal(record.hasError, undefined);
+    assert.equal(record.requestId, undefined);
+  }
+  const privateRecord = JSON.parse(
+    sanitizeReport(
+      JSON.stringify({
+        type: 'flush-completed',
+        requestId: 'private-secret',
+        reason: 'private-secret',
+        outcome: 'private-secret',
+      }),
+    ),
+  );
+  assert.equal(privateRecord.hasRequestId, false);
+  assert.equal(privateRecord.hasError, true);
+  assert.doesNotMatch(JSON.stringify(privateRecord), /private-secret/);
+});
+
+test('runtime bilinmeyen kanıtı host olarak etiketlemez', () => {
+  const summary = (record) => summarizeReport(sanitizeReport(JSON.stringify(record)).split('\n'));
+  assert.equal(summary({ type: 'perf' }).runtime, 'unknown');
+  assert.equal(summary({ type: 'info' }).runtime, 'unknown');
+  assert.equal(summary({ type: 'info', env: null }).runtime, 'unknown');
+  assert.equal(summary({ type: 'info', env: [] }).runtime, 'unknown');
+  assert.equal(
+    summary({ type: 'info', env: { PRESSURE_VESSEL_RUNTIME: '/opt/custom-runtime' } }).runtime,
+    'unknown',
+  );
+  assert.equal(summary({ type: 'info', env: {} }).runtime, 'host');
+  assert.equal(
+    summary({ type: 'info', env: { PRESSURE_VESSEL_RUNTIME: '/opt/steamrt4_platform_4.0' } })
+      .runtime,
+    'steamrt4_platform_4.0',
+  );
+});
+
+test('tekrar temizlenen rapor bilinmeyen runtime ve kimlik varlığı sınıflarını korur', () => {
+  const raw = [
+    { type: 'info', env: { PRESSURE_VESSEL_RUNTIME: '/opt/custom-runtime' } },
+    { type: 'flush-completed', requestId: 'suspend-2', reason: 'suspend', outcome: 'timedOut' },
+  ]
+    .map(JSON.stringify)
+    .join('\n');
+  const sanitized = sanitizeReport(raw);
+  assert.equal(sanitizeReport(sanitized), sanitized);
+  assert.equal(summarizeReport(sanitized.split('\n')).runtime, 'unknown');
+});
+
+test('hata bayrağı false alanı veya boş nedenle girdi sırasına göre kaybolmaz', () => {
+  for (const fields of [
+    { message: 'private-error', hasError: false },
+    { hasError: false, message: 'private-error' },
+    { message: 'private-error', reason: '' },
+  ]) {
+    const record = JSON.parse(sanitizeReport(JSON.stringify({ type: 'error', ...fields })));
+    assert.equal(record.hasError, true);
+    assert.doesNotMatch(JSON.stringify(record), /private-error/);
+  }
+});
+
+test('ham runtime ortamı çelişen host etiketiyle kabul edilmez', () => {
+  for (const fields of [
+    { runtime: 'host', env: { PRESSURE_VESSEL_RUNTIME: '/opt/custom-runtime' } },
+    { env: { PRESSURE_VESSEL_RUNTIME: '/opt/custom-runtime' }, runtime: 'host' },
+  ]) {
+    const shared = sanitizeReport(JSON.stringify({ type: 'info', ...fields }));
+    assert.equal(summarizeReport(shared.split('\n')).runtime, 'unknown');
+    assert.equal(sanitizeReport(shared), shared);
+  }
+});
+
 test('silme acik oyun kimligi onayi olmadan reddedilir', () => {
   assert.throws(() => assertCleanConfirmation('vol_deck_probe', undefined), /onay/);
   assert.throws(() => assertCleanConfirmation('vol_deck_probe', 'other'), /onay/);

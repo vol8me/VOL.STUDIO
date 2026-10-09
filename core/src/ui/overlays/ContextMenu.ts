@@ -145,6 +145,8 @@ export class ContextMenu {
     } else if (event.key === 'End') {
       nextIndex = this.lastEnabledIndex();
     } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
       this.popup.close();
       this.target.setAttribute('aria-expanded', 'false');
       this.target.focus();

@@ -7,6 +7,18 @@ import { setTimeout as delay } from 'node:timers/promises';
 const require = createRequire(import.meta.url);
 const viteEntry = resolve(dirname(require.resolve('vite/package.json')), 'bin/vite.js');
 
+/**
+ * Vite 8 dinleyici adresindeki bağlantı noktasını ANSI kalın biçimle yazar; renk açıkken
+ * düz metin araması adresi hiç bulamaz, renk kapalıyken kaçış dizisi beklemek de bulamaz.
+ * Bu yüzden kaçış dizileri ayıklanır ve düz metin aranır: iki durumda da çalışır.
+ */
+const ANSI_SGR = new RegExp(String.raw`${String.fromCharCode(27)}\[[0-9;]*m`, 'g');
+
+/** @param {string} output Vite'in stdout'u (renkli ya da düz). @param {number} port */
+export function previewReady(output, port) {
+  return output.replace(ANSI_SGR, '').includes(`http://127.0.0.1:${port}/`);
+}
+
 /** Sunucu yalnız doğrudan Node çocuğuna aittir; mevcut port sahibi asla kapatılmaz. */
 export async function startPreview({ cwd, port, entry = viteEntry }) {
   const probe = createServer();
@@ -45,7 +57,7 @@ export async function startPreview({ cwd, port, entry = viteEntry }) {
   });
   child.stdout.on('data', (chunk) => {
     stdout = `${stdout}${chunk}`.slice(-4096);
-    listening ||= stdout.includes(`http://127.0.0.1:${port}/`);
+    listening ||= previewReady(stdout, port);
   });
   const waitForClose = async (ms) => {
     const controller = new AbortController();

@@ -1,5 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -242,6 +250,155 @@ describe('syncRigExport', () => {
     ).toThrow(/export tutarsız/);
     expect(existsSync(metadataOut)).toBe(false);
   });
+
+  it.each(['../escape', '..\\escape', 'a/b', 'a\\b', '..', 'C:escape', 'hull:stream'])(
+    'dosya yolu olabilen partId yazımdan önce reddedilir: %s',
+    (partId) => {
+      writeExport(metadataFixture());
+      const paths = resolveRigExportPaths(ref());
+      const metadata = metadataFixture();
+      metadata.parts[0]!.partId = partId;
+      writeFileSync(paths.metadataFile, JSON.stringify(metadata));
+      const { metadataOut, partsOut } = outFiles();
+      expect(() =>
+        syncRigExport({ source: ref(), metadataOut, partsOut, publicBase: 'assets/rig' }),
+      ).toThrow(/kimlik|partId/);
+      expect(existsSync(partsOut)).toBe(false);
+      expect(existsSync(metadataOut)).toBe(false);
+    },
+  );
+
+  it('traversal kaynak dosyası var olsa da hedef üst dizinini değiştirmez', () => {
+    const metadata = metadataFixture();
+    metadata.parts = [{ ...metadata.parts[0]!, partId: '../escape' }];
+    writeExport(metadata, []);
+    const paths = resolveRigExportPaths(ref());
+    writeFileSync(join(paths.entityDir, 'escape.png'), 'kaynak');
+    const { metadataOut, partsOut } = outFiles();
+    mkdirSync(join(partsOut, '..'), { recursive: true });
+    const outside = join(partsOut, '..', 'escape.png');
+    writeFileSync(outside, 'korunacak');
+    expect(() =>
+      syncRigExport({ source: ref(), metadataOut, partsOut, publicBase: 'assets/rig' }),
+    ).toThrow(/kimlik|partId/);
+    expect(readFileSync(outside, 'utf8')).toBe('korunacak');
+    expect(existsSync(metadataOut)).toBe(false);
+  });
+
+  it.each(['partsOut', 'metadataOut', 'source'] as const)(
+    'symlink/junction %s yolu yazımdan önce reddedilir',
+    (linked) => {
+      writeExport(metadataFixture());
+      const outside = join(root, 'unrelated');
+      mkdirSync(outside);
+      writeFileSync(join(outside, 'hull.png'), 'korunacak');
+      const link = join(root, 'linked');
+      symlinkSync(outside, link, process.platform === 'win32' ? 'junction' : 'dir');
+      const target = outFiles();
+      const source = ref();
+      if (linked === 'partsOut') target.partsOut = join(link, 'parts');
+      if (linked === 'metadataOut') target.metadataOut = join(link, 'walker.metadata.json');
+      if (linked === 'source') {
+        const paths = resolveRigExportPaths(source);
+        rmSync(paths.partsDir, { recursive: true });
+        symlinkSync(outside, paths.partsDir, process.platform === 'win32' ? 'junction' : 'dir');
+        writeFileSync(join(outside, 'arm.png'), 'kol');
+      }
+      expect(() => syncRigExport({ source, ...target, publicBase: 'assets/rig' })).toThrow(
+        /sembolik|junction|bağ/,
+      );
+      expect(readFileSync(join(outside, 'hull.png'), 'utf8')).toBe('korunacak');
+      expect(existsSync(join(outside, 'parts'))).toBe(false);
+      expect(existsSync(target.metadataOut)).toBe(false);
+    },
+  );
+
+  it('güven sınırının üstündeki bağ (bağlı ev dizini, junction sürücü) dışa aktarmayı kırmaz', () => {
+    writeExport(metadataFixture());
+    const viaLink = join(root, 'via-link');
+    symlinkSync(root, viaLink, process.platform === 'win32' ? 'junction' : 'dir');
+    const linkedRef = { ...ref(), exportRoot: join(viaLink, 'exported') };
+    expect(auditRigExport(linkedRef).missingParts).toEqual([]);
+    // Hedefler çalışma dizinine göre sınanır; sınırın üstü bağlıysa yine kırılmaz.
+    const work = join(viaLink, 'work');
+    mkdirSync(work);
+    vi.spyOn(process, 'cwd').mockReturnValue(work);
+    const report = syncRigExport({
+      source: linkedRef,
+      metadataOut: join(work, 'out', 'walker.metadata.json'),
+      partsOut: join(work, 'out', 'parts'),
+      publicBase: 'assets/rig',
+    });
+    expect(report.copied).toEqual(['hull.png', 'arm.png']);
+    vi.restoreAllMocks();
+  });
+
+  it('güven sınırının altındaki bağ, sınırın üstü bağlı olsa da hâlâ reddedilir', () => {
+    writeExport(metadataFixture());
+    const viaLink = join(root, 'via-link');
+    symlinkSync(root, viaLink, process.platform === 'win32' ? 'junction' : 'dir');
+    const work = join(viaLink, 'work');
+    mkdirSync(work);
+    const outside = join(root, 'elsewhere');
+    mkdirSync(outside);
+    writeFileSync(join(outside, 'hull.png'), 'korunacak');
+    symlinkSync(outside, join(work, 'out'), process.platform === 'win32' ? 'junction' : 'dir');
+    vi.spyOn(process, 'cwd').mockReturnValue(work);
+    expect(() =>
+      syncRigExport({
+        source: { ...ref(), exportRoot: join(viaLink, 'exported') },
+        metadataOut: join(work, 'out', 'walker.metadata.json'),
+        partsOut: join(work, 'out', 'parts'),
+        publicBase: 'assets/rig',
+      }),
+    ).toThrow(/sembolik|junction|bağ/);
+    expect(readFileSync(join(outside, 'hull.png'), 'utf8')).toBe('korunacak');
+    vi.restoreAllMocks();
+  });
+
+  it('PNG adındaki dizin geçerli parça sayılmaz ve hedef oluşturulmaz', () => {
+    writeExport(metadataFixture());
+    const paths = resolveRigExportPaths(ref());
+    rmSync(join(paths.partsDir, 'arm.png'));
+    mkdirSync(join(paths.partsDir, 'arm.png'));
+    const target = outFiles();
+    expect(() => syncRigExport({ source: ref(), ...target, publicBase: 'assets/rig' })).toThrow();
+    expect(existsSync(target.partsOut)).toBe(false);
+  });
+
+  it('güvenli uppercase, tire ve iç nokta kimliklerini değiştirmeden gönderir', () => {
+    const metadata = metadataFixture({ entityId: 'Walker-v2', domain: 'Enemy.Units' });
+    metadata.parts[0]!.partId = 'Hull.main';
+    metadata.parts[1]!.parentPartId = 'Hull.main';
+    writeExport(metadata);
+    const target = outFiles();
+    const report = syncRigExport({
+      source: ref('Walker-v2', 'Enemy.Units'),
+      ...target,
+      publicBase: 'assets/rig',
+    });
+    expect(report.copied).toEqual(['Hull.main.png', 'arm.png']);
+    expect(readFileSync(join(target.partsOut, 'Hull.main.png'), 'utf8')).toBe('png:Hull.main.png');
+  });
+
+  it.each(['parts', 'parent', 'metadata'] as const)(
+    'kaynakla örtüşen %s hedefi kaynağı değiştirmez',
+    (overlap) => {
+      writeExport(metadataFixture());
+      const paths = resolveRigExportPaths(ref());
+      const target = outFiles();
+      if (overlap === 'parts') target.partsOut = paths.partsDir;
+      if (overlap === 'parent') target.partsOut = join(paths.entityDir, '..');
+      if (overlap === 'metadata') target.metadataOut = paths.metadataFile;
+      const before = readFileSync(paths.metadataFile, 'utf8');
+      expect(() => syncRigExport({ source: ref(), ...target, publicBase: 'assets/rig' })).toThrow(
+        /örtüş/,
+      );
+      expect(readFileSync(paths.metadataFile, 'utf8')).toBe(before);
+      expect(readFileSync(join(paths.partsDir, 'hull.png'), 'utf8')).toBe('png:hull.png');
+      expect(existsSync(join(paths.entityDir, '..', 'hull.png'))).toBe(false);
+    },
+  );
 });
 
 describe('auditShippedRig', () => {

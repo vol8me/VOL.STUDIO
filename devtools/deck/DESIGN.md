@@ -18,5 +18,14 @@ ayıklanmamış ham çıktı repo belgesine ya da loguna girmez. Kalıcı teknik
 karar [Steam Deck rehberine](../../docs/steam-deck.md), ham ölçüm yerel
 records/ dizinine aittir.
 
+Paylaşılan rapor kapanışın `reason` (`close`, `signal`, `suspend`) ve
+`outcome` (`success`, `failed`, `timedOut`) sınıflarını korur. İstek kimliği
+taşınmaz; `hasRequestId` yalnız tanınan kapanış/uyku protokol kimliğinin
+varlığını bildirir. Serbest hata metni `hasError` olur; normal kapanış
+nedeni hata sayılmaz. Runtime ölçümü yoksa veya temizleyici ham runtime'ı
+tanıyamadıysa `unknown` yazılır. `host`, yalnız tam ortam dökümünde runtime
+değişkeninin açık yokluğu ile bildirilir; paylaşılmış kaydın yeniden
+temizlenmesi bu sınıfları kaybetmez.
+
 Testler protokolü ve ölçüm hesaplarını doğrular. Gerçek cihazda elle
 ölçüm yapılmadıysa bu adım tamamlanmış sayılmaz.

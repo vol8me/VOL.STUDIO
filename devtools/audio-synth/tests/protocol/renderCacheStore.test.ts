@@ -2,6 +2,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   rmSync,
   statSync,
   utimesSync,
@@ -58,6 +59,39 @@ describe('disk render önbelleği', () => {
     cache.write(key, [ramp(64)]);
     const [file] = files(cache.dir);
     writeFileSync(file, Buffer.alloc(40));
+    expect(cache.read(key)).toBeUndefined();
+    expect(files(cache.dir)).toEqual([]);
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    'PCM içindeki sonlu olmayan %s örneğini isabet saymaz',
+    (sample) => {
+      const cache = new DiskRenderCache(tempRoot());
+      const key = cacheKey({ nonFinite: true });
+      cache.write(key, [ramp(4), ramp(4)]);
+      const [file] = files(cache.dir);
+      const bytes = readFileSync(file);
+      bytes.writeFloatLE(sample, bytes.length - 4);
+      writeFileSync(file, bytes);
+      expect(cache.read(key)).toBeUndefined();
+      expect(cache.stats).toMatchObject({ hits: 0, misses: 1 });
+      expect(files(cache.dir)).toEqual([]);
+    },
+  );
+
+  it.each([
+    [0, 4],
+    [1, 0],
+    [100000, 0],
+  ])('boş PCM başlığı kanal=%i kare=%i kabul edilmez', (count, frames) => {
+    const cache = new DiskRenderCache(tempRoot());
+    const key = cacheKey({ empty: true });
+    cache.write(key, [ramp(4)]);
+    const [file] = files(cache.dir);
+    const bytes = readFileSync(file).subarray(0, 16);
+    bytes.writeUInt32LE(count, 4);
+    bytes.writeUInt32LE(frames, 8);
+    writeFileSync(file, bytes);
     expect(cache.read(key)).toBeUndefined();
     expect(files(cache.dir)).toEqual([]);
   });

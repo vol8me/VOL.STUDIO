@@ -227,7 +227,9 @@ seçimi ve arama kararı nihai kalite ister.
 modülasyonları içerir. Yerinde işleyen düğümler önbellek tamponuna sahip
 olmaz; okuma ve yazma kopyadır. Sample doğrulaması cache hit öncesinde
 çalışır. Kod import kapanışının parmak izi değişince eski PCM okunmaz;
-bozuk cache girdisi miss sayılır. Doğrulama önbelleği kullanmaz.
+bozuk cache girdisi miss sayılır. Disk girdisinin kanal/kare sayısı pozitif,
+bayt boyutu tam ve bütün PCM örnekleri sonlu olmalıdır; bozuk girdi silinip
+yeniden render edilir. Doğrulama önbelleği kullanmaz.
 
 Paralel toplu işler seri yolla aynı saf görevi çalıştırır. Sonuç girdi
 sırasına yerleşir, tamamlanma sırası kimliği değiştirmez. Worker sayısı

@@ -105,6 +105,9 @@ Reduced-motion dekor sürelerini 0 yapar; anlam opacity/etiket/ring ile korunur.
 oyun sayacı gibi işlev süresi sıfırlanmaz. Cancel, interruption, destroy, dil/tema değişimi ve
 hidden/suspend son durumu deterministik verir; animasyon olayı gelmese de temizlik tamamlanır.
 İki bağımsız kaynak varsa DisposableScope; listener/timer/abonelik/voice sahipsiz kalmaz.
+Wizard'da doğrudan adım değişimi ve destroy bekleyen doğrulamanın sahipliğini bırakır:
+geç çözüm veya ret adımı, tamamlanma callback'ini, odağı veya yeni isteğin kilidini değiştirmez.
+Yeni adım geçişi önceki geçiş zamanlayıcısını ve karesini iptal eder.
 Lint yalnız UI hareket süreleri içindir; domain timeout, rate-limit ve genel animateValue
 yanlışlıkla yasaklanmaz.
 
@@ -253,6 +256,10 @@ kapatır), Joystick (ok tuşları vektör üretir), seçilebilir DataTable (rovi
 Enter/Space, `aria-selected`) klavye ve kol karşılığını taşır; durum değişimi canlı bölgeyle duyurulur ve
 yeniden çizim odağı düşürmez.
 
+RangeSlider jestinin tek işaretçi sahibi vardır; ikinci basış başlangıç snapshot'ını devralmaz,
+başka işaretçinin hareketi değer üretmez. PullToRefresh'te pointercancel, hazır eşiği aşılmış
+olsa bile yenileme veya tıklama yutma zamanlayıcısı başlatmadan görünümü sıfırlar.
+
 ## 10. UI yüzey ailesi
 
 Diyaloglar yıkıcı onay, çıkış, izin, fatal ve save conflict sunumudur.
@@ -260,6 +267,11 @@ Ad, modal containment, inert arka plan, tek geri, uygun initial focus ve
 restore gerekir. Save conflict local/remote özeti ve intent'ini çizer;
 Steam istemcisinin Auto-Cloud dialog'unu ele geçirmez. Cloud servis/revision/
 merge motoru ayrı ürün işidir, bu planla sahte gerçek Cloud entegrasyonu eklenmez.
+
+Popup Escape'i yalnız son açılan Popup üzerinden ortak geri yığınına iletir; üzerine daha
+sonra Modal açılmışsa o katman kapanır. ContextMenu kendi Escape kapanışını tüketir;
+aynı tuş dış Popup veya Modal'ı kapatmaz. İç Popover kapanışında odak dış katmandaki
+tetikleyicide kalır.
 
 Toast görünür yığın ≤3, kritik > ödül > bilgi; rutin 2–5 s. Hover/focus
 zamanı durdurur; aksiyonlu/kritik bildirim erişim kaybedecek biçimde silinmez.

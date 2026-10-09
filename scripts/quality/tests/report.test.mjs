@@ -34,7 +34,7 @@ describe('kalite raporu sınıflandırması', () => {
       );
       const childEnv = { ...process.env };
       delete childEnv.NODE_TEST_CONTEXT;
-      const tap = spawnSync(process.execPath, ['--test', source], {
+      const tap = spawnSync(process.execPath, ['--test', '--test-reporter=tap', source], {
         encoding: 'utf8',
         env: childEnv,
       });

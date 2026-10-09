@@ -62,12 +62,15 @@ export class GameServices {
   private readonly resumeListeners = new Set<() => Promise<void>>();
   private released = false;
   private readonly stores: ScopedStores;
+  private paused = false;
+  private inputGeneration = 0;
+  private inputQueue: Promise<void> = Promise.resolve();
 
   private constructor(
     readonly platform: RuntimePlatform,
     readonly session: SessionKind,
-    readonly glyphContext: GlyphFamilyContext,
-    readonly steam: SteamworksStatus,
+    private glyphContextState: GlyphFamilyContext,
+    private steamState: SteamworksStatus,
     measure: boolean,
     readonly overrides: RuntimeOverrides,
   ) {
@@ -141,7 +144,7 @@ export class GameServices {
         );
       await Promise.all([services.settings.load(), services.progress.load()]);
       await services.display?.start();
-      await services.setPaused(false);
+      await services.applySteamActionSet();
       const apply = (): void => setHapticsEnabled(services.settings.get().haptics);
       apply();
       services.scope.addSubscription(services.settings.subscribe(apply));
@@ -158,6 +161,7 @@ export class GameServices {
       services.scope.addSubscription(
         onSystemResume(() => {
           services.pause();
+          void services.refreshNativeInput();
           services.measurements?.reset();
           services.diagnostics?.markResume();
           for (const listener of services.resumeListeners) {
@@ -177,6 +181,14 @@ export class GameServices {
             if (active) services.pause();
           }),
         );
+      if (platform !== 'web') {
+        const refresh = (): void => {
+          void services.refreshNativeInput();
+        };
+        for (const event of ['gamepadconnected', 'gamepaddisconnected', 'focus', 'pageshow']) {
+          services.scope.addListener(window, event, refresh);
+        }
+      }
       if (platform === 'android') await androidScreenOrientation.set('landscape');
       return services;
     } catch (error) {
@@ -195,10 +207,54 @@ export class GameServices {
     return () => this.resumeListeners.delete(listener);
   }
 
-  async setPaused(paused: boolean): Promise<void> {
+  get glyphContext(): GlyphFamilyContext {
+    return this.glyphContextState;
+  }
+
+  get steam(): SteamworksStatus {
+    return this.steamState;
+  }
+
+  setPaused(paused: boolean): Promise<void> {
+    this.paused = paused;
+    return this.refreshNativeInput();
+  }
+
+  /** Kol ve yaşam döngüsü sınırında IPC; kare yoklaması güncel bağlamı yalnız okur. */
+  private refreshNativeInput(): Promise<void> {
+    if (this.released || this.platform === 'web') return Promise.resolve();
+    const generation = ++this.inputGeneration;
+    const current = (): boolean => !this.released && generation === this.inputGeneration;
+    const run = this.inputQueue
+      .then(async () => {
+        if (!current()) return;
+        const [context, pads, steam] = await Promise.all([
+          steamworksGlyphContext(),
+          steamVirtualGamepads(),
+          steamworksStatus(),
+        ]);
+        if (!current()) return;
+        const pad = singleVirtualPad(pads);
+        this.glyphContextState = {
+          ...context,
+          steamDeckSession: this.session === 'gamescope' || steam.deck,
+          ...(pad ? { virtualPad: pad } : {}),
+        };
+        this.steamState = steam;
+        await this.applySteamActionSet();
+      })
+      .catch((error: unknown) => {
+        console.warn('[VOL.TEST] Native girdi bağlamı yenilenemedi:', error);
+      });
+    this.inputQueue = run;
+    return run;
+  }
+
+  private async applySteamActionSet(): Promise<void> {
+    if (this.released) return;
     if (this.steam.available && this.steam.inputReady && this.steam.manifestOk !== false) {
       try {
-        await activateSteamActionSet(paused ? 'Menu' : 'Gameplay');
+        await activateSteamActionSet(this.paused ? 'Menu' : 'Gameplay');
       } catch (error) {
         console.warn('[VOL.TEST] Steam aksiyon seti uygulanamadı:', error);
       }

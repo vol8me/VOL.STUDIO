@@ -43,6 +43,7 @@ export class MusicEngine {
 
   private readonly tracks = new Map<string, MusicTrack>();
   private readonly buffers = new Map<string, AudioBuffer>();
+  private readonly loadController = new AbortController();
   private activeStems = new Map<string, ActiveStem>();
 
   private currentTrackId?: string;
@@ -132,6 +133,8 @@ export class MusicEngine {
   /** Track'i buffer'ları ile önceden yükler.
    *  Bir stem yüklenemezse diğerlerini engellemez, sadece uyarır. */
   async loadTrack(track: MusicTrack): Promise<boolean> {
+    const { signal } = this.loadController;
+    if (signal.aborted) return false;
     this.tracks.set(track.id, track);
     let loadedAny = false;
     const tasks = track.stems.map(async (stem) => {
@@ -145,17 +148,20 @@ export class MusicEngine {
           this.buffers.set(cacheKey, stem.buffer);
           loadedAny = true;
         } else if (stem.src) {
-          const buffer = await this.loader.loadFromUrl(stem.src);
+          const buffer = await this.loader.loadFromUrl(stem.src, { signal });
+          if (signal.aborted) return;
           this.buffers.set(cacheKey, buffer);
           loadedAny = true;
         }
       } catch (err) {
+        if (signal.aborted) return;
         console.warn(`[MusicEngine] Stem yüklenemedi: ${stem.id}`, err);
       }
     });
     await Promise.all(tasks);
+    if (signal.aborted) return false;
     await Promise.all(trackCues(track).map((cue) => this.cues.load(track.id, cue)));
-    return loadedAny;
+    return !signal.aborted && loadedAny;
   }
 
   /**
@@ -478,6 +484,8 @@ export class MusicEngine {
 
   /** Tüm kaynakları temizler. */
   dispose(): void {
+    if (this.loadController.signal.aborted) return;
+    this.loadController.abort();
     const toDispose = [...this.activeStems.values()];
     this.stop({ fadeOut: 0 });
     for (const active of toDispose) {

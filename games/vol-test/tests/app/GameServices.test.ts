@@ -1,24 +1,33 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DisplayModeController } from '@volstudio/tauri-v2';
 import type * as Platform from '@volstudio/tauri-v2';
+import { resolveGlyphFamily, type GlyphFamilyContext } from '@volstudio/core/ui';
 import { GameServices } from '@/app/GameServices';
 
-const bridge = vi.hoisted(() => ({
-  platform: 'web',
-  session: 'web',
-  measure: false,
-  orientationError: false,
-  suspend: null as (() => Promise<void>) | null,
-  shutdown: null as (() => Promise<void>) | null,
-  resume: null as (() => void) | null,
-  overlay: null as ((active: boolean) => void) | null,
-  stops: 0,
-  reports: [] as unknown[],
-  reportError: null as Error | null,
-  steamReady: false,
-  actionSets: [] as string[],
-  env: {},
-}));
+const bridge = vi.hoisted(() => {
+  // Zayıf tip: her alan isteğe bağlıdır; boş bağlam anlamlı bir değerdir ve
+  // açık tip burada yazım hatasını (ör. `steamworksTyp`) erken yakalar.
+  const glyphContext: GlyphFamilyContext = {};
+  return {
+    platform: 'web',
+    session: 'web',
+    measure: false,
+    orientationError: false,
+    suspend: null as (() => Promise<void>) | null,
+    shutdown: null as (() => Promise<void>) | null,
+    resume: null as (() => void) | null,
+    overlay: null as ((active: boolean) => void) | null,
+    stops: 0,
+    reports: [] as unknown[],
+    reportError: null as Error | null,
+    steamReady: false,
+    actionSets: [] as string[],
+    env: {},
+    glyphContext,
+    glyphLookup: null as (() => Promise<GlyphFamilyContext>) | null,
+    pads: [{ slot: 0, name: 'pad', vid: 0x054c, pid: 0, type: 'ps5' }],
+  };
+});
 vi.mock('@volstudio/tauri-v2', async (importOriginal) => {
   const original = await importOriginal<typeof Platform>();
   const stop = () => () => {
@@ -30,8 +39,8 @@ vi.mock('@volstudio/tauri-v2', async (importOriginal) => {
     getSessionKind: () => Promise.resolve(bridge.session),
     getDiagnosticsEnv: () =>
       Promise.resolve({ ...bridge.env, ...(bridge.measure ? { VOL_DECK_MEASURE: '1' } : {}) }),
-    steamVirtualGamepads: () => Promise.resolve([{ vid: 0x054c, type: 'ps5' }]),
-    steamworksGlyphContext: () => Promise.resolve({}),
+    steamVirtualGamepads: () => Promise.resolve(bridge.pads),
+    steamworksGlyphContext: () => bridge.glyphLookup?.() ?? Promise.resolve(bridge.glyphContext),
     steamworksStatus: () =>
       Promise.resolve({
         compiled: bridge.steamReady,
@@ -80,9 +89,102 @@ afterEach(() => {
   vi.restoreAllMocks();
   bridge.env = {};
   bridge.reportError = null;
+  bridge.glyphContext = {};
+  bridge.glyphLookup = null;
+  bridge.pads = [{ slot: 0, name: 'pad', vid: 0x054c, pid: 0, type: 'ps5' }];
 });
 
 describe('GameServices', () => {
+  it('kol değişiminde eski Steam ailesini bırakır ve güncel menü aksiyonunu yeni kola uygular', async () => {
+    localStorage.clear();
+    Object.assign(bridge, {
+      platform: 'desktop',
+      session: 'desktop',
+      measure: false,
+      steamReady: true,
+      orientationError: false,
+      actionSets: [],
+      glyphContext: { steamworksType: 'ps5' },
+    });
+    services = await GameServices.create();
+    await services.setPaused(true);
+    expect(resolveGlyphFamily('gamepad', services.glyphContext)).toBe('playstation');
+    bridge.glyphContext = { steamworksType: 'xboxone' };
+    bridge.pads = [{ slot: 0, name: 'pad', vid: 0x045e, pid: 0, type: 'xboxone' }];
+    window.dispatchEvent(new Event('gamepadconnected'));
+    await vi.waitFor(() =>
+      expect(resolveGlyphFamily('gamepad', services!.glyphContext)).toBe('xbox'),
+    );
+    expect(services.glyphContext.virtualPad?.vid).toBe(0x045e);
+    expect(bridge.actionSets).toEqual(['Gameplay', 'Menu', 'Menu']);
+    // Kol ayrılınca native ipucu da silinir; sıradaki Gamepad.id gerçeği kazanır.
+    bridge.glyphContext = {};
+    bridge.pads = [];
+    window.dispatchEvent(new Event('gamepaddisconnected'));
+    await vi.waitFor(() => expect(services!.glyphContext.virtualPad).toBeUndefined());
+    expect(
+      resolveGlyphFamily('gamepad', {
+        ...services.glyphContext,
+        gamepadId: 'Xbox Controller',
+      }),
+    ).toBe('xbox');
+    bridge.steamReady = false;
+  });
+
+  it('Steam açılışta yokken odak dönüşünde yeniden bağlanır ve duraklama son durumu kullanır', async () => {
+    localStorage.clear();
+    Object.assign(bridge, {
+      platform: 'desktop',
+      session: 'desktop',
+      measure: false,
+      steamReady: false,
+      orientationError: false,
+      actionSets: [],
+    });
+    services = await GameServices.create();
+    expect(services.steam.available).toBe(false);
+    bridge.steamReady = true;
+    window.dispatchEvent(new Event('focus'));
+    await vi.waitFor(() => expect(services!.steam.available).toBe(true));
+    expect(bridge.actionSets).toEqual(['Gameplay']);
+    await services.setPaused(true);
+    expect(bridge.actionSets).toEqual(['Gameplay', 'Menu']);
+    bridge.steamReady = false;
+  });
+
+  it('kapanıştan sonra dönen native kol sorgusu bağlamı değiştirmez ve aksiyon kurmaz', async () => {
+    localStorage.clear();
+    Object.assign(bridge, {
+      platform: 'desktop',
+      session: 'desktop',
+      measure: false,
+      steamReady: true,
+      orientationError: false,
+      actionSets: [],
+      glyphContext: { steamworksType: 'ps5' },
+    });
+    services = await GameServices.create();
+    let finish!: (context: GlyphFamilyContext) => void;
+    bridge.glyphLookup = () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      });
+    window.dispatchEvent(new Event('gamepadconnected'));
+    await vi.waitFor(() => expect(finish).toBeTypeOf('function'));
+    services.dispose();
+    finish({ steamworksType: 'xboxone' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(resolveGlyphFamily('gamepad', services.glyphContext)).toBe('playstation');
+    expect(bridge.actionSets).toEqual(['Gameplay']);
+    bridge.glyphLookup = () => {
+      throw new Error('Sökülen dinleyici çağrıldı.');
+    };
+    window.dispatchEvent(new Event('gamepadconnected'));
+    window.dispatchEvent(new Event('focus'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    bridge.steamReady = false;
+  });
+
   it('pending F11 son tercihi kalıcı olmadan kapanış ACK vermez', async () => {
     localStorage.clear();
     Object.assign(bridge, { platform: 'web', session: 'web', measure: false });

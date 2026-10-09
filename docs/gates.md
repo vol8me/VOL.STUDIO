@@ -9,7 +9,7 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 
 | Kapı      | Ne zaman         | Bileşim                                                                                                               |
 | --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `quick`   | pre-commit       | `contract` + `format-check` + `typecheck` + `lint`                                                                    |
+| `quick`   | pre-commit       | `node-pin` + `contract` + `format-check` + `typecheck` + `lint`                                                       |
 | `fast`    | yerel geliştirme | `quick` + `test`                                                                                                      |
 | `high`    | pre-push         | `quick` + `build` + `rust` + `lint-css` + `coverage` + `coverage-shape` + `audio-test` + `bundle` + `scaling` + `e2e` |
 | `signoff` | sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`                                          |
@@ -18,8 +18,9 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 
 | Tarif            | Sınadığı                                                                                                                                                                                                             |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node-pin`       | Çalışan Node, `.node-version` ve `package.json` `engines.node` ile aynı kesin sürüm; değilse ilk adımda açık mesajla durur (`doctor` aynı denetimi kullanır)                                                         |
 | `contract`       | `scripts/quality/tests`, `scripts/linux/tests`, `scripts/android/tests`, `devtools/deck/tests` (bekçi ve betik testleri) ve `scripts/quality/cli/workspace-contract.mjs` (aşağıda)                                   |
-| `format-check`   | Prettier, `**/*.{ts,css,json,md}`                                                                                                                                                                                    |
+| `format-check`   | Prettier, `**/*.{ts,mts,cts,js,mjs,cjs,css,json,md,yaml,yml,html}`                                                                                                                                                   |
 | `typecheck`      | Aktif paketlerin `typecheck` betiği (`tsc --noEmit`, `noImplicitOverride` dahil) ve kök betiklerin JSDoc denetimi (`scripts/tsconfig.json`)                                                                          |
 | `lint`           | ESLint: TS kaynak, betik ve testler tip bilgisiyle (`no-floating-promises` hata); `.js`/`.mjs` betikler `@eslint/js` ile; deterministik kodda `localeCompare` yasak; frozen ağaçlar lifecycle'dan yok sayılır        |
 | `lint-css`       | Stylelint, `**/*.css`                                                                                                                                                                                                |

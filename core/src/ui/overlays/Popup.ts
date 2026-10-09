@@ -1,5 +1,5 @@
 import { UI_THRESHOLD } from '../../constants';
-import { pushBackHandler } from '../../platform/backNavigation';
+import { pushBackHandler, triggerBack } from '../../platform/backNavigation';
 
 export type PopupPlacement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end';
 
@@ -13,6 +13,9 @@ export interface PopupOptions {
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
 }
+
+/** Escape sahibi açılış sırasıdır; document dinleyicisinin kayıt sırası değildir. */
+const openPopups: Popup[] = [];
 
 /**
  * Bir hedef elemente anchored, dışa-tıklama/Escape-kapatılabilir konumlu
@@ -59,10 +62,15 @@ export class Popup {
     };
 
     this.boundKeydown = (event) => {
-      if (event.key === 'Escape') {
+      if (
+        event.key === 'Escape' &&
+        !event.defaultPrevented &&
+        openPopups[openPopups.length - 1] === this
+      ) {
         event.preventDefault();
         event.stopPropagation();
-        this.close();
+        // Popup üstüne Modal/OSK açılmış olabilir; klavye de ortak LIFO geri sahibini kullanır.
+        triggerBack();
       }
     };
 
@@ -79,6 +87,7 @@ export class Popup {
   show(): void {
     if (this.destroyed || this.open) return;
     this.open = true;
+    openPopups.push(this);
 
     if (!this.element.isConnected) {
       this.container.appendChild(this.element);
@@ -141,6 +150,8 @@ export class Popup {
 
   /** Yalnız açıkken yaşayan dinleyiciler: dış tıklama, klavye, geri hareketi, konum. */
   private detachWhileOpenListeners(): void {
+    const index = openPopups.indexOf(this);
+    if (index !== -1) openPopups.splice(index, 1);
     document.removeEventListener('click', this.boundOutsideClick);
     document.removeEventListener('keydown', this.boundKeydown);
     this.releaseBackHandler?.();

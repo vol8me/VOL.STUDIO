@@ -138,6 +138,15 @@ fn read_in(dir: &Path, name: &str) -> Result<StoreRead, String> {
     // ya da bozukken tam bir geçici dosya en yeni jenerasyondur.
     for candidate in [&temp, &backup] {
         if let Some(data) = valid(candidate)? {
+            // Kurtarma yalnız RAM'de kalamaz: sonraki yazım aynı `.tmp`yi
+            // truncate eder. Önce sağlam jenerasyonu güncel ada yerleştiririz;
+            // yedekten kurtarmada kaynak yedek kopyalama boyunca korunur.
+            if candidate == &backup {
+                write_file(&temp, data.as_bytes())?;
+            }
+            fs::rename(&temp, &current)
+                .map_err(|error| format!("kurtarma yerine koyma: {error}"))?;
+            sync_dir(dir)?;
             return Ok(StoreRead {
                 data: Some(data),
                 recovered: true,
@@ -449,6 +458,43 @@ mod store_tests {
             read(&dir, "e.json"),
             (Some(r#"{"v":2}"#.into()), true, false)
         );
+    }
+
+    #[test]
+    fn kurtarilan_gecici_kayit_sonraki_yarim_yazimda_kaybolmaz() {
+        for corrupt_current in [false, true] {
+            let dir = temp_dir();
+            if corrupt_current {
+                fs::write(dir.join("recovery.json"), "{bozuk").unwrap();
+            }
+            fs::write(dir.join("recovery.json.tmp"), r#"{"shots":17}"#).unwrap();
+            assert_eq!(
+                read(&dir, "recovery.json"),
+                (Some(r#"{"shots":17}"#.into()), true, false)
+            );
+            // Sonraki yazıcının truncate sonrası ölmesi diskte bu durumu bırakır.
+            fs::write(dir.join("recovery.json.tmp"), "{yarim").unwrap();
+            assert_eq!(
+                read(&dir, "recovery.json"),
+                (Some(r#"{"shots":17}"#.into()), false, false)
+            );
+            fs::remove_dir_all(dir).unwrap();
+        }
+    }
+
+    #[test]
+    fn kurtarilan_gecici_jenerasyon_sonraki_yazimin_yedegidir() {
+        let dir = temp_dir();
+        fs::write(dir.join("recovery.json.bak"), r#"{"shots":4}"#).unwrap();
+        fs::write(dir.join("recovery.json.tmp"), r#"{"shots":17}"#).unwrap();
+        assert!(read(&dir, "recovery.json").1);
+        write_in(&dir, "recovery.json", r#"{"shots":18}"#).unwrap();
+        fs::write(dir.join("recovery.json"), "{bozuk").unwrap();
+        assert_eq!(
+            read(&dir, "recovery.json"),
+            (Some(r#"{"shots":17}"#.into()), true, false)
+        );
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

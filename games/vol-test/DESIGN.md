@@ -220,6 +220,13 @@ ilerlemeyi `AutosaveCoordinator` ile yazar. `ScopedSaveManager` cihaz ve
 ilerleme kapsamlarını ayrı depolar. Uyku ve kapanış kayıt kuyruklarını
 boşaltır; kaynaklar sahne kapanışında sökülür.
 
+Native Steam durumu ve glif bağlamı kol takma/çıkarma, pencereye odak dönüşü,
+sayfa dönüşü, sistem uyanışı ve duraklatma geçişinde yenilenir. Yenilemeler
+tek kuyrukta ilerler; yeni istek eski cevabı geçersiz kılar ve kapanmış
+servise geç sonuç uygulanmaz. Yeniden bağlanan istemci ve yeni kol güncel
+oyun/menü aksiyon setini alır. HUD karede yalnız bu güncel bağlamı okur;
+kare başına native sorgu yapılmaz.
+
 Açılış iki scope adapter'ını bir kez kurar ve eski kayıt göçünü state
 yüklemeden bekler. `voltest.preferences` cihaz, `voltest.progress` ilerleme
 uyumluluk eşlemesidir; geçmişte kapsamsız sürüm yayımlandığı iddiası değildir.

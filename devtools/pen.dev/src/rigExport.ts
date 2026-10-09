@@ -1,6 +1,7 @@
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
   readdirSync,
@@ -8,7 +9,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { validateRigMetadata, type RigMetadata } from '@volstudio/core/rig/metadata';
 
 /**
@@ -33,6 +34,8 @@ export interface RigExportPaths {
 
 /** Bir export referansını mutlak dosya yollarına çevirir. */
 export function resolveRigExportPaths(ref: RigExportRef): RigExportPaths {
+  assertExportId(ref.domain, 'domain');
+  assertExportId(ref.entityId, 'entityId');
   // Export ağacı sözleşmesi POSIX yoludur: rig dosyaları `.pen` kaynaklarıyla
   // ve üretim betikleriyle aynı göreli yolu paylaşır. Windows'ta `join`
   // ayracı üretirse aynı export farklı yol olarak görünür.
@@ -65,11 +68,19 @@ export interface RigExportAudit {
  */
 export function auditRigExport(ref: RigExportRef): RigExportAudit {
   const paths = resolveRigExportPaths(ref);
+  const sourceBoundary = ref.exportRoot;
+  rejectLinkedPath(paths.metadataFile, sourceBoundary);
+  rejectLinkedPath(paths.partsDir, sourceBoundary);
   const metadata = readRigMetadata(paths.metadataFile);
+  for (const part of metadata.parts) assertExportId(part.partId, 'partId');
 
   const expected = new Set(metadata.parts.map((part) => `${part.partId}.png`));
   const missingParts = [...expected]
-    .filter((file) => !existsSync(join(paths.partsDir, file)))
+    .filter((file) => {
+      const path = join(paths.partsDir, file);
+      rejectLinkedPath(path, sourceBoundary);
+      return !existsSync(path) || !lstatSync(path).isFile();
+    })
     .sort();
 
   const onDisk = existsSync(paths.partsDir)
@@ -155,6 +166,28 @@ export function syncRigExport(request: RigSyncRequest): RigSyncReport {
   const paths = resolveRigExportPaths(request.source);
   const base = request.publicBase.replace(/\/+$/, '');
 
+  if (
+    contains(paths.entityDir, request.partsOut) ||
+    contains(request.partsOut, paths.entityDir) ||
+    contains(paths.entityDir, request.metadataOut)
+  ) {
+    throw new Error('rig kaynak ve gönderim hedefi örtüşemez');
+  }
+
+  // Bütün yazım ve silme hedefleri işlem başlamadan denetlenir. Bir PNG'nin
+  // kendisi de bağ olabilir; yalnız partsOut dizinini sınamak yeterli değildir.
+  const targetBoundary = process.cwd();
+  rejectLinkedPath(request.partsOut, targetBoundary);
+  rejectLinkedPath(request.metadataOut, targetBoundary);
+  for (const part of metadata.parts) {
+    rejectLinkedPath(join(request.partsOut, `${part.partId}.png`), targetBoundary);
+  }
+  if (existsSync(request.partsOut)) {
+    for (const file of readdirSync(request.partsOut)) {
+      if (file.endsWith('.png')) rejectLinkedPath(join(request.partsOut, file), targetBoundary);
+    }
+  }
+
   mkdirSync(request.partsOut, { recursive: true });
   mkdirSync(dirname(request.metadataOut), { recursive: true });
 
@@ -204,4 +237,48 @@ function readRigMetadata(metadataFile: string): RigMetadata {
     throw new Error(`metadata bulunamadı: ${metadataFile}`);
   }
   return validateRigMetadata(JSON.parse(readFileSync(metadataFile, 'utf8')), metadataFile);
+}
+
+const EXPORT_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const WINDOWS_DEVICE = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
+
+function assertExportId(value: string, label: string): void {
+  if (
+    typeof value !== 'string' ||
+    !EXPORT_ID.test(value) ||
+    value.endsWith('.') ||
+    WINDOWS_DEVICE.test(value)
+  ) {
+    throw new Error(`${label}: güvenli export kimliği olmalı (${JSON.stringify(value)})`);
+  }
+}
+
+function contains(parent: string, child: string): boolean {
+  const path = relative(resolve(parent), resolve(child));
+  return path === '' || (path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path));
+}
+
+/**
+ * lstat, hedefi olmayan bağları da görür; Windows junction da bağ sayılır.
+ *
+ * Güven sınırı aracın kendi ağacıdır: `boundary`nin ALTINDAKİ her bileşen bağ olamaz; sınırın
+ * kendisi ve üstü makine düzenidir (bağlı bir ev dizini, `/var/home`, junction'lı sürücü) ve
+ * dışa aktarmayı kırmamalıdır. Sınırın dışında kalan yolda hiçbir güven varsayımı yoktur: kök
+ * dizine kadar bütün atalar denetlenir.
+ */
+function rejectLinkedPath(path: string, boundary?: string): void {
+  const stop = boundary !== undefined && contains(boundary, path) ? resolve(boundary) : undefined;
+  let cursor = resolve(path);
+  while (cursor !== stop) {
+    try {
+      if (lstatSync(cursor).isSymbolicLink()) {
+        throw new Error(`rig yolu sembolik bağ/junction içeremez: ${cursor}`);
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+    const parent = dirname(cursor);
+    if (parent === cursor) return;
+    cursor = parent;
+  }
 }

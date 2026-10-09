@@ -95,6 +95,32 @@ describe('steamworksStatus', () => {
 });
 
 describe('createSteamworksTextEntryProvider', () => {
+  it.each([
+    ['password', 'password'],
+    ['default', 'normal'],
+    ['search', 'normal'],
+    [undefined, 'normal'],
+  ] as const)('%s amacı native klavyede %s kipine gider', async (purpose, mode) => {
+    const { probe, events } = fakeProbe({ show_text_input: true });
+    const restore = afterEach(probe);
+    const opened = createSteamworksTextEntryProvider().open({ value: 'ilk', purpose });
+    try {
+      await nextTurn();
+      expect(probe.invoke).toHaveBeenCalledWith('show_text_input', {
+        requestId: expect.any(String) as unknown,
+        description: '',
+        existingText: 'ilk',
+        maxCharacters: 4096,
+        multiline: false,
+        mode,
+      });
+    } finally {
+      events.get('vol-steamworks:text-input')?.({ requestId: requestId(probe), submitted: false });
+      await opened;
+      restore();
+    }
+  });
+
   it('show sırasında gelen hızlı kapanışı kaçırmaz ve aboneliği kaldırır', async () => {
     const { probe, events } = fakeProbe({
       show_text_input: (args: Record<string, unknown>) => {

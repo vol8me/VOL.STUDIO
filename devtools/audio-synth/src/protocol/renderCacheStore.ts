@@ -129,13 +129,17 @@ function decode(bytes: Buffer): Float32Array[] | undefined {
   if (view.getUint32(0, true) !== MAGIC) return undefined;
   const count = view.getUint32(4, true);
   const frames = view.getUint32(8, true);
+  if (count === 0 || frames === 0) return undefined;
   if (bytes.length !== HEADER_BYTES + count * frames * 4) return undefined;
-  return Array.from({ length: count }, (_, ch) => {
+  const channels: Float32Array[] = [];
+  for (let ch = 0; ch < count; ch++) {
     const channel = new Float32Array(frames);
     const start = bytes.byteOffset + HEADER_BYTES + ch * frames * 4;
     new Uint8Array(channel.buffer).set(new Uint8Array(bytes.buffer, start, frames * 4));
-    return channel;
-  });
+    if (!channel.every(Number.isFinite)) return undefined;
+    channels.push(channel);
+  }
+  return channels;
 }
 
 export interface DiskCacheOptions {

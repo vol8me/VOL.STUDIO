@@ -44,6 +44,8 @@ export class Wizard {
   private transitionFrame: number | null = null;
   /** validate() beklenirken ikinci bir ilerleme baslatilmasini engeller. */
   private advancing = false;
+  private validationToken = 0;
+  private destroyed = false;
 
   constructor(options: WizardOptions) {
     // Boş adım listesi tüm indekslemeleri (renderStep, handleNext, updateChrome)
@@ -125,13 +127,32 @@ export class Wizard {
 
   /** validate() çağırmadan doğrudan verilen adıma atlar (ör. özet ekranından "2. adımı düzenle" bağlantısı). */
   goToStep(index: number): void {
-    if (index < 0 || index >= this.steps.length) return;
+    if (this.destroyed || index < 0 || index >= this.steps.length) return;
+    this.invalidateValidation();
+    this.moveToStep(index);
+  }
+
+  private moveToStep(index: number): void {
     const direction: 'forward' | 'backward' = index > this.currentIndex ? 'forward' : 'backward';
     this.currentIndex = index;
     this.renderStep(direction);
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.invalidateValidation();
+    this.cancelTransition();
+    i18next.off('languageChanged', this.onLanguageChanged);
+    this.backButton.removeEventListener('click', this.boundBackClick);
+    this.nextButton.removeEventListener('click', this.boundNextClick);
+    for (const step of this.steps) {
+      step.content.destroy?.();
+    }
+    this.element.remove();
+  }
+
+  private cancelTransition(): void {
     // Gecis zamanlayıcısı kopmus DOM üzerinde replaceChildren cagirmamali.
     if (this.transitionTimer !== null) {
       window.clearTimeout(this.transitionTimer);
@@ -141,13 +162,6 @@ export class Wizard {
       cancelAnimationFrame(this.transitionFrame);
       this.transitionFrame = null;
     }
-    i18next.off('languageChanged', this.onLanguageChanged);
-    this.backButton.removeEventListener('click', this.boundBackClick);
-    this.nextButton.removeEventListener('click', this.boundNextClick);
-    for (const step of this.steps) {
-      step.content.destroy?.();
-    }
-    this.element.remove();
   }
 
   private buildIndicator(index: number, step: WizardStep): HTMLDivElement {
@@ -174,8 +188,9 @@ export class Wizard {
    * doğrulama sırasında cift tıklama iki geçişi kuyruğa alir ve bir adim atlanır.
    */
   private async handleNext(): Promise<void> {
-    if (this.advancing) return;
+    if (this.destroyed || this.advancing) return;
     this.advancing = true;
+    const token = ++this.validationToken;
     // Kilitlenen düğme odaktaysa tarayıcı odağı gövdeye atar; bitince geri verilir.
     const hadFocus = document.activeElement === this.nextButton;
     this.nextButton.disabled = true;
@@ -184,7 +199,7 @@ export class Wizard {
       const current = this.steps[this.currentIndex];
       if (current.validate) {
         const valid = await current.validate();
-        if (!valid) return;
+        if (token !== this.validationToken || !valid) return;
       }
 
       if (this.currentIndex === this.steps.length - 1) {
@@ -192,18 +207,28 @@ export class Wizard {
         return;
       }
 
-      this.goToStep(this.currentIndex + 1);
+      this.moveToStep(this.currentIndex + 1);
     } catch (error) {
       // validate/onFinish/goToStep hata fırlatırsa ilerleme kilitlenmesin;
       // unhandled rejection yerine loglanır.
-      console.error('[Wizard] Sonraki adıma geçiş başarısız:', error);
+      if (token === this.validationToken) {
+        console.error('[Wizard] Sonraki adıma geçiş başarısız:', error);
+      }
     } finally {
-      this.advancing = false;
-      this.nextButton.disabled = false;
-      if (hadFocus && this.element.isConnected && document.activeElement === document.body) {
-        this.nextButton.focus();
+      if (token === this.validationToken) {
+        this.invalidateValidation();
+        if (hadFocus && this.element.isConnected && document.activeElement === document.body) {
+          this.nextButton.focus();
+        }
       }
     }
+  }
+
+  /** Eski doğrulama yeni adımı, yeni isteğin kilidini veya sökülmüş sahibini değiştiremez. */
+  private invalidateValidation(): void {
+    this.validationToken++;
+    this.advancing = false;
+    this.nextButton.disabled = false;
   }
 
   /**
@@ -212,6 +237,7 @@ export class Wizard {
    * timeout'un yeni içeriği ezmesini önler.
    */
   private renderStep(direction: 'forward' | 'backward' = 'forward'): void {
+    this.cancelTransition();
     const step = this.steps[this.currentIndex];
     const token = ++this.transitionToken;
 

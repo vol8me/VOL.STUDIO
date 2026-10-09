@@ -10,9 +10,12 @@ Oyun tek AudioContext sahibi olabilir; motor `audioContext` ve `destination`
 ile o bağlama ve hedefe bağlanır. Bağlam yaratma, kilit açma ve platform
 yaşam döngüsü tüketiciye aittir. Motor kaynak, mixer, buffer cache ve kendi
 aboneliklerini dispose ile bırakır; dışarıdan verilen bağlamı sahiplenmez.
+`dispose` terminal ve idempotenttir: bekleyen stem/cue isteklerini iptal eder,
+geç decode sonucu cache'i yeniden dolduramaz veya yeni cue isteği başlatamaz.
+Kapanan motorda `loadTrack` ve cue yüklemesi `false` döner.
 
 Track kimliği benzersizdir. Stem kaynak URL ya da AudioBuffer taşır;
-OGG çözümü başarısızsa loader MP3 alternatifini deneyebilir. URL cache'i
+OGG çözümü başarısızsa yükleme reddedilir; başka biçime düşülmez. URL cache'i
 kaynakla, doğrudan buffer cache'i track ve stem kimliğiyle kapsamlanır;
 aynı adlı iki stem karışmaz. Reddedilen yükleme Promise'i kalıcı cache
 olmaz.

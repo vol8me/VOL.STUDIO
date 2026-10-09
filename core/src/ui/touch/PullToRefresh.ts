@@ -155,7 +155,7 @@ export class PullToRefresh {
       window.setTimeout(() => this.scrollArea.removeEventListener('click', swallow, true), 0);
     }
 
-    if (this.phase === 'ready') {
+    if (event.type === 'pointerup' && this.phase === 'ready') {
       void this.commitRefresh();
     } else {
       this.reset();

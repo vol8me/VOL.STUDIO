@@ -22,9 +22,11 @@ mod b64;
 #[cfg(feature = "steamworks")]
 mod callbacks;
 mod service;
+mod text_input;
 
 pub use service::{
     ActionState, AnalogAction, CloudFileInfo, ControllerInfo, DigitalAction, GlyphOrigin, Status,
+    TextInputMode,
 };
 
 use serde::Serialize;
@@ -124,6 +126,7 @@ fn show_text_input<R: Runtime>(
     existing_text: String,
     max_characters: u32,
     multiline: bool,
+    mode: TextInputMode,
 ) -> Result<bool, Error> {
     service(&app)
         .show_text_input(
@@ -132,6 +135,7 @@ fn show_text_input<R: Runtime>(
             &existing_text,
             max_characters,
             multiline,
+            mode,
         )
         .map_err(Error)
 }

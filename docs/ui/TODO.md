@@ -263,6 +263,10 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
       klavye. Slider/stepper yeni malzeme ve değer perdesi sesiyle. Kapanır: canlı önizleme/
       tek kalıcı değişiklik/iptalde geri alma/sessiz programatik ayar; dikey range geometrisi/
       AT, saydam hit-test; IME bileşiminde Enter göndermez.
+      Yapıldı: RangeSlider yalnız jesti başlatan işaretçiyi izler; ikinci basış başlangıç
+      snapshot'ını ve yakalamayı devralmaz, ikinci parmağın hareketi önizleme/commit üretmez.
+      Birincil olmayan işaretçi ve sağ fare düğmesi jest başlatmaz
+      (`core/tests/ui/primitives/rangeSliderPointerOwnership.test.ts`).
 - [ ] **UI-05.2 — Seçim denetimleri.** Select açıkken devre dışı bırakma kapatır ve odağı geri
       yükler; aynı değer seçimi tekrar kalıcı değişiklik üretmez; Checkbox/switch kararı;
       RadioGroup/SegmentedControl; ColorPicker/CurveEditor klavye/tap karşılığı. Kapanır:
@@ -280,6 +284,9 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
       başlatmaz, otomatik geçiş odakla da durur ve azaltılmış harekette başlamaz, aynı sayfaya geçiş
       `onSlideChange` üretmez (`core/tests/ui/layout/carouselKeyboard.test.ts`). Tabs/Tree zaten APG
       klavyesindedir; Wizard/Accordion/UIRoot ve genişlik/RTL kanıtı açık.
+      Yapıldı: Wizard'da `goToStep`/destroy bekleyen doğrulamayı geçersiz kılar; eski çözüm/ret
+      callback, odak, yeni doğrulamanın kilidi veya yeni geçiş üretmez. Hızlı adım değişimleri
+      önceki timer/rAF'ı iptal eder (`core/tests/ui/layout/wizardLifecycle.test.ts`).
 - [ ] **UI-05.4 — SettingsForm/SettingsRow.** Bölüm/satır/açıklama/reset/uygula/geri al/hata/
       meşgul deseni model ve tarif olarak ayrılır; ses/müzik ayarı satırları ses sistemine bağlı.
       Kapanır: Escape/geri sırasında kaydedilmemiş değişim kararı tüketicide; kaydediliyor
@@ -461,6 +468,10 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       görünmüyordu.
       Kalan: ContextMenu/RadialMenu/Popover/FatalStartupError aynı dile yayılım ve ince ayar;
       giriş/çıkış juice'u ve sesin tam kapsamı; 3 katmanlı yığın kanıtı.
+      Yapıldı: Popup'ın Escape yolu açılış sırasını ve ortak LIFO geri yığınını kullanır;
+      iç Popup/Popover kapanırken dış katman açık ve odak tetikleyicide kalır, eski Popup üzerine
+      açılan Modal önce kapanır. ContextMenu yerel Escape'i dış katmana sızdırmaz
+      (`core/tests/ui/overlays/popupKeyboardStack.test.ts`).
 - [ ] **UI-09.2 — Tooltip/RichTooltip ve ToastManager.** Hover/odak kalıcılığı, Esc, balona geçiş,
       dokunma/kol alternatifi; 3 bildirimlik kuyruk, kritik öncelik/eylem; bildirim sesleri.
       Kapanır: 3 s zorunlu gizleme yok; acil bildirim sessizce düşmez; AT dinler; HUD üstüne
@@ -524,6 +535,9 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       düğme eklendi (host sorumluluğu: jest tek yol olamaz). RadialMenu için `openFocused` ve vitrinde
       "Tuşla Aç" düğmesi (`holdInput.spec.ts` iki motor). Kalan: SquareJoystick/SwipeGestureZone/MultiTouchZone
       klavye karşılığı kararı, gesture süresi reduced-motion, VOL.TEST joystick/hold cihaz koşusu.
+      Yapıldı: PullToRefresh hazır eşiğini aşmış olsa da pointercancel yenileme çağırmaz;
+      görünümü ve yakalamayı sıfırlar, tıklama yutma zamanlayıcısı bırakmaz
+      (`core/tests/ui/touch/pullToRefreshCancel.test.ts`).
 - [ ] **UI-10.2 — DualAxisScrollPanel/ScrollView/VirtualList/KeyedVirtualList/SplitPane.**
       Etkileşimli alt öğe istisnası, sürükleme eşiği, birincil işaretçi, sanal öğeler, resize.
       Kapanır: pointerdown anında alt düğme niyeti alınmaz; iptal edilen sürükleme tıklama üretmez;

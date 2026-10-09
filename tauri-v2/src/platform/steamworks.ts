@@ -218,6 +218,7 @@ export function createSteamworksTextEntryProvider(): TextEntryProvider {
               existingText: request.value,
               maxCharacters: request.maxLength ?? 4096,
               multiline: request.multiline ?? false,
+              mode: request.purpose === 'password' ? 'password' : 'normal',
             })) === true;
         } catch {
           // Native açılış reddi yerel klavyeye düşer; iptal aşağıda ayrı korunur.

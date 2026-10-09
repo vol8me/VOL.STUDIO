@@ -39,6 +39,18 @@ Audit eksik parça, metadata uyuşmazlığı ve yetim dosyanın tamamını topla
 verify bozuk export'u göndermez. Diskte bulunan fakat metadata'da olmayan
 parça da hatadır, silinmiş bir bileşenin meşru asset gibi taşınması önlenir.
 
+Dosya sınırı domain, entity ve parça kimliğini tek güvenli dosya/dizin bileşeni
+olarak sınar; harf, rakam, iç nokta, alt çizgi ve tire korunur. Ayraç, traversal,
+sürücü/ADS, sondaki nokta ve Windows cihaz adı dosya adı olamaz. PNG adını
+taşıyan dizin gerçek parça sayılmaz. Güven sınırı aracın kendi ağacıdır: kaynakta
+`exportRoot`, hedeflerde çalışma dizini. Sınırın ALTINDAKİ ara dizinler ile yazılacak
+veya temizlenecek PNG yolları symlink/junction içeremez; sınırın kendisi ve üstü
+(bağlı ev dizini, junction'lı sürücü) makine düzenidir ve dışa aktarmayı kırmaz. Sınırın
+dışına çıkan yolda güven varsayımı yoktur ve kök dizine kadar her ata denetlenir. Bu denetim
+bütün kopyalama ve silmelerden önce tamamlanır.
+Gönderim parça dizini kaynak entity ağacının içinde veya atası olamaz;
+metadata gönderimi de kaynak ağacının üstüne yazamaz.
+
 Sync metadata file yollarını tüketicinin kendi statik köküne yeniden yazar.
 Previews çalışma zamanı yükü olmadığı için düşürülür. Hedefteki eski parça
 artıkları temizlenir. Gönderilmiş metadata ve asset ağacı tüketici tarafında

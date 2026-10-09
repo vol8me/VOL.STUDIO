@@ -65,6 +65,7 @@ export function listElfFiles(dir) {
  * @param {(path: string) => string} readelf `readelf -V <dosya>` çıktısı veren çağrı.
  * @returns {{files: number, offenders: {path: string, needs: string[]}[]}}
  *   offenders boşsa paket `cap` sınırının içindedir.
+ * @throws {Error} Sınır geçersizse, paket ELF içermiyorsa veya readelf çalışmazsa.
  */
 export function checkGlibcCap(
   dir,
@@ -72,14 +73,21 @@ export function checkGlibcCap(
   readelf = (path) =>
     execFileSync('readelf', ['-V', path], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
 ) {
+  if (
+    !/^\d+\.\d+$/.test(cap) ||
+    !cap.split('.').every((part) => Number.isSafeInteger(Number(part)))
+  ) {
+    throw new Error(`Geçersiz GLIBC sınırı: ${cap}`);
+  }
   const offenders = [];
   const files = listElfFiles(dir);
+  if (files.length === 0) throw new Error(`Paket ELF dosyası içermiyor: ${dir}`);
   for (const file of files) {
     let text;
     try {
       text = readelf(file);
-    } catch {
-      continue; // statik ELF'te sürüm bölümü olmayabilir — istek de yoktur.
+    } catch (cause) {
+      throw new Error(`ELF sürüm gereksinimleri okunamadı: ${file}`, { cause });
     }
     const over = [...elfGlibcNeeds(text)].filter((need) => compareVersions(need, cap) > 0);
     if (over.length > 0) {

@@ -2,8 +2,11 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { nodeRuntimeProblem } from '../nodeRuntime.mjs';
+
+const CLI = join(import.meta.dirname, '../cli/node-runtime.mjs');
 
 function fixture(t, engines = '22.23.1', pinned = '22.23.1') {
   const root = mkdtempSync(join(tmpdir(), 'vol-node-'));
@@ -30,4 +33,16 @@ test('sürüm dosyası ve manifest ayrışması reddedilir', (t) => {
 test('sürüm dosyası kesin sürüm taşımalıdır', (t) => {
   const root = fixture(t, '22', '22');
   assert.match(nodeRuntimeProblem(root, '22'), /aynı kesin sürüm/);
+});
+test('kapı CLI sürüm uyuşmazlığında açık mesajla 1 ile çıkar, eşleşmede 0', (t) => {
+  const current = process.versions.node;
+  const mismatch = spawnSync(process.execPath, [CLI, '--root', fixture(t, '0.0.1', '0.0.1')], {
+    encoding: 'utf8',
+  });
+  assert.equal(mismatch.status, 1);
+  assert.match(mismatch.stderr, /0\.0\.1 gerekir/);
+  const match = spawnSync(process.execPath, [CLI, '--root', fixture(t, current, current)], {
+    encoding: 'utf8',
+  });
+  assert.equal(match.status, 0, match.stderr);
 });

@@ -26,6 +26,10 @@ iki kapsama taşır. Native ayrı dosyadaki kapsamlı anahtar kendi kapsamını
 korur; tarayıcı göçü yalnız oyunun önekini okur. Oyun göçü state yüklemeden
 bekler. Adapter önbelleği yalnız başarılı native yazımdan sonra ilerler;
 reddedilen yazım aynı adapter ile yeniden denenebilir.
+Native kurtarma sağlam geçici dosyayı güncel ada atomik taşır; yedekten
+kurtarmada yedek korunarak güncel dosya kurulur. Bu yerleştirme tamamlanmadan
+başarılı okuma dönmez. Böylece sonraki yazımın geçici dosyayı boşaltması
+kurtarılmış jenerasyonu kaybetmez; bir sonraki yedek de o jenerasyondur.
 
 Kapanış/uyku ACK'i `requestId`, `reason` ve gerçek `success`/`failed` sonucunu
 taşır; süre native kabuğa aittir. Süre dolmadan kabul edilen ACK, bekleyen
@@ -37,6 +41,10 @@ durdurup birleştirir, sonra callback'leri ve istemciyi bırakır. Metin isteği
 kimliği native sonucu JS owner'a bağlar. İptal sonucu bastırır; native popup'ın
 terminal callback'i gelmeden busy sahipliği bırakılmaz. JS abort'u beklemeden
 sonuçlanır, geç abonelikleri söker; yeni isteğe eski sonuç uygulanmaz.
+Metin sağlayıcısı parola amacını IPC'de `password`, diğer amaçları `normal`
+kipine çevirir. Native komut yalnız bu iki enum değerini kabul eder;
+Steam klavyesi parola kipinde SDK maskesini kullanır. Stub aynı komut
+tipini taşır; yerel klavye yedeği de parola amacını korur.
 
 Linux çizim yolu ölçülmüş ortama göre seçilir. Tam ekranın gerçek durumu
 pencere yöneticisinden okunur; yalnız önceki uygulama isteğine güvenilmez.

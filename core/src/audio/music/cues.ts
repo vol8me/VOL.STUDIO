@@ -18,6 +18,7 @@ interface ActiveCue {
 export class MusicCuePlayer {
   private readonly buffers = new Map<string, AudioBuffer>();
   private readonly active = new Map<string, ActiveCue>();
+  private readonly loadController = new AbortController();
   private counter = 0;
 
   constructor(
@@ -33,14 +34,20 @@ export class MusicCuePlayer {
 
   /** Cue'yu yükler; başarısızlık parçayı düşürmez, yalnız o cue çalınamaz. */
   async load(trackId: string, cue: MusicCue): Promise<boolean> {
+    const { signal } = this.loadController;
+    if (signal.aborted) return false;
     const key = this.key(trackId, cue);
     if (this.buffers.has(key)) return true;
     try {
       if (cue.buffer) this.buffers.set(key, cue.buffer);
-      else if (cue.src) this.buffers.set(key, await this.loader.loadFromUrl(cue.src));
-      else return false;
+      else if (cue.src) {
+        const buffer = await this.loader.loadFromUrl(cue.src, { signal });
+        if (signal.aborted) return false;
+        this.buffers.set(key, buffer);
+      } else return false;
       return true;
     } catch (err) {
+      if (signal.aborted) return false;
       console.warn(`[MusicEngine] Cue yüklenemedi: ${cue.id}`, err);
       return false;
     }
@@ -92,6 +99,8 @@ export class MusicCuePlayer {
   }
 
   dispose(): void {
+    if (this.loadController.signal.aborted) return;
+    this.loadController.abort();
     this.stopAll(0);
     for (const cue of this.active.values()) this.mixer.removeChannel(cue.channelId);
     this.active.clear();

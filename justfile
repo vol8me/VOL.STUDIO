@@ -52,6 +52,10 @@ coverage-shape:
 
 # Bekçilerin kendi testleri ve workspace sözleşmesi. Testler geçici depolarda
 # git koşar; hook'un GIT_* ortamı onları gerçek depoya yönlendirmesin diye silinir.
+# Kapılar `.node-version` ile aynı kesin Node sürümünde koşar; aksi hâlde ilk adımda durur.
+node-pin:
+    node scripts/quality/cli/node-runtime.mjs
+
 contract:
     env -u GIT_DIR -u GIT_INDEX_FILE -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_PREFIX node --test scripts/quality/tests/*.test.mjs scripts/linux/tests/*.test.mjs scripts/android/tests/*.test.mjs devtools/deck/tests/*.test.mjs
     pnpm run contract
@@ -103,7 +107,7 @@ ui-check:
 
 # === BİRLEŞİK KAPILAR ===
 
-quick: contract format-check typecheck lint
+quick: node-pin contract format-check typecheck lint
 
 fast: quick test
 

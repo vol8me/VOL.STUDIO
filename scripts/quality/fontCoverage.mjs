@@ -73,7 +73,7 @@ export function missingGlyphs(root, fonts = FONT_FILES, locales = LOCALE_FILES, 
     const missing = new Set();
     for (const character of text) {
       const code = character.codePointAt(0);
-      if (code === undefined || code < 32 ||character === ' ') continue;
+      if (code === undefined || code < 32 || character === ' ') continue;
       if (!available.some((set) => set.has(code))) missing.add(character);
     }
     if (missing.size > 0) result[file] = [...missing];

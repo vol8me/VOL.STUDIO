@@ -23,6 +23,9 @@ Host'ta üretilen paket host'un glibc'sine bağlanır; daha yeni glibc'li bir
 host'ta üretilen AppImage SteamOS'ta açılmaz. Steam ve Deck için derleme
 steamrt4 SDK kabında yapılır ve paketteki ELF'lerin glibc tavanı denetlenir
 ([steam-deck.md](steam-deck.md#paketleme)).
+Bekçi eksik/çalışmayan `readelf`, okunamayan ELF, geçersiz GLIBC sınırı ve
+ELF içermeyen AppDir durumunda derlemeyi reddeder. Başarıyla incelenmiş statik
+ELF'in sürüm gereksinimi olmaması geçerlidir; inceleme hatasıyla karıştırılmaz.
 
 ## WebView çizim yolu
 

@@ -7,7 +7,7 @@ import { afterEach, expect, it } from 'vitest';
 const roots: string[] = [];
 afterEach(() => {
   for (const root of roots.splice(0)) {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 });
 
@@ -25,6 +25,18 @@ async function fixture() {
   return { root, port };
 }
 
+it('hazır adresi renkli ve düz Vite çıktısında tanır, başka portu ve yarım adresi tanımaz', async () => {
+  const { previewReady } = await import('../../scripts/device-preview.mjs');
+  // Vite 8 portu ANSI kalın yazar: düz metin araması bunu bulamaz ve önizleme zaman aşımına uğrardı.
+  const colored = '  Local:   [36mhttp://127.0.0.1:[1m4173[22m/[39m';
+  expect(colored.includes('http://127.0.0.1:4173/')).toBe(false);
+  expect(previewReady(colored, 4173)).toBe(true);
+  expect(previewReady('  Local:   http://127.0.0.1:4173/', 4173)).toBe(true);
+  expect(previewReady(colored, 4174)).toBe(false);
+  expect(previewReady('  Local:   http://127.0.0.1:41730/', 4173)).toBe(false);
+  expect(previewReady('http://127.0.0.1:4173', 4173)).toBe(false);
+});
+
 it('gerçek Vite ardışık koşularda PID ve port bırakmadan kapanır', async () => {
   const { startPreview } = await import('../../scripts/device-preview.mjs');
   const { root, port } = await fixture();
@@ -39,7 +51,11 @@ it('gerçek Vite ardışık koşularda PID ve port bırakmadan kapanır', async 
     expect(() => process.kill(server.pid, 0)).toThrow();
     await expect(fetch(`http://127.0.0.1:${port}`)).rejects.toThrow();
   }
-  expect(() => rmSync(root, { recursive: true, force: true })).not.toThrow();
+  // Süreç çıktıktan sonra Windows çalışma dizini tutamacını yük altında kısa süre geç bırakabilir;
+  // sözleşme "anında" değil "sınırlı sürede (1 sn) silinebilir"dir.
+  expect(() =>
+    rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }),
+  ).not.toThrow();
   expect(existsSync(root)).toBe(false);
 });
 
