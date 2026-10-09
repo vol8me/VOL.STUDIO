@@ -10,7 +10,7 @@ ekler. Ana menü yoktur; HUD ile duraklatma, ayar ve senaryo panelleri vardır.
 ## Model ve sunum
 
 Simülasyon `src/sim/` altında model/sunum ayrımıyla düzenlenir.
-Saf headless import kabulü kök F06'da ayrıca doğrulanacaktır. CORE `SimulationClock`
+Saf headless import kabulü ayrı Node testinde doğrulanır. CORE `SimulationClock`
 60 Hz sabit adımla ilerler; tank kuvvetleri iki alt adımda çözülür. Poz,
 taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
 Çizim hızı fizik saatini değiştirmez; duraklatma simülasyon adımı üretmez.
@@ -133,6 +133,11 @@ kesişimidir; uç noktaları örnekleyen test dönmüş gövdenin köşesini ve 
 kirişi kaçırırdı. Aynı adımda birden çok araç kesişirse en erken temas
 kazanır, sahibi dışlanır. Olay, itki ve önizleme adımın bittiği yeri değil
 temas noktasını görür; araç adımın sonundaki pozunda sabit sayılır.
+
+Dünya duvarı aynı süpürülmüş segmenti ilk çıkış parametresinde keser;
+çapraz atışta x/y ayrı ayrı kırpılmaz. Duvar arkasındaki araç isabet almaz.
+Dışarıda doğan namlu ucu başlangıç sınırında sonlanır; önizleme ve runtime
+aynı geometrik kuralı kullanır. Bu, eğri uçuşun tam sürekli çözümü değildir.
 
 Atış gövde ve namluyu yaylandırır; parlama, kısa gaz jetleri, kıvılcım,
 duman ve toz üretir. Kamera atışta sarsılmaz, küçük yaylı itme yapar.

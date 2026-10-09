@@ -6,6 +6,7 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -75,6 +76,40 @@ const leftovers = (dir: string): string[] =>
   existsSync(dir) ? readdirSync(dir).filter((name) => name.includes('.tmp-')) : [];
 
 describe('organize-pen-export CLI (B11)', () => {
+  it('manifest dışındaki PNG ve dizinleri korur; aynı staging ikinci export için kullanılabilir', () => {
+    stage('n1', 'n2', 'unrelated');
+    mkdirSync(join(staging, 'notes'));
+    writeFileSync(join(staging, 'notes', 'keep.txt'), 'koru');
+    expect(organize([part('n1', 'hull')]).status).toBe(0);
+    expect(readFileSync(join(staging, 'n2.png'), 'utf8')).toBe('png:n2');
+    expect(readFileSync(join(staging, 'unrelated.png'), 'utf8')).toBe('png:unrelated');
+    expect(organize([part('n2', 'arm')]).status).toBe(0);
+    expect(readFileSync(join(staging, 'notes', 'keep.txt'), 'utf8')).toBe('koru');
+    expect(readFileSync(entity('parts', 'hull.png'), 'utf8')).toBe('png:n1');
+  });
+
+  it('staging ve hedef örtüşürse kaynak tüketilmeden reddeder', () => {
+    const original = staging;
+    staging = entity('parts');
+    mkdirSync(staging, { recursive: true });
+    stage('n1');
+    const result = organize([part('n1', 'n1')]);
+    expect(result.status).toBe(1);
+    expect(readFileSync(join(staging, 'n1.png'), 'utf8')).toBe('png:n1');
+    expect(existsSync(entity('metadata', 'walker.metadata.json'))).toBe(false);
+    staging = original;
+  });
+
+  it('hedef junction başka staging kaynağına bağlanırsa yazmadan reddeder', () => {
+    stage('n1', 'hull');
+    mkdirSync(entity(), { recursive: true });
+    symlinkSync(staging, entity('parts'), 'junction');
+    const result = organize([part('n1', 'hull')]);
+    expect(result.status).toBe(1);
+    expect(readFileSync(join(staging, 'n1.png'), 'utf8')).toBe('png:n1');
+    expect(readFileSync(join(staging, 'hull.png'), 'utf8')).toBe('png:hull');
+  });
+
   it('geçerli manifest: parça, önizleme ve metadata yazılır; kaynak ve staging temizlenir', () => {
     stage('n1', 'n2', 'p1');
     const result = organize([part('n1', 'hull'), part('n2', 'arm', 'hull')], [part('p1', 'card')]);

@@ -9,7 +9,7 @@
  *
  * Çıktı: `devtools/vol-showcase/records/ui-gallery/<tag>/` (git dışı): `cards/*.jpg`, `layers/*.jpg`, `index.json`.
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from '@playwright/test';
@@ -86,6 +86,8 @@ const slug = (text) =>
 
 async function openPage(width = 1280, height = 800) {
   const context = await browser.newContext({
+    // Sabit dil: OS yerelini devralırsa katman adımları (İngilizce düğme adları) ve kart başlıkları kayar.
+    locale: 'en-US',
     viewport: { width, height },
     deviceScaleFactor: 2,
     reducedMotion: 'no-preference',
@@ -148,7 +150,7 @@ async function compose(composer, frames) {
   }, frames);
 }
 
-const composerContext = await browser.newContext();
+const composerContext = await browser.newContext({ locale: 'en-US' });
 const composer = await composerContext.newPage();
 await composer.goto('about:blank');
 
@@ -396,7 +398,7 @@ const LAYERS = [
     'Zengin ipucu',
     async (p) => {
       await selectTab(p, 'advanced');
-      await p.getByText('Flame Sword').hover();
+      await p.getByText('Flame Sword').filter({ visible: true }).first().hover();
       await sleep(700);
     },
   ],
@@ -533,6 +535,11 @@ try {
 } finally {
   writeFileSync(resolve(out, 'index.json'), JSON.stringify(index, null, 2));
   await browser.close();
-  server.kill();
+  // `shell: true` ile Windows'ta `kill()` yalnız kabuğu öldürür; önizleme sunucusu portta öksüz kalır.
+  if (process.platform === 'win32' && server.pid) {
+    spawnSync('taskkill', ['/pid', String(server.pid), '/T', '/F'], { stdio: 'ignore' });
+  } else {
+    server.kill();
+  }
 }
 console.log(`\nGaleri: ${out} (${index.cards.length} kart, ${index.layers.length} katman)`);

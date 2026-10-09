@@ -113,6 +113,11 @@ yanlışlıkla yasaklanmaz.
 Primitive ses motorunu kurmaz; kabul edilmiş niyeti bir kez bildirir. Uygulama kökündeki tek
 UiSoundKit/geri bildirim sahibi seti çalar (UIRoot düzeyi); shared UIRoot aynı parent'ta ikinci
 listener kurmaz. Programatik sessiz setter ses/commit üretmez; iptal rollback'i başarı sayılmaz.
+İç içe köklerde fiziksel DOM olayının sahibi en yakın kayıtlı köktür;
+dış kökün fallback'i veya özel handler'ı aynı olayı yeniden sahiplenmez.
+Olay hedefi olmayan host sinyali açıkça seçilen bileşenin köküne gider.
+Geç ses ayarı restore'u kullanıcının o sırada değiştirdiği alanı ezmez;
+diğer alanlar yüklenir ve birleştirilmiş snapshot kalıcı yazmanın sonuncusudur.
 Promise'in çözülmesi tek başına oyun/ürün başarısı değildir; sonucu host bildirir. Mevcut
 primitive haptik yolu korunuyorsa merkezi sağlayıcı ikinci darbe üretmez.
 

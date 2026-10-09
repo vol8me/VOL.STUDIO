@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildSesTab } from '../../src/sections/sesTab';
+import { ShowcaseApp } from '../../src/ShowcaseApp';
+import { getAppSoundKit } from '../../src/appSound';
 
 /** Ses laboratuvarı, Web Audio VARKEN: bağlam jestle kurulur, durum gerçek bağlamı gösterir, dışa aktarma çalışır. */
 class StubContext {
   static created = 0;
+  static started = 0;
   state: AudioContextState = 'suspended';
   readonly sampleRate = 48_000;
   readonly baseLatency = 0.01;
@@ -38,7 +41,9 @@ class StubContext {
   createBufferSource(): unknown {
     return {
       connect: vi.fn(),
-      start: vi.fn(),
+      start: () => {
+        StubContext.started += 1;
+      },
       stop: vi.fn(),
       buffer: null,
       playbackRate: { value: 1 },
@@ -54,6 +59,7 @@ describe('ses laboratuvarı (Web Audio var)', () => {
 
   beforeEach(() => {
     StubContext.created = 0;
+    StubContext.started = 0;
     vi.stubGlobal('AudioContext', StubContext);
     vi.stubGlobal(
       'fetch',
@@ -76,6 +82,39 @@ describe('ses laboratuvarı (Web Audio var)', () => {
     if (!element) throw new Error(`Bulunamadı: ${selector}`);
     element.click();
   };
+
+  it('gerçek uygulama ve laboratuvar birlikteyken tek bileşen tıklaması tek ses; audition uygulama sesi üretmez', async () => {
+    const mount = document.createElement('div');
+    document.body.append(mount);
+    const app = new ShowcaseApp(mount);
+    try {
+      const press = app.element.querySelector<HTMLElement>('[data-ses-comp="press"]')!;
+      press.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+      const appKit = getAppSoundKit()!;
+      await appKit.preload();
+      await vi.waitFor(() =>
+        expect(app.element.querySelector('[data-ses="state"]')?.getAttribute('data-value')).toBe(
+          'locked',
+        ),
+      );
+      const before = StubContext.started;
+      press.click();
+      expect(StubContext.started - before).toBe(1);
+      expect(appKit.metrics.played).toBe(0);
+      expect(
+        app.element.querySelector('[data-ses="probe-total"]')?.getAttribute('data-value'),
+      ).toBe('1');
+      const processed = app.element.querySelector<HTMLElement>('[data-ses="kit"]')!;
+      const dry = app.element.querySelector<HTMLElement>('[data-ses="dry"]')!;
+      const auditionBefore = StubContext.started;
+      processed.click();
+      dry.click();
+      await vi.waitFor(() => expect(StubContext.started - auditionBefore).toBe(2));
+      expect(appKit.metrics.played).toBe(0);
+    } finally {
+      app.destroy();
+    }
+  });
 
   it('bağlam jestten önce kurulmaz; ilk etkileşimde bir kez kurulur ve durum çalışır bağlamı gösterir', async () => {
     expect(StubContext.created).toBe(0);

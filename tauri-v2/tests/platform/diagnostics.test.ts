@@ -54,12 +54,13 @@ describe('reportDiagnostics', () => {
     });
   });
 
-  it('komut hatasını yutar, tarayıcıda komut çağırmaz', async () => {
-    tauri.invoke.mockRejectedValue(new Error('eklenti yok'));
-    await expect(reportDiagnostics({ ok: 1 })).resolves.toBeUndefined();
+  it('teslim reddini çağırana taşır, tarayıcıda teslim gerçekleşmiş sayılmaz', async () => {
+    const error = new Error('eklenti yok');
+    tauri.invoke.mockRejectedValue(error);
+    await expect(reportDiagnostics({ ok: 1 })).rejects.toBe(error);
 
     tauri.isTauri.mockReturnValue(false);
-    await reportDiagnostics({ ok: 1 });
+    await expect(reportDiagnostics({ ok: 1 })).rejects.toThrow();
     expect(tauri.invoke).toHaveBeenCalledTimes(1);
   });
 });

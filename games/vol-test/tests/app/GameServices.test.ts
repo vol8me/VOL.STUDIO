@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DisplayModeController } from '@volstudio/tauri-v2';
 import type * as Platform from '@volstudio/tauri-v2';
 import { GameServices } from '@/app/GameServices';
 
@@ -13,6 +14,7 @@ const bridge = vi.hoisted(() => ({
   overlay: null as ((active: boolean) => void) | null,
   stops: 0,
   reports: [] as unknown[],
+  reportError: null as Error | null,
   steamReady: false,
   actionSets: [] as string[],
   env: {},
@@ -63,7 +65,7 @@ vi.mock('@volstudio/tauri-v2', async (importOriginal) => {
     },
     reportDiagnostics: (value: unknown) => {
       bridge.reports.push(value);
-      return Promise.resolve();
+      return bridge.reportError ? Promise.reject(bridge.reportError) : Promise.resolve();
     },
     androidScreenOrientation: {
       set: () =>
@@ -77,9 +79,89 @@ afterEach(() => {
   services = null;
   vi.restoreAllMocks();
   bridge.env = {};
+  bridge.reportError = null;
 });
 
 describe('GameServices', () => {
+  it('pending F11 son tercihi kalıcı olmadan kapanış ACK vermez', async () => {
+    localStorage.clear();
+    Object.assign(bridge, { platform: 'web', session: 'web', measure: false });
+    services = await GameServices.create();
+    services.display?.destroy();
+    let active = false;
+    let release!: (active: boolean) => void;
+    let pendingRead = false;
+    const adapter: NonNullable<
+      ConstructorParameters<typeof DisplayModeController>[0]['windowAdapter']
+    > = {
+      isAvailable: () => true,
+      isFullscreen: () =>
+        pendingRead
+          ? new Promise((resolve) => {
+              release = resolve;
+            })
+          : Promise.resolve(active),
+      setFullscreen: (value) => {
+        active = value;
+        return Promise.resolve();
+      },
+      setResolution: () => Promise.resolve(),
+      onFullscreenChange: () => Promise.resolve(() => undefined),
+    };
+    const display = new DisplayModeController({
+      getMode: () => services!.settings.get().display,
+      setMode: (value) => services!.settings.update({ display: value }),
+      subscribe: (listener) => services!.settings.subscribe(listener),
+      windowAdapter: adapter,
+    });
+    Object.defineProperty(services, 'display', { value: display });
+    try {
+      await display.start();
+      pendingRead = true;
+      const toggle = display.toggle();
+      let ack = false;
+      const shutdown = bridge.shutdown!().then(() => {
+        ack = true;
+      });
+      await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(ack).toBe(false);
+      pendingRead = false;
+      release(false);
+      await Promise.all([toggle, shutdown]);
+      expect(ack).toBe(true);
+      const stored: unknown = JSON.parse(localStorage.getItem('device.voltest.preferences')!);
+      expect(stored).toMatchObject({ display: 'fullscreen' });
+      expect(active).toBe(true);
+    } finally {
+      display.destroy();
+    }
+  });
+
+  it('başlangıç raporu reddedilse de oyun açılır ve kayıp güvenli gözlenir', async () => {
+    Object.assign(bridge, { platform: 'web', session: 'web', measure: true });
+    const error = new Error('başlangıç tanısı');
+    bridge.reportError = error;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    services = await GameServices.create();
+    expect(services.measurements).toBeDefined();
+    expect(warn).toHaveBeenCalledWith('[VOL.TEST] Ölçüm ortamı kaydedilemedi:', error);
+  });
+
+  it('CORE tanı transport reddini oyun hata sınırında gözler', async () => {
+    Object.assign(bridge, { platform: 'web', session: 'web', measure: true });
+    services = await GameServices.create();
+    const error = new Error('tanı teslimi');
+    bridge.reportError = error;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    for (let frame = 0; frame < 60; frame++) {
+      services.diagnostics!.beginFrame();
+      services.diagnostics!.endFrame();
+    }
+    await Promise.resolve();
+    expect(warn).toHaveBeenCalledWith('[VOL.TEST] Tanı kaydı teslim edilemedi:', error);
+  });
+
   it('kapanış snapshotından önce oyun girdisini duraklatır; listener hatası kayıt kancasını kesmez', async () => {
     localStorage.clear();
     Object.assign(bridge, {

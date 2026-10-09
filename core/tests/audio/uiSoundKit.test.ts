@@ -76,6 +76,54 @@ afterEach(() => {
 });
 
 describe('ayarlar (cihaz kapsamı)', () => {
+  it('geç restore kullanıcı alanlarını korur, kalan kanalları runtime ve diskte birleştirir', async () => {
+    let resolve!: (value: unknown) => void;
+    const saves: unknown[] = [];
+    const store: UiAudioSettingsStore = {
+      load: <T>() =>
+        new Promise<T>((done) => {
+          resolve = (value) => done(value as T);
+        }),
+      save: <T>(_key: ScopedKey, value: T) => {
+        saves.push(value);
+        return Promise.resolve();
+      },
+    };
+    const instance = kit({ store }).kit;
+    const restoring = instance.restore();
+    instance.setSettings({ muted: true, ui: 0.2 });
+    resolve({ muted: false, ui: 0.8, music: 0.3, master: 0.5 });
+    await restoring;
+    await instance.whenSaved;
+    expect(instance.settings).toMatchObject({ muted: true, ui: 0.2, music: 0.3, master: 0.5 });
+    expect(instance.channelGain('ui')).toBe(0);
+    expect(saves.at(-1)).toEqual(instance.settings);
+    instance.dispose();
+  });
+
+  it('son başlatılan restore önceliklidir; dispose sonrasındaki okuma uygulanmaz', async () => {
+    const resolvers: Array<(value: unknown) => void> = [];
+    const store: UiAudioSettingsStore = {
+      load: <T>() =>
+        new Promise<T>((done) => {
+          resolvers.push((value) => done(value as T));
+        }),
+      save: () => Promise.resolve(),
+    };
+    const instance = kit({ store }).kit;
+    const first = instance.restore();
+    const second = instance.restore();
+    resolvers[1]({ music: 0.4 });
+    await second;
+    resolvers[0]({ music: 0.9 });
+    await first;
+    expect(instance.settings.music).toBe(0.4);
+    const last = instance.restore();
+    instance.dispose();
+    resolvers[2]({ music: 1 });
+    await last;
+    expect(instance.settings.music).toBe(0.4);
+  });
   it('varsayılanlar, kırpma ve bozuk değerin varsayılana inmesi', () => {
     expect(DEFAULT_UI_AUDIO_SETTINGS).toEqual({
       master: 1,

@@ -74,7 +74,9 @@ kimliği, staging dosyası ve tekrarları parça ve önizleme birlikte, tek plan
 olarak doğrular; bir düğüm iki hedefe yazılamaz ve kimlik dosya yolunu
 kaçıramaz. Hedefler ile metadata tek birim olarak yerleşir: hata önceki
 hedefleri geri yükler, yarım hedef ve geçici dosya bırakmaz; kaynak PNG'ler
-yalnız her hedef yerleştikten sonra silinir. Şema başvurusu
+yalnız her hedef yerleştikten sonra silinir. Manifest dışı staging dosyası
+ve alt dizin korunur; staging yalnız boşsa kaldırılır. Kaynak/hedef örtüşmesi
+ve symlink/junction yolu yazımdan önce reddedilir. Şema başvurusu
 `scripts/organize-pen-export.mjs` içindedir. x/y/rotation/rootSizePx yoksa
 positionPx null çıktısı rig montajı için yeterli değildir.
 

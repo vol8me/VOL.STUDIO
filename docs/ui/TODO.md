@@ -23,6 +23,8 @@ cihaz kabulü [VERIFICATION](VERIFICATION.md) belgesindedir.
 | K6  | **Kapılar kanıt içindir, hedef değildir.** Yeni kapı/ratchet yalnız bir ürün kusurunu gerçekten önlüyorsa yazılır; mevcut olanlar korunur, ama kapıyı yeşillendirmek için ürün kararı bozulmaz.                                                                                                    |
 | K7  | **İnsan yargısı ayrıdır.** Görsel ve ses beğenisi kullanıcıya aittir; reddedilen iş yeniden açılır. Cihazda ölçülemeyen kabul PASS sayılmaz (NOT-RUN), ama cihaz bağlıysa ölçülür.                                                                                                                 |
 
+Görsel, ses ve imleç beğenisi isteğe bağlı tasarım feedback’idir; teknik kapanış için insan kararı beklenmez. Yapılmayan değerlendirme PASS yazılmaz. Fiziksel erişim/girdi ve cihaz kabulü bu tercihten ayrı kalır.
+
 ## Dürüst başlangıç (2026-10-07)
 
 | Alan             | Durum                                                                                                                                                                                                                                           |
@@ -52,19 +54,18 @@ cihaz kabulü [VERIFICATION](VERIFICATION.md) belgesindedir.
 
 ## Bağımlılık ve dalgalar
 
-| Dalga | Kapsam                                                                                                                | Çıkış (hepsi gerçek, görülür/duyulur kanıt)                                                                                |
-| ----- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 1     | Kimlik: UI-01.6–01.9, UI-02.6–02.8 (paralel hatlar); UI-07.2–07.3; UI-06.2–06.4 (Windows native)                      | İki skin yan yana; gerçek ikon/imleç; yeni ses seti uygulamada duyulur; native Windows vitrin açılır.                      |
-| 2     | UI-01.10 + UI-02.9 → **UI-03 dikey dilim (Button)** → UI-04/05/08/09/10 aileleri; UI-07.4; UI-11.1–11.2; UI-12.2–12.3 | Bir bileşen ailesi malzeme+ikon+imleç+ses+juice ile uçtan uca; kullanıcı görsel ve ses kabulü; aileler aynı dille yayılır. |
-| 3     | UI-11.3–11.4, UI-12.1, UI-12.4, UI-13                                                                                 | Cihaz/insan kabulleri PASS/FAIL/NOT-RUN ayrı raporda; `signoff`; F07 kapanışı.                                             |
+| Dalga | Kapsam                                                                                                                | Çıkış (hepsi gerçek, görülür/duyulur kanıt)                                                                                                            |
+| ----- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1     | Kimlik: UI-01.6–01.9, UI-02.6–02.8 (paralel hatlar); UI-07.2–07.3; UI-06.2–06.4 (Windows native)                      | İki skin yan yana; gerçek ikon/imleç; yeni ses seti uygulamada duyulur; native Windows vitrin açılır.                                                  |
+| 2     | UI-01.10 + UI-02.9 → **UI-03 dikey dilim (Button)** → UI-04/05/08/09/10 aileleri; UI-07.4; UI-11.1–11.2; UI-12.2–12.3 | Bir bileşen ailesi malzeme+ikon+imleç+ses+juice ile uçtan uca; görsel/ses teknik matrisi; isteğe bağlı tasarım feedback’i; aileler aynı dille yayılır. |
+| 3     | UI-11.3–11.4, UI-12.1, UI-12.4, UI-13                                                                                 | Cihaz/insan kabulleri PASS/FAIL/NOT-RUN ayrı raporda; `signoff`; F07 kapanışı.                                                                         |
 
 Sert ön koşullar: UI-01.7 → UI-03; UI-02.8 → UI-03; UI-03.4 → UI-04/05/08/09/10; UI-05.1 → UI-09, UI-11.1;
 UI-07.1 (tamam) → UI-08; UI-06.2 → UI-11.3/12.4. Aynı dosyaya dokunan görevler seri, farklı
 dizinlere dokunanlar paraleldir. Kritik yol: UI-01.7 + UI-01.8 + UI-02.8 → UI-03.4 → en uzun
 aile (UI-05 + UI-09) → UI-13.
 
-**F07 kapanış tanımı:** bütün görevler kapanmış (kod/kapı ve bağlı cihazlarda ölçülebilen kabul), kullanıcı
-görsel/ses kabulü kayıtlı, cihazdan bağımsız kalan her NOT-RUN gerekçeli ve kök F08/F09'a devredilmiş,
+**F07 kapanış tanımı:** bütün görevler kapanmış (kod/kapı ve bağlı cihazlarda ölçülebilen kabul), cihazdan bağımsız kalan her NOT-RUN gerekçeli ve kök F08/F09'a devredilmiş,
 `pnpm signoff` geçmiş olmalıdır.
 
 ### Yapılamayan/NOT-RUN kalacak kabuller
@@ -160,8 +161,8 @@ kendisi sıfırdan yeniden yapılır.**
 - [ ] **UI-02.9 — Laboratuvar ve kulak notları.** Ses laboratuvarı yeni sözlüğe göre
       güncellenir: her olay, palet, kuru/kit, eski/yeni A/B, dinleme paketi dışa aktarımı.
       Kullanıcının dinleme notları tarihli olarak VERIFICATION'a işlenir; reddedilen ses
-      yeniden tasarlanır. Kapanır: kullanıcı dinleme kararı kayıtlı (kabul ya da yeniden
-      yapım); `pnpm signoff` UI-02 yayını için koşar. Ek: Kenney Interface Sounds/UI Audio
+      yeniden tasarlanır. Kapanır: laboratuvar teknik matrisi ve dinleme paketi doğrulanmış; varsa kullanıcı
+      feedback’i kaydedilmiş (zorunlu bekleme yok); `pnpm signoff` UI-02 yayını için koşar. Ek: Kenney Interface Sounds/UI Audio
       (CC0, yalnız yerel ölçüm referansı) ile bant ve yükseklik karşılaştırma tablosu
       VERIFICATION'a eklenir.
 
@@ -251,7 +252,7 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
       `aria-hidden`), ipucu rozetleri dekor, son kart düğmeyle verilince odak gövdeye düşmez (desteye alınır).
       CardPicker modal odak tuzağı/geri dönüş zaten sağlam.
 - [ ] **UI-04.4 — Kart kabulü.** Üç nadirlik × iki skin; açık/boş/disabled/ayrılma durumları iki
-      motorda; %30/%200/6 hane. Kapanır: kullanıcı görsel kabulü; referans ve özgün fark incelenir.
+      motorda; %30/%200/6 hane. Kapanır: görsel durum matrisi ve isteğe bağlı kullanıcı değerlendirmesi; referans ve özgün fark incelenir.
 
 ### UI-05 — Panel, form ve ayarlar
 
@@ -290,7 +291,7 @@ Faz testi: Button/IconButton/Toolbar modül adlı testleri, interactionContract/
       sese bağlı satırlar açık.
 - [ ] **UI-05.5 — Form kabulü.** Her kontrol yalnız kol, yalnız klavye, dokunma, %30, 6 hane.
       Kapanır: bileşik denetimin yön tuşu FocusNav tarafından alınmaz; durum matrisi + axe;
-      modal örtüşme; kullanıcı görsel kabulü.
+      modal örtüşme; görsel durum matrisi ve isteğe bağlı kullanıcı değerlendirmesi.
 
 ### UI-06 — Tek VOL.SHOWCASE ve Windows native temel / M4
 
@@ -684,14 +685,25 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       kök neden `docs/steam-deck.md`'dedir (Forms 42,9 / Touch 46,5 → kart başına bileşik katman ile 60,0 / 59,4; 14 sekme
       57–60,6, ortanca 60,2; kök neden CPU boyama, GPU %0). Bir de gerçek hata: Tabs'in kendi ok tuşu odağı taşıyınca
       `FocusNavController` halkası eski öğede kalıyordu (düzeltildi).
+      **Kullanıcı görsel onay paketi (F07 yeniden açılış öncesi, yerel ve git dışı):**
+      `node devtools/vol-showcase/scripts/gallery.mjs --tag <ad>` (sabit `en-US` dil) 294 kart şeridini (çelik + aurum;
+      varsayılan/hover/odak/basılı) ve 58 açık katmanı (modal, sheet, onay, popup, popover, bağlam menüsü, bildirimler,
+      diyalog, komut paleti, ekran klavyesi, zengin ipucu, radyal menü, seviye/mağaza, yükleme) üretir; gerçek cihaz
+      görüntüleri (Steam Deck çelik+aurum 14 sekme, Samsung ve Lenovo dikey+yatay 14 sekme) aynı yerel kaydın cihaz alt alanında
+      altındadır, sıra `INDEX.md`'dedir. Deck'te kol sanal girdisi (sudo parolası yok) yerine `xdotool` ok/Enter tuşları
+      kullanıldı; fiziksel kol ile gezinme bu pakette yoktur. Android'de yerel kare ölçümü Samsung jank %0,36–0,44,
+      Lenovo %1,9–2,3 (`docs/android.md`; Lenovo farkı açıklanmadı).
 - [ ] **UI-13.4 — İnsan erişim/görsel/haptik/ses.** Yalnız klavye/kol gerçek akış, seçilen AT +
       TalkBack + NVDA/Narrator, TR/EN/%200/gri ton, glif yüksekliği, haptik; kullanıcının
-      görsel/ses/imleç kabulü. Kapanır: gerçek beyan ve profil kaydı; eksik profil açık kabul.
+      görsel/ses/imleç feedback’i isteğe bağlıdır. Kapanır: gerçek erişim/girdi ve profil kaydı; eksik cihaz profili açık kabul, beğeni bekleme kapısı değildir.
 - [ ] **UI-13.5 — Sürüm adayı teslimi.** `pnpm signoff`, public yüzey/paket boyutu/ölçekleme;
       piksel temelleri incelenmiş; belgeler güncel. Kapanır: high/signoff ve gerçek kabul ayrı
       PASS/FAIL/NOT-RUN raporu; kalan her iş kök/paket TODO'da gerçek ölçütle açık; **F07 kapanır.**
 
 ## Kapatılanlar
+
+- [x] B24/B25 — İç içe kök olay sahibi, Ses sekmesi dinletim ayrımı ve geç restore alan/snapshot korunumu gerçek tüketici regresyonlarıyla düzeltildi; UI-02/UI-13 bütün matrisi açık.
+- [x] B26/B28 — Mini harita scoped tema, geç mount/remount ve canlı erişilebilir ad CORE/MapPanel/HUD regresyonlarıyla düzeltildi; UI-07/UI-08 bütün aile kabulü açık.
 
 Planın hazırlanmış olması bir üretim görevini kapatmaz; yalnız kapıdan geçmiş ve vitrinde/oyunda görünür iş buraya taşınır. Kabul edilmeyen kapanışlar işaretlidir.
 

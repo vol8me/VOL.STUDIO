@@ -100,6 +100,23 @@ function pointer(type: string): PointerEvent {
 }
 
 describe('Hud', () => {
+  it('harita adı ve araç özeti HUD dil geçişinde birlikte yenilenir', async () => {
+    await i18next.changeLanguage('tr');
+    const { hud, parent } = mount();
+    hud.update(
+      hudFrame({ vehicles: () => [{ id: 2, x: 300, y: 400, hull: 0, player: false }] }),
+      0,
+    );
+    const canvas = parent.querySelector('.vt-hud__map canvas')!;
+    expect(canvas.getAttribute('aria-label')).toBe(i18next.t('voltest:hud.map'));
+    await i18next.changeLanguage('en');
+    expect(canvas.getAttribute('aria-label')).toBe(i18next.t('voltest:hud.map'));
+    expect(canvas.getAttribute('aria-description')).toBe(
+      i18next.t('voltest:hud.mapSummary', { vehicles: 1, zoom: 1 }),
+    );
+    hud.destroy();
+    await i18next.changeLanguage('tr');
+  });
   it('atış dolum barı kalan beklemeyi gösterir ve dil değişiminde erişilebilir adı yenilenir', async () => {
     const { hud, parent } = mount();
     const bar = parent.querySelector<HTMLElement>('.vt-hud__fire-bar')!;

@@ -40,7 +40,7 @@ export class MapPanel {
       wheelZoom: true,
       controls: true,
       maxZoom: 6,
-      label: i18next.t('voltest:hud.map'),
+      label: () => i18next.t('voltest:hud.map'),
       describe: (counts, zoom) =>
         i18next.t('voltest:hud.mapSummary', { vehicles: counts.vehicle ?? 0, zoom }),
     });

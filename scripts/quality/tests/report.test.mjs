@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { delimiter, join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
+import { writeNodeCommand } from './runCommand.mjs';
 import { COMPOSITE_GATES, classify, stagesFor } from '../report.mjs';
 import { gateStages, parseJustRecipes } from '../justfile.mjs';
 
@@ -19,6 +22,95 @@ import { gateStages, parseJustRecipes } from '../justfile.mjs';
  * uydurmaktır.
  */
 describe('kalite raporu sınıflandırması', () => {
+  it('gerçek node TAP ve CLI JSON hata sebebini, yolu, başlığı ve exit kodunu korur', () => {
+    const root = mkdtempSync(join(tmpdir(), 'vol-report-'));
+    try {
+      const source = join(root, 'uiDocs.test.mjs');
+      writeFileSync(
+        source,
+        "import { test } from 'node:test';\n" +
+          "test('@volstudio/audio-synth API', () => {});\n" +
+          "test('UI belgeleri örneklerle eşleşir', () => { throw new Error('docs/ui/CATALOG.md: eksik örnek\\nikinci açıklama'); });\n",
+      );
+      const childEnv = { ...process.env };
+      delete childEnv.NODE_TEST_CONTEXT;
+      const tap = spawnSync(process.execPath, ['--test', source], {
+        encoding: 'utf8',
+        env: childEnv,
+      });
+      assert.equal(tap.status, 1);
+      const classified = classify('contract', tap.stdout);
+      assert.equal(classified.package, null);
+      assert.equal(classified.reason, 'docs/ui/CATALOG.md: eksik örnek\nikinci açıklama');
+      assert.equal(classified.title, 'UI belgeleri örneklerle eşleşir');
+      assert.ok(classified.path.includes('uiDocs.test.mjs'));
+      writeFileSync(join(root, 'justfile'), 'contract:\nquick: contract\n');
+      writeNodeCommand(
+        root,
+        'pnpm',
+        `process.stdout.write(${JSON.stringify(tap.stdout)}); process.exit(7);`,
+      );
+      const env = { ...process.env };
+      const pathKey = Object.keys(env).find((key) => key.toLowerCase() === 'path') ?? 'PATH';
+      env[pathKey] = `${root}${delimiter}${env[pathKey]}`;
+      const cli = resolve(import.meta.dirname, '../report.mjs');
+      const json = spawnSync(process.execPath, [cli, 'quick', '--json'], {
+        cwd: root,
+        env,
+        encoding: 'utf8',
+      });
+      assert.equal(json.status, 7, json.stderr);
+      assert.deepEqual(JSON.parse(json.stdout).failure, {
+        stage: 'contract',
+        kind: classified.kind,
+        package: classified.package,
+        reason: classified.reason,
+        exitCode: 7,
+        title: classified.title,
+        path: classified.path,
+      });
+      const human = spawnSync(process.execPath, [cli, 'quick'], {
+        cwd: root,
+        env,
+        encoding: 'utf8',
+      });
+      assert.equal(human.status, 7);
+      assert.ok(human.stdout.includes(tap.stdout));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  it('başka paketin PASS satırı TAP hatasına atfedilmez; başlık, sebep ve yol korunur', () => {
+    const output = [
+      '# Subtest: @volstudio/audio-synth API',
+      'ok 1 - @volstudio/audio-synth API',
+      '# Subtest: UI belgeleri örneklerle eşleşir',
+      'not ok 2 - UI belgeleri örneklerle eşleşir',
+      '  ---',
+      "  location: 'C:\\Dev\\VOL.STUDIO\\scripts\\quality\\tests\\uiDocs.test.mjs:42:1'",
+      "  failureType: 'testCodeFailure'",
+      "  error: 'docs/ui/CATALOG.md: eksik örnek'",
+      "  code: 'ERR_ASSERTION'",
+      '  ...',
+    ].join('\n');
+    assert.deepEqual(classify('contract', output), {
+      package: null,
+      kind: 'test',
+      reason: 'docs/ui/CATALOG.md: eksik örnek',
+      title: 'UI belgeleri örneklerle eşleşir',
+      path: 'C:\\Dev\\VOL.STUDIO\\scripts\\quality\\tests\\uiDocs.test.mjs:42:1',
+    });
+  });
+
+  it('TAP hata bloğu içindeki paket failure context olarak kullanılır', () => {
+    const result = classify(
+      'test',
+      "ok 1 - @volstudio/core\nnot ok 2 - @volstudio/vol-showcase API\n  ---\n  error: 'eksik export'\n  ...",
+    );
+    assert.equal(result.package, '@volstudio/vol-showcase');
+    assert.equal(result.reason, 'eksik export');
+  });
+
   it('kendi betiğimizin yapılandırılmış işareti önce okunur', () => {
     // workspace-contract.mjs kendi çıktısını serbest metin olarak değil
     // ##quality:{...} işaretiyle bildirir — biçimi biz kontrol ediyoruz.

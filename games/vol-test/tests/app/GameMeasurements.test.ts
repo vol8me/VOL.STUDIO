@@ -1,7 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import { GameMeasurements } from '@/app/GameMeasurements';
+import { reportDiagnostics } from '@volstudio/tauri-v2';
 
 describe('GameMeasurements', () => {
+  it('gerçek reporter IPC reddini kayıp sayar ve sonraki diske teslim kaydına taşır', async () => {
+    const delivered: Record<string, unknown>[] = [];
+    const error = new Error('native disk reddi');
+    let attempts = 0;
+    const probe = {
+      isTauri: () => true,
+      invoke: (_command: string, args?: Record<string, unknown>) => {
+        if (++attempts === 1) return Promise.reject(error);
+        delivered.push(JSON.parse(args!.line as string) as Record<string, unknown>);
+        return Promise.resolve();
+      },
+    };
+    const measurement = new GameMeasurements((record) => reportDiagnostics(record, probe), 10);
+    measurement.frame(0, false, 'high', 0);
+    measurement.frame(16, false, 'high', 0);
+    await expect(measurement.flush()).rejects.toMatchObject({ errors: [error] });
+    measurement.frame(32, false, 'high', 0);
+    measurement.frame(48, false, 'high', 0);
+    await measurement.flush();
+    expect(delivered[0]).toMatchObject({ lostReports: 1, window: 2 });
+  });
+
   it('render gönderimi ve GPU süresini ayrı örneklerle tutar; sunum süresi uydurmaz', async () => {
     const records: Record<string, unknown>[] = [];
     const measurement = new GameMeasurements((record) => {

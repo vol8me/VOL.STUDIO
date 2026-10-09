@@ -56,7 +56,7 @@ const INTENT_KINDS: readonly UiIntentKind[] = [
 ];
 const OUTCOMES: readonly UiOutcome[] = ['success', 'warning', 'error'];
 
-/** Ses laboratuvarının kendi kökü; vitrinin geri kalanı sese bağlanmaz. */
+/** Ses laboratuvarının örnek adresi. */
 function baseUrl(): string {
   return import.meta.env.BASE_URL;
 }
@@ -91,13 +91,16 @@ function row(): HTMLElement {
  * Ses laboratuvarı: anlamsal UI olaylarının sesini, kanal ayarlarını, ses
  * bütçesini ve niyet sondasını tek yerde gösterir. Ses bağlamı ve örnekler
  * ilk kullanıcı jestine kadar kurulmaz (kilitli bağlamda ses kuyruğa alınmaz).
- * Laboratuvar kendi niyet veriyolunu kurar; yalnız bu sekmedeki bileşenler
- * ses üretir ve sondaya sayılır.
+ * Laboratuvar uygulama sesinden bağımsızdır: gerçek bileşenler iç veriyolunda
+ * kit ve sondaya bağlanır; audition ve ayarlar dış veriyolunda uygulama sesi üretmez.
  */
 export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
   const container = document.createElement('div');
   container.className = 'vol-showcase-section';
   const disposables = new DisposableScope();
+  // Audition kendi sesini çalar; bu sınır uygulama kitinin ek press üretmesini engeller.
+  const laboratoryRoot = uiIntentBusFor(container);
+  disposables.add({ dispose: laboratoryRoot.release });
   // Kök başına tek UiIntentBus: niyet kökü YALNIZ "Gerçek bileşenler" kartıdır: olay düğmeleri ve kuru/kit düğmeleri
   // sesi doğrudan çalar; bir de niyet üretselerdi aynı tık iki ses ve iki sayım olurdu.
   const componentsBody = document.createElement('div');

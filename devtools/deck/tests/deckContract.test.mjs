@@ -70,19 +70,27 @@ function shellPath(value) {
 function shellInventory(...args) {
   // Yalnız yol ARGÜMANLARI normalize edilir; komutun kendisi (Python kodu)
   // dokunulmadan kalır.
-  return renderInventoryCommand(...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)));
+  return renderInventoryCommand(
+    ...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)),
+  );
 }
 
 function shellLogRead(...args) {
-  return renderLogReadCommand(...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)));
+  return renderLogReadCommand(
+    ...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)),
+  );
 }
 
 function shellAtomicWrite(...args) {
-  return renderAtomicWriteCommand(...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)));
+  return renderAtomicWriteCommand(
+    ...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)),
+  );
 }
 
 function shellReleaseStop(...args) {
-  return renderReleaseStopCommand(...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)));
+  return renderReleaseStopCommand(
+    ...args.map((arg) => (typeof arg === 'string' ? shellPath(arg) : arg)),
+  );
 }
 
 // Windows'ta `HOME` tanımsızdır ve Python `expanduser` `USERPROFILE`'ı okur;
@@ -540,6 +548,30 @@ test('ayrı oyun oturumları aynı pencere numarasıyla kaybolmaz; yavaş kare v
   );
 });
 
+test('oyun raporu eksik pencere ve kaybı ölçüm kabulünde reddeder', () => {
+  const perf = (window, lostReports = 0) => ({
+    type: 'perf',
+    runId: 'one',
+    fps: 60,
+    window,
+    lostReports,
+  });
+  for (const records of [
+    [perf(1, 1)],
+    [perf(1), perf(3)],
+    [perf(2)],
+    [{ ...perf(1), lostReports: undefined }],
+  ]) {
+    assert.equal(summarizeReport(records.map(JSON.stringify)).complete, false);
+  }
+  assert.equal(summarizeReport([perf(1), perf(2)].map(JSON.stringify)).complete, true);
+  assert.equal(summarizeReport([]).complete, false);
+  assert.equal(
+    summarizeReport([JSON.stringify({ type: 'phase', phase: 'menu', lostReports: 1 })]).complete,
+    false,
+  );
+});
+
 test('touchpad kisayol raporu yalniz sabit siniflari ve boolean alanlari tasir', () => {
   const event = JSON.stringify({
     v: 1,
@@ -575,11 +607,9 @@ test('touchpad kisayol raporu yalniz sabit siniflari ve boolean alanlari tasir',
 });
 
 test('rapor eski insan bekleme durumu taşımaz; teknik sonuçlar korunur', () => {
-  const record = (result) =>
-    JSON.parse(sanitizeReport(JSON.stringify({ type: 'perf', result })));
+  const record = (result) => JSON.parse(sanitizeReport(JSON.stringify({ type: 'perf', result })));
   assert.equal(record('pending-human').result, undefined);
-  for (const result of ['ok', 'error', 'unavailable'])
-    assert.equal(record(result).result, result);
+  for (const result of ['ok', 'error', 'unavailable']) assert.equal(record(result).result, result);
 });
 
 test('silme acik oyun kimligi onayi olmadan reddedilir', () => {
@@ -649,6 +679,30 @@ test('release hazirligi eski dosyalari ve oturum sentinelini korur', () => {
   });
 });
 
+test('sonda fazlarında eksik, yanlış tipli ve negatif kayıp sayacı kabul edilmez', () => {
+  for (const type of ['phase', 'phase-raf']) {
+    for (const lostReports of [undefined, null, '0', -1, 1]) {
+      assert.equal(
+        summarizeReport([JSON.stringify({ type, phase: 'menu', fps: 60, lostReports })]).complete,
+        false,
+      );
+    }
+    assert.equal(
+      summarizeReport([JSON.stringify({ type, phase: 'menu', fps: 60, lostReports: 0 })]).complete,
+      true,
+    );
+    for (const lostReports of [undefined, -1, '0']) {
+      assert.equal(
+        summarizeReport([
+          JSON.stringify({ type, phase: 'menu', fps: 60, lostReports }),
+          JSON.stringify({ type, phase: 'menu', fps: 60, lostReports: 0 }),
+        ]).complete,
+        false,
+      );
+    }
+  }
+});
+
 test('release SIGTERM ayni urunun eski surecine ulasmaz', async (t) => {
   // SIGTERM gönderme `/proc` taramasıyla Linux'a özgüdür; Windows'ta süreç
   // sinyali farklı çalışır ve bu sözleşme orada ölçülemez.
@@ -663,7 +717,7 @@ test('release SIGTERM ayni urunun eski surecine ulasmaz', async (t) => {
   mkdirSync(newDirectory);
   // `/usr/bin/sleep` yalnız POSIX'te vardır; testin amacı aynı adlı iki
   // sürecin ayrı kalması olduğu için platformun kendi kalıcı komutu kopyalanır.
-// Windows kopyalanmış bir `.exe`yi doğrudan başlatamaz (yan yükleme/izin),
+  // Windows kopyalanmış bir `.exe`yi doğrudan başlatamaz (yan yükleme/izin),
   // bu yüzden kabuk üzerinden `shell: true` ile çalıştırılır.
   const sleeper = isWindows
     ? join(process.env.SystemRoot, 'System32', 'ping.exe')

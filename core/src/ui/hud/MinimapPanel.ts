@@ -34,8 +34,8 @@ export interface MinimapPanelOptions {
   zoom?: number;
   /** Minimap'e tıklanınca dünya koordinatını döndürür (kamera zıplatma çağıran tarafta yapılır). */
   onClick?: (worldX: number, worldY: number) => void;
-  /** Ekran okuyucular için açıklama. Varsayılan "Harita". */
-  label?: string;
+  /** Ekran okuyucu adı. Sağlayıcı dil değişiminde yeniden okunur; varsayılan CORE dil anahtarıdır. */
+  label?: string | (() => string);
   /** Dünya ızgarası: `step` dünya birimidir, her `majorEvery` çizgide bir belirgin çizgi (varsayılan 5). Tema renginde, canvas içinde çizilir. */
   grid?: { step: number; majorEvery?: number };
   /** Dünya sınırı çerçevesi. Varsayılan true. */
@@ -157,12 +157,18 @@ export class MinimapPanel {
   private zoomIn?: IconButton;
   private zoomOut?: IconButton;
   private readonly themeObserver?: MutationObserver;
+  private readonly mountObserver?: MutationObserver;
+  private mountDiscoveryDocument: Document | null = null;
+  private themeAncestors: Element[] = [];
+  private themeOwner: Element | null = null;
+  private themeValue: string | null = null;
   private readonly labelIsI18n: boolean;
   private label: string;
   private readonly interactive: boolean;
   private readonly cleanups: Array<() => void> = [];
   private readonly onLanguageChanged = (): void => {
-    if (this.labelIsI18n) this.label = i18next.t('core:minimap.label');
+    if (typeof this.options.label === 'function') this.label = this.options.label();
+    else if (this.labelIsI18n) this.label = i18next.t('core:minimap.label');
     this.applyLabels();
   };
 
@@ -182,7 +188,7 @@ export class MinimapPanel {
     } = options;
     this.options = options;
     this.labelIsI18n = label === undefined;
-    this.label = label ?? i18next.t('core:minimap.label');
+    this.label = typeof label === 'function' ? label() : (label ?? i18next.t('core:minimap.label'));
     this.width = width;
     this.height = height;
     this.dpr = Math.min(MAX_DPR, Math.max(1, globalThis.devicePixelRatio || 1));
@@ -223,25 +229,67 @@ export class MinimapPanel {
     this.applyLabels();
     this.draw();
 
-    // Kaplama değişince (steel ↔ aurum) palet yeniden okunur; yalnız ilgili öznitelik izlenir.
+    // Bağlı haritada yalnız ata zinciri izlenir; ayrıkken ekleme keşfi bağlama yaşam döngüsünü tamamlar.
     if (typeof MutationObserver === 'function') {
-      this.themeObserver = new MutationObserver(() => {
-        this.paletteKey = '';
-        this.invalidate();
+      this.themeObserver = new MutationObserver(() => this.bindThemeAncestors());
+      this.mountObserver = new MutationObserver(() => {
+        if (this.element.isConnected) this.bindThemeAncestors();
       });
-      this.themeObserver.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-vol-theme'],
-      });
+      this.bindThemeAncestors();
     }
     // Eleman kurucuda henüz belgeye bağlı olmayabilir: bağlanınca tema renkleriyle bir kez yeniden çizilir.
     this.themeFrame = requestAnimationFrame(() => {
       this.themeFrame = 0;
+      this.bindThemeAncestors();
       this.paletteKey = '';
       this.invalidate();
     });
 
     i18next.on('languageChanged', this.onLanguageChanged);
+  }
+
+  private bindThemeAncestors(): void {
+    if (this.destroyed) return;
+    const ownerDocument = this.element.ownerDocument;
+    if (this.element.isConnected) {
+      this.mountObserver?.disconnect();
+      this.mountDiscoveryDocument = null;
+    } else if (this.mountDiscoveryDocument !== ownerDocument) {
+      // Ayrık öğenin yeni atasını DOM bildirmez: yalnız bağlanana kadar ekleme keşfi gerekir.
+      this.mountObserver?.disconnect();
+      this.mountObserver?.observe(ownerDocument.documentElement, {
+        childList: true,
+        subtree: true,
+      });
+      this.mountDiscoveryDocument = ownerDocument;
+    }
+    const ancestors: Element[] = [];
+    for (let node: Element | null = this.element; node; node = node.parentElement) {
+      ancestors.push(node);
+    }
+    // İlk bağlama karesinden önce küresel tema değişimi de kaybolmasın.
+    const documentRoot = ownerDocument.documentElement;
+    if (!ancestors.includes(documentRoot)) ancestors.push(documentRoot);
+    if (
+      ancestors.length !== this.themeAncestors.length ||
+      ancestors.some((node, index) => node !== this.themeAncestors[index])
+    ) {
+      this.themeObserver?.disconnect();
+      this.themeAncestors = ancestors;
+      for (const node of ancestors)
+        this.themeObserver?.observe(node, {
+          attributes: true,
+          attributeFilter: ['data-vol-theme'],
+          childList: true,
+        });
+    }
+    const owner = this.element.closest('[data-vol-theme]');
+    const value = owner?.getAttribute('data-vol-theme') ?? null;
+    if (owner === this.themeOwner && value === this.themeValue) return;
+    this.themeOwner = owner;
+    this.themeValue = value;
+    this.palette = null;
+    this.invalidate();
   }
 
   // ---- genel API ----
@@ -392,6 +440,10 @@ export class MinimapPanel {
     this.destroyed = true;
     i18next.off('languageChanged', this.onLanguageChanged);
     this.themeObserver?.disconnect();
+    this.mountObserver?.disconnect();
+    this.mountDiscoveryDocument = null;
+    this.themeAncestors = [];
+    this.themeOwner = null;
     if (this.pingFrame) cancelAnimationFrame(this.pingFrame);
     if (this.themeFrame) cancelAnimationFrame(this.themeFrame);
     for (const cleanup of this.cleanups.splice(0)) cleanup();

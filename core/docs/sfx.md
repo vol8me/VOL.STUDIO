@@ -98,6 +98,10 @@ ile bildirir (`success` → `confirm`, `warning` → `alert`, `error` → `denie
   oyunun kendi SFX'idir.
 - `setAssets` / `followTheme` paleti çalışırken değiştirir (aşağıda).
 
+Geç restore yalnız kullanıcının henüz değiştirmediği ayar alanlarını yükler.
+Değişen alanlar korunur, birleştirilmiş snapshot yeniden kaydedilir; eski
+restore jenerasyonu veya dispose sonrası sonuç mevcut sahibine yazamaz.
+
 ### `uiSoundAssets`
 
 CORE'un gönderdiği UI ses setlerinin URL'lerini verir: 25 olay × 3 varyant × 2 palet

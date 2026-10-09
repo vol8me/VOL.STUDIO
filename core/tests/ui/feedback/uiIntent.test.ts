@@ -334,6 +334,82 @@ describe('titreşim sahipliği: çift darbe yok', () => {
 });
 
 describe('kök paylaşımı', () => {
+  it('iç fiziksel olay dış özel handler hedefiyle ikinci niyete dönüşmez', () => {
+    const outer = root();
+    const inner = document.createElement('div');
+    outer.element.append(inner);
+    const handle = uiIntentBusFor(inner);
+    const outerSeen = record(outer.bus);
+    const innerSeen = record(handle.bus);
+    const button = new Button('İç');
+    inner.append(button.element);
+    outer.element.addEventListener('click', (event) => {
+      emitUiIntent({ kind: 'confirm', origin: 'OuterCard', target: outer.element, event });
+    });
+    button.element.click();
+    expect(innerSeen.map((intent) => intent.origin)).toEqual(['Button']);
+    expect(outerSeen).toEqual([]);
+    // DOM'a gönderilmemiş ürün sinyali hedef sahibinde kalır.
+    expect(
+      outer.bus.emit({
+        kind: 'open',
+        origin: 'Host',
+        target: outer.element,
+        event: new Event('open'),
+      }),
+    ).not.toBeNull();
+    expect(outerSeen.map((intent) => intent.origin)).toEqual(['Host']);
+    handle.release();
+    outer.release();
+  });
+  it('iç bileşen ve fallback yalnız en yakın kökte yayınlar; söküm dış köke döner', () => {
+    const outer = root();
+    const inner = document.createElement('div');
+    outer.element.append(inner);
+    const handle = uiIntentBusFor(inner);
+    const outerSeen = record(outer.bus, { haptics: true });
+    const innerSeen = record(handle.bus);
+    const button = new Button('İç', { haptic: false });
+    const plain = document.createElement('button');
+    inner.append(button.element, plain);
+    button.element.click();
+    plain.click();
+    expect(innerSeen.map((intent) => intent.origin)).toEqual(['Button', 'auto']);
+    expect(outerSeen).toEqual([]);
+    handle.release();
+    plain.click();
+    expect(outerSeen.map((intent) => intent.origin)).toEqual(['auto']);
+    outer.release();
+  });
+
+  it('iç kökün özel niyeti dış fallback ve titreşim politikasına sızmaz', () => {
+    const outer = root();
+    const inner = document.createElement('div');
+    outer.element.append(inner);
+    const handle = uiIntentBusFor(inner);
+    const outerSeen = record(outer.bus, { haptics: true });
+    const innerSeen = record(handle.bus);
+    const control = document.createElement('button');
+    inner.append(control);
+    control.addEventListener('click', (event) => {
+      emitUiIntent({
+        kind: 'confirm',
+        origin: 'Custom',
+        target: control,
+        event,
+        haptic: false,
+        defaultHaptic: 'tap',
+      });
+    });
+    control.click();
+    expect(innerSeen.map((intent) => [intent.origin, intent.kind])).toEqual([
+      ['Custom', 'confirm'],
+    ]);
+    expect(outerSeen).toEqual([]);
+    expect(play).not.toHaveBeenCalled();
+    handle.release();
+    outer.release();
+  });
   it('aynı elemanı paylaşan iki UIRoot tek veriyolu görür; dinleyici ve niyet çoğalmaz', () => {
     const parent = document.createElement('div');
     document.body.append(parent);

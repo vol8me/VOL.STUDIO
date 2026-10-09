@@ -10,8 +10,12 @@ taşınır. Eksik kapanış yeni görevdir.
 Kullanıcı mimari, kök, belge ve gerekçeli silme/taşıma/birleştirme kararlarını
 yetkilendirdi. F01–F03 sonuçları rapor §18, F04 kaynak uygulaması ve açık native kabul rapor §19, F05–F06 kaynak
 uygulaması ve kalan işler rapor §20'dedir.
-**F01–F03, F05 ve F06 tamamlandı; F04 (yalnız F04.4) ve F07–F10 açıktır.** Faz numarası bağımsız işleri gereksiz seri bekletmez;
-gerçek ön koşul ve kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
+**F01–F03 ve F05–F06 kaynak işleri kapalı; F04/F07–F10 açıktır.**
+2026-10-09'da B21–B30 kaynak kusurları ve regresyonları uygulandı.
+F04.6/F05.7/F06.5/F08.7/F10.9/F10.10 Kapatılanlar'a taşındı;
+UI bulguları kendi sahibinde kapalı, bütün aile matrisi açıktır.
+Faz numarası bağımsız işleri gereksiz seri bekletmez; gerçek ön koşul ve
+kaynak çakışması korunur. Cihaz bağlılığı kabul değildir.
 Yapılmayan insan/görsel/hissiyat değerlendirmesi uydurulmaz.
 
 ## Açık
@@ -36,6 +40,11 @@ Aşağıdaki satırlar indekstir; kapanış checkbox'ı ve ölçütleri yalnız 
 - **F07.2 — Dalga 1, kimlik:** UI-01.6–01.9 tema çifti/malzeme/ikon/imleç, UI-02.6–02.8 yeni ses, UI-07.2–07.3 i18n/font, UI-06.2–06.4 Windows native vitrin; paralel.
 - **F07.3 — Dalga 2, dikey dilim ve aileler:** UI-01.10 + UI-02.9 → UI-03 (Button) → UI-04/05/08/09/10 fan-out, UI-07.4, UI-11.1–11.2, UI-12.2–12.3.
 - **F07.4 — Dalga 3, platform ve tam kabul:** UI-11.3–11.4, UI-12.1, UI-12.4, UI-13; cihaz/insan kabulleri ayrı PASS/FAIL/NOT-RUN.
+
+B24 çift kök olayı ve B25 geç restore UI-02.8/UI-13.2'de kaynak/regresyonla kapalı;
+B26 scoped mini harita teması ve B28 erişilebilir adın dil geçişi de kapalı.
+UI-07/UI-08'in bütün aile/platform işleri bundan türetilmez. Kaynaklı tekrar ve kapanış rapor §4'tedir;
+ayrı checkbox defteri açılmaz.
 
 ### F08 — Linux builder ve Deck kabulünü yeniden kur
 
@@ -64,14 +73,24 @@ erişim sağlar; kurulu uygulamanın mevcut commit olması ayrıca doğrulanır.
 Güvenlik F02'den itibaren bağımsız erken yürütülür; bu fazın son sıra numarası
 release redini ertelemek için gerekçe değildir.
 
-- [ ] **[P2] F10.1 — JS/Rust bağımlılık riski.** braces yayımlanmış düzeltmesi/uyumlu zincir veya gerçek güvenli alternatif; glib unsound, yanked ve unmaintained sahipliği/erişilebilirlik. Kapanır: yok sürüme override yok; security-js ve gerekçeli Rust risk politikası doğrulanır; gate seviyesi düşürülmez.
+- [ ] **[P2] F10.1 — JS/Rust bağımlılık riski.** Güncel JS audit: braces 3.0.3, source-map-js 1.2.1, postcss-selector-parser 7.1.4 (2 high/1 moderate). braces için önerilen 3.0.4 registry'de yok; diğer ikisinin 1.2.2/7.1.6 yamaları yayımlanmış. glib unsound, yanked ve yedi unmaintained uyarısının platform/sahip/erişilebilirlik kararı gerekir. Kapanır: yok sürüme override yok; uyumlu zincir veya gerçek güvenli alternatif ve regresyon; security-js ve gerekçeli Rust risk politikası doğrulanır; gate seviyesi düşürülmez.
 - [ ] **[P3] F10.2 — S7 majör geçişler.** ESLint/stylelint/jsdom/Vitest/TypeScript hedefleri gerçekten yayımlanmış destek matrisiyle tek tek. Kapanır: her geçiş ilgili paket/test/kapıyla; toplu latest ve ilgisiz mimari göç yok.
-- [ ] **[P3] F10.3 — Sıkı indeks ve teknik ratchet.** CORE noUncheckedIndexedAccess varsayımları daraltılır; kalite eşiklerinin geçmiş base-ref ve gerekçeli istisna denetimi; scaling ortak şemalı okuyucu. Kapanır: tip kapısı, eşik düşürme/bozuk config negatif fixture'ı; ölçülen kapsam korunur.
+- [ ] **[P3] F10.3 — Sıkı indeks ve teknik ratchet.** CORE noUncheckedIndexedAccess varsayımları daraltılır; kalite eşiklerinin geçmiş base-ref ve gerekçeli istisna denetimi; scaling ortak şemalı okuyucu. WebKit prob kalibrasyonu ilk örnekte −0,05 ms, mevcut retry’da +3,42 ms verdi; ölçüm hassasiyeti açık. Kapanır: A/A gürültü ve desteklenmeyen iz ayrımı tekrarlanabilir fixture/karşıt kontrolle, retry başarı diye saklanmadan; tip kapısı, eşik düşürme/bozuk config negatif fixture'ı; ölçülen kapsam korunur.
 - [ ] **[P3] F10.4 — A20 haptik yürütme kararı.** Mevcut scheduler/driver gecikme, eşzamanlılık ve iptal ölçülür. Kapanır: worker gerekliyse tek scheduler geçişi regresyon+önce/sonra ölçüm; gerekmiyorsa kanıtlı koruma kararı; sırf önerilmiş diye worker eklenmez.
 - [ ] **[P3] F10.5 — Yeni donanım kapsamı.** OLED Deck/Steam Machine. Kapanır: ilgili donanım bulunduğunda ayrı frame/runtime profili; eldeki cihaz kabulü bu işi sahte kapatmaz, Windows devamını bloke etmez.
 - [ ] **F10.6 — K3/K5 dal bakımı.** Birleştirme hedefleri ve eski yerel/uzak dalların erişilebilir işi ayrı git operasyonu olarak ele alınır. Kapanır: kayıp commit/çalışma sıfır, açık hedef ve test/snapshot kanıtı; rapor teslimi merge/branch silme yapılmış sayılmaz.
 
 ## Kapatılanlar
+
+- [x] F10.7 — Kare ölçüm aracı kontrollü build'de 2,3 KiB ayrıştırıldı; güncel app 182,4/120,4 KiB bilinçli kapsam gerekçesiyle bütçelendi; vendor/CSS/kapsam eşikleri korunarak bundle ve tam high geçti.
+- [x] F10.8 — Vitrin README/DESIGN, headless ve O(N) uzamsal tarama açıklaması güncel; özel kanıt atıfları ve zorunlu beğeni şartı düzeltildi, kullanıcı değişiklikleri korunarak belge/biçim/contract kapıları geçti.
+
+- [x] F04.6 — Bekleyen native toggle flush kuyruğunda; destroy/generation ve görüntü→ayar son snapshot sırası controller/tüketici regresyonlarıyla kapalı (B22).
+- [x] F05.7 — Manifest dışı staging korunur; örtüşme/symlink/junction preflight reddi ve ardışık export gerçek geçici disk testleriyle kapalı (B21).
+- [x] F06.5 — İlk dünya çıkışı ortak segment parametresidir; bağımsız konum, duvar ön/arka hedef ve gerçek tank atışı regresyonları kapalı (B27).
+- [x] F08.7 — Native Result/reporter reddi ve ölçüm kaybı görünür; eksik/sayaçsız Deck/Android kanıtı fail-closed, gerçek disk ve tüketici bileşimi testli (B23).
+- [x] F10.9 — TAP failing blok paket/başlık/yol teşhisi ve belirsizde null; gerçek JSON CLI exit/raw log regresyonu kapalı (B29).
+- [x] F10.10 — Preview doğrudan sahip Node çocuğu; gerçek Windows PID/port kapanışı, dolu port korunumu ve erken çıkış testli (B30).
 
 <a id="f01"></a>
 
@@ -98,7 +117,7 @@ release redini ertelemek için gerekçe değildir.
 - [x] F06.1 — Mermi, adımın süpürdüğü parçayı gövdenin yönlü ayak iziyle keser (segment–OBB ilk temas); olay/itki/önizleme temas noktasını görür, en erken hedef ve sahip dışlaması deterministik.
 - [x] F06.2 — Duvar sert sınırdır: araç teması sonrası duvar yeniden çözülür (en çok 4 geçiş); 4×4000 adım ve köşe yığınında hiçbir gövde köşesi dünya dışında kalmaz, kalan örtüşme ≈0,05 birim.
 - [x] F06.3 — Saf simülasyon CORE'a yalnız alt yüzeylerle bağlanır; beş senaryo Node'da DOM/CSS yükleyicisi olmadan seedli koşar ve vitest sonucuyla birebir aynıdır.
-- [x] F06.4 — Güncel commit (`093e4c8d`) ile cihaz profili: Deck host AppImage 10 dk çoklu tank/kar/yüksek + sanal kolla sürekli ateş ve dönüş = 60 FPS medyan, p95 19 ms (hedef 18 ms'nin 1 ms üstünde, F08.5'e devredildi), 5 kare >34 ms; Lenovo tablet 10 dk boş jank %0,04 / çoklu tank jank %3,97, bellek büyümesi yok (`docs/steam-deck.md`, `docs/android.md`).
+- [x] F06.4 — `093e4c8d` commitinde alınan cihaz referansı: Deck host AppImage 10 dk çoklu tank/kar/yüksek + sanal kolla sürekli ateş ve dönüş = 60 FPS medyan, p95 19 ms (hedef 18 ms'nin 1 ms üstünde, F08.5'e devredildi), 5 kare >34 ms; Lenovo tablet 10 dk boş jank %0,04 / çoklu tank jank %3,97, bellek büyümesi yok (`docs/steam-deck.md`, `docs/android.md`).
 - [x] Monorepo denetim raporu docs'a yerleştirildi; 20 bulgu, 43 belge kararı ve bütün açık işler F01–F10'a eşlendi.
 - [x] Visual Studio C++ Build Tools kuruldu; güncel doctor/bootstrap doğruluğu F02.1 ile tamamlandı.
 - [x] Just kabuğu Git kurulumundan seçilir; WSL gölgesi ortam teşhisinde ayrılır.
@@ -111,7 +130,7 @@ release redini ertelemek için gerekçe değildir.
 - [x] Ölçüm seçimleri kalıcı cihaz tercihlerinden ayrıldı.
 - [x] E1 — Girdi sunumu tek kol yoklamasını ve kip hakemini tüketir.
 - [x] VT6 — Windows NSIS kimlik/ikon/yetenek yapılandırması testli; native kabul F09'da.
-- [x] VT-R1 — Kimlikli araç/mermi/olay ve SAT teması var; yeni B17/B18 F06'da açık.
+- [x] VT-R1 — Kimlikli araç/mermi/olay ve SAT teması var; B17/B18 F06.1/F06.2, B27 ilk duvar teması F06.5 ile kapandı.
 - [x] VT-R2 — Fren/sürtünme/drift/aktarma modeli ve hissiyat zarfı testli.
 - [x] VT-R3 — Joystick/fren/hızlanma/minimap ve mobil örtüşme E2E'si var.
 - [x] VT-R4 — Mermi/patlama/palet izi ve kalite kademeli efektler uygulandı.

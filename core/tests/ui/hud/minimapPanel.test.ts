@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MinimapPanel, type MinimapPanelOptions } from '../../../src/ui/hud/MinimapPanel';
 import { niceScaleMetres, resolveMinimapPalette } from '../../../src/ui/hud/minimapDraw';
+import { ThemeController } from '../../../src/ui/themes/ThemeController';
 
 /** Çizim çağrılarını kaydeden sahte 2B bağlam: davranış (ne, kaç kez) sınanır, piksel değil. */
 function fakeContext() {
@@ -66,6 +67,135 @@ afterEach(() => {
 });
 
 describe('MinimapPanel — çizim sözleşmesi', () => {
+  it('ilk kareden sonra mevcut scoped köke bağlanınca durağan harita temayı bulur', async () => {
+    let frame!: FrameRequestCallback;
+    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => {
+      frame = callback;
+      return 1;
+    });
+    const host = document.createElement('section');
+    document.body.append(host);
+    const theme = new ThemeController({ theme: 'aurum' });
+    theme.attach(host);
+    const panel = new MinimapPanel({
+      width: 200,
+      height: 200,
+      worldWidth: 2000,
+      worldHeight: 2000,
+    });
+    tracked.push(panel);
+    frame(0);
+    await Promise.resolve();
+    const before = draws();
+    host.append(panel.element);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(before + 1);
+    theme.setTheme('default');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(before + 2);
+    theme.dispose();
+  });
+
+  it('ayrılıp başka karede mevcut scoped köke bağlanan harita gözlemi yeniler', async () => {
+    let frame!: FrameRequestCallback;
+    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => {
+      frame = callback;
+      return 1;
+    });
+    const host = document.createElement('section');
+    document.body.append(host);
+    const theme = new ThemeController({ theme: 'aurum' });
+    theme.attach(host);
+    const panel = make();
+    frame(0);
+    await Promise.resolve();
+    panel.element.remove();
+    await Promise.resolve();
+    await Promise.resolve();
+    const before = draws();
+    host.append(panel.element);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(before + 1);
+    panel.element.remove();
+    await Promise.resolve();
+    await Promise.resolve();
+    const detached = draws();
+    panel.destroy();
+    host.append(panel.element);
+    theme.setTheme('default');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(detached);
+    theme.dispose();
+  });
+  it('durağan scoped harita tema sahibini izler; reparent ve söküm bağı temizler', async () => {
+    vi.spyOn(globalThis, 'getComputedStyle').mockImplementation((element) => {
+      const style = document.createElement('div').style;
+      style.setProperty(
+        '--vol-ui-well',
+        element.closest('[data-vol-theme]')?.getAttribute('data-vol-theme') === 'aurum'
+          ? '#123456'
+          : '#654321',
+      );
+      return style;
+    });
+    let frame!: FrameRequestCallback;
+    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => {
+      frame = callback;
+      return 1;
+    });
+    const outer = document.createElement('section');
+    const inner = document.createElement('section');
+    const outerTheme = new ThemeController();
+    const innerTheme = new ThemeController();
+    outerTheme.attach(outer);
+    innerTheme.attach(inner);
+    outer.append(inner);
+    document.body.append(outer);
+    const panel = make();
+    inner.append(panel.element);
+    frame(0);
+    await Promise.resolve();
+    const settled = draws();
+    expect(fake.ctx.fillStyle).toBe('#654321');
+    innerTheme.setTheme('aurum');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 1);
+    expect(fake.ctx.fillStyle).toBe('#123456');
+    outerTheme.setTheme('aurum');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 1);
+    const other = document.createElement('section');
+    const otherTheme = new ThemeController();
+    otherTheme.attach(other);
+    document.body.append(other);
+    other.append(panel.element);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 2);
+    expect(fake.ctx.fillStyle).toBe('#654321');
+    innerTheme.setTheme('default');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 2);
+    otherTheme.setTheme('aurum');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 3);
+    panel.destroy();
+    otherTheme.setTheme('default');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 3);
+    outerTheme.dispose();
+    innerTheme.dispose();
+    otherTheme.dispose();
+  });
   it('aynı çerçevedeki birçok değişiklik TEK çizim isteği olur (mikro görev)', async () => {
     const panel = make();
     const before = draws();

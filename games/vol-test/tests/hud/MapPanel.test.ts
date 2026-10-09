@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { i18n } from '@volstudio/core/i18n';
+import { i18n, i18next } from '@volstudio/core/i18n';
 import { MapPanel } from '@/hud/MapPanel';
 import { hudFrame } from './support';
 
@@ -43,6 +43,20 @@ const OPTIONS = {
 };
 
 describe('harita', () => {
+  it('gerçek harita adı ve araç özeti dil değişiminde birlikte güncellenir', async () => {
+    await i18next.changeLanguage('tr');
+    const map = new MapPanel(OPTIONS);
+    map.update(hudFrame({ vehicles: () => [{ id: 2, x: 10, y: 20, hull: 0, player: false }] }));
+    const canvas = map.element.querySelector('canvas')!;
+    expect(canvas.getAttribute('aria-label')).toBe(i18next.t('voltest:hud.map'));
+    await i18next.changeLanguage('en');
+    expect(canvas.getAttribute('aria-label')).toBe(i18next.t('voltest:hud.map'));
+    expect(canvas.getAttribute('aria-description')).toBe(
+      i18next.t('voltest:hud.mapSummary', { vehicles: 1, zoom: 1 }),
+    );
+    map.destroy();
+    await i18next.changeLanguage('tr');
+  });
   let calls: string[];
   beforeEach(async () => {
     await i18n.init();

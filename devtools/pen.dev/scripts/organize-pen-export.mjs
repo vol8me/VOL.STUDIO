@@ -7,9 +7,12 @@ import {
   copyFileSync,
   existsSync,
   linkSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
   renameSync,
+  realpathSync,
+  rmdirSync,
   rmSync,
   unlinkSync,
   writeFileSync,
@@ -64,6 +67,12 @@ if (!Number.isFinite(resolvedExportScale) || resolvedExportScale <= 0) {
 }
 
 const entityRoot = join(outputRoot, domain, entityId);
+rejectLinkedPath(stagingDir);
+rejectLinkedPath(entityRoot);
+const sourceRoot = realpathSync(stagingDir);
+if (contains(entityRoot, sourceRoot) || contains(sourceRoot, entityRoot)) {
+  fail('staging ve entity hedefi örtüşemez');
+}
 
 console.log(`${domain}/${entityId} export'u düzenleniyor`);
 
@@ -78,6 +87,7 @@ const parts = partPlan.moves.map(({ item, dest }) => ({ ...item, file: dest }));
 const previews = previewPlan.moves.map(({ item, dest }) => ({ ...item, file: dest }));
 
 const metadataPath = join(entityRoot, 'metadata', `${entityId}.metadata.json`);
+rejectLinkedPath(metadataPath);
 const metadata = {
   schemaVersion: 1,
   entityId,
@@ -122,9 +132,11 @@ console.log(`  yazıldı: ${metadataPath}`);
 
 // Kaynaklar yalnız her hedef yerleştikten SONRA silinir.
 for (const { src } of moves) unlinkSync(src);
-if (existsSync(stagingDir)) {
-  rmSync(stagingDir, { recursive: true, force: true });
+try {
+  rmdirSync(stagingDir);
   console.log(`  staging dizini temizlendi: ${stagingDir}`);
+} catch (error) {
+  if (!['ENOTEMPTY', 'EEXIST'].includes(error.code)) throw error;
 }
 
 console.log(`Bitti: ${parts.length} parça, ${previews.length} önizleme -> ${entityRoot}`);
@@ -136,6 +148,7 @@ console.log(`Bitti: ${parts.length} parça, ${previews.length} önizleme -> ${en
  */
 function planMoves(list, targetDir, label) {
   if (!list?.length) return { targetDir, moves: [] };
+  rejectLinkedPath(targetDir);
 
   const moves = [];
   const seen = new Set();
@@ -173,11 +186,37 @@ function planMoves(list, targetDir, label) {
     if (!existsSync(src)) {
       fail(`staging dosyası eksik - ${item.partId} (${item.id}): ${src}`);
     }
+    rejectLinkedPath(src);
+    if (!lstatSync(src).isFile()) fail(`staging kaynağı dosya olmalı: ${src}`);
 
-    moves.push({ item, src, dest: join(targetDir, `${item.partId}.png`) });
+    const dest = join(targetDir, `${item.partId}.png`);
+    rejectLinkedPath(dest);
+    moves.push({ item, src, dest });
   }
 
   return { targetDir, moves };
+}
+
+function contains(parent, child) {
+  const path = relative(resolve(parent), resolve(child));
+  return path === '' || (!path.startsWith('..') && !isAbsolute(path));
+}
+
+// Junction/symlink üzerinden kaynak ya da hedef sahipliği genişletilmez.
+function rejectLinkedPath(path) {
+  let current = resolve(path);
+  while (true) {
+    try {
+      if (lstatSync(current).isSymbolicLink()) {
+        fail(`export yolu sembolik bağ içeremez: ${current}`);
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+    const parent = dirname(current);
+    if (parent === current) return;
+    current = parent;
+  }
 }
 
 /**

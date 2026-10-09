@@ -131,25 +131,47 @@ Bellek büyümesi yok. Oyun içi FPS örneği yok (ölçüm kipi yalnız Deck or
 
 Native titreşim durum sorgusu destek bildirdi; geçerli desen kabul edildi,
 geçersiz desen reddedildi. Motorun fiziksel hissi insan doğrulaması ister.
-Samsung bu ölçümde erişilebilir değildi; ölçülmedi. Kontrol ve titreşim hissiyatı gerçek insan kabulü olarak ayrı kalır;
+Samsung bu 600 sn'lik ölçümde erişilebilir değildi; sonraki turda 90 sn'lik boş dünya ölçümü yukarıdadır, uzun oturum ve çoklu tank Samsung'da ölçülmedi. Kontrol ve titreşim hissiyatı gerçek insan kabulü olarak ayrı kalır;
 ses yayını teknik QA, runtime decode/çıkış ise hedef cihaz doğrulamasıdır.
 
 ### Dikey ve yatay native kare ölçümü (2026-10-08)
 
-Güncel çalışma ağacından üretilen debug APK (`vol-test`), iki cihaz × iki yön, `scripts/android/device-benchmark.mjs 90`
-(90 sn, dokunma girdisi yok, boş dünya; değerler native `gfxinfo` karesidir, oyun FPS'i değildir):
+Güncel çalışma ağacından üretilen debug APK (`vol-test`; yeni dakika haritası ve yükleme ekranı dahil), iki cihaz × iki yön,
+`scripts/android/device-benchmark.mjs 90` (90 sn, dokunma girdisi yok, boş dünya). Değerler native `gfxinfo` karesidir,
+oyun FPS'i değildir; yön her koşuda `settings put system user_rotation` ile sabitlendi, koşu sonunda cihazın özgün
+ayarı geri yazıldı.
 
-| Cihaz                   | Yön   | Kare                   | Jank          | p50/p90/p99 (ms) | PSS    |
-| ----------------------- | ----- | ---------------------- | ------------- | ---------------- | ------ |
-| Lenovo TB350FU (120 Hz) | dikey | 9040 / 8952 (iki koşu) | %2,07 / %2,33 | 10/14/20         | 298 MB |
-| Lenovo TB350FU (120 Hz) | yatay | 9071                   | %1,89         | —                | 306 MB |
-| Samsung (R5CXA3KZWNK)   | dikey | 5280                   | %0,44         | —                | —      |
-| Samsung (R5CXA3KZWNK)   | yatay | 5312                   | %0,36         | —                | —      |
+| Cihaz                   | Yön   | Kare        | Jank          | p50/p90/p99 (ms) | Kaçan vsync | PSS (grafik) |
+| ----------------------- | ----- | ----------- | ------------- | ---------------- | ----------- | ------------ |
+| Lenovo TB350FU (120 Hz) | dikey | 9040 / 8952 | %2,07 / %2,33 | 10/14/20         | 5           | 298 (154) MB |
+| Lenovo TB350FU (120 Hz) | yatay | 9071 / 9051 | %1,89 / %2,18 | 10/14/20         | 4           | 310 (152) MB |
+| Samsung (60 Hz)         | dikey | 5280 / 5299 | %0,44 / %0,30 | 8/9/14           | 0           | 187 (41) MB  |
+| Samsung (60 Hz)         | yatay | 5312 / 5306 | %0,36 / %0,32 | 8/9/14           | 0           | 187 (41) MB  |
 
-Okuma: Samsung'da jank %0,5 altında. Lenovo'da %1,9–2,3 ve iki koşuda tutarlı; yukarıdaki 600 sn'lik %0,04 ölçümüne göre
-yüksek. Fark **açıklanmadı**: ölçüm süresi (90 sn, açılış kareleri payı büyük), farklı commit (yeni dakika haritası ve
-yükleme ekranı) ya da cihaz durumu olabilir; hangisi olduğu ayrı bir 600 sn koşuyla ayrıştırılmadı. "—" hücreleri bu
-turda not alınmadı. Dikey ve yatay arasında anlamlı fark yok. Çoklu tank ve dokunma yüklü oturum bu turda koşulmadı.
+Kare ve jank hücrelerinde iki koşu vardır (ilk / ikinci); p50/p90/p99, kaçan vsync ve bellek ikinci koşudandır.
+Okuma: Samsung'da jank %0,5 altında ve vsync kaçmıyor; yön fark yaratmıyor. Lenovo'da jank %1,9–2,3 ve dört
+koşuda tutarlı: yukarıdaki 600 sn'lik %0,04 ölçümüne göre yüksek. Fark **açıklanmadı**: ölçüm süresi (90 sn, açılış
+kareleri payı büyük), farklı commit (yeni dakika haritası ve yükleme ekranı) ya da cihaz durumu olabilir; hangisi olduğu
+ayrı bir 600 sn koşuyla ayrıştırılmadı. Çoklu tank, hava önizlemesi ve dokunma yüklü oturum bu turda koşulmadı.
+
+### Vitrin sekmeleri, Chrome'da dikey ve yatay (2026-10-08)
+
+Vitrin (`devtools/vol-showcase`) aynı cihazlarda Chrome'da (`adb reverse` ile yerel önizleme sunucusu, CDP) 14 sekmenin
+tamamı için sekme sekme kaydırılarak gezildi: sunulan kare (rAF aralığı) ölçüldü ve her sekmeden kaydırma dilimi başına
+ekran görüntüsü alındı. Ölçüm yöntemi vitrindeki kare ölçeriyle aynıdır (`Shift+B` ya da `?bench`); gezen betik
+oturuma özeldir ve repoda yoktur, yinelenebilir olan parça kare ölçeridir.
+
+| Cihaz (CSS alanı, DPR)         | Yön   | 14 sekme FPS | Yavaş sekme |
+| ------------------------------ | ----- | ------------ | ----------- |
+| Samsung S21 FE (384×725, 2,8)  | dikey | 59,9 (hepsi) | —           |
+| Samsung S21 FE (796×283, 2,8)  | yatay | 59,9–60,0    | —           |
+| Lenovo TB350FU (856×1317, 1,4) | dikey | 56,7–60,0    | Text 56,7   |
+| Lenovo TB350FU (1427×747, 1,4) | yatay | 58,3–60,0    | Text 58,3   |
+
+Bu gezintiyle dört gerçek kusur bulundu ve düzeltildi: yatay Samsung'da ekran klavyesinin Vazgeç/Bitti satırı kırpılıyordu
+(`OnScreenKeyboard`), Workbench görüntü çubuğu kart kırpmasının arkasında kalıyordu, Kimlik ikon galerisi tek dar sütuna
+düşüyordu, SlotGrid telefon dikeyinde sağdan kırpılıyordu. Bu bir ekran görüntüsü ve kare incelemesidir; dokunma hissi,
+ses ve insan kabulü yerine geçmez.
 
 ## Fiziksel kabulün kanıt sınırı
 

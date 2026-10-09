@@ -73,6 +73,54 @@ afterEach(() => {
 });
 
 describe('DisplayModeController — native pencere', () => {
+  it('bekleyen F11 sorgusu bitmeden flush tamamlanmaz ve son tercih uygulanır', async () => {
+    const preference = makePreference('windowed');
+    const native = makeNativeWindow();
+    const controller = create({ ...preference, windowAdapter: native.adapter });
+    await controller.start();
+    let release!: (active: boolean) => void;
+    native.adapter.isFullscreen.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    const toggle = controller.toggle();
+    let settled = false;
+    const flush = controller.flush().then(() => {
+      settled = true;
+    });
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(settled).toBe(false);
+    release(false);
+    await Promise.all([toggle, flush]);
+    expect(preference.getMode()).toBe('fullscreen');
+    expect(await native.adapter.isFullscreen()).toBe(true);
+  });
+
+  it('bekleyen F11 sorgusu destroy sonrasında tercihi değiştiremez', async () => {
+    const preference = makePreference('windowed');
+    const native = makeNativeWindow();
+    const controller = create({ ...preference, windowAdapter: native.adapter });
+    await controller.start();
+    let release!: (active: boolean) => void;
+    native.adapter.isFullscreen.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    const toggle = controller.toggle();
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+    controller.destroy();
+    release(false);
+    await toggle;
+    await controller.flush();
+    expect(preference.getMode()).toBe('windowed');
+    expect(preference.setMode).not.toHaveBeenCalled();
+  });
+
   it('açılış kipini ve pencereli boyutu uygular', async () => {
     const preference = makePreference('windowed');
     const native = makeNativeWindow();
@@ -194,6 +242,27 @@ describe('DisplayModeController — native pencere', () => {
     await controller.flush();
 
     expect(onError).toHaveBeenCalledOnce();
+    expect(native.adapter.setFullscreen).toHaveBeenCalledWith(true);
+  });
+
+  it('native toggle sorgu reddi tercihi değiştirmez; flush reddeder ve sonraki istek toparlanır', async () => {
+    const preference = makePreference('windowed');
+    const native = makeNativeWindow();
+    const error = new Error('tam ekran sorgusu reddedildi');
+    const onError = vi.fn();
+    const controller = create({ ...preference, windowAdapter: native.adapter, onError });
+    await controller.start();
+    native.adapter.isFullscreen.mockRejectedValueOnce(error);
+
+    await controller.toggle();
+    await expect(controller.flush()).rejects.toBe(error);
+    expect(preference.setMode).not.toHaveBeenCalled();
+    expect(native.adapter.setFullscreen).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(error);
+
+    await controller.toggle();
+    await expect(controller.flush()).resolves.toBeUndefined();
+    expect(preference.getMode()).toBe('fullscreen');
     expect(native.adapter.setFullscreen).toHaveBeenCalledWith(true);
   });
 

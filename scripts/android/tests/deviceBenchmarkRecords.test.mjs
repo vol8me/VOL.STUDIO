@@ -10,7 +10,14 @@ const line = (record) => JSON.stringify(record) + '\n';
 
 test('yalnız mevcut ölçümde eklenen tamamlanmış tanı kayıtlarını okur', () => {
   const old = line({ type: 'perf', runId: 'old', fps: 240, renderer: 'canvas' });
-  const fresh = line({ type: 'perf', runId: 'fresh', fps: 60, renderer: { kind: 'webgl' } });
+  const fresh = line({
+    type: 'perf',
+    runId: 'fresh',
+    fps: 60,
+    renderer: { kind: 'webgl' },
+    window: 1,
+    lostReports: 0,
+  });
   const records = appendedDiagnostics(old, old + fresh + '{"type":');
   assert.deepEqual(gameDiagnostics(records), { fps: 60, renderer: 'webgl', samples: 1 });
   assert.deepEqual(appendedDiagnostics(old, old), []);
@@ -41,6 +48,24 @@ test('karışan çalıştırmalar ve geçersiz sayılar kanıt sayılmaz', () =>
     renderer: null,
     samples: 0,
   });
+});
+
+test('kayıp, eksik pencere ve teslim sayacı olmayan FPS kabul kanıtı değildir', () => {
+  const perf = (window, lostReports = 0) => ({
+    type: 'perf',
+    runId: 'one',
+    fps: 60,
+    window,
+    lostReports,
+  });
+  for (const records of [
+    [perf(1, 1)],
+    [perf(1), perf(3)],
+    [{ type: 'perf', runId: 'one', fps: 60, window: 1 }],
+    [perf(0)],
+  ])
+    assert.deepEqual(gameDiagnostics(records), { fps: null, renderer: null, samples: 0 });
+  assert.deepEqual(gameDiagnostics([perf(4), perf(5)]), { fps: 60, renderer: null, samples: 2 });
 });
 
 test('boş native ölçüm bilinmeyendir; gerçek sıfır korunur', () => {

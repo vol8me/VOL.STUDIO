@@ -503,6 +503,8 @@ async function cmdMeasure(root, workspace, host, label, opts = {}) {
   privateFile(join(dir, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
   if (summary.phases.length === 0)
     throw new Error('Yeni kare ölçümü gelmedi; özel ham kayıtlar korundu');
+  if (!summary.complete)
+    throw new Error('Ölçüm raporu eksik veya kayıp içeriyor; kabul kanıtı oluşturulmadı');
 
   console.log(`[measure] kayıt: ${relative(ROOT, dir)}`);
   console.log(`[measure] fazlar:`);

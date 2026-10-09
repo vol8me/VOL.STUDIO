@@ -92,7 +92,12 @@ export class GameServices {
       this.diagnostics = createDiagnostics({
         gameId: 'vol-test',
         overlay: !measure,
-        transport: { send: (snapshot) => reportDiagnostics({ ...snapshot }) },
+        transport: {
+          send: (snapshot) =>
+            reportDiagnostics({ ...snapshot }).catch((error: unknown) =>
+              console.warn('[VOL.TEST] Tanı kaydı teslim edilemedi:', error),
+            ),
+        },
       });
     }
     if (measure) this.measurements = new GameMeasurements(reportDiagnostics);
@@ -130,7 +135,10 @@ export class GameServices {
         ],
         services.storeOptions,
       );
-      if (services.measurements) await reportDiagnostics({ type: 'info', env });
+      if (services.measurements)
+        await reportDiagnostics({ type: 'info', env }).catch((error: unknown) =>
+          console.warn('[VOL.TEST] Ölçüm ortamı kaydedilemedi:', error),
+        );
       await Promise.all([services.settings.load(), services.progress.load()]);
       await services.display?.start();
       await services.setPaused(false);
@@ -207,11 +215,17 @@ export class GameServices {
     }
   }
   async flush(): Promise<void> {
-    const durability = [this.settings, this.progress, this.display];
+    const durability = [this.settings, this.progress];
     void Promise.resolve()
       .then(() => this.measurements?.flush())
       .catch((error: unknown) => console.warn('[VOL.TEST] Ölçüm boşaltılamadı:', error));
-    const results = await Promise.allSettled(durability.map(async (service) => service?.flush()));
+    // Görüntü niyeti ayar tercihini değiştirebilir; o niyet yerleşmeden
+    // ayar snapshot'ını boşaltmak kapanış ACK'sını eski değerle üretir.
+    const displayResults = await Promise.allSettled([this.display?.flush()]);
+    const results = [
+      ...(await Promise.allSettled(durability.map(async (service) => service.flush()))),
+      ...displayResults,
+    ];
     const failures = results.filter((result) => result.status === 'rejected');
     if (failures.length)
       throw new AggregateError(

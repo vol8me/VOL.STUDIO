@@ -119,6 +119,8 @@ export class UiSoundKit implements Disposable {
   private played = 0;
   private dropped = 0;
   private pending: Promise<void> = Promise.resolve();
+  private readonly touchedSettings = new Set<keyof UiAudioSettings>();
+  private restoreRevision = 0;
 
   constructor(private readonly options: UiSoundKitOptions = {}) {
     this.random = createRandom(options.seed ?? UI_SOUND_SEED);
@@ -379,9 +381,17 @@ export class UiSoundKit implements Disposable {
   /** Ayar değiştirir (geçersiz değer varsayılana iner), UI otobüsüne uygular ve kalıcılaştırır. */
   setSettings(patch: Partial<UiAudioSettings>): UiAudioSettings {
     if (this.disposed) return this.current;
+    for (const key of Object.keys(this.current) as Array<keyof UiAudioSettings>) {
+      if (Object.hasOwn(patch, key)) this.touchedSettings.add(key);
+    }
     this.current = normalizeUiAudioSettings({ ...this.current, ...patch }, this.current);
     this.applyBusGain();
     if (this.current.muted) this.stopAll();
+    this.saveSettings();
+    return this.current;
+  }
+
+  private saveSettings(): void {
     const store = this.options.store;
     if (store) {
       const value = this.current;
@@ -389,18 +399,27 @@ export class UiSoundKit implements Disposable {
         .then(() => store.save(UI_AUDIO_STORAGE_KEY, value))
         .catch((error: unknown) => this.options.onError?.(error));
     }
-    return this.current;
   }
 
   /** Kalıcı ayarı okur; okuma hatası bildirilir ve mevcut ayar korunur. */
   async restore(): Promise<UiAudioSettings> {
     const store = this.options.store;
     if (!store || this.disposed) return this.current;
+    const revision = ++this.restoreRevision;
     try {
       const saved = await store.load<unknown>(UI_AUDIO_STORAGE_KEY, undefined);
-      if (!this.disposed) {
-        this.current = normalizeUiAudioSettings(saved, this.current);
+      if (!this.disposed && revision === this.restoreRevision) {
+        const protectedSettings: Partial<UiAudioSettings> = Object.fromEntries(
+          [...this.touchedSettings].map((key) => [key, this.current[key]]),
+        );
+        this.current = normalizeUiAudioSettings(
+          protectedSettings,
+          normalizeUiAudioSettings(saved, this.current),
+        );
         this.applyBusGain();
+        if (this.current.muted) this.stopAll();
+        // Kullanıcı yazması restore'dan önce bitmiş olabilir; birleştirilmiş son durum diskte de yaşar.
+        if (this.touchedSettings.size > 0) this.saveSettings();
       }
     } catch (error) {
       this.options.onError?.(error);

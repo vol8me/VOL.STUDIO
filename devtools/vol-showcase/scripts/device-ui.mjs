@@ -12,6 +12,7 @@
  */
 import { execFileSync, spawn } from 'node:child_process';
 import { resolve } from 'node:path';
+import { startPreview } from './device-preview.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const repo = resolve(root, '../..');
@@ -106,12 +107,7 @@ try {
       shell: process.platform === 'win32',
     });
   }
-  server = spawn(
-    'pnpm',
-    ['exec', 'vite', 'preview', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'],
-    { cwd: root, stdio: 'ignore', shell: process.platform === 'win32' },
-  );
-  await new Promise((done) => setTimeout(done, 4000));
+  server = await startPreview({ cwd: root, port: PORT });
   adb(['reverse', `tcp:${PORT}`, `tcp:${PORT}`]);
   adb([
     'shell',
@@ -141,6 +137,6 @@ try {
   } catch {
     /* geri alma en iyi çabadır */
   }
-  server?.kill();
+  await server?.stop();
 }
 process.exit(failed === 0 ? 0 : 1);

@@ -131,6 +131,8 @@ ve engel sayma politikası açık parametreyle seçilir.
 
 Sürekli uzayda hücre bazlı yakını sorgular. `rebuild` kümeyi baştan kurar,
 `refresh` aynı kümenin konumlarını günceller, `update` tek nesneyi taşır.
+`refresh` iterable'ın tamamını O(N) tarar; yalnız hücresi değişen nesnenin
+üyeliğini yeniden yazar. Az değişen nesne sayısı taramanın maliyetini kaldırmaz.
 Listeden tamamen çıkan nesne yalnız konum yenilemesiyle temizlenmez;
 doğum/geri dönüşüm sınırında rebuild gerekir.
 

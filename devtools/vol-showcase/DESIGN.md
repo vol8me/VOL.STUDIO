@@ -2,7 +2,8 @@
 
 Vitrin CORE DOM UI kataloğunun tüketicisidir. Bileşen uygulaması CORE'da,
 örnek düzen ve etkileşimler bu pakettedir. Phaser ya da Tauri döngüsü
-gerekmez. Bir üründe tüketicisi olmayan CORE bileşeni vitrinde görünür ve
+tarayıcı yolu için gerekmez; native vitrin ortak kabuğu tüketir.
+Bir üründe tüketicisi olmayan CORE bileşeni vitrinde görünür ve
 kendi adıyla CORE testinde sınanır.
 
 ## Görsel sözleşme
@@ -24,7 +25,8 @@ animasyon bitişine bağlı kalmaz. Kaydırma dış panelde tanımlanır.
 [Sekme kataloğu, komutlar ve hedef politikası](README.md)
 
 [UI sözleşmesi ve uygulama fazları](../../docs/ui/README.md) tasarımın
-hedef halini tanımlar; mevcut paket henüz web vitrini olarak çalışır.
+hedef halini tanımlar; web ve native girişleri mevcuttur. Tema ve ses
+laboratuvarları çalışır; kalan aile/native kabulü UI TODO’da açıktır.
 
 ## Yerel (native) vitrin
 
@@ -46,6 +48,8 @@ Linux paketi (AppImage) Windows'ta WSL Ubuntu 24.04 içinde üretilir:
 Android (Chrome, adb): `node devtools/vol-showcase/scripts/device-ui.mjs --orientation both --tag <ad>`
 yerel sunucuyu `adb reverse` ile cihaza bağlar, CDP ile `tests/device/tablet.spec.ts` koşar (dokunma
 hedefi, yerleşim, ekran klavyesi, ses bağlamı, gecikme) ve köprüleri geri alır. Çıktı paketin git dışı
-records alanına yazılır; kabul kararı [VERIFICATION](../../docs/ui/VERIFICATION.md) içindedir.
+records alanına yazılır. Preview doğrudan Node çocuğudur; aracın kapanışı
+yalnız sahip olunan süreci ve adb köprülerini bırakır. Dolu port başka
+sunucuya bağlanmak yerine reddedilir; kabul kararı [VERIFICATION](../../docs/ui/VERIFICATION.md) içindedir.
 Deck: `pnpm deck run … --release <kayıt>` ve `pnpm deck shot <ad>`; her ekran görüntüsü incelenir,
 koşulmayan hücre NOT-RUN kalır.

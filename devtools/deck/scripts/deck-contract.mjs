@@ -666,7 +666,32 @@ export function summarizeReport(lines) {
   const pads = records.filter((r) => r.type === 'pad-connected');
   const padInputs = records.filter((r) => r.type === 'pad-input');
   const steamworks = [...records].reverse().find((r) => r.type === 'steamworks');
+  const windowsByRun = new Map();
+  let complete =
+    phases.length > 0 &&
+    phases.every((record) => record.lostReports === 0) &&
+    records.length === lines.filter((line) => line.trim()).length &&
+    !records.some((record) => record.lostReports > 0);
+  for (const record of byPhase.values()) {
+    if (record.type !== 'perf') continue;
+    if (
+      typeof record.runId !== 'string' ||
+      !record.runId ||
+      record.lostReports !== 0 ||
+      !Number.isSafeInteger(record.window) ||
+      record.window < 1
+    )
+      complete = false;
+    const windows = windowsByRun.get(record.runId) ?? [];
+    windows.push(record.window);
+    windowsByRun.set(record.runId, windows);
+  }
+  for (const windows of windowsByRun.values()) {
+    windows.sort((a, b) => a - b);
+    if (windows.some((window, index) => window !== index + 1)) complete = false;
+  }
   return {
+    complete,
     env: info?.env ?? null,
     runtime: info?.env?.PRESSURE_VESSEL_RUNTIME ?? 'host',
     phases: [...byPhase.values()].map((p) => ({

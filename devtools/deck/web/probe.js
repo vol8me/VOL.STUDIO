@@ -12,6 +12,7 @@ function show(key, text) {
   detailEl.textContent = Object.values(lines).join('\n');
 }
 
+let lostReports = 0;
 function log(type, data = {}) {
   const entry = {
     v: 1,
@@ -20,8 +21,12 @@ function log(type, data = {}) {
     t: Math.round(performance.now()),
     wall: Date.now(),
     ...data,
+    lostReports,
   };
-  return invoke('plugin:vol-diagnostics|report', { line: JSON.stringify(entry) }).catch(() => {});
+  return invoke('plugin:vol-diagnostics|report', { line: JSON.stringify(entry) }).catch(() => {
+    lostReports++;
+    show('delivery', `ölçüm kaydı teslim edilemedi; kayıp: ${lostReports}`);
+  });
 }
 
 window.addEventListener('error', (e) => log('error', { message: String(e.message) }));

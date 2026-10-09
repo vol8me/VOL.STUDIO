@@ -88,7 +88,11 @@ export class DisplayModeController {
 
   /** Bekleyen uygulamaları tüketir. */
   async flush(): Promise<void> {
-    await this.applyQueue;
+    let pending: Promise<void>;
+    do {
+      pending = this.applyQueue;
+      await pending;
+    } while (pending !== this.applyQueue);
     if (this.applyFailure) throw this.applyFailure.error;
   }
 
@@ -149,8 +153,20 @@ export class DisplayModeController {
 
   private async toggleNative(): Promise<void> {
     if (this.destroyed) return;
-    const active = await this.window.isFullscreen();
-    await this.options.setMode(toMode(!active));
+    const generation = ++this.applyGeneration;
+    const run = this.applyQueue
+      .then(async () => {
+        if (this.isStale(generation)) return;
+        const active = await this.window.isFullscreen();
+        if (this.isStale(generation)) return;
+        await this.options.setMode(toMode(!active));
+        if (!this.destroyed) void this.apply();
+      })
+      .catch((error: unknown) => this.recordApplyError(error));
+    this.applyQueue = run;
+    // setMode aboneliği aynı kuyruğa yeni uygulama ekleyebilir; kuyruğun
+    // içinden flush beklemek uygulamayı kendi kendisine kilitler.
+    await run;
     await this.flush();
   }
 }

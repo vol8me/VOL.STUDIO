@@ -23,7 +23,19 @@ export function gameDiagnostics(records) {
   if (runs.size !== 1) return { fps: null, renderer: null, samples: 0 };
   const runId = [...runs][0];
   const current = records.filter((record) => record.runId === runId);
-  const perf = current.filter((record) => record.type === 'perf' && finite(record.fps) !== null);
+  const perf = current.filter((record) => record.type === 'perf');
+  if (
+    !perf.length ||
+    perf.some(
+      (record, index) =>
+        finite(record.fps) === null ||
+        record.lostReports !== 0 ||
+        !Number.isSafeInteger(record.window) ||
+        record.window < 1 ||
+        (index > 0 && record.window !== perf[index - 1].window + 1),
+    )
+  )
+    return { fps: null, renderer: null, samples: 0 };
   const latest = perf.at(-1);
   const renderer =
     current

@@ -43,6 +43,13 @@ pencere yöneticisinden okunur; yalnız önceki uygulama isteğine güvenilmez.
 Gamescope oturumunda pencere yönetimi seçenekleri oturum yeteneklerine göre
 sunulur. Çıkış niyeti uygulama düzeyinde sonlandırmaya dönüşür.
 
+`DisplayModeController` native durum sorgusunu ve tercih uygulamasını aynı
+kuyrukta tutar. Kapanış önce bu niyeti yerleştirir, sonra ayar snapshot'ını
+yazar; destroy sonrası geç sorgu eski sahibin tercihini değiştirmez.
+`reportDiagnostics` IPC ve native append/sync hatasını reddeder;
+oyun hata sınırı reddi yakalar, ölçüm sahibi kaybı sayar. Kayıp veya eksik
+pencere cihaz ölçümünde başarılı kabul üretmez; hata metni yerel dosya yolu taşımaz.
+
 Platform kuralları [Linux](../docs/linux.md),
 [Steam Deck](../docs/steam-deck.md) ve [Android](../docs/android.md)
 belgelerinde; ortak davranış JS testleri ve Rust kapısıyla korunur.

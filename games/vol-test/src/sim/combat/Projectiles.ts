@@ -141,15 +141,15 @@ export class Projectiles {
       shell.px = shell.x;
       shell.py = shell.y;
       const landed = this.advance(shell, sampleStepMs);
-      const target = this.struck(shell, targets);
+      const outsideStart = !world.contains(shell.px, shell.py);
+      const wall = this.clipToWorld(shell, world);
+      const target = outsideStart ? null : this.struck(shell, targets);
       if (target) {
         result.targetId = target.id;
         result.surface = 'vehicle';
         break;
       }
-      if (!world.contains(shell.x, shell.y)) {
-        shell.x = Math.min(world.width, Math.max(0, shell.x));
-        shell.y = Math.min(world.height, Math.max(0, shell.y));
+      if (wall) {
         result.surface = 'wall';
         break;
       }
@@ -205,7 +205,9 @@ export class Projectiles {
       const angle = Math.atan2(projectile.vy, projectile.vx);
       let alive = true;
 
-      const target = this.struck(projectile, targets);
+      const outsideStart = !world.contains(projectile.px, projectile.py);
+      const wall = this.clipToWorld(projectile, world);
+      const target = outsideStart ? null : this.struck(projectile, targets);
       if (target) {
         events.push({
           kind: 'hit',
@@ -217,9 +219,7 @@ export class Projectiles {
         });
         onHit?.(projectile, target);
         alive = false;
-      } else if (!world.contains(projectile.x, projectile.y)) {
-        projectile.x = Math.min(world.width, Math.max(0, projectile.x));
-        projectile.y = Math.min(world.height, Math.max(0, projectile.y));
+      } else if (wall) {
         events.push(this.impact(projectile, 'wall', angle));
         alive = false;
       } else if (landed || projectile.ageMs >= this.lifeMs) {
@@ -309,6 +309,26 @@ export class Projectiles {
       y: projectile.y,
       angle,
     };
+  }
+
+  /** Hedef taramasına yalnız dünya içindeki yol girer; ilk duvarın gerisi vurulamaz. */
+  private clipToWorld(projectile: Projectile, world: World): boolean {
+    const { px, py, x, y } = projectile;
+    if (!world.contains(px, py)) {
+      // Namlu gövdenin önündedir: sınır dışında doğarsa ilk nokta hemen duvardır.
+      projectile.x = Math.min(world.width, Math.max(0, px));
+      projectile.y = Math.min(world.height, Math.max(0, py));
+      return true;
+    }
+    if (world.contains(x, y)) return false;
+    let exitT = 1;
+    if (x < 0) exitT = Math.min(exitT, -px / (x - px));
+    else if (x > world.width) exitT = Math.min(exitT, (world.width - px) / (x - px));
+    if (y < 0) exitT = Math.min(exitT, -py / (y - py));
+    else if (y > world.height) exitT = Math.min(exitT, (world.height - py) / (y - py));
+    projectile.x = Math.min(world.width, Math.max(0, px + (x - px) * exitT));
+    projectile.y = Math.min(world.height, Math.max(0, py + (y - py) * exitT));
+    return true;
   }
 
   /**

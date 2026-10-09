@@ -70,6 +70,40 @@ export function classify(stage, output) {
     }
   }
 
+  // Paket PASS satırları hata sahipliği değildir; yalnız TAP hata bloğunu okuruz.
+  const tapFailure = output.match(
+    /^\s*not ok \d+ - (.+)\r?\n([\s\S]*?)(?=^\s*(?:not )?ok \d+|^\s*# Subtest:|$(?![\s\S]))/m,
+  );
+  if (tapFailure) {
+    const [, title, block] = tapFailure;
+    const field = (name) => {
+      const match = block.match(new RegExp(`^( *)(?:${name}): (.+)$`, 'm'));
+      if (!match) return undefined;
+      const value = match[2].trim();
+      if (/^[|>][-+]?$/.test(value)) {
+        const lines = block
+          .slice(match.index + match[0].length)
+          .split('\n')
+          .slice(1);
+        const content = [];
+        for (const line of lines) {
+          if (line.trim() && !line.startsWith(`${match[1]}  `)) break;
+          content.push(line.slice(match[1].length + 2).replace(/\r$/, ''));
+        }
+        return content.join('\n').trimEnd();
+      }
+      return value.replace(/^(['"])([\s\S]*)\1$/, '$2');
+    };
+    const packages = [...new Set(`${title}\n${block}`.match(/@volstudio\/[\w-]+/g) ?? [])];
+    return {
+      package: packages.length === 1 ? packages[0] : null,
+      kind: 'test',
+      reason: field('error') ?? title,
+      title,
+      ...(field('location') && { path: field('location') }),
+    };
+  }
+
   const coverage = output.match(/Coverage for (\w+) \(([\d.]+)%\) does not meet.*?\(([\d.]+)%\)/);
   if (coverage) {
     return {
@@ -188,6 +222,8 @@ function runCli() {
         reason: failure.reason,
         exitCode: failure.exitCode,
         ...(failure.tail && { tail: failure.tail }),
+        ...(failure.title && { title: failure.title }),
+        ...(failure.path && { path: failure.path }),
       },
     }),
   };

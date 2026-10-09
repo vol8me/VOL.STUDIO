@@ -142,6 +142,8 @@ export class UiIntentBus {
   emit(request: UiIntentRequest): UiIntent | null {
     const { event, target } = request;
     if (!event) return null;
+    const eventOwner = event.target instanceof Element ? findUiIntentBus(event.target) : null;
+    if (eventOwner && eventOwner !== this) return null;
     if (this.claimed.has(event)) return null;
     if (isDisabled(target)) return null;
     this.claimed.add(event);
@@ -219,6 +221,7 @@ function attachFallback(root: Element, bus: UiIntentBus): () => void {
   const onClick = (event: Event): void => {
     const target = event.target;
     if (!(target instanceof Element)) return;
+    if (findUiIntentBus(target) !== bus) return;
     const control = target.closest(FALLBACK_CONTROLS);
     if (!control || !root.contains(control) || control.closest('[data-vol-silent]')) return;
     bus.emit({

@@ -67,23 +67,17 @@ fn measurement_requested(value: Option<&str>) -> bool {
     value == Some("1")
 }
 
-fn log_path(dir: &std::path::Path) -> PathBuf {
-    let _ = std::fs::create_dir_all(dir);
-    dir.join("diagnostics.jsonl")
-}
-
-fn append(dir: &std::path::Path, line: &str) {
-    if let Ok(mut file) = OpenOptions::new()
+fn append(dir: &std::path::Path, line: &str) -> std::io::Result<()> {
+    std::fs::create_dir_all(dir)?;
+    let mut file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(log_path(dir))
-    {
-        // Tek write çağrısı şart: writeln! satırı ve '\n'ı ayrı write'a
-        // böler; sinyal işleyici ile JS `report` aynı anda yazarsa iki
-        // kayıt tek satırda birleşir. O_APPEND + tek write_all kaydı atomik tutar.
-        let _ = file.write_all(format!("{line}\n").as_bytes());
-        let _ = file.sync_data();
-    }
+        .open(dir.join("diagnostics.jsonl"))?;
+    // Tek write çağrısı şart: writeln! satırı ve '\n'ı ayrı write'a
+    // böler; sinyal işleyici ile JS `report` aynı anda yazarsa iki
+    // kayıt tek satırda birleşir. O_APPEND + tek write_all kaydı atomik tutar.
+    file.write_all(format!("{line}\n").as_bytes())?;
+    file.sync_data()
 }
 
 #[cfg(target_os = "linux")]
@@ -113,14 +107,18 @@ fn native(dir: &std::path::Path, kind: &str, extra: serde_json::Value) {
             target.insert(key.clone(), item.clone());
         }
     }
-    append(dir, &value.to_string());
+    if let Err(error) = append(dir, &value.to_string()) {
+        eprintln!("Native ölçüm kaydı teslim edilemedi: {:?}", error.kind());
+    }
 }
 
 #[tauri::command]
-fn report<R: Runtime>(app: AppHandle<R>, line: String) {
-    if let Some(dir) = app.try_state::<DiagnosticsDir>() {
-        append(&dir.0, &line);
-    }
+fn report<R: Runtime>(app: AppHandle<R>, line: String) -> Result<(), String> {
+    let dir = app
+        .try_state::<DiagnosticsDir>()
+        .ok_or_else(|| "Ölçüm kaydı etkin değil.".to_owned())?;
+    append(&dir.0, &line)
+        .map_err(|error| format!("Ölçüm kaydı teslim edilemedi: {:?}", error.kind()))
 }
 
 #[tauri::command]
@@ -215,6 +213,52 @@ fn build<R: Runtime>(enabled: bool) -> TauriPlugin<R> {
         .build()
 }
 
+#[cfg(test)]
+mod delivery_tests {
+    use super::*;
+
+    fn temp_dir() -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "vol-diagnostics-delivery-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ))
+    }
+
+    #[test]
+    fn append_rejects_real_disk_open_failure() {
+        let dir = temp_dir();
+        std::fs::create_dir_all(dir.join("diagnostics.jsonl")).unwrap();
+        let result = append(&dir, "{\"type\":\"perf\"}");
+        std::fs::remove_dir_all(dir).unwrap();
+        assert!(
+            result.is_err(),
+            "Açılamayan JSONL dosyası teslim başarısı değildir"
+        );
+    }
+
+    #[test]
+    fn append_delivers_complete_jsonl_records_to_real_disk() {
+        let dir = temp_dir();
+        append(&dir, "{\"window\":1}").unwrap();
+        append(&dir, "{\"window\":2}").unwrap();
+        let written = std::fs::read_to_string(dir.join("diagnostics.jsonl")).unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(written, "{\"window\":1}\n{\"window\":2}\n");
+    }
+
+    #[test]
+    fn append_rejects_real_directory_creation_failure() {
+        let dir = temp_dir();
+        std::fs::write(&dir, "engel").unwrap();
+        let result = append(&dir.join("nested"), "{}");
+        std::fs::remove_file(dir).unwrap();
+        assert!(result.is_err());
+    }
+}
 #[cfg(test)]
 mod privacy_tests {
     use super::{allowed_env_name, measurement_requested};

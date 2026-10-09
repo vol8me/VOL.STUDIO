@@ -29,20 +29,17 @@ export async function getDiagnosticsEnv(
 
 /**
  * Tek JSONL kaydı yazar. Kayıt eklentinin fsync'li tek dosyasına gider;
- * hata bilinçli olarak yutulur — ölçüm, ölçtüğü oyunu düşürmemelidir.
+ * Yalnız native teslim tamamlanınca çözülür. Reddin oyun yaşam döngüsünü
+ * kesmemesi çağıranın hata sınırına, kayıp sayımı ölçüm sahibine aittir.
  */
 export async function reportDiagnostics(
   record: Record<string, unknown>,
   probe: DiagnosticsProbe = defaultProbe,
 ): Promise<void> {
-  if (!probe.isTauri()) return;
-  try {
-    await probe.invoke('plugin:vol-diagnostics|report', {
-      line: JSON.stringify(record),
-    });
-  } catch {
-    // Bilinçli — bkz. üstteki JSDoc.
-  }
+  if (!probe.isTauri()) throw new Error('Native ölçüm teslimi kullanılamıyor.');
+  await probe.invoke('plugin:vol-diagnostics|report', {
+    line: JSON.stringify(record),
+  });
 }
 
 /**
