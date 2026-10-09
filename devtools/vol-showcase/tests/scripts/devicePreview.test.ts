@@ -4,10 +4,31 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, expect, it } from 'vitest';
 
+/*
+ * Ölü bir sürecin çalışma dizini tutamacı ya da yeni dosyaları tarayan Windows araçları
+ * dizini kısa süre kilitli bırakabilir; yükte bu saniyeleri bulur. Sızan bir süreç
+ * dizini ASLA bırakmaz, bu yüzden sınırlı ama gerçekçi bir bekleme sızıntıyı yine yakalar.
+ * `rmSync`in `maxRetries` seçeneği bu yolda işlemez; bekleme burada açıkça yapılır.
+ */
+async function removeTree(root: string, budgetMs = 10_000) {
+  const deadline = Date.now() + budgetMs;
+  for (;;) {
+    try {
+      rmSync(root, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (Date.now() >= deadline) throw error;
+      await new Promise((done) => setTimeout(done, 100));
+    }
+  }
+}
+
 const roots: string[] = [];
-afterEach(() => {
+afterEach(async () => {
   for (const root of roots.splice(0)) {
-    rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    await removeTree(root).catch(() => {
+      // Geçici dizin temizliği testin konusu değil; sözleşme test gövdesindeki iddiadadır.
+    });
   }
 });
 
@@ -51,11 +72,8 @@ it('gerçek Vite ardışık koşularda PID ve port bırakmadan kapanır', async 
     expect(() => process.kill(server.pid, 0)).toThrow();
     await expect(fetch(`http://127.0.0.1:${port}`)).rejects.toThrow();
   }
-  // Süreç çıktıktan sonra Windows çalışma dizini tutamacını yük altında kısa süre geç bırakabilir;
-  // sözleşme "anında" değil "sınırlı sürede (1 sn) silinebilir"dir.
-  expect(() =>
-    rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }),
-  ).not.toThrow();
+  // Sözleşme "anında" değil "sınırlı sürede silinebilir"dir (bkz. removeTree).
+  await expect(removeTree(root)).resolves.toBeUndefined();
   expect(existsSync(root)).toBe(false);
 });
 
