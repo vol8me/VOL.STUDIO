@@ -4,6 +4,16 @@ const PORT = Number(process.env.VOL_UI_E2E_PORT ?? 5181);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 /**
+ * `scripts/e2e.mjs` her motoru kendi sunucusunda eşzamanlı koşar; sunucular
+ * çakışmasın diye her motorun portu burada bildirilir (`devPorts` bekçisi bu
+ * dosyadaki `_E2E_PORT ?? n` bildirimlerini okur).
+ */
+export const ENGINE_PORTS = {
+  chromium: PORT,
+  webkit: Number(process.env.VOL_UI_WEBKIT_E2E_PORT ?? 5182),
+};
+
+/**
  * CORE'un GÖRSEL sözleşme kapısı. Birim testler yapıyı doğrular ama bileşenin
  * doğru GÖRÜNDÜĞÜNÜ görmez: silinen bir token ya da ters dönen bir `flex`
  * hepsi yeşilken gönderilebilir.
