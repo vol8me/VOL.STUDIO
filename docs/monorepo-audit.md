@@ -225,8 +225,8 @@ Yerel audit ve gerçek lock zinciri üç JS advisory gösterdi:
 | Paket / kurulu sürüm          | Seviye   | Doğrulanan karar                                                                             |
 | ----------------------------- | -------- | -------------------------------------------------------------------------------------------- |
 | braces 3.0.3                  | High     | Audit önerisi 3.0.4 registry'de yok; GitHub kaydı patch yok diyor. Hayalî override yapılmaz. |
-| source-map-js 1.2.1           | High     | 1.2.2 gerçekten yayımlanmış; uyumlu transitive güncelleme/regresyon adayı.                   |
-| postcss-selector-parser 7.1.4 | Moderate | 7.1.6 gerçekten yayımlanmış; uyumlu Stylelint zinciri/regresyon adayı.                       |
+| source-map-js 1.2.1           | High     | **Kapandı**: lock 1.2.2'ye güncellendi; `just fast` yeşil, audit'te yok.                     |
+| postcss-selector-parser 7.1.4 | Moderate | **Kapandı**: lock 7.1.6'ya güncellendi; `lint-css` yeşil, audit'te yok.                      |
 
 Kaynaklar: [braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
 [source-map-js advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q),
