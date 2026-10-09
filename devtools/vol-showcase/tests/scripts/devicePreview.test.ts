@@ -1,5 +1,5 @@
 import { createServer } from 'node:net';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, expect, it } from 'vitest';
@@ -7,7 +7,7 @@ import { afterEach, expect, it } from 'vitest';
 const roots: string[] = [];
 afterEach(() => {
   for (const root of roots.splice(0)) {
-    rmSync(root, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+    rmSync(root, { recursive: true, force: true });
   }
 });
 
@@ -16,7 +16,6 @@ async function fixture() {
   roots.push(root);
   mkdirSync(join(root, 'dist'));
   writeFileSync(join(root, 'dist/index.html'), '<p>fixture-ready</p>');
-  writeFileSync(join(root, 'vite.config.mjs'), 'export default {};');
   const socket = createServer();
   await new Promise<void>((done) => socket.listen(0, '127.0.0.1', done));
   const address = socket.address();
@@ -40,6 +39,8 @@ it('gerçek Vite ardışık koşularda PID ve port bırakmadan kapanır', async 
     expect(() => process.kill(server.pid, 0)).toThrow();
     await expect(fetch(`http://127.0.0.1:${port}`)).rejects.toThrow();
   }
+  expect(() => rmSync(root, { recursive: true, force: true })).not.toThrow();
+  expect(existsSync(root)).toBe(false);
 });
 
 it('dolu portu reddeder ve mevcut dinleyiciyi korur', async () => {

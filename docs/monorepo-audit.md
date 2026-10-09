@@ -130,6 +130,15 @@ Bu tablo cihaz desteğinin tamamını veya F07'nin bütün ailesini kapatmaz.
 | B29, P3 | [Kapı raporu](../scripts/quality/report.mjs) failing TAP bloğunu ayrıştırır; belirsiz paket null kalır.                                                                                                                                                             | Önceki PASS paketi yanlış atfedilmez; multiline YAML sebep/yol, gerçek CLI JSON ve exit/raw log korunumu.                                                                                                          |
 | B30, P3 | [Preview sahibi](../devtools/vol-showcase/scripts/device-preview.mjs) Vite'ı doğrudan Node çocuğu olarak açar; kendi stdout'u ve HTTP hazır olmadan kabul etmez.                                                                                                    | Gerçek Windows Vite ardışık turunda PID/port kapanışı, dolu port sahibinin korunumu, erken exit; kapanış sınırlı bekler ve başarısızsa reddeder.                                                                   |
 
+B30 fixture'ı statik dist'i gerçek Vite ile sınar; gereksiz boş config
+derlemesi kaldırıldı. Push kancasındaki ilk coverage turunda PID/port
+kapalıyken tempdir EBUSY görüldü; kilit sahibi sonradan yakalanamadı.
+Config kullanan 120 ayrı gerçek Windows aç/kapat turu anında dizin
+temizliğiyle geçti, kalıcı grandchild sızıntısı gözlenmedi. Fixture artık
+cleanup retry kullanmaz ve dizinin hemen silindiğini ayrıca assert eder;
+tam coverage kompozisyonu yeniden geçti. Config bundler'ın geçici dosya
+ömrü bu fixture'ın kabulü değildir; kesin EBUSY sahibi çözüldü denmez.
+
 İki bağımsız inceleme düzeltmesi de aynı bulgunun parçasıdır; yeni açık
 checkbox defteri oluşturulmadı. B27 süpürülmüş doğru parçası modelini
 düzeltir; eğri uçuşun veya hareketli hedefin tam sürekli CCD'si vaat edilmez.
@@ -169,7 +178,7 @@ genel resolution API'si gerçek oyunda hata var diye yükseltilmedi.
 
 ## 6. Güncel kapılar ve bundle
 
-Güncel birleşik **pnpm high PASS**: contract, biçim, tip, lint,
+İlk tamamlanan birleşik **pnpm high PASS**: contract, biçim, tip, lint,
 build, Rust, CSS, coverage/shape, audio alt kümesi, bundle, scaling ve
 iki motorlu E2E aynı sabit kaynak ağacında tamamlandı. Contract 414 PASS /
 2 mevcut platform skip; eşik, timeout ve skip politikası gevşetilmedi.
@@ -251,7 +260,7 @@ risksiz kabul değildir. glib 0.18.5'in
 | VOL.TEST    |    %98,78 | %94,26 |   %97,44 | %99,33 |
 | Audio synth |    %96,10 | %89,12 |   %97,77 | %96,85 |
 
-Tablo güncel high kapsamıdır; audio synth ayrı audit koşusudur (§17).
+Tablo ilk tamamlanan high kapsamıdır; audio synth ayrı audit koşusudur (§17).
 Denetim başlangıcında kusurların ilgili dar testleri de yeşildi: CORE 229, Pencil 27, audio protocol
 30, native/oyun hizmetleri 101, oyun fizik/HUD 43. Bunlar benzersiz toplam
 test sayısı değildir; bazı dosyalar tekrar koşuldu. Kanıt, mevcut testlerin
@@ -563,7 +572,7 @@ yeniden inceledi, başka somut engelleyici bulgu bildirmedi.
 reddedildi; kaynak sabitlenip yeniden koşulunca 70 dosya/380 test geçti,
 unhandled rejection yoktu. Eşzamanlı yükteki zaman aşımı sonrası vitrin
 tek süreçte 18 dosya/117 test geçti; genel timeout/skip büyütülmedi.
-Güncel birleşik high PASS; log high-final kaydındadır. E2E: oyun
+İlk birleşik high PASS; log high-final kaydındadır. E2E: oyun
 33 PASS/1 skip; vitrin 293 PASS, 1 flaky, 6 skip. WebKit kalibrasyonu
 ilk örnekte separation −0,05 ms ile reddedildi, mevcut retry #1'de
 3,42 ms ile geçti. Mevcut iki retry politikası değiştirilmedi. Bu
