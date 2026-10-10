@@ -168,6 +168,8 @@ test.describe('juice maliyeti', () => {
     page,
   }, info) => {
     test.skip(info.project.name !== 'chromium', 'iz yalnız Chromium: WebKit kapsamı unsupported');
+    // Tek başına ≈39 sn sürer (5 blok × 30 tıklama + iz); iki motor eşzamanlı koşunca 60 sn sınırı aşıyordu.
+    test.slow();
     await openLive(page);
     await selectTab(page, 'kimlik');
     const group = page

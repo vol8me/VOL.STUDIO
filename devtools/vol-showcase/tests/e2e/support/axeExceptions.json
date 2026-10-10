@@ -44,7 +44,7 @@
     {
       "scope": "tab/touch",
       "rule": "color-contrast",
-      "target": ".vol-charge-button__label",
+      "target": "#vol-charge-label-1",
       "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {

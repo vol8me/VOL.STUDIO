@@ -60,6 +60,30 @@ test.describe('axe: açık katmanlar', () => {
   }
 });
 
+/**
+ * Kart seçici katmanları (UI-04.2): modal olmayan, vitrinin ortak kart katmanında açılır; bu yüzden
+ * `LAYER_SCENARIOS` (Escape/odak dönüşü sözleşmesi) dışındadır, ama aynı axe kayıt kuralına tabidir.
+ */
+const CARD_LAYERS = [
+  { scope: 'cards/levelup', open: 'OPEN LEVEL-UP' },
+  { scope: 'cards/levelup-error', open: 'LEVEL-UP: ERROR' },
+  { scope: 'cards/shop', open: 'OPEN SHOP' },
+] as const;
+
+test.describe('axe: kart katmanları', () => {
+  for (const layer of CARD_LAYERS) {
+    test(layer.scope, async ({ page }) => {
+      await openShowcase(page);
+      await selectTab(page, 'cards');
+      await page.getByRole('button', { name: layer.open, exact: true }).click();
+      const root = page.locator('.vol-showcase-card-layer:not([hidden])');
+      await root.first().waitFor();
+      await page.waitForTimeout(500);
+      expectReconciled(`layer/${layer.scope}`, await scan(page, root));
+    });
+  }
+});
+
 test.describe('düzenek ihlali yakalar', () => {
   test('bilerek adsız bırakılan giriş alanı kayıtsız ihlal olarak düşer', async ({ page }) => {
     await openShowcase(page);

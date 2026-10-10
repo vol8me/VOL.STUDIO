@@ -22,40 +22,12 @@
       "bg": "pressedFill",
       "owner": "UI-05.3",
       "reason": "soluk metin bu yüzeyde 4,5:1 altında; yüzey/metin tonu seçili satır ve sekme durumlarında bileşenle birlikte düzeltilir"
-    },
-    {
-      "theme": "default",
-      "fg": "onBrand",
-      "bg": "brandHover",
-      "owner": "UI-03.1",
-      "reason": "marka hover dolgusunda onBrand metni 4,5:1 altında; buton hover tonu pilotta ayarlanır (aurum'da çözüldü)"
-    },
-    {
-      "theme": "default",
-      "fg": "uiBorderStrong",
-      "bg": "uiBg",
-      "owner": "UI-03.1",
-      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (aurum'da çözüldü)"
-    },
-    {
-      "theme": "default",
-      "fg": "uiBorderStrong",
-      "bg": "uiSurface1",
-      "owner": "UI-03.1",
-      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (aurum'da çözüldü)"
-    },
-    {
-      "theme": "default",
-      "fg": "uiBorderStrong",
-      "bg": "uiSurface2",
-      "owner": "UI-03.1",
-      "reason": "bileşen sınırı olarak güçlü kenarlık 3:1 altında; buton/giriş sınırı pilotta tonlanır (aurum'da çözüldü)"
     }
   ],
   "rawDurations": {
     "core/src/ui/buttons/buttons.css": 1,
     "core/src/ui/camera/camera.css": 1,
-    "core/src/ui/cards/cards.css": 7,
+    "core/src/ui/cards/cards.css": 2,
     "core/src/ui/data/boards.css": 3,
     "core/src/ui/feedback/feedback.css": 3,
     "core/src/ui/hud/hud.css": 7,

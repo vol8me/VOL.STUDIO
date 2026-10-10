@@ -253,6 +253,28 @@
     box-shadow var(--vol-motion-duration-fast, 120ms) var(--vol-motion-ease-standard, ease);
 }
 
+/* Düğme içi ikon: tamsayı piksel ölçeği (theme.css `--vol-icon-*`), düğme boyutunu izler. */
+.vol-button,
+.vol-icon-button {
+  --vol-icon-box: var(--vol-icon-md);
+}
+
+.vol-button--sm,
+.vol-icon-button--sm {
+  --vol-icon-box: var(--vol-icon-sm);
+}
+
+.vol-button--lg,
+.vol-icon-button--lg {
+  --vol-icon-box: var(--vol-icon-lg);
+}
+
+.vol-button__icon,
+.vol-icon-button__icon {
+  width: var(--vol-icon-box);
+  height: var(--vol-icon-box);
+}
+
 .vol-button:hover,
 .vol-button.vol-gamepad-hover,
 .vol-icon-button:hover,
@@ -320,7 +342,7 @@
 .vol-icon-button--primary,
 .vol-wizard__nav-button--next {
   --vol-btn-base: var(--vol-ui-brand-solid);
-  --vol-btn-hover: var(--vol-ui-brand-hover);
+  --vol-btn-hover: var(--vol-ui-brand-fill-hover);
   --vol-btn-pressed: var(--vol-ui-brand-pressed);
   --vol-btn-border: var(--vol-ui-brand-border);
   --vol-btn-text: var(--vol-ui-on-brand);
@@ -519,13 +541,6 @@
     inset 0 1px 0 var(--vol-ui-plate-top-light),
     inset 0 -1px 0 rgb(0 0 0 / 40%),
     inset 4px 0 0 var(--vol-ui-brand-solid);
-}
-
-/* Düğme içi ikon: etiketle aynı ağırlıkta okunur (1 em kutu küçük kalıyordu). */
-.vol-button__icon,
-.vol-icon-button__icon {
-  width: 1.3em;
-  height: 1.3em;
 }
 
 /*

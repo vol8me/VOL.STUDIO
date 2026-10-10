@@ -42,7 +42,12 @@
   },
   "swipe": {
     "reject": "Reddet",
-    "accept": "Kabul Et"
+    "accept": "Kabul Et",
+    "stack": "Kart destesi: sol ok reddeder, sağ ok kabul eder",
+    "accepted": "Kabul edildi: {{label}}",
+    "rejected": "Reddedildi: {{label}}",
+    "remaining": "Kalan kart: {{count}}",
+    "done": "Kart kalmadı"
   },
   "pause": {
     "pause": "Duraklat",
@@ -105,6 +110,11 @@
     "dropped": "{{label}} yuva {{n}}'e taşındı",
     "rejected": "{{label}} yuva {{n}}'e konamaz",
     "cancelled": "Taşıma iptal edildi"
+  },
+  "chargeButton": {
+    "start": "Doluyor",
+    "percent": "Yüzde {{percent}}",
+    "ready": "Tamamen doldu"
   },
   "joystick": {
     "label": "Sanal çubuk"

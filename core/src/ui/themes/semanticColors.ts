@@ -28,6 +28,10 @@ export const VOL_SEMANTIC_COLORS = {
   plateTopLight: '#ffffff1f',
   wellInnerShadow: '#00000066',
 
+  // marka dolgusu üstünde metin: onBrand ile ≥4,5:1 kalır. `brandHover` vurgu/metin tonudur
+  // (açık, koyu yüzeyde bağlantı rengi); dolgu hover'ı bu rolden okunur.
+  brandFillHover: '#ac5017',
+
   // çerçeve
   frameHairline: '#34414d',
   frameCorner: '#864a2c',

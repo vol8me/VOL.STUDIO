@@ -137,7 +137,7 @@
 
 .vol-osk__key--primary {
   --vol-btn-base: var(--vol-ui-brand-solid);
-  --vol-btn-hover: var(--vol-ui-brand-hover);
+  --vol-btn-hover: var(--vol-ui-brand-fill-hover);
   --vol-btn-pressed: var(--vol-ui-brand-pressed);
   --vol-btn-border: var(--vol-ui-brand-border);
   --vol-btn-text: var(--vol-ui-on-brand);

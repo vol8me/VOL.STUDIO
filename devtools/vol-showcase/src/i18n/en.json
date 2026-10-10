@@ -847,6 +847,10 @@
   },
   "cards": {
     "rarityTitle": "CardTile — rarity tiers",
+    "matrixTitle": "CardTile — states (rarity × normal, disabled, locked)",
+    "locked": "LOCKED",
+    "stressName": "Chain Lightning of the Everlasting Northern Storm Court",
+    "stressDesc": "Lightning that jumps between up to twelve enemies, splits at every third hit and keeps its charge while you move, then returns to the caster once the combo runs out.",
     "levelUpCardTitle": "LevelUpPicker — free pick",
     "shopCardTitle": "ShopPicker — priced cards, buy/sell",
     "rarity": {
@@ -869,6 +873,10 @@
     "selected": "Selected: {{id}}",
     "noSelection": "Nothing selected yet",
     "openLevelUp": "OPEN LEVEL-UP",
+    "openLevelUpLoading": "LEVEL-UP: LOADING",
+    "openLevelUpError": "LEVEL-UP: ERROR",
+    "noticeLoading": "Loading offers",
+    "noticeError": "Offers could not be refreshed; showing the last ones",
     "openShop": "OPEN SHOP",
     "levelUpTitle": "LEVEL 4",
     "levelUpHint": "Choose one card",

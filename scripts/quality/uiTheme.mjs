@@ -149,8 +149,9 @@ export function contrastPairs() {
   for (const surface of SURFACES)
     for (const text of ['uiText', 'uiTextSecondary', 'uiTextMuted'])
       pairs.push([text, surface, 4.5]);
+  // Marka hover'ı metin/vurgu tonudur; dolgu hover'ı `brandFillHover` rolüdür.
   for (const family of ['brand', 'support', 'accent'])
-    for (const state of ['Solid', 'Hover', 'Pressed'])
+    for (const state of ['Solid', family === 'brand' ? 'FillHover' : 'Hover', 'Pressed'])
       pairs.push([`on${cap(family)}`, `${family}${state}`, 4.5]);
   for (const family of ['success', 'warning', 'danger', 'info'])
     pairs.push([`on${cap(family)}`, `${family}Solid`, 4.5]);

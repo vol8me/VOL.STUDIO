@@ -47,6 +47,36 @@ test.describe('klavye', () => {
     });
   }
 
+  test('ChargeButton okuyucu duyurusu: 5 duyuru (başlangıç, %25/50/75, dolu), ad etiket kalır, bırakışta temizlenir', async ({
+    page,
+  }) => {
+    await openLive(page);
+    await selectTab(page, 'touch');
+    const charge = page.locator(CHARGE).first();
+    await charge.scrollIntoViewIfNeeded();
+    await charge.focus();
+    const label = (await charge.locator('.vol-charge-button__label').textContent()) ?? '';
+    await expect(charge).toHaveAccessibleName(label);
+
+    await charge.evaluate((button) => {
+      const region = button.querySelector('[role="status"]')!;
+      const heard: string[] = [];
+      (window as unknown as { __heard: string[] }).__heard = heard;
+      new MutationObserver(() => {
+        const text = region.textContent ?? '';
+        if (text) heard.push(text);
+      }).observe(region, { childList: true, characterData: true, subtree: true });
+    });
+    await page.keyboard.down('Space');
+    await expect(charge).toHaveClass(/vol-charge-button--full/, { timeout: 3000 });
+    await page.keyboard.up('Space');
+    const heard = await page.evaluate(() => (window as unknown as { __heard: string[] }).__heard);
+    expect(heard, 'kare başına değil: yalnız eşiklerde').toHaveLength(5);
+    expect(new Set(heard).size, 'beş duyuru birbirinden farklı').toBe(5);
+    await expect(charge.locator('[role="status"]')).toHaveText('');
+    await expect(charge).toHaveAccessibleName(label);
+  });
+
   test('LongPressButton uzun Enter basışı eşiği aşar ve basılı durum sınıfını verir', async ({
     page,
   }) => {

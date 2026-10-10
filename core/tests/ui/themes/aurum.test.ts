@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VOL_COLORS } from '../../../src/ui/colors';
 import { VOL_AURUM_OVERRIDES } from '../../../src/ui/themes/aurum';
+import { VOL_SEMANTIC_COLORS } from '../../../src/ui/themes/semanticColors';
 import { contrastRatio } from '../../support/contrast';
 import { deltaEOk } from '../../support/oklab';
 
@@ -9,7 +10,11 @@ import { deltaEOk } from '../../support/oklab';
  * Bu bir TABANDIR; kapsamlı tema kontrast kapısı UI-01.5'tedir ve aynı yardımcıyı
  * kullanır. Eşikler: normal metin 4.5, ikon/odak/kenarlık gibi metin dışı 3.
  */
-const aurum: Record<string, string> = { ...VOL_COLORS, ...VOL_AURUM_OVERRIDES };
+const aurum: Record<string, string> = {
+  ...VOL_COLORS,
+  ...VOL_SEMANTIC_COLORS,
+  ...VOL_AURUM_OVERRIDES,
+};
 const surfaces = ['uiBg', 'uiBgSubtle', 'uiSurface1', 'uiSurface2', 'uiSurface3', 'selectedFill'];
 
 describe('aurum kontrast tabanı', () => {
@@ -27,8 +32,8 @@ describe('aurum kontrast tabanı', () => {
     }
   });
 
-  it('üzerinde metin taşıyan marka dolguları (solid/hover/pressed) onBrand ile ≥ 4.5', () => {
-    for (const fill of ['brandSolid', 'brandHover', 'brandPressed']) {
+  it('üzerinde metin taşıyan marka dolguları (solid/fillHover/pressed) onBrand ile ≥ 4.5', () => {
+    for (const fill of ['brandSolid', 'brandFillHover', 'brandPressed']) {
       expect(contrastRatio(aurum.onBrand, aurum[fill]), fill).toBeGreaterThanOrEqual(4.5);
     }
   });

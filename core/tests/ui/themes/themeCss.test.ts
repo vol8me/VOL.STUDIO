@@ -51,7 +51,7 @@ describe('theme.css ↔ tema kaynağı', () => {
 
   it('public VOL_COLORS uyumu: 60 genel token aynen durur, roller ayrı kümededir', () => {
     expect(Object.keys(VOL_COLORS)).toHaveLength(60);
-    expect(Object.keys(VOL_SEMANTIC_COLORS)).toHaveLength(39);
+    expect(Object.keys(VOL_SEMANTIC_COLORS)).toHaveLength(40);
     const keys = new Set(Object.keys(VOL_COLORS));
     for (const key of Object.keys(VOL_SEMANTIC_COLORS)) expect(keys.has(key), key).toBe(false);
     const region = extractRegion(css, TOKENS_BEGIN, TOKENS_END)!;

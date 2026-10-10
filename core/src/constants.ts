@@ -84,7 +84,7 @@ export const UI_TIMING = {
   /** ChargeButton default dolum süresi. */
   CHARGE_DURATION_MS: 900,
   /** SwipeableCardStack kart uçuş animasyonu. */
-  CARD_FLY_ANIMATION_MS: 180,
+  CARD_FLY_ANIMATION_MS: 240,
   /** FloatingText fade-out süresi. */
   FLOATING_TEXT_FADE_OUT_MS: 200,
   /** AnimatedLabel glyph stagger gecikmesi. */

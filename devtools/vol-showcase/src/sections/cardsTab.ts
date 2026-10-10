@@ -51,6 +51,8 @@ const REROLL_BASE_COST = 5;
 const REROLL_COST_STEP = 3;
 /** Q/E yetenek slotu sayısı — gerçek oyundaki `AbilityLoadout` ile aynı. */
 const ABILITY_SLOT_COUNT = 2;
+/** "Yükleniyor" demosunda tekliflerin geldiği süre (ms). */
+const LOADING_DEMO_MS = 1200;
 
 function demoCard(id: DemoCardId, options: { withPrice?: boolean } = {}): CardTileData {
   const demo = DEMO_CARDS[id];
@@ -109,6 +111,112 @@ function buildRarityCard(disposables: DisposableScope): HTMLElement {
 }
 
 /**
+ * CardTile durum matrisi (UI-04.1): nadirlik × normal / devre dışı / kilitli, ardından uzun metin
+ * ve 6 haneli fiyatla stres kartları. Eylem düğmesi her durumda kartın içinde görünür kalmalıdır
+ * (bkz. `cardMatrix.spec.ts`).
+ */
+function buildStateMatrixCard(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const matrix = document.createElement('div');
+  matrix.className = 'vol-showcase-card-row vol-showcase-card-matrix';
+  matrix.dataset.cardMatrix = 'states';
+  const tiers: readonly DemoCardId[] = ['turret', 'chain', 'inferno'];
+  for (const state of ['normal', 'disabled', 'locked'] as const) {
+    for (const id of tiers) {
+      const tile = new CardTile({
+        data: { ...demoCard(id, { withPrice: true }), statusLabel: '' },
+        actionLabel: i18next.t('volui:cards.buy'),
+        disabled: state === 'disabled',
+      });
+      if (state === 'disabled') {
+        tile.setDisabled(true, i18next.t('volui:cards.tooExpensive'));
+      } else if (state === 'locked') {
+        tile.setLocked(true);
+        tile.update({ statusLabel: i18next.t('volui:cards.locked') });
+      }
+      tile.element.dataset.cardState = state;
+      disposables.addDestroyables(tile);
+      matrix.appendChild(tile.element);
+    }
+  }
+
+  const stress = document.createElement('div');
+  stress.className = 'vol-showcase-card-row vol-showcase-card-matrix';
+  stress.dataset.cardMatrix = 'stress';
+  for (const rarity of ['rare', 'epic', 'legendary'] as const) {
+    const tile = new CardTile({
+      data: {
+        id: `stress-${rarity}`,
+        title: i18next.t('volui:cards.stressName'),
+        description: i18next.t('volui:cards.stressDesc'),
+        rarity,
+        rarityLabel: i18next.t(`volui:cards.rarity.${rarity}`),
+        typeLabel: i18next.t('volui:cards.type.ability'),
+        priceLabel: i18next.t('volui:cards.price', { price: '999999' }),
+        statusLabel: i18next.t('volui:cards.tooExpensive'),
+      },
+      actionLabel: i18next.t('volui:cards.buy'),
+      secondaryActionLabel: i18next.t('volui:cards.select'),
+    });
+    tile.element.dataset.cardState = 'stress';
+    disposables.addDestroyables(tile);
+    stress.appendChild(tile.element);
+  }
+
+  const variants = document.createElement('div');
+  variants.className = 'vol-showcase-card-row vol-showcase-card-matrix';
+  variants.dataset.cardMatrix = 'variants';
+  const variantBase = (id: DemoCardId): CardTileData => demoCard(id, { withPrice: true });
+  const variantTiles: ReadonlyArray<[string, CardTile]> = [
+    ['display', new CardTile({ data: variantBase('turret') })],
+    [
+      'compact',
+      new CardTile({
+        data: variantBase('chain'),
+        compact: true,
+        actionLabel: i18next.t('volui:cards.select'),
+      }),
+    ],
+    [
+      'secondary',
+      new CardTile({
+        data: variantBase('inferno'),
+        actionLabel: i18next.t('volui:cards.sell', { value: 16 }),
+        secondaryActionLabel: i18next.t('volui:cards.select'),
+      }),
+    ],
+    [
+      'draggable',
+      new CardTile({
+        data: variantBase('turret'),
+        actionLabel: i18next.t('volui:cards.select'),
+        dragData: 'demo-slot',
+      }),
+    ],
+    [
+      'dragging',
+      new CardTile({
+        data: variantBase('chain'),
+        actionLabel: i18next.t('volui:cards.select'),
+        dragData: 'demo-slot',
+      }),
+    ],
+  ];
+  for (const [state, tile] of variantTiles) {
+    // Sürüklenen kart durumunu görmek için sınıf sabit bırakılır (gerçek sürükleme tarayıcı olayıdır).
+    if (state === 'dragging') tile.element.classList.add('vol-card--dragging');
+    tile.element.dataset.cardState = state;
+    disposables.addDestroyables(tile);
+    variants.appendChild(tile.element);
+  }
+
+  wrap.append(matrix, variants, stress);
+  return card(i18next.t('volui:cards.matrixTitle'), wrap);
+}
+
+/**
  * Ortak overlay katmanı — `CardPicker` bilinçli olarak Modal'a bağlı değildir
  * (konumlandırma çağıranın sorumluluğu); burada bir oyunun kart katmanıyla
  * aynı mekanizma kurulur: ortalanmış, kararmış,
@@ -137,7 +245,12 @@ function createLayerController(
   layer: HTMLDivElement,
   picker: { show(): void; hide(): void },
   openButton: Button,
+  siblingButtons: readonly Button[] = [],
 ): { open: () => void; close: () => void } {
+  const setTriggersHidden = (hidden: boolean): void => {
+    openButton.element.hidden = hidden;
+    for (const sibling of siblingButtons) sibling.element.hidden = hidden;
+  };
   let hideTimeout: CancellableDisposable | null = null;
 
   const open = (): void => {
@@ -145,7 +258,7 @@ function createLayerController(
     hideTimeout = null;
     layer.classList.remove('vol-showcase-card-layer--leaving');
     layer.hidden = false;
-    openButton.element.hidden = true;
+    setTriggersHidden(true);
   };
 
   const close = (): void => {
@@ -156,7 +269,7 @@ function createLayerController(
       hideTimeout = null;
       layer.hidden = true;
       layer.classList.remove('vol-showcase-card-layer--leaving');
-      openButton.element.hidden = false;
+      setTriggersHidden(false);
     }, HIDE_ANIMATION_MS);
   };
 
@@ -198,26 +311,53 @@ function buildLevelUpCard(
   const layer = buildCardLayer(uiRootElement, picker.element);
   disposables.addDestroyables({ destroy: () => layer.remove() });
 
+  const context = {
+    title: i18next.t('volui:cards.levelUpTitle'),
+    hint: i18next.t('volui:cards.levelUpHint'),
+  };
+  const offers = (): CardTileData[] => [demoCard('turret'), demoCard('inferno')];
+  /** Seçici durumları: normal, teklifler yükleniyor (kısa süre sonra gelir), yenileme hatası (son teklifler). */
+  const openAs = (mode: 'normal' | 'loading' | 'error'): void => {
+    closeAllExcept(controller.close);
+    // Katman önce görünür hale gelir; panel açılış animasyonu
+    // görünür ağaçta çalışır, gizli katmanda sıfırlandan başlamaz.
+    controller.open();
+    if (mode === 'loading') {
+      picker.present([], context);
+      picker.setNotice({ kind: 'loading', message: i18next.t('volui:cards.noticeLoading') });
+      disposables.addTimeout(() => {
+        // Bu arada katman kapandıysa (başka bir katman açıldı) gizli katmanda sunum yapılmaz.
+        if (layer.hidden) return;
+        picker.setNotice(null);
+        picker.present(offers(), context);
+      }, LOADING_DEMO_MS);
+      return;
+    }
+    picker.present(offers(), context);
+    if (mode === 'error') {
+      picker.setNotice({ kind: 'error', message: i18next.t('volui:cards.noticeError') });
+    }
+  };
+
   const open = new Button(i18next.t('volui:cards.openLevelUp'), {
     variant: 'primary',
-    onClick: () => {
-      closeAllExcept(controller.close);
-      // Katman önce görünür hale gelir; panel açılış animasyonu
-      // görünür ağaçta çalışır, gizli katmanda sıfırlandan başlamaz.
-      controller.open();
-      picker.present([demoCard('turret'), demoCard('inferno')], {
-        title: i18next.t('volui:cards.levelUpTitle'),
-        hint: i18next.t('volui:cards.levelUpHint'),
-      });
-    },
+    onClick: () => openAs('normal'),
   });
-  disposables.addDestroyables(open);
+  const openLoading = new Button(i18next.t('volui:cards.openLevelUpLoading'), {
+    onClick: () => openAs('loading'),
+  });
+  const openError = new Button(i18next.t('volui:cards.openLevelUpError'), {
+    onClick: () => openAs('error'),
+  });
+  disposables.addDestroyables(open, openLoading, openError);
 
-  const controller = createLayerController(disposables, layer, picker, open);
+  const controller = createLayerController(disposables, layer, picker, open, [
+    openLoading,
+    openError,
+  ]);
   registerCloser(controller.close);
 
-  wrap.appendChild(open.element);
-  wrap.appendChild(result.element);
+  wrap.append(open.element, openLoading.element, openError.element, result.element);
   return card(i18next.t('volui:cards.levelUpCardTitle'), wrap);
 }
 
@@ -482,7 +622,7 @@ export function buildCardsTab(uiRootElement: HTMLElement): {
 
   const element = document.createElement('div');
   element.className = 'vol-showcase-section';
-  element.append(buildRarityCard(disposables), bottomRow);
+  element.append(buildRarityCard(disposables), buildStateMatrixCard(disposables), bottomRow);
 
   return {
     element,

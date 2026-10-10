@@ -165,8 +165,9 @@ export class ShopPicker extends CardPicker {
     this.footer.appendChild(this.closeButton);
   }
 
-  /** Dükkanı verilen durumla çizer ve açar. */
+  /** Dükkanı verilen durumla çizer ve açar; önceki durum bildirimi (`setNotice`) eskimiştir ve temizlenir. */
   present(state: ShopPickerState): void {
+    this.setNotice(null);
     this.render(state);
     this.show();
   }
@@ -554,6 +555,8 @@ export class ShopPicker extends CardPicker {
   }
 
   private readonly handleClose = (): void => {
+    // Çıkış animasyonu sürerken ikinci tıklama ya da geri, `onClose`u ikinci kez çağırmaz.
+    if (!this.isVisible()) return;
     this.hide();
     this.onCloseCallback();
   };

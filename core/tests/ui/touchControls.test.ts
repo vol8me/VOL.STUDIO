@@ -9,6 +9,7 @@ import { uiIntentBusFor } from '../../src/ui/feedback/uiIntent';
 import { PullToRefresh } from '../../src/ui/touch/PullToRefresh';
 import { RadialMenu } from '../../src/ui/overlays/RadialMenu';
 import { SwipeableCardStack } from '../../src/ui/cards/SwipeableCardStack';
+import { UI_TIMING } from '../../src/constants';
 
 const tracked: Array<{ destroy(): void }> = [];
 function track<T extends { destroy(): void }>(instance: T): T {
@@ -778,7 +779,7 @@ describe('SwipeableCardStack', () => {
     expect(onSwipe).toHaveBeenCalledWith('c0', 'right');
     expect(stack.remaining).toBe(2);
 
-    vi.advanceTimersByTime(200);
+    vi.advanceTimersByTime(UI_TIMING.CARD_FLY_ANIMATION_MS);
   });
 
   it('eşik altındaki sürükleme kartı geri getirir, onSwipe tetiklenmez', () => {
@@ -811,7 +812,7 @@ describe('SwipeableCardStack', () => {
     acceptBtn.click();
 
     expect(onSwipe).toHaveBeenCalledWith('c0', 'right');
-    vi.advanceTimersByTime(200);
+    vi.advanceTimersByTime(UI_TIMING.CARD_FLY_ANIMATION_MS);
   });
 
   it('son kart da atılınca onEmpty çağrılır', () => {
@@ -822,7 +823,7 @@ describe('SwipeableCardStack', () => {
     );
 
     stack.swipeTop('left');
-    vi.advanceTimersByTime(200);
+    vi.advanceTimersByTime(UI_TIMING.CARD_FLY_ANIMATION_MS);
 
     expect(stack.remaining).toBe(0);
     expect(onEmpty).toHaveBeenCalledTimes(1);

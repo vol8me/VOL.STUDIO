@@ -25,6 +25,14 @@ export interface CardPickerOptions {
  */
 export const HIDE_ANIMATION_MS = 240;
 
+let pickerSerial = 0;
+
+/** Seçicinin teklif yerine gösterdiği durum bildirimi: teklif yükleniyor ya da alınamadı. */
+export interface CardPickerNotice {
+  kind: 'loading' | 'error';
+  message: string;
+}
+
 /**
  * Kart seçim panellerinin ortak tabanı — başlık, ipucu ve kart ızgarası.
  *
@@ -38,6 +46,7 @@ export abstract class CardPicker {
   protected readonly footer: HTMLDivElement;
   private readonly titleElement: HTMLDivElement;
   private readonly hintElement: HTMLDivElement;
+  private readonly noticeElement: HTMLDivElement;
   private readonly tiles: CardTile[] = [];
   private visible = false;
   private hideTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -70,6 +79,8 @@ export abstract class CardPicker {
 
     this.titleElement = document.createElement('div');
     this.titleElement.className = 'vol-card-picker__title';
+    this.titleElement.id = `vol-card-picker-title-${++pickerSerial}`;
+    this.element.setAttribute('aria-labelledby', this.titleElement.id);
     this.titleElement.textContent = options.title ?? '';
     header.appendChild(this.titleElement);
 
@@ -79,6 +90,11 @@ export abstract class CardPicker {
     header.appendChild(this.hintElement);
 
     this.element.appendChild(header);
+
+    this.noticeElement = document.createElement('div');
+    this.noticeElement.className = 'vol-card-picker__notice';
+    this.noticeElement.hidden = true;
+    this.element.appendChild(this.noticeElement);
 
     this.grid = document.createElement('div');
     this.grid.className = 'vol-card-picker__grid';
@@ -136,6 +152,7 @@ export abstract class CardPicker {
       this.hideTimeout = null;
       this.element.hidden = true;
       this.element.classList.remove('vol-card-picker--leaving');
+      this.setNotice(null);
     }, HIDE_ANIMATION_MS);
   }
 
@@ -153,6 +170,7 @@ export abstract class CardPicker {
     this.visible = false;
     this.intentGuard?.reset();
     this.closeModal();
+    this.setNotice(null);
     this.element.hidden = true;
     this.element.classList.remove('vol-card-picker--leaving');
   }
@@ -169,6 +187,28 @@ export abstract class CardPicker {
     if (this.hideTimeout === null) return;
     clearTimeout(this.hideTimeout);
     this.hideTimeout = null;
+  }
+
+  /**
+   * Teklif yerine durum gösterir (`null` temizler). `loading` nazik `status` bölgesidir ve ızgarayı
+   * `aria-busy` yapar; `error` `alert` olarak hemen duyurulur. Metni ve ne zaman temizleneceğini
+   * çağıran belirler: seçici ürün kuralı bilmez. `hideImmediately`/`destroy` bildirimi temizler.
+   */
+  setNotice(notice: CardPickerNotice | null): void {
+    const element = this.noticeElement;
+    element.textContent = '';
+    element.classList.remove('vol-card-picker__notice--loading', 'vol-card-picker__notice--error');
+    this.grid.removeAttribute('aria-busy');
+    if (!notice) {
+      element.hidden = true;
+      element.removeAttribute('role');
+      return;
+    }
+    element.setAttribute('role', notice.kind === 'error' ? 'alert' : 'status');
+    element.classList.add(`vol-card-picker__notice--${notice.kind}`);
+    if (notice.kind === 'loading') this.grid.setAttribute('aria-busy', 'true');
+    element.hidden = false;
+    element.textContent = notice.message;
   }
 
   protected setTitle(title: string): void {
@@ -247,6 +287,11 @@ export abstract class CardPicker {
 
   protected setHint(hint: string): void {
     this.hintElement.textContent = hint;
+  }
+
+  /** Kimliğiyle bir kartın seçildiğini görsel olarak belli eder (bkz. `CardTile.markPicked`). */
+  protected markPicked(cardId: string): void {
+    this.tiles.find((tile) => tile.id === cardId)?.markPicked();
   }
 
   /** Izgaradaki kartları temizler (yeni teklif gösterilmeden önce). */

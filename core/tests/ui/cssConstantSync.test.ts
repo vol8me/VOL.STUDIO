@@ -11,6 +11,7 @@ import {
   PURCHASE_FLASH_MS,
 } from '../../src/ui/cards/ShopPicker';
 import { CARD_ENTER_ANIMATION_MS } from '../../src/ui/cards/CardTile';
+import { UI_TIMING } from '../../src/constants';
 
 /**
  * CSS sabit senkronu:
@@ -121,7 +122,19 @@ describe('CSS sabit senkronu — teardown zamanlayıcıları', () => {
     const match = /([0-9.]+)(m?s)/.exec(animation);
     expect(match, 'entering animasyon süresi okunamadı').not.toBeNull();
     const cssMs = match![2] === 'ms' ? Number(match![1]) : Number(match![1]) * 1000;
-    expect(CARD_ENTER_ANIMATION_MS).toBeGreaterThanOrEqual(cssMs);
+    const staggerMs = cssVarDurationMs(theme, '--vol-motion-preset-card-stagger');
+    // Zamanlayıcı yedeği, en geç başlayan (4.) kartın animasyonunu da kapsamalı.
+    expect(CARD_ENTER_ANIMATION_MS).toBeGreaterThanOrEqual(cssMs + 3 * staggerMs);
+  });
+});
+
+describe('CSS sabit senkronu — kart destesi', () => {
+  it('CARD_FLY_ANIMATION_MS, .vol-card-stack__card--flying geçişinden kısa değil', () => {
+    const transition = cssDeclaration(cards, '.vol-card-stack__card--flying', 'transition');
+    expect(transition).toContain('var(--vol-transition-medium)');
+    expect(UI_TIMING.CARD_FLY_ANIMATION_MS).toBeGreaterThanOrEqual(
+      cssVarDurationMs(theme, '--vol-transition-medium'),
+    );
   });
 });
 
@@ -162,13 +175,16 @@ describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
     const gridBase =
       '.vol-card-picker__grid > .vol-card--entering:not(.vol-card--leaving, .vol-card--just-purchased)';
     const gridSecond = cssDeclaration(cards, `${gridBase}:nth-child(2)`, 'animation-delay');
-    expect(gridSecond).toBe('60ms');
+    // Gecikme ham ms değil, hareket ön ayarının kademe adımıdır (UI-04.1): tek kaynak token.
+    const step = 'var(--vol-motion-preset-card-stagger)';
+    expect(gridSecond).toBe(step);
 
     const gridThird = cssDeclaration(cards, `${gridBase}:nth-child(3)`, 'animation-delay');
-    expect(gridThird).toBe('120ms');
+    expect(gridThird).toBe(`calc(${step} * 2)`);
 
     const gridFourth = cssDeclaration(cards, `${gridBase}:nth-child(4)`, 'animation-delay');
-    expect(gridFourth).toBe('180ms');
+    expect(gridFourth).toBe(`calc(${step} * 3)`);
+    expect(cssVarDurationMs(theme, '--vol-motion-preset-card-stagger')).toBe(40);
 
     // Yalnızca `.vol-card--entering` alan kartlar animasyon kazanır; envanter
     // veya satın alınmış kartlar stagere yakalanmaz.

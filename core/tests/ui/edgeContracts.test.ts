@@ -200,7 +200,9 @@ describe('CardTile durum geçişleri', () => {
     const tile = track(new CardTile({ data, compact: true, className: 'custom' }));
     expect(tile.element.className).toContain('vol-card--compact');
     expect(tile.element.className).toContain('custom');
-    expect(tile.element.querySelector('.vol-card__badges')).toBeNull();
+    // Rozet satırında nadirlik işareti (baklava) daima durur; etiket rozetleri yoktan eklenir.
+    expect(tile.element.querySelector('.vol-card__badges')?.children).toHaveLength(1);
+    expect(tile.element.querySelector('.vol-card__rarity, .vol-card__type')).toBeNull();
 
     tile.update({
       title: 'Yeni',
@@ -219,7 +221,8 @@ describe('CardTile durum geçişleri', () => {
     tile.update({ rarity: 'epic', rarityLabel: 'E', typeLabel: 'T', priceLabel: '13' });
     expect(tile.element.querySelector('.vol-card__price')?.textContent).toBe('13');
     tile.update({ rarityLabel: '', typeLabel: '', priceLabel: '' });
-    expect(tile.element.querySelector('.vol-card__badges')).toBeNull();
+    expect(tile.element.querySelector('.vol-card__rarity, .vol-card__type')).toBeNull();
+    expect(tile.element.querySelectorAll('.vol-card__pips svg')).toHaveLength(2);
     expect(tile.element.querySelector('.vol-card__price')).toBeNull();
   });
 

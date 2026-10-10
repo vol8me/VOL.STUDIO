@@ -1,5 +1,10 @@
 import { UI_SIZE, UI_TIMING } from '../../constants';
+import { i18next } from '../../i18n/I18n';
 import { bindHoldInput } from './holdInput';
+
+/** Dolum duyuru basamağı: yüzde 25'lik adımlar (4 duyuru, dolu dahil); kare başına değil. */
+const ANNOUNCE_STEPS = 4;
+let announcerSerial = 0;
 
 export interface ChargeButtonOptions {
   label?: string;
@@ -21,6 +26,13 @@ export interface ChargeButtonOptions {
   /** Dolum iptal edildi (pointercancel, yakalama kaybı, sayfa gizlendi, söküm): `onRelease`/`onCharged` ÇAĞRILMAZ. */
   onCancel?: () => void;
   size?: number;
+  /**
+   * Ekran okuyucu duyurusu (varsayılan kapalı; host kendi HUD'ında duyuruyorsa çift okunmasın):
+   * dolum başlayınca "Doluyor", yüzde 25/50/75'te yüzde, tam dolunca "Tamamen doldu" (kibar canlı
+   * bölge, kare başına değil). Metin `core:chargeButton` çevirisinden gelir. Bırakış/iptalde bölge
+   * temizlenir; sonucu oyun duyurur. `label` verilmişse düğmenin adı etikettir (canlı bölge ada karışmaz).
+   */
+  announce?: boolean;
 }
 
 /**
@@ -41,6 +53,8 @@ export class ChargeButton {
   private chargeStartTime = 0;
   private isCharging = false;
   private isFullyCharged = false;
+  private readonly announcer: HTMLSpanElement | null = null;
+  private announcedStep = 0;
   private rafHandle: number | null = null;
   private activePointerId: number | null = null;
   private boundPointerDown: (event: PointerEvent) => void;
@@ -106,6 +120,20 @@ export class ChargeButton {
       labelEl.className = 'vol-charge-button__label';
       labelEl.textContent = options.label;
       this.element.appendChild(labelEl);
+      if (options.announce) {
+        labelEl.id = `vol-charge-label-${++announcerSerial}`;
+        this.element.setAttribute('aria-labelledby', labelEl.id);
+      }
+    }
+
+    if (options.announce) {
+      const announcer = document.createElement('span');
+      announcer.className = 'vol-sr-only';
+      announcer.setAttribute('role', 'status');
+      announcer.setAttribute('aria-live', 'polite');
+      announcer.setAttribute('aria-atomic', 'true');
+      this.element.appendChild(announcer);
+      this.announcer = announcer;
     }
 
     this.boundPointerDown = (event) => this.handlePointerDown(event);
@@ -178,6 +206,8 @@ export class ChargeButton {
     this.chargeStartTime = performance.now();
     this.element.classList.add('vol-charge-button--charging');
     this.element.setAttribute('aria-pressed', 'true');
+    this.announcedStep = 0;
+    this.announce(i18next.t('core:chargeButton.start'));
     this.tick();
   }
 
@@ -206,6 +236,7 @@ export class ChargeButton {
     const offset = this.ringCircumference * (1 - progress);
     this.ring.style.strokeDashoffset = String(offset);
     this.onChargeProgressHandler?.(progress);
+    this.announceProgress(progress);
 
     if (progress >= 1) {
       // wasAlreadyFull koruması olmadan, tick() rAF ile devam ettiği sürece (allowPartialRelease:true)
@@ -224,8 +255,26 @@ export class ChargeButton {
     this.rafHandle = requestAnimationFrame(() => this.tick());
   }
 
+  private announce(message: string): void {
+    if (this.announcer) this.announcer.textContent = message;
+  }
+
+  /** Her yüzde 25 eşiği bir kez; tam dolum "Tamamen doldu". Kare başına duyuru yok. */
+  private announceProgress(progress: number): void {
+    if (!this.announcer) return;
+    const step = Math.min(ANNOUNCE_STEPS, Math.floor(progress * ANNOUNCE_STEPS));
+    if (step <= this.announcedStep) return;
+    this.announcedStep = step;
+    this.announce(
+      step >= ANNOUNCE_STEPS
+        ? i18next.t('core:chargeButton.ready')
+        : i18next.t('core:chargeButton.percent', { percent: (step * 100) / ANNOUNCE_STEPS }),
+    );
+  }
+
   private stopCharging(): void {
     this.isCharging = false;
+    this.announce('');
     if (this.rafHandle !== null) {
       cancelAnimationFrame(this.rafHandle);
       this.rafHandle = null;

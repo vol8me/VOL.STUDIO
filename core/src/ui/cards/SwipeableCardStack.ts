@@ -1,12 +1,19 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_RATIO, UI_THRESHOLD, UI_TIMING, UI_CAPACITY } from '../../constants';
 import { i18next } from '../../i18n/I18n';
+import { emitUiIntent } from '../feedback/uiIntent';
+
+function prefersReducedMotion(): boolean {
+  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 export type SwipeDirection = 'left' | 'right';
 
 export interface SwipeableCardDefinition {
   id: string;
   element: HTMLElement;
+  /** Okuyucu duyurusu için kısa ad (örn. kartın başlığı); `announce` açıkken sonuç cümlesine girer. */
+  label?: string;
 }
 
 export interface SwipeableCardStackOptions {
@@ -17,8 +24,18 @@ export interface SwipeableCardStackOptions {
   onEmpty?: () => void;
   /** Kartın atılmış sayılması için gereken minimum yatay sürükleme mesafesi (piksel). Aşılmazsa kart merkeze geri döner. Varsayılan 120. */
   swipeThreshold?: number;
-  /** true ise kartın altında sol/sağ için ayrı aksiyon düğmeleri gösterilir — sürüklemeye alternatif. Varsayılan false. */
+  /**
+   * true ise kartın altında sol/sağ için ayrı aksiyon düğmeleri gösterilir — sürüklemeye alternatif.
+   * Varsayılan false: düğmeler yokken yığının kendisi odaklanabilir ve sol/sağ okla yönetilir (klavye).
+   * Kol (gamepad) etkinleştirmesi odaktaki düğmeyi tıkladığı için kol kullanıcıları düğmelere ihtiyaç duyar.
+   * Yönler fiziksel ve RTL'den bağımsızdır: sol = ret, sağ = kabul (ipucu rozetleri ve düğme sırası da öyle).
+   */
   showActionButtons?: boolean;
+  /**
+   * true ise her sonuç (kabul/ret, kalan kart sayısı) nazik bir canlı bölgeyle duyurulur; duyuru odaktan
+   * bağımsızdır (odak düğmede ya da yığında kalır). Varsayılan false: DOM'a hiçbir şey eklenmez.
+   */
+  announce?: boolean;
 }
 
 /**
@@ -33,6 +50,8 @@ export class SwipeableCardStack {
   private readonly onSwipeHandler?: (id: string, direction: SwipeDirection) => void;
   private readonly onEmptyHandler?: () => void;
   private readonly swipeThreshold: number;
+  private readonly liveEl: HTMLDivElement | null;
+  private dragPicked = false;
   private cards: SwipeableCardDefinition[];
   private cardElements: HTMLDivElement[] = [];
   /**
@@ -59,6 +78,16 @@ export class SwipeableCardStack {
       this.actionButtons[0].setAttribute('aria-label', i18next.t('core:swipe.reject'));
     if (this.actionButtons[1])
       this.actionButtons[1].setAttribute('aria-label', i18next.t('core:swipe.accept'));
+    if (!this.actionsEl) this.stackEl.setAttribute('aria-label', i18next.t('core:swipe.stack'));
+  };
+
+  /** Düğmesiz modda odaktaki yığın: sol/sağ ok fiziksel yönde karar verir (Ctrl/Alt/Meta ile değil). */
+  private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (event.defaultPrevented || event.target !== this.stackEl) return;
+    if (event.ctrlKey || event.altKey || event.metaKey) return;
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    this.commitSwipe(event.key === 'ArrowRight' ? 'right' : 'left', event);
   };
 
   constructor(options: SwipeableCardStackOptions) {
@@ -73,6 +102,25 @@ export class SwipeableCardStack {
     this.stackEl = document.createElement('div');
     this.stackEl.className = 'vol-card-stack__stack';
     this.element.appendChild(this.stackEl);
+
+    if (!options.showActionButtons) {
+      this.stackEl.tabIndex = 0;
+      this.stackEl.setAttribute('role', 'group');
+      this.stackEl.setAttribute('aria-label', i18next.t('core:swipe.stack'));
+      this.stackEl.setAttribute('aria-keyshortcuts', 'ArrowLeft ArrowRight');
+      this.scope.addListener(this.stackEl, 'keydown', this.onKeyDown);
+    }
+
+    if (options.announce) {
+      this.liveEl = document.createElement('div');
+      this.liveEl.className = 'vol-sr-only';
+      this.liveEl.setAttribute('role', 'status');
+      this.liveEl.setAttribute('aria-live', 'polite');
+      this.liveEl.setAttribute('aria-atomic', 'true');
+      this.element.appendChild(this.liveEl);
+    } else {
+      this.liveEl = null;
+    }
 
     if (options.showActionButtons) {
       this.actionsEl = this.buildActionButtons();
@@ -116,7 +164,7 @@ export class SwipeableCardStack {
     rejectBtn.className = 'vol-card-stack__action vol-card-stack__action--reject';
     rejectBtn.setAttribute('aria-label', i18next.t('core:swipe.reject'));
     rejectBtn.appendChild(this.buildXIcon());
-    rejectBtn.addEventListener('click', () => this.commitSwipe('left'));
+    rejectBtn.addEventListener('click', (event) => this.commitSwipe('left', event));
     row.appendChild(rejectBtn);
 
     const acceptBtn = document.createElement('button');
@@ -124,7 +172,7 @@ export class SwipeableCardStack {
     acceptBtn.className = 'vol-card-stack__action vol-card-stack__action--accept';
     acceptBtn.setAttribute('aria-label', i18next.t('core:swipe.accept'));
     acceptBtn.appendChild(this.buildCheckIcon());
-    acceptBtn.addEventListener('click', () => this.commitSwipe('right'));
+    acceptBtn.addEventListener('click', (event) => this.commitSwipe('right', event));
     row.appendChild(acceptBtn);
 
     this.actionButtons = [rejectBtn, acceptBtn];
@@ -171,12 +219,20 @@ export class SwipeableCardStack {
     if (this.cards.length > 0) {
       this.attachDragHandlers(this.stackEl.lastElementChild as HTMLDivElement, this.cards[0].id);
       // Yeni kart geldi — action button'ları tekrar tıklanabilir yap.
-      for (const btn of this.actionButtons) btn.disabled = false;
+      for (const btn of this.actionButtons) {
+        btn.disabled = false;
+        btn.removeAttribute('aria-disabled');
+      }
     } else {
       // Deste boşaldı — butonlar kalıcı disable kalsın, tıklanacak kart yok. Odaktaki düğme kilitlenirse
       // tarayıcı odağı gövdeye atar (klavye/kol kullanıcısı yerini yitirir): odak destenin kendisine alınır.
       const focusedAction = this.actionButtons.some((btn) => btn === document.activeElement);
-      for (const btn of this.actionButtons) btn.disabled = true;
+      for (const btn of this.actionButtons) {
+        btn.removeAttribute('aria-disabled');
+        btn.disabled = true;
+      }
+      // Düğmesiz modda yığın zaten odaktadır; karar verilecek kart kalmadığı için sekme sırasından çıkar.
+      if (!this.actionsEl) this.stackEl.tabIndex = -1;
       if (focusedAction) {
         this.stackEl.tabIndex = -1;
         this.stackEl.focus({ preventScroll: true });
@@ -187,6 +243,9 @@ export class SwipeableCardStack {
 
   private attachDragHandlers(topCardEl: HTMLDivElement, cardId: string): void {
     const onPointerDown = (event: PointerEvent): void => {
+      // İkinci parmak ya da fare ek düğmesi sürüklemeyi çalmaz; yalnız birincil düğme/dokunma başlatır.
+      if (this.isDragging || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      this.dragPicked = false;
       this.isDragging = true;
       this.dragStartX = event.clientX;
       this.dragOffsetX = 0;
@@ -200,6 +259,11 @@ export class SwipeableCardStack {
     const onPointerMove = (event: PointerEvent): void => {
       if (!this.isDragging || this.activePointerId !== event.pointerId) return;
       this.dragOffsetX = event.clientX - this.dragStartX;
+      // Sürükleme gerçekten başlayınca (ipucu eşiği) kart "kaldırılmış" sayılır: tek bir pick niyeti.
+      if (!this.dragPicked && Math.abs(this.dragOffsetX) > UI_THRESHOLD.CARD_SWIPE_HINT_PX) {
+        this.dragPicked = true;
+        emitUiIntent({ kind: 'pick', origin: 'SwipeableCardStack', target: topCardEl, event });
+      }
       const rotation = this.dragOffsetX * UI_RATIO.CARD_SWIPE_ROTATION;
       topCardEl.style.transform = `translateX(${this.dragOffsetX}px) rotate(${rotation}deg)`;
       topCardEl.classList.toggle(
@@ -227,12 +291,18 @@ export class SwipeableCardStack {
     const onPointerUp = (event: PointerEvent): void => {
       if (!this.isDragging || this.activePointerId !== event.pointerId) return;
       this.isDragging = false;
-      topCardEl.releasePointerCapture(event.pointerId);
+      this.activePointerId = null;
+      try {
+        topCardEl.releasePointerCapture(event.pointerId);
+      } catch {
+        // Yakalama zaten bırakılmış (yakalama kaybı): kapatılacak bir şey yok.
+      }
       topCardEl.classList.remove('vol-card-stack__card--dragging');
 
-      // İptal edilen sürükleme (sistem jesti, kesilen dokunma) asla kabul/ret sayılmaz: kart yerine döner.
-      if (event.type !== 'pointercancel' && Math.abs(this.dragOffsetX) >= this.swipeThreshold) {
-        this.commitSwipe(this.dragOffsetX > 0 ? 'right' : 'left');
+      // İptal edilen sürükleme (sistem jesti, kesilen dokunma, kaybolan yakalama) asla kabul/ret
+      // sayılmaz: kart yerine döner.
+      if (event.type === 'pointerup' && Math.abs(this.dragOffsetX) >= this.swipeThreshold) {
+        this.commitSwipe(this.dragOffsetX > 0 ? 'right' : 'left', event);
       } else {
         topCardEl.style.transform = '';
         topCardEl.classList.remove(
@@ -248,18 +318,20 @@ export class SwipeableCardStack {
     topCardEl.addEventListener('pointermove', onPointerMove);
     topCardEl.addEventListener('pointerup', onPointerUp);
     topCardEl.addEventListener('pointercancel', onPointerUp);
+    topCardEl.addEventListener('lostpointercapture', onPointerUp);
     this.scope.add({
       dispose: () => {
         topCardEl.removeEventListener('pointerdown', onPointerDown);
         topCardEl.removeEventListener('pointermove', onPointerMove);
         topCardEl.removeEventListener('pointerup', onPointerUp);
         topCardEl.removeEventListener('pointercancel', onPointerUp);
+        topCardEl.removeEventListener('lostpointercapture', onPointerUp);
       },
     });
     void cardId;
   }
 
-  private commitSwipe(direction: SwipeDirection): void {
+  private commitSwipe(direction: SwipeDirection, event?: Event): void {
     // Reentrant koruma: uçuş animasyonu (180ms) sırasında ikinci commit gelirse
     // this.stackEl.lastElementChild hala eski kartın element'idir (DOM henüz
     // yeniden çizilmemiş) — yanlış kart uçar. Ayrıca swipeTop() programatik
@@ -269,14 +341,26 @@ export class SwipeableCardStack {
     if (!removed) return;
 
     this.isCommitting = true;
-    // Animasyon sırasında action button'ları disable et — tıklama kaybolmaz,
-    // kullanıcı görsel feedback alır (buton gri olur, tıklanmaz).
-    for (const btn of this.actionButtons) btn.disabled = true;
+    // Uçuş sırasında düğmeler `aria-disabled` olur, `disabled` DEĞİL: odaktaki `disabled` düğmeyi tarayıcı
+    // bulandırır ve klavye/kol kullanıcısı her kararda yerini yitirirdi. Tıklamayı `isCommitting` yutar.
+    for (const btn of this.actionButtons) btn.setAttribute('aria-disabled', 'true');
 
     const topCardEl = this.stackEl.lastElementChild as HTMLDivElement | null;
+    // Kabul "confirm", ret "cancel" sesidir; olaysız (programatik) karar sessiz kalır.
+    if (event && topCardEl) {
+      emitUiIntent({
+        kind: direction === 'right' ? 'confirm' : 'cancel',
+        origin: 'SwipeableCardStack',
+        target: topCardEl,
+        event,
+      });
+    }
+    this.announceDecision(direction, removed);
     this.onSwipeHandler?.(removed.id, direction);
 
-    if (topCardEl) {
+    // Azaltılmış harekette uçuş yok: son durum aynıdır, deste hemen yeniden çizilir.
+    const reduceMotion = prefersReducedMotion();
+    if (topCardEl && !reduceMotion) {
       const flyDistance = direction === 'right' ? window.innerWidth : -window.innerWidth;
       topCardEl.classList.add('vol-card-stack__card--flying');
       topCardEl.style.transform = `translateX(${flyDistance}px) rotate(${
@@ -285,11 +369,28 @@ export class SwipeableCardStack {
     }
 
     // Uçuş animasyonu görsel olarak başlasın diye kısa bir gecikme sonra deste yeniden çizilir.
-    this.renderTimeoutId = window.setTimeout(() => {
-      this.renderTimeoutId = null;
-      this.isCommitting = false;
-      this.renderStack();
-    }, UI_TIMING.CARD_FLY_ANIMATION_MS);
+    this.renderTimeoutId = window.setTimeout(
+      () => {
+        this.renderTimeoutId = null;
+        this.isCommitting = false;
+        this.renderStack();
+      },
+      reduceMotion ? 0 : UI_TIMING.CARD_FLY_ANIMATION_MS,
+    );
+  }
+
+  /** Kararı ve kalan kart sayısını nazik canlı bölgeye yazar (opt-in `announce`). */
+  private announceDecision(direction: SwipeDirection, card: SwipeableCardDefinition): void {
+    if (!this.liveEl) return;
+    const decision = i18next.t(
+      direction === 'right' ? 'core:swipe.accepted' : 'core:swipe.rejected',
+      { label: card.label ?? '' },
+    );
+    const left =
+      this.cards.length > 0
+        ? i18next.t('core:swipe.remaining', { count: this.cards.length })
+        : i18next.t('core:swipe.done');
+    this.liveEl.textContent = `${decision}. ${left}`;
   }
 
   private buildXIcon(): SVGSVGElement {

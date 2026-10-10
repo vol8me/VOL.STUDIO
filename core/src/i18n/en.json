@@ -42,7 +42,12 @@
   },
   "swipe": {
     "reject": "Reject",
-    "accept": "Accept"
+    "accept": "Accept",
+    "stack": "Card stack: left arrow rejects, right arrow accepts",
+    "accepted": "Accepted: {{label}}",
+    "rejected": "Rejected: {{label}}",
+    "remaining": "Cards left: {{count}}",
+    "done": "No cards left"
   },
   "pause": {
     "pause": "Pause",
@@ -105,6 +110,11 @@
     "dropped": "{{label}} moved to slot {{n}}",
     "rejected": "Cannot place {{label}} in slot {{n}}",
     "cancelled": "Move cancelled"
+  },
+  "chargeButton": {
+    "start": "Charging",
+    "percent": "{{percent}} percent",
+    "ready": "Fully charged"
   },
   "joystick": {
     "label": "Virtual stick"

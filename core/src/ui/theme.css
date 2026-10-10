@@ -34,7 +34,7 @@
   --vol-ui-surface-2: #212a33;
   --vol-ui-surface-3: #2a3540;
   --vol-ui-border-soft: #34414d;
-  --vol-ui-border-strong: #495865;
+  --vol-ui-border-strong: #68788a;
   --vol-ui-text: #e8eef5;
   --vol-ui-text-secondary: #b5c1cc;
   --vol-ui-text-muted: #83919d;
@@ -94,6 +94,7 @@
   --vol-ui-plate: #212a33;
   --vol-ui-plate-top-light: #ffffff1f;
   --vol-ui-well-inner-shadow: #00000066;
+  --vol-ui-brand-fill-hover: #ac5017;
   --vol-ui-frame-hairline: #34414d;
   --vol-ui-frame-corner: #864a2c;
   --vol-ui-frame-header: #1d252d;
@@ -185,6 +186,15 @@
   --vol-text-heading: 24px;
   --vol-text-display: 28px;
 
+  /*
+   * İkon ölçeği: düğme içi ikonlar tamsayı pikseldir (1,3 em kesirli boyut kenarı bulandırıyordu).
+   * Düğme boyutuna bağlıdır: sm 32 px kutuda 16, md 40 px kutuda 20, lg 48 px kutuda 24 (kutunun
+   * yarısı; dolu siluet etiketle aynı ağırlıkta okunur). Açık `size` verilen `Icon` bu ölçeği aşar.
+   */
+  --vol-icon-sm: 16px;
+  --vol-icon-md: 20px;
+  --vol-icon-lg: 24px;
+
   --vol-space-xs: 4px;
   --vol-space-sm: 8px;
   --vol-space-md: 16px;
@@ -270,7 +280,7 @@
   --vol-ui-surface-2: #212a33;
   --vol-ui-surface-3: #2a3540;
   --vol-ui-border-soft: #34414d;
-  --vol-ui-border-strong: #495865;
+  --vol-ui-border-strong: #68788a;
   --vol-ui-text: #e8eef5;
   --vol-ui-text-secondary: #b5c1cc;
   --vol-ui-text-muted: #83919d;
@@ -330,6 +340,7 @@
   --vol-ui-plate: #212a33;
   --vol-ui-plate-top-light: #ffffff1f;
   --vol-ui-well-inner-shadow: #00000066;
+  --vol-ui-brand-fill-hover: #ac5017;
   --vol-ui-frame-hairline: #34414d;
   --vol-ui-frame-corner: #864a2c;
   --vol-ui-frame-header: #1d252d;
@@ -433,6 +444,7 @@
   --vol-ui-plate: #271c3c;
   --vol-ui-plate-top-light: #ffeab81f;
   --vol-ui-well-inner-shadow: #00000099;
+  --vol-ui-brand-fill-hover: #dcb560;
   --vol-ui-frame-hairline: #52447a;
   --vol-ui-frame-corner: #c9a14a;
   --vol-ui-frame-header: #241a38;

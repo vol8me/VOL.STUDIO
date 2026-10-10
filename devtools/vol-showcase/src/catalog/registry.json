@@ -343,11 +343,12 @@
         "via": "LevelUpPicker",
         "reason": "soyut taban sınıf; vitrinde türevleri LevelUpPicker ve ShopPicker çizer"
       },
-      "tests": [],
-      "gap": {
-        "task": "UI-04.2",
-        "reason": "soyut taban sınıf yalnız LevelUpPicker/ShopPicker türevleri üzerinden sınanıyor; doğrudan test yok"
-      },
+      "tests": [
+        {
+          "file": "core/tests/ui/cards/cardPickerStates.test.ts",
+          "title": "yükleniyor: nazik status bölgesi ve ızgarada aria-busy"
+        }
+      ],
       "extraStates": ["loading", "error"]
     },
     {
@@ -367,6 +368,10 @@
         {
           "file": "core/tests/ui/cards/cardTile.test.ts",
           "title": "başlık, açıklama, nadirlik ve tip rozetini yazar"
+        },
+        {
+          "file": "core/tests/ui/cards/cardSurface.test.ts",
+          "title": "kart, başlığıyla adlandırılmış bir gruptur"
         }
       ]
     },
@@ -1945,6 +1950,10 @@
         {
           "file": "core/tests/ui/touchControls.test.ts",
           "title": "eşiği aşan sürükleme onSwipe tetikler ve bir sonraki karta geçer"
+        },
+        {
+          "file": "core/tests/ui/cards/swipeableCardStack.test.ts",
+          "title": "düğmesiz modda yığın odaklanabilir ve sol/sağ ok fiziksel yönde karar verir"
         }
       ]
     },

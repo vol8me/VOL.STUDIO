@@ -143,6 +143,23 @@ test.describe('görsel sözleşme: katmanlar', () => {
       await page.waitForTimeout(300);
       await expect(page).toHaveScreenshot(`layer-${skin}-palette.png`, LAYER_SHOT);
     });
+
+    // Kart seçici katmanları (UI-04.2/04.4): seviye atlama, hata bildirimli seviye atlama ve dükkan.
+    for (const [name, button] of [
+      ['levelup', 'OPEN LEVEL-UP'],
+      ['levelup-error', 'LEVEL-UP: ERROR'],
+      ['shop', 'OPEN SHOP'],
+    ] as const) {
+      test(`kart katmanı ${name} (${skin})`, async ({ page }) => {
+        await openShowcase(page);
+        await useSkin(page, skin);
+        await selectTab(page, 'cards');
+        await pressButton(page, button);
+        await page.locator('.vol-showcase-card-layer:not([hidden])').waitFor();
+        await page.waitForTimeout(800);
+        await expect(page).toHaveScreenshot(`layer-${skin}-cards-${name}.png`, LAYER_SHOT);
+      });
+    }
   }
 
   for (const tab of ['buttons', 'cards', 'panels', 'forms'] as const) {

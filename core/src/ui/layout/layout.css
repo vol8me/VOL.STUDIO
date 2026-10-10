@@ -767,7 +767,7 @@
 }
 
 .vol-wizard__nav-button--next:hover {
-  background: var(--vol-ui-brand-hover);
+  background: var(--vol-ui-brand-fill-hover);
 }
 
 .vol-split-pane {

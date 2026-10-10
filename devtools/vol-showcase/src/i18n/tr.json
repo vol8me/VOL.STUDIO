@@ -846,6 +846,10 @@
     "slow": "Yavaş (800ms)"
   },
   "cards": {
+    "matrixTitle": "CardTile — durumlar (nadirlik × normal, devre dışı, kilitli)",
+    "locked": "KİLİTLİ",
+    "stressName": "Sonsuz Kuzey Fırtına Divanı'nın Zincir Şimşeği",
+    "stressDesc": "On iki düşmana kadar atlayan, her üçüncü vuruşta ikiye ayrılan ve siz hareket ederken yükünü koruyan şimşek; kombo bitince büyücüye geri döner.",
     "rarityTitle": "CardTile — nadirlik kademeleri",
     "levelUpCardTitle": "LevelUpPicker — ücretsiz seçim",
     "shopCardTitle": "ShopPicker — fiyatlı kartlar, alım/satım",
@@ -868,6 +872,10 @@
     },
     "selected": "Seçilen: {{id}}",
     "noSelection": "Henüz seçim yok",
+    "openLevelUpLoading": "SEVİYE ATLAMA: YÜKLENİYOR",
+    "openLevelUpError": "SEVİYE ATLAMA: HATA",
+    "noticeLoading": "Teklifler yükleniyor",
+    "noticeError": "Teklifler yenilenemedi; son teklifler gösteriliyor",
     "openLevelUp": "SEVİYE EKRANINI AÇ",
     "openShop": "DÜKKANI AÇ",
     "levelUpTitle": "SEVİYE 4",

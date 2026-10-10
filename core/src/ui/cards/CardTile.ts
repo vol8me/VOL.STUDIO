@@ -1,4 +1,6 @@
-/** Kart nadirlik kademesi — yalnızca görsel farklılaşma sağlar. */
+import { emitUiIntent } from '../feedback/uiIntent';
+
+/** Kart nadirlik kademesi — renk ve baklava sayısıyla görsel farklılaşma sağlar. */
 export type CardRarity = 'rare' | 'epic' | 'legendary';
 
 /** Bir kartın gösterilecek içeriği. Metin dışı varlık (ikon/görsel) taşımaz. */
@@ -50,11 +52,35 @@ export const CARD_DRAG_MIME = 'application/x-vol-card';
 
 /**
  * CSS `vol-card-in` süresi + en uzun stagger gecikmesi.
- * `vol-card-in` 360 ms'dir; level-up 4. kartı 180 ms gecikmeli başlar.
+ * `vol-card-in` 360 ms'dir; level-up 4. kartı 3 × `--vol-motion-preset-card-stagger`
+ * (40 ms) = 120 ms gecikmeli başlar.
  * `animationend` `prefers-reduced-motion` altında ateşlenmeyebileceği için
  * zamanlayıcı yedeği de bu değerle çalışır.
  */
-export const CARD_ENTER_ANIMATION_MS = 540;
+export const CARD_ENTER_ANIMATION_MS = 480;
+
+/**
+ * Nadirliğin renk dışı işareti: kademe sayısı kadar baklava çizgisi (rare 1, epic 2, legendary 3).
+ * Renk tek taşıyıcı olmaz (WCAG 1.4.1); `rarityLabel` verilmese de kart kademesini gösterir.
+ */
+const RARITY_PIPS: Readonly<Record<CardRarity, number>> = { rare: 1, epic: 2, legendary: 3 };
+
+/** `markPicked` vurgusunun süresi: seçicinin çıkış animasyonuyla (240 ms) birlikte görünür kalır. */
+const PICKED_MS = 360;
+
+let cardSerial = 0;
+
+/** Tek baklava: metin karakteri değil çizgi (SVG), `currentColor` ile nadirlik rengini alır. */
+function createPip(): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 8 8');
+  svg.setAttribute('focusable', 'false');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M4 0 8 4 4 8 0 4Z');
+  path.setAttribute('fill', 'currentColor');
+  svg.appendChild(path);
+  return svg;
+}
 
 /**
  * Tek bir kartın görsel karşılığı — başlık, açıklama, nadirlik ve isteğe bağlı
@@ -72,6 +98,9 @@ export class CardTile {
   private typeElement: HTMLSpanElement | null;
   private priceElement: HTMLSpanElement | null;
   private readonly statusElement: HTMLSpanElement;
+  private readonly pipsElement: HTMLSpanElement;
+  private readonly uid = ++cardSerial;
+  private pickedTimeout: number | null = null;
   private readonly footer: HTMLDivElement;
   private readonly badges: HTMLDivElement;
   private actionButton: HTMLButtonElement | null;
@@ -99,9 +128,17 @@ export class CardTile {
 
     this.element = document.createElement('div');
     this.applyBaseClassName();
+    // Kartın adı başlığıdır: ekran okuyucu "Seç" düğmesini hangi karta ait olduğuyla okur.
+    this.element.setAttribute('role', 'group');
 
     this.badges = document.createElement('div');
     this.badges.className = 'vol-card__badges';
+
+    this.pipsElement = document.createElement('span');
+    this.pipsElement.className = 'vol-card__pips';
+    this.pipsElement.setAttribute('aria-hidden', 'true');
+    this.syncPips();
+    this.badges.appendChild(this.pipsElement);
 
     this.rarityElement = data.rarityLabel
       ? this.createBadge(data.rarityLabel, 'vol-card__rarity')
@@ -109,12 +146,13 @@ export class CardTile {
     this.typeElement = data.typeLabel ? this.createBadge(data.typeLabel, 'vol-card__type') : null;
     if (this.rarityElement) this.badges.appendChild(this.rarityElement);
     if (this.typeElement) this.badges.appendChild(this.typeElement);
-    if (this.badges.childElementCount > 0) {
-      this.element.appendChild(this.badges);
-    }
+    // Nadirlik işareti satırda daima durur; satır etiketlerden bağımsız olarak karta bağlıdır.
+    this.element.appendChild(this.badges);
 
     this.titleElement = document.createElement('span');
     this.titleElement.className = 'vol-card__title';
+    this.titleElement.id = `vol-card-title-${this.uid}`;
+    this.element.setAttribute('aria-labelledby', this.titleElement.id);
     this.titleElement.textContent = data.title;
     this.element.appendChild(this.titleElement);
 
@@ -156,6 +194,13 @@ export class CardTile {
       // Bazı tarayıcılar yalnızca `text/plain` taşır; ikisini de yaz.
       event.dataTransfer?.setData('text/plain', this.currentDragData ?? '');
       this.element.classList.add('vol-card--dragging');
+      emitUiIntent({
+        kind: 'pick',
+        origin: 'CardTile',
+        target: this.element,
+        event,
+        source: 'pointer',
+      });
     };
     this.boundDragEnd = () => {
       this.element.classList.remove('vol-card--dragging');
@@ -197,6 +242,7 @@ export class CardTile {
       this.element.classList.remove(`vol-card--${this.currentRarity}`);
       this.currentRarity = data.rarity;
       this.element.classList.add(`vol-card--${this.currentRarity}`);
+      this.syncPips();
     }
 
     if (data.rarityLabel !== undefined) {
@@ -205,11 +251,9 @@ export class CardTile {
       } else if (data.rarityLabel && !this.rarityElement) {
         this.rarityElement = this.createBadge(data.rarityLabel, 'vol-card__rarity');
         this.badges.insertBefore(this.rarityElement, this.typeElement);
-        this.syncBadgesVisibility();
       } else if (!data.rarityLabel && this.rarityElement) {
         this.rarityElement.remove();
         this.rarityElement = null;
-        this.syncBadgesVisibility();
       }
     }
 
@@ -219,11 +263,9 @@ export class CardTile {
       } else if (data.typeLabel && !this.typeElement) {
         this.typeElement = this.createBadge(data.typeLabel, 'vol-card__type');
         this.badges.appendChild(this.typeElement);
-        this.syncBadgesVisibility();
       } else if (!data.typeLabel && this.typeElement) {
         this.typeElement.remove();
         this.typeElement = null;
-        this.syncBadgesVisibility();
       }
     }
 
@@ -259,6 +301,11 @@ export class CardTile {
     this.actionButton = document.createElement('button');
     this.actionButton.type = 'button';
     this.actionButton.className = 'vol-card__action';
+    this.actionButton.id = `vol-card-action-${this.uid}`;
+    this.actionButton.setAttribute(
+      'aria-labelledby',
+      `${this.actionButton.id} ${this.titleElement.id}`,
+    );
     this.actionButton.textContent = label;
     this.actionButton.addEventListener('click', this.handleAction);
     // İkincil buton (varsa) önce gelmemeli; aksiyon butonu önce DOM'da
@@ -288,6 +335,11 @@ export class CardTile {
     this.secondaryButton = document.createElement('button');
     this.secondaryButton.type = 'button';
     this.secondaryButton.className = 'vol-card__action vol-card__action--secondary';
+    this.secondaryButton.id = `vol-card-secondary-${this.uid}`;
+    this.secondaryButton.setAttribute(
+      'aria-labelledby',
+      `${this.secondaryButton.id} ${this.titleElement.id}`,
+    );
     this.secondaryButton.textContent = label;
     this.secondaryButton.addEventListener('click', this.handleSecondaryAction);
     if (this.actionButton) {
@@ -295,6 +347,25 @@ export class CardTile {
     } else {
       this.footer.appendChild(this.secondaryButton);
     }
+  }
+
+  /**
+   * Seçim vurgusu: kart kısa süre `--vol-motion-card-select-scale` (1,04) büyür ve çerçevesi
+   * parlar; azaltılmış harekette ölçek yoktur, çerçeve vurgusu kalır. Kapanan seçicide
+   * hangi kartın seçildiğini belli eder.
+   */
+  markPicked(): void {
+    if (this.pickedTimeout !== null) window.clearTimeout(this.pickedTimeout);
+    this.element.classList.add('vol-card--picked');
+    this.pickedTimeout = window.setTimeout(() => {
+      this.pickedTimeout = null;
+      this.element.classList.remove('vol-card--picked');
+    }, PICKED_MS);
+  }
+
+  /** Kartın kimliği (seçici, olayı bildiren kartı bununla bulur). */
+  get id(): string {
+    return this.cardId;
   }
 
   /** Kilit görselini açar/kapatır. */
@@ -347,7 +418,11 @@ export class CardTile {
       window.clearTimeout(this.enterTimeout);
       this.enterTimeout = null;
     }
-    this.element.classList.remove('vol-card--entering');
+    if (this.pickedTimeout !== null) {
+      window.clearTimeout(this.pickedTimeout);
+      this.pickedTimeout = null;
+    }
+    this.element.classList.remove('vol-card--entering', 'vol-card--picked');
     this.element.remove();
   }
 
@@ -376,12 +451,10 @@ export class CardTile {
       .join(' ');
   }
 
-  private syncBadgesVisibility(): void {
-    if (this.badges.childElementCount > 0 && this.badges.parentElement !== this.element) {
-      this.element.insertBefore(this.badges, this.titleElement);
-    } else if (this.badges.childElementCount === 0 && this.badges.parentElement === this.element) {
-      this.badges.remove();
-    }
+  private syncPips(): void {
+    this.pipsElement.replaceChildren(
+      ...Array.from({ length: RARITY_PIPS[this.currentRarity] }, createPip),
+    );
   }
 
   private removeActionButton(): void {
@@ -398,8 +471,15 @@ export class CardTile {
     this.secondaryButton = null;
   }
 
-  private readonly handleAction = (): void => {
-    if (this.actionButton?.disabled) return;
+  private readonly handleAction = (event: Event): void => {
+    if (!this.actionButton || this.actionButton.disabled) return;
+    emitUiIntent({
+      kind: 'select',
+      origin: 'CardTile',
+      target: this.actionButton,
+      event,
+      defaultHaptic: 'select',
+    });
     this.onAction?.(this.cardId);
   };
 

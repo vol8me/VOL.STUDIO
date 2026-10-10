@@ -248,12 +248,13 @@ function buildSwipeableCardStackDemo(disposables: DisposableScope): HTMLElement 
     disposables.addDestroyables(title, desc);
     el.appendChild(title.element);
     el.appendChild(desc.element);
-    return { id: q.id, element: el };
+    return { id: q.id, label: q.title, element: el };
   });
 
   const stack = new SwipeableCardStack({
     cards,
     showActionButtons: true,
+    announce: true,
     onSwipe: (id, direction) => {
       const quest = quests.find((q) => q.id === id);
       if (direction === 'right') {
@@ -294,6 +295,7 @@ function buildChargeButtonDemo(disposables: DisposableScope): HTMLElement {
     label: i18next.t('volui:touch.hit'),
     icon: svgIcon('sword'),
     chargeDurationMs: DEMO_TIMEOUTS.chargeDuration,
+    announce: true,
     onChargeProgress: (progress) => {
       result.setContent(i18next.t('volui:touch.charging', { n: Math.round(progress * 100) }));
     },

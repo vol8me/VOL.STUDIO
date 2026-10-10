@@ -97,6 +97,7 @@ export const VOL_AURUM_OVERRIDES: VolThemeOverrides = {
   panel: '#1d1530',
   plate: '#271c3c',
   plateTopLight: '#ffeab81f',
+  brandFillHover: '#dcb560',
   wellInnerShadow: '#00000099',
 
   // çerçeve

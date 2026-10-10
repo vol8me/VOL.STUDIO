@@ -30,6 +30,8 @@ export class LevelUpPicker extends CardPicker {
     if (context.title !== undefined) this.setTitle(context.title);
     if (context.hint !== undefined) this.setHint(context.hint);
 
+    // Yeni teklif: önceki durum bildirimi eskidir. Yükleniyor/hata bildirimi çağıran tarafından `present`ten sonra konur.
+    this.setNotice(null);
     this.clearTiles();
     for (const card of cards) {
       this.addTile(card, {
@@ -42,6 +44,9 @@ export class LevelUpPicker extends CardPicker {
   }
 
   private handleSelect(cardId: string): void {
+    // Kapanış animasyonu sürerken (240 ms) kartlar tıklanabilir kalır; ikinci tıklama ikinci seçim sayılmaz.
+    if (!this.isVisible()) return;
+    this.markPicked(cardId);
     this.hide();
     this.onSelect(cardId);
   }
