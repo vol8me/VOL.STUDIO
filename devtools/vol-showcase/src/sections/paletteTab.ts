@@ -1,5 +1,5 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { Text } from '@volstudio/core/ui';
+import { Text, watchTheme } from '@volstudio/core/ui';
 import { i18n } from '@volstudio/core/i18n';
 import { card, paletteGrid } from './shared';
 
@@ -143,19 +143,24 @@ const GROUPS: PaletteGroup[] = [
   },
 ];
 
+/** Kaplama değişince kökteki token değerlerini yeniden okuyan satırlar; hex yazıları bayat kalmaz. */
+type Refresh = () => void;
+
 function buildSwatch(
   token: string,
   rootStyle: CSSStyleDeclaration,
   disposables: DisposableScope,
+  refreshers: Refresh[],
 ): HTMLElement {
   const value = rootStyle.getPropertyValue(token).trim();
 
   const swatch = document.createElement('div');
   swatch.className = 'vol-palette-swatch';
 
+  // Renk, değeri kopyalamak yerine token'a bağlanır: kaplama değişince çip kendiliğinden döner.
   const chip = document.createElement('div');
   chip.className = 'vol-palette-swatch__chip';
-  chip.style.background = value || 'transparent';
+  chip.style.background = `var(${token})`;
   swatch.appendChild(chip);
 
   const name = new Text(token.replace('--vol-ui-', ''), { variant: 'muted', tag: 'span' });
@@ -167,6 +172,7 @@ function buildSwatch(
   swatch.appendChild(hex.element);
 
   disposables.addDestroyables(name, hex);
+  refreshers.push(() => hex.setContent(rootStyle.getPropertyValue(token).trim()));
   return swatch;
 }
 
@@ -174,11 +180,12 @@ function buildGroupGrid(
   group: PaletteGroup,
   rootStyle: CSSStyleDeclaration,
   disposables: DisposableScope,
+  refreshers: Refresh[],
 ): HTMLElement {
   const grid = document.createElement('div');
   grid.className = 'vol-palette-group__grid';
   for (const token of group.tokens) {
-    grid.appendChild(buildSwatch(token, rootStyle, disposables));
+    grid.appendChild(buildSwatch(token, rootStyle, disposables, refreshers));
   }
   return grid;
 }
@@ -189,13 +196,19 @@ export function buildPaletteTab(): { element: HTMLElement; destroy: () => void }
   const disposables = new DisposableScope();
 
   const rootStyle = getComputedStyle(document.documentElement);
+  const refreshers: Refresh[] = [];
   const cards = GROUPS.map((group) =>
-    card(i18n.tDynamic(group.titleKey), buildGroupGrid(group, rootStyle, disposables), {
+    card(i18n.tDynamic(group.titleKey), buildGroupGrid(group, rootStyle, disposables, refreshers), {
       span: group.span,
     }),
   );
 
   container.appendChild(paletteGrid(cards));
+  disposables.add(
+    watchTheme(container, () => {
+      for (const refresh of refreshers) refresh();
+    }),
+  );
 
   return {
     element: container,

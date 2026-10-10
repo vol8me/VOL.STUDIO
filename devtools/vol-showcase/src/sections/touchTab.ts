@@ -378,7 +378,8 @@ function buildWorldCameraDemo(disposables: DisposableScope): HTMLElement {
   canvas.width = 640;
   canvas.height = 360;
   canvas.setAttribute('aria-label', i18next.t('volui:touch.worldCameraLabel'));
-  const context = canvas.getContext('2d');
+  // CPU tuvali: gamescope'ta hızlandırılmış 2D tuval boş kalıyordu (bkz. CurveEditor).
+  const context = canvas.getContext('2d', { willReadFrequently: true });
   if (!context) return canvas;
 
   const camera: WorldCamera = {

@@ -770,6 +770,7 @@
   "validateRigMetadata",
   "valueNoise",
   "vibrate",
+  "watchTheme",
   "wrap",
   "wrapAngle"
 ]

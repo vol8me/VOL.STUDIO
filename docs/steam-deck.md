@@ -64,11 +64,25 @@ arayüzü kalır).
   yaratır; Steam Input onu tanır ve kendi sanal kollarını açar (kol görünmeden önce **en az 8 sn**
   beklenir, kısa beklemede girdi sayfaya ulaşmaz). Bu işletim sistemi düzeyinde sanal koldur,
   **fiziksel Deck düğmeleri değildir**; Steam Input → WebKitGTK Gamepad API → gezinme zincirini sınar.
-- gamescope kuralı (DMA-BUF açık) altında HOST derlemesinde **2D canvas boş
-  kalır** (vitrinde Curve Editor); `WEBKIT_DISABLE_DMABUF_RENDERER=1` ile aynı
-  sayfa çizer. Bunun SLR4 derlemesinde de olup olmadığı **ölçülmedi**; canvas
-  2D/WebGL kullanan oyun, kabuğun gamescope kuralını bu ölçümle yeniden
-  sınamadan teslim edilmez (UI-12 / F08).
+- Sanal klavye: `devtools/deck/scripts/virtual-keys.py` (`KEYS_WARMUP=2 python3 virtual-keys.py SHIFT+B`)
+  `/dev/uinput` ile sanal klavye yaratır; tuşlar A–Z, 0–9, ENTER, ESC, TAB, SPACE, ok tuşları, HOME, END, PAGEUP,
+  PAGEDOWN; `SHIFT+B` birlikte basılır. gamescope odağındaki pencereye normal klavye olayı olarak ulaşır ve URL
+  yazmadan vitrinin kare ölçerini (`Shift+B`) başlatır, ölçüm sonuç penceresinde HOME/PAGEDOWN ile sayfalar gezilir.
+  Sanal kol gibi işletim sistemi düzeyindedir, fiziksel klavye ya da Steam ekran klavyesi değildir.
+- gamescope kuralı (DMA-BUF açık) altında **2D canvas boş kalır** (vitrinde Curve Editor): HOST derlemesinde
+  (2026-10-08) ve **SLR4 derlemesinde de** (2026-10-10, aynı sayfa, aynı cihaz) ölçüldü; `WEBKIT_DISABLE_DMABUF_RENDERER=1`
+  ile aynı sayfa çizer. Uygulanan çözüm: küçük arayüz tuvalleri
+  `getContext('2d', { willReadFrequently: true })` ile **CPU tuvali** ister (`CurveEditor`, `MinimapPanel`,
+  vitrinin dokunma sekmesi). **Doğrulama (SLR4, 2026-10-10, gamescope, LCD Deck, ekran görüntüsü):** Curve Editor
+  (ızgara, eğri, noktalar) ve HUD sekmesindeki Minimap (ızgara, bloklar, işaretler) çiziliyor; yama öncesi aynı
+  derlemede Curve Editor boştu. Doğrulanmayanlar: dokunma sekmesinin dünya kamerası tuvali ve **HOST derlemesinde yamalı
+  koşu** (UI-13.3 A/B). Phaser/WebGL oyun tuvali bu ölçümün **dışındadır**: canvas kullanan oyun, kabuğun gamescope
+  kuralını kendi tuvaliyle yeniden sınamadan teslim edilmez (UI-12 / F08).
+- **.desktop şablonu tuzağı:** `devtools/vol-showcase/src-tauri/linux.desktop.hbs` anahtar=değer satır biçimidir. Biçimleyici (Prettier'ın
+  Handlebars ayrıştırıcısı) satırları tek satıra birleştirince AppImage paketlemesi bozulur ve Deck'te pencere boş
+  açılır. Şablon `.prettierignore`dadır ve `scripts/quality/tests/desktopTemplate.test.mjs` çok satırlılığı korur.
+- **Ölçüm tuzağı:** önceki koşudan kalan **ikinci bir `VOL.UI` süreci** kare hızını yarıya indirir ve ölçümü geçersiz
+  kılar. Ölçümden önce tüm `VOL.UI` süreçleri kapatılır (`pgrep -ax VOL.UI` boş dönmeli); aksi halde sayı atılır.
 
 Tauri kimliği veri yolunu belirler. Her ürün kendi kimliğini taşır; kimlik
 geçişi kayıt yolunu da değiştirir ve yedekli veri geçişi gerektirir. Steam
@@ -168,10 +182,17 @@ dokular). Karar: `.vol-showcase-card` kendi bileşik katmanı (tasarım değişm
 ortanca 60,2**; Forms 60,0, Touch 59,4. Motor-kapsamlı kuralla yeniden dağıtım ve ölçüm sonucu aynı: 14 sekme 57,3–60,6 FPS, ortanca 60,2; Forms 60,0, Touch 59,1. Kalan: HUD sekmesinde tek 129–130 ms kare (en kötü kare, %2 yavaş; neden ölçülmedi),
 Text sekmesinin 53–59 ms'lik tek kareleri.
 
-Sınırlar: bu, host derlemesi (Ubuntu WebKitGTK 2.4x, Cairo CPU boyama) ölçümüdür; **SLR4 derlemesinde** (farklı
-WebKitGTK/Skia olasılığı) yeniden ölçülmeden aynı sayılmaz (F08.5). CPU governor/termal etkisi ve oyun (Phaser/WebGL)
-FPS'i ayrıdır (VOL.TEST 60 medyan, p95 19 ms; yukarıdaki bölüm). Oyun arayüzüne taşınırken aynı ilke geçerlidir:
-bağımsız HUD plakalarını (kart boyunda) katmana terfi ettir, devasa tek katman kurma.
+**SLR4 ölçümü (2026-10-10, LCD Deck, `pnpm build:linux-steamrt4` AppDir'i, 1280×800, DPR 1, tek `VOL.UI` süreci,
+gamescope; kullanıcı aracı `AppleWebKit/605.1.15 Version/60.5 Safari`, X11):** 15 sekmenin tamamı **57,8–60,6 FPS,
+ortanca 59,5**. En düşük TEXT 57,8 (kareler %6 oranında 20 ms üstü); en kötü tek kare FORMS 71 ms; p95 19–21 ms.
+THEME sekmesi (yeni, iki canvas ve çok kutu) 60,0 FPS. Aynı derlemenin yama öncesi ilk temiz koşusu: ortanca 59,5, en
+düşük 58,1. Gamescope açılış görüntüsünde tam ekran düğmesi yoktur ve dil düğmesi boşluğu doldurur. Bu sayı "kaydırılırken sunulan kare"dir, oyun FPS'i değildir.
+
+Sınırlar: host derlemesi (Ubuntu WebKitGTK 2.4x, Cairo CPU boyama) ve SLR4 sayıları birbirinden ayrı ölçülmüştür;
+birbirinin yerine geçmez ve **host/SLR4 aynı örnekle A/B** UI-13.3'tedir. SLR4 koşusu **ısınmamış** tek pencere
+ölçümüdür (10 dk termal ve MangoHud/gamescope sunum istatistiği NOT-RUN). CPU governor/termal etkisi ve oyun
+(Phaser/WebGL) FPS'i ayrıdır (VOL.TEST 60 medyan, p95 19 ms; yukarıdaki bölüm). Oyun arayüzüne taşınırken aynı ilke
+geçerlidir: bağımsız HUD plakalarını (kart boyunda) katmana terfi ettir, devasa tek katman kurma.
 
 ## Girdi ve glif
 

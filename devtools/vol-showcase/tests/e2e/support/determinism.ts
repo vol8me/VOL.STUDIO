@@ -104,6 +104,7 @@ export const SHOWCASE_TABS = [
   'forms',
   'workbench',
   'palette',
+  'theme',
   'advanced',
   'scroll',
   'touch',

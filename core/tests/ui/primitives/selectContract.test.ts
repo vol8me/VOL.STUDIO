@@ -40,6 +40,43 @@ describe('Select sözleşmesi', () => {
     expect(onCommit).toHaveBeenCalledExactlyOnceWith('b');
   });
 
+  it('yeni değer seçilince liste kapanır ve odak tetikleyiciye döner (tıklama ve Enter)', () => {
+    const select = make(vi.fn(), 'a');
+    select.element.click();
+    optionOf('b').click();
+    expect(select.getValue()).toBe('b');
+    expect(document.activeElement).toBe(select.element);
+
+    select.element.click();
+    const option = optionOf('c');
+    option.focus();
+    option.click(); // Enter da düğmede tıklama üretir
+    expect(select.getValue()).toBe('c');
+    expect(document.activeElement).toBe(select.element);
+  });
+
+  it('commit geri çağrısı odak tetikleyicideyken çalışır', () => {
+    let focusedAtCommit: Element | null = null;
+    const select = make(
+      vi.fn(() => {
+        focusedAtCommit = document.activeElement;
+      }),
+      'a',
+    );
+    select.element.click();
+    optionOf('b').click();
+    expect(focusedAtCommit).toBe(select.element);
+  });
+
+  it('programatik ayar odağa dokunmaz', () => {
+    const select = make(vi.fn(), 'a');
+    const other = document.createElement('button');
+    document.body.appendChild(other);
+    other.focus();
+    select.setValue('b');
+    expect(document.activeElement).toBe(other);
+  });
+
   it('açıkken devre dışı bırakma listeyi kapatır ve odağı tetikleyiciye alır', () => {
     const select = make();
     select.element.click();

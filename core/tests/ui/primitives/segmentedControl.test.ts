@@ -100,6 +100,22 @@ describe('SegmentedControl — klavye', () => {
     expect(buttonsOf(control).map((button) => button.tabIndex)).toEqual([-1, -1, -1, 0]);
   });
 
+  it('ok tuşunda odak commit geri çağrısından ÖNCE yeni segmente taşınır', () => {
+    let focusedAtCommit: Element | null = null;
+    const control = mount({
+      options: THREE_WITH_GAP,
+      value: 'a',
+      onCommit: () => {
+        focusedAtCommit = document.activeElement;
+      },
+    });
+    const [a, , c] = buttonsOf(control);
+    a.focus();
+    press(a, 'ArrowRight');
+    // Tüketici commit'te arayüzü yeniden kurarsa (dil seçimi) odak zaten yeni segmentte olmalıdır.
+    expect(focusedAtCommit).toBe(c);
+  });
+
   it('ok tuşları kapalı segmenti atlayarak seçer, uçlarda sarar ve odağı taşır', () => {
     const onCommit = vi.fn<(value: string) => void>();
     const control = mount({ options: THREE_WITH_GAP, value: 'a', onCommit });

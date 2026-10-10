@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Sanal klavye (uinput). Kullanim: virtual-keys.py <adim>... ; adim = bekleme(sn) ya da tus[:sure]
-Tuslar: A-Z 0-9 ENTER ESC TAB SPACE UP DOWN LEFT RIGHT; birlikte basili: SHIFT+B. Ornek: KEYS_WARMUP=4 virtual-keys.py SHIFT+B
+Tuslar: A-Z 0-9 ENTER ESC TAB SPACE UP DOWN LEFT RIGHT HOME END PAGEUP PAGEDOWN; birlikte basili: SHIFT+B. Ornek: KEYS_WARMUP=4 virtual-keys.py SHIFT+B
 Isletim sistemi duzeyinde sanal klavyedir (fiziksel klavye/Steam ekran klavyesi degildir); gamescope odagindaki pencereye
 normal klavye olayi olarak ulasir. Deck'te URL yazmadan `Shift+B` kare olcerini baslatmak icin kullanilir."""
 import fcntl, os, struct, sys, time
@@ -12,7 +12,8 @@ UI_DEV_CREATE = 0x5501
 UI_DEV_DESTROY = 0x5502
 
 KEYS = {'ESC': 1, 'ENTER': 28, 'TAB': 15, 'SPACE': 57, 'SHIFT': 42,
-        'UP': 103, 'DOWN': 108, 'LEFT': 105, 'RIGHT': 106}
+        'UP': 103, 'DOWN': 108, 'LEFT': 105, 'RIGHT': 106,
+        'HOME': 102, 'END': 107, 'PAGEUP': 104, 'PAGEDOWN': 109}
 for index, letter in enumerate('QWERTYUIOP'):
     KEYS[letter] = 16 + index
 for index, letter in enumerate('ASDFGHJKL'):

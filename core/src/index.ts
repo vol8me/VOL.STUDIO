@@ -368,6 +368,7 @@ export {
   type ThemeState,
   type ThemeStore,
 } from './ui/themes/ThemeController';
+export { watchTheme } from './ui/themes/themeWatch';
 export {
   MotionController,
   type MotionControllerOptions,

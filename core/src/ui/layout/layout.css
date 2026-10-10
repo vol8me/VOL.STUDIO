@@ -398,6 +398,28 @@
   }
 }
 
+/*
+ * Aynı yığılma DAR KAPSAYICIDA da çalışır (kart, bölme, kapsamlı önizleme): görünüm penceresi geniş olsa da etiket sütunu
+ * sıfıra sıkışıp harf harf dizilmesin. Etkili olması için satırın bir atası `container-type: inline-size` olmalıdır;
+ * kapsayıcı yoksa kural hiç eşleşmez ve yukarıdaki medya sorgusu tek başına geçerlidir. `container-type` yerleşim sınırlaması
+ * getirir (içindeki `position: fixed` öğeler artık kapsayıcıya göre konumlanır): katmanların bağlandığı elemana değil, ayrı
+ * bir sarmalayıcıya verilmelidir.
+ */
+@container (width <= 400px) {
+  .vol-settings-row--stack-narrow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--vol-space-xs);
+  }
+
+  .vol-settings-row--stack-narrow .vol-settings-row__control {
+    justify-content: flex-start;
+  }
+
+  .vol-settings-row--stack-narrow .vol-settings-row__control > .vol-select {
+    width: 100%;
+  }
+}
+
 .vol-tree,
 .vol-tree__children {
   margin: 0;

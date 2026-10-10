@@ -1,6 +1,7 @@
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { emitUiIntent, emitUiSignal } from '../feedback/uiIntent';
+import { watchTheme } from '../themes/themeWatch';
 import { Button } from './Button';
 
 export type CurvePoint = readonly [number, number];
@@ -127,7 +128,9 @@ export class CurveEditor {
     // Çizim yalnız görseldir; nokta düğmeleri ve metin eşdeğerleri erişilebilirlik ağacındadır.
     this.canvas.setAttribute('aria-hidden', 'true');
     this.stage.appendChild(this.canvas);
-    this.context = this.canvas.getContext('2d');
+    // CPU tuvali (`willReadFrequently`): küçük arayüz tuvali; Steam Deck gamescope'ta (WebKitGTK, DMA-BUF kompozit)
+    // hızlandırılmış 2D tuval BOŞ kalıyordu, CPU tuval aynı sayfada çizer (UI-06.4).
+    this.context = this.canvas.getContext('2d', { willReadFrequently: true });
 
     const hint = document.createElement('span');
     hint.className = 'vol-sr-only';
@@ -188,6 +191,9 @@ export class CurveEditor {
 
     i18next.on('languageChanged', this.onLanguageChanged);
     this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
+    // Çizgi, ızgara ve nokta renkleri çizim anında token'dan okunur: kaplama değişince (ya da eleman başka kapsama
+    // taşınınca) kendiliğinden yenilenmez, bu yüzden izlenir.
+    this.scope.add(watchTheme(this.element, () => this.draw()));
 
     this.renderHandles();
     this.applyDisabled();

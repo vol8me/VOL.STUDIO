@@ -219,8 +219,9 @@ export class SegmentedControl {
 
     event.preventDefault();
     const next = enabled[(target + enabled.length) % enabled.length];
-    this.commitUser(next, event);
+    // Odak ÖNCE taşınır: değişimi dinleyen tüketici (dil seçimi gibi) commit'te arayüzü yeniden kurarsa odağı yeni segmentte bulur.
     this.buttons.get(next)?.focus();
+    this.commitUser(next, event);
   }
 
   private select(value: string): void {

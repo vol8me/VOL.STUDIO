@@ -1,5 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { LocalStorageAdapter, ScopedSaveManager } from '@volstudio/core/persistence';
+import { ThemeController } from '@volstudio/core/ui';
 import { PlatformServices } from '../../src/platform';
 import { resolve } from 'node:path';
 import { buildAdvancedTab } from '../../src/sections/advancedTab';
@@ -14,6 +15,7 @@ import { buildPanelsTab } from '../../src/sections/panelsTab';
 import { buildScrollTab } from '../../src/sections/scrollTab';
 import { buildSesTab } from '../../src/sections/sesTab';
 import { buildTextTab } from '../../src/sections/textTab';
+import { buildThemeTab } from '../../src/sections/themeTab';
 import { buildTouchTab } from '../../src/sections/touchTab';
 import { buildWorkbenchTab } from '../../src/sections/workbenchTab';
 
@@ -67,6 +69,21 @@ export function tabBuilders(getRoot: () => HTMLElement): TabBuilder[] {
     { name: 'forms', build: () => buildFormsTab(root(), webPlatform()) },
     { name: 'workbench', build: () => buildWorkbenchTab() },
     { name: 'palette', build: () => buildPaletteTab() },
+    {
+      name: 'theme',
+      build: () => {
+        // Küresel denetleyiciyi kabuk sahiplenir; burada sekmeyle birlikte kurulur ve sökülür.
+        const theme = new ThemeController();
+        const tab = buildThemeTab({ theme, platform: webPlatform() });
+        return {
+          element: tab.element,
+          destroy: () => {
+            tab.destroy();
+            theme.dispose();
+          },
+        };
+      },
+    },
     { name: 'advanced', build: () => buildAdvancedTab(root()) },
     { name: 'scroll', build: () => buildScrollTab() },
     { name: 'touch', build: () => buildTouchTab() },

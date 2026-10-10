@@ -10,22 +10,5 @@
       "reason": "393 px genişlikte 12 tuşluk satır 44 px genişliğe sığmaz; tuşlar taşmadan daralır (≥ 28 px, WCAG 2.5.8 AA 24 px) ve yükseklik 44 px kalır. Telefonda metin girişi yerel IME ile yapılır; ekran klavyesi kol ve tablet içindir. Android IME köprüsü ve kenar boşlukları UI-11.3 ile kapanır."
     }
   ],
-  "glyphHeights": [
-    {
-      "font": "Jura 12px w400",
-      "owner": "UI-07.3",
-      "reason": "12 px Jura normal ağırlıkta büyük harf mürekkep yüksekliği 9 ekran px altında; font-size ≥12 tek başına Valve glif alt sınırını garanti etmez"
-    },
-    {
-      "font": "Jura 12px w600",
-      "owner": "UI-07.3",
-      "reason": "12 px Jura yarı kalın ağırlıkta büyük harf mürekkep yüksekliği 9 ekran px altında"
-    },
-    {
-      "font": "monospace 14px w400",
-      "engines": ["webkit"],
-      "owner": "UI-07.3",
-      "reason": "WebKit'te genel monospace yedeği bu makinenin sistem yazı tipine düşer ve 9 ekran px altında çizilir; ölçü makineye bağlıdır, gerçek yedek yazı tipi tabanı UI-07.3'te belirlenir"
-    }
-  ]
+  "glyphHeights": []
 }

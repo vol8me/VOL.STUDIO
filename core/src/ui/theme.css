@@ -166,6 +166,13 @@
   /* @generated:motion:end */
   --vol-font-family: 'Jura', sans-serif;
   --vol-font-family-body: 'Exo 2', sans-serif;
+  /*
+   * Gönderilen yazı tipleri tek aralıklı değildir; genel `monospace` yedeği motora ve sisteme göre değişir (WebKit
+   * Courier New'a düşer: 14 px'te büyük harf yüksekliği 8 ekran px). Tek aralıklı yazı bu yığınla istenir; sıra,
+   * büyük harf yüksekliği bol olan yazı tipleri önce gelir.
+   */
+  --vol-font-family-mono:
+    'Cascadia Mono', Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
 
   /*
    * Tip ölçeği rol taşır; yeni boyut eklenmez, en yakın rol seçilir.
@@ -176,10 +183,12 @@
    *   title   panel/kart başlığı
    *   heading bölüm başlığı
    *   display ekran başlığı, hasar sayısı
-   * Taban 12 px'tir (Steam Deck okunabilirliği; vol-showcase readability kapısı).
+   * Taban 12 px'tir (Steam Deck okunabilirliği; vol-showcase readability kapısı). Jura büyük harfleri küçüktür (cap
+   * oranı 0,633; Exo 2 0,69): Jura'lı roller (micro, label) 13 px'tir ve büyük harf mürekkep yüksekliği 9 ekran px
+   * (Valve alt sınırı) verir, Jura 12 px 8 verir. Gövde yazısı Exo 2'dir, 12 px'te de 9 verir.
    */
-  --vol-text-micro: 12px;
-  --vol-text-label: 12px;
+  --vol-text-micro: 13px;
+  --vol-text-label: 13px;
   --vol-text-body: 14px;
   --vol-text-lead: 16px;
   --vol-text-title: 20px;

@@ -111,7 +111,7 @@ export const MIN_NODE_WIDTH = 88;
  * ölçüm yapar (bkz. aşağıdaki yorum, DOM'a bağlı olma zorunluluğunu
  * ortadan kaldırmak için).
  */
-export const NODE_LABEL_FONT = "600 12px 'Jura', sans-serif";
+export const NODE_LABEL_FONT = "600 13px 'Jura', sans-serif";
 
 interface NodeLayout {
   centerX: number;

@@ -70,22 +70,20 @@ aile (UI-05 + UI-09) → UI-13.
 
 ## Gerçek kalan iş (2026-10-10 sonu)
 
-**F07 KAPALI DEĞİLDİR.** 31 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
+**F07 KAPALI DEĞİLDİR.** 29 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
 metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde bu oturumda çalıştırılmadı.
 
 | Görev        | Gerçek kalan iş                                                                                                                                                                                                                                                                                                     | Tür                 |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
 | UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                                                                                               | cihaz + insan       |
 | UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                                                                                                | cihaz + insan       |
-| UI-06.4      | Deck host+SLR4 açılış, OGG/UI sesi, yalnız kol, ekran görüntüsü, ısınmış performans; Windows tarafı yapıldı                                                                                                                                                                                                         | cihaz               |
-| UI-07.3      | Değişken TTF boyutu/subset kararı, yedek font tabanı/satır yüksekliği, font yükleme hatası örneği, asenkron font yerleşimi kaydırmaz kanıtı; Deck glif yüksekliği, Android %200                                                                                                                                     | kod + cihaz         |
-| UI-07.4      | Tema sekmesi ve genel tema/dil/yoğunluk seçici; önizleme kapsamları, body portalları, canvas sabit renkleri; 2 skin × 3 yoğunlukta kontrast/odak, CLS                                                                                                                                                               | kod (büyük)         |
+| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                                                                                                  | cihaz               |
 | UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                                                                                                         | kod                 |
 | UI-09.1–09.4 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL; **UI-09.4 (diyalog deseni, yönlendirici işaret, yasal metin) hiç başlanmadı**                                                    | kod + insan (AT)    |
 | UI-10.1–10.5 | SquareJoystick/SwipeGestureZone/MultiTouchZone klavye karşılığı, jest süresi reduced-motion; SplitPane/ScrollView/VirtualList kanıtı, %200, tutamak 24/44; sayaç tarifi; CanvasViewport/WorldCamera/PinchZoom alternatifi, Toolbar/PropertyField, meşgul <100 ms; **UI-10.5 palet ve ileri katalog hiç başlanmadı** | kod + cihaz         |
 | UI-11.1      | Unicode grafem, gerçek IME bileşimi, readOnly/disabled tuşları; Deck kolu ve Android cihaz kanıtı                                                                                                                                                                                                                   | kod + cihaz + insan |
 | UI-11.2      | **Hiç başlanmadı:** native menü/pano (`nativeMenus.ts`, `native_menus.js`), salt okunur/parola kuralları, izin reddi akışı                                                                                                                                                                                          | kod                 |
-| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 bağlı; Samsung yoksa NOT-RUN)                                                                                                                                                                      | kod + cihaz         |
+| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                                                                                                           | kod + cihaz         |
 | UI-12.1      | **Hiç başlanmadı:** Steam metin sağlayıcısı (`steamworks.ts`, `service.rs`), gerçek Steam runtime sondası                                                                                                                                                                                                           | kod + cihaz         |
 | UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                                                                                               | cihaz + insan       |
 | UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                                                                                                           | cihaz (Windows)     |
@@ -203,8 +201,9 @@ UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağım
       Bulunan ve kapanan: AppImage'a giren Ubuntu libwayland/xcb Deck Mesa'sıyla karışıp WebKitWebProcess'i
       EGL hatasıyla düşürüyor (pencere boş) → `build-appimage.mjs` bu kütüphaneleri pakete koymaz; vitrin
       `lang` özniteliği yerleşimden sonra atandığı için WebKit'te "SETTİNGS" (Türkçe İ) çıkıyordu → atama
-      sayfa kurulmadan önce. **Açık bulgu:** gamescope kuralındaki DMA-BUF açık yolunda HOST derlemesinde 2D
-      canvas boş (Curve Editor), kapalıyken çiziliyor; SLR4 derlemesinde yeniden ölçülecek (UI-12 / F08).
+      sayfa kurulmadan önce. **Bulgu (2026-10-10'da kapandı):** gamescope kuralındaki DMA-BUF açık yolunda 2D canvas
+      boş (Curve Editor), kapalıyken çiziliyor; HOST'ta ve SLR4'te de boş olduğu ölçüldü, küçük arayüz tuvalleri CPU
+      tuvaline alındı ve SLR4'te doğrulandı (aşağıdaki 2026-10-10 Deck kaydı).
       Kol: OS düzeyi sanal Xbox kolu (`devtools/deck/scripts/virtual-pad.py`) Steam Input üzerinden D-pad/RB/A ve OSK yazımını sürdü (fiziksel düğme değil).
       Yapıldı (2026-10-10): **Windows yerel kare/CPU sondası** (`devtools/vol-showcase/scripts/native-frame-probe.mjs`, WebView2 + CDP,
       A/A iki koşu; debug derleme, 60 Hz, DPR 1,25): 14 sekmenin 13'ü 60,0 FPS, `cards` 59,7 (her koşuda tek 33 ms kare), A/A farkı 0 FPS /
@@ -213,9 +212,19 @@ UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağım
       kusur — `InputPresentationController` glifleri her karede (oyunda her HUD karesinde) belgeyi tarıyordu, `GamepadPointerController` kol
       yokken modal arıyordu → değişiklik/kol bazlı; ayrıca kapalı `DialogueBox` okunun saydam sonsuz animasyonu yalnız görünürken oynar
       (`idleCost.spec.ts`; boşta CPU'yu ölçülebilir azaltmadı, tasarruf iddia edilmez). Kayıt: [VERIFICATION](VERIFICATION.md) "Windows yerel kare ve CPU kaydı".
-      **Açık (gerçek iş, bu oturumda ÇALIŞTIRILMADI; Deck bağlıdır):** Deck host AppImage + SLR4 (steamrt4) derlemesi ve açılışı, Deck'te OGG/UI
-      sesi çıkışı, yalnız kol akışı ve fiziksel kol/arka tuş, Deck ekran görüntüsü, ısınmış performans/MangoHud, gamescope satır gizleme; release
-      derleme ve DPI 125/150/200 Windows koşuları (UI-12.4). Görev bunlar ölçülene kadar AÇIK kalır.
+      Yapıldı (2026-10-10): **Deck SLR4 derlemesi ve açılışı** (`pnpm build:linux-steamrt4`, docker; 280 ELF'in hepsi ≤ GLIBC_2.41;
+      `pnpm deck deploy` + `run`): LCD Deck, gamescope, 1280×800, tek `VOL.UI` süreci. Uygulama içi kare ölçeri (`Shift+B`, sanal
+      klavye `devtools/deck/scripts/virtual-keys.py` ile): 15 sekmenin tamamı 57,8–60,6 FPS, ortanca 59,5 (en düşük TEXT 57,8; Tema
+      60,0). Gamescope'ta tam ekran düğmesi görünmez, dil düğmesi boşluğu doldurur; Tema sekmesinin oturum satırı "desktop · gamescope ·
+      fullscreen: not offered" der. **2D canvas bulgusu SLR4'te de vardı** → `CurveEditor`, `MinimapPanel` ve dokunma sekmesi tuvalleri
+      `willReadFrequently` CPU tuvali ister; yama sonrası SLR4'te Curve Editor, HUD'daki Minimap ve Tema sekmesindeki üç kapsamın
+      tuvalleri çiziliyor (ekran görüntüsü). Ölçüm tuzakları belgelendi: kalan ikinci `VOL.UI` süreci FPS'i yarıya indirir; Prettier
+      `.desktop` şablonunu tek satıra birleştirip boş pencere üretmişti (şablon `.prettierignore`da, testli). Ayrıntı:
+      [steam-deck.md](../steam-deck.md).
+      **Açık (gerçek iş):** Deck'te OGG/UI sesi çıkışı, fiziksel kol/arka tuş (Steam Input yeniden bağlama UI-12.2), ısınmış 10 dk performans
+      ve MangoHud/gamescope sunum istatistiği, gamescope'ta pencere ayar satırlarının gizlenmesi, dokunma sekmesi tuvalinin Deck'te
+      doğrulanması; host derleme ile SLR4 aynı örnekle A/B (UI-13.3); Windows release derleme ve DPI 125/150/200 koşuları (UI-12.4).
+      Görev bunlar ölçülene kadar AÇIK kalır.
 
 Faz testi: quality/appIdentity/productIcons/catalog/layers/ports/cargo/plugin fixtures, contract/rust/build/bundle, iki motor E2E, gerçek native sonda.
 
@@ -244,7 +253,7 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
       → `{{count, number}}`; `Select` harfle gezinmesi sistem yerelinde küçültüyordu (Türkçe klavyeden `I` → `i`, "Işık" bulunamıyordu; arayüz
       diliyle düzeltildi). Kanıt: `plurals.test.ts`, `settingsModel.test.ts`, `minimapPanel.test.ts`, `selectionControls.test.ts`,
       `i18nSurface.test.mjs` (düzeltme olmadan kırılan testlerle). Yapıldı (2026-10-10, ikinci dilim): **tarih/birim/yüzde** — kit kendi biçimleyicisini yazmaz; i18next `datetime`/`number(unit|percent)` biçimleyicileri etkin arayüz diliyle `Intl`e devredilir (`formats.test.ts`: beklenen değer açık dil koduyla `Intl`den, iki dilin çıktısı farklı). Vitrindeki elle birleştirmeler tüketiciye çevrildi: olay günlüğü saati elle 24 saat idi (İngilizcede `12:00:00 AM` olmalı), sayaç para biçimi `tr-TR`ye sabitti, Zoom yüzdesi ve saniye birimi elle yazılıyordu (`localeFormats.spec.ts`, iki motor, tr-TR/en-US tarayıcı yerelinde; İngilizce saat testi eski kodla kırılır). **%200 yakınlaştırma**: `pseudoLocale.spec.ts` 640×400 CSS görünümünü (1280×800 pencerenin %200'ü) 14 sekme × LTR/RTL + altı açık katman için iki motorda tarar, kırpılma/taşma yok. **RTL açılır pencere yönü**: `Popup` konumlaması fiziksel sola hizalıyordu; RTL'de `Select`/`Popover`/`ColorPicker`/`ContextMenu` penceresi okuma başlangıcından uzak açılıyordu → `start`/`end` mantıksal kenar oldu (`direction.ts`), taşarsa karşı kenara çevrilir; `popupDirection.test.ts` düzeltme olmadan kırılır, `inlineDirection.spec.ts` Select ve Popover'ı iki motor × LTR/RTL ölçer. **NOT-RUN (gerçek çeviriyle uzunluk):** TR/EN dışında gerçek çeviri yok; %30 uzun sahte dil gerçek çeviri iddiası taşımaz. Üçüncü dil getiren ilk ürün (F09.4 VT7 i18n sözleşmesi) o dilin kaynağını aynı `?lang=` kancasıyla taratır; kitte yapılacak kod işi kalmadı.
-- [ ] **UI-07.3 — Font varlığı.** Mevcut font hattı ve subset manifesti; lisans/kaynak, gerçek
+- [x] **UI-07.3 — Font varlığı.** Mevcut font hattı ve subset manifesti; lisans/kaynak, gerçek
       glif sınırları, Türkçe kapsamı, yedek font tabanı/satır yüksekliği, soğuk önbellek; oyun
       hissine uygun başlık/sayı yazı tipi seçimi gözden geçirilir. Kapanır: font-ready ve yükleme
       hatası örneği; asenkron font yerleşimi kaydırmaz; Deck glif yüksekliği gerçek ekranda;
@@ -255,16 +264,42 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
       bunlar arayüzde kullanılıyordu ve sistem yedek fontuna düşüp platforma göre farklı çiziliyordu →
       sıralama göstergesi ve ağaç oku CSS üçgeni, tuş etiketleri sözcük ("Left Arrow"), vitrin metinlerinde ok yerine
       sözcük ve bağlam menüsü tetikleyicisinde ikon. Eksik glif yeni metinde kapıyı düşürür. Lisans dosyaları
-      (OFL) pakette. Kalan: değişken TTF'lerin boyutu/subset kararı, yedek font tabanı/satır yüksekliği ölçümü,
-      font yükleme hatası örneği, asenkron font yerleşimi kaydırmaz kanıtı, Deck glif yüksekliği ve Android %200
-      ölçek.
-- [ ] **UI-07.4 — Tema laboratuvarı ve üst bar (kalan).** Yapıldı: vitrin üst çubuğunda skin
+      (OFL) pakette.
+      Yapıldı (2026-10-10): **boyut/subset kararı**: alt kümeleme ve WOFF2 yok (ölçüm: TTF 865 KB → WOFF2 295 KB → alt kümeli
+      144 KB; hedefler yerel paketlerdir, alt küme Kiril/Yunan/Vietnam kapsamını düşürür); `fontCoverage.test.mjs` bütçesi
+      toplam ≤ 900 KB, dosya ≤ 320 KB, Exo 2 Kiril ve Jura Yunan korunur. **Yükleme hatası ve asenkron yerleşim**
+      (`fontLoad.spec.ts`, iki motor): yavaş yazı tipinde uygulama yüklenmiş yazı tipiyle kurulur, 15 sekme yüksekliği
+      kurulumdan sonra birebir aynı, Chromium CLS 0; istek iptal edilince "Font yüklenemedi" uyarısı, sistem yedeğiyle
+      açılış, taşma/kırpılma yok. **Yedek yazı tipi tabanı**: yedek/yüklü sekme yüksekliği farkı tarayıcıda en fazla −%3,8
+      (eşik %10), Lenovo'da en fazla −%3,5 (eşik %15). Ortak taşma tarayıcısı `devtools/vol-showcase/tests/e2e/support/textFit.ts` (pseudo-locale ve
+      cihaz). **Cihaz yazı ölçeği taraması** (Lenovo, `device-ui.mjs --font-scale 2.0`, iki yön, 14 sekme): bulgu 0, ama
+      Chrome `font_scale`i CSS px'e uygulamadı (düğme 44, yazı 16, kök 16 px), bu yüzden %200 kanıtı SAYILMAZ.
+      **Glif yüksekliği kusuru kapandı:** Jura 12 px büyük harf mürekkep yüksekliği 8 ekran px'ti (Valve alt sınırı 9; Deck'te kart başlığı etiketi 8 px ölçüldü), `geometryExceptions.json`daki üç bilinen kusur (Jura 12 px w400/w600, WebKit `monospace`) bu görev içinde çözüldü: `--vol-text-micro`/`--vol-text-label` 13 px, açık monospace yığını; kayıt listesi boş. Etki: etiketler 1 px büyür, sayfalar 3–65 px uzar, 42 görsel taban çizgisi bilerek yenilendi (+ Tema sekmesi için 1 yeni).
+      **Deck glif yüksekliği** gerçek ekranda ölçüldü (gövde Exo 2 16 px büyük harf 11 px = 1,30 mm; küçük etiket 8 px =
+      0,94 mm). Tam tablo: [VERIFICATION](VERIFICATION.md) "Yazı tipi boyutu ve yedek kaydı".
+      **NOT-RUN (gerekçeli, devredildi):** Android'de gerçek %200 yazı/WebView ölçeği (APK WebView koşusu → UI-11.3 ve
+      F09.2); glif yüksekliğinin ve okunabilirliğin insan kabulü (UI-13.4).
+- [x] **UI-07.4 — Tema laboratuvarı ve üst bar (kalan).** Yapıldı: vitrin üst çubuğunda skin
       düğmesi (`ThemeController`, kök `data-vol-theme`, seçim `localStorage`'da kalır, bilinmeyen
       kayıt varsayılana döner; `skin.spec.ts` iki motorda), skin ses paletini ve imleç aksanını
-      değiştirir; üst çubuk çekirdek bileşenleriyle yeniden kuruldu (UI-01.7 notuna bakın). Kalan: Tema sekmesi ve genel tema/dil/yoğunluk seçici; önizleme kapsamları/body
-      portalları/canvas sabit renkleri (CurveEditor/Minimap). Kapanır: 2 skin × 3 yoğunlukta
+      değiştirir; üst çubuk çekirdek bileşenleriyle yeniden kuruldu (UI-01.7 notuna bakın). Kapanır: 2 skin × 3 yoğunlukta
       kontrast/odak; Chromium CLS ve tüm motor geometrisi; geçiş anlık, durum/kaydırma/odak/seçim
-      sabit.
+      sabit; önizleme kapsamları/body portalları/canvas sabit renkleri (CurveEditor/Minimap).
+      Yapıldı (2026-10-10): **Tema sekmesi** (`devtools/vol-showcase/src/sections/themeTab.ts`): küresel skin/yoğunluk/dil seçici, 44 px dokunma
+      hedefi anahtarı, oturum satırı (platform, oturum, tam ekran kontrolünün gerçek karşılığı), küreseli izleyen kutu ve iki
+      kendi denetleyicili kapsam; kapsamdaki `Select` listesi `container` ile kutuya bağlanır ve kutunun kaplamasını giyer.
+      Ortak **`watchTheme`** (`core/src/ui/themes/themeWatch.ts`, genel API): `CurveEditor` ve `MinimapPanel` kaplamayı
+      izler (Minimap'in kendi uzun gözlemci düzeneği buna indi). Bulunan ve düzeltilen çekirdek kusurları: `CurveEditor`
+      kaplama değişince eski renkte kalıyordu; `SettingsRow` dar kapsayıcıda etiket sütununu sıfıra sıkıştırıyordu
+      (additive `@container` kuralı); `Select` yeni değer seçilince odağı gövdeye düşürüyordu (WCAG 2.4.3); `SegmentedControl`
+      ok tuşunda yeniden kuran tüketicide (dil) odağı eski segmentte bırakıyordu (bu ikisinin testi düzeltme olmadan
+      KIRILIR); Palette sekmesi skin değişince eski değeri gösteriyordu; dil değişimi kaydırmayı ve odağı kaybettiriyordu. Kanıt:
+      `themeLab.spec.ts` (iki motor, 18/18), `themeMatrix.spec.ts` (axe ihlal 0, 5 kombinasyon × 15 sekme, Chromium; odak
+      göstergesi ve geometri iki motor; skin geçişi CLS < 0,0001, Chromium), `themeWatch.test.ts`; gerçek cihazda Deck SLR4
+      (Tema sekmesi 60,0 FPS, üç kapsamın tuvalleri kendi kaplamasında çizilir) ve Lenovo dikey+yatay. Tam tablo:
+      [VERIFICATION](VERIFICATION.md) "Tema laboratuvarı ve skin × yoğunluk kaydı". **Belgeli sınırlar:** yoğunluk
+      değişince WebKit'te görünen içerik birkaç on piksel kayar (çapa yok); dil değişiminde diğer sekmelere girilmiş metin
+      korunmaz. **NOT-RUN:** aurum skininin insan göz kabulü (UI-13.4).
 
 ### UI-08 — HUD ve erken tier-1 kapsam kontrolü
 

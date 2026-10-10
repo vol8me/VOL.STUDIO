@@ -8,6 +8,7 @@ import {
   Icon,
   IconButton,
   type IconName,
+  listFocusable,
   THEME_IDS,
   Tabs,
   ThemeController,
@@ -30,6 +31,7 @@ import { buildPanelsTab } from './sections/panelsTab';
 import { buildScrollTab } from './sections/scrollTab';
 import { buildSesTab } from './sections/sesTab';
 import { buildTextTab } from './sections/textTab';
+import { buildThemeTab } from './sections/themeTab';
 import { buildTouchTab } from './sections/touchTab';
 import { buildWorkbenchTab } from './sections/workbenchTab';
 
@@ -42,6 +44,7 @@ type ShowcaseTabId =
   | 'forms'
   | 'workbench'
   | 'palette'
+  | 'theme'
   | 'advanced'
   | 'scroll'
   | 'touch'
@@ -65,6 +68,7 @@ const TAB_ICONS: ReadonlyArray<readonly [ShowcaseTabId, IconName]> = [
   ['forms', 'tune'],
   ['workbench', 'gears'],
   ['palette', 'palette'],
+  ['theme', 'paintBucket'],
   ['advanced', 'apps'],
   ['scroll', 'moveDown'],
   ['touch', 'touch'],
@@ -253,7 +257,30 @@ export class ShowcaseApp {
     this.element.remove();
   }
 
+  /**
+   * Yeniden kurulumdan önce kaydırma ve odak konumu: dil değişimi sekmeleri baştan kurar, kullanıcı olduğu yerde kalmalı.
+   * Odak, görünür odaklanabilirler içindeki SIRA ile tutulur (yapı dil değişince aynıdır; metinler değişir).
+   */
+  private captureView(): { scrollTop: number; focusIndex: number } | null {
+    if (!this.tabs) return null;
+    const panels = this.element.querySelector<HTMLElement>('.vol-tabs__panels');
+    const active = document.activeElement;
+    const focusIndex =
+      active instanceof HTMLElement ? listFocusable(this.element).indexOf(active) : -1;
+    return { scrollTop: panels?.scrollTop ?? 0, focusIndex };
+  }
+
+  private restoreView(view: { scrollTop: number; focusIndex: number } | null): void {
+    if (!view) return;
+    const panels = this.element.querySelector<HTMLElement>('.vol-tabs__panels');
+    if (panels) panels.scrollTop = view.scrollTop;
+    if (view.focusIndex >= 0) {
+      listFocusable(this.element)[view.focusIndex]?.focus({ preventScroll: true });
+    }
+  }
+
   private rebuild(): void {
+    const view = this.captureView();
     // Belge dili sayfa kurulmadan önce yazılır: WebKit büyük harf dönüşümünü ilk yerleşimdeki dil
     // kuralıyla yapar (index.html varsayılanı `tr`; İngilizce başlık "SETTİNGS" olmasın).
     document.documentElement.lang = i18next.language ?? 'tr';
@@ -332,6 +359,11 @@ export class ShowcaseApp {
       },
       { id: 'workbench', labelKey: 'workbench', builder: buildWorkbenchTab },
       { id: 'palette', labelKey: 'palette', builder: buildPaletteTab },
+      {
+        id: 'theme',
+        labelKey: 'theme',
+        builder: () => buildThemeTab({ theme: this.theme, platform: this.platform }),
+      },
       { id: 'advanced', labelKey: 'advanced', builder: () => buildAdvancedTab(this.element) },
       { id: 'scroll', labelKey: 'scroll', builder: buildScrollTab },
       { id: 'touch', labelKey: 'touch', builder: buildTouchTab },
@@ -379,6 +411,7 @@ export class ShowcaseApp {
     }
     this.element.appendChild(this.tabs.element);
     document.title = i18next.t('volui:app.title');
+    this.restoreView(view);
   }
 
   /** Sekme düğmelerine ikon ekler (`-tab-<id>` kimliğinden): ikon süstür, ad metindedir. */

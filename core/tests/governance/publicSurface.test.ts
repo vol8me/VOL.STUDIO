@@ -366,6 +366,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'validateRigMetadata',
   'valueNoise',
   'vibrate',
+  'watchTheme',
   'wrap',
   'wrapAngle',
 ];

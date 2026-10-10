@@ -738,7 +738,7 @@ body {
   border-radius: var(--vol-radius-sm);
   color: var(--vol-ui-text-muted);
   font-family: var(--vol-font-family);
-  font-size: 12px;
+  font-size: var(--vol-text-label);
   text-align: center;
 }
 

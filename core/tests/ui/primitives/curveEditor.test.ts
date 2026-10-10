@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { CurveEditor } from '../../../src/ui/primitives/CurveEditor';
+import { ThemeController } from '../../../src/ui/themes/ThemeController';
 
 function canvasOf(editor: CurveEditor): HTMLCanvasElement {
   return editor.element.querySelector('canvas')!;
@@ -201,5 +202,74 @@ describe('CurveEditor', () => {
     canvas.dispatchEvent(new MouseEvent('dblclick', { clientX: 50, clientY: 50 }));
     expect(onInput).not.toHaveBeenCalled();
     expect(editor.element.isConnected).toBe(false);
+  });
+});
+
+describe('CurveEditor — kaplama', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    vi.restoreAllMocks();
+  });
+
+  /** Çizgi rengini (`strokeStyle`) kaydeden sahte bağlam ve kaplamaya göre token veren `getComputedStyle`. */
+  function fakeCanvas(): { strokes: string[] } {
+    const strokes: string[] = [];
+    let strokeStyle = '';
+    const noop = (): void => undefined;
+    const context = {
+      clearRect: noop,
+      beginPath: noop,
+      moveTo: noop,
+      lineTo: noop,
+      arc: noop,
+      fill: noop,
+      stroke: () => strokes.push(strokeStyle),
+      set strokeStyle(value: string) {
+        strokeStyle = value;
+      },
+      get strokeStyle() {
+        return strokeStyle;
+      },
+      fillStyle: '',
+      lineWidth: 1,
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+      context as unknown as CanvasRenderingContext2D,
+    );
+    vi.spyOn(globalThis, 'getComputedStyle').mockImplementation((element) => {
+      const style = document.createElement('div').style;
+      const aurum = element.closest('[data-vol-theme]')?.getAttribute('data-vol-theme') === 'aurum';
+      style.setProperty('--vol-ui-brand-solid', aurum ? '#f0c568' : '#d67434');
+      return style;
+    });
+    return { strokes };
+  }
+
+  it('kaplama değişince eğri yeni tema renginde yeniden çizilir (canvas CSS dışıdır)', async () => {
+    const canvas = fakeCanvas();
+    const scope = document.createElement('section');
+    document.body.append(scope);
+    const theme = new ThemeController();
+    theme.attach(scope);
+    const editor = new CurveEditor();
+    scope.append(editor.element);
+    editor.setPoints([
+      [0, 0],
+      [1, 1],
+    ]);
+    expect(canvas.strokes.at(-1)).toBe('#d67434');
+
+    theme.setTheme('aurum');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(canvas.strokes.at(-1)).toBe('#f0c568');
+
+    editor.destroy();
+    const before = canvas.strokes.length;
+    theme.setTheme('default');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(canvas.strokes.length).toBe(before);
+    theme.dispose();
   });
 });

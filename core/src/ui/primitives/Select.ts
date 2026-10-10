@@ -206,7 +206,11 @@ export class Select {
     this.optionButtons.get(value)?.setAttribute('aria-selected', 'true');
 
     this.renderLabel();
+    // Odak listedeyse (tıklama, Enter) kapanışla birlikte tetikleyiciye döner; yoksa gizlenen listeyle birlikte gövdeye
+    // düşer ve klavye kullanıcısı yerini kaybeder (WCAG 2.4.3). Programatik (sessiz) ayar odağa dokunmaz.
+    const focusWasInList = this.popup.element.contains(document.activeElement);
     this.popup.close();
+    if (focusWasInList) this.element.focus();
 
     if (!opts.silent) {
       emitUiIntent({

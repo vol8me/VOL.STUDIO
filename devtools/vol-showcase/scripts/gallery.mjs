@@ -33,6 +33,7 @@ const TABS = [
   'forms',
   'workbench',
   'palette',
+  'theme',
   'advanced',
   'scroll',
   'touch',

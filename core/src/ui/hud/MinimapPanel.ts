@@ -1,6 +1,8 @@
 import { i18next } from '../../i18n/I18n';
+import type { Disposable } from '../../lifecycle/DisposableScope';
 import { Icon } from '../primitives/Icon';
 import { IconButton } from '../primitives/IconButton';
+import { watchTheme } from '../themes/themeWatch';
 import {
   drawBounds,
   drawCursor,
@@ -151,17 +153,11 @@ export class MinimapPanel {
   private destroyed = false;
   private focused = false;
   private pingFrame = 0;
-  private themeFrame = 0;
   private dragPointer: number | null = null;
   private description = '';
   private zoomIn?: IconButton;
   private zoomOut?: IconButton;
-  private readonly themeObserver?: MutationObserver;
-  private readonly mountObserver?: MutationObserver;
-  private mountDiscoveryDocument: Document | null = null;
-  private themeAncestors: Element[] = [];
-  private themeOwner: Element | null = null;
-  private themeValue: string | null = null;
+  private readonly themeWatch: Disposable;
   private readonly labelIsI18n: boolean;
   private label: string;
   private readonly interactive: boolean;
@@ -218,7 +214,9 @@ export class MinimapPanel {
     this.canvas.className = 'vol-minimap__canvas';
     this.element.appendChild(this.canvas);
 
-    const ctx = this.canvas.getContext('2d');
+    // CPU tuvali (`willReadFrequently`): küçük arayüz tuvali; Steam Deck gamescope'ta (WebKitGTK, DMA-BUF kompozit)
+    // hızlandırılmış 2D tuval BOŞ kalıyordu, CPU tuval aynı sayfada çizer (UI-06.4).
+    const ctx = this.canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) {
       throw new Error('MinimapPanel: 2D canvas context alınamadı');
     }
@@ -229,67 +227,13 @@ export class MinimapPanel {
     this.applyLabels();
     this.draw();
 
-    // Bağlı haritada yalnız ata zinciri izlenir; ayrıkken ekleme keşfi bağlama yaşam döngüsünü tamamlar.
-    if (typeof MutationObserver === 'function') {
-      this.themeObserver = new MutationObserver(() => this.bindThemeAncestors());
-      this.mountObserver = new MutationObserver(() => {
-        if (this.element.isConnected) this.bindThemeAncestors();
-      });
-      this.bindThemeAncestors();
-    }
-    // Eleman kurucuda henüz belgeye bağlı olmayabilir: bağlanınca tema renkleriyle bir kez yeniden çizilir.
-    this.themeFrame = requestAnimationFrame(() => {
-      this.themeFrame = 0;
-      this.bindThemeAncestors();
-      this.paletteKey = '';
+    // Kaplama değişimi, taşınma ve ilk bağlanma `watchTheme`dedir: palet atılır, harita bir kez yeniden çizilir.
+    this.themeWatch = watchTheme(this.element, () => {
+      this.palette = null;
       this.invalidate();
     });
 
     i18next.on('languageChanged', this.onLanguageChanged);
-  }
-
-  private bindThemeAncestors(): void {
-    if (this.destroyed) return;
-    const ownerDocument = this.element.ownerDocument;
-    if (this.element.isConnected) {
-      this.mountObserver?.disconnect();
-      this.mountDiscoveryDocument = null;
-    } else if (this.mountDiscoveryDocument !== ownerDocument) {
-      // Ayrık öğenin yeni atasını DOM bildirmez: yalnız bağlanana kadar ekleme keşfi gerekir.
-      this.mountObserver?.disconnect();
-      this.mountObserver?.observe(ownerDocument.documentElement, {
-        childList: true,
-        subtree: true,
-      });
-      this.mountDiscoveryDocument = ownerDocument;
-    }
-    const ancestors: Element[] = [];
-    for (let node: Element | null = this.element; node; node = node.parentElement) {
-      ancestors.push(node);
-    }
-    // İlk bağlama karesinden önce küresel tema değişimi de kaybolmasın.
-    const documentRoot = ownerDocument.documentElement;
-    if (!ancestors.includes(documentRoot)) ancestors.push(documentRoot);
-    if (
-      ancestors.length !== this.themeAncestors.length ||
-      ancestors.some((node, index) => node !== this.themeAncestors[index])
-    ) {
-      this.themeObserver?.disconnect();
-      this.themeAncestors = ancestors;
-      for (const node of ancestors)
-        this.themeObserver?.observe(node, {
-          attributes: true,
-          attributeFilter: ['data-vol-theme'],
-          childList: true,
-        });
-    }
-    const owner = this.element.closest('[data-vol-theme]');
-    const value = owner?.getAttribute('data-vol-theme') ?? null;
-    if (owner === this.themeOwner && value === this.themeValue) return;
-    this.themeOwner = owner;
-    this.themeValue = value;
-    this.palette = null;
-    this.invalidate();
   }
 
   // ---- genel API ----
@@ -439,13 +383,8 @@ export class MinimapPanel {
   destroy(): void {
     this.destroyed = true;
     i18next.off('languageChanged', this.onLanguageChanged);
-    this.themeObserver?.disconnect();
-    this.mountObserver?.disconnect();
-    this.mountDiscoveryDocument = null;
-    this.themeAncestors = [];
-    this.themeOwner = null;
+    this.themeWatch.dispose();
     if (this.pingFrame) cancelAnimationFrame(this.pingFrame);
-    if (this.themeFrame) cancelAnimationFrame(this.themeFrame);
     for (const cleanup of this.cleanups.splice(0)) cleanup();
     this.zoomIn?.destroy();
     this.zoomOut?.destroy();

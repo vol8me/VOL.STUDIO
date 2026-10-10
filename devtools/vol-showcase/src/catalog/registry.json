@@ -2152,11 +2152,7 @@
       "anchor": "A4",
       "archetype": "mechanism",
       "consumer": "catalog",
-      "showcase": [],
-      "shownVia": {
-        "via": null,
-        "reason": "görsel olmayan tema/yoğunluk sahibi; vitrin üst bar seçicisi UI-07.4'te bağlanır"
-      },
+      "showcase": ["sections/themeTab.ts"],
       "tests": [
         {
           "file": "core/tests/ui/themes/themeController.test.ts",
@@ -3120,6 +3116,34 @@
         {
           "file": "core/tests/ui/feedback/uiIntent.test.ts",
           "title": "release ikinci çağrıda etkisizdir ve son bırakış kaydı siler"
+        }
+      ]
+    },
+    {
+      "export": "watchTheme",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-07",
+      "anchor": "A4",
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/paletteTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/themes/themeWatch.test.ts",
+          "title": "en yakın kaplama sahibinin değeri değişince bildirir; ilgisiz değişimi yok sayar"
+        },
+        {
+          "file": "core/tests/ui/themes/themeWatch.test.ts",
+          "title": "daha yakın kök kaplamayı sahiplenir: dıştaki değişim içteki öğeyi etkilemez"
+        },
+        {
+          "file": "core/tests/ui/themes/themeWatch.test.ts",
+          "title": "başka kapsama taşınınca bildirir ve yeni atanın değişimini izler"
+        },
+        {
+          "file": "core/tests/ui/themes/themeWatch.test.ts",
+          "title": "ayrık eleman belgeye bağlanınca bildirir (kurucuda bağlı olmayan çizim yenilenir)"
         }
       ]
     }

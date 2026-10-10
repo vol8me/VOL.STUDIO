@@ -36,6 +36,7 @@ export {
   type ThemeState,
   type ThemeStore,
 } from './themes/ThemeController';
+export { watchTheme } from './themes/themeWatch';
 export {
   MotionController,
   type MotionControllerOptions,
