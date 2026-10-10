@@ -15,6 +15,12 @@ import {
 import { i18next } from '@volstudio/core/i18n';
 import { card, cardGrid, svgIcon } from './shared';
 import { ICON_COPY, ICON_EDIT, ICON_SHARE, ICON_TRASH } from './icons';
+import {
+  buildDialogPatternsDemo,
+  buildGuidedTourDemo,
+  buildLegalDemo,
+  buildSyncConflictDemo,
+} from './dialogPatternCards';
 
 function buildFadeDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
@@ -530,6 +536,18 @@ export function buildPanelsTab(uiRootElement: HTMLElement): {
       span: 4,
     }),
     card(i18next.t('volui:panels.confirm'), buildConfirmDemo(disposables, uiRootElement)),
+    card(
+      i18next.t('volui:panels.dialogPatterns'),
+      buildDialogPatternsDemo(disposables, uiRootElement),
+      { span: 2 },
+    ),
+    card(
+      i18next.t('volui:panels.syncConflict'),
+      buildSyncConflictDemo(disposables, uiRootElement),
+      { span: 2 },
+    ),
+    card(i18next.t('volui:panels.guidedTour'), buildGuidedTourDemo(disposables, uiRootElement)),
+    card(i18next.t('volui:panels.legal'), buildLegalDemo(disposables, uiRootElement)),
     card(i18next.t('volui:panels.toast'), buildToastDemo(uiRootElement, disposables)),
     card(
       i18next.t('volui:panels.cornerNotification'),

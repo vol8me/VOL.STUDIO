@@ -138,6 +138,30 @@ export const LAYER_SCENARIOS: readonly LayerScenario[] = [
     root: (page) => page.locator('.vol-popover.vol-popup--visible'),
   },
   {
+    scope: 'panels/dialog',
+    tab: 'panels',
+    trigger: (page) => button(page, en.panels.dpDestructive),
+    root: (page) => page.locator('.vol-dialog.vol-modal--visible'),
+  },
+  {
+    scope: 'panels/conflict',
+    tab: 'panels',
+    trigger: (page) => button(page, en.panels.scOpen),
+    root: (page) => page.locator('.vol-dialog.vol-modal--visible'),
+  },
+  {
+    scope: 'panels/legal',
+    tab: 'panels',
+    trigger: (page) => button(page, en.panels.legalOpen),
+    root: (page) => page.locator('.vol-legal.vol-modal--visible'),
+  },
+  {
+    scope: 'panels/tour',
+    tab: 'panels',
+    trigger: (page) => button(page, en.panels.tourStart),
+    root: (page) => page.locator('.vol-tour.vol-popup--visible'),
+  },
+  {
     scope: 'forms/select',
     tab: 'forms',
     trigger: (page) => page.locator('.vol-select').first(),

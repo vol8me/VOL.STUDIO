@@ -8,6 +8,7 @@
 @import url('./layout/layout.css');
 @import url('./layout/density.css');
 @import url('./overlays/overlays.css');
+@import url('./overlays/dialogs.css');
 @import url('./overlays/loading.css');
 @import url('./feedback/feedback.css');
 @import url('./hud/hud.css');

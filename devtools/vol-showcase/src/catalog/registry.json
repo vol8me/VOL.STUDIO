@@ -2781,6 +2781,30 @@
       ]
     },
     {
+      "export": "openActionDialog",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/dialogPatternCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/actionDialog.test.ts",
+          "title": "ad ve açıklamaya bağlı diyalog kurar; yıkıcı eylem varsa alertdialog olur"
+        },
+        {
+          "file": "core/tests/ui/overlays/actionDialog.test.ts",
+          "title": "söz beklenirken bekleme duyurulur, diğer eylemler kapanır, iptal açık kalır ve odak alır"
+        },
+        {
+          "file": "core/tests/ui/overlays/actionDialog.test.ts",
+          "title": "reddedilen iş hata bölgesini açar, eylemleri geri verir ve aynı eylem yeniden denenir"
+        }
+      ]
+    },
+    {
       "export": "pickDirectionalTarget",
       "kind": "helper",
       "tier": 2,
@@ -3132,6 +3156,67 @@
       ]
     },
     {
+      "export": "showDestructiveConfirm",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/dialogPatternCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "alertdialog açar, ilk odak iptaldedir ve sonucu açıkça yazar"
+        },
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "Escape, iptal düğmesi ve sinyal false döndürür; Enter (ilk odak) yıkıcı işlem yapmaz"
+        }
+      ],
+      "extraStates": ["focusVisible", "keyboard"]
+    },
+    {
+      "export": "showDialog",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/dialogPatternCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/actionDialog.test.ts",
+          "title": "Escape, scrim ve Android geri iptal eylemini döndürür"
+        },
+        {
+          "file": "core/tests/ui/overlays/actionDialog.test.ts",
+          "title": "sinyal iptali iptal eylemini döndürür; önceden iptal edilmişse hiç açılmaz"
+        }
+      ]
+    },
+    {
+      "export": "showExitPrompt",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/dialogPatternCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "üç seçenek sunar; vazgeç ilk odaktır ve Escape bunu döndürür"
+        },
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "kaydetme işi başarısızsa diyalog açık kalır, yeniden denenir ve kaydetmeden çıkış hâlâ mümkündür"
+        }
+      ]
+    },
+    {
       "export": "showFatalStartupError",
       "kind": "helper",
       "tier": 1,
@@ -3146,6 +3231,97 @@
           "title": "başlık ve hata ayrıntısını erişilebilir yüzeye yazar"
         }
       ]
+    },
+    {
+      "export": "showLegalDocument",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/dialogPatternCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/legalSheet.test.ts",
+          "title": "başlıklı, kaydırılabilir gövdeli sheet açar; bölümler ve atıf listesi yazılır"
+        },
+        {
+          "file": "core/tests/ui/overlays/legalSheet.test.ts",
+          "title": "adresler tıklanabilir bağlantı değil seçilebilir metindir; metin HTML olarak yorumlanmaz"
+        }
+      ],
+      "extraStates": ["focusVisible", "keyboard"]
+    },
+    {
+      "export": "showPermissionPrompt",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/dialogPatternCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "gerekçeyi açıklama olarak gösterir; izin ver, izin verme ve Escape sonuçları"
+        },
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "gerçek istek reddedilirse hata ve yeniden deneme çıkar; izin verme isteği çalıştırmaz"
+        }
+      ]
+    },
+    {
+      "export": "showSyncConflict",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/dialogPatternCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "iki kopyayı karşılaştırır, her eylemin sonucunu yazar ve ilk odak iptaldedir"
+        },
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "çözüm başarısızsa açık hata, yeniden deneme ve iptal vardır; iptalde çözüm sinyali iptal olur"
+        },
+        {
+          "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+          "title": "varsayılan metinler bir bulut hizmeti adı anmaz (gerçek AutoCloud diye sunulmaz)"
+        }
+      ],
+      "extraStates": ["focusVisible", "keyboard"]
+    },
+    {
+      "export": "startGuidedTour",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-09",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/dialogPatternCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/overlays/guidedTour.test.ts",
+          "title": "İleri/Geri adımları sırayla gezdirir; son adımda Bitti vardır ve tur completed olur"
+        },
+        {
+          "file": "core/tests/ui/overlays/guidedTour.test.ts",
+          "title": "görünmeyen ve çözülemeyen adımlar atlanır; sayaç özgün sırayı korur"
+        },
+        {
+          "file": "core/tests/ui/overlays/guidedTour.test.ts",
+          "title": "adım sürerken hedef kaybolursa kutu sonraki adıma geçer; sonrası kalmadıysa tur completed biter"
+        }
+      ],
+      "extraStates": ["focusVisible", "keyboard"]
     },
     {
       "export": "suppressNativeMenus",

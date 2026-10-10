@@ -223,5 +223,51 @@
   "dialogue": {
     "fastForward": "Yazımı hızlandır",
     "skipLine": "Satırı tamamla"
+  },
+  "dialog": {
+    "cancel": "İptal",
+    "busy": "İşleniyor…",
+    "failed": "İşlem tamamlanamadı. Yeniden deneyebilir ya da vazgeçebilirsiniz.",
+    "destructive": {
+      "confirm": "Sil",
+      "consequence": "Bu işlem geri alınamaz."
+    },
+    "exit": {
+      "title": "Çıkmadan önce",
+      "message": "Kaydedilmemiş değişiklikler var.",
+      "saveAndExit": "Kaydet ve çık",
+      "discardAndExit": "Kaydetmeden çık",
+      "stay": "Vazgeç, kalayım"
+    },
+    "permission": {
+      "allow": "İzin ver",
+      "deny": "Şimdi değil"
+    },
+    "conflict": {
+      "title": "Kayıt çakışması",
+      "message": "Bu cihazdaki kayıt ile uzaktaki kopya farklı. Hangisini koruyacağınızı seçin; diğeri değiştirilir.",
+      "local": "Bu cihaz",
+      "remote": "Uzak kopya",
+      "keepLocal": "Bu cihazdakini koru",
+      "useRemote": "Uzak kopyayı kullan",
+      "keepLocalNote": "Uzaktaki kopya bu cihazdakiyle değiştirilir.",
+      "useRemoteNote": "Bu cihazdaki kayıt uzak kopyayla değiştirilir.",
+      "cancelNote": "İptal ederseniz hiçbir şey değişmez.",
+      "failed": "Çakışma çözülemedi; kayıtlara dokunulmadı. Yeniden deneyebilir ya da vazgeçebilirsiniz."
+    },
+    "tour": {
+      "next": "İleri",
+      "back": "Geri",
+      "skip": "Atla",
+      "done": "Bitti",
+      "step": "Adım {{current}} / {{total}}"
+    },
+    "legal": {
+      "close": "Kapat",
+      "attributions": "Atıflar",
+      "license": "Lisans",
+      "source": "Kaynak",
+      "author": "Yazar"
+    }
   }
 }

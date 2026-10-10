@@ -31,6 +31,34 @@
       "known": {}
     },
     {
+      "scope": "panels/dialog",
+      "export": "showDestructiveConfirm",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/conflict",
+      "export": "showSyncConflict",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/legal",
+      "export": "showLegalDocument",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
+      "scope": "panels/tour",
+      "export": "startGuidedTour",
+      "focus": "inside",
+      "states": ["focusVisible", "keyboard"],
+      "known": {}
+    },
+    {
       "scope": "forms/select",
       "export": "Select",
       "focus": "inside",

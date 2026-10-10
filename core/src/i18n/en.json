@@ -223,5 +223,51 @@
   "dialogue": {
     "fastForward": "Speed up typing",
     "skipLine": "Finish the line"
+  },
+  "dialog": {
+    "cancel": "Cancel",
+    "busy": "Working…",
+    "failed": "The action did not complete. You can try again or cancel.",
+    "destructive": {
+      "confirm": "Delete",
+      "consequence": "This cannot be undone."
+    },
+    "exit": {
+      "title": "Before you leave",
+      "message": "You have unsaved changes.",
+      "saveAndExit": "Save and exit",
+      "discardAndExit": "Exit without saving",
+      "stay": "Cancel, stay"
+    },
+    "permission": {
+      "allow": "Allow",
+      "deny": "Not now"
+    },
+    "conflict": {
+      "title": "Save conflict",
+      "message": "The save on this device and the remote copy differ. Choose which one to keep; the other is replaced.",
+      "local": "This device",
+      "remote": "Remote copy",
+      "keepLocal": "Keep this device's save",
+      "useRemote": "Use the remote copy",
+      "keepLocalNote": "The remote copy is replaced with this device's save.",
+      "useRemoteNote": "This device's save is replaced with the remote copy.",
+      "cancelNote": "If you cancel, nothing changes.",
+      "failed": "The conflict could not be resolved; your saves were not touched. You can try again or cancel."
+    },
+    "tour": {
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip",
+      "done": "Done",
+      "step": "Step {{current}} / {{total}}"
+    },
+    "legal": {
+      "close": "Close",
+      "attributions": "Attributions",
+      "license": "License",
+      "source": "Source",
+      "author": "Author"
+    }
   }
 }

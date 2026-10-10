@@ -11,6 +11,14 @@ export interface ModalOptions {
   onClose?: () => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /** Erişilebilir rol; geri alınamaz sonuç soran diyalog `alertdialog` olur. Varsayılan `dialog`. */
+  role?: 'dialog' | 'alertdialog';
+  /** Diyaloğa ad veren öğenin kimliği (`aria-labelledby`). */
+  labelledBy?: string;
+  /** Diyaloğu açıklayan öğenin kimliği (`aria-describedby`). */
+  describedBy?: string;
+  /** Açılışta odak alacak öğe; null/undefined ise ilk odaklanabilir öğe. */
+  initialFocus?: () => HTMLElement | null | undefined;
 }
 
 const BODY_LOCK_CLASS = 'vol-modal__body-locked';
@@ -43,6 +51,7 @@ export class Modal {
   private readonly scrim: HTMLDivElement;
   private readonly content: HTMLDivElement;
   private readonly onClose?: () => void;
+  private readonly initialFocus?: ModalOptions['initialFocus'];
   private previouslyFocused: (HTMLOrSVGElement & Element) | null = null;
   private boundKeydown: (event: KeyboardEvent) => void;
   private onScrimClick?: () => void;
@@ -54,6 +63,7 @@ export class Modal {
   constructor(options: ModalOptions = {}) {
     const { closeOnScrimClick = true, onClose } = options;
     this.onClose = onClose;
+    this.initialFocus = options.initialFocus;
 
     this.element = document.createElement('div');
     this.element.className = ['vol-modal', options.className].filter(Boolean).join(' ');
@@ -68,8 +78,10 @@ export class Modal {
 
     this.content = document.createElement('div');
     this.content.className = 'vol-modal__content';
-    this.content.setAttribute('role', 'dialog');
+    this.content.setAttribute('role', options.role ?? 'dialog');
     this.content.setAttribute('aria-modal', 'true');
+    if (options.labelledBy) this.content.setAttribute('aria-labelledby', options.labelledBy);
+    if (options.describedBy) this.content.setAttribute('aria-describedby', options.describedBy);
 
     this.element.appendChild(this.scrim);
     this.element.appendChild(this.content);
@@ -113,8 +125,12 @@ export class Modal {
     );
     syncBodyLock();
 
-    const firstFocusable = this.content.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-    firstFocusable?.focus();
+    const preferred = this.initialFocus?.();
+    const target =
+      preferred && this.content.contains(preferred)
+        ? preferred
+        : this.content.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    target?.focus();
   }
 
   /**
