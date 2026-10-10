@@ -3,7 +3,7 @@ import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { pushBackHandler } from '../../platform/backNavigation';
 import { FOCUSABLE_SELECTOR } from '../focus/focusable';
 import { previousFocusTarget } from '../primitives/buttonBehavior';
-import { emitUiSignal } from '../feedback/uiIntent';
+import { signalOverlay } from './overlaySignal';
 
 export interface ModalOptions {
   /** Scrim'e (arka plan karartması) tıklayınca kapat. Varsayılan true. */
@@ -140,10 +140,7 @@ export class Modal {
 
   /** Açma/kapama sesi: tetikleyici (odağın önceki sahibi) kayıtlı bir UI kökündeyse niyet yayılır. */
   private signal(kind: 'open' | 'close'): void {
-    const target = this.previouslyFocused;
-    if (target instanceof Element && target.isConnected) {
-      emitUiSignal({ kind, origin: 'Modal', target });
-    }
+    signalOverlay(kind, 'Modal', this.previouslyFocused);
   }
 
   destroy(): void {

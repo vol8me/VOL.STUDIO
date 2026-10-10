@@ -26,6 +26,7 @@ import {
 } from '@volstudio/core/ui';
 import { i18n, i18next } from '@volstudio/core/i18n';
 import { findBindingConflicts } from '@volstudio/core/input/bindings';
+import { getAppSoundKit } from '../appSound';
 import { buildGamepadDemo } from './touchGamepadDemo';
 import { buildRadialMenuDemo } from './touchRadialDemo';
 import { card, cardGrid, svgIcon } from './shared';
@@ -428,6 +429,8 @@ function buildWorldCameraDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
+const SLOT_COLUMNS = 6;
+
 /** SlotGrid demosu: 24 slot (6x4) envanter, sürüklenebilir 1x1/2x1/2x2 eşyalar. onSwapRequest true → 1x1 eşyalar yer değiştirebilir. */
 function buildSlotGridDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
@@ -491,12 +494,21 @@ function buildSlotGridDemo(disposables: DisposableScope): HTMLElement {
 
   const grid = new SlotGrid({
     slotCount: 24,
-    columns: 6,
+    columns: SLOT_COLUMNS,
     // Telefon dikeyinde kart ~318 px'tir: 6×56 sütun taşar ve sağdaki hücreler kırpılırdı; 44 px hücreler (6×44 + 5×8) sığar.
     size: window.matchMedia?.('(max-width: 480px)').matches ? 44 : undefined,
     items,
     onMove: (itemId, from, to) => {
-      result.setContent(i18next.t('volui:touch.itemMoved', { itemId, from, to }));
+      // Kuşanma oyun kararıdır (bileşen bilemez): ilk satır kısayol çubuğudur, oraya bırakılan eşya kuşanılır.
+      const equipped = to < SLOT_COLUMNS && from >= SLOT_COLUMNS;
+      if (equipped) getAppSoundKit()?.play('equip');
+      result.setContent(
+        i18next.t(equipped ? 'volui:touch.itemEquipped' : 'volui:touch.itemMoved', {
+          itemId,
+          from,
+          to: equipped ? to + 1 : to,
+        }),
+      );
     },
     onSwapRequest: () => true,
     onSlotClick: (item) => {

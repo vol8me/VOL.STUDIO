@@ -11,6 +11,7 @@ import {
   UI_MICRO_GAP_MS,
   UI_OUTCOME_SOUND,
   UI_RATE_JITTER,
+  UI_SLIDER_DRAG_GAIN,
   UI_SLIDER_RATE_RANGE,
   UI_SOUND_EVENTS,
   UI_SOUND_SEED,
@@ -58,11 +59,13 @@ export interface UiSoundThemeSource {
 export interface UiSoundPlayOptions {
   /** Oynatma hızı çarpanı (perde); kaydırıcı değeri gibi sürekli değerler için. */
   rate?: number;
+  /** Ses başına kazanç çarpanı [0, 1]; yalnız bu çalma için. */
+  gain?: number;
 }
 
 /** Üzerine gelme ve odak sesi için etkileşimli hedefler. */
 const HOVER_TARGETS =
-  'button, a[href], select, summary, input[type="range"], input[type="checkbox"], [role="tab"], [role="option"], [role="menuitem"], [role="switch"], [data-ui-sound="hover"]';
+  'button, a[href], select, summary, input[type="range"], [role="slider"], input[type="checkbox"], [role="tab"], [role="option"], [role="menuitem"], [role="switch"], [data-ui-sound="hover"]';
 
 export interface UiSoundKitOptions {
   assets?: UiSoundAssets;
@@ -266,6 +269,7 @@ export class UiSoundKit implements Disposable {
       try {
         started = bank.play(id, {
           rate: options.rate,
+          gain: options.gain,
           rateJitter: UI_RATE_JITTER,
           priority: critical ? 'critical' : 'normal',
         });
@@ -298,6 +302,11 @@ export class UiSoundKit implements Disposable {
       const [low, high] = UI_SLIDER_RATE_RANGE;
       this.play(UI_INTENT_SOUND.valuePreview, {
         rate: fraction === null ? undefined : low + (high - low) * fraction,
+        // Sürükleme (fare/dokunma) sürekli tick üretir: kısık; klavye ve düğme adımı tam seviye.
+        gain:
+          intent.source === 'pointer' || intent.source === 'touch'
+            ? UI_SLIDER_DRAG_GAIN
+            : undefined,
       });
       return;
     }
@@ -534,10 +543,21 @@ function isChecked(target: Element): boolean {
 
 /** Kaydırıcı değerinin [0, 1] konumu; aralık girdisi değilse ya da sonsuzsa `null`. */
 function rangeFraction(target: Element): number | null {
-  if (!(target instanceof HTMLInputElement) || target.type !== 'range') return null;
-  const min = Number(target.min === '' ? 0 : target.min);
-  const max = Number(target.max === '' ? 100 : target.max);
-  const value = Number(target.value);
+  let min: number;
+  let max: number;
+  let value: number;
+  if (target instanceof HTMLInputElement && target.type === 'range') {
+    min = Number(target.min === '' ? 0 : target.min);
+    max = Number(target.max === '' ? 100 : target.max);
+    value = Number(target.value);
+  } else if (target instanceof HTMLElement && target.dataset.volPitchMin !== undefined) {
+    // Çift uçlu kaydırıcı tutamağı: perde bütün aralığa göredir (aria-valuemin/max tutamağa özeldir).
+    min = Number(target.dataset.volPitchMin);
+    max = Number(target.dataset.volPitchMax);
+    value = Number(target.getAttribute('aria-valuenow'));
+  } else {
+    return null;
+  }
   if (![min, max, value].every(Number.isFinite) || max <= min) return null;
   return Math.min(1, Math.max(0, (value - min) / (max - min)));
 }

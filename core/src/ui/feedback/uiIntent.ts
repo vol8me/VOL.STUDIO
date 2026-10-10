@@ -65,6 +65,11 @@ export interface UiIntentRequest {
   defaultHaptic?: HapticPattern;
   /** Önizleme `false`, kalıcı değişiklik `true`; varsayılan `true`. */
   persistent?: boolean;
+  /**
+   * Girdi yolu, olay türünden çıkarılamadığında bildirilir (yerel `input` olayı: sürükleme mi,
+   * klavye mi). Verilmezse olaydan türer.
+   */
+  source?: UiIntentSource;
 }
 
 export interface UiIntent {
@@ -151,7 +156,7 @@ export class UiIntentBus {
     const intent: UiIntent = {
       id: this.nextId++,
       kind: request.kind,
-      source: sourceOf(event),
+      source: request.source ?? sourceOf(event),
       origin: request.origin,
       target,
       persistent: request.persistent ?? true,

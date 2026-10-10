@@ -82,16 +82,27 @@ ile bildirir (`success` → `confirm`, `warning` → `alert`, `error` → `denie
   `aria-pressed`).
 - `type` niyeti `keyTap`, `erase` niyeti `keyDelete`, `reject` niyeti (bileşenin kendi sınırı
   kullanıcı eylemini reddetti: dolu `maxLength`) `denied` çalar. Ekran klavyesi bu üçünü yayar.
-- `valuePreview` (kaydırıcı) perdeyi değerin konumuna bağlar: alçak değer alçak ses.
+- `valuePreview` (kaydırıcı, çift uçlu kaydırıcı) perdeyi değerin konumuna bağlar: alçak değer alçak ses.
+  Her değer adımı tek tick üretir (45 ms mikro aralığı kalabalığı keser). İşaretçiyle sürükleme
+  (`UI_SLIDER_DRAG_GAIN`, 0,55) klavye ve düğme adımından kısıktır: sürükleme sürekli adım üretir.
+  Yerel `input` olayı sürüklemeyi klavyeden ayıramadığı için `Slider` basılı işaretçiyi niyetin
+  `source` alanında bildirir.
 - `observe(root)` gerçek fare üzerine gelmesini (`hover`) ve klavye odağını (`focus`)
   dinler; dokunma ve fare odağı ses çalmaz.
 - **Olay sahipliği.** 25 olayın her biri bir niyetten, kökün gözlemcisinden ya da host'un açık
   `play` çağrısından gelir (`soundCoverage.test.ts` sahipsiz olay bırakmaz). Niyetler:
   `press` (düğme), `toggle`→`toggleOn`/`toggleOff`, `select` (seçim, sekme dışı menü, diyalog satırı),
   `navigate`→`tabSwitch` (sekme), `open`/`close`→`panelOpen`/`panelClose` (modal, sheet, onay,
-  akordeon), `confirm`/`cancel`→`confirm`/`back`, `valuePreview`/`valueCommit`, `pick`/`drop`→
+  akordeon, popover, bağlam menüsü, komut paleti), `confirm`/`cancel`→`confirm`/`back`, `valuePreview`/`valueCommit`, `pick`/`drop`→
   `dragPick`/`dragDrop`, `notify`/`alert` (bildirim; sistem olayı), `type`/`erase`→`keyTap`/`keyDelete`,
   `reject`→`denied`. Host olayları: `equip`, `purchase`, `reward`, `levelUp`, `release`.
+  `release` bilinçli olarak bileşene bağlı değildir: basılı tutma denetimleri oyun SFX'idir, sıradan
+  düğme sesi tıklamada (`press`) çalar; bırakış sesi isteyen özel yüzey `play('release')` çağırır.
+- **Katman sesi.** Açılış/kapanış niyeti tetikleyici (odağın önceki sahibi ya da bağlı eleman)
+  kayıtlı bir UI kökündeyse yayılır. Kodla, tetikleyicisiz açılan ya da sökülen katman sessizdir.
+  Kısayolla açılış, odak kayıtlı kökteki bir öğedeyken tetikleyici sayılır; odak gövdedeyse sessizdir.
+  Seçimi izleyen kapanış (bağlam menüsü öğesi, komut satırı) kendi seçim sesi olduğu için
+  kapanış sesini çiftlemez. `Select` kendi `select` niyetini yaydığından açılır liste sesi çiftlemez.
 - **Yedek niyet.** Kök, bileşen niyet yaymadıysa her düğme/sekme/menü/seçenek tıklamasını
   `press`/`navigate`/`select` olarak duyurur (aynı olay iki kez sayılmaz); `data-vol-silent` susturur.
   Oynanış denetimleri (Hold, LongPress, Charge, DirectionButton) susturulmuştur: ateş/şarj/yön sesi

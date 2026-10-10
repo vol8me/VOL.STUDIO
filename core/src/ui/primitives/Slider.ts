@@ -1,4 +1,4 @@
-import { emitUiIntent } from '../feedback/uiIntent';
+import { emitUiIntent, type UiIntentSource } from '../feedback/uiIntent';
 import { UI_SIZE } from '../../constants';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 
@@ -129,6 +129,14 @@ export class Slider {
 
     this.element.appendChild(track);
 
+    // Yerel `input` olayı sürüklemeyi klavyeden ayırmaz; basılı işaretçi kaynağı bildirir.
+    let dragSource: UiIntentSource | null = null;
+    const boundPointerDown = (event: PointerEvent): void => {
+      dragSource = event.pointerType === 'mouse' ? 'pointer' : 'touch';
+    };
+    const boundPointerRelease = (): void => {
+      dragSource = null;
+    };
     const boundInput = (event: Event): void => {
       const value = Number(this.input.value);
       this.gestureStartValue ??= this.committedValue;
@@ -139,6 +147,7 @@ export class Slider {
         target: this.input,
         event,
         persistent: false,
+        ...(dragSource && { source: dragSource }),
       });
       this.onInputHandler?.(value);
     };
@@ -160,6 +169,10 @@ export class Slider {
     this.scope.addListener(this.input, 'change', boundChange);
     this.scope.addListener(this.input, 'keydown', boundKeydown as EventListener);
     this.scope.addListener(this.input, 'pointercancel', boundPointerCancel);
+    this.scope.addListener(this.input, 'pointerdown', boundPointerDown as EventListener);
+    this.scope.addListener(this.input, 'pointerup', boundPointerRelease);
+    this.scope.addListener(this.input, 'pointercancel', boundPointerRelease);
+    this.scope.addListener(this.input, 'lostpointercapture', boundPointerRelease);
 
     this.render(value);
     this.committedValue = this.getValue();

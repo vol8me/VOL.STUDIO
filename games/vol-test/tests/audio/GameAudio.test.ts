@@ -183,4 +183,20 @@ describe('GameAudio', () => {
     release();
     root.remove();
   });
+
+  it('arayüz kiti oyunun ana otobüsüne bağlanır: ana ses tercihi arayüz sesini de belirler', () => {
+    const gameBus = context.gains[0];
+    const root = document.createElement('div');
+    document.body.append(root);
+    const { bus, release } = uiIntentBusFor(root);
+    const feeders = (): number =>
+      context.gains.filter((node) => node !== gameBus && node.connections.includes(gameBus)).length;
+    const before = feeders();
+    audio.attachUi(bus, root);
+    expect(feeders()).toBeGreaterThan(before);
+    audio.setVolume(0);
+    expect(gameBus.gain.value).toBe(0);
+    release();
+    root.remove();
+  });
 });

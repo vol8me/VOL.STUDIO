@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll, afterEach } from 'vitest';
 import { SlotGrid, type SlotItem } from '../../../src/ui/hud/SlotGrid';
+import { cellCenter, mockGridGeometry, stubPointerCapture } from '../../support/slotGridGeometry';
 
 const tracked: SlotGrid[] = [];
 function track(grid: SlotGrid): SlotGrid {
@@ -11,19 +12,7 @@ afterEach(() => {
   while (tracked.length > 0) tracked.pop()!.destroy();
 });
 
-beforeAll(() => {
-  // jsdom pointer capture desteklemiyor
-  if (!('setPointerCapture' in Element.prototype)) {
-    Object.defineProperty(Element.prototype, 'setPointerCapture', {
-      value: () => {},
-      configurable: true,
-    });
-    Object.defineProperty(Element.prototype, 'releasePointerCapture', {
-      value: () => {},
-      configurable: true,
-    });
-  }
-});
+beforeAll(stubPointerCapture);
 
 function makeItem(overrides?: Partial<SlotItem>): SlotItem {
   return {
@@ -31,57 +20,6 @@ function makeItem(overrides?: Partial<SlotItem>): SlotItem {
     label: 'Eşya',
     ...overrides,
   };
-}
-
-/**
- * jsdom `getBoundingClientRect` 0 döner. SlotGrid geometri hesabı için
- * grid ve item rect'lerini simüle eder.
- */
-function mockGridGeometry(grid: SlotGrid, columns: number, size = 56, gap = 8): void {
-  const slotCount = grid['slotCount'];
-  const rows = Math.ceil(slotCount / columns);
-
-  vi.spyOn(grid['cellsEl'], 'getBoundingClientRect').mockReturnValue({
-    left: 0,
-    top: 0,
-    right: columns * size + (columns - 1) * gap,
-    bottom: rows * size + (rows - 1) * gap,
-    width: columns * size + (columns - 1) * gap,
-    height: rows * size + (rows - 1) * gap,
-    x: 0,
-    y: 0,
-    toJSON: () => ({}),
-  });
-
-  for (const view of (grid['itemViews'] as Map<number, { element: HTMLDivElement }>).values()) {
-    const el = view.element;
-    const _index = Number(el.dataset.slotIndex);
-    const style = el.style;
-    const left = Number.parseFloat(style.left) || 0;
-    const top = Number.parseFloat(style.top) || 0;
-    const width = Number.parseFloat(style.width) || size;
-    const height = Number.parseFloat(style.height) || size;
-
-    vi.spyOn(el, 'getBoundingClientRect').mockReturnValue({
-      left,
-      top,
-      right: left + width,
-      bottom: top + height,
-      width,
-      height,
-      x: left,
-      y: top,
-      toJSON: () => ({}),
-    });
-  }
-}
-
-function cellCenter(index: number, columns = 6, size = 56, gap = 8): { x: number; y: number } {
-  const col = index % columns;
-  const row = Math.floor(index / columns);
-  const x = col * (size + gap) + size / 2;
-  const y = row * (size + gap) + size / 2;
-  return { x, y };
 }
 
 describe('SlotGrid', () => {

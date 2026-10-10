@@ -1,4 +1,5 @@
 import { i18next } from '../../i18n/I18n';
+import { signalOverlay } from './overlaySignal';
 
 export interface CommandItem {
   id: string;
@@ -147,6 +148,7 @@ export class CommandPalette {
   }
 
   open(): void {
+    if (this.isOpen()) return;
     this.previouslyFocused = document.activeElement as HTMLElement | null;
     this.element.classList.add('vol-command-palette--visible');
     this.element.inert = false;
@@ -155,12 +157,15 @@ export class CommandPalette {
     this.applyFilter();
     document.addEventListener('keydown', this.boundGlobalEscape);
     this.input.focus();
+    signalOverlay('open', 'CommandPalette', this.previouslyFocused);
   }
 
-  close(): void {
+  close(silent = false): void {
+    const wasOpen = this.isOpen();
     this.element.classList.remove('vol-command-palette--visible');
     this.element.inert = true;
     document.removeEventListener('keydown', this.boundGlobalEscape);
+    if (wasOpen && !silent) signalOverlay('close', 'CommandPalette', this.previouslyFocused);
     this.previouslyFocused?.focus();
     this.onCloseHandler?.();
   }
@@ -377,7 +382,8 @@ export class CommandPalette {
   }
 
   private selectItem(item: CommandItem): void {
-    this.close();
+    // Seçilen komutun kendi sesi vardır (satır tıklaması); kapanış sesi çiftlenmez.
+    this.close(true);
     item.onSelect();
   }
 }

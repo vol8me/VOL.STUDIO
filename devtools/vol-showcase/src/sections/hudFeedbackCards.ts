@@ -218,7 +218,7 @@ export function buildXPBarCard(disposables: DisposableScope): HTMLElement {
   const gainXp = (amount: number): void => {
     const next = applyXPGain(progress.level, progress.xp, amount, xpForLevel);
     // Seviye atlandıysa host duyurur (XPBar ses çalmaz; olay oyundadır).
-    if (next.level > progress.level) getAppSoundKit()?.play('levelUp');
+    getAppSoundKit()?.play(next.level > progress.level ? 'levelUp' : 'reward');
     progress = { level: next.level, xp: next.xp };
     xpBar.setState(progress.level, progress.xp);
   };

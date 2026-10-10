@@ -46,6 +46,7 @@ export class Popover {
       closeOnOutsideClick: options.closeOnOutsideClick,
       container: options.container,
       className: ['vol-popover', options.className].filter(Boolean).join(' '),
+      signal: 'Popover',
       onClose: () => {
         this.target.setAttribute('aria-expanded', 'false');
         // Odak yalnız popover'ın İÇİNDEYKEN tetikleyiciye döner. Dışarı

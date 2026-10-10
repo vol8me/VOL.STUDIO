@@ -1,5 +1,6 @@
 import { UI_THRESHOLD } from '../../constants';
 import { pushBackHandler, triggerBack } from '../../platform/backNavigation';
+import { signalOverlay } from './overlaySignal';
 
 export type PopupPlacement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end';
 
@@ -12,6 +13,11 @@ export interface PopupOptions {
   container?: HTMLElement;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /**
+   * Verilirse açılış/kapanış sesi bu kaynak adıyla niyet olarak yayılır (hedef tetikleyicidir).
+   * Verilmezse sessizdir: Select gibi kendi niyetini yayan bileşenler sesi çiftlemez.
+   */
+  signal?: string;
 }
 
 /** Escape sahibi açılış sırasıdır; document dinleyicisinin kayıt sırası değildir. */
@@ -29,6 +35,7 @@ export class Popup {
   private readonly placement: PopupPlacement;
   private readonly closeOnOutsideClick: boolean;
   private readonly onCloseHandler?: () => void;
+  private readonly signalOrigin: string | undefined;
   private readonly container: HTMLElement;
   private open = false;
   private destroyed = false;
@@ -48,6 +55,7 @@ export class Popup {
     this.placement = placement;
     this.closeOnOutsideClick = closeOnOutsideClick;
     this.onCloseHandler = onClose;
+    this.signalOrigin = options.signal;
     this.container = container;
 
     this.element = document.createElement('div');
@@ -116,14 +124,18 @@ export class Popup {
     // capture: true — ic scroll konteynerlerinin kaydırması da yakalanmali.
     window.addEventListener('scroll', this.boundReposition, { capture: true, passive: true });
     window.addEventListener('resize', this.boundReposition);
+    if (this.signalOrigin) signalOverlay('open', this.signalOrigin, this.target);
   }
 
-  close(): void {
+  /** `silent`: kapanışı bir seçim izliyorsa (kendi sesi vardır) kapanış sesi çalmaz. */
+  close(options: { silent?: boolean } = {}): void {
     if (this.destroyed || !this.open) return;
     this.open = false;
 
     this.element.classList.remove('vol-popup--visible');
     this.detachWhileOpenListeners();
+    if (this.signalOrigin && !options.silent)
+      signalOverlay('close', this.signalOrigin, this.target);
     this.onCloseHandler?.();
   }
 

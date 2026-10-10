@@ -123,5 +123,10 @@ export const UI_MAX_VOICES = 4;
 export const UI_RATE_JITTER = 0.04;
 /** Kaydırıcı perdesi: değerin konumu [0, 1] → oynatma hızı [alt, üst] (~ bir büyük onluya karşılık). */
 export const UI_SLIDER_RATE_RANGE = [0.82, 1.38] as const;
+/**
+ * Sürükleme sırasındaki kaydırıcı ticki kısıktır: sürükleme sürekli adım üretir, klavye/düğme ise
+ * tek tek. Değer perdesi aynı kalır; yalnız kazanç düşer (UI otobüsünün kendi seviyesine çarpan).
+ */
+export const UI_SLIDER_DRAG_GAIN = 0.55;
 /** UI RNG akışının sabit tohumu: simülasyon RNG'sinden BAĞIMSIZ ve tekrarlanabilir. */
 export const UI_SOUND_SEED = 0x75_69_73_6e; // "uisn"

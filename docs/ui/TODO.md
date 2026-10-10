@@ -131,33 +131,6 @@ Sahip CORE geri bildirim + audio-synth üreticisi + uygulama adaptörü. Niyet k
 titreşim sağlayıcısı, kısma ve laboratuvar mekanizması hazırdır (Kapatılanlar); **ses setinin
 kendisi sıfırdan yeniden yapılır.**
 
-- [ ] **UI-02.8 — Uygulama genelinde bağlama (kalan).** Yapıldı: kit yeni sözlükle (23 olay; 2026-10-08'de ekran klavyesi için `keyTap`/`keyDelete` ile 25,
-      iki palet), `toggleOn/Off`, kaydırıcıda değere bağlı perde, hover/focus gözlemcisi,
-      `setAssets`/`followTheme`, vitrin kökünde uygulama geneli bağlama; vitrin üst çubuğundaki skin
-      düğmesi ses paletini (çelik ↔ aurum) ve imleç vurgusunu değiştirir; VOL.TEST HUD kökünde kit
-      (oyunun ses bağlamı ve ana otobüsü üstünde; oyun SFX'i değişmedi) ve duraklatma/sürdürme paneli
-      kitin `panelOpen`/`panelClose` sesiyle çalar, eski duraklatma sesi yalnız kit yokken yedektir
-      (çift çalmaz). Paket payı ölçüldü: VOL.TEST app +5,8 KiB (bütçe 107,0).
-      **Olay→bileşen kapsamı (2026-10-08):** önceden `open`/`close`/`confirm`/`cancel` niyetlerini
-      hiçbir bileşen yaymıyordu (`panelOpen`/`panelClose`/`back`/`confirm` vitrinde hiç duyulmuyordu,
-      `tabSwitch`/`dragPick`/`dragDrop`/`notify`/`alert` için niyet bile yoktu). Eklendi: niyet türleri
-      `navigate`→`tabSwitch`, `pick`→`dragPick`, `drop`→`dragDrop`, `notify`→`notify`, `alert`→`alert`
-      (+ `type`/`erase`/`reject`); `Tabs` (tıklama, ok tuşları, LB/RB), `Modal`/`Sheet`/`Confirm`
-      (tetikleyiciden açılış ve kapanış; söküm ve tetikleyicisiz oyun açışı sessiz), `Accordion`,
-      `DialogueBox` (satır ilerletme `select`, seçim `confirm`), `SlotGrid` (kaldırma/bırakma/geri
-      çevirme), `ToastManager` (varyanta göre `notify`/`alert`) ve ekran klavyesi niyet yayar. **Yedek
-      katman:** kök, bileşenin kendisi niyet yaymadıysa (`claim` ile yinelenmez) her düğme/sekme/menü/
-      seçenek tıklamasını `press`/`navigate`/`select` olarak duyurur; `data-vol-silent` ile susturulur.
-      Oynanış denetimleri (Hold/LongPress/Charge/DirectionButton) bilinçli sessizdir: ateş/şarj/yön sesi
-      oyunun SFX'idir. Host olayları vitrinde bağlandı: seviye atlama (`levelUp`), satın alma
-      (`purchase`). Kanıt: `soundCoverage.test.ts` (25 olayın sahibi tablosu + 9 bileşen davranışı).
-      Kalan: stepper/slider detent (adım başına tık) ve kaydırıcı sürüklemesinde kısık ses ayarı;
-      `equip`/`reward` host bağlaması ve `release` (basılı tutmada bırakış), SlotGrid sürükleme niyeti
-      için gerçek işaretçi testi; ContextMenu/CommandPalette/Popup açılış sesi (tetikleyicisiz tuş
-      kısayolu açılışı için sahipsiz-niyet kararı); seviyeler,
-      sessiz ve palet seçiminin mevcut kalıcılığa bağlanması (VOL.TEST ayar paneli). Kapanır:
-      vitrinde her etkileşim duyulur (olay→bileşen tablosu testli); ses yokken/kapalıyken işlev ve
-      görsel durum aynı; oyun SFX/ambiyans değişmez.
 - [ ] **UI-02.9 — Laboratuvar ve kulak notları.** Ses laboratuvarı yeni sözlüğe göre
       güncellenir: her olay, palet, kuru/kit, eski/yeni A/B, dinleme paketi dışa aktarımı.
       Kullanıcının dinleme notları tarihli olarak VERIFICATION'a işlenir; reddedilen ses
@@ -183,7 +156,7 @@ uca örneğidir: malzeme + ikon + imleç + ses + juice bir arada. Diğer aileler
       durumları testli (tümü devre dışı → durak yok, biri açılınca durak o; dikey çoklu seçimde
       yalnız etkin düğmeler dolaşılır, yatay ok dikeyde gezinmez; odaklı düğme kapanınca durak
       komşuya geçer) — `buttonDisabledContract.test.ts`; yerel button Enter ve Space tek niyet
-      kanıtı `ses.spec.ts`te iki motorda var. Kalan: sesin açık/kapalı eşdeğer işlevi (UI-02.8 ile).
+      kanıtı `ses.spec.ts`te iki motorda var; sesin açık/kapalı eşdeğer işlevi `uiSoundMuted.test.ts`te (Button/Checkbox/Slider/Tabs birebir aynı). Kalan: kayıtlı kontrast kusurları (`onBrand/brandHover` 3,07, `uiBorderStrong` 2,59/2,25/1,99), `Icon` boyut ağırlığı ve buton içi ikon ölçekleri.
 - [ ] **UI-03.2 — Hold/Charge/LongPress (kalan).** Yapıldı: aynı yüzey malzemesi (kabartma, gömülü
       basılı durum, devre dışı); iptal sözleşmesi kanıtlı (`holdButtons.test.ts`): pointercancel,
       yakalama kaybı, sayfa gizlenmesi, devre dışı ve söküm basışı bırakır, iptal ASLA eylem sayılmaz
@@ -721,6 +694,7 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
 
 Planın hazırlanmış olması bir üretim görevini kapatmaz; yalnız kapıdan geçmiş ve vitrinde/oyunda görünür iş buraya taşınır. Kabul edilmeyen kapanışlar işaretlidir.
 
+- [x] UI-02.8 — Uygulama genelinde bağlama: kit 25 olay × 2 palet (çelik/aurum) ile vitrin kökünde ve VOL.TEST HUD kökünde (oyun bağlamı ve ana otobüsü üstünde; oyun SFX'i değişmedi, duraklatma paneli kitin `panelOpen`/`panelClose` sesiyle çalar, eski ses yalnız kit yokken yedek). Niyet türleri `navigate/pick/drop/notify/alert/type/erase/reject` + `open/close/confirm/cancel`: `Tabs`, `Modal`/`Sheet`/`Confirm`, `Accordion`, `Popover`/`ContextMenu`/`CommandPalette` (ortak `overlaySignal.ts`), `DialogueBox`, `SlotGrid`, `ToastManager`, ekran klavyesi, `Slider`/`RangeSlider` yayar; bileşen yaymadıysa kök düğme/sekme/menü/seçenek tıklamasını yedek olarak duyurur (`claim` yinelemez, `data-vol-silent` susturur). Kararlar: (1) kaydırıcı sürüklemesi (işaretçi/dokunma) `UI_SLIDER_DRAG_GAIN` 0,55 ile kısıktır, klavye ve düğme adımı tam seviye; yerel `input` olayı sürüklemeyi klavyeden ayıramadığı için `Slider` basılı işaretçiyi niyetin `source` alanında bildirir, `RangeSlider` önizleme + bırakışta tek `valueCommit`; (2) `release` bileşene bağlı değil (basılı tutma oyun SFX'idir, tıklama sesi `press`); (3) katman açılışı tetikleyici kayıtlı kökteyse sesli, kodla/tetikleyicisiz açılış ve söküm sessiz, seçimi izleyen kapanış çiftlenmez; (4) host olayları vitrinde bağlı: `reward`/`levelUp` (XP kazanımı), `equip` (envanterden kısayol çubuğuna taşıma), `purchase`; (5) VOL.TEST tek ana ses tercihi (`device.voltest.preferences.volume`, kalıcı) kitin kullandığı ana otobüse uygulanır — ayrı arayüz seviyesi/palet/sessiz denetimi oyunda yoktur, ses 0 = tam sessiz; kitin seviye/sessiz kalıcılığı vitrindedir (`localAudioStore`), palet temayı izler. Kanıt: `soundCoverage.test.ts` (olay→bileşen tablosu), `uiSliderSound.test.ts` (8), `overlaySignals.test.ts` (9), `slotGridIntent.test.ts` (gerçek işaretçi akışı, 4), vitrin `hostSounds.test.ts` (2), `uiSoundMuted.test.ts` (Button/Checkbox/Slider/Tabs sessiz kitle birebir aynı geri çağrı, durum, DOM ve sıfır ses), `GameAudio.test.ts` (kit ana otobüse bağlı). Paket payı: VOL.TEST app +5,8 KiB. Kalan insan dinlemesi UI-02.9'dadır.
 - [x] UI-02.7 — Sentez ve ölçüt: audio-synth ile iki palet (`steel`, `aurum`) × 23 olay × 3 varyant sıfırdan üretildi (138 OGG; eski 12 olaylık `ui-*` aileleri, bank ve manifestleri silindi). Her olay üç katman ailesinden kurulur: gövde (düşen perdeli sinüs + doygunluk), ayrı süzülmüş temas tıkı, gerektiğinde modal çınlama/melodik katman; varyasyon boyutları gövde süresi, tık parlaklığı, çınlama perdesi ve gövde sıcaklığıdır. UI politikası güncellendi (yükseklik −42…−8 LUFS; eski yüksek geçiren ve sub kuralı kalktı); testler gövde+tık katmanı ve gövde bandının üst bantlardan zayıf olmamasını doğrular. `denied` ve `toggle-off` ailelerinde ortanca çeşitlilik eşiği düşürüldü (0,015/0,02): kısa kuru sesler, kasıtlı.
 - [x] UI-02.6 — Ses brief'i ve olay sözlüğü v2: 23 olay (`hover`, `focus`, `press`, `release`, `back`, `confirm`, `toggleOn/Off`, `select`, `tabSwitch`, `sliderTick`, `valueCommit`, `panelOpen/Close`, `dragPick/Drop`, `equip`, `purchase`, `reward`, `levelUp`, `notify`, `denied`, `alert`); niyet→olay eşlemesi `UI_INTENT_SOUND`, ürün sonucu `UI_OUTCOME_SOUND` (başarı→`confirm`, uyarı→`alert`, hata→`denied`); mikro olaylar `hover`/`focus` 70 ms, `sliderTick` 45 ms; kritikler `alert`/`denied`. Paletler `steel` (çelik donanım) ve `aurum` (yaldızlı cam ve lake). Belge: `core/docs/sfx.md`.
 - [x] UI-00.1 — `core/src/ui/index.ts` yüzeyi (89 sınıf, 29 yardımcı, 205 tip) AST'den çıkarılır; her sınıf/yardımcı `registry.json`'da tekil kayıtlıdır ve kapı kaydı yüzeyle, VOL.TEST tüketimiyle (17 sınıf doğrudan), vitrin kullanımıyla ve gerçek `it`+`expect` kanıtıyla karşılaştırır. Eski isim-geçişi bekçisinin yorum/metin mention'ını gösterim saydığı 9 yer ve kanıtsız 5 öğe (sahip görevli gap) ortaya çıktı.

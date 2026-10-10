@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { emitUiIntent, emitUiSignal } from '../feedback/uiIntent';
 
 export interface RangeSliderValue {
   min: number;
@@ -129,6 +130,11 @@ export class RangeSlider {
     this.maxHandle.setAttribute('role', 'slider');
     this.maxHandle.setAttribute('aria-label', label ? `${label} (maksimum)` : 'Maksimum');
     this.track.appendChild(this.maxHandle);
+    // Ses perdesi bütün aralığa göredir; tutamağın kendi aria-valuemin/max'ı karşı tutamağa bağlıdır.
+    for (const handle of [this.minHandle, this.maxHandle]) {
+      handle.dataset.volPitchMin = String(this.min);
+      handle.dataset.volPitchMax = String(this.max);
+    }
 
     this.element.appendChild(this.track);
 
@@ -159,13 +165,13 @@ export class RangeSlider {
       }
       this.gestureStart = this.getValue();
       this.activePointerId = event.pointerId;
-      this.commitUserInput(this.activeHandle, this.valueFromClientX(event.clientX));
+      this.commitUserInput(this.activeHandle, this.valueFromClientX(event.clientX), event);
       this.track.setPointerCapture(event.pointerId);
       event.preventDefault();
     };
     const boundPointerMove = (event: PointerEvent): void => {
       if (!this.activeHandle || this.activePointerId !== event.pointerId) return;
-      this.commitUserInput(this.activeHandle, this.valueFromClientX(event.clientX));
+      this.commitUserInput(this.activeHandle, this.valueFromClientX(event.clientX), event);
     };
     const boundPointerUp = (event: PointerEvent): void => {
       this.finishGesture(event, event.type === 'pointercancel');
@@ -197,7 +203,16 @@ export class RangeSlider {
       event.preventDefault();
       const current = handle === 'min' ? this.minValue : this.maxValue;
       const next = Number.isFinite(delta) ? current + delta : delta > 0 ? this.max : this.min;
-      if (this.commitUserInput(handle, next)) this.onCommitHandler?.(this.getValue());
+      if (this.commitUserInput(handle, next, event)) {
+        // Aynı tuş olayı önizleme niyetini zaten sahiplendi; kalıcı değişiklik ayrı niyettir.
+        emitUiSignal({
+          kind: 'valueCommit',
+          origin: 'RangeSlider',
+          target: this.handleElement(handle),
+          source: 'keyboard',
+        });
+        this.onCommitHandler?.(this.getValue());
+      }
     };
     this.boundMinHandleKeydown = this.boundHandleKeydown('min');
     this.boundMaxHandleKeydown = this.boundHandleKeydown('max');
@@ -250,7 +265,21 @@ export class RangeSlider {
     return this.min + ratio * (this.max - this.min);
   }
 
-  private commitUserInput(handle: 'min' | 'max', rawValue: number): boolean {
+  private handleElement(handle: 'min' | 'max'): HTMLElement {
+    return handle === 'min' ? this.minHandle : this.maxHandle;
+  }
+
+  /** Kullanıcı olayından ses/titreşim niyeti; programatik değişim (olaysız) sessizdir. */
+  private signal(
+    kind: 'valuePreview' | 'valueCommit',
+    target: HTMLElement,
+    event: Event,
+    persistent: boolean,
+  ): void {
+    emitUiIntent({ kind, origin: 'RangeSlider', target, event, persistent });
+  }
+
+  private commitUserInput(handle: 'min' | 'max', rawValue: number, event: Event): boolean {
     // Adım hizalama this.min'e göredir, sıfıra değil — native <input type=range>'in
     // `min + n*step` kuralıyla uyumlu (bkz. Slider.ts); aksi halde ok-tuşu adımları
     // min step'in katı değilse beklenmedik yuvarlanırdı.
@@ -269,6 +298,7 @@ export class RangeSlider {
     const current = this.getValue();
     const changed = current.min !== previous.min || current.max !== previous.max;
     if (changed) {
+      this.signal('valuePreview', this.handleElement(handle), event, false);
       this.onInputHandler?.(current);
     }
     return changed;
@@ -283,6 +313,7 @@ export class RangeSlider {
     } else if (this.gestureStart) {
       const current = this.getValue();
       if (current.min !== this.gestureStart.min || current.max !== this.gestureStart.max) {
+        this.signal('valueCommit', this.handleElement(this.activeHandle), event, true);
         this.onCommitHandler?.(current);
       }
     }

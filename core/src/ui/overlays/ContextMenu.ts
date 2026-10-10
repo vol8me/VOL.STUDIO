@@ -48,6 +48,7 @@ export class ContextMenu {
     this.target = target;
     this.popup = new Popup(target, {
       placement: options.placement ?? 'bottom-end',
+      signal: 'ContextMenu',
       onClose: () => this.target.setAttribute('aria-expanded', 'false'),
       container: options.container,
     });
@@ -97,7 +98,8 @@ export class ContextMenu {
       itemButton.tabIndex = -1;
 
       const onClick = (): void => {
-        this.popup.close();
+        // Seçimin kendi sesi vardır (menü öğesi tıklaması); ayrıca kapanış sesi çalmaz.
+        this.popup.close({ silent: true });
         entry.onSelect();
       };
       this.scope.addListener(itemButton, 'click', onClick);
