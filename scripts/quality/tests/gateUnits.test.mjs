@@ -189,6 +189,12 @@ test('crate kapsamı dışına uzanan derleme okuması yoktur (gizli bağımlıl
       unit.scope.dirs.some((dir) => path === dir || path.startsWith(`${dir}/`));
     for (const file of walk(crateDir)) {
       const text = read(file);
+      if (file.endsWith('.rs')) {
+        assert.ok(
+          !text.includes('CARGO_MANIFEST_DIR'),
+          `${file}: CARGO_MANIFEST_DIR crate dizini dışına uzanabilir; okunan yolu kapsama açıkça ekleyin`,
+        );
+      }
       for (const match of text.matchAll(/include(?:_str|_bytes)?!\(\s*"([^"]+)"/g)) {
         const target = posix.normalize(posix.join(dirname(file), match[1]));
         assert.ok(inScope(target), `${file}: include → ${target} crate kapsamı dışında`);

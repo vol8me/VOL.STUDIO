@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolve } from 'node:path';
 import { snapshotFiles } from '../gateCache.mjs';
-import { deriveSharedInputs, readWorkspaceGraph, scopeInclude } from '../gateScope.mjs';
+import {
+  deriveSharedInputs,
+  findUnrecognizedScriptMentions,
+  readWorkspaceGraph,
+  scopeInclude,
+} from '../gateScope.mjs';
 
 const root = resolve(import.meta.dirname, '../../..');
 
@@ -171,4 +176,31 @@ test('gerçek depo: türetilen betik kümeleri dardır ve bilinen bağımlılık
     );
     assert.ok(!set.has('scripts/quality/gate.mjs'), `${name}: kapı koşucusu paket girdisi değil`);
   }
+});
+
+test('tanınmayan betik başvurusu biçimi bekçiye takılır, tanınanlar ve yorumlar takılmaz', () => {
+  const sources = {
+    'p/ok.mjs': [
+      "import '../scripts/vite/a.mjs';",
+      "join(ROOT, 'scripts', 'linux', 'b.mjs');",
+      'const t = `${ROOT}/scripts/quality/c.mjs`;',
+      "join(PACKAGE, 'scripts/audio-job.ts');",
+      'const manifest = { scripts: { test: "x" } }; manifest.scripts.test;',
+      '// bkz. scripts dizini',
+      ' * scripts ağacı',
+    ].join('\n'),
+    'p/bad.mjs': "const dir = base + sep + 'scripts' + sep + name;",
+    'other/q.mjs': "const dir = 'scripts' + name;",
+  };
+  const found = findUnrecognizedScriptMentions(
+    '/yok',
+    graphOf('p'),
+    Object.keys(sources),
+    (_root, path) => sources[path] ?? null,
+  );
+  assert.deepEqual(
+    found.map((mention) => `${mention.file}:${mention.line}`),
+    ['p/bad.mjs:1'],
+    'paket dışı dosya ve tanınan biçimler sayılmaz',
+  );
 });

@@ -82,7 +82,8 @@ export const STAGE_PLAN = {
 };
 
 /**
- * Paketin makbuz kapsamı kapanıştan GENİŞ olmak zorundaysa burada, gerekçesiyle.
+ * Paketin TESTLERİNİN makbuz kapsamı kapanıştan GENİŞ olmak zorundaysa burada, gerekçesiyle;
+ * yalnız `overrides` işaretli aşamaya (`test`) uygulanır, tip ve lint denetimi kapanışta kalır.
  * Bir paketin testi başka dosyaları okuyorsa ve burada yazılı değilse
  * `gatePlan.test.mjs` düşer (`findScopeEscapes`).
  */
@@ -129,3 +130,13 @@ export function wavesFor(stages) {
     (wave) => wave.length > 0,
   );
 }
+
+/**
+ * Paket kaynağında `scripts` sözcüğü geçen ama kök betik ağacına başvuru OLMAYAN dosyalar
+ * (`findUnrecognizedScriptMentions`). Anahtar dosya yoludur; değer neden başvuru sayılmadığıdır.
+ * Listede olmayan tanınmayan biçim bekçiyi düşürür; anısı kalmayan kayıt da düşürür.
+ */
+export const REVIEWED_SCRIPT_MENTIONS = {
+  'devtools/audio-synth/tests/governance/docReferences.test.ts':
+    'belgedeki yol desenini ve package.json betik adlarını sınar; kök betik ağacını okumaz',
+};

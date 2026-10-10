@@ -61,10 +61,10 @@ Kapılar aktif workspace'ten türer; kapsam ratchet'i düşürülmez.
 Pre-commit quick ve pre-push high kancaları atlanmaz. Ortam:
 `pnpm run doctor:env`. Kapıları `scripts/quality/gate.mjs` koşar: statik aşamalar
 birlikte, ağır aşamalar tek tek, ucuzdan pahalıya; girdisi bayt bayt aynı kalan
-aşama makbuzdan atlanır (`signoff` her zaman taze). Neden koştuğu/atlandığı
-çıktıda yazar; `pnpm high --fresh` makbuzu yok sayar. Tek düşen kapı
-`pnpm exec just <tarif>` ile yeniden koşulur; makine-okunur kanıt
-`pnpm high --json`dır.
+aşama (büyük aşamalarda paket, crate ya da takım birimi) makbuzdan atlanır
+(`signoff` her zaman taze). Neden koştuğu/atlandığı çıktıda yazar; `pnpm high --fresh`
+makbuzu yok sayar. Düşen birim, çıktıdaki `tekrar:` komutuyla yeniden koşulur (düz yol:
+`pnpm exec just <tarif>`); makine-okunur kanıt `pnpm high --json`dır.
 
 Yeni davranış ve hata düzeltmesi anlamlı regresyon testi bırakır; tests ağacı
 src ağacını yansıtır. Disk testleri gerçek geçici dizindedir. Genel timeout

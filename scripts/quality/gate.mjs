@@ -57,6 +57,8 @@ function toolParts(root) {
 function summarize(failure) {
   return {
     stage: failure.stage,
+    ...(failure.unit && { unit: failure.unit }),
+    rerun: failure.rerun,
     kind: failure.kind,
     package: failure.package,
     reason: failure.reason,
@@ -163,12 +165,15 @@ function main() {
     const logDirectory = join(receiptDirectory(root), '..');
     const failures = report.failures.map(({ stage, entry }, index) => {
       const output = entry.output ?? '';
-      const logFile = join(logDirectory, `last-failure${index === 0 ? '' : `-${stage}`}.log`);
+      const slug = entry.item.label.replace(/[^\w.-]+/g, '_');
+      const logFile = join(logDirectory, `last-failure${index === 0 ? '' : `-${slug}`}.log`);
       mkdirSync(logDirectory, { recursive: true });
       writeFileSync(logFile, output);
       return {
         stage,
         label: entry.item.label,
+        unit: entry.item.unit,
+        rerun: [entry.item.command, ...entry.item.args].join(' '),
         exitCode: entry.code || 1,
         ...classify(stage, output),
         output,
@@ -208,7 +213,8 @@ function main() {
       log(`  paket : ${failure.package ?? '-'}`);
       log(`  sebep : ${failure.reason}`);
       log(`  günlük: ${failure.logFile}`);
-      log(`  tekrar: pnpm exec just ${failure.stage}`);
+      log(`  tekrar: ${failure.rerun}`);
+      if (failure.unit) log(`  aşama : pnpm exec just ${failure.stage} (tüm birimler, düz yol)`);
     }
     for (const note of report.notes) log(`  not   : ${note}`);
     const saved = report.savedMs > 0 ? ` (önbellek ~${minutes(report.savedMs)} kazandırdı)` : '';

@@ -6,6 +6,7 @@ import { gateStages, parseJustRecipes } from '../justfile.mjs';
 import {
   REQUIRES,
   REVIEWED_ESCAPES,
+  REVIEWED_SCRIPT_MENTIONS,
   SCOPE_OVERRIDES,
   STAGE_PLAN,
   WAVES,
@@ -17,6 +18,7 @@ import {
   closureOf,
   deriveSharedInputs,
   findScopeEscapes,
+  findUnrecognizedScriptMentions,
   readWorkspaceGraph,
   scopeInclude,
 } from '../gateScope.mjs';
@@ -220,5 +222,30 @@ test('dar kapsamlı paketler kapsam dışına uzanan dosya okumaz (gizli bağım
   }
   for (const file of Object.keys(REVIEWED_ESCAPES)) {
     assert.ok(seen.has(file), `${file}: REVIEWED_ESCAPES’ta ama artık kaçış yok (bayat kayıt)`);
+  }
+});
+
+test('paket kaynağındaki her betik başvurusu biçimi türetmece tanınır (gizli bağımlılık bekçisi)', () => {
+  /*
+   * `deriveSharedInputs` yalnız tanıdığı yazım biçimlerini izler. Tanımadığı bir biçim
+   * (`'scripts' + sep + ad` gibi) bir betiğin paket kapsamına girmesini sessizce engeller;
+   * bu bekçi o biçimi yazıldığı gün yakalar. Çözüm: biçimi tanıtmak ya da dosyayı
+   * REVIEWED_SCRIPT_MENTIONS’a gerekçeyle yazmak.
+   */
+  const graph = readWorkspaceGraph(root);
+  const files = [...snapshotFiles(root).keys()];
+  const seen = new Set();
+  for (const mention of findUnrecognizedScriptMentions(root, graph, files)) {
+    seen.add(mention.file);
+    assert.ok(
+      mention.file in REVIEWED_SCRIPT_MENTIONS,
+      `${mention.file}:${mention.line}: tanınmayan "scripts" başvurusu → ${mention.text}`,
+    );
+  }
+  for (const file of Object.keys(REVIEWED_SCRIPT_MENTIONS)) {
+    assert.ok(
+      seen.has(file),
+      `${file}: REVIEWED_SCRIPT_MENTIONS’ta ama artık anısı yok (bayat kayıt)`,
+    );
   }
 });

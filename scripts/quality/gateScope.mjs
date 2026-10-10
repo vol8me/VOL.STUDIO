@@ -304,3 +304,43 @@ export function findScopeEscapes(root, graph, packageName, files) {
 
 /** `.` ve onun üstü: tüm repoyu kapsar, kapsamı belirsizleştirir. */
 const isRepoRoot = (target) => target === '' || target === '.';
+
+const CODE_FILE = /\.(?:ts|mts|cts|tsx|js|mjs|cjs)$/;
+const SCRIPTS_WORD = /(?<![\w.$-])scripts(?![\w-]|\s*[:=])/g;
+
+/**
+ * Paket kaynağında `scripts` sözcüğü geçen ama `deriveSharedInputs`in tanıdığı hiçbir
+ * başvuru biçiminin kapsamadığı yerler (örn. `'scripts' + sep + ad`). Türetme yalnız
+ * tanıdığı biçimleri izler; tanımadığı biçim, bir betiğin paket kapsamına girmesini
+ * SESSİZCE engellerdi. Bekçi bu körlüğü görünür kılar: biçim ya tanınır ya da gerekçeyle
+ * `REVIEWED_SCRIPT_MENTIONS`a yazılır.
+ *
+ * @param {Iterable<string>} files izlenen ve izlenmeyen dosya yolları
+ * @returns {{ file: string, line: number, text: string }[]}
+ */
+export function findUnrecognizedScriptMentions(root, graph, files, read = readSource) {
+  const recognized = [
+    FILE_RELATIVE.regex,
+    ROOT_QUOTED.regex,
+    ROOT_ANYWHERE.regex,
+    SEGMENTED_SCRIPT,
+  ];
+  const dirs = [...graph.packages.values()].filter((pkg) => pkg.active).map((pkg) => pkg.dir);
+  const found = [];
+  for (const file of files) {
+    if (!CODE_FILE.test(file) || !underAny(file, dirs)) continue;
+    const source = read(root, file);
+    if (source === null) continue;
+    source.split('\n').forEach((text, index) => {
+      if (COMMENT_LINE.test(text) && !text.includes('import(')) return;
+      const covered = recognized.flatMap((regex) =>
+        [...text.matchAll(regex)].map((match) => [match.index, match.index + match[0].length]),
+      );
+      for (const mention of text.matchAll(SCRIPTS_WORD)) {
+        const inside = covered.some(([from, to]) => mention.index >= from && mention.index < to);
+        if (!inside) found.push({ file, line: index + 1, text: text.trim().slice(0, 120) });
+      }
+    });
+  }
+  return found;
+}

@@ -111,19 +111,21 @@ async function runPlanned(planned, ctx) {
   await Promise.all(Array.from({ length: lanes }, lane));
 
   const items = planned.items.filter((item) => entries.has(item)).map((item) => entries.get(item));
-  const failed = items.find((entry) => entry.status === 'failed') ?? null;
-  const status = failed
-    ? 'failed'
-    : items.every((entry) => entry.status === 'cached')
-      ? 'cached'
-      : 'passed';
+  // Eşzamanlı birimlerden birden fazlası düşebilir; hepsi raporlanır, hiçbiri kaybolmaz.
+  const failedEntries = items.filter((entry) => entry.status === 'failed');
+  const status =
+    failedEntries.length > 0
+      ? 'failed'
+      : items.every((entry) => entry.status === 'cached')
+        ? 'cached'
+        : 'passed';
   return {
     stage: planned.stage,
     status,
     durationMs: Date.now() - started,
     concurrency: planned.concurrency,
     items,
-    failed,
+    failedEntries,
   };
 }
 
@@ -234,7 +236,7 @@ export async function runGate(options) {
     if (!stable) files = after;
     stages.push(...outcomes);
     for (const outcome of outcomes) {
-      if (outcome.failed) failures.push({ stage: outcome.stage, entry: outcome.failed });
+      for (const entry of outcome.failedEntries) failures.push({ stage: outcome.stage, entry });
     }
     if (failures.length > 0) break;
   }

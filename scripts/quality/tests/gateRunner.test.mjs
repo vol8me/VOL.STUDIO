@@ -423,3 +423,24 @@ test('atlanan birimler aşama başına tek olayla bildirilir', async () => {
     r.cleanup();
   }
 });
+
+test('aynı aşamada birden fazla birim düşerse hepsi raporlanır', async () => {
+  const r = fixture();
+  try {
+    await run(r, 'fast', recorder().execute);
+    r.write('a/x.txt', '2');
+    const failing = recorder({
+      'lint a': () => ({ code: 1, output: 'a düştü' }),
+      'lint b': () => ({ code: 1, output: 'b düştü' }),
+    });
+    const report = await run(r, 'fast', failing.execute);
+    assert.equal(report.status, 'failed');
+    assert.deepEqual(
+      report.failures.map((failure) => failure.entry.item.label),
+      ['lint a', 'lint b'],
+      'eşzamanlı düşen iki birimden biri sessizce kaybolmaz',
+    );
+  } finally {
+    r.cleanup();
+  }
+});
