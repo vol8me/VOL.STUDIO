@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { IStorageAdapter } from '@volstudio/core';
+import type { IStorageAdapter } from '@volstudio/core/persistence';
 
 /** Native okuma kaydı eksik ya da bozuk bulduğunda bildirilen olay. */
 export interface StoreIntegrityEvent {

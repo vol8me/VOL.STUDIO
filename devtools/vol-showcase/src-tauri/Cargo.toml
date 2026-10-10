@@ -20,7 +20,6 @@ volstudio-tauri = { path = "../../../tauri-v2/src-tauri", default-features = fal
 tauri = { version = "2.11", features = ["rustls-tls"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
-tauri-plugin-vol-orientation = { path = "../../../tauri-v2/plugins/vol-orientation" }
 tauri-plugin-vol-haptics = { path = "../../../tauri-v2/plugins/vol-haptics" }
 
 [features]

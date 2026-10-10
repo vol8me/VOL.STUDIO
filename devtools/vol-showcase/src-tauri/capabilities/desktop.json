@@ -3,5 +3,10 @@
   "description": "Masaüstü ana pencere izinleri",
   "platforms": ["linux", "windows", "macOS"],
   "windows": ["main"],
-  "permissions": ["core:default", "core:window:allow-set-fullscreen", "core:window:allow-set-size"]
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-set-size",
+    "core:window:allow-center"
+  ]
 }

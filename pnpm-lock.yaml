@@ -153,6 +153,9 @@ importers:
       '@volstudio/core':
         specifier: workspace:*
         version: link:../../core
+      '@volstudio/tauri-v2':
+        specifier: workspace:*
+        version: link:../../tauri-v2
     devDependencies:
       '@axe-core/playwright':
         specifier: ^4.13.0

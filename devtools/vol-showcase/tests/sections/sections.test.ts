@@ -47,17 +47,21 @@ describe('vol-showcase sekme builderları', () => {
   it('panels sekmesi Popover sözleşmesini gerçek tetikleyiciyle sürer', () => {
     const { element, destroy } = buildPanelsTab(uiRoot);
     uiRoot.appendChild(element);
-    const trigger = element.querySelector<HTMLButtonElement>('[aria-controls^="vol-popover-"]');
+    const trigger = element.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]');
 
     expect(trigger).not.toBeNull();
     expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    // Kapalı popover DOM'da yoktur: `aria-controls` yalnız açıkken geçerli bir kimliğe işaret eder.
+    expect(trigger?.hasAttribute('aria-controls')).toBe(false);
     trigger?.click();
     expect(trigger?.getAttribute('aria-expanded')).toBe('true');
     const controlled = trigger?.getAttribute('aria-controls');
+    expect(controlled).toMatch(/^vol-popover-/);
     expect(controlled ? document.getElementById(controlled)?.hidden : true).toBe(false);
 
     trigger?.click();
     expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+    expect(trigger?.hasAttribute('aria-controls')).toBe(false);
     destroy();
   });
 

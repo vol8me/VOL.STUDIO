@@ -43,6 +43,28 @@ Linux paketi (AppImage) Windows'ta WSL Ubuntu 24.04 içinde üretilir:
 `pnpm deck deploy devtools/vol-showcase --appdir <AppDir>` ile yüklenir. Bu HOST derlemesidir, steamrt4
 (SLR4) kabulü değildir; tuzaklar ve ölçümler [steam-deck.md](../../docs/steam-deck.md) içindedir.
 
+## Platform bağı
+
+`src/platform.ts` (`PlatformServices`) vitrinin gerçek platform bağıdır; `bootShowcase` kurar, oturumla birlikte
+söker. Kabuk türü (`getRuntimePlatform`) ve oturum sınıfı (`getSessionKind`) `tauri-v2`den gelir, ekran
+başına tercih (`device.volui:display`: pencere kipi + çözünürlük) `createScopedStores` ile tutulur.
+
+- **Web (`pnpm dev`, tarayıcı):** oturum `web`, depo localStorage, native pencere yok; tam ekranı kabuğun
+  `FullscreenController`ı sürer ve tercih açılışta uygulanmaz (tarayıcı jestsiz tam ekrana izin vermez).
+  Ayar kartındaki oturum seçici bir **simülasyondur** (`displayCapabilitiesForSession` tablosunu gösterir).
+- **Masaüstü native:** `DisplayModeController` Tauri penceresini sürer; başlık düğmesi, F11 ve ayar satırları
+  aynı tercihi paylaşır, tercih sert kapanışta bile geri gelir. Oturum bildirilir, seçilemez.
+- **gamescope (Deck oyun kipi):** pencere kipi ve çözünürlük satırları yetenek tablosundan sunulmaz; pencere
+  denetleyicisi kurulmaz.
+- **Android:** pencere kipi yok; yalnız titreşim sürücüsü (`observeAndroidHaptics`) ve `vol-haptics` eklentisi
+  kurulur. Tüketicisiz yön eklentisi vitrinde yoktur (kapı: `tauriPlugins.mjs`, `platform.test.ts`).
+
+Pencere komutlarının Tauri izinleri (`setFullscreen`, `setSize`, `center`) masaüstü yeteneğinde verilir;
+`validateWindowPermissions` kapısı eksik izni derlemeden önce yakalar. Yerel tur:
+`node devtools/vol-showcase/scripts/native-platform-tour.mjs target/debug/VOL.UI.exe` (debug derleme:
+`pnpm --filter @volstudio/vol-showcase tauri build --debug --no-bundle`); WebView2'ye CDP ile bağlanıp gerçek
+pencereyi, kalıcılığı ve sert kapanış sonrası geri yüklemeyi sürer, kullanıcı verisini yedekleyip geri koyar.
+
 ## Gerçek cihazda sınama
 
 Android (Chrome, adb): `node devtools/vol-showcase/scripts/device-ui.mjs --orientation both --tag <ad>`

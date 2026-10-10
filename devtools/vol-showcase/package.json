@@ -16,7 +16,8 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@volstudio/core": "workspace:*"
+    "@volstudio/core": "workspace:*",
+    "@volstudio/tauri-v2": "workspace:*"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

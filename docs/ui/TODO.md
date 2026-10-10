@@ -149,6 +149,7 @@ görsel/ses değerlendirmesi, referans-özgün fark incelemesi ve Deck kol hücr
 
 UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağımlılık kurulmaz.
 
+- [x] **UI-06.3 — Platform ayarı ve görünür kabuk** (teknik; Deck gamescope turu ve Android APK NOT-RUN, sahip UI-06.4/F08/F09). **Vitrin gerçek platform bağına kavuştu** (`PlatformServices`, `devtools/vol-showcase/src/platform.ts`): kabuk türü ve oturum sınıfı `tauri-v2`den okunur, ekran başına tercih (`device.volui:display`) `createScopedStores` ile tutulur, masaüstü native'de `DisplayModeController` Tauri penceresini sürer (başlık düğmesi, F11 ve ayar satırları aynı tercihi paylaşır), gamescope'ta pencere kipi/çözünürlük yetenek tablosundan sunulmaz ve pencere denetleyicisi kurulmaz, Android'de pencere kipi yoktur ve yalnız titreşim sürücüsü kaydolur; web (`pnpm dev`) yedeği localStorage + tarayıcı tam ekranıdır ve ayar kartındaki oturum seçici açıkça simülasyondur. Ayar kartı gerçek özeti gösterir ("Çalışma ortamı … · oturum …"). **Windows yerel turunda (`native-platform-tour.mjs`, WebView2 + CDP, 15/15) bulunan gerçek kusur:** pencereli kipe dönüşte `window.center not allowed` — `center` izni hiçbir uygulamada verilmemişti (VOL.TEST dahil; boyut uygulanır, ortalama sessizce düşerdi) → izin iki masaüstü yeteneğine eklendi ve `validateWindowPermissions` kapısı (`TauriWindowAdapter` çağrıları ↔ pencereyi süren uygulamaların izinleri) yazıldı. Tüketicisiz `vol-orientation` eklentisi vitrinin Android kaydından, bağımlılığından ve yeteneğinden çıkarıldı (ölü yüzey); `tauri-v2` kök barrel'ı Phaser çektiği için tarayıcı sınırı derlemeyi düşürüyordu → üç import `@volstudio/core/platform` ve `/persistence` alt yoluna alındı. Kanıt: `platform.test.ts` (13: web yedeği, native sürücü başlangıç/dinleyici/kalıcılık, bozuk/okunamayan/yazılamayan kayıt, gamescope, Android gözlemcileri, destroy, dil değişiminde abonelik sızıntısı yok, eklenti yüzeyi tüketiciyle sınırlı), `tauriPlugins.test.mjs` (pencere izni, 6), iki motorda `displaySettings`, `formAcceptance`, `pseudoLocale`, `layout`. Kayıt: [VERIFICATION](VERIFICATION.md) "Platform bağı kaydı".
 - [x] **UI-06.2 — Native crate ve kapı kapsamı.** vitrinin kendi `src-tauri` dizini ortak
       `tauri-v2` kütüphanesini tüketir; kendi kimliği/ikonu/asgari yetenekleri; kök Cargo
       glob/tek lock. AppIdentity, plugin üçlü kayıt ve productIcons native uygulama keşfi.
@@ -162,10 +163,6 @@ UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağım
       yaşam döngüsü/manifest keşfinden vitrini zaten kapsar (`just quick` yeşil); `productIcons` yalnız
       `games/` altına bakıyordu, artık aktif her native kabuğu (vitrin dahil) tarar ve birim testle sınanır;
       `bundle.category` DeveloperTool, masaüstü `Categories=Development` (oyun kopyası değil); `just rust` yeşil.
-- [ ] **UI-06.3 — Platform ayarı ve görünür kabuk.** Mevcut oturum/DisplayModeController/
-      scopedStores/haptik adaptörleri; gamescope etkisiz seçenekler capability'den; web yedeği.
-      Kapanır: native kaynak taşıyan plugin yalnız gereken uygulamada; `pnpm dev` web bakışı;
-      başlatma/kaynak temizliği/dil değişimi sızıntı üretmez.
 - [ ] **UI-06.4 — Windows temel ve ayrı Linux/Deck teslim.** İlk native Windows açılışı ve
       WebView2 kare/CPU sondası teknik referanstır; AppImage/steamrt4 AppDir ve `pnpm deck`
       sözleşmesi. Kapanır: laptopta görünür native pencere; Deck host+SLR4 açılış/OGG/UI sesi,

@@ -9,6 +9,8 @@ import {
   cargoPluginDeps,
   registeredPlugins,
   validateTauriPlugins,
+  validateWindowPermissions,
+  WINDOW_PERMISSIONS,
 } from '../tauriPlugins.mjs';
 
 const LIFECYCLE = { schemaVersion: 1, workspaces: [] };
@@ -104,4 +106,86 @@ test('kurulmamış eklentiye verilen izin yakalanır', () => {
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+const ADAPTER = `export class TauriWindowAdapter {
+  async setFullscreen(a) { await this.window?.setFullscreen(a); }
+  async setResolution(w, h) { await this.window.setSize(w); await this.window.center(); }
+}\n`;
+const WINDOW_APP = (permissions, source = 'new DisplayModeController({});') => ({
+  'tauri-v2/src/window/TauriWindowAdapter.ts': ADAPTER,
+  'game/src-tauri/tauri.conf.json': '{}',
+  'game/src/main.ts': source,
+  'game/src-tauri/capabilities/desktop.json': JSON.stringify({
+    platforms: ['linux', 'windows'],
+    permissions,
+  }),
+  'game/src-tauri/capabilities/mobile.json': JSON.stringify({
+    platforms: ['android'],
+    permissions: ['core:default'],
+  }),
+});
+
+test('pencereyi süren uygulama her pencere komutunun iznini masaüstü yeteneğinde taşır', () => {
+  const root = repo(WINDOW_APP(['core:default', ...Object.values(WINDOW_PERMISSIONS)]));
+  try {
+    assert.deepEqual(validateWindowPermissions(root, LIFECYCLE), []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('eksik pencere izni yakalanır (center: pencereli kipe dönüşte sessizce düşerdi)', () => {
+  const root = repo(
+    WINDOW_APP(['core:default', 'core:window:allow-set-fullscreen', 'core:window:allow-set-size']),
+  );
+  try {
+    const problems = validateWindowPermissions(root, LIFECYCLE).join('\n');
+    assert.match(problems, /game\/src-tauri\/capabilities.*this\.window\.center.*allow-center/);
+    assert.doesNotMatch(problems, /allow-set-size|allow-set-fullscreen/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('izin yalnız mobil yetenekte verilmişse masaüstü eksik sayılır', () => {
+  const files = WINDOW_APP(['core:default']);
+  files['game/src-tauri/capabilities/mobile.json'] = JSON.stringify({
+    platforms: ['android'],
+    permissions: ['core:default', ...Object.values(WINDOW_PERMISSIONS)],
+  });
+  const root = repo(files);
+  try {
+    assert.equal(validateWindowPermissions(root, LIFECYCLE).length, 3);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('pencereyi sürmeyen uygulamadan pencere izni istenmez', () => {
+  const root = repo(WINDOW_APP(['core:default'], 'export const idle = 1;'));
+  try {
+    assert.deepEqual(validateWindowPermissions(root, LIFECYCLE), []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('izin tablosunda olmayan yeni pencere çağrısı yakalanır', () => {
+  const files = WINDOW_APP(['core:default', ...Object.values(WINDOW_PERMISSIONS)]);
+  files['tauri-v2/src/window/TauriWindowAdapter.ts'] =
+    `${ADAPTER}\nfoo() { this.window.minimize(); }\n`;
+  const root = repo(files);
+  try {
+    assert.match(
+      validateWindowPermissions(root, LIFECYCLE).join('\n'),
+      /this\.window\.minimize\(\).*WINDOW_PERMISSIONS/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('gerçek depo: pencere komutlarının izinleri tablodadır ve uygulamalarda verilmiştir', () => {
+  assert.deepEqual(validateWindowPermissions(process.cwd(), LIFECYCLE), []);
 });

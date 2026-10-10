@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { planRumblePulses, setHapticsDriver, type HapticsDriver } from '@volstudio/core';
+import { planRumblePulses, setHapticsDriver, type HapticsDriver } from '@volstudio/core/platform';
 import { getRuntimePlatform, type RuntimePlatform } from './runtimePlatform';
 
 export interface AndroidHapticsProbe {

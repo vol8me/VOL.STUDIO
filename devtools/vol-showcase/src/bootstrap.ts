@@ -6,16 +6,19 @@ import enResources from './i18n/en.json';
 import './i18next-augment';
 import { applyDirectionFromUrl, applyPseudoLocaleFromUrl } from './pseudoLocale';
 import { detectEngine } from './engine';
+import { PlatformServices, type PlatformProbes } from './platform';
 import { ShowcaseApp } from './ShowcaseApp';
 
 export interface ShowcaseSession {
   readonly app: ShowcaseApp;
+  readonly platform: PlatformServices;
   destroy(): void;
 }
 
 /** i18n, font ve DOM yaşam döngüsünü tek, kapatılabilir oturumda başlatır. */
 export async function bootShowcase(
   root: HTMLElement | null = document.querySelector<HTMLElement>('#app'),
+  probes: PlatformProbes = {},
 ): Promise<ShowcaseSession> {
   if (!root) throw new Error('[VOL.UI] #app kökü bulunamadı.');
 
@@ -32,7 +35,9 @@ export async function bootShowcase(
     await new FontManager({ fonts: [VOL_FONTS.Jura, VOL_FONTS['Exo 2']] }).load();
   }
 
-  const app = new ShowcaseApp(root);
+  // Kabuk türü, oturum sınıfı, tercih deposu, native pencere ve titreşim sürücüleri: web'de yedeğe iner.
+  const platform = await PlatformServices.boot(probes);
+  const app = new ShowcaseApp(root, platform);
   const lifecycle = new DisposableScope();
   let destroyed = false;
   const destroy = (): void => {
@@ -40,8 +45,9 @@ export async function bootShowcase(
     destroyed = true;
     lifecycle.dispose();
     app.destroy();
+    platform.destroy();
   };
   lifecycle.addListener(window, 'beforeunload', destroy, { once: true });
 
-  return { app, destroy };
+  return { app, platform, destroy };
 }

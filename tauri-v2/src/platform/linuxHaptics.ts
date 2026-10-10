@@ -4,7 +4,7 @@ import {
   setHapticsDriver,
   type HapticPattern,
   type HapticsDriver,
-} from '@volstudio/core';
+} from '@volstudio/core/platform';
 
 export interface LinuxHapticsProbe {
   readonly isTauri: () => boolean;

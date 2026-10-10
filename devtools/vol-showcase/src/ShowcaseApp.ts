@@ -1,5 +1,6 @@
 import { FullscreenController } from '@volstudio/core/platform';
 import { startAppSound } from './appSound';
+import type { PlatformView } from './platform';
 import {
   Button,
   CursorController,
@@ -135,9 +136,14 @@ export class ShowcaseApp {
     if (!this.destroyed) this.rebuild();
   };
 
-  constructor(private readonly mount: HTMLElement) {
+  constructor(
+    private readonly mount: HTMLElement,
+    private readonly platform: PlatformView,
+  ) {
     this.element = document.createElement('div');
     this.element.className = 'vol-showcase-root';
+    this.element.dataset.volPlatform = platform.platform;
+    this.element.dataset.volSession = platform.session;
     this.mount.replaceChildren(this.element);
     this.fullscreen = this.lifecycle.addDestroyable(
       new FullscreenController({
@@ -146,6 +152,8 @@ export class ShowcaseApp {
         onError: (error) => console.warn('[VOL.UI] Tam ekran açılamadı:', error),
       }),
     );
+    // Native pencere tercihi (F11, pencere yöneticisi, ayar satırı) tam ekran düğmesine yansır.
+    this.lifecycle.addSubscription(platform.subscribe(() => this.renderFullscreenLabel()));
     i18next.on('languageChanged', this.onLanguageChanged);
     this.lifecycle.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
     // Kol gezinmesi vitrin genelinde yaşar: rebuild sekmeleri yeniden kurar
@@ -284,7 +292,7 @@ export class ShowcaseApp {
       new IconButton(new Icon({ name: 'fullscreen', size: 18 }).element, {
         size: 'sm',
         label: i18next.t('volui:app.fullscreen'),
-        onClick: () => void this.fullscreen.toggle(),
+        onClick: () => void this.toggleFullscreen(),
       }),
     );
     this.fullscreenButton.element.classList.add('vol-showcase-fullscreen-button');
@@ -302,7 +310,11 @@ export class ShowcaseApp {
       { id: 'panels', labelKey: 'panels', builder: () => buildPanelsTab(this.element) },
       { id: 'hud', labelKey: 'hud', builder: buildHudTab },
       { id: 'cards', labelKey: 'cards', builder: () => buildCardsTab(this.element) },
-      { id: 'forms', labelKey: 'forms', builder: () => buildFormsTab(this.element) },
+      {
+        id: 'forms',
+        labelKey: 'forms',
+        builder: () => buildFormsTab(this.element, this.platform),
+      },
       { id: 'workbench', labelKey: 'workbench', builder: buildWorkbenchTab },
       { id: 'palette', labelKey: 'palette', builder: buildPaletteTab },
       { id: 'advanced', labelKey: 'advanced', builder: () => buildAdvancedTab(this.element) },
@@ -366,15 +378,25 @@ export class ShowcaseApp {
     }
   }
 
+  /** Native pencere varsa tam ekranı o sürer (tercih kalıcıdır); yoksa tarayıcının tam ekran yolu. */
+  private toggleFullscreen(): Promise<void> {
+    return this.platform.display ? this.platform.display.toggle() : this.fullscreen.toggle();
+  }
+
+  private isFullscreenNow(): boolean {
+    return this.platform.display
+      ? this.platform.displayPreferences.mode === 'fullscreen'
+      : this.fullscreen.isFullscreen();
+  }
+
   private renderFullscreenLabel(button?: HTMLButtonElement): void {
     const target =
       button ?? this.element.querySelector<HTMLButtonElement>('.vol-showcase-fullscreen-button');
     if (!target) return;
-    const key = this.fullscreen.isFullscreen()
-      ? 'volui:app.leaveFullscreen'
-      : 'volui:app.fullscreen';
+    const fullscreen = this.isFullscreenNow();
+    const key = fullscreen ? 'volui:app.leaveFullscreen' : 'volui:app.fullscreen';
     target.setAttribute('aria-label', i18next.t(key));
     target.setAttribute('title', i18next.t(key));
-    target.setAttribute('aria-pressed', String(this.fullscreen.isFullscreen()));
+    target.setAttribute('aria-pressed', String(fullscreen));
   }
 }

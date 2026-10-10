@@ -5,6 +5,7 @@ import {
   type ScopedKey,
 } from '@volstudio/core/persistence';
 import { displayCapabilitiesForSession } from '@volstudio/core/platform';
+import type { RuntimePlatform, SessionKind } from '@volstudio/tauri-v2';
 import { DEFAULT_UI_AUDIO_SETTINGS, type UiAudioSettings } from '@volstudio/core/audio/ui';
 import {
   Button,
@@ -31,6 +32,7 @@ import {
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
 import { getAppSoundKit } from '../appSound';
+import { DEFAULT_DISPLAY, DISPLAY_RESOLUTIONS, type PlatformView } from '../platform';
 import { card, cardGrid } from './shared';
 
 function buildSettingsFormDemo(disposables: DisposableScope): HTMLElement {
@@ -221,17 +223,20 @@ function buildSixDigitDemo(disposables: DisposableScope): HTMLElement {
 
 /**
  * D5c vitrini — oturum → görüntü yeteneği → görünen satırlar zinciri.
- * Oturum seçici bir SİMÜLASYONDUR: vitrin web oturumunda koşar, gamescope
- * seçimi `displayCapabilitiesForSession` tablosunun davranışını gösterir.
- * Kalite `device` kapsamına kaydeder (ekran başına tercih); pencere kipi
- * ve çözünürlük satırları gamescope'ta sunulmaz.
+ *
+ * **Native kabukta GERÇEK**: oturum sınıfı kabuktan okunur (seçilemez), pencere kipi ve çözünürlük
+ * `DisplayModeController` ile Tauri penceresini sürer, F11/pencere yöneticisi değişimi satıra yansır.
+ * **Web'de (`pnpm dev`, tarayıcı) SİMÜLASYON**: oturum seçici `displayCapabilitiesForSession` tablosunun
+ * davranışını gösterir, kip/çözünürlük hiçbir pencereye dokunmaz. Kalite her yerde `device` kapsamına
+ * kaydeder (ekran başına tercih); pencere kipi ve çözünürlük satırları gamescope'ta sunulmaz.
  */
-function buildDisplaySettingsDemo(disposables: DisposableScope): HTMLElement {
-  const stores = new ScopedSaveManager({
-    synced: new LocalStorageAdapter(),
-    device: new LocalStorageAdapter(),
-  });
+function buildDisplaySettingsDemo(
+  disposables: DisposableScope,
+  platform: PlatformView,
+): HTMLElement {
+  const stores = platform.stores;
   const QUALITY_KEY: ScopedKey = 'device.volui:display-quality';
+  const live = platform.display !== null;
 
   const quality = new Select({
     options: [
@@ -252,26 +257,36 @@ function buildDisplaySettingsDemo(disposables: DisposableScope): HTMLElement {
       { value: 'gamescope', label: i18next.t('volui:forms.sessionGamescope') },
       { value: 'bigpicture', label: i18next.t('volui:forms.sessionBigPicture') },
     ],
-    value: 'web',
+    value: platform.session,
+    // Native kabukta oturum bildirilir, seçilmez; web'de simülasyon seçicisidir.
+    disabled: platform.native,
     onCommit: applySession,
   });
+  const preferences = platform.displayPreferences;
   const mode = new Select({
     options: [
       { value: 'windowed', label: i18next.t('volui:forms.displayWindowed') },
       { value: 'fullscreen', label: i18next.t('volui:forms.displayFullscreen') },
     ],
-    value: 'fullscreen',
+    value: live ? preferences.mode : 'fullscreen',
+    onCommit: (value) => {
+      if (live && (value === 'windowed' || value === 'fullscreen')) {
+        void platform.update({ mode: value });
+      }
+    },
   });
   const resolution = new Select({
-    options: ['1280x800', '1920x1080', '2560x1440', '3840x2160'].map((value) => ({
-      value,
-      label: value.replace('x', '×'),
-    })),
-    value: '1280x800',
+    options: DISPLAY_RESOLUTIONS.map((value) => ({ value, label: value.replace('x', '×') })),
+    value: live ? preferences.resolution : DEFAULT_DISPLAY.resolution,
+    onCommit: (value) => {
+      if (live) void platform.update({ resolution: value });
+    },
   });
 
   const sessionRow = new SettingsRow({
-    label: i18next.t('volui:forms.displaySession'),
+    label: i18next.t(
+      platform.native ? 'volui:forms.displaySessionReal' : 'volui:forms.displaySession',
+    ),
     control: session,
   });
   const modeRow = new SettingsRow({
@@ -288,6 +303,31 @@ function buildDisplaySettingsDemo(disposables: DisposableScope): HTMLElement {
   });
   const form = new SettingsForm({ className: 'vol-display-settings' });
   form.add(sessionRow).add(modeRow).add(resolutionRow).add(qualityRow);
+
+  // Gerçek kabuk bilgisi görünür kalır: simülasyon seçimi gerçek oturumu örtmez.
+  const runtimeLabels: Record<RuntimePlatform, string> = {
+    web: i18next.t('volui:forms.runtimeWeb'),
+    desktop: i18next.t('volui:forms.runtimeDesktop'),
+    android: i18next.t('volui:forms.runtimeAndroid'),
+  };
+  const sessionLabels: Record<SessionKind, string> = {
+    web: i18next.t('volui:forms.sessionWeb'),
+    desktop: i18next.t('volui:forms.sessionDesktop'),
+    gamescope: i18next.t('volui:forms.sessionGamescope'),
+    bigpicture: i18next.t('volui:forms.sessionBigPicture'),
+  };
+  const summary = new Text(
+    i18next.t('volui:forms.platformSummary', {
+      runtime: runtimeLabels[platform.platform],
+      session: sessionLabels[platform.session],
+    }),
+    { variant: 'muted', tag: 'p' },
+  );
+  summary.element.classList.add('vol-display-settings__summary');
+  summary.element.dataset.volPlatform = platform.platform;
+  summary.element.dataset.volSession = platform.session;
+  form.element.append(summary.element);
+
   disposables.addDestroyables(
     session,
     mode,
@@ -297,6 +337,7 @@ function buildDisplaySettingsDemo(disposables: DisposableScope): HTMLElement {
     modeRow,
     resolutionRow,
     qualityRow,
+    summary,
     form,
   );
 
@@ -306,6 +347,18 @@ function buildDisplaySettingsDemo(disposables: DisposableScope): HTMLElement {
     const caps = displayCapabilitiesForSession(kind);
     modeRow.element.hidden = !caps.windowMode;
     resolutionRow.element.hidden = !caps.resolution;
+  }
+  applySession(platform.session);
+
+  // F11, pencere yöneticisi ve başka sekme tercihi değiştirince satırlar gerçeği gösterir.
+  if (live) {
+    disposables.addSubscription(
+      platform.subscribe(() => {
+        const current = platform.displayPreferences;
+        mode.setValue(current.mode);
+        resolution.setValue(current.resolution);
+      }),
+    );
   }
   return form.element;
 }
@@ -638,7 +691,10 @@ function buildOnScreenKeyboardDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
-export function buildFormsTab(uiRootElement: HTMLElement): {
+export function buildFormsTab(
+  uiRootElement: HTMLElement,
+  platform: PlatformView,
+): {
   element: HTMLElement;
   destroy: () => void;
 } {
@@ -719,9 +775,13 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:forms.settingsForm'), buildSettingsFormDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.settingsModel'), buildSettingsModelDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.audioSettings'), buildAudioSettingsDemo(disposables), { span: 2 }),
-    card(i18next.t('volui:forms.displaySettings'), buildDisplaySettingsDemo(disposables), {
-      span: 2,
-    }),
+    card(
+      i18next.t('volui:forms.displaySettings'),
+      buildDisplaySettingsDemo(disposables, platform),
+      {
+        span: 2,
+      },
+    ),
     card(i18next.t('volui:forms.numberStepper'), unitStepper.element, { center: true }),
     card(i18next.t('volui:forms.sixDigits'), buildSixDigitDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.timerBarVariations'), buildTimerBarVariationsDemo(disposables)),

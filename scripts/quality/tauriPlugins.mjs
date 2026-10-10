@@ -159,3 +159,82 @@ export function validateTauriPlugins(root, lifecycle = loadRepoLifecycle(root)) 
 
   return problems;
 }
+
+/**
+ * `TauriWindowAdapter`ın pencereye yaptığı her çağrı Tauri'de ayrı bir izne bağlıdır; izin yoksa çağrı çalışma
+ * anında "not allowed" ile düşer ve yalnız konsola uyarı yazılır (Windows yerel turunda `center` böyle
+ * yakalandı: pencereli kipe dönüşte boyut uygulanır, ortalama sessizce düşerdi). Yeni bir çağrı bu tabloya
+ * eklenmeden kapıdan geçmez.
+ */
+export const WINDOW_PERMISSIONS = {
+  setFullscreen: 'core:window:allow-set-fullscreen',
+  setSize: 'core:window:allow-set-size',
+  center: 'core:window:allow-center',
+};
+
+const ADAPTER_PATH = 'tauri-v2/src/window/TauriWindowAdapter.ts';
+const DESKTOP_PLATFORMS = new Set(['windows', 'linux', 'macOS']);
+
+/** Bağdaştırıcının `this.window` üstünden çağırdığı komutlar. */
+export function adapterWindowCalls(source) {
+  return [
+    ...new Set([...source.matchAll(/this\.window\??\.([A-Za-z]+)\(/g)].map((m) => m[1])),
+  ].sort();
+}
+
+/**
+ * Pencereyi süren (`DisplayModeController`/`TauriWindowAdapter` kullanan) her uygulamanın masaüstü yeteneği
+ * bağdaştırıcının çağırdığı komutların izinlerini taşır.
+ */
+export function validateWindowPermissions(root, lifecycle = loadRepoLifecycle(root)) {
+  if (!existsSync(join(root, ADAPTER_PATH))) return [];
+  const problems = [];
+  const calls = adapterWindowCalls(readFileSync(join(root, ADAPTER_PATH), 'utf8'));
+  for (const call of calls) {
+    if (!(call in WINDOW_PERMISSIONS)) {
+      problems.push(
+        `${ADAPTER_PATH}: this.window.${call}() çağrısının izni scripts/quality/tauriPlugins.mjs WINDOW_PERMISSIONS tablosunda yok.`,
+      );
+    }
+  }
+  const configs = excludingFrozenPaths(
+    workingTreeFiles(root, ['**/src-tauri/tauri.conf.json']),
+    lifecycle,
+  );
+  for (const config of configs) {
+    const crate = dirname(config);
+    const appDir = dirname(crate);
+    const sources = excludingFrozenPaths(
+      workingTreeFiles(root, [`${appDir}/src`]).filter((file) => file.endsWith('.ts')),
+      lifecycle,
+    );
+    const drivesWindow = sources.some((file) =>
+      /\b(?:DisplayModeController|TauriWindowAdapter)\b/.test(
+        readFileSync(join(root, file), 'utf8'),
+      ),
+    );
+    if (!drivesWindow) continue;
+    const granted = new Set();
+    for (const capability of capabilitiesOf(join(root, crate))) {
+      const platforms = capability.platforms;
+      if (
+        Array.isArray(platforms) &&
+        !platforms.some((platform) => DESKTOP_PLATFORMS.has(platform))
+      ) {
+        continue;
+      }
+      for (const permission of capability.permissions ?? []) {
+        granted.add(typeof permission === 'string' ? permission : permission?.identifier);
+      }
+    }
+    for (const call of calls) {
+      const permission = WINDOW_PERMISSIONS[call];
+      if (permission && !granted.has(permission)) {
+        problems.push(
+          `${crate}/capabilities: uygulama pencereyi sürüyor (this.window.${call}) ama masaüstü yeteneği "${permission}" iznini vermiyor — çağrı çalışma anında düşer.`,
+        );
+      }
+    }
+  }
+  return problems;
+}

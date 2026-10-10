@@ -4134,7 +4134,6 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-vol-haptics",
- "tauri-plugin-vol-orientation",
  "volstudio-tauri",
 ]
 

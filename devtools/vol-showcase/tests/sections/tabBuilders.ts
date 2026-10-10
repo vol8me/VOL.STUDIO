@@ -1,4 +1,6 @@
 import { readdirSync } from 'node:fs';
+import { LocalStorageAdapter, ScopedSaveManager } from '@volstudio/core/persistence';
+import { PlatformServices } from '../../src/platform';
 import { resolve } from 'node:path';
 import { buildAdvancedTab } from '../../src/sections/advancedTab';
 import { buildButtonsTab } from '../../src/sections/buttonsTab';
@@ -14,6 +16,16 @@ import { buildSesTab } from '../../src/sections/sesTab';
 import { buildTextTab } from '../../src/sections/textTab';
 import { buildTouchTab } from '../../src/sections/touchTab';
 import { buildWorkbenchTab } from '../../src/sections/workbenchTab';
+
+/** Tarayıcı kabuğu: web oturumu, localStorage deposu, native pencere ve titreşim sürücüsü yok. */
+export function webPlatform(): PlatformServices {
+  return PlatformServices.create(
+    'web',
+    'web',
+    new ScopedSaveManager({ synced: new LocalStorageAdapter(), device: new LocalStorageAdapter() }),
+    { observeHaptics: [] },
+  );
+}
 
 export interface TabBuild {
   element: HTMLElement;
@@ -52,7 +64,7 @@ export function tabBuilders(getRoot: () => HTMLElement): TabBuilder[] {
     { name: 'panels', build: () => buildPanelsTab(root()) },
     { name: 'hud', build: () => buildHudTab() },
     { name: 'cards', build: () => buildCardsTab(root()) },
-    { name: 'forms', build: () => buildFormsTab(root()) },
+    { name: 'forms', build: () => buildFormsTab(root(), webPlatform()) },
     { name: 'workbench', build: () => buildWorkbenchTab() },
     { name: 'palette', build: () => buildPaletteTab() },
     { name: 'advanced', build: () => buildAdvancedTab(root()) },

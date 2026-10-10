@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildSesTab } from '../../src/sections/sesTab';
 import { ShowcaseApp } from '../../src/ShowcaseApp';
 import { getAppSoundKit } from '../../src/appSound';
+import { webPlatform } from './tabBuilders';
 
 /** Ses laboratuvarı, Web Audio VARKEN: bağlam jestle kurulur, durum gerçek bağlamı gösterir, dışa aktarma çalışır. */
 class StubContext {
@@ -86,7 +87,7 @@ describe('ses laboratuvarı (Web Audio var)', () => {
   it('gerçek uygulama ve laboratuvar birlikteyken tek bileşen tıklaması tek ses; audition uygulama sesi üretmez', async () => {
     const mount = document.createElement('div');
     document.body.append(mount);
-    const app = new ShowcaseApp(mount);
+    const app = new ShowcaseApp(mount, webPlatform());
     try {
       const press = app.element.querySelector<HTMLElement>('[data-ses-comp="press"]')!;
       press.dispatchEvent(new Event('pointerdown', { bubbles: true }));
