@@ -1000,10 +1000,11 @@
     },
     "compare": {
       "title": "Dışa aktarma ve kıyas",
-      "hint": "Kuru: işlenmemiş örnek, kanal ayarı ve perde değişimi yok. Kit: ±%4 perde, kanal kazancı ve ses bütçesi uygulanır.",
+      "hint": "Kuru: işlenmemiş örnek, kanal ayarı ve perde değişimi yok. Kit: ±%4 perde, kanal kazancı ve ses bütçesi uygulanır. A/B: aynı olay ve varyantı iki paletle art arda, kuru çalar.",
       "variant": "Varyant {{value}}",
       "dry": "Kuru çal",
       "kit": "Kit ile çal",
+      "ab": "Palet A/B (çelik sonra aurum)",
       "download": "Örneği indir"
     },
     "palette": {

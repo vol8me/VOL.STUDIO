@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 const LISTENING_DIR = () => join(repo!.root, LISTENING_ROOT);
-const COUNTS = { canary: 0, benchmark: 0, reference: 0 };
+const COUNTS = { canary: 0, benchmark: 0, reference: 0, ui: 0 };
 
 function writeCanary(id: string): void {
   const dir = join(repo!.root, 'devtools/audio-synth/corpus/canaries');
@@ -300,6 +300,43 @@ describe('dinleme paketi', () => {
     },
     CORPUS_TIMEOUT,
   );
+
+  it('gönderilen UI paletleri olay başına palet × varyant grubu olarak sunulur', () => {
+    repo = createTestRepo();
+    const names = ['steel/press-a', 'steel/press-b', 'aurum/press-a', 'steel/hover-a'];
+    for (const name of names) {
+      const manifestPath = `core/audio-manifests/ui/${name}.json`;
+      const manifest = JSON.parse(readFileSync(join(REPO, manifestPath), 'utf8')) as {
+        asset: { path: string };
+      };
+      const manifestDst = join(repo.root, manifestPath);
+      mkdirSync(dirname(manifestDst), { recursive: true });
+      copyFileSync(join(REPO, manifestPath), manifestDst);
+      const assetDst = join(repo.root, manifest.asset.path);
+      mkdirSync(dirname(assetDst), { recursive: true });
+      copyFileSync(join(REPO, manifest.asset.path), assetDst);
+    }
+    const pkg = buildListeningPackage(repo.root);
+    expect(pkg.counts).toEqual({ ...COUNTS, ui: 4 });
+    const press = pkg.items.filter((i) => i.group === 'ui:press');
+    expect(press.map((i) => i.id)).toEqual([
+      'ui/aurum/press-a',
+      'ui/steel/press-a',
+      'ui/steel/press-b',
+    ]);
+    for (const item of pkg.items) {
+      expect(item.kind).toBe('ui');
+      expect(item.role).toBe('delivery');
+      expect(item.assetClass).toBe('ui');
+      expect(item.pcmHash).toMatch(/^sha256:/);
+      expect(item.file.startsWith(`${LISTENING_ROOT}/ui/`)).toBe(true);
+      expect(item).not.toHaveProperty('decision');
+    }
+    expect(press[0].title).toBe('press · aurum · A');
+    const html = readFileSync(join(LISTENING_DIR(), 'index.html'), 'utf8');
+    expect(html).toContain('UI sesleri (gönderilen paletler)');
+    expect(html).toContain('ui:press');
+  });
 
   it('yeniden koşu aynı envanteri üretir (deterministik paket)', () => {
     repo = createTestRepo();

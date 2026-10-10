@@ -119,6 +119,7 @@ test('ses laboratuvarı: kuru ve kit yolu hatasız çalışır, örnek indirilir
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.locator('[data-ses="kit"]').click();
   await page.locator('[data-ses="dry"]').click();
+  await page.locator('[data-ses="ab"]').click();
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('[data-ses="download"]').click(),

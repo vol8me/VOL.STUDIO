@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Sha256 } from '../kernel/canonical';
@@ -12,6 +12,7 @@ import type { SampleResolver } from '../program/samples';
 import { decodeWithFfmpeg } from './toolchain';
 import { encodeQualityOf } from './encodeProfiles';
 import { checkMusic } from './music';
+import { validateManifest } from './manifest';
 import { REFERENCE_MIX_ID } from '../music/stem';
 import { materialize } from '../program/dimensions';
 import { renderProgram } from '../program/render';
@@ -23,11 +24,14 @@ import { readJsonFile, resolveInside, writeFileAtomic } from './fs';
 export const LISTENING_ROOT = `${EXPORT_ROOT}/listening`;
 export const LISTENING_SCHEMA = 'ListeningPackageV2';
 
+/** Uygulamanın gönderdiği UI paletlerinin manifestleri: `<palet>/<olay>-<varyant>.json`. */
+const UI_MANIFESTS_ROOT = 'core/audio-manifests/ui';
+
 export type ListeningRole = 'source' | 'delivery' | 'loop2x' | 'overlay';
 
 export interface ListeningItemV2 {
   readonly id: string;
-  readonly kind: 'canary' | 'benchmark' | 'reference';
+  readonly kind: 'canary' | 'benchmark' | 'reference' | 'ui';
   /** Repo-göreli WAV (export ağacı). */
   readonly file: string;
   readonly title: string;
@@ -47,6 +51,7 @@ export interface ListeningPackageV2 {
     readonly canary: number;
     readonly benchmark: number;
     readonly reference: number;
+    readonly ui: number;
   };
   readonly items: readonly ListeningItemV2[];
 }
@@ -113,7 +118,7 @@ function pageHtml(pkg: ListeningPackageV2): string {
 <title>Dinleme paketi</title><style>${PAGE_CSS}</style></head><body>
 <h1>Dinleme paketi — ${pkg.counts.canary} canary, ${pkg.counts.benchmark} benchmark, ${
     pkg.counts.reference
-  } referans</h1>
+  } referans, ${pkg.counts.ui} UI sesi</h1>
 <p>Bu isteğe bağlı dinleme aracı kaynak ve teslim varyantlarını sunar.
 <code>source</code> = programdan render, <code>delivery</code> = gönderilen
 kodlamanın çözümü, <code>loop2x</code> = iki ardışık döngü turu (dikiş),
@@ -121,6 +126,7 @@ kodlamanın çözümü, <code>loop2x</code> = iki ardışık döngü turu (diki�
 ${sectionHtml('Organik canary' + "'" + 'ler', items('canary'))}
 ${sectionHtml('Benchmark görevleri', items('benchmark'))}
 ${sectionHtml('Production referansları', items('reference'))}
+${sectionHtml('UI sesleri (gönderilen paletler)', items('ui'))}
 </body></html>`;
 }
 
@@ -386,6 +392,48 @@ function referenceItems(repoRoot: string, samples: SampleResolver): ListeningIte
 }
 
 /**
+ * Gönderilen UI paletleri: her olay için palet × varyant yan yana (palet A/B). Ses, uygulamaya
+ * giden OGG'nin çözümüdür (kodek sonrası); yeniden render yok. Referans setler (Kenney) pakete
+ * GİRMEZ: yalnız yerel ölçüm içindir (`scripts/ui-reference-compare.ts`).
+ */
+function uiItems(repoRoot: string): ListeningItemV2[] {
+  const root = resolveInside(repoRoot, UI_MANIFESTS_ROOT, 'ui manifests');
+  if (!existsSync(root)) return [];
+  const items: ListeningItemV2[] = [];
+  for (const palette of readdirSync(root).sort()) {
+    const dir = join(root, palette);
+    if (!statSync(dir).isDirectory()) continue;
+    for (const file of readdirSync(dir)
+      .filter((name) => name.endsWith('.json'))
+      .sort()) {
+      const manifestPath = `${UI_MANIFESTS_ROOT}/${palette}/${file}`;
+      const manifest = validateManifest(readJsonFile(join(dir, file), manifestPath));
+      const name = file.replace(/.json$/, '');
+      const parts = /^(.+)-([a-z])$/.exec(name);
+      const event = parts?.[1] ?? name;
+      const variant = (parts?.[2] ?? '').toUpperCase();
+      const decoded = decodeWithFfmpeg(resolveInside(repoRoot, manifest.asset.path, 'asset'), name);
+      const pcm: Pcm = { channels: decoded.channels, sampleRate: decoded.sampleRate };
+      items.push({
+        id: `ui/${palette}/${name}`,
+        kind: 'ui',
+        file: writePcm(repoRoot, `${LISTENING_ROOT}/ui/${palette}/${name}.wav`, pcm),
+        title: `${event} · ${palette} · ${variant}`,
+        guide: [
+          'Gönderilen OGG dosyasının çözümü. Aynı olayın paletlerini ve varyantlarını karşılaştırın; kulaklıkta ve cihaz hoparlöründe ayrı dinleyin.',
+        ],
+        manifest: manifestPath,
+        assetClass: manifest.policy.assetClass,
+        pcmHash: hashPcm(pcm.channels, pcm.sampleRate),
+        group: `ui:${event}`,
+        role: 'delivery',
+      });
+    }
+  }
+  return items;
+}
+
+/**
  * Paketi kurar: WAV'ları yazar, `listening.json` ve `index.html`'i üretir.
  * Deterministiktir — tarih/saat yazmaz; aynı repo durumu aynı paketi verir.
  */
@@ -397,6 +445,7 @@ export function buildListeningPackage(repoRoot: string): ListeningPackageV2 {
       ...canaryItems(repoRoot, samples),
       ...benchmarkItems(repoRoot, tmp, samples),
       ...referenceItems(repoRoot, samples),
+      ...uiItems(repoRoot),
     ];
     const count = (kind: ListeningItemV2['kind']) => items.filter((i) => i.kind === kind).length;
     const pkg: ListeningPackageV2 = {
@@ -405,6 +454,7 @@ export function buildListeningPackage(repoRoot: string): ListeningPackageV2 {
         canary: count('canary'),
         benchmark: count('benchmark'),
         reference: count('reference'),
+        ui: count('ui'),
       },
       items,
     };

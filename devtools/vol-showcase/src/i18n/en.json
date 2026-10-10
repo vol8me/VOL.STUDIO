@@ -1000,10 +1000,11 @@
     },
     "compare": {
       "title": "Export and comparison",
-      "hint": "Dry: the unprocessed sample, no channel setting and no pitch shift. Kit: ±4% pitch, channel gain and the voice budget apply.",
+      "hint": "Dry: the unprocessed sample, no channel setting and no pitch shift. Kit: ±4% pitch, channel gain and the voice budget apply. A/B plays the same event and variant in both palettes back to back, dry.",
       "variant": "Variant {{value}}",
       "dry": "Play dry",
       "kit": "Play through kit",
+      "ab": "Palette A/B (steel then aurum)",
       "download": "Download sample"
     },
     "palette": {

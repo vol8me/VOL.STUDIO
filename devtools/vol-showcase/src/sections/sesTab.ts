@@ -56,6 +56,10 @@ const INTENT_KINDS: readonly UiIntentKind[] = [
 ];
 const OUTCOMES: readonly UiOutcome[] = ['success', 'warning', 'error'];
 
+/** Palet A/B: ilk sesin başlangıç payı ve iki palet arasındaki sessizlik (bağlam saniyesi). */
+const AB_LEAD_S = 0.05;
+const AB_GAP_S = 0.35;
+
 /** Ses laboratuvarının örnek adresi. */
 function baseUrl(): string {
   return import.meta.env.BASE_URL;
@@ -541,6 +545,33 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
     },
   });
   processed.element.dataset.ses = 'kit';
+  // Palet A/B: aynı olay ve varyant her palette, bağlam saatinde art arda (kuru, kit işlemesi yok).
+  const ab = new Button(i18next.t('volui:ses.compare.ab'), {
+    variant: 'default',
+    haptic: false,
+    onClick: async () => {
+      prepare();
+      const ctx = context;
+      if (!ctx) return;
+      try {
+        await ctx.resume();
+        let at = ctx.currentTime + AB_LEAD_S;
+        for (const name of UI_SOUND_PALETTES) {
+          const buffer = await load(
+            uiSoundAssets(baseUrl(), name)[compareEvent]?.[compareVariant] ?? '',
+          );
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.start(at);
+          at += buffer.duration + AB_GAP_S;
+        }
+      } catch (error) {
+        console.warn('[VOL.UI] Palet A/B çalınamadı:', error);
+      }
+    },
+  });
+  ab.element.dataset.ses = 'ab';
   const download = new Button(i18next.t('volui:ses.compare.download'), {
     variant: 'default',
     haptic: false,
@@ -562,11 +593,11 @@ export function buildSesTab(): { element: HTMLElement; destroy: () => void } {
     },
   });
   download.element.dataset.ses = 'download';
-  disposables.addDestroyables(eventSelect, variantSelect, dry, processed, download);
+  disposables.addDestroyables(eventSelect, variantSelect, dry, processed, ab, download);
   const compareRow = row();
   compareRow.append(eventSelect.element, variantSelect.element);
   const compareActions = row();
-  compareActions.append(dry.element, processed.element, download.element);
+  compareActions.append(dry.element, processed.element, ab.element, download.element);
   compareBody.append(compareHint.element, compareRow, compareActions);
 
   container.appendChild(

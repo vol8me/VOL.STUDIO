@@ -40,6 +40,7 @@ pnpm --filter @volstudio/audio-synth test
 pnpm --filter @volstudio/audio-synth audio:production-check
 pnpm --filter @volstudio/audio-synth audio:reference-check
 pnpm --filter @volstudio/audio-synth audio:listen
+pnpm --filter @volstudio/audio-synth audio:ui-reference <referans-klasörü> …
 pnpm exec just audio-verify
 ```
 
@@ -47,7 +48,10 @@ Gönderilen dosya kodek sonrası ölçülür. PCM kimliği, render yüzeyi, dosy
 özetleri, sınıf politikası, loop dikişi ve bank/bundle bağları doğrulanır.
 Dinleme paketi `export/` altında git dışıdır. Mekanik QA sesin beğenildiği
 anlamına gelmez. Canary ve benchmark mekanik ölçümleri korur; dinleme
-paketi isteğe bağlı WAV, kaynak/teslim karşılaştırması, loop2x ve rehber sunar.
+paketi isteğe bağlı WAV, kaynak/teslim karşılaştırması, loop2x ve rehber sunar; gönderilen UI
+sesleri olay başına palet × varyant grubu olarak girer. `audio:ui-reference` gönderilen UI
+seslerini yerel bir referans klasörüyle (ör. Kenney CC0 paketleri; depoya girmez) bant, yükseklik
+ve gövde/vurgu oranında karşılaştırır, çıktısı `export/ui-reference/` altındadır.
 `production-ready`, güncel görev başarısı ile bağımsız doğrulanmış yayının
 teknik sözleşmesidir; insanın dinlediği veya sesi beğendiği anlamına gelmez.
 

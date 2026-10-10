@@ -212,12 +212,64 @@ tetikleme kritik sonucu susturmaz. Haptik kapalı/sıfır şiddet ve odak kaybı
 cihaz çıkarma/çıkışta durma gerçek sondada sınanır.
 
 **Referans ölçümü ve kulak.** Gövde ve karakter, referans setlerle (Kenney Interface Sounds ve
-UI Audio; yalnız yerel ölçüm) bant dağılımı, yükseklik ve gövde/vurgu oranı karşılaştırmasıyla
-doğrulanır: örnek ölçümde referansın iyi seslerinde sub −17…−40, low −14…−30, mid −15…−30,
-high −20…−35 dB iken önceki setimizde low/sub −45…−75 dB idi (gövde yok) ve yükseklik −20 LUFS
-iken referans −10…−25 LUFS idi. Yeni set bu aralıkla karşılaştırılır; ölçüm karar vermez, kulak
-verir. **Dinleme notları** kullanıcıdan tarihli olarak aşağıya işlenir; reddedilen ses yeniden
-tasarlanır; dinleme notu UI-02.9 teknik kapanışının zorunlu şartı değildir.
+UI Audio, CC0; yalnız yerel ölçüm, depoya girmez) bant dağılımı, yükseklik ve gövde/vurgu
+oranı karşılaştırmasıyla doğrulanır. Ölçüm karar vermez, kulak verir. **Dinleme notları**
+kullanıcıdan tarihli olarak aşağıya işlenir; reddedilen ses yeniden tasarlanır; dinleme notu
+UI-02.9 teknik kapanışının zorunlu şartı değildir.
+
+_Yöntem (2026-10-10, `devtools/audio-synth/scripts/ui-reference-compare.ts`)._ Hepsi gönderilen
+biçimde (OGG, FFmpeg çözümü) ölçülür: 151 referans dosyası (Interface Sounds 100, UI Audio 51;
+paketlerin `Audio` klasörleri) ve gönderilen 150 UI sesi (2 palet × 25 olay × 3 varyant).
+Yükseklik BS.1770 tepe anlık (400 ms) LUFS ve 4× true peak. Bant düzeyi: 2048 örneklik Hann
+pencereli Welch gücü, sesin etkin karelerinin (en güçlü karenin 40 dB altına inmeyenler)
+ortalaması, dBFS; bantlar sub 20–80, low 80–250, mid 250–2500, high 2500–16000 Hz.
+Gövde/vurgu = (sub+low) gücünün high gücüne oranı (dB; pozitif = gövde ağırlıklı). Hücre:
+ortanca (p10…p90). Referanslar `kenney.nl/assets/interface-sounds` ve `kenney.nl/assets/ui-audio`
+paketleridir; komuta klasör olarak verilir. Bu paragrafın önceki sürümündeki örnek sayılar
+(sub −17…−40, low −14…−30 …) tekrarlanamayan bir örnek ölçümdü ve farklı normalizasyon
+kullanıyordu; bu betik ve tablo onların yerini alır.
+
+| Set                     | Ses | Tepe anlık LUFS     | True peak dBTP   | sub dBFS            | low dBFS            | mid dBFS            | high dBFS           | Gövde/vurgu dB      | Merkez Hz        | Süre ms      |
+| ----------------------- | --: | ------------------- | ---------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ---------------- | ------------ |
+| Kenney Interface Sounds | 100 | −18,1 (−25,2…−11,7) | −0,9 (−1,0…+0,3) | −56,2 (−84,7…−30,8) | −51,4 (−84,8…−28,0) | −25,2 (−40,1…−13,0) | −30,6 (−80,7…−15,9) | −15,6 (−54,4…+29,3) | 2156 (345…9403)  | 225 (40…608) |
+| Kenney UI Audio         |  51 | −24,0 (−26,6…−19,4) | −0,8 (−1,7…+1,2) | −54,9 (−97,9…−42,2) | −53,1 (−90,9…−39,3) | −29,7 (−39,4…−22,8) | −28,7 (−33,0…−24,0) | −21,8 (−64,6…−6,1)  | 3767 (1733…7000) | 304 (53…421) |
+| VOL aurum (gönderilen)  |  75 | −26,2 (−37,3…−17,6) | −5,0 (−8,9…−2,9) | −43,6 (−63,3…−30,2) | −29,5 (−44,7…−24,1) | −27,0 (−69,4…−19,1) | −52,8 (−70,0…−42,4) | +26,8 (+9,2…+40,9)  | 333 (172…1367)   | 220 (87…587) |
+| VOL steel (gönderilen)  |  75 | −25,7 (−34,0…−20,8) | −5,0 (−8,9…−2,9) | −45,3 (−53,8…−29,1) | −24,1 (−38,2…−19,8) | −31,1 (−53,2…−20,5) | −65,8 (−74,7…−45,3) | +36,8 (+24,3…+48,9) | 207 (142…886)    | 194 (87…340) |
+
+_Bulgular (ölçüm; kulak değil)._
+
+1. **Gövde referanstan çok fazla, vurgu çok az.** low bandı referanstan ortancada 22–29 dB
+   yüksek (−24…−30 dBFS; referans −51…−53); mid bandı referansla aynı aralıkta (−27…−31;
+   referans −25…−30); high bandı 22–37 dB düşük (−53…−66; referans −29…−31). Gövde/vurgu
+   +27…+37 dB, referans −16…−22 dB: yön ters. Ağırlık merkezi 207–333 Hz, referans 2,2–3,8 kHz.
+   Silinen önceki set orta bant ağırlıklıydı (TODO "Dürüst başlangıç": sub/low −45…−75 dB) ve
+   reddedildi ("tok değil"); yeni set gövdeyi ekledi, ancak bu ölçüm temas/vurgu katmanının
+   referans düzeyinin çok altında kaldığını da gösteriyor.
+2. **Olay bazında:** en parlak olaylar `alert` (high −25/−27 dBFS), `purchase` aurum (−35) ve
+   `panel-open` (−42/−45); en koyular `key-delete` (−76/−81), `slider-tick`, `hover`, `focus`,
+   `denied`, `select` steel, `drag-drop` steel, `press`, `toggle*`, `release` (−57…−73; merkez
+   125–680 Hz). En sık duyulan olayların çoğu koyu uçtadır.
+3. **Yükseklik:** tepe anlık ortanca −26 LUFS (referans −18…−24); UI politikası aralığında
+   (−42…−8). Mikro olaylar (`hover`, `focus`, `key-tap`, `slider-tick`: 77–107 ms) −33…−39 LUFS
+   okur; 400 ms'lik anlık pencerede bu kısa sesler seyrelir (≈ −6…−7 LU), yani ölçü onları
+   olduğundan sessiz gösterir. True peak −5 dBTP: −1 dBTP tavanının 4 dB altında ve referansın
+   (−0,9; p90'ı 0 dBTP üstü) altında; seviye kazancı için payımız var.
+4. **Cihaz hoparlörü uyarısı (varsayım, ölçülmedi):** küçük tablet/el konsolu hoparlörleri
+   150–200 Hz altını zayıf çalar. Ses gövde ağırlıklı olduğundan cihazda duyulan kısım
+   ağırlıkla mid bandı olur (referansla aynı aralıkta) ve hava çok azdır: "tok ama donuk"
+   duyulma riski vardır; kulaklıkta gövde duyulur. Bu oturumda cihaz hoparlör çıkışı
+   kaydedilmedi; karar kullanıcının kulağındadır.
+
+_Karar._ Ölçümle körlemesine yeniden ayar yapılmadı: set insan tarafından henüz dinlenmedi, bir
+önceki ret gövde eksikliği yüzündendi ve parlaklığı yalnız ölçümle artırmak o kararı geri
+alabilir. Dinleme sonucunda "boğuk/donuk" notu gelirse hedef ölçülebilirdir: sık olaylarda
+(`press`, `toggle*`, `select`, `tabSwitch`, `sliderTick`, `valueCommit`) high bandı ortancada
+≥ −45 dBFS (şimdi −50…−73), gövde (low) bandı korunur, UI politikası ve `audio-verify` yeniden
+geçer. Dinleme paketi (`pnpm --filter @volstudio/audio-synth audio:listen`, audio-synth paketinin git dışı `export/listening` klasörü)
+150 gönderilen UI sesini olay başına palet × varyant grubu olarak sunar; ses laboratuvarındaki
+"Palet A/B" düğmesi aynı olay ve varyantı iki paletle art arda çalar. "Eski/yeni A/B"
+uygulanamaz: eski 12 olaylık set D2 ile silindi ve yeniden üretilemez; yerine referans
+karşılaştırması (tablo) ve palet A/B vardır.
 
 Dinleme notları: 2026-10-07 — kullanıcı ilk seti reddetti ("tok değil, hissiyat kötü, kullanım
 alanları yanlış, slider'da ses yok"); set sıfırdan yeniden yapılır (UI-02.6–02.9).
