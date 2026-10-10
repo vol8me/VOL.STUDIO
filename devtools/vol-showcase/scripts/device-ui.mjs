@@ -4,7 +4,7 @@
  * KAPI DEĞİL, cihaz kabul kaydıdır: çıktı `records/ui-device/<etiket>-<yön>/` altındadır (git dışı).
  *
  *   node devtools/vol-showcase/scripts/device-ui.mjs [--serial <s>] [--orientation portrait|landscape|both]
- *                                                  [--tag <ad>] [--no-build]
+ *                                                  [--tag <ad>] [--no-build] [--font-scale <n>]
  *
  * Yerel `vite preview` sunucusunu açar, `adb reverse` ile cihazın `localhost`una bağlar, Chrome'un
  * DevTools soketini `adb forward` eder, `tests/device` belirtimini koşar ve her şeyi geri alır
@@ -29,6 +29,8 @@ const CDP_PORT = 9222;
 const orientation = option('orientation', 'both');
 const tag = option('tag', new Date().toISOString().slice(0, 10));
 let serial = option('serial', '');
+// Sistem yazı ölçeği (Ayarlar > Ekran > Yazı boyutu): 1 varsayılan, 2 en büyük erişilebilirlik ölçeği (UI-07.3).
+const fontScale = option('font-scale', '');
 
 const adb = (parts, opts = {}) =>
   execFileSync(ADB, serial ? ['-s', serial, ...parts] : parts, {
@@ -72,6 +74,7 @@ async function run(rotation) {
         VOL_DEVICE_CDP: `http://127.0.0.1:${CDP_PORT}`,
         VOL_DEVICE_OUT: out,
         VOL_DEVICE_SERIAL: serial,
+        VOL_DEVICE_FONT_SCALE: fontScale || original.fontScale,
       },
     },
   );
@@ -96,7 +99,11 @@ async function closeProbeTabs() {
 }
 
 pickDevice();
-const original = { auto: setting('accelerometer_rotation'), user: setting('user_rotation') };
+const original = {
+  auto: setting('accelerometer_rotation'),
+  user: setting('user_rotation'),
+  fontScale: setting('font_scale'),
+};
 let server;
 let failed = 0;
 try {
@@ -107,6 +114,7 @@ try {
       shell: process.platform === 'win32',
     });
   }
+  if (fontScale) adb(['shell', 'settings', 'put', 'system', 'font_scale', fontScale]);
   server = await startPreview({ cwd: root, port: PORT });
   adb(['reverse', `tcp:${PORT}`, `tcp:${PORT}`]);
   adb([
@@ -131,6 +139,12 @@ try {
   try {
     adb(['shell', 'settings', 'put', 'system', 'user_rotation', original.user]);
     adb(['shell', 'settings', 'put', 'system', 'accelerometer_rotation', original.auto]);
+    if (fontScale) {
+      // `settings get` ayar yoksa "null" döner; geri alma varsayılana (1.0) iner.
+      const restore =
+        original.fontScale === 'null' || !original.fontScale ? '1.0' : original.fontScale;
+      adb(['shell', 'settings', 'put', 'system', 'font_scale', restore]);
+    }
     await closeProbeTabs();
     adb(['reverse', '--remove', `tcp:${PORT}`]);
     adb(['forward', '--remove', `tcp:${CDP_PORT}`]);

@@ -380,12 +380,11 @@ body {
   border: 1px solid var(--vol-ui-border-soft);
 }
 
+/* Token adı teknik bir etikettir: dokunmatikte `title` yok, bu yüzden kısaltılmaz, dar sütunda satır kırar. */
 .vol-palette-swatch__name {
   font-size: var(--vol-text-label);
   text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .vol-palette-swatch__hex {

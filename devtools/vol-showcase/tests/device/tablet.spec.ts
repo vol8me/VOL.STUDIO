@@ -10,6 +10,7 @@ import {
   measureTargets,
 } from '../e2e/support/geometry';
 import { hitTargetSelectors } from '../e2e/support/policy';
+import { scan, type Finding } from '../e2e/support/textFit';
 import { APP_URL, OUT_DIR, expect, test } from './device';
 
 /**
@@ -331,4 +332,73 @@ test('cihaz: dokunma → ilk görünür geri bildirim gecikmesi (rAF + mesaj tur
   const result = { n: samples.length, p50: at(0.5), p95: at(0.95), max: sorted.at(-1) };
   save('latency.json', result);
   expect(result.p95, `p95 ${result.p95.toFixed(1)} ms`).toBeLessThan(100);
+});
+
+/** Her sekmenin panel yüksekliği (yerleşim parmak izi). */
+async function panelHeights(page: Page): Promise<Record<string, number>> {
+  const heights: Record<string, number> = {};
+  for (const tab of SHOWCASE_TABS) {
+    await selectTab(page, tab);
+    heights[tab] = await page.evaluate(
+      (id) =>
+        Math.round(
+          document
+            .querySelector<HTMLElement>(`[role="tabpanel"][id$="-panel-${id}"]`)!
+            .getBoundingClientRect().height,
+        ),
+      tab,
+    );
+  }
+  return heights;
+}
+
+test('cihaz: metin sistem yazı ölçeğinde kırpılmaz/taşmaz; yazı ölçeği kutuyu büyütür', async ({
+  device: page,
+}) => {
+  await openApp(page);
+  const scale = process.env.VOL_DEVICE_FONT_SCALE ?? '1.0';
+  // Sistem yazı ölçeği etkisi: aynı düğmenin kutu yüksekliği ve hesaplanan yazı boyu (ölçek 1.0 koşusuyla kıyaslanır).
+  const button = await page.evaluate(() => {
+    const element = document.querySelector<HTMLElement>('.vol-button');
+    if (!element) return null;
+    return {
+      height: Math.round(element.getBoundingClientRect().height * 10) / 10,
+      fontSize: getComputedStyle(element).fontSize,
+      remPx: getComputedStyle(document.documentElement).fontSize,
+    };
+  });
+  const findings: Finding[] = [];
+  for (const tab of SHOWCASE_TABS) {
+    await selectTab(page, tab);
+    findings.push(...(await scan(page, tab, `device-font-${scale}`)));
+  }
+  save(`text-fit-font-${scale}.json`, { scale, button, findings });
+  expect(findings).toEqual([]);
+});
+
+test('cihaz: yazı tipi yüklenemezse sistem yedeği yerleşimi bozmaz (yükseklik farkı ölçülür)', async ({
+  device: page,
+}) => {
+  await openApp(page);
+  const loaded = await panelHeights(page);
+  const fallbackPage = await page.context().newPage();
+  try {
+    await fallbackPage.route('**/assets/fonts/**', (route) => route.abort());
+    await openApp(fallbackPage);
+    const fallback = await panelHeights(fallbackPage);
+    const delta = Object.fromEntries(
+      SHOWCASE_TABS.map((tab) => [
+        tab,
+        Math.round(((fallback[tab] - loaded[tab]) / loaded[tab]) * 1000) / 10,
+      ]),
+    );
+    save('font-fallback.json', { loaded, fallback, deltaPercent: delta });
+    for (const [tab, value] of Object.entries(delta)) {
+      expect(Math.abs(value), `${tab} sekmesi yedek/yüklü yükseklik farkı %`).toBeLessThanOrEqual(
+        15,
+      );
+    }
+  } finally {
+    await fallbackPage.close();
+  }
 });
