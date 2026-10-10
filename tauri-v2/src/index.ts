@@ -18,7 +18,13 @@ export {
   activateSteamActionSet,
   createSteamworksTextEntryProvider,
   onSteamOverlay,
+  showSteamFloatingKeyboard,
+  showSteamFloatingKeyboardFor,
   steamworksGlyphContext,
   steamworksStatus,
+  type SteamFloatingKeyboardAnchor,
+  type SteamFloatingKeyboardField,
+  type SteamFloatingKeyboardOptions,
+  type SteamFloatingKeyboardResult,
   type SteamworksStatus,
 } from './platform/steamworks';

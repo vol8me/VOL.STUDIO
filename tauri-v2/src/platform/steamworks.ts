@@ -252,3 +252,160 @@ export function createSteamworksTextEntryProvider(): TextEntryProvider {
     },
   };
 }
+
+/**
+ * Kayan klavye (Steam `ShowFloatingGamepadTextInput`) odaklı alanın ÜSTÜNE biner ve
+ * tuşları doğrudan o alana yazar: diyalog gibi sonuç metni dönmez, alan değerini
+ * tarayıcının `input` olayları değiştirir. Bu yüzden ayrı bir giriştir ve
+ * `TextEntryProvider` sözleşmesine (tek seferlik sonuç) KARIŞTIRILMAZ; çağıran alanı
+ * odakta tutar ve kapanışta başka bir şey uygulamaz.
+ *
+ * - `dismissed`: klavye kapandı (kullanıcı ya da Steam). Alan değeri zaten güncel.
+ * - `unavailable`: klavye açılamadı (eklenti/overlay yok, parola alanı, geçersiz alan);
+ *   çağıran core'un yerel ekran klavyesine ya da diyaloğa düşer.
+ * - `busy`: bu uçta zaten bir kayan klavye açık.
+ * - `canceled`: sahibi iptal etti (sinyal) ya da üst süre doldu; klavye kapatılır.
+ */
+export type SteamFloatingKeyboardResult = 'dismissed' | 'unavailable' | 'busy' | 'canceled';
+
+/** Görünüm penceresine göre alan dikdörtgeni, CSS pikseli. */
+export interface SteamFloatingKeyboardAnchor {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface SteamFloatingKeyboardOptions {
+  /** Çok satırlı düzen (TextArea); yoksa tek satır. */
+  readonly multiline?: boolean;
+  /**
+   * Parola alanı. Steam'in kayan klavyesinin maskesi yoktur: parola isteği
+   * diyalogun Password moduna ayrılır, burada `unavailable` döner ve klavye açılmaz.
+   */
+  readonly password?: boolean;
+  /** Sahibin iptali; açık klavye SDK'dan kapatılır. */
+  readonly signal?: AbortSignal;
+  /** CSS → pencere pikseli çarpanı; varsayılan `devicePixelRatio` (yoksa 1). */
+  readonly scale?: number;
+}
+
+let floatingKeyboardOpen = false;
+let floatingRequestSequence = 0n;
+
+function floatingRect(
+  anchor: SteamFloatingKeyboardAnchor,
+  scale: number,
+): { x: number; y: number; width: number; height: number } | null {
+  const values = [anchor.x, anchor.y, anchor.width, anchor.height, scale];
+  if (!values.every(Number.isFinite) || anchor.width <= 0 || anchor.height <= 0 || scale <= 0) {
+    return null;
+  }
+  return {
+    x: Math.round(anchor.x * scale),
+    y: Math.round(anchor.y * scale),
+    width: Math.max(1, Math.round(anchor.width * scale)),
+    height: Math.max(1, Math.round(anchor.height * scale)),
+  };
+}
+
+export async function showSteamFloatingKeyboard(
+  anchor: SteamFloatingKeyboardAnchor,
+  options: SteamFloatingKeyboardOptions = {},
+): Promise<SteamFloatingKeyboardResult> {
+  const { signal } = options;
+  if (signal?.aborted) return 'canceled';
+  if (floatingKeyboardOpen) return 'busy';
+  const rect = floatingRect(anchor, options.scale ?? globalThis.devicePixelRatio ?? 1);
+  if (options.password === true || !rect) return 'unavailable';
+
+  floatingKeyboardOpen = true;
+  const requestId = `float-${++floatingRequestSequence}`;
+  const currentProbe = probe;
+  const scope = new DisposableScope();
+  let stopped = false;
+  let showStarted = false;
+  let resolveAbort!: (result: SteamFloatingKeyboardResult) => void;
+  const aborted = new Promise<SteamFloatingKeyboardResult>((resolve) => (resolveAbort = resolve));
+  const cancelNative = async (): Promise<void> => {
+    if (!showStarted) return;
+    try {
+      await currentProbe.invoke('cancel_text_input', { requestId });
+    } catch (error) {
+      console.warn('Steam kayan klavyesi kapatılamadı:', error);
+    }
+  };
+  const abort = (): void => {
+    stopped = true;
+    void cancelNative();
+    scope.dispose();
+    resolveAbort('canceled');
+  };
+  if (signal) scope.addListener(signal, 'abort', abort, { once: true });
+  const run = async (): Promise<SteamFloatingKeyboardResult> => {
+    let dismiss!: (result: SteamFloatingKeyboardResult) => void;
+    const dismissed = new Promise<SteamFloatingKeyboardResult>((resolve) => (dismiss = resolve));
+    let shown = false;
+    try {
+      scope.addSubscription(
+        await currentProbe.listen('vol-steamworks:floating-dismissed', (payload) => {
+          const event = payload as { requestId?: string } | null;
+          if (!stopped && showStarted && event?.requestId === requestId) dismiss('dismissed');
+        }),
+      );
+      if (stopped) return 'canceled';
+      showStarted = true;
+      shown =
+        (await currentProbe.invoke('show_floating_input', {
+          requestId,
+          ...rect,
+          mode: options.multiline === true ? 'multiLine' : 'singleLine',
+        })) === true;
+    } catch {
+      // Açılış reddi çağıranın yedeğine bırakılır; iptal aşağıda ayrı korunur.
+    }
+    if (stopped) {
+      if (shown) void cancelNative();
+      return 'canceled';
+    }
+    if (!shown) return 'unavailable';
+    scope.addTimeout(() => {
+      // Kapanış olayı hiç gelmezse alan sonsuza dek "açık" kalmaz.
+      stopped = true;
+      void cancelNative();
+      dismiss('canceled');
+    }, TEXT_INPUT_LIMIT_MS);
+    return dismissed;
+  };
+  try {
+    return await Promise.race([run(), aborted]);
+  } finally {
+    scope.dispose();
+    floatingKeyboardOpen = false;
+  }
+}
+
+/** `showSteamFloatingKeyboard`ın ihtiyaç duyduğu alan şekli; DOM'a bağımlı değildir. */
+export interface SteamFloatingKeyboardField {
+  readonly tagName: string;
+  readonly type?: string;
+  readonly readOnly?: boolean;
+  readonly disabled?: boolean;
+  getBoundingClientRect(): SteamFloatingKeyboardAnchor;
+}
+
+/**
+ * Alanın türünden düzeni, parola durumunu ve dikdörtgeni türetir. Salt okunur ya da
+ * devre dışı alana klavye açılmaz (`unavailable`). Alanın odağı çağıranda kalır.
+ */
+export function showSteamFloatingKeyboardFor(
+  field: SteamFloatingKeyboardField,
+  signal?: AbortSignal,
+): Promise<SteamFloatingKeyboardResult> {
+  if (field.readOnly === true || field.disabled === true) return Promise.resolve('unavailable');
+  return showSteamFloatingKeyboard(field.getBoundingClientRect(), {
+    multiline: field.tagName.toLowerCase() === 'textarea',
+    password: field.type === 'password',
+    signal,
+  });
+}

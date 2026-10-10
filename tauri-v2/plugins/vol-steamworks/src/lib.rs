@@ -25,8 +25,8 @@ mod service;
 mod text_input;
 
 pub use service::{
-    ActionState, AnalogAction, CloudFileInfo, ControllerInfo, DigitalAction, GlyphOrigin, Status,
-    TextInputMode,
+    ActionState, AnalogAction, CloudFileInfo, ControllerInfo, DigitalAction, FloatingInputMode,
+    GlyphOrigin, Status, TextInputMode,
 };
 
 use serde::Serialize;
@@ -35,6 +35,7 @@ use tauri::{
     plugin::{Builder, TauriPlugin},
     AppHandle, Manager, Runtime,
 };
+use text_input::validated_floating_rect;
 
 #[derive(Debug)]
 pub struct Error(String);
@@ -148,9 +149,11 @@ fn show_floating_input<R: Runtime>(
     y: i32,
     width: i32,
     height: i32,
+    mode: FloatingInputMode,
 ) -> Result<bool, Error> {
+    let (x, y, width, height) = validated_floating_rect(x, y, width, height).map_err(Error)?;
     service(&app)
-        .show_floating_input(&request_id, x, y, width, height)
+        .show_floating_input(&request_id, x, y, width, height, mode)
         .map_err(Error)
 }
 

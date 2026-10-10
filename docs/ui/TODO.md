@@ -70,7 +70,7 @@ aile (UI-05 + UI-09) → UI-13.
 
 ## Gerçek kalan iş (2026-10-10 sonu)
 
-**F07 KAPALI DEĞİLDİR.** 28 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
+**F07 KAPALI DEĞİLDİR.** 27 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
 metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde bu oturumda çalıştırılmadı.
 
 | Görev        | Gerçek kalan iş                                                                                                                                                                                                                                                                                                     | Tür                 |
@@ -83,7 +83,6 @@ metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları De
 | UI-10.1–10.5 | SquareJoystick/SwipeGestureZone/MultiTouchZone klavye karşılığı, jest süresi reduced-motion; SplitPane/ScrollView/VirtualList kanıtı, %200, tutamak 24/44; sayaç tarifi; CanvasViewport/WorldCamera/PinchZoom alternatifi, Toolbar/PropertyField, meşgul <100 ms; **UI-10.5 palet ve ileri katalog hiç başlanmadı** | kod + cihaz         |
 | UI-11.1      | Unicode grafem, gerçek IME bileşimi, readOnly/disabled tuşları; Deck kolu ve Android cihaz kanıtı                                                                                                                                                                                                                   | kod + cihaz + insan |
 | UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                                                                                                           | kod + cihaz         |
-| UI-12.1      | **Hiç başlanmadı:** Steam metin sağlayıcısı (`steamworks.ts`, `service.rs`), gerçek Steam runtime sondası                                                                                                                                                                                                           | kod + cihaz         |
 | UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                                                                                               | cihaz + insan       |
 | UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                                                                                                           | cihaz (Windows)     |
 | UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                                                                                                    | kod + insan (IME)   |
@@ -567,10 +566,26 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
 
 Ön koşul: UI-12.1 için UI-11.1; UI-12.2–12.3 için UI-03 (12.3 ayrıca UI-02.8); UI-12.4 için UI-06.2 ve UI-11.2.
 
-- [ ] **UI-12.1 — Steam metin sağlayıcısı.** `tauri-v2/src/platform/steamworks.ts` ve plugin
+- [x] **UI-12.1 — Steam metin sağlayıcısı.** `tauri-v2/src/platform/steamworks.ts` ve plugin
       `service.rs`: parola isteği→Password modu, yüzen tek/çok satırlı giriş, sahibin iptali.
       Kapanır: diyalog sonucu ile yüzen klavye tuş olayı ayrı testli; gerçek Steam runtime sondası
       (AppID 480/başarılı IPC ürün kabulü değildir); OSK yedeği korunur.
+      Yapıldı (2026-10-10): **diyalog** (`createSteamworksTextEntryProvider`) zaten parolayı `Password`, diğerlerini `Normal` kipine
+      çeviriyor ve sahibin iptalinde native girişi kapatıyordu; **yüzen klavye** için JS yüzü yoktu, çok satır kipi yoktu ve iptal SDK'dan
+      kapatmıyordu. Şimdi: Rust `show_floating_input` `mode` (`singleLine`/`multiLine`; IPC başka kipi kabul etmez, SDK eşlemesi
+      `steamworks` özelliği altında testli) ve alan dikdörtgenini (pozitif boyut) IPC sınırında doğruluyor; `cancel_text_input` etkin istek
+      yüzen klavyeyse `DismissFloatingGamepadTextInput` çağırıp sahipliği boşaltıyor (diyaloğun SDK iptali yok; yalnız sonucu yok sayılır).
+      JS: `showSteamFloatingKeyboard(anchor, {multiline, password, signal, scale})` ve alandan türeten `showSteamFloatingKeyboardFor(field, signal)`
+      — sonuç metni taşımaz, yalnız `dismissed | unavailable | busy | canceled` (tuşlar doğrudan odaklı alana yazılır; diyalog
+      `text-input` olayına abone değildir). Parola alanı, salt okunur/devre dışı alan, geçersiz dikdörtgen ve Steam'in `false` yanıtı
+      `unavailable` döner (native çağrısız ya da aboneliği bırakarak); çağıran core OSK'ya ya da diyalogun `Password` kipine düşer — yüzen
+      klavyenin maskesi yoktur, o yüzden parola ona verilmez. Kanıt: `tauri-v2/tests/platform/steamworksFloating.test.ts` (21; abonelik
+      show'dan önce, ölçekli dikdörtgen, kapanış olayı kimlik eşlemesi, show'dan önce gelen kapanış, busy, abort/geç show/üst süre/iptal
+      reddi, OSK yedeği; beş mutasyonla öldürülme denetimi), Rust: `cargo test` 12 (stub) ve `--features steamworks` 18 geçti, clippy
+      `-D warnings` iki yapılandırmada temiz. **NOT-RUN (gerekçeli, devredildi):** gerçek Steam runtime'ında yüzen klavyenin alanı örtmeden
+      açılması, CSS→pencere pikseli çarpanının (`devicePixelRatio`) Steam'in beklediği koordinatla uyumu ve `FloatingGamepadTextInputDismissed`
+      geri çağrısı → F08.6/F04.4; AppID 480 veya başarılı IPC ürün kabulü sayılmaz. Core'a `blur` eden sağlayıcı sözleşmesi eklenmedi:
+      yüzen klavye odaklı alanı gerektirir, bu yüzden `TextEntryProvider`'a karıştırılmadı.
 - [ ] **UI-12.2 — Eylem glifi ve kol geçişi.** InputPresentationController/Glyph ile etkin eylem
       kaynağı; remap, hotplug/çoklu kol/Steam Input kapalı/trackpad/fare/klavye. Kapanır: gerçek
       bağlama glifi ile aile yedeği ayrı; çift işaretçi sahibi yok; Deck ekran klavyesi/menü/diyaloglar

@@ -548,6 +548,22 @@ Kayıtlar git dışıdır (`devtools/vol-showcase/records/ui-device/2026-10-10-{
 
 Dokunma kaynaklı `contextmenu` olayına dokunulmaz: Android'de yerel seçim tutamakları ve eylem çubuğu UI-11.3'ün konusudur.
 
+## Steam metin sağlayıcısı: diyalog ve yüzen klavye (UI-12.1)
+
+İki ayrı giriş vardır; sonuç yolları karışmaz. Diyalog tek seferlik metin döndürür (`TextEntryProvider`); yüzen klavye tuşları doğrudan odaklı
+alana yazar ve yalnız durum bildirir.
+
+| Kural                        | Kanıt                                                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parola → Password kipi       | Diyalog: `purpose: 'password'` → `mode: 'password'` (`steamworks.test.ts`); Rust IPC yalnız `normal`/`password` kabul eder (`text_input.rs`)                |
+| Parola yüzen klavyeye gitmez | `showSteamFloatingKeyboard(…, {password:true})` ve `type=password` alan native çağrısız `unavailable`; yüzen klavyenin maskesi yoktur                       |
+| Tek/çok satır                | `singleLine`/`multiLine`; Rust IPC başka kipi reddeder; SDK eşlemesi `steamworks` özelliğiyle testli                                                        |
+| Sonuç yolları ayrı           | Yüzen klavye `text-input` olayına abone olmaz; kapanış yükündeki metin sonucu belirlemez; sonuç `dismissed`/`unavailable`/`busy`/`canceled`                 |
+| Sahibin iptali               | `AbortSignal` → `cancel_text_input` (aynı kimlik) → Rust `DismissFloatingGamepadTextInput`; show yanıtı gecikirse geç açılış yine kapatılır; üst süre 10 dk |
+| Geçersiz alan                | Sıfır/negatif boyut ve sonlu olmayan değer native çağrısız `unavailable` (JS), Rust IPC sınırında da reddedilir                                             |
+| OSK yedeği                   | Diyalog açılamazsa core `OnScreenKeyboard`'a düşer; kayan klavye `unavailable` döndüğünde çağıran aynı yedeğe düşer                                         |
+| Gerçek Steam runtime         | **NOT-RUN** → F08.6/F04.4: yüzen klavyenin alanı örtmemesi, `devicePixelRatio` çarpanının Steam koordinatıyla uyumu, kapanış geri çağrısı                   |
+
 ## Gerçek platform matrisi
 
 | Profil                                 | Görüntü/girdi                                                     | Zorunlu örnek                                                                                       |

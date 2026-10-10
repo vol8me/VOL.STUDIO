@@ -60,7 +60,7 @@ pub(crate) fn register_callbacks(
     vec![overlay, text, floating]
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum InputKind {
     Text,
     Floating,
@@ -85,11 +85,15 @@ impl PendingInput {
         self.0 = Some((id.into(), kind, false));
         Ok(true)
     }
-    pub(crate) fn cancel(&mut self, id: &str) {
-        if let Some((active, _, cancelled)) = &mut self.0 {
-            if active == id {
+    /// İptal edilen etkin isteğin türünü döner: kayan klavye SDK'dan ayrıca
+    /// kapatılabilir, diyaloğun SDK tarafında iptal çağrısı yoktur.
+    pub(crate) fn cancel(&mut self, id: &str) -> Option<InputKind> {
+        match &mut self.0 {
+            Some((active, kind, cancelled)) if active == id => {
                 *cancelled = true;
+                Some(*kind)
             }
+            _ => None,
         }
     }
     pub(crate) fn finish(&mut self, kind: InputKind) -> Option<String> {
@@ -156,17 +160,31 @@ mod tests {
     fn iptal_native_popup_bitene_kadar_sahipligi_tutar() {
         let mut pending = PendingInput::default();
         assert!(pending.begin("text-1", InputKind::Text).unwrap());
-        pending.cancel("text-1");
+        assert_eq!(pending.cancel("text-1"), Some(InputKind::Text));
         assert!(!pending.begin("text-2", InputKind::Text).unwrap());
         assert_eq!(pending.finish(InputKind::Text), None);
         assert!(pending.begin("text-2", InputKind::Floating).unwrap());
-        pending.cancel("text-1");
+        assert_eq!(pending.cancel("text-1"), None);
         assert_eq!(pending.finish(InputKind::Text), None);
         assert_eq!(
             pending.finish(InputKind::Floating).as_deref(),
             Some("text-2")
         );
         assert_eq!(pending.finish(InputKind::Floating), None);
+    }
+
+    #[test]
+    fn kayan_klavye_iptali_tur_doner_kapanis_olay_yayinlamaz() {
+        let mut pending = PendingInput::default();
+        assert!(pending.begin("floating-1", InputKind::Floating).unwrap());
+        // Başkasının kimliği etkin isteği iptal edemez.
+        assert_eq!(pending.cancel("floating-0"), None);
+        assert_eq!(pending.cancel("floating-1"), Some(InputKind::Floating));
+        // SDK kapanış geri çağrısı sahipliği boşaltır ama JS'e olay gitmez.
+        assert_eq!(pending.finish(InputKind::Floating), None);
+        assert!(pending.begin("floating-2", InputKind::Floating).unwrap());
+        // Bitmiş istek bir daha iptal edilemez.
+        assert_eq!(pending.cancel("floating-1"), None);
     }
 
     #[test]

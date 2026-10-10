@@ -4,7 +4,7 @@
 //!
 //! Gerçek impl `imp` modülündedir ve yalnız feature açıkken derlenir.
 
-pub use crate::text_input::TextInputMode;
+pub use crate::text_input::{FloatingInputMode, TextInputMode};
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
@@ -142,8 +142,7 @@ pub(crate) mod imp {
         use std::sync::{Arc, Mutex};
         use std::time::Duration;
         use steamworks::{
-            CallbackHandle, Client, FloatingGamepadTextInputMode, GamepadTextInputLineMode,
-            GamepadTextInputMode, InputType,
+            CallbackHandle, Client, GamepadTextInputLineMode, GamepadTextInputMode, InputType,
         };
         use tauri::{AppHandle, Emitter, Runtime};
 
@@ -589,13 +588,14 @@ pub(crate) mod imp {
                 y: i32,
                 width: i32,
                 height: i32,
+                mode: FloatingInputMode,
             ) -> Result<bool, String> {
                 self.show_input(request_id, InputKind::Floating, || {
                     // SAFETY: state kilidi SDK bağlamını yaşatır.
                     unsafe {
                         steamworks::sys::SteamAPI_ISteamUtils_ShowFloatingGamepadTextInput(
                             steamworks::sys::SteamAPI_SteamUtils_v010(),
-                            FloatingGamepadTextInputMode::SingleLine.into(),
+                            steamworks::FloatingGamepadTextInputMode::from(mode).into(),
                             x,
                             y,
                             width,
@@ -632,7 +632,17 @@ pub(crate) mod imp {
                 // Bağlantı kurmaya çalışmaz: iptal yeni kaynak açamaz.
                 let state = self.state.lock().unwrap();
                 if let State::Up { session, .. } = &*state {
-                    session.pending.lock().unwrap().cancel(request_id);
+                    let cancelled = session.pending.lock().unwrap().cancel(request_id);
+                    if cancelled == Some(InputKind::Floating) {
+                        // Kayan klavye SDK'dan kapatılabilir; kapanış geri çağrısı iptal
+                        // işaretli olduğundan olay yayınlamaz, yalnız sahipliği boşaltır.
+                        // SAFETY: state kilidi SDK bağlamını yaşatır.
+                        unsafe {
+                            steamworks::sys::SteamAPI_ISteamUtils_DismissFloatingGamepadTextInput(
+                                steamworks::sys::SteamAPI_SteamUtils_v010(),
+                            );
+                        }
+                    }
                 }
                 Ok(())
             }
@@ -847,6 +857,7 @@ pub(crate) mod imp {
                 _y: i32,
                 _w: i32,
                 _h: i32,
+                _mode: FloatingInputMode,
             ) -> Result<bool, String> {
                 self.unavailable()
             }
