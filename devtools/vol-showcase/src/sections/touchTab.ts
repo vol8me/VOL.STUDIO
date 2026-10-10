@@ -19,6 +19,7 @@ import {
   SquareJoystick,
   SwipeableCardStack,
   SwipeGestureZone,
+  type SwipeGestureEvent,
   Text,
   HoldButton,
   KeyBindingList,
@@ -731,7 +732,14 @@ function buildLongPressButtonDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
-/** SwipeGestureZone demosu: yön+mesafe+hız dedektörü (kart hareketi yok). onSwipeMove sürükleme sırasında canlı ipucu günceller. */
+/** Klavye/kol eşdeğeri düğmelerinin gönderdiği kaydırma mesafesi (jest eşiğiyle aynı, 40 px). */
+const KEYBOARD_SWIPE_PX = 40;
+
+/**
+ * SwipeGestureZone demosu: yön+mesafe+hız dedektörü (kart hareketi yok). onSwipeMove sürükleme sırasında canlı ipucu
+ * günceller. Jest tek yol olamaz (CONTRACT §9): dört yön düğmesi AYNI `onSwipe` yolunu çağırır; alan bir kontrol değil
+ * dedektör olduğundan eşdeğeri sahibin sorumluluğudur ve burada görünür kılınır.
+ */
 function buildSwipeGestureZoneDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
@@ -744,6 +752,16 @@ function buildSwipeGestureZoneDemo(disposables: DisposableScope): HTMLElement {
   surface.className = 'vol-showcase-swipe-zone-surface';
   surface.append(svgIcon('range', 44));
 
+  const report = (event: SwipeGestureEvent): void => {
+    result.setContent(
+      i18next.t('volui:touch.cameraPanned', {
+        dir: i18n.tDynamic(`volui:touch.directions.${event.direction}`),
+        distance: Math.round(event.distance),
+        velocity: event.velocity.toFixed(2),
+      }),
+    );
+  };
+
   const zone = new SwipeGestureZone({
     content: surface,
     size: { width: 220, height: 140 },
@@ -755,21 +773,27 @@ function buildSwipeGestureZoneDemo(disposables: DisposableScope): HTMLElement {
     },
     onSwipe: (event) => {
       surface.style.transform = '';
-      const dirKey = `volui:touch.directions.${event.direction}`;
-      const directionLabel = i18n.tDynamic(dirKey);
-      result.setContent(
-        i18next.t('volui:touch.cameraPanned', {
-          dir: directionLabel,
-          distance: Math.round(event.distance),
-          velocity: event.velocity.toFixed(2),
-        }),
-      );
+      report(event);
     },
   });
   disposables.addDestroyables(zone);
 
+  const keys = document.createElement('div');
+  keys.className = 'vol-showcase-row__group';
+  for (const direction of ['left', 'up', 'down', 'right'] as const) {
+    const button = new Button(i18n.tDynamic(`volui:touch.directions.${direction}`), {
+      onClick: () => report({ direction, distance: KEYBOARD_SWIPE_PX, velocity: 0 }),
+    });
+    disposables.addDestroyables(button);
+    keys.appendChild(button.element);
+  }
+  const keyHint = new Text(i18next.t('volui:touch.swipeKeyboardHint'), { variant: 'muted' });
+  disposables.addDestroyables(keyHint);
+
   wrap.appendChild(zone.element);
+  wrap.appendChild(keys);
   wrap.appendChild(result.element);
+  wrap.appendChild(keyHint.element);
 
   return wrap;
 }

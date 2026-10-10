@@ -1,5 +1,7 @@
 import { INPUT, UI_SIZE } from '../../constants';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { i18next } from '../../i18n/I18n';
+import { ArrowKeyHold } from './arrowKeys';
 
 export interface SquareJoystickVector {
   x: number;
@@ -13,6 +15,8 @@ export interface SquareJoystickOptions {
   deadZone?: number;
   onMove?: (vector: SquareJoystickVector) => void;
   onRelease?: () => void;
+  /** Erişilebilir ad (klavyeyle odaklanan çubuk için); verilmezse `core:joystick.label`. */
+  label?: string;
 }
 
 /**
@@ -23,6 +27,10 @@ export interface SquareJoystickOptions {
  *
  * `onMove` -1..1 normalize x/y döner, ama kare geometriye göre normalize
  * edilir (dairesel clamp yok) — çapraz yönlerde büyüklük √2 olabilir.
+ *
+ * **Klavye:** Joystick ile aynı (`ArrowKeyHold`): çubuk odaklanabilir, ok tuşları basılı tutuldukça kare geometrinin ham
+ * ekseninde (-1/0/1) vektör üretir, son tuş bırakılınca ya da odak kaybında `onRelease` çağrılır; işaretçi basılıyken
+ * tuşlar yok sayılır.
  */
 export class SquareJoystick {
   readonly element: HTMLDivElement;
@@ -43,6 +51,11 @@ export class SquareJoystick {
   private readonly scope = new DisposableScope();
   /** Yalnızca bir sürükleme oturumu boyunca yaşar — bkz. `attachDragListeners`. */
   private dragScope: DisposableScope | null = null;
+  private readonly keys = new ArrowKeyHold({
+    onChange: (x, y) => this.applyKeys(x, y),
+    onRelease: () => this.releaseKeys(),
+    isBlocked: () => this.activePointerId !== null,
+  });
 
   constructor(options: SquareJoystickOptions = {}) {
     const {
@@ -50,6 +63,7 @@ export class SquareJoystick {
       deadZone = INPUT.DEAD_ZONE_RATIO,
       onMove,
       onRelease,
+      label,
     } = options;
     this.halfSize = size;
     this.deadZone = deadZone;
@@ -62,6 +76,10 @@ export class SquareJoystick {
 
     this.base = document.createElement('div');
     this.base.className = 'vol-square-joystick__base';
+    this.base.tabIndex = 0;
+    this.base.setAttribute('role', 'group');
+    this.base.setAttribute('aria-label', label ?? i18next.t('core:joystick.label'));
+    this.base.setAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown ArrowLeft ArrowRight');
     this.element.appendChild(this.base);
 
     this.thumb = document.createElement('div');
@@ -76,12 +94,30 @@ export class SquareJoystick {
     // bağlamak, hiç dokunulmayan bir joystick için bile sayfadaki her pointermove'u
     // handler'a sokardı (bkz. RadialMenu/Kanban aynı deseni kullanır).
     this.scope.addListener(this.base, 'pointerdown', this.boundPointerDown as EventListener);
+    this.scope.addListener(this.base, 'keydown', ((event: KeyboardEvent) =>
+      this.keys.keydown(event)) as EventListener);
+    this.scope.addListener(this.base, 'keyup', ((event: KeyboardEvent) =>
+      this.keys.keyup(event)) as EventListener);
+    this.scope.addListener(this.base, 'blur', () => this.keys.release());
   }
 
   destroy(): void {
     this.dragScope?.dispose();
     this.scope.dispose();
     this.element.remove();
+  }
+
+  /** Tutulan ok tuşlarının ham ekseni (-1/0/1): kare geometride çapraz da tam kenara varır. */
+  private applyKeys(x: number, y: number): void {
+    this.base.classList.toggle('vol-square-joystick__base--active', x !== 0 || y !== 0);
+    this.thumb.style.transform = `translate(calc(-50% + ${x * this.halfSize}px), calc(-50% + ${y * this.halfSize}px))`;
+    this.onMoveHandler?.({ x, y });
+  }
+
+  private releaseKeys(): void {
+    this.base.classList.remove('vol-square-joystick__base--active');
+    this.thumb.style.transform = 'translate(-50%, -50%)';
+    this.onReleaseHandler?.();
   }
 
   private attachDragListeners(): void {

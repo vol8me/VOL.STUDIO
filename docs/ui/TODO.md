@@ -486,6 +486,20 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       Yapıldı: PullToRefresh hazır eşiğini aşmış olsa da pointercancel yenileme çağırmaz;
       görünümü ve yakalamayı sıfırlar, tıklama yutma zamanlayıcısı bırakmaz
       (`core/tests/ui/touch/pullToRefreshCancel.test.ts`).
+      Yapıldı (2026-10-10): **SquareJoystick klavyeyle sürülemiyordu** (yalnız işaretçi; odaklanamıyordu). Ok tuşu
+      mantığı `Joystick`ten ortak `ArrowKeyHold`a çıkarıldı (karşıt tuş sıfırlar, `repeat` yeni değişim üretmez,
+      son tuş/odak kaybı `onRelease`, işaretçi basılıyken tuşlar yok sayılır ve YUTULMAZ); daire birim uzunluğa
+      normalize eder, kare ham ekseni (-1/0/1, çapraz √2) verir. İkisi de adlı (`label` seçeneği ya da
+      `core:joystick.label`), `aria-keyshortcuts` bildirir ve `:focus-visible` halkası vardır. **Karar: SwipeGestureZone
+      ve MultiTouchZone denetim değil jest ALGILAYICIDIR** — klavye eşdeğerini bileşen değil sahibi verir (neyin
+      kaydırıldığını yalnız o bilir); bileşen odak tuzağı/sahte tuş icat etmez, `CONTRACT.md` §9'a yazıldı. Vitrin Dokunma
+      sekmesinde kaydırma demosu dört yön düğmesiyle (`KEYBOARD_SWIPE_PX` = 40, eşiği aşan gerçek `onSwipe`) ve ipucu metniyle
+      eşdeğeri gösterir. **Jest süresi hareket azaltmada bozulmaz:** uzun bas/şarj/kaydırma/çekip-yenile zaman
+      damgasından ve zamanlayıcıdan çalışır, CSS animasyon/geçiş olayı beklemez; `gestureReducedMotion.test.ts`
+      hareket azaltma AÇIKKEN dört jestin aynı süre ve eşikle tamamlandığını ve kaynağın `animationend`/`transitionend`/
+      `matchMedia` okumadığını kilitler. Kanıt: birim `squareJoystickKeyboard.test.ts` (10) +
+      `gestureReducedMotion.test.ts` (17), vitrinde `touchEquivalents.spec.ts` 7 senaryo × iki motor. **Açık:** VOL.TEST
+      joystick/hold cihaz koşusu (Lenovo, gerçek dokunma).
 - [ ] **UI-10.2 — DualAxisScrollPanel/ScrollView/VirtualList/KeyedVirtualList/SplitPane.**
       Etkileşimli alt öğe istisnası, sürükleme eşiği, birincil işaretçi, sanal öğeler, resize.
       Kapanır: pointerdown anında alt düğme niyeti alınmaz; iptal edilen sürükleme tıklama üretmez;

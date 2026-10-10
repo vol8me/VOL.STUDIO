@@ -625,6 +625,20 @@ tuşunu bildirir; ikincisi gerçek cihazda bulundu.
 | Gerçek Deck kolu, Steam klavyesi | Fiziksel kolla ekran klavyesi, gerçek Steam metin sağlayıcısı                                                                                                                                                                                                                                                     | **NOT-RUN** (UI-13.4; F08.6)                                   |
 | Başka IME ve insan hissi         | Samsung Klavye, Japonca/Korece IME, Android WebView (Chrome değil), yazım hissi                                                                                                                                                                                                                                   | **NOT-RUN** (UI-13.4; UI-11.4/F09.2)                           |
 
+## Çubuk ve jest klavye eşdeğeri, jest süresi (UI-10.1)
+
+Dokunma denetimleri tek girdi yoluna bağlı kalamaz: çubuk klavyeyle sürülür, jest algılayıcıların eşdeğerini sahibi verir.
+
+| Kural                                | Kanıt                                                                                                                                                                                                               | Sonuç                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Ortak ok tuşu mantığı                | `ArrowKeyHold`: karşıt tuş sıfırlar, `repeat` yeni değişim üretmez, son tuş bırakılınca tek `onRelease`, işaretçi basılıyken tuş yutulmaz (`squareJoystickKeyboard.test.ts`, 10)                                    | Geçti                    |
+| SquareJoystick klavyesi              | Odaklanır, adlı, `aria-keyshortcuts`; kare geometride ham eksen (çapraz √2), odak kaybı basılı tuşu bırakır, söküm dinleyici bırakmaz. Daire birim uzunluğa normalize eder                                          | Geçti                    |
+| Odak halkası                         | İki çubuk tabanında `:focus-visible` halkası (`touch.css`): klavye odağında `solid 2px`, odak dışında çizgi yok (`touchEquivalents.spec.ts`, iki motor; WebKit'te değiştirici tuş modaliteyi kurmaz, ok tuşu kurar) | Geçti                    |
+| Jest algılayıcıların eşdeğeri        | Karar: SwipeGestureZone/MultiTouchZone denetim değil algılayıcıdır, eşdeğeri sahibi verir. Vitrin kaydırma demosu dört yön düğmesiyle gerçek `onSwipe` üretir (`touchEquivalents.spec.ts`, 7 senaryo × iki motor)   | Geçti                    |
+| Jest süresi hareket azaltmada        | Hareket azaltma açıkken uzun bas, şarj, kaydırma ve çekip-yenile aynı süre/eşikle tamamlanır; kaynak `animationend`/`transitionend`/`matchMedia` okumaz (`gestureReducedMotion.test.ts`, 17)                        | Geçti                    |
+| VOL.TEST joystick/hold, gerçek cihaz | Lenovo TB350FU'da gerçek dokunuşla joystick ve basılı-tut                                                                                                                                                           | **Açık** (UI-10.1 devam) |
+| Fiziksel kol, ekran okuyucu          | Kolla çubuk sürme hissi, NVDA/TalkBack ile çubuk duyurusu                                                                                                                                                           | **NOT-RUN** (UI-13.4)    |
+
 ## Gerçek platform matrisi
 
 | Profil                                 | Görüntü/girdi                                                     | Zorunlu örnek                                                                                       |

@@ -860,6 +860,7 @@
     "selectedItem": "Seçildi.",
     "contextMenuOpened": "Bağlam menüsü açıldı (Kullan / At / İncele).",
     "swipeZoneHint": "Alanı herhangi bir yöne kaydır.",
+    "swipeKeyboardHint": "Jest hiçbir zaman tek yol değildir: her düğme aynı kaydırma olayını gönderir.",
     "cameraPanned": "Kamera {{dir}} yönde pan edildi — mesafe: {{distance}}px, hız: {{velocity}}px/ms.",
     "multiTouchHint": "Alana birden fazla parmakla/tıklamayla dokun.",
     "activeTouches": "Aktif dokunuş: {{n}}",

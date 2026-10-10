@@ -1,8 +1,7 @@
 import { INPUT, UI_SIZE } from '../../constants';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { i18next } from '../../i18n/I18n';
-
-const ARROWS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+import { ArrowKeyHold } from './arrowKeys';
 
 export interface JoystickVector {
   x: number;
@@ -48,7 +47,11 @@ export class Joystick {
   private readonly scope = new DisposableScope();
   /** Yalnızca bir sürükleme oturumu boyunca yaşar — bkz. `attachDragListeners`. */
   private dragScope: DisposableScope | null = null;
-  private readonly heldKeys = new Set<string>();
+  private readonly keys = new ArrowKeyHold({
+    onChange: (x, y) => this.applyKeys(x, y),
+    onRelease: () => this.releaseKeys(),
+    isBlocked: () => this.activePointerId !== null,
+  });
 
   constructor(options: JoystickOptions = {}) {
     const {
@@ -88,10 +91,10 @@ export class Joystick {
     // handler'a sokardı (bkz. RadialMenu/Kanban aynı deseni kullanır).
     this.scope.addListener(this.base, 'pointerdown', this.boundPointerDown as EventListener);
     this.scope.addListener(this.base, 'keydown', ((event: KeyboardEvent) =>
-      this.onKeyDown(event)) as EventListener);
+      this.keys.keydown(event)) as EventListener);
     this.scope.addListener(this.base, 'keyup', ((event: KeyboardEvent) =>
-      this.onKeyUp(event)) as EventListener);
-    this.scope.addListener(this.base, 'blur', () => this.releaseKeys());
+      this.keys.keyup(event)) as EventListener);
+    this.scope.addListener(this.base, 'blur', () => this.keys.release());
   }
 
   destroy(): void {
@@ -100,25 +103,8 @@ export class Joystick {
     this.element.remove();
   }
 
-  private onKeyDown(event: KeyboardEvent): void {
-    if (!ARROWS.includes(event.key) || this.activePointerId !== null) return;
-    event.preventDefault();
-    if (event.repeat) return;
-    this.heldKeys.add(event.key);
-    this.applyKeys();
-  }
-
-  private onKeyUp(event: KeyboardEvent): void {
-    if (!this.heldKeys.delete(event.key)) return;
-    event.preventDefault();
-    if (this.heldKeys.size === 0) this.releaseKeys();
-    else this.applyKeys();
-  }
-
   /** Tutulan ok tuşlarını birim uzunlukta bir vektöre çevirir ve başparmağı oraya taşır. */
-  private applyKeys(): void {
-    const x = (this.heldKeys.has('ArrowRight') ? 1 : 0) - (this.heldKeys.has('ArrowLeft') ? 1 : 0);
-    const y = (this.heldKeys.has('ArrowDown') ? 1 : 0) - (this.heldKeys.has('ArrowUp') ? 1 : 0);
+  private applyKeys(x: number, y: number): void {
     const length = Math.hypot(x, y);
     const vx = length === 0 ? 0 : x / length;
     const vy = length === 0 ? 0 : y / length;
@@ -128,11 +114,6 @@ export class Joystick {
   }
 
   private releaseKeys(): void {
-    if (this.heldKeys.size === 0 && !this.base.classList.contains('vol-joystick__base--active')) {
-      return;
-    }
-    this.heldKeys.clear();
-    if (this.activePointerId !== null) return;
     this.base.classList.remove('vol-joystick__base--active');
     this.thumb.style.transform = 'translate(-50%, -50%)';
     this.onReleaseHandler?.();

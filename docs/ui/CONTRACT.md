@@ -261,9 +261,15 @@ Hover/odak içeriği (Tooltip, RichTooltip) WCAG 1.4.13'e uyar: Escape kapatır 
 
 Sürükleme ve basılı-tut/sürükle desenleri tek yol olamaz: SlotGrid (Space tutar, oklar hedef seçer,
 Space/Enter bırakır, Escape iptal), RadialMenu (`openFocused`: oklar döner, Enter seçer, Escape/Tab seçmeden
-kapatır), Joystick (ok tuşları vektör üretir), seçilebilir DataTable (roving `tabindex`, ok/Home/End,
+kapatır), Joystick ve SquareJoystick (ok tuşları vektör üretir; ortak `ArrowKeyHold`), seçilebilir DataTable (roving `tabindex`, ok/Home/End,
 Enter/Space, `aria-selected`) klavye ve kol karşılığını taşır; durum değişimi canlı bölgeyle duyurulur ve
 yeniden çizim odağı düşürmez.
+
+Jest dedektörleri (SwipeGestureZone, MultiTouchZone) kontrol değil algılayıcıdır: odaklanmazlar ve tek başlarına
+klavye/kol eşdeğeri taşımazlar; eşdeğer onları kullanan sahibin eylem yoludur (aynı geri çağrıyı çağıran düğmeler).
+Vitrin bunu SwipeGestureZone'da yön düğmeleriyle gösterir. MultiTouchZone parmak konumu raporlar; "çok parmağın klavye
+karşılığı" anlamsızdır, jestin yaptığı eylemin (kaydır/yakınlaştır) düğme alternatifi sahibe aittir (kamera denetleyicileri:
+UI-10.4).
 
 Izgara ve tablo semantiği (ARIA gerekçesi): `role="grid"` yalnız etkileşimli veri içindir ve klavye
 sözleşmesi vaat eder; görsel bir ızgaraya (CSS `grid`) otomatik yazılmaz. Seçilemeyen DataTable ve palet

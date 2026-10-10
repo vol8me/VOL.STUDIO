@@ -53,6 +53,12 @@
   border-color: var(--vol-ui-brand-border);
 }
 
+.vol-joystick__base:focus-visible,
+.vol-square-joystick__base:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 3px;
+}
+
 .vol-square-joystick__thumb {
   width: calc(var(--vol-square-joystick-size) * 0.7);
   height: calc(var(--vol-square-joystick-size) * 0.7);

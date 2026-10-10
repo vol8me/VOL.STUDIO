@@ -860,6 +860,7 @@
     "selectedItem": "Selected.",
     "contextMenuOpened": "Context menu opened (Use / Drop / Inspect).",
     "swipeZoneHint": "Swipe the area in any direction.",
+    "swipeKeyboardHint": "Gestures are never the only way: each button sends the same swipe event.",
     "cameraPanned": "Camera panned {{dir}} — distance: {{distance}}px, velocity: {{velocity}}px/ms.",
     "multiTouchHint": "Touch the area with multiple fingers/clicks.",
     "activeTouches": "Active touches: {{n}}",
