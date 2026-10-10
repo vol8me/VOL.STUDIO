@@ -1,4 +1,4 @@
-import { animateValue } from '../animation';
+import { Easing, animateValue } from '../animation';
 
 export interface CounterOptions {
   value?: number;
@@ -8,6 +8,12 @@ export interface CounterOptions {
   animateMs?: number;
   /** Okuyucu duyurusunun başına eklenen ad ("Mermi 12"); ikonlu sayaçlar adını buradan taşır. */
   announcePrefix?: string;
+  /**
+   * Sayma hedefi kısa süre (en çok %3,7) aşıp yerine oturur. Yalnız görseldir: okuyucu duyurusu ve
+   * `getValue()` hedef değerdir. Azaltılmış harekette yoktur. Varsayılan kapalı: ara değerin hedefi
+   * aşması her sayaçta istenmez (kalan can, mermi gibi sınırlı değerlerde kapalı kalmalı).
+   */
+  overshoot?: boolean;
 }
 
 /**
@@ -39,6 +45,7 @@ export class Counter {
   private value: number;
   private readonly format: (value: number) => string;
   private readonly animateMs: number;
+  private readonly overshoot: boolean;
   private cancelAnimation?: () => void;
   private feedbackTimeout?: ReturnType<typeof setTimeout>;
   private readonly announcePrefix: string;
@@ -51,7 +58,9 @@ export class Counter {
       format = (v) => String(Math.round(v)),
       animateMs = 150,
       announcePrefix = '',
+      overshoot = false,
     } = options;
+    this.overshoot = overshoot;
     this.announcePrefix = announcePrefix;
 
     this.value = value;
@@ -102,6 +111,7 @@ export class Counter {
         from,
         to: value,
         durationMs: this.animateMs,
+        easing: this.overshoot && !prefersReducedMotion() ? Easing.easeOutOvershoot : undefined,
         onUpdate: (v) => {
           this.displayElement.textContent = this.format(v);
         },
@@ -193,6 +203,10 @@ export class Counter {
     clearTimeout(this.pendingAnnounce);
     this.element.remove();
   }
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 function inferValueChange(from: number, to: number): CounterValueChange {

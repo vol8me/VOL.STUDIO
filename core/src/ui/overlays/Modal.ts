@@ -1,4 +1,4 @@
-import { playJuice } from '../motion/juice';
+import { playJuice, playJuiceSequence } from '../motion/juice';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { pushBackHandler } from '../../platform/backNavigation';
 import { FOCUSABLE_SELECTOR } from '../focus/focusable';
@@ -98,8 +98,7 @@ export class Modal {
     this.previouslyFocused = previousFocusTarget() as (HTMLOrSVGElement & Element) | null;
     this.element.classList.add('vol-modal--visible');
     this.signal('open');
-    // Panel girişi: içerik hafif küçükten oturur (hareket azaltılmışta CSS çevirisiz).
-    if (!this.element.classList.contains('vol-sheet')) playJuice(this.content, 'enter');
+    if (!this.element.classList.contains('vol-sheet')) this.playEntry();
     this.element.inert = false;
 
     this.sessionScope = new DisposableScope();
@@ -116,6 +115,18 @@ export class Modal {
 
     const firstFocusable = this.content.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
     firstFocusable?.focus();
+  }
+
+  /**
+   * Panel girişi: tek parçalı içerik hafif küçükten oturur; çok parçalı içerik (başlık, gövde,
+   * düğmeler) parça parça sıralı girer. Hareket azaltılmışta CSS çevirisizdir.
+   */
+  private playEntry(): void {
+    const parts = [...this.content.children].filter(
+      (child): child is HTMLElement => child instanceof HTMLElement,
+    );
+    if (parts.length > 1) playJuiceSequence(parts, 'enter');
+    else playJuice(this.content, 'enter');
   }
 
   close(): void {

@@ -705,6 +705,7 @@
   "pickDirectionalTarget",
   "planRumblePulses",
   "playJuice",
+  "playJuiceSequence",
   "pointInCircle",
   "pointInRect",
   "poseSourceOf",

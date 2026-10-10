@@ -19,15 +19,13 @@
       "scope": "tab/scroll",
       "rule": "color-contrast",
       "target": ".vol-text--body:nth-child(6)",
-      "owner": "UI-10.2",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/scroll",
       "rule": "color-contrast",
       "target": ".vol-text--body:nth-child(7)",
-      "owner": "UI-10.2",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/touch",
@@ -47,92 +45,79 @@
       "scope": "tab/touch",
       "rule": "color-contrast",
       "target": ".vol-charge-button__label",
-      "owner": "UI-03.2",
-      "reason": "axe hesaplayamadı (yarı saydam ya da üst üste arka plan); kontrast son alfa/arka plan üzerinden UI-01.5 ölçümüyle elle doğrulanacak. Token düzeyi kontrast UI-01.5 kapısında ölçülüyor; bileşen düzeyi son renk incelemesi sahip görevdedir"
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/hud",
       "rule": "color-contrast",
       "target": "#vol-bar-label-1",
-      "owner": "UI-01.7",
-      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/hud",
       "rule": "color-contrast",
       "target": "#vol-bar-label-2",
-      "owner": "UI-01.7",
-      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/hud",
       "rule": "color-contrast",
       "target": "#vol-bar-label-3",
-      "owner": "UI-01.7",
-      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/hud",
       "rule": "color-contrast",
       "target": "#vol-bar-label-4",
-      "owner": "UI-01.7",
-      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
       "target": "#vol-bar-label-6",
-      "owner": "UI-01.7",
-      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
       "target": "#vol-bar-label-7",
-      "owner": "UI-01.7",
-      "reason": "Çubuk etiketi dolgunun segment çentikli ve parlak üst bantlı zemini üstünde; axe gradyan zeminde kontrastı hesaplayamadı. Elle incelendi: beyaz etiket metni koyu dolgu rengi ve metin gölgesi üzerinde okunur; son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
       "target": ".vol-showcase-material__frame-header > .vol-text--muted.vol-text",
-      "owner": "UI-01.7",
-      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Başlık metni ana metin rengiyle (#e8eef5) düz çerçeve şeridi tonunun (#1d252d) üstünde: elle incelendi (≈ 13:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
       "target": ".vol-mat--pressed > .vol-text--muted.vol-text",
-      "owner": "UI-01.7",
-      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
       "target": ".vol-mat--well > .vol-text--muted.vol-text",
-      "owner": "UI-01.7",
-      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
       "target": ".vol-showcase-material__frame > p",
-      "owner": "UI-01.7",
-      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
       "target": "div[data-material=\"Panel\"] > .vol-text--muted.vol-text",
-      "owner": "UI-01.7",
-      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     },
     {
       "scope": "tab/kimlik",
       "rule": "color-contrast",
       "target": "div[data-material=\"Plate\"] > .vol-text--muted.vol-text",
-      "owner": "UI-01.7",
-      "reason": "Malzeme gösterim yüzeyi arka plan görseli (grain/gradyan) ya da köşe bindirmesi taşıyor; axe zemini hesaplayamadı. Metin ikincil/orta metin rengiyle düz bir tonun üstünde: elle incelendi (≥ 7:1); son renk ölçümü UI-01.7 malzeme kapanışında yapılır."
+      "reason": "axe zemini hesaplayamadı (gradyan, doku ya da yarı saydam katman). finalContrast.spec.ts bu kaydı çizilmiş zemin pikselleriyle iki skinde ölçer (en kötü piksel ≥ eşik); ölçüm düşerse kayıt değil yüzey düzeltilir."
     }
   ]
 }

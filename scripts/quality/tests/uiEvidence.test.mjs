@@ -46,6 +46,16 @@ test('sahibi kapanmış/yanlış, gerekçesiz, yinelenen ve geçersiz kapsamlı 
   assert.ok(problems.some((p) => /geçersiz kapsam/.test(p)));
 });
 
+test('hesaplanamayan kontrast kaydı sahip istemez; başka kural ve ihlal kaydı ister', () => {
+  const contrast = record({ rule: 'color-contrast', owner: undefined });
+  assert.deepEqual(validateAxeRecords({ violations: [], incomplete: [contrast] }, tasks), []);
+  const asViolation = validateAxeRecords({ violations: [contrast], incomplete: [] }, tasks);
+  assert.ok(asViolation.some((p) => /sahip görev açık bir UI görevi olmalı/.test(p)));
+  const otherRule = record({ rule: 'aria-valid-attr-value', owner: undefined });
+  const problems = validateAxeRecords({ violations: [], incomplete: [otherRule] }, tasks);
+  assert.ok(problems.some((p) => /sahip görev açık bir UI görevi olmalı/.test(p)));
+});
+
 const registry = {
   archetypes: { overlay: { applicable: ['normal', 'focusVisible', 'keyboard'] } },
   entries: [{ export: 'Modal', archetype: 'overlay' }],

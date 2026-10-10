@@ -1068,7 +1068,8 @@
       "juicePop": "Sayı patlaması",
       "juiceFlash": "Vuruş flaşı",
       "juiceShake": "Sarsıntı",
-      "juiceEnter": "Panel girişi"
+      "juiceEnter": "Panel girişi",
+      "juiceSequence": "Sıralı giriş"
     },
     "iconGallery": "İkon galerisi",
     "iconCategory": "İkon kategorisi"

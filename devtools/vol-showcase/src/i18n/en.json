@@ -1068,7 +1068,8 @@
       "juicePop": "Number pop",
       "juiceFlash": "Hit flash",
       "juiceShake": "Shake",
-      "juiceEnter": "Panel enter"
+      "juiceEnter": "Panel enter",
+      "juiceSequence": "Sequenced enter"
     },
     "iconGallery": "Icon gallery",
     "iconCategory": "Icon category"

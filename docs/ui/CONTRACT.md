@@ -101,6 +101,15 @@ kritik/odak > kullanıcı eylemi > dekor; burst'te dekor düşürülür. Blur i�
 yedeği düz scrim'dir. Sürekli dikkat dağıtan parıltı ve kontrolsüz flash yoktur; WCAG flash
 sınırı tüm sahnede korunur.
 
+Uygulama: `playJuice` her etkiyi belge başına `MotionController` hakkıyla oynatır (bütçe doluysa
+dekor oynamaz, kullanıcı eylemi dekoru keser, hak bitişte ve kesintide döner); `playJuiceSequence`
+bir dizi öğeyi (40 ms basamak, en çok 6 basamak) TEK hak olarak sıralı oynatır (Modal çok parçalı
+girişi). Parlaklık flaşı pencere içinde en çok 3 kez başlar ve 341×256 CSS px alanı aşan öğede
+uygulanmaz (WCAG 2.3.1/2.3.2; azaltılmış harekette de geçerli). Blur bütçesi vitrinde ölçülür:
+bütün sekmelerde ve açık katmanlarda iki skinde etkin blur yüzeyi ve bulanık dış gölge sıfırdır
+(`materialBudget.spec.ts`); malzeme sert gölge kullanır, tavan aşılırsa kapı düşer. Sayaç
+`overshoot` seçeneği hedefi en çok %3,7 aşıp oturur, varsayılan kapalıdır.
+
 Reduced-motion dekor sürelerini 0 yapar; anlam opacity/etiket/ring ile korunur. Hold/charge/
 oyun sayacı gibi işlev süresi sıfırlanmaz. Cancel, interruption, destroy, dil/tema değişimi ve
 hidden/suspend son durumu deterministik verir; animasyon olayı gelmese de temizlik tamamlanır.

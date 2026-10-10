@@ -30,16 +30,21 @@
   background-color: var(--vol-ui-danger-solid);
 }
 
+/* Etiket kendi plakasını taşır: dolgu, şerit ve doku üstünde son renkte okunur (ölçüm: finalContrast.spec). */
 .vol-bar__label {
   letter-spacing: 0.04em;
   color: var(--vol-ui-text);
+  background: var(--vol-ui-scrim);
+  border-radius: var(--vol-radius-sm);
+  padding-inline: 6px;
   text-shadow: 0 1px 2px var(--vol-ui-scrim);
   pointer-events: none;
-  justify-content: center;
-  align-items: center;
   font-size: var(--vol-text-label);
   font-weight: 600;
-  display: flex;
+  width: fit-content;
+  height: fit-content;
+  max-width: 100%;
+  margin: auto;
   position: absolute;
   inset: 0;
 }
@@ -230,12 +235,16 @@
 .vol-timer-bar__label {
   font-variant-numeric: tabular-nums;
   color: var(--vol-ui-text);
+  background: var(--vol-ui-scrim);
+  border-radius: var(--vol-radius-sm);
+  padding-inline: 6px;
   text-shadow: 0 1px 2px var(--vol-ui-scrim);
-  justify-content: center;
-  align-items: center;
   font-size: var(--vol-text-label);
   font-weight: 600;
-  display: flex;
+  width: fit-content;
+  height: fit-content;
+  max-width: 100%;
+  margin: auto;
   position: absolute;
   inset: 0;
 }

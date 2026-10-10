@@ -311,6 +311,7 @@ const EXPECTED_PUBLIC_SURFACE: readonly string[] = [
   'pickDirectionalTarget',
   'planRumblePulses',
   'playJuice',
+  'playJuiceSequence',
   'pointInCircle',
   'pointInRect',
   'poseSourceOf',

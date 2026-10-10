@@ -2651,6 +2651,22 @@
       ]
     },
     {
+      "export": "playJuiceSequence",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-01",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/kimlikMaterial.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/motion/juice.test.ts",
+          "title": "öğeler basamak başına 40 ms gecikmeyle girer; temizlikte gecikme kalkar"
+        }
+      ]
+    },
+    {
       "export": "registerIconSprite",
       "kind": "helper",
       "tier": 1,

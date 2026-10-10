@@ -186,6 +186,9 @@ export function buildFormattedCounterCard(disposables: DisposableScope): HTMLEle
   const counter = new Counter({
     value: 0,
     format: (v) => `${Math.round(v).toLocaleString('tr-TR')} ₺`,
+    // Ödül sayımı: hedefi hafifçe aşıp oturur (yalnız görsel; duyuru ve değer hedeftir).
+    animateMs: 450,
+    overshoot: true,
   });
   counter.element.style.fontSize = '32px';
   disposables.addDestroyables(counter);

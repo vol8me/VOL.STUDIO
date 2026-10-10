@@ -20,7 +20,8 @@ export interface Finding {
 
 export interface AxeRecord extends Finding {
   readonly scope: string;
-  readonly owner: string;
+  /** Yalnız hesaplanamayan kontrast kayıtlarında yoktur: onları piksel ölçümü (finalContrast.spec.ts) kapsar. */
+  readonly owner?: string;
   readonly reason: string;
 }
 

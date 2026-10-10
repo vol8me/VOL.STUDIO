@@ -8,6 +8,8 @@ export const Easing = {
     const c3 = c1 + 1;
     return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
   },
+  /** Hedefi en çok %3,7 aşıp oturur (sayaçlar için; `easeOutBack` %10 aşar ve büyük sayıda yanıltır). */
+  easeOutOvershoot: (t: number): number => 1 + 2 * (t - 1) ** 3 + (t - 1) ** 2,
 } as const;
 
 export interface AnimateValueOptions {

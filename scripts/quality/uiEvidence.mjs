@@ -21,6 +21,9 @@ function openTasks(text) {
   return new Set([...text.matchAll(/^- \[ \] \*\*(UI-\d\d\.\d) /gm)].map((match) => match[1]));
 }
 
+/** Kontrast hesaplanamayan kayıtları finalContrast.spec.ts piksel ölçümüyle kapsar; sahip görev gerekmez. */
+const isMeasured = (kind, record) => kind === 'incomplete' && record.rule === 'color-contrast';
+
 export function validateAxeRecords(records, tasks) {
   const problems = [];
   for (const kind of ['violations', 'incomplete']) {
@@ -31,7 +34,7 @@ export function validateAxeRecords(records, tasks) {
       seen.add(id);
       if (!SCOPE.test(record.scope ?? '')) problems.push(`axe ${kind}: geçersiz kapsam: ${id}`);
       if (!record.rule || !record.target) problems.push(`axe ${kind}: kural/hedef eksik: ${id}`);
-      if (!tasks.has(record.owner))
+      if (!isMeasured(kind, record) && !tasks.has(record.owner))
         problems.push(
           `axe ${kind}: sahip görev açık bir UI görevi olmalı (${record.owner}): ${id}`,
         );

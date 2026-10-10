@@ -53,8 +53,8 @@ export const MOTION_INTERACTION = {
 /**
  * Oyun hissi (juice) ilkelleri: basma yolu, kaldırma, odak nabzı, sayı patlaması, vuruş flaşı,
  * panel girişi, sınırlı sarsıntı. Ad son ekiyle birimi söyler (`Ms` → ms, `Px` → px; ek yoksa
- * birimsiz çarpan). Hepsi `--vol-motion-juice-*` olur; `prefers-reduced-motion` ve
- * `data-vol-motion="reduced"` altında çeviri/ölçek/sarsıntı yoktur, anlam renk ve kenarla kalır.
+ * birimsiz çarpan). Hepsi `--vol-motion-juice-*` olur; `prefers-reduced-motion` altında
+ * çeviri/ölçek/sarsıntı yoktur, anlam renk ve kenarla kalır.
  * Flaş süresi WCAG sınırının (saniyede en çok 3 parlama) çok altında tekrar eder: tek vuruşta
  * tek flaş, kuyruklanmaz.
  */

@@ -92,6 +92,18 @@ describe('Easing eğrileri', () => {
     expect(Math.max(...[0.5, 0.6, 0.7, 0.8].map((t) => Easing.easeOutBack(t)))).toBeGreaterThan(1);
   });
 
+  it('easeOutOvershoot uç noktaları korur, hedefi en çok %3,7 aşar ve oturur', () => {
+    expect(Easing.easeOutOvershoot(0)).toBeCloseTo(0, 10);
+    expect(Easing.easeOutOvershoot(1)).toBeCloseTo(1, 10);
+    const peak = Math.max(
+      ...Array.from({ length: 1001 }, (_, i) => Easing.easeOutOvershoot(i / 1000)),
+    );
+    expect(peak).toBeGreaterThan(1.03);
+    expect(peak).toBeLessThan(1.04);
+    // easeOutBack'ten belirgin biçimde yumuşaktır (büyük sayıda yanıltmaz).
+    expect(peak).toBeLessThan(Math.max(...[0.6, 0.7, 0.8].map((t) => Easing.easeOutBack(t))));
+  });
+
   it('animateValue sıfır sürede son değeri hemen verir ve verilen eğriyi kullanır', () => {
     const values: number[] = [];
     const onComplete = vi.fn();

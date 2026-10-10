@@ -7,6 +7,7 @@ import {
   JUICE_KINDS,
   Text,
   playJuice,
+  playJuiceSequence,
   type JuiceKind,
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
@@ -126,8 +127,17 @@ export function buildMaterialSection(): MaterialSection {
         onClick: () => playJuice(juiceTarget, kind),
       }),
   );
-  disposables.addDestroyables(...juiceButtons);
-  buttonBody.append(row(...juiceButtons.map((button) => button.element)));
+  // Sıralı giriş: panelin parçaları (burada çubuklar) 40 ms basamakla girer.
+  const sequenceButton = new Button(i18next.t('volui:kimlik.material.juiceSequence'), {
+    fullWidth: false,
+    onClick: () =>
+      playJuiceSequence(
+        bars.map((bar) => bar.element),
+        'enter',
+      ),
+  });
+  disposables.addDestroyables(...juiceButtons, sequenceButton);
+  buttonBody.append(row(...juiceButtons.map((button) => button.element), sequenceButton.element));
 
   return {
     cards: [
