@@ -154,3 +154,79 @@ test('sayı adımı: boş alan değer sayılmaz, ok tuşu tek adım atar, odak h
   expect(Number(await input.inputValue())).toBe(Number(original) + 1);
   await expect(input).toHaveAccessibleName(/.+/);
 });
+
+test.describe('eğri düzenleyici', () => {
+  const POINT = '.vol-curve-editor__point';
+
+  async function curve(page: Page) {
+    await openForms(page);
+    const editor = page.locator('.vol-curve-editor').first();
+    await editor.scrollIntoViewIfNeeded();
+    return {
+      editor,
+      points: editor.locator(POINT),
+      canvas: editor.locator('canvas'),
+      add: editor.locator('.vol-curve-editor__tools button').nth(0),
+      remove: editor.locator('.vol-curve-editor__tools button').nth(1),
+    };
+  }
+
+  test('nokta düğmeleri tuvaldeki noktanın üstünde durur ve oklar noktayı taşır', async ({
+    page,
+  }) => {
+    const { points, canvas } = await curve(page);
+    await expect(points).toHaveCount(3);
+    const canvasBox = (await canvas.boundingBox())!;
+
+    // Orta nokta (0.5, 0.85): düğme merkezi tuvalin %50'si / %15'i (yukarıdan).
+    const middle = points.nth(1);
+    const box = (await middle.boundingBox())!;
+    expect(Math.abs(center(box).x - (canvasBox.x + canvasBox.width * 0.5))).toBeLessThan(2);
+    expect(Math.abs(center(box).y - (canvasBox.y + canvasBox.height * 0.15))).toBeLessThan(2);
+
+    await middle.focus();
+    const before = await middle.getAttribute('aria-label');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Shift+ArrowRight');
+    expect(await middle.getAttribute('aria-label')).not.toBe(before);
+    const moved = (await middle.boundingBox())!;
+    expect(center(moved).y).toBeGreaterThan(center(box).y);
+    expect(center(moved).x).toBeGreaterThan(center(box).x);
+    await expect(middle).toBeFocused();
+    // Duyuru odak düğmesinden bağımsız canlı bölgeye yazılır.
+    await expect(page.locator('.vol-curve-editor [role="status"]').first()).toHaveText(/.+/);
+  });
+
+  test('Nokta ekle / Noktayı sil düğmeleri çift tık ve Alt+tık yerine dokunma yoludur', async ({
+    page,
+  }) => {
+    const { points, add, remove } = await curve(page);
+    await expect(remove).toBeDisabled();
+    await add.click();
+    await expect(points).toHaveCount(4);
+    // Yeni nokta odaklanır ve silme açılır.
+    await expect(remove).toBeEnabled();
+    await remove.click();
+    await expect(points).toHaveCount(3);
+    await expect(add).toBeEnabled();
+  });
+
+  test('tuvalde sürükleme noktayı taşır, odak o noktanın düğmesine geçer, Escape geri alır', async ({
+    page,
+  }) => {
+    const { points, canvas } = await curve(page);
+    const canvasBox = (await canvas.boundingBox())!;
+    const target = center((await points.nth(1).boundingBox())!);
+    const label = await points.nth(1).getAttribute('aria-label');
+
+    await page.mouse.move(target.x, target.y);
+    await page.mouse.down();
+    await page.mouse.move(target.x + 30, target.y + 30, { steps: 4 });
+    await expect(points.nth(1)).toBeFocused();
+    expect(await points.nth(1).getAttribute('aria-label')).not.toBe(label);
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    expect(await points.nth(1).getAttribute('aria-label')).toBe(label);
+    expect(canvasBox.width).toBeGreaterThan(0);
+  });
+});

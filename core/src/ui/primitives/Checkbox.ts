@@ -5,7 +5,16 @@ import type { HapticFeedback } from './hapticFeedback';
 export interface CheckboxOptions {
   checked?: boolean;
   label?: string;
+  /** Görünür etiket yokken erişilebilir ad; çevrilmiş metin. */
+  ariaLabel?: string;
   disabled?: boolean;
+  /**
+   * Anlam: `checkbox` (varsayılan) seçim/onay içindir ("kabul ediyorum"); `switch` anında etkili açma/kapama
+   * ayarıdır. Çizim ikisinde de aynı iz+başparmaktır; ekran okuyucu `switch` rolüyle "açık/kapalı" der.
+   */
+  variant?: 'checkbox' | 'switch';
+  /** Doğrulama hatası: `aria-invalid`. Hata metni `aria-describedby` ile tüketicide bağlanır. */
+  invalid?: boolean;
   onInput?: (checked: boolean) => void;
   onCommit?: (checked: boolean) => void;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
@@ -25,7 +34,16 @@ export class Checkbox {
   private readonly haptic: HapticFeedback | undefined;
 
   constructor(options: CheckboxOptions = {}) {
-    const { checked = false, label, disabled = false, onInput, onCommit } = options;
+    const {
+      checked = false,
+      label,
+      ariaLabel,
+      disabled = false,
+      variant = 'checkbox',
+      invalid = false,
+      onInput,
+      onCommit,
+    } = options;
     this.checked = checked;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
@@ -39,6 +57,9 @@ export class Checkbox {
     this.input.className = 'vol-checkbox__input';
     this.input.checked = checked;
     this.input.disabled = disabled;
+    if (variant === 'switch') this.input.setAttribute('role', 'switch');
+    if (ariaLabel && !label) this.input.setAttribute('aria-label', ariaLabel);
+    this.setInvalid(invalid);
     this.element.appendChild(this.input);
 
     const track = document.createElement('span');
@@ -78,6 +99,11 @@ export class Checkbox {
 
   setDisabled(disabled: boolean): void {
     this.input.disabled = disabled;
+  }
+
+  setInvalid(invalid: boolean): void {
+    if (invalid) this.input.setAttribute('aria-invalid', 'true');
+    else this.input.removeAttribute('aria-invalid');
   }
 
   /** Label metnini günceller — dil değişiminde kullanılır. */

@@ -12,6 +12,8 @@ export interface SelectOption {
   label: string;
   /** Seçeneğin metnini vurgular (ör. "Kabus" zorluğunu kırmızıyla işaretlemek). Belirtilmezse normal renk kullanılır. */
   tone?: SelectOptionTone;
+  /** Seçilemez: görünür kalır, klavye gezinmesi atlar, tıklama değer üretmez. */
+  disabled?: boolean;
 }
 
 export interface SelectOptions {
@@ -21,6 +23,8 @@ export interface SelectOptions {
   /** Açılan listenin erişilebilir adı; verilmezse ortak `core:select.listbox`. */
   listboxLabel?: string;
   disabled?: boolean;
+  /** Doğrulama hatası: tetikleyicide `aria-invalid`. Hata metni `aria-describedby` ile tüketicide bağlanır. */
+  invalid?: boolean;
   onInput?: (value: string) => void;
   onCommit?: (value: string) => void;
   /** Popup'ın ekleneceği kapsayıcı. Varsayılan document.body. */
@@ -62,6 +66,7 @@ export class Select {
       value,
       placeholder,
       disabled = false,
+      invalid = false,
       onInput,
       onCommit,
       container,
@@ -78,6 +83,7 @@ export class Select {
     this.element.type = 'button';
     this.element.className = 'vol-select';
     this.element.disabled = disabled;
+    this.setInvalid(invalid);
     this.element.setAttribute('aria-haspopup', 'listbox');
     this.element.setAttribute('aria-expanded', 'false');
 
@@ -163,6 +169,11 @@ export class Select {
     this.renderLabel();
   }
 
+  setInvalid(invalid: boolean): void {
+    if (invalid) this.element.setAttribute('aria-invalid', 'true');
+    else this.element.removeAttribute('aria-invalid');
+  }
+
   setDisabled(disabled: boolean): void {
     if (disabled && this.popup.isOpen()) {
       // Açık liste yetim kalmasın; odak listeden tetikleyiciye döner, sonra tetikleyici kilitlenir.
@@ -179,6 +190,8 @@ export class Select {
   }
 
   private selectValue(value: string, opts: { silent?: boolean; event?: Event } = {}): void {
+    // Devre dışı seçenek kullanıcı eylemiyle seçilemez (programatik ayar sessizce kabul edilir).
+    if (!opts.silent && this.options.find((o) => o.value === value)?.disabled) return;
     if (!opts.silent && value === this.value) {
       // Aynı değeri yeniden seçmek kalıcı değişiklik değildir: yalnız listeyi kapat.
       this.popup.close();
@@ -210,6 +223,17 @@ export class Select {
   }
 
   private renderOptions(): void {
+    if (this.options.length === 0) {
+      // Boş liste boş bir kutu değildir: nedeni söyleyen seçilemez tek satır.
+      const empty = document.createElement('div');
+      empty.className = 'vol-select__empty';
+      empty.setAttribute('role', 'option');
+      empty.setAttribute('aria-disabled', 'true');
+      empty.setAttribute('aria-selected', 'false');
+      empty.textContent = i18next.t('core:select.empty');
+      this.popup.element.appendChild(empty);
+      return;
+    }
     for (const [index, item] of this.options.entries()) {
       const optionButton = document.createElement('button');
       optionButton.type = 'button';
@@ -221,6 +245,10 @@ export class Select {
       optionButton.setAttribute('role', 'option');
       optionButton.setAttribute('aria-selected', String(item.value === this.value));
       optionButton.tabIndex = -1;
+      if (item.disabled) {
+        optionButton.disabled = true;
+        optionButton.setAttribute('aria-disabled', 'true');
+      }
 
       this.optionScope.addListener(optionButton, 'click', (event: Event) =>
         this.selectValue(item.value, { event }),
@@ -244,9 +272,20 @@ export class Select {
   }
 
   private initialFocusIndex(): number {
-    if (!this.value) return 0;
-    const index = this.options.findIndex((o) => o.value === this.value);
-    return index === -1 ? 0 : index;
+    const selected = this.value ? this.options.findIndex((o) => o.value === this.value) : -1;
+    if (selected !== -1 && !this.options[selected].disabled) return selected;
+    const first = this.options.findIndex((o) => !o.disabled);
+    return first === -1 ? 0 : first;
+  }
+
+  /** `from`dan `step` yönünde (döngüsel) ilk etkin seçeneğin indeksi; etkin yoksa `null`. */
+  private enabledIndexFrom(from: number, step: 1 | -1): number | null {
+    const count = this.options.length;
+    for (let offset = 1; offset <= count; offset++) {
+      const index = (((from + step * offset) % count) + count) % count;
+      if (!this.options[index].disabled) return index;
+    }
+    return null;
   }
 
   private focusOption(index: number): void {
@@ -259,13 +298,13 @@ export class Select {
     let nextIndex: number | null = null;
 
     if (event.key === 'ArrowDown') {
-      nextIndex = (index + 1) % this.options.length;
+      nextIndex = this.enabledIndexFrom(index, 1);
     } else if (event.key === 'ArrowUp') {
-      nextIndex = (index - 1 + this.options.length) % this.options.length;
+      nextIndex = this.enabledIndexFrom(index, -1);
     } else if (event.key === 'Home') {
-      nextIndex = 0;
+      nextIndex = this.enabledIndexFrom(-1, 1);
     } else if (event.key === 'End') {
-      nextIndex = this.options.length - 1;
+      nextIndex = this.enabledIndexFrom(this.options.length, -1);
     } else if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
@@ -283,7 +322,11 @@ export class Select {
       const order = [...this.options.keys()];
       const start = [...order.slice(index + 1), ...order.slice(0, index + 1)];
       nextIndex =
-        start.find((i) => this.options[i].label.toLocaleLowerCase().startsWith(typed)) ?? null;
+        start.find(
+          (i) =>
+            !this.options[i].disabled &&
+            this.options[i].label.toLocaleLowerCase().startsWith(typed),
+        ) ?? null;
     }
 
     if (nextIndex === null) {

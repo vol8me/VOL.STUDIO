@@ -146,6 +146,9 @@ export class RangeSlider {
     this.maxHandle.tabIndex = 0;
     this.maxHandle.setAttribute('role', 'slider');
     this.track.appendChild(this.maxHandle);
+    // Kol D-pad'i yatay oku tutamağa verir (FocusNav sözleşmesi); dikey D-pad çıkış yoludur.
+    this.minHandle.dataset.volArrows = 'horizontal';
+    this.maxHandle.dataset.volArrows = 'horizontal';
     // Ses perdesi bütün aralığa göredir; tutamağın kendi aria-valuemin/max'ı karşı tutamağa bağlıdır.
     for (const handle of [this.minHandle, this.maxHandle]) {
       handle.dataset.volPitchMin = String(this.min);

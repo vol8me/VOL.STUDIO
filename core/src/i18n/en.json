@@ -125,7 +125,17 @@
   },
   "select": {
     "placeholder": "Select…",
-    "listbox": "Options"
+    "listbox": "Options",
+    "empty": "No options"
+  },
+  "curveEditor": {
+    "hint": "Arrow keys move a point, Shift moves it ten times as far. Enter grabs or drops it, Escape cancels, Delete removes it.",
+    "add": "Add point",
+    "remove": "Remove point",
+    "point": "Point {{index}} of {{count}}: X {{x}}, Y {{y}}",
+    "grabbed": "Grabbed.",
+    "added": "Added.",
+    "removed": "Removed."
   },
   "rangeSlider": {
     "min": "Minimum",

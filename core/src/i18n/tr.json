@@ -125,7 +125,17 @@
   },
   "select": {
     "placeholder": "Seçiniz",
-    "listbox": "Seçenekler"
+    "listbox": "Seçenekler",
+    "empty": "Seçenek yok"
+  },
+  "curveEditor": {
+    "hint": "Ok tuşları noktayı taşır, Shift ile on kat. Enter noktayı tutar veya bırakır, Escape geri alır, Delete siler.",
+    "add": "Nokta ekle",
+    "remove": "Noktayı sil",
+    "point": "Nokta {{index}} / {{count}}: X {{x}}, Y {{y}}",
+    "grabbed": "Tutuldu.",
+    "added": "Eklendi.",
+    "removed": "Silindi."
   },
   "rangeSlider": {
     "min": "Alt sınır",

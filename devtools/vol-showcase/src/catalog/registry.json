@@ -432,6 +432,10 @@
         {
           "file": "core/tests/ui/primitives/semanticHaptics.test.ts",
           "title": "Checkbox, Select ve SegmentedControl yalnız değer commitinde select üretir"
+        },
+        {
+          "file": "core/tests/ui/primitives/selectionControls.test.ts",
+          "title": "switch varyantı switch rolü taşır; varsayılan checkbox kalır; adsız denetim ariaLabel alır"
         }
       ]
     },
@@ -452,6 +456,10 @@
         {
           "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
           "title": "Select ve ColorPicker programatik setterda sessiz, kullanıcıda input+commit üretir"
+        },
+        {
+          "file": "core/tests/ui/primitives/selectionControls.test.ts",
+          "title": "yarım hex aria-invalid taşır, geçerli olunca temizlenir; Escape taslağı geri alır ve yayılmaz"
         }
       ],
       "extraStates": ["error"]
@@ -540,6 +548,10 @@
         {
           "file": "core/tests/ui/primitives/curveEditor.test.ts",
           "title": "varsayılan kimlik eğrisidir"
+        },
+        {
+          "file": "core/tests/ui/primitives/selectionControls.test.ts",
+          "title": "her nokta adlı bir düğmedir; tuval AT ağacından gizlidir; grup etiketle adlanır"
         }
       ]
     },
@@ -1731,6 +1743,10 @@
         {
           "file": "core/tests/ui/overlays/sheet.test.ts",
           "title": "iç Select Escape ile önce kendi listesini kapatır, Sheet açık kalır"
+        },
+        {
+          "file": "core/tests/ui/primitives/selectionControls.test.ts",
+          "title": "devre dışı seçenek seçilemez, gezinme onu atlar, kalıcı değişiklik üretmez"
         }
       ],
       "extraStates": ["error", "empty"]

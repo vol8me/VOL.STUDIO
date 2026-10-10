@@ -2,20 +2,6 @@
   "violations": [],
   "incomplete": [
     {
-      "scope": "tab/panels",
-      "rule": "aria-valid-attr-value",
-      "target": "button[aria-controls=\"vol-popover-1\"]",
-      "owner": "UI-09.1",
-      "reason": "Popover aria-controls hedefi kapalıyken DOM'da yok; elle inceleme"
-    },
-    {
-      "scope": "tab/forms",
-      "rule": "aria-valid-attr-value",
-      "target": ".vol-color-picker__swatch",
-      "owner": "UI-05.2",
-      "reason": "ColorPicker örneği aria değeri otomatik doğrulanamadı; elle inceleme"
-    },
-    {
       "scope": "tab/scroll",
       "rule": "color-contrast",
       "target": ".vol-text--body:nth-child(6)",

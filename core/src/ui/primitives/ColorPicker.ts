@@ -1,5 +1,6 @@
 import { Popover } from '../overlays/Popover';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { emitUiIntent } from '../feedback/uiIntent';
 
 export interface ColorPickerOptions {
   /** `#rrggbb`. Geçersizse siyaha düşer. */
@@ -97,9 +98,9 @@ export class ColorPicker {
         button.style.backgroundColor = preset;
         button.title = preset;
         button.setAttribute('aria-label', preset);
-        const handler = (): void => {
+        const handler = (event: Event): void => {
           this.applyInput(preset);
-          this.commitCurrent();
+          this.commitCurrent(event);
           this.popover?.close();
         };
         presets.appendChild(button);
@@ -114,25 +115,40 @@ export class ColorPicker {
       this.popover.add(presets);
       this.scope.addDestroyable(this.popover);
       this.scope.addListener(this.swatchButton, 'click', () => this.popover?.toggle());
+    } else {
+      // Hazır renk yoksa kutucuk yalnız göstergedir: etkin ama işlevsiz bir düğme olarak Tab'a ve AT'ye girmez.
+      this.swatchButton.setAttribute('inert', '');
+      this.swatchButton.removeAttribute('aria-label');
     }
 
     // Hex alanı yazarken DEĞİL, geçerli bir değer oluşunca uygulanır: her tuş
     // vuruşunda geçersiz bir ara değer yaymak, dinleyicideki paleti kırardı.
     const boundHex = (): void => {
-      if (HEX.test(this.hexInput.value)) this.applyInput(this.hexInput.value);
+      const valid = HEX.test(this.hexInput.value);
+      // Yarım yazılmış hex hata değildir ama geçerli değer de değildir: AT'ye bildirilir, blur'da düzelir.
+      if (valid) this.hexInput.removeAttribute('aria-invalid');
+      else this.hexInput.setAttribute('aria-invalid', 'true');
+      if (valid) this.applyInput(this.hexInput.value);
     };
-    const boundHexChange = (): void => this.commitCurrent();
+    const boundHexChange = (event: Event): void => this.commitCurrent(event);
     const boundHexKeydown = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape' || this.value === this.committedValue) return;
+      if (event.isComposing) return;
+      const draft = this.hexInput.value !== this.committedValue;
+      if (event.key !== 'Escape' || (this.value === this.committedValue && !draft)) return;
+      // Kaydedilmemiş taslak: ilk Escape geri alır; katmanı kapatan ikinci Escape'tir.
       event.preventDefault();
+      event.stopPropagation();
+      this.hexInput.removeAttribute('aria-invalid');
+      const changed = this.value !== this.committedValue;
       this.setVisualValue(this.committedValue);
-      this.onInputHandler?.(this.value);
+      if (changed) this.onInputHandler?.(this.value);
     };
     // Odak kaybında geçersiz metin son geçerli değere geri döner; kullanıcı
     // yarım yazdığı bir hex ile baş başa kalmaz.
     const boundHexBlur = (): void => {
       this.commitCurrent();
       this.hexInput.value = this.value;
+      this.hexInput.removeAttribute('aria-invalid');
     };
 
     this.scope.addListener(this.hexInput, 'input', boundHex);
@@ -194,9 +210,10 @@ export class ColorPicker {
     this.onInputHandler?.(next);
   }
 
-  private commitCurrent(): void {
+  private commitCurrent(event?: Event): void {
     if (this.value === this.committedValue) return;
     this.committedValue = this.value;
+    emitUiIntent({ kind: 'valueCommit', origin: 'ColorPicker', target: this.hexInput, event });
     this.onCommitHandler?.(this.value);
   }
 }

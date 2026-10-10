@@ -49,6 +49,8 @@ export class Popover {
       signal: 'Popover',
       onClose: () => {
         this.target.setAttribute('aria-expanded', 'false');
+        // Kapalı popover DOM'da yoktur; `aria-controls` yalnız açıkken geçerli bir kimliğe işaret eder.
+        this.restoreAttribute('aria-controls', this.originalAriaControls);
         // Odak yalnız popover'ın İÇİNDEYKEN tetikleyiciye döner. Dışarı
         // tıklamayla kapanışta kullanıcı zaten başka bir yeri (çoğu zaman bir
         // metin alanını) odaklamıştır; oradan odağı geri almak kullanıcıyı
@@ -64,7 +66,6 @@ export class Popover {
     this.element.setAttribute('role', options.role ?? 'dialog');
     if (options.ariaLabel) this.element.setAttribute('aria-label', options.ariaLabel);
 
-    this.target.setAttribute('aria-controls', id);
     this.target.setAttribute('aria-expanded', 'false');
     if (!this.target.hasAttribute('aria-haspopup')) {
       this.target.setAttribute('aria-haspopup', options.role ?? 'dialog');
@@ -79,6 +80,7 @@ export class Popover {
   show(): void {
     if (this.destroyed || this.popup.isOpen()) return;
     this.popup.show();
+    this.target.setAttribute('aria-controls', this.element.id);
     this.target.setAttribute('aria-expanded', 'true');
     this.onOpenHandler?.();
     if (this.focusOnOpen) {

@@ -75,6 +75,28 @@ function isEditingTarget(target: EventTarget | null): boolean {
   );
 }
 
+const ARROW_KEY: Record<NavDirection, string> = {
+  up: 'ArrowUp',
+  down: 'ArrowDown',
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
+};
+
+/**
+ * Bileşik denetim sözleşmesi: `data-vol-arrows="horizontal|vertical|both"` taşıyan odaklı eleman o eksendeki
+ * yön girdisini KENDİ ok tuşu işleyicisine verir (kol D-pad'i gerçek klavye gibi davranır); işleyici olayı
+ * `preventDefault` ile tüketirse gezinme olmaz, tüketmezse (ya da eksen dışıysa) uzamsal gezinme sürer.
+ * Kaydırıcı tutamağı yalnız yatay eksenini alır; dikey D-pad ondan çıkış yoludur.
+ */
+function ownsDirection(element: HTMLElement, direction: NavDirection): boolean {
+  const axis = element.dataset.volArrows;
+  if (!axis) return false;
+  const horizontal = direction === 'left' || direction === 'right';
+  return (
+    axis === 'both' || (axis === 'horizontal' && horizontal) || (axis === 'vertical' && !horizontal)
+  );
+}
+
 function adjustRange(input: HTMLInputElement, direction: NavDirection): boolean {
   const style = getComputedStyle(input);
   const vertical = /^(vertical|sideways)-/.test(style.writingMode);
@@ -114,6 +136,8 @@ export class FocusNavController {
   private navWasActive = true;
   private activationArmed = true;
   private started = false;
+  /** Sentetik ok olayı kendi dinleyicimize dönüp özyinelemesin. */
+  private dispatchingArrow = false;
   private previousPad: PadLike | null = null;
   /** A basılıyken odaktaki basılı-tutma denetimi: A bırakılınca, odak değişince ya da söküm anında bırakılır. */
   private heldTarget: HTMLElement | null = null;
@@ -174,6 +198,14 @@ export class FocusNavController {
     ) {
       return;
     }
+    if (
+      current &&
+      candidates.includes(current) &&
+      ownsDirection(current, direction) &&
+      this.dispatchArrow(current, direction)
+    ) {
+      return;
+    }
     const next =
       current && candidates.includes(current)
         ? pickDirectionalTarget(
@@ -185,6 +217,22 @@ export class FocusNavController {
           )
         : candidates[0];
     this.focusElement(next ?? current ?? candidates[0]);
+  }
+
+  /** Yönü odaktaki bileşik denetime klavye olayı olarak verir; denetim tüketirse true. */
+  private dispatchArrow(element: HTMLElement, direction: NavDirection): boolean {
+    const event = new KeyboardEvent('keydown', {
+      key: ARROW_KEY[direction],
+      bubbles: true,
+      cancelable: true,
+    });
+    this.dispatchingArrow = true;
+    try {
+      element.dispatchEvent(event);
+    } finally {
+      this.dispatchingArrow = false;
+    }
+    return event.defaultPrevented;
   }
 
   /** Odaktaki elemanı etkinleştirir (A / Enter). */
@@ -249,6 +297,7 @@ export class FocusNavController {
   }
 
   private onKeydown(event: KeyboardEvent): void {
+    if (this.dispatchingArrow) return;
     if (event.key === 'Escape') {
       if (event.defaultPrevented || isEditingTarget(event.target)) {
         this.escapeHeld = true;
