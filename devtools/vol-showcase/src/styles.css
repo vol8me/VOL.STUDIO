@@ -273,6 +273,13 @@ body {
   gap: var(--vol-space-sm);
 }
 
+.vol-showcase-six-digits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-lg);
+  width: 100%;
+}
+
 .vol-showcase-timer-variations {
   display: flex;
   flex-direction: column;

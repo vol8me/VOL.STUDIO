@@ -100,6 +100,12 @@ export class NumberStepper {
     this.input.max = String(max);
     this.input.step = String(this.step);
     this.input.value = String(this.value);
+    // Girdi genişliği aralığın en geniş yazımına göre (işaret ve ondalık dahil); büyük sayı kırpılmaz.
+    const places = Math.max(decimalPlaces(this.step), decimalPlaces(this.min));
+    this.input.style.setProperty(
+      '--vol-stepper-chars',
+      String(Math.max(min.toFixed(places).length, max.toFixed(places).length)),
+    );
     // Perde bütün aralığa göredir; ses kiti yerel `number` girdisini bu bildirimle kaydırıcı gibi okur.
     this.input.dataset.volPitchMin = String(min);
     this.input.dataset.volPitchMax = String(max);

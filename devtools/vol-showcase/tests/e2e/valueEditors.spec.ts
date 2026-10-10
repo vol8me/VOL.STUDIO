@@ -114,8 +114,10 @@ test('aralık kaydırıcı: tutamaklar dilden adlı, değer metni biçimli, devr
   page,
 }) => {
   await openForms(page);
-  const min = page.locator('.vol-range-slider__handle--min').first();
-  const max = page.locator('.vol-range-slider__handle--max').first();
+  // Altı haneli demo biçimleyicisizdir (değer metni ham sayıdır); biçimli örnek düzey aralığı kartıdır.
+  const formatted = page.locator('.vol-showcase-card:not(:has(.vol-showcase-six-digits))');
+  const min = formatted.locator('.vol-range-slider__handle--min').first();
+  const max = formatted.locator('.vol-range-slider__handle--max').first();
   await min.scrollIntoViewIfNeeded();
 
   await expect(min).toHaveAttribute('role', 'slider');

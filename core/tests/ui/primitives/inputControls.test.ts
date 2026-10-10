@@ -25,6 +25,20 @@ describe('Input kontrolleri - programatik setter sözleşmesi', () => {
     area.destroy();
   });
 
+  it('NumberStepper girdi genişliği aralığın en geniş yazımından gelir: 6 hane, işaret ve ondalık dahil', () => {
+    const chars = (stepper: NumberStepper): string | undefined =>
+      stepper.element
+        .querySelector<HTMLInputElement>('.vol-stepper__input')
+        ?.style.getPropertyValue('--vol-stepper-chars');
+    const gold = new NumberStepper({ min: 0, max: 999_999 });
+    const signed = new NumberStepper({ min: -100, max: 50 });
+    const fractional = new NumberStepper({ min: 0, max: 1, step: 0.25 });
+    expect(chars(gold)).toBe('6');
+    expect(chars(signed)).toBe('4');
+    expect(chars(fractional)).toBe('4');
+    for (const stepper of [gold, signed, fractional]) stepper.destroy();
+  });
+
   it('NumberStepper.setValue sessizdir', () => {
     const onCommit = vi.fn();
     const stepper = new NumberStepper({ onCommit, value: 5 });

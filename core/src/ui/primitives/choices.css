@@ -310,7 +310,12 @@
 .vol-stepper__input {
   pointer-events: auto;
   text-align: center;
-  width: 56px;
+
+  /* Genişlik aralığın en geniş değerinden gelir (`--vol-stepper-chars`): 6 haneli sayı kırpılmaz, 2 haneli dar kalır. */
+  width: max(
+    56px,
+    calc(var(--vol-stepper-chars, 3) * 1ch + var(--vol-space-md) + var(--vol-space-sm))
+  );
   font-family: var(--vol-font-family);
   font-variant-numeric: tabular-nums;
   color: var(--vol-ui-text);

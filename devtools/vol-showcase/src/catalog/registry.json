@@ -726,11 +726,12 @@
         "via": null,
         "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
       },
-      "tests": [],
-      "gap": {
-        "task": "UI-05.5",
-        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
-      }
+      "tests": [
+        {
+          "file": "core/tests/ui/focus/focusable.test.ts",
+          "title": "etkin düğme/giriş/seçim/bağlantı ve tabindex’li öğeleri eşler; devre dışı, tabindex=-1 ve ikon href’i eşlemez"
+        }
+      ]
     },
     {
       "export": "FOCUS_NAV_CLASS",

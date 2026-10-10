@@ -414,6 +414,8 @@
     "audioSettings": "Audio settings (live)",
     "playerName": "Player name",
     "nameRequired": "Name can’t be empty",
+    "sixDigits": "Six-digit values",
+    "gold": "Gold",
     "displaySettings": "Display settings (per session)",
     "displaySession": "Session (simulated)",
     "sessionWeb": "Web",

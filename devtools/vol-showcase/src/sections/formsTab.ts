@@ -198,6 +198,28 @@ function buildAudioSettingsDemo(disposables: DisposableScope): HTMLElement {
 }
 
 /**
+ * Altı haneli değerler: sayı gösteren denetimler en geniş gerçekçi değerle (999 999) kırpılmadan çizilir.
+ * Sınama `formAcceptance.spec.ts`: değer metni ve adım girdisi 1280/360/320 px'te taşmaz.
+ */
+function buildSixDigitDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-six-digits';
+  const gold = i18next.t('volui:forms.gold');
+  const stepper = new NumberStepper({ label: gold, min: 0, max: 999_999, step: 1, value: 999_999 });
+  const slider = new Slider({ label: gold, min: 0, max: 999_999, step: 1000, value: 999_999 });
+  const range = new RangeSlider({
+    label: gold,
+    min: 0,
+    max: 999_999,
+    step: 1000,
+    value: { min: 100_000, max: 999_999 },
+  });
+  disposables.addDestroyables(stepper, slider, range);
+  wrap.append(stepper.element, slider.element, range.element);
+  return wrap;
+}
+
+/**
  * D5c vitrini — oturum → görüntü yeteneği → görünen satırlar zinciri.
  * Oturum seçici bir SİMÜLASYONDUR: vitrin web oturumunda koşar, gamescope
  * seçimi `displayCapabilitiesForSession` tablosunun davranışını gösterir.
@@ -701,6 +723,7 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
       span: 2,
     }),
     card(i18next.t('volui:forms.numberStepper'), unitStepper.element, { center: true }),
+    card(i18next.t('volui:forms.sixDigits'), buildSixDigitDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.timerBarVariations'), buildTimerBarVariationsDemo(disposables)),
     card(i18next.t('volui:forms.timerBar'), buildTimerBarDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.rangeSlider'), buildRangeSliderDemo(disposables), { span: 4 }),

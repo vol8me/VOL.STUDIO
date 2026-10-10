@@ -414,6 +414,8 @@
     "audioSettings": "Ses ayarları (canlı)",
     "playerName": "Oyuncu adı",
     "nameRequired": "Ad boş olamaz",
+    "sixDigits": "Altı haneli değerler",
+    "gold": "Altın",
     "displaySettings": "Görüntü ayarları (oturuma göre)",
     "displaySession": "Oturum (simülasyon)",
     "sessionWeb": "Web",
