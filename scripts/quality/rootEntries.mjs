@@ -28,6 +28,7 @@ export const ROOT_ENTRIES = {
   games: { reason: 'Ürün paketleri', optional: true },
   justfile: 'Kalite kapısı tarifleri',
   'package.json': 'pnpm kökü; Prettier ve stylelint yapılandırması burada',
+  patches: 'pnpm yamaları (patchedDependencies); her yama securityPolicy.json kaydına bağlıdır',
   'pnpm-lock.yaml': 'pnpm kilidi',
   'pnpm-workspace.yaml': 'pnpm workspace tanımı',
   'quality.json': 'Kapı eşikleri ve bütçeler (tek doğruluk kaynağı)',

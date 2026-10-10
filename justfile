@@ -82,9 +82,11 @@ build-ui:
 rust:
     node scripts/quality/rust.mjs
 
+# `pnpm audit --audit-level moderate`; yalnız securityPolicy.json'da kanıtlı kayıt geçer.
 security-js:
-    pnpm audit --audit-level moderate
+    node scripts/quality/jsAudit.mjs
 
+# cargo-audit; bakımsız/sağlam olmayan/yanked uyarıları da politikayla eşlenir.
 security-rust:
     node scripts/quality/rustAudit.mjs
 

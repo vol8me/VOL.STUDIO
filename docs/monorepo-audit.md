@@ -183,7 +183,8 @@ build, Rust, CSS, coverage/shape, audio alt kümesi, bundle, scaling ve
 iki motorlu E2E aynı sabit kaynak ağacında tamamlandı. Contract 414 PASS /
 2 mevcut platform skip; eşik, timeout ve skip politikası gevşetilmedi.
 JS güvenlik kapısı ayrıca yeniden koşuldu: 2 high / 1 moderate ile FAIL.
-Bu nedenle **signoff PASS değildir**; advisory sahipliği F10.1'de açık.
+Bu nedenle o koşuda **signoff PASS değildi**; advisory sahipliği sonradan F10.1'de
+kapandı ([kapı politikası](gates.md)).
 
 Temiz frontend build, gzip level 9:
 
@@ -222,11 +223,11 @@ maliyetidir. Kapsamı kanıtlı ayırmak ile testi sessizce kaldırmak farklıd�
 
 Yerel audit ve gerçek lock zinciri üç JS advisory gösterdi:
 
-| Paket / kurulu sürüm          | Seviye   | Doğrulanan karar                                                                             |
-| ----------------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| braces 3.0.3                  | High     | Audit önerisi 3.0.4 registry'de yok; GitHub kaydı patch yok diyor. Hayalî override yapılmaz. |
-| source-map-js 1.2.1           | High     | **Kapandı**: lock 1.2.2'ye güncellendi; `just fast` yeşil, audit'te yok.                     |
-| postcss-selector-parser 7.1.4 | Moderate | **Kapandı**: lock 7.1.6'ya güncellendi; `lint-css` yeşil, audit'te yok.                      |
+| Paket / kurulu sürüm          | Seviye   | Doğrulanan karar                                                                                                                                    |
+| ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| braces 3.0.3                  | High     | Audit önerisi 3.0.4 registry'de yok; GitHub kaydı patch yok diyor. Hayalî override yapılmaz. Sonra F10.1: yerel derinlik yaması ve kanıtlı istisna. |
+| source-map-js 1.2.1           | High     | **Kapandı**: lock 1.2.2'ye güncellendi; `just fast` yeşil, audit'te yok.                                                                            |
+| postcss-selector-parser 7.1.4 | Moderate | **Kapandı**: lock 7.1.6'ya güncellendi; `lint-css` yeşil, audit'te yok.                                                                             |
 
 Kaynaklar: [braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
 [source-map-js advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q),
@@ -525,10 +526,9 @@ eklemek için kanıt veya gereksinim yoktur.
 
 | Sıra | İş            | Kapanış                                                                         |
 | ---- | ------------- | ------------------------------------------------------------------------------- |
-| 1    | F10.1         | JS advisory ve Rust risk kararı; signoff açık                                   |
-| 2    | F07           | Mevcut aile/davranış/görsel/native matrisi; B24–B26/B28 kaynak kusurları kapalı |
-| 3    | F08 / F09     | Commit/runtime eşlenmiş Linux/Deck ve Windows/Android ürün kabulleri            |
-| 4    | F10.3 / F10.6 | Ratchet/CSS kapsam gerekçesi ve ayrı dal bakımı                                 |
+| 1    | F07           | Mevcut aile/davranış/görsel/native matrisi; B24–B26/B28 kaynak kusurları kapalı |
+| 2    | F08 / F09     | Commit/runtime eşlenmiş Linux/Deck ve Windows/Android ürün kabulleri            |
+| 3    | F10.3 / F10.6 | Ratchet/CSS kapsam gerekçesi ve ayrı dal bakımı                                 |
 
 B21/B22/B23/B27/B29/B30 kök TODO Kapatılanlar'da, UI bulgularının
 kaynak/regresyon durumu UI TODO sahibindedir. Teknik ölçüt insan beğenisi

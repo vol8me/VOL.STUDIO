@@ -90,8 +90,8 @@ pahalıdır; bu yüzden kapsam geniş tutulur ve gizli okumalar bekçilenir
 | `rust`           | Kök workspace'in aktif üye manifestleri: `fmt --check`, `clippy --all-targets -D warnings` (feature taşıyan crate'te `--all-features` ile de), `test --all-targets`; crate'ler kökteki ortak hedef dizinini paylaşır                               |
 | `coverage-audio` | audio-synth'in tam kapsamı ve şekli                                                                                                                                                                                                                |
 | `audio-verify`   | Yayınlanmış her sesi manifestinden yeniden render edip PCM kimliğini karşılaştırır                                                                                                                                                                 |
-| `security-js`    | `pnpm audit --audit-level moderate`                                                                                                                                                                                                                |
-| `security-rust`  | Kökteki tek `Cargo.lock` üzerinde cargo-audit                                                                                                                                                                                                      |
+| `security-js`    | `pnpm audit --audit-level moderate`; yalnız `securityPolicy.json`da kanıtlı kayıt geçer (`scripts/quality/jsAudit.mjs`, aşağıda)                                                                                                                   |
+| `security-rust`  | Kökteki tek `Cargo.lock` üzerinde cargo-audit; zafiyet ve yanked hiç, bakımsız/sağlam olmayan uyarı yalnız kayıtlıysa geçer (`scripts/quality/rustAudit.mjs`, aşağıda)                                                                             |
 
 `pnpm exec just report <kapı> --json` kapıyı koşup sonucu makine-okunur
 verir; aşamalar `justfile`dan türer. `pnpm run doctor:env` araçları ve
@@ -202,8 +202,8 @@ her biri belirgin yavaşlar, toplam duvar süresi yine kısalır).
 | `e2e` vitrin / vol-test | 447 / 85 sn | vitrinde iki motor eşzamanlı; seri koşu 719 sn                         |
 | `coverage-audio`        | 532 sn      | kapsam ölçümü sentezi yavaşlatır                                       |
 | `audio-verify`          | 98 sn       |                                                                        |
-| `security-js`           | 2 sn        |                                                                        |
-| `security-rust`         | 4 sn        |                                                                        |
+| `security-js`           | 2 sn        | audit + yama sınaması + kayıt defteri sorgusu                          |
+| `security-rust`         | 6 sn        |                                                                        |
 
 Birleşik kapılar makbuzsuz (soğuk) koşuda: `quick` yaklaşık 1,5 dk, `fast` 5,6 dk,
 `high` 15 dk; `signoff`, `high` ile `coverage-audio`, `audio-verify` ve güvenlik
@@ -226,9 +226,50 @@ vitrin motorları yalnız birbirleriyle eşzamanlıdır.
 | `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına; WebKit'te Web Audio olmayan derlemede iki ses testi atlanır (2 atlama) |
 | `scaling`, `bundle`                             | algoritmik ölçekleme oranı, gzip bütçesi                                       | süre eşiği yoktur; cihaz performansı kapı değildir                                                                              |
 | `coverage-audio`, `audio-verify`                | tam audio kapsamı; yayınlanmış her sesin yeniden render kimliği                | dinleme kanıtı değildir (insan beyanı gerekir)                                                                                  |
-| `security-js`, `security-rust`                  | bilinen advisory                                                               | `braces` için yama yayımlanmadığından `security-js` kırmızıdır (`TODO.md` F10.1); `signoff` bu çözülene kadar yeşil olamaz      |
+| `security-js`, `security-rust`                  | bilinen advisory; kayıtsız yeni risk, bayat kayıt, yayımlanmış düzeltme        | kayıtlı riskler gerçek olarak durur (aşağıdaki politika); zamana bağlıdır, yeni advisory kapıyı sonradan kırabilir              |
 
 Cihaz kabulü, insan beğenisi ve fiziksel ölçüm hiçbir kapının konusu değildir.
+
+## Güvenlik riski politikası
+
+`security-js` ve `security-rust` ham advisory listesini değil, advisory'lerin
+[`securityPolicy.json`](../scripts/quality/securityPolicy.json) ile eşlenmiş sonucunu
+denetler. Seviye düşürülmez; toptan yok sayma yoktur. Her kayıt advisory, paket ve
+sürümle eşleşir; gerekçe, etki alanı, sahip, kaldırma koşulu ve gözden geçirme
+tarihi taşır, aksi hâlde politika dosyası geçersizdir.
+
+| Bulgu                                       | Kapı                                                                                      |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| JS advisory (moderate ve üstü)              | Yalnız politikada kayıtlıysa **ve** kanıtı sağlanıyorsa geçer                             |
+| Rust zafiyeti                               | Her zaman düşer                                                                           |
+| Rust yanked crate                           | Her zaman düşer; `cargo update -p <crate>` ile yükseltilir                                |
+| Rust `unmaintained` ya da `unsound` uyarısı | Yalnız politikada (advisory + crate + sürüm + tür) kayıtlıysa geçer; yeni olan düşer      |
+| Kayıtlı ama artık bulunmayan kayıt          | Düşer; kayıt silinir ya da yeni sürüm için yeniden gözden geçirilir (politika bayatlamaz) |
+
+**JS kanıtı** (`jsAudit.mjs`): yama dosyası vardır ve `pnpm-workspace.yaml`
+`patchedDependencies` ile bağlıdır; bağımlıların gerçekten çözdüğü kurulu kopya
+gerçek bir Node sürecinde paketin davranış sınamasından geçer; kayıt defterinde
+daha yeni sürüm yayımlanmamıştır (yayımlanmışsa yükseltme gözden geçirilir ve yama
+silinir). Davranış sınaması olmayan pakete istisna verilemez.
+
+Güncel kayıtlar:
+
+- **braces 3.0.3** (GHSA-vfj7-8cjw-p6xm, yüksek). Upstream düzeltme yayımlamadı ve stylelint'in
+  micromatch/fast-glob zinciri başka sürüme geçemez (stylelint 17 dahil aynı zinciri taşır).
+  [`patches/braces@3.0.3.patch`](../patches/braces@3.0.3.patch) iç içe küme ve parantez
+  derinliğini 100 ile sınırlar; aşan desen yığın taşması yerine denetimli `SyntaxError` verir,
+  olağan desenlerin çıktısı değişmez. Yalnız geliştirme aracıdır: stylelint desenleri kendi
+  yapılandırmasından alır, dışarıdan desen gelmez.
+- **Rust, 8 kayıt.** `glib 0.18.5` (`unsound`, yalnız Linux): etkilenen `VariantStrIter`
+  API'sini bağımlılık kapanışında çağıran yoktur. `proc-macro-error` ve `paste`
+  derleme zamanı makrolarıdır. Beş `unic-*` crate'i `tauri-utils 2.9.3` → `urlpattern 0.3`
+  zincirindedir. Sahip hepsinde Tauri, gtk-rs ya da steamworks-rs'tir; her kaydın
+  zinciri, platformu ve kaldırma koşulu dosyadadır.
+
+Kayıt eklemek: önce düzeltme ya da yükseltme denenir; olmuyorsa etki alanı
+(çağıran var mı, hangi platform, çalışma zamanı mı derleme zamanı mı) doğrulanıp
+`securityPolicy.json`a yazılır. Kaldırma: koşul gerçekleşince yükseltme yapılır, kayıt
+(ve varsa yama) silinir; bayat kayıt kapıyı zaten düşürür.
 
 ## Ölçüm notları
 
