@@ -129,3 +129,56 @@ test('gizli sekme paneli etkileşimsizdir: içindeki denetime Tab ulaşmaz', asy
   });
   expect(focusable, 'gizli paneldeki denetim odak alamaz').toBe(false);
 });
+
+interface Edges {
+  left: number;
+  right: number;
+}
+
+for (const dir of ['ltr', 'rtl'] as const) {
+  test(`Select açılır penceresi okuma başlangıcına hizalanır ve görünür alanda kalır (${dir})`, async ({
+    page,
+  }) => {
+    await open(page, dir);
+    await selectTab(page, 'forms');
+    const select = page.locator('[role="tabpanel"]:not([aria-hidden="true"]) .vol-select').first();
+    await select.scrollIntoViewIfNeeded();
+    const trigger = await select.evaluate(
+      (el): Edges => el.getBoundingClientRect().toJSON() as Edges,
+    );
+    await select.click();
+    const list = page.locator('.vol-popup--visible').last();
+    await expect(list).toBeVisible();
+    const box = await list.evaluate((el): Edges => el.getBoundingClientRect().toJSON() as Edges);
+    const viewportWidth = page.viewportSize()!.width;
+    // Mantıksal başlangıç: LTR'de sol kenar, RTL'de sağ kenar tetikleyiciyle aynı hizada.
+    if (dir === 'ltr') expect(Math.abs(box.left - trigger.left)).toBeLessThanOrEqual(1);
+    else expect(Math.abs(box.right - trigger.right)).toBeLessThanOrEqual(1);
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(viewportWidth);
+  });
+}
+
+for (const dir of ['ltr', 'rtl'] as const) {
+  test(`Popover (ColorPicker/ContextMenu ile aynı Popup) okuma başlangıcına hizalanır (${dir})`, async ({
+    page,
+  }) => {
+    await open(page, dir);
+    await selectTab(page, 'panels');
+    const trigger = page
+      .locator('[role="tabpanel"]:not([aria-hidden="true"])')
+      .getByRole('button', { name: 'Open Popover', exact: true });
+    await trigger.scrollIntoViewIfNeeded();
+    const rect = await trigger.evaluate(
+      (el): Edges => el.getBoundingClientRect().toJSON() as Edges,
+    );
+    await trigger.click();
+    const popover = page.locator('.vol-popover').last();
+    await expect(popover).toBeVisible();
+    const box = await popover.evaluate((el): Edges => el.getBoundingClientRect().toJSON() as Edges);
+    if (dir === 'ltr') expect(Math.abs(box.left - rect.left)).toBeLessThanOrEqual(1);
+    else expect(Math.abs(box.right - rect.right)).toBeLessThanOrEqual(1);
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(page.viewportSize()!.width);
+  });
+}

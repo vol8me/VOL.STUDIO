@@ -109,6 +109,8 @@ async function scan(
 
 const VIEWPORTS = [
   { name: '1280x800', width: 1280, height: 800 },
+  // %200 tarayıcı yakınlaştırması: 1280×800 pencerenin CSS görünümü 640×400'dür (UI-07.2).
+  { name: '640x400', width: 640, height: 400 },
   { name: '360x740', width: 360, height: 740 },
   { name: '320x568', width: 320, height: 568 },
 ] as const;
@@ -171,7 +173,7 @@ const OVERLAYS: ReadonlyArray<{
   },
 ];
 
-for (const viewport of VIEWPORTS.slice(0, 2)) {
+for (const viewport of VIEWPORTS.filter((vp) => vp.name !== '320x568')) {
   test(`sahte dil (+%30) ${viewport.name}: açık katmanlarda metin kırpılmaz`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto('/?lang=pseudo');

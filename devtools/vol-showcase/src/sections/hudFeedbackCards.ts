@@ -185,7 +185,7 @@ export function buildFormattedCounterCard(disposables: DisposableScope): HTMLEle
 
   const counter = new Counter({
     value: 0,
-    format: (v) => `${Math.round(v).toLocaleString('tr-TR')} ₺`,
+    format: (v) => i18next.t('volui:hud.goldAmount', { value: Math.round(v) }),
     // Ödül sayımı: hedefi hafifçe aşıp oturur (yalnız görsel; duyuru ve değer hedeftir).
     animateMs: 450,
     overshoot: true,

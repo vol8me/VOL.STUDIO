@@ -328,7 +328,7 @@ function buildPinchZoomDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
-  const zoomLabel = new Text(i18next.t('volui:touch.zoomPercent', { n: 100 }), {
+  const zoomLabel = new Text(i18next.t('volui:touch.zoomPercent', { n: 1 }), {
     variant: 'muted',
   });
   disposables.addDestroyables(zoomLabel);
@@ -347,7 +347,7 @@ function buildPinchZoomDemo(disposables: DisposableScope): HTMLElement {
     minZoom: 0.6,
     maxZoom: 2.5,
     onTransformChange: (zoom) => {
-      zoomLabel.setContent(i18next.t('volui:touch.zoomPercent', { n: Math.round(zoom * 100) }));
+      zoomLabel.setContent(i18next.t('volui:touch.zoomPercent', { n: zoom }));
     },
   });
   disposables.addDestroyables(controller);

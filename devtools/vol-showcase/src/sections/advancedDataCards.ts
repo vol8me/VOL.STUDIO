@@ -253,13 +253,8 @@ export function buildEventLogDemo(disposables: DisposableScope): HTMLElement {
   ];
   let wave = 1;
 
-  const formatNow = (): string => {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, '0')}:${now
-      .getMinutes()
-      .toString()
-      .padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-  };
+  // Saat biçimi arayüz diline göre i18next `datetime` biçimleyicisinden gelir (UI-07.2); elle 24 saat birleştirmesi yok.
+  const formatNow = (): string => i18next.t('volui:advanced.eventTime', { at: new Date() });
 
   const pushRandomEvent = (): void => {
     const sample = sampleEvents[Math.floor(Math.random() * sampleEvents.length)];

@@ -24,7 +24,7 @@ function buildPropertyDemo(disposables: DisposableScope): HTMLElement {
   const input = new Input({
     value: i18next.t('volui:workbench.nameValue'),
     onCommit: (value) =>
-      commitState.setContent(i18next.t('volui:workbench.commitState', { value })),
+      commitState.setContent(i18next.t('volui:workbench.commitState', { value, at: new Date() })),
   });
   const nameField = new PropertyField({
     label: i18next.t('volui:workbench.name'),
@@ -145,9 +145,7 @@ function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
     maxZoom: 8,
     onChange: (transform) => {
       artwork.style.transform = `translate(${transform.offsetX}px, ${transform.offsetY}px) scale(${transform.zoom})`;
-      zoomState.setContent(
-        i18next.t('volui:workbench.zoomState', { zoom: Math.round(transform.zoom * 100) }),
-      );
+      zoomState.setContent(i18next.t('volui:workbench.zoomState', { zoom: transform.zoom }));
     },
   });
   controller.actualSize();

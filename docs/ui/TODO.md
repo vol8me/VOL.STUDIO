@@ -70,7 +70,7 @@ aile (UI-05 + UI-09) → UI-13.
 
 ## Gerçek kalan iş (2026-10-10 sonu)
 
-**F07 KAPALI DEĞİLDİR.** 32 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
+**F07 KAPALI DEĞİLDİR.** 31 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
 metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde bu oturumda çalıştırılmadı.
 
 | Görev        | Gerçek kalan iş                                                                                                                                                                                                                                                                                                     | Tür                 |
@@ -78,7 +78,6 @@ metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları De
 | UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                                                                                               | cihaz + insan       |
 | UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                                                                                                | cihaz + insan       |
 | UI-06.4      | Deck host+SLR4 açılış, OGG/UI sesi, yalnız kol, ekran görüntüsü, ısınmış performans; Windows tarafı yapıldı                                                                                                                                                                                                         | cihaz               |
-| UI-07.2      | Tarih/birim biçimi, gerçek çeviriyle uzunluk, %200 yakınlaştırma, RTL açılır pencere yönü                                                                                                                                                                                                                           | kod + tarayıcı      |
 | UI-07.3      | Değişken TTF boyutu/subset kararı, yedek font tabanı/satır yüksekliği, font yükleme hatası örneği, asenkron font yerleşimi kaydırmaz kanıtı; Deck glif yüksekliği, Android %200                                                                                                                                     | kod + cihaz         |
 | UI-07.4      | Tema sekmesi ve genel tema/dil/yoğunluk seçici; önizleme kapsamları, body portalları, canvas sabit renkleri; 2 skin × 3 yoğunlukta kontrast/odak, CLS                                                                                                                                                               | kod (büyük)         |
 | UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                                                                                                         | kod                 |
@@ -224,7 +223,7 @@ Faz testi: quality/appIdentity/productIcons/catalog/layers/ports/cargo/plugin fi
 
 UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz.
 
-- [ ] **UI-07.2 — Çoğul/biçim/RTL ve uzunluk.** i18next JSON `count` + Intl; tablo/sayı hizası;
+- [x] **UI-07.2 — Çoğul/biçim/RTL ve uzunluk.** i18next JSON `count` + Intl; tablo/sayı hizası;
       deterministik %30 uzatılan yapay dil; `lang`/`dir`, logical CSS/ok/picker/swipe; RTL sınaması
       gerçek çeviri iddiası taşımaz. Kapanır: 0/1/çok, tarih/birim/6 hane, Türkçe ı/İ;
       görüntüleme sıralaması manifest/replay sırasına sızmaz; %200/320 px etiketler kırpılmaz.
@@ -244,9 +243,7 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
       elle seçiyordu (`unsavedOne`/`unsavedMany`); mini harita okuyucu özeti İngilizcede "1 markers" yazıyordu ve altı hane ayırıcısızdı
       → `{{count, number}}`; `Select` harfle gezinmesi sistem yerelinde küçültüyordu (Türkçe klavyeden `I` → `i`, "Işık" bulunamıyordu; arayüz
       diliyle düzeltildi). Kanıt: `plurals.test.ts`, `settingsModel.test.ts`, `minimapPanel.test.ts`, `selectionControls.test.ts`,
-      `i18nSurface.test.mjs` (düzeltme olmadan kırılan testlerle). Kalan (gerçek iş): tarih/birim biçimi (kitte biçimleyen bileşen yok;
-      i18next `datetime`/`number(unit)` ile tüketici örneği ve test), gerçek çeviriyle uzunluk (TR/EN dışında çeviri yok), %200 yakınlaştırma
-      ölçümü, RTL'de Select/ColorPicker/Popover açılır pencere yönü (ok/sekme/ağaç/slayt/ızgara/sütun yönü UI-05.3'te yapıldı ve iki motorda ölçüldü).
+      `i18nSurface.test.mjs` (düzeltme olmadan kırılan testlerle). Yapıldı (2026-10-10, ikinci dilim): **tarih/birim/yüzde** — kit kendi biçimleyicisini yazmaz; i18next `datetime`/`number(unit|percent)` biçimleyicileri etkin arayüz diliyle `Intl`e devredilir (`formats.test.ts`: beklenen değer açık dil koduyla `Intl`den, iki dilin çıktısı farklı). Vitrindeki elle birleştirmeler tüketiciye çevrildi: olay günlüğü saati elle 24 saat idi (İngilizcede `12:00:00 AM` olmalı), sayaç para biçimi `tr-TR`ye sabitti, Zoom yüzdesi ve saniye birimi elle yazılıyordu (`localeFormats.spec.ts`, iki motor, tr-TR/en-US tarayıcı yerelinde; İngilizce saat testi eski kodla kırılır). **%200 yakınlaştırma**: `pseudoLocale.spec.ts` 640×400 CSS görünümünü (1280×800 pencerenin %200'ü) 14 sekme × LTR/RTL + altı açık katman için iki motorda tarar, kırpılma/taşma yok. **RTL açılır pencere yönü**: `Popup` konumlaması fiziksel sola hizalıyordu; RTL'de `Select`/`Popover`/`ColorPicker`/`ContextMenu` penceresi okuma başlangıcından uzak açılıyordu → `start`/`end` mantıksal kenar oldu (`direction.ts`), taşarsa karşı kenara çevrilir; `popupDirection.test.ts` düzeltme olmadan kırılır, `inlineDirection.spec.ts` Select ve Popover'ı iki motor × LTR/RTL ölçer. **NOT-RUN (gerçek çeviriyle uzunluk):** TR/EN dışında gerçek çeviri yok; %30 uzun sahte dil gerçek çeviri iddiası taşımaz. Üçüncü dil getiren ilk ürün (F09.4 VT7 i18n sözleşmesi) o dilin kaynağını aynı `?lang=` kancasıyla taratır; kitte yapılacak kod işi kalmadı.
 - [ ] **UI-07.3 — Font varlığı.** Mevcut font hattı ve subset manifesti; lisans/kaynak, gerçek
       glif sınırları, Türkçe kapsamı, yedek font tabanı/satır yüksekliği, soğuk önbellek; oyun
       hissine uygun başlık/sayı yazı tipi seçimi gözden geçirilir. Kapanır: font-ready ve yükleme

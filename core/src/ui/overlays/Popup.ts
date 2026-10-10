@@ -1,6 +1,7 @@
 import { UI_THRESHOLD } from '../../constants';
 import { pushBackHandler, triggerBack } from '../../platform/backNavigation';
 import { signalOverlay } from './overlaySignal';
+import { isRtl } from '../direction';
 
 export type PopupPlacement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end';
 
@@ -190,13 +191,16 @@ export class Popup {
       openUp = false;
     }
 
-    let alignEnd = this.placement.endsWith('end');
-    const spaceRightFromStart = viewportWidth - targetRect.left;
-    if (!alignEnd && spaceRightFromStart < popupWidth + margin) {
-      alignEnd = true;
+    // `start`/`end` MANTIKSAL kenardır: RTL'de başlangıç tetikleyicinin sağ kenarıdır (UI-07.2).
+    // Taşarsa karşı kenara çevrilir (iki yönde de), sonra görünür alana sıkıştırılır.
+    let alignRight = this.placement.endsWith('end') !== isRtl(this.target);
+    if (!alignRight && viewportWidth - targetRect.left < popupWidth + margin) {
+      alignRight = targetRect.right >= popupWidth + margin;
+    } else if (alignRight && targetRect.right < popupWidth + margin) {
+      alignRight = viewportWidth - targetRect.left < popupWidth + margin;
     }
 
-    const left = alignEnd ? targetRect.right - popupWidth : targetRect.left;
+    const left = alignRight ? targetRect.right - popupWidth : targetRect.left;
     const clampedLeft = Math.min(Math.max(margin, left), viewportWidth - popupWidth - margin);
 
     const top = openUp ? targetRect.top - popupHeight - margin : targetRect.bottom + margin;
