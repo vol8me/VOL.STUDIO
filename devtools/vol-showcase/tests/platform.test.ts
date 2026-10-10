@@ -211,6 +211,44 @@ describe('PlatformServices', () => {
     services.destroy();
   });
 
+  it('tam ekran kontrolü ortama göre akıllıdır: native pencere, tarayıcı Fullscreen API ya da hiçbiri', async () => {
+    const control = async (
+      platform: 'web' | 'desktop' | 'android',
+      session: 'web' | 'desktop' | 'gamescope' | 'bigpicture',
+      browserFullscreen = true,
+    ) => {
+      const services = await PlatformServices.boot(
+        probes({
+          platform: () => platform,
+          session: () => Promise.resolve(session),
+          createDisplay: () => fakeDisplay().driver,
+          browserFullscreen: () => browserFullscreen,
+        }),
+      );
+      const value = services.fullscreenControl;
+      services.destroy();
+      return value;
+    };
+    // Tarayıcı: Fullscreen API varsa düğme anlamlı; iPhone Safari gibi API'siz tarayıcıda yok.
+    expect(await control('web', 'web')).toBe('browser');
+    expect(await control('web', 'web', false)).toBe('none');
+    // Masaüstü native: pencere sürücüsü tam ekranı sürer (tarayıcı API'sinin desteği önemsiz).
+    expect(await control('desktop', 'desktop', false)).toBe('native-window');
+    expect(await control('desktop', 'bigpicture')).toBe('native-window');
+    // Steam Deck oyun kipi ve Android zaten tam ekran: kontrol sunulmaz, tarayıcı API'si olsa bile.
+    expect(await control('desktop', 'gamescope')).toBe('none');
+    expect(await control('android', 'desktop')).toBe('none');
+    expect(await control('android', 'desktop', false)).toBe('none');
+  });
+
+  it('Android: pencere kipi ve çözünürlük sunulmaz (oturum `desktop` bildirse de)', async () => {
+    const services = await PlatformServices.boot(
+      probes({ platform: () => 'android', session: () => Promise.resolve('desktop') }),
+    );
+    expect(services.capabilities).toEqual({ windowMode: false, resolution: false });
+    services.destroy();
+  });
+
   it('Android: pencere sürücüsü yok; titreşim gözlemcileri bir kez kurulur, destroy hepsini söker', async () => {
     const stops = [vi.fn(), vi.fn()];
     const observers = stops.map((stop) => vi.fn(() => stop));

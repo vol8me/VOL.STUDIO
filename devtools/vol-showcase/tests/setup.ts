@@ -3,6 +3,10 @@ import { i18n, i18next } from '@volstudio/core/i18n';
 import trResources from '../src/i18n/tr.json';
 import enResources from '../src/i18n/en.json';
 
+// jsdom DOM Fullscreen API'sini sunmaz; gerçek tarayıcılar sunar (iPhone Safari hariç). Varsayılan test ortamı
+// tam ekran destekli bir tarayıcıdır; desteksiz durum `PlatformProbes.browserFullscreen` ile ayrıca sınanır.
+Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, value: true });
+
 i18n.addResources('tr', 'volui', trResources);
 i18n.addResources('en', 'volui', enResources);
 

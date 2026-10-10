@@ -119,7 +119,8 @@ export class ShowcaseApp {
   private readonly cursors: CursorController;
   private renderScope: DisposableScope | null = null;
   private readonly lifecycle = new DisposableScope();
-  private readonly fullscreen: FullscreenController;
+  /** Yalnız tam ekran kontrolü olan oturumda kurulur (`platform.fullscreenControl !== 'none'`). */
+  private readonly fullscreen: FullscreenController | null;
   private readonly focusNav: FocusNavController;
   private activeTabId: ShowcaseTabId = 'buttons';
   private tabOrder: ShowcaseTabId[] = [];
@@ -145,13 +146,21 @@ export class ShowcaseApp {
     this.element.dataset.volPlatform = platform.platform;
     this.element.dataset.volSession = platform.session;
     this.mount.replaceChildren(this.element);
-    this.fullscreen = this.lifecycle.addDestroyable(
-      new FullscreenController({
-        target: this.element,
-        onChange: () => this.renderFullscreenLabel(),
-        onError: (error) => console.warn('[VOL.UI] Tam ekran açılamadı:', error),
-      }),
-    );
+    this.element.dataset.volFullscreen = platform.fullscreenControl;
+    // F11 ve düğme tek sahipten geçer: native pencerede pencere sürücüsü, web'de DOM Fullscreen API. Android ve gamescope
+    // zaten tam ekrandır (`none`): denetleyici kurulmaz, F11 yakalanmaz.
+    const display = platform.display;
+    this.fullscreen =
+      platform.fullscreenControl === 'none'
+        ? null
+        : this.lifecycle.addDestroyable(
+            new FullscreenController({
+              target: this.element,
+              onChange: () => this.renderFullscreenLabel(),
+              onError: (error) => console.warn('[VOL.UI] Tam ekran açılamadı:', error),
+              onToggleRequest: display ? () => display.toggle() : undefined,
+            }),
+          );
     // Native pencere tercihi (F11, pencere yöneticisi, ayar satırı) tam ekran düğmesine yansır.
     this.lifecycle.addSubscription(platform.subscribe(() => this.renderFullscreenLabel()));
     i18next.on('languageChanged', this.onLanguageChanged);
@@ -288,19 +297,25 @@ export class ShowcaseApp {
     this.skinButton.element.classList.add('vol-showcase-skin-button');
     this.renderSkinLabel();
 
-    this.fullscreenButton = renderScope.addDestroyable(
-      new IconButton(new Icon({ name: 'fullscreen', size: 18 }).element, {
-        size: 'sm',
-        label: i18next.t('volui:app.fullscreen'),
-        onClick: () => void this.toggleFullscreen(),
-      }),
-    );
-    this.fullscreenButton.element.classList.add('vol-showcase-fullscreen-button');
-    this.renderFullscreenLabel(this.fullscreenButton.element);
+    // Tam ekran düğmesi yalnız anlamlıysa vardır; yoksa dil düğmesi boşalan hücreyi doldurur (CSS `data-vol-fullscreen`).
+    this.fullscreenButton = null;
+    if (this.fullscreen) {
+      this.fullscreenButton = renderScope.addDestroyable(
+        new IconButton(new Icon({ name: 'fullscreen', size: 18 }).element, {
+          size: 'sm',
+          label: i18next.t('volui:app.fullscreen'),
+          onClick: () => void this.toggleFullscreen(),
+        }),
+      );
+      this.fullscreenButton.element.classList.add('vol-showcase-fullscreen-button');
+      this.renderFullscreenLabel(this.fullscreenButton.element);
+    }
 
     const actions = document.createElement('div');
     actions.className = 'vol-showcase-header__actions';
-    actions.append(this.skinButton.element, this.langButton.element, this.fullscreenButton.element);
+    actions.dataset.volFullscreen = this.platform.fullscreenControl;
+    actions.append(this.skinButton.element, this.langButton.element);
+    if (this.fullscreenButton) actions.append(this.fullscreenButton.element);
     header.appendChild(actions);
 
     const specs: TabSpec[] = [
@@ -380,13 +395,14 @@ export class ShowcaseApp {
 
   /** Native pencere varsa tam ekranı o sürer (tercih kalıcıdır); yoksa tarayıcının tam ekran yolu. */
   private toggleFullscreen(): Promise<void> {
-    return this.platform.display ? this.platform.display.toggle() : this.fullscreen.toggle();
+    if (this.platform.display) return this.platform.display.toggle();
+    return this.fullscreen?.toggle() ?? Promise.resolve();
   }
 
   private isFullscreenNow(): boolean {
     return this.platform.display
       ? this.platform.displayPreferences.mode === 'fullscreen'
-      : this.fullscreen.isFullscreen();
+      : (this.fullscreen?.isFullscreen() ?? false);
   }
 
   private renderFullscreenLabel(button?: HTMLButtonElement): void {

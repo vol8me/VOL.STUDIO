@@ -17,6 +17,12 @@ import {
 
 export type DisplayMode = 'windowed' | 'fullscreen';
 
+/**
+ * Tam ekran kontrolünün GERÇEK karşılığı: `native-window` (Tauri penceresi), `browser` (DOM Fullscreen API) ya da `none`
+ * (Android Activity, gamescope zaten tam ekran; Fullscreen API'si olmayan tarayıcı). `none` iken kontrol sunulmaz.
+ */
+export type FullscreenControl = 'native-window' | 'browser' | 'none';
+
 export interface DisplayPreferences {
   readonly mode: DisplayMode;
   /** `GENİŞLİKxYÜKSEKLİK`; yalnız pencereli kipte uygulanır. */
@@ -40,6 +46,18 @@ export interface PlatformProbes {
   readonly createDisplay?: (options: DisplayOptions) => DisplayDriver;
   /** Titreşim sürücüsü gözlemcileri; her biri sökme işlevi döner. */
   readonly observeHaptics?: readonly (() => () => void)[];
+  /** Tarayıcı DOM Fullscreen API'sini sunuyor mu (iPhone Safari sunmaz). */
+  readonly browserFullscreen?: () => boolean;
+}
+
+interface FullscreenCapableDocument extends Document {
+  webkitFullscreenEnabled?: boolean;
+}
+
+function browserFullscreenSupported(): boolean {
+  if (typeof document === 'undefined') return false;
+  const doc = document as FullscreenCapableDocument;
+  return doc.fullscreenEnabled === true || doc.webkitFullscreenEnabled === true;
 }
 
 /** Bozuk, eski ya da yabancı kayıt varsayılana iner; kısmi geçerli alan korunur. */
@@ -70,6 +88,8 @@ function parseResolution(resolution: string): { width: number; height: number } 
  */
 export class PlatformServices {
   readonly capabilities: SessionDisplayCapabilities;
+  /** Tam ekran düğmesinin gerçek karşılığı; `none` ise kabuk düğmeyi hiç göstermez. */
+  readonly fullscreenControl: FullscreenControl;
   /** Native pencere sürücüsü; web, Android ve gamescope'ta `null`. */
   readonly display: DisplayDriver | null;
   private preferences: DisplayPreferences = DEFAULT_DISPLAY;
@@ -83,7 +103,7 @@ export class PlatformServices {
     readonly stores: ScopedSaveManager,
     probes: PlatformProbes,
   ) {
-    this.capabilities = displayCapabilitiesForSession(session);
+    this.capabilities = displayCapabilitiesForSession(session, platform);
     const wantsWindow = platform === 'desktop' && this.capabilities.windowMode;
     const create =
       probes.createDisplay ?? ((options: DisplayOptions) => new DisplayModeController(options));
@@ -95,6 +115,15 @@ export class PlatformServices {
           getWindowedSize: () => parseResolution(this.preferences.resolution),
         })
       : null;
+    const browserFullscreen = (probes.browserFullscreen ?? browserFullscreenSupported)();
+    this.fullscreenControl =
+      platform === 'web'
+        ? browserFullscreen
+          ? 'browser'
+          : 'none'
+        : this.display
+          ? 'native-window'
+          : 'none';
     const observers = probes.observeHaptics ?? [observeLinuxHaptics, observeAndroidHaptics];
     for (const observe of observers) this.scope.add({ dispose: observe() });
   }
@@ -171,6 +200,7 @@ export type PlatformView = Pick<
   | 'native'
   | 'stores'
   | 'capabilities'
+  | 'fullscreenControl'
   | 'display'
   | 'displayPreferences'
   | 'update'

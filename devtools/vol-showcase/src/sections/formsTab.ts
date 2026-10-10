@@ -344,7 +344,12 @@ function buildDisplaySettingsDemo(
   // Oturum değişimi yetenek tablosuna bağlanır: anlamsız satır gizlenir
   // (devre dışı bırakılmaz — "seçilemeyen" değil "sunulmayan" kontroldür).
   function applySession(kind: string): void {
-    const caps = displayCapabilitiesForSession(kind);
+    // Native kabukta gerçek çalışma ortamı da hesaba girer (Android oturumu `desktop` bildirir ama pencere kipi yoktur);
+    // web'deki simülasyon seçicisi yalnız oturum sınıfını değiştirir.
+    const caps = displayCapabilitiesForSession(
+      kind,
+      platform.native ? platform.platform : undefined,
+    );
     modeRow.element.hidden = !caps.windowMode;
     resolutionRow.element.hidden = !caps.resolution;
   }

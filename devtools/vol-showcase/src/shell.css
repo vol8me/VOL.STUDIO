@@ -86,6 +86,11 @@
   min-width: 0;
 }
 
+/* Tam ekran kontrolü yoksa (Android, gamescope, Fullscreen API'siz tarayıcı) dil düğmesi boşalan hücreyi doldurur. */
+.vol-showcase-header__actions[data-vol-fullscreen='none'] .vol-showcase-lang-button {
+  grid-column: 1 / -1;
+}
+
 /* Sayfa başlığı şeridi: her sekme ne olduğunu söyleyerek açılır. */
 .vol-showcase-page {
   display: flex;
@@ -162,6 +167,14 @@
 
   .vol-showcase-header__actions {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .vol-showcase-header__actions[data-vol-fullscreen='none'] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .vol-showcase-header__actions[data-vol-fullscreen='none'] .vol-showcase-lang-button {
+    grid-column: auto;
   }
 
   .vol-showcase-skin-button {

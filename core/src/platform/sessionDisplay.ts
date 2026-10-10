@@ -19,7 +19,17 @@ export interface SessionDisplayCapabilities {
   readonly resolution: boolean;
 }
 
-export function displayCapabilitiesForSession(sessionKind: string): SessionDisplayCapabilities {
-  if (sessionKind === 'gamescope') return { windowMode: false, resolution: false };
+/**
+ * `runtime` verilirse (`'web' | 'desktop' | 'android'`, `getRuntimePlatform` sonucu) Android'de de pencere kipi ve çözünürlük
+ * sunulmaz: Activity pencereyi ve sistem çubuklarını sahiplenir, kullanıcı ne pencere ne iç çözünürlük seçebilir. Android
+ * oturumu `desktop` bildirir (gamescope/Big Picture yoktur), bu yüzden yalnız oturum sınıfı bunu ayırt edemezdi.
+ */
+export function displayCapabilitiesForSession(
+  sessionKind: string,
+  runtime?: string,
+): SessionDisplayCapabilities {
+  if (sessionKind === 'gamescope' || runtime === 'android') {
+    return { windowMode: false, resolution: false };
+  }
   return { windowMode: true, resolution: true };
 }

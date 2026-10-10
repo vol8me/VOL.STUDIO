@@ -9,6 +9,16 @@ describe('displayCapabilitiesForSession — gamescope görüntü yetenekleri', (
     });
   });
 
+  it('Android çalışma ortamında oturum sınıfı ne olursa olsun pencere kipi ve çözünürlük sunulmaz', () => {
+    const none = { windowMode: false, resolution: false };
+    expect(displayCapabilitiesForSession('desktop', 'android')).toEqual(none);
+    expect(displayCapabilitiesForSession('web', 'android')).toEqual(none);
+    expect(displayCapabilitiesForSession('desktop', 'desktop')).toEqual({
+      windowMode: true,
+      resolution: true,
+    });
+  });
+
   it('masaüstü ve web oturumunda iki kontrol de etkilidir', () => {
     const all = { windowMode: true, resolution: true };
     expect(displayCapabilitiesForSession('desktop')).toEqual(all);
