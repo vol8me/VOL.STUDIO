@@ -27,6 +27,11 @@ const ROOT = resolve(import.meta.dirname, '../..');
 export const STEAMRT4_SDK_IMAGE =
   'registry.gitlab.steamos.cloud/steamrt/steamrt4/sdk:4.0.20260805.254769';
 export const BUILD_IMAGE_TAG = 'volstudio/steamrt4-build:4.0.20260805.254769';
+/**
+ * Kap motoru: varsayılan podman (SELinux etiketli birimler için); Docker'lı ortamda (ör. WSL) `VOL_CONTAINER_ENGINE=docker`.
+ * `:Z`/`:z` etiketleri SELinux'suz Docker'da yok sayılır.
+ */
+export const CONTAINER_ENGINE = process.env.VOL_CONTAINER_ENGINE === 'docker' ? 'docker' : 'podman';
 /** Deck'in ölçülen glibc'si; bekçi bunun üstünü reddeder. */
 export const GLIBC_CAP = '2.41';
 
@@ -148,7 +153,11 @@ function ensureProbeAudio() {
 
 function imageExists(tag) {
   try {
-    execFileSync('podman', ['image', 'exists', tag], { stdio: 'ignore' });
+    execFileSync(
+      CONTAINER_ENGINE,
+      CONTAINER_ENGINE === 'docker' ? ['image', 'inspect', tag] : ['image', 'exists', tag],
+      { stdio: 'ignore' },
+    );
     return true;
   } catch {
     return false;
@@ -164,7 +173,7 @@ ensureProbeAudio();
 if (!imageExists(BUILD_IMAGE_TAG)) {
   console.log(`[steamrt4] derleme imajı kuruluyor: ${BUILD_IMAGE_TAG}`);
   execFileSync(
-    'podman',
+    CONTAINER_ENGINE,
     [
       'build',
       '-t',
@@ -179,7 +188,7 @@ if (!imageExists(BUILD_IMAGE_TAG)) {
 
 // Crate önbelleği adlı birimde tutulur; AppImage araç önbelleği host'tan paylaşılır.
 execFileSync(
-  'podman',
+  CONTAINER_ENGINE,
   [
     'run',
     '--rm',

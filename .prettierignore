@@ -7,6 +7,10 @@ build/
 **/*.min.css
 core/public/assets/fonts/
 
+# XDG .desktop şablonları anahtar=değer satır biçimidir; Prettier'ın Handlebars ayrıştırıcısı satırları tek satıra
+# birleştirip AppImage paketlemesini bozdu (UI-06.3 → Deck'te boş pencere). Test: desktopTemplate.test.mjs.
+**/*.hbs
+
 # `pnpm gen:ui-assets` YAZDIĞI üretilmiş varlıklar (SVG, manifest, kaynak kaydı); biçimi
 # üretici belirler ve --check bayt eşitliğine bakar.
 core/public/assets/ui/
