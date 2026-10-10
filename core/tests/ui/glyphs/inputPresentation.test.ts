@@ -77,6 +77,37 @@ describe('InputPresentationController', () => {
     presentation.destroy();
   });
 
+  it('sunum girdisi değişmedikçe glifler her çağrıda taranmaz; değişince hemen, yerinde bağlama için aralıkla', () => {
+    const state = { mode: 'pc' as string | undefined, padId: '', padConnected: false };
+    const presentation = new InputPresentationController({ readState: () => state });
+    const binding = {
+      padName: 'faceDown' as const,
+      keyboardName: 'key' as const,
+      key: 'e',
+      label: 'Eylem',
+    };
+    const glyph = presentation.createGlyph(binding);
+    document.body.append(glyph);
+    const scan = vi.spyOn(document, 'querySelectorAll');
+
+    presentation.poll(); // ilk çağrı her zaman tarar
+    expect(scan).toHaveBeenCalledTimes(1);
+    for (let i = 0; i < 20; i += 1) presentation.poll();
+    expect(scan).toHaveBeenCalledTimes(1); // durum aynı: belge taranmadı
+
+    state.mode = 'gamepad';
+    state.padId = 'DualSense';
+    state.padConnected = true;
+    presentation.poll(); // değişiklik hemen yansır
+    expect(scan).toHaveBeenCalledTimes(2);
+    expect(glyph.querySelector('img')?.getAttribute('src')).toContain('/playstation/');
+
+    for (let i = 0; i < 40; i += 1) presentation.poll();
+    expect(scan.mock.calls.length).toBeGreaterThanOrEqual(3); // yerinde değişen bağlama için aralıklı tarama
+    expect(scan.mock.calls.length).toBeLessThan(5);
+    presentation.destroy();
+  });
+
   it('kol çıkarılınca eski kontrolcü ailesi ekranda kalmaz', () => {
     let pads: PadLike[] = [pad('DualSense')];
     const presentation = new InputPresentationController({

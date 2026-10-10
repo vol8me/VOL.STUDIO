@@ -159,8 +159,8 @@
     "resetAll": "Varsayılana dön",
     "resetRow": "Varsayılan",
     "resetRowNamed": "Varsayılana döndür: {{label}}",
-    "unsavedOne": "1 kaydedilmemiş değişiklik",
-    "unsavedMany": "{{count}} kaydedilmemiş değişiklik",
+    "unsaved_one": "{{count}} kaydedilmemiş değişiklik",
+    "unsaved_other": "{{count}} kaydedilmemiş değişiklik",
     "saving": "Kaydediliyor…",
     "saved": "Kaydedildi",
     "saveFailed": "Kaydedilemedi. Değişiklikleriniz duruyor.",
@@ -181,7 +181,8 @@
     "finish": "Bitir"
   },
   "minimap": {
-    "summary": "{{label}}: {{count}} işaret, yakınlaştırma {{zoom}}x",
+    "summary_one": "{{label}}: {{count, number}} işaret, yakınlaştırma {{zoom}}x",
+    "summary_other": "{{label}}: {{count, number}} işaret, yakınlaştırma {{zoom}}x",
     "zoomIn": "Haritayı yakınlaştır",
     "zoomOut": "Haritayı uzaklaştır",
     "label": "Harita",

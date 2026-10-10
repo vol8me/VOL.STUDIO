@@ -171,12 +171,11 @@ export class GamepadPointerController {
   }
 
   private poll(deltaMs: number, pad: PadLike | null): void {
-    const modal = this.topModal();
+    // Kol yokken modal aranmaz: `active` zaten yanlıştır ve belge taraması her karede boşa giderdi.
+    const padReady = pad?.connected === true && pad.mapping === 'standard';
+    const modal = padReady ? this.topModal() : null;
     const active =
-      this.options.isActive?.() !== false &&
-      (!modal || this.root.contains(modal)) &&
-      pad?.connected === true &&
-      pad.mapping === 'standard';
+      this.options.isActive?.() !== false && (!modal || this.root.contains(modal)) && padReady;
     const primary = pad?.buttons[this.options.button ?? GAMEPAD_BUTTON.primary]?.pressed === true;
     const changedPad = pad?.index !== this.previousPad?.index || pad?.id !== this.previousPad?.id;
     if (changedPad) {

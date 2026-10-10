@@ -1,10 +1,9 @@
 /**
  * Çeviri yüzeyi bekçisi (UI-07.1): anahtarlar, kullanım ve görünen metin tek AST taramasından.
  *
- * Neden AST: metin araması bir anahtarın adını yorumda ya da başka bir dizgede bulup
- * "kullanılıyor" sayar ve `Lv.${level}` gibi görünen metni hiç görmez. Burada kaynak
- * TypeScript derleyicisiyle okunur: yalnız gerçek dizge sabitleri ve şablon sabitleri
- * kanıttır, test dosyaları kanıt DEĞİLDİR (yalnız testte geçen anahtar üründe ölüdür).
+ * Neden AST: metin araması anahtar adını yorumda bulup "kullanılıyor" sayar ve `Lv.${level}`
+ * gibi görünen metni görmez. Yalnız gerçek dizge/şablon sabitleri kanıttır; test dosyaları
+ * kanıt DEĞİLDİR (yalnız testte geçen anahtar üründe ölüdür).
  *
  * Kurallar (hepsi bir sorun metni üretir; boş liste temiz yüzeydir):
  * 1. TR/EN parite: iki dilin yaprak anahtar kümesi aynı olmalı.
@@ -19,6 +18,9 @@
  * 6. Kodlanmış görünen metin: bir DOM yuvasına (textContent, aria-label, title, placeholder…)
  *    ya da UI seçeneğine (label, title…) yazılan harfli dizge. İstisna `TEXT_ALLOW`dadır ve
  *    gerekçelidir; artık bulunmayan istisna bayat sayılıp reddedilir.
+ * 7. Çoğul (UI-07.2): sayıya bağlı cümle `anahtar_one`/`anahtar_other` kullanır (kategoriler
+ *    `Intl.PluralRules`tan). Grup tek anahtar sayılır, her dil kendi kategorilerini taşır,
+ *    kullanılmayan kategori ölü sayılır, `xOne`/`xMany` gibi elle çoğul çifti reddedilir.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -225,6 +227,22 @@ const TEXT_WIDGETS = new Set(['Text', 'Button', 'IconButton']);
 const TRANSLATORS = new Set(['t', 'tDynamic', 'assertKey']);
 const LETTERS = /[A-Za-zÇĞİÖŞÜçğıöşü]{2,}/;
 const CAMEL = /^[a-z][a-zA-Z0-9]*$/;
+const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
+const HAND_ROLLED = /^(.+?)(One|Single)$/;
+const HAND_ROLLED_SIBLINGS = ['Many', 'Few', 'Other', 'Plural', 'Multiple'];
+
+/** `anahtar_one` → { base: 'anahtar', category: 'one' }; çoğul olmayan anahtar için null. */
+export function pluralParts(key) {
+  const match = PLURAL_SUFFIX.exec(key);
+  return match ? { base: key.slice(0, match.index), category: match[1] } : null;
+}
+
+const baseKey = (key) => pluralParts(key)?.base ?? key;
+
+/** Bir dilin `Intl.PluralRules` kategorileri (tr/en: one + other). */
+export function pluralCategoriesOf(lang) {
+  return new Intl.PluralRules(lang).resolvedOptions().pluralCategories;
+}
 
 function flatten(value, path = [], out = new Set()) {
   if (Array.isArray(value)) {
@@ -413,19 +431,72 @@ export function validateI18nSurface(root, options = {}) {
     if (!tr || !en) continue;
     const trKeys = flatten(tr);
     const enKeys = flatten(en);
-    known.set(catalog.ns, trKeys);
+    known.set(catalog.ns, new Set([...trKeys, ...[...trKeys].map(baseKey)]));
 
-    // 1. Parite.
-    for (const key of trKeys) {
-      if (!enKeys.has(key)) problems.push(`${catalog.dir}: "${key}" en.json'da yok (parite).`);
+    // 1. Parite: çoğul grubu tek anahtardır (kategori kümesi dile göre değişebilir).
+    const trBases = new Set([...trKeys].map(baseKey));
+    const enBases = new Set([...enKeys].map(baseKey));
+    for (const key of trBases) {
+      if (!enBases.has(key)) problems.push(`${catalog.dir}: "${key}" en.json'da yok (parite).`);
     }
-    for (const key of enKeys) {
-      if (!trKeys.has(key)) problems.push(`${catalog.dir}: "${key}" tr.json'da yok (parite).`);
+    for (const key of enBases) {
+      if (!trBases.has(key)) problems.push(`${catalog.dir}: "${key}" tr.json'da yok (parite).`);
+    }
+
+    // 7. Çoğul: her dil kendi kategorilerini taşır, ölü kategori ve elle çoğul çifti yok.
+    /** @type {Array<[string, Set<string>]>} */
+    const locales = [
+      ['tr', trKeys],
+      ['en', enKeys],
+    ];
+    for (const [lang, keys] of locales) {
+      const required = pluralCategoriesOf(lang);
+      const groups = new Map();
+      for (const key of keys) {
+        const parts = pluralParts(key);
+        if (!parts) continue;
+        if (!groups.has(parts.base)) groups.set(parts.base, new Set());
+        groups.get(parts.base).add(parts.category);
+      }
+      for (const [base, have] of groups) {
+        if (keys.has(base)) {
+          problems.push(
+            `${catalog.dir}/${lang}.json: "${base}" hem düz hem çoğul (_one/_other) tanımlı; biri kalmalı.`,
+          );
+        }
+        const missing = required.filter((category) => !have.has(category));
+        if (missing.length > 0) {
+          problems.push(
+            `${catalog.dir}/${lang}.json: "${base}" çoğul biçimi eksik (${missing.join(', ')}); ` +
+              `${lang} dilinin kategorileri: ${required.join(', ')}.`,
+          );
+        }
+        const extra = [...have].filter((category) => !required.includes(category));
+        if (extra.length > 0) {
+          problems.push(
+            `${catalog.dir}/${lang}.json: "${base}" için ${extra.join(', ')} biçimi ${lang} dilinde ` +
+              'hiç seçilmez (ölü çoğul biçimi).',
+          );
+        }
+      }
+      for (const key of keys) {
+        const match = HAND_ROLLED.exec(key);
+        if (!match) continue;
+        const sibling = HAND_ROLLED_SIBLINGS.find((word) => keys.has(`${match[1]}${word}`));
+        if (sibling) {
+          problems.push(
+            `${catalog.dir}/${lang}.json: "${key}" / "${match[1]}${sibling}" elle çoğul çifti; ` +
+              `"${match[1]}_one" / "${match[1]}_other" ve t(anahtar, { count }) kullan.`,
+          );
+        }
+      }
     }
 
     // 2. Adlandırma.
     for (const key of trKeys) {
-      const bad = key.split('.').filter((part) => !CAMEL.test(part));
+      const bad = baseKey(key)
+        .split('.')
+        .filter((part) => !CAMEL.test(part));
       if (bad.length > 0) {
         problems.push(
           `${catalog.dir}: "${key}" anahtar parçası camelCase değil (${bad.join(', ')}).`,
@@ -436,9 +507,10 @@ export function validateI18nSurface(root, options = {}) {
     // 3. Ölü anahtar (ad alanı önekli ya da öneksiz tam sabit, ya da aile).
     const catalogFamilies = families.filter((family) => family.ns === catalog.ns);
     const dead = [...trKeys].filter((key) => {
-      if (literals.has(key) || literals.has(`${catalog.ns}:${key}`)) return false;
-      if (indirect.some((entry) => entry.ns === catalog.ns && entry.key === key)) return false;
-      return !catalogFamilies.some((family) => familyMatches(family, key));
+      const used = baseKey(key);
+      if (literals.has(used) || literals.has(`${catalog.ns}:${used}`)) return false;
+      if (indirect.some((entry) => entry.ns === catalog.ns && entry.key === used)) return false;
+      return !catalogFamilies.some((family) => familyMatches(family, used));
     });
     if (dead.length > 0) {
       problems.push(

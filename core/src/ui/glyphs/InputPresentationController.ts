@@ -21,6 +21,9 @@ export interface ControlGlyphBinding {
   label: string;
 }
 
+/** Sunum girdisi değişmeden art arda bu kadar `poll` geçince glifler yine de bir kez taranır. */
+const QUIET_POLLS_BEFORE_SWEEP = 30;
+
 export class InputPresentationController {
   private readonly scope = new DisposableScope();
   private readonly pad: GamepadController<never> | null;
@@ -37,6 +40,9 @@ export class InputPresentationController {
   private padId = '';
   private padConnected = false;
   private hadPad = false;
+  /** Glifler en son hangi sunum girdisiyle güncellendi (kip, kol, bağlam); boşken henüz taranmadı. */
+  private appliedKey = '';
+  private quietPolls = 0;
 
   constructor(private readonly options: InputPresentationOptions = {}) {
     this.now = options.now ?? (() => performance.now());
@@ -105,12 +111,26 @@ export class InputPresentationController {
         { id: 'gamepad', active: this.pad?.isActive ?? false },
       ]);
     }
+    // Her karede belgeyi taramak boşta bile ana iş parçacığının en büyük JS maliyetiydi (kare başına
+    // yaklaşık 0,5 ms, Deck/telefonda katı); glifler yalnız sunum girdisi değişince güncellenir.
+    // Yeni glif kendi ilk güncellemesini `createGlyph`te alır; yerinde değişen bağlamalar için yine de
+    // belli aralıkla taranır.
+    const key = this.presentationKey();
+    if (key === this.appliedKey && ++this.quietPolls < QUIET_POLLS_BEFORE_SWEEP) return;
+    this.appliedKey = key;
+    this.quietPolls = 0;
     for (const element of (this.options.root ?? document).querySelectorAll<HTMLElement>(
       '[data-vol-input-glyph]',
     )) {
       const view = this.glyphs.get(element);
       if (view) this.updateGlyph(view.glyph, view.binding);
     }
+  }
+
+  /** Glif ailesini ve adını belirleyen her şey: kip, kol varlığı/geçmişi ve aile bağlamı. */
+  private presentationKey(): string {
+    const context = { ...this.options.context?.(), gamepadId: this.padId };
+    return `${this.mode}|${this.padConnected}|${this.hadPad}|${JSON.stringify(context)}`;
   }
 
   private updateGlyph(glyph: Glyph, binding: ControlGlyphBinding): void {

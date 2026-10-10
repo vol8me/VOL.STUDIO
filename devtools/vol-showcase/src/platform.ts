@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { ScopedSaveManager, type ScopedKey, type ScopedStores } from '@volstudio/core/persistence';
 import {
   displayCapabilitiesForSession,
@@ -73,7 +74,7 @@ export class PlatformServices {
   readonly display: DisplayDriver | null;
   private preferences: DisplayPreferences = DEFAULT_DISPLAY;
   private readonly listeners = new Set<() => void>();
-  private readonly stops: (() => void)[] = [];
+  private readonly scope = new DisposableScope();
   private destroyed = false;
 
   private constructor(
@@ -95,7 +96,7 @@ export class PlatformServices {
         })
       : null;
     const observers = probes.observeHaptics ?? [observeLinuxHaptics, observeAndroidHaptics];
-    for (const observe of observers) this.stops.push(observe());
+    for (const observe of observers) this.scope.add({ dispose: observe() });
   }
 
   /** Bildirilen kabuk ve oturumla eşzamanlı kurulum; tercih yüklenmez (testlerde ve `boot`ta kullanılır). */
@@ -157,7 +158,7 @@ export class PlatformServices {
     if (this.destroyed) return;
     this.destroyed = true;
     this.display?.destroy();
-    for (const stop of this.stops.splice(0)) stop();
+    this.scope.dispose();
     this.listeners.clear();
   }
 }

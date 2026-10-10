@@ -309,11 +309,7 @@ export class SettingsForm {
     if (busy) text = i18next.t('core:settingsForm.saving');
     else if (this.outcome === 'failed') text = i18next.t('core:settingsForm.saveFailed');
     else if (this.outcome === 'invalid') text = i18next.t('core:settingsForm.invalid');
-    else if (dirty > 0)
-      text =
-        dirty === 1
-          ? i18next.t('core:settingsForm.unsavedOne')
-          : i18next.t('core:settingsForm.unsavedMany', { count: dirty });
+    else if (dirty > 0) text = i18next.t('core:settingsForm.unsaved', { count: dirty });
     else if (this.outcome === 'saved') text = i18next.t('core:settingsForm.saved');
     this.statusElement.textContent = text;
     this.statusElement.classList.toggle(

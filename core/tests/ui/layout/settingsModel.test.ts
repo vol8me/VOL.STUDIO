@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ScopedKey } from '../../../src/persistence/scopedStorage';
+import { i18next } from '../../../src/i18n/I18n';
 import { DEFAULT_UI_AUDIO_SETTINGS, type UiAudioSettings } from '../../../src/audio/ui/settings';
 import { createAudioSettingsRows } from '../../../src/ui/layout/AudioSettingsRows';
 import { SettingsForm } from '../../../src/ui/layout/SettingsForm';
@@ -370,6 +371,19 @@ describe('SettingsForm model bağı', () => {
     expect(language.element.textContent).toContain('Türkçe');
     expect(status()).toBe('');
     expect(buttons().apply.disabled).toBe(true);
+  });
+
+  it('durum satırı sayıya göre tekil/çoğul seçer (İngilizce: 1 change, 2 changes)', async () => {
+    await i18next.changeLanguage('en');
+    try {
+      const { settings, status } = await build();
+      settings.set('name', 'Ada');
+      expect(status()).toBe('1 unsaved change');
+      settings.set('language', 'en');
+      expect(status()).toBe('2 unsaved changes');
+    } finally {
+      await i18next.changeLanguage('tr');
+    }
   });
 
   it('geçersiz değer satırda role=alert hatası ve aria-invalid üretir; Uygula yazmaz ve nedenini söyler', async () => {

@@ -285,13 +285,17 @@
   justify-content: center;
   align-items: center;
   font-size: var(--vol-text-micro);
-  animation: 1s ease-in-out infinite vol-dialogue-bounce;
   display: flex;
   position: absolute;
 }
 
+/*
+ * Zıplama YALNIZ görünürken oynar: saydam okta bile sonsuz animasyon her karede kompozit işi üretir
+ * (kapalı, kök düzeyde bağlı bir diyalog vitrinde boştaki CPU'nun büyük payıydı — UI-06.4 boşta ölçümü).
+ */
 .vol-dialogue__continue--visible {
   opacity: 1;
+  animation: 1s ease-in-out infinite vol-dialogue-bounce;
 }
 
 .vol-dialogue__controls {

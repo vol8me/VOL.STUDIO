@@ -317,15 +317,17 @@ export class Select {
       this.element.setAttribute('aria-expanded', 'false');
       return;
     } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      // Yazarak ilk eşleşen seçeneğe git (yerel <select> gibi, etiketin ilk harfi).
-      const typed = event.key.toLocaleLowerCase();
+      // Yazarak ilk eşleşen seçeneğe git (yerel <select> gibi, etiketin ilk harfi). Küçültme arayüz
+      // diliyle yapılır: sistem yerelinde `I` → `i` kalır ve Türkçe klavyeden yazılan `I` "Işık"ı bulamaz.
+      const locale = i18next.language || undefined;
+      const typed = event.key.toLocaleLowerCase(locale);
       const order = [...this.options.keys()];
       const start = [...order.slice(index + 1), ...order.slice(0, index + 1)];
       nextIndex =
         start.find(
           (i) =>
             !this.options[i].disabled &&
-            this.options[i].label.toLocaleLowerCase().startsWith(typed),
+            this.options[i].label.toLocaleLowerCase(locale).startsWith(typed),
         ) ?? null;
     }
 

@@ -159,8 +159,8 @@
     "resetAll": "Reset to defaults",
     "resetRow": "Default",
     "resetRowNamed": "Reset to default: {{label}}",
-    "unsavedOne": "1 unsaved change",
-    "unsavedMany": "{{count}} unsaved changes",
+    "unsaved_one": "{{count}} unsaved change",
+    "unsaved_other": "{{count}} unsaved changes",
     "saving": "Saving…",
     "saved": "Saved",
     "saveFailed": "Could not save. Your changes are still here.",
@@ -181,7 +181,8 @@
     "finish": "Finish"
   },
   "minimap": {
-    "summary": "{{label}}: {{count}} markers, zoom {{zoom}}x",
+    "summary_one": "{{label}}: {{count, number}} marker, zoom {{zoom}}x",
+    "summary_other": "{{label}}: {{count, number}} markers, zoom {{zoom}}x",
     "zoomIn": "Zoom map in",
     "zoomOut": "Zoom map out",
     "label": "Map",

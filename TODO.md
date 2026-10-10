@@ -36,6 +36,8 @@ Windows geliştirme/ilk native referans önce; Linux/Deck kabulü F08'dir. **F07
 
 Aşağıdaki satırlar indekstir; kapanış checkbox'ı ve ölçütleri yalnız UI TODO'dadır.
 
+**Durum (2026-10-10 sonu): F07 AÇIK** — 32 UI görevi açık, `signoff` koşulmadı; gerçek kalan iş [UI TODO "Gerçek kalan iş"](docs/ui/TODO.md) tablosundadır.
+
 - **F07.1 — Dalga 0, zemin ve kanıt (tamam):** UI-06.1, UI-00.1–00.7; registry, iki motor, axe, ölçüm, boyut payı, browser probu.
 - **F07.2 — Dalga 1, kimlik:** UI-01.6–01.9 tema çifti/malzeme/ikon/imleç, UI-02.6–02.8 yeni ses, UI-07.2–07.3 i18n/font, UI-06.2–06.4 Windows native vitrin; paralel.
 - **F07.3 — Dalga 2, dikey dilim ve aileler:** UI-01.10 + UI-02.9 → UI-03 (Button) → UI-04/05/08/09/10 fan-out, UI-07.4, UI-11.1–11.2, UI-12.2–12.3.

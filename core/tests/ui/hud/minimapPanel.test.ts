@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { i18next } from '../../../src/i18n/I18n';
 import { MinimapPanel, type MinimapPanelOptions } from '../../../src/ui/hud/MinimapPanel';
 import { niceScaleMetres, resolveMinimapPalette } from '../../../src/ui/hud/minimapDraw';
 import { ThemeController } from '../../../src/ui/themes/ThemeController';
@@ -245,6 +246,21 @@ describe('MinimapPanel — çizim sözleşmesi', () => {
     await Promise.resolve();
     expect(draws()).toBe(before + 1);
     expect(canvasOf(panel).getAttribute('aria-description')).toBe('{"tank":1}');
+  });
+
+  it('varsayılan okuyucu özeti işaret sayısına göre tekil/çoğul yazar (1 marker, 2 markers)', async () => {
+    await i18next.changeLanguage('en');
+    try {
+      const panel = make({ label: 'Map' });
+      panel.setMarker('a', { worldX: 100, worldY: 100, color: '#fff' });
+      await Promise.resolve();
+      expect(canvasOf(panel).getAttribute('aria-description')).toMatch(/Map: 1 marker, zoom/);
+      panel.setMarker('b', { worldX: 300, worldY: 300, color: '#fff' });
+      await Promise.resolve();
+      expect(canvasOf(panel).getAttribute('aria-description')).toMatch(/Map: 2 markers, zoom/);
+    } finally {
+      await i18next.changeLanguage('tr');
+    }
   });
 
   it('canvas cihaz piksel oranına göre ölçeklenir (üst sınır 2), CSS boyutu sabit kalır', () => {

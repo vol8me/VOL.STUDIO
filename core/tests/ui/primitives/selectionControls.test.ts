@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { i18next } from '../../../src/i18n/I18n';
 import { uiIntentBusFor, type UiIntent } from '../../../src/ui/feedback/uiIntent';
 import { FocusNavController } from '../../../src/ui/focus/FocusNavController';
 import { Checkbox } from '../../../src/ui/primitives/Checkbox';
@@ -65,6 +66,37 @@ describe('Select', () => {
     // "b" yalnız devre dışı Bravo ile başlar; odak kalır.
     expect(document.activeElement).toBe(optionOf('c'));
     select.destroy();
+  });
+
+  it('harfle gezinme arayüz diliyle küçültür: Türkçede I → ı, İ → i (sistem yerelinden bağımsız)', async () => {
+    const turkish = [
+      { value: 'izmir', label: 'İzmir' },
+      { value: 'isik', label: 'Işık' },
+    ];
+    const open = () => {
+      const select = new Select({ options: turkish, value: 'izmir', onCommit: vi.fn() });
+      document.body.append(select.element);
+      select.element.click();
+      return select;
+    };
+    await i18next.changeLanguage('tr');
+    try {
+      const first = open();
+      key(optionOf('izmir'), 'I'); // Türkçe klavyede Shift+ı
+      expect(document.activeElement).toBe(optionOf('isik'));
+      key(optionOf('isik'), 'i');
+      expect(document.activeElement).toBe(optionOf('izmir'));
+      first.destroy();
+      key(document.body, 'Escape');
+      await i18next.changeLanguage('en');
+      const second = open();
+      // İngilizcede I → i: ilk eşleşen "Işık"tan sonra gelen İzmir ("i̇zmir") değil, sıradaki eşleşmedir.
+      key(optionOf('izmir'), 'I');
+      expect(document.activeElement).toBe(optionOf('isik'));
+      second.destroy();
+    } finally {
+      await i18next.changeLanguage('tr');
+    }
   });
 
   it('boş liste nedenini söyler (seçilemez tek satır), tetikleyici açılır ama değer üretmez', () => {

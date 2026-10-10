@@ -420,6 +420,17 @@ describe('GamepadPointerController DOM niyeti', () => {
     expect(events).toEqual(['pointerdown:gamepad', 'pointercancel:gamepad']);
   });
 
+  it('kol yokken ya da standart olmayan eşlemede her kare belgeyi modal için taramaz (boşta maliyet)', () => {
+    const scan = vi.spyOn(document, 'querySelectorAll');
+    update(null);
+    update(null);
+    update({ ...pad(), connected: false });
+    update({ ...pad(), mapping: '' });
+    expect(scan).not.toHaveBeenCalled();
+    update(pad());
+    expect(scan).toHaveBeenCalled();
+  });
+
   it('destroy hover, tutuş ve rAF kaynaklarını kaldırır', () => {
     update(pad(1));
     update(pad(0, 0, true));

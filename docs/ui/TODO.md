@@ -68,6 +68,36 @@ aile (UI-05 + UI-09) → UI-13.
 **F07 kapanış tanımı:** bütün görevler kapanmış (kod/kapı ve bağlı cihazlarda ölçülebilen kabul), cihazdan bağımsız kalan her NOT-RUN gerekçeli ve kök F08/F09'a devredilmiş,
 `pnpm signoff` geçmiş olmalıdır.
 
+## Gerçek kalan iş (2026-10-10 sonu)
+
+**F07 KAPALI DEĞİLDİR.** 32 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
+metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde bu oturumda çalıştırılmadı.
+
+| Görev        | Gerçek kalan iş                                                                                                                                                                                                                                                                                                     | Tür                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                                                                                               | cihaz + insan       |
+| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                                                                                                | cihaz + insan       |
+| UI-06.4      | Deck host+SLR4 açılış, OGG/UI sesi, yalnız kol, ekran görüntüsü, ısınmış performans; Windows tarafı yapıldı                                                                                                                                                                                                         | cihaz               |
+| UI-07.2      | Tarih/birim biçimi, gerçek çeviriyle uzunluk, %200 yakınlaştırma, RTL açılır pencere yönü                                                                                                                                                                                                                           | kod + tarayıcı      |
+| UI-07.3      | Değişken TTF boyutu/subset kararı, yedek font tabanı/satır yüksekliği, font yükleme hatası örneği, asenkron font yerleşimi kaydırmaz kanıtı; Deck glif yüksekliği, Android %200                                                                                                                                     | kod + cihaz         |
+| UI-07.4      | Tema sekmesi ve genel tema/dil/yoğunluk seçici; önizleme kapsamları, body portalları, canvas sabit renkleri; 2 skin × 3 yoğunlukta kontrast/odak, CLS                                                                                                                                                               | kod (büyük)         |
+| UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                                                                                                         | kod                 |
+| UI-09.1–09.4 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL; **UI-09.4 (diyalog deseni, yönlendirici işaret, yasal metin) hiç başlanmadı**                                                    | kod + insan (AT)    |
+| UI-10.1–10.5 | SquareJoystick/SwipeGestureZone/MultiTouchZone klavye karşılığı, jest süresi reduced-motion; SplitPane/ScrollView/VirtualList kanıtı, %200, tutamak 24/44; sayaç tarifi; CanvasViewport/WorldCamera/PinchZoom alternatifi, Toolbar/PropertyField, meşgul <100 ms; **UI-10.5 palet ve ileri katalog hiç başlanmadı** | kod + cihaz         |
+| UI-11.1      | Unicode grafem, gerçek IME bileşimi, readOnly/disabled tuşları; Deck kolu ve Android cihaz kanıtı                                                                                                                                                                                                                   | kod + cihaz + insan |
+| UI-11.2      | **Hiç başlanmadı:** native menü/pano (`nativeMenus.ts`, `native_menus.js`), salt okunur/parola kuralları, izin reddi akışı                                                                                                                                                                                          | kod                 |
+| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 bağlı; Samsung yoksa NOT-RUN)                                                                                                                                                                      | kod + cihaz         |
+| UI-12.1      | **Hiç başlanmadı:** Steam metin sağlayıcısı (`steamworks.ts`, `service.rs`), gerçek Steam runtime sondası                                                                                                                                                                                                           | kod + cihaz         |
+| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                                                                                               | cihaz + insan       |
+| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                                                                                                           | cihaz (Windows)     |
+| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                                                                                                    | kod + insan (IME)   |
+| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                                                                                              | cihaz               |
+| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                                                                                                    | insan               |
+| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                                                                                               | kapanış             |
+
+Bu oturumda koşulmayanlar: tam `node scripts/e2e.mjs`, `pnpm fast`/`high`/`signoff`, tam core vitest (yalnız ilgili dosyalar), Deck ve Lenovo
+oturumları. Cihaz bağımsız her iş bittiğinde sıradaki kapı bunlardır; cihazlar bağlı olduğundan cihaz satırları "NOT-RUN" değil "yapılacak"tır.
+
 ### Yapılamayan/NOT-RUN kalacak kabuller
 
 Kod fazını bloklamaz, sürümü bloklar ve PASS sayılmaz: Steam Deck host/SLR4 açılış, kol-only,
@@ -176,8 +206,17 @@ UI-06.1 tamamlandı. UI-06.2–06.4 UI-05'i beklemez. Oyun kaynaklarına bağım
       `lang` özniteliği yerleşimden sonra atandığı için WebKit'te "SETTİNGS" (Türkçe İ) çıkıyordu → atama
       sayfa kurulmadan önce. **Açık bulgu:** gamescope kuralındaki DMA-BUF açık yolunda HOST derlemesinde 2D
       canvas boş (Curve Editor), kapalıyken çiziliyor; SLR4 derlemesinde yeniden ölçülecek (UI-12 / F08).
-      Kol: OS düzeyi sanal Xbox kolu (`devtools/deck/scripts/virtual-pad.py`) Steam Input üzerinden D-pad/RB/A ve OSK yazımını sürdü (fiziksel düğme değil). Kalan: SLR4 (steamrt4) derlemesi, fiziksel kol/arka tuş ve glif, OGG/UI sesi çıkışı, ısınmış
-      performans/MangoHud, Windows kare sondası → NOT-RUN, sahip UI-12.4/F08.
+      Kol: OS düzeyi sanal Xbox kolu (`devtools/deck/scripts/virtual-pad.py`) Steam Input üzerinden D-pad/RB/A ve OSK yazımını sürdü (fiziksel düğme değil).
+      Yapıldı (2026-10-10): **Windows yerel kare/CPU sondası** (`devtools/vol-showcase/scripts/native-frame-probe.mjs`, WebView2 + CDP,
+      A/A iki koşu; debug derleme, 60 Hz, DPR 1,25): 14 sekmenin 13'ü 60,0 FPS, `cards` 59,7 (her koşuda tek 33 ms kare), A/A farkı 0 FPS /
+      0,01 çekirdek; **boşta CPU A/A gürültüsü ±0,3 sn/5 sn**. Boşta atfı: ≈%80'i ekranda görünen yükleme döndürücüsünün 60 Hz kare üretimi
+      (animasyon durunca 1,0–1,3 → 0,2–0,3 sn), kusur değil. CPU profilinde tek anlamlı JS maliyeti `querySelectorAll` (162 ms/5 sn) çıktı: gerçek
+      kusur — `InputPresentationController` glifleri her karede (oyunda her HUD karesinde) belgeyi tarıyordu, `GamepadPointerController` kol
+      yokken modal arıyordu → değişiklik/kol bazlı; ayrıca kapalı `DialogueBox` okunun saydam sonsuz animasyonu yalnız görünürken oynar
+      (`idleCost.spec.ts`; boşta CPU'yu ölçülebilir azaltmadı, tasarruf iddia edilmez). Kayıt: [VERIFICATION](VERIFICATION.md) "Windows yerel kare ve CPU kaydı".
+      **Açık (gerçek iş, bu oturumda ÇALIŞTIRILMADI; Deck bağlıdır):** Deck host AppImage + SLR4 (steamrt4) derlemesi ve açılışı, Deck'te OGG/UI
+      sesi çıkışı, yalnız kol akışı ve fiziksel kol/arka tuş, Deck ekran görüntüsü, ısınmış performans/MangoHud, gamescope satır gizleme; release
+      derleme ve DPI 125/150/200 Windows koşuları (UI-12.4). Görev bunlar ölçülene kadar AÇIK kalır.
 
 Faz testi: quality/appIdentity/productIcons/catalog/layers/ports/cargo/plugin fixtures, contract/rust/build/bundle, iki motor E2E, gerçek native sonda.
 
@@ -199,8 +238,15 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
       kart nadirlik etiketi, diyalog konuşmacı plakası, kart ve sihirbaz alt çubuğu, segmented kontrol ve OSK dil
       tuşu (telefon dikeyinde üst üste) taşıyordu; SlotGrid etiketi ve Select değeri üç nokta ile kısalır ve tam
       metin `title`dadır. İki eski geometri kaydı (BuildMenu, kart eylemi telefon örtülmesi) bayatladığı için
-      silindi. Kalan: `ı/İ` ve 0/1/çok çoğul biçim testleri, tarih/birim biçimi, gerçek çeviriyle uzunluk,
-      %200 yakınlaştırma ölçümü, RTL'de picker yönü (ok/sekme/ağaç/slayt/ızgara/sütun yönü UI-05.3'te yapıldı ve iki motorda ölçüldü).
+      silindi. Yapıldı (2026-10-10): **çoğul sözleşmesi** — sayıya bağlı cümleler i18next yerel
+      `anahtar_one`/`anahtar_other` anahtarlarını kullanır (kategoriler `Intl.PluralRules`tan); çeviri kapısı grubu tek anahtar
+      sayar, her dilin kategorilerini ve elle çoğul çiftini (`xOne`/`xMany`) denetler. Bulunan gerçek kusurlar: ayar formu çoğulu kodda
+      elle seçiyordu (`unsavedOne`/`unsavedMany`); mini harita okuyucu özeti İngilizcede "1 markers" yazıyordu ve altı hane ayırıcısızdı
+      → `{{count, number}}`; `Select` harfle gezinmesi sistem yerelinde küçültüyordu (Türkçe klavyeden `I` → `i`, "Işık" bulunamıyordu; arayüz
+      diliyle düzeltildi). Kanıt: `plurals.test.ts`, `settingsModel.test.ts`, `minimapPanel.test.ts`, `selectionControls.test.ts`,
+      `i18nSurface.test.mjs` (düzeltme olmadan kırılan testlerle). Kalan (gerçek iş): tarih/birim biçimi (kitte biçimleyen bileşen yok;
+      i18next `datetime`/`number(unit)` ile tüketici örneği ve test), gerçek çeviriyle uzunluk (TR/EN dışında çeviri yok), %200 yakınlaştırma
+      ölçümü, RTL'de Select/ColorPicker/Popover açılır pencere yönü (ok/sekme/ağaç/slayt/ızgara/sütun yönü UI-05.3'te yapıldı ve iki motorda ölçüldü).
 - [ ] **UI-07.3 — Font varlığı.** Mevcut font hattı ve subset manifesti; lisans/kaynak, gerçek
       glif sınırları, Türkçe kapsamı, yedek font tabanı/satır yüksekliği, soğuk önbellek; oyun
       hissine uygun başlık/sayı yazı tipi seçimi gözden geçirilir. Kapanır: font-ready ve yükleme

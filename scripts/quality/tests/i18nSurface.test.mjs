@@ -9,6 +9,8 @@ import {
   INDIRECT_KEYS,
   I18N_CATALOGS,
   TEXT_ALLOW,
+  pluralCategoriesOf,
+  pluralParts,
   validateI18nSurface,
 } from '../i18nSurface.mjs';
 
@@ -278,6 +280,85 @@ test('kodlanmış metin yalnız UI dizinlerinde aranır; istisna gerekçeli ve b
   });
   assert.equal(stale.length, 1);
   assert.match(stale[0], /bayat metin istisnası.*"Yok"/);
+});
+
+const PLURAL_CODE = "export const f = (n) => i18next.t('app:list.items', { count: n });\n";
+const PLURAL_TR = { list: { items_one: '{{count}} öğe', items_other: '{{count}} öğe' } };
+const PLURAL_EN = { list: { items_one: '{{count}} item', items_other: '{{count}} items' } };
+
+test('çoğul grubu tek anahtar sayılır: temel ad kullanılınca _one/_other ölü değildir', (t) => {
+  const root = repo(t, fixture(PLURAL_TR, PLURAL_EN, PLURAL_CODE));
+  assert.deepEqual(run(root), []);
+});
+
+test('çoğul grubunun temel adı hiçbir yerde geçmiyorsa ölü sayılır', (t) => {
+  const root = repo(t, fixture(PLURAL_TR, PLURAL_EN, "export const f = () => 'başka';\n"));
+  const problems = run(root).join('\n');
+  assert.match(problems, /kullanılmayan anahtar \(2\).*list\.items_one.*list\.items_other/);
+});
+
+test('çoğul kategorisi eksik olan dil yakalanır (tr/en: one + other)', (t) => {
+  const root = repo(
+    t,
+    fixture(PLURAL_TR, { list: { items_other: '{{count}} items' } }, PLURAL_CODE),
+  );
+  const problems = run(root).join('\n');
+  assert.match(problems, /en\.json: "list\.items" çoğul biçimi eksik \(one\)/);
+  assert.doesNotMatch(problems, /tr\.json.*eksik/);
+  assert.doesNotMatch(problems, /parite/, 'aynı grup iki dilde var: parite bozulmaz');
+});
+
+test('dilin hiç seçmediği çoğul kategorisi ölü sayılır', (t) => {
+  const root = repo(
+    t,
+    fixture(PLURAL_TR, { list: { ...PLURAL_EN.list, items_zero: 'no items' } }, PLURAL_CODE),
+  );
+  assert.match(
+    run(root).join('\n'),
+    /en\.json: "list\.items" için zero biçimi en dilinde hiç seçilmez/,
+  );
+});
+
+test('aynı anahtar hem düz hem çoğul tanımlanamaz', (t) => {
+  const root = repo(
+    t,
+    fixture(PLURAL_TR, { list: { ...PLURAL_EN.list, items: 'items' } }, PLURAL_CODE),
+  );
+  assert.match(run(root).join('\n'), /"list\.items" hem düz hem çoğul/);
+});
+
+test('elle çoğul çifti (xOne/xMany) reddedilir ve yerine çoğul anahtarı önerilir', (t) => {
+  const root = repo(
+    t,
+    fixture(
+      { sheet: { changeOne: 'bir değişiklik', changeMany: '{{count}} değişiklik' } },
+      { sheet: { changeOne: 'one change', changeMany: '{{count}} changes' } },
+      "export const f = () => [i18next.t('app:sheet.changeOne'), i18next.t('app:sheet.changeMany')];\n",
+    ),
+  );
+  const problems = run(root).join('\n');
+  assert.match(problems, /sheet\.changeOne" \/ "sheet\.changeMany" elle çoğul çifti/);
+  assert.match(problems, /sheet\.change_one" \/ "sheet\.change_other"/);
+});
+
+test('yalnız çoğul biçimleri olan anahtar için eksik-anahtar uyarısı çıkmaz', (t) => {
+  const root = repo(t, fixture(PLURAL_TR, PLURAL_EN, PLURAL_CODE));
+  assert.doesNotMatch(run(root).join('\n'), /eksik çeviri anahtarı/);
+  const missing = repo(
+    t,
+    fixture(PLURAL_TR, PLURAL_EN, "export const f = () => i18next.t('app:list.nothing');\n"),
+  );
+  assert.match(run(missing).join('\n'), /eksik çeviri anahtarı "app:list\.nothing"/);
+});
+
+test('çoğul ayrıştırma ve dil kategorileri', () => {
+  assert.deepEqual(pluralParts('list.items_one'), { base: 'list.items', category: 'one' });
+  assert.deepEqual(pluralParts('list.items_other'), { base: 'list.items', category: 'other' });
+  assert.equal(pluralParts('list.itemsOne'), null);
+  assert.deepEqual(pluralCategoriesOf('tr'), ['one', 'other']);
+  assert.deepEqual(pluralCategoriesOf('en'), ['one', 'other']);
+  // Gerçek bir ikinci dil eklenirse kapı kategorilerini buradan öğrenir (Arapça: altı kategori).
+  assert.deepEqual(pluralCategoriesOf('ar'), ['few', 'many', 'one', 'two', 'zero', 'other']);
 });
 
 test('gerçek repoda yüzey temizdir ve her bildirim kanıtlıdır', () => {
