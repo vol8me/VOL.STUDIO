@@ -67,6 +67,40 @@ test('RB/LB sekme sırasında ileri/geri sarar', async ({ page }) => {
   expect(await activeId()).toBe(first);
 });
 
+test('açık liste varken RB/LB sekmeyi değiştirmez (liste sahipsiz kalmaz); B listeyi kapatır', async ({
+  page,
+}) => {
+  await selectTab(page, 'theme');
+  const activeId = () => page.locator(ACTIVE_TAB).getAttribute('id');
+  const tabBefore = await activeId();
+  const trigger = page.locator('.vol-theme-lab__global .vol-select');
+  await trigger.click();
+  const list = page.locator('.vol-select__listbox.vol-popup--visible');
+  await expect(list).toHaveCount(1);
+
+  await pressButton(page, PAD.rightBumper);
+  await pressButton(page, PAD.leftBumper);
+  expect(await activeId()).toBe(tabBefore);
+  await expect(list).toHaveCount(1);
+
+  await pressButton(page, PAD.secondary);
+  await expect(list).toHaveCount(0);
+  // Liste kapanınca kol omuz düğmeleri yeniden sekme değiştirir.
+  await pressButton(page, PAD.rightBumper);
+  expect(await activeId()).not.toBe(tabBefore);
+});
+
+test('açık iletişim kutusu varken RB sekmeyi değiştirmez', async ({ page }) => {
+  const activeId = () => page.locator(ACTIVE_TAB).getAttribute('id');
+  const tabBefore = await activeId();
+  await pressButton(page, PAD.start);
+  await expect(page.locator(CONFIRM_DIALOG)).toBeVisible();
+  await pressButton(page, PAD.rightBumper);
+  expect(await activeId()).toBe(tabBefore);
+  await pressButton(page, PAD.secondary);
+  await expect(page.locator(CONFIRM_DIALOG)).toHaveCount(0);
+});
+
 test('Menu duraklatma iletişim kutusu açar; B aynı geri yığınından kapatır', async ({ page }) => {
   await pressButton(page, PAD.start);
   const dialog = page.locator(CONFIRM_DIALOG);

@@ -293,7 +293,9 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
       kaplama değişince eski renkte kalıyordu; `SettingsRow` dar kapsayıcıda etiket sütununu sıfıra sıkıştırıyordu
       (additive `@container` kuralı); `Select` yeni değer seçilince odağı gövdeye düşürüyordu (WCAG 2.4.3); `SegmentedControl`
       ok tuşunda yeniden kuran tüketicide (dil) odağı eski segmentte bırakıyordu (bu ikisinin testi düzeltme olmadan
-      KIRILIR); Palette sekmesi skin değişince eski değeri gösteriyordu; dil değişimi kaydırmayı ve odağı kaybettiriyordu. Kanıt:
+      KIRILIR); Palette sekmesi skin değişince eski değeri gösteriyordu; dil değişimi kaydırmayı ve odağı kaybettiriyordu;
+      açık `Select` listesi varken LB/RB sekmeyi değiştirip listeyi sahipsiz bırakıyordu (Deck'te gözlendi: vitrin omuz
+      düğmelerini açık katmanda yutar, `Popup` tetikleyicisi kalkınca kapanır; testler düzeltme olmadan KIRILIR). Kanıt:
       `themeLab.spec.ts` (iki motor, 18/18), `themeMatrix.spec.ts` (axe ihlal 0, 5 kombinasyon × 15 sekme, Chromium; odak
       göstergesi ve geometri iki motor; skin geçişi CLS < 0,0001, Chromium), `themeWatch.test.ts`; gerçek cihazda Deck SLR4
       (Tema sekmesi 60,0 FPS, üç kapsamın tuvalleri kendi kaplamasında çizilir) ve Lenovo dikey+yatay. Tam tablo:

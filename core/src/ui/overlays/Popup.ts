@@ -44,6 +44,7 @@ export class Popup {
   private readonly boundReposition: () => void;
   private boundKeydown: (event: KeyboardEvent) => void;
   private releaseBackHandler: (() => void) | null = null;
+  private targetObserver: ResizeObserver | undefined;
 
   constructor(target: HTMLElement, options: PopupOptions = {}) {
     const {
@@ -125,6 +126,16 @@ export class Popup {
     // capture: true — ic scroll konteynerlerinin kaydırması da yakalanmali.
     window.addEventListener('scroll', this.boundReposition, { capture: true, passive: true });
     window.addEventListener('resize', this.boundReposition);
+    // Tetikleyici sahneden kalkarsa (sekme/panel gizlendi, düğüm söküldü) liste havada kalıp görünür alanın köşesine
+    // yapışırdı: ölçüsü sıfırlanan tetikleyicinin listesi kendiliğinden kapanır (kullanıcı eylemi değil: sessiz).
+    if (typeof ResizeObserver !== 'undefined') {
+      this.targetObserver = new ResizeObserver(() => {
+        if (!this.target.isConnected || this.target.getClientRects().length === 0) {
+          this.close({ silent: true });
+        }
+      });
+      this.targetObserver.observe(this.target);
+    }
     if (this.signalOrigin) signalOverlay('open', this.signalOrigin, this.target);
   }
 
@@ -171,6 +182,8 @@ export class Popup {
     this.releaseBackHandler = null;
     window.removeEventListener('scroll', this.boundReposition, { capture: true });
     window.removeEventListener('resize', this.boundReposition);
+    this.targetObserver?.disconnect();
+    this.targetObserver = undefined;
   }
 
   /** Tercih edilen `placement` boyunca konumlandırır, viewport'tan taşarsa karşı tarafa çevirir. */

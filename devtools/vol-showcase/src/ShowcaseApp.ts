@@ -1,4 +1,4 @@
-import { FullscreenController } from '@volstudio/core/platform';
+import { FullscreenController, getBackHandlerCount } from '@volstudio/core/platform';
 import { startAppSound } from './appSound';
 import type { PlatformView } from './platform';
 import {
@@ -238,6 +238,9 @@ export class ShowcaseApp {
 
   private stepTab(delta: number): void {
     if (this.tabOrder.length === 0 || !this.tabs) return;
+    // Açık katman (liste, modal, ekran klavyesi) geri yığınında kayıtlıdır: LB/RB altındaki sekmeyi değiştirmez,
+    // yoksa katman tetikleyicisi gizlenmiş hâlde ekranda sahipsiz kalırdı (Deck'te sayfanın sol üstüne yapışan liste).
+    if (getBackHandlerCount() > 0) return;
     const index = this.tabOrder.indexOf(this.activeTabId);
     const next = this.tabOrder[(index + delta + this.tabOrder.length) % this.tabOrder.length];
     // LB/RB bir kullanıcı eylemidir: sekme geçişi tıklamayla aynı `navigate` sesini alır.
