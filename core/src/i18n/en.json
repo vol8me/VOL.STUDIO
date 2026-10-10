@@ -153,6 +153,27 @@
   "propertyField": {
     "reset": "Reset to default"
   },
+  "settingsForm": {
+    "apply": "Apply",
+    "revert": "Undo changes",
+    "resetAll": "Reset to defaults",
+    "resetRow": "Default",
+    "resetRowNamed": "Reset to default: {{label}}",
+    "unsavedOne": "1 unsaved change",
+    "unsavedMany": "{{count}} unsaved changes",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "saveFailed": "Could not save. Your changes are still here.",
+    "invalid": "Fix the highlighted settings first.",
+    "audio": {
+      "master": "Master volume",
+      "ui": "Interface sounds",
+      "sfx": "Effects",
+      "music": "Music",
+      "speech": "Speech",
+      "muted": "Mute all"
+    }
+  },
   "wizard": {
     "step": "Step {{n}} of {{total}}: {{title}}",
     "back": "Back",

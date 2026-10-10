@@ -1,10 +1,46 @@
+import { i18next } from '../../i18n/I18n';
+import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { Button } from '../primitives/Button';
+import type { SettingsApplyResult, SettingsCloseDecision, SettingsModel } from './SettingsModel';
+
 export interface SettingsControl {
   readonly element: HTMLElement;
 }
 
 export interface SettingsFormOptions {
   readonly className?: string;
+  /**
+   * Verilirse form modele bağlanır: taslak/hata/meşgul durumu, Uygula / Geri al / Varsayılana dön eylemleri ve
+   * `addField` tarifleri çalışır. Verilmezse form yalnız sunum kabıdır.
+   */
+  readonly model?: SettingsModel;
 }
+
+/** Modelin bir alanını çizen denetimin yüzü: değeri dışarıdan (sessizce) ayarlanabilir. */
+export interface SettingsFieldControl<T = unknown> extends SettingsControl {
+  setValue(value: T): void;
+  destroy?(): void;
+}
+
+/** Bir ayar alanının TARİFİ: hangi anahtar, hangi etiket, denetim nasıl kurulur. Model değeri tutar. */
+export interface SettingsFieldRecipe<T = unknown> {
+  readonly key: string;
+  readonly label?: string;
+  readonly description?: string;
+  readonly stackOnNarrow?: boolean;
+  /** Denetimi kurar; kullanıcı değiştirince `onChange` çağrılır (modelin taslağını günceller). */
+  create(context: { readonly value: T; onChange(value: T): void }): SettingsFieldControl<T>;
+}
+
+const sameValue = (a: unknown, b: unknown): boolean =>
+  Object.is(a, b) || JSON.stringify(a) === JSON.stringify(b);
+
+interface BoundField {
+  sync(): void;
+  destroy(): void;
+}
+
+type FormOutcome = 'saved' | 'failed' | 'invalid' | null;
 
 export interface SettingsRowOptions {
   readonly label?: string;
@@ -115,14 +151,175 @@ export class SettingsRow {
   }
 }
 
-/** SettingsRow koleksiyonunu dikey form ritminde tutan sunum kabı. */
+/**
+ * SettingsRow koleksiyonunu dikey form ritminde tutan sunum kabı. Bir `SettingsModel` verilirse form onun
+ * TARİFİ olur: durum modelde, çizim burada (bkz. `addField`).
+ */
 export class SettingsForm {
   readonly element: HTMLDivElement;
   private busy = false;
+  private readonly model: SettingsModel | null;
+  private readonly scope = new DisposableScope();
+  private readonly fields: BoundField[] = [];
+  private actionsElement: HTMLDivElement | null = null;
+  private statusElement: HTMLDivElement | null = null;
+  private applyButton: Button | null = null;
+  private revertButton: Button | null = null;
+  private resetAllButton: Button | null = null;
+  private outcome: FormOutcome = null;
 
   constructor(options: SettingsFormOptions = {}) {
     this.element = document.createElement('div');
     this.element.className = ['vol-settings-form', options.className].filter(Boolean).join(' ');
+    this.model = options.model ?? null;
+    if (this.model) this.buildActions(this.model);
+  }
+
+  /** Modeldeki bir alanı tarifiyle çizer: denetim ↔ taslak çift yönlü, hata ve "varsayılana dön" satırda. */
+  addField<T>(recipe: SettingsFieldRecipe<T>): SettingsRow {
+    const model = this.requireModel();
+    // Denetimin şu an GÖSTERDİĞİ değer: kullanıcı değişikliğinden dönen model bildirimi denetime geri yazılmaz.
+    let shown: unknown = model.get(recipe.key);
+    const control = recipe.create({
+      value: model.get<T>(recipe.key),
+      onChange: (value) => {
+        shown = value;
+        model.set(recipe.key, value);
+      },
+    });
+    const row = new SettingsRow({
+      label: recipe.label,
+      description: recipe.description,
+      control,
+      stackOnNarrow: recipe.stackOnNarrow,
+    });
+    const reset = new Button(i18next.t('core:settingsForm.resetRow'), {
+      size: 'sm',
+      fullWidth: false,
+      onClick: () => model.reset(recipe.key),
+    });
+    reset.element.classList.add('vol-settings-row__reset');
+    reset.element.setAttribute(
+      'aria-label',
+      i18next.t('core:settingsForm.resetRowNamed', { label: recipe.label ?? recipe.key }),
+    );
+    (row.element.querySelector('.vol-settings-row__control') ?? row.element).appendChild(
+      reset.element,
+    );
+    this.add(row);
+
+    const field: BoundField = {
+      sync: () => {
+        const value = model.get<T>(recipe.key);
+        if (!sameValue(value, shown)) {
+          shown = value;
+          control.setValue(value);
+        }
+        row.setError(model.error(recipe.key));
+        row.element.classList.toggle('vol-settings-row--dirty', model.isDirty(recipe.key));
+        reset.element.hidden = !model.isModified(recipe.key);
+        reset.setDisabled(model.isBusy());
+      },
+      destroy: () => {
+        reset.destroy();
+        control.destroy?.();
+        row.destroy();
+      },
+    };
+    this.fields.push(field);
+    field.sync();
+    return row;
+  }
+
+  /** Taslağı uygular; sonuç durum satırında duyurulur. Kaydedilirken ikinci çağrı `busy` döner. */
+  async applyModel(): Promise<SettingsApplyResult> {
+    const model = this.requireModel();
+    const result = await model.apply();
+    if (result.status === 'applied') this.outcome = result.saved.length > 0 ? 'saved' : null;
+    else if (result.status === 'failed') this.outcome = 'failed';
+    else if (result.status === 'invalid') this.outcome = 'invalid';
+    this.refresh();
+    return result;
+  }
+
+  /** Escape/geri: kirli değişiklikte karar tüketicidedir (`apply` / `discard` / `stay`). */
+  requestClose(
+    decide: (dirty: readonly string[]) => Promise<SettingsCloseDecision> | SettingsCloseDecision,
+  ): Promise<boolean> {
+    return this.requireModel().requestClose(decide);
+  }
+
+  private requireModel(): SettingsModel {
+    if (!this.model) throw new Error('SettingsForm: bu işlem için `model` verilmeli.');
+    return this.model;
+  }
+
+  private buildActions(model: SettingsModel): void {
+    const bar = document.createElement('div');
+    bar.className = 'vol-settings-form__actions';
+    const status = document.createElement('div');
+    status.className = 'vol-settings-form__status';
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    this.applyButton = new Button(i18next.t('core:settingsForm.apply'), {
+      variant: 'primary',
+      fullWidth: false,
+      onClick: () => void this.applyModel(),
+    });
+    this.revertButton = new Button(i18next.t('core:settingsForm.revert'), {
+      fullWidth: false,
+      onClick: () => model.revert(),
+    });
+    this.resetAllButton = new Button(i18next.t('core:settingsForm.resetAll'), {
+      fullWidth: false,
+      onClick: () => model.resetAll(),
+    });
+    bar.append(
+      status,
+      this.resetAllButton.element,
+      this.revertButton.element,
+      this.applyButton.element,
+    );
+    this.element.appendChild(bar);
+    this.actionsElement = bar;
+    this.statusElement = status;
+    // Düzenleme eski sonucu eskitir; uygulama sonucu `applyModel` içinde yeniden kurulur.
+    this.scope.addSubscription(
+      model.subscribe(() => {
+        if (!model.isBusy()) this.outcome = null;
+        this.refresh();
+      }),
+    );
+    this.refresh();
+  }
+
+  private refresh(): void {
+    const model = this.model;
+    if (!model || !this.statusElement) return;
+    const dirty = model.dirtyKeys().length;
+    const busy = model.isBusy();
+    if (busy) this.element.setAttribute('aria-busy', 'true');
+    else this.element.removeAttribute('aria-busy');
+    this.applyButton?.setDisabled(busy || dirty === 0);
+    this.applyButton?.setLoading(busy);
+    this.revertButton?.setDisabled(busy || dirty === 0);
+    this.resetAllButton?.setDisabled(busy);
+    for (const field of this.fields) field.sync();
+    let text = '';
+    if (busy) text = i18next.t('core:settingsForm.saving');
+    else if (this.outcome === 'failed') text = i18next.t('core:settingsForm.saveFailed');
+    else if (this.outcome === 'invalid') text = i18next.t('core:settingsForm.invalid');
+    else if (dirty > 0)
+      text =
+        dirty === 1
+          ? i18next.t('core:settingsForm.unsavedOne')
+          : i18next.t('core:settingsForm.unsavedMany', { count: dirty });
+    else if (this.outcome === 'saved') text = i18next.t('core:settingsForm.saved');
+    this.statusElement.textContent = text;
+    this.statusElement.classList.toggle(
+      'vol-settings-form__status--error',
+      this.outcome === 'failed' || this.outcome === 'invalid',
+    );
   }
 
   /**
@@ -147,11 +344,17 @@ export class SettingsForm {
   }
 
   add(row: SettingsRow): this {
-    this.element.appendChild(row.element);
+    // Eylem çubuğu varsa satırlar onun ÜSTÜNE girer; çubuk her zaman formun sonunda kalır.
+    this.element.insertBefore(row.element, this.actionsElement);
     return this;
   }
 
   destroy(): void {
+    this.scope.dispose();
+    for (const field of this.fields.splice(0)) field.destroy();
+    this.applyButton?.destroy();
+    this.revertButton?.destroy();
+    this.resetAllButton?.destroy();
     this.element.remove();
   }
 }

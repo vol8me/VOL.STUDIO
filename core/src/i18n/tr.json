@@ -153,6 +153,27 @@
   "propertyField": {
     "reset": "Varsayılana döndür"
   },
+  "settingsForm": {
+    "apply": "Uygula",
+    "revert": "Değişiklikleri geri al",
+    "resetAll": "Varsayılana dön",
+    "resetRow": "Varsayılan",
+    "resetRowNamed": "Varsayılana döndür: {{label}}",
+    "unsavedOne": "1 kaydedilmemiş değişiklik",
+    "unsavedMany": "{{count}} kaydedilmemiş değişiklik",
+    "saving": "Kaydediliyor…",
+    "saved": "Kaydedildi",
+    "saveFailed": "Kaydedilemedi. Değişiklikleriniz duruyor.",
+    "invalid": "Önce vurgulanan ayarları düzeltin.",
+    "audio": {
+      "master": "Ana ses",
+      "ui": "Arayüz sesi",
+      "sfx": "Efektler",
+      "music": "Müzik",
+      "speech": "Konuşma",
+      "muted": "Tümünü sessize al"
+    }
+  },
   "wizard": {
     "step": "Adım {{n}} / {{total}}: {{title}}",
     "back": "Geri",

@@ -5,11 +5,13 @@ import {
   type ScopedKey,
 } from '@volstudio/core/persistence';
 import { displayCapabilitiesForSession } from '@volstudio/core/platform';
+import { DEFAULT_UI_AUDIO_SETTINGS, type UiAudioSettings } from '@volstudio/core/audio/ui';
 import {
   Button,
   Checkbox,
   ColorPicker,
   CurveEditor,
+  createAudioSettingsRows,
   Input,
   NumberStepper,
   OnScreenKeyboard,
@@ -19,6 +21,7 @@ import {
   SegmentedControl,
   Select,
   SettingsForm,
+  SettingsModel,
   SettingsRow,
   Slider,
   Text,
@@ -27,6 +30,7 @@ import {
   Toolbar,
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
+import { getAppSoundKit } from '../appSound';
 import { card, cardGrid } from './shared';
 
 function buildSettingsFormDemo(disposables: DisposableScope): HTMLElement {
@@ -66,6 +70,130 @@ function buildSettingsFormDemo(disposables: DisposableScope): HTMLElement {
     fpsRow,
     form,
   );
+  return form.element;
+}
+
+/**
+ * Model + tarif: durum `SettingsModel`de (taslak, hata, kapsam başına atomik yazım), form onu çizer. Kalite ve
+ * FPS `device`, dil ve ad `synced` kapsamındadır; Uygula her kapsama TEK yazım yapar, Geri al taslakları atar.
+ */
+function buildSettingsModelDemo(disposables: DisposableScope): HTMLElement {
+  const stores = new ScopedSaveManager({
+    synced: new LocalStorageAdapter(),
+    device: new LocalStorageAdapter(),
+  });
+  const model = new SettingsModel({
+    store: stores,
+    keys: { device: 'device.volui:settings-demo', synced: 'synced.volui:settings-demo' },
+    fields: {
+      quality: { scope: 'device', defaultValue: 'high' },
+      fps: { scope: 'device', defaultValue: true },
+      language: { scope: 'synced', defaultValue: 'tr' },
+      name: {
+        scope: 'synced',
+        defaultValue: 'Aldric',
+        validate: (value) =>
+          String(value).trim() === '' ? i18next.t('volui:forms.nameRequired') : null,
+      },
+    },
+  });
+  void model.load();
+
+  const form = new SettingsForm({ className: 'vol-settings-model-demo', model });
+  form.addField<string>({
+    key: 'quality',
+    label: i18next.t('volui:forms.displayQuality'),
+    stackOnNarrow: true,
+    create: ({ value, onChange }) => {
+      const select = new Select({
+        options: [
+          { value: 'low', label: i18next.t('volui:forms.low') },
+          { value: 'high', label: i18next.t('volui:forms.high') },
+        ],
+        value,
+        onCommit: onChange,
+      });
+      return {
+        element: select.element,
+        setValue: (next) => select.setValue(next),
+        destroy: () => select.destroy(),
+      };
+    },
+  });
+  form.addField<string>({
+    key: 'language',
+    label: i18next.t('volui:forms.language'),
+    stackOnNarrow: true,
+    create: ({ value, onChange }) => {
+      const control = new SegmentedControl({
+        options: [
+          { value: 'tr', label: i18next.t('volui:forms.turkish') },
+          { value: 'en', label: i18next.t('volui:forms.english') },
+        ],
+        value,
+        onCommit: onChange,
+      });
+      return {
+        element: control.element,
+        setValue: (next) => control.setValue(next),
+        destroy: () => control.destroy(),
+      };
+    },
+  });
+  form.addField<string>({
+    key: 'name',
+    label: i18next.t('volui:forms.playerName'),
+    stackOnNarrow: true,
+    create: ({ value, onChange }) => {
+      const input = new Input({ value, onInput: onChange });
+      return {
+        element: input.element,
+        setValue: (next) => input.setValue(next),
+        destroy: () => input.destroy(),
+      };
+    },
+  });
+  form.addField<boolean>({
+    key: 'fps',
+    create: ({ value, onChange }) => {
+      const checkbox = new Checkbox({
+        label: i18next.t('volui:forms.showFps'),
+        checked: value,
+        variant: 'switch',
+        onCommit: onChange,
+      });
+      return {
+        element: checkbox.element,
+        setValue: (next) => checkbox.setChecked(next),
+        destroy: () => checkbox.destroy(),
+      };
+    },
+  });
+  disposables.addDestroyables(form);
+  return form.element;
+}
+
+/**
+ * Ses ayar satırları ses sistemine DOĞRUDAN bağlıdır: kaydırıcı kazancı anında değiştirir (uygulama kiti
+ * varsa onu, yoksa yerel bir yüzü). Taslak/uygula yoktur; ses ayarı canlı duyulur.
+ */
+function buildAudioSettingsDemo(disposables: DisposableScope): HTMLElement {
+  let local: UiAudioSettings = { ...DEFAULT_UI_AUDIO_SETTINGS };
+  const port = {
+    get settings(): UiAudioSettings {
+      return getAppSoundKit()?.settings ?? local;
+    },
+    setSettings(patch: Partial<UiAudioSettings>): UiAudioSettings {
+      const kit = getAppSoundKit();
+      if (kit) return kit.setSettings(patch);
+      local = { ...local, ...patch };
+      return local;
+    },
+  };
+  const audio = createAudioSettingsRows(port);
+  const form = new SettingsForm({ className: 'vol-audio-settings-demo' });
+  for (const row of audio.rows) form.add(row);
+  disposables.addDestroyables(audio, form);
   return form.element;
 }
 
@@ -567,6 +695,8 @@ export function buildFormsTab(uiRootElement: HTMLElement): {
     card(i18next.t('volui:forms.segmentedControl'), qualitySegmented.element),
     card(i18next.t('volui:forms.segmentedControlPassive'), buildPassiveSegmentedDemo(disposables)),
     card(i18next.t('volui:forms.settingsForm'), buildSettingsFormDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:forms.settingsModel'), buildSettingsModelDemo(disposables), { span: 2 }),
+    card(i18next.t('volui:forms.audioSettings'), buildAudioSettingsDemo(disposables), { span: 2 }),
     card(i18next.t('volui:forms.displaySettings'), buildDisplaySettingsDemo(disposables), {
       span: 2,
     }),

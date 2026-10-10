@@ -1800,6 +1800,34 @@
         {
           "file": "core/tests/ui/layout/settingsForm.test.ts",
           "title": "etiketli kontrolleri ortak satır ve kontrol yuvasında toplar"
+        },
+        {
+          "file": "core/tests/ui/layout/settingsModel.test.ts",
+          "title": "Uygula: kaydediliyor duyurulur ve form aria-busy olur, ikinci tık yazım başlatmaz; sonra \"Kaydedildi\""
+        }
+      ]
+    },
+    {
+      "export": "SettingsModel",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": "A5",
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layout/settingsModel.test.ts",
+          "title": "her kirli kapsam TEK yazımla gider; belge kapsamın bütün alanlarını ve bilinmeyen alanları taşır"
+        },
+        {
+          "file": "core/tests/ui/layout/settingsModel.test.ts",
+          "title": "bir kapsam yazılamazsa onun taslağı kirli kalır, diğer kapsam işlenir; yeniden deneme tamamlar"
+        },
+        {
+          "file": "core/tests/ui/layout/settingsModel.test.ts",
+          "title": "kaydedilirken ikinci uygulama başlamaz (busy); yazım sürerken yapılan yeni düzenleme kirli kalır"
         }
       ]
     },
@@ -2528,6 +2556,22 @@
         {
           "file": "core/tests/ui/icons/icons.test.ts",
           "title": "configureIcons kökü değiştirir, sondaki eğik çizgiyi atar ve yalnız sonraki yüklemeleri etkiler"
+        }
+      ]
+    },
+    {
+      "export": "createAudioSettingsRows",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-05",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": ["sections/formsTab.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/layout/settingsModel.test.ts",
+          "title": "beş seviye ve sessize alma satırı kurulur; kaydırıcı kazancı anında sisteme yazar"
         }
       ]
     },

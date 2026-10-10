@@ -9,9 +9,25 @@ export {
   SettingsForm,
   SettingsRow,
   type SettingsControl,
+  type SettingsFieldControl,
+  type SettingsFieldRecipe,
   type SettingsFormOptions,
   type SettingsRowOptions,
 } from './SettingsForm';
+export {
+  SettingsModel,
+  type SettingsApplyResult,
+  type SettingsCloseDecision,
+  type SettingsFieldSpec,
+  type SettingsFields,
+  type SettingsModelOptions,
+  type SettingsStore,
+} from './SettingsModel';
+export {
+  createAudioSettingsRows,
+  type AudioSettingsPort,
+  type AudioSettingsRows,
+} from './AudioSettingsRows';
 export { VirtualList, type VirtualListOptions } from './VirtualList';
 export {
   SplitPane,

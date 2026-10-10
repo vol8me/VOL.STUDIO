@@ -285,6 +285,12 @@
   font-weight: 600;
 }
 
+/* Kaydedilmemiş (taslak) satır: marka renkli kenar; geçersiz satırın tehlike kenarı sonra gelir ve onu ezer. */
+.vol-settings-row--dirty {
+  border-left: 3px solid var(--vol-ui-brand-border);
+  padding-left: var(--vol-space-sm);
+}
+
 .vol-settings-row--invalid {
   border-left: 3px solid var(--vol-ui-danger-solid);
   padding-left: var(--vol-space-sm);
@@ -292,9 +298,58 @@
 
 .vol-settings-row__control {
   display: flex;
+  gap: var(--vol-space-sm);
+  align-items: center;
   justify-content: flex-end;
   min-width: 0;
   max-width: 100%;
+}
+
+.vol-settings-row__reset[hidden] {
+  display: none;
+}
+
+.vol-audio-level {
+  display: flex;
+  gap: var(--vol-space-sm);
+  align-items: center;
+}
+
+.vol-audio-level > .vol-slider {
+  width: clamp(8rem, 28vw, 14rem);
+}
+
+.vol-audio-level__value {
+  min-width: 5ch;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-micro);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.vol-settings-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vol-space-sm);
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: var(--vol-space-sm);
+  padding-top: var(--vol-space-md);
+  border-top: 1px solid var(--vol-ui-border-soft);
+}
+
+.vol-settings-form__status {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: 1.25em;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-micro);
+  overflow-wrap: anywhere;
+}
+
+.vol-settings-form__status--error {
+  color: var(--vol-ui-text);
+  font-weight: 600;
 }
 
 .vol-settings-row__control > .vol-select {
