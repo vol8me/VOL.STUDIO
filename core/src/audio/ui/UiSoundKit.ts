@@ -551,10 +551,13 @@ function rangeFraction(target: Element): number | null {
     max = Number(target.max === '' ? 100 : target.max);
     value = Number(target.value);
   } else if (target instanceof HTMLElement && target.dataset.volPitchMin !== undefined) {
-    // Çift uçlu kaydırıcı tutamağı: perde bütün aralığa göredir (aria-valuemin/max tutamağa özeldir).
+    // Çift uçlu kaydırıcı tutamağı ve sayı adımı: perde bütün aralığa göredir (aria-valuemin/max tutamağa özeldir).
     min = Number(target.dataset.volPitchMin);
     max = Number(target.dataset.volPitchMax);
-    value = Number(target.getAttribute('aria-valuenow'));
+    // Tutamak `aria-valuenow` taşır; adım girdisi (`number`) kendi değerini taşır.
+    value = Number(
+      target instanceof HTMLInputElement ? target.value : target.getAttribute('aria-valuenow'),
+    );
   } else {
     return null;
   }

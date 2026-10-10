@@ -127,6 +127,12 @@
     "placeholder": "Seçiniz",
     "listbox": "Seçenekler"
   },
+  "rangeSlider": {
+    "min": "Alt sınır",
+    "max": "Üst sınır",
+    "minOf": "{{label}} (alt sınır)",
+    "maxOf": "{{label}} (üst sınır)"
+  },
   "stepper": {
     "decrement": "Azalt",
     "increment": "Artır"

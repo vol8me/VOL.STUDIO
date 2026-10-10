@@ -377,7 +377,13 @@
   inset: 0;
 }
 
+/*
+ * Kaydırıcı FİZİKSELDİR, RTL'de aynalanmaz: dolgu ve tutamak `left` yüzdesiyle çizilir (RangeSlider ve kart
+ * destesi yönleriyle aynı kural). Yerel girdi RTL'de aynalanırdı; tıklama tutamağı çubuğun öbür ucuna
+ * atardı. Etiket/değer satırı yine belge yönünü izler.
+ */
 .vol-slider--horizontal .vol-slider__input {
+  direction: ltr;
   top: 50%;
   bottom: auto;
   min-height: var(--vol-hit-target-min, auto);

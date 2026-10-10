@@ -6,6 +6,7 @@ import {
   type UiSoundAssets,
 } from '../../src/audio/ui';
 import { uiIntentBusFor, type UiIntent } from '../../src/ui/feedback/uiIntent';
+import { NumberStepper } from '../../src/ui/primitives/NumberStepper';
 import { RangeSlider } from '../../src/ui/primitives/RangeSlider';
 import { Slider } from '../../src/ui/primitives/Slider';
 import { FakeContext, stubFetch } from '../support/fakeAudio';
@@ -210,6 +211,45 @@ describe('RangeSlider sesi', () => {
     control.setValue({ min: 10, max: 90 });
     control.setValueAndNotify({ min: 30, max: 70 });
     expect(seen).toEqual([]);
+    release();
+  });
+});
+
+describe('NumberStepper sesi', () => {
+  it('düğme adımı kaydırıcı tickidir; perde değerin aralıktaki konumuna bağlıdır', async () => {
+    const { context, seen, release } = await mounted();
+    const control = new NumberStepper({ min: 0, max: 10, value: 1 });
+    document.body.append(control.element);
+    const [minus, plus] = control.element.querySelectorAll<HTMLButtonElement>('button');
+
+    plus.click();
+    const lowRate = lastRate(context);
+    for (let value = 2; value < 9; value++) {
+      clock += 100;
+      plus.click();
+    }
+    clock += 100;
+    plus.click();
+    const highRate = lastRate(context);
+    expect(highRate).toBeGreaterThan(lowRate);
+    expect(seen.filter((intent) => intent.kind === 'valuePreview').length).toBeGreaterThan(0);
+
+    clock += 100;
+    const before = context.sources.length;
+    minus.click();
+    expect(context.sources.length).toBeGreaterThan(before);
+    release();
+  });
+
+  it('geçersiz yazı ve programatik atama ses üretmez', async () => {
+    const { context, release } = await mounted();
+    const control = new NumberStepper({ min: 0, max: 10, value: 4 });
+    document.body.append(control.element);
+    const input = control.element.querySelector<HTMLInputElement>('input')!;
+    input.value = '';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    control.setValue(7);
+    expect(context.sources).toHaveLength(0);
     release();
   });
 });

@@ -1,3 +1,4 @@
+import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { emitUiIntent, emitUiSignal } from '../feedback/uiIntent';
 
@@ -15,8 +16,14 @@ export interface RangeSliderOptions {
   step?: number;
   value?: RangeSliderValue;
   label?: string;
+  /** Görünür etiket yokken erişilebilir ad; çevrilmiş metin. */
+  ariaLabel?: string;
   formatValue?: (value: number) => string;
   disabled?: boolean;
+  /** Salt okunur: tutamaklar odaklanır ve okunur; kullanıcı değeri değiştiremez. */
+  readOnly?: boolean;
+  /** Doğrulama hatası: `aria-invalid`. Hata metni `aria-describedby` ile tüketicide bağlanır. */
+  invalid?: boolean;
   onInput?: (value: RangeSliderValue) => void;
   onCommit?: (value: RangeSliderValue) => void;
 }
@@ -58,6 +65,10 @@ export class RangeSlider {
   private activeHandle: 'min' | 'max' | null = null;
   private activePointerId: number | null = null;
   private gestureStart: RangeSliderValue | null = null;
+  private labelText: string | null;
+  private readonly labelElement: HTMLSpanElement | null;
+  private readOnly: boolean;
+  private readonly onLanguageChanged = (): void => this.applyHandleNames();
   private boundHandleKeydown: (handle: 'min' | 'max') => (event: KeyboardEvent) => void;
   private boundMinHandleKeydown: (event: KeyboardEvent) => void;
   private boundMaxHandleKeydown: (event: KeyboardEvent) => void;
@@ -69,8 +80,11 @@ export class RangeSlider {
       step = 1,
       value = { min, max },
       label,
+      ariaLabel,
       formatValue = (v) => String(v),
       disabled = false,
+      readOnly = false,
+      invalid = false,
       onInput,
       onCommit,
     } = options;
@@ -88,6 +102,8 @@ export class RangeSlider {
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
     this.disabled = disabled;
+    this.readOnly = readOnly;
+    this.labelText = label ?? ariaLabel ?? null;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-range-slider';
@@ -100,6 +116,7 @@ export class RangeSlider {
       labelText.className = 'vol-range-slider__label';
       labelText.textContent = label;
       labelRow.appendChild(labelText);
+      this.labelElement = labelText;
 
       this.valueLabel = document.createElement('span');
       this.valueLabel.className = 'vol-range-slider__value';
@@ -108,6 +125,7 @@ export class RangeSlider {
       this.element.appendChild(labelRow);
     } else {
       this.valueLabel = null;
+      this.labelElement = null;
     }
 
     this.track = document.createElement('div');
@@ -121,14 +139,12 @@ export class RangeSlider {
     this.minHandle.className = 'vol-range-slider__handle vol-range-slider__handle--min';
     this.minHandle.tabIndex = 0;
     this.minHandle.setAttribute('role', 'slider');
-    this.minHandle.setAttribute('aria-label', label ? `${label} (minimum)` : 'Minimum');
     this.track.appendChild(this.minHandle);
 
     this.maxHandle = document.createElement('div');
     this.maxHandle.className = 'vol-range-slider__handle vol-range-slider__handle--max';
     this.maxHandle.tabIndex = 0;
     this.maxHandle.setAttribute('role', 'slider');
-    this.maxHandle.setAttribute('aria-label', label ? `${label} (maksimum)` : 'Maksimum');
     this.track.appendChild(this.maxHandle);
     // Ses perdesi bütün aralığa göredir; tutamağın kendi aria-valuemin/max'ı karşı tutamağa bağlıdır.
     for (const handle of [this.minHandle, this.maxHandle]) {
@@ -137,12 +153,17 @@ export class RangeSlider {
     }
 
     this.element.appendChild(this.track);
+    this.applyHandleNames();
+    this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
+    i18next.on('languageChanged', this.onLanguageChanged);
+    this.setInvalid(invalid);
 
     // Track tüm pointer olaylarını dinler (iki native range input üst üste koymak
     // yerine); boş track tıklaması ve doğrudan handle basışını tek tip ele alır.
     const boundPointerDown = (event: PointerEvent): void => {
       if (
         this.disabled ||
+        this.readOnly ||
         this.activePointerId !== null ||
         !event.isPrimary ||
         (event.pointerType === 'mouse' && event.button !== 0)
@@ -182,7 +203,7 @@ export class RangeSlider {
     this.scope.addListener(this.track, 'pointercancel', boundPointerUp as EventListener);
 
     this.boundHandleKeydown = (handle) => (event) => {
-      if (this.disabled) return;
+      if (this.disabled || this.readOnly) return;
       if (event.key === 'Escape' && this.gestureStart) {
         event.preventDefault();
         this.restoreGestureStart();
@@ -193,11 +214,15 @@ export class RangeSlider {
           ? this.step
           : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
             ? -this.step
-            : event.key === 'Home'
-              ? Number.NEGATIVE_INFINITY
-              : event.key === 'End'
-                ? Number.POSITIVE_INFINITY
-                : null;
+            : event.key === 'PageUp'
+              ? this.pageStep
+              : event.key === 'PageDown'
+                ? -this.pageStep
+                : event.key === 'Home'
+                  ? Number.NEGATIVE_INFINITY
+                  : event.key === 'End'
+                    ? Number.POSITIVE_INFINITY
+                    : null;
       if (delta === null) return;
 
       event.preventDefault();
@@ -221,6 +246,7 @@ export class RangeSlider {
 
     this.render();
     this.setDisabled(disabled);
+    this.applyReadOnly();
   }
 
   getValue(): RangeSliderValue {
@@ -250,12 +276,61 @@ export class RangeSlider {
     this.element.classList.toggle('vol-range-slider--disabled', disabled);
     this.minHandle.tabIndex = disabled ? -1 : 0;
     this.maxHandle.tabIndex = disabled ? -1 : 0;
+    for (const handle of [this.minHandle, this.maxHandle]) {
+      handle.setAttribute('aria-disabled', String(disabled));
+    }
+  }
+
+  setReadOnly(readOnly: boolean): void {
+    if (readOnly) this.restoreGestureStart();
+    this.readOnly = readOnly;
+    this.applyReadOnly();
+  }
+
+  setInvalid(invalid: boolean): void {
+    for (const handle of [this.minHandle, this.maxHandle]) {
+      if (invalid) handle.setAttribute('aria-invalid', 'true');
+      else handle.removeAttribute('aria-invalid');
+    }
+  }
+
+  /** Görünür etiketi günceller (dil değişimi); tutamak adları da yenilenir. */
+  setLabel(label: string): void {
+    if (this.labelElement) this.labelElement.textContent = label;
+    this.labelText = label;
+    this.applyHandleNames();
   }
 
   destroy(): void {
     this.restoreGestureStart(false);
     this.scope.dispose();
     this.element.remove();
+  }
+
+  /** Büyük adım: aralığın yaklaşık onda biri, adımın katı (PageUp/PageDown). */
+  private get pageStep(): number {
+    return Math.max(this.step, Math.round((this.max - this.min) / 10 / this.step) * this.step);
+  }
+
+  private applyReadOnly(): void {
+    for (const handle of [this.minHandle, this.maxHandle]) {
+      if (this.readOnly) handle.setAttribute('aria-readonly', 'true');
+      else handle.removeAttribute('aria-readonly');
+    }
+  }
+
+  /** Tutamak adları dilden gelir: görünür etiketle birlikte "(alt sınır)" son eki ya da yalın ad. */
+  private applyHandleNames(): void {
+    const label = this.labelText;
+    // Anahtarlar düz yazılır: kullanılmayan-anahtar kapısı şablonlu anahtarı göremez.
+    this.minHandle.setAttribute(
+      'aria-label',
+      label ? i18next.t('core:rangeSlider.minOf', { label }) : i18next.t('core:rangeSlider.min'),
+    );
+    this.maxHandle.setAttribute(
+      'aria-label',
+      label ? i18next.t('core:rangeSlider.maxOf', { label }) : i18next.t('core:rangeSlider.max'),
+    );
   }
 
   /** clientX'i değere çevirir. getBoundingClientRect() burada güvenli (render()'ın aksine) çünkü pointer olayları yalnızca element DOM'da görünürken tetiklenir. */
@@ -367,6 +442,8 @@ export class RangeSlider {
     this.minHandle.setAttribute('aria-valuemin', String(this.min));
     this.minHandle.setAttribute('aria-valuemax', String(this.maxValue));
     this.minHandle.setAttribute('aria-valuenow', String(this.minValue));
+    this.minHandle.setAttribute('aria-valuetext', this.formatValue(this.minValue));
+    this.maxHandle.setAttribute('aria-valuetext', this.formatValue(this.maxValue));
     this.maxHandle.setAttribute('aria-valuemin', String(this.minValue));
     this.maxHandle.setAttribute('aria-valuemax', String(this.max));
     this.maxHandle.setAttribute('aria-valuenow', String(this.maxValue));

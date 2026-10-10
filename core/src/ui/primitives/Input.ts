@@ -7,6 +7,12 @@ export interface InputOptions {
   value?: string;
   type?: 'text' | 'password' | 'search' | 'number';
   disabled?: boolean;
+  /** Salt okunur: odaklanır, seçilir, kopyalanır; değişmez ve kol klavyesi açılmaz. */
+  readOnly?: boolean;
+  /** Görünür etiket yokken erişilebilir ad; çevrilmiş metin. Etiket `PropertyField`/`SettingsRow` ile bağlanır. */
+  ariaLabel?: string;
+  /** Doğrulama hatası: `aria-invalid`. Hata metni `aria-describedby` ile tüketicide bağlanır. */
+  invalid?: boolean;
   /** Kullanıcı yazarken canlı değer. Programatik `setValue` bunu çağırmaz. */
   onInput?: (value: string) => void;
   /** Kullanıcı değeri Enter/change ile tamamladığında çağrılır. */
@@ -30,6 +36,9 @@ export class Input {
       value = '',
       type = 'text',
       disabled = false,
+      readOnly = false,
+      ariaLabel,
+      invalid = false,
       onInput,
       onCommit,
       onEnter,
@@ -40,10 +49,13 @@ export class Input {
     this.element.type = type;
     this.element.value = value;
     this.element.disabled = disabled;
+    this.element.readOnly = readOnly;
     this.committedValue = this.element.value;
     if (placeholder) {
       this.element.placeholder = placeholder;
     }
+    if (ariaLabel) this.element.setAttribute('aria-label', ariaLabel);
+    this.setInvalid(invalid);
 
     const boundInput = (event: Event): void => {
       emitUiIntent({
@@ -57,9 +69,17 @@ export class Input {
     };
     const boundChange = (event: Event): void => this.commitUserValue(event);
     const boundKeydown = (event: KeyboardEvent): void => {
+      // IME bileşimi sürerken Enter adayı onaylar; alanı göndermez (keyCode 229: bileşim sırasındaki eski tarayıcı kodu).
+      if (event.isComposing || event.keyCode === 229) return;
       if (event.key === 'Enter') {
         this.onEnterHandler?.(this.element.value);
         this.commitUserValue(event);
+      } else if (event.key === 'Escape' && this.element.value !== this.committedValue) {
+        // Kaydedilmemiş taslak: ilk Escape taslağı geri alır; katmanı kapatan ikinci Escape'tir.
+        event.preventDefault();
+        event.stopPropagation();
+        this.element.value = this.committedValue;
+        this.onInputHandler?.(this.committedValue);
       }
     };
 
@@ -69,6 +89,7 @@ export class Input {
     // Kol kipinde native odak metin yazdıramaz; kolla klavye istenir.
     // Kip kapalıysa yardımcı hiçbir şey yapmaz ve native davranış sürer.
     this.scope.addListener(this.element, 'focus', () => {
+      if (this.element.readOnly) return;
       this.cancelTextEntry = requestTextEntryForElement(this.element, {
         purpose: this.element.type === 'password' ? 'password' : 'default',
         apply: (value) => {
@@ -107,6 +128,16 @@ export class Input {
   setDisabled(disabled: boolean): void {
     if (disabled) this.cancelTextEntry?.();
     this.element.disabled = disabled;
+  }
+
+  setReadOnly(readOnly: boolean): void {
+    if (readOnly) this.cancelTextEntry?.();
+    this.element.readOnly = readOnly;
+  }
+
+  setInvalid(invalid: boolean): void {
+    if (invalid) this.element.setAttribute('aria-invalid', 'true');
+    else this.element.removeAttribute('aria-invalid');
   }
 
   focus(): void {

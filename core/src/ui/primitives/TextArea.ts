@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { emitUiIntent } from '../feedback/uiIntent';
 import { requestTextEntryForElement } from '../textEntry/textEntry';
 
 export interface TextAreaOptions {
@@ -7,6 +8,12 @@ export interface TextAreaOptions {
   rows?: number;
   maxLength?: number;
   disabled?: boolean;
+  /** Salt okunur: odaklanır, seçilir, kopyalanır; değişmez ve kol klavyesi açılmaz. */
+  readOnly?: boolean;
+  /** Görünür etiket yokken erişilebilir ad; çevrilmiş metin. Etiket `PropertyField`/`SettingsRow` ile bağlanır. */
+  ariaLabel?: string;
+  /** Doğrulama hatası: `aria-invalid`. Hata metni `aria-describedby` ile tüketicide bağlanır. */
+  invalid?: boolean;
   onInput?: (value: string) => void;
   onCommit?: (value: string) => void;
 }
@@ -36,6 +43,9 @@ export class TextArea {
       rows = 4,
       maxLength,
       disabled = false,
+      readOnly = false,
+      ariaLabel,
+      invalid = false,
       onInput,
       onCommit,
     } = options;
@@ -52,6 +62,9 @@ export class TextArea {
     this.textarea.rows = rows;
     this.textarea.value = value;
     this.textarea.disabled = disabled;
+    this.textarea.readOnly = readOnly;
+    if (ariaLabel) this.textarea.setAttribute('aria-label', ariaLabel);
+    this.setInvalid(invalid);
     if (placeholder) this.textarea.placeholder = placeholder;
     if (maxLength) this.textarea.maxLength = maxLength;
     this.element.appendChild(this.textarea);
@@ -64,21 +77,42 @@ export class TextArea {
       this.counterElement = null;
     }
 
-    const boundInput = (): void => {
+    // Klavye/kol klavyesi olayı varsa niyet kaynağını taşır; olaysız (kol klavyesi uygulaması) da kalıcı değişimdir.
+    const boundInput = (event?: Event): void => {
       this.renderCounter();
+      emitUiIntent({
+        kind: 'valuePreview',
+        origin: 'TextArea',
+        target: this.textarea,
+        event,
+        persistent: false,
+      });
       this.onInputHandler?.(this.textarea.value);
     };
-    const boundChange = (): void => {
+    const boundChange = (event?: Event): void => {
       const value = this.textarea.value;
       if (value === this.committedValue) return;
       this.committedValue = value;
+      emitUiIntent({ kind: 'valueCommit', origin: 'TextArea', target: this.textarea, event });
       this.onCommitHandler?.(value);
     };
     this.scope.addListener(this.textarea, 'input', boundInput);
     this.scope.addListener(this.textarea, 'change', boundChange);
+    this.scope.addListener(this.textarea, 'keydown', ((event: KeyboardEvent) => {
+      // Çok satırlı alanda Enter satır sonudur (IME dahil gönderme yok); Escape yalnız taslağı geri alır.
+      if (event.isComposing || event.keyCode === 229) return;
+      if (event.key === 'Escape' && this.textarea.value !== this.committedValue) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.textarea.value = this.committedValue;
+        this.renderCounter();
+        this.onInputHandler?.(this.committedValue);
+      }
+    }) as EventListener);
     // Kol kipinde native odak metin yazdıramaz; kolla klavye istenir
     // (Input ile aynı kanca; `multiline` klavyeye satırsonu tuşu ekler).
     this.scope.addListener(this.textarea, 'focus', () => {
+      if (this.textarea.readOnly) return;
       this.cancelTextEntry = requestTextEntryForElement(this.textarea, {
         multiline: true,
         apply: (value) => {
@@ -134,6 +168,16 @@ export class TextArea {
   setDisabled(disabled: boolean): void {
     if (disabled) this.cancelTextEntry?.();
     this.textarea.disabled = disabled;
+  }
+
+  setReadOnly(readOnly: boolean): void {
+    if (readOnly) this.cancelTextEntry?.();
+    this.textarea.readOnly = readOnly;
+  }
+
+  setInvalid(invalid: boolean): void {
+    if (invalid) this.textarea.setAttribute('aria-invalid', 'true');
+    else this.textarea.removeAttribute('aria-invalid');
   }
 
   focus(): void {

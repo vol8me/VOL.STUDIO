@@ -223,6 +223,8 @@ describe('programatik, devre dışı ve önizleme durumları', () => {
       ['Slider', 'valueCommit', true],
       ['Input', 'valuePreview', false],
       ['Input', 'valueCommit', true],
+      // Düğme adımı: değer perdesi tickini önizleme, ardından kalıcı değişikliği taşır (kaydırıcı klavye adımı gibi).
+      ['NumberStepper', 'valuePreview', false],
       ['NumberStepper', 'valueCommit', true],
     ]);
   });

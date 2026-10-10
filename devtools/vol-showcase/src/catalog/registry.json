@@ -935,6 +935,10 @@
         {
           "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
           "title": "Input canlı input ve tek commit üretir; setter sessiz baseline kurar"
+        },
+        {
+          "file": "core/tests/ui/primitives/editorContract.test.ts",
+          "title": "IME bileşiminde Enter göndermez ve kalıcı değişiklik üretmez; bileşim bitince Enter çalışır"
         }
       ],
       "extraStates": ["error", "empty", "digits6"]
@@ -1356,6 +1360,10 @@
         {
           "file": "core/tests/ui/primitives/inputControls.test.ts",
           "title": "NumberStepper.setValue sessizdir"
+        },
+        {
+          "file": "core/tests/ui/primitives/editorContract.test.ts",
+          "title": "boş ya da sayı olmayan metin değer değildir: son geçerli değere döner, kalıcı değişiklik yok"
         }
       ],
       "extraStates": ["error", "digits6"]
@@ -1588,6 +1596,10 @@
         {
           "file": "core/tests/ui/primitives/inputControls.test.ts",
           "title": "RangeSlider.setValue sessizdir ve step=0 çökmez"
+        },
+        {
+          "file": "core/tests/ui/primitives/editorContract.test.ts",
+          "title": "tutamak adları dilden gelir ve dil değişince yenilenir; etiket yoksa yalın ad"
         }
       ],
       "extraStates": ["digits6"]
@@ -1841,6 +1853,10 @@
         {
           "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
           "title": "Slider input sırasında canlı, change sırasında tek commit üretir"
+        },
+        {
+          "file": "core/tests/ui/primitives/editorContract.test.ts",
+          "title": "readOnly yerel hareketi sessizce geri alır: değer, niyet ve geri çağrım yok"
         }
       ],
       "extraStates": ["digits6"]
@@ -2047,6 +2063,10 @@
         {
           "file": "core/tests/ui/primitives/inputControls.test.ts",
           "title": "TextArea.setValue sessizdir"
+        },
+        {
+          "file": "core/tests/ui/primitives/editorContract.test.ts",
+          "title": "Escape taslağı geri alır; IME bileşiminde geri alma yok; readOnly/invalid yansır"
         }
       ],
       "extraStates": ["error", "empty"]

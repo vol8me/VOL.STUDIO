@@ -127,6 +127,12 @@
     "placeholder": "Select…",
     "listbox": "Options"
   },
+  "rangeSlider": {
+    "min": "Minimum",
+    "max": "Maximum",
+    "minOf": "{{label}} (minimum)",
+    "maxOf": "{{label}} (maximum)"
+  },
   "stepper": {
     "decrement": "Decrease",
     "increment": "Increase"

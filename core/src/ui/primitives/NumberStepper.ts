@@ -1,9 +1,14 @@
 import { Icon } from './Icon';
-import { emitUiIntent } from '../feedback/uiIntent';
+import { emitUiIntent, emitUiSignal } from '../feedback/uiIntent';
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 let stepperInstanceCounter = 0;
+
+function decimalPlaces(value: number): number {
+  const [, fraction = ''] = String(value).split('.');
+  return fraction.length;
+}
 
 export interface NumberStepperOptions {
   min?: number;
@@ -14,6 +19,10 @@ export interface NumberStepperOptions {
   /** Görünür etiket yokken erişilebilir ad; çevrilmiş metin. */
   ariaLabel?: string;
   disabled?: boolean;
+  /** Salt okunur: odaklanır ve okunur; değer ve düğmeler değişmez. */
+  readOnly?: boolean;
+  /** Doğrulama hatası: `aria-invalid`. Hata metni `aria-describedby` ile tüketicide bağlanır. */
+  invalid?: boolean;
   onInput?: (value: number) => void;
   onCommit?: (value: number) => void;
 }
@@ -32,6 +41,8 @@ export class NumberStepper {
   private onCommitHandler?: (value: number) => void;
   private readonly scope = new DisposableScope();
   private previewValue: number | null = null;
+  private disabled = false;
+  private readOnly = false;
   private readonly onLanguageChanged = (): void => {
     this.decrementButton.setAttribute('aria-label', i18next.t('core:stepper.decrement'));
     this.incrementButton.setAttribute('aria-label', i18next.t('core:stepper.increment'));
@@ -46,6 +57,8 @@ export class NumberStepper {
       label,
       ariaLabel,
       disabled = false,
+      readOnly = false,
+      invalid = false,
       onInput,
       onCommit,
     } = options;
@@ -87,6 +100,9 @@ export class NumberStepper {
     this.input.max = String(max);
     this.input.step = String(this.step);
     this.input.value = String(this.value);
+    // Perde bütün aralığa göredir; ses kiti yerel `number` girdisini bu bildirimle kaydırıcı gibi okur.
+    this.input.dataset.volPitchMin = String(min);
+    this.input.dataset.volPitchMax = String(max);
     if (labelId) this.input.setAttribute('aria-labelledby', labelId);
     else if (ariaLabel) this.input.setAttribute('aria-label', ariaLabel);
     control.appendChild(this.input);
@@ -101,13 +117,13 @@ export class NumberStepper {
     this.element.appendChild(control);
 
     const boundDecrement = (event: Event): void =>
-      this.commitUser(this.value - this.step, true, event);
+      this.commitUser(this.value - this.step, true, event, true);
     const boundIncrement = (event: Event): void =>
-      this.commitUser(this.value + this.step, true, event);
+      this.commitUser(this.value + this.step, true, event, true);
     const boundInput = (event: Event): void => {
       const parsed = Number(this.input.value);
       if (Number.isFinite(parsed)) {
-        this.previewValue = this.clamp(parsed);
+        this.previewValue = this.normalize(parsed);
         emitUiIntent({
           kind: 'valuePreview',
           origin: 'NumberStepper',
@@ -119,19 +135,40 @@ export class NumberStepper {
       }
     };
     const boundInputChange = (event: Event): void => {
+      // Boş ya da sayı olmayan metin değer değildir: sessizce 0/en küçüğe düşmez, son geçerli değer kalır.
+      if (this.input.value.trim() === '' || !Number.isFinite(Number(this.input.value))) {
+        this.previewValue = null;
+        this.input.value = String(this.value);
+        return;
+      }
       const parsed = Number(this.input.value);
-      const clamped = this.clamp(parsed);
-      this.commitUser(parsed, this.previewValue !== clamped, event);
+      const normalized = this.normalize(parsed);
+      this.commitUser(parsed, this.previewValue !== normalized, event);
+      // Değişmeyen değerde de alan normalize (ör. 7.4 → 7) görünmeli.
+      this.input.value = String(this.value);
       this.previewValue = null;
+    };
+    const boundKeydown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape' || this.input.value === String(this.value)) return;
+      // Yazılırken alınan önizleme kalıcı değildir: ilk Escape son kalıcı değere döner.
+      event.preventDefault();
+      event.stopPropagation();
+      const hadPreview = this.previewValue !== null;
+      this.previewValue = null;
+      this.input.value = String(this.value);
+      if (hadPreview) this.onInputHandler?.(this.value);
     };
 
     this.scope.addListener(this.decrementButton, 'click', boundDecrement);
     this.scope.addListener(this.incrementButton, 'click', boundIncrement);
     this.scope.addListener(this.input, 'input', boundInput);
     this.scope.addListener(this.input, 'change', boundInputChange);
+    this.scope.addListener(this.input, 'keydown', boundKeydown as EventListener);
 
-    this.setDisabled(disabled);
-    this.updateButtonState();
+    this.disabled = disabled;
+    this.readOnly = readOnly;
+    this.applyInteractivity();
+    this.setInvalid(invalid);
 
     this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
     i18next.on('languageChanged', this.onLanguageChanged);
@@ -150,10 +187,18 @@ export class NumberStepper {
   }
 
   setDisabled(disabled: boolean): void {
-    this.decrementButton.disabled = disabled;
-    this.incrementButton.disabled = disabled;
-    this.input.disabled = disabled;
-    if (!disabled) this.updateButtonState();
+    this.disabled = disabled;
+    this.applyInteractivity();
+  }
+
+  setReadOnly(readOnly: boolean): void {
+    this.readOnly = readOnly;
+    this.applyInteractivity();
+  }
+
+  setInvalid(invalid: boolean): void {
+    if (invalid) this.input.setAttribute('aria-invalid', 'true');
+    else this.input.removeAttribute('aria-invalid');
   }
 
   destroy(): void {
@@ -162,7 +207,7 @@ export class NumberStepper {
   }
 
   private applyValue(value: number): boolean {
-    const clamped = this.clamp(value);
+    const clamped = this.normalize(value);
     const changed = clamped !== this.value;
     this.value = clamped;
     this.input.value = String(clamped);
@@ -170,10 +215,31 @@ export class NumberStepper {
     return changed;
   }
 
-  private commitUser(value: number, emitInput = true, event?: Event): void {
+  /**
+   * `step`: düğme adımı. Düğme tek eylemde hem değer perdesi tickini (kaydırıcı klavye adımı gibi) hem kalıcı
+   * değişikliği taşır; yazılan değerde önizleme `input` olayında zaten çalmıştır.
+   */
+  private commitUser(value: number, emitInput = true, event?: Event, step = false): void {
     const changed = this.applyValue(value);
     if (!changed) return;
-    emitUiIntent({ kind: 'valueCommit', origin: 'NumberStepper', target: this.input, event });
+    if (step) {
+      const preview = emitUiIntent({
+        kind: 'valuePreview',
+        origin: 'NumberStepper',
+        target: this.input,
+        event,
+        persistent: false,
+      });
+      // Aynı yerel olayı önizleme sahiplendi; kalıcı değişiklik ayrı niyettir.
+      emitUiSignal({
+        kind: 'valueCommit',
+        origin: 'NumberStepper',
+        target: this.input,
+        ...(preview && { source: preview.source }),
+      });
+    } else {
+      emitUiIntent({ kind: 'valueCommit', origin: 'NumberStepper', target: this.input, event });
+    }
     if (emitInput) this.onInputHandler?.(this.value);
     this.onCommitHandler?.(this.value);
   }
@@ -183,9 +249,23 @@ export class NumberStepper {
     return Math.min(this.max, Math.max(this.min, value));
   }
 
+  /** Aralığa sığdırır ve `min + n*step` ızgarasına oturtur (yerel `number` girdisinin kuralı); kayan nokta artığı atılır. */
+  private normalize(value: number): number {
+    const clamped = this.clamp(value);
+    const snapped = this.min + Math.round((clamped - this.min) / this.step) * this.step;
+    const decimals = Math.max(decimalPlaces(this.step), decimalPlaces(this.min));
+    return this.clamp(Number(snapped.toFixed(decimals)));
+  }
+
+  private applyInteractivity(): void {
+    this.input.disabled = this.disabled;
+    this.input.readOnly = this.readOnly;
+    this.updateButtonState();
+  }
+
   private updateButtonState(): void {
-    if (this.input.disabled) return;
-    this.decrementButton.disabled = this.value <= this.min;
-    this.incrementButton.disabled = this.value >= this.max;
+    const locked = this.disabled || this.readOnly;
+    this.decrementButton.disabled = locked || this.value <= this.min;
+    this.incrementButton.disabled = locked || this.value >= this.max;
   }
 }

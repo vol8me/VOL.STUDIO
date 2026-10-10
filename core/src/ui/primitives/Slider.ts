@@ -20,6 +20,10 @@ export interface SliderOptions {
   /** Değerin yanında gösterilecek metni biçimlendirir. Varsayılan: ham sayı. */
   formatValue?: (value: number) => string;
   disabled?: boolean;
+  /** Salt okunur: odaklanır ve okunur; kullanıcı değeri değiştiremez. */
+  readOnly?: boolean;
+  /** Doğrulama hatası: `aria-invalid`. Hata metni `aria-describedby` ile tüketicide bağlanır. */
+  invalid?: boolean;
   onInput?: (value: number) => void;
   onCommit?: (value: number) => void;
 }
@@ -46,6 +50,7 @@ export class Slider {
   private readonly scope = new DisposableScope();
   private committedValue: number;
   private gestureStartValue: number | null = null;
+  private readOnly = false;
 
   constructor(options: SliderOptions = {}) {
     const {
@@ -59,6 +64,8 @@ export class Slider {
       length = UI_SIZE.SLIDER_DEFAULT_LENGTH_PX,
       formatValue = (v) => String(v),
       disabled = false,
+      readOnly = false,
+      invalid = false,
       onInput,
       onCommit,
     } = options;
@@ -120,8 +127,11 @@ export class Slider {
     this.input.step = String(step > 0 ? step : 1);
     this.input.value = String(value);
     if (orientation === 'vertical') {
+      // `orient` yalnız eski Gecko içindir; erişilebilirlik ağacı yönü `aria-orientation`dan okur.
       this.input.setAttribute('orient', 'vertical');
+      this.input.setAttribute('aria-orientation', 'vertical');
     }
+    this.setInvalid(invalid);
     // Erişilebilir ad: görünür etiket varsa ona bağlanır (dil değişimiyle birlikte güncellenir), yoksa verilen ad.
     if (this.labelText) this.input.setAttribute('aria-labelledby', this.labelText.id);
     else if (ariaLabel) this.input.setAttribute('aria-label', ariaLabel);
@@ -138,6 +148,12 @@ export class Slider {
       dragSource = null;
     };
     const boundInput = (event: Event): void => {
+      if (this.readOnly) {
+        // Salt okunur kaydırıcı yerel olarak hareket eder; değer, niyet ve geri çağrım olmadan eski yerine döner.
+        this.input.value = String(this.committedValue);
+        this.render(this.getValue());
+        return;
+      }
       const value = Number(this.input.value);
       this.gestureStartValue ??= this.committedValue;
       this.render(value);
@@ -177,6 +193,7 @@ export class Slider {
     this.render(value);
     this.committedValue = this.getValue();
     this.setDisabled(disabled);
+    this.setReadOnly(readOnly);
   }
 
   getValue(): number {
@@ -207,7 +224,21 @@ export class Slider {
   }
 
   setDisabled(disabled: boolean): void {
+    // Sürükleme sürerken devre dışı kalan kaydırıcı önizlemede takılı kalmaz (kalıcı değişiklik yok).
+    if (disabled) this.cancelGesture();
     this.input.disabled = disabled;
+  }
+
+  setReadOnly(readOnly: boolean): void {
+    if (readOnly) this.cancelGesture();
+    this.readOnly = readOnly;
+    if (readOnly) this.input.setAttribute('aria-readonly', 'true');
+    else this.input.removeAttribute('aria-readonly');
+  }
+
+  setInvalid(invalid: boolean): void {
+    if (invalid) this.input.setAttribute('aria-invalid', 'true');
+    else this.input.removeAttribute('aria-invalid');
   }
 
   /** Label metnini günceller — dil değişiminde kullanılır. */

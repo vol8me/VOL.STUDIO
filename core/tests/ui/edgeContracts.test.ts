@@ -338,7 +338,7 @@ describe('RangeSlider giriş sınırları', () => {
     maxHandle.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
     expect(slider.getValue()).toEqual({ min: 0, max: 10 });
     const ignored = new KeyboardEvent('keydown', {
-      key: 'PageDown',
+      key: 'a',
       bubbles: true,
       cancelable: true,
     });
