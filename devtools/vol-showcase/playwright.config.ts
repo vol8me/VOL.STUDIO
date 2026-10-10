@@ -1,7 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
+import { availableParallelism } from 'node:os';
 
 const PORT = Number(process.env.VOL_UI_E2E_PORT ?? 5181);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
+
+/** Motor başına işçi; iki motor birlikte koşar. 8 çekirdekte 2 işçi kararlı, 3 işçi zaman aşımı üretti. */
+const WORKERS = Math.min(2, Math.max(1, Math.floor(availableParallelism() / 4)));
 
 /**
  * `scripts/e2e.mjs` her motoru kendi sunucusunda eşzamanlı koşar; sunucular
@@ -27,7 +31,7 @@ export const ENGINE_PORTS = {
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
-  workers: 1,
+  workers: WORKERS,
   forbidOnly: true,
   reporter: [['list']],
   timeout: 60_000,
@@ -35,7 +39,7 @@ export default defineConfig({
     timeout: 15_000,
     toHaveScreenshot: {
       /*
-       * SIFIR TOLERANS, ölçümle: `determinism.spec.ts` on iki sekmenin ayrı
+       * SIFIR TOLERANS, ölçümle: `determinism.spec.ts` her sekmenin ayrı
        * yüklemelerde birebir aynı çizildiğini gösteriyor, gürültü sıfırsa
        * tolerans da sıfır olabilir. Savunmacı bir `maxDiffPixelRatio: 0.002`
        * ile aynı renk kayması 12 sekmenin yalnız BİRİNDE yakalanıyordu.

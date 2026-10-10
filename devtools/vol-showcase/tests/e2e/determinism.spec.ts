@@ -47,32 +47,32 @@ test.describe('dondurma katmanı', () => {
     expect(afterReload).toEqual(readings.randoms);
   });
 
-  test('AYRI yüklemelerde her sekmenin görüntüsü birebir aynıdır', async ({ page }) => {
-    /*
-     * Bu testin ölçtüğü şey `maxDiffPixelRatio` eşiğinin gerekçesidir. Sekmeler
-     * birebir aynı çıkıyorsa tolerans yalnızca makine farkları içindir; bir
-     * sekme burada kaymaya başlarsa piksel temeli o sekme için güvenilmezdir ve
-     * eşiği gevşetmek yerine kaynağı dondurulmalıdır.
-     */
-    const digest = async (): Promise<Map<string, string>> => {
-      const hashes = new Map<string, string>();
-      await openShowcase(page);
-      for (const tab of SHOWCASE_TABS) {
+  /*
+   * Bu testlerin ölçtüğü şey piksel temelinin sıfır toleransının gerekçesidir.
+   * Sekme iki yüklemede birebir aynı çıkıyorsa tolerans gerekmez; bir sekme
+   * burada kaymaya başlarsa piksel temeli o sekme için güvenilmezdir ve eşiği
+   * gevşetmek yerine kaynağı dondurulmalıdır.
+   *
+   * Sekme başına ayrı test: tek testte tüm sekmeleri iki kez gezmek, yük altında
+   * test zaman aşımının büyük kısmını yer ve düşen sekmenin adını gizler.
+   */
+  for (const tab of SHOWCASE_TABS) {
+    test(`AYRI yüklemelerde "${tab}" sekmesinin görüntüsü birebir aynıdır`, async ({ page }) => {
+      const digest = async (): Promise<string> => {
+        await openShowcase(page);
         await selectTab(page, tab);
         const shot = await page.locator(`[role="tabpanel"][id$="-panel-${tab}"]`).screenshot();
-        hashes.set(tab, createHash('sha256').update(shot).digest('hex'));
-      }
-      return hashes;
-    };
+        return createHash('sha256').update(shot).digest('hex');
+      };
 
-    const first = await digest();
-    const second = await digest();
+      const first = await digest();
+      const second = await digest();
 
-    const drifted = SHOWCASE_TABS.filter((tab) => first.get(tab) !== second.get(tab));
-    expect(
-      drifted,
-      `Bu sekmeler iki AYRI yüklemede farklı çizildi. Bir dondurulmamış ` +
-        `rastgelelik/zaman kaynağı var; eşiği gevşetmek yerine kaynağı bul.`,
-    ).toEqual([]);
-  });
+      expect(
+        second,
+        `"${tab}" iki AYRI yüklemede farklı çizildi. Bir dondurulmamış ` +
+          `rastgelelik/zaman kaynağı var; eşiği gevşetmek yerine kaynağı bul.`,
+      ).toBe(first);
+    });
+  }
 });
