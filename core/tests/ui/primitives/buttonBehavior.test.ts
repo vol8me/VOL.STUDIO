@@ -41,6 +41,20 @@ describe('runButtonClick — paylaşılan tıklama sözleşmesi', () => {
     expect(handler).toHaveBeenCalledTimes(2);
   });
 
+  it('meşgul durum handler\'dan ÖNCE açılır: iş başlarken "çalışıyor" zaten söylenmiştir (UI-10.4, <100 ms)', () => {
+    const target = host();
+    const order: string[] = [];
+    const base = target.setLoading;
+    target.setLoading = (value) => {
+      order.push(`loading:${value}`);
+      base(value);
+    };
+    void runButtonClick(target, () => {
+      order.push(`handler(busy=${target.isLoading()})`);
+    });
+    expect(order).toEqual(['loading:true', 'handler(busy=true)', 'loading:false']);
+  });
+
   it('asenkron handler beklenir; süresince loading açıktır ve yeniden giriş reddedilir', async () => {
     const target = host();
     let finish: () => void = () => undefined;

@@ -333,6 +333,11 @@ body {
   min-width: 120px;
 }
 
+/* Yakınlaştırma düğmeleri kısa komuttur: etiket iki satıra bölünmez, sığmazsa düğme alt satıra iner. */
+.vol-showcase-panel-demo__controls .vol-showcase-zoom-button {
+  white-space: nowrap;
+}
+
 .vol-showcase-panel-stage {
   position: relative;
   height: 190px;

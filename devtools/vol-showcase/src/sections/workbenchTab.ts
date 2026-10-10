@@ -143,6 +143,8 @@ function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
     documentHeight: 256,
     minZoom: 0.25,
     maxZoom: 8,
+    // Tekerlek ve Space+sürükleme tek yol değildir (UI-10.4): görünüm odaktayken `+`/`-`/oklar/`0`/`Home` de çalışır.
+    keyboard: true,
     onChange: (transform) => {
       artwork.style.transform = `translate(${transform.offsetX}px, ${transform.offsetY}px) scale(${transform.zoom})`;
       zoomState.setContent(i18next.t('volui:workbench.zoomState', { zoom: transform.zoom }));
@@ -157,6 +159,14 @@ function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
     size: 'sm',
     onClick: () => controller.actualSize(),
   });
+  const zoomOut = new Button(i18next.t('volui:workbench.zoomOut'), {
+    size: 'sm',
+    onClick: () => controller.zoomBy(1 / 1.25),
+  });
+  const zoomIn = new Button(i18next.t('volui:workbench.zoomIn'), {
+    size: 'sm',
+    onClick: () => controller.zoomBy(1.25),
+  });
   const viewportWrap = document.createElement('div');
   viewportWrap.className = 'vol-showcase-workbench-viewport-wrap';
   const viewportBar = document.createElement('div');
@@ -165,7 +175,14 @@ function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
     variant: 'muted',
     tag: 'span',
   });
-  viewportBar.append(hint.element, zoomState.element, fit.element, actual.element);
+  viewportBar.append(
+    hint.element,
+    zoomState.element,
+    zoomOut.element,
+    zoomIn.element,
+    fit.element,
+    actual.element,
+  );
   viewportWrap.append(viewportBar, viewport);
 
   const split = new SplitPane({
@@ -177,7 +194,17 @@ function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
     separatorLabel: i18next.t('volui:workbench.splitPane'),
   });
   split.element.classList.add('vol-showcase-workbench-split');
-  disposables.addDestroyables(list, controller, zoomState, hint, fit, actual, split);
+  disposables.addDestroyables(
+    list,
+    controller,
+    zoomState,
+    hint,
+    zoomOut,
+    zoomIn,
+    fit,
+    actual,
+    split,
+  );
   return split.element;
 }
 

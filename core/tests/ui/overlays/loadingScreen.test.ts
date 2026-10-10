@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import {
   LoadingScreen,
@@ -382,6 +384,21 @@ describe('LoadingScreen — arkaplan tipleri', () => {
     expect(video?.muted).toBe(true);
     expect(video?.loop).toBe(true);
     expect(video?.playsInline).toBe(true);
+  });
+});
+
+describe('LoadingScreen — ses', () => {
+  it('yükleme boyunca sürekli ses varsayılan değildir: <audio> yok, video arka plan sessiz, kaynakta ses yolu yok (UI-10.4)', () => {
+    const loading = createLoading({ background: { type: 'video', src: 'test.mp4' } });
+    expect(loading.element.querySelector('audio')).toBeNull();
+    expect(loading.element.querySelector('video')?.muted).toBe(true);
+    const source = readFileSync(
+      resolve(__dirname, '../../../src/ui/overlays/LoadingScreen.ts'),
+      'utf8',
+    );
+    expect(source).not.toMatch(
+      /AudioContext|new Audio\(|createElement\('audio'\)|SoundKit|uiSound/,
+    );
   });
 });
 

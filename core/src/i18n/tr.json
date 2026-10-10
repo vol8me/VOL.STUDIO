@@ -123,6 +123,10 @@
     "percent": "Yüzde {{percent}}",
     "ready": "Tamamen doldu"
   },
+  "pinchZoom": {
+    "label": "Yakınlaştırılabilir alan",
+    "level": "Yakınlaştırma %{{percent}}"
+  },
   "joystick": {
     "label": "Sanal çubuk"
   },

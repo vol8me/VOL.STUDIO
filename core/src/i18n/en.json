@@ -123,6 +123,10 @@
     "percent": "{{percent}} percent",
     "ready": "Fully charged"
   },
+  "pinchZoom": {
+    "label": "Zoomable area",
+    "level": "Zoom {{percent}}%"
+  },
   "joystick": {
     "label": "Virtual stick"
   },

@@ -1,5 +1,7 @@
 import type { Rect } from '../../math/geometry';
+import { UI_SIZE } from '../../constants';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { VIEWPORT_SHORTCUTS, isViewportKeyTarget, viewportKeyAction } from './viewportKeys';
 
 export interface WorldCamera {
   width: number;
@@ -44,6 +46,14 @@ export interface WorldCameraControllerOptions {
   readonly mousePanMomentumMs?: number;
   readonly initialZoomFactor?: number;
   readonly onChange?: (state: WorldCameraState) => void;
+  /**
+   * Klavye eşdeğeri (varsayılan KAPALI: oyunun kendi tuşları vardır). Açılınca eleman odaklanır (`tabindex` yoksa 0) ve YALNIZ
+   * kendisi odaktayken `+`/`-` yakınlaştırır, `0`/`Home` dünyayı sığdırır, oklar görünümü taşır. Parmak sıkıştırma ve tekerleğin
+   * tek yol olmaması içindir; kapalıyken eşdeğeri sahibi `zoomBy`/`panByScreen`/`fitWorld` ile verir.
+   */
+  readonly keyboard?: boolean;
+  /** `keyboard` açıkken elemanın erişilebilir adı (verilirse `role="group"` yoksa eklenir). */
+  readonly label?: string;
 }
 
 interface TrackedPointer {
@@ -66,6 +76,8 @@ interface WheelMotion {
 }
 
 const WHEEL_LINE_PX = 16;
+/** Klavyede `+`/`-` basışı başına zoom çarpanı. */
+const KEY_ZOOM_FACTOR = 1.25;
 const MAX_WHEEL_DELTA_PX = 240;
 const DEFAULT_POINTER_FRAME_MS = 16;
 const POINTER_VELOCITY_WINDOW_MS = 80;
@@ -155,6 +167,7 @@ export class WorldCameraController {
     this.scope.addListener(element, 'pointerup', this.onPointerEnd);
     this.scope.addListener(element, 'pointercancel', this.onPointerEnd);
     this.scope.addListener(element, 'wheel', this.onWheel, { passive: false });
+    if (options.keyboard) this.enableKeyboard(options.label);
     this.camera.data?.set('preserveCameraState', true);
     this.fitWorld();
   }
@@ -170,6 +183,31 @@ export class WorldCameraController {
     this.targetCenterY = this.bounds.y + this.bounds.height / 2;
     this.stopMomentum();
     this.applyState(this.targetCenterX, this.targetCenterY, this.targetZoom);
+  }
+
+  /**
+   * Görünümü ekranda `dx`/`dy` piksel kaydırır (sürüklemeyle aynı yön: pozitif `dx` dünyayı sağa taşır). Parmakla sürüklemenin
+   * programatik eşdeğeridir; sürüklemeden kalan ivmeyi keser ve sınırda aynı direnci uygular.
+   */
+  panByScreen(dx: number, dy: number): void {
+    if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
+    this.stopMomentum();
+    this.panBy(dx, dy);
+  }
+
+  /**
+   * Görünümün ORTASINI sabit tutarak hedef zoom'u `factor` ile çarpar (sıkıştırma/tekerleğin programatik eşdeğeri). Geçiş
+   * `update` karelerinde yumuşatılır; sınırlar (`minZoom`..azami) aşılmaz.
+   */
+  zoomBy(factor: number): void {
+    if (!(factor > 0) || !Number.isFinite(factor)) return;
+    this.stopMomentum();
+    const metrics = this.metrics();
+    this.setZoomTargetAt(
+      metrics.left + metrics.width / 2,
+      metrics.top + metrics.height / 2,
+      this.targetZoom * factor,
+    );
   }
 
   refreshViewport(): void {
@@ -234,6 +272,39 @@ export class WorldCameraController {
     this.wheelMotion = null;
     this.stopMomentum();
   }
+
+  private enableKeyboard(label: string | undefined): void {
+    if (!this.element.hasAttribute('tabindex')) this.element.tabIndex = 0;
+    this.element.setAttribute('aria-keyshortcuts', VIEWPORT_SHORTCUTS);
+    if (label) {
+      this.element.setAttribute('aria-label', label);
+      if (!this.element.hasAttribute('role')) this.element.setAttribute('role', 'group');
+    }
+    this.scope.addListener(this.element, 'keydown', this.onKeydown);
+  }
+
+  private readonly onKeydown = (event: KeyboardEvent): void => {
+    if (!isViewportKeyTarget(event, this.element)) return;
+    const action = viewportKeyAction(event);
+    if (!action) return;
+    event.preventDefault();
+    switch (action.kind) {
+      case 'zoom':
+        this.zoomBy(action.direction > 0 ? KEY_ZOOM_FACTOR : 1 / KEY_ZOOM_FACTOR);
+        return;
+      case 'reset':
+      case 'fit':
+        this.fitWorld();
+        return;
+      case 'pan':
+        // Ok tuşu GÖRÜNÜMÜ taşır (kaydırma kuralı); dünya ters yöne gider.
+        this.panByScreen(
+          -action.x * UI_SIZE.VIEWPORT_KEY_PAN_PX,
+          -action.y * UI_SIZE.VIEWPORT_KEY_PAN_PX,
+        );
+        return;
+    }
+  };
 
   private readonly onPointerDown = (event: PointerEvent): void => {
     const position = pointerPosition(event);

@@ -10,9 +10,6 @@ import {
   LongPressButton,
   MultiTouchZone,
   PauseResumeButton,
-  PinchZoomController,
-  WorldCameraController,
-  type WorldCamera,
   PullToRefresh,
   SlotGrid,
   type SlotItem,
@@ -28,6 +25,7 @@ import {
 import { i18n, i18next } from '@volstudio/core/i18n';
 import { findBindingConflicts } from '@volstudio/core/input/bindings';
 import { getAppSoundKit } from '../appSound';
+import { buildPinchZoomDemo, buildWorldCameraDemo } from './touchCameraDemo';
 import { buildGamepadDemo } from './touchGamepadDemo';
 import { buildRadialMenuDemo } from './touchRadialDemo';
 import { card, cardGrid, svgIcon } from './shared';
@@ -321,115 +319,6 @@ function buildChargeButtonDemo(disposables: DisposableScope): HTMLElement {
   wrap.appendChild(chargeButton.element);
   wrap.appendChild(statusRow);
 
-  return wrap;
-}
-
-/** PinchZoomController demosu: küçük taktik harita. Masaüstünde tekerlek=zoom/sürükle=pan; dokunmatikte iki parmak=zoom/tek parmak=pan. */
-function buildPinchZoomDemo(disposables: DisposableScope): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'vol-showcase-panel-demo';
-
-  const zoomLabel = new Text(i18next.t('volui:touch.zoomPercent', { n: 1 }), {
-    variant: 'muted',
-  });
-  disposables.addDestroyables(zoomLabel);
-
-  const map = document.createElement('div');
-  map.className = 'vol-showcase-pinch-map';
-  for (let i = 1; i <= 36; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'vol-showcase-pinch-map__cell';
-    cell.textContent = String(i);
-    map.appendChild(cell);
-  }
-
-  const controller = new PinchZoomController({
-    content: map,
-    minZoom: 0.6,
-    maxZoom: 2.5,
-    onTransformChange: (zoom) => {
-      zoomLabel.setContent(i18next.t('volui:touch.zoomPercent', { n: zoom }));
-    },
-  });
-  disposables.addDestroyables(controller);
-  controller.element.style.height = '260px';
-
-  // HoldButton yerine Button: HoldButton etiketi aria-only, "Sıfırla" tek seferlik komut.
-  const resetButton = new Button(i18next.t('volui:touch.reset'), {
-    onClick: () => controller.reset(),
-  });
-  disposables.addDestroyables(resetButton);
-
-  const controls = document.createElement('div');
-  controls.className = 'vol-showcase-panel-demo__controls';
-  controls.appendChild(resetButton.element);
-  controls.appendChild(zoomLabel.element);
-
-  wrap.appendChild(controller.element);
-  wrap.appendChild(controls);
-
-  return wrap;
-}
-
-function buildWorldCameraDemo(disposables: DisposableScope): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'vol-showcase-panel-demo';
-  const canvas = document.createElement('canvas');
-  canvas.className = 'vol-showcase-world-camera';
-  canvas.width = 640;
-  canvas.height = 360;
-  canvas.setAttribute('aria-label', i18next.t('volui:touch.worldCameraLabel'));
-  // CPU tuvali: gamescope'ta hızlandırılmış 2D tuval boş kalıyordu (bkz. CurveEditor).
-  const context = canvas.getContext('2d', { willReadFrequently: true });
-  if (!context) return canvas;
-
-  const camera: WorldCamera = {
-    width: canvas.width,
-    height: canvas.height,
-    zoom: 1,
-    scrollX: 0,
-    scrollY: 0,
-    setZoom(zoom) {
-      camera.zoom = zoom;
-      draw();
-      return camera;
-    },
-    centerOn(x, y) {
-      camera.scrollX = x - camera.width / (2 * camera.zoom);
-      camera.scrollY = y - camera.height / (2 * camera.zoom);
-      draw();
-      return camera;
-    },
-  };
-  const draw = (): void => {
-    context.setTransform(1, 0, 0, 1, 0, 0);
-    context.fillStyle = '#090e18';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.setTransform(
-      camera.zoom,
-      0,
-      0,
-      camera.zoom,
-      -camera.scrollX * camera.zoom,
-      -camera.scrollY * camera.zoom,
-    );
-    context.fillStyle = '#111827';
-    context.fillRect(0, 0, 400, 400);
-    context.fillStyle = '#d6c783';
-    context.fillRect(80, 110, 70, 70);
-    context.fillStyle = '#315c59';
-    context.fillRect(245, 255, 95, 60);
-    context.strokeStyle = '#365266';
-    context.strokeRect(0, 0, 400, 400);
-  };
-
-  const controller = new WorldCameraController(canvas, camera, {
-    bounds: { x: 0, y: 0, width: 400, height: 400 },
-  });
-  disposables.addDestroyables(controller);
-  const hint = new Text(i18next.t('volui:touch.worldCameraHint'), { variant: 'muted' });
-  disposables.addDestroyables(hint);
-  wrap.append(canvas, hint.element);
   return wrap;
 }
 

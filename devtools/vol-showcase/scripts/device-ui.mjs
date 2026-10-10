@@ -4,9 +4,11 @@
  * KAPI DEĞİL, cihaz kabul kaydıdır: çıktı `records/ui-device/<etiket>-<yön>/` altındadır (git dışı).
  *
  *   node devtools/vol-showcase/scripts/device-ui.mjs [--serial <s>] [--orientation portrait|landscape|both]
- *                                                  [--tag <ad>] [--no-build] [--font-scale <n>] [--spec <ad>]
+ *                                                  [--tag <ad>] [--no-build] [--font-scale <n>] [--spec <ad>] [--game]
  *
  * `--spec` yalnız dosya adı bu ifadeyi içeren belirtimi koşar (örn. `--spec textEntry`); verilmezse `tests/device` hepsi.
+ * `--game` ayrıca VOL.TEST'i derler ve `VOL_DEVICE_GAME_URL` ile sunar (oyunun dokunmatik kontrolleri: `volTest.spec.ts`);
+ * verilmezse o belirtim kendini atlar.
  *
  * Yerel `vite preview` sunucusunu açar, `adb reverse` ile cihazın `localhost`una bağlar, Chrome'un
  * DevTools soketini `adb forward` eder, `tests/device` belirtimini koşar ve her şeyi geri alır
@@ -27,6 +29,7 @@ const flag = (name) => args.includes(`--${name}`);
 
 const ADB = process.env.ADB ?? 'adb';
 const PORT = Number(process.env.VOL_DEVICE_PORT ?? 4175);
+const GAME_PORT = PORT + 1;
 const CDP_PORT = 9222;
 const orientation = option('orientation', 'both');
 const tag = option('tag', new Date().toISOString().slice(0, 10));
@@ -34,6 +37,7 @@ let serial = option('serial', '');
 // Sistem yazı ölçeği (Ayarlar > Ekran > Yazı boyutu): 1 varsayılan, 2 en büyük erişilebilirlik ölçeği (UI-07.3).
 const fontScale = option('font-scale', '');
 const spec = option('spec', '');
+const withGame = flag('game');
 
 const adb = (parts, opts = {}) =>
   execFileSync(ADB, serial ? ['-s', serial, ...parts] : parts, {
@@ -81,6 +85,7 @@ async function run(rotation) {
       env: {
         ...process.env,
         VOL_DEVICE_URL: `http://localhost:${PORT}/`,
+        ...(withGame ? { VOL_DEVICE_GAME_URL: `http://localhost:${GAME_PORT}/` } : {}),
         VOL_DEVICE_CDP: `http://127.0.0.1:${CDP_PORT}`,
         VOL_DEVICE_OUT: out,
         VOL_DEVICE_SERIAL: serial,
@@ -98,7 +103,9 @@ async function closeProbeTabs() {
     for (const tab of tabs) {
       if (
         tab.type === 'page' &&
-        (tab.url === 'about:blank' || tab.url.includes(`localhost:${PORT}`))
+        (tab.url === 'about:blank' ||
+          tab.url.includes(`localhost:${PORT}`) ||
+          tab.url.includes(`localhost:${GAME_PORT}`))
       ) {
         await fetch(`http://127.0.0.1:${CDP_PORT}/json/close/${tab.id}`);
       }
@@ -115,6 +122,7 @@ const original = {
   fontScale: setting('font_scale'),
 };
 let server;
+let gameServer;
 let failed = 0;
 try {
   if (!flag('no-build')) {
@@ -124,9 +132,20 @@ try {
       shell: process.platform === 'win32',
     });
   }
+  if (withGame && !flag('no-build')) {
+    execFileSync('pnpm', ['--filter', '@volstudio/vol-test', 'build'], {
+      cwd: repo,
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    });
+  }
   if (fontScale) adb(['shell', 'settings', 'put', 'system', 'font_scale', fontScale]);
   server = await startPreview({ cwd: root, port: PORT });
   adb(['reverse', `tcp:${PORT}`, `tcp:${PORT}`]);
+  if (withGame) {
+    gameServer = await startPreview({ cwd: resolve(repo, 'games/vol-test'), port: GAME_PORT });
+    adb(['reverse', `tcp:${GAME_PORT}`, `tcp:${GAME_PORT}`]);
+  }
   adb([
     'shell',
     'am',
@@ -157,10 +176,12 @@ try {
     }
     await closeProbeTabs();
     adb(['reverse', '--remove', `tcp:${PORT}`]);
+    if (withGame) adb(['reverse', '--remove', `tcp:${GAME_PORT}`]);
     adb(['forward', '--remove', `tcp:${CDP_PORT}`]);
   } catch {
     /* geri alma en iyi çabadır */
   }
+  await gameServer?.stop();
   await server?.stop();
 }
 process.exit(failed === 0 ? 0 : 1);

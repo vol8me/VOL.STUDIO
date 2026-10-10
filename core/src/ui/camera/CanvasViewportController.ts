@@ -1,3 +1,9 @@
+import { UI_SIZE } from '../../constants';
+import { VIEWPORT_SHORTCUTS, isViewportKeyTarget, viewportKeyAction } from './viewportKeys';
+
+/** Klavyede `+`/`-` basışı başına zoom çarpanı (tekerlek sürekli üstel; klavye ayrık karardır). */
+const KEY_ZOOM_FACTOR = 1.25;
+
 export interface ViewportPoint {
   x: number;
   y: number;
@@ -23,6 +29,14 @@ export interface CanvasViewportControllerOptions {
   wheelSensitivity?: number;
   onChange?: (transform: CanvasViewportTransform, reason: CanvasViewportChangeReason) => void;
   onCommit?: (transform: CanvasViewportTransform, reason: 'pan' | 'zoom') => void;
+  /**
+   * Klavye eşdeğeri (varsayılan KAPALI: editör kısayolları sahibine aittir). Açılınca yüzey odaklanır (`tabindex` yoksa 0)
+   * ve YALNIZ kendisi odaktayken `+`/`-` yakınlaştırır, `0` gerçek boyuta döner, `Home` sığdırır, oklar görünümü taşır.
+   * Tekerlek/sürükleme gibi bu da kullanıcı eylemidir: `onChange` + `onCommit` (`zoom`/`pan`) üretir.
+   */
+  keyboard?: boolean;
+  /** `keyboard` açıkken yüzeyin erişilebilir adı (verilirse `role="group"` yoksa eklenir); host kendi adını verebilir. */
+  label?: string;
 }
 
 /**
@@ -60,6 +74,7 @@ export class CanvasViewportController {
   private readonly boundKeydown: (event: KeyboardEvent) => void;
   private readonly boundKeyup: (event: KeyboardEvent) => void;
   private readonly boundBlur: () => void;
+  private readonly boundViewportKeydown: ((event: KeyboardEvent) => void) | null = null;
 
   constructor(element: HTMLElement, options: CanvasViewportControllerOptions) {
     this.element = element;
@@ -78,6 +93,16 @@ export class CanvasViewportController {
     };
 
     this.element.classList.add('vol-canvas-viewport');
+    if (options.keyboard) {
+      if (!this.element.hasAttribute('tabindex')) this.element.tabIndex = 0;
+      this.element.setAttribute('aria-keyshortcuts', VIEWPORT_SHORTCUTS);
+      if (options.label) {
+        this.element.setAttribute('aria-label', options.label);
+        if (!this.element.hasAttribute('role')) this.element.setAttribute('role', 'group');
+      }
+      this.boundViewportKeydown = (event) => this.handleViewportKey(event);
+      this.element.addEventListener('keydown', this.boundViewportKeydown);
+    }
     this.boundPointerDown = (event) => this.startPan(event);
     this.boundPointerMove = (event) => this.movePan(event);
     this.boundPointerEnd = (event) => this.endPan(event, event.type === 'pointercancel');
@@ -169,6 +194,22 @@ export class CanvasViewportController {
     this.emitChange('programmatic');
   }
 
+  /**
+   * Görünümü `dx`/`dy` ekran pikseli kaydırır (sürüklemeyle aynı yön: pozitif dx belgeyi sağa taşır). Programatik eşdeğerdir:
+   * `onChange('programmatic')` üretir, kullanıcı commit'i sayılmaz.
+   */
+  panBy(dx: number, dy: number): void {
+    this.transform.offsetX += this.finite(dx, 0);
+    this.transform.offsetY += this.finite(dy, 0);
+    this.emitChange('programmatic');
+  }
+
+  /** Görünümün ORTASINI sabit tutarak zoom'u `factor` ile çarpar (parmakla/tekerlekle büyütmenin programatik eşdeğeri). */
+  zoomBy(factor: number): void {
+    this.applyZoom(this.viewportCenter(), this.transform.zoom * this.validZoom(factor, 1));
+    this.emitChange('programmatic');
+  }
+
   isPanning(): boolean {
     return this.pan !== null;
   }
@@ -184,6 +225,9 @@ export class CanvasViewportController {
     this.element.removeEventListener('pointerenter', this.boundPointerEnter);
     this.element.removeEventListener('pointerleave', this.boundPointerLeave);
     this.element.removeEventListener('wheel', this.boundWheel);
+    if (this.boundViewportKeydown) {
+      this.element.removeEventListener('keydown', this.boundViewportKeydown);
+    }
     window.removeEventListener('keydown', this.boundKeydown);
     window.removeEventListener('keyup', this.boundKeyup);
     window.removeEventListener('blur', this.boundBlur);
@@ -278,6 +322,44 @@ export class CanvasViewportController {
     if (event.code !== 'Space') return;
     this.spacePressed = false;
     this.renderCursor();
+  }
+
+  /** Klavye eşdeğeri: kullanıcı eylemi olarak `zoom`/`pan` bildirir ve commit eder (tekerlek/sürüklemeyle aynı sözleşme). */
+  private handleViewportKey(event: KeyboardEvent): void {
+    if (this.destroyed || !isViewportKeyTarget(event, this.element)) return;
+    const action = viewportKeyAction(event);
+    if (!action) return;
+    event.preventDefault();
+    switch (action.kind) {
+      case 'zoom': {
+        const factor = action.direction > 0 ? KEY_ZOOM_FACTOR : 1 / KEY_ZOOM_FACTOR;
+        const before = this.transform.zoom;
+        this.applyZoom(this.viewportCenter(), before * factor);
+        if (this.transform.zoom === before) return;
+        this.emitChange('zoom');
+        this.onCommitHandler?.(this.getTransform(), 'zoom');
+        return;
+      }
+      case 'reset':
+        this.actualSize();
+        return;
+      case 'fit':
+        this.fit();
+        return;
+      case 'pan':
+        // Ok tuşu GÖRÜNÜMÜ taşır (kaydırma kuralı); belge ters yöne gider.
+        this.transform.offsetX -= action.x * UI_SIZE.VIEWPORT_KEY_PAN_PX;
+        this.transform.offsetY -= action.y * UI_SIZE.VIEWPORT_KEY_PAN_PX;
+        this.emitChange('pan');
+        this.onCommitHandler?.(this.getTransform(), 'pan');
+        return;
+    }
+  }
+
+  private viewportCenter(): ViewportPoint {
+    const origin = this.viewportOrigin();
+    const size = this.viewportSize();
+    return { x: origin.left + size.width / 2, y: origin.top + size.height / 2 };
   }
 
   private applyZoom(screenPoint: ViewportPoint, zoom: number): void {

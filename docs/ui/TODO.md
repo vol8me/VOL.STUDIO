@@ -73,21 +73,21 @@ aile (UI-05 + UI-09) → UI-13.
 **F07 KAPALI DEĞİLDİR.** 24 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
 metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde bu oturumda çalıştırılmadı.
 
-| Görev        | Gerçek kalan iş                                                                                                                                                                                                                                                                  | Tür               |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                                                            | cihaz + insan     |
-| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                                                             | cihaz + insan     |
-| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                                                               | cihaz             |
-| UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                                                                      | kod               |
-| UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te)                                            | kod + insan (AT)  |
-| UI-10.1–10.5 | SquareJoystick/SwipeGestureZone/MultiTouchZone klavye karşılığı, jest süresi reduced-motion; SplitPane/ScrollView/VirtualList kanıtı, %200, tutamak 24/44; sayaç tarifi; CanvasViewport/WorldCamera/PinchZoom alternatifi, Toolbar/PropertyField, meşgul <100 ms (UI-10.5 tamam) | kod + cihaz       |
-| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                                                                        | kod + cihaz       |
-| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                                                            | cihaz + insan     |
-| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                                                                        | cihaz (Windows)   |
-| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                                                                 | kod + insan (IME) |
-| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                                                           | cihaz             |
-| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                                                                 | insan             |
-| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                                                            | kapanış           |
+| Görev        | Gerçek kalan iş                                                                                                                                                                                                                       | Tür               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                 | cihaz + insan     |
+| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                  | cihaz + insan     |
+| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                    | cihaz             |
+| UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                           | kod               |
+| UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te) | kod + insan (AT)  |
+| UI-10.2–10.3 | SplitPane/ScrollView/VirtualList kanıtı, %200, tutamak 24/44; PauseResumeButton sayaç tarifi (UI-10.1, UI-10.4 ve UI-10.5 tamam)                                                                                                      | kod + cihaz       |
+| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                             | kod + cihaz       |
+| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                 | cihaz + insan     |
+| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                             | cihaz (Windows)   |
+| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                      | kod + insan (IME) |
+| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                | cihaz             |
+| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                      | insan             |
+| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                 | kapanış           |
 
 Bu oturumda koşulmayanlar: tam `node scripts/e2e.mjs`, `pnpm fast`/`high`/`signoff`, tam core vitest (yalnız ilgili dosyalar), Deck ve Lenovo
 oturumları. Cihaz bağımsız her iş bittiğinde sıradaki kapı bunlardır; cihazlar bağlı olduğundan cihaz satırları "NOT-RUN" değil "yapılacak"tır.
@@ -471,7 +471,7 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
 
 Ön koşul UI-03.4; UI-10.1 ayrıca UI-03.2. Sahip touch/camera/layout/text.
 
-- [ ] **UI-10.1 — DirectionButton/DPad/Joystick/SquareJoystick/SwipeGestureZone/MultiTouchZone/
+- [x] **UI-10.1 — DirectionButton/DPad/Joystick/SquareJoystick/SwipeGestureZone/MultiTouchZone/
       PullToRefresh.** Birinci/ikinci işaretçi sahipliği, iptal/capture kaybı/görünürlük;
       deadzone/smooth tüketici politikası. Kapanır: VOL.TEST joystick/hold; yalnız dokunma ve
       klavye/kol eşdeğer; gesture süresi reduced-motion'da bozulmaz.
@@ -498,8 +498,19 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       damgasından ve zamanlayıcıdan çalışır, CSS animasyon/geçiş olayı beklemez; `gestureReducedMotion.test.ts`
       hareket azaltma AÇIKKEN dört jestin aynı süre ve eşikle tamamlandığını ve kaynağın `animationend`/`transitionend`/
       `matchMedia` okumadığını kilitler. Kanıt: birim `squareJoystickKeyboard.test.ts` (10) +
-      `gestureReducedMotion.test.ts` (17), vitrinde `touchEquivalents.spec.ts` 7 senaryo × iki motor. **Açık:** VOL.TEST
-      joystick/hold cihaz koşusu (Lenovo, gerçek dokunma).
+      `gestureReducedMotion.test.ts` (17), vitrinde `touchEquivalents.spec.ts` (çubuk/kaydırma senaryoları × iki motor).
+      Yapıldı (2026-10-11): **gerçek cihaz kapanışı** (Lenovo TB350FU, Android 14, Chrome; dikey ve yatay; ham
+      `Input.dispatchTouchEvent`, pointerType touch; `devtools/vol-showcase/tests/device/touchInput.spec.ts` ve
+      `volTest.spec.ts`; üç tam koşu, her yönde 4/4 geçti). Vitrinde Joystick ve SquareJoystick gerçek dokunuşla
+      sürüldü (basılıyken vektör x 0,71 / y −0,54, bırakınca 0,00 / 0,00), HoldButton basılıyken `aria-pressed=true`, bırakınca
+      `false`, gerçek kaydırma jesti yön ve mesafe üretti, yön düğmesi aynı olayı verdi. **VOL.TEST** (oyunun kendi HUD'u,
+      gerçek Phaser döngüsü; `device-ui.mjs --game` oyunu derler, ayrı yerel sunucu ve `adb reverse` kurar): sol çubuk tankı
+      sürdü (64→72 m, bırakınca durdu), hızlanma düğmesi çubukla birlikte (iki parmak; oyun kuralı gereği hızlanma yalnız
+      ileri giderken sürer) `vt-hud--boosting`i açıp bıraktığında kapattı. **Not (test altyapısı):** ilk yatay koşuda iki
+      senaryo düğmeye dokunamadı; ham CDP dokunuşu örtülmeyi/yerleşim oturmasını denetlemez. Nedeni KANITLANAMADI (tanı koşusunda
+      hedefi örten görünür öğe bulunmadı); hedef görünüm ortasına getirilip oturması bekleniyor ve merkezde hedefin durduğu
+      doğrulanıyor (`devtools/vol-showcase/tests/device/touch.ts`) — sonra üç tam koşuda her yönde 4/4 geçti. **NOT-RUN (gerekçeli):** fiziksel kolla çubuk hissi ve ekran
+      okuyucuyla çubuk duyurusu → UI-13.4; Samsung SM-G990B2 bağlı değil → UI-13.3.
 - [ ] **UI-10.2 — DualAxisScrollPanel/ScrollView/VirtualList/KeyedVirtualList/SplitPane.**
       Etkileşimli alt öğe istisnası, sürükleme eşiği, birincil işaretçi, sanal öğeler, resize.
       Kapanır: pointerdown anında alt düğme niyeti alınmaz; iptal edilen sürükleme tıklama üretmez;
@@ -518,7 +529,7 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       niyeti yayar (programatik değişim yaymaz), `pointercancel` basılı görünümü temizler; `setRunning`
       ve constructor/callback sözleşmesi aynen (`touchControls.test.ts`). Sayaç tamamlanma yolu ve
       destroy önceki testlerle kapsanır; tarif ayrımı (opt-in sayaç tarifi) açık.
-- [ ] **UI-10.4 — LoadingScreen/Text/AnimatedLabel/Icon/Toolbar/PropertyField/CanvasViewportController/
+- [x] **UI-10.4 — LoadingScreen/Text/AnimatedLabel/Icon/Toolbar/PropertyField/CanvasViewportController/
       WorldCameraController/PinchZoomController.** Hazır/hata/yeniden deneme/iptal ve ilerleme;
       yüklemede yeni malzeme. Kapanır: asgari yükleme süresi 500 ms isteğe bağlı, meşgul durum
       <100 ms, iptal güvenli; yüklemede sürekli ses varsayılan değil; parmakla büyütmeye alternatif;
@@ -548,6 +559,39 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       dünya) ve vitrin Loading sekmesinde aşama/ipucu/takılma ve hata kartları. Kanıt:
       `loadingScreen.test.ts` (72), `bootLoading.test.ts`, VOL.TEST e2e 17/17 Chromium, vitrin
       görsel temel çizgisi. Cihazda (Deck/tablet) görsel kabul kullanıcı turuna bırakıldı.
+      Yapıldı (2026-10-11): **parmakla büyütme tek yoldu** (PinchZoom: tekerlek/sıkıştırma/sürükleme; CanvasViewport: tekerlek +
+      Space/orta tuş; WorldCamera: tekerlek/sıkıştırma/sürükleme) → üç denetleyici aynı eşdeğeri alır (`core/src/ui/camera/viewportKeys.ts`):
+      `+`/`-` yakınlaştırır, `0` sıfırlar/gerçek boyut, `Home` sığdırır, oklar GÖRÜNÜMÜ kaydırma kuralıyla taşır; Ctrl/Meta/Alt'li
+      tuş (tarayıcının kendi yakınlaştırması) ve IME bileşimi işlenmez, tuş yalnız yüzeyin KENDİSİ odaktayken çalışır (içerideki alan
+      `+`/`-`/oklarını kendi işi için kullanır). **PinchZoomController:** `keyboard` (varsayılan açık) → odaklanır (`role=group`,
+      adlı, `aria-keyshortcuts`, `:focus-visible` halkası); `zoomBy(delta)` görünüm ortasını sabit tutar, `panBy(dx,dy)`,
+      `reset()`; klavye/programatik değişiklik `role="status"` bölgesinde "Yakınlaştırma %125" diye duyurulur (sürükleme ve
+      sıkıştırma duyurulmaz); geçiş animasyonu hareket azaltmada kapanır. **CanvasViewportController:** `keyboard` (varsayılan
+      KAPALI: editör kısayolları sahibine aittir) + `label`; `panBy`/`zoomBy` programatik (`onChange('programmatic')`, commit yok),
+      klavye kullanıcı eylemidir (`onChange` + `onCommit` `zoom`/`pan`, sınırda sahte commit yok); `tabindex`/`role` varsa korunur.
+      **WorldCameraController:** `keyboard` (varsayılan KAPALI) + `label`, `zoomBy(çarpan)` (hedef zoom, `update` yumuşatır),
+      `panByScreen(dx,dy)` (ivmeyi keser, sınır direnci aynı). **Hata (e2e/cihaz hazırlığında bulundu):** vitrin dünya kamerası
+      demosu `update`i hiç çağırmıyordu → tekerlek zoom'u (hedefi değiştirir, kareyi yumuşatma uygular) demoda HİÇ görünmüyordu;
+      demo artık yalnız hareket sürerken kare döngüsü çalıştırır (yerleşince durur; boşta maliyet yok) ve düğmelerle de sürülür.
+      Vitrin: Dokunma sekmesinde PinchZoom ve WorldCamera demolarına Yakınlaştır/Uzaklaştır/Sıfırla düğmeleri ve klavye ipucu,
+      İş tezgâhı görünümüne Yakınlaştır/Uzaklaştır düğmeleri (CanvasViewport artık dokunmatikte de yakınlaşır) ve `keyboard`.
+      **Meşgul durum <100 ms:** `Button` meşgul durumu işleyiciden ÖNCE açar (`runButtonClick`: `setLoading(true)` → handler;
+      sıralama birim testiyle kilitli); gerçek tarayıcıda çıkış istemindeki "Kaydet ve çık" tıklamasından, `aria-busy`nin DOM'da
+      olduğu kareye kadar `click.timeStamp` → rAF + mesaj turu 20 örnekle ölçülür (`busyFeedback.spec.ts`; sunulan kare DEĞİL,
+      başsız yaklaşım): **Chromium p95 26,4 ms, WebKit p95 60,0 ms** (ortam tabanı p95 22,3 / 81,0 ms; kapı: meşgul durum tabana en çok
+      bir kare ekler (iki motor); mutlak p95 < 100 ms yalnız Chromium'da kapıdır, başsız WebKit'in kendi tabanı 81 ms olduğundan
+      orada mutlak sınır konmaz). **Yüklemede sürekli ses yok:** `LoadingScreen` kaynağında ses
+      yolu yok, video arka plan sessiz (birim test). **Toolbar/PropertyField gerçek tarayıcıda** (`toolbarField.spec.ts`, 5 senaryo × iki
+      motor): araç çubuğu TEK sekme durağı (oklar/Home/End gezer ve sarar), seçim `aria-pressed` taşır ve aksiyon düğmesi seçimi
+      değiştirmez, her araç adlı ve odak halkası görünür; özellik alanının etiketi denetimin adı, açıklaması denetimin açıklaması,
+      Enter işler, sıfırlama değeri ve durumu geri alır. **Gerçek cihaz** (Lenovo, dikey+yatay, `touchInput.spec.ts`): gerçek iki
+      parmak sıkıştırma PinchZoom'u 250%'e (demo sınırı) çıkardı, aynı kamera dokunulan düğmelerle 125/75'e gitti; dünya
+      kamerası sıkıştırmayla ve düğmeyle değişti, Sıfırla dünyayı sığdırdı. Kanıt: birim `cameraKeyboard.test.ts` (25; yön işareti ve
+      değiştirici koruması bozulunca sırasıyla 8 ve 4 test düşer), `buttonBehavior.test.ts` (+1), `loadingScreen.test.ts` (+1), vitrinde
+      `touchEquivalents.spec.ts` kamera senaryoları, `busyFeedback.spec.ts`, `toolbarField.spec.ts`; Dokunma ve İş tezgâhı piksel
+      temelleri yenilendi (yeni düğme/ipucu; gözle karşılaştırıldı, yalnız beklenen eklemeler). **NOT-RUN (gerekçeli, devredildi):**
+      gerçek ekran okuyucuyla yakınlaştırma duyurusu → UI-13.4; yükleme ekranının Deck/tablet görsel kabulü ve sunulan kare
+      gecikmesi → UI-13.3/13.4; Deck'te fiziksel kolla kamera → UI-13.4.
 - [x] **UI-10.5 — Palette ve ileri katalog kanıtı.** Her aile durum örneği, public yardımcılar,
       grid ARIA gerekçesi. Kapanır: registry başlangıç sınıfları + yeni exportlar tam; palet
       okunabilirliği; tier-2 erişilebilir.

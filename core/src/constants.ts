@@ -49,6 +49,8 @@ export const UI_SIZE = {
   RADIAL_MENU_DEFAULT_RADIUS_PX: 96,
   /** RadialMenu default merkez dead-zone yarıçapı. */
   RADIAL_MENU_DEFAULT_DEADZONE_PX: 24,
+  /** Kamera/yakınlaştırma yüzeyinde bir ok tuşu basışının kaydırma adımı. */
+  VIEWPORT_KEY_PAN_PX: 48,
 } as const;
 
 /** UI oranları (0-1 aralığı). */
@@ -124,6 +126,8 @@ export const PINCH_ZOOM = {
   INITIAL: 1,
   /** Fare tekerlek zoom adımı. */
   WHEEL_STEP: 0.1,
+  /** Klavye (`+`/`-`) ve programatik `zoomBy` adımı: tekerlekten büyük, çünkü basış başına bir karar. */
+  KEY_STEP: 0.25,
 } as const;
 
 /** Teknik altyapı sabitleri. */

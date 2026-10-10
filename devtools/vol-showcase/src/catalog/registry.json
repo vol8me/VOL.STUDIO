@@ -331,6 +331,10 @@
         {
           "file": "core/tests/ui/camera/canvasViewportController.test.ts",
           "title": "screen/document dönüşümleri birbirinin tersidir ve setter zoomu sınırlar"
+        },
+        {
+          "file": "core/tests/ui/camera/cameraKeyboard.test.ts",
+          "title": "açıkken odaklanır, adlanır; var olan tabindex ve role korunur"
         }
       ]
     },
@@ -1459,11 +1463,15 @@
       "anchor": "A5",
       "archetype": "mechanism",
       "consumer": "catalog",
-      "showcase": ["sections/touchTab.ts"],
+      "showcase": ["sections/touchCameraDemo.ts"],
       "tests": [
         {
           "file": "core/tests/ui/layoutAndControls.test.ts",
           "title": "oluşturulur ve içeriği sarar"
+        },
+        {
+          "file": "core/tests/ui/camera/cameraKeyboard.test.ts",
+          "title": "odaklanabilir, adlıdır, kısayollarını bildirir; ad verilmezse çevrilmiş varsayılan kullanılır"
         }
       ]
     },
@@ -2439,11 +2447,15 @@
       "anchor": "A5",
       "archetype": "mechanism",
       "consumer": "catalog",
-      "showcase": ["sections/touchTab.ts"],
+      "showcase": ["sections/touchCameraDemo.ts"],
       "tests": [
         {
           "file": "core/tests/ui/camera/worldCameraController.test.ts",
           "title": "açılışta dünyayı boşluk bırakmadan görüntü alanına kaplar ve ortalar"
+        },
+        {
+          "file": "core/tests/ui/camera/cameraKeyboard.test.ts",
+          "title": "açıkken odaklanır ve adlanır"
         }
       ]
     },

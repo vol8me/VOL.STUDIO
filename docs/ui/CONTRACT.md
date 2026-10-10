@@ -268,8 +268,15 @@ yeniden çizim odağı düşürmez.
 Jest dedektörleri (SwipeGestureZone, MultiTouchZone) kontrol değil algılayıcıdır: odaklanmazlar ve tek başlarına
 klavye/kol eşdeğeri taşımazlar; eşdeğer onları kullanan sahibin eylem yoludur (aynı geri çağrıyı çağıran düğmeler).
 Vitrin bunu SwipeGestureZone'da yön düğmeleriyle gösterir. MultiTouchZone parmak konumu raporlar; "çok parmağın klavye
-karşılığı" anlamsızdır, jestin yaptığı eylemin (kaydır/yakınlaştır) düğme alternatifi sahibe aittir (kamera denetleyicileri:
-UI-10.4).
+karşılığı" anlamsızdır, jestin yaptığı eylemin (kaydır/yakınlaştır) düğme alternatifi sahibe aittir.
+
+Kamera ve yakınlaştırma yüzeyleri (PinchZoomController, CanvasViewportController, WorldCameraController) parmakla büyütmeyi tek
+yol bırakmaz: üçü de `viewportKeys` tuş eşlemesini (`+`/`-` yakınlaştırır, `0` sıfırlar/gerçek boyut, `Home` sığdırır, oklar GÖRÜNÜMÜ
+kaydırma kuralıyla taşır) ve programatik karşılığı (`zoomBy`, `panBy`/`panByScreen`) taşır. Klavye yalnız yüzeyin KENDİSİ
+odaktayken çalışır (içerideki alanın tuşları çalınmaz), Ctrl/Meta/Alt'li tuşlar ve IME bileşimi işlenmez (tarayıcının kendi
+yakınlaştırması bozulmaz). PinchZoomController'da klavye varsayılan AÇIKTIR (kendi odak yüzeyini kurar, zoom düzeyini
+`role="status"`ta duyurur); CanvasViewportController ve WorldCameraController'da varsayılan KAPALIDIR (host editör/oyun kendi
+kısayollarını taşır; açmak sahibin kararıdır). Düğme alternatifi sahibe aittir; vitrin ikisini de gösterir.
 
 Izgara ve tablo semantiği (ARIA gerekçesi): `role="grid"` yalnız etkileşimli veri içindir ve klavye
 sözleşmesi vaat eder; görsel bir ızgaraya (CSS `grid`) otomatik yazılmaz. Seçilemeyen DataTable ve palet
