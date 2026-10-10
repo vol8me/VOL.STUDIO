@@ -211,27 +211,32 @@ her biri belirgin yavaşlar, toplam duvar süresi yine kısalır).
 | Aşama                   | Süre        | Not                                                                    |
 | ----------------------- | ----------- | ---------------------------------------------------------------------- |
 | `node-pin`              | 1 sn        |                                                                        |
-| `contract`              | 46 sn       | bekçi testleri ve workspace sözleşmesi                                 |
-| `format-check`          | 21 sn       |                                                                        |
-| `typecheck`             | 26 sn       |                                                                        |
-| `lint`                  | 51 sn       | tip bilgili ESLint                                                     |
-| `lint-css`              | 5 sn        |                                                                        |
+| `contract`              | 40 sn       | bekçi testleri ve workspace sözleşmesi                                 |
+| `format-check`          | 5 sn        | sıcak içerik önbelleği                                                 |
+| `typecheck`             | 27 sn       |                                                                        |
+| `lint`                  | 54 sn       | tip bilgili ESLint                                                     |
+| `lint-css`              | 4 sn        | sıcak içerik önbelleği                                                 |
 | `build` / `bundle`      | 4 / 1 sn    |                                                                        |
 | `scaling`               | 4 sn        |                                                                        |
 | `audio-test`            | 12–144 sn   | alt küme 12 sn; yapılandırma/silme değişiminde tam takım 144 sn        |
-| `rust`                  | 34 sn       | sıcak hedef dizini; soğuk derleme (kilit/araç zinciri değişimi) 4,4 dk |
-| `test`                  | 245 sn      | audio-synth 141, core 55, vol-test 29, vitrin 12, diğerleri 4 sn altı  |
+| `rust`                  | 35 sn       | sıcak hedef dizini; soğuk derleme (kilit/araç zinciri değişimi) 4,4 dk |
+| `test`                  | 238 sn      | audio-synth 152, core 54, vol-test 28, vitrin 20, diğerleri 7 sn altı  |
 | `coverage`              | 113 sn      | audio-synth hariç                                                      |
-| `e2e` vitrin / vol-test | 447 / 85 sn | vitrinde iki motor eşzamanlı; seri koşu 719 sn                         |
-| `coverage-audio`        | 532 sn      | kapsam ölçümü sentezi yavaşlatır                                       |
-| `audio-verify`          | 98 sn       |                                                                        |
-| `security-js`           | 2 sn        | audit + yama sınaması + kayıt defteri sorgusu                          |
-| `security-rust`         | 6 sn        |                                                                        |
+| `e2e` vitrin / vol-test | 343 / 86 sn | vitrinde iki motor eşzamanlı, motor başına 2 işçi                      |
+| `coverage-audio`        | 545 sn      | kapsam ölçümü sentezi yavaşlatır                                       |
+| `audio-verify`          | 100 sn      |                                                                        |
+| `security-js`           | 3 sn        | audit + yama sınaması + kayıt defteri sorgusu                          |
+| `security-rust`         | 4 sn        |                                                                        |
 
-Birleşik kapılar makbuzsuz (soğuk) koşuda: `quick` yaklaşık 1,5 dk, `fast` 5,6 dk,
-`high` 15 dk; `signoff`, `high` ile `coverage-audio`, `audio-verify` ve güvenlik
-aşamalarının toplamı olarak yaklaşık 26 dk'dır (tek koşu olarak ölçülmemiştir).
-Girdisi hiç değişmemiş ağaçta `high` yaklaşık 13 sn sürer (yalnız önbelleksiz aşamalar).
+Birleşik kapılar makbuzsuz (soğuk) koşuda: `signoff` 24,3 dk ölçüldü (tek taze koşu;
+statik dalga 78 sn, `e2e` 429 sn). `high` ayrı koşu olarak ölçülmedi; aynı koşunun
+aşama toplamından yaklaşık 13,4 dk, `fast` yaklaşık 5,4 dk (statik dalga ile `test`
+toplamı), `quick` yaklaşık 1,3 dk'dır. Girdisi hiç değişmemiş ağaçta `quick` 2 sn,
+`high` yaklaşık 13 sn sürer (yalnız önbelleksiz aşamalar).
+
+Makbuzlu `quick`, tek dosya düzenlemesinden sonra yalnız etkilenen birimi koşar:
+yaprak paket kaynağı ~45 sn, betik ~38 sn, belge ~35 sn. Taban `contract` (28–35 sn):
+bekçi testleri bütün repoyu okur, bu yüzden her düzenlemede koşar.
 
 Süre ölçen testler yük altında kararsızlaşır; bu yüzden `scaling` ve `e2e` tek başına
 koşar, audio-synth işçi sayısı sınırlıdır (`devtools/audio-synth/vitest.config.ts`) ve
@@ -243,15 +248,15 @@ Eşzamanlılık kararı sezgiyle değil ölçümle verilir; benimsemek için en 
 yeşil koşu gerekir. Aşağıdakiler bu ölçütü karşılamadığı için YOKTUR; aynı denemeyi
 körlemesine tekrarlamayın.
 
-| Deneme                                             | Ölçüm (8 çekirdek)                                                                   | Karar                                               |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------- |
-| vitrin e2e, motor başına 2 işçi                    | 456 → 341 / 339 / 351 sn, üç koşu yeşil                                              | **benimsendi** (çekirdek/4, en çok 2)               |
-| vitrin e2e, motor başına 3 işçi                    | 304 sn ama WebKit'te sınama zaman aşımı                                              | reddedildi: 6 tarayıcı 8 çekirdeği aşar             |
-| vol-test e2e, 2 işçi                               | 85 → 77–79 sn (34 sınama; süreyi birkaç uzun sınama belirler)                        | reddedildi: 7 sn için ayar değişmez                 |
-| `coverage`, `pnpm -r --no-sort`                    | 111–112 → 101–109 sn ama her koşuda farklı sınamalar 5 sn zaman aşımına düştü        | reddedildi: kazanç yok, kararsız                    |
-| `test`, 2 birim eşzamanlı                          | 245 → 219 sn; audio-synth 141 → 219 sn, core 55 → 88 sn uzadı                        | reddedildi: %11 kazanç, çekişme kritik yolu uzatır  |
-| `audio-test`, yapılandırma değişiminde de alt küme | tam takım yalnız yapılandırma/silme değişiminde koşar (144 sn); tipik alt küme 12 sn | reddedildi: yapılandırma her sınamayı etkileyebilir |
-| `coverage` paket başına makbuz                     | `coverage-shape` koşunun bütün lcov'unu okur                                         | reddedildi: tazelik sözleşmesini bozar              |
+| Deneme                                             | Ölçüm (8 çekirdek)                                                                          | Karar                                               |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| vitrin e2e, motor başına 2 işçi                    | 456 → 341 / 339 / 351 sn, üç koşu yeşil                                                     | **benimsendi** (çekirdek/4, en çok 2)               |
+| vitrin e2e, motor başına 3 işçi                    | 317 / 319 / 325 sn; üç koşunun ikisinde zamanlama sınaması (`probe` flaky, `latency` düştü) | reddedildi: ~25 sn için ölçüm sınamaları bozulur    |
+| vol-test e2e, 2 işçi                               | 85 → 77–79 sn (34 sınama; süreyi birkaç uzun sınama belirler)                               | reddedildi: 7 sn için ayar değişmez                 |
+| `coverage`, `pnpm -r --no-sort`                    | 111–112 → 101–109 sn ama her koşuda farklı sınamalar 5 sn zaman aşımına düştü               | reddedildi: kazanç yok, kararsız                    |
+| `test`, 2 birim eşzamanlı                          | 245 → 219 sn; audio-synth 141 → 219 sn, core 55 → 88 sn uzadı                               | reddedildi: %11 kazanç, çekişme kritik yolu uzatır  |
+| `audio-test`, yapılandırma değişiminde de alt küme | tam takım yalnız yapılandırma/silme değişiminde koşar (144 sn); tipik alt küme 12 sn        | reddedildi: yapılandırma her sınamayı etkileyebilir |
+| `coverage` paket başına makbuz                     | `coverage-shape` koşunun bütün lcov'unu okur                                                | reddedildi: tazelik sözleşmesini bozar              |
 
 ## Kapı sağlığı: ne yakalar, ne yakalamaz
 
