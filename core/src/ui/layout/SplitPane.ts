@@ -18,7 +18,13 @@ export interface SplitPaneOptions {
   onCommit?: (primarySize: number) => void;
 }
 
-/** Yeniden boyutlandırılabilir, daraltılabilir iki bölgeli workbench yerleşimi. */
+/**
+ * Yeniden boyutlandırılabilir, daraltılabilir iki bölgeli workbench yerleşimi.
+ *
+ * Sürüklemenin tek sahibi vardır: ilk birincil işaretçi (ikinci parmak ya da ikinci düğme sürüklemeyi devralmaz).
+ * `pointercancel` ve Escape sürüklemeyi İPTAL eder: boyut başlangıca döner ve `onCommit` çağrılmaz (bırakmak işler,
+ * iptal işlemez). Tutamak hedefi ve en küçük bölme boyutları `layout.css`te yerleşime de yansır.
+ */
 export class SplitPane {
   readonly element: HTMLDivElement;
   readonly primaryPane: HTMLDivElement;
@@ -36,7 +42,8 @@ export class SplitPane {
   /** Kullanıcının seçtiği boyut; pencere daralsa da korunur. */
   private desiredSize: number;
   private collapsed: SplitPaneSide | undefined;
-  private drag: { pointerId: number; origin: number; size: number } | null = null;
+  /** Etkin sürükleme: tek sahibi var (ilk birincil işaretçi); `size`/`desired` iptalde geri yüklenen başlangıç değeridir. */
+  private drag: { pointerId: number; origin: number; size: number; desired: number } | null = null;
   private readonly boundPointerDown: (event: PointerEvent) => void;
   private readonly boundPointerMove: (event: PointerEvent) => void;
   private readonly boundPointerEnd: (event: PointerEvent) => void;
@@ -64,6 +71,7 @@ export class SplitPane {
     ]
       .filter(Boolean)
       .join(' ');
+    this.element.style.setProperty('--vol-split-secondary-min', `${this.minSecondary}px`);
 
     this.primaryPane = document.createElement('div');
     this.primaryPane.className = 'vol-split-pane__pane vol-split-pane__pane--primary';
@@ -121,6 +129,8 @@ export class SplitPane {
             this.render();
           });
     this.resizeObserver?.observe(this.element);
+    // Tutamak kalınlığı işaretçi türüne/hedef tabanına göre değişir (24 → 44 px) ve kapı büyütmeden de değişebilir.
+    this.resizeObserver?.observe(this.separator);
     this.render();
   }
 
@@ -175,14 +185,20 @@ export class SplitPane {
   }
 
   private startDrag(event: PointerEvent): void {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    // Tek sahip: sürükleme sürerken gelen ikinci işaretçi (ikinci parmak) devralmaz; birincil olmayan işaretçi
+    // ve fare ikincil/orta düğmesi başlatmaz.
+    if (this.drag || !event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0))
+      return;
     if (this.collapsed) this.expandPane();
     this.drag = {
       pointerId: event.pointerId,
       origin: this.direction === 'horizontal' ? event.clientX : event.clientY,
       size: this.size,
+      desired: this.desiredSize,
     };
     this.separator.setPointerCapture(event.pointerId);
+    // Escape ile iptal ayırıcıya gelmeli: pointerdown'ı iptal etmek tarayıcıya odağı vermeyi bırakabilir.
+    this.separator.focus({ preventScroll: true });
     this.element.classList.add('vol-split-pane--resizing');
     event.preventDefault();
   }
@@ -195,8 +211,24 @@ export class SplitPane {
 
   private endDrag(event: PointerEvent): void {
     if (!this.drag || event.pointerId !== this.drag.pointerId) return;
+    if (event.type === 'pointercancel') {
+      this.cancelDrag();
+      return;
+    }
     this.releaseDrag();
     this.onCommitHandler?.(this.size);
+  }
+
+  /** Sürüklemeyi iptal eder: boyut başlangıca döner (önizleme bildirilir), `onCommit` çağrılmaz. */
+  private cancelDrag(): void {
+    const drag = this.drag;
+    if (!drag) return;
+    this.releaseDrag();
+    this.desiredSize = drag.desired;
+    if (this.size === drag.size) return;
+    this.size = drag.size;
+    this.render();
+    this.onResizeHandler?.(drag.size);
   }
 
   private releaseDrag(): void {
@@ -209,6 +241,11 @@ export class SplitPane {
   }
 
   private handleKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.drag) {
+      event.preventDefault();
+      this.cancelDrag();
+      return;
+    }
     const decrease = this.direction === 'horizontal' ? 'ArrowLeft' : 'ArrowUp';
     const increase = this.direction === 'horizontal' ? 'ArrowRight' : 'ArrowDown';
     const amount = event.shiftKey ? this.keyboardStep * 4 : this.keyboardStep;
@@ -249,8 +286,13 @@ export class SplitPane {
       this.direction === 'horizontal'
         ? (this.element?.clientWidth ?? 0)
         : (this.element?.clientHeight ?? 0);
+    // Tutamağın kendi kalınlığı da kapın içindedir: ikinci bölme en küçük boyutunun altına inmesin.
+    const handle =
+      this.direction === 'horizontal'
+        ? (this.separator?.offsetWidth ?? 0)
+        : (this.separator?.offsetHeight ?? 0);
     const available =
-      total > 0 ? Math.max(this.minPrimary, total - this.minSecondary) : this.maxPrimary;
+      total > 0 ? Math.max(this.minPrimary, total - this.minSecondary - handle) : this.maxPrimary;
     return Math.max(this.minPrimary, Math.min(this.maxPrimary, available));
   }
 

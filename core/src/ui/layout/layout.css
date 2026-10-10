@@ -1,6 +1,10 @@
+/*
+ * Kaydırma çubukları kullanıcı aracısı denetimidir (WCAG 2.5.8 "User agent control"): kalınlığı yazar
+ * küçültmez, yalnız rengi verilir. `scrollbar-width: thin` ve `::-webkit-scrollbar` kalınlığı çubuğu 8-10 px'e
+ * indirip tutamağı 24 px'in çok altında bırakıyordu (dokunmatik ve trackpad'de yakalanamıyordu).
+ */
 .vol-scroll-view {
   pointer-events: auto;
-  scrollbar-width: thin;
   scrollbar-color: var(--vol-ui-border-strong) var(--vol-ui-surface-1);
   position: relative;
 }
@@ -15,24 +19,6 @@
   overflow: auto hidden;
 }
 
-.vol-scroll-view::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.vol-scroll-view::-webkit-scrollbar-track {
-  background: var(--vol-ui-surface-1);
-}
-
-.vol-scroll-view::-webkit-scrollbar-thumb {
-  background: var(--vol-ui-border-strong);
-  border-radius: var(--vol-radius-sm);
-}
-
-.vol-scroll-view::-webkit-scrollbar-thumb:hover {
-  background: var(--vol-ui-text-muted);
-}
-
 .vol-scroll-view__content {
   padding: var(--vol-space-md);
 }
@@ -43,23 +29,9 @@
 
 .vol-virtual-list {
   pointer-events: auto;
-  scrollbar-width: thin;
   scrollbar-color: var(--vol-ui-border-strong) var(--vol-ui-surface-1);
   position: relative;
   overflow: hidden auto;
-}
-
-.vol-virtual-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.vol-virtual-list::-webkit-scrollbar-track {
-  background: var(--vol-ui-surface-1);
-}
-
-.vol-virtual-list::-webkit-scrollbar-thumb {
-  background: var(--vol-ui-border-strong);
-  border-radius: var(--vol-radius-sm);
 }
 
 .vol-virtual-list__spacer {
@@ -864,12 +836,19 @@
   overflow: hidden;
 }
 
+/*
+ * Bölmelerin bildirilen en küçük boyutları (`minPrimary`/`minSecondary`) yerleşimde de geçerlidir: kap onların
+ * toplamından dar kalırsa ikinci bölme ezilmez, DIŞ panel kayar (pencere %200-%400 büyütüldüğünde de kullanılır
+ * kalır). İlk bölme `flex: 0 0 boyut` olduğundan kendiliğinden küçülmez; yalnız ikinci bölmenin tabanı gerekir.
+ */
 .vol-split-pane--horizontal {
   flex-direction: row;
+  overflow: auto hidden;
 }
 
 .vol-split-pane--vertical {
   flex-direction: column;
+  overflow: hidden auto;
 }
 
 .vol-split-pane__pane {
@@ -899,9 +878,24 @@
   flex: 1 1 auto;
 }
 
+.vol-split-pane--horizontal .vol-split-pane__pane--secondary {
+  min-width: var(--vol-split-secondary-min, 0);
+}
+
+.vol-split-pane--vertical .vol-split-pane__pane--secondary {
+  min-height: var(--vol-split-secondary-min, 0);
+}
+
+/*
+ * Tutamak hedefi: ince işaretçide en az 24 px (WCAG 2.5.8), kaba işaretçide ve `large` hedef tabanında
+ * `--vol-hit-target-min` (44 px). GERÇEK kutu büyür — görünmez overlay değil — bu yüzden komşu bölmenin kaydırma
+ * çubuğunu ya da kenar düğmesini örtmez. Çizgi ve kavrama işareti kutunun ortasında kalır.
+ */
 .vol-split-pane__separator {
+  --vol-split-handle-size: max(24px, var(--vol-hit-target-min, 0px));
+
   box-sizing: border-box;
-  flex: 0 0 5px;
+  flex: 0 0 var(--vol-split-handle-size);
   background: var(--vol-ui-bg-subtle);
   position: relative;
   touch-action: none;
@@ -913,13 +907,28 @@
   position: absolute;
 }
 
+/* Kavrama işareti: tutamağın sürüklenebilir olduğunu görünür kılar (dokunmatikte imleç ipucu yoktur). */
+.vol-split-pane__separator::before {
+  content: '';
+  z-index: 1;
+  background: var(--vol-ui-border-strong);
+  border-radius: var(--vol-radius-sm);
+  position: absolute;
+}
+
 .vol-split-pane--horizontal .vol-split-pane__separator {
   cursor: var(--vol-cursor-resize-h, col-resize);
 }
 
 .vol-split-pane--horizontal .vol-split-pane__separator::after {
   width: 1px;
-  inset: 0 auto 0 2px;
+  inset: 0 auto 0 calc(50% - 0.5px);
+}
+
+.vol-split-pane--horizontal .vol-split-pane__separator::before {
+  width: 4px;
+  height: 32px;
+  inset: calc(50% - 16px) auto auto calc(50% - 2px);
 }
 
 .vol-split-pane--vertical .vol-split-pane__separator {
@@ -928,12 +937,21 @@
 
 .vol-split-pane--vertical .vol-split-pane__separator::after {
   height: 1px;
-  inset: 2px 0 auto;
+  inset: calc(50% - 0.5px) 0 auto;
+}
+
+.vol-split-pane--vertical .vol-split-pane__separator::before {
+  width: 32px;
+  height: 4px;
+  inset: calc(50% - 2px) auto auto calc(50% - 16px);
 }
 
 .vol-split-pane__separator:hover::after,
 .vol-split-pane__separator:focus-visible::after,
-.vol-split-pane--resizing .vol-split-pane__separator::after {
+.vol-split-pane--resizing .vol-split-pane__separator::after,
+.vol-split-pane__separator:hover::before,
+.vol-split-pane__separator:focus-visible::before,
+.vol-split-pane--resizing .vol-split-pane__separator::before {
   background: var(--vol-ui-brand-solid);
 }
 
@@ -949,7 +967,6 @@
   width: 100%;
   pointer-events: auto;
   scrollbar-color: var(--vol-ui-border-strong) var(--vol-ui-surface-1);
-  scrollbar-width: thin;
   position: relative;
   overflow: hidden auto;
 }
@@ -970,10 +987,4 @@
   position: absolute;
   inset: 0 0 auto;
   overflow: hidden;
-}
-
-@media (pointer: coarse) {
-  .vol-split-pane__separator {
-    flex-basis: 12px;
-  }
 }

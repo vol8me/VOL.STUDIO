@@ -51,6 +51,8 @@ export const UI_SIZE = {
   RADIAL_MENU_DEFAULT_DEADZONE_PX: 24,
   /** Kamera/yakınlaştırma yüzeyinde bir ok tuşu basışının kaydırma adımı. */
   VIEWPORT_KEY_PAN_PX: 48,
+  /** Odaktaki kaydırma yüzeyinde (DualAxisScrollPanel) bir ok tuşu basışının kaydırma adımı. */
+  SCROLL_KEY_STEP_PX: 48,
 } as const;
 
 /** UI oranları (0-1 aralığı). */

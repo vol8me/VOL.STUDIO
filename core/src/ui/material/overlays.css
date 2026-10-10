@@ -451,7 +451,6 @@
 /* Sekmeler tek satırda kayar; ikon + ad yan yana, düğme küçülmez. */
 .vol-tabs--horizontal .vol-tabs__list {
   overflow-x: auto;
-  scrollbar-width: thin;
   padding-inline: var(--vol-space-sm);
 }
 

@@ -123,6 +123,9 @@
     "percent": "Yüzde {{percent}}",
     "ready": "Tamamen doldu"
   },
+  "dualAxisScroll": {
+    "label": "Kaydırılabilir alan"
+  },
   "pinchZoom": {
     "label": "Yakınlaştırılabilir alan",
     "level": "Yakınlaştırma %{{percent}}"

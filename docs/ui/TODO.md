@@ -80,7 +80,6 @@ metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları De
 | UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                    | cihaz             |
 | UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                           | kod               |
 | UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te) | kod + insan (AT)  |
-| UI-10.2–10.3 | SplitPane/ScrollView/VirtualList kanıtı, %200, tutamak 24/44; PauseResumeButton sayaç tarifi (UI-10.1, UI-10.4 ve UI-10.5 tamam)                                                                                                      | kod + cihaz       |
 | UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                             | kod + cihaz       |
 | UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                 | cihaz + insan     |
 | UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                             | cihaz (Windows)   |
@@ -511,7 +510,7 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       hedefi örten görünür öğe bulunmadı); hedef görünüm ortasına getirilip oturması bekleniyor ve merkezde hedefin durduğu
       doğrulanıyor (`devtools/vol-showcase/tests/device/touch.ts`) — sonra üç tam koşuda her yönde 4/4 geçti. **NOT-RUN (gerekçeli):** fiziksel kolla çubuk hissi ve ekran
       okuyucuyla çubuk duyurusu → UI-13.4; Samsung SM-G990B2 bağlı değil → UI-13.3.
-- [ ] **UI-10.2 — DualAxisScrollPanel/ScrollView/VirtualList/KeyedVirtualList/SplitPane.**
+- [x] **UI-10.2 — DualAxisScrollPanel/ScrollView/VirtualList/KeyedVirtualList/SplitPane.**
       Etkileşimli alt öğe istisnası, sürükleme eşiği, birincil işaretçi, sanal öğeler, resize.
       Kapanır: pointerdown anında alt düğme niyeti alınmaz; iptal edilen sürükleme tıklama üretmez;
       %200 dış panel kaydırması; 24/44 kaydırma tutamağı.
@@ -520,8 +519,43 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       viewport'a çalınıyordu), yalnız birincil işaretçi/ana düğme başlatır, gerçek sürüklemeyi bitiren
       bırakma altındaki öğeye tıklama üretmez, iptal (`pointercancel`) tıklama yutmaz; Carousel slayt
       içi denetime basınca sürükleme başlatmaz; SkillTree zaten düğümü hariç tutar. Testler:
-      `touchControls.test.ts`. SplitPane/ScrollView/VirtualList kanıtı, %200 ve tutamak boyutu açık.
-- [ ] **UI-10.3 — PauseResumeButton sunum/tarif ayrımı.** Constructor ve callback bildiren
+      `touchControls.test.ts`.
+      Yapıldı (2026-10-11): **gerçek kusurlar bulundu ve düzeltildi.** (1) **SplitPane tutamağı 5 px'ti** (kaba işaretçide
+      `@media (pointer: coarse)` ile 12 px; token'ı eziyordu): gerçek kutu artık `max(24px, --vol-hit-target-min)` →
+      ince işaretçide 24 px (WCAG 2.5.8), kaba işaretçide ve `large` hedef tabanında 44 px; görünmez overlay değil (komşu
+      bölmenin kaydırma çubuğunu örtmez), çizgi ve kavrama işareti ortada. Tutamak kalınlığı en büyük boyuta da girer
+      (bölme en küçük ikinci boyutunun altına inmez). (2) **Sürükleme sahipliği:** sürüklerken gelen ikinci parmak sürüklemeyi
+      devralıyordu; artık tek sahip (ilk birincil işaretçi), birincil olmayan ve fare ikincil düğmesi başlatmaz. (3)
+      **İptal:** `pointercancel` ve Escape sürüklemeyi iptal eder (boyut başlangıca döner, `onCommit` çağrılmaz; önceden
+      sistem kesintisi yarım boyutu kalıcı kılıyordu). (4) **En küçük bölme boyutları yerleşimde de geçerli:** kap dar
+      kalırsa ikinci bölme ezilmiyor (320 px'te 97 px'e iniyordu), dış panel yatay kayıyor. (5) **DualAxisScrollPanel**
+      `overflow: hidden` olduğundan tekerlek ve klavye hiçbir şey yapmıyordu (yalnız sürükleme): artık odaklanabilir adlı
+      grup; oklar/Page/Home/End (Shift yatay), tekerlek ve Shift+tekerlek; yalnız yüzeyin kendisi odaktayken, uçta olay
+      iptal edilmez (ata kaydırıcı devralır). (6) **ScrollView** `scrollToTop/Bottom` hareket azaltmada da `smooth` kayıyordu
+      (tarayıcı kısmaz): artık anında. (7) **Kaydırma çubuğu kalınlığı:** `scrollbar-width: thin` ve `::-webkit-scrollbar`
+      kalınlığı çubuğu 8–10 px'e indiriyordu (Windows Chromium ölçümü: varsayılan 15 px, `thin` 10 px, `::-webkit-scrollbar`
+      8 px); kullanıcı aracısı denetimi küçültülmediği sürece WCAG 2.5.8 istisnasındadır, bu yüzden ScrollView, VirtualList,
+      KeyedVirtualList ve yatay sekme şeridinden kalınlık kuralları kaldırıldı (yalnız renk). **Kanıt:** birim
+      `splitPaneInput.test.ts` (12), `scrollSurfaces.test.ts` (10: ScrollView hareket azaltma, VirtualList 5000 satır
+      pencereleme, CSS politikası), `dualAxisScrollInput.test.ts` (14), `hitTargetSync.test.ts` (ayırıcı politikaya girdi);
+      mutasyonla öldürüldü (sahiplik koruması kalkınca 3, iptal eski davranışa dönünce 3, tutamak kalınlığı hesaba
+      katılmayınca 2 test düştü). Gerçek tarayıcıda iki motor: `devtools/vol-showcase/tests/e2e/scrollSplit.spec.ts` (tutamak
+      24 → large'da 44 px, vuruş alanı ±11/±21 px, komşu boşluğu 0, fare sürükleme/Escape/kalıcı, telefon koşulunda 44 px, %200
+      (640×400) ve %400 (320×568) sayfa yatay taşmaz ve ikinci bölme ezilmez, %400'de bölme kayar ve odak ayırıcıyı görünür
+      kılar, iç alan sona ulaşınca kaydırma dış panele geçer, ScrollView/VirtualList klavye ve tekerlek, 5000 satırda DOM < 30,
+      DualAxisScrollPanel klavye/tekerlek); Chromium'da ayrıca gerçek dokunma (CDP): ikinci parmak devralmaz, `touchCancel`
+      geri alır. **Gerçek cihaz** (Lenovo TB350FU, Android 14, Chrome; dikey ve yatay;
+      `devtools/vol-showcase/tests/device/scrollSplit.spec.ts`, 4/4 her yönde): tutamak 43,99 px, parmakla sürüldü ve
+      bıraktığında kaldı, ikinci parmak devralmadı, `touchCancel` boyutu geri aldı, ScrollView ve VirtualList parmakla kaydı
+      (DOM 20 satır), iç alan sona ulaşınca kaydırma dış panele geçti, DualAxisScrollPanel iki eksende kaydı. Cihaz koşusu
+      ayrıca gösterim demosunun hatasını buldu: `minPrimary 150 + tutamak + minSecondary 280` tablet dikeyinde (473 px kart)
+      sürme payını sıfıra indiriyordu → demo en küçükleri 120/200 yapıldı. Workbench piksel temeli yenilendi (tutamak
+      24 px + kavrama işareti; gözle karşılaştırıldı, yalnız beklenen değişiklik). **NOT-RUN (gerekçeli, devredildi):**
+      Windows/Deck'te gerçek klasik kaydırma çubuğu tutamağının fiziksel kabulü (UA denetimi) ve fiziksel kolla bölme
+      sürükleme → UI-13.3/13.4; gerçek AT'de ayırıcı değer duyurusu → UI-13.4. Not: başsız Chromium kaydırma çubuklarını
+      varsayılanda gizler (`--hide-scrollbars`); çubuk kalınlığı ayrı bir betikle bu bayrak kapatılarak ölçüldü ve kayda
+      geçirilmedi (e2e'ye girmedi).
+- [x] **UI-10.3 — PauseResumeButton sunum/tarif ayrımı.** Constructor ve callback bildiren
       `setRunning` korunur; yeni additive sessiz senkron ve ayrı kullanıcı niyet yolu; opt-in sayaç
       tarifi. Kapanır: legacy setter/callback, sessiz sync, user toggle, counter completion,
       freeze, pointercancel, destroy ayrı regresyon; public sınıf silinmez.
@@ -529,6 +563,21 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       niyeti yayar (programatik değişim yaymaz), `pointercancel` basılı görünümü temizler; `setRunning`
       ve constructor/callback sözleşmesi aynen (`touchControls.test.ts`). Sayaç tamamlanma yolu ve
       destroy önceki testlerle kapsanır; tarif ayrımı (opt-in sayaç tarifi) açık.
+      Yapıldı (2026-10-11): **sayaç tarifi düğmeden ayrıldı**: `core/src/ui/buttons/pauseCounter.ts` DOM'suz `PauseCounter`
+      (düğme ona yetki verir; `counter` verilmezse hiçbir zamanlayıcı kurulmaz; genel yüzeye eklenmedi, public sınıf ve
+      `counter` seçeneği aynen). **Gerçek kusur:** düğmenin `setInterval(1000)` sayacı süreyi tik sayısından türetiyordu:
+      her duraklat/devam döngüsü kesirli saniyeyi yutuyor (0,9 sn'de duraklatıp devam edince tam bir saniye daha bekleniyor)
+      ve arka planda kısılan zamanlayıcı sayacı geri bırakıyordu. Tarif artık geçen gerçek zamandan (tek yönlü saat)
+      türetir: duraklatma kesri dondurur (10 × 500 ms duraklat/devam = 5 sn), geç tetiklenen zamanlayıcı geçen süre kadar
+      ilerler (ara saniyeler tek `onTick`te atlanır), erken tetiklenme sahte saniye üretmez, `down` tamamlanınca bir kez
+      `onComplete` ve durur, `onTick` içinde duraklatan sahip yeniden kurdurmaz, `dispose` zamanlayıcıyı bırakır.
+      Tamamlanmış sayaç sürdürülürse eski sözleşme korunur (sıradaki saniyede yeniden tamamlanır). **Kanıt:** birim
+      `core/tests/ui/touch/pauseCounter.test.ts` (16: 12 tarif + 4 düğme birleşimi), `touchControls.test.ts` (eski legacy
+      setter/callback, sessiz sync, kullanıcı toggle, tamamlanma, freeze, pointercancel, destroy regresyonları aynen geçti;
+      destroy testi `clearInterval` ayrıntısından davranışa çevrildi); mutasyonla öldürüldü (duraklatma kesri atınca 3, süre tik
+      sayısından türetilince 2 test düştü). Tarif zamanı `performance.now`dan alır; determinism yardımcısı onu dondurduğundan
+      vitrin demosunda sayaç e2e'de 0:00'da deterministik kalır. **NOT-RUN:** yok (saf mantık; gerçek cihaz/AT davranışı sayaç
+      için ayrı bir kabul gerektirmiyor).
 - [x] **UI-10.4 — LoadingScreen/Text/AnimatedLabel/Icon/Toolbar/PropertyField/CanvasViewportController/
       WorldCameraController/PinchZoomController.** Hazır/hata/yeniden deneme/iptal ve ilerleme;
       yüklemede yeni malzeme. Kapanır: asgari yükleme süresi 500 ms isteğe bağlı, meşgul durum

@@ -64,6 +64,12 @@ export async function release(session: CDPSession): Promise<void> {
   await session.detach();
 }
 
+/** Sistem dokunuşu keser (örn. başka bir uygulama öne gelir): tarayıcı açık parmaklar için `pointercancel` yollar. */
+export async function cancel(session: CDPSession): Promise<void> {
+  await session.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+  await session.detach();
+}
+
 export async function tap(page: Page, target: Locator): Promise<void> {
   const point = await centerOf(target);
   const session = await page.context().newCDPSession(page);

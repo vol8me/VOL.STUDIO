@@ -309,12 +309,12 @@ describe('PauseResumeButton', () => {
     expect(onToggle).not.toHaveBeenCalled();
   });
 
-  it("destroy bekleyen interval'i temizler", () => {
+  it('destroy bekleyen sayaç zamanlayıcısını temizler', () => {
     vi.useFakeTimers();
     const button = new PauseResumeButton({ counter: { direction: 'up' } });
-    const clearSpy = vi.spyOn(window, 'clearInterval');
+    expect(vi.getTimerCount()).toBe(1);
     button.destroy();
-    expect(clearSpy).toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 

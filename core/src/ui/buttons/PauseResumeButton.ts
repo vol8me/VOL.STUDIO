@@ -1,5 +1,6 @@
 import { i18next } from '../../i18n/I18n';
 import { emitUiIntent } from '../feedback/uiIntent';
+import { PauseCounter } from './pauseCounter';
 
 export interface PauseResumeButtonOptions {
   /** Duraklat durumundayken (oyun çalışırken) gösterilecek erişilebilirlik etiketi. Varsayılan 'Duraklat'. */
@@ -30,7 +31,10 @@ function formatSeconds(totalSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
-/** Oyunu durdurup başlatan iki-durumlu buton. `counter` verilirse kendi setInterval'ini durum geçişleriyle senkron yönetir. */
+/**
+ * Oyunu durdurup başlatan iki-durumlu buton (sunum). `counter` verilirse isteğe bağlı sayaç tarifi (`PauseCounter`) düğmenin
+ * durumuyla senkron çalışır: sunum ve sayaç mantığı ayrıdır, sayaç verilmezse hiçbir zamanlayıcı kurulmaz.
+ */
 export class PauseResumeButton {
   readonly element: HTMLButtonElement;
   private pauseLabel: string;
@@ -38,14 +42,12 @@ export class PauseResumeButton {
   private readonly pauseLabelIsI18n: boolean;
   private readonly resumeLabelIsI18n: boolean;
   private readonly onToggleHandler?: (isRunning: boolean) => void;
-  private readonly counterOptions?: PauseResumeButtonOptions['counter'];
+  private readonly counter: PauseCounter | null = null;
   private readonly iconSlot: HTMLSpanElement;
   private readonly counterEl: HTMLSpanElement | null = null;
   private readonly pauseIcon: SVGSVGElement;
   private readonly resumeIcon: SVGSVGElement;
   private isRunning: boolean;
-  private seconds: number;
-  private intervalHandle: number | null = null;
   private pressed = false;
 
   constructor(options: PauseResumeButtonOptions = {}) {
@@ -54,10 +56,22 @@ export class PauseResumeButton {
     this.pauseLabel = options.pauseLabel ?? i18next.t('core:pause.pause');
     this.resumeLabel = options.resumeLabel ?? i18next.t('core:pause.resume');
     this.onToggleHandler = options.onToggle;
-    this.counterOptions = options.counter;
     this.isRunning = !(options.startPaused ?? false);
-    this.seconds =
-      this.counterOptions?.direction === 'down' ? (this.counterOptions.startSeconds ?? 0) : 0;
+    const counter = options.counter;
+    if (counter) {
+      this.counter = new PauseCounter({
+        direction: counter.direction,
+        startSeconds: counter.startSeconds,
+        onTick: (seconds) => {
+          if (this.counterEl) this.counterEl.textContent = formatSeconds(seconds);
+          counter.onTick?.(seconds);
+        },
+        onComplete: () => {
+          this.applyState(false);
+          counter.onComplete?.();
+        },
+      });
+    }
 
     this.element = document.createElement('button');
     this.element.type = 'button';
@@ -74,10 +88,10 @@ export class PauseResumeButton {
     this.iconSlot.appendChild(this.isRunning ? this.pauseIcon : this.resumeIcon);
     this.element.appendChild(this.iconSlot);
 
-    if (this.counterOptions) {
+    if (this.counter) {
       this.counterEl = document.createElement('span');
       this.counterEl.className = 'vol-pause-resume-button__counter';
-      this.counterEl.textContent = formatSeconds(this.seconds);
+      this.counterEl.textContent = formatSeconds(this.counter.getSeconds());
       this.element.appendChild(this.counterEl);
     }
 
@@ -88,7 +102,7 @@ export class PauseResumeButton {
     this.element.addEventListener('pointerleave', () => this.setPressed(false));
     this.element.addEventListener('pointercancel', () => this.setPressed(false));
 
-    if (this.isRunning) this.startInterval();
+    if (this.isRunning) this.counter?.resume();
 
     i18next.on('languageChanged', this.onLanguageChanged);
   }
@@ -106,7 +120,7 @@ export class PauseResumeButton {
 
   /** Sayaç kullanılıyorsa şu anki saniye değerini döner (counter verilmediyse her zaman 0). */
   getSeconds(): number {
-    return this.seconds;
+    return this.counter?.getSeconds() ?? 0;
   }
 
   /** Durumu programatik olarak değiştirir — click ile aynı yolu izler, onToggle da tetiklenir (geriye uyumlu). */
@@ -127,7 +141,7 @@ export class PauseResumeButton {
 
   destroy(): void {
     i18next.off('languageChanged', this.onLanguageChanged);
-    this.stopInterval();
+    this.counter?.dispose();
     this.element.remove();
   }
 
@@ -149,46 +163,14 @@ export class PauseResumeButton {
     this.element.setAttribute('aria-label', running ? this.pauseLabel : this.resumeLabel);
     this.iconSlot.replaceChildren(running ? this.pauseIcon : this.resumeIcon);
 
-    if (running) {
-      this.startInterval();
-    } else {
-      this.stopInterval();
-    }
+    if (running) this.counter?.resume();
+    else this.counter?.pause();
   }
 
   private setPressed(pressed: boolean): void {
     if (this.pressed === pressed) return;
     this.pressed = pressed;
     this.element.classList.toggle('vol-pause-resume-button--pressed', pressed);
-  }
-
-  private startInterval(): void {
-    if (!this.counterOptions || this.intervalHandle !== null) return;
-    this.intervalHandle = window.setInterval(() => this.tickCounter(), 1000);
-  }
-
-  private stopInterval(): void {
-    if (this.intervalHandle === null) return;
-    window.clearInterval(this.intervalHandle);
-    this.intervalHandle = null;
-  }
-
-  private tickCounter(): void {
-    if (!this.counterOptions || !this.counterEl) return;
-
-    if (this.counterOptions.direction === 'down') {
-      this.seconds = Math.max(0, this.seconds - 1);
-    } else {
-      this.seconds += 1;
-    }
-
-    this.counterEl.textContent = formatSeconds(this.seconds);
-    this.counterOptions.onTick?.(this.seconds);
-
-    if (this.counterOptions.direction === 'down' && this.seconds === 0) {
-      this.applyState(false);
-      this.counterOptions.onComplete?.();
-    }
   }
 
   private buildIcon(kind: 'pause' | 'resume'): SVGSVGElement {

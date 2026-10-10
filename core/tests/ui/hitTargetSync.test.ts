@@ -35,6 +35,11 @@ const ALSO_REQUIRED: ReadonlyArray<{ selector: string; reason: string }> = [
     selector: '.vol-range-slider__track::before',
     reason: 'Aralık kaydırıcısında hedef, çubuğun üstünde simetrik taşan görünmez şerittir.',
   },
+  {
+    selector: '.vol-split-pane__separator',
+    reason:
+      'SplitPane tutamağı sürüklenir (cursor: pointer taşımaz); gerçek kutu en az 24 px, kaba işaretçide ve large hedef tabanında token (44 px). Tek ekseni tutamak kalınlığıdır.',
+  },
 ];
 
 /**

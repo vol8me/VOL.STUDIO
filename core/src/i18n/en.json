@@ -123,6 +123,9 @@
     "percent": "{{percent}} percent",
     "ready": "Fully charged"
   },
+  "dualAxisScroll": {
+    "label": "Scrollable area"
+  },
   "pinchZoom": {
     "label": "Zoomable area",
     "level": "Zoom {{percent}}%"

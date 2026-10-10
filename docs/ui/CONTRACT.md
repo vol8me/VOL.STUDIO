@@ -278,6 +278,17 @@ yakınlaştırması bozulmaz). PinchZoomController'da klavye varsayılan AÇIKTI
 `role="status"`ta duyurur); CanvasViewportController ve WorldCameraController'da varsayılan KAPALIDIR (host editör/oyun kendi
 kısayollarını taşır; açmak sahibin kararıdır). Düğme alternatifi sahibe aittir; vitrin ikisini de gösterir.
 
+Kaydırma ve bölme yüzeyleri de sürüklemeyi tek yol bırakmaz (UI-10.2). `overflow: hidden` ile kendi kaydırmasını yapan
+DualAxisScrollPanel odaklanabilir adlı gruptur: oklar/Page/Home/End (Shift yatay), tekerlek ve Shift+tekerlek çalışır; tuş
+yalnız yüzeyin kendisi odaktayken işlenir, kaydırılacak yer kalmadıysa olay iptal edilmez ve ata kaydırıcı devralır (kaydırma
+tuzağı yok). SplitPane tutamağı gerçek kutu olarak ince işaretçide en az 24 px, kaba işaretçide ve `large` hedef tabanında
+`--vol-hit-target-min` kadardır (görünmez overlay yok); sürüklemenin tek sahibi ilk birincil işaretçidir, `pointercancel` ve
+Escape iptal eder (boyut başlangıca döner, `onCommit` yok); bildirilen en küçük bölme boyutları ve tutamak kalınlığı yerleşimde
+de geçerlidir, kap dar kalırsa dış panel kayar. Kaydırma çubuğu kullanıcı aracısı denetimidir: yazar kalınlığı küçültmez
+(`scrollbar-width: thin` ve `::-webkit-scrollbar` kalınlığı yok), yalnız renk verir. Programatik `smooth` kaydırma hareket
+azaltmada anında yapılır. PauseResumeButton sunumdur; isteğe bağlı sayaç tarifi (`counter`) DOM'suz `PauseCounter`a devredilir
+ve süreyi geçen gerçek zamandan türetir (duraklatma kesirli saniyeyi dondurur).
+
 Izgara ve tablo semantiği (ARIA gerekçesi): `role="grid"` yalnız etkileşimli veri içindir ve klavye
 sözleşmesi vaat eder; görsel bir ızgaraya (CSS `grid`) otomatik yazılmaz. Seçilemeyen DataTable ve palet
 karşıtlık çizelgesi salt okunur karşılaştırma verisidir → yerel `<table>` (`th scope`, satırda seçim yok).

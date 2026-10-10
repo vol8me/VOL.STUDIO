@@ -1,3 +1,10 @@
+/** Programatik kaydırma, hareket azaltma tercihinde animasyonsuz (anında) yapılır; tarayıcı `smooth`u kendiliğinden kısmaz. */
+function scrollBehavior(): ScrollBehavior {
+  const reduced =
+    typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return reduced ? 'auto' : 'smooth';
+}
+
 export type ScrollDirection = 'vertical' | 'horizontal';
 
 export interface ScrollViewOptions {
@@ -42,11 +49,11 @@ export class ScrollView {
   }
 
   scrollToTop(): void {
-    this.element.scrollTo({ top: 0, behavior: 'smooth' });
+    this.element.scrollTo({ top: 0, behavior: scrollBehavior() });
   }
 
   scrollToBottom(): void {
-    this.element.scrollTo({ top: this.element.scrollHeight, behavior: 'smooth' });
+    this.element.scrollTo({ top: this.element.scrollHeight, behavior: scrollBehavior() });
   }
 
   destroy(): void {

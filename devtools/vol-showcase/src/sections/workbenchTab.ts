@@ -189,8 +189,10 @@ function buildSplitViewportDemo(disposables: DisposableScope): HTMLElement {
     primary: list,
     secondary: viewportWrap,
     initialSize: 220,
-    minPrimary: 150,
-    minSecondary: 280,
+    // En küçükler yerleşimde de geçerlidir (kap dar kalırsa dış panel kayar); tablet dikeyinde (≈470 px kart) tutamağın
+    // sürülecek payı kalsın diye ikisi de küçük tutulur: 473 − 44 (tutamak) − 200 = 229 üst sınır, 120 alt sınır.
+    minPrimary: 120,
+    minSecondary: 200,
     separatorLabel: i18next.t('volui:workbench.splitPane'),
   });
   split.element.classList.add('vol-showcase-workbench-split');

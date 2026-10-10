@@ -673,6 +673,10 @@
         {
           "file": "core/tests/ui/touchControls.test.ts",
           "title": "sürükleme scrollLeft/scrollTop'ı ters yönde günceller (pan davranışı)"
+        },
+        {
+          "file": "core/tests/ui/layout/dualAxisScrollInput.test.ts",
+          "title": "oklar görünümü adım adım kaydırır ve olayı iptal eder"
         }
       ]
     },
@@ -1451,6 +1455,10 @@
         {
           "file": "core/tests/ui/touchControls.test.ts",
           "title": "varsayılan olarak çalışır durumda başlar, tıklayınca duraklatılmış duruma geçer"
+        },
+        {
+          "file": "core/tests/ui/touch/pauseCounter.test.ts",
+          "title": "düğmeyle duraklatma kesirli saniyeyi dondurur ve sayaç metni güncellenir"
         }
       ],
       "extraStates": ["loading"]
@@ -1728,6 +1736,10 @@
         {
           "file": "core/tests/ui/layoutAndControls.test.ts",
           "title": "oluşturulur, yön sınıfını taşır, çocuk eklenir ve temizlenir"
+        },
+        {
+          "file": "core/tests/ui/layout/scrollSurfaces.test.ts",
+          "title": "hareket azaltmada animasyonsuz (anında) kayar; tarayıcı smooth değerini kendiliğinden kısmaz"
         }
       ]
     },
@@ -1971,6 +1983,10 @@
         {
           "file": "core/tests/ui/workbenchPrimitives.test.ts",
           "title": "pointer/klavye resize, clamp, collapse ve sessiz programatik setter sağlar"
+        },
+        {
+          "file": "core/tests/ui/layout/splitPaneInput.test.ts",
+          "title": "pointercancel boyutu başlangıca döndürür, önizlemeyi bildirir ve onCommit çağırmaz"
         }
       ]
     },
@@ -2416,6 +2432,10 @@
         {
           "file": "core/tests/ui/layout/layoutStructures.test.ts",
           "title": "yalnızca görünür + overscan aralığındaki satırları render eder"
+        },
+        {
+          "file": "core/tests/ui/layout/scrollSurfaces.test.ts",
+          "title": "DOM yalnız görünür aralık + taşma kadardır, tam liste bildirilir"
         }
       ]
     },
