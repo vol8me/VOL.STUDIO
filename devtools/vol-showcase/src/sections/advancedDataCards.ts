@@ -145,6 +145,7 @@ export function buildDataTableDemo(disposables: DisposableScope): HTMLElement {
     ],
     rows: unitRows,
     selectable: true,
+    ariaLabel: i18next.t('volui:advanced.dataTable'),
     initialSort: { key: 'power', direction: 'desc' },
     onRowClick: (row) =>
       result.setContent(
@@ -197,6 +198,7 @@ export function buildVirtualizedDataTableDemo(disposables: DisposableScope): HTM
     ],
     rows: buildLargeUnitRows(5000),
     selectable: true,
+    ariaLabel: i18next.t('volui:advanced.dataTableVirtualized'),
     virtualize: { rowHeight: 37, height: 260 },
     onRowClick: (row) =>
       result.setContent(

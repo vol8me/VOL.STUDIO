@@ -1,5 +1,6 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { emitUiIntent } from '../feedback/uiIntent';
+import { isComposingKey } from '../textEntry/ime';
 import { requestTextEntryForElement } from '../textEntry/textEntry';
 
 export interface TextAreaOptions {
@@ -100,7 +101,7 @@ export class TextArea {
     this.scope.addListener(this.textarea, 'change', boundChange);
     this.scope.addListener(this.textarea, 'keydown', ((event: KeyboardEvent) => {
       // Çok satırlı alanda Enter satır sonudur (IME dahil gönderme yok); Escape yalnız taslağı geri alır.
-      if (event.isComposing || event.keyCode === 229) return;
+      if (isComposingKey(event)) return;
       if (event.key === 'Escape' && this.textarea.value !== this.committedValue) {
         event.preventDefault();
         event.stopPropagation();

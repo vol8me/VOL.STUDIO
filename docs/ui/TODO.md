@@ -70,25 +70,24 @@ aile (UI-05 + UI-09) → UI-13.
 
 ## Gerçek kalan iş (2026-10-10 sonu)
 
-**F07 KAPALI DEĞİLDİR.** 26 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
+**F07 KAPALI DEĞİLDİR.** 24 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
 metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde bu oturumda çalıştırılmadı.
 
-| Görev        | Gerçek kalan iş                                                                                                                                                                                                                                                                                                     | Tür                 |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                                                                                               | cihaz + insan       |
-| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                                                                                                | cihaz + insan       |
-| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                                                                                                  | cihaz               |
-| UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                                                                                                         | kod                 |
-| UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te)                                                                               | kod + insan (AT)    |
-| UI-10.1–10.5 | SquareJoystick/SwipeGestureZone/MultiTouchZone klavye karşılığı, jest süresi reduced-motion; SplitPane/ScrollView/VirtualList kanıtı, %200, tutamak 24/44; sayaç tarifi; CanvasViewport/WorldCamera/PinchZoom alternatifi, Toolbar/PropertyField, meşgul <100 ms; **UI-10.5 palet ve ileri katalog hiç başlanmadı** | kod + cihaz         |
-| UI-11.1      | Unicode grafem, gerçek IME bileşimi, readOnly/disabled tuşları; Deck kolu ve Android cihaz kanıtı                                                                                                                                                                                                                   | kod + cihaz + insan |
-| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                                                                                                           | kod + cihaz         |
-| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                                                                                               | cihaz + insan       |
-| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                                                                                                           | cihaz (Windows)     |
-| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                                                                                                    | kod + insan (IME)   |
-| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                                                                                              | cihaz               |
-| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                                                                                                    | insan               |
-| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                                                                                               | kapanış             |
+| Görev        | Gerçek kalan iş                                                                                                                                                                                                                                                                  | Tür               |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                                                            | cihaz + insan     |
+| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                                                             | cihaz + insan     |
+| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                                                               | cihaz             |
+| UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                                                                      | kod               |
+| UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te)                                            | kod + insan (AT)  |
+| UI-10.1–10.5 | SquareJoystick/SwipeGestureZone/MultiTouchZone klavye karşılığı, jest süresi reduced-motion; SplitPane/ScrollView/VirtualList kanıtı, %200, tutamak 24/44; sayaç tarifi; CanvasViewport/WorldCamera/PinchZoom alternatifi, Toolbar/PropertyField, meşgul <100 ms (UI-10.5 tamam) | kod + cihaz       |
+| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                                                                        | kod + cihaz       |
+| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                                                            | cihaz + insan     |
+| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                                                                        | cihaz (Windows)   |
+| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                                                                 | kod + insan (IME) |
+| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                                                           | cihaz             |
+| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                                                                 | insan             |
+| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                                                            | kapanış           |
 
 Bu oturumda koşulmayanlar: tam `node scripts/e2e.mjs`, `pnpm fast`/`high`/`signoff`, tam core vitest (yalnız ilgili dosyalar), Deck ve Lenovo
 oturumları. Cihaz bağımsız her iş bittiğinde sıradaki kapı bunlardır; cihazlar bağlı olduğundan cihaz satırları "NOT-RUN" değil "yapılacak"tır.
@@ -535,15 +534,39 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       dünya) ve vitrin Loading sekmesinde aşama/ipucu/takılma ve hata kartları. Kanıt:
       `loadingScreen.test.ts` (72), `bootLoading.test.ts`, VOL.TEST e2e 17/17 Chromium, vitrin
       görsel temel çizgisi. Cihazda (Deck/tablet) görsel kabul kullanıcı turuna bırakıldı.
-- [ ] **UI-10.5 — Palette ve ileri katalog kanıtı.** Her aile durum örneği, public yardımcılar,
+- [x] **UI-10.5 — Palette ve ileri katalog kanıtı.** Her aile durum örneği, public yardımcılar,
       grid ARIA gerekçesi. Kapanır: registry başlangıç sınıfları + yeni exportlar tam; palet
       okunabilirliği; tier-2 erişilebilir.
+      Yapıldı (2026-10-10): **Palet sekmesi kaç oranla okunur sorusuna cevap vermiyordu** (yalnız çip + ad + onaltılık değer) ve
+      Türkçe grup başlıkları ("Surface", "Semantic: Success"…) çevrilmemişti → Karşıtlık çizelgesi (`paletteContrast.ts`): metin ×
+      4 yüzey (12), `on-*` × `*-solid` (7), ikon/odak halkası/kenarlık (5) = 24 çift; oran etkin kaplamanın ÇÖZÜMLENMİŞ token'larından
+      canlı hesaplanır (saydam renk önce zemine, zemin sayfa tabanına bileşilir; `scripts/quality/uiTheme.mjs` ile aynı WCAG yöntemi),
+      sonuç yazıyla ("Geçer (≥ 4,5:1)" / "Kalır"; renk tek taşıyıcı değil), çözülemeyen token sahte oran yazmaz ("Ölçülemedi"),
+      kaplama değişince yenilenir. Gerçek `<table>` (sütun/satır başlığı), örnek kutusu `aria-hidden`. Token grupları adlı **liste**
+      (`ul[role=list]`, `aria-label`); palet salt okunur olduğundan `grid` değildir. **Görsel inceleme bir hata yakaladı:** tam genişlik
+      kart 12 birimlik palet ızgarasında `flex` kuralı işlemediği için 150 px'e sıkışmıştı (e2e ilk koşuda geçmişti çünkü taşma
+      ölçüyordu, genişliği değil) → `grid-column: 1 / -1` ve karta ızgara genişliği + satır yüksekliği ölçümü eklendi (kural
+      kaldırılınca 150 ≠ 954 px ile düşer, mutasyonla doğrulandı). **ARIA gerekçesi** `CONTRACT.md` §9'dadır; sonuç: seçilebilir
+      DataTable `aria-selected` taşıyan satırları düz `table`da bırakıyordu → `role="grid"` (+ `aria-multiselectable`, yeni
+      `ariaLabel` seçeneği; gezinme satır düzeyinde, hücre gezinmesi yok), seçilemeyen tablo yerel kalır, SlotGrid `group` + `button`
+      kalır (gerekçeli). **Registry:** 95 sınıf + 68 yardımcı = 163 kayıt, kapı eksik/fazla/bayat kaydı ve vitrin/test bağını reddeder;
+      tek açık `gap` (`requestGamepadTextEntry`, UI-11.1) doğrudan teste bağlandı (6 test), registry'de açık gap kalmadı; `CATALOG.md`
+      başlık sayıları bayattı (94/148/241, 17 doğrudan) → gerçek 95/163/281, 20 doğrudan ve yeni kapı testi bunu yüzeyle karşılaştırır.
+      Kanıt: `paletteTab.test.ts` (13; eşik kapsayıcı, alfa, çözülemeyen değer, canlı yenileme; üç mutasyon öldürüldü),
+      `dataTableGrid.test.ts` (4), `requestGamepadTextEntry.test.ts` (6), e2e `paletteReadability.spec.ts` 7 senaryo × iki motor (her
+      oran tarayıcının ÇİZDİĞİ renklerden bağımsız yeniden hesaplanır: iki kaplamada 24 çift, fark < 0,005; hiçbir çift kalmaz; çalışırken
+      kaplama değişimi; 320 px'te taşma yok; 1280'de tam genişlik), tier-2 (Gelişmiş/Palet dahil her sekme) axe 0 ihlal 2 kaplama × 3
+      yoğunluk (`themeMatrix.spec.ts`, kayıtlı `incomplete` incelemeleri aynen). **NOT-RUN (gerekçeli, devredildi):** gerçek ekran
+      okuyucuda tablo/liste/grid duyurusu (özellikle NVDA'nın grid'de odak kipi) → UI-13.4; her ailenin HER uygulanabilir durumunun
+      ayrı kanıtı katalog kapanışıdır → UI-13.1 (registry arketip durumları bildirir, durum başına kanıtı henüz zorlamaz).
+      Not: vitrin bileşen/varyant adlarının büyük bölümü (106 değer: "Popup", "Primary", "Small"…) Türkçede İngilizce bırakılmıştır;
+      bu bilinçli katalog adlandırması gibi duruyor, ürün kararı beklenir (çevrilmedi).
 
 ### UI-11 — Metin oturumu ve Android / M7 alt faz
 
 Ön koşul: UI-11.1–11.2 için UI-05.1; UI-11.3–11.4 için UI-06.2 ve Android cihazı. F04.2 tekrarlanmaz (D9).
 
-- [ ] **UI-11.1 — Sahip/oturum/IME bileşimi.** `core/src/ui/textEntry/textEntry.ts` sağlayıcı/kip
+- [x] **UI-11.1 — Sahip/oturum/IME bileşimi.** `core/src/ui/textEntry/textEntry.ts` sağlayıcı/kip
       sondası yeniden kullanılır; oturum sınıfı ve abort/selection gruplama. OSK Türkçe/İngilizce
       düzen, Unicode grafem/silme ve maxLength, multiline/password/readOnly/disabled; sahibin
       public iptal yolu.
@@ -557,10 +580,27 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       `keyTap`/`keyDelete` (iki palet), alçak ekranda sıkılaşma ve `100dvh` sınırı, kolda son satır
       (Vazgeç·Bitti) uzamsal gezinme düzeltmesi. Kanıt: `keyboard.test.ts` (13), `osk.spec.ts`
       (dikey/yatay telefon, dikey/yatay tablet, işaretçi, klavye; iki motor).
-      Kalan: Unicode grafem kümesi (şimdi kod noktası), IME bileşimi, readOnly/disabled tuşları,
-      gerçek cihaz kanıtı (Deck kolu, Android) — NOT-RUN. Kapanır: eski async sonuç yeni/yok edilmiş alana yazamaz ve odak veremez;
-      sağlayıcı değişiminde eski temizlik yeni sahibi silmez; tek bekleyen istek/zaman aşımı/geri/
-      Escape; IME'de Enter göndermez; OSK diyalog adı/odak sınırı ve ekran görüntüsü.
+      Yapıldı (2026-10-10): **grafem, IME ve alan sahipliği.** İmleç `value` içinde UTF-16 konumudur ve her zaman grafem
+      sınırındadır (`core/src/ui/textEntry/graphemes.ts`: `Intl.Segmenter`, yoksa kod noktası + bağlanan parça/bayrak/ZWJ/CRLF
+      yedeği); geri silme ve ← → TEK kümeyi geçer (aile emojisi, bayrak, ayrışık vurgu bölünmez); parola grafem başına bir
+      nokta gösterir; `maxLength` HTML gibi UTF-16 kod birimi sayar (düzenleme menüsü ve TextArea ile aynı, sayaç de öyle).
+      `requestTextEntryForElement` salt okunur alan için de klavye açmaz. IME: tek iç `isComposingKey` (`isComposing` veya
+      `keyCode 229`); `Input`/`TextArea`/`ColorPicker` bunu zaten sayıyordu, `CommandPalette` (Enter/Escape/oklar +
+      belge Escape'i) ve `NumberStepper` (Escape) saymıyordu — bileşimde komut çalıştırıp paleti kapatıyordu, düzeltildi.
+      **Gerçek cihaz bulgusu (Lenovo TB350FU, Android 14, Chrome, Gboard):** ipucu yokken Gboard tek alanda "Sonraki"
+      gösterir ve Chrome bunu odak gezintisi sayar — sayfaya HİÇ `Enter` gelmez, komut paleti klavyeden çalıştırılamıyordu.
+      `enterkeyhint` eklendi (`setEnterKeyHint`): `CommandPalette` `go`, `NumberStepper`/renk hex `done`, `Input` için
+      açık `enterKeyHint` seçeneği (varsayılan: `onEnter` → `done`, `type: 'search'` → `search`). Cihazda "Git" tuşu gerçek
+      `keydown Enter` (keyCode 13, bileşim dışı) üretir ve komutu çalıştırır. Gboard harfleri `keydown Unidentified`
+      keyCode 229, isComposing false olarak gelir (bileşim olayı yok): `isComposingKey` bunların hepsini tanır.
+      Kanıt: `graphemes.test.ts` (23; Segmenter + yedek yol), `keyboardGraphemes.test.ts` (6), `imeComposition.test.ts` (16:
+      iki IME sinyali × palet/stepper/renk/Input/TextArea + enterkeyhint), `textEntry.test.ts` (+salt okunur/devre dışı),
+      mutasyonla doğrulandı (IME tanıma ve grafem bölme kapatılınca 25 test düştü); gerçek cihaz:
+      `devtools/vol-showcase/tests/device/textEntry.spec.ts` (2 senaryo, dikey ve yatay: gerçek Gboard'a `adb input tap`,
+      palet, dokunmatik kipte ekran klavyesi açılmaması, salt okunur alanın klavye açmaması).
+      **NOT-RUN (gerekçeli, devredildi):** Deck'te fiziksel kolla ekran klavyesi ve gerçek Steam klavyesi → UI-13.4/F08.6;
+      Samsung Klavye/Japonca-Korece IME ve insan yazım hissi → UI-13.4; Android WebView'de (Chrome değil) Gboard → UI-11.4/F09.2.
+
 - [x] **UI-11.2 — Native menü ve pano.** `core/src/ui/nativeMenus.ts` + `tauri-v2/src-tauri/src/native_menus.js`
       düzenlenebilir alan istisnası; ClipboardAdapter (web/native). Kapanır: yapıştırmayı kullanıcı
       başlatır; salt okunurda Kopyala/Tümünü Seç var, Kes/Yapıştır yok; parolada Kopyala/Kes kapalı;

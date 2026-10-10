@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import {
+  REGISTRY_PATH,
   STATE_AXES,
   analyzeTests,
   evidenceStatus,
@@ -215,6 +218,25 @@ test('gerçek CORE UI yüzeyi 95 sınıf ve 68 yardımcıdır', () => {
   assert.equal(real.classes.length, 95);
   assert.equal(real.helpers.length, 68);
   assert.ok(real.types > 100);
+});
+
+test('CATALOG.md başlık sayıları gerçek yüzey ve kayıtla birebirdir', () => {
+  const catalog = readFileSync(resolve(ROOT, 'docs/ui/CATALOG.md'), 'utf8');
+  const real = uiSurface(ROOT);
+  const registry = JSON.parse(readFileSync(resolve(ROOT, REGISTRY_PATH), 'utf8'));
+  const direct = registry.entries.filter(
+    (entry) => entry.kind === 'class' && entry.consumer === 'direct',
+  ).length;
+  const stated = /(\d+) public sınıf, (\d+) runtime export, (\d+) type-only export/.exec(catalog);
+  assert.ok(stated, 'CATALOG.md "N public sınıf, M runtime export, K type-only export" satırı yok');
+  assert.deepEqual(
+    stated.slice(1).map(Number),
+    [real.classes.length, real.classes.length + real.helpers.length, real.types],
+    'CATALOG.md kapsam sayıları bayat; gerçek yüzeye göre güncelle',
+  );
+  const statedDirect = /(\d+) sınıf VOL\.TEST'te doğrudan/.exec(catalog);
+  assert.ok(statedDirect, `CATALOG.md "N sınıf VOL.TEST'te doğrudan" ifadesi yok`);
+  assert.equal(Number(statedDirect[1]), direct, 'doğrudan tüketilen sınıf sayısı bayat');
 });
 
 test('suggestEvidence gerçek doğrulama taşıyan testi bulur', () => {

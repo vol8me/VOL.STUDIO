@@ -25,7 +25,7 @@ export interface TextEntryRequest {
   multiline?: boolean;
   /** Amaç ipucu: `password` ekranda maskelenir; sağlayıcı klavye düzeni seçebilir. */
   purpose?: 'default' | 'password' | 'search';
-  /** En çok karakter; alanın `maxLength`inden gelir. Verilmezse sınır yok. */
+  /** En çok UTF-16 kod birimi (HTML `maxlength` gibi); alanın `maxLength`inden gelir. Verilmezse sınır yok. */
   maxLength?: number;
 }
 
@@ -136,7 +136,8 @@ export function requestTextEntryForElement(
     refocusSuppress.delete(element);
     return noop;
   }
-  if (!isGamepadTextEntryActive() || element.disabled) return noop;
+  // Salt okunur alan yazılamaz: klavye açılıp `apply` ile değeri değiştirmek `readOnly` sözleşmesini çiğnerdi.
+  if (!isGamepadTextEntryActive() || element.disabled || element.readOnly) return noop;
   cancelActiveSession?.();
   // Klavyeye odak aktarımının blur'u iptal değildir; dinleyici sonra kurulur.
   element.blur();

@@ -2,6 +2,7 @@ import { Icon } from './Icon';
 import { emitUiIntent, emitUiSignal } from '../feedback/uiIntent';
 import { i18next } from '../../i18n/I18n';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { isComposingKey, setEnterKeyHint } from '../textEntry/ime';
 
 let stepperInstanceCounter = 0;
 
@@ -95,6 +96,7 @@ export class NumberStepper {
 
     this.input = document.createElement('input');
     this.input.type = 'number';
+    setEnterKeyHint(this.input, 'done');
     this.input.className = 'vol-stepper__input';
     this.input.min = String(min);
     this.input.max = String(max);
@@ -155,6 +157,8 @@ export class NumberStepper {
       this.previewValue = null;
     };
     const boundKeydown = (event: KeyboardEvent): void => {
+      // IME kompozisyonunda Escape adayı iptal eder; önizlemeyi geri almaz ve üst katmanı kapatmaz.
+      if (isComposingKey(event)) return;
       if (event.key !== 'Escape' || this.input.value === String(this.value)) return;
       // Yazılırken alınan önizleme kalıcı değildir: ilk Escape son kalıcı değere döner.
       event.preventDefault();

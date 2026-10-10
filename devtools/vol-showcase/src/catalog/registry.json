@@ -2937,11 +2937,12 @@
         "via": null,
         "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
       },
-      "tests": [],
-      "gap": {
-        "task": "UI-11.1",
-        "reason": "çalışma zamanı yardımcısını doğrudan sınayan test yok; sahip görev kanıtı ekler"
-      }
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/requestGamepadTextEntry.test.ts",
+          "title": "kayıtlı sağlayıcı isteği ve sinyali olduğu gibi alır; sonucu aynen döndürür, ekran klavyesi açılmaz"
+        }
+      ]
     },
     {
       "export": "requestTextEntryForElement",

@@ -265,6 +265,16 @@ kapatır), Joystick (ok tuşları vektör üretir), seçilebilir DataTable (rovi
 Enter/Space, `aria-selected`) klavye ve kol karşılığını taşır; durum değişimi canlı bölgeyle duyurulur ve
 yeniden çizim odağı düşürmez.
 
+Izgara ve tablo semantiği (ARIA gerekçesi): `role="grid"` yalnız etkileşimli veri içindir ve klavye
+sözleşmesi vaat eder; görsel bir ızgaraya (CSS `grid`) otomatik yazılmaz. Seçilemeyen DataTable ve palet
+karşıtlık çizelgesi salt okunur karşılaştırma verisidir → yerel `<table>` (`th scope`, satırda seçim yok).
+Satırı odaklanan ve seçilen DataTable → `role="grid"` (`aria-selected`, çoklu seçimde `aria-multiselectable`,
+roving `tabindex`, ok/Home/End/Enter/Space); gezinme SATIR düzeyindedir, hücreler etkileşimsiz olduğundan
+sol/sağ hücre gezinmesi yoktur (bilinen sınır). Palet token grupları salt okunur çip koleksiyonudur → adlı
+liste. SlotGrid etkileşimli hücre kümesidir ama her slot bağımsız bir eylem yüzeyidir (tut/bırak/seç) →
+`group` + her slot `button` (roving `tabindex`, uzamsal kol gezintisi); `grid` rolü ona sütun/satır başlığı
+ve hücre-hücre ok sözleşmesi vaat ederdi. Bu seçimler `dataTableGrid.test.ts` ve `paletteTab.test.ts` ile pinlidir.
+
 RangeSlider jestinin tek işaretçi sahibi vardır; ikinci basış başlangıç snapshot'ını devralmaz,
 başka işaretçinin hareketi değer üretmez. PullToRefresh'te pointercancel, hazır eşiği aşılmış
 olsa bile yenileme veya tıklama yutma zamanlayıcısı başlatmadan görünümü sıfırlar.

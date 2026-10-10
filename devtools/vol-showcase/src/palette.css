@@ -1,0 +1,127 @@
+/*
+ * Palet sekmesi: token grupları ve karşıtlık çizelgesi. Renk YALNIZ tokenlardan gelir; çizelge satırlarındaki örnek
+ * kutusu çiftin kendi ön/zemin renklerini kaplamanın yüzey ve metin tokenlarıyla giyer, bu yüzden kaplama değişince kendiliğinden döner.
+ */
+
+/* Palet ızgarası 12 birimlik sabit gridtir; tam genişlik kart bütün sütunları kaplar (`flex` yalnız genel ızgarada işler). */
+.vol-palette-grid .vol-showcase-card--span-all {
+  grid-column: 1 / -1;
+}
+
+.vol-palette-group__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vol-palette-group__item {
+  min-width: 0;
+}
+
+.vol-palette-contrast-wrap {
+  display: grid;
+  gap: var(--vol-space-sm);
+  width: 100%;
+  min-width: 0;
+}
+
+.vol-palette-contrast {
+  width: 100%;
+  max-width: 56rem;
+  border-collapse: collapse;
+
+  /* Sabit düzen: sütun genişliği içerikten gelmez; kaplama değişince oran metni değişse de hiçbir kutu kaymaz. */
+  table-layout: fixed;
+}
+
+.vol-palette-contrast th,
+.vol-palette-contrast td {
+  padding: var(--vol-space-xs) var(--vol-space-sm);
+  border-bottom: 1px solid var(--vol-ui-border-soft);
+  text-align: start;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+  font-size: var(--vol-text-label);
+  font-weight: 400;
+  color: var(--vol-ui-text-secondary);
+}
+
+.vol-palette-contrast thead th {
+  color: var(--vol-ui-text-muted);
+  font-weight: 600;
+}
+
+/*
+ * Sütun genişlikleri içeriğe göre HESAPLANIR (yüzde değil): örnek kutusu ~5 em, oran "12,35:1", sonuç "Geçer (≥ 4,5:1)".
+ * Yüzdeler 360 px'te örnek sütununu 33 px'e düşürüp kutuyu taşırıyordu (+%30 sahte dil ölçümü). Ad sütunu kalan yeri
+ * alır ve kırılır.
+ */
+.vol-palette-contrast th:nth-child(2) {
+  width: calc(5em + 2 * var(--vol-space-sm));
+}
+
+.vol-palette-contrast th:nth-child(3) {
+  width: calc(8ch + 2 * var(--vol-space-sm));
+}
+
+.vol-palette-contrast th:nth-child(4) {
+  /* "Geçer (≥ 4,5:1)" tek satırda okunur; dar ekranda kırılır. */
+  width: calc(15ch + 2 * var(--vol-space-sm));
+}
+
+/*
+ * Metin kutuları hücre genişliğini doldurur (`display: block`): kaplama değişince oran ve sonuç sözü ("Geçer"/"Kalır")
+ * değişir, satır içi kutu metnin genişliğine daralır ve çizelge kayardı. Rakamlar eşit genişlikte okunur.
+ */
+.vol-palette-contrast__name,
+.vol-palette-contrast__ratio,
+.vol-palette-contrast__result {
+  display: block;
+  font-size: var(--vol-text-label);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.vol-palette-contrast__ratio {
+  font-variant-numeric: tabular-nums;
+}
+
+.vol-palette-contrast__sample {
+  /* Hücreyi doldurur: örnek yazısı çevirisiyle uzarsa kutu hücre içinde kalır (taşmaz), gerekirse yazı kırılır. */
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 2px var(--vol-space-xs);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  text-align: center;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Kalan çift yazıyla da belli olur ("Kalır"); renk yalnız pekiştirir. */
+.vol-palette-contrast__row[data-result='fail'] .vol-palette-contrast__result {
+  color: var(--vol-ui-danger-border);
+  font-weight: 700;
+}
+
+/* Telefon genişliğinde sabit sütunların toplamı karta sığmaz: sütunlar daralır, sonuç sözü iki satıra kırılır. */
+@media (width <= 480px) {
+  .vol-palette-contrast th,
+  .vol-palette-contrast td {
+    padding-inline: var(--vol-space-xs);
+  }
+
+  .vol-palette-contrast th:nth-child(2) {
+    width: calc(4em + 2 * var(--vol-space-xs));
+  }
+
+  .vol-palette-contrast th:nth-child(3) {
+    width: calc(7ch + 2 * var(--vol-space-xs));
+  }
+
+  .vol-palette-contrast th:nth-child(4) {
+    width: calc(8ch + 2 * var(--vol-space-xs));
+  }
+}

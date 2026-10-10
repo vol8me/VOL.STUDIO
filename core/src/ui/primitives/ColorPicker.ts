@@ -1,6 +1,7 @@
 import { Popover } from '../overlays/Popover';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { emitUiIntent } from '../feedback/uiIntent';
+import { isComposingKey, setEnterKeyHint } from '../textEntry/ime';
 
 export interface ColorPickerOptions {
   /** `#rrggbb`. Geçersizse siyaha düşer. */
@@ -84,6 +85,7 @@ export class ColorPicker {
     this.hexInput.value = this.value;
     this.hexInput.spellcheck = false;
     this.hexInput.maxLength = 7;
+    setEnterKeyHint(this.hexInput, 'done');
     this.hexInput.disabled = options.disabled ?? false;
     if (options.label) this.hexInput.setAttribute('aria-label', options.label);
     row.appendChild(this.hexInput);
@@ -132,7 +134,7 @@ export class ColorPicker {
     };
     const boundHexChange = (event: Event): void => this.commitCurrent(event);
     const boundHexKeydown = (event: KeyboardEvent): void => {
-      if (event.isComposing) return;
+      if (isComposingKey(event)) return;
       const draft = this.hexInput.value !== this.committedValue;
       if (event.key !== 'Escape' || (this.value === this.committedValue && !draft)) return;
       // Kaydedilmemiş taslak: ilk Escape geri alır; katmanı kapatan ikinci Escape'tir.

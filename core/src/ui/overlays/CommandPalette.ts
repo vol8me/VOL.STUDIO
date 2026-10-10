@@ -1,4 +1,5 @@
 import { i18next } from '../../i18n/I18n';
+import { isComposingKey, setEnterKeyHint } from '../textEntry/ime';
 import { signalOverlay } from './overlaySignal';
 
 export interface CommandItem {
@@ -105,6 +106,8 @@ export class CommandPalette {
     this.input.setAttribute('role', 'combobox');
     this.input.setAttribute('aria-expanded', 'true');
     this.input.setAttribute('aria-autocomplete', 'list');
+    // Enter seçili komutu çalıştırır: Android klavyesi "Git" göstermeli (ipucu yoksa "Sonraki" çıkar ve Enter gelmez).
+    setEnterKeyHint(this.input, 'go');
     inputRow.appendChild(this.input);
 
     this.panel.appendChild(inputRow);
@@ -127,7 +130,8 @@ export class CommandPalette {
 
     // Odak input'tan kayarsa diye Escape'i document seviyesinde de yakalar.
     this.boundGlobalEscape = (event) => {
-      if (event.key === 'Escape' && this.isOpen()) this.close();
+      // IME kompozisyonunda Escape adayı iptal eder; paleti kapatmaz.
+      if (event.key === 'Escape' && !isComposingKey(event) && this.isOpen()) this.close();
     };
 
     i18next.on('languageChanged', this.onLanguageChanged);
@@ -183,6 +187,8 @@ export class CommandPalette {
   }
 
   private handleKeydown(event: KeyboardEvent): void {
+    // Kompozisyon sürerken Enter/Escape/oklar IME'nindir (aday seçme/iptal/gezinme); komut çalıştırmaz, paleti kapatmaz.
+    if (isComposingKey(event)) return;
     if (event.key === 'Escape') {
       event.preventDefault();
       this.close();

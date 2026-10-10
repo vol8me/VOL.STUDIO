@@ -5,6 +5,7 @@ import { Icon, type IconName } from '../primitives/Icon';
 import { emitUiIntent, findUiIntentRoot, type UiIntentKind } from '../feedback/uiIntent';
 import { previousFocusTarget } from '../primitives/buttonBehavior';
 import { listFocusable } from '../focus/focusable';
+import { firstGraphemeLength, lastGraphemeLength, splitGraphemes } from './graphemes';
 import type { TextEntryRequest, TextEntryResult } from './textEntry';
 
 /**
@@ -20,7 +21,8 @@ import type { TextEntryRequest, TextEntryResult } from './textEntry';
  * sınıf tuş), diğer diller için QWERTY. İki katman vardır: harfler ve semboller
  * (`@ # ₺ € / \ …` — kullanıcı adı, adres ve parola için gerekir). İmleç gerçektir:
  * `←` `→` ile hareket eder, yazma ve silme imleç konumunda olur; değer panelde
- * canlı görünür ve parola maskelenir.
+ * canlı görünür ve parola maskelenir. İmleç ve geri silme KOD NOKTASINA değil grafem kümesine göre ilerler
+ * (`graphemes.ts`); `maxLength` HTML gibi UTF-16 kod birimi sayar.
  */
 
 type KeyAction =
@@ -93,7 +95,7 @@ export class OnScreenKeyboard {
   private readonly purpose: NonNullable<TextEntryRequest['purpose']>;
   private readonly maxLength: number;
   private value: string;
-  /** İmleç, kod noktası cinsinden (`[...value]` indeksi); 0..uzunluk. */
+  /** İmleç, `value` içinde UTF-16 kod birimi konumudur (her zaman bir grafem sınırı); 0..`value.length`. */
   private caret: number;
   private shifted = false;
   private layer: 'letters' | 'symbols' = 'letters';
@@ -108,7 +110,7 @@ export class OnScreenKeyboard {
   private constructor(request: TextEntryRequest, resolve: (r: TextEntryResult) => void) {
     this.anchor = previousFocusTarget() ?? document.body;
     this.value = request.value;
-    this.caret = [...request.value].length;
+    this.caret = request.value.length;
     this.original = request.value;
     this.isMultiline = request.multiline === true;
     this.purpose = request.purpose ?? 'default';
@@ -469,8 +471,7 @@ export class OnScreenKeyboard {
     const data = key.dataset;
     switch (data.action) {
       case 'backspace':
-        if (this.caret === 0) return;
-        this.edit(this.caret - 1, 1, '');
+        if (!this.erasePrevious()) return;
         this.intent('erase', key, event);
         break;
       case 'shift':
@@ -495,9 +496,12 @@ export class OnScreenKeyboard {
         return;
       case 'left':
       case 'right': {
-        const next = this.caret + (data.action === 'left' ? -1 : 1);
-        if (next < 0 || next > [...this.value].length) return;
-        this.caret = next;
+        const step =
+          data.action === 'left'
+            ? -lastGraphemeLength(this.value.slice(0, this.caret))
+            : firstGraphemeLength(this.value.slice(this.caret));
+        if (step === 0) return;
+        this.caret += step;
         this.intent('select', key, event, 'select');
         break;
       }
@@ -521,37 +525,44 @@ export class OnScreenKeyboard {
     this.showValue();
   }
 
-  /** İmleç konumuna metin ekler; sınır doluysa reddeder ve `false` döner. */
+  /**
+   * İmleç konumuna metin ekler; sınır doluysa reddeder ve `false` döner. `maxLength` UTF-16 kod birimi sayar
+   * (HTML `maxlength` ve düzenleme menüsüyle aynı), böylece klavyenin kabul ettiği değer alanda da geçerli kalır.
+   */
   private insert(text: string, key: HTMLElement, event: Event): boolean {
-    const added = [...text];
-    if ([...this.value].length + added.length > this.maxLength) {
+    if (this.value.length + text.length > this.maxLength) {
       this.intent('reject', key, event);
       return false;
     }
-    this.edit(this.caret, 0, text);
-    this.caret += added.length;
+    this.value = this.value.slice(0, this.caret) + text + this.value.slice(this.caret);
+    this.caret += text.length;
     this.intent('type', key, event);
     return true;
   }
 
-  /** `[...value]` üzerinde `start`tan `deleteCount` kod noktasını `text` ile değiştirir. */
-  private edit(start: number, deleteCount: number, text: string): void {
-    const chars = [...this.value];
-    chars.splice(start, deleteCount, ...text);
-    this.value = chars.join('');
-    if (deleteCount > 0) this.caret = start;
+  /** İmlecin solundaki TEK grafem kümesini siler (birleşik harf, bayrak, ZWJ emojisi yarım kalmaz). */
+  private erasePrevious(): boolean {
+    const length = lastGraphemeLength(this.value.slice(0, this.caret));
+    if (length === 0) return false;
+    this.value = this.value.slice(0, this.caret - length) + this.value.slice(this.caret);
+    this.caret -= length;
+    return true;
   }
 
-  /** Parola ekranda maskelenir; değer yine olduğu gibi döner. İmleç değerin içinde görünür. */
+  /** Parola ekranda maskelenir (grafem başına bir nokta); değer yine olduğu gibi döner. İmleç değerin içinde görünür. */
   private showValue(): void {
-    const chars = [...this.value];
-    const shown = this.masked ? chars.map(() => '•') : chars;
+    const before = this.value.slice(0, this.caret);
+    const after = this.value.slice(this.caret);
+    const mask = (text: string): string =>
+      this.masked ? '•'.repeat(splitGraphemes(text).length) : text;
     this.valueView.replaceChildren(
-      document.createTextNode(shown.slice(0, this.caret).join('')),
+      document.createTextNode(mask(before)),
       this.caretView,
-      document.createTextNode(shown.slice(this.caret).join('') || (shown.length === 0 ? ' ' : '')),
+      document.createTextNode(mask(after) || (this.value === '' ? ' ' : '')),
     );
-    if (this.counterView) this.counterView.textContent = `${chars.length} / ${this.maxLength}`;
+    if (this.counterView) {
+      this.counterView.textContent = `${this.value.length} / ${this.maxLength}`;
+    }
   }
 
   private close(canceled: boolean): void {

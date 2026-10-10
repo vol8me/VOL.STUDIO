@@ -29,6 +29,8 @@ export interface DataTableOptions<T> {
   initialSort?: { key: string; direction: DataTableSortDirection };
   /** Satır yoksa gösterilecek metin. Varsayılan 'Kayıt yok'. */
   emptyText?: string;
+  /** Tablonun erişilebilir adı (`aria-label`); seçilebilir tablo bir `grid` olduğundan ad verilmesi önerilir. */
+  ariaLabel?: string;
   /**
    * Binlerce satırlık veri setleri için pencereleme (windowing) — VirtualList
    * ile aynı desen, ama `<table>` semantiği korunur: eksik satırların yüksekliği
@@ -121,6 +123,7 @@ export class DataTable<T extends object> {
 
     this.table = document.createElement('table');
     this.table.className = 'vol-datatable__table';
+    if (options.ariaLabel) this.table.setAttribute('aria-label', options.ariaLabel);
 
     const thead = document.createElement('thead');
     thead.appendChild(this.buildHeaderRow());
@@ -129,6 +132,10 @@ export class DataTable<T extends object> {
     this.tbody = document.createElement('tbody');
     this.table.appendChild(this.tbody);
     if (this.selectable) {
+      // Satırlar odaklanır ve seçilir (`aria-selected`, roving tabindex, ok tuşları): bu, APG'nin etkileşimli veri
+      // ızgarası desenidir. Düz `table` salt okunur veri içindir ve satırda seçim durumuna izin vermez.
+      this.table.setAttribute('role', 'grid');
+      if (this.multiSelect) this.table.setAttribute('aria-multiselectable', 'true');
       const onKeyDown = (event: KeyboardEvent): void => this.onRowKeyDown(event);
       this.tbody.addEventListener('keydown', onKeyDown);
       this.headerScope.add({ dispose: () => this.tbody.removeEventListener('keydown', onKeyDown) });

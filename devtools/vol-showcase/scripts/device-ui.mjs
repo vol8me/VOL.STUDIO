@@ -4,7 +4,9 @@
  * KAPI DEĞİL, cihaz kabul kaydıdır: çıktı `records/ui-device/<etiket>-<yön>/` altındadır (git dışı).
  *
  *   node devtools/vol-showcase/scripts/device-ui.mjs [--serial <s>] [--orientation portrait|landscape|both]
- *                                                  [--tag <ad>] [--no-build] [--font-scale <n>]
+ *                                                  [--tag <ad>] [--no-build] [--font-scale <n>] [--spec <ad>]
+ *
+ * `--spec` yalnız dosya adı bu ifadeyi içeren belirtimi koşar (örn. `--spec textEntry`); verilmezse `tests/device` hepsi.
  *
  * Yerel `vite preview` sunucusunu açar, `adb reverse` ile cihazın `localhost`una bağlar, Chrome'un
  * DevTools soketini `adb forward` eder, `tests/device` belirtimini koşar ve her şeyi geri alır
@@ -31,6 +33,7 @@ const tag = option('tag', new Date().toISOString().slice(0, 10));
 let serial = option('serial', '');
 // Sistem yazı ölçeği (Ayarlar > Ekran > Yazı boyutu): 1 varsayılan, 2 en büyük erişilebilirlik ölçeği (UI-07.3).
 const fontScale = option('font-scale', '');
+const spec = option('spec', '');
 
 const adb = (parts, opts = {}) =>
   execFileSync(ADB, serial ? ['-s', serial, ...parts] : parts, {
@@ -63,7 +66,14 @@ async function run(rotation) {
   console.log(`\n== ${rotation.name} (user_rotation=${rotation.value}) → ${out}`);
   const result = spawn(
     'pnpm',
-    ['exec', 'playwright', 'test', '-c', 'tests/device/playwright.config.ts'],
+    [
+      'exec',
+      'playwright',
+      'test',
+      '-c',
+      'tests/device/playwright.config.ts',
+      ...(spec ? [spec] : []),
+    ],
     {
       cwd: root,
       stdio: 'inherit',

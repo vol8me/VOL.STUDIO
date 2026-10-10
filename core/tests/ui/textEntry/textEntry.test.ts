@@ -72,6 +72,26 @@ describe('textEntry — kolla metin girişi', () => {
     expect(document.querySelector('.vol-osk')).toBeNull();
   });
 
+  it('salt okunur ya da devre dışı alan için klavye açılmaz; yazılabilir olunca açılır', async () => {
+    input.readOnly = true;
+    focus();
+    await flush();
+    expect(document.querySelector('.vol-osk')).toBeNull();
+
+    input.readOnly = false;
+    input.disabled = true;
+    focus();
+    await flush();
+    expect(document.querySelector('.vol-osk')).toBeNull();
+
+    input.disabled = false;
+    focus();
+    await flush();
+    expect(document.querySelector('.vol-osk')).not.toBeNull();
+    triggerBack();
+    await flush();
+  });
+
   it('kol kipindeyken odak ekran klavyesi açar ve değer apply edilir', async () => {
     input.focus();
     focus();

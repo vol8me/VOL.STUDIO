@@ -513,7 +513,18 @@
     "semanticDanger": "Semantic: Danger",
     "semanticInfo": "Semantic: Info",
     "interaction": "Interaction",
-    "overlay": "Overlay"
+    "overlay": "Overlay",
+    "contrast": "Contrast pairs",
+    "contrastNote": "Measured live from the active skin's resolved tokens; transparency is composited over the page background. Text needs 4.5:1, icons, the focus ring and borders need 3:1.",
+    "colPair": "Pair",
+    "colSample": "Sample",
+    "colRatio": "Ratio",
+    "colResult": "Result",
+    "pairOn": "{{foreground}} on {{background}}",
+    "sample": "Aa",
+    "pass": "Pass (≥ {{min}}:1)",
+    "fail": "Fail (< {{min}}:1)",
+    "unknown": "Not measurable"
   },
   "advanced": {
     "dialogue": "Dialogue",

@@ -1,5 +1,6 @@
 import { emitUiIntent } from '../feedback/uiIntent';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { isComposingKey, setEnterKeyHint } from '../textEntry/ime';
 import { requestTextEntryForElement } from '../textEntry/textEntry';
 
 export interface InputOptions {
@@ -18,6 +19,11 @@ export interface InputOptions {
   /** Kullanıcı değeri Enter/change ile tamamladığında çağrılır. */
   onCommit?: (value: string) => void;
   onEnter?: (value: string) => void;
+  /**
+   * Ekran klavyesinin eylem tuşu (`enterkeyhint`). Verilmezse `onEnter` varsa `done`, `type: 'search'` ise `search`;
+   * ikisi de yoksa tarayıcı seçer. İpucu olmadan Android'de "Sonraki" çıkar ve sayfaya Enter gelmez.
+   */
+  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
 }
 
 export class Input {
@@ -42,6 +48,7 @@ export class Input {
       onInput,
       onCommit,
       onEnter,
+      enterKeyHint,
     } = options;
 
     this.element = document.createElement('input');
@@ -55,6 +62,10 @@ export class Input {
       this.element.placeholder = placeholder;
     }
     if (ariaLabel) this.element.setAttribute('aria-label', ariaLabel);
+    setEnterKeyHint(
+      this.element,
+      enterKeyHint ?? (type === 'search' ? 'search' : onEnter ? 'done' : undefined),
+    );
     this.setInvalid(invalid);
 
     const boundInput = (event: Event): void => {
@@ -70,7 +81,7 @@ export class Input {
     const boundChange = (event: Event): void => this.commitUserValue(event);
     const boundKeydown = (event: KeyboardEvent): void => {
       // IME bileşimi sürerken Enter adayı onaylar; alanı göndermez (keyCode 229: bileşim sırasındaki eski tarayıcı kodu).
-      if (event.isComposing || event.keyCode === 229) return;
+      if (isComposingKey(event)) return;
       if (event.key === 'Enter') {
         this.onEnterHandler?.(this.element.value);
         this.commitUserValue(event);
