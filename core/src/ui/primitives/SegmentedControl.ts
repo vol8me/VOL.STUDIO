@@ -1,5 +1,6 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { emitUiIntent } from '../feedback/uiIntent';
+import { inlineSign } from '../direction';
 import type { HapticFeedback } from './hapticFeedback';
 
 export interface SegmentedControlOption {
@@ -190,7 +191,7 @@ export class SegmentedControl {
     const current = focused ?? this.value;
     const index = current === undefined ? -1 : enabled.indexOf(current);
     // Yatay şeritte "sağ" okuma yönüne bağlıdır; sağdan sola dilde önceki segmenttir.
-    const forward = this.element.closest('[dir="rtl"]') ? -1 : 1;
+    const forward = inlineSign(this.element);
 
     let target: number;
     switch (event.key) {

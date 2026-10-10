@@ -60,7 +60,7 @@ test('kontrast son renk üzerinden ölçülür: alfalı ön renk ve alfalı zemi
   assert.ok(Math.abs(contrastRatio('#ffffff', '#ffffff80', black) - 3.95) < 0.02);
 });
 
-test('mevcut tema kusurları kayıtlı olanlarla birebir: default 3, aurum 0', () => {
+test('mevcut tema kusurları kayıtlı olanlarla birebir: default 0, aurum 0', () => {
   const colors = readExportedConstant('colors.ts', read('core/src/ui/colors.ts'), 'VOL_COLORS');
   const semantic = readExportedConstant(
     's.ts',
@@ -75,7 +75,7 @@ test('mevcut tema kusurları kayıtlı olanlarla birebir: default 3, aurum 0', (
   const base = { ...colors, ...semantic };
   const failures = contrastFailures({ default: base, aurum: { ...base, ...aurum } });
   assert.equal(failures.filter((f) => f.theme === 'aurum').length, 0);
-  assert.equal(failures.filter((f) => f.theme === 'default').length, 3);
+  assert.equal(failures.filter((f) => f.theme === 'default').length, 0);
   // Kasıtlı kötü bir token yeni kusur üretir.
   const worse = contrastFailures({ default: { ...base, uiText: '#202830' } });
   assert.ok(worse.some((f) => f.fg === 'uiText' && f.bg === 'uiSurface1'));

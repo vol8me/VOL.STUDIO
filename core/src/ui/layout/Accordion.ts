@@ -42,8 +42,11 @@ export class Accordion {
     this.element = document.createElement('div');
     this.element.className = 'vol-accordion';
 
+    // Tekli kipte birden çok başlangıç açık bölümü verilse de yalnız ilk geçerli olan açılır.
+    const known = defaultOpen.filter((id) => sections.some((section) => section.id === id));
+    const initiallyOpen = new Set(singleOpen ? known.slice(0, 1) : known);
     for (const section of sections) {
-      this.element.appendChild(this.buildSection(section, defaultOpen.includes(section.id)));
+      this.element.appendChild(this.buildSection(section, initiallyOpen.has(section.id)));
     }
   }
 
@@ -67,6 +70,7 @@ export class Accordion {
   }
 
   open(id: string): void {
+    if (!this.panelElements.has(id)) return;
     if (this.singleOpen) {
       for (const openId of [...this.openIds]) {
         if (openId !== id) this.close(openId);

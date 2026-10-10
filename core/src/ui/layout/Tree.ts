@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { inlineSign } from '../direction';
 
 export interface TreeNodeDefinition {
   id: string;
@@ -180,16 +181,33 @@ export class Tree {
       }
       childListOuter.appendChild(childList);
       if (node.expanded) childListOuter.classList.add('vol-tree__children-outer--open');
+      // Kapalı dal etkileşimsizdir (Accordion paneliyle aynı): yükseklik 0'a çöken satırlar AT ağacında
+      // kalmaz ve Tab onlara ulaşmaz.
+      childListOuter.inert = !node.expanded;
     }
 
     const setExpanded = (expanded: boolean): void => {
       if (!hasChildren || !childListOuter) return;
+      // Kapanan dalın içinde odak ya da gezici sekme durağı varsa, `inert` onları sessizce yok etmeden
+      // önce belirlenir ve sahibi satıra taşınır.
+      const hadFocus = !expanded && childListOuter.contains(document.activeElement);
+      const hadStop =
+        !expanded && childListOuter.querySelector('.vol-tree__row[tabindex="0"]') !== null;
       item.setAttribute('aria-expanded', String(expanded));
       childListOuter.classList.toggle('vol-tree__children-outer--open', expanded);
+      childListOuter.inert = !expanded;
       caret.classList.toggle('vol-tree__caret--open', expanded);
       // Hemen çağrılabilir — görünürlük zaten class ile belirlidir, CSS geçişinin
       // bitmesi beklenmez.
       this.refreshFlatOrder();
+      if (hadFocus || hadStop) {
+        for (const entry of this.flatOrder) entry.row.tabIndex = -1;
+        // Kapanan dal artık sıralamada yoktur; içindeki satırlar da durak olmaktan çıkar.
+        for (const hidden of childListOuter.querySelectorAll<HTMLElement>('.vol-tree__row'))
+          hidden.tabIndex = -1;
+        row.tabIndex = 0;
+        if (hadFocus) row.focus();
+      }
     };
 
     const toggleExpanded = (): void => {
@@ -277,7 +295,17 @@ export class Tree {
         this.focusRelative(id, -1);
         return;
       }
-      case 'ArrowRight': {
+      case 'ArrowRight':
+      case 'ArrowLeft': {
+        // Aç/in okuma yönünü izler: LTR'de sağ ok açar, sol ok kapatır/ebeveyne çıkar; RTL'de tersi.
+        const opensWith = inlineSign(this.element) === -1 ? 'ArrowLeft' : 'ArrowRight';
+        if (event.key !== opensWith) {
+          event.preventDefault();
+          const expandedNow = hasChildren && item.getAttribute('aria-expanded') === 'true';
+          if (expandedNow) setExpanded(false);
+          else this.focusParent(id);
+          return;
+        }
         if (!hasChildren) return;
         event.preventDefault();
         const expanded = item.getAttribute('aria-expanded') === 'true';
@@ -285,16 +313,6 @@ export class Tree {
           setExpanded(true);
         } else {
           this.focusRelative(id, 1);
-        }
-        return;
-      }
-      case 'ArrowLeft': {
-        event.preventDefault();
-        const expanded = hasChildren && item.getAttribute('aria-expanded') === 'true';
-        if (expanded) {
-          setExpanded(false);
-        } else {
-          this.focusParent(id);
         }
         return;
       }

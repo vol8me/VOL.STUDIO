@@ -178,6 +178,10 @@
         {
           "file": "core/tests/ui/layout/layoutStructures.test.ts",
           "title": "singleOpen:true (varsayılan) iken bir bölüm açılınca diğerleri kapanır"
+        },
+        {
+          "file": "core/tests/ui/layout/inlineDirection.test.ts",
+          "title": "tekli Accordion birden çok defaultOpen verilse de yalnız ilk geçerli bölümü açar; bilinmeyen kimlik yok sayılır"
         }
       ],
       "extraStates": ["disabled"]
@@ -392,6 +396,10 @@
         {
           "file": "core/tests/ui/languageChange.test.ts",
           "title": "Carousel arrow aria-label'leri dil degisiminde guncellenir"
+        },
+        {
+          "file": "core/tests/ui/layout/inlineDirection.test.ts",
+          "title": "Carousel: RTL’de iz sağa kayar, sol ok/düğme sonraki sayfadır, etiketler yönü izler"
         }
       ]
     },
@@ -1016,6 +1024,10 @@
         {
           "file": "core/tests/ui/data/kanban.test.ts",
           "title": "zengin kart metadata, WIP meta ve arama filtresini birlikte çizer"
+        },
+        {
+          "file": "core/tests/ui/layout/inlineDirection.test.ts",
+          "title": "Kanban: RTL’de sol ok kartı sonraki sütuna, sağ ok bir önceki sütuna taşır"
         }
       ],
       "extraStates": ["loading", "error"]
@@ -1393,6 +1405,10 @@
         {
           "file": "core/tests/ui/textEntry/textEntry.test.ts",
           "title": "parola ekranda maskelenir, değer olduğu gibi döner; alan sınırı aşılmaz"
+        },
+        {
+          "file": "core/tests/ui/textEntry/keyboard.test.ts",
+          "title": "aria-modal: Tab son tuştan ilk tuşa, Shift+Tab ilk tuştan son tuşa döner; odak arkadaki sayfaya sızmaz"
         }
       ]
     },
@@ -1723,6 +1739,10 @@
         {
           "file": "core/tests/ui/primitives/segmentedControl.test.ts",
           "title": "setOptions etiketleri yeniler, seçimi korur ve geri çağrı üretmez"
+        },
+        {
+          "file": "core/tests/ui/layout/inlineDirection.test.ts",
+          "title": "SegmentedControl önceki davranışını korur (RTL’de sol ok sonraki)"
         }
       ]
     },
@@ -1890,6 +1910,10 @@
         {
           "file": "core/tests/ui/hud/slotGrid.test.ts",
           "title": "doğru sayıda hücre ile grid oluşturur"
+        },
+        {
+          "file": "core/tests/ui/layout/inlineDirection.test.ts",
+          "title": "SlotGrid: RTL’de sağ ok soldaki (önceki indeks) hücredir"
         }
       ]
     },
@@ -2026,6 +2050,10 @@
         {
           "file": "core/tests/ui/memory.test.ts",
           "title": "Tabs.destroy tab içeriklerinin destroy metodunu çağırır"
+        },
+        {
+          "file": "core/tests/ui/layout/inlineDirection.test.ts",
+          "title": "Tabs gizli paneli etkileşimsizdir (inert + aria-hidden); seçim değişince yer değiştirir"
         }
       ],
       "extraStates": ["disabled"]
@@ -2183,6 +2211,10 @@
         {
           "file": "core/tests/ui/workbenchRegressions.test.ts",
           "title": "seçimli toolbarda toggle:false düğmeye basmak aktif aracı düşürmez"
+        },
+        {
+          "file": "core/tests/ui/layout/inlineDirection.test.ts",
+          "title": "Toolbar yatayda RTL’de sol ok sonraki düğmedir"
         }
       ]
     },
@@ -2219,6 +2251,10 @@
         {
           "file": "core/tests/ui/layout/layoutStructures.test.ts",
           "title": "bir yaprak düğüme (children olmayan) tıklamak seçer ve onSelect çağırır"
+        },
+        {
+          "file": "core/tests/ui/layout/inlineDirection.test.ts",
+          "title": "Tree: RTL’de sol ok açar/iner, sağ ok kapatır/ebeveyne çıkar"
         }
       ]
     },

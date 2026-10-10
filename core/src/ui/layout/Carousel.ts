@@ -1,6 +1,7 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_RATIO } from '../../constants';
 import { i18next } from '../../i18n/I18n';
+import { inlineSign } from '../direction';
 
 const INTERACTIVE = 'button, a[href], input, select, textarea, [role="slider"], [contenteditable]';
 let carouselSeq = 0;
@@ -54,15 +55,30 @@ export class Carousel {
    * düz `for` döngüsü ilk hatada duruyor ve kalan her şeyi sızdırıyordu.
    */
   private readonly scope = new DisposableScope();
-  private readonly onLanguageChanged = (): void => {
+  /**
+   * Yön, öğe belgeye eklenince bilinir (yapıcıda öğe kopuktur ve `dir` okunamaz). Bu yüzden yöne bağlı durum
+   * (düğme adı ve kenar kilidi) ilk yerleşimde, odakta/imleç girişinde ve dil değişiminde yenilenir.
+   */
+  private refreshDirection(): void {
+    this.applyArrowLabels();
+    this.updateArrowEdges();
+  }
+
+  /** Oklar fiziksel konumdadır; RTL'de sol ok "sonraki"dir. */
+  private applyArrowLabels(): void {
+    const rtl = inlineSign(this.element) === -1;
     const arrows = this.element.querySelectorAll<HTMLButtonElement>('.vol-carousel__arrow');
     arrows.forEach((btn) => {
       const isLeft = btn.classList.contains('vol-carousel__arrow--left');
       btn.setAttribute(
         'aria-label',
-        isLeft ? i18next.t('core:carousel.prev') : i18next.t('core:carousel.next'),
+        isLeft !== rtl ? i18next.t('core:carousel.prev') : i18next.t('core:carousel.next'),
       );
     });
+  }
+
+  private readonly onLanguageChanged = (): void => {
+    this.refreshDirection();
     if (this.dotsEl) {
       const dots = this.dotsEl.querySelectorAll<HTMLButtonElement>('.vol-carousel__dot');
       dots.forEach((dot, i) => {
@@ -98,8 +114,13 @@ export class Carousel {
     viewport.appendChild(this.track);
 
     if (options.showArrows ?? true) {
-      const prevBtn = this.buildArrowButton('left', () => this.goTo(this.currentIndex - 1));
-      const nextBtn = this.buildArrowButton('right', () => this.goTo(this.currentIndex + 1));
+      // Oklar fiziksel konumdadır; RTL'de sol ok sonraki sayfadır (sayfalar sağdan sola dizilir).
+      const prevBtn = this.buildArrowButton('left', () =>
+        this.goTo(this.currentIndex - inlineSign(this.element)),
+      );
+      const nextBtn = this.buildArrowButton('right', () =>
+        this.goTo(this.currentIndex + inlineSign(this.element)),
+      );
       this.element.appendChild(prevBtn);
       this.element.appendChild(nextBtn);
     }
@@ -113,6 +134,21 @@ export class Carousel {
 
     this.attachDragHandlers(viewport);
     this.updatePosition(false);
+    this.element.addEventListener('focusin', this.onFocusLabels);
+    this.element.addEventListener('pointerenter', this.onFocusLabels);
+    // İlk yerleşim: öğe belgeye eklenince `dir` okunur ve yöne bağlı durum doğrulanır (jsdom'da yoktur).
+    const layoutObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(() => this.refreshDirection());
+    layoutObserver?.observe(this.element);
+    this.scope.add({
+      dispose: () => {
+        this.element.removeEventListener('focusin', this.onFocusLabels);
+        this.element.removeEventListener('pointerenter', this.onFocusLabels);
+        layoutObserver?.disconnect();
+      },
+    });
 
     this.labelSlides();
 
@@ -143,6 +179,8 @@ export class Carousel {
 
     i18next.on('languageChanged', this.onLanguageChanged);
   }
+
+  private readonly onFocusLabels = (): void => this.refreshDirection();
 
   /** Belirtilen sayfaya geçer (aralık dışına taşarsa en yakın uca kenetlenir). */
   goTo(index: number): void {
@@ -204,9 +242,10 @@ export class Carousel {
     }
     const onKeydown = (event: KeyboardEvent): void => {
       const last = this.slides.length - 1;
+      const sign = inlineSign(this.element);
       const target: Record<string, number> = {
-        ArrowLeft: this.currentIndex - 1,
-        ArrowRight: this.currentIndex + 1,
+        ArrowLeft: this.currentIndex - sign,
+        ArrowRight: this.currentIndex + sign,
         Home: 0,
         End: last,
       };
@@ -255,7 +294,7 @@ export class Carousel {
     const onPointerMove = (event: PointerEvent): void => {
       if (!this.isDragging || this.activePointerId !== event.pointerId) return;
       this.dragDeltaX = event.clientX - this.dragStartX;
-      const baseOffset = -this.currentIndex * viewport.clientWidth;
+      const baseOffset = -this.currentIndex * viewport.clientWidth * inlineSign(this.element);
       this.track.style.transform = `translateX(${baseOffset + this.dragDeltaX}px)`;
     };
     const onPointerUp = (event: PointerEvent): void => {
@@ -268,9 +307,10 @@ export class Carousel {
       if (event.type === 'pointercancel') {
         // İptal sayfa değiştirmez: bulunduğu sayfaya geri oturur.
         this.updatePosition(true);
-      } else if (this.dragDeltaX > threshold) {
+      } else if (this.dragDeltaX * inlineSign(this.element) > threshold) {
+        // Sağa sürükleme LTR'de önceki, RTL'de sonraki sayfayı getirir.
         this.goTo(this.currentIndex - 1);
-      } else if (this.dragDeltaX < -threshold) {
+      } else if (this.dragDeltaX * inlineSign(this.element) < -threshold) {
         this.goTo(this.currentIndex + 1);
       } else {
         this.updatePosition(true);
@@ -295,7 +335,8 @@ export class Carousel {
 
   private updatePosition(animate: boolean): void {
     this.track.classList.toggle('vol-carousel__track--animated', animate);
-    this.track.style.transform = `translateX(${-this.currentIndex * 100}%)`;
+    // RTL'de sayfa 0 sağdadır; sonraki sayfa sola dizilir, iz sağa kayar.
+    this.track.style.transform = `translateX(${-this.currentIndex * 100 * inlineSign(this.element)}%)`;
 
     this.slideElements.forEach((slideEl, index) => {
       const active = index === this.currentIndex;
@@ -308,12 +349,17 @@ export class Carousel {
       dot.setAttribute('aria-selected', String(active));
       dot.tabIndex = active ? 0 : -1;
     });
-    const arrows = this.element.querySelectorAll<HTMLButtonElement>('.vol-carousel__arrow');
-    arrows.forEach((arrow) => {
-      const atEdge = arrow.classList.contains('vol-carousel__arrow--left')
-        ? this.currentIndex === 0
-        : this.currentIndex === this.slides.length - 1;
-      arrow.setAttribute('aria-disabled', String(atEdge));
+    this.updateArrowEdges();
+  }
+
+  /** Sol düğme LTR'de "önceki", RTL'de "sonraki"dir: kenar da okuma yönüyle yer değiştirir. */
+  private updateArrowEdges(): void {
+    const rtl = inlineSign(this.element) === -1;
+    const first = this.currentIndex === 0;
+    const last = this.currentIndex === this.slides.length - 1;
+    this.element.querySelectorAll<HTMLButtonElement>('.vol-carousel__arrow').forEach((arrow) => {
+      const isLeft = arrow.classList.contains('vol-carousel__arrow--left');
+      arrow.setAttribute('aria-disabled', String(isLeft !== rtl ? first : last));
     });
   }
 

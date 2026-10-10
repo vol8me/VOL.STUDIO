@@ -1,29 +1,7 @@
 {
   "schema": "UiThemeKnownV1",
   "note": "Tema kapısının bilinen kusur kaydı. contrast: sahip açık UI görevine bağlı; kusur düzelince kayıt bayatlar ve kapı düşer. rawDurations: dosya başına ham (var dışı) hareket süresi sayısı; yalnız azalır, bileşenler UI-03+ ile var(--vol-motion-*)'a geçtikçe düşürülür.",
-  "contrast": [
-    {
-      "theme": "default",
-      "fg": "uiTextMuted",
-      "bg": "uiSurface3",
-      "owner": "UI-05.3",
-      "reason": "soluk metin bu yüzeyde 4,5:1 altında; yüzey/metin tonu seçili satır ve sekme durumlarında bileşenle birlikte düzeltilir"
-    },
-    {
-      "theme": "default",
-      "fg": "uiTextMuted",
-      "bg": "selectedFill",
-      "owner": "UI-05.3",
-      "reason": "soluk metin bu yüzeyde 4,5:1 altında; yüzey/metin tonu seçili satır ve sekme durumlarında bileşenle birlikte düzeltilir"
-    },
-    {
-      "theme": "default",
-      "fg": "uiTextMuted",
-      "bg": "pressedFill",
-      "owner": "UI-05.3",
-      "reason": "soluk metin bu yüzeyde 4,5:1 altında; yüzey/metin tonu seçili satır ve sekme durumlarında bileşenle birlikte düzeltilir"
-    }
-  ],
+  "contrast": [],
   "rawDurations": {
     "core/src/ui/buttons/buttons.css": 1,
     "core/src/ui/camera/camera.css": 1,

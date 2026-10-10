@@ -1,3 +1,4 @@
+import { inlineSign } from '../direction';
 import { emitUiIntent } from '../feedback/uiIntent';
 export interface TabContent {
   element: HTMLElement;
@@ -99,6 +100,7 @@ export class Tabs {
       tab.content.element.setAttribute('role', 'tabpanel');
       tab.content.element.setAttribute('aria-labelledby', tabId);
       tab.content.element.setAttribute('aria-hidden', String(!isActive));
+      tab.content.element.inert = !isActive;
       tab.content.element.classList.toggle('vol-tabs__panel--hidden', !isActive);
       this.panelContainer.appendChild(tab.content.element);
     }
@@ -127,6 +129,8 @@ export class Tabs {
     const previousTab = this.tabs.find((t) => t.id === this.activeId);
     if (previousTab) {
       previousTab.content.element.setAttribute('aria-hidden', 'true');
+      // Gizli panel etkileşimsizdir: içindeki denetime Tab ve okuyucu ulaşmaz (CSS gizlemesine ek güvence).
+      previousTab.content.element.inert = true;
       previousTab.content.element.classList.add('vol-tabs__panel--hidden');
     }
 
@@ -139,6 +143,7 @@ export class Tabs {
     const nextTab = this.tabs.find((t) => t.id === id);
     if (nextTab) {
       nextTab.content.element.setAttribute('aria-hidden', 'false');
+      nextTab.content.element.inert = false;
       nextTab.content.element.classList.remove('vol-tabs__panel--hidden');
     }
 
@@ -164,8 +169,11 @@ export class Tabs {
 
   private handleKeydown(event: KeyboardEvent, index: number): void {
     let nextIndex: number | null = null;
-    const nextKey = this.orientation === 'vertical' ? 'ArrowDown' : 'ArrowRight';
-    const prevKey = this.orientation === 'vertical' ? 'ArrowUp' : 'ArrowLeft';
+    // Yatay çubukta "sağ" okuma yönüne bağlıdır: RTL'de sol ok sonraki sekmedir.
+    const rtl = inlineSign(this.element) === -1;
+    const nextKey =
+      this.orientation === 'vertical' ? 'ArrowDown' : rtl ? 'ArrowLeft' : 'ArrowRight';
+    const prevKey = this.orientation === 'vertical' ? 'ArrowUp' : rtl ? 'ArrowRight' : 'ArrowLeft';
 
     if (event.key === nextKey) {
       nextIndex = (index + 1) % this.tabs.length;

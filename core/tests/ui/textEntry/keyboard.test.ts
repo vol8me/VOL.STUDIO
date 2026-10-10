@@ -137,6 +137,39 @@ describe('ekran klavyesi erişilebilirliği ve sayacı', () => {
     expect(document.querySelector('.vol-osk__counter')?.textContent).toBe('0 / 8');
   });
 
+  it('aria-modal: Tab son tuştan ilk tuşa, Shift+Tab ilk tuştan son tuşa döner; odak arkadaki sayfaya sızmaz', () => {
+    // jsdom yerleşim hesaplamaz; gezinilebilirlik için sıfırdan büyük kutu gerekir.
+    const rect = { width: 10, height: 10, top: 0, left: 0, right: 10, bottom: 10, x: 0, y: 0 };
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(rect as DOMRect);
+    const behind = document.createElement('button');
+    document.body.append(behind);
+    void OnScreenKeyboard.open({ value: '' });
+    const keys = [...document.querySelectorAll<HTMLButtonElement>('.vol-osk button')];
+    const first = keys[0];
+    const last = keys[keys.length - 1];
+    const tab = (shiftKey: boolean): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey,
+        bubbles: true,
+        cancelable: true,
+      });
+      document.activeElement!.dispatchEvent(event);
+      return event;
+    };
+
+    last.focus();
+    expect(tab(false).defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(first);
+    expect(tab(true).defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(last);
+    // Aradaki tuşlarda tarayıcının doğal sırası bozulmaz.
+    keys[3].focus();
+    expect(tab(false).defaultPrevented).toBe(false);
+    expect(document.activeElement).not.toBe(behind);
+    vi.restoreAllMocks();
+  });
+
   it('sayaç yazdıkça güncellenir ve sınır dolunca yazma reddedilir', async () => {
     const pending = OnScreenKeyboard.open({ value: 'ab', maxLength: 3 });
     press('[data-value="c"]');

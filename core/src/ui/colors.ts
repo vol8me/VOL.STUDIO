@@ -11,7 +11,7 @@ export const VOL_COLORS = {
   // metin
   uiText: '#e8eef5',
   uiTextSecondary: '#b5c1cc',
-  uiTextMuted: '#83919d',
+  uiTextMuted: '#96a4b0',
   uiTextDisabled: '#5d6a75',
   uiIcon: '#9aa7b3',
 

@@ -4,6 +4,7 @@ import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { Icon, type IconName } from '../primitives/Icon';
 import { emitUiIntent, findUiIntentRoot, type UiIntentKind } from '../feedback/uiIntent';
 import { previousFocusTarget } from '../primitives/buttonBehavior';
+import { listFocusable } from '../focus/focusable';
 import type { TextEntryRequest, TextEntryResult } from './textEntry';
 
 /**
@@ -180,6 +181,10 @@ export class OnScreenKeyboard {
     i18next.on('languageChanged', this.onLanguageChanged);
     this.scope.addSubscription(() => i18next.off('languageChanged', this.onLanguageChanged));
 
+    // `aria-modal`: Tab klavyeden çıkmaz. Son tuştan sonra ilk tuşa döner; odak klavyenin ARKASINDAKİ
+    // (örtülü) sayfa denetimlerine sızmaz.
+    this.scope.addListener<KeyboardEvent>(this.element, 'keydown', (event) => this.trapTab(event));
+
     // B / Escape / Android geri — ortak yığın iptal eder.
     this.scope.addSubscription(
       pushBackHandler(() => {
@@ -187,6 +192,23 @@ export class OnScreenKeyboard {
         return true;
       }),
     );
+  }
+
+  private trapTab(event: KeyboardEvent): void {
+    if (event.key !== 'Tab') return;
+    const items = listFocusable(this.element);
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    const inside = active !== null && this.element.contains(active);
+    if (event.shiftKey && (!inside || active === first)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (!inside || active === last)) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   /** Klavyeyi açar; kullanıcı bitirince çözülen promise döner. */

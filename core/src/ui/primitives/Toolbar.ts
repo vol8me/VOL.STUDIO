@@ -1,4 +1,5 @@
 import { Icon, type IconName } from './Icon';
+import { inlineSign } from '../direction';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 
 export type ToolbarOrientation = 'horizontal' | 'vertical';
@@ -224,8 +225,12 @@ export class Toolbar {
   }
 
   private handleKeydown(event: KeyboardEvent): void {
-    const forwardKey = this.orientation === 'horizontal' ? 'ArrowRight' : 'ArrowDown';
-    const backwardKey = this.orientation === 'horizontal' ? 'ArrowLeft' : 'ArrowUp';
+    // Yatay çubukta "sağ" okuma yönüne bağlıdır: RTL'de sol ok sonraki düğmedir.
+    const rtl = inlineSign(this.element) === -1;
+    const forwardKey =
+      this.orientation === 'horizontal' ? (rtl ? 'ArrowLeft' : 'ArrowRight') : 'ArrowDown';
+    const backwardKey =
+      this.orientation === 'horizontal' ? (rtl ? 'ArrowRight' : 'ArrowLeft') : 'ArrowUp';
     let targetIndex: number | null = null;
     if (event.key === forwardKey) targetIndex = this.findEnabled(this.activeIndex, 1);
     else if (event.key === backwardKey) targetIndex = this.findEnabled(this.activeIndex, -1);

@@ -1,4 +1,5 @@
 import { emitUiIntent } from '../feedback/uiIntent';
+import { inlineSign } from '../direction';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_THRESHOLD } from '../../constants';
 import { i18next } from '../../i18n/I18n';
@@ -533,8 +534,10 @@ export class SlotGrid {
   }
 
   private stepFor(key: string): number {
-    if (key === 'ArrowLeft') return -1;
-    if (key === 'ArrowRight') return 1;
+    // Izgara okuma yönüyle aynalanır: RTL'de sağdaki hücre bir önceki indekstir.
+    const sign = inlineSign(this.element);
+    if (key === 'ArrowLeft') return -sign;
+    if (key === 'ArrowRight') return sign;
     return key === 'ArrowUp' ? -this.columns : this.columns;
   }
 

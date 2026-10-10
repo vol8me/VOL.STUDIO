@@ -1,4 +1,5 @@
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { inlineSign } from '../direction';
 import { UI_THRESHOLD } from '../../constants';
 import { i18next } from '../../i18n/I18n';
 
@@ -698,7 +699,9 @@ export class Kanban {
 
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       const columnIndex = this.columns.indexOf(located.column);
-      const nextColumn = this.columns[columnIndex + (event.key === 'ArrowLeft' ? -1 : 1)];
+      // Sütunlar okuma yönünde dizilir: RTL'de sol ok bir sonraki sütundur.
+      const step = (event.key === 'ArrowLeft' ? -1 : 1) * inlineSign(this.element);
+      const nextColumn = this.columns[columnIndex + step];
       if (!nextColumn) return;
       event.preventDefault();
       // Sütun değişiminde kart, geldiği sıradaki konuma en yakın yere yerleştirilir.

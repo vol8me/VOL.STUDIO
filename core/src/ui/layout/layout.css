@@ -361,13 +361,19 @@
 }
 
 .vol-tree__children-outer {
+  /* Kapalı dal çizilmez: yüksekliği 0'a çöken satırlar AT ağacında, bul-ve-tıkla ve ölçümde kalmaz.
+     `visibility` kapanırken geçiş bitince gizlenir, açılırken hemen görünür (animasyon bozulmaz). */
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-property: grid-template-rows, visibility;
+  transition-duration: 0.26s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  visibility: hidden;
   display: grid;
 }
 
 .vol-tree__children-outer--open {
   grid-template-rows: 1fr;
+  visibility: visible;
 }
 
 .vol-tree__children-outer .vol-tree__children {
