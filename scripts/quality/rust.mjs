@@ -48,13 +48,25 @@ export function cargoSteps(manifestText) {
   ];
 }
 
+/**
+ * @param {string} [only] verilirse yalnız bu manifest (depo köküne göre, `/` ayraçlı);
+ *   kapı koşucusu crate başına makbuz tuttuğu için tek crate koşar
+ */
 export function checkRust(
   root,
   run = execFileSync,
   lifecycle = loadWorkspaceLifecycle(join(root, 'workspace-lifecycle.json')),
+  only = undefined,
 ) {
-  const manifests = rustManifests(root, lifecycle);
-  if (manifests.length === 0) throw new Error('Rust kapısı: Cargo.toml bulunamadı');
+  const active = rustManifests(root, lifecycle);
+  const manifests = only === undefined ? active : active.filter((manifest) => manifest === only);
+  if (manifests.length === 0) {
+    throw new Error(
+      only === undefined
+        ? 'Rust kapısı: Cargo.toml bulunamadı'
+        : `Rust kapısı: ${only} aktif bir Cargo.toml değil`,
+    );
+  }
   // Crate'ler aynı bağımlılık ağacını paylaşır; ortak hedef dizini onları bir kez derler.
   const env = {
     ...process.env,
@@ -72,5 +84,8 @@ export function checkRust(
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  checkRust(process.cwd());
+  const flag = process.argv.indexOf('--manifest');
+  const only = flag === -1 ? undefined : process.argv[flag + 1];
+  if (flag !== -1 && !only) throw new Error('--manifest bir Cargo.toml yolu ister');
+  checkRust(process.cwd(), execFileSync, undefined, only);
 }

@@ -49,23 +49,29 @@ export const REQUIRES = {
  *  - `scaling`: süre oranı ölçer, ölçüm tekrar edilmeden güvenilmez.
  *  - `security-*`: sonuç zamana bağlıdır (yeni advisory).
  *
- * `units: 'packages'`: aşama paket paket makbuzlanır; yalnız makbuzu olmayan
- * paketler koşar. Kapsam paket başına `SCOPE_OVERRIDES` ya da kapanıştır.
+ * `units`: aşama parça parça makbuzlanır; yalnız makbuzu olmayan parçalar koşar.
+ * Parçaları `gateUnits.mjs` türetir (`packages`, `typecheck`, `lint`, `contract`,
+ * `rust`); her parça `justfile`daki tarifin işinin bir dilimidir ve tarifle aynı
+ * işi bölüşür (`gatePlan.test.mjs` bunu sınar).
+ *  - `concurrency`: aynı aşamanın kaç parçası birlikte koşar (varsayılan 1). Yalnız
+ *    birbirinin ölçümünü bozmayan ve ortak kilit paylaşmayan parçalar için.
+ *  - `overrides`: paket parçaları `SCOPE_OVERRIDES`ı uygular (testleri repoyu okuyan
+ *    paketler); statik denetimler kapanışta kalır.
  */
 export const STAGE_PLAN = {
   'node-pin': { cache: false },
-  contract: { scope: 'repo' },
+  contract: { units: 'contract', concurrency: 2 },
   'format-check': { scope: 'repo' },
-  typecheck: { scope: 'code' },
-  lint: { scope: 'code' },
+  typecheck: { units: 'typecheck', script: 'typecheck', concurrency: 4 },
+  lint: { units: 'lint', concurrency: 4 },
   'lint-css': { scope: 'code' },
   build: { cache: false },
   bundle: { cache: false },
   scaling: { cache: false },
   // Koşan alt küme git farkından türer; plan anahtara girer (bkz. gate.mjs → toolParts).
   'audio-test': { scope: 'repo' },
-  rust: { scope: 'code' },
-  test: { units: 'packages', script: 'test' },
+  rust: { units: 'rust' },
+  test: { units: 'packages', script: 'test', overrides: true },
   coverage: { scope: 'code' },
   'coverage-shape': { scope: 'code' },
   e2e: { units: 'packages', script: 'test:e2e' },

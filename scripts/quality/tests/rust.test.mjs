@@ -105,6 +105,21 @@ test('Rust kapısı aktif manifestleri check/fmt/clippy ile sınar', () => {
         ),
       /cargo kırmızı/,
     );
+
+    // Kapı koşucusu crate başına makbuz tutar: tek manifest yalnız kendi adımlarını koşar.
+    const single = [];
+    checkRust(
+      root,
+      (command, args, options) => single.push(relative(root, options.cwd).split(/[\\/]/).join('/')),
+      lifecycle,
+      'games/new-game/src-tauri/Cargo.toml',
+    );
+    assert.deepEqual([...new Set(single)], ['games/new-game/src-tauri']);
+    assert.equal(single.length, 3);
+    assert.throws(
+      () => checkRust(root, () => {}, lifecycle, 'target/generated/Cargo.toml'),
+      /aktif bir Cargo\.toml değil/,
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

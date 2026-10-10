@@ -8,9 +8,12 @@
  *    okunup okunmadığı bilinemeyen aşamalar.
  *  - `code`: paket dizinleri + paket dışı kod/yapılandırma. Kökteki belgeler
  *    (`docs/`, paket dışı `.md`) sayılmaz; hiçbir kod kapısı onları okumaz.
- *  - `closure`: bir paketin kendisi + `@volstudio/*` bağımlılık kapanışı +
- *    paket dışı kod/yapılandırma. Paketin başka dizine uzandığı bir dosya
- *    okuması `findScopeEscapes` ile bekçilenir.
+ *  - `closure`: bir paketin kendisi + `@volstudio/*` bağımlılık kapanışı + kök
+ *    yapılandırma + paketlerin GERÇEKTEN başvurduğu betikler (`deriveSharedInputs`).
+ *    Betik dizinindeki başka dosya paket sonucunu etkilemez.
+ *  - `crate`: bir Rust crate'inin dizini + path bağımlılıkları + Cargo kökü.
+ *
+ * Paketin başka dizine uzandığı bir dosya okuması `findScopeEscapes` ile bekçilenir.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join, posix } from 'node:path';
@@ -18,6 +21,22 @@ import { activeWorkspaceNames, loadWorkspaceLifecycle } from './workspaceLifecyc
 
 const under = (path, dir) => path === dir || path.startsWith(`${dir}/`);
 const underAny = (path, dirs) => dirs.some((dir) => under(path, dir));
+
+/** Paketlerin dışındaki betik ağacı: yalnız başvurulan dosyaları kapsama girer. */
+const SCRIPTS_DIR = 'scripts';
+
+/** Rust sonucunu etkileyen kök dosyalar (JS yapılandırması buna girmez). */
+const CARGO_ROOT_FILES = [
+  'Cargo.toml',
+  'Cargo.lock',
+  'rust-toolchain.toml',
+  'rust-toolchain',
+  'rustfmt.toml',
+  '.rustfmt.toml',
+  'clippy.toml',
+  '.clippy.toml',
+];
+const CARGO_ROOT_DIRS = ['.cargo'];
 
 /**
  * Lifecycle'dan paket grafiği: tüm kayıtlı dizinler (aktif + frozen) ve aktif
@@ -81,26 +100,171 @@ function isOutsideDoc(path) {
   return path.startsWith('docs/') || path.endsWith('.md');
 }
 
+/** Hiçbir paketin içinde olmayan, belge olmayan dosya. */
+const isGlobalFile = (graph, path) => !underAny(path, graph.allDirs) && !isOutsideDoc(path);
+
+/** Kök yapılandırma ve betik dışı paylaşılan dosyalar: her paket kapsamına girer. */
+const isBaseFile = (graph, path) => isGlobalFile(graph, path) && !under(path, SCRIPTS_DIR);
+
 /**
- * @param {{ kind: 'repo' } | { kind: 'code' } | { kind: 'closure', package: string }} scope
+ * @typedef {{ kind: 'repo' } | { kind: 'code' }
+ *   | { kind: 'closure', package: string }
+ *   | { kind: 'crate', dirs: string[] }} Scope
+ *
+ * @param {Scope} scope
+ * @param {Map<string, Set<string>>} [shared] `deriveSharedInputs` sonucu; `closure` için
  * @returns {(path: string) => boolean}
  */
-export function scopeInclude(graph, scope) {
+export function scopeInclude(graph, scope, shared = new Map()) {
   if (scope.kind === 'repo') return () => true;
-  const isGlobal = (path) => !underAny(path, graph.allDirs) && !isOutsideDoc(path);
   if (scope.kind === 'code') {
-    return (path) => underAny(path, graph.activeDirs) || isGlobal(path);
+    return (path) => underAny(path, graph.activeDirs) || isGlobalFile(graph, path);
   }
   if (scope.kind === 'closure') {
-    const dirs = closureOf(graph, scope.package).map((name) => graph.packages.get(name).dir);
-    if (dirs.length === 0) throw new Error(`Kapsam: "${scope.package}" aktif paket değil.`);
-    return (path) => underAny(path, dirs) || isGlobal(path);
+    const members = closureOf(graph, scope.package);
+    if (members.length === 0) throw new Error(`Kapsam: aktif paket yok (${scope.package}).`);
+    const dirs = members.map((name) => graph.packages.get(name).dir);
+    const derived = new Set(members.flatMap((name) => [...(shared.get(name) ?? [])]));
+    return (path) => underAny(path, dirs) || isBaseFile(graph, path) || derived.has(path);
+  }
+  if (scope.kind === 'crate') {
+    return (path) =>
+      underAny(path, scope.dirs) ||
+      CARGO_ROOT_FILES.includes(path) ||
+      underAny(path, CARGO_ROOT_DIRS);
   }
   throw new Error(`Bilinmeyen kapsam türü: ${JSON.stringify(scope)}`);
 }
 
 const SCANNED = /\.(?:ts|mts|cts|tsx|js|mjs|cjs|json)$/;
 const RELATIVE_LITERAL = /(['"`])((?:\.\.\/)+[^'"`\r\n]*|\.\.)\1/g;
+/** `join(ROOT, 'scripts', 'linux', 'x.mjs')`: yol parçalarla kurulan betik başvurusu. */
+const SEGMENTED_SCRIPT = /(['"`])scripts\1\s*,\s*((?:(['"`])[^'"`,\r\n]+\3\s*,?\s*)*)/g;
+const QUOTED_SEGMENT = /(['"`])([^'"`,\r\n]+)\1/g;
+const SCRIPT_EXTENSIONS = ['', '.mjs', '.js', '.ts', '.mts', '.cjs', '.json'];
+
+/**
+ * Başvuru desenleri. `rootRelative`: yakalanan yol dosyaya göre değil depo köküne göredir.
+ * `ROOT_ANYWHERE` tırnak aramaz: `${ROOT}/scripts/x.mjs` gibi kurulan yollar da yakalanır.
+ * Fazla yakalamak güvenlidir (kapsam genişler); eksik yakalamak sessiz yanlış atlamadır.
+ */
+const FILE_RELATIVE = { regex: RELATIVE_LITERAL, group: 2, rootRelative: false };
+const SAME_DIR = { regex: /(['"`])(\.\/[^'"`\r\n]*)\1/g, group: 2, rootRelative: false };
+const ROOT_QUOTED = { regex: /(['"`])(scripts\/[^'"`\r\n]*)\1/g, group: 2, rootRelative: true };
+const ROOT_ANYWHERE = { regex: /(?<![\w-])(scripts\/[\w./@-]+)/g, group: 1, rootRelative: true };
+
+/**
+ * Başvurunun gösterdiği betik dosyaları. Dizin başvurusu (`scripts/linux`) yalnız bir
+ * PAKET dosyasından geliyorsa dizini kapsar; betiklerin kendi içindeki `..` gibi yol
+ * hesapları dizin okuması değildir.
+ */
+function scriptResolver(tracked) {
+  const scripts = [...tracked].filter((path) => under(path, SCRIPTS_DIR));
+  return (target, fromPackage) => {
+    for (const extension of SCRIPT_EXTENSIONS) {
+      const path = `${target}${extension}`;
+      if (tracked.has(path) && under(path, SCRIPTS_DIR)) return [path];
+    }
+    for (const extension of SCRIPT_EXTENSIONS.slice(1)) {
+      const path = `${target}/index${extension}`;
+      if (tracked.has(path) && under(path, SCRIPTS_DIR)) return [path];
+    }
+    if (fromPackage && under(target, SCRIPTS_DIR)) {
+      return scripts.filter((path) => under(path, target));
+    }
+    return [];
+  };
+}
+
+/** Kaynak metindeki betik başvurularının depo köküne göre yolları. */
+function scriptTargets(file, source, patterns) {
+  const found = [];
+  for (const { regex, group, rootRelative } of patterns) {
+    for (const match of source.matchAll(regex)) {
+      const literal = rootRelative ? match[group].replace(/[./]+$/, '') : match[group];
+      found.push(posix.normalize(rootRelative ? literal : posix.join(dirname(file), literal)));
+    }
+  }
+  for (const match of source.matchAll(SEGMENTED_SCRIPT)) {
+    const segments = [...match[2].matchAll(QUOTED_SEGMENT)].map((segment) => segment[2]);
+    found.push(posix.normalize([SCRIPTS_DIR, ...segments].join('/')));
+  }
+  return found;
+}
+
+const PACKAGE_PATTERNS = [FILE_RELATIVE, ROOT_QUOTED, ROOT_ANYWHERE];
+const SCRIPT_PATTERNS = [FILE_RELATIVE, SAME_DIR, ROOT_QUOTED];
+
+/**
+ * Paketlerin paket dışı betiklerden GERÇEKTEN başvurduğu dosyalar ve onların geçişli
+ * göreli başvuruları. Paket, betik dizininin geri kalanını okumaz; o yüzden betik
+ * düzenlemesi paketin makbuzunu bozmaz.
+ *
+ * @param {Iterable<string>} files izlenen ve izlenmeyen dosya yolları
+ * @returns {Map<string, Set<string>>} paket adı → betik dosyası yolları
+ */
+export function deriveSharedInputs(root, graph, files, read = readSource) {
+  const tracked = new Set(files);
+  const resolve = scriptResolver(tracked);
+  const cache = new Map();
+  const text = (path) => {
+    if (!cache.has(path)) {
+      const source = read(root, path);
+      cache.set(path, source === null ? null : withoutInertComments(source));
+    }
+    return cache.get(path);
+  };
+
+  const result = new Map();
+  for (const pkg of graph.packages.values()) {
+    if (!pkg.active) continue;
+    const found = new Set();
+    const queue = [];
+    const add = (targets, fromPackage) => {
+      for (const target of targets) {
+        for (const path of resolve(target, fromPackage)) {
+          if (!found.has(path)) {
+            found.add(path);
+            queue.push(path);
+          }
+        }
+      }
+    };
+    for (const file of tracked) {
+      if (!under(file, pkg.dir) || !SCANNED.test(file)) continue;
+      const source = text(file);
+      if (source !== null) add(scriptTargets(file, source, PACKAGE_PATTERNS), true);
+    }
+    while (queue.length > 0) {
+      const file = queue.pop();
+      const source = SCANNED.test(file) ? text(file) : null;
+      if (source !== null) add(scriptTargets(file, source, SCRIPT_PATTERNS), false);
+    }
+    result.set(pkg.name, found);
+  }
+  return result;
+}
+
+const COMMENT_LINE = /^\s*(?:\/\/|\/?\*)/;
+
+/**
+ * Yalnız yorumdan ibaret satırlar hiçbir dosyayı okumaz; içlerinde geçen yol sabiti
+ * kapsamı şişirir. Tip denetimini etkileyen `import(...)` başvuruları yorumda da kalır.
+ */
+function withoutInertComments(source) {
+  return source
+    .split('\n')
+    .filter((line) => !COMMENT_LINE.test(line) || line.includes('import('))
+    .join('\n');
+}
+
+function readSource(root, path) {
+  try {
+    return readFileSync(join(root, path), 'utf8');
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Paketin KENDİ kapanışı dışındaki dosyaya uzanan göreli yol sabitleri. Böyle

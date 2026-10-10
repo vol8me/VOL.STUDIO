@@ -15,6 +15,7 @@ import { snapshotFiles } from '../gateCache.mjs';
 import {
   activePackagesWithScript,
   closureOf,
+  deriveSharedInputs,
   findScopeEscapes,
   readWorkspaceGraph,
   scopeInclude,
@@ -95,13 +96,32 @@ test('paket birimleri runActive ile aynı paketleri seçer', () => {
   const graph = readWorkspaceGraph(root);
   const lifecycle = loadWorkspaceLifecycle(resolve(root, 'workspace-lifecycle.json'));
   const packages = listWorkspacePackages(root);
-  for (const stage of ['test', 'e2e']) {
+  for (const stage of ['test', 'e2e', 'typecheck']) {
     const script = STAGE_PLAN[stage].script;
     const expected = buildActiveScriptCommand(lifecycle, packages, script, {
       ifPresent: true,
     }).packages;
     assert.deepEqual(activePackagesWithScript(graph, script), [...expected].sort(), stage);
   }
+});
+
+test('eşzamanlılık yalnız birimli aşamalarda ve yalnız ortak kilit paylaşmayanlarda açıktır', () => {
+  for (const [stage, plan] of Object.entries(STAGE_PLAN)) {
+    if (plan.concurrency === undefined) continue;
+    assert.ok(plan.units, `${stage}: eşzamanlılık yalnız birimli aşamada anlamlı`);
+    assert.ok(Number.isInteger(plan.concurrency) && plan.concurrency >= 2, stage);
+  }
+  // cargo tek hedef dizini kilitler: crate’leri birlikte koşturmak hiçbir şey kazandırmaz.
+  assert.equal(STAGE_PLAN.rust.concurrency, undefined);
+  // Süre ölçen aşamalar kendi içinde de art arda koşar.
+  assert.equal(STAGE_PLAN.scaling.concurrency, undefined);
+});
+
+test('kapsam geçersiz kılmaları yalnız testleri repoyu okuyan aşamalara uygulanır', () => {
+  const overridden = Object.entries(STAGE_PLAN)
+    .filter(([, plan]) => plan.overrides)
+    .map(([stage]) => stage);
+  assert.deepEqual(overridden, ['test']);
 });
 
 test('kapsam geçersiz kılmaları aktif paketlere işaret eder ve gerekçelidir', () => {
@@ -124,6 +144,36 @@ test('kapanış: vol-test CORE ve tauri-v2’yi görür, vitrin vol-test’i gö
     '@volstudio/core',
     '@volstudio/vol-showcase',
   ]);
+});
+
+test('kapanış kapsamı: betik düzenlemesi yalnız onu gerçekten kullanan paketlerin makbuzunu bozar', () => {
+  const graph = readWorkspaceGraph(root);
+  const files = [...snapshotFiles(root).keys()];
+  const shared = deriveSharedInputs(root, graph, files);
+  const scopeOf = (name) => scopeInclude(graph, { kind: 'closure', package: name }, shared);
+
+  const voltest = scopeOf('@volstudio/vol-test');
+  assert.equal(
+    voltest('scripts/vite/audioBankRuntime.mjs'),
+    true,
+    'vol-test vite eklentisini kullanır',
+  );
+  assert.equal(
+    voltest('scripts/quality/gate.mjs'),
+    false,
+    'kapı koşucusu paket sonucunu etkilemez',
+  );
+  assert.equal(voltest('workspace-lifecycle.json'), true, 'kök yapılandırma her pakette');
+
+  const showcase = scopeOf('@volstudio/vol-showcase');
+  assert.equal(
+    showcase('scripts/vite/audioBankRuntime.mjs'),
+    false,
+    'vitrin ses eklentisini görmez',
+  );
+  assert.equal(showcase('scripts/vite/browserBoundary.mjs'), true);
+
+  assert.equal(scopeOf('@volstudio/deck')('scripts/linux/targets.mjs'), true);
 });
 
 test('kapsam: kök belge kod kapsamına girmez, paket belgesi ve kök yapılandırma girer', () => {

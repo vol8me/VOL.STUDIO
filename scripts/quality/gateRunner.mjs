@@ -17,31 +17,28 @@ import {
   snapshotFiles,
   writeReceipt,
 } from './gateCache.mjs';
-import { SCOPE_OVERRIDES, STAGE_PLAN, wavesFor } from './gatePlan.mjs';
-import { activePackagesWithScript, readWorkspaceGraph, scopeInclude } from './gateScope.mjs';
+import { STAGE_PLAN, wavesFor } from './gatePlan.mjs';
+import { deriveSharedInputs, readWorkspaceGraph, scopeInclude } from './gateScope.mjs';
+import { unitsFor } from './gateUnits.mjs';
 
 /** Sürüm öncesi kapı hiçbir makbuza güvenmez; yine de makbuz yazar. */
 export const ALWAYS_FRESH = new Set(['signoff']);
 
-function unitScope(name) {
-  const override = SCOPE_OVERRIDES[name];
-  return override ? { kind: override.kind } : { kind: 'closure', package: name };
-}
-
-function makeItem(ctx, stage, unit, scope, parts) {
+function makeItem(ctx, stage, spec, parts) {
   const plan = STAGE_PLAN[stage];
-  const command = 'pnpm';
-  const args = unit ? ['--filter', unit, 'run', plan.script] : ['exec', 'just', stage];
-  const label = unit ? `${stage} ${unit.replace('@volstudio/', '')}` : stage;
+  const { unit, command, args } = spec;
+  const label = unit ? `${stage} ${spec.label}` : stage;
   const base = { stage, unit, label, command, args };
   if (plan.cache === false) {
     return { ...base, key: null, cached: null, reason: 'önbelleksiz aşama' };
   }
 
-  const include = scopeInclude(ctx.graph, scope);
+  const include = scopeInclude(ctx.graph, spec.scope, ctx.shared());
   const key = fingerprint(ctx.files, include, [
     `stage=${stage}`,
     ...(unit ? [`unit=${unit}`] : []),
+    // Komut anahtarda: birimin ne koşturduğu değişirse eski makbuz geçerli sayılmaz.
+    `run=${[command, ...args].join(' ')}`,
     ...environmentParts(),
     ...parts,
   ]);
@@ -56,57 +53,102 @@ function makeItem(ctx, stage, unit, scope, parts) {
 export function planStage(ctx, stage) {
   const plan = STAGE_PLAN[stage];
   const parts = ctx.toolParts(stage);
-  if (plan.units === 'packages') {
-    const names = activePackagesWithScript(ctx.graph, plan.script);
-    if (names.length === 0) throw new Error(`Aktif workspace'lerde "${plan.script}" betiği yok.`);
-    return {
-      stage,
-      items: names.map((name) => makeItem(ctx, stage, name, unitScope(name), parts)),
-    };
-  }
-  return { stage, items: [makeItem(ctx, stage, null, { kind: plan.scope }, parts)] };
+  const specs = plan.units
+    ? unitsFor(ctx, stage)
+    : [
+        {
+          unit: null,
+          label: stage,
+          command: 'pnpm',
+          args: ['exec', 'just', stage],
+          scope: { kind: plan.scope },
+        },
+      ];
+  return {
+    stage,
+    concurrency: plan.concurrency ?? 1,
+    items: specs.map((spec) => makeItem(ctx, stage, spec, parts)),
+  };
 }
 
+/**
+ * Aşamanın öğelerini koşar. Makbuzdan atlanan öğeler tek olay olarak bildirilir; kalanlar
+ * en çok `concurrency` kadar birlikte koşar. Biri düşünce yeni öğe başlamaz, koşanlar biter.
+ */
 async function runPlanned(planned, ctx) {
   const started = Date.now();
-  const items = [];
-  let failed = null;
-  for (const item of planned.items) {
-    if (item.cached) {
-      ctx.emit({ type: 'cached', item });
-      items.push({ item, status: 'cached', durationMs: 0, savedMs: item.cached.durationMs ?? 0 });
-      continue;
-    }
-    ctx.emit({ type: 'start', item });
-    const itemStart = Date.now();
-    const result = await ctx.execute(item, { live: ctx.live });
-    const durationMs = Date.now() - itemStart;
-    const status = result.code === 0 ? 'passed' : 'failed';
-    items.push({ item, status, durationMs, output: result.output, code: result.code });
-    ctx.emit({ type: 'end', item, status, durationMs });
-    if (status === 'failed') {
-      failed = items.at(-1);
-      break;
-    }
+  const entries = new Map();
+  const cached = planned.items.filter((item) => item.cached);
+  if (cached.length > 0) ctx.emit({ type: 'cached', stage: planned.stage, items: cached });
+  for (const item of cached) {
+    entries.set(item, {
+      item,
+      status: 'cached',
+      durationMs: 0,
+      savedMs: item.cached.durationMs ?? 0,
+    });
   }
+
+  const queue = planned.items.filter((item) => !item.cached);
+  const lanes = Math.max(1, Math.min(planned.concurrency, queue.length));
+  // Canlı çıktı yalnız tek koşan öğede okunur; eşzamanlı çocukların çıktısı karışırdı.
+  const live = ctx.live && lanes === 1;
+  let stopped = false;
+  const lane = async () => {
+    while (!stopped) {
+      const item = queue.shift();
+      if (!item) return;
+      ctx.emit({ type: 'start', item });
+      const itemStart = Date.now();
+      const result = await ctx.execute(item, { live });
+      const durationMs = Date.now() - itemStart;
+      const status = result.code === 0 ? 'passed' : 'failed';
+      entries.set(item, { item, status, durationMs, output: result.output, code: result.code });
+      ctx.emit({ type: 'end', item, status, durationMs });
+      if (status === 'failed') stopped = true;
+    }
+  };
+  await Promise.all(Array.from({ length: lanes }, lane));
+
+  const items = planned.items.filter((item) => entries.has(item)).map((item) => entries.get(item));
+  const failed = items.find((entry) => entry.status === 'failed') ?? null;
   const status = failed
     ? 'failed'
     : items.every((entry) => entry.status === 'cached')
       ? 'cached'
       : 'passed';
-  return { stage: planned.stage, status, durationMs: Date.now() - started, items, failed };
+  return {
+    stage: planned.stage,
+    status,
+    durationMs: Date.now() - started,
+    concurrency: planned.concurrency,
+    items,
+    failed,
+  };
+}
+
+/**
+ * Bir aşamanın, her öğesi koşsaydı süreceği duvar süresi: öğeler en çok `lanes` şeritte,
+ * en uzundan başlayarak dağıtılır (atlananın yerine kayıtlı süresi konur).
+ */
+function stageWallTime(durations, lanes) {
+  const loads = new Array(Math.max(1, lanes)).fill(0);
+  for (const duration of [...durations].sort((a, b) => b - a)) {
+    loads[loads.indexOf(Math.min(...loads))] += duration;
+  }
+  return Math.max(...loads);
 }
 
 /**
  * Dalganın duvar saatinde önbelleğin kazandırdığı süre. Aşamalar birlikte koştuğu için
  * süreler toplanmaz: dalga, en uzun aşama kadar sürerdi; kazanç o süre ile gerçek
- * duvar süresi arasındaki farktır. Aşamanın birimleri art arda koşar, onlar toplanır.
+ * duvar süresi arasındaki farktır. Aşamanın birimleri `concurrency` kadar birlikte koşar.
  */
 export function waveSaving(outcomes, wallMs) {
   const would = outcomes.map((outcome) =>
-    outcome.items.reduce(
-      (sum, entry) => sum + (entry.status === 'cached' ? entry.savedMs : entry.durationMs),
-      0,
+    stageWallTime(
+      outcome.items.map((entry) => (entry.status === 'cached' ? entry.savedMs : entry.durationMs)),
+      outcome.concurrency ?? 1,
     ),
   );
   return Math.max(0, Math.max(0, ...would) - wallMs);
@@ -132,6 +174,15 @@ export async function runGate(options) {
   const recipes = parseJustRecipes(readFileSync(join(root, 'justfile'), 'utf8'));
   const waves = wavesFor(gateStages(recipes, gate));
   const graph = readWorkspaceGraph(root);
+  // Betik başvuruları her dalgada değil, ağaç değiştiğinde yeniden türetilir.
+  const derived = { files: null, value: new Map() };
+  const sharedInputs = (current) => {
+    if (derived.files !== current) {
+      derived.value = deriveSharedInputs(root, graph, current.keys());
+      derived.files = current;
+    }
+    return derived.value;
+  };
 
   const started = Date.now();
   const stages = [];
@@ -142,7 +193,17 @@ export async function runGate(options) {
   const failures = [];
 
   for (const wave of waves) {
-    const ctx = { root, graph, files, fresh, toolParts, execute, emit, live: wave.length === 1 };
+    const ctx = {
+      root,
+      graph,
+      files,
+      fresh,
+      toolParts,
+      execute,
+      emit,
+      live: wave.length === 1,
+      shared: () => sharedInputs(files),
+    };
     const before = treeDigest(files);
     const planned = wave.map((stage) => planStage(ctx, stage));
     emit({ type: 'wave', stages: wave });
@@ -169,7 +230,8 @@ export async function runGate(options) {
         }
       }
     }
-    files = after;
+    // Değişmeyen ağaçta aynı nesne kalır: türetilmiş betik girdileri yeniden hesaplanmaz.
+    if (!stable) files = after;
     stages.push(...outcomes);
     for (const outcome of outcomes) {
       if (outcome.failed) failures.push({ stage: outcome.stage, entry: outcome.failed });

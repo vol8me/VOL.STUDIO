@@ -140,10 +140,14 @@ function main() {
         `  ${event.status === 'passed' ? '✓' : '✗'} ${event.item.label} ${seconds(event.durationMs)}`,
       );
     } else if (event.type === 'cached') {
-      const ago = event.item.cached.passedAt
-        ? ` · ${minutes(Date.now() - Date.parse(event.item.cached.passedAt))} önce geçti`
+      const [first] = event.items;
+      const ago = first.cached.passedAt
+        ? ` · ${minutes(Date.now() - Date.parse(first.cached.passedAt))} önce geçti`
         : '';
-      log(`⏭ ${event.item.label} (girdi bayt bayt aynı${ago})`);
+      const names = event.items.some((item) => item.unit)
+        ? `${event.stage}: ${event.items.map((item) => item.label.slice(event.stage.length + 1)).join(', ')}`
+        : first.label;
+      log(`⏭ ${names} (girdi bayt bayt aynı${ago})`);
     }
   };
 
@@ -182,6 +186,13 @@ function main() {
         stage: stage.stage,
         status: stage.status,
         durationMs: stage.durationMs,
+        ...(stage.items.some((entry) => entry.item.unit) && {
+          units: stage.items.map((entry) => ({
+            unit: entry.item.unit,
+            status: entry.status,
+            durationMs: entry.durationMs,
+          })),
+        }),
       })),
       ...(failures.length > 0 && {
         failure: summarize(failures[0]),
@@ -207,8 +218,13 @@ function main() {
     );
     for (const stage of report.stages) {
       const mark = stage.status === 'passed' ? '✓' : stage.status === 'cached' ? '⏭' : '✗';
+      const ran = stage.items.filter((entry) => entry.status !== 'cached').length;
+      const detail =
+        stage.items.length > 1 && ran > 0 && ran < stage.items.length
+          ? ` · ${ran}/${stage.items.length} birim koştu`
+          : '';
       log(
-        `  ${mark} ${stage.stage.padEnd(15)} ${stage.status === 'cached' ? 'önbellek' : seconds(stage.durationMs)}`,
+        `  ${mark} ${stage.stage.padEnd(15)} ${stage.status === 'cached' ? 'önbellek' : seconds(stage.durationMs)}${detail}`,
       );
     }
     if (asJson) console.log(JSON.stringify(summary, null, 2));
