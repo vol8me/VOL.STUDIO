@@ -696,6 +696,32 @@ function buildOnScreenKeyboardDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
+/** Düzenleme menüsü (UI-11.2): normal, salt okunur ve parola alanı; menü kuralları alan durumuna göre değişir. */
+function buildEditMenuDemo(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const hint = new Text(i18next.t('volui:forms.editMenuHint'), { variant: 'muted' });
+  const normal = new Input({
+    value: i18next.t('volui:forms.editMenuNormalValue'),
+    ariaLabel: i18next.t('volui:forms.editMenuNormal'),
+  });
+  const readOnly = new Input({
+    value: i18next.t('volui:forms.editMenuReadOnlyValue'),
+    ariaLabel: i18next.t('volui:forms.editMenuReadOnly'),
+    readOnly: true,
+  });
+  const password = new Input({
+    value: 'secret-123',
+    type: 'password',
+    ariaLabel: i18next.t('volui:forms.editMenuPassword'),
+  });
+  disposables.addDestroyables(hint, normal, readOnly, password);
+
+  wrap.append(hint.element, normal.element, readOnly.element, password.element);
+  return wrap;
+}
+
 export function buildFormsTab(
   uiRootElement: HTMLElement,
   platform: PlatformView,
@@ -797,6 +823,7 @@ export function buildFormsTab(
     card(i18next.t('volui:forms.propertyField'), buildPropertyFieldDemo(disposables)),
     card(i18next.t('volui:forms.toolbar'), buildToolbarDemo(disposables)),
     card(i18next.t('volui:forms.onScreenKeyboard'), buildOnScreenKeyboardDemo(disposables)),
+    card(i18next.t('volui:forms.editMenu'), buildEditMenuDemo(disposables)),
   ];
 
   container.appendChild(cardGrid(cards));

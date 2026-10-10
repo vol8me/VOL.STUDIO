@@ -439,6 +439,16 @@
     "onScreenKeyboardOpen": "Klavyeyi aç",
     "onScreenKeyboardValue": "Değer: {{value}}",
     "onScreenKeyboardCanceled": "İptal edildi, değer korundu: {{value}}",
+    "editMenu": "Düzenleme menüsü",
+    "editMenuHint": "Bir alanda sağ tıklayın (ya da Shift+F10) — Kes, Kopyala, Yapıştır ve Tümünü seç açılır. Salt okunur alan yalnız kopyalar; parola alanı hiç kopyalanmaz.",
+    "editMenuNormal": "Düzenlenebilir metin",
+    "editMenuNormalValue": "Bu metni düzenleyin",
+    "editMenuReadOnly": "Salt okunur metin",
+    "editMenuReadOnlyValue": "Salt okunur metin",
+    "editMenuPassword": "Parola",
+    "editMenuDenied": "Pano bu eylemi engelledi (izin reddedildi).",
+    "editMenuUnavailable": "Pano burada kullanılamıyor.",
+    "editMenuFailed": "Pano eylemi başarısız oldu.",
     "enemyLevelValue": "Sv.{{value}}"
   },
   "palette": {

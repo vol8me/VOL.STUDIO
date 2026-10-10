@@ -22,6 +22,8 @@ export interface ContextMenuOptions {
   container?: HTMLElement;
   /** Ek CSS class'ı — kullanıcı kendi stilini geçersiz kılmak için. */
   className?: string;
+  /** Menü her kapandığında (seçim, Escape, dışa tıklama, tetikleyicinin kaybı) bir kez çağrılır. */
+  onClose?: () => void;
 }
 
 function isSeparator(entry: ContextMenuEntry): entry is ContextMenuSeparator {
@@ -49,7 +51,10 @@ export class ContextMenu {
     this.popup = new Popup(target, {
       placement: options.placement ?? 'bottom-end',
       signal: 'ContextMenu',
-      onClose: () => this.target.setAttribute('aria-expanded', 'false'),
+      onClose: () => {
+        this.target.setAttribute('aria-expanded', 'false');
+        options.onClose?.();
+      },
       container: options.container,
     });
     this.popup.element.classList.add('vol-context-menu');

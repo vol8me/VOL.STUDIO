@@ -188,6 +188,15 @@ ortanca 59,5**. En düşük TEXT 57,8 (kareler %6 oranında 20 ms üstü); en k�
 THEME sekmesi (yeni, iki canvas ve çok kutu) 60,0 FPS. Aynı derlemenin yama öncesi ilk temiz koşusu: ortanca 59,5, en
 düşük 58,1. Gamescope açılış görüntüsünde tam ekran düğmesi yoktur ve dil düğmesi boşluğu doldurur. Bu sayı "kaydırılırken sunulan kare"dir, oyun FPS'i değildir.
 
+**13 px etiket ve açık-katman düzeltmesi sonrası (2026-10-10, aynı cihaz, SLR4 derlemesi #4):** 15 sekme ortanca **59,8 FPS**,
+en düşük FORMS 58,4, p95 18–21 ms; kart başlığı etiketinin büyük harf yüksekliği **9 ekran px (1,06 mm)**, önceki 8 px'in yerine
+(Valve alt sınırı ≥ 9). Aynı turda bulunan kusur: Tema sekmesinde `Select` listesi açıkken LB/RB sekmeyi değiştirip listeyi
+sayfa köşesinde sahipsiz bırakıyordu; vitrin açık katmanda omuz düğmelerini yutar ve `Popup` tetikleyicisi kalkınca kapanır.
+Doğrulama: Formlar sekmesi listesi fareyle açık, LB sekmeyi değiştirmedi, B kapattı, RB yine sekme değiştirdi. **Cihaz tuzağı:** her
+`devtools/deck/scripts/virtual-pad.py` çağrısı yeni bir sanal kol açar; D-pad basışlarının bir kısmı etki göstermeyebilir, bu yüzden
+adım adım yürüyüşte ekran görüntüsüyle sonucu doğrulayın (düğme basışları LB/RB/A/B güvenilir çıktı). Gamescope'ta fare tıklaması
+için `DISPLAY=:1 xdotool` çalışır.
+
 Sınırlar: host derlemesi (Ubuntu WebKitGTK 2.4x, Cairo CPU boyama) ve SLR4 sayıları birbirinden ayrı ölçülmüştür;
 birbirinin yerine geçmez ve **host/SLR4 aynı örnekle A/B** UI-13.3'tedir. SLR4 koşusu **ısınmamış** tek pencere
 ölçümüdür (10 dk termal ve MangoHud/gamescope sunum istatistiği NOT-RUN). CPU governor/termal etkisi ve oyun

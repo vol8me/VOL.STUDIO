@@ -7,11 +7,14 @@ import {
   FocusNavController,
   Icon,
   IconButton,
+  type EditMenuResult,
   type IconName,
+  installEditMenu,
   listFocusable,
   THEME_IDS,
   Tabs,
   ThemeController,
+  ToastManager,
   showConfirm,
   type ThemeId,
   type ThemeStore,
@@ -126,6 +129,8 @@ export class ShowcaseApp {
   /** Yalnız tam ekran kontrolü olan oturumda kurulur (`platform.fullscreenControl !== 'none'`). */
   private readonly fullscreen: FullscreenController | null;
   private readonly focusNav: FocusNavController;
+  /** Düzenleme menüsü hata bildirimi; ilk hatada kurulur. */
+  private editMenuToasts: ToastManager | null = null;
   private activeTabId: ShowcaseTabId = 'buttons';
   private tabOrder: ShowcaseTabId[] = [];
   private destroyed = false;
@@ -181,6 +186,10 @@ export class ShowcaseApp {
       }),
     );
     this.focusNav.start();
+    // Düzenlenebilir alanların kendi bağlam menüsü (Kes/Kopyala/Yapıştır/Tümünü seç); yerel menünün yerine geçer.
+    this.lifecycle.addSubscription(
+      installEditMenu(document, { onResult: (result) => this.onEditMenuResult(result) }),
+    );
     // Skin (tema): kök elemana `data-vol-theme` yazar; ses paleti ve imleç vurgusu ona bağlanır.
     this.theme = new ThemeController({ store: localThemeStore() });
     this.lifecycle.add(this.theme.attach(document.documentElement));
@@ -203,6 +212,18 @@ export class ShowcaseApp {
       })),
     );
     this.rebuild();
+  }
+
+  /** Pano eylemi başarısızsa nedenini söyler (izin reddi, yetenek yok); başarı ve eski sonuç sessizdir. */
+  private onEditMenuResult(result: EditMenuResult): void {
+    if (result.ok || !result.reason || result.reason === 'stale') return;
+    this.editMenuToasts ??= this.lifecycle.addDestroyable(new ToastManager(this.element));
+    const message = {
+      denied: i18next.t('volui:forms.editMenuDenied'),
+      unavailable: i18next.t('volui:forms.editMenuUnavailable'),
+      failed: i18next.t('volui:forms.editMenuFailed'),
+    }[result.reason];
+    this.editMenuToasts.show(message, { variant: 'warning' });
   }
 
   /** Pencere dar eşiği geçince kabuk yeniden kurulur (aktif sekme korunur). */

@@ -439,6 +439,16 @@
     "onScreenKeyboardOpen": "Open keyboard",
     "onScreenKeyboardValue": "Value: {{value}}",
     "onScreenKeyboardCanceled": "Canceled, value kept: {{value}}",
+    "editMenu": "Edit menu",
+    "editMenuHint": "Right-click a field (or press Shift+F10) for Cut, Copy, Paste and Select all. Read-only fields only copy; the password field never copies.",
+    "editMenuNormal": "Editable text",
+    "editMenuNormalValue": "Edit this text",
+    "editMenuReadOnly": "Read-only text",
+    "editMenuReadOnlyValue": "Read-only text",
+    "editMenuPassword": "Password",
+    "editMenuDenied": "The clipboard blocked this action (permission denied).",
+    "editMenuUnavailable": "The clipboard is not available here.",
+    "editMenuFailed": "The clipboard action failed.",
     "enemyLevelValue": "Lv.{{value}}"
   },
   "palette": {

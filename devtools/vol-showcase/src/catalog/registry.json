@@ -2573,6 +2573,30 @@
       ]
     },
     {
+      "export": "createWebClipboardAdapter",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/clipboard.test.ts",
+          "title": "izin reddi `denied` olur, fırlatmaz ve yazmada yedeğe düşmez"
+        },
+        {
+          "file": "core/tests/ui/textEntry/clipboard.test.ts",
+          "title": "pano içeriği konsola yazılmaz"
+        }
+      ]
+    },
+    {
       "export": "emitUiIntent",
       "kind": "helper",
       "tier": 1,
@@ -2649,6 +2673,26 @@
         {
           "file": "core/tests/ui/glyphs/glyphs.test.ts",
           "title": "aile ve dosya ile yol üretir"
+        }
+      ]
+    },
+    {
+      "export": "installEditMenu",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "direct",
+      "showcase": ["ShowcaseApp.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/editMenu.test.ts",
+          "title": "Kes panoya yazar, seçimi siler ve `input` olayı yayar"
+        },
+        {
+          "file": "core/tests/ui/textEntry/editMenu.test.ts",
+          "title": "izin reddi akışı bozmaz: alan değişmez, menü kapanır, sonuç bildirilir"
         }
       ]
     },
@@ -2753,6 +2797,30 @@
         {
           "file": "core/tests/ui/focus/focusNav.test.ts",
           "title": "yönün ilerisindeki en yakın aday kazanır"
+        }
+      ]
+    },
+    {
+      "export": "planEditMenu",
+      "kind": "helper",
+      "tier": 1,
+      "phase": "UI-11",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "saf karar fonksiyonu; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/textEntry/editMenu.test.ts",
+          "title": "parolada Kes ve Kopyala sunulur ama kapalıdır; Yapıştır ve Tümünü Seç açıktır"
+        },
+        {
+          "file": "core/tests/ui/textEntry/editMenu.test.ts",
+          "title": "salt okunurda yalnız Kopyala ve Tümünü Seç sunulur (Kes/Yapıştır yok)"
         }
       ]
     },

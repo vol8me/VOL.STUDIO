@@ -99,6 +99,13 @@
     "placeholder": "Komut ara…",
     "general": "Genel"
   },
+  "editMenu": {
+    "label": "Düzenle",
+    "cut": "Kes",
+    "copy": "Kopyala",
+    "paste": "Yapıştır",
+    "selectAll": "Tümünü seç"
+  },
   "toast": {
     "dismiss": "Kapat"
   },

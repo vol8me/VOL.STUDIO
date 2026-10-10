@@ -20,6 +20,7 @@
 @import url('./data/boards.css');
 @import url('./primitives/workbench.css');
 @import url('./textEntry/keyboard.css');
+@import url('./textEntry/editMenu.css');
 @import url('./material/material.css');
 @import url('./material/hud.css');
 @import url('./material/overlays.css');

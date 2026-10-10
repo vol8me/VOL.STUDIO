@@ -4,6 +4,7 @@ import {
   createVolGame,
   i18n,
   i18next,
+  installEditMenu,
   showFatalStartupError,
   suppressNativeMenus,
 } from '@volstudio/core';
@@ -56,6 +57,8 @@ async function boot(): Promise<void> {
         }),
       );
     scope.addSubscription(suppressNativeMenus(document));
+    // Yerel menü kapalıyken düzenlenebilir alanlar (senaryo paneli) kendi Kes/Kopyala/Yapıştır menüsünü alır.
+    scope.addSubscription(installEditMenu(document));
     game.events.once('destroy', () => scope.dispose());
   } catch (error) {
     loading.abort();

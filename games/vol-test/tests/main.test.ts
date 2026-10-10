@@ -6,6 +6,8 @@ const boundary = vi.hoisted(() => ({
   disposeServices: vi.fn(),
   stopMenus: vi.fn(),
   suppressMenus: vi.fn(),
+  stopEditMenu: vi.fn(),
+  editMenu: vi.fn(),
   fatal: vi.fn(),
 }));
 
@@ -13,6 +15,7 @@ vi.mock('@volstudio/core', () => ({
   createVolGame: boundary.createGame,
   i18n: { addResources: vi.fn(), init: () => Promise.resolve() },
   i18next: { t: () => 'VOL.TEST' },
+  installEditMenu: boundary.editMenu,
   showFatalStartupError: boundary.fatal,
   suppressNativeMenus: boundary.suppressMenus,
 }));
@@ -34,6 +37,7 @@ describe('oyun açılış sahipliği', () => {
     vi.clearAllMocks();
     boundary.createServices.mockResolvedValue({ dispose: boundary.disposeServices });
     boundary.suppressMenus.mockReturnValue(boundary.stopMenus);
+    boundary.editMenu.mockReturnValue(boundary.stopEditMenu);
   });
 
   it('oyun kurulumu reddedilirse edinilmiş servisleri bırakır', async () => {
@@ -58,5 +62,26 @@ describe('oyun açılış sahipliği', () => {
     expect(destroy).toHaveBeenCalledTimes(1);
     expect(boundary.disposeServices).toHaveBeenCalledTimes(1);
     error.mockRestore();
+  });
+
+  it('başarılı açılışta yerel menü kapanır, düzenleme menüsü kurulur ve oyun yok olunca ikisi de bırakılır', async () => {
+    const handlers: Record<string, () => void> = {};
+    boundary.createGame.mockResolvedValue({
+      events: {
+        on: vi.fn(),
+        once: vi.fn((name: string, handler: () => void) => {
+          handlers[name] = handler;
+        }),
+      },
+      destroy: vi.fn(),
+    });
+    await import('../src/main');
+    await vi.waitFor(() => expect(boundary.editMenu).toHaveBeenCalledTimes(1));
+    expect(boundary.suppressMenus).toHaveBeenCalledTimes(1);
+    expect(boundary.stopMenus).not.toHaveBeenCalled();
+    expect(boundary.stopEditMenu).not.toHaveBeenCalled();
+    handlers.destroy();
+    expect(boundary.stopMenus).toHaveBeenCalledTimes(1);
+    expect(boundary.stopEditMenu).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,0 +1,20 @@
+/*
+ * Düzenleme menüsü (`editMenu.ts`): menü, işaretçinin bulunduğu noktaya konan görünmez bir çapaya bağlanır.
+ * Çapa yerleşimde yer tutar (ölçülebilir, `Popup` ona göre konumlanır) ama görünmez ve tıklanamaz.
+ * Pano yedeği için geçici metin alanı (`clipboard.ts`) ekran dışında durur.
+ */
+.vol-edit-menu-anchor {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.vol-edit-menu-holder {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: -9999px;
+  opacity: 0;
+  pointer-events: none;
+}

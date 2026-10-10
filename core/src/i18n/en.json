@@ -99,6 +99,13 @@
     "placeholder": "Search commands…",
     "general": "General"
   },
+  "editMenu": {
+    "label": "Edit",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select all"
+  },
   "toast": {
     "dismiss": "Dismiss"
   },
