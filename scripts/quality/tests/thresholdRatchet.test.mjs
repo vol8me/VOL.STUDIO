@@ -124,6 +124,36 @@ describe('eşik ratchet: karşılaştırma', () => {
     assert.deepEqual(compareThresholds(base, added), []);
   });
 
+  it('betik kapsamı eşiği düşer ya da yeni muafiyet eklenirse reddedilir; ilk benimseme serbesttir', () => {
+    const scripts = (extra = {}) => ({
+      lines: 92,
+      branches: 86,
+      functions: 94,
+      floorPct: 50,
+      minLines: 50,
+      acknowledged: { 'scripts/a.mjs': 'Tarifle çalışır.' },
+      ...extra,
+    });
+    const base = config({ scriptCoverage: scripts() });
+
+    assert.deepEqual(compareThresholds(config(), base), []);
+    assert.deepEqual(compareThresholds(base, structuredClone(base)), []);
+
+    const lowered = config({ scriptCoverage: scripts({ lines: 80 }) });
+    const problems = compareThresholds(base, lowered);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /^scriptCoverage\.lines: 92 → 80/);
+
+    const widened = config({
+      scriptCoverage: scripts({
+        acknowledged: { 'scripts/a.mjs': 'x', 'scripts/b.mjs': 'Yeni muafiyet.' },
+      }),
+    });
+    const added = compareThresholds(base, widened);
+    assert.equal(added.length, 1);
+    assert.match(added[0], /^scriptCoverage\.acknowledged\["scripts\/b\.mjs"\]: yeni muafiyet/);
+  });
+
   it('taban hiç atlama bütçesi taşımıyorsa ilk benimseme gevşeme sayılmaz', () => {
     const base = config();
     const adopted = config({ skipBudget: { e2e: { 'a/webkit/main': 16 } } });
@@ -207,6 +237,36 @@ describe('eşik ratchet: şema', () => {
     const wrong = valid();
     wrong.skipBudget = [];
     assert.ok(validateQualityConfig(wrong).some((p) => p.startsWith('skipBudget: nesne')));
+  });
+
+  it('betik kapsamı bölümü: geçerli biçim kabul edilir, bozuk değerler reddedilir', () => {
+    const ok = valid();
+    ok.scriptCoverage = {
+      lines: 92,
+      branches: 86,
+      functions: 94,
+      floorPct: 50,
+      minLines: 50,
+      acknowledged: { 'scripts/a.mjs': 'Tarifle çalışır.' },
+    };
+    assert.deepEqual(validateQualityConfig(ok), []);
+
+    const bad = valid();
+    bad.scriptCoverage = {
+      lines: 120,
+      branches: 'x',
+      minLines: 0,
+      acknowledged: { 'scripts/a.mjs': ' ' },
+    };
+    const problems = validateQualityConfig(bad);
+    assert.ok(problems.some((p) => p.startsWith('scriptCoverage.lines')));
+    assert.ok(problems.some((p) => p.startsWith('scriptCoverage.branches')));
+    assert.ok(problems.some((p) => p.startsWith('scriptCoverage.minLines')));
+    assert.ok(problems.some((p) => p.includes('acknowledged["scripts/a.mjs"]')));
+
+    const wrong = valid();
+    wrong.scriptCoverage = [];
+    assert.ok(validateQualityConfig(wrong).some((p) => p.startsWith('scriptCoverage: nesne')));
   });
 
   it('geçerli istisna kabul edilir', () => {

@@ -92,6 +92,33 @@
       "vol-test/webkit": 1
     }
   },
+  "scriptCoverage": {
+    "$comment": "Kapı kodunun (scripts/**) node --test kapsamı (scripts/quality/scriptCoverage.mjs). 2026-10-11 ölçümü: satır %94,3 / dal %88,1 / işlev %96,0 (628 sınama). acknowledged: sınamalarda hiç yüklenmeyen ya da yarısından azı kapsanan betik ve onu hangi kapı/komutun çalıştırdığı; bayat kayıt düşer.",
+    "lines": 92,
+    "branches": 86,
+    "functions": 94,
+    "floorPct": 50,
+    "minLines": 50,
+    "acknowledged": {
+      "scripts/quality/gate.mjs": "Kapı koşucusunun CLI girişidir; her `pnpm quick|high|signoff` koşusu onu çalıştırır. Mantığı gateRunner.mjs, signoffRecord.mjs ve counts.mjs testlerindedir.",
+      "scripts/quality/cli/workspace-contract.mjs": "Sözleşme bekçilerinin CLI birleştiricisidir; `contract` aşamasının `cli` birimi her koşuda onu çalıştırır. Bekçilerin her biri kendi birim testindedir.",
+      "scripts/quality/cli/bundle-report.mjs": "Betik justfile tarifiyle (`bundle`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/cli/scaling-report.mjs": "Betik justfile tarifiyle (`scaling`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/cli/coverage-shape-report.mjs": "Betik justfile tarifiyle (`coverage-shape`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/cli/ui-registry.mjs": "Betik justfile tarifiyle (`ui-registry --check`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/audioVerify.mjs": "Betik justfile tarifiyle (`audio-verify`) çalışır; kapının kendisi her koşuda onu çalıştırır ve çıkış kodu kapıdır, birim testi yoktur.",
+      "scripts/quality/cleanWorkspace.mjs": "Betik `just clean` tarifiyle çalışır ve disk siler; test edilmez, tarifi yalnız kullanıcı çalıştırır.",
+      "scripts/doctor.mjs": "Betik `pnpm run doctor:env` ile çalışır; ortam araçlarını yoklar, çıktısı makineye bağlıdır.",
+      "scripts/vite/browserBoundary.mjs": "Vite eklentisidir; vitrin build'i (`build` aşaması) modül grafiğini her koşuda çalıştırır ve kanıtı build çıktısına yazar.",
+      "scripts/linux/build-appimage.mjs": "Linux paketleyicisi (`pnpm build:linux-appimage`); Windows makinede koşmaz. Linux ölçümü docs/linux.md'de NOT-RUN'dır.",
+      "scripts/linux/build-steamrt4.mjs": "Steam Runtime paketleyicisi (`pnpm build:linux-steamrt4`); Windows makinede koşmaz. Linux ölçümü docs/linux.md'de NOT-RUN'dır.",
+      "scripts/android/device-tour.mjs": "Bağlı Android cihaz ister; saf yargı mantığı deviceTour.mjs'te ve testlidir, kanıtı docs/android.md \"Cihaz turu\"dur.",
+      "scripts/android/audio-players.mjs": "Bağlı Android cihaz ister (`dumpsys audio`); cihaz kabulü aracıdır, kapı değildir.",
+      "scripts/android/frame-stats.mjs": "Bağlı Android cihaz ister (`dumpsys gfxinfo`); cihaz kabulü aracıdır, kapı değildir.",
+      "scripts/quality/cli/ui-baseline.mjs": "Vitrini derler ve iki motorda ölçer (`record`); cihaz/tarayıcı ister, kayıt git dışıdır. `compare` mantığı uiBaseline testlerindedir.",
+      "scripts/quality/coverageRun.mjs": "`pnpm -r` ile paket kapsamını koşar (`coverage` aşamasının kendisi); main() yolu aşamada çalışır, saf yardımcıları (`splitMeasured`, `selectRunPackages`) testlidir."
+    }
+  },
   "coverageRuns": {
     "coverage": {
       "exclude": ["@volstudio/audio-synth"]

@@ -48,6 +48,15 @@ export interface QualityConfig {
   };
   /** Aşama → sayım anahtarı → izin verilen en çok atlama (`counts.mjs`). */
   skipBudget?: Record<string, Record<string, number>>;
+  /** Kapı kodunun kendi kapsamı (`scriptCoverage.mjs`). */
+  scriptCoverage?: {
+    lines?: number;
+    branches?: number;
+    functions?: number;
+    floorPct?: number;
+    minLines?: number;
+    acknowledged?: Record<string, string>;
+  };
   ratchetExceptions?: { key: string; to: number | null; reason: string }[];
 }
 

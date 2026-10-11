@@ -92,6 +92,14 @@ export function thresholdEntries(config) {
         add(`skipBudget[${JSON.stringify(stage)}][${JSON.stringify(key)}]`, 'ceiling', value);
     }
   }
+  const scripts = config?.scriptCoverage;
+  for (const metric of ['lines', 'branches', 'functions', 'floorPct']) {
+    if (isNumber(scripts?.[metric])) add(`scriptCoverage.${metric}`, 'higher', scripts[metric]);
+  }
+  if (isNumber(scripts?.minLines)) add('scriptCoverage.minLines', 'lower', scripts.minLines);
+  for (const file of Object.keys(scripts?.acknowledged ?? {})) {
+    add(`scriptCoverage.acknowledged[${JSON.stringify(file)}]`, 'absent');
+  }
   const shape = config?.coverageShape;
   if (isNumber(shape?.minLines)) add('coverageShape.minLines', 'lower', shape.minLines);
   if (isNumber(shape?.floorPct)) add('coverageShape.floorPct', 'higher', shape.floorPct);
@@ -168,7 +176,9 @@ export function compareThresholds(baseConfig, headConfig, options = {}) {
         `${key}: yeni atlama bütçesi ${after.value} (${label}te anahtar yoktu, 0 sayılır). ${hint(key, after.value)}`,
       );
     }
-    if (after.kind === 'absent' && !base.has(key) && !excused(key, null)) {
+    // Bölüm tabanda hiç yoksa ilk benimseme gevşeme değil, mevcut durumun kaydıdır.
+    const adopted = key.startsWith('scriptCoverage.') && baseConfig?.scriptCoverage === undefined;
+    if (after.kind === 'absent' && !adopted && !base.has(key) && !excused(key, null)) {
       problems.push(`${key}: yeni muafiyet eklendi (${label}te yoktu). ${hint(key, null)}`);
     }
   }

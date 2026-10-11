@@ -229,6 +229,42 @@ export function validateQualityConfig(raw) {
     }
   }
 
+  if (raw.scriptCoverage !== undefined) {
+    const block = raw.scriptCoverage;
+    if (!isPlainObject(block)) {
+      problems.push(
+        'scriptCoverage: nesne olmalı (lines/branches/functions/floorPct/acknowledged)',
+      );
+    } else {
+      for (const key of ['lines', 'branches', 'functions', 'floorPct']) {
+        const value = block[key];
+        if (value === undefined) continue;
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100) {
+          problems.push(`scriptCoverage.${key}: yüzde olmalı, 0-100 aralığında`);
+        }
+      }
+      if (
+        block.minLines !== undefined &&
+        !(Number.isInteger(block.minLines) && block.minLines > 0)
+      ) {
+        problems.push('scriptCoverage.minLines: pozitif tam sayı olmalı');
+      }
+      if (block.acknowledged !== undefined) {
+        if (!isPlainObject(block.acknowledged)) {
+          problems.push('scriptCoverage.acknowledged: nesne olmalı (dosya yolu → gerekçe)');
+        } else {
+          for (const [file, reason] of Object.entries(block.acknowledged)) {
+            if (typeof reason !== 'string' || !reason.trim()) {
+              problems.push(
+                `scriptCoverage.acknowledged[${JSON.stringify(file)}]: gerekçe boş olamaz. Sessiz muafiyet yok.`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (raw.skipBudget !== undefined) {
     if (!isPlainObject(raw.skipBudget)) {
       problems.push('skipBudget: nesne olmalı (aşama adı → sayım anahtarı → en çok atlama)');
