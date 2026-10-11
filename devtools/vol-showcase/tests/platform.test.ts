@@ -18,7 +18,11 @@ import {
  * deposu ve titreşim gözlemcileri. Native kabuk burada sahtedir; gerçek pencere ve Tauri IPC kabulü native
  * turdadır (UI-06.4), web yedeği ve yaşam döngüsü sözleşmesi burada ölçülür.
  */
-const BOOT_TIMEOUT_MS = 20_000;
+/**
+ * Bu testler TÜM uygulamayı kurar: süre uygulamayla büyür ve `--coverage` (v8) altında paralel paketlerle birlikte tek başına
+ * çalışmanın katlarına çıkar. Sınır, takılmayı gizlemeyecek kadar dar, yük payını taşıyacak kadar geniştir.
+ */
+const BOOT_TIMEOUT_MS = 60_000;
 
 type MemoryStores = ScopedStores & { raw: Map<string, unknown>; adapter: IStorageAdapter };
 

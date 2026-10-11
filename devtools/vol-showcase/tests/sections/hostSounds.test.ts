@@ -31,11 +31,14 @@ describe('XP kazanımı: ödül ve seviye atlama', () => {
 
   it('seviye atlatmayan kazanım `reward`, atlatan `levelUp` çalar (ikisi birden değil)', () => {
     const { scope, buttons } = xpCard();
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
     buttons[0].click(); // +20 XP: 75 gereken seviyeyi geçmez
     expect(play.mock.calls).toEqual([['reward']]);
     play.mockClear();
     buttons[1].click(); // +150 XP: seviye atlar
+    expect(play.mock.calls).toEqual([['levelUp']]);
+    play.mockClear();
+    buttons[2].click(); // +2000 XP: ÇOK seviye atlar; yine tek `levelUp` (seviye başına ses yağmaz)
     expect(play.mock.calls).toEqual([['levelUp']]);
     scope.dispose();
   });

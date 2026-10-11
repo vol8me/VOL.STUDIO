@@ -115,7 +115,8 @@ describe('ses laboratuvarı (Web Audio var)', () => {
     } finally {
       app.destroy();
     }
-  });
+    // Tüm uygulamayı kurar: `--coverage` altında varsayılan sınır aşılır.
+  }, 30_000);
 
   it('bağlam jestten önce kurulmaz; ilk etkileşimde bir kez kurulur ve durum çalışır bağlamı gösterir', async () => {
     expect(StubContext.created).toBe(0);

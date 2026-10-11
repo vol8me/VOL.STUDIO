@@ -6,9 +6,9 @@ import {
 } from '../../src/platform/linuxHaptics';
 
 /*
- * '@volstudio/core' kök barrel'ı Phaser köprülerini çeker; bu test
- * sürücü↔komut tercümesini sınadığı için desen tablosu değil kablolama
- * doğrulanır — gerçek tablo core'un kendi testinde kanıtlıdır.
+ * Sürücü '@volstudio/core/platform' alt yolundan içe aktarır (kök barrel Phaser köprülerini çeker): sahte nesne AYNI yolu
+ * örtmelidir, yoksa gerçek modül yüklenir ve çağrı doğrulamaları sessizce boşa düşer. Bu test sürücü↔komut tercümesini
+ * sınadığı için desen tablosu değil kablolama doğrulanır — gerçek tablo core'un kendi testinde kanıtlıdır.
  */
 const fakes = vi.hoisted(() => ({
   setHapticsDriver: vi.fn(),
@@ -23,7 +23,7 @@ const tauri = vi.hoisted(() => ({
   invoke: vi.fn((): Promise<unknown> => Promise.resolve({ backend: 'none' })),
 }));
 
-vi.mock('@volstudio/core', () => fakes);
+vi.mock('@volstudio/core/platform', () => fakes);
 vi.mock('@tauri-apps/api/core', () => tauri);
 
 beforeEach(() => {

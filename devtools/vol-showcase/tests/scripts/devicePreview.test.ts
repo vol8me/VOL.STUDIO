@@ -75,7 +75,8 @@ it('gerçek Vite ardışık koşularda PID ve port bırakmadan kapanır', async 
   // Sözleşme "anında" değil "sınırlı sürede silinebilir"dir (bkz. removeTree).
   await expect(removeTree(root)).resolves.toBeUndefined();
   expect(existsSync(root)).toBe(false);
-});
+  // İki gerçek Vite süreci başlatır/durdurur: yüklü makinede varsayılan sınır dardır.
+}, 30_000);
 
 it('dolu portu reddeder ve mevcut dinleyiciyi korur', async () => {
   const { startPreview } = await import('../../scripts/device-preview.mjs');
