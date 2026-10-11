@@ -487,7 +487,7 @@ Bulunan ve düzeltilen gerçek kusur: Jura 12 px etiketlerin büyük harf yükse
 
 Karar (kusur değil): palet kartındaki token adı artık kırpılıp üç nokta konmaz, dar sütunda satır kırar (`overflow-wrap: anywhere`); dokunmatikte `title` yoktur, adı okuyamayan kullanıcı teknik etiketi öğrenemez.
 
-**NOT-RUN** (PASS sayılmaz): Android'de **gerçek %200 yazı/WebView ölçeği** — yukarıdaki sistem `font_scale` koşusu CSS px'i ölçeklemediği için kanıt sayılmaz; APK içindeki WebView ile koşu UI-11.3'e ve F09.2'ye bağlıdır (masaüstündeki %200 kanıtı UI-07.2 `pseudoLocale.spec.ts` 640×400 görünümüdür). Samsung SM-G990B2 yazı ölçeği koşusu. Deck glif yüksekliğinin ve yazı tipi okunabilirliğinin **insan kabulü** UI-13.4'tedir; piksel ölçümü kabul yerine geçmez.
+**NOT-RUN** (PASS sayılmaz): Android'de **gerçek %200 yazı/WebView ölçeği** — yukarıdaki sistem `font_scale` koşusu CSS px'i ölçeklemediği için kanıt sayılmaz; APK içindeki WebView ile koşu UI-11.4'e ve F09.2'ye bağlıdır (masaüstündeki %200 kanıtı UI-07.2 `pseudoLocale.spec.ts` 640×400 görünümüdür). Samsung SM-G990B2 yazı ölçeği koşusu. Deck glif yüksekliğinin ve yazı tipi okunabilirliğinin **insan kabulü** UI-13.4'tedir; piksel ölçümü kabul yerine geçmez.
 
 ## Tema laboratuvarı ve skin × yoğunluk kaydı (UI-07.4)
 
@@ -548,7 +548,7 @@ Kayıtlar git dışıdır (`devtools/vol-showcase/records/ui-device/2026-10-10-{
 | Gerçek sistem panosu         | Chromium: izin verilmiş bağlamda Kes sonra Yapıştır gerçek `navigator.clipboard`'dan döner. WebKit: Playwright pano izni veremez, test atlanır; aynı akış bellekte panoyla iki motorda koşar         | Chromium geçti, WebKit atlandı            |
 | Yerel pencerede pano         | WebView2, WebKitGTK ve Android WebView'de `navigator.clipboard` izin davranışı ölçülmedi; yerel eklenti eklenmedi                                                                                    | **NOT-RUN** (UI-12.4/F09.1, F08.6, F09.2) |
 
-Dokunma kaynaklı `contextmenu` olayına dokunulmaz: Android'de yerel seçim tutamakları ve eylem çubuğu UI-11.3'ün konusudur.
+Dokunma kaynaklı `contextmenu` olayına dokunulmaz: Android'de yerel seçim tutamakları ve eylem çubuğu kalır. `suppressNativeMenus` de düzenlenebilir alanda dokunma kaynaklı olayı engellemez; engellenseydi WebView çubuğu açmazdı (Lenovo'da ölçüldü, UI-11.3).
 
 ## Steam metin sağlayıcısı: diyalog ve yüzen klavye (UI-12.1)
 
