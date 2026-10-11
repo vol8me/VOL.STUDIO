@@ -12,9 +12,10 @@ Claude'un araç izni kullanıcı kapsamını genişletmez; mevcut açık yetki t
 
 ## Model ve alt ajan düzeni
 
-Ana model Sonnet, danışman Opus; alt ajanlar ve gerekçe: [Claude çalışma düzeni](docs/claude-workflow.md).
+Ana model Sonnet, danışman Opus. Ölçümler, gerekçe ve sınırlar: [Claude çalışma düzeni](docs/claude-workflow.md).
 
-- Hacimli ve bağımsız iş alt ajana gider: geniş arama `Explore`, uzun günlük `log-digest`, kaynaklı dış araştırma `researcher`. Karar, tasarım ve düzenleme ana oturumda kalır. Bağımsız işler aynı mesajda paralel başlatılır.
-- Alt ajan çıktısı kanıt değildir: bir kararı ya da raporu taşıyan her bulgu (yol, satır, düşen test, sayı) kaynağından doğrulanır.
-- Danışman plan kilitlenmeden önce, aynı sorun iki kez düzeltilemediğinde ve "bitti" demeden önce çağrılır.
+- Varsayılan doğrudan çalışmaktır: arama, dosya okuma ve olgu sorusu Grep, Read ve WebFetch ile ana oturumda yapılır. Bu işlerde alt ajan ölçümde daha pahalı ve daha yavaştı, doğruluk eşitti; küçük işe dağıtım yapılmaz.
+- `Explore` yalnız çok adımlı, açık uçlu, salt okunur keşif içindir.
+- Alt ajan çıktısı kanıt değildir: karar ya da rapor taşıyan her bulgu (yol, satır, sayı) kaynağından doğrulanır.
+- Danışman pahalıdır: kısa işte çağrılmaz, çok adımlı işte bağlam küçükken çağrılır.
 - Konu değişince yeni oturum açılır: uzun bağlam her istekte plan limitinden yer.

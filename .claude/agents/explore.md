@@ -1,6 +1,6 @@
 ---
 name: Explore
-description: Salt okunur hızlı depo taraması. Bir şeyin nerede tanımlandığını, kim tarafından kullanıldığını ya da bir desenin nerelerde geçtiğini bulmak için, birden çok dosya veya dizin taranacaksa proaktif kullan. Karar, tasarım veya değişiklik için kullanma.
+description: Açık uçlu, birden çok adımlı salt okunur keşif. Bir yapının nerede ve nasıl kurulduğunu birkaç aramayla çıkarmak gerektiğinde kullan. Tek bir desenin tek aramasıyla bulunacak şey için KULLANMA; Grep ile doğrudan ara. Karar, tasarım veya değişiklik için kullanma.
 tools: Read, Grep, Glob
 model: haiku
 omitClaudeMd: true

@@ -61,6 +61,14 @@ test('her alt ajan tanımı ad, açıklama, model ve açık araç listesi taşı
   }
 });
 
+test('ajan açıklaması ne zaman kullanılmayacağını söyler', () => {
+  // Ölçümde alt ajan küçük işte doğrudan çalışmadan pahalı ve yavaştı (docs/claude-workflow.md):
+  // açıklama dar tutulmazsa model her aramayı devreder.
+  for (const { file, meta } of agents()) {
+    assert.match(meta.description, /KULLANMA/, `${file}: description "KULLANMA" cümlesi taşımalı`);
+  }
+});
+
 test('Haiku ajanları salt okunurdur', () => {
   // Haiku kısa, kanıt döndüren işe verilir; yazma yetkisi ya da kararı ucuz modele bırakmaz.
   for (const { file, meta } of agents().filter(({ meta: m }) => m.model === 'haiku')) {
