@@ -25,7 +25,8 @@ pnpm --filter @volstudio/vol-showcase test:e2e
 ```
 
 E2E gönderilen build'i Chromium ve WebKit'te sınar; piksel temeli yalnız
-Chromium'dadır. Temel yalnız bilinçli görsel değişiklikte yenilenir.
+Chromium'dadır ve yalnız `win32` kümesi kayıtlıdır; Linux temeli yoktur. Temel yalnız bilinçli görsel
+değişiklikte yenilenir.
 Browser sonucu native ses, fiziksel girdi veya insan beğenisi yerine yazılmaz.
 Tüketicisiz CORE bileşeni burada örnek ve CORE'da kendi testiyle yaşar.
 
