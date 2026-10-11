@@ -2,6 +2,24 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { tabBuilders } from './sections/tabBuilders';
 import * as Core from '@volstudio/core';
 
+const EXPECTED_TABS = [
+  'buttons',
+  'text',
+  'panels',
+  'hud',
+  'cards',
+  'forms',
+  'workbench',
+  'palette',
+  'theme',
+  'advanced',
+  'scroll',
+  'touch',
+  'loading',
+  'ses',
+  'kimlik',
+];
+
 /**
  * VOL.UI Qualification Parity Testi (Option B).
  *
@@ -55,38 +73,23 @@ describe('VOL.UI Qualification Parity Invariant', () => {
     }
   });
 
-  it('Showcase tüm sekmelerde bileşen ailelerini nitelendirir ve temizler', () => {
-    const builders = tabBuilders(() => uiRoot);
-    expect(builders.length).toBe(15);
+  it('Showcase sekmeleri beklenen sırayla kayıtlıdır', () => {
+    expect(tabBuilders(() => uiRoot).map((b) => b.name)).toEqual(EXPECTED_TABS);
+  });
 
-    const registeredTabs = builders.map((b) => b.name);
-    const expectedTabs = [
-      'buttons',
-      'text',
-      'panels',
-      'hud',
-      'cards',
-      'forms',
-      'workbench',
-      'palette',
-      'theme',
-      'advanced',
-      'scroll',
-      'touch',
-      'loading',
-      'ses',
-      'kimlik',
-    ];
-    expect(registeredTabs).toEqual(expectedTabs);
-
-    for (const { name, build } of builders) {
-      expect(name).toBeTruthy();
-      const { element, destroy } = build();
+  // Her sekme kendi sınamasıdır: 15 sekmeyi tek sınamada kurmak paralel kapsam koşusunda 5 sn
+  // bütçesini aşıyordu ve düşen sekmeyi adıyla göstermiyordu.
+  it.each(EXPECTED_TABS)(
+    'Showcase "%s" sekmesi bileşen ailesini nitelendirir ve temizler',
+    (tab) => {
+      const entry = tabBuilders(() => uiRoot).find((b) => b.name === tab);
+      expect(entry).toBeDefined();
+      const { element, destroy } = entry!.build();
       expect(element).toBeInstanceOf(HTMLElement);
       expect(element.classList.contains('vol-showcase-section')).toBe(true);
       expect(typeof destroy).toBe('function');
       destroy();
       expect(uiRoot.children.length).toBe(0);
-    }
-  });
+    },
+  );
 });
