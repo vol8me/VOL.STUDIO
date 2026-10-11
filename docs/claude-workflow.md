@@ -57,8 +57,9 @@ amaçlı ajan da, karmaşık çok adımlı iş yapsa bile Haiku'ya düşer. Limi
   `researcher` listede yoktur.
 - Gerçek `Explore` delegasyonunu Haiku koşturdu (`claude-haiku-4-5-20251001`, 949 giriş ve
   444 çıkış token); ana oturum Sonnet'te kaldı. Tek koşudur: tasarruf oranı çıkarılmaz.
-- `haiku` takma adı bu sürümde Haiku 4.5'e çözülür. Haiku 5.5 Claude Code 2.1.293 ve üstünü
-  ister; sürüm yükselince ajanlar kendiliğinden yeni sürüme geçer.
+- `haiku` takma adı 2.1.288'de Haiku 4.5'e, 2.1.296'da Haiku 5.5'e çözüldü (`modelUsage`
+  ile ölçüldü). Haiku 5.5 Claude Code 2.1.293 ve üstünü ister; ajanlar takma adı kullandığı
+  için sürüm yükselince kendiliğinden yeni modele geçer.
 - Bu makinede kullanıcı varsayılanı zaten Sonnet'tir: `model` satırı burada davranışı
   değiştirmez, başka hesapta değiştirir. Ajan ve danışman satırları değiştirir.
 
