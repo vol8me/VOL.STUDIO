@@ -51,12 +51,12 @@ Kapıların tek kaynağı `justfile`, eşik ve bütçelerin kaynağı `quality.j
 Kapılar aktif workspace'ten türer; kapsam ratchet'i düşürülmez.
 [Kapı sözleşmesi](docs/gates.md) kompozisyonu ve rapor biçimini açıklar.
 
-| Kapı           | Bileşim                                                                                  |
-| -------------- | ---------------------------------------------------------------------------------------- |
-| `pnpm quick`   | `node-pin` `contract` `format-check` `typecheck` `lint` `lint-css`                       |
-| `pnpm fast`    | `quick` `test`                                                                           |
-| `pnpm high`    | `quick` `build` `bundle` `scaling` `audio-test` `rust` `coverage` `coverage-shape` `e2e` |
-| `pnpm signoff` | `high` `coverage-audio` `audio-verify` `security-js` `security-rust`                     |
+| Kapı           | Bileşim                                                                            |
+| -------------- | ---------------------------------------------------------------------------------- |
+| `pnpm quick`   | `node-pin` `contract` `format-check` `typecheck` `lint` `lint-css`                 |
+| `pnpm fast`    | `quick` `test`                                                                     |
+| `pnpm high`    | `quick` `build` `bundle` `scaling` `audio-test` `rust` `coverage` `coverage-shape` |
+| `pnpm signoff` | `high` `e2e` `coverage-audio` `audio-verify` `security-js` `security-rust`         |
 
 Pre-commit quick ve pre-push high kancaları atlanmaz. Ortam:
 `pnpm run doctor:env`. Kapıları `scripts/quality/gate.mjs` koşar: statik aşamalar

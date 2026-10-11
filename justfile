@@ -94,8 +94,8 @@ audio-verify:
     node scripts/quality/audioVerify.mjs
 
 # UI kanıtı: yüzey kaydı ve kanıt verisi, ardından vitrinin iki motorlu tam E2E'si
-# (axe, durum fixture'ları, yerleşim, piksel). `high` bu bileşimi zaten içerir;
-# tarif UI işinde bu kısa yolu tek komutta verir. Gerçek cihaz/insan kabulü değildir.
+# (axe, durum fixture'ları, yerleşim, piksel). `signoff` e2e'yi içerir, `high` içermez;
+# bu tarif UI işinde push'tan önce çalıştırılacak kısa yolu tek komutta verir. Gerçek cihaz/insan kabulü değildir.
 # UI ilk referans kaydı (git dışı): just ui-baseline <etiket>; karşılaştırma için
 # node scripts/quality/cli/ui-baseline.mjs compare <önceki> <sonraki> --strict
 ui-baseline label:
@@ -120,9 +120,11 @@ fast: quick test
 # `coverage` aynı testleri eşikleriyle koştuğu için düz `test` tekrarlanmaz.
 # Tauri generate_context! frontendDist'i derleme sırasında okur; temiz klonda
 # frontend çıktısı Rust'tan önce üretilir.
-high: quick build bundle scaling audio-test rust coverage coverage-shape e2e
+high: quick build bundle scaling audio-test rust coverage coverage-shape
 
-signoff: high coverage-audio audio-verify security-js security-rust
+# `e2e` pre-push'ta DEĞİL, burada koşar: iki motorda yaklaşık yarım saat sürer ve her push'u o kadar bekletir.
+# Push'tan önce `pnpm exec just ui-check` ile tek başına da koşulabilir.
+signoff: high e2e coverage-audio audio-verify security-js security-rust
 
 # Örn: just report high --json
 report gate='high' *flags:

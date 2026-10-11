@@ -7,12 +7,17 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 
 ## Birleşik kapılar
 
-| Kapı      | Ne zaman         | Bileşim                                                                                                  |
-| --------- | ---------------- | -------------------------------------------------------------------------------------------------------- |
-| `quick`   | pre-commit       | `node-pin` + `contract` + `format-check` + `typecheck` + `lint` + `lint-css`                             |
-| `fast`    | yerel geliştirme | `quick` + `test`                                                                                         |
-| `high`    | pre-push         | `quick` + `build` + `bundle` + `scaling` + `audio-test` + `rust` + `coverage` + `coverage-shape` + `e2e` |
-| `signoff` | sürüm öncesi     | `high` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`                             |
+| Kapı      | Ne zaman         | Bileşim                                                                                          |
+| --------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `quick`   | pre-commit       | `node-pin` + `contract` + `format-check` + `typecheck` + `lint` + `lint-css`                     |
+| `fast`    | yerel geliştirme | `quick` + `test`                                                                                 |
+| `high`    | pre-push         | `quick` + `build` + `bundle` + `scaling` + `audio-test` + `rust` + `coverage` + `coverage-shape` |
+| `signoff` | sürüm öncesi     | `high` + `e2e` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`             |
+
+`e2e` pre-push kapısında değildir (2026-10-11 kararı): iki motorda yaklaşık yarım saat sürer ve her push'u o kadar
+bekletir. Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `signoff`ta yakalanır. Bir arayüz
+değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. Süre sorunu çözülmedi, yalnız push yolundan
+çıkarıldı: bkz. `TODO.md` F10.13.
 
 ## Kapı koşucusu
 

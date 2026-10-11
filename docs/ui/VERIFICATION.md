@@ -32,11 +32,12 @@ geriletmeme eşiklerinin kaynağıdır.
 | `scaling`                                       | CORE uzamsal arama ve VOL.TEST mermi ölçekleme oranı                                 | UI kare maliyeti bu kapıyla geçti sayılmaz; büyük veri/sanal liste davranışı ayrıca ölçülür              |
 | `e2e`                                           | Aktif paketlerin Playwright testleri                                                 | Vitrinde iki motorda bütün davranış dosyaları; axe/durum/tema/niyet/uzun metin                           |
 | `rust`                                          | Aktif crate fmt/clippy/test                                                          | Native vitrin crate/eklenti yaşam döngüsü ve politika testleri                                           |
-| `signoff`                                       | high + tam ses kapsamı/doğrulaması + JS/Rust güvenlik                                | Yayınlanan UI sesleri ve nihai kilometre taşı; gerçek cihaz/insan kabulü ayrıca                          |
+| `signoff`                                       | high + e2e + tam ses kapsamı/doğrulaması + JS/Rust güvenlik                          | Yayınlanan UI sesleri ve nihai kilometre taşı; gerçek cihaz/insan kabulü ayrıca                          |
 
 Yerel UI doğrulama tarifi `ui-check`tir (UI-00.3): yüzey kaydı ve vitrinin iki
 motorlu tam E2E'si (axe, durum fixture'ları, dokunma hedefi geometrisi, glif
-yüksekliği, gecikme/performans rapor düzeneği); `high` aynı E2E'yi zaten içerir.
+yüksekliği, gecikme/performans rapor düzeneği); `signoff` aynı E2E'yi içerir, `high`
+(pre-push) içermez: UI değişikliği push'tan önce bu tarifle kanıtlanır.
 Geometri ve glif bulguları `geometryExceptions.json`da sahip görevle izlenir;
 rapor vitrin paketinin git dışı records alanına yazılır ve
 ekrana sunulan kare ölçülmedikçe PASS olamaz. Tam durum matrisi ve gerçek UI
