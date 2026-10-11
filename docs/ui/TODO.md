@@ -920,6 +920,13 @@ neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altı
       Devralınan (UI-08.4, 2026-10-11): `node scripts/quality/cli/ui-registry.mjs --states UI-01 … UI-12`
       açık durum sıfır verene dek kapanmaz; erken fazlarda 123 durum açıktır (55/180 bağlı). Bağlanamayan
       durum (Playwright ya da CSS ağırlıklı) için ya vitest karşılığı yazılır ya da gerekçeli N/A olur.
+      Durum (2026-10-12): registry girdisi `stateNa: { durum: "gerekçe" }` taşıyabilir (açık sayılmaz; doğrulayıcı ve testli).
+      UI-01/02/07/11 fazları sıfır açık; `--states` bütün tier-1 fazlarda **154 açık** durum gösterir (UI-03 18, UI-04 42,
+      UI-05 51, UI-08 12, UI-09 10, UI-10 18, UI-12 3). Kalanların hepsi bileşen durumlarıdır (hover, focusVisible,
+      keyboard, gamepad, touch, reducedMotion, long30, digits6, empty…) ve vitrinde gerçek örnek üzerinde ölçülecek:
+      kök sınıf başına örnek sayısı keşfedildi (buttons/forms/cards/hud sekmeleri; `.vol-button` 14, `.vol-card` 23,
+      `.vol-slider` 10, `.vol-select` 7 …). Plan: bileşen ailesi başına tablo güdümlü e2e (kontroller, kartlar, ekran
+      bileşenleri, yüzeyler); her blok `SURFACES.<Export>` ile adı kullanır, var olmayan durum gerekçeli N/A olur.
 - [ ] **UI-13.2 — Etkileşim stresleri.** İç içe modal→Select→OSK→IME, istek beklerken tema/dil
       değişimi, hızlı tekrar/yükleme iptali, %200/RTL/multidokunma/kol↔dokunma/hotplug,
       askıya alma/devam, sessizleştirme/ses erişimi. Kapanır: kayıp odak/yinelenen kalıcı
