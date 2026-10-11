@@ -21,6 +21,7 @@ import { validateCommentDensity } from '../commentDensity.mjs';
 import { validateDevPorts } from '../devPorts.mjs';
 import { validateModuleCycles } from '../moduleCycles.mjs';
 import { validateIndexModules } from '../indexModules.mjs';
+import { validateThresholdRatchet } from '../thresholdRatchet.mjs';
 import { validateDeviceApps } from '../deviceApps.mjs';
 import { validateCargoWorkspace } from '../cargoWorkspace.mjs';
 import { validateProductIcons } from '../productIcons.mjs';
@@ -101,6 +102,8 @@ problems.push(...validateSourceSize(root, undefined, undefined, lifecycle));
 problems.push(...validateDevPorts(root, lifecycle));
 problems.push(...validateModuleCycles(root, lifecycle));
 problems.push(...validateIndexModules(root, lifecycle));
+const ratchet = validateThresholdRatchet(root, quality);
+problems.push(...ratchet.problems);
 problems.push(...validateCommentDensity(root, undefined, undefined, lifecycle));
 problems.push(...validateDeviceApps(root, lifecycle));
 problems.push(...validateCargoWorkspace(root, undefined, undefined, lifecycle));
@@ -180,3 +183,4 @@ console.log(
   `[workspace-contract] ${activePackages.length} aktif / ${packages.length} toplam paket, kapı kapsamı tam, ` +
     `katman sınırları temiz, dosya boyutları ve kaynak girdileri geçerli.`,
 );
+if (ratchet.note) console.log(`[workspace-contract] uyarı: ${ratchet.note}`);

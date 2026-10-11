@@ -229,6 +229,29 @@ export function validateQualityConfig(raw) {
     }
   }
 
+  if (raw.ratchetExceptions !== undefined) {
+    if (!Array.isArray(raw.ratchetExceptions)) {
+      problems.push('ratchetExceptions: dizi olmalı ({ key, to, reason } kayıtları)');
+    } else {
+      raw.ratchetExceptions.forEach((entry, index) => {
+        const where = `ratchetExceptions[${index}]`;
+        if (!isPlainObject(entry)) {
+          problems.push(`${where}: nesne olmalı`);
+          return;
+        }
+        if (typeof entry.key !== 'string' || !entry.key.trim()) {
+          problems.push(`${where}.key: eşik yolu olmalı (ör. packages["@volstudio/core"].lines)`);
+        }
+        if (entry.to !== null && !(typeof entry.to === 'number' && Number.isFinite(entry.to))) {
+          problems.push(`${where}.to: sayı ya da null (kayıt silindi/eklendi) olmalı`);
+        }
+        if (typeof entry.reason !== 'string' || !entry.reason.trim()) {
+          problems.push(`${where}.reason: gerekçe boş olamaz. Sessiz gevşetme yok.`);
+        }
+      });
+    }
+  }
+
   // Muaf bir paket aynı anda eşik taşıyorsa hangisinin geçerli olduğu belirsiz.
   if (isPlainObject(raw.exempt) && isPlainObject(raw.packages)) {
     for (const name of Object.keys(raw.exempt)) {

@@ -803,6 +803,13 @@ ve hata sebebi `report.mjs` ile ayrıştırılır (sentetik fixture testi). Yuka
 sonucu tarihsel kanıttır; gerçek Playwright düşüşüyle doğrulama aşağıdaki üçüncü
 turda yapıldı. İz saklama ve tam yeşil `signoff` hâlâ açık ([F11.2](../TODO.md)).
 
+**§22 sonrası F11.4 düzeltmesi (2026-10-11):** `scripts/quality/thresholdRatchet.mjs` kapsam eşiklerini, `floor`u,
+muafiyetleri ve şekil sınırını taban dala göre karşılaştırır; gevşetme `quality.json` → `ratchetExceptions`
+gerekçesi olmadan `contract`ta düşer (birim testleri ve gerçek ağaçta 94→60 negatif kontrolü). Eşikler
+ölçülenden en çok 2 puan aşağıya çekildi: CORE 94/92/86/93, vitrin dal 70 ve işlev 86, VOL.TEST dal 92,
+tauri-v2 97/95/91, pen.dev 98/98/95 (satır/ifade/dal/işlev; audio-synth zaten sıkıydı). Aynı turda
+`index.ts` kapsam dışlaması `indexModules.mjs` bekçisiyle doğru hale getirildi (F11.5).
+
 ## 23. Sonraki `signoff` düşüşü ve F11.2 gerçek çıktı doğrulaması (2026-10-11)
 
 Önceki §22 ölçümleri korunur; sonraki taze turda `fast` ve `high` PASS

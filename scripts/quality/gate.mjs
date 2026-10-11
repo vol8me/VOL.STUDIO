@@ -22,6 +22,7 @@ import { receiptDirectory } from './gateCache.mjs';
 import { audioTestPlan, changedFiles } from './audioTests.mjs';
 import { runGate } from './gateRunner.mjs';
 import { checkHostLoad } from './hostLoad.mjs';
+import { resolveRatchetBase } from './thresholdRatchet.mjs';
 import { describeSignoff, readSignoffRecord, writeSignoffRecord } from './signoffRecord.mjs';
 import { COMPOSITE_GATES, classify } from './report.mjs';
 
@@ -51,6 +52,10 @@ function toolParts(root) {
   };
   return (stage) => {
     if (stage === 'rust') return [version('rustc'), version('cargo')];
+    // Eşik ratchet'i taban ref'in `quality.json`una bağlıdır; ağaç aynı kalsa da taban değişebilir.
+    if (stage === 'contract') {
+      return [`ratchetBase=${resolveRatchetBase(root)?.blob ?? 'yok'}`];
+    }
     // Hangi alt kümenin koştuğu git farkından gelir; geçen plan o plan için geçerlidir.
     if (stage === 'audio-test') return [`plan=${JSON.stringify(audioTestPlan(changedFiles()))}`];
     return [];
