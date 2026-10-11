@@ -18,7 +18,7 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 koşularda vitrin E2E 22,6 ve 26,3 dk sürdü; sonraki başarısız `signoff`
 36,2 dk'da WebKit E2E hatasıyla düştü. Ardından **aynı performans değişikliği
 öncesi çalışma ağacında üç tam `signoff` PASS** (48,4 / 47,0 / 48,1 dk),
-ancak vitrin E2E yine 24–26 dk seviyesinde.
+ancak vitrin E2E yine 24–26 dk seviyesinde. Kapı bekçileri eklendikten sonraki taze koşu (`eb81a52c`): **18/18 PASS, 37,7 dk**, vitrin E2E 20,5 dk ([rapor §26](monorepo-audit.md)); tek koşudur.
 Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `signoff`ta yakalanır. Bir arayüz
 değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. **24–26 dk vitrin E2E maliyeti kabul edilemez**; yalnız push yolundan
 çıkarılmıştır, henüz hızlandırılmamıştır: bkz. [F10.13](../TODO.md).

@@ -1001,3 +1001,35 @@ görünür panel kanıtı geçerlidir; Samsung Android 16'da kilit ekranının
 geri/arka plan/haptik, uzun oturum ve paket/commit eşlemesi tamamlanmadı.
 Masaüstü tam `signoff` bu fiziksel kabulleri kapatmaz; UI-13.5/F07
 ayrı açık işler olarak kalır.
+
+## 26. Kapı bekçileri sonrası taze tam `signoff` (2026-10-11)
+
+`eb81a52c` temiz ağacında (eşik gevşetme bekçisi, sayaç ve atlama bütçesi, betik
+kapsamı, platform kümesi ve sabit bekleme bütçesi dahil) tam `signoff`
+`--fresh` koşuldu: **18/18 PASS, 37,7 dk, ön yük %8**; koşu sırasında ağaç
+değişmedi ve yerel `signoff` kaydı bu commit/ağaç için yazıldı.
+
+| Aşama                   | Süre             | Sonuç                |
+| ----------------------- | ---------------- | -------------------- |
+| `contract`              | 118,2 sn         | 649 geçti, 2 atlandı |
+| `format-check`          | 89,4 sn          | PASS                 |
+| `typecheck`             | 60,3 sn          | PASS                 |
+| `lint` / `lint-css`     | 86,6 / 53,7 sn   | PASS                 |
+| `rust` (8 birim)        | 35,0 sn          | PASS                 |
+| `coverage`              | 131,2 sn         | PASS                 |
+| `e2e` vitrin / VOL.TEST | 1232,1 / 91,9 sn | PASS                 |
+| `coverage-audio`        | 531,9 sn         | PASS                 |
+| `audio-verify`          | 98,2 sn          | PASS                 |
+| `security-js` / `-rust` | 3,1 / 4,1 sn     | PASS                 |
+
+E2E toplamı **1058 geçti / 21 atlandı / 0 düştü / 0 kararsız**; atlamalar
+`skipBudget` ile aynı koşuda denetlendi (vitrin chromium ana 513/1, webkit ana
+449/16, sessiz şeritler 27/1 ve 26/2; VOL.TEST chromium 22/0, webkit 21/1).
+
+**Sınırlar:** Bu **tek** koşudur; F10.13'ün "üç ardışık yeşil" ve vitrin E2E
+**10 dk** ölçütü karşılanmadı (20,5 dk). Önceki seriye (24–26 dk, 47–48 dk
+toplam) göre düşüş gözlendi, ancak profillenmediği ve yük/commit farkı
+ayrıştırılmadığı için hiçbir değişikliğe atfedilmez. F11.1 (kök neden, gerçek
+işaretçi regresyonu) ve F11.2 (gerçek tam kapı hata yolu entegrasyonu) bu koşuyla
+kapanmaz: yeşil koşu hata yolunu tetiklemedi. Fiziksel cihaz ve insan
+kabulleri (F09.2 vb.) ayrı açık işlerdir.

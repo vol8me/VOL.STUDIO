@@ -89,7 +89,7 @@ release redini ertelemek için gerekçe değildir.
       `incomplete` sonuçlarının eşitliğini sınar. Bu, yalnızca ölçülen
       Chromium axe skin matrisi alt kümesinin karşılaştırmasıdır; toplam
       vitrin E2E'ye ya da 48 dakikalık `signoff`a **%24 kazanç**
-      atfedilemez. Optimizasyondan sonra tam `signoff` **henüz koşulmadı**;
+      atfedilemez. Optimizasyondan sonra tek tam `signoff` koşuldu (`eb81a52c`, 37,7 dk, 18/18 PASS, vitrin E2E 20,5 dk; ön yük %8): **tek koşudur**, nedeni profillenmedi, 10 dk eşiği ve üç ardışık yeşil karşılanmadı;
       F10.13 **AÇIK** ([denetim §25](docs/monorepo-audit.md)).
 - [ ] **[P3] F10.5 — Yeni donanım kapsamı.** OLED Deck/Steam Machine. Kapanır: ilgili donanım bulunduğunda ayrı frame/runtime profili; eldeki cihaz kabulü bu işi sahte kapatmaz, Windows devamını bloke etmez.
 - [ ] **F10.6 — K3/K5 dal bakımı.** Birleştirme hedefleri ve eski yerel/uzak dalların erişilebilir işi ayrı git operasyonu olarak ele alınır. Kapanır: kayıp commit/çalışma sıfır, açık hedef ve test/snapshot kanıtı; rapor teslimi merge/branch silme yapılmış sayılmaz.
@@ -107,7 +107,7 @@ zaman aşımı; koşucu orada durduğu için dört aşama koşulmadı, ayrı ko�
 (447 geçti / 16 atlandı / 1 düştü; sessiz şerit geçti). Önceki iki turun 0/2 sonucu tarihsel kanıttır;
 ilk başarısız dizide **0/3 yeşil `signoff`** vardı. Üçüncü başarısız koşuda dört sonraki aşama `notRun` kaydedildi;
 önceki bağımsız aşama PASS sonuçları bu koşuya devredilemez.
-**Sonraki tam koşu dizisi (2026-10-11, aynı performans değişikliği öncesi çalışma ağacı): üç ardışık tam `signoff` PASS, 48,4 / 47,0 / 48,1 dk; üçüncü koşu 18/18 PASS.** E2E sonrasındaki `coverage-audio`, `audio-verify`, `security-js`, `security-rust` aşamaları bu dizide gerçekten koşuldu. Üç yeşil sonuç önceki düşüşlerin geçmiş kanıtını silmez; F11.1'de kök neden/gerçek pointer, F11.2'de yeni arşivin gerçek tam kapı hata entegrasyonu açık. Sonraki kod değişiklikleri için tam `signoff` kanıtı **yok** ([rapor §25](docs/monorepo-audit.md)).
+**Sonraki tam koşu dizisi (2026-10-11, aynı performans değişikliği öncesi çalışma ağacı): üç ardışık tam `signoff` PASS, 48,4 / 47,0 / 48,1 dk; üçüncü koşu 18/18 PASS.** E2E sonrasındaki `coverage-audio`, `audio-verify`, `security-js`, `security-rust` aşamaları bu dizide gerçekten koşuldu. Üç yeşil sonuç önceki düşüşlerin geçmiş kanıtını silmez; F11.1'de kök neden/gerçek pointer, F11.2'de yeni arşivin gerçek tam kapı hata entegrasyonu açık. Güncel düzen (`eb81a52c`, kapı bekçileri dahil) için tam `signoff` **18/18 PASS, 37,7 dk**; e2e 1058 geçti / 21 atlandı / 0 düştü, atlama bütçesi ve sayaç aynı koşuda denetlendi ([rapor §26](docs/monorepo-audit.md)); bu tek koşu F11.1/F11.2 kök neden kanıtı değildir.
 Negatif kontrol: bilerek eklenen 10 kusurun 10'u `quick`te beklenen aşamada yakalandı; kapsam eşiğini düşürmek GEÇTİ;
 kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını sınadı.
 
