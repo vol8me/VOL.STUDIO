@@ -102,3 +102,51 @@ test('iki motorlu pakette her spec her projede koşar; tek istisna gerekçeli pi
   }
   assert.ok(checked > 0, 'İki projeli en az bir E2E yapılandırması bulunmalı');
 });
+
+// Sessiz şerit: zamanı sınırlayan sınamalar ana şeritten ayrılır (bkz. QUIET_SPECS). Şeritler yalnız tam koşuyu
+// böler; bir sınama ikisinden de düşerse ya da ikisinde birden koşarsa kapsam sessizce bozulur.
+test('vitrin şeritleri her spec dosyasını tam bir şeritte koşturur ve sessiz liste gerçek dosyaları adlar', async () => {
+  const directory = resolve(root, 'devtools/vol-showcase');
+  const configUrl = pathToFileURL(resolve(directory, 'playwright.config.ts')).href;
+  const load = async (lane) => {
+    const previous = process.env.VOL_UI_E2E_LANE;
+    if (lane === undefined) delete process.env.VOL_UI_E2E_LANE;
+    else process.env.VOL_UI_E2E_LANE = lane;
+    try {
+      return await tsImport(`${configUrl}?lane=${lane ?? 'all'}`, import.meta.url);
+    } finally {
+      if (previous === undefined) delete process.env.VOL_UI_E2E_LANE;
+      else process.env.VOL_UI_E2E_LANE = previous;
+    }
+  };
+  const all = await load(undefined);
+  const main = await load('main');
+  const quiet = await load('quiet');
+  const testDir = resolve(directory, all.default.testDir);
+  const specs = readdirSync(testDir)
+    .filter((entry) => entry.endsWith('.spec.ts'))
+    .sort();
+
+  for (const name of all.QUIET_SPECS) {
+    assert.ok(specs.includes(`${name}.spec.ts`), `QUIET_SPECS: ${name}.spec.ts diye bir dosya yok`);
+  }
+  assert.ok(all.QUIET_SPECS.length > 0, 'sessiz şerit boş: ayrım anlamsız');
+  assert.equal(all.default.testIgnore, undefined, 'şerit verilmezse hiçbir spec dışlanmaz');
+  assert.equal(all.default.testMatch, undefined, 'şerit verilmezse varsayılan eşleşme kalır');
+
+  for (const spec of specs) {
+    const file = resolve(testDir, spec);
+    const inMain = !matches(main.default.testIgnore, file);
+    const inQuiet = matches(quiet.default.testMatch, file);
+    assert.equal(
+      inMain !== inQuiet,
+      true,
+      `${spec}: tam bir şeritte koşmalı (ana ${inMain}, sessiz ${inQuiet})`,
+    );
+    assert.equal(
+      inQuiet,
+      all.QUIET_SPECS.includes(spec.replace(/\.spec\.ts$/, '')),
+      `${spec}: sessiz şerit üyeliği QUIET_SPECS ile aynı olmalı`,
+    );
+  }
+});

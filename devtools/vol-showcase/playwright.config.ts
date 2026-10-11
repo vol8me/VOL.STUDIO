@@ -18,6 +18,23 @@ export const ENGINE_PORTS = {
 };
 
 /**
+ * Zamanlama ÖLÇEN ve süre sınırı koyan sınamalar (girdi→görünür gecikme, meşgul durum, flaş sınırı, maliyet raporu,
+ * prob kalibrasyonu). Eşzamanlı yükte (iki motor, motor başına işçi) ölçümleri yük taşır ve düşer; bu yüzden
+ * `scripts/e2e.mjs` önce geri kalan her şeyi eşzamanlı koşar, bunları ayrı bir SESSİZ şeritte, motor motor ve tek
+ * işçiyle koşar. `VOL_UI_E2E_LANE` verilmezse (tek dosya, ad hoc koşu) hepsi tek şeritte koşar.
+ * Yeni bir sınama zamanı SINIRLIYORSA buraya girer; `e2eConfig.test.mjs` adların gerçek dosya olduğunu sınar.
+ */
+export const QUIET_SPECS = [
+  'busyFeedback',
+  'latency',
+  'motionMeasure',
+  'performance',
+  'probe',
+] as const;
+const quietPattern = new RegExp(String.raw`[\\/](${QUIET_SPECS.join('|')})\.spec\.ts$`);
+const lane = process.env.VOL_UI_E2E_LANE;
+
+/**
  * CORE'un GÖRSEL sözleşme kapısı. Birim testler yapıyı doğrular ama bileşenin
  * doğru GÖRÜNDÜĞÜNÜ görmez: silinen bir token ya da ters dönen bir `flex`
  * hepsi yeşilken gönderilebilir.
@@ -30,6 +47,8 @@ export const ENGINE_PORTS = {
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  ...(lane === 'main' ? { testIgnore: quietPattern } : {}),
+  ...(lane === 'quiet' ? { testMatch: quietPattern } : {}),
   fullyParallel: false,
   workers: WORKERS,
   forbidOnly: true,

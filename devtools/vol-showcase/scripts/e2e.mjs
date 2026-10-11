@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 /**
  * Vitrin E2E: yapılandırmadaki her motor kendi süreçte, kendi preview
- * sunucusunda ve kendi portunda EŞZAMANLI koşar.
+ * sunucusunda ve kendi portunda koşar.
  *
- * Tek süreçte motorlar art arda koşar ve toplam süre ikisinin toplamıdır. Motorlar
- * birbirinin durumunu paylaşmaz (ayrı tarayıcı, ayrı sunucu, ayrı port), bu yüzden
- * eşzamanlı koşu aynı kapsamı daha kısa sürede verir. Hiçbir motor dışlanmaz:
- * motor listesi `playwright.config.ts` projelerinden gelir.
+ * Tam koşu iki şeritten oluşur (`playwright.config.ts` → `QUIET_SPECS`):
+ *  1. ANA şerit: zamanı sınırlamayan her sınama, motorlar EŞZAMANLI. Motorlar birbirinin durumunu paylaşmaz (ayrı
+ *     tarayıcı, ayrı sunucu, ayrı port), bu yüzden eşzamanlı koşu aynı kapsamı daha kısa sürede verir.
+ *  2. SESSİZ şerit: zamanı ÖLÇEN ve süre sınırı koyan sınamalar, motor motor ve tek işçiyle. Yük altında ölçümleri
+ *     yük taşır; tek başına koşan motor bunları gerçek değerlerinde ölçer.
+ * Hiçbir motor ve hiçbir sınama dışlanmaz: motor listesi `playwright.config.ts` projelerinden gelir, iki şerit
+ * birlikte bütün sınamaları kapsar.
  *
- * Ek argümanlar her sürece aynen geçer (`--grep`, `--update-snapshots`, dosya adı).
+ * Ek argüman (dosya adı, `--grep`, `--update-snapshots`) verilirse seçili koşu tek şeritte, motorlar eşzamanlı koşar
+ * ve argümanlar her sürece aynen geçer: şeritler yalnız tam koşuyu böler.
  */
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -33,23 +37,30 @@ if (new Set(projects.map((name) => ports[name])).size !== projects.length) {
 }
 
 const extra = process.argv.slice(2);
-const children = [];
-const exits = projects.map(
-  (name) =>
-    new Promise((resolve) => {
-      const child = spawn(
-        process.execPath,
-        [playwrightCli, 'test', `--project=${name}`, ...extra],
-        {
-          stdio: 'inherit',
-          env: { ...process.env, VOL_UI_E2E_PORT: String(ports[name]) },
-        },
-      );
-      children.push(child);
-      child.on('error', () => resolve(1));
-      child.on('close', (code) => resolve(code ?? 1));
-    }),
-);
+const children = new Set();
+
+/** Bir motoru kendi sürecinde koşar; çıkış kodunu döndürür. `lane` verilmezse tek şerittir. */
+function runEngine(name, lane, args) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [playwrightCli, 'test', `--project=${name}`, ...args], {
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        VOL_UI_E2E_PORT: String(ports[name]),
+        ...(lane ? { VOL_UI_E2E_LANE: lane } : {}),
+      },
+    });
+    children.add(child);
+    child.on('error', () => {
+      children.delete(child);
+      resolve(1);
+    });
+    child.on('close', (code) => {
+      children.delete(child);
+      resolve(code ?? 1);
+    });
+  });
+}
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => {
@@ -58,8 +69,24 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
   });
 }
 
-const codes = await Promise.all(exits);
+const verdict = (code) => (code === 0 ? 'geçti' : `düştü (${code})`);
+
+if (extra.length > 0) {
+  const codes = await Promise.all(projects.map((name) => runEngine(name, undefined, extra)));
+  console.log(
+    `[e2e] ${projects.map((name, index) => `${name}: ${verdict(codes[index])}`).join(' · ')}`,
+  );
+  process.exit(codes.find((code) => code !== 0) ?? 0);
+}
+
+const main = await Promise.all(projects.map((name) => runEngine(name, 'main', [])));
+// Sessiz şerit ana şeridin düşmesine bakmaz: tam kanıt tek koşuda gelir.
+const quiet = [];
+for (const name of projects) quiet.push(await runEngine(name, 'quiet', ['--workers=1']));
+
 console.log(
-  `[e2e] ${projects.map((name, index) => `${name}: ${codes[index] === 0 ? 'geçti' : `düştü (${codes[index]})`}`).join(' · ')}`,
+  `[e2e] ${projects
+    .map((name, index) => `${name}: ana ${verdict(main[index])}, sessiz ${verdict(quiet[index])}`)
+    .join(' · ')}`,
 );
-process.exit(codes.find((code) => code !== 0) ?? 0);
+process.exit([...main, ...quiet].find((code) => code !== 0) ?? 0);

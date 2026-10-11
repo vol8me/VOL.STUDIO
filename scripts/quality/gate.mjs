@@ -10,6 +10,8 @@
  * - Çıktı sessizdir: geçen aşama tek satır, düşen aşama sonu + sınıflandırma +
  *   tam günlük yolu. `--verbose` çocuk çıktısını canlı akıtır.
  * - `--json` `report.mjs` ile aynı şekli stdout'a yazar; insan günlüğü stderr'e gider.
+ * - `quick` dışındaki kapılar başlamadan makine yükünü örnekler; meşgulse yiyen süreçleri adıyla yazar
+ *   (`hostLoad.mjs`). Yalnız uyarır; süre ve zaman aşımı sonuçları yük taşır.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
@@ -19,6 +21,7 @@ import { execFileSync, spawn, spawnSync } from './command.mjs';
 import { receiptDirectory } from './gateCache.mjs';
 import { audioTestPlan, changedFiles } from './audioTests.mjs';
 import { runGate } from './gateRunner.mjs';
+import { checkHostLoad } from './hostLoad.mjs';
 import { COMPOSITE_GATES, classify } from './report.mjs';
 
 const OUTPUT_CAP = 8 * 1024 * 1024;
@@ -90,6 +93,15 @@ function main() {
   process.on('SIGINT', onSignal);
   process.on('SIGTERM', onSignal);
 
+  // `quick` pre-commit hızını korur ve kanıtı süre değil içeriktir; yük yalnız ağır kapılarda örneklenir.
+  let hostLoad = null;
+  const preflight =
+    gate === 'quick'
+      ? Promise.resolve()
+      : checkHostLoad({ root, log }).then((load) => {
+          hostLoad = load;
+        });
+
   const execute = (item, mode) =>
     new Promise((resolve) => {
       const child = spawn(item.command, item.args, {
@@ -153,89 +165,97 @@ function main() {
     }
   };
 
-  return runGate({
-    root,
-    gate,
-    fresh: flags.includes('--fresh'),
-    execute,
-    emit,
-    toolParts: toolParts(root),
-  }).then((report) => {
-    clearInterval(heartbeat);
-    const logDirectory = join(receiptDirectory(root), '..');
-    const failures = report.failures.map(({ stage, entry }, index) => {
-      const output = entry.output ?? '';
-      const slug = entry.item.label.replace(/[^\w.-]+/g, '_');
-      const logFile = join(logDirectory, `last-failure${index === 0 ? '' : `-${slug}`}.log`);
-      mkdirSync(logDirectory, { recursive: true });
-      writeFileSync(logFile, output);
-      return {
-        stage,
-        label: entry.item.label,
-        unit: entry.item.unit,
-        rerun: [entry.item.command, ...entry.item.args].join(' '),
-        exitCode: entry.code || 1,
-        ...classify(stage, output),
-        output,
-        logFile,
-      };
-    });
-
-    const summary = {
-      gate: report.gate,
-      status: report.status,
-      durationMs: report.durationMs,
-      savedMs: report.savedMs,
-      fresh: report.fresh,
-      stages: report.stages.map((stage) => ({
-        stage: stage.stage,
-        status: stage.status,
-        durationMs: stage.durationMs,
-        ...(stage.items.some((entry) => entry.item.unit) && {
-          units: stage.items.map((entry) => ({
-            unit: entry.item.unit,
-            status: entry.status,
-            durationMs: entry.durationMs,
-          })),
-        }),
-      })),
-      ...(failures.length > 0 && {
-        failure: summarize(failures[0]),
-        failures: failures.map(summarize),
+  return preflight
+    .then(() =>
+      runGate({
+        root,
+        gate,
+        fresh: flags.includes('--fresh'),
+        execute,
+        emit,
+        toolParts: toolParts(root),
       }),
-      ...(report.notes.length > 0 && { notes: report.notes }),
-    };
+    )
+    .then((report) => {
+      clearInterval(heartbeat);
+      const logDirectory = join(receiptDirectory(root), '..');
+      const failures = report.failures.map(({ stage, entry }, index) => {
+        const output = entry.output ?? '';
+        const slug = entry.item.label.replace(/[^\w.-]+/g, '_');
+        const logFile = join(logDirectory, `last-failure${index === 0 ? '' : `-${slug}`}.log`);
+        mkdirSync(logDirectory, { recursive: true });
+        writeFileSync(logFile, output);
+        return {
+          stage,
+          label: entry.item.label,
+          unit: entry.item.unit,
+          rerun: [entry.item.command, ...entry.item.args].join(' '),
+          exitCode: entry.code || 1,
+          ...classify(stage, output),
+          output,
+          logFile,
+        };
+      });
 
-    for (const failure of failures) {
-      const tail = failure.output.split('\n').slice(-120).join('\n');
-      log(`\n── ${failure.label} düştü ──\n${tail}\n`);
-      log(`  tür   : ${failure.kind}`);
-      log(`  paket : ${failure.package ?? '-'}`);
-      log(`  sebep : ${failure.reason}`);
-      log(`  günlük: ${failure.logFile}`);
-      log(`  tekrar: ${failure.rerun}`);
-      if (failure.unit) log(`  aşama : pnpm exec just ${failure.stage} (tüm birimler, düz yol)`);
-    }
-    for (const note of report.notes) log(`  not   : ${note}`);
-    const saved = report.savedMs > 0 ? ` (önbellek ~${minutes(report.savedMs)} kazandırdı)` : '';
-    log(
-      `\n[kapı] ${gate}: ${report.status === 'passed' ? 'geçti' : 'DÜŞTÜ'} — ${minutes(report.durationMs)}${saved}` +
-        `${report.fresh ? ' · taze koşu' : ''} · ${availableParallelism()} çekirdek`,
-    );
-    for (const stage of report.stages) {
-      const mark = stage.status === 'passed' ? '✓' : stage.status === 'cached' ? '⏭' : '✗';
-      const ran = stage.items.filter((entry) => entry.status !== 'cached').length;
-      const detail =
-        stage.items.length > 1 && ran > 0 && ran < stage.items.length
-          ? ` · ${ran}/${stage.items.length} birim koştu`
-          : '';
+      const summary = {
+        gate: report.gate,
+        status: report.status,
+        durationMs: report.durationMs,
+        savedMs: report.savedMs,
+        fresh: report.fresh,
+        stages: report.stages.map((stage) => ({
+          stage: stage.stage,
+          status: stage.status,
+          durationMs: stage.durationMs,
+          ...(stage.items.some((entry) => entry.item.unit) && {
+            units: stage.items.map((entry) => ({
+              unit: entry.item.unit,
+              status: entry.status,
+              durationMs: entry.durationMs,
+            })),
+          }),
+        })),
+        ...(failures.length > 0 && {
+          failure: summarize(failures[0]),
+          failures: failures.map(summarize),
+        }),
+        ...(report.notes.length > 0 && { notes: report.notes }),
+        ...(hostLoad && {
+          hostLoad: { busy: Number(hostLoad.busy.toFixed(2)), warned: hostLoad.warned },
+        }),
+      };
+
+      for (const failure of failures) {
+        const tail = failure.output.split('\n').slice(-120).join('\n');
+        log(`\n── ${failure.label} düştü ──\n${tail}\n`);
+        log(`  tür   : ${failure.kind}`);
+        log(`  paket : ${failure.package ?? '-'}`);
+        log(`  sebep : ${failure.reason}`);
+        log(`  günlük: ${failure.logFile}`);
+        log(`  tekrar: ${failure.rerun}`);
+        if (failure.unit) log(`  aşama : pnpm exec just ${failure.stage} (tüm birimler, düz yol)`);
+      }
+      for (const note of report.notes) log(`  not   : ${note}`);
+      const saved = report.savedMs > 0 ? ` (önbellek ~${minutes(report.savedMs)} kazandırdı)` : '';
       log(
-        `  ${mark} ${stage.stage.padEnd(15)} ${stage.status === 'cached' ? 'önbellek' : seconds(stage.durationMs)}${detail}`,
+        `\n[kapı] ${gate}: ${report.status === 'passed' ? 'geçti' : 'DÜŞTÜ'} — ${minutes(report.durationMs)}${saved}` +
+          `${report.fresh ? ' · taze koşu' : ''} · ${availableParallelism()} çekirdek` +
+          `${hostLoad ? ` · ön yük %${Math.round(hostLoad.busy * 100)}` : ''}`,
       );
-    }
-    if (asJson) console.log(JSON.stringify(summary, null, 2));
-    return failures.length > 0 ? failures[0].exitCode : 0;
-  });
+      for (const stage of report.stages) {
+        const mark = stage.status === 'passed' ? '✓' : stage.status === 'cached' ? '⏭' : '✗';
+        const ran = stage.items.filter((entry) => entry.status !== 'cached').length;
+        const detail =
+          stage.items.length > 1 && ran > 0 && ran < stage.items.length
+            ? ` · ${ran}/${stage.items.length} birim koştu`
+            : '';
+        log(
+          `  ${mark} ${stage.stage.padEnd(15)} ${stage.status === 'cached' ? 'önbellek' : seconds(stage.durationMs)}${detail}`,
+        );
+      }
+      if (asJson) console.log(JSON.stringify(summary, null, 2));
+      return failures.length > 0 ? failures[0].exitCode : 0;
+    });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
