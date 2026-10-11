@@ -18,6 +18,7 @@ export interface WeightedEntry<T> {
  */
 export class WeightedPicker<T> {
   private readonly values: T[] = [];
+  private readonly weights: number[] = [];
   private readonly cumulative: number[] = [];
   private total = 0;
 
@@ -29,7 +30,22 @@ export class WeightedPicker<T> {
       if (!(entry.weight > 0) || !Number.isFinite(entry.weight)) continue;
       this.total += entry.weight;
       this.values.push(entry.value);
+      this.weights.push(entry.weight);
       this.cumulative.push(this.total);
+    }
+
+    // Her ağırlık sonlu olsa da toplam taşabilir. O durumda tüm ağırlıkları
+    // aynı katsayıyla küçültmek göreli olasılıkları korur.
+    if (!Number.isFinite(this.total)) {
+      let max = 0;
+      for (const weight of this.weights) max = Math.max(max, weight);
+      this.total = 0;
+      for (let i = 0; i < this.weights.length; i++) {
+        const normalized = this.weights[i] / max;
+        this.weights[i] = normalized;
+        this.total += normalized;
+        this.cumulative[i] = this.total;
+      }
     }
   }
 
@@ -69,7 +85,7 @@ export class WeightedPicker<T> {
   pickUnique(random: Random, count: number): T[] {
     const remaining = this.values.map((value, i) => ({
       value,
-      weight: this.cumulative[i] - (i > 0 ? this.cumulative[i - 1] : 0),
+      weight: this.weights[i],
     }));
 
     const result: T[] = [];

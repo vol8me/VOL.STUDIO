@@ -36,7 +36,7 @@ Windows geliştirme/ilk native referans önce; Linux/Deck kabulü F08'dir. **F07
 
 Aşağıdaki satırlar indekstir; kapanış checkbox'ı ve ölçütleri yalnız UI TODO'dadır.
 
-**Durum (2026-10-11): F07 AÇIK** — 16 UI görevi açık, `signoff` koşulmadı; gerçek kalan iş [UI TODO "Gerçek kalan iş"](docs/ui/TODO.md) tablosundadır.
+**Durum (2026-10-11): F07 AÇIK** — 16 UI görevi açık. İlk üç tam `signoff` WebKit'te düştü; ardından **aynı performans değişikliği öncesi çalışma ağacında üç ardışık tam PASS** alındı (48,4 / 47,0 / 48,1 dk; [rapor §25](docs/monorepo-audit.md)). Bu, açık UI/cihaz/insan kabullerini veya sonraki kod değişikliklerini onaylamaz. Gerçek kalan iş [UI TODO "Gerçek kalan iş"](docs/ui/TODO.md) tablosundadır.
 
 - **F07.1 — Dalga 0, zemin ve kanıt (tamam):** UI-06.1, UI-00.1–00.7; registry, iki motor, axe, ölçüm, boyut payı, browser probu.
 - **F07.2 — Dalga 1, kimlik:** UI-01.6–01.9 tema çifti/malzeme/ikon/imleç, UI-02.6–02.8 yeni ses, UI-07.2–07.3 i18n/font, UI-06.2–06.4 Windows native vitrin; paralel.
@@ -53,7 +53,7 @@ ayrı checkbox defteri açılmaz.
 Ön koşul: F02/F04/F06'nın ilgili teknik teslimi. Genel controller/Steam/
 kalıcılık mekanizmaları silinmez; frozen lifecycle ile askıya alma taklit edilmez.
 
-- [ ] **[P1] F08.1 — Linux üretim profili ve fail-closed ELF.** Windows'tan ayrı bağımlılık ağacı/builder; AppDir/steamrt4/GStreamer. Kapanır: B08 readelf eksik/okunamayan ELF açık red; doğru GLIBC/ABI pozitif fixture ve gerçek paket.
+- [ ] **[P1] F08.1 — Linux üretim profili ve fail-closed ELF.** Windows'tan ayrı bağımlılık ağacı/builder; AppDir/steamrt4/GStreamer. B08 `readelf` yok/başarısız, okunamayan ELF, ELF içermeyen paket ve geçersiz GLIBC sınırı artık `glibc-cap.mjs` ile reddedilir (`glibcCap.test.mjs` negatifleri); GLIBC/ABI ayrıştırma ve sınır içi fixture da geçer. Kapanır: ayrı Linux builder'da üretilmiş gerçek steamrt4 AppDir'in ELF/GLIBC taraması ve GStreamer/OGG teknik probu; Linux/Deck görünür açılışı F08.3 sahibindedir.
 - [ ] **[P2] F08.2 — Paylaşılabilir doğru kanıt.** B09 outcome/requestId/normalize reason ve B10 runtime ortamı korunur. Kapanır: sanitizer roundtrip success/failed/timedOut ayrımı; host/SLR4 yanlış etiketlenmez; gizli adres/seri/kullanıcı yok; schema/runId/stamp zinciri.
 - [ ] **[P1] F08.3 — Host ve SLR4 gerçek açılış.** VOL.TEST Linux görünür pencere/screenshot, ayrı SLR4 kısayolu/OGG. Kapanır: VT2/VT5 ve eski D1-codec gerçek paket/commit/runtime kaydı; host kabulü SLR4 yerine sayılmaz.
 - [ ] **[P1] F08.4 — Windows'tan devkit uçtan uca.** Keşif/DNS/SSH/transfer/builder açık preflight. Kapanır: eski D1-deck zinciri gerçek build→yükleme→launch→ölçüm→screenshot; mevcut shell-kapalı SSH quoting korunur.
@@ -66,7 +66,7 @@ kalıcılık mekanizmaları silinmez; frozen lifecycle ile askıya alma taklit e
 erişim sağlar; kurulu uygulamanın mevcut commit olması ayrıca doğrulanır.
 
 - [ ] **[P1] F09.1 — Windows gerçek ürün.** NSIS/WebView2 kurulum/açılış/kaldırma, DPI125/150/200, klavye/kol/metin/clipboard/ekran kipi/ses/kayıt/kapanış. Kapanır: installer ve paketli native profil; B01/K4/store sonuçları gerçek örnekte; konfigürasyon testi fiziksel kabul yerine sayılmaz.
-- [ ] **[P1] F09.2 — Android görünür/native profil.** Windows toolchain'den APK, tablet Activity/ActionMode/insets/yön/arka plan dönüşü/geri/titreşim. Kapanır: Lenovo gerçek panel ve sistem screenshot siyah-kare kök nedeni; Android 16/600dp yön iddiası uygun cihaz/emülatörde; Android14 tablet buna eşdeğer sayılmaz.
+- [ ] **[P1] F09.2 — Android görünür/native profil (KISMİ; açık).** Windows toolchain'den APK, tablet Activity/ActionMode/insets/yön/arka plan dönüşü/geri/titreşim. 2026-10-11: çalışma ağacından `aarch64` debug APK/AAB başarıyla üretildi; APK Lenovo Android 14 ve Samsung Android 16'ya yeniden kuruldu (iki cihazda kurulum ve süreç başlatma başarılı). **Lenovo'da yeni APK'nın görünür oyun paneli sistem screenshot'ında doğrulandı.** Samsung ilk siyah görüntüsünde ekran `Dozing`/`NotificationShade` idi; uyandırılınca güvenli kilit ekranı (`Bouncer`) odaktaydı, yeni APK'nın görünür paneli bu yüzden **NOT-RUN**. Sürümün bir git commit'ine bağlanması, uzun oturum ve insan kabulü açık. Üç tam yeşil `signoff` native cihaz kabulü yerine geçmez. Kapanır: yeni paketle her iki cihazda Activity/ActionMode/insets/geri/yön/arka plan/titreşim turu; Android 16/600dp yön iddiasının fiziksel doğrulaması; Samsung'un kilit sonrası görünür paneli; Android 14 tablet bunlara eşdeğer sayılmaz.
 - [ ] **[P1] F09.3 — Oyun hissi ve uzun oturum.** VT-H3/VT-W/VT-Q/VT4/VT-H2 ve Samsung kısa dış dokunma. Kapanır: gerçek nişan/ateş eşiği/iç-dış bölge/hareket/kar-çoklu tank-atış bütçesi; ses olay/oynatma/uyanış teknik doğrulaması; insan beyanı nişan/dokunma/haptik hissi içindir, ses dinleme kabulü değildir; Samsung olmadan onun kabulü yazılmaz.
 - [ ] **[P1] F09.4 — VT7 ilk ürün doğrulaması.** Yeni oyun rehberi/template üretimi. Kapanır: temiz alanda üretilen özgün kimlikli paket ilk signoff'u geçer; Cargo/lifecycle/quality/ikon/port/i18n ve devtools'suz build sözleşmesi; mevcut advisory redi atlanmaz.
 
@@ -79,7 +79,18 @@ release redini ertelemek için gerekçe değildir.
 - [ ] **[P3] F10.3 — Sıkı indeks ve teknik ratchet.** CORE noUncheckedIndexedAccess varsayımları daraltılır; kalite eşiklerinin geçmiş base-ref ve gerekçeli istisna denetimi; scaling ortak şemalı okuyucu. WebKit prob kalibrasyonu ilk örnekte −0,05 ms, mevcut retry’da +3,42 ms verdi; ölçüm hassasiyeti açık. Kapanır: A/A gürültü ve desteklenmeyen iz ayrımı tekrarlanabilir fixture/karşıt kontrolle, retry başarı diye saklanmadan; tip kapısı, eşik düşürme/bozuk config negatif fixture'ı; ölçülen kapsam korunur.
 - [ ] **[P3] F10.4 — A20 haptik yürütme kararı.** Mevcut scheduler/driver gecikme, eşzamanlılık ve iptal ölçülür. Kapanır: worker gerekliyse tek scheduler geçişi regresyon+önce/sonra ölçüm; gerekmiyorsa kanıtlı koruma kararı; sırf önerilmiş diye worker eklenmez.
 - [ ] **[P3] F10.12 — Tauri 2.12 geçişi.** Tauri 2.11.5 → 2.12.2 (tauri-utils 2.10 → urlpattern 0.6) beş `unic-*` bakımsızlık uyarısını kaldırır; wry 0.57, tao 0.37, muda 0.20 ve webview2-com yerel katmanı değiştirir (gtk-rs 0.18 kalır, glib uyarısı sürer). Ön koşul: F09.1/F09.2 yerel temel çizgisi; karşılaştırılacak Windows/Android turu olmadan yerel katman değişimi kanıtsızdır. Kapanır: Cargo/pnpm Tauri sürüm paritesi (`tauriPlugins`), `rust` kapısı, Windows yerel ürün turu (kurulum, kapanış, kurtarma), Android ve Linux yerel kanıtı ayrı ayrı; beş `unic-*` kaydı `securityPolicy.json`dan silinir; toplu `cargo update` yok.
-- [ ] **[P3] F10.13 — Kapı ölçek eşikleri (koşullu).** Kapı süresi etki alanıyla büyür, repo boyutuyla değil; yalnız `contract`, `format-check`, `coverage` ve `coverage-audio` her değişiklikte repo geneli koşar. Tetik (`pnpm high --json`, taze koşu): soğuk `high` 20 dk, core düzenlemesi sonrası `high` 15 dk, `coverage` 5 dk, `contract` 90 sn ya da vitrin `e2e` 10 dk aşılırsa. Kapanır: yalnız tetiklenen aşama için önce ölçüm, sonra tek müdahale (`coverage`: paket başına damgalı lcov ve şekil kapısı sözleşmesi; `contract`: türetilmiş kapsamlı bekçi aileleri; `e2e`: zamanlama sınamaları için sessiz şerit); önce/sonra süresi ve en az 3 art arda yeşil koşu `docs/gates.md`e yazılır. Tetik yoksa önceden yeniden yapılandırma yapılmaz. Durum (2026-10-11): vitrin `e2e` tetiği tuttu (21,5 dk, boş sanılan makinede; iki ayrı yük etkeni ölçüldü) ve zamanlama sınamaları düştü; ilk müdahale uygulandı: zamanlama sınamaları için sessiz şerit (`QUIET_SPECS`) ve kapıda yük ön kontrolü (`hostLoad.mjs`); önce/sonra süresi ve 3 art arda yeşil koşu henüz yok, bu yüzden madde AÇIK. Aynı gün kullanıcı kararıyla `e2e` pre-push kapısından (`high`) `signoff`a taşındı: push artık o süreyi beklemez, ama süre HIZLANMADI (tam koşu ~25-30 dk; belgelenmiş 343 sn bayat) ve arayüz gerilemesi push'ta değil `signoff`ta ya da elle `just ui-check`te yakalanır. Taze ölçüm (2026-10-11, `signoff`, ön yük %7): vitrin `e2e` **22,6 ve 26,3 dk** (iki taze koşu; birincide ana şerit WebKit 17,7 / Chromium 14,7 dk eşzamanlı + sessiz şerit 2,1 + 2,7 dk; 1.013 koşan test, 4.076 işçi-sn); en ağır spec'ler themeMatrix 297, accessibility 270, layout 257, pseudoLocale 252, materialBudget 216 işçi-sn (rapor §22.2). Süre bütçesi tablosundaki 343 sn artık geçersiz ve `docs/gates.md`de düzeltildi; madde AÇIK.
+- [ ] **[P1] F10.13 — Kapı ölçek eşikleri ve kabul edilemez E2E maliyeti (AÇIK).** Kapı süresi etki alanıyla büyümeli, repo boyutuyla değil; yalnız `contract`, `format-check`, `coverage`, `coverage-audio` her değişiklikte repo geneli koşar. Tetikler: soğuk `high` 20 dk, CORE düzenlemesinden sonra `high` 15 dk, `coverage` 5 dk, `contract` 90 sn veya vitrin `e2e` **10 dk** aşımı. Vitrin tetiği 2026-10-11'de **21,5 dk** ile tuttu; iki farklı `vite` yük etkeni araştırıldı (rapor §22.2). İlk müdahale olarak zaman ölçen sınamalar `QUIET_SPECS` sessiz şeridine, E2E ise pre-push `high`dan `signoff`a taşındı ve `hostLoad.mjs` ön kontrolü eklendi: **yük ayrıldı, E2E hızlanmadı**. İlk başarısız koşularda vitrin E2E **22,6 / 26,3 dk**; yeni üç tam PASS dizisinde de **yaklaşık 24–26 dk**. Tam `signoff` **48,4 / 47,0 / 48,1 dk** sürdü. Bu süreler **kabul edilemez**, üç yeşil koşu yalnız mevcut doğruluğu kanıtlar. **Kapanır:** zaman dağılımını/motor ve spec maliyetini profil et, kapsam veya gerçek ölçüm kanıtını zayıflatmadan hedefe yönelik performans düzeltmesi yap, `e2e`yi 10 dk eşiğine indir ya da ölçüme dayalı açık yeni bütçe kararı al; gerçek **önce/sonra sürelerini** ve performans değişikliği sonrasında **en az üç ardışık tam yeşil `signoff`** sonucunu [kapı raporuna](docs/gates.md) kaydet. Eski **343 sn** vitrin bütçesi bayattır; maliyet yalnız push yolundan çıkarılarak çözülmüş sayılmaz. Son üç tam PASS performans değişiklikleri **öncesine** aittir, sonraki düzeltmenin kanıtı değildir.
+      **İlk hedefli performans kanıtı (2026-10-11; tam kapı değil):** Chromium
+      `themeMatrix.spec.ts` içindeki axe skin × yoğunluk matrisi, eski standart
+      `scan` ile **5/5 PASS, 2,1 dk**; `scanCached` ile **5/5 PASS, 1,6 dk**
+      ölçüldü (bu alt kümede yaklaşık **%24 süre azalması**, 0,5 dk).
+      Optimizasyon axe'i sayfa başına bir kez yükler; her profil için `buttons`
+      ve `forms` sekmelerinde **iki standart `scan`** ile `violations` ve
+      `incomplete` sonuçlarının eşitliğini sınar. Bu, yalnızca ölçülen
+      Chromium axe skin matrisi alt kümesinin karşılaştırmasıdır; toplam
+      vitrin E2E'ye ya da 48 dakikalık `signoff`a **%24 kazanç**
+      atfedilemez. Optimizasyondan sonra tam `signoff` **henüz koşulmadı**;
+      F10.13 **AÇIK** ([denetim §25](docs/monorepo-audit.md)).
 - [ ] **[P3] F10.5 — Yeni donanım kapsamı.** OLED Deck/Steam Machine. Kapanır: ilgili donanım bulunduğunda ayrı frame/runtime profili; eldeki cihaz kabulü bu işi sahte kapatmaz, Windows devamını bloke etmez.
 - [ ] **F10.6 — K3/K5 dal bakımı.** Birleştirme hedefleri ve eski yerel/uzak dalların erişilebilir işi ayrı git operasyonu olarak ele alınır. Kapanır: kayıp commit/çalışma sıfır, açık hedef ve test/snapshot kanıtı; rapor teslimi merge/branch silme yapılmış sayılmaz.
 
@@ -91,27 +102,73 @@ Kaynak: bütün kapıların taze koşusu, bilerek kusur ekleyen negatif kontroll
 zaman aşımı; koşucu orada durduğu için dört aşama koşulmadı, ayrı koşuldu ve geçti: `coverage-audio` 547 sn,
 `audio-verify` 101 sn, `security-js` 3 sn, `security-rust` 4 sn). **İkinci taze `signoff` de DÜŞTÜ** (30,6 dk,
 ön yük %4; e2e 26,3 dk): bu kez başka bir WebKit testi, sessiz şeritte tek işçiyle `motionMeasure.spec.ts:124`,
-60 sn zaman aşımı. İki taze koşuda yeşil `signoff` yok (0/2).
+60 sn zaman aşımı. **Sonraki üçüncü `signoff` da DÜŞTÜ** (36,2 dk): WebKit ana şeridinde
+`hudStates.spec.ts:248:3` XPBar testi 15 sn `toHaveClass` beklentisinden düştü
+(447 geçti / 16 atlandı / 1 düştü; sessiz şerit geçti). Önceki iki turun 0/2 sonucu tarihsel kanıttır;
+ilk başarısız dizide **0/3 yeşil `signoff`** vardı. Üçüncü başarısız koşuda dört sonraki aşama `notRun` kaydedildi;
+önceki bağımsız aşama PASS sonuçları bu koşuya devredilemez.
+**Sonraki tam koşu dizisi (2026-10-11, aynı performans değişikliği öncesi çalışma ağacı): üç ardışık tam `signoff` PASS, 48,4 / 47,0 / 48,1 dk; üçüncü koşu 18/18 PASS.** E2E sonrasındaki `coverage-audio`, `audio-verify`, `security-js`, `security-rust` aşamaları bu dizide gerçekten koşuldu. Üç yeşil sonuç önceki düşüşlerin geçmiş kanıtını silmez; F11.1'de kök neden/gerçek pointer, F11.2'de yeni arşivin gerçek tam kapı hata entegrasyonu açık. Sonraki kod değişiklikleri için tam `signoff` kanıtı **yok** ([rapor §25](docs/monorepo-audit.md)).
 Negatif kontrol: bilerek eklenen 10 kusurun 10'u `quick`te beklenen aşamada yakalandı; kapsam eşiğini düşürmek GEÇTİ;
 kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını sınadı.
 
-- [ ] **[P1] F11.1 — `signoff` iki taze koşuda iki ayrı WebKit zaman aşımıyla düştü (0/2 yeşil).** (a) `dialogPatterns.spec.ts:116`
+- [ ] **[P1] F11.1 — WebKit test kök nedeni / gerçek pointer regresyonu (tarihsel 0/3 FAIL; ardından 3/3 tam PASS, AÇIK).** (a) `dialogPatterns.spec.ts:116`
       (kayıt çakışması, bekleme sırasında iptal; ana şerit): `Cancel` tıklaması 60 sn bekledi — "`.vol-showcase-card__body`
       işaretçiyi örtüyor / öğe kararsız / DOM'dan ayrıldı"; aynı spec izole ve `--repeat-each=5` ile iki motorda 50/50
       geçti. (b) `motionMeasure.spec.ts:124` flaş sınırı, azaltılmış hareket kapalı (sessiz şerit, tek işçi, ön yük %4):
       120 art arda `click()` döngüsü 60 sn'yi aştı; WebKit'te iki varyant birinci koşuda 33,8 / 30,2 sn, ikincide
   > 60 sn (düştü) / 53,0 sn sürdü; Chromium 15,5 / 11,1 sn → 21,2 / 17,4 sn: koşular arası ~2 kat sapma, bütçenin
-  > %50–100'ünü kullanıyor, payı yok. Kök nedenler BİLİNMİYOR; test-results izi bir sonraki e2e koşusunda silinir.
+  > %50–100'ünü kullanıyor, payı yok. (a)/(b) kök nedenleri BİLİNMİYOR; ilk koşuların eski ortak
+  > `test-results` izleri sonraki koşuda silinmişti. Yeni E2E çalıştırıcısı sonraki hata izlerini ayrı arşivler (F11.2).
   > Kapanır: (a) için yük altında yeniden üretim ya da iz analiziyle kök neden (zamanlama
   > yarışı mı, katmanın örtüldüğü gerçek istif/odak kusuru mu); (b) için WebKit'te tıklama başına maliyetin ölçümü ve
-  > testin süre sınırından bağımsız (döngü sayısı/doğrudan olay) yeniden kurulması; düzeltme yeniden denemeyle ya da
-  > zaman aşımı büyütmeyle saklanmaz; üç art arda yeşil tam `signoff`.
-- [ ] **[P1] F11.2 — Kanıt bütünlüğü: koşulmayan ve düşen kanıt görünmez.** `signoff` ilk düşende durur ve
-      `--json` `stages` listesi koşulmayan dört aşamayı hiç yazmaz (NOT-RUN yok); düşen Playwright testi
-      `kind: unknown / sınıflandırılamayan hata` olur ve `tail` test adını taşımaz (yalnız `last-failure.log`da; F10.9
-      yalnız TAP'i kapsadı); düşen testin izi sonraki koşuda silinir. Kapanır: JSON koşulmayan aşamayı `notRun` yazar;
-      Playwright düşüşü test/dosya/satır/sebep olarak sınıflanır; bağımsız aşamalar (`coverage-audio`, `audio-verify`,
-      `security-*`) e2e düşse de koşar ya da açıkça NOT-RUN kalır; düşen izin kopyası kapı günlüğü yanında saklanır.
+  > testin süre sınırından bağımsız (döngü sayısı/doğrudan olay) yeniden kurulması;
+  > (c) üçüncü tur: `hudStates.spec.ts:248:3`, XPBar çoklu seviye testi; `aria-valuenow=125`,
+  > `aria-valuemax=325` ve seviye etiketi doğrulandıktan sonra `vol-xp-bar--level-up` sınıfı
+  > 15 sn içinde bulunmadı (`expect(locator).toHaveClass(expected) failed`).
+  > **(c) hedefli düzeltme/doğrulama:** `hudStates.spec.ts` geçici (600 ms) `level-up`
+  > sınıfını `click()` RPC'sinden SONRA sorguluyordu; sınıf test gözlemine kadar kalkabiliyordu.
+  > Tıklamadan ÖNCE kurulan `MutationObserver` sınıf geçişini, normal animasyonu ve hareket azaltmadaki
+  > sabit vurguyu yakalar. Hedefli tekrarlar WebKit **6/6**, Chromium **6/6** PASS;
+  > bunlar gerçek XPBar davranışının tüm kapıda güvenceye alındığı veya ilk iki farklı
+  > WebKit kusurunun giderildiği anlamına gelmez. **Kapanır:** (a)/(b) kök neden/regresyonları
+  > ve (c) dahil tam ağaçta üç art arda yeşil `signoff`; retry ya da zaman aşımı
+  > büyütmeyle hata gizlenmez. **Üç ardışık tam PASS artık sağlandı (48,4/47,0/48,1 dk); ancak kapanış SAĞLANMADI:**
+  > (a) `dialogPatterns` iptali, (b) `motionMeasure` flaş serisi artık sayfa içinden
+  > `element.click()` kullanıyor; bu akış eski gerçek Playwright pointer
+  > hit-testing/actionability arızalarını tek başına sınamaz. (a)/(b) kök nedenlerinin
+  > ayrıştırılması ve gerçek işaretçiyle karşıt/regresyon kanıtı hâlâ gerekli.
+  > Son üç PASS **performans değişikliklerinden önceki ağaca aittir**. F11.1 **AÇIK (kısmi)**.
+- [ ] **[P1] F11.2 — Kanıt bütünlüğü: koşulmayan ve düşen kanıt.** **Kısmen düzeltildi:** `gateRunner.mjs`
+      erken düşüşten sonra koşulmayan aşamaları JSON'da `status: notRun` olarak üretir; regresyonu
+      `gateRunner.test.mjs`dedir. Bekleyen birimler de `notRun` raporlanır. `report.mjs`
+      Playwright test dosyasını/satırını/başlığını ve hata sebebini çıkarır (`report.test.mjs` fixture).
+      **Üçüncü gerçek `signoff` ile doğrulandı:** XPBar hatası `kind: test`,
+      `reason: expect(locator).toHaveClass(expected) failed` olarak sınıflandı; dört sonraki
+      aşama `notRun` göründü. Önceki iki `signoff` çıktısında bu iyileştirmeler yoktu.
+      **Yeni kısmi iyileştirme:** vitrin `e2e.mjs` her motor/şerit için ayrı
+      Playwright çıktı dizini kullanır; hata bağlamını ve varsa Playwright'ın
+      ürettiği `trace.zip` / `report.json` kanıtını git dışı kalite önbelleğinde
+      arşivler, başarılı koşu kendi geçici çıktısını siler. Zorla düşürülen **her iki
+      motor** için dosyalar üretildi; ardından gelen başarılı koşu arşivleri silmedi
+      (ilk elle hata-yolu doğrulaması). **Otomatik RED→GREEN regresyon artık VAR:**
+      `scripts/quality/tests/e2eArchive.test.mjs` **5/5 PASS**,
+      `scripts/quality/tests/e2eConfig.test.mjs` **3/3 PASS** (2026-10-11,
+      worker-2). Tarayıcı/Vite açmayan gerçek Node sahte Playwright alt süreçleri,
+      Chromium/WebKit seçili hata izlerini, JSON `trace.zip` ek yolu yeniden
+      bağlamayı, ana şerit hatasında sessiz şeritlerin koşmasını, rapor
+      eksikliğinde `error-context.json` ve izi korumayı, sonraki PASS'te
+      eski arşivi silmemeyi, 14 gün/10 koşu ve 2 günlük geçici çıktı
+      temizliğini sınar. **10→11 hata koşusu regresyonu düzeltildi:**
+      `e2e.mjs` hem başlangıçta hem **tüm şeritler tamamlanınca** budar;
+      yeni başarısızlık koşu sonunda arşiv sayısını 10'un üstünde bırakmaz.
+      Arşiv yalnız **yereldir**, değişmez/uzak kayıt değildir;
+      `last-failure.log` ayrı ve geçicidir. Önceki üç tam yeşil `signoff`
+      bu son otomatik arşiv düzeltmesinden **önce** koşuldu; hata yolunu
+      tetiklemedi. **Kalan kapanış ölçütü:** güncel düzenle gerçek tam
+      `signoff`/kapı hata yolunda Playwright izi → motor/şerit arşivi →
+      kapı raporu/`notRun` zincirinin uçtan uca kanıtı ve güncel
+      değişikliklerden sonra taze tam `signoff` doğrulaması.
+      F11.2 **AÇIK (entegrasyon kısmi)**.
 - [ ] **[P2] F11.3 — Sayım ve atlama kapıda görünmez.** Kapı JSON'u yalnız durum/süre taşır; geçti/atlandı/düştü
       sayısı yok, atlama ratchet'i yok. Ölçülen: WebKit e2e'de 16 (+2 sessiz şerit) atlama (belge "2" diyordu), Chromium'da
       1 + 1; `node:test` 561 testin 2'si atlanır. WebKit'te gerçek dokunma (SplitPane CDP), Web Audio (iki ses testi),

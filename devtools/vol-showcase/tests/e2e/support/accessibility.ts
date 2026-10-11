@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { ElementHandle, Locator, Page } from '@playwright/test';
+import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { stableTarget } from './axeTarget';
@@ -13,6 +14,14 @@ import { selectTab, type ShowcaseTab } from './determinism';
  * muafiyeti yoktur, kayıt bayatlayınca (bulgu düzelince) test düşer.
  */
 export const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+
+// AxeBuilder.analyze() her sekmede 500+ KiB axe kaynağını yeniden değerlendirir.
+// Kaynağı yalnız sayfa başına bir kez yükleyen yol, skin × yoğunluk matrisindeki
+// onlarca aynı-sayfa taramasında bu tekrarı kaldırır. Başka frame varsa standart
+// AxeBuilder'ın frame birleştirme davranışı korunur.
+const axeScriptPath = createRequire(import.meta.resolve('@axe-core/playwright')).resolve(
+  'axe-core/axe.min.js',
+);
 
 export interface Finding {
   readonly rule: string;
@@ -65,6 +74,30 @@ export async function scan(page: Page, region?: Locator): Promise<Scan> {
   const results = await builder.analyze();
   if (region)
     await region.first().evaluate((element) => element.removeAttribute('data-axe-region'));
+  return { violations: toFindings(results.violations), incomplete: toFindings(results.incomplete) };
+}
+
+/** Tek frame'li UI matrisi için daha az script enjeksiyonlu, eşdeğer axe taraması. */
+export async function scanCached(page: Page): Promise<Scan> {
+  if (page.frames().length !== 1) return scan(page);
+  const installed = await page.evaluate(() => Boolean((window as Window & { axe?: unknown }).axe));
+  if (!installed) await page.addScriptTag({ path: axeScriptPath });
+  const results = await page.evaluate(async (tags) => {
+    const axe = (
+      window as unknown as Window & {
+        axe: {
+          run: (
+            root: Document,
+            options: { runOnly: { type: 'tag'; values: string[] } },
+          ) => Promise<{
+            violations: { id: string; nodes: { target: unknown[] }[] }[];
+            incomplete: { id: string; nodes: { target: unknown[] }[] }[];
+          }>;
+        };
+      }
+    ).axe;
+    return axe.run(document, { runOnly: { type: 'tag', values: tags } });
+  }, WCAG_TAGS);
   return { violations: toFindings(results.violations), incomplete: toFindings(results.incomplete) };
 }
 

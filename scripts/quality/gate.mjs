@@ -243,14 +243,21 @@ function main() {
           `${hostLoad ? ` · ön yük %${Math.round(hostLoad.busy * 100)}` : ''}`,
       );
       for (const stage of report.stages) {
-        const mark = stage.status === 'passed' ? '✓' : stage.status === 'cached' ? '⏭' : '✗';
+        const mark =
+          stage.status === 'passed'
+            ? '✓'
+            : stage.status === 'cached'
+              ? '⏭'
+              : stage.status === 'notRun'
+                ? '—'
+                : '✗';
         const ran = stage.items.filter((entry) => entry.status !== 'cached').length;
         const detail =
           stage.items.length > 1 && ran > 0 && ran < stage.items.length
             ? ` · ${ran}/${stage.items.length} birim koştu`
             : '';
         log(
-          `  ${mark} ${stage.stage.padEnd(15)} ${stage.status === 'cached' ? 'önbellek' : seconds(stage.durationMs)}${detail}`,
+          `  ${mark} ${stage.stage.padEnd(15)} ${stage.status === 'cached' ? 'önbellek' : stage.status === 'notRun' ? 'NOT-RUN' : seconds(stage.durationMs)}${detail}`,
         );
       }
       if (asJson) console.log(JSON.stringify(summary, null, 2));

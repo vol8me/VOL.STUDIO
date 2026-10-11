@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { key, loadAxeRecords, scan } from './support/accessibility';
+import { key, loadAxeRecords, scan, scanCached } from './support/accessibility';
 import { openShowcase, selectTab, SHOWCASE_TABS, type ShowcaseTab } from './support/determinism';
 
 /**
@@ -44,7 +44,13 @@ test.describe('axe: skin × yoğunluk', () => {
       const problems: string[] = [];
       for (const tab of SHOWCASE_TABS) {
         await selectTab(page, tab);
-        const found = await scan(page);
+        const found = await scanCached(page);
+        // Eşitlik bekçisi: her skin×yoğunluk profilinde standart Playwright
+        // frame taramasıyla sonuçlar birebir aynı olmalı. Böylece optimizasyon
+        // erişilebilirlik kapsamını sessizce daraltamaz.
+        if (tab === 'buttons' || tab === 'forms') {
+          expect(found, `${skin}/${density}/${tab} axe sonuç paritesi`).toEqual(await scan(page));
+        }
         for (const violation of found.violations) problems.push(`${tab}: ihlal ${key(violation)}`);
         const known = knownIncomplete(tab);
         for (const item of found.incomplete) {

@@ -173,6 +173,11 @@ test('düşen birim sonraki dalgaları durdurur ve makbuzunu siler', async () =>
     );
     assert.equal(report.failures[0].entry.item.label, 'lint a');
     assert.ok(!failing.ran.includes('test a'), 'test dalgası düşen aşamadan sonra başlamaz');
+    assert.deepEqual(
+      report.stages.filter((stage) => stage.status === 'notRun').map((stage) => stage.stage),
+      ['test'],
+      'koşulmayan aşama raporda açıkça görünür',
+    );
     assert.equal(receipts(r, 'lint', '@volstudio/a'), 1, 'eski geçiş geri alma için kalır');
     const again = recorder({ 'lint a': () => ({ code: 1, output: 'yine düştü' }) });
     await run(r, 'fast', again.execute);
@@ -369,6 +374,16 @@ test('eşzamanlılığı 1 olan aşamanın birimleri art arda koşar ve düşend
     assert.equal(peak, 1, 'cargo hedef dizinini paylaşır; crate’ler art arda koşar');
     assert.deepEqual(started, ['rust a'], 'düşen crate’ten sonra sıradaki başlamaz');
     assert.equal(report.status, 'failed');
+    assert.deepEqual(
+      report.stages
+        .find((stage) => stage.stage === 'rust')
+        .items.map(({ item, status }) => [item.label, status]),
+      [
+        ['rust a', 'failed'],
+        ['rust b', 'notRun'],
+      ],
+      'sırada bekleyen crate NOT-RUN olarak korunur',
+    );
   } finally {
     r.cleanup();
   }

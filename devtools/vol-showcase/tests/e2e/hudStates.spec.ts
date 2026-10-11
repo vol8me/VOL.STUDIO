@@ -31,6 +31,64 @@ const press = (page: Page, name: string): Promise<void> =>
     .first()
     .click();
 
+/**
+ * Level-up sınıfı 600 ms sonra kasıtlı kaldırılır. Gerçek Playwright click'inden
+ * ÖNCE MutationObserver kurup efektin oluştuğu karede kanıtını saklamak gerekir:
+ * click RPC'si döndüğünde sınıf çoktan kalkmış olabilir.
+ */
+async function gainXpAndInspectEffect(page: Page): Promise<{
+  levelUp: boolean;
+  animation: string;
+  shadow: string;
+}> {
+  const xp = page.locator('.vol-xp-bar').first();
+  await xp.evaluate((element) => {
+    type Evidence = {
+      observer: MutationObserver;
+      levelUp: boolean;
+      animation: string;
+      shadow: string;
+    };
+    const probe = element as HTMLElement & { __xpEffectProbe?: Evidence };
+    const evidence: Evidence = {
+      observer: undefined as unknown as MutationObserver,
+      levelUp: false,
+      animation: '',
+      shadow: '',
+    };
+    evidence.observer = new MutationObserver(() => {
+      if (!element.classList.contains('vol-xp-bar--level-up')) return;
+      const style = getComputedStyle(element);
+      evidence.levelUp = true;
+      evidence.animation = style.animationName;
+      evidence.shadow = style.boxShadow;
+      evidence.observer.disconnect();
+    });
+    evidence.observer.observe(element, { attributes: true, attributeFilter: ['class'] });
+    probe.__xpEffectProbe = evidence;
+  });
+  await press(page, '+2,000 XP (many levels)');
+  return xp.evaluate((element) => {
+    const probe = element as HTMLElement & {
+      __xpEffectProbe?: {
+        observer: MutationObserver;
+        levelUp: boolean;
+        animation: string;
+        shadow: string;
+      };
+    };
+    const evidence = probe.__xpEffectProbe;
+    if (!evidence) throw new Error('XPBar efekt sondası kayboldu');
+    evidence.observer.disconnect();
+    delete probe.__xpEffectProbe;
+    return {
+      levelUp: evidence.levelUp,
+      animation: evidence.animation,
+      shadow: evidence.shadow,
+    };
+  });
+}
+
 /** Dolgunun çubuğa oranı (%). */
 async function fillPercent(locator: Locator): Promise<number> {
   return locator.evaluate((element) => {
@@ -251,12 +309,13 @@ test.describe('XPBar çoklu seviye', () => {
     await page.emulateMedia(NORMAL);
     await openHud(page);
     const xp = page.locator('.vol-xp-bar').first();
-    await press(page, '+2,000 XP (many levels)');
+    const effect = await gainXpAndInspectEffect(page);
+    expect(effect.levelUp, 'seviye atlama vurgusu tetiklendi').toBe(true);
+    expect(effect.animation).toContain('vol-xp-level-up');
     // 1. seviyeden 2.000 XP: eşik 50 + 25·seviye ⇒ 10 seviye atlanır (11. seviye, 125 XP).
     await expect(xp).toHaveAttribute('aria-valuemax', '325');
     await expect(xp).toHaveAttribute('aria-valuenow', '125');
     await expect(xp.locator('.vol-bar__label')).toContainText('Lv. 11');
-    await expect(xp).toHaveClass(/vol-xp-bar--level-up/);
   });
 
   test('hareket azaltmada halka hareket etmez: animasyon yok, sabit ışıma vurguyu taşır', async ({
@@ -264,15 +323,10 @@ test.describe('XPBar çoklu seviye', () => {
   }) => {
     await page.emulateMedia(REDUCED);
     await openHud(page);
-    const xp = page.locator('.vol-xp-bar').first();
-    await press(page, '+2,000 XP (many levels)');
-    await expect(xp).toHaveClass(/vol-xp-bar--level-up/);
-    const style = await xp.evaluate((element) => {
-      const computed = getComputedStyle(element);
-      return { animation: computed.animationName, shadow: computed.boxShadow };
-    });
-    expect(style.animation).toBe('none');
-    expect(style.shadow).toMatch(/0px 0px 0px 4px/);
+    const effect = await gainXpAndInspectEffect(page);
+    expect(effect.levelUp, 'hareket azaltmada da vurgu sınıfı kuruldu').toBe(true);
+    expect(effect.animation).toBe('none');
+    expect(effect.shadow).toMatch(/0px 0px 0px 4px/);
   });
 });
 

@@ -1,7 +1,11 @@
 # VOL.STUDIO — güncel monorepo denetimi
 
-**Tarih:** 2026-10-09. **Temel:** `251c3db4`, `feature/core-hardening`;
-B21–B30 uygulaması bu teslimdeki kaynak ve regresyonlardır.
+**Kaynak denetimi:** 2026-10-09. **Kapı derin turu:** 2026-10-11 (§22);
+aynı gün sonraki başarısız `signoff` koşusu §23'te, hedefli düzeltme
+kanıtları §24'te; aynı değişiklik öncesi ağaçta üç ardışık tam yeşil
+`signoff` sonucu §25'tedir.
+**İlk temel:** `251c3db4`, `feature/core-hardening`;
+B21–B30 uygulaması kaynak ve regresyonlarla doğrulandı.
 F04 teslimi `cab83d7e` sonrasında 81 commit incelendi. Bu rapor kaynak kodu,
 oturum başındaki beş yerel değişikliği ve önceki cihaz kayıtlarını ayırır.
 Bugünkü karar burada; ayrıntılı tarihçe git'te, işlerin sahibi
@@ -11,8 +15,8 @@ Bugünkü karar burada; ayrıntılı tarihçe git'te, işlerin sahibi
 
 Repo ciddi biçimde ilerledi. Windows geçişi artık yalnız yol ayırıcı yaması
 değil: çalışan MSVC probu, süreç/argv sözleşmeleri, gerçek disk testleri ve
-native kayıt turu var. CORE UI'ın yeni kimliği kaynakta, vitrinde ve oyunda
-tüketiliyor. Audio hedef kilidi, manifest doğrulaması ve fizik kesişimi
+native kayıt turu var. CORE UI altyapısı kaynakta, vitrinde ve oyunda
+tüketiliyor; yeni görsel/ses kimliğinin tam kabulü F07'de açık. Audio hedef kilidi, manifest doğrulaması ve fizik kesişimi
 düzeltmeleri gerçek; yalnız belgeye yazılmış işler değiller.
 
 **Buna rağmen bütün ürün kabulleri tamamlanmış değildir.** B21–B30'un
@@ -21,7 +25,7 @@ tüketici ve dosya/süreç sınırları birlikte sınandı (§4). Bağımsız in
 yakaladığı geç mini harita montajı ve sayaçsız eski Deck kaydı da çözüme alındı.
 
 Belge yolu kusuru giderildi; bundle farkı özellik maliyetiyle ayrıştırıldı.
-Güncel birleşik kapının kanıtı §6/§17'dedir. JS güvenlik advisory'leri ve
+Birleşik kapının 2026-10-11 taze kanıtı §22'dedir; önceki turlar §6/§17'dedir. JS güvenlik advisory'leri ve
 fiziksel/native ürün kabulleri açık kalır. Teknik kapanış bir insan
 beğenisi bekleme durumu üretmez; yapılmayan cihaz kabulü de PASS sayılmaz.
 
@@ -744,6 +748,9 @@ kararlılığını sınar; kasıtlı CSS kusuruyla bu turda denenmedi).
 
 ### 22.4 Koşucunun tersine mühendisliği
 
+Bu maddeler 2026-10-11 ilk denetim anındaki kaynak davranışını anlatır; sonraki
+F11.2 kısmi değişiminin güncel durumu bölüm sonundadır.
+
 - **Makbuz anahtarı** (`gateCache.mjs`): çalışma ağacındaki izlenen+izlenmeyen dosyaların içerik karması + Node
   sürümü + platform (`rust` için `rustc`/`cargo`, `audio-test` için git-farkı planı). Bağımlılık içeriği
   `node_modules`tan değil `pnpm-lock.yaml`dan gelir; elle bozulmuş kurulu paket anahtarı değiştirmez. Makbuz
@@ -788,3 +795,200 @@ Sözleşme "ölçülen değerin ~2 puan altı" der; CORE ve vitrin bunun çok ü
 3. Bu turda **ölçülmeyen** şeyler: Rust test sayısı, soğuk Rust derlemesi, audio-test tam takımı, `bundle`/`scaling`
    negatif kontrolü, e2e'nin tam negatif kontrolü, başka makine/OS. Hiçbiri başarılı sayılmaz.
 4. Hiçbir eşik, timeout, atlama ya da kapı gevşetilmedi; kapı kodu değiştirilmedi.
+
+**§22 sonrası F11.2 kısmi düzeltmesi (2026-10-11):** Koşucu artık erken düşüşten
+sonra yürütülmeyen aşamaları ve bekleyen birimleri JSON'da `notRun` olarak listeler
+(`gateRunner.mjs`, `gateRunner.test.mjs`). Playwright liste çıktısının test dosyası/satırı/başlığı
+ve hata sebebi `report.mjs` ile ayrıştırılır (sentetik fixture testi). Yukarıdaki iki `signoff`
+sonucu tarihsel kanıttır; gerçek Playwright düşüşüyle doğrulama aşağıdaki üçüncü
+turda yapıldı. İz saklama ve tam yeşil `signoff` hâlâ açık ([F11.2](../TODO.md)).
+
+## 23. Sonraki `signoff` düşüşü ve F11.2 gerçek çıktı doğrulaması (2026-10-11)
+
+Önceki §22 ölçümleri korunur; sonraki taze turda `fast` ve `high` PASS
+durumunu sürdürdü, ancak **`signoff` 36,2 dakikada yine DÜŞTÜ**. Önceki iki
+`signoff` (27,1 ve 30,6 dk) ile birlikte sonuç **0/3 yeşil**; sürüm kapısı açık.
+Üçüncü turun vitrin E2E ana WebKit şeridinde **447 geçen, 16 atlanan, 1 düşen**
+test vardı. Chromium ana şeridi ve iki motorun sessiz şeridi geçti;
+VOL.TEST E2E birimi vitrindeki düşüşün ardından koşmadı.
+
+Başarısız test `devtools/vol-showcase/tests/e2e/hudStates.spec.ts:248:3` içindeki
+**XPBar çoklu seviye / +2.000 XP** akışıdır. Oyun düzeyi ve çubuk değerleri
+(`aria-valuemax=325`, `aria-valuenow=125`, `Lv. 11`) beklentileri geçti.
+`hudStates.spec.ts:259` satırında `expect(locator).toHaveClass(expected) failed`:
+`locator('.vol-xp-bar').first()` 15 saniye boyunca
+`/vol-xp-bar--level-up/` sınıfını taşımadı (gerçek sınıflar
+`vol-bar vol-bar--cooldown vol-xp-bar`). Geçici vurgu davranışı ile testin
+gözlem anından hangisinin kusurlu olduğu henüz kanıtlanmadı; F11.1 açık.
+İlk iki turun `dialogPatterns` / `motionMeasure` bulguları ayrı tarihsel kanıttır.
+
+**F11.2 kısmi doğrulaması:** Bu üçüncü gerçek hata, raporda `kind: test`
+ve `reason: expect(locator).toHaveClass(expected) failed` olarak
+sınıflandırıldı. Koşucunun JSON sonucu `coverage-audio`, `audio-verify`,
+`security-js`, `security-rust` aşamalarını **`notRun`** gösterdi.
+Bu dört aşamanın §22'deki bağımsız PASS kayıtları üçüncü tur için
+PASS sayılmaz. Kapı önbelleğindeki `last-failure.log` ile
+Playwright `test-results` izi yerel/geçicidir; sonraki koşuyla silinebilir,
+kalıcı arşiv kanıtı henüz yoktur. `signoff` ve F11.1/F11.2 **AÇIK**.
+
+## 24. XPBar hedefli regresyonu ve E2E hata kanıtının ayrılması (2026-10-11)
+
+Bu bölüm **§23'teki başarısız `signoff` sonucunu değiştirmez**. Üç tam
+`signoff` denemesi de düşmüştür (0/3 yeşil); `fast`/`high` PASS kalır.
+Henüz düzeltmelerden sonra tam bir yeşil `signoff` yoktur; F11.1 kapanışı için
+**üç art arda yeşil tam koşu** gerekir.
+
+**F11.1, hedefli XPBar sınaması — KISMİ:** `hudStates.spec.ts` geçici
+`vol-xp-bar--level-up` sınıfını, Playwright `click()` çağrısı döndükten
+sonra arıyordu. Gerçek sınıfın ömrü 600 ms olduğu için gözlem anında kaybolması
+testin hatalı negatif üretmesine yol açabiliyordu. Prime, tıklamadan **önce**
+`MutationObserver` kaydı kurarak sınıf geçişini ve o andaki
+`animationName`/`boxShadow` kanıtını tutan test sondası ekledi; normal
+ve hareket azaltılmış XPBar testleri bu kanıta bakar. Hedefli tekrarlar
+**WebKit 6/6 PASS ve Chromium 6/6 PASS**. Üretim XPBar davranışında kanıtlanmış
+bir düzeltme iddiası yoktur; önceki `dialogPatterns` ve `motionMeasure`
+WebKit düşüşlerinin kök nedeni bu hedefli sonuçla çözülmüş sayılmaz.
+
+**F11.2, yerel hata arşivi — KISMİ:** Worker-2, vitrin E2E çalıştırıcısında
+her motor/şeridi ayrı `outputDir` ve Playwright JSON raporuyla ayırdı.
+Başarısız motor/şeridin `error-context.json` ve varsa `trace.zip` /
+`report.json` dosyaları git dışı kalite önbelleğindeki hata arşivine
+taşınır; başarılı koşunun kendi geçici çıktısı silinir. **Zorlanmış
+başarısızlıkla her iki motorda** üç dosya türü doğrulandı ve daha sonraki
+başarılı koşunun eski hata arşivini silmediği sınandı. Budama
+**yeni E2E başlangıcında 14 gün / 10 önceki hata koşusu** üzerinden
+yapılır; o sürümde yeni düşüş bu sınırı bir sonraki başlangıca kadar
+aşabiliyordu (**daha sonraki koşu sonu budama düzeltmesi ve otomatik
+regresyonu §25'tedir**). Bu yerel kanıt, uzak/değişmez kayıt
+ya da üçüncü tam `signoff`un geriye dönük kurtarılmış izi değildir.
+`report.mjs`nin üçüncü gerçek turdaki `kind: test` sınıflandırması ve
+dört `notRun` aşama kanıtı §23'teki gibi geçerlidir. Yeni arşivin bir
+sonraki gerçek tam düşüşle uçtan uca doğrulanması ve F11.2 kapanış şartları
+**açıktır**.
+
+**Android cihaz turu (2026-10-11, F09.2 KISMİ):** Önce Lenovo Android 14 ve
+Samsung Android 16'da 2026-10-08 tarihli eski APK ile görünür smoke yapıldı;
+bu kaynak kabulü değildir. Ardından mevcut çalışma ağacından `aarch64`
+Tauri debug APK/AAB üretildi ve aynı APK iki cihaza `adb install -r` ile
+başarıyla kuruldu. Lenovo'nun yeni APK'sı önde çalışan `MainActivity` olarak
+göründü; sistem screenshot'ı oyun, HUD, joystick ve minimap'i çizdi. Samsung'da
+yeni APK kuruldu ve süreç başladı, fakat ilk siyah screenshot sırasında güç
+durumu `Dozing`, odak `NotificationShade` idi; uyandırınca güvenli kilit
+ekranı `Bouncer` oldu. Bu görüntü **WebView siyah ekran kusuru kanıtı değildir**;
+Samsung yeni APK'nın görünür oyun paneli kabulü **NOT-RUN**. Her iki cihazın
+yeniden açılma, geri/yön/arka plan, titreşim ve uzun oturum kabulü ile APK'nın
+sonraki git commit'ine bağlanması açık kalır. F09.2 tamamlanmadı.
+
+## 25. Üç ardışık tam `signoff` PASS — performans düzeltmesinden önce (2026-10-11)
+
+**Yeni doğrulama (önceki başarısızlıklar silinmez):** §22–23'te sırasıyla
+27,1, 30,6 ve 36,2 dk sonunda düşen ilk üç tam `signoff` koşusu, o
+anların gerçek FAIL kanıtıdır. Ardından **aynı performans değişikliği
+öncesi çalışma ağacında** üç tam `signoff` art arda **PASS** oldu:
+
+| Yeşil seri | Süre    | Tam kapı kararı | E2E ve sonraki aşamalar                                 |
+| ---------- | ------- | --------------- | ------------------------------------------------------- |
+| #1         | 48,4 dk | **PASS**        | Tam `signoff` geçti                                     |
+| #2         | 47,0 dk | **PASS**        | Tam `signoff` geçti                                     |
+| #3         | 48,1 dk | **18/18 PASS**  | Vitrin/VOL.TEST E2E ve E2E sonrası dört aşama yürütüldü |
+
+Son koşuda yalnız `high` ya da seçili vitrin testleri değil, **tam birleşik
+kapı** geçmiştir. İlk başarısız seride vitrin E2E'den sonra
+`notRun` kalan `coverage-audio`, `audio-verify`, `security-js`,
+`security-rust` aşamaları bu başarılı seride gerçekten çalıştırıldı ve
+geçti. VOL.TEST E2E artık “ölçülmedi/hiç koşmadı” değildir: üç tam
+başarılı koşunun parçası olarak **PASS**; bu kayıtta ayrı aşama süresi
+raporlanmadığı için süre uydurulmadı. Üçüncü koşunun **18/18**
+sayısı yalnız o koşunun teyit edilmiş raporuna aittir. Önceki 0/3
+başarısız dizi ile sonraki 3/3 başarılı dizi farklı tarihsel gözlemlerdir.
+
+**F11.1 AÇIK — üç PASS yeterli kapanış kanıtı değildir.** Geçici 600 ms
+XPBar vurgusunun tıklama öncesi `MutationObserver` ile izlenmesi,
+`dialogPatterns`teki beklerken iptal ve `motionMeasure`deki flaş
+istek serisinin sayfa içi `element.click()` ile sürülmesinden sonra
+tam koşular geçti; ancak son iki akış eski Playwright gerçek pointer
+hit-testing/actionability yolunu birebir sınamaz. İlk hata için
+örtme/odak/DOM kararsızlığının, ikinci için tıklama başına WebKit
+maliyetinin kök nedeni ve bağımsız gerçek işaretçi/karşıt regresyon
+kanıtı tamamlanmadan F11.1 kapanmaz. Süre uzatma veya test atlama ile
+PASS üretilmediği, eksik gerçek işaretçi testinin otomatik tamamlandığı
+anlamına gelmez.
+
+**F11.2 AÇIK — otomatik arşiv regresyonu artık VAR; gerçek tam kapı
+entegrasyonu açık.** Erken düşüşte `notRun` ve gerçek Playwright
+`kind: test` sınıflandırması önceki başarısız koşuda, yerel
+motor/şerit iz arşivi elle zorlanmış hata denemesinde görüldü
+(§23–24). **2026-10-11'de worker-2 RED→GREEN** hata-arşivi
+regresyonunu ekledi:
+`scripts/quality/tests/e2eArchive.test.mjs` **5/5 PASS**;
+`scripts/quality/tests/e2eConfig.test.mjs` **3/3 PASS**.
+Tarayıcı/Vite başlatmadan gerçek Node alt süreçlerinde sahte Playwright
+CLI çalıştırılarak şunlar sınandı:
+
+- Chromium/WebKit seçili başarısızlıklarında `trace.zip`,
+  `error-context.json`, `report.json` ve JSON ek dosyalarının
+  taşınmış arşiv yoluna yeniden bağlanması;
+- ana şerit düşerken diğer motorun ve her iki sessiz şeridin
+  çalışmaya devam etmesi, başarılı şeridin geçici çıktısının silinmesi;
+- rapor üretilemeyen hata durumunda raporun bulunmadığının doğru
+  kaydedilip mevcut trace'in korunması;
+- sonraki başarılı koşunun önceki hata kanıtını silmemesi;
+- **14 gün/10 hata koşusu**, 2 günlük scratch budaması ve özellikle
+  **tam 10 mevcut hata koşusundan sonra 11. başarısızlığın** sınırı
+  aşmaması.
+
+Son madde gerçek kusuru yakaladı: yalnız başlangıçta budamak, yeni
+başarısızlık geldiğinde 11 hata koşusu bırakıyordu. `e2e.mjs` artık
+başlangıçta **ve tüm motor/şeritler bittiğinde** yeniden budar;
+regresyonla onaylandı. **Bu, tarayıcısız alt süreç entegrasyon
+kanıtıdır; gerçek Playwright/Vite ile tam `signoff` başarısızlığı
+değildir.** Arşiv git dışı/yereldir, değişmez veya merkezi kayıt
+değildir; `last-failure.log` ayrı/geçicidir.
+**Açık tek F11.2 entegrasyon ölçütü:** güncel kodla gerçek tam
+`signoff` hata yolunda Playwright trace/raporunun kapı JSON
+`notRun`/hata sınıflandırmasına kadar bağlandığının uçtan uca
+gösterilmesi. Ayrıca bu yeni arşiv ve performans değişikliklerinden
+**sonra taze tam `signoff`** henüz yoktur. Önceki
+48,4 / 47,0 / 48,1 dk'lık üç yeşil tam koşu bu değişikliklerden
+**öncedir**; onlara sonradan kapsam atfedilemez.
+
+**F10.13 AÇIK — performans kabul edilmedi.** Başarılı tam kapıların
+**48,4 / 47,0 / 48,1 dk** sürmesi ve vitrin E2E'nin yaklaşık
+**24–26 dk** sürmeye devam etmesi, belgelenen **10 dk E2E tetik
+eşiğinin** çok üzerindedir. Önceki 343 sn bütçe güncel değildir.
+`e2e`yi `high` pre-push'tan `signoff`a almak push gecikmesini
+azalttı; **E2E yürütme maliyetini azaltmadı**. Kritik spec/motor
+profiline dayalı optimizasyon ve karşılaştırılabilir önce/sonra
+ölçümü gereklidir. Bu üç PASS **performans değişikliği öncesi**
+ağaca aittir; daha sonra yapılacak optimizasyon için yeni tam
+`signoff` çalıştırılmış veya onaylanmış sayılmaz.
+
+**F10.13 — ilk hedefli optimizasyon ölçümü (2026-10-11; tam kapı sonucu değil):**
+`devtools/vol-showcase/tests/e2e/themeMatrix.spec.ts` içindeki
+**Chromium axe skin × yoğunluk matrisi** aynı beş profilde iki yöntemle
+karşılaştırıldı:
+
+| Yöntem          | Hedefli sonuç | Süre       | Kanıt                   |
+| --------------- | ------------- | ---------- | ----------------------- |
+| Standart `scan` | **5/5 PASS**  | **2,1 dk** | Önceki yöntem           |
+| `scanCached`    | **5/5 PASS**  | **1,6 dk** | Ölçülen optimize yöntem |
+
+Gözlenen fark **0,5 dk**, yalnız bu alt kümede yaklaşık **%24 daha kısa
+süre** (0,5 / 2,1). `scanCached` axe'i her sayfada bir kez yükler;
+her skin/yoğunluk profili için `buttons` ve `forms` üzerinde
+**iki ek standart `scan`** yaparak `violations` ve `incomplete`
+sonuçlarının aynı kaldığını doğrular. Bu parite denetimi
+erişilebilirlik sonuçlarını sessizce daraltmama amacındadır.
+**Bu, tüm E2E veya tam `signoff` süresinde %24 hızlanma kanıtı değildir.**
+Ölçüm yalnız Chromium'daki ilgili beş test içindir; başka motorlara,
+diğer spec'lere ve tam kapı süresine genellenmez. Yukarıdaki üç
+**48,4 / 47,0 / 48,1 dk PASS** performans değişikliği **öncesindedir**.
+Optimizasyondan sonra tam `signoff` çalıştırılmadı; F10.13
+**AÇIK** kalır ve sonraki tam kapı/önce-sonra süre ölçümünü bekler.
+
+**F09.2 AÇIK (KISMİ):** §24'teki yeni APK kurulumları ve Lenovo Android 14
+görünür panel kanıtı geçerlidir; Samsung Android 16'da kilit ekranının
+ötesindeki görünür panel **NOT-RUN**. Activity/ActionMode/insets/yön/
+geri/arka plan/haptik, uzun oturum ve paket/commit eşlemesi tamamlanmadı.
+Masaüstü tam `signoff` bu fiziksel kabulleri kapatmaz; UI-13.5/F07
+ayrı açık işler olarak kalır.

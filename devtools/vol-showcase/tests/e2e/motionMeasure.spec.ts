@@ -126,24 +126,61 @@ test.describe('flaş sınırı (WCAG 2.3.1 / 2.3.2)', () => {
     }) => {
       if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' });
       await openLive(page);
-      const { damage, heal } = await healthBar(page);
-      await page.evaluate(() => {
-        const log: { at: number; area: number }[] = [];
-        (window as unknown as { __flashes: typeof log }).__flashes = log;
+      const { bar, damage, heal } = await healthBar(page);
+      // İlk gerçek Playwright pointer yolculuğu: DOM .click() örtülü bir
+      // düğmeyi de çalıştırabildiğinden vuruş ve iyileşmenin hit-test'i ayrı.
+      await damage.click();
+      await expect(bar).toHaveAttribute('aria-valuenow', '80');
+      await heal.click();
+      await expect(bar).toHaveAttribute('aria-valuenow', '100');
+      // İlk gerçek pointer vuruşu CSS animasyonu ve belge düzeyinde 1,1 sn'lik
+      // flaş kotası başlatır. Stres ölçümü bunlardan etkilenmesin: yeni belge
+      // açıp aynı HUD kontrolünde sıfırdan, yalnız 120 olaylık pencereyi ölç.
+      await openLive(page);
+      await selectTab(page, 'hud');
+      // Playwright'ın her tıklama için konum/eyleme hazır olma turu cihaz yüküne
+      // göre uzar; 120 ayrı RPC üç saniyelik basıncı dakikalara yayabiliyordu.
+      // Aynı gerçek düğme click handler'larını sayfa saatinde 25 ms aralıkla sür.
+      const result = await damage.evaluate(async (damageButton) => {
+        if (!(damageButton instanceof HTMLButtonElement))
+          throw new Error('Hasar kontrolü düğme değil');
+        const healButton = [...damageButton.parentElement!.querySelectorAll('button')].find(
+          (button) => button.textContent?.trim() === '+20',
+        );
+        if (!healButton) throw new Error('İyileştirme düğmesi bulunamadı');
+        const flashes: { at: number; area: number }[] = [];
+        let damageClicks = 0;
+        let healClicks = 0;
+        damageButton.addEventListener('click', () => damageClicks++);
+        healButton.addEventListener('click', () => healClicks++);
         document.addEventListener('animationstart', (event) => {
           if (event.animationName !== 'vol-juice-flash') return;
           const rect = (event.target as HTMLElement).getBoundingClientRect();
-          log.push({ at: performance.now(), area: rect.width * rect.height });
+          flashes.push({ at: performance.now(), area: rect.width * rect.height });
         });
+        for (let round = 0; round < 12; round++) {
+          for (let i = 0; i < 5; i++) {
+            damageButton.click();
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+          for (let i = 0; i < 5; i++) {
+            healButton.click();
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+        }
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        return { flashes, damageClicks, healClicks };
       });
-      // 3 saniye boyunca ~25 ms aralıkla indir/yükselt: her indirme bir flaş talebidir.
-      for (let round = 0; round < 12; round++) {
-        for (let i = 0; i < 5; i++) await damage.click({ delay: 0 });
-        for (let i = 0; i < 5; i++) await heal.click({ delay: 0 });
-      }
-      const flashes = await page.evaluate(
-        () => (window as unknown as { __flashes: { at: number; area: number }[] }).__flashes,
-      );
+      expect(result.damageClicks, '60 hasar isteği gönderildi').toBe(60);
+      expect(result.healClicks, '60 iyileştirme isteği gönderildi').toBe(60);
+      await expect(bar).toHaveAttribute('aria-valuenow', '100');
+      // Son gerçek pointer yolculuğu: seri DOM yükünden sonra aynı hedefler
+      // hâlâ etkileşilebilir olmalı, değer değişikliği de gözlemlenmeli.
+      await damage.click();
+      await expect(bar).toHaveAttribute('aria-valuenow', '80');
+      await heal.click();
+      await expect(bar).toHaveAttribute('aria-valuenow', '100');
+      const flashes = result.flashes;
       expect(flashes.length, 'flaş hiç başlamadı: ölçüm geçersiz').toBeGreaterThan(0);
       // 12 turda 60 indirme denendi; sınır devreye girmediyse ölçüm hiçbir şey kanıtlamaz.
       expect(flashes.length, 'flaşlar sınırlandı (talepten az)').toBeLessThan(60);

@@ -30,6 +30,9 @@ Native kurtarma sağlam geçici dosyayı güncel ada atomik taşır; yedekten
 kurtarmada yedek korunarak güncel dosya kurulur. Bu yerleştirme tamamlanmadan
 başarılı okuma dönmez. Böylece sonraki yazımın geçici dosyayı boşaltması
 kurtarılmış jenerasyonu kaybetmez; bir sonraki yedek de o jenerasyondur.
+Yeni native yazım da güncel kayıt yoksa veya bozuksa aynı kurtarmayı önce
+uygular; ilk yazıdan önce okuma yapılmamış olsa bile sağlam geçici jenerasyon
+yeni kaydın yedeği olarak korunur.
 
 Kapanış/uyku ACK'i `requestId`, `reason` ve gerçek `success`/`failed` sonucunu
 taşır; süre native kabuğa aittir. Süre dolmadan kabul edilen ACK, bekleyen
@@ -41,6 +44,9 @@ durdurup birleştirir, sonra callback'leri ve istemciyi bırakır. Metin isteği
 kimliği native sonucu JS owner'a bağlar. İptal sonucu bastırır; native popup'ın
 terminal callback'i gelmeden busy sahipliği bırakılmaz. JS abort'u beklemeden
 sonuçlanır, geç abonelikleri söker; yeni isteğe eski sonuç uygulanmaz.
+Steam Cloud kayıtları okuma ve yazmada 1 MiB ile sınırlıdır; native okuma
+yalnız sınırı ölçmek için bir ek bayt alır ve büyük kaydı IPC'ye çıkarmaz.
+Base64 girdisinin üst sınırı ayrıştırmadan önce denetlenir.
 Metin sağlayıcısı parola amacını IPC'de `password`, diğer amaçları `normal`
 kipine çevirir. Native komut yalnız bu iki enum değerini kabul eder;
 Steam klavyesi parola kipinde SDK maskesini kullanır. Stub aynı komut

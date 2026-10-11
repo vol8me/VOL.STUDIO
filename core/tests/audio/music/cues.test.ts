@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   barDurationSeconds,
   barsToFrames,
@@ -128,6 +128,33 @@ describe('müzik cue’ları', () => {
     expect(started(boss)).toBeCloseTo(start, 9);
     expect(engine.getCurrentState()).toMatchObject({ trackId: 'boss', playing: true });
     await expect(engine.transitionTo('field', { cue: 'yok' })).rejects.toThrow(/cue yok/);
+  });
+
+  it('geçiş hedefi yüklenirken kaynak parça doğal biterse geçiş sessizce iptal olur', async () => {
+    const { context, engine, cue, track } = setup();
+    await engine.loadTrack(
+      track('field', {
+        loopEnd: 1,
+        stems: [{ id: 'main', buffer: buffer(context, 1), loop: false }],
+        cues: [cue('to-boss', 1, 2)],
+      }),
+    );
+    const tracks = (engine as unknown as { tracks: Map<string, MusicTrack> }).tracks;
+    tracks.set('boss', track('boss', { stems: [{ id: 'main', src: 'boss.ogg' }] }));
+    let resolveBoss!: (buffer: AudioBuffer) => void;
+    vi.spyOn(engine.loader, 'loadFromUrl').mockImplementation(
+      () => new Promise<AudioBuffer>((resolve) => (resolveBoss = resolve)),
+    );
+
+    await engine.play('field');
+    const pending = engine.transitionTo('boss', { cue: 'to-boss' });
+    context.createdSources[0].simulateEnded();
+    expect(engine.getCurrentState().playing).toBe(false);
+    resolveBoss(buffer(context, 2));
+
+    await expect(pending).resolves.toEqual(expect.any(Number));
+    expect(engine.getCurrentState()).toMatchObject({ playing: false, trackId: undefined });
+    expect(context.createdSources).toHaveLength(1);
   });
 
   it('çalan parça yokken cue çağrısı adıyla reddedilir', async () => {

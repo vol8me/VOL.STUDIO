@@ -109,13 +109,6 @@ fn valid_cloud_name(name: &str) -> bool {
     valid_name(name) && !name.starts_with('.')
 }
 
-/// Bulut dosyası tavanı. Steam'in tek dosya sınırının altında kalır ve bu
-/// kabuğun taşıması beklenen kayıt büyüklüğünü aşan isteği, uzak sunucuya
-/// gitmeden reddeder. Sınır yazılan bayta uygulanır, base64 sarmalayıcısına
-/// değil: sarmalayıcı çözülmeden bayt sayısı bilinmez.
-#[cfg_attr(not(feature = "steamworks"), allow(dead_code))]
-const MAX_CLOUD_BYTES: usize = 1024 * 1024;
-
 #[cfg_attr(not(feature = "steamworks"), allow(dead_code))]
 fn validated_cloud_name(name: &str) -> Result<&str, String> {
     if valid_cloud_name(name) {
@@ -138,6 +131,7 @@ pub(crate) mod imp {
     mod real {
         use super::*;
         use crate::callbacks::{register_callbacks, Event, InputKind, PendingInput};
+        use crate::cloud;
         use std::sync::atomic::{AtomicBool, Ordering};
         use std::sync::{Arc, Mutex};
         use std::time::Duration;
@@ -687,24 +681,12 @@ pub(crate) mod imp {
                 if !file.exists() {
                     return Ok(None);
                 }
-                use std::io::Read;
-                let mut buf = Vec::new();
-                file.read()
-                    .read_to_end(&mut buf)
-                    .map_err(|e| format!("bulut okuma hatası: {e}"))?;
-                Ok(Some(b64_encode(&buf)))
+                Ok(Some(b64_encode(&cloud::read(file.read())?)))
             }
 
             pub fn cloud_write(&self, name: &str, data_base64: &str) -> Result<bool, String> {
                 let name = validated_cloud_name(name)?;
-                let bytes =
-                    b64_decode(data_base64).ok_or_else(|| "bozuk base64 verisi".to_string())?;
-                if bytes.len() > MAX_CLOUD_BYTES {
-                    return Err(format!(
-                        "bulut verisi çok büyük: {} bayt, sınır {MAX_CLOUD_BYTES}",
-                        bytes.len()
-                    ));
-                }
+                let bytes = cloud::decode(data_base64)?;
                 let client = self.client()?;
                 let file = client.remote_storage().file(name);
                 use std::io::Write;
@@ -746,9 +728,6 @@ pub(crate) mod imp {
             crate::b64::encode(data)
         }
 
-        fn b64_decode(text: &str) -> Option<Vec<u8>> {
-            crate::b64::decode(text)
-        }
         #[cfg(test)]
         mod native_tests {
             use super::*;

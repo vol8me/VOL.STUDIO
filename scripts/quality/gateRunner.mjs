@@ -110,7 +110,10 @@ async function runPlanned(planned, ctx) {
   };
   await Promise.all(Array.from({ length: lanes }, lane));
 
-  const items = planned.items.filter((item) => entries.has(item)).map((item) => entries.get(item));
+  // Birim kuyruğu ilk hatada kesilirse başlamayan birimler de raporda yer alır.
+  const items = planned.items.map(
+    (item) => entries.get(item) ?? { item, status: 'notRun', durationMs: 0 },
+  );
   // Eşzamanlı birimlerden birden fazlası düşebilir; hepsi raporlanır, hiçbiri kaybolmaz.
   const failedEntries = items.filter((entry) => entry.status === 'failed');
   const status =
@@ -239,6 +242,16 @@ export async function runGate(options) {
       for (const entry of outcome.failedEntries) failures.push({ stage: outcome.stage, entry });
     }
     if (failures.length > 0) break;
+  }
+
+  // Erken düşüş, sonraki aşamaların hiç koşulmadığını makine okuyucusundan gizlememeli.
+  const completed = new Set(stages.map(({ stage }) => stage));
+  for (const wave of waves) {
+    for (const stage of wave) {
+      if (!completed.has(stage)) {
+        stages.push({ stage, status: 'notRun', durationMs: 0, items: [], failedEntries: [] });
+      }
+    }
   }
 
   return {

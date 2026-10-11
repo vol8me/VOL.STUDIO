@@ -104,6 +104,25 @@ export function classify(stage, output) {
     };
   }
 
+  // Playwright'ın hem ayrıntılı `1) [webkit] › ...` hem de sonuçtaki
+  // `1 failed\n    [webkit] › ...` biçimini kabul et. `ok N [webkit]` geçen
+  // testleri kazara hata sahibi olarak seçme.
+  const playwrightFailure =
+    stage === 'e2e' &&
+    output.match(
+      /^(?:\s*\d+\)\s+|\s{2,})(\[[^\]\r\n]+\])\s+[›>]\s+(.+?\.spec\.tsx?:\d+:\d+)\s+[›>]\s+(.+)$/m,
+    );
+  if (playwrightFailure) {
+    const error = output.match(/^\s*(?:Error:|TimeoutError:)\s*(.+)$/m);
+    return {
+      package: pkg,
+      kind: 'test',
+      path: playwrightFailure[2].trim().replaceAll('\\', '/'),
+      title: playwrightFailure[3].trim(),
+      reason: error?.[1]?.trim() || 'Playwright testi başarısız',
+    };
+  }
+
   const coverage = output.match(/Coverage for (\w+) \(([\d.]+)%\) does not meet.*?\(([\d.]+)%\)/);
   if (coverage) {
     return {

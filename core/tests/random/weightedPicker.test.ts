@@ -37,6 +37,21 @@ describe('WeightedPicker', () => {
     expect(common / 10_000).toBeLessThan(0.94);
   });
 
+  it('büyük sonlu ağırlıklar toplamı taşsa bile olasılık ve benzersiz seçim korunur', () => {
+    const entries = [
+      { value: 'ilk', weight: 1e308 },
+      { value: 'ikinci', weight: 1e308 },
+      { value: 'üçüncü', weight: 1e308 },
+    ];
+    const picker = new WeightedPicker(entries);
+    const random = createRandom(42);
+    const picked = Array.from({ length: 200 }, () => picker.pick(random));
+    expect(new Set(picked).size).toBeGreaterThan(1);
+    expect(new Set(picker.pickUnique(createRandom(1), 3))).toEqual(
+      new Set(['ilk', 'ikinci', 'üçüncü']),
+    );
+  });
+
   it('aynı tohum aynı seçim dizisini üretir (deterministik)', () => {
     const entries = [
       { value: 'a', weight: 3 },

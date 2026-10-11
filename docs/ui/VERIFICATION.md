@@ -19,20 +19,21 @@ UI-13 yeni araç icat etmez, aynı doğrulanmış probun tam örneklemini alır.
 
 ## Mevcut kapılar ve planlanan genişleme
 
-Kapı bileşiminin tek kaynağı `justfile`; `quality.json` bütçe ve kapsamı
-geriletmeme eşiklerinin kaynağıdır.
+Kapı bileşiminin tek kaynağı `justfile`; `quality.json` bütçe ve kapsam
+eşiklerinin kaynağıdır. Eşiklerin geçmiş tabana göre düşürülmesini reddeden
+bekçi henüz yoktur ([F11.4](../../TODO.md)).
 
-| Mevcut kapı                                     | Mevcut kapsam                                                                        | UI planında eklenecek kanıt                                                                              |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `contract`                                      | Katman/dışa aktarım/katalog/kimlik/ikon/satır/i18n/yerel ihlal örnekleri ve belgeler | Native araç keşfi; kayıtlı durum/test örneği bağlantısı; tema/hareket ihlal örnekleri                    |
-| `format-check`, `typecheck`, `lint`, `lint-css` | Kod/biçim/tip/stil                                                                   | Tipli tema/olay, UI hareketindeki sabit değerlerin kapsamı, yeni public alt yol                          |
-| `test` / `coverage` / `coverage-shape`          | Aktif paket testleri ve kapsamı geriletmeme eşikleri                                 | Kaynak ağacını yansıtan yeni davranış/yaşam döngüsü testleri; eşikler ölçülmüş kapsam artışıyla yükselir |
-| `audio-test`                                    | Audio-synth hızlı alt test takımı                                                    | Yeni UI işi/varlığı/olayı regresyonları; tam yayın doğrulamasının yerine geçmez                          |
-| `build` / `bundle`                              | Üretim çıktısı ve gzip app/vendor/css boyutu                                         | Vitrin göçünde bütçe korunur; ayrı ses/UI dışa aktarım yolları Phaser çekmez                             |
-| `scaling`                                       | CORE uzamsal arama ve VOL.TEST mermi ölçekleme oranı                                 | UI kare maliyeti bu kapıyla geçti sayılmaz; büyük veri/sanal liste davranışı ayrıca ölçülür              |
-| `e2e`                                           | Aktif paketlerin Playwright testleri                                                 | Vitrinde iki motorda bütün davranış dosyaları; axe/durum/tema/niyet/uzun metin                           |
-| `rust`                                          | Aktif crate fmt/clippy/test                                                          | Native vitrin crate/eklenti yaşam döngüsü ve politika testleri                                           |
-| `signoff`                                       | high + e2e + tam ses kapsamı/doğrulaması + JS/Rust güvenlik                          | Yayınlanan UI sesleri ve nihai kilometre taşı; gerçek cihaz/insan kabulü ayrıca                          |
+| Mevcut kapı                                     | Mevcut kapsam                                                                        | UI planında eklenecek kanıt                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `contract`                                      | Katman/dışa aktarım/katalog/kimlik/ikon/satır/i18n/yerel ihlal örnekleri ve belgeler | Native araç keşfi; kayıtlı durum/test örneği bağlantısı; tema/hareket ihlal örnekleri                 |
+| `format-check`, `typecheck`, `lint`, `lint-css` | Kod/biçim/tip/stil                                                                   | Tipli tema/olay, UI hareketindeki sabit değerlerin kapsamı, yeni public alt yol                       |
+| `test` / `coverage` / `coverage-shape`          | Aktif paket testleri, tanımlı kapsam eşikleri ve şekil denetimi                      | Kaynak ağacını yansıtan yeni davranış/yaşam döngüsü testleri; eşik artırımı ve düşüş bekçisi F11.4'te |
+| `audio-test`                                    | Audio-synth hızlı alt test takımı                                                    | Yeni UI işi/varlığı/olayı regresyonları; tam yayın doğrulamasının yerine geçmez                       |
+| `build` / `bundle`                              | Üretim çıktısı ve gzip app/vendor/css boyutu                                         | Vitrin göçünde bütçe korunur; ayrı ses/UI dışa aktarım yolları Phaser çekmez                          |
+| `scaling`                                       | CORE uzamsal arama ve VOL.TEST mermi ölçekleme oranı                                 | UI kare maliyeti bu kapıyla geçti sayılmaz; büyük veri/sanal liste davranışı ayrıca ölçülür           |
+| `e2e`                                           | Aktif paketlerin Playwright testleri                                                 | Vitrinde iki motorda bütün davranış dosyaları; axe/durum/tema/niyet/uzun metin                        |
+| `rust`                                          | Aktif crate fmt/clippy/test                                                          | Native vitrin crate/eklenti yaşam döngüsü ve politika testleri                                        |
+| `signoff`                                       | high + e2e + tam ses kapsamı/doğrulaması + JS/Rust güvenlik                          | Yayınlanan UI sesleri ve nihai kilometre taşı; gerçek cihaz/insan kabulü ayrıca                       |
 
 Yerel UI doğrulama tarifi `ui-check`tir (UI-00.3): yüzey kaydı ve vitrinin iki
 motorlu tam E2E'si (axe, durum fixture'ları, dokunma hedefi geometrisi, glif

@@ -52,12 +52,17 @@ const laneIgnore = lane === 'main' ? [quietPattern] : [];
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  // Eşzamanlı motor/şerit süreçleri kendi çıktısını temizler. Çalıştırıcı her
+  // sürece benzersiz dizin verir; doğrudan Playwright çağrıları eski yolu korur.
+  outputDir: process.env.VOL_UI_E2E_OUTPUT_DIR ?? './test-results',
   ...(laneIgnore.length > 0 ? { testIgnore: laneIgnore } : {}),
   ...(lane === 'quiet' ? { testMatch: quietPattern } : {}),
   fullyParallel: false,
   workers: WORKERS,
   forbidOnly: true,
-  reporter: [['list']],
+  reporter: process.env.VOL_UI_E2E_REPORT_FILE
+    ? [['list'], ['json', { outputFile: process.env.VOL_UI_E2E_REPORT_FILE }]]
+    : [['list']],
   timeout: 60_000,
   expect: {
     timeout: 15_000,

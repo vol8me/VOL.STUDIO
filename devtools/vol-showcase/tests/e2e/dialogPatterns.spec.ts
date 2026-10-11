@@ -125,8 +125,45 @@ test.describe('kayıt çakışması (benzetim)', () => {
     // Kart, bu kalıbın gerçek bir bulut hizmeti olmadığını açıkça söyler.
     await expect(page.locator('.vol-showcase-card', { hasText: t.scNote })).toHaveCount(1);
 
+    // Bekleme 700 ms sürer. Playwright'ın ardışık click/actionability RPC'leri
+    // özellikle WebKit altında bu aralığı aşabiliyordu; iptal gerçekte iş
+    // bitmeden tetiklenmeli. İki gerçek düğme handler'ını tek sayfa turunda sür.
+    const busy = await button(dialog(page), 'Use the remote copy').evaluate((remote) => {
+      const root = remote.closest('.vol-dialog');
+      if (!root) throw new Error('Çakışma diyaloğu bulunamadı');
+      const buttons = [...root.querySelectorAll<HTMLButtonElement>('button')];
+      const local = buttons.find(
+        (button) => button.textContent?.trim() === "Keep this device's save",
+      );
+      const cancel = buttons.find((button) => button.textContent?.trim() === 'Cancel');
+      if (!local || !cancel) throw new Error('Çakışma eylemleri bulunamadı');
+      (remote as HTMLButtonElement).click();
+      const state = {
+        localDisabled: local.disabled,
+        cancelEnabled: !cancel.disabled,
+        ariaBusy: root.querySelector('[role$="dialog"]')?.getAttribute('aria-busy'),
+      };
+      cancel.click();
+      return state;
+    });
+    expect(busy).toEqual({ localDisabled: true, cancelEnabled: true, ariaBusy: 'true' });
+    await expect(dialog(page)).toHaveCount(0);
+    await expect(resultOf(page, t.syncConflict)).toHaveText('Result: cancel');
+  });
+
+  test('uzak kopya seçimi ve iptal gerçek işaretçiyle hedeflenir', async ({ page }) => {
+    await openPanels(page);
+
+    // 700 ms'lik iş süresiyle yarışmadan iki hedefin de gerçek Playwright
+    // pointer eylemiyle tıklanabilir olduğunu sınar (örtülme/hit-testing).
+    // Bekleme sırasındaki iptal yarışını yukarıdaki atomik test ayrıca korur.
+    await button(page, t.scOpen).click();
     await button(dialog(page), 'Use the remote copy').click();
-    await expect(button(dialog(page), "Keep this device's save")).toBeDisabled();
+    await expect(dialog(page)).toHaveCount(0);
+    await expect(resultOf(page, t.syncConflict)).toHaveText('Result: remote');
+
+    await button(page, t.scOpen).click();
+    await expect(button(dialog(page), 'Cancel')).toBeFocused();
     await button(dialog(page), 'Cancel').click();
     await expect(dialog(page)).toHaveCount(0);
     await expect(resultOf(page, t.syncConflict)).toHaveText('Result: cancel');

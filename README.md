@@ -54,23 +54,31 @@ pnpm exec just --list      # tekil kapılar
 Düşen tek kapı bağımsız yeniden çalıştırılır. Koşulmayan kapı geçmiş sayılmaz;
 cihaz ölçümü ve insan dinlemesi otomatik kapıların yerine geçmez.
 
+**2026-10-11 kapı kanıtı:** Aynı performans değişikliği öncesi çalışma ağacında
+üç ardışık tam `signoff` **PASS** (48,4 / 47,0 / 48,1 dk; üçüncü koşu 18/18).
+Ancak vitrin E2E yaklaşık **24–26 dk** sürdüğünden maliyet kabul edilebilir
+değil ([F10.13](TODO.md)); bu sonuçlar sonraki performans/arşiv değişikliklerini,
+F11.1'in açık gerçek pointer/kök neden ve F11.2'nin açık tam kapı hata
+entegrasyonu işlerini veya native cihaz kabulünü onaylamaz. E2E `high` içinde değil; UI değişikliğinde ayrıca
+`pnpm exec just ui-check` gerekir ([kapı sonuçları](docs/gates.md)).
+
 ## Belgeler
 
-| Konu                   | Belge                                                                |
-| ---------------------- | -------------------------------------------------------------------- |
-| Çalışma sözleşmesi     | [AGENTS.md](AGENTS.md)                                               |
-| Kapılar ve raporlar    | [docs/gates.md](docs/gates.md)                                       |
-| Motor                  | [core/README.md](core/README.md)                                     |
-| Native kabuk           | [tauri-v2/README.md](tauri-v2/README.md)                             |
-| Linux                  | [docs/linux.md](docs/linux.md)                                       |
-| Steam Deck             | [docs/steam-deck.md](docs/steam-deck.md)                             |
-| Android                | [docs/android.md](docs/android.md)                                   |
-| Ses üretimi            | [audio-synth/README.md](devtools/audio-synth/README.md)              |
-| Rig üretimi            | [pen.dev/README.md](devtools/pen.dev/README.md)                      |
-| UI kataloğu            | [vol-showcase/README.md](devtools/vol-showcase/README.md)            |
-| UI uygulama sözleşmesi | [UI fazları ve nihai plan](docs/ui/README.md)                        |
-| Açık işler             | [TODO.md](TODO.md)                                                   |
-| Teknik değerlendirme   | [Monorepo denetimi ve iyileştirme kararları](docs/monorepo-audit.md) |
+| Konu                        | Belge                                                                |
+| --------------------------- | -------------------------------------------------------------------- |
+| Çalışma sözleşmesi          | [AGENTS.md](AGENTS.md)                                               |
+| Kapılar ve raporlar         | [docs/gates.md](docs/gates.md)                                       |
+| Motor                       | [core/README.md](core/README.md)                                     |
+| Native kabuk                | [tauri-v2/README.md](tauri-v2/README.md)                             |
+| Linux                       | [docs/linux.md](docs/linux.md)                                       |
+| Steam Deck                  | [docs/steam-deck.md](docs/steam-deck.md)                             |
+| Android                     | [docs/android.md](docs/android.md)                                   |
+| Ses üretimi                 | [audio-synth/README.md](devtools/audio-synth/README.md)              |
+| Rig üretimi                 | [pen.dev/README.md](devtools/pen.dev/README.md)                      |
+| UI kataloğu                 | [vol-showcase/README.md](devtools/vol-showcase/README.md)            |
+| UI sözleşmesi ve iş listesi | [CORE UI belge rehberi](docs/ui/README.md)                           |
+| Açık işler                  | [TODO.md](TODO.md)                                                   |
+| Teknik değerlendirme        | [Monorepo denetimi ve iyileştirme kararları](docs/monorepo-audit.md) |
 
 ## Lisans
 

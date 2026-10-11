@@ -348,6 +348,34 @@ describe('MusicEngine — eşzamanlılık ve buffer önbelleği', () => {
     expect(engine.getCurrentState().trackId).toBe('trackB');
   });
 
+  it('çalan parçaya son play isteği bekleyen crossfade geçişini iptal eder', async () => {
+    const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
+    const bufferA = makeBuffer(fakeContext, 2);
+    const bufferB = makeBuffer(fakeContext, 3);
+    await engine.loadTrack({ id: 'trackA', bpm: 120, stems: [{ id: 'a', buffer: bufferA }] });
+    await engine.play('trackA');
+
+    const tracks = (engine as unknown as { tracks: Map<string, unknown> }).tracks;
+    tracks.set('trackB', { id: 'trackB', bpm: 120, stems: [{ id: 'b', src: 'b.ogg' }] });
+    let resolveB!: (buffer: AudioBuffer) => void;
+    vi.spyOn(engine.loader, 'loadFromUrl').mockImplementation(
+      () => new Promise<AudioBuffer>((resolve) => (resolveB = resolve)),
+    );
+
+    const pending = engine.crossfadeTo('trackB', 0.1);
+    // Daha yeni çağrı çalan A'yı korumalı ve state'i değiştirmeli.
+    await engine.play('trackA', { state: { intensity: 0.25 } });
+    resolveB(bufferB);
+    await pending;
+
+    expect(engine.getCurrentState()).toMatchObject({
+      trackId: 'trackA',
+      playing: true,
+      state: { intensity: 0.25 },
+    });
+    expect(fakeContext.createdSources).toHaveLength(1);
+  });
+
   it('play() beklerken stop() gelirse, play() döndüğünde sesi geri açmaz', async () => {
     const engine = new MusicEngine({ audioContext: fakeContext as unknown as AudioContext });
     const buffer = makeBuffer(fakeContext, 2);

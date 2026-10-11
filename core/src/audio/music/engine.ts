@@ -191,6 +191,8 @@ export class MusicEngine {
   async play(trackId: string, options: PlayOptions = {}): Promise<void> {
     // Aynı parça zaten çalıyorsa yeniden başlatılmaz; verilen state uygulanır.
     if (this.isPlaying && this.currentTrackId === trackId) {
+      // Daha önce başlatılmış async geçiş, bu son play isteğini sonradan ezemez.
+      this.playToken++;
       if (options.state) this.setState(options.state);
       return;
     }
@@ -408,12 +410,16 @@ export class MusicEngine {
     const token = ++this.playToken;
     await this.loadTrack(track);
     if (token !== this.playToken) return this.trackStartTime;
+    // Yükleme sürerken döngüsüz kaynak kendiliğinden bitmiş olabilir.
+    // Artık kaynak müzik/ölçü ızgarası yoksa eskimiş cue geçişini başlatma.
+    if (!this.isPlaying || this.currentTrackId !== fromId || !this.scheduler)
+      return this.trackStartTime;
     const playable = this.resolvePlayableStems(track);
     if (playable.length === 0) {
       throw new Error(`Track'e geçilemedi, hiçbir stem yüklenemedi: ${trackId}`);
     }
     const when = this.alignedTime(cue.align ?? 'bar');
-    const start = when + (this.scheduler as MusicScheduler).barsToSeconds(cue.bars);
+    const start = when + this.scheduler.barsToSeconds(cue.bars);
     this.releaseStems(when);
     this.cues.start(fromId, cue, when, cue.gain ?? 1);
     this.currentTrackId = trackId;

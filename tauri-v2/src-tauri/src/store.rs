@@ -209,6 +209,12 @@ fn write_in(dir: &Path, name: &str, data: &str) -> Result<(), String> {
     let backup = side(dir, name, ".bak");
     let temp = side(dir, name, ".tmp");
 
+    // Güncel kayıt yok/bozuksa .tmp en yeni sağlam jenerasyon olabilir.
+    // Yeni yazıcı .tmp'yi truncate etmeden onu güncel ada kurtarmalıdır;
+    // aksi hâlde hem bu jenerasyon hem de bir sonraki yedek kaybolur.
+    if valid(&current)?.is_none() {
+        read_in(dir, name)?;
+    }
     let current_valid = valid(&current)?.is_some();
     write_file(&temp, data.as_bytes())?;
     if current_valid {
@@ -495,6 +501,28 @@ mod store_tests {
             (Some(r#"{"shots":17}"#.into()), true, false)
         );
         fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn yazma_once_saglam_geciciyi_kurtarip_yedekler() {
+        for corrupt_current in [false, true] {
+            let dir = temp_dir();
+            if corrupt_current {
+                fs::write(dir.join("recovery.json"), "{bozuk").unwrap();
+            }
+            fs::write(dir.join("recovery.json.bak"), r#"{"shots":4}"#).unwrap();
+            fs::write(dir.join("recovery.json.tmp"), r#"{"shots":17}"#).unwrap();
+
+            // JS henüz read çağırmadan yeni kayıt yazarsa kurtarılabilir en
+            // güncel jenerasyon, yeni yazının yedeği olarak korunmalıdır.
+            write_in(&dir, "recovery.json", r#"{"shots":18}"#).unwrap();
+            fs::write(dir.join("recovery.json"), "{bozuk").unwrap();
+            assert_eq!(
+                read(&dir, "recovery.json"),
+                (Some(r#"{"shots":17}"#.into()), true, false)
+            );
+            fs::remove_dir_all(dir).unwrap();
+        }
     }
 
     #[test]

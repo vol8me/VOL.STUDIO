@@ -14,10 +14,14 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | `high`    | pre-push         | `quick` + `build` + `bundle` + `scaling` + `audio-test` + `rust` + `coverage` + `coverage-shape` |
 | `signoff` | sürüm öncesi     | `high` + `e2e` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`             |
 
-`e2e` pre-push kapısında değildir (2026-10-11 kararı): iki motorda ~23 dk sürer (taze ölçüm: 22,6 dk) ve her push'u o kadar
-bekletir. Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `signoff`ta yakalanır. Bir arayüz
-değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. Süre sorunu çözülmedi, yalnız push yolundan
-çıkarıldı: bkz. `TODO.md` F10.13.
+`e2e` pre-push kapısında değildir (2026-10-11 kararı): ilk başarısız
+koşularda vitrin E2E 22,6 ve 26,3 dk sürdü; sonraki başarısız `signoff`
+36,2 dk'da WebKit E2E hatasıyla düştü. Ardından **aynı performans değişikliği
+öncesi çalışma ağacında üç tam `signoff` PASS** (48,4 / 47,0 / 48,1 dk),
+ancak vitrin E2E yine 24–26 dk seviyesinde.
+Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `signoff`ta yakalanır. Bir arayüz
+değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. **24–26 dk vitrin E2E maliyeti kabul edilemez**; yalnız push yolundan
+çıkarılmıştır, henüz hızlandırılmamıştır: bkz. [F10.13](../TODO.md).
 
 ## Kapı koşucusu
 
@@ -38,7 +42,15 @@ koşan düz yoldur. Koşucu dört şey yapar:
    aşama koşar. Makbuzlar `node_modules` altındaki kapı önbelleğindedir (repoya girmez, `just clean` siler).
 3. **Okunur çıktı.** Geçen aşama tek satırdır; koşan aşamanın NEDEN koştuğu yazılır
    (`girdi değişti`, `makbuz yok`, `önbelleksiz aşama`, `--fresh`). Düşen aşamanın sonu,
-   sınıflandırması, tam günlüğün yolu ve tekrar komutu basılır. `--json` `just report` ile aynı şekli verir.
+   sınıflandırması, tam günlüğün yolu ve tekrar komutu basılır. `--json` `just report` ile aynı şekli verir;
+   ilk düşüşten sonra yürütülmeyen aşamaları ve bekleyen birimleri `status: notRun` olarak listeler.
+   Playwright liste çıktısından test konumu ve neden ayrıştırılır; üçüncü gerçek `signoff`da
+   `kind: test` ve `reason: expect(locator).toHaveClass(expected) failed` görüldü.
+   Hata izleri yeni E2E çalıştırıcısında motor/şerit bazında sınırlı yerel arşive
+   alınır; tarayıcısız sahte Playwright alt süreçleriyle otomatik hata arşivi
+   regresyonu **5/5 PASS** (`e2eArchive.test.mjs`), yapılandırma testleri
+   **3/3 PASS** (`e2eConfig.test.mjs`). Gerçek tam `signoff` hata
+   zincirinin uçtan uca entegrasyon kanıtı hâlâ [F11.2](../TODO.md) işidir.
 4. **Yük ön kontrolü** ([`hostLoad.mjs`](../scripts/quality/hostLoad.mjs)). `quick` dışındaki kapılar başlamadan
    makinenin meşgul oranını bir saniye örnekler; %30'u aşıyorsa yiyen süreçleri PID, oran ve komut satırıyla yazar
    (bu depoya ait olanlar `[repo]` işaretlidir ve kapatma komutu önerilir). Yalnız uyarır: kapıyı düşürmez, süreç
@@ -220,33 +232,97 @@ Windows 11, 8 mantıksal çekirdek. İki sütun ayrı yöntemdir ve karıştır�
 (makbuzsuz, ön yük ≤%11; statik aşamalar birlikte koştuğundan her biri tek başınadan uzundur, toplam duvar süresi
 yine kısadır). Yük altında süreler uzar.
 
-| Aşama              | Tek başına | Taze tur             | Not                                                                                         |
-| ------------------ | ---------- | -------------------- | ------------------------------------------------------------------------------------------- |
-| `node-pin`         | 1 sn       | 1 sn                 |                                                                                             |
-| `contract`         | 40 sn      | 86 sn                | `node-test` 86, `cli` 71 sn; statik dalgada                                                 |
-| `format-check`     | 5 sn       | 83 sn                | tek başına sıcak içerik önbelleğiyle; dalgada işlemciyi paylaşır                            |
-| `typecheck`        | 27 sn      | 59 sn                | en yavaş birim CORE ve vitrin ~35 sn                                                        |
-| `lint`             | 54 sn      | 81 sn                | CORE 80, audio-synth 82, vitrin 54, VOL.TEST 48 sn (tip bilgili ESLint)                     |
-| `lint-css`         | 4 sn       | 51–61 sn             | tek başına sıcak içerik önbelleğiyle                                                        |
-| `build` / `bundle` | 4 / 1 sn   | 4 / 1 sn             |                                                                                             |
-| `scaling`          | 4 sn       | 3,5 sn               |                                                                                             |
-| `audio-test`       | 12–144 sn  | 6 sn                 | alt küme; yapılandırma/silme değişiminde tam takım (144 sn bu turda ölçülmedi)              |
-| `rust`             | 35 sn      | 29–37 sn             | sıcak hedef dizini; soğuk derleme (kilit/araç zinciri değişimi) 4,4 dk, ölçülmedi           |
-| `test`             | 238 sn     | 272 sn               | audio-synth 149, core 67, vol-test 29, vitrin 19, tauri-v2 4, pen.dev 3, deck 1 sn          |
-| `coverage`         | 113 sn     | 128–140 sn           | audio-synth hariç                                                                           |
-| `e2e` vitrin       | 343 sn     | **1.355 / 1.577 sn** | 22,6 / 26,3 dk (iki taze koşu); ana şerit WebKit 17,7–18,2 dk eşzamanlı + sessiz 4,8–8,0 dk |
-| `e2e` vol-test     | 86 sn      | ölçülmedi            | ilk `signoff` vitrinde düştüğü için bu birim koşmadı                                        |
-| `coverage-audio`   | 545 sn     | 547 sn               | kapsam ölçümü sentezi yavaşlatır                                                            |
-| `audio-verify`     | 100 sn     | 101 sn               |                                                                                             |
-| `security-js`      | 3 sn       | 3 sn                 | audit + yama sınaması + kayıt defteri sorgusu                                               |
-| `security-rust`    | 4 sn       | 4 sn                 |                                                                                             |
+| Aşama              | Tek başına | Taze tur               | Not                                                                                                               |
+| ------------------ | ---------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `node-pin`         | 1 sn       | 1 sn                   |                                                                                                                   |
+| `contract`         | 40 sn      | 86 sn                  | `node-test` 86, `cli` 71 sn; statik dalgada                                                                       |
+| `format-check`     | 5 sn       | 83 sn                  | tek başına sıcak içerik önbelleğiyle; dalgada işlemciyi paylaşır                                                  |
+| `typecheck`        | 27 sn      | 59 sn                  | en yavaş birim CORE ve vitrin ~35 sn                                                                              |
+| `lint`             | 54 sn      | 81 sn                  | CORE 80, audio-synth 82, vitrin 54, VOL.TEST 48 sn (tip bilgili ESLint)                                           |
+| `lint-css`         | 4 sn       | 51–61 sn               | tek başına sıcak içerik önbelleğiyle                                                                              |
+| `build` / `bundle` | 4 / 1 sn   | 4 / 1 sn               |                                                                                                                   |
+| `scaling`          | 4 sn       | 3,5 sn                 |                                                                                                                   |
+| `audio-test`       | 12–144 sn  | 6 sn                   | alt küme; yapılandırma/silme değişiminde tam takım (144 sn bu turda ölçülmedi)                                    |
+| `rust`             | 35 sn      | 29–37 sn               | sıcak hedef dizini; soğuk derleme (kilit/araç zinciri değişimi) 4,4 dk, ölçülmedi                                 |
+| `test`             | 238 sn     | 272 sn                 | audio-synth 149, core 67, vol-test 29, vitrin 19, tauri-v2 4, pen.dev 3, deck 1 sn                                |
+| `coverage`         | 113 sn     | 128–140 sn             | audio-synth hariç                                                                                                 |
+| `e2e` vitrin       | 343 sn     | **1.355 / 1.577 sn**   | 22,6 / 26,3 dk (ilk iki başarısız koşu); sonraki üç tam PASS'te ~24–26 dk; 343 sn bayat bütçe                     |
+| `e2e` vol-test     | 86 sn      | ilk iki koşuda NOT-RUN | ilk başarısız dizide vitrin düştüğü için koşmadı; **sonraki üç tam PASS'te koştu ve geçti** (ayrı süre kaydı yok) |
+| `coverage-audio`   | 545 sn     | 547 sn                 | kapsam ölçümü sentezi yavaşlatır                                                                                  |
+| `audio-verify`     | 100 sn     | 101 sn                 |                                                                                                                   |
+| `security-js`      | 3 sn       | 3 sn                   | audit + yama sınaması + kayıt defteri sorgusu                                                                     |
+| `security-rust`    | 4 sn       | 4 sn                   |                                                                                                                   |
 
-Birleşik kapılar, taze tur (makbuzsuz): `quick` 87,8 sn; `fast` 6,0 dk; `high` **4,7 dk**; `signoff` iki koşuda da
+Birleşik kapılar, ilk taze tur (makbuzsuz): `quick` 87,8 sn; `fast` 6,0 dk; `high` **4,7 dk**; `signoff` iki koşuda da
 (27,1 ve 30,6 dk) vitrin `e2e`inde düştü ve orada durdu, bu yüzden dört son aşama ayrı koşuldu (hepsi geçti; toplam
 ~11 dk). Önceki
 belge `high` için "yaklaşık 13,4 dk" diyordu: o sayı `e2e` pre-push kapısındayken ve eski süre bütçesiyle
 toplanmıştı; `e2e` `signoff`a taşındığından geçersizdir. Girdisi hiç değişmemiş ağaçta `quick` 2 sn, `high`
 yaklaşık 13 sn sürer (önceki ölçüm, bu turda yeniden ölçülmedi).
+
+**Sonraki `signoff` (2026-10-11):** 36,2 dk sonunda yeniden **FAIL** (toplam 0/3
+yeşil). Vitrin E2E ana WebKit şeridi 447 PASS / 16 SKIP / 1 FAIL:
+`hudStates.spec.ts:248:3` XPBar çoklu seviye testinde 15 sn boyunca beklenen
+`vol-xp-bar--level-up` sınıfı görülmedi (`expect(locator).toHaveClass(expected) failed`).
+Chromium ana şeridi ve iki motorun sessiz şeridi geçti; VOL.TEST E2E birimi
+çalışmadı. Dört sonraki aşama (`coverage-audio`, `audio-verify`, `security-js`,
+`security-rust`) JSON'da `notRun` oldu; önceki ayrı PASS kanıtları bu turu
+yeşil yapmaz. Playwright düşüşü `kind: test` olarak sınıflandırıldı;
+`last-failure.log` ve bu turun trace'i o an geçiciydi. `fast`/`high` PASS, F11.1/F11.2
+açık ([tarihsel denetim §23](monorepo-audit.md)); sonraki yeşil seri [§25](monorepo-audit.md)'tedir.
+
+**Üçüncü koşu sonrası hedefli doğrulama, tam kapı değil (2026-10-11):**
+`hudStates.spec.ts`, 600 ms'lik XPBar vurgu sınıfını `click()` tamamlandıktan
+sonra yakalamaya çalışmak yerine tıklamadan **önce** `MutationObserver`
+kurar; sınıf geçişini ve animasyon/gölge kanıtını olay anında toplar.
+Hedefli WebKit **6/6**, Chromium **6/6** PASS. Bu test düzeneği iyileştirmesi
+önceki iki ayrı WebKit hatasının kök nedenini tek başına çözmez. **Sonrasında
+üç art arda başarılı tam `signoff` elde edildi**, fakat F11.1'in
+gerçek pointer/actionability regresyonu ve (a)/(b) kök neden ölçütleri
+**açık**; eski Playwright tıklamalarını sayfa içi `element.click()` ile
+değiştirmek gerçek hit-testing testinin yerine geçmez.
+
+**Hata arşivi, hedefli hata-yolu doğrulaması (F11.2 KISMİ):**
+`devtools/vol-showcase/scripts/e2e.mjs` her motor/şerit için ayrı
+Playwright `outputDir` ve JSON raporu yapılandırır. Başarısız şeridin
+`error-context.json` ve varsa `trace.zip` / `report.json` kanıtı
+git dışı `node_modules` kalite önbelleğine arşivlenir. Worker-2'nin
+iki motoru da zorla düşürdüğü sınamada arşiv dosyaları oluştu;
+ardından başarılı çalıştırma eski hata kanıtını silmedi. **Yeni otomatik
+RED→GREEN arşiv regresyonu** `scripts/quality/tests/e2eArchive.test.mjs`
+**5/5 PASS**; `e2eConfig.test.mjs` **3/3 PASS**. Gerçek Node alt süreçli
+sahte Playwright testi iki motorun trace/JSON arşivini, JSON ek yollarının
+taşınınca güncellenmesini, ana/sessiz şerit ayrımını, rapor bulunmayan hata
+durumunu, sonraki PASS'in eski arşivi korumasını ve yaş/sayı budamasını
+doğrular; tarayıcı/Vite açmaz. **10→11 hata regresyonu düzeltildi:**
+çalıştırıcı hem başlangıçta hem **koşu sonunda** 14 gün/10 hata koşusu
+sınırını uygular, scratch dosyalarını 2 güne kadar tutar. Başarılı geçici
+çıktı temizlenir; genel `last-failure.log` kalıcı değildir. Arşiv
+yereldir, merkezi/değişmez kayıt değildir; bu kayıt özelliği bir PASS
+iddiası sayılmaz. Önceki üç tam yeşil `signoff` yeni arşiv değişikliği
+**öncesine** aittir ve gerçek tam başarısızlık yolunu sınamaz.
+**F11.2 açık kalan:** güncel kodda gerçek tam `signoff` hatasının
+kapı raporu/`notRun` ile arşivlenmiş Playwright izine bağlanmasının
+uçtan uca doğrulanması ve son kod değişikliklerinden sonra taze tam
+`signoff` kanıtı;
+[tarihsel §24 ve güncel §25](monorepo-audit.md).
+
+**Üç ardışık tam PASS — performans değişiklikleri öncesi çalışma ağacı
+(2026-10-11, denetim §25):**
+
+| Tam koşu      | Duvar süresi | Sonuç          | Kanıt sınırı                                                                                                    |
+| ------------- | ------------ | -------------- | --------------------------------------------------------------------------------------------------------------- |
+| Yeşil seri #1 | 48,4 dk      | PASS           | Tam kapı; vitrin + VOL.TEST E2E ve E2E sonrası aşamalar geçti                                                   |
+| Yeşil seri #2 | 47,0 dk      | PASS           | Aynı değişiklik öncesi çalışma ağacı, tam kapı                                                                  |
+| Yeşil seri #3 | 48,1 dk      | **18/18 PASS** | Üçüncü tam kapı; `coverage-audio`, `audio-verify`, `security-js`, `security-rust` E2E'den sonra gerçekten koştu |
+
+**Sonuç:** Önceki üç WebKit FAIL koşusu tarihsel olarak geçerlidir; onların
+ardından **3/3 tam PASS** doğrulandı. Bu doğruluk kanıtı F11.1/F11.2'nin
+açık regresyon/kök neden işlerini kapatmaz, Android/Deck/insan kabulü değildir.
+Vitrin E2E'nin **24–26 dk** olması 10 dk tetik eşiğini ağır biçimde aşıyor;
+F10.13'te ölçüme dayalı performans müdahalesi ve müdahale **sonrası**
+yeni tam kapı kanıtı gerekir. Bu kayıt bir performans düzeltmesi
+**sonrasında koşulmuş `signoff`** olarak yorumlanamaz.
 
 Makbuzlu `quick`, tek dosya düzenlemesinden sonra yalnız etkilenen birimi koşar (önceki ölçüm: yaprak paket
 kaynağı ~45 sn, betik ~38 sn, belge ~35 sn; taban `contract` 28–35 sn tek başına). Birden çok birim
@@ -301,7 +377,7 @@ körlemesine tekrarlamayın.
 | ----------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `contract`                                      | katman, döngü, i18n, port, ikon, kilit, belge-gerçek uyumu, bekçilerin kendisi | repo geneline bakar; yalnız yazılmış bekçiyi zorlar                                                                                                                                                                                                                                     |
 | `typecheck`, `lint`, `lint-css`, `format-check` | tip, kural ve biçim ihlalleri                                                  | çalışma zamanı davranışını sınamaz                                                                                                                                                                                                                                                      |
-| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşiği ve şekli ratchet'tir                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir)                                                                                                                                                                                                                                |
+| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşikleri ve şekil denetimi                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir); eşik düşürmeyi önceki tabana göre reddeden ratchet eksik (F11.4)                                                                                                                                                              |
 | `audio-test`                                    | audio-synth'in sabit alt kümesi + değişenle ilişkili testler                   | alt küme tam takımın yerini tutmaz; tam kanıt `test` ve `coverage-audio`'dadır                                                                                                                                                                                                          |
 | `rust`                                          | `fmt`, `clippy -D warnings`, `test`                                            | yalnız host hedefi; Linux/Android native kanıtı ayrı                                                                                                                                                                                                                                    |
 | `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına; WebKit'te 18 atlama (gerçek dokunma, Web Audio, layout-shift, pano, Chromium'a özgü axe/iz) ve Chromium'da 2 (toplayıcı, WebKit izi); atlama sayısı kapıda sayılmaz; yük altında aralıklı zaman aşımı görülebilir (TODO F11.1) |
@@ -368,7 +444,8 @@ matrisi UI görevlerinde eklenir.
 
 - **Kapsam motoru:** Vitest ve `@vitest/coverage-v8` aynı exact sürümdedir;
   V8 kapsamı AST tabanlı yeniden eşleme kullanır. Motor değişiminde eşik
-  geçişi ölçülen LCOV pay/paydalarıyla yapılır; sonrasında ratchet sürer.
+  geçişi ölçülen LCOV pay/paydalarıyla yapılır; önceki eşiklere göre düşüşü
+  reddeden ratchet henüz uygulanmadı (F11.4).
 - **Piksel temeli tam paneli çeker:** vol-showcase sekme paneli kendi
   kaydırıcısıdır ve Playwright iç içe kaydırıcının görünmeyen kısmını çekemez;
   `visual.spec.ts` ekran görüntüsünden önce kap zincirinin taşmasını açar.
@@ -389,7 +466,7 @@ başarısı ürün kabulü olarak raporlanmaz.
 | `test-pkg <pkg>`              | Tek paketin düz testini çalıştırır                                                                                                                           |
 | `build-ui`                    | Mevcut vitrin build kolaylığı                                                                                                                                |
 | `ui-baseline <etiket>`        | UI ilk referans kaydı (git dışı): sayımlar, ekran özetleri, hareket, gönderilen bayt, cihaz NOT-RUN hücreleri; `ui-baseline.mjs compare` ile karşılaştırılır |
-| `ui-check`                    | UI yüzey kaydı + vitrinin iki motorlu tam E2E'si; `high` içinde zaten var, tek komut kısa yolu                                                               |
+| `ui-check`                    | UI yüzey kaydı + vitrin build'i + iki motorlu tam E2E; `high` içermez, UI değişikliği için push öncesi ayrı çalıştırılır                                     |
 | `report <kapı> --json`        | Kapıyı çalıştırıp aşama/exit/süre raporu verir                                                                                                               |
 | `dev`, `dev-ui`               | Geliştirme uygulamasını açar                                                                                                                                 |
 | `fix`                         | Format ve lint düzeltmesi yapar                                                                                                                              |

@@ -24,6 +24,10 @@ const CONTENT_POSITION_MAP: Record<LoadingContentPosition, { align: string; just
   'bottom-right': { align: 'flex-end', justify: 'flex-end' },
 };
 
+// Birden çok yükleme ekranı aynı sayfayı engelliyorsa son ekran kapanana kadar
+// `inert` kalır. Önceden başka sahibi tarafından kapatılmış öğelere dokunulmaz.
+const backgroundBlockCounts = new WeakMap<HTMLElement, number>();
+
 export interface LoadingIndicatorOptions {
   type?: LoadingIndicatorType;
   /** Gösterge rengi — CSS custom property veya hex. Varsayılan: --vol-ui-accent-solid. */
@@ -158,6 +162,7 @@ export class LoadingScreen {
   private readonly blockBackground: boolean;
   private tipIndex = 0;
   private tipTimer: ReturnType<typeof setInterval> | null = null;
+  private tipSwapTimer: ReturnType<typeof setTimeout> | null = null;
   private stallTimer: ReturnType<typeof setTimeout> | null = null;
   private showDelayTimer: ReturnType<typeof setTimeout> | null = null;
   private stalled = false;
@@ -512,18 +517,39 @@ export class LoadingScreen {
       active instanceof HTMLElement && active !== document.body && !this.element.contains(active)
         ? active
         : null;
-    const own = this.element.closest('body > *') ?? this.element;
-    for (const child of Array.from(document.body.children)) {
-      if (child === own || !(child instanceof HTMLElement) || child.inert) continue;
-      child.inert = true;
-      this.blockedSiblings.push(child);
+    // Loader uygulama köküne gömüldüyse yalnız body kardeşlerini kapatmak
+    // yetersizdir; loader'a giden DOM yolunun tüm kardeşleri kapatılmalı.
+    let branch: Element | null = this.element;
+    while (branch?.parentElement) {
+      const parent: HTMLElement = branch.parentElement;
+      for (const child of Array.from(parent.children)) {
+        if (child === branch || !(child instanceof HTMLElement)) continue;
+        // Eşzamanlı yükleyiciler birbirinin girişini kilitlememeli.
+        if (child.classList.contains('vol-loading')) continue;
+        const count = backgroundBlockCounts.get(child) ?? 0;
+        if (child.inert && count === 0) continue;
+        backgroundBlockCounts.set(child, count + 1);
+        child.inert = true;
+        this.blockedSiblings.push(child);
+      }
+      if (parent === document.body) break;
+      branch = parent;
     }
     this.element.tabIndex = -1;
     this.element.focus({ preventScroll: true });
   }
 
   private unblockPage(): void {
-    for (const child of this.blockedSiblings) child.inert = false;
+    for (const child of this.blockedSiblings) {
+      const count = backgroundBlockCounts.get(child);
+      if (count === undefined) continue;
+      if (count <= 1) {
+        backgroundBlockCounts.delete(child);
+        child.inert = false;
+      } else {
+        backgroundBlockCounts.set(child, count - 1);
+      }
+    }
     this.blockedSiblings = [];
     const target = this.restoreFocusTo;
     this.restoreFocusTo = null;
@@ -549,7 +575,9 @@ export class LoadingScreen {
     this.tipTimer = setInterval(() => {
       this.tipIndex = (this.tipIndex + 1) % this.tips.length;
       this.tipEl?.classList.add('vol-loading__tip--swap');
-      setTimeout(() => {
+      if (this.tipSwapTimer) clearTimeout(this.tipSwapTimer);
+      this.tipSwapTimer = setTimeout(() => {
+        this.tipSwapTimer = null;
         this.renderTip();
         this.tipEl?.classList.remove('vol-loading__tip--swap');
       }, 160);
@@ -559,6 +587,9 @@ export class LoadingScreen {
   private stopTips(): void {
     if (this.tipTimer) clearInterval(this.tipTimer);
     this.tipTimer = null;
+    if (this.tipSwapTimer) clearTimeout(this.tipSwapTimer);
+    this.tipSwapTimer = null;
+    this.tipEl?.classList.remove('vol-loading__tip--swap');
   }
 
   private stallText(): string {
@@ -586,6 +617,7 @@ export class LoadingScreen {
 
   /** Progress günceller (0-100). Değer yumuşak animasyonla hedefe ulaşır; ilk çağrıda çubuk belirsizden kesine geçer. */
   update(percent: number): void {
+    if (!Number.isFinite(percent)) return;
     const target = Math.max(0, Math.min(100, percent));
     this.indicatorEl.setAttribute('aria-valuenow', String(Math.round(target)));
     if (!this.determinate) {

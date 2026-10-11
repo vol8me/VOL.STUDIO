@@ -102,6 +102,38 @@ describe('kalite raporu sınıflandırması', () => {
     });
   });
 
+  it('Playwright başarısızlığında test başlığı ve dosya konumu JSON teşhisine girer', () => {
+    const output = [
+      '  1) [webkit] › tests/e2e/motionMeasure.spec.ts:124:5 › flashes › limits bursts',
+      '    Test timeout of 60000ms exceeded.',
+      '    Error: locator.click: Test timeout of 60000ms exceeded.',
+    ].join('\n');
+    assert.deepEqual(classify('e2e', output), {
+      package: null,
+      kind: 'test',
+      path: 'tests/e2e/motionMeasure.spec.ts:124:5',
+      title: 'flashes › limits bursts',
+      reason: 'locator.click: Test timeout of 60000ms exceeded.',
+    });
+  });
+  it('gerçek WebKit signoff özetindeki başarısızlığı geçen testlerle karıştırmaz', () => {
+    const output = [
+      '  ok  7 [chromium] › tests\\e2e\\motionMeasure.spec.ts:124:5 › flaş sınırı geçti',
+      '    Error: expect(locator).toHaveClass(expected) failed',
+      '  1 failed',
+      '    [webkit] › tests\\e2e\\hudStates.spec.ts:248:3 › XPBar çoklu seviye › +2.000 XP birden çok seviye atlar',
+      '  16 skipped',
+      '  447 passed (22.7m)',
+    ].join('\n');
+    assert.deepEqual(classify('e2e', output), {
+      package: null,
+      kind: 'test',
+      path: 'tests/e2e/hudStates.spec.ts:248:3',
+      title: 'XPBar çoklu seviye › +2.000 XP birden çok seviye atlar',
+      reason: 'expect(locator).toHaveClass(expected) failed',
+    });
+  });
+
   it('TAP hata bloğu içindeki paket failure context olarak kullanılır', () => {
     const result = classify(
       'test',

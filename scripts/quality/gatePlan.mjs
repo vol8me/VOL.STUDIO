@@ -113,6 +113,8 @@ export const REVIEWED_ESCAPES = {
     'kök yalnız lifecycle ve scripts/linux hedeflerini okur; ikisi de paket dışı koddur',
   'devtools/deck/tests/probeMetrics.test.mjs':
     'kökten yalnız CORE kaynağını okur; CORE kapanıştadır',
+  'devtools/vol-showcase/scripts/e2e.mjs':
+    'repo kökü yalnız git dışı node_modules/.cache/vol-quality altında izole E2E çıktı/hata arşivi oluşturmak için kullanılır; kaynak okunmaz',
   'devtools/vol-showcase/tests/e2e/support/policy.ts':
     'kökten yalnız core/src/ui okunur; CORE kapanıştadır',
   'devtools/vol-showcase/vite.config.ts': 'vite fs.allow kökü; dosya okumaz',

@@ -168,7 +168,8 @@ maxStack birdir; benzerlik ve kapasite tüketicinindir.
 
 Enjekte edilmiş RNG ile ağırlıklı seçim yapar. Sıfır ve negatif ağırlık aday
 olmaz; `pickUnique` tekrarsız seçimdir. Kaynağın adı ve oyun karşılığı generic
-value içinde tüketiciye aittir.
+value içinde tüketiciye aittir. Sonlu ağırlıkların toplamı taşarsa ağırlıklar
+ortak katsayıyla ölçeklenir; dağılım ve iadesiz seçim korunur.
 
 ### `ObjectPool`
 

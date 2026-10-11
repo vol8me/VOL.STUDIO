@@ -543,6 +543,19 @@ describe('LoadingScreen — ilerleme anlamı, hata ve yeniden deneme', () => {
     ).toBe('true');
   });
 
+  it('sonlu olmayan ilerleme önceki erişilebilir ve görsel değeri bozmaz', () => {
+    const loading = createLoading({ showPercent: true });
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+    loading.update(40);
+    loading.update(Number.NaN);
+    loading.update(Number.POSITIVE_INFINITY);
+    expect(
+      loading.element.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow'),
+    ).toBe('40');
+    expect(loading.element.style.getPropertyValue('--vol-loading-progress')).toBe('40%');
+    expect(loading.element.querySelector('.vol-loading__percent')?.textContent).toBe('40%');
+  });
+
   it('varsayılan asgari gösterim süresi kapalıdır (hide hemen uygulanır)', () => {
     const onComplete = vi.fn();
     const loading = createLoading({ transitionMs: 100, onComplete });
@@ -643,6 +656,18 @@ describe('LoadingScreen — plaka, aşama, ipucu, takılma, gecikme, arka plan',
     expect(tip.textContent).toBe(frozen);
   });
 
+  it('hide sırasında bekleyen ipucu geçişi yeni içerik yazmaz', () => {
+    const loading = createLoading({ tips: ['bir', 'iki'], tipIntervalMs: 1000 });
+    loading.show();
+    vi.advanceTimersByTime(1000);
+    const tip = loading.element.querySelector('.vol-loading__tip')!;
+    const before = tip.textContent;
+    loading.hide();
+    vi.advanceTimersByTime(160);
+    expect(tip.textContent).toBe(before);
+    expect(tip.classList.contains('vol-loading__tip--swap')).toBe(false);
+  });
+
   it('ilerleme stallMs boyunca değişmezse bir kez bildirilir; ilerleyince temizlenir ve yeniden silahlanır', () => {
     const onStall = vi.fn();
     const loading = createLoading({ stallMs: 1000, onStall });
@@ -725,6 +750,36 @@ describe('LoadingScreen — plaka, aşama, ipucu, takılma, gecikme, arka plan',
     loading.hide();
     expect(Boolean(page.inert)).toBe(false);
     expect(document.activeElement).toBe(button);
+  });
+
+  it('eşzamanlı yükleme ekranları bağımsız kilitlerini bırakana kadar sayfayı kapalı tutar', () => {
+    const page = document.createElement('main');
+    document.body.appendChild(page);
+    const first = createLoading();
+    const second = createLoading();
+    first.show();
+    second.show();
+    expect(page.inert).toBe(true);
+    first.hide();
+    expect(page.inert).toBe(true);
+    second.hide();
+    expect(page.inert).toBe(false);
+  });
+
+  it('yükleme ekranı uygulama kapsayıcısında yer aldığında aynı kapsayıcının içeriğini de kilitler', () => {
+    const app = document.createElement('main');
+    const page = document.createElement('button');
+    app.appendChild(page);
+    document.body.appendChild(app);
+    const loading = createLoading();
+    app.appendChild(loading.element);
+    page.focus();
+    loading.show();
+    expect(page.inert).toBe(true);
+    expect(Boolean(app.inert)).toBe(false);
+    loading.hide();
+    expect(page.inert).toBe(false);
+    expect(document.activeElement).toBe(page);
   });
 
   it('blockBackground:false arka sayfaya dokunmaz', () => {
