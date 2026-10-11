@@ -23,6 +23,8 @@ export interface KeyBindingListOptions {
   onReset?: (action: string) => void;
   /** Bağ metnini oyunun kendi kelimesiyle yazmak için. */
   formatBinding?: (binding: PCActionBinding) => string;
+  /** Satır yokken görünen metin; verilmezse dile göre `core:keyBindings.empty`. */
+  emptyText?: string;
   className?: string;
 }
 
@@ -45,6 +47,7 @@ export class KeyBindingList {
   private readonly onRebind: (action: string, binding: PCActionBinding) => void;
   private readonly onReset?: (action: string) => void;
   private readonly formatBinding: (binding: PCActionBinding) => string;
+  private readonly emptyText?: string;
   private capturing: string | null = null;
   private readonly onLanguageChanged = (): void => this.render();
 
@@ -85,6 +88,7 @@ export class KeyBindingList {
     this.onRebind = options.onRebind;
     this.onReset = options.onReset;
     this.formatBinding = options.formatBinding ?? describePCBinding;
+    this.emptyText = options.emptyText;
 
     this.element = document.createElement('div');
     this.element.className = ['vol-key-bindings', options.className].filter(Boolean).join(' ');
@@ -143,6 +147,16 @@ export class KeyBindingList {
   private render(): void {
     const keep = this.focusedControl();
     this.element.textContent = '';
+
+    // Satır yokken sessiz boş liste yerine durum söylenir (DataTable `emptyText` ile aynı sözleşme).
+    if (this.rows.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'vol-key-bindings__empty';
+      empty.setAttribute('role', 'listitem');
+      empty.textContent = this.emptyText ?? i18next.t('core:keyBindings.empty');
+      this.element.appendChild(empty);
+      return;
+    }
 
     for (const row of this.rows) {
       const item = document.createElement('div');

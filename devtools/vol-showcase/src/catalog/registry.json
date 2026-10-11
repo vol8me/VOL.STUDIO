@@ -794,7 +794,15 @@
           "file": "core/tests/ui/overlays/overlaysExtra.test.ts",
           "title": "show() ilk satırı sırayla karakter-karakter yazar"
         }
-      ]
+      ],
+      "states": {
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/overlayMotion.spec.ts",
+            "title": "DialogueBox: hareket azaltılmışta kutu kayarak belirmez"
+          }
+        ]
+      }
     },
     {
       "export": "DirectionButton",
@@ -1343,7 +1351,15 @@
           "file": "core/tests/ui/data/keyBindingList.test.ts",
           "title": "her eylemi etiketi ve okunur bağıyla çizer"
         }
-      ]
+      ],
+      "states": {
+        "empty": [
+          {
+            "file": "core/tests/ui/data/keyBindingList.test.ts",
+            "title": "satır yokken sessiz boş liste yerine boş durumu söyler ve satır gelince kalkar"
+          }
+        ]
+      }
     },
     {
       "export": "KeyedVirtualList",
@@ -1676,7 +1692,15 @@
           "title": "açık modal destroy edilince kilit kalkar"
         }
       ],
-      "extraStates": ["disabled"]
+      "extraStates": ["disabled"],
+      "states": {
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/overlayMotion.spec.ts",
+            "title": "Modal: hareket azaltılmışta ve normalde yalnız solarak geçer, kayma yoktur"
+          }
+        ]
+      }
     },
     {
       "export": "MotionController",
@@ -1875,7 +1899,15 @@
           "file": "core/tests/ui/overlays/popupBackNavigation.test.ts",
           "title": "açık Popup geri hareketini tüketir, alttaki işleyiciye sızdırmaz"
         }
-      ]
+      ],
+      "states": {
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/overlayMotion.spec.ts",
+            "title": "Popup: hareket azaltılmışta açılır katman kayarak belirmez"
+          }
+        ]
+      }
     },
     {
       "export": "PropertyField",
@@ -1955,7 +1987,15 @@
           "file": "core/tests/ui/touchControls.test.ts",
           "title": "basılı-tut + sürükle + bırak akışında en yakın item seçilir"
         }
-      ]
+      ],
+      "states": {
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/overlayMotion.spec.ts",
+            "title": "RadialMenu: hareket azaltılmışta menü ölçeklenerek belirmez"
+          }
+        ]
+      }
     },
     {
       "export": "RadioGroup",
@@ -2738,7 +2778,15 @@
           "title": "oluştur ve yok et"
         }
       ],
-      "extraStates": ["error"]
+      "extraStates": ["error"],
+      "states": {
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/overlayMotion.spec.ts",
+            "title": "ToastManager: hareket azaltılmışta bildirim kayarak belirmez"
+          }
+        ]
+      }
     },
     {
       "export": "ToolButton",
@@ -2799,7 +2847,15 @@
           "file": "core/tests/ui/overlays/overlays.test.ts",
           "title": "oluştur ve yok et"
         }
-      ]
+      ],
+      "states": {
+        "reducedMotion": [
+          {
+            "file": "devtools/vol-showcase/tests/e2e/overlayMotion.spec.ts",
+            "title": "Tooltip: hareket azaltılmışta balon kayarak belirmez"
+          }
+        ]
+      }
     },
     {
       "export": "Tree",

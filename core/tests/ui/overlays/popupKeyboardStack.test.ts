@@ -119,3 +119,75 @@ describe('Popup klavye katman yığını', () => {
     expect(document.activeElement).toBe(trigger);
   });
 });
+
+describe('Üç katmanlı yığın (Modal → Popup → Popover)', () => {
+  function stack() {
+    const modal = new Modal();
+    const opener = target();
+    modal.add({ element: opener });
+    document.body.appendChild(modal.element);
+    cleanups.push(() => modal.destroy());
+    modal.open();
+
+    const popupTrigger = target(opener.parentElement ?? document.body);
+    const middle = new Popup(popupTrigger, { closeOnOutsideClick: false });
+    cleanups.push(() => middle.destroy());
+    // Kullanıcı tetikleyiciye odaklanıp açar; geri verilecek odak bu andaki sahiptir.
+    popupTrigger.focus();
+    middle.show();
+
+    const popoverTrigger = target(middle.element);
+    const top = new Popover(popoverTrigger, { closeOnOutsideClick: false });
+    cleanups.push(() => top.destroy());
+    popoverTrigger.focus();
+    top.show();
+    return { modal, middle, top, opener, popupTrigger, popoverTrigger };
+  }
+
+  it('Escape katmanları açılışın tersi sırayla kapatır (LIFO), her adımda alttakiler açık kalır', async () => {
+    const { modal, middle, top } = stack();
+    await Promise.resolve();
+    expect([modal.isOpen(), middle.isOpen(), top.isOpen()]).toEqual([true, true, true]);
+
+    escape();
+    expect([modal.isOpen(), middle.isOpen(), top.isOpen()]).toEqual([true, true, false]);
+    escape();
+    expect([modal.isOpen(), middle.isOpen(), top.isOpen()]).toEqual([true, false, false]);
+    escape();
+    expect([modal.isOpen(), middle.isOpen(), top.isOpen()]).toEqual([false, false, false]);
+  });
+
+  it('üstteki Popover kapanınca odak tetikleyicisine döner; odak yönetmeyen Popup bunu iddia etmez', async () => {
+    const { middle, top, popoverTrigger } = stack();
+    await Promise.resolve();
+    escape();
+    expect(top.isOpen()).toBe(false);
+    expect(middle.isOpen()).toBe(true);
+    expect(document.activeElement).toBe(popoverTrigger);
+    escape();
+    expect(middle.isOpen()).toBe(false);
+  });
+
+  it('ortadaki katmanın sökümü üsttekini bozmaz; kalan tek Escape üsttekini kapatır', async () => {
+    const { modal, middle, top } = stack();
+    await Promise.resolve();
+    middle.destroy();
+    escape();
+    expect(top.isOpen()).toBe(false);
+    expect(modal.isOpen()).toBe(true);
+    escape();
+    expect(modal.isOpen()).toBe(false);
+    expect(getBackHandlerCount()).toBe(0);
+  });
+
+  it('tümü sökülünce gövdede katman, kilit ve geri dinleyicisi kalmaz', async () => {
+    const { modal, middle, top } = stack();
+    await Promise.resolve();
+    top.destroy();
+    middle.destroy();
+    modal.destroy();
+    expect(getBackHandlerCount()).toBe(0);
+    expect(document.body.classList.contains('vol-modal__body-locked')).toBe(false);
+    expect(document.querySelector('.vol-modal, .vol-popup, .vol-popover')).toBeNull();
+  });
+});

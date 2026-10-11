@@ -769,12 +769,21 @@
   inset: 0;
   z-index: var(--vol-z-dialog);
   display: grid;
-  place-content: center;
+
+  /* `safe`: içerik ekrandan uzunsa üst kenardan kesilmez, kaydırılır (uzun hata ayrıntısı). */
+  place-content: safe center;
   gap: var(--vol-space-sm);
   padding: var(--vol-space-lg);
   background: var(--vol-ui-bg);
   color: var(--vol-ui-text);
   text-align: center;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.vol-fatal-startup:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -4px;
 }
 
 .vol-fatal-startup__title {
@@ -900,4 +909,36 @@
   min-width: 200px;
   padding: var(--vol-space-sm);
   font-family: var(--vol-font-family-body);
+}
+
+/*
+ * Hareket azaltma: katmanlar kayma/ölçek yerine yalnız belirir (geçişin kendisi `--vol-transition-*`
+ * ile kalır; yön ve ölçek ofseti kalkar). Sonsuz "devam" oku durur; durum okunur kalır (UI-09.1).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .vol-toast,
+  .vol-toast--visible,
+  .vol-tooltip,
+  .vol-tooltip--visible,
+  .vol-popup,
+  .vol-popup--visible,
+  .vol-sheet .vol-modal__content,
+  .vol-sheet.vol-modal--visible .vol-modal__content {
+    transform: none;
+  }
+
+  .vol-dialogue,
+  .vol-dialogue--visible {
+    transform: translate(-50%);
+  }
+
+  .vol-dialogue__continue--visible {
+    animation: none;
+  }
+
+  .vol-radial-menu,
+  .vol-radial-menu--visible {
+    transform: none;
+    transition: opacity var(--vol-transition-fast);
+  }
 }

@@ -480,11 +480,18 @@ neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altı
       iç Popup/Popover kapanırken dış katman açık ve odak tetikleyicide kalır, eski Popup üzerine
       açılan Modal önce kapanır. ContextMenu yerel Escape'i dış katmana sızdırmaz
       (`core/tests/ui/overlays/popupKeyboardStack.test.ts`).
-      Denetim (2026-10-11, kutu açık, kod değişmedi): (1) `overlays.css`te translate/ölçek geçişleri, RadialMenu'nün
-      sabit 0,16 sn yaylanma eğrisi ve sonsuz `vol-dialogue-bounce` `prefers-reduced-motion` altında değişmiyor
-      (yalnız Toast ve tur hedefi kapsıyor; hiçbir test ölçmüyor). (2) `showFatalStartupError` eylemsiz salt
-      `role="alert"`: odak/eylem yok, kaydırma yok (kod okumasıyla; tarayıcıda ölçülmedi). (3) 3 katmanlı yığın
-      kanıtı hâlâ yok (yalnız iki katmanlı).
+      Yapıldı (2026-10-12), 2026-10-11 denetiminin üç bulgusu kapandı: (1) `overlays.css` sonuna
+      `prefers-reduced-motion` bloğu: Toast/Tooltip/Popup/Sheet içeriği/DialogueBox kayma ofseti, RadialMenu
+      ölçek ve yaylanma ve sonsuz `vol-dialogue-bounce` hareket azaltılmışta kalkar (Modal zaten yalnız solar);
+      `overlayMotion.spec.ts` iki motorda kapalı durumun hesaplanmış `transform`/`animation`/`transition`
+      değerini iki tercihte ölçer ve normal tercihte ofsetin VAR olduğunu da iddia eder (düzeltme geri
+      alınınca 7 test düşer). (2) `showFatalStartupError` uzun ayrıntıda kesiliyor ve kaydırılamıyordu →
+      `overflow: auto`, `place-content: safe center`, klavyeyle odaklanır (`tabindex=0`) ve isteğe bağlı
+      `autoFocus` (VOL.TEST açılış hatasında açık); `fatalStartup.spec.ts` uzun ayrıntıda kesilmeme ve
+      End ile kaydırmayı, kısa ayrıntıda ortalamayı iki motorda ölçer. (3) 3 katmanlı yığın:
+      `popupKeyboardStack.test.ts` Modal → Popup → Popover için LIFO Escape, ortadaki katmanın sökümü ve
+      toplu sökümde gövdede katman/kilit/geri dinleyicisi kalmamasını sınar. Odak yönetmeyen düz Popup
+      kapanınca odağı tetikleyiciye geri VERMEZ (sözleşmesi budur; yalnız Popover/Modal geri verir).
 - [ ] **UI-09.2 — Tooltip/RichTooltip ve ToastManager.** Hover/odak kalıcılığı, Esc, balona geçiş,
       dokunma/kol alternatifi; 3 bildirimlik kuyruk, kritik öncelik/eylem; bildirim sesleri.
       Kapanır: 3 s zorunlu gizleme yok; acil bildirim sessizce düşmez; AT dinler; HUD üstüne
@@ -530,8 +537,9 @@ neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altı
       Denetim (2026-10-11, kutu açık): %30/%200/RTL ölçümü var — `pseudoLocale.spec.ts` advanced (DataTable,
       Kanban, EventLog) ve touch (KeyBindingList) sekmelerini +%30 sahte dilde LTR/RTL, 1280×800/640×400/360/320
       px'te tarar (istisna dosyası yok; kırpma/taşma bulgudur); pseudoLocale+layout+inlineDirection+scrollView iki
-      motorda 46/46. Kanban RTL ok anlamı `inlineDirection.test.ts`. Kalan: **KeyBindingList satır yokken sessiz boş
-      liste** (DataTable'ın `emptyText`i gibi boş durum yok, testi yok) ve gerçek AT (NOT-RUN → UI-13.4).
+      motorda 46/46. Kanban RTL ok anlamı `inlineDirection.test.ts`. **KeyBindingList boş durumu eklendi (2026-10-12):** satır yokken
+      `emptyText` ya da dile göre `core:keyBindings.empty` yazılır (`keyBindingList.test.ts`); kalan: gerçek AT
+      (NOT-RUN → UI-13.4).
 - [x] **UI-09.4 — Diyalog deseni/yönlendirici işaret/yasal metin.** Mevcut Modal/Panel/Button/
       Text bileşimi ile yıkıcı işlem/çıkış/izin/yerel-uzak çakışma/ilk kullanım yönlendirmesi/
       kredi ve yasal metin (ikon atıf ekranı dahil). Kapanır: çakışmada niyet/hata/bekleme/

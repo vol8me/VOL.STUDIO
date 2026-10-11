@@ -23,4 +23,16 @@ describe('showFatalStartupError', () => {
     const overlay = showFatalStartupError({ title: 'Hata', error: 42, parent });
     expect(overlay.querySelector('p')?.textContent).toBe('42');
   });
+
+  it('kaydırılabilir yüzey klavyeyle odaklanabilir; odak yalnız istenince alınır', () => {
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    const quiet = showFatalStartupError({ title: 'Hata', error: 'x', parent });
+    expect(quiet.tabIndex).toBe(0);
+    expect(document.activeElement).not.toBe(quiet);
+
+    const focused = showFatalStartupError({ title: 'Hata', error: 'x', parent, autoFocus: true });
+    expect(document.activeElement).toBe(focused);
+    parent.remove();
+  });
 });

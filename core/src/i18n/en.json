@@ -249,7 +249,8 @@
     "listening": "Press a key…",
     "rebind": "Rebind {{action}}",
     "reset": "Reset",
-    "resetAction": "Reset {{action}} to default"
+    "resetAction": "Reset {{action}} to default",
+    "empty": "No actions to rebind"
   },
   "xp": {
     "progress": "Lv. {{level}} — {{value}} / {{max}}"

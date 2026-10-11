@@ -15,6 +15,12 @@
   gap: var(--vol-space-sm);
 }
 
+.vol-key-bindings__empty {
+  padding: var(--vol-space-sm);
+  color: var(--vol-ui-text-muted);
+  overflow-wrap: anywhere;
+}
+
 .vol-key-bindings__label {
   flex: 1 1 8ch;
   min-width: 0;

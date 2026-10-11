@@ -249,7 +249,8 @@
     "listening": "Tuşa bas…",
     "rebind": "{{action}} için yeni tuş ata",
     "reset": "Sıfırla",
-    "resetAction": "{{action}} tuşunu varsayılana döndür"
+    "resetAction": "{{action}} tuşunu varsayılana döndür",
+    "empty": "Yeniden atanacak eylem yok"
   },
   "xp": {
     "progress": "Sv. {{level}} — {{value}} / {{max}}"

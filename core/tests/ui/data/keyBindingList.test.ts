@@ -28,6 +28,34 @@ describe('KeyBindingList', () => {
     list.destroy();
   });
 
+  it('satır yokken sessiz boş liste yerine boş durumu söyler ve satır gelince kalkar', () => {
+    const list = new KeyBindingList({ rows: [], onRebind: vi.fn() });
+    const empty = list.element.querySelector('.vol-key-bindings__empty');
+    expect(empty?.textContent).toBe(i18next.t('core:keyBindings.empty'));
+    expect(empty?.textContent?.trim()).not.toBe('');
+    expect(bindingButtons(list)).toHaveLength(0);
+
+    list.setRows(ROWS);
+    expect(list.element.querySelector('.vol-key-bindings__empty')).toBeNull();
+    expect(bindingButtons(list)).toHaveLength(2);
+
+    list.setRows([]);
+    expect(list.element.querySelector('.vol-key-bindings__empty')).not.toBeNull();
+    list.destroy();
+  });
+
+  it('emptyText verilirse oyunun kendi boş durum metni çizilir', () => {
+    const list = new KeyBindingList({
+      rows: [],
+      onRebind: vi.fn(),
+      emptyText: 'Kol atamaları yok',
+    });
+    expect(list.element.querySelector('.vol-key-bindings__empty')?.textContent).toBe(
+      'Kol atamaları yok',
+    );
+    list.destroy();
+  });
+
   it('düğmeye basınca dinlemeye geçer', () => {
     const list = new KeyBindingList({ rows: ROWS, onRebind: vi.fn() });
     bindingButtons(list)[0].click();

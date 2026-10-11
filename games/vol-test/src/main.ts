@@ -73,5 +73,5 @@ async function boot(): Promise<void> {
 
 boot().catch((error: unknown) => {
   console.error('[VOL.TEST] Açılış başarısız:', error);
-  showFatalStartupError({ title: fatalTitle(), error });
+  showFatalStartupError({ title: fatalTitle(), error, autoFocus: true });
 });
