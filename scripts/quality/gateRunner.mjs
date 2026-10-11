@@ -17,6 +17,7 @@ import {
   snapshotFiles,
   writeReceipt,
 } from './gateCache.mjs';
+import { checkSkipBudget, parseCounts } from './counts.mjs';
 import { STAGE_PLAN, wavesFor } from './gatePlan.mjs';
 import { deriveSharedInputs, readWorkspaceGraph, scopeInclude } from './gateScope.mjs';
 import { unitsFor } from './gateUnits.mjs';
@@ -72,6 +73,36 @@ export function planStage(ctx, stage) {
 }
 
 /**
+ * Aşamanın atlama bütçesini sınar; aşan öğe düşmüş sayılır ve makbuzu silinir.
+ *
+ * Bütçe anahtarının sahibi öğedir: birimsiz aşamada tek öğe hepsinin sahibidir; birimli aşamada
+ * anahtar birim adıdır (`contract` → `node-test`) ya da `<paket kısa adı>/…` ile başlar
+ * (`e2e` → `vol-showcase/webkit/main`). Sahibi bu koşuda koşmuş öğenin satırı gelmezse sayım
+ * bilinmiyordur ve öğe düşer; sayımı olmayan eski makbuz bütçesiz sayılır, yeniden koşunca sınanır.
+ */
+function enforceSkipBudget(stage, entries, budget) {
+  if (!budget) return;
+  const owns = (entry, key) => {
+    const unit = entry.item.unit;
+    if (!unit) return true;
+    return key === unit || key.startsWith(`${unit.replace(/^@volstudio\//, '')}/`);
+  };
+  for (const entry of entries.values()) {
+    if (entry.status !== 'passed' && entry.status !== 'cached') continue;
+    if (!entry.counts) continue;
+    const owed =
+      entry.status === 'passed' ? Object.keys(budget).filter((key) => owns(entry, key)) : [];
+    const problems = checkSkipBudget(entry.counts, budget, owed);
+    if (problems.length === 0) continue;
+    const message = problems.map((problem) => `atlama bütçesi: ${problem}`).join('\n');
+    const marker = `##quality:${JSON.stringify({ kind: 'skip-budget', count: problems.length })}`;
+    entry.status = 'failed';
+    entry.code = 1;
+    entry.output = `${entry.output ?? ''}\n${message}\n${marker}\n`;
+  }
+}
+
+/**
  * Aşamanın öğelerini koşar. Makbuzdan atlanan öğeler tek olay olarak bildirilir; kalanlar
  * en çok `concurrency` kadar birlikte koşar. Biri düşünce yeni öğe başlamaz, koşanlar biter.
  */
@@ -86,6 +117,7 @@ async function runPlanned(planned, ctx) {
       status: 'cached',
       durationMs: 0,
       savedMs: item.cached.durationMs ?? 0,
+      counts: Array.isArray(item.cached.counts) ? item.cached.counts : null,
     });
   }
 
@@ -103,12 +135,20 @@ async function runPlanned(planned, ctx) {
       const result = await ctx.execute(item, { live });
       const durationMs = Date.now() - itemStart;
       const status = result.code === 0 ? 'passed' : 'failed';
-      entries.set(item, { item, status, durationMs, output: result.output, code: result.code });
+      entries.set(item, {
+        item,
+        status,
+        durationMs,
+        output: result.output,
+        code: result.code,
+        counts: parseCounts(result.output, { fallbackKey: item.unit ?? item.stage }),
+      });
       ctx.emit({ type: 'end', item, status, durationMs });
       if (status === 'failed') stopped = true;
     }
   };
   await Promise.all(Array.from({ length: lanes }, lane));
+  enforceSkipBudget(planned.stage, entries, ctx.skipBudget?.[planned.stage]);
 
   // Birim kuyruğu ilk hatada kesilirse başlamayan birimler de raporda yer alır.
   const items = planned.items.map(
@@ -170,12 +210,14 @@ export const treeDigest = (files) => fingerprint(files, () => true);
  * @param {(item: object, mode: { live: boolean }) => Promise<{ code: number, output: string }>} options.execute
  * @param {(event: object) => void} [options.emit]
  * @param {(stage: string) => string[]} [options.toolParts]
+ * @param {Record<string, Record<string, number>>} [options.skipBudget] aşama → anahtar → en çok atlama
  * @param {(root: string) => Map<string, string>} [options.snapshot]
  */
 export async function runGate(options) {
   const { root, gate, execute, emit = () => {}, snapshot = snapshotFiles } = options;
   const fresh = Boolean(options.fresh) || ALWAYS_FRESH.has(gate);
   const toolParts = options.toolParts ?? (() => []);
+  const skipBudget = options.skipBudget ?? {};
   const recipes = parseJustRecipes(readFileSync(join(root, 'justfile'), 'utf8'));
   const waves = wavesFor(gateStages(recipes, gate));
   const graph = readWorkspaceGraph(root);
@@ -205,6 +247,7 @@ export async function runGate(options) {
       files,
       fresh,
       toolParts,
+      skipBudget,
       execute,
       emit,
       live: wave.length === 1,
@@ -232,6 +275,7 @@ export async function runGate(options) {
             key: item.key,
             passedAt: new Date().toISOString(),
             durationMs: entry.durationMs,
+            ...(entry.counts?.length > 0 && { counts: entry.counts }),
           });
         }
       }

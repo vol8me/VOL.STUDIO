@@ -94,6 +94,42 @@ describe('eşik ratchet: karşılaştırma', () => {
     assert.match(problems[0], /^exempt\["@volstudio\/new"\]: yeni muafiyet eklendi/);
   });
 
+  it('atlama bütçesi artarsa ya da yeni pozitif anahtar eklenirse reddedilir; düşme ve sıfır serbesttir', () => {
+    const base = config({
+      skipBudget: { e2e: { 'a/webkit/main': 16 }, contract: { 'node-test': 2 } },
+    });
+    const lowered = structuredClone(base);
+    lowered.skipBudget.e2e['a/webkit/main'] = 10;
+    lowered.skipBudget.e2e['a/chromium/main'] = 0;
+    assert.deepEqual(compareThresholds(base, lowered), []);
+
+    const raised = structuredClone(base);
+    raised.skipBudget.e2e['a/webkit/main'] = 17;
+    const problems = compareThresholds(base, raised);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /^skipBudget\["e2e"\]\["a\/webkit\/main"\]: 16 → 17/);
+
+    const added = structuredClone(base);
+    added.skipBudget.e2e['b/webkit/main'] = 1;
+    const addedProblems = compareThresholds(base, added);
+    assert.equal(addedProblems.length, 1);
+    assert.match(
+      addedProblems[0],
+      /^skipBudget\["e2e"\]\["b\/webkit\/main"\]: yeni atlama bütçesi 1/,
+    );
+
+    added.ratchetExceptions = [
+      { key: 'skipBudget["e2e"]["b/webkit/main"]', to: 1, reason: 'Yeni motor şeridi.' },
+    ];
+    assert.deepEqual(compareThresholds(base, added), []);
+  });
+
+  it('taban hiç atlama bütçesi taşımıyorsa ilk benimseme gevşeme sayılmaz', () => {
+    const base = config();
+    const adopted = config({ skipBudget: { e2e: { 'a/webkit/main': 16 } } });
+    assert.deepEqual(compareThresholds(base, adopted), []);
+  });
+
   it('şekil sınırı gevşerse reddedilir (minLines artar, floorPct düşer)', () => {
     const base = config();
     const loosened = { ...base, coverageShape: { minLines: 200, floorPct: 30 } };
@@ -151,6 +187,26 @@ describe('eşik ratchet: şema', () => {
   const valid = () => ({
     floor: { lines: 50, statements: 50, branches: 50, functions: 40 },
     packages: { a: { lines: 80, statements: 80, branches: 70, functions: 75 } },
+  });
+
+  it('atlama bütçesi: geçerli biçim kabul edilir, bozuk değer ve boş aşama reddedilir', () => {
+    const ok = valid();
+    ok.skipBudget = { e2e: { 'a/webkit/main': 16 }, contract: { 'node-test': 0 } };
+    assert.deepEqual(validateQualityConfig(ok), []);
+
+    const bad = valid();
+    bad.skipBudget = { e2e: { 'a/webkit/main': -1, 'a/chromium': 1.5 }, contract: {}, lint: 'x' };
+    const problems = validateQualityConfig(bad);
+    assert.ok(problems.some((p) => p.includes('["a/webkit/main"]') && p.includes('tam sayı')));
+    assert.ok(problems.some((p) => p.includes('["a/chromium"]')));
+    assert.ok(
+      problems.some((p) => p.includes('skipBudget["contract"]') && p.includes('boş olmayan')),
+    );
+    assert.ok(problems.some((p) => p.includes('skipBudget["lint"]')));
+
+    const wrong = valid();
+    wrong.skipBudget = [];
+    assert.ok(validateQualityConfig(wrong).some((p) => p.startsWith('skipBudget: nesne')));
   });
 
   it('geçerli istisna kabul edilir', () => {

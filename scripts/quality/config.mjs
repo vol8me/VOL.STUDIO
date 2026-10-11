@@ -229,6 +229,27 @@ export function validateQualityConfig(raw) {
     }
   }
 
+  if (raw.skipBudget !== undefined) {
+    if (!isPlainObject(raw.skipBudget)) {
+      problems.push('skipBudget: nesne olmalı (aşama adı → sayım anahtarı → en çok atlama)');
+    } else {
+      for (const [stage, budget] of Object.entries(raw.skipBudget)) {
+        if (stage.startsWith('$')) continue;
+        const where = `skipBudget[${JSON.stringify(stage)}]`;
+        if (!isPlainObject(budget) || Object.keys(budget).length === 0) {
+          problems.push(`${where}: boş olmayan nesne olmalı (anahtar → en çok atlama)`);
+          continue;
+        }
+        for (const [key, value] of Object.entries(budget)) {
+          if (key.startsWith('$')) continue;
+          if (!Number.isInteger(value) || value < 0) {
+            problems.push(`${where}[${JSON.stringify(key)}]: sıfır ya da pozitif tam sayı olmalı`);
+          }
+        }
+      }
+    }
+  }
+
   if (raw.ratchetExceptions !== undefined) {
     if (!Array.isArray(raw.ratchetExceptions)) {
       problems.push('ratchetExceptions: dizi olmalı ({ key, to, reason } kayıtları)');

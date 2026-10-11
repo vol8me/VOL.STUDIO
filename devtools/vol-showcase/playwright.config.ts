@@ -61,8 +61,12 @@ export default defineConfig({
   workers: WORKERS,
   forbidOnly: true,
   reporter: process.env.VOL_UI_E2E_REPORT_FILE
-    ? [['list'], ['json', { outputFile: process.env.VOL_UI_E2E_REPORT_FILE }]]
-    : [['list']],
+    ? [
+        ['list'],
+        ['../../scripts/quality/countsReporter.mjs', { scope: 'vol-showcase' }],
+        ['json', { outputFile: process.env.VOL_UI_E2E_REPORT_FILE }],
+      ]
+    : [['list'], ['../../scripts/quality/countsReporter.mjs', { scope: 'vol-showcase' }]],
   timeout: 60_000,
   expect: {
     timeout: 15_000,

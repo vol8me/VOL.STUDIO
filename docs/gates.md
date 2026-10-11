@@ -27,7 +27,7 @@ değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` 
 
 `pnpm quick`, `pnpm fast`, `pnpm high`, `pnpm signoff` ve git kancaları `scripts/quality/gate.mjs`yi çağırır.
 `justfile` yalnız bileşimi söyler; `just <kapı>` aynı aşamaları önbelleksiz ve art arda
-koşan düz yoldur. Koşucu beş şey yapar:
+koşan düz yoldur. Koşucu altı şey yapar:
 
 1. **Sıra ve paralellik** ([`gatePlan.mjs`](../scripts/quality/gatePlan.mjs)). Aşamalar
    ucuzdan pahalıya dizilir; düşecek kapı dakikalar harcanmadan düşer. Birbirinin
@@ -63,6 +63,14 @@ koşan düz yoldur. Koşucu beş şey yapar:
    koşu sırasında değiştiyse yazmaz); `high` sonunda yaşı ve ağacın değişip değişmediğini söyler, `--json`da
    `signoff.state` (`none`/`same`/`changed`), `ageMs` ve `commitsSince` alanlarıdır. Yalnız uyarıdır: kapıyı
    geçirmez ya da düşürmez, imzasızdır ve başka makinedeki bir koşuyu kanıtlamaz.
+6. **Sayım ve atlama bütçesi** ([`counts.mjs`](../scripts/quality/counts.mjs)). Koşan ve makbuzdan gelen her öğenin
+   geçen/atlanan/düşen/kararsız sayısı aşama çıktısından okunur; `--json`da aşamanın `counts` alanı, metin
+   özetinde aşama satırının sonudur (`449 geçti, 16 atlandı`). Kaynak, Playwright raporlayıcısının
+   ([`countsReporter.mjs`](../scripts/quality/countsReporter.mjs)) `##counts:` satırı ve `node --test` TAP özetidir.
+   `quality.json` → `skipBudget` aşama → anahtar → en çok atlama der; aşan öğe düşer, bütçede olmayan anahtarın
+   hakkı 0'dır, bütçesi olan anahtarın satırı gelmezse (çıktı biçimi değişti) sayım bilinmiyor diye düşer.
+   Bütçeyi yükseltmek `ratchetExceptions` ister (aşağıda). Üçüncü parti özet biçimi değişirse yalnız sayım
+   kaybolur; kapı kararı çıkış kodundan gelir, bütçeli aşamada kayıp sessiz yeşil olmaz.
 
 ```
 pnpm high                 # makbuzdan atlayarak
@@ -168,6 +176,8 @@ sahibindedir; Linux'a özgü atlanan test başarı sayılmaz.
 | `scripts/quality/moduleCycles.mjs`       | Paket içi çalışma zamanı import döngüsü; `import type` sayılmaz, `@/` alias'ı çözülür                                                                                                                                                                                                                                     |
 | `scripts/quality/indexModules.mjs`       | `src/**/index.ts` yalnız yeniden dışa aktarım ve tip içerir; kapsam ölçümü bu dosyaları dışladığı için içlerindeki mantık sınanmazdı                                                                                                                                                                                      |
 | `scripts/quality/thresholdRatchet.mjs`   | Kapsam eşikleri, `floor`, muafiyetler ve şekil sınırı taban dala (`origin/dev`, yoksa `dev`/`main`; merge-base) göre gevşeyemez; gevşetme `quality.json` → `ratchetExceptions` içinde anahtar, değer ve gerekçeyle kayıtlıdır. Taban ref yoksa NOT-RUN notu basılır. Taban dosya kimliği `contract` makbuz anahtarındadır |
+| `scripts/quality/counts.mjs`             | Aşama çıktısından geçen/atlanan sayımı okur ve `quality.json` → `skipBudget` ile karşılaştırır; bütçe aşımı, bütçesiz anahtar ve okunamayan sayım düşer                                                                                                                                                                   |
+| `scripts/quality/countsReporter.mjs`     | Playwright raporlayıcısı: proje (ve vitrinde şerit) başına `##counts:` satırı; iki paketin `playwright.config.ts`inde tanımlıdır                                                                                                                                                                                          |
 | `scripts/quality/sourceSize.mjs`         | Kod, test, betik, stil ve native kaynak en çok 1000 satır; belge, veri ve asset sayılmaz                                                                                                                                                                                                                                  |
 | `scripts/quality/commentDensity.mjs`     | TS, JS, Rust, CSS ve Kotlin kaynağında yorum oranı en çok %40 (aşım gerekçe listesiyle), tek yorum bloğu en çok 24 satır                                                                                                                                                                                                  |
 | `scripts/quality/i18nSurface.mjs`        | AST taraması: TR/EN parite, camelCase adlandırma, kullanılmayan anahtar (test kanıt değildir), gerekçeli ve üreticisi doğrulanan dinamik aileler, eksik `ad:anahtar` sabiti, modül düzeyi çeviri çağrısı, kodlanmış görünen metin (gerekçeli `TEXT_ALLOW`, bayat istisna reddedilir)                                      |
@@ -381,23 +391,41 @@ körlemesine tekrarlamayın.
 
 ## Kapı sağlığı: ne yakalar, ne yakalamaz
 
-| Kapı                                            | Yakaladığı                                                                     | Bilinen sınır                                                                                                                                                                                                                                                                           |
-| ----------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `contract`                                      | katman, döngü, i18n, port, ikon, kilit, belge-gerçek uyumu, bekçilerin kendisi | repo geneline bakar; yalnız yazılmış bekçiyi zorlar                                                                                                                                                                                                                                     |
-| `typecheck`, `lint`, `lint-css`, `format-check` | tip, kural ve biçim ihlalleri                                                  | çalışma zamanı davranışını sınamaz                                                                                                                                                                                                                                                      |
-| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşikleri ve şekil denetimi                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir); eşik düşürmeyi önceki tabana göre reddeden ratchet eksik (F11.4)                                                                                                                                                              |
-| `audio-test`                                    | audio-synth'in sabit alt kümesi + değişenle ilişkili testler                   | alt küme tam takımın yerini tutmaz; tam kanıt `test` ve `coverage-audio`'dadır                                                                                                                                                                                                          |
-| `rust`                                          | `fmt`, `clippy -D warnings`, `test`                                            | yalnız host hedefi; Linux/Android native kanıtı ayrı                                                                                                                                                                                                                                    |
-| `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına; WebKit'te 18 atlama (gerçek dokunma, Web Audio, layout-shift, pano, Chromium'a özgü axe/iz) ve Chromium'da 2 (toplayıcı, WebKit izi); atlama sayısı kapıda sayılmaz; yük altında aralıklı zaman aşımı görülebilir (TODO F11.1) |
-| `scaling`, `bundle`                             | algoritmik ölçekleme oranı, gzip bütçesi                                       | süre eşiği yoktur; cihaz performansı kapı değildir                                                                                                                                                                                                                                      |
-| `coverage-audio`, `audio-verify`                | tam audio kapsamı; yayınlanmış her sesin yeniden render kimliği                | dinleme kanıtı değildir (insan beyanı gerekir)                                                                                                                                                                                                                                          |
-| `security-js`, `security-rust`                  | bilinen advisory; kayıtsız yeni risk, bayat kayıt, yayımlanmış düzeltme        | kayıtlı riskler gerçek olarak durur (aşağıdaki politika); zamana bağlıdır, yeni advisory kapıyı sonradan kırabilir                                                                                                                                                                      |
+| Kapı                                            | Yakaladığı                                                                     | Bilinen sınır                                                                                                                                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contract`                                      | katman, döngü, i18n, port, ikon, kilit, belge-gerçek uyumu, bekçilerin kendisi | repo geneline bakar; yalnız yazılmış bekçiyi zorlar                                                                                                                                                     |
+| `typecheck`, `lint`, `lint-css`, `format-check` | tip, kural ve biçim ihlalleri                                                  | çalışma zamanı davranışını sınamaz                                                                                                                                                                      |
+| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşikleri ve şekil denetimi                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir); eşik düşürmeyi önceki tabana göre reddeden ratchet eksik (F11.4)                                                                              |
+| `audio-test`                                    | audio-synth'in sabit alt kümesi + değişenle ilişkili testler                   | alt küme tam takımın yerini tutmaz; tam kanıt `test` ve `coverage-audio`'dadır                                                                                                                          |
+| `rust`                                          | `fmt`, `clippy -D warnings`, `test`                                            | yalnız host hedefi; Linux/Android native kanıtı ayrı                                                                                                                                                    |
+| `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına; atlamalar sayılır ve `skipBudget`la sınırlıdır (aşağıdaki motor boşlukları tablosu); yük altında aralıklı zaman aşımı görülebilir (TODO F11.1) |
+| `scaling`, `bundle`                             | algoritmik ölçekleme oranı, gzip bütçesi                                       | süre eşiği yoktur; cihaz performansı kapı değildir                                                                                                                                                      |
+| `coverage-audio`, `audio-verify`                | tam audio kapsamı; yayınlanmış her sesin yeniden render kimliği                | dinleme kanıtı değildir (insan beyanı gerekir)                                                                                                                                                          |
+| `security-js`, `security-rust`                  | bilinen advisory; kayıtsız yeni risk, bayat kayıt, yayımlanmış düzeltme        | kayıtlı riskler gerçek olarak durur (aşağıdaki politika); zamana bağlıdır, yeni advisory kapıyı sonradan kırabilir                                                                                      |
 
 **Negatif kontrol (2026-10-11, `quick`):** bilerek eklenen kusurlardan tip hatası, `no-floating-promises`, biçim,
 CSS sınıf adı, 1001 satırlık izlenen ve izlenmeyen dosya, katman ihlali, kodlanmış görünen metin, kırık belge
 bağlantısı ve tarihçe yorumu beklenen aşamada yakalandı. Yakalanmayan: kısmi sahneleme (kapı çalışma ağacını sınar, commit'e girecek indeksi değil). Kapsam eşiğini
 düşürmek ilk turda geçmişti (CORE satır 90→60); `thresholdRatchet.mjs` sonrası `contract` onu taban dala göre
 reddeder (gerçek ağaçta eşik 94→60 yapılınca düştü). Ayrıntı ve yöntem: [denetim raporu §22](monorepo-audit.md).
+
+### e2e motor boşlukları ve atlama bütçesi
+
+Atlama bütçesi (`quality.json` → `skipBudget`, 2026-10-11 Windows ölçümü) motor başına şunu söyler; bütçeyi
+aşan ya da yeni bir atlama getiren değişiklik kapıda düşer. Bir motorda atlanan şey o motorda **kanıtlanmamıştır**:
+
+| Anahtar                       | Atlama | Nedeni (kaynaktaki atlama iletisi)                                                                                       |
+| ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `vol-showcase/webkit/main`    | 16     | Toplayıcı (`UI_BASELINE_OUT` yok) + Chromium'a özgü kanıt: gerçek dokunma (CDP, SplitPane), pano izni, axe, layout-shift |
+| `vol-showcase/webkit/quiet`   | 2      | Chromium'a özgü iz (`motionMeasure`, `probe`)                                                                            |
+| `vol-showcase/chromium/main`  | 1      | Toplayıcı (`UI_BASELINE_OUT` verilmediği için rutin koşuda atlanır)                                                      |
+| `vol-showcase/chromium/quiet` | 1      | WebKit'e özgü iz testi (`probe.spec.ts`)                                                                                 |
+| `vol-test/webkit`             | 1      | Web Audio yok: bu motorda ses ölçümüne uygun değil (`audio.spec.ts`)                                                     |
+| `vol-test/chromium`           | 0      | —                                                                                                                        |
+| `contract` → `node-test`      | 2      | `appimageMedia` araç yokluğu, deck SIGTERM `/proc` taraması (Linux sözleşmesi)                                           |
+
+Atlama başına test adı bu tabloda değil, bütçe aşıldığında düşen aşamanın günlüğündedir; neden metinleri
+kaynaktaki `test.skip(...)` iletileridir. Linux ya da başka makinede sayı farklı olabilir; ölçülmemiş ortamın bütçesi yazılmaz.
 
 Cihaz kabulü, insan beğenisi ve fiziksel ölçüm hiçbir kapının konusu değildir.
 

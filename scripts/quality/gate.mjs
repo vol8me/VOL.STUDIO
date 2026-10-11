@@ -22,6 +22,8 @@ import { receiptDirectory } from './gateCache.mjs';
 import { audioTestPlan, changedFiles } from './audioTests.mjs';
 import { runGate } from './gateRunner.mjs';
 import { checkHostLoad } from './hostLoad.mjs';
+import { loadQualityConfig } from './config.mjs';
+import { describeCounts } from './counts.mjs';
 import { resolveRatchetBase } from './thresholdRatchet.mjs';
 import { describeSignoff, readSignoffRecord, writeSignoffRecord } from './signoffRecord.mjs';
 import { COMPOSITE_GATES, classify } from './report.mjs';
@@ -97,6 +99,11 @@ function signoffStatus(root, report) {
     now: Date.now(),
     commitsSince: Number.isFinite(commitsSince) ? commitsSince : null,
   });
+}
+
+/** Aşamanın öğelerinden okunan sayım satırları (koşan ve makbuzdan gelen). */
+function stageRows(stage) {
+  return stage.items.flatMap((entry) => entry.counts ?? []);
 }
 
 /** `report.mjs` ile aynı şekil: ajanlar ve araçlar tek biçim okur. */
@@ -217,6 +224,7 @@ function main() {
         execute,
         emit,
         toolParts: toolParts(root),
+        skipBudget: loadQualityConfig(join(root, 'quality.json')).skipBudget ?? {},
       }),
     )
     .then((report) => {
@@ -253,6 +261,7 @@ function main() {
           stage: stage.stage,
           status: stage.status,
           durationMs: stage.durationMs,
+          ...(stageRows(stage).length > 0 && { counts: stageRows(stage) }),
           ...(stage.items.some((entry) => entry.item.unit) && {
             units: stage.items.map((entry) => ({
               unit: entry.item.unit,
@@ -310,8 +319,9 @@ function main() {
           stage.items.length > 1 && ran > 0 && ran < stage.items.length
             ? ` · ${ran}/${stage.items.length} birim koştu`
             : '';
+        const counted = describeCounts(stageRows(stage));
         log(
-          `  ${mark} ${stage.stage.padEnd(15)} ${stage.status === 'cached' ? 'önbellek' : stage.status === 'notRun' ? 'NOT-RUN' : seconds(stage.durationMs)}${detail}`,
+          `  ${mark} ${stage.stage.padEnd(15)} ${stage.status === 'cached' ? 'önbellek' : stage.status === 'notRun' ? 'NOT-RUN' : seconds(stage.durationMs)}${detail}${counted ? ` · ${counted}` : ''}`,
         );
       }
       if (asJson) console.log(JSON.stringify(summary, null, 2));

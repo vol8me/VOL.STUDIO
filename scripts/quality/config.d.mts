@@ -46,6 +46,9 @@ export interface QualityConfig {
     floorPct?: number;
     acknowledged?: Record<string, string>;
   };
+  /** Aşama → sayım anahtarı → izin verilen en çok atlama (`counts.mjs`). */
+  skipBudget?: Record<string, Record<string, number>>;
+  ratchetExceptions?: { key: string; to: number | null; reason: string }[];
 }
 
 /**

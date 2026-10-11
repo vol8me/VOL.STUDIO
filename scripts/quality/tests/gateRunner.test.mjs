@@ -485,3 +485,123 @@ test('koşu sırasında dosya değişirse bitiş karması başlangıçtan ayrıl
     r.cleanup();
   }
 });
+
+const TAP = (skipped) =>
+  [
+    'TAP version 13',
+    '# tests 10',
+    '# suites 0',
+    `# pass ${10 - skipped}`,
+    '# fail 0',
+    '# cancelled 0',
+    `# skipped ${skipped}`,
+    '# todo 0',
+    '',
+  ].join('\n');
+
+const counts = (report, stageName) =>
+  report.stages
+    .find((stage) => stage.stage === stageName)
+    .items.flatMap((entry) => entry.counts ?? []);
+
+test('atlama bütçesi içindeki sayım rapora girer ve makbuzdan da taşınır', async () => {
+  const r = fixture();
+  try {
+    const skipBudget = { contract: { 'node-test': 2 } };
+    const exec = recorder({ 'contract node-test': () => ({ code: 0, output: TAP(2) }) });
+    const report = await run(r, 'fast', exec.execute, { skipBudget });
+    assert.equal(report.status, 'passed');
+    const rows = [{ key: 'node-test', passed: 8, skipped: 2, failed: 0, flaky: 0 }];
+    assert.deepEqual(counts(report, 'contract'), rows);
+
+    const again = await run(r, 'fast', recorder().execute, { skipBudget });
+    assert.equal(again.status, 'passed');
+    assert.deepEqual(counts(again, 'contract'), rows);
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('bütçeyi aşan atlama aşamayı düşürür, işareti yazar ve makbuz bırakmaz', async () => {
+  const r = fixture();
+  try {
+    const exec = recorder({ 'contract node-test': () => ({ code: 0, output: TAP(3) }) });
+    const report = await run(r, 'fast', exec.execute, {
+      skipBudget: { contract: { 'node-test': 2 } },
+    });
+    assert.equal(report.status, 'failed');
+    const [failure] = report.failures;
+    assert.equal(failure.stage, 'contract');
+    assert.match(failure.entry.output, /node-test: 3 atlama, bütçe 2/);
+    assert.match(failure.entry.output, /##quality:\{"kind":"skip-budget","count":1\}/);
+    assert.equal(receipts(r, 'contract', 'node-test'), 0);
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('bütçesi olan birimin sayımı okunamazsa sessiz geçmez', async () => {
+  const r = fixture();
+  try {
+    const exec = recorder({ 'contract node-test': () => ({ code: 0, output: 'yeni biçim\n' }) });
+    const report = await run(r, 'fast', exec.execute, {
+      skipBudget: { contract: { 'node-test': 2 } },
+    });
+    assert.equal(report.status, 'failed');
+    assert.match(report.failures[0].entry.output, /sayım okunamadı/);
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('paket birimli aşamada anahtar paket adıyla başlar; bütçede olmayan anahtarın 0 hakkı vardır', async () => {
+  const r = fixture();
+  try {
+    const marker = (key, skipped) =>
+      `##counts:${JSON.stringify({ key, passed: 5, skipped, failed: 0, flaky: 0 })}\n`;
+    const exec = recorder({
+      'e2e a': () => ({ code: 0, output: marker('a/webkit/main', 2) }),
+      'e2e b': () => ({ code: 0, output: marker('b/chromium', 1) }),
+    });
+    const report = await run(r, 'high', exec.execute, {
+      skipBudget: { e2e: { 'a/webkit/main': 2 } },
+    });
+    assert.equal(report.status, 'failed');
+    const failures = report.failures.filter((entry) => entry.stage === 'e2e');
+    assert.equal(failures.length, 1);
+    assert.equal(failures[0].entry.item.unit, '@volstudio/b');
+    assert.match(
+      failures[0].entry.output,
+      /b\/chromium: 1 atlama, bütçe 0 \(anahtar bütçede yok\)/,
+    );
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('paket birimi bütçeli anahtarının satırını üretmezse düşer', async () => {
+  const r = fixture();
+  try {
+    const exec = recorder({ 'e2e a': () => ({ code: 0, output: 'sayım yok\n' }) });
+    const report = await run(r, 'high', exec.execute, {
+      skipBudget: { e2e: { 'a/webkit/main': 2 } },
+    });
+    const failure = report.failures.find((entry) => entry.stage === 'e2e');
+    assert.ok(failure);
+    assert.match(failure.entry.output, /a\/webkit\/main: bütçesi var ama sayım okunamadı/);
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('bütçe tanımsızsa sayım yalnız raporlanır ve kapıyı düşürmez', async () => {
+  const r = fixture();
+  try {
+    const exec = recorder({ 'contract node-test': () => ({ code: 0, output: TAP(5) }) });
+    const report = await run(r, 'fast', exec.execute);
+    assert.equal(report.status, 'passed');
+    assert.equal(counts(report, 'contract')[0].skipped, 5);
+  } finally {
+    r.cleanup();
+  }
+});

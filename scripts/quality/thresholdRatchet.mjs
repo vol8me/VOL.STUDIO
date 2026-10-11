@@ -62,10 +62,11 @@ const isNumber = (value) => typeof value === 'number' && Number.isFinite(value);
 /**
  * Konfigürasyonu karşılaştırılabilir kayıtlara düzleştirir.
  *
- * `higher`: değer düşerse gevşemedir. `lower`: değer artarsa gevşemedir. `present`: kayıt
+ * `higher`: değer düşerse gevşemedir. `lower`: değer artarsa gevşemedir. `ceiling`: `lower` gibidir
+ * ama kayıt tabanda yoksa değeri 0 sayılır (bütçesiz anahtar atlama hakkı taşımaz). `present`: kayıt
  * silinirse, `absent`: kayıt eklenirse gevşemedir.
  *
- * @returns {Map<string, { kind: 'higher' | 'lower' | 'present' | 'absent', value: number | null }>}
+ * @returns {Map<string, { kind: 'higher' | 'lower' | 'ceiling' | 'present' | 'absent', value: number | null }>}
  */
 export function thresholdEntries(config) {
   const entries = new Map();
@@ -84,6 +85,12 @@ export function thresholdEntries(config) {
   }
   for (const name of Object.keys(config?.exempt ?? {})) {
     add(`exempt[${JSON.stringify(name)}]`, 'absent');
+  }
+  for (const [stage, budget] of Object.entries(config?.skipBudget ?? {})) {
+    for (const [key, value] of Object.entries(budget ?? {})) {
+      if (isNumber(value))
+        add(`skipBudget[${JSON.stringify(stage)}][${JSON.stringify(key)}]`, 'ceiling', value);
+    }
   }
   const shape = config?.coverageShape;
   if (isNumber(shape?.minLines)) add('coverageShape.minLines', 'lower', shape.minLines);
@@ -107,6 +114,8 @@ export function compareThresholds(baseConfig, headConfig, options = {}) {
   const base = thresholdEntries(baseConfig);
   const head = thresholdEntries(headConfig);
   const problems = [];
+  // Taban hiç atlama bütçesi taşımıyorsa ilk benimseme gevşeme değil, ölçümün kaydıdır.
+  const baseHasBudget = baseConfig?.skipBudget !== undefined;
 
   const excused = (key, to) =>
     exceptions.some(
@@ -147,6 +156,18 @@ export function compareThresholds(baseConfig, headConfig, options = {}) {
   }
 
   for (const [key, after] of head) {
+    if (
+      after.kind === 'ceiling' &&
+      baseHasBudget &&
+      !base.has(key) &&
+      after.value !== null &&
+      after.value > 0 &&
+      !excused(key, after.value)
+    ) {
+      problems.push(
+        `${key}: yeni atlama bütçesi ${after.value} (${label}te anahtar yoktu, 0 sayılır). ${hint(key, after.value)}`,
+      );
+    }
     if (after.kind === 'absent' && !base.has(key) && !excused(key, null)) {
       problems.push(`${key}: yeni muafiyet eklendi (${label}te yoktu). ${hint(key, null)}`);
     }

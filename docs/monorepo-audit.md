@@ -805,7 +805,8 @@ turda yapıldı. İz saklama ve tam yeşil `signoff` hâlâ açık ([F11.2](../T
 
 **§22 sonrası F11.4 düzeltmesi (2026-10-11):** `scripts/quality/thresholdRatchet.mjs` kapsam eşiklerini, `floor`u,
 muafiyetleri ve şekil sınırını taban dala göre karşılaştırır; gevşetme `quality.json` → `ratchetExceptions`
-gerekçesi olmadan `contract`ta düşer (birim testleri ve gerçek ağaçta 94→60 negatif kontrolü). Eşikler
+gerekçesi olmadan `contract`ta düşer (birim testleri ve gerçek ağaçta 94→60 negatif kontrolü). F11.3: aşama sayımı JSON'a girer ve atlama sayısı `skipBudget` ile sınırlıdır (gerçek e2e ölçümü: vitrin
+WebKit 16+2, Chromium 1+1, VOL.TEST WebKit 1, `node --test` 2). Eşikler
 ölçülenden en çok 2 puan aşağıya çekildi: CORE 94/92/86/93, vitrin dal 70 ve işlev 86, VOL.TEST dal 92,
 tauri-v2 97/95/91, pen.dev 98/98/95 (satır/ifade/dal/işlev; audio-synth zaten sıkıydı). Aynı turda
 `index.ts` kapsam dışlaması `indexModules.mjs` bekçisiyle doğru hale getirildi (F11.5).

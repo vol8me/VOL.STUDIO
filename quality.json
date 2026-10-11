@@ -78,6 +78,20 @@
     "minLines": 100,
     "floorPct": 50
   },
+  "skipBudget": {
+    "$comment": "Aşama -> sayım anahtarı -> izin verilen en çok atlama (scripts/quality/counts.mjs). 2026-10-11 Windows ölçümü: node --test 627 testin 2'si (appimageMedia araç yokluğu, deck SIGTERM /proc); e2e vitrin WebKit ana 16/sessiz 2, Chromium 1/1, VOL.TEST WebKit 1. Bütçede olmayan anahtarın hakkı 0'dır; artış ratchetExceptions ister.",
+    "contract": {
+      "node-test": 2
+    },
+    "e2e": {
+      "vol-showcase/chromium/main": 1,
+      "vol-showcase/chromium/quiet": 1,
+      "vol-showcase/webkit/main": 16,
+      "vol-showcase/webkit/quiet": 2,
+      "vol-test/chromium": 0,
+      "vol-test/webkit": 1
+    }
+  },
   "coverageRuns": {
     "coverage": {
       "exclude": ["@volstudio/audio-synth"]
