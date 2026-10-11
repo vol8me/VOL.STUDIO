@@ -22,6 +22,7 @@ import { receiptDirectory } from './gateCache.mjs';
 import { audioTestPlan, changedFiles } from './audioTests.mjs';
 import { runGate } from './gateRunner.mjs';
 import { checkHostLoad } from './hostLoad.mjs';
+import { describeSignoff, readSignoffRecord, writeSignoffRecord } from './signoffRecord.mjs';
 import { COMPOSITE_GATES, classify } from './report.mjs';
 
 const OUTPUT_CAP = 8 * 1024 * 1024;
@@ -54,6 +55,43 @@ function toolParts(root) {
     if (stage === 'audio-test') return [`plan=${JSON.stringify(audioTestPlan(changedFiles()))}`];
     return [];
   };
+}
+
+function gitText(root, args) {
+  try {
+    return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: 'pipe' }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Yeşil `signoff` kaydını yazar; ağaç koşu sırasında değiştiyse yazmaz (o ağaç için kanıt değildir).
+ * `high` bunu okuyup yaşını yazar (F11.7).
+ */
+function recordSignoff(root, report) {
+  if (report.gate !== 'signoff' || report.status !== 'passed') return;
+  if (report.tree.start !== report.tree.end) return;
+  writeSignoffRecord(root, {
+    treeDigest: report.tree.end,
+    commit: gitText(root, ['rev-parse', 'HEAD']),
+    passedAt: new Date().toISOString(),
+    durationMs: report.durationMs,
+  });
+}
+
+/** `high` koşusunun sonunda son yeşil `signoff`un yaşını ve ağaçla ilişkisini söyler. */
+function signoffStatus(root, report) {
+  const record = readSignoffRecord(root);
+  const commitsSince = record?.commit
+    ? Number(gitText(root, ['rev-list', '--count', `${record.commit}..HEAD`]))
+    : null;
+  return describeSignoff({
+    record,
+    treeDigest: report.tree.end,
+    now: Date.now(),
+    commitsSince: Number.isFinite(commitsSince) ? commitsSince : null,
+  });
 }
 
 /** `report.mjs` ile aynı şekil: ajanlar ve araçlar tek biçim okur. */
@@ -197,6 +235,9 @@ function main() {
         };
       });
 
+      recordSignoff(root, report);
+      const signoff = gate === 'high' ? signoffStatus(root, report) : null;
+
       const summary = {
         gate: report.gate,
         status: report.status,
@@ -220,6 +261,13 @@ function main() {
           failures: failures.map(summarize),
         }),
         ...(report.notes.length > 0 && { notes: report.notes }),
+        ...(signoff && {
+          signoff: {
+            state: signoff.state,
+            ageMs: signoff.ageMs,
+            commitsSince: signoff.commitsSince,
+          },
+        }),
         ...(hostLoad && {
           hostLoad: { busy: Number(hostLoad.busy.toFixed(2)), warned: hostLoad.warned },
         }),
@@ -236,6 +284,7 @@ function main() {
         if (failure.unit) log(`  aşama : pnpm exec just ${failure.stage} (tüm birimler, düz yol)`);
       }
       for (const note of report.notes) log(`  not   : ${note}`);
+      if (signoff && report.status === 'passed') log(`  ${signoff.message}`);
       const saved = report.savedMs > 0 ? ` (önbellek ~${minutes(report.savedMs)} kazandırdı)` : '';
       log(
         `\n[kapı] ${gate}: ${report.status === 'passed' ? 'geçti' : 'DÜŞTÜ'} — ${minutes(report.durationMs)}${saved}` +

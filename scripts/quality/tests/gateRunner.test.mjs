@@ -459,3 +459,29 @@ test('aynı aşamada birden fazla birim düşerse hepsi raporlanır', async () =
     r.cleanup();
   }
 });
+
+test('rapor ağaç karmasını taşır: değişmeyen ağaçta başlangıç ve bitiş eşittir', async () => {
+  const r = fixture();
+  try {
+    const report = await run(r, 'fast', recorder().execute);
+    assert.match(report.tree.start, /^[0-9a-f]{64}$/);
+    assert.equal(report.tree.start, report.tree.end);
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('koşu sırasında dosya değişirse bitiş karması başlangıçtan ayrılır', async () => {
+  const r = fixture();
+  try {
+    const execute = async (item) => {
+      if (item.label === 'lint a') r.write('a/x.txt', 'koşu sırasında değişti');
+      return { code: 0, output: '' };
+    };
+    const report = await run(r, 'fast', execute);
+    assert.notEqual(report.tree.start, report.tree.end);
+    assert.ok(report.notes.some((note) => note.includes('ağaç koşu sırasında değişti')));
+  } finally {
+    r.cleanup();
+  }
+});

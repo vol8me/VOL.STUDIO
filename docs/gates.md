@@ -27,7 +27,7 @@ değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` 
 
 `pnpm quick`, `pnpm fast`, `pnpm high`, `pnpm signoff` ve git kancaları `scripts/quality/gate.mjs`yi çağırır.
 `justfile` yalnız bileşimi söyler; `just <kapı>` aynı aşamaları önbelleksiz ve art arda
-koşan düz yoldur. Koşucu dört şey yapar:
+koşan düz yoldur. Koşucu beş şey yapar:
 
 1. **Sıra ve paralellik** ([`gatePlan.mjs`](../scripts/quality/gatePlan.mjs)). Aşamalar
    ucuzdan pahalıya dizilir; düşecek kapı dakikalar harcanmadan düşer. Birbirinin
@@ -57,6 +57,12 @@ koşan düz yoldur. Koşucu dört şey yapar:
    kapatmaz (açık bir geliştirme sunucusu başkasının işi olabilir). Gerekçe: süre ölçen sınamalar yük altında düşer ve
    düşen sınamanın yükten mi koddan mı olduğu koşudan anlaşılmaz. Son satır ön yükü `· ön yük %N` olarak yazar;
    `--json` özetinde `hostLoad` alanıdır. `VOL_GATE_ALLOW_BUSY=1` denetimi atlar.
+5. **Son yeşil `signoff` kaydı** ([`signoffRecord.mjs`](../scripts/quality/signoffRecord.mjs)). Kancalar `high`i
+   koşturur, `signoff` (e2e dahil) push'ta yoktur; bu yüzden `high` yeşilken `signoff` günlerce koşulmamış olabilir.
+   Yeşil `signoff` ağaç karmasını, commit'i ve süresini kapı önbelleğine (`node_modules` altı, repoya girmez) yazar (ağaç
+   koşu sırasında değiştiyse yazmaz); `high` sonunda yaşı ve ağacın değişip değişmediğini söyler, `--json`da
+   `signoff.state` (`none`/`same`/`changed`), `ageMs` ve `commitsSince` alanlarıdır. Yalnız uyarıdır: kapıyı
+   geçirmez ya da düşürmez, imzasızdır ve başka makinedeki bir koşuyu kanıtlamaz.
 
 ```
 pnpm high                 # makbuzdan atlayarak

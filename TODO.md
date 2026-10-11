@@ -187,12 +187,13 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
 - [ ] **[P2] F11.6 — Kapıların kendisi kapsamsız.** `scripts/quality` (63 `.mjs`, 561 `node:test`) için kapsam
       ölçümü yoktur; bu turda yalnız 9 kusur sınıfı (tip, lint, biçim, CSS, dosya boyutu, katman, kodlanmış metin, kırık bağlantı, tarihçe yorumu) elle negatif kontrol gördü. Kapanır: `node --test` kapsamı ya
       da c8 ile ölçüm ve gerekçeli eşik; her bekçi için en az bir negatif fixture (kusur → doğru aşama düşer) kayıtlı.
-- [ ] **[P2] F11.7 — Yerel kanıtın aşılabilirliği.** Kancalar çalışma ağacını sınar, indeksi değil: kısmi
-      sahnelemede `quick` GEÇTİ, indeksteki içerik Prettier'dan düştü (deneyle). `SKIP_SIMPLE_GIT_HOOKS=1` ve `--no-verify`
-      kancaları atlar; sunucu tarafı yoktur (bulut CI yok kararı); son yeşil `signoff`'un kaydı/yaşı hiçbir yerde
-      görünmez, bu yüzden `high` yeşilken `signoff` günlerce koşulmayabilir. Kapanır: indeks sınama maliyeti ölçülür ve
-      karar yazılır (ya da sınır belgelenir); `pnpm high` çıktısı "son yeşil signoff: ağaç karması, yaş" satırını uyarı
-      olarak basar; onaysız pipeline eklenmez.
+- [ ] **[P2] F11.7 — Yerel kanıtın aşılabilirliği (KISMİ).** **Yapıldı:** yeşil `signoff` ağaç karmasını/commit'i
+      yerel kayda yazar ve `pnpm high` sonunda "son yeşil signoff: yaş, ağaç aynı/değişti (N commit)" satırını (ve
+      `--json` `signoff` alanını) basar; uyarıdır, kapıyı düşürmez (`signoffRecord.test.mjs`, `gateRunner.test.mjs`
+      ağaç karması regresyonu). **Açık:** kancalar çalışma ağacını sınar, indeksi değil: kısmi sahnelemede `quick`
+      GEÇTİ, indeksteki içerik Prettier'dan düştü (deneyle). `SKIP_SIMPLE_GIT_HOOKS=1` ve `--no-verify` kancaları
+      atlar; sunucu tarafı yoktur (bulut CI yok kararı). Kapanır: indeks sınama maliyeti ölçülür ve karar yazılır
+      (ya da sınır belgelenir); onaysız pipeline eklenmez.
 - [ ] **[P3] F11.8 — Bayat Linux piksel temeli ve platform bekçisi yok.** 12 `chromium-linux` temeli
       (2026-10-06) 51 `chromium-win32`'ye karşı; UI-08.x değişikliğinden sonra yalnız win32 yenilendi, Linux'ta piksel
       kapısı fiilen bayat/eksik. `playwright.config.ts` yorumu "-chromium-linux" der. Kapanır: Linux temeli tam set

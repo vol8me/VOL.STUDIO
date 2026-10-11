@@ -159,8 +159,8 @@ export function waveSaving(outcomes, wallMs) {
   return Math.max(0, Math.max(0, ...would) - wallMs);
 }
 
-/** Ağacın tamamının karması: aşama sırasında dosya değişti mi diye bakmak için. */
-const treeDigest = (files) => fingerprint(files, () => true);
+/** Ağacın tamamının karması: aşama sırasında dosya değişti mi diye bakmak ve `signoff` kaydı için. */
+export const treeDigest = (files) => fingerprint(files, () => true);
 
 /**
  * @param {object} options
@@ -194,6 +194,7 @@ export async function runGate(options) {
   const notes = [];
   let savedMs = 0;
   let files = snapshot(root);
+  const startDigest = treeDigest(files);
   /** @type {{ stage: string, entry: any }[]} */
   const failures = [];
 
@@ -263,5 +264,7 @@ export async function runGate(options) {
     notes,
     stages,
     failures,
+    // Başlangıç ve bitiş karması eşitse ağaç kapı koşarken değişmemiştir.
+    tree: { start: startDigest, end: treeDigest(files) },
   };
 }
