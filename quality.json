@@ -119,6 +119,30 @@
       "scripts/quality/coverageRun.mjs": "`pnpm -r` ile paket kapsamını koşar (`coverage` aşamasının kendisi); main() yolu aşamada çalışır, saf yardımcıları (`splitMeasured`, `selectRunPackages`) testlidir."
     }
   },
+  "fixedWaitBudget": {
+    "$comment": "Tarayıcı testlerindeki waitForTimeout sayısı dosya başına (scripts/quality/fixedWaits.mjs). Artış düşürür; azalış bütçenin düşürülmesini ister. Olay/koşul bekleyen ifadeye çevrilen dosya buradan çıkar.",
+    "devtools/vol-showcase/tests/device/hud.spec.ts": 1,
+    "devtools/vol-showcase/tests/device/hudInteraction.spec.ts": 6,
+    "devtools/vol-showcase/tests/device/scrollSplit.spec.ts": 3,
+    "devtools/vol-showcase/tests/device/tablet.spec.ts": 4,
+    "devtools/vol-showcase/tests/device/textEntry.spec.ts": 4,
+    "devtools/vol-showcase/tests/device/touch.ts": 2,
+    "devtools/vol-showcase/tests/device/touchInput.spec.ts": 1,
+    "devtools/vol-showcase/tests/device/volTest.spec.ts": 2,
+    "devtools/vol-showcase/tests/e2e/accessibility.spec.ts": 1,
+    "devtools/vol-showcase/tests/e2e/fontLoad.spec.ts": 2,
+    "devtools/vol-showcase/tests/e2e/gamepad.spec.ts": 2,
+    "devtools/vol-showcase/tests/e2e/hudStates.spec.ts": 2,
+    "devtools/vol-showcase/tests/e2e/idleCost.spec.ts": 1,
+    "devtools/vol-showcase/tests/e2e/motionMeasure.spec.ts": 1,
+    "devtools/vol-showcase/tests/e2e/probe.spec.ts": 3,
+    "devtools/vol-showcase/tests/e2e/pseudoLocale.spec.ts": 1,
+    "devtools/vol-showcase/tests/e2e/scrollSplit.spec.ts": 2,
+    "devtools/vol-showcase/tests/e2e/stress.spec.ts": 9,
+    "devtools/vol-showcase/tests/e2e/themeMatrix.spec.ts": 1,
+    "devtools/vol-showcase/tests/e2e/visual.spec.ts": 5,
+    "games/vol-test/tests/e2e/world.spec.ts": 3
+  },
   "coverageRuns": {
     "coverage": {
       "exclude": ["@volstudio/audio-synth"]

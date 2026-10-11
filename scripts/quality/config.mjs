@@ -265,6 +265,21 @@ export function validateQualityConfig(raw) {
     }
   }
 
+  if (raw.fixedWaitBudget !== undefined) {
+    if (!isPlainObject(raw.fixedWaitBudget)) {
+      problems.push('fixedWaitBudget: nesne olmalı (test dosyası yolu → sabit bekleme sayısı)');
+    } else {
+      for (const [file, count] of Object.entries(raw.fixedWaitBudget)) {
+        if (file.startsWith('$')) continue;
+        if (!Number.isInteger(count) || count < 1) {
+          problems.push(
+            `fixedWaitBudget[${JSON.stringify(file)}]: pozitif tam sayı olmalı (bekleme kalmadıysa kaydı silin)`,
+          );
+        }
+      }
+    }
+  }
+
   if (raw.skipBudget !== undefined) {
     if (!isPlainObject(raw.skipBudget)) {
       problems.push('skipBudget: nesne olmalı (aşama adı → sayım anahtarı → en çok atlama)');

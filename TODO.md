@@ -176,9 +176,12 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
       GEÇTİ, indeksteki içerik Prettier'dan düştü (deneyle). `SKIP_SIMPLE_GIT_HOOKS=1` ve `--no-verify` kancaları
       atlar; sunucu tarafı yoktur (bulut CI yok kararı). Kapanır: indeks sınama maliyeti ölçülür ve karar yazılır
       (ya da sınır belgelenir); onaysız pipeline eklenmez.
-- [ ] **[P3] F11.9 — Sabit beklemeler yük altında kırılganlık üretir.** Vitrin e2e'de 30 `waitForTimeout`
-      (stress.spec.ts'in yeni yük testleri dahil: 7 sn, 1,5 sn). Kapanır: olay/koşul bekleyen ifadeye çevrilir ya da
-      gerekçelidir; F11.1'in kök nedeniyle birlikte ele alınır.
+- [ ] **[P3] F11.9 — Sabit beklemeler yük altında kırılganlık üretir (KISMİ).** **Yapıldı:** `fixedWaits.mjs`
+      bekçisi `waitForTimeout` sayısını test dosyası başına bütçeler (`quality.json` → `fixedWaitBudget`; ölçülen
+      56 çağrı / 21 dosya; artış ve unutulmuş bütçe `contract`ta düşer). **Açık:** mevcut 56 bekleme olay/koşul
+      ifadesine çevrilmedi (stress.spec 9, visual.spec 5, hudInteraction 6 en büyükleri; yük testlerinin 7 sn ve 1,5 sn
+      beklemeleri süre geçirmenin kendisidir). Kapanır: her biri koşula çevrilir ya da gerekçeli bırakılıp bütçe düşer;
+      F11.1'in kök nedeniyle birlikte ele alınır.
 - [ ] **[P3] F11.10 — Yürütme maliyeti adayları (ölçüldü, benimsenmedi).** CORE testlerinde jsdom ortamı 250
       dosyada 287 işçi-sn, testlerin kendisi 36 işçi-sn; VOL.TEST 105/38, vitrin 45/85. DOM gerektirmeyen dosyaları
       `@vitest-environment node`a ayırmak ve ESLint `--cache` (tip bilgili kural bağımlılık değişimini önbellek

@@ -92,6 +92,9 @@ export function thresholdEntries(config) {
         add(`skipBudget[${JSON.stringify(stage)}][${JSON.stringify(key)}]`, 'ceiling', value);
     }
   }
+  for (const [file, value] of Object.entries(config?.fixedWaitBudget ?? {})) {
+    if (isNumber(value)) add(`fixedWaitBudget[${JSON.stringify(file)}]`, 'ceiling', value);
+  }
   const scripts = config?.scriptCoverage;
   for (const metric of ['lines', 'branches', 'functions', 'floorPct']) {
     if (isNumber(scripts?.[metric])) add(`scriptCoverage.${metric}`, 'higher', scripts[metric]);
@@ -124,6 +127,7 @@ export function compareThresholds(baseConfig, headConfig, options = {}) {
   const problems = [];
   // Taban hiç atlama bütçesi taşımıyorsa ilk benimseme gevşeme değil, ölçümün kaydıdır.
   const baseHasBudget = baseConfig?.skipBudget !== undefined;
+  const baseHasWaitBudget = baseConfig?.fixedWaitBudget !== undefined;
 
   const excused = (key, to) =>
     exceptions.some(
@@ -166,7 +170,7 @@ export function compareThresholds(baseConfig, headConfig, options = {}) {
   for (const [key, after] of head) {
     if (
       after.kind === 'ceiling' &&
-      baseHasBudget &&
+      (key.startsWith('fixedWaitBudget[') ? baseHasWaitBudget : baseHasBudget) &&
       !base.has(key) &&
       after.value !== null &&
       after.value > 0 &&

@@ -154,6 +154,24 @@ describe('eşik ratchet: karşılaştırma', () => {
     assert.match(added[0], /^scriptCoverage\.acknowledged\["scripts\/b\.mjs"\]: yeni muafiyet/);
   });
 
+  it('sabit bekleme bütçesi artarsa ya da yeni dosya eklenirse reddedilir; azalış ve ilk benimseme serbesttir', () => {
+    const base = config({ fixedWaitBudget: { 'a/tests/x.spec.ts': 3 } });
+    assert.deepEqual(compareThresholds(config(), base), []);
+
+    const lowered = config({ fixedWaitBudget: { 'a/tests/x.spec.ts': 1 } });
+    assert.deepEqual(compareThresholds(base, lowered), []);
+
+    const raised = config({ fixedWaitBudget: { 'a/tests/x.spec.ts': 4 } });
+    const problems = compareThresholds(base, raised);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /^fixedWaitBudget\["a\/tests\/x\.spec\.ts"\]: 3 → 4/);
+
+    const added = config({ fixedWaitBudget: { 'a/tests/x.spec.ts': 3, 'a/tests/y.spec.ts': 1 } });
+    const addedProblems = compareThresholds(base, added);
+    assert.equal(addedProblems.length, 1);
+    assert.match(addedProblems[0], /^fixedWaitBudget\["a\/tests\/y\.spec\.ts"\]: yeni/);
+  });
+
   it('taban hiç atlama bütçesi taşımıyorsa ilk benimseme gevşeme sayılmaz', () => {
     const base = config();
     const adopted = config({ skipBudget: { e2e: { 'a/webkit/main': 16 } } });
@@ -267,6 +285,21 @@ describe('eşik ratchet: şema', () => {
     const wrong = valid();
     wrong.scriptCoverage = [];
     assert.ok(validateQualityConfig(wrong).some((p) => p.startsWith('scriptCoverage: nesne')));
+  });
+
+  it('sabit bekleme bütçesi: pozitif tam sayı ister, sıfır ve kesir reddedilir', () => {
+    const ok = valid();
+    ok.fixedWaitBudget = { $comment: 'x', 'a/tests/x.spec.ts': 3 };
+    assert.deepEqual(validateQualityConfig(ok), []);
+
+    const bad = valid();
+    bad.fixedWaitBudget = { 'a/tests/x.spec.ts': 0, 'a/tests/y.spec.ts': 1.5 };
+    const problems = validateQualityConfig(bad);
+    assert.equal(problems.length, 2);
+
+    const wrong = valid();
+    wrong.fixedWaitBudget = [];
+    assert.ok(validateQualityConfig(wrong).some((p) => p.startsWith('fixedWaitBudget: nesne')));
   });
 
   it('geçerli istisna kabul edilir', () => {

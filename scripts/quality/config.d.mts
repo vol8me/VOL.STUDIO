@@ -48,6 +48,8 @@ export interface QualityConfig {
   };
   /** Aşama → sayım anahtarı → izin verilen en çok atlama (`counts.mjs`). */
   skipBudget?: Record<string, Record<string, number>>;
+  /** Test dosyası → izin verilen en çok `waitForTimeout` (`fixedWaits.mjs`). */
+  fixedWaitBudget?: Record<string, number>;
   /** Kapı kodunun kendi kapsamı (`scriptCoverage.mjs`). */
   scriptCoverage?: {
     lines?: number;
