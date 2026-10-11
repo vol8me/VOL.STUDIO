@@ -697,7 +697,19 @@
           "file": "core/tests/ui/cursors/cursors.test.ts",
           "title": "nişangâh kipi yerel imleci gizler, işaretçiyi aynı olayda izler ve dokunmada saklanır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "arayüz imleçleri kökte CSS değişkeni olarak kurulur ve dispose ile kalkar"
+          },
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "rts bağlamı hedef yüzeyin imlecini ve tonunu değiştirir; ui kipinde bağlam yok sayılır"
+          }
+        ]
+      }
     },
     {
       "export": "CurveEditor",
@@ -737,7 +749,15 @@
           "file": "core/tests/ui/themes/registry.test.ts",
           "title": "her yoğunluk için kök ve kapsamlı seçici vardır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/themes/registry.test.ts",
+            "title": "her yoğunluk için kök ve kapsamlı seçici vardır"
+          }
+        ]
+      }
     },
     {
       "export": "DPad",
@@ -1040,7 +1060,19 @@
           "file": "core/tests/ui/glyphs/glyphs.test.ts",
           "title": "aile/slot için img src kurar"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/glyphs/glyphs.test.ts",
+            "title": "aile/slot için img src kurar"
+          },
+          {
+            "file": "core/tests/ui/glyphs/glyphs.test.ts",
+            "title": "aile yoksa gizlenir, sonra canlı güncellenir"
+          }
+        ]
+      }
     },
     {
       "export": "HIDE_ANIMATION_MS",
@@ -1146,7 +1178,15 @@
           "file": "core/tests/ui/icons/icons.test.ts",
           "title": "RTS komutları, yapılar, birimler, kaynaklar ve bullet hell ikonları yeterince geniştir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/icons/icons.test.ts",
+            "title": "RTS komutları, yapılar, birimler, kaynaklar ve bullet hell ikonları yeterince geniştir"
+          }
+        ]
+      }
     },
     {
       "export": "Icon",
@@ -1166,7 +1206,15 @@
           "file": "core/tests/ui/icons/icons.test.ts",
           "title": "katalog adı, simge bağı ve erişilebilirlik: süs gizli, etiketli anlamlı"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/icons/icons.test.ts",
+            "title": "ilk Icon kullanımı sprite yüklenmemişse yüklemeyi başlatır ve simge hazır olunca bağı yeniler"
+          }
+        ]
+      }
     },
     {
       "export": "IconButton",
@@ -1282,7 +1330,19 @@
           "file": "core/tests/ui/glyphs/inputPresentation.test.ts",
           "title": "paylaşılan girdi durumunda kolu yeniden yoklamaz ve kendi kip hakemini açmaz"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/glyphs/inputPresentation.test.ts",
+            "title": "paylaşılan girdi durumunda kolu yeniden yoklamaz ve kendi kip hakemini açmaz"
+          },
+          {
+            "file": "core/tests/ui/glyphs/inputPresentation.test.ts",
+            "title": "aynı glif düğümü canlı kol ailesine ve klavye/dokunmatik kipine geçer"
+          }
+        ]
+      }
     },
     {
       "export": "JUICE_KINDS",
@@ -1298,7 +1358,19 @@
           "file": "core/tests/ui/motion/juice.test.ts",
           "title": "her tür kendi sınıfını ekler ve emniyet payı sonunda kaldırır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/juice.test.ts",
+            "title": "her tür kendi sınıfını ekler ve emniyet payı sonunda kaldırır"
+          },
+          {
+            "file": "core/tests/ui/motion/juice.test.ts",
+            "title": "aynı anda en çok üç grup oynar; dördüncüsü bütçe dolu olduğundan oynamaz"
+          }
+        ]
+      }
     },
     {
       "export": "Joystick",
@@ -1314,7 +1386,19 @@
           "file": "core/tests/ui/layoutAndControls.test.ts",
           "title": "oluşturulur ve yok edilir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/layoutAndControls.test.ts",
+            "title": "oluşturulur ve yok edilir"
+          },
+          {
+            "file": "core/tests/ui/layoutAndControls.test.ts",
+            "title": "pointer sürükleme normalize vektör çıktısı verir ve bırakınca sıfırlar"
+          }
+        ]
+      }
     },
     {
       "export": "Kanban",
@@ -1423,7 +1507,15 @@
           "file": "core/tests/ui/motion/presets.test.ts",
           "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/presets.test.ts",
+            "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
+          }
+        ]
+      }
     },
     {
       "export": "LevelUpPicker",
@@ -1491,7 +1583,19 @@
           "title": "varsayılan class ve transition tipini uygular"
         }
       ],
-      "extraStates": ["loading", "error"]
+      "extraStates": ["loading", "error"],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/loadingScreen.test.ts",
+            "title": "varsayılan class ve transition tipini uygular"
+          },
+          {
+            "file": "core/tests/ui/overlays/loadingScreen.test.ts",
+            "title": "her indicator tipi için doğru class ekler"
+          }
+        ]
+      }
     },
     {
       "export": "LongPressButton",
@@ -1547,7 +1651,15 @@
           "file": "core/tests/ui/motion/presets.test.ts",
           "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/presets.test.ts",
+            "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
+          }
+        ]
+      }
     },
     {
       "export": "MOTION_DURATIONS",
@@ -1567,7 +1679,15 @@
           "file": "core/tests/ui/motion/presets.test.ts",
           "title": "dört temel süre 120/200/320/480 ms"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/presets.test.ts",
+            "title": "dört temel süre 120/200/320/480 ms"
+          }
+        ]
+      }
     },
     {
       "export": "MOTION_EASINGS",
@@ -1587,7 +1707,15 @@
           "file": "core/tests/ui/motion/presets.test.ts",
           "title": "her presetin eğrisi tanımlı eğrilerdendir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/presets.test.ts",
+            "title": "her presetin eğrisi tanımlı eğrilerdendir"
+          }
+        ]
+      }
     },
     {
       "export": "MOTION_INTERACTION",
@@ -1607,7 +1735,15 @@
           "file": "core/tests/ui/motion/presets.test.ts",
           "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/presets.test.ts",
+            "title": "etkileşim ölçekleri, bütçe ve loading asgari süresi sözleşmedeki değerlerdir"
+          }
+        ]
+      }
     },
     {
       "export": "MOTION_JUICE",
@@ -1627,7 +1763,15 @@
           "file": "core/tests/ui/motion/presets.test.ts",
           "title": "juice ilkelleri adlı, birim son ekli ve sınırlıdır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/presets.test.ts",
+            "title": "juice ilkelleri adlı, birim son ekli ve sınırlıdır"
+          }
+        ]
+      }
     },
     {
       "export": "MOTION_PRESETS",
@@ -1647,7 +1791,19 @@
           "file": "core/tests/ui/motion/presets.test.ts",
           "title": "özel koreografi sözleşmedeki adlı sürelerdir; gizli sayısal istisna yok"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/presets.test.ts",
+            "title": "özel koreografi sözleşmedeki adlı sürelerdir; gizli sayısal istisna yok"
+          },
+          {
+            "file": "core/tests/ui/motion/presets.test.ts",
+            "title": "her presetin eğrisi tanımlı eğrilerdendir"
+          }
+        ]
+      }
     },
     {
       "export": "MinimapPanel",
@@ -1699,6 +1855,16 @@
             "file": "devtools/vol-showcase/tests/e2e/overlayMotion.spec.ts",
             "title": "Modal: hareket azaltılmışta ve normalde yalnız solarak geçer, kayma yoktur"
           }
+        ],
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/modalEntry.test.ts",
+            "title": "çok parçalı içerik 40 ms basamakla sıralı girer; içerik kabı kendisi oynamaz"
+          },
+          {
+            "file": "core/tests/ui/overlays/modalEntry.test.ts",
+            "title": "tek parçalı içerik kabıyla birlikte girer"
+          }
         ]
       }
     },
@@ -1724,7 +1890,19 @@
           "file": "core/tests/ui/motion/motionController.test.ts",
           "title": "olay salkımı: 30 olay (grup + 10 parçacık + blur) bütçeyi hiçbir anda aşmaz ve hepsi bir kez temizlenir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/motionController.test.ts",
+            "title": "dekor 0 olur, anlamsal süre korunur, işlevsel süre HİÇ değişmez"
+          },
+          {
+            "file": "core/tests/ui/motion/motionController.test.ts",
+            "title": "sistem tercihi matchMedia ile okunur; elle geçersiz kılma null ile sisteme döner"
+          }
+        ]
+      }
     },
     {
       "export": "MultiTouchZone",
@@ -1955,7 +2133,15 @@
           "file": "core/tests/ui/cursors/cursors.test.ts",
           "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
+          }
+        ]
+      }
     },
     {
       "export": "RTS_CURSORS",
@@ -1971,7 +2157,15 @@
           "file": "core/tests/ui/cursors/cursors.test.ts",
           "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
+          }
+        ]
+      }
     },
     {
       "export": "RadialMenu",
@@ -2638,7 +2832,15 @@
           "file": "core/tests/ui/themes/registry.test.ts",
           "title": "THEME_IDS: default + üretilen her tema; theme.css her biri için blok taşır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/themes/registry.test.ts",
+            "title": "THEME_IDS: default + üretilen her tema; theme.css her biri için blok taşır"
+          }
+        ]
+      }
     },
     {
       "export": "Tabs",
@@ -2695,7 +2897,19 @@
           "file": "core/tests/ui/dataAndText.test.ts",
           "title": "varsayılan tag=p, variant=body ile oluşturulur"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/dataAndText.test.ts",
+            "title": "varsayılan tag=p, variant=body ile oluşturulur"
+          },
+          {
+            "file": "core/tests/ui/dataAndText.test.ts",
+            "title": "farklı tag ile oluşturulabilir (ör. h2)"
+          }
+        ]
+      }
     },
     {
       "export": "TextArea",
@@ -2740,7 +2954,19 @@
           "file": "core/tests/ui/themes/themeController.test.ts",
           "title": "bilinmeyen değer varsayılana döner: kurucuda ve ayarlarken"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/themes/themeController.test.ts",
+            "title": "varsayılan: default tema, comfortable yoğunluk, küçük hedef tabanı yok"
+          },
+          {
+            "file": "core/tests/ui/themes/themeController.test.ts",
+            "title": "bilinmeyen değer varsayılana döner: kurucuda ve ayarlarken"
+          }
+        ]
+      }
     },
     {
       "export": "TimerBar",
@@ -2784,6 +3010,16 @@
           {
             "file": "devtools/vol-showcase/tests/e2e/overlayMotion.spec.ts",
             "title": "ToastManager: hareket azaltılmışta bildirim kayarak belirmez"
+          }
+        ],
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/overlays.test.ts",
+            "title": "oluştur ve yok et"
+          },
+          {
+            "file": "core/tests/ui/overlays/overlays.test.ts",
+            "title": "show mesaj ekler ve rAF ile görünür olur"
           }
         ]
       }
@@ -2927,7 +3163,19 @@
           "file": "core/tests/ui/cursors/cursors.test.ts",
           "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "kayıttaki kimlikler üretilmiş adlarla birebir aynıdır"
+          },
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "arayüz imleçleri kökte CSS değişkeni olarak kurulur ve dispose ile kalkar"
+          }
+        ]
+      }
     },
     {
       "export": "UiHapticProvider",
@@ -2947,7 +3195,19 @@
           "file": "core/tests/ui/feedback/uiHapticProvider.test.ts",
           "title": "dispose: süren titreşimi keser, dinleyicileri ve niyet aboneliğini söker, bir kez çalışır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/feedback/uiHapticProvider.test.ts",
+            "title": "bir niyet bileşen deseniyle TEK darbe üretir; bileşenin kendi yolu susar"
+          },
+          {
+            "file": "core/tests/ui/feedback/uiHapticProvider.test.ts",
+            "title": "haptic:false niyeti bastırır; açık desen varsayılana baskındır"
+          }
+        ]
+      }
     },
     {
       "export": "UiIntentBus",
@@ -2967,7 +3227,19 @@
           "file": "core/tests/ui/feedback/uiIntent.test.ts",
           "title": "niyet kimlikleri artan ve tekildir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/feedback/uiIntent.test.ts",
+            "title": "aynı olay nesnesi yeniden işlenirse ikinci üretim sessizdir"
+          },
+          {
+            "file": "core/tests/ui/feedback/uiIntent.test.ts",
+            "title": "niyet kimlikleri artan ve tekildir"
+          }
+        ]
+      }
     },
     {
       "export": "VOL_COLORS",
@@ -2983,7 +3255,19 @@
           "file": "core/tests/ui/colorSync.test.ts",
           "title": "colors.ts'teki her token theme.css'te --vol-ui-* olarak var"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/colorSync.test.ts",
+            "title": "colors.ts'teki her token theme.css'te --vol-ui-* olarak var"
+          },
+          {
+            "file": "core/tests/ui/colorSync.test.ts",
+            "title": "theme.css'teki --vol-ui-* değişkenleri colors.ts'te karşılığı var"
+          }
+        ]
+      }
     },
     {
       "export": "VOL_ICONS",
@@ -3166,7 +3450,15 @@
           "file": "core/tests/ui/cursors/cursors.test.ts",
           "title": "configureCursorAssets kökü değiştirir, sondaki eğik çizgiyi atar ve kaydı o kökten getirir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "configureCursorAssets kökü değiştirir, sondaki eğik çizgiyi atar ve kaydı o kökten getirir"
+          }
+        ]
+      }
     },
     {
       "export": "configureIcons",
@@ -3186,7 +3478,15 @@
           "file": "core/tests/ui/icons/icons.test.ts",
           "title": "configureIcons kökü değiştirir, sondaki eğik çizgiyi atar ve yalnız sonraki yüklemeleri etkiler"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/icons/icons.test.ts",
+            "title": "configureIcons kökü değiştirir, sondaki eğik çizgiyi atar ve yalnız sonraki yüklemeleri etkiler"
+          }
+        ]
+      }
     },
     {
       "export": "createAudioSettingsRows",
@@ -3226,7 +3526,19 @@
           "file": "core/tests/ui/textEntry/clipboard.test.ts",
           "title": "pano içeriği konsola yazılmaz"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/textEntry/clipboard.test.ts",
+            "title": "okuma ve yazma başarısı metni döndürür / yazar"
+          },
+          {
+            "file": "core/tests/ui/textEntry/clipboard.test.ts",
+            "title": "izin reddi `denied` olur, fırlatmaz ve yazmada yedeğe düşmez"
+          }
+        ]
+      }
     },
     {
       "export": "emitUiIntent",
@@ -3246,7 +3558,19 @@
           "file": "core/tests/ui/feedback/uiIntent.test.ts",
           "title": "aynı yerel olayı iki bileşen işlerse yalnız içteki sahiplenir (iki kez üretilmez)"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/feedback/uiIntent.test.ts",
+            "title": "aynı yerel olayı iki bileşen işlerse yalnız içteki sahiplenir (iki kez üretilmez)"
+          },
+          {
+            "file": "core/tests/ui/feedback/uiIntent.test.ts",
+            "title": "iç fiziksel olay dış özel handler hedefiyle ikinci niyete dönüşmez"
+          }
+        ]
+      }
     },
     {
       "export": "glyphFile",
@@ -3326,7 +3650,19 @@
           "file": "core/tests/ui/textEntry/editMenu.test.ts",
           "title": "izin reddi akışı bozmaz: alan değişmez, menü kapanır, sonuç bildirilir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/textEntry/editMenu.test.ts",
+            "title": "metin alanında sağ tık yerel menüyü susturur ve dört öğeli menü açar (TR etiketler)"
+          },
+          {
+            "file": "core/tests/ui/textEntry/editMenu.test.ts",
+            "title": "metin alanı olmayan hedefte ve seçilemeyen türlerde menü açmaz, olaya dokunmaz"
+          }
+        ]
+      }
     },
     {
       "export": "isGamepadTextEntryActive",
@@ -3410,7 +3746,19 @@
           "file": "core/tests/ui/icons/icons.test.ts",
           "title": "ağ hatası uyarıyla bildirilir, fırlatmaz ve sonraki çağrıda yeniden denenir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/icons/icons.test.ts",
+            "title": "eşzamanlı çağrılar tek istekte birleşir, bir kez yerleşir; sonrası istek yapmaz"
+          },
+          {
+            "file": "core/tests/ui/icons/icons.test.ts",
+            "title": "ağ hatası uyarıyla bildirilir, fırlatmaz ve sonraki çağrıda yeniden denenir"
+          }
+        ]
+      }
     },
     {
       "export": "openActionDialog",
@@ -3434,7 +3782,19 @@
           "file": "core/tests/ui/overlays/actionDialog.test.ts",
           "title": "reddedilen iş hata bölgesini açar, eylemleri geri verir ve aynı eylem yeniden denenir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/actionDialog.test.ts",
+            "title": "eylem sayısı 1–4 dışındaysa, kimlikler yinelenirse ya da iptal/odak eylemi yoksa fırlatır"
+          },
+          {
+            "file": "core/tests/ui/overlays/actionDialog.test.ts",
+            "title": "ad ve açıklamaya bağlı diyalog kurar; yıkıcı eylem varsa alertdialog olur"
+          }
+        ]
+      }
     },
     {
       "export": "pickDirectionalTarget",
@@ -3478,7 +3838,19 @@
           "file": "core/tests/ui/textEntry/editMenu.test.ts",
           "title": "salt okunurda yalnız Kopyala ve Tümünü Seç sunulur (Kes/Yapıştır yok)"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/textEntry/editMenu.test.ts",
+            "title": "normal alan: dört eylem, hepsi açık"
+          },
+          {
+            "file": "core/tests/ui/textEntry/editMenu.test.ts",
+            "title": "devre dışı alanda menü yoktur"
+          }
+        ]
+      }
     },
     {
       "export": "playJuice",
@@ -3494,7 +3866,19 @@
           "file": "core/tests/ui/motion/juice.test.ts",
           "title": "her tür kendi sınıfını ekler ve emniyet payı sonunda kaldırır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/juice.test.ts",
+            "title": "her tür kendi sınıfını ekler ve emniyet payı sonunda kaldırır"
+          },
+          {
+            "file": "core/tests/ui/motion/juice.test.ts",
+            "title": "animasyon bitince sınıf hemen kalkar; alt elemanın bitişi etkiyi bitirmez"
+          }
+        ]
+      }
     },
     {
       "export": "playJuiceSequence",
@@ -3510,7 +3894,19 @@
           "file": "core/tests/ui/motion/juice.test.ts",
           "title": "öğeler basamak başına 40 ms gecikmeyle girer; temizlikte gecikme kalkar"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/motion/juice.test.ts",
+            "title": "öğeler basamak başına 40 ms gecikmeyle girer; temizlikte gecikme kalkar"
+          },
+          {
+            "file": "core/tests/ui/motion/juice.test.ts",
+            "title": "gecikme en çok altı basamakta durur: uzun dizi toplam beklemeyi büyütmez"
+          }
+        ]
+      }
     },
     {
       "export": "registerIconSprite",
@@ -3530,7 +3926,15 @@
           "file": "core/tests/ui/icons/icons.test.ts",
           "title": "geçersiz sprite metni reddedilir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/icons/icons.test.ts",
+            "title": "geçersiz sprite metni reddedilir"
+          }
+        ]
+      }
     },
     {
       "export": "registerTextEntryModeProbe",
@@ -3614,7 +4018,15 @@
           "file": "core/tests/ui/themes/registry.test.ts",
           "title": "bilinmeyen değer varsayılana döner"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/themes/registry.test.ts",
+            "title": "bilinmeyen değer varsayılana döner"
+          }
+        ]
+      }
     },
     {
       "export": "resolveGlyphFamily",
@@ -3670,7 +4082,15 @@
           "file": "core/tests/ui/themes/registry.test.ts",
           "title": "bilinmeyen değer varsayılana döner"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/themes/registry.test.ts",
+            "title": "bilinmeyen değer varsayılana döner"
+          }
+        ]
+      }
     },
     {
       "export": "rtsCursorFor",
@@ -3686,7 +4106,15 @@
           "file": "core/tests/ui/cursors/cursors.test.ts",
           "title": "dost, düşman, kaynak ve engelli bağlam ayrı şekil ve tonla eşlenir; renk tek kanal değildir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "dost, düşman, kaynak ve engelli bağlam ayrı şekil ve tonla eşlenir; renk tek kanal değildir"
+          }
+        ]
+      }
     },
     {
       "export": "runButtonClick",
@@ -3726,7 +4154,15 @@
           "file": "core/tests/ui/cursors/cursors.test.ts",
           "title": "ekran kenarı kaydırma bölgesi köşe ve kenarlara göre sekiz yönü verir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cursors/cursors.test.ts",
+            "title": "ekran kenarı kaydırma bölgesi köşe ve kenarlara göre sekiz yönü verir"
+          }
+        ]
+      }
     },
     {
       "export": "setTextEntryModeProbe",
@@ -3770,7 +4206,19 @@
           "file": "core/tests/ui/textEntry/textEntry.test.ts",
           "title": "alanın maxLength değeri isteğe taşınır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/textEntry/requestGamepadTextEntry.test.ts",
+            "title": "kol kipi kapalıyken null döner ve hiçbir klavye açılmaz (sağlayıcı da çağrılmaz)"
+          },
+          {
+            "file": "core/tests/ui/textEntry/requestGamepadTextEntry.test.ts",
+            "title": "iptal edilmiş sinyalle çağrı null döner ve sağlayıcıya ulaşmaz"
+          }
+        ]
+      }
     },
     {
       "export": "showConfirm",
@@ -3807,7 +4255,19 @@
           "title": "Escape, iptal düğmesi ve sinyal false döndürür; Enter (ilk odak) yıkıcı işlem yapmaz"
         }
       ],
-      "extraStates": ["focusVisible", "keyboard"]
+      "extraStates": ["focusVisible", "keyboard"],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+            "title": "alertdialog açar, ilk odak iptaldedir ve sonucu açıkça yazar"
+          },
+          {
+            "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+            "title": "Escape, iptal düğmesi ve sinyal false döndürür; Enter (ilk odak) yıkıcı işlem yapmaz"
+          }
+        ]
+      }
     },
     {
       "export": "showDialog",
@@ -3827,7 +4287,19 @@
           "file": "core/tests/ui/overlays/actionDialog.test.ts",
           "title": "sinyal iptali iptal eylemini döndürür; önceden iptal edilmişse hiç açılmaz"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/actionDialog.test.ts",
+            "title": "Escape, scrim ve Android geri iptal eylemini döndürür"
+          },
+          {
+            "file": "core/tests/ui/overlays/actionDialog.test.ts",
+            "title": "sinyal iptali iptal eylemini döndürür; önceden iptal edilmişse hiç açılmaz"
+          }
+        ]
+      }
     },
     {
       "export": "showExitPrompt",
@@ -3847,7 +4319,19 @@
           "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
           "title": "kaydetme işi başarısızsa diyalog açık kalır, yeniden denenir ve kaydetmeden çıkış hâlâ mümkündür"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+            "title": "üç seçenek sunar; vazgeç ilk odaktır ve Escape bunu döndürür"
+          },
+          {
+            "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+            "title": "kaydet ve kaydetme seçimleri; kaydetme işi çalıştırmaz"
+          }
+        ]
+      }
     },
     {
       "export": "showFatalStartupError",
@@ -3863,7 +4347,19 @@
           "file": "core/tests/ui/overlays/fatalStartupError.test.ts",
           "title": "başlık ve hata ayrıntısını erişilebilir yüzeye yazar"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/fatalStartupError.test.ts",
+            "title": "başlık ve hata ayrıntısını erişilebilir yüzeye yazar"
+          },
+          {
+            "file": "core/tests/ui/overlays/fatalStartupError.test.ts",
+            "title": "Error olmayan ayrıntıyı güvenli biçimde metne çevirir"
+          }
+        ]
+      }
     },
     {
       "export": "showLegalDocument",
@@ -3904,7 +4400,19 @@
           "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
           "title": "gerçek istek reddedilirse hata ve yeniden deneme çıkar; izin verme isteği çalıştırmaz"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+            "title": "gerekçesiz izin istemi açılmaz (söz reddedilir)"
+          },
+          {
+            "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+            "title": "gerekçeyi açıklama olarak gösterir; izin ver, izin verme ve Escape sonuçları"
+          }
+        ]
+      }
     },
     {
       "export": "showSyncConflict",
@@ -3929,7 +4437,19 @@
           "title": "varsayılan metinler bir bulut hizmeti adı anmaz (gerçek AutoCloud diye sunulmaz)"
         }
       ],
-      "extraStates": ["focusVisible", "keyboard"]
+      "extraStates": ["focusVisible", "keyboard"],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+            "title": "iki kopyayı karşılaştırır, her eylemin sonucunu yazar ve ilk odak iptaldedir"
+          },
+          {
+            "file": "core/tests/ui/overlays/dialogPatterns.test.ts",
+            "title": "kopya adı çağıranın verdiği etikettir"
+          }
+        ]
+      }
     },
     {
       "export": "startGuidedTour",
@@ -3974,7 +4494,19 @@
           "file": "core/tests/ui/nativeMenus.test.ts",
           "title": "bağlam menüsünü metin alanı dahil her yerde engeller"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/nativeMenus.test.ts",
+            "title": "düzenlenebilir alanda dokunma olayı engellenmez; fare ve tuval engellenir"
+          },
+          {
+            "file": "core/tests/ui/nativeMenus.test.ts",
+            "title": "bağlam menüsünü metin alanı dahil her yerde engeller"
+          }
+        ]
+      }
     },
     {
       "export": "uiIntentBusFor",
@@ -3994,7 +4526,19 @@
           "file": "core/tests/ui/feedback/uiIntent.test.ts",
           "title": "release ikinci çağrıda etkisizdir ve son bırakış kaydı siler"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/feedback/uiIntent.test.ts",
+            "title": "bir fiziksel işaretçi etkinleştirmesi (pointerdown, pointerup, click) tek niyet üretir"
+          },
+          {
+            "file": "core/tests/ui/feedback/uiIntent.test.ts",
+            "title": "girdi yolu: fare tıklaması pointer, klavye etkinleştirmesi keyboard, yapay tıklama synthetic"
+          }
+        ]
+      }
     },
     {
       "export": "watchTheme",
@@ -4022,7 +4566,19 @@
           "file": "core/tests/ui/themes/themeWatch.test.ts",
           "title": "ayrık eleman belgeye bağlanınca bildirir (kurucuda bağlı olmayan çizim yenilenir)"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/themes/themeWatch.test.ts",
+            "title": "en yakın kaplama sahibinin değeri değişince bildirir; ilgisiz değişimi yok sayar"
+          },
+          {
+            "file": "core/tests/ui/themes/themeWatch.test.ts",
+            "title": "daha yakın kök kaplamayı sahiplenir: dıştaki değişim içteki öğeyi etkilemez"
+          }
+        ]
+      }
     }
   ]
 }

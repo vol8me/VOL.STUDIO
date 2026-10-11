@@ -194,6 +194,9 @@ function hasAssertion(node) {
 
 const HELPER_DEPTH = 4;
 
+/** Export bazında durum N/A gerekçesinin asgari uzunluğu: "yok" yazılarak geçilemez. */
+const MIN_NA_REASON = 30;
+
 /** Dosyadaki adlandırılmış yardımcı işlevler (bildirim ya da ok işlevi) ve gövdelerinden `collect` ile toplananlar. */
 function helperIdentifiers(sourceFile, collect = identifierSet) {
   const helpers = new Map();
@@ -297,7 +300,8 @@ export function stateEvidenceStatus(facts, title, name, state) {
 
 /**
  * Uygulanabilir durumların kanıt bağı: arketip + `extraStates` kümesinden bağlı (`states`), fixture ile sınanan
- * (`fixtures`: stateFixtures belgesi) ve kalanlar. Kalan kanıtsız demek değildir: bağlanmamıştır.
+ * (`fixtures`: stateFixtures belgesi), bu export için gerekçeli N/A (`stateNa`) ve kalanlar. Kalan kanıtsız demek
+ * değildir: bağlanmamıştır.
  *
  * @param {{ archetypes?: Record<string, { applicable?: string[] }>, entries?: Array<Record<string, any>> }} registry
  * @param {{
@@ -327,7 +331,13 @@ export function stateCoverage(registry, { phases, tier, fixtures } = {}) {
     const fixtured = applicable.filter(
       (state) => !bound.includes(state) && fixtureStates.get(entry.export)?.has(state),
     );
-    const open = applicable.filter((state) => !bound.includes(state) && !fixtured.includes(state));
+    const na = applicable.filter(
+      (state) =>
+        !bound.includes(state) && !fixtured.includes(state) && entry.stateNa?.[state] !== undefined,
+    );
+    const open = applicable.filter(
+      (state) => !bound.includes(state) && !fixtured.includes(state) && !na.includes(state),
+    );
     rows.push({
       export: entry.export,
       phase: entry.phase,
@@ -335,6 +345,7 @@ export function stateCoverage(registry, { phases, tier, fixtures } = {}) {
       applicable: applicable.length,
       bound,
       fixtured,
+      na,
       open,
     });
   }
@@ -492,6 +503,23 @@ export function validateUiRegistry({ registry, surface, usage, read, showcaseTex
       ...(registry.archetypes?.[entry.archetype]?.applicable ?? []),
       ...(entry.extraStates ?? []),
     ]);
+    for (const [state, reason] of Object.entries(entry.stateNa ?? {})) {
+      const at = `UI registry: ${id}: stateNa.${state}`;
+      if (!STATE_AXES.includes(state)) {
+        problems.push(`UI registry: ${id}: stateNa bilinmeyen durum "${state}".`);
+        continue;
+      }
+      if (!applicable.has(state)) {
+        problems.push(`${at} zaten uygulanabilir değil: arketip N/A'sı yeter, kaydı sil.`);
+        continue;
+      }
+      if ((entry.states?.[state] ?? []).length > 0)
+        problems.push(`${at}: durum hem teste bağlı hem N/A; biri silinmeli.`);
+      if (typeof reason !== 'string' || reason.trim().length < MIN_NA_REASON)
+        problems.push(
+          `${at}: gerekçe en az ${MIN_NA_REASON} karakter olmalı (durumun bu export'ta neden var olmadığını söyle).`,
+        );
+    }
     for (const [state, evidence] of Object.entries(entry.states ?? {})) {
       const at = `UI registry: ${id}: states.${state}`;
       if (!STATE_AXES.includes(state)) {

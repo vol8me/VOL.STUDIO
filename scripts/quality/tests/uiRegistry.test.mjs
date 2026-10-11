@@ -343,13 +343,68 @@ test('stateCoverage bağlı, fixture ile sınanan ve açık durumları ayırır'
   assert.equal(rows[0].applicable, 4);
 });
 
+test('stateNa gerekçeli N/A durumu açık sayılmaz ve doğrulanır', () => {
+  const registry = {
+    archetypes: { control: { applicable: ['normal', 'hover', 'disabled'], na: {} } },
+    entries: [
+      {
+        export: 'Foo',
+        phase: 'UI-03',
+        tier: 1,
+        archetype: 'control',
+        states: { normal: [at('b')] },
+        stateNa: { hover: 'bu denetim işaretçi girişine tepki vermez; yalnız klavye tetikler' },
+      },
+    ],
+  };
+  const [row] = stateCoverage(registry, { phases: ['UI-03'], tier: 1 });
+  assert.deepEqual(row.na, ['hover']);
+  assert.deepEqual(row.open, ['disabled']);
+});
+
+test('stateNa: uygulanabilir olmayan, bağlı ve gerekçesiz durum ihlaldir', () => {
+  const problems = run({
+    entries: [
+      entry({
+        states: { hover: [{ file: 'core/tests/ui/foo.test.ts', title: 'Foo davranışı' }] },
+        stateNa: {
+          hover: 'durum hem bağlı hem N/A olmamalı, ikisi birden yazılırsa bozuk kayıttır',
+          disabled: 'kısa',
+          bogus: 'bilinmeyen durum için yeterince uzun bir gerekçe yazıldı burada',
+        },
+      }),
+      helperEntry({
+        stateNa: {
+          hover: 'arketip bu durumu zaten gerekçeli olarak N/A saymıştır, kayıt gereksiz',
+        },
+      }),
+    ],
+  });
+  assert.ok(problems.some((p) => /stateNa\.hover.*hem teste bağlı hem N\/A/.test(p)));
+  assert.ok(problems.some((p) => /stateNa\.disabled.*en az 30 karakter/.test(p)));
+  assert.ok(problems.some((p) => /bilinmeyen durum "bogus"/.test(p)));
+  assert.ok(problems.some((p) => /fooHelper.*stateNa\.hover.*zaten uygulanabilir değil/.test(p)));
+});
+
 /**
  * Erken tier-1 fazlarında teste bağlı durum sayısının tabanı (UI-08.4). Yalnız yukarı çıkar: bağ sildiysen ya da
  * testi yeniden adlandırdıysan kapı zaten düşer; bu taban, bağların sessizce gevşetilmesini engeller. Yeni bağ
  * ekleyince tabanı yükselt; kalan açık durumlar `node scripts/quality/cli/ui-registry.mjs --states` çıktısındadır
  * ve UI-13.1 kapanışında sıfır olmalıdır.
  */
-const BOUND_STATE_FLOOR = { 'UI-03': 15, 'UI-04': 11, 'UI-05': 21, 'UI-08': 8 };
+const BOUND_STATE_FLOOR = {
+  'UI-01': 28,
+  'UI-02': 4,
+  'UI-03': 15,
+  'UI-04': 11,
+  'UI-05': 21,
+  'UI-07': 1,
+  'UI-08': 8,
+  'UI-09': 11,
+  'UI-10': 4,
+  'UI-11': 5,
+  'UI-12': 2,
+};
 
 test('erken tier-1 fazlarında teste bağlı durum sayısı tabanın altına inmez', () => {
   const registry = JSON.parse(readFileSync(resolve(ROOT, REGISTRY_PATH), 'utf8'));

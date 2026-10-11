@@ -39,7 +39,8 @@ function printStates(phases) {
     const applicable = inPhase.reduce((total, row) => total + row.applicable, 0);
     console.log(
       `${phase} (tier 1, ${inPhase.length} export): ${applicable} uygulanabilir durum — ` +
-        `${sum('bound')} teste bağlı, ${sum('fixtured')} fixture ile sınanıyor, ${sum('open')} açık`,
+        `${sum('bound')} teste bağlı, ${sum('fixtured')} fixture ile sınanıyor, ` +
+        `${sum('na')} gerekçeli N/A, ${sum('open')} açık`,
     );
     for (const row of inPhase.filter((r) => r.open.length > 0))
       console.log(`  ${row.export}: açık ${row.open.join(', ')}`);
