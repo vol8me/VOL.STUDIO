@@ -407,7 +407,22 @@
     "score": "Skor",
     "scoreValue": "{{value, number}}",
     "scoreDrop": "0'a düş",
-    "scoreRestore": "999.999'a dön"
+    "scoreRestore": "999.999'a dön",
+    "castle": "Kale",
+    "costLongGold": "123.456 Altın",
+    "notEnough": "Yetersiz {{resource}}",
+    "resourcesLabel": "Kaynaklar",
+    "resourcesScarce": "Kıt",
+    "resourcesPlenty": "Bol",
+    "placeHint": "Bir bina seç, sonra haritanın üzerinde gez: imleç inşa imlecine, suyun üstünde engel imlecine dönüşür. Alınamayan binalar odaklanabilir kalır ve nedenini söyler.",
+    "water": "Su",
+    "placed": "{{name}} yerleştirildi.",
+    "placeBlocked": "Suya inşa edilemez.",
+    "cursorState": "İmleç: {{state}} ({{cursor}})",
+    "probe": {
+      "none": "Niyetler: henüz yok",
+      "list": "Niyetler: {{list}}"
+    }
   },
   "forms": {
     "input": "Input",
@@ -737,7 +752,8 @@
     "statDamage": "Hasar",
     "statRange": "Menzil",
     "statFireDamage": "Ateş hasarı",
-    "statDurability": "Dayanıklılık"
+    "statDurability": "Dayanıklılık",
+    "needPoints": "{{name}} için beceri puanı yetersiz."
   },
   "scroll": {
     "verticalText": "Dikey Metin",
@@ -851,7 +867,7 @@
     "zoomOut": "Uzaklaştır",
     "zoomKeyboardHint": "Haritaya odaklan: + / - yakınlaştırır, oklar kaydırır, 0 sıfırlar. Düğmeler sıkıştırma gerektirmeden aynısını yapar.",
     "reset": "Sıfırla",
-    "slotGridHint": "Bir eşyayı sürükleyip boş ya da dolu bir slota bırak. Üst sıra kısayol çubuğudur: oraya bırakılan eşya kuşanılır.",
+    "slotGridHint": "Bir eşyayı sürükleyip boş ya da dolu bir slota bırak ya da seçip Taşı’ya bas: oklar veya D-pad slot seçer, Boşluk ya da A bırakır, Escape veya B vazgeçer, bir slota dokunmak yerleştirir. Üst sıra kısayol çubuğudur: oraya bırakılan eşya kuşanılır.",
     "itemEquipped": "\"{{itemId}}\" kısayol çubuğunun {{to}}. yuvasına kuşanıldı.",
     "itemMoved": "\"{{itemId}}\" taşındı: slot {{from}} yuvasından {{to}} yuvasına.",
     "itemDetail": "Detay: {{label}}{{qty}}",
@@ -868,7 +884,7 @@
     "crouching": "Eğiliyor…",
     "simulationRunning": "Simülasyon çalışıyor.",
     "simulationPaused": "Simülasyon duraklatıldı.",
-    "actionBarHint": "Bir eyleme tıkla (ya da 1/2/3 tuşlarına bas).",
+    "actionBarHint": "Bir eyleme tıkla (ya da 1/2/3 tuşlarına bas). Kule bekler, dalga mana ister: engelli eylemler odaklanabilir kalır ve nedenini söyler (üzerine gel, odakla ya da uzun bas).",
     "buildTower": "Kule İnşa Et",
     "startWave": "Dalgayı Başlat",
     "speedX2": "Hız x2",
@@ -904,7 +920,14 @@
       "down": "Aşağı",
       "left": "Sol",
       "right": "Sağ"
-    }
+    },
+    "moveItem": "Taşı",
+    "blockedCooldown": "{{name}} henüz hazır değil.",
+    "blockedMana": "{{name}}: mana yetersiz.",
+    "manaLabel": "Mana",
+    "manaOk": "Yeterli",
+    "manaLow": "Düşük",
+    "notEnoughMana": "Yetersiz mana"
   },
   "loading": {
     "indicatorTypes": "Gösterge Tipleri",

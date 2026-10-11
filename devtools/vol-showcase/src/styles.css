@@ -871,6 +871,15 @@ body {
   touch-action: none;
 }
 
+/* Niyet sondası: kartta üretilen anlamsal niyetlerin son birkaçı; sabit yükseklik, kart kaymaz. */
+.vol-showcase-intent-probe {
+  min-height: 2.6em;
+  font-size: var(--vol-text-label);
+  color: var(--vol-ui-text-secondary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
 .vol-showcase-arena__thing {
   position: absolute;
   padding: 6px 10px;
@@ -899,6 +908,19 @@ body {
 
 .vol-showcase-arena__thing--build {
   border-color: var(--vol-ui-brand-solid);
+  border-style: dashed;
+}
+
+/* İnşa zemini (BuildMenu kartı): su bölgesi "engelli" imlecini verir; yer tutucu ölçüsü sabit, metin taşmaz. */
+.vol-showcase-arena--build {
+  height: 180px;
+}
+
+.vol-showcase-arena--build .vol-showcase-arena__thing--blocked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   border-style: dashed;
 }
 

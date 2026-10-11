@@ -382,7 +382,9 @@ describe('SkillTree', () => {
     expect(buttons[0].classList.contains('vol-skill-tree__node--unlocked')).toBe(true);
     expect(buttons[1].classList.contains('vol-skill-tree__node--available')).toBe(true);
     expect(buttons[2].classList.contains('vol-skill-tree__node--locked')).toBe(true);
-    expect(buttons[2].disabled).toBe(true);
+    // Kilitli düğüm `disabled` DEĞİL: odaklanabilir kalır, neden kilitli olduğu klavye/dokunmayla öğrenilebilir.
+    expect(buttons[2].disabled).toBe(false);
+    expect(buttons[2].getAttribute('aria-disabled')).toBe('true');
   });
 
   it('durum verilmezse tüm düğümler kilitli sayılır', () => {
@@ -416,7 +418,7 @@ describe('SkillTree', () => {
     expect(tree.getNodeState('child')).toBe('unlocked');
   });
 
-  it('locked (disabled) bir düğüme tıklamak hiçbir şey yapmaz', () => {
+  it('locked (aria-disabled) bir düğüme tıklamak onNodeClick çağırmaz', () => {
     const onNodeClick = vi.fn();
     const tree = treeWith(['root'], onNodeClick);
     const lockedButton =

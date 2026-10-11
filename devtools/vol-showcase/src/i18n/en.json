@@ -407,7 +407,22 @@
     "score": "Score",
     "scoreValue": "{{value, number}}",
     "scoreDrop": "Drop to 0",
-    "scoreRestore": "Back to 999,999"
+    "scoreRestore": "Back to 999,999",
+    "castle": "Castle",
+    "costLongGold": "123,456 Gold",
+    "notEnough": "Not enough {{resource}}",
+    "resourcesLabel": "Resources",
+    "resourcesScarce": "Scarce",
+    "resourcesPlenty": "Plenty",
+    "placeHint": "Pick a building, then move over the map: the cursor becomes the build cursor, and the blocked cursor over water. Unaffordable buildings stay focusable and say why.",
+    "water": "Water",
+    "placed": "{{name}} placed.",
+    "placeBlocked": "Cannot build on water.",
+    "cursorState": "Cursor: {{state}} ({{cursor}})",
+    "probe": {
+      "none": "Intents: none yet",
+      "list": "Intents: {{list}}"
+    }
   },
   "forms": {
     "input": "Input",
@@ -737,7 +752,8 @@
     "statDamage": "Damage",
     "statRange": "Range",
     "statFireDamage": "Fire damage",
-    "statDurability": "Durability"
+    "statDurability": "Durability",
+    "needPoints": "Not enough skill points for {{name}}."
   },
   "scroll": {
     "verticalText": "Vertical Text",
@@ -851,7 +867,7 @@
     "zoomOut": "Zoom out",
     "zoomKeyboardHint": "Focus the map: + / - zoom, arrows pan, 0 resets. The buttons do the same without a pinch.",
     "reset": "Reset",
-    "slotGridHint": "Drag an item to an empty or occupied slot. The top row is the hotbar: items dropped there are equipped.",
+    "slotGridHint": "Drag an item to an empty or occupied slot, or select it and press Move: arrows or the D-pad choose a slot, Space or A drops, Escape or B cancels, a tap on a slot places it. The top row is the hotbar: items dropped there are equipped.",
     "itemEquipped": "\"{{itemId}}\" equipped to hotbar slot {{to}}.",
     "itemMoved": "\"{{itemId}}\" moved from slot {{from}} to slot {{to}}.",
     "itemDetail": "Detail: {{label}}{{qty}}",
@@ -868,7 +884,7 @@
     "crouching": "Crouching…",
     "simulationRunning": "Simulation running.",
     "simulationPaused": "Simulation paused.",
-    "actionBarHint": "Click an action (or press 1/2/3).",
+    "actionBarHint": "Click an action (or press 1/2/3). The tower cools down and the wave needs mana: blocked actions stay focusable and say why (hover, focus or long-press).",
     "buildTower": "Build Tower",
     "startWave": "Start Wave",
     "speedX2": "Speed x2",
@@ -904,7 +920,14 @@
       "down": "Down",
       "left": "Left",
       "right": "Right"
-    }
+    },
+    "moveItem": "Move",
+    "blockedCooldown": "{{name}} is not ready yet.",
+    "blockedMana": "{{name}}: not enough mana.",
+    "manaLabel": "Mana",
+    "manaOk": "Enough",
+    "manaLow": "Low",
+    "notEnoughMana": "Not enough mana"
   },
   "loading": {
     "indicatorTypes": "Indicator Types",

@@ -22,11 +22,19 @@ export async function centerOf(target: Locator): Promise<Point> {
   const box = await target.boundingBox();
   if (!box) throw new Error('dokunulacak öğenin kutusu yok');
   const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-  const covered = await target.evaluate((element, at) => {
+  const covering = await target.evaluate((element, at) => {
     const top = document.elementFromPoint(at.x, at.y);
-    return top === null || !(element === top || element.contains(top) || top.contains(element));
+    if (top !== null && (element === top || element.contains(top) || top.contains(element)))
+      return null;
+    return top === null
+      ? 'yok'
+      : `${top.tagName.toLowerCase()}.${String(top.className).split(' ')[0]}`;
   }, point);
-  if (covered) throw new Error(`hedef örtülü: (${point.x.toFixed(0)}, ${point.y.toFixed(0)})`);
+  if (covering !== null) {
+    throw new Error(
+      `hedef örtülü: (${point.x.toFixed(0)}, ${point.y.toFixed(0)}) üstte: ${covering}`,
+    );
+  }
   return point;
 }
 
@@ -70,10 +78,36 @@ export async function cancel(session: CDPSession): Promise<void> {
   await session.detach();
 }
 
-export async function tap(page: Page, target: Locator): Promise<void> {
-  const point = await centerOf(target);
+/** CDP dokunuşunun uyumluluk `click`i `pointerup`tan ~250-300 ms SONRA gelir (gerçek çekirdek dokunuşunda 3-5 ms: `adb input tap` ile ölçüldü). */
+const CLICK_SETTLE_MS = 600;
+
+/**
+ * Ekran koordinatına gerçek dokunuş. `click` gecikmeli geldiği için bu aralıkta bir sonraki işlem sayfayı kaydırırsa (örn.
+ * `centerOf`) gecikmiş tıklama AYNI EKRAN KOORDİNATINDAKİ başka öğeye düşer; bu yüzden tıklama gelene (ya da çıkış payı
+ * dolana: sayfa `pointerdown`u iptal ettiyse tıklama hiç gelmez) kadar beklenir.
+ */
+export async function tapAt(page: Page, point: Point): Promise<void> {
+  await page.evaluate((settle) => {
+    (window as unknown as { __tapSettled: Promise<void> }).__tapSettled = new Promise<void>(
+      (resolve) => {
+        const done = (): void => {
+          clearTimeout(timer);
+          window.removeEventListener('click', done, true);
+          resolve();
+        };
+        const timer = setTimeout(done, settle);
+        window.addEventListener('click', done, true);
+      },
+    );
+  }, CLICK_SETTLE_MS);
   const session = await page.context().newCDPSession(page);
   await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
   await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await session.detach();
+  await page.evaluate(() => (window as unknown as { __tapSettled: Promise<void> }).__tapSettled);
+}
+
+/** Hedefin merkezine (örtülme denetimiyle) gerçek dokunuş. */
+export async function tap(page: Page, target: Locator): Promise<void> {
+  await tapAt(page, await centerOf(target));
 }

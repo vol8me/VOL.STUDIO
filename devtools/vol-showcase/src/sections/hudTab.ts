@@ -16,8 +16,8 @@ import {
   buildResourceCounterCard,
   buildXPBarCard,
 } from './hudFeedbackCards';
+import { buildBuildMenuCard } from './hudBuildCard';
 import {
-  buildBuildMenuCard,
   buildFpsMeterCard,
   buildMinimapCard,
   buildRoundCounterCard,

@@ -114,13 +114,33 @@
     "dismiss": "Dismiss"
   },
   "slotGrid": {
-    "grabbed": "{{label}} picked up. Arrow keys choose a slot, Space drops, Escape cancels.",
+    "grabbed": "{{label}} picked up. Arrow keys or a tap choose a slot, Space or Enter drops, Escape cancels.",
     "targetEmpty": "Slot {{n}}, empty",
     "targetSwap": "Slot {{n}}, swap with {{label}}",
     "targetBlocked": "Slot {{n}}, not allowed",
     "dropped": "{{label}} moved to slot {{n}}",
     "rejected": "Cannot place {{label}} in slot {{n}}",
     "cancelled": "Move cancelled"
+  },
+  "actionBar": {
+    "label": "Actions",
+    "remaining": "{{seconds}} s left"
+  },
+  "buildMenu": {
+    "label": "Build menu"
+  },
+  "skillTree": {
+    "label": "Skill tree",
+    "locked": "locked",
+    "available": "available",
+    "unlocked": "unlocked",
+    "requires": "Requires: {{names}}",
+    "view": "Tree view",
+    "controls": "View controls",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetView": "Reset view",
+    "zoomLevel": "Zoom {{percent}} percent"
   },
   "chargeButton": {
     "start": "Charging",

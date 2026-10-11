@@ -121,3 +121,135 @@ describe('konum', () => {
     rich.destroy();
   });
 });
+
+describe('dokunma: uzun basış balonu açar (hover/odak dokunmada yoktur)', () => {
+  const touch = (type: string, init: Partial<PointerEventInit> = {}): PointerEvent =>
+    new PointerEvent(type, {
+      pointerType: 'touch',
+      pointerId: 1,
+      isPrimary: true,
+      bubbles: true,
+      clientX: 100,
+      clientY: 100,
+      ...init,
+    });
+
+  it('450 ms basılı tutmak balonu açar; kısa dokunuş açmaz', () => {
+    const target = button();
+    const tooltip = new Tooltip(target, 'Bilgi', { delayMs: 0 });
+    const bubble = document.querySelector('.vol-tooltip')!;
+    target.dispatchEvent(touch('pointerdown'));
+    vi.advanceTimersByTime(300);
+    target.dispatchEvent(touch('pointerup'));
+    vi.advanceTimersByTime(600);
+    expect(visible(bubble)).toBe(false);
+
+    target.dispatchEvent(touch('pointerdown'));
+    vi.advanceTimersByTime(449);
+    expect(visible(bubble)).toBe(false);
+    vi.advanceTimersByTime(2);
+    expect(visible(bubble)).toBe(true);
+    tooltip.destroy();
+  });
+
+  it('uzun basışın tıklaması yutulur; sonraki normal tıklama geçer', () => {
+    const target = button();
+    const onClick = vi.fn();
+    target.addEventListener('click', onClick);
+    const tooltip = new Tooltip(target, 'Bilgi', { delayMs: 0 });
+    target.dispatchEvent(touch('pointerdown'));
+    vi.advanceTimersByTime(460);
+    target.dispatchEvent(touch('pointerup'));
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(onClick).not.toHaveBeenCalled();
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    tooltip.destroy();
+  });
+
+  it('tıklama hiç gelmezse yutma bayrağı süre dolunca kalkar', () => {
+    const target = button();
+    const onClick = vi.fn();
+    target.addEventListener('click', onClick);
+    const tooltip = new Tooltip(target, 'Bilgi', { delayMs: 0 });
+    target.dispatchEvent(touch('pointerdown'));
+    vi.advanceTimersByTime(460);
+    target.dispatchEvent(touch('pointercancel'));
+    vi.advanceTimersByTime(600);
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    tooltip.destroy();
+  });
+
+  it('parmak kayarsa (kaydırma/sürükleme) basış iptal olur', () => {
+    const target = button();
+    const tooltip = new Tooltip(target, 'Bilgi', { delayMs: 0 });
+    const bubble = document.querySelector('.vol-tooltip')!;
+    target.dispatchEvent(touch('pointerdown'));
+    vi.advanceTimersByTime(200);
+    target.dispatchEvent(touch('pointermove', { clientX: 130 }));
+    vi.advanceTimersByTime(600);
+    expect(visible(bubble)).toBe(false);
+    tooltip.destroy();
+  });
+
+  it('fare basışı balonu açmaz; ikinci parmak basışı başlatmaz', () => {
+    const target = button();
+    const tooltip = new Tooltip(target, 'Bilgi', { delayMs: 0 });
+    const bubble = document.querySelector('.vol-tooltip')!;
+    target.dispatchEvent(touch('pointerdown', { pointerType: 'mouse' }));
+    target.dispatchEvent(touch('pointerdown', { isPrimary: false, pointerId: 2 }));
+    vi.advanceTimersByTime(800);
+    expect(visible(bubble)).toBe(false);
+    tooltip.destroy();
+  });
+
+  it('açık balon dışına dokunmak kapatır; hedefe ya da balona dokunmak kapatmaz', () => {
+    const target = button();
+    const rich = new RichTooltip(target, { title: 'Kilitli', description: 'Önkoşul: Hız' });
+    const bubble = document.querySelector('.vol-rich-tooltip')!;
+    const outside = document.createElement('div');
+    document.body.append(outside);
+    rich.show();
+    expect(visible(bubble, 'vol-rich-tooltip--visible')).toBe(true);
+    bubble.dispatchEvent(touch('pointerdown'));
+    target.dispatchEvent(touch('pointerdown'));
+    expect(visible(bubble, 'vol-rich-tooltip--visible')).toBe(true);
+    outside.dispatchEvent(touch('pointerdown'));
+    expect(visible(bubble, 'vol-rich-tooltip--visible')).toBe(false);
+    rich.destroy();
+  });
+
+  it('show()/hide() gecikmesiz açık yardım eylemidir; Escape kapatır', () => {
+    const target = button();
+    const tooltip = new Tooltip(target, 'Bilgi');
+    const bubble = document.querySelector('.vol-tooltip')!;
+    tooltip.show();
+    expect(visible(bubble)).toBe(true);
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(visible(bubble)).toBe(false);
+    tooltip.show();
+    tooltip.hide();
+    expect(visible(bubble)).toBe(false);
+    tooltip.destroy();
+  });
+
+  it('söküm bekleyen basışı iptal eder ve açık yutma dinleyicisini bırakır', () => {
+    const target = button();
+    const onClick = vi.fn();
+    target.addEventListener('click', onClick);
+    const pending = new Tooltip(target, 'Bilgi', { delayMs: 0 });
+    target.dispatchEvent(touch('pointerdown'));
+    pending.destroy();
+    vi.advanceTimersByTime(800);
+    expect(document.querySelector('.vol-tooltip')).toBeNull();
+
+    // Uzun basış tamamlandıktan sonra söküm: yutma dinleyicisi kalmaz, tıklama normal akar.
+    const held = new Tooltip(target, 'Bilgi', { delayMs: 0 });
+    target.dispatchEvent(touch('pointerdown'));
+    vi.advanceTimersByTime(460);
+    held.destroy();
+    target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});

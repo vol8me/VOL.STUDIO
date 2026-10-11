@@ -1,5 +1,10 @@
 export { FpsMeter, type FpsMeterOptions, type FpsMeterPosition } from './FpsMeter';
-export { ActionBar, type ActionBarSlot, type ActionBarOptions } from './ActionBar';
+export {
+  ActionBar,
+  type ActionBarBlockReason,
+  type ActionBarSlot,
+  type ActionBarOptions,
+} from './ActionBar';
 export { BuildMenu, type BuildMenuItem, type BuildMenuOptions } from './BuildMenu';
 export {
   MinimapPanel,

@@ -18,6 +18,7 @@ import {
   Wizard,
 } from '@volstudio/core/ui';
 import { i18next } from '@volstudio/core/i18n';
+import { intentProbe } from './intentProbe';
 
 /** DialogueBox demosu: showControls:true ile dallı diyalog ve ileri saralama. */
 
@@ -566,7 +567,12 @@ export function buildSkillTreeDemo(disposables: DisposableScope): HTMLElement {
     onNodeClick: (id, state) => {
       if (state !== 'available') return;
       const cost = costs[id] ?? 1;
-      if (skillPoints < cost) return;
+      if (skillPoints < cost) {
+        // Yetersiz puan host kararıdır; bileşen yalnız niyeti bildirir. Geri bildirim burada (gerçek oyunda ses/yanıp sönme).
+        const name = skillTree.getNodes().find((node) => node.id === id)?.label ?? id;
+        pointsText.setContent(i18next.t('volui:advanced.needPoints', { name }));
+        return;
+      }
 
       skillPoints -= cost;
       unlockedIds.add(id);
@@ -589,6 +595,7 @@ export function buildSkillTreeDemo(disposables: DisposableScope): HTMLElement {
   wrap.appendChild(pointsText.element);
   wrap.appendChild(skillTree.element);
   wrap.appendChild(resetButton.element);
+  wrap.appendChild(intentProbe(wrap, disposables));
 
   return wrap;
 }

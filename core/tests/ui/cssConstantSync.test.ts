@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readUiCss } from '../support/uiCss';
 import { MODAL_TRANSITION_MS } from '../../src/ui/overlays/Confirm';
 import { TOAST_FADE_OUT_MS } from '../../src/ui/overlays/Toast';
-import { MIN_NODE_WIDTH, NODE_LABEL_FONT } from '../../src/ui/hud/SkillTree';
+import { MIN_NODE_WIDTH, NODE_HEIGHT, NODE_LABEL_FONT } from '../../src/ui/hud/SkillTree';
 import { HANDLE_WIDTH_PX } from '../../src/ui/primitives/RangeSlider';
 import { EVENT_LOG_LEAVE_DURATION_MS } from '../../src/ui/data/EventLog';
 import {
@@ -21,6 +21,7 @@ import { UI_TIMING } from '../../src/constants';
 const theme = readUiCss('theme.css');
 const overlays = readUiCss('overlays/overlays.css');
 const hud = readUiCss('hud/hud.css');
+const skillTree = readUiCss('hud/skillTree.css');
 const primitiveChoices = readUiCss('primitives/choices.css');
 const dataBoards = readUiCss('data/boards.css');
 const cards = readUiCss('cards/cards.css');
@@ -140,8 +141,13 @@ describe('CSS sabit senkronu — kart destesi', () => {
 
 describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
   it('MIN_NODE_WIDTH === .vol-skill-tree__node min-width', () => {
-    const cssWidth = cssDeclaration(hud, '.vol-skill-tree__node', 'min-width');
+    const cssWidth = cssDeclaration(skillTree, '.vol-skill-tree__node', 'min-width');
     expect(pxToNumber(cssWidth)).toBe(MIN_NODE_WIDTH);
+  });
+
+  it('NODE_HEIGHT === .vol-skill-tree__node height (ok gezinmesi yerleşim kutusu)', () => {
+    const cssHeight = cssDeclaration(skillTree, '.vol-skill-tree__node', 'height');
+    expect(pxToNumber(cssHeight)).toBe(NODE_HEIGHT);
   });
 
   it('HANDLE_WIDTH_PX === .vol-range-slider__handle width', () => {
@@ -153,13 +159,15 @@ describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
     // measureText() bu string ile ölçüm yapıyor; CSS'ten saparsa düğüm
     // genişlikleri yanlış hesaplanır ve uzun etiketler kutudan taşar.
     const fontFamily = cssDeclaration(theme, ':root', '--vol-font-family');
-    const fontSize = resolveToken(cssDeclaration(hud, '.vol-skill-tree__node-label', 'font-size'));
-    const fontWeight = cssDeclaration(hud, '.vol-skill-tree__node-label', 'font-weight');
+    const fontSize = resolveToken(
+      cssDeclaration(skillTree, '.vol-skill-tree__node-label', 'font-size'),
+    );
+    const fontWeight = cssDeclaration(skillTree, '.vol-skill-tree__node-label', 'font-weight');
 
     expect(NODE_LABEL_FONT).toBe(`${fontWeight} ${fontSize} ${fontFamily}`);
 
     // Düğümün kendisi bu aileyi kullanmalı, aksi halde ölçüm başka fontla yapılır.
-    expect(cssDeclaration(hud, '.vol-skill-tree__node', 'font-family')).toBe(
+    expect(cssDeclaration(skillTree, '.vol-skill-tree__node', 'font-family')).toBe(
       'var(--vol-font-family)',
     );
   });
@@ -193,5 +201,23 @@ describe('CSS sabit senkronu — geometri birebir eşleşmeli', () => {
 
     const inventoryStagger = /\.vol-card-shop__list > \.vol-card:nth-child\(2\)/;
     expect(cards).not.toMatch(inventoryStagger);
+  });
+});
+
+describe('CSS sözleşmesi — dokunmatik sürükleme', () => {
+  it('SlotGrid öğesi parmakla sürüklenirken tarayıcı kaydırmasına çevrilmez (pointercancel → kayıp bırakma)', () => {
+    expect(cssDeclaration(hud, '.vol-slot-grid__item', 'touch-action')).toBe('none');
+  });
+});
+
+describe('CSS sözleşmesi — dokunmatik balon', () => {
+  it('kaba işaretçide görünür balon dokunuşu yutmaz; fare için üstüne geçilebilir (hoverable) kalır', () => {
+    // Balon altındaki denetimi örterse dokunmatikte ona ulaşılamaz (hover yok, balona dokunmak onu kapatmaz).
+    const coarse =
+      /@media \(pointer: coarse\)\s*\{\s*\.vol-tooltip--visible,\s*\.vol-rich-tooltip--visible\s*\{\s*pointer-events:\s*none;/;
+    expect(overlays).toMatch(coarse);
+    // Fare yolu bozulmadı: WCAG 1.4.13 gereği balon fareyle üstüne geçilebilir.
+    expect(cssDeclaration(overlays, '.vol-tooltip--visible', 'pointer-events')).toBe('auto');
+    expect(cssDeclaration(overlays, '.vol-rich-tooltip--visible', 'pointer-events')).toBe('auto');
   });
 });

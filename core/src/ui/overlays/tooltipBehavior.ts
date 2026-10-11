@@ -7,6 +7,16 @@ const TARGET_GAP = 8;
 /** Fare hedeften balona geçerken balonun kaybolmaması için tanınan süre (ms): balon "hoverable" kalır. */
 const HIDE_GRACE_MS = 120;
 
+/**
+ * Dokunma/kalem eşdeğeri: hedefe bu kadar basılı tutmak balonu açar (hover ve odak dokunmada yoktur). Eşik, sistem
+ * uzun basışından (500 ms) kısadır; kısa dokunuş (tıklama) balona dönüşmez.
+ */
+const LONG_PRESS_MS = 450;
+/** Uzun basış sırasında parmağın bu kadar kayması kaydırma/sürükleme sayılır ve basışı iptal eder. */
+const LONG_PRESS_SLOP_PX = 10;
+/** Uzun basıştan sonra gelen tıklamanın yutulacağı en uzun pencere (ms); tıklama hiç gelmezse bayrak kalkar. */
+const CLICK_SUPPRESS_MS = 500;
+
 export type BubblePlacement = 'top' | 'bottom';
 
 export interface BubbleOptions {
@@ -20,6 +30,10 @@ export interface BubbleOptions {
 }
 
 export interface BubbleBinding {
+  /** Balonu gecikmesiz gösterir (dokunma/kol "yardım" eylemi için). */
+  show(): void;
+  /** Balonu gizler. */
+  hide(): void;
   /** Hedefteki ve balondaki dinleyicileri söker; balonu DOM'dan kaldırmaz. */
   destroy(): void;
 }
@@ -47,6 +61,10 @@ function describe(target: HTMLElement, bubble: HTMLElement): () => void {
  * geçebilir (balon "hoverable"), konum iki eksende sınırlanır ve dikeyde yer yoksa karşı tarafa
  * çevrilir, kaydırma/yeniden boyutlandırmada yeniden konumlanır. Kol gezinmesi hedefi odakladığı için
  * kol/klavye yolu odak olayıyla çalışır.
+ *
+ * Dokunma yolu (hover yoktur): hedefe `LONG_PRESS_MS` basılı tutmak balonu açar ve o basışın tıklaması YUTULUR
+ * (bilgi bakmak eylemi tetiklemez); balon başka bir yere dokunulana ya da Escape'e kadar kalır. Kısa dokunuş
+ * etkilenmez. `show()`/`hide()` bileşenlere açık yardım eylemi (kilitli düğümün nedeni gibi) için verilir.
  */
 export function bindBubble(options: BubbleOptions): BubbleBinding {
   const { target, bubble, placement, delayMs, container, visibleClass } = options;
@@ -85,6 +103,13 @@ export function bindBubble(options: BubbleOptions): BubbleBinding {
     hide();
   };
 
+  /** Balonun ve hedefin DIŞINA dokunmak/basmak balonu kapatır (dokunmada balon tek başına kapanmaz). */
+  const onOutsidePointerDown = (event: PointerEvent): void => {
+    const node = event.target;
+    if (node instanceof Node && (target.contains(node) || bubble.contains(node))) return;
+    hide();
+  };
+
   function show(): void {
     clearTimeout(hideTimeout);
     if (!bubble.isConnected) container.appendChild(bubble);
@@ -93,6 +118,7 @@ export function bindBubble(options: BubbleOptions): BubbleBinding {
     visible = true;
     bubble.classList.add(visibleClass);
     document.addEventListener('keydown', onEscape, true);
+    document.addEventListener('pointerdown', onOutsidePointerDown, true);
     window.addEventListener('scroll', reposition, true);
     window.addEventListener('resize', reposition);
   }
@@ -104,6 +130,7 @@ export function bindBubble(options: BubbleOptions): BubbleBinding {
     visible = false;
     bubble.classList.remove(visibleClass);
     document.removeEventListener('keydown', onEscape, true);
+    document.removeEventListener('pointerdown', onOutsidePointerDown, true);
     window.removeEventListener('scroll', reposition, true);
     window.removeEventListener('resize', reposition);
   }
@@ -120,6 +147,61 @@ export function bindBubble(options: BubbleOptions): BubbleBinding {
   };
   const cancelHide = (): void => clearTimeout(hideTimeout);
 
+  // Dokunma/kalem uzun basışı (hover ve odak dokunmada güvenilir değildir). Fare buraya girmez.
+  let pressTimer: ReturnType<typeof setTimeout> | undefined;
+  let pressPointer: { id: number; x: number; y: number } | null = null;
+  let suppressTimer: ReturnType<typeof setTimeout> | undefined;
+  let suppressingClick = false;
+
+  const swallowClick = (event: Event): void => {
+    if (!(event.target instanceof Node) || !target.contains(event.target)) return;
+    event.stopImmediatePropagation();
+    event.preventDefault();
+    stopSuppressing();
+  };
+  function stopSuppressing(): void {
+    suppressingClick = false;
+    clearTimeout(suppressTimer);
+    document.removeEventListener('click', swallowClick, true);
+  }
+  const cancelPress = (): void => {
+    clearTimeout(pressTimer);
+    pressPointer = null;
+  };
+  const onPressDown = (event: PointerEvent): void => {
+    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+    if (event.isPrimary === false) return;
+    cancelPress();
+    pressPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    pressTimer = setTimeout(() => {
+      pressTimer = undefined;
+      pressPointer = null;
+      show();
+      // Bu basışın bırakılışında gelecek tıklama eylemi tetiklemesin.
+      suppressingClick = true;
+      document.addEventListener('click', swallowClick, true);
+      clearTimeout(suppressTimer);
+      suppressTimer = setTimeout(stopSuppressing, CLICK_SUPPRESS_MS);
+    }, LONG_PRESS_MS);
+  };
+  const onPressMove = (event: PointerEvent): void => {
+    if (!pressPointer || event.pointerId !== pressPointer.id) return;
+    const moved = Math.hypot(event.clientX - pressPointer.x, event.clientY - pressPointer.y);
+    if (moved > LONG_PRESS_SLOP_PX) cancelPress();
+  };
+  const onPressEnd = (event: PointerEvent): void => {
+    if (pressPointer && event.pointerId === pressPointer.id) cancelPress();
+  };
+  /** Uzun basışın sistem bağlam menüsü açılmasın (Android Chrome basılı tutmada üretebilir). */
+  const onContextMenu = (event: Event): void => {
+    if (suppressingClick) event.preventDefault();
+  };
+  target.addEventListener('pointerdown', onPressDown);
+  target.addEventListener('pointermove', onPressMove);
+  target.addEventListener('pointerup', onPressEnd);
+  target.addEventListener('pointercancel', onPressEnd);
+  target.addEventListener('contextmenu', onContextMenu);
+
   // Balon bağlandığı anda DOM'dadır (görünmez): `aria-describedby` boşa başvurmaz ve ekran okuyucu
   // odak anında açıklamayı okuyabilir; görünmezken `visibility:hidden` olduğu için sayfa içeriği sayılmaz.
   if (!bubble.isConnected) container.appendChild(bubble);
@@ -132,8 +214,17 @@ export function bindBubble(options: BubbleOptions): BubbleBinding {
   bubble.addEventListener('mouseleave', scheduleHide);
 
   return {
+    show,
+    hide,
     destroy() {
       hide();
+      cancelPress();
+      stopSuppressing();
+      target.removeEventListener('pointerdown', onPressDown);
+      target.removeEventListener('pointermove', onPressMove);
+      target.removeEventListener('pointerup', onPressEnd);
+      target.removeEventListener('pointercancel', onPressEnd);
+      target.removeEventListener('contextmenu', onContextMenu);
       undescribe();
       target.removeEventListener('mouseenter', scheduleShow);
       target.removeEventListener('mouseleave', scheduleHide);

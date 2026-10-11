@@ -14,7 +14,7 @@ export interface TooltipOptions {
 
 let tooltipInstanceCounter = 0;
 
-/** Bir hedef elementte fare hover veya klavye odağıyla tetiklenen bilgi balonu. Dokunmatikte tetiklenmez (hover yok). */
+/** Bir hedef elementte fare hover, klavye odağı ya da dokunmada uzun basışla tetiklenen bilgi balonu (dokunmada hover yoktur). */
 export class Tooltip {
   private readonly bubble: HTMLDivElement;
   private readonly binding: BubbleBinding;
@@ -47,6 +47,15 @@ export class Tooltip {
 
   setText(text: string): void {
     this.bubble.textContent = text;
+  }
+
+  /** Balonu gecikmesiz gösterir: dokunma/kol için açık yardım eylemi (hover ve odak dokunmada yoktur). */
+  show(): void {
+    this.binding.show();
+  }
+
+  hide(): void {
+    this.binding.hide();
   }
 
   destroy(): void {

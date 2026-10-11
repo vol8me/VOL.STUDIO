@@ -4,7 +4,6 @@
  */
 import type { CancellableDisposable, DisposableScope } from '@volstudio/core/lifecycle';
 import {
-  BuildMenu,
   Button,
   FpsMeter,
   MinimapPanel,
@@ -16,23 +15,9 @@ import {
   RoundCounter,
   type FpsMeterPosition,
 } from '@volstudio/core/ui';
-import { i18n, i18next } from '@volstudio/core/i18n';
+import { i18next } from '@volstudio/core/i18n';
 import { card, svgIcon } from './shared';
-import {
-  ICON_AMMO,
-  ICON_COIN,
-  ICON_FIRE,
-  ICON_GUARD,
-  ICON_MANA,
-  ICON_SPEED,
-  ICON_SWORD,
-  ICON_TOWER,
-  ICON_TURRET,
-  ICON_WALL,
-  ICON_WOOD,
-  ICON_ZOOM_IN,
-  ICON_ZOOM_OUT,
-} from './icons';
+import { ICON_AMMO, ICON_FIRE, ICON_SPEED, ICON_SWORD, ICON_TURRET } from './icons';
 
 /** RoundCounter saf görüntüdür; demo akışı yalnız bu builder içinde tutulur. */
 export function buildRoundCounterCard(disposables: DisposableScope): HTMLElement {
@@ -228,179 +213,6 @@ export function buildStatsPanelCard(disposables: DisposableScope): HTMLElement {
   wrap.append(openButton.element, statsPanel.element);
 
   return card(i18next.t('volui:hud.statsPanel'), wrap, { spanAll: true });
-}
-
-/** BuildMenu: RTS/TD inşa menüsü — ikon+ad+maliyet+kısayol grid'i. */
-export function buildBuildMenuCard(disposables: DisposableScope): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'vol-showcase-panel-demo';
-
-  const result = new Text(i18next.t('volui:hud.awaitingSelection'), { variant: 'muted' });
-  disposables.addDestroyables(result);
-
-  const buildMenuItems = [
-    {
-      id: 'turret',
-      icon: ICON_TURRET,
-      label: 'volui:hud.arrowTower',
-      cost: 'volui:hud.cost50Gold',
-      hotkey: 'Q',
-    },
-    {
-      id: 'wall',
-      icon: ICON_WALL,
-      label: 'volui:hud.wall',
-      cost: 'volui:hud.cost20Wood',
-      hotkey: 'W',
-    },
-    {
-      id: 'barracks',
-      icon: ICON_SWORD,
-      label: 'volui:hud.barracks',
-      cost: 'volui:hud.cost100Gold',
-      hotkey: 'E',
-      disabled: true,
-    },
-    {
-      id: 'fire-tower',
-      icon: ICON_FIRE,
-      label: 'volui:hud.fireTower',
-      cost: 'volui:hud.cost75Gold',
-      hotkey: 'R',
-    },
-    {
-      id: 'watchtower',
-      icon: ICON_TOWER,
-      label: 'volui:hud.watchtower',
-      cost: 'volui:hud.cost60Wood',
-      hotkey: 'T',
-    },
-    {
-      id: 'guard-tower',
-      icon: ICON_GUARD,
-      label: 'volui:hud.guardTower',
-      cost: 'volui:hud.cost120Gold',
-      hotkey: 'Y',
-      disabled: true,
-    },
-    {
-      id: 'healing-well',
-      icon: ICON_MANA,
-      label: 'volui:hud.healingWell',
-      cost: 'volui:hud.cost60Gold',
-      hotkey: 'U',
-    },
-    {
-      id: 'ballista',
-      icon: ICON_TURRET,
-      label: 'volui:hud.ballista',
-      cost: 'volui:hud.cost100Gold',
-      hotkey: 'I',
-    },
-    {
-      id: 'cannon',
-      icon: ICON_FIRE,
-      label: 'volui:hud.cannon',
-      cost: 'volui:hud.cost120Gold',
-      hotkey: 'O',
-    },
-    {
-      id: 'observatory',
-      icon: ICON_ZOOM_IN,
-      label: 'volui:hud.observatory',
-      cost: 'volui:hud.cost80Gold',
-      hotkey: 'P',
-    },
-    {
-      id: 'gate',
-      icon: ICON_WALL,
-      label: 'volui:hud.gate',
-      cost: 'volui:hud.cost50Wood',
-      hotkey: 'A',
-    },
-    {
-      id: 'farm',
-      icon: ICON_WOOD,
-      label: 'volui:hud.farm',
-      cost: 'volui:hud.cost30Wood',
-      hotkey: 'S',
-    },
-    {
-      id: 'lumber-mill',
-      icon: ICON_WOOD,
-      label: 'volui:hud.lumberMill',
-      cost: 'volui:hud.cost40Wood',
-      hotkey: 'D',
-    },
-    {
-      id: 'market',
-      icon: ICON_COIN,
-      label: 'volui:hud.market',
-      cost: 'volui:hud.cost100Gold',
-      hotkey: 'F',
-      disabled: true,
-    },
-    {
-      id: 'shrine',
-      icon: ICON_MANA,
-      label: 'volui:hud.shrine',
-      cost: 'volui:hud.cost150Gold',
-      hotkey: 'G',
-    },
-    {
-      id: 'stable',
-      icon: ICON_SPEED,
-      label: 'volui:hud.stable',
-      cost: 'volui:hud.cost80Gold',
-      hotkey: 'H',
-    },
-    {
-      id: 'siege-workshop',
-      icon: ICON_SWORD,
-      label: 'volui:hud.siegeWorkshop',
-      cost: 'volui:hud.cost120Gold',
-      hotkey: 'J',
-    },
-    {
-      id: 'mage-tower',
-      icon: ICON_TOWER,
-      label: 'volui:hud.mageTower',
-      cost: 'volui:hud.cost150Gold',
-      hotkey: 'K',
-    },
-    {
-      id: 'bunker',
-      icon: ICON_GUARD,
-      label: 'volui:hud.bunker',
-      cost: 'volui:hud.cost90Gold',
-      hotkey: 'L',
-    },
-    {
-      id: 'lighthouse',
-      icon: ICON_ZOOM_OUT,
-      label: 'volui:hud.lighthouse',
-      cost: 'volui:hud.cost110Gold',
-      hotkey: ';',
-      disabled: true,
-    },
-  ];
-
-  const buildMenu = new BuildMenu({
-    items: buildMenuItems.map((item) => ({
-      ...item,
-      icon: svgIcon(item.icon),
-      label: i18n.tDynamic(item.label),
-      cost: i18n.tDynamic(item.cost),
-      onSelect: () =>
-        result.setContent(i18next.t('volui:hud.selected', { name: i18n.tDynamic(item.label) })),
-      onDeselect: () => result.setContent(i18next.t('volui:hud.selectionCancelled')),
-    })),
-  });
-  disposables.addDestroyables(buildMenu);
-  wrap.appendChild(buildMenu.element);
-  wrap.appendChild(result.element);
-
-  return card(i18next.t('volui:hud.buildMenu'), wrap, { spanAll: true });
 }
 
 /** MinimapPanel.backgroundImage için basit arazi dokusu üretir. */

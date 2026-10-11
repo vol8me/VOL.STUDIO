@@ -3,26 +3,19 @@ import { inlineSign } from '../direction';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_THRESHOLD } from '../../constants';
 import { i18next } from '../../i18n/I18n';
+import {
+  ItemView,
+  normalizeSpan,
+  type Geometry,
+  type SlotItem,
+  type SlotSpan,
+} from './slotGridItem';
 
-export interface SlotSpan {
-  /** Kaç sütun kaplar. Varsayılan 1. */
-  cols?: number;
-  /** Kaç satır kaplar. Varsayılan 1. */
-  rows?: number;
-}
+// Genel tipler `slotGridItem.ts`te tanımlıdır (dosya boyutu sınırı); paket yüzeyi buradan yeniden dışa aktarılır.
+export type { SlotItem, SlotSpan };
 
-export interface SlotItem {
-  id: string;
-  label: string;
-  /** String olarak verilirse initial/emoji; Node/SVG ise kopyalanıp kullanılır. */
-  icon?: string | Node;
-  /** Sağ altta küçük rozet (ör. "×12"). */
-  quantity?: number;
-  /** Slot köşe rengi. Verilmezse nötr. */
-  rarity?: 'common' | 'rare' | 'epic';
-  /** 1x1'den büyük blok boyutu. */
-  span?: SlotSpan;
-}
+/** İşaretçi bırakışı niyetini yaydıktan sonra gelen uyumluluk `click`inin yutulacağı en uzun süre (ms). */
+const CLICK_SWALLOW_MS = 500;
 
 export interface SlotGridOptions {
   /** Toplam hücre sayısı (satır×sütun). Span'lı item'lar bunun bir parçasıdır. */
@@ -58,159 +51,6 @@ interface DragState {
   startX: number;
   startY: number;
   moved: boolean;
-}
-
-interface Geometry {
-  size: number;
-  gap: number;
-  columns: number;
-  slotCount: number;
-}
-
-function normalizeSpan(span: SlotSpan | undefined): { cols: number; rows: number } {
-  return { cols: Math.max(1, span?.cols ?? 1), rows: Math.max(1, span?.rows ?? 1) };
-}
-
-/**
- * Her item için tek DOM node. Node taşındığında fiziksel element aynı kalır,
- * yalnızca pozisyon/görsel güncellenir. Büyük item'lar için kök hücreden
- * itibaren `left/top/width/height` ile mutlak konumlanır.
- */
-class ItemView {
-  readonly element: HTMLDivElement;
-  private item: SlotItem;
-  private index: number;
-  private geometry: Geometry;
-
-  private iconEl: HTMLSpanElement;
-  private labelEl: HTMLSpanElement;
-  private quantityEl: HTMLSpanElement;
-
-  constructor(item: SlotItem, index: number, geometry: Geometry) {
-    this.item = item;
-    this.index = index;
-    this.geometry = geometry;
-
-    this.element = document.createElement('div');
-    this.element.className = 'vol-slot-grid__item';
-    // Öğeler etkinleştirilebilir/taşınabilir denetimdir (Enter/A etkinleştirir, Space tutar): düğme rolü.
-    this.element.setAttribute('role', 'button');
-    // Klavye/kol erişimi: dolaşma (roving tabindex) SlotGrid tarafından ayarlanır.
-    this.element.tabIndex = -1;
-    this.element.setAttribute('aria-label', this.ariaLabel());
-    this.element.dataset.itemId = item.id;
-    this.element.dataset.slotIndex = String(index);
-    this.element.style.pointerEvents = 'auto';
-
-    this.iconEl = document.createElement('span');
-    this.iconEl.className = 'vol-slot-grid__item-icon';
-    this.element.appendChild(this.iconEl);
-
-    this.labelEl = document.createElement('span');
-    this.labelEl.className = 'vol-slot-grid__item-label';
-    this.element.appendChild(this.labelEl);
-
-    this.quantityEl = document.createElement('span');
-    this.quantityEl.className = 'vol-slot-grid__item-quantity';
-    this.element.appendChild(this.quantityEl);
-
-    this.render();
-    this.applyGeometry();
-  }
-
-  update(item: SlotItem, index: number, geometry: Geometry): void {
-    const changed =
-      this.item.id !== item.id ||
-      this.item.label !== item.label ||
-      this.item.quantity !== item.quantity ||
-      this.item.rarity !== item.rarity ||
-      this.item.icon !== item.icon ||
-      this.item.span?.cols !== item.span?.cols ||
-      this.item.span?.rows !== item.span?.rows ||
-      this.index !== index;
-
-    this.item = item;
-    this.index = index;
-    this.geometry = geometry;
-
-    if (changed) {
-      this.element.dataset.itemId = item.id;
-      this.element.dataset.slotIndex = String(index);
-      this.element.setAttribute('aria-label', this.ariaLabel());
-      this.render();
-    }
-    this.applyGeometry();
-  }
-
-  getId(): string {
-    return this.item.id;
-  }
-
-  getIndex(): number {
-    return this.index;
-  }
-
-  getItem(): SlotItem {
-    return this.item;
-  }
-
-  setGeometry(geometry: Geometry): void {
-    this.geometry = geometry;
-    this.applyGeometry();
-  }
-
-  toggleDragging(active: boolean): void {
-    this.element.classList.toggle('vol-slot-grid__item--dragging', active);
-  }
-
-  private render(): void {
-    const { item } = this;
-
-    this.element.className = 'vol-slot-grid__item';
-    if (item.rarity) {
-      this.element.classList.add(`vol-slot-grid__item--rarity-${item.rarity}`);
-    }
-
-    if (item.icon) {
-      if (typeof item.icon === 'string') {
-        this.iconEl.textContent = item.icon;
-      } else {
-        this.iconEl.replaceChildren(item.icon.cloneNode(true));
-      }
-      this.iconEl.style.display = '';
-    } else {
-      this.iconEl.textContent = item.label.slice(0, 2).toLocaleUpperCase(i18next.language ?? 'tr');
-      this.iconEl.style.display = '';
-    }
-
-    this.labelEl.textContent = item.label;
-    // Etiket sabit hücrede üç nokta ile kısalır; tam ad (ve adet) yine okunabilir kalır.
-    this.element.title = this.ariaLabel();
-    this.quantityEl.textContent =
-      item.quantity !== undefined && item.quantity > 1 ? `×${item.quantity}` : '';
-  }
-
-  private applyGeometry(): void {
-    const { size, gap, columns } = this.geometry;
-    const { cols, rows } = normalizeSpan(this.item.span);
-    const col = this.index % columns;
-    const row = Math.floor(this.index / columns);
-
-    const x = col * (size + gap);
-    const y = row * (size + gap);
-    const w = cols * size + (cols - 1) * gap;
-    const h = rows * size + (rows - 1) * gap;
-
-    this.element.style.left = `${x}px`;
-    this.element.style.top = `${y}px`;
-    this.element.style.width = `${w}px`;
-    this.element.style.height = `${h}px`;
-  }
-
-  private ariaLabel(): string {
-    const { item } = this;
-    return item.quantity && item.quantity > 1 ? `${item.label} (×${item.quantity})` : item.label;
-  }
 }
 
 /**
@@ -249,6 +89,8 @@ export class SlotGrid {
   private readonly dragContainer: HTMLElement;
 
   private drag: DragState | null = null;
+  /** Bu ana kadar gelen ilk fare/dokunma `click`i yutulur (işaretçi bırakışı zaten niyetini yaydı). */
+  private swallowClickUntil = 0;
   /** Klavyeyle tutulan item: kaynak hücre ve imlecin dolaştığı hedef hücre. */
   private keyboardMove: { fromIndex: number; target: number; itemView: ItemView } | null = null;
   /** Dolaşma hedefi: Tab'ın indiği tek item (kök hücre indeksi). */
@@ -316,10 +158,22 @@ export class SlotGrid {
     this.scope.add({ dispose: () => this.itemsEl.removeEventListener('pointerdown', pointerDown) });
 
     const keyDown = (event: KeyboardEvent): void => this.onKeyDown(event);
-    // Klavye ve kol A odaktaki öğede `click` (detail 0) üretir: etkinleştirme. Fare tıklaması pointerup'ta işlenir.
+    // Kol A odaktaki öğede `click` (detail 0) üretir (klavye Enter/Space'i kendi keydown'unda işler; bölüm elemanı düğme
+    // olmadığından tarayıcı onlardan tıklama üretmez): öğe tutuluyorsa hedefe BIRAKIR, değilse etkinleştirir.
+    // Fare/dokunma tıklaması pointerup'ta işlenir.
     const click = (event: MouseEvent): void => {
-      if (event.detail !== 0 || this.keyboardMove) return;
-      this.activateFromElement(event.target);
+      if (event.detail !== 0) return;
+      if (this.keyboardMove) this.dropKeyboardMove(event);
+      else this.activateFromElement(event.target);
+    };
+    // Dokun-yerleştir: tutulan öğe varken boş/dolu bir hücreye dokunmak hedefi seçer ve bırakır (sürüklemenin eşdeğeri).
+    const cellClick = (event: MouseEvent): void => {
+      const move = this.keyboardMove;
+      const cell = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+        '.vol-slot-grid__cell',
+      );
+      if (!move || !cell?.dataset.slotIndex) return;
+      this.placeAt(Number(cell.dataset.slotIndex), event);
     };
     const focusIn = (event: FocusEvent): void => {
       const index = this.indexOfElement(event.target);
@@ -331,12 +185,30 @@ export class SlotGrid {
         this.cancelKeyboardMove();
       }
     };
+    // Tutulan öğe varken hücreye basmak odağı öğeden almasın (focusout taşımayı iptal ederdi).
+    const cellMouseDown = (event: MouseEvent): void => {
+      if (this.keyboardMove) event.preventDefault();
+    };
+    // Sürükleme/yerleştirme işaretçi bırakışında kendi niyetini (drop/reject) yayar; ardından gelen uyumluluk `click`i kök
+    // yedeğinde ikinci bir `press` üretmesin diye bir kez yutulur (yakalama aşaması: kök dinleyicisinden önce).
+    const swallowClick = (event: MouseEvent): void => {
+      if (event.detail === 0 || performance.now() >= this.swallowClickUntil) return;
+      this.swallowClickUntil = 0;
+      event.stopPropagation();
+      event.preventDefault();
+    };
+    this.element.addEventListener('click', swallowClick, true);
+    this.cellsEl.addEventListener('mousedown', cellMouseDown);
+    this.cellsEl.addEventListener('click', cellClick);
     this.itemsEl.addEventListener('keydown', keyDown);
     this.itemsEl.addEventListener('click', click);
     this.itemsEl.addEventListener('focusin', focusIn);
     this.itemsEl.addEventListener('focusout', focusOut);
     this.scope.add({
       dispose: () => {
+        this.element.removeEventListener('click', swallowClick, true);
+        this.cellsEl.removeEventListener('mousedown', cellMouseDown);
+        this.cellsEl.removeEventListener('click', cellClick);
         this.itemsEl.removeEventListener('keydown', keyDown);
         this.itemsEl.removeEventListener('click', click);
         this.itemsEl.removeEventListener('focusin', focusIn);
@@ -358,6 +230,31 @@ export class SlotGrid {
   getItem(index: number): SlotItem | undefined {
     const rootIndex = this.occupancy.get(index);
     return rootIndex === undefined ? undefined : this.items[rootIndex];
+  }
+
+  /** Bir öğe "tutuluyor" mu (klavye, kol ya da dokunma "Taşı" akışı)? */
+  get isMoving(): boolean {
+    return this.keyboardMove !== null;
+  }
+
+  /**
+   * Taşıma akışını başlatır (sürüklemenin klavye/kol/dokunma eşdeğeri): `index` verilmezse odaktaki, o da yoksa ilk öğe.
+   * Tutulurken oklar/D-pad hedef hücreyi seçer, kol A ya da Boşluk/Enter bırakır, B/Escape vazgeçer; dokunmada bir hücreye
+   * ya da öğeye dokunmak hedefi seçip bırakır. Boş ızgarada ya da zaten tutuluyorsa `false` döner.
+   */
+  beginMove(index?: number): boolean {
+    if (this.keyboardMove) return false;
+    const from = index ?? this.focusIndex ?? [...this.itemViews.keys()].sort((a, b) => a - b)[0];
+    const view = from === undefined ? undefined : this.itemViews.get(from);
+    if (!view || from === undefined) return false;
+    this.startKeyboardMove(from);
+    view.element.focus();
+    return true;
+  }
+
+  /** Tutulan öğeyi bırakmadan vazgeçer (öğe yerinde kalır). */
+  cancelMove(): void {
+    this.cancelKeyboardMove();
   }
 
   /** Programatik olarak item yerleştirir. */
@@ -576,11 +473,16 @@ export class SlotGrid {
     }
   }
 
-  private startKeyboardMove(index: number, event: KeyboardEvent): void {
+  private startKeyboardMove(index: number, event?: Event): void {
     const itemView = this.itemViews.get(index);
     if (!itemView) return;
     this.keyboardMove = { fromIndex: index, target: index, itemView };
     itemView.toggleDragging(true);
+    // Tutulan öğe yön girdisini kendisi alır (kol D-pad'i hedef hücreyi seçer, odak komşu öğeye kaçmaz); hücre katmanı
+    // dokunma/fare için etkinleşir.
+    itemView.element.dataset.volArrows = 'both';
+    itemView.element.setAttribute('aria-pressed', 'true');
+    this.element.classList.add('vol-slot-grid--moving');
     emitUiIntent({ kind: 'pick', origin: 'SlotGrid', target: this.element, event });
     this.announce(i18next.t('core:slotGrid.grabbed', { label: itemView.getItem().label }));
   }
@@ -641,7 +543,21 @@ export class SlotGrid {
     this.announce(message);
   }
 
-  private dropKeyboardMove(event: KeyboardEvent): void {
+  /** Dokunma/fare ile seçilen hücreye yerleştirir: hedefi o hücre yapar, önizlemeyi gösterir ve bırakır. */
+  private placeAt(index: number, event: Event): void {
+    const move = this.keyboardMove;
+    if (!move) return;
+    // Tutulan öğenin kendi hücresine dokunmak vazgeçmektir (kayma olmadan bırakmanın anlamı yoktur).
+    if (index === move.fromIndex) {
+      this.cancelKeyboardMove();
+      return;
+    }
+    move.target = index;
+    this.showKeyboardTarget();
+    this.dropKeyboardMove(event);
+  }
+
+  private dropKeyboardMove(event: Event): void {
     const move = this.keyboardMove;
     if (!move) return;
     const label = move.itemView.getItem().label;
@@ -657,6 +573,8 @@ export class SlotGrid {
     // Geçersiz hedef: öğe tutulmaya devam eder, kullanıcı başka hücre seçebilir.
     emitUiIntent({ kind: 'reject', origin: 'SlotGrid', target: this.element, event });
     this.announce(i18next.t('core:slotGrid.rejected', { label, n }));
+    // Dokunma başka bir öğeye odak verdiyse yön girdisi tutulan öğeye geri dönsün.
+    if (document.activeElement !== move.itemView.element) move.itemView.element.focus();
   }
 
   private cancelKeyboardMove(): void {
@@ -668,6 +586,9 @@ export class SlotGrid {
   private endKeyboardMove(): void {
     const move = this.keyboardMove;
     if (!move) return;
+    delete move.itemView.element.dataset.volArrows;
+    move.itemView.element.removeAttribute('aria-pressed');
+    this.element.classList.remove('vol-slot-grid--moving');
     move.itemView.toggleDragging(false);
     this.clearDropTarget();
     this.keyboardMove = null;
@@ -737,6 +658,8 @@ export class SlotGrid {
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < UI_THRESHOLD.DRAG_START_PX) return;
       drag.moved = true;
+      // İşaretçi sürüklemesi başlayınca tutulan öğe bırakılır: iki taşıma aynı anda sürmez.
+      this.cancelKeyboardMove();
       drag.itemView.toggleDragging(true);
       emitUiIntent({ kind: 'pick', origin: 'SlotGrid', target: this.element, event });
       this.dragContainer.appendChild(drag.ghostEl);
@@ -759,11 +682,15 @@ export class SlotGrid {
     }
 
     if (!drag.moved) {
-      // Tıklama
-      this.onSlotClickHandler?.(drag.itemView.getItem(), drag.fromIndex);
+      // Tıklama: öğe tutuluyorsa dokunulan öğenin hücresi hedeftir (yer değiştirme), aksi halde etkinleştirme.
+      if (this.keyboardMove) {
+        this.swallowNextClick();
+        this.placeAt(drag.fromIndex, event);
+      } else this.onSlotClickHandler?.(drag.itemView.getItem(), drag.fromIndex);
       this.endDrag();
       return;
     }
+    this.swallowNextClick();
 
     const toIndex = this.resolveDropTarget(event.clientX, event.clientY, drag);
     this.clearDropTarget();
@@ -779,6 +706,10 @@ export class SlotGrid {
     drag.itemView.toggleDragging(false);
     this.endDrag();
   };
+
+  private swallowNextClick(): void {
+    this.swallowClickUntil = performance.now() + CLICK_SWALLOW_MS;
+  }
 
   private moveGhost(clientX: number, clientY: number): void {
     const drag = this.drag;
@@ -808,8 +739,10 @@ export class SlotGrid {
     const ghostLeft = clientX - drag.offsetX - gridRect.left;
     const ghostTop = clientY - drag.offsetY - gridRect.top;
 
-    const col = Math.floor(ghostLeft / track);
-    const row = Math.floor(ghostTop / track);
+    // En yakın hücreye oturur (`floor` değil): öğe hücre merkezinden tutulup hedef hücrenin merkezine bırakılınca köşe tam
+    // hücre sınırındadır ve parmağın alt-piksel sapması bir önceki hücreye (çoğu kez dolu) düşürür — cihazda ölçüldü.
+    const col = Math.round(ghostLeft / track);
+    const row = Math.round(ghostTop / track);
     if (col < 0 || row < 0) return null;
 
     const rootIndex = row * this.columns + col;

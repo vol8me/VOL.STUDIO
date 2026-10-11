@@ -8,7 +8,7 @@
     "core/src/ui/cards/cards.css": 2,
     "core/src/ui/data/boards.css": 3,
     "core/src/ui/feedback/feedback.css": 3,
-    "core/src/ui/hud/hud.css": 7,
+    "core/src/ui/hud/skillTree.css": 7,
     "core/src/ui/layout/layout.css": 5,
     "core/src/ui/overlays/loading.css": 12,
     "core/src/ui/overlays/overlays.css": 3,

@@ -15,6 +15,8 @@ export interface RichTooltipContent {
   description?: string;
   /** Etiket-değer satırları (ör. Hasar: 42, Menzil: 4) karşılaştırma kartları için. */
   stats?: RichTooltipStat[];
+  /** İstatistiklerden sonra, uyarı tonunda tek satır: bir şeyin NEDEN kullanılamadığı (ör. "Gerekli: Hız"). */
+  note?: string;
 }
 
 export interface RichTooltipOptions {
@@ -56,6 +58,15 @@ export class RichTooltip {
 
   setContent(content: RichTooltipContent): void {
     this.renderContent(content);
+  }
+
+  /** Balonu gecikmesiz gösterir: dokunma/kol için açık yardım eylemi (hover ve odak dokunmada yoktur). */
+  show(): void {
+    this.binding.show();
+  }
+
+  hide(): void {
+    this.binding.hide();
   }
 
   destroy(): void {
@@ -100,6 +111,13 @@ export class RichTooltip {
         statsList.appendChild(row);
       }
       this.bubble.appendChild(statsList);
+    }
+
+    if (content.note) {
+      const note = document.createElement('div');
+      note.className = 'vol-rich-tooltip__note';
+      note.textContent = content.note;
+      this.bubble.appendChild(note);
     }
   }
 }

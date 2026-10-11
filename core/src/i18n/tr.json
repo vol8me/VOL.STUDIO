@@ -114,13 +114,33 @@
     "dismiss": "Kapat"
   },
   "slotGrid": {
-    "grabbed": "{{label}} alındı. Ok tuşları yuva seçer, Boşluk bırakır, Escape iptal eder.",
+    "grabbed": "{{label}} alındı. Ok tuşları ya da dokunuş yuva seçer, Boşluk veya Enter bırakır, Escape iptal eder.",
     "targetEmpty": "Yuva {{n}}, boş",
     "targetSwap": "Yuva {{n}}, {{label}} ile yer değiştir",
     "targetBlocked": "Yuva {{n}}, izin yok",
     "dropped": "{{label}} yuva {{n}}'e taşındı",
     "rejected": "{{label}} yuva {{n}}'e konamaz",
     "cancelled": "Taşıma iptal edildi"
+  },
+  "actionBar": {
+    "label": "Eylemler",
+    "remaining": "{{seconds}} sn kaldı"
+  },
+  "buildMenu": {
+    "label": "İnşa menüsü"
+  },
+  "skillTree": {
+    "label": "Yetenek ağacı",
+    "locked": "kilitli",
+    "available": "açılabilir",
+    "unlocked": "açık",
+    "requires": "Gerekli: {{names}}",
+    "view": "Ağaç görünümü",
+    "controls": "Görünüm denetimleri",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "resetView": "Görünümü sıfırla",
+    "zoomLevel": "Yakınlaştırma yüzde {{percent}}"
   },
   "chargeButton": {
     "start": "Doluyor",

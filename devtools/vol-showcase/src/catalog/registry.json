@@ -203,6 +203,18 @@
         {
           "file": "core/tests/ui/layoutAndControls.test.ts",
           "title": "slotları oluşturur ve tıklama onActivate çağırır"
+        },
+        {
+          "file": "core/tests/ui/hud/hudBlockedActions.test.ts",
+          "title": "ActionBar kökü toolbar; tek sekme durağı, oklar/Home/End slotlar arasında gezinir"
+        },
+        {
+          "file": "core/tests/ui/hud/hudBlockedActions.test.ts",
+          "title": "ActionBar bekleyen slot odaklanabilir kalır; basış onActivate çağırmaz, reject niyeti + onBlocked verir"
+        },
+        {
+          "file": "core/tests/ui/hud/hudBlockedActions.test.ts",
+          "title": "ActionBar nedenli kullanılamaz slot: neden aria-description olur, reject + onBlocked(\"unavailable\")"
         }
       ]
     },
@@ -267,11 +279,23 @@
       "anchor": "A1",
       "archetype": "collection",
       "consumer": "catalog",
-      "showcase": ["sections/hudPanelCards.ts"],
+      "showcase": ["sections/hudBuildCard.ts"],
       "tests": [
         {
           "file": "core/tests/ui/hud/hudPanels.test.ts",
           "title": "bir öğeye tıklamak seçer ve onSelect çağırır"
+        },
+        {
+          "file": "core/tests/ui/hud/hudBlockedActions.test.ts",
+          "title": "BuildMenu nedenli kullanılamaz öğe: seçilmez, reject + onBlocked(neden), odaklanabilir"
+        },
+        {
+          "file": "core/tests/ui/hud/hudBlockedActions.test.ts",
+          "title": "BuildMenu seçim tek niyet: select, yeniden basış cancel; programatik selectItem sessiz"
+        },
+        {
+          "file": "core/tests/ui/hud/hudBlockedActions.test.ts",
+          "title": "BuildMenu altı haneli maliyet kutu içinde kalır ve kısayol rozetini örtmez (sınıf sözleşmesi)"
         }
       ]
     },
@@ -1994,6 +2018,14 @@
         {
           "file": "core/tests/ui/hud/hudPanels.test.ts",
           "title": "durum haritasına göre --unlocked / --available / --locked class alır"
+        },
+        {
+          "file": "core/tests/ui/hud/hudBlockedActions.test.ts",
+          "title": "SkillTree kilitli düğüm odaklanabilir, onNodeClick çağırmaz ve tek reject niyeti verir"
+        },
+        {
+          "file": "core/tests/ui/hud/skillTreeView.test.ts",
+          "title": "SkillTree görünüm odaktayken + - 0 yakınlaştırır ve sıfırlar; ok kaydırır"
         }
       ]
     },
@@ -2039,6 +2071,14 @@
         {
           "file": "core/tests/ui/layout/inlineDirection.test.ts",
           "title": "SlotGrid: RTL’de sağ ok soldaki (önceki indeks) hücredir"
+        },
+        {
+          "file": "core/tests/ui/hud/slotGridMove.test.ts",
+          "title": "SlotGrid kol akışı: D-pad (sentetik ok) hedefi seçer, A (click detail 0) bırakır, onMove çağrılır"
+        },
+        {
+          "file": "core/tests/ui/hud/slotGridMove.test.ts",
+          "title": "SlotGrid tutulan öğe varken boş hücreye dokunmak hedefi seçip bırakır; tek drop niyeti"
         }
       ]
     },

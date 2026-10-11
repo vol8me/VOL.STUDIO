@@ -693,6 +693,17 @@
   transition-delay: 0s;
 }
 
+/* Dokunmatikte hover yoktur ve balon (uzun basış / odak / reddedilen basış) hedefin yanında, çoğu kez bir komşu denetimin
+   ÜSTÜNDE açılır: dokunuşu yutarsa altındaki denetime ulaşılamaz (cihazda ölçüldü: ActionBar'ın nedeni, hemen üstündeki Mana
+   seçicisini örter). Balon dokunuşu geçirir; o dokunuş "dışarı basış" olarak balonu da kapatır. Fare için balonun üstüne geçmek
+   (WCAG 1.4.13 "hoverable") aynen kalır. */
+@media (pointer: coarse) {
+  .vol-tooltip--visible,
+  .vol-rich-tooltip--visible {
+    pointer-events: none;
+  }
+}
+
 .vol-rich-tooltip__title {
   font-family: var(--vol-font-family);
   color: var(--vol-ui-text);
@@ -702,6 +713,15 @@
 
 .vol-rich-tooltip__description {
   color: var(--vol-ui-text-muted);
+  font-size: var(--vol-text-label);
+  line-height: 1.4;
+}
+
+/* Neden notu: uyarı tonu YALNIZ renk değil, sol çizgi ile de ayrılır. */
+.vol-rich-tooltip__note {
+  color: var(--vol-ui-text);
+  border-inline-start: 3px solid var(--vol-ui-warning-solid);
+  padding-inline-start: var(--vol-space-sm);
   font-size: var(--vol-text-label);
   line-height: 1.4;
 }

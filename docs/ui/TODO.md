@@ -68,28 +68,28 @@ aile (UI-05 + UI-09) → UI-13.
 **F07 kapanış tanımı:** bütün görevler kapanmış (kod/kapı ve bağlı cihazlarda ölçülebilen kabul), cihazdan bağımsız kalan her NOT-RUN gerekçeli ve kök F08/F09'a devredilmiş,
 `pnpm signoff` geçmiş olmalıdır.
 
-## Gerçek kalan iş (2026-10-10 sonu)
+## Gerçek kalan iş (2026-10-11)
 
-**F07 KAPALI DEĞİLDİR.** 24 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
-metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde bu oturumda çalıştırılmadı.
+**F07 KAPALI DEĞİLDİR.** 17 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
+metinlerindeki "Kalan/Açık" notlarından derlenmiştir; kalan "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde henüz çalıştırılmadı (UI-08.3 Lenovo koşusu hariç).
 
-| Görev        | Gerçek kalan iş                                                                                                                                                                                                                             | Tür               |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                       | cihaz + insan     |
-| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                        | cihaz + insan     |
-| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                          | cihaz             |
-| UI-08.3–08.4 | ActionBar/BuildMenu/SkillTree/SlotGrid: bekleme/kilit etkinleştirme, klavye/kol/dokunma alternatifleri, anlamsal niyet, `resolveSkillStates`, kolla tutma/bırakma, 6 haneli fiyat; tier-1 kapsam kontrolü (UI-08.1/08.2 2026-10-11 kapandı) | kod               |
-| UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te)       | kod + insan (AT)  |
-| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                                   | kod + cihaz       |
-| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                       | cihaz + insan     |
-| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                                   | cihaz (Windows)   |
-| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                            | kod + insan (IME) |
-| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                      | cihaz             |
-| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                            | insan             |
-| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                       | kapanış           |
+| Görev        | Gerçek kalan iş                                                                                                                                                                                                                       | Tür               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                 | cihaz + insan     |
+| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                  | cihaz + insan     |
+| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                    | cihaz             |
+| UI-08.4      | Erken tier-1 kapsam kontrolü: ScrollView referans klavye/odak/overscroll kanıtı; UI-03/04/05/08 applicable durumlarının assertion'a bağlanması; kalanlar görünür kalan iş (UI-08.1–08.3 2026-10-11 kapandı)                           | kod               |
+| UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te) | kod + insan (AT)  |
+| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                             | kod + cihaz       |
+| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                 | cihaz + insan     |
+| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                             | cihaz (Windows)   |
+| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                      | kod + insan (IME) |
+| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                | cihaz             |
+| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                      | insan             |
+| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                 | kapanış           |
 
-Bu oturumda koşulmayanlar: tam `node scripts/e2e.mjs`, `pnpm fast`/`high`/`signoff`, tam core vitest (yalnız ilgili dosyalar), Deck ve Lenovo
-oturumları. Cihaz bağımsız her iş bittiğinde sıradaki kapı bunlardır; cihazlar bağlı olduğundan cihaz satırları "NOT-RUN" değil "yapılacak"tır.
+Henüz koşulmayanlar: tam `node scripts/e2e.mjs`, `pnpm fast`/`high`/`signoff`, Deck oturumları (tam core vitest 2026-10-11'de koşuldu: 249 dosya / 3394 test geçti;
+Lenovo `hudInteraction` dikey/yatay/%200 yazı koşuldu). Cihaz bağımsız her iş bittiğinde sıradaki kapı bunlardır; cihazlar bağlı olduğundan cihaz satırları "NOT-RUN" değil "yapılacak"tır.
 
 ### Yapılamayan/NOT-RUN kalacak kabuller
 
@@ -374,7 +374,7 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       `hudPanels.spec.ts` (10, iki motor 20/20), `hudLayer.spec.ts` (5, iki motor 10/10), Lenovo `hud.spec.ts`. Oyun fiziği/performansı
       göreve karıştırılmadı. **NOT-RUN:** fiziksel Deck/tablet görsel kabulü ve mini harita dokunma-sürükleme hissi (kullanıcı turu,
       UI-13.4).
-- [ ] **UI-08.3 — ActionBar/BuildMenu/SkillTree/SlotGrid.** Gerçek oyun ikonları (UI-01.8),
+- [x] **UI-08.3 — ActionBar/BuildMenu/SkillTree/SlotGrid.** Gerçek oyun ikonları (UI-01.8),
       seçim/kilitli/kullanılamayan/bekleme/boş/nadirlik; klavye/kol/dokunma; RTS bağlamsal
       imleç (UI-01.9) ile. Kapanır: resolveSkillStates isteğe bağlı kalır; hover/Tooltip ve
       dokunma alternatifi; sunumda altın/yetenek defteri yok; anlamsal olay tekil; uzun 6 haneli fiyat.
@@ -389,6 +389,45 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       Yapıldı (2026-10-08): BuildMenu seçimi (açma-kapama) `aria-pressed` ile, ActionBar mod slotu
       `aria-pressed` ile, soğuyan slot `aria-disabled` ile duyulur (yalnız durum değişince yazılır)
       (`core/tests/ui/hud/hudSemantics.test.ts`).
+      Yapıldı (2026-10-11): kapanış. **Kullanılamaz ≠ disabled:** bekleyen (`setCooldown`), nedenli (`ActionBar.setUnavailable(id,
+neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altın/mana/puan sunumda tutulmaz) ve kilitli
+      (`SkillTree`) öğe `disabled` DEĞİL `aria-disabled`dır: odaklanabilir kalır, `aria-describedby` balonu nedeni söyler (kalan
+      süre, "Yetersiz Altın", "Gerekli: Kılıç Ustalığı"), basış tek `reject` niyeti verir (hedef bileşen kökü: disabled hedef niyet
+      yaymaz) ve ev sahibine `onBlocked(id, neden)` bildirir; kullanılabilir öğe tek `press`/`select`/`cancel` üretir.
+      **ActionBar** `toolbar` (tek sekme durağı, ok tuşları, kısayol 1/2/3 bekleyen slotu çalıştırmaz); **BuildMenu** tek sekme durağı + uzamsal ok gezinmesi (`pickDirectionalTarget`), balon ad+kısayol+maliyet+neden, **altı haneli ve boşluksuz fiyat kutuyu
+      taşırmaz ve kısayol rozetiyle çakışmaz** (`overflow-wrap`, kutu sınırlı); seçim RTS bağlamsal imlecini değiştirir (vitrin
+      `hudBuildCard.ts`: seçimsiz boşta, seçiliyken inşa, suda engelli; UI-01.9). **SkillTree** baştan yazıldı: kilitli düğüm
+      odaklanır, roving tabindex (tek durak = ilk açılabilir düğüm), uzamsal ok gezinmesi, basış `reject` + eksik önkoşul notlu
+      `RichTooltip` (`note`; balon ALTTA açılır ki adını verdiği önkoşulu örtmesin), görünüm yakınlaştırma 1×–2× (klavye + / − / 0, IconButton
+      düğmeleri 44 px, sınırda `aria-disabled`, tekerlek sınırda sayfaya bırakılır → kaydırma tuzağı yok), ilk birincil
+      işaretçiyle kaydırma, odak görünüme kaydırılır, `skillTree.css` ayrıldı; `resolveSkillStates` isteğe bağlı kaldı.
+      **SlotGrid** taşıma akışı: `beginMove(index?)`/`cancelMove()`/`isMoving` (kol A / "Taşı" düğmesi / Space), oklar ve D-pad hedefi seçer
+      (`data-vol-arrows`), Enter/A bırakır, Escape/B vazgeçer; **dokun-yerleştir:** tutulan öğe varken bir hücreye dokunmak
+      yerleştirir; sürükleme sonrası gelen uyumluluk `click` bir kez yutulur (fareyle sürükle-bırak önceden `pick, drop, press:auto`
+      veriyordu, artık yalnız `pick, drop`). **Dokunma alternatifi (hover yok):** `bindBubble` dokunma/kalemde 450 ms uzun basışla balonu açar ve o
+      basışın tıklamasını yutar (10 px kayma sınırı; kısa dokunuş etkilenmez), balon başka yere dokunana/Escape'e kadar kalır;
+      kilitli düğümün nedeni `show()` ile verilir.
+      **Gerçek kusurlar (cihazda ve gerçek tarayıcıda bulundu, kökünden giderildi):** (1) SlotGrid öğesi `touch-action: none`
+      taşımıyordu: parmakla dikey sürükleme tarayıcı kaydırmasına çevrilip `pointercancel` oluyor ve bırakma SESSİZCE kayboluyordu
+      (`pick` var `drop` yok); (2) bırakma hücresi hayalet öğenin köşesinden `floor` ile hesaplanıyordu: hücre merkezine bırakınca
+      köşe tam sınırda kalır, gerçek parmağın alt-piksel sapması bir önceki (çoğu kez dolu) hücreye düşürüp bırakmayı REDDEDİYORDU
+      (fare tamsayı koordinatla şans eseri geçiyordu) → en yakın hücreye yuvarlanır; (3) dokunmada açılan neden balonu hemen
+      üstündeki komşu denetimi örtüyor ve balona dokunmak onu kapatmıyordu (ActionBar nedeni, hemen üstündeki Mana seçicisine
+      ulaşılmasını engelliyordu) → `@media (pointer: coarse)`'ta görünür balon dokunuşu geçirir (fare "hoverable" kalır); (4) SkillTree
+      balonu önkoşul düğümünü örtüyordu → alta; (5) önceki UI-08.1/08.2 commit'inden kalan, `pnpm quick`'in koşmadığı ama `pnpm high`'ın
+      yakalayacağı gizli kusur: `publicSurface.test.ts` iki yeni adı (`FLOATING_TEXT_MAX_ACTIVE`, `MAX_LEVELS_PER_XP_GAIN`) listede
+      yoktu (tam core vitest ile bulundu). **Ölçüm notu:** CDP `Input.dispatchTouchEvent` dokunuşunun uyumluluk `click`i `pointerup`tan
+      250–300 ms sonra gelir (gerçek çekirdek dokunuşu `adb input tap` ile 3–5 ms: ürün gecikmesi DEĞİL, koşum artefaktı); bu aralıkta
+      sayfa kayarsa gecikmiş tıklama başka öğeye düşerdi → cihaz `tap()`i tıklamayı bekler.
+      Kanıt: `core/tests/ui/hud/hudBlockedActions.test.ts` (18), `skillTreeView.test.ts` (15), `slotGridMove.test.ts` (16, alt-piksel
+      sapma testi hata varken kırılıyor), `tooltipBehavior.test.ts` (+8 → 14: 450 ms uzun basış, tıklama yutma ve süre dolumu, kayma iptali, fare/ikinci parmak, dışa dokunma, `show`/`hide`, söküm),
+      `cssConstantSync.test.ts` (+2: `touch-action`, kaba işaretçide balon), `hudInteraction.spec.ts` (13, iki motor 26/26; mutasyonla
+      sınandı: tıklama yutma, kilitli düğüm reject, BuildMenu reject, ActionBar reject, 6 haneli fiyat), Lenovo
+      `devtools/vol-showcase/tests/device/hudInteraction.spec.ts` (4: ActionBar/BuildMenu/SlotGrid/SkillTree gerçek dokunuş, uzun basış,
+      parmakla sürükleme, 44 px hedefler; dikey 4/4, yatay 4/4, %200 yazı ölçeğinde 8/8). Tür yüzeyi +1 ad (`ActionBarBlockReason`;
+      820 sembol; 95 sınıf, 165 runtime, 284 type-only). Kayıt: [VERIFICATION](VERIFICATION.md) "ActionBar/BuildMenu/SkillTree/SlotGrid
+      kaydı". **NOT-RUN:** fiziksel kolla SlotGrid taşıma ve ActionBar kısayolu hissi, ekran okuyucunun kullanılamaz nedenini
+      okuması, uzun basışın insan hissi (UI-13.4); Samsung SM-G990B2 (UI-13.3).
 - [ ] **UI-08.4 — Erken tier-1 kapsam kontrolü.** ScrollView referans klavye/odak/overscroll
       kanıtı; UI-10 ileri pan ayrı. Kapanır: UI-03/04/05/08 applicable durumları assertion'a bağlı;
       kalanlar görünür kalan iş; tam tier-1/M3 kapanışı yalnız UI-13.1'de.

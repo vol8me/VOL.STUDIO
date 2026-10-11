@@ -272,15 +272,30 @@ aynı basış/bırakış çiftini üretir (`data-vol-hold` işareti, kontrolcün
 Bu denetimler arayüz sesi çalmaz: ateş/şarj/yön sesi oyunun SFX'idir.
 
 Hover/odak içeriği (Tooltip, RichTooltip) WCAG 1.4.13'e uyar: Escape kapatır (tuş yutulur), balon
-üzerine gelinebilir, hedefe `aria-describedby` bağlanır, konum iki eksende sınırlanır. Bildirim
+üzerine gelinebilir, hedefe `aria-describedby` bağlanır, konum iki eksende sınırlanır. Dokunmada hover yoktur: hedefe 450 ms
+basılı tutmak (dokunma/kalem; 10 px kayma iptal eder) balonu açar ve o basışın tıklaması yutulur (bilgi bakmak eylemi tetiklemez),
+balon başka yere dokunana ya da Escape'e kadar kalır; kısa dokunuş etkilenmez. Kaba işaretçide (`pointer: coarse`) görünür balon
+dokunuşu YUTMAZ (altındaki denetime geçer ve o dokunuş balonu kapatır): balon çoğu kez bir komşu denetimin üstünde açıldığından
+yutarsa o denetime ulaşılamazdı (cihazda ölçüldü); fare için "hoverable" aynen kalır. Bildirim
 (ToastManager) en çok 3 görünür, fazlası kaybolmadan sıradadır; kritik bildirim `role="alert"`,
 öncelikli ve kalıcıdır, sessizce düşmez; eylemli bildirim kalıcıdır; fare/odak süreyi durdurur.
 
-Sürükleme ve basılı-tut/sürükle desenleri tek yol olamaz: SlotGrid (Space tutar, oklar hedef seçer,
-Space/Enter bırakır, Escape iptal), RadialMenu (`openFocused`: oklar döner, Enter seçer, Escape/Tab seçmeden
+Sürükleme ve basılı-tut/sürükle desenleri tek yol olamaz: SlotGrid (`beginMove()`/"Taşı" düğmesi/Space tutar, oklar ve D-pad hedef seçer,
+Space/Enter/kol A bırakır, Escape/kol B iptal; dokunmada tutulan öğe varken bir hücreye dokunmak yerleştirir), RadialMenu (`openFocused`: oklar döner, Enter seçer, Escape/Tab seçmeden
 kapatır), Joystick ve SquareJoystick (ok tuşları vektör üretir; ortak `ArrowKeyHold`), seçilebilir DataTable (roving `tabindex`, ok/Home/End,
 Enter/Space, `aria-selected`) klavye ve kol karşılığını taşır; durum değişimi canlı bölgeyle duyurulur ve
 yeniden çizim odağı düşürmez.
+
+HUD eylem yüzeylerinde (ActionBar, BuildMenu, SkillTree; UI-08.3) KULLANILAMAZ öğe `disabled` DEĞİL `aria-disabled`dır: bekleyen
+(`setCooldown`), nedenli (`setUnavailable(id, neden)`; neden ev sahibinden gelir, sunum altın/mana/puan tutmaz) ve kilitli
+(önkoşul eksik) öğe odağı korur (kol/klavye ona ulaşır), nedeni `aria-describedby` ile okuyucuya ve balonla gözlere söyler ve basış
+tek `reject` niyeti verir (hedef bileşen kökü: disabled hedef niyet yaymaz); ev sahibi `onBlocked` ile geri bildirim (SFX/yanıp
+sönme) verir. Kullanılabilir öğe tek `press`/`select`/`cancel` üretir. SkillTree önkoşul balonunu ALTTA açar (önkoşullar üstte;
+balon adını verdiği düğümü örtmez), 1×–2× yakınlaştırma düğmeleri/klavyesi ve ilk birincil işaretçiyle kaydırma taşır, tekerlek
+sınırda sayfaya bırakılır. İşaretçiyle sürüklenen öğe (`SlotGrid`) `touch-action: none` taşır: aksi hâlde parmakla dikey sürükleme
+tarayıcı kaydırmasına çevrilip `pointercancel` olur ve bırakma sessizce kaybolur; bırakma hücresi hayalet öğenin EN YAKIN hücresidir
+(`floor` değil: gerçek parmağın alt-piksel sapması hücre sınırında bir önceki hücreye düşürürdü). Sürükleme/yerleştirmenin
+ardından gelen uyumluluk `click` bir kez yutulur (kök yedeğinde ikinci `press:auto` üretmez).
 
 Jest dedektörleri (SwipeGestureZone, MultiTouchZone) kontrol değil algılayıcıdır: odaklanmazlar ve tek başlarına
 klavye/kol eşdeğeri taşımazlar; eşdeğer onları kullanan sahibin eylem yoludur (aynı geri çağrıyı çağıran düğmeler).

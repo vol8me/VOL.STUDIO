@@ -11,6 +11,7 @@ import {
   MultiTouchZone,
   PauseResumeButton,
   PullToRefresh,
+  SegmentedControl,
   SlotGrid,
   type SlotItem,
   SquareJoystick,
@@ -29,6 +30,7 @@ import { buildPinchZoomDemo, buildWorldCameraDemo } from './touchCameraDemo';
 import { buildGamepadDemo } from './touchGamepadDemo';
 import { buildRadialMenuDemo } from './touchRadialDemo';
 import { card, cardGrid, svgIcon } from './shared';
+import { intentProbe } from './intentProbe';
 import {
   ICON_DASH,
   ICON_FIRE,
@@ -36,7 +38,6 @@ import {
   ICON_JUMP,
   ICON_CROUCH,
   ICON_SPEED,
-  ICON_TOWER,
   ICON_WAVE,
 } from './icons';
 
@@ -404,7 +405,9 @@ function buildSlotGridDemo(disposables: DisposableScope): HTMLElement {
       );
     },
     onSwapRequest: () => true,
-    onSlotClick: (item) => {
+    onSlotClick: (item, index) => {
+      selectedIndex = index;
+      moveButton.setDisabled(false);
       result.setContent(
         i18next.t('volui:touch.itemDetail', { label: item.label, qty: item.quantity ?? 0 }),
       );
@@ -412,8 +415,22 @@ function buildSlotGridDemo(disposables: DisposableScope): HTMLElement {
   });
   disposables.addDestroyables(grid);
 
+  // Sürükleme tek yol değildir: seçili öğeyi "Taşı" ile tutun, oklar/D-pad hedefi seçer, kol A/Boşluk/Enter bırakır, B/Escape
+  // vazgeçer; dokunmada bir hücreye ya da öğeye dokunmak hedefi seçip bırakır (kol-only ve dokunmatik eşdeğeri).
+  let selectedIndex = -1;
+  const moveButton = new Button(i18next.t('volui:touch.moveItem'), {
+    disabled: true,
+    onClick: () => {
+      if (selectedIndex >= 0) grid.beginMove(selectedIndex);
+    },
+  });
+  disposables.addDestroyables(moveButton);
+  moveButton.element.dataset.action = 'slot-move';
+
   wrap.appendChild(grid.element);
+  wrap.appendChild(moveButton.element);
   wrap.appendChild(result.element);
+  wrap.appendChild(intentProbe(wrap, disposables));
 
   return wrap;
 }
@@ -513,13 +530,17 @@ function buildPauseResumeDemo(disposables: DisposableScope): HTMLElement {
   return wrap;
 }
 
-/** ActionBar demosu: sabit eylem çubuğu. "Kule İnşa Et" 3sn bekleme başlatır (rAF). shortcut 1/2/3 tuş eşleşmesi, görünür rozet yok. */
+/**
+ * ActionBar demosu: sabit eylem çubuğu (UI-08.3). "Kule" 3 sn bekleme başlatır; bekleyen slot `aria-disabled` olur, odaklanabilir
+ * kalır, balon kalan süreyi söyler ve basış reddedilir (`reject`). "Dalga" mana yetmeyince nedenli kullanılamaz olur (neden
+ * host'tan gelir). Kısayol 1/2/3, oklar slotlar arasında gezinir; dokunmada uzun basış balonu açar.
+ */
 function buildActionBarDemo(disposables: DisposableScope): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'vol-showcase-panel-demo';
 
   // Sabit yükseklikli durum satırı — metin değişimi ActionBar'ı kaydırmaz.
-  const { element: _statusRow, text: result } = buildStatusRow(
+  const { element: statusRow, text: result } = buildStatusRow(
     i18next.t('volui:touch.actionBarHint'),
   );
   disposables.addDestroyables(result);
@@ -530,11 +551,12 @@ function buildActionBarDemo(disposables: DisposableScope): HTMLElement {
   const bar = new ActionBar({
     showLabels: true,
     enableKeyboardShortcuts: true,
+    showTooltips: true,
     slots: [
       {
         id: 'tower',
         label: i18next.t('volui:touch.buildTower'),
-        icon: svgIcon(ICON_TOWER),
+        icon: svgIcon('archerTower'),
         shortcut: '1',
       },
       {
@@ -552,9 +574,7 @@ function buildActionBarDemo(disposables: DisposableScope): HTMLElement {
     ],
     onActivate: (id) => {
       if (id === 'tower') {
-        const now = performance.now();
-        if (now < towerCooldownEnd) return;
-        towerCooldownEnd = now + TOWER_COOLDOWN_SECONDS * 1000;
+        towerCooldownEnd = performance.now() + TOWER_COOLDOWN_SECONDS * 1000;
         result.setContent(i18next.t('volui:touch.towerBuilt', { n: TOWER_COOLDOWN_SECONDS }));
         tickCooldown();
       } else if (id === 'wave') {
@@ -563,6 +583,19 @@ function buildActionBarDemo(disposables: DisposableScope): HTMLElement {
         result.setContent(i18next.t('volui:touch.speedSetX2'));
       }
     },
+    // Bileşen "hazır değil"i bildirir, geri bildirim oyunundur (burada durum satırı; gerçek oyunda SFX/yanıp sönme).
+    onBlocked: (id, reason) =>
+      result.setContent(
+        i18next.t(
+          reason === 'cooldown' ? 'volui:touch.blockedCooldown' : 'volui:touch.blockedMana',
+          {
+            name:
+              id === 'tower'
+                ? i18next.t('volui:touch.buildTower')
+                : i18next.t('volui:touch.startWave'),
+          },
+        ),
+      ),
   });
   disposables.addDestroyables(bar);
 
@@ -575,8 +608,20 @@ function buildActionBarDemo(disposables: DisposableScope): HTMLElement {
     }
   };
 
-  wrap.appendChild(bar.element);
-  wrap.appendChild(result.element);
+  // Mana host kararıdır: düşükken "dalga" nedenli kullanılamaz olur, yeterliyken geri açılır.
+  const mana = new SegmentedControl({
+    ariaLabel: i18next.t('volui:touch.manaLabel'),
+    value: 'ok',
+    options: [
+      { value: 'ok', label: i18next.t('volui:touch.manaOk') },
+      { value: 'low', label: i18next.t('volui:touch.manaLow') },
+    ],
+    onCommit: (value) =>
+      bar.setUnavailable('wave', value === 'low' ? i18next.t('volui:touch.notEnoughMana') : null),
+  });
+  disposables.addDestroyables(mana);
+
+  wrap.append(mana.element, bar.element, statusRow, intentProbe(wrap, disposables));
 
   return wrap;
 }

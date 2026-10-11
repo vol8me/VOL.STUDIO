@@ -8,7 +8,7 @@ Yeni regresyonlar modül adıyla test aynasına gider; eski birleşik testler b�
 
 ## Kapsam ve terfi
 
-95 public sınıf, 165 runtime export, 283 type-only export vardır.
+95 public sınıf, 165 runtime export, 284 type-only export vardır.
 20 sınıf VOL.TEST'te doğrudan, Glyph createGlyph üzerinden dolaylı kullanılır.
 Tier-1 ortak tabanı Button, IconButton, Text, Panel, Select, Checkbox,
 Slider, HoldButton, Bar/XPBar, ScrollView ve picker'lardır; aktif tüketimdeki
