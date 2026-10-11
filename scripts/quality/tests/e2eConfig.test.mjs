@@ -134,19 +134,27 @@ test('vitrin şeritleri her spec dosyasını tam bir şeritte koşturur ve sessi
   assert.equal(all.default.testIgnore, undefined, 'şerit verilmezse hiçbir spec dışlanmaz');
   assert.equal(all.default.testMatch, undefined, 'şerit verilmezse varsayılan eşleşme kalır');
 
-  for (const spec of specs) {
-    const file = resolve(testDir, spec);
-    const inMain = !matches(main.default.testIgnore, file);
-    const inQuiet = matches(quiet.default.testMatch, file);
-    assert.equal(
-      inMain !== inQuiet,
-      true,
-      `${spec}: tam bir şeritte koşmalı (ana ${inMain}, sessiz ${inQuiet})`,
-    );
-    assert.equal(
-      inQuiet,
-      all.QUIET_SPECS.includes(spec.replace(/\.spec\.ts$/, '')),
-      `${spec}: sessiz şerit üyeliği QUIET_SPECS ile aynı olmalı`,
-    );
+  // Playwright'ta proje düzeyindeki `testIgnore`/`testMatch` üst düzeydekini EZER (ikisi birleşmez): WebKit'in kendi
+  // `testIgnore`'u şerit listesini sessizce düşürmüştü. Bu yüzden şerit üyeliği her PROJENİN etkin listesinden okunur.
+  const effective = (config, project, key) => project[key] ?? config.default[key];
+  for (const project of main.default.projects) {
+    const quietProject = quiet.default.projects.find((entry) => entry.name === project.name);
+    const plainProject = all.default.projects.find((entry) => entry.name === project.name);
+    assert.ok(quietProject && plainProject, `${project.name}: üç yapılandırmada da bulunmalı`);
+    for (const spec of specs) {
+      const file = resolve(testDir, spec);
+      // Şeritsiz yapılandırmada bile dışlanan dosya (WebKit'te piksel temeli) hiçbir şeritte koşmaz.
+      if (matches(effective(all, plainProject, 'testIgnore'), file)) continue;
+      const inMain = !matches(effective(main, project, 'testIgnore'), file);
+      const inQuiet =
+        matches(effective(quiet, quietProject, 'testMatch'), file) &&
+        !matches(effective(quiet, quietProject, 'testIgnore'), file);
+      const isQuiet = all.QUIET_SPECS.includes(spec.replace(/\.spec\.ts$/, ''));
+      assert.equal(
+        isQuiet ? inQuiet && !inMain : inMain && !inQuiet,
+        true,
+        `${project.name} · ${spec}: tam bir şeritte koşmalı (ana ${inMain}, sessiz ${inQuiet})`,
+      );
+    }
   }
 });

@@ -253,8 +253,10 @@ vitrin motorları yalnız birbirleriyle eşzamanlıdır.
 eşzamanlıyken kararsızdı (WebKit'te meşgul durumun tabana eklediği süre ve flaş sınırının
 devreye girmesi düştü); tek başına, tek işçiyle koşunca geçtiler. `devtools/vol-showcase/scripts/e2e.mjs` tam koşuyu
 ikiye böler: ana şeritte geri kalan her şey motorlar eşzamanlı, ardından bu spec'ler motor motor
-ve tek işçiyle. Şeritler yalnız tam koşuyu böler: `e2eConfig` bekçisi her spec dosyasının tam
-bir şeritte koştuğunu ve listenin gerçek dosyaları adlandırdığını sınar; dosya adı ya da `--grep`
+ve tek işçiyle. Şeritler yalnız tam koşuyu böler: `e2eConfig` bekçisi her spec dosyasının HER
+PROJEDE tam bir şeritte koştuğunu ve listenin gerçek dosyaları adlandırdığını sınar (proje düzeyindeki
+`testIgnore` üst düzeydekini ezer; WebKit'te bu yüzden sessiz spec'ler bir koşu boyunca ana şeritte de
+koştu ve yükte düştü); dosya adı ya da `--grep`
 verilen ad hoc koşu tek şeritte koşar. Yeni bir sınama süreyi SINIRLIYORSA listeye girer.
 
 **Bu bütçe yalnız boş makinede geçerlidir.** 2026-10-11'de vitrin `e2e`i bu bütçenin çok üstüne

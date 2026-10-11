@@ -33,6 +33,11 @@ export const QUIET_SPECS = [
 ] as const;
 const quietPattern = new RegExp(String.raw`[\\/](${QUIET_SPECS.join('|')})\.spec\.ts$`);
 const lane = process.env.VOL_UI_E2E_LANE;
+/**
+ * Ana şeridin dışlaması. Proje düzeyindeki `testIgnore` üst düzeydekini EZER (birleşmez), bu yüzden kendi
+ * `testIgnore`'u olan her proje bu listeyi AÇIKÇA katar; yoksa o projede sessiz spec'ler ana şeritte de koşar.
+ */
+const laneIgnore = lane === 'main' ? [quietPattern] : [];
 
 /**
  * CORE'un GÖRSEL sözleşme kapısı. Birim testler yapıyı doğrular ama bileşenin
@@ -47,7 +52,7 @@ const lane = process.env.VOL_UI_E2E_LANE;
  */
 export default defineConfig({
   testDir: './tests/e2e',
-  ...(lane === 'main' ? { testIgnore: quietPattern } : {}),
+  ...(laneIgnore.length > 0 ? { testIgnore: laneIgnore } : {}),
   ...(lane === 'quiet' ? { testMatch: quietPattern } : {}),
   fullyParallel: false,
   workers: WORKERS,
@@ -93,7 +98,7 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'], deviceScaleFactor: 1 },
       // Piksel temeli yalnız Chromium'dadır; WebKit temeli bilinçli olarak ayrıca
       // kalibre edilmeden kurulmaz ve otomatik güncellemeyle saklanmaz.
-      testIgnore: /visual\.spec\.ts/,
+      testIgnore: [/visual\.spec\.ts/, ...laneIgnore],
     },
   ],
   webServer: {
