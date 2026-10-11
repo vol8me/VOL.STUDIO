@@ -95,8 +95,11 @@ test('meşgul durum, olaydan sonraki ilk karede görünür ve ortam tabanına en
     await dialog.getByRole('button', { name: 'Save and exit', exact: true }).click();
     const busyReading = await readProbe(page);
 
-    // Çalışırken iptal açık ve odaklıdır; diyalog kapanır ve sonraki örnek temiz başlar.
-    await dialog.getByRole('button', { name: 'Cancel, stay', exact: true }).click();
+    // Çalışırken iptal açık ve odaklıdır; diyalog kapanır ve sonraki örnek temiz başlar. Klavyeyle kapatılır: fare
+    // tıklamasının eyleme-uygunluk beklemesi benzetilmiş kaydetme süresiyle yarışır (kaydetme bitince diyalog
+    // kendiliğinden kapanır, tıklama hedefsiz kalır); odak sözleşmesi zaten burada doğrulanır.
+    await expect(dialog.getByRole('button', { name: 'Cancel, stay', exact: true })).toBeFocused();
+    await page.keyboard.press('Enter');
     await expect(dialog).toHaveCount(0);
 
     // İlk üç tur ısınmadır (JIT, yerleşim).

@@ -48,7 +48,8 @@ test('RTS arenası: bağlama göre şekil ve ton değişir, kenar kaydırma oku 
   ];
   const cursors = new Set<string>();
   for (const [context, value] of expectations) {
-    await page.locator(`[data-ctx="${context}"]`).hover();
+    // `data-ctx` başka sekmelerde de var (HUD inşa kartı); WebKit gizli sekmeleri de kurar, seçici arenaya bağlanır.
+    await arena.locator(`[data-ctx="${context}"]`).hover();
     await expect(readout).toHaveAttribute('data-value', value);
     const css = await cursorOf(page, '[data-arena="rts"]');
     expect(css).toContain('data:image/svg+xml');

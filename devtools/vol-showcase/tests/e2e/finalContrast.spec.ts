@@ -104,6 +104,29 @@ test.describe('düzenek eşik altını yakalar, geçeni geçirir', () => {
     expect(faint.worst).toBeLessThan(4.5);
   });
 
+  test('kesirli konumdaki kutunun dışında kalan sınır satırı ölçülmez (yalnız metnin arkası sayılır)', async ({
+    page,
+  }) => {
+    await openShowcase(page);
+    // Açık sayfa üstünde koyu kutu, `top` yarım piksel: kutu piksele yuvarlanarak çizilir, metin kutusunun ilk satırı
+    // kutunun DIŞINDA (açık zemin) kalır; metnin arkasında olmayan o satır en kötü piksel sayılmamalıdır.
+    await page.evaluate(() => {
+      const sheet = document.createElement('div');
+      sheet.style.cssText =
+        'position:fixed;left:10px;top:10px;width:240px;height:60px;background:#fff;z-index:99999';
+      const box = document.createElement('div');
+      box.id = 'fc-fixture';
+      box.textContent = 'Deneme metni';
+      box.style.cssText =
+        'position:absolute;left:10px;top:10.5px;padding:0;background:#000;color:#fff;font:13px sans-serif;line-height:normal';
+      sheet.append(box);
+      document.body.append(sheet);
+    });
+    const scratch = await scratchPage(page);
+    const [measure] = await measureFinalContrast(page, scratch, page.locator('#fc-fixture'));
+    expect(measure.worst).toBeGreaterThan(20);
+  });
+
   test('büyük metin 3:1 eşiğini kullanır', async ({ page }) => {
     const [measure] = await fixture(page, 'background:#000;color:#fff;font-size:28px');
     expect(measure.required).toBe(3);

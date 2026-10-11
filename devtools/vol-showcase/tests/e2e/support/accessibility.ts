@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { ElementHandle, Locator, Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { stableTarget } from './axeTarget';
 import { selectTab, type ShowcaseTab } from './determinism';
 
 /**
@@ -46,7 +47,10 @@ export interface Scan {
 function toFindings(results: { id: string; nodes: { target: unknown[] }[] }[]): Finding[] {
   return results
     .flatMap((result) =>
-      result.nodes.map((node) => ({ rule: result.id, target: node.target.join(' ') })),
+      result.nodes.map((node) => ({
+        rule: result.id,
+        target: stableTarget(node.target.join(' ')),
+      })),
     )
     .sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
 }

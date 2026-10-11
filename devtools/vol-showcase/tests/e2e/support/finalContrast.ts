@@ -193,10 +193,26 @@ function measureRun(
   const foreground = parseColor(run.color);
   const ratios: number[] = [];
   for (const rect of run.rects) {
-    const x0 = Math.max(0, Math.floor(rect.x * scale));
-    const y0 = Math.max(0, Math.floor(rect.y * scale));
-    const x1 = Math.min(image.width, Math.ceil((rect.x + rect.width) * scale));
-    const y1 = Math.min(image.height, Math.ceil((rect.y + rect.height) * scale));
+    // Kesirli konumdaki kutu piksele yuvarlanarak çizilir: metin kutusunun yalnız kısmen içinde kalan sınır pikseli
+    // metnin ARKASINDA değildir (çizilen zeminin ya da kutunun dışı görünür) ve ölçüme girmez. Kutu bir pikselden
+    // küçükse (içeride tam piksel yoksa) dışa yuvarlanır.
+    const inner = {
+      x0: Math.ceil(rect.x * scale),
+      y0: Math.ceil(rect.y * scale),
+      x1: Math.floor((rect.x + rect.width) * scale),
+      y1: Math.floor((rect.y + rect.height) * scale),
+    };
+    const hasWholePixels = inner.x1 > inner.x0 && inner.y1 > inner.y0;
+    const x0 = Math.max(0, hasWholePixels ? inner.x0 : Math.floor(rect.x * scale));
+    const y0 = Math.max(0, hasWholePixels ? inner.y0 : Math.floor(rect.y * scale));
+    const x1 = Math.min(
+      image.width,
+      hasWholePixels ? inner.x1 : Math.ceil((rect.x + rect.width) * scale),
+    );
+    const y1 = Math.min(
+      image.height,
+      hasWholePixels ? inner.y1 : Math.ceil((rect.y + rect.height) * scale),
+    );
     for (let y = y0; y < y1; y++) {
       for (let x = x0; x < x1; x++) {
         const at = (y * image.width + x) * 4;
