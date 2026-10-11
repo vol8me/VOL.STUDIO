@@ -749,6 +749,90 @@
 }
 
 /*
+ * Hata (`Bar.setStatus('error')`): tehlike rengi VE çapraz şerit — renk körü ve soluk ekranda da ayırt edilir.
+ * Dolgu son değerde kalır (hatanın nerede oluştuğu okunur).
+ */
+.vol-bar--error .vol-bar__fill {
+  background-color: var(--vol-ui-danger-solid);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0,
+    transparent 6px,
+    rgb(0 0 0 / 40%) 6px,
+    rgb(0 0 0 / 40%) 12px
+  );
+}
+
+/*
+ * Düşük uyarısı rengin yanında DESENLE de söylenir (renk tek başına taşıyıcı olmaz): dolgunun üstünde 45° ince şerit.
+ * Hata şeridinden (135°, kalın, dolguyu değiştirir) açısı ve kalınlığıyla ayrılır; okuyucu metni "düşük" der.
+ */
+.vol-bar--low .vol-bar__fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 4px,
+    rgb(0 0 0 / 32%) 4px,
+    rgb(0 0 0 / 32%) 6px
+  );
+  pointer-events: none;
+}
+
+/*
+ * Belirsiz ilerleme (`Bar.setStatus('busy')`): dolgu kuyuda kayan dar bir banttır (yalnız transform). Hasar şeridi
+ * saklıdır; değer gösterilmez. Hareket azaltılmışta bant kaymaz: kuyu boyunca sönük dolgu kalır, anlamı `aria-busy` taşır.
+ */
+.vol-bar--busy .vol-bar__trail {
+  display: none;
+}
+
+.vol-bar--busy .vol-bar__fill {
+  width: 34%;
+  height: 100%;
+  animation: vol-bar-sweep calc(var(--vol-motion-duration-cinematic) * 3)
+    var(--vol-motion-ease-standard, ease-in-out) infinite;
+}
+
+.vol-bar--vertical.vol-bar--busy .vol-bar__fill {
+  width: 100%;
+  height: 34%;
+  animation-name: vol-bar-sweep-vertical;
+}
+
+@keyframes vol-bar-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes vol-bar-sweep-vertical {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(-300%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vol-bar--busy .vol-bar__fill,
+  .vol-bar--vertical.vol-bar--busy .vol-bar__fill {
+    width: 100%;
+    height: 100%;
+    animation: none;
+    opacity: 0.35;
+  }
+}
+
+/*
  * Kaydırıcı: çubuk bir KUYU (oyuk), dolgu kesikli enerji şeridi, tutamaç çelik bir plaka;
  * ortasındaki marka çizgisi değer yönünü gösterir. Hepsi düz renk + sert iç gölge (blur yok).
  */

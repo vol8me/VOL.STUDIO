@@ -208,16 +208,21 @@
   transform: translate(-50%, -50%) scale(0.4);
 }
 
-.vol-floating-text--critical.vol-floating-text--visible {
+.vol-floating-text--emphasis.vol-floating-text--visible {
   transform: translate(-50%, -50%) scale(1.15);
 }
 
-.vol-floating-text--critical.vol-floating-text--fading {
+.vol-floating-text--emphasis.vol-floating-text--fading {
   transform: translate(-50%, -50%) scale(1);
 }
 
+/*
+ * Salt-gösterim plakaları (TimerBar, ResourceBar, RoundCounter) işaretçiyi KENDİ ÜSTLENMEZ: `pointer-events` miras
+ * alınır. HUD kökü `pointer-events: none` iken (oyun tuvali altta tıklanır) plaka tıklamayı yutmaz; normal akışta
+ * miras değeri `auto` olduğundan görünüm ve davranış aynıdır. Etkileşimli bileşenler (ActionBar, BuildMenu, MinimapPanel…)
+ * kendi kutusunda `auto` ister.
+ */
 .vol-timer-bar {
-  pointer-events: auto;
   background: var(--vol-ui-surface-1);
   border: 1px solid var(--vol-ui-border-soft);
   border-radius: var(--vol-radius-sm);
@@ -254,7 +259,6 @@
 }
 
 .vol-resource-bar {
-  pointer-events: auto;
   align-items: center;
   gap: var(--vol-space-lg);
   padding: var(--vol-space-sm) var(--vol-space-md);
@@ -265,7 +269,6 @@
 }
 
 .vol-round-counter {
-  pointer-events: auto;
   padding: var(--vol-space-sm) var(--vol-space-lg);
   background: var(--vol-ui-overlay-panel);
   border: 1px solid var(--vol-ui-border-soft);
@@ -294,6 +297,31 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /*
+   * Yüzen metin yükselmez ve yaylanmaz: doğduğu noktada belirir, solar. Vurgu (`emphasis`) ölçek patlaması yerine
+   * son boyutunda görünür. Düzey atlama halkası hareket etmez; ışıma kalıcı kalır ve vurgu süresi sonunda kalkar.
+   */
+  .vol-floating-text,
+  .vol-floating-text--emphasis {
+    transition: opacity var(--vol-transition-fast);
+  }
+
+  .vol-floating-text--visible {
+    transform: translate(-50%);
+  }
+
+  .vol-floating-text--emphasis.vol-floating-text--visible,
+  .vol-floating-text--emphasis.vol-floating-text--fading {
+    transform: translate(-50%, -50%);
+  }
+
+  .vol-bar.vol-xp-bar--level-up {
+    animation: none;
+    box-shadow:
+      0 0 0 4px var(--vol-ui-accent-solid),
+      inset 0 2px 0 var(--vol-ui-well-inner-shadow);
+  }
+
   /* Sayı patlamasında ölçek yok; yön rengi vurgusu kalır. */
   @keyframes vol-counter-pulse {
     0% {

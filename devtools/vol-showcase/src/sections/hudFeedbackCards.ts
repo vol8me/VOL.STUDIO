@@ -11,6 +11,7 @@ import {
   Bar,
   Button,
   Counter,
+  FLOATING_TEXT_MAX_ACTIVE,
   FloatingTextManager,
   ResourceBar,
   ResourceCounter,
@@ -64,6 +65,74 @@ export function buildBarVariantCard(
   wrap.appendChild(controls);
 
   return card(i18n.tDynamic(VARIANT_KEYS[variant]), wrap);
+}
+
+/**
+ * HUD durum kartı: tek çubukta boş/dolu, meşgul (belirsiz ilerleme), hata ve geçersiz sayı; 6 haneli sayaç sıfıra düşer.
+ * Bileşenler yalnız sunar — hangi durumun ne zaman geçerli olduğuna burada düğmeler karar verir.
+ */
+export function buildHudStatesCard(disposables: DisposableScope): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'vol-showcase-panel-demo';
+
+  const bar = new Bar({
+    variant: 'health',
+    max: 100,
+    value: 60,
+    ariaLabel: i18next.t('volui:hud.health'),
+    label: (value, max) => `${value} / ${max}`,
+  });
+  bar.element.dataset.hudState = 'bar';
+  disposables.addDestroyables(bar);
+  wrap.appendChild(bar.element);
+
+  const note = new Text(i18next.t('volui:hud.statesHint'), { variant: 'muted' });
+  disposables.addDestroyables(note);
+  wrap.appendChild(note.element);
+
+  const barControls = document.createElement('div');
+  barControls.className = 'vol-showcase-panel-demo__controls';
+  const toggleStatus = (status: 'busy' | 'error'): void =>
+    bar.setStatus(bar.getStatus() === status ? 'normal' : status);
+  const buttons = [
+    new Button(i18next.t('volui:hud.barEmpty'), { onClick: () => bar.setValue(0) }),
+    new Button(i18next.t('volui:hud.barFull'), { onClick: () => bar.setValue(100) }),
+    new Button(i18next.t('volui:hud.barBusy'), { onClick: () => toggleStatus('busy') }),
+    new Button(i18next.t('volui:hud.barError'), { onClick: () => toggleStatus('error') }),
+    new Button(i18next.t('volui:hud.barInvalid'), { onClick: () => bar.setValue(Number.NaN) }),
+  ];
+  for (const button of buttons) {
+    disposables.addDestroyables(button);
+    barControls.appendChild(button.element);
+  }
+  wrap.appendChild(barControls);
+
+  const score = new Counter({
+    value: 999_999,
+    animateMs: 600,
+    format: (value) => i18next.t('volui:hud.scoreValue', { value: Math.round(value) }),
+    announcePrefix: i18next.t('volui:hud.score'),
+  });
+  score.element.dataset.hudState = 'score';
+  score.element.style.fontSize = '32px';
+  disposables.addDestroyables(score);
+  wrap.appendChild(score.element);
+
+  const scoreControls = document.createElement('div');
+  scoreControls.className = 'vol-showcase-panel-demo__controls';
+  const drop = new Button(i18next.t('volui:hud.scoreDrop'), {
+    variant: 'danger',
+    onClick: () => score.setValue(0),
+  });
+  const restore = new Button(i18next.t('volui:hud.scoreRestore'), {
+    onClick: () => score.setValue(999_999),
+  });
+  disposables.addDestroyables(drop, restore);
+  scoreControls.appendChild(drop.element);
+  scoreControls.appendChild(restore.element);
+  wrap.appendChild(scoreControls);
+
+  return card(i18next.t('volui:hud.statesCard'), wrap);
 }
 
 /** lowThreshold altında kırmızıya döner. Varsayılan %25, burada %50. */
@@ -244,10 +313,14 @@ export function buildXPBarCard(disposables: DisposableScope): HTMLElement {
     variant: 'primary',
     onClick: () => gainXp(150),
   });
-  disposables.addDestroyables(addSmallButton, addBigButton);
+  const addHugeButton = new Button(i18next.t('volui:hud.add2000XP'), {
+    onClick: () => gainXp(2000),
+  });
+  disposables.addDestroyables(addSmallButton, addBigButton, addHugeButton);
 
   controls.appendChild(addSmallButton.element);
   controls.appendChild(addBigButton.element);
+  controls.appendChild(addHugeButton.element);
   wrap.appendChild(controls);
 
   return card(i18next.t('volui:hud.xpBar'), wrap);
@@ -349,12 +422,35 @@ export function buildFloatingTextCard(disposables: DisposableScope): HTMLElement
       );
     },
   });
-  disposables.addDestroyables(damageButton, healButton, criticalButton);
+  // Yoğun çatışma: aynı anda ekranda duran metin sayısı sınırlıdır, en eskiler toplanır.
+  const status = new Text('', { variant: 'muted' });
+  const reportActive = (): void => {
+    status.setContent(
+      i18next.t('volui:hud.floatingActive', {
+        count: manager.activeCount,
+        max: FLOATING_TEXT_MAX_ACTIVE,
+      }),
+    );
+  };
+  const crowdButton = new Button(i18next.t('volui:hud.crowd'), {
+    onClick: () => {
+      const { x, y } = spawnAt();
+      for (let index = 0; index < 60; index += 1) {
+        manager.spawn(x + (index % 10) * 14 - 63, y, `-${index + 1}`, { variant: 'negative' });
+      }
+      reportActive();
+    },
+  });
+  disposables.addDestroyables(damageButton, healButton, criticalButton, crowdButton, status);
 
   controls.appendChild(damageButton.element);
   controls.appendChild(healButton.element);
   controls.appendChild(criticalButton.element);
+  controls.appendChild(crowdButton.element);
   wrap.appendChild(controls);
+  status.element.setAttribute('role', 'status');
+  wrap.appendChild(status.element);
+  reportActive();
 
   return card(i18next.t('volui:hud.floatingText'), wrap, { spanAll: true });
 }

@@ -59,6 +59,8 @@ export class XPBar {
    * bileşen hiçbir şeye karar vermez.
    */
   setState(level: number, xp: number): void {
+    // Geçersiz sayı ("NaN") oyuncuya yazılmaz: son geçerli durum kalır.
+    if (!Number.isFinite(level) || !Number.isFinite(xp)) return;
     const leveledUp = level > this.level;
     this.level = level;
     this.xp = Math.max(0, xp);
@@ -97,6 +99,12 @@ export class XPBar {
   }
 }
 
+/**
+ * `applyXPGain` tek çağrıda en çok bu kadar seviye atlar. Eşik çok küçük ya da kazanç çok büyükse döngü milyarlarca
+ * kez dönüp ana iş parçacığını dondururdu; sınıra varınca kalan XP son seviyede bırakılır (çubuk dolu görünür).
+ */
+export const MAX_LEVELS_PER_XP_GAIN = 1000;
+
 /** `applyXPGain` sonucu. */
 export interface XpGainResult {
   level: number;
@@ -119,6 +127,9 @@ export interface XpGainResult {
  *
  * `xpForLevel` sıfır ya da negatif dönerse döngü DURUR: aksi halde sonsuz
  * seviye atlama olurdu (eşiksiz seviye her zaman aşılmış sayılır).
+ *
+ * Geçersiz girdi çökertmez: sonlu olmayan `amount` 0 sayılır; negatif `amount` XP'yi düşürür ama seviye ve XP asla
+ * sıfırın altına inmez; tek çağrıda atlanan seviye `MAX_LEVELS_PER_XP_GAIN` ile sınırlıdır.
  */
 export function applyXPGain(
   level: number,
@@ -127,11 +138,11 @@ export function applyXPGain(
   xpForLevel: (level: number) => number,
 ): XpGainResult {
   let currentLevel = level;
-  let remaining = xp + amount;
+  let remaining = xp + (Number.isFinite(amount) ? amount : 0);
   let levelsGained = 0;
 
   let threshold = xpForLevel(currentLevel);
-  while (threshold > 0 && remaining >= threshold) {
+  while (threshold > 0 && remaining >= threshold && levelsGained < MAX_LEVELS_PER_XP_GAIN) {
     remaining -= threshold;
     currentLevel += 1;
     levelsGained += 1;

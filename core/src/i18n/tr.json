@@ -85,10 +85,14 @@
     "label": "Kaynaklar"
   },
   "bar": {
-    "ariaLabel": "ilerleme çubuğu"
+    "ariaLabel": "ilerleme çubuğu",
+    "valueText": "{{value}} / {{max}}",
+    "low": "düşük",
+    "error": "hata"
   },
   "timerBar": {
-    "ariaLabel": "zamanlayıcı"
+    "ariaLabel": "zamanlayıcı",
+    "valueText": "{{seconds}} sn kaldı"
   },
   "datatable": {
     "empty": "Kayıt yok"
@@ -203,7 +207,10 @@
     "interactive": "{{label}}, etkileşimli — Enter ile merkeze zıpla"
   },
   "selectionInfo": {
-    "emptyState": "Seçili öğe yok"
+    "emptyState": "Seçili öğe yok",
+    "label": "Seçim",
+    "selected": "Seçili: {{name}}",
+    "health": "Can"
   },
   "statsPanel": {
     "close": "İstatistikleri kapat"

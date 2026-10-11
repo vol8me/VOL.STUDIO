@@ -85,10 +85,14 @@
     "label": "Resources"
   },
   "bar": {
-    "ariaLabel": "progress bar"
+    "ariaLabel": "progress bar",
+    "valueText": "{{value}} / {{max}}",
+    "low": "low",
+    "error": "error"
   },
   "timerBar": {
-    "ariaLabel": "timer"
+    "ariaLabel": "timer",
+    "valueText": "{{seconds}} s left"
   },
   "datatable": {
     "empty": "No records"
@@ -203,7 +207,10 @@
     "interactive": "{{label}}, interactive — press Enter to jump to center"
   },
   "selectionInfo": {
-    "emptyState": "No selection"
+    "emptyState": "No selection",
+    "label": "Selection",
+    "selected": "Selected: {{name}}",
+    "health": "Health"
   },
   "statsPanel": {
     "close": "Close statistics"

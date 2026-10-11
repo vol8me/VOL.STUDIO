@@ -117,6 +117,23 @@ hidden/suspend son durumu deterministik verir; animasyon olayı gelmese de temiz
 Wizard'da doğrudan adım değişimi ve destroy bekleyen doğrulamanın sahipliğini bırakır:
 geç çözüm veya ret adımı, tamamlanma callback'ini, odağı veya yeni isteğin kilidini değiştirmez.
 Yeni adım geçişi önceki geçiş zamanlayıcısını ve karesini iptal eder.
+
+**HUD göstergeleri** (UI-08). Değer tween'i (Bar/Counter/XPBar) dekordur: azaltılmış harekette tween
+başlamaz, değer ve dolgu ilk karede hedeftedir (`prefersReducedMotion`, tek ortak yardımcı).
+`TimerBar` ilerlemesi İŞLEVSEL zamandır: azaltılmış harekette de akar, hareket bütçesinden hak almaz
+(`MotionController.requestGroup` çağrılmaz); yalnız `reset()` geri sarması anlıktır. Bar yalnız renkle
+konuşmaz: `error` 135° çizgili tehlike şeridi + "hata", `busy` dolgusuz kayan bant + `aria-busy` (değer yok),
+düşük değer 45° desen + okuyucu metni "…, düşük"; değer metni (`aria-valuetext`) hedef değerden gelir ve yalnız
+değişince yazılır, ara animasyon adımı duyurulmaz. `NaN`/`Infinity` girdi yok sayılır (gösterge bozulmaz).
+`applyXPGain` çağrı başına en çok `MAX_LEVELS_PER_XP_GAIN` düzey atlar (sonsuz döngü yok). Yüzen metin
+aynı anda en çok `FLOATING_TEXT_MAX_ACTIVE` (24) tanedir, en eskisi geri dönüştürülür, öğeler havuzdan
+gelir ve süre dolunca havuza döner; kap `aria-hidden`dır (savaş sayıları okuyucuya duyurulmaz). Ödül ve
+düzey sesi ev sahibi niyetidir (`getAppSoundKit()?.play`), hasar sesi oyun SFX'idir; sunum bileşeni ikisini de
+kendiliğinden çalmaz.
+Salt-gösterim plakaları (`TimerBar`, `ResourceBar`, `RoundCounter`) `pointer-events` ÜSTLENMEZ, miras alır:
+`pointer-events: none` bir HUD kökünde tıklama altındaki oyuna geçer. Yalnız etkileşimli bileşenler
+(ActionBar, BuildMenu, MinimapPanel, SkillTree, SlotGrid, SelectionInfoPanel, dokunmatik denetimler) kendi
+kutusunda `auto` ister; kapalı katman hiçbir noktayı yakalamaz.
 Lint yalnız UI hareket süreleri içindir; domain timeout, rate-limit ve genel animateValue
 yanlışlıkla yasaklanmaz.
 

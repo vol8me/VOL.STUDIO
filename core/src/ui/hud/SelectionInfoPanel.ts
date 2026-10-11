@@ -16,8 +16,12 @@ export interface SelectionInfoData {
   name: string;
   /** SVG/emoji portre; verilmezse ikon alanı boş kalır. */
   portrait?: string | Node;
-  /** Verilirse can/enerji barı gösterilir. */
-  health?: Pick<BarOptions, 'max' | 'value' | 'lowThreshold'>;
+  /**
+   * Verilirse can/enerji barı gösterilir. `ariaLabel` okuyucuya barın adını söyler ("Can", "Enerji"); verilmezse
+   * `core:selectionInfo.health` kullanılır ve dil değişince yenilenir. Düşük durum renkle birlikte desen ve metinle de
+   * söylenir (`Bar`).
+   */
+  health?: Pick<BarOptions, 'max' | 'value' | 'lowThreshold' | 'ariaLabel'>;
   stats?: SelectionInfoStat[];
   actions?: SelectionInfoAction[];
 }
@@ -26,6 +30,10 @@ export interface SelectionInfoData {
  * Seçili birim/bina/makine için bilgi kartı. `show(data)` ile doldurulur,
  * `clear()` ile boş duruma döner. Her `show()` çağrısı önce eski içeriği
  * temizler, sonra health bar/aksiyonları yeniden kurar.
+ *
+ * Okuyucu: kök adlı bir bölgedir (`core:selectionInfo.label`); seçim değişince gizli bir durum bölgesi YALNIZ seçili
+ * öğenin adını duyurur ("Seçili: Okçu Kulesi" / "Seçili öğe yok"), kart içeriğinin tamamını değil — kalabalık seçimde
+ * okuyucu boğulmaz. Portre dekoratiftir (`aria-hidden`).
  */
 export class SelectionInfoPanel {
   readonly element: HTMLDivElement;
@@ -35,7 +43,10 @@ export class SelectionInfoPanel {
   private readonly statsElement: HTMLDivElement;
   private readonly actionsElement: HTMLDivElement;
   private readonly emptyStateElement: HTMLDivElement;
+  private readonly announceElement: HTMLSpanElement;
   private healthBar: Bar | null = null;
+  private healthLabelFromI18n = false;
+  private selectedName: string | null = null;
   private actionButtons: IconButton[] = [];
 
   private readonly emptyStateTextIsI18n: boolean;
@@ -45,6 +56,11 @@ export class SelectionInfoPanel {
       this.emptyStateText = i18next.t('core:selectionInfo.emptyState');
       this.emptyStateElement.textContent = this.emptyStateText;
     }
+    this.element.setAttribute('aria-label', i18next.t('core:selectionInfo.label'));
+    if (this.healthLabelFromI18n) {
+      this.healthBar?.setAriaLabel(i18next.t('core:selectionInfo.health'));
+    }
+    this.announce();
   };
 
   constructor(options: { emptyStateText?: string } = {}) {
@@ -52,6 +68,14 @@ export class SelectionInfoPanel {
     this.emptyStateText = options.emptyStateText ?? i18next.t('core:selectionInfo.emptyState');
     this.element = document.createElement('div');
     this.element.className = 'vol-selection-panel vol-selection-panel--empty';
+    this.element.setAttribute('role', 'region');
+    this.element.setAttribute('aria-label', i18next.t('core:selectionInfo.label'));
+
+    this.announceElement = document.createElement('span');
+    this.announceElement.className = 'vol-sr-only';
+    this.announceElement.setAttribute('role', 'status');
+    this.announceElement.setAttribute('aria-live', 'polite');
+    this.element.appendChild(this.announceElement);
 
     this.emptyStateElement = document.createElement('div');
     this.emptyStateElement.className = 'vol-selection-panel__empty-state';
@@ -62,6 +86,7 @@ export class SelectionInfoPanel {
 
     this.portraitElement = document.createElement('div');
     this.portraitElement.className = 'vol-selection-panel__portrait';
+    this.portraitElement.setAttribute('aria-hidden', 'true');
     this.element.appendChild(this.portraitElement);
 
     const body = document.createElement('div');
@@ -78,11 +103,13 @@ export class SelectionInfoPanel {
 
     this.statsElement = document.createElement('div');
     this.statsElement.className = 'vol-selection-panel__stats';
+    this.statsElement.setAttribute('role', 'list');
     body.appendChild(this.statsElement);
 
     this.actionsElement = document.createElement('div');
     this.actionsElement.className = 'vol-selection-panel__actions';
     body.appendChild(this.actionsElement);
+    this.announce();
   }
 
   show(data: SelectionInfoData): void {
@@ -99,11 +126,14 @@ export class SelectionInfoPanel {
     }
 
     this.nameElement.textContent = data.name;
+    this.selectedName = data.name;
 
     if (data.health) {
+      this.healthLabelFromI18n = data.health.ariaLabel === undefined;
       this.healthBar = new Bar({
         variant: 'health',
         ...data.health,
+        ariaLabel: data.health.ariaLabel ?? i18next.t('core:selectionInfo.health'),
         label: (v, m) => `${v} / ${m}`,
       });
       this.healthContainer.appendChild(this.healthBar.element);
@@ -112,6 +142,7 @@ export class SelectionInfoPanel {
     for (const stat of data.stats ?? []) {
       const row = document.createElement('div');
       row.className = 'vol-selection-panel__stat-row';
+      row.setAttribute('role', 'listitem');
 
       const label = document.createElement('span');
       label.className = 'vol-selection-panel__stat-label';
@@ -135,13 +166,16 @@ export class SelectionInfoPanel {
 
     // İçerik dolduktan sonra oynatılır, aksi halde animasyon boş elementler üzerinde bitmiş olurdu.
     this.replayFadeIn();
+    this.announce();
   }
 
   /** Seçim boşalınca çağrılır; panel boş duruma döner. */
   clear(): void {
     this.clearContent();
+    this.selectedName = null;
     this.element.classList.add('vol-selection-panel--empty');
     this.replayFadeIn();
+    this.announce();
   }
 
   setHealth(value: number): void {
@@ -154,6 +188,15 @@ export class SelectionInfoPanel {
     this.element.remove();
   }
 
+  /** Durum bölgesine yalnız metin değişince yazılır: aynı seçimi yeniden göstermek yeniden duyuru üretmez. */
+  private announce(): void {
+    const text =
+      this.selectedName === null
+        ? this.emptyStateText
+        : i18next.t('core:selectionInfo.selected', { name: this.selectedName });
+    if (this.announceElement.textContent !== text) this.announceElement.textContent = text;
+  }
+
   private replayFadeIn(): void {
     this.element.classList.remove('vol-selection-panel--transition');
     // Reflow zorunlu, aksi halde animasyon yeniden tetiklenmez.
@@ -164,6 +207,7 @@ export class SelectionInfoPanel {
   private clearContent(): void {
     this.healthBar?.destroy();
     this.healthBar = null;
+    this.healthLabelFromI18n = false;
     this.healthContainer.textContent = '';
 
     for (const button of this.actionButtons) {

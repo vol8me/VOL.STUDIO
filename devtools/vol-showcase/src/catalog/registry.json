@@ -239,6 +239,22 @@
         {
           "file": "core/tests/ui/feedback/feedback.test.ts",
           "title": "dikey yönelimde dolgu YÜKSEKLİKTEN büyür; progressbar rolünde geçersiz aria-orientation yazılmaz"
+        },
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "meşgul: değer yerine aria-busy yazılır, boyutu CSS belirler; normale dönünce değer yerinde durur"
+        },
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "NaN ve sonsuz değer yok sayılır: son geçerli değer kalır, \"NaN%\" yazılmaz"
+        },
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "dolgu doğrudan son değere gider: rAF animasyonu kurulmaz, aria ve genişlik aynı anda hedefte"
+        },
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "düşük durum yalnız renkle değil metinle de söylenir: \"değer / üst sınır, düşük\""
         }
       ],
       "extraStates": ["loading", "error", "empty"]
@@ -523,6 +539,10 @@
         {
           "file": "core/tests/ui/feedback/feedback.test.ts",
           "title": "oluşturma ve yok etme"
+        },
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "6 haneli düşüş (999 999 → 0) sayarak iner, son durumda tam sıfırdır ve tek duyuru üretir"
         }
       ],
       "extraStates": ["empty"]
@@ -722,6 +742,26 @@
       "extraStates": ["empty"]
     },
     {
+      "export": "FLOATING_TEXT_MAX_ACTIVE",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "varsayılan sınır belgelenmiş sabittir"
+        }
+      ]
+    },
+    {
       "export": "FOCUSABLE_SELECTOR",
       "kind": "helper",
       "tier": 2,
@@ -774,6 +814,10 @@
         {
           "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
           "title": "spawn bir metin elementi oluşturur, durationMs + fade süresi sonunda kaldırır"
+        },
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "aynı anda en çok maxActive metin durur; en eski toplanır, en yeni her zaman görünür"
         }
       ]
     },
@@ -1172,6 +1216,26 @@
         {
           "file": "core/tests/ui/newTouchGestures.test.ts",
           "title": "eşik dolmadan bırakılırsa onTap tetiklenir, onLongPress tetiklenmez"
+        }
+      ]
+    },
+    {
+      "export": "MAX_LEVELS_PER_XP_GAIN",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-08",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "applyXPGain: dev kazanç ve küçük eşik ana iş parçacığını dondurmaz; seviye atlama sınırlıdır"
         }
       ]
     },
@@ -1805,6 +1869,18 @@
         {
           "file": "core/tests/ui/hud/hudPanels.test.ts",
           "title": "başlangıçta boş durumdadır"
+        },
+        {
+          "file": "core/tests/ui/hud/hudPanelsA11y.test.ts",
+          "title": "seçim değişince durum bölgesi yalnız adı söyler; boşalınca boş durumu söyler"
+        },
+        {
+          "file": "core/tests/ui/hud/hudPanelsA11y.test.ts",
+          "title": "aynı seçim yeniden gösterilince durum bölgesi yeniden yazılmaz (yeniden duyuru yok)"
+        },
+        {
+          "file": "core/tests/ui/hud/hudPanelsA11y.test.ts",
+          "title": "can çubuğu adlıdır, değeri okunur ve düşük durum metinle söylenir"
         }
       ]
     },
@@ -2019,6 +2095,14 @@
         {
           "file": "core/tests/ui/hud/hudPanels.test.ts",
           "title": "başlangıçta kapalıdır ve grupları render eder"
+        },
+        {
+          "file": "core/tests/ui/hud/hudPanelsA11y.test.ts",
+          "title": "başlıklı bölüm başlığıyla adlanır, başlıksız bölüm bölge olmaz"
+        },
+        {
+          "file": "core/tests/ui/hud/hudPanelsA11y.test.ts",
+          "title": "girdiler liste öğesidir"
         }
       ]
     },
@@ -2201,6 +2285,10 @@
         {
           "file": "core/tests/ui/feedback/feedback.test.ts",
           "title": "oluşturma ve yok etme"
+        },
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "hareket azaltmada çubuk yine akar ve süre dolunca tam zamanında tamamlanır"
         }
       ],
       "extraStates": ["empty"]
@@ -2492,6 +2580,10 @@
         {
           "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
           "title": "setState barı dışarıdaki duruma eşitler"
+        },
+        {
+          "file": "core/tests/ui/feedback/hudStates.test.ts",
+          "title": "tek kazanımla birden çok seviye atlanır: bar son seviyeyi gösterir, düzey vurgusu TEK kez oynar"
         }
       ],
       "extraStates": ["empty"]

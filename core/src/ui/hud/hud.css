@@ -875,12 +875,18 @@
   right: max(var(--vol-safe-right), var(--vol-space-md));
 }
 
+/*
+ * Düşük kare hızı rengin yanında ŞEKİLLE de söylenir (renk tek başına taşıyıcı olmaz): uyarı kesikli çerçeve, tehlike
+ * düz çerçeve + iç halka. Kutu ölçüsü değişmez (border kalınlığı sabit, halka içeride çizilir): gösterge yer oynatmaz.
+ */
 .vol-fps-meter[data-level='warn'] {
   color: var(--vol-ui-warning-solid);
   border-color: var(--vol-ui-warning-border);
+  border-style: dashed;
 }
 
 .vol-fps-meter[data-level='danger'] {
   color: var(--vol-ui-danger-solid);
   border-color: var(--vol-ui-danger-border);
+  box-shadow: inset 0 0 0 2px var(--vol-ui-danger-border);
 }

@@ -73,20 +73,20 @@ aile (UI-05 + UI-09) → UI-13.
 **F07 KAPALI DEĞİLDİR.** 24 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
 metinlerindeki "Kalan/Açık" notlarından derlenmiştir; "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde bu oturumda çalıştırılmadı.
 
-| Görev        | Gerçek kalan iş                                                                                                                                                                                                                       | Tür               |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                 | cihaz + insan     |
-| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                  | cihaz + insan     |
-| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                    | cihaz             |
-| UI-08.1–08.4 | Bar/XPBar/TimerBar/RoundCounter/FloatingTextManager kalan durumları; Fps/Selection/Stats panelleri; ActionBar/BuildMenu/SkillTree klavye, `resolveSkillStates`, kolla tutma/bırakma; tier-1 kapsam kontrolü                           | kod               |
-| UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te) | kod + insan (AT)  |
-| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                             | kod + cihaz       |
-| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                 | cihaz + insan     |
-| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                             | cihaz (Windows)   |
-| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                      | kod + insan (IME) |
-| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                | cihaz             |
-| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                      | insan             |
-| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                 | kapanış           |
+| Görev        | Gerçek kalan iş                                                                                                                                                                                                                             | Tür               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                       | cihaz + insan     |
+| UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                        | cihaz + insan     |
+| UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                          | cihaz             |
+| UI-08.3–08.4 | ActionBar/BuildMenu/SkillTree/SlotGrid: bekleme/kilit etkinleştirme, klavye/kol/dokunma alternatifleri, anlamsal niyet, `resolveSkillStates`, kolla tutma/bırakma, 6 haneli fiyat; tier-1 kapsam kontrolü (UI-08.1/08.2 2026-10-11 kapandı) | kod               |
+| UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te)       | kod + insan (AT)  |
+| UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                                   | kod + cihaz       |
+| UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                       | cihaz + insan     |
+| UI-12.4      | NSIS derleme/yükleme/kaldırma/açılış, WebView2, DPI 125/150/200, font/input/clipboard/back; release derleme kare/CPU atfı                                                                                                                   | cihaz (Windows)   |
+| UI-13.1–13.2 | Tam tier-1/M3 ve katalog kapanışı (ertelenmiş applicable durum ve AA bulgusu sıfır); modal→Select→OSK→IME zinciri, istek beklerken tema değişimi, %200/RTL stres                                                                            | kod + insan (IME) |
+| UI-13.3      | Windows/Deck host+SLR4/Android aynı örnekle A/B, 10 dk termal, UI maliyetinin toplam FPS'ten ayrılması                                                                                                                                      | cihaz             |
+| UI-13.4      | Gerçek AT (NVDA/Narrator/TalkBack), klavye/kol akışı, gri ton, glif yüksekliği, haptik, ses kulak kabulü — **yalnız insan; sahte PASS yazılmaz**                                                                                            | insan             |
+| UI-13.5      | `pnpm fast`/`high`/`signoff` yeşil, piksel temelleri incelenmiş, belgeler güncel, push; **F07 yalnız burada kapanır**                                                                                                                       | kapanış           |
 
 Bu oturumda koşulmayanlar: tam `node scripts/e2e.mjs`, `pnpm fast`/`high`/`signoff`, tam core vitest (yalnız ilgili dosyalar), Deck ve Lenovo
 oturumları. Cihaz bağımsız her iş bittiğinde sıradaki kapı bunlardır; cihazlar bağlı olduğundan cihaz satırları "NOT-RUN" değil "yapılacak"tır.
@@ -305,7 +305,7 @@ UI-07.1 tamamlandı (AST çeviri kapısı). Mevcut i18n motoru yeniden yazılmaz
 Ön koşul UI-03.4, UI-07.1. Sahip feedback/hud/tarif; oyun durumunu sunum tutmaz. Bullet hell ve
 RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
 
-- [ ] **UI-08.1 — Bar/XPBar/Counter/ResourceCounter/ResourceBar/TimerBar/RoundCounter/
+- [x] **UI-08.1 — Bar/XPBar/Counter/ResourceCounter/ResourceBar/TimerBar/RoundCounter/
       FloatingTextManager.** Yeni bar malzemesi (segment, parlak bant, hasar gecikmesi), sayı
       tween/pop, boş/dolu/geçersiz eşik/çoklu kazanım/6 haneli düşüş/meşgul/hata, role/valuetext,
       opt-in applyXPGain. Kapanır: reduced-motion sayı/son durum tam; havuzlama/kaynak
@@ -315,7 +315,24 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       sonunda SON değerle; skor/süre gibi sık yazılan sayaç okuyucuyu boğmaz), `ResourceCounter` kökü artık
       adlı `group` (rolsüz öğedeki `aria-label` yok sayılıyordu) ve duyuru kaynak adını taşır ("Mermi 12")
       (`counterAnnounce.test.ts`). Bar/TimerBar/RoundCounter semantiği zaten `progressbar`/`status`.
-- [ ] **UI-08.2 — FpsMeter/MinimapPanel/SelectionInfoPanel/StatsPanel.** VOL.TEST gerçek örnek;
+      Yapıldı (2026-10-11): kapanış. **Durumlar:** `Bar` boş/dolu/geçersiz (`NaN`/`Infinity`/negatif yok sayılır, eşik
+      sıkıştırılır)/meşgul (`setStatus('busy')`: dolgusuz kayan bant, `aria-busy`, değer yok)/hata (`error`: 135° şerit + "hata"
+      metni); `XPBar` çoklu seviye (`MAX_LEVELS_PER_XP_GAIN` = 1000 sınırı, geçersiz miktar 0), 6 haneli sayaç düşüşü.
+      **Okuyucu:** `aria-valuetext` hedef değerden ve yalnız DEĞİŞİNCE yazılır ("60 / 100", düşükte "…, düşük"), `ariaLabel`
+      varken ad o olur ve görünür etiket değer metnine döner (`aria-hidden`), `TimerBar` `valuenow`/`valuetext` ayrı yazılır.
+      **Hareket azaltma:** ortak `prefersReducedMotion` (`core/src/ui/motion/reducedMotion.ts`; Carousel/SwipeableCardStack/
+      ScrollView'daki üç kopya buna indi); Bar/Counter/XPBar son durumu ilk karede verir, `TimerBar` işlevsel zamandır:
+      azaltılmışta AKAR ve hareket bütçesinden hak almaz. **Havuz/temizlik:** `FloatingTextManager` en çok 24 (`FLOATING_TEXT_MAX_ACTIVE`),
+      en eskisi geri dönüşür, 16'lık öğe havuzu, `destroy` her şeyi iptal eder, kap `aria-hidden`. **Ödül/hasar sesi:** ödül ve
+      düzey sesi ev sahibi niyeti (`getAppSoundKit()?.play`, vitrin XP kartı çalar), hasar sesi oyun SFX'i (UI ses setinde yok) —
+      politika CONTRACT §4'te. **Gerçek kusur bulundu:** yüzen metin CSS'i `--critical` seçicileri taşıyordu ama varyant `emphasis`
+      idi; vurgu hiç ölçeklenmiyor (0,4'te kalıyordu) → `--emphasis`e çevrildi, e2e ile doğrulandı (≈1,15 / azaltılmışta 1).
+      Vitrin: "Gösterge durumları" kartı (Boş/Dolu/Meşgul/Hata/Geçersiz sayı, 6 haneli skor), XP "çok seviye", yüzen metin
+      "yoğun çatışma ×60". Kanıt: `core/tests/ui/feedback/hudStates.test.ts` (48; 7 mutasyon yakalandı), `hudStates.spec.ts` (19, iki
+      motor 38/38, gerçek saat + `emulateMedia`), Lenovo `devtools/vol-showcase/tests/device/hud.spec.ts` (5/5 dikey, yatay ve %200 yazı). Tür yüzeyi
+      +4 ad (`BarStatus`, `FloatingTextManagerOptions`, iki sabit; 819 sembol). Kayıt: [VERIFICATION](VERIFICATION.md) "HUD gösterge
+      durumları ve bilgi panelleri kaydı". **NOT-RUN:** ekran okuyucu duyurusu ve ödül/düzey sesinin kulakla kabulü (UI-13.4).
+- [x] **UI-08.2 — FpsMeter/MinimapPanel/SelectionInfoPanel/StatsPanel.** VOL.TEST gerçek örnek;
       boyut/zoom/skin; işaretçi kontrastı, renk dışı işaret, ikon. Kapanır: HUD işaretçi/girdi
       katmanı örtüşmesi doğru; mini harita görünümü tüketici modeli; oyun fiziği/performans bu
       göreve karıştırılmaz.
@@ -342,6 +359,21 @@ RTS HUD'ı: bakış sürekliliği, yüksek kontrast, büyük/okunur sayı.
       Kanıt: `core/tests/ui/hud/minimapPanel.test.ts` (19), `games/vol-test/tests/hud/MapPanel.test.ts`,
       gerçek oyun ekran görüntüsü (çoklu tank, 3 yakınlaştırma düzeyi), vitrin görsel temel çizgisi.
       Açık: fiziksel Deck/tablet görsel kabulü ve dokunma sürükleme hissi (kullanıcı turu).
+      Yapıldı (2026-10-11): kapanış. **Okuyucu sözleşmesi:** `SelectionInfoPanel` kökü adlı `region`, gizli `role=status`/`polite`
+      YALNIZ seçili adını ya da boş durumu söyler (aynı seçim yeniden yazılmaz), portre `aria-hidden`, can çubuğu adlı ("Can")
+      ve değer metinli, istatistikler `list`; `StatsPanel` bölümü `aria-labelledby` ile başlığıyla adlanır, girdiler `list`.
+      **Renk dışı işaret:** düşük değer Bar'da 45° çizgi deseni + "…, düşük" metni (renk tek taşıyıcı değil); `FpsMeter` uyarı
+      kesikli kenar, tehlike 2 px iç halka (kutu ölçüsü sabit). **İşaretçi kontrastı:** `MinimapPanel` sabit renkleri zemine karşı
+      iki skinde ölçüldü (kamera çerçevesi 16,67/17,63; sınır 4,03/8,34; imleç 13,77/16,76; metin 10,63/12,72). **HUD işaretçi/girdi
+      katmanı:** VOL.TEST `hudLayer.spec.ts` (iki motor, masaüstü + telefon yatayı, gerçek `elementFromPoint`): pasif plakalar ve boş
+      alan tuvale geçer, etkileşimli parçalar kendi merkezini yakalar, kapalı duraklatma katmanı yakalamaz; **çekirdek kusur:**
+      `.vol-timer-bar`/`.vol-resource-bar`/`.vol-round-counter` gereksiz `pointer-events: auto` taşıyıp click-through HUD'da tıklamayı
+      yutuyordu → miras alır oldu (CONTRACT §4; eski kural geri konunca testler düştü). Vitrin SelectionInfoPanel kartına "Seçiliye hasar"
+      düğmesi (düşük can durumu). **Boyut/zoom/skin:** 393 px'te yatay taşma yok ve 44 px hedefler (`layout.spec.ts`), iki skin ×
+      üç yoğunlukta axe 0 (`themeMatrix.spec.ts`), Lenovo %200 yazı ölçeğinde `hud.spec.ts` 5/5. Kanıt: `hudPanelsA11y.test.ts` (10),
+      `hudPanels.spec.ts` (10, iki motor 20/20), `hudLayer.spec.ts` (5, iki motor 10/10), Lenovo `hud.spec.ts`. Oyun fiziği/performansı
+      göreve karıştırılmadı. **NOT-RUN:** fiziksel Deck/tablet görsel kabulü ve mini harita dokunma-sürükleme hissi (kullanıcı turu,
+      UI-13.4).
 - [ ] **UI-08.3 — ActionBar/BuildMenu/SkillTree/SlotGrid.** Gerçek oyun ikonları (UI-01.8),
       seçim/kilitli/kullanılamayan/bekleme/boş/nadirlik; klavye/kol/dokunma; RTS bağlamsal
       imleç (UI-01.9) ile. Kapanır: resolveSkillStates isteğe bağlı kalır; hover/Tooltip ve

@@ -1,10 +1,14 @@
 import { Easing, animateValue } from '../animation';
+import { prefersReducedMotion } from '../motion/reducedMotion';
 
 export interface CounterOptions {
   value?: number;
   /** Sayı gösterimini biçimlendirir (örn. binlik ayraç, "x3" formatı). Varsayılan: Math.round + String. */
   format?: (value: number) => string;
-  /** Değer değişimini akıcı sayma animasyonu süresi. 0 = anında. */
+  /**
+   * Değer değişimini akıcı sayma animasyonu süresi. 0 = anında. Hareket azaltma açıkken sayma yoktur: sayı doğrudan son
+   * değere gider (duyuru ve `getValue()` zaten hedef değerdir).
+   */
   animateMs?: number;
   /** Okuyucu duyurusunun başına eklenen ad ("Mermi 12"); ikonlu sayaçlar adını buradan taşır. */
   announcePrefix?: string;
@@ -99,19 +103,23 @@ export class Counter {
    * `change: 'none'` çıkış kapısıdır.
    */
   setValue(value: number, options: CounterSetValueOptions = {}): void {
+    // Geçersiz sayı ("NaN", "Infinity") oyuncuya yazılmaz: son geçerli değer kalır. Gösterilen yanlış bir sayı,
+    // gösterilmeyen güncellemeden kötüdür.
+    if (!Number.isFinite(value)) return;
     const from = this.value;
     this.value = value;
 
     this.cancelAnimation?.();
+    this.cancelAnimation = undefined;
 
-    if (this.animateMs <= 0 || from === value) {
+    if (this.animateMs <= 0 || from === value || prefersReducedMotion()) {
       this.displayElement.textContent = this.format(value);
     } else {
       this.cancelAnimation = animateValue({
         from,
         to: value,
         durationMs: this.animateMs,
-        easing: this.overshoot && !prefersReducedMotion() ? Easing.easeOutOvershoot : undefined,
+        easing: this.overshoot ? Easing.easeOutOvershoot : undefined,
         onUpdate: (v) => {
           this.displayElement.textContent = this.format(v);
         },
@@ -203,10 +211,6 @@ export class Counter {
     clearTimeout(this.pendingAnnounce);
     this.element.remove();
   }
-}
-
-function prefersReducedMotion(): boolean {
-  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 function inferValueChange(from: number, to: number): CounterValueChange {

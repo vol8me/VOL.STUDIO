@@ -2,13 +2,10 @@ import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_RATIO } from '../../constants';
 import { i18next } from '../../i18n/I18n';
 import { inlineSign } from '../direction';
+import { prefersReducedMotion } from '../motion/reducedMotion';
 
 const INTERACTIVE = 'button, a[href], input, select, textarea, [role="slider"], [contenteditable]';
 let carouselSeq = 0;
-
-function prefersReducedMotion(): boolean {
-  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
 
 export interface CarouselSlide {
   id: string;

@@ -125,6 +125,8 @@ export function buildSelectionInfoPanelCard(disposables: DisposableScope): HTMLE
   const panel = new SelectionInfoPanel();
   disposables.addDestroyables(panel);
   wrap.appendChild(panel.element);
+  // Seçili öğenin canı; "hasar" düşük durumu (desen + okuyucu metni) göstermek için gerçek değeri izler.
+  let health = 80;
 
   const controls = document.createElement('div');
   controls.className = 'vol-showcase-panel-demo__controls';
@@ -132,10 +134,11 @@ export function buildSelectionInfoPanelCard(disposables: DisposableScope): HTMLE
   const selectButton = new Button(i18next.t('volui:hud.selectTower'), {
     variant: 'primary',
     onClick: () => {
+      health = 80;
       panel.show({
         name: i18next.t('volui:hud.arrowTowerLv2'),
         portrait: svgIcon(ICON_TURRET),
-        health: { max: 100, value: 80, lowThreshold: 0.3 },
+        health: { max: 100, value: health, lowThreshold: 0.3 },
         stats: [
           { label: i18next.t('volui:hud.statDamage'), value: '12' },
           { label: i18next.t('volui:hud.statRange'), value: '4' },
@@ -146,18 +149,29 @@ export function buildSelectionInfoPanelCard(disposables: DisposableScope): HTMLE
             icon: svgIcon(ICON_SWORD),
             label: i18next.t('volui:hud.upgrade'),
             variant: 'primary',
-            onClick: () => panel.setHealth(100),
+            onClick: () => {
+              health = 100;
+              panel.setHealth(health);
+            },
           },
         ],
       });
     },
   });
+  const hurtButton = new Button(i18next.t('volui:hud.damageSelected'), {
+    variant: 'danger',
+    onClick: () => {
+      health = Math.max(0, health - 30);
+      panel.setHealth(health);
+    },
+  });
   const clearButton = new Button(i18next.t('volui:hud.clearSelection'), {
     onClick: () => panel.clear(),
   });
-  disposables.addDestroyables(selectButton, clearButton);
+  disposables.addDestroyables(selectButton, hurtButton, clearButton);
 
   controls.appendChild(selectButton.element);
+  controls.appendChild(hurtButton.element);
   controls.appendChild(clearButton.element);
   wrap.appendChild(controls);
 

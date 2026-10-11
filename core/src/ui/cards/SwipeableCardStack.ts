@@ -2,10 +2,7 @@ import { DisposableScope } from '../../lifecycle/DisposableScope';
 import { UI_RATIO, UI_THRESHOLD, UI_TIMING, UI_CAPACITY } from '../../constants';
 import { i18next } from '../../i18n/I18n';
 import { emitUiIntent } from '../feedback/uiIntent';
-
-function prefersReducedMotion(): boolean {
-  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
+import { prefersReducedMotion } from '../motion/reducedMotion';
 
 export type SwipeDirection = 'left' | 'right';
 

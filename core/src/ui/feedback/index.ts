@@ -1,8 +1,9 @@
-export { Bar, type BarVariant, type BarLabel, type BarOptions } from './Bar';
+export { Bar, type BarVariant, type BarLabel, type BarOptions, type BarStatus } from './Bar';
 export {
   XPBar,
   // Opsiyonel KURAL tarifi — "taşan XP sonraki seviyeye devreder".
   applyXPGain,
+  MAX_LEVELS_PER_XP_GAIN,
   type XPBarOptions,
   type XpGainResult,
 } from './XPBar';
@@ -18,8 +19,10 @@ export { TimerBar, type TimerBarOptions } from './TimerBar';
 export { RoundCounter, type RoundCounterOptions } from './RoundCounter';
 export {
   FloatingTextManager,
+  FLOATING_TEXT_MAX_ACTIVE,
   type FloatingTextVariant,
   type FloatingTextOptions,
+  type FloatingTextManagerOptions,
 } from './FloatingText';
 export { UiHapticProvider, type UiHapticProviderOptions } from './UiHapticProvider';
 export {

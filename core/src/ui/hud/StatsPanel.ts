@@ -27,6 +27,8 @@ export interface StatsPanelOptions {
   className?: string;
 }
 
+let statsGroupSeq = 0;
+
 interface EntryView {
   readonly row: HTMLDivElement;
   readonly icon: HTMLSpanElement;
@@ -127,10 +129,13 @@ export class StatsPanel {
     icon.hidden = true;
     const heading = document.createElement('h3');
     heading.className = 'vol-stats-panel__group-title';
+    // Başlıklı bölüm adlı bir bölge olur; başlıksız bölüm (etiket verilmedi) bölge olmaz (aşağıda `updateGroup`).
+    heading.id = `vol-stats-group-${++statsGroupSeq}`;
     title.append(icon, heading);
     root.appendChild(title);
     const entries = document.createElement('div');
     entries.className = 'vol-stats-panel__entries';
+    entries.setAttribute('role', 'list');
     root.appendChild(entries);
     const view: GroupView = { root, icon, heading, entries, entryViews: new Map() };
     this.groups.set(id, view);
@@ -141,6 +146,8 @@ export class StatsPanel {
     this.updateIcon(view.icon, group.icon);
     view.heading.textContent = group.label ?? '';
     view.heading.hidden = !group.label;
+    if (group.label) view.root.setAttribute('aria-labelledby', view.heading.id);
+    else view.root.removeAttribute('aria-labelledby');
     const nextIds = new Set<string>();
     for (const entry of group.entries) {
       nextIds.add(entry.id);
@@ -162,6 +169,7 @@ export class StatsPanel {
   private createEntry(view: GroupView, id: string): EntryView {
     const row = document.createElement('div');
     row.className = 'vol-stats-panel__entry';
+    row.setAttribute('role', 'listitem');
     const icon = document.createElement('span');
     icon.className = 'vol-stats-panel__entry-icon';
     icon.hidden = true;

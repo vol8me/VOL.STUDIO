@@ -1,8 +1,8 @@
+import { prefersReducedMotion } from '../motion/reducedMotion';
+
 /** Programatik kaydırma, hareket azaltma tercihinde animasyonsuz (anında) yapılır; tarayıcı `smooth`u kendiliğinden kısmaz. */
 function scrollBehavior(): ScrollBehavior {
-  const reduced =
-    typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  return reduced ? 'auto' : 'smooth';
+  return prefersReducedMotion() ? 'auto' : 'smooth';
 }
 
 export type ScrollDirection = 'vertical' | 'horizontal';
