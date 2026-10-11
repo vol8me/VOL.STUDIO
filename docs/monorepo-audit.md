@@ -767,8 +767,8 @@ F11.2 kısmi değişiminin güncel durumu bölüm sonundadır.
   çıktısına girmez, atlama ratchet'i yoktur.
 - **Çıktı bütünlüğü:** `--json` yalnız koşan aşamaları listeler; düşen Playwright testi `unknown` sınıflanır ve
   adı JSON'da yoktur; düşen testin izi sonraki e2e koşusunda silinir.
-- **Kapsam dışlaması:** altı paketin (core, vitrin, VOL.TEST, audio-synth, tauri-v2, pen.dev) `coverage.exclude`ı `src/**/index.ts`i toptan dışlar; audio-synth'te iki
-  `index.ts` çalıştırılabilir mantık taşır (`findPresets` 6 dal, `getPreset`). `scripts/quality` kapsamı hiç
+- **Kapsam dışlaması:** altı paketin (core, vitrin, VOL.TEST, audio-synth, tauri-v2, pen.dev) `coverage.exclude`ı `src/**/index.ts`i toptan dışlar; bu dışlama artık
+  `indexModules.mjs` bekçisiyle doğrudur (audio-synth'in iki mantıklı `index.ts`i ayrıldı). `scripts/quality` kapsamı hiç
   ölçülmez.
 
 ### 22.5 Eşik boşluğu ve platform bayatlığı

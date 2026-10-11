@@ -179,11 +179,6 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
       99,3/96; tauri-v2 satır 99,3/93; pen.dev 100/97. `quality.json` "~2 puan altı, yalnız yükselir" der; eşik
       düşürme (CORE satır 90→60) `quick`ten GEÇTİ (taban 50). Yalnız audio-synth sıkı (96,9/95). Kapanır: eşikler
       ölçüme ≤2 puan yaklaştırılır; base-ref ratchet'i eşik düşürmeyi reddeder (F10.3 ile birlikte, negatif fixture).
-- [ ] **[P2] F11.5 — Kapsam dışlaması belgeyle çelişir.** `src/**/index.ts` toptan dışlanır, ama
-      `devtools/audio-synth/src/presets/index.ts` (`callablePresetNames`, `getPreset`) ve `devtools/audio-synth/src/presets/catalog/index.ts`
-      (`findPresets`, 6 dal) çalıştırılabilir mantık taşır; AGENTS.md "kapsam yalnız çalıştırılabilir satırı olmayan
-      dosyaları dışlar" der. Kapanır: bekçi `index.ts`te çalıştırılabilir yapı arar; iki dosyanın mantığı ayrı dosyaya
-      taşınıp test edilir ya da dışlama gerekçeyle daraltılır.
 - [ ] **[P2] F11.6 — Kapıların kendisi kapsamsız.** `scripts/quality` (63 `.mjs`, 561 `node:test`) için kapsam
       ölçümü yoktur; bu turda yalnız 9 kusur sınıfı (tip, lint, biçim, CSS, dosya boyutu, katman, kodlanmış metin, kırık bağlantı, tarihçe yorumu) elle negatif kontrol gördü. Kapanır: `node --test` kapsamı ya
       da c8 ile ölçüm ve gerekçeli eşik; her bekçi için en az bir negatif fixture (kusur → doğru aşama düşer) kayıtlı.
@@ -210,6 +205,7 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
 ## Kapatılanlar
 
 - [x] F11.0 — Ajan uyumu ve bayat sayılar: `CLAUDE.md` kökü `@AGENTS.md` ile içe aktarır (Claude Code `AGENTS.md`yi kendiliğinden okumaz; önceki salt bağlantı oturum bağlamına girmiyordu, tek kaynak `AGENTS.md` kalır); `docs/gates.md` süre ve atlama sayıları taze ölçümle düzeltildi (`high` 13,4 → 4,7 dk, vitrin `e2e` 343 → 1.355 sn, WebKit 2 → 18 atlama).
+- [x] F11.5 — `src/**/index.ts` yalnız yeniden dışa aktarım ve tip içerir: `scripts/quality/indexModules.mjs` çalıştırılabilir ifadeyi dosya:satırla reddeder (contract'ta, negatif fixture'lı); audio-synth'in `getPreset`/`callablePresetNames` mantığı `devtools/audio-synth/src/presets/registry.ts`e, `findPresets`/`PRESET_CATALOG` `devtools/audio-synth/src/presets/catalog/catalog.ts`e taşındı ve ölçülür
 - [x] F10.1 — braces GHSA-vfj7-8cjw-p6xm için düzeltme yayımlanmadı (upstream durağan, stylelint zinciri başka sürüme geçemez): derinlik sınırı yaması `patches/` altında, `security-js` yama bağı + kurulu davranış sınaması + yayımlanmış düzeltme denetimini koşar, bayat kaydı reddeder. Yanked `yoke-derive` 0.8.4'e yükseltildi; Rust'ta yalnız kayıtlı `unsound`/`unmaintained` uyarı (8 kayıt: zincir, platform, etki alanı, sahip) geçer, zafiyet ve yanked geçmez. Gate seviyesi düşürülmedi; ayrıntı `docs/gates.md` → Güvenlik riski politikası.
 - [x] F10.7 — Kare ölçüm aracı kontrollü build'de 2,3 KiB ayrıştırıldı; güncel app 182,4/120,4 KiB bilinçli kapsam gerekçesiyle bütçelendi; vendor/CSS/kapsam eşikleri korunarak bundle ve tam high geçti.
 - [x] F10.8 — Vitrin README/DESIGN, headless ve O(N) uzamsal tarama açıklaması güncel; özel kanıt atıfları ve zorunlu beğeni şartı düzeltildi, kullanıcı değişiklikleri korunarak belge/biçim/contract kapıları geçti.
