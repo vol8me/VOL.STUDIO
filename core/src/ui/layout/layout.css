@@ -55,6 +55,13 @@
   display: flex;
 }
 
+/* Odaklanabilir kaydırma yüzeyleri tarayıcının varsayılan halkasını değil temanın halkasını taşır (WCAG 2.4.7). */
+.vol-scroll-view:focus-visible,
+.vol-virtual-list:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: -2px;
+}
+
 .vol-panel {
   justify-content: center;
   align-items: stretch;

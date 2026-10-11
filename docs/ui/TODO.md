@@ -70,7 +70,7 @@ aile (UI-05 + UI-09) → UI-13.
 
 ## Gerçek kalan iş (2026-10-11)
 
-**F07 KAPALI DEĞİLDİR.** 17 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı; push yapılmadı. Aşağıdaki tablo ilgili görevlerin kendi
+**F07 KAPALI DEĞİLDİR.** 16 UI görevi açıktır; `pnpm signoff` (UI-13.5) koşulmadı. Aşağıdaki tablo ilgili görevlerin kendi
 metinlerindeki "Kalan/Açık" notlarından derlenmiştir; kalan "cihaz" satırları Deck/Lenovo bağlı olduğu hâlde henüz çalıştırılmadı (UI-08.3 Lenovo koşusu hariç).
 
 | Görev        | Gerçek kalan iş                                                                                                                                                                                                                       | Tür               |
@@ -78,7 +78,6 @@ metinlerindeki "Kalan/Açık" notlarından derlenmiştir; kalan "cihaz" satırla
 | UI-03.3      | VOL.TEST duraklatma/ayarlar hit-test'inin Deck host koşusu; Slider adı için gerçek AT                                                                                                                                                 | cihaz + insan     |
 | UI-03.4      | İlk yanıt p95<100 ms (WebKit başsız 105–115 ms), CPU/sunum profili, ses kulak kabulü                                                                                                                                                  | cihaz + insan     |
 | UI-06.4      | Deck: SLR4 açılış, kare ve canvas yapıldı (2026-10-10); kalan OGG/UI sesi çıkışı, fiziksel kol, ısınmış 10 dk performans/MangoHud, gamescope satır gizleme; Windows tarafı yapıldı                                                    | cihaz             |
-| UI-08.4      | Erken tier-1 kapsam kontrolü: ScrollView referans klavye/odak/overscroll kanıtı; UI-03/04/05/08 applicable durumlarının assertion'a bağlanması; kalanlar görünür kalan iş (UI-08.1–08.3 2026-10-11 kapandı)                           | kod               |
 | UI-09.1–09.3 | ContextMenu/RadialMenu/Popover/FatalStartupError yayılımı, juice/ses kapsamı, 3 katmanlı yığın, %200/IME odak; dokunmatik tooltip alternatifi; Kanban/KeyBindingList %30/%200/RTL (UI-09.4 tamam: insan/cihaz kabulü UI-13.3/13.4'te) | kod + insan (AT)  |
 | UI-11.3–11.4 | **Hiç başlanmadı:** Android Activity/ActionMode/Insets ve Metin Girişi sekmesi + fiziksel APK (Lenovo Android 14 ve Samsung SM-G990B2 / Android 16 bağlı)                                                                             | kod + cihaz       |
 | UI-12.2–12.3 | Fiziksel Deck düğmeleri, Steam Input yeniden bağlama, çoklu kol; haptik uyku/odak kaybı/cihaz çıkarma gerçek sondası; hissiyat beyanı                                                                                                 | cihaz + insan     |
@@ -428,9 +427,24 @@ neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altı
       820 sembol; 95 sınıf, 165 runtime, 284 type-only). Kayıt: [VERIFICATION](VERIFICATION.md) "ActionBar/BuildMenu/SkillTree/SlotGrid
       kaydı". **NOT-RUN:** fiziksel kolla SlotGrid taşıma ve ActionBar kısayolu hissi, ekran okuyucunun kullanılamaz nedenini
       okuması, uzun basışın insan hissi (UI-13.4); Samsung SM-G990B2 (UI-13.3).
-- [ ] **UI-08.4 — Erken tier-1 kapsam kontrolü.** ScrollView referans klavye/odak/overscroll
+- [x] **UI-08.4 — Erken tier-1 kapsam kontrolü.** ScrollView referans klavye/odak/overscroll
       kanıtı; UI-10 ileri pan ayrı. Kapanır: UI-03/04/05/08 applicable durumları assertion'a bağlı;
       kalanlar görünür kalan iş; tam tier-1/M3 kapanışı yalnız UI-13.1'de.
+      Yapıldı (2026-10-11): **ScrollView ve VirtualList'te iki gerçek kusur, gerçek tarayıcıda bulundu ve kökünden giderildi:**
+      (1) `FocusNavController` ok tuşlarını uzamsal gezinme için yuttuğundan odaktaki yüzey ArrowDown/ArrowUp ile kaymıyor,
+      odağı komşu denetime atıyordu (PageDown/End/Home yerel olduğu için çalışıyordu) → `scrollByArrowKey` (ortak
+      yardımcı): yüzey kendisi odaktayken tek adım (`SCROLL_KEY_STEP_PX`) kaydırır, uçta olayı bırakır (tuzak yok),
+      `data-vol-arrows` ile kol D-pad'i aynı işleyiciye gider; (2) odak halkası tarayıcı varsayılanıydı (`auto`) → temanın
+      2 px halkası. **Kanıt:** `core/tests/ui/layout/arrowScroll.test.ts` (10; gerçek `FocusNavController` ile klavye ve
+      D-pad), `scrollSurfaces.test.ts` (+1 CSS), `devtools/vol-showcase/tests/e2e/scrollView.spec.ts` (6, iki motor:
+      hesaplanan halka rengi = token, ok tuşları dikey/yatay, odaktaki çocuk görünür kalır; hata varken 5/6 düşüyordu).
+      Overscroll: zincirleme tuzak yok (`scrollSplit.spec.ts`, mevcut). **Durum bağı:** registry girdisi `states` taşır
+      (`scripts/quality/uiRegistry.mjs`; test başlığı + adın tanımlayıcı kullanımı + `expect` + durum işareti doğrulanır,
+      N/A durum bağlanamaz); `node scripts/quality/cli/ui-registry.mjs --states` bağlı/açık durumu fazlara göre yazar;
+      bağlı sayı tabanı `uiRegistry.test.mjs`te. **Sonuç (UI-03/04/05/08 tier-1, 19 export, 180 durum): 55 teste bağlı,
+      2 fixture ile sınanıyor, 123 açık** (UI-03 15/33, UI-04 11/53, UI-05 21/74, UI-08 8/20); bağlar gövdesi okunarak
+      kuruldu. Açık durumlar UI-13.1'in ölçütüdür. **NOT-RUN:** ScrollView'un erişilebilir adı/rol duyurusu (UI-13.4).
+      Kayıt: [VERIFICATION](VERIFICATION.md) "ScrollView referansı ve durum bağı kaydı".
 
 ### UI-09 — Overlay, bildirim ve veri yüzeyleri
 
@@ -872,6 +886,9 @@ neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altı
       applicable durum ve açık AA bulgusu sıfır; registry gerçek test bağlantısı tam; public yüzey
       kilidi/belgeler/README/i18n uyumlu; kullanılmayan bağımlılık/anahtar/varlık yok; döngü ve
       1000 satır sınırı korunur.
+      Devralınan (UI-08.4, 2026-10-11): `node scripts/quality/cli/ui-registry.mjs --states UI-01 … UI-12`
+      açık durum sıfır verene dek kapanmaz; erken fazlarda 123 durum açıktır (55/180 bağlı). Bağlanamayan
+      durum (Playwright ya da CSS ağırlıklı) için ya vitest karşılığı yazılır ya da gerekçeli N/A olur.
 - [ ] **UI-13.2 — Etkileşim stresleri.** İç içe modal→Select→OSK→IME, istek beklerken tema/dil
       değişimi, hızlı tekrar/yükleme iptali, %200/RTL/multidokunma/kol↔dokunma/hotplug,
       askıya alma/devam, sessizleştirme/ses erişimi. Kapanır: kayıp odak/yinelenen kalıcı

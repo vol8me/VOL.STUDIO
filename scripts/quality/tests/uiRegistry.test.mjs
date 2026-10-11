@@ -6,8 +6,11 @@ import { fileURLToPath } from 'node:url';
 import {
   REGISTRY_PATH,
   STATE_AXES,
+  STATE_MARKERS,
   analyzeTests,
   evidenceStatus,
+  stateCoverage,
+  stateEvidenceStatus,
   suggestEvidence,
   uiSurface,
   validateRepoUiRegistry,
@@ -237,6 +240,126 @@ test('CATALOG.md başlık sayıları gerçek yüzey ve kayıtla birebirdir', () 
   const statedDirect = /(\d+) sınıf VOL\.TEST'te doğrudan/.exec(catalog);
   assert.ok(statedDirect, `CATALOG.md "N sınıf VOL.TEST'te doğrudan" ifadesi yok`);
   assert.equal(Number(statedDirect[1]), direct, 'doğrudan tüketilen sınıf sayısı bayat');
+});
+
+const FOO_FILE = 'core/tests/ui/foo.test.ts';
+const DISABLED_TITLE = 'Foo devre dışıyken tıklamaya yanıt vermez';
+const DISABLED_TEST = [
+  `it('${DISABLED_TITLE}', () => {`,
+  '  const foo = new Foo({ disabled: true });',
+  '  expect(foo.element.disabled).toBe(true);',
+  '});',
+  "it('Foo davranışı', () => { expect(new Foo()).toBeTruthy(); });",
+  "it('fooHelper çalışır', () => { expect(fooHelper()).toBe(1); });",
+].join('\n');
+const at = (title) => ({ file: FOO_FILE, title });
+const withStates = (states, source = DISABLED_TEST) =>
+  run({
+    entries: [entry({ states }), helperEntry()],
+    tree: { ...files, [FOO_FILE]: source },
+  });
+
+test('durum bağı: işaret taşıyan, doğrulamalı test uygulanabilir duruma bağlanır', () => {
+  assert.deepEqual(withStates({ disabled: [at(DISABLED_TITLE)] }), []);
+});
+
+test('durum bağı: işareti olmayan, başlıksız ya da doğrulamasız test reddedilir', () => {
+  const noMarker = withStates({ hover: [at('Foo davranışı')] });
+  assert.ok(
+    noMarker.some((p) =>
+      /states\.hover: "Foo davranışı" testinin kodunda hover durumunun işareti yok/.test(p),
+    ),
+  );
+  assert.ok(
+    withStates({ disabled: [at('yok')] }).some((p) =>
+      /states\.disabled: "yok" başlıklı test/.test(p),
+    ),
+  );
+  const bare = DISABLED_TEST.replace('expect(foo.element.disabled).toBe(true);', 'foo.element;');
+  assert.ok(
+    withStates({ disabled: [at(DISABLED_TITLE)] }, bare).some((p) =>
+      /states\.disabled: .* hiçbir expect çağrısı taşımıyor/.test(p),
+    ),
+  );
+});
+
+test('durum bağı: işaret yalnız yorumda ya da başlıkta geçiyorsa sayılmaz', () => {
+  const commentOnly = [
+    "it('Foo disabled başlığı', () => {",
+    '  // disabled burada yalnız yorum',
+    '  expect(new Foo()).toBeTruthy();',
+    '});',
+    "it('Foo davranışı', () => { expect(new Foo()).toBeTruthy(); });",
+    "it('fooHelper çalışır', () => { expect(fooHelper()).toBe(1); });",
+  ].join('\n');
+  const problems = withStates({ disabled: [at('Foo disabled başlığı')] }, commentOnly);
+  assert.ok(problems.some((p) => /disabled durumunun işareti yok/.test(p)));
+});
+
+test('durum bağı: N/A, bilinmeyen ve boş durum reddedilir', () => {
+  const helper = run({
+    entries: [entry(), helperEntry({ states: { hover: [at('fooHelper çalışır')] } })],
+  });
+  assert.ok(helper.some((p) => /fooHelper: states\.hover uygulanabilir değil/.test(p)));
+  assert.ok(
+    withStates({ uçuş: [at('Foo davranışı')] }).some((p) => /bilinmeyen durum "uçuş"/.test(p)),
+  );
+  assert.ok(withStates({ normal: [] }).some((p) => /states\.normal boş/.test(p)));
+});
+
+test('normal durum işaretsizdir; her durum ekseninin işaret tanımı vardır', () => {
+  const facts = analyzeTests('x.test.ts', DISABLED_TEST);
+  assert.equal(stateEvidenceStatus(facts, 'Foo davranışı', 'Foo', 'normal'), 'ok');
+  assert.equal(stateEvidenceStatus(facts, 'Foo davranışı', 'Foo', 'hover'), 'marker');
+  assert.equal(stateEvidenceStatus(facts, DISABLED_TITLE, 'Foo', 'disabled'), 'ok');
+  for (const state of STATE_AXES) {
+    assert.ok(state in STATE_MARKERS, `${state}: işaret tanımı yok`);
+    const marker = STATE_MARKERS[state];
+    assert.ok(marker === null || marker instanceof RegExp, `${state}: RegExp ya da null olmalı`);
+  }
+});
+
+test('stateCoverage bağlı, fixture ile sınanan ve açık durumları ayırır', () => {
+  const registry = {
+    archetypes: { control: { applicable: ['normal', 'hover', 'disabled'], na: {} } },
+    entries: [
+      {
+        export: 'Foo',
+        phase: 'UI-03',
+        tier: 1,
+        archetype: 'control',
+        extraStates: ['loading'],
+        states: { normal: [at('b')] },
+      },
+      { export: 'Bar', phase: 'UI-09', tier: 2, archetype: 'control' },
+    ],
+  };
+  const fixtures = { fixtures: [{ export: 'Foo', states: ['hover'] }] };
+  const rows = stateCoverage(registry, { phases: ['UI-03'], tier: 1, fixtures });
+  assert.equal(rows.length, 1);
+  assert.deepEqual(rows[0].bound, ['normal']);
+  assert.deepEqual(rows[0].fixtured, ['hover']);
+  assert.deepEqual(rows[0].open, ['disabled', 'loading']);
+  assert.equal(rows[0].applicable, 4);
+});
+
+/**
+ * Erken tier-1 fazlarında teste bağlı durum sayısının tabanı (UI-08.4). Yalnız yukarı çıkar: bağ sildiysen ya da
+ * testi yeniden adlandırdıysan kapı zaten düşer; bu taban, bağların sessizce gevşetilmesini engeller. Yeni bağ
+ * ekleyince tabanı yükselt; kalan açık durumlar `node scripts/quality/cli/ui-registry.mjs --states` çıktısındadır
+ * ve UI-13.1 kapanışında sıfır olmalıdır.
+ */
+const BOUND_STATE_FLOOR = { 'UI-03': 15, 'UI-04': 11, 'UI-05': 21, 'UI-08': 8 };
+
+test('erken tier-1 fazlarında teste bağlı durum sayısı tabanın altına inmez', () => {
+  const registry = JSON.parse(readFileSync(resolve(ROOT, REGISTRY_PATH), 'utf8'));
+  const rows = stateCoverage(registry, { phases: Object.keys(BOUND_STATE_FLOOR), tier: 1 });
+  for (const [phase, floor] of Object.entries(BOUND_STATE_FLOOR)) {
+    const bound = rows
+      .filter((row) => row.phase === phase)
+      .reduce((total, row) => total + row.bound.length, 0);
+    assert.ok(bound >= floor, `${phase}: ${bound} bağlı durum, taban ${floor}`);
+  }
 });
 
 test('suggestEvidence gerçek doğrulama taşıyan testi bulur', () => {

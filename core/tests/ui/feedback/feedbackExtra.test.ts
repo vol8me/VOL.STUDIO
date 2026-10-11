@@ -280,15 +280,15 @@ describe('XPBar', () => {
   });
 
   it('boş XP barı kritik/kırmızı duruma düşmez — dolan bir değerdir', () => {
-    const xpBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, animateMs: 0 }));
-    expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
+    const emptyBar = track(new XPBar({ level: 1, xp: 0, xpForLevel, animateMs: 0 }));
+    expect(emptyBar.element.classList.contains('vol-bar--low')).toBe(false);
 
-    xpBar.setState(1, 1);
-    expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
+    emptyBar.setState(1, 1);
+    expect(emptyBar.element.classList.contains('vol-bar--low')).toBe(false);
 
     // Seviye atlayınca bar yeniden boşalır; yine kırmızıya dönmemeli.
-    xpBar.setState(2, 0);
-    expect(xpBar.element.classList.contains('vol-bar--low')).toBe(false);
+    emptyBar.setState(2, 0);
+    expect(emptyBar.element.classList.contains('vol-bar--low')).toBe(false);
   });
 
   it('setState barı dışarıdaki duruma eşitler', () => {

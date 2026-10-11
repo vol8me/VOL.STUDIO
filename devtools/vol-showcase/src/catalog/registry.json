@@ -269,6 +269,32 @@
           "title": "düşük durum yalnız renkle değil metinle de söylenir: \"değer / üst sınır, düşük\""
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/feedback/feedback.test.ts",
+            "title": "varsayılan yatay yönelim genişlikten büyür ve eksen bildirmez"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "core/tests/ui/feedback/hudStates.test.ts",
+            "title": "dolgu doğrudan son değere gider: rAF animasyonu kurulmaz, aria ve genişlik aynı anda hedefte"
+          }
+        ],
+        "loading": [
+          {
+            "file": "core/tests/ui/feedback/hudStates.test.ts",
+            "title": "meşgul: değer yerine aria-busy yazılır, boyutu CSS belirler; normale dönünce değer yerinde durur"
+          }
+        ],
+        "error": [
+          {
+            "file": "core/tests/ui/feedback/hudStates.test.ts",
+            "title": "hata: sınıf ve okuyucu metni \"hata\"; son değer korunur"
+          }
+        ]
+      },
       "extraStates": ["loading", "error", "empty"]
     },
     {
@@ -332,6 +358,42 @@
           "title": "oluşturma ve yok etme"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "varsayılan variant ve size classlarını korur"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "tıklama onClick handlerını çağırır"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "disabled durumda tıklama handlerı çağırmaz"
+          }
+        ],
+        "loading": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "setLoading DOM durumunu ve disabled niteliğini yönetir"
+          },
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "loading sırasında tıklama handlerı çağırmaz"
+          }
+        ],
+        "error": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "handler hata fırlatınca hata durumu kurulur, sonraki başarılı tıklamada kalkar"
+          }
+        ]
+      },
       "extraStates": ["loading", "error"]
     },
     {
@@ -397,6 +459,14 @@
           "title": "yükleniyor: nazik status bölgesi ve ızgarada aria-busy"
         }
       ],
+      "states": {
+        "loading": [
+          {
+            "file": "core/tests/ui/cards/cardPickerStates.test.ts",
+            "title": "yükleniyor: nazik status bölgesi ve ızgarada aria-busy"
+          }
+        ]
+      },
       "extraStates": ["loading", "error"]
     },
     {
@@ -421,7 +491,31 @@
           "file": "core/tests/ui/cards/cardSurface.test.ts",
           "title": "kart, başlığıyla adlandırılmış bir gruptur"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cards/cardSurface.test.ts",
+            "title": "kart, başlığıyla adlandırılmış bir gruptur"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/cards/cardSurface.test.ts",
+            "title": "eylem tıklaması kök veriyoluna tek bir \"select\" niyeti yayar (düğme sesi yedeği yinelenmez)"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/cards/cardTile.test.ts",
+            "title": "devre dışı aksiyon çalışmaz"
+          },
+          {
+            "file": "core/tests/ui/cards/cardTile.test.ts",
+            "title": "setDisabled butonu ve durum metnini günceller"
+          }
+        ]
+      }
     },
     {
       "export": "Carousel",
@@ -489,7 +583,21 @@
           "file": "core/tests/ui/primitives/selectionControls.test.ts",
           "title": "switch varyantı switch rolü taşır; varsayılan checkbox kalır; adsız denetim ariaLabel alır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/primitives/selectionControls.test.ts",
+            "title": "switch varyantı switch rolü taşır; varsayılan checkbox kalır; adsız denetim ariaLabel alır"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+            "title": "ayrık kontroller kullanıcı değişiminde input/commit callbacklerini birer kez üretir"
+          }
+        ]
+      }
     },
     {
       "export": "ColorPicker",
@@ -879,7 +987,15 @@
           "file": "core/tests/ui/hud/fpsMeter.test.ts",
           "title": "varsayılan köşe sağ üsttür ve konum data attribute ile gelir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/hud/fpsMeter.test.ts",
+            "title": "kare akışından FPS türetir ve metne yazar"
+          }
+        ]
+      }
     },
     {
       "export": "GamepadPointerController",
@@ -952,7 +1068,61 @@
           "file": "core/tests/ui/memory.test.ts",
           "title": "HoldButton pointer capture serbest bırakılır ve listenerlar SİMETRİK temizlenir"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/interactionContract.test.ts",
+            "title": "Space basılı tutmak onPress, bırakmak onRelease üretir"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/holdButtons.test.ts",
+            "title": "pointercancel ve yakalama kaybı basışı bırakır; ikinci işaretçi ikinci onPress üretmez"
+          },
+          {
+            "file": "core/tests/ui/interactionContract.test.ts",
+            "title": "basılıyken destroy edilirse onRelease gelir (mandallı durum bırakmaz)"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/interactionContract.test.ts",
+            "title": "devre dışıyken klavye basımı yok sayılır"
+          },
+          {
+            "file": "core/tests/ui/holdInput.test.ts",
+            "title": "devre dışı denetim klavyeyle basılmaz"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/interactionContract.test.ts",
+            "title": "Space basılı tutmak onPress, bırakmak onRelease üretir"
+          },
+          {
+            "file": "core/tests/ui/interactionContract.test.ts",
+            "title": "Enter de aktivasyon tuşudur"
+          },
+          {
+            "file": "core/tests/ui/interactionContract.test.ts",
+            "title": "klavye tekrarı (auto-repeat) yeni bir onPress SAYILMAZ"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "core/tests/ui/holdInput.test.ts",
+            "title": "A, odaktaki HoldButton için basış ve bırakış üretir (click değil)"
+          }
+        ],
+        "touch": [
+          {
+            "file": "core/tests/ui/holdButtons.test.ts",
+            "title": "pointercancel ve yakalama kaybı basışı bırakır; ikinci işaretçi ikinci onPress üretmez"
+          }
+        ]
+      }
     },
     {
       "export": "ICON_CATEGORIES",
@@ -1009,6 +1179,32 @@
           "title": "oluşturma ve yok etme"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "varsayılan variant ve size classlarını korur"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "tıklama onClick handlerını çağırır"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "disabled durumda tıklama handlerı çağırmaz"
+          }
+        ],
+        "loading": [
+          {
+            "file": "core/tests/ui/interactionContract.test.ts",
+            "title": "IconButton da asenkron handler bekler ve aria-busy yazar"
+          }
+        ]
+      },
       "extraStates": ["loading"]
     },
     {
@@ -1038,6 +1234,30 @@
           "title": "IME bileşiminde Enter göndermez ve kalıcı değişiklik üretmez; bileşim bitince Enter çalışır"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+            "title": "Input canlı input ve tek commit üretir; setter sessiz baseline kurar"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/primitives/editorContract.test.ts",
+            "title": "IME bileşiminde Enter göndermez ve kalıcı değişiklik üretmez; bileşim bitince Enter çalışır"
+          },
+          {
+            "file": "core/tests/ui/primitives/editorContract.test.ts",
+            "title": "Escape taslağı son kalıcı değere döndürür ve katmanı kapatmaz; taslak yokken yayılır"
+          }
+        ],
+        "error": [
+          {
+            "file": "core/tests/ui/primitives/editorContract.test.ts",
+            "title": "readOnly, invalid ve ariaLabel yerel özniteliklere yansır; setterlar geri alınır"
+          }
+        ]
+      },
       "extraStates": ["error", "empty", "digits6"]
     },
     {
@@ -1208,6 +1428,36 @@
           "title": "kart hide animasyonu sırasında daha önce basılan A seçimi tamamlayamaz"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cardPickerIntent.test.ts",
+            "title": "varsayılan picker programatik click sözleşmesini korur"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/cards/cardPickerStates.test.ts",
+            "title": "kapanış animasyonu sürerken ikinci tıklama ikinci seçim üretmez"
+          }
+        ],
+        "loading": [
+          {
+            "file": "core/tests/ui/cards/cardPickerStates.test.ts",
+            "title": "yükleniyor: nazik status bölgesi ve ızgarada aria-busy"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "core/tests/ui/gamepadPointer.test.ts",
+            "title": "kart hide animasyonu sırasında daha önce basılan A seçimi tamamlayamaz"
+          },
+          {
+            "file": "core/tests/ui/cardPickerIntent.test.ts",
+            "title": "aynı kol aktivasyonu içinde callback yeni karta tekrar activate yapamaz"
+          }
+        ]
+      },
       "extraStates": ["loading"]
     },
     {
@@ -1397,7 +1647,15 @@
           "file": "core/tests/ui/hud/hudPanels.test.ts",
           "title": "canvas tıklaması dünya koordinatını hesaplayıp onClick çağırır"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/hud/hudPanels.test.ts",
+            "title": "onClick verilmezse canvas role=\"img\" olarak render edilir (tıklanabilir değil)"
+          }
+        ]
+      }
     },
     {
       "export": "Modal",
@@ -1524,6 +1782,14 @@
           "title": "oluşturulur, gösterilir, gizlenir ve yok edilir"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/layoutAndControls.test.ts",
+            "title": "oluşturulur, gösterilir, gizlenir ve yok edilir"
+          }
+        ]
+      },
       "extraStates": ["disabled"]
     },
     {
@@ -1829,7 +2095,33 @@
           "file": "core/tests/ui/layout/scrollSurfaces.test.ts",
           "title": "hareket azaltmada animasyonsuz (anında) kayar; tarayıcı smooth değerini kendiliğinden kısmaz"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/layoutAndControls.test.ts",
+            "title": "oluşturulur, yön sınıfını taşır, çocuk eklenir ve temizlenir"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/layout/arrowScroll.test.ts",
+            "title": "ScrollView odaktayken ok tuşu kaydırır"
+          }
+        ],
+        "gamepad": [
+          {
+            "file": "core/tests/ui/layout/arrowScroll.test.ts",
+            "title": "kol D-pad: uca varana dek kaydırır, uçta odak komşu denetime geçer"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "core/tests/ui/layout/scrollSurfaces.test.ts",
+            "title": "hareket azaltmada animasyonsuz (anında) kayar; tarayıcı smooth değerini kendiliğinden kısmaz"
+          }
+        ]
+      }
     },
     {
       "export": "SegmentedControl",
@@ -1853,7 +2145,27 @@
           "file": "core/tests/ui/layout/inlineDirection.test.ts",
           "title": "SegmentedControl önceki davranışını korur (RTL’de sol ok sonraki)"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+            "title": "ayrık kontroller kullanıcı değişiminde input/commit callbacklerini birer kez üretir"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+            "title": "ayrık kontroller kullanıcı değişiminde input/commit callbacklerini birer kez üretir"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/layout/inlineDirection.test.ts",
+            "title": "SegmentedControl önceki davranışını korur (RTL’de sol ok sonraki)"
+          }
+        ]
+      }
     },
     {
       "export": "Select",
@@ -1878,6 +2190,40 @@
           "title": "devre dışı seçenek seçilemez, gezinme onu atlar, kalıcı değişiklik üretmez"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "başlangıç değeri seçili etiketi ve aria-selected değerini gösterir"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "tetikleyici tıklama ile açılıp kapanır"
+          },
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "seçenek tıklaması input callback çağırır, değeri ve etiketi günceller"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/primitives/primitives.test.ts",
+            "title": "disabled durumda açılmaz"
+          },
+          {
+            "file": "core/tests/ui/primitives/selectionControls.test.ts",
+            "title": "devre dışı seçenek seçilemez, gezinme onu atlar, kalıcı değişiklik üretmez"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/primitives/selectionControls.test.ts",
+            "title": "boş liste nedenini söyler (seçilemez tek satır), tetikleyici açılır ama değer üretmez"
+          }
+        ]
+      },
       "extraStates": ["error", "empty"]
     },
     {
@@ -2003,6 +2349,30 @@
           "title": "teklifleri fiyatlarıyla ve bakiyeyle gösterir"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/cards/shopPicker.test.ts",
+            "title": "maliyet etiketini gösterir ve karşılanamıyorsa butonu kilitler"
+          }
+        ],
+        "press": [
+          {
+            "file": "core/tests/ui/cards/cardPickerStates.test.ts",
+            "title": "dükkan kapatma: çift tıklama ve tıklama + geri onClose’u bir kez çağırır"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/cards/shopPicker.test.ts",
+            "title": "bakiye yetmeyen kartın butonu kilitli ve uyarı metinli"
+          },
+          {
+            "file": "core/tests/ui/cards/shopPicker.test.ts",
+            "title": "maliyet etiketini gösterir ve karşılanamıyorsa butonu kilitler"
+          }
+        ]
+      },
       "extraStates": ["loading", "error"]
     },
     {
@@ -2052,6 +2422,26 @@
           "title": "readOnly yerel hareketi sessizce geri alır: değer, niyet ve geri çağrım yok"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+            "title": "Slider input sırasında canlı, change sırasında tek commit üretir"
+          }
+        ],
+        "keyboard": [
+          {
+            "file": "core/tests/ui/primitives/valueInteractionContract.test.ts",
+            "title": "Slider input sırasında canlı, change sırasında tek commit üretir"
+          }
+        ],
+        "disabled": [
+          {
+            "file": "core/tests/ui/primitives/editorContract.test.ts",
+            "title": "sürükleme sürerken devre dışı kalırsa önizleme geri alınır, kalıcı değişiklik olmaz"
+          }
+        ]
+      },
       "extraStates": ["digits6"]
     },
     {
@@ -2457,7 +2847,15 @@
           "file": "core/tests/ui/layout/layoutStructures.test.ts",
           "title": "parent altında .vol-ui-root elementi oluşturur"
         }
-      ]
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/layout/layoutStructures.test.ts",
+            "title": "parent altında .vol-ui-root elementi oluşturur"
+          }
+        ]
+      }
     },
     {
       "export": "UI_CURSORS",
@@ -2626,6 +3024,20 @@
           "title": "tek kazanımla birden çok seviye atlanır: bar son seviyeyi gösterir, düzey vurgusu TEK kez oynar"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
+            "title": "setState barı dışarıdaki duruma eşitler"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/feedback/feedbackExtra.test.ts",
+            "title": "boş XP barı kritik/kırmızı duruma düşmez — dolan bir değerdir"
+          }
+        ]
+      },
       "extraStates": ["empty"]
     },
     {

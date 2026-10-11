@@ -201,7 +201,9 @@ uygulanabilir ya da gerekçeli N/A tutar; UI-00.3 bu matrisi vitrin fixture'lar�
 ## Her satırın kapanış verisi
 
 Registry: class/export ID, tier, owner phase, fixture ID, applicable state,
-assertion/test path ve somut anchor gerekçesi. Durumlar normal/hover/press/
+assertion/test path ve somut anchor gerekçesi. Durum başına bağ isteğe bağlı `states` alanındadır
+(durum → test dosyası + başlık; doğrulayıcı durumun işaretini ve `expect`i arar);
+bağlanmamış uygulanabilir durumlar `node scripts/quality/cli/ui-registry.mjs --states` ile listelenir. Durumlar normal/hover/press/
 focus-visible/disabled/loading/error/empty/keyboard/gamepad/touch/
 reduced-motion/%30/6hane; N/A gerekçelidir. Public helperlar da behavior
 fixture'ına bağlanır. Yeni public sınıf mirrored test + vitrin + README

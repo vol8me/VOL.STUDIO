@@ -1,4 +1,5 @@
 import { prefersReducedMotion } from '../motion/reducedMotion';
+import { scrollByArrowKey } from './arrowScroll';
 
 /** Programatik kaydırma, hareket azaltma tercihinde animasyonsuz (anında) yapılır; tarayıcı `smooth`u kendiliğinden kısmaz. */
 function scrollBehavior(): ScrollBehavior {
@@ -26,6 +27,12 @@ export class ScrollView {
     // tabindex="0" bu overflow:auto kapsayıcını odaklanabilir/klavye-kaydırılabilir
     // yapar (VirtualList.ts ile aynı düzeltme); olmadan klavye-only kullanıcılar kaydıramaz.
     this.element.tabIndex = 0;
+    // Ok tuşunu yüzey kendisi kaydırır (`FocusNavController` yerel ok kaydırmasını yutar); `data-vol-arrows`
+    // kol D-pad'ini de aynı işleyiciye verir ve uçta uzamsal gezinmeye bırakır.
+    this.element.dataset.volArrows = direction;
+    this.element.addEventListener('keydown', (event) =>
+      scrollByArrowKey(this.element, event, direction),
+    );
     if (size) {
       if (direction === 'vertical') {
         this.element.style.height = `${size}px`;

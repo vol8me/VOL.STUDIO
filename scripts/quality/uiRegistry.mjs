@@ -94,6 +94,24 @@ function identifierSet(node) {
   return names;
 }
 
+/** Tanımlayıcılar ve metin değerleri (yorum hariç): durum işareti aramasının evreni. */
+function wordSet(node) {
+  const words = new Set();
+  const visit = (child) => {
+    if (
+      ts.isIdentifier(child) ||
+      ts.isStringLiteralLike(child) ||
+      ts.isTemplateHead(child) ||
+      ts.isTemplateMiddle(child) ||
+      ts.isTemplateTail(child)
+    )
+      words.add(child.text);
+    ts.forEachChild(child, visit);
+  };
+  visit(node);
+  return words;
+}
+
 /** Dosya adı tanımlayıcı olarak kullanıyor mu (yorum ve metin sayılmaz). */
 export function fileUsesIdentifier(file, text, name) {
   return usesIdentifier(parse(file, text), name);
@@ -176,19 +194,19 @@ function hasAssertion(node) {
 
 const HELPER_DEPTH = 4;
 
-/** Dosyadaki adlandırılmış yardımcı işlevler (bildirim ya da ok işlevi) ve kullandıkları tanımlayıcılar. */
-function helperIdentifiers(sourceFile) {
+/** Dosyadaki adlandırılmış yardımcı işlevler (bildirim ya da ok işlevi) ve gövdelerinden `collect` ile toplananlar. */
+function helperIdentifiers(sourceFile, collect = identifierSet) {
   const helpers = new Map();
   const visit = (node) => {
     if (ts.isFunctionDeclaration(node) && node.name && node.body) {
-      helpers.set(node.name.text, identifierSet(node.body));
+      helpers.set(node.name.text, collect(node.body));
     } else if (
       ts.isVariableDeclaration(node) &&
       ts.isIdentifier(node.name) &&
       node.initializer &&
       (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))
     ) {
-      helpers.set(node.name.text, identifierSet(node.initializer.body));
+      helpers.set(node.name.text, collect(node.initializer.body));
     }
     ts.forEachChild(node, visit);
   };
@@ -215,16 +233,18 @@ function expandThroughHelpers(names, helpers) {
 }
 
 /**
- * Test dosyasının blokları: başlık, kullanılan tanımlayıcılar ve doğrulama
- * çağrısı var mı. Blok adı doğrudan ya da dosyadaki adlandırılmış yardımcı
- * işlevler (örn. `mountSheet`) üzerinden kullanabilir.
+ * Test dosyasının blokları: başlık, kullanılan tanımlayıcılar (`names`), tanımlayıcı ve metin değerleri (`words`,
+ * yorum hariç) ve doğrulama çağrısı var mı. Blok adı doğrudan ya da dosyadaki adlandırılmış yardımcı işlevler
+ * (örn. `mountSheet`) üzerinden kullanabilir.
  */
 export function analyzeTests(file, text) {
   const sourceFile = parse(file, text);
-  const helpers = helperIdentifiers(sourceFile);
+  const helperNames = helperIdentifiers(sourceFile);
+  const helperWords = helperIdentifiers(sourceFile, wordSet);
   return testBlocks(file, text).map((block) => ({
     title: block.title,
-    names: expandThroughHelpers(identifierSet(block.body), helpers),
+    names: expandThroughHelpers(identifierSet(block.body), helperNames),
+    words: expandThroughHelpers(wordSet(block.body), helperWords),
     asserts: hasAssertion(block.body),
   }));
 }
@@ -236,6 +256,89 @@ export function evidenceStatus(facts, title, name) {
   const named = matches.filter((block) => block.names.has(name));
   if (named.length === 0) return 'name';
   return named.some((block) => block.asserts) ? 'ok' : 'assert';
+}
+
+/**
+ * Bir durumu sınayan testin kodunda (yorum hariç) görünmesi gereken işaret. İşaret kanıt değildir, ama durumu hiç
+ * anmayan bir testin o duruma bağlanmasını engeller: `hover` bağlı bir test işaretçi girişini, `disabled` bağlı
+ * test devre dışı durumu kodunda taşımalıdır. `normal` işaretsizdir: doğrulama taşıyan her test varsayılan davranışı
+ * sınar. Bağı kuran kişi gövdeyi yine okur; bu yalnız bağın sessizce yanlış durumu göstermesini engeller.
+ */
+export const STATE_MARKERS = {
+  normal: null,
+  hover: /hover|pointerenter|pointerover|mouseenter|mouseover/i,
+  press: /pointerdown|mousedown|pointerup|touchstart|\bclick\b|press/i,
+  focusVisible: /focus/i,
+  disabled: /disabled/i,
+  loading: /loading|busy/i,
+  error: /error|invalid|alert|hata/i,
+  empty: /empty|\bboş\b/i,
+  keyboard: /keydown|keyup|keyboardevent|keyboard|klavye|\benter\b|\bspace\b|arrow|escape|\btab\b/i,
+  gamepad: /gamepad|focusnav|d-?pad|pollpad|padlike|volarrows|dispatcharrow/i,
+  touch: /touch|pointercancel|pointertype|coarse|swipe|pinch/i,
+  reducedMotion: /reduced|prefersreducedmotion|matchmedia/i,
+  long30: /%30|uzun|\blong|uzat|overflow|ellipsis|truncat|wrap|clamp|taşma/i,
+  digits6: /999999|999 999|\b\d{6}\b|altı hane|6 hane|digits/i,
+};
+
+/** `'ok'` ya da neden geçerli olmadığı: `'title' | 'name' | 'assert' | 'marker'`. */
+export function stateEvidenceStatus(facts, title, name, state) {
+  const status = evidenceStatus(facts, title, name);
+  if (status !== 'ok') return status;
+  const marker = STATE_MARKERS[state];
+  if (!marker) return 'ok';
+  const candidates = facts.filter(
+    (block) => block.title === title && block.names.has(name) && block.asserts,
+  );
+  return candidates.some((block) => [...block.words].some((word) => marker.test(word)))
+    ? 'ok'
+    : 'marker';
+}
+
+/**
+ * Uygulanabilir durumların kanıt bağı: arketip + `extraStates` kümesinden bağlı (`states`), fixture ile sınanan
+ * (`fixtures`: stateFixtures belgesi) ve kalanlar. Kalan kanıtsız demek değildir: bağlanmamıştır.
+ *
+ * @param {{ archetypes?: Record<string, { applicable?: string[] }>, entries?: Array<Record<string, any>> }} registry
+ * @param {{
+ *   phases?: string[],
+ *   tier?: number,
+ *   fixtures?: { fixtures?: Array<{ export: string, states?: string[] }> } | null,
+ * }} [options]
+ */
+export function stateCoverage(registry, { phases, tier, fixtures } = {}) {
+  const fixtureStates = new Map();
+  for (const fixture of fixtures?.fixtures ?? []) {
+    const set = fixtureStates.get(fixture.export) ?? new Set();
+    for (const state of fixture.states ?? []) set.add(state);
+    fixtureStates.set(fixture.export, set);
+  }
+  const rows = [];
+  for (const entry of registry.entries ?? []) {
+    if (phases && !phases.includes(entry.phase)) continue;
+    if (tier !== undefined && entry.tier !== tier) continue;
+    const applicable = [
+      ...new Set([
+        ...(registry.archetypes?.[entry.archetype]?.applicable ?? []),
+        ...(entry.extraStates ?? []),
+      ]),
+    ];
+    const bound = applicable.filter((state) => (entry.states?.[state] ?? []).length > 0);
+    const fixtured = applicable.filter(
+      (state) => !bound.includes(state) && fixtureStates.get(entry.export)?.has(state),
+    );
+    const open = applicable.filter((state) => !bound.includes(state) && !fixtured.includes(state));
+    rows.push({
+      export: entry.export,
+      phase: entry.phase,
+      tier: entry.tier,
+      applicable: applicable.length,
+      bound,
+      fixtured,
+      open,
+    });
+  }
+  return rows;
 }
 
 /** `name` için gerçek doğrulama taşıyan testler: yeni export kaydederken aday listesi. */
@@ -384,6 +487,44 @@ export function validateUiRegistry({ registry, surface, usage, read, showcaseTex
         problems.push(`UI registry: ${id}: "${title}" testi adı tanımlayıcı olarak kullanmıyor.`);
       else if (status === 'assert')
         problems.push(`UI registry: ${id}: "${title}" testi hiçbir expect çağrısı taşımıyor.`);
+    }
+    const applicable = new Set([
+      ...(registry.archetypes?.[entry.archetype]?.applicable ?? []),
+      ...(entry.extraStates ?? []),
+    ]);
+    for (const [state, evidence] of Object.entries(entry.states ?? {})) {
+      const at = `UI registry: ${id}: states.${state}`;
+      if (!STATE_AXES.includes(state)) {
+        problems.push(`UI registry: ${id}: states bilinmeyen durum "${state}".`);
+        continue;
+      }
+      if (!applicable.has(state)) {
+        problems.push(`${at} uygulanabilir değil (gerekçeli N/A): bağlanamaz.`);
+        continue;
+      }
+      if (!Array.isArray(evidence) || evidence.length === 0) {
+        problems.push(`${at} boş; kanıt ekle ya da durumu sil.`);
+        continue;
+      }
+      for (const { file, title } of evidence) {
+        const text = read(file);
+        if (text === null) {
+          problems.push(`${at}: test dosyası yok: ${file}.`);
+          continue;
+        }
+        const status = stateEvidenceStatus(factsOf(file, text), title, id, state);
+        if (status === 'title')
+          problems.push(`${at}: "${title}" başlıklı test ${file} içinde yok.`);
+        else if (status === 'name')
+          problems.push(`${at}: "${title}" testi adı tanımlayıcı olarak kullanmıyor.`);
+        else if (status === 'assert')
+          problems.push(`${at}: "${title}" testi hiçbir expect çağrısı taşımıyor.`);
+        else if (status === 'marker')
+          problems.push(
+            `${at}: "${title}" testinin kodunda ${state} durumunun işareti yok ` +
+              `(${STATE_MARKERS[state]}); durumu sınayan başka bir test bağla.`,
+          );
+      }
     }
   }
   for (const [name, kind] of expected) {

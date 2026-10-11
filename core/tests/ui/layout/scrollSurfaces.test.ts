@@ -163,6 +163,16 @@ describe('Kaydırma yüzeyi CSS politikası', () => {
     expect(layout).toMatch(/\.vol-scroll-view\s*\{[^}]*scrollbar-color/);
   });
 
+  it('odaklanabilir kaydırma yüzeyleri temanın odak halkasını taşır (varsayılan tarayıcı halkası değil)', () => {
+    const layout = readUiCss('layout/layout.css').replace(/\/\*[\s\S]*?\*\//g, '');
+    const rule =
+      /\.vol-scroll-view:focus-visible,\s*\.vol-virtual-list:focus-visible\s*\{([^}]*)\}/.exec(
+        layout,
+      )?.[1] ?? '';
+    expect(rule).toMatch(/outline:\s*2px solid var\(--vol-ui-focus-ring\)/);
+    expect(rule).toMatch(/outline-offset:\s*-2px/);
+  });
+
   it('SplitPane tutamağı: gerçek kutu 24 px tabanlı, kaba işaretçide/large hedefte --vol-hit-target-min', () => {
     const layout = readUiCss('layout/layout.css');
     const rule = /\.vol-split-pane__separator\s*\{([^}]*)\}/.exec(layout)?.[1] ?? '';

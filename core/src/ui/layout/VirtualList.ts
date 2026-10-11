@@ -1,3 +1,5 @@
+import { scrollByArrowKey } from './arrowScroll';
+
 export interface VirtualListOptions<T> {
   items: T[];
   /** Satır başına sabit piksel yükseklik; pencereleme hesabı buna dayanır (değişken yükseklik desteklenmez). */
@@ -42,9 +44,13 @@ export class VirtualList<T> {
     this.element.className = 'vol-virtual-list';
     this.element.style.height = `${options.height}px`;
     // tabindex="0" bu overflow:auto kapsayıcını klavye-odaklanabilir yapar, native
-    // Page Up/Down/Home/End/ok kaydırmasını etkinleştirir; olmadan klavye-only
-    // kullanıcılar erişemez.
+    // Page Up/Down/Home/End kaydırmasını etkinleştirir; olmadan klavye-only kullanıcılar
+    // erişemez. Ok tuşunu `FocusNavController` yuttuğundan yüzey kendisi kaydırır (ScrollView ile aynı).
     this.element.tabIndex = 0;
+    this.element.dataset.volArrows = 'vertical';
+    this.element.addEventListener('keydown', (event) =>
+      scrollByArrowKey(this.element, event, 'vertical'),
+    );
     this.element.setAttribute('role', 'list');
 
     this.spacer = document.createElement('div');
