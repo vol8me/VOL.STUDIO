@@ -476,6 +476,11 @@ neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altı
       iç Popup/Popover kapanırken dış katman açık ve odak tetikleyicide kalır, eski Popup üzerine
       açılan Modal önce kapanır. ContextMenu yerel Escape'i dış katmana sızdırmaz
       (`core/tests/ui/overlays/popupKeyboardStack.test.ts`).
+      Denetim (2026-10-11, kutu açık, kod değişmedi): (1) `overlays.css`te translate/ölçek geçişleri, RadialMenu'nün
+      sabit 0,16 sn yaylanma eğrisi ve sonsuz `vol-dialogue-bounce` `prefers-reduced-motion` altında değişmiyor
+      (yalnız Toast ve tur hedefi kapsıyor; hiçbir test ölçmüyor). (2) `showFatalStartupError` eylemsiz salt
+      `role="alert"`: odak/eylem yok, kaydırma yok (kod okumasıyla; tarayıcıda ölçülmedi). (3) 3 katmanlı yığın
+      kanıtı hâlâ yok (yalnız iki katmanlı).
 - [ ] **UI-09.2 — Tooltip/RichTooltip ve ToastManager.** Hover/odak kalıcılığı, Esc, balona geçiş,
       dokunma/kol alternatifi; 3 bildirimlik kuyruk, kritik öncelik/eylem; bildirim sesleri.
       Kapanır: 3 s zorunlu gizleme yok; acil bildirim sessizce düşmez; AT dinler; HUD üstüne
@@ -518,6 +523,11 @@ neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altı
       bırakma, RadialMenu hover'daki öğeyi seçme, Carousel sayfa değiştirme üretiyordu → hepsinde iptal
       sessiz (`pointerCancelContract.test.ts`, `kanban.test.ts`; eski test iptalde kabulü sabitliyordu,
       düzeltildi). Kanban/SlotGrid tıklayarak taşıma ve klavye yolu önceki turlarda kanıtlı.
+      Denetim (2026-10-11, kutu açık): %30/%200/RTL ölçümü var — `pseudoLocale.spec.ts` advanced (DataTable,
+      Kanban, EventLog) ve touch (KeyBindingList) sekmelerini +%30 sahte dilde LTR/RTL, 1280×800/640×400/360/320
+      px'te tarar (istisna dosyası yok; kırpma/taşma bulgudur); pseudoLocale+layout+inlineDirection+scrollView iki
+      motorda 46/46. Kanban RTL ok anlamı `inlineDirection.test.ts`. Kalan: **KeyBindingList satır yokken sessiz boş
+      liste** (DataTable'ın `emptyText`i gibi boş durum yok, testi yok) ve gerçek AT (NOT-RUN → UI-13.4).
 - [x] **UI-09.4 — Diyalog deseni/yönlendirici işaret/yasal metin.** Mevcut Modal/Panel/Button/
       Text bileşimi ile yıkıcı işlem/çıkış/izin/yerel-uzak çakışma/ilk kullanım yönlendirmesi/
       kredi ve yasal metin (ikon atıf ekranı dahil). Kapanır: çakışmada niyet/hata/bekleme/
@@ -895,8 +905,19 @@ neden)`, `BuildMenu.setUnavailable(id, neden)`; neden ev sahibinden gelir: altı
       değişiklik/kalan kaynak/eski sonuç yok; iki motor testleri başarılı.
       Kısmi kanıt (2026-10-08): `stress.spec.ts` (iki motor): OSK açıkken dil ve tema değişimi, Modal/Sheet
       açıkken sistem kaynaklı dil değişimi, altı kez art arda modal aç/kapat → konsol hatası yok, yetim
-      katman/gövde kilidi/inert kalmaz, açık kalan klavye çalışır. Kalan: modal→Select→OSK→IME zinciri
-      (gerçek IME gerekir), istek beklerken tema değişimi, %200/RTL altında aynı akışlar.
+      katman/gövde kilidi/inert kalmaz, açık kalan klavye çalışır.
+      Yapıldı (2026-10-11): `stress.spec.ts` 17 test, iki motorda 17/17. **İstek beklerken** (gerçek saat; aşamalı
+      yükleme ve başarısız yükleme akışları): tema değişimi isteği kesmez, tokenlar değişir, ekran temiz kapanır
+      (kilit/inert/yetim ekran yok); hata durumunda tema değişince uyarı görünür kalır ve odak "Tekrar dene"de
+      kalır, yeniden deneme tamamlanır; dil değişimi sekmeyi yeniden kurduğundan bekleyen istek yetim ekran
+      bırakmadan iptal olur, eski zamanlayıcı sonradan ekran/hata üretmez (7 sn beklenir), yeni dilde akış baştan
+      çalışır; sekme gezinmesi isteği iptal etmez, sekme seçilir, ekran bitince geri gelmez; beş kez art arda
+      başlatma tek ekran bırakır. **RTL ve %200 yaklaşımı** (1280×800 RTL, 640×400 LTR, 640×400 RTL): ekran
+      klavyesi tema değişiminden sonra pencereye sığar, Vazgeç görünür ve odak klavyenin içinde kalır; Modal art
+      arda aç/kapat ve açıkken dil değişimi kilit/yetim katman bırakmaz. Not: "%200" burada 640×400 görünüm
+      penceresidir, tarayıcı yakınlaştırması değil. Kalan (kutu açık): modal→Select→OSK→IME zinciri (gerçek IME
+      gerekir; vitrinde modal içinde Select+OSK akışı da yok), çoklu dokunma, kol↔dokunma geçişi ve takıp çıkarma
+      (kol testleri yalnız tek kol), askıya alma/devam bu yüzeylerde, sessizleştirme/ses erişimi altında UI.
 - [ ] **UI-13.3 — Gerçek cihaz/performans.** Windows, Deck host/SLR4, Android profilleri aynı
       örnekle A/B; VOL.TEST yükleri sabit tohumla. Kapanır: CPU gürültü sınırı ve ekrana sunum
       ayrı; UI maliyeti toplam FPS'ten ayrı kök neden; 10 dk termal; bilinmeyen NOT-RUN.

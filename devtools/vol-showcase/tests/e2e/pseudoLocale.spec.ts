@@ -6,8 +6,9 @@ import { scan, type Finding } from './support/textFit';
 /**
  * Uzatılmış metin taraması (UI-07.2): `?lang=pseudo` deterministik %30 uzun sahte dili açar (gerçek çeviri değildir).
  * Her sekmede metin taşıyan öğenin içeriği kendi kutusuna sığmalı ya da kaydırılabilir olmalıdır; kırpılma
- * (overflow gizli + scrollWidth > clientWidth) ve sayfa dışına taşma hata sayılır. Bilinçli kırpmalar
- * `tests/e2e/support/clipExceptions.json`da gerekçeyle durur; düzelen kayıt bayatlar ve testi düşürür.
+ * (overflow gizli + scrollWidth > clientWidth) ve sayfa dışına taşma hata sayılır. Kayıtlı istisna dosyası YOKTUR:
+ * ölçü dışı yalnız görünmeyen/sr-only/sıfır boyutlu öğeler, kaydırılabilir kutular ve üç nokta + `title` ile
+ * kurtarılabilen kısaltmadır (`support/textFit.ts`); her bulgu doğrudan hatadır.
  */
 const VIEWPORTS = [
   { name: '1280x800', width: 1280, height: 800 },

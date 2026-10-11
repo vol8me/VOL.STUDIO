@@ -115,10 +115,13 @@ export const SHOWCASE_TABS = [
 
 export type ShowcaseTab = (typeof SHOWCASE_TABS)[number];
 
-/** Sayfayı dondurulmuş bir ortamda açar ve yerleşimin oturmasını bekler. */
-export async function openShowcase(page: Page, seed = 20260101): Promise<void> {
+/**
+ * Sayfayı dondurulmuş bir ortamda açar ve yerleşimin oturmasını bekler. `path` yön/dil bağlamları içindir
+ * (`/?dir=rtl`); varsayılan çağrılar değişmez.
+ */
+export async function openShowcase(page: Page, seed = 20260101, path = '/'): Promise<void> {
   await page.addInitScript(freezeEnvironment, seed);
-  await page.goto('/');
+  await page.goto(path);
   await page.addStyleTag({ content: STILL_CSS });
 
   // Yazı tipleri geç yüklenirse metin bir kare fallback ile çizilir ve ekran
