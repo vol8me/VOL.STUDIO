@@ -23,7 +23,7 @@ const GATE_TABLE_DOCS = ['AGENTS.md', 'docs/gates.md'];
 // Aşağıdaki ters testler listenin bayatlamasına izin vermez.
 const LOCAL_ONLY = new Map([
   ['graphify-out/', 'graphify çıktısı yereldir ve yok sayılır'],
-  ['.claude/', 'Claude Code yerel çalışma dizinidir ve yok sayılır'],
+  ['.claude/settings.local.json', 'Claude Code kişisel yerel ayarıdır ve yok sayılır'],
 ]);
 const ABSENT_BY_RULE = new Map([
   ['.github/workflows/', 'bulut CI yasağının konusudur; yokluğu kuralın kendisidir'],

@@ -96,5 +96,6 @@ Teslim değişiklik, koşulan kapı, kalan risk ve çalışma ağacı durumunu s
 
 `graphify-out/` varsa mimari sorusunda önce graphify query/affected kullanılır,
 sonuç kaynakla doğrulanır; kod değişince graphify update uygulanır. Çıktı yereldir.
-`.claude/` git dışıdır; araç çıktısı paketin git dışı records/export alanına
+`.claude/` içinde yalnız `.claude/settings.json` ve `.claude/agents/` izlenir; `.claude/settings.local.json`
+ve oturum verisi git dışıdır. Araç çıktısı paketin git dışı records/export alanına
 yazılır. Claude'a özgü farklar [CLAUDE.md](CLAUDE.md) içindedir.

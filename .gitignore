@@ -25,10 +25,13 @@ test-results/
 playwright-report/
 
 # Yerel ve yeniden üretilebilir çıktılar
-# - Claude Code oturum ayarları ve yerel araştırma kaydı
+# - Claude Code kişisel ayarı, oturum verisi ve yerel araştırma kaydı; yalnız paylaşılan
+#   ayar (model yönlendirmesi) ve alt ajan tanımları izlenir
 # - graphify bilgi grafiği
 # - audio-synth dinleme/inceleme çıktısı
-.claude/
+.claude/*
+!.claude/settings.json
+!.claude/agents/
 graphify-out/
 devtools/*/export/
 

@@ -9,6 +9,8 @@ import { workingTreeFiles } from './gitFiles.mjs';
  * `optional` girdi henüz var olmayabilir (planlanmış ürün dizini).
  */
 export const ROOT_ENTRIES = {
+  '.claude':
+    'Paylaşılan Claude Code ayarı (model yönlendirmesi) ve alt ajan tanımları; hesap değişse de depoyla gelir, kalanı git dışı',
   '.gitattributes': 'Satır sonu ve ikili dosya kuralları',
   '.gitignore': 'Üretilen ve yerel çıktının dışlanması',
   '.node-version': 'Deterministik PCM üretiminin kesin Node çalışma zamanı',

@@ -75,6 +75,8 @@ test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kayn
     'tauri-v2/plugins/vol-haptics/android/.tauri/tauri-api/.gradle/9.2.0/gc.properties',
     'tauri-v2/plugins/vol-haptics/android/.tauri/tauri-api/src/main/java/app/tauri/plugin/Plugin.kt',
     '.claude/arastirma/rapor.jsonl',
+    '.claude/settings.local.json',
+    '.claude/agent-memory-local/explore/MEMORY.md',
     'graphify-out/graph.json',
   ];
   const kept = [
@@ -87,6 +89,9 @@ test('repo ignore sözleşmesi sırları ve üretilen çıktıları kapsar, kayn
     'AGENTS.md',
     'CLAUDE.md',
     'devtools/pen.dev/AGENTS.md',
+    // Paylaşılan Claude Code ayarı ve alt ajanlar: kalıcılık yalnız bu iki yolda yaşar.
+    '.claude/settings.json',
+    '.claude/agents/explore.md',
   ];
 
   for (const path of ignored) assert.equal(isIgnored(path), true, `${path} ignore edilmeli`);
