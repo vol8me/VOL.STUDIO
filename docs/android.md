@@ -186,17 +186,27 @@ node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.ap
   üretilmelidir), soğuk açılış, yatay görünüm ve dokunmatik işaretçi, güvenli alan, geri tuşu (1. basış
   duraklatma paneli, 2. basış devam), arka plana gidip dönüş (süreç ve sayfa aynı, kareler akıyor), dört yön
   isteğinde yatay kilit (Activity yeniden yaratılmaz), ekran klavyesi açılışı ve metin alanının klavyenin üstündeki
-  görsel görünümde kalması, titreşim isteklerinin sistem servisine ulaşması ve çalınması.
+  görsel görünümde kalması, uzun basışta yerel seçim çubuğunun (Kes/Kopyala/Tümünü seç) açılması ve Kes ile
+  Yapıştır'ın alanın değerini gerçekten değiştirmesi, titreşim isteklerinin sistem servisine ulaşması ve çalınması.
 - **Kilit aşılmaz:** cihaz kilitli ya da uykudaysa `--wait-unlock` süresince ekranı uyandırıp bekler, kilit açılmazsa
   tur NOT-RUN olur. `--keep-awake` ekran zaman aşımını tur süresince uzatır; yön ve yoğunluk ayarlarıyla birlikte
   özgün değerler `finally`de geri yazılır (kablosuz adb düşerse komut stderr'e yazılır).
 - **Titreşim iki ayrı hükümdür:** istek sisteme ULAŞTI mı ve ÇALINDI mı. Cihaz ayarı titreşimi kapatmışsa
   (`ignored_for_settings`; Lenovo'da `mVibrateOn=false`) istek ulaşmıştır ama çalındığı söylenemez. Android 14'ün
   `Previous vibrations` listesi ve Android 16'nın tablo satırları okunur; çalınan titreşimin hissi insan kabulüdür.
+  Tur, kapalı bulduğu `vibrate_on` anahtarını yalnız titreşim adımında açıp hemen geri yazar; yoksa çalınma hiç
+  ölçülemezdi.
 - **`--simulate-large-screen` (Android 16+):** `wm density` ile en küçük genişliği ≈640dp yapıp yön kilidini yeniden
   sınar. Bu fiziksel bir ≥600dp cihaz DEĞİLDİR; yalnız işletim sisteminin büyük ekran yolunu sürer.
-- **Sınır:** native seçim/ActionMode, dokunma hissi, ses dinleme ve gerçek AT insan kabulüdür. Uzun basışta WebView
-  `contextmenu` olayı oluşmadığı için native bağlam menüsü bastırması NOT-RUN kalır.
+- **Seçim çubuğu ve `contextmenu`:** WebView, `contextmenu` olayının varsayılanı engellenirse seçim tutamaklarını
+  gösterir ama Kes/Kopyala/Yapıştır çubuğunu AÇMAZ (Lenovo Android 14'te ölçüldü). Bu yüzden `suppressNativeMenus` ve
+  kabuğun `native_menus.js`'i düzenlenebilir alanda dokunma kaynaklı (ya da birincil işaretçisi dokunmatik) olayı
+  engellemez; fare sağ tıkı ve tuval engellenmeye devam eder. Tur `contextmenu` olaylarının engellenmediğini ve
+  çubuk eylemlerinin çalıştığını ölçer. Çift dokunuş da `contextmenu` üretir ama `pointerType` `mouse` gelir:
+  karar yalnız olayın tipine bağlanamaz, `(pointer: coarse)` da bakılır.
+- **Sayı alanı:** `type=number` alanında `selectionStart` null döner; "kelime seçildi" hükmü NOT-RUN yazılır, seçimin
+  varlığını çubuğun Kes/Kopyala düğümleri kanıtlar.
+- **Sınır:** dokunma hissi, ses dinleme ve gerçek AT insan kabulüdür. Bölünmüş ekran ve yüzen klavye turda sürülmez.
 
 ## Fiziksel kabulün kanıt sınırı
 

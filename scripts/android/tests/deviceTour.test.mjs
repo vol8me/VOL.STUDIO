@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  findEditAction,
   judgeOrientation,
+  judgeSelection,
   judgeVibrations,
   newVibrations,
   overallVerdict,
@@ -9,6 +11,7 @@ import {
   parseFocusedWindow,
   parseInputShown,
   parseKeyguardShowing,
+  parseUiNodes,
   parseVibrations,
   parseWakefulness,
 } from '../deviceTour.mjs';
@@ -178,5 +181,43 @@ describe('cihaz turu: yön ve genel hüküm', () => {
     assert.equal(overallVerdict([pass, notRun, fail]), 'FAIL');
     assert.equal(overallVerdict([notRun, notRun]), 'NOT-RUN');
     assert.equal(overallVerdict([]), 'NOT-RUN');
+  });
+});
+
+describe('cihaz turu: yerel seçim çubuğu', () => {
+  const xml = `<?xml version='1.0' encoding='UTF-8'?><hierarchy rotation="1">
+    <node index="0" text="" class="android.widget.FrameLayout" bounds="[0,0][1200,2000]">
+      <node index="0" text="Kes" content-desc="" class="android.widget.Button" bounds="[100,200][300,300]" />
+      <node index="1" text="" content-desc="Kopyala" class="android.widget.Button" bounds="[300,200][500,300]" />
+      <node index="2" text="Tümünü seç" class="android.widget.Button" bounds="[500,200][700,300]" />
+    </node></hierarchy>`;
+
+  it('metin ve açıklama taşıyan düğümleri merkezleriyle çıkarır; etiketsizleri atar', () => {
+    const nodes = parseUiNodes(xml);
+    assert.deepEqual(
+      nodes.map((node) => [node.label, node.x, node.y]),
+      [
+        ['Kes', 200, 250],
+        ['Kopyala', 400, 250],
+        ['Tümünü seç', 600, 250],
+      ],
+    );
+  });
+
+  it('eylemi Türkçe ve İngilizce etiketle bulur; olmayan eylem null verir', () => {
+    const nodes = parseUiNodes(xml);
+    assert.equal(findEditAction(nodes, 'cut')?.x, 200);
+    assert.equal(findEditAction(nodes, 'copy')?.x, 400);
+    assert.equal(findEditAction(nodes, 'selectAll')?.x, 600);
+    assert.equal(findEditAction(nodes, 'paste'), null);
+    const english = parseUiNodes('<node text="Paste" bounds="[0,0][10,10]" />');
+    assert.equal(findEditAction(english, 'paste')?.label, 'Paste');
+  });
+
+  it('seçim hükmü: seçildi PASS, boş FAIL, sayı alanı ve alan yok NOT-RUN', () => {
+    assert.equal(judgeSelection({ start: 0, end: 8, value: 'volstudio' }).verdict, 'PASS');
+    assert.equal(judgeSelection({ start: 3, end: 3, value: 'volstudio' }).verdict, 'FAIL');
+    assert.equal(judgeSelection({ start: null, end: null, value: '12' }).verdict, 'NOT-RUN');
+    assert.equal(judgeSelection(null).verdict, 'NOT-RUN');
   });
 });

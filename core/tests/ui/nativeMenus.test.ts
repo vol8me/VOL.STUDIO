@@ -1,11 +1,89 @@
 import { describe, expect, it } from 'vitest';
-import { isBlockedShortcut, suppressNativeMenus } from '../../src/ui/nativeMenus';
+import {
+  allowsNativeEditMenu,
+  isBlockedShortcut,
+  isTouchContextMenu,
+  suppressNativeMenus,
+} from '../../src/ui/nativeMenus';
 
 function dispatch(target: EventTarget, type: string): Event {
   const event = new Event(type, { bubbles: true, cancelable: true });
   target.dispatchEvent(event);
   return event;
 }
+
+function touchInfo(event: Event, init: { pointerType?: string; fires?: boolean }): Event {
+  if (init.pointerType !== undefined)
+    Object.defineProperty(event, 'pointerType', { value: init.pointerType });
+  if (init.fires !== undefined)
+    Object.defineProperty(event, 'sourceCapabilities', {
+      value: { firesTouchEvents: init.fires },
+    });
+  return event;
+}
+
+function contextMenu(
+  target: EventTarget,
+  init: { pointerType?: string; fires?: boolean } = {},
+): Event {
+  const event = touchInfo(new Event('contextmenu', { bubbles: true, cancelable: true }), init);
+  target.dispatchEvent(event);
+  return event;
+}
+
+describe('dokunma kaynaklı bağlam menüsü (Android seçim çubuğu)', () => {
+  it('pointerType touch/pen ve firesTouchEvents dokunma sayılır; fare sayılmaz', () => {
+    const make = (init: { pointerType?: string; fires?: boolean }): Event =>
+      touchInfo(new Event('contextmenu'), init);
+    expect(isTouchContextMenu(make({ pointerType: 'touch' }))).toBe(true);
+    expect(isTouchContextMenu(make({ pointerType: 'pen' }))).toBe(true);
+    expect(isTouchContextMenu(make({ fires: true }))).toBe(true);
+    expect(isTouchContextMenu(make({ pointerType: 'mouse', fires: false }))).toBe(false);
+    expect(isTouchContextMenu(make({}))).toBe(false);
+  });
+
+  it('düzenlenebilir alanda dokunma olayı engellenmez; fare ve tuval engellenir', () => {
+    const stop = suppressNativeMenus(document);
+    const canvas = document.createElement('canvas');
+    const input = document.createElement('input');
+    document.body.append(canvas, input);
+
+    expect(contextMenu(input, { pointerType: 'touch' }).defaultPrevented).toBe(false);
+    expect(contextMenu(input, { pointerType: 'mouse' }).defaultPrevented).toBe(true);
+    // Düzenlenemeyen yüzeyde dokunma da engellenir (oyun tuvalinde yerel metin menüsü yok).
+    expect(contextMenu(canvas, { pointerType: 'touch' }).defaultPrevented).toBe(true);
+
+    stop();
+    canvas.remove();
+    input.remove();
+  });
+
+  it('birincil işaretçisi dokunmatik cihazda fare tipli olay da düzenlenebilir alanda geçer', () => {
+    const original = globalThis.matchMedia;
+    globalThis.matchMedia = ((query: string) => ({
+      matches: query === '(pointer: coarse)',
+    })) as typeof matchMedia;
+    const input = document.createElement('input');
+    const canvas = document.createElement('canvas');
+    document.body.append(input, canvas);
+    try {
+      const onInput = touchInfo(new Event('contextmenu', { bubbles: true }), {
+        pointerType: 'mouse',
+      });
+      input.dispatchEvent(onInput);
+      expect(allowsNativeEditMenu(onInput)).toBe(true);
+      const onCanvas = touchInfo(new Event('contextmenu', { bubbles: true }), {
+        pointerType: 'mouse',
+      });
+      canvas.dispatchEvent(onCanvas);
+      expect(allowsNativeEditMenu(onCanvas)).toBe(false);
+    } finally {
+      globalThis.matchMedia = original;
+      input.remove();
+      canvas.remove();
+    }
+  });
+});
 
 describe('suppressNativeMenus', () => {
   it('bağlam menüsünü metin alanı dahil her yerde engeller', () => {

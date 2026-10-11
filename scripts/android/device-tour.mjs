@@ -25,7 +25,9 @@ import { join } from 'node:path';
 import { execFileSync } from '../quality/command.mjs';
 import { selectDevice } from './device-benchmark-contract.mjs';
 import {
+  findEditAction,
   judgeOrientation,
+  judgeSelection,
   judgeVibrations,
   newVibrations,
   overallVerdict,
@@ -33,6 +35,7 @@ import {
   parseFocusedWindow,
   parseInputShown,
   parseKeyguardShowing,
+  parseUiNodes,
   parseVibrations,
   parseWakefulness,
 } from './deviceTour.mjs';
@@ -94,6 +97,91 @@ async function screenshot(name) {
     maxBuffer: 64 * 1024 * 1024,
   });
   writeFileSync(join(shotsDirectory, `${name}.png`), png);
+}
+
+/** Ekranın erişilebilirlik ağacı: yerel seçim çubuğu bu pencerede görünür. */
+function uiNodes() {
+  shell('uiautomator dump --windows /sdcard/vol-tour-ui.xml');
+  const xml = adb(['exec-out', 'cat', '/sdcard/vol-tour-ui.xml']);
+  shell('rm -f /sdcard/vol-tour-ui.xml');
+  return parseUiNodes(xml);
+}
+
+const FIELD_SELECTION = `(() => {
+  const field = document.activeElement;
+  if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) return null;
+  return { start: field.selectionStart, end: field.selectionEnd, value: field.value };
+})()`;
+
+/**
+ * Seçim ve yerel eylem çubuğu (UI-11.3). Uzun basış kelimeyi seçer ve WebView'ın kendi ActionMode çubuğunu
+ * açar (`contextmenu` olayı bu yolda oluşmaz). Çubuktan Kes ve Yapıştır GERÇEKTEN çalıştırılır: alanın değeri
+ * sayfadan okunur. Alan odakta ve uzun basış yapılmış varsayılır.
+ */
+async function selectionProbe(x, y) {
+  const selected = await page.evaluate(FIELD_SELECTION);
+  const judged = judgeSelection(selected);
+  add('text.long-press-selects-word', judged.verdict, judged.detail);
+  await screenshot('text-selection');
+  // Sayı alanında seçim aralığı API'si yoktur (NOT-RUN); seçimin varlığını çubuk kanıtlar, bu yüzden sürer.
+  if (judged.verdict === 'FAIL') return;
+
+  const nodes = uiNodes();
+  const labels = nodes.map((node) => node.label).slice(0, 12);
+  const cut = findEditAction(nodes, 'cut');
+  const copy = findEditAction(nodes, 'copy');
+  if (!cut && !copy) {
+    add(
+      'text.selection-toolbar-visible',
+      'NOT-RUN',
+      `erişilebilirlik ağacında Kes/Kopyala düğümü bulunamadı (görünen etiketler: ${labels.join(' | ') || 'yok'}); ` +
+        'çubuk ekran görüntüsünde incelenmeli',
+    );
+    return;
+  }
+  add(
+    'text.selection-toolbar-visible',
+    'PASS',
+    `yerel çubuk eylemleri: ${['cut', 'copy', 'selectAll', 'paste']
+      .filter((name) => findEditAction(nodes, name))
+      .join(', ')}`,
+  );
+
+  if (!cut) {
+    add('text.selection-cut-removes-text', 'NOT-RUN', 'çubukta Kes yok (yalnız Kopyala)');
+    return;
+  }
+  const before = selected.value;
+  adb(['shell', 'input', 'tap', String(cut.x), String(cut.y)]);
+  await sleep(1);
+  const afterCut = await page.evaluate(FIELD_SELECTION);
+  add(
+    'text.selection-cut-removes-text',
+    afterCut && afterCut.value.length < before.length ? 'PASS' : 'FAIL',
+    `değer "${before}" → "${afterCut?.value ?? '?'}"`,
+  );
+
+  // Boş alanda uzun basış: pano doluyken Yapıştır çubuğu çıkar.
+  adb(['shell', 'input', 'swipe', String(x), String(y), String(x), String(y), '900']);
+  await sleep(1.2);
+  const paste = findEditAction(uiNodes(), 'paste');
+  if (!paste) {
+    add(
+      'text.selection-paste-restores-text',
+      'NOT-RUN',
+      'Kes sonrası uzun basışta Yapıştır düğümü bulunamadı',
+    );
+    return;
+  }
+  adb(['shell', 'input', 'tap', String(paste.x), String(paste.y)]);
+  await sleep(1);
+  const afterPaste = await page.evaluate(FIELD_SELECTION);
+  const cutText = selected.start === null ? before : before.slice(selected.start, selected.end);
+  add(
+    'text.selection-paste-restores-text',
+    afterPaste !== null && afterPaste.value.includes(cutText) ? 'PASS' : 'FAIL',
+    `değer "${afterCut?.value ?? '?'}" → "${afterPaste?.value ?? '?'}" (yapıştırılan "${cutText}")`,
+  );
 }
 
 /** WebView hata ayıklama kanalı: sayfada ifade değerlendirir. */
@@ -168,7 +256,7 @@ const PAGE_STATE = `(() => {
   return {
     type: screen.orientation && screen.orientation.type,
     width: innerWidth, height: innerHeight, dpr: devicePixelRatio,
-    visual: { top: visualViewport.offsetTop, height: visualViewport.height },
+    visual: { top: visualViewport.offsetTop, left: visualViewport.offsetLeft, height: visualViewport.height },
     coarse: matchMedia('(pointer: coarse)').matches,
     visibility: document.visibilityState,
     insets,
@@ -180,7 +268,7 @@ const PAGE_STATE = `(() => {
   };
 })()`;
 
-/** @type {{ screenOff?: string, accelerometer?: string, rotation?: string, density?: string }} */
+/** @type {{ screenOff?: string, accelerometer?: string, rotation?: string, density?: string, vibrateOn?: string }} */
 const original = {};
 let page = null;
 let pid = null;
@@ -402,18 +490,31 @@ try {
           shown === true && typing.field?.active && fieldVisible ? 'PASS' : 'FAIL',
           `${needsScroll ? 'kaydırma gerekti; ' : ''}klavye=${shown} alan odakta=${typing.field?.active} alan görsel görünümde=${fieldVisible} (alan y=${Math.round(field?.y ?? -1)}, görsel görünüm üst=${Math.round(typing.visual.top)} yükseklik=${Math.round(typing.visual.height)}/${typing.height})`,
         );
-        adb(['shell', 'input', 'swipe', String(x), String(y), String(x), String(y), '900']);
+        // Seçim sınaması için alana bilinen bir değer yazılır (rakam: sayı alanı da kabul eder).
+        adb(['shell', 'input', 'text', '24680']);
+        await sleep(0.8);
+        // Uzun basış METNİN üstüne yapılır. Klavye görsel görünümü kaydırır: `getBoundingClientRect` düzen
+        // görünümünün koordinatıdır, ekrana dokunmak için görsel görünümün ofseti çıkarılır (çıkarılmazsa
+        // dokunuş klavyenin tuşlarına düşer ve alana rakam yazar).
+        const textX = String(Math.round((typing.field.x - typing.visual.left + 60) * typing.dpr));
+        const textY = String(
+          Math.round((typing.field.y - typing.visual.top + typing.field.height / 2) * typing.dpr),
+        );
+        adb(['shell', 'input', 'swipe', textX, textY, textX, textY, '900']);
         await sleep(1.2);
         const context = await page.evaluate(
           `({ count: window.__tourContext.length, prevented: window.__tourContext.filter((event) => event.defaultPrevented).length })`,
         );
+        // Dokunmada yerel seçim çubuğu kalır: bu alanda oluşan `contextmenu` olayı ENGELLENMEMELİ (engellenirse
+        // WebView tutamakları gösterir ama Kes/Kopyala çubuğunu açmaz; gerçek cihazda ölçüldü).
         add(
-          'text.native-context-menu-suppressed',
-          context.count === 0 ? 'NOT-RUN' : context.prevented === context.count ? 'PASS' : 'FAIL',
+          'text.touch-context-menu-not-prevented',
+          context.count === 0 ? 'NOT-RUN' : context.prevented === 0 ? 'PASS' : 'FAIL',
           context.count === 0
-            ? 'uzun basışta contextmenu olayı oluşmadı; bastırma sınanamadı'
-            : `${context.count} contextmenu olayı, ${context.prevented} bastırıldı`,
+            ? 'dokunuşta contextmenu olayı oluşmadı; engelleme sınanamadı'
+            : `${context.count} contextmenu olayı, ${context.prevented} engellendi`,
         );
+        await selectionProbe(Number(textX), Number(textY));
         adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
         await sleep(1);
         adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
@@ -432,6 +533,11 @@ try {
         adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
         await sleep(1.2);
       }
+      // Cihazın titreşim anahtarı kapalıysa sistem her isteği `ignored_for_settings` sayar ve çalındığı
+      // ölçülemez; tur anahtarı yalnız bu adımda açar ve hemen geri yazar (çıkışta da `finally` yazar).
+      original.vibrateOn = setting('vibrate_on');
+      if (original.vibrateOn === '0') shell('settings put system vibrate_on 1');
+      await sleep(1);
       const longSide = Math.max(Number(size?.[1] ?? 0), Number(size?.[2] ?? 0));
       const shortSide = Math.min(Number(size?.[1] ?? 0), Number(size?.[2] ?? 0));
       for (const fy of [0.74, 0.89]) {
@@ -452,6 +558,8 @@ try {
       }
       await sleep(1);
       const judged = judgeVibrations(newVibrations(vibrationsBefore, vibrations()));
+      shell(`settings put system vibrate_on ${original.vibrateOn}`);
+      delete original.vibrateOn;
       add('haptics.request-reached-system', judged.reached.verdict, judged.reached.detail);
       add('haptics.played', judged.played.verdict, judged.played.detail);
 
@@ -528,6 +636,8 @@ try {
     await restore(`settings put system user_rotation ${original.rotation}`);
   if (original.accelerometer !== undefined)
     await restore(`settings put system accelerometer_rotation ${original.accelerometer}`);
+  if (original.vibrateOn !== undefined)
+    await restore(`settings put system vibrate_on ${original.vibrateOn}`);
   if (original.screenOff !== undefined)
     await restore(`settings put system screen_off_timeout ${original.screenOff}`);
   await restore(`am force-stop ${pkg}`);

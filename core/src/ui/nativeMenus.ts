@@ -6,8 +6,8 @@
  * enjekte eder (`tauri-v2/src-tauri/src/native_menus.js`). Web hedefi bu
  * yardımcıyı çağırır.
  *
- * Metin alanları istisna DEĞİLDİR: kopyala-yapıştır menüsü istenmez. Seçim
- * yine de korunur — `input`/`textarea` dışında seçimi `base.css` kapatır.
+ * Metin alanlarında fare menüsü istenmez (yerine `installEditMenu`), ama DOKUNMADA yerel seçim
+ * çubuğu kalır: bkz. `allowsNativeEditMenu`. Seçim `input`/`textarea` dışında `base.css` ile kapalıdır.
  */
 /** Her yerde kapalı Ctrl/⌘ kısayolları: yazdır, yenile, bul, kaydet, kaynak, git, aç. */
 const ALWAYS_BLOCKED_SHORTCUTS: readonly string[] = ['p', 'r', 'f', 's', 'u', 'g', 'o'];
@@ -30,8 +30,35 @@ export function isBlockedShortcut(event: KeyboardEvent, editable: boolean): bool
   return !editable && OUTSIDE_TEXT_BLOCKED_SHORTCUTS.includes(key);
 }
 
+/**
+ * Dokunma/kalem kaynaklı bağlam menüsü olayı mı (uzun basış, seçim). Chromium `contextmenu`u `PointerEvent`
+ * olarak verir (`pointerType`); eski sürümlerde `sourceCapabilities.firesTouchEvents` okunur.
+ */
+export function isTouchContextMenu(event: Event): boolean {
+  const pointerType = (event as Partial<PointerEvent>).pointerType;
+  if (pointerType === 'touch' || pointerType === 'pen') return true;
+  const capabilities = (event as { sourceCapabilities?: { firesTouchEvents?: boolean } })
+    .sourceCapabilities;
+  return capabilities?.firesTouchEvents === true;
+}
+
+/**
+ * Yerel seçim çubuğuna (Android ActionMode: Kes/Kopyala/Yapıştır) izin verilen olay mı: düzenlenebilir alanda
+ * dokunma kaynaklı, ya da birincil işaretçisi dokunmatik cihazda. `contextmenu`un varsayılanı engellenirse
+ * WebView seçim tutamaklarını gösterir ama eylem çubuğunu açmaz (UI-11.3, gerçek cihazda ölçüldü). Fare sağ
+ * tıkı ve düzenlenemeyen yüzeyler (oyun tuvali) engellenmeye devam eder; fare için çekirdeğin kendi
+ * `installEditMenu` menüsü vardır.
+ */
+export function allowsNativeEditMenu(event: Event): boolean {
+  const target = event.target;
+  if (!(target instanceof Element) || target.closest(EDITABLE) === null) return false;
+  if (isTouchContextMenu(event)) return true;
+  return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+}
+
 export function suppressNativeMenus(root: Document | HTMLElement = document): () => void {
   const onContextMenu = (event: Event): void => {
+    if (allowsNativeEditMenu(event)) return;
     event.preventDefault();
   };
 

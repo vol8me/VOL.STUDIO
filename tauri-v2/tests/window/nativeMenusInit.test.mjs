@@ -37,6 +37,26 @@ describe('native_menus.js — WebView yerel menüsü', () => {
     input.remove();
   });
 
+  it('düzenlenebilir alanda dokunma kaynaklı bağlam menüsü engellenmez (Android seçim çubuğu)', () => {
+    const canvas = document.createElement('canvas');
+    const input = document.createElement('input');
+    document.body.append(canvas, input);
+    runScript();
+    const touch = (target, pointerType) => {
+      const event = new Event('contextmenu', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'pointerType', { value: pointerType });
+      target.dispatchEvent(event);
+      return event;
+    };
+
+    expect(touch(input, 'touch').defaultPrevented).toBe(false);
+    expect(touch(input, 'mouse').defaultPrevented).toBe(true);
+    expect(touch(canvas, 'touch').defaultPrevented).toBe(true);
+
+    canvas.remove();
+    input.remove();
+  });
+
   it('sürükleme hayaletini engeller, metin seçimini bırakır', () => {
     const image = document.createElement('img');
     const input = document.createElement('input');

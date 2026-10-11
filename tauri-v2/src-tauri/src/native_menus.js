@@ -4,11 +4,30 @@
  * Her pencereye sayfa yüklenmeden önce enjekte edilir; web hedefinde aynı
  * davranışı `core/src/ui/nativeMenus.ts` verir ve karar orada belgelenir.
  *
- * Metin alanları istisna değildir (kopyala menüsü istenmez) ama seçim
- * `input`/`textarea` dışında kapanır; yazılan metin seçilebilir kalır.
+ * Fare menüsü metin alanında da kapalıdır; dokunmada yerel seçim çubuğu kalır
+ * (Android ActionMode). Seçim `input`/`textarea` dışında kapanır.
  */
 (function () {
+  // Düzenlenebilir alanda dokunma kaynaklı (ya da birincil işaretçisi dokunmatik cihazda) olay engellenmez:
+  // engellenirse Android WebView seçim tutamaklarını gösterir ama Kes/Kopyala/Yapıştır çubuğunu açmaz.
+  // Karar `core/src/ui/nativeMenus.ts` → `allowsNativeEditMenu` ile aynıdır (eşlik testli).
+  function allowsNativeEditMenu(event) {
+    var target = event.target;
+    if (!(
+      target &&
+      target.closest &&
+      target.closest('input, textarea, [contenteditable="true"]')
+    )) {
+      return false;
+    }
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') return true;
+    var capabilities = event.sourceCapabilities;
+    if (capabilities && capabilities.firesTouchEvents === true) return true;
+    return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  }
+
   function blockContextMenu(event) {
+    if (allowsNativeEditMenu(event)) return;
     event.preventDefault();
   }
 
