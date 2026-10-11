@@ -122,7 +122,7 @@ fast: quick test
 # frontend çıktısı Rust'tan önce üretilir.
 high: quick build bundle scaling audio-test rust coverage coverage-shape
 
-# `e2e` pre-push'ta DEĞİL, burada koşar: iki motorda yaklaşık yarım saat sürer ve her push'u o kadar bekletir.
+# `e2e` pre-push'ta DEĞİL, burada koşar: iki motorda ~23 dk sürer ve her push'u o kadar bekletir.
 # Push'tan önce `pnpm exec just ui-check` ile tek başına da koşulabilir.
 signoff: high e2e coverage-audio audio-verify security-js security-rust
 

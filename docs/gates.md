@@ -14,7 +14,7 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 | `high`    | pre-push         | `quick` + `build` + `bundle` + `scaling` + `audio-test` + `rust` + `coverage` + `coverage-shape` |
 | `signoff` | sürüm öncesi     | `high` + `e2e` + `coverage-audio` + `audio-verify` + `security-js` + `security-rust`             |
 
-`e2e` pre-push kapısında değildir (2026-10-11 kararı): iki motorda yaklaşık yarım saat sürer ve her push'u o kadar
+`e2e` pre-push kapısında değildir (2026-10-11 kararı): iki motorda ~23 dk sürer (taze ölçüm: 22,6 dk) ve her push'u o kadar
 bekletir. Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `signoff`ta yakalanır. Bir arayüz
 değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. Süre sorunu çözülmedi, yalnız push yolundan
 çıkarıldı: bkz. `TODO.md` F10.13.
@@ -215,43 +215,49 @@ kırar.
 
 ## Süre bütçesi
 
-Windows 11, 8 mantıksal çekirdek, boş makine, ısınmış araç önbellekleri; her aşama
-tek başına ölçülmüştür. Yük altında süreler uzar (statik aşamalar birlikte koşunca
-her biri belirgin yavaşlar, toplam duvar süresi yine kısalır).
+Windows 11, 8 mantıksal çekirdek. İki sütun ayrı yöntemdir ve karıştırılmaz: **tek başına** önceki ölçümdür
+(boş makine, ısınmış önbellek, aşama tek koşar); **taze tur** 2026-10-11'de kapı koşucusunun `--fresh` koşusudur
+(makbuzsuz, ön yük ≤%11; statik aşamalar birlikte koştuğundan her biri tek başınadan uzundur, toplam duvar süresi
+yine kısadır). Yük altında süreler uzar.
 
-| Aşama                   | Süre        | Not                                                                    |
-| ----------------------- | ----------- | ---------------------------------------------------------------------- |
-| `node-pin`              | 1 sn        |                                                                        |
-| `contract`              | 40 sn       | bekçi testleri ve workspace sözleşmesi                                 |
-| `format-check`          | 5 sn        | sıcak içerik önbelleği                                                 |
-| `typecheck`             | 27 sn       |                                                                        |
-| `lint`                  | 54 sn       | tip bilgili ESLint                                                     |
-| `lint-css`              | 4 sn        | sıcak içerik önbelleği                                                 |
-| `build` / `bundle`      | 4 / 1 sn    |                                                                        |
-| `scaling`               | 4 sn        |                                                                        |
-| `audio-test`            | 12–144 sn   | alt küme 12 sn; yapılandırma/silme değişiminde tam takım 144 sn        |
-| `rust`                  | 35 sn       | sıcak hedef dizini; soğuk derleme (kilit/araç zinciri değişimi) 4,4 dk |
-| `test`                  | 238 sn      | audio-synth 152, core 54, vol-test 28, vitrin 20, diğerleri 7 sn altı  |
-| `coverage`              | 113 sn      | audio-synth hariç                                                      |
-| `e2e` vitrin / vol-test | 343 / 86 sn | vitrinde iki motor eşzamanlı, motor başına 2 işçi                      |
-| `coverage-audio`        | 545 sn      | kapsam ölçümü sentezi yavaşlatır                                       |
-| `audio-verify`          | 100 sn      |                                                                        |
-| `security-js`           | 3 sn        | audit + yama sınaması + kayıt defteri sorgusu                          |
-| `security-rust`         | 4 sn        |                                                                        |
+| Aşama              | Tek başına | Taze tur             | Not                                                                                         |
+| ------------------ | ---------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| `node-pin`         | 1 sn       | 1 sn                 |                                                                                             |
+| `contract`         | 40 sn      | 86 sn                | `node-test` 86, `cli` 71 sn; statik dalgada                                                 |
+| `format-check`     | 5 sn       | 83 sn                | tek başına sıcak içerik önbelleğiyle; dalgada işlemciyi paylaşır                            |
+| `typecheck`        | 27 sn      | 59 sn                | en yavaş birim CORE ve vitrin ~35 sn                                                        |
+| `lint`             | 54 sn      | 81 sn                | CORE 80, audio-synth 82, vitrin 54, VOL.TEST 48 sn (tip bilgili ESLint)                     |
+| `lint-css`         | 4 sn       | 51–61 sn             | tek başına sıcak içerik önbelleğiyle                                                        |
+| `build` / `bundle` | 4 / 1 sn   | 4 / 1 sn             |                                                                                             |
+| `scaling`          | 4 sn       | 3,5 sn               |                                                                                             |
+| `audio-test`       | 12–144 sn  | 6 sn                 | alt küme; yapılandırma/silme değişiminde tam takım (144 sn bu turda ölçülmedi)              |
+| `rust`             | 35 sn      | 29–37 sn             | sıcak hedef dizini; soğuk derleme (kilit/araç zinciri değişimi) 4,4 dk, ölçülmedi           |
+| `test`             | 238 sn     | 272 sn               | audio-synth 149, core 67, vol-test 29, vitrin 19, tauri-v2 4, pen.dev 3, deck 1 sn          |
+| `coverage`         | 113 sn     | 128–140 sn           | audio-synth hariç                                                                           |
+| `e2e` vitrin       | 343 sn     | **1.355 / 1.577 sn** | 22,6 / 26,3 dk (iki taze koşu); ana şerit WebKit 17,7–18,2 dk eşzamanlı + sessiz 4,8–8,0 dk |
+| `e2e` vol-test     | 86 sn      | ölçülmedi            | ilk `signoff` vitrinde düştüğü için bu birim koşmadı                                        |
+| `coverage-audio`   | 545 sn     | 547 sn               | kapsam ölçümü sentezi yavaşlatır                                                            |
+| `audio-verify`     | 100 sn     | 101 sn               |                                                                                             |
+| `security-js`      | 3 sn       | 3 sn                 | audit + yama sınaması + kayıt defteri sorgusu                                               |
+| `security-rust`    | 4 sn       | 4 sn                 |                                                                                             |
 
-Birleşik kapılar makbuzsuz (soğuk) koşuda: `signoff` 24,3 dk ölçüldü (tek taze koşu;
-statik dalga 78 sn, `e2e` 429 sn). `high` ayrı koşu olarak ölçülmedi; aynı koşunun
-aşama toplamından yaklaşık 13,4 dk, `fast` yaklaşık 5,4 dk (statik dalga ile `test`
-toplamı), `quick` yaklaşık 1,3 dk'dır. Girdisi hiç değişmemiş ağaçta `quick` 2 sn,
-`high` yaklaşık 13 sn sürer (yalnız önbelleksiz aşamalar).
+Birleşik kapılar, taze tur (makbuzsuz): `quick` 87,8 sn; `fast` 6,0 dk; `high` **4,7 dk**; `signoff` iki koşuda da
+(27,1 ve 30,6 dk) vitrin `e2e`inde düştü ve orada durdu, bu yüzden dört son aşama ayrı koşuldu (hepsi geçti; toplam
+~11 dk). Önceki
+belge `high` için "yaklaşık 13,4 dk" diyordu: o sayı `e2e` pre-push kapısındayken ve eski süre bütçesiyle
+toplanmıştı; `e2e` `signoff`a taşındığından geçersizdir. Girdisi hiç değişmemiş ağaçta `quick` 2 sn, `high`
+yaklaşık 13 sn sürer (önceki ölçüm, bu turda yeniden ölçülmedi).
 
-Makbuzlu `quick`, tek dosya düzenlemesinden sonra yalnız etkilenen birimi koşar:
-yaprak paket kaynağı ~45 sn, betik ~38 sn, belge ~35 sn. Taban `contract` (28–35 sn):
-bekçi testleri bütün repoyu okur, bu yüzden her düzenlemede koşar.
+Makbuzlu `quick`, tek dosya düzenlemesinden sonra yalnız etkilenen birimi koşar (önceki ölçüm: yaprak paket
+kaynağı ~45 sn, betik ~38 sn, belge ~35 sn; taban `contract` 28–35 sn tek başına). Birden çok birim
+geçersizleşirse aynı dalgada koşarlar ve birbirini yavaşlatır: negatif kontrol turunda tek bir CORE dosyası
+düzenlemesi 84–89 sn, `contract`ı tetikleyen düzenlemeler 82–122 sn sürdü.
 
 Süre ölçen testler yük altında kararsızlaşır; bu yüzden `scaling` ve `e2e` tek başına
 koşar, audio-synth işçi sayısı sınırlıdır (`devtools/audio-synth/vitest.config.ts`) ve
-vitrin motorları yalnız birbirleriyle eşzamanlıdır.
+vitrin motorları yalnız birbirleriyle eşzamanlıdır. **Taze turda vitrin `e2e` bu düzende bile iki koşunun
+ikisinde de bir WebKit testinde zaman aşımına uğradı** (`dialogPatterns.spec.ts:116` ana şerit; `motionMeasure.spec.ts:124`
+sessiz şerit, tek işçi, ön yük %4; ilki izole tekrarda 50/50 geçti; TODO F11.1): düzen kararsızlığı tamamen önlemez.
 
 **Sessiz şerit.** Zamanı ÖLÇEN ve süre sınırı koyan beş vitrin spec'i (`QUIET_SPECS` →
 `busyFeedback`, `latency`, `motionMeasure`, `performance`, `probe`) iki motor ve dört işçi
@@ -291,17 +297,23 @@ körlemesine tekrarlamayın.
 
 ## Kapı sağlığı: ne yakalar, ne yakalamaz
 
-| Kapı                                            | Yakaladığı                                                                     | Bilinen sınır                                                                                                                   |
-| ----------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `contract`                                      | katman, döngü, i18n, port, ikon, kilit, belge-gerçek uyumu, bekçilerin kendisi | repo geneline bakar; yalnız yazılmış bekçiyi zorlar                                                                             |
-| `typecheck`, `lint`, `lint-css`, `format-check` | tip, kural ve biçim ihlalleri                                                  | çalışma zamanı davranışını sınamaz                                                                                              |
-| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşiği ve şekli ratchet'tir                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir)                                                                        |
-| `audio-test`                                    | audio-synth'in sabit alt kümesi + değişenle ilişkili testler                   | alt küme tam takımın yerini tutmaz; tam kanıt `test` ve `coverage-audio`'dadır                                                  |
-| `rust`                                          | `fmt`, `clippy -D warnings`, `test`                                            | yalnız host hedefi; Linux/Android native kanıtı ayrı                                                                            |
-| `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına; WebKit'te Web Audio olmayan derlemede iki ses testi atlanır (2 atlama) |
-| `scaling`, `bundle`                             | algoritmik ölçekleme oranı, gzip bütçesi                                       | süre eşiği yoktur; cihaz performansı kapı değildir                                                                              |
-| `coverage-audio`, `audio-verify`                | tam audio kapsamı; yayınlanmış her sesin yeniden render kimliği                | dinleme kanıtı değildir (insan beyanı gerekir)                                                                                  |
-| `security-js`, `security-rust`                  | bilinen advisory; kayıtsız yeni risk, bayat kayıt, yayımlanmış düzeltme        | kayıtlı riskler gerçek olarak durur (aşağıdaki politika); zamana bağlıdır, yeni advisory kapıyı sonradan kırabilir              |
+| Kapı                                            | Yakaladığı                                                                     | Bilinen sınır                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contract`                                      | katman, döngü, i18n, port, ikon, kilit, belge-gerçek uyumu, bekçilerin kendisi | repo geneline bakar; yalnız yazılmış bekçiyi zorlar                                                                                                                                                                                                                                     |
+| `typecheck`, `lint`, `lint-css`, `format-check` | tip, kural ve biçim ihlalleri                                                  | çalışma zamanı davranışını sınamaz                                                                                                                                                                                                                                                      |
+| `test`, `coverage`                              | birim ve yönetişim testleri; kapsam eşiği ve şekli ratchet'tir                 | `test` eşik uygulamaz (yeşil görünüp `high`'ı kırabilir)                                                                                                                                                                                                                                |
+| `audio-test`                                    | audio-synth'in sabit alt kümesi + değişenle ilişkili testler                   | alt küme tam takımın yerini tutmaz; tam kanıt `test` ve `coverage-audio`'dadır                                                                                                                                                                                                          |
+| `rust`                                          | `fmt`, `clippy -D warnings`, `test`                                            | yalnız host hedefi; Linux/Android native kanıtı ayrı                                                                                                                                                                                                                                    |
+| `e2e`                                           | iki motorda axe, yerleşim, durum matrisi, sahte dil, piksel                    | piksel temeli yalnız Chromium ve işletim sistemi başına; WebKit'te 18 atlama (gerçek dokunma, Web Audio, layout-shift, pano, Chromium'a özgü axe/iz) ve Chromium'da 2 (toplayıcı, WebKit izi); atlama sayısı kapıda sayılmaz; yük altında aralıklı zaman aşımı görülebilir (TODO F11.1) |
+| `scaling`, `bundle`                             | algoritmik ölçekleme oranı, gzip bütçesi                                       | süre eşiği yoktur; cihaz performansı kapı değildir                                                                                                                                                                                                                                      |
+| `coverage-audio`, `audio-verify`                | tam audio kapsamı; yayınlanmış her sesin yeniden render kimliği                | dinleme kanıtı değildir (insan beyanı gerekir)                                                                                                                                                                                                                                          |
+| `security-js`, `security-rust`                  | bilinen advisory; kayıtsız yeni risk, bayat kayıt, yayımlanmış düzeltme        | kayıtlı riskler gerçek olarak durur (aşağıdaki politika); zamana bağlıdır, yeni advisory kapıyı sonradan kırabilir                                                                                                                                                                      |
+
+**Negatif kontrol (2026-10-11, `quick`):** bilerek eklenen kusurlardan tip hatası, `no-floating-promises`, biçim,
+CSS sınıf adı, 1001 satırlık izlenen ve izlenmeyen dosya, katman ihlali, kodlanmış görünen metin, kırık belge
+bağlantısı ve tarihçe yorumu beklenen aşamada yakalandı. Yakalanmayanlar: kapsam eşiğini düşürmek (`quality.json`
+CORE satır 90→60 geçti; ratchet taban 50'nin üstünde denetlenmez) ve kısmi sahneleme (kapı çalışma ağacını sınar,
+commit'e girecek indeksi değil). Ayrıntı ve yöntem: [denetim raporu §22](monorepo-audit.md).
 
 Cihaz kabulü, insan beğenisi ve fiziksel ölçüm hiçbir kapının konusu değildir.
 

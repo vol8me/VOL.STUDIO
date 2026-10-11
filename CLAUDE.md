@@ -1,6 +1,9 @@
 # Claude Code
 
-Depo sınırları ve belge yönlendirmesi [AGENTS.md](AGENTS.md) içindedir.
+@AGENTS.md
+
+Depo sınırları, kapılar ve belge yönlendirmesi yukarıdaki [AGENTS.md](AGENTS.md) içindedir; Claude Code onu
+kendiliğinden okumadığı için bu dosya içe aktarır.
 
 `.claude/` içinde yalnız `.claude/settings.json` (model yönlendirmesi) ve `.claude/agents/` (alt ajanlar)
 izlenir; kişisel ayar `.claude/settings.local.json` ile oturum verisi git dışıdır. Araç

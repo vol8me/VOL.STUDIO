@@ -64,7 +64,9 @@ birlikte, ağır aşamalar tek tek, ucuzdan pahalıya; girdisi bayt bayt aynı k
 aşama (büyük aşamalarda paket, crate ya da takım birimi) makbuzdan atlanır
 (`signoff` her zaman taze). Neden koştuğu/atlandığı çıktıda yazar; `pnpm high --fresh`
 makbuzu yok sayar. Düşen birim, çıktıdaki `tekrar:` komutuyla yeniden koşulur (düz yol:
-`pnpm exec just <tarif>`); makine-okunur kanıt `pnpm high --json`dır.
+`pnpm exec just <tarif>`); makine-okunur kanıt `pnpm high --json`dır. Taze süre (8 çekirdek):
+`quick` ~1,5 dk, `high` ~5 dk, `signoff` ~40 dk; `signoff` arka planda koşulur ve ilk düşende durur,
+koşulmayan aşama NOT-RUN'dır ([ölçüm](docs/gates.md)).
 
 Yeni davranış ve hata düzeltmesi anlamlı regresyon testi bırakır; tests ağacı
 src ağacını yansıtır. Disk testleri gerçek geçici dizindedir. Genel timeout

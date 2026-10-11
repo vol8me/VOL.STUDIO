@@ -659,3 +659,132 @@ yeni kodu sırf hızlı yazıldı diye çöpe atmak doğru karar olmaz.
 On kaynak kusuru çözüldü; güvenlik ve cihaz kimliği/kabulü kalan önceliktir. F07 bitmiş, Deck sorunsuz, bütün ses/erişilebilirlik kabulü
 verilmiş veya signoff yeşil demek kanıta aykırı. Riskin adı/sahibi/Kapanır
 ölçütü var; çözüm daha uzun TODO değil, bu ölçütleri uygulamaktır.
+
+## 22. Kapı turu: taze ölçüm, çapraz sorgu ve tersine mühendislik (2026-10-11)
+
+Bu bölüm bir uygulama turu değildir: bütün kapılar taze koşuldu, kapıların kendisi bilerek kusur eklenerek
+sorgulandı ve koşucu kaynaktan okundu. Düzeltmeler yazılmadı; bulgular [TODO F11](../TODO.md) iş listesine
+bağlandı. Ağaç `feature/core-hardening` @ `86c21077`, Windows 11, 8 mantıksal çekirdek, ön yük %7–%11,
+`pnpm <kapı> --fresh` (makbuzsuz). Kullanıcı değişiklikleri korundu; negatif kontroller her seferinde geri alındı
+(`git status` temiz).
+
+### 22.1 Kapı süreleri ve sonuçları
+
+| Kapı         | Süre (taze)        | Sonuç     | Not                                                                                                                |
+| ------------ | ------------------ | --------- | ------------------------------------------------------------------------------------------------------------------ |
+| `quick`      | 87,8 sn            | geçti     | `contract` 85,7 · `format-check` 82,7 · `lint` 81,3 · `typecheck` 59,0 · `lint-css` 51,4 sn                        |
+| `fast`       | 359,8 sn (6,0 dk)  | geçti     | `quick` + `test` 271,8 sn (audio-synth 148,5 · core 67,3 · VOL.TEST 29,4 · vitrin 18,5)                            |
+| `high`       | 281,7 sn (4,7 dk)  | geçti     | statik dalga 84,8 + build 3,8 + bundle 1,3 + scaling 3,5 + audio-test 6,3 + rust 37,2 + coverage 139,7 + shape 1,2 |
+| `signoff` #1 | 1.624 sn (27,1 dk) | **DÜŞTÜ** | `e2e` 1.354,8 sn'de WebKit ana şeritte 1 test (`dialogPatterns`); koşucu orada durdu                               |
+| `signoff` #2 | 1.837 sn (30,6 dk) | **DÜŞTÜ** | `e2e` 1.576,7 sn'de WebKit sessiz şeritte 1 test (`motionMeasure`); koşucu orada durdu                             |
+
+`signoff`un koşulmayan dört aşaması ayrı ayrı koşuldu (kapı kararı yerine geçmez, aşama kanıtıdır):
+`coverage-audio` 547 sn **geçti** (satır %96,86 · dal %89,1 · işlev %97,77 · ifade %96,1), `audio-verify` 101 sn
+geçti, `security-js` 3 sn geçti, `security-rust` 4 sn geçti. VOL.TEST `e2e` birimi ilk `signoff`ta koşmadı
+(vitrin birimi düşünce durdu); ikinci `signoff`ta da koşmadı. İkinci koşunun statik aşamaları (`contract` 79,5 ·
+`format` 78,2 · `typecheck` 58,6 · `lint` 79,2 · `lint-css` 51,5 · `rust` 32,5 · `coverage` 127,6 sn) geçti; son dört
+aşama o koşuda tekrar edilmedi. **İki taze `signoff` koşusunun ikisi de düştü (0/2 yeşil).**
+
+**Düşen testler (iki ayrı koşu, iki ayrı test, ikisi de WebKit):**
+
+1. #1 — `dialogPatterns.spec.ts:116` (ana şerit): `Cancel` tıklaması 60 sn bekledi; Playwright günlüğü
+   "`.vol-showcase-card__body` işaretçiyi örtüyor", "öğe kararsız", "DOM'dan ayrıldı" der. Aynı dosya
+   `--repeat-each=5` ile iki motorda 50/50 geçti; yani kalıcı değil yük altında aralıklı (ana şerit: iki motor
+   eşzamanlı, motor başına 2 işçi).
+2. #2 — `motionMeasure.spec.ts:124` flaş sınırı, azaltılmış hareket kapalı (sessiz şerit, tek işçi, ön yük %4):
+   120 art arda `click()` döngüsü 60 sn'yi aştı (`locator.click` zaman aşımı, satır 142). Aynı test WebKit'te
+   birinci koşuda 33,8 / 30,2 sn, ikincide >60 sn / 53,0 sn; Chromium 15,5 / 11,1 sn → 21,2 / 17,4 sn. Yük
+   değil testin kendi bütçesi sınırda: koşular arası ~2 kat sapma, 60 sn'nin %50–100'ü.
+
+İki durumda da kök neden bilinmiyor; test-results/trace bir sonraki e2e koşusunda silindiği için sonradan
+incelenemez. Retry/zaman aşımı büyütme ile saklanmadı: F11.1 açık.
+
+### 22.2 Test envanteri (bu turda sayılan)
+
+| Katman                    | Dosya |      Test | Süre / not                                                                                 |
+| ------------------------- | ----: | --------: | ------------------------------------------------------------------------------------------ |
+| core (vitest, jsdom)      |   250 |     3.405 | 67 sn; ortam kurulumu 287 işçi-sn, testler 36 işçi-sn                                      |
+| audio-synth (vitest)      |   132 |     2.264 | 148 sn (işçi sınırı 4)                                                                     |
+| VOL.TEST (vitest)         |    70 |       385 | 42 sn; ortam 105 işçi-sn, testler 38 işçi-sn                                               |
+| tauri-v2 (vitest)         |    21 |       188 | 4 sn                                                                                       |
+| vitrin (vitest)           |    24 |       171 | 31 sn                                                                                      |
+| pen.dev / deck (vitest)   |   2/2 |     48/23 | 3 sn / 0,5 sn                                                                              |
+| bekçi/betik (`node:test`) |     — |       561 | 559 geçti, 2 atlama; + workspace sözleşmesi                                                |
+| vitrin e2e                |     — |     1.033 | Chromium 541 · WebKit 492 (piksel yalnız Chromium); 1.013 koştu, 20 atlandı; 4.076 işçi-sn |
+| Rust                      |     — | ölçülmedi | `rust` aşaması geçti; test sayısı bu turda kaydedilmedi                                    |
+
+En ağır e2e spec'leri (iki motor, işçi-sn): themeMatrix 297, accessibility 270, layout 257, pseudoLocale 252,
+materialBudget 216 (106 test), focusVisible 213, finalContrast 211, stress 188, formAcceptance 162.
+
+### 22.3 Negatif kontrol: kapı gerçekten kırılıyor mu?
+
+Yöntem: tek bir kusur ekle, `node scripts/quality/gate.mjs quick --json` koş, kusuru geri al. Makbuz önbelleği
+açıktı (yalnız etkilenen birimler koştu).
+
+| Kusur                                         | Beklenen aşama | Sonuç                                                        |
+| --------------------------------------------- | -------------- | ------------------------------------------------------------ |
+| `const x: number = 'x'` (CORE)                | typecheck      | düştü: core, tauri-v2, vitrin, VOL.TEST (bağımlılar)         |
+| `Promise.resolve(1);` (no-floating-promises)  | lint           | düştü: core                                                  |
+| kötü biçimli Markdown maddesi                 | format-check   | düştü (36 sn; sibling birimler kesildi)                      |
+| CSS `.BadClassName`                           | lint-css       | düştü                                                        |
+| 1001 satırlık izlenen dosya                   | contract       | düştü                                                        |
+| 1001 satırlık **izlenmeyen** dosya            | contract       | düştü (bekçi izlenmeyeni de görür)                           |
+| CORE'dan `@volstudio/vol-test` import         | contract       | düştü (katman) + typecheck                                   |
+| kodlanmış görünen metin (`textContent = '…'`) | contract       | düştü                                                        |
+| kırık göreli belge bağlantısı                 | contract       | düştü                                                        |
+| tarihçe yorumu ("eskiden", "bir dönem")       | contract       | düştü                                                        |
+| CORE kapsam eşiğini 90 → 60 düşürmek          | (geçmemeli)    | **GEÇTİ**: eşik düşürme denetlenmez, taban 50                |
+| kısmi sahneleme: indeks kusurlu, ağaç temiz   | (geçmemeli)    | **GEÇTİ**: `quick` exit 0; indeks içeriği Prettier'dan düştü |
+
+İkisi gerçek boşluktur (F11.4, F11.7). Üç not: (1) bir dalgada bir birim düşünce kardeş birimler kesilir; JSON
+bunları "düşen" gibi gösterir, ilk düşeni ayırmak gerekir; (2) `contract` bekçilerinin hangisinin düştüğü
+`quick`in JSON'unda değil günlüktedir; (3) bu tur yalnız `quick` aşamalarını negatif sınadı: `coverage`, `e2e`,
+`bundle`, `scaling` ve güvenlik kapıları için negatif kontrol bu turda YOK (`determinism.spec.ts` piksel kapısının
+kararlılığını sınar; kasıtlı CSS kusuruyla bu turda denenmedi).
+
+### 22.4 Koşucunun tersine mühendisliği
+
+- **Makbuz anahtarı** (`gateCache.mjs`): çalışma ağacındaki izlenen+izlenmeyen dosyaların içerik karması + Node
+  sürümü + platform (`rust` için `rustc`/`cargo`, `audio-test` için git-farkı planı). Bağımlılık içeriği
+  `node_modules`tan değil `pnpm-lock.yaml`dan gelir; elle bozulmuş kurulu paket anahtarı değiştirmez. Makbuz
+  imzasızdır (düz JSON, git dışı önbellek dizini): yalnız atlama içindir, sahte geçiş üretemez ama elle yazılabilir;
+  `signoff` makbuza güvenmez. Ajan makbuz yazmaz.
+- **Plan** (`gatePlan.mjs`): `build`/`bundle`/`scaling`/`node-pin`/güvenlik aşamaları her zaman koşar; `coverage`
+  `code` kapsamlıdır, `audio-test` git-farkı (`@{upstream}`, yoksa `origin/dev`, yoksa tam takım) ile alt küme seçer.
+  `audio-test` alt kümesi tam takımın yerini tutmaz: audio-synth'in tam takımı yalnız `signoff`ta (`coverage-audio`).
+- **Kancalar:** `pre-commit` → `pnpm quick`, `pre-push` → `pnpm high`; ikisi de `SKIP_SIMPLE_GIT_HOOKS=1` ile atlanır
+  (simple-git-hooks kabuk betiği). Sunucu tarafı denetim yoktur (bulut CI yok kararı). Yerel kanıt, kullanıcının
+  kancayı atlamamasına dayanır; `signoff`un son yeşil koşusunun kaydı yoktur.
+- **e2e koşucusu** (`devtools/vol-showcase/scripts/e2e.mjs`): `reuseExistingServer: false` (eski sunucu yanlış
+  geçiş üretmez); iki şerit; `forbidOnly`; yeniden deneme (`retries`) yok; ama test/atlama/flaky sayısı kapı
+  çıktısına girmez, atlama ratchet'i yoktur.
+- **Çıktı bütünlüğü:** `--json` yalnız koşan aşamaları listeler; düşen Playwright testi `unknown` sınıflanır ve
+  adı JSON'da yoktur; düşen testin izi sonraki e2e koşusunda silinir.
+- **Kapsam dışlaması:** altı paketin (core, vitrin, VOL.TEST, audio-synth, tauri-v2, pen.dev) `coverage.exclude`ı `src/**/index.ts`i toptan dışlar; audio-synth'te iki
+  `index.ts` çalıştırılabilir mantık taşır (`findPresets` 6 dal, `getPreset`). `scripts/quality` kapsamı hiç
+  ölçülmez.
+
+### 22.5 Eşik boşluğu ve platform bayatlığı
+
+| Paket       | Satır ölçülen/eşik | İşlev ölçülen/eşik | Dal ölçülen/eşik | Not                               |
+| ----------- | ------------------ | ------------------ | ---------------- | --------------------------------- |
+| CORE        | %96,6 / 90         | %95,7 / 91         | %88,0 / 84       | satır payı ≈1.230 kapsamsız satır |
+| vitrin      | %95,2 / 94         | %88,5 / 83         | %72,4 / 58       | dal payı 14 puan                  |
+| VOL.TEST    | %99,3 / 96         | %97,5 / 95         | %94,3 / 90       |                                   |
+| tauri-v2    | %99,3 / 93         | %100 / 100         | %93,5 / 90       |                                   |
+| pen.dev     | %100 / 97          | %100 / 100         | %97,8 / 94       | tek kaynak dosyası                |
+| audio-synth | %96,86 / 95        | %97,77 / 95        | %89,1 / 88       | tek sıkı paket (pay 1–3 puan)     |
+
+Sözleşme "ölçülen değerin ~2 puan altı" der; CORE ve vitrin bunun çok üstünde gevşektir. Piksel temeli: 51
+`chromium-win32` ve 12 `chromium-linux` (2026-10-06, UI-08.x'ten önce): Linux kümesi bayat/eksiktir.
+
+### 22.6 Karar ve sınırlar
+
+1. **`signoff` bugün güvenle yeşil çıkarılamıyor** (iki taze koşuda 0/2): düşen testler iki ayrı WebKit zamanlama
+   testidir; kök neden bilinmediği için bunun kod kusuru mu ölçüm kusuru mu olduğu da söylenemez. F11.1/F11.2'de açık.
+   Taze `quick`/`fast`/`high` yeşil; `high` pre-push'ta 4,7 dk'dır, belgedeki 13,4 dk bayattı.
+2. En büyük güvence boşlukları (öncelik sırasıyla): koşulmayan aşamanın JSON'da görünmemesi, kısmi sahneleme,
+   düşürülebilir kapsam eşiği, kapıların kendisinin kapsamsızlığı, WebKit atlamaları.
+3. Bu turda **ölçülmeyen** şeyler: Rust test sayısı, soğuk Rust derlemesi, audio-test tam takımı, `bundle`/`scaling`
+   negatif kontrolü, e2e'nin tam negatif kontrolü, başka makine/OS. Hiçbiri başarılı sayılmaz.
+4. Hiçbir eşik, timeout, atlama ya da kapı gevşetilmedi; kapı kodu değiştirilmedi.

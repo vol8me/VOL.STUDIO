@@ -79,12 +79,79 @@ release redini ertelemek için gerekçe değildir.
 - [ ] **[P3] F10.3 — Sıkı indeks ve teknik ratchet.** CORE noUncheckedIndexedAccess varsayımları daraltılır; kalite eşiklerinin geçmiş base-ref ve gerekçeli istisna denetimi; scaling ortak şemalı okuyucu. WebKit prob kalibrasyonu ilk örnekte −0,05 ms, mevcut retry’da +3,42 ms verdi; ölçüm hassasiyeti açık. Kapanır: A/A gürültü ve desteklenmeyen iz ayrımı tekrarlanabilir fixture/karşıt kontrolle, retry başarı diye saklanmadan; tip kapısı, eşik düşürme/bozuk config negatif fixture'ı; ölçülen kapsam korunur.
 - [ ] **[P3] F10.4 — A20 haptik yürütme kararı.** Mevcut scheduler/driver gecikme, eşzamanlılık ve iptal ölçülür. Kapanır: worker gerekliyse tek scheduler geçişi regresyon+önce/sonra ölçüm; gerekmiyorsa kanıtlı koruma kararı; sırf önerilmiş diye worker eklenmez.
 - [ ] **[P3] F10.12 — Tauri 2.12 geçişi.** Tauri 2.11.5 → 2.12.2 (tauri-utils 2.10 → urlpattern 0.6) beş `unic-*` bakımsızlık uyarısını kaldırır; wry 0.57, tao 0.37, muda 0.20 ve webview2-com yerel katmanı değiştirir (gtk-rs 0.18 kalır, glib uyarısı sürer). Ön koşul: F09.1/F09.2 yerel temel çizgisi; karşılaştırılacak Windows/Android turu olmadan yerel katman değişimi kanıtsızdır. Kapanır: Cargo/pnpm Tauri sürüm paritesi (`tauriPlugins`), `rust` kapısı, Windows yerel ürün turu (kurulum, kapanış, kurtarma), Android ve Linux yerel kanıtı ayrı ayrı; beş `unic-*` kaydı `securityPolicy.json`dan silinir; toplu `cargo update` yok.
-- [ ] **[P3] F10.13 — Kapı ölçek eşikleri (koşullu).** Kapı süresi etki alanıyla büyür, repo boyutuyla değil; yalnız `contract`, `format-check`, `coverage` ve `coverage-audio` her değişiklikte repo geneli koşar. Tetik (`pnpm high --json`, taze koşu): soğuk `high` 20 dk, core düzenlemesi sonrası `high` 15 dk, `coverage` 5 dk, `contract` 90 sn ya da vitrin `e2e` 10 dk aşılırsa. Kapanır: yalnız tetiklenen aşama için önce ölçüm, sonra tek müdahale (`coverage`: paket başına damgalı lcov ve şekil kapısı sözleşmesi; `contract`: türetilmiş kapsamlı bekçi aileleri; `e2e`: zamanlama sınamaları için sessiz şerit); önce/sonra süresi ve en az 3 art arda yeşil koşu `docs/gates.md`e yazılır. Tetik yoksa önceden yeniden yapılandırma yapılmaz. Durum (2026-10-11): vitrin `e2e` tetiği tuttu (21,5 dk, boş sanılan makinede; iki ayrı yük etkeni ölçüldü) ve zamanlama sınamaları düştü; ilk müdahale uygulandı: zamanlama sınamaları için sessiz şerit (`QUIET_SPECS`) ve kapıda yük ön kontrolü (`hostLoad.mjs`); önce/sonra süresi ve 3 art arda yeşil koşu henüz yok, bu yüzden madde AÇIK. Aynı gün kullanıcı kararıyla `e2e` pre-push kapısından (`high`) `signoff`a taşındı: push artık o süreyi beklemez, ama süre HIZLANMADI (tam koşu ~25-30 dk; belgelenmiş 343 sn bayat) ve arayüz gerilemesi push'ta değil `signoff`ta ya da elle `just ui-check`te yakalanır.
+- [ ] **[P3] F10.13 — Kapı ölçek eşikleri (koşullu).** Kapı süresi etki alanıyla büyür, repo boyutuyla değil; yalnız `contract`, `format-check`, `coverage` ve `coverage-audio` her değişiklikte repo geneli koşar. Tetik (`pnpm high --json`, taze koşu): soğuk `high` 20 dk, core düzenlemesi sonrası `high` 15 dk, `coverage` 5 dk, `contract` 90 sn ya da vitrin `e2e` 10 dk aşılırsa. Kapanır: yalnız tetiklenen aşama için önce ölçüm, sonra tek müdahale (`coverage`: paket başına damgalı lcov ve şekil kapısı sözleşmesi; `contract`: türetilmiş kapsamlı bekçi aileleri; `e2e`: zamanlama sınamaları için sessiz şerit); önce/sonra süresi ve en az 3 art arda yeşil koşu `docs/gates.md`e yazılır. Tetik yoksa önceden yeniden yapılandırma yapılmaz. Durum (2026-10-11): vitrin `e2e` tetiği tuttu (21,5 dk, boş sanılan makinede; iki ayrı yük etkeni ölçüldü) ve zamanlama sınamaları düştü; ilk müdahale uygulandı: zamanlama sınamaları için sessiz şerit (`QUIET_SPECS`) ve kapıda yük ön kontrolü (`hostLoad.mjs`); önce/sonra süresi ve 3 art arda yeşil koşu henüz yok, bu yüzden madde AÇIK. Aynı gün kullanıcı kararıyla `e2e` pre-push kapısından (`high`) `signoff`a taşındı: push artık o süreyi beklemez, ama süre HIZLANMADI (tam koşu ~25-30 dk; belgelenmiş 343 sn bayat) ve arayüz gerilemesi push'ta değil `signoff`ta ya da elle `just ui-check`te yakalanır. Taze ölçüm (2026-10-11, `signoff`, ön yük %7): vitrin `e2e` **22,6 ve 26,3 dk** (iki taze koşu; birincide ana şerit WebKit 17,7 / Chromium 14,7 dk eşzamanlı + sessiz şerit 2,1 + 2,7 dk; 1.013 koşan test, 4.076 işçi-sn); en ağır spec'ler themeMatrix 297, accessibility 270, layout 257, pseudoLocale 252, materialBudget 216 işçi-sn (rapor §22.2). Süre bütçesi tablosundaki 343 sn artık geçersiz ve `docs/gates.md`de düzeltildi; madde AÇIK.
 - [ ] **[P3] F10.5 — Yeni donanım kapsamı.** OLED Deck/Steam Machine. Kapanır: ilgili donanım bulunduğunda ayrı frame/runtime profili; eldeki cihaz kabulü bu işi sahte kapatmaz, Windows devamını bloke etmez.
 - [ ] **F10.6 — K3/K5 dal bakımı.** Birleştirme hedefleri ve eski yerel/uzak dalların erişilebilir işi ayrı git operasyonu olarak ele alınır. Kapanır: kayıp commit/çalışma sıfır, açık hedef ve test/snapshot kanıtı; rapor teslimi merge/branch silme yapılmış sayılmaz.
 
+### F11 — Kapı güvencesi, kanıt bütünlüğü ve ölçek (2026-10-11 taze tur)
+
+Kaynak: bütün kapıların taze koşusu, bilerek kusur ekleyen negatif kontroller ve koşucunun tersine mühendisliği;
+ölçüm, yöntem ve sınırlar [rapor §22](docs/monorepo-audit.md). Özet (`--fresh`, 8 çekirdek, ön yük ≤%11):
+`quick` 87,8 sn, `fast` 6,0 dk, `high` 4,7 dk geçti; **`signoff` DÜŞTÜ** (27,1 dk: vitrin e2e WebKit'te 1 aralıklı
+zaman aşımı; koşucu orada durduğu için dört aşama koşulmadı, ayrı koşuldu ve geçti: `coverage-audio` 547 sn,
+`audio-verify` 101 sn, `security-js` 3 sn, `security-rust` 4 sn). **İkinci taze `signoff` de DÜŞTÜ** (30,6 dk,
+ön yük %4; e2e 26,3 dk): bu kez başka bir WebKit testi, sessiz şeritte tek işçiyle `motionMeasure.spec.ts:124`,
+60 sn zaman aşımı. İki taze koşuda yeşil `signoff` yok (0/2).
+Negatif kontrol: bilerek eklenen 10 kusurun 10'u `quick`te beklenen aşamada yakalandı; kapsam eşiğini düşürmek GEÇTİ;
+kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını sınadı.
+
+- [ ] **[P1] F11.1 — `signoff` iki taze koşuda iki ayrı WebKit zaman aşımıyla düştü (0/2 yeşil).** (a) `dialogPatterns.spec.ts:116`
+      (kayıt çakışması, bekleme sırasında iptal; ana şerit): `Cancel` tıklaması 60 sn bekledi — "`.vol-showcase-card__body`
+      işaretçiyi örtüyor / öğe kararsız / DOM'dan ayrıldı"; aynı spec izole ve `--repeat-each=5` ile iki motorda 50/50
+      geçti. (b) `motionMeasure.spec.ts:124` flaş sınırı, azaltılmış hareket kapalı (sessiz şerit, tek işçi, ön yük %4):
+      120 art arda `click()` döngüsü 60 sn'yi aştı; WebKit'te iki varyant birinci koşuda 33,8 / 30,2 sn, ikincide
+  > 60 sn (düştü) / 53,0 sn sürdü; Chromium 15,5 / 11,1 sn → 21,2 / 17,4 sn: koşular arası ~2 kat sapma, bütçenin
+  > %50–100'ünü kullanıyor, payı yok. Kök nedenler BİLİNMİYOR; test-results izi bir sonraki e2e koşusunda silinir.
+  > Kapanır: (a) için yük altında yeniden üretim ya da iz analiziyle kök neden (zamanlama
+  > yarışı mı, katmanın örtüldüğü gerçek istif/odak kusuru mu); (b) için WebKit'te tıklama başına maliyetin ölçümü ve
+  > testin süre sınırından bağımsız (döngü sayısı/doğrudan olay) yeniden kurulması; düzeltme yeniden denemeyle ya da
+  > zaman aşımı büyütmeyle saklanmaz; üç art arda yeşil tam `signoff`.
+- [ ] **[P1] F11.2 — Kanıt bütünlüğü: koşulmayan ve düşen kanıt görünmez.** `signoff` ilk düşende durur ve
+      `--json` `stages` listesi koşulmayan dört aşamayı hiç yazmaz (NOT-RUN yok); düşen Playwright testi
+      `kind: unknown / sınıflandırılamayan hata` olur ve `tail` test adını taşımaz (yalnız `last-failure.log`da; F10.9
+      yalnız TAP'i kapsadı); düşen testin izi sonraki koşuda silinir. Kapanır: JSON koşulmayan aşamayı `notRun` yazar;
+      Playwright düşüşü test/dosya/satır/sebep olarak sınıflanır; bağımsız aşamalar (`coverage-audio`, `audio-verify`,
+      `security-*`) e2e düşse de koşar ya da açıkça NOT-RUN kalır; düşen izin kopyası kapı günlüğü yanında saklanır.
+- [ ] **[P2] F11.3 — Sayım ve atlama kapıda görünmez.** Kapı JSON'u yalnız durum/süre taşır; geçti/atlandı/düştü
+      sayısı yok, atlama ratchet'i yok. Ölçülen: WebKit e2e'de 16 (+2 sessiz şerit) atlama (belge "2" diyordu), Chromium'da
+      1 + 1; `node:test` 561 testin 2'si atlanır. WebKit'te gerçek dokunma (SplitPane CDP), Web Audio (iki ses testi),
+      layout-shift ve gerçek pano kanıtı yoktur. Kapanır: aşama başına sayılar JSON'da; atlama sayısı artamaz ya da
+      gerekçeli kayıtlıdır; engine başına kapsam boşlukları `docs/gates.md`de listelidir.
+- [ ] **[P2] F11.4 — Kapsam eşikleri ölçümden uzak ve düşürülebilir.** Ölçülen / eşik: CORE satır 96,6/90, işlev
+      95,7/91, dal 88,0/84 (≈1.230 kapsamsız satıra pay); vitrin dal 72,4/58 (14 puan), satır 95,2/94; VOL.TEST satır
+      99,3/96; tauri-v2 satır 99,3/93; pen.dev 100/97. `quality.json` "~2 puan altı, yalnız yükselir" der; eşik
+      düşürme (CORE satır 90→60) `quick`ten GEÇTİ (taban 50). Yalnız audio-synth sıkı (96,9/95). Kapanır: eşikler
+      ölçüme ≤2 puan yaklaştırılır; base-ref ratchet'i eşik düşürmeyi reddeder (F10.3 ile birlikte, negatif fixture).
+- [ ] **[P2] F11.5 — Kapsam dışlaması belgeyle çelişir.** `src/**/index.ts` toptan dışlanır, ama
+      `devtools/audio-synth/src/presets/index.ts` (`callablePresetNames`, `getPreset`) ve `devtools/audio-synth/src/presets/catalog/index.ts`
+      (`findPresets`, 6 dal) çalıştırılabilir mantık taşır; AGENTS.md "kapsam yalnız çalıştırılabilir satırı olmayan
+      dosyaları dışlar" der. Kapanır: bekçi `index.ts`te çalıştırılabilir yapı arar; iki dosyanın mantığı ayrı dosyaya
+      taşınıp test edilir ya da dışlama gerekçeyle daraltılır.
+- [ ] **[P2] F11.6 — Kapıların kendisi kapsamsız.** `scripts/quality` (63 `.mjs`, 561 `node:test`) için kapsam
+      ölçümü yoktur; bu turda yalnız 9 kusur sınıfı (tip, lint, biçim, CSS, dosya boyutu, katman, kodlanmış metin, kırık bağlantı, tarihçe yorumu) elle negatif kontrol gördü. Kapanır: `node --test` kapsamı ya
+      da c8 ile ölçüm ve gerekçeli eşik; her bekçi için en az bir negatif fixture (kusur → doğru aşama düşer) kayıtlı.
+- [ ] **[P2] F11.7 — Yerel kanıtın aşılabilirliği.** Kancalar çalışma ağacını sınar, indeksi değil: kısmi
+      sahnelemede `quick` GEÇTİ, indeksteki içerik Prettier'dan düştü (deneyle). `SKIP_SIMPLE_GIT_HOOKS=1` ve `--no-verify`
+      kancaları atlar; sunucu tarafı yoktur (bulut CI yok kararı); son yeşil `signoff`'un kaydı/yaşı hiçbir yerde
+      görünmez, bu yüzden `high` yeşilken `signoff` günlerce koşulmayabilir. Kapanır: indeks sınama maliyeti ölçülür ve
+      karar yazılır (ya da sınır belgelenir); `pnpm high` çıktısı "son yeşil signoff: ağaç karması, yaş" satırını uyarı
+      olarak basar; onaysız pipeline eklenmez.
+- [ ] **[P3] F11.8 — Bayat Linux piksel temeli ve platform bekçisi yok.** 12 `chromium-linux` temeli
+      (2026-10-06) 51 `chromium-win32`'ye karşı; UI-08.x değişikliğinden sonra yalnız win32 yenilendi, Linux'ta piksel
+      kapısı fiilen bayat/eksik. `playwright.config.ts` yorumu "-chromium-linux" der. Kapanır: Linux temeli tam set
+      olarak yenilenir ya da silinip platform sınırı belgelenir; platform temelleri tutarsızsa bekçi düşer.
+- [ ] **[P3] F11.9 — Sabit beklemeler yük altında kırılganlık üretir.** Vitrin e2e'de 30 `waitForTimeout`
+      (stress.spec.ts'in yeni yük testleri dahil: 7 sn, 1,5 sn). Kapanır: olay/koşul bekleyen ifadeye çevrilir ya da
+      gerekçelidir; F11.1'in kök nedeniyle birlikte ele alınır.
+- [ ] **[P3] F11.10 — Yürütme maliyeti adayları (ölçüldü, benimsenmedi).** CORE testlerinde jsdom ortamı 250
+      dosyada 287 işçi-sn, testlerin kendisi 36 işçi-sn; VOL.TEST 105/38, vitrin 45/85. DOM gerektirmeyen dosyaları
+      `@vitest-environment node`a ayırmak ve ESLint `--cache` (tip bilgili kural bağımlılık değişimini önbellek
+      anahtarında görmez: negatif kontrol şart) adaydır. Kapanır: önce/sonra ölçüm ve en az 3 yeşil koşu; kazanç %10'un
+      altındaysa "Ölçülüp benimsenmeyenler"e yazılıp reddedilir. Tetik değil, ölçüm işi; F10.13 tetiği tutana dek açık.
+
 ## Kapatılanlar
 
+- [x] F11.0 — Ajan uyumu ve bayat sayılar: `CLAUDE.md` kökü `@AGENTS.md` ile içe aktarır (Claude Code `AGENTS.md`yi kendiliğinden okumaz; önceki salt bağlantı oturum bağlamına girmiyordu, tek kaynak `AGENTS.md` kalır); `docs/gates.md` süre ve atlama sayıları taze ölçümle düzeltildi (`high` 13,4 → 4,7 dk, vitrin `e2e` 343 → 1.355 sn, WebKit 2 → 18 atlama).
 - [x] F10.1 — braces GHSA-vfj7-8cjw-p6xm için düzeltme yayımlanmadı (upstream durağan, stylelint zinciri başka sürüme geçemez): derinlik sınırı yaması `patches/` altında, `security-js` yama bağı + kurulu davranış sınaması + yayımlanmış düzeltme denetimini koşar, bayat kaydı reddeder. Yanked `yoke-derive` 0.8.4'e yükseltildi; Rust'ta yalnız kayıtlı `unsound`/`unmaintained` uyarı (8 kayıt: zincir, platform, etki alanı, sahip) geçer, zafiyet ve yanked geçmez. Gate seviyesi düşürülmedi; ayrıntı `docs/gates.md` → Güvenlik riski politikası.
 - [x] F10.7 — Kare ölçüm aracı kontrollü build'de 2,3 KiB ayrıştırıldı; güncel app 182,4/120,4 KiB bilinçli kapsam gerekçesiyle bütçelendi; vendor/CSS/kapsam eşikleri korunarak bundle ve tam high geçti.
 - [x] F10.8 — Vitrin README/DESIGN, headless ve O(N) uzamsal tarama açıklaması güncel; özel kanıt atıfları ve zorunlu beğeni şartı düzeltildi, kullanıcı değişiklikleri korunarak belge/biçim/contract kapıları geçti.
