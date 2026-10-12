@@ -144,6 +144,29 @@ export class Tank extends RigidBody {
     this.capturePose();
   }
 
+  /** Yeniden doğan araç önceki sürüşten palet, yay ve depo durumu taşımaz. */
+  resetForRespawn(x: number, y: number, hull = -Math.PI / 2): void {
+    this.place(x, y, hull);
+    this.reserve.reset();
+    this.suspension.reset();
+    this.driver.reversing = false;
+    this.treadLeft = 0;
+    this.treadRight = 0;
+    this.groundLeft = 0;
+    this.groundRight = 0;
+    this.surfaceLeft = 0;
+    this.surfaceRight = 0;
+    this.slideLeft = 0;
+    this.slideRight = 0;
+    this.slip = 0;
+    this.contact.speed = 0;
+    this.targets.left = 0;
+    this.targets.right = 0;
+    this.targets.forward = false;
+    this.targets.braking = false;
+    this.capturePose();
+  }
+
   /** Adım başında çağrılır; render bu pozdan günceline ara değer alır. */
   capturePose(): void {
     const pose = this.previous;

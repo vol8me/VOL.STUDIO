@@ -14,6 +14,7 @@ function fixture(t) {
   };
   for (const [dir, name] of [
     ['core', 'core'],
+    ['network', 'network'],
     ['games/demo', 'demo'],
     ['devtools/tool', 'tool'],
     ['devtools/other', 'other'],
@@ -29,6 +30,9 @@ for (const [file, source] of [
   ['games/demo/src/index.ts', 'import /* açıklama */ ("@volstudio/tool");'],
   ['devtools/tool/server/main.ts', 'import "@volstudio/demo";'],
   ['devtools/tool/scripts/main.mjs', 'import "@volstudio/other";'],
+  ['network/src/index.ts', 'import "@volstudio/demo";'],
+  ['core/src/index.ts', 'import "@volstudio/network";'],
+  ['games/demo/server/index.ts', 'import "@volstudio/tool";'],
 ])
   test(`katman ihlali: ${file}`, (t) => {
     const { root, write } = fixture(t);
@@ -50,6 +54,15 @@ test('tsconfig aliası tüketici sınırını delemez', (t) => {
   );
   write('games/demo/src/index.ts', 'import { value } from "@hidden/index";');
   assert.match(validateLayerBoundaries(root).join('\n'), /@volstudio\/tool/);
+});
+
+test('oyun client kodu server Node kaynağına, oyun server kodu browser adapterına ulaşamaz', (t) => {
+  const { root, write } = fixture(t);
+  write('games/demo/src/main.ts', 'import "../server/WorldRoom";');
+  write('games/demo/server/index.ts', 'import "@volstudio/network/client";');
+  const issues = validateLayerBoundaries(root).join('\n');
+  assert.match(issues, /oyun istemcisi Node sunucu kaynağını içe aktaramaz/);
+  assert.match(issues, /Node sunucusu browser network istemcisini içe aktaramaz/);
 });
 
 test('manifest kenarları ve gerçek bağımlılık döngüsü görünürdür', (t) => {

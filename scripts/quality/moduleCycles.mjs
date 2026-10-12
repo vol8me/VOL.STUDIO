@@ -89,7 +89,7 @@ function runtimeImports(source, fileName) {
 }
 
 function packageDirs(root) {
-  const dirs = ['core', 'tauri-v2'];
+  const dirs = ['core', 'tauri-v2', 'network'];
   for (const group of ['games', 'devtools']) {
     const base = join(root, group);
     if (!existsSync(base)) continue;

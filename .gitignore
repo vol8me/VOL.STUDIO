@@ -16,6 +16,7 @@ node_modules/
 
 # Derleme çıktıları: Vite `dist/`, Cargo workspace `target/`, tsc artımlı bilgisi
 dist/
+dist-server/
 target/
 *.tsbuildinfo
 

@@ -1,9 +1,10 @@
 import type { SuspensionConfig, TankConfig, WeaponConfig } from '@/config/tank';
+import { COMBAT, type CombatConfig } from '@/config/combat';
 import { angleDelta } from '@volstudio/core/math';
 import { idleCommand, type TankCommand } from './command';
-import { Projectiles } from './combat/Projectiles';
+import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
-import type { SimEvent } from './events';
+import type { DamageCause, SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
 import type { World } from './world/World';
 import type { WeatherSystem } from './weather/WeatherSystem';
@@ -15,6 +16,7 @@ export interface SimulationOptions {
   readonly tank: TankConfig;
   readonly suspension: SuspensionConfig;
   readonly weapon: WeaponConfig;
+  readonly combat?: CombatConfig;
   readonly weather?: WeatherSystem;
 }
 
@@ -38,15 +40,18 @@ export class Simulation {
   readonly weather: WeatherSystem | undefined;
   private readonly vehicleList: Vehicle[] = [];
   private readonly options: SimulationOptions;
+  private readonly combat: CombatConfig;
   private readonly events: SimEvent[] = [];
   private readonly contact = createContact();
   private readonly inputs = new Map<EntityId, TankCommand>();
+  private readonly collisionDamagePairs = new Set<string>();
   private nextId: EntityId = 1;
   private playerId: EntityId;
   timeMs = 0;
 
   constructor(options: SimulationOptions) {
     this.options = options;
+    this.combat = options.combat ?? COMBAT;
     this.world = options.world;
     this.weather = options.weather;
     this.projectiles = new Projectiles(
@@ -75,10 +80,20 @@ export class Simulation {
   }
 
   /** Yeni araç yerleştirir; kimlik simülasyon ömrü boyunca yeniden kullanılmaz. */
-  spawn(x: number, y: number, hull = -Math.PI / 2): Vehicle {
+  spawn(x: number, y: number, hull = -Math.PI / 2, team: number | null = null): Vehicle {
+    if (team !== null && !Number.isSafeInteger(team))
+      throw new RangeError('Takım kimliği güvenli tamsayı olmalı');
     const options = this.options;
-    const vehicle = new Vehicle(this.nextId++, options.tank, options.suspension, options.weapon);
+    const vehicle = new Vehicle(
+      this.nextId++,
+      options.tank,
+      options.suspension,
+      options.weapon,
+      this.combat,
+      team,
+    );
     vehicle.tank.place(x, y, hull);
+    Object.assign(vehicle.spawnPoint, { x, y, hull });
     this.vehicleList.push(vehicle);
     this.inputs.set(vehicle.id, idleCommand());
     return vehicle;
@@ -93,12 +108,88 @@ export class Simulation {
     this.inputs.delete(id);
   }
 
+  /** Yetkili komutların ve savaş çözümünün ortak hasar kapısı; gerçek düşen canı döndürür. */
+  applyDamage(
+    targetId: EntityId,
+    amount: number,
+    source?: EntityId,
+    cause: DamageCause = 'direct',
+  ): number {
+    const target = this.vehicle(targetId);
+    if (!target) return 0;
+    if (source !== undefined && this.isFriendly(source, target)) return 0;
+    const applied = target.vitality.damage(amount);
+    if (applied === 0) return 0;
+    this.emit({
+      kind: 'damaged',
+      target: targetId,
+      source,
+      cause,
+      amount: applied,
+      health: target.vitality.health,
+    });
+    if (!target.vitality.alive) this.emit({ kind: 'died', target: targetId, source, cause });
+    return applied;
+  }
+
+  /** Ölü hedefe can basmaz; ölümden çıkış yalnız respawnVehicle ile gerçekleşir. */
+  healVehicle(targetId: EntityId, amount: number, source?: EntityId): number {
+    const target = this.vehicle(targetId);
+    if (!target) return 0;
+    const applied = target.vitality.heal(amount);
+    if (applied > 0)
+      this.emit({
+        kind: 'healed',
+        target: targetId,
+        source,
+        amount: applied,
+        health: target.vitality.health,
+      });
+    return applied;
+  }
+
+  /** Ölen aracı aynı kimlikle yeniden yerleştirir; fizik ve silah beklemeleri sıfırlanır. */
+  respawnVehicle(id: EntityId, x?: number, y?: number, hull?: number): boolean {
+    const vehicle = this.vehicle(id);
+    if (!vehicle || vehicle.vitality.alive) return false;
+    const point = vehicle.spawnPoint;
+    const nextX = x ?? point.x;
+    const nextY = y ?? point.y;
+    const nextHull = hull ?? point.hull;
+    if (![nextX, nextY, nextHull].every(Number.isFinite))
+      throw new RangeError('Yeniden doğma konumu sonlu olmalı');
+    const bodyRadius = Math.hypot(this.options.tank.halfLength, this.options.tank.halfWidth);
+    vehicle.tank.resetForRespawn(
+      Math.max(bodyRadius, Math.min(this.world.width - bodyRadius, nextX)),
+      Math.max(bodyRadius, Math.min(this.world.height - bodyRadius, nextY)),
+      nextHull,
+    );
+    vehicle.gun.reset();
+    vehicle.vitality.respawn();
+    this.emit({ kind: 'respawned', target: id, x: vehicle.tank.x, y: vehicle.tank.y });
+    return true;
+  }
+
+  /** Birbirini vuramayan takım üyeleri mermiler için de saydamdır. */
+  private isFriendly(sourceId: EntityId, target: Vehicle): boolean {
+    if (this.combat.friendlyFire || target.team === null) return false;
+    const source = this.vehicle(sourceId);
+    return source !== undefined && source.team === target.team;
+  }
+
+  private canProjectileHit(owner: EntityId, target: ProjectileTarget): boolean {
+    const vehicle = this.vehicle(target.id);
+    return vehicle !== undefined && vehicle.vitality.alive && !this.isFriendly(owner, vehicle);
+  }
+
   /**
    * Bir adım ilerler. Tek komut verilirse kontrol edilen araca uygulanır,
    * diğer araçlar boşta kalır; komut kaynağı verilirse her araç kendi
    * komutunu alır.
    */
   step(input: TankCommand | CommandSource, stepMs: number): void {
+    if (!Number.isFinite(stepMs) || stepMs < 0)
+      throw new RangeError('Simülasyon adımı sonlu ve negatif olmayan süre olmalı');
     this.weather?.step(stepMs);
     if (this.weather) this.projectiles.setAir(this.weather.frame);
     const dt = stepMs / 1000;
@@ -108,11 +199,15 @@ export class Simulation {
         ? input
         : (vehicle) => (vehicle.id === this.playerId ? input : IDLE);
 
+    this.collisionDamagePairs.clear();
     for (const vehicle of this.vehicleList) {
+      const tick = vehicle.vitality.step(stepMs);
+      if (tick.respawnReady) this.respawnVehicle(vehicle.id);
       const tank = vehicle.tank;
       tank.capturePose();
       const command = this.inputs.get(vehicle.id)!;
       Object.assign(command, commandFor(vehicle));
+      if (!vehicle.vitality.alive) continue;
       const x = tank.x;
       const y = tank.y;
       const groundLeft = tank.groundLeft;
@@ -136,6 +231,7 @@ export class Simulation {
     }
     this.settleContacts();
     for (const vehicle of this.vehicleList) {
+      if (!vehicle.vitality.alive) continue;
       const contact = vehicle.tank.contact;
       if (contact.speed > this.options.tank.impactEventSpeed) {
         this.emit({
@@ -147,9 +243,11 @@ export class Simulation {
           normalY: contact.normalY,
           speed: contact.speed,
         });
+        this.applyImpactDamage(vehicle.id, contact.speed, this.combat.wall, 'wall');
       }
     }
     for (const vehicle of this.vehicleList) {
+      if (!vehicle.vitality.alive) continue;
       vehicle.gun.update(stepMs);
       const command = this.inputs.get(vehicle.id)!;
       const aiming = command.aimX !== 0 || command.aimY !== 0;
@@ -176,7 +274,9 @@ export class Simulation {
           projectile.x,
           projectile.y,
         );
+        this.applyDamage(struck.id, this.combat.projectileDamage, projectile.owner, 'projectile');
       },
+      (owner, target) => this.canProjectileHit(owner, target),
     );
     if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS);
   }
@@ -195,6 +295,7 @@ export class Simulation {
       this.world,
       this.vehicleList,
       stepMs,
+      (owner, target) => this.canProjectileHit(owner, target),
     );
   }
 
@@ -218,7 +319,8 @@ export class Simulation {
   private settleContacts(): void {
     for (let pass = 0; pass < CONTACT_PASSES; pass++) {
       if (!this.collideVehicles()) return;
-      for (const vehicle of this.vehicleList) vehicle.tank.settleAgainst(this.world);
+      for (const vehicle of this.vehicleList)
+        if (vehicle.vitality.alive) vehicle.tank.settleAgainst(this.world);
     }
   }
 
@@ -233,6 +335,7 @@ export class Simulation {
       for (let second = first + 1; second < list.length; second++) {
         const a = list[first];
         const b = list[second];
+        if (!a.vitality.alive || !b.vitality.alive) continue;
         const ax = a.tank.x;
         const ay = a.tank.y;
         const bx = b.tank.x;
@@ -252,6 +355,12 @@ export class Simulation {
           normalY: hit.normalY,
           speed: hit.speed,
         });
+        const key = a.id + ':' + b.id;
+        if (!this.collisionDamagePairs.has(key)) {
+          this.collisionDamagePairs.add(key);
+          this.applyImpactDamage(a.id, hit.speed, this.combat.collision, 'collision', b.id);
+          this.applyImpactDamage(b.id, hit.speed, this.combat.collision, 'collision', a.id);
+        }
       }
     }
     return moved;
@@ -283,5 +392,17 @@ export class Simulation {
       -(-dirX * fy + dirY * fx) * weapon.recoilKick,
     );
     this.emit({ kind: 'fired', source: vehicle.id, x, y, angle: tank.turret });
+  }
+
+  private applyImpactDamage(
+    target: EntityId,
+    speed: number,
+    rule: { readonly minSpeed: number; readonly damagePerSpeed: number },
+    cause: DamageCause,
+    source?: EntityId,
+  ): void {
+    if (speed > rule.minSpeed) {
+      this.applyDamage(target, (speed - rule.minSpeed) * rule.damagePerSpeed, source, cause);
+    }
   }
 }

@@ -20,6 +20,11 @@ export class BoostReserve {
     this.energy = config.boostCapacity;
   }
 
+  reset(): void {
+    this.energy = this.config.boostCapacity;
+    this.active = false;
+  }
+
   update(wanted: boolean, dt: number): void {
     const config = this.config;
     const threshold = this.active ? 0 : config.boostRestart;

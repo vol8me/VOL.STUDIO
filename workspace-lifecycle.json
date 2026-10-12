@@ -35,6 +35,11 @@
       "packageName": "@volstudio/vol-test",
       "path": "games/vol-test",
       "status": "active"
+    },
+    {
+      "packageName": "@volstudio/network",
+      "path": "network",
+      "status": "active"
     }
   ]
 }

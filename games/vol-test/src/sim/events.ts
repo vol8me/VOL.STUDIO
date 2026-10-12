@@ -1,11 +1,40 @@
 import type { EntityId } from './entities/Vehicle';
 
+export type DamageCause = 'projectile' | 'wall' | 'collision' | 'direct';
+
 /**
  * Simülasyonun sunuma bildirdiği olaylar. Her olay kaynağını (ve varsa
  * hedefini) kimlikle taşır; görünüm, efekt, kamera, ses ve titreşim olayın
  * oyuncuya ait olup olmadığına göre tepki verir.
  */
 export type SimEvent =
+  | {
+      readonly kind: 'damaged';
+      readonly target: EntityId;
+      readonly source?: EntityId;
+      readonly cause: DamageCause;
+      readonly amount: number;
+      readonly health: number;
+    }
+  | {
+      readonly kind: 'healed';
+      readonly target: EntityId;
+      readonly source?: EntityId;
+      readonly amount: number;
+      readonly health: number;
+    }
+  | {
+      readonly kind: 'died';
+      readonly target: EntityId;
+      readonly source?: EntityId;
+      readonly cause: DamageCause;
+    }
+  | {
+      readonly kind: 'respawned';
+      readonly target: EntityId;
+      readonly x: number;
+      readonly y: number;
+    }
   | {
       readonly kind: 'fired';
       readonly source: EntityId;

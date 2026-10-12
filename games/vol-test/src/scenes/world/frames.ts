@@ -2,6 +2,8 @@ import type { HudFrame, HudVehicle } from '@/hud/HudFrame';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import { lerpAngle } from '@volstudio/core/math';
 import type { Tank } from '@/sim/tank/Tank';
+import type { Vitality } from '@/sim/combat/Vitality';
+import { COMBAT } from '@/config/combat';
 import type { TankFrame } from '@/view/TankView';
 
 /**
@@ -35,6 +37,7 @@ export function hudFrame(
   fireProgress = 1,
   climate?: HudFrame['climate'],
   vehicles?: HudFrame['vehicles'],
+  vitality?: Vitality,
 ): HudFrame {
   return {
     x: frame.x,
@@ -47,6 +50,11 @@ export function hudFrame(
     boost: tank.boost,
     boostCapacity,
     fireProgress,
+    health: vitality?.health ?? COMBAT.maxHealth,
+    maxHealth: vitality?.maxHealth ?? COMBAT.maxHealth,
+    alive: vitality?.alive ?? true,
+    respawnRemainingMs: vitality?.respawnRemainingMs ?? 0,
+    protectionRemainingMs: vitality?.protectionRemainingMs ?? 0,
     climate,
     vehicles,
     view,
@@ -59,6 +67,7 @@ export function* hudVehicles(
   playerId: number,
 ): Generator<HudVehicle> {
   for (const vehicle of vehicles) {
+    if (!vehicle.vitality.alive) continue;
     const { x, y, hull } = vehicle.tank;
     yield { id: vehicle.id, x, y, hull, player: vehicle.id === playerId };
   }

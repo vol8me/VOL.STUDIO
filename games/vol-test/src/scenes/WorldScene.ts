@@ -286,7 +286,10 @@ export class WorldScene extends Phaser.Scene {
     for (const vehicle of this.sim.vehicles) {
       const tank = vehicle.tank;
       const frame = tankFrame(tank, alpha);
-      this.vehicles.get(vehicle.id)?.update(frame, presentMs);
+      const view = this.vehicles.get(vehicle.id);
+      view?.update(frame, presentMs);
+      view?.root.setAlpha(vehicle.vitality.alive ? 1 : 0.25);
+      if (!vehicle.vitality.alive) continue;
       this.effects.updateVehicle(vehicle.id, {
         x: frame.x,
         y: frame.y,
@@ -306,7 +309,7 @@ export class WorldScene extends Phaser.Scene {
     this.effects.update(this.sim.projectiles, alpha, presentMs);
     measurements?.mark('effects');
 
-    const aiming = !paused && this.controls.aiming;
+    const aiming = !paused && player.vitality.alive && this.controls.aiming;
     if (aiming) {
       const tank = player.tank;
       const preview = this.sim.previewAim(player, GAME.simulationStepMs);
@@ -340,6 +343,7 @@ export class WorldScene extends Phaser.Scene {
         player.gun.getProgress(),
         this.environment.climate,
         () => hudVehicles(this.sim.vehicles, player.id),
+        player.vitality,
       ),
       time,
     );

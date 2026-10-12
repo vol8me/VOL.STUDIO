@@ -69,6 +69,8 @@ export interface ProjectileTarget {
 
 /** İsabet anında çağrılır; hedefe itki uygulamak simülasyonun işidir. */
 export type ProjectileHit = (projectile: Projectile, target: ProjectileTarget) => void;
+/** Dost ateşi gibi hedefe göre çarpışma kurallarını çağıran belirler. */
+export type ProjectileCanHit = (owner: EntityId, target: ProjectileTarget) => boolean;
 
 /**
  * Sabit kapasiteli mermi kümesi. Canlı mermiler dizinin başında yoğun durur;
@@ -129,6 +131,7 @@ export class Projectiles {
     world: World,
     targets: readonly ProjectileTarget[] = [],
     sampleStepMs = 1000 / 60,
+    canHit?: ProjectileCanHit,
   ): AimPreview {
     if (!(Number.isFinite(sampleStepMs) && sampleStepMs > 0))
       throw new RangeError('Önizleme adımı pozitif ve sonlu olmalı');
@@ -143,7 +146,7 @@ export class Projectiles {
       const landed = this.advance(shell, sampleStepMs);
       const outsideStart = !world.contains(shell.px, shell.py);
       const wall = this.clipToWorld(shell, world);
-      const target = outsideStart ? null : this.struck(shell, targets);
+      const target = outsideStart ? null : this.struck(shell, targets, canHit);
       if (target) {
         result.targetId = target.id;
         result.surface = 'vehicle';
@@ -194,6 +197,7 @@ export class Projectiles {
     events: SimEvent[],
     targets: readonly ProjectileTarget[] = [],
     onHit?: ProjectileHit,
+    canHit?: ProjectileCanHit,
   ): void {
     let index = 0;
     while (index < this.live) {
@@ -207,7 +211,7 @@ export class Projectiles {
 
       const outsideStart = !world.contains(projectile.px, projectile.py);
       const wall = this.clipToWorld(projectile, world);
-      const target = outsideStart ? null : this.struck(projectile, targets);
+      const target = outsideStart ? null : this.struck(projectile, targets, canHit);
       if (target) {
         events.push({
           kind: 'hit',
@@ -340,12 +344,13 @@ export class Projectiles {
   private struck(
     projectile: Projectile,
     targets: readonly ProjectileTarget[],
+    canHit?: ProjectileCanHit,
   ): ProjectileTarget | null {
     const { px, py, x, y } = projectile;
     let nearest: ProjectileTarget | null = null;
     let nearestT = Infinity;
     for (const target of targets) {
-      if (target.id === projectile.owner) continue;
+      if (target.id === projectile.owner || (canHit && !canHit(projectile.owner, target))) continue;
       const t = target.entryT(px, py, x, y);
       if (t !== null && t < nearestT) {
         nearest = target;

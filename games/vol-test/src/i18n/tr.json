@@ -19,7 +19,24 @@
     "reverse": "Geri",
     "brake": "Fren",
     "fireReload": "Atış dolumu",
+    "health": "Araç canı",
+    "respawnIn": "Araç imha oldu · {{seconds}} sn sonra yeniden doğacak",
+    "protection": "Yeniden doğma koruması · {{seconds}} sn",
     "climate": "{{season}} · {{weather}}"
+  },
+  "network": {
+    "title": "Çok oyunculu test",
+    "connecting": "Sunucuya bağlanılıyor…",
+    "connected": "Sunucuya bağlandı",
+    "error": "Bağlantı kurulamadı veya kesildi",
+    "left": "Odadan ayrıldı",
+    "summary": "Oyuncu: {{players}} · Can: {{health}} / {{maxHealth}}",
+    "awaiting": "Sunucu durumu bekleniyor…",
+    "respawn": "{{seconds}} sn sonra yeniden doğacak",
+    "you": "Siz",
+    "other": "Diğer oyuncu",
+    "controls": "WASD hareket · Fare nişan · Sol tık ateş · Shift hızlan · Boşluk fren",
+    "leave": "Odadan çık"
   },
   "controls": {
     "move": "Hareket",

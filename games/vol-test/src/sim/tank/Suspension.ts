@@ -30,6 +30,11 @@ export class Suspension {
     return this.rollSpring.value;
   }
 
+  reset(): void {
+    this.pitchSpring.reset();
+    this.rollSpring.reset();
+  }
+
   /** Gövde çerçevesinde hız darbesi (birim/s): ileri (+) ve sağ (+). */
   kick(forward: number, right: number): void {
     this.pitchSpring.velocity += forward;

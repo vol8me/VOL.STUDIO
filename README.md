@@ -7,15 +7,16 @@ oyun akışında sınayan test ürünüdür.
 
 ## Paketler
 
-| Yol                      | Paket                     | Sorumluluk                                      |
-| ------------------------ | ------------------------- | ----------------------------------------------- |
-| `core/`                  | `@volstudio/core`         | Oyunlardan bağımsız motor ve DOM UI kataloğu    |
-| `tauri-v2/`              | `@volstudio/tauri-v2`     | Paylaşılan native kabuk ve platform adaptörleri |
-| `devtools/audio-synth/`  | `@volstudio/audio-synth`  | Deterministik ses ve müzik üretimi, yayın ve QA |
-| `devtools/deck/`         | `@volstudio/deck`         | Steam Deck sondası ve devkit otomasyonu         |
-| `devtools/pen.dev/`      | `@volstudio/pen.dev`      | Pencil tasarımından rig export ve gönderim      |
-| `devtools/vol-showcase/` | `@volstudio/vol-showcase` | CORE UI vitrini ve görsel sözleşme              |
-| `games/vol-test/`        | `@volstudio/vol-test`     | Motor ve kabuğun uçtan uca test oyunu           |
+| Yol                      | Paket                     | Sorumluluk                                       |
+| ------------------------ | ------------------------- | ------------------------------------------------ |
+| `core/`                  | `@volstudio/core`         | Oyunlardan bağımsız motor ve DOM UI kataloğu     |
+| `network/`               | `@volstudio/network`      | Çok oyunculu istemci ve sürümlü girdi sözleşmesi |
+| `tauri-v2/`              | `@volstudio/tauri-v2`     | Paylaşılan native kabuk ve platform adaptörleri  |
+| `devtools/audio-synth/`  | `@volstudio/audio-synth`  | Deterministik ses ve müzik üretimi, yayın ve QA  |
+| `devtools/deck/`         | `@volstudio/deck`         | Steam Deck sondası ve devkit otomasyonu          |
+| `devtools/pen.dev/`      | `@volstudio/pen.dev`      | Pencil tasarımından rig export ve gönderim       |
+| `devtools/vol-showcase/` | `@volstudio/vol-showcase` | CORE UI vitrini ve görsel sözleşme               |
+| `games/vol-test/`        | `@volstudio/vol-test`     | Motor ve kabuğun uçtan uca test oyunu            |
 
 Aktif paketler `workspace-lifecycle.json` ile belirlenir. Yeni ürün
 [oyun kurma rehberi](docs/new-game.md) üzerinden `games/` altında oluşturulur.
@@ -64,22 +65,22 @@ entegrasyonu işlerini veya native cihaz kabulünü onaylamaz. E2E `high` içind
 
 ## Belgeler
 
-| Konu                            | Belge                                                                |
-| ------------------------------- | -------------------------------------------------------------------- |
-| Çalışma sözleşmesi              | [AGENTS.md](AGENTS.md)                                               |
-| Kapılar ve raporlar             | [docs/gates.md](docs/gates.md)                                       |
-| Motor                           | [core/README.md](core/README.md)                                     |
-| Native kabuk                    | [tauri-v2/README.md](tauri-v2/README.md)                             |
-| Linux                           | [docs/linux.md](docs/linux.md)                                       |
-| Steam Deck                      | [docs/steam-deck.md](docs/steam-deck.md)                             |
-| Android                         | [docs/android.md](docs/android.md)                                   |
-| Ses üretimi                     | [audio-synth/README.md](devtools/audio-synth/README.md)              |
-| Rig üretimi                     | [pen.dev/README.md](devtools/pen.dev/README.md)                      |
-| UI kataloğu                     | [vol-showcase/README.md](devtools/vol-showcase/README.md)            |
-| UI sözleşmesi ve iş listesi     | [CORE UI belge rehberi](docs/ui/README.md)                           |
-| Açık işler                      | [TODO.md](TODO.md)                                                   |
-| Teknik değerlendirme            | [Monorepo denetimi ve iyileştirme kararları](docs/monorepo-audit.md) |
-| Multiplayer backend araştırması | [24 oyunculu otomasyon/RTS/aksiyon kararı](docs/backend-research.md) |
+| Konu                            | Belge                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| Çalışma sözleşmesi              | [AGENTS.md](AGENTS.md)                                                    |
+| Kapılar ve raporlar             | [docs/gates.md](docs/gates.md)                                            |
+| Motor                           | [core/README.md](core/README.md)                                          |
+| Native kabuk                    | [tauri-v2/README.md](tauri-v2/README.md)                                  |
+| Linux                           | [docs/linux.md](docs/linux.md)                                            |
+| Steam Deck                      | [docs/steam-deck.md](docs/steam-deck.md)                                  |
+| Android                         | [docs/android.md](docs/android.md)                                        |
+| Ses üretimi                     | [audio-synth/README.md](devtools/audio-synth/README.md)                   |
+| Rig üretimi                     | [pen.dev/README.md](devtools/pen.dev/README.md)                           |
+| UI kataloğu                     | [vol-showcase/README.md](devtools/vol-showcase/README.md)                 |
+| UI sözleşmesi ve iş listesi     | [CORE UI belge rehberi](docs/ui/README.md)                                |
+| Açık işler                      | [TODO.md](TODO.md)                                                        |
+| Teknik değerlendirme            | [Monorepo denetimi ve iyileştirme kararları](docs/monorepo-audit.md)      |
+| Multiplayer backend araştırması | [Kalıcı 8–12 oyunculu otomasyon/TD araştırması](docs/backend-research.md) |
 
 ## Lisans
 

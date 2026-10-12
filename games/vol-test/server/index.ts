@@ -1,0 +1,36 @@
+import { createServer } from 'node:http';
+import { defineRoom, defineServer } from '@colyseus/core';
+import { WebSocketTransport } from '@colyseus/ws-transport';
+import { WorldRoom } from './WorldRoom';
+
+export function createWorldServer() {
+  const http = createServer();
+  const server = defineServer({
+    greet: false,
+    transport: new WebSocketTransport({ server: http, maxPayload: 1024 }),
+    rooms: { voltest: defineRoom(WorldRoom) },
+  });
+  return { http, server };
+}
+
+/** Geliştirmede loopback; uzak testte listen adresi açıkça verilir. */
+export async function startWorldServer(port = 2567, host = '127.0.0.1') {
+  const { http, server } = createWorldServer();
+  await server.listen(port, host);
+  const address = http.address();
+  if (!address || typeof address === 'string') throw new Error('Sunucu adresi çözülemedi.');
+  return { server, endpoint: `http://${host}:${address.port}` };
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === new URL(`file:///${process.argv[1].replaceAll('\\', '/')}`).href
+) {
+  const port = Number(process.env.VOL_NET_PORT ?? 2567);
+  const host = process.env.VOL_NET_HOST ?? '127.0.0.1';
+  if (!Number.isSafeInteger(port) || port < 0 || port > 65535) {
+    throw new Error('VOL_NET_PORT 0–65535 arasında olmalı.');
+  }
+  const started = await startWorldServer(port, host);
+  console.info(`[VOL.TEST] Network hazır: ${started.endpoint}`);
+}

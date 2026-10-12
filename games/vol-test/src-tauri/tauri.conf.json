@@ -29,7 +29,7 @@
         "style-src": "'unsafe-inline' 'self'",
         "img-src": "'self' blob: data:",
         "font-src": "'self'",
-        "connect-src": "'self' ipc: http://ipc.localhost",
+        "connect-src": "'self' ipc: http://ipc.localhost http://127.0.0.1:2567 ws://127.0.0.1:2567",
         "media-src": "'self'",
         "object-src": "'none'",
         "frame-src": "'none'",

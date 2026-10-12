@@ -59,10 +59,33 @@ preview ve e2e portu aynı olabilir; iki ayrı paket aynı portu bildiremez.
 
 ## Sınırlar
 
-- Oyunun çalışma zamanı (`<oyun>/src/`) yalnız `core`, `tauri-v2` ve dış bağımlılıkları
+- Oyunun çalışma zamanı (`<oyun>/src/`) yalnız `core`, `network`, `tauri-v2` ve dış bağımlılıkları
   import eder; devtool ve başka oyun import edemez. `<oyun>/scripts/` ve `<oyun>/tests/`
   build/doğrulama zamanıdır.
 - Aktif paket frozen pakete bağımlı olamaz.
+
+## Seçmeli multiplayer profili
+
+Yeni oyun çevrimdışı başlayabilir. Bağlantı gerekirse `@volstudio/network/protocol`
+ve `@volstudio/network/client` exports'ları oyunun istemcisinden kullanılır;
+oyunun sunucu odası, başsız simülasyonu, combat ve world schema'sı ürünün
+`games/<oyun>/server/` ve `games/<oyun>/src/sim/` alanlarında kalır. Ortak pakete başka oyunun
+harita, tank, ekonomi veya gameplay kuralları sokulmaz.
+
+VOL.TEST'teki örnekte `server:dev` Node otoritesini localhost'ta başlatır,
+`build:server` Vite oyun bundle'ından ayrı Node bundle üretir; ürün `build`
+ikisini de koşar. Gerçek ağ odası deneyi `games/vol-test/tests/server/WorldRoom.test.ts`
+içindedir; `joinOrCreate` dolu odadan sonra yeni oda oluşturabildiğinden oda
+başına limit ile toplam oyuncu limitini ayırır. İstemciden yalnız doğrulanmış
+girdi kabul edilir ve her sabit sim adımında en fazla bir niyet işlenir.
+
+Bağlantı açıldığında `DisposableScope` ve oda aboneliğinin `dispose()` yolu
+kapanışta çalışır. Paketli Tauri'de sunucu URL'si `connect-src` CSP listesine,
+güvenli yayın uçları WSS/HTTPS'e ve auth token politikasına uyarlanır.
+Oyuncu konumu, takım, hasar ve ekonomi yalnız sunucuda değiştirilir. Kalıcı
+dünya için her dünya bir writer, snapshot+journal, komut idempotency, yeniden
+bağlanma ve görünürlük/chunk bütçesi olmadan yayın kabul edilmez.
+[Araştırma ve maliyet](backend-research.md), [paket](../network/README.md).
 
 ## Kendiliğinden olanlar
 

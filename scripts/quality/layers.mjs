@@ -43,7 +43,7 @@ function inside(parent, child) {
 }
 
 function packagesAt(root) {
-  const dirs = ['core', 'tauri-v2'];
+  const dirs = ['core', 'tauri-v2', 'network'];
   for (const group of ['games', 'devtools']) {
     if (!existsSync(join(root, group))) continue;
     for (const entry of readdirSync(join(root, group), { withFileTypes: true })) {
@@ -65,7 +65,9 @@ function packagesAt(root) {
             ? 'tool'
             : dir === 'core'
               ? 'core'
-              : 'platform',
+              : dir === 'network'
+                ? 'network'
+                : 'platform',
       };
     });
 }
@@ -127,6 +129,13 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
     } else if (owner.kind === 'platform' && (target.kind === 'game' || target.kind === 'tool')) {
       problems.push(`${where}: platform katmanı bir oyun/devtool tüketiyor ("${target.name}").`);
     } else if (
+      owner.kind === 'network' &&
+      (target.kind === 'game' || target.kind === 'tool' || target.kind === 'platform')
+    ) {
+      problems.push(
+        `${where}: network paketi oyun, devtool veya native kabuğa bağımlı olamaz ("${target.name}").`,
+      );
+    } else if (
       owner.kind === 'game' &&
       (target.kind === 'game' || (runtime && target.kind === 'tool'))
     ) {
@@ -159,11 +168,31 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
         );
       }
     }
-    const roots = owner.kind === 'tool' ? ['src', 'server', 'shared', 'scripts'] : ['src'];
+    const roots =
+      owner.kind === 'tool'
+        ? ['src', 'server', 'shared', 'scripts']
+        : owner.kind === 'game'
+          ? ['src', 'server', 'shared']
+          : ['src'];
     for (const directory of roots)
       walk(join(owner.root, directory), (file) => {
         for (const specifier of sourceImports(readFileSync(file, 'utf8'), file)) {
           const where = posixPath(relative(root, file));
+          if (
+            owner.kind === 'game' &&
+            directory === 'src' &&
+            specifier.startsWith('.') &&
+            inside(join(owner.root, 'server'), resolve(dirname(file), specifier))
+          ) {
+            problems.push(`${where}: oyun istemcisi Node sunucu kaynağını içe aktaramaz.`);
+          }
+          if (
+            owner.kind === 'game' &&
+            directory === 'server' &&
+            specifier === '@volstudio/network/client'
+          ) {
+            problems.push(`${where}: Node sunucusu browser network istemcisini içe aktaramaz.`);
+          }
           const target = targetOf(specifier, file);
           check(owner, target, where, directory !== 'scripts');
           if (target && target !== owner) {

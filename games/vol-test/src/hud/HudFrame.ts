@@ -22,6 +22,11 @@ export interface HudFrame {
   readonly boost: number;
   readonly boostCapacity: number;
   readonly fireProgress: number;
+  readonly health: number;
+  readonly maxHealth: number;
+  readonly alive: boolean;
+  readonly respawnRemainingMs: number;
+  readonly protectionRemainingMs: number;
   readonly climate?: ClimateFrame;
   /**
    * Haritada gösterilecek tüm araçlar. Tembel: yalnız harita güncellenirken (10 Hz) çağrılır, her karede

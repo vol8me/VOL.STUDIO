@@ -1,14 +1,16 @@
-# Colyseus: VOL.TEST ve açık dünya otomasyon/TD backend araştırması
+# Çok oyunculu backend kararı: VOL.TEST, Colyseus, ArcNet ve alternatifler
 
-Araştırma tarihi: **12 Ekim 2026**. İncelenen repo tabanı: `69aac367`.
+Araştırma tarihi: **12 Ekim 2026**. İlk belge tabanı `69aac367`;
+ikinci incelemede `22577f4f` ve çalışma ağacındaki kalıcı denemeler incelendi.
 İncelenen oyun modelleri: Mindustry benzeri co-op/PvP otomasyon, bullet hell/mini
-MOBA ve açık dünya RTS. Deney zarfı oturum veya dünya başına **24 oyuncudur**;
-ürünün kesin oyuncu limiti değildir. Onaylanan ürün yönü aşağıdadır.
+MOBA ve açık dünya RTS. İlk inceleme 24 bağlantı sondasıdır; yeni ürün
+hedefi **kalıcı açık dünya başına 8–12 oyuncu**dur. İki testin yükü aynı değildir.
 Toplam eşzamanlı oyuncu sayısı, dünya büyüklüğü ve barındırma bütçesi henüz belirlenmedi.
 
-## Onaylanan yön ve açık kararlar
+## Güncel öneri ve yeniden açılan kararlar
 
-Colyseus seçimi kullanıcı tarafından onaylandı. İlk gerçek tüketici **VOL.TEST**;
+Önceki oturumda Colyseus yönü onaylanmıştı; **12 Ekim'deki yeni istekle
+framework ve işletim kararı yeniden değerlendirmeye açıldı.** İlk gerçek tüketici **VOL.TEST**;
 sonraki ürün hedefi devasa açık dünyada Mindustry tarzı **otomasyon + kule savunması
 (TD), PvP ve co-op** oyunudur. Çok oyunculu dağıtım yalnız **resmî sunucuyu** destekleyecek;
 oyuncunun sunucu açması veya evden barındırma dağıtım hedefi değildir.
@@ -29,15 +31,17 @@ dünya boyutu/aktif varlık bütçesi, ilk barındırma sağlayıcısı ve ranke
 açık kararlardır. PostgreSQL ve ortak network paketi aşağıdaki mimari önerilerdir;
 Colyseus onayı bu alt tercihlerin uygulanmış veya ayrıca onaylanmış olduğu anlamına gelmez.
 
-**İlk tercih: Colyseus 0.18 üzerinde sunucu otoriteli TypeScript simülasyonu;
+**Koşullu ilk tercih: Colyseus 0.18 üzerinde sunucu otoriteli TypeScript simülasyonu;
 kalıcı dünya verisi için sunucuya ait PostgreSQL ve gerektiğinde snapshot dosya depolaması.**
 İlk dikey dilimde tek sunucu süreci ve tek dünya yeterlidir. Çok sayıda dünya
 çalıştırma ihtiyacı ölçülünce süreç sayısı ve eşleştirme altyapısı büyütülür.
 Yerel deneyle doğrulanan repo uyumu, onaylanan framework seçimini destekler;
-bu bir üretim kapasitesi kabulü değildir. **Colyseus kararı onaylandı;
-kalıcı entegrasyon ve üretim kapasitesi kabulü henüz yapılmadı.**
-Gerçek Node simülasyonu ve Phaser 4 deneyi bu kararı destekliyor; WebKit'te
-bulunan SDK constructor sorunu temiz platform kabulünün açık koşuludur.
+bu bir üretim kapasitesi kabulü değildir. **Seçim yeniden açılmıştır;
+ilk kalıcı prototip Colyseus ile doğrulansa da üretim kapasitesi kabulü henüz yapılmadı.**
+Gerçek Node simülasyonu ve Phaser 4 deneyi bu kararı destekliyor. Önceki
+araştırmada WebKit SDK constructor sorunu vardı; yeni `?net` oyun istemcisinde
+Chromium ve WebKit üzerinden iki pencerenin gerçek Colyseus odasına bağlanma,
+hareket ve ayrılma testleri geçti. Linux'un paketli WebKitGTK kabulü ayrıdır.
 “Bütün oyunlar ve bütün cihazlar için tam üretim uyumu” sonucu çıkarmıyorum.
 
 **Talo'yu ana oynanış sunucusu olarak seçmiyorum.** Gerçek WebSocket/kanal
@@ -52,6 +56,176 @@ fabrika makineleri, taşıma ağları, yapay zekâ, birimler, mermiler ve görü
 durum güncellemelerinden gelir. Backend seçimi bu algoritmaların maliyetini
 kendiliğinden çözmez. Özellikle dev bir fabrikayı her tick bütün oyunculara
 gönderen bir tasarım, oyuncu sayısı düşükken de pahalı olabilir.
+
+## 12 Ekim 2026 ikinci tur: kaynak, uygulama ve maliyet kararı
+
+**Sorunun asıl şekli:** 12 oyuncuyu bir WebSocket odasına almak teknik açıdan
+nispeten kolay; milyonlarca durağan karo, aktif binlerce üretim makinesi,
+AI, mermi ve PvP görünürlüğüyle **kesintisiz tek dünya simülasyonu** zordur.
+Toplam CCU yerine dünya başına aktif nesne sayısı, her server tick'inde
+değişen veri hacmi, istemciye gönderilen ilgilendiği bölge ve kaydın
+dayanıklılığı ana maliyet değişkenleridir.
+
+İlk sonuçlara bakıp özel transport yazmıyorum: **Colyseus mevcut
+`Simulation`'a adapte oluyor, TypeScript/Node çalışma zamanını koruyor, MIT
+lisansı kendi sunucumuzda ücretsiz ve ilk 12 gerçek istemci testi geçti.**
+Ancak bu, kalıcı dünya için kesin çerçeve kararı değildir. Dünya modeli
+Colyseus'a değil oyun/CORE sınırına aittir; framework değiştirebilmek için
+schema/protokol ve depo adapter'ları dar tutulur.
+
+### Anuken kendi ArcNet'ini nasıl kullanıyor?
+
+Mindustry, Java tabanlı Anuken **Arc** altyapısındaki
+`extensions:arcnet` modülünü ve varsayılan `ArcNetProvider`'ı kullanır.
+Bu, TypeScript/Phaser için hazır bir TypeScript kütüphanesi değildir.
+Başlangıçta sıkıştırılmış dünya baseline'ı gönderir; daha sonra blok/entity
+snapshot'ları, konum ve görünürlük bilgilerini güvenilir/güvenilmez ağ
+kanallarına ayırır. Steam sürümü ayrı Steam Networking Sockets yolu da kullanır.
+Dolayısıyla Mindustry'nin yaptığı şey, tek bir ağ kütüphanesi yazmak değil,
+**oyunun veri modeli için özelleştirilmiş world streaming ve sync politikasıdır**.
+Öğrenilecek taraf budur: chunk sürümü, blok değişiklikleri, görünürlük,
+simülasyon zamanı ve az miktarda girdi niyeti. Üstelik NetServer'ın güncel
+`clientSnapshot` yolunda `admins.isStrict() && headless` koşuluna göre oyuncu
+konumu doğrulanıyor; katı denetim kapalıyken istemci pozisyonu kabul
+edilebiliyor. Mindustry'yi mutlak otorite/anti-cheat referansı saymak hatalı.
+[ArcNet bağımlılığı](https://github.com/Anuken/Mindustry/blob/master/build.gradle),
+[Mindustry Platform](https://github.com/Anuken/Mindustry/blob/master/core/src/mindustry/core/Platform.java),
+[NetServer](https://github.com/Anuken/Mindustry/blob/master/core/src/mindustry/core/NetServer.java),
+[Steam ağı](https://github.com/Anuken/Mindustry/blob/master/desktop/src/mindustry/desktop/steam/SNet.java).
+
+### Alternatifler: yeni gereksinime göre
+
+| Çözüm                                    | Buradaki avantaj                                                                               | Maliyet ve tasarım sakıncası                                                                                            | Şu anki karar                                                |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Colyseus 0.18 OSS**                    | Saf TS/Node `Simulation`, odalar, schema delta, bağlantı, MTI testleri, kendin barındırma      | Büyük chunk'ı kendisi optimize etmez, 1 room tek JS olay döngüsü, SDK WebKit constructor sorunu                         | **İlk dikey dilim**; son karar yük testine bağlı             |
+| **Kendi ws/uWebSockets protokolümüz**    | Paket formatını/tick/interest'i bütünüyle yönetiriz, ek hosting lisansı yok                    | Reconnect, auth, prediction, snapshot diff, hile sınırı, codec/migration, gözlem ve bakımın tamamı bize ait             | Colyseus transport/codec ölçümü dar boğaz kanıtlarsa         |
+| **Colyseus uWebSockets transport**       | Aynı room/sim üzerinde daha ucuz taşıma adayı, az geçiş maliyeti                               | Codec ve sim CPU sorunlarını çözmez; native TLS/perf testi gerekir                                                      | Özel ağ yığını yazmadan önce A/B testi                       |
+| **SpacetimeDB 2 TypeScript**             | Kalıcılığı ve tablo aboneliğini framework'ün merkezine alır, artık TS server reducer destekler | Reducer/DB-first world mimarisi için simülasyon refaktörü, BSL 1.1 lisans incelemesi ve TeV bazlı veri trafiği faturası | Küçük fabrika reducer deneyiyle açık rakip                   |
+| **Nakama OSS**                           | Auth, sosyal, sıralama, oturumlar ve server framework                                          | TS runtime Goja/ES5 sandbox; mevcut Node/ES2022 `Simulation`ı doğrudan çalıştıramaz; ek Node gameplay sunucusu gerekir  | İleride hesap/sosyal katman adayı                            |
+| **PartyServer/Cloudflare DO**            | Coğrafi yakınlık, stateful actor modeli, entegre edge operasyonu                               | Isolate sınırları, sürekli 60Hz dünya ve büyük RAM yükü, hibernation etkileşimi; hosted PartyKit Ekim 2026 kapanıyor    | Küçük asenkron oda için ayrı deney, bu dünya için önce değil |
+| **Godot dedicated server/Photon Fusion** | Engine'de ayrı multiplayer ekosistemleri                                                       | Phaser/CORE TS simülasyonu yeniden yazılır; Fusion Unity odaklıdır                                                      | Mevcut repo için ekonomik değil                              |
+
+[Colyseus optimizasyon](https://docs.colyseus.io/state/optimization),
+[Colyseus uWS](https://docs.colyseus.io/server/transport/uwebsockets),
+[Colyseus ölçekleme](https://docs.colyseus.io/scalability),
+[SpacetimeDB TS reducer](https://spacetimedb.com/docs/quickstarts/typescript/),
+[SpacetimeDB fiyat](https://spacetimedb.com/pricing),
+[Nakama TS çalışma zamanı](https://heroiclabs.com/docs/nakama/server-framework/typescript-runtime/),
+[PartyKit geçiş duyurusu](https://blog.partykit.io/posts/hosted-platform-shutdown),
+[Cloudflare DO limitleri](https://developers.cloudflare.com/durable-objects/platform/limits/).
+
+### Gerçek yerel prototip: neler PASS?
+
+`network/` aktif workspace paketi ve `@volstudio/network` exports'u;
+`games/vol-test/server/` Colyseus 0.18 Node odası `Simulation`ın aynı
+saf oyun kurallarını kullanır. Sunucu 60Hz tick, 20Hz positional schema
+patch, 12 kişi/oda tavanı, 1KiB WebSocket payload tavanı ve en güncel
+geçerli girdiyi tick başına bir kez uygulama mekanizmasına sahiptir.
+12 gerçek Colyseus SDK bağlantısı tek odada farklı araç ID'leriyle PASS, 13. `joinById` dolu odaya giriş RED, farklı protocol sürümü RED;
+64 girdilik burst tek simülasyon adımı başına en çok tek niyet uyguluyor.
+Oyun içindeki can, ölüm, yenilenme ve koruma mekanizmasının sonucu sunucu
+otoritesinin `Simulation`ından üretilir; client bu alanları belirleyemez.
+`joinOrCreate` ise dolu odadan sonra _yeni bir oda_ kurabilir; tek dünya
+limitiyle bütün sunucu CCU limitinin karıştırılmaması gerekir.
+
+Oyunun opt-in `?net=http://127.0.0.1:2567` sahnesi, mevcut Phaser
+`BootScene` ve CORE HUD bileşenleriyle gerçek sunucu state'ini çizer.
+Yerel `NetworkSession`, 60Hz girdiyi gönderir, 20Hz schema güncellemelerini
+okur, geç gelen join ve çıkışta aboneliği temizler; üç saniye state akışı
+kesilirse bağlantıyı hata olarak gösterir. Chromium ve WebKit E2E'de iki
+ayrı pencerenin aynı odada hareket/ayrılma davranışı ve bozuk adresin
+görünür hata durumu ölçüldü; tahmin/düzeltme henüz eklenmedi.
+
+Gerçek localhost WS ve aynı Node sürecindeki istemcilerle yeniden üretilebilir
+`probe:network` ölçümü: **12 oyuncu, 10 saniye, 607 server tick,
+5.544 gönderilen girdi, 2.077 client state callback, patch-aralığı p95
+65,6ms; yaklaşık %17,3 tek çekirdek CPU eşdeğeri, 68,2→76,9MiB RSS.**
+İkinci koşu **8 oyuncu, 5 saniye, 305 tick, 1.992 girdi ve p95 65,9ms**.
+CPU/RSS değerleri sunucuyu **ve test istemcilerini** içerir; TSX ile yapılan
+ikinci koşunun başlangıç belleği farklıdır. Bunlar uzak ağ RTT'si, gerçek
+fabrika yükü veya uzun süreli kararlılık ölçümü değildir.
+
+Bu **üretim kabulü değildir**: gerçek hesap/Steam auth, reconnect koltuğu,
+authz/team/ownership, canlı native client correction, kalıcı kaydet/restore,
+multi-host world ownership, ilgi alanı/chunk stream, replay anti-cheat,
+Windows/Linux/Android paketli native ağ kabulü henüz tamamlanmadı. İlk prototipin
+oda belleği süreç kapanınca kaybolur. Modelde fabrika/konveyör/TD yoktur.
+
+**Windows paketli kabulü (12 Ekim):** Yeni release Tauri `VOL.TEST.exe`,
+WebView2 (`tauri.localhost`) içinde localhost Colyseus sunucusunun HTTP
+matchmaking ve WS akışına bağlandı. İkinci gerçek SDK istemcisi aynı odadayken
+iki tank ve HP barları çizildi; diğer oyuncunun hareketi görüldü, ayrılma
+sonrası oda üyeliği temizlendi. DOM'da 2 oyuncu, başarılı bağlanma mesajı;
+CDP konsol/sayfa hatası **0**. Bu gerçek paketli Windows smoke PASS'tir;
+Android ve Linux paketli testler, bağlantı kopması/prediction ve dış WAN WSS
+henüz NOT-RUN'dır.
+
+Yeni Phaser ağ sahnesinin doğrudan UI/ömür testleriyle VOL.TEST oyun kapsamı
+**404/404 unit PASS**; source coverage satır **%98,96**, statement **%98,13**,
+branch **%93,13**, function **%96,85**. Colyseus Chromium ve WebKit iki gerçek
+istemci E2E'si motor başına 2 testten **4/4 PASS**. Bu oyun birim/E2E
+kanıtı, 24–72 saat ağır dünya yükü veya dış sunucu bağlantısı ölçümü değildir.
+
+### Kapasite ve aylık maliyet: varsayımlar açık
+
+Hesap: 730 saat/ay, aktif oyuncu başına **her 50ms 1 kB wire patch**,
+bağlantılar %100 dolu, state güncellemeleri her istemciye gönderilir.
+TLS/headers, geri giriş, sıkıştırma, ilgi alanı ve backend CPU hariçtir.
+Bu bir ölçülmüş trafik kaydı değildir.
+
+| Kapasite             | Tam dolu 1kB/oyuncu/20Hz | %25 efektif doluluk | 4kB/oyuncu/20Hz tam dolu |
+| -------------------- | -----------------------: | ------------------: | -----------------------: |
+| 1 dünya × 8 oyuncu   |                420 GB/ay |           105 GB/ay |               1,68 TB/ay |
+| 1 dünya × 12 oyuncu  |                631 GB/ay |           158 GB/ay |               2,52 TB/ay |
+| 20 dünya × 8 oyuncu  |               8,41 TB/ay |          2,10 TB/ay |              33,64 TB/ay |
+| 20 dünya × 12 oyuncu |              12,61 TB/ay |          3,15 TB/ay |              50,46 TB/ay |
+| 20 dünya × 14 oyuncu |              14,72 TB/ay |          3,68 TB/ay |              58,87 TB/ay |
+
+**CPU ve RAM asıl belirsizlik:** 20 oda × 30Hz × 5ms ortalama sim+encode
+yükü saniyede 3 çekirdek-saniyedir; %50 hedef kullanımda ~6 vCPU gerekir.
+1ms ise ~1,2; 15ms ise ~18 vCPU. 20 dünya × 256MiB ≈5GiB RAM, ancak
+768MiB ise 15GiB + Node/DB/OS/GC. Bu noktalar ölçüm değil duyarlılık
+hesabıdır. Her 60Hz tick'in 16,7ms bütçesi vardır ve 20Hz patch kısılması
+sim yükünü kendiliğinden azaltmaz.
+
+**12 Ekim açık fiyat karşılaştırması:** Colyseus Cloud Frankfurt High Frequency
+1 paylaşımlı vCPU/1GB **$18/ay**, 2 paylaşımlı vCPU/4GB **$72/ay**;
+resmî API listesi ve vitrindeki başlangıç $15/ay aynı değil.
+Self-host Hetzner Almanya CX23 2vCPU/4GB **€5,49/ay**, CPX22 2vCPU/4GB
+**€19,49/ay**; IPv4, %20 backup, vergi ve operasyon dahil değil.
+Tek dünya pilotunda örnek Hetzner CX23 + IPv4 + backup yaklaşık **€7,09/ay**
+(DB/WSS/reverse proxy/monitoring hariç). 20 dünya orta varsayımsal yükte
+Cloud 3×HF2v4GB ≈**$216/ay**, Hetzner 2×CPX32 ≈**€86/ay** + DB;
+ağır yükte Cloud 9×HF2v4GB ≈**$648/ay**, Hetzner 3×CPX42
+≈**€252/ay** + DB. Bu SKU'ların CPU performansı eşdeğer değildir, fiyat
+ürün kapasitesini kanıtlamaz. Colyseus Cloud API 33 lokasyon döndürdü,
+Türkiye lokasyonu yok; Frankfurt/Warsaw/Tel Aviv RTT gerçek ISP'lerde ölçülmeli.
+[Cloud fiyat API](https://cloud-prod.colyseus.io/api/prices),
+[Hetzner Haziran 2026 fiyat güncellemesi](https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/),
+[Hetzner Cloud](https://www.hetzner.com/cloud/general-purpose/),
+[DO Droplet ve trafik](https://www.digitalocean.com/pricing/droplets),
+[SpacetimeDB tarifesi](https://spacetimedb.com/pricing).
+
+### 7/24 dünya neden başka bir sözleşme gerektiriyor?
+
+Arka planda hiç oyuncu yokken 60Hz çalışan 20 world ile hiç oyuncu yokken
+uyuyup birikmiş üretimi analytically catch-up eden dünya aynı CPU faturası
+değildir. PvP/TD tehditleri 7/24 ilerleyecekse tam sim gereken nesneleri
+tanımlamak gerekir. Üretim çözümü: dünya başına **tek writer ve lease/fencing**;
+tekil komut ID/idempotent ledger; checkpoint'te entity ID, RNG, tick,
+cooldown, fabrika ağı, inventory ve chunk revisions; journal işlemine
+kalıcı fsync/transaction olmadan ACK gönderilmez. PostgreSQL aday,
+snapshot/yedek nesne deposu ayrıdır. Şimdiki RAM odası bunları sunmaz.
+
+Ölçüm kapısı: 1/5/20 dünya × 8/12/14 gerçek client, farklı 30/60Hz
+sim ve 10/20Hz patch, 0,25/1/4kB payload ve 0/25/100% world aktivitesi.
+Tick/encode/GC p50/p95/p99, event-loop lag, RSS, CPU, outbound byte,
+oyuncu net RTT/jitter ölçülür; **24–72 saat soak**, oyuncu kopması,
+%1–3 kayıp/50–200ms gecikme, process kill, DB arızası, migrate/restore,
+Windows WebView2/Android/Linux WebKitGTK paketli denemeler ayrıca kabul alır.
+İlk 30Hz p99 yük hedefi 33,3ms ve %95 için 20ms adaydır; ürün ölçümü sonrası
+`quality.json` kapısına geçirilir. Bu veri gelmeden hosting satın alma
+veya yeniden `arcNet` yazma kararı verilmez.
 
 ## Colyseus nedir; sunucu satın almak gerekir mi?
 
@@ -500,18 +674,17 @@ yeniden bağlanma ve ortak sunucu işletim mekanizmalarını sağlar. Gerçek
 oyun kuralları ve world schema'sı ürün paketinde kalır.
 
 ```text
-packages/network/
+network/
   src/client/       # SDK bağlantısı ve lifecycle; browser'a uygun
   src/protocol/     # sürüm, input/emir zarfı; gizli bilgi taşımaz
   src/server/       # ortak Node lifecycle/auth/telemetry mekanizmaları
 games/<oyun>/
-  src/client/       # Phaser/CORE sunumu ve ürün bağlantı tüketicisi
-  src/shared/       # saf simülasyon, komutlar ve sürümlü domain codec
-  src/server/       # ürün room'u, auth politikası, world repository
+  src/              # Phaser/CORE sunumu ve saf oyun simülasyonu
+  server/           # ürün room'u, auth politikası, world repository
 ```
 
-Bu ağaç **henüz uygulanmadı**; bu tur kalıcı entegrasyon yerine karar için
-kanıt üretti. Tek oyunla başlayıp yalnız browser bağlantısını paylaşmak
+Temel network protokol/istemci paketi ve ilk ürün odası **uygulandı**;
+tam server lifecycle/auth/telemetry ve kalıcı dünya henüz tamamlanmadı. Tek oyunla başlayıp yalnız browser bağlantısını paylaşmak
 istenirse daha küçük seçenek önerilen `core/src/<network>` alanı ve opt-in `./network`
 export'udur; Colyseus room, DB ve oyun auth politikası CORE'a taşınmaz.
 Çok oyun için server ortaklığı da hedeflendiğinden ayrı network paketi

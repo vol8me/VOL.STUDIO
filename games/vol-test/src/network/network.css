@@ -1,0 +1,23 @@
+.vt-network-hud {
+  position: absolute;
+  z-index: 12;
+  top: calc(var(--vol-safe-top) + 16px);
+  left: calc(var(--vol-safe-left) + 16px);
+  display: flex;
+  width: min(360px, calc(100% - 32px));
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+}
+
+.vt-network-hud .vol-text {
+  margin: 0;
+}
+
+.vt-network-hud [data-connection='error'] {
+  color: var(--vol-ui-danger-solid);
+}

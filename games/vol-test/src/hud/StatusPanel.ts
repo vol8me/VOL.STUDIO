@@ -12,6 +12,8 @@ export class StatusPanel {
   private readonly title: Text;
   private readonly boost: Bar;
   private readonly fire: Bar;
+  private readonly health: Bar;
+  private readonly lifecycle: Text;
   private readonly telemetry: Text;
   private lastTelemetry = '';
 
@@ -38,6 +40,20 @@ export class StatusPanel {
       ariaLabel: i18next.t('voltest:hud.fireReload'),
       className: 'vt-hud__fire-bar',
     });
+    this.health = new Bar({
+      max: 100,
+      value: 100,
+      orientation: 'vertical',
+      variant: 'health',
+      lowThreshold: 0.25,
+      animateMs: 0,
+      ariaLabel: i18next.t('voltest:hud.health'),
+      className: 'vt-hud__health-bar',
+    });
+    this.lifecycle = new Text('', { variant: 'muted', tag: 'p' });
+    this.lifecycle.element.classList.add('vt-hud__lifecycle');
+    this.lifecycle.element.dataset.testid = 'lifecycle';
+    this.lifecycle.element.setAttribute('role', 'status');
     this.telemetry = new Text('', { variant: 'muted', tag: 'p' });
     this.telemetry.element.classList.add('vt-hud__telemetry');
     this.telemetry.element.dataset.testid = 'telemetry';
@@ -45,6 +61,8 @@ export class StatusPanel {
       this.title.element,
       this.boost.element,
       this.fire.element,
+      this.health.element,
+      this.lifecycle.element,
       this.telemetry.element,
     ];
   }
@@ -52,6 +70,19 @@ export class StatusPanel {
   update(frame: HudFrame): void {
     this.boost.setValue((100 * frame.boost) / frame.boostCapacity);
     this.fire.setValue(frame.fireProgress * 100);
+    this.health.setMax(frame.maxHealth);
+    this.health.setValue(frame.health);
+    this.lifecycle.setContent(
+      !frame.alive
+        ? i18next.t('voltest:hud.respawnIn', {
+            seconds: Math.ceil(frame.respawnRemainingMs / 1000),
+          })
+        : frame.protectionRemainingMs > 0
+          ? i18next.t('voltest:hud.protection', {
+              seconds: Math.ceil(frame.protectionRemainingMs / 1000),
+            })
+          : '',
+    );
     const text = i18next.t('voltest:hud.telemetry', {
       speed: formatSpeed(frame.speed, this.metre),
       heading: formatHeading(frame.hull),
@@ -72,6 +103,7 @@ export class StatusPanel {
     this.title.setContent(i18next.t('voltest:app.title'));
     this.boost.element.setAttribute('aria-label', i18next.t('voltest:hud.boost'));
     this.fire.element.setAttribute('aria-label', i18next.t('voltest:hud.fireReload'));
+    this.health.element.setAttribute('aria-label', i18next.t('voltest:hud.health'));
     this.lastTelemetry = '';
   }
 
@@ -79,6 +111,8 @@ export class StatusPanel {
     this.title.destroy();
     this.boost.destroy();
     this.fire.destroy();
+    this.health.destroy();
+    this.lifecycle.destroy();
     this.telemetry.destroy();
   }
 }

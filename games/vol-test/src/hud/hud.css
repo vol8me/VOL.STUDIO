@@ -47,6 +47,28 @@
   left: calc(var(--vol-safe-left) + 48px);
 }
 
+.vt-hud__health-bar {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--vol-safe-left) + 72px);
+  width: 14px;
+  height: min(34vh, 300px);
+  transform: translateY(-50%);
+}
+
+.vt-hud__lifecycle {
+  position: absolute;
+  top: calc(var(--vol-safe-top) + 54px);
+  left: calc(var(--vol-safe-left) + 20px);
+  margin: 0;
+  padding: 4px 8px;
+  background: var(--vol-ui-overlay-panel);
+}
+
+.vt-hud__lifecycle:empty {
+  display: none;
+}
+
 .vt-hud__map {
   position: absolute;
   top: calc(var(--vol-safe-top) + 10px);
@@ -157,7 +179,8 @@
 }
 
 .vt-hud[data-mode='touch'] .vt-hud__boost-bar,
-.vt-hud[data-mode='touch'] .vt-hud__fire-bar {
+.vt-hud[data-mode='touch'] .vt-hud__fire-bar,
+.vt-hud[data-mode='touch'] .vt-hud__health-bar {
   top: calc(var(--vol-safe-top) + 104px);
   height: min(24vh, 160px);
   transform: none;
@@ -176,14 +199,15 @@
 
 @media (height <= 520px) {
   .vt-hud[data-mode='touch'] .vt-hud__boost-bar,
-  .vt-hud[data-mode='touch'] .vt-hud__fire-bar {
+  .vt-hud[data-mode='touch'] .vt-hud__fire-bar,
+  .vt-hud[data-mode='touch'] .vt-hud__health-bar {
     height: min(24vh, calc(100vh - 310px - var(--vol-safe-top) - var(--vol-safe-bottom)));
   }
 }
 
 .vt-hud__climate {
   position: absolute;
-  left: calc(var(--vol-safe-left) + 72px);
+  left: calc(var(--vol-safe-left) + 96px);
   top: calc(var(--vol-safe-top) + 104px);
   margin: 0;
   padding: 4px 8px;

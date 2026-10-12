@@ -100,6 +100,26 @@ function pointer(type: string): PointerEvent {
 }
 
 describe('Hud', () => {
+  it('can çubuğu, ölüm sayacı ve koruma durumu HUD karesini izler ve dil değiştirir', async () => {
+    const { hud, parent, find } = mount();
+    const health = parent.querySelector<HTMLElement>('.vt-hud__health-bar')!;
+    expect(health.getAttribute('aria-label')).toBe('Araç canı');
+    hud.update(hudFrame({ health: 25 }), 100);
+    expect(health.getAttribute('aria-valuenow')).toBe('25');
+    hud.update(hudFrame({ health: 0, alive: false, respawnRemainingMs: 2050 }), 200);
+    expect(health.getAttribute('aria-valuenow')).toBe('0');
+    expect(find('lifecycle').textContent).toContain('3 sn sonra');
+    hud.update(hudFrame({ protectionRemainingMs: 980 }), 300);
+    expect(find('lifecycle').textContent).toContain('koruması');
+    await i18next.changeLanguage('en');
+    expect(health.getAttribute('aria-label')).toBe('Vehicle health');
+    hud.update(hudFrame({ health: 0, alive: false, respawnRemainingMs: 2050 }), 400);
+    expect(find('lifecycle').textContent).toContain('respawn in 3 s');
+    await i18next.changeLanguage('tr');
+    hud.destroy();
+    expect(parent.querySelector('.vt-hud__health-bar')).toBeNull();
+  });
+
   it('harita adı ve araç özeti HUD dil geçişinde birlikte yenilenir', async () => {
     await i18next.changeLanguage('tr');
     const { hud, parent } = mount();

@@ -33,7 +33,7 @@ const read = (file) => readFileSync(join(ROOT, file), 'utf8');
 
 function workspaceScripts() {
   const scripts = new Map();
-  const dirs = ['core', 'tauri-v2'];
+  const dirs = ['core', 'tauri-v2', 'network'];
   for (const group of ['devtools', 'games']) {
     if (!existsSync(join(ROOT, group))) continue;
     for (const entry of readdirSync(join(ROOT, group), { withFileTypes: true })) {

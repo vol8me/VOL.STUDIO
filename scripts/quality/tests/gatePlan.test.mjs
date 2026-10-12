@@ -135,10 +135,11 @@ test('kapsam geçersiz kılmaları aktif paketlere işaret eder ve gerekçelidir
   }
 });
 
-test('kapanış: vol-test ve vitrin CORE ile tauri-v2’yi görür, birbirini görmez', () => {
+test('kapanış: vol-test CORE, network ve kabuğu; vitrin CORE ve kabuğu görür', () => {
   const graph = readWorkspaceGraph(root);
   assert.deepEqual(closureOf(graph, '@volstudio/vol-test'), [
     '@volstudio/core',
+    '@volstudio/network',
     '@volstudio/tauri-v2',
     '@volstudio/vol-test',
   ]);

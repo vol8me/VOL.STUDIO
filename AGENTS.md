@@ -10,6 +10,7 @@ Alt dizindeki AGENTS.md kendi alanını daraltabilir, kök sınırlarını gevş
 | Yol                      | Paket                     | Rol                                              |
 | ------------------------ | ------------------------- | ------------------------------------------------ |
 | `core/`                  | `@volstudio/core`         | Oyundan bağımsız mekanizmalar ve UI kataloğu     |
+| `network/`               | `@volstudio/network`      | Paylaşılan multiplayer istemcisi ve protokolü    |
 | `tauri-v2/`              | `@volstudio/tauri-v2`     | Paylaşılan native kabuk ve platform adaptörleri  |
 | `devtools/audio-synth/`  | `@volstudio/audio-synth`  | Deterministik ses üretimi ve teknik yayın kabulü |
 | `devtools/deck/`         | `@volstudio/deck`         | Deck ölçüm sondası ve devkit otomasyonu          |
@@ -23,8 +24,9 @@ Kök girdilerin gerekçesi `scripts/quality/rootEntries.mjs` içindedir.
 
 ## Mimari sınırlar
 
-- Bağımlılık tek yönlüdür: CORE oyun/devtool import etmez; oyun runtime'ı
-  yalnız CORE, kabuk ve dış bağımlılıkları kullanır. Devtool yalnız devDependency'dir.
+- Bağımlılık tek yönlüdür: CORE oyun/devtool/network import etmez; oyun runtime'ı
+  yalnız CORE, network, kabuk ve dış bağımlılıkları kullanır. Network oyun, devtool
+  veya native kabuğu import etmez. Devtool yalnız devDependency'dir.
   Paketler birbirine yalnız exports haritasından girer.
 - CORE mekanizma, sunum ve opt-in tarif katmanlarını ayırır; sunum oyun kuralı
   veya kendi durum defterini taşımaz. [CORE tasarımı](core/DESIGN.md),

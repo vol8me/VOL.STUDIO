@@ -1,0 +1,29 @@
+{
+  "name": "@volstudio/network",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./protocol": {
+      "import": "./src/protocol/index.ts",
+      "types": "./src/protocol/index.ts"
+    },
+    "./client": {
+      "import": "./src/client/index.ts",
+      "types": "./src/client/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@colyseus/sdk": "0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "^6.0.3",
+    "vitest": "4.1.11"
+  }
+}
