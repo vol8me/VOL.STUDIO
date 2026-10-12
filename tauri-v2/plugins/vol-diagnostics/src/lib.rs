@@ -30,6 +30,7 @@ use tauri::{
 /// Kayıt biçimi sürümü; ölçüm kayıtları bunu taşır ki okuyucu eski/yeni
 /// şemayı ayırt edebilsin.
 pub const RECORD_VERSION: u32 = 1;
+const MAX_REPORT_BYTES: usize = 64 * 1024;
 
 /// Kimlik, yol ve oturum belirteci taşımayan tam değişken adları.
 const ENV_ALLOWLIST: &[&str] = &[
@@ -94,21 +95,91 @@ fn clock(id: libc::clockid_t) -> f64 {
 /// yazılır ki uyku sıçraması ve JS saatleriyle kıyas yapılabilsin.
 #[cfg(target_os = "linux")]
 fn native(dir: &std::path::Path, kind: &str, extra: serde_json::Value) {
+    let value = native_record(
+        kind,
+        (
+            clock(libc::CLOCK_MONOTONIC),
+            clock(libc::CLOCK_BOOTTIME),
+            clock(libc::CLOCK_REALTIME),
+        ),
+        extra,
+    );
+    if let Err(error) = append(dir, &value.to_string()) {
+        eprintln!("Native ölçüm kaydı teslim edilemedi: {:?}", error.kind());
+    }
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn native_record(
+    kind: &str,
+    clocks: (f64, f64, f64),
+    extra: serde_json::Value,
+) -> serde_json::Value {
     let mut value = serde_json::json!({
         "v": RECORD_VERSION,
         "src": "rust",
         "type": kind,
-        "mono": clock(libc::CLOCK_MONOTONIC),
-        "boot": clock(libc::CLOCK_BOOTTIME),
-        "wall": clock(libc::CLOCK_REALTIME),
+        "mono": clocks.0,
+        "boot": clocks.1,
+        "wall": clocks.2,
     });
+    let fields: &[&str] = match kind {
+        "signal" => &["requestId", "reason", "signal"],
+        "exit-after-grace" => &["requestId", "reason", "signal", "outcome"],
+        "suspend-gap" => &["seconds"],
+        _ => &[],
+    };
     if let (Some(target), Some(source)) = (value.as_object_mut(), extra.as_object()) {
-        for (key, item) in source {
-            target.insert(key.clone(), item.clone());
+        for &key in fields {
+            if let Some(item) = source.get(key) {
+                target.insert(key.into(), item.clone());
+            }
         }
     }
-    if let Err(error) = append(dir, &value.to_string()) {
-        eprintln!("Native ölçüm kaydı teslim edilemedi: {:?}", error.kind());
+    value
+}
+
+#[cfg(test)]
+mod event_acl_tests;
+
+#[cfg(test)]
+mod native_record_tests {
+    use super::*;
+
+    #[test]
+    fn payload_cannot_override_native_envelope() {
+        let record = native_record(
+            "signal",
+            (1.0, 2.0, 3.0),
+            serde_json::json!({
+                "v": 99, "src": "js", "type": "perf", "mono": 88, "boot": 88, "wall": 88,
+                "requestId": "shutdown-1", "reason": "signal", "signal": 15,
+                "outcome": "success", "seconds": 50, "fps": 200, "secret": "yabancı",
+            }),
+        );
+        assert_eq!(
+            record,
+            serde_json::json!({
+                "v": 1, "src": "rust", "type": "signal", "mono": 1.0, "boot": 2.0, "wall": 3.0,
+                "requestId": "shutdown-1", "reason": "signal", "signal": 15,
+            })
+        );
+    }
+
+    #[test]
+    fn native_record_copies_only_fields_allowed_for_its_kind() {
+        let extra = serde_json::json!({
+            "requestId": "shutdown-1", "reason": "signal", "signal": 15,
+            "outcome": "failed", "seconds": 4, "fps": 200,
+        });
+        let exit = native_record("exit-after-grace", (1.0, 2.0, 3.0), extra.clone());
+        assert_eq!(exit["outcome"], "failed");
+        assert!(exit.get("seconds").is_none());
+        let suspend = native_record("suspend-gap", (1.0, 2.0, 3.0), extra.clone());
+        assert_eq!(suspend["seconds"], 4);
+        assert!(suspend.get("requestId").is_none());
+        let start = native_record("start", (1.0, 2.0, 3.0), extra);
+        assert_eq!(start.as_object().unwrap().len(), 6);
     }
 }
 
@@ -117,7 +188,23 @@ fn report<R: Runtime>(app: AppHandle<R>, line: String) -> Result<(), String> {
     let dir = app
         .try_state::<DiagnosticsDir>()
         .ok_or_else(|| "Ölçüm kaydı etkin değil.".to_owned())?;
-    append(&dir.0, &line)
+    report_in(&dir.0, &line)
+}
+
+fn report_in(dir: &std::path::Path, line: &str) -> Result<(), String> {
+    if line.len() > MAX_REPORT_BYTES {
+        return Err("Ölçüm kaydı 64 KiB sınırını aşıyor.".to_owned());
+    }
+    let mut record: serde_json::Map<String, serde_json::Value> = serde_json::from_str(line)
+        .map_err(|_| "Ölçüm kaydı tek JSON nesnesi olmalı.".to_owned())?;
+    // Kaynak native sınırın kararıdır; IPC göndereni Rust gözlemi üretemez.
+    record.insert("src".into(), "js".into());
+    let normalized =
+        serde_json::to_string(&record).map_err(|_| "Ölçüm kaydı serileştirilemedi.".to_owned())?;
+    if normalized.len() > MAX_REPORT_BYTES {
+        return Err("Ölçüm kaydı 64 KiB sınırını aşıyor.".to_owned());
+    }
+    append(dir, &normalized)
         .map_err(|error| format!("Ölçüm kaydı teslim edilemedi: {:?}", error.kind()))
 }
 
@@ -216,6 +303,40 @@ fn build<R: Runtime>(enabled: bool) -> TauriPlugin<R> {
 #[cfg(test)]
 mod delivery_tests {
     use super::*;
+
+    #[test]
+    fn ipc_rejects_records_other_than_single_objects() {
+        let dir = temp_dir();
+        for line in ["{}\n{}", "[]", "null", "42", "{yarim"] {
+            assert!(report_in(&dir, line).is_err(), "{line}");
+        }
+        assert!(!dir.join("diagnostics.jsonl").exists());
+    }
+
+    #[test]
+    fn ipc_rejects_oversized_records_before_disk_write() {
+        let dir = temp_dir();
+        let line = format!(r#"{{"x":"{}"}}"#, "a".repeat(64 * 1024));
+        assert!(report_in(&dir, &line).is_err());
+        assert!(!dir.join("diagnostics.jsonl").exists());
+    }
+
+    #[test]
+    fn ipc_cannot_forge_native_source_and_preserves_body() {
+        let dir = temp_dir();
+        report_in(
+            &dir,
+            r#"{"src":"rust","type":"perf","window":1,"note":"iki\nsatır"}"#,
+        )
+        .unwrap();
+        let written = std::fs::read_to_string(dir.join("diagnostics.jsonl")).unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(written.lines().count(), 1);
+        let record: serde_json::Value = serde_json::from_str(written.trim()).unwrap();
+        assert_eq!(record["src"], "js");
+        assert_eq!(record["window"], 1);
+        assert_eq!(record["note"], "iki\nsatır");
+    }
 
     fn temp_dir() -> PathBuf {
         std::env::temp_dir().join(format!(

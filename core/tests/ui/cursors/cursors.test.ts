@@ -187,6 +187,23 @@ describe('CursorController', () => {
     controller.dispose();
   });
 
+  it('chrome kapalı önizleme yenileme ve kapanışta uygulamanın arayüz imlecini korur', async () => {
+    const { controller: owner } = await make();
+    const before = document.documentElement.style.getPropertyValue('--vol-cursor-link');
+    const { controller: preview } = await make({ chrome: false });
+
+    try {
+      vi.stubGlobal('matchMedia', () => ({ matches: false }));
+      preview.refresh();
+      expect(document.documentElement.style.getPropertyValue('--vol-cursor-link')).toBe(before);
+      preview.dispose();
+      expect(document.documentElement.style.getPropertyValue('--vol-cursor-link')).toBe(before);
+    } finally {
+      preview.dispose();
+      owner.dispose();
+    }
+  });
+
   it('rts bağlamı hedef yüzeyin imlecini ve tonunu değiştirir; ui kipinde bağlam yok sayılır', async () => {
     const { controller, target } = await make({ mode: 'rts' });
     controller.setContext('hostile');
@@ -327,6 +344,61 @@ describe('CSS değişken adları', () => {
 });
 
 describe('kayıt yükleme', () => {
+  it.each([
+    ['null imleç haritası', () => ({ ...data, cursors: null })],
+    ['null nişangâh haritası', () => ({ ...data, reticles: null })],
+    ['dizi imleç haritası', () => ({ ...data, cursors: [] })],
+    ['sıfır ızgara', () => ({ ...data, cursorSize: 0 })],
+    ['sonsuz ızgara', () => ({ ...data, reticleSize: Infinity })],
+    ['eksik imleç', () => ({ ...data, cursors: { ...data.cursors, default: undefined } })],
+    [
+      'bozuk katman',
+      () => ({
+        ...data,
+        cursors: { ...data.cursors, default: { ...data.cursors.default, body: null } },
+      }),
+    ],
+    [
+      'bozuk etkin nokta',
+      () => ({
+        ...data,
+        cursors: { ...data.cursors, default: { ...data.cursors.default, hotspot: ['x', 2] } },
+      }),
+    ],
+    [
+      'yanlış imleç kümesi',
+      () => ({
+        ...data,
+        cursors: { ...data.cursors, default: { ...data.cursors.default, set: 'rts' } },
+      }),
+    ],
+    ['eksik nişangâh', () => ({ ...data, reticles: { ...data.reticles, ringDot: undefined } })],
+    [
+      'bozuk nişangâh yolu',
+      () => ({ ...data, reticles: { ...data.reticles, ringDot: { paths: [3] } } }),
+    ],
+  ])('%s sistem imlecine düşer ve ready reddedilmez', async (_name, invalid) => {
+    resetCursorData();
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(invalid()) }),
+    );
+    const target = document.createElement('div');
+    target.style.cursor = 'crosshair';
+    document.body.appendChild(target);
+    const controller = new CursorController({ target, mode: 'shooter' });
+
+    try {
+      await expect(controller.ready).resolves.toBeUndefined();
+      expect(controller.active).toBe(false);
+      expect(target.style.cursor).toBe('crosshair');
+      expect(document.querySelector('.vol-reticle')).toBeNull();
+      await expect(loadCursorData()).resolves.toBeNull();
+    } finally {
+      controller.dispose();
+    }
+  });
+
   it('configureCursorAssets kökü değiştirir, sondaki eğik çizgiyi atar ve kaydı o kökten getirir', async () => {
     resetCursorData();
     const fetchMock = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(data) }));

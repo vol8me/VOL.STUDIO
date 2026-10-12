@@ -202,6 +202,37 @@ export function waveSaving(outcomes, wallMs) {
 /** Ağacın tamamının karması: aşama sırasında dosya değişti mi diye bakmak ve `signoff` kaydı için. */
 export const treeDigest = (files) => fingerprint(files, () => true);
 
+function invalidateWave(outcomes, message) {
+  for (const outcome of outcomes) {
+    for (const entry of outcome.items) {
+      if (entry.status !== 'passed' && entry.status !== 'cached') continue;
+      entry.status = 'failed';
+      entry.code = 1;
+      entry.output = `${entry.output ?? ''}\n${message}\n##quality:${JSON.stringify({ kind: 'tree-changed', count: 1 })}\n`;
+    }
+    outcome.failedEntries = outcome.items.filter((entry) => entry.status === 'failed');
+    outcome.status = 'failed';
+  }
+}
+
+function recordOutcomeReceipts(root, outcomes, stable) {
+  for (const outcome of outcomes) {
+    for (const entry of outcome.items) {
+      const { item } = entry;
+      if (!item.key) continue;
+      if (entry.status === 'failed') clearReceipt(root, item.stage, item.unit, item.key);
+      else if (entry.status === 'passed' && stable) {
+        writeReceipt(root, item.stage, item.unit, {
+          key: item.key,
+          passedAt: new Date().toISOString(),
+          durationMs: entry.durationMs,
+          ...(entry.counts?.length > 0 && { counts: entry.counts }),
+        });
+      }
+    }
+  }
+}
+
 /**
  * @param {object} options
  * @param {string} options.root
@@ -263,23 +294,11 @@ export async function runGate(options) {
     const after = snapshot(root);
     const stable = treeDigest(after) === before;
     if (!stable) {
-      notes.push(`${wave.join(', ')}: ağaç koşu sırasında değişti; makbuz yazılmadı`);
+      const message = `${wave.join(', ')}: ağaç koşu sırasında değişti; kapı yeniden koşulmalı`;
+      notes.push(message);
+      invalidateWave(outcomes, message);
     }
-    for (const outcome of outcomes) {
-      for (const entry of outcome.items) {
-        const { item } = entry;
-        if (!item.key) continue;
-        if (entry.status === 'failed') clearReceipt(root, item.stage, item.unit, item.key);
-        else if (entry.status === 'passed' && stable) {
-          writeReceipt(root, item.stage, item.unit, {
-            key: item.key,
-            passedAt: new Date().toISOString(),
-            durationMs: entry.durationMs,
-            ...(entry.counts?.length > 0 && { counts: entry.counts }),
-          });
-        }
-      }
-    }
+    recordOutcomeReceipts(root, outcomes, stable);
     // Değişmeyen ağaçta aynı nesne kalır: türetilmiş betik girdileri yeniden hesaplanmaz.
     if (!stable) files = after;
     stages.push(...outcomes);

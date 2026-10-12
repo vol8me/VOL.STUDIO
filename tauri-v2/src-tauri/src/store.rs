@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock, Weak};
 use tauri::Manager;
 
 /// Seri hâldeki kayıt ve bütünlük işaretleri. `data` yoksa `null` döner.
@@ -25,6 +25,15 @@ pub struct StoreRead {
 }
 
 const RESERVED_SUFFIXES: [&str; 3] = [".bak", ".tmp", ".bak.tmp"];
+const MAX_STORE_BYTES: usize = 1024 * 1024;
+
+fn validate_size(size: usize) -> Result<(), String> {
+    if size > MAX_STORE_BYTES {
+        Err(format!("store kaydı sınırı aşıyor: {MAX_STORE_BYTES} bayt"))
+    } else {
+        Ok(())
+    }
+}
 
 fn store_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     let dir = app
@@ -67,25 +76,32 @@ fn validate_name(name: &str) -> Result<(), String> {
 /// Aynı ada yapılan okuma ve yazmalar tek sırada koşar; iki adaptör aynı
 /// dosyayı yazsa da yan dosyalar yarışmaz.
 fn name_lock(name: &str) -> Arc<Mutex<()>> {
-    static LOCKS: OnceLock<Mutex<HashMap<String, Arc<Mutex<()>>>>> = OnceLock::new();
+    static LOCKS: OnceLock<Mutex<HashMap<String, Weak<Mutex<()>>>>> = OnceLock::new();
     let mut locks = LOCKS
         .get_or_init(|| Mutex::new(HashMap::new()))
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
-    locks
-        .entry(name.to_ascii_lowercase())
-        .or_insert_with(|| Arc::new(Mutex::new(())))
-        .clone()
+    // Registry yalnız etkin işlerce sahip olunan kilitleri tutar; rastgele
+    // dosya adları süreç boyunca kalıcı birikim oluşturamaz.
+    locks.retain(|_, lock| lock.strong_count() > 0);
+    let key = name.to_ascii_lowercase();
+    if let Some(lock) = locks.get(&key).and_then(Weak::upgrade) {
+        return lock;
+    }
+    let lock = Arc::new(Mutex::new(()));
+    locks.insert(key, Arc::downgrade(&lock));
+    lock
 }
 
 fn read_raw(path: &Path) -> Option<Result<Vec<u8>, String>> {
     match File::open(path) {
-        Ok(mut file) => {
+        Ok(file) => {
             let mut data = Vec::new();
             Some(
-                file.read_to_end(&mut data)
-                    .map(|_| data)
-                    .map_err(|error| format!("okuma: {error}")),
+                file.take((MAX_STORE_BYTES + 1) as u64)
+                    .read_to_end(&mut data)
+                    .map_err(|error| format!("okuma: {error}"))
+                    .and_then(|_| validate_size(data.len()).map(|()| data)),
             )
         }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
@@ -199,12 +215,13 @@ fn preserve_backup(current: &Path, backup: &Path, dir: &Path, name: &str) -> Res
         return Ok(());
     }
     let staged = side(dir, name, ".bak.tmp");
-    let bytes = fs::read(current).map_err(|error| format!("yedek okuma: {error}"))?;
+    let bytes = read_raw(current).ok_or_else(|| "yedeklenecek kayıt bulunamadı".to_owned())??;
     write_file(&staged, &bytes)?;
     fs::rename(&staged, backup).map_err(|error| format!("yedek taşıma: {error}"))
 }
 
 fn write_in(dir: &Path, name: &str, data: &str) -> Result<(), String> {
+    validate_size(data.len())?;
     let current = dir.join(name);
     let backup = side(dir, name, ".bak");
     let temp = side(dir, name, ".tmp");
@@ -267,6 +284,7 @@ pub async fn vol_store_write(
     data: String,
 ) -> Result<(), String> {
     validate_name(&name)?;
+    validate_size(data.len())?;
     if !parses_as_object(&data) {
         return Err("store kaydı JSON nesnesi olmalı".to_string());
     }
@@ -282,6 +300,64 @@ pub async fn vol_store_write(
 #[cfg(test)]
 mod store_tests {
     use super::*;
+
+    #[test]
+    fn oversized_write_preserves_existing_generations() {
+        let dir = temp_dir();
+        write_in(&dir, "bounded.json", r#"{"v":1}"#).unwrap();
+        write_in(&dir, "bounded.json", r#"{"v":2}"#).unwrap();
+        let oversized = format!(r#"{{"x":"{}"}}"#, "a".repeat(1024 * 1024));
+        let result = write_in(&dir, "bounded.json", &oversized);
+        let current = fs::read_to_string(dir.join("bounded.json")).unwrap();
+        let backup = fs::read_to_string(dir.join("bounded.json.bak")).unwrap();
+        fs::remove_dir_all(dir).unwrap();
+        assert!(result.is_err(), "1 MiB üstü yazım reddedilmeli");
+        assert_eq!(current, r#"{"v":2}"#);
+        assert_eq!(backup, r#"{"v":1}"#);
+    }
+
+    #[test]
+    fn oversized_generation_rejects_without_fallback_or_quarantine() {
+        for suffix in ["", ".tmp", ".bak"] {
+            let dir = temp_dir();
+            let path = side(&dir, "bounded.json", suffix);
+            let oversized = format!(r#"{{"x":"{}"}}"#, "a".repeat(1024 * 1024));
+            fs::write(&path, &oversized).unwrap();
+            if suffix != ".bak" {
+                fs::write(dir.join("bounded.json.bak"), r#"{"v":1}"#).unwrap();
+            }
+            let result = read_in(&dir, "bounded.json");
+            let preserved = fs::read_to_string(&path).unwrap();
+            let files = fs::read_dir(&dir).unwrap().count();
+            fs::remove_dir_all(dir).unwrap();
+            assert!(
+                result.is_err(),
+                "boyut aşımı bozuk kayıt değildir: {suffix}"
+            );
+            assert_eq!(preserved, oversized);
+            assert_eq!(files, if suffix == ".bak" { 1 } else { 2 });
+        }
+    }
+
+    #[test]
+    fn exact_one_mib_record_roundtrips() {
+        let dir = temp_dir();
+        let data = format!(r#"{{"x":"{}"}}"#, "a".repeat(1024 * 1024 - 8));
+        assert_eq!(data.len(), 1024 * 1024);
+        write_in(&dir, "bounded.json", &data).unwrap();
+        let result = read_in(&dir, "bounded.json").unwrap();
+        fs::remove_dir_all(dir).unwrap();
+        assert_eq!(result.data.as_deref(), Some(data.as_str()));
+    }
+
+    #[test]
+    fn registry_does_not_retain_unused_name_locks() {
+        let first = name_lock("registry-lifetime.json");
+        let second = name_lock("REGISTRY-LIFETIME.JSON");
+        assert!(Arc::ptr_eq(&first, &second));
+        drop(second);
+        assert_eq!(Arc::strong_count(&first), 1);
+    }
 
     fn temp_dir() -> PathBuf {
         static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);

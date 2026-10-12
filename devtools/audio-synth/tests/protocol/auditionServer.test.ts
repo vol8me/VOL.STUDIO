@@ -1,8 +1,8 @@
 import { spawnTsxSync } from '../support/process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   exportAuditionPage,
@@ -12,6 +12,7 @@ import {
 import { ProtocolError } from '../../src/protocol/errors';
 import {
   exportSearchAudition,
+  auditionPath,
   loadSearch,
   recordDecision,
   runSearch,
@@ -104,6 +105,67 @@ const searchFiles = () => [
 ];
 
 describe('dinleme sunucusu — güvenlik sınırı', () => {
+  it(
+    'ses dosyası stream açılırken kaybolursa süreç ayakta kalır ve sonraki isteği yanıtlar',
+    () => {
+      const isolated = createTestRepo();
+      try {
+        const isolatedLoc = { repoRoot: isolated.root, searchesRoot: ROOT, searchId: 'shell-test' };
+        runSearch(isolated.root, ROOT, shellSpec({ candidates: 1, filters: [] }));
+        const id = loadSearch(isolatedLoc).report.candidates[0].candidateId as string;
+        const wav = join(isolated.root, auditionPath(isolatedLoc.searchId, id));
+        mkdirSync(join(wav, '..'), { recursive: true });
+        writeFileSync(wav, 'test ses baytları');
+        const script = join(isolated.root, 'read-race.ts');
+        writeFileSync(join(isolated.root, 'package.json'), '{"type":"module"}');
+        const serverModule = pathToFileURL(join(PACKAGE, 'src/protocol/auditionServer.ts')).href;
+        writeFileSync(
+          script,
+          `
+        import fs from 'node:fs';
+        import { syncBuiltinESMExports } from 'node:module';
+        import { request } from 'node:http';
+        import { startAuditionServer } from ${JSON.stringify(serverModule)};
+        async function main() {
+          const server = await startAuditionServer(${JSON.stringify(isolatedLoc)});
+          const original = fs.createReadStream;
+          fs.createReadStream = (file, options) => {
+            fs.unlinkSync(file);
+            return original(file, options);
+          };
+          syncBuiltinESMExports();
+          const get = path => new Promise((resolve, reject) => {
+            const req = request(new URL(path, server.url), res => {
+              res.resume();
+              res.on('end', () => resolve(res.statusCode));
+              res.on('error', reject);
+            });
+            req.on('error', reject);
+            req.end();
+          });
+          try {
+            console.log(JSON.stringify({
+              audio: await get('/audio/${id}.wav'),
+              state: await get('/api/state'),
+            }));
+          } finally {
+            fs.createReadStream = original;
+            syncBuiltinESMExports();
+            await server.close();
+          }
+        }
+        main().catch(() => process.exitCode = 1);
+      `,
+        );
+        const result = spawnTsxSync(script, [], { encoding: 'utf8', timeout: 10_000 });
+        expect(result.status).toBe(0);
+        expect(JSON.parse(result.stdout)).toEqual({ audio: 404, state: 200 });
+      } finally {
+        isolated.cleanup();
+      }
+    },
+    RENDER_TIMEOUT,
+  );
   it('yalnız loopback’e bağlanır; loopback dışı adres reddedilir', () => {
     expect(server.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/$/);
     expect(() => startAuditionServer(loc, { host: '0.0.0.0' as '127.0.0.1' })).toThrow(
@@ -140,6 +202,21 @@ describe('dinleme sunucusu — güvenlik sınırı', () => {
     const audio = await send('GET', `/audio/${passed}.wav`);
     expect(audio.status).toBe(200);
     expect(audio.headers['content-type']).toBe('audio/wav');
+    const head = await send('HEAD', `/audio/${passed}.wav`);
+    expect(head.status).toBe(200);
+    expect(head.body).toBe('');
+
+    const file = join(repo.root, auditionPath(loc.searchId, passed));
+    const bytes = readFileSync(file);
+    rmSync(file);
+    mkdirSync(file);
+    try {
+      expect((await send('GET', `/audio/${passed}.wav`)).status).toBe(404);
+      expect((await send('GET', '/api/state')).status).toBe(200);
+    } finally {
+      rmSync(file, { recursive: true });
+      writeFileSync(file, bytes);
+    }
   });
 
   it('yazma yalnız JSON, kendi origin’i ve doğrulanmış gövdeyle; başka hiçbir dosya yazılmaz', async () => {

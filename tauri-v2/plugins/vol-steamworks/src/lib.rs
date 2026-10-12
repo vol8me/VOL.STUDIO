@@ -22,6 +22,7 @@ mod b64;
 #[cfg(feature = "steamworks")]
 mod callbacks;
 mod cloud;
+mod input_initialization;
 mod service;
 mod text_input;
 

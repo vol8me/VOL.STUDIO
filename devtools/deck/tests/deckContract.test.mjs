@@ -317,6 +317,29 @@ test('summarizeReport: fazlar, sinyaller, sanal kol ve runtime ayrışır', () =
   assert.equal(s.total, 6);
 });
 
+test('bilinmeyen prototype alanı temizlenen native sinyal kaydını düşürmez', () => {
+  for (const key of ['toString', 'constructor', 'valueOf']) {
+    const cleaned = sanitizeReport(
+      JSON.stringify({ src: 'rust', type: 'signal', signal: 15, [key]: 'etiket' }),
+    );
+    assert.deepEqual(JSON.parse(cleaned), { src: 'rust', type: 'signal', signal: 15 });
+  }
+});
+
+test('native sinyal ve uyku kanıtı yalnız Rust kayıtlarından türetilir', () => {
+  const lines = [
+    { src: 'js', type: 'signal', signal: 9 },
+    { type: 'signal', signal: 2 },
+    { src: 'rust', type: 'signal', signal: 15 },
+    { src: 'js', type: 'suspend-gap', seconds: 999 },
+    { type: 'suspend-gap', seconds: 888 },
+    { src: 'rust', type: 'suspend-gap', seconds: 60 },
+  ].map(JSON.stringify);
+  const summary = summarizeReport(sanitizeReport(lines.join('\n')).trim().split('\n'));
+  assert.deepEqual(summary.signals, [15]);
+  assert.deepEqual(summary.suspendGaps, [60]);
+});
+
 test('summarizeReport: oyun perf pencereleri, pad-input ve steamworks ayrışır', () => {
   const lines = [
     JSON.stringify({ src: 'js', type: 'info', env: { STEAM_GAMESCOPE: '1' } }),

@@ -21,15 +21,23 @@ export class EventBus<TEvents extends object> {
     }
     set.add(handler);
 
+    let removed = false;
     return () => {
+      if (removed) return;
+      removed = true;
       set?.delete(handler);
-      if (set?.size === 0) this.handlers.delete(event);
+      // clear sonrası aynı olay yeni bir kümeye sahip olabilir.
+      if (set?.size === 0 && this.handlers.get(event) === set) this.handlers.delete(event);
     };
   }
 
   /** Bir kez çalışır, sonra kendini kaldırır. */
   once<K extends keyof TEvents>(event: K, handler: (payload: TEvents[K]) => void): Unsubscribe {
+    let fired = false;
     const off = this.on(event, (payload) => {
+      // İç yayın wrapper'ı tüketmişse dış yayının snapshotı tekrar çalıştırmaz.
+      if (fired) return;
+      fired = true;
       off();
       handler(payload);
     });
@@ -54,7 +62,11 @@ export class EventBus<TEvents extends object> {
       } catch (error) {
         errors++;
         if (this.onHandlerError) {
-          this.onHandlerError(error, String(event));
+          try {
+            this.onHandlerError(error, String(event));
+          } catch (callbackError) {
+            console.error('[EventBus] Hata dinleyicisi başarısız oldu:', callbackError);
+          }
         } else {
           console.error(`[EventBus] "${String(event)}" dinleyicisi hata fırlattı:`, error);
         }

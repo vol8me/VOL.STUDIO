@@ -18,7 +18,7 @@ import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { execFileSync, spawn, spawnSync } from './command.mjs';
-import { receiptDirectory } from './gateCache.mjs';
+import { assertIndexMatchesWorkingTree, receiptDirectory } from './gateCache.mjs';
 import { audioTestPlan, changedFiles } from './audioTests.mjs';
 import { runGate } from './gateRunner.mjs';
 import { checkHostLoad } from './hostLoad.mjs';
@@ -216,8 +216,9 @@ function main() {
   };
 
   return preflight
-    .then(() =>
-      runGate({
+    .then(() => {
+      if (flags.includes('--index')) assertIndexMatchesWorkingTree(root);
+      return runGate({
         root,
         gate,
         fresh: flags.includes('--fresh'),
@@ -225,10 +226,11 @@ function main() {
         emit,
         toolParts: toolParts(root),
         skipBudget: loadQualityConfig(join(root, 'quality.json')).skipBudget ?? {},
-      }),
-    )
+      });
+    })
     .then((report) => {
       clearInterval(heartbeat);
+      if (flags.includes('--index')) assertIndexMatchesWorkingTree(root);
       const logDirectory = join(receiptDirectory(root), '..');
       const failures = report.failures.map(({ stage, entry }, index) => {
         const output = entry.output ?? '';

@@ -33,6 +33,38 @@ describe('EventBus', () => {
     expect(() => off()).not.toThrow();
   });
 
+  it('eski iptal yeniden çağrılınca yeni abonelik korunur', () => {
+    const bus = new EventBus<Events>();
+    const off = bus.on('changed', () => {});
+    off();
+    const totals: number[] = [];
+    bus.on('changed', ({ total }) => totals.push(total));
+
+    off();
+    bus.emit('changed', { total: 7 });
+
+    expect(totals).toEqual([7]);
+    expect(bus.listenerCount('changed')).toBe(1);
+  });
+
+  it.each(['event', 'all'] as const)(
+    'clear (%s) öncesindeki iptal yeni aboneliği kaldırmaz',
+    (mode) => {
+      const bus = new EventBus<Events>();
+      const off = bus.on('changed', () => {});
+      if (mode === 'event') bus.clear('changed');
+      else bus.clear();
+      const totals: number[] = [];
+      bus.on('changed', ({ total }) => totals.push(total));
+
+      off();
+      bus.emit('changed', { total: 8 });
+
+      expect(totals).toEqual([8]);
+      expect(bus.listenerCount('changed')).toBe(1);
+    },
+  );
+
   it('once yalnızca bir kez çalışır', () => {
     const bus = new EventBus<Events>();
     const handler = vi.fn();
@@ -42,6 +74,23 @@ describe('EventBus', () => {
     bus.emit('changed', { total: 2 });
     expect(handler).toHaveBeenCalledTimes(1);
     expect(bus.listenerCount('changed')).toBe(0);
+  });
+
+  it('iç içe yayın sırasında once dış snapshotta tekrar çalışmaz', () => {
+    const bus = new EventBus<Events>();
+    let nested = false;
+    bus.on('changed', () => {
+      if (nested) return;
+      nested = true;
+      bus.emit('changed', { total: 2 });
+    });
+    const totals: number[] = [];
+    bus.once('changed', ({ total }) => totals.push(total));
+
+    bus.emit('changed', { total: 1 });
+
+    expect(totals).toEqual([2]);
+    expect(bus.listenerCount('changed')).toBe(1);
   });
 
   it('yayın sırasında abonelikten çıkan dinleyici KALANLARI atlatmaz', () => {
@@ -94,6 +143,28 @@ describe('EventBus', () => {
     bus.emit('changed', { total: 1 });
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
+  });
+
+  it('hata kancası fırlatınca kalan dinleyiciler yayını alır', () => {
+    const bus = new EventBus<Events>();
+    const reporterError = new Error('hata kancası');
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    bus.onHandlerError = () => {
+      throw reporterError;
+    };
+    bus.on('changed', () => {
+      throw new Error('dinleyici');
+    });
+    const totals: number[] = [];
+    bus.on('changed', ({ total }) => totals.push(total));
+
+    try {
+      expect(bus.emit('changed', { total: 9 })).toBe(1);
+      expect(totals).toEqual([9]);
+      expect(spy).toHaveBeenCalledWith(expect.any(String), reporterError);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('dinleyicisi olmayan olay yayını sorunsuzdur', () => {

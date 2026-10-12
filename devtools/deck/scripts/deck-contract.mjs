@@ -532,7 +532,7 @@ export function sanitizeReport(text) {
         result.hasError = result.hasError === true || value;
       else if (boolean.has(key) && (typeof value === 'boolean' || value === null))
         result[key] = value;
-      else if (enums[key] && typeof value === 'string' && enums[key].test(value))
+      else if (Object.hasOwn(enums, key) && typeof value === 'string' && enums[key].test(value))
         result[key] = value;
       else if (nested.has(key)) result[key] = safe(value);
       else if (key === 'metrics' && value && typeof value === 'object') {
@@ -678,8 +678,8 @@ export function summarizeReport(lines) {
   // `perf` pencereleri aynı faz adını taşıdığı için `window` anahtarla ayrılır.
   const byPhase = new Map(phases.map((p) => [`${p.runId ?? ''}#${p.phase}#${p.window ?? ''}`, p]));
   const info = [...records].reverse().find((r) => r.type === 'info');
-  const signals = records.filter((r) => r.type === 'signal');
-  const suspendGaps = records.filter((r) => r.type === 'suspend-gap');
+  const signals = records.filter((r) => r.src === 'rust' && r.type === 'signal');
+  const suspendGaps = records.filter((r) => r.src === 'rust' && r.type === 'suspend-gap');
   const pads = records.filter((r) => r.type === 'pad-connected');
   const padInputs = records.filter((r) => r.type === 'pad-input');
   const steamworks = [...records].reverse().find((r) => r.type === 'steamworks');

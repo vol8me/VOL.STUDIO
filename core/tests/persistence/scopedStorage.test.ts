@@ -74,6 +74,39 @@ describe('ScopedSaveManager', () => {
 });
 
 describe('migrateLegacyStore', () => {
+  it.each([false, true])(
+    'null kaynak retainSource=%s iken göçü durdurmaz veya hedefe yazılmaz',
+    async (retainSource) => {
+      const legacy = new MemoryAdapter();
+      legacy.data.set('voltest.preferences', null);
+      legacy.data.set('voltest.progress', { distance: 12, shots: 3 });
+      const stores = scopedPair();
+      const manager = new ScopedSaveManager(stores);
+
+      const report = await migrateLegacyStore({
+        legacy,
+        scoped: manager,
+        retainSource,
+        mappings: [
+          { key: 'voltest.preferences', scope: 'device' },
+          { key: 'voltest.progress', scope: 'synced' },
+        ],
+      });
+
+      expect(report).toEqual({
+        moved: ['voltest.progress'],
+        defaulted: [],
+        unknownLeftBehind: false,
+      });
+      expect(legacy.data.get('voltest.preferences')).toBeNull();
+      expect(stores.device.data.has('device.voltest.preferences')).toBe(false);
+      expect(await manager.load('synced.voltest.progress', null)).toEqual({
+        distance: 12,
+        shots: 3,
+      });
+    },
+  );
+
   it('kaynak öneki aynı depodaki başka oyunu eşleme bulunsa da taşımaz veya silmez', async () => {
     const legacy = new MemoryAdapter();
     legacy.data.set('game.progress', 5);

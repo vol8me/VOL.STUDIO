@@ -30,6 +30,10 @@ reddedilir. Snapshot sınırını ve isimli oyun akışlarını tüketici belirl
 
 ## Kalıcılık
 
+`SaveManager` ve `ScopedSaveManager` depodaki `null` değerini geçersiz kayıt
+sayarak varsayılana döner. `migrateLegacyStore` aynı değeri kaynakta korur,
+hedefe yazmadan atlar; tek geçersiz anahtar diğer kayıtların göçünü durdurmaz.
+
 ### `AutosaveCoordinator`
 
 Anlık görüntüyü periyodik ve arka plan tetiklerinde seri yazıma toplar.
@@ -99,7 +103,9 @@ CORE'a gömülmez.
 
 Tipli olay ve payload taşır. Bir dinleyicinin hatası kalanlarını durdurmaz.
 Yayın sırasında abonelik değişimi mevcut yayını bozmaz. Aboneliğin kaldırma
-fonksiyonu tüketicinin yaşam döngüsüne bağlanır.
+fonksiyonu tüketicinin yaşam döngüsüne bağlanır; tekrar çağrılması veya
+`clear` öncesinden kalması yeni abonelikleri kaldırmaz. Hata kancası fırlarsa
+tanıya yazılır ve yayın sürer. `once` iç içe yayında da yalnız bir kez çalışır.
 
 ## Izgara ve uzam
 
@@ -276,6 +282,11 @@ senkron okunur, saklanmaz; base ile current ayrı nesnedir.
 seçebilir. `FullscreenController` native/web yetenek ve red callback'iyle
 çalışır, destroy bütün abonelikleri kapatır.
 
+`CursorController` için `chrome: false` önizleme ve yüzey imlecini sınırlar;
+yenileme ve kapanış uygulamanın kök imleç değişkenlerini kaldırmaz. Getirilen
+imleç kaydında boyutlar, bütün katalog girdileri, etkin noktalar ve yol dizileri
+doğrulanır; bozuk kayıt `ready` reddi üretmeden sistem imlecine döner.
+
 Haptik `vibrate` niyetini kullanılabilir sürücüye yönlendirir; native,
 uygun mobil tarayıcı ve gamepad yolları ayrı yeteneklerdir. Masaüstünde
 API'nin mevcut olması motor bulunduğunu kanıtlamaz.
@@ -313,3 +324,20 @@ değeri, kendisini bildiren karede tick üretilmemişse kaybolmamalıdır.
 Çağıranın kare temposunda örneklenmez. Bu kipte `aimStickActivatesOnTouch`
 ve deadzone eşiği geçersizdir. `reset` histerezisi düşürür; sonraki basış
 `enter` eşiğinden geçer. Eylemin ürün anlamı tüketicinindir.
+
+## Yerel tanı
+
+`LocalServerTransport` geliştirme snapshot'ını tüketicinin verdiği adrese
+gönderir. Yardımcı `node core/scripts/debug-server.mjs` yalnız `127.0.0.1`
+üzerinde 9876 portunu dinler; `--port <sayı>` başka portu, `--port 0` boş
+portu seçer. Host dinleme portundaki loopback adı olmalıdır. Origin yokluğu
+yerel CLI'yi, loopback HTTP(S) kökenleri ve `tauri://localhost`,
+`http://tauri.localhost`, `https://tauri.localhost` native geliştirmeyi
+karşılar; yabancı kökenlere CORS izni verilmez ve istek reddedilir.
+
+`/debug` ve `/perf` POST gövdesi en çok 64 KiB'dır; fazla gövde 413, bozuk
+JSON veya loglanan alanın yanlış tipi 400 döner. Etiketlerin kontrol
+karakterleri temizlenir ve uzunluğu sınırlanır; bir snapshot tek terminal
+satırı üretir. Kesilmiş istek kaynakları bırakılır, sunucu diğer istekleri
+kabul etmeye devam eder. Araç üretim telemetrisi veya uzaktan erişim servisi
+değildir.

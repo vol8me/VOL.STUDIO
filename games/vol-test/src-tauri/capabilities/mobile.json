@@ -5,6 +5,8 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:event:deny-emit",
+    "core:event:deny-emit-to",
     "vol-orientation:default",
     "vol-haptics:default",
     "vol-diagnostics:default",

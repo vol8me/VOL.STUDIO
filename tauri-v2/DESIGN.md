@@ -26,6 +26,13 @@ iki kapsama taşır. Native ayrı dosyadaki kapsamlı anahtar kendi kapsamını
 korur; tarayıcı göçü yalnız oyunun önekini okur. Oyun göçü state yüklemeden
 bekler. Adapter önbelleği yalnız başarılı native yazımdan sonra ilerler;
 reddedilen yazım aynı adapter ile yeniden denenebilir.
+Native store kaydı UTF-8 baytlarıyla en çok 1 MiB'dir; yazım JSON
+ayrıştırmasından önce sınırlanır, disk okuması yalnız bir ek bayt alır.
+Boyut aşımı bozuk kayıt değildir: hata döner, eski jenerasyona düşmez ve
+dosyaları karantinaya taşımaz. Bu tavan mevcut oyunun küçük ayar ve ilerleme
+kayıtlarına geniş pay bırakır; daha büyük kayıt ayrı bir depolama sözleşmesi
+ister. Ad kilitleri yalnız etkin işler boyunca yaşar; aynı adın eşzamanlı
+okuma/yazmaları sırada kalırken bitmiş adlar registry'de birikmez.
 Native kurtarma sağlam geçici dosyayı güncel ada atomik taşır; yedekten
 kurtarmada yedek korunarak güncel dosya kurulur. Bu yerleştirme tamamlanmadan
 başarılı okuma dönmez. Böylece sonraki yazımın geçici dosyayı boşaltması
@@ -45,8 +52,17 @@ kimliği native sonucu JS owner'a bağlar. İptal sonucu bastırır; native popu
 terminal callback'i gelmeden busy sahipliği bırakılmaz. JS abort'u beklemeden
 sonuçlanır, geç abonelikleri söker; yeni isteğe eski sonuç uygulanmaz.
 Steam Cloud kayıtları okuma ve yazmada 1 MiB ile sınırlıdır; native okuma
-yalnız sınırı ölçmek için bir ek bayt alır ve büyük kaydı IPC'ye çıkarmaz.
+SDK boyutunu önceden denetler ve yalnız bir ek bayt alır. Tek senkron
+`FileRead`, sarmalayıcının süresiz async tamamlanma spin'ini kullanmaz;
+başarısız, kısa veya boyut sorgusundan sonra değişmiş kayıt IPC'ye çıkmaz.
+Eksik dosya `null`, sağlam boş dosya boş base64 döner.
 Base64 girdisinin üst sınırı ayrıştırmadan önce denetlenir.
+Bulut yazımı tek `FileWrite` çağrısının gerçek SDK bool sonucunu taşır;
+stream sarmalayıcısının Drop sırasında yuttuğu Close sonucu başarı sayılmaz.
+Bu onay yerel Steam SDK teslimidir; uzak bulut eşzamanlama ve fiziksel
+cihaz kabulünün yerine geçmez. `inputReady` gerçek `Steam Input::Init`
+sonucudur; init reddinde manifesto uygulanmaz ve Input komutları açık hata
+döner. Steam Utils metin girişi ve Cloud aynı istemcide bağımsız kalır.
 Metin sağlayıcısı parola amacını IPC'de `password`, diğer amaçları `normal`
 kipine çevirir. Native komut yalnız bu iki enum değerini kabul eder;
 Steam klavyesi parola kipinde SDK maskesini kullanır. Stub aynı komut
@@ -63,6 +79,14 @@ yazar; destroy sonrası geç sorgu eski sahibin tercihini değiştirmez.
 `reportDiagnostics` IPC ve native append/sync hatasını reddeder;
 oyun hata sınırı reddi yakalar, ölçüm sahibi kaybı sayar. Kayıp veya eksik
 pencere cihaz ölçümünde başarılı kabul üretmez; hata metni yerel dosya yolu taşımaz.
+Diagnostics IPC tek JSON nesnesi kabul eder ve giriş ile normalize edilmiş
+kaydı 64 KiB ile sınırlar. Native sınır `src` alanını `js` yapar; çok satırlı
+girdi ayrı JSONL gözlemleri üretemez ve ön yüz Rust gözlemi taklit edemez.
+Ürün ve yeni oyun capability'leri JS `emit`/`emit_to` çağrılarını açıkça
+reddeder; native kabuğun `app.emit` olayları ve ön yüzün dinleme yetkisi
+korunur. Rust kayıt zarfının sürüm, kaynak, tür ve saatleri payload'dan
+değiştirilemez; ek alanlar yalnız kapanış kimliği/nedeni/sinyali/sonucu ve
+uyku süresi için kayıt türünün izin listesine göre taşınır.
 
 Platform kuralları [Linux](../docs/linux.md),
 [Steam Deck](../docs/steam-deck.md) ve [Android](../docs/android.md)

@@ -152,9 +152,9 @@
     }
   },
   "bundles": {
-    "$comment": "Gzip level 9, 2026-10-11 temiz build (UI-08.3 sonrası): VOL.SHOWCASE app 226.6 / css 31.0 KiB; VOL.TEST app 128.4 / vendor 345.6 / css 27.8 KiB. Önceki bütçe 2026-10-09 ölçümüydü (showcase app 182.4 / css 28.8; oyun app 120.4 / css 26.1); o günden sonraki 39 commit (UI-03.1…UI-08.3: kart ailesi, değer editörleri, ayar formu, tema laboratuvarı, metin girişi/IME, kamera ve joystick klavye eşdeğerleri, SplitPane, HUD göstergeleri, ActionBar/BuildMenu/SkillTree/SlotGrid) yalnız `pnpm quick` kapısından geçti; paket boyutu kapısı (`pnpm high`) bu aralıkta koşulmadığından aşım ancak ilk push denemesinde görüldü. Artış özellik bazında AYRIŞTIRILMADI (ölçülmedi); vendor yığını değişmedi (345.6 ≤ 360) ve uygulama kodu vendor diye gizlenmedi. Vitrin tüm kütüphane yüzeyini taşıyan bir geliştirici aracıdır; oyun artışının (+8.0 KiB app) nedeni ayrıca ölçülmedi. App/CSS bütçeleri ölçülenin 0.5 KiB üstü; vendor ve kapsam eşikleri değişmez. Bu büyüklükte (~%24 vitrin app) artış F10.13 (kapı ölçek eşikleri) altında ayrıca incelenmelidir; geçmiş git’tedir.",
+    "$comment": "Gzip level 9. 2026-10-12 B36 sağlamlaştırması: aynı app grafiğinde yalnız cursorData modülü HEAD sürümüyle build-load hookunda karşılaştırıldı (kaynak dosyası değişmedi). Eski doğrulayıcıyla app 232502 B, tam katalog/set/hotspot/yol doğrulamasıyla 232649 B: ek maliyet 147 B. Okunabilir sadeleştirme önceki 232708 B çıktısını 59 B azalttı. Vitrin app bütçesi yalnız ölçülen 227.2 KiB değeridir (önce 227.1, +0.1 KiB); vendor/CSS, oyun, kapsam ve atlama bütçeleri korunur. Güncel build: vitrin app 227.2 / css 31.1 KiB; oyun app 128.6 / vendor 345.6 / css 27.9 KiB. App kodu vendor diye gizlenmez. Ölçüm ve karar docs/monorepo-audit.md §27, genel kapı maliyeti işi TODO.md F10.13 sahibindedir.",
     "devtools/vol-showcase": {
-      "app": 227.1,
+      "app": 227.2,
       "vendor": 1,
       "css": 31.5
     },

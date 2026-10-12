@@ -84,7 +84,12 @@ doğrudan çocuk x/y'si kendi rig yerleşimidir.
 Native Export `<nodeId>.png` üretir. Organize manifesti partId, düğüm
 kimliği, staging dosyası ve tekrarları parça ve önizleme birlikte, tek plan
 olarak doğrular; bir düğüm iki hedefe yazılamaz ve kimlik dosya yolunu
-kaçıramaz. Hedefler ile metadata tek birim olarak yerleşir: hata önceki
+kaçıramaz. İlk disk değişikliğinden önce kaynak başvuruları boş olmayan
+metin, parts boş olmayan dizi, previews verilmişse dizi olmalıdır. Parça
+tipi metindir; parça/önizleme boyutları, verilmiş kök boyutu ve dönüş sonlu
+sayılardır. x/y birlikte verilir ve sonlu sayı olmalıdır; category metin ya
+da null olabilir. Eksik veya yanlış tipli manifest kaynak PNG'leri tüketmez
+ve önceki export'u değiştirmez. Hedefler ile metadata tek birim olarak yerleşir: hata önceki
 hedefleri geri yükler, yarım hedef ve geçici dosya bırakmaz; kaynak PNG'ler
 yalnız her hedef yerleştikten sonra silinir. Manifest dışı staging dosyası
 ve alt dizin korunur; staging yalnız boşsa kaldırılır. Kaynak/hedef örtüşmesi

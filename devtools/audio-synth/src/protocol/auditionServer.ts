@@ -1,4 +1,4 @@
-import { createReadStream, existsSync } from 'node:fs';
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { AudioParamError } from '../guard/errors';
@@ -123,6 +123,29 @@ function send(res: ServerResponse, status: number, type: string, body: string): 
 const json = (res: ServerResponse, status: number, value: unknown) =>
   send(res, status, 'application/json; charset=utf-8', JSON.stringify(value));
 
+function streamAudio(file: string, req: IncomingMessage, res: ServerResponse): void {
+  const stream = createReadStream(file);
+  const stop = () => stream.destroy();
+  res.once('close', stop);
+  stream.once('close', () => res.off('close', stop));
+  stream.once('error', (error: NodeJS.ErrnoException) => {
+    if (res.headersSent) {
+      res.destroy();
+      return;
+    }
+    const missing = error.code === 'ENOENT' || error.code === 'EISDIR';
+    json(res, missing ? 404 : 500, { error: 'dinleme kopyası okunamadı' });
+  });
+  stream.once('open', () => {
+    if (res.destroyed) return stop();
+    res.writeHead(200, { ...SECURITY_HEADERS, 'content-type': 'audio/wav' });
+    if (req.method === 'HEAD') {
+      res.end();
+      stop();
+    } else stream.pipe(res);
+  });
+}
+
 /** Sınırı aşan gövde saklanmadan boşaltılır ve adlı hatayla reddedilir (soket kesilmez). */
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -221,10 +244,9 @@ export function startAuditionServer(
       if (!report.candidates.some((c) => c.candidateId === id && c.render !== null))
         return json(res, 404, { error: 'aday yok' });
       const file = resolveInside(loc.repoRoot, auditionPath(loc.searchId, id), 'audio');
-      if (!existsSync(file))
+      if (!existsSync(file) || !statSync(file).isFile())
         return json(res, 404, { error: 'dinleme kopyası yok (search audition)' });
-      res.writeHead(200, { ...SECURITY_HEADERS, 'content-type': 'audio/wav' });
-      createReadStream(file).pipe(res);
+      streamAudio(file, req, res);
       return;
     }
     return json(res, 404, { error: 'bulunamadı' });

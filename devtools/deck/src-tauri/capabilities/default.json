@@ -1,5 +1,11 @@
 {
   "identifier": "default",
   "windows": ["main"],
-  "permissions": ["core:default", "vol-diagnostics:default", "vol-steamworks:default"]
+  "permissions": [
+    "core:default",
+    "core:event:deny-emit",
+    "core:event:deny-emit-to",
+    "vol-diagnostics:default",
+    "vol-steamworks:default"
+  ]
 }

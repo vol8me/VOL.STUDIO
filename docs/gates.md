@@ -18,14 +18,19 @@ Kapıların tek kaynağı `justfile`'dır; `just` global değilse
 koşularda vitrin E2E 22,6 ve 26,3 dk sürdü; sonraki başarısız `signoff`
 36,2 dk'da WebKit E2E hatasıyla düştü. Ardından **aynı performans değişikliği
 öncesi çalışma ağacında üç tam `signoff` PASS** (48,4 / 47,0 / 48,1 dk),
-ancak vitrin E2E yine 24–26 dk seviyesinde. Kapı bekçileri eklendikten sonraki taze koşu (`eb81a52c`): **18/18 PASS, 37,7 dk**, vitrin E2E 20,5 dk ([rapor §26](monorepo-audit.md)); tek koşudur.
+ancak vitrin E2E yine 24–26 dk seviyesinde. Kapı bekçileri eklendikten sonraki taze koşu (`eb81a52c`): **18/18 PASS, 37,7 dk**, vitrin E2E 20,5 dk ([rapor §26](monorepo-audit.md)); tek koşudur. Kaynak sağlamlaştırma değişikliklerinin nihai taze koşusu da **18/18 PASS, 41,8 dk**; vitrin E2E 21,5 dk, tam audio kapsamı 9,0 dk sürdü ([rapor §27](monorepo-audit.md)).
 Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `signoff`ta yakalanır. Bir arayüz
-değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. **24–26 dk vitrin E2E maliyeti kabul edilemez**; yalnız push yolundan
+değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. **20–26 dk vitrin E2E maliyeti kabul edilemez**; yalnız push yolundan
 çıkarılmıştır, henüz hızlandırılmamıştır: bkz. [F10.13](../TODO.md).
 
 ## Kapı koşucusu
 
 `pnpm quick`, `pnpm fast`, `pnpm high`, `pnpm signoff` ve git kancaları `scripts/quality/gate.mjs`yi çağırır.
+Pre-commit `pnpm quick --index` kullanır: kapıdan önce ve sonra indeks ile sınanan
+çalışma ağacı eşleşmelidir. Sahne dışı izlenen değişiklik veya yok sayılmayan yeni
+dosya varsa commit reddedilir; ilgili içerik sahnelenir ya da ayrı çalışma alanına
+taşınır. Kısmi sahnelemeyi ayrı bir indeks kopyasında sınamak yerine uyuşmazlık
+açıkça reddedilir. Üretilmiş ve yok sayılmış çıktılar bu karşılaştırmaya girmez.
 `justfile` yalnız bileşimi söyler; `just <kapı>` aynı aşamaları önbelleksiz ve art arda
 koşan düz yoldur. Koşucu altı şey yapar:
 
@@ -127,7 +132,11 @@ pahalıdır; bu yüzden kapsam geniş tutulur ve gizli okumalar bekçilenir
   sonraki aşamaların girdisi), `scaling` (süre oranı ölçer), `audio-test` (kapsamı git
   farkından türer), `security-js` ve `security-rust` (sonuç zamana bağlı).
 - **`signoff` hiçbir makbuza güvenmez**; yine de geçen aşamalara makbuz yazar.
-- Aşama koşarken ağaç değişirse (örn. düzenleme) o dalganın makbuzu yazılmaz.
+- Aşama koşarken ağaç değişirse (örn. düzenleme) o dalga ve kapı düşer, sonraki
+  dalgalar NOT-RUN kalır; değişmiş girdiye geçiş makbuzu yazılmaz.
+- Envanter Git'ten, her mevcut girdinin karması ham disk baytından gelir.
+  Temiz indeks karması kullanılmaz: LF normalizasyonu, `assume-unchanged` ve
+  `skip-worktree` diskteki farklı baytı gizleyemez.
 
 ## Tekil kapılar
 

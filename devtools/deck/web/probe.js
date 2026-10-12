@@ -249,7 +249,8 @@ function runLoadPhases() {
     },
     update(_time, delta) {
       const now = performance.now();
-      if (lastFrame) deltas.push(now - lastFrame);
+      const phase = PHASES[phaseIndex];
+      if (lastFrame && Number.isFinite(phase.seconds)) deltas.push(now - lastFrame);
       lastFrame = now;
       const dt = delta / 1000;
       for (const s of sprites) {
@@ -258,7 +259,6 @@ function runLoadPhases() {
         if (s.x < 0 || s.x > 1280) s.vx *= -1;
         if (s.y < 0 || s.y > 800) s.vy *= -1;
       }
-      const phase = PHASES[phaseIndex];
       statusEl.textContent = `faz: ${phase.name} — ${Math.round(this.game.loop.actualFps)} FPS`;
       if (now - phaseStart >= phase.seconds * 1000) {
         const summary = summarize(deltas);

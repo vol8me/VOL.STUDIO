@@ -54,7 +54,7 @@
     "pnpm": ">=11.18.0"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm quick",
+    "pre-commit": "pnpm quick --index",
     "pre-push": "pnpm high"
   },
   "prettier": {

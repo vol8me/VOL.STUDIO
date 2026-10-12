@@ -11,6 +11,7 @@ import {
   readReceipt,
   snapshotFiles,
   writeReceipt,
+  assertIndexMatchesWorkingTree,
 } from '../gateCache.mjs';
 
 const GIT_ENV = Object.fromEntries(
@@ -37,6 +38,54 @@ function repo(files) {
 }
 
 const all = () => true;
+
+test('commit denetimi kısmi sahnelemeyi ve sahne dışı bağımlılığı reddeder', () => {
+  const r = repo({ 'a.txt': 'ilk' });
+  try {
+    assert.doesNotThrow(() => assertIndexMatchesWorkingTree(r.root));
+    r.write('a.txt', 'commit içeriği');
+    r.git('add', 'a.txt');
+    r.write('a.txt', 'kapının gördüğü içerik');
+    assert.throws(() => assertIndexMatchesWorkingTree(r.root), /indeks.*çalışma ağacı/i);
+    r.git('add', 'a.txt');
+    assert.doesNotThrow(() => assertIndexMatchesWorkingTree(r.root));
+    r.write('dependency.txt', 'sahne dışı bağımlılık');
+    assert.throws(() => assertIndexMatchesWorkingTree(r.root), /dependency\.txt/);
+    r.git('add', 'dependency.txt');
+    assert.doesNotThrow(() => assertIndexMatchesWorkingTree(r.root));
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('commit denetimi git bayrağının gizlediği değişikliği reddeder', () => {
+  const r = repo({ 'a.txt': 'ilk', '.gitignore': 'dist/\n' });
+  try {
+    r.write('dist/output.txt', 'üretilmiş');
+    assert.doesNotThrow(() => assertIndexMatchesWorkingTree(r.root));
+    r.git('update-index', '--assume-unchanged', 'a.txt');
+    r.write('a.txt', 'gizli değişim');
+    assert.throws(() => assertIndexMatchesWorkingTree(r.root), /a\.txt/);
+  } finally {
+    r.cleanup();
+  }
+});
+
+test('Git LF normalizasyonu diskteki CRLF baytlarını ve indeks farkını gizleyemez', () => {
+  const r = repo({ '.gitattributes': '* text=auto eol=lf\n', 'a.txt': 'bir\n' });
+  try {
+    const before = fingerprint(snapshotFiles(r.root), all);
+    r.write('a.txt', 'bir\r\n');
+    r.git('add', 'a.txt');
+    assert.equal(r.git('diff-files', '--name-only').trim(), '');
+    assert.notEqual(fingerprint(snapshotFiles(r.root), all), before);
+    assert.throws(() => assertIndexMatchesWorkingTree(r.root), /a\.txt/);
+    r.write('a.txt', 'bir\n');
+    assert.doesNotThrow(() => assertIndexMatchesWorkingTree(r.root));
+  } finally {
+    r.cleanup();
+  }
+});
 
 test('anlık görüntü izlenen, izlenmeyen ve yok sayılan dosyaları doğru ayırır', () => {
   const r = repo({ 'a.txt': 'a', '.gitignore': 'dist/\n', 'dist/out.js': 'x' });
@@ -92,6 +141,22 @@ test('silinen dosya karmayı değiştirir; yok sayılan dosyanın değişmesi de
     assert.notEqual(fingerprint(snapshotFiles(r.root), all), before);
   } finally {
     r.cleanup();
+  }
+});
+
+test('git denetim dışı işaretleri değişmiş baytı makbuzdan gizleyemez', () => {
+  for (const flag of ['--assume-unchanged', '--skip-worktree']) {
+    const r = repo({ 'a.txt': 'bir' });
+    try {
+      const before = fingerprint(snapshotFiles(r.root), all);
+      r.git('update-index', flag, 'a.txt');
+      r.write('a.txt', 'değişti');
+      assert.notEqual(fingerprint(snapshotFiles(r.root), all), before, flag);
+      unlinkSync(join(r.root, 'a.txt'));
+      assert.equal(snapshotFiles(r.root).has('a.txt'), false, `${flag}: silinen dosya`);
+    } finally {
+      r.cleanup();
+    }
   }
 });
 

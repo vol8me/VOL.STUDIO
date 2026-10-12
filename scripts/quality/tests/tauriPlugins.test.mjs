@@ -33,7 +33,12 @@ const SHELL = {
     '[package]\nname = "app"\n\n[dependencies]\ntauri-plugin-vol-x = { path = "../x" }\n',
   'app/src-tauri/src/main.rs': 'fn main() { b.plugin(tauri_plugin_vol_x::init()); }\n',
   'app/src-tauri/capabilities/default.json': JSON.stringify({
-    permissions: ['core:default', 'vol-x:default'],
+    permissions: [
+      'core:default',
+      'core:event:deny-emit',
+      'core:event:deny-emit-to',
+      'vol-x:default',
+    ],
   }),
 };
 
@@ -54,6 +59,48 @@ test('Cargo, kaynak ve yetenek ayrıştırıcıları', () => {
 test('kurulu, izinli ve tüketilen eklentiler temiz geçer', () => {
   const root = repo(SHELL);
   try {
+    assert.deepEqual(validateTauriPlugins(root, LIFECYCLE), []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('ürünün JS olay yazma yetkisi açık kalamaz', () => {
+  for (const permissions of [
+    ['core:default', 'vol-x:default'],
+    ['core:default', 'core:event:deny-emit', 'vol-x:default'],
+    ['core:event:default', 'vol-x:default'],
+  ]) {
+    const root = repo({
+      ...SHELL,
+      'app/src-tauri/capabilities/default.json': JSON.stringify({ permissions }),
+    });
+    try {
+      assert.match(validateTauriPlugins(root, LIFECYCLE).join('\n'), /JS olay yazma.*deny-emit/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }
+});
+
+test('yeni oyun şablonu da olay yazma reddini taşır', () => {
+  const path = 'tauri-v2/templates/game/src-tauri/capabilities/default.json.template';
+  const root = repo({ ...SHELL, [path]: JSON.stringify({ permissions: ['core:default'] }) });
+  try {
+    assert.match(
+      validateTauriPlugins(root, LIFECYCLE).join('\n'),
+      /default\.json\.template.*deny-emit/,
+    );
+    writeFileSync(
+      join(root, path),
+      JSON.stringify({
+        permissions: [
+          'core:default',
+          { identifier: 'core:event:deny-emit' },
+          'core:event:deny-emit-to',
+        ],
+      }),
+    );
     assert.deepEqual(validateTauriPlugins(root, LIFECYCLE), []);
   } finally {
     rmSync(root, { recursive: true, force: true });

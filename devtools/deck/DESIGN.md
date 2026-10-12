@@ -11,6 +11,8 @@ Web sonda ile native kabuk aynı ölçüm protokolünü taşır. Ortam bilgisi,
 yük ve zaman penceresi sonuçla birlikte okunur. Kısa ya da eksik pencere
 tam ölçüm gibi raporlanmaz. Kullanılan çizim yolu ve oturum sonucu
 etkileyebileceğinden kıyas aynı koşullar üzerinden yapılır.
+Süreli yük fazları kare aralıklarını yalnız kendi ölçüm penceresinde toplar;
+sondaki süresiz etkileşim fazı kare örneği biriktirmez.
 
 Devkit otomasyonu cihaz üzerinde geçici dosya ve kısayol bırakabilir;
 çalışma sonunda bunların durumu bildirilir. Kimlik, adres, oturum bilgisi ve
@@ -26,6 +28,9 @@ nedeni hata sayılmaz. Runtime ölçümü yoksa veya temizleyici ham runtime'ı
 tanıyamadıysa `unknown` yazılır. `host`, yalnız tam ortam dökümünde runtime
 değişkeninin açık yokluğu ile bildirilir; paylaşılmış kaydın yeniden
 temizlenmesi bu sınıfları kaybetmez.
+Bilinmeyen alanlar, prototype adları dahil, izinli kayıt alanlarını
+düşürmeden çıkarılır. Sinyal ve uyku aralığı kanıtı yalnız `src: rust`
+kayıtlarından türetilir; JavaScript bildirimi native kabul üretmez.
 
 Testler protokolü ve ölçüm hesaplarını doğrular. Gerçek cihazda elle
 ölçüm yapılmadıysa bu adım tamamlanmış sayılmaz.

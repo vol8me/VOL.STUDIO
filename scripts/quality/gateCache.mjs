@@ -40,40 +40,56 @@ function hashWorkingFiles(root, paths) {
 
 /**
  * Çalışma ağacındaki her izlenen ya da izlenmeyen-ama-yok-sayılmayan dosya →
- * içerik karması. Dokunulmamış dosyalar için git'in indeks karması kullanılır
- * (dosyaya yeniden bakmaz); değişen ve izlenmeyen dosyalar ham baytla karmalanır.
+ * içerik karması. Git'in temiz/normalizasyon/denetim dışı kararına güvenilmez:
+ * indeks LF taşırken diskte CRLF bulunabilir. Her mevcut girdi ham baytla
+ * karmalanır; indeks yalnız dosya envanteridir.
  *
  * @returns {Map<string, string>} yol (`/` ayraçlı) → karma
  */
 export function snapshotFiles(root) {
-  const staged = new Map();
+  const staged = new Set();
   for (const entry of nulSeparated(git(root, ['ls-files', '-s', '-z']))) {
     const tab = entry.indexOf('\t');
-    const [mode, sha] = entry.slice(0, tab).split(' ');
+    const [mode] = entry.slice(0, tab).split(' ');
     if (mode === '160000') continue;
-    staged.set(entry.slice(tab + 1), sha);
+    staged.add(entry.slice(tab + 1));
   }
-  const dirty = new Set(nulSeparated(git(root, ['diff-files', '--name-only', '-z'])));
   const untracked = nulSeparated(git(root, ['ls-files', '--others', '--exclude-standard', '-z']));
 
   // Makbuzların kendisi `node_modules/.cache` altındadır; yok sayılmaları .gitignore'a
   // bırakılmaz, yoksa makbuz yazmak kendi anahtarını değiştirirdi.
   const counted = (path) => !path.startsWith('node_modules/');
   const files = new Map();
-  const pending = [];
-  for (const [path, sha] of staged) {
-    if (!counted(path)) continue;
-    if (!dirty.has(path)) files.set(path, sha);
-    else if (existsSync(join(root, path))) pending.push(path);
-  }
-  for (const path of untracked)
-    if (counted(path) && existsSync(join(root, path))) pending.push(path);
+  const pending = [...new Set([...staged, ...untracked])].filter(
+    (path) => counted(path) && existsSync(join(root, path)),
+  );
 
   const hashes = hashWorkingFiles(root, pending);
   // Önek yok: ham karma, süzgeçsiz dosyada git'in blob karmasıyla aynıdır; aynı içerik
   // stage'lenince ya da geri dönünce aynı karmayı vermelidir.
   pending.forEach((path, index) => files.set(path, hashes[index]));
   return files;
+}
+
+/** Commit kancası yalnız kapının gördüğü ağacın tamamı sahnedeyse geçer. */
+export function assertIndexMatchesWorkingTree(root) {
+  const index = new Map();
+  for (const entry of nulSeparated(git(root, ['ls-files', '-s', '-z']))) {
+    const tab = entry.indexOf('\t');
+    const [mode, sha, stage] = entry.slice(0, tab).split(' ');
+    if (stage !== '0') throw new Error('Commit indeksi çözülmemiş çakışma içeriyor.');
+    if (mode !== '160000') index.set(entry.slice(tab + 1), sha);
+  }
+  const files = snapshotFiles(root);
+  const different = [...new Set([...index.keys(), ...files.keys()])].filter(
+    (path) => index.get(path) !== files.get(path),
+  );
+  if (different.length > 0) {
+    throw new Error(
+      `Commit indeksi çalışma ağacıyla aynı değil: ${different.join(', ')}. ` +
+        'Kapı çalışma ağacını sınar; bu dosyaları sahnele veya sahne dışı değişiklikleri ayrı çalışma alanında tut.',
+    );
+  }
 }
 
 /**

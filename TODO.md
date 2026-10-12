@@ -169,13 +169,6 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
       kapı raporu/`notRun` zincirinin uçtan uca kanıtı ve güncel
       değişikliklerden sonra taze tam `signoff` doğrulaması.
       F11.2 **AÇIK (entegrasyon kısmi)**.
-- [ ] **[P2] F11.7 — Yerel kanıtın aşılabilirliği (KISMİ).** **Yapıldı:** yeşil `signoff` ağaç karmasını/commit'i
-      yerel kayda yazar ve `pnpm high` sonunda "son yeşil signoff: yaş, ağaç aynı/değişti (N commit)" satırını (ve
-      `--json` `signoff` alanını) basar; uyarıdır, kapıyı düşürmez (`signoffRecord.test.mjs`, `gateRunner.test.mjs`
-      ağaç karması regresyonu). **Açık:** kancalar çalışma ağacını sınar, indeksi değil: kısmi sahnelemede `quick`
-      GEÇTİ, indeksteki içerik Prettier'dan düştü (deneyle). `SKIP_SIMPLE_GIT_HOOKS=1` ve `--no-verify` kancaları
-      atlar; sunucu tarafı yoktur (bulut CI yok kararı). Kapanır: indeks sınama maliyeti ölçülür ve karar yazılır
-      (ya da sınır belgelenir); onaysız pipeline eklenmez.
 - [ ] **[P3] F11.9 — Sabit beklemeler yük altında kırılganlık üretir (KISMİ).** **Yapıldı:** `fixedWaits.mjs`
       bekçisi `waitForTimeout` sayısını test dosyası başına bütçeler (`quality.json` → `fixedWaitBudget`; ölçülen
       56 çağrı / 21 dosya; artış ve unutulmuş bütçe `contract`ta düşer). **Açık:** mevcut 56 bekleme olay/koşul
@@ -190,6 +183,8 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
 
 ## Kapatılanlar
 
+- [x] F12.1 — B31–B51 kalıcılık, olay/ömür, asset, native teslim ve kapı bütünlüğü kusurları başarısız→başarılı regresyonlarla kapatıldı; güncel sözleşmeler ile değişmeyen ağaçta taze `high` (13/13, 8,3 dk) ve `signoff` (18/18, 41,8 dk) geçti; fiziksel cihaz ve insan kabulleri kendi açık işlerinde kaldı.
+- [x] F11.7 — Kapı girdileri Git işaretleri ve EOL filtresinden bağımsız ham baytla karmalanır; pre-commit öncesi/sonrası tüm indeks–çalışma ağacı eşitliği şarttır. Kısmi sahneleme, CRLF ve sahne dışı yeni bağımlılık negatifleri geçer; iki kontrolün ölçülen ek maliyeti yaklaşık 1,7 sn'dir. Yerel kancanın bilerek atlanabilmesi ve bulut CI olmaması belgelenmiş güven sınırıdır.
 - [x] F11.0 — Ajan uyumu ve bayat sayılar: `CLAUDE.md` kökü `@AGENTS.md` ile içe aktarır (Claude Code `AGENTS.md`yi kendiliğinden okumaz; önceki salt bağlantı oturum bağlamına girmiyordu, tek kaynak `AGENTS.md` kalır); `docs/gates.md` süre ve atlama sayıları taze ölçümle düzeltildi (`high` 13,4 → 4,7 dk, vitrin `e2e` 343 → 1.355 sn, WebKit 2 → 18 atlama).
 - [x] F11.3 — Aşama sayımı (`counts.mjs`, Playwright `countsReporter.mjs`) `--json`da ve aşama satırında görünür; `quality.json` → `skipBudget` atlama sayısını sınırlar (aşım, bütçesiz anahtar ve okunamayan sayım düşer; artış `ratchetExceptions` ister); motor boşlukları `docs/gates.md` "e2e motor boşlukları"nda; gerçek e2e koşusunda ölçüldü (vitrin WebKit 16+2, Chromium 1+1, VOL.TEST WebKit 1, node:test 2)
 - [x] F11.4 — Kapsam eşikleri ölçümden en çok 2 puan aşağıda (CORE 94/92/86/93, vitrin dal 70, VOL.TEST dal 92, tauri-v2 97/95/91, pen.dev 98/98/95) ve `scripts/quality/thresholdRatchet.mjs` eşik, `floor`, muafiyet ve şekil gevşetmesini taban dala göre `contract`ta reddeder; gerekçeli gevşetme `quality.json` → `ratchetExceptions` (negatif fixture + gerçek ağaçta 94→60 kontrolü)

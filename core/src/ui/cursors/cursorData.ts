@@ -1,4 +1,4 @@
-import type { CursorId, ReticleId } from './cursorNames';
+import { RETICLES, RTS_CURSORS, UI_CURSORS, type CursorId, type ReticleId } from './cursorNames';
 
 /** `assets/cursors/cursors.json` kaydı (üretilmiştir; bkz. `core/scripts/cursors/curate.mjs`). */
 export interface CursorEntry {
@@ -30,18 +30,55 @@ export function configureCursorAssets(options: { baseUrl?: string }): void {
   if (options.baseUrl !== undefined) cursorRoot = options.baseUrl.replace(/\/+$/, '');
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isPositiveFinite(value: unknown): value is number {
+  return Number.isFinite(value) && (value as number) > 0;
+}
+
+function isPaths(value: unknown): value is readonly string[] {
+  return Array.isArray(value) && value.every((path) => typeof path === 'string' && path.length > 0);
+}
+
+function hasEntries(
+  value: unknown,
+  ids: readonly string[],
+  matches: (entry: Record<string, unknown>) => boolean,
+): boolean {
+  return isRecord(value) && ids.every((id) => isRecord(value[id]) && matches(value[id]));
+}
+
+function isCursor(
+  entry: Record<string, unknown>,
+  set: CursorEntry['set'],
+  gridSize: number,
+): boolean {
+  return (
+    entry.set === set &&
+    isPaths(entry.outline) &&
+    isPaths(entry.body) &&
+    Array.isArray(entry.hotspot) &&
+    entry.hotspot.length === 2 &&
+    entry.hotspot.every(
+      (coordinate) => Number.isFinite(coordinate) && coordinate >= 0 && coordinate <= gridSize,
+    )
+  );
+}
+
 function validate(value: unknown): CursorData {
-  const data = value as Partial<CursorData> | null;
+  const data = value as CursorData;
   if (
-    !data ||
-    typeof data.cursorSize !== 'number' ||
-    typeof data.reticleSize !== 'number' ||
-    typeof data.cursors !== 'object' ||
-    typeof data.reticles !== 'object'
-  ) {
+    !isRecord(value) ||
+    !isPositiveFinite(data.cursorSize) ||
+    !isPositiveFinite(data.reticleSize) ||
+    !hasEntries(data.cursors, UI_CURSORS, (entry) => isCursor(entry, 'ui', data.cursorSize)) ||
+    !hasEntries(data.cursors, RTS_CURSORS, (entry) => isCursor(entry, 'rts', data.cursorSize)) ||
+    !hasEntries(data.reticles, RETICLES, (entry) => isPaths(entry.paths))
+  )
     throw new Error('İmleç kaydı geçersiz');
-  }
-  return data as CursorData;
+  return data;
 }
 
 /**

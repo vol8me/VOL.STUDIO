@@ -44,6 +44,7 @@ if (outputRootFromRepo.startsWith('..') || isAbsolute(outputRootFromRepo)) {
 }
 
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+validateManifest(manifest);
 const {
   entityId,
   domain,
@@ -140,6 +141,76 @@ try {
 }
 
 console.log(`Bitti: ${parts.length} parça, ${previews.length} önizleme -> ${entityRoot}`);
+
+// Şema, kaynak PNG'ler tüketilmeden ve önceki metadata değiştirilmeden
+// tamamlanır. Kimlik/eklem ve disk sahipliği ayrıca taşıma planında sınanır.
+function validateManifest(manifest) {
+  requireObject(manifest, 'manifest');
+  for (const field of [
+    'entityId',
+    'domain',
+    'sourcePenFile',
+    'sourceSheetNodeId',
+    'sourceSheetName',
+  ]) {
+    requireString(manifest[field], field);
+  }
+  if (manifest.rootSizePx !== undefined && manifest.rootSizePx !== null) {
+    requireObject(manifest.rootSizePx, 'rootSizePx');
+    for (const field of ['width', 'height']) {
+      requireFiniteNumber(manifest.rootSizePx[field], `rootSizePx.${field}`);
+    }
+  }
+  for (const name of ['parts', 'previews']) {
+    const list = manifest[name];
+    if (name === 'previews' && list === undefined) continue;
+    if (!Array.isArray(list) || (name === 'parts' && list.length === 0)) {
+      fail(`${name} ${name === 'parts' ? 'boş olmayan bir' : 'bir'} dizi olmalı`);
+    }
+    list.forEach((item, index) => {
+      const label = `${name}[${index}]`;
+      requireObject(item, label);
+      requireString(item.partId, `${label}.partId`);
+      for (const field of ['width', 'height']) {
+        requireFiniteNumber(item[field], `${label}.${field}`);
+      }
+      if (name === 'previews') return;
+      requireString(item.type, `${label}.type`);
+      if (item.x !== undefined || item.y !== undefined) {
+        requireFiniteNumber(item.x, `${label}.x`);
+        requireFiniteNumber(item.y, `${label}.y`);
+      }
+      if (item.rotation !== undefined && item.rotation !== null) {
+        requireFiniteNumber(item.rotation, `${label}.rotation`);
+      }
+      if (
+        item.category !== undefined &&
+        item.category !== null &&
+        typeof item.category !== 'string'
+      ) {
+        fail(`${label}.category metin ya da null olmalı`);
+      }
+    });
+  }
+}
+
+function requireObject(value, label) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    fail(`${label} bir nesne olmalı`);
+  }
+}
+
+function requireString(value, label) {
+  if (typeof value !== 'string' || value.length === 0) {
+    fail(`${label} boş olmayan bir metin olmalı`);
+  }
+}
+
+function requireFiniteNumber(value, label) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    fail(`${label} sonlu bir sayı olmalı`);
+  }
+}
 
 /**
  * Bir listenin taşıma planını doğrular. Eksik dosya, tekrar eden ya da

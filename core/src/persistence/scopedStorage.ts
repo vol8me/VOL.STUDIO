@@ -108,7 +108,8 @@ export async function migrateLegacyStore(options: {
     const scopedKey = isScopedKey(key);
     if (scopedKey && skipScopedKeys !== false) continue;
     const value = await legacy.get<unknown>(key);
-    if (value === undefined) continue; // hiç yazılmamış ya da zaten taşınmış
+    // SaveManager null'u geçersiz kayıt sayar; göç de hedefe taşımadan atlar.
+    if (value === undefined || value === null) continue;
     const scope = table.get(key);
     if (!scopedKey && scope === undefined) defaulted.push(key);
     const target: ScopedKey = scopedKey ? key : `${scope ?? defaultScope}.${key}`;

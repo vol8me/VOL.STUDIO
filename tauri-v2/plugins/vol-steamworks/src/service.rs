@@ -4,6 +4,8 @@
 //!
 //! Gerçek impl `imp` modülündedir ve yalnız feature açıkken derlenir.
 
+#[cfg(feature = "steamworks")]
+use crate::input_initialization::initialize_input;
 pub use crate::text_input::{FloatingInputMode, TextInputMode};
 use serde::Serialize;
 
@@ -182,6 +184,7 @@ pub(crate) mod imp {
             // Pompa durup join edildikten sonra kayıtlar, en son istemci düşer.
             callbacks: Vec<CallbackHandle>,
             client: Client,
+            input_ready: bool,
             pending: Arc<Mutex<PendingInput>>,
             stop: Arc<AtomicBool>,
             pump: Option<std::thread::JoinHandle<()>>,
@@ -275,9 +278,14 @@ pub(crate) mod imp {
                 }
                 match Client::init_app(app_id) {
                     Ok(client) => {
-                        client.input().init(false);
-                        let manifest_ok = manifest
-                            .map(|path| client.input().set_input_action_manifest_file_path(&path));
+                        let (input_ready, manifest_ok) = initialize_input(
+                            || client.input().init(false),
+                            || {
+                                manifest.map(|path| {
+                                    client.input().set_input_action_manifest_file_path(&path)
+                                })
+                            },
+                        );
                         let pending = Arc::new(Mutex::new(PendingInput::default()));
                         let callbacks = self.register_callbacks(&client, pending.clone());
                         let stop = Arc::new(AtomicBool::new(false));
@@ -286,6 +294,7 @@ pub(crate) mod imp {
                             session: Session {
                                 callbacks,
                                 client,
+                                input_ready,
                                 pending,
                                 stop,
                                 pump: Some(pump),
@@ -353,6 +362,16 @@ pub(crate) mod imp {
                 }
             }
 
+            fn input_client(&self) -> Result<Client, String> {
+                self.ensure_connected();
+                let state = self.state.lock().unwrap();
+                match &*state {
+                    State::Up { session, .. } if session.input_ready => Ok(session.client.clone()),
+                    State::Up { .. } => Err("Steam Input başlatılamadı".into()),
+                    State::Down { error } => Err(error.clone()),
+                }
+            }
+
             pub fn status(&self) -> Status {
                 self.ensure_connected();
                 let state = self.state.lock().unwrap();
@@ -384,7 +403,7 @@ pub(crate) mod imp {
                             big_picture: utils.is_steam_in_big_picture_mode(),
                             overlay_enabled: utils.is_overlay_enabled(),
                             cloud_enabled: Some(remote.is_cloud_enabled_for_app()),
-                            input_ready: true,
+                            input_ready: session.input_ready,
                             manifest_ok: *manifest_ok,
                             error: None,
                         }
@@ -401,7 +420,7 @@ pub(crate) mod imp {
                 if !std::path::Path::new(path).is_file() {
                     return Err(format!("manifesto dosyası yok: {path}"));
                 }
-                let client = self.client()?;
+                let client = self.input_client()?;
                 Ok(client.input().set_input_action_manifest_file_path(path))
             }
 
@@ -411,7 +430,7 @@ pub(crate) mod imp {
                 if !valid_name(name) {
                     return Err(format!("geçersiz aksiyon seti adı: {name:?}"));
                 }
-                let client = self.client()?;
+                let client = self.input_client()?;
                 let input = client.input();
                 input.run_frame();
                 let set = input.get_action_set_handle(name);
@@ -423,7 +442,7 @@ pub(crate) mod imp {
             }
 
             pub fn controllers(&self) -> Result<Vec<ControllerInfo>, String> {
-                let client = self.client()?;
+                let client = self.input_client()?;
                 let input = client.input();
                 input.run_frame();
                 Ok(input
@@ -441,7 +460,7 @@ pub(crate) mod imp {
             /// (0–65535); 0,0 durdurur. `steamworks` 0.13 sarmalayıcısı bu
             /// çağrıyı açmadığı için SDK fonksiyonu doğrudan çağrılır.
             pub fn vibrate(&self, left: u16, right: u16) -> Result<u32, String> {
-                let client = self.client()?;
+                let client = self.input_client()?;
                 let input = client.input();
                 input.run_frame();
                 let controllers = input.get_connected_controllers();
@@ -467,7 +486,7 @@ pub(crate) mod imp {
                 if !digital.iter().chain(analog).all(|name| valid_name(name)) {
                     return Err("geçersiz aksiyon adı".into());
                 }
-                let client = self.client()?;
+                let client = self.input_client()?;
                 let input = client.input();
                 input.run_frame();
                 let Some(&handle) = input.get_connected_controllers().first() else {
@@ -518,7 +537,7 @@ pub(crate) mod imp {
                 if !valid_name(action_set) || !valid_name(action) {
                     return Err("geçersiz aksiyon seti/aksiyon adı".into());
                 }
-                let client = self.client()?;
+                let client = self.input_client()?;
                 let input = client.input();
                 input.run_frame();
                 let set = input.get_action_set_handle(action_set);
@@ -652,7 +671,7 @@ pub(crate) mod imp {
             /// Steam Input bağlama paneli — kullanıcının kendi atamalarını
             /// düzenlediği overlay ekranı. Overlay yoksa `false`.
             pub fn show_binding_panel(&self) -> Result<bool, String> {
-                let client = self.client()?;
+                let client = self.input_client()?;
                 let input = client.input();
                 input.run_frame();
                 match input.get_connected_controllers().first() {
@@ -681,19 +700,44 @@ pub(crate) mod imp {
                 if !file.exists() {
                     return Ok(None);
                 }
-                Ok(Some(b64_encode(&cloud::read(file.read())?)))
+                let name = std::ffi::CString::new(name)
+                    .map_err(|_| "bulut adı NUL içeremez".to_owned())?;
+                // SAFETY: client çağrı boyunca yaşar; ad NUL'suzdur.
+                let remote = unsafe { steamworks::sys::SteamAPI_SteamRemoteStorage_v016() };
+                let size = unsafe {
+                    steamworks::sys::SteamAPI_ISteamRemoteStorage_GetFileSize(remote, name.as_ptr())
+                };
+                let bytes = cloud::read(size, |target| unsafe {
+                    // SAFETY: hedef yazılabilir, yaşayan ve en çok 1 MiB+1
+                    // baytlık dilimdir; uzunluk i32 sınırının altındadır.
+                    steamworks::sys::SteamAPI_ISteamRemoteStorage_FileRead(
+                        remote,
+                        name.as_ptr(),
+                        target.as_mut_ptr().cast(),
+                        target.len() as i32,
+                    )
+                })?;
+                Ok(Some(b64_encode(&bytes)))
             }
 
             pub fn cloud_write(&self, name: &str, data_base64: &str) -> Result<bool, String> {
                 let name = validated_cloud_name(name)?;
                 let bytes = cloud::decode(data_base64)?;
-                let client = self.client()?;
-                let file = client.remote_storage().file(name);
-                use std::io::Write;
-                file.write()
-                    .write_all(&bytes)
-                    .map(|_| true)
-                    .map_err(|e| format!("bulut yazma hatası: {e}"))
+                let _client = self.client()?;
+                let name = std::ffi::CString::new(name)
+                    .map_err(|_| "bulut adı NUL içeremez".to_owned())?;
+                // Sarmalayıcının stream Drop'u Close sonucunu yutar. 1 MiB ile
+                // sınırlı tek SDK yazımı gerçek teslim bool'unu IPC'ye taşır.
+                // SAFETY: _client arayüzü çağrı boyunca yaşatır; ad NUL'suz,
+                // baytlar yaşayan dilimdir ve uzunluk i32 sınırının altındadır.
+                cloud::commit(&bytes, |data| unsafe {
+                    steamworks::sys::SteamAPI_ISteamRemoteStorage_FileWrite(
+                        steamworks::sys::SteamAPI_SteamRemoteStorage_v016(),
+                        name.as_ptr(),
+                        data.as_ptr().cast(),
+                        data.len() as i32,
+                    )
+                })
             }
 
             pub fn cloud_delete(&self, name: &str) -> Result<bool, String> {
@@ -743,6 +787,7 @@ pub(crate) mod imp {
                 let stop = Arc::new(AtomicBool::new(false));
                 let pump = Service::<tauri::Wry>::spawn_pump(client.clone(), stop.clone());
                 let session = Session {
+                    input_ready: true,
                     callbacks,
                     client,
                     pending,

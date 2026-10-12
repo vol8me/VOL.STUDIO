@@ -255,6 +255,7 @@ export class CursorController implements Disposable {
   }
 
   private clearChrome(): void {
+    if (!this.chrome) return;
     for (const id of UI_CURSORS) this.chromeRoot.style.removeProperty(cursorVar(id));
   }
 

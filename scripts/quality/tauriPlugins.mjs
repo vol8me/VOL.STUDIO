@@ -79,6 +79,40 @@ function capabilitiesOf(crateDir) {
     .map((name) => readJson(join(dir, name)));
 }
 
+/** JS kaynaklı olay native kapanış/uyku kanıtına dönüşemez. */
+function eventWriteProblems(capability, owner) {
+  const permissions = new Set(
+    (capability.permissions ?? []).map((entry) =>
+      typeof entry === 'string' ? entry : entry.identifier,
+    ),
+  );
+  const grants = [
+    'core:default',
+    'core:event:default',
+    'core:event:allow-emit',
+    'core:event:allow-emit-to',
+  ];
+  if (!grants.some((permission) => permissions.has(permission))) return [];
+  return ['core:event:deny-emit', 'core:event:deny-emit-to']
+    .filter((permission) => !permissions.has(permission))
+    .map((permission) => `${owner}: JS olay yazma kapalı olmalı; ${permission} eksik.`);
+}
+
+function applicationProblems(crate, registeredAnywhere) {
+  if (!crate.app) return [];
+  const problems = crate.capabilities.flatMap((capability) =>
+    eventWriteProblems(capability, `${crate.dir}/capabilities`),
+  );
+  for (const prefix of capabilityPrefixes(crate.capabilities)) {
+    if (!registeredAnywhere.has(snake(prefix))) {
+      problems.push(
+        `${crate.dir}/capabilities: "${prefix}:" izni var ama eklenti hiçbir yerde kurulmuyor.`,
+      );
+    }
+  }
+  return problems;
+}
+
 /**
  * JS eklenti bağımlılıkları, Cargo bağımlılıkları, Rust'taki kayıtlar ve
  * uygulama yetenekleri birbirine bağlıdır: kaydı olmayan JS eklentisi çalışma
@@ -147,14 +181,12 @@ export function validateTauriPlugins(root, lifecycle = loadRepoLifecycle(root)) 
         `${crate.dir}: tauri_plugin_${name} kuruluyor ama hiçbir uygulama ona izin vermiyor ve JS tüketicisi yok.`,
       );
     }
-    if (!crate.app) continue;
-    for (const prefix of capabilityPrefixes(crate.capabilities)) {
-      if (!registeredAnywhere.has(snake(prefix))) {
-        problems.push(
-          `${crate.dir}/capabilities: "${prefix}:" izni var ama eklenti hiçbir yerde kurulmuyor.`,
-        );
-      }
-    }
+    problems.push(...applicationProblems(crate, registeredAnywhere));
+  }
+
+  const template = 'tauri-v2/templates/game/src-tauri/capabilities/default.json.template';
+  if (existsSync(join(root, template))) {
+    problems.push(...eventWriteProblems(readJson(join(root, template)), template));
   }
 
   return problems;

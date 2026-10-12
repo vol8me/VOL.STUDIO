@@ -1033,3 +1033,96 @@ ayrıştırılmadığı için hiçbir değişikliğe atfedilmez. F11.1 (kök ned
 işaretçi regresyonu) ve F11.2 (gerçek tam kapı hata yolu entegrasyonu) bu koşuyla
 kapanmaz: yeşil koşu hata yolunu tetiklemedi. Fiziksel cihaz ve insan
 kabulleri (F09.2 vb.) ayrı açık işlerdir.
+
+## 27. Kaynak sağlamlaştırma: güven sınırları ve hata yolları (2026-10-12)
+
+**Amaç:** yedi aktif pakette görünen davranışı kaynağa doğru izlemek; dış girdi,
+disk, IPC, abonelik, kapanış ve kalite kanıtının bozulduğu yolları gerçek
+regresyonlarla ayırmak. Çalışma `feature/core-hardening` üzerinde, temiz
+`4101d91c` ağacından başladı. Merge veya bulut pipeline eklenmedi.
+
+İnceleme CORE/tüketici kalıcılığı ve yaşam döngüsü, Tauri komutları ve ürün
+yetenekleri, Steam sarmalayıcısı, Pencil düzenleyicisi, audio dinleme sunucusu,
+Deck sonda/sanitizer ve kapı koşucusunu kapsar. Graphify `query`/`affected`
+yerel gezinme için kullanıldı; bayat grafiğin sonuçları kaynakla doğrulandı.
+Pencil kaynağı açılmadı veya düzenlenmedi; kapı yalnız Git içerik karması üretir. Kayıtlar gerçek geçici
+dizinlerde; süreç ve HTTP sınamaları yalnız kendi yerel test örneklerindedir.
+
+Fallow 3.33.1, 1.649 dosya ve 24.421 işlev üzerinde sağlık adayları üretti;
+605 işlev varsayılan karmaşıklık eşiğinin üzerinde. Kapsam modeli
+`static_estimated` olduğundan bu sayı gerçek LCOV veya ürün kusuru sayısı
+değildir. Güvenlik çıktısındaki **41 aday**, doğrulanmış 41 açık anlamına
+gelmez; 29.822 çözümlenemeyen çağrı yeri taramanın eksiksizlik iddiasını da
+engeller. Kabuk kullanmayan argv çağrıları, yerel devkit HTTP kanalı ve
+güvenilir üretilmiş SVG/audio asset yüklemeleri bağlamla değerlendirildi;
+keyfî uzak girdi zinciri kanıtlanmadan açık diye sayılmadı. Public katalog
+ve betik exportları yalnız otomatik "unused" önerisiyle silinmedi.
+
+### Doğrulanan kaynak kusurları
+
+| Kimlik | Etki ve kök neden                                                                                              | Kaynak düzeltmesi / regresyon                                                                                                                |
+| ------ | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| B31    | Eski `off()` yeni EventBus aboneliğini siliyordu.                                                              | İptal idempotent; silme yalnız sahip olduğu kümeye uygulanır.                                                                                |
+| B32    | İç içe yayın `once` dinleyicisini iki kez çalıştırıyordu.                                                      | Wrapper tüketim bayrağı; iç yayın ve dış snapshot regresyonu.                                                                                |
+| B33    | Hata kancası fırlatınca kalan olay dinleyicileri çalışmıyordu.                                                 | Kanca hatası yalıtılır; asıl dinleyici hata sayısı korunur.                                                                                  |
+| B34    | Legacy `null` kayıt göç doğrulamasını düşürüp oyun açılışını durduruyordu.                                     | SaveManager'ın boş kayıt sözleşmesiyle uyumlu atlama; kaynak korunur, hedef kirlenmez.                                                       |
+| B35    | `chrome:false` imleç önizlemesi kapanınca uygulama sahibinin CSS'i siliniyordu.                                | Önizleme sahip olmadığı chrome değişkenlerini temizlemez.                                                                                    |
+| B36    | Bozuk imleç kayıt haritası yüklenmiş sayılıp `ready` sözünü reddediyordu.                                      | Izgara, katalog, set, hotspot ve vektör dizileri doğrulanır; sistem imleci yedeği korunur.                                                   |
+| B37    | Eksik/yanlış tipli manifestten kullanılamayan rig metadata üretilip staging tüketiliyordu.                     | Kaynak bilgisi/geometri/dizi şeması bütün disk değişimlerinden önce; önceki hedef ve kaynak PNG korunumu.                                    |
+| B38    | Native store sınırsız dosyayı okuyup JSON ayrıştırabiliyordu.                                                  | Jenerasyon başına 1 MiB; en çok sınır+1 bayt okuma, ayrıştırmadan önce yazma reddi; büyük dosya karantinaya taşınmaz veya eski kayda düşmez. |
+| B39    | Her store adı süreç sonuna kadar güçlü kilit referansı tutuyordu.                                              | Zayıf referanslı registry ölü sahipleri budar; eşzamanlı aynı ad aynı kilitte kalır.                                                         |
+| B40    | Diagnostics IPC çok satır ve `src:rust` kaydını yazabiliyordu.                                                 | Tek JSON nesnesi, 64 KiB, native `src:js`, değiştirilemeyen Rust zarfı ve JS event yazma reddi; disk/ACL regresyonları.                      |
+| B41    | Steam Input `Init=false` olsa da hazır bildiriliyordu.                                                         | SDK sonucu oturumda tutulur; Input komutları hazır olmayan oturumda reddedilir.                                                              |
+| B42    | Steam dosya sarmalayıcısının Drop'u kapanış hatasını yuttuğu için başarısız Cloud yazımı başarılı görünüyordu. | Sınırlı tek SDK FileWrite sonucu teslim sonucudur; `false` hata olarak taşınır.                                                              |
+| B43    | Steam Cloud okuyucusu async tamamlanmayı süresiz döngüde bekliyordu.                                           | Tek sınırlı FileRead; negatif/büyük boyut ve eksik/değişmiş okuma sayısı IPC öncesi reddedilir.                                              |
+| B44    | Git denetim dışı işaretleri ve LF normalizasyonu değişmiş disk baytını makbuzdan gizliyordu.                   | Her girdinin ham karması; değişiklik, silme ve CRLF sahneleme negatifleri.                                                                   |
+| B45    | Kapı çalışırken kaynak değişse de kapı yeşil dönüyordu.                                                        | Değişen dalga başarısız, sonraki aşamalar NOT-RUN; geçiş makbuzu yok.                                                                        |
+| B46    | Kısmi sahnelemede sınanan dosyayla commit dosyası farklı olabiliyordu.                                         | Pre-commit öncesi/sonrası indeks eşleşme şartı; sahne dışı yeni bağımlılık da reddedilir.                                                    |
+| B47    | Dinleme WAV yolu dizin olunca/okuma hatasında stream hatası süreci düşürüyordu.                                | Hata ve istemci kapanışı stream ömrüne bağlanır; gerçek HTTP/disk regresyonu.                                                                |
+| B48    | Sanitizer bilinmeyen `constructor`/`toString` alanında bütün kaydı kaybediyordu.                               | Enum tablosunda yalnız kendi anahtarları okunur; geçerli sinyal korunur.                                                                     |
+| B49    | JS kaydı native signal/uyku/çıkış kanıtı sayılabiliyordu.                                                      | Native olay değerlendirmesi `src:rust` şartına bağlıdır.                                                                                     |
+| B50    | Deck'in süresiz etkileşim fazı her kareyi dizide biriktiriyordu.                                               | Ölçüm örnekleri yalnız sonlu fazlarda tutulur; son faz büyümez, ilk faz ölçümü korunur.                                                      |
+| B51    | Yerel tanı sunucusu yabancı Origin/Host ve sınırsız gövdeyi kabul edip kontrol karakterlerini loga taşıyordu.  | Loopback/native köken, Host, 64 KiB ve snapshot biçimi doğrulanır; log tek satırdır, yarım istek süreci düşürmez.                            |
+
+Bu bulgular uzaktan kod çalıştırma iddiası değildir. B38–B40 IPC/disk kaynak
+sınırı ve kanıt sahipliğini; B44–B46 yerel geliştirme kanıtını korur. B31–B37
+ve B41–B43/B47–B50 kullanılabilirlik, doğru teslim ve kaynak yaşamı kusurlarıdır.
+B51 geliştirme yardımcısının yerel HTTP sınırıdır; gönderilen oyunda tüketicisi yoktur.
+
+### Kapı kanıtı ve kalan kabul
+
+Başlangıçta koşulan `high --fresh`, yeni RED testlerinin paralelde eklendiği
+ağaçta `coverage` aşamasında altı CORE regresyonundan düştü (4,7 dk).
+Önceki aşamaların geçmesi temiz başlangıç için tam `high` kanıtı değildir;
+`coverage-shape` NOT-RUN kaldı. Sonraki taze `quick`, Steam service dosyasının 1.000 satır sert sınırını aşmasından düştü; eşiğe istisna eklenmedi, Input başlatma mekanizması ve testleri özel kardeş modüle ayrıldı. Bağımsız incelemenin iki ek P2 bulgusu (LF normalizasyonu ve JS event yan yolu) yeniden üretilip kapatıldı. ACL mekanizma testi gerçek Tauri RuntimeAuthority kullanır; ürün/template izinleri contract negatifleriyle korunur. Crate dışı derleme okuması kaldırıldı. Son bağımsız diff incelemesi yeni engelleyici bulgu vermedi.
+
+Bağımsız `security-js` ve `security-rust` güncel denetimleri geçti:
+braces'in davranışla kanıtlı yaması ve sekiz kayıtlı Rust riski korunuyor;
+güvenlik/kapsam/atlama ve piksel temeli değiştirilmedi. Steam Input ve Cloud SDK
+başarı sonuçlarının anlamı [Input Init](https://partner.steamgames.com/doc/api/ISteamInput#Init)
+ve [RemoteStorage FileWrite](https://partner.steamgames.com/doc/api/ISteamRemoteStorage#FileWrite)
+birincil sözleşmeleriyle karşılaştırıldı. Stub/helper testi fiziksel Steam
+istemcisi, Cloud aktarımı veya kol kabulü değildir.
+
+Yerel kancalar ve makbuzlar imzasızdır; kancayı bilerek atlayan kullanıcıya
+karşı uzak bir kapı sağlamaz. Linux/Deck gerçek paket, Windows installer,
+Android düzeltme sonrası tüm cihazlar, uzun oturum ve insan kabulü bu turda
+koşulmadı. F07–F09, F10.13 ve F11.1/F11.2 açık kabul ölçütleri korunur.
+Yeşil kaynak kapısı tek başına ürünün bütün platformlarda yayın kabulü değildir.
+
+İncelenen fakat bu turda kusur diye kanıtlanmayan sınırlar: Linux logind
+sinyalinde sender/path filtreleme, aynı OS kullanıcısının store symlink/reparse
+müdahalesi ve tanı komutunun eşzamanlı disk sync maliyeti. Bunlar için Linux
+bus politikası/cihaz veya ölçüm gerekir; Windows kaynak testi bu kanıtı üretmez.
+Mevcut tek `main` pencere, uzak capability yokluğu ve sıkı CSP doğrulandı;
+uzaktan ayrıcalık aşımı veya dosya yolu kaçışı kanıtlanmadı.
+
+Kaynak sonrası iki taze `high` koşusu `bundle`da durdu (2,3 dk): vitrin app 227,3 KiB / bütçe 227,1. Doğrulama kapsamı korunarak beş düzenleme ölçüldü; 232.708 → 232.649 B gzip9 (59 B azalma), kapı 227,2 KiB bildirdi. Tek modülü build-load hookunda HEAD doğrulayıcısıyla karşılaştırma, aynı app grafiğinde **232.502 → 232.649 B**, yalnız tam imleç doğrulaması için **147 B** ek maliyet gösterdi. Bu nedenle `quality.json` vitrin app bütçesi **227,1 → 227,2 KiB** (+0,1 KiB) olarak ölçülen değere güncellendi; vendor, CSS, oyun, kapsam ve atlama bütçeleri değişmedi. Uygulama kodu vendor parçasına taşınmadı. İlk geçici dosya karşılaştırmasının Windows geri yükleme kilidi sonrası kaynak geri kuruldu, 62 regresyon ve gerçek build aynı 232.649 B ile yeniden doğrulandı; son karşılaştırma kaynak dosyasına dokunmaz.
+
+**Taze high PASS:** 13/13 aşama, 8,3 dk; ön yük %34. Contract 662 geçti / 2 atlandı; static, build, bundle, scaling, audio-test, sekiz Rust birimi, coverage ve coverage-shape geçti. Rust 59,5 sn, değişiklik seçiminin genişlettiği audio-test 148,6 sn, coverage 140,8 sn; toplam sürenin tamamı native derlemeye atfedilemez. Ayrı tüm özellikli native test: **76 geçti / 1 fiziksel Steam testi ignored**, fmt PASS. Genel timeout değiştirilmeden yükle eşzamanlı tam audio koşusu 2.259 PASS / 6 timeout verdi; düşen üç dosya yalnız başına aynı timeout ile 26/26 geçti. Bu tekrar ilk tam koşunun düşüşünü silmez.
+
+**Nihai taze signoff PASS:** değişmeyen kaynak ağacında 18/18 aşama, 41,8 dk; ön yük %23. Contract 662 geçti / 2 atlandı. E2E 1.078 geçti / 21 atlandı / 0 düştü: vitrin Chromium ana 523/1, WebKit ana 459/16, Chromium sessiz 27/1, WebKit sessiz 26/2; VOL.TEST Chromium 22/0 ve WebKit 21/1. E2E 1.383,0 sn (vitrin 1.288,7 sn), tam audio kapsamı 541,7 sn ve audio verify 106,2 sn sürdü; iki güvenlik aşaması da geçti. Genel timeout, atlama/kapsam eşiği veya piksel temeli gevşetilmedi. Bu tek koşu F10.13'ün üç ardışık tur ve 10 dk vitrin E2E kapanışını karşılamaz; F11.1/F11.2 hata yolu ve gerçek işaretçi kök nedenini de üretmez.
+
+Fallow audit varsayılan kurallarla **FAIL** döndü: sıfır yeni dead-code ve sıfır kopya grubu, miras alınmış 12 unused adayı ve değişen 24 dosyada 45 karmaşıklık/CRAP adayı. Kapsam kaynağı `estimated` olduğundan gerçek regresyonları olan yeni indeks karşılaştırıcısını bile kapsamsız sayar; bu puan test kapsamı kanıtı değildir. Node CLI/test girişlerini eksik tanıdığı için çalıştırılan organize betiği ve contract testleri unused görünür; bu uyarılar silme kanıtı değildir. Yeni doğrulayıcı ve dalga/makbuz/uygulama-izin kontrolleri özel yardımcılarla ayrıldı. Fallow boundary/policy yapılandırması yoktur; sıfır değerleri ölçüm sayılmaz. Mimari kanıt repo contract/layer bekçilerindendir. Bu genel uyarılar tam kalite kapısının PASS sonucu diye sunulmaz.
+
+Ham karma/indeks kontrolü yedi örnekte sırasıyla 767 / 827 ms medyan ölçüldü (yerel, aynı ağaç; kısmi sahneleme reddi). Pre-commit iki eşleşme kontrolü yapar; yaklaşık 1,7 sn ek kontrol maliyeti, ayrı indeks kopyasında tam takımı ikinci kez sınama yerine uyuşmazlığı reddeden karardır. Yerel CLI yanlış indeksle çıkış 1 verdi; Git bayrağı, CRLF ve sahne dışı yeni bağımlılık regresyonları geçer.

@@ -152,6 +152,11 @@ benchmark geçişini ve insanın kabul ettiği üretim yeteneğini ayırır.
 Arama spec'i boyut alanlarını, stratejiyi ve bütçeyi açık tanımlar. Aday
 kimliği ve sırası deterministiktir; ön denetim toplam maliyeti render
 öncesinde sınar. Aday seçimi ile production job seçimi ayrı kayıttır.
+
+Yerel dinleme sunucusu yalnız adayın gerçek ses dosyasını sunar. Dosya
+açılırken kaybolursa 404 döner; stream okuma hatası süreci düşürmez.
+Yanıt başladıktan sonraki okuma hatası o bağlantıyı kapatır. İstemci
+bağlantısı ve HEAD isteği sona erdiğinde dosya stream'i de kapatılır.
 Onaylı aday job'a terfi eder ve standart yayın kapısından geçer.
 
 Opt-in semantic scorer harici argv sürecidir, kabuk çalıştırmaz. Skor

@@ -12,6 +12,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { validateRigMetadata } from '@volstudio/core/rig/metadata';
 
 /**
  * `organize-pen-export.mjs` CLI'sinin gerçek süreç + gerçek geçici disk
@@ -57,12 +58,21 @@ function stage(...ids: string[]): void {
   for (const id of ids) writeFileSync(join(staging, `${id}.png`), `png:${id}`);
 }
 
-function organize(parts: Item[], previews: Item[] = []) {
+function organize(parts: Item[], previews: Item[] = [], overrides: Record<string, unknown> = {}) {
   // Manifest staging'in dışında: staging başarıyla silinirken de okunabilsin.
   const manifestFile = join(output, '..', `manifest-${process.pid}.json`);
   writeFileSync(
     manifestFile,
-    JSON.stringify({ entityId: 'walker', domain: 'enemies', parts, previews }),
+    JSON.stringify({
+      entityId: 'walker',
+      domain: 'enemies',
+      sourcePenFile: 'reference.pen',
+      sourceSheetNodeId: 'sheet',
+      sourceSheetName: 'Export Sheet',
+      parts,
+      previews,
+      ...overrides,
+    }),
   );
   const result = spawnSync(process.execPath, [SCRIPT, manifestFile, staging, output], {
     encoding: 'utf8',
@@ -122,6 +132,7 @@ describe('organize-pen-export CLI (B11)', () => {
     ) as {
       parts: { partId: string; sourceNodeId: string; parentPartId: string | null }[];
     };
+    expect(() => validateRigMetadata(metadata)).not.toThrow();
     expect(metadata.parts.map((p) => [p.partId, p.sourceNodeId, p.parentPartId])).toEqual([
       ['hull', 'n1', null],
       ['arm', 'n2', 'hull'],
@@ -129,6 +140,45 @@ describe('organize-pen-export CLI (B11)', () => {
     expect(existsSync(staging)).toBe(false);
     for (const dir of ['parts', 'previews', 'metadata']) expect(leftovers(entity(dir))).toEqual([]);
   });
+
+  it.each([
+    ['sourcePenFile', { sourcePenFile: undefined }],
+    ['sourceSheetNodeId', { sourceSheetNodeId: 5 }],
+    ['sourceSheetName', { sourceSheetName: '' }],
+    ['rootSizePx', { rootSizePx: { width: '10', height: 10 } }],
+    ['parts', { parts: {} }],
+    ['parts', { parts: [] }],
+    ['previews', { previews: 'bozuk' }],
+    ['parts[0].width', { parts: [{ ...part('n1', 'body'), width: undefined }] }],
+    ['parts[0].partId', { parts: [{ ...part('n1', 'body'), partId: 123 }] }],
+    ['parts[0].height', { parts: [{ ...part('n1', 'body'), height: '10' }] }],
+    ['parts[0].type', { parts: [{ ...part('n1', 'body'), type: undefined }] }],
+    ['parts[0].x', { parts: [{ ...part('n1', 'body'), x: '10', y: 10 }] }],
+    ['parts[0].y', { parts: [{ ...part('n1', 'body'), x: 10 }] }],
+    ['parts[0].rotation', { parts: [{ ...part('n1', 'body'), rotation: '90' }] }],
+    ['parts[0].category', { parts: [{ ...part('n1', 'body'), category: {} }] }],
+    ['previews[0].width', { previews: [{ ...part('n2', 'card'), width: null }] }],
+  ])(
+    'bozuk %s kaynakları tüketmeden ve önceki export değişmeden reddedilir',
+    (field, overrides) => {
+      stage('n1');
+      expect(organize([part('n1', 'body')]).status).toBe(0);
+      const metadataBefore = readFileSync(entity('metadata', 'walker.metadata.json'), 'utf8');
+      mkdirSync(staging, { recursive: true });
+      writeFileSync(join(staging, 'n1.png'), 'png:yeni');
+      stage('n2');
+
+      const result = organize([part('n1', 'body')], [], overrides);
+
+      expect(result.status, result.stderr).toBe(1);
+      expect(result.stderr).toContain(field);
+      expect(readFileSync(join(staging, 'n1.png'), 'utf8')).toBe('png:yeni');
+      expect(readFileSync(join(staging, 'n2.png'), 'utf8')).toBe('png:n2');
+      expect(readFileSync(entity('parts', 'body.png'), 'utf8')).toBe('png:n1');
+      expect(readFileSync(entity('metadata', 'walker.metadata.json'), 'utf8')).toBe(metadataBefore);
+      expect(existsSync(entity('previews'))).toBe(false);
+    },
+  );
 
   it('farklı partId aynı nodeId: yazımdan önce reddedilir, kaynak ve hedef dokunulmaz', () => {
     stage('n1', 'n2');

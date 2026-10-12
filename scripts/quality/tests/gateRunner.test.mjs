@@ -236,7 +236,7 @@ test('signoff hiçbir makbuza güvenmez', async () => {
   }
 });
 
-test('koşu sırasında ağaç değişirse makbuz yazılmaz', async () => {
+test('koşu sırasında ağaç değişirse kapı düşer ve makbuz yazılmaz', async () => {
   const r = fixture();
   try {
     const racing = recorder({
@@ -246,7 +246,12 @@ test('koşu sırasında ağaç değişirse makbuz yazılmaz', async () => {
       },
     });
     const report = await run(r, 'quick', racing.execute);
-    assert.equal(report.status, 'passed');
+    assert.equal(report.status, 'failed');
+    assert.ok(report.failures.some(({ stage }) => stage === 'lint'));
+    assert.match(report.failures[0].entry.output, /ağaç koşu sırasında değişti/);
+    assert.ok(
+      report.stages.every((stage) => stage.status !== 'passed' || stage.stage === 'node-pin'),
+    );
     assert.equal(receipts(r, 'lint', '@volstudio/a'), 0, 'yarışan aşama makbuz bırakmaz');
     assert.ok(report.notes.some((note) => note.includes('ağaç koşu sırasında değişti')));
   } finally {
@@ -479,6 +484,8 @@ test('koşu sırasında dosya değişirse bitiş karması başlangıçtan ayrıl
       return { code: 0, output: '' };
     };
     const report = await run(r, 'fast', execute);
+    assert.equal(report.status, 'failed');
+    assert.equal(report.stages.find(({ stage }) => stage === 'test').status, 'notRun');
     assert.notEqual(report.tree.start, report.tree.end);
     assert.ok(report.notes.some((note) => note.includes('ağaç koşu sırasında değişti')));
   } finally {
