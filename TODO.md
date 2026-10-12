@@ -183,6 +183,7 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
 
 ## Kapatılanlar
 
+- [x] F13.1 — 24 oyunculu co-op/PvP otomasyon, RTS ve aksiyon backend araştırması kaynaklarla tamamlandı; Colyseus/Talo/Nakama/SpacetimeDB/özel taşıma ayrımı, repo sınırları ve gerçek Node + 24 istemcili simülasyon uyum deneyi [raporda](docs/backend-research.md). Üretim yükü, kalıcılık, prediction ve cihaz kabulü yapılmış sayılmaz; önerilen backend yerleşimi henüz uygulanmadı.
 - [x] F12.1 — B31–B51 kalıcılık, olay/ömür, asset, native teslim ve kapı bütünlüğü kusurları başarısız→başarılı regresyonlarla kapatıldı; güncel sözleşmeler ile değişmeyen ağaçta taze `high` (13/13, 8,3 dk) ve `signoff` (18/18, 41,8 dk) geçti; fiziksel cihaz ve insan kabulleri kendi açık işlerinde kaldı.
 - [x] F11.7 — Kapı girdileri Git işaretleri ve EOL filtresinden bağımsız ham baytla karmalanır; pre-commit öncesi/sonrası tüm indeks–çalışma ağacı eşitliği şarttır. Kısmi sahneleme, CRLF ve sahne dışı yeni bağımlılık negatifleri geçer; iki kontrolün ölçülen ek maliyeti yaklaşık 1,7 sn'dir. Yerel kancanın bilerek atlanabilmesi ve bulut CI olmaması belgelenmiş güven sınırıdır.
 - [x] F11.0 — Ajan uyumu ve bayat sayılar: `CLAUDE.md` kökü `@AGENTS.md` ile içe aktarır (Claude Code `AGENTS.md`yi kendiliğinden okumaz; önceki salt bağlantı oturum bağlamına girmiyordu, tek kaynak `AGENTS.md` kalır); `docs/gates.md` süre ve atlama sayıları taze ölçümle düzeltildi (`high` 13,4 → 4,7 dk, vitrin `e2e` 343 → 1.355 sn, WebKit 2 → 18 atlama).
