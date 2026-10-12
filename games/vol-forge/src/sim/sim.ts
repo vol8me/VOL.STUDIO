@@ -1,7 +1,7 @@
 import { createStatefulRandom, type StatefulRandom } from '@volstudio/core/random';
 import { SpatialIndex } from '@volstudio/core/spatial';
 import { BUILDING, ITEM_COUNT, KIND, MACHINES, WAVES, WORLD } from '@/config/forge';
-import { fnv1a } from '@/net/bytes';
+import { fnv1a, hashBuffer } from '@/net/bytes';
 import { applyCommand, Ledger, RESULT, type ForgeCommand } from './commands';
 import { readSnapshot, snapshotDimensions, writeSnapshot, type SnapshotMeta } from './snapshot';
 import { stepBelts, stepMachines } from './belts';
@@ -114,6 +114,14 @@ export class ForgeSim {
     return { fresh: true, result };
   }
 
+  /**
+   * Defter ve sıra denetimi olmadan uygular. Kilit adımlı istemci sunucunun zaten kabul ettiği
+   * komutları bu yoldan uygular; ağdan gelen ham komut için `apply` kullanılır.
+   */
+  applyRaw(command: ForgeCommand): number {
+    return applyCommand(this.state, command);
+  }
+
   /** Rastgele akışın anlık durumu; anlık görüntüye ve testlere girer. */
   get rngState(): number {
     return this.random.getState();
@@ -195,6 +203,58 @@ export class ForgeSim {
   hash(): number {
     const bytes = this.snapshot();
     return fnv1a(bytes.subarray(0, bytes.length - 4));
+  }
+
+  /**
+   * Oynanışı belirleyen durumun hızlı karması: defter hariç, anlık görüntüden bağımsız ve
+   * kopyasız. Sunucu ve kilit adımlı istemci aynı adımda aynı değeri üretmelidir; 256×256 dünyada
+   * milisaniye mertebesindedir.
+   */
+  stateHash(): number {
+    const s = this.state;
+    const scalars = new Float64Array([
+      s.tick,
+      s.nextWaveTick,
+      s.wave,
+      s.defeats,
+      s.coreHp,
+      s.flowTick,
+      s.flowDirty ? 1 : 0,
+      this.random.getState(),
+      s.freeCount,
+      s.aliveUnits,
+    ]);
+    let hash = hashBuffer(scalars, 0x811c9dc5);
+    hash = hashBuffer(s.inventory, hash);
+    hash = hashBuffer(s.delivered, hash);
+    for (const array of [
+      s.ore,
+      s.kind,
+      s.rot,
+      s.team,
+      s.hp,
+      s.timer,
+      s.bufA,
+      s.bufOut,
+      s.beltCount,
+      s.beltItem,
+      s.beltPos,
+      s.flowDir,
+      s.unitGen,
+    ])
+      hash = hashBuffer(array, hash);
+    hash = hashBuffer(s.freeUnits.subarray(0, s.freeCount), hash);
+    const record = new Float64Array(5);
+    for (const unit of s.units) {
+      if (!unit.alive) continue;
+      record[0] = unit.slot;
+      record[1] = unit.kind;
+      record[2] = unit.x;
+      record[3] = unit.y;
+      record[4] = unit.hp;
+      hash = hashBuffer(record, hash);
+    }
+    return hash;
   }
 
   /** Test ve ölçüm: araya komut girmeden `count` adım. */

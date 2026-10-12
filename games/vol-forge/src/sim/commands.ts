@@ -14,9 +14,10 @@ export const RESULT = {
   protected: 6,
   badKind: 7,
   duplicate: 8,
-  tooFar: 9,
-  rateLimited: 10,
-  malformed: 11,
+  rateLimited: 9,
+  malformed: 10,
+  /** Sunucu günlüğü yazamıyor: komut kabul edilmedi, durum değişmedi. */
+  unavailable: 11,
 } as const;
 export type CommandResult = (typeof RESULT)[keyof typeof RESULT];
 
@@ -144,6 +145,13 @@ export function applyCommand(s: ForgeState, command: ForgeCommand): CommandResul
   return RESULT.ok;
 }
 
+/** Oyuncu anahtarı: istemcinin ürettiği kalıcı kimlik. Anlık görüntü biçimi 255 bayta kadar taşır; 64'te kesilir. */
+export const PLAYER_KEY_PATTERN = /^[A-Za-z0-9_-]{8,64}$/;
+
+export function isPlayerKey(value: unknown): value is string {
+  return typeof value === 'string' && PLAYER_KEY_PATTERN.test(value);
+}
+
 /** Oyuncu başına son komut sırası ve sonucu; yeniden gönderilen komut ikinci kez uygulanmaz. */
 export class Ledger {
   private readonly entries = new Map<string, { seq: number; result: number }>();
@@ -159,8 +167,16 @@ export class Ledger {
     return { fresh: false, result: seq === entry.seq ? entry.result : RESULT.duplicate };
   }
 
+  /** Geçersiz anahtar anlık görüntü biçimini bozacağı için girişte reddedilir. */
   record(key: string, seq: number, result: number): void {
+    if (!isPlayerKey(key))
+      throw new RangeError('Oyuncu anahtarı 8-64 harf, rakam, _ veya - olmalı.');
     this.entries.set(key, { seq, result });
+  }
+
+  /** Oyuncunun kabul edilmiş son komut sırası; hiç komutu yoksa 0. İstemci buradan devam eder. */
+  lastSeq(key: string): number {
+    return this.entries.get(key)?.seq ?? 0;
   }
 
   forEach(visit: (key: string, seq: number, result: number) => void): void {

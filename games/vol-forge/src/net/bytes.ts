@@ -13,6 +13,12 @@ export class ByteWriter {
     return this.cursor;
   }
 
+  /** Daha önce yazılmış 4 baytı sonradan doldurur (uzunluk öneki için). */
+  patchU32(at: number, value: number): void {
+    if (at < 0 || at + 4 > this.cursor) throw new RangeError('Yama yazılmış aralığın dışında.');
+    this.view.setUint32(at, value, true);
+  }
+
   /** Yazılanın kopyası; yazıcı yeniden kullanılabilir. */
   finish(): Uint8Array {
     return this.buffer.slice(0, this.cursor);
@@ -139,4 +145,39 @@ export function fnv1a(data: Uint8Array, seed = 0x811c9dc5): number {
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
   return hash >>> 0;
+}
+
+/**
+ * Durum karması için hızlı 32 bit karıştırıcı: dört baytı tek adımda işler (FNV'den ~4 kat hızlı).
+ * Güvenlik amacı yoktur; iki simülasyonun aynı durumda olup olmadığını denetler.
+ */
+export function hashBuffer(view: ArrayBufferView, seed: number): number {
+  let hash = seed >>> 0;
+  if (view.byteOffset % 4 === 0 && view.byteLength % 4 === 0) {
+    const words = new Uint32Array(view.buffer, view.byteOffset, view.byteLength / 4);
+    for (let index = 0; index < words.length; index++) {
+      hash = Math.imul(hash ^ words[index], 0x01000193);
+      hash ^= hash >>> 15;
+    }
+    return hash >>> 0;
+  }
+  return fnv1a(new Uint8Array(view.buffer, view.byteOffset, view.byteLength), hash);
+}
+
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let index = 0; index < 256; index++) {
+    let value = index;
+    for (let bit = 0; bit < 8; bit++) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+    table[index] = value >>> 0;
+  }
+  return table;
+})();
+
+/** CRC-32 (IEEE); günlük kayıtlarında kesik veya bozuk yazımı yakalar. */
+export function crc32(data: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (let index = 0; index < data.length; index++)
+    crc = CRC_TABLE[(crc ^ data[index]) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
 }

@@ -4,6 +4,7 @@ import { ByteReader, ByteWriter } from '../../src/net/bytes';
 import {
   applyCommand,
   COMMAND,
+  isPlayerKey,
   Ledger,
   parseCommand,
   readCommand,
@@ -144,22 +145,33 @@ describe('applyCommand', () => {
 describe('Ledger', () => {
   it('yeni seq taze, aynı seq önbellek, eski seq kopya sayılır', () => {
     const ledger = new Ledger();
-    expect(ledger.lookup('a', 1)).toEqual({ fresh: true });
-    ledger.record('a', 5, RESULT.occupied);
-    expect(ledger.lookup('a', 5)).toEqual({ fresh: false, result: RESULT.occupied });
-    expect(ledger.lookup('a', 3)).toEqual({ fresh: false, result: RESULT.duplicate });
-    expect(ledger.lookup('a', 6)).toEqual({ fresh: true });
-    expect(ledger.lookup('b', 1)).toEqual({ fresh: true });
+    expect(ledger.lookup('player-a', 1)).toEqual({ fresh: true });
+    ledger.record('player-a', 5, RESULT.occupied);
+    expect(ledger.lookup('player-a', 5)).toEqual({ fresh: false, result: RESULT.occupied });
+    expect(ledger.lookup('player-a', 3)).toEqual({ fresh: false, result: RESULT.duplicate });
+    expect(ledger.lookup('player-a', 6)).toEqual({ fresh: true });
+    expect(ledger.lookup('player-b', 1)).toEqual({ fresh: true });
     expect(ledger.size).toBe(1);
+  });
+
+  it('geçersiz oyuncu anahtarını ve sıfır sırasını reddeder, son sırayı söyler', () => {
+    const ledger = new Ledger();
+    for (const bad of ['', 'kısa', 'çok-uzun-'.repeat(20), 'boşluk var 123', 'x'.repeat(65)])
+      expect(() => ledger.record(bad, 1, 0)).toThrow(RangeError);
+    expect(isPlayerKey('player-01_ok')).toBe(true);
+    expect(isPlayerKey(42)).toBe(false);
+    expect(ledger.lastSeq('player-a')).toBe(0);
+    ledger.record('player-a', 7, 0);
+    expect(ledger.lastSeq('player-a')).toBe(7);
   });
 
   it('sıralı gezer ve temizlenir', () => {
     const ledger = new Ledger();
-    ledger.record('z', 1, 0);
-    ledger.record('a', 2, 0);
+    ledger.record('player-z', 1, 0);
+    ledger.record('player-a', 2, 0);
     const keys: string[] = [];
     ledger.forEach((key) => keys.push(key));
-    expect(keys).toEqual(['a', 'z']);
+    expect(keys).toEqual(['player-a', 'player-z']);
     ledger.clear();
     expect(ledger.size).toBe(0);
   });
@@ -168,9 +180,9 @@ describe('Ledger', () => {
     const sim = smallSim();
     const command: ForgeCommand = { type: COMMAND.place, x: 5, y: 5, kind: KIND.conveyor, rot: 0 };
     const ore = sim.state.inventory[1];
-    expect(sim.apply('p', 1, command)).toEqual({ fresh: true, result: RESULT.ok });
-    expect(sim.apply('p', 1, command)).toEqual({ fresh: false, result: RESULT.ok });
-    expect(sim.apply('p', 0, command)).toEqual({ fresh: false, result: RESULT.duplicate });
+    expect(sim.apply('player-p', 1, command)).toEqual({ fresh: true, result: RESULT.ok });
+    expect(sim.apply('player-p', 1, command)).toEqual({ fresh: false, result: RESULT.ok });
+    expect(sim.apply('player-p', 0, command)).toEqual({ fresh: false, result: RESULT.duplicate });
     expect(sim.state.inventory[1]).toBe(ore - 1);
   });
 });

@@ -21,18 +21,18 @@
     "capacity": "tsx --tsconfig tsconfig.json scripts/capacity.ts"
   },
   "dependencies": {
-    "@volstudio/core": "workspace:*",
-    "@volstudio/network": "workspace:*",
     "@colyseus/core": "0.18.18",
     "@colyseus/schema": "5.0.39",
+    "@colyseus/sdk": "0.18.5",
     "@colyseus/ws-transport": "0.18.4",
-    "phaser": "^4.2.1",
-    "@volstudio/tauri-v2": "workspace:*"
+    "@volstudio/core": "workspace:*",
+    "@volstudio/network": "workspace:*",
+    "@volstudio/tauri-v2": "workspace:*",
+    "phaser": "^4.2.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@tauri-apps/cli": "2.11.4",
-    "@colyseus/sdk": "0.18.5",
     "@types/node": "^26.1.2",
     "esbuild": "^0.27.0",
     "i18next": "26.3.6",

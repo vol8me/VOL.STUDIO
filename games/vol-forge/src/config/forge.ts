@@ -139,10 +139,8 @@ export const START_RESOURCES = { ore: 300, plate: 40 } as const;
 /** Yol alanı en çok bu aralıkta yeniden hesaplanır (katı bina değişimi sonrası). */
 export const FLOW_RECOMPUTE_MIN_TICKS = 15;
 
-/** Oyuncunun inşa menzili (tile) ve komut hız sınırı. */
+/** Oyuncu sınırları. Komutlar dünya genelinde geçerlidir: oyuncunun konumu ya da menzili yoktur. */
 export const PLAYER = {
-  buildRange: 28,
-  speed: 14 / 30,
   commandsPerSecond: 20,
   maxPlayers: 12,
 } as const;
@@ -153,6 +151,12 @@ export const NET = {
   dynamicsEvery: 2,
   /** Konveyör içeriği anlık görüntüsünün aralığı (adım). */
   beltsEvery: 6,
+  /** Kilit adımlı eşitlemede paket aralığı (adım): 30 Hz'de 15 paket/sn. */
+  syncEvery: 2,
+  /** Durum karmasının pakete eklendiği aralık (adım): 5 saniye. */
+  hashEvery: 150,
+  /** Ortak durum (HUD) aralığı (adım). */
+  hudEvery: 15,
   /** İstemcinin isteyebileceği en büyük ilgi alanı (chunk). */
   maxAoiChunks: { x: 8, y: 6 },
   /** Soket tamponu bu bayttan büyükse dinamik paket atlanır. */

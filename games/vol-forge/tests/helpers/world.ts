@@ -16,7 +16,7 @@ export function place(
   y: number,
   kind: number,
   rot = 0,
-  key = 'test',
+  key = 'test-player',
 ): number {
   const command: ForgeCommand = { type: COMMAND.place, x, y, kind, rot };
   return sim.apply(key, seq++, command).result;

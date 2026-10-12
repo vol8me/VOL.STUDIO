@@ -1,6 +1,6 @@
 import { ByteReader, ByteWriter, fnv1a } from '@/net/bytes';
-import { ITEM_COUNT, UNIT_POOL } from '@/config/forge';
-import type { Ledger } from './commands';
+import { BELT, ITEM_COUNT, KIND, UNIT_KIND, UNIT_POOL } from '@/config/forge';
+import { isPlayerKey, type Ledger } from './commands';
 import type { ForgeState } from './state';
 
 const MAGIC = 0x53574656; // "VFWS"
@@ -132,6 +132,7 @@ export function readSnapshot(bytes: Uint8Array, s: ForgeState, ledger: Ledger): 
       copy.set(input.bytes(array.byteLength));
       return copy;
     });
+    validateTiles(s, target, staged);
     const unitGen = input.bytes(UNIT_POOL).slice();
     const freeCount = input.u32();
     if (freeCount > UNIT_POOL) throw new SnapshotError('Birim havuzu bozuk.');
@@ -145,11 +146,13 @@ export function readSnapshot(bytes: Uint8Array, s: ForgeState, ledger: Ledger): 
       y: input.f64(),
       hp: input.f64(),
     }));
+    validateUnits(s, free, units);
     const entries = input.u32();
     const players: { key: string; seq: number; result: number }[] = [];
     for (let index = 0; index < entries; index++) {
       const length = input.u8();
       const key = new TextDecoder().decode(input.bytes(length));
+      if (!isPlayerKey(key)) throw new SnapshotError('Defterde geçersiz oyuncu anahtarı var.');
       players.push({ key, seq: input.u32(), result: input.u8() });
     }
     if (input.remaining !== 0) throw new SnapshotError('Anlık görüntüde artık bayt var.');
@@ -188,5 +191,51 @@ export function readSnapshot(bytes: Uint8Array, s: ForgeState, ledger: Ledger): 
   } catch (error) {
     if (error instanceof SnapshotError) throw error;
     throw new SnapshotError(error instanceof Error ? error.message : 'Anlık görüntü okunamadı.');
+  }
+}
+
+const BAD_STATE = 'Anlık görüntü içeriği geçersiz: ';
+
+/** Tile dizilerinin değer aralıkları; sağlaması geçerli ama anlamsız dosya canlı durumu bozamaz. */
+function validateTiles(s: ForgeState, target: ArrayBufferView[], staged: Uint8Array[]): void {
+  const at = (array: ArrayBufferView) => target.indexOf(array);
+  const bytes = (array: ArrayBufferView) => staged[at(array)];
+  const kinds = bytes(s.kind);
+  const rots = bytes(s.rot);
+  const counts = bytes(s.beltCount);
+  const items = bytes(s.beltItem);
+  const flows = new Int8Array(bytes(s.flowDir).buffer);
+  const ores = bytes(s.ore);
+  for (let tile = 0; tile < s.count; tile++) {
+    if (kinds[tile] > KIND.wall) throw new SnapshotError(BAD_STATE + 'tile türü');
+    if (rots[tile] > 3) throw new SnapshotError(BAD_STATE + 'yön');
+    if (counts[tile] > BELT.slots) throw new SnapshotError(BAD_STATE + 'bant doluluğu');
+    if (ores[tile] > 1) throw new SnapshotError(BAD_STATE + 'cevher');
+    if (flows[tile] < -1 || flows[tile] > 3) throw new SnapshotError(BAD_STATE + 'yol alanı');
+  }
+  for (let index = 0; index < items.length; index++)
+    if (items[index] >= ITEM_COUNT) throw new SnapshotError(BAD_STATE + 'eşya türü');
+}
+
+/** Boş yuva listesi ile canlı birimler havuzu tam ve çakışmasız bölmelidir. */
+function validateUnits(
+  s: ForgeState,
+  free: number[],
+  units: { slot: number; kind: number; x: number; y: number; hp: number }[],
+): void {
+  const owner = new Uint8Array(UNIT_POOL);
+  for (const slot of free) {
+    if (slot >= UNIT_POOL || owner[slot] !== 0) throw new SnapshotError(BAD_STATE + 'boş yuva');
+    owner[slot] = 1;
+  }
+  for (const unit of units) {
+    if (unit.slot >= UNIT_POOL || owner[unit.slot] !== 0)
+      throw new SnapshotError(BAD_STATE + 'birim yuvası');
+    owner[unit.slot] = 2;
+    if (unit.kind !== UNIT_KIND.crawler && unit.kind !== UNIT_KIND.brute)
+      throw new SnapshotError(BAD_STATE + 'birim türü');
+    const finite = Number.isFinite(unit.x) && Number.isFinite(unit.y) && Number.isFinite(unit.hp);
+    if (!finite || unit.x < 0 || unit.y < 0 || unit.x > s.width || unit.y > s.height)
+      throw new SnapshotError(BAD_STATE + 'birim konumu');
   }
 }

@@ -40,7 +40,7 @@ describe('determinizm', () => {
         const command = place(10 + (step % 30), 10, KIND.wall);
         a.state.inventory[ITEM.plate] += 8;
         b.state.inventory[ITEM.plate] += 8;
-        expect(a.apply('p', step, command)).toEqual(b.apply('p', step, command));
+        expect(a.apply('player-p', step, command)).toEqual(b.apply('player-p', step, command));
       }
       a.step();
       b.step();
@@ -65,14 +65,14 @@ describe('anlık görüntü', () => {
   it('geri yüklenen simülasyon canlı olanla aynı karmayı ve aynı geleceği taşır', () => {
     const live = busy();
     live.run(700);
-    live.apply('ali', 1, place(12, 12, KIND.wall));
-    live.apply('veli', 4, place(13, 12, KIND.wall));
+    live.apply('player-ali', 1, place(12, 12, KIND.wall));
+    live.apply('player-veli', 4, place(13, 12, KIND.wall));
     const bytes = live.snapshot();
     const restored = ForgeSim.restore(bytes, { sustainUnits: 60 });
     expect(restored.hash()).toBe(live.hash());
     expect(restored.tick).toBe(live.tick);
     expect(restored.snapshot()).toEqual(bytes);
-    expect(restored.ledger.lookup('ali', 1)).toEqual(live.ledger.lookup('ali', 1));
+    expect(restored.ledger.lookup('player-ali', 1)).toEqual(live.ledger.lookup('player-ali', 1));
     for (let step = 0; step < 900; step++) {
       live.step();
       restored.step();
@@ -85,10 +85,13 @@ describe('anlık görüntü', () => {
     const live = busy();
     const command = place(14, 14, KIND.wall);
     live.state.inventory[ITEM.plate] = 100;
-    const first = live.apply('ali', 9, command);
+    const first = live.apply('player-ali', 9, command);
     const restored = ForgeSim.restore(live.snapshot());
     const plates = restored.state.inventory[ITEM.plate];
-    expect(restored.apply('ali', 9, command)).toEqual({ fresh: false, result: first.result });
+    expect(restored.apply('player-ali', 9, command)).toEqual({
+      fresh: false,
+      result: first.result,
+    });
     expect(restored.state.inventory[ITEM.plate]).toBe(plates);
   });
 
@@ -167,6 +170,73 @@ describe('bozuk anlık görüntü', () => {
       return body;
     });
     expect(() => ForgeSim.restore(sealed)).toThrow(SnapshotError);
+  });
+});
+
+describe('anlamsız ama sağlaması geçerli dosya', () => {
+  /** Gövdeyi oyun durumu alanlarının başlangıç konumlarıyla düzenler. */
+  const HEADER = 4 + 4 + 2 + 2 + 4 * 5 + 8 + 1 + 4 + 4 * 3 * 2;
+  const TILES = 64 * 64;
+  const PER_TILE = 1 + 1 + 1 + 1 + 2 + 2 + 1 + 1 + 1 + 4 + 8 + 1;
+  const UNITS_AT = HEADER + TILES * PER_TILE;
+
+  function broken(edit: (view: DataView, body: Uint8Array) => void, ticks = 200): void {
+    const live = busy();
+    live.run(ticks);
+    const target = ForgeSim.create({ ...SMALL, seed: 55 });
+    const before = target.hash();
+    const sealed = reseal(live.snapshot(), (body) => {
+      edit(new DataView(body.buffer, body.byteOffset, body.byteLength), body);
+      return body;
+    });
+    expect(() => readSnapshot(sealed, target.state, target.ledger)).toThrow(SnapshotError);
+    expect(target.hash()).toBe(before);
+  }
+
+  it('havuz dışı birim yuvasını reddeder ve hedef durumu bozmaz', () => {
+    broken((view) => {
+      const freeCount = view.getUint32(UNITS_AT + 2048, true);
+      // İlk canlı birimin yuvası: boş liste, canlı sayısı, sonra birim kaydı.
+      const firstUnit = UNITS_AT + 2048 + 4 + freeCount * 2 + 4;
+      view.setUint16(firstUnit, 60000, true);
+    });
+  });
+
+  it('boş listede ve canlı birimde tekrar eden yuvayı reddeder', () => {
+    broken((view) => {
+      const freeAt = UNITS_AT + 2048 + 4;
+      view.setUint16(freeAt + 2, view.getUint16(freeAt, true), true);
+    });
+  });
+
+  it('sonlu olmayan birim konumunu ve bilinmeyen birim türünü reddeder', () => {
+    const unitAt = (view: DataView) =>
+      UNITS_AT + 2048 + 4 + view.getUint32(UNITS_AT + 2048, true) * 2 + 4;
+    broken((view) => view.setFloat64(unitAt(view) + 2 + 1, Number.NaN, true));
+    broken((view) => view.setUint8(unitAt(view) + 2, 9));
+  });
+
+  it('tile alanlarındaki aralık dışı değerleri reddeder', () => {
+    const kindsAt = HEADER + TILES; // ore'dan sonra kind
+    broken((view) => view.setUint8(kindsAt + 10, 77));
+    broken((view) => view.setUint8(kindsAt + TILES + 10, 9)); // rot
+    broken((view) => view.setUint8(HEADER + TILES * 10 + 10, 200)); // beltCount
+  });
+
+  it('defterde geçersiz oyuncu anahtarını reddeder', () => {
+    const live = busy();
+    live.apply('player-ok', 1, place(5, 5, KIND.conveyor));
+    const bytes = live.snapshot();
+    const marker = new TextEncoder().encode('player-ok');
+    const at = bytes.findIndex((_, index) =>
+      marker.every((value, i) => bytes[index + i] === value),
+    );
+    expect(at).toBeGreaterThan(0);
+    const sealed = reseal(bytes, (body) => {
+      body[at] = 0x20; // boşluk anahtar kuralını bozar
+      return body;
+    });
+    expect(() => ForgeSim.restore(sealed)).toThrow(/anahtar/);
   });
 });
 

@@ -77,7 +77,7 @@ değildir. Komutlar: `pnpm --filter @volstudio/vol-forge capacity` ve `games/vol
 | 20 dünya × (21.617 bant, 1.500 birim) tek iş parçacığında          | 14,216 ms | 14,141 | 16,202 | 19,274 | %42,6                |
 
 Bütçe 30 Hz'de 33,3 ms'dir; hiçbir koşuda aşılmadı. 60 Hz bütçesi (16,7 ms) yalnız son satırda
-%0,6 turda aşıldı. GC: 21 bin bantlı tek dünyada 100 sn'lik koşuda 4 duraklama, toplam 1,5 ms.
+%0,6 turda aşıldı. GC: 21 bin bantlı tek dünyada 3.000 adımda (100 sn simülasyon zamanı, birkaç sn gerçek süre) 4 duraklama, toplam 1,5 ms.
 Aşama dökümünde bantlar süreyi domine eder (21 bin bantta 0,56 ms'nin 0,43 ms'i); birim ve taret
 yoğun olsa da küçüktür: 1.500 birim 46 taretin menzilinde yığılınca indeks yenileme + hedef tarama
 tek tick'te p99 1,27 ms'dir.
@@ -88,8 +88,10 @@ kararlı. RSS 66 → 82 MB iki basamakta yükseldi (yığın düz olduğu için 
 sayfalar olabilir; ayrıştırılmadı).
 
 **Çıkarım:** "binlerce konveyör + yüzlerce birim, oyuncu yokken işleyen dünya" simülasyon açısından
-Node/TypeScript için sorun değildir; marj 20–60 kattır. Dolayısıyla seçim kararı simülasyon
-maliyetine değil, çoğaltma (replikasyon), dayanıklılık ve işletim sorularına bağlıdır.
+Node/TypeScript için sorun değildir. Tek dünyada 33,3 ms bütçenin ~60 katı (21 bin bant) ile ~400 katı
+(3 bin bant) altındayız. Aynı iş parçacığına 20 yoğun dünya yüklenince marj ~2,3 kata düşer ve 60 Hz
+bütçesi aşılır: yoğun 20 dünya tek süreçte değil, çekirdek başına süreç/işçi olarak dağıtılmalıdır.
+Seçim kararı bu yüzden simülasyon maliyetine değil, çoğaltma, dayanıklılık ve işletim sorularına bağlıdır.
 
 ## 12 Ekim 2026 ikinci tur: kaynak, uygulama ve maliyet kararı
 
