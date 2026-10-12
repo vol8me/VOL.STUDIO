@@ -22,15 +22,23 @@ export async function startWorldServer(port = 2567, host = '127.0.0.1') {
   return { server, endpoint: `http://${host}:${address.port}` };
 }
 
+/** Ortam değişkenlerinden dinleme adresini okur; geçersiz port başlatmayı durdurur. */
+export function listenSettings(env: Readonly<Record<string, string | undefined>>): {
+  port: number;
+  host: string;
+} {
+  const port = Number(env.VOL_NET_PORT ?? 2567);
+  if (!Number.isSafeInteger(port) || port < 0 || port > 65535) {
+    throw new RangeError('VOL_NET_PORT 0–65535 arasında olmalı.');
+  }
+  return { port, host: env.VOL_NET_HOST ?? '127.0.0.1' };
+}
+
 if (
   process.argv[1] &&
   import.meta.url === new URL(`file:///${process.argv[1].replaceAll('\\', '/')}`).href
 ) {
-  const port = Number(process.env.VOL_NET_PORT ?? 2567);
-  const host = process.env.VOL_NET_HOST ?? '127.0.0.1';
-  if (!Number.isSafeInteger(port) || port < 0 || port > 65535) {
-    throw new Error('VOL_NET_PORT 0–65535 arasında olmalı.');
-  }
+  const { port, host } = listenSettings(process.env);
   const started = await startWorldServer(port, host);
   console.info(`[VOL.TEST] Network hazır: ${started.endpoint}`);
 }

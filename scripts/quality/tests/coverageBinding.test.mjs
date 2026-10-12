@@ -17,6 +17,20 @@ test('eşik kaldırma, yanlış paket ve dolaylı override gerçek yüklemede re
       )}; export default { test: { coverage: { thresholds, include: ['src/**/*.ts'], exclude: [] } } };`,
       true,
     ],
+    [
+      'server',
+      `const thresholds = ${JSON.stringify(
+        expected,
+      )}; export default { test: { coverage: { thresholds, include: ['src/**/*.ts', 'server/**/*.ts'], exclude: [] } } };`,
+      true,
+    ],
+    [
+      'foreign',
+      `const thresholds = ${JSON.stringify(
+        expected,
+      )}; export default { test: { coverage: { thresholds, include: ['src/**/*.ts', 'scripts/**/*.ts'], exclude: [] } } };`,
+      false,
+    ],
     ['missing', 'export default { test: { coverage: {} } };', false],
     [
       'wrong',

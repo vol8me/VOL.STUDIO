@@ -15,7 +15,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.ts', 'server/**/*.ts'],
       exclude: ['src/**/index.ts', 'src/**/*.d.ts'],
       thresholds: quality.packages['@volstudio/vol-test'],
     },

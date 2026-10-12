@@ -1,6 +1,8 @@
+import { matchMaker } from '@colyseus/core';
 import { Client, type Room } from '@colyseus/sdk';
 import { afterEach, describe, expect, it } from 'vitest';
 import { startWorldServer } from '../../server/index';
+import type { WorldRoom } from '../../server/WorldRoom';
 
 let server: Awaited<ReturnType<typeof startWorldServer>> | undefined;
 const clients: Room[] = [];
@@ -41,6 +43,18 @@ async function join(): Promise<Room> {
   const room = await new Client(server!.endpoint).joinOrCreate('voltest', { protocol: 1 });
   clients.push(room);
   return room;
+}
+
+function local(room: Room): WorldRoom {
+  return matchMaker.getLocalRoomById(room.roomId) as unknown as WorldRoom;
+}
+
+async function until(predicate: () => boolean, timeoutMs = 5000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!predicate()) {
+    if (Date.now() > deadline) throw new Error('Koşul zamanında gerçekleşmedi.');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
 }
 
 afterEach(async () => {
@@ -88,4 +102,57 @@ describe('gerçek WebSocket üzerinden VOL.TEST oda otoritesi', () => {
     expect(current.y).toBeLessThan(4096);
     expect(state(first).players.has(second.sessionId)).toBe(true);
   }, 12_000);
+
+  it('ilk oyuncu çıkınca simülasyonda sahipsiz araç kalmaz', async () => {
+    server = await startWorldServer(0);
+    const first = await join();
+    const second = await join();
+    await until(() => local(first).simulatedVehicles === 2);
+    await first.leave();
+    clients.splice(clients.indexOf(first), 1);
+    await until(() => local(second).activeVehicles === 1);
+    expect(local(second).simulatedVehicles).toBe(1);
+    const third = await join();
+    await until(() => local(third).activeVehicles === 2);
+    expect(local(third).simulatedVehicles).toBe(2);
+  }, 12_000);
+
+  it('çıkan oyuncunun yuvası yeniden kullanılır ve doğan araçlar çakışmaz', async () => {
+    server = await startWorldServer(0);
+    const rooms = await Promise.all([join(), join(), join(), join()]);
+    await until(() => local(rooms[0]).activeVehicles === 4);
+    await rooms[1].leave();
+    clients.splice(clients.indexOf(rooms[1]), 1);
+    await until(() => local(rooms[0]).activeVehicles === 3);
+    const late = await join();
+    await until(() => local(late).activeVehicles === 4);
+    expect(local(late).vehiclePositions()).toHaveLength(4);
+    expect(local(late).minimumVehicleGap()).toBeGreaterThan(66);
+  }, 12_000);
+
+  it('saniyede sınırı aşan istemciyi düşürür, normal 60 Hz istemciyi tutar', async () => {
+    server = await startWorldServer(0);
+    const flood = await join();
+    const steady = await join();
+    await until(() => local(flood).activeVehicles === 2);
+    let floodClosed = false;
+    flood.onLeave(() => {
+      floodClosed = true;
+    });
+    for (let seq = 0; seq < 400; seq++) flood.send('input', intent(seq));
+    await until(() => floodClosed, 5000);
+    clients.splice(clients.indexOf(flood), 1);
+    await until(() => local(steady).activeVehicles === 1);
+
+    let steadyClosed = false;
+    steady.onLeave(() => {
+      steadyClosed = true;
+    });
+    for (let seq = 0; seq < 120; seq++) {
+      steady.send('input', intent(seq));
+      await new Promise((resolve) => setTimeout(resolve, 1000 / 60));
+    }
+    expect(steadyClosed).toBe(false);
+    expect(local(steady).activeVehicles).toBe(1);
+  }, 20_000);
 });

@@ -146,16 +146,16 @@ içine uzanmaz. Efektler ayrı yaşam süreli sınırlı havuzlardır.
 
 ## Can, hasar ve yeniden doğma
 
-Her \`Vehicle\` bir \`Vitality\` taşır; can, ölüm, doğal onarım, yeniden doğma
+Her `Vehicle` bir `Vitality` taşır; can, ölüm, doğal onarım, yeniden doğma
 sayacı ve geçici hasar korumasının tek sahibi saf simülasyondur. Phaser saati,
 tarayıcı zamanlayıcısı veya rastgele sayı kullanılmaz. Varsayılan savaş değerleri
-\`src/config/combat.ts\` içindedir: 100 can, 34 mermi hasarı, son hasardan 6 sn
+`src/config/combat.ts` içindedir: 100 can, 34 mermi hasarı, son hasardan 6 sn
 sonra saniyede 4 can onarım, ölümden 4 sn sonra yeniden doğma ve 1,2 sn koruma.
 Duvar ve araç çarpışması eşik üstündeki normal temas hızına göre hasar verir.
 Araç çiftinde dört temas çözümü geçse de bir simülasyon adımında aynı çiftten
 bir kez hasar alınır.
 
-\`Simulation.applyDamage\`, \`healVehicle\` ve \`respawnVehicle\`, yetkili
+`Simulation.applyDamage`, `healVehicle` ve `respawnVehicle`, yetkili
 savaş komutlarının ve dünya sistemlerinin kullanacağı tek kapıdır. Hasar ve
 iyileşme gerçek değişen miktarı döndürür; miktarlar sonlu, negatif olmayan
 sayıdır. Ölüm canı sıfıra indirir; cansız araç hareket etmez, ateş etmez,
@@ -165,10 +165,10 @@ yetkili çağıran bu konumu açıkça geçebilir. Gövde fiziği ve atış bekl
 sıfırlanır. Henüz yerleştirmeyi serbest bir doğum alanına kaydıran sunucu
 kuralı bulunmaz.
 
-İsteğe bağlı takım kimliği \`Simulation.spawn\` ile verilir. Her iki araç
-aynı takımdaysa ve \`friendlyFire\` kapalıysa dost mermileri hedefi geçer;
+İsteğe bağlı takım kimliği `Simulation.spawn` ile verilir. Her iki araç
+aynı takımdaysa ve `friendlyFire` kapalıysa dost mermileri hedefi geçer;
 nişan önizlemesi de aynı kuralı kullanır. Takımsız araçlar herkese
-karşı hedef sayılır. \`damaged\`, \`healed\`, \`died\` ve \`respawned\`
+karşı hedef sayılır. `damaged`, `healed`, `died` ve `respawned`
 olayları araç kimliği ve varsa kaynak kimliğiyle sunuma aktarılır. HUD,
 CORE can çubuğuyla güncel canı ve ölüm/koruma süresini i18n anahtarıyla
 gösterir; ölü araç görünümü soluklaşır. Sunucu tarafı savaş yetkilendirmesi,

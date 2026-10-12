@@ -1,6 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import { loadConfigFromFile } from 'vite';
 
+/**
+ * Ölçülen kaynak kökleri. Çok oyunculu oyunun Node sunucusu (`server/`) çalıştırılabilir
+ * kaynaktır ve src ile aynı eşiklere bağlıdır; başka bir seçim kaynağı kapsamdan saklayabilir.
+ */
+const ALLOWED_INCLUDES = [['src/**/*.ts'], ['src/**/*.ts', 'server/**/*.ts']];
+
 /** Metinde bir anahtarın varlığı değil, Vitest'e verilen gerçek değer doğrulanır. */
 export async function validateCoverageBinding(configPath, expected) {
   try {
@@ -15,8 +21,10 @@ export async function validateCoverageBinding(configPath, expected) {
         )}).`,
       );
     }
-    if (!isDeepStrictEqual(coverage?.include, ['src/**/*.ts'])) {
-      problems.push(`${configPath}: coverage.include yalnız src/**/*.ts olmalı.`);
+    if (!ALLOWED_INCLUDES.some((allowed) => isDeepStrictEqual(coverage?.include, allowed))) {
+      problems.push(
+        `${configPath}: coverage.include yalnız src/**/*.ts (ve varsa server/**/*.ts) olmalı.`,
+      );
     }
     const allowedExcludes = new Set(['src/**/index.ts', 'src/**/*.d.ts', 'src/vite-env.d.ts']);
     if (

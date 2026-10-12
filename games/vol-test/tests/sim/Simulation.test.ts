@@ -6,6 +6,33 @@ import type { SimEvent } from '@/sim/events';
 import { command, simulation, STEP_MS, world } from '../support/sim';
 
 describe('Simulation', () => {
+  it('spawnPlayer kapalıyken kontrol edilen araç doğmaz, araçlar komut kaynağıyla sürülür', () => {
+    const sim = new Simulation({
+      world: world(1024),
+      tank: TANK,
+      suspension: SUSPENSION,
+      weapon: WEAPON,
+      spawnPlayer: false,
+    });
+    expect(sim.vehicles).toHaveLength(0);
+    expect(() => sim.player).toThrow('Kontrol edilen araç yok');
+    const vehicle = sim.spawn(512, 512, 0);
+    // Kontrol edilen araç olmadığından tek komut kimseyi sürmez; araç kaldırılabilir.
+    const startX = vehicle.tank.x;
+    for (let step = 0; step < 20; step++) sim.step(command({ moveX: 1 }), STEP_MS);
+    expect(vehicle.tank.x).toBe(startX);
+    for (let step = 0; step < 20; step++) sim.step(() => command({ moveX: 1 }), STEP_MS);
+    expect(vehicle.tank.x).toBeGreaterThan(startX);
+    sim.despawn(vehicle.id);
+    expect(sim.vehicles).toHaveLength(0);
+  });
+
+  it('varsayılan kurulum kontrol edilen aracı merkezde doğurur ve kaldırılmasını reddeder', () => {
+    const sim = simulation(1024);
+    expect(sim.vehicles).toHaveLength(1);
+    expect(() => sim.despawn(sim.player.id)).toThrow('kaldırılamaz');
+  });
+
   it('hava opt-in olur, tek simülasyon saatiyle ilerler ve hareket eden tank karı sıkıştırır', () => {
     expect(simulation().weather).toBeUndefined();
     const space = world(1024);

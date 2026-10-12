@@ -18,6 +18,12 @@ export interface SimulationOptions {
   readonly weapon: WeaponConfig;
   readonly combat?: CombatConfig;
   readonly weather?: WeatherSystem;
+  /**
+   * Varsayılan `true`: dünya merkezinde kontrol edilen bir araç doğar. Sunucu
+   * dünyası `false` verir; araçlar bağlanan oyuncuyla doğar ve çıkınca kalkar,
+   * sahipsiz bir gövde dünyada kalmaz.
+   */
+  readonly spawnPlayer?: boolean;
 }
 
 /** Araç kimliğinden o adımın komutu; verilmeyen araç boşta kalır. */
@@ -46,7 +52,7 @@ export class Simulation {
   private readonly inputs = new Map<EntityId, TankCommand>();
   private readonly collisionDamagePairs = new Set<string>();
   private nextId: EntityId = 1;
-  private playerId: EntityId;
+  private playerId: EntityId | null = null;
   timeMs = 0;
 
   constructor(options: SimulationOptions) {
@@ -60,8 +66,10 @@ export class Simulation {
       options.weapon.flight,
     );
     if (this.weather) this.projectiles.setAir(this.weather.frame);
-    const center = this.world.center;
-    this.playerId = this.spawn(center.x, center.y).id;
+    if (options.spawnPlayer !== false) {
+      const center = this.world.center;
+      this.playerId = this.spawn(center.x, center.y).id;
+    }
   }
 
   get vehicles(): readonly Vehicle[] {
@@ -70,7 +78,7 @@ export class Simulation {
 
   /** Kontrol edilen araç. */
   get player(): Vehicle {
-    const vehicle = this.vehicle(this.playerId);
+    const vehicle = this.playerId === null ? undefined : this.vehicle(this.playerId);
     if (!vehicle) throw new Error('Kontrol edilen araç yok');
     return vehicle;
   }
