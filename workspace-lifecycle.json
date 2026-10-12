@@ -40,6 +40,11 @@
       "packageName": "@volstudio/network",
       "path": "network",
       "status": "active"
+    },
+    {
+      "packageName": "@volstudio/vol-forge",
+      "path": "games/vol-forge",
+      "status": "active"
     }
   ]
 }

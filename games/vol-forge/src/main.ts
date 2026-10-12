@@ -1,0 +1,39 @@
+import '@volstudio/core/ui/styles.css';
+import { DisposableScope } from '@volstudio/core/lifecycle';
+import { createVolGame, i18n, showFatalStartupError, suppressNativeMenus } from '@volstudio/core';
+import { App } from './app/App';
+import { MainScene } from './scenes/MainScene';
+import { GAME } from './config/game';
+import en from './i18n/en.json';
+import tr from './i18n/tr.json';
+import './i18n/i18next-augment';
+import './style.css';
+
+export async function boot(): Promise<void> {
+  i18n.addResources('tr', 'volforge', tr);
+  i18n.addResources('en', 'volforge', en);
+  await i18n.init();
+  const scope = new DisposableScope();
+  let game: Awaited<ReturnType<typeof createVolGame>> | undefined;
+  try {
+    scope.addDestroyable(new App(document.getElementById('hud')!));
+    game = await createVolGame({
+      parent: 'game',
+      backgroundColor: GAME.backgroundColor,
+      strategy: 'resize',
+      maxDpr: GAME.maxDpr,
+      scenes: [MainScene],
+    });
+    scope.addSubscription(suppressNativeMenus(document));
+    game.events.once('destroy', () => scope.dispose());
+  } catch (error) {
+    try {
+      game?.destroy(true);
+    } finally {
+      scope.dispose();
+    }
+    throw error;
+  }
+}
+
+void boot().catch((error: unknown) => showFatalStartupError({ title: tr.app.fatal, error }));

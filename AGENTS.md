@@ -16,6 +16,7 @@ Alt dizindeki AGENTS.md kendi alanını daraltabilir, kök sınırlarını gevş
 | `devtools/deck/`         | `@volstudio/deck`         | Deck ölçüm sondası ve devkit otomasyonu          |
 | `devtools/pen.dev/`      | `@volstudio/pen.dev`      | Pencil kaynağından rig export'u                  |
 | `devtools/vol-showcase/` | `@volstudio/vol-showcase` | CORE UI vitrini ve piksel sözleşmesi             |
+| `games/vol-forge/`       | `@volstudio/vol-forge`    | Kalıcı fabrika dünyası ve çok oyunculu kanıtı    |
 | `games/vol-test/`        | `@volstudio/vol-test`     | CORE ve kabuğun gerçek oyun tüketicisi           |
 
 Paket durumu `workspace-lifecycle.json` içindedir; frozen ağaç değişmez ve

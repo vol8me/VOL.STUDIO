@@ -57,6 +57,40 @@ durum güncellemelerinden gelir. Backend seçimi bu algoritmaların maliyetini
 kendiliğinden çözmez. Özellikle dev bir fabrikayı her tick bütün oyunculara
 gönderen bir tasarım, oyuncu sayısı düşükken de pahalı olabilir.
 
+## 13 Ekim 2026: VOL.FORGE ile ölçülen kapasite
+
+Kuramsal tartışma yerine hedef yükü taşıyan ayrı bir kanıt oyunu yazıldı:
+[VOL.FORGE](../games/vol-forge/DESIGN.md). Dünya 256×256 tile, sunucu otoriteli, 30 Hz,
+deterministik; konveyör eşyası sabit noktalı, durum düz tiplenmiş dizilerde. Ölçümler Ryzen 5 7235HS
+(4 çekirdek/8 iş parçacığı), 15,7 GB, Node 22.23.1, Windows 11 üzerinde, başka işler (test, kapı)
+çalışırken alındı; güç planı kaydedilmedi. Sayılar bu makineye aittir ve üretim kapasite garantisi
+değildir. Komutlar: `pnpm --filter @volstudio/vol-forge capacity` ve `games/vol-forge/scripts/soak.ts`.
+
+### Başsız simülasyon adımı (ağ, disk ve Colyseus yok)
+
+| Senaryo                                                            | Adım ort. | p50    | p99    | maks.  | Bir çekirdek (30 Hz) |
+| ------------------------------------------------------------------ | --------- | ------ | ------ | ------ | -------------------- |
+| 3.000 bant (6.000 eşya), 200 birim, 24 taret                       | 0,083 ms  | 0,072  | 0,231  | 0,470  | %0,2                 |
+| 21.617 bant (86.468 eşya), 1.498 birim, 46 taret                   | 0,564 ms  | 0,525  | 1,038  | 1,637  | %1,7                 |
+| 512×512 dünya: 86.754 bant (347.016 eşya), 2.019 birim             | 1,948 ms  | 1,898  | 2,879  | 3,409  | %5,8                 |
+| 20 dünya × (8.000 bant, 300 birim) tek iş parçacığında, tur süresi | 4,359 ms  | 4,307  | 5,603  | 7,002  | %13,1                |
+| 20 dünya × (21.617 bant, 1.500 birim) tek iş parçacığında          | 14,216 ms | 14,141 | 16,202 | 19,274 | %42,6                |
+
+Bütçe 30 Hz'de 33,3 ms'dir; hiçbir koşuda aşılmadı. 60 Hz bütçesi (16,7 ms) yalnız son satırda
+%0,6 turda aşıldı. GC: 21 bin bantlı tek dünyada 100 sn'lik koşuda 4 duraklama, toplam 1,5 ms.
+Aşama dökümünde bantlar süreyi domine eder (21 bin bantta 0,56 ms'nin 0,43 ms'i); birim ve taret
+yoğun olsa da küçüktür: 1.500 birim 46 taretin menzilinde yığılınca indeks yenileme + hedef tarama
+tek tick'te p99 1,27 ms'dir.
+
+Hızlandırılmış zamanda 10 saatlik soak (8.000 bant, 400 birim, 1,08 milyon adım, 544 yenilgi/sıfırlama
+döngüsü): GC sonrası yığın 8,4 MB'ta sabit (eğim 0,006 MB/saat), adım süresi 0,151–0,177 ms aralığında
+kararlı. RSS 66 → 82 MB iki basamakta yükseldi (yığın düz olduğu için bunun nedeni V8'in ayırdığı
+sayfalar olabilir; ayrıştırılmadı).
+
+**Çıkarım:** "binlerce konveyör + yüzlerce birim, oyuncu yokken işleyen dünya" simülasyon açısından
+Node/TypeScript için sorun değildir; marj 20–60 kattır. Dolayısıyla seçim kararı simülasyon
+maliyetine değil, çoğaltma (replikasyon), dayanıklılık ve işletim sorularına bağlıdır.
+
 ## 12 Ekim 2026 ikinci tur: kaynak, uygulama ve maliyet kararı
 
 **Sorunun asıl şekli:** 12 oyuncuyu bir WebSocket odasına almak teknik açıdan

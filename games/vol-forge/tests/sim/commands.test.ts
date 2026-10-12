@@ -1,0 +1,176 @@
+import { describe, expect, it } from 'vitest';
+import { BUILDING, KIND, REFUND_PERCENT } from '../../src/config/forge';
+import { ByteReader, ByteWriter } from '../../src/net/bytes';
+import {
+  applyCommand,
+  COMMAND,
+  Ledger,
+  parseCommand,
+  readCommand,
+  RESULT,
+  writeCommand,
+  type ForgeCommand,
+} from '../../src/sim/commands';
+import { place, smallSim } from '../helpers/world';
+
+describe('parseCommand', () => {
+  it('geçerli yükleri komuta çevirir', () => {
+    expect(parseCommand({ type: 1, x: 3, y: 4, kind: 2, rot: 1 }, 64, 64)).toEqual({
+      type: 1,
+      x: 3,
+      y: 4,
+      kind: 2,
+      rot: 1,
+    });
+    expect(parseCommand({ type: 2, x: 0, y: 63 }, 64, 64)).toEqual({ type: 2, x: 0, y: 63 });
+    expect(parseCommand({ type: 3, x: 1, y: 1, rot: 3 }, 64, 64)).toEqual({
+      type: 3,
+      x: 1,
+      y: 1,
+      rot: 3,
+    });
+  });
+
+  it.each([
+    [null],
+    [undefined],
+    [4],
+    ['x'],
+    [[]],
+    [{}],
+    [{ type: 1, x: 64, y: 0, kind: 1, rot: 0 }],
+    [{ type: 1, x: -1, y: 0, kind: 1, rot: 0 }],
+    [{ type: 1, x: 1.5, y: 0, kind: 1, rot: 0 }],
+    [{ type: 1, x: 0, y: 0, kind: 1, rot: 4 }],
+    [{ type: 1, x: 0, y: 0, kind: 300, rot: 0 }],
+    [{ type: 3, x: 0, y: 0, rot: 9 }],
+    [{ type: 9, x: 0, y: 0 }],
+    [{ type: 1, x: Number.NaN, y: 0, kind: 1, rot: 0 }],
+    [{ type: 1, x: '3', y: 0, kind: 1, rot: 0 }],
+  ])('geçersiz yükü reddeder: %j', (payload) => {
+    expect(parseCommand(payload, 64, 64)).toBeNull();
+  });
+});
+
+describe('writeCommand / readCommand', () => {
+  it('üç komutu gidiş dönüşte korur', () => {
+    const commands: ForgeCommand[] = [
+      { type: COMMAND.place, x: 5, y: 60, kind: KIND.drill, rot: 2 },
+      { type: COMMAND.remove, x: 9, y: 9 },
+      { type: COMMAND.rotate, x: 1, y: 2, rot: 3 },
+    ];
+    const out = new ByteWriter();
+    for (const command of commands) writeCommand(out, command);
+    const input = new ByteReader(out.finish());
+    expect(commands.map(() => readCommand(input))).toEqual(commands);
+  });
+
+  it('bilinmeyen komut türü null olur', () => {
+    const out = new ByteWriter();
+    out.u8(77);
+    out.u16(1);
+    out.u16(1);
+    expect(readCommand(new ByteReader(out.finish()))).toBeNull();
+  });
+});
+
+describe('applyCommand', () => {
+  it('yerleştirir, bedelini düşer ve chunk yapı sürümünü artırır', () => {
+    const sim = smallSim();
+    const s = sim.state;
+    const before = s.inventory[1];
+    const tile = s.index(5, 5);
+    const version = s.chunkVersion[s.chunkOfTile[tile]];
+    expect(place(sim, 5, 5, KIND.conveyor, 2)).toBe(RESULT.ok);
+    expect(s.kind[tile]).toBe(KIND.conveyor);
+    expect(s.rot[tile]).toBe(2);
+    expect(s.hp[tile]).toBe(BUILDING[KIND.conveyor].hp);
+    expect(s.inventory[1]).toBe(before - 1);
+    expect(s.chunkVersion[s.chunkOfTile[tile]]).toBeGreaterThan(version);
+  });
+
+  it('sınır, dolu kare, tür, cevher ve bakiye hatalarını ayırır', () => {
+    const sim = smallSim();
+    const s = sim.state;
+    expect(applyCommand(s, { type: COMMAND.place, x: -1, y: 0, kind: 1, rot: 0 })).toBe(
+      RESULT.outOfBounds,
+    );
+    expect(place(sim, 5, 5, KIND.conveyor)).toBe(RESULT.ok);
+    expect(place(sim, 5, 5, KIND.conveyor)).toBe(RESULT.occupied);
+    expect(place(sim, 6, 5, KIND.core)).toBe(RESULT.badKind);
+    s.ore[s.index(7, 5)] = 0;
+    expect(place(sim, 7, 5, KIND.drill)).toBe(RESULT.needsOre);
+    s.inventory[1] = 0;
+    expect(place(sim, 8, 5, KIND.conveyor)).toBe(RESULT.tooPoor);
+  });
+
+  it('silince yarı iade eder, çekirdeği korur, boş kareyi söyler', () => {
+    const sim = smallSim();
+    const s = sim.state;
+    s.ore[s.index(10, 10)] = 1;
+    expect(place(sim, 10, 10, KIND.drill)).toBe(RESULT.ok);
+    const poor = s.inventory[1];
+    expect(applyCommand(s, { type: COMMAND.remove, x: 10, y: 10 })).toBe(RESULT.ok);
+    const refund = Math.floor((BUILDING[KIND.drill].cost.ore! * REFUND_PERCENT) / 100);
+    expect(s.inventory[1]).toBe(poor + refund);
+    expect(s.kind[s.index(10, 10)]).toBe(KIND.empty);
+    expect(applyCommand(s, { type: COMMAND.remove, x: 10, y: 10 })).toBe(RESULT.empty);
+    const core = s.coreOrigin;
+    expect(applyCommand(s, { type: COMMAND.remove, x: core.x, y: core.y })).toBe(RESULT.protected);
+  });
+
+  it('döndürür; duvar ve taret döndürülmez', () => {
+    const sim = smallSim();
+    const s = sim.state;
+    place(sim, 2, 2, KIND.conveyor, 0);
+    place(sim, 3, 2, KIND.wall, 0);
+    expect(applyCommand(s, { type: COMMAND.rotate, x: 2, y: 2, rot: 3 })).toBe(RESULT.ok);
+    expect(s.rot[s.index(2, 2)]).toBe(3);
+    expect(applyCommand(s, { type: COMMAND.rotate, x: 3, y: 2, rot: 1 })).toBe(RESULT.badKind);
+    expect(applyCommand(s, { type: COMMAND.rotate, x: 4, y: 2, rot: 1 })).toBe(RESULT.empty);
+  });
+
+  it('katı bina yol alanını kirletir, bant kirletmez', () => {
+    const sim = smallSim();
+    const s = sim.state;
+    s.flowDirty = false;
+    place(sim, 2, 2, KIND.conveyor);
+    expect(s.flowDirty).toBe(false);
+    place(sim, 3, 3, KIND.wall);
+    expect(s.flowDirty).toBe(true);
+  });
+});
+
+describe('Ledger', () => {
+  it('yeni seq taze, aynı seq önbellek, eski seq kopya sayılır', () => {
+    const ledger = new Ledger();
+    expect(ledger.lookup('a', 1)).toEqual({ fresh: true });
+    ledger.record('a', 5, RESULT.occupied);
+    expect(ledger.lookup('a', 5)).toEqual({ fresh: false, result: RESULT.occupied });
+    expect(ledger.lookup('a', 3)).toEqual({ fresh: false, result: RESULT.duplicate });
+    expect(ledger.lookup('a', 6)).toEqual({ fresh: true });
+    expect(ledger.lookup('b', 1)).toEqual({ fresh: true });
+    expect(ledger.size).toBe(1);
+  });
+
+  it('sıralı gezer ve temizlenir', () => {
+    const ledger = new Ledger();
+    ledger.record('z', 1, 0);
+    ledger.record('a', 2, 0);
+    const keys: string[] = [];
+    ledger.forEach((key) => keys.push(key));
+    expect(keys).toEqual(['a', 'z']);
+    ledger.clear();
+    expect(ledger.size).toBe(0);
+  });
+
+  it('sim.apply aynı komutu ikinci kez uygulamaz', () => {
+    const sim = smallSim();
+    const command: ForgeCommand = { type: COMMAND.place, x: 5, y: 5, kind: KIND.conveyor, rot: 0 };
+    const ore = sim.state.inventory[1];
+    expect(sim.apply('p', 1, command)).toEqual({ fresh: true, result: RESULT.ok });
+    expect(sim.apply('p', 1, command)).toEqual({ fresh: false, result: RESULT.ok });
+    expect(sim.apply('p', 0, command)).toEqual({ fresh: false, result: RESULT.duplicate });
+    expect(sim.state.inventory[1]).toBe(ore - 1);
+  });
+});

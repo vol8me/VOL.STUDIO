@@ -1,0 +1,45 @@
+{
+  "name": "@volstudio/vol-forge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm run build:client && pnpm run build:server",
+    "build:client": "vite build",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --external:@colyseus/* --tsconfig=tsconfig.json --outfile=dist-server/index.mjs",
+    "server:dev": "tsx --tsconfig tsconfig.json server/index.ts",
+    "start:server": "node dist-server/index.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "scaling": "tsx scripts/scaling.ts",
+    "tauri": "tauri",
+    "capacity": "tsx --tsconfig tsconfig.json scripts/capacity.ts"
+  },
+  "dependencies": {
+    "@volstudio/core": "workspace:*",
+    "@volstudio/network": "workspace:*",
+    "@colyseus/core": "0.18.18",
+    "@colyseus/schema": "5.0.39",
+    "@colyseus/ws-transport": "0.18.4",
+    "phaser": "^4.2.1",
+    "@volstudio/tauri-v2": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tauri-apps/cli": "2.11.4",
+    "@colyseus/sdk": "0.18.5",
+    "@types/node": "^26.1.2",
+    "esbuild": "^0.27.0",
+    "i18next": "26.3.6",
+    "jsdom": "25.0.1",
+    "tsx": "^4.23.11",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.0",
+    "vitest": "4.1.11"
+  }
+}

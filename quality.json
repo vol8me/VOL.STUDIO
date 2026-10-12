@@ -78,6 +78,12 @@
       "statements": 50,
       "branches": 50,
       "functions": 40
+    },
+    "@volstudio/vol-forge": {
+      "lines": 50,
+      "statements": 50,
+      "branches": 50,
+      "functions": 40
     }
   },
   "coverageShape": {
@@ -168,6 +174,11 @@
       "app": 183.7,
       "vendor": 360,
       "css": 28.3
+    },
+    "games/vol-forge": {
+      "app": 150,
+      "vendor": 360,
+      "css": 24
     }
   },
   "documentation": {
@@ -222,7 +233,7 @@
     "exceptions": []
   },
   "scaling": {
-    "$comment": "CORE uzamsal indeks 128→512 varlık oranı ~3.3; vol-test mermi adımı 128→512 oranı ~3.7 ölçüldü. Karesel büyüme ~16 olur.",
+    "$comment": "CORE uzamsal indeks 128→512 varlık oranı ~3.3; vol-test mermi adımı 128→512 oranı ~3.7, vol-forge fabrika adımı 1000→4000 bant oranı ~4 ölçüldü. Karesel büyüme ~16 olur.",
     "core": {
       "$measure": {
         "script": "scripts/scaling.ts",
@@ -240,6 +251,15 @@
         "value": "ms"
       },
       "projectiles512Over128": 6
+    },
+    "games/vol-forge": {
+      "$measure": {
+        "script": "scripts/scaling.ts",
+        "series": "steps",
+        "input": "load",
+        "value": "ms"
+      },
+      "load4000Over1000": 6
     }
   }
 }

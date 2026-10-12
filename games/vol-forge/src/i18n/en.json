@@ -1,0 +1,7 @@
+{
+  "app": {
+    "title": "VOL.FORGE",
+    "ready": "Ready",
+    "fatal": "Could not start the game"
+  }
+}
