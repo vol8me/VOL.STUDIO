@@ -181,8 +181,14 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
       anahtarında görmez: negatif kontrol şart) adaydır. Kapanır: önce/sonra ölçüm ve en az 3 yeşil koşu; kazanç %10'un
       altındaysa "Ölçülüp benimsenmeyenler"e yazılıp reddedilir. Tetik değil, ölçüm işi; F10.13 tetiği tutana dek açık.
 
+### F13 — Onaylanan backend yönü ve ilk gerçek tüketici
+
+- [ ] **[P1] F13.3 — VOL.TEST Colyseus dikey dilimi.** Colyseus ve yalnız resmî sunucu hedefi onaylandı; ilk tüketici VOL.TEST, sonraki hedef devasa açık dünya otomasyon/TD PvP ve co-op. Windows/Linux/Android ve Steam hedefte, web yayını yok. Yaklaşık 20 dünya × 8–14 oyuncu yalnız kapasite senaryosudur; oyuncusuz dünya davranışı, dünya yükü, bütçe ve kimlik eşlemesi açık. Mimari öneriler ve yerel kanıt sınırı [araştırmada](docs/backend-research.md). Kapanır: runtime/export ve gate sınırlarıyla kalıcı iki istemci + Node entegrasyonu; ownership/input bütçesi, reconnect/dispose ve WebKit regresyonları izlenen testlerde geçer; hedef platformların paketli kabulü ayrıca kanıtlanır.
+
 ## Kapatılanlar
 
+- [x] F13.4 — Backend araştırması kullanıcı kararıyla güncellendi: Colyseus, VOL.TEST ilk tüketici, resmî sunucu ve Windows/Linux/Android/Steam hedefi; web yayını yok. 20 dünya × 8–14 oyuncu karar verilmemiş senaryo, deneyler yerel kanıt; kalıcı entegrasyon F13.3'tür.
+- [x] F13.2 — Colyseus lisans/Cloud/VPS/mini PC, çok oyunlu repo yerleşimi ve üretim kabul kapsamı çapraz kaynaklarla genişletildi; 12 sunucu kontrolü ×3, Phaser 4 iki motor/gecikme, kötüye kullanım ve encoder/fizik ölçümleri [raporda](docs/backend-research.md). WebKit temiz kabulü FAIL; test harness'ı üretim entegrasyonu veya tam dünya/cihaz kabulü değildir.
 - [x] F13.1 — 24 oyunculu co-op/PvP otomasyon, RTS ve aksiyon backend araştırması kaynaklarla tamamlandı; Colyseus/Talo/Nakama/SpacetimeDB/özel taşıma ayrımı, repo sınırları ve gerçek Node + 24 istemcili simülasyon uyum deneyi [raporda](docs/backend-research.md). Üretim yükü, kalıcılık, prediction ve cihaz kabulü yapılmış sayılmaz; önerilen backend yerleşimi henüz uygulanmadı.
 - [x] F12.1 — B31–B51 kalıcılık, olay/ömür, asset, native teslim ve kapı bütünlüğü kusurları başarısız→başarılı regresyonlarla kapatıldı; güncel sözleşmeler ile değişmeyen ağaçta taze `high` (13/13, 8,3 dk) ve `signoff` (18/18, 41,8 dk) geçti; fiziksel cihaz ve insan kabulleri kendi açık işlerinde kaldı.
 - [x] F11.7 — Kapı girdileri Git işaretleri ve EOL filtresinden bağımsız ham baytla karmalanır; pre-commit öncesi/sonrası tüm indeks–çalışma ağacı eşitliği şarttır. Kısmi sahneleme, CRLF ve sahne dışı yeni bağımlılık negatifleri geçer; iki kontrolün ölçülen ek maliyeti yaklaşık 1,7 sn'dir. Yerel kancanın bilerek atlanabilmesi ve bulut CI olmaması belgelenmiş güven sınırıdır.
