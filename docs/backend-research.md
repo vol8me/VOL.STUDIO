@@ -55,7 +55,7 @@ dünya başına 12 oyuncu, 20 dünya.
 1. **Simülasyon ucuzdur.** 21 bin bant ve 600 birimle tek adım 0,4–1 ms (bütçe 33,3 ms);
    dizüstü, Steam Deck ve Android tablette (cihazlarda Chromium motoru).
 2. **Colyseus oda, WebSocket taşıma, yeniden bağlanma ve oturum katmanı olarak bu yükü taşıdı:**
-   20 dünya × 12 bot dört Node sürecinde 30 Hz'i korudu, toplam yaklaşık 0,5–0,7 çekirdek tuttu.
+   20 dünya × 12 bot dört Node sürecinde 30 Hz'i korudu, toplam yaklaşık 0,6–0,8 çekirdek tuttu.
 3. **Yükü durum eşitlemesi değil, deterministik kilit adım taşıdı.** Dünyayı Colyseus `Schema` +
    `StateView` ile eşitlemek istemci başına 38,7 KB/sn (kontrol ölçümü, sınırları aşağıda), özel
    ilgi alanı çerçevesi 20–100 KB/sn, kilit adım 0,19 KB/sn tuttu. VOL.FORGE kilit adım kullanır:
@@ -134,10 +134,10 @@ Tek dünya, 12 oyuncu:
 
 | Senaryo                            | Hz (en az) | Adım p99 | Çıkış KB/sn/istemci | CPU (çekirdek) | RSS    | Ack p50 / p99 / maks (ms) |
 | ---------------------------------- | ---------- | -------- | ------------------- | -------------- | ------ | ------------------------- |
-| Kilit adım, 8.000 bant, 400 birim  | 30,04      | 4,63 ms  | 0,19                | 0,05           | 81 MB  | 44,5 / 52,9 / 54,5        |
-| Kilit adım, 21.000 bant, 600 birim | 30,04      | 4,47 ms  | 0,20                | 0,06           | 71 MB  | 46,8 / 53,2 / 62,9        |
-| İlgi alanı, dağınık, 8.000 bant    | 30,02      | 4,30 ms  | 48,6                | 0,07           | 113 MB | 48,9 / 54,7 / 69,1        |
-| İlgi alanı, çekirdekte, 8.000 bant | 30,03      | 4,30 ms  | 100,8               | 0,08           | 101 MB | 48,1 / 53,2 / 63,0        |
+| Kilit adım, 8.000 bant, 400 birim  | 30,00      | 3,92 ms  | 0,19                | 0,04           | 81 MB  | 31,7 / 50,8 / 53,8        |
+| Kilit adım, 21.000 bant, 600 birim | 30,02      | 4,92 ms  | 0,20                | 0,09           | 71 MB  | 32,7 / 50,3 / 51,1        |
+| İlgi alanı, dağınık, 8.000 bant    | 30,02      | 4,47 ms  | 48,6                | 0,07           | 103 MB | 33,0 / 51,1 / 52,6        |
+| İlgi alanı, çekirdekte, 8.000 bant | 30,00      | 4,44 ms  | 100,6               | 0,08           | 104 MB | 32,9 / 51,9 / 52,7        |
 
 20 dünya × 12 oyuncu = 240 bağlantı:
 
@@ -149,23 +149,23 @@ Tek dünya, 12 oyuncu:
 | İlgi alanı, 3.000 bant, 150 birim, 4 süreç     | 30,00      | 4,31 ms  | 21,1 ms          | 20,8                | 0,19–0,21              | 120–122 MB  | 30,1 / 51,4 / 65,4        |
 
 "Adım p99" bir adımın bütünüdür: komut, simülasyon, kodlama ve gönderim. Adımlar arası p99 Windows'ta
-49–56 ms, maks. 57–96 ms görünür: Windows zamanlayıcı çözünürlüğü yaklaşık 15,6 ms'dir, ortalama hız her
+47–56 ms, maks. 48–96 ms görünür: Windows zamanlayıcı çözünürlüğü yaklaşık 15,6 ms'dir, ortalama hız her
 dünyada 30,0 Hz'dir ve hiçbir dünya 30,00 Hz'in altına düşmedi. Bot hatası 0, ölçüm sonunda bütün oyuncular
 bağlıydı, hız sınırı aşımı 0, geri basınç atlaması 0, dünya hatası (`fault`) 0.
 
 **Adım aralığı hatası ve düzeltmesi (Linux ölçümünün bulgusu).** İlk sürüm adımı Colyseus `setFixedTimestep`
 ile sürüyordu. Node `setInterval` kesirli milisaniyeyi kırptığı için 30 Hz'de 33 ms'lik tetikleme 33,33 ms'lik
-adımı yaklaşık her yüz tetiklemede bir kaçırır; iki adımlık (~66 ms) boşluk doğar. Windows'ta bunu zamanlayıcı
-çözünürlüğüne yazmıştım; Linux'ta (1 ms çözünürlük) adımlar arası p99 65,8 ms çıkınca açıklamanın eksik
-olduğu görüldü. `games/vol-forge/server/stepClock.ts` adım süresinden kısa aralıkla (10 ms) çağrılıp geçen süreyi biriktirir.
+adımı yaklaşık her yüz tetiklemede bir kaçırır; iki adımlık (~66 ms) boşluk doğar. Windows'ta görülen 47–56 ms'nin
+bir bölümü 15,6 ms'lik zamanlayıcı çözünürlüğüdür (31,25 / 46,9 ms dönüşümü); Linux'ta (1 ms çözünürlük) p99'un 65,8 ms
+çıkması asıl nedenin bu atlama olduğunu gösterdi. `games/vol-forge/server/stepClock.ts` adım süresinden kısa aralıkla (10 ms) çağrılıp geçen süreyi biriktirir.
 Aynı Deck senaryosunda adımlar arası p99 65,8 → 44,3 ms, ack p99 45,4 → 41,6 ms, CPU değişmedi; Windows'ta
 ack p50 49,9 → 29,4 ms. Ortalama hız her iki durumda 30,0 Hz'dir: düzeltilen sorun hız değil, gecikme ve
 titreşimdir.
 
-- **Sunucu CPU'su küçüktür.** 20 dünya dört süreçte toplam yaklaşık 0,5–0,7 çekirdek tutar. Ryzen 5 7235HS
+- **Sunucu CPU'su küçüktür.** 20 dünya dört süreçte toplam yaklaşık 0,6–0,8 çekirdek tutar. Ryzen 5 7235HS
   (8 iş parçacığı) üzerinde 8.000 bantlı 20 dünya, bot CPU'su dahil aynı makinede sorunsuz koştu.
 - **Süreç başına 5 dünya makul görünür; 20 dünya tek süreçte ortalamayı korur ama kuyrukları bozar**
-  (olay döngüsü p99 34 ms, ack maks. 645 ms). Dünya sayısı CPU'dan çok kuyruk gecikmesiyle sınırlanır.
+  (olay döngüsü p99 30 ms, ack maks. 667 ms). Dünya sayısı CPU'dan çok kuyruk gecikmesiyle sınırlanır.
 - **Ack gecikmesi p50 29–32 ms, p99 50–52 ms** (tek süreçte 20 dünyada p99 82 ms, maks. 667 ms). Bileşenlerine
   (zamanlayıcı çözünürlüğü, günlüğün grup yazımı, adım aralığı) ayrılmadı. Loopback'te ağ
   gecikmesi yoktur; gerçek ağda üstüne eklenir.
@@ -180,7 +180,7 @@ titreşimdir.
 Aynı sunucu paketi ve aynı yük botları Steam Deck'te (AMD Custom APU, 8 iş parçacığı, 14,5 GB, SteamOS,
 Node 22.23.1 linux-x64, sunucu ve botlar aynı cihazda, loopback) koşturuldu. Sunucu ve bot betikleri dizüstünde
 `esbuild` ile paketlenip kopyalandı; Node arşivi ve Colyseus paketleri cihazda kullanıcı dizinine kuruldu, repoya
-Linux'a özgü betik girmedi. Deck bir oyun cihazıdır: bu ölçüm "Linux'ta çalışır ve ne kadar tutar" sorusunu
+Linux'a özgü betik girmedi. Cihaz CPU yönetimi `powersave` idi (yükseltilmedi). Deck bir oyun cihazıdır: bu ölçüm "Linux'ta çalışır ve ne kadar tutar" sorusunu
 yanıtlar, üretim sunucusu donanımı kapasitesini değil.
 
 | Senaryo (kilit adım, 20 dünya × 12 oyuncu, 4 süreç) | Hz (en az) | Adım p99 | Olay döngüsü p99 | Adımlar arası p99 | CPU / süreç | RSS / süreç | Ack p50 / p99 / maks (ms) |

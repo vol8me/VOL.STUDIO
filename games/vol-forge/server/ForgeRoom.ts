@@ -265,7 +265,7 @@ export class ForgeRoom extends Room {
     if (this.mode === SYNC_MODE.aoi) this.replicator = new Replicator(this.sim);
     const stepMs = 1000 / (options.tickHz ?? SIM.tickRate);
     const stepClock = new StepClock(stepMs, performance.now());
-    this.setSimulationInterval(
+    this.setTimestep(
       () => {
         for (let due = stepClock.due(performance.now()); due > 0; due--) this.advance();
       },
