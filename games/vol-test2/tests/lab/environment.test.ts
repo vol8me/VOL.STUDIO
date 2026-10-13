@@ -23,6 +23,17 @@ describe('classifyRenderer', () => {
     expect(classifyRenderer(name)).toBe(expected);
   });
 
+  it('WebKit Apple dışı platformda "Apple GPU" adını gizler: sınıf bilinmez', () => {
+    const webkit = { engine: 'webkit' as const };
+    expect(classifyRenderer('Apple GPU', { ...webkit, platform: 'Win32' })).toBe('unknown');
+    expect(classifyRenderer('Apple GPU', { ...webkit, platform: 'Linux x86_64' })).toBe('unknown');
+    expect(classifyRenderer('Apple GPU', { ...webkit, platform: 'MacIntel' })).toBe('hardware');
+    expect(classifyRenderer('Apple GPU', { ...webkit, platform: 'iPhone' })).toBe('hardware');
+    expect(classifyRenderer('Apple GPU', { engine: 'chromium', platform: 'Win32' })).toBe(
+      'hardware',
+    );
+  });
+
   it('ad yoksa sezgiyle donanım demez', () => {
     expect(classifyRenderer(null)).toBe('unknown');
     expect(classifyRenderer('  ')).toBe('unknown');
@@ -116,6 +127,30 @@ describe('buildEnvironment', () => {
     expect(env.engine).toBe('chromium');
     expect(env.rendererClass).toBe('software');
     expect(env.refresh.hz).toBe(60);
+  });
+
+  it('Windows üstünde WebKit "Apple GPU" bildirirse çizici sınıfı unknown olur', () => {
+    const env = buildEnvironment({
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/605.1.15 (KHTML, like Gecko) Safari/605.1.15',
+      platform: 'Win32',
+      dpr: 1,
+      viewport: { width: 1280, height: 800 },
+      hardwareConcurrency: 8,
+      deviceMemoryGb: null,
+      visibility: 'visible',
+      gl: {
+        version: 1,
+        vendor: 'Apple Inc.',
+        renderer: 'Apple GPU',
+        maxTextureSize: 16384,
+        masked: false,
+      },
+      rafMedianMs: 16,
+      capturedAt: '2026-10-13T10:00:00.000Z',
+    });
+    expect(env.engine).toBe('webkit');
+    expect(env.rendererClass).toBe('unknown');
   });
 
   it('GL ve rAF ölçümü yoksa bilinmiyor der', () => {

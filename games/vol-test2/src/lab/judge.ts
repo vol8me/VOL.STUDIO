@@ -221,13 +221,15 @@ function baselineChecks(input: JudgeInput, unmeasured: string[]): Check[] {
 
 export function judge(input: JudgeInput, options: JudgeOptions = {}): Verdict {
   const scope = input.env.rendererClass;
+  // Sınıfı bilinmeyen çizici için donanım iddia edilmez: gevşek bütçe uygulanır, `scope` açıkça `unknown` kalır.
   const budget: Budget = {
-    ...BUDGETS[scope === 'software' ? 'software' : 'hardware'],
+    ...BUDGETS[scope === 'hardware' ? 'hardware' : 'software'],
     ...options.budget,
   };
   const checks: Check[] = [];
   const reasons: string[] = [];
   const unmeasured: string[] = [...(input.extraUnmeasured ?? [])];
+  if (scope === 'unknown') unmeasured.push('renderer-class');
 
   checks.push(limitCheck('run.errors', input.run.errors, 0, 'sayfa/konsol hatası'));
   for (const invariant of input.invariants) {

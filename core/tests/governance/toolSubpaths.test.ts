@@ -6,6 +6,8 @@ import * as Lifecycle from '../../src/lifecycle/index';
 import * as I18n from '../../src/i18n/index';
 import * as Fonts from '../../src/fonts/index';
 import * as RigMetadata from '../../src/rig/metadata';
+import * as Locomotion from '../../src/rig/locomotion';
+import * as Diagnostics from '../../src/diagnostics/index';
 
 describe('Phaser taşımayan araç alt-yolları', () => {
   const packageJson = JSON.parse(
@@ -29,6 +31,14 @@ describe('Phaser taşımayan araç alt-yolları', () => {
       './state': { import: './src/state/index.ts', types: './src/state/index.ts' },
       './graphics': { import: './src/graphics/index.ts', types: './src/graphics/index.ts' },
       './rig/metadata': { import: './src/rig/metadata.ts', types: './src/rig/metadata.ts' },
+      './rig/locomotion': {
+        import: './src/rig/locomotion.ts',
+        types: './src/rig/locomotion.ts',
+      },
+      './diagnostics': {
+        import: './src/diagnostics/index.ts',
+        types: './src/diagnostics/index.ts',
+      },
     });
   });
 
@@ -40,6 +50,10 @@ describe('Phaser taşımayan araç alt-yolları', () => {
     expect(I18n.I18n).toBeDefined();
     expect(Fonts.FontManager).toBeDefined();
     expect(Fonts.VOL_FONTS).toBeDefined();
+    expect(Locomotion.LegGait).toBeDefined();
+    expect(Locomotion.measureSupport).toBeDefined();
+    expect(Diagnostics.createDiagnostics).toBeDefined();
+    expect(Diagnostics.GpuTimer).toBeDefined();
     expect(RigMetadata.validateRigMetadata).toBeDefined();
     expect(RigMetadata.buildRigDefinition).toBeDefined();
     expect(RigMetadata.articulateRigDefinition).toBeDefined();
@@ -82,6 +96,8 @@ describe('Phaser taşımayan araç alt-yolları', () => {
       '../../src/i18n/index.ts',
       '../../src/fonts/index.ts',
       '../../src/rig/metadata.ts',
+      '../../src/rig/locomotion.ts',
+      '../../src/diagnostics/index.ts',
       '../../src/time/index.ts',
       '../../src/input/bindingLabels.ts',
     ];

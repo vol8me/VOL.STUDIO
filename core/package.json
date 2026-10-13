@@ -42,6 +42,14 @@
       "import": "./src/rig/metadata.ts",
       "types": "./src/rig/metadata.ts"
     },
+    "./rig/locomotion": {
+      "import": "./src/rig/locomotion.ts",
+      "types": "./src/rig/locomotion.ts"
+    },
+    "./diagnostics": {
+      "import": "./src/diagnostics/index.ts",
+      "types": "./src/diagnostics/index.ts"
+    },
     "./ui": {
       "import": "./src/ui/index.ts",
       "types": "./src/ui/index.ts"

@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
-import { DisposableScope, GpuTimer, type Diagnostics, type GpuTimerSample } from '@volstudio/core';
+import { GpuTimer, type Diagnostics, type GpuTimerSample } from '@volstudio/core/diagnostics';
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { RingStats } from '@/app/ringStats';
 import type { FactoryHost } from '@/app/host';
 import {
@@ -22,7 +23,9 @@ import { resolveParams, type ParamValues } from './params';
 import { FrameProbe, type FrameSummary } from './probe';
 import type { WorkloadDef, WorkloadInstance } from './workload';
 
-export type RunState = 'idle' | 'starting' | 'warmup' | 'running' | 'finished' | 'failed';
+/** `observing`: gözlem kipinde kareler sürekli ölçülür (yük ve bitiş yoktur); `reset` pencereyi yeniler. */
+export type RunState =
+  'idle' | 'starting' | 'warmup' | 'running' | 'finished' | 'failed' | 'observing';
 export type StopReason = 'duration' | 'manual' | 'watchdog';
 
 export interface LabError {
@@ -128,10 +131,15 @@ export class LabRuntime {
   private longTasks = 0;
   private longTaskSupported = false;
   private rafMedianMs: number | null = null;
+  private calibration: Promise<void> | null = null;
   private readonly waiters: ((report: RunReport) => void)[] = [];
 
   constructor(private readonly deps: RuntimeDeps) {
     this.now = deps.now ?? (() => performance.now());
+    if (deps.observeOnly) {
+      this.state = 'observing';
+      this.startedMs = this.now();
+    }
     const { events } = deps.game;
     const on = (event: string, listener: () => void): void => {
       events.on(event, listener);
@@ -165,13 +173,18 @@ export class LabRuntime {
   }
 
   private get measuring(): boolean {
-    return this.state === 'warmup' || this.state === 'running';
+    return this.state === 'warmup' || this.state === 'running' || this.state === 'observing';
   }
 
   /** Ekranın gerçek yenileme hızını oyun döngüsünden bağımsız ölçer; yük başlamadan bir kez çağrılır. */
-  async calibrate(): Promise<void> {
-    this.rafMedianMs = await measureRaf(30, (callback) => requestAnimationFrame(callback));
-    this.log.info('lab', 'calibrate', { rafMedianMs: this.rafMedianMs });
+  calibrate(): Promise<void> {
+    this.calibration ??= measureRaf(30, (callback) => requestAnimationFrame(callback)).then(
+      (median) => {
+        this.rafMedianMs = median;
+        this.log.info('lab', 'calibrate', { rafMedianMs: median });
+      },
+    );
+    return this.calibration;
   }
 
   private observeLongTasks(): void {
@@ -196,7 +209,7 @@ export class LabRuntime {
 
   private onGpuSample(sample: GpuTimerSample): void {
     if (sample.status === 'ready' && sample.durationMs !== null) {
-      if (this.state === 'running') {
+      if (this.state === 'running' || this.state === 'observing') {
         this.gpuMs.push(sample.durationMs);
         this.gpuReady++;
       }
@@ -264,6 +277,9 @@ export class LabRuntime {
         'observe-only',
         'Bu sayfa gözlem kipinde: yük koşturmak canlı oturumu bozar (?lab=run).',
       );
+    // Ekranın yenileme tavanı bilinmeden başlayan koşu FPS'i yanlış yorumlatır; kalibrasyon en çok 3 sn sürer.
+    // Bekleme meşgul denetiminden ÖNCE: iki eşzamanlı start aynı anda denetimi geçmesin.
+    if (this.calibration !== null) await this.calibration;
     if (this.state === 'starting' || this.measuring)
       return fail('busy', `Bir koşu sürüyor (${this.state}); önce stop ya da reset.`);
     const def = this.deps.workloads.find((workload) => workload.id === options.workload);
@@ -392,6 +408,7 @@ export class LabRuntime {
     observeOnly: boolean;
     lastError: LabError | null;
   } {
+    const observing = this.state === 'observing';
     const elapsed = this.measuring ? this.now() - this.startedMs : 0;
     const total = this.warmupMs + this.durationMs;
     return {
@@ -400,7 +417,7 @@ export class LabRuntime {
       workload: this.def?.id ?? null,
       paramsKey: this.paramsKey,
       elapsedMs: Math.round(elapsed),
-      remainingMs: this.measuring ? Math.max(0, Math.round(total - elapsed)) : 0,
+      remainingMs: this.measuring && !observing ? Math.max(0, Math.round(total - elapsed)) : 0,
       frames: this.probe.summary().frames,
       hiddenDuringRun: this.hiddenDuringRun,
       observeOnly: this.deps.observeOnly,
@@ -477,6 +494,7 @@ export class LabRuntime {
     });
     for (const [name, value] of Object.entries(counters))
       this.deps.diagnostics?.setCount(`lab.${name}`, value);
+    if (this.state === 'observing') return;
     const limit = this.state === 'warmup' ? this.warmupMs : this.warmupMs + this.durationMs;
     if (now - this.startedMs > limit + WATCHDOG_MS) {
       this.log.warn('lab', 'run.watchdog', { state: this.state });
@@ -485,6 +503,11 @@ export class LabRuntime {
   }
 
   stop(): Outcome<RunReport> {
+    if (this.state === 'observing')
+      return fail(
+        'observe-only',
+        'Gözlem kipinde bitirilecek koşu yok; ölçüm penceresi için reset.',
+      );
     if (this.measuring) return ok(this.finish('manual'));
     if (this.state === 'finished' && this.last !== null) return ok(this.last);
     return fail('not-running', `Koşu yok (durum: ${this.state}).`);
@@ -617,7 +640,10 @@ export class LabRuntime {
   reset(): void {
     this.teardownInstance();
     this.probe.reset();
-    this.state = 'idle';
+    this.gpuMs.clear();
+    this.gpuReady = 0;
+    this.gpuLast = null;
+    this.state = this.deps.observeOnly ? 'observing' : 'idle';
     this.def = null;
     this.lastError = null;
     this.log.info('lab', 'reset');

@@ -11,9 +11,26 @@ export type Engine = 'chromium' | 'webkit' | 'firefox' | 'unknown';
 const SOFTWARE_RENDERER =
   /swiftshader|llvmpipe|softpipe|software|basic render|mesa offscreen|\bwarp\b/i;
 
-/** WebGL çizici adından sınıf. Ad yoksa ya da boşsa `unknown`: sezgiyle donanım denmez. */
-export function classifyRenderer(name: string | null | undefined): RendererClass {
+/** WebKit sürücü adını her platformda "Apple GPU" diye gizler; yalnız Apple platformunda gerçektir. */
+const WEBKIT_MASKED_NAME = /^apple gpu$/i;
+const APPLE_PLATFORM = /mac|iphone|ipad/i;
+
+/**
+ * WebGL çizici adından sınıf. Ad yoksa, boşsa ya da motor adı gizliyorsa (WebKit'in Apple dışı
+ * platformdaki "Apple GPU"su) `unknown`: sezgiyle donanım denmez.
+ */
+export function classifyRenderer(
+  name: string | null | undefined,
+  context?: { readonly engine: Engine; readonly platform: string },
+): RendererClass {
   if (!name || name.trim() === '') return 'unknown';
+  if (
+    context !== undefined &&
+    context.engine === 'webkit' &&
+    WEBKIT_MASKED_NAME.test(name.trim()) &&
+    !APPLE_PLATFORM.test(context.platform)
+  )
+    return 'unknown';
   return SOFTWARE_RENDERER.test(name) ? 'software' : 'hardware';
 }
 
@@ -112,8 +129,9 @@ export interface Environment {
 }
 
 export function buildEnvironment(input: EnvironmentInput): Environment {
+  const engine = engineOf(input.userAgent);
   return {
-    engine: engineOf(input.userAgent),
+    engine,
     userAgent: input.userAgent,
     platform: input.platform,
     dpr: input.dpr,
@@ -122,7 +140,7 @@ export function buildEnvironment(input: EnvironmentInput): Environment {
     deviceMemoryGb: input.deviceMemoryGb,
     visibility: input.visibility,
     webgl: input.gl,
-    rendererClass: classifyRenderer(input.gl?.renderer),
+    rendererClass: classifyRenderer(input.gl?.renderer, { engine, platform: input.platform }),
     refresh: refreshRateOf(input.rafMedianMs ?? 0),
     capturedAt: input.capturedAt,
   };
@@ -141,15 +159,25 @@ export function measureRaf(
   return new Promise((resolve) => {
     const gaps: number[] = [];
     let last: number | null = null;
+    let done = false;
     const startedAt = clock();
+    // Sekme gizliyken rAF hiç çağrılmaz: süre denetimi yalnız `tick` içinde olsaydı söz asla çözülmezdi.
+    const watchdog = setTimeout(() => finish(null), timeoutMs);
+    const finish = (value: number | null): void => {
+      if (done) return;
+      done = true;
+      clearTimeout(watchdog);
+      resolve(value);
+    };
     const tick = (now: number): void => {
+      if (done) return;
       if (last !== null) gaps.push(now - last);
       last = now;
       if (gaps.length >= frames) {
         gaps.sort((a, b) => a - b);
-        resolve(gaps[Math.floor(gaps.length / 2)]);
+        finish(gaps[Math.floor(gaps.length / 2)]);
       } else if (clock() - startedAt > timeoutMs) {
-        resolve(null);
+        finish(null);
       } else {
         raf(tick);
       }

@@ -1,16 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { FactoryHost } from '../../src/app/host';
+import { LabLog } from '../../src/lab/log';
+import type { ParamSpec } from '../../src/lab/params';
+import { LabRuntime } from '../../src/lab/runtime';
+import type { WorkloadDef, WorkloadInstance } from '../../src/lab/workload';
 
 /**
- * CORE'un kök girişi modül düzeyinde Phaser'a dokunur (jsdom'da canvas yok); runtime yalnız
- * `DisposableScope` ve `GpuTimer` kullanır. Gerçek GPU zamanlayıcısı CORE'un kendi testindedir;
- * burada örnekleri elle besleyen bir taklit var.
+ * Gerçek GPU zamanlayıcısı CORE'un kendi testindedir; burada WebGL yok. Örnekleri elle besleyen
+ * bir taklit, runtime'ın örnekleri doğru pencerede toplayıp raporladığını sınar.
  */
 const gpu = vi.hoisted(() => ({
   timers: [] as { options: { onSample(sample: unknown): void } }[],
 }));
-vi.mock('@volstudio/core', async () => {
-  const { DisposableScope } = await import('@volstudio/core/lifecycle');
-  class FakeGpuTimer {
+vi.mock('@volstudio/core/diagnostics', () => ({
+  GpuTimer: class FakeGpuTimer {
     status = 'unsupported';
     constructor(
       _gl: unknown,
@@ -26,15 +29,8 @@ vi.mock('@volstudio/core', async () => {
     destroy(): void {
       this.status = 'destroyed';
     }
-  }
-  return { DisposableScope, GpuTimer: FakeGpuTimer };
-});
-
-import type { FactoryHost } from '../../src/app/host';
-import { LabLog } from '../../src/lab/log';
-import type { ParamSpec } from '../../src/lab/params';
-import { LabRuntime } from '../../src/lab/runtime';
-import type { WorkloadDef, WorkloadInstance } from '../../src/lab/workload';
+  },
+}));
 
 /** Phaser'sız küçük olay yayıcısı: runtime yalnız `on/off/once` kullanır. */
 class Emitter {
@@ -129,7 +125,13 @@ interface Rig {
 const rigs: Rig[] = [];
 
 function makeRig(
-  options: { observeOnly?: boolean; workloads?: WorkloadDef[]; renderer?: boolean } = {},
+  options: {
+    observeOnly?: boolean;
+    workloads?: WorkloadDef[];
+    renderer?: boolean;
+    /** Verilirse oyun çizicisi bu adı bildiren sahte bir WebGL bağlamı taşır. */
+    glRenderer?: string;
+  } = {},
 ): Rig {
   const events = new Emitter();
   const active = new Set<string>();
@@ -139,7 +141,18 @@ function makeRig(
   const game = {
     events,
     loop: { delta: 16.7, frame: 0 },
-    renderer: undefined,
+    renderer:
+      options.glRenderer === undefined
+        ? undefined
+        : {
+            gl: {
+              VENDOR: 1,
+              RENDERER: 2,
+              MAX_TEXTURE_SIZE: 3,
+              getParameter: (name: number) => (name === 2 ? options.glRenderer : null),
+              getExtension: () => null,
+            },
+          },
     scene: {
       getScenes: () => [...active].map((key) => ({ scene: { key } })),
       stop: (key: string) => active.delete(key),
@@ -252,7 +265,7 @@ describe('LabRuntime', () => {
     const rig = makeRig({ observeOnly: true });
     const result = await start(rig);
     expect(result).toMatchObject({ ok: false, error: { code: 'observe-only' } });
-    expect(rig.runtime.state).toBe('idle');
+    expect(rig.runtime.state).toBe('observing');
   });
 
   it('bilinmeyen yük, bozuk parametre ve meşgul durum açık kodla reddedilir', async () => {
@@ -448,7 +461,7 @@ describe('LabRuntime', () => {
   });
 
   it('GPU zamanlayıcısı örnek vermezse ölçülemeyen olarak yazılır', async () => {
-    const rig = makeRig();
+    const rig = makeRig({ glRenderer: 'ANGLE (NVIDIA GeForce RTX 3050, Direct3D11)' });
     await start(rig, { durationMs: 3000, warmupMs: 0 });
     rig.frame(200);
     expect(rig.runtime.last?.gpu.samples).toBe(0);

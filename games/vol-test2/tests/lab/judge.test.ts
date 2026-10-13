@@ -150,10 +150,19 @@ describe('judge', () => {
     expect(verdict.reasons.join()).toContain('donanım çizici istendi');
   });
 
-  it('tanınmayan çizici sınıfı donanım bütçesiyle yargılanır, kapsamı unknown yazar', () => {
-    const verdict = judge(input({ env: env(null) }));
+  it('tanınmayan çizici sınıfında donanım iddia edilmez: gevşek bütçe, kapsam unknown, sınıf ölçülemeyen', () => {
+    const verdict = judge(
+      input({
+        env: env(null),
+        frame: frame({ fps: 12, workMs: summary(30), intervalMs: summary(80) }),
+        gpu: GPU_NONE,
+      }),
+    );
     expect(verdict.scope).toBe('unknown');
     expect(verdict.status).toBe('pass');
+    expect(verdict.checks.find((c) => c.id === 'frame.fps')?.status).toBe('skip');
+    expect(verdict.unmeasured).toContain('renderer-class');
+    expect(judge(input({ env: env(null) }), { requireHardware: true }).status).toBe('inconclusive');
   });
 
   it('canvas çiziciye düşmek fail; bildirim yoksa unmeasured', () => {

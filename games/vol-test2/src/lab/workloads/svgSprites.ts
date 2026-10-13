@@ -1,7 +1,9 @@
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import { ASSETS, TILE_UNITS, type AssetId } from '../assets/manifest';
 import { kitFacts, loadKit, textureKey, type KitLoad } from '../assets/textures';
 import { LAB_SCENE_KEY } from '../LabScene';
+import { BLEND } from '../parts';
+import { seeded } from '../random';
 import type { Invariant } from '../judge';
 import type { ParamSpec } from '../params';
 import type { WorkloadDef, WorkloadInstance } from '../workload';
@@ -75,23 +77,6 @@ const PARAMS: readonly ParamSpec[] = [
     description: 'her karede dönüş (matris güncellemesi)',
   },
 ];
-
-const BLEND: Readonly<Record<string, number>> = {
-  normal: Phaser.BlendModes.NORMAL,
-  add: Phaser.BlendModes.ADD,
-};
-
-/** Tohumlu, deterministik rastgele: aynı parametreler aynı yerleşimi verir (mulberry32). */
-function seeded(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 interface Mover {
   readonly image: Phaser.GameObjects.Image;
@@ -243,7 +228,7 @@ export const svgSprites: WorkloadDef = {
       {
         count: Number(params.count),
         size: Number(params.size),
-        blend: BLEND[String(params.blend)],
+        blend: BLEND[String(params.blend) as keyof typeof BLEND],
         alpha: Number(params.alpha),
         speed: Number(params.speed),
         spin: params.spin === true,
