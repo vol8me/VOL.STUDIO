@@ -28,6 +28,7 @@ import { LockstepFeed } from './lockstepFeed';
 import { Ring, summarize, type TickSummary } from './metrics';
 import type { ClientCursor } from './replication';
 import { Replicator, dueAt, emptySectionBytes, type SectionBytes } from './replication';
+import { StepClock } from './stepClock';
 import { WorldStore, type LoadReport, type SnapshotReport } from './store';
 
 const deflateAsync = promisify(deflate);
@@ -262,7 +263,14 @@ export class ForgeRoom extends Room {
 
     this.feed = new LockstepFeed(this.sim.tick);
     if (this.mode === SYNC_MODE.aoi) this.replicator = new Replicator(this.sim);
-    this.setFixedTimestep(() => this.advance(), options.tickHz ?? SIM.tickRate);
+    const stepMs = 1000 / (options.tickHz ?? SIM.tickRate);
+    const stepClock = new StepClock(stepMs, performance.now());
+    this.setSimulationInterval(
+      () => {
+        for (let due = stepClock.due(performance.now()); due > 0; due--) this.advance();
+      },
+      Math.min(10, stepMs),
+    );
 
     this.onMessageBytes(TO_SERVER.hello, (client: Client, bytes: Uint8Array) =>
       this.hello(client, bytes),

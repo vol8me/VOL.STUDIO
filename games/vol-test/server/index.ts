@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { defineRoom, defineServer } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { WorldRoom } from './WorldRoom';
+import { isEntryModule } from './entry';
 
 export function createWorldServer() {
   const http = createServer();
@@ -34,10 +35,7 @@ export function listenSettings(env: Readonly<Record<string, string | undefined>>
   return { port, host: env.VOL_NET_HOST ?? '127.0.0.1' };
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === new URL(`file:///${process.argv[1].replaceAll('\\', '/')}`).href
-) {
+if (isEntryModule(import.meta.url, process.argv[1])) {
   const { port, host } = listenSettings(process.env);
   const started = await startWorldServer(port, host);
   console.info(`[VOL.TEST] Network hazır: ${started.endpoint}`);

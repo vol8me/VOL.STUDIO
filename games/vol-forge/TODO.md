@@ -5,9 +5,10 @@
       Cihaz sayıları bugün yalnız Chromium motorundandır; WebKitGTK ve paketli kabuk ölçülmedi.
       Kapanır: her platformda `data-fps`, `data-step-p99` ve `data-hash-checks` ile en az 5 dakikalık
       yoğun dünya oturumu kaydı, `resyncs` 0.
-- [ ] Linux'ta sunucu yük testi ve 24–72 saat gerçek zamanlı kararlılık koşusu. Bugünkü en uzun gerçek
-      zamanlı koşu 45 dakikadır ve yalnız Windows'tadır. Kapanır: `loadtest --sample 60` ile Linux'ta
-      ve Windows'ta 24 saat, RSS ve veri dizini eğimi sıfıra yakın, `faults` 0.
+- [ ] 24–72 saat gerçek zamanlı kararlılık koşusu ve üretim sunucusu donanımında yük testi. Linux yük
+      testi yalnız Steam Deck'te kısa süreli koştu (40 sn); en uzun gerçek zamanlı koşu 45 dakikadır ve
+      yalnız Windows'tadır. Kapanır: `loadtest --sample 60` ile hedef Linux sunucusunda ve Windows'ta
+      24 saat, RSS ve veri dizini eğimi sıfıra yakın, `faults` 0; `crash.test.ts` Linux'ta geçer.
 - [ ] Ağ koşullarında ölçüm: %1–3 paket kaybı ve 50–200 ms gecikme altında kilit adımlı gecikme,
       yeniden bağlanma ve yeniden eşitleme oranı. Bugünkü koşular döngü içi (loopback) ağdadır.
       Kapanır: bozulmuş ağda ack p99, `lagTicks` dağılımı ve `resyncs` raporu.

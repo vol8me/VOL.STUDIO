@@ -23,9 +23,9 @@ Android hesabının Steam ile ilişkisi henüz kararlaştırılmadı.
 **Yaklaşık 20 eşzamanlı dünya × dünya başına 8–14 oyuncu**, değerlendirilecek
 bir kapasite senaryosudur; sabit ürün limiti veya ölçülmüş kapasite değildir.
 Dünyaların tamamı doluysa **160–280 eşzamanlı oyuncu** eder. VOL.FORGE ölçümünde
-8 iş parçacıklı bir Windows dizüstü, 20 dünya × 12 oyuncuyu (240 gerçek WebSocket
-bağlantısı) dört Node sürecinde taşıdı (aşağıdaki 13 Ekim bölümü). Bu, üretim
-kabulü değildir: Linux sunucu, gerçek ağ, 24 saat üstü işletim ve toplam
+8 iş parçacıklı bir Windows dizüstü ve bir Steam Deck (Linux x64, 8 iş parçacığı), 20 dünya × 12 oyuncuyu
+(240 gerçek WebSocket bağlantısı) dört Node sürecinde taşıdı (aşağıdaki 13 Ekim bölümü). Bu, üretim
+kabulü değildir: üretim sunucusu donanımı, gerçek ağ, 24 saat üstü işletim ve toplam
 DB/yedek/işletim bütçesi ayrıca ölçülüp seçilir.
 
 Oyuncusuz dünya davranışı VOL.FORGE'da 7/24 simülasyondur ve ölçüldü. Dünya
@@ -66,10 +66,11 @@ dünya başına 12 oyuncu, 20 dünya.
    (tablette adım başına yaklaşık 1 ms). Gizli bilgi isteyen PvP için ilgi alanı yolu ayrılmıştır, istemcisi yoktur.
 5. **Dayanıklılık:** anlık görüntü + günlük, ack kalıcılıktan sonra, `kill -9` ile kurtarma, sapmada yeniden eşitleme.
 
-Ölçülmeyenler ve sınırlar: bütün sayılar tek Windows dizüstü ve loopback ağdadır. Linux sunucu, gerçek ağ
-kaybı/gecikmesi, 45 dakikadan uzun koşu, işletim sistemi düzeyinde güç kaybı, WebKitGTK ve paketli WebView,
-kimlik/WSS ve süreçler arası dünya eşlemesi ölçülmedi. Cihaz sayıları paketli uygulamadan değil, cihazdaki
-Chromium'dandır.
+Ölçülmeyenler ve sınırlar: sayılar bir Windows dizüstü ve bir Steam Deck'te (Linux), loopback ağdadır;
+Deck bir oyun cihazıdır, sunucu donanımı değildir. Üretim sunucusu donanımı ve Linux dağıtımı, gerçek ağ
+kaybı/gecikmesi, 45 dakikadan uzun koşu (o da yalnız Windows'ta), işletim sistemi düzeyinde güç kaybı,
+Linux'ta `crash.test.ts` ve soak, WebKitGTK ve paketli WebView, kimlik/WSS ve süreçler arası dünya eşlemesi
+ölçülmedi. Cihaz sayıları paketli uygulamadan değil, cihazdaki Chromium'dandır.
 
 **Talo'yu ana oynanış sunucusu olarak seçmiyorum.** Gerçek WebSocket/kanal
 özellikleri vardır; fakat araştırılan hazır sözleşme oyun kuralları, tick,
@@ -142,29 +143,58 @@ Tek dünya, 12 oyuncu:
 
 | Senaryo                                        | Hz (en az) | Adım p99 | Olay döngüsü p99 | Çıkış KB/sn/istemci | CPU / süreç (çekirdek) | RSS / süreç | Ack p50 / p99 / maks (ms) |
 | ---------------------------------------------- | ---------- | -------- | ---------------- | ------------------- | ---------------------- | ----------- | ------------------------- |
-| Kilit adım, 3.000 bant, 150 birim, **1 süreç** | 29,99      | 3,75 ms  | 34,0 ms          | 0,19                | 0,36                   | 179 MB      | 57,4 / 111,9 / 645        |
-| Kilit adım, 3.000 bant, 150 birim, 4 süreç     | 29,99      | 4,54 ms  | 18,3 ms          | 0,19                | 0,12–0,13              | 110–182 MB  | 48,9 / 63,1 / 90,0        |
-| Kilit adım, 8.000 bant, 400 birim, 4 süreç     | 29,99      | 4,76 ms  | 18,7 ms          | 0,19                | 0,15–0,16              | 108–114 MB  | 49,9 / 64,2 / 104,3       |
-| İlgi alanı, 3.000 bant, 150 birim, 4 süreç     | 30,00      | 4,23 ms  | 21,3 ms          | 20,8                | 0,18                   | 118–124 MB  | 52,1 / 64,0 / 111,5       |
+| Kilit adım, 3.000 bant, 150 birim, **1 süreç** | 30,00      | 4,26 ms  | 30,0 ms          | 0,19                | 0,41                   | 205 MB      | 32,4 / 81,6 / 667         |
+| Kilit adım, 3.000 bant, 150 birim, 4 süreç     | 30,00      | 4,10 ms  | 14,5 ms          | 0,19                | 0,15–0,16              | 111–144 MB  | 30,1 / 50,5 / 66,1        |
+| Kilit adım, 8.000 bant, 400 birim, 4 süreç     | 30,00      | 4,69 ms  | 15,4 ms          | 0,19                | 0,18–0,20              | 107–110 MB  | 29,4 / 51,5 / 82,4        |
+| İlgi alanı, 3.000 bant, 150 birim, 4 süreç     | 30,00      | 4,31 ms  | 21,1 ms          | 20,8                | 0,19–0,21              | 120–122 MB  | 30,1 / 51,4 / 65,4        |
 
-"Adım p99" bir adımın bütünüdür: komut, simülasyon, kodlama ve gönderim. Adımlar arası p99 48–57 ms,
-maks. 50–110 ms görünür; bunun nedeni Windows zamanlayıcı çözünürlüğüdür (yaklaşık 15,6 ms), ortalama
-hız her dünyada 30,0 Hz'dir ve bu tablolardaki koşularda hiçbir dünya 29,99 Hz'in altına düşmedi. Bot hatası 0,
-ölçüm sonunda bütün oyuncular bağlıydı, hız sınırı aşımı 0, geri basınç atlaması 0, dünya hatası (`fault`) 0.
+"Adım p99" bir adımın bütünüdür: komut, simülasyon, kodlama ve gönderim. Adımlar arası p99 Windows'ta
+49–56 ms, maks. 57–96 ms görünür: Windows zamanlayıcı çözünürlüğü yaklaşık 15,6 ms'dir, ortalama hız her
+dünyada 30,0 Hz'dir ve hiçbir dünya 30,00 Hz'in altına düşmedi. Bot hatası 0, ölçüm sonunda bütün oyuncular
+bağlıydı, hız sınırı aşımı 0, geri basınç atlaması 0, dünya hatası (`fault`) 0.
+
+**Adım aralığı hatası ve düzeltmesi (Linux ölçümünün bulgusu).** İlk sürüm adımı Colyseus `setFixedTimestep`
+ile sürüyordu. Node `setInterval` kesirli milisaniyeyi kırptığı için 30 Hz'de 33 ms'lik tetikleme 33,33 ms'lik
+adımı yaklaşık her yüz tetiklemede bir kaçırır; iki adımlık (~66 ms) boşluk doğar. Windows'ta bunu zamanlayıcı
+çözünürlüğüne yazmıştım; Linux'ta (1 ms çözünürlük) adımlar arası p99 65,8 ms çıkınca açıklamanın eksik
+olduğu görüldü. `games/vol-forge/server/stepClock.ts` adım süresinden kısa aralıkla (10 ms) çağrılıp geçen süreyi biriktirir.
+Aynı Deck senaryosunda adımlar arası p99 65,8 → 44,3 ms, ack p99 45,4 → 41,6 ms, CPU değişmedi; Windows'ta
+ack p50 49,9 → 29,4 ms. Ortalama hız her iki durumda 30,0 Hz'dir: düzeltilen sorun hız değil, gecikme ve
+titreşimdir.
 
 - **Sunucu CPU'su küçüktür.** 20 dünya dört süreçte toplam yaklaşık 0,5–0,7 çekirdek tutar. Ryzen 5 7235HS
   (8 iş parçacığı) üzerinde 8.000 bantlı 20 dünya, bot CPU'su dahil aynı makinede sorunsuz koştu.
 - **Süreç başına 5 dünya makul görünür; 20 dünya tek süreçte ortalamayı korur ama kuyrukları bozar**
   (olay döngüsü p99 34 ms, ack maks. 645 ms). Dünya sayısı CPU'dan çok kuyruk gecikmesiyle sınırlanır.
-- **Ack gecikmesi p50 45–57 ms, p99 53–64 ms** (tek süreçte 20 dünyada p99 112 ms). Bileşenlerine
-  (Windows zamanlayıcı çözünürlüğü, günlüğün grup yazımı, adım aralığı) ayrılmadı. Loopback'te ağ
+- **Ack gecikmesi p50 29–32 ms, p99 50–52 ms** (tek süreçte 20 dünyada p99 82 ms, maks. 667 ms). Bileşenlerine
+  (zamanlayıcı çözünürlüğü, günlüğün grup yazımı, adım aralığı) ayrılmadı. Loopback'te ağ
   gecikmesi yoktur; gerçek ağda üstüne eklenir.
-- **Günlük:** kilit adımlı koşuda dünya başına yaklaşık 11–13 fsync/sn (tek dünya 11,4; 20 dünyada toplam 259),
-  en uzun fsync 4–23 ms (Windows/NTFS). Bu sayılar günlük sayaçlarının kontrol noktalarında sıfırlanmadığı
-  yeniden koşulardan gelir (aynı 8.000 bantlı senaryolar: Hz 30,01–30,03, adım p99 3,9–4,9 ms, ack p99 54–61 ms,
-  sapmasız karma denetimi); ilk koşulardaki günlük sayaçları dosya başına sıfırlandığı için kullanılmaz.
+- **Günlük:** kilit adımlı koşuda dünya başına yaklaşık 12–13 fsync/sn (tek dünya 11,4; 20 dünyada toplam
+  240–270), en uzun fsync 13–72 ms (Windows/NTFS). Günlük sayaçları kontrol noktalarında sıfırlanmaz;
+  ilk koşulardaki sayaçlar dosya başına sıfırlandığı için kullanılmaz.
   Anlık görüntü 1,5 MB ham; serileştirme ana iş parçacığını 4–8,6 ms tutar.
 - **Katılım:** anlık görüntü 1,5 MB ham, zlib sonrası 17–26 KB gider.
+
+### Linux sunucu ölçümü (Steam Deck)
+
+Aynı sunucu paketi ve aynı yük botları Steam Deck'te (AMD Custom APU, 8 iş parçacığı, 14,5 GB, SteamOS,
+Node 22.23.1 linux-x64, sunucu ve botlar aynı cihazda, loopback) koşturuldu. Sunucu ve bot betikleri dizüstünde
+`esbuild` ile paketlenip kopyalandı; Node arşivi ve Colyseus paketleri cihazda kullanıcı dizinine kuruldu, repoya
+Linux'a özgü betik girmedi. Deck bir oyun cihazıdır: bu ölçüm "Linux'ta çalışır ve ne kadar tutar" sorusunu
+yanıtlar, üretim sunucusu donanımı kapasitesini değil.
+
+| Senaryo (kilit adım, 20 dünya × 12 oyuncu, 4 süreç) | Hz (en az) | Adım p99 | Olay döngüsü p99 | Adımlar arası p99 | CPU / süreç | RSS / süreç | Ack p50 / p99 / maks (ms) |
+| --------------------------------------------------- | ---------- | -------- | ---------------- | ----------------- | ----------- | ----------- | ------------------------- |
+| 8.000 bant, 400 birim                               | 30,00      | 7,0 ms   | 4,6 ms           | 44,3 ms           | 0,21–0,22   | 182–204 MB  | 18,0 / 41,6 / 83,4        |
+| 21.000 bant, 600 birim                              | 30,00      | 7,4 ms   | 8,8 ms           | 47,6 ms           | 0,31        | 166–195 MB  | 20,0 / 44,0 / 89,8        |
+
+- Dizüstünden farklar: adım p99 yaklaşık 1,5 kat (7,0 ms, hâlâ 33 ms bütçenin beşte biri), olay döngüsü ve ack
+  gecikmesi daha iyi (Linux zamanlayıcısı), RSS yaklaşık 1,7 kat. Günlük 340–350 fsync/sn, en uzun fsync 27–39 ms.
+- Bu ilk Linux koşusu iki gerçek hatayı yakaladı: sunucu `games/vol-forge/server/index.ts` doğrudan çalıştırılınca "ana modül mü"
+  denetimi POSIX yollarında hiç eşleşmiyordu ve süreç sessizce çıkıyordu (VOL.FORGE ve VOL.TEST'te aynı satır;
+  `games/vol-forge/server/entry.ts` ile düzeltildi); "hazır" satırı metrik kapısı dinlemeye başlamadan yazılıyordu, süreci başlatan
+  betik satırı görür görmez bağlanınca reddediliyordu (artık dinlemeden önce yazılmaz).
+- `SIGKILL` kurtarma Linux'ta da denendi (aşağıdaki bölüm). `crash.test.ts` ve soak Linux'ta koşmadı.
 
 ### Oyuncusuz dünya
 
@@ -216,6 +246,9 @@ arayüzü onu desteklemez.
   "hazır"a 685 ms (Node ve tsx başlangıcı dahil). Dünya zamanı öldürme anının 7 adım (0,23 sn) gerisinden devam
   etti: kayıp yalnız son kayıttan sonraki, komutsuz adımlardır; onaylanan komut kaybolmaz. Bu, süreç ölümü
   için kurtarma süresidir; disk ya da makine kaybı için değildir.
+  Aynı betik Steam Deck'te (Linux, gerçek `SIGKILL`) koşturuldu: 70 sn'de 311 deneme, 113 kabul; 1.800. adımdaki
+  anlık görüntü, 45 komut ve 300 adım tekrarı, karma sapması 0, yükleme 156 ms, süreç başlangıcından "hazır"a
+  737 ms; dünya zamanı öldürme anının 6 adım gerisinden devam etti.
 - **Yeniden eşitleme**: istemci karma sapmasını saptayınca yeni anlık görüntü ister ve kendini onarır
   (`games/vol-forge/tests/server/room.test.ts`, gerçek WebSocket); aşırı sık istek anlık görüntü getirmez ve sayılır.
   Kopan istemci aynı oturum anahtarıyla yeniden bağlanıp yeniden eşitlenir.

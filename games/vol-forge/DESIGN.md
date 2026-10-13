@@ -44,6 +44,11 @@ Dünya durumu Colyseus `Schema` ile eşitlenmez: mesajlar sayıyla adlandırılm
   varlık, bant ve HUD bölümlerini çerçeve olarak yollar. Savaş sisi ve gizli bilgi gerektiren
   PvP için ayrılmış yoldur: kilit adımda her istemci bütün dünyayı bilir. İstemci arayüzü bu
   biçimi desteklemez; bağlanırsa söyler ve odadan ayrılır. Yük ve CPU ölçümü içindir.
+- **Adım saati.** Sunucu adımı Colyseus `setFixedTimestep` ile değil `StepClock` ile sürer: 10 ms'lik
+  tetiklemelerde geçen süre biriktirilir, birikim adım süresini aşınca adım koşar. `setFixedTimestep` aralığı
+  adım süresine (33,33 ms) eşitler; Node `setInterval` bunu 33 ms'ye kırptığı için her yüz tetiklemede bir
+  adım atlanır ve adımlar arası p99 iki adıma çıkar. Ortalama hız her iki durumda 30 Hz'dir; fark titreşim ve
+  ack gecikmesidir ([ölçüm](../../docs/backend-research.md)). Uzun duraklamadan sonra en çok 5 adım yakalanır.
 - **El sıkışma.** İstemci işleyicilerini kurduktan sonra `hello` yollar; sunucu karşılama ve
   (lockstep için) zlib ile sıkıştırılmış anlık görüntü döndürür. Yeniden `hello` yeniden
   eşitleme isteğidir. Anlık görüntü sıkıştırması iş parçacığı havuzundadır, adım döngüsünü

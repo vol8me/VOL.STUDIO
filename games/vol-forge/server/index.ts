@@ -1,3 +1,4 @@
+import { once } from 'node:events';
 import { createServer, type Server as HttpServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { defineRoom, defineServer, matchMaker } from '@colyseus/core';
@@ -6,6 +7,7 @@ import { NET } from '@/config/forge';
 import { SYNC_MODE, type SyncMode } from '@/net/protocol';
 import { buildComb } from '@/sim/scenario';
 import { BOOT_TOKEN, ForgeRoom, ROOM_NAME, type ForgeWorldConfig } from './ForgeRoom';
+import { isEntryModule } from './entry';
 import { drainEventLoopDelay, eventLoopDelay } from './metrics';
 
 /** Bir komut en çok birkaç yüz bayt; bu sınır tek mesajın sunucuyu şişirmesini önler. */
@@ -158,10 +160,7 @@ export function serveMetrics(running: RunningForge, port: number, host = '127.0.
   return http;
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === new URL(`file:///${process.argv[1].replaceAll('\\', '/')}`).href
-) {
+if (isEntryModule(import.meta.url, process.argv[1])) {
   const settings = runtimeSettings(process.env);
   const scene = settings.scene;
   const worlds: ForgeWorldConfig[] = Array.from({ length: settings.worlds }, (_, index) => ({
@@ -185,7 +184,9 @@ if (
       : undefined,
   }));
   const running = await startForge(worlds, settings.port, settings.host);
-  if (settings.metricsPort !== null) serveMetrics(running, settings.metricsPort);
+  // Hazır satırı yalnız metrik kapısı da dinlerken yazılır: süreci başlatan ölçüm betiği satırı görür görmez bağlanır.
+  if (settings.metricsPort !== null)
+    await once(serveMetrics(running, settings.metricsPort), 'listening');
   console.info(`[VOL.FORGE] Sunucu hazır: ${running.endpoint} (${worlds.length} dünya)`);
   const shutdown = (): void => {
     void running.stop().finally(() => process.exit(0));

@@ -64,12 +64,10 @@ async function boot(dataDir: string): Promise<Child> {
     void exited.then(() => reject(new Error(`Sunucu çıktı:\n${output}`)));
     setTimeout(() => reject(new Error(`Sunucu hazır olmadı:\n${output}`)), 60_000);
   });
-  return {
-    process: child,
-    endpoint,
-    metricsUrl: `http://127.0.0.1:${metricsPort}/metrics`,
-    exited,
-  };
+  // Hazır satırı metrik kapısı da dinlerken yazılır; ilk istek reddedilirse süreç erken "hazır" demiştir.
+  const metricsUrl = `http://127.0.0.1:${metricsPort}/metrics`;
+  await (await fetch(metricsUrl)).arrayBuffer();
+  return { process: child, endpoint, metricsUrl, exited };
 }
 
 function emptyTiles(session: ForgeSession, count: number, skip: number) {
