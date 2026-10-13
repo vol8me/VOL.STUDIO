@@ -1,11 +1,11 @@
 import type { SuspensionConfig, TankConfig, WeaponConfig } from '@/config/tank';
 import { COMBAT, type CombatConfig } from '@/config/combat';
-import { angleDelta } from '@volstudio/core/math';
 import { idleCommand, type TankCommand } from './command';
 import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
+import { aimAligned, applyRecoil } from './vehicleStep';
 import type { World } from './world/World';
 import type { WeatherSystem } from './weather/WeatherSystem';
 import { WEATHER } from '@/config/weather';
@@ -258,12 +258,8 @@ export class Simulation {
       if (!vehicle.vitality.alive) continue;
       vehicle.gun.update(stepMs);
       const command = this.inputs.get(vehicle.id)!;
-      const aiming = command.aimX !== 0 || command.aimY !== 0;
-      const aligned =
-        !aiming ||
-        Math.abs(angleDelta(vehicle.tank.turret, Math.atan2(command.aimY, command.aimX))) <=
-          this.options.weapon.aimTolerance;
-      if (command.fire && aligned && vehicle.gun.tryTrigger()) this.fire(vehicle);
+      if (command.fire && aimAligned(vehicle, command) && vehicle.gun.tryTrigger())
+        this.fire(vehicle);
     }
     this.projectiles.step(
       stepMs,
@@ -392,13 +388,7 @@ export class Simulation {
       dirX * weapon.projectileSpeed + tank.vx,
       dirY * weapon.projectileSpeed + tank.vy,
     );
-    tank.applyImpulse(-dirX * weapon.recoilImpulse, -dirY * weapon.recoilImpulse);
-    const fx = Math.cos(tank.hull);
-    const fy = Math.sin(tank.hull);
-    tank.suspension.kick(
-      -(dirX * fx + dirY * fy) * weapon.recoilKick,
-      -(-dirX * fy + dirY * fx) * weapon.recoilKick,
-    );
+    applyRecoil(vehicle);
     this.emit({ kind: 'fired', source: vehicle.id, x, y, angle: tank.turret });
   }
 

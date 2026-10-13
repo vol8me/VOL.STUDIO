@@ -30,9 +30,25 @@ export class Suspension {
     return this.rollSpring.value;
   }
 
+  get pitchVelocity(): number {
+    return this.pitchSpring.velocity;
+  }
+
+  get rollVelocity(): number {
+    return this.rollSpring.velocity;
+  }
+
   reset(): void {
     this.pitchSpring.reset();
     this.rollSpring.reset();
+  }
+
+  /** Ağ uzlaştırması: yayların konum ve hızını sunucu değerine kurar. */
+  restore(pitch: number, pitchVelocity: number, roll: number, rollVelocity: number): void {
+    this.pitchSpring.value = pitch;
+    this.pitchSpring.velocity = pitchVelocity;
+    this.rollSpring.value = roll;
+    this.rollSpring.velocity = rollVelocity;
   }
 
   /** Gövde çerçevesinde hız darbesi (birim/s): ileri (+) ve sağ (+). */

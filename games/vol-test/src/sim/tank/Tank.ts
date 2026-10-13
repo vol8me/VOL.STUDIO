@@ -13,6 +13,7 @@ import { Driver, type TrackTargets } from './Driver';
 import { Suspension } from './Suspension';
 import { computeTrackForces, createTrackForces, type TrackSurface } from './trackForces';
 import { Turret } from './Turret';
+import { createTankState, type TankState } from './TankState';
 import type { SuspensionConfig, TankConfig } from '@/config/tank';
 
 /** Render ara değeri için tankın poz kaydı. */
@@ -164,6 +165,67 @@ export class Tank extends RigidBody {
     this.targets.right = 0;
     this.targets.forward = false;
     this.targets.braking = false;
+    this.capturePose();
+  }
+
+  /** Bir sonraki adımı belirleyen bütün skaler durumu `out`a yazar. */
+  captureState(out: TankState = createTankState()): TankState {
+    out.x = this.x;
+    out.y = this.y;
+    out.vx = this.vx;
+    out.vy = this.vy;
+    out.hull = this.angle;
+    out.angularVelocity = this.angularVelocity;
+    out.turret = this.turretMount.angle;
+    out.trackLeft = this.trackLeft;
+    out.trackRight = this.trackRight;
+    out.treadLeft = this.treadLeft;
+    out.treadRight = this.treadRight;
+    out.groundLeft = this.groundLeft;
+    out.groundRight = this.groundRight;
+    out.surfaceLeft = this.surfaceLeft;
+    out.surfaceRight = this.surfaceRight;
+    out.slideLeft = this.slideLeft;
+    out.slideRight = this.slideRight;
+    out.slip = this.slip;
+    out.boost = this.reserve.energy;
+    out.boosting = this.reserve.active;
+    out.reversing = this.driver.reversing;
+    out.pitch = this.suspension.pitch;
+    out.pitchVelocity = this.suspension.pitchVelocity;
+    out.roll = this.suspension.roll;
+    out.rollVelocity = this.suspension.rollVelocity;
+    return out;
+  }
+
+  /**
+   * Yetkili durumu tanka kurar (ağ uzlaştırması). `previous` poz da yeni konuma çekilir; yoksa
+   * görünüm eski konumdan yeni konuma bir kare süzülürdü.
+   */
+  restoreState(state: TankState): void {
+    this.x = state.x;
+    this.y = state.y;
+    this.vx = state.vx;
+    this.vy = state.vy;
+    this.angle = state.hull;
+    this.angularVelocity = state.angularVelocity;
+    this.turretMount.angle = state.turret;
+    this.trackLeft = state.trackLeft;
+    this.trackRight = state.trackRight;
+    this.treadLeft = state.treadLeft;
+    this.treadRight = state.treadRight;
+    this.groundLeft = state.groundLeft;
+    this.groundRight = state.groundRight;
+    this.surfaceLeft = state.surfaceLeft;
+    this.surfaceRight = state.surfaceRight;
+    this.slideLeft = state.slideLeft;
+    this.slideRight = state.slideRight;
+    this.slip = state.slip;
+    this.reserve.energy = state.boost;
+    this.reserve.active = state.boosting;
+    this.driver.reversing = state.reversing;
+    this.suspension.restore(state.pitch, state.pitchVelocity, state.roll, state.rollVelocity);
+    this.contact.speed = 0;
     this.capturePose();
   }
 
