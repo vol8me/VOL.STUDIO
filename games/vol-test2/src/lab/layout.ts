@@ -1,4 +1,4 @@
-import { PROPS, type PropKind } from './props';
+import { PROPS, type PropKind } from '@/art/props';
 
 export interface Placement {
   readonly kind: PropKind;

@@ -1,8 +1,8 @@
 import type Phaser from 'phaser';
-import { ASSETS, TILE_UNITS, type AssetId } from '../assets/manifest';
-import { kitFacts, loadKit, textureKey, type KitLoad } from '../assets/textures';
+import { ASSETS, TILE_UNITS, type AssetId } from '@/art/manifest';
+import { kitFacts, loadKit, textureKey, type KitLoad } from '@/art/textures';
 import { LAB_SCENE_KEY } from '../LabScene';
-import { BLEND } from '../parts';
+import { BLEND } from '@/art/parts';
 import { seeded } from '../random';
 import type { Invariant } from '../judge';
 import type { ParamSpec } from '../params';

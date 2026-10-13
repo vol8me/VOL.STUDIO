@@ -1,12 +1,12 @@
-import { ASSET_LIST, TILE_UNITS, type AssetId } from '../assets/manifest';
-import { kitFacts, loadKit, type KitLoad } from '../assets/textures';
+import { ASSET_LIST, TILE_UNITS, type AssetId } from '@/art/manifest';
+import { kitFacts, loadKit, type KitLoad } from '@/art/textures';
 import type { Invariant } from '../judge';
 import { LAB_SCENE_KEY } from '../LabScene';
 import { layoutFactory, type Layout } from '../layout';
 import type { ParamSpec } from '../params';
-import { phaserParts } from '../phaserParts';
-import { PropField } from '../propField';
-import { PROPS } from '../props';
+import { phaserParts } from '@/art/phaserParts';
+import { PropField } from '@/art/propField';
+import { PROPS } from '@/art/props';
 import { seeded } from '../random';
 import { round3, SpanTimer } from '../timing';
 import type { WorkloadDef, WorkloadInstance } from '../workload';

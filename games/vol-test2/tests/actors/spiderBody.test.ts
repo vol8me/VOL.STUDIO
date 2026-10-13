@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SpiderBody, type LegPose } from '../../src/lab/spiderBody';
-import { DEFAULT_SPIDER, FEMUR_LENGTH, LOWER_LENGTH } from '../../src/lab/spiderRig';
+import { SpiderBody, type LegPose } from '../../src/actors/spiderBody';
+import { DEFAULT_SPIDER, FEMUR_LENGTH, LOWER_LENGTH } from '../../src/actors/spiderRig';
 import { seeded } from '../../src/lab/random';
 import { createWander, stepWander, velocityOf } from '../../src/lab/wander';
 

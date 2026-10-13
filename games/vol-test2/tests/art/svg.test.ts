@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { measureSvg } from '../../src/lab/svg';
+import { measureSvg } from '../../src/art/svg';
 
 const SAMPLE = `<?xml version="1.0"?>
 <!-- <path d="M0 0L9 9"/> yorumun içindeki yol sayılmaz -->

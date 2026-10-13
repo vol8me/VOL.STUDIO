@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BLEND } from './parts';
+import { BLEND } from '@/art/parts';
 
 export const LAB_SCENE_KEY = 'lab';
 

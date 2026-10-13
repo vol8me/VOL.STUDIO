@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DEG } from '../../src/lab/anim';
-import { ASSETS, TILE_UNITS } from '../../src/lab/assets/manifest';
-import { textureKey } from '../../src/lab/assets/textures';
-import { BLEND } from '../../src/lab/parts';
-import { PROPS, type PropKind } from '../../src/lab/props';
-import { PropField, type PropFieldOptions } from '../../src/lab/propField';
-import { FakeFactory } from './fakeParts';
+import { DEG } from '../../src/art/anim';
+import { ASSETS, TILE_UNITS } from '../../src/art/manifest';
+import { textureKey } from '../../src/art/textures';
+import { BLEND } from '../../src/art/parts';
+import { PROPS, type PropKind } from '../../src/art/props';
+import { PropField, type PropFieldOptions } from '../../src/art/propField';
+import { FakeFactory } from '../helpers/fakeParts';
 
 const OPTIONS: PropFieldOptions = { zoom: 0.5, pxPerUnit: 2 };
 

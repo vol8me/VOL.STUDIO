@@ -1,6 +1,6 @@
-import { animationValue, type AnimSpec } from './anim';
-import { textureKey } from './assets/textures';
-import { BLEND, type PartFactory, type PartPort } from './parts';
+import { animationValue, type AnimSpec } from '@/art/anim';
+import { textureKey } from '@/art/textures';
+import { BLEND, type PartFactory, type PartPort } from '@/art/parts';
 import type { SpiderBody } from './spiderBody';
 import {
   ABDOMEN_PIVOT_BODY,

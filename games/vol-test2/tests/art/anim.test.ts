@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { animationRange, animationValue, type AnimSpec } from '../../src/lab/anim';
+import { animationRange, animationValue, type AnimSpec } from '../../src/art/anim';
 
 describe('animationValue', () => {
   it('spin: rpm başına tam tur, 360 derecede sarar', () => {

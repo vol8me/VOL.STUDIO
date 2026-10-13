@@ -1,10 +1,10 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ASSET_LIST, ASSETS, floorViolations } from '../../src/lab/assets/manifest';
-import { measureSvg } from '../../src/lab/svg';
+import { ASSET_LIST, ASSETS, floorViolations } from '../../src/art/manifest';
+import { measureSvg } from '../../src/art/svg';
 
-const DIR = join(import.meta.dirname, '../../src/lab/assets');
+const DIR = join(import.meta.dirname, '../../src/art/kit');
 const read = (file: string): string => readFileSync(join(DIR, file), 'utf8');
 
 describe('lab SVG varlıkları', () => {

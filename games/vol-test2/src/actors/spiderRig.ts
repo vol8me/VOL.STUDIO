@@ -1,8 +1,8 @@
-import type { Vec } from './parts';
+import type { Vec } from '@/art/parts';
 
 /**
  * Örümcek rig'inin sabitleri. Bağlantı noktaları SVG dosyalarındaki gerçek koordinatlardır
- * (`arachnid-*.svg`); `tests/lab/spiderRig.test.ts` her birini dosyayla karşılaştırır, böylece bir
+ * (`arachnid-*.svg`); `tests/actors/spiderRig.test.ts` her birini dosyayla karşılaştırır, böylece bir
  * parçanın yeniden çizilmesi rig'i sessizce bozmaz. Birim tasarım birimidir (1 karo = 64).
  *
  * Gövde uzayı: başgöğsün merkezi orijin, burun +x (doğu), ekran ekseni (y aşağı). Sol bacaklar

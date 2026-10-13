@@ -1,6 +1,6 @@
 import { animationValue, DEG } from './anim';
-import { ASSETS, TILE_UNITS } from './assets/manifest';
-import { textureKey } from './assets/textures';
+import { ASSETS, TILE_UNITS } from './manifest';
+import { textureKey } from './textures';
 import { BLEND, type PartFactory, type PartPort, type TilePort } from './parts';
 import { PROPS, type LayerDef, type PropKind } from './props';
 

@@ -1,5 +1,5 @@
 import type { AnimSpec } from './anim';
-import type { AssetId } from './assets/manifest';
+import type { AssetId } from './manifest';
 import type { Vec } from './parts';
 
 /** Karo tabanlı bir yapının bir katmanı. Konumlar tasarım biriminde, bağlantı noktası (pivot) esaslıdır. */

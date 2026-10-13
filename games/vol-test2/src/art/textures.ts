@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { measureSvg, type SvgComplexity } from '../svg';
+import { measureSvg, type SvgComplexity } from './svg';
 import { ASSETS, type AssetId } from './manifest';
 
 /** Doku adı: aynı varlık farklı rasterleme ölçeğinde ayrı doku olarak yaşar. */

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { textureKey } from '../../src/lab/assets/textures';
-import { BLEND } from '../../src/lab/parts';
-import { SpiderBody } from '../../src/lab/spiderBody';
+import { textureKey } from '../../src/art/textures';
+import { BLEND } from '../../src/art/parts';
+import { SpiderBody } from '../../src/actors/spiderBody';
 import {
   ABDOMEN_PIVOT_BODY,
   DEFAULT_SPIDER,
   REACTOR_BODY,
   SPIDER_ANCHORS,
   TIBIA_LENGTH,
-} from '../../src/lab/spiderRig';
-import { SPIDER_PART_COUNT, SpiderView, type SpiderViewOptions } from '../../src/lab/spiderView';
-import { FakeFactory, type FakePart } from './fakeParts';
+} from '../../src/actors/spiderRig';
+import { SPIDER_PART_COUNT, SpiderView, type SpiderViewOptions } from '../../src/actors/spiderView';
+import { FakeFactory, type FakePart } from '../helpers/fakeParts';
 
 const OPTIONS: SpiderViewOptions = { zoom: 1.5, pxPerUnit: 2, depthBase: 30, phase: 0.3 };
 

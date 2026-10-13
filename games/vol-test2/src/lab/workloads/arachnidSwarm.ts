@@ -1,12 +1,12 @@
-import { kitFacts, loadKit, type KitLoad } from '../assets/textures';
+import { kitFacts, loadKit, type KitLoad } from '@/art/textures';
 import type { Invariant } from '../judge';
 import { LAB_SCENE_KEY } from '../LabScene';
 import type { ParamSpec } from '../params';
-import { phaserParts } from '../phaserParts';
-import type { PartFactory } from '../parts';
+import { phaserParts } from '@/art/phaserParts';
+import type { PartFactory } from '@/art/parts';
 import { seeded } from '../random';
-import { SpiderBody } from '../spiderBody';
-import { SpiderView, SPIDER_PART_COUNT } from '../spiderView';
+import { SpiderBody } from '@/actors/spiderBody';
+import { SpiderView, SPIDER_PART_COUNT } from '@/actors/spiderView';
 import { round3, SpanTimer } from '../timing';
 import {
   createWander,
@@ -16,7 +16,7 @@ import {
   type WanderState,
 } from '../wander';
 import type { WorkloadDef, WorkloadInstance } from '../workload';
-import type { AssetId } from '../assets/manifest';
+import type { AssetId } from '@/art/manifest';
 
 const SPIDER_ASSETS: readonly AssetId[] = [
   'arachnid-abdomen',

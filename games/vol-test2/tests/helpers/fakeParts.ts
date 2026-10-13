@@ -1,4 +1,4 @@
-import type { PartFactory, TilePort } from '../../src/lab/parts';
+import type { PartFactory, TilePort } from '../../src/art/parts';
 
 /** Sahne nesnesi portunun bellek içi karşılığı: konum, ölçek ve çağrılan ayarlar okunabilir. */
 export class FakePart implements TilePort {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { layoutFactory, type Layout } from '../../src/lab/layout';
-import { PROPS, type PropKind } from '../../src/lab/props';
+import { PROPS, type PropKind } from '../../src/art/props';
 import { seeded } from '../../src/lab/random';
 
 const make = (cols: number, rows: number, seed = 7, fill = 0.3): Layout =>

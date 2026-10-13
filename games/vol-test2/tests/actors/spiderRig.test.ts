@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ASSETS, type AssetId } from '../../src/lab/assets/manifest';
+import { ASSETS, type AssetId } from '../../src/art/manifest';
 import {
   ABDOMEN_PIVOT_BODY,
   buildLegs,
@@ -14,9 +14,9 @@ import {
   SPIDER_ANCHORS,
   STANCE_DEG,
   TIBIA_LENGTH,
-} from '../../src/lab/spiderRig';
+} from '../../src/actors/spiderRig';
 
-const DIR = join(import.meta.dirname, '../../src/lab/assets');
+const DIR = join(import.meta.dirname, '../../src/art/kit');
 const read = (id: AssetId): string => readFileSync(join(DIR, ASSETS[id].file), 'utf8');
 
 interface Circle {

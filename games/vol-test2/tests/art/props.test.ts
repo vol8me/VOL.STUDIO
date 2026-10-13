@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { animationRange } from '../../src/lab/anim';
-import { ASSETS, TILE_UNITS } from '../../src/lab/assets/manifest';
-import { dynamicLayerCount, PROP_KINDS, PROPS, TURRET_PERIOD_MS } from '../../src/lab/props';
+import { animationRange } from '../../src/art/anim';
+import { ASSETS, TILE_UNITS } from '../../src/art/manifest';
+import { dynamicLayerCount, PROP_KINDS, PROPS, TURRET_PERIOD_MS } from '../../src/art/props';
 
 describe('PROPS: yapı tarifleri tutarlıdır', () => {
   it('her tarif kendi türünün adını taşır ve PROP_KINDS hepsini sayar', () => {
