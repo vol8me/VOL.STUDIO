@@ -4,6 +4,7 @@ import { Predict, classifyJoinError, type JoinFailure, type Room } from '@volstu
 import { afterEach, describe, expect, it } from 'vitest';
 import { MATCH, NETWORK } from '@/config/network';
 import { TANK } from '@/config/tank';
+import { STRIKER, VEHICLE_IDS, VEHICLES, modelOf } from '@/config/vehicles';
 import { WORLD } from '@/config/world';
 import { EVENT_MESSAGE, type EventBatch, type NetEvent } from '@/network/events';
 import { PredictedPilot } from '@/network/PredictedPilot';
@@ -102,6 +103,27 @@ describe('MatchRoom katılım', () => {
     expect(seat.state.code).toBe('');
     await until(() => seat.state.tick > 5, 'sunucu adımları');
     expect(Number.isFinite(seat.state.timeMs)).toBe(true);
+  });
+
+  it('araç seçilmezse Striker, seçilirse o araç doğar: tanım, can ve model kaydı eşleşir', async () => {
+    await boot();
+    const plain = await join({ name: 'Ada' });
+    expect(self(plain).model).toBe(modelOf(STRIKER));
+    expect(vehicleOf(plain).spec).toBe(STRIKER);
+    for (const spec of Object.values(VEHICLES)) {
+      const seat = await join({ model: modelOf(spec) });
+      expect(self(seat).model).toBe(modelOf(spec));
+      expect(vehicleOf(seat).spec).toBe(spec);
+      expect(self(seat).health).toBe(spec.health);
+    }
+  });
+
+  it('tanımsız ya da tamsayı olmayan araç indeksi protokol ihlali olarak reddedilir', async () => {
+    await boot();
+    for (const model of [VEHICLE_IDS.length, -1, 1.5, '1', null, Number.NaN]) {
+      expect(await failure(join({ model })), String(model)).toBe('protocol');
+    }
+    expect(serverRoomCount()).toBe(0);
   });
 
   it('yeni gelen araç doğma korumasıyla başlar', async () => {

@@ -251,3 +251,60 @@ describe('Projectiles', () => {
     expect(projectiles.count).toBe(0);
   });
 });
+
+describe('Projectiles profilleri', () => {
+  const short = { muzzleHeight: 10, launchSpeed: 0, gravity: 314, drag: 0, maxRange: 5000 };
+
+  it('mermi doğduğu profilin ömrüne göre biter: kısa ömürlü mermi önce patlar', () => {
+    const projectiles = new Projectiles(4, 5000);
+    const brief = projectiles.addProfile(100, undefined);
+    projectiles.spawn(1, 100, 500, 10, 0);
+    projectiles.spawn(2, 100, 600, 10, 0, brief);
+    const events: SimEvent[] = [];
+    projectiles.step(150, world(), events);
+    expect(projectiles.count).toBe(1);
+    expect(events).toMatchObject([{ kind: 'impact', owner: 2, surface: 'ground' }]);
+    expect(projectiles.items[0].owner).toBe(1);
+  });
+
+  it('uçuş modeli profile göre uygulanır: düz mermi yere düşmez, yerçekimli düşer', () => {
+    const projectiles = new Projectiles(4, 5000);
+    const lobbed = projectiles.addProfile(5000, short);
+    projectiles.spawn(1, 100, 500, 100, 0);
+    projectiles.spawn(2, 100, 600, 100, 0, lobbed);
+    projectiles.step(1000, world(), []);
+    expect(projectiles.count).toBe(1);
+    expect(projectiles.items[0].owner).toBe(1);
+  });
+
+  it('etiket profili kaydedene döner ve önizleme profilin ömrüyle kesilir', () => {
+    const projectiles = new Projectiles(4, 2000);
+    const tagged = projectiles.addProfile(200, undefined, 3);
+    const shell = projectiles.spawn(1, 100, 500, 100, 0, tagged);
+    expect(projectiles.styleOf(shell)).toBe(3);
+    expect(projectiles.styleOf(projectiles.spawn(1, 100, 500, 100, 0))).toBe(0);
+    const space = world();
+    // Önizleme sonucu paylaşılan bir nesnedir: uzunluk ikinci çağrıdan önce okunur.
+    const longLength = projectiles.preview(1, 100, 500, 100, 0, space, [], 1000 / 60).pathLength;
+    const cutLength = projectiles.preview(
+      1,
+      100,
+      500,
+      100,
+      0,
+      space,
+      [],
+      1000 / 60,
+      undefined,
+      tagged,
+    ).pathLength;
+    expect(cutLength).toBeLessThan(longLength / 4);
+  });
+
+  it('geçersiz profili ve ömrü reddeder', () => {
+    const projectiles = new Projectiles(2, 1000);
+    expect(() => projectiles.addProfile(0, undefined)).toThrow(RangeError);
+    expect(() => projectiles.addProfile(Number.NaN, undefined)).toThrow(RangeError);
+    expect(() => projectiles.spawn(1, 0, 0, 0, 0, 5)).toThrow(RangeError);
+  });
+});

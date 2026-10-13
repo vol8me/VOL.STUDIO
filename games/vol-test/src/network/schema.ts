@@ -45,6 +45,8 @@ export const NO_TEAM = -1;
 export const PlayerState = schema(
   {
     vehicleId: t.uint16().default(0),
+    /** Seçilen aracın `VEHICLE_IDS` indeksi; katılırken doğrulanır, oyuncu ömrü boyunca değişmez. */
+    model: t.uint8().default(0),
     name: t.string().default(''),
     team: t.int8().default(NO_TEAM),
     connected: flag(),
@@ -56,6 +58,8 @@ export const PlayerState = schema(
     respawnMs: f32(),
     protectionMs: f32(),
     gunMs: f64(),
+    /** Sıradaki tetik çekişinde ateşlenecek yuva grubu (`Vehicle.salvo`). */
+    salvo: t.uint8().default(0),
 
     x: f64(),
     y: f64(),

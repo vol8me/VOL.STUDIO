@@ -87,9 +87,37 @@ Tam ekran filtre veya shader kullanılmaz. HUD mevsim ve havayı i18n metniyle
 gösterir. Görünüm önizlemesi README'deki mevsim/hava sorgularıyla seçilir;
 normal oturumun takvimi bu önizlemeden bağımsızdır.
 
+## Araçlar
+
+Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, can,
+şasi sayıları, süspansiyon ve silahlanma. Kayıt sırası (`VEHICLE_IDS`) ağdaki `model`
+indeksidir; araç eklenirse sona eklenir, yeniden sıralanmaz. `Vehicle` tanımdan şasi,
+silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca değil tanıma bakar.
+
+| Araç    | Rol                      | Can | Hız | Dönüş | Atış                                |
+| ------- | ------------------------ | --- | --- | ----- | ----------------------------------- |
+| Striker | Dengeli ana tank         | 100 | 230 | 3,0   | 34 hasar, 650 ms, kabuk             |
+| Bulwark | Ağır kuşatma tankı       | 170 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi       |
+| Dart    | Hafif, hızlı keşif tankı | 64  | 330 | 4,4   | 16 hasar, 360 ms, uzun menzilli ray |
+
+Tablo `src/config/vehicles.ts` değerlerinin özetidir; saniyelik hasar araçlar arasında %35'ten
+az ayrışır ve karakter farkı hızlanmadan, dönüşten, frenden ve geri tepmeden gelir
+(`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler). Aracı oyuncu katılırken
+`model` seçeneğiyle seçer; sunucu tanımsız indeksi protokol ihlali sayıp reddeder.
+
+Silahlanma (`Armament`) bir silahın sayılarını, namlu yuvalarını ve atış gruplarını
+(`salvo`) taşır. 0. yuva nişan taretidir; öteki yuvalar nişan noktasına (0. yuvadan
+`toeInRange` ileride) bakar, yani her yuvanın yönü yalnız poza bağlıdır ve ağda namlu açısı
+taşınmaz. Her tetik çekişi sıradaki grubu ateşler; sıra `Vehicle.salvo` ile döner ve
+sunucu durumunda (`PlayerState.salvo`) öngörüyle uzlaştırılır. Mermi, ateşleyen silahın
+profilini (`Projectiles.addProfile`: ömür, uçuş, stil) taşır; isabet hasarı ve itkisi
+aynı silahın tanımından okunur.
+
 ## Sürüş ve süspansiyon
 
-Tank bir katı cisimdir; kütle ve ayak izi `src/config/tank.ts` içindedir.
+Araç gövdesi bir katı cisimdir (`Chassis`: poz, durum, taret, hızlanma deposu, süspansiyon
+ve duvar teması; tank `Chassis`'e palet kuvvetlerini ekler). Striker'ın kütlesi ve ayak izi
+`src/config/tank.ts` içindedir, öteki araçlar aynı tablonun değerlerini değiştirir.
 Hız doğrudan atanmaz: iki paletin kuvveti gövdeyi taşır, kuvvet farkı döndürür.
 Palet yüzey hızıyla zemin hızı farkı çekiş üretir. Stribeck geçişi statik ve
 kinetik sürtünmeyi birleştirir; boylamsal ve yanal kuvvet aynı sürtünme
@@ -121,18 +149,19 @@ araç örtüşmesi ≈0,05 birimdir (4 tohum, 48 000 araç çifti ve köşe yı�
 Taret gövdeden bağımsız dünya yönünü korur; gövde dönünce veya nişan çubuğu
 bırakılınca otomatik olarak gövdeye dönmez. Dönüş hızı ve hizalanma eşiği
 silah yapılandırmasındadır. Taret hedefe oturmadığında ateş isteği bekler,
-dolum tüketilmez. Atış aralığı 650 ms'dir.
+dolum tüketilmez. Atış aralığı silaha göredir (Striker 650 ms).
 
-Mermi namlu ekseni boyunca çıkar ve tankın hızından yalnız eksen bileşenini
-devralır: yan kayarken ateş eden tankın mermisi namlunun gösterdiği doğrultudan
-sapmaz. Atış tanka ters yönde itki uygular. Düşey uçuş, yatay hava direnci, rüzgâr, yer teması ve menzil sonu aynı
+Mermi namlu ekseni boyunca çıkar ve aracın hızından yalnız eksen bileşenini
+devralır: yan kayarken ateş eden aracın mermisi namlunun gösterdiği doğrultudan
+sapmaz. Atış araca ters yönde itki uygular; çok namlulu araçta her namlunun geri
+tepmesi, bütün mermiler doğduktan sonra ayrı ayrı uygulanır. Düşey uçuş, yatay hava direnci, rüzgâr, yer teması ve menzil sonu aynı
 balistik çözümle hesaplanır. Yer ve menzil bitişi adımın içindeki kesin
 zamanda çözülür. Nişan önizlemesi aynı uçuş hesabını, araçları ve dünya
 sınırını kullanır; gelecekteki hava olayını tahmin etmez.
 
-Namlu, lazer ve fare nişanı tek geometriden türer (`src/sim/muzzle.ts`): taret mili
-gövde merkezi artı süspansiyon kaymasıdır, namlu ucu milden taret yönünde
-`WEAPON.muzzleOffset` uzaklıktadır. Sim atışı, ağız parlaması ve nişan çizgisi
+Namlu, lazer ve fare nişanı tek geometriden türer (`src/sim/muzzle.ts`): yuva mili
+gövde merkezi artı yuvanın gövde eksenindeki konumu artı süspansiyon kaymasıdır, namlu
+ucu milden yuva yönünde `MountSpec.reach` uzaklıktadır. Sim atışı, ağız parlaması ve nişan çizgisi
 aynı işlevi okur; çizgi ekranda görünen ara değerli kareden (`tankFrame`)
 türetilir ve mermi yolunu (rüzgâr ve direnç eğrisi dahil) namlu ucundan çizer.
 Fare nişanı da son çizilen karedeki taret milinden hesaplanır; simülasyonun

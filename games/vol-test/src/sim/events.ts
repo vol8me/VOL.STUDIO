@@ -38,6 +38,8 @@ export type SimEvent =
   | {
       readonly kind: 'fired';
       readonly source: EntityId;
+      /** Ateşleyen yuva (`Armament.mounts` indeksi): çok namlulu araçta her namlu ayrı olaydır. */
+      readonly mount: number;
       readonly x: number;
       readonly y: number;
       readonly angle: number;

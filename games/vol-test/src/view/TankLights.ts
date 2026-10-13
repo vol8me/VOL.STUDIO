@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Spring1D } from '@volstudio/core/math';
 import { TANK_LIGHTS } from '@/config/tankView';
+import { STRIKER } from '@/config/vehicles';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import type { TankFrame } from './TankView';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
@@ -46,7 +47,13 @@ export class TankLights {
     const beat = 0.5 + 0.5 * Math.sin(this.pulse);
     this.bodyPart.setScale(INV * (0.68 + beat * 0.14 + (frame.boosting ? 0.1 : 0)));
     this.bodyPart.setAlpha(0.55 + beat * 0.35);
-    const tip = muzzlePose(frame, TANK_LIGHTS.muzzleX + this.barrel.value, this.tip);
+    const tip = muzzlePose(
+      frame,
+      STRIKER.armament,
+      0,
+      this.tip,
+      TANK_LIGHTS.muzzleX + this.barrel.value,
+    );
     this.flash.setPosition(tip.x, tip.y);
     this.flash.setRotation(tip.angle);
     if (this.flashMs > 0) {

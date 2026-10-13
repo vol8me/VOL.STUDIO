@@ -231,8 +231,8 @@ describe('involvesPlayer', () => {
   const me = 3;
   const other = 4;
   const cases: [NetEvent, boolean][] = [
-    [{ kind: 'fired', source: me, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }, true],
-    [{ kind: 'fired', source: other, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }, false],
+    [{ kind: 'fired', mount: 0, source: me, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }, true],
+    [{ kind: 'fired', mount: 0, source: other, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }, false],
     [{ kind: 'impact', owner: me, surface: 'wall', x: 0, y: 0, angle: 0 }, true],
     [{ kind: 'impact', owner: other, surface: 'ground', x: 0, y: 0, angle: 0 }, false],
     [{ kind: 'hit', owner: other, target: me, x: 0, y: 0, angle: 0 }, true],

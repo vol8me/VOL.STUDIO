@@ -11,7 +11,6 @@ export class Vitality {
   constructor(private readonly config: CombatConfig) {
     const numbers = [
       config.maxHealth,
-      config.projectileDamage,
       config.regenerationDelayMs,
       config.regenerationPerSecond,
       config.respawnDelayMs,

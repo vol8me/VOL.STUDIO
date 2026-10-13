@@ -51,6 +51,8 @@ export interface JoinParams {
   readonly mode?: string;
   readonly code?: string;
   readonly protocol?: number;
+  /** Seçilen aracın `VEHICLE_IDS` indeksi; sunucu doğrular. Kasıtlı geçersiz değer için `unknown`. */
+  readonly model?: unknown;
 }
 
 /** Herkese açık odaya katılır (yoksa kurar); `protocol` varsayılan olarak güncel sürümdür. */

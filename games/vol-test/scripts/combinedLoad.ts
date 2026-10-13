@@ -1,5 +1,5 @@
 import { SCENARIOS, type ScenarioId } from '../src/config/scenarios';
-import { SUSPENSION, TANK, WEAPON } from '../src/config/tank';
+import { STRIKER } from '../src/config/vehicles';
 import { idleCommand } from '../src/sim/command';
 import { ScenarioRunner } from '../src/sim/scenarios/ScenarioRunner';
 import { Simulation } from '../src/sim/Simulation';
@@ -66,9 +66,7 @@ function run(load: Load) {
     : undefined;
   const sim = new Simulation({
     world,
-    tank: TANK,
-    suspension: SUSPENSION,
-    weapon: WEAPON,
+    vehicle: STRIKER,
     weather,
   });
   const runner = new ScenarioRunner(sim);

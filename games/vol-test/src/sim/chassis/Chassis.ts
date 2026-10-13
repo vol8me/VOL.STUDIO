@@ -128,6 +128,10 @@ export abstract class Chassis extends RigidBody {
     return this.reserve.active;
   }
 
+  get boostCapacity(): number {
+    return this.config.boostCapacity;
+  }
+
   /** Geri vitesteyim (yalnız paletli tankta anlamlıdır). */
   abstract get reversing(): boolean;
 

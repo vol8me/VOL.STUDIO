@@ -21,7 +21,6 @@ import {
   type EffectLevel,
   type EffectProfile,
 } from '@/config/quality';
-import { TANK } from '@/config/tank';
 import { WORLD } from '@/config/world';
 import { Hud } from '@/hud/Hud';
 import type { SimEvent } from '@/sim/events';
@@ -178,6 +177,7 @@ export class WorldScene extends Phaser.Scene {
     this.camera.model.snapTo(start.x, start.y);
     pivotPose(
       start.readPose({ x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 }),
+      this.driver.player.armament,
       this.aimOrigin,
     );
 
@@ -295,7 +295,7 @@ export class WorldScene extends Phaser.Scene {
         groundRight: tank.groundRight,
         slideLeft: tank.slideLeft,
         slideRight: tank.slideRight,
-        trackOffset: TANK.trackOffset,
+        trackOffset: tank.trackOffset,
       });
     }
     measurements?.mark('vehicles');
@@ -306,7 +306,7 @@ export class WorldScene extends Phaser.Scene {
     // Nişan, kamera ve HUD ekranda çizilen aynı ara değerli kareyi okur: namlu, lazer ve fare
     // nişanı arasında kare kaymaları kalmaz.
     const view = tankFrame(player.chassis, alpha);
-    pivotPose(view, this.aimOrigin);
+    pivotPose(view, player.armament, this.aimOrigin);
     const aiming = !paused && player.vitality.alive && this.controls.aiming;
     const presence = this.aimPresence.update(aiming, delta);
     if (presence > 0 && player.vitality.alive) {
@@ -331,7 +331,7 @@ export class WorldScene extends Phaser.Scene {
       hudFrame(
         player.chassis,
         view,
-        TANK.boostCapacity,
+        player.chassis.boostCapacity,
         rect,
         player.gun.getProgress(),
         this.environment.climate,

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { COMBAT } from '@/config/combat';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
 import { Simulation } from '@/sim/Simulation';
 import type { SimEvent } from '@/sim/events';
 import { command, simulation, STEP_MS, world } from '../../support/sim';
+import { STRIKER } from '@/config/vehicles';
 
 describe('Simulation savaş yaşam döngüsü', () => {
   it('yetkili hasar ve iyileşme kapısı olayları doğru sırada üretir; ölü araç ateş etmez', () => {
@@ -114,9 +114,7 @@ describe('Simulation savaş yaşam döngüsü', () => {
   it('dost ateşi ekip kimliğinde filtrelenir; düşmana gerçek mermi hasarı uygulanır', () => {
     const sim = new Simulation({
       world: world(),
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
       combat: COMBAT,
     });
     const teammate = sim.spawn(2048 + 120, 2048, 0, 10);
@@ -142,9 +140,7 @@ describe('Simulation savaş yaşam döngüsü', () => {
   it('araç çarpışması normal hıza göre hasar verir; aynı çift bir adımda tek kez yaralanır', () => {
     const sim = new Simulation({
       world: world(),
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
       combat: {
         ...COMBAT,
         collision: { minSpeed: 0, damagePerSpeed: 0.5 },

@@ -3,8 +3,8 @@ import { SimulationClock } from '@volstudio/core';
 import { TANK } from '@/config/tank';
 import { hudFrame, hudVehicles, tankFrame } from '@/scenes/world/frames';
 import { Vehicle } from '@/sim/entities/Vehicle';
-import { SUSPENSION, WEAPON } from '@/config/tank';
 import { command, DT, tank, world } from '../../support/sim';
+import { STRIKER } from '@/config/vehicles';
 
 describe('frames', () => {
   it('poz, taret ve süspansiyon önceki ve güncel adım arasında ara değerlenir', () => {
@@ -85,7 +85,7 @@ it('saat reset ve duraklatma toplam zamanı ile poz geçmişini ayrı yönetir',
 
 describe('hudVehicles', () => {
   function pair(): Vehicle[] {
-    const vehicles = [1, 2].map((id) => new Vehicle(id, TANK, SUSPENSION, WEAPON));
+    const vehicles = [1, 2].map((id) => new Vehicle(id, STRIKER));
     vehicles[0].chassis.place(1000, 1000, 0);
     vehicles[1].chassis.place(2000, 1500, 1);
     for (const vehicle of vehicles) {

@@ -1,10 +1,11 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
-import { TANK, WEAPON } from '@/config/tank';
+import { TANK } from '@/config/tank';
 import { muzzlePose } from '@/sim/muzzle';
 import { TankView, type TankFrame } from '@/view/TankView';
 import { TEXTURE, TEXTURE_SCALE } from '@/view/textures';
 import { fakeScene, lastCall } from '../support/fakeScene';
+import { STRIKER } from '@/config/vehicles';
 
 const frame = (overrides: Partial<TankFrame> = {}): TankFrame => ({
   x: 100,
@@ -42,7 +43,7 @@ describe('TankView', () => {
     expect(children).toContain(turretRig);
     expect(children.indexOf(byTexture(TEXTURE.hull)[0])).toBeLessThan(children.indexOf(core));
     expect(children.indexOf(core)).toBeLessThan(children.indexOf(turretRig));
-    expect(flash.x).toBeCloseTo(97 + WEAPON.muzzleOffset);
+    expect(flash.x).toBeCloseTo(97 + STRIKER.armament.mounts[0].reach);
     expect(flash.y).toBeCloseTo(202);
     expect(flash.rotation).toBeCloseTo(0);
   });
@@ -60,7 +61,7 @@ describe('TankView', () => {
       view.update(state, 0);
       const turret = byTexture(TEXTURE.turret)[0];
       // Sahne zinciri: kök (poz, gövde yönü) → gövde (süspansiyon) → taret kabı (dönüş) → resim.
-      const local = { x: Number(turret.x ?? 0) + WEAPON.muzzleOffset, y: 0 };
+      const local = { x: Number(turret.x ?? 0) + STRIKER.armament.mounts[0].reach, y: 0 };
       const rotated = (point: { x: number; y: number }, angle: number) => ({
         x: point.x * Math.cos(angle) - point.y * Math.sin(angle),
         y: point.x * Math.sin(angle) + point.y * Math.cos(angle),
@@ -68,7 +69,7 @@ describe('TankView', () => {
       const inRig = rotated(local, Number(turretRig.rotation));
       const inBody = { x: Number(body.x) + inRig.x, y: Number(body.y) + inRig.y };
       const world = rotated(inBody, Number(root.rotation));
-      const tip = muzzlePose(state, WEAPON.muzzleOffset, { x: 0, y: 0, angle: 0 });
+      const tip = muzzlePose(state, STRIKER.armament, 0, { x: 0, y: 0, angle: 0 });
       expect(Number(root.x) + world.x).toBeCloseTo(tip.x, 6);
       expect(Number(root.y) + world.y).toBeCloseTo(tip.y, 6);
       const flash = byTexture(TEXTURE.flash)[0];

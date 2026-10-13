@@ -1,7 +1,6 @@
 /** Can, hasar ve yeniden doğma kuralları yalnız oyunun yapılandırmasındadır. */
 export const COMBAT = {
   maxHealth: 100,
-  projectileDamage: 34,
   /** Aynı takımın mermileri birbirine çarpmaz. Takımsız araçlar herkese karşı açıktır. */
   friendlyFire: false,
   /** Son hasardan sonra doğal onarımın başlaması için geçen simülasyon süresi. */
@@ -19,9 +18,11 @@ export const COMBAT = {
   },
 } as const;
 
+/** Aynı anda havada kalabilen en çok mermi; dolunca en yaşlı mermi yeni atışa verilir. */
+export const PROJECTILE_CAPACITY = 256;
+
 export interface CombatConfig {
   readonly maxHealth: number;
-  readonly projectileDamage: number;
   readonly friendlyFire: boolean;
   readonly regenerationDelayMs: number;
   readonly regenerationPerSecond: number;

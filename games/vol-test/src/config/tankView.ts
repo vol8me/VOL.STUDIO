@@ -1,4 +1,5 @@
-import { TANK, WEAPON } from './tank';
+import { TANK } from './tank';
+import { STRIKER } from './vehicles';
 
 export const TREAD_VIEW = {
   width: 2 * TANK.halfLength - 2 * (TANK.halfWidth - TANK.trackOffset),
@@ -10,7 +11,7 @@ export const TREAD_VIEW = {
 
 export const TANK_LIGHTS = {
   depth: 11,
-  muzzleX: WEAPON.muzzleOffset,
+  muzzleX: STRIKER.armament.mounts[0].reach,
   flashMs: 70,
   barrel: { kick: -210, stiffness: 420, damping: 22, max: 5 },
 } as const;

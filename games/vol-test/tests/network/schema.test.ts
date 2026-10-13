@@ -21,6 +21,7 @@ import {
 /** Tankın dinamik durumu olmayan, oyuncu kaydına özgü alanlar. */
 const RECORD_FIELDS = [
   'vehicleId',
+  'model',
   'name',
   'team',
   'connected',
@@ -31,6 +32,7 @@ const RECORD_FIELDS = [
   'respawnMs',
   'protectionMs',
   'gunMs',
+  'salvo',
 ];
 
 const input = (patch: Partial<TankInputFields> = {}): TankInputFields => ({

@@ -1,7 +1,7 @@
 import { clampSimulationStep } from '@volstudio/core';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { NETWORK } from '@/config/network';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+import { STRIKER, vehicleAt } from '@/config/vehicles';
 import type { TankCommand } from '@/sim/command';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import { Simulation } from '@/sim/Simulation';
@@ -19,7 +19,10 @@ import { EventQueue } from './timeline';
  * Sunucunun bildirdiği isabeti/patlamayı, aynı sahibin yerel mermisiyle eşleştirme yarıçapı: görüntü
  * geriye dönük süre kadar geride olduğu için mermi o sürede aldığı yol kadar farklı yerde olabilir.
  */
-const RETIRE_RADIUS = (WEAPON.projectileSpeed * NETWORK.interpolationDelayMs) / 1000;
+function retireRadius(vehicle: Vehicle | undefined): number {
+  const speed = (vehicle?.weapon ?? STRIKER.armament.weapon).projectileSpeed;
+  return (speed * NETWORK.interpolationDelayMs) / 1000;
+}
 
 /**
  * Olay oyuncuyu doğrudan ilgilendiriyor mu (kaynak, hedef ya da taraf)? Oyuncunun kendi atışı,
@@ -76,19 +79,15 @@ export class OnlineWorld {
     const self = session.self;
     if (!self) throw new Error('Oturumda kendi oyuncu kaydı yok.');
     this.selfRecord = self;
-    this.sim = new Simulation({
-      world: space,
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
-      spawnPlayer: false,
-    });
+    const spec = vehicleAt(self.model) ?? STRIKER;
+    this.sim = new Simulation({ world: space, vehicle: spec, spawnPlayer: false });
     const vehicle = this.sim.spawn(
       self.x,
       self.y,
       self.hull,
       self.team === NO_TEAM ? null : self.team,
       self.vehicleId,
+      spec,
     );
     this.pilot = new PredictedPilot({
       room: session.room,
@@ -97,7 +96,7 @@ export class OnlineWorld {
       space,
       vehicle,
       divergenceTolerance: NETWORK.divergenceTolerance,
-      onFired: (launch) => this.fireLocally(launch),
+      onFired: (launch, mount) => this.fireLocally(launch, mount),
     });
     this.remotes = new RemoteTanks(session.room, session.predict, this.sim);
     this.scope.addSubscription(session.onEvents((batch) => this.receive(batch)));
@@ -154,10 +153,20 @@ export class OnlineWorld {
   }
 
   /** Öngörülen atış: mermi ve ağız parlaması sunucu yanıtı beklenmeden başlar. */
-  private fireLocally(launch: Launch): void {
+  private fireLocally(launch: Launch, mount: number): void {
     const id = this.player.id;
-    this.sim.projectiles.spawn(id, launch.x, launch.y, launch.vx, launch.vy);
-    this.outbox.push({ kind: 'fired', source: id, ...launch });
+    const profile = this.sim.profileFor(this.player.weapon);
+    this.sim.projectiles.spawn(id, launch.x, launch.y, launch.vx, launch.vy, profile);
+    this.outbox.push({
+      kind: 'fired',
+      source: id,
+      mount,
+      x: launch.x,
+      y: launch.y,
+      angle: launch.angle,
+      vx: launch.vx,
+      vy: launch.vy,
+    });
   }
 
   /** Sunucunun bir adımlık olay paketini işler (oturum bunu kendiliğinden çağırır). */
@@ -175,11 +184,20 @@ export class OnlineWorld {
       case 'fired':
         // Kendi atışımız öngörüyle zaten oynadı.
         if (event.source === this.player.id) return;
-        this.sim.projectiles.spawn(event.source, event.x, event.y, event.vx, event.vy);
+        {
+          const shooter = this.sim.vehicle(event.source);
+          const profile = this.sim.profileFor((shooter ?? this.player).weapon);
+          this.sim.projectiles.spawn(event.source, event.x, event.y, event.vx, event.vy, profile);
+        }
         break;
       case 'impact':
       case 'hit':
-        this.sim.projectiles.retire(event.owner, event.x, event.y, RETIRE_RADIUS);
+        this.sim.projectiles.retire(
+          event.owner,
+          event.x,
+          event.y,
+          retireRadius(this.sim.vehicle(event.owner)),
+        );
         break;
     }
     this.outbox.push(event);

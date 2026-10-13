@@ -1,6 +1,6 @@
 import { clampSimulationStep, SimulationClock } from '@volstudio/core';
 import { GAME } from '@/config/game';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+import { STRIKER } from '@/config/vehicles';
 import { WORLD } from '@/config/world';
 import type { Hud } from '@/hud/Hud';
 import type { LobbyPanel } from '@/hud/LobbyPanel';
@@ -25,9 +25,7 @@ export class OfflineDriver implements WorldDriver {
     const overrides = services?.overrides;
     this.sim = new Simulation({
       world,
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
       weather,
     });
     this.scenarios = scope.addDestroyable(new ScenarioRunner(this.sim));

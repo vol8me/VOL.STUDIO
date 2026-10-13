@@ -1,6 +1,7 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { Callbacks, type Predict, type Room } from '@volstudio/network/client';
 import { NETWORK } from '@/config/network';
+import { STRIKER, vehicleAt } from '@/config/vehicles';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import type { Simulation } from '@/sim/Simulation';
 import {
@@ -94,7 +95,8 @@ export class RemoteTanks {
   private add(key: string, record: PlayerSnapshot): void {
     if (key === this.room.sessionId || this.remotes.has(key)) return;
     const team = record.team === NO_TEAM ? null : record.team;
-    const vehicle = this.sim.spawn(record.x, record.y, record.hull, team, record.vehicleId);
+    const spec = vehicleAt(record.model) ?? STRIKER;
+    const vehicle = this.sim.spawn(record.x, record.y, record.hull, team, record.vehicleId, spec);
     this.remotes.set(key, {
       record,
       vehicle,

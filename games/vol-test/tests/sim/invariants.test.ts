@@ -3,6 +3,7 @@ import { createRandom } from '@volstudio/core/random';
 import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
 import type { TankCommand } from '@/sim/command';
 import { command, simulation, STEP_MS } from '../support/sim';
+import { PROJECTILE_CAPACITY } from '@/config/combat';
 
 /**
  * Bulanık girdi altında simülasyonun değişmezleri. Örnek tabanlı testler
@@ -97,7 +98,7 @@ describe('simülasyon değişmezleri', () => {
         if (!(Math.abs(pitch) <= SUSPENSION.maxOffset && Math.abs(roll) <= SUSPENSION.maxOffset)) {
           violations.record(`adım ${step}: süspansiyon aralık dışı (${pitch}, ${roll})`);
         }
-        if (!(sim.projectiles.count <= WEAPON.capacity)) {
+        if (!(sim.projectiles.count <= PROJECTILE_CAPACITY)) {
           violations.record(`adım ${step}: mermi sayısı ${sim.projectiles.count}`);
         }
       }

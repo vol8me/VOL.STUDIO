@@ -13,7 +13,7 @@ import {
 import { COMBAT } from '../src/config/combat';
 import { GAME } from '../src/config/game';
 import { MATCH, NETWORK, type MatchConfig } from '../src/config/network';
-import { SUSPENSION, TANK, WEAPON } from '../src/config/tank';
+import { STRIKER, modelOf, vehicleAt, type VehicleSpec } from '../src/config/vehicles';
 import { WORLD } from '../src/config/world';
 import { EVENT_MESSAGE, type EventBatch, type NetEvent } from '../src/network/events';
 import { ROOM } from '../src/network/rooms';
@@ -57,6 +57,24 @@ interface Slot {
 
 const IDLE = Object.freeze(idleCommand());
 
+/** Doğrulanmış katılım: ağ ortak alanları ve seçilen araç. */
+interface VehicleJoin extends AuthenticatedJoin {
+  readonly spec: VehicleSpec;
+}
+
+/**
+ * Katılım seçeneğindeki `model` (`VEHICLE_IDS` indeksi). Yoksa Striker; tamsayı olmayan ya da
+ * tanımsız indeks protokol ihlalidir ve reddedilir: sunucu bilinmeyen aracı sessizce başkasıyla
+ * değiştirmez.
+ */
+function chooseVehicle(options: unknown): VehicleSpec {
+  const model = (options as { model?: unknown } | null)?.model;
+  if (model === undefined) return STRIKER;
+  const spec = typeof model === 'number' ? vehicleAt(model) : undefined;
+  if (!spec) throw rejectJoin('protocol');
+  return spec;
+}
+
 /**
  * Oyun odası: tek yetkili dünya. İstemci yalnız niyet (`TankInput`) yollar; poz, hasar, skor ve
  * ateş sonucu sunucudadır. Girdiler Colyseus'un yerel girdi tamponundan adım başına birer tane
@@ -78,9 +96,7 @@ export class MatchRoom extends Room {
 
   private readonly sim = new Simulation({
     world: new World(WORLD.width, WORLD.height, WORLD.gridStep),
-    tank: TANK,
-    suspension: SUSPENSION,
-    weapon: WEAPON,
+    vehicle: STRIKER,
     spawnPlayer: false,
   });
   private readonly players = new Map<string, Slot>();
@@ -152,14 +168,14 @@ export class MatchRoom extends Room {
     await this.lock();
   }
 
-  override onAuth(_client: Client, options: unknown): AuthenticatedJoin {
+  override onAuth(_client: Client, options: unknown): VehicleJoin {
     if (this.rejection) throw rejectJoin(this.rejection);
     const join = authenticateJoin(options);
     if (this.privateRoom && join.code !== this.code) throw rejectJoin('code');
-    return join;
+    return { ...join, spec: chooseVehicle(options) };
   }
 
-  override onJoin(client: Client, _options: unknown, auth: AuthenticatedJoin): void {
+  override onJoin(client: Client, _options: unknown, auth: VehicleJoin): void {
     const team = this.rules.mode === 'teams' ? this.smallerTeam() : NO_TEAM;
     const center = this.sim.world.center;
     const seat = chooseSeat(
@@ -169,11 +185,19 @@ export class MatchRoom extends Room {
       this.threats(),
     );
     const point = seatPoint(seat, NETWORK.maxPlayers, center);
-    const vehicle = this.sim.spawn(point.x, point.y, point.hull, team === NO_TEAM ? null : team);
+    const vehicle = this.sim.spawn(
+      point.x,
+      point.y,
+      point.hull,
+      team === NO_TEAM ? null : team,
+      undefined,
+      auth.spec,
+    );
     vehicle.vitality.protectionRemainingMs = COMBAT.respawnProtectionMs;
     const name = uniqueName(auth.name ?? `${NETWORK.fallbackName} ${vehicle.id}`, this.names());
     const state = new PlayerState();
     state.vehicleId = vehicle.id;
+    state.model = modelOf(auth.spec);
     state.name = name;
     state.team = team;
     state.connected = true;
@@ -367,6 +391,7 @@ export class MatchRoom extends Room {
     state.respawnMs = vehicle.vitality.respawnRemainingMs;
     state.protectionMs = vehicle.vitality.protectionRemainingMs;
     state.gunMs = vehicle.gun.getRemaining();
+    state.salvo = vehicle.salvo;
   }
 
   private smallerTeam(): number {

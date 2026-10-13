@@ -4,11 +4,11 @@ import { TANK } from '@/config/tank';
 import type { TankCommand } from '@/sim/command';
 import type { SimEvent } from '@/sim/events';
 import type { Simulation } from '@/sim/Simulation';
-import type { Tank } from '@/sim/tank/Tank';
+import type { Chassis } from '@/sim/chassis/Chassis';
 import { command, simulation, STEP_MS } from '../support/sim';
 
 /** Dört köşenin dünya sınırına göre en derin taşması (≤ 0: hepsi içeride). */
-function worstEscape(tank: Tank, size: number): number {
+function worstEscape(tank: Chassis, size: number): number {
   const fx = Math.cos(tank.hull);
   const fy = Math.sin(tank.hull);
   let worst = Number.NEGATIVE_INFINITY;
@@ -26,8 +26,8 @@ function worstEscape(tank: Tank, size: number): number {
 }
 
 /** İki gövde arasındaki en küçük ayırıcı-eksen örtüşmesi (0: ayrık). */
-function overlapDepth(a: Tank, b: Tank): number {
-  const corners = (tank: Tank) => {
+function overlapDepth(a: Chassis, b: Chassis): number {
+  const corners = (tank: Chassis) => {
     const fx = Math.cos(tank.hull);
     const fy = Math.sin(tank.hull);
     const out: Array<[number, number]> = [];

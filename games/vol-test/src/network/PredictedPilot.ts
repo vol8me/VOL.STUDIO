@@ -3,7 +3,7 @@ import { lerpAngle } from '@volstudio/core/math';
 import { COMBAT } from '@/config/combat';
 import { GAME } from '@/config/game';
 import { NETWORK } from '@/config/network';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+import { STRIKER, vehicleAt } from '@/config/vehicles';
 import { Vehicle } from '@/sim/entities/Vehicle';
 import { stepPredictedVehicle, type Launch } from '@/sim/vehicleStep';
 import { createChassisState } from '@/sim/chassis/ChassisState';
@@ -55,7 +55,7 @@ export interface PilotOptions {
    * Canlı (yeniden oynatma olmayan) adımda ateş edildiğinde çağrılır; mermiyi sunucu doğurur,
    * istemci kendi mermisini bu değerlerle görsel olarak uçurur.
    */
-  readonly onFired?: (launch: Launch) => void;
+  readonly onFired?: (launch: Launch, mount: number) => void;
 }
 
 /**
@@ -75,9 +75,7 @@ export class PredictedPilot {
       options.vehicle ??
       new Vehicle(
         self.vehicleId,
-        TANK,
-        SUSPENSION,
-        WEAPON,
+        vehicleAt(self.model) ?? STRIKER,
         COMBAT,
         self.team === NO_TEAM ? null : self.team,
       );
@@ -121,6 +119,7 @@ export class PredictedPilot {
     const self = this.options.self;
     vehicle.chassis.restoreState(readChassisState(self, this.scratch));
     vehicle.gun.restore(self.gunMs);
+    vehicle.salvo = self.salvo;
     vehicle.vitality.health = self.health;
     vehicle.vitality.respawnRemainingMs = self.respawnMs;
     vehicle.vitality.protectionRemainingMs = self.protectionMs;

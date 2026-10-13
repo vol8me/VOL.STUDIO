@@ -1,7 +1,7 @@
 import type { HudFrame, HudVehicle } from '@/hud/HudFrame';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import { lerpAngle } from '@volstudio/core/math';
-import type { Tank } from '@/sim/tank/Tank';
+import type { Chassis } from '@/sim/chassis/Chassis';
 import type { Vitality } from '@/sim/combat/Vitality';
 import { COMBAT } from '@/config/combat';
 import type { TankFrame } from '@/view/TankView';
@@ -10,7 +10,7 @@ import type { TankFrame } from '@/view/TankView';
  * Görünümün okuyacağı tank karesi: poz, taret ve süspansiyon önceki ve
  * güncel simülasyon adımı arasında `alpha` ile ara değerlenir.
  */
-export function tankFrame(tank: Tank, alpha: number): TankFrame {
+export function tankFrame(tank: Chassis, alpha: number): TankFrame {
   const previous = tank.previous;
   const mix = (from: number, to: number): number => from + (to - from) * alpha;
   return {
@@ -30,7 +30,7 @@ export function tankFrame(tank: Tank, alpha: number): TankFrame {
 
 /** HUD karesi: ara değerli poz, sürüş durumu ve kameranın görünen alanı. */
 export function hudFrame(
-  tank: Tank,
+  tank: Chassis,
   frame: TankFrame,
   boostCapacity: number,
   view: HudFrame['view'],

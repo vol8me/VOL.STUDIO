@@ -1,8 +1,8 @@
 import { angleDelta } from '@volstudio/core/math';
 import type { TankCommand } from './command';
-import type { WeaponConfig } from '@/config/tank';
+import type { Armament } from '@/config/vehicles';
 import type { Vehicle } from './entities/Vehicle';
-import { muzzlePose, type MuzzlePose } from './muzzle';
+import { mountPose, muzzlePose, type MuzzlePose } from './muzzle';
 import type { ChassisPose } from './chassis/ChassisState';
 import type { World } from './world/World';
 
@@ -32,87 +32,97 @@ export type LaunchBuffer = { -readonly [K in keyof Launch]: Launch[K] };
 
 const shotPose: ChassisPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
 const shotMuzzle: MuzzlePose = { x: 0, y: 0, angle: 0 };
+const shotLaunch: LaunchBuffer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0 };
 
 /**
- * Verilen poz ve tank hızından atışı türetir; sim, öngörü ve nişan çizgisi (ara değerli poz) aynı
- * işlevi kullanır. Mermi namlu ekseni boyunca çıkar ve tankın hızından yalnız eksen bileşenini
- * devralır: yan kayarken ateş eden tankın mermisi namlunun gösterdiği yönden sapmaz, bu yüzden
- * nişan çizgisi ile namlu her zaman aynı doğrultudadır.
+ * Verilen poz ve araç hızından `mount`. yuvanın atışını türetir; sim, öngörü ve nişan çizgisi (ara
+ * değerli poz) aynı işlevi kullanır. Mermi namlu ekseni boyunca çıkar ve aracın hızından yalnız
+ * eksen bileşenini devralır: yan kayarken ateş eden aracın mermisi namlunun gösterdiği yönden
+ * sapmaz, bu yüzden nişan çizgisi ile namlu her zaman aynı doğrultudadır.
  */
 export function launchFrom(
   pose: ChassisPose,
-  tankVx: number,
-  tankVy: number,
-  weapon: WeaponConfig,
+  vehicleVx: number,
+  vehicleVy: number,
+  armament: Armament,
+  mount: number,
   out: LaunchBuffer,
 ): Launch {
-  const muzzle = muzzlePose(pose, weapon.muzzleOffset, shotMuzzle);
-  const dirX = Math.cos(pose.turret);
-  const dirY = Math.sin(pose.turret);
-  const speed = weapon.projectileSpeed + tankVx * dirX + tankVy * dirY;
+  const muzzle = muzzlePose(pose, armament, mount, shotMuzzle);
+  const dirX = Math.cos(muzzle.angle);
+  const dirY = Math.sin(muzzle.angle);
+  const speed = armament.weapon.projectileSpeed + vehicleVx * dirX + vehicleVy * dirY;
   out.x = muzzle.x;
   out.y = muzzle.y;
   out.vx = dirX * speed;
   out.vy = dirY * speed;
-  out.angle = pose.turret;
+  out.angle = muzzle.angle;
   return out;
 }
 
 /**
- * Mermi namlu ucundan çıkar. Geri tepme mermi doğduktan SONRA uygulanır; bu yüzden çağrı
- * `applyRecoil`den önce yapılmalıdır.
+ * Atışın yuvadan araca geri tepmesi: ters yönde itki ve süspansiyon vuruşu (yandan ateş yalpa
+ * yapar). Mermi aracın hızını devralarak çıkar; bu çağrı mermi doğduktan SONRA yapılmalıdır.
  */
-export function muzzleLaunch(vehicle: Vehicle): Launch {
-  const tank = vehicle.chassis;
-  return launchFrom(tank.readPose(shotPose), tank.vx, tank.vy, vehicle.weapon, {
-    x: 0,
-    y: 0,
-    vx: 0,
-    vy: 0,
-    angle: 0,
-  });
-}
-
-/**
- * Atışın tanka geri tepmesi: ters yönde itki ve süspansiyon vuruşu (yandan ateş yalpa yapar).
- * Mermi tankın hızını devralarak çıkar; bu çağrı mermi doğduktan SONRA yapılmalıdır.
- */
-export function applyRecoil(vehicle: Vehicle): void {
-  const tank = vehicle.chassis;
+function applyRecoil(vehicle: Vehicle, angle: number): void {
+  const chassis = vehicle.chassis;
   const weapon = vehicle.weapon;
-  const dirX = Math.cos(tank.turret);
-  const dirY = Math.sin(tank.turret);
-  tank.applyImpulse(-dirX * weapon.recoilImpulse, -dirY * weapon.recoilImpulse);
-  const fx = Math.cos(tank.hull);
-  const fy = Math.sin(tank.hull);
-  tank.suspension.kick(
+  const dirX = Math.cos(angle);
+  const dirY = Math.sin(angle);
+  chassis.applyImpulse(-dirX * weapon.recoilImpulse, -dirY * weapon.recoilImpulse);
+  const fx = Math.cos(chassis.hull);
+  const fy = Math.sin(chassis.hull);
+  chassis.suspension.kick(
     -(dirX * fx + dirY * fy) * weapon.recoilKick,
     -(-dirX * fy + dirY * fx) * weapon.recoilKick,
   );
 }
 
 /**
+ * Bir tetik çekişi: sıradaki yuva grubunun her namlusu ateşlenir. `onLaunch` her namlunun atışını
+ * geri tepmeden ÖNCE alır (sunucu mermiyi doğurur, istemci kendi mermisini görsel olarak aynı
+ * değerlerle uçurur); ardından geri tepmeler uygulanır ve sıra bir sonraki gruba geçer. `launch`
+ * paylaşılan bir arabellektir: değerler çağrı içinde okunur, saklanmaz.
+ */
+export function triggerVolley(
+  vehicle: Vehicle,
+  onLaunch?: (launch: Launch, mount: number) => void,
+): void {
+  const armament = vehicle.armament;
+  const group = armament.salvo[vehicle.salvo];
+  const chassis = vehicle.chassis;
+  chassis.readPose(shotPose);
+  for (const mount of group) {
+    launchFrom(shotPose, chassis.vx, chassis.vy, armament, mount, shotLaunch);
+    onLaunch?.(shotLaunch, mount);
+  }
+  for (const mount of group) {
+    applyRecoil(vehicle, mountPose(shotPose, armament, mount, shotMuzzle).angle);
+  }
+  vehicle.salvo = (vehicle.salvo + 1) % armament.salvo.length;
+}
+
+/**
  * Tek aracın komutla sürülen adımı: `Simulation.step`in bu araç için yaptığı iş, araç teması ve
  * mermi çözümü olmadan. İstemci öngörüsü ve yeniden oynatma bunu çağırır; sunucuda aynı
  * adımın parçaları `Simulation` içinde bu işlevlerle ortaktır. Mermiyi sunucu doğurur, burada yalnız
- * tankın tepkisi uygulanır; `onLaunch` varsa atışın değerlerini geri tepmeden önce alır (istemci
- * kendi mermisini görsel olarak aynı değerlerle uçurur). Ateş edildiyse `true` döner.
+ * aracın tepkisi uygulanır; `onLaunch` varsa her atışın değerlerini geri tepmeden önce alır.
+ * Ateş edildiyse `true` döner.
  */
 export function stepPredictedVehicle(
   vehicle: Vehicle,
   command: TankCommand,
   world: World,
   stepMs: number,
-  onLaunch?: (launch: Launch) => void,
+  onLaunch?: (launch: Launch, mount: number) => void,
 ): boolean {
-  const tank = vehicle.chassis;
-  tank.capturePose();
+  const chassis = vehicle.chassis;
+  chassis.capturePose();
   if (!vehicle.vitality.alive) return false;
-  tank.step(command, world, stepMs / 1000);
+  chassis.step(command, world, stepMs / 1000);
   vehicle.gun.update(stepMs);
   if (command.fire && aimAligned(vehicle, command) && vehicle.gun.tryTrigger()) {
-    onLaunch?.(muzzleLaunch(vehicle));
-    applyRecoil(vehicle);
+    triggerVolley(vehicle, onLaunch);
     return true;
   }
   return false;

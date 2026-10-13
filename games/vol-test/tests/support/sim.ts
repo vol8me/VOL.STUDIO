@@ -1,4 +1,5 @@
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+import { SUSPENSION, TANK } from '@/config/tank';
+import { STRIKER } from '@/config/vehicles';
 import { idleCommand, type TankCommand } from '@/sim/command';
 import { Simulation } from '@/sim/Simulation';
 import { Tank } from '@/sim/tank/Tank';
@@ -18,7 +19,7 @@ export function tank(at?: { x: number; y: number; hull?: number }): Tank {
 }
 
 export function simulation(size = 4096): Simulation {
-  return new Simulation({ world: world(size), tank: TANK, suspension: SUSPENSION, weapon: WEAPON });
+  return new Simulation({ world: world(size), vehicle: STRIKER });
 }
 
 export function command(patch: Partial<TankCommand> = {}): TankCommand {

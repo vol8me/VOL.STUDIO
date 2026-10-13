@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+import { TANK, WEAPON } from '@/config/tank';
 import { Projectiles, type ProjectileTarget } from '@/sim/combat/Projectiles';
 import type { SimEvent } from '@/sim/events';
 import { Vehicle } from '@/sim/entities/Vehicle';
-import type { Tank } from '@/sim/tank/Tank';
+import type { Chassis } from '@/sim/chassis/Chassis';
 import { simulation, STEP_MS, tank, world } from '../../support/sim';
+import { STRIKER } from '@/config/vehicles';
 
 const DIAGONAL = Math.PI / 4;
 /** Gövdenin en uzak köşesinin ekseninden uzaklığı: 45°de en üst köşe. */
@@ -12,14 +13,14 @@ const CORNER_X = (TANK.halfLength - TANK.halfWidth) * Math.SQRT1_2;
 const CORNER_Y = (TANK.halfLength + TANK.halfWidth) * Math.SQRT1_2;
 
 /** Gerçek araç: hedef sözleşmesini (`entryT`) üretimdeki `Vehicle` sağlar. */
-function target(id: number, body: Tank): ProjectileTarget {
-  const vehicle = new Vehicle(id, TANK, SUSPENSION, WEAPON);
+function target(id: number, body: Chassis): ProjectileTarget {
+  const vehicle = new Vehicle(id, STRIKER);
   vehicle.chassis.place(body.x, body.y, body.angle);
   return vehicle;
 }
 
 /** B17'nin eski modeli: yalnız yol ortası ve uç noktası örneklenir. */
-function sampledOnly(body: Tank, from: [number, number], to: [number, number]): boolean {
+function sampledOnly(body: Chassis, from: [number, number], to: [number, number]): boolean {
   const inside = (x: number, y: number) => {
     const dx = x - body.x;
     const dy = y - body.y;
@@ -35,7 +36,7 @@ function sampledOnly(body: Tank, from: [number, number], to: [number, number]): 
  * 45° dönmüş gövdenin üst köşesi, y=500 doğrusunun `depth` birim üstüne
  * çıkar; kiriş genişliği 2·depth olur ve x=`chordCenter` etrafındadır.
  */
-function cornerClipped(chordCenter: number, depth: number): Tank {
+function cornerClipped(chordCenter: number, depth: number): Chassis {
   return tank({
     x: chordCenter - CORNER_X,
     y: 500 + depth - CORNER_Y,

@@ -2,8 +2,8 @@ import { SCENARIOS, type ScenarioId } from '../../src/config/scenarios';
 import { idleCommand } from '../../src/sim/command';
 import { ScenarioRunner } from '../../src/sim/scenarios/ScenarioRunner';
 import { Simulation } from '../../src/sim/Simulation';
-import { SUSPENSION, TANK, WEAPON } from '../../src/config/tank';
 import { World } from '../../src/sim/world/World';
+import { STRIKER } from '../../src/config/vehicles';
 
 /**
  * Sabit tohumlu bütün senaryoları DOM, CSS ve Phaser olmadan koşar; son
@@ -15,9 +15,7 @@ export function scenarioDigest(seed: number, steps = 180): Record<ScenarioId, nu
   for (const id of Object.keys(SCENARIOS) as ScenarioId[]) {
     const sim = new Simulation({
       world: new World(4096, 4096, 128),
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
     });
     const runner = new ScenarioRunner(sim);
     runner.select(id, seed);

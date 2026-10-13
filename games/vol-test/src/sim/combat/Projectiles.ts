@@ -1,3 +1,4 @@
+import type { WeaponFlight } from '@/config/tank';
 import type { EntityId } from '../entities/Vehicle';
 import type { SimEvent } from '../events';
 import type { World } from '../world/World';
@@ -17,14 +18,17 @@ export interface Projectile {
   travelled: number;
   /** Ateşleyen araç; kendi aracına isabet etmez. */
   owner: EntityId;
+  /** `Projectiles.addProfile` indeksi: merminin ömrü ve uçuş modeli. */
+  profile: number;
 }
 
-export interface ProjectileFlight {
-  readonly muzzleHeight: number;
-  readonly launchSpeed: number;
-  readonly gravity: number;
-  readonly drag: number;
-  readonly maxRange: number;
+export type ProjectileFlight = WeaponFlight;
+
+/** Bir silahın merminin ömrü ve uçuşu; `tag` sahibin silahı tanıması içindir (`styleOf`). */
+interface ProjectileProfile {
+  readonly lifeMs: number;
+  readonly flight: ProjectileFlight | undefined;
+  readonly tag: number;
 }
 
 export interface ProjectileAir {
@@ -58,6 +62,7 @@ function createProjectile(): Projectile {
     verticalSpeed: 0,
     travelled: 0,
     owner: 0,
+    profile: 0,
   };
 }
 
@@ -96,16 +101,32 @@ export class Projectiles {
     pathLength: 0,
   };
   private readonly air = { windX: 0, windY: 0, airDrag: 1 };
+  private readonly profiles: ProjectileProfile[];
 
+  /** 0. profil `lifeMs` ve `flight` ile kurulur; başka silahlar `addProfile` ile eklenir. */
   constructor(
     readonly capacity: number,
-    private readonly lifeMs: number,
-    private readonly flight?: ProjectileFlight,
+    lifeMs: number,
+    flight?: ProjectileFlight,
   ) {
     if (!(Number.isInteger(capacity) && capacity > 0)) {
       throw new RangeError(`Mermi kapasitesi pozitif tamsayı olmalı: ${capacity}`);
     }
     this.items = Array.from({ length: capacity }, createProjectile);
+    this.profiles = [{ lifeMs, flight, tag: 0 }];
+  }
+
+  /** Yeni mermi profili ekler ve indeksini döndürür; mermi `spawn`da bu indeksle doğar. */
+  addProfile(lifeMs: number, flight: ProjectileFlight | undefined, tag = 0): number {
+    if (!(Number.isFinite(lifeMs) && lifeMs > 0))
+      throw new RangeError('Mermi ömrü pozitif ve sonlu olmalı');
+    this.profiles.push({ lifeMs, flight, tag });
+    return this.profiles.length - 1;
+  }
+
+  /** Merminin profilini kaydeden sahibin etiketi (silah görünüm kimliği). */
+  styleOf(projectile: Projectile): number {
+    return this.profiles[projectile.profile].tag;
   }
 
   get count(): number {
@@ -118,7 +139,7 @@ export class Projectiles {
     Object.assign(this.air, { windX: air.windX, windY: air.windY, airDrag: air.airDrag });
   }
 
-  spawn(owner: EntityId, x: number, y: number, vx: number, vy: number): Projectile {
+  spawn(owner: EntityId, x: number, y: number, vx: number, vy: number, profile = 0): Projectile {
     let slot: Projectile;
     if (this.live < this.capacity) {
       slot = this.items[this.live++]!;
@@ -129,7 +150,7 @@ export class Projectiles {
       }
       slot = this.items[oldest]!;
     }
-    this.reset(slot, owner, x, y, vx, vy);
+    this.reset(slot, owner, x, y, vx, vy, profile);
     return slot;
   }
 
@@ -143,15 +164,17 @@ export class Projectiles {
     targets: readonly ProjectileTarget[] = [],
     sampleStepMs = 1000 / 60,
     canHit?: ProjectileCanHit,
+    profile = 0,
   ): AimPreview {
     if (!(Number.isFinite(sampleStepMs) && sampleStepMs > 0))
       throw new RangeError('Önizleme adımı pozitif ve sonlu olmalı');
     const shell = this.previewShell;
-    this.reset(shell, owner, x, y, vx, vy);
+    this.reset(shell, owner, x, y, vx, vy, profile);
     const result = this.aim;
     result.targetId = null;
     result.surface = 'ground';
-    const steps = Math.ceil(this.lifeMs / sampleStepMs);
+    const lifeMs = this.profiles[profile].lifeMs;
+    const steps = Math.ceil(lifeMs / sampleStepMs);
     if (result.path.length < (steps + 2) * 2) result.path = new Float32Array((steps + 2) * 2);
     const path = result.path;
     path[0] = x;
@@ -176,7 +199,7 @@ export class Projectiles {
         result.surface = 'wall';
         break;
       }
-      if (landed || shell.ageMs >= this.lifeMs) break;
+      if (landed || shell.ageMs >= lifeMs) break;
     }
     result.x = shell.x;
     result.y = shell.y;
@@ -194,16 +217,21 @@ export class Projectiles {
     y: number,
     vx: number,
     vy: number,
+    profile: number,
   ): void {
+    const entry = this.profiles[profile];
+    if (!entry) throw new RangeError(`Mermi profili yok: ${profile}`);
+    const flight = entry.flight;
     slot.x = slot.px = x;
     slot.y = slot.py = y;
     slot.vx = vx;
     slot.vy = vy;
     slot.ageMs = 0;
-    slot.height = slot.previousHeight = this.flight?.muzzleHeight ?? 0;
-    slot.verticalSpeed = this.flight?.launchSpeed ?? 0;
+    slot.height = slot.previousHeight = flight?.muzzleHeight ?? 0;
+    slot.verticalSpeed = flight?.launchSpeed ?? 0;
     slot.travelled = 0;
     slot.owner = owner;
+    slot.profile = profile;
   }
 
   clear(): void {
@@ -275,7 +303,7 @@ export class Projectiles {
       } else if (wall) {
         events.push(this.impact(projectile, 'wall', angle));
         alive = false;
-      } else if (landed || projectile.ageMs >= this.lifeMs) {
+      } else if (landed || projectile.ageMs >= this.profiles[projectile.profile].lifeMs) {
         events.push(this.impact(projectile, 'ground', angle));
         alive = false;
       }
@@ -292,9 +320,9 @@ export class Projectiles {
   }
 
   private advance(projectile: Projectile, dtMs: number): boolean {
-    const flight = this.flight;
+    const { flight, lifeMs } = this.profiles[projectile.profile];
     const drag = (flight?.drag ?? 0) * this.air.airDrag;
-    let dt = Math.min(dtMs, Math.max(0, this.lifeMs - projectile.ageMs)) / 1000;
+    let dt = Math.min(dtMs, Math.max(0, lifeMs - projectile.ageMs)) / 1000;
     projectile.previousHeight = projectile.height;
     let landed = false;
     if (flight) {

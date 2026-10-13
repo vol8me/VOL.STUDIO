@@ -119,7 +119,7 @@ export class GameAudio {
     for (const vehicle of audible) {
       let voice = this.vehicles.get(vehicle.id);
       if (!voice) {
-        voice = new VehicleAudio(this.context, this.bus);
+        voice = new VehicleAudio(this.context, this.bus, vehicle.spec);
         this.vehicles.set(vehicle.id, voice);
       }
       if (voice.update(vehicle.chassis, listener, this.paused))

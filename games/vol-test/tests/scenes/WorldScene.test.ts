@@ -7,7 +7,6 @@ import { TANK } from '@/config/tank';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
 import type { SimEvent } from '@/sim/events';
 import { Simulation } from '@/sim/Simulation';
-import { SUSPENSION, WEAPON } from '@/config/tank';
 import { WorldScene } from '@/scenes/WorldScene';
 import type { DriverFactory, WorldDriver, WorldStartData } from '@/scenes/world/WorldDriver';
 import { BootScene } from '@/scenes/BootScene';
@@ -15,6 +14,7 @@ import * as SceneAudio from '@/audio/sceneAudio';
 import { GameAudio } from '@/audio/GameAudio';
 import { FakeAudioContext } from '../support/fakeAudio';
 import { fakeObject, fakeScene, lastCall } from '../support/fakeScene';
+import { STRIKER } from '@/config/vehicles';
 
 const controls = vi.hoisted(() => ({
   state: null as unknown as InputState<TestAction>,
@@ -444,9 +444,7 @@ describe('WorldScene sürücüleri', () => {
         received = context;
         const sim = new Simulation({
           world: context.world,
-          tank: TANK,
-          suspension: SUSPENSION,
-          weapon: WEAPON,
+          vehicle: STRIKER,
         });
         built = {
           sim,

@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { NETWORK } from '@/config/network';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
 import { WORLD } from '@/config/world';
 import type { OnlineSession } from '@/network/OnlineSession';
 import { applyVitals, RemoteTanks } from '@/network/RemoteTanks';
@@ -14,6 +13,7 @@ import {
   until,
   type TestServer,
 } from '../support/netHarness';
+import { STRIKER } from '@/config/vehicles';
 
 let server: TestServer | undefined;
 const sessions: OnlineSession[] = [];
@@ -36,9 +36,7 @@ async function join(mode: 'ffa' | 'teams' = 'ffa', name = 'Pilot'): Promise<Onli
 function viewSim(): Simulation {
   return new Simulation({
     world: new World(WORLD.width, WORLD.height, WORLD.gridStep),
-    tank: TANK,
-    suspension: SUSPENSION,
-    weapon: WEAPON,
+    vehicle: STRIKER,
     spawnPlayer: false,
   });
 }

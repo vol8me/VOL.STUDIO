@@ -3,10 +3,10 @@ import { GameAudio } from '@/audio/GameAudio';
 import { Simulation } from '@/sim/Simulation';
 import { command, STEP_MS } from '../support/sim';
 import { World } from '@/sim/world/World';
-import { TANK, SUSPENSION, WEAPON } from '@/config/tank';
 import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext } from '../support/fakeAudio';
 import { Button, uiIntentBusFor } from '@volstudio/core/ui';
+import { STRIKER } from '@/config/vehicles';
 
 describe('GameAudio', () => {
   let context: FakeAudioContext;
@@ -61,7 +61,7 @@ describe('GameAudio', () => {
   it('olayları aileye, mesafeye ve çarpma şiddetine eşler; pan ile 1/r uygular', () => {
     audio.route(
       [
-        { kind: 'fired', source: 1, x: 0, y: 0, angle: 0, vx: 0, vy: 0 },
+        { kind: 'fired', mount: 0, source: 1, x: 0, y: 0, angle: 0, vx: 0, vy: 0 },
         { kind: 'impact', owner: 1, surface: 'ground', x: 600, y: 0, angle: 0 },
         { kind: 'impact', owner: 1, surface: 'wall', x: -1500, y: 0, angle: 0 },
         { kind: 'hit', owner: 1, target: 2, x: 0, y: 0, angle: 0 },
@@ -85,9 +85,7 @@ describe('GameAudio', () => {
   it('duraklatma döngüleri keser, UI geçişi tek kez çalar ve söküm sonrası olay yok sayılır', async () => {
     const sim = new Simulation({
       world: new World(1000, 1000, 32),
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
     });
     sim.step(command({ moveX: 1 }), STEP_MS);
     await audio.sync(sim.vehicles, sim.player.chassis);
@@ -106,7 +104,10 @@ describe('GameAudio', () => {
     expect(context.sources.filter((s) => s.loop).every((s) => s.stopped)).toBe(true);
     audio.dispose();
     const count = context.sources.length;
-    audio.route([{ kind: 'fired', source: 1, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }], listener);
+    audio.route(
+      [{ kind: 'fired', mount: 0, source: 1, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }],
+      listener,
+    );
     audio.setPaused(true);
     expect(context.sources).toHaveLength(count);
     expect(context.gains.every((n) => n.disconnected)).toBe(true);
@@ -115,9 +116,7 @@ describe('GameAudio', () => {
   it('fren kenarını ses ailesine bağlar; duraklatılmış ve işitme dışında kalan olaylar susar', async () => {
     const sim = new Simulation({
       world: new World(1000, 1000, 32),
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
     });
     const subject = sim.player.chassis;
     subject.vx = 100;
@@ -126,10 +125,16 @@ describe('GameAudio', () => {
     await audio.sync(sim.vehicles, subject);
     expect(context.sources.filter((s) => !s.loop).map((s) => s.buffer?.url)).toHaveLength(1);
     expect(context.sources.find((s) => !s.loop)?.buffer?.url).toContain('/brake/');
-    audio.route([{ kind: 'fired', source: 1, x: 4000, y: 0, angle: 0, vx: 0, vy: 0 }], listener);
+    audio.route(
+      [{ kind: 'fired', mount: 0, source: 1, x: 4000, y: 0, angle: 0, vx: 0, vy: 0 }],
+      listener,
+    );
     audio.setPaused(true);
     const count = context.sources.length;
-    audio.route([{ kind: 'fired', source: 1, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }], listener);
+    audio.route(
+      [{ kind: 'fired', mount: 0, source: 1, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }],
+      listener,
+    );
     expect(context.sources).toHaveLength(count);
     await audio.sync(sim.vehicles, subject);
     expect(context.sources.filter((s) => s.loop).every((s) => s.stopped)).toBe(true);
@@ -145,7 +150,16 @@ describe('GameAudio', () => {
       otherContext.destination as unknown as AudioNode,
     );
     await other.load();
-    const event = { kind: 'fired' as const, source: 1, x: 0, y: 0, angle: 0, vx: 0, vy: 0 };
+    const event = {
+      kind: 'fired' as const,
+      source: 1,
+      mount: 0,
+      x: 0,
+      y: 0,
+      angle: 0,
+      vx: 0,
+      vy: 0,
+    };
     for (let n = 0; n < 6; n++) {
       audio.route([event], listener);
       other.route([event], listener);

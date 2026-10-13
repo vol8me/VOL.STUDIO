@@ -1,17 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+import { TANK, WEAPON } from '@/config/tank';
 import { Simulation } from '@/sim/Simulation';
 import { WeatherSystem } from '@/sim/weather/WeatherSystem';
 import type { SimEvent } from '@/sim/events';
 import { command, simulation, STEP_MS, world } from '../support/sim';
+import { STRIKER } from '@/config/vehicles';
 
 describe('Simulation', () => {
   it('spawnPlayer kapalıyken kontrol edilen araç doğmaz, araçlar komut kaynağıyla sürülür', () => {
     const sim = new Simulation({
       world: world(1024),
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
       spawnPlayer: false,
     });
     expect(sim.vehicles).toHaveLength(0);
@@ -40,9 +39,7 @@ describe('Simulation', () => {
     weather.step(60_000);
     const sim = new Simulation({
       world: space,
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
       weather,
     });
     sim.player.chassis.place(512, 512, 0);
@@ -68,9 +65,7 @@ describe('Simulation', () => {
       weather.step(60_000);
       const sim = new Simulation({
         world: space,
-        tank: TANK,
-        suspension: SUSPENSION,
-        weapon: WEAPON,
+        vehicle: STRIKER,
         weather,
       });
       sim.player.chassis.place(2000, 2000, 0);
@@ -87,9 +82,7 @@ describe('Simulation', () => {
     weather.step(60_000);
     const sim = new Simulation({
       world: space,
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
+      vehicle: STRIKER,
       weather,
     });
     const tank = sim.player.chassis;

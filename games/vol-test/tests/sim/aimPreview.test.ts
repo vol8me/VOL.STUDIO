@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { WEAPON } from '@/config/tank';
+
 import type { SimEvent } from '@/sim/events';
 import { muzzlePose } from '@/sim/muzzle';
 import type { ChassisPose } from '@/sim/chassis/ChassisState';
 import { command, simulation, STEP_MS } from '../support/sim';
+import { STRIKER } from '@/config/vehicles';
 
 describe('Simulation.previewAim', () => {
   it('poz verilmezse güncel adımın atışını önizler: önizleme yolu gerçek mermiyle çakışır', () => {
@@ -30,7 +31,7 @@ describe('Simulation.previewAim', () => {
     sim.player.chassis.place(2048, 2048, 0.3);
     const shown: ChassisPose = { x: 2053, y: 2044, hull: 0.35, turret: 0.8, pitch: 2, roll: -2.5 };
     const preview = sim.previewAim(sim.player, STEP_MS, shown);
-    const tip = muzzlePose(shown, WEAPON.muzzleOffset, { x: 0, y: 0, angle: 0 });
+    const tip = muzzlePose(shown, STRIKER.armament, 0, { x: 0, y: 0, angle: 0 });
     expect(preview.path[0]).toBeCloseTo(tip.x, 2);
     expect(preview.path[1]).toBeCloseTo(tip.y, 2);
     const dx = preview.path[2] - preview.path[0];

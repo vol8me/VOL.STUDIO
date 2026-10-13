@@ -2,7 +2,7 @@ import type { Predict, Room } from '@volstudio/network/client';
 import { describe, expect, it, vi } from 'vitest';
 import { COMBAT } from '@/config/combat';
 import { GAME } from '@/config/game';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+
 import { Vehicle } from '@/sim/entities/Vehicle';
 import { WORLD } from '@/config/world';
 import { PredictedPilot, type PilotPose } from '@/network/PredictedPilot';
@@ -10,6 +10,7 @@ import { NO_TEAM, PlayerState, type MatchSnapshot, type PlayerSnapshot } from '@
 import type { Launch } from '@/sim/vehicleStep';
 import { World } from '@/sim/world/World';
 import { command } from '../support/sim';
+import { STRIKER } from '@/config/vehicles';
 
 interface SimConfig {
   readonly snap: number;
@@ -70,7 +71,7 @@ describe('PredictedPilot kurulum', () => {
   it('sunucunun yetkili durumunu araca kurar', () => {
     const { build, record } = wire(
       undefined,
-      recordOf({ gunMs: 123.5, protectionMs: 800, respawnMs: 0 }),
+      recordOf({ gunMs: 123.5, protectionMs: 800, respawnMs: 0, salvo: 1 }),
     );
     const pilot = build();
     const { chassis, vitality, gun } = pilot.vehicle;
@@ -82,11 +83,12 @@ describe('PredictedPilot kurulum', () => {
     expect(vitality.health).toBe(100);
     expect(vitality.protectionRemainingMs).toBe(800);
     expect(gun.getRemaining()).toBe(123.5);
+    expect(pilot.vehicle.salvo).toBe(1);
   });
 
   it('dışarıdan verilen aracı sürer ve kendisi yenisini kurmaz', () => {
     const { build, record } = wire();
-    const supplied = new Vehicle(record.vehicleId, TANK, SUSPENSION, WEAPON, COMBAT);
+    const supplied = new Vehicle(record.vehicleId, STRIKER, COMBAT);
     const wired = wire();
     const pilot = new PredictedPilot({
       room: { input: () => wired.handle } as unknown as Room<MatchSnapshot>,

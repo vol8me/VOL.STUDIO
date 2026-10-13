@@ -133,12 +133,41 @@ export const SUSPENSION = {
 
 export type SuspensionConfig = { readonly [K in keyof typeof SUSPENSION]: number };
 
-/** Taret ateşi. */
-export const WEAPON = {
+/** Mermi görünüm kimliği: iz, ağız parlaması, patlama ve ses ailesi buna göre seçilir. */
+export const WEAPON_STYLES = ['shell', 'slug', 'rail', 'plasma'] as const;
+export type WeaponStyle = (typeof WEAPON_STYLES)[number];
+
+/** Merminin yükseklik ve menzil modeli (`Projectiles` bunu okur). */
+export interface WeaponFlight {
+  readonly muzzleHeight: number;
+  readonly launchSpeed: number;
+  readonly gravity: number;
+  readonly drag: number;
+  readonly maxRange: number;
+}
+
+/** Bir silahın sayıları; namlu yerleşimi aracın `Armament`ındadır. */
+export interface WeaponConfig {
+  readonly intervalMs: number;
+  readonly aimTolerance: number;
+  readonly projectileSpeed: number;
+  readonly projectileLifeMs: number;
+  readonly flight: WeaponFlight;
+  /** Mermi kütlesi × çıkış hızı: araca ters yönde uygulanan itki (kg·birim/s). */
+  readonly recoilImpulse: number;
+  /** İsabet eden merminin hedefe aktardığı itki (kg·birim/s). */
+  readonly hitImpulse: number;
+  /** Geri tepmenin süspansiyona vuruşu (birim/s). */
+  readonly recoilKick: number;
+  /** İsabetin hedeften düştüğü can. */
+  readonly damage: number;
+  readonly style: WeaponStyle;
+}
+
+/** Striker'ın taret ateşi; diğer araçların silahları `config/vehicles.ts` içinde bundan türer. */
+export const WEAPON: WeaponConfig = {
   intervalMs: 650,
   aimTolerance: 0.025,
-  /** Taret milinden namlu ucuna (turret.svg: ağız bileziğinin ucu); görünüm aynı değeri okur. */
-  muzzleOffset: 29.4,
   projectileSpeed: 900,
   projectileLifeMs: 1200,
   flight: {
@@ -148,13 +177,9 @@ export const WEAPON = {
     drag: 0.32,
     maxRange: 620,
   },
-  /** Mermi kütlesi × çıkış hızı: tanka ters yönde uygulanan itki (kg·birim/s). */
   recoilImpulse: 42000,
-  /** İsabet eden merminin hedefe aktardığı itki (kg·birim/s). */
   hitImpulse: 60000,
-  /** Geri tepmenin süspansiyona vuruşu (birim/s). */
   recoilKick: 34,
-  capacity: 256,
-} as const;
-
-export type WeaponConfig = typeof WEAPON;
+  damage: 34,
+  style: 'shell',
+};

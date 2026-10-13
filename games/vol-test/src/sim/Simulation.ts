@@ -1,18 +1,13 @@
-import type { SuspensionConfig, TankConfig, WeaponConfig } from '@/config/tank';
-import { COMBAT, type CombatConfig } from '@/config/combat';
+import { WEAPON_STYLES, type WeaponConfig } from '@/config/tank';
+import { STRIKER, type VehicleSpec } from '@/config/vehicles';
+import { COMBAT, PROJECTILE_CAPACITY, type CombatConfig } from '@/config/combat';
 import { idleCommand, type TankCommand } from './command';
 import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
 import type { ChassisPose } from './chassis/ChassisState';
-import {
-  aimAligned,
-  applyRecoil,
-  launchFrom,
-  muzzleLaunch,
-  type LaunchBuffer,
-} from './vehicleStep';
+import { aimAligned, launchFrom, triggerVolley, type LaunchBuffer } from './vehicleStep';
 import type { World } from './world/World';
 import type { WeatherSystem } from './weather/WeatherSystem';
 import { WEATHER } from '@/config/weather';
@@ -20,9 +15,8 @@ import { WORLD } from '@/config/world';
 
 export interface SimulationOptions {
   readonly world: World;
-  readonly tank: TankConfig;
-  readonly suspension: SuspensionConfig;
-  readonly weapon: WeaponConfig;
+  /** Araç belirtilmeyen doğuşların tanımı (varsayılan Striker). */
+  readonly vehicle?: VehicleSpec;
   readonly combat?: CombatConfig;
   readonly weather?: WeatherSystem;
   /**
@@ -31,6 +25,8 @@ export interface SimulationOptions {
    * sahipsiz bir gövde dünyada kalmaz.
    */
   readonly spawnPlayer?: boolean;
+  /** Aynı anda havada kalabilen mermi tavanı (varsayılan `PROJECTILE_CAPACITY`). */
+  readonly projectileCapacity?: number;
 }
 
 /** Araç kimliğinden o adımın komutu; verilmeyen araç boşta kalır. */
@@ -53,7 +49,11 @@ export class Simulation {
   readonly weather: WeatherSystem | undefined;
   private readonly vehicleList: Vehicle[] = [];
   private readonly options: SimulationOptions;
+  private readonly defaultSpec: VehicleSpec;
   private readonly combat: CombatConfig;
+  /** Silahın mermi profili ve profilden silaha dönüş (isabet hasarı profilin silahından okunur). */
+  private readonly weaponProfiles = new Map<WeaponConfig, number>();
+  private readonly profileWeapons: WeaponConfig[] = [];
   private readonly events: SimEvent[] = [];
   private readonly previewPose: ChassisPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
   private readonly previewLaunch: LaunchBuffer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0 };
@@ -66,14 +66,17 @@ export class Simulation {
 
   constructor(options: SimulationOptions) {
     this.options = options;
+    this.defaultSpec = options.vehicle ?? STRIKER;
     this.combat = options.combat ?? COMBAT;
     this.world = options.world;
     this.weather = options.weather;
+    const weapon = this.defaultSpec.armament.weapon;
     this.projectiles = new Projectiles(
-      options.weapon.capacity,
-      options.weapon.projectileLifeMs,
-      options.weapon.flight,
+      options.projectileCapacity ?? PROJECTILE_CAPACITY,
+      weapon.projectileLifeMs,
+      weapon.flight,
     );
+    this.profileWeapons[0] = weapon;
     if (this.weather) this.projectiles.setAir(this.weather.frame);
     if (options.spawnPlayer !== false) {
       const center = this.world.center;
@@ -97,6 +100,24 @@ export class Simulation {
   }
 
   /**
+   * Silahın mermi profili; ilk kullanımda kaydedilir. Uzaktan ateşi çizen istemci de mermiyi
+   * sahibin silahının profiliyle doğurur.
+   */
+  profileFor(weapon: WeaponConfig): number {
+    let profile = this.weaponProfiles.get(weapon);
+    if (profile === undefined) {
+      profile = this.projectiles.addProfile(
+        weapon.projectileLifeMs,
+        weapon.flight,
+        WEAPON_STYLES.indexOf(weapon.style),
+      );
+      this.weaponProfiles.set(weapon, profile);
+      this.profileWeapons[profile] = weapon;
+    }
+    return profile;
+  }
+
+  /**
    * Yeni araç yerleştirir; kimlik simülasyon ömrü boyunca yeniden kullanılmaz. `id` yalnız başka
    * bir otoritenin (ağ sunucusu) kimlik verdiği görünüm modelleri içindir: tekil tutmak çağıranındır.
    */
@@ -106,21 +127,15 @@ export class Simulation {
     hull = -Math.PI / 2,
     team: number | null = null,
     id?: EntityId,
+    spec: VehicleSpec = this.defaultSpec,
   ): Vehicle {
     if (team !== null && !Number.isSafeInteger(team))
       throw new RangeError('Takım kimliği güvenli tamsayı olmalı');
     if (id !== undefined && (!Number.isSafeInteger(id) || id < 1 || this.vehicle(id)))
       throw new RangeError('Araç kimliği pozitif, güvenli ve tekil tamsayı olmalı');
-    const options = this.options;
     this.nextId = Math.max(this.nextId, (id ?? 0) + 1);
-    const vehicle = new Vehicle(
-      id ?? this.nextId++,
-      options.tank,
-      options.suspension,
-      options.weapon,
-      this.combat,
-      team,
-    );
+    this.profileFor(spec.armament.weapon);
+    const vehicle = new Vehicle(id ?? this.nextId++, spec, this.combat, team);
     vehicle.chassis.place(x, y, hull);
     Object.assign(vehicle.spawnPoint, { x, y, hull });
     this.vehicleList.push(vehicle);
@@ -203,13 +218,15 @@ export class Simulation {
     const nextHull = hull ?? point.hull;
     if (![nextX, nextY, nextHull].every(Number.isFinite))
       throw new RangeError('Yeniden doğma konumu sonlu olmalı');
-    const bodyRadius = Math.hypot(this.options.tank.halfLength, this.options.tank.halfWidth);
+    const { halfLength, halfWidth } = vehicle.chassis.shape;
+    const bodyRadius = Math.hypot(halfLength, halfWidth);
     vehicle.chassis.resetForRespawn(
       Math.max(bodyRadius, Math.min(this.world.width - bodyRadius, nextX)),
       Math.max(bodyRadius, Math.min(this.world.height - bodyRadius, nextY)),
       nextHull,
     );
     vehicle.gun.reset();
+    vehicle.salvo = 0;
     vehicle.vitality.respawn();
     this.emit({
       kind: 'respawned',
@@ -264,8 +281,8 @@ export class Simulation {
       tank.step(command, this.world, dt, this.weather?.sample(x, y));
       if (this.weather) {
         const amountPerUnit = WEATHER.tank.snowCompactionPerMetre / WORLD.metre / 2;
-        const offsetX = -Math.sin(tank.hull) * this.options.tank.trackOffset;
-        const offsetY = Math.cos(tank.hull) * this.options.tank.trackOffset;
+        const offsetX = -Math.sin(tank.hull) * tank.trackOffset;
+        const offsetY = Math.cos(tank.hull) * tank.trackOffset;
         this.weather.compress(
           tank.x - offsetX,
           tank.y - offsetY,
@@ -282,7 +299,7 @@ export class Simulation {
     for (const vehicle of this.vehicleList) {
       if (!vehicle.vitality.alive) continue;
       const contact = vehicle.chassis.contact;
-      if (contact.speed > this.options.tank.impactEventSpeed) {
+      if (contact.speed > vehicle.chassis.impactEventSpeed) {
         this.emit({
           kind: 'wallHit',
           source: vehicle.id,
@@ -310,16 +327,16 @@ export class Simulation {
       (projectile, target) => {
         const struck = this.vehicle(target.id);
         if (!struck) return;
+        const weapon = this.profileWeapons[projectile.profile];
         const speed = Math.hypot(projectile.vx, projectile.vy) || 1;
-        const impulse =
-          this.options.weapon.hitImpulse * (speed / this.options.weapon.projectileSpeed);
+        const impulse = weapon.hitImpulse * (speed / weapon.projectileSpeed);
         struck.chassis.applyImpulse(
           (projectile.vx / speed) * impulse,
           (projectile.vy / speed) * impulse,
           projectile.x,
           projectile.y,
         );
-        this.applyDamage(struck.id, this.combat.projectileDamage, projectile.owner, 'projectile');
+        this.applyDamage(struck.id, weapon.damage, projectile.owner, 'projectile');
       },
       (owner, target) => this.canProjectileHit(owner, target),
     );
@@ -338,7 +355,8 @@ export class Simulation {
       pose ?? tank.readPose(this.previewPose),
       tank.vx,
       tank.vy,
-      vehicle.weapon,
+      vehicle.armament,
+      0,
       this.previewLaunch,
     );
     return this.projectiles.preview(
@@ -351,6 +369,7 @@ export class Simulation {
       this.vehicleList,
       stepMs,
       (owner, target) => this.canProjectileHit(owner, target),
+      this.profileFor(vehicle.weapon),
     );
   }
 
@@ -404,7 +423,7 @@ export class Simulation {
         );
         if (a.chassis.x !== ax || a.chassis.y !== ay || b.chassis.x !== bx || b.chassis.y !== by)
           moved = true;
-        if (hit.speed <= this.options.tank.impactEventSpeed) continue;
+        if (hit.speed <= Math.min(a.chassis.impactEventSpeed, b.chassis.impactEventSpeed)) continue;
         a.chassis.kickFrom(hit);
         b.chassis.kickFrom({ ...hit, normalX: -hit.normalX, normalY: -hit.normalY });
         this.emit({
@@ -429,21 +448,23 @@ export class Simulation {
   }
 
   /**
-   * Mermi namludan tankın hızını devralarak çıkar. Tanka ters yönde itki
-   * uygulanır; gövde ateş yönünün tersine yaylanır (yandan ateş yalpa yapar).
+   * Sıradaki yuva grubunun mermileri namludan aracın hızını devralarak çıkar. Araca ters yönde
+   * itki uygulanır; gövde ateş yönünün tersine yaylanır (yandan ateş yalpa yapar).
    */
   private fire(vehicle: Vehicle): void {
-    const launch = muzzleLaunch(vehicle);
-    this.projectiles.spawn(vehicle.id, launch.x, launch.y, launch.vx, launch.vy);
-    applyRecoil(vehicle);
-    this.emit({
-      kind: 'fired',
-      source: vehicle.id,
-      x: launch.x,
-      y: launch.y,
-      angle: launch.angle,
-      vx: launch.vx,
-      vy: launch.vy,
+    const profile = this.profileFor(vehicle.weapon);
+    triggerVolley(vehicle, (launch, mount) => {
+      this.projectiles.spawn(vehicle.id, launch.x, launch.y, launch.vx, launch.vy, profile);
+      this.emit({
+        kind: 'fired',
+        source: vehicle.id,
+        mount,
+        x: launch.x,
+        y: launch.y,
+        angle: launch.angle,
+        vx: launch.vx,
+        vy: launch.vy,
+      });
     });
   }
 
