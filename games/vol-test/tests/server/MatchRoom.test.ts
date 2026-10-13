@@ -486,23 +486,40 @@ describe('MatchRoom ayrılma ve bağlantı kopması', () => {
     await until(() => matchMaker.getLocalRoomById(id) === undefined, 'oda kapanışı');
   });
 
-  it('kopan bağlantı bekletilir, geri gelince oyuncu aynı araçla sürer', async () => {
+  it('kopan bağlantı bekletilir; geri gelince aynı kayıtla öngörü ve tüketim sürer', async () => {
     await boot();
     const seat = await join({ name: 'Yolcu' });
     const sessionId = seat.sessionId;
-    const vehicleId = self(seat).vehicleId;
-    seat.reconnection.enabled = true;
-    seat.reconnection.minUptime = 0;
-    const dropped = new Promise<void>((resolve) => seat.onDrop(() => resolve()));
-    // 4010: istemcinin "ağ gitti, yeniden dene" kapanış kodu.
-    seat.connection.close(4010);
-    await dropped;
+    const record = self(seat);
+    const vehicleId = record.vehicleId;
     const local = serverRoom(seat);
-    await until(() => local.state.players.get(sessionId)?.connected === false, 'kopma işareti');
-    expect(local.playerCount).toBe(1);
-    await until(() => local.state.players.get(sessionId)?.connected === true, 'yeniden bağlanma');
+    const run = drive(seat);
+    try {
+      await until(() => local.inputStats(sessionId)!.consumed > 30, 'kopma öncesi girdi');
+      seat.reconnection.enabled = true;
+      seat.reconnection.minUptime = 0;
+      const dropped = new Promise<void>((resolve) => seat.onDrop(() => resolve()));
+      // 4010: istemcinin "ağ gitti, yeniden dene" kapanış kodu.
+      seat.connection.close(4010);
+      await dropped;
+      await until(() => local.state.players.get(sessionId)?.connected === false, 'kopma işareti');
+      expect(local.playerCount).toBe(1);
+      await until(() => local.state.players.get(sessionId)?.connected === true, 'yeniden bağlanma');
+      // Yeni pacer sıfırdan sayar: tüketim yeniden artmalı.
+      await until(() => local.inputStats(sessionId)!.consumed > 40, 'kopma sonrası girdi');
+      run.corrections.length = 0;
+      await until(() => run.corrections.length > 12, 'kopma sonrası uzlaştırma', 4000);
+    } finally {
+      run.stop();
+    }
     expect(local.state.players.get(sessionId)?.vehicleId).toBe(vehicleId);
     expect(seat.sessionId).toBe(sessionId);
+    // İstemci aynı kayıt nesnesini izlemeye devam eder: öngörü ölü bir nesneye bağlanmadı.
+    expect(seat.state.players.get(sessionId)).toBe(record);
+    // Kopmanın yarattığı sıçrama sönmüş olmalı: son düzeltmeler sıfıra yakın.
+    const tail = run.corrections.slice(-6);
+    expect(Math.max(...tail)).toBeLessThan(1e-3);
+    run.pilot.dispose();
   });
 });
 
@@ -510,37 +527,18 @@ describe('MatchRoom öngörü', () => {
   it('istemci öngörüsü sunucuyla bit bit uyuşur: düzeltmelerin çoğu sıfırdır', async () => {
     await boot();
     const seat = await join({ name: 'Pilot' });
-    const predict = Predict.get(seat);
-    let fired = 0;
-    const pilot = new PredictedPilot({
-      room: seat,
-      predict,
-      self: self(seat),
-      space: new World(WORLD.width, WORLD.height, WORLD.gridStep),
-      divergenceTolerance: 1e9,
-      onFired: () => fired++,
-    });
-    const corrections: number[] = [];
-    let step = 0;
-    let seen = 0;
-    const timer = setInterval(() => {
-      const due = predict.tick(performance.now());
-      for (let index = 0; index < due; index++) pilot.send(commandAt(step++));
-      if (pilot.reconciler.reconcileSeq !== seen) {
-        seen = pilot.reconciler.reconcileSeq;
-        corrections.push(pilot.reconciler.lastCorrectionMag);
-      }
-    }, 4);
+    const run = drive(seat);
     const serverFired: NetEvent[] = [];
     seat.onMessage(EVENT_MESSAGE, (batch: EventBatch) =>
       serverFired.push(...batch.events.filter((event) => event.kind === 'fired')),
     );
     try {
-      await until(() => corrections.length > 20, 'uzlaştırmalar', 4000);
+      await until(() => run.corrections.length > 20, 'uzlaştırmalar', 4000);
     } finally {
-      clearInterval(timer);
+      run.stop();
     }
 
+    const corrections = run.corrections;
     const sorted = [...corrections].sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)];
     const exact = corrections.filter((magnitude) => magnitude < 1e-6).length;
@@ -549,16 +547,42 @@ describe('MatchRoom öngörü', () => {
     // yük altında bunu nadiren görür, bu yüzden "çoğu sıfır" denir, "hepsi" denmez.
     expect(exact / corrections.length).toBeGreaterThan(0.8);
     expect(Math.max(...corrections)).toBeLessThan(NETWORK.seatRadius / 2);
-    expect(pilot.drift.ema).toBeLessThan(1);
-    expect(fired).toBeGreaterThan(0);
+    expect(run.pilot.drift.ema).toBeLessThan(1);
+    expect(run.fired()).toBeGreaterThan(0);
     await until(() => serverFired.length > 0, 'sunucunun kendi atışı');
-    const pose = pilot.pose();
+    const pose = run.pilot.pose();
     expect(Number.isFinite(pose.x) && Number.isFinite(pose.y) && Number.isFinite(pose.hull)).toBe(
       true,
     );
-    pilot.dispose();
+    run.pilot.dispose();
   });
 });
+
+/** Odaya öngörülü bir pilot bağlar ve çeşitli girdi akışıyla sürer; düzeltme büyüklüklerini toplar. */
+function drive(seat: Seat) {
+  const predict = Predict.get(seat);
+  let fired = 0;
+  const pilot = new PredictedPilot({
+    room: seat,
+    predict,
+    self: self(seat),
+    space: new World(WORLD.width, WORLD.height, WORLD.gridStep),
+    divergenceTolerance: 1e9,
+    onFired: () => fired++,
+  });
+  const corrections: number[] = [];
+  let step = 0;
+  let seen = 0;
+  const timer = setInterval(() => {
+    const due = predict.tick(performance.now());
+    for (let index = 0; index < due; index++) pilot.send(commandAt(step++));
+    if (pilot.reconciler.reconcileSeq !== seen) {
+      seen = pilot.reconciler.reconcileSeq;
+      corrections.push(pilot.reconciler.lastCorrectionMag);
+    }
+  }, 4);
+  return { pilot, corrections, fired: () => fired, stop: () => clearInterval(timer) };
+}
 
 function serverRoomCount(): number {
   return matchMaker.stats.local.roomCount;

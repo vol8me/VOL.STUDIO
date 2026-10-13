@@ -52,7 +52,7 @@ interface Slot {
   readonly sessionId: string;
   readonly state: PlayerSnapshot;
   readonly vehicle: Vehicle;
-  readonly pacer: InputPacer;
+  pacer: InputPacer<TankCommand>;
 }
 
 const IDLE = Object.freeze(idleCommand());
@@ -181,7 +181,7 @@ export class MatchRoom extends Room {
       sessionId: client.sessionId,
       state,
       vehicle,
-      pacer: new InputPacer(NETWORK.inputLead, NETWORK.inputHoldSteps),
+      pacer: this.newPacer(),
     };
     this.syncVehicle(slot);
     this.players.set(client.sessionId, slot);
@@ -207,7 +207,12 @@ export class MatchRoom extends Room {
 
   override onReconnect(client: Client): void {
     const slot = this.players.get(client.sessionId);
-    if (slot) slot.state.connected = true;
+    if (slot) {
+      slot.state.connected = true;
+      // Sunucu yeniden bağlanana yeni girdi tamponu verir ve istemci sayacı sıfırlar: eski
+      // tüketim durumu ilk adımlarda yanlış girdiyi tutardı.
+      slot.pacer = this.newPacer();
+    }
     this.log?.log('info', 'player.reconnect', { session: client.sessionId });
   }
 
@@ -316,7 +321,7 @@ export class MatchRoom extends Room {
     return slot.pacer.pull(
       this.inputs.get(sessionId),
       toCommand,
-      (latest) => ({ ...toCommand(latest), fire: false }),
+      (last) => ({ ...last, fire: false }),
       IDLE,
       this.state.tick,
     );
@@ -338,6 +343,10 @@ export class MatchRoom extends Room {
       );
       Object.assign(vehicle.spawnPoint, seatPoint(seat, NETWORK.maxPlayers, this.sim.world.center));
     }
+  }
+
+  private newPacer(): InputPacer<TankCommand> {
+    return new InputPacer(NETWORK.inputLead, NETWORK.inputHoldSteps);
   }
 
   private threats(except?: number): { x: number; y: number }[] {

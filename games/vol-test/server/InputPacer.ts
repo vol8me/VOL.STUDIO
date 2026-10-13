@@ -1,7 +1,6 @@
 /** Colyseus girdi erişicisinin pacer'ın okuduğu kısmı. */
 export interface InputSource<I> {
   readonly size: number;
-  readonly latest: I | undefined;
   next(): I | undefined;
 }
 
@@ -18,16 +17,17 @@ export interface PacerStats {
  * Sunucu her sabit adımda dünyayı ilerletir; girdisi geç kalan araç için bu adım istemcinin
  * öngörmediği bir "boşta" adımdır ve uzlaştırmada düzeltme olarak geri döner. Pacer, tüketime
  * ancak tamponda `lead` girdi birikince başlayarak `lead - 1` adımı aşmayan geç kalmaları eler
- * (titreşim tamponu). Tampon boşalırsa yeniden dolana dek boşta adım atılır; boşta adımda son
- * yönlendirme `holdSteps` adım tutulur, ateş tutulmaz. İlk girdi tüketilmeden önceki adımlar hep
- * boştadır: istemci o girdileri henüz onaylanmadan öngörür ve sunucunun tuttuğu adım, istemcinin
- * hiç oynamadığı bir adım olarak açılışta görünür bir düzeltme doğururdu.
+ * (titreşim tamponu). Tampon boşalırsa yeniden dolana dek boşta adım atılır. Boşta adım, son
+ * TÜKETİLEN komutu `holdSteps` adım sürdürür (ateş tutulmaz): henüz tüketilmemiş bir girdiyi
+ * tutmak onu sonradan bir kez daha uygulatırdı. İlk girdi tüketilmeden önceki adımlar hep
+ * boştadır.
  */
-export class InputPacer {
+export class InputPacer<C> {
   private priming = true;
   private idleRun = 0;
   private consumedCount = 0;
   private underflowCount = 0;
+  private last: C | undefined;
   private readonly marks: number[] = [];
 
   constructor(
@@ -41,13 +41,14 @@ export class InputPacer {
   }
 
   /**
-   * Bu adımın komutu. `convert` tüketilen girdiyi, `held` boşta adımda son girdiyi komuta çevirir;
-   * `idle` hiç girdi yokken ya da tutma süresi dolunca verilir. `tick` yalnız ölçüm içindir.
+   * Bu adımın komutu. `convert` tüketilen girdiyi komuta çevirir; `hold` son tüketilen komuttan
+   * boşta adımda sürdürülecek komutu üretir; `idle` hiç tüketim olmamışsa ya da tutma süresi
+   * dolmuşsa verilir. `tick` yalnız ölçüm içindir.
    */
-  pull<I, C>(
+  pull<I>(
     source: InputSource<I>,
     convert: (input: I) => C,
-    held: (latest: I) => C,
+    hold: (last: C) => C,
     idle: C,
     tick = 0,
   ): C {
@@ -57,17 +58,16 @@ export class InputPacer {
       if (input !== undefined) {
         this.idleRun = 0;
         this.consumedCount++;
-        return convert(input);
+        this.last = convert(input);
+        return this.last;
       }
       this.priming = true;
     }
     this.idleRun++;
     this.underflowCount++;
     if (this.marks.length < 16) this.marks.push(tick);
-    const latest = source.latest;
-    if (this.consumedCount === 0 || latest === undefined || this.idleRun > this.holdSteps)
-      return idle;
-    return held(latest);
+    if (this.last === undefined || this.idleRun > this.holdSteps) return idle;
+    return hold(this.last);
   }
 
   get stats(): PacerStats {
