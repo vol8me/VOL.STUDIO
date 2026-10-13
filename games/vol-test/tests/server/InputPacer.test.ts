@@ -154,6 +154,19 @@ describe('InputPacer boşta adım', () => {
     expect(pacer.stats.underflowTicks).toHaveLength(16);
   });
 
+  it('aç kalma yalnız ilk tüketimden sonraki boşta adımları sayar', () => {
+    const pacer = new InputPacer<string>(1, 3);
+    const queue = new Queue();
+    pull(pacer, queue);
+    pull(pacer, queue);
+    expect(pacer.stats).toMatchObject({ underflows: 2, starved: 0 });
+    queue.push(1);
+    pull(pacer, queue);
+    pull(pacer, queue);
+    pull(pacer, queue);
+    expect(pacer.stats).toMatchObject({ consumed: 1, underflows: 4, starved: 2 });
+  });
+
   it('tutma adımı sıfırsa komut tutulmaz', () => {
     const pacer = new InputPacer<string>(1, 0);
     const queue = new Queue();

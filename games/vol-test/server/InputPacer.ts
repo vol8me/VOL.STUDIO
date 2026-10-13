@@ -11,6 +11,11 @@ export interface PacerStats {
   readonly underflows: number;
   /** Boşta adımların sunucu adım numaraları (ilk 16). */
   readonly underflowTicks: readonly number[];
+  /**
+   * İlk tüketimden SONRAKİ boşta adım sayısı: aracın gerçekten ilerlediği bir sırada istemcinin
+   * öngörmediği adımlar. Sıfırsa sunucu durumu istemci öngörüsüyle bit bit aynı olmalıdır.
+   */
+  readonly starved: number;
 }
 
 /**
@@ -27,6 +32,7 @@ export class InputPacer<C> {
   private idleRun = 0;
   private consumedCount = 0;
   private underflowCount = 0;
+  private starvedCount = 0;
   private last: C | undefined;
   private readonly marks: number[] = [];
 
@@ -65,6 +71,7 @@ export class InputPacer<C> {
     }
     this.idleRun++;
     this.underflowCount++;
+    if (this.consumedCount > 0) this.starvedCount++;
     if (this.marks.length < 16) this.marks.push(tick);
     if (this.last === undefined || this.idleRun > this.holdSteps) return idle;
     return hold(this.last);
@@ -75,6 +82,7 @@ export class InputPacer<C> {
       consumed: this.consumedCount,
       underflows: this.underflowCount,
       underflowTicks: this.marks,
+      starved: this.starvedCount,
     };
   }
 }
