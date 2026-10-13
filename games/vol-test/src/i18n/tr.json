@@ -81,5 +81,66 @@
     "dust": "Toz",
     "rain": "Yağmur",
     "snow": "Kar"
+  },
+  "online": {
+    "title": "Çok oyunculu",
+    "leave": "Maçtan ayrıl",
+    "name": "Oyuncu adı",
+    "namePlaceholder": "Pilot",
+    "mode": "Maç türü",
+    "modeKind": {
+      "ffa": "Herkes tek",
+      "teams": "Takımlar"
+    },
+    "quick": "Hızlı oyun",
+    "create": "Özel oda kur",
+    "join": "Odaya katıl",
+    "code": "Oda kodu",
+    "codePlaceholder": "ABCDE",
+    "cancel": "Vazgeç",
+    "connecting": "Bağlanıyor…",
+    "error": {
+      "protocol": "Sunucu bu sürümle uyumsuz; oyunu güncelleyin.",
+      "code": "Oda kodu 5 harf ya da rakam olmalı.",
+      "full": "Oda dolu.",
+      "notFound": "Bu kodla açık bir oda yok.",
+      "unreachable": "Sunucuya ulaşılamadı.",
+      "failed": "Odaya katılınamadı."
+    },
+    "lost": "Bağlantı kesildi; çevrimdışı dünyaya dönüldü.",
+    "reconnecting": "Bağlantı koptu — yeniden bağlanılıyor…",
+    "room": "Oda {{code}}",
+    "publicRoom": "Herkese açık oda",
+    "target": "Hedef {{count}}",
+    "ping": "{{ms}} ms",
+    "board": {
+      "title": "Skor tablosu",
+      "rank": "#",
+      "player": "Oyuncu",
+      "kills": "Öldürme",
+      "deaths": "Ölüm",
+      "you": "{{name}} (siz)",
+      "away": "{{name}} (bağlantı yok)",
+      "empty": "Oyuncu yok"
+    },
+    "team": {
+      "amber": "Kehribar takımı",
+      "blue": "Mavi takım"
+    },
+    "winner": {
+      "self": "Siz kazandınız!",
+      "player": "{{name}} kazandı",
+      "team": "{{team}} kazandı",
+      "none": "Berabere"
+    },
+    "matchEnd": "Maç bitti",
+    "next": "Yeni maç {{seconds}} sn içinde başlıyor",
+    "feed": {
+      "joined": "{{name}} katıldı",
+      "left": "{{name}} ayrıldı",
+      "kill": "{{killer}} » {{victim}}",
+      "down": "{{victim}} düştü",
+      "matchStart": "Yeni maç başladı"
+    }
   }
 }

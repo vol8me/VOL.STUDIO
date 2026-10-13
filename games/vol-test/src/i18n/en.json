@@ -81,5 +81,66 @@
     "dust": "Dust",
     "rain": "Rain",
     "snow": "Snow"
+  },
+  "online": {
+    "title": "Multiplayer",
+    "leave": "Leave match",
+    "name": "Player name",
+    "namePlaceholder": "Pilot",
+    "mode": "Match type",
+    "modeKind": {
+      "ffa": "Free for all",
+      "teams": "Teams"
+    },
+    "quick": "Quick play",
+    "create": "Create private room",
+    "join": "Join room",
+    "code": "Room code",
+    "codePlaceholder": "ABCDE",
+    "cancel": "Cancel",
+    "connecting": "Connecting…",
+    "error": {
+      "protocol": "The server is incompatible with this version; update the game.",
+      "code": "The room code must be 5 letters or digits.",
+      "full": "The room is full.",
+      "notFound": "No open room has this code.",
+      "unreachable": "Could not reach the server.",
+      "failed": "Could not join the room."
+    },
+    "lost": "Connection lost; returned to the offline world.",
+    "reconnecting": "Connection dropped — reconnecting…",
+    "room": "Room {{code}}",
+    "publicRoom": "Public room",
+    "target": "Target {{count}}",
+    "ping": "{{ms}} ms",
+    "board": {
+      "title": "Scoreboard",
+      "rank": "#",
+      "player": "Player",
+      "kills": "Kills",
+      "deaths": "Deaths",
+      "you": "{{name}} (you)",
+      "away": "{{name}} (disconnected)",
+      "empty": "No players"
+    },
+    "team": {
+      "amber": "Amber team",
+      "blue": "Blue team"
+    },
+    "winner": {
+      "self": "You won!",
+      "player": "{{name}} won",
+      "team": "{{team}} won",
+      "none": "Draw"
+    },
+    "matchEnd": "Match over",
+    "next": "Next match starts in {{seconds}} s",
+    "feed": {
+      "joined": "{{name}} joined",
+      "left": "{{name}} left",
+      "kill": "{{killer}} » {{victim}}",
+      "down": "{{victim}} went down",
+      "matchStart": "A new match began"
+    }
   }
 }

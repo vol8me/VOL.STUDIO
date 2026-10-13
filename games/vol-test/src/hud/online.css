@@ -1,0 +1,189 @@
+/*
+ * Çevrimiçi maç HUD'u. Bileşenlerin görünümü CORE'undur; bu dosya konum ve aralık verir. Metin
+ * taşıyan bölgeler UI yüzey tokenıyla zeminlenir (hud.css ile aynı kural). Panel dokunmayı
+ * yakalamaz; tablo ve akış yalnız okunur.
+ */
+.vt-online {
+  --vt-online-top: calc(var(--vol-safe-top) + 10px);
+
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+/* CORE tablosu ve günlüğü kendi `pointer-events: auto`sunu verir; oyun alanındaki dokunuşu yutmasınlar. */
+.vt-online * {
+  pointer-events: none;
+}
+
+.vt-online__banner {
+  position: absolute;
+  top: var(--vt-online-top);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 2 * var(--vt-map, 168px) - 48px);
+  padding: 6px 12px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.vt-online__scores {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.vt-online__scores[hidden] {
+  display: none;
+}
+
+.vt-online__score,
+.vt-online__player {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vt-online__dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.vt-online__ping {
+  --vt-grade: var(--vol-ui-success-solid);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vt-online__ping::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vt-grade);
+}
+
+.vt-online__ping[data-grade='fair'] {
+  --vt-grade: var(--vol-ui-warning-solid);
+}
+
+.vt-online__ping[data-grade='bad'] {
+  --vt-grade: var(--vol-ui-danger-solid);
+}
+
+.vt-online__board {
+  position: absolute;
+  top: calc(var(--vt-online-top) + 44px);
+  left: 50%;
+  width: min(300px, 34vw);
+  border-radius: var(--vol-radius-md);
+  background: var(--vol-ui-overlay-panel);
+  font-size: 12px;
+  line-height: 16px;
+  transform: translateX(-50%);
+}
+
+.vt-online__self {
+  font-weight: 700;
+}
+
+/* Maç sonu: sonuç ve tam tablo ekranın ortasındadır. */
+.vt-online--result .vt-online__board {
+  top: 50%;
+  width: min(460px, 90vw);
+  font-size: 14px;
+  line-height: 20px;
+  transform: translate(-50%, 0);
+}
+
+.vt-online__result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-width: min(460px, 90vw);
+  padding: 10px 16px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md);
+  background: var(--vol-ui-overlay-panel);
+  text-align: center;
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+.vt-online__result[hidden] {
+  display: none;
+}
+
+.vt-online__result > * {
+  margin: 0;
+}
+
+.vt-online__notice {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--vol-ui-danger-border);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
+  transform: translateX(-50%);
+}
+
+.vt-online__notice[hidden] {
+  display: none;
+}
+
+/* Akış haritanın ve tam ekran düğmesinin altında, sağ kenardadır; sessizken soluklaşır. */
+.vt-online__feed {
+  position: absolute;
+  top: calc(var(--vt-online-top) + var(--vt-map, 168px) + 56px);
+  right: calc(var(--vol-safe-right) + 16px);
+  width: min(280px, 30vw);
+  font-size: 12px;
+  opacity: 1;
+  transition: opacity 0.4s;
+}
+
+.vt-online__feed--idle {
+  opacity: 0.35;
+}
+
+/* Akış ve skor tablosu ancak yeterli alan varken gösterilir; bağlantı çubuğu her zaman görünür. */
+@media (height <= 520px), (width <= 760px) {
+  .vt-online__feed,
+  .vt-online:not(.vt-online--result) .vt-online__board {
+    display: none;
+  }
+
+  .vt-online__banner {
+    max-width: calc(100% - 2 * var(--vt-map, 120px) - 24px);
+    padding: 4px 8px;
+  }
+}
+
+/* Lobi: CORE modalının içeriği dikey akar; yalnız kod alanı ve durum satırı oyuna özgüdür. */
+.vt-lobby__code {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.vt-lobby__status {
+  min-height: 1.5em;
+  margin: 0;
+}
+
+.vt-lobby__status[data-tone='danger'] {
+  color: var(--vol-ui-danger-solid);
+}

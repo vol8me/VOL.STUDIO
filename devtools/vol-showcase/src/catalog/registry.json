@@ -782,11 +782,11 @@
     {
       "export": "DataTable",
       "kind": "class",
-      "tier": 2,
+      "tier": 1,
       "phase": "UI-09",
       "anchor": "A4",
       "archetype": "container",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/advancedDataCards.ts"],
       "tests": [
         {
@@ -798,6 +798,14 @@
           "title": "DataTable emptyText i18n default ise dil degisiminde guncellenir"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/edgeContracts.test.ts",
+            "title": "boş/custom metin, sütun stilleri, string ve Node render yollarını uygular"
+          }
+        ]
+      },
       "extraStates": ["loading", "error", "digits6"]
     },
     {
@@ -883,11 +891,11 @@
     {
       "export": "EventLog",
       "kind": "class",
-      "tier": 2,
+      "tier": 1,
       "phase": "UI-09",
       "anchor": "A4",
       "archetype": "display",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/advancedDataCards.ts"],
       "tests": [
         {
@@ -899,6 +907,14 @@
           "title": "EventLog filter button label'lari dil degisiminde guncellenir"
         }
       ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/dataAndText.test.ts",
+            "title": "push yeni bir satır ekler, en yeni satır DOM sırasında en sonda olur"
+          }
+        ]
+      },
       "extraStates": ["empty"]
     },
     {

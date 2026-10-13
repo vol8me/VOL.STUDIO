@@ -5,8 +5,11 @@ import type * as CoreModule from '@volstudio/core';
 import { triggerBack, Vector2, type InputState } from '@volstudio/core';
 import { TANK } from '@/config/tank';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
-import type { Simulation } from '@/sim/Simulation';
+import type { SimEvent } from '@/sim/events';
+import { Simulation } from '@/sim/Simulation';
+import { SUSPENSION, WEAPON } from '@/config/tank';
 import { WorldScene } from '@/scenes/WorldScene';
+import type { DriverFactory, WorldDriver, WorldStartData } from '@/scenes/world/WorldDriver';
 import { BootScene } from '@/scenes/BootScene';
 import * as SceneAudio from '@/audio/sceneAudio';
 import { GameAudio } from '@/audio/GameAudio';
@@ -65,11 +68,12 @@ interface Harness {
     patch?: Partial<InputState<TestAction>> & { press?: TestAction[]; deltaMs?: number },
   ) => void;
   created: ReturnType<typeof fakeScene>['created'];
+  restart: ReturnType<typeof vi.fn>;
 }
 
 let active: Harness | null = null;
 
-function mount(services?: GameServices): Harness {
+function mount(services?: GameServices, data?: WorldStartData): Harness {
   controls.state = idle();
   controls.vibrate = [];
   controls.cancelled = 0;
@@ -80,6 +84,7 @@ function mount(services?: GameServices): Harness {
   const camera = fakeObject('camera');
   Object.assign(camera, { width: 1280, height: 800 });
   const handlers = new Map<string, (...args: unknown[]) => void>();
+  const restart = vi.fn();
   let shutdown = (): void => undefined;
   Object.assign(scene, {
     add: fake.add,
@@ -91,8 +96,9 @@ function mount(services?: GameServices): Harness {
       off: vi.fn(),
     },
     events: { once: (_name: string, handler: () => void) => (shutdown = handler) },
+    scene: { restart },
   });
-  scene.create();
+  scene.create(data);
   let time = 0;
   const harness: Harness = {
     scene,
@@ -100,6 +106,7 @@ function mount(services?: GameServices): Harness {
     camera,
     parent,
     created: fake.created,
+    restart,
     wheel: (dy) => handlers.get('wheel')?.({}, [], 0, dy),
     shutdown: () => shutdown(),
     frame(patch = {}) {
@@ -419,6 +426,125 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     shutdown();
     expect(parent.querySelector('[data-testid="hud"]')).toBeNull();
     active = null;
+  });
+});
+
+describe('WorldScene sürücüleri', () => {
+  /** Sahnenin yalnız sözleşmeyi okuduğunu gösteren sahte sürücü: yerel benzetim, sabit çıktı. */
+  function stub(overrides: Partial<WorldDriver> = {}): {
+    factory: DriverFactory;
+    driver: () => WorldDriver;
+    context: () => Parameters<DriverFactory>[0];
+  } {
+    let built: WorldDriver | undefined;
+    let received: Parameters<DriverFactory>[0] | undefined;
+    return {
+      factory: (context) => {
+        received = context;
+        const sim = new Simulation({
+          world: context.world,
+          tank: TANK,
+          suspension: SUSPENSION,
+          weapon: WEAPON,
+        });
+        built = {
+          sim,
+          player: sim.player,
+          measurement: { scenario: 'online', seed: 3 },
+          advance: vi.fn(() => ({ alpha: 0 })),
+          drainEvents: vi.fn((out: SimEvent[]) => out),
+          ...overrides,
+        };
+        return built;
+      },
+      driver: () => built!,
+      context: () => received!,
+    };
+  }
+
+  it('verilen sürücüyü çalıştırır; sahne ona kare süresini, duraklama durumunu ve zamanı verir', () => {
+    const { factory, driver } = stub();
+    const { frame } = mount(undefined, { createDriver: factory });
+    frame({ deltaMs: 20 });
+    expect(driver().advance).toHaveBeenLastCalledWith(expect.any(Number), 20, false);
+    frame({ press: ['pause'] });
+    expect(driver().advance).toHaveBeenLastCalledWith(expect.any(Number), expect.any(Number), true);
+    expect(driver().drainEvents).toHaveBeenCalled();
+  });
+
+  it('sürücü bağlamı sahnenin dünyasını, kontrolünü, tohumunu ve yeniden başlatmayı taşır', () => {
+    const { factory, context } = stub();
+    const next: WorldStartData = { createDriver: factory, weather: 'clear' };
+    const { restart } = mount(undefined, next);
+    const received = context();
+    expect(received.world.width).toBeGreaterThan(0);
+    expect(received.seed).toBe(731);
+    expect(received.scene).toBeDefined();
+    received.restart({ notice: 'voltest:online.lost' });
+    expect(restart).toHaveBeenCalledWith({ notice: 'voltest:online.lost' });
+    // Phaser `undefined` veriyi yok sayıp önceki veriyi (eski sürücü fabrikasını) korur: boş nesne gerekir.
+    received.restart();
+    expect(restart).toHaveBeenLastCalledWith({});
+  });
+
+  it('HUD kurulunca sürücüye bağlar ve her karede sunum çağrısı verir', () => {
+    const attachHud = vi.fn();
+    const present = vi.fn();
+    const { factory } = stub({ attachHud, present });
+    const { frame, parent } = mount(undefined, { createDriver: factory });
+    expect(attachHud).toHaveBeenCalledTimes(1);
+    expect(parent.querySelector('[data-testid="hud"]')).not.toBeNull();
+    frame();
+    frame();
+    expect(present).toHaveBeenCalledTimes(2);
+  });
+
+  it('ölçüm kaydına sürücünün bağlamını ve sayılarını yazar, saat alanlarını uydurmaz', async () => {
+    const frameSpy = vi.fn<(...args: unknown[]) => void>();
+    const services = await GameServices.create();
+    Object.defineProperty(services, 'measurements', {
+      value: { beginFrame: vi.fn(), mark: vi.fn(), frame: frameSpy },
+    });
+    const { factory } = stub({ metrics: () => ({ 'online.pingMs': 12 }) });
+    const { frame } = mount(services, { createDriver: factory });
+    frame();
+    const [, , , , context, metrics] = frameSpy.mock.calls.at(-1)!;
+    expect(context).toMatchObject({ scenario: 'online', seed: 3 });
+    expect(metrics).toMatchObject({ 'online.pingMs': 12 });
+    expect(metrics).not.toHaveProperty('simulation.rawDeltaMs');
+    services.dispose();
+  });
+
+  it('başlangıç verisindeki havayı sabitler ve bildirimi oyuncuya gösterir', () => {
+    const { factory } = stub();
+    const { parent, frame } = mount(undefined, {
+      createDriver: factory,
+      weather: 'snow',
+      notice: 'voltest:online.lost',
+    });
+    frame();
+    expect(parent.textContent).toContain('Bağlantı kesildi');
+    expect(parent.querySelector('.vt-hud__climate')?.textContent).toContain('Kar');
+  });
+
+  it('çevrimdışı sandbox duraklatma menüsünde çok oyunculu lobiyi tembel açar', async () => {
+    const { frame, parent } = mount();
+    expect(parent.querySelector('.vt-lobby')).toBeNull();
+    frame({ press: ['pause'] });
+    const open = parent.querySelector<HTMLButtonElement>('[data-testid="pause-online"]')!;
+    expect(open.textContent).toBe('Çok oyunculu');
+    open.click();
+    await vi.waitFor(() =>
+      expect(parent.querySelector('.vt-lobby.vol-modal--visible')).not.toBeNull(),
+    );
+    parent.querySelector<HTMLButtonElement>('[data-testid="lobby-cancel"]')!.click();
+    expect(parent.querySelector('.vt-lobby.vol-modal--visible')).toBeNull();
+    // İkinci açılış aynı lobiyi yeniden açar, ikincisini kurmaz.
+    open.click();
+    await vi.waitFor(() =>
+      expect(parent.querySelector('.vt-lobby.vol-modal--visible')).not.toBeNull(),
+    );
+    expect(parent.querySelectorAll('.vt-lobby')).toHaveLength(1);
   });
 });
 

@@ -1,10 +1,8 @@
 import Phaser from 'phaser';
 import {
   applyVolViewport,
-  clampSimulationStep,
   DisposableScope,
   shouldUseTouchControls,
-  SimulationClock,
   type SimulationClockFrame,
 } from '@volstudio/core';
 import { angleDelta } from '@volstudio/core/math';
@@ -22,19 +20,19 @@ import {
   type EffectLevel,
   type EffectProfile,
 } from '@/config/quality';
-import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+import { TANK, WEAPON } from '@/config/tank';
 import { WORLD } from '@/config/world';
 import { Hud } from '@/hud/Hud';
 import type { SimEvent } from '@/sim/events';
-import { ScenarioRunner } from '@/sim/scenarios/ScenarioRunner';
 import { SCENARIO } from '@/config/scenarios';
-import { Simulation } from '@/sim/Simulation';
+import type { Simulation } from '@/sim/Simulation';
 import { World } from '@/sim/world/World';
 import { ArenaView } from '@/view/ArenaView';
 import { EffectsView } from '@/view/EffectsView';
 import { VehicleViews } from '@/view/VehicleViews';
 import { CameraRig } from './world/CameraRig';
 import { hudFrame, hudVehicles, tankFrame } from './world/frames';
+import { OfflineDriver } from './world/OfflineDriver';
 import { PauseController } from './world/PauseController';
 import { EnvironmentController } from './world/EnvironmentController';
 import { SEASONS } from '@/config/seasons';
@@ -42,6 +40,7 @@ import { parseSeasonOverride } from '@/sim/seasons/SeasonCycle';
 import { parseWeatherOverride } from '@/sim/weather/WeatherSystem';
 import { PlayerControls } from './world/PlayerControls';
 import { routeSimEvents } from './world/SimEventRouter';
+import type { WorldDriver, WorldStartData } from './world/WorldDriver';
 
 /**
  * Oyun sahnesi: katmanları kurar, her karede sırayla sürer ve kapanışta
@@ -51,9 +50,7 @@ import { routeSimEvents } from './world/SimEventRouter';
  */
 export class WorldScene extends Phaser.Scene {
   private audio: GameAudio | null = null;
-  private sim!: Simulation;
-  private scenarios!: ScenarioRunner;
-  private clock!: SimulationClock;
+  private driver!: WorldDriver;
   private clockFrame: SimulationClockFrame | undefined;
   private controls!: PlayerControls;
   private pause!: PauseController;
@@ -76,7 +73,12 @@ export class WorldScene extends Phaser.Scene {
     return this.clockFrame;
   }
 
-  create(): void {
+  /** Dünyayı sürenin benzetimi; çevrimiçi kipte yalnız sunumdur. */
+  private get sim(): Simulation {
+    return this.driver.sim;
+  }
+
+  create(data?: WorldStartData): void {
     this.clockFrame = undefined;
     this.scope = new DisposableScope();
     applyVolViewport(this);
@@ -126,33 +128,33 @@ export class WorldScene extends Phaser.Scene {
         world.height,
         seed,
         quality.getProfile(),
-        parseWeatherOverride(query.get('weather')) ?? overrides?.weather,
+        data?.weather ?? parseWeatherOverride(query.get('weather')) ?? overrides?.weather,
         previewSeason,
       ),
     );
     if (previewSeason) this.environment.model.step(SEASONS.previewWarmupMs);
-    this.sim = new Simulation({
+    const touch = shouldUseTouchControls();
+    this.controls = this.scope.addDestroyable(
+      new PlayerControls(
+        this,
+        ['gamescope', 'bigpicture'].includes(this.services?.session ?? '')
+          ? 'gamepad'
+          : touch
+            ? 'touch'
+            : undefined,
+      ),
+    );
+    this.driver = (data?.createDriver ?? ((context) => new OfflineDriver(context)))({
+      scene: this,
       world,
-      tank: TANK,
-      suspension: SUSPENSION,
-      weapon: WEAPON,
       weather: this.environment.model,
-    });
-    this.scenarios = this.scope.addDestroyable(new ScenarioRunner(this.sim));
-    this.scenarios.select(overrides?.scenario ?? preferences?.scenario ?? 'empty', seed);
-    if (this.services)
-      this.scope.addSubscription(
-        this.services.settings.subscribe((value) => {
-          this.scenarios.select(
-            overrides?.scenario ?? value.scenario,
-            overrides?.seed ?? value.seed,
-          );
-        }),
-      );
-    this.clock = new SimulationClock({
-      fixedStepMs: GAME.simulationStepMs,
-      maxStepsPerFrame: GAME.maxStepsPerFrame,
-      partialStep: 'defer',
+      controls: this.controls,
+      services: this.services,
+      seed,
+      scope: this.scope,
+      // Phaser boş veriyi yok sayıp ÖNCEKİ sahne verisini korur: `{}` olmadan "Ayrıl" eski çevrimiçi
+      // sürücü fabrikasını ölü oturumla yeniden kurardı.
+      restart: (next) => this.scene.restart(next ?? {}),
     });
 
     this.effects = this.scope.addDestroyable(new EffectsView(this, quality.getProfile()));
@@ -165,19 +167,8 @@ export class WorldScene extends Phaser.Scene {
     );
     this.vehicles = this.scope.addDestroyable(new VehicleViews(this));
     this.camera = new CameraRig(this, CAMERA, world.width, world.height);
-    const start = this.sim.player.tank;
+    const start = this.driver.player.tank;
     this.camera.model.snapTo(start.x, start.y);
-    const touch = shouldUseTouchControls();
-    this.controls = this.scope.addDestroyable(
-      new PlayerControls(
-        this,
-        ['gamescope', 'bigpicture'].includes(this.services?.session ?? '')
-          ? 'gamepad'
-          : touch
-            ? 'touch'
-            : undefined,
-      ),
-    );
 
     this.hud = this.scope.addDestroyable(
       new Hud({
@@ -198,6 +189,8 @@ export class WorldScene extends Phaser.Scene {
       }),
     );
     this.audio?.attachUi(this.hud.intents, this.hud.rootElement);
+    this.driver.attachHud?.(this.hud);
+    if (data?.notice) this.hud.notify(data.notice, 'warning');
     this.pause = this.scope.addDestroyable(
       new PauseController({
         surface: this.hud,
@@ -236,7 +229,7 @@ export class WorldScene extends Phaser.Scene {
     diagnostics?.beginFrame();
     diagnostics?.setScene('World');
     diagnostics?.setInput(this.controls.snapshot());
-    const player = this.sim.player;
+    const player = this.driver.player;
     const command = this.controls.read(player.tank.x, player.tank.y, delta);
     if (this.controls.pressed('pause')) this.pause.toggle();
 
@@ -247,18 +240,8 @@ export class WorldScene extends Phaser.Scene {
       if (this.controls.pressed('zoomOut')) this.camera.model.zoomBy(-1);
       if (this.controls.pressed('grid')) this.arena.setGridVisible(!this.arena.gridVisible);
     }
-    this.clockFrame = this.clock.advance(
-      delta,
-      (stepMs) => {
-        const command = this.controls.step(stepMs);
-        const { x, y } = player.tank;
-        this.sim.step((vehicle) => this.scenarios.commandFor(vehicle, command), stepMs);
-        this.services?.progress.travel(
-          Math.hypot(player.tank.x - x, player.tank.y - y) / WORLD.metre,
-        );
-      },
-      { acceptedDeltaMs: clampSimulationStep(delta), paused },
-    );
+    const stepped = this.driver.advance(time, delta, paused);
+    this.clockFrame = stepped.clock;
 
     measurements?.mark('simulation');
 
@@ -266,7 +249,7 @@ export class WorldScene extends Phaser.Scene {
       this.effects.removeVehicle(removed);
     }
     this.simEvents.length = 0;
-    const events = this.sim.drainEvents(this.simEvents);
+    const events = this.driver.drainEvents(this.simEvents);
     for (const event of events)
       if (event.kind === 'fired' && event.source === player.id) this.services?.progress.fired();
     this.audio?.route(events, player.tank);
@@ -281,7 +264,7 @@ export class WorldScene extends Phaser.Scene {
     });
     measurements?.mark('eventsAudio');
 
-    const alpha = this.clock.getInterpolationAlpha();
+    const alpha = stepped.alpha;
     const presentMs = paused ? 0 : delta;
     for (const vehicle of this.sim.vehicles) {
       const tank = vehicle.tank;
@@ -351,16 +334,19 @@ export class WorldScene extends Phaser.Scene {
     diagnostics?.setCount('projectiles', this.sim.projectiles.count);
     diagnostics?.setCount('weatherParticles', this.environment.counts.particles);
     diagnostics?.setCount('weatherSurfaceCells', this.environment.counts.surfaceCells);
+    this.driver.present?.(time);
     diagnostics?.endFrame();
     measurements?.mark('hudDiagnostics');
+    const clock = stepped.clock;
+    const context = this.driver.measurement;
     measurements?.frame(
       performance.now(),
       paused,
       this.quality.getLevel(),
       this.sim.projectiles.count,
       {
-        scenario: this.scenarios.scenario,
-        seed: this.scenarios.currentSeed,
+        scenario: context.scenario,
+        seed: context.seed,
         weather: this.environment.climate.kind,
         season: this.environment.climate.season,
       },
@@ -368,14 +354,17 @@ export class WorldScene extends Phaser.Scene {
         vehicles: this.sim.vehicles.length,
         weatherParticles: this.environment.counts.particles,
         weatherSurfaceCells: this.environment.counts.surfaceCells,
-        'simulation.rawDeltaMs': this.clockFrame.rawDeltaMs,
-        'simulation.acceptedDeltaMs': this.clockFrame.acceptedDeltaMs,
-        'simulation.simulatedMs': this.clockFrame.simulatedMs,
-        'simulation.accumulatorMs': this.clockFrame.accumulatorMs,
-        'simulation.droppedMs': this.clockFrame.droppedMs,
-        'simulation.fixedSteps': this.clockFrame.fixedSteps,
-        'simulation.tickStart': this.clockFrame.tickStart,
-        'simulation.tickEnd': this.clockFrame.tickEnd,
+        ...this.driver.metrics?.(),
+        ...(clock && {
+          'simulation.rawDeltaMs': clock.rawDeltaMs,
+          'simulation.acceptedDeltaMs': clock.acceptedDeltaMs,
+          'simulation.simulatedMs': clock.simulatedMs,
+          'simulation.accumulatorMs': clock.accumulatorMs,
+          'simulation.droppedMs': clock.droppedMs,
+          'simulation.fixedSteps': clock.fixedSteps,
+          'simulation.tickStart': clock.tickStart,
+          'simulation.tickEnd': clock.tickEnd,
+        }),
       },
     );
   }

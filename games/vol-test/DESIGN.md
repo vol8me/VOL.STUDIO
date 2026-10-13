@@ -298,6 +298,48 @@ katettiği yol (`groundLeft/groundRight`) işaretli bir integraldir ve hız
 değildir. Ses yayın kabulü kaynak/PCM/manifest ve codec sonrası teknik QA ile
 verilir; dinleme yapıldığı iddiası teknik sonuçtan türetilmez.
 
+## Çok oyunculu
+
+Çevrimiçi oyun opt-in'dir: duraklatma menüsündeki "Çok oyunculu" lobiyi açar, çevrimdışı açılış ağ
+kodunu yüklemez (`online-*.js` ayrı parçadır, bütçesi `quality.json`'dadır). Sunucu `server/`
+altındadır (`build:server` çıktısı Node ile başlar) ve [network](../../network/README.md)
+çalışma zamanının üstünde Colyseus odası koşar; sunucu adresi `?server=host:port`, derleme zamanı
+`VITE_VOLTEST_SERVER` ya da geliştirme adresidir.
+
+| Parça                                             | Sorumluluk                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------- |
+| `server/MatchRoom.ts`                             | Tek yetkili dünya: 60 Hz adım, 20 Hz yama, skor, doğma, maç döngüsü |
+| `server/InputPacer.ts`                            | Girdi titreşim tamponu; geç girdi sayılı boşta adım olur            |
+| `src/network/OnlineSession.ts`                    | Eşleştirme, bağlantı durumu, ping/titreşim, olay dağıtımı           |
+| `src/network/PredictedPilot.ts`, `OnlineWorld.ts` | Kendi aracın öngörüsü, uzlaştırma, uzak araç ara değeri             |
+| `src/scenes/world/`                               | `WorldDriver` sözleşmesi: çevrimdışı ve çevrimiçi sürücü, lobi      |
+| `src/hud/LobbyPanel.ts`, `OnlinePanel.ts`         | CORE Modal/Input/DataTable/EventLog ile lobi, tablo, akış           |
+
+Oda herkese açık (mod başına, 12 araç) ya da kodlu özel (en çok 8) olur; kip herkes-tek ya da iki
+takımdır. Skor sınırına ulaşan maç biter, ara vermeden sonra skorlar sıfırlanır ve herkes yeniden
+doğar. Doğan araç kısa süre korumalıdır ve düşmandan uzağa konur. Kurallar yalnız `src/config/network.ts`
+içindedir; testler kısa maçı alt sınıfla verir, ağdan değiştirilemez.
+
+Sunucu yalnız niyeti (`TankInput`) kabul eder; poz, hasar, skor ve ateş sonucu onundur. İstemci her
+sabit adımda aynı `Simulation` adımıyla kendi aracını öngörür, Colyseus `Predict` sunucu durumunu
+bit bit alıp bekleyen girdileri yeniden oynatır (sapma `data-drift-peak` ile ölçülür). Uzak araçlar
+`interpolationDelayMs` geriden iki yama arasında ara değerlenir; olaylar aynı görüntü zamanına
+ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağıdakiler sözleşmedir:
+
+- Çizim pozu `tank.previous` içinde ara değerlidir; sahne çevrimiçi alfa 0 ile çizer.
+- Kendi `fired` yankısı bastırılır (öngörü atışı zaten gösterdi); yerel mermi yerelde ilerler.
+- Hava senkronlanmaz; çevrimiçi dünya `clear` açılır.
+- Duraklatma dünyayı dondurmaz (saat sunucudadır): araç yalnız boş girdi yollar.
+- Sahne yeniden başlarken `restart` her zaman bir nesne geçirir. Phaser boş veriyi yok sayıp
+  önceki veriyi korur; "Ayrıl" sonrası eski çevrimiçi sürücü fabrikası ölü oturumla yeniden kurulurdu.
+- Bilerek ayrılma `leave(true)` ile hemen düşer; kopma 15 sn yeniden bağlanma ister ve çubukta
+  uyarı verir; bağlantı kapanırsa oyuncu çevrimdışı dünyaya `online.lost` bildirimiyle döner.
+
+Ölçüm ve sınırlar: WebKit ve Chromium'da düz sürüş + fren denemesinde öngörü sapması 0'dır (gerçek
+sunucuya karşı, E2E notu). Bu, çok katmanlı manevra, çarpışma ve ateşte cihazlar arası determinizm
+kanıtı değildir. Gecikme telafisi yoktur: isabet, sunucunun o adımdaki dünyasına göredir.
+Paketli Windows/Android ağ kabulü ve insan sunum beğenisi yapılmamıştır.
+
 ## Doğrulama
 
 `tests/sim/feel.test.ts` sürüş, fren, kayma, dönüş, hızlanma, taret, geri
@@ -312,6 +354,8 @@ koşulları değiştirmez ve ölçüm seçimi kayda yazılmaz.
 
 E2E gönderilen build'i Chromium ve WebKit'te klavye, sanal kol ve dokunmatik
 girdiyle açar; ayarlar, senaryolar, duraklatma, hava görünümü ve temiz konsol
-sınanır. Kapsam, bundle ve algoritmik ölçekleme eşikleri kök `quality.json`
+sınanır. Çok oyunculu E2E gerçek Colyseus sunucusunu test işleminde kurar (iki sayfa, bir Node
+gözlemcisi: eşleşme, özel oda, sürüş/uzlaştırma, ateş, ölüm/doğuş, ayrılma, ulaşılamayan sunucu); ölümü
+sunucudaki yetkili `Simulation`a hasar vererek tetikler. Kapsam, bundle ve algoritmik ölçekleme eşikleri kök `quality.json`
 içindedir. Gerçek cihaz performansı, görsel ve haptik kabulü otomatik testlerden
 ayrı kalır; ses yayın kabulü teknik QA sözleşmesidir. Açık kabul işleri kök [TODO.md](../../TODO.md) içinde izlenir.

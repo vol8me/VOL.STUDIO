@@ -1,4 +1,5 @@
 import { PersistedObservableState, type ScopedSaveManager } from '@volstudio/core';
+import { sanitizeName } from '@volstudio/network/protocol';
 import { isScenario, validSeed, SCENARIO, type ScenarioId } from '@/config/scenarios';
 import { initialEffectLevel, type EffectLevel } from '@/config/quality';
 
@@ -9,6 +10,8 @@ export interface GamePreferences {
   display: 'windowed' | 'fullscreen';
   scenario: ScenarioId;
   seed: number;
+  /** Çevrimiçi maçlarda görünen ad; boşsa sunucu ad atar. */
+  playerName: string;
 }
 
 const KEY = 'device.voltest.preferences';
@@ -24,6 +27,7 @@ function parsePreferences(value: unknown, fallback: GamePreferences): GamePrefer
         ? Math.max(0, Math.min(1, input.volume))
         : fallback.volume,
     haptics: typeof input.haptics === 'boolean' ? input.haptics : fallback.haptics,
+    playerName: sanitizeName(input.playerName) ?? fallback.playerName,
     display:
       input.display === 'fullscreen' || input.display === 'windowed'
         ? input.display
@@ -42,6 +46,7 @@ export class GameSettings {
       display: 'windowed',
       scenario: 'empty',
       seed: SCENARIO.defaultSeed,
+      playerName: '',
     };
     this.state = new PersistedObservableState({
       key: KEY,
@@ -54,7 +59,8 @@ export class GameSettings {
         a.haptics === b.haptics &&
         a.display === b.display &&
         a.scenario === b.scenario &&
-        a.seed === b.seed,
+        a.seed === b.seed &&
+        a.playerName === b.playerName,
       store: {
         load: (_key, fallback) => store.load(KEY, fallback),
         save: (_key, value) => store.save(KEY, value),

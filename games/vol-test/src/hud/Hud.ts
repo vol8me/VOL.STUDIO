@@ -1,4 +1,5 @@
 import type { VirtualActionSource, VirtualStickSource } from '@volstudio/core';
+import type { MessageKey } from '@/i18n/keys';
 import type { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
@@ -17,7 +18,7 @@ import { ControlHints } from './ControlHints';
 import { FullscreenToggle } from './FullscreenToggle';
 import type { HudFrame } from './HudFrame';
 import { MapPanel } from './MapPanel';
-import { PauseOverlay } from './PauseOverlay';
+import { PauseOverlay, type PauseAction } from './PauseOverlay';
 import { StatusPanel } from './StatusPanel';
 import { TouchControls } from './TouchControls';
 import './hud.css';
@@ -69,6 +70,7 @@ export class Hud {
   private readonly hints: ControlHints;
   private readonly touch: TouchControls;
   private readonly pause: PauseOverlay;
+  private readonly toasts: ToastManager;
   private readonly fullscreen: FullscreenToggle | null;
   private inputMode: string | undefined;
   private statusDueMs = 0;
@@ -143,6 +145,7 @@ export class Hud {
     root.mount(this.pause.element);
     // Kayıt kurtarma/sıfırlama oyuncuya söylenir (yalnız konsola değil); geç abone olan HUD geçmişi de alır.
     const toasts = this.scope.addDestroyable(new ToastManager(root.element));
+    this.toasts = toasts;
     const integrity = options.services?.integrity;
     if (integrity) {
       this.scope.addSubscription(
@@ -176,6 +179,28 @@ export class Hud {
     this.layer.dataset.mode = touch ? 'touch' : 'desktop';
     this.touch.setVisible(touch);
     this.hints.setVisible(!touch);
+  }
+
+  /** HUD katmanına bir parça ekler (tıklanabilir içerik kendi `pointer-events`ini açar); sökücü döner. */
+  mount(element: HTMLElement): () => void {
+    this.layer.append(element);
+    return () => element.remove();
+  }
+
+  /** HUD'un üstündeki katmana (modal, bildirim) bir parça ekler; sökücü döner. */
+  mountOverlay(element: HTMLElement): () => void {
+    this.uiRoot.mount(element);
+    return () => element.remove();
+  }
+
+  /** Oyuncuya kısa bildirim: `key` i18n anahtarıdır. */
+  notify(key: MessageKey, variant: 'default' | 'success' | 'warning' | 'danger' = 'default'): void {
+    this.toasts.show(i18next.t(key), { variant, critical: variant === 'danger' });
+  }
+
+  /** Duraklatma menüsünün sürdür düğmesinin üstündeki eylemleri değiştirir. */
+  setPauseActions(actions: readonly PauseAction[]): void {
+    this.pause.setActions(actions);
   }
 
   showPause(): void {

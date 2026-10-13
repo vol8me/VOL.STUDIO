@@ -36,6 +36,18 @@ seçer. Seçim oyuncuyu başlangıç konumuna taşımaz. Önizleme örneği
 `?season=winter&weather=snow`; season spring/summer/autumn/winter,
 weather clear/dust/rain/snow olabilir. Sorgusuz oturum normal takvimdir.
 
+## Çok oyunculu
+
+Duraklat → "Çok oyunculu" lobiyi açar: hızlı oyun, özel oda kodu, ad ve takım/herkes-tek kipi.
+Sunucu ayrı süreçtir; adres `?server=host:port` ile verilir (varsayılan `127.0.0.1:2567`).
+
+```bash
+pnpm --filter @volstudio/vol-test server:dev
+pnpm --filter @volstudio/vol-test dev
+```
+
+Öngörü, uzlaştırma ve sınırlar [DESIGN](DESIGN.md) "Çok oyunculu" bölümündedir.
+
 ## Ayrıntılar
 
 - [DESIGN](DESIGN.md): model, sunum, config sahipliği, kalıcılık ve ses.

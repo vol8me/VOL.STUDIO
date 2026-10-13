@@ -21,8 +21,15 @@ describe('cihaz tercihleri', () => {
       display: 'windowed',
       scenario: 'empty',
       seed: 731,
+      playerName: '',
     });
-    await settings.update({ quality: 'high', volume: 0.3, haptics: false, display: 'fullscreen' });
+    await settings.update({
+      quality: 'high',
+      volume: 0.3,
+      haptics: false,
+      display: 'fullscreen',
+      playerName: '  Kaptan   Ada ',
+    });
     await settings.flush();
     settings.dispose();
     const next = new GameSettings(store(), 'Android');
@@ -34,6 +41,7 @@ describe('cihaz tercihleri', () => {
       display: 'fullscreen',
       scenario: 'empty',
       seed: 731,
+      playerName: 'Kaptan Ada',
     });
     expect(localStorage.getItem('synced.voltest.preferences')).toBeNull();
     next.dispose();
@@ -46,6 +54,7 @@ describe('cihaz tercihleri', () => {
       volume: 8,
       haptics: 'true',
       display: 'minimized',
+      playerName: 42,
     });
     const settings = new GameSettings(saves, 'Linux');
     await settings.load();
@@ -56,6 +65,7 @@ describe('cihaz tercihleri', () => {
       display: 'windowed',
       scenario: 'empty',
       seed: 731,
+      playerName: '',
     });
     const changes: unknown[] = [];
     const off = settings.subscribe((value) => changes.push(value));

@@ -300,4 +300,62 @@ describe('Hud', () => {
     button.click();
     hud.destroy();
   });
+
+  it('parça ve bindirme katmanına ekler, sökücü parçayı kaldırır', () => {
+    const { hud, parent } = mount();
+    const part = document.createElement('div');
+    const overlay = document.createElement('div');
+    const unmount = hud.mount(part);
+    const unmountOverlay = hud.mountOverlay(overlay);
+    expect(parent.querySelector('.vt-hud')?.contains(part)).toBe(true);
+    expect(parent.contains(overlay)).toBe(true);
+    expect(parent.querySelector('.vt-hud')?.contains(overlay)).toBe(false);
+    unmount();
+    unmountOverlay();
+    expect(parent.contains(part)).toBe(false);
+    expect(parent.contains(overlay)).toBe(false);
+    hud.destroy();
+  });
+
+  it('bildirim anahtarını çevirip toast olarak gösterir', () => {
+    const { hud, parent } = mount();
+    hud.notify('voltest:online.lost', 'warning');
+    expect(parent.textContent).toContain(i18next.t('voltest:online.lost'));
+    hud.destroy();
+  });
+
+  it('duraklatma eylemleri düğme olur, dil ve değişimle yenilenir, menüyü kapatmaz', async () => {
+    const { hud, find, onResume } = mount();
+    const run = vi.fn();
+    hud.setPauseActions([
+      { id: 'online', labelKey: 'voltest:online.title', run },
+      { id: 'leave', labelKey: 'voltest:online.leave', variant: 'danger', run: vi.fn() },
+    ]);
+    hud.showPause();
+    expect(find('pause-online').textContent).toBe('Çok oyunculu');
+    expect(find('pause-leave').className).toContain('danger');
+    find('pause-online').click();
+    expect(run).toHaveBeenCalledOnce();
+    expect(hud.paused).toBe(true);
+    expect(onResume).not.toHaveBeenCalled();
+
+    await i18next.changeLanguage('en');
+    expect(find('pause-online').textContent).toBe('Multiplayer');
+    await i18next.changeLanguage('tr');
+
+    hud.setPauseActions([{ id: 'only', labelKey: 'voltest:online.leave', run }]);
+    expect(document.querySelector('[data-testid="pause-online"]')).toBeNull();
+    expect(find('pause-only')).not.toBeNull();
+    hud.destroy();
+  });
+
+  it('eylemler ve devam düğmesi aynı yapışkan altlıktadır: panel kayarken ikisi de erişilebilir', () => {
+    const { hud, find } = mount();
+    hud.setPauseActions([{ id: 'online', labelKey: 'voltest:online.title', run: vi.fn() }]);
+    hud.showPause();
+    const footer = find('pause-resume').closest('.vt-pause__footer');
+    expect(footer).not.toBeNull();
+    expect(footer?.contains(find('pause-online'))).toBe(true);
+    hud.destroy();
+  });
 });

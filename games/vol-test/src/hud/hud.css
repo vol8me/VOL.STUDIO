@@ -217,10 +217,23 @@
   white-space: nowrap;
 }
 
-/* Duraklatma paneli 800 px yüksekliğte (Deck) taşar ve kayar; devam düğmesi kayarken de erişilebilir kalır. */
-.vt-pause__resume {
+/* Duraklatma paneli 800 px yüksekliğte (Deck) taşar ve kayar; eylemler ve devam düğmesi kayarken de erişilebilir kalır. */
+.vt-pause__footer {
   position: sticky;
   bottom: var(--vol-space-md);
   flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
   box-shadow: 0 0 0 var(--vol-space-md) var(--vol-ui-panel);
+}
+
+.vt-pause__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-sm);
+}
+
+.vt-pause__actions:empty {
+  display: none;
 }
