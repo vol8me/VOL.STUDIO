@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="24" height="16">
+  <title>Örümcek pençesi</title>
+    <path d="M1 8 L6 4.6 L13 5.6 L20 9 L13 8.6 L6 11.4 Z" fill="#2f3741" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M12 6 Q18 6.6 20 9" fill="none" stroke="#e05555" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M5 5.6 L12 6.2" stroke="#fff" stroke-opacity=".4" stroke-width="1"/>
+    <circle cx="4" cy="8" r="2.6" fill="#2a3139" stroke="#141a20" stroke-width="1"/>
+</svg>

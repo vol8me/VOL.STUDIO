@@ -11,7 +11,7 @@ import {
 import { COMMAND, RESULT, type FactoryCommand } from '../../src/sim/commands';
 import { buildComb } from '../../src/sim/scenario';
 import { FactorySim } from '../../src/sim/sim';
-import { LockstepFeed } from '../../server/lockstepFeed';
+import { LockstepFeed } from '@/net/lockstepFeed';
 import { SMALL } from '../helpers/world';
 
 /** Sunucu tarafı: gerçek akış, gerçek kodlama; ağ yerine doğrudan teslim. */

@@ -25,7 +25,7 @@ import { isPlayerKey, readCommand, RESULT, type FactoryCommand } from '@/sim/com
 import { FactorySim } from '@/sim/sim';
 import type { JournalWriter } from './journal';
 import { encodeBeatRecord, encodeCommandRecord, type JournalStats } from './journal';
-import { LockstepFeed } from './lockstepFeed';
+import { LockstepFeed } from '@/net/lockstepFeed';
 import type { ClientCursor } from './replication';
 import { Replicator, dueAt, emptySectionBytes, type SectionBytes } from './replication';
 import { WorldStore, type LoadReport, type SnapshotReport } from './store';

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">
+  <title>Örümcek kalçası</title>
+    <circle cx="10" cy="10" r="9" fill="#4a5360" stroke="#141a20" stroke-width="1.5"/>
+    <path d="M2.93 7.81 L3.73 6.07 L4.95 4.59 L6.51 3.47 L8.31 2.8 L10.22 2.6" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="1.1"/>
+    <circle cx="10" cy="10" r="4.4" fill="#2a3139" stroke="#141a20" stroke-width="1"/>
+    <circle cx="10" cy="10" r="1.8" fill="#9aa6b2"/>
+</svg>

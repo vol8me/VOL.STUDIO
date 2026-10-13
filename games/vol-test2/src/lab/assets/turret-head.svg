@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Taret kafası</title>
+    <rect x="30" y="18.9" width="28" height="7.2" rx="1.4" fill="#aab6c0" stroke="#141a20" stroke-width="1.4"/>
+    <rect x="31.6" y="19.7" width="25" height="2.2" rx="1" fill="#e8f0f5" fill-opacity=".7"/>
+    <path d="M36 18.9 V26.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M41 18.9 V26.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M46 18.9 V26.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M51 18.9 V26.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <rect x="54" y="17.7" width="7" height="9.6" rx="1.6" fill="#5c6670" stroke="#141a20" stroke-width="1.4"/>
+    <rect x="58.4" y="20.3" width="3" height="4.4" rx="1" fill="#0d1115"/>
+    <rect x="30" y="33.9" width="28" height="7.2" rx="1.4" fill="#aab6c0" stroke="#141a20" stroke-width="1.4"/>
+    <rect x="31.6" y="34.7" width="25" height="2.2" rx="1" fill="#e8f0f5" fill-opacity=".7"/>
+    <path d="M36 33.9 V41.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M41 33.9 V41.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M46 33.9 V41.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M51 33.9 V41.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <rect x="54" y="32.7" width="7" height="9.6" rx="1.6" fill="#5c6670" stroke="#141a20" stroke-width="1.4"/>
+    <rect x="58.4" y="35.3" width="3" height="4.4" rx="1" fill="#0d1115"/>
+    <path d="M14 12 L34 12 L40 18 L40 46 L34 52 L14 52 L8 46 L8 18 Z" fill="#3f9b5a" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M10 46 L10 18 L14 14 L30 14" fill="none" stroke="#bff0cc" stroke-opacity=".7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M38 18 L38 46 L34 50 L16 50" fill="none" stroke="#0e3a1e" stroke-opacity=".6" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M17 20 L29 20 L33 24 L33 40 L29 44 L17 44 L13 40 L13 24 Z" fill="#2f7a47" stroke="#141a20" stroke-width="1.2" stroke-linejoin="round"/>
+    <rect x="15.72" y="40" width="2.56" height="3" rx="1" fill="#10151a" stroke="#141a20" stroke-width=".8"/>
+    <path d="M16.32 43 L17.68 43" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
+    <rect x="19.72" y="40" width="2.56" height="3" rx="1" fill="#10151a" stroke="#141a20" stroke-width=".8"/>
+    <path d="M20.32 43 L21.68 43" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
+    <rect x="23.72" y="40" width="2.56" height="3" rx="1" fill="#10151a" stroke="#141a20" stroke-width=".8"/>
+    <path d="M24.32 43 L25.68 43" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
+    <rect x="27.72" y="40" width="2.56" height="3" rx="1" fill="#10151a" stroke="#141a20" stroke-width=".8"/>
+    <path d="M28.32 43 L29.68 43" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
+    <circle cx="24" cy="32" r="7" fill="#4b545e" stroke="#141a20" stroke-width="1.4"/>
+    <circle cx="24" cy="32" r="3.6" fill="#7fe9ff" stroke="#141a20" stroke-width="1"/>
+    <path d="M22 30 Q24 28 26.4 29.6" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+    <path d="M30 24 H38 M30 40 H38" stroke="#141a20" stroke-opacity=".6" stroke-width="1.2"/>
+</svg>

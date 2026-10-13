@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Konveyör zemin</title>
+    <path d="M6 6 L58 6 L62 10 L62 54 L58 58 L6 58 L2 54 L2 10 Z" fill="#3d4650" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M4 52 L4 12 L8 8 L56 8" fill="none" stroke="#ffffff" stroke-opacity="0.38" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M56 8 L60 12 L60 52 L56 56 L8 56" fill="none" stroke="#000000" stroke-opacity="0.34" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="6" y="14" width="52" height="36" rx="2" fill="#1e252c" stroke="#141a20" stroke-width="1.2"/>
+    <path d="M7 15 L57 15" stroke="#000" stroke-opacity=".6" stroke-width="2"/>
+    <path d="M10 8 L10 12" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M10.9 8.9 L10.9 12.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M19 8 L19 12" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M19.9 8.9 L19.9 12.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M28 8 L28 12" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M28.9 8.9 L28.9 12.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M37 8 L37 12" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M37.9 8.9 L37.9 12.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M46 8 L46 12" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M46.9 8.9 L46.9 12.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M55 8 L55 12" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M55.9 8.9 L55.9 12.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M10 52 L10 56" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M10.9 52.9 L10.9 56.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M19 52 L19 56" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M19.9 52.9 L19.9 56.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M28 52 L28 56" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M28.9 52.9 L28.9 56.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M37 52 L37 56" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M37.9 52.9 L37.9 56.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M46 52 L46 56" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M46.9 52.9 L46.9 56.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M55 52 L55 56" stroke="#141a20" stroke-opacity=".7" stroke-width="1"/>
+    <path d="M55.9 52.9 L55.9 56.9" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/>
+    <path d="M2 26 L10 26 L10 38 L2 38 Z" fill="#2c343c" stroke="#141a20" stroke-width="1"/>
+    <path d="M54 26 L62 26 L62 38 L54 38 Z" fill="#2c343c" stroke="#141a20" stroke-width="1"/>
+</svg>

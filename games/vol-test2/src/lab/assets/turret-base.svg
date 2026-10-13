@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Taret tabanı</title>
+    <path d="M59.72 43.48 L43.48 59.72 L20.52 59.72 L4.28 43.48 L4.28 20.52 L20.52 4.28 L43.48 4.28 L59.72 20.52 Z" fill="#46505a" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M55.56 41.76 L41.76 55.56 L22.24 55.56 L8.44 41.76 L8.44 22.24 L22.24 8.44 L41.76 8.44 L55.56 22.24 Z" fill="none" stroke="#3f9b5a" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M5.29 20.71 L9.36 13.88 L15.13 8.41 L22.17 4.72 L29.95 3.07" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.3"/>
+    <circle cx="32" cy="32" r="17" fill="#2d343b" stroke="#141a20" stroke-width="1.5"/>
+    <circle cx="32" cy="32" r="14" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1.2"/>
+    <circle cx="54.2" cy="32" r="1.9" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
+    <path d="M53.16 31.72 L55.25 32.28" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M53.06 30.96 Q54.2 30.2 55.15 30.86" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
+    <circle cx="47.7" cy="47.7" r="1.9" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
+    <path d="M46.66 47.42 L48.75 47.99" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M46.56 46.66 Q47.7 45.9 48.65 46.56" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
+    <circle cx="32" cy="54.2" r="1.9" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
+    <path d="M30.96 53.92 L33.05 54.49" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M30.86 53.16 Q32 52.4 32.95 53.06" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
+    <circle cx="16.3" cy="47.7" r="1.9" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
+    <path d="M15.26 47.42 L17.35 47.99" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M15.16 46.66 Q16.3 45.9 17.25 46.56" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
+    <circle cx="9.8" cy="32" r="1.9" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
+    <path d="M8.76 31.72 L10.85 32.28" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M8.66 30.96 Q9.8 30.2 10.75 30.86" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
+    <circle cx="16.3" cy="16.3" r="1.9" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
+    <path d="M15.26 16.02 L17.35 16.59" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M15.16 15.26 Q16.3 14.5 17.25 15.16" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
+    <circle cx="32" cy="9.8" r="1.9" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
+    <path d="M30.96 9.52 L33.05 10.09" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M30.86 8.76 Q32 8 32.95 8.66" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
+    <circle cx="47.7" cy="16.3" r="1.9" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
+    <path d="M46.66 16.02 L48.75 16.59" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M46.56 15.26 Q47.7 14.5 48.65 15.16" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
+    <rect x="48.09" y="49.29" width="6" height="3.6" rx="1" fill="#e3b22d" stroke="#141a20" stroke-width=".8"/>
+    <rect x="9.91" y="49.29" width="6" height="3.6" rx="1" fill="#e3b22d" stroke="#141a20" stroke-width=".8"/>
+</svg>

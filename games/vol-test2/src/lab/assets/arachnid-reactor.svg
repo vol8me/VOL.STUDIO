@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <title>Örümcek reaktörü</title>
+  <defs>
+    <radialGradient id="aura" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff6a3a" stop-opacity=".7"/><stop offset=".6" stop-color="#ff3a2a" stop-opacity=".25"/><stop offset="1" stop-color="#ff3a2a" stop-opacity="0"/></radialGradient>
+    <radialGradient id="core" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff2d0"/><stop offset=".5" stop-color="#ff8a4a"/><stop offset="1" stop-color="#e03030" stop-opacity="0"/></radialGradient>
+  </defs>
+    <circle cx="24" cy="24" r="23" fill="url(#aura)"/>
+    <circle cx="24" cy="24" r="8" fill="url(#core)"/>
+</svg>

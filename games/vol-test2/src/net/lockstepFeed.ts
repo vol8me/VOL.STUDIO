@@ -1,5 +1,5 @@
 import { NET } from '@/config/factory';
-import { writeTickPacket, type TickCommand, type TickPacket } from '@/net/lockstep';
+import { writeTickPacket, type TickCommand, type TickPacket } from './lockstep';
 import type { FactoryCommand } from '@/sim/commands';
 import type { FactorySim } from '@/sim/sim';
 

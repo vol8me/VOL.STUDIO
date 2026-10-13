@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Örümcek başgöğsü</title>
+    <path d="M60 32 L52 22 L43 13 L28 9 L14 11 L6 20 L4 32 L6 44 L14 53 L28 55 L43 51 L52 42 Z" fill="#3a4350" stroke="#141a20" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M52 32 L46 24 L38 17 L26 14 L15 16 L10 24 L9 32 L10 40 L15 48 L26 50 L38 47 L46 40 Z" fill="#55606d" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M10 38 L10 24 L15 16 L26 14 L38 17 L46 24" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M46 40 L38 47 L26 50 L15 48" fill="none" stroke="#000" stroke-opacity=".4" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M44 32 L38 24 L24 21 L16 25 L14 32 L16 39 L24 43 L38 40 Z" fill="#6c7886" stroke="#141a20" stroke-width="1.1" stroke-linejoin="round"/>
+    <path d="M14 32 H44" stroke="#141a20" stroke-opacity=".6" stroke-width="1.2"/>
+    <path d="M20 22 Q19 32 20 42" fill="none" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M28 22 Q27 32 28 42" fill="none" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M36 24 Q35 32 36 40" fill="none" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <circle cx="38" cy="15" r="3.4" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="38" cy="15" r="1.5" fill="#8d97a3"/>
+    <circle cx="38" cy="49" r="3.4" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="38" cy="49" r="1.5" fill="#8d97a3"/>
+    <circle cx="28" cy="12" r="3.4" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="28" cy="12" r="1.5" fill="#8d97a3"/>
+    <circle cx="28" cy="52" r="3.4" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="28" cy="52" r="1.5" fill="#8d97a3"/>
+    <circle cx="19" cy="12" r="3.4" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="19" cy="12" r="1.5" fill="#8d97a3"/>
+    <circle cx="19" cy="52" r="3.4" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="19" cy="52" r="1.5" fill="#8d97a3"/>
+    <circle cx="11" cy="12" r="3.4" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="11" cy="12" r="1.5" fill="#8d97a3"/>
+    <circle cx="11" cy="52" r="3.4" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="11" cy="52" r="1.5" fill="#8d97a3"/>
+    <path d="M52 26 L63 28 L60 23.5 L55 23 Z" fill="#2a3139" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M60 27.8 Q64 30 63.2 31.4" fill="none" stroke="#e05555" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M50 20 L58 18 L59 15 L52 16 Z" fill="#46505b" stroke="#141a20" stroke-width="1.1" stroke-linejoin="round"/>
+    <path d="M52 38 L63 36 L60 40.5 L55 41 Z" fill="#2a3139" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M60 36.2 Q64 34 63.2 32.6" fill="none" stroke="#e05555" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M50 44 L58 46 L59 49 L52 48 Z" fill="#46505b" stroke="#141a20" stroke-width="1.1" stroke-linejoin="round"/>
+    <circle cx="49" cy="28.5" r="3.8" fill="#2a1114" stroke="#141a20" stroke-width=".9"/>
+    <circle cx="49" cy="28.5" r="2.8" fill="#ff4a4a"/>
+    <circle cx="48.16" cy="27.52" r="1.06" fill="#ffd6d6"/>
+    <circle cx="49" cy="35.5" r="3.8" fill="#2a1114" stroke="#141a20" stroke-width=".9"/>
+    <circle cx="49" cy="35.5" r="2.8" fill="#ff4a4a"/>
+    <circle cx="48.16" cy="34.52" r="1.06" fill="#ffd6d6"/>
+    <circle cx="45" cy="24.5" r="2.7" fill="#2a1114" stroke="#141a20" stroke-width=".9"/>
+    <circle cx="45" cy="24.5" r="1.7" fill="#ff4a4a"/>
+    <circle cx="44.49" cy="23.91" r="0.65" fill="#ffd6d6"/>
+    <circle cx="45" cy="39.5" r="2.7" fill="#2a1114" stroke="#141a20" stroke-width=".9"/>
+    <circle cx="45" cy="39.5" r="1.7" fill="#ff4a4a"/>
+    <circle cx="44.49" cy="38.91" r="0.65" fill="#ffd6d6"/>
+    <circle cx="43.5" cy="28" r="2.4" fill="#2a1114" stroke="#141a20" stroke-width=".9"/>
+    <circle cx="43.5" cy="28" r="1.4" fill="#ff4a4a"/>
+    <circle cx="43.08" cy="27.51" r="0.53" fill="#ffd6d6"/>
+    <circle cx="43.5" cy="36" r="2.4" fill="#2a1114" stroke="#141a20" stroke-width=".9"/>
+    <circle cx="43.5" cy="36" r="1.4" fill="#ff4a4a"/>
+    <circle cx="43.08" cy="35.51" r="0.53" fill="#ffd6d6"/>
+    <circle cx="41" cy="26" r="2.2" fill="#2a1114" stroke="#141a20" stroke-width=".9"/>
+    <circle cx="41" cy="26" r="1.2" fill="#ff4a4a"/>
+    <circle cx="40.64" cy="25.58" r="0.46" fill="#ffd6d6"/>
+    <circle cx="41" cy="38" r="2.2" fill="#2a1114" stroke="#141a20" stroke-width=".9"/>
+    <circle cx="41" cy="38" r="1.2" fill="#ff4a4a"/>
+    <circle cx="40.64" cy="37.58" r="0.46" fill="#ffd6d6"/>
+</svg>

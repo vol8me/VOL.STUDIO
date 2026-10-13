@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <title>Çekirdek halkası</title>
+    <path d="M131.94 82.6 A52 52 0 0 1 126.28 103.72 L142.3 111.93 A70 70 0 0 0 149.91 83.5 Z" fill="#2f7fd1" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M139.76 85.39 A60 60 0 0 1 134.45 105.21 L139.89 107.73 A66 66 0 0 0 145.73 85.93 Z" fill="#8ec5ff" fill-opacity=".9"/>
+    <circle cx="134.09" cy="94.49" r="1.6" fill="#e8f4ff"/>
+    <path d="M123.68 108.22 A52 52 0 0 1 108.22 123.68 L117.99 138.8 A70 70 0 0 0 138.8 117.99 Z" fill="#1f4f86" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M129.05 114.55 A60 60 0 0 1 114.55 129.05 L118 133.96 A66 66 0 0 0 133.96 118 Z" fill="#3f6fa8" fill-opacity=".9"/>
+    <circle cx="119.6" cy="119.6" r="1.6" fill="#e8f4ff"/>
+    <path d="M103.72 126.28 A52 52 0 0 1 82.6 131.94 L83.5 149.91 A70 70 0 0 0 111.93 142.3 Z" fill="#2f7fd1" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M105.21 134.45 A60 60 0 0 1 85.39 139.76 L85.93 145.73 A66 66 0 0 0 107.73 139.89 Z" fill="#8ec5ff" fill-opacity=".9"/>
+    <circle cx="94.49" cy="134.09" r="1.6" fill="#e8f4ff"/>
+    <path d="M77.4 131.94 A52 52 0 0 1 56.28 126.28 L48.07 142.3 A70 70 0 0 0 76.5 149.91 Z" fill="#1f4f86" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M74.61 139.76 A60 60 0 0 1 54.79 134.45 L52.27 139.89 A66 66 0 0 0 74.07 145.73 Z" fill="#3f6fa8" fill-opacity=".9"/>
+    <circle cx="65.51" cy="134.09" r="1.6" fill="#e8f4ff"/>
+    <path d="M51.78 123.68 A52 52 0 0 1 36.32 108.22 L21.2 117.99 A70 70 0 0 0 42.01 138.8 Z" fill="#2f7fd1" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M45.45 129.05 A60 60 0 0 1 30.95 114.55 L26.04 118 A66 66 0 0 0 42 133.96 Z" fill="#8ec5ff" fill-opacity=".9"/>
+    <circle cx="40.4" cy="119.6" r="1.6" fill="#e8f4ff"/>
+    <path d="M33.72 103.72 A52 52 0 0 1 28.06 82.6 L10.09 83.5 A70 70 0 0 0 17.7 111.93 Z" fill="#1f4f86" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M25.55 105.21 A60 60 0 0 1 20.24 85.39 L14.27 85.93 A66 66 0 0 0 20.11 107.73 Z" fill="#3f6fa8" fill-opacity=".9"/>
+    <circle cx="25.91" cy="94.49" r="1.6" fill="#e8f4ff"/>
+    <path d="M28.06 77.4 A52 52 0 0 1 33.72 56.28 L17.7 48.07 A70 70 0 0 0 10.09 76.5 Z" fill="#2f7fd1" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M20.24 74.61 A60 60 0 0 1 25.55 54.79 L20.11 52.27 A66 66 0 0 0 14.27 74.07 Z" fill="#8ec5ff" fill-opacity=".9"/>
+    <circle cx="25.91" cy="65.51" r="1.6" fill="#e8f4ff"/>
+    <path d="M36.32 51.78 A52 52 0 0 1 51.78 36.32 L42.01 21.2 A70 70 0 0 0 21.2 42.01 Z" fill="#1f4f86" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M30.95 45.45 A60 60 0 0 1 45.45 30.95 L42 26.04 A66 66 0 0 0 26.04 42 Z" fill="#3f6fa8" fill-opacity=".9"/>
+    <circle cx="40.4" cy="40.4" r="1.6" fill="#e8f4ff"/>
+    <path d="M56.28 33.72 A52 52 0 0 1 77.4 28.06 L76.5 10.09 A70 70 0 0 0 48.07 17.7 Z" fill="#2f7fd1" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M54.79 25.55 A60 60 0 0 1 74.61 20.24 L74.07 14.27 A66 66 0 0 0 52.27 20.11 Z" fill="#8ec5ff" fill-opacity=".9"/>
+    <circle cx="65.51" cy="25.91" r="1.6" fill="#e8f4ff"/>
+    <path d="M82.6 28.06 A52 52 0 0 1 103.72 33.72 L111.93 17.7 A70 70 0 0 0 83.5 10.09 Z" fill="#1f4f86" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M85.39 20.24 A60 60 0 0 1 105.21 25.55 L107.73 20.11 A66 66 0 0 0 85.93 14.27 Z" fill="#3f6fa8" fill-opacity=".9"/>
+    <circle cx="94.49" cy="25.91" r="1.6" fill="#e8f4ff"/>
+    <path d="M108.22 36.32 A52 52 0 0 1 123.68 51.78 L138.8 42.01 A70 70 0 0 0 117.99 21.2 Z" fill="#2f7fd1" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M114.55 30.95 A60 60 0 0 1 129.05 45.45 L133.96 42 A66 66 0 0 0 118 26.04 Z" fill="#8ec5ff" fill-opacity=".9"/>
+    <circle cx="119.6" cy="40.4" r="1.6" fill="#e8f4ff"/>
+    <path d="M126.28 56.28 A52 52 0 0 1 131.94 77.4 L149.91 76.5 A70 70 0 0 0 142.3 48.07 Z" fill="#1f4f86" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M134.45 54.79 A60 60 0 0 1 139.76 74.61 L145.73 74.07 A66 66 0 0 0 139.89 52.27 Z" fill="#3f6fa8" fill-opacity=".9"/>
+    <circle cx="134.09" cy="65.51" r="1.6" fill="#e8f4ff"/>
+    <path d="M127 80 L122 80" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M126.29 88.16 L123.82 87.73" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M124.17 96.07 L121.82 95.22" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M120.7 103.5 L116.37 101" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M116 110.21 L114.09 108.6" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M110.21 116 L108.6 114.09" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M103.5 120.7 L101 116.37" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M96.07 124.17 L95.22 121.82" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M88.16 126.29 L87.73 123.82" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M80 127 L80 122" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M71.84 126.29 L72.27 123.82" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M63.93 124.17 L64.78 121.82" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M56.5 120.7 L59 116.37" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M49.79 116 L51.4 114.09" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M44 110.21 L45.91 108.6" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M39.3 103.5 L43.63 101" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M35.83 96.07 L38.18 95.22" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M33.71 88.16 L36.18 87.73" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M33 80 L38 80" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M33.71 71.84 L36.18 72.27" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M35.83 63.93 L38.18 64.78" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M39.3 56.5 L43.63 59" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M44 49.79 L45.91 51.4" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M49.79 44 L51.4 45.91" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M56.5 39.3 L59 43.63" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M63.93 35.83 L64.78 38.18" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M71.84 33.71 L72.27 36.18" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M80 33 L80 38" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M88.16 33.71 L87.73 36.18" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M96.07 35.83 L95.22 38.18" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M103.5 39.3 L101 43.63" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M110.21 44 L108.6 45.91" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M116 49.79 L114.09 51.4" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M120.7 56.5 L116.37 59" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M124.17 63.93 L121.82 64.78" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <path d="M126.29 71.84 L123.82 72.27" stroke="#8ec5ff" stroke-opacity=".8" stroke-width="1.1"/>
+    <circle cx="80" cy="80" r="39" fill="none" stroke="#141a20" stroke-width="1.6"/>
+</svg>

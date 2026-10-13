@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 16" width="56" height="16">
+  <title>Örümcek uyluğu</title>
+    <path d="M4 8 L9 3 L44 4 L53 8 L44 12 L9 13 Z" fill="#59626f" stroke="#141a20" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M10 5.4 L43 5.8 L50 8" fill="none" stroke="#fff" stroke-opacity=".42" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M10 11 L43 10.4" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M18 4.4 V11.6" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M28 4.4 V11.6" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M38 4.4 V11.6" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M20 3.4 L24 0.6 L28 3.4 Z" fill="#7a8592" stroke="#141a20" stroke-width="1"/>
+    <circle cx="8" cy="8" r="4.2" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="8" cy="8" r="1.6" fill="#a3adb8"/>
+    <circle cx="48" cy="8" r="3.8" fill="#2a3139" stroke="#141a20" stroke-width="1.2"/>
+    <circle cx="48" cy="8" r="1.4" fill="#a3adb8"/>
+</svg>
