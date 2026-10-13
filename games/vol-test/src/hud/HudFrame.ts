@@ -29,8 +29,9 @@ export interface HudFrame {
   readonly protectionRemainingMs: number;
   readonly climate?: ClimateFrame;
   /**
-   * Haritada gösterilecek tüm araçlar. Tembel: yalnız harita güncellenirken (10 Hz) çağrılır, her karede
-   * liste kurulmaz.
+   * Haritada gösterilecek tüm araçlar. Tembel: yalnız harita güncellenirken çağrılır (düşük kalitede
+   * seyreltilir). Çağrı başına nesne üretmemek için yineleyici AYNI `HudVehicle` nesnelerini yeniden
+   * kullanabilir; tüketici onları saklamaz.
    */
   readonly vehicles?: () => Iterable<HudVehicle>;
   readonly view: {

@@ -214,6 +214,11 @@ Geri tepme ve sarsıntı ayrı ötelemelerdir. Olay → kamera/titreşim eşleme
 `src/config/feel.ts` içinde tutulur.
 
 HUD görünür bileşenleri CORE'dan alır; oyun CSS'i yerleşim ve yüzeyi kurar.
+Harita (CORE `MinimapPanel`) çizilen her karede, ekrandaki ara değerli pozdan güncellenir:
+adım konumu ya da seyreltilmiş güncelleme işareti sıçratır. İşaretler yerinde güncellenir
+(çerçeve başına nesne üretilmez), pikselin 1/8'inden küçük değişim çizim istemez, özet yalnız
+tür sayıları değişince yazılır. Düşük kalite profili haritayı 33 ms aralıkla seyreltir
+(`EffectProfile.mapIntervalMs`).
 Duraklatma Esc, Menu, düğme veya Android geri hareketiyle kapanır; arka plana
 dokunmak kapatmaz. Uygulama arka plana geçince ve sistem uyuyunca duraklar.
 Uyanış kendiliğinden devam etmez. Tarayıcı tam ekranı CORE kontrolüyle,

@@ -93,10 +93,25 @@ const WELL_ALPHA = 0.8;
 const PING_MS = 1200;
 const MAX_PINGS = 8;
 const MAX_DPR = 2;
+/** Çizim isteyen en küçük yön değişimi (radyan, ≈0,6°). */
+const ROTATION_EPSILON = 0.01;
 
-function normalize(
-  marker: MinimapMarker,
-): Required<Omit<MinimapMarker, 'kind'>> & { kind: string } {
+interface StoredMarker {
+  worldX: number;
+  worldY: number;
+  color: string;
+  radius: number;
+  shape: MinimapMarkerShape;
+  rotation: number;
+  kind: string;
+  priority: number;
+  outline: boolean;
+  edge: boolean;
+  /** Son `setMarker` çağrısının senkron nesli (`syncMarkers` görülmeyeni bununla ayıklar). */
+  stamp: number;
+}
+
+function createStored(marker: MinimapMarker, stamp: number): StoredMarker {
   return {
     worldX: marker.worldX,
     worldY: marker.worldY,
@@ -108,17 +123,16 @@ function normalize(
     priority: marker.priority ?? 0,
     outline: marker.outline ?? true,
     edge: marker.edge ?? false,
+    stamp,
   };
 }
-
-type StoredMarker = ReturnType<typeof normalize>;
 
 /**
  * Canvas tabanlı harita. Dünya koordinatlarını piksele çevirir; ızgara, dünya sınırı, kamera görüş alanı,
  * işaretler, ölçek çubuğu ve halka dalgalarını çizer. Kamera zıplatma çağıranda kalır.
  *
  * Performans sözleşmesi: değişiklikler biriktirilir ve çerçeve başına BİR kez çizilir (`batch` ile açıkça da
- * gruplanabilir); piksel altı değişim (aynı işaret, yarım pikselden az hareket) hiç çizim istemez, durağan
+ * gruplanabilir); piksel altı değişim (aynı işaret, pikselin 1/8'inden az hareket) hiç çizim istemez, durağan
  * harita CPU harcamaz. Canvas cihaz piksel oranına (en çok 2) göre ölçeklenir.
  */
 export class MinimapPanel {
@@ -142,6 +156,19 @@ export class MinimapPanel {
   private cursor: { x: number; y: number } | null = null;
   private followId: string | null = null;
   private readonly markers = new Map<string, StoredMarker>();
+  /** Çizim sırası (öncelik artan); işaret eklenince, çıkınca ya da önceliği değişince yeniden kurulur. */
+  private order: StoredMarker[] | null = null;
+  private generation = 0;
+  private readonly drawable: DrawableMarker = {
+    worldX: 0,
+    worldY: 0,
+    color: '',
+    radius: 0,
+    shape: 'dot',
+    rotation: 0,
+    outline: true,
+    edge: false,
+  };
   private readonly counts: Record<string, number> = {};
   private readonly pings: Ping[] = [];
   private viewport: MinimapRect | null = null;
@@ -158,6 +185,8 @@ export class MinimapPanel {
   private zoomIn?: IconButton;
   private zoomOut?: IconButton;
   private readonly themeWatch: Disposable;
+  private readonly setMarkerBound = (id: string, marker: MinimapMarker): void =>
+    this.setMarker(id, marker);
   private readonly labelIsI18n: boolean;
   private label: string;
   private readonly interactive: boolean;
@@ -238,15 +267,45 @@ export class MinimapPanel {
 
   // ---- genel API ----
 
+  /**
+   * İşareti ekler ya da günceller. Var olan işaret yerinde güncellenir (çerçeve başına nesne
+   * üretilmez); piksel altı değişim hiçbir şey yapmaz. Özet yalnız tür sayıları değişince tazelenir:
+   * hareket eden bir işaret çerçeve başına çeviri ve DOM yazımı istemez.
+   */
   setMarker(id: string, marker: MinimapMarker): void {
-    const next = normalize(marker);
-    const previous = this.markers.get(id);
-    if (previous && this.sameMarker(previous, next)) return;
-    if (previous) this.counts[previous.kind] = (this.counts[previous.kind] ?? 1) - 1;
-    this.markers.set(id, next);
-    this.counts[next.kind] = (this.counts[next.kind] ?? 0) + 1;
-    if (this.followId === id && this.zoom > 1) this.recenter(next.worldX, next.worldY);
-    this.refreshDescription();
+    const stored = this.markers.get(id);
+    if (!stored) {
+      const created = createStored(marker, this.generation);
+      this.markers.set(id, created);
+      this.order = null;
+      this.counts[created.kind] = (this.counts[created.kind] ?? 0) + 1;
+      if (this.followId === id && this.zoom > 1) this.recenter(created.worldX, created.worldY);
+      this.refreshDescription();
+      this.invalidate();
+      return;
+    }
+    stored.stamp = this.generation;
+    if (!this.markerChanged(stored, marker)) return;
+    const kind = marker.kind ?? 'marker';
+    const priority = marker.priority ?? 0;
+    const recount = kind !== stored.kind;
+    if (recount) {
+      this.counts[stored.kind] = (this.counts[stored.kind] ?? 1) - 1;
+      this.counts[kind] = (this.counts[kind] ?? 0) + 1;
+    }
+    if (priority !== stored.priority) this.order = null;
+    stored.worldX = marker.worldX;
+    stored.worldY = marker.worldY;
+    stored.color = marker.color;
+    stored.radius = marker.radius ?? 3;
+    stored.shape = marker.shape ?? 'dot';
+    stored.rotation = marker.rotation ?? 0;
+    stored.kind = kind;
+    stored.priority = priority;
+    stored.outline = marker.outline ?? true;
+    stored.edge = marker.edge ?? false;
+    if (this.followId === id && this.zoom > 1) this.recenter(stored.worldX, stored.worldY);
+    if (recount) this.refreshDescription();
     this.invalidate();
   }
 
@@ -254,21 +313,30 @@ export class MinimapPanel {
     const previous = this.markers.get(id);
     if (!previous) return;
     this.markers.delete(id);
+    this.order = null;
     this.counts[previous.kind] = (this.counts[previous.kind] ?? 1) - 1;
     if (this.followId === id) this.followId = null;
     this.refreshDescription();
     this.invalidate();
   }
 
+  /**
+   * Senkron liste: `fill` içinde verilen işaretler eklenir/güncellenir, verilmeyenler kaldırılır, tek
+   * çizim istenir. Her çerçevede çağrılabilir; `set` çağrıları nesne üretmez.
+   */
+  syncMarkers(fill: (set: (id: string, marker: MinimapMarker) => void) => void): void {
+    this.batch(() => {
+      this.generation += 1;
+      fill(this.setMarkerBound);
+      for (const [id, marker] of this.markers)
+        if (marker.stamp !== this.generation) this.removeMarker(id);
+    });
+  }
+
   /** Kimliği verilen işaretlerin dışındakileri kaldırır, verilenleri ekler/günceller: tek çizimle senkron liste. */
   setMarkers(entries: Iterable<readonly [string, MinimapMarker]>): void {
-    this.batch(() => {
-      const keep = new Set<string>();
-      for (const [id, marker] of entries) {
-        keep.add(id);
-        this.setMarker(id, marker);
-      }
-      for (const id of [...this.markers.keys()]) if (!keep.has(id)) this.removeMarker(id);
+    this.syncMarkers((set) => {
+      for (const [id, marker] of entries) set(id, marker);
     });
   }
 
@@ -613,23 +681,24 @@ export class MinimapPanel {
 
   // ---- dönüşümler ----
 
+  /** Çizim isteyen en küçük konum değişimi (dünya birimi): bir CSS pikselinin 1/8'i. */
   private epsilon(): number {
-    return this.worldWidth / this.zoom / this.width / 2;
+    return this.worldWidth / this.zoom / this.width / 8;
   }
 
-  private sameMarker(a: StoredMarker, b: StoredMarker): boolean {
+  private markerChanged(stored: StoredMarker, next: MinimapMarker): boolean {
     const eps = this.epsilon();
     return (
-      a.color === b.color &&
-      a.radius === b.radius &&
-      a.shape === b.shape &&
-      a.kind === b.kind &&
-      a.priority === b.priority &&
-      a.outline === b.outline &&
-      a.edge === b.edge &&
-      Math.abs(a.worldX - b.worldX) < eps &&
-      Math.abs(a.worldY - b.worldY) < eps &&
-      Math.abs(a.rotation - b.rotation) < 0.02
+      stored.color !== next.color ||
+      stored.radius !== (next.radius ?? 3) ||
+      stored.shape !== (next.shape ?? 'dot') ||
+      stored.kind !== (next.kind ?? 'marker') ||
+      stored.priority !== (next.priority ?? 0) ||
+      stored.outline !== (next.outline ?? true) ||
+      stored.edge !== (next.edge ?? false) ||
+      Math.abs(stored.worldX - next.worldX) >= eps ||
+      Math.abs(stored.worldY - next.worldY) >= eps ||
+      Math.abs(stored.rotation - (next.rotation ?? 0)) >= ROTATION_EPSILON
     );
   }
 
@@ -712,6 +781,13 @@ export class MinimapPanel {
     this.pingFrame = requestAnimationFrame(tick);
   }
 
+  private drawOrder(): readonly StoredMarker[] {
+    if (!this.order) {
+      this.order = [...this.markers.values()].sort((a, b) => a.priority - b.priority);
+    }
+    return this.order;
+  }
+
   private draw(): void {
     this.dirty = false;
     const { ctx, width, height } = this;
@@ -748,9 +824,16 @@ export class MinimapPanel {
     if (this.options.showBounds ?? true) drawBounds(ctx, view, palette, world);
     if (this.viewport) drawFrustum(ctx, view, palette, this.viewport);
 
-    const drawables = [...this.markers.values()].sort((a, b) => a.priority - b.priority);
-    for (const marker of drawables) {
-      const drawable: DrawableMarker = { ...marker, radius: marker.radius * this.baseScale };
+    const drawable = this.drawable;
+    for (const marker of this.drawOrder()) {
+      drawable.worldX = marker.worldX;
+      drawable.worldY = marker.worldY;
+      drawable.color = marker.color;
+      drawable.radius = marker.radius * this.baseScale;
+      drawable.shape = marker.shape;
+      drawable.rotation = marker.rotation;
+      drawable.outline = marker.outline;
+      drawable.edge = marker.edge;
       drawMarker(ctx, view, palette, drawable);
       if (marker.edge) drawEdgeMarker(ctx, view, palette, drawable);
     }

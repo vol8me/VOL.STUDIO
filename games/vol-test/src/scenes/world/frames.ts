@@ -61,14 +61,31 @@ export function hudFrame(
   };
 }
 
-/** Harita için araç listesi: poz simülasyonun güncel adımıdır (harita 10 Hz, ara değer gerekmez). */
+/** Her yineleme `alpha` ile ara değerlenmiş, nesneleri yeniden kullanılan harita aracı havuzu. */
+type MutableHudVehicle = { -readonly [K in keyof HudVehicle]: HudVehicle[K] };
+const mapPool: MutableHudVehicle[] = [];
+
+/**
+ * Harita için araç listesi: poz, çizilen kareyle aynı ara değerlidir (harita her karede güncellenir; adım
+ * konumu kullanılsaydı işaret adım hızında sıçrar). Yield edilen nesneler çağrılar arasında yeniden
+ * kullanılır; tüketici saklamaz.
+ */
 export function* hudVehicles(
   vehicles: readonly Vehicle[],
   playerId: number,
+  alpha: number,
 ): Generator<HudVehicle> {
+  let used = 0;
   for (const vehicle of vehicles) {
     if (!vehicle.vitality.alive) continue;
-    const { x, y, hull } = vehicle.tank;
-    yield { id: vehicle.id, x, y, hull, player: vehicle.id === playerId };
+    const { previous, x, y, hull } = vehicle.tank;
+    const entry = (mapPool[used] ??= { id: 0, x: 0, y: 0, hull: 0, player: false });
+    used++;
+    entry.id = vehicle.id;
+    entry.x = previous.x + (x - previous.x) * alpha;
+    entry.y = previous.y + (y - previous.y) * alpha;
+    entry.hull = lerpAngle(previous.hull, hull, alpha);
+    entry.player = vehicle.id === playerId;
+    yield entry;
   }
 }

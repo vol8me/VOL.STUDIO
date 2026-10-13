@@ -214,13 +214,73 @@ describe('MinimapPanel — çizim sözleşmesi', () => {
     panel.setViewport(0, 0, 500, 500);
     await Promise.resolve();
     const settled = draws();
-    panel.setMarker('a', { worldX: 102, worldY: 99, color: '#fff', radius: 4 });
-    panel.setViewport(1, 1, 500, 500);
+    panel.setMarker('a', { worldX: 100.8, worldY: 99.4, color: '#fff', radius: 4 });
+    panel.setViewport(0.8, 0.8, 500, 500);
     await Promise.resolve();
     expect(draws()).toBe(settled);
     panel.setMarker('a', { worldX: 160, worldY: 100, color: '#fff', radius: 4 });
     await Promise.resolve();
     expect(draws()).toBe(settled + 1);
+  });
+
+  it('pikselin sekizde birini aşan konum değişimi çizilir: yavaş hareket kare atlamaz', async () => {
+    // 2000 birim / 200 px: 10 birim = 1 px, eşik 1,25 birim.
+    const panel = make();
+    panel.setMarker('a', { worldX: 100, worldY: 100, color: '#fff' });
+    await Promise.resolve();
+    const settled = draws();
+    panel.setMarker('a', { worldX: 101.5, worldY: 100, color: '#fff' });
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 1);
+    panel.setMarker('a', { worldX: 101.5, worldY: 100, color: '#fff', rotation: 0.05 });
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 2);
+  });
+
+  it('hareket eden işaret özeti çevirmez ve DOM yazmaz; yalnız tür sayısı değişince', () => {
+    const describe = vi.fn((counts: Readonly<Record<string, number>>) => JSON.stringify(counts));
+    const panel = make({ describe });
+    panel.setMarker('a', { worldX: 100, worldY: 100, color: '#fff', kind: 'tank' });
+    const calls = describe.mock.calls.length;
+    for (let step = 1; step <= 50; step++)
+      panel.setMarker('a', { worldX: 100 + step * 30, worldY: 100, color: '#fff', kind: 'tank' });
+    expect(describe.mock.calls.length).toBe(calls);
+    panel.setMarker('a', { worldX: 1600, worldY: 100, color: '#fff', kind: 'enemy' });
+    expect(describe.mock.calls.length).toBe(calls + 1);
+    expect(canvasOf(panel).getAttribute('aria-description')).toBe('{"tank":0,"enemy":1}');
+  });
+
+  it('syncMarkers görülmeyen işareti kaldırır; yerinde güncelleme sırayı bozmaz', async () => {
+    const panel = make({ describe: (counts) => JSON.stringify(counts) });
+    const feed = (ids: string[], x: number): void =>
+      panel.syncMarkers((set) => {
+        for (const id of ids) set(id, { worldX: x, worldY: 500, color: '#fff', kind: 'tank' });
+      });
+    feed(['a', 'b', 'c'], 100);
+    feed(['a', 'c'], 120);
+    await Promise.resolve();
+    expect(canvasOf(panel).getAttribute('aria-description')).toBe('{"tank":2}');
+    feed(['a', 'b', 'c'], 140);
+    await Promise.resolve();
+    expect(canvasOf(panel).getAttribute('aria-description')).toBe('{"tank":3}');
+  });
+
+  it('çizim sırası önceliğe göredir ve öncelik değişince yeniden kurulur', () => {
+    const panel = make();
+    const filled: string[] = [];
+    fake.ctx.fill = (): void => {
+      const style = fake.ctx.fillStyle;
+      filled.push(typeof style === 'string' ? style : '');
+    };
+    panel.setMarker('low', { worldX: 100, worldY: 100, color: '#111111', priority: 0 });
+    panel.setMarker('high', { worldX: 100, worldY: 100, color: '#eeeeee', priority: 5 });
+    filled.length = 0;
+    panel.flush();
+    expect(filled.slice(-2)).toEqual(['#111111', '#eeeeee']);
+    panel.setMarker('low', { worldX: 100, worldY: 100, color: '#111111', priority: 9 });
+    filled.length = 0;
+    panel.flush();
+    expect(filled.slice(-2)).toEqual(['#eeeeee', '#111111']);
   });
 
   it('batch çıkışta bir çizim ister; flush bekleyeni hemen çizer', () => {

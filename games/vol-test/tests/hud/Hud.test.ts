@@ -137,6 +137,22 @@ describe('Hud', () => {
     hud.destroy();
     await i18next.changeLanguage('tr');
   });
+  it('harita kalite profilindeki aralıkla yenilenir: yüksekte her karede, düşükte seyreltilmiş', () => {
+    const { hud, parent, quality } = mount();
+    const map = parent.querySelector<HTMLElement>('.vt-hud__map')!;
+    hud.update(hudFrame({ x: 0, y: 0 }), 0);
+    hud.update(hudFrame({ x: 64, y: 0 }), 1);
+    expect(map.dataset.position).toBe('2,0');
+    quality.setLevel('low');
+    hud.update(hudFrame({ x: 128, y: 0 }), 2);
+    expect(map.dataset.position).toBe('4,0');
+    hud.update(hudFrame({ x: 192, y: 0 }), 10);
+    expect(map.dataset.position).toBe('4,0');
+    hud.update(hudFrame({ x: 192, y: 0 }), 40);
+    expect(map.dataset.position).toBe('6,0');
+    hud.destroy();
+  });
+
   it('atış dolum barı kalan beklemeyi gösterir ve dil değişiminde erişilebilir adı yenilenir', async () => {
     const { hud, parent } = mount();
     const bar = parent.querySelector<HTMLElement>('.vt-hud__fire-bar')!;

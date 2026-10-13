@@ -50,9 +50,8 @@ export interface HudOptions {
   readonly onResume: () => void;
 }
 
-/** Telemetri saniyede ~15, harita ~10 kez yenilenir; her karede DOM yazılmaz. */
+/** Telemetri saniyede ~15 kez yenilenir; her karede DOM yazılmaz. Harita kalite profilindeki aralıkla yenilenir. */
 const STATUS_INTERVAL_MS = 66;
-const MAP_INTERVAL_MS = 100;
 
 /**
  * VOL.TEST HUD'u: parçaları kurar, girdi kipine göre dokunmatik ve masaüstü
@@ -73,6 +72,7 @@ export class Hud {
   private readonly toasts: ToastManager;
   private readonly fullscreen: FullscreenToggle | null;
   private inputMode: string | undefined;
+  private readonly quality: HudOptions['quality'];
   private statusDueMs = 0;
   private mapDueMs = 0;
 
@@ -87,6 +87,7 @@ export class Hud {
   }
 
   constructor(options: HudOptions) {
+    this.quality = options.quality;
     const root = this.scope.addDestroyable(new UIRoot(options.parent));
     this.uiRoot = root;
     this.layer = document.createElement('div');
@@ -225,7 +226,7 @@ export class Hud {
       this.climate.update(frame.climate);
     }
     if (nowMs >= this.mapDueMs) {
-      this.mapDueMs = nowMs + MAP_INTERVAL_MS;
+      this.mapDueMs = nowMs + this.quality.getProfile().mapIntervalMs;
       this.map.update(frame);
     }
   }

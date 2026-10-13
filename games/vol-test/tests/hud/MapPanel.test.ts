@@ -111,6 +111,56 @@ describe('harita', () => {
     map.destroy();
   });
 
+  it('her karede ilerleyen araç haritada ara değerli akar: yavaş hareket kare atlamaz', async () => {
+    const map = new MapPanel(OPTIONS);
+    document.body.appendChild(map.element);
+    let x = 1000;
+    const frame = () =>
+      hudFrame({ x, y: 1000, vehicles: () => [{ id: 2, x, y: 500, hull: 0, player: false }] });
+    map.update(frame());
+    await Promise.resolve();
+    // 4096 birim / 168 px ≈ 24,4 birim/px: eşik ≈ 3 birim. Araç karede 3,8 birim yürür (230 birim/s, 60 Hz).
+    const settled = calls.filter((c) => c === 'clearRect').length;
+    for (let step = 0; step < 30; step++) {
+      x += 3.8;
+      map.update(frame());
+      await Promise.resolve();
+    }
+    expect(calls.filter((c) => c === 'clearRect').length).toBe(settled + 30);
+    map.destroy();
+  });
+
+  it('kaybolan araç işareti kaldırılır ve aynı araç yeniden girince işaretlenir', () => {
+    const map = new MapPanel(OPTIONS);
+    document.body.appendChild(map.element);
+    const canvas = map.element.querySelector('canvas')!;
+    const two = hudFrame({
+      vehicles: () => [
+        { id: 2, x: 900, y: 900, hull: 0, player: false },
+        { id: 3, x: 1200, y: 900, hull: 0, player: false },
+      ],
+    });
+    map.update(two);
+    expect(canvas.getAttribute('aria-description')).toMatch(/ 2 /);
+    map.update(hudFrame({ vehicles: () => [{ id: 3, x: 1200, y: 900, hull: 0, player: false }] }));
+    expect(canvas.getAttribute('aria-description')).toMatch(/ 1 /);
+    map.update(two);
+    expect(canvas.getAttribute('aria-description')).toMatch(/ 2 /);
+    map.destroy();
+  });
+
+  it('konum yazısı yalnız bir metre ilerleyince tazelenir (her karede DOM yazılmaz)', () => {
+    const map = new MapPanel(OPTIONS);
+    document.body.appendChild(map.element);
+    map.update(hudFrame({ x: 640, y: 1280 }));
+    expect(map.element.dataset.position).toBe('20,40');
+    map.update(hudFrame({ x: 650, y: 1280 }));
+    expect(map.element.dataset.position).toBe('20,40');
+    map.update(hudFrame({ x: 700, y: 1280 }));
+    expect(map.element.dataset.position).toBe('22,40');
+    map.destroy();
+  });
+
   it('yakınlaştırma düğmeleri vardır ve oyuncuyu ortada tutar', () => {
     const map = new MapPanel(OPTIONS);
     document.body.appendChild(map.element);

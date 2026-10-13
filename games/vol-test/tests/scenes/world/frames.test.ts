@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { SimulationClock } from '@volstudio/core';
 import { TANK } from '@/config/tank';
-import { hudFrame, tankFrame } from '@/scenes/world/frames';
+import { hudFrame, hudVehicles, tankFrame } from '@/scenes/world/frames';
+import { Vehicle } from '@/sim/entities/Vehicle';
+import { SUSPENSION, WEAPON } from '@/config/tank';
 import { command, DT, tank, world } from '../../support/sim';
 
 describe('frames', () => {
@@ -79,4 +81,40 @@ it('saat reset ve duraklatma toplam zamanı ile poz geçmişini ayrı yönetir',
     y: 34,
   });
   expect(tankFrame(subject, clock.getInterpolationAlpha()).hull).toBeCloseTo(-0.4);
+});
+
+describe('hudVehicles', () => {
+  function pair(): Vehicle[] {
+    const vehicles = [1, 2].map((id) => new Vehicle(id, TANK, SUSPENSION, WEAPON));
+    vehicles[0].tank.place(1000, 1000, 0);
+    vehicles[1].tank.place(2000, 1500, 1);
+    for (const vehicle of vehicles) {
+      vehicle.tank.capturePose();
+      vehicle.tank.x += 40;
+      vehicle.tank.y -= 20;
+    }
+    return vehicles;
+  }
+
+  it('pozu çizilen kareyle aynı ara değerle verir ve oyuncuyu işaretler', () => {
+    const vehicles = pair();
+    const half = [...hudVehicles(vehicles, 1, 0.5)].map((entry) => ({ ...entry }));
+    expect(half).toEqual([
+      { id: 1, x: 1020, y: 990, hull: 0, player: true },
+      { id: 2, x: 2020, y: 1490, hull: 1, player: false },
+    ]);
+    expect([...hudVehicles(vehicles, 1, 0)].map((entry) => entry.x)).toEqual([1000, 2000]);
+    expect([...hudVehicles(vehicles, 1, 1)].map((entry) => entry.x)).toEqual([1040, 2040]);
+  });
+
+  it('ölü araçları atlar ve nesneleri çağrılar arasında yeniden kullanır', () => {
+    const vehicles = pair();
+    const first = [...hudVehicles(vehicles, 1, 1)];
+    const again = [...hudVehicles(vehicles, 1, 1)];
+    expect(again[0]).toBe(first[0]);
+    vehicles[0].vitality.damage(1e9);
+    const alive = [...hudVehicles(vehicles, 1, 1)];
+    expect(alive).toHaveLength(1);
+    expect(alive[0].id).toBe(2);
+  });
 });

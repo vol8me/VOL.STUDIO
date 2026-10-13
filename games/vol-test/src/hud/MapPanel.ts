@@ -1,5 +1,5 @@
 import { i18next } from '@volstudio/core/i18n';
-import { MinimapPanel, VOL_COLORS } from '@volstudio/core/ui';
+import { MinimapPanel, VOL_COLORS, type MinimapMarker } from '@volstudio/core/ui';
 import { formatMetres } from './format';
 import type { HudFrame } from './HudFrame';
 
@@ -26,6 +26,21 @@ export class MapPanel {
   readonly element: HTMLElement;
   private readonly minimap: MinimapPanel;
   private readonly metre: number;
+  private readonly player: MinimapMarker = {
+    worldX: 0,
+    worldY: 0,
+    color: VOL_COLORS.brandHover,
+    shape: 'arrow',
+    rotation: 0,
+    radius: 5,
+    kind: 'player',
+    priority: 10,
+  };
+  private readonly others = new Map<number, { key: string; seen: number; marker: MinimapMarker }>();
+  private generation = 0;
+  /** Konum yazısının son yazıldığı konum: ilk güncelleme her zaman yazar. */
+  private shownX = Number.POSITIVE_INFINITY;
+  private shownY = Number.POSITIVE_INFINITY;
 
   constructor(options: MapPanelOptions) {
     this.metre = options.metre;
@@ -48,47 +63,58 @@ export class MapPanel {
     this.element.classList.add('vt-hud__map');
   }
 
+  /**
+   * Her çizilen karede çağrılabilir: işaretler yerinde güncellenir (nesne üretilmez), piksel altı
+   * değişim çizim istemez. Konum yazısı (E2E ve teşhis) yalnız bir metre ilerleyince tazelenir.
+   */
   update(frame: HudFrame): void {
     this.minimap.batch(() => {
-      const entries: Array<[string, Parameters<MinimapPanel['setMarker']>[1]]> = [
-        [
-          'player',
-          {
-            worldX: frame.x,
-            worldY: frame.y,
-            color: VOL_COLORS.brandHover,
-            shape: 'arrow',
-            rotation: frame.hull,
-            radius: 5,
-            kind: 'player',
-            priority: 10,
-          },
-        ],
-      ];
-      for (const vehicle of frame.vehicles?.() ?? []) {
-        if (vehicle.player) continue;
-        entries.push([
-          `v${vehicle.id}`,
-          {
-            worldX: vehicle.x,
-            worldY: vehicle.y,
-            color: VOL_COLORS.uiTextSecondary,
-            shape: 'arrow',
-            rotation: vehicle.hull,
-            radius: 3.5,
-            kind: 'vehicle',
-            edge: true,
-          },
-        ]);
-      }
-      this.minimap.setMarkers(entries);
+      const player = this.player;
+      player.worldX = frame.x;
+      player.worldY = frame.y;
+      player.rotation = frame.hull;
+      this.generation += 1;
+      this.minimap.syncMarkers((set) => {
+        set('player', player);
+        for (const vehicle of frame.vehicles?.() ?? []) {
+          if (vehicle.player) continue;
+          let entry = this.others.get(vehicle.id);
+          if (!entry) {
+            entry = {
+              key: `v${vehicle.id}`,
+              seen: 0,
+              marker: {
+                worldX: 0,
+                worldY: 0,
+                color: VOL_COLORS.uiTextSecondary,
+                shape: 'arrow',
+                radius: 3.5,
+                kind: 'vehicle',
+                edge: true,
+              },
+            };
+            this.others.set(vehicle.id, entry);
+          }
+          entry.seen = this.generation;
+          entry.marker.worldX = vehicle.x;
+          entry.marker.worldY = vehicle.y;
+          entry.marker.rotation = vehicle.hull;
+          set(entry.key, entry.marker);
+        }
+      });
+      for (const [id, entry] of this.others)
+        if (entry.seen !== this.generation) this.others.delete(id);
       this.minimap.follow('player');
       this.minimap.setViewport(frame.view.x, frame.view.y, frame.view.width, frame.view.height);
     });
-    this.element.dataset.position = `${formatMetres(frame.x, this.metre)},${formatMetres(
-      frame.y,
-      this.metre,
-    )}`;
+    if (Math.hypot(frame.x - this.shownX, frame.y - this.shownY) >= this.metre) {
+      this.shownX = frame.x;
+      this.shownY = frame.y;
+      this.element.dataset.position = `${formatMetres(frame.x, this.metre)},${formatMetres(
+        frame.y,
+        this.metre,
+      )}`;
+    }
   }
 
   destroy(): void {
