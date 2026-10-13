@@ -81,7 +81,7 @@ girdi kabul edilir ve her sabit sim adımında en fazla bir niyet işlenir.
 
 Bağlantı bütçesi dünyaya bağlıdır. Yüksek sayıda bant ve birim içeren, oyuncusuz da işleyen bir
 dünya için Colyseus `Schema` ile durumu çoğaltmak yerine deterministik simülasyonu istemcide de
-koşturup yalnız komutları göndermek ölçülen seçenektir ([VOL.FORGE](../games/vol-forge/DESIGN.md);
+koşturup yalnız komutları göndermek ölçülen seçenektir ([VOL.TEST2](../games/vol-test2/DESIGN.md);
 sayılar ve sınırlar [araştırmada](backend-research.md)). Bu yol savaş sisini ve gizli bilgiyi
 taşımaz; onlar için ilgi alanı çerçevesi gerekir. Karar, oyunun gizli bilgi ihtiyacına göre verilir.
 

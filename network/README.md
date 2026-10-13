@@ -5,7 +5,7 @@ iletişim katmanıdır. CORE simülasyon mekaniği ve UI'ı taşımaya devam ede
 `tauri-v2` native kabuğu sağlar. Dünya durumu, savaş, üretim kuralları ve
 sunucu odası **oyuna** aittir. İlk tüketici VOL.TEST'tir.
 
-İkinci tüketici [VOL.FORGE](../games/vol-forge/DESIGN.md) yalnız `./protocol`daki
+İkinci tüketici [VOL.TEST2](../games/vol-test2/DESIGN.md) yalnız `./protocol`daki
 `PROTOCOL_VERSION`'u kullanır: odası, ikili protokolü ve kilit adımlı istemcisi oyunun
 içindedir ve Colyseus `Schema` kullanmaz. İkinci bir oyun aynı kilit adımlı istemciyi isterse
 `ForgeSession`, protokol ve kilit adımlı istemci bu pakete taşınır; o zamana dek paylaşım yoktur.

@@ -185,7 +185,7 @@ importers:
         specifier: 4.1.11
         version: 4.1.11(@types/node@26.1.2)(@vitest/coverage-v8@4.1.11)(jsdom@25.0.1(supports-color@7.2.0))(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11))
 
-  games/vol-forge:
+  games/vol-test2:
     dependencies:
       '@colyseus/core':
         specifier: 0.18.18

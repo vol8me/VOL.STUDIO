@@ -42,8 +42,8 @@
       "status": "active"
     },
     {
-      "packageName": "@volstudio/vol-forge",
-      "path": "games/vol-forge",
+      "packageName": "@volstudio/vol-test2",
+      "path": "games/vol-test2",
       "status": "active"
     }
   ]

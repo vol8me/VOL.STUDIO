@@ -22,13 +22,13 @@ Android hesabının Steam ile ilişkisi henüz kararlaştırılmadı.
 
 **Yaklaşık 20 eşzamanlı dünya × dünya başına 8–14 oyuncu**, değerlendirilecek
 bir kapasite senaryosudur; sabit ürün limiti veya ölçülmüş kapasite değildir.
-Dünyaların tamamı doluysa **160–280 eşzamanlı oyuncu** eder. VOL.FORGE ölçümünde
+Dünyaların tamamı doluysa **160–280 eşzamanlı oyuncu** eder. VOL.TEST2 ölçümünde
 8 iş parçacıklı bir Windows dizüstü ve bir Steam Deck (Linux x64, 8 iş parçacığı), 20 dünya × 12 oyuncuyu
 (240 gerçek WebSocket bağlantısı) dört Node sürecinde taşıdı (aşağıdaki 13 Ekim bölümü). Bu, üretim
 kabulü değildir: üretim sunucusu donanımı, gerçek ağ, 24 saat üstü işletim ve toplam
 DB/yedek/işletim bütçesi ayrıca ölçülüp seçilir.
 
-Oyuncusuz dünya davranışı VOL.FORGE'da 7/24 simülasyondur ve ölçüldü. Dünya
+Oyuncusuz dünya davranışı VOL.TEST2'da 7/24 simülasyondur ve ölçüldü. Dünya
 boyutu/aktif varlık bütçesi (ölçümler 256×256 tile, en çok 21 bin bant), ilk
 barındırma sağlayıcısı ve ranked kapsamı açık kararlardır. PostgreSQL ve ortak
 network paketi aşağıdaki mimari önerilerdir;
@@ -40,7 +40,7 @@ kalıcı dünya verisi için sunucuya ait PostgreSQL ve gerektiğinde snapshot d
 çalıştırma ihtiyacı ölçülünce süreç sayısı ve eşleştirme altyapısı büyütülür.
 Yerel deneyle doğrulanan repo uyumu, onaylanan framework seçimini destekler;
 bu bir üretim kapasitesi kabulü değildir. **Seçim 12 Ekim'de yeniden açılmıştı;
-VOL.FORGE ölçümleri hedef yükün bu repoda taşınabildiğini gösterdi (aşağıdaki hüküm),
+VOL.TEST2 ölçümleri hedef yükün bu repoda taşınabildiğini gösterdi (aşağıdaki hüküm),
 üretim kapasitesi kabulü ise henüz yapılmadı.**
 Gerçek Node simülasyonu ve Phaser 4 deneyi bu kararı destekliyor. Önceki
 araştırmada WebKit SDK constructor sorunu vardı; yeni `?net` oyun istemcisinde
@@ -48,7 +48,7 @@ Chromium ve WebKit üzerinden iki pencerenin gerçek Colyseus odasına bağlanma
 hareket ve ayrılma testleri geçti. Linux'un paketli WebKitGTK kabulü ayrıdır.
 “Bütün oyunlar ve bütün cihazlar için tam üretim uyumu” sonucu çıkarmıyorum.
 
-**13 Ekim ölçümü sonrası hüküm.** [VOL.FORGE](../games/vol-forge/DESIGN.md) kanıt oyununda
+**13 Ekim ölçümü sonrası hüküm.** [VOL.TEST2](../games/vol-test2/DESIGN.md) kanıt oyununda
 hedef yük ölçüldü: binlerce konveyör, yüzlerce birim, oyuncu yokken de işleyen dünya,
 dünya başına 12 oyuncu, 20 dünya.
 
@@ -58,7 +58,7 @@ dünya başına 12 oyuncu, 20 dünya.
    20 dünya × 12 bot dört Node sürecinde 30 Hz'i korudu, toplam yaklaşık 0,6–0,8 çekirdek tuttu.
 3. **Yükü durum eşitlemesi değil, deterministik kilit adım taşıdı.** Dünyayı Colyseus `Schema` +
    `StateView` ile eşitlemek istemci başına 38,7 KB/sn (kontrol ölçümü, sınırları aşağıda), özel
-   ilgi alanı çerçevesi 20–100 KB/sn, kilit adım 0,19 KB/sn tuttu. VOL.FORGE kilit adım kullanır:
+   ilgi alanı çerçevesi 20–100 KB/sn, kilit adım 0,19 KB/sn tuttu. VOL.TEST2 kilit adım kullanır:
    istemci aynı simülasyonu koşturur, ağdan yalnız komutlar geçer. Colyseus Schema bu işte özel
    çerçeveden kötü değildir; fakat hiçbir durum çoğaltma biçimi kilit adım kadar ucuz değildir.
 4. **Kilit adımın bedeli:** savaş sisi ve gizli bilgi yoktur; istemci ile sunucu aynı kural sürümünü
@@ -85,14 +85,14 @@ durum güncellemelerinden gelir. Backend seçimi bu algoritmaların maliyetini
 kendiliğinden çözmez. Özellikle dev bir fabrikayı her tick bütün oyunculara
 gönderen bir tasarım, oyuncu sayısı düşükken de pahalı olabilir.
 
-## 13 Ekim 2026: VOL.FORGE ile ölçülen kapasite
+## 13 Ekim 2026: VOL.TEST2 ile ölçülen kapasite
 
 Kuramsal tartışma yerine hedef yükü taşıyan ayrı bir kanıt oyunu yazıldı:
-[VOL.FORGE](../games/vol-forge/DESIGN.md). Dünya 256×256 tile, sunucu otoriteli, 30 Hz,
+[VOL.TEST2](../games/vol-test2/DESIGN.md). Dünya 256×256 tile, sunucu otoriteli, 30 Hz,
 deterministik; konveyör eşyası sabit noktalı, durum düz tiplenmiş dizilerde. Ölçümler Ryzen 5 7235HS
 (4 çekirdek/8 iş parçacığı), 15,7 GB, Node 22.23.1, Windows 11 üzerinde, başka işler (test, kapı)
 çalışırken alındı; güç planı kaydedilmedi. Sayılar bu makineye aittir ve üretim kapasite garantisi
-değildir. Komutlar [VOL.FORGE README'sindedir](../games/vol-forge/README.md) (`capacity`, `loadtest`, `schema-control`,
+değildir. Komutlar [VOL.TEST2 README'sindedir](../games/vol-test2/README.md) (`capacity`, `loadtest`, `schema-control`,
 `engines`, `device-bench`, `restore-bench`, `soak`).
 
 ### Başsız simülasyon adımı (ağ, disk ve Colyseus yok)
@@ -124,7 +124,7 @@ Seçim kararı bu yüzden simülasyon maliyetine değil, çoğaltma, dayanıklı
 
 ### Tam yığın: ayrı süreçlerde sunucu ve gerçek WebSocket botları
 
-`games/vol-forge/scripts/loadtest.ts` gerçek `games/vol-forge/server/index.ts`'i ayrı süreçlerde başlatır; botlar aynı makineden
+`games/vol-test2/scripts/loadtest.ts` gerçek `games/vol-test2/server/index.ts`'i ayrı süreçlerde başlatır; botlar aynı makineden
 gerçek WebSocket ile bağlanır (dünya başına 12 oyuncu, her biri saniyede yaklaşık 2 komut;
 komutların çoğu rastgele konumda olduğu için sunucu reddeder). Sayılar sunucunun kendi `/metrics`
 çıktısından okunur; bot CPU'su aynı makineyi paylaştığı için sayılar temkinlidir. Her koşu 8 sn
@@ -157,7 +157,7 @@ bağlıydı, hız sınırı aşımı 0, geri basınç atlaması 0, dünya hatas�
 ile sürüyordu. Node `setInterval` kesirli milisaniyeyi kırptığı için 30 Hz'de 33 ms'lik tetikleme 33,33 ms'lik
 adımı yaklaşık her yüz tetiklemede bir kaçırır; iki adımlık (~66 ms) boşluk doğar. Windows'ta görülen 47–56 ms'nin
 bir bölümü 15,6 ms'lik zamanlayıcı çözünürlüğüdür (31,25 / 46,9 ms dönüşümü); Linux'ta (1 ms çözünürlük) p99'un 65,8 ms
-çıkması asıl nedenin bu atlama olduğunu gösterdi. `games/vol-forge/server/stepClock.ts` adım süresinden kısa aralıkla (10 ms) çağrılıp geçen süreyi biriktirir.
+çıkması asıl nedenin bu atlama olduğunu gösterdi. `games/vol-test2/server/stepClock.ts` adım süresinden kısa aralıkla (10 ms) çağrılıp geçen süreyi biriktirir.
 Aynı Deck senaryosunda adımlar arası p99 65,8 → 44,3 ms, ack p99 45,4 → 41,6 ms, CPU değişmedi; Windows'ta
 ack p50 49,9 → 29,4 ms. Ortalama hız her iki durumda 30,0 Hz'dir: düzeltilen sorun hız değil, gecikme ve
 titreşimdir.
@@ -190,9 +190,9 @@ yanıtlar, üretim sunucusu donanımı kapasitesini değil.
 
 - Dizüstünden farklar: adım p99 yaklaşık 1,5 kat (7,0 ms, hâlâ 33 ms bütçenin beşte biri), olay döngüsü ve ack
   gecikmesi daha iyi (Linux zamanlayıcısı), RSS yaklaşık 1,7 kat. Günlük 340–350 fsync/sn, en uzun fsync 27–39 ms.
-- Bu ilk Linux koşusu iki gerçek hatayı yakaladı: sunucu `games/vol-forge/server/index.ts` doğrudan çalıştırılınca "ana modül mü"
-  denetimi POSIX yollarında hiç eşleşmiyordu ve süreç sessizce çıkıyordu (VOL.FORGE ve VOL.TEST'te aynı satır;
-  `games/vol-forge/server/entry.ts` ile düzeltildi); "hazır" satırı metrik kapısı dinlemeye başlamadan yazılıyordu, süreci başlatan
+- Bu ilk Linux koşusu iki gerçek hatayı yakaladı: sunucu `games/vol-test2/server/index.ts` doğrudan çalıştırılınca "ana modül mü"
+  denetimi POSIX yollarında hiç eşleşmiyordu ve süreç sessizce çıkıyordu (VOL.TEST2 ve VOL.TEST'te aynı satır;
+  `games/vol-test2/server/entry.ts` ile düzeltildi); "hazır" satırı metrik kapısı dinlemeye başlamadan yazılıyordu, süreci başlatan
   betik satırı görür görmez bağlanınca reddediliyordu (artık dinlemeden önce yazılmaz).
 - `SIGKILL` kurtarma Linux'ta da denendi (aşağıdaki bölüm). `crash.test.ts` ve soak Linux'ta koşmadı.
 
@@ -216,7 +216,7 @@ Aynı dünya üç yolla çoğaltıldı. Egress (sunucudan istemciye yük baytı,
 | Özel ikili ilgi alanı, 20 dünya, 3.000 bant                              | 20,8          | 2,0                        | Dünya başına, 240 bağlantı                                    |
 | Colyseus `Schema` + `StateView` (kontrol), aynı ilgi alanı sınırı, 15 Hz | 38,7          | 3,8                        | 8.000 bant, 408 birim, dağınık bakış; yalnız sunucu kodlaması |
 
-Colyseus `Schema` kontrolü (`games/vol-forge/scripts/schema-control.ts`) aynı dünyayı aynı rastgele ilgi alanı sınırıyla (8×6 chunk)
+Colyseus `Schema` kontrolü (`games/vol-test2/scripts/schema-control.ts`) aynı dünyayı aynı rastgele ilgi alanı sınırıyla (8×6 chunk)
 `StateView` üzerinden eşitler: bant başına ve birim başına birer şema düğümü, 15 Hz yama. İstemci başına 38,7 KB/sn,
 katılımda görünüm başına 39,6 KB. Sunucunun ana iş parçacığında şemayı simülasyondan güncellemek adım başına
 ortalama 1,63 ms (p99 7,2 ms), kodlama yama başına ortalama 0,64 ms (p99 2,0 ms, en çok 36 ms) tuttu. **Sınırlar:**
@@ -233,14 +233,14 @@ arayüzü onu desteklemez.
 
 ### Dayanıklılık ve çökme kurtarma
 
-- **`kill -9` sınaması** (`games/vol-forge/tests/server/crash.test.ts`): gerçek sunucu süreci üç döngüde rastgele bir anda
+- **`kill -9` sınaması** (`games/vol-test2/tests/server/crash.test.ts`): gerçek sunucu süreci üç döngüde rastgele bir anda
   `SIGKILL` ile öldürülür (anlık görüntü her 60 adımda, öldürme anı sıklıkla anlık görüntü ve günlük
   değişimine denk gelir). Her açılışta önceki döngülerde onaylanan her komut ayakta, oyuncunun son sırası
   korunmuş, günlük tekrarında karma sapması 0.
 - **Ack kalıcılıktan sonra gider**: günlük kaydı `fsync` ile kalıcı olunca. Süreç ölümünde onaylanmış komut
   kaybolmaz. **İşletim sistemi çökmesi ya da güç kesintisi altında bu doğrulanmadı**: test süreci
   öldürür, diski değil.
-- **Yeniden yükleme süresi** (`games/vol-forge/scripts/restore-bench.ts`): 8.000 bantlı, 400 birimli dünya 70 sn komut aldı
+- **Yeniden yükleme süresi** (`games/vol-test2/scripts/restore-bench.ts`): 8.000 bantlı, 400 birimli dünya 70 sn komut aldı
   (300 deneme, 113 kabul), süreç `SIGKILL` ile öldürüldü. Yeniden başlatmada sunucu 1.800. adımdaki anlık
   görüntüyü yükledi, 44 komutu ve 301 adımı tekrar etti, karma sapması 0, yükleme 103 ms; süreç başlangıcından
   "hazır"a 685 ms (Node ve tsx başlangıcı dahil). Dünya zamanı öldürme anının 7 adım (0,23 sn) gerisinden devam
@@ -250,7 +250,7 @@ arayüzü onu desteklemez.
   anlık görüntü, 45 komut ve 300 adım tekrarı, karma sapması 0, yükleme 156 ms, süreç başlangıcından "hazır"a
   737 ms; dünya zamanı öldürme anının 6 adım gerisinden devam etti.
 - **Yeniden eşitleme**: istemci karma sapmasını saptayınca yeni anlık görüntü ister ve kendini onarır
-  (`games/vol-forge/tests/server/room.test.ts`, gerçek WebSocket); aşırı sık istek anlık görüntü getirmez ve sayılır.
+  (`games/vol-test2/tests/server/room.test.ts`, gerçek WebSocket); aşırı sık istek anlık görüntü getirmez ve sayılır.
   Kopan istemci aynı oturum anahtarıyla yeniden bağlanıp yeniden eşitlenir.
 - **Tek yazıcı ve hata**: dünya dizini bir yazıcı kilidiyle korunur, her açılış yeni bir `epoch` alır;
   günlük yazımı hata verirse dünya salt okunur olur.
@@ -371,7 +371,7 @@ edilebiliyor. Mindustry'yi mutlak otorite/anti-cheat referansı saymak hatalı.
 
 | Çözüm                                    | Buradaki avantaj                                                                               | Maliyet ve tasarım sakıncası                                                                                                             | Şu anki karar                                                |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| **Colyseus 0.18 OSS**                    | Saf TS/Node `Simulation`, odalar, schema delta, bağlantı, MTI testleri, kendin barındırma      | Büyük chunk'ı kendisi optimize etmez, 1 room tek JS olay döngüsü, SDK WebKit constructor sorunu (VOL.FORGE'da dar sarmalayıcıyla aşıldı) | **İlk dikey dilim**; son karar yük testine bağlı             |
+| **Colyseus 0.18 OSS**                    | Saf TS/Node `Simulation`, odalar, schema delta, bağlantı, MTI testleri, kendin barındırma      | Büyük chunk'ı kendisi optimize etmez, 1 room tek JS olay döngüsü, SDK WebKit constructor sorunu (VOL.TEST2'da dar sarmalayıcıyla aşıldı) | **İlk dikey dilim**; son karar yük testine bağlı             |
 | **Kendi ws/uWebSockets protokolümüz**    | Paket formatını/tick/interest'i bütünüyle yönetiriz, ek hosting lisansı yok                    | Reconnect, auth, prediction, snapshot diff, hile sınırı, codec/migration, gözlem ve bakımın tamamı bize ait                              | Colyseus transport/codec ölçümü dar boğaz kanıtlarsa         |
 | **Colyseus uWebSockets transport**       | Aynı room/sim üzerinde daha ucuz taşıma adayı, az geçiş maliyeti                               | Codec ve sim CPU sorunlarını çözmez; native TLS/perf testi gerekir                                                                       | Özel ağ yığını yazmadan önce A/B testi                       |
 | **SpacetimeDB 2 TypeScript**             | Kalıcılığı ve tablo aboneliğini framework'ün merkezine alır, artık TS server reducer destekler | Reducer/DB-first world mimarisi için simülasyon refaktörü, BSL 1.1 lisans incelemesi ve TeV bazlı veri trafiği faturası                  | Küçük fabrika reducer deneyiyle açık rakip                   |
@@ -489,7 +489,7 @@ tanımlamak gerekir. Üretim çözümü: dünya başına **tek writer ve lease/f
 tekil komut ID/idempotent ledger; checkpoint'te entity ID, RNG, tick,
 cooldown, fabrika ağı, inventory ve chunk revisions; journal işlemine
 kalıcı fsync/transaction olmadan ACK gönderilmez. PostgreSQL aday,
-snapshot/yedek nesne deposu ayrıdır. VOL.TEST'in RAM odası bunları sunmaz; VOL.FORGE odası
+snapshot/yedek nesne deposu ayrıdır. VOL.TEST'in RAM odası bunları sunmaz; VOL.TEST2 odası
 tek yazıcı kilidi, anlık görüntü + günlük ve kalıcılıktan sonra ack sunar (13 Ekim bölümü).
 
 Ölçüm kapısı: 1/5/20 dünya × 8/12/14 gerçek client, farklı 30/60Hz
@@ -678,8 +678,8 @@ kontrolü de bağlandı fakat aynı kayıt kaldı. Bütün kontrollerde
 oyun simülasyonundan gelmediğini doğruluyor; hatayı sessizce filtrelemedik
 ve SDK'yı monkeypatch etmedik.
 
-13 Ekim güncellemesi: VOL.FORGE istemcisi bu sorunu dar bir sarmalayıcıyla aşar
-(`games/vol-forge/src/net/webSocketShim.ts`): SDK `WebSocket`i modül yüklenirken önbelleğe aldığı için sarmalayıcı
+13 Ekim güncellemesi: VOL.TEST2 istemcisi bu sorunu dar bir sarmalayıcıyla aşar
+(`games/vol-test2/src/net/webSocketShim.ts`): SDK `WebSocket`i modül yüklenirken önbelleğe aldığı için sarmalayıcı
 `main.ts`in ilk import'udur ve Node imzasındaki seçenek nesnesini tarayıcı imzasına çevirir.
 Chromium ve WebKit e2e'de `pageerror` yoktur. Upstream düzeltilmedi; paketli WebKitGTK ayrıca sınanmalıdır.
 
@@ -915,13 +915,13 @@ hile sınırları bizim ürüne aktarılmaz.
 
 Lockstep az komutla bant genişliğini düşürür, ancak cross-engine determinism,
 geç katılım baseline'ı, yavaş/kopan oyuncu ve sürüm uyumu kararlarını gerektirir.
-VOL.FORGE bunların bir kısmını ölçtü (13 Ekim bölümü): aynı üç senaryo Node,
+VOL.TEST2 bunların bir kısmını ölçtü (13 Ekim bölümü): aynı üç senaryo Node,
 Chromium, WebKit (Playwright, Windows), Android ARM64 Chrome ve Linux x64 Chrome'da
 aynı karmayı verdi; geç katılım 17–26 KB'lık sıkıştırılmış anlık görüntüyle
 çözüldü; sapma karma denetimiyle yakalanıp yeniden eşitlemeyle onarıldı. Çözülmeyen:
 gizli bilgi (savaş sisi, PvP), canlı sürüm geçişi ve WebKitGTK. **Öneri:** sis gerektirmeyen
 co-op/PvE'de kilit adım; sis veya gizli bilgi gereken PvP'de sunucu otoriteli ilgi alanı
-eşitlemesi (VOL.FORGE `aoi` yolu bunun ölçüm iskeletidir, 20–100 KB/sn/istemci).
+eşitlemesi (VOL.TEST2 `aoi` yolu bunun ölçüm iskeletidir, 20–100 KB/sn/istemci).
 
 ### Bullet hell ve mini MOBA
 
