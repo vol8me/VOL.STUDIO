@@ -7,17 +7,17 @@ Alt dizindeki AGENTS.md kendi alanını daraltabilir, kök sınırlarını gevş
 
 ## Repo haritası
 
-| Yol                      | Paket                     | Rol                                              |
-| ------------------------ | ------------------------- | ------------------------------------------------ |
-| `core/`                  | `@volstudio/core`         | Oyundan bağımsız mekanizmalar ve UI kataloğu     |
-| `network/`               | `@volstudio/network`      | Paylaşılan multiplayer istemcisi ve protokolü    |
-| `tauri-v2/`              | `@volstudio/tauri-v2`     | Paylaşılan native kabuk ve platform adaptörleri  |
-| `devtools/audio-synth/`  | `@volstudio/audio-synth`  | Deterministik ses üretimi ve teknik yayın kabulü |
-| `devtools/deck/`         | `@volstudio/deck`         | Deck ölçüm sondası ve devkit otomasyonu          |
-| `devtools/pen.dev/`      | `@volstudio/pen.dev`      | Pencil kaynağından rig export'u                  |
-| `devtools/vol-showcase/` | `@volstudio/vol-showcase` | CORE UI vitrini ve piksel sözleşmesi             |
-| `games/vol-test2/`       | `@volstudio/vol-test2`    | Kalıcı fabrika dünyası ve çok oyunculu kanıtı    |
-| `games/vol-test/`        | `@volstudio/vol-test`     | CORE ve kabuğun gerçek oyun tüketicisi           |
+| Yol                      | Paket                     | Rol                                               |
+| ------------------------ | ------------------------- | ------------------------------------------------- |
+| `core/`                  | `@volstudio/core`         | Oyundan bağımsız mekanizmalar ve UI kataloğu      |
+| `network/`               | `@volstudio/network`      | Multiplayer protokolü, istemcisi ve sunucu zemini |
+| `tauri-v2/`              | `@volstudio/tauri-v2`     | Paylaşılan native kabuk ve platform adaptörleri   |
+| `devtools/audio-synth/`  | `@volstudio/audio-synth`  | Deterministik ses üretimi ve teknik yayın kabulü  |
+| `devtools/deck/`         | `@volstudio/deck`         | Deck ölçüm sondası ve devkit otomasyonu           |
+| `devtools/pen.dev/`      | `@volstudio/pen.dev`      | Pencil kaynağından rig export'u                   |
+| `devtools/vol-showcase/` | `@volstudio/vol-showcase` | CORE UI vitrini ve piksel sözleşmesi              |
+| `games/vol-test2/`       | `@volstudio/vol-test2`    | Kalıcı fabrika dünyası ve çok oyunculu kanıtı     |
+| `games/vol-test/`        | `@volstudio/vol-test`     | CORE ve kabuğun gerçek oyun tüketicisi            |
 
 Paket durumu `workspace-lifecycle.json` içindedir; frozen ağaç değişmez ve
 aktif paket frozen pakete bağımlı olamaz. Yeni ürün: [yeni oyun rehberi](docs/new-game.md).

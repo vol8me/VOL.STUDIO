@@ -8,7 +8,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await server?.server.gracefullyShutdown(false);
+  await server?.stop();
 });
 
 test('iki tarayıcı gerçek odayı paylaşır; hareket sunucudan gelir ve leave uzak oyuncuyu kaldırır', async ({
