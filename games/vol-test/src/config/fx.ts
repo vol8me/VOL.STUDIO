@@ -5,6 +5,8 @@ export const FX = {
     haloAlpha: 0.3,
     coreWidth: 0.9,
     markerRadius: 5,
+    /** Yörünge örneklerinden kaçta biri çizilir (örnekler 1/60 s arayla). */
+    stride: 3,
     alpha: 0.55,
     pulseMs: 180,
     pulseAlpha: 0.08,

@@ -4,9 +4,13 @@ import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
 import { Vehicle } from '@/sim/entities/Vehicle';
 import type { SimEvent } from '@/sim/events';
 import { Simulation } from '@/sim/Simulation';
+import { muzzlePose } from '@/sim/muzzle';
+import type { TankPose } from '@/sim/tank/Tank';
+import type { TankState } from '@/sim/tank/TankState';
 import {
   aimAligned,
   applyRecoil,
+  launchFrom,
   muzzleLaunch,
   stepPredictedVehicle,
   type Launch,
@@ -29,6 +33,11 @@ function mirror(): Vehicle {
   const vehicle = new Vehicle(1, TANK, SUSPENSION, WEAPON, COMBAT);
   vehicle.tank.place(2048, 2048, 0);
   return vehicle;
+}
+
+/** Aracın tank durumunu verilen alanlarla kurar (taret ve süspansiyon salt okunurdur). */
+function posed(vehicle: Vehicle, fields: Partial<TankState>): void {
+  vehicle.tank.restoreState({ ...vehicle.tank.captureState(), ...fields });
 }
 
 describe('stepPredictedVehicle', () => {
@@ -72,25 +81,57 @@ describe('stepPredictedVehicle', () => {
       });
       expect(launches[0].angle).toBe(server.tank.turret);
       // Geri tepme uygulanmış tankın hızı değişmiştir: atış hızı onu değil öncekini taşır.
-      const afterRecoil = Math.cos(launches[0].angle) * WEAPON.projectileSpeed + client.tank.vx;
+      const afterRecoil =
+        Math.cos(launches[0].angle) *
+        (WEAPON.projectileSpeed +
+          client.tank.vx * Math.cos(launches[0].angle) +
+          client.tank.vy * Math.sin(launches[0].angle));
       expect(launches[0].vx).not.toBe(afterRecoil);
       seen++;
     }
     expect(seen).toBe(1);
   });
 
-  it('muzzleLaunch tankın hızını devralır ve namlu ucunu verir', () => {
+  it('muzzleLaunch yalnız tankın eksen hızını devralır: mermi daima namlunun gösterdiği doğrultuda çıkar', () => {
     const vehicle = mirror();
-    vehicle.tank.vx = 30;
-    vehicle.tank.vy = -10;
+    posed(vehicle, { turret: 0.9, vx: 30, vy: -190 });
     const launch = muzzleLaunch(vehicle);
+    const axial = 30 * Math.cos(0.9) + -190 * Math.sin(0.9);
     expect(launch.angle).toBe(vehicle.tank.turret);
-    expect(launch.vx).toBeCloseTo(Math.cos(launch.angle) * WEAPON.projectileSpeed + 30, 9);
-    expect(launch.vy).toBeCloseTo(Math.sin(launch.angle) * WEAPON.projectileSpeed - 10, 9);
-    expect(Math.hypot(launch.x - vehicle.tank.x, launch.y - vehicle.tank.y)).toBeCloseTo(
-      WEAPON.muzzleOffset,
-      9,
-    );
+    expect(Math.hypot(launch.vx, launch.vy)).toBeCloseTo(WEAPON.projectileSpeed + axial, 9);
+    expect(Math.atan2(launch.vy, launch.vx)).toBeCloseTo(0.9, 12);
+  });
+
+  it('namlu ucu süspansiyon kaymasını taşır ve ekrandaki namlu ucuyla aynı noktadır', () => {
+    const vehicle = mirror();
+    posed(vehicle, { hull: 0.6, turret: -1.1, pitch: 2.4, roll: -3.2 });
+    const launch = muzzleLaunch(vehicle);
+    const pose = vehicle.tank.readPose({ x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 });
+    const tip = muzzlePose(pose, WEAPON.muzzleOffset, { x: 0, y: 0, angle: 0 });
+    expect(launch.x).toBe(tip.x);
+    expect(launch.y).toBe(tip.y);
+    // Süspansiyonsuz uç ile fark tam olarak gövde eksenindeki kayma kadardır.
+    const plainX = vehicle.tank.x + Math.cos(-1.1) * WEAPON.muzzleOffset;
+    const plainY = vehicle.tank.y + Math.sin(-1.1) * WEAPON.muzzleOffset;
+    expect(Math.hypot(launch.x - plainX, launch.y - plainY)).toBeCloseTo(Math.hypot(2.4, -3.2), 9);
+  });
+
+  it('launchFrom ara değerli pozdan türetilince çizgi o karedeki namluyla aynı doğrultudadır', () => {
+    const vehicle = mirror();
+    const shown: TankPose = {
+      x: 2050.4,
+      y: 2047.1,
+      hull: 0.31,
+      turret: 0.52,
+      pitch: 1.1,
+      roll: 2.2,
+    };
+    const launch = launchFrom(shown, 140, -60, WEAPON, { x: 0, y: 0, vx: 0, vy: 0, angle: 0 });
+    expect(launch.angle).toBe(shown.turret);
+    expect(Math.atan2(launch.vy, launch.vx)).toBeCloseTo(shown.turret, 12);
+    const tip = muzzlePose(shown, WEAPON.muzzleOffset, { x: 0, y: 0, angle: 0 });
+    expect([launch.x, launch.y]).toEqual([tip.x, tip.y]);
+    expect(vehicle.tank.x).toBe(2048);
   });
 
   it('ölü araç ilerlemez ve ateş etmez; poz yine yakalanır', () => {

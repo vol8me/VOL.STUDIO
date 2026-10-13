@@ -122,11 +122,20 @@ bırakılınca otomatik olarak gövdeye dönmez. Dönüş hızı ve hizalanma e�
 silah yapılandırmasındadır. Taret hedefe oturmadığında ateş isteği bekler,
 dolum tüketilmez. Atış aralığı 650 ms'dir.
 
-Mermi tankın yatay hızını devralır; atış tanka ters yönde itki uygular.
-Düşey uçuş, yatay hava direnci, rüzgâr, yer teması ve menzil sonu aynı
+Mermi namlu ekseni boyunca çıkar ve tankın hızından yalnız eksen bileşenini
+devralır: yan kayarken ateş eden tankın mermisi namlunun gösterdiği doğrultudan
+sapmaz. Atış tanka ters yönde itki uygular. Düşey uçuş, yatay hava direnci, rüzgâr, yer teması ve menzil sonu aynı
 balistik çözümle hesaplanır. Yer ve menzil bitişi adımın içindeki kesin
 zamanda çözülür. Nişan önizlemesi aynı uçuş hesabını, araçları ve dünya
 sınırını kullanır; gelecekteki hava olayını tahmin etmez.
+
+Namlu, lazer ve fare nişanı tek geometriden türer (`src/sim/muzzle.ts`): taret mili
+gövde merkezi artı süspansiyon kaymasıdır, namlu ucu milden taret yönünde
+`WEAPON.muzzleOffset` uzaklıktadır. Sim atışı, ağız parlaması ve nişan çizgisi
+aynı işlevi okur; çizgi ekranda görünen ara değerli kareden (`tankFrame`)
+türetilir ve mermi yolunu (rüzgâr ve direnç eğrisi dahil) namlu ucundan çizer.
+Fare nişanı da son çizilen karedeki taret milinden hesaplanır; simülasyonun
+bir sonraki adımdaki konumundan değil.
 
 İsabet, adımın süpürdüğü doğru parçasının gövdenin yönlü ayak iziyle ilk
 kesişimidir; uç noktaları örnekleyen test dönmüş gövdenin köşesini ve dar

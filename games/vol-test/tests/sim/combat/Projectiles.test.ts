@@ -154,6 +154,23 @@ describe('Projectiles', () => {
     expect(projectiles.preview(1, 4000, 200, 900, 0, space).surface).toBe('wall');
   });
 
+  it('önizleme yörüngesi namlu ucundan başlar, adım adım ilerler ve isabet noktasında biter', () => {
+    const projectiles = new Projectiles(2, WEAPON.projectileLifeMs, WEAPON.flight);
+    const open = projectiles.preview(1, 100, 200, 900, 0, world());
+    expect(open.pathLength).toBeGreaterThan(5);
+    expect([open.path[0], open.path[1]]).toEqual([100, 200]);
+    const last = open.pathLength - 1;
+    expect(open.path[last * 2]).toBeCloseTo(open.x, 3);
+    expect(open.path[last * 2 + 1]).toBeCloseTo(open.y, 3);
+    for (let point = 1; point < open.pathLength; point++)
+      expect(open.path[point * 2]).toBeGreaterThanOrEqual(open.path[point * 2 - 2]);
+    const hit = projectiles.preview(1, 100, 100, 900, 0, world(), [band(2, 190, 210)]);
+    const end = hit.pathLength - 1;
+    expect(hit.targetId).toBe(2);
+    expect(hit.path[end * 2]).toBeCloseTo(hit.x, 3);
+    expect(hit.path[end * 2 + 1]).toBeCloseTo(hit.y, 3);
+  });
+
   it('önizleme aracı engel olarak gösterir; kendi aracını yok sayar', () => {
     const projectiles = new Projectiles(2, WEAPON.projectileLifeMs, WEAPON.flight);
     const targets = [band(1, -Infinity), band(2, 190, 210)];

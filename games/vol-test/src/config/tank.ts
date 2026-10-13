@@ -136,7 +136,8 @@ export type SuspensionConfig = typeof SUSPENSION;
 export const WEAPON = {
   intervalMs: 650,
   aimTolerance: 0.025,
-  muzzleOffset: 30,
+  /** Taret milinden namlu ucuna (turret.svg: ağız bileziğinin ucu); görünüm aynı değeri okur. */
+  muzzleOffset: 29.4,
   projectileSpeed: 900,
   projectileLifeMs: 1200,
   flight: {

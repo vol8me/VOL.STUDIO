@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
-import { TANK } from '@/config/tank';
+import { TANK, WEAPON } from '@/config/tank';
+import { muzzlePose } from '@/sim/muzzle';
 import { TankView, type TankFrame } from '@/view/TankView';
 import { TEXTURE, TEXTURE_SCALE } from '@/view/textures';
 import { fakeScene, lastCall } from '../support/fakeScene';
@@ -41,10 +42,42 @@ describe('TankView', () => {
     expect(children).toContain(turretRig);
     expect(children.indexOf(byTexture(TEXTURE.hull)[0])).toBeLessThan(children.indexOf(core));
     expect(children.indexOf(core)).toBeLessThan(children.indexOf(turretRig));
-    expect(flash.x).toBeCloseTo(126);
+    expect(flash.x).toBeCloseTo(97 + WEAPON.muzzleOffset);
     expect(flash.y).toBeCloseTo(202);
     expect(flash.rotation).toBeCloseTo(0);
   });
+
+  it('ağız parlaması ile sahne zincirindeki namlu ucu ortak geometriyle çakışır (eğik poz dahil)', () => {
+    const poses: Array<Partial<TankFrame>> = [
+      { hull: 0.5, turret: 1.2, pitch: 2.5, roll: -3 },
+      { hull: -2.4, turret: 0.7, pitch: -3.6, roll: 1.4 },
+      { hull: 3, turret: -3, pitch: 0, roll: 3.6 },
+    ];
+    for (const pose of poses) {
+      const { view, byTexture, body, root, turretRig } = build();
+      view.fire();
+      const state = frame(pose);
+      view.update(state, 0);
+      const turret = byTexture(TEXTURE.turret)[0];
+      // Sahne zinciri: kök (poz, gövde yönü) → gövde (süspansiyon) → taret kabı (dönüş) → resim.
+      const local = { x: Number(turret.x ?? 0) + WEAPON.muzzleOffset, y: 0 };
+      const rotated = (point: { x: number; y: number }, angle: number) => ({
+        x: point.x * Math.cos(angle) - point.y * Math.sin(angle),
+        y: point.x * Math.sin(angle) + point.y * Math.cos(angle),
+      });
+      const inRig = rotated(local, Number(turretRig.rotation));
+      const inBody = { x: Number(body.x) + inRig.x, y: Number(body.y) + inRig.y };
+      const world = rotated(inBody, Number(root.rotation));
+      const tip = muzzlePose(state, WEAPON.muzzleOffset, { x: 0, y: 0, angle: 0 });
+      expect(Number(root.x) + world.x).toBeCloseTo(tip.x, 6);
+      expect(Number(root.y) + world.y).toBeCloseTo(tip.y, 6);
+      const flash = byTexture(TEXTURE.flash)[0];
+      expect(flash.x).toBeCloseTo(tip.x, 6);
+      expect(flash.y).toBeCloseTo(tip.y, 6);
+      expect(flash.rotation).toBeCloseTo(tip.angle, 9);
+    }
+  });
+
   it('palet geometrisi fizik ayarından türer', () => {
     const { byTexture } = build();
     const treads = byTexture(TEXTURE.treadBand);

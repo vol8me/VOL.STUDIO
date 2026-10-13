@@ -38,6 +38,10 @@ export interface AimPreview {
   y: number;
   targetId: EntityId | null;
   surface: 'ground' | 'wall' | 'vehicle';
+  /** Önizleme yörüngesi: `x0,y0,x1,y1,…`; ilk nokta namlu ucu, son nokta (`x`,`y`) varış. */
+  path: Float32Array;
+  /** `path` içindeki geçerli nokta sayısı (çift sayısı). */
+  pathLength: number;
 }
 
 function createProjectile(): Projectile {
@@ -83,7 +87,14 @@ export class Projectiles {
   readonly items: Projectile[];
   private live = 0;
   private readonly previewShell = createProjectile();
-  private readonly aim: AimPreview = { x: 0, y: 0, targetId: null, surface: 'ground' };
+  private readonly aim: AimPreview = {
+    x: 0,
+    y: 0,
+    targetId: null,
+    surface: 'ground',
+    path: new Float32Array(0),
+    pathLength: 0,
+  };
   private readonly air = { windX: 0, windY: 0, airDrag: 1 };
 
   constructor(
@@ -140,12 +151,21 @@ export class Projectiles {
     const result = this.aim;
     result.targetId = null;
     result.surface = 'ground';
-    for (let step = 0; step <= Math.ceil(this.lifeMs / sampleStepMs); step++) {
+    const steps = Math.ceil(this.lifeMs / sampleStepMs);
+    if (result.path.length < (steps + 2) * 2) result.path = new Float32Array((steps + 2) * 2);
+    const path = result.path;
+    path[0] = x;
+    path[1] = y;
+    let points = 1;
+    for (let step = 0; step <= steps; step++) {
       shell.px = shell.x;
       shell.py = shell.y;
       const landed = this.advance(shell, sampleStepMs);
       const outsideStart = !world.contains(shell.px, shell.py);
       const wall = this.clipToWorld(shell, world);
+      path[points * 2] = shell.x;
+      path[points * 2 + 1] = shell.y;
+      points++;
       const target = outsideStart ? null : this.struck(shell, targets, canHit);
       if (target) {
         result.targetId = target.id;
@@ -160,6 +180,10 @@ export class Projectiles {
     }
     result.x = shell.x;
     result.y = shell.y;
+    // İsabet adımın sonunu isabet noktasına çeker; yörünge de oraya biter.
+    path[points * 2 - 2] = shell.x;
+    path[points * 2 - 1] = shell.y;
+    result.pathLength = points;
     return result;
   }
 

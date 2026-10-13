@@ -5,7 +5,14 @@ import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
-import { aimAligned, applyRecoil, muzzleLaunch } from './vehicleStep';
+import type { TankPose } from './tank/Tank';
+import {
+  aimAligned,
+  applyRecoil,
+  launchFrom,
+  muzzleLaunch,
+  type LaunchBuffer,
+} from './vehicleStep';
 import type { World } from './world/World';
 import type { WeatherSystem } from './weather/WeatherSystem';
 import { WEATHER } from '@/config/weather';
@@ -48,6 +55,8 @@ export class Simulation {
   private readonly options: SimulationOptions;
   private readonly combat: CombatConfig;
   private readonly events: SimEvent[] = [];
+  private readonly previewPose: TankPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
+  private readonly previewLaunch: LaunchBuffer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0 };
   private readonly contact = createContact();
   private readonly inputs = new Map<EntityId, TankCommand>();
   private readonly collisionDamagePairs = new Set<string>();
@@ -312,17 +321,27 @@ export class Simulation {
     if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS);
   }
 
-  previewAim(vehicle: Vehicle, stepMs: number) {
+  /**
+   * Aracın şimdi ateş etmesi hâlinde mermisinin gideceği yol. `pose` verilirse atış o pozdan
+   * türetilir (görünümün ara değerli karesi: nişan çizgisi ekrandaki namluyla aynı doğrultuda
+   * kalır); verilmezse güncel adımın pozu kullanılır.
+   */
+  previewAim(vehicle: Vehicle, stepMs: number, pose?: TankPose) {
     if (this.weather) this.projectiles.setAir(this.weather.frame);
     const tank = vehicle.tank;
-    const dx = Math.cos(tank.turret);
-    const dy = Math.sin(tank.turret);
+    const launch = launchFrom(
+      pose ?? tank.readPose(this.previewPose),
+      tank.vx,
+      tank.vy,
+      vehicle.weapon,
+      this.previewLaunch,
+    );
     return this.projectiles.preview(
       vehicle.id,
-      tank.x + dx * vehicle.weapon.muzzleOffset,
-      tank.y + dy * vehicle.weapon.muzzleOffset,
-      dx * vehicle.weapon.projectileSpeed + tank.vx,
-      dy * vehicle.weapon.projectileSpeed + tank.vy,
+      launch.x,
+      launch.y,
+      launch.vx,
+      launch.vy,
       this.world,
       this.vehicleList,
       stepMs,

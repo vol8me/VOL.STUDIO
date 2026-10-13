@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Spring1D } from '@volstudio/core/math';
 import { TANK_LIGHTS } from '@/config/tankView';
+import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import type { TankFrame } from './TankView';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
 
@@ -12,6 +13,7 @@ export class TankLights {
   readonly bodyPart: Phaser.GameObjects.Image;
   private readonly flash: Phaser.GameObjects.Image;
   private readonly barrel = new Spring1D();
+  private readonly tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private flashMs = 0;
   private pulse = 0;
 
@@ -39,18 +41,14 @@ export class TankLights {
   update(frame: TankFrame, deltaMs: number): number {
     this.barrel.update(0, deltaMs, TANK_LIGHTS.barrel);
     this.barrel.value = Phaser.Math.Clamp(this.barrel.value, -TANK_LIGHTS.barrel.max, 0);
-    const cosine = Math.cos(frame.hull);
-    const sine = Math.sin(frame.hull);
-    const x = frame.x + frame.pitch * cosine - frame.roll * sine;
-    const y = frame.y + frame.pitch * sine + frame.roll * cosine;
     const effort = Math.min(1, frame.speed / 230) + (frame.boosting ? 0.8 : 0);
     this.pulse += (deltaMs / 1000) * (1.4 + effort * 3.2) * Math.PI * 2;
     const beat = 0.5 + 0.5 * Math.sin(this.pulse);
     this.bodyPart.setScale(INV * (0.68 + beat * 0.14 + (frame.boosting ? 0.1 : 0)));
     this.bodyPart.setAlpha(0.55 + beat * 0.35);
-    const reach = TANK_LIGHTS.muzzleX + this.barrel.value;
-    this.flash.setPosition(x + Math.cos(frame.turret) * reach, y + Math.sin(frame.turret) * reach);
-    this.flash.setRotation(frame.turret);
+    const tip = muzzlePose(frame, TANK_LIGHTS.muzzleX + this.barrel.value, this.tip);
+    this.flash.setPosition(tip.x, tip.y);
+    this.flash.setRotation(tip.angle);
     if (this.flashMs > 0) {
       this.flashMs = Math.max(0, this.flashMs - deltaMs);
       this.flash.setAlpha(this.flashMs / TANK_LIGHTS.flashMs);

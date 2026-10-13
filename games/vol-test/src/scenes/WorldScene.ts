@@ -5,7 +5,6 @@ import {
   shouldUseTouchControls,
   type SimulationClockFrame,
 } from '@volstudio/core';
-import { angleDelta } from '@volstudio/core/math';
 import { AimGuide } from '@/view/effects/AimGuide';
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { createSceneAudio } from '@/audio/sceneAudio';
@@ -20,12 +19,14 @@ import {
   type EffectLevel,
   type EffectProfile,
 } from '@/config/quality';
-import { TANK, WEAPON } from '@/config/tank';
+import { TANK } from '@/config/tank';
 import { WORLD } from '@/config/world';
 import { Hud } from '@/hud/Hud';
 import type { SimEvent } from '@/sim/events';
+import { pivotPose, type MuzzlePose } from '@/sim/muzzle';
 import { SCENARIO } from '@/config/scenarios';
 import type { Simulation } from '@/sim/Simulation';
+import { aimAligned } from '@/sim/vehicleStep';
 import { World } from '@/sim/world/World';
 import { ArenaView } from '@/view/ArenaView';
 import { EffectsView } from '@/view/EffectsView';
@@ -63,6 +64,8 @@ export class WorldScene extends Phaser.Scene {
   private hud!: Hud;
   private quality!: GraphicsQuality<EffectLevel, EffectProfile>;
   private readonly simEvents: SimEvent[] = [];
+  /** Son çizilen karedeki taret mili: fare nişanı ekranda görünen noktadan hesaplanır. */
+  private readonly aimOrigin: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private scope = new DisposableScope();
 
   constructor(private readonly services?: GameServices) {
@@ -169,6 +172,10 @@ export class WorldScene extends Phaser.Scene {
     this.camera = new CameraRig(this, CAMERA, world.width, world.height);
     const start = this.driver.player.tank;
     this.camera.model.snapTo(start.x, start.y);
+    pivotPose(
+      start.readPose({ x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 }),
+      this.aimOrigin,
+    );
 
     this.hud = this.scope.addDestroyable(
       new Hud({
@@ -230,7 +237,7 @@ export class WorldScene extends Phaser.Scene {
     diagnostics?.setScene('World');
     diagnostics?.setInput(this.controls.snapshot());
     const player = this.driver.player;
-    const command = this.controls.read(player.tank.x, player.tank.y, delta);
+    const command = this.controls.read(this.aimOrigin.x, this.aimOrigin.y, delta);
     if (this.controls.pressed('pause')) this.pause.toggle();
 
     const paused = this.pause.paused;
@@ -292,27 +299,24 @@ export class WorldScene extends Phaser.Scene {
     this.effects.update(this.sim.projectiles, alpha, presentMs);
     measurements?.mark('effects');
 
+    // Nişan, kamera ve HUD ekranda çizilen aynı ara değerli kareyi okur: namlu, lazer ve fare
+    // nişanı arasında kare kaymaları kalmaz.
+    const view = tankFrame(player.tank, alpha);
+    pivotPose(view, this.aimOrigin);
     const aiming = !paused && player.vitality.alive && this.controls.aiming;
     if (aiming) {
-      const tank = player.tank;
-      const preview = this.sim.previewAim(player, GAME.simulationStepMs);
+      const preview = this.sim.previewAim(player, GAME.simulationStepMs, view);
       this.aimGuide.draw(
         {
-          x: tank.x + Math.cos(tank.turret) * WEAPON.muzzleOffset,
-          y: tank.y + Math.sin(tank.turret) * WEAPON.muzzleOffset,
-          endX: preview.x,
-          endY: preview.y,
-          aligned:
-            (command.aimX === 0 && command.aimY === 0) ||
-            Math.abs(angleDelta(tank.turret, Math.atan2(command.aimY, command.aimX))) <=
-              WEAPON.aimTolerance,
+          path: preview.path,
+          length: preview.pathLength,
+          aligned: aimAligned(player, command),
         },
         time,
       );
     } else this.aimGuide.draw(null, time);
     measurements?.mark('aim');
 
-    const view = tankFrame(player.tank, alpha);
     this.camera.update(view.x, view.y, delta, paused);
     const rect = this.camera.model.visibleRect();
     this.environment.render(this.sim.vehicles, alpha, rect);

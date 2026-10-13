@@ -1,6 +1,9 @@
 import { angleDelta } from '@volstudio/core/math';
 import type { TankCommand } from './command';
+import type { WeaponConfig } from '@/config/tank';
 import type { Vehicle } from './entities/Vehicle';
+import { muzzlePose, type MuzzlePose } from './muzzle';
+import type { TankPose } from './tank/Tank';
 import type { World } from './world/World';
 
 /**
@@ -24,22 +27,50 @@ export interface Launch {
   readonly angle: number;
 }
 
+/** `launchFrom`un yazdığı yeniden kullanılabilir arabellek. */
+export type LaunchBuffer = { -readonly [K in keyof Launch]: Launch[K] };
+
+const shotPose: TankPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
+const shotMuzzle: MuzzlePose = { x: 0, y: 0, angle: 0 };
+
 /**
- * Mermi namlu ucundan tankın hızını devralarak çıkar. Geri tepme mermi doğduktan SONRA
- * uygulanır; bu yüzden çağrı `applyRecoil`den önce yapılmalıdır.
+ * Verilen poz ve tank hızından atışı türetir; sim, öngörü ve nişan çizgisi (ara değerli poz) aynı
+ * işlevi kullanır. Mermi namlu ekseni boyunca çıkar ve tankın hızından yalnız eksen bileşenini
+ * devralır: yan kayarken ateş eden tankın mermisi namlunun gösterdiği yönden sapmaz, bu yüzden
+ * nişan çizgisi ile namlu her zaman aynı doğrultudadır.
+ */
+export function launchFrom(
+  pose: TankPose,
+  tankVx: number,
+  tankVy: number,
+  weapon: WeaponConfig,
+  out: LaunchBuffer,
+): Launch {
+  const muzzle = muzzlePose(pose, weapon.muzzleOffset, shotMuzzle);
+  const dirX = Math.cos(pose.turret);
+  const dirY = Math.sin(pose.turret);
+  const speed = weapon.projectileSpeed + tankVx * dirX + tankVy * dirY;
+  out.x = muzzle.x;
+  out.y = muzzle.y;
+  out.vx = dirX * speed;
+  out.vy = dirY * speed;
+  out.angle = pose.turret;
+  return out;
+}
+
+/**
+ * Mermi namlu ucundan çıkar. Geri tepme mermi doğduktan SONRA uygulanır; bu yüzden çağrı
+ * `applyRecoil`den önce yapılmalıdır.
  */
 export function muzzleLaunch(vehicle: Vehicle): Launch {
   const tank = vehicle.tank;
-  const weapon = vehicle.weapon;
-  const dirX = Math.cos(tank.turret);
-  const dirY = Math.sin(tank.turret);
-  return {
-    x: tank.x + dirX * weapon.muzzleOffset,
-    y: tank.y + dirY * weapon.muzzleOffset,
-    vx: dirX * weapon.projectileSpeed + tank.vx,
-    vy: dirY * weapon.projectileSpeed + tank.vy,
-    angle: tank.turret,
-  };
+  return launchFrom(tank.readPose(shotPose), tank.vx, tank.vy, vehicle.weapon, {
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    angle: 0,
+  });
 }
 
 /**

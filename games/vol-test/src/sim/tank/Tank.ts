@@ -231,13 +231,18 @@ export class Tank extends RigidBody {
 
   /** Adım başında çağrılır; render bu pozdan günceline ara değer alır. */
   capturePose(): void {
-    const pose = this.previous;
-    pose.x = this.x;
-    pose.y = this.y;
-    pose.hull = this.angle;
-    pose.turret = this.turretMount.angle;
-    pose.pitch = this.suspension.pitch;
-    pose.roll = this.suspension.roll;
+    this.readPose(this.previous);
+  }
+
+  /** Güncel adımın pozunu `out`a yazar (atış ve nişan geometrisi bunu okur). */
+  readPose(out: TankPose): TankPose {
+    out.x = this.x;
+    out.y = this.y;
+    out.hull = this.angle;
+    out.turret = this.turretMount.angle;
+    out.pitch = this.suspension.pitch;
+    out.roll = this.suspension.roll;
+    return out;
   }
 
   step(command: TankCommand, world: World, dt: number, surface?: TrackSurface): void {
