@@ -174,7 +174,7 @@ export class WorldScene extends Phaser.Scene {
     );
     this.vehicles = this.scope.addDestroyable(new VehicleViews(this));
     this.camera = new CameraRig(this, CAMERA, world.width, world.height);
-    const start = this.driver.player.tank;
+    const start = this.driver.player.chassis;
     this.camera.model.snapTo(start.x, start.y);
     pivotPose(
       start.readPose({ x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 }),
@@ -263,22 +263,22 @@ export class WorldScene extends Phaser.Scene {
     const events = this.driver.drainEvents(this.simEvents);
     for (const event of events)
       if (event.kind === 'fired' && event.source === player.id) this.services?.progress.fired();
-    this.audio?.route(events, player.tank);
-    void this.audio?.sync(this.sim.vehicles, player.tank);
+    this.audio?.route(events, player.chassis);
+    void this.audio?.sync(this.sim.vehicles, player.chassis);
     routeSimEvents(events, {
       player: player.id,
       tank: (id) => this.vehicles.get(id),
       effects: this.effects,
       arena: this.arena,
       camera: this.camera.model,
-      listener: player.tank,
+      listener: player.chassis,
     });
     measurements?.mark('eventsAudio');
 
     const alpha = stepped.alpha;
     const presentMs = paused ? 0 : delta;
     for (const vehicle of this.sim.vehicles) {
-      const tank = vehicle.tank;
+      const tank = vehicle.chassis;
       const frame = tankFrame(tank, alpha);
       const view = this.vehicles.get(vehicle.id);
       view?.update(frame, presentMs);
@@ -305,7 +305,7 @@ export class WorldScene extends Phaser.Scene {
 
     // Nişan, kamera ve HUD ekranda çizilen aynı ara değerli kareyi okur: namlu, lazer ve fare
     // nişanı arasında kare kaymaları kalmaz.
-    const view = tankFrame(player.tank, alpha);
+    const view = tankFrame(player.chassis, alpha);
     pivotPose(view, this.aimOrigin);
     const aiming = !paused && player.vitality.alive && this.controls.aiming;
     const presence = this.aimPresence.update(aiming, delta);
@@ -329,7 +329,7 @@ export class WorldScene extends Phaser.Scene {
     measurements?.mark('environmentCamera');
     this.hud.update(
       hudFrame(
-        player.tank,
+        player.chassis,
         view,
         TANK.boostCapacity,
         rect,

@@ -5,7 +5,7 @@ import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
-import type { TankPose } from './tank/Tank';
+import type { ChassisPose } from './tank/Tank';
 import {
   aimAligned,
   applyRecoil,
@@ -55,7 +55,7 @@ export class Simulation {
   private readonly options: SimulationOptions;
   private readonly combat: CombatConfig;
   private readonly events: SimEvent[] = [];
-  private readonly previewPose: TankPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
+  private readonly previewPose: ChassisPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
   private readonly previewLaunch: LaunchBuffer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0 };
   private readonly contact = createContact();
   private readonly inputs = new Map<EntityId, TankCommand>();
@@ -121,7 +121,7 @@ export class Simulation {
       this.combat,
       team,
     );
-    vehicle.tank.place(x, y, hull);
+    vehicle.chassis.place(x, y, hull);
     Object.assign(vehicle.spawnPoint, { x, y, hull });
     this.vehicleList.push(vehicle);
     this.inputs.set(vehicle.id, idleCommand());
@@ -204,14 +204,19 @@ export class Simulation {
     if (![nextX, nextY, nextHull].every(Number.isFinite))
       throw new RangeError('Yeniden doğma konumu sonlu olmalı');
     const bodyRadius = Math.hypot(this.options.tank.halfLength, this.options.tank.halfWidth);
-    vehicle.tank.resetForRespawn(
+    vehicle.chassis.resetForRespawn(
       Math.max(bodyRadius, Math.min(this.world.width - bodyRadius, nextX)),
       Math.max(bodyRadius, Math.min(this.world.height - bodyRadius, nextY)),
       nextHull,
     );
     vehicle.gun.reset();
     vehicle.vitality.respawn();
-    this.emit({ kind: 'respawned', target: vehicle.id, x: vehicle.tank.x, y: vehicle.tank.y });
+    this.emit({
+      kind: 'respawned',
+      target: vehicle.id,
+      x: vehicle.chassis.x,
+      y: vehicle.chassis.y,
+    });
   }
 
   /** Birbirini vuramayan takım üyeleri mermiler için de saydamdır. */
@@ -247,7 +252,7 @@ export class Simulation {
     for (const vehicle of this.vehicleList) {
       const tick = vehicle.vitality.step(stepMs);
       if (tick.respawnReady) this.respawnVehicle(vehicle.id);
-      const tank = vehicle.tank;
+      const tank = vehicle.chassis;
       tank.capturePose();
       const command = this.inputs.get(vehicle.id)!;
       Object.assign(command, commandFor(vehicle));
@@ -276,7 +281,7 @@ export class Simulation {
     this.settleContacts();
     for (const vehicle of this.vehicleList) {
       if (!vehicle.vitality.alive) continue;
-      const contact = vehicle.tank.contact;
+      const contact = vehicle.chassis.contact;
       if (contact.speed > this.options.tank.impactEventSpeed) {
         this.emit({
           kind: 'wallHit',
@@ -308,7 +313,7 @@ export class Simulation {
         const speed = Math.hypot(projectile.vx, projectile.vy) || 1;
         const impulse =
           this.options.weapon.hitImpulse * (speed / this.options.weapon.projectileSpeed);
-        struck.tank.applyImpulse(
+        struck.chassis.applyImpulse(
           (projectile.vx / speed) * impulse,
           (projectile.vy / speed) * impulse,
           projectile.x,
@@ -326,9 +331,9 @@ export class Simulation {
    * türetilir (görünümün ara değerli karesi: nişan çizgisi ekrandaki namluyla aynı doğrultuda
    * kalır); verilmezse güncel adımın pozu kullanılır.
    */
-  previewAim(vehicle: Vehicle, stepMs: number, pose?: TankPose) {
+  previewAim(vehicle: Vehicle, stepMs: number, pose?: ChassisPose) {
     if (this.weather) this.projectiles.setAir(this.weather.frame);
-    const tank = vehicle.tank;
+    const tank = vehicle.chassis;
     const launch = launchFrom(
       pose ?? tank.readPose(this.previewPose),
       tank.vx,
@@ -370,7 +375,7 @@ export class Simulation {
     for (let pass = 0; pass < CONTACT_PASSES; pass++) {
       if (!this.collideVehicles()) return;
       for (const vehicle of this.vehicleList)
-        if (vehicle.vitality.alive) vehicle.tank.settleAgainst(this.world);
+        if (vehicle.vitality.alive) vehicle.chassis.settleAgainst(this.world);
     }
   }
 
@@ -386,15 +391,22 @@ export class Simulation {
         const a = list[first];
         const b = list[second];
         if (!a.vitality.alive || !b.vitality.alive) continue;
-        const ax = a.tank.x;
-        const ay = a.tank.y;
-        const bx = b.tank.x;
-        const by = b.tank.y;
-        const hit = resolveBodyContact(a.tank, a.tank.shape, b.tank, b.tank.shape, this.contact);
-        if (a.tank.x !== ax || a.tank.y !== ay || b.tank.x !== bx || b.tank.y !== by) moved = true;
+        const ax = a.chassis.x;
+        const ay = a.chassis.y;
+        const bx = b.chassis.x;
+        const by = b.chassis.y;
+        const hit = resolveBodyContact(
+          a.chassis,
+          a.chassis.shape,
+          b.chassis,
+          b.chassis.shape,
+          this.contact,
+        );
+        if (a.chassis.x !== ax || a.chassis.y !== ay || b.chassis.x !== bx || b.chassis.y !== by)
+          moved = true;
         if (hit.speed <= this.options.tank.impactEventSpeed) continue;
-        a.tank.kickFrom(hit);
-        b.tank.kickFrom({ ...hit, normalX: -hit.normalX, normalY: -hit.normalY });
+        a.chassis.kickFrom(hit);
+        b.chassis.kickFrom({ ...hit, normalX: -hit.normalX, normalY: -hit.normalY });
         this.emit({
           kind: 'collision',
           a: a.id,

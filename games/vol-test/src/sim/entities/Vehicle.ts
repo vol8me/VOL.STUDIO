@@ -14,7 +14,7 @@ export type EntityId = number;
  * komut dışarıdan gelir.
  */
 export class Vehicle {
-  readonly tank: Tank;
+  readonly chassis: Tank;
   readonly gun: Cooldown;
   readonly vitality: Vitality;
   /** Yeniden doğma konumu sunucu veya senaryo tarafından açıkça güncellenebilir. */
@@ -28,7 +28,7 @@ export class Vehicle {
     combat: CombatConfig = COMBAT,
     readonly team: number | null = null,
   ) {
-    this.tank = new Tank(tank, suspension);
+    this.chassis = new Tank(tank, suspension);
     this.gun = new Cooldown(weapon.intervalMs);
     this.vitality = new Vitality(combat);
     this.spawnPoint = { x: 0, y: 0, hull: -Math.PI / 2 };
@@ -41,7 +41,7 @@ export class Vehicle {
    */
   entryT(startX: number, startY: number, endX: number, endY: number): number | null {
     if (!this.vitality.alive) return null;
-    const { x, y, angle, shape } = this.tank;
+    const { x, y, angle, shape } = this.chassis;
     return segmentOrientedBoxEntryT(
       startX,
       startY,

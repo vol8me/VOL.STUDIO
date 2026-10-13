@@ -86,12 +86,12 @@ it('saat reset ve duraklatma toplam zamanı ile poz geçmişini ayrı yönetir',
 describe('hudVehicles', () => {
   function pair(): Vehicle[] {
     const vehicles = [1, 2].map((id) => new Vehicle(id, TANK, SUSPENSION, WEAPON));
-    vehicles[0].tank.place(1000, 1000, 0);
-    vehicles[1].tank.place(2000, 1500, 1);
+    vehicles[0].chassis.place(1000, 1000, 0);
+    vehicles[1].chassis.place(2000, 1500, 1);
     for (const vehicle of vehicles) {
-      vehicle.tank.capturePose();
-      vehicle.tank.x += 40;
-      vehicle.tank.y -= 20;
+      vehicle.chassis.capturePose();
+      vehicle.chassis.x += 40;
+      vehicle.chassis.y -= 20;
     }
     return vehicles;
   }

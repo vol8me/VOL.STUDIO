@@ -100,10 +100,10 @@ describe('OnlineWorld öngörü', () => {
   it('girdi aracı sürer; çizim pozu previous içindedir ve sapma küçük kalır', async () => {
     const session = await join();
     const world = build(session);
-    const start = { x: world.player.tank.x, y: world.player.tank.y };
+    const start = { x: world.player.chassis.x, y: world.player.chassis.y };
     const loop = run(session, world, () => command({ moveY: -1 }));
     await until(() => loop.steps() > 40, 'girdi adımları');
-    const tank = world.player.tank;
+    const tank = world.player.chassis;
     expect(Math.hypot(tank.x - start.x, tank.y - start.y)).toBeGreaterThan(5);
     // Çizim pozu ara değerli öngörüdür; güncel durumdan en çok bir adımlık yol kadar geride olabilir.
     const lag = Math.hypot(tank.previous.x - tank.x, tank.previous.y - tank.y);
@@ -118,9 +118,12 @@ describe('OnlineWorld öngörü', () => {
     run(session, world);
     const record = serverRoom(session.room).vehicleOf(session.room.sessionId)!;
     await until(() => session.snapshotAgeMs > 0, 'ilk yama');
-    record.tank.x += 40;
+    record.chassis.x += 40;
     await until(() => world.pilot.drift.peak > 1, 'ölçülen sapma');
-    await until(() => Math.abs(world.player.tank.x - record.tank.x) < 1, 'yeni yetkiye yakınsama');
+    await until(
+      () => Math.abs(world.player.chassis.x - record.chassis.x) < 1,
+      'yeni yetkiye yakınsama',
+    );
   });
 
   it('ölü araç sürülmez; sunucunun can ve sayaçları araca yansır', async () => {

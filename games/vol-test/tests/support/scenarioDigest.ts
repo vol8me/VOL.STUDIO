@@ -25,7 +25,12 @@ export function scenarioDigest(seed: number, steps = 180): Record<ScenarioId, nu
     for (let step = 0; step < steps; step++) {
       sim.step((vehicle) => runner.commandFor(vehicle, input), 1000 / 60);
     }
-    result[id] = sim.vehicles.map(({ tank }) => [tank.x, tank.y, tank.hull, tank.turret]);
+    result[id] = sim.vehicles.map(({ chassis }) => [
+      chassis.x,
+      chassis.y,
+      chassis.hull,
+      chassis.turret,
+    ]);
     runner.destroy();
   }
   return result;

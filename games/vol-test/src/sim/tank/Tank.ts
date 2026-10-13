@@ -13,11 +13,11 @@ import { Driver, type TrackTargets } from './Driver';
 import { Suspension } from './Suspension';
 import { computeTrackForces, createTrackForces, type TrackSurface } from './trackForces';
 import { Turret } from './Turret';
-import { createTankState, type TankState } from './TankState';
+import { createChassisState, type ChassisState } from '../chassis/ChassisState';
 import type { SuspensionConfig, TankConfig } from '@/config/tank';
 
 /** Render ara değeri için tankın poz kaydı. */
-export interface TankPose {
+export interface ChassisPose {
   x: number;
   y: number;
   hull: number;
@@ -63,7 +63,7 @@ export class Tank extends RigidBody {
   /** Bu adımdaki en sert DUVAR teması; `speed` 0 ise temas yok. */
   readonly contact: Contact = createContact();
   readonly suspension: Suspension;
-  readonly previous: TankPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
+  readonly previous: ChassisPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
   private readonly driver: Driver;
   private readonly turretMount: Turret;
   private readonly reserve: BoostReserve;
@@ -169,7 +169,7 @@ export class Tank extends RigidBody {
   }
 
   /** Bir sonraki adımı belirleyen bütün skaler durumu `out`a yazar. */
-  captureState(out: TankState = createTankState()): TankState {
+  captureState(out: ChassisState = createChassisState()): ChassisState {
     out.x = this.x;
     out.y = this.y;
     out.vx = this.vx;
@@ -202,7 +202,7 @@ export class Tank extends RigidBody {
    * Yetkili durumu tanka kurar (ağ uzlaştırması). `previous` poz da yeni konuma çekilir; yoksa
    * görünüm eski konumdan yeni konuma bir kare süzülürdü.
    */
-  restoreState(state: TankState): void {
+  restoreState(state: ChassisState): void {
     this.x = state.x;
     this.y = state.y;
     this.vx = state.vx;
@@ -235,7 +235,7 @@ export class Tank extends RigidBody {
   }
 
   /** Güncel adımın pozunu `out`a yazar (atış ve nişan geometrisi bunu okur). */
-  readPose(out: TankPose): TankPose {
+  readPose(out: ChassisPose): ChassisPose {
     out.x = this.x;
     out.y = this.y;
     out.hull = this.angle;

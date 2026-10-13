@@ -187,7 +187,7 @@ export class OnlineWorld {
 
   /** Çizim pozunu `previous`a yazar: `tankFrame(tank, 0)` ara değerli öngörüyü okur. */
   private placePose(vehicle: Vehicle, pose: PilotPose): void {
-    const previous = vehicle.tank.previous;
+    const previous = vehicle.chassis.previous;
     previous.x = pose.x;
     previous.y = pose.y;
     previous.hull = pose.hull;

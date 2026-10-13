@@ -217,7 +217,7 @@ test('klavyeyle sürülen tank sunucudaki konumla aynı yere oturur', async ({ b
   // (SDK eşiksiz sapmayı hiç ölçmez; bu adım olmadan "sapma 0" boş bir iddia olurdu.)
   const room = serverRoom(watcher.room);
   const vehicle = room.vehicleOf(watcher.sessionOf(`${tag}-D`))!;
-  vehicle.tank.x += 3 * WORLD.metre;
+  vehicle.chassis.x += 3 * WORLD.metre;
   await expect.poll(async () => (await drift()).max, { timeout: 8000 }).toBeGreaterThan(1);
   await expect
     .poll(

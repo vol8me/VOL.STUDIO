@@ -289,7 +289,7 @@ describe('MatchRoom girdi yetkisi', () => {
       clearInterval(timer);
     }
     const vehicle = vehicleOf(seat);
-    expect(vehicle.tank.x).toBeCloseTo(self(seat).x, -1);
+    expect(vehicle.chassis.x).toBeCloseTo(self(seat).x, -1);
   });
 
   it('bozuk ve aşırı girdi aracı hızlandırmaz ve durumu bozmaz', async () => {
@@ -309,7 +309,7 @@ describe('MatchRoom girdi yetkisi', () => {
     let top = 0;
     const watch = setInterval(() => {
       const vehicle = vehicleOf(seat);
-      top = Math.max(top, Math.hypot(vehicle.tank.vx, vehicle.tank.vy));
+      top = Math.max(top, Math.hypot(vehicle.chassis.vx, vehicle.chassis.vy));
     }, 8);
     try {
       await until(

@@ -302,18 +302,18 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     const { sim, camera, parent, frame } = mount();
     frame();
     const [x, y] = lastCall(camera, 'centerOn') as [number, number];
-    expect(x).toBeCloseTo(sim.player.tank.x, 0);
-    expect(y).toBeCloseTo(sim.player.tank.y, 0);
+    expect(x).toBeCloseTo(sim.player.chassis.x, 0);
+    expect(y).toBeCloseTo(sim.player.chassis.y, 0);
     expect(parent.querySelector('[data-testid="hud"]')).not.toBeNull();
   });
 
   it('hareket girdisi tankı sürer, kamera ve telemetri izler', () => {
     const { sim, frame, parent, camera } = mount();
-    const start = sim.player.tank.x;
+    const start = sim.player.chassis.x;
     for (let step = 0; step < 120; step++) frame({ move: new Vector2(1, 0) });
-    expect(sim.player.tank.x).toBeGreaterThan(start + 100);
+    expect(sim.player.chassis.x).toBeGreaterThan(start + 100);
     const [x] = lastCall(camera, 'centerOn') as [number, number];
-    expect(Math.abs(x - sim.player.tank.x)).toBeLessThan(40);
+    expect(Math.abs(x - sim.player.chassis.x)).toBeLessThan(40);
     expect(parent.querySelector('[data-testid="telemetry"]')!.textContent).toMatch(/m\/s/);
   });
 
@@ -332,12 +332,12 @@ describe('WorldScene', { timeout: 20_000 }, () => {
 
   it('duvar çarpması sarsıntı ve şiddete göre titreşim üretir', () => {
     const { sim, frame } = mount();
-    sim.player.tank.place(sim.world.width - 90, sim.world.height / 2, 0);
+    sim.player.chassis.place(sim.world.width - 90, sim.world.height / 2, 0);
     for (let step = 0; step < 90; step++) frame({ move: new Vector2(1, 0), press: ['boost'] });
     expect(controls.vibrate.some((pattern) => pattern === 'tap' || pattern === 'warning')).toBe(
       true,
     );
-    expect(sim.player.tank.x + TANK.halfLength).toBeLessThanOrEqual(sim.world.width + 1e-6);
+    expect(sim.player.chassis.x + TANK.halfLength).toBeLessThanOrEqual(sim.world.width + 1e-6);
   });
 
   it('duraklatma simülasyonu dondurur, titreşimi keser; ikinci basış sürdürür', () => {
@@ -345,14 +345,14 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     frame({ press: ['pause'] });
     expect(pauseOpen(parent)).not.toBeNull();
     expect(controls.cancelled).toBe(1);
-    const x = sim.player.tank.x;
+    const x = sim.player.chassis.x;
     for (let step = 0; step < 10; step++) frame({ move: new Vector2(1, 0) });
-    expect(sim.player.tank.x).toBe(x);
+    expect(sim.player.chassis.x).toBe(x);
     frame();
     frame({ press: ['pause'] });
     expect(pauseOpen(parent)).toBeNull();
     for (let step = 0; step < 30; step++) frame({ move: new Vector2(1, 0) });
-    expect(sim.player.tank.x).toBeGreaterThan(x);
+    expect(sim.player.chassis.x).toBeGreaterThan(x);
   });
 
   it('hava ve mevsim saati simülasyonla ilerler, duraklatmada durur', () => {
@@ -413,7 +413,7 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     frame();
     const containers = () => created.filter((object) => object.kind === 'container').length;
     const before = containers();
-    const other = sim.spawn(sim.player.tank.x + 300, sim.player.tank.y, 0);
+    const other = sim.spawn(sim.player.chassis.x + 300, sim.player.chassis.y, 0);
     frame();
     expect(containers()).toBeGreaterThan(before);
     sim.despawn(other.id);

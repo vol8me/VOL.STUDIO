@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { WEAPON } from '@/config/tank';
 import type { SimEvent } from '@/sim/events';
 import { muzzlePose } from '@/sim/muzzle';
-import type { TankPose } from '@/sim/tank/Tank';
+import type { ChassisPose } from '@/sim/tank/Tank';
 import { command, simulation, STEP_MS } from '../support/sim';
 
 describe('Simulation.previewAim', () => {
   it('poz verilmezse güncel adımın atışını önizler: önizleme yolu gerçek mermiyle çakışır', () => {
     const sim = simulation();
-    sim.player.tank.place(2048, 2048, 0);
+    sim.player.chassis.place(2048, 2048, 0);
     for (let step = 0; step < 30; step++) sim.step(command({ aimX: 1, aimY: 0.4 }), STEP_MS);
     const preview = sim.previewAim(sim.player, STEP_MS);
     const path = Array.from(preview.path.slice(0, preview.pathLength * 2));
@@ -27,8 +27,8 @@ describe('Simulation.previewAim', () => {
 
   it('verilen ara değerli pozdan türetilir: yol ekrandaki namlu ucundan, taret doğrultusunda başlar', () => {
     const sim = simulation();
-    sim.player.tank.place(2048, 2048, 0.3);
-    const shown: TankPose = { x: 2053, y: 2044, hull: 0.35, turret: 0.8, pitch: 2, roll: -2.5 };
+    sim.player.chassis.place(2048, 2048, 0.3);
+    const shown: ChassisPose = { x: 2053, y: 2044, hull: 0.35, turret: 0.8, pitch: 2, roll: -2.5 };
     const preview = sim.previewAim(sim.player, STEP_MS, shown);
     const tip = muzzlePose(shown, WEAPON.muzzleOffset, { x: 0, y: 0, angle: 0 });
     expect(preview.path[0]).toBeCloseTo(tip.x, 2);

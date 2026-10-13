@@ -161,7 +161,7 @@ export class OnlineDriver implements WorldDriver {
     const ownId = this.player.id;
     const teams = this.session.room.state.mode === 'teams';
     for (const vehicle of this.sim.vehicles) {
-      const frame = tankFrame(vehicle.tank, 0);
+      const frame = tankFrame(vehicle.chassis, 0);
       const vitality = vehicle.vitality;
       const team = vehicle.team === null ? undefined : teamColor(vehicle.team);
       yield {

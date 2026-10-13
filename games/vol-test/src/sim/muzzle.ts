@@ -1,4 +1,4 @@
-import type { TankPose } from './tank/Tank';
+import type { ChassisPose } from './tank/Tank';
 
 /** Dünya uzayında bir nokta ve bakış yönü. */
 export interface MuzzlePose {
@@ -13,7 +13,7 @@ export interface MuzzlePose {
  * görünür bir kayma doğar. Gövde süspansiyonla paletler üzerinde `pitch` (ileri) ve `roll` (yan)
  * kadar kayar; taret mili bu kaymayla birlikte gider. `reach` mil ile namlu ucu arası mesafedir.
  */
-export function muzzlePose(pose: TankPose, reach: number, out: MuzzlePose): MuzzlePose {
+export function muzzlePose(pose: ChassisPose, reach: number, out: MuzzlePose): MuzzlePose {
   const cosine = Math.cos(pose.hull);
   const sine = Math.sin(pose.hull);
   const dirX = Math.cos(pose.turret);
@@ -25,6 +25,6 @@ export function muzzlePose(pose: TankPose, reach: number, out: MuzzlePose): Muzz
 }
 
 /** Taret milinin dünya konumu: nişanın dönüş merkezi ve namluların başlangıcı. */
-export function pivotPose(pose: TankPose, out: MuzzlePose): MuzzlePose {
+export function pivotPose(pose: ChassisPose, out: MuzzlePose): MuzzlePose {
   return muzzlePose(pose, 0, out);
 }

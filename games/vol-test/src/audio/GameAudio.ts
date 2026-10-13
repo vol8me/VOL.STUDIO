@@ -104,10 +104,10 @@ export class GameAudio {
     const audible = [...vehicles]
       .sort(
         (a, b) =>
-          Math.hypot(a.tank.x - listener.x, a.tank.y - listener.y) -
-            Math.hypot(b.tank.x - listener.x, b.tank.y - listener.y) || a.id - b.id,
+          Math.hypot(a.chassis.x - listener.x, a.chassis.y - listener.y) -
+            Math.hypot(b.chassis.x - listener.x, b.chassis.y - listener.y) || a.id - b.id,
       )
-      .filter((v) => spatialSound(v.tank, listener).gain > 0)
+      .filter((v) => spatialSound(v.chassis, listener).gain > 0)
       .slice(0, AUDIO.maxLoopVehicles);
     const ids = new Set(audible.map((v) => v.id));
     for (const [id, voice] of this.vehicles)
@@ -122,8 +122,8 @@ export class GameAudio {
         voice = new VehicleAudio(this.context, this.bus);
         this.vehicles.set(vehicle.id, voice);
       }
-      if (voice.update(vehicle.tank, listener, this.paused))
-        this.play('brake', vehicle.tank, listener);
+      if (voice.update(vehicle.chassis, listener, this.paused))
+        this.play('brake', vehicle.chassis, listener);
       pending.push(voice.ready);
     }
     await Promise.all(pending);

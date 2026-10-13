@@ -4,7 +4,7 @@
  * kalması yeniden oynatmada kalıcı sapma demektir. Anlık türevler (`plan` hedefleri, `contact`,
  * `previous` poz) her adımın başında yeniden hesaplandığı için durum değildir.
  */
-export interface TankState {
+export interface ChassisState {
   x: number;
   y: number;
   vx: number;
@@ -32,7 +32,7 @@ export interface TankState {
   rollVelocity: number;
 }
 
-export const TANK_STATE_NUMBERS = [
+export const CHASSIS_STATE_NUMBERS = [
   'x',
   'y',
   'vx',
@@ -57,14 +57,14 @@ export const TANK_STATE_NUMBERS = [
   'roll',
   'rollVelocity',
 ] as const satisfies readonly {
-  [K in keyof TankState]: TankState[K] extends number ? K : never;
-}[keyof TankState][];
+  [K in keyof ChassisState]: ChassisState[K] extends number ? K : never;
+}[keyof ChassisState][];
 
-export const TANK_STATE_FLAGS = ['boosting', 'reversing'] as const satisfies readonly {
-  [K in keyof TankState]: TankState[K] extends boolean ? K : never;
-}[keyof TankState][];
+export const CHASSIS_STATE_FLAGS = ['boosting', 'reversing'] as const satisfies readonly {
+  [K in keyof ChassisState]: ChassisState[K] extends boolean ? K : never;
+}[keyof ChassisState][];
 
-export function createTankState(): TankState {
+export function createChassisState(): ChassisState {
   return {
     x: 0,
     y: 0,

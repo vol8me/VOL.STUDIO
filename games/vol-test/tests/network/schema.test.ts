@@ -12,7 +12,11 @@ import {
   toCommand,
   type TankInputFields,
 } from '@/network/schema';
-import { createTankState, TANK_STATE_FLAGS, TANK_STATE_NUMBERS } from '@/sim/tank/TankState';
+import {
+  createChassisState,
+  CHASSIS_STATE_FLAGS,
+  CHASSIS_STATE_NUMBERS,
+} from '@/sim/chassis/ChassisState';
 
 /** Tankın dinamik durumu olmayan, oyuncu kaydına özgü alanlar. */
 const RECORD_FIELDS = [
@@ -43,14 +47,14 @@ const input = (patch: Partial<TankInputFields> = {}): TankInputFields => ({
 describe('PlayerState', () => {
   it('tank durumunun her alanını taşır, fazlasını yalnız kayıt alanları olarak', () => {
     const fields = Object.keys(Metadata.getFields(PlayerState) as Record<string, number>).sort();
-    const tankKeys = Object.keys(createTankState());
+    const tankKeys = Object.keys(createChassisState());
     expect(fields).toEqual([...tankKeys, ...RECORD_FIELDS].sort());
   });
 
-  it('tank alanları TankState ile aynı türdedir ve sıfırdan başlar', () => {
+  it('tank alanları ChassisState ile aynı türdedir ve sıfırdan başlar', () => {
     const state = new PlayerState();
-    for (const key of TANK_STATE_NUMBERS) expect(state[key], key).toBe(0);
-    for (const key of TANK_STATE_FLAGS) expect(state[key], key).toBe(false);
+    for (const key of CHASSIS_STATE_NUMBERS) expect(state[key], key).toBe(0);
+    for (const key of CHASSIS_STATE_FLAGS) expect(state[key], key).toBe(false);
   });
 
   it('kayıt alanları tanımlı başlangıç değeriyle gelir', () => {

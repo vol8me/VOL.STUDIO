@@ -14,7 +14,7 @@ const CORNER_Y = (TANK.halfLength + TANK.halfWidth) * Math.SQRT1_2;
 /** Gerçek araç: hedef sözleşmesini (`entryT`) üretimdeki `Vehicle` sağlar. */
 function target(id: number, body: Tank): ProjectileTarget {
   const vehicle = new Vehicle(id, TANK, SUSPENSION, WEAPON);
-  vehicle.tank.place(body.x, body.y, body.angle);
+  vehicle.chassis.place(body.x, body.y, body.angle);
   return vehicle;
 }
 
@@ -146,7 +146,7 @@ describe('mermi süpürmesi (B17)', () => {
     };
     const launch = () => {
       const sim = simulation();
-      sim.player.tank.place(500, 500, 0);
+      sim.player.chassis.place(500, 500, 0);
       return sim;
     };
 
@@ -164,9 +164,9 @@ describe('mermi süpürmesi (B17)', () => {
     // Kiriş bu adım segmentinin başından 1–5 birim ileride; orta ve uç dışarıda.
     const sim = launch();
     const enemy = sim.spawn(0, 0, DIAGONAL);
-    enemy.tank.place(startX + 3 - CORNER_X, startY + 2 - CORNER_Y, DIAGONAL);
-    expect(sampledOnly(enemy.tank, [startX, startY], [endX, endY])).toBe(false);
-    const before = enemy.tank.angularVelocity;
+    enemy.chassis.place(startX + 3 - CORNER_X, startY + 2 - CORNER_Y, DIAGONAL);
+    expect(sampledOnly(enemy.chassis, [startX, startY], [endX, endY])).toBe(false);
+    const before = enemy.chassis.angularVelocity;
     const events: SimEvent[] = [];
     sim.step({ ...fire, fire: true }, STEP_MS);
     for (let step = 0; step < 14; step++) {
@@ -176,7 +176,7 @@ describe('mermi süpürmesi (B17)', () => {
     expect(events.filter((event) => event.kind === 'hit')).toEqual([
       expect.objectContaining({ owner: sim.player.id, target: enemy.id }),
     ]);
-    expect(enemy.tank.angularVelocity).not.toBe(before);
+    expect(enemy.chassis.angularVelocity).not.toBe(before);
     expect(sim.projectiles.count).toBe(0);
   });
 });

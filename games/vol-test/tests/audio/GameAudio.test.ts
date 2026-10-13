@@ -90,7 +90,7 @@ describe('GameAudio', () => {
       weapon: WEAPON,
     });
     sim.step(command({ moveX: 1 }), STEP_MS);
-    await audio.sync(sim.vehicles, sim.player.tank);
+    await audio.sync(sim.vehicles, sim.player.chassis);
     expect(context.sources.filter((s) => s.loop).length).toBeGreaterThan(0);
     audio.setPaused(true);
     audio.setPaused(true);
@@ -119,7 +119,7 @@ describe('GameAudio', () => {
       suspension: SUSPENSION,
       weapon: WEAPON,
     });
-    const subject = sim.player.tank;
+    const subject = sim.player.chassis;
     subject.vx = 100;
     sim.step(command({ brake: true }), STEP_MS);
     await audio.sync(sim.vehicles, subject);

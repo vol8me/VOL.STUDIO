@@ -18,11 +18,11 @@ describe('Simulation', () => {
     expect(() => sim.player).toThrow('Kontrol edilen araç yok');
     const vehicle = sim.spawn(512, 512, 0);
     // Kontrol edilen araç olmadığından tek komut kimseyi sürmez; araç kaldırılabilir.
-    const startX = vehicle.tank.x;
+    const startX = vehicle.chassis.x;
     for (let step = 0; step < 20; step++) sim.step(command({ moveX: 1 }), STEP_MS);
-    expect(vehicle.tank.x).toBe(startX);
+    expect(vehicle.chassis.x).toBe(startX);
     for (let step = 0; step < 20; step++) sim.step(() => command({ moveX: 1 }), STEP_MS);
-    expect(vehicle.tank.x).toBeGreaterThan(startX);
+    expect(vehicle.chassis.x).toBeGreaterThan(startX);
     sim.despawn(vehicle.id);
     expect(sim.vehicles).toHaveLength(0);
   });
@@ -45,7 +45,7 @@ describe('Simulation', () => {
       weapon: WEAPON,
       weather,
     });
-    sim.player.tank.place(512, 512, 0);
+    sim.player.chassis.place(512, 512, 0);
     expect(sim.weather).toBe(weather);
     const before = weather.frame.elapsedMs;
     sim.step(command(), 0);
@@ -53,7 +53,9 @@ describe('Simulation', () => {
     expect(weather.sample(512, 512).snowCompaction).toBe(0);
     for (let step = 0; step < 30; step++) sim.step(command({ moveX: 1 }), STEP_MS);
     expect(weather.frame.elapsedMs).toBeCloseTo(before + 30 * STEP_MS);
-    expect(weather.sample(sim.player.tank.x, sim.player.tank.y).snowCompaction).toBeGreaterThan(0);
+    expect(
+      weather.sample(sim.player.chassis.x, sim.player.chassis.y).snowCompaction,
+    ).toBeGreaterThan(0);
   });
 
   it('gerçek ıslak zeminde kilitli palet kuru zeminden uzun fren yolu bırakır', () => {
@@ -71,10 +73,10 @@ describe('Simulation', () => {
         weapon: WEAPON,
         weather,
       });
-      sim.player.tank.place(2000, 2000, 0);
-      sim.player.tank.vx = 200;
+      sim.player.chassis.place(2000, 2000, 0);
+      sim.player.chassis.vx = 200;
       for (let step = 0; step < 12; step++) sim.step(command({ brake: true }), STEP_MS);
-      return sim.player.tank.x - 2000;
+      return sim.player.chassis.x - 2000;
     };
     expect(run(true)).toBeGreaterThan(run(false));
   });
@@ -90,7 +92,7 @@ describe('Simulation', () => {
       weapon: WEAPON,
       weather,
     });
-    const tank = sim.player.tank;
+    const tank = sim.player.chassis;
     tank.place(512, 512, 0);
     for (let step = 0; step < 2; step++) sim.step(command({ moveY: 1 }), STEP_MS);
     expect(tank.x).toBeCloseTo(512, 10);
@@ -106,8 +108,8 @@ describe('Simulation', () => {
   });
   it('tankı dünyanın ortasına yerleştirir', () => {
     const sim = simulation();
-    expect(sim.player.tank.x).toBe(2048);
-    expect(sim.player.tank.y).toBe(2048);
+    expect(sim.player.chassis.x).toBe(2048);
+    expect(sim.player.chassis.y).toBe(2048);
   });
 
   it('ateş aralıkla sınırlıdır, namludan çıkar ve tankı ters yöne iter', () => {
@@ -115,10 +117,10 @@ describe('Simulation', () => {
     const firing = command({ fire: true });
     sim.step(firing, STEP_MS);
     expect(sim.projectiles.count).toBe(1);
-    expect(sim.player.tank.vy).toBeGreaterThan(0);
+    expect(sim.player.chassis.vy).toBeGreaterThan(0);
     const events = sim.drainEvents([]);
     const fired = events.find((event) => event.kind === 'fired');
-    expect(fired).toMatchObject({ angle: sim.player.tank.turret });
+    expect(fired).toMatchObject({ angle: sim.player.chassis.turret });
     for (let step = 0; step < Math.ceil(WEAPON.intervalMs / STEP_MS) - 1; step++) {
       sim.step(firing, STEP_MS);
     }
@@ -145,7 +147,7 @@ describe('Simulation', () => {
     moving.step(command({ moveY: -1, boost: true, fire: true }), STEP_MS);
     const driven = moving.drainEvents([]).find((event) => event.kind === 'fired');
     if (driven?.kind !== 'fired') throw new Error('atış olayı yok');
-    const { vx, vy } = reference.player.tank;
+    const { vx, vy } = reference.player.chassis;
     expect(Math.hypot(vx, vy)).toBeGreaterThan(50);
     expect(driven.vx).toBeCloseTo(Math.cos(driven.angle) * WEAPON.projectileSpeed + vx, 6);
     expect(driven.vy).toBeCloseTo(Math.sin(driven.angle) * WEAPON.projectileSpeed + vy, 6);
@@ -182,8 +184,8 @@ describe('Simulation', () => {
     for (let step = 0; step < 60; step++) sim.step(command({ aimX: 1 }), STEP_MS);
     sim.step(command({ aimX: 1, fire: true }), STEP_MS);
     for (let step = 0; step < 3; step++) sim.step(command({ aimX: 1 }), STEP_MS);
-    expect(Math.abs(sim.player.tank.suspension.roll)).toBeGreaterThan(
-      Math.abs(sim.player.tank.suspension.pitch),
+    expect(Math.abs(sim.player.chassis.suspension.roll)).toBeGreaterThan(
+      Math.abs(sim.player.chassis.suspension.pitch),
     );
   });
 
@@ -254,8 +256,8 @@ describe('Simulation', () => {
     for (let step = 0; step < 60; step++) {
       sim.step((vehicle) => command({ moveX: vehicle.id === other.id ? 1 : 0 }), STEP_MS);
     }
-    expect(other.tank.x).toBeGreaterThan(1010);
-    expect(sim.player.tank.speed).toBeLessThan(1);
+    expect(other.chassis.x).toBeGreaterThan(1010);
+    expect(sim.player.chassis.speed).toBeLessThan(1);
   });
 
   it('mermi başka araca isabet eder ve onu iter; sahibine isabet etmez', () => {
@@ -271,7 +273,7 @@ describe('Simulation', () => {
     }
     const hit = events.find((event) => event.kind === 'hit');
     expect(hit).toMatchObject({ owner: sim.player.id, target: target.id });
-    expect(target.tank.x).toBeGreaterThan(2048 + 200);
+    expect(target.chassis.x).toBeGreaterThan(2048 + 200);
   });
 
   it('araçlar çarpışır, olay üretir ve iç içe geçmez', () => {
@@ -281,7 +283,10 @@ describe('Simulation', () => {
     for (let step = 0; step < 120; step++) {
       sim.step((vehicle) => command({ moveX: vehicle.id === other.id ? -1 : 1 }), STEP_MS);
       sim.drainEvents(events);
-      const gap = Math.hypot(other.tank.x - sim.player.tank.x, other.tank.y - sim.player.tank.y);
+      const gap = Math.hypot(
+        other.chassis.x - sim.player.chassis.x,
+        other.chassis.y - sim.player.chassis.y,
+      );
       expect(gap, `adım ${step}`).toBeGreaterThan(2 * 21 - 1);
     }
     const collision = events.find((event) => event.kind === 'collision');
@@ -304,7 +309,7 @@ describe('Simulation', () => {
           STEP_MS,
         );
       }
-      const tank = sim.player.tank;
+      const tank = sim.player.chassis;
       return [tank.x, tank.y, tank.hull, tank.suspension.pitch, sim.projectiles.count];
     };
     expect(run()).toEqual(run());

@@ -60,7 +60,7 @@ describe('simülasyon değişmezleri', () => {
       for (let step = 0; step < STEPS; step++) {
         current = randomCommand(next, current);
         sim.step(current, STEP_MS);
-        const tank = sim.player.tank;
+        const tank = sim.player.chassis;
         const values = [tank.x, tank.y, tank.vx, tank.vy, tank.hull, tank.angularVelocity];
         if (!values.every(Number.isFinite)) {
           violations.record(`adım ${step}: sonlu olmayan değer ${values.join(', ')}`);
@@ -116,7 +116,7 @@ describe('simülasyon değişmezleri', () => {
     for (let step = 0; step < 2000; step++) {
       current = randomCommand(() => random.next(), current);
       sim.step(current, STEP_MS);
-      const { groundLeft, groundRight } = sim.player.tank;
+      const { groundLeft, groundRight } = sim.player.chassis;
       if (!(groundLeft >= left && groundRight >= right)) {
         violations.record(
           `adım ${step}: yer yolu geri gitti (sol ${left} → ${groundLeft}, sağ ${right} → ${groundRight})`,
@@ -143,7 +143,7 @@ describe('simülasyon değişmezleri', () => {
         );
       }
       sim.step((vehicle) => commands.get(vehicle.id)!, STEP_MS);
-      const tanks = sim.vehicles.map((vehicle) => vehicle.tank);
+      const tanks = sim.vehicles.map((vehicle) => vehicle.chassis);
       for (const tank of tanks) {
         if (!(
           Number.isFinite(tank.x) &&

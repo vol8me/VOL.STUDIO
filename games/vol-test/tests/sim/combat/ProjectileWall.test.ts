@@ -80,7 +80,7 @@ describe('merminin ilk dünya sınırı teması (B27)', () => {
 
   it('gerçek tankın namlu çıkışı, patlama ve nişan önizlemesi aynı ilk duvarı görür', () => {
     const sim = simulation(1000);
-    sim.player.tank.place(974, 500, 0);
+    sim.player.chassis.place(974, 500, 0);
     const aim = command({ aimX: 1, aimY: 1 });
     for (let step = 0; step < 20; step++) sim.step(aim, STEP_MS);
     const preview = { ...sim.previewAim(sim.player, STEP_MS) };

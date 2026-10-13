@@ -68,7 +68,7 @@ function overlapDepth(a: Tank, b: Tank): number {
 const MAX_RESIDUAL_OVERLAP = 0.5;
 
 function expectSeparated(sim: Simulation, label: string): void {
-  const tanks = sim.vehicles.map((vehicle) => vehicle.tank);
+  const tanks = sim.vehicles.map((vehicle) => vehicle.chassis);
   for (let first = 0; first < tanks.length; first++)
     for (let second = first + 1; second < tanks.length; second++)
       expect(overlapDepth(tanks[first], tanks[second]), label).toBeLessThan(MAX_RESIDUAL_OVERLAP);
@@ -76,7 +76,7 @@ function expectSeparated(sim: Simulation, label: string): void {
 
 function expectAllInside(sim: Simulation, size: number, label: string): void {
   for (const vehicle of sim.vehicles) {
-    expect(worstEscape(vehicle.tank, size), `${label} araç ${vehicle.id}`).toBeLessThanOrEqual(
+    expect(worstEscape(vehicle.chassis, size), `${label} araç ${vehicle.id}`).toBeLessThanOrEqual(
       1e-6,
     );
   }
@@ -86,7 +86,7 @@ describe('duvar ve araç temasının ortak çözümü (B18)', () => {
   it('duvar dibindeki oyuncuyu ikinci araç iterken bütün gövde köşeleri dünyada kalır', () => {
     const size = 1000;
     const sim = simulation(size);
-    sim.player.tank.place(26, 500, 0);
+    sim.player.chassis.place(26, 500, 0);
     const rammer = sim.spawn(500, 500, Math.PI);
     const drive = (vehicle: { id: number }): TankCommand =>
       vehicle.id === rammer.id
@@ -97,13 +97,13 @@ describe('duvar ve araç temasının ortak çözümü (B18)', () => {
       expectAllInside(sim, size, `adım ${step}`);
     }
     // Araçlar gerçekten temas etti: düzeltme sınaması boş geçmedi.
-    expect(rammer.tank.x).toBeLessThan(200);
+    expect(rammer.chassis.x).toBeLessThan(200);
   });
 
   it('köşeye sıkışan üç araçta duvar sert sınırdır; araçlar ayrılmaya çalışır', () => {
     const size = 900;
     const sim = simulation(size);
-    sim.player.tank.place(60, 60, Math.PI * 0.75);
+    sim.player.chassis.place(60, 60, Math.PI * 0.75);
     const second = sim.spawn(130, 70, Math.PI * 0.9);
     const third = sim.spawn(90, 140, -Math.PI * 0.8);
     const toCorner = (vehicle: { id: number }): TankCommand =>
@@ -118,14 +118,16 @@ describe('duvar ve araç temasının ortak çözümü (B18)', () => {
       expectSeparated(sim, `adım ${step}`);
     }
     for (const vehicle of sim.vehicles) {
-      expect(Number.isFinite(vehicle.tank.x + vehicle.tank.y + vehicle.tank.vx)).toBe(true);
+      expect(Number.isFinite(vehicle.chassis.x + vehicle.chassis.y + vehicle.chassis.vx)).toBe(
+        true,
+      );
     }
   });
 
   it('duvara iterilen araç hem collision hem wallHit olayı üretir', () => {
     const size = 1000;
     const sim = simulation(size);
-    sim.player.tank.place(30, 500, 0);
+    sim.player.chassis.place(30, 500, 0);
     const rammer = sim.spawn(300, 500, Math.PI);
     const events: SimEvent[] = [];
     for (let step = 0; step < 240; step++) {

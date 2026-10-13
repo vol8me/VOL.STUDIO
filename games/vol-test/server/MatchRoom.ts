@@ -28,12 +28,12 @@ import {
   type MatchMode,
   type PlayerSnapshot,
 } from '../src/network/schema';
-import { writeTankState } from '../src/network/tankSync';
+import { writeChassisState } from '../src/network/chassisSync';
 import { idleCommand, type TankCommand } from '../src/sim/command';
 import type { Vehicle } from '../src/sim/entities/Vehicle';
 import type { SimEvent } from '../src/sim/events';
 import { Simulation } from '../src/sim/Simulation';
-import { createTankState } from '../src/sim/tank/TankState';
+import { createChassisState } from '../src/sim/chassis/ChassisState';
 import { World } from '../src/sim/world/World';
 import { InputPacer, type PacerStats } from './InputPacer';
 import { MatchRules } from './MatchRules';
@@ -86,7 +86,7 @@ export class MatchRoom extends Room {
   private readonly players = new Map<string, Slot>();
   private readonly byVehicle = new Map<number, Slot>();
   private readonly commands = new Map<number, TankCommand>();
-  private readonly scratch = createTankState();
+  private readonly scratch = createChassisState();
   private readonly drained: SimEvent[] = [];
   private readonly stepTimes = new Ring(300);
   private rules = new MatchRules('ffa', MATCH.scoreLimit.ffa, MATCH.intermissionMs);
@@ -354,14 +354,14 @@ export class MatchRoom extends Room {
   private threats(except?: number): { x: number; y: number }[] {
     const list: { x: number; y: number }[] = [];
     for (const { vehicle } of this.players.values()) {
-      if (vehicle.id !== except && vehicle.vitality.alive) list.push(vehicle.tank);
+      if (vehicle.id !== except && vehicle.vitality.alive) list.push(vehicle.chassis);
     }
     return list;
   }
 
   private syncVehicle(slot: Slot): void {
     const { state, vehicle } = slot;
-    writeTankState(state, vehicle.tank.captureState(this.scratch));
+    writeChassisState(state, vehicle.chassis.captureState(this.scratch));
     state.health = vehicle.vitality.health;
     state.alive = vehicle.vitality.alive;
     state.respawnMs = vehicle.vitality.respawnRemainingMs;

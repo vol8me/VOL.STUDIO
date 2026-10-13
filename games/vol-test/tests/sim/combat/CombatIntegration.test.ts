@@ -18,14 +18,14 @@ describe('Simulation savaş yaşam döngüsü', () => {
     const events = sim.drainEvents([]);
     expect(events.map((event) => event.kind)).toEqual(['damaged', 'healed', 'damaged', 'died']);
     expect(events[2]).toMatchObject({ amount: 70, health: 0, cause: 'direct' });
-    const at = { x: enemy.tank.x, y: enemy.tank.y };
+    const at = { x: enemy.chassis.x, y: enemy.chassis.y };
     for (let tick = 0; tick < 20; tick++)
       sim.step(
         (vehicle) => command(vehicle.id === enemy.id ? { fire: true, moveX: 1 } : {}),
         STEP_MS,
       );
-    expect(enemy.tank.x).toBe(at.x);
-    expect(enemy.tank.y).toBe(at.y);
+    expect(enemy.chassis.x).toBe(at.x);
+    expect(enemy.chassis.y).toBe(at.y);
     expect(sim.drainEvents([]).filter((event) => event.kind === 'fired')).toHaveLength(0);
   });
 
@@ -33,15 +33,15 @@ describe('Simulation savaş yaşam döngüsü', () => {
     const sim = simulation();
     const vehicle = sim.spawn(2400, 2048, 0);
     sim.applyDamage(vehicle.id, 40);
-    vehicle.tank.trackLeft = 120;
-    vehicle.tank.vx = 90;
+    vehicle.chassis.trackLeft = 120;
+    vehicle.chassis.vx = 90;
     vehicle.gun.trigger();
     sim.drainEvents([]);
     expect(sim.resetVehicle(vehicle.id, 2100, 2200, 1)).toBe(true);
-    expect(vehicle.tank.x).toBe(2100);
-    expect(vehicle.tank.y).toBe(2200);
-    expect(vehicle.tank.vx).toBe(0);
-    expect(vehicle.tank.trackLeft).toBe(0);
+    expect(vehicle.chassis.x).toBe(2100);
+    expect(vehicle.chassis.y).toBe(2200);
+    expect(vehicle.chassis.vx).toBe(0);
+    expect(vehicle.chassis.trackLeft).toBe(0);
     expect(vehicle.gun.isReady()).toBe(true);
     expect(vehicle.vitality.health).toBe(COMBAT.maxHealth);
     expect(vehicle.vitality.protectionRemainingMs).toBe(COMBAT.respawnProtectionMs);
@@ -58,21 +58,21 @@ describe('Simulation savaş yaşam döngüsü', () => {
   it('ölü araç isabet hedefi ve çarpışma gövdesi olmaz; kimlik korunarak yeniden doğar', () => {
     const sim = simulation();
     const target = sim.spawn(2400, 2048, 0);
-    target.tank.suspension.kick(15, 12);
-    target.tank.trackLeft = 100;
-    target.tank.trackRight = 300;
+    target.chassis.suspension.kick(15, 12);
+    target.chassis.trackLeft = 100;
+    target.chassis.trackRight = 300;
     sim.applyDamage(target.id, 1000);
     sim.drainEvents([]);
     expect(target.entryT(2300, 2048, 2500, 2048)).toBeNull();
     expect(sim.respawnVehicle(target.id, 2600, 2100, Math.PI)).toBe(true);
     expect(sim.vehicle(target.id)).toBe(target);
-    expect(target.tank.x).toBe(2600);
-    expect(target.tank.y).toBe(2100);
-    expect(target.tank.hull).toBeCloseTo(Math.PI);
-    expect(target.tank.trackLeft).toBe(0);
-    expect(target.tank.trackRight).toBe(0);
-    expect(target.tank.suspension.pitch).toBe(0);
-    expect(target.tank.suspension.roll).toBe(0);
+    expect(target.chassis.x).toBe(2600);
+    expect(target.chassis.y).toBe(2100);
+    expect(target.chassis.hull).toBeCloseTo(Math.PI);
+    expect(target.chassis.trackLeft).toBe(0);
+    expect(target.chassis.trackRight).toBe(0);
+    expect(target.chassis.suspension.pitch).toBe(0);
+    expect(target.chassis.suspension.roll).toBe(0);
     expect(target.vitality.health).toBe(COMBAT.maxHealth);
     expect(sim.applyDamage(target.id, 100)).toBe(0);
     expect(sim.respawnVehicle(target.id)).toBe(false);
@@ -88,7 +88,7 @@ describe('Simulation savaş yaşam döngüsü', () => {
     const run = () => {
       const sim = simulation();
       const target = sim.spawn(1000, 2000, 0.5);
-      target.tank.place(1600, 1700);
+      target.chassis.place(1600, 1700);
       sim.applyDamage(target.id, 1000);
       const result: SimEvent[] = [];
       sim.drainEvents(result);
@@ -99,7 +99,7 @@ describe('Simulation savaş yaşam döngüsü', () => {
       }
       return {
         health: target.vitality.health,
-        pos: [target.tank.x, target.tank.y, target.tank.hull],
+        pos: [target.chassis.x, target.chassis.y, target.chassis.hull],
         remaining: target.vitality.respawnRemainingMs,
         events: result,
       };
@@ -124,8 +124,8 @@ describe('Simulation savaş yaşam döngüsü', () => {
     // Oyuncu takım değiştirmese de takım 10'un aracı, silah doğrultusunun üzerindedir.
     // Takımsız oyuncu her araca düşman sayılır; takım filtresi için ayrı atıcı kurulur.
     const shooter = sim.spawn(2048, 1700, 0, 10);
-    teammate.tank.place(2048 + 120, 1700);
-    enemy.tank.place(2048 + 230, 1700);
+    teammate.chassis.place(2048 + 120, 1700);
+    enemy.chassis.place(2048 + 230, 1700);
     for (let tick = 0; tick < 75; tick++) {
       sim.step(
         (vehicle) => command(vehicle.id === shooter.id ? { aimX: 1, fire: tick === 30 } : {}),

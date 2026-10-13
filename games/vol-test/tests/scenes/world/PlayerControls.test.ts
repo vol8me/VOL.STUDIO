@@ -268,7 +268,7 @@ describe('PlayerControls — renderdan sabit ticke', () => {
         const end = (segment + 1) * 320;
         while (renderMs < end - 1e-9) {
           const delta = Math.min(frameDeltas[frameIndex++ % frameDeltas.length], end - renderMs);
-          control.read(sim.player.tank.x, sim.player.tank.y, delta);
+          control.read(sim.player.chassis.x, sim.player.chassis.y, delta);
           clock.advance(delta, (stepMs) => {
             const command = control.step(stepMs);
             commands.push([command.moveX, command.moveY]);
@@ -282,7 +282,7 @@ describe('PlayerControls — renderdan sabit ticke', () => {
           sim.step(() => command, stepMs);
         });
       }
-      return { commands, x: sim.player.tank.x, y: sim.player.tank.y, timeMs: sim.timeMs };
+      return { commands, x: sim.player.chassis.x, y: sim.player.chassis.y, timeMs: sim.timeMs };
     }
     const baseline = run([1000 / 30]);
     expect(baseline.commands).toHaveLength(60);

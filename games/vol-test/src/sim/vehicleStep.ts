@@ -3,7 +3,7 @@ import type { TankCommand } from './command';
 import type { WeaponConfig } from '@/config/tank';
 import type { Vehicle } from './entities/Vehicle';
 import { muzzlePose, type MuzzlePose } from './muzzle';
-import type { TankPose } from './tank/Tank';
+import type { ChassisPose } from './tank/Tank';
 import type { World } from './world/World';
 
 /**
@@ -13,7 +13,7 @@ import type { World } from './world/World';
 export function aimAligned(vehicle: Vehicle, command: TankCommand): boolean {
   if (command.aimX === 0 && command.aimY === 0) return true;
   return (
-    Math.abs(angleDelta(vehicle.tank.turret, Math.atan2(command.aimY, command.aimX))) <=
+    Math.abs(angleDelta(vehicle.chassis.turret, Math.atan2(command.aimY, command.aimX))) <=
     vehicle.weapon.aimTolerance
   );
 }
@@ -30,7 +30,7 @@ export interface Launch {
 /** `launchFrom`un yazdığı yeniden kullanılabilir arabellek. */
 export type LaunchBuffer = { -readonly [K in keyof Launch]: Launch[K] };
 
-const shotPose: TankPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
+const shotPose: ChassisPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
 const shotMuzzle: MuzzlePose = { x: 0, y: 0, angle: 0 };
 
 /**
@@ -40,7 +40,7 @@ const shotMuzzle: MuzzlePose = { x: 0, y: 0, angle: 0 };
  * nişan çizgisi ile namlu her zaman aynı doğrultudadır.
  */
 export function launchFrom(
-  pose: TankPose,
+  pose: ChassisPose,
   tankVx: number,
   tankVy: number,
   weapon: WeaponConfig,
@@ -63,7 +63,7 @@ export function launchFrom(
  * `applyRecoil`den önce yapılmalıdır.
  */
 export function muzzleLaunch(vehicle: Vehicle): Launch {
-  const tank = vehicle.tank;
+  const tank = vehicle.chassis;
   return launchFrom(tank.readPose(shotPose), tank.vx, tank.vy, vehicle.weapon, {
     x: 0,
     y: 0,
@@ -78,7 +78,7 @@ export function muzzleLaunch(vehicle: Vehicle): Launch {
  * Mermi tankın hızını devralarak çıkar; bu çağrı mermi doğduktan SONRA yapılmalıdır.
  */
 export function applyRecoil(vehicle: Vehicle): void {
-  const tank = vehicle.tank;
+  const tank = vehicle.chassis;
   const weapon = vehicle.weapon;
   const dirX = Math.cos(tank.turret);
   const dirY = Math.sin(tank.turret);
@@ -105,7 +105,7 @@ export function stepPredictedVehicle(
   stepMs: number,
   onLaunch?: (launch: Launch) => void,
 ): boolean {
-  const tank = vehicle.tank;
+  const tank = vehicle.chassis;
   tank.capturePose();
   if (!vehicle.vitality.alive) return false;
   tank.step(command, world, stepMs / 1000);

@@ -146,17 +146,17 @@ describe('RemoteTanks ara değer', () => {
     const start = { x: record.x, y: record.y };
     cruise(driver);
     await until(
-      () => Math.hypot(vehicle.tank.x - start.x, vehicle.tank.y - start.y) > 25,
+      () => Math.hypot(vehicle.chassis.x - start.x, vehicle.chassis.y - start.y) > 25,
       'hareket',
     );
-    const shown = Math.hypot(vehicle.tank.x - start.x, vehicle.tank.y - start.y);
+    const shown = Math.hypot(vehicle.chassis.x - start.x, vehicle.chassis.y - start.y);
     const authoritative = Math.hypot(record.x - start.x, record.y - start.y);
     // Görüntü geriye dönük süre kadar gecikir: sunucudaki gerçek konumu geçemez.
     expect(shown).toBeLessThanOrEqual(authoritative + 1);
     expect(shown).toBeGreaterThan(0);
     // Hız gerçekten ara değerden gelir: tankın sürüş sinyalleri de taşınır.
-    expect(vehicle.tank.speed).toBeGreaterThan(0);
-    expect(vehicle.tank.treadLeft).not.toBe(0);
+    expect(vehicle.chassis.speed).toBeGreaterThan(0);
+    expect(vehicle.chassis.treadLeft).not.toBe(0);
     remotes.dispose();
   });
 
@@ -168,12 +168,12 @@ describe('RemoteTanks ara değer', () => {
     const vehicle = remotes.vehicle(target.self!.vehicleId)!;
     await until(() => watcher.room.state.timeMs > 400, 'yama akışı');
     const local = serverRoom(target.room).vehicleOf(target.room.sessionId)!;
-    const far = { x: local.tank.x + NETWORK.seatRadius * 2, y: local.tank.y };
-    local.tank.place(far.x, far.y, 0);
+    const far = { x: local.chassis.x + NETWORK.seatRadius * 2, y: local.chassis.y };
+    local.chassis.place(far.x, far.y, 0);
     const samples: number[] = [];
-    const watch = setInterval(() => samples.push(vehicle.tank.x), 4);
+    const watch = setInterval(() => samples.push(vehicle.chassis.x), 4);
     timers.push(watch);
-    await until(() => Math.abs(vehicle.tank.x - far.x) < 1, 'ışınlanma');
+    await until(() => Math.abs(vehicle.chassis.x - far.x) < 1, 'ışınlanma');
     clearInterval(watch);
     // Ara değerli kayma olsaydı aradaki konumlar (yarı yol) görülürdü.
     const midway = samples.filter(

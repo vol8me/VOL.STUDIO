@@ -31,7 +31,12 @@ describe('ScenarioRunner', () => {
       for (let step = 0; step < 90; step++) {
         sim.step((vehicle) => runner.commandFor(vehicle, command({ moveX: 1 })), STEP_MS);
       }
-      return sim.vehicles.map(({ tank }) => [tank.x, tank.y, tank.hull, tank.turret]);
+      return sim.vehicles.map(({ chassis }) => [
+        chassis.x,
+        chassis.y,
+        chassis.hull,
+        chassis.turret,
+      ]);
     };
     expect(run(123)).toEqual(run(123));
     expect(run(124)).not.toEqual(run(123));
@@ -42,7 +47,7 @@ describe('ScenarioRunner', () => {
     const runner = new ScenarioRunner(sim);
     for (const level of ['slalom', 'targets'] as const) {
       runner.select(level, 10);
-      const positions = sim.vehicles.slice(1).map(({ tank }) => [tank.x, tank.y]);
+      const positions = sim.vehicles.slice(1).map(({ chassis }) => [chassis.x, chassis.y]);
       const input = command({ moveX: 1 });
       expect(runner.commandFor(sim.player, input)).toBe(input);
       for (const vehicle of sim.vehicles.slice(1)) {
@@ -50,7 +55,7 @@ describe('ScenarioRunner', () => {
       }
       for (let step = 0; step < 30; step++)
         sim.step((vehicle) => runner.commandFor(vehicle, command()), STEP_MS);
-      expect(sim.vehicles.slice(1).map(({ tank }) => [tank.x, tank.y])).toEqual(positions);
+      expect(sim.vehicles.slice(1).map(({ chassis }) => [chassis.x, chassis.y])).toEqual(positions);
     }
   });
 });

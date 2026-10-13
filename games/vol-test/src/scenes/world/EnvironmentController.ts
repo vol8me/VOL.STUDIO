@@ -43,7 +43,7 @@ export class EnvironmentController {
     this.frames.length = 0;
     for (const vehicle of vehicles) {
       if (this.frames.length >= WEATHER_VIEW.vehicleCapacity) break;
-      const frame = tankFrame(vehicle.tank, alpha);
+      const frame = tankFrame(vehicle.chassis, alpha);
       if (
         frame.x < rect.x ||
         frame.y < rect.y ||

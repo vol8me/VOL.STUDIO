@@ -39,7 +39,7 @@ export class ScenarioRunner {
     this.epoch = this.sim.timeMs;
     const random = createRandom(seed);
     const count = SCENARIOS[mode].count;
-    const player = this.sim.player.tank;
+    const player = this.sim.player.chassis;
     for (let slot = 0; slot < count; slot++) {
       const angle = (slot * Math.PI * 2) / count;
       const radius = SCENARIO.dynamic.radius + random.bipolar() * SCENARIO.dynamic.jitter;
@@ -64,10 +64,10 @@ export class ScenarioRunner {
     this.neighbors = this.sim.vehicles.map((vehicle) => ({
       vehicle,
       get x() {
-        return vehicle.tank.x;
+        return vehicle.chassis.x;
       },
       get y() {
-        return vehicle.tank.y;
+        return vehicle.chassis.y;
       },
     }));
     this.index.rebuild(this.neighbors);
@@ -82,7 +82,12 @@ export class ScenarioRunner {
       this.indexedAt = this.sim.timeMs;
     }
     const own = this.neighbors.find((entry) => entry.vehicle === vehicle);
-    const target = this.index.findNearest(vehicle.tank.x, vehicle.tank.y, SCENARIO.aimRadius, own);
+    const target = this.index.findNearest(
+      vehicle.chassis.x,
+      vehicle.chassis.y,
+      SCENARIO.aimRadius,
+      own,
+    );
     const elapsed = this.sim.timeMs - this.epoch;
     const phase = this.phases[slot];
     const heading = (elapsed / 1000) * SCENARIO.dynamic.turnRate + phase;
@@ -93,8 +98,8 @@ export class ScenarioRunner {
       ...idleCommand(),
       moveX: Math.cos(heading),
       moveY: Math.sin(heading),
-      aimX: target ? target.x - vehicle.tank.x : 0,
-      aimY: target ? target.y - vehicle.tank.y : 0,
+      aimX: target ? target.x - vehicle.chassis.x : 0,
+      aimY: target ? target.y - vehicle.chassis.y : 0,
       fire: target !== null && firing < SCENARIO.dynamic.fireWindowMs,
     };
   }

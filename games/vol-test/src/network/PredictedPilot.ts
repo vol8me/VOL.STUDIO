@@ -6,7 +6,7 @@ import { NETWORK } from '@/config/network';
 import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
 import { Vehicle } from '@/sim/entities/Vehicle';
 import { stepPredictedVehicle, type Launch } from '@/sim/vehicleStep';
-import { createTankState } from '@/sim/tank/TankState';
+import { createChassisState } from '@/sim/chassis/ChassisState';
 import type { World } from '@/sim/world/World';
 import type { TankCommand } from '@/sim/command';
 import {
@@ -17,7 +17,7 @@ import {
   type TankInputData,
   type TankInputFields,
 } from './schema';
-import { readTankState } from './tankSync';
+import { readChassisState } from './chassisSync';
 
 /** Öngörülen aracın çizim pozu: SDK'nın ara değerli ve düzeltme ofsetli okuması. */
 export interface PilotPose {
@@ -67,7 +67,7 @@ export class PredictedPilot {
   readonly vehicle: Vehicle;
   readonly input: InputHandle<TankInputData>;
   readonly reconciler: SimReconciler<TankInputFields, PilotPose, PilotWorld>;
-  private readonly scratch = createTankState();
+  private readonly scratch = createChassisState();
 
   constructor(private readonly options: PilotOptions) {
     const { room, predict, self, space } = options;
@@ -119,7 +119,7 @@ export class PredictedPilot {
   /** Sunucunun yetkili durumunu araca kurar; öngörü bu noktadan yeniden başlar. */
   private adopt(vehicle: Vehicle): void {
     const self = this.options.self;
-    vehicle.tank.restoreState(readTankState(self, this.scratch));
+    vehicle.chassis.restoreState(readChassisState(self, this.scratch));
     vehicle.gun.restore(self.gunMs);
     vehicle.vitality.health = self.health;
     vehicle.vitality.respawnRemainingMs = self.respawnMs;
@@ -127,7 +127,7 @@ export class PredictedPilot {
   }
 
   private readPose(vehicle: Vehicle): PilotPose {
-    const tank = vehicle.tank;
+    const tank = vehicle.chassis;
     return {
       x: tank.x,
       y: tank.y,

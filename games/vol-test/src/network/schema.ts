@@ -38,7 +38,7 @@ export type TankInputFields = Pick<
 export const NO_TEAM = -1;
 
 /**
- * Bir oyuncunun herkese açık durumu. Tankın dinamik alanları `TankState` ile birebir aynıdır
+ * Bir oyuncunun herkese açık durumu. Tankın dinamik alanları `ChassisState` ile birebir aynıdır
  * (`tests/network/schema.test.ts` bunu doğrular) ve `float64`tür: uzlaştırma sunucunun değerini
  * bit bit alıp bekleyen girdileri üstüne oynatır, kesme hatası her onayda sapma olurdu.
  */

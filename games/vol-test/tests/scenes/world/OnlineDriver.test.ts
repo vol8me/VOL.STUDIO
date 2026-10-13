@@ -140,7 +140,7 @@ describe('OnlineDriver sürüş', () => {
     const { driver, session, run } = await rig();
     run();
     const record = serverRoom(session.room).vehicleOf(session.room.sessionId)!;
-    record.tank.x += 40;
+    record.chassis.x += 40;
     await until(() => driver.metrics()['online.driftMax'] > 1, 'ölçülen sapma');
     const seen = driver.metrics()['online.driftMax'];
     await until(() => driver.metrics()['online.driftPeak'] < seen / 2, 'sönümlü tepenin düşmesi');
@@ -149,12 +149,12 @@ describe('OnlineDriver sürüş', () => {
 
   it('girdiyi öngörüyle sürer, ölçüm bağlamını ve ağ sayılarını verir', async () => {
     const { driver, run, setCommand, steps } = await rig();
-    const start = { x: driver.player.tank.x, y: driver.player.tank.y };
+    const start = { x: driver.player.chassis.x, y: driver.player.chassis.y };
     setCommand(command({ moveY: -1 }));
     run();
     await until(() => steps.count > 40, 'girdi adımları');
     expect(
-      Math.hypot(driver.player.tank.x - start.x, driver.player.tank.y - start.y),
+      Math.hypot(driver.player.chassis.x - start.x, driver.player.chassis.y - start.y),
     ).toBeGreaterThan(5);
     expect(driver.sim).toBe(driver.world.sim);
     expect(driver.measurement).toEqual({ scenario: ONLINE_SCENARIO, seed: 0 });

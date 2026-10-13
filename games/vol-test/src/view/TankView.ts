@@ -1,13 +1,13 @@
 import type Phaser from 'phaser';
 import { poseSourceOf, PoseShadow, type PoseSourceNode } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
-import type { TankPose } from '@/sim/tank/Tank';
+import type { ChassisPose } from '@/sim/tank/Tank';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
 import { TreadRig } from './TreadRig';
 import { TankLights } from './TankLights';
 
 /** Görünümün her kare okuduğu tank durumu (ara değerli poz + sürüş sinyalleri). */
-export interface TankFrame extends TankPose {
+export interface TankFrame extends ChassisPose {
   readonly treadLeft: number;
   readonly treadRight: number;
   readonly speed: number;

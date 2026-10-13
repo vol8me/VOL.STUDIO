@@ -4,11 +4,11 @@ import { NETWORK } from '@/config/network';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import type { Simulation } from '@/sim/Simulation';
 import {
-  createTankState,
-  TANK_STATE_FLAGS,
-  TANK_STATE_NUMBERS,
-  type TankState,
-} from '@/sim/tank/TankState';
+  createChassisState,
+  CHASSIS_STATE_FLAGS,
+  CHASSIS_STATE_NUMBERS,
+  type ChassisState,
+} from '@/sim/chassis/ChassisState';
 import { NO_TEAM, type MatchSnapshot, type PlayerSnapshot } from './schema';
 
 type AttachConfig = Parameters<Predict['attach']>[1];
@@ -22,7 +22,7 @@ const ANGLE_FIELDS: ReadonlySet<string> = new Set(['hull', 'turret']);
  */
 function interpolation(): AttachConfig {
   const config: Record<string, unknown> = {};
-  for (const key of TANK_STATE_NUMBERS) {
+  for (const key of CHASSIS_STATE_NUMBERS) {
     config[key] = {
       mode: 'lerp',
       delay: NETWORK.interpolationDelayMs,
@@ -36,7 +36,7 @@ function interpolation(): AttachConfig {
 interface Remote {
   readonly record: PlayerSnapshot;
   readonly vehicle: Vehicle;
-  readonly state: TankState;
+  readonly state: ChassisState;
   readonly detach: () => void;
 }
 
@@ -79,9 +79,9 @@ export class RemoteTanks {
   update(ageMs: number): void {
     for (const remote of this.remotes.values()) {
       const { record, vehicle, state } = remote;
-      for (const key of TANK_STATE_NUMBERS) state[key] = this.predict.value(record, key);
-      for (const key of TANK_STATE_FLAGS) state[key] = record[key];
-      vehicle.tank.restoreState(state);
+      for (const key of CHASSIS_STATE_NUMBERS) state[key] = this.predict.value(record, key);
+      for (const key of CHASSIS_STATE_FLAGS) state[key] = record[key];
+      vehicle.chassis.restoreState(state);
       applyVitals(vehicle, record, ageMs);
     }
   }
@@ -98,7 +98,7 @@ export class RemoteTanks {
     this.remotes.set(key, {
       record,
       vehicle,
-      state: createTankState(),
+      state: createChassisState(),
       detach: this.predict.attach(record, this.attachConfig),
     });
   }

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { SUSPENSION, TANK } from '@/config/tank';
 import { Tank } from '@/sim/tank/Tank';
-import { createTankState, TANK_STATE_FLAGS, TANK_STATE_NUMBERS } from '@/sim/tank/TankState';
+import {
+  createChassisState,
+  CHASSIS_STATE_FLAGS,
+  CHASSIS_STATE_NUMBERS,
+} from '@/sim/chassis/ChassisState';
 import { commandAt } from '../../support/commands';
 import { DT, world } from '../../support/sim';
 
@@ -15,24 +19,24 @@ function fresh(): Tank {
   return tank;
 }
 
-describe('TankState', () => {
+describe('ChassisState', () => {
   it('anahtar listeleri durum biçimini eksiksiz ve tekrarsız kapsar', () => {
-    const keys = [...TANK_STATE_NUMBERS, ...TANK_STATE_FLAGS].sort();
-    expect(keys).toEqual(Object.keys(createTankState()).sort());
+    const keys = [...CHASSIS_STATE_NUMBERS, ...CHASSIS_STATE_FLAGS].sort();
+    expect(keys).toEqual(Object.keys(createChassisState()).sort());
     expect(new Set(keys).size).toBe(keys.length);
   });
 
   it('captureState her alanı doldurur ve hedef nesneyi yeniden kullanır', () => {
     const tank = fresh();
     drive(tank, world(), 0, 120);
-    const out = createTankState();
+    const out = createChassisState();
     expect(tank.captureState(out)).toBe(out);
     expect(out.x).toBe(tank.x);
     expect(out.hull).toBe(tank.hull);
     expect(out.turret).toBe(tank.turret);
     expect(out.boost).toBe(tank.boost);
     expect(out.pitch).toBe(tank.suspension.pitch);
-    for (const key of TANK_STATE_NUMBERS) expect(Number.isFinite(out[key])).toBe(true);
+    for (const key of CHASSIS_STATE_NUMBERS) expect(Number.isFinite(out[key])).toBe(true);
   });
 
   it('durumu geri yüklenen tank, kesintisiz süren tankla bit bit aynı ilerler', () => {
@@ -68,7 +72,7 @@ describe('TankState', () => {
 
   it('restoreState previous pozu yeni konuma çeker', () => {
     const tank = fresh();
-    const state = createTankState();
+    const state = createChassisState();
     Object.assign(state, tank.captureState(), { x: 900, y: 700 });
     tank.restoreState(state);
     expect(tank.previous.x).toBe(900);

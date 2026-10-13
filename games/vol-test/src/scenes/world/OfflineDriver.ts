@@ -66,9 +66,11 @@ export class OfflineDriver implements WorldDriver {
       deltaMs,
       (stepMs) => {
         const command = controls.step(stepMs);
-        const { x, y } = player.tank;
+        const { x, y } = player.chassis;
         this.sim.step((vehicle) => this.scenarios.commandFor(vehicle, command), stepMs);
-        services?.progress.travel(Math.hypot(player.tank.x - x, player.tank.y - y) / WORLD.metre);
+        services?.progress.travel(
+          Math.hypot(player.chassis.x - x, player.chassis.y - y) / WORLD.metre,
+        );
       },
       { acceptedDeltaMs: clampSimulationStep(deltaMs), paused },
     );

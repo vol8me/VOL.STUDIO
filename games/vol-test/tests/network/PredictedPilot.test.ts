@@ -73,12 +73,12 @@ describe('PredictedPilot kurulum', () => {
       recordOf({ gunMs: 123.5, protectionMs: 800, respawnMs: 0 }),
     );
     const pilot = build();
-    const { tank, vitality, gun } = pilot.vehicle;
+    const { chassis, vitality, gun } = pilot.vehicle;
     expect(pilot.vehicle.id).toBe(record.vehicleId);
     expect(pilot.vehicle.team).toBeNull();
-    expect(tank.x).toBe(1000);
-    expect(tank.y).toBe(1200);
-    expect(tank.hull).toBe(0.5);
+    expect(chassis.x).toBe(1000);
+    expect(chassis.y).toBe(1200);
+    expect(chassis.hull).toBe(0.5);
     expect(vitality.health).toBe(100);
     expect(vitality.protectionRemainingMs).toBe(800);
     expect(gun.getRemaining()).toBe(123.5);
@@ -96,7 +96,7 @@ describe('PredictedPilot kurulum', () => {
       vehicle: supplied,
     });
     expect(pilot.vehicle).toBe(supplied);
-    expect(supplied.tank.x).toBe(1000);
+    expect(supplied.chassis.x).toBe(1000);
     expect(build().vehicle).not.toBe(supplied);
   });
 
@@ -123,7 +123,7 @@ describe('PredictedPilot adım', () => {
   it('adım komutu aracı sürer; canlı atış bildirilir, yeniden oynatılan atış bildirilmez', () => {
     const { build, config, fired } = wire();
     const pilot = build();
-    const before = { x: pilot.vehicle.tank.x, y: pilot.vehicle.tank.y };
+    const before = { x: pilot.vehicle.chassis.x, y: pilot.vehicle.chassis.y };
     const world = { vehicle: pilot.vehicle, space: new World(WORLD.width, WORLD.height, 128) };
     const live = { moveY: -1, fire: true };
 
@@ -140,19 +140,19 @@ describe('PredictedPilot adım', () => {
     }
     expect(fired).toHaveBeenCalledTimes(1);
     expect(
-      Math.hypot(pilot.vehicle.tank.x - before.x, pilot.vehicle.tank.y - before.y),
+      Math.hypot(pilot.vehicle.chassis.x - before.x, pilot.vehicle.chassis.y - before.y),
     ).toBeGreaterThan(0.5);
   });
 
   it('adopt sunucu durumunu yeniden yükler: öngörülen sapma silinir', () => {
     const { build, config, record } = wire();
     const pilot = build();
-    pilot.vehicle.tank.x = 5;
+    pilot.vehicle.chassis.x = 5;
     pilot.vehicle.vitality.health = 1;
     record.x = 1500;
     record.health = 60;
     config().adopt({ vehicle: pilot.vehicle, space: new World(WORLD.width, WORLD.height, 128) });
-    expect(pilot.vehicle.tank.x).toBe(1500);
+    expect(pilot.vehicle.chassis.x).toBe(1500);
     expect(pilot.vehicle.vitality.health).toBe(60);
   });
 
@@ -167,9 +167,9 @@ describe('PredictedPilot adım', () => {
       x: 1000,
       y: 1200,
       hull: 0.5,
-      turret: pilot.vehicle.tank.turret,
-      pitch: pilot.vehicle.tank.suspension.pitch,
-      roll: pilot.vehicle.tank.suspension.roll,
+      turret: pilot.vehicle.chassis.turret,
+      pitch: pilot.vehicle.chassis.suspension.pitch,
+      roll: pilot.vehicle.chassis.suspension.roll,
     });
   });
 
