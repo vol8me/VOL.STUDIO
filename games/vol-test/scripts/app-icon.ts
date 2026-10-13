@@ -1,20 +1,20 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { composeTankSvg, type TankSvgParts } from '../src/assets/tank/composeTankSvg';
+import { composeTankSvg, type TankSvgParts } from '../src/assets/vehicles/composeTankSvg';
 
 const root = join(import.meta.dirname, '..');
 const names = {
-  hull: 'hull',
-  turret: 'turret',
-  tread: 'tread',
-  treadEnd: 'tread-end',
-  core: 'core',
-  feeler: 'feeler',
+  hull: 'striker/hull',
+  turret: 'striker/turret',
+  tread: 'shared/tread',
+  treadEnd: 'shared/tread-end',
+  core: 'shared/core',
+  feeler: 'striker/feeler',
 };
 const parts = Object.fromEntries(
   Object.entries(names).map(([key, name]) => [
     key,
-    readFileSync(join(root, 'src/assets/tank', `${name}.svg`), 'utf8'),
+    readFileSync(join(root, 'src/assets/vehicles', `${name}.svg`), 'utf8'),
   ]),
 ) as unknown as TankSvgParts;
 const tank = composeTankSvg(parts, { size: 1024, heading: -45, turret: -20 });

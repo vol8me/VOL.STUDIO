@@ -4,12 +4,12 @@ import type { FollowCamera } from '@volstudio/core/camera';
 import type { SimEvent } from '@/sim/events';
 import type { ArenaView } from '@/view/ArenaView';
 import type { EffectsView } from '@/view/EffectsView';
-import type { TankView } from '@/view/TankView';
+import type { VehicleView } from '@/view/VehicleView';
 
 export interface SimEventTargets {
   /** Kontrol edilen aracın kimliği: kamera ve titreşim yalnız ona tepki verir. */
   readonly player: number;
-  readonly tank: (id: number) => Pick<TankView, 'fire'> | undefined;
+  readonly tank: (id: number) => Pick<VehicleView, 'fire'> | undefined;
   readonly effects: Pick<EffectsView, 'muzzle' | 'explode' | 'hit' | 'wallHit'>;
   readonly arena: Pick<ArenaView, 'strike'>;
   readonly camera: Pick<FollowCamera, 'kick' | 'addTrauma'>;
@@ -55,7 +55,7 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
   for (const event of events) {
     switch (event.kind) {
       case 'fired':
-        targets.tank(event.source)?.fire();
+        targets.tank(event.source)?.fire(event.mount);
         targets.effects.muzzle(event.x, event.y, event.angle);
         if (event.source === targets.player) {
           targets.camera.kick(event.angle, FEEL.fire.cameraKick);

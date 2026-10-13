@@ -1,25 +1,17 @@
 import type Phaser from 'phaser';
-import { TANK } from '@/config/tank';
-import { TEXTURE, TEXTURE_SCALE } from './textures';
-import { TREAD_VIEW } from '@/config/tankView';
+import { treadView, type TreadView } from '@/config/tankView';
+import type { TankSpec } from '@/config/vehicles';
+import { TEXTURE, TEXTURE_SCALE, treadBandTexture } from './textures';
 import { treadFrame } from './TreadTexture';
 
 const INV = 1 / TEXTURE_SCALE;
-/**
- * Palet geometrisi fizikten türer: palet merkezi `trackOffset`te, eni gövde
- * ayak izinin dış kenarına kadar, uçlar ayak izinin boyunda yarım daire.
- */
-const TREAD_OFFSET = TANK.trackOffset;
-const TREAD_HEIGHT = 2 * (TANK.halfWidth - TANK.trackOffset);
-const TREAD_LENGTH = 2 * TANK.halfLength - TREAD_HEIGHT;
-/** Palet ucundaki dönüşün yarıçapı: palet eninin yarısı. */
-const TREAD_END_RADIUS = TREAD_HEIGHT / 2;
 /** tread-end.svg içindeki dairenin çapı. */
 const TREAD_END_TEXTURE_DIAMETER = 11.2;
 
 /**
  * İki palet: yüzey yoluyla kayan bant ve bandın döndüğü yarım daire uçlar.
  * Uçtaki halkalar aynı yolla döner; patinajda palet döner, tank ilerlemez.
+ * Geometri aracın fizik ayak izinden türer (`treadView`).
  */
 export class TreadRig {
   /** Tank kabının alt katmanları: tabanlar, uçlar, bantlar. */
@@ -28,23 +20,26 @@ export class TreadRig {
   readonly shadowCasters: readonly Phaser.GameObjects.Image[];
   private readonly bands: [Phaser.GameObjects.Image, Phaser.GameObjects.Image];
   private readonly ends: Phaser.GameObjects.Image[];
+  private readonly endRadius: number;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, spec: TankSpec) {
+    const view: TreadView = treadView(spec);
+    this.endRadius = view.height / 2;
     this.ends = [-1, 1].flatMap((side) =>
       [-1, 1].map((end) =>
         scene.add
-          .image((end * TREAD_LENGTH) / 2, side * TREAD_OFFSET, TEXTURE.treadEnd)
-          .setScale(INV * (TREAD_HEIGHT / TREAD_END_TEXTURE_DIAMETER)),
+          .image((end * view.width) / 2, side * view.offset, TEXTURE.treadEnd)
+          .setScale(INV * (view.height / TREAD_END_TEXTURE_DIAMETER)),
       ),
     );
     const band = (side: number): Phaser.GameObjects.Image =>
       scene.add
-        .image(0, side * TREAD_OFFSET, TEXTURE.treadBand, 0)
-        .setDisplaySize(TREAD_VIEW.width, TREAD_VIEW.height);
+        .image(0, side * view.offset, treadBandTexture(spec.id), 0)
+        .setDisplaySize(view.width, view.height);
     const bases = [-1, 1].map((side) =>
       scene.add
-        .image(0, side * TREAD_OFFSET, TEXTURE.treadBase)
-        .setDisplaySize(TREAD_LENGTH, TREAD_HEIGHT),
+        .image(0, side * view.offset, TEXTURE.treadBase)
+        .setDisplaySize(view.width, view.height),
     );
     this.bands = [band(-1), band(1)];
     this.parts = [...bases, ...this.ends, ...this.bands];
@@ -57,7 +52,7 @@ export class TreadRig {
     left.setFrame(treadFrame(treadLeft));
     right.setFrame(treadFrame(treadRight));
     this.ends.forEach((end, index) => {
-      end.setRotation((index < 2 ? treadLeft : treadRight) / TREAD_END_RADIUS);
+      end.setRotation((index < 2 ? treadLeft : treadRight) / this.endRadius);
     });
   }
 }

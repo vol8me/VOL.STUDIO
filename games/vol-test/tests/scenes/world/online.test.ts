@@ -6,6 +6,7 @@ import { i18next } from '@volstudio/core/i18n';
 import { JoinError } from '@volstudio/network/client';
 import type { GameServices } from '@/app/GameServices';
 import { EFFECT_LEVELS, type EffectLevel, type EffectProfile } from '@/config/quality';
+import { DART, modelOf } from '@/config/vehicles';
 import { WORLD } from '@/config/world';
 import { Hud } from '@/hud/Hud';
 import type { TestAction } from '@/input/bindings';
@@ -74,7 +75,7 @@ function setup(): Setup {
   const restart = vi.fn<(data?: WorldStartData) => void>();
   const update = vi.fn();
   const services = {
-    settings: { get: () => ({ playerName: 'Ada' }), update },
+    settings: { get: () => ({ playerName: 'Ada', vehicle: 'dart' }), update },
   } as unknown as GameServices;
   const context: DriverContext = {
     scene: {} as Phaser.Scene,
@@ -136,6 +137,7 @@ describe('createLobby', () => {
     expect(open).toHaveBeenCalledWith({
       endpoint: 'http://127.0.0.1:2567',
       name: 'Ada',
+      model: modelOf(DART),
       request: { kind: 'quick', mode: 'ffa' },
     });
     expect(update).toHaveBeenCalledWith({ playerName: 'Ada' });

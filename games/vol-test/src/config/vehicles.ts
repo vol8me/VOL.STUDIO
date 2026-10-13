@@ -7,8 +7,12 @@ import {
   type WeaponConfig,
 } from './tank';
 
+/** Paletli araçlar. */
+export const TANK_IDS = ['striker', 'bulwark', 'dart'] as const;
+export type TankId = (typeof TANK_IDS)[number];
+
 /** Seçilebilir araçlar; sıra ağ protokolündeki `model` indeksidir, sona eklenir ve yeniden sıralanmaz. */
-export const VEHICLE_IDS = ['striker', 'bulwark', 'dart'] as const;
+export const VEHICLE_IDS = [...TANK_IDS] as const;
 export type VehicleId = (typeof VEHICLE_IDS)[number];
 
 /** Bir aracın en çok taşıyabileceği namlu: atış arabellekleri ve ağ paketi bu tavana göre boyanır. */
@@ -47,6 +51,7 @@ interface VehicleBase {
 /** Paletli şasi tanımı. */
 export interface TankSpec extends VehicleBase {
   readonly kind: 'tank';
+  readonly id: TankId;
   readonly tank: TankConfig;
 }
 

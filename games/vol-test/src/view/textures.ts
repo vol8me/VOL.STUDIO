@@ -1,11 +1,19 @@
 import type Phaser from 'phaser';
-import coreUrl from '@/assets/tank/core.svg?url';
-import feelerUrl from '@/assets/tank/feeler.svg?url';
-import flashUrl from '@/assets/tank/flash.svg?url';
-import hullUrl from '@/assets/tank/hull.svg?url';
-import treadEndUrl from '@/assets/tank/tread-end.svg?url';
-import treadUrl from '@/assets/tank/tread.svg?url';
-import turretUrl from '@/assets/tank/turret.svg?url';
+import coreUrl from '@/assets/vehicles/shared/core.svg?url';
+import flashUrl from '@/assets/vehicles/shared/flash.svg?url';
+import treadEndUrl from '@/assets/vehicles/shared/tread-end.svg?url';
+import treadUrl from '@/assets/vehicles/shared/tread.svg?url';
+import bulwarkFeelerUrl from '@/assets/vehicles/bulwark/feeler.svg?url';
+import bulwarkHullUrl from '@/assets/vehicles/bulwark/hull.svg?url';
+import bulwarkTurretUrl from '@/assets/vehicles/bulwark/turret.svg?url';
+import dartFeelerUrl from '@/assets/vehicles/dart/feeler.svg?url';
+import dartHullUrl from '@/assets/vehicles/dart/hull.svg?url';
+import dartTurretUrl from '@/assets/vehicles/dart/turret.svg?url';
+import strikerFeelerUrl from '@/assets/vehicles/striker/feeler.svg?url';
+import strikerHullUrl from '@/assets/vehicles/striker/hull.svg?url';
+import strikerTurretUrl from '@/assets/vehicles/striker/turret.svg?url';
+import { tankSpecs, treadView } from '@/config/tankView';
+import type { TankId } from '@/config/vehicles';
 import { createTreadTexture } from './TreadTexture';
 
 /**
@@ -14,14 +22,11 @@ import { createTreadTexture } from './TreadTexture';
  */
 export const TEXTURE_SCALE = 4;
 
+/** Bütün araçların paylaştığı dokular ve çalışma anında çizilen efekt dokuları. */
 export const TEXTURE = {
-  hull: 'tank-hull',
-  turret: 'tank-turret',
   tread: 'tank-tread',
-  treadBand: 'tank-tread-band',
   treadEnd: 'tank-tread-end',
   core: 'tank-core',
-  feeler: 'tank-feeler',
   flash: 'tank-flash',
   spark: 'fx-spark',
   treadPrint: 'fx-tread-print',
@@ -32,19 +37,38 @@ export const TEXTURE = {
   treadBase: 'tank-tread-base',
 } as const;
 
-const SVG_PARTS: ReadonlyArray<readonly [string, string]> = [
-  [TEXTURE.hull, hullUrl],
-  [TEXTURE.turret, turretUrl],
+/** Araca özgü parçaların doku anahtarı: parça SVG'si araç klasöründedir. */
+export type TankPart = 'hull' | 'turret' | 'feeler';
+
+export function tankTexture(id: TankId, part: TankPart): string {
+  return `${id}-${part}`;
+}
+
+/** Aracın palet bandı kare sayfası: bant boyu araca göre değişir. */
+export function treadBandTexture(id: TankId): string {
+  return `${id}-tread-band`;
+}
+
+const TANK_PART_URLS: Readonly<Record<TankId, Readonly<Record<TankPart, string>>>> = {
+  striker: { hull: strikerHullUrl, turret: strikerTurretUrl, feeler: strikerFeelerUrl },
+  bulwark: { hull: bulwarkHullUrl, turret: bulwarkTurretUrl, feeler: bulwarkFeelerUrl },
+  dart: { hull: dartHullUrl, turret: dartTurretUrl, feeler: dartFeelerUrl },
+};
+
+const SHARED_PARTS: ReadonlyArray<readonly [string, string]> = [
   [TEXTURE.tread, treadUrl],
   [TEXTURE.treadEnd, treadEndUrl],
   [TEXTURE.core, coreUrl],
-  [TEXTURE.feeler, feelerUrl],
   [TEXTURE.flash, flashUrl],
 ];
 
 /** Tank parçalarını yükleme kuyruğuna ekler (BootScene `preload`). */
 export function queueTankTextures(loader: Phaser.Loader.LoaderPlugin): void {
-  for (const [key, url] of SVG_PARTS) loader.svg(key, url, { scale: TEXTURE_SCALE });
+  for (const [key, url] of SHARED_PARTS) loader.svg(key, url, { scale: TEXTURE_SCALE });
+  for (const spec of tankSpecs()) {
+    for (const [part, url] of Object.entries(TANK_PART_URLS[spec.id]))
+      loader.svg(tankTexture(spec.id, part as TankPart), url, { scale: TEXTURE_SCALE });
+  }
 }
 
 function canvasTexture(
@@ -66,7 +90,14 @@ function canvasTexture(
 
 /** Çalışma anında çizilen efekt dokuları. */
 export function createRuntimeTextures(scene: Phaser.Scene): void {
-  createTreadTexture(scene, TEXTURE.tread, TEXTURE.treadBand, TEXTURE_SCALE);
+  for (const spec of tankSpecs())
+    createTreadTexture(
+      scene,
+      TEXTURE.tread,
+      treadBandTexture(spec.id),
+      TEXTURE_SCALE,
+      treadView(spec),
+    );
   canvasTexture(scene, TEXTURE.spark, 16, 16, (g) => {
     const gradient = g.createRadialGradient(8, 8, 0, 8, 8, 8);
     gradient.addColorStop(0, 'rgba(255,255,255,1)');

@@ -2,6 +2,7 @@ import { PersistedObservableState, type ScopedSaveManager } from '@volstudio/cor
 import { sanitizeName } from '@volstudio/network/protocol';
 import { isScenario, validSeed, SCENARIO, type ScenarioId } from '@/config/scenarios';
 import { initialEffectLevel, type EffectLevel } from '@/config/quality';
+import { isVehicleId, STRIKER, type VehicleId } from '@/config/vehicles';
 
 export interface GamePreferences {
   quality: EffectLevel;
@@ -12,6 +13,8 @@ export interface GamePreferences {
   seed: number;
   /** Çevrimiçi maçlarda görünen ad; boşsa sunucu ad atar. */
   playerName: string;
+  /** Oyuncunun sürdüğü araç; çevrimdışı sandbox ve çevrimiçi katılım bunu kullanır. */
+  vehicle: VehicleId;
 }
 
 const KEY = 'device.voltest.preferences';
@@ -28,6 +31,7 @@ function parsePreferences(value: unknown, fallback: GamePreferences): GamePrefer
         : fallback.volume,
     haptics: typeof input.haptics === 'boolean' ? input.haptics : fallback.haptics,
     playerName: sanitizeName(input.playerName) ?? fallback.playerName,
+    vehicle: isVehicleId(input.vehicle) ? input.vehicle : fallback.vehicle,
     display:
       input.display === 'fullscreen' || input.display === 'windowed'
         ? input.display
@@ -47,6 +51,7 @@ export class GameSettings {
       scenario: 'empty',
       seed: SCENARIO.defaultSeed,
       playerName: '',
+      vehicle: STRIKER.id,
     };
     this.state = new PersistedObservableState({
       key: KEY,
@@ -60,7 +65,8 @@ export class GameSettings {
         a.display === b.display &&
         a.scenario === b.scenario &&
         a.seed === b.seed &&
-        a.playerName === b.playerName,
+        a.playerName === b.playerName &&
+        a.vehicle === b.vehicle,
       store: {
         load: (_key, fallback) => store.load(KEY, fallback),
         save: (_key, value) => store.save(KEY, value),

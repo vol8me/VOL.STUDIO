@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="62" height="40" viewBox="0 0 62 40">
+  <defs>
+    <radialGradient id="dome" cx="0.36" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#8ea6bb"/>
+      <stop offset="0.5" stop-color="#3b4a59"/>
+      <stop offset="1" stop-color="#171f27"/>
+    </radialGradient>
+    <linearGradient id="barrel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8197ad"/>
+      <stop offset="0.45" stop-color="#394755"/>
+      <stop offset="1" stop-color="#182028"/>
+    </linearGradient>
+    <linearGradient id="mantlet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2a343e"/>
+      <stop offset="1" stop-color="#56697c"/>
+    </linearGradient>
+    <radialGradient id="shell" cx="0.35" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#a85a70"/>
+      <stop offset="0.5" stop-color="#612f40"/>
+      <stop offset="1" stop-color="#2f141d"/>
+    </radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#effffb"/>
+      <stop offset="0.45" stop-color="#52f5cf"/>
+      <stop offset="1" stop-color="#0c5c4b"/>
+    </radialGradient>
+    <linearGradient id="heat" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#52f5cf" stop-opacity="0"/>
+      <stop offset="1" stop-color="#52f5cf" stop-opacity=".85"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-linecap="round">
+    <path d="M24 12.4C31 9.6 36 14 44 12" stroke="#3a1a26" stroke-width="2.6"/>
+    <path d="M24 12.4C31 9.6 36 14 44 12" stroke="#9a5468" stroke-width="1.4"/>
+    <path d="M24 27.6C31 30.4 36 26 44 28" stroke="#3a1a26" stroke-width="2.6"/>
+    <path d="M24 27.6C31 30.4 36 26 44 28" stroke="#9a5468" stroke-width="1.4"/>
+  </g>
+  <rect x="33" y="16.2" width="22" height="7.6" rx="1.2" fill="url(#barrel)" stroke="#0d1217" stroke-width=".8"/>
+  <rect x="39.5" y="14.6" width="5.6" height="10.8" rx="1.6" fill="#2b3640" stroke="#0d1217" stroke-width=".6"/>
+  <path d="M40.6 15.2v9.6M42.3 15.2v9.6M44 15.2v9.6" stroke="#5c7084" stroke-width=".4"/>
+  <rect x="47.2" y="15.4" width="1.9" height="9.2" rx=".5" fill="#26303a" stroke="#0d1217" stroke-width=".45"/>
+  <rect x="34" y="16.8" width="5" height="6.4" fill="url(#heat)" opacity=".5"/>
+  <path d="M53 13.4H58.6L60.4 15.4V24.6L58.6 26.6H53Z" fill="#29333d" stroke="#0d1217" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M55 14.2v2.6M57 14.2v2.6M55 23.2v2.6M57 23.2v2.6" stroke="#0b0f13" stroke-width=".9"/>
+  <path d="M59.4 16.6v6.8" stroke="#52f5cf" stroke-opacity=".6" stroke-width=".7" stroke-linecap="round"/>
+  <path d="M27 9.6H35V30.4H27Z" fill="url(#mantlet)" stroke="#0d1217" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M28.4 11.2H33.6M28.4 28.8H33.6" stroke="#a9bdd0" stroke-opacity=".4" stroke-width=".5"/>
+  <g fill="#9fb3c6"><circle cx="29" cy="11.4" r=".5"/><circle cx="33" cy="11.4" r=".5"/><circle cx="29" cy="28.6" r=".5"/><circle cx="33" cy="28.6" r=".5"/></g>
+  <rect x="0.8" y="11.4" width="9.6" height="17.2" rx="1.6" fill="#252f39" stroke="#0d1217" stroke-width=".8"/>
+  <path d="M2.6 13H9" stroke="#8ea4b8" stroke-opacity=".4" stroke-width=".5"/>
+  <g fill="#f2b544"><path d="M3 18.4l2.2 0-1.4 3.2-2.2 0z"/><path d="M6.2 18.4l1.6 0-1.4 3.2-1.6 0z"/></g>
+  <rect x="2.4" y="24.4" width="6.4" height="2" rx=".5" fill="#0b0f13"/>
+  <path d="M10 8.4L18 4.6L27 8.6L30 20L27 31.4L18 35.4L10 31.6L6.6 20Z" fill="url(#dome)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M8.2 11.6C10.6 7.8 14.6 6 18 5.8C16.4 9.6 15.4 14.2 15 20C12.4 18.6 10 16.4 8.2 11.6Z" fill="url(#shell)" stroke="#1a0b12" stroke-width=".55"/>
+  <path d="M8.2 28.4C10.6 32.2 14.6 34 18 34.2C16.4 30.4 15.4 25.8 15 20C12.4 21.4 10 23.6 8.2 28.4Z" fill="url(#shell)" stroke="#1a0b12" stroke-width=".55"/>
+  <path d="M19 6.6L26 9.6L28.6 20L26 30.4L19 33.4C20.8 28.4 21.4 24.2 21.4 20C21.4 15.8 20.8 11.6 19 6.6Z" fill="#46586a" stroke="#0d1217" stroke-width=".6"/>
+  <path d="M9.4 20H14" stroke="#52f5cf" stroke-opacity=".65" stroke-width=".55" stroke-linecap="round"/>
+  <circle cx="23" cy="20" r="3.6" fill="url(#lens)" stroke="#0d1217" stroke-width=".7"/>
+  <circle cx="22" cy="19" r=".9" fill="#ffffff" fill-opacity=".9"/>
+  <circle cx="20.6" cy="9.4" r="1.15" fill="#52f5cf" stroke="#0d1217" stroke-width=".4"/>
+  <circle cx="20.6" cy="30.6" r="1.15" fill="#52f5cf" stroke="#0d1217" stroke-width=".4"/>
+  <g fill="#9fb3c6"><circle cx="25.4" cy="12.2" r=".55"/><circle cx="25.4" cy="27.8" r=".55"/><circle cx="12.4" cy="9.2" r=".5"/><circle cx="12.4" cy="30.8" r=".5"/></g>
+</svg>

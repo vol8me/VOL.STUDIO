@@ -1,3 +1,4 @@
+import { STRIKER } from '@/config/vehicles';
 import type { SurfaceCell, SurfaceSample, WeatherFrame } from '@/sim/weather/WeatherSystem';
 import type { WeatherSource } from '@/view/weather/SurfaceLayer';
 import type { WeatherVehicleFrame } from '@/view/weather/VehicleReflectionPool';
@@ -54,6 +55,7 @@ export function weather(surface: SurfaceSample = sample()): WeatherSource {
 export function vehicle(id = 1, overrides: Partial<WeatherVehicleFrame> = {}): WeatherVehicleFrame {
   return {
     id,
+    spec: STRIKER,
     x: 64,
     y: 64,
     hull: 0.5,

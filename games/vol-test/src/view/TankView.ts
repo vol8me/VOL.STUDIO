@@ -1,23 +1,16 @@
 import type Phaser from 'phaser';
 import { poseSourceOf, PoseShadow, type PoseSourceNode } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
-import type { ChassisPose } from '@/sim/chassis/ChassisState';
-import { TEXTURE, TEXTURE_SCALE } from './textures';
+import { TANK_ART, type TankArt } from '@/config/tankView';
+import type { TankSpec } from '@/config/vehicles';
+import { TEXTURE_SCALE, tankTexture } from './textures';
 import { TreadRig } from './TreadRig';
 import { TankLights } from './TankLights';
+import type { TankFrame, VehicleView } from './VehicleView';
 
-/** Görünümün her kare okuduğu tank durumu (ara değerli poz + sürüş sinyalleri). */
-export interface TankFrame extends ChassisPose {
-  readonly treadLeft: number;
-  readonly treadRight: number;
-  readonly speed: number;
-  readonly angularVelocity: number;
-  readonly boosting: boolean;
-}
+export type { TankFrame } from './VehicleView';
 
 const INV = 1 / TEXTURE_SCALE;
-/** Taret pivotunun doku içindeki yeri (turret.svg). */
-const TURRET_PIVOT = { x: 12 / 44, y: 0.5 };
 const FEELER_SPRING = { stiffness: 90, damping: 9 };
 /** Gölge ışığın tersine düşer; biçimi parçaların pozundan gelir (CORE `PoseShadow`). */
 const SHADOW = { offsetX: 3, offsetY: 5, alpha: 0.32, depth: 9 };
@@ -27,9 +20,9 @@ const SHADOW = { offsetX: 3, offsetY: 5, alpha: 0.32, depth: 9 };
  * Gövde, çekirdek, duyargalar ve
  * taret bir üst katmandadır ve süspansiyonun yunuslama/yalpa ötelemesiyle
  * paletlerin üstünde kayar. Taret gövdeden bağımsız döner, namlu atışta geri
- * teper.
+ * teper. Parça dokuları ve ölçüleri aracın sanat tablosundan gelir (`TANK_ART`).
  */
-export class TankView {
+export class TankView implements VehicleView {
   readonly root: Phaser.GameObjects.Container;
   private readonly shadow: PoseShadow;
   /** Gölge veren katı parçalar; ışık kaynakları (çekirdek, parlama) dahil değil. */
@@ -41,25 +34,33 @@ export class TankView {
   private readonly lights: TankLights;
   private readonly turretRig: Phaser.GameObjects.Container;
   private readonly turret: Phaser.GameObjects.Image;
+  private readonly art: TankArt;
   private elapsedMs = 0;
 
-  constructor(scene: Phaser.Scene, lighting?: Phaser.GameObjects.Container) {
+  constructor(
+    scene: Phaser.Scene,
+    private readonly spec: TankSpec,
+    lighting?: Phaser.GameObjects.Container,
+  ) {
+    const art = TANK_ART[spec.id];
+    this.art = art;
     this.shadow = new PoseShadow(scene, SHADOW);
-    this.lights = new TankLights(scene, lighting);
+    this.lights = new TankLights(scene, spec, lighting);
 
-    this.treads = new TreadRig(scene);
+    this.treads = new TreadRig(scene, spec);
 
-    const hull = scene.add.image(0, 0, TEXTURE.hull).setScale(INV);
+    const hull = scene.add.image(0, 0, tankTexture(spec.id, 'hull')).setScale(INV);
+    const feeler = art.feeler;
     this.feelers = [-1, 1].map((side) =>
       scene.add
-        .image(-17, side * 6.5, TEXTURE.feeler)
-        .setOrigin(1 / 18, 0.5)
+        .image(feeler.anchorX, side * feeler.anchorY, tankTexture(spec.id, 'feeler'))
+        .setOrigin(1 / feeler.width, 0.5)
         .setScale(INV)
-        .setRotation(Math.PI - side * 0.35),
+        .setRotation(Math.PI - side * feeler.rest),
     );
     this.turret = scene.add
-      .image(0, 0, TEXTURE.turret)
-      .setOrigin(TURRET_PIVOT.x, TURRET_PIVOT.y)
+      .image(0, 0, tankTexture(spec.id, 'turret'))
+      .setOrigin(art.turret.pivotX / art.turret.width, 0.5)
       .setScale(INV);
     this.turretRig = scene.add.container(0, 0, [this.turret]);
     this.body = scene.add.container(0, 0, [
@@ -95,13 +96,14 @@ export class TankView {
     this.turretRig.setRotation(frame.turret - frame.hull);
     this.turret.setX(this.lights.update(frame, deltaMs));
 
+    const rest = this.art.feeler.rest;
     const sway = Math.sin(this.elapsedMs / 380) * 0.08;
-    const drag = Math.min(0.5, frame.speed / 600);
+    const drag = Math.min(0.5, frame.speed / (this.spec.tank.maxSpeed * 2.6));
     this.feelers.forEach((feeler, index) => {
       const side = index === 0 ? -1 : 1;
       const target = -frame.angularVelocity * 0.12 + side * (sway - drag * 0.6);
       const offset = this.feelerSprings[index].update(target, deltaMs, FEELER_SPRING);
-      feeler.setRotation(Math.PI - side * (0.35 - drag * 0.25) + offset);
+      feeler.setRotation(Math.PI - side * (rest - drag * 0.25) + offset);
     });
     this.shadow.update(this.shadowSource);
   }

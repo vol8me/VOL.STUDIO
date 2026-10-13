@@ -51,7 +51,7 @@ export class EnvironmentController {
         frame.y > rect.y + rect.height
       )
         continue;
-      this.frames.push({ ...frame, id: vehicle.id });
+      this.frames.push({ ...frame, id: vehicle.id, spec: vehicle.spec });
     }
     this.view.update(this.model, rect, this.frames);
   }

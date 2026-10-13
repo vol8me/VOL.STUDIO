@@ -22,6 +22,7 @@ describe('cihaz tercihleri', () => {
       scenario: 'empty',
       seed: 731,
       playerName: '',
+      vehicle: 'striker',
     });
     await settings.update({
       quality: 'high',
@@ -29,6 +30,7 @@ describe('cihaz tercihleri', () => {
       haptics: false,
       display: 'fullscreen',
       playerName: '  Kaptan   Ada ',
+      vehicle: 'bulwark',
     });
     await settings.flush();
     settings.dispose();
@@ -42,6 +44,7 @@ describe('cihaz tercihleri', () => {
       scenario: 'empty',
       seed: 731,
       playerName: 'Kaptan Ada',
+      vehicle: 'bulwark',
     });
     expect(localStorage.getItem('synced.voltest.preferences')).toBeNull();
     next.dispose();
@@ -55,6 +58,7 @@ describe('cihaz tercihleri', () => {
       haptics: 'true',
       display: 'minimized',
       playerName: 42,
+      vehicle: 'hovercraft',
     });
     const settings = new GameSettings(saves, 'Linux');
     await settings.load();
@@ -66,6 +70,7 @@ describe('cihaz tercihleri', () => {
       scenario: 'empty',
       seed: 731,
       playerName: '',
+      vehicle: 'striker',
     });
     const changes: unknown[] = [];
     const off = settings.subscribe((value) => changes.push(value));

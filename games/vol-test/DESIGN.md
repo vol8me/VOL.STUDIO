@@ -42,15 +42,23 @@ Oyun paleti `src/config/palette.ts`, mevsim sunumu `src/config/weatherView.ts`
 içindedir. HUD yalnız CORE renk tokenlarını kullanır; oyun paleti UI temasını
 değiştirmez. Metin bölgeleri okunurluk için UI yüzeyi üzerinde durur.
 
-Tank, `src/assets/tank/` içindeki SVG parçalarından kurulur. Gövde, taret,
-palet, çekirdek, duyarga ve namlu parlaması ayrı sunulur. CORE `PoseShadow`
-aynı parçaları karartarak gölgeyi üretir. Palet bandı gerçek yüzey yolunu
+Her tank `src/assets/vehicles/` altında kendi klasöründeki SVG parçalarından
+kurulur (gövde, taret, duyarga); palet pabucu, palet ucu, çekirdek ve namlu
+parlaması `shared` klasöründe ortaktır. Parça ölçüleri, duyarga bağlantısı,
+çekirdek ve parlama ölçeği ile geri tepme yayı `src/config/tankView.ts`
+içindeki `TANK_ART` tablosundadır; palet geometrisi `treadView` ile aracın
+fizik ayak izinden türer. Sahne araç türünü bilmez: `src/view/VehicleView.ts`
+sözleşmesini `VehicleViews` kaydı tanımına uygun görünümle karşılar. Üç tank
+aynı aileden çıkar (koyu mavi-gri plakalar, bordo kabuk, turkuaz damar, altıgen
+taret kubbesi) ve siluetiyle ayrışır: Striker dengeli, Bulwark geniş ve ağır
+(amber şevronlu), Dart dar ve uzun. CORE `PoseShadow` aynı parçaları
+karartarak gölgeyi üretir. Palet bandı gerçek yüzey yolunu
 izler; patinajda bant döner fakat tank ilerlemez. Palet izi temas yolunu,
 kayma çizgisi ise kaymanın şiddetini izler. Kar sıkışması görsel izden ayrı,
 modeldeki palet temasıyla hesaplanır.
 
-Palet bandı `TreadTexture` ile aynı SVG'den bir kez üretilen ortak 32 karelik
-dokuyu kullanır; faz aralığı 0,25 dünya birimidir. Her araç kendi pozunu
+Palet bandı `TreadTexture` ile aynı SVG'den araç başına bir kez üretilen
+32 karelik dokuyu kullanır (bant boyu araca göre değişir); faz aralığı 0,25 dünya birimidir. Her araç kendi pozunu
 seçer, her karede canvas veya GPU dokusu üretmez. Çekirdek gövde içinde
 taretin arkasında normal alfa ile çizilir. Namlu parlamaları `VehicleViews`
 tarafından sahiplenilen tek additive katmandadır; gövde ve taretin dünya

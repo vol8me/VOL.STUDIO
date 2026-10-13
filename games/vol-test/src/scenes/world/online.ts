@@ -1,4 +1,5 @@
 import { classifyJoinError, type JoinFailure } from '@volstudio/network/client';
+import { modelOf, STRIKER, VEHICLES } from '@/config/vehicles';
 import type { Hud } from '@/hud/Hud';
 import { LobbyPanel, type LobbyChoice } from '@/hud/LobbyPanel';
 import type { MessageKey } from '@/i18n/keys';
@@ -61,6 +62,7 @@ export function createLobby(hud: Hud, context: DriverContext): LobbyPanel {
       session = await OnlineSession.open({
         endpoint: sessionEndpoint(),
         name: choice.name,
+        model: modelOf(VEHICLES[services?.settings.get().vehicle ?? STRIKER.id]),
         request: choice.request,
       });
     } catch (error) {

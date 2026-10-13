@@ -256,7 +256,7 @@ export class WorldScene extends Phaser.Scene {
 
     measurements?.mark('simulation');
 
-    for (const removed of this.vehicles.sync(this.sim.vehicles.map((vehicle) => vehicle.id))) {
+    for (const removed of this.vehicles.sync(this.sim.vehicles)) {
       this.effects.removeVehicle(removed);
     }
     this.simEvents.length = 0;

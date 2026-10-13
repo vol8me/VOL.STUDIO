@@ -20,6 +20,8 @@ export interface SessionOptions {
   readonly endpoint: string;
   readonly name: string;
   readonly request: OnlineRequest;
+  /** Seçilen aracın `VEHICLE_IDS` indeksi; verilmezse ilk araçla katılır. */
+  readonly model?: number;
   /** Testte sahte eşleştirici; verilmezse `endpoint` için gerçek istemci kurulur. */
   readonly lobby?: Lobby;
   /** Katılımdan sonra kendi oyuncu kaydının görünmesini bekleme üst sınırı. */
@@ -91,14 +93,14 @@ export class OnlineSession {
   }
 
   private static connect(lobby: Lobby, options: SessionOptions): Promise<Room<MatchSnapshot>> {
-    const { request, name } = options;
+    const { request, name, model = 0 } = options;
     if (request.kind === 'quick')
-      return lobby.joinOrCreate(ROOM.match, { name, mode: request.mode }, MATCH_SCHEMA);
+      return lobby.joinOrCreate(ROOM.match, { name, model, mode: request.mode }, MATCH_SCHEMA);
     const code = normalizeRoomCode(request.code);
     if (code === null) return Promise.reject(new JoinError('code'));
     return request.kind === 'create'
-      ? lobby.create(ROOM.private, { name, code }, MATCH_SCHEMA)
-      : lobby.join(ROOM.private, { name, code }, MATCH_SCHEMA);
+      ? lobby.create(ROOM.private, { name, model, code }, MATCH_SCHEMA)
+      : lobby.join(ROOM.private, { name, model, code }, MATCH_SCHEMA);
   }
 
   /** İlk durum gelip kayıt görünene dek bekler; oda önce kapanır ya da süre dolarsa `failed`. */

@@ -11,8 +11,8 @@ describe('WeatherView', () => {
   it('kaliteyi canlı uygular, sabit kaynakları tekrar kullanır ve destroy sonrası çizmez', () => {
     const scene = fakeScene();
     const view = new WeatherView(scene as unknown as Phaser.Scene, 8, EFFECT_LEVELS.high);
-    const created = scene.created.length;
     view.update(weather(), rect, [vehicle()]);
+    const created = scene.created.length;
     expect(view.counts.particles).toBe(512);
     view.applyProfile(EFFECT_LEVELS.low);
     view.update(weather(), rect, [vehicle()]);

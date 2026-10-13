@@ -2,6 +2,7 @@ import { JoinError, type Lobby, type Room } from '@volstudio/network/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NETWORK } from '@/config/network';
 import type { EventBatch } from '@/network/events';
+import { ROOM } from '@/network/rooms';
 import { OnlineSession, type ConnectionStatus, type OnlineRequest } from '@/network/OnlineSession';
 import type { MatchSnapshot } from '@/network/schema';
 import { openSession, startServer, until, type TestServer } from '../support/netHarness';
@@ -216,6 +217,35 @@ describe('OnlineSession yerleşme', () => {
     );
     expect(reason).toBe('failed');
     expect(raw.leave).toHaveBeenCalled();
+  });
+
+  it('seçilen aracın model indeksini katılım seçeneğinde taşır; verilmezse ilk araçtır', async () => {
+    const { lobby } = emptyRoom();
+    const join = (model?: number) =>
+      failure(
+        OnlineSession.open({
+          endpoint: 'http://127.0.0.1:1',
+          name: 'A',
+          request: { kind: 'quick', mode: 'ffa' },
+          ...(model === undefined ? {} : { model }),
+          lobby,
+          settleTimeoutMs: 5,
+        }),
+      );
+    await join(2);
+    await join();
+    expect(lobby.joinOrCreate).toHaveBeenNthCalledWith(
+      1,
+      ROOM.match,
+      { name: 'A', model: 2, mode: 'ffa' },
+      expect.anything(),
+    );
+    expect(lobby.joinOrCreate).toHaveBeenNthCalledWith(
+      2,
+      ROOM.match,
+      { name: 'A', model: 0, mode: 'ffa' },
+      expect.anything(),
+    );
   });
 
   it('oda yerleşmeden kapanırsa failed olur', async () => {

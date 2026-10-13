@@ -1,20 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { composeTankSvg, type TankSvgParts } from '@/assets/tank/composeTankSvg';
+import { composeTankSvg, type TankSvgParts } from '@/assets/vehicles/composeTankSvg';
 
+/** Parça dosyaları: ortak parçalar `shared/`, araca özgü olanlar `striker/` altındadır. */
 const names = {
-  hull: 'hull',
-  turret: 'turret',
-  tread: 'tread',
-  treadEnd: 'tread-end',
-  core: 'core',
-  feeler: 'feeler',
+  hull: 'striker/hull',
+  turret: 'striker/turret',
+  tread: 'shared/tread',
+  treadEnd: 'shared/tread-end',
+  core: 'shared/core',
+  feeler: 'striker/feeler',
 };
 const parts = Object.fromEntries(
   Object.entries(names).map(([key, name]) => [
     key,
-    readFileSync(resolve(process.cwd(), `src/assets/tank/${name}.svg`), 'utf8'),
+    readFileSync(resolve(process.cwd(), `src/assets/vehicles/${name}.svg`), 'utf8'),
   ]),
 ) as unknown as TankSvgParts;
 

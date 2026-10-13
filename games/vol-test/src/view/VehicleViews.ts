@@ -1,14 +1,22 @@
 import Phaser from 'phaser';
 import { TANK_LIGHTS } from '@/config/tankView';
+import type { VehicleSpec } from '@/config/vehicles';
 import { TankView } from './TankView';
+import type { VehicleView } from './VehicleView';
+
+/** Kayıttaki bir aracın görünüm için gereken kimliği ve tanımı. */
+export interface ViewedVehicle {
+  readonly id: number;
+  readonly spec: VehicleSpec;
+}
 
 /**
- * Kimlik → tank görünümü kaydı. Her kare simülasyondaki araç kimlikleriyle
- * eşitlenir: yeni araca görünüm kurulur, kaybolanınki sökülür. Sahne
- * görünümleri tek tek değil bu kayıt üzerinden yönetir.
+ * Kimlik → araç görünümü kaydı. Her kare simülasyondaki araçlarla eşitlenir: yeni araca
+ * tanımına uygun görünüm kurulur, kaybolanınki sökülür. Sahne görünümleri tek tek değil bu
+ * kayıt üzerinden yönetir.
  */
 export class VehicleViews {
-  private readonly views = new Map<number, TankView>();
+  private readonly views = new Map<number, VehicleView>();
   private readonly lighting: Phaser.GameObjects.Container;
 
   constructor(private readonly scene: Phaser.Scene) {
@@ -18,11 +26,12 @@ export class VehicleViews {
       .setBlendMode(Phaser.BlendModes.ADD);
   }
 
-  /** Kayıttaki kimlikleri `ids` ile eşitler; kaldırılan kimlikleri döner. */
-  sync(ids: Iterable<number>): number[] {
-    const alive = new Set(ids);
-    for (const id of alive) {
-      if (!this.views.has(id)) this.views.set(id, new TankView(this.scene, this.lighting));
+  /** Kayıttaki araçları `vehicles` ile eşitler; kaldırılan kimlikleri döner. */
+  sync(vehicles: Iterable<ViewedVehicle>): number[] {
+    const alive = new Set<number>();
+    for (const vehicle of vehicles) {
+      alive.add(vehicle.id);
+      if (!this.views.has(vehicle.id)) this.views.set(vehicle.id, this.create(vehicle.spec));
     }
     const removed: number[] = [];
     for (const [id, view] of this.views) {
@@ -34,7 +43,7 @@ export class VehicleViews {
     return removed;
   }
 
-  get(id: number): TankView | undefined {
+  get(id: number): VehicleView | undefined {
     return this.views.get(id);
   }
 
@@ -46,5 +55,9 @@ export class VehicleViews {
     for (const view of this.views.values()) view.destroy();
     this.views.clear();
     this.lighting.destroy();
+  }
+
+  private create(spec: VehicleSpec): VehicleView {
+    return new TankView(this.scene, spec, this.lighting);
   }
 }
