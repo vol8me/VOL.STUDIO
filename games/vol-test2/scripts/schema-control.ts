@@ -9,9 +9,9 @@
  * şema (örneğin chunk başına paketlenmiş bayt dizisi) bu sayıları değiştirebilir.
  */
 import { Encoder, StateView, schema, t } from '@colyseus/schema';
-import { BELT, NET, UNIT_KIND, WORLD } from '../src/config/forge';
+import { BELT, NET, UNIT_KIND, WORLD } from '../src/config/factory';
 import { buildComb } from '../src/sim/scenario';
-import { ForgeSim } from '../src/sim/sim';
+import { FactorySim } from '../src/sim/sim';
 
 const argv = process.argv.slice(2).filter((value) => value !== '--');
 const flag = (name: string, fallback: number): number => {
@@ -38,7 +38,7 @@ const World = schema(
   'CWorld',
 );
 
-const sim = ForgeSim.create({ seed: 0x5eed1234, sustainUnits: unitsTarget });
+const sim = FactorySim.create({ seed: 0x5eed1234, sustainUnits: unitsTarget });
 buildComb(sim, { maxBelts: belts, turrets: 24, fill: 2, smelterEvery: 3 });
 for (let step = 0; step < 600; step++) sim.step();
 const s = sim.state;

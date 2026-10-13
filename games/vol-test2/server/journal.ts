@@ -1,6 +1,6 @@
 import { open, readFile, type FileHandle } from 'node:fs/promises';
 import { ByteReader, ByteWriter, crc32 } from '@/net/bytes';
-import { readCommand, writeCommand, type ForgeCommand } from '@/sim/commands';
+import { readCommand, writeCommand, type FactoryCommand } from '@/sim/commands';
 
 /**
  * Komut günlüğü: anlık görüntüden sonra gelen her kabul edilmiş komut ve düzenli kalp atışları.
@@ -25,7 +25,7 @@ export type JournalRecord =
       readonly tick: number;
       readonly key: string;
       readonly seq: number;
-      readonly command: ForgeCommand;
+      readonly command: FactoryCommand;
     }
   | { readonly kind: typeof RECORD.beat; readonly tick: number; readonly hash: number };
 
@@ -33,7 +33,7 @@ export function encodeCommandRecord(
   tick: number,
   key: string,
   seq: number,
-  command: ForgeCommand,
+  command: FactoryCommand,
 ): Uint8Array {
   const out = new ByteWriter(64);
   out.u8(RECORD.command);

@@ -1,29 +1,29 @@
-import { BELT, KIND } from '../../src/config/forge';
-import { COMMAND, type ForgeCommand } from '../../src/sim/commands';
-import { ForgeSim } from '../../src/sim/sim';
-import type { ForgeState } from '../../src/sim/state';
+import { BELT, KIND } from '../../src/config/factory';
+import { COMMAND, type FactoryCommand } from '../../src/sim/commands';
+import { FactorySim } from '../../src/sim/sim';
+import type { FactoryState } from '../../src/sim/state';
 
 export const SMALL = { width: 64, height: 64 } as const;
 
-export function smallSim(extra: { seed?: number; sustainUnits?: number } = {}): ForgeSim {
-  return ForgeSim.create({ ...SMALL, ...extra });
+export function smallSim(extra: { seed?: number; sustainUnits?: number } = {}): FactorySim {
+  return FactorySim.create({ ...SMALL, ...extra });
 }
 
 let seq = 1;
 export function place(
-  sim: ForgeSim,
+  sim: FactorySim,
   x: number,
   y: number,
   kind: number,
   rot = 0,
   key = 'test-player',
 ): number {
-  const command: ForgeCommand = { type: COMMAND.place, x, y, kind, rot };
+  const command: FactoryCommand = { type: COMMAND.place, x, y, kind, rot };
   return sim.apply(key, seq++, command).result;
 }
 
 /** Her bant karesinde eşyalar azalan konumda ve en az aralıkta durmalıdır. */
-export function beltViolations(s: ForgeState): string[] {
+export function beltViolations(s: FactoryState): string[] {
   const problems: string[] = [];
   for (let tile = 0; tile < s.count; tile++) {
     const count = s.beltCount[tile];

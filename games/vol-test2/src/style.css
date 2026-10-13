@@ -25,18 +25,18 @@ body {
   pointer-events: none;
 }
 
-.forge-app,
-.forge-play {
+.factory-app,
+.factory-play {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.forge-app [hidden] {
+.factory-app [hidden] {
   display: none;
 }
 
-.forge-connect {
+.factory-connect {
   pointer-events: auto;
   position: absolute;
   top: 50%;
@@ -55,36 +55,36 @@ body {
   font-family: var(--vol-font-family);
 }
 
-.forge-connect__title {
+.factory-connect__title {
   margin: 0;
   font-size: var(--vol-text-heading, 1.25rem);
 }
 
-.forge-connect__hint {
+.factory-connect__hint {
   margin: 0;
   color: var(--vol-ui-text-secondary);
   font-size: var(--vol-text-label, 0.875rem);
 }
 
-.forge-connect__field {
+.factory-connect__field {
   display: flex;
   flex-direction: column;
   gap: var(--vol-space-xs, 0.25rem);
 }
 
-.forge-connect__label {
+.factory-connect__label {
   font-size: var(--vol-text-label, 0.875rem);
   color: var(--vol-ui-text-secondary);
 }
 
-.forge-connect__error {
+.factory-connect__error {
   margin: 0;
   min-height: 1.25em;
   color: var(--vol-ui-danger-solid);
   font-size: var(--vol-text-label, 0.875rem);
 }
 
-.forge-hud {
+.factory-hud {
   pointer-events: auto;
   position: absolute;
   top: calc(var(--vol-safe-top, 0px) + 0.5rem);
@@ -102,17 +102,17 @@ body {
   font-size: var(--vol-text-label, 0.875rem);
 }
 
-.forge-hud__status {
+.factory-hud__status {
   font-weight: 600;
 }
 
-.forge-hud__stats {
+.factory-hud__stats {
   flex: 1 1 auto;
   min-width: 0;
   color: var(--vol-ui-text-secondary);
 }
 
-.forge-tools {
+.factory-tools {
   pointer-events: auto;
   position: absolute;
   bottom: calc(var(--vol-safe-bottom, 0px) + 0.5rem);
@@ -128,17 +128,17 @@ body {
 }
 
 /* Menü satır satır dolar: dar ekranda ikinci satıra sarar, orta alanı kaplamaz. */
-.forge-tools .vol-build-menu {
+.factory-tools .vol-build-menu {
   flex: 1 1 22rem;
   grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
   padding: var(--vol-space-xs, 0.25rem);
 }
 
-.forge-tools .vol-build-menu__item {
+.factory-tools .vol-build-menu__item {
   padding: var(--vol-space-xs, 0.25rem);
 }
 
-.forge-tools > .vol-button {
+.factory-tools > .vol-button {
   flex: 0 0 auto;
   align-self: center;
 }

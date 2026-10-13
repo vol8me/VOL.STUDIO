@@ -1,6 +1,6 @@
 import { PALETTE } from '@/config/game';
-import { BUILDING, KIND, WORLD, type Kind } from '@/config/forge';
-import type { ForgeState } from '@/sim/state';
+import { BUILDING, KIND, WORLD, type Kind } from '@/config/factory';
+import type { FactoryState } from '@/sim/state';
 
 /** Hasar bu orandan aşağıdaki yapının üstüne kırmızı örtü çizilir. */
 const DAMAGE_RATIO = 0.5;
@@ -25,7 +25,7 @@ function arrow(ctx: CanvasRenderingContext2D, cx: number, cy: number, rot: numbe
  */
 export function drawChunk(
   ctx: CanvasRenderingContext2D,
-  s: ForgeState,
+  s: FactoryState,
   chunk: number,
   tilePx: number,
 ): void {

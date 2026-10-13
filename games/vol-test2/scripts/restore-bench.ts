@@ -13,8 +13,8 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { KIND, WORLD } from '../src/config/forge';
-import { ForgeSession } from '../src/net/session';
+import { KIND, WORLD } from '../src/config/factory';
+import { FactorySession } from '../src/net/session';
 
 const packageDir = fileURLToPath(new URL('..', import.meta.url));
 
@@ -102,7 +102,7 @@ let current: Boot | null = null;
 try {
   current = await boot(dataDir);
   const first = current;
-  const session = await ForgeSession.connect({
+  const session = await FactorySession.connect({
     endpoint: first.endpoint,
     worldId: 'world-1',
     key: 'player-restore',

@@ -10,7 +10,7 @@ karar [backend araştırmasındadır](../../docs/backend-research.md).
 
 ## Simülasyon
 
-- Durum tile başına düz tiplenmiş dizilerdedir (`ForgeState`). Nesne tahsisi ve `Map` yoktur;
+- Durum tile başına düz tiplenmiş dizilerdedir (`FactoryState`). Nesne tahsisi ve `Map` yoktur;
   adım başına ayırma yalnız taret atışı kayıtlarındadır.
 - Konveyör eşyası sabit noktalıdır (`0..1023`, kare başına 4 yuva, 256 aralık). Kayan nokta
   yalnız birimlerin konumundadır; birim hareketi `Math.sqrt` ve dört işlem kullanır
@@ -35,7 +35,7 @@ Colyseus odaları, WebSocket taşımasını, oturum yeniden bağlanmasını ve o
 Dünya durumu Colyseus `Schema` ile eşitlenmez: mesajlar sayıyla adlandırılmış ham baytlardır
 (`src/net/protocol.ts`, `WIRE_VERSION`). Gerekçe ve karşılaştırma araştırma belgesindedir.
 
-- **Kilit adımlı (`lockstep`, birincil).** İstemci aynı `ForgeSim`'i koşturur. Sunucu iki adımda
+- **Kilit adımlı (`lockstep`, birincil).** İstemci aynı `FactorySim`'i koşturur. Sunucu iki adımda
   bir paket gönderir (`NET.syncEvery`): o aralıkta uygulanan komutlar ve adım sayısı; her 150
   adımda durum karması. Yük bant sayısına değil komut sayısına bağlıdır. İstemci karmayı kendi
   durumuyla karşılaştırır; ayrışırsa `desynced` olur ve yeniden el sıkışarak yeni anlık görüntü
@@ -63,6 +63,10 @@ Dünya durumu Colyseus `Schema` ile eşitlenmez: mesajlar sayıyla adlandırılm
   `tests/sim/golden.test.ts` kural parmak iziyle yakalar. Farklı kuralları koşturan bir istemci her karma
   denetiminde ayrışıp sürekli yeni anlık görüntü isteyeceği için eski istemciyi sunucuda tutmak desteklenmez:
   Steam ve Android güncellemeleri aynı anda yayımlanmazsa eski sürüm güncellenene dek bağlanamaz.
+  `Forge*` adlarının `Factory*` olarak değişmesi (oda adı `factory`, veri dizini `records/factory-data`)
+  mesaj baytlarını ve kuralları değiştirmedi (`golden.test.ts` karması aynı); bu yüzden `WIRE_VERSION`
+  ve `SIM_VERSION` artmadı. Dağıtılmış istemci olmadığı için oda adı için uyumluluk penceresi yoktur;
+  eski `records/forge-data` varsa elle taşınır.
 - **Oyuncu anahtarı kimlik doğrulaması değildir.** İstemcinin ürettiği rastgele bir dizedir;
   aynı anahtarla yeni bağlantı eskisini yerinden eder. Gerçek kimlik (Steam, hesap) ürün
   kararıdır ve burada yoktur.
@@ -87,8 +91,8 @@ Dünya durumu Colyseus `Schema` ile eşitlenmez: mesajlar sayıyla adlandırılm
 
 ## İstemci
 
-Phaser 4 yalnız çizer; kural ve durum `ForgeSim` ile `ForgeController`dadır (Phaser'a ve DOM'a
-dokunmaz). `ForgeScene` CORE `WorldCameraController` ile kamerayı, `TapDetector` ile dokunmayı
+Phaser 4 yalnız çizer; kural ve durum `FactorySim` ile `FactoryController`dadır (Phaser'a ve DOM'a
+dokunmaz). `FactoryScene` CORE `WorldCameraController` ile kamerayı, `TapDetector` ile dokunmayı
 (kısa dokunuş eylem, mouse sağ tık ya da dokunmatik uzun basış silme) yönetir. `WorldView` dünyayı
 16×16 tile'lık chunk dokularına çizer; doku yalnız chunk sürümü değişince yenilenir
 (kare başına en çok 8), bellekte en çok 96 doku tutulur, bant eşyaları ve birimler uzak
@@ -110,7 +114,7 @@ aldığı için `main.ts` bu modülü ilk import eder; WebKit aksi halde "Wrong 
   eşleştirme ve keşif henüz yoktur.
 - Oyuncu kimliği ve yetkilendirme yoktur (yukarıya bakın); WSS ve belirteç ürün kararıdır.
 - Paketli uygulama (Tauri WebView) ağ ve performans açısından ölçülmedi; cihaz sayıları tarayıcı motorundandır.
-- `ForgeSession`, kilit adımlı istemci ve protokol bu pakettedir; ikinci bir oyun aynısını isterse
+- `FactorySession`, kilit adımlı istemci ve protokol bu pakettedir; ikinci bir oyun aynısını isterse
   `@volstudio/network`a taşınır ([TODO](TODO.md)).
 
 ## Ölçüm araçları

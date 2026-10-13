@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BELT } from '../../src/config/forge';
+import { BELT } from '../../src/config/factory';
 import { beltItemPoint, lerp, tileAt, visibleChunks } from '../../src/view/geometry';
 import { evictionOrder } from '../../src/view/chunkCache';
 

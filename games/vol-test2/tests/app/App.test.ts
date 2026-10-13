@@ -10,10 +10,10 @@ vi.mock('@volstudio/core/i18n', () => ({
 }));
 
 import { App, type AppDeps } from '../../src/app/App';
-import { ForgeHost } from '../../src/app/host';
-import { ITEM } from '../../src/config/forge';
+import { FactoryHost } from '../../src/app/host';
+import { ITEM } from '../../src/config/factory';
 import { SIM_MISMATCH, SYNC_MODE } from '../../src/net/protocol';
-import type { ForgeSession, SessionEvent } from '../../src/net/session';
+import type { FactorySession, SessionEvent } from '../../src/net/session';
 import { RESULT } from '../../src/sim/commands';
 import { smallSim } from '../helpers/world';
 
@@ -42,7 +42,7 @@ function fakeSession() {
 }
 
 function setup(overrides: Partial<AppDeps> = {}, fake = fakeSession()) {
-  const host = new ForgeHost();
+  const host = new FactoryHost();
   const storage = new Map<string, string>();
   const deps: AppDeps = {
     host,
@@ -56,7 +56,7 @@ function setup(overrides: Partial<AppDeps> = {}, fake = fakeSession()) {
       getItem: (key) => storage.get(key) ?? null,
       setItem: (key, value) => void storage.set(key, value),
     },
-    connect: vi.fn(() => Promise.resolve(fake.session as unknown as ForgeSession)),
+    connect: vi.fn(() => Promise.resolve(fake.session as unknown as FactorySession)),
     hudIntervalMs: 20,
     ...overrides,
   };
@@ -64,10 +64,10 @@ function setup(overrides: Partial<AppDeps> = {}, fake = fakeSession()) {
   return { app, host, deps, storage, ...fake };
 }
 
-const connectCard = () => document.querySelector<HTMLElement>('.forge-connect')!;
-const playing = () => document.querySelector<HTMLElement>('.forge-play')!;
-const errorText = () => document.querySelector('.forge-connect__error')!.textContent;
-const inputs = () => [...document.querySelectorAll<HTMLInputElement>('.forge-connect input')];
+const connectCard = () => document.querySelector<HTMLElement>('.factory-connect')!;
+const playing = () => document.querySelector<HTMLElement>('.factory-play')!;
+const errorText = () => document.querySelector('.factory-connect__error')!.textContent;
+const inputs = () => [...document.querySelectorAll<HTMLInputElement>('.factory-connect input')];
 const key = (init: KeyboardEventInit, target: EventTarget = document.body) =>
   target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, ...init }));
 
@@ -121,14 +121,14 @@ describe('App bağlantı formu', () => {
     expect(storage.get('voltest2.server')).toBe('http://127.0.0.1:2567');
     expect(connectCard().hidden).toBe(true);
     expect(playing().hidden).toBe(false);
-    expect(document.querySelector('.forge-hud__status')!.textContent).toBe('status.live');
-    expect(document.querySelector('.forge-hud__stats')!.textContent).toContain('hud.players 3');
+    expect(document.querySelector('.factory-hud__status')!.textContent).toBe('status.live');
+    expect(document.querySelector('.factory-hud__stats')!.textContent).toContain('hud.players 3');
   });
 
   it('ölçüm değerlerini otomasyon için veri öznitelikleri olarak yayımlar', async () => {
     const { app } = setup();
     await app.join();
-    const stats = document.querySelector<HTMLElement>('[data-testid="forge-stats"]')!;
+    const stats = document.querySelector<HTMLElement>('[data-testid="factory-stats"]')!;
     expect(stats.dataset.hashChecks).toBe('5');
     expect(stats.dataset.lag).toBe('4');
     expect(stats.dataset.units).toBe(String(Number(stats.dataset.units)));
@@ -157,11 +157,11 @@ describe('App bağlantı formu', () => {
   });
 
   it('katılım sürerken ikinci katılım isteği yok sayılır', async () => {
-    let release: (session: ForgeSession) => void = () => undefined;
+    let release: (session: FactorySession) => void = () => undefined;
     const fake = fakeSession();
     const connect = vi.fn(
       () =>
-        new Promise<ForgeSession>((resolve) => {
+        new Promise<FactorySession>((resolve) => {
           release = resolve;
         }),
     );
@@ -169,7 +169,7 @@ describe('App bağlantı formu', () => {
     const first = app.join();
     await app.join();
     expect(connect).toHaveBeenCalledTimes(1);
-    release(fake.session as unknown as ForgeSession);
+    release(fake.session as unknown as FactorySession);
     await first;
     expect(app.currentPhase).toBe('playing');
   });
@@ -225,7 +225,7 @@ describe('App oturum yaşam döngüsü', () => {
     const fake = fakeSession();
     const { app, host } = setup({}, fake);
     await app.join();
-    document.querySelector<HTMLButtonElement>('.forge-hud button')!.click();
+    document.querySelector<HTMLButtonElement>('.factory-hud button')!.click();
     await vi.waitFor(() => expect(fake.session.leave).toHaveBeenCalled());
     expect(host.controller).toBeNull();
     expect(errorText()).toBe('');
@@ -240,23 +240,23 @@ describe('App oturum yaşam döngüsü', () => {
     app.destroy();
     expect(fake.session.leave).toHaveBeenCalledTimes(1);
     expect(host.controller).toBeNull();
-    expect(document.querySelector('.forge-app')).toBeNull();
+    expect(document.querySelector('.factory-app')).toBeNull();
     expect(fake.listeners.size).toBe(0);
   });
 
   it('katılım tamamlanmadan kapatılırsa gelen oturum bırakılır', async () => {
-    let release: (session: ForgeSession) => void = () => undefined;
+    let release: (session: FactorySession) => void = () => undefined;
     const fake = fakeSession();
     const connect = vi.fn(
       () =>
-        new Promise<ForgeSession>((resolve) => {
+        new Promise<FactorySession>((resolve) => {
           release = resolve;
         }),
     );
     const { app, host } = setup({ connect }, fake);
     const joining = app.join();
     app.destroy();
-    release(fake.session as unknown as ForgeSession);
+    release(fake.session as unknown as FactorySession);
     await joining;
     expect(fake.session.leave).toHaveBeenCalledTimes(1);
     expect(host.controller).toBeNull();
@@ -275,7 +275,7 @@ describe('App oyun arayüzü', () => {
     );
     key({ key: 'r' });
     expect(controller.rot).toBe(1);
-    expect(document.querySelector('.forge-tools')!.textContent).toContain('dir.south');
+    expect(document.querySelector('.factory-tools')!.textContent).toContain('dir.south');
     key({ key: 'Escape' });
     expect(controller.tool).toBeNull();
   });
@@ -332,7 +332,7 @@ describe('App oyun arayüzü', () => {
     fake.session.lockstep.sim = null as never;
     const { app } = setup({}, fake);
     await app.join();
-    expect(document.querySelector('.forge-hud__status')!.textContent).toBe('status.reconnecting');
-    expect(document.querySelector('.forge-hud__stats')!.textContent).toBe('');
+    expect(document.querySelector('.factory-hud__status')!.textContent).toBe('status.reconnecting');
+    expect(document.querySelector('.factory-hud__stats')!.textContent).toBe('');
   });
 });

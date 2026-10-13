@@ -5,8 +5,8 @@ import { createVolGame, i18n, showFatalStartupError, suppressNativeMenus } from 
 import { App } from './app/App';
 import { loadSettings, type KeyValueStore } from './app/connect';
 import { host } from './app/host';
-import { ForgeScene } from './scenes/ForgeScene';
-import { ForgeSession } from './net/session';
+import { FactoryScene } from './scenes/FactoryScene';
+import { FactorySession } from './net/session';
 import { GAME } from './config/game';
 import en from './i18n/en.json';
 import tr from './i18n/tr.json';
@@ -40,7 +40,7 @@ export async function boot(): Promise<void> {
         host,
         settings: loadSettings(window.location.search, storage, secureRandom),
         storage,
-        connect: (options) => ForgeSession.connect(options),
+        connect: (options) => FactorySession.connect(options),
       }),
     );
     game = await createVolGame({
@@ -48,7 +48,7 @@ export async function boot(): Promise<void> {
       backgroundColor: GAME.backgroundColor,
       strategy: 'resize',
       maxDpr: GAME.maxDpr,
-      scenes: [ForgeScene],
+      scenes: [FactoryScene],
     });
     scope.addSubscription(suppressNativeMenus(document));
     game.events.once('destroy', () => scope.dispose());

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SIM_VERSION } from '../../src/config/forge';
+import { SIM_VERSION } from '../../src/config/factory';
 import { SIM_MISMATCH, isSimMismatch } from '../../src/net/protocol';
 
 describe('simülasyon sürümü uyuşmazlığı', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createStatefulRandom } from '@volstudio/core/random';
-import { KIND, NET } from '../../src/config/forge';
+import { KIND, NET } from '../../src/config/factory';
 import { ByteWriter } from '../../src/net/bytes';
 import {
   LockstepClient,
@@ -8,15 +8,15 @@ import {
   writeTickPacket,
   type TickPacket,
 } from '../../src/net/lockstep';
-import { COMMAND, RESULT, type ForgeCommand } from '../../src/sim/commands';
+import { COMMAND, RESULT, type FactoryCommand } from '../../src/sim/commands';
 import { buildComb } from '../../src/sim/scenario';
-import { ForgeSim } from '../../src/sim/sim';
+import { FactorySim } from '../../src/sim/sim';
 import { LockstepFeed } from '../../server/lockstepFeed';
 import { SMALL } from '../helpers/world';
 
 /** Sunucu tarafı: gerçek akış, gerçek kodlama; ağ yerine doğrudan teslim. */
 class Server {
-  readonly sim: ForgeSim;
+  readonly sim: FactorySim;
   readonly feed: LockstepFeed;
   readonly clients: LockstepClient[] = [];
   readonly random = createStatefulRandom(4242);
@@ -26,12 +26,12 @@ class Server {
   packets = 0;
 
   constructor(seed = 21) {
-    this.sim = ForgeSim.create({ ...SMALL, seed });
+    this.sim = FactorySim.create({ ...SMALL, seed });
     buildComb(this.sim, { maxBelts: 300, turrets: 6, fill: 1, smelterEvery: 2 });
     this.feed = new LockstepFeed(this.sim.tick);
   }
 
-  private randomCommand(): ForgeCommand {
+  private randomCommand(): FactoryCommand {
     const r = this.random;
     const x = Math.floor(r.next() * SMALL.width);
     const y = Math.floor(r.next() * SMALL.height);

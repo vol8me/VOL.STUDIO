@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { SIM_VERSION } from '../../src/config/forge';
+import { SIM_VERSION } from '../../src/config/factory';
 import { buildComb } from '../../src/sim/scenario';
-import { ForgeSim } from '../../src/sim/sim';
+import { FactorySim } from '../../src/sim/sim';
 
 /**
  * Simülasyon kurallarının parmak izi. Kilit adımlı istemci ile sunucu aynı kuralları koşturmak
@@ -11,7 +11,7 @@ import { ForgeSim } from '../../src/sim/sim';
 const GOLDEN = { simVersion: 1, tick: 900, hash: 1167257528 };
 
 function fingerprint(): number {
-  const sim = ForgeSim.create({ seed: 0x5eed, width: 96, height: 96, sustainUnits: 60 });
+  const sim = FactorySim.create({ seed: 0x5eed, width: 96, height: 96, sustainUnits: 60 });
   buildComb(sim, { maxBelts: 900, turrets: 12, fill: 2, smelterEvery: 3 });
   sim.run(GOLDEN.tick);
   return sim.hash();

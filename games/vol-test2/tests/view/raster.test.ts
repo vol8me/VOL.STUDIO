@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILDING, KIND, WORLD } from '../../src/config/forge';
+import { BUILDING, KIND, WORLD } from '../../src/config/factory';
 import { PALETTE } from '../../src/config/game';
 import { drawChunk } from '../../src/view/raster';
 import { smallSim } from '../helpers/world';

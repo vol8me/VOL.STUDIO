@@ -5,6 +5,7 @@ import { LockstepClient, readTickPacket } from './lockstep';
 import {
   SYNC_MODE,
   TO_CLIENT,
+  ROOM_NAME,
   TO_SERVER,
   WIRE_VERSION,
   readAck,
@@ -17,10 +18,8 @@ import {
   type Welcome,
 } from './protocol';
 import { Replica } from './replica';
-import { NET, SIM_VERSION } from '@/config/forge';
-import { writeCommand, type ForgeCommand, COMMAND } from '@/sim/commands';
-
-export const ROOM_NAME = 'forge';
+import { NET, SIM_VERSION } from '@/config/factory';
+import { writeCommand, type FactoryCommand, COMMAND } from '@/sim/commands';
 
 /** Colyseus `CloseCode.MAY_TRY_RECONNECT`. */
 const MAY_TRY_RECONNECT = 4010;
@@ -58,7 +57,7 @@ export interface ReceivedBytes {
 }
 
 interface Waiting {
-  readonly command: ForgeCommand;
+  readonly command: FactoryCommand;
   readonly sentAt: number;
   readonly resolve: (ack: Ack) => void;
 }
@@ -75,7 +74,7 @@ export async function inflateDeflate(bytes: Uint8Array): Promise<Uint8Array> {
  * yeniden bağlanma. Phaser'a bağlı değildir; oyun sahnesi ve test botları aynı sınıfı kullanır.
  * Kilit adımlı dünyada `lockstep`, ilgi alanı dünyasında `replica` dolar.
  */
-export class ForgeSession {
+export class FactorySession {
   status: SessionStatus = 'connecting';
   welcome: Welcome | null = null;
   lockstep = new LockstepClient();
@@ -106,7 +105,7 @@ export class ForgeSession {
     this.wire();
   }
 
-  static async connect(options: SessionOptions): Promise<ForgeSession> {
+  static async connect(options: SessionOptions): Promise<FactorySession> {
     const client = new Client(options.endpoint);
     const room = await client.join(ROOM_NAME, {
       worldId: options.worldId,
@@ -115,7 +114,7 @@ export class ForgeSession {
       sim: SIM_VERSION,
       key: options.key,
     });
-    const session = new ForgeSession(room, options);
+    const session = new FactorySession(room, options);
     session.hello();
     return session;
   }
@@ -251,7 +250,7 @@ export class ForgeSession {
   }
 
   /** Komutu sıraya alır ve gönderir; ack (sunucu günlüğe yazdıktan sonra) gelince çözülür. */
-  submit(command: ForgeCommand): Promise<Ack> {
+  submit(command: FactoryCommand): Promise<Ack> {
     const seq = this.nextSeq++;
     return new Promise<Ack>((resolve) => {
       this.waiting.set(seq, { command, sentAt: this.now(), resolve });
@@ -336,7 +335,7 @@ function toBytes(payload: unknown): Uint8Array {
   throw new TypeError('Bayt yükü bekleniyordu.');
 }
 
-function encodeCommand(seq: number, command: ForgeCommand): Uint8Array {
+function encodeCommand(seq: number, command: FactoryCommand): Uint8Array {
   const out = new ByteWriter(16);
   out.u32(seq);
   writeCommand(out, command);

@@ -13,35 +13,36 @@ import {
   stdoutSink,
   type StartedHost,
 } from '@volstudio/network/server';
-import { NET } from '@/config/forge';
+import { NET } from '@/config/factory';
 import { SYNC_MODE, type SyncMode } from '@/net/protocol';
 import { buildComb } from '@/sim/scenario';
-import { BOOT_TOKEN, ForgeRoom, ROOM_NAME, type ForgeWorldConfig } from './ForgeRoom';
+import { ROOM_NAME } from '@/net/protocol';
+import { BOOT_TOKEN, FactoryRoom, type FactoryWorldConfig } from './FactoryRoom';
 
-const rooms = { [ROOM_NAME]: defineRoom(ForgeRoom).filterBy(['worldId']) };
+const rooms = { [ROOM_NAME]: defineRoom(FactoryRoom).filterBy(['worldId']) };
 
-export interface RunningForge extends StartedHost<typeof rooms> {
-  readonly rooms: Map<string, ForgeRoom>;
+export interface RunningFactory extends StartedHost<typeof rooms> {
+  readonly rooms: Map<string, FactoryRoom>;
 }
 
 /**
  * Sunucuyu başlatır ve dünyaları kurar. Dünyalar açılışta oluşturulur: oyuncu yokken de çalışırlar.
  * Bir dünya diskte başka bir süreçte kilitliyse başlatma durur ve hata verir.
  */
-export async function startForge(
-  worlds: readonly ForgeWorldConfig[],
+export async function startFactory(
+  worlds: readonly FactoryWorldConfig[],
   port = 2567,
   host = '127.0.0.1',
   logger?: Logger,
-): Promise<RunningForge> {
+): Promise<RunningFactory> {
   const started = await startHost(rooms, { port, host }, { logger });
-  const worldRooms = new Map<string, ForgeRoom>();
+  const worldRooms = new Map<string, FactoryRoom>();
   try {
     for (const world of worlds) {
       const listing = await matchMaker.createRoom(ROOM_NAME, { ...world, boot: BOOT_TOKEN });
       worldRooms.set(
         world.worldId,
-        matchMaker.getLocalRoomById(listing.roomId) as unknown as ForgeRoom,
+        matchMaker.getLocalRoomById(listing.roomId) as unknown as FactoryRoom,
       );
     }
   } catch (error) {
@@ -87,7 +88,7 @@ export function runtimeSettings(
   const units = envInteger(env, 'VOL_TEST2_UNITS', 0, 0, 2000);
   return {
     ...listenSettings(env),
-    dataDir: resolve(envText(env, 'VOL_TEST2_DATA', join('records', 'forge-data'))),
+    dataDir: resolve(envText(env, 'VOL_TEST2_DATA', join('records', 'factory-data'))),
     worlds: envInteger(env, 'VOL_TEST2_WORLDS', 1, 1, 64),
     worldPrefix: envText(env, 'VOL_TEST2_WORLD_PREFIX', 'world-', /^[a-z][a-z0-9_-]{0,15}$/),
     firstWorld: envInteger(env, 'VOL_TEST2_FIRST_WORLD', 1, 0, 10000),
@@ -112,8 +113,8 @@ export function runtimeSettings(
 if (isEntryModule(import.meta.url, process.argv[1])) {
   const settings = runtimeSettings(process.env);
   const scene = settings.scene;
-  const logger = Logger.create({ src: 'forge', sinks: [stdoutSink()] });
-  const worlds: ForgeWorldConfig[] = Array.from({ length: settings.worlds }, (_, index) => ({
+  const logger = Logger.create({ src: 'factory', sinks: [stdoutSink()] });
+  const worlds: FactoryWorldConfig[] = Array.from({ length: settings.worlds }, (_, index) => ({
     worldId: `${settings.worldPrefix}${settings.firstWorld + index}`,
     dataDir: settings.dataDir,
     mode: settings.mode,
@@ -133,7 +134,7 @@ if (isEntryModule(import.meta.url, process.argv[1])) {
           })
       : undefined,
   }));
-  const running = await startForge(worlds, settings.port, settings.host, logger);
+  const running = await startFactory(worlds, settings.port, settings.host, logger);
   // Hazır satırı yalnız işletim kapısı da dinlerken yazılır: süreci başlatan ölçüm betiği satırı görür görmez bağlanır.
   const ops =
     settings.metricsPort === null

@@ -1,8 +1,8 @@
 import type Phaser from 'phaser';
 import { describe, expect, it, vi } from 'vitest';
-import type { ForgeController } from '../../src/app/ForgeController';
-import { ForgeController as Controller } from '../../src/app/ForgeController';
-import { BELT, ITEM, KIND, UNIT_KIND, WORLD } from '../../src/config/forge';
+import type { FactoryController } from '../../src/app/FactoryController';
+import { FactoryController as Controller } from '../../src/app/FactoryController';
+import { BELT, ITEM, KIND, UNIT_KIND, WORLD } from '../../src/config/factory';
 import { VIEW } from '../../src/config/game';
 import { WorldView } from '../../src/view/WorldView';
 import { place, smallSim } from '../helpers/world';
@@ -82,7 +82,7 @@ function fakeScene(view: { x: number; y: number; width: number; height: number }
   return { scene: scene as unknown as Phaser.Scene, raw: scene, textures, images, graphics };
 }
 
-function controllerFor(sim: ReturnType<typeof smallSim>): ForgeController {
+function controllerFor(sim: ReturnType<typeof smallSim>): FactoryController {
   const session = {
     lockstep: { sim, status: 'running', lagTicks: 4, players: 1 },
     status: 'live',
@@ -179,9 +179,9 @@ describe('WorldView', () => {
     }
     expect(view.textureCount).toBe(2);
     // En eski iki chunk (0 ve 1) düştü; son ikisi ve görünen kaldı.
-    expect(fake.raw.textures.remove).toHaveBeenCalledWith('forge-chunk-0');
-    expect(fake.raw.textures.remove).toHaveBeenCalledWith('forge-chunk-1');
-    expect(fake.textures.has('forge-chunk-3')).toBe(true);
+    expect(fake.raw.textures.remove).toHaveBeenCalledWith('factory-chunk-0');
+    expect(fake.raw.textures.remove).toHaveBeenCalledWith('factory-chunk-1');
+    expect(fake.textures.has('factory-chunk-3')).toBe(true);
   });
 
   it('bant eşyalarını yakında çizer, uzaktan çizmez', () => {

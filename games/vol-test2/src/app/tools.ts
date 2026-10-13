@@ -1,9 +1,9 @@
 import { TOOLS, type ToolId } from '@/config/game';
 import { ACK_APPLIED_UNKNOWN } from '@/net/session';
-import { COMMAND, RESULT, type ForgeCommand } from '@/sim/commands';
+import { COMMAND, RESULT, type FactoryCommand } from '@/sim/commands';
 
 /** Aracın tile'a uygulayacağı komut: `remove` siler, diğerleri o türü verilen yönde yerleştirir. */
-export function commandFor(tool: ToolId, x: number, y: number, rot: number): ForgeCommand {
+export function commandFor(tool: ToolId, x: number, y: number, rot: number): FactoryCommand {
   const entry = TOOLS.find((candidate) => candidate.id === tool);
   if (!entry || entry.kind === null) return { type: COMMAND.remove, x, y };
   return { type: COMMAND.place, x, y, kind: entry.kind, rot };

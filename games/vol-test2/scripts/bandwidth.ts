@@ -8,9 +8,9 @@
  * `dense` herkes çekirdek başında ve `--dense` kadar birim ilgi alanına yığılmış (sim durur).
  */
 import { cpus } from 'node:os';
-import { NET, SIM, UNIT_KIND } from '../src/config/forge';
+import { NET, SIM, UNIT_KIND } from '../src/config/factory';
 import { buildComb } from '../src/sim/scenario';
-import { ForgeSim } from '../src/sim/sim';
+import { FactorySim } from '../src/sim/sim';
 import { dueAt, Replicator, totalBytes, type ClientCursor } from '../server/replication';
 import type { Hud } from '../src/net/protocol';
 
@@ -33,7 +33,7 @@ const dense = arg('dense', 0);
 const dynamicsEvery = arg('dynamicsEvery', NET.dynamicsEvery);
 const beltsEvery = arg('beltsEvery', NET.beltsEvery);
 
-const sim = ForgeSim.create({ seed: 0x5eed1234, sustainUnits: units });
+const sim = FactorySim.create({ seed: 0x5eed1234, sustainUnits: units });
 const built = buildComb(sim, { maxBelts: belts, turrets: 24, fill, smelterEvery: 3 });
 sim.run(900);
 const s = sim.state;

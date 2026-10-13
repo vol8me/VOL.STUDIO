@@ -1,5 +1,5 @@
 import { buildComb } from '../src/sim/scenario';
-import { ForgeSim } from '../src/sim/sim';
+import { FactorySim } from '../src/sim/sim';
 
 /**
  * `scaling` kapısının VOL.TEST2 ölçümü: fabrika dünyasının adımı iki yük boyunda koşar.
@@ -18,7 +18,7 @@ function median(values: number[]): number {
 }
 
 const steps = LOADS.map((load) => {
-  const sim = ForgeSim.create({ seed: 0x5eed1234, sustainUnits: load / 10 });
+  const sim = FactorySim.create({ seed: 0x5eed1234, sustainUnits: load / 10 });
   const built = buildComb(sim, { maxBelts: load, turrets: 24, fill: 3, smelterEvery: 3 });
   if (built.belts < load * 0.9) throw new Error(`bant kurulamadı: ${built.belts}/${load}`);
   for (let step = 0; step < WARMUP_STEPS; step++) sim.step();

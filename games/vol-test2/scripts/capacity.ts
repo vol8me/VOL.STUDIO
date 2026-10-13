@@ -10,8 +10,8 @@ import { cpus, totalmem } from 'node:os';
 import { PerformanceObserver } from 'node:perf_hooks';
 import { SpatialIndex } from '@volstudio/core/spatial';
 import { buildComb } from '../src/sim/scenario';
-import { ForgeSim, PHASES } from '../src/sim/sim';
-import { ITEM, KIND, MACHINES, SIM, UNIT_KIND } from '../src/config/forge';
+import { FactorySim, PHASES } from '../src/sim/sim';
+import { ITEM, KIND, MACHINES, SIM, UNIT_KIND } from '../src/config/factory';
 import { turretStep, type Shot } from '../src/sim/units';
 import type { Unit } from '../src/sim/state';
 
@@ -64,10 +64,10 @@ function percentile(sorted: Float64Array, fraction: number): number {
 const args = parse(process.argv.slice(2).filter((value) => value !== '--'));
 const budgetMs = SIM.stepMs;
 
-const sims: ForgeSim[] = [];
+const sims: FactorySim[] = [];
 let report = { belts: 0, drills: 0, smelters: 0, turrets: 0, items: 0 };
 for (let world = 0; world < args.worlds; world++) {
-  const sim = ForgeSim.create({
+  const sim = FactorySim.create({
     seed: 0x5eed1234 + world,
     width: args.size,
     height: args.size,

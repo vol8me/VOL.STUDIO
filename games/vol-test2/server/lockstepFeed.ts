@@ -1,7 +1,7 @@
-import { NET } from '@/config/forge';
+import { NET } from '@/config/factory';
 import { writeTickPacket, type TickCommand, type TickPacket } from '@/net/lockstep';
-import type { ForgeCommand } from '@/sim/commands';
-import type { ForgeSim } from '@/sim/sim';
+import type { FactoryCommand } from '@/sim/commands';
+import type { FactorySim } from '@/sim/sim';
 
 /**
  * Sunucudan istemcilere giden kilit adımlı akış. Uygulanan komutları adım damgasıyla biriktirir ve
@@ -18,7 +18,7 @@ export class LockstepFeed {
   }
 
   /** Komut, uygulandığı adım numarasıyla kaydedilir (adım henüz çalışmadan). */
-  record(tick: number, player: number, command: ForgeCommand): void {
+  record(tick: number, player: number, command: FactoryCommand): void {
     this.commands.push({ tick, player, command });
   }
 
@@ -26,7 +26,7 @@ export class LockstepFeed {
    * Adım bittikten sonra çağrılır. Paket sınırına gelinmediyse `null`; geldiyse paketi ve baytlarını
    * verir. Karma aralığı geldiğinde durum karması pakete eklenir.
    */
-  flush(sim: ForgeSim, players: number): { packet: TickPacket; bytes: Uint8Array } | null {
+  flush(sim: FactorySim, players: number): { packet: TickPacket; bytes: Uint8Array } | null {
     const to = sim.tick;
     if (to % NET.syncEvery !== 0 || to <= this.from) return null;
     const hash = to % NET.hashEvery === 0 ? { tick: to, value: sim.stateHash() } : null;

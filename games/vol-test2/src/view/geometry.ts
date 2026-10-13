@@ -1,5 +1,5 @@
 import { DX, DY } from '@/sim/state';
-import { BELT } from '@/config/forge';
+import { BELT } from '@/config/factory';
 
 export interface ChunkRange {
   readonly x0: number;

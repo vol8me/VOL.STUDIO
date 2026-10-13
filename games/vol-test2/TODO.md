@@ -22,7 +22,7 @@
 - [ ] Güç kesintisi dayanıklılığı: `kill -9` değil, işletim sistemi düzeyinde yazma kaybı altında
       günlük/anlık görüntü semantiği (disk önbelleği). Kapanır: fsync davranışının hedef disk ve
       dosya sisteminde ölçülmüş kaydı.
-- [ ] `ForgeSession`, kilit adımlı istemci ve ikili protokolü ikinci bir oyun istediğinde
+- [ ] `FactorySession`, kilit adımlı istemci ve ikili protokolü ikinci bir oyun istediğinde
       `@volstudio/network`a taşı. Kapanır: ikinci tüketici ve paylaşılan testler.
 
 ## Kapatılanlar

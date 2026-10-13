@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ITEM, KIND, WORLD } from '../../src/config/forge';
+import { ITEM, KIND, WORLD } from '../../src/config/factory';
 import { buildComb } from '../../src/sim/scenario';
-import { ForgeSim } from '../../src/sim/sim';
-import { ForgeState } from '../../src/sim/state';
+import { FactorySim } from '../../src/sim/sim';
+import { FactoryState } from '../../src/sim/state';
 import { beltViolations, SMALL } from '../helpers/world';
 
 describe('buildComb', () => {
   it('sınırı aşmadan bant, matkap, işleyici ve taret kurar', () => {
-    const sim = ForgeSim.create({ ...SMALL });
+    const sim = FactorySim.create({ ...SMALL });
     const report = buildComb(sim, { maxBelts: 300, turrets: 8, fill: 3, smelterEvery: 2 });
     expect(report.belts).toBeGreaterThan(100);
     expect(report.belts).toBeLessThanOrEqual(300 + 64);
@@ -19,7 +19,7 @@ describe('buildComb', () => {
   });
 
   it('matkaplar cevher üstündedir ve işleyici hat içindedir', () => {
-    const sim = ForgeSim.create({ ...SMALL });
+    const sim = FactorySim.create({ ...SMALL });
     buildComb(sim, { maxBelts: 600, smelterEvery: 1 });
     const s = sim.state;
     for (let tile = 0; tile < s.count; tile++)
@@ -27,7 +27,7 @@ describe('buildComb', () => {
   });
 
   it('kurulan fabrika çekirdeğe eşya taşır', () => {
-    const sim = ForgeSim.create({ ...SMALL });
+    const sim = FactorySim.create({ ...SMALL });
     buildComb(sim, { maxBelts: 600, fill: 0, smelterEvery: 2 });
     sim.run(900);
     expect(sim.state.delivered[ITEM.ore] + sim.state.delivered[ITEM.plate]).toBeGreaterThan(0);
@@ -35,7 +35,7 @@ describe('buildComb', () => {
 
   it('aynı seçenekler aynı dünyayı verir', () => {
     const make = () => {
-      const sim = ForgeSim.create({ ...SMALL, seed: 3 });
+      const sim = FactorySim.create({ ...SMALL, seed: 3 });
       buildComb(sim, { maxBelts: 500, turrets: 6, fill: 1, smelterEvery: 3 });
       return sim.hash();
     };
@@ -43,22 +43,22 @@ describe('buildComb', () => {
   });
 
   it('tavan sıfırsa yalnız gövdeyi kurar', () => {
-    const sim = ForgeSim.create({ ...SMALL });
+    const sim = FactorySim.create({ ...SMALL });
     const report = buildComb(sim, { maxBelts: 0 });
     expect(report.drills).toBe(0);
     expect(report.turrets).toBe(0);
   });
 });
 
-describe('ForgeState', () => {
+describe('FactoryState', () => {
   it('geçersiz boyutu reddeder', () => {
-    expect(() => new ForgeState(0, 16)).toThrow(RangeError);
-    expect(() => new ForgeState(1.5, 16)).toThrow(RangeError);
-    expect(() => new ForgeState(WORLD.chunk + 1, WORLD.chunk)).toThrow(RangeError);
+    expect(() => new FactoryState(0, 16)).toThrow(RangeError);
+    expect(() => new FactoryState(1.5, 16)).toThrow(RangeError);
+    expect(() => new FactoryState(WORLD.chunk + 1, WORLD.chunk)).toThrow(RangeError);
   });
 
   it('listeleri ihtiyaç büyüdükçe genişletir', () => {
-    const s = new ForgeState(128, 128);
+    const s = new FactoryState(128, 128);
     for (let x = 0; x < 128; x++)
       for (let y = 0; y < 20; y++) s.kind[s.index(x, y)] = KIND.conveyor;
     s.rebuildLists();
@@ -67,7 +67,7 @@ describe('ForgeState', () => {
   });
 
   it('hasar yalnız birleştirilince chunk sürümünü artırır', () => {
-    const sim = ForgeSim.create({ ...SMALL });
+    const sim = FactorySim.create({ ...SMALL });
     const s = sim.state;
     const tile = s.index(5, 5);
     const chunk = s.chunkOfTile[tile];

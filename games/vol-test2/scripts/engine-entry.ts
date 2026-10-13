@@ -1,5 +1,5 @@
 import { buildComb } from '../src/sim/scenario';
-import { ForgeSim } from '../src/sim/sim';
+import { FactorySim } from '../src/sim/sim';
 
 /** Aynı senaryoyu koşturup periyodik karmaları verir; her motorda aynı olmalıdır. */
 export function run(
@@ -10,7 +10,7 @@ export function run(
   ticks: number,
   every: number,
 ): number[] {
-  const sim = ForgeSim.create({ seed, width: size, height: size, sustainUnits: units });
+  const sim = FactorySim.create({ seed, width: size, height: size, sustainUnits: units });
   buildComb(sim, { maxBelts: belts, turrets: 16, fill: 2, smelterEvery: 2 });
   const hashes: number[] = [];
   for (let tick = 1; tick <= ticks; tick++) {
@@ -22,7 +22,7 @@ export function run(
 
 /** Yalnız adım süresi: motorlar ve cihazlar arası maliyet karşılaştırması. */
 export function time(size: number, belts: number, units: number, ticks: number): number {
-  const sim = ForgeSim.create({ seed: 7, width: size, height: size, sustainUnits: units });
+  const sim = FactorySim.create({ seed: 7, width: size, height: size, sustainUnits: units });
   buildComb(sim, { maxBelts: belts, turrets: 24, fill: 2, smelterEvery: 3 });
   sim.run(300);
   const started = performance.now();
@@ -45,7 +45,7 @@ export interface StepStats {
  * kaba, `meanMs` kesindir; ikisi birlikte okunur.
  */
 export function steps(size: number, belts: number, units: number, ticks: number): StepStats {
-  const sim = ForgeSim.create({ seed: 7, width: size, height: size, sustainUnits: units });
+  const sim = FactorySim.create({ seed: 7, width: size, height: size, sustainUnits: units });
   const report = buildComb(sim, { maxBelts: belts, turrets: 24, fill: 2, smelterEvery: 3 });
   sim.run(300);
   const samples = new Float64Array(ticks);

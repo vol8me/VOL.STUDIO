@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILDING, KIND, REFUND_PERCENT } from '../../src/config/forge';
+import { BUILDING, KIND, REFUND_PERCENT } from '../../src/config/factory';
 import { ByteReader, ByteWriter } from '../../src/net/bytes';
 import {
   applyCommand,
@@ -10,7 +10,7 @@ import {
   readCommand,
   RESULT,
   writeCommand,
-  type ForgeCommand,
+  type FactoryCommand,
 } from '../../src/sim/commands';
 import { place, smallSim } from '../helpers/world';
 
@@ -55,7 +55,7 @@ describe('parseCommand', () => {
 
 describe('writeCommand / readCommand', () => {
   it('üç komutu gidiş dönüşte korur', () => {
-    const commands: ForgeCommand[] = [
+    const commands: FactoryCommand[] = [
       { type: COMMAND.place, x: 5, y: 60, kind: KIND.drill, rot: 2 },
       { type: COMMAND.remove, x: 9, y: 9 },
       { type: COMMAND.rotate, x: 1, y: 2, rot: 3 },
@@ -178,7 +178,13 @@ describe('Ledger', () => {
 
   it('sim.apply aynı komutu ikinci kez uygulamaz', () => {
     const sim = smallSim();
-    const command: ForgeCommand = { type: COMMAND.place, x: 5, y: 5, kind: KIND.conveyor, rot: 0 };
+    const command: FactoryCommand = {
+      type: COMMAND.place,
+      x: 5,
+      y: 5,
+      kind: KIND.conveyor,
+      rot: 0,
+    };
     const ore = sim.state.inventory[1];
     expect(sim.apply('player-p', 1, command)).toEqual({ fresh: true, result: RESULT.ok });
     expect(sim.apply('player-p', 1, command)).toEqual({ fresh: false, result: RESULT.ok });

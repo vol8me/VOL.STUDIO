@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { BELT, ITEM, KIND, MACHINES } from '../../src/config/forge';
+import { BELT, ITEM, KIND, MACHINES } from '../../src/config/factory';
 import { insertOnBelt, stepBelts } from '../../src/sim/belts';
-import { ForgeState } from '../../src/sim/state';
+import { FactoryState } from '../../src/sim/state';
 import { beltViolations, place, smallSim } from '../helpers/world';
 
-function lone(rot: number): { s: ForgeState; tile: number } {
-  const s = new ForgeState(64, 64);
+function lone(rot: number): { s: FactoryState; tile: number } {
+  const s = new FactoryState(64, 64);
   const tile = s.index(10, 10);
   s.kind[tile] = KIND.conveyor;
   s.rot[tile] = rot;

@@ -1,7 +1,7 @@
-import { BUILDABLE, BUILDING, KIND, REFUND_PERCENT, type Kind } from '@/config/forge';
+import { BUILDABLE, BUILDING, KIND, REFUND_PERCENT, type Kind } from '@/config/factory';
 import type { ByteReader, ByteWriter } from '@/net/bytes';
 import { clearTile, isSolid } from './units';
-import type { ForgeState } from './state';
+import type { FactoryState } from './state';
 
 /** Komut sonuç kodları; istemciye ack ile gider, sıra değişmez. */
 export const RESULT = {
@@ -23,7 +23,7 @@ export type CommandResult = (typeof RESULT)[keyof typeof RESULT];
 
 export const COMMAND = { place: 1, remove: 2, rotate: 3 } as const;
 
-export type ForgeCommand =
+export type FactoryCommand =
   | {
       readonly type: typeof COMMAND.place;
       readonly x: number;
@@ -44,7 +44,7 @@ function integer(value: unknown, min: number, max: number): value is number {
 }
 
 /** Ağdan gelen yükü komuta çevirir; geçersiz yük `null` olur. */
-export function parseCommand(value: unknown, width: number, height: number): ForgeCommand | null {
+export function parseCommand(value: unknown, width: number, height: number): FactoryCommand | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const data = value as Record<string, unknown>;
   if (!integer(data.x, 0, width - 1) || !integer(data.y, 0, height - 1)) return null;
@@ -63,7 +63,7 @@ export function parseCommand(value: unknown, width: number, height: number): For
 }
 
 /** Komutun ikili biçimi: günlük (journal) ve ağ aynı kodlamayı kullanır. */
-export function writeCommand(out: ByteWriter, command: ForgeCommand): void {
+export function writeCommand(out: ByteWriter, command: FactoryCommand): void {
   out.u8(command.type);
   out.u16(command.x);
   out.u16(command.y);
@@ -76,7 +76,7 @@ export function writeCommand(out: ByteWriter, command: ForgeCommand): void {
 }
 
 /** Bozuk veya bilinmeyen komut `null` olur; okuyucu konumu belirsiz kalır, çağıran paketi atar. */
-export function readCommand(input: ByteReader): ForgeCommand | null {
+export function readCommand(input: ByteReader): FactoryCommand | null {
   const type = input.u8();
   const x = input.u16();
   const y = input.u16();
@@ -96,14 +96,14 @@ const COST_KEYS = ['ore', 'plate'] as const;
 const ITEM_OF = { ore: 1, plate: 2 } as const;
 
 function affordable(
-  s: ForgeState,
+  s: FactoryState,
   cost: Readonly<Partial<Record<'ore' | 'plate', number>>>,
 ): boolean {
   return COST_KEYS.every((key) => s.inventory[ITEM_OF[key]] >= (cost[key] ?? 0));
 }
 
 /** Komutu bir kez uygular; sonuç yalnız dünya durumuna bağlıdır, bu yüzden tekrar oynatmada aynıdır. */
-export function applyCommand(s: ForgeState, command: ForgeCommand): CommandResult {
+export function applyCommand(s: FactoryState, command: FactoryCommand): CommandResult {
   if (!s.inBounds(command.x, command.y)) return RESULT.outOfBounds;
   const tile = s.index(command.x, command.y);
   if (command.type === COMMAND.place) {

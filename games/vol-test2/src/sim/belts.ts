@@ -1,8 +1,8 @@
-import { BELT, ITEM, KIND, MACHINES } from '@/config/forge';
-import { DX, DY, type ForgeState } from './state';
+import { BELT, ITEM, KIND, MACHINES } from '@/config/factory';
+import { DX, DY, type FactoryState } from './state';
 
 /** Bir tile'a `item` verir; kabul edildiyse `true`. `direction` eşyanın hareket yönüdür. */
-export function offer(s: ForgeState, to: number, item: number, direction: number): boolean {
+export function offer(s: FactoryState, to: number, item: number, direction: number): boolean {
   switch (s.kind[to]) {
     case KIND.conveyor:
       return insertOnBelt(s, to, item, direction);
@@ -28,7 +28,7 @@ export function offer(s: ForgeState, to: number, item: number, direction: number
 }
 
 /** `from` tile'ının önündeki komşu tile; dünya dışıysa -1. */
-export function front(s: ForgeState, from: number, direction: number): number {
+export function front(s: FactoryState, from: number, direction: number): number {
   const y = (from / s.width) | 0;
   const x = from - y * s.width;
   const nx = x + DX[direction];
@@ -40,7 +40,12 @@ export function front(s: ForgeState, from: number, direction: number): number {
  * Banda eşya ekler. Kafa kafaya gelen bant kabul edilmez; arkadan girenler
  * başa, yandan girenler ortaya yerleşir. Komşu eşyalarla aralık korunur.
  */
-export function insertOnBelt(s: ForgeState, to: number, item: number, direction: number): boolean {
+export function insertOnBelt(
+  s: FactoryState,
+  to: number,
+  item: number,
+  direction: number,
+): boolean {
   const target = s.rot[to];
   if (((direction + 2) & 3) === target) return false;
   const count = s.beltCount[to];
@@ -62,7 +67,7 @@ export function insertOnBelt(s: ForgeState, to: number, item: number, direction:
 }
 
 /** Bant tile'ının eşyalarını ilerletir ve öndekini bir sonraki tile'a aktarmayı dener. */
-export function stepBelts(s: ForgeState): void {
+export function stepBelts(s: FactoryState): void {
   s.chunkItems.fill(0);
   const last = BELT.length - 1;
   for (let entry = 0; entry < s.beltListLength; entry++) {
@@ -96,7 +101,7 @@ export function stepBelts(s: ForgeState): void {
 }
 
 /** Matkap ve işleyiciler; taret ateşi birim adımıyla birlikte `units.ts`tedir. */
-export function stepMachines(s: ForgeState): void {
+export function stepMachines(s: FactoryState): void {
   for (let entry = 0; entry < s.machineListLength; entry++) {
     const tile = s.machineList[entry];
     const kind = s.kind[tile];

@@ -1,9 +1,9 @@
 import type { Random } from '@volstudio/core/random';
-import { KIND, START_RESOURCES, BUILDING, WORLD } from '@/config/forge';
-import type { ForgeState } from './state';
+import { KIND, START_RESOURCES, BUILDING, WORLD } from '@/config/factory';
+import type { FactoryState } from './state';
 
 /** Seedli cevher yamaları; çekirdek çevresi temiz kalır. Aynı tohum aynı arazi demektir. */
-export function generateTerrain(s: ForgeState, random: Random): void {
+export function generateTerrain(s: FactoryState, random: Random): void {
   const center = s.coreCenter;
   for (let field = 0; field < WORLD.oreFields; field++) {
     const radius =
@@ -32,7 +32,7 @@ export function generateTerrain(s: ForgeState, random: Random): void {
 }
 
 /** Çekirdeği merkeze koyar ve başlangıç kaynaklarını verir. */
-export function placeCore(s: ForgeState): void {
+export function placeCore(s: FactoryState): void {
   const origin = s.coreOrigin;
   for (let dy = 0; dy < WORLD.coreSize; dy++) {
     for (let dx = 0; dx < WORLD.coreSize; dx++) {

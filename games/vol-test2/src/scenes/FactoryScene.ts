@@ -2,23 +2,23 @@ import Phaser from 'phaser';
 import { WorldCameraController } from '@volstudio/core/ui';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { i18next } from '@volstudio/core/i18n';
-import { host as defaultHost, type ForgeHost } from '@/app/host';
-import type { ForgeController } from '@/app/ForgeController';
+import { host as defaultHost, type FactoryHost } from '@/app/host';
+import type { FactoryController } from '@/app/FactoryController';
 import { TapDetector } from '@/app/tap';
 import { VIEW } from '@/config/game';
 import { tileAt } from '@/view/geometry';
 import { WorldView } from '@/view/WorldView';
 
-export const FORGE_SCENE_KEY = 'forge';
+export const FACTORY_SCENE_KEY = 'factory';
 
 /**
  * Dünya sahnesi. Bir denetleyici bağlanıp ilk anlık görüntüsü gelince kamera, dokunma algısı ve dünya
  * görünümünü kurar; denetleyici düşünce hepsini söker. Oyun mantığı denetleyicidedir, burada yalnız
  * girdi ve çizim köprüsü vardır.
  */
-export class ForgeScene extends Phaser.Scene {
-  private readonly host: ForgeHost;
-  private bound: ForgeController | null = null;
+export class FactoryScene extends Phaser.Scene {
+  private readonly host: FactoryHost;
+  private bound: FactoryController | null = null;
   private view: WorldView | null = null;
   private cameraController: WorldCameraController | null = null;
   private scope: DisposableScope | null = null;
@@ -26,8 +26,8 @@ export class ForgeScene extends Phaser.Scene {
   private cameraWidth = 0;
   private cameraHeight = 0;
 
-  constructor(host: ForgeHost = defaultHost) {
-    super(FORGE_SCENE_KEY);
+  constructor(host: FactoryHost = defaultHost) {
+    super(FACTORY_SCENE_KEY);
     this.host = host;
   }
 
@@ -64,13 +64,13 @@ export class ForgeScene extends Phaser.Scene {
     this.view?.update();
   }
 
-  private worldChanged(controller: ForgeController): boolean {
+  private worldChanged(controller: FactoryController): boolean {
     const sim = controller.sim;
     if (sim === null || this.cameraWidth === 0) return false;
     return sim.state.width !== this.cameraWidth || sim.state.height !== this.cameraHeight;
   }
 
-  private build(controller: ForgeController): void {
+  private build(controller: FactoryController): void {
     const sim = controller.sim!;
     const { width, height } = sim.state;
     this.cameraWidth = width;

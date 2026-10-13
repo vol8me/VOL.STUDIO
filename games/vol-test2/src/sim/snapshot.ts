@@ -1,7 +1,7 @@
 import { ByteReader, ByteWriter, fnv1a } from '@/net/bytes';
-import { BELT, ITEM_COUNT, KIND, UNIT_KIND, UNIT_POOL } from '@/config/forge';
+import { BELT, ITEM_COUNT, KIND, UNIT_KIND, UNIT_POOL } from '@/config/factory';
 import { isPlayerKey, type Ledger } from './commands';
-import type { ForgeState } from './state';
+import type { FactoryState } from './state';
 
 const MAGIC = 0x53574656; // "VFWS"
 const VERSION = 1;
@@ -17,7 +17,7 @@ export class SnapshotError extends Error {
  * Kalıcı durumun kanonik ikili biçimi. Sonundaki FNV-1a sağlaması hem bozuk dosyayı
  * yakalar hem de `hash()` değeridir: iki simülasyonun durumu aynıysa baytları aynıdır.
  */
-export function writeSnapshot(s: ForgeState, rngState: number, ledger: Ledger): Uint8Array {
+export function writeSnapshot(s: FactoryState, rngState: number, ledger: Ledger): Uint8Array {
   const out = new ByteWriter(s.count * 12 + 65536);
   out.u32(MAGIC);
   out.u32(VERSION);
@@ -89,7 +89,7 @@ export interface SnapshotMeta {
 }
 
 /** Bütün alanlar doğrulanmadan `s`ye tek bayt yazılmaz: bozuk dosya canlı durumu kirletmez. */
-export function readSnapshot(bytes: Uint8Array, s: ForgeState, ledger: Ledger): SnapshotMeta {
+export function readSnapshot(bytes: Uint8Array, s: FactoryState, ledger: Ledger): SnapshotMeta {
   if (bytes.length < 8) throw new SnapshotError('Anlık görüntü çok kısa.');
   const body = bytes.subarray(0, bytes.length - 4);
   const expected = new DataView(bytes.buffer, bytes.byteOffset + bytes.length - 4, 4).getUint32(
@@ -197,7 +197,7 @@ export function readSnapshot(bytes: Uint8Array, s: ForgeState, ledger: Ledger): 
 const BAD_STATE = 'Anlık görüntü içeriği geçersiz: ';
 
 /** Tile dizilerinin değer aralıkları; sağlaması geçerli ama anlamsız dosya canlı durumu bozamaz. */
-function validateTiles(s: ForgeState, target: ArrayBufferView[], staged: Uint8Array[]): void {
+function validateTiles(s: FactoryState, target: ArrayBufferView[], staged: Uint8Array[]): void {
   const at = (array: ArrayBufferView) => target.indexOf(array);
   const bytes = (array: ArrayBufferView) => staged[at(array)];
   const kinds = bytes(s.kind);
@@ -219,7 +219,7 @@ function validateTiles(s: ForgeState, target: ArrayBufferView[], staged: Uint8Ar
 
 /** Boş yuva listesi ile canlı birimler havuzu tam ve çakışmasız bölmelidir. */
 function validateUnits(
-  s: ForgeState,
+  s: FactoryState,
   free: number[],
   units: { slot: number; kind: number; x: number; y: number; hp: number }[],
 ): void {

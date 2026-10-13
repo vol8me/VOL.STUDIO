@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { BUILDING, ITEM, KIND, UNIT_KIND, WAVES } from '../../src/config/forge';
+import { BUILDING, ITEM, KIND, UNIT_KIND, WAVES } from '../../src/config/factory';
 import { fnv1a } from '../../src/net/bytes';
-import { COMMAND, Ledger, type ForgeCommand } from '../../src/sim/commands';
+import { COMMAND, Ledger, type FactoryCommand } from '../../src/sim/commands';
 import { buildComb } from '../../src/sim/scenario';
-import { ForgeSim } from '../../src/sim/sim';
+import { FactorySim } from '../../src/sim/sim';
 import { readSnapshot, SnapshotError, snapshotDimensions } from '../../src/sim/snapshot';
-import { ForgeState } from '../../src/sim/state';
+import { FactoryState } from '../../src/sim/state';
 import { beltViolations, SMALL } from '../helpers/world';
 
-function busy(seed = 7): ForgeSim {
-  const sim = ForgeSim.create({ ...SMALL, seed, sustainUnits: 60 });
+function busy(seed = 7): FactorySim {
+  const sim = FactorySim.create({ ...SMALL, seed, sustainUnits: 60 });
   buildComb(sim, { maxBelts: 400, turrets: 8, fill: 2, smelterEvery: 2 });
   return sim;
 }
@@ -23,7 +23,7 @@ function reseal(bytes: Uint8Array, edit: (body: Uint8Array) => Uint8Array): Uint
   return out;
 }
 
-const place = (x: number, y: number, kind: number): ForgeCommand => ({
+const place = (x: number, y: number, kind: number): FactoryCommand => ({
   type: COMMAND.place,
   x,
   y,
@@ -68,7 +68,7 @@ describe('anlık görüntü', () => {
     live.apply('player-ali', 1, place(12, 12, KIND.wall));
     live.apply('player-veli', 4, place(13, 12, KIND.wall));
     const bytes = live.snapshot();
-    const restored = ForgeSim.restore(bytes, { sustainUnits: 60 });
+    const restored = FactorySim.restore(bytes, { sustainUnits: 60 });
     expect(restored.hash()).toBe(live.hash());
     expect(restored.tick).toBe(live.tick);
     expect(restored.snapshot()).toEqual(bytes);
@@ -86,7 +86,7 @@ describe('anlık görüntü', () => {
     const command = place(14, 14, KIND.wall);
     live.state.inventory[ITEM.plate] = 100;
     const first = live.apply('player-ali', 9, command);
-    const restored = ForgeSim.restore(live.snapshot());
+    const restored = FactorySim.restore(live.snapshot());
     const plates = restored.state.inventory[ITEM.plate];
     expect(restored.apply('player-ali', 9, command)).toEqual({
       fresh: false,
@@ -102,7 +102,7 @@ describe('anlık görüntü', () => {
   it('havuzun yuva sırası ve nesil sayacı korunur', () => {
     const live = busy();
     live.run(400);
-    const restored = ForgeSim.restore(live.snapshot(), { sustainUnits: 60 });
+    const restored = FactorySim.restore(live.snapshot(), { sustainUnits: 60 });
     expect([...restored.state.freeUnits.subarray(0, restored.state.freeCount)]).toEqual([
       ...live.state.freeUnits.subarray(0, live.state.freeCount),
     ]);
@@ -114,15 +114,15 @@ describe('anlık görüntü', () => {
 describe('bozuk anlık görüntü', () => {
   it('kısa dosyayı, yanlış imzayı ve bozuk baytı reddeder', () => {
     const bytes = busy().snapshot();
-    expect(() => ForgeSim.restore(bytes.slice(0, 7))).toThrow(SnapshotError);
+    expect(() => FactorySim.restore(bytes.slice(0, 7))).toThrow(SnapshotError);
     const flipped = bytes.slice();
     flipped[flipped.length >> 1] ^= 0x40;
-    expect(() => ForgeSim.restore(flipped)).toThrow(/sağlama/);
+    expect(() => FactorySim.restore(flipped)).toThrow(/sağlama/);
     const foreign = reseal(bytes, (body) => {
       body[0] ^= 0xff;
       return body;
     });
-    expect(() => ForgeSim.restore(foreign)).toThrow(/imza/);
+    expect(() => FactorySim.restore(foreign)).toThrow(/imza/);
   });
 
   it('desteklenmeyen sürümü ve artık baytı reddeder', () => {
@@ -131,19 +131,19 @@ describe('bozuk anlık görüntü', () => {
       body[4] = 99;
       return body;
     });
-    expect(() => ForgeSim.restore(future)).toThrow(/sürüm/);
+    expect(() => FactorySim.restore(future)).toThrow(/sürüm/);
     const padded = reseal(bytes, (body) => {
       const wider = new Uint8Array(body.length + 1);
       wider.set(body);
       return wider;
     });
-    expect(() => ForgeSim.restore(padded)).toThrow(/artık/);
+    expect(() => FactorySim.restore(padded)).toThrow(/artık/);
   });
 
   it('sağlaması geçerli ama kesik gövdeyi reddeder ve hedef durumu bozmaz', () => {
     const live = busy();
     live.run(300);
-    const target = ForgeSim.create({ ...SMALL, seed: 99 });
+    const target = FactorySim.create({ ...SMALL, seed: 99 });
     const before = target.hash();
     const truncated = reseal(live.snapshot(), (body) => body.slice(0, body.length - 9));
     expect(() => readSnapshot(truncated, target.state, target.ledger)).toThrow(SnapshotError);
@@ -152,7 +152,7 @@ describe('bozuk anlık görüntü', () => {
 
   it('başka boyuttaki dünyaya yüklemeyi reddeder', () => {
     const bytes = busy().snapshot();
-    const other = new ForgeState(80, 80);
+    const other = new FactoryState(80, 80);
     expect(() => readSnapshot(bytes, other, new Ledger())).toThrow(/boyut/);
   });
 
@@ -169,7 +169,7 @@ describe('bozuk anlık görüntü', () => {
       view.setUint32(freeCountAt, view.getUint32(freeCountAt, true) - 1, true);
       return body;
     });
-    expect(() => ForgeSim.restore(sealed)).toThrow(SnapshotError);
+    expect(() => FactorySim.restore(sealed)).toThrow(SnapshotError);
   });
 });
 
@@ -183,7 +183,7 @@ describe('anlamsız ama sağlaması geçerli dosya', () => {
   function broken(edit: (view: DataView, body: Uint8Array) => void, ticks = 200): void {
     const live = busy();
     live.run(ticks);
-    const target = ForgeSim.create({ ...SMALL, seed: 55 });
+    const target = FactorySim.create({ ...SMALL, seed: 55 });
     const before = target.hash();
     const sealed = reseal(live.snapshot(), (body) => {
       edit(new DataView(body.buffer, body.byteOffset, body.byteLength), body);
@@ -236,18 +236,18 @@ describe('anlamsız ama sağlaması geçerli dosya', () => {
       body[at] = 0x20; // boşluk anahtar kuralını bozar
       return body;
     });
-    expect(() => ForgeSim.restore(sealed)).toThrow(/anahtar/);
+    expect(() => FactorySim.restore(sealed)).toThrow(/anahtar/);
   });
 });
 
 describe('çekirdek ve yenilgi durumu', () => {
   it('yenilgi sayacı ve çekirdek canı kalıcıdır', () => {
-    const live = ForgeSim.create({ ...SMALL });
+    const live = FactorySim.create({ ...SMALL });
     live.state.coreHp = 10;
     live.state.allocateUnit(UNIT_KIND.crawler, 29.5, 31.5, 40);
     live.step();
     expect(live.state.defeats).toBe(1);
-    const restored = ForgeSim.restore(live.snapshot());
+    const restored = FactorySim.restore(live.snapshot());
     expect(restored.state.defeats).toBe(1);
     expect(restored.state.coreHp).toBe(BUILDING[KIND.core].hp);
     expect(restored.state.nextWaveTick).toBe(WAVES.firstDelay);

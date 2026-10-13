@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { BELT, NET } from '../../src/config/forge';
+import { BELT, NET } from '../../src/config/factory';
 import { ByteWriter } from '../../src/net/bytes';
 import {
   CHUNK,
@@ -23,14 +23,14 @@ import {
 } from '../../src/net/protocol';
 import { Replica } from '../../src/net/replica';
 import { buildComb } from '../../src/sim/scenario';
-import { ForgeSim } from '../../src/sim/sim';
+import { FactorySim } from '../../src/sim/sim';
 import { dueAt, Replicator } from '../../server/replication';
 import { SMALL } from '../helpers/world';
 
 const ALL = { x: 8, y: 6 };
 
-function busy(): ForgeSim {
-  const sim = ForgeSim.create({ ...SMALL, seed: 11, sustainUnits: 80 });
+function busy(): FactorySim {
+  const sim = FactorySim.create({ ...SMALL, seed: 11, sustainUnits: 80 });
   buildComb(sim, { maxBelts: 500, turrets: 8, fill: 2, smelterEvery: 2 });
   return sim;
 }
@@ -50,7 +50,7 @@ const HUD: Hud = {
   tickMs100: 12,
 };
 
-function welcomeOf(sim: ForgeSim) {
+function welcomeOf(sim: FactorySim) {
   return {
     wire: WIRE_VERSION,
     epoch: 1,
@@ -68,7 +68,7 @@ function welcomeOf(sim: ForgeSim) {
 }
 
 /** Bir istemciyi tick tick besler; her çerçeveyi kopyaya uygular. */
-function connect(sim: ForgeSim) {
+function connect(sim: FactorySim) {
   const replicator = new Replicator(sim);
   const cursor = replicator.createCursor(ALL, 0);
   const replica = new Replica();
@@ -157,7 +157,7 @@ describe('çoğaltma gidiş-dönüşü', () => {
   });
 
   it('tıkanmış bant değişmediği sürece yeniden gönderilmez', () => {
-    const sim = ForgeSim.create({ ...SMALL, seed: 3 });
+    const sim = FactorySim.create({ ...SMALL, seed: 3 });
     const s = sim.state;
     for (let x = 5; x < 15; x++) {
       const tile = s.index(x, 10);
@@ -179,7 +179,7 @@ describe('çoğaltma gidiş-dönüşü', () => {
   });
 
   it('boş dünyada bant bölümü hiç gönderilmez', () => {
-    const { cursor, pump } = connect(ForgeSim.create({ ...SMALL, seed: 4 }));
+    const { cursor, pump } = connect(FactorySim.create({ ...SMALL, seed: 4 }));
     pump(NET.beltsEvery * 4);
     expect(cursor.bytes.belts).toBe(0);
   });

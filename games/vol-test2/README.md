@@ -18,7 +18,7 @@ pnpm --filter @volstudio/vol-test2 dev             # tarayıcı geliştirme
 İstemci adresi ve dünya bağlantı formundan ya da `?server=http://127.0.0.1:2567&world=world-1`
 ile verilir. Yoğun ölçüm dünyası için sunucuyu `VOL_TEST2_BELTS=8000 VOL_TEST2_UNITS=400`
 ile başlat; öteki ayarlar `server/index.ts` içindeki `runtimeSettings` işlevindedir. Veri
-dizini `VOL_TEST2_DATA` (varsayılan `records/forge-data`, git dışı).
+dizini `VOL_TEST2_DATA` (varsayılan `records/factory-data`, git dışı).
 
 ## Komutlar
 

@@ -1,4 +1,4 @@
-import { BELT } from '@/config/forge';
+import { BELT } from '@/config/factory';
 import { ByteReader } from './bytes';
 import {
   CHUNK,

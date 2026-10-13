@@ -8,15 +8,15 @@ import {
   UNIT_KIND,
   UNIT_POOL,
   WAVES,
-} from '../../src/config/forge';
-import { ForgeState } from '../../src/sim/state';
+} from '../../src/config/factory';
+import { FactoryState } from '../../src/sim/state';
 import { place, smallSim } from '../helpers/world';
 
 const CORE_HP = BUILDING[KIND.core].hp;
 
 describe('birim havuzu', () => {
   it('doluyken null verir, serbest yuvayı yeniden kullanır ve nesil sayar', () => {
-    const s = new ForgeState(64, 64);
+    const s = new FactoryState(64, 64);
     const units = Array.from({ length: UNIT_POOL }, () =>
       s.allocateUnit(UNIT_KIND.crawler, 1, 1, 10),
     );

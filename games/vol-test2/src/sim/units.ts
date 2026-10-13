@@ -9,8 +9,8 @@ import {
   UNIT_KIND,
   WAVES,
   WORLD,
-} from '@/config/forge';
-import { DX, DY, type ForgeState, type Unit } from './state';
+} from '@/config/factory';
+import { DX, DY, type FactoryState, type Unit } from './state';
 
 /** Taret ateşi: kaynak tile ve hedef konum (tile uzayı). Bir adım için geçerlidir. */
 export interface Shot {
@@ -40,7 +40,7 @@ export function isSolid(kind: number): boolean {
 export class FlowSolver {
   private readonly queue: Int32Array;
 
-  constructor(private readonly state: ForgeState) {
+  constructor(private readonly state: FactoryState) {
     this.queue = new Int32Array(state.count);
   }
 
@@ -80,7 +80,7 @@ export class FlowSolver {
   }
 
   private seenBuffer: Uint8Array | null = null;
-  private seen(s: ForgeState): Uint8Array {
+  private seen(s: FactoryState): Uint8Array {
     if (!this.seenBuffer || this.seenBuffer.length !== s.count)
       this.seenBuffer = new Uint8Array(s.count);
     else this.seenBuffer.fill(0);
@@ -93,7 +93,7 @@ export interface Spawner {
   next(): number;
 }
 
-function edgePosition(s: ForgeState, random: Spawner): { x: number; y: number } {
+function edgePosition(s: FactoryState, random: Spawner): { x: number; y: number } {
   const side = Math.floor(random.next() * 4);
   const along = 2 + random.next() * ((side & 1 ? s.height : s.width) - 4);
   const inset = 1 + random.next() * 2;
@@ -103,13 +103,13 @@ function edgePosition(s: ForgeState, random: Spawner): { x: number; y: number } 
   return { x: along, y: s.height - inset };
 }
 
-export function spawnUnit(s: ForgeState, kind: number, random: Spawner): Unit | null {
+export function spawnUnit(s: FactoryState, kind: number, random: Spawner): Unit | null {
   const at = edgePosition(s, random);
   return s.allocateUnit(kind, at.x, at.y, specOf(kind).hp);
 }
 
 /** Dalga zamanı geldiyse birimleri doğurur. */
-export function spawnWave(s: ForgeState, random: Spawner): void {
+export function spawnWave(s: FactoryState, random: Spawner): void {
   if (s.tick < s.nextWaveTick) return;
   const total = WAVES.baseCount + WAVES.perWave * s.wave;
   const brutes = (s.wave + 1) % WAVES.bruteEvery === 0 ? Math.floor(total / 4) : 0;
@@ -120,13 +120,13 @@ export function spawnWave(s: ForgeState, random: Spawner): void {
 }
 
 /** Birim sayısı `target`ın altındaysa eksik kadarını (adım başına sınırlı) doğurur. */
-export function sustainUnits(s: ForgeState, target: number, random: Spawner): void {
+export function sustainUnits(s: FactoryState, target: number, random: Spawner): void {
   const missing = Math.min(target - s.aliveUnits, 24);
   for (let index = 0; index < missing; index++)
     spawnUnit(s, random.next() < 0.1 ? UNIT_KIND.brute : UNIT_KIND.crawler, random);
 }
 
-export function damageBuilding(s: ForgeState, tile: number, amount: number): void {
+export function damageBuilding(s: FactoryState, tile: number, amount: number): void {
   const kind = s.kind[tile];
   if (kind === KIND.core) {
     s.coreHp = Math.max(0, s.coreHp - amount);
@@ -142,14 +142,14 @@ export function damageBuilding(s: ForgeState, tile: number, amount: number): voi
   destroyBuilding(s, tile);
 }
 
-export function destroyBuilding(s: ForgeState, tile: number): void {
+export function destroyBuilding(s: FactoryState, tile: number): void {
   const wasSolid = isSolid(s.kind[tile]);
   clearTile(s, tile);
   if (wasSolid) s.flowDirty = true;
 }
 
 /** Tile'ı boşaltır; bant üstündeki eşyalar yok olur. */
-export function clearTile(s: ForgeState, tile: number): void {
+export function clearTile(s: FactoryState, tile: number): void {
   s.kind[tile] = KIND.empty;
   s.rot[tile] = 0;
   s.team[tile] = 0;
@@ -161,7 +161,7 @@ export function clearTile(s: ForgeState, tile: number): void {
   s.touchStructure(tile);
 }
 
-export function unitStep(s: ForgeState): void {
+export function unitStep(s: FactoryState): void {
   const center = s.coreCenter;
   for (const unit of s.units) {
     if (!unit.alive) continue;
@@ -226,7 +226,7 @@ const candidates: Unit[] = [];
  * Her taret menzilindeki en yakın canlı birime vurur. Eşit uzaklıkta düşük yuva kazanır:
  * hücre içi sıra geri yüklemede değişse de sonuç değişmez.
  */
-export function turretStep(s: ForgeState, index: SpatialIndex<Unit>, shots: Shot[]): void {
+export function turretStep(s: FactoryState, index: SpatialIndex<Unit>, shots: Shot[]): void {
   const core = s.coreCenter;
   const supplyRadiusSq = SUPPLY.radius * SUPPLY.radius;
   const supplying = s.tick % SUPPLY.period === 0;
@@ -275,7 +275,7 @@ export function turretStep(s: ForgeState, index: SpatialIndex<Unit>, shots: Shot
 }
 
 /** Yol alanı eskidiyse ve bekleme süresi dolduysa yeniden hesaplanır. */
-export function refreshFlow(s: ForgeState, solver: FlowSolver): void {
+export function refreshFlow(s: FactoryState, solver: FlowSolver): void {
   if (!s.flowDirty) return;
   if (s.flowTick >= 0 && s.tick - s.flowTick < FLOW_RECOMPUTE_MIN_TICKS) return;
   solver.compute();

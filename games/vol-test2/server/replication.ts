@@ -1,4 +1,4 @@
-import { BELT, NET, UNIT, UNIT_KIND, UNIT_POOL } from '@/config/forge';
+import { BELT, NET, UNIT, UNIT_KIND, UNIT_POOL } from '@/config/factory';
 import { ByteWriter, fnv1a } from '@/net/bytes';
 import {
   CHUNK,
@@ -16,7 +16,7 @@ import {
   type ChunkRect,
   type Hud,
 } from '@/net/protocol';
-import type { ForgeSim } from '@/sim/sim';
+import type { FactorySim } from '@/sim/sim';
 import type { Shot } from '@/sim/units';
 
 /** Bir çerçevede en çok gönderilen yapı chunk'ı; ilk bağlanışta yük birkaç çerçeveye yayılır. */
@@ -146,7 +146,7 @@ export class Replicator {
 
   private readonly frame = new ByteWriter(64 * 1024);
 
-  constructor(private readonly sim: ForgeSim) {
+  constructor(private readonly sim: FactorySim) {
     const s = sim.state;
     this.chunksX = s.chunksX;
     this.chunksY = s.chunksY;

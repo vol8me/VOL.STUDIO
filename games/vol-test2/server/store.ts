@@ -10,7 +10,7 @@ import {
   type FileHandle,
 } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ForgeSim, type ForgeSimOptions } from '@/sim/sim';
+import { FactorySim, type FactorySimOptions } from '@/sim/sim';
 import { SnapshotError } from '@/sim/snapshot';
 import {
   emptyJournalStats,
@@ -144,19 +144,19 @@ export class WorldStore {
    * sırasında denetlenir; uyuşmazlık `hashMismatches` olarak raporlanır.
    */
   async load(
-    options: ForgeSimOptions,
-    fresh: () => ForgeSim,
+    options: FactorySimOptions,
+    fresh: () => FactorySim,
     now: () => number = () => performance.now(),
-  ): Promise<{ sim: ForgeSim; report: LoadReport }> {
+  ): Promise<{ sim: FactorySim; report: LoadReport }> {
     const started = now();
     const snapshots = (await this.list(SNAPSHOT_PATTERN)).reverse();
-    let sim: ForgeSim | null = null;
+    let sim: FactorySim | null = null;
     let snapshotTick = 0;
     let skipped = 0;
     for (const entry of snapshots) {
       try {
         const bytes = new Uint8Array(await readFile(join(this.dir, entry.name)));
-        sim = ForgeSim.restore(bytes, options);
+        sim = FactorySim.restore(bytes, options);
         snapshotTick = sim.tick;
         break;
       } catch (error) {
@@ -215,7 +215,7 @@ export class WorldStore {
   }
 
   private replay(
-    sim: ForgeSim,
+    sim: FactorySim,
     records: readonly JournalRecord[],
   ): { commands: number; mismatches: number } {
     let commands = 0;
@@ -240,7 +240,7 @@ export class WorldStore {
    * diye), disk yazımı beklenir. Başarısızlıkta eski anlık görüntü ve günlük yerinde kalır.
    */
   async snapshot(
-    sim: ForgeSim,
+    sim: FactorySim,
     now: () => number = () => performance.now(),
   ): Promise<SnapshotReport> {
     const started = now();

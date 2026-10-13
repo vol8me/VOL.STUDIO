@@ -5,7 +5,7 @@ import { deflate } from 'node:zlib';
 import { CloseCode, Room, ServerError, type Client } from '@colyseus/core';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
 import { Ring, runRoomLoop, summarize, type TickSummary } from '@volstudio/network/server';
-import { ITEM, NET, PLAYER, SIM, SIM_VERSION } from '@/config/forge';
+import { ITEM, NET, PLAYER, SIM, SIM_VERSION } from '@/config/factory';
 import { ByteReader } from '@/net/bytes';
 import {
   CHUNK,
@@ -21,8 +21,8 @@ import {
   type Hud,
   type SyncMode,
 } from '@/net/protocol';
-import { isPlayerKey, readCommand, RESULT, type ForgeCommand } from '@/sim/commands';
-import { ForgeSim } from '@/sim/sim';
+import { isPlayerKey, readCommand, RESULT, type FactoryCommand } from '@/sim/commands';
+import { FactorySim } from '@/sim/sim';
 import type { JournalWriter } from './journal';
 import { encodeBeatRecord, encodeCommandRecord, type JournalStats } from './journal';
 import { LockstepFeed } from './lockstepFeed';
@@ -47,15 +47,13 @@ const MAX_VIOLATIONS = 64;
 /** Eşzamanlı sıkıştırılan katılım anlık görüntüsü üst sınırı; aşılırsa katılım reddedilir. */
 const MAX_PENDING_JOINS = 32;
 
-export const ROOM_NAME = 'forge';
-
 /**
  * Oda yalnız sunucu tarafından kurulur. İstemci `joinOrCreate` ile oda yaratmaya kalkarsa bu
  * belirteç olmadığı için `onCreate` reddeder; belirteç süreç dışına çıkmaz.
  */
 export const BOOT_TOKEN = randomBytes(16).toString('hex');
 
-export interface ForgeWorldConfig {
+export interface FactoryWorldConfig {
   readonly worldId: string;
   readonly dataDir: string;
   /** Eşitleme biçimi; varsayılan kilit adımlı. */
@@ -68,12 +66,12 @@ export interface ForgeWorldConfig {
   /** Anlık görüntü aralığı (adım). */
   readonly snapshotEvery?: number;
   /** Yeni dünya kurulurken bir kez çağrılır (ölçüm sahnesi). Diskten yüklenen dünyada çağrılmaz. */
-  readonly prepare?: (sim: ForgeSim) => void;
+  readonly prepare?: (sim: FactorySim) => void;
   readonly tickHz?: number;
   readonly maxPlayers?: number;
 }
 
-export type ForgeRoomOptions = ForgeWorldConfig & { readonly boot: string };
+export type FactoryRoomOptions = FactoryWorldConfig & { readonly boot: string };
 
 interface Player {
   client: Client;
@@ -92,7 +90,7 @@ interface Player {
 interface PendingCommand {
   readonly player: Player;
   readonly seq: number;
-  readonly command: ForgeCommand;
+  readonly command: FactoryCommand;
 }
 
 interface PendingAck {
@@ -147,18 +145,18 @@ export interface WorldMetrics {
  * ve taşımayı verir; simülasyon, günlük, eşitleme ve kalıcılık bu paketin kodudur. Komutlar adım
  * başında uygulanır, günlüğe yazılır ve ack kalıcı olduktan sonra gider.
  */
-export class ForgeRoom extends Room {
+export class FactoryRoom extends Room {
   /** Süreç içinde bir dünya tek odadadır; süreçler arası kural `world.lock` ile korunur. */
-  private static readonly active = new Map<string, ForgeRoom>();
+  private static readonly active = new Map<string, FactoryRoom>();
 
   override maxClients: number = PLAYER.maxPlayers;
   override maxMessagesPerSecond = NET.maxMessagesPerSecond;
   override autoDispose = false;
 
-  private config!: ForgeWorldConfig;
+  private config!: FactoryWorldConfig;
   private mode: SyncMode = SYNC_MODE.lockstep;
   private store!: WorldStore;
-  private sim!: ForgeSim;
+  private sim!: FactorySim;
   private journal!: JournalWriter;
   private feed!: LockstepFeed;
   private replicator: Replicator | null = null;
@@ -203,8 +201,8 @@ export class ForgeRoom extends Room {
   private snapshotBytesSent = 0;
   private snapshotRawBytes = 0;
 
-  static find(worldId: string): ForgeRoom | undefined {
-    return ForgeRoom.active.get(worldId);
+  static find(worldId: string): FactoryRoom | undefined {
+    return FactoryRoom.active.get(worldId);
   }
 
   override onAuth(_client: Client, options: Record<string, unknown>): boolean {
@@ -218,22 +216,22 @@ export class ForgeRoom extends Room {
     return valid;
   }
 
-  override async onCreate(options: ForgeRoomOptions): Promise<void> {
+  override async onCreate(options: FactoryRoomOptions): Promise<void> {
     if (options?.boot !== BOOT_TOKEN) throw new Error('Dünyayı yalnız sunucu kurabilir.');
     if (!WORLD_ID_PATTERN.test(options.worldId)) throw new RangeError('Geçersiz dünya kimliği.');
-    if (ForgeRoom.active.has(options.worldId))
+    if (FactoryRoom.active.has(options.worldId))
       throw new Error(`Dünya zaten bu süreçte çalışıyor: ${options.worldId}`);
-    ForgeRoom.active.set(options.worldId, this);
+    FactoryRoom.active.set(options.worldId, this);
     try {
       await this.boot(options);
     } catch (error) {
-      ForgeRoom.active.delete(options.worldId);
+      FactoryRoom.active.delete(options.worldId);
       await this.store?.release().catch(() => undefined);
       throw error;
     }
   }
 
-  private async boot(options: ForgeRoomOptions): Promise<void> {
+  private async boot(options: FactoryRoomOptions): Promise<void> {
     this.config = options;
     this.mode = options.mode ?? SYNC_MODE.lockstep;
     this.maxClients = options.maxPlayers ?? PLAYER.maxPlayers;
@@ -249,7 +247,7 @@ export class ForgeRoom extends Room {
       sustainUnits: options.sustainUnits,
     };
     const loaded = await this.store.load(simOptions, () => {
-      const sim = ForgeSim.create(simOptions);
+      const sim = FactorySim.create(simOptions);
       options.prepare?.(sim);
       return sim;
     });
@@ -348,7 +346,7 @@ export class ForgeRoom extends Room {
   override async onDispose(): Promise<void> {
     if (this.disposed || !this.store) return;
     this.disposed = true;
-    ForgeRoom.active.delete(this.config.worldId);
+    FactoryRoom.active.delete(this.config.worldId);
     try {
       if (!this.fault) await this.store.snapshot(this.sim);
       await this.store.prune();
@@ -484,7 +482,7 @@ export class ForgeRoom extends Room {
     player.tokensAt = now;
 
     let seq = 0;
-    let command: ForgeCommand | null = null;
+    let command: FactoryCommand | null = null;
     try {
       const input = new ByteReader(bytes);
       seq = input.u32();
@@ -753,7 +751,7 @@ export class ForgeRoom extends Room {
   }
 
   /** Test ve ölçüm: canlı simülasyon. Üretim kodu bunu kullanmaz. */
-  get simulation(): ForgeSim {
+  get simulation(): FactorySim {
     return this.sim;
   }
 }

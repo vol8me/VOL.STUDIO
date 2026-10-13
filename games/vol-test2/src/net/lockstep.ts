@@ -1,6 +1,6 @@
 import { ByteReader, ByteWriter } from './bytes';
-import { readCommand, writeCommand, type ForgeCommand } from '@/sim/commands';
-import { ForgeSim } from '@/sim/sim';
+import { readCommand, writeCommand, type FactoryCommand } from '@/sim/commands';
+import { FactorySim } from '@/sim/sim';
 import { SnapshotError } from '@/sim/snapshot';
 
 /**
@@ -13,7 +13,7 @@ import { SnapshotError } from '@/sim/snapshot';
 export interface TickCommand {
   readonly tick: number;
   readonly player: number;
-  readonly command: ForgeCommand;
+  readonly command: FactoryCommand;
 }
 
 /** `[from, to)` adımlarını kapsar; `to` sunucunun tamamladığı adım sayısıdır. */
@@ -82,7 +82,7 @@ export interface LockstepMetrics {
  * kadar ilerletir. Çizim `sim.state`ten okur.
  */
 export class LockstepClient {
-  sim: ForgeSim | null = null;
+  sim: FactorySim | null = null;
   status: LockstepStatus = 'waiting';
   /** Sunucunun tamamladığını bildirdiği adım sayısı; simülasyon bunun ötesine geçmez. */
   horizon = 0;
@@ -111,7 +111,7 @@ export class LockstepClient {
 
   /** Bozuk anlık görüntü `SnapshotError` fırlatır ve hiçbir şey kurulmaz. */
   install(snapshot: Uint8Array, options: { sustainUnits?: number } = {}): void {
-    const sim = ForgeSim.restore(snapshot, options);
+    const sim = FactorySim.restore(snapshot, options);
     this.sim = sim;
     this.horizon = sim.tick;
     this.queued.length = 0;

@@ -23,8 +23,8 @@ vi.mock('../src/app/App', () => ({
     destroy = resources.appDestroy;
   },
 }));
-vi.mock('../src/scenes/ForgeScene', () => ({ ForgeScene: class {} }));
-vi.mock('../src/net/session', () => ({ ForgeSession: { connect: vi.fn() } }));
+vi.mock('../src/scenes/FactoryScene', () => ({ FactoryScene: class {} }));
+vi.mock('../src/net/session', () => ({ FactorySession: { connect: vi.fn() } }));
 vi.mock('../src/net/installWebSocketShim', () => ({}));
 import { boot } from '../src/main';
 import { i18n, createVolGame, suppressNativeMenus } from '@volstudio/core';

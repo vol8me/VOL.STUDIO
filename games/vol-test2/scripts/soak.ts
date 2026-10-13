@@ -5,8 +5,8 @@
  *   node --expose-gc --import tsx scripts/soak.ts --hours 10
  */
 import { buildComb } from '../src/sim/scenario';
-import { ForgeSim } from '../src/sim/sim';
-import { SIM } from '../src/config/forge';
+import { FactorySim } from '../src/sim/sim';
+import { SIM } from '../src/config/factory';
 
 function arg(name: string, fallback: number): number {
   const at = process.argv.indexOf(`--${name}`);
@@ -21,7 +21,7 @@ const units = arg('units', 400);
 const totalTicks = Math.round(hours * 3600 * SIM.tickRate);
 const perWindow = Math.floor(totalTicks / windows);
 
-const sim = ForgeSim.create({ sustainUnits: units });
+const sim = FactorySim.create({ sustainUnits: units });
 buildComb(sim, { maxBelts: belts, turrets: 24, fill: 2, smelterEvery: 3 });
 sim.run(600);
 

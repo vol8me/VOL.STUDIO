@@ -5,10 +5,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createStatefulRandom } from '@volstudio/core/random';
-import { KIND } from '../../src/config/forge';
-import { COMMAND, type ForgeCommand } from '../../src/sim/commands';
+import { KIND } from '../../src/config/factory';
+import { COMMAND, type FactoryCommand } from '../../src/sim/commands';
 import { buildComb } from '../../src/sim/scenario';
-import { ForgeSim } from '../../src/sim/sim';
+import { FactorySim } from '../../src/sim/sim';
 import {
   encodeBeatRecord,
   encodeCommandRecord,
@@ -29,7 +29,7 @@ afterEach(async () => {
   await Promise.all(dirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
 });
 
-const command: ForgeCommand = { type: COMMAND.place, x: 3, y: 4, kind: KIND.conveyor, rot: 1 };
+const command: FactoryCommand = { type: COMMAND.place, x: 3, y: 4, kind: KIND.conveyor, rot: 1 };
 
 describe('günlük', () => {
   it('kayıtları yazar, kalıcılaştırır ve aynen okur', async () => {
@@ -115,7 +115,7 @@ class Driver {
   journal!: JournalWriter;
 
   constructor(
-    readonly sim: ForgeSim,
+    readonly sim: FactorySim,
     readonly store: WorldStore,
   ) {}
 
@@ -124,7 +124,7 @@ class Driver {
     this.journal = this.store.rotateJournal(this.sim.tick, 1);
   }
 
-  private command(): ForgeCommand {
+  private command(): FactoryCommand {
     const r = this.random;
     return {
       type: COMMAND.place,
@@ -153,8 +153,8 @@ class Driver {
   }
 }
 
-function worldFor(seed = 21): ForgeSim {
-  const sim = ForgeSim.create({ ...SMALL, seed });
+function worldFor(seed = 21): FactorySim {
+  const sim = FactorySim.create({ ...SMALL, seed });
   buildComb(sim, { maxBelts: 300, turrets: 6, fill: 1, smelterEvery: 2 });
   return sim;
 }

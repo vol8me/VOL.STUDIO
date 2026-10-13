@@ -1,6 +1,6 @@
-import { BELT, BUILDING, ITEM, KIND, WORLD, type Kind } from '@/config/forge';
-import type { ForgeSim } from './sim';
-import type { ForgeState } from './state';
+import { BELT, BUILDING, ITEM, KIND, WORLD, type Kind } from '@/config/factory';
+import type { FactorySim } from './sim';
+import type { FactoryState } from './state';
 
 export interface CombOptions {
   /** En çok bu kadar konveyör kurulur (tavan; dünya sığdırdığı kadarını alır). */
@@ -24,7 +24,7 @@ export interface CombReport {
 const ROW_SPACING = 3;
 const RING_HALF = 7;
 
-function put(s: ForgeState, x: number, y: number, kind: Kind, rot: number): number {
+function put(s: FactoryState, x: number, y: number, kind: Kind, rot: number): number {
   const tile = s.index(x, y);
   s.kind[tile] = kind;
   s.rot[tile] = rot;
@@ -39,7 +39,7 @@ function put(s: ForgeState, x: number, y: number, kind: Kind, rot: number): numb
  * Matkaplar cevher üstündeki satır kenarlarına, hat içi işleyiciler satır ortasına konur.
  * Yapı komutsuz kurulur (senaryo); deterministiktir ve aynı seçeneklerle aynı dünyayı verir.
  */
-export function buildComb(sim: ForgeSim, options: CombOptions): CombReport {
+export function buildComb(sim: FactorySim, options: CombOptions): CombReport {
   const s = sim.state;
   const fill = Math.min(BELT.slots, Math.max(0, options.fill ?? 0));
   const core = s.coreOrigin;
@@ -116,7 +116,7 @@ export function buildComb(sim: ForgeSim, options: CombOptions): CombReport {
 }
 
 /** Çekirdeği çevreleyen kare halkada boş karelere taret koyar; dolu kareyi atlar. */
-function placeRing(s: ForgeState, wanted: number): number {
+function placeRing(s: FactoryState, wanted: number): number {
   if (wanted <= 0) return 0;
   const center = s.coreCenter;
   const cx = Math.floor(center.x);

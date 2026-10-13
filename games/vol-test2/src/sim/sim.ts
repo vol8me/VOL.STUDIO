@@ -1,11 +1,11 @@
 import { createStatefulRandom, type StatefulRandom } from '@volstudio/core/random';
 import { SpatialIndex } from '@volstudio/core/spatial';
-import { BUILDING, ITEM_COUNT, KIND, MACHINES, WAVES, WORLD } from '@/config/forge';
+import { BUILDING, ITEM_COUNT, KIND, MACHINES, WAVES, WORLD } from '@/config/factory';
 import { fnv1a, hashBuffer } from '@/net/bytes';
-import { applyCommand, Ledger, RESULT, type ForgeCommand } from './commands';
+import { applyCommand, Ledger, RESULT, type FactoryCommand } from './commands';
 import { readSnapshot, snapshotDimensions, writeSnapshot, type SnapshotMeta } from './snapshot';
 import { stepBelts, stepMachines } from './belts';
-import { ForgeState, type Unit } from './state';
+import { FactoryState, type Unit } from './state';
 import { generateTerrain, placeCore } from './terrain';
 import {
   FlowSolver,
@@ -17,7 +17,7 @@ import {
   type Shot,
 } from './units';
 
-export interface ForgeSimOptions {
+export interface FactorySimOptions {
   readonly seed?: number;
   readonly width?: number;
   readonly height?: number;
@@ -29,7 +29,7 @@ export interface ForgeSimOptions {
   readonly sustainUnits?: number;
 }
 
-/** Ölçüm aşamaları; `ForgeSim.profile` bu sırayla süre biriktirir. */
+/** Ölçüm aşamaları; `FactorySim.profile` bu sırayla süre biriktirir. */
 export const PHASES = [
   'flow',
   'machines',
@@ -59,8 +59,8 @@ export interface ApplyOutcome {
  * Komutlar adımlar arasında uygulanır; `state.tick` komutun hangi adımdan önce
  * uygulandığını söyler ve günlük (journal) bu sayıyı kullanır.
  */
-export class ForgeSim {
-  readonly state: ForgeState;
+export class FactorySim {
+  readonly state: FactoryState;
   readonly ledger = new Ledger();
   /** Son adımın taret atışları; sonraki adım başında temizlenir. */
   readonly shots: Shot[] = [];
@@ -74,7 +74,7 @@ export class ForgeSim {
   /** Aşama başına birikmiş süre (ms); `measure` ile açılır. Durumu etkilemez. */
   profile: Float64Array | null = null;
 
-  private constructor(state: ForgeState, random: StatefulRandom, options: ForgeSimOptions) {
+  private constructor(state: FactoryState, random: StatefulRandom, options: FactorySimOptions) {
     this.state = state;
     this.random = random;
     this.solver = new FlowSolver(state);
@@ -82,19 +82,19 @@ export class ForgeSim {
     this.sustain = options.sustainUnits ?? 0;
   }
 
-  static create(options: ForgeSimOptions = {}): ForgeSim {
-    const state = new ForgeState(options.width, options.height);
+  static create(options: FactorySimOptions = {}): FactorySim {
+    const state = new FactoryState(options.width, options.height);
     const random = createStatefulRandom(options.seed ?? WORLD.seed);
     generateTerrain(state, random);
     placeCore(state);
     state.nextWaveTick = WAVES.firstDelay;
-    return new ForgeSim(state, random, options);
+    return new FactorySim(state, random, options);
   }
 
   /** Bozuk dosya `SnapshotError` fırlatır; hiçbir durum kurulmaz. */
-  static restore(bytes: Uint8Array, options: ForgeSimOptions = {}): ForgeSim {
+  static restore(bytes: Uint8Array, options: FactorySimOptions = {}): FactorySim {
     const { width, height } = snapshotDimensions(bytes);
-    const sim = new ForgeSim(new ForgeState(width, height), createStatefulRandom(0), options);
+    const sim = new FactorySim(new FactoryState(width, height), createStatefulRandom(0), options);
     const meta = readSnapshot(bytes, sim.state, sim.ledger);
     sim.random.setState(meta.rngState);
     sim.index.rebuild(sim.state.units);
@@ -106,7 +106,7 @@ export class ForgeSim {
   }
 
   /** Aynı oyuncudan aynı `seq` ikinci kez uygulanmaz; sonuç önbellekten gelir. */
-  apply(key: string, seq: number, command: ForgeCommand): ApplyOutcome {
+  apply(key: string, seq: number, command: FactoryCommand): ApplyOutcome {
     const seen = this.ledger.lookup(key, seq);
     if (!seen.fresh) return { fresh: false, result: seen.result };
     const result = applyCommand(this.state, command);
@@ -118,7 +118,7 @@ export class ForgeSim {
    * Defter ve sıra denetimi olmadan uygular. Kilit adımlı istemci sunucunun zaten kabul ettiği
    * komutları bu yoldan uygular; ağdan gelen ham komut için `apply` kullanılır.
    */
-  applyRaw(command: ForgeCommand): number {
+  applyRaw(command: FactoryCommand): number {
     return applyCommand(this.state, command);
   }
 

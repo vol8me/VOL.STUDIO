@@ -19,8 +19,9 @@ import { Client, type Room } from '@colyseus/sdk';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
 import { Ring } from '@volstudio/network/server';
 import { ByteWriter } from '../src/net/bytes';
-import { NET, SIM_VERSION, WORLD } from '../src/config/forge';
+import { NET, SIM_VERSION, WORLD } from '../src/config/factory';
 import {
+  ROOM_NAME,
   TO_CLIENT,
   TO_SERVER,
   WIRE_VERSION,
@@ -28,7 +29,7 @@ import {
   writeView,
   type ChunkRect,
 } from '../src/net/protocol';
-import { ForgeSession } from '../src/net/session';
+import { FactorySession } from '../src/net/session';
 import { COMMAND, writeCommand } from '../src/sim/commands';
 
 interface Args {
@@ -212,7 +213,7 @@ const timers: ReturnType<typeof setInterval>[] = [];
 const rooms: Room[] = [];
 
 async function thinBot(endpoint: string, worldId: string, index: number): Promise<void> {
-  const room = await new Client(endpoint).join('forge', {
+  const room = await new Client(endpoint).join(ROOM_NAME, {
     worldId,
     protocol: PROTOCOL_VERSION,
     wire: WIRE_VERSION,
@@ -374,7 +375,7 @@ try {
     `${instances.length} sunucu süreci hazır; ${args.worlds} dünya x ${args.bots} bot (${args.mode})`,
   );
 
-  const verifySessions: ForgeSession[] = [];
+  const verifySessions: FactorySession[] = [];
   for (const instance of instances) {
     for (const worldId of instance.worldIds) {
       // Doğrulama botları ilk dünyanın yuvalarından yer alır: dünya başına toplam `bots` kalır.
@@ -390,7 +391,7 @@ try {
   if (args.verify > 0 && args.mode === 'lockstep') {
     const target = instances[0];
     for (let index = 0; index < args.verify; index++) {
-      const session = await ForgeSession.connect({
+      const session = await FactorySession.connect({
         endpoint: target.endpoint,
         worldId: target.worldIds[0],
         key: `verify-${index}-aaaa`,

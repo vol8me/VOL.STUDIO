@@ -1,4 +1,4 @@
-import { BUILDING, KIND, WORLD, type Kind } from '@/config/forge';
+import { BUILDING, KIND, WORLD, type Kind } from '@/config/factory';
 import { ByteReader, ByteWriter } from './bytes';
 
 /**
@@ -6,6 +6,9 @@ import { ByteReader, ByteWriter } from './bytes';
  * bayttır. Hem sunucu hem istemci bu dosyadan okur; biçim yalnız burada tanımlanır.
  */
 export const WIRE_VERSION = 1;
+
+/** Colyseus oda adı: istemci katılımı ve sunucu kaydı aynı değeri okur. */
+export const ROOM_NAME = 'factory';
 
 /** Katılımda sunucunun simülasyon sürümü uyuşmazlığı için döndürdüğü hata; istemci kullanıcıya güncelleme söyler. */
 export const SIM_MISMATCH = { code: 4426, message: 'sim-version' } as const;

@@ -6,8 +6,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { KIND } from '../../src/config/forge';
-import { ForgeSession } from '../../src/net/session';
+import { KIND } from '../../src/config/factory';
+import { FactorySession } from '../../src/net/session';
 import { RESULT } from '../../src/sim/commands';
 import { until } from '../helpers/server';
 
@@ -70,7 +70,7 @@ async function boot(dataDir: string): Promise<Child> {
   return { process: child, endpoint, metricsUrl, exited };
 }
 
-function emptyTiles(session: ForgeSession, count: number, skip: number) {
+function emptyTiles(session: FactorySession, count: number, skip: number) {
   const s = session.lockstep.sim!.state;
   const tiles: { x: number; y: number }[] = [];
   let seen = 0;
@@ -106,7 +106,7 @@ describe('süreç öldürülünce (SIGKILL)', () => {
       for (let cycle = 0; cycle < 3; cycle++) {
         const child = await boot(directory);
         children.push(child);
-        const session = await ForgeSession.connect({
+        const session = await FactorySession.connect({
           endpoint: child.endpoint,
           worldId: 'world-1',
           key: 'player-crash',
@@ -162,7 +162,7 @@ describe('süreç öldürülünce (SIGKILL)', () => {
       // Son açılış: hiçbir şey kaybolmamış, tekrar temiz.
       const last = await boot(directory);
       children.push(last);
-      const session = await ForgeSession.connect({
+      const session = await FactorySession.connect({
         endpoint: last.endpoint,
         worldId: 'world-1',
         key: 'player-crash',

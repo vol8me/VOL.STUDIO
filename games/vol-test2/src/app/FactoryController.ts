@@ -1,16 +1,16 @@
 import { PACE, STATS, VIEW, type ToolId } from '@/config/game';
-import { ITEM, SIM, UNIT_POOL } from '@/config/forge';
+import { ITEM, SIM, UNIT_POOL } from '@/config/factory';
 import { Pacer } from '@/net/pacer';
-import type { ForgeSession, SessionStatus } from '@/net/session';
+import type { FactorySession, SessionStatus } from '@/net/session';
 import type { Ack } from '@/net/protocol';
-import type { ForgeCommand } from '@/sim/commands';
-import type { ForgeSim } from '@/sim/sim';
+import type { FactoryCommand } from '@/sim/commands';
+import type { FactorySim } from '@/sim/sim';
 import { RingStats } from './ringStats';
 import { commandFor, nextRotation, resultKey } from './tools';
 
 /** Oturumun denetleyicinin kullandığı kısmı; testte sahte oturum verilir. */
 export type ControllerSession = Pick<
-  ForgeSession,
+  FactorySession,
   'lockstep' | 'status' | 'rttMs' | 'submit' | 'advance' | 'resync' | 'nextCommandSeq'
 >;
 
@@ -69,7 +69,7 @@ const MAX_SHOTS = 256;
  * Oyuncunun niyetini (araç, yön, dokunma) komuta çevirir, kilit adımlı simülasyonu hızlandırır ve çizim
  * için kare durumunu tutar. Phaser ve DOM'a dokunmaz: saat, bildirim ve oturum dışarıdan gelir.
  */
-export class ForgeController {
+export class FactoryController {
   tool: ToolId | null = null;
   rot = 0;
   desyncs = 0;
@@ -88,7 +88,7 @@ export class ForgeController {
   readonly stepMs = new RingStats(STATS.windowSamples);
   private ghosts: Ghost[] = [];
   private shots: ShotView[] = [];
-  private lastSimulated: ForgeSim | null = null;
+  private lastSimulated: FactorySim | null = null;
   private resyncedAt = -Infinity;
   private wasDesynced = false;
 
@@ -98,7 +98,7 @@ export class ForgeController {
     private readonly now: () => number = () => performance.now(),
   ) {}
 
-  get sim(): ForgeSim | null {
+  get sim(): FactorySim | null {
     return this.session.lockstep.sim;
   }
 
@@ -124,7 +124,7 @@ export class ForgeController {
     return this.submit(command);
   }
 
-  private submit(command: ForgeCommand): Promise<Ack> {
+  private submit(command: FactoryCommand): Promise<Ack> {
     const seq = this.session.nextCommandSeq;
     const pending = this.session.submit(command);
     const kind = command.type === 1 ? command.kind : null;
@@ -189,7 +189,7 @@ export class ForgeController {
   }
 
   /** Her adımın atışları sonraki adımda silinir; kare birden çok adım koşturabildiği için burada toplanır. */
-  private collectShots(sim: ForgeSim): void {
+  private collectShots(sim: FactorySim): void {
     if (sim.shots.length === 0) return;
     const until = this.now() + VIEW.shotMs;
     for (const shot of sim.shots) {
@@ -206,7 +206,7 @@ export class ForgeController {
     return this.shots;
   }
 
-  private capture(sim: ForgeSim): void {
+  private capture(sim: FactorySim): void {
     const s = sim.state;
     for (const unit of s.units) {
       if (!unit.alive) continue;

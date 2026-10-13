@@ -39,7 +39,9 @@ const page = await context.newPage();
 const errors: string[] = [];
 page.on('pageerror', (error) => errors.push(error.message));
 await page.goto(appUrl);
-await page.waitForSelector('[data-testid="forge-status"][data-status="live"]', { timeout: 60_000 });
+await page.waitForSelector('[data-testid="factory-status"][data-status="live"]', {
+  timeout: 60_000,
+});
 
 const gpu = await page.evaluate(`(() => {
   const canvas = document.createElement('canvas');
@@ -85,7 +87,9 @@ await page.waitForTimeout(1000);
 const after = await counters();
 
 const read = (): Promise<Record<string, string | undefined>> =>
-  page.getByTestId('forge-stats').evaluate((element) => ({ ...(element as HTMLElement).dataset }));
+  page
+    .getByTestId('factory-stats')
+    .evaluate((element) => ({ ...(element as HTMLElement).dataset }));
 const samples: Record<string, string | undefined>[] = [];
 for (let elapsed = 0; elapsed < seconds; elapsed += 5) {
   samples.push(await read());

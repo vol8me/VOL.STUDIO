@@ -9,14 +9,14 @@ vi.mock('phaser', () => ({
 }));
 vi.mock('@volstudio/core/i18n', () => ({ i18next: { t: (key: string) => key } }));
 
-import { ForgeController } from '../../src/app/ForgeController';
-import { ForgeHost } from '../../src/app/host';
+import { FactoryController } from '../../src/app/FactoryController';
+import { FactoryHost } from '../../src/app/host';
 import { VIEW } from '../../src/config/game';
-import { ForgeScene } from '../../src/scenes/ForgeScene';
-import { ForgeSim } from '../../src/sim/sim';
+import { FactoryScene } from '../../src/scenes/FactoryScene';
+import { FactorySim } from '../../src/sim/sim';
 import { smallSim } from '../helpers/world';
 
-const hostInstance = new ForgeHost();
+const hostInstance = new FactoryHost();
 
 function pointer(
   type: string,
@@ -70,7 +70,7 @@ function setup() {
     g.destroy = vi.fn();
     return g;
   };
-  const scene = new ForgeScene(hostInstance) as unknown as Record<string, unknown> & ForgeScene;
+  const scene = new FactoryScene(hostInstance) as unknown as Record<string, unknown> & FactoryScene;
   Object.assign(scene, {
     cameras: { main: camera },
     scale: {
@@ -112,7 +112,7 @@ function controllerWith(sim = smallSim()) {
     resync: vi.fn(),
     nextCommandSeq: 1,
   };
-  const controller = new ForgeController(session as never, () => {});
+  const controller = new FactoryController(session as never, () => {});
   const tap = vi.spyOn(controller, 'tap');
   const frame = vi.spyOn(controller, 'frame');
   return { controller, lockstep, tap, frame };
@@ -123,7 +123,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe('ForgeScene', () => {
+describe('FactoryScene', () => {
   it('denetleyici yokken hiçbir şey kurmaz', () => {
     const { scene } = setup();
     scene.create();
@@ -228,7 +228,7 @@ describe('ForgeScene', () => {
     // Aynı boyutta yeni sim: görünüm korunur (dokular yeniden çizilir, nesne değişmez).
     scene.update(0, 16);
     expect((scene as unknown as { view: unknown }).view).toBe(first);
-    lockstep.sim = ForgeSim.create({ width: 32, height: 32 });
+    lockstep.sim = FactorySim.create({ width: 32, height: 32 });
     scene.update(0, 16);
     expect((scene as unknown as { view: unknown }).view).not.toBe(first);
     expect((scene as unknown as { view: unknown }).view).not.toBeNull();

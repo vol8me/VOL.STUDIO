@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  ForgeController,
+  FactoryController,
   type ControllerSession,
   type Notice,
-} from '../../src/app/ForgeController';
-import { KIND } from '../../src/config/forge';
+} from '../../src/app/FactoryController';
+import { KIND } from '../../src/config/factory';
 import { VIEW } from '../../src/config/game';
 import type { Ack } from '../../src/net/protocol';
 import { COMMAND, RESULT } from '../../src/sim/commands';
-import type { ForgeSim } from '../../src/sim/sim';
+import type { FactorySim } from '../../src/sim/sim';
 import { smallSim } from '../helpers/world';
 
 interface FakeLockstep {
-  sim: ForgeSim | null;
+  sim: FactorySim | null;
   status: 'waiting' | 'running' | 'desynced';
   lagTicks: number;
   players: number;
@@ -50,7 +50,7 @@ function harness(options: { lag?: number } = {}) {
   } as unknown as ControllerSession;
   const notices: Notice[] = [];
   let clock = 0;
-  const controller = new ForgeController(
+  const controller = new FactoryController(
     session,
     (notice) => notices.push(notice),
     () => clock,
@@ -70,7 +70,7 @@ function harness(options: { lag?: number } = {}) {
   };
 }
 
-describe('ForgeController.tap', () => {
+describe('FactoryController.tap', () => {
   it('seçili araç yoksa ya da oturum canlı değilse komut göndermez', () => {
     const h = harness();
     expect(h.controller.tap(5, 5)).toBeNull();
@@ -138,7 +138,7 @@ describe('ForgeController.tap', () => {
   });
 });
 
-describe('ForgeController.frame', () => {
+describe('FactoryController.frame', () => {
   it('pacer izin verdiği kadar adım koşturur', () => {
     const h = harness({ lag: 4 });
     h.controller.frame(1000 / 30);
@@ -205,7 +205,7 @@ describe('ForgeController.frame', () => {
   });
 });
 
-describe('ForgeController.hud', () => {
+describe('FactoryController.hud', () => {
   it('envanter, dalga ve ağ durumunu özetler', () => {
     const h = harness();
     const hud = h.controller.hud()!;

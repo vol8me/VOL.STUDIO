@@ -1,8 +1,8 @@
 import type Phaser from 'phaser';
-import type { ForgeController } from '@/app/ForgeController';
+import type { FactoryController } from '@/app/FactoryController';
 import { PALETTE, VIEW, type ToolId } from '@/config/game';
-import { BELT, ITEM, KIND, UNIT, UNIT_KIND, WORLD } from '@/config/forge';
-import type { ForgeState } from '@/sim/state';
+import { BELT, ITEM, KIND, UNIT, UNIT_KIND, WORLD } from '@/config/factory';
+import type { FactoryState } from '@/sim/state';
 import { evictionOrder } from './chunkCache';
 import { beltItemPoint, lerp, visibleChunks, type WorldRect } from './geometry';
 import { drawChunk } from './raster';
@@ -42,12 +42,12 @@ export class WorldView {
   private readonly dynamic: Phaser.GameObjects.Graphics;
   private readonly overlay: Phaser.GameObjects.Graphics;
   private frame = 0;
-  private lastState: ForgeState | null = null;
+  private lastState: FactoryState | null = null;
   private readonly point = { x: 0, y: 0 };
 
   constructor(
     private readonly scene: Phaser.Scene,
-    private readonly controller: ForgeController,
+    private readonly controller: FactoryController,
     private readonly tilePx: number = VIEW.tilePx,
     private readonly textureLimit: number = VIEW.chunkTextureLimit,
   ) {
@@ -79,7 +79,7 @@ export class WorldView {
     this.drawOverlay(s);
   }
 
-  private syncChunks(s: ForgeState, view: WorldRect): void {
+  private syncChunks(s: FactoryState, view: WorldRect): void {
     const chunkPx = WORLD.chunk * this.tilePx;
     const range = visibleChunks(view, chunkPx, s.chunksX, s.chunksY);
     let budget = VIEW.chunkRedrawBudget;
@@ -115,7 +115,7 @@ export class WorldView {
   }
 
   private createEntry(chunk: number, x: number, y: number, size: number): ChunkEntry {
-    const key = `forge-chunk-${chunk}`;
+    const key = `factory-chunk-${chunk}`;
     const texture = this.scene.textures.createCanvas(key, size, size)!;
     texture.setFilter(NEAREST);
     const image = this.scene.add.image(x, y, key).setOrigin(0, 0).setDepth(CHUNK_DEPTH);
@@ -127,7 +127,7 @@ export class WorldView {
     this.scene.textures.remove(entry.key);
   }
 
-  private drawDynamic(s: ForgeState, view: WorldRect, zoom: number): void {
+  private drawDynamic(s: FactoryState, view: WorldRect, zoom: number): void {
     const g = this.dynamic;
     const tilePx = this.tilePx;
     const x0 = view.x / tilePx - 1;
@@ -176,7 +176,7 @@ export class WorldView {
     }
   }
 
-  private drawItems(s: ForgeState, x0: number, y0: number, x1: number, y1: number): void {
+  private drawItems(s: FactoryState, x0: number, y0: number, x1: number, y1: number): void {
     const g = this.dynamic;
     const tilePx = this.tilePx;
     const half = ITEM_SIZE_PX / 2;
@@ -201,7 +201,7 @@ export class WorldView {
     }
   }
 
-  private drawOverlay(s: ForgeState): void {
+  private drawOverlay(s: FactoryState): void {
     const g = this.overlay;
     const tilePx = this.tilePx;
     const tool = this.controller.tool;

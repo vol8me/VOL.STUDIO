@@ -1,10 +1,10 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { BuildMenu, Button, Input, ToastManager } from '@volstudio/core/ui';
-import { BUILDING } from '@/config/forge';
+import { BUILDING } from '@/config/factory';
 import { TOOLS, type ToolId } from '@/config/game';
 import { SYNC_MODE, isSimMismatch } from '@/net/protocol';
-import type { ForgeSession, SessionOptions } from '@/net/session';
-import { ForgeController, type HudView, type Notice } from './ForgeController';
+import type { FactorySession, SessionOptions } from '@/net/session';
+import { FactoryController, type HudView, type Notice } from './FactoryController';
 import {
   parseServer,
   parseWorld,
@@ -13,16 +13,16 @@ import {
   type KeyValueStore,
 } from './connect';
 import { actionForKey, isTypingTarget } from './hotkeys';
-import type { ForgeHost } from './host';
+import type { FactoryHost } from './host';
 import { DIRECTION_KEYS } from './tools';
 import { translate as t } from './translate';
 
 /** Arayüzün dış bağımlılıkları; testte oturum kurucusu ve zamanlayıcı sahtedir. */
 export interface AppDeps {
-  readonly host: ForgeHost;
+  readonly host: FactoryHost;
   readonly settings: ConnectSettings;
   readonly storage: KeyValueStore | null;
-  readonly connect: (options: SessionOptions) => Promise<ForgeSession>;
+  readonly connect: (options: SessionOptions) => Promise<FactorySession>;
   /** HUD yenileme aralığı (ms). */
   readonly hudIntervalMs?: number;
 }
@@ -69,27 +69,27 @@ function element<K extends keyof HTMLElementTagNameMap>(
 
 /**
  * DOM arayüzü: bağlantı formu, durum çubuğu, araç menüsü ve bildirimler. Oyun mantığı
- * `ForgeController`dadır; bu sınıf yalnız oturumu kurar, denetleyiciyi sahneye (`host`) bağlar ve
+ * `FactoryController`dadır; bu sınıf yalnız oturumu kurar, denetleyiciyi sahneye (`host`) bağlar ve
  * denetleyici durumunu yazıya çevirir.
  */
 export class App {
-  private readonly root = element('div', 'forge-app');
-  private readonly connectCard = element('form', 'forge-connect');
+  private readonly root = element('div', 'factory-app');
+  private readonly connectCard = element('form', 'factory-connect');
   private readonly serverInput: Input;
   private readonly worldInput: Input;
   private readonly joinButton: Button;
-  private readonly errorLine = element('p', 'forge-connect__error');
-  private readonly playing = element('div', 'forge-play');
-  private readonly statusLine = element('div', 'forge-hud__status');
-  private readonly statLine = element('div', 'forge-hud__stats');
+  private readonly errorLine = element('p', 'factory-connect__error');
+  private readonly playing = element('div', 'factory-play');
+  private readonly statusLine = element('div', 'factory-hud__status');
+  private readonly statLine = element('div', 'factory-hud__stats');
   private readonly menu: BuildMenu;
   private readonly rotateButton: Button;
   private readonly leaveButton: Button;
   private readonly toasts: ToastManager;
   private readonly scope = new DisposableScope();
   private unsubscribeSession: (() => void) | null = null;
-  private session: ForgeSession | null = null;
-  private controller: ForgeController | null = null;
+  private session: FactorySession | null = null;
+  private controller: FactoryController | null = null;
   private phase: Phase = 'connect';
   private timer: ReturnType<typeof setInterval> | null = null;
   private destroyed = false;
@@ -153,14 +153,14 @@ export class App {
   private buildConnect(): void {
     const card = this.connectCard;
     card.noValidate = true;
-    card.dataset.testid = 'forge-connect';
-    this.serverInput.element.dataset.testid = 'forge-server';
-    this.worldInput.element.dataset.testid = 'forge-world';
-    this.joinButton.element.dataset.testid = 'forge-join';
-    this.errorLine.dataset.testid = 'forge-error';
+    card.dataset.testid = 'factory-connect';
+    this.serverInput.element.dataset.testid = 'factory-server';
+    this.worldInput.element.dataset.testid = 'factory-world';
+    this.joinButton.element.dataset.testid = 'factory-join';
+    this.errorLine.dataset.testid = 'factory-error';
     card.append(
-      element('h1', 'forge-connect__title', t('connect.title')),
-      element('p', 'forge-connect__hint', t('connect.hint')),
+      element('h1', 'factory-connect__title', t('connect.title')),
+      element('p', 'factory-connect__hint', t('connect.hint')),
       this.labelled(t('connect.server'), this.serverInput.element),
       this.labelled(t('connect.world'), this.worldInput.element),
       this.errorLine,
@@ -174,20 +174,20 @@ export class App {
   }
 
   private labelled(text: string, control: HTMLElement): HTMLLabelElement {
-    const label = element('label', 'forge-connect__field');
-    label.append(element('span', 'forge-connect__label', text), control);
+    const label = element('label', 'factory-connect__field');
+    label.append(element('span', 'factory-connect__label', text), control);
     return label;
   }
 
   private buildPlaying(): void {
-    const top = element('div', 'forge-hud');
+    const top = element('div', 'factory-hud');
     top.append(this.statusLine, this.statLine, this.leaveButton.element);
     this.statusLine.setAttribute('role', 'status');
-    this.statusLine.dataset.testid = 'forge-status';
-    this.statLine.dataset.testid = 'forge-stats';
-    this.leaveButton.element.dataset.testid = 'forge-leave';
-    this.playing.dataset.testid = 'forge-play';
-    const bottom = element('div', 'forge-tools');
+    this.statusLine.dataset.testid = 'factory-status';
+    this.statLine.dataset.testid = 'factory-stats';
+    this.leaveButton.element.dataset.testid = 'factory-leave';
+    this.playing.dataset.testid = 'factory-play';
+    const bottom = element('div', 'factory-tools');
     bottom.append(this.menu.element, this.rotateButton.element);
     this.playing.append(top, bottom);
   }
@@ -222,7 +222,7 @@ export class App {
     this.worldInput.setInvalid(false);
     this.setError(null);
     this.show('joining');
-    let session: ForgeSession;
+    let session: FactorySession;
     try {
       session = await this.deps.connect({
         endpoint: server,
@@ -242,8 +242,8 @@ export class App {
     this.attach(session);
   }
 
-  private attach(session: ForgeSession): void {
-    const controller = new ForgeController(session, (notice) => this.onNotice(notice));
+  private attach(session: FactorySession): void {
+    const controller = new FactoryController(session, (notice) => this.onNotice(notice));
     this.session = session;
     this.controller = controller;
     this.unsubscribeSession = session.subscribe((event) => {

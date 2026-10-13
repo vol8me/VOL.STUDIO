@@ -1,14 +1,14 @@
-import type { ForgeController } from './ForgeController';
+import type { FactoryController } from './FactoryController';
 
 /**
  * Sahne ile DOM arayüzü arasındaki tek paylaşılan nokta: şu an bağlı denetleyici. Arayüz bağlanınca
  * `attach`, kopunca `detach` çağırır; sahne her karede `controller`a bakar ve yoksa hiçbir şey çizmez.
  */
-export class ForgeHost {
-  controller: ForgeController | null = null;
+export class FactoryHost {
+  controller: FactoryController | null = null;
   private readonly listeners = new Set<() => void>();
 
-  attach(controller: ForgeController): void {
+  attach(controller: FactoryController): void {
     this.controller = controller;
     this.emit();
   }
@@ -31,4 +31,4 @@ export class ForgeHost {
 }
 
 /** Uygulama süreci başına tek paylaşılan örnek. */
-export const host = new ForgeHost();
+export const host = new FactoryHost();

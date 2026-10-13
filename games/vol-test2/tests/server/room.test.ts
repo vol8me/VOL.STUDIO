@@ -5,7 +5,7 @@ import { Client } from '@colyseus/sdk';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
 import { afterEach, describe, expect, it } from 'vitest';
 import { RECORD, readJournal, type JournalRecord } from '../../server/journal';
-import { ROOM_NAME } from '../../server/ForgeRoom';
+import { ROOM_NAME } from '@/net/protocol';
 import { ByteWriter } from '../../src/net/bytes';
 import {
   SYNC_MODE,
@@ -17,32 +17,32 @@ import {
   readWelcome,
   type Ack,
 } from '../../src/net/protocol';
-import type { ForgeSession } from '../../src/net/session';
-import { COMMAND, RESULT, writeCommand, type ForgeCommand } from '../../src/sim/commands';
-import { KIND, SIM_VERSION } from '../../src/config/forge';
-import { startTestForge, until, type TestForge } from '../helpers/server';
+import type { FactorySession } from '../../src/net/session';
+import { COMMAND, RESULT, writeCommand, type FactoryCommand } from '../../src/sim/commands';
+import { KIND, SIM_VERSION } from '../../src/config/factory';
+import { startTestFactory, until, type TestFactory } from '../helpers/server';
 
-let forge: TestForge | undefined;
+let factory: TestFactory | undefined;
 const pumps: ReturnType<typeof setInterval>[] = [];
 
 afterEach(async () => {
   for (const pump of pumps.splice(0)) clearInterval(pump);
-  await forge?.close();
-  forge = undefined;
+  await factory?.close();
+  factory = undefined;
 });
 
 /** Kilit adımlı istemcinin simülasyonunu gerçek bir oyun döngüsü gibi ilerletir. */
-function pump(session: ForgeSession): void {
+function pump(session: FactorySession): void {
   pumps.push(setInterval(() => session.advance(16), 5));
 }
 
-async function live(session: ForgeSession): Promise<ForgeSession> {
+async function live(session: FactorySession): Promise<FactorySession> {
   await until(() => session.status === 'live');
   return session;
 }
 
 /** Çekirdekten uzak, boş ve cevhersiz bir tile. */
-function emptyTile(session: ForgeSession, skip = 0): { x: number; y: number } {
+function emptyTile(session: FactorySession, skip = 0): { x: number; y: number } {
   const s = session.lockstep.sim!.state;
   let found = 0;
   for (let y = 4; y < s.height - 4; y++)
@@ -61,7 +61,7 @@ async function journalRecords(dataDir: string, worldId = 'test'): Promise<Journa
   return records;
 }
 
-function commandBytes(seq: number, command: ForgeCommand): Uint8Array {
+function commandBytes(seq: number, command: FactoryCommand): Uint8Array {
   const out = new ByteWriter(16);
   out.u32(seq);
   writeCommand(out, command);
@@ -69,7 +69,7 @@ function commandBytes(seq: number, command: ForgeCommand): Uint8Array {
 }
 
 /** Oturum sınıfı olmadan ham istemci: ack ve karşılamayı toplar. */
-async function rawClient(test: TestForge, key: string) {
+async function rawClient(test: TestFactory, key: string) {
   const room = await test.raw(key);
   const acks: Ack[] = [];
   let welcome: ReturnType<typeof readWelcome> | null = null;
@@ -86,8 +86,8 @@ async function rawClient(test: TestForge, key: string) {
 
 describe('dünya yaşam döngüsü', () => {
   it('oyuncu yokken de adım atar', { timeout: 30_000 }, async () => {
-    forge = await startTestForge({ tickHz: 120 });
-    const room = forge.forge.rooms.get('test')!;
+    factory = await startTestFactory({ tickHz: 120 });
+    const room = factory.factory.rooms.get('test')!;
     const start = room.simulation.tick;
     await until(() => room.simulation.tick > start + 60);
     const metrics = room.metrics();
@@ -96,7 +96,7 @@ describe('dünya yaşam döngüsü', () => {
   });
 
   it('istemci oda yaratamaz; yanlış protokol, tel sürümü ve anahtar reddedilir', async () => {
-    forge = await startTestForge();
+    factory = await startTestFactory();
     const valid = {
       worldId: 'test',
       protocol: PROTOCOL_VERSION,
@@ -104,7 +104,7 @@ describe('dünya yaşam döngüsü', () => {
       sim: SIM_VERSION,
       key: 'player-ok1',
     };
-    const endpoint = forge.forge.endpoint;
+    const endpoint = factory.factory.endpoint;
     await expect(
       new Client(endpoint).joinOrCreate(ROOM_NAME, { ...valid, worldId: 'evil' }),
     ).rejects.toThrow();
@@ -124,23 +124,23 @@ describe('dünya yaşam döngüsü', () => {
     await expect(
       new Client(endpoint).join(ROOM_NAME, { ...valid, key: 'a/b/c/d/e/f' }),
     ).rejects.toThrow();
-    expect(forge.forge.rooms.get('test')!.metrics().players).toBe(0);
+    expect(factory.factory.rooms.get('test')!.metrics().players).toBe(0);
   });
 
   it('dolu odaya katılım reddedilir', async () => {
-    forge = await startTestForge({ maxPlayers: 3 });
-    for (let index = 0; index < 3; index++) await forge.connect(`player-full${index}`);
-    await expect(forge.connect('player-full9')).rejects.toThrow();
-    expect(forge.forge.rooms.get('test')!.metrics().players).toBe(3);
+    factory = await startTestFactory({ maxPlayers: 3 });
+    for (let index = 0; index < 3; index++) await factory.connect(`player-full${index}`);
+    await expect(factory.connect('player-full9')).rejects.toThrow();
+    expect(factory.factory.rooms.get('test')!.metrics().players).toBe(3);
   });
 
   it('aynı anahtarla yeni bağlantı eskisini yerinden eder', { timeout: 20_000 }, async () => {
-    forge = await startTestForge();
-    const first = await live(await forge.connect('player-twin'));
-    const second = await live(await forge.connect('player-twin'));
+    factory = await startTestFactory();
+    const first = await live(await factory.connect('player-twin'));
+    const second = await live(await factory.connect('player-twin'));
     await until(() => first.status === 'closed');
     expect(second.status).toBe('live');
-    expect(forge.forge.rooms.get('test')!.metrics().players).toBe(1);
+    expect(factory.factory.rooms.get('test')!.metrics().players).toBe(1);
   });
 });
 
@@ -149,8 +149,8 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
     'katılan istemci anlık görüntüyle kurulur ve sunucu karmasıyla uyumlu kalır',
     { timeout: 30_000 },
     async () => {
-      forge = await startTestForge({ tickHz: 120 });
-      const session = await live(await forge.connect('player-sync1'));
+      factory = await startTestFactory({ tickHz: 120 });
+      const session = await live(await factory.connect('player-sync1'));
       pump(session);
       expect(session.welcome).toMatchObject({ mode: SYNC_MODE.lockstep, lastSeq: 0, slot: 0 });
       await until(() => session.lockstep.metrics.hashChecks >= 3, 12000);
@@ -164,9 +164,9 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
     'komut günlükte kalıcı olduktan sonra onaylanır; diğer oyuncuda da görünür',
     { timeout: 30_000 },
     async () => {
-      forge = await startTestForge({ tickHz: 120 });
-      const a = await live(await forge.connect('player-aaaa1'));
-      const b = await live(await forge.connect('player-bbbb1'));
+      factory = await startTestFactory({ tickHz: 120 });
+      const a = await live(await factory.connect('player-aaaa1'));
+      const b = await live(await factory.connect('player-bbbb1'));
       pump(a);
       pump(b);
       const { x, y } = emptyTile(a);
@@ -174,7 +174,7 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
       const ack = await a.place(x, y, KIND.conveyor, 0);
       expect(ack.result).toBe(RESULT.ok);
       // Ack geldiğinde komut diske yazılmış olmalı: sunucu çökse bile kaybolmaz.
-      const records = await journalRecords(forge.dataDir);
+      const records = await journalRecords(factory.dataDir);
       expect(
         records.some(
           (record) =>
@@ -188,29 +188,29 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
       const tile = y * a.lockstep.sim!.state.width + x;
       await until(() => b.lockstep.sim!.state.kind[tile] === KIND.conveyor);
       await until(() => a.lockstep.sim!.state.kind[tile] === KIND.conveyor);
-      const room = forge.forge.rooms.get('test')!;
+      const room = factory.factory.rooms.get('test')!;
       expect(room.simulation.state.kind[tile]).toBe(KIND.conveyor);
       expect(room.metrics().commands.accepted).toBe(1);
     },
   );
 
   it('reddedilen komutun sonucu iletilir ve durum değişmez', async () => {
-    forge = await startTestForge();
-    const a = await live(await forge.connect('player-rej01'));
+    factory = await startTestFactory();
+    const a = await live(await factory.connect('player-rej01'));
     const { x, y } = emptyTile(a);
     const first = await a.place(x, y, KIND.wall, 0);
     const second = await a.place(x, y, KIND.wall, 0);
     expect(first.result).toBe(RESULT.ok);
     expect(second.result).toBe(RESULT.occupied);
-    expect(forge.forge.rooms.get('test')!.metrics().commands.rejected).toBe(1);
+    expect(factory.factory.rooms.get('test')!.metrics().commands.rejected).toBe(1);
   });
 
   it(
     'koparak yeniden bağlanan istemci aynı oturum anahtarıyla yeniden eşitlenir',
     { timeout: 30_000 },
     async () => {
-      forge = await startTestForge({ tickHz: 120 });
-      const session = await live(await forge.connect('player-recon'));
+      factory = await startTestFactory({ tickHz: 120 });
+      const session = await live(await factory.connect('player-recon'));
       pump(session);
       const { x, y } = emptyTile(session);
       expect((await session.place(x, y, KIND.wall, 0)).result).toBe(RESULT.ok);
@@ -233,8 +233,8 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
     'istemci sapma saptayınca yeniden el sıkışma ile kendini onarır',
     { timeout: 40_000 },
     async () => {
-      forge = await startTestForge({ tickHz: 120 });
-      const session = await live(await forge.connect('player-desync'));
+      factory = await startTestFactory({ tickHz: 120 });
+      const session = await live(await factory.connect('player-desync'));
       pump(session);
       expect(session.resync()).toBe(false);
       const { x, y } = emptyTile(session);
@@ -255,8 +255,8 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
   );
 
   it('çok sık yeniden el sıkışma anlık görüntü getirmez ve düşürülür', async () => {
-    forge = await startTestForge();
-    const bad = await rawClient(forge, 'player-hellos');
+    factory = await startTestFactory();
+    const bad = await rawClient(factory, 'player-hellos');
     const welcomes: number[] = [];
     bad.room.onMessage(TO_CLIENT.welcome, () => welcomes.push(Date.now()));
     let closed = false;
@@ -272,9 +272,9 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
 
 describe('komut güvenliği', () => {
   it('aynı sıra numarası ikinci kez uygulanmaz; eski sıra yinelenmiş sayılır', async () => {
-    forge = await startTestForge();
-    const client = await rawClient(forge, 'player-dupe1');
-    const command: ForgeCommand = { type: COMMAND.place, x: 5, y: 5, kind: KIND.wall, rot: 0 };
+    factory = await startTestFactory();
+    const client = await rawClient(factory, 'player-dupe1');
+    const command: FactoryCommand = { type: COMMAND.place, x: 5, y: 5, kind: KIND.wall, rot: 0 };
     client.room.sendBytes(TO_SERVER.command, commandBytes(5, command));
     client.room.sendBytes(TO_SERVER.command, commandBytes(5, command));
     client.room.sendBytes(TO_SERVER.command, commandBytes(3, command));
@@ -284,27 +284,27 @@ describe('komut güvenliği', () => {
       client.acks[0].result,
       RESULT.duplicate,
     ]);
-    const metrics = forge.forge.rooms.get('test')!.metrics();
+    const metrics = factory.factory.rooms.get('test')!.metrics();
     expect(metrics.commands.duplicates).toBe(2);
     expect(metrics.commands.accepted + metrics.commands.rejected).toBe(1);
   });
 
   it('saniyedeki komut sınırı aşılınca fazlası rateLimited döner', async () => {
-    forge = await startTestForge();
-    const client = await rawClient(forge, 'player-rate1');
-    const command: ForgeCommand = { type: COMMAND.remove, x: 1, y: 1 };
+    factory = await startTestFactory();
+    const client = await rawClient(factory, 'player-rate1');
+    const command: FactoryCommand = { type: COMMAND.remove, x: 1, y: 1 };
     for (let seq = 1; seq <= 60; seq++)
       client.room.sendBytes(TO_SERVER.command, commandBytes(seq, command));
     await until(() => client.acks.length >= 40);
     const limited = client.acks.filter((ack) => ack.result === RESULT.rateLimited).length;
     expect(limited).toBeGreaterThan(20);
-    expect(forge.forge.rooms.get('test')!.metrics().commands.rateLimited).toBe(limited);
+    expect(factory.factory.rooms.get('test')!.metrics().commands.rateLimited).toBe(limited);
   });
 
   it('bozuk mesaj yağdıran istemci düşürülür, dünya etkilenmez', async () => {
-    forge = await startTestForge();
-    const bad = await rawClient(forge, 'player-flood');
-    const good = await live(await forge.connect('player-good1'));
+    factory = await startTestFactory();
+    const bad = await rawClient(factory, 'player-flood');
+    const good = await live(await factory.connect('player-good1'));
     let closed = false;
     bad.room.onLeave(() => {
       closed = true;
@@ -312,14 +312,16 @@ describe('komut güvenliği', () => {
     for (let index = 0; index < 100; index++)
       bad.room.sendBytes(TO_SERVER.command, Uint8Array.of(1, 2, 3));
     await until(() => closed);
-    await until(() => forge!.forge.rooms.get('test')!.metrics().players === 1);
+    await until(() => factory!.factory.rooms.get('test')!.metrics().players === 1);
     expect(good.status).toBe('live');
-    expect(forge.forge.rooms.get('test')!.metrics().commands.malformed).toBeGreaterThanOrEqual(64);
+    expect(factory.factory.rooms.get('test')!.metrics().commands.malformed).toBeGreaterThanOrEqual(
+      64,
+    );
   });
 
   it('el sıkışmadan gelen komut yok sayılır', async () => {
-    forge = await startTestForge();
-    const room = await forge.raw('player-early');
+    factory = await startTestFactory();
+    const room = await factory.raw('player-early');
     const acks: Ack[] = [];
     room.onMessage(TO_CLIENT.ack, (payload: Uint8Array) => acks.push(readAck(payload)));
     room.sendBytes(
@@ -328,7 +330,7 @@ describe('komut güvenliği', () => {
     );
     await new Promise((resolve) => setTimeout(resolve, 150));
     expect(acks).toHaveLength(0);
-    expect(forge.forge.rooms.get('test')!.metrics().commands.accepted).toBe(0);
+    expect(factory.factory.rooms.get('test')!.metrics().commands.accepted).toBe(0);
     await room.leave();
   });
 });
@@ -338,23 +340,23 @@ describe('kalıcılık (yeniden başlatma)', () => {
     'sunucu yeniden başlayınca dünya, komutlar ve oyuncunun son sırası korunur',
     { timeout: 30_000 },
     async () => {
-      forge = await startTestForge({ tickHz: 120 }, { keepData: false });
-      const first = await live(await forge.connect('player-keep1'));
+      factory = await startTestFactory({ tickHz: 120 }, { keepData: false });
+      const first = await live(await factory.connect('player-keep1'));
       const { x, y } = emptyTile(first);
       expect((await first.place(x, y, KIND.wall, 0)).result).toBe(RESULT.ok);
-      const room = forge.forge.rooms.get('test')!;
+      const room = factory.factory.rooms.get('test')!;
       await until(() => room.simulation.tick > 90);
       const epochBefore = first.welcome!.epoch;
       const tickBefore = room.simulation.tick;
 
-      await forge.restart();
-      const restored = forge.forge.rooms.get('test')!;
+      await factory.restart();
+      const restored = factory.factory.rooms.get('test')!;
       expect(restored.metrics().persistence.load).toMatchObject({ source: 'snapshot' });
       expect(restored.simulation.tick).toBeGreaterThanOrEqual(tickBefore);
       const tile = y * restored.simulation.state.width + x;
       expect(restored.simulation.state.kind[tile]).toBe(KIND.wall);
 
-      const again = await live(await forge.connect('player-keep1'));
+      const again = await live(await factory.connect('player-keep1'));
       expect(again.welcome!.epoch).not.toBe(epochBefore);
       expect(again.welcome!.lastSeq).toBe(1);
       const next = emptyTile(again, 3);
@@ -367,11 +369,11 @@ describe('kalıcılık (yeniden başlatma)', () => {
 
 describe('ilgi alanı biçimi (gerçek WebSocket)', () => {
   it('çerçeveler kopyayı kurar ve komut sonucu kopyada görünür', { timeout: 30_000 }, async () => {
-    forge = await startTestForge({ tickHz: 120, mode: SYNC_MODE.aoi });
-    const session = await live(await forge.connect('player-aoi01'));
+    factory = await startTestFactory({ tickHz: 120, mode: SYNC_MODE.aoi });
+    const session = await live(await factory.connect('player-aoi01'));
     expect(session.welcome!.mode).toBe(SYNC_MODE.aoi);
     await until(() => session.replica.hud !== null);
-    const room = forge.forge.rooms.get('test')!;
+    const room = factory.factory.rooms.get('test')!;
     const s = room.simulation.state;
     let target = -1;
     for (let tile = 0; tile < s.count && target < 0; tile++)

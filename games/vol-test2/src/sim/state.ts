@@ -1,4 +1,4 @@
-import { BELT, ITEM_COUNT, KIND, UNIT_POOL, WORLD } from '@/config/forge';
+import { BELT, ITEM_COUNT, KIND, UNIT_POOL, WORLD } from '@/config/factory';
 
 /** Yön 0=doğu, 1=güney, 2=batı, 3=kuzey. */
 export const DX = [1, 0, -1, 0] as const;
@@ -20,7 +20,7 @@ export class Unit {
  * tamamını kapsar; türetilmiş listeler (`beltList`, `machineList`, yol alanı)
  * kapsanmaz ve geri yüklemede yeniden kurulur.
  */
-export class ForgeState {
+export class FactoryState {
   readonly width: number;
   readonly height: number;
   readonly count: number;

@@ -1,8 +1,8 @@
-import { KIND } from './forge';
+import { KIND } from './factory';
 
 export const GAME = { maxDpr: 2, backgroundColor: '#0d1218' } as const;
 
-/** Çizim ve kamera ayarları. Oynanış sayıları `forge.ts`tedir; burada yalnız sunum vardır. */
+/** Çizim ve kamera ayarları. Oynanış sayıları `factory.ts`tedir; burada yalnız sunum vardır. */
 export const VIEW = {
   /** Tile kenarı piksel: chunk dokusu 16×16 tile = 256×256 px. */
   tilePx: 16,

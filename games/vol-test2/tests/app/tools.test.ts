@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { KIND } from '../../src/config/forge';
+import { KIND } from '../../src/config/factory';
 import { TOOLS } from '../../src/config/game';
 import { ACK_APPLIED_UNKNOWN } from '../../src/net/session';
 import { COMMAND, RESULT } from '../../src/sim/commands';
