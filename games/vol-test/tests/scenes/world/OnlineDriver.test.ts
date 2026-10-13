@@ -136,6 +136,17 @@ const byId = (parent: HTMLElement, id: string): HTMLElement =>
   parent.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
 
 describe('OnlineDriver sürüş', () => {
+  it('en büyük sapma sönümlü tepe düştükten sonra da kalır', async () => {
+    const { driver, session, run } = await rig();
+    run();
+    const record = serverRoom(session.room).vehicleOf(session.room.sessionId)!;
+    record.tank.x += 40;
+    await until(() => driver.metrics()['online.driftMax'] > 1, 'ölçülen sapma');
+    const seen = driver.metrics()['online.driftMax'];
+    await until(() => driver.metrics()['online.driftPeak'] < seen / 2, 'sönümlü tepenin düşmesi');
+    expect(driver.metrics()['online.driftMax']).toBeGreaterThanOrEqual(seen);
+  });
+
   it('girdiyi öngörüyle sürer, ölçüm bağlamını ve ağ sayılarını verir', async () => {
     const { driver, run, setCommand, steps } = await rig();
     const start = { x: driver.player.tank.x, y: driver.player.tank.y };
@@ -151,6 +162,7 @@ describe('OnlineDriver sürüş', () => {
     const metrics = driver.metrics();
     expect(Object.keys(metrics).sort()).toEqual([
       'online.driftEma',
+      'online.driftMax',
       'online.driftPeak',
       'online.jitterMs',
       'online.pingMs',

@@ -12,9 +12,14 @@ export interface LinkView {
   readonly status: ConnectionStatus;
   readonly pingMs: number;
   readonly jitterMs: number;
-  /** Öngörü sapması: uzlaştırma düzeltmesinin üstel ortalaması ve tepe değeri (dünya birimi). */
+  /**
+   * Öngörü sapması (dünya birimi): uzlaştırma düzeltmesinin üstel ortalaması, sönümlü tepesi ve
+   * oturum boyunca görülen en büyük tepe. Sönümlü tepe yama başına %10 azalır; yalnız `driftMax`
+   * kısa bir sapmanın olup olmadığını sonradan da söyler.
+   */
   readonly driftEma: number;
   readonly driftPeak: number;
+  readonly driftMax: number;
 }
 
 /** Akış, son satırdan bu kadar sonra soluklaşır. */
@@ -152,6 +157,7 @@ export class OnlinePanel {
     // Ölçüm ve E2E için: öngörü sapması imzaya girmez (her yenilemede değişir), yalnız özniteliğe yazılır.
     this.ping.dataset.driftEma = link.driftEma.toFixed(3);
     this.ping.dataset.driftPeak = link.driftPeak.toFixed(3);
+    this.ping.dataset.driftMax = link.driftMax.toFixed(3);
     this.paint();
   }
 

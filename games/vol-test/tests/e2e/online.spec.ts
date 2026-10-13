@@ -197,18 +197,37 @@ test('klavyeyle sürülen tank sunucudaki konumla aynı yere oturur', async ({ b
     .toBeLessThan(0.5);
   expect(authority().x).toBeGreaterThan(start.x + 3);
 
-  // Öngörü sapması ölçülür; WebKit ile Chromium farkı kayıt altındadır.
-  const drift = await ping(page).evaluate((element) => ({
-    ema: Number((element as HTMLElement).dataset.driftEma),
-    peak: Number((element as HTMLElement).dataset.driftPeak),
-  }));
+  // Öngörü sapması: sürüş boyunca görülen en büyük değer kayıt altındadır (sönümlü tepe, durgunken
+  // sıfıra iner; `driftMax` oturum boyunca en büyüğünü tutar).
+  const drift = async () =>
+    ping(page).evaluate((element) => ({
+      ema: Number((element as HTMLElement).dataset.driftEma),
+      peak: Number((element as HTMLElement).dataset.driftPeak),
+      max: Number((element as HTMLElement).dataset.driftMax),
+    }));
+  const driven = await drift();
   info.annotations.push({
     type: 'drift',
-    description: `ema=${drift.ema.toFixed(3)} peak=${drift.peak.toFixed(3)} (${info.project.name})`,
+    description: `max=${driven.max.toFixed(3)} (${info.project.name})`,
   });
-  // Ölçülen: iki motorda da 0 (birebir). Sınır, sunucunun adım kaçırdığı tek tük düzeltmeyi taşır;
-  // gerçek bir ayrışma (motor farkı, bozuk uzlaştırma) onlarca birimdir.
-  expect(drift.peak).toBeLessThan(16);
+  // Sınır, sunucunun adım kaçırdığı tek tük düzeltmeyi taşır; gerçek ayrışma onlarca birimdir.
+  expect(driven.max).toBeLessThan(16);
+
+  // Ölçümün canlı olduğunun kanıtı: yetkili aracı kaydır. Sapma görünmeli, istemci yakınsamalı.
+  // (SDK eşiksiz sapmayı hiç ölçmez; bu adım olmadan "sapma 0" boş bir iddia olurdu.)
+  const room = serverRoom(watcher.room);
+  const vehicle = room.vehicleOf(watcher.sessionOf(`${tag}-D`))!;
+  vehicle.tank.x += 3 * WORLD.metre;
+  await expect.poll(async () => (await drift()).max, { timeout: 8000 }).toBeGreaterThan(1);
+  await expect
+    .poll(
+      async () => {
+        const mine = await position(page);
+        return Math.hypot(mine.x - authority().x, mine.y - authority().y);
+      },
+      { timeout: 8000 },
+    )
+    .toBeLessThan(0.5);
 });
 
 test('atış sunucuda yayınlanır: gözlemci kendi olay akışında atışı görür', async ({
@@ -282,6 +301,27 @@ test('Ayrıl: oyuncu sunucudan düşer ve oyun çevrimdışı dünyaya döner', 
   // Çevrimdışı dünyada çubuk yok, ama duraklatma menüsünde "Çok oyunculu" yine var.
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('pause-online')).toBeVisible();
+});
+
+test('çevrimdışı açılış ağ parçasını yüklemez ve soket açmaz; lobi açılınca parça gelir', async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  const sockets: string[] = [];
+  page.on('request', (request) => requests.push(request.url()));
+  page.on('websocket', (socket) => sockets.push(socket.url()));
+  await page.goto('/');
+  await expect(page.getByTestId('hud')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('pause-online')).toBeVisible();
+  const online = (url: string): boolean => /\/assets\/online-[\w-]+\.(js|css)/.test(url);
+  expect(requests.filter(online)).toEqual([]);
+  expect(sockets).toEqual([]);
+
+  await page.getByTestId('pause-online').click();
+  await expect(page.getByTestId('lobby-quick')).toBeVisible();
+  expect(requests.some(online)).toBe(true);
+  expect(sockets).toEqual([]);
 });
 
 test('ulaşılamayan sunucuda lobi hatayı yazar ve yeniden denemeye açık kalır', async ({ page }) => {

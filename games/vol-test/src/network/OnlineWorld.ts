@@ -96,6 +96,7 @@ export class OnlineWorld {
       self,
       space,
       vehicle,
+      divergenceTolerance: NETWORK.divergenceTolerance,
       onFired: (launch) => this.fireLocally(launch),
     });
     this.remotes = new RemoteTanks(session.room, session.predict, this.sim);

@@ -111,6 +111,18 @@ describe('OnlineWorld öngörü', () => {
     expect(world.pilot.drift.peak).toBeLessThan(5);
   });
 
+  it('sunucu aracı kaydırınca sapma ölçülür ve istemci yeni yetkiye yakınsar', async () => {
+    // SDK, sapma eşiği verilmezse ölçümü hiç yapmaz; "sapma 0" bu testsiz boş bir iddia olurdu.
+    const session = await join();
+    const world = build(session);
+    run(session, world);
+    const record = serverRoom(session.room).vehicleOf(session.room.sessionId)!;
+    await until(() => session.snapshotAgeMs > 0, 'ilk yama');
+    record.tank.x += 40;
+    await until(() => world.pilot.drift.peak > 1, 'ölçülen sapma');
+    await until(() => Math.abs(world.player.tank.x - record.tank.x) < 1, 'yeni yetkiye yakınsama');
+  });
+
   it('ölü araç sürülmez; sunucunun can ve sayaçları araca yansır', async () => {
     const session = await join();
     const world = build(session);

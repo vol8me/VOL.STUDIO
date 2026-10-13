@@ -35,6 +35,8 @@ export const NETWORK = {
   reconnectSeconds: 15,
   /** Uzak araçların çizildiği geriye dönük süre (ms): iki yama arasını ara değerle doldurur. */
   interpolationDelayMs: 100,
+  /** Eşik yoksa SDK sapmayı ölçmez (hep 0); kalıcı sapma bunu aşarsa uyarır. 1 m = 32 birim. */
+  divergenceTolerance: 4,
 } as const;
 
 export interface MatchConfig {

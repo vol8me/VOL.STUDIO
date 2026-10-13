@@ -42,8 +42,8 @@ export interface PilotOptions {
   readonly space: World;
   /**
    * Verilirse her uzlaştırmada düzeltme büyüklüğü ölçülür (`reconciler.drift`, `lastCorrectionMag`)
-   * ve bu eşiği aşan düzeltme konsola uyarı yazar. Üretimde kapalı kalır; ölçüm testlerde ve
-   * geliştirme bayrağında açılır.
+   * ve kalıcı sapma bu eşiği aşarsa konsola uyarı yazar. Verilmezse SDK sapmayı hiç ölçmez
+   * (`drift` hep 0 kalır); oyun dünyası her zaman verir.
    */
   readonly divergenceTolerance?: number;
   /**

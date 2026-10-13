@@ -335,9 +335,11 @@ ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağ�
 - Bilerek ayrılma `leave(true)` ile hemen düşer; kopma 15 sn yeniden bağlanma ister ve çubukta
   uyarı verir; bağlantı kapanırsa oyuncu çevrimdışı dünyaya `online.lost` bildirimiyle döner.
 
-Ölçüm ve sınırlar: WebKit ve Chromium'da düz sürüş + fren denemesinde öngörü sapması 0'dır (gerçek
-sunucuya karşı, E2E notu). Bu, çok katmanlı manevra, çarpışma ve ateşte cihazlar arası determinizm
-kanıtı değildir. Gecikme telafisi yoktur: isabet, sunucunun o adımdaki dünyasına göredir.
+Ölçüm ve sınırlar: sapma ölçümü SDK'da yalnız bir eşik verilince açılır (`NETWORK.divergenceTolerance`);
+eşiksiz "sapma 0" hiçbir şey söylemez. E2E yetkili aracı kaydırıp sapmanın görünmesini ve istemcinin
+yakınsamasını doğrular. Gerçek sunucuya karşı düz sürüş + fren denemesinde (yerel döngü) iki motorda
+oturum boyunca en büyük sapma 0–0,05 birimdir (7 koşu; `data-drift-max`). Bu, manevra, çarpışma ve
+ateşte cihazlar arası determinizm kanıtı değildir. Gecikme telafisi yoktur: isabet, sunucunun o adımdaki dünyasına göredir.
 Paketli Windows/Android ağ kabulü ve insan sunum beğenisi yapılmamıştır.
 
 ## Doğrulama

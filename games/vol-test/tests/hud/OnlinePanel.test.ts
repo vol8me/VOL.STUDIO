@@ -45,7 +45,14 @@ function view(patch: Partial<MatchView> = {}): MatchView {
   };
 }
 
-const live: LinkView = { status: 'live', pingMs: 42, jitterMs: 3, driftEma: 0.25, driftPeak: 1.5 };
+const live: LinkView = {
+  status: 'live',
+  pingMs: 42,
+  jitterMs: 3,
+  driftEma: 0.25,
+  driftPeak: 1.5,
+  driftMax: 6,
+};
 
 const text = (panel: OnlinePanel, id: string): string =>
   panel.element.querySelector(`[data-testid="${id}"]`)?.textContent ?? '';
@@ -91,10 +98,11 @@ describe('OnlinePanel çubuk', () => {
 
   it('öngörü sapmasını ölçüm özniteliklerine yazar', () => {
     const panel = mount();
-    panel.update(view(), { ...live, driftEma: 0.1234, driftPeak: 4.5678 });
+    panel.update(view(), { ...live, driftEma: 0.1234, driftPeak: 4.5678, driftMax: 9.87654 });
     const ping = panel.element.querySelector<HTMLElement>('[data-testid="online-ping"]')!;
     expect(ping.dataset.driftEma).toBe('0.123');
     expect(ping.dataset.driftPeak).toBe('4.568');
+    expect(ping.dataset.driftMax).toBe('9.877');
   });
 
   it('bağlantı koptuğunda uyarı çıkar, dönünce kaybolur', () => {

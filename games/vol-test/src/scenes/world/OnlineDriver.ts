@@ -43,6 +43,7 @@ export class OnlineDriver implements WorldDriver {
   private panel: OnlinePanel | undefined;
   private panelDueMs = 0;
   private leaving = false;
+  private driftMax = 0;
 
   constructor(
     private readonly context: DriverContext,
@@ -82,6 +83,7 @@ export class OnlineDriver implements WorldDriver {
       'online.jitterMs': this.session.jitterMs,
       'online.driftEma': this.world.pilot.drift.ema,
       'online.driftPeak': this.world.pilot.drift.peak,
+      'online.driftMax': this.driftMax,
       'online.remotes': this.world.remotes.count,
     };
   }
@@ -126,6 +128,8 @@ export class OnlineDriver implements WorldDriver {
 
   present(nowMs: number): void {
     this.tags.update(this.tagFrames());
+    // Sönümlü tepe yama aralığında kaybolur; en büyük değer her karede izlenir.
+    this.driftMax = Math.max(this.driftMax, this.world.pilot.drift.peak);
     const panel = this.panel;
     if (!panel) return;
     for (const line of this.pending) panel.push(line);
@@ -141,6 +145,7 @@ export class OnlineDriver implements WorldDriver {
       jitterMs: session.jitterMs,
       driftEma: drift.ema,
       driftPeak: drift.peak,
+      driftMax: this.driftMax,
     });
   }
 
