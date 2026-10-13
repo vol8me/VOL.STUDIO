@@ -63,6 +63,8 @@ preview ve e2e portu aynı olabilir; iki ayrı paket aynı portu bildiremez.
   import eder; devtool ve başka oyun import edemez. `<oyun>/scripts/` ve `<oyun>/tests/`
   build/doğrulama zamanıdır.
 - Aktif paket frozen pakete bağımlı olamaz.
+- Node sunucusu (`<oyun>/server/`) Colyseus çalışma zamanını `@volstudio/network/server`'dan alır
+  (döngü, ana makine, kapanış, günlük, işletim kapısı); tarayıcı kodu o export'a uzanamaz.
 
 ## Seçmeli multiplayer profili
 

@@ -4,6 +4,7 @@ import { promisify } from 'node:util';
 import { deflate } from 'node:zlib';
 import { CloseCode, Room, ServerError, type Client } from '@colyseus/core';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
+import { Ring, runRoomLoop, summarize, type TickSummary } from '@volstudio/network/server';
 import { ITEM, NET, PLAYER, SIM, SIM_VERSION } from '@/config/forge';
 import { ByteReader } from '@/net/bytes';
 import {
@@ -25,10 +26,8 @@ import { ForgeSim } from '@/sim/sim';
 import type { JournalWriter } from './journal';
 import { encodeBeatRecord, encodeCommandRecord, type JournalStats } from './journal';
 import { LockstepFeed } from './lockstepFeed';
-import { Ring, summarize, type TickSummary } from './metrics';
 import type { ClientCursor } from './replication';
 import { Replicator, dueAt, emptySectionBytes, type SectionBytes } from './replication';
-import { StepClock } from './stepClock';
 import { WorldStore, type LoadReport, type SnapshotReport } from './store';
 
 const deflateAsync = promisify(deflate);
@@ -263,14 +262,7 @@ export class ForgeRoom extends Room {
 
     this.feed = new LockstepFeed(this.sim.tick);
     if (this.mode === SYNC_MODE.aoi) this.replicator = new Replicator(this.sim);
-    const stepMs = 1000 / (options.tickHz ?? SIM.tickRate);
-    const stepClock = new StepClock(stepMs, performance.now());
-    this.setTimestep(
-      () => {
-        for (let due = stepClock.due(performance.now()); due > 0; due--) this.advance();
-      },
-      Math.min(10, stepMs),
-    );
+    runRoomLoop(this, options.tickHz ?? SIM.tickRate, () => this.advance());
 
     this.onMessageBytes(TO_SERVER.hello, (client: Client, bytes: Uint8Array) =>
       this.hello(client, bytes),

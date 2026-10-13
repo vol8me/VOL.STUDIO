@@ -118,3 +118,46 @@ test('başka pakete yalnız exports haritasındaki yoldan girilir', () => {
   const closed = { name: '@volstudio/tool', manifest: {} };
   assert.match(exportViolation('@volstudio/tool', closed) ?? '', /dışarıya kapalıdır/);
 });
+
+test('oyun istemcisi network sunucu çalışma zamanını içe aktaramaz; oyun sunucusu aktarabilir', (t) => {
+  const { root, write } = fixture(t);
+  write(
+    'network/package.json',
+    JSON.stringify({
+      name: '@volstudio/network',
+      exports: { './server': './src/server/index.ts', './client': './src/client/index.ts' },
+    }),
+  );
+  write('games/demo/server/index.ts', 'import "@volstudio/network/server";');
+  assert.deepEqual(validateLayerBoundaries(root), []);
+  write('games/demo/src/main.ts', 'import "@volstudio/network/server";');
+  assert.match(
+    validateLayerBoundaries(root).join('\n'),
+    /oyun istemcisi network sunucu çalışma zamanını içe aktaramaz/,
+  );
+});
+
+test('network yüzeyleri birbirine ve Node bağımlılığına yalnız izin verilen yönde uzanır', (t) => {
+  const { root, write } = fixture(t);
+  write('network/src/protocol/input.ts', 'export const v = 1;');
+  write('network/src/client/room.ts', 'import "../protocol/input";\nimport "@colyseus/sdk";');
+  write('network/src/server/host.ts', 'import "../protocol/input";\nimport "node:http";');
+  assert.deepEqual(validateLayerBoundaries(root), []);
+
+  for (const [file, source, pattern] of [
+    ['network/src/client/a.ts', 'import "../server/host";', /client kodu server kodunu/],
+    ['network/src/client/b.ts', 'import "@volstudio/network/server";', /client kodu server kodunu/],
+    ['network/src/server/c.ts', 'import "../client/room";', /server kodu client kodunu/],
+    ['network/src/protocol/d.ts', 'import "../client/room";', /protocol kodu client kodunu/],
+    ['network/src/protocol/e.ts', 'import "../server/host";', /protocol kodu server kodunu/],
+    ['network/src/client/f.ts', 'import "node:fs";', /Node\/sunucu bağımlılığı/],
+    ['network/src/client/g.ts', 'import "http";', /Node\/sunucu bağımlılığı/],
+    ['network/src/client/h.ts', 'import "fs/promises";', /Node\/sunucu bağımlılığı/],
+    ['network/src/protocol/i.ts', 'import "@colyseus/core";', /Node\/sunucu bağımlılığı/],
+    ['network/src/client/j.ts', 'import "@colyseus/ws-transport";', /Node\/sunucu bağımlılığı/],
+  ]) {
+    write(file, source);
+    assert.match(validateLayerBoundaries(root).join('\n'), pattern, file);
+    rmSync(join(root, file));
+  }
+});

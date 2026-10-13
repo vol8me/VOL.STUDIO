@@ -59,7 +59,7 @@ async function until(predicate: () => boolean, timeoutMs = 5000): Promise<void> 
 
 afterEach(async () => {
   await Promise.allSettled(clients.splice(0).map((room) => room.leave()));
-  await server?.server.gracefullyShutdown(false);
+  await server?.stop();
   server = undefined;
 });
 

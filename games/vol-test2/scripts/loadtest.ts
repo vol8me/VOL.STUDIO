@@ -17,6 +17,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client, type Room } from '@colyseus/sdk';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
+import { Ring } from '@volstudio/network/server';
 import { ByteWriter } from '../src/net/bytes';
 import { NET, SIM_VERSION, WORLD } from '../src/config/forge';
 import {
@@ -29,7 +30,6 @@ import {
 } from '../src/net/protocol';
 import { ForgeSession } from '../src/net/session';
 import { COMMAND, writeCommand } from '../src/sim/commands';
-import { Ring } from '../server/metrics';
 
 interface Args {
   worlds: number;

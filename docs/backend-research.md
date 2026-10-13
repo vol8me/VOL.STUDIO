@@ -157,7 +157,7 @@ bağlıydı, hız sınırı aşımı 0, geri basınç atlaması 0, dünya hatas�
 ile sürüyordu. Node `setInterval` kesirli milisaniyeyi kırptığı için 30 Hz'de 33 ms'lik tetikleme 33,33 ms'lik
 adımı yaklaşık her yüz tetiklemede bir kaçırır; iki adımlık (~66 ms) boşluk doğar. Windows'ta görülen 47–56 ms'nin
 bir bölümü 15,6 ms'lik zamanlayıcı çözünürlüğüdür (31,25 / 46,9 ms dönüşümü); Linux'ta (1 ms çözünürlük) p99'un 65,8 ms
-çıkması asıl nedenin bu atlama olduğunu gösterdi. `games/vol-test2/server/stepClock.ts` adım süresinden kısa aralıkla (10 ms) çağrılıp geçen süreyi biriktirir.
+çıkması asıl nedenin bu atlama olduğunu gösterdi. `network/src/server/loop.ts` (`StepClock`, `runRoomLoop`) adım süresinden kısa aralıkla (10 ms) çağrılıp geçen süreyi biriktirir; iki oyun da aynı çalışma zamanını kullanır.
 Aynı Deck senaryosunda adımlar arası p99 65,8 → 44,3 ms, ack p99 45,4 → 41,6 ms, CPU değişmedi; Windows'ta
 ack p50 49,9 → 29,4 ms. Ortalama hız her iki durumda 30,0 Hz'dir: düzeltilen sorun hız değil, gecikme ve
 titreşimdir.
@@ -192,7 +192,7 @@ yanıtlar, üretim sunucusu donanımı kapasitesini değil.
   gecikmesi daha iyi (Linux zamanlayıcısı), RSS yaklaşık 1,7 kat. Günlük 340–350 fsync/sn, en uzun fsync 27–39 ms.
 - Bu ilk Linux koşusu iki gerçek hatayı yakaladı: sunucu `games/vol-test2/server/index.ts` doğrudan çalıştırılınca "ana modül mü"
   denetimi POSIX yollarında hiç eşleşmiyordu ve süreç sessizce çıkıyordu (VOL.TEST2 ve VOL.TEST'te aynı satır;
-  `games/vol-test2/server/entry.ts` ile düzeltildi); "hazır" satırı metrik kapısı dinlemeye başlamadan yazılıyordu, süreci başlatan
+  `network/src/server/entry.ts` ile düzeltildi); "hazır" satırı metrik kapısı dinlemeye başlamadan yazılıyordu, süreci başlatan
   betik satırı görür görmez bağlanınca reddediliyordu (artık dinlemeden önce yazılmaz).
 - `SIGKILL` kurtarma Linux'ta da denendi (aşağıdaki bölüm). `crash.test.ts` ve soak Linux'ta koşmadı.
 

@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { builtinModules } from 'node:module';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { sourceImports } from './sourceImports.mjs';
@@ -36,6 +37,14 @@ const SKIP_DIRS = new Set([
   'target',
 ]);
 const SOURCE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
+
+/**
+ * `network/src` üç yüzeye bölünür: protokol ve istemci tarayıcıda da çalışır, sunucu yalnız Node'dadır.
+ * Her yüzeyin içe aktaramayacağı kardeş yüzeyler.
+ */
+const NETWORK_SIDES = { protocol: ['client', 'server'], client: ['server'], server: ['client'] };
+const NODE_ONLY_PACKAGES = new Set(['@colyseus/core', '@colyseus/ws-transport']);
+const NODE_BUILTINS = new Set(builtinModules);
 
 function inside(parent, child) {
   const path = relative(parent, child);
@@ -80,6 +89,36 @@ function walk(dir, visit) {
     if (entry.isDirectory()) walk(file, visit);
     else if (SOURCE.test(entry.name) && !/\.d\.[cm]?ts$/.test(entry.name)) visit(file);
   }
+}
+
+/** `network/src/<yüzey>` içindeki bir dosyanın kardeş yüzeye ya da Node'a uzanan kenarları. */
+function networkSideProblems(owner, file, specifier, where) {
+  const side = relative(join(owner.root, 'src'), file).split(sep)[0];
+  const forbidden = NETWORK_SIDES[side];
+  if (!forbidden) return [];
+  const problems = [];
+  for (const other of forbidden) {
+    const viaName = specifier === `${owner.name}/${other}`;
+    const viaPath =
+      specifier.startsWith('.') &&
+      inside(join(owner.root, 'src', other), resolve(dirname(file), specifier));
+    if (viaName || viaPath) {
+      problems.push(`${where}: network ${side} kodu ${other} kodunu içe aktaramaz.`);
+    }
+  }
+  if (side !== 'server') {
+    const bare = specifier.startsWith('node:') ? specifier.slice(5) : specifier;
+    if (
+      specifier.startsWith('node:') ||
+      NODE_BUILTINS.has(bare.split('/')[0]) ||
+      NODE_ONLY_PACKAGES.has(specifier)
+    ) {
+      problems.push(
+        `${where}: network ${side} kodu tarayıcıda da çalışır; Node/sunucu bağımlılığı içe aktaramaz ("${specifier}").`,
+      );
+    }
+  }
+  return problems;
 }
 
 /**
@@ -192,6 +231,18 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
             specifier === '@volstudio/network/client'
           ) {
             problems.push(`${where}: Node sunucusu browser network istemcisini içe aktaramaz.`);
+          }
+          if (
+            owner.kind === 'game' &&
+            directory === 'src' &&
+            specifier === '@volstudio/network/server'
+          ) {
+            problems.push(
+              `${where}: oyun istemcisi network sunucu çalışma zamanını içe aktaramaz.`,
+            );
+          }
+          if (owner.kind === 'network') {
+            problems.push(...networkSideProblems(owner, file, specifier, where));
           }
           const target = targetOf(specifier, file);
           check(owner, target, where, directory !== 'scripts');

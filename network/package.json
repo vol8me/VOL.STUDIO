@@ -11,6 +11,10 @@
     "./client": {
       "import": "./src/client/index.ts",
       "types": "./src/client/index.ts"
+    },
+    "./server": {
+      "import": "./src/server/index.ts",
+      "types": "./src/server/index.ts"
     }
   },
   "scripts": {
@@ -19,7 +23,9 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@colyseus/sdk": "0.18.5"
+    "@colyseus/core": "0.18.18",
+    "@colyseus/sdk": "0.18.5",
+    "@colyseus/ws-transport": "0.18.4"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",

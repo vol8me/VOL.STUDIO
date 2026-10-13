@@ -1,6 +1,6 @@
 import { monitorEventLoopDelay, type IntervalHistogram } from 'node:perf_hooks';
 
-/** Sabit uzunluklu halka: son N adımın süresi. Ayırma yapmaz. */
+/** Sabit uzunluklu halka: son N ölçüm. Ayırma yapmaz. */
 export class Ring {
   private readonly values: Float64Array;
   private next = 0;
@@ -93,4 +93,27 @@ export function drainEventLoopDelay(): LoopSummary {
   };
   histogram.reset();
   return summary;
+}
+
+export interface ProcessSnapshot {
+  readonly loop: LoopSummary;
+  readonly memory: NodeJS.MemoryUsage;
+  readonly cpu: NodeJS.CpuUsage;
+  readonly uptimeSeconds: number;
+  readonly pid: number;
+  readonly node: string;
+  readonly platform: NodeJS.Platform;
+}
+
+/** Süreç genelinde sağlık özeti. Olay döngüsü histogramı okunurken sıfırlanır. */
+export function processSnapshot(): ProcessSnapshot {
+  return {
+    loop: drainEventLoopDelay(),
+    memory: process.memoryUsage(),
+    cpu: process.cpuUsage(),
+    uptimeSeconds: process.uptime(),
+    pid: process.pid,
+    node: process.version,
+    platform: process.platform,
+  };
 }

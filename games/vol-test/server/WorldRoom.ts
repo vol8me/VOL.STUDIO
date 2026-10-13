@@ -1,6 +1,7 @@
 import { Room } from '@colyseus/core';
 import { schema, t } from '@colyseus/schema';
 import { InputMailbox, PROTOCOL_VERSION } from '@volstudio/network/protocol';
+import { runRoomLoop } from '@volstudio/network/server';
 import { GAME } from '../src/config/game';
 import { NETWORK } from '../src/config/network';
 import { SUSPENSION, TANK, WEAPON } from '../src/config/tank';
@@ -58,34 +59,28 @@ export class WorldRoom extends Room {
 
   override onCreate(): void {
     this.setPatchRate(NETWORK.patchRateMs);
-    this.setFixedTimestep(
-      () => {
-        const commands = new Map<number, ReturnType<typeof idleCommand>>();
-        for (const { vehicle, mailbox } of this.players.values()) {
-          commands.set(vehicle.id, mailbox.consume());
-        }
-        this.sim.step(
-          (vehicle) => commands.get(vehicle.id) ?? idleCommand(),
-          GAME.simulationStepMs,
-        );
-        this.tick++;
-        this.state.tick = this.tick;
-        for (const [sessionId, { vehicle }] of this.players) {
-          const state = this.state.players.get(sessionId);
-          if (!state) continue;
-          state.x = vehicle.tank.x;
-          state.y = vehicle.tank.y;
-          state.hull = vehicle.tank.hull;
-          state.turret = vehicle.tank.turret;
-          state.health = vehicle.vitality.health;
-          state.maxHealth = vehicle.vitality.maxHealth;
-          state.alive = vehicle.vitality.alive;
-          state.respawnRemainingMs = vehicle.vitality.respawnRemainingMs;
-        }
-        this.sim.drainEvents([]);
-      },
-      Math.round(1000 / GAME.simulationStepMs),
-    );
+    runRoomLoop(this, 1000 / GAME.simulationStepMs, () => {
+      const commands = new Map<number, ReturnType<typeof idleCommand>>();
+      for (const { vehicle, mailbox } of this.players.values()) {
+        commands.set(vehicle.id, mailbox.consume());
+      }
+      this.sim.step((vehicle) => commands.get(vehicle.id) ?? idleCommand(), GAME.simulationStepMs);
+      this.tick++;
+      this.state.tick = this.tick;
+      for (const [sessionId, { vehicle }] of this.players) {
+        const state = this.state.players.get(sessionId);
+        if (!state) continue;
+        state.x = vehicle.tank.x;
+        state.y = vehicle.tank.y;
+        state.hull = vehicle.tank.hull;
+        state.turret = vehicle.tank.turret;
+        state.health = vehicle.vitality.health;
+        state.maxHealth = vehicle.vitality.maxHealth;
+        state.alive = vehicle.vitality.alive;
+        state.respawnRemainingMs = vehicle.vitality.respawnRemainingMs;
+      }
+      this.sim.drainEvents([]);
+    });
     this.onMessage('input', (client, payload: unknown) => {
       this.players.get(client.sessionId)?.mailbox.offer(payload);
     });

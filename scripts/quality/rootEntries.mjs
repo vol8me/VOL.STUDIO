@@ -29,7 +29,8 @@ export const ROOT_ENTRIES = {
   'eslint.config.mjs': 'ESLint düz yapılandırması köke bağlıdır',
   games: { reason: 'Ürün paketleri', optional: true },
   justfile: 'Kalite kapısı tarifleri',
-  network: 'Ortak multiplayer taşıma, sürümlü protokol ve sunucu giriş korumaları paketi',
+  network:
+    'Ortak multiplayer paketi: sürümlü protokol, istemci, Colyseus sunucu çalışma zamanı ve işletim kapısı',
   'package.json': 'pnpm kökü; Prettier ve stylelint yapılandırması burada',
   patches: 'pnpm yamaları (patchedDependencies); her yama securityPolicy.json kaydına bağlıdır',
   'pnpm-lock.yaml': 'pnpm kilidi',
