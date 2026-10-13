@@ -1,6 +1,29 @@
 # İş listesi
 
-- [ ] Oynanış ve ürün görsellerini ekle. Kapanır: ürünün kendi kabul senaryoları geçer.
+- [ ] Gömülü oyuncu (sim): sunucunun verdiği JOIN/LEAVE ile slot, MOVE niyeti, bina ve arazi çarpışması,
+      süzgeçli otomatik ateş, ölüm ve doğuş; yuva komutla günlüğe ve tick paketine girer, kopunca sıfır niyet.
+      Kapanır: SIM_VERSION 2, anlık görüntü v2, yeni altın karma, günlük tekrarında özdeş durum, iki istemcide
+      aynı `stateHash`, hız sınırına takılmayan niyet kodlaması testle kanıtlı.
+- [ ] İstemci dilimi: statik sanat chunk dokusuna pişer, PropField yalnız hareketli katmanları çizer; tank
+      görünümü, `FollowCamera` ile sabit px/tile, birim hareket yumuşatıcısı, örümcek LOD'u.
+      Kapanır: gerçek yakınlıkta (≈0,5 px/birim) ekran görüntüsü vol-test tankıyla yan yana değerlendirildi;
+      yürüyüş ölçümü (adım/sn/bacak, acil oranı, kayma) oyun içi hareket kaynağıyla yeniden koşuldu.
+- [ ] Açık dünya: 512² biyomlu arazi (tam sayı gürültü, tohumdan), geçilemez su ve kayalık, yuvadan çekirdeğe
+      arazi yolu garantisi, yuvalar, inşa menzili, arazi hız çarpanları. Yol alanı 512²'de ölçülür; pencereli
+      alan yapılmaz. Kapanır: her yuvadan arazi yolu testi, geçilemez arazide duvarlanma yok, Android'de
+      `FlowSolver.compute` süresi ölçülmüş.
+- [ ] İklim: ayrık hava türü ve mevsim tick'ten saf fonksiyon olarak türer; yalnız ayrık tür oyun
+      çarpanına girer (tam sayı yüzde). CORE'a terfi ayrı değişikliktir ve vol-test bit özdeş kalır.
+      Kapanır: iki motorda aynı tür dizisi, vol-test piksel temelleri değişmedi.
+- [ ] Etki, ses ve arayüz: toz, namlu ışığı, kıvılcım, patlama, inşa halkası, sarsıntı, titreşim; CORE sfx
+      ile ses; CORE hud/touch ile HUD, sanal çubuk, mini harita, hava parçacıkları, mevsim tonu.
+      Kapanır: etkileşimli kare bütçesi `quality.json`'a göre, e2e Chromium ve WebKit.
+- [ ] Android tam destek: dokunmatik denetim, güvenli alan, geri tuşu, titreşim, grafik katmanı, chunk doku
+      bütçesi katman başına, manifest kayması testi, `ws://` açık metin politikası. Kapanır: bağlı cihaza
+      kurulum ve kabul kaydı (`data-fps`, `data-step-p99`, `data-hash-checks`); ölçülmeyen madde yazılmaz.
+- [ ] Laboratuvar: iş yükü testleri (sahte Phaser sahnesi, kapsam eşiği düşmeden), kayıt defteri ↔ belge
+      eşitliği, lab belgesi, oyunun ajan sözleşmesi, lab komut satırı, e2e duman testi.
+      Kapanır: `pnpm high` yeşil, `pnpm signoff` arka planda koştu ve sonucu kayıtlı.
 - [ ] Paketli uygulamayı cihazda ölç: Windows WebView2, Android WebView ve Steam Deck (WebKitGTK).
       Cihaz sayıları bugün yalnız Chromium motorundandır; WebKitGTK ve paketli kabuk ölçülmedi.
       Kapanır: her platformda `data-fps`, `data-step-p99` ve `data-hash-checks` ile en az 5 dakikalık
