@@ -3,7 +3,13 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { readStamp, selectRunPackages, splitMeasured, stampPath } from '../coverageRun.mjs';
+import {
+  readStamp,
+  selectRunPackages,
+  splitMeasured,
+  stampPath,
+  workersPerPackage,
+} from '../coverageRun.mjs';
 
 const PACKAGES = [
   { name: '@volstudio/audio-synth', dir: 'devtools/audio-synth' },
@@ -52,4 +58,11 @@ test('eşikten muaf paket ölçülmez ama testi koşar', () => {
     plain.map((p) => p.name),
     ['@volstudio/sample-game'],
   );
+});
+
+test('işçi tavanı çekirdeğin yarısıdır, tek çekirdekte 1 verir', () => {
+  assert.equal(workersPerPackage(8), 4);
+  assert.equal(workersPerPackage(16), 8);
+  assert.equal(workersPerPackage(2), 1);
+  assert.equal(workersPerPackage(1), 1);
 });

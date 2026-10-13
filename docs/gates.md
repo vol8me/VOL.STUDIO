@@ -275,7 +275,7 @@ yine kısadır). Yük altında süreler uzar.
 | `audio-test`       | 12–144 sn  | 6 sn                   | alt küme; yapılandırma/silme değişiminde tam takım (144 sn bu turda ölçülmedi)                                    |
 | `rust`             | 35 sn      | 29–37 sn               | sıcak hedef dizini; soğuk derleme (kilit/araç zinciri değişimi) 4,4 dk, ölçülmedi                                 |
 | `test`             | 238 sn     | 272 sn                 | audio-synth 149, core 67, vol-test 29, vitrin 19, tauri-v2 4, pen.dev 3, deck 1 sn                                |
-| `coverage`         | 113 sn     | 128–140 sn             | audio-synth hariç                                                                                                 |
+| `coverage`         | 113 sn     | 163 sn                 | audio-synth hariç; paket başına 4 Vitest işçisi (çekirdek/2), üç koşu yeşil                                       |
 | `e2e` vitrin       | 343 sn     | **1.355 / 1.577 sn**   | 22,6 / 26,3 dk (ilk iki başarısız koşu); sonraki üç tam PASS'te ~24–26 dk; 343 sn bayat bütçe                     |
 | `e2e` vol-test     | 86 sn      | ilk iki koşuda NOT-RUN | ilk başarısız dizide vitrin düştüğü için koşmadı; **sonraki üç tam PASS'te koştu ve geçti** (ayrı süre kaydı yok) |
 | `coverage-audio`   | 545 sn     | 547 sn                 | kapsam ölçümü sentezi yavaşlatır                                                                                  |
@@ -391,15 +391,18 @@ Eşzamanlılık kararı sezgiyle değil ölçümle verilir; benimsemek için en 
 yeşil koşu gerekir. Aşağıdakiler bu ölçütü karşılamadığı için YOKTUR; aynı denemeyi
 körlemesine tekrarlamayın.
 
-| Deneme                                             | Ölçüm (8 çekirdek)                                                                          | Karar                                               |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| vitrin e2e, motor başına 2 işçi                    | 456 → 341 / 339 / 351 sn, üç koşu yeşil                                                     | **benimsendi** (çekirdek/4, en çok 2)               |
-| vitrin e2e, motor başına 3 işçi                    | 317 / 319 / 325 sn; üç koşunun ikisinde zamanlama sınaması (`probe` flaky, `latency` düştü) | reddedildi: ~25 sn için ölçüm sınamaları bozulur    |
-| vol-test e2e, 2 işçi                               | 85 → 77–79 sn (34 sınama; süreyi birkaç uzun sınama belirler)                               | reddedildi: 7 sn için ayar değişmez                 |
-| `coverage`, `pnpm -r --no-sort`                    | 111–112 → 101–109 sn ama her koşuda farklı sınamalar 5 sn zaman aşımına düştü               | reddedildi: kazanç yok, kararsız                    |
-| `test`, 2 birim eşzamanlı                          | 245 → 219 sn; audio-synth 141 → 219 sn, core 55 → 88 sn uzadı                               | reddedildi: %11 kazanç, çekişme kritik yolu uzatır  |
-| `audio-test`, yapılandırma değişiminde de alt küme | tam takım yalnız yapılandırma/silme değişiminde koşar (144 sn); tipik alt küme 12 sn        | reddedildi: yapılandırma her sınamayı etkileyebilir |
-| `coverage` paket başına makbuz                     | `coverage-shape` koşunun bütün lcov'unu okur                                                | reddedildi: tazelik sözleşmesini bozar              |
+| Deneme                                              | Ölçüm (8 çekirdek)                                                                           | Karar                                               |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| vitrin e2e, motor başına 2 işçi                     | 456 → 341 / 339 / 351 sn, üç koşu yeşil                                                      | **benimsendi** (çekirdek/4, en çok 2)               |
+| vitrin e2e, motor başına 3 işçi                     | 317 / 319 / 325 sn; üç koşunun ikisinde zamanlama sınaması (`probe` flaky, `latency` düştü)  | reddedildi: ~25 sn için ölçüm sınamaları bozulur    |
+| vol-test e2e, 2 işçi                                | 85 → 77–79 sn (34 sınama; süreyi birkaç uzun sınama belirler)                                | reddedildi: 7 sn için ayar değişmez                 |
+| `coverage`, `pnpm -r --no-sort`                     | 111–112 → 101–109 sn ama her koşuda farklı sınamalar 5 sn zaman aşımına düştü                | reddedildi: kazanç yok, kararsız                    |
+| `coverage`, paket başına işçi sınırsız (varsayılan) | ~148 sn ama beş koşunun ikisinde vitrin `main.test.ts` 20 sn aşımına düştü (tek başına 3 sn) | reddedildi: dört paket birlikte çekirdeği aşar      |
+| `coverage`, paket başına 2 işçi (çekirdek/4)        | 237 / 236 / 241 sn, üç koşu yeşil                                                            | reddedildi: +%45 süre, en ağır paketin yolu uzar    |
+| `coverage`, paket başına 4 işçi (çekirdek/2)        | 163 / 163 / 163 sn, üç koşu yeşil                                                            | **benimsendi** (`workersPerPackage`)                |
+| `test`, 2 birim eşzamanlı                           | 245 → 219 sn; audio-synth 141 → 219 sn, core 55 → 88 sn uzadı                                | reddedildi: %11 kazanç, çekişme kritik yolu uzatır  |
+| `audio-test`, yapılandırma değişiminde de alt küme  | tam takım yalnız yapılandırma/silme değişiminde koşar (144 sn); tipik alt küme 12 sn         | reddedildi: yapılandırma her sınamayı etkileyebilir |
+| `coverage` paket başına makbuz                      | `coverage-shape` koşunun bütün lcov'unu okur                                                 | reddedildi: tazelik sözleşmesini bozar              |
 
 ## Kapı sağlığı: ne yakalar, ne yakalamaz
 

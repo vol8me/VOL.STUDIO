@@ -12,6 +12,7 @@
  */
 import { execFileSync, spawnSync } from './command.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { availableParallelism } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadQualityConfig } from './config.mjs';
@@ -29,6 +30,21 @@ export function readStamp(root, run) {
   } catch {
     return null;
   }
+}
+
+/** `pnpm -r` varsayılan eşzamanlılığı. */
+const WORKSPACE_CONCURRENCY = 4;
+
+/**
+ * Paket başına Vitest işçi sayısı: çekirdeğin yarısı. Varsayılan (çekirdek - 1) her paketi tek başına
+ * makineyi doldurmaya iter; dört paket birlikte koşunca kapsam yükü altındaki bütünsel sınamalar
+ * (vitrin `main.test.ts` tek başına 3 sn, çekişmede 20 sn aşımı) zaman aşımına düşer. Ölçüm (8 çekirdek):
+ * sınırsız ~148 sn ama beş koşunun ikisi düştü; paket başına 4 işçi 163 sn ve üç koşu yeşil; 2 işçi
+ * 237-241 sn (çekirdek sayısını bölmek en ağır paketin kritik yolunu uzatır). `VITEST_MAX_WORKERS` verilmişse
+ * o kazanır.
+ */
+export function workersPerPackage(cpuCount) {
+  return Math.max(1, Math.floor(cpuCount / 2));
 }
 
 /**
@@ -93,10 +109,19 @@ function main(run) {
   writeFileSync(stampPath(root, run), JSON.stringify(stamp, null, 2));
 
   const filters = packages.flatMap((pkg) => ['--filter', pkg.name]);
-  const result = spawnSync('pnpm', ['-r', ...filters, 'run', 'test:coverage'], {
-    cwd: root,
-    stdio: 'inherit',
-  });
+  const result = spawnSync(
+    'pnpm',
+    ['-r', `--workspace-concurrency=${WORKSPACE_CONCURRENCY}`, ...filters, 'run', 'test:coverage'],
+    {
+      cwd: root,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        VITEST_MAX_WORKERS:
+          process.env.VITEST_MAX_WORKERS ?? String(workersPerPackage(availableParallelism())),
+      },
+    },
+  );
   if (result.status !== 0) return result.status ?? 1;
 
   if (plain.length > 0) {
