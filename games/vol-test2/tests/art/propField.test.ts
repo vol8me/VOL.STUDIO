@@ -41,7 +41,7 @@ describe('PropField: yerleştirme', () => {
     const { factory, field: props } = field();
     props.add('conveyor', 0, 0);
     const belt = factory.byKey(textureKey('conveyor-belt', 2))[0];
-    expect(belt.width).toBeCloseTo(TILE_UNITS * OPTIONS.zoom);
+    expect(belt.width).toBeCloseTo(ASSETS['conveyor-belt'].width * OPTIONS.zoom);
     expect(belt.height).toBeCloseTo(ASSETS['conveyor-belt'].height * OPTIONS.zoom);
     expect(belt.tileScaleX).toBeCloseTo(OPTIONS.zoom / OPTIONS.pxPerUnit);
     expect(belt.tileScaleY).toBeCloseTo(OPTIONS.zoom / OPTIONS.pxPerUnit);
@@ -117,7 +117,7 @@ describe('PropField: animasyon', () => {
     props.update(0.25);
     // 48 birim/sn * 0,25 sn = 12 birim; doku pikseli = 12 * pxPerUnit.
     expect(belt.tilePositionX).toBeCloseTo(-12 * OPTIONS.pxPerUnit);
-    props.update(64 / 48);
+    props.update(ASSETS['conveyor-belt'].width / 48);
     expect(belt.tilePositionX).toBeCloseTo(0, 6); // bir dönem sonra sarar
   });
 
@@ -163,7 +163,8 @@ describe('PropField: animasyon', () => {
       const angle = Math.atan2(flash.y - head.y, flash.x - head.x);
       expect(Math.cos(angle - head.rotation)).toBeCloseTo(1, 6);
     }
-    for (const distance of distances) expect(distance).toBeCloseTo(36 * OPTIONS.zoom, 6);
+    const muzzle = PROPS.turret.layers.find((layer) => layer.id === 'flash')?.at[0] ?? NaN;
+    for (const distance of distances) expect(distance).toBeCloseTo(muzzle * OPTIONS.zoom, 6);
   });
 
   it('geri tepme namluyu kendi ekseni boyunca geri çeker ve söner', () => {

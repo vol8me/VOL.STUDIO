@@ -1,35 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <title>Taret kafası</title>
-    <rect x="30" y="18.9" width="28" height="7.2" rx="1.4" fill="#aab6c0" stroke="#141a20" stroke-width="1.4"/>
-    <rect x="31.6" y="19.7" width="25" height="2.2" rx="1" fill="#e8f0f5" fill-opacity=".7"/>
-    <path d="M36 18.9 V26.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
-    <path d="M41 18.9 V26.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
-    <path d="M46 18.9 V26.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
-    <path d="M51 18.9 V26.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
-    <rect x="54" y="17.7" width="7" height="9.6" rx="1.6" fill="#5c6670" stroke="#141a20" stroke-width="1.4"/>
-    <rect x="58.4" y="20.3" width="3" height="4.4" rx="1" fill="#0d1115"/>
-    <rect x="30" y="33.9" width="28" height="7.2" rx="1.4" fill="#aab6c0" stroke="#141a20" stroke-width="1.4"/>
-    <rect x="31.6" y="34.7" width="25" height="2.2" rx="1" fill="#e8f0f5" fill-opacity=".7"/>
-    <path d="M36 33.9 V41.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
-    <path d="M41 33.9 V41.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
-    <path d="M46 33.9 V41.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
-    <path d="M51 33.9 V41.1" stroke="#141a20" stroke-opacity=".5" stroke-width="1"/>
-    <rect x="54" y="32.7" width="7" height="9.6" rx="1.6" fill="#5c6670" stroke="#141a20" stroke-width="1.4"/>
-    <rect x="58.4" y="35.3" width="3" height="4.4" rx="1" fill="#0d1115"/>
-    <path d="M14 12 L34 12 L40 18 L40 46 L34 52 L14 52 L8 46 L8 18 Z" fill="#3f9b5a" stroke="#141a20" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M10 46 L10 18 L14 14 L30 14" fill="none" stroke="#bff0cc" stroke-opacity=".7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="M38 18 L38 46 L34 50 L16 50" fill="none" stroke="#0e3a1e" stroke-opacity=".6" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="M17 20 L29 20 L33 24 L33 40 L29 44 L17 44 L13 40 L13 24 Z" fill="#2f7a47" stroke="#141a20" stroke-width="1.2" stroke-linejoin="round"/>
-    <rect x="15.72" y="40" width="2.56" height="3" rx="1" fill="#10151a" stroke="#141a20" stroke-width=".8"/>
-    <path d="M16.32 43 L17.68 43" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
-    <rect x="19.72" y="40" width="2.56" height="3" rx="1" fill="#10151a" stroke="#141a20" stroke-width=".8"/>
-    <path d="M20.32 43 L21.68 43" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
-    <rect x="23.72" y="40" width="2.56" height="3" rx="1" fill="#10151a" stroke="#141a20" stroke-width=".8"/>
-    <path d="M24.32 43 L25.68 43" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
-    <rect x="27.72" y="40" width="2.56" height="3" rx="1" fill="#10151a" stroke="#141a20" stroke-width=".8"/>
-    <path d="M28.32 43 L29.68 43" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
-    <circle cx="24" cy="32" r="7" fill="#4b545e" stroke="#141a20" stroke-width="1.4"/>
-    <circle cx="24" cy="32" r="3.6" fill="#7fe9ff" stroke="#141a20" stroke-width="1"/>
-    <path d="M22 30 Q24 28 26.4 29.6" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
-    <path d="M30 24 H38 M30 40 H38" stroke="#141a20" stroke-opacity=".6" stroke-width="1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 40" width="64" height="40">
+  <title>Taret kafa</title>
+  <defs>
+    <linearGradient id="th-steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6f8499"/>
+      <stop offset="0.45" stop-color="#3a4958"/>
+      <stop offset="1" stop-color="#202a33"/>
+    </linearGradient>
+    <linearGradient id="th-steeld" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b4854"/>
+      <stop offset="1" stop-color="#161d24"/>
+    </linearGradient>
+    <radialGradient id="th-plum" cx="0.4" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#c0728a"/>
+      <stop offset="0.55" stop-color="#6b3547"/>
+      <stop offset="1" stop-color="#361823"/>
+    </radialGradient>
+    <linearGradient id="th-plumf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a85b73"/>
+      <stop offset="1" stop-color="#4a2230"/>
+    </linearGradient>
+    <linearGradient id="th-amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd884"/>
+      <stop offset="0.5" stop-color="#e0a132"/>
+      <stop offset="1" stop-color="#8a5a14"/>
+    </linearGradient>
+    <radialGradient id="th-teal" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#effffb"/>
+      <stop offset="0.4" stop-color="#52f5cf"/>
+      <stop offset="1" stop-color="#0c5c4b"/>
+    </radialGradient>
+    <radialGradient id="th-ember" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#fff2d0"/>
+      <stop offset="0.35" stop-color="#ff9a4a"/>
+      <stop offset="1" stop-color="#8a1d10"/>
+    </radialGradient>
+    <linearGradient id="th-barrel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8aa2b8"/>
+      <stop offset="0.5" stop-color="#3f4f5f"/>
+      <stop offset="1" stop-color="#1b232b"/>
+    </linearGradient>
+  </defs>
+    <path d="M23 8.9 H55 Q58 8.9 58 11.9 V13.1 Q58 16.1 55 16.1 H23 Q20 16.1 20 13.1 V11.9 Q20 8.9 23 8.9 Z" fill="url(#th-barrel)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M48.4 7.7 H55.6 Q58 7.7 58 10.1 V14.9 Q58 17.3 55.6 17.3 H48.4 Q46 17.3 46 14.9 V10.1 Q46 7.7 48.4 7.7 Z" fill="url(#th-steeld)" stroke="#0d1217" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M24 10.9H44" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M23 23.9 H55 Q58 23.9 58 26.9 V28.1 Q58 31.1 55 31.1 H23 Q20 31.1 20 28.1 V26.9 Q20 23.9 23 23.9 Z" fill="url(#th-barrel)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M48.4 22.7 H55.6 Q58 22.7 58 25.1 V29.9 Q58 32.3 55.6 32.3 H48.4 Q46 32.3 46 29.9 V25.1 Q46 22.7 48.4 22.7 Z" fill="url(#th-steeld)" stroke="#0d1217" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M24 25.9H44" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M36.17 26.7 L26.7 36.17 L13.3 36.17 L3.83 26.7 L3.83 13.3 L13.3 3.83 L26.7 3.83 L36.17 13.3 Z" fill="url(#th-plum)" stroke="#0d1217" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M8 13C11 8 15 6 20 5.6" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="23" cy="20" r="6.4" fill="url(#th-teal)" stroke="#0d1217" stroke-width="2.6"/>
+    <circle cx="21.4" cy="18.2" r="1.7" fill="#fff" fill-opacity=".9"/>
 </svg>

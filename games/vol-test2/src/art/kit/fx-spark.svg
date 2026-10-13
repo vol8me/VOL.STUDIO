@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>Kıvılcım</title>
+  <defs>
+    <radialGradient id="sp-g" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="0.5" stop-color="#ffe29a" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#ffb347" stop-opacity="0.7"/>
+    </radialGradient>
+  </defs>
+    <path d="M32 16 L19.11 19.11 L16 32 L12.89 19.11 L0 16 L12.89 12.89 L16 0 L19.11 12.89 Z" fill="url(#sp-g)"/>
+</svg>

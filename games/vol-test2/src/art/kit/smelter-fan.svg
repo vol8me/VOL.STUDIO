@@ -1,11 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <title>Dökümhane fanı</title>
-    <circle cx="8" cy="8" r="7.4" fill="#2b3239" stroke="#141a20" stroke-width="1"/>
-    <path d="M9.91 7.41 L13.79 4.84 L14.31 9.95 L9.91 8.59 Z" fill="#9aa6b2" stroke="#141a20" stroke-width=".7" stroke-linejoin="round"/>
-    <path d="M9.47 9.36 L13.64 11.43 L9.46 14.44 L8.44 9.95 Z" fill="#9aa6b2" stroke="#141a20" stroke-width=".7" stroke-linejoin="round"/>
-    <path d="M7.56 9.95 L7.84 14.6 L3.16 12.49 L6.53 9.36 Z" fill="#9aa6b2" stroke="#141a20" stroke-width=".7" stroke-linejoin="round"/>
-    <path d="M6.09 8.59 L2.21 11.16 L1.69 6.05 L6.09 7.41 Z" fill="#9aa6b2" stroke="#141a20" stroke-width=".7" stroke-linejoin="round"/>
-    <path d="M6.53 6.64 L2.36 4.57 L6.54 1.56 L7.56 6.05 Z" fill="#9aa6b2" stroke="#141a20" stroke-width=".7" stroke-linejoin="round"/>
-    <path d="M8.44 6.05 L8.16 1.4 L12.84 3.51 L9.47 6.64 Z" fill="#9aa6b2" stroke="#141a20" stroke-width=".7" stroke-linejoin="round"/>
-    <circle cx="8" cy="8" r="1.9" fill="#c4562d" stroke="#141a20" stroke-width=".7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">
+  <title>Ergitici fan</title>
+  <defs>
+    <linearGradient id="sf-steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6f8499"/>
+      <stop offset="0.45" stop-color="#3a4958"/>
+      <stop offset="1" stop-color="#202a33"/>
+    </linearGradient>
+    <linearGradient id="sf-steeld" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b4854"/>
+      <stop offset="1" stop-color="#161d24"/>
+    </linearGradient>
+    <radialGradient id="sf-plum" cx="0.4" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#c0728a"/>
+      <stop offset="0.55" stop-color="#6b3547"/>
+      <stop offset="1" stop-color="#361823"/>
+    </radialGradient>
+    <linearGradient id="sf-plumf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a85b73"/>
+      <stop offset="1" stop-color="#4a2230"/>
+    </linearGradient>
+    <linearGradient id="sf-amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd884"/>
+      <stop offset="0.5" stop-color="#e0a132"/>
+      <stop offset="1" stop-color="#8a5a14"/>
+    </linearGradient>
+    <radialGradient id="sf-teal" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#effffb"/>
+      <stop offset="0.4" stop-color="#52f5cf"/>
+      <stop offset="1" stop-color="#0c5c4b"/>
+    </radialGradient>
+    <radialGradient id="sf-ember" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#fff2d0"/>
+      <stop offset="0.35" stop-color="#ff9a4a"/>
+      <stop offset="1" stop-color="#8a1d10"/>
+    </radialGradient>
+  </defs>
+    <path d="M12 7 L19 3.5 L21.5 9 L21.5 13 L12 13 Z" fill="url(#sf-steel)" stroke="#0d1217" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M11.6 13.23 L11.13 21.04 L5.12 20.46 L1.65 18.46 L6.4 10.23 Z" fill="url(#sf-steel)" stroke="#0d1217" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M6.4 9.77 L-0.13 5.46 L3.38 0.54 L6.85 -1.46 L11.6 6.77 Z" fill="url(#sf-steel)" stroke="#0d1217" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="10" cy="10" r="3" fill="url(#sf-amber)" stroke="#0d1217" stroke-width="1.8"/>
 </svg>

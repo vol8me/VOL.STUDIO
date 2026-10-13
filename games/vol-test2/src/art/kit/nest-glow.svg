@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <title>Yuva parıltısı</title>
+  <defs>
+    <radialGradient id="ng-g" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff2d0" stop-opacity="1"/>
+      <stop offset="0.3" stop-color="#ff7a3a" stop-opacity="0.9"/>
+      <stop offset="0.65" stop-color="#c0301c" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#c0301c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+    <circle cx="96" cy="96" r="70" fill="url(#ng-g)"/>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 56" width="112" height="56">
+  <title>Mimar kule</title>
+  <defs>
+    <linearGradient id="tt-steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6f8499"/>
+      <stop offset="0.45" stop-color="#3a4958"/>
+      <stop offset="1" stop-color="#202a33"/>
+    </linearGradient>
+    <linearGradient id="tt-steeld" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b4854"/>
+      <stop offset="1" stop-color="#161d24"/>
+    </linearGradient>
+    <radialGradient id="tt-plum" cx="0.4" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#c0728a"/>
+      <stop offset="0.55" stop-color="#6b3547"/>
+      <stop offset="1" stop-color="#361823"/>
+    </radialGradient>
+    <linearGradient id="tt-plumf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a85b73"/>
+      <stop offset="1" stop-color="#4a2230"/>
+    </linearGradient>
+    <linearGradient id="tt-amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd884"/>
+      <stop offset="0.5" stop-color="#e0a132"/>
+      <stop offset="1" stop-color="#8a5a14"/>
+    </linearGradient>
+    <radialGradient id="tt-teal" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#effffb"/>
+      <stop offset="0.4" stop-color="#52f5cf"/>
+      <stop offset="1" stop-color="#0c5c4b"/>
+    </radialGradient>
+    <radialGradient id="tt-ember" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#fff2d0"/>
+      <stop offset="0.35" stop-color="#ff9a4a"/>
+      <stop offset="1" stop-color="#8a1d10"/>
+    </radialGradient>
+    <linearGradient id="tt-barrel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8aa2b8"/>
+      <stop offset="0.5" stop-color="#3f4f5f"/>
+      <stop offset="1" stop-color="#1b232b"/>
+    </linearGradient>
+    <radialGradient id="tt-dome" cx="0.38" cy="0.32" r="0.8">
+      <stop offset="0" stop-color="#9db4c8"/>
+      <stop offset="0.5" stop-color="#46586a"/>
+      <stop offset="1" stop-color="#1b232b"/>
+    </radialGradient>
+  </defs>
+    <path d="M35.4 13.6 H90.6 Q94 13.6 94 17 V19 Q94 22.4 90.6 22.4 H35.4 Q32 22.4 32 19 V17 Q32 13.6 35.4 13.6 Z" fill="url(#tt-barrel)" stroke="#0d1217" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M83 12.2 H95 Q98 12.2 98 15.2 V20.8 Q98 23.8 95 23.8 H83 Q80 23.8 80 20.8 V15.2 Q80 12.2 83 12.2 Z" fill="url(#tt-steeld)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="94" y="15" width="3" height="6" rx="1" fill="#52f5cf"/>
+    <path d="M38 16H76" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M35.4 33.6 H90.6 Q94 33.6 94 37 V39 Q94 42.4 90.6 42.4 H35.4 Q32 42.4 32 39 V37 Q32 33.6 35.4 33.6 Z" fill="url(#tt-barrel)" stroke="#0d1217" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M83 32.2 H95 Q98 32.2 98 35.2 V40.8 Q98 43.8 95 43.8 H83 Q80 43.8 80 40.8 V35.2 Q80 32.2 83 32.2 Z" fill="url(#tt-steeld)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="94" y="35" width="3" height="6" rx="1" fill="#52f5cf"/>
+    <path d="M38 36H76" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M54.17 37.18 L41.18 50.17 L22.82 50.17 L9.83 37.18 L9.83 18.82 L22.82 5.83 L41.18 5.83 L54.17 18.82 Z" fill="url(#tt-dome)" stroke="#0d1217" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M12 20C16 12 24 8 32 7C30 13 29 20 28 28C22 26 16 24 12 20Z" fill="url(#tt-plum)" stroke="#0d1217" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M12 36C16 44 24 48 32 49C30 43 29 36 28 28C22 30 16 32 12 36Z" fill="url(#tt-plumf)" stroke="#0d1217" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="38" cy="28" r="8" fill="url(#tt-teal)" stroke="#0d1217" stroke-width="2.8"/>
+    <circle cx="35.6" cy="25.6" r="2.2" fill="#fff" fill-opacity=".9"/>
+    <rect x="6" y="24" width="9" height="8" rx="2" fill="#26303a" stroke="#0d1217" stroke-width="2"/>
+</svg>

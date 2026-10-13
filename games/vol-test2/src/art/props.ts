@@ -25,7 +25,16 @@ export interface LayerDef {
 }
 
 export type PropKind =
-  'conveyor' | 'drill' | 'smelter' | 'turret' | 'wall' | 'core' | 'ore-a' | 'ore-b' | 'ore-c';
+  | 'conveyor'
+  | 'drill'
+  | 'smelter'
+  | 'turret'
+  | 'wall'
+  | 'core'
+  | 'nest'
+  | 'ore-a'
+  | 'ore-b'
+  | 'ore-c';
 
 export interface PropDef {
   readonly kind: PropKind;
@@ -50,8 +59,8 @@ export const PROPS: Readonly<Record<PropKind, PropDef>> = {
       {
         id: 'belt',
         asset: 'conveyor-belt',
-        at: [0, 0],
-        scroll: { kind: 'scroll', unitsPerSecond: 48, period: 64 },
+        at: [8, 16],
+        scroll: { kind: 'scroll', unitsPerSecond: 48, period: 48 },
       },
       { id: 'rails', asset: 'conveyor-rails', at: [0, 0] },
     ],
@@ -85,8 +94,8 @@ export const PROPS: Readonly<Record<PropKind, PropDef>> = {
       {
         id: 'fan',
         asset: 'smelter-fan',
-        at: [47, 49],
-        pivot: [8, 8],
+        at: [55, 20],
+        pivot: [10, 10],
         rotate: { kind: 'spin', rpm: 160 },
       },
     ],
@@ -100,7 +109,7 @@ export const PROPS: Readonly<Record<PropKind, PropDef>> = {
         id: 'head',
         asset: 'turret-head',
         at: [32, 32],
-        pivot: [24, 32],
+        pivot: [20, 20],
         rotate: { kind: 'sweep', centerDeg: 0, amplitudeDeg: 55, hz: 0.22 },
         slide: { kind: 'kick', units: 3.5, periodMs: TURRET_PERIOD_MS, decayMs: 120 },
       },
@@ -108,8 +117,8 @@ export const PROPS: Readonly<Record<PropKind, PropDef>> = {
         id: 'flash',
         asset: 'turret-flash',
         parent: 'head',
-        at: [36, 0],
-        pivot: [4, 16],
+        at: [40, 0],
+        pivot: [24, 24],
         blend: 'add',
         alpha: { kind: 'flash', periodMs: TURRET_PERIOD_MS, decayMs: 180 },
       },
@@ -125,16 +134,31 @@ export const PROPS: Readonly<Record<PropKind, PropDef>> = {
         id: 'ring',
         asset: 'core-ring',
         at: [96, 96],
-        pivot: [80, 80],
+        pivot: [96, 96],
         rotate: { kind: 'spin', rpm: 5 },
       },
       {
         id: 'glow',
         asset: 'core-glow',
         at: [96, 96],
-        pivot: [80, 80],
+        pivot: [96, 96],
         blend: 'add',
         alpha: { kind: 'pulse', min: 0.55, max: 1, hz: 0.5 },
+      },
+    ],
+  },
+  nest: {
+    kind: 'nest',
+    tiles: [3, 3],
+    layers: [
+      { id: 'base', asset: 'nest-base', at: [0, 0] },
+      {
+        id: 'glow',
+        asset: 'nest-glow',
+        at: [96, 96],
+        pivot: [96, 96],
+        blend: 'add',
+        alpha: { kind: 'pulse', min: 0.4, max: 1, hz: 0.7 },
       },
     ],
   },

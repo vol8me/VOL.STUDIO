@@ -21,8 +21,6 @@ import type { AssetId } from '@/art/manifest';
 const SPIDER_ASSETS: readonly AssetId[] = [
   'arachnid-abdomen',
   'arachnid-carapace',
-  'arachnid-claw',
-  'arachnid-coxa',
   'arachnid-femur',
   'arachnid-reactor',
   'arachnid-shadow',

@@ -1,67 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 72" width="88" height="72">
-  <title>Örümcek karnı</title>
-    <path d="M76 18 L60 8 L40 6 L22 12 L10 24 L8 36 L10 48 L22 60 L40 66 L60 64 L76 54 L80 36 Z" fill="#323a45" stroke="#141a20" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M63 19.1 L73 17.6 L73 54.4 L63 52.9 Z" fill="#46505c" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
-    <path d="M64 51.9 L64 20.6 L72 19.6" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M72.2 19.6 L72.2 52.4 L64 52.8" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1.2" stroke-linejoin="round"/>
-    <circle cx="68" cy="22" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M67.29 21.81 L68.72 22.2" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M67.22 21.29 Q68 20.77 68.65 21.22" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <circle cx="68" cy="50" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M67.29 49.81 L68.72 50.2" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M67.22 49.29 Q68 48.77 68.65 49.22" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <path d="M52.5 17.3 L62.5 15.8 L62.5 56.2 L52.5 54.7 Z" fill="#46505c" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
-    <path d="M53.5 53.7 L53.5 18.8 L61.5 17.8" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M61.7 17.8 L61.7 54.2 L53.5 54.6" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1.2" stroke-linejoin="round"/>
-    <circle cx="57.5" cy="20.200000000000003" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M56.79 20.01 L58.22 20.4" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M56.72 19.49 Q57.5 18.97 58.15 19.42" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <circle cx="57.5" cy="51.800000000000004" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M56.79 51.61 L58.22 52" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M56.72 51.09 Q57.5 50.57 58.15 51.02" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <path d="M42 15.5 L52 14 L52 58 L42 56.5 Z" fill="#46505c" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
-    <path d="M43 55.5 L43 17 L51 16" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M51.2 16 L51.2 56 L43 56.4" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1.2" stroke-linejoin="round"/>
-    <circle cx="47" cy="18.4" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M46.29 18.2 L47.72 18.6" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M46.22 17.68 Q47 17.17 47.65 17.62" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <circle cx="47" cy="53.6" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M46.29 53.41 L47.72 53.8" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M46.22 52.89 Q47 52.37 47.65 52.82" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <path d="M31.5 17.3 L41.5 15.8 L41.5 56.2 L31.5 54.7 Z" fill="#46505c" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
-    <path d="M32.5 53.7 L32.5 18.8 L40.5 17.8" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M40.7 17.8 L40.7 54.2 L32.5 54.6" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1.2" stroke-linejoin="round"/>
-    <circle cx="36.5" cy="20.200000000000003" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M35.78 20.01 L37.22 20.4" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M35.72 19.49 Q36.5 18.97 37.15 19.42" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <circle cx="36.5" cy="51.800000000000004" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M35.78 51.61 L37.22 52" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M35.72 51.09 Q36.5 50.57 37.15 51.02" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <path d="M21 22.1 L31 20.6 L31 51.4 L21 49.9 Z" fill="#46505c" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
-    <path d="M22 48.9 L22 23.6 L30 22.6" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M30.2 22.6 L30.2 49.4 L22 49.8" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1.2" stroke-linejoin="round"/>
-    <circle cx="26" cy="25" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M25.29 24.81 L26.72 25.2" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M25.22 24.29 Q26 23.77 26.65 24.22" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <circle cx="26" cy="47" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M25.29 46.81 L26.72 47.2" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M25.22 46.29 Q26 45.77 26.65 46.22" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <path d="M10.5 26.9 L20.5 25.4 L20.5 46.6 L10.5 45.1 Z" fill="#46505c" stroke="#141a20" stroke-width="1.3" stroke-linejoin="round"/>
-    <path d="M11.5 44.1 L11.5 28.4 L19.5 27.4" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M19.7 27.4 L19.7 44.6 L11.5 45" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1.2" stroke-linejoin="round"/>
-    <circle cx="15.5" cy="29.799999999999997" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M14.79 29.6 L16.22 29.99" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M14.72 29.08 Q15.5 28.57 16.15 29.02" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <circle cx="15.5" cy="42.2" r="1.3" fill="#aeb8c2" stroke="#141a20" stroke-width="1"/>
-    <path d="M14.79 42.01 L16.22 42.4" stroke="#141a20" stroke-width=".9" stroke-linecap="round"/>
-    <path d="M14.72 41.49 Q15.5 40.97 16.15 41.42" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>
-    <path d="M12 36 H76" stroke="#8d97a3" stroke-width="2.4" stroke-linecap="round"/>
-    <path d="M12 36 H76" stroke="#141a20" stroke-opacity=".6" stroke-width=".8" stroke-dasharray="3 5"/>
-    <circle cx="44" cy="36" r="9" fill="#14090b" stroke="#141a20" stroke-width="1.5"/>
-    <path d="M39 28.6 V43.4" stroke="#4a2024" stroke-width="1.5"/>
-    <path d="M42.4 28.6 V43.4" stroke="#4a2024" stroke-width="1.5"/>
-    <path d="M45.8 28.6 V43.4" stroke="#4a2024" stroke-width="1.5"/>
-    <path d="M49.2 28.6 V43.4" stroke="#4a2024" stroke-width="1.5"/>
-    <path d="M10 31 L2 33 L6 28 Z" fill="#2a3139" stroke="#141a20" stroke-width="1.1" stroke-linejoin="round"/>
-    <path d="M10 41 L2 39 L6 44 Z" fill="#2a3139" stroke="#141a20" stroke-width="1.1" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 143 125" width="143" height="125">
+  <title>Örümcek karın</title>
+  <defs>
+    <linearGradient id="ab-steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6f8499"/>
+      <stop offset="0.45" stop-color="#3a4958"/>
+      <stop offset="1" stop-color="#202a33"/>
+    </linearGradient>
+    <linearGradient id="ab-steeld" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b4854"/>
+      <stop offset="1" stop-color="#161d24"/>
+    </linearGradient>
+    <radialGradient id="ab-plum" cx="0.4" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#c0728a"/>
+      <stop offset="0.55" stop-color="#6b3547"/>
+      <stop offset="1" stop-color="#361823"/>
+    </radialGradient>
+    <linearGradient id="ab-plumf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a85b73"/>
+      <stop offset="1" stop-color="#4a2230"/>
+    </linearGradient>
+    <linearGradient id="ab-amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd884"/>
+      <stop offset="0.5" stop-color="#e0a132"/>
+      <stop offset="1" stop-color="#8a5a14"/>
+    </linearGradient>
+    <radialGradient id="ab-teal" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#effffb"/>
+      <stop offset="0.4" stop-color="#52f5cf"/>
+      <stop offset="1" stop-color="#0c5c4b"/>
+    </radialGradient>
+    <radialGradient id="ab-ember" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#fff2d0"/>
+      <stop offset="0.35" stop-color="#ff9a4a"/>
+      <stop offset="1" stop-color="#8a1d10"/>
+    </radialGradient>
+  </defs>
+  <g transform="scale(1.15)">
+    <path d="M112 54C112 40 100 30 84 26C64 21 42 22 28 32C14 40 6 48 6 54C6 60 14 68 28 76C42 86 64 87 84 82C100 78 112 68 112 54Z" fill="url(#ab-steeld)" stroke="#0d1217" stroke-width="3.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M12 54C12 48 16 43 28 36C36 32 42 31 46 31C42 42 42 66 46 77C42 77 36 76 28 72C16 65 12 60 12 54Z" fill="url(#ab-plum)" stroke="#0d1217" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M50 28C56 27.6 63 28 63 28V80C63 80 56 80.4 50 80C48 64 48 44 50 28Z" fill="url(#ab-steel)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M66 28C72 27.6 79 28 79 28V80C79 80 72 80.4 66 80C64 64 64 44 66 28Z" fill="url(#ab-steel)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M82 28C88 27.6 94 28 94 28V80C94 80 88 80.4 82 80C80 64 80 44 82 28Z" fill="url(#ab-steel)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M52 31C58 30.6 60 30.6 62 31" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="64" cy="54" r="16" fill="#1a0d0d" stroke="#0d1217" stroke-width="3"/>
+    <circle cx="64" cy="54" r="12" fill="#3a1410" stroke="#0d1217" stroke-width="2"/>
+    <path d="M102 41L108 54L102 67" fill="none" stroke="#ff8a55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".85"/>
+  </g>
 </svg>

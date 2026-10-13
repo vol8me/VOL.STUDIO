@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { SPIDER_ART } from '../../scripts/art/spider';
 import { ASSETS, type AssetId } from '../../src/art/manifest';
 import {
   ABDOMEN_PIVOT_BODY,
   buildLegs,
-  CLAW_LENGTH,
   DEFAULT_SPIDER,
   FEMUR_LENGTH,
   LOWER_LENGTH,
@@ -13,7 +13,6 @@ import {
   REACTOR_BODY,
   SPIDER_ANCHORS,
   STANCE_DEG,
-  TIBIA_LENGTH,
 } from '../../src/actors/spiderRig';
 
 const DIR = join(import.meta.dirname, '../../src/art/kit');
@@ -36,14 +35,63 @@ function circles(svg: string): Circle[] {
 const hasCircle = (svg: string, x: number, y: number): boolean =>
   circles(svg).some((circle) => Math.abs(circle.x - x) < 0.01 && Math.abs(circle.y - y) < 0.01);
 
-describe('SPIDER_ANCHORS: rig sabitleri SVG dosyalarıyla örtüşür', () => {
+/** `<g transform="scale(k)">` çarpanı: başgöğüs ve karın taban koordinatlarında çizilip büyütülür. */
+function groupScale(svg: string): number {
+  const match = /transform="scale\(([\d.]+)\)"/.exec(svg);
+  return match === null ? 1 : Number(match[1]);
+}
+
+/** Bir yolun `M/L` köşeleri (çokgen yolları). */
+function vertices(path: string): [number, number][] {
+  return [...path.matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])]);
+}
+
+function distanceToPolygon(x: number, y: number, polygon: readonly [number, number][]): number {
+  let best = Infinity;
+  for (let index = 0; index < polygon.length; index++) {
+    const [ax, ay] = polygon[index];
+    const [bx, by] = polygon[(index + 1) % polygon.length];
+    const dx = bx - ax;
+    const dy = by - ay;
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+    best = Math.min(best, Math.hypot(x - (ax + t * dx), y - (ay + t * dy)));
+  }
+  return best;
+}
+
+describe('SPIDER_ANCHORS: rig sabitleri üreteçle ve SVG dosyalarıyla örtüşür', () => {
+  it('rig sayıları sanat üretecinin sayılarıdır (çizim değişirse rig sessizce bozulmaz)', () => {
+    const { femur, tibia, carapace, abdomen, reactor, shadow } = SPIDER_ANCHORS;
+    expect(femur).toEqual({
+      width: SPIDER_ART.femur.w,
+      height: SPIDER_ART.femur.h,
+      a: SPIDER_ART.femur.a,
+      b: SPIDER_ART.femur.b,
+    });
+    expect(tibia).toEqual({
+      width: SPIDER_ART.tibia.w,
+      height: SPIDER_ART.tibia.h,
+      a: SPIDER_ART.tibia.a,
+      tip: SPIDER_ART.tibia.tip,
+    });
+    expect(carapace.width).toBe(SPIDER_ART.carapace.w);
+    expect(carapace.height).toBe(SPIDER_ART.carapace.h);
+    expect(carapace.center).toEqual(SPIDER_ART.carapace.center);
+    expect([...carapace.hipsX]).toEqual(SPIDER_ART.carapace.hipsX);
+    expect([...carapace.hipsY]).toEqual(SPIDER_ART.carapace.hipsY);
+    expect(abdomen.width).toBe(SPIDER_ART.abdomen.w);
+    expect(abdomen.height).toBe(SPIDER_ART.abdomen.h);
+    expect(abdomen.pivot).toEqual(SPIDER_ART.abdomen.pivot);
+    expect(abdomen.vent).toEqual(SPIDER_ART.abdomen.vent);
+    expect(reactor.width).toBe(SPIDER_ART.reactor.w);
+    expect(shadow.width).toBe(SPIDER_ART.shadow.w);
+  });
+
   it('bildirilen boyutlar manifestteki boyutlardır', () => {
     const sized: [AssetId, { width: number; height: number }][] = [
       ['arachnid-carapace', SPIDER_ANCHORS.carapace],
       ['arachnid-femur', SPIDER_ANCHORS.femur],
       ['arachnid-tibia', SPIDER_ANCHORS.tibia],
-      ['arachnid-claw', SPIDER_ANCHORS.claw],
-      ['arachnid-coxa', SPIDER_ANCHORS.coxa],
       ['arachnid-abdomen', SPIDER_ANCHORS.abdomen],
       ['arachnid-reactor', SPIDER_ANCHORS.reactor],
       ['arachnid-shadow', SPIDER_ANCHORS.shadow],
@@ -54,77 +102,74 @@ describe('SPIDER_ANCHORS: rig sabitleri SVG dosyalarıyla örtüşür', () => {
     }
   });
 
-  it('uyluk ve kaval eklem daireleri tam bağlantı noktalarındadır', () => {
+  it('uyluk eklem daireleri bağlantı noktalarında, kavalın dizi A noktasındadır', () => {
     const { femur, tibia } = SPIDER_ANCHORS;
     const femurSvg = read('arachnid-femur');
     expect(hasCircle(femurSvg, femur.a[0], femur.a[1])).toBe(true);
     expect(hasCircle(femurSvg, femur.b[0], femur.b[1])).toBe(true);
-    const tibiaSvg = read('arachnid-tibia');
-    expect(hasCircle(tibiaSvg, tibia.a[0], tibia.a[1])).toBe(true);
-    expect(hasCircle(tibiaSvg, tibia.b[0], tibia.b[1])).toBe(true);
+    expect(hasCircle(read('arachnid-tibia'), tibia.a[0], tibia.a[1])).toBe(true);
   });
 
-  it('pençe eklemi dairesi (4,8) ve kırmızı uç çizgisi (20,9)da biter', () => {
-    const { claw } = SPIDER_ANCHORS;
-    const svg = read('arachnid-claw');
-    expect(hasCircle(svg, claw.a[0], claw.a[1])).toBe(true);
-    expect(svg).toContain(`${claw.tip[0]} ${claw.tip[1]}"`);
+  it('kaval pençe ucunda biter: kemik yolu ucu (tip) köşe olarak taşır', () => {
+    const { tibia } = SPIDER_ANCHORS;
+    expect(read('arachnid-tibia')).toContain(`${tibia.tip[0]} ${tibia.tip[1]}C`);
   });
 
-  it('kalça plakası ve reaktör çekirdeği kendi merkezindedir', () => {
-    expect(hasCircle(read('arachnid-coxa'), 10, 10)).toBe(true);
-    expect(hasCircle(read('arachnid-reactor'), 24, 24)).toBe(true);
-    expect(read('arachnid-shadow')).toContain('cx="64" cy="64"');
+  it('reaktör ve gölge kendi merkezindedir', () => {
+    expect(hasCircle(read('arachnid-reactor'), 32, 32)).toBe(true);
+    expect(hasCircle(read('arachnid-shadow'), 96, 96)).toBe(true);
   });
 
-  it('başgöğsün sekiz omuz yuvası hipsX/hipsY ile aynı yerdedir', () => {
+  it('kalçalar kabuğun kenarındadır: ne içeride kaybolur ne boşlukta asılı kalır', () => {
     const { hipsX, hipsY, center } = SPIDER_ANCHORS.carapace;
     const svg = read('arachnid-carapace');
+    const k = groupScale(svg);
+    const hull = /<path d="(M106 54[^"]+)"/.exec(svg)?.[1] ?? '';
+    const polygon = vertices(hull).map(([x, y]) => [x * k, y * k] as [number, number]);
+    expect(polygon.length).toBeGreaterThanOrEqual(8);
     hipsX.forEach((x, pair) => {
-      expect(hasCircle(svg, x, center[1] - hipsY[pair]), `sol çift ${pair}`).toBe(true);
-      expect(hasCircle(svg, x, center[1] + hipsY[pair]), `sağ çift ${pair}`).toBe(true);
+      for (const y of [hipsY[pair], 2 * center[1] - hipsY[pair]])
+        expect(distanceToPolygon(x, y, polygon), `çift ${pair}`).toBeLessThanOrEqual(4);
     });
   });
 
-  it('karın kabuğu bağlantı noktasında uçlanır ve perçinler havalandırma çevresinde simetriktir', () => {
+  it('karın bağlantı noktasında uçlanır ve reaktör havalandırması karnın içindedir', () => {
     const { abdomen } = SPIDER_ANCHORS;
     const svg = read('arachnid-abdomen');
-    const outline = /<path d="([^"]+)"/.exec(svg)?.[1] ?? '';
-    const xs = [...outline.matchAll(/[ML](\d+(?:\.\d+)?) (\d+(?:\.\d+)?)/g)].map((m) =>
-      Number(m[1]),
-    );
-    expect(Math.max(...xs)).toBeGreaterThanOrEqual(abdomen.pivot[0]);
-    expect(Math.min(...xs)).toBeLessThan(abdomen.vent[0]);
-    const rivets = circles(svg);
-    expect(rivets.length).toBeGreaterThanOrEqual(8);
-    for (const rivet of rivets) {
-      const mirror = rivets.find(
-        (other) =>
-          Math.abs(other.x - rivet.x) < 0.01 &&
-          Math.abs(other.y - (2 * abdomen.vent[1] - rivet.y)) < 0.01,
-      );
-      expect(mirror, `(${rivet.x},${rivet.y}) simetriği`).toBeDefined();
-    }
+    const k = groupScale(svg);
+    expect(svg).toContain('M112 54C');
+    expect(112 * k).toBeCloseTo(abdomen.pivot[0], 5);
+    expect(hasCircle(svg, abdomen.vent[0] / k, abdomen.vent[1] / k)).toBe(true);
+    expect(abdomen.vent[0]).toBeLessThan(abdomen.pivot[0]);
+    expect(abdomen.vent[1]).toBe(abdomen.pivot[1]);
   });
 });
 
-describe('uzuv uzunlukları', () => {
-  it('kemik uzunlukları eklem noktalarından türer ve ayak pençe ucundadır', () => {
-    expect(FEMUR_LENGTH).toBe(40);
-    expect(TIBIA_LENGTH).toBe(48);
-    expect(CLAW_LENGTH).toBe(16);
-    expect(LOWER_LENGTH).toBe(TIBIA_LENGTH + CLAW_LENGTH);
+describe('uzuv uzunlukları ve oranları', () => {
+  it('kemik uzunlukları eklem noktalarından türer; ayak pençe ucundadır', () => {
+    expect(FEMUR_LENGTH).toBe(44);
+    expect(LOWER_LENGTH).toBe(64);
     expect(MAX_REACH).toBe(FEMUR_LENGTH + LOWER_LENGTH);
   });
 
-  it('reaktör karın havalandırmasının gövdedeki izdüşümüdür', () => {
-    expect(ABDOMEN_PIVOT_BODY).toEqual([-24, 0]);
-    expect(REACTOR_BODY).toEqual([-56, 0]);
+  it('bacak ince çubuk değil dolgun kapsüldür: kalınlık uzunluğa oranla yeterli', () => {
+    const { femur, tibia } = SPIDER_ANCHORS;
+    expect(femur.height / FEMUR_LENGTH).toBeGreaterThanOrEqual(0.6);
+    expect(tibia.height / LOWER_LENGTH).toBeGreaterThanOrEqual(0.4);
   });
 
-  it('dinlenme erişimi dizi belirgin bükecek kadar kısa, uyluğu aşacak kadar uzundur', () => {
+  it('reaktör karın havalandırmasının gövdedeki izdüşümüdür', () => {
+    expect(ABDOMEN_PIVOT_BODY).toEqual([-44, 0]);
+    const { pivot, vent } = SPIDER_ANCHORS.abdomen;
+    expect(REACTOR_BODY[0]).toBeCloseTo(-44 + (vent[0] - pivot[0]), 9);
+    expect(REACTOR_BODY[1]).toBeCloseTo(0, 9);
+    expect(REACTOR_BODY[0]).toBeLessThan(ABDOMEN_PIVOT_BODY[0]);
+  });
+
+  it('dinlenme erişimi dizi bükecek kadar kısa, adım tetiği erişim payının içindedir', () => {
     expect(DEFAULT_SPIDER.homeReach).toBeLessThan(MAX_REACH * 0.8);
     expect(DEFAULT_SPIDER.homeReach).toBeGreaterThan(FEMUR_LENGTH);
+    expect(DEFAULT_SPIDER.homeReach + DEFAULT_SPIDER.stepTriggerPx).toBeLessThanOrEqual(MAX_REACH);
     expect(DEFAULT_SPIDER.maxStrainPx).toBeGreaterThan(DEFAULT_SPIDER.stepTriggerPx);
   });
 });
@@ -143,6 +188,14 @@ describe('buildLegs', () => {
       expect(left?.hip[0]).toBe(right?.hip[0]);
       expect(left?.hip[1]).toBe(-(right?.hip[1] ?? 0));
     }
+  });
+
+  it('komşu kalçalar uyluk başlığının çapından uzaktır: başlıklar üst üste binmez', () => {
+    for (const a of legs)
+      for (const b of legs) {
+        if (a === b) continue;
+        expect(Math.hypot(a.hip[0] - b.hip[0], a.hip[1] - b.hip[1])).toBeGreaterThanOrEqual(20);
+      }
   });
 
   it('duruş açıları ön bacaktan arkaya doğru artar', () => {

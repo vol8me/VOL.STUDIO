@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 96" width="128" height="96">
+  <title>Mimar gövde</title>
+  <defs>
+    <linearGradient id="hu-steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6f8499"/>
+      <stop offset="0.45" stop-color="#3a4958"/>
+      <stop offset="1" stop-color="#202a33"/>
+    </linearGradient>
+    <linearGradient id="hu-steeld" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b4854"/>
+      <stop offset="1" stop-color="#161d24"/>
+    </linearGradient>
+    <radialGradient id="hu-plum" cx="0.4" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#c0728a"/>
+      <stop offset="0.55" stop-color="#6b3547"/>
+      <stop offset="1" stop-color="#361823"/>
+    </radialGradient>
+    <linearGradient id="hu-plumf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a85b73"/>
+      <stop offset="1" stop-color="#4a2230"/>
+    </linearGradient>
+    <linearGradient id="hu-amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd884"/>
+      <stop offset="0.5" stop-color="#e0a132"/>
+      <stop offset="1" stop-color="#8a5a14"/>
+    </linearGradient>
+    <radialGradient id="hu-teal" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#effffb"/>
+      <stop offset="0.4" stop-color="#52f5cf"/>
+      <stop offset="1" stop-color="#0c5c4b"/>
+    </radialGradient>
+    <radialGradient id="hu-ember" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#fff2d0"/>
+      <stop offset="0.35" stop-color="#ff9a4a"/>
+      <stop offset="1" stop-color="#8a1d10"/>
+    </radialGradient>
+    <linearGradient id="hu-glacis" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3a4958"/>
+      <stop offset="1" stop-color="#8aa0b4"/>
+    </linearGradient>
+  </defs>
+    <path d="M19 3 H109 Q120 3 120 14 V16 Q120 27 109 27 H19 Q8 27 8 16 V14 Q8 3 19 3 Z" fill="#0e1317" stroke="#0d1217" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="12" y="5" width="104" height="20" rx="8" fill="#0a0e11" opacity=".0"/>
+    <path d="M19 69 H109 Q120 69 120 80 V82 Q120 93 109 93 H19 Q8 93 8 82 V80 Q8 69 19 69 Z" fill="#0e1317" stroke="#0d1217" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="12" y="71" width="104" height="20" rx="8" fill="#0a0e11" opacity=".0"/>
+    <path d="M22 24H98L124 38V58L98 72H22L8 62V34Z" fill="url(#hu-steel)" stroke="#0d1217" stroke-width="3.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M24 28H96" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M98 26L120 39V57L98 70Z" fill="url(#hu-glacis)" stroke="#0d1217" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M100 32L116 41" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M104 40L110 48L104 56M111 40L117 48L111 56" fill="none" stroke="#f2b544" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M119 41 H121 Q124 41 124 44 V52 Q124 55 121 55 H119 Q116 55 116 52 V44 Q116 41 119 41 Z" fill="url(#hu-teal)" stroke="#0d1217" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M12 32C16 30 22 30 24 32V64C22 66 16 66 12 64Z" fill="url(#hu-plum)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M14 40C17 43 20 43 23 40" fill="none" stroke="#52f5cf" stroke-width="2.2" stroke-linecap="round" stroke-opacity=".8"/>
+    <path d="M26 32C30 30 36 30 38 32V64C36 66 30 66 26 64Z" fill="url(#hu-plum)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M28 40C31 43 34 43 37 40" fill="none" stroke="#52f5cf" stroke-width="2.2" stroke-linecap="round" stroke-opacity=".8"/>
+    <path d="M40 32C44 30 50 30 52 32V64C50 66 44 66 40 64Z" fill="url(#hu-plum)" stroke="#0d1217" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M42 40C45 43 48 43 51 40" fill="none" stroke="#52f5cf" stroke-width="2.2" stroke-linecap="round" stroke-opacity=".8"/>
+    <circle cx="64" cy="48" r="24" fill="#0a0e12" stroke="#0d1217" stroke-width="3.4"/>
+    <circle cx="64" cy="48" r="20" fill="none" stroke="#1d3a36" stroke-width="3.6"/>
+    <circle cx="64" cy="48" r="24" fill="none" stroke="#4d5e6e" stroke-width="1.8" stroke-opacity=".8"/>
+    <rect x="72" y="26.4" width="14" height="3.2" rx="1.6" fill="#f2b544" fill-opacity=".85"/>
+    <rect x="72" y="66.4" width="14" height="3.2" rx="1.6" fill="#f2b544" fill-opacity=".85"/>
+</svg>

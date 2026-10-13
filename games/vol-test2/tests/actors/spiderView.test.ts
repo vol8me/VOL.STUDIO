@@ -7,7 +7,6 @@ import {
   DEFAULT_SPIDER,
   REACTOR_BODY,
   SPIDER_ANCHORS,
-  TIBIA_LENGTH,
 } from '../../src/actors/spiderRig';
 import { SPIDER_PART_COUNT, SpiderView, type SpiderViewOptions } from '../../src/actors/spiderView';
 import { FakeFactory, type FakePart } from '../helpers/fakeParts';
@@ -30,26 +29,24 @@ const only = (factory: FakeFactory, id: Parameters<typeof textureKey>[0]): FakeP
   factory.byKey(textureKey(id, OPTIONS.pxPerUnit));
 
 describe('SpiderView: kurulum', () => {
-  it('36 parça: gölge, 8×(uyluk, kaval, pençe, kalça), karın, başgöğüs, reaktör', () => {
+  it('20 parça: gölge, 8×(uyluk, kaval), karın, başgöğüs, reaktör', () => {
     const { factory, view } = build();
-    expect(SPIDER_PART_COUNT).toBe(36);
+    expect(SPIDER_PART_COUNT).toBe(20);
     expect(view.partCount).toBe(SPIDER_PART_COUNT);
     expect(factory.parts).toHaveLength(SPIDER_PART_COUNT);
-    for (const id of ['femur', 'tibia', 'claw', 'coxa'] as const)
+    for (const id of ['femur', 'tibia'] as const)
       expect(only(factory, `arachnid-${id}`)).toHaveLength(8);
     for (const id of ['shadow', 'abdomen', 'carapace', 'reactor'] as const)
       expect(only(factory, `arachnid-${id}`)).toHaveLength(1);
   });
 
-  it('çizim sırası gölge < uyluk < kaval < pençe < kalça < karın < başgöğüs < reaktör ve tabana göre aralıklıdır', () => {
+  it('çizim sırası gölge < uyluk < kaval < karın < başgöğüs < reaktör ve tabana göre aralıklıdır', () => {
     const { factory } = build();
     const depth = (id: Parameters<typeof textureKey>[0]): number => only(factory, id)[0].depth;
     const order = [
       'arachnid-shadow',
       'arachnid-femur',
       'arachnid-tibia',
-      'arachnid-claw',
-      'arachnid-coxa',
       'arachnid-abdomen',
       'arachnid-carapace',
       'arachnid-reactor',
@@ -79,7 +76,7 @@ describe('SpiderView: kurulum', () => {
 });
 
 describe('SpiderView: yerleştirme', () => {
-  it('başgöğüs gövde konumundadır; uyluk kalçada, kaval dizde, pençe kavalın ucundadır', () => {
+  it('başgöğüs gövde konumundadır; uyluk kalçada, kaval dizdedir', () => {
     const { factory, view, body } = build();
     view.update(body, 100, 50, 0, 0);
     expect(only(factory, 'arachnid-carapace')[0].x).toBeCloseTo(100 * OPTIONS.zoom);
@@ -87,18 +84,12 @@ describe('SpiderView: yerleştirme', () => {
     const pose = body.legs[0];
     const femur = only(factory, 'arachnid-femur')[0];
     const tibia = only(factory, 'arachnid-tibia')[0];
-    const claw = only(factory, 'arachnid-claw')[0];
     expect(femur.x).toBeCloseTo((100 + pose.hipX) * OPTIONS.zoom);
     expect(femur.y).toBeCloseTo((50 + pose.hipY) * OPTIONS.zoom);
     expect(femur.rotation).toBeCloseTo(pose.femurRad);
     expect(tibia.x).toBeCloseTo((100 + pose.kneeX) * OPTIONS.zoom);
     expect(tibia.rotation).toBeCloseTo(pose.tibiaRad);
-    expect(claw.x).toBeCloseTo(
-      (100 + pose.kneeX + Math.cos(pose.tibiaRad) * TIBIA_LENGTH) * OPTIONS.zoom,
-    );
-    expect(claw.y).toBeCloseTo(
-      (50 + pose.kneeY + Math.sin(pose.tibiaRad) * TIBIA_LENGTH) * OPTIONS.zoom,
-    );
+    expect(tibia.y).toBeCloseTo((50 + pose.kneeY) * OPTIONS.zoom);
   });
 
   it('gövde açısı bütün parçaları birlikte döndürür', () => {
@@ -163,7 +154,7 @@ describe('SpiderView: yerleştirme', () => {
     expect(differed).toBe(true);
   });
 
-  it('adım tepesinde kaval ve pençe kalınlaşır (ayak kameraya yaklaşır), yerdeki bacak sabit kalır', () => {
+  it('adım tepesinde uyluk ve kaval kalınlaşır (ayak kameraya yaklaşır), yerdeki bacak sabit kalır', () => {
     const { factory, view, body } = build();
     let x = 100;
     let lifted = -1;
@@ -183,7 +174,7 @@ describe('SpiderView: yerleştirme', () => {
     expect(only(factory, 'arachnid-tibia')[grounded].scaleY).toBeCloseTo(base);
   });
 
-  it('liftScale seçeneği kalınlaşmayı ayarlar; destroy 36 parçayı da yok eder', () => {
+  it('liftScale seçeneği kalınlaşmayı ayarlar; destroy 20 parçayı da yok eder', () => {
     const { factory, view, body } = build({ ...OPTIONS, liftScale: 0 });
     let x = 100;
     for (let frame = 0; frame < 60; frame++) {

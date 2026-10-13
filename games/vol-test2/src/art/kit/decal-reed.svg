@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Kamış</title>
+    <path d="M18 56L22 16L26 56Z" fill="#000" fill-opacity="0.32"/>
+    <path d="M30 56L36 10L42 56Z" fill="#000" fill-opacity="0.32"/>
+    <path d="M46 56L48 24L52 56Z" fill="#000" fill-opacity="0.32"/>
+    <path d="M24 50L35 22L38 52Z" fill="#fff" fill-opacity="0.16"/>
+</svg>

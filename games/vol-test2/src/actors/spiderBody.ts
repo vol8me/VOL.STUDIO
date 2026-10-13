@@ -65,8 +65,8 @@ function kneeScore(def: LegDef, kneeX: number, kneeY: number): number {
   return def.side * kneeY;
 }
 
-/** Ağırlık merkezi: karın ağır olduğu için başgöğsün biraz gerisinde (gövde uzayı). */
-const CENTER_OF_MASS: readonly [number, number] = [-18, 0];
+/** Ağırlık merkezi: karın ağır olduğu için başgöğsün gerisinde (gövde uzayı). */
+const CENTER_OF_MASS: readonly [number, number] = [-40, 0];
 /** Kare süresi bu değere kelepçelenir (CORE `MAX_SIM_STEP_MS` ile aynı gerekçe). */
 const MAX_STEP_MS = 50;
 

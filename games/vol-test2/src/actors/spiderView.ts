@@ -9,7 +9,6 @@ import {
   SHADOW_BODY,
   SHADOW_SCALE,
   SPIDER_ANCHORS,
-  TIBIA_LENGTH,
 } from './spiderRig';
 
 export interface SpiderViewOptions {
@@ -25,18 +24,16 @@ export interface SpiderViewOptions {
   readonly liftScale?: number;
 }
 
-/** Her örümcekte gövde parçası katmanları; sıra çizim sırasıdır. */
-export const SPIDER_PART_COUNT = 1 + 8 + 8 + 8 + 8 + 1 + 1 + 1;
+/** Her örümcekte parça sayısı: gölge, 8×(uyluk, kaval), karın, başgöğüs, reaktör. */
+export const SPIDER_PART_COUNT = 1 + 8 + 8 + 1 + 1 + 1;
 
 const REACTOR_PULSE: AnimSpec = { kind: 'pulse', min: 0.55, max: 1, hz: 0.9 };
 const ABDOMEN_SWAY_DEG = 3.2;
 const ABDOMEN_SWAY_HZ = 0.8;
 
 interface LegParts {
-  readonly coxa: PartPort;
   readonly femur: PartPort;
   readonly tibia: PartPort;
-  readonly claw: PartPort;
 }
 
 /**
@@ -85,36 +82,32 @@ export class SpiderView {
     const shadow = SPIDER_ANCHORS.shadow;
     origin(this.shadow, shadow.center, shadow.width, shadow.height);
 
-    const { femur, tibia, claw, coxa } = SPIDER_ANCHORS;
+    const { femur, tibia } = SPIDER_ANCHORS;
     for (let index = 0; index < legCount; index++) {
       const legParts: LegParts = {
         femur: make('arachnid-femur', 1),
         tibia: make('arachnid-tibia', 2),
-        claw: make('arachnid-claw', 3),
-        coxa: make('arachnid-coxa', 4),
       };
       origin(legParts.femur, femur.a, femur.width, femur.height);
       origin(legParts.tibia, tibia.a, tibia.width, tibia.height);
-      origin(legParts.claw, claw.a, claw.width, claw.height);
-      origin(legParts.coxa, coxa.center, coxa.width, coxa.height);
       this.legs.push(legParts);
     }
 
-    this.abdomen = make('arachnid-abdomen', 5);
+    this.abdomen = make('arachnid-abdomen', 3);
     origin(
       this.abdomen,
       SPIDER_ANCHORS.abdomen.pivot,
       SPIDER_ANCHORS.abdomen.width,
       SPIDER_ANCHORS.abdomen.height,
     );
-    this.carapace = make('arachnid-carapace', 6);
+    this.carapace = make('arachnid-carapace', 4);
     origin(
       this.carapace,
       SPIDER_ANCHORS.carapace.center,
       SPIDER_ANCHORS.carapace.width,
       SPIDER_ANCHORS.carapace.height,
     );
-    this.reactor = make('arachnid-reactor', 7);
+    this.reactor = make('arachnid-reactor', 5);
     this.reactor.setBlendMode(BLEND.add);
     origin(
       this.reactor,
@@ -148,16 +141,6 @@ export class SpiderView {
       parts.femur.scaleY = thickness;
       place(parts.tibia, pose.kneeX, pose.kneeY, pose.tibiaRad);
       parts.tibia.scaleY = thickness;
-      // Pençe kavalın ucundan başlar: kaval B noktası eklemin 48 birim ilerisindedir.
-      const reach = TIBIA_LENGTH;
-      place(
-        parts.claw,
-        pose.kneeX + Math.cos(pose.tibiaRad) * reach,
-        pose.kneeY + Math.sin(pose.tibiaRad) * reach,
-        pose.tibiaRad,
-      );
-      parts.claw.scaleY = thickness;
-      place(parts.coxa, pose.hipX, pose.hipY, 0);
     }
 
     // Karın hafifçe salınır; reaktör karnın havalandırmasında olduğu için onunla birlikte döner.

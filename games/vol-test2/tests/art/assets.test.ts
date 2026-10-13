@@ -1,11 +1,52 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ASSET_LIST, ASSETS, floorViolations } from '../../src/art/manifest';
+import { ASSET_LIST, ASSETS, type AssetId } from '../../src/art/manifest';
 import { measureSvg } from '../../src/art/svg';
 
 const DIR = join(import.meta.dirname, '../../src/art/kit');
 const read = (file: string): string => readFileSync(join(DIR, file), 'utf8');
+
+/**
+ * Dolgun gövde: gradyan dolgulu, kalın dış çizgili biçimler (vol-test tank dili). Listede olmayan her
+ * varlık hafiftir (parıltı, gölge, bant, çıkartma, efekt); yeni bir varlık iki sınıftan birine girmek
+ * zorundadır, böylece ince çizgi ya da düz dolgu bir yer tutucu olarak sızamaz.
+ */
+const SOLID: ReadonlySet<AssetId> = new Set<AssetId>([
+  'arachnid-abdomen',
+  'arachnid-carapace',
+  'arachnid-femur',
+  'arachnid-tibia',
+  'conveyor-base',
+  'conveyor-rails',
+  'core-base',
+  'core-ring',
+  'drill-base',
+  'drill-rotor',
+  'nest-base',
+  'ore-a',
+  'ore-b',
+  'ore-c',
+  'smelter-base',
+  'smelter-fan',
+  'tank-hull',
+  'tank-turret',
+  'turret-base',
+  'turret-head',
+  'wall',
+]);
+
+const SOLID_FLOOR = { elements: 30, paths: 3, gradients: 5, outlined: 2 } as const;
+/** Dış çizgi bir sprite'ın ekranda kalınlığıdır: bunun altı 0,5 px/birimde saç teli olur. */
+const MIN_OUTLINE_WIDTH = 1.6;
+const MIN_ANY_STROKE = 1.2;
+
+/** Dış çizgi rengi (scripts/art/lib.ts OL) taşıyan öğelerin çizgi kalınlıkları: dolgun gövdenin imzası. */
+const outlineWidths = (source: string): number[] =>
+  [...source.matchAll(/<[^>]*stroke="#0d1217"[^>]*>/g)].map((tag) => {
+    const width = /stroke-width="([\d.]+)"/.exec(tag[0]);
+    return width === null ? 1 : Number(width[1]);
+  });
 
 describe('lab SVG varlıkları', () => {
   it('manifest ile klasör birebir aynıdır', () => {
@@ -17,17 +58,22 @@ describe('lab SVG varlıkları', () => {
     for (const asset of ASSET_LIST) expect(ASSETS[asset.id]).toBe(asset);
   });
 
-  it('sekiz ailenin hepsi vardır ve örümcek bacaklı parçalardan oluşur', () => {
+  it('bütün aileler vardır ve örümcek iki kemikli bacak parçalarından oluşur', () => {
     const families = new Set(ASSET_LIST.map((asset) => asset.id.split('-')[0]));
     for (const family of [
       'arachnid',
       'conveyor',
-      'drill',
-      'smelter',
-      'turret',
       'core',
+      'decal',
+      'drill',
+      'fx',
+      'nest',
       'ore',
+      'smelter',
+      'tank',
+      'turret',
       'wall',
+      'wx',
     ])
       expect(families.has(family), family).toBe(true);
     const spiderParts = ASSET_LIST.filter((asset) => asset.id.startsWith('arachnid-')).map(
@@ -36,8 +82,6 @@ describe('lab SVG varlıkları', () => {
     expect(spiderParts.sort()).toEqual([
       'arachnid-abdomen',
       'arachnid-carapace',
-      'arachnid-claw',
-      'arachnid-coxa',
       'arachnid-femur',
       'arachnid-reactor',
       'arachnid-shadow',
@@ -56,20 +100,37 @@ describe('lab SVG varlıkları', () => {
     }
   });
 
-  it.each(ASSET_LIST.map((asset) => [asset.id, asset] as const))(
-    '%s yer tutucu değil: karmaşıklık tabanının üstünde',
-    (_id, asset) => {
-      expect(floorViolations(measureSvg(read(asset.file)), asset.floor)).toEqual([]);
-      expect(Object.keys(asset.floor).length, 'her varlığın tabanı vardır').toBeGreaterThan(0);
-    },
-  );
+  it('her varlık dolgun gövde sınıfındadır ya da hafiftir; listede olmayan kimlik yoktur', () => {
+    const ids = new Set<AssetId>(ASSET_LIST.map((asset) => asset.id));
+    for (const id of SOLID) expect(ids.has(id), id).toBe(true);
+  });
 
-  it('yer tutucu bir şekil hiçbir varlığın tabanını geçemez', () => {
+  it.each(
+    ASSET_LIST.filter((asset) => SOLID.has(asset.id)).map((asset) => [asset.id, asset] as const),
+  )('%s dolgun gövdedir: gradyan, kalın dış çizgi ve ayrıntı tabanının üstünde', (_id, asset) => {
+    const source = read(asset.file);
+    const measured = measureSvg(source);
+    expect(measured.elements).toBeGreaterThanOrEqual(SOLID_FLOOR.elements);
+    expect(measured.paths).toBeGreaterThanOrEqual(SOLID_FLOOR.paths);
+    expect(measured.gradients).toBeGreaterThanOrEqual(SOLID_FLOOR.gradients);
+    const widths = outlineWidths(source);
+    expect(widths.length).toBeGreaterThanOrEqual(SOLID_FLOOR.outlined);
+    expect(Math.min(...widths)).toBeGreaterThanOrEqual(MIN_OUTLINE_WIDTH);
+  });
+
+  it('düz dolgulu bir yer tutucu dolgun gövde tabanını geçemez', () => {
     const placeholder = measureSvg(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#888"/></svg>',
     );
+    expect(placeholder.gradients).toBeLessThan(SOLID_FLOOR.gradients);
+    expect(placeholder.elements).toBeLessThan(SOLID_FLOOR.elements);
+    expect(outlineWidths('<rect fill="#888"/>')).toEqual([]);
+  });
+
+  it('hiçbir çizgi saç teli değildir', () => {
     for (const asset of ASSET_LIST)
-      expect(floorViolations(placeholder, asset.floor).length, asset.id).toBeGreaterThan(0);
+      for (const match of read(asset.file).matchAll(/stroke-width="([\d.]+)"/g))
+        expect(Number(match[1]), asset.file).toBeGreaterThanOrEqual(MIN_ANY_STROKE);
   });
 
   it('SVG kaynağı geçerli XML ve dış kaynak çağırmaz', () => {

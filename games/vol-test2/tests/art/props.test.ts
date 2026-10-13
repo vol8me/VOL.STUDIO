@@ -63,8 +63,11 @@ describe('PROPS: yapı tarifleri tutarlıdır', () => {
     for (const kind of PROP_KINDS) {
       for (const layer of PROPS[kind].layers) {
         if (layer.scroll === undefined || layer.scroll.kind !== 'scroll') continue;
-        expect(layer.scroll.period, `${kind}.${layer.id}`).toBe(ASSETS[layer.asset].width);
-        expect(ASSETS[layer.asset].width).toBe(TILE_UNITS);
+        const asset = ASSETS[layer.asset];
+        expect(layer.scroll.period, `${kind}.${layer.id}`).toBe(asset.width);
+        // Bant rayların arasındaki kanala sığar: karodan geniş olamaz ve karonun içinde başlar.
+        expect(layer.at[0] + asset.width, `${kind}.${layer.id}`).toBeLessThanOrEqual(TILE_UNITS);
+        expect(layer.at[1] + asset.height, `${kind}.${layer.id}`).toBeLessThanOrEqual(TILE_UNITS);
       }
     }
   });
@@ -103,6 +106,7 @@ describe('dynamicLayerCount', () => {
       turret: 2,
       wall: 0,
       core: 2,
+      nest: 1,
       'ore-a': 0,
       'ore-b': 0,
       'ore-c': 0,
