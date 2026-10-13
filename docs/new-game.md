@@ -81,11 +81,10 @@ içindedir; `joinOrCreate` dolu odadan sonra yeni oda oluşturabildiğinden oda
 başına limit ile toplam oyuncu limitini ayırır. İstemciden yalnız doğrulanmış
 girdi kabul edilir ve her sabit sim adımında en fazla bir niyet işlenir.
 
-Bağlantı bütçesi dünyaya bağlıdır. Yüksek sayıda bant ve birim içeren, oyuncusuz da işleyen bir
-dünya için Colyseus `Schema` ile durumu çoğaltmak yerine deterministik simülasyonu istemcide de
-koşturup yalnız komutları göndermek ölçülen seçenektir ([VOL.TEST2](../games/vol-test2/DESIGN.md);
-sayılar ve sınırlar [araştırmada](backend-research.md)). Bu yol savaş sisini ve gizli bilgiyi
-taşımaz; onlar için ilgi alanı çerçevesi gerekir. Karar, oyunun gizli bilgi ihtiyacına göre verilir.
+Bağlantı bütçesi dünyaya bağlıdır. Çok sayıda varlığı olan, oyuncusuz da işleyen bir dünyada tam
+durumu `Schema` ile çoğaltmak pahalıdır; ilgi alanı çerçevesi ya da deterministik adım gibi seçenekler
+ölçüyle seçilir ([araştırma](backend-research.md)). Deterministik yol savaş sisini ve gizli bilgiyi
+taşımaz. Karar, oyunun gizli bilgi ihtiyacına göre verilir.
 
 Bağlantı açıldığında `DisposableScope` ve oda aboneliğinin `dispose()` yolu
 kapanışta çalışır. Paketli Tauri'de sunucu URL'si `connect-src` CSP listesine,

@@ -3,8 +3,8 @@
 `@volstudio/network`, oyunların paylaştığı **opt-in** çok oyunculu altyapıdır: sürümlü protokol,
 tarayıcı istemcisi ve Node'da Colyseus sunucu çalışma zamanı. CORE simülasyon mekaniği ve UI'ı,
 `tauri-v2` native kabuğu taşır. Dünya durumu, savaş, üretim kuralları ve **oda sınıfı oyuna** aittir;
-bu paket odayı çalıştıran zemini verir. Tüketiciler [VOL.TEST](../games/vol-test/README.md) ve
-[VOL.TEST2](../games/vol-test2/DESIGN.md)'dir.
+bu paket odayı çalıştıran zemini verir. Paket belirli bir oyuna bağlı değildir; ilk tüketici
+[VOL.TEST](../games/vol-test/README.md)'tir.
 
 ## Yüzeyler
 
@@ -31,10 +31,6 @@ isteğe ekler ve her hatayı `JoinError.reason` kümesine indirger (`not-found`,
 eklenir). Girdi şeması, oda durumu ve öngörü **oyunundur**: oyun `defineInput` şemasını tanımlar,
 uzlaştırmayı Colyseus SDK'nın `Predict`i yapar ([VOL.TEST tasarımı](../games/vol-test/DESIGN.md)).
 
-VOL.TEST2 yalnız `PROTOCOL_VERSION`'u kullanır: ikili protokolü ve kilit adımlı istemcisi oyunun
-içindedir, Colyseus `Schema` kullanmaz. İkinci bir oyun aynı istemciyi isterse protokol ve oturum
-bu pakete taşınır; o zamana dek paylaşım yoktur.
-
 ## Çalıştırma
 
 ```sh
@@ -42,6 +38,6 @@ pnpm --filter @volstudio/network test:coverage
 pnpm --filter @volstudio/vol-test server:dev
 ```
 
-Bu bir **yerel prototiptir**: üretim kimlik doğrulaması, durable dünya kaydı (VOL.TEST2 dışında),
+Bu bir **yerel prototiptir**: üretim kimlik doğrulaması, durable dünya kaydı,
 region/interest/fog filtreleri ve cihazlar arası düzeltmeli hareket yoktur. Karar ve maliyet
 varsayımları [backend araştırmasındadır](../docs/backend-research.md).

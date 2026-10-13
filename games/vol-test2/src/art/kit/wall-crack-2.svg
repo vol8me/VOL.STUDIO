@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <title>Duvar çatlağı</title>
-    <path d="M20 12L28 26L24 34L34 46" fill="none" stroke="#06090c" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".9"/>
-    <path d="M52 18L42 28L46 38" fill="none" stroke="#06090c" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".9"/>
-    <path d="M12 44L22 40" fill="none" stroke="#06090c" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".9"/>
-</svg>

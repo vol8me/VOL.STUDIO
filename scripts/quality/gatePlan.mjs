@@ -118,7 +118,6 @@ export const REVIEWED_ESCAPES = {
   'devtools/vol-showcase/tests/e2e/support/policy.ts':
     'kökten yalnız core/src/ui okunur; CORE kapanıştadır',
   'devtools/vol-showcase/vite.config.ts': 'vite fs.allow kökü; dosya okumaz',
-  'games/vol-test2/vite.config.ts': 'vite fs.allow kökü; dosya okumaz',
   'games/vol-test/vite.config.ts': 'vite fs.allow kökü; dosya okumaz',
 };
 

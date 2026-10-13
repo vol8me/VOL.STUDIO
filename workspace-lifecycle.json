@@ -40,11 +40,6 @@
       "packageName": "@volstudio/network",
       "path": "network",
       "status": "active"
-    },
-    {
-      "packageName": "@volstudio/vol-test2",
-      "path": "games/vol-test2",
-      "status": "active"
     }
   ]
 }
