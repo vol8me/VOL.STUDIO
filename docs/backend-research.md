@@ -328,7 +328,8 @@ yoğunluğundan değil başsız yazılım çizimden gelir ve cihaz kare hızı o
 Doğrulama botlarının 542 karma denetimi, sunucu ile istemci simülasyonunun 81.000 adım boyunca yük altında aynı
 kaldığının en uzun kanıtıdır (aynı makine, aynı motor). **Sınırlar:** 45 dakika 24–72 saatlik kabulün yerine geçmez;
 yığındaki 1 MB altı artış ölçüm gürültüsüdür ama saatte birkaç MB'lık yavaş bir sızıntıyı dışlamaz. Koşu Windows'ta,
-aynı makinedeki botlarla yapıldı.
+aynı makinedeki botlarla ve adım saati (`StepClock`) eklenmeden önceki sunucu döngüsüyle yapıldı; döngü
+değişikliğinin bellek davranışını etkilemesi beklenmez ama 45 dakikalık koşu yeniden yapılmadı.
 
 ## 12 Ekim 2026 ikinci tur: kaynak, uygulama ve maliyet kararı
 
