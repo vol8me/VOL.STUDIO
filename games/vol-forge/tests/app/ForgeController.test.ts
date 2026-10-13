@@ -16,6 +16,7 @@ interface FakeLockstep {
   status: 'waiting' | 'running' | 'desynced';
   lagTicks: number;
   players: number;
+  metrics: { hashChecks: number };
 }
 
 function harness(options: { lag?: number } = {}) {
@@ -25,6 +26,7 @@ function harness(options: { lag?: number } = {}) {
     status: 'running',
     lagTicks: options.lag ?? 4,
     players: 2,
+    metrics: { hashChecks: 7 },
   };
   let seq = 1;
   const resolvers: ((ack: Ack) => void)[] = [];
@@ -216,5 +218,34 @@ describe('ForgeController.hud', () => {
     });
     expect(hud.coreHp).toBeGreaterThan(0);
     expect(hud.nextWaveSeconds).toBeGreaterThanOrEqual(0);
+    expect(hud.hashChecks).toBe(7);
+  });
+
+  it('kare hızını ve adım süresini kayan pencerede ölçer', () => {
+    const h = harness();
+    let clock = 0;
+    h.setClock(clock);
+    h.advance.mockImplementation((steps: number) => {
+      for (let step = 0; step < steps; step++) h.sim.step();
+      clock += 2;
+      h.setClock(clock);
+      return steps;
+    });
+    for (let index = 0; index < 10; index++) h.controller.frame(1000 / 30);
+    const hud = h.controller.hud()!;
+    expect(hud.fps).toBeCloseTo(30, 5);
+    expect(hud.frameMsP99).toBeCloseTo(1000 / 30, 5);
+    expect(h.controller.stepMs.count).toBeGreaterThan(0);
+    expect(hud.stepMsP50).toBe(2);
+    expect(hud.stepMsP99).toBe(2);
+  });
+
+  it('süresiz kareyi ve hiç koşmamış pencereyi sıfır sayar', () => {
+    const h = harness();
+    h.controller.frame(0);
+    const hud = h.controller.hud()!;
+    expect(h.controller.frameMs.count).toBe(0);
+    expect(hud.fps).toBe(0);
+    expect(hud.stepMsP99).toBe(0);
   });
 });

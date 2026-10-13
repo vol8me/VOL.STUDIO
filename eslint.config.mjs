@@ -24,6 +24,8 @@ export default tseslint.config(
       // Betikle kopyalanan üçüncü parti derlemesi (git dışı).
       'devtools/deck/web/vendor/**',
       '**/dist/**',
+      // Oyun sunucusu paketi (esbuild çıktısı, git dışı).
+      '**/dist-server/**',
       '**/target/**',
       '**/build/**',
       // vitest v8 coverage raporu — üretilen HTML/JS, repoya girmez

@@ -5,6 +5,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { KIND } from '../../src/config/forge';
 import { averageColor, decodePng } from './png';
 import { SYNC_MODE } from '../../src/net/protocol';
+import { buildComb } from '../../src/sim/scenario';
 import { startForge, type RunningForge } from '../../server/index';
 
 let forge: RunningForge;
@@ -16,6 +17,18 @@ test.beforeAll(async () => {
     [
       { worldId: 'world-1', dataDir, mode: SYNC_MODE.lockstep, seed: 7 },
       { worldId: 'aoi-1', dataDir, mode: SYNC_MODE.aoi, seed: 8, width: 64, height: 64 },
+      {
+        worldId: 'dense-1',
+        dataDir,
+        mode: SYNC_MODE.lockstep,
+        seed: 9,
+        width: 128,
+        height: 128,
+        sustainUnits: 150,
+        prepare: (sim) => {
+          buildComb(sim, { maxBelts: 3000, turrets: 24, fill: 2, smelterEvery: 3 });
+        },
+      },
     ],
     0,
   );
@@ -93,6 +106,35 @@ test('iki oyuncu aynı dünyayı paylaşır; yerleştirme sunucuya ulaşır, eş
   } finally {
     await other.close();
   }
+});
+
+test('yoğun dünyada (3000 bant, 150 birim) istemci benzetimi sunucuyla aynı kalır', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(joinUrl('dense-1'));
+  await expect(status(page)).toHaveAttribute('data-status', 'live', { timeout: 30_000 });
+  // Üç karma denetimi (450 adım ≈ 15 sn): istemci kendi benzetiminde sunucuyla aynı karmaya ulaştı.
+  await expect
+    .poll(async () => Number(await stats(page).getAttribute('data-hash-checks')), {
+      timeout: 60_000,
+    })
+    .toBeGreaterThanOrEqual(3);
+  await expect(stats(page)).toHaveAttribute('data-resyncs', '0');
+  await expect(status(page)).toHaveAttribute('data-status', 'live');
+  expect(Number(await stats(page).getAttribute('data-units'))).toBeGreaterThan(50);
+  // Gerçek tarayıcı motorunda tek adımın medyanı 33 ms'lik adım bütçesinin çok altında kalmalı.
+  expect(Number(await stats(page).getAttribute('data-step-p50'))).toBeLessThan(10);
+  const measured = await stats(page).evaluate((element) => ({
+    ...(element as HTMLElement).dataset,
+  }));
+  test.info().annotations.push({
+    type: 'ölçüm',
+    description: `fps ${measured.fps}, kare p99 ${measured.frameP99} ms, adım p50 ${measured.stepP50} ms, p99 ${measured.stepP99} ms`,
+  });
+  expect(errors).toEqual([]);
 });
 
 test('Ayrıl düğmesi sunucudaki oyuncuyu kaldırır ve formu geri getirir', async ({ page }) => {

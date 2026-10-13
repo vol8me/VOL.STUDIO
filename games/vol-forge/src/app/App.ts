@@ -1,3 +1,4 @@
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { BuildMenu, Button, Input, ToastManager } from '@volstudio/core/ui';
 import { BUILDING } from '@/config/forge';
 import { TOOLS, type ToolId } from '@/config/game';
@@ -85,7 +86,7 @@ export class App {
   private readonly rotateButton: Button;
   private readonly leaveButton: Button;
   private readonly toasts: ToastManager;
-  private readonly unsubscribers: (() => void)[] = [];
+  private readonly scope = new DisposableScope();
   private unsubscribeSession: (() => void) | null = null;
   private session: ForgeSession | null = null;
   private controller: ForgeController | null = null;
@@ -145,9 +146,7 @@ export class App {
     parent.appendChild(this.root);
     this.show('connect');
 
-    const onKeyDown = (event: KeyboardEvent): void => this.onKeyDown(event);
-    document.addEventListener('keydown', onKeyDown);
-    this.unsubscribers.push(() => document.removeEventListener('keydown', onKeyDown));
+    this.scope.addListener<KeyboardEvent>(document, 'keydown', (event) => this.onKeyDown(event));
     if (deps.settings.autoJoin) void this.join();
   }
 
@@ -348,6 +347,13 @@ export class App {
     this.statLine.dataset.tick = String(hud.tick);
     this.statLine.dataset.players = String(hud.players);
     this.statLine.dataset.resyncs = String(hud.resyncs);
+    this.statLine.dataset.units = String(hud.units);
+    this.statLine.dataset.lag = String(hud.lagTicks);
+    this.statLine.dataset.hashChecks = String(hud.hashChecks);
+    this.statLine.dataset.fps = hud.fps.toFixed(1);
+    this.statLine.dataset.frameP99 = hud.frameMsP99.toFixed(1);
+    this.statLine.dataset.stepP50 = hud.stepMsP50.toFixed(3);
+    this.statLine.dataset.stepP99 = hud.stepMsP99.toFixed(3);
     this.statusLine.textContent = hud.desynced ? t('status.desynced') : t(`status.${hud.status}`);
     this.statLine.textContent = [
       `${t('hud.ore')} ${hud.ore}`,
@@ -375,7 +381,7 @@ export class App {
     this.destroyed = true;
     if (this.timer !== null) clearInterval(this.timer);
     this.timer = null;
-    for (const unsubscribe of this.unsubscribers.splice(0)) unsubscribe();
+    this.scope.dispose();
     this.unsubscribeSession?.();
     this.unsubscribeSession = null;
     const session = this.session;

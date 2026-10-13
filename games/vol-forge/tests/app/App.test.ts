@@ -23,7 +23,7 @@ function fakeSession() {
   const session = {
     status: 'live',
     welcome: null as { mode: number } | null,
-    lockstep: { sim, status: 'running', lagTicks: 4, players: 3 },
+    lockstep: { sim, status: 'running', lagTicks: 4, players: 3, metrics: { hashChecks: 5 } },
     rttMs: 17.4,
     submit: vi.fn((command: { x: number; y: number }) =>
       Promise.resolve({ seq: 1, result: RESULT.needsOre, tick: 1, command }),
@@ -123,6 +123,17 @@ describe('App bağlantı formu', () => {
     expect(playing().hidden).toBe(false);
     expect(document.querySelector('.forge-hud__status')!.textContent).toBe('status.live');
     expect(document.querySelector('.forge-hud__stats')!.textContent).toContain('hud.players 3');
+  });
+
+  it('ölçüm değerlerini otomasyon için veri öznitelikleri olarak yayımlar', async () => {
+    const { app } = setup();
+    await app.join();
+    const stats = document.querySelector<HTMLElement>('[data-testid="forge-stats"]')!;
+    expect(stats.dataset.hashChecks).toBe('5');
+    expect(stats.dataset.lag).toBe('4');
+    expect(stats.dataset.units).toBe(String(Number(stats.dataset.units)));
+    for (const name of ['fps', 'frameP99', 'stepP50', 'stepP99'] as const)
+      expect(Number.isFinite(Number(stats.dataset[name]))).toBe(true);
   });
 
   it('bağlantı kurulamazsa formda kalır ve hatayı söyler', async () => {

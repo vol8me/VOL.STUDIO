@@ -34,6 +34,9 @@ export const PACE = {
   maxStepsPerFrame: 8,
 } as const;
 
+/** HUD ve cihaz ölçümü için kayan pencere: son bu kadar kare ve simülasyon adımı. */
+export const STATS = { windowSamples: 240 } as const;
+
 export const PALETTE = {
   ground: '#17202a',
   groundAlt: '#1a2430',

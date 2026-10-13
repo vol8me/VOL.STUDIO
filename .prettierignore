@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-server/
 target/
 build/
 **/pnpm-lock.yaml

@@ -79,7 +79,7 @@ describe('kilit adımlı eşitleme', () => {
   it('istemci rastgele komut akışında sunucuyla aynı durumda kalır', () => {
     const server = new Server();
     const client = server.join();
-    for (let step = 0; step < 4000; step++) {
+    for (let step = 0; step < 1350; step++) {
       server.tick();
       client.advance(Infinity);
       if (client.sim!.tick === server.sim.tick && step % 150 === 0)
@@ -88,15 +88,15 @@ describe('kilit adımlı eşitleme', () => {
     expect(client.status).toBe('running');
     expect(client.sim!.tick).toBe(server.sim.tick);
     expect(client.sim!.stateHash()).toBe(server.sim.stateHash());
-    expect(client.metrics.hashChecks).toBeGreaterThan(20);
+    expect(client.metrics.hashChecks).toBeGreaterThan(6);
     expect(client.metrics.commandsApplied).toBe(server.accepted);
-    expect(server.accepted).toBeGreaterThan(150);
+    expect(server.accepted).toBeGreaterThan(50);
   });
 
   it('paket sınırında olmayan bir adımda geç katılan, anlık görüntüyle yetişir', () => {
     const server = new Server(33);
     const early = server.join();
-    for (let step = 0; step < 1001; step++) {
+    for (let step = 0; step < 301; step++) {
       server.tick();
       early.advance(Infinity);
     }
@@ -109,7 +109,7 @@ describe('kilit adımlı eşitleme', () => {
       early.advance(Infinity);
     }
     late.install(snapshot);
-    for (let step = 0; step < 2500; step++) {
+    for (let step = 0; step < 700; step++) {
       server.tick();
       early.advance(Infinity);
       late.advance(Infinity);

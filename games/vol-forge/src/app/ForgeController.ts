@@ -1,10 +1,11 @@
-import { PACE, VIEW, type ToolId } from '@/config/game';
+import { PACE, STATS, VIEW, type ToolId } from '@/config/game';
 import { ITEM, SIM, UNIT_POOL } from '@/config/forge';
 import { Pacer } from '@/net/pacer';
 import type { ForgeSession, SessionStatus } from '@/net/session';
 import type { Ack } from '@/net/protocol';
 import type { ForgeCommand } from '@/sim/commands';
 import type { ForgeSim } from '@/sim/sim';
+import { RingStats } from './ringStats';
 import { commandFor, nextRotation, resultKey } from './tools';
 
 /** Oturumun denetleyicinin kullandığı kısmı; testte sahte oturum verilir. */
@@ -43,6 +44,14 @@ export interface HudView {
   readonly rttMs: number;
   readonly desynced: boolean;
   readonly resyncs: number;
+  /** Karma denetimi sayısı: istemci ile sunucu durumunun eşitliğinin kanıtı. */
+  readonly hashChecks: number;
+  /** Ölçülen çizim hızı ve en kötü kare süresi (p99, ms). */
+  readonly fps: number;
+  readonly frameMsP99: number;
+  /** Tek simülasyon adımının istemcideki süresi (ms): cihaz maliyetinin doğrudan ölçüsü. */
+  readonly stepMsP50: number;
+  readonly stepMsP99: number;
 }
 
 export type Notice =
@@ -74,6 +83,9 @@ export class ForgeController {
   readonly previousX = new Float32Array(UNIT_POOL);
   readonly previousY = new Float32Array(UNIT_POOL);
   readonly previousGen = new Uint8Array(UNIT_POOL);
+  /** Kare aralığı ve adım süresi pencereleri; HUD ve cihaz denemeleri bunlardan okur. */
+  readonly frameMs = new RingStats(STATS.windowSamples);
+  readonly stepMs = new RingStats(STATS.windowSamples);
   private ghosts: Ghost[] = [];
   private shots: ShotView[] = [];
   private lastSimulated: ForgeSim | null = null;
@@ -140,6 +152,7 @@ export class ForgeController {
    * durumunu kendisi atıp sunucudan yeni anlık görüntü ister.
    */
   frame(deltaMs: number): void {
+    if (deltaMs > 0) this.frameMs.push(deltaMs);
     const lockstep = this.session.lockstep;
     const sim = lockstep.sim;
     if (sim !== this.lastSimulated) {
@@ -168,7 +181,9 @@ export class ForgeController {
     const steps = this.pacer.next(deltaMs, lockstep.lagTicks);
     for (let step = 0; step < steps; step++) {
       this.capture(sim);
+      const startedAt = this.now();
       this.session.advance(1);
+      this.stepMs.push(this.now() - startedAt);
       this.collectShots(sim);
     }
   }
@@ -206,6 +221,7 @@ export class ForgeController {
     if (!sim) return null;
     const s = sim.state;
     const lockstep = this.session.lockstep;
+    const frameMean = this.frameMs.mean();
     return {
       status: this.session.status,
       ore: s.inventory[ITEM.ore],
@@ -220,6 +236,11 @@ export class ForgeController {
       rttMs: this.session.rttMs,
       desynced: lockstep.status === 'desynced',
       resyncs: this.desyncs,
+      hashChecks: lockstep.metrics.hashChecks,
+      fps: frameMean > 0 ? 1000 / frameMean : 0,
+      frameMsP99: this.frameMs.percentile(0.99),
+      stepMsP50: this.stepMs.percentile(0.5),
+      stepMsP99: this.stepMs.percentile(0.99),
     };
   }
 }
