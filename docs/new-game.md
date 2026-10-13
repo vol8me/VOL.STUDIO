@@ -76,7 +76,7 @@ harita, tank, ekonomi veya gameplay kuralları sokulmaz.
 
 VOL.TEST'teki örnekte `server:dev` Node otoritesini localhost'ta başlatır,
 `build:server` Vite oyun bundle'ından ayrı Node bundle üretir; ürün `build`
-ikisini de koşar. Gerçek ağ odası deneyi `games/vol-test/tests/server/WorldRoom.test.ts`
+ikisini de koşar. Gerçek ağ odası deneyi `games/vol-test/tests/server/MatchRoom.test.ts`
 içindedir; `joinOrCreate` dolu odadan sonra yeni oda oluşturabildiğinden oda
 başına limit ile toplam oyuncu limitini ayırır. İstemciden yalnız doğrulanmış
 girdi kabul edilir ve her sabit sim adımında en fazla bir niyet işlenir.

@@ -24,20 +24,6 @@
     "protection": "Respawn protection · {{seconds}} s",
     "climate": "{{season}} · {{weather}}"
   },
-  "network": {
-    "title": "Multiplayer test",
-    "connecting": "Connecting to server…",
-    "connected": "Connected to server",
-    "error": "Connection failed or was lost",
-    "left": "Left the room",
-    "summary": "Players: {{players}} · HP: {{health}} / {{maxHealth}}",
-    "awaiting": "Waiting for server state…",
-    "respawn": "Respawn in {{seconds}} s",
-    "you": "You",
-    "other": "Other player",
-    "controls": "WASD move · Mouse aim · Left click fire · Shift boost · Space brake",
-    "leave": "Leave room"
-  },
   "controls": {
     "move": "Move",
     "aim": "Aim",

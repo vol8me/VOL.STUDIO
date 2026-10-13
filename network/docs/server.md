@@ -28,6 +28,14 @@ günlüğe yazar ve reddeder.
 `isEntryModule(import.meta.url, process.argv[1])` modülün doğrudan başlatılıp başlatılmadığını dosya
 URL'sini yola çevirerek sınar; `file:///` birleştirmesi POSIX'te yanlış eşleşir ve sunucu sessizce çıkardı.
 
+## Katılım kapısı
+
+`authenticateJoin(options)` oda `onAuth`unda çağrılır: protokol sürümünü ve oda kodu biçimini doğrular,
+adı temizler ve `{ name, code }` döndürür. `rejectJoin(neden)` istemcide `JoinError(neden)` olarak
+görünen `ServerError(4400, neden)` üretir. Ret **`onAuth`ta** yapılır: `onCreate`te fırlatılan
+`ServerError`un kodu Colyseus'un HTTP katmanında durum kodu olur ve 4400 geçersiz olduğu için istemci
+nedensiz `500` görür. `uniqueName(istenen, alınanlar)` odada çakışan adı `Ada 2`, `Ada 3` diye açar.
+
 ## Günlük
 
 `Logger` yapılandırılmış JSONL yazar: `{ seq, t, lvl, src, ev, data? }`. `ev` noktalı küçük harfli

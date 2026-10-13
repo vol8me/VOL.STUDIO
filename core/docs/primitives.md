@@ -70,7 +70,8 @@ sırasında eklenen iş aynı turda çalışmaz.
 
 Yeniden kullanılabilirliğe kalan süreyi ve ilerlemeyi tutar. `tryTrigger`
 kontrol ile tetiklemeyi tek çağrıda yapar. `setDuration` devam eden beklemeyi
-kısaltabilir; ilerleme 0–1 aralığındadır.
+kısaltabilir; ilerleme 0–1 aralığındadır. `restore` kalan süreyi dışarıdan alınmış bir
+durumdan (ağ uzlaştırması, kayıt) kesir hatası olmadan yazar.
 
 ### `RoundLoop`
 

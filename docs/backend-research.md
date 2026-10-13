@@ -390,55 +390,26 @@ edilebiliyor. Mindustry'yi mutlak otorite/anti-cheat referansı saymak hatalı.
 
 ### Gerçek yerel prototip: neler PASS?
 
-`network/` aktif workspace paketi ve `@volstudio/network` exports'u;
-`games/vol-test/server/` Colyseus 0.18 Node odası `Simulation`ın aynı
-saf oyun kurallarını kullanır. Sunucu 60Hz tick, 20Hz positional schema
-patch, 12 kişi/oda tavanı, 1KiB WebSocket payload tavanı ve en güncel
-geçerli girdiyi tick başına bir kez uygulama mekanizmasına sahiptir.
-12 gerçek Colyseus SDK bağlantısı tek odada farklı araç ID'leriyle PASS, 13. `joinById` dolu odaya giriş RED, farklı protocol sürümü RED;
-64 girdilik burst tek simülasyon adımı başına en çok tek niyet uyguluyor.
-Oyun içindeki can, ölüm, yenilenme ve koruma mekanizmasının sonucu sunucu
-otoritesinin `Simulation`ından üretilir; client bu alanları belirleyemez.
-`joinOrCreate` ise dolu odadan sonra _yeni bir oda_ kurabilir; tek dünya
-limitiyle bütün sunucu CCU limitinin karıştırılmaması gerekir.
+`network/` aktif workspace paketi ve `@volstudio/network` exports'udur. `games/vol-test/server/`
+Colyseus 0.18 Node odalarını kurar: `MatchRoom` (herkese açık, moda göre eşleşir) ve `PrivateRoom`
+(5 harfli kodla). Otorite `Simulation`dır: sunucu 60 Hz sabit adımla koşar, durumu 20 Hz yamalar,
+odada 12 (özel odada 8) araç, ileti başına 1 KiB ve saniyede 240 ileti sınırı vardır. Girdi
+Colyseus `defineInput` tamponundan adım başına bir kez tüketilir ve tüketilen sayı onay olarak
+döner; istemci aracı aynı adım işleviyle öngörür, SDK sunucu durumuna göre yeniden oynatır.
 
-Oyunun opt-in `?net=http://127.0.0.1:2567` sahnesi, mevcut Phaser
-`BootScene` ve CORE HUD bileşenleriyle gerçek sunucu state'ini çizer.
-Yerel `NetworkSession`, 60Hz girdiyi gönderir, 20Hz schema güncellemelerini
-okur, geç gelen join ve çıkışta aboneliği temizler; üç saniye state akışı
-kesilirse bağlantıyı hata olarak gösterir. Chromium ve WebKit E2E'de iki
-ayrı pencerenin aynı odada hareket/ayrılma davranışı ve bozuk adresin
-görünür hata durumu ölçüldü; tahmin/düzeltme henüz eklenmedi.
+Gerçek `startHost` sunucusu ve SDK istemcisiyle entegrasyon testleri şunları doğrular: katılım,
+ad çakışması ve temizliği, protokol reddi, mod başına oda, 13. oyuncunun ikinci odaya düşmesi,
+özel oda kurma/katılma/çakışma/eşzamanlı kuruluş, bozuk girdi, ateş olayı, ileti taşmasında
+düşürme, skor ve maç döngüsü, bağlantı kopması ve yeniden bağlanma, öngörü sapması (yerel
+koşuda uzlaştırmaların çoğunda düzeltme sıfırdır; sunucu girdisi geç kalırsa küçük bir düzeltme
+doğar ve testte ayrı sayılır). Ölçüm ve sınırlar `games/vol-test/tests/server/MatchRoom.test.ts`
+içindedir.
 
-Gerçek localhost WS ve aynı Node sürecindeki istemcilerle yeniden üretilebilir
-`probe:network` ölçümü: **12 oyuncu, 10 saniye, 607 server tick,
-5.544 gönderilen girdi, 2.077 client state callback, patch-aralığı p95
-65,6ms; yaklaşık %17,3 tek çekirdek CPU eşdeğeri, 68,2→76,9MiB RSS.**
-İkinci koşu **8 oyuncu, 5 saniye, 305 tick, 1.992 girdi ve p95 65,9ms**.
-CPU/RSS değerleri sunucuyu **ve test istemcilerini** içerir; TSX ile yapılan
-ikinci koşunun başlangıç belleği farklıdır. Bunlar uzak ağ RTT'si, gerçek
-fabrika yükü veya uzun süreli kararlılık ölçümü değildir.
-
-Bu **üretim kabulü değildir**: gerçek hesap/Steam auth, reconnect koltuğu,
-authz/team/ownership, canlı native client correction, kalıcı kaydet/restore,
-multi-host world ownership, ilgi alanı/chunk stream, replay anti-cheat,
-Windows/Linux/Android paketli native ağ kabulü henüz tamamlanmadı. İlk prototipin
-oda belleği süreç kapanınca kaybolur. Modelde fabrika/konveyör/TD yoktur.
-
-**Windows paketli kabulü (12 Ekim):** Yeni release Tauri `VOL.TEST.exe`,
-WebView2 (`tauri.localhost`) içinde localhost Colyseus sunucusunun HTTP
-matchmaking ve WS akışına bağlandı. İkinci gerçek SDK istemcisi aynı odadayken
-iki tank ve HP barları çizildi; diğer oyuncunun hareketi görüldü, ayrılma
-sonrası oda üyeliği temizlendi. DOM'da 2 oyuncu, başarılı bağlanma mesajı;
-CDP konsol/sayfa hatası **0**. Bu gerçek paketli Windows smoke PASS'tir;
-Android ve Linux paketli testler, bağlantı kopması/prediction ve dış WAN WSS
-henüz NOT-RUN'dır.
-
-Yeni Phaser ağ sahnesinin doğrudan UI/ömür testleriyle VOL.TEST oyun kapsamı
-**404/404 unit PASS**; source coverage satır **%98,96**, statement **%98,13**,
-branch **%93,13**, function **%96,85**. Colyseus Chromium ve WebKit iki gerçek
-istemci E2E'si motor başına 2 testten **4/4 PASS**. Bu oyun birim/E2E
-kanıtı, 24–72 saat ağır dünya yükü veya dış sunucu bağlantısı ölçümü değildir.
+Bu **üretim kabulü değildir**; şunlar NOT-RUN'dır: çok oyunculu yük ölçümü (CPU, bellek, bant,
+yama aralığı) yeni mimaride yeniden alınmadı — önceki prototipin ölçümü sahne ve girdi yolu
+değiştiği için kaldırıldı, **paketli (Tauri) Windows, Android ve Linux ağ kabulü**, dış WAN WSS,
+iki farklı JS motorunda (V8/JavaScriptCore) öngörü eşitliği, gerçek hesap/Steam kimlik doğrulaması,
+kalıcı kayıt ve çok makineli dünya sahipliği. Modelde fabrika/konveyör/TD yoktur.
 
 ### Kapasite ve aylık maliyet: varsayımlar açık
 

@@ -30,11 +30,6 @@ vi.mock('@/app/bootLoading', () => ({
 vi.mock('@/app/GameServices', () => ({ GameServices: { create: boundary.createServices } }));
 vi.mock('@/scenes/BootScene', () => ({ BootScene: class {} }));
 vi.mock('@/scenes/WorldScene', () => ({ WorldScene: class {} }));
-vi.mock('@/network/NetworkScene', () => ({
-  NetworkScene: class {
-    constructor(readonly endpoint: string) {}
-  },
-}));
 
 describe('oyun açılış sahipliği', () => {
   beforeEach(() => {
@@ -44,19 +39,6 @@ describe('oyun açılış sahipliği', () => {
     boundary.createServices.mockResolvedValue({ dispose: boundary.disposeServices });
     boundary.suppressMenus.mockReturnValue(boundary.stopMenus);
     boundary.editMenu.mockReturnValue(boundary.stopEditMenu);
-  });
-
-  it('net sorgusu olduğunda ayrı sahneyi seçer; yoksa mevcut WorldScene korunur', async () => {
-    boundary.createGame.mockResolvedValue({
-      events: { on: vi.fn(), once: vi.fn() },
-      destroy: vi.fn(),
-    });
-    history.replaceState({}, '', '/?net=http%3A%2F%2F127.0.0.1%3A2567');
-    await import('../src/main');
-    await vi.waitFor(() => expect(boundary.createGame).toHaveBeenCalledTimes(1));
-    const options = boundary.createGame.mock.calls[0][0] as { scenes: unknown[] };
-    expect(options.scenes[1]).toMatchObject({ endpoint: 'http://127.0.0.1:2567' });
-    history.replaceState({}, '', '/');
   });
 
   it('oyun kurulumu reddedilirse edinilmiş servisleri bırakır', async () => {

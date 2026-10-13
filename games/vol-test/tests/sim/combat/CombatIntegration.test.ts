@@ -29,6 +29,32 @@ describe('Simulation savaş yaşam döngüsü', () => {
     expect(sim.drainEvents([]).filter((event) => event.kind === 'fired')).toHaveLength(0);
   });
 
+  it('resetVehicle canlı aracı da sıfırlar; bilinmeyen kimlikte false döner', () => {
+    const sim = simulation();
+    const vehicle = sim.spawn(2400, 2048, 0);
+    sim.applyDamage(vehicle.id, 40);
+    vehicle.tank.trackLeft = 120;
+    vehicle.tank.vx = 90;
+    vehicle.gun.trigger();
+    sim.drainEvents([]);
+    expect(sim.resetVehicle(vehicle.id, 2100, 2200, 1)).toBe(true);
+    expect(vehicle.tank.x).toBe(2100);
+    expect(vehicle.tank.y).toBe(2200);
+    expect(vehicle.tank.vx).toBe(0);
+    expect(vehicle.tank.trackLeft).toBe(0);
+    expect(vehicle.gun.isReady()).toBe(true);
+    expect(vehicle.vitality.health).toBe(COMBAT.maxHealth);
+    expect(vehicle.vitality.protectionRemainingMs).toBe(COMBAT.respawnProtectionMs);
+    expect(sim.drainEvents([])).toContainEqual({
+      kind: 'respawned',
+      target: vehicle.id,
+      x: 2100,
+      y: 2200,
+    });
+    expect(sim.resetVehicle(999)).toBe(false);
+    expect(() => sim.resetVehicle(vehicle.id, Number.NaN)).toThrow(RangeError);
+  });
+
   it('ölü araç isabet hedefi ve çarpışma gövdesi olmaz; kimlik korunarak yeniden doğar', () => {
     const sim = simulation();
     const target = sim.spawn(2400, 2048, 0);

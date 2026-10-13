@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { Room, defineRoom } from '@colyseus/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { connectRoom } from '../../src/client';
+import { createLobby } from '../../src/client';
 import {
   createHost,
   DEFAULT_MAX_PAYLOAD_BYTES,
@@ -48,9 +48,9 @@ describe('startHost', () => {
     const host = await start(logger);
     expect(host.port).toBeGreaterThan(0);
     expect(host.endpoint).toBe(`http://127.0.0.1:${host.port}`);
-    const room = await connectRoom(host.endpoint, 'ping');
+    const room = await createLobby(host.endpoint).joinOrCreate('ping');
     expect(room.sessionId).toBeTruthy();
-    await room.dispose();
+    await room.leave();
     const event = logger.since().records.find((record) => record.ev === 'listening');
     expect(event?.src).toBe('host');
     expect(event?.data).toMatchObject({ endpoint: host.endpoint, rooms: ['ping'] });

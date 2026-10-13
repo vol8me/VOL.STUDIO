@@ -160,6 +160,22 @@ export class Simulation {
   respawnVehicle(id: EntityId, x?: number, y?: number, hull?: number): boolean {
     const vehicle = this.vehicle(id);
     if (!vehicle || vehicle.vitality.alive) return false;
+    this.place(vehicle, x, y, hull);
+    return true;
+  }
+
+  /**
+   * Aracı canlı ya da ölü, tam sağlıkla ve sıfırlanmış fizikle verilen (yoksa kayıtlı doğma)
+   * noktaya koyar. Maç sıfırlaması gibi herkesin aynı anda yeniden başlaması gereken yerde kullanılır.
+   */
+  resetVehicle(id: EntityId, x?: number, y?: number, hull?: number): boolean {
+    const vehicle = this.vehicle(id);
+    if (!vehicle) return false;
+    this.place(vehicle, x, y, hull);
+    return true;
+  }
+
+  private place(vehicle: Vehicle, x?: number, y?: number, hull?: number): void {
     const point = vehicle.spawnPoint;
     const nextX = x ?? point.x;
     const nextY = y ?? point.y;
@@ -174,8 +190,7 @@ export class Simulation {
     );
     vehicle.gun.reset();
     vehicle.vitality.respawn();
-    this.emit({ kind: 'respawned', target: id, x: vehicle.tank.x, y: vehicle.tank.y });
-    return true;
+    this.emit({ kind: 'respawned', target: vehicle.id, x: vehicle.tank.x, y: vehicle.tank.y });
   }
 
   /** Birbirini vuramayan takım üyeleri mermiler için de saydamdır. */

@@ -3,6 +3,8 @@ export { envChoice, envFlag, envInteger, envText, listenSettings } from './env';
 export type { Env, ListenSettings } from './env';
 export { createHost, DEFAULT_MAX_PAYLOAD_BYTES, installShutdown, startHost } from './host';
 export type { Host, HostOptions, StartedHost } from './host';
+export { authenticateJoin, rejectJoin, uniqueName } from './join';
+export type { AuthenticatedJoin } from './join';
 export { TokenBucket } from './limits';
 export { pumpIntervalMs, runRoomLoop, StepClock } from './loop';
 export type { RoomLoopOptions } from './loop';

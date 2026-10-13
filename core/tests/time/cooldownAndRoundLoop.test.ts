@@ -70,6 +70,26 @@ describe('Cooldown', () => {
     expect(cd.isReady()).toBe(true);
   });
 
+  it('restore kalan süreyi bit bit yazar ve süre aralığına kelepçeler', () => {
+    const cd = new Cooldown(100);
+    cd.restore(37.123456789);
+    expect(cd.getRemaining()).toBe(37.123456789);
+    expect(cd.isReady()).toBe(false);
+    cd.restore(250);
+    expect(cd.getRemaining()).toBe(100);
+    cd.restore(-5);
+    expect(cd.getRemaining()).toBe(0);
+    expect(cd.isReady()).toBe(true);
+  });
+
+  it('restore sonlu olmayan değeri reddeder ve beklemeyi bozmaz', () => {
+    const cd = new Cooldown(100);
+    cd.restore(40);
+    expect(() => cd.restore(Number.NaN)).toThrow(/remainingMs/);
+    expect(() => cd.restore(Number.POSITIVE_INFINITY)).toThrow(/remainingMs/);
+    expect(cd.getRemaining()).toBe(40);
+  });
+
   it('hazırken update çağırmak kalanı negatife sürüklemez', () => {
     const cd = new Cooldown(100);
     cd.update(5000);

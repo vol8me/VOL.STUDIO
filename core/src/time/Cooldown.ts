@@ -49,6 +49,18 @@ export class Cooldown {
     this.remainingMs = 0;
   }
 
+  /**
+   * Kalan süreyi doğrudan yazar; `[0, süre]` aralığına kelepçelenir, sonlu olmayan değer reddedilir.
+   * Başka bir kaynaktan alınan durumu (ağ uzlaştırması, kayıt) `trigger`/`update` kesir hatası
+   * olmadan geri yüklemek içindir.
+   */
+  restore(remainingMs: number): void {
+    this.remainingMs = Math.min(
+      this.durationMs,
+      Math.max(0, requireFinite(remainingMs, 'Cooldown remainingMs')),
+    );
+  }
+
   /** Devam eden bekleme KELEPÇELENİR: süre kısalınca eski uzun bekleme çekilmez. */
   setDuration(durationMs: number): void {
     this.durationMs = Math.max(0, requireFinite(durationMs, 'Cooldown durationMs'));

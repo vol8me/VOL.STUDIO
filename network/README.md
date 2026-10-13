@@ -11,11 +11,11 @@ bu paket odayı çalıştıran zemini verir. Tüketiciler [VOL.TEST](../games/vo
 `src/` üç yüzeye bölünür ve `exports` haritası da öyledir. Yüzeyler arası kenarlar
 `scripts/quality/layers.mjs` ile denetlenir.
 
-| Export       | Çalıştığı yer    | İçerik                                                             |
-| ------------ | ---------------- | ------------------------------------------------------------------ |
-| `./protocol` | tarayıcı + Node  | `PROTOCOL_VERSION`, girdi doğrulaması, `InputMailbox`              |
-| `./client`   | tarayıcı/webview | `connectRoom`: Colyseus bağlantısı, temizlenebilir state aboneliği |
-| `./server`   | yalnız Node      | döngü, ana makine, kapanış, günlük, işletim kapısı, ölçüm          |
+| Export       | Çalıştığı yer    | İçerik                                                               |
+| ------------ | ---------------- | -------------------------------------------------------------------- |
+| `./protocol` | tarayıcı + Node  | `PROTOCOL_VERSION`, katılım seçenekleri, ad ve oda kodu kuralları    |
+| `./client`   | tarayıcı/webview | `createLobby` eşleştirme girişi, `JoinError`, Colyseus öngörü API'si |
+| `./server`   | yalnız Node      | döngü, ana makine, katılım kapısı, kapanış, günlük, ölçüm            |
 
 Protokol ve istemci Node yerleşiklerini, `@colyseus/core` ile `@colyseus/ws-transport`'u içe
 aktaramaz; sunucu istemciyi aktaramaz. Oyunun tarayıcı kodu `./server`'a uzanamaz. Sunucu
@@ -23,9 +23,13 @@ aktaramaz; sunucu istemciyi aktaramaz. Oyunun tarayıcı kodu `./server`'a uzana
 
 ## Protokol ve istemci
 
-`./protocol` sürümlü girdi doğrulaması ve `InputMailbox` sağlar; bağlantı patlaması tek
-simülasyon adımında birden çok dünya adımı üretmez. Hareket ve nişan eksenleri aralık ve uzunluk
-açısından doğrulanır; istemci pozisyon veya hasar durumu yazamaz. Protokol sürümü `1`dir.
+`./protocol` bağlantı sözleşmesidir: sürüm (`PROTOCOL_VERSION`, şu an `2`), katılım seçenekleri
+(`protocol`, `name`, `code`), görünen ad temizliği ve oda kodu alfabesi. Sunucu her katılımı
+`authenticateJoin` ile doğrular; ret nedeni (`protocol`, `code`, `full`) `ServerError(4400, neden)`
+olarak gider. `./client` içindeki `createLobby(endpoint)` Colyseus eşleştirmesini sarar, sürümü her
+isteğe ekler ve her hatayı `JoinError.reason` kümesine indirger (`not-found`, `unreachable`, `failed`
+eklenir). Girdi şeması, oda durumu ve öngörü **oyunundur**: oyun `defineInput` şemasını tanımlar,
+uzlaştırmayı Colyseus SDK'nın `Predict`i yapar ([VOL.TEST tasarımı](../games/vol-test/DESIGN.md)).
 
 VOL.TEST2 yalnız `PROTOCOL_VERSION`'u kullanır: ikili protokolü ve kilit adımlı istemcisi oyunun
 içindedir, Colyseus `Schema` kullanmaz. İkinci bir oyun aynı istemciyi isterse protokol ve oturum
@@ -36,7 +40,6 @@ bu pakete taşınır; o zamana dek paylaşım yoktur.
 ```sh
 pnpm --filter @volstudio/network test:coverage
 pnpm --filter @volstudio/vol-test server:dev
-pnpm --filter @volstudio/vol-test probe:network --worlds=1 --clients=12 --seconds=10
 ```
 
 Bu bir **yerel prototiptir**: üretim kimlik doğrulaması, durable dünya kaydı (VOL.TEST2 dışında),

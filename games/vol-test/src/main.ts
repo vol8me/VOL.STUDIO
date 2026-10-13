@@ -38,16 +38,12 @@ async function boot(): Promise<void> {
   try {
     const services = scope.add(await GameServices.create());
     loading.servicesReady();
-    const query = new URLSearchParams(location.search);
-    const scene = query.has('net')
-      ? new (await import('@/network/NetworkScene')).NetworkScene(query.get('net') ?? '')
-      : new WorldScene(services);
     game = await createVolGame({
       parent: 'game',
       backgroundColor: PALETTE.void,
       strategy: 'resize',
       maxDpr: GAME.maxDpr,
-      scenes: [BootScene, scene],
+      scenes: [BootScene, new WorldScene(services)],
       diagnostics: services.diagnostics,
       audio: { noAudio: false, disableWebAudio: false },
     });

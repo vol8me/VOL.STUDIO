@@ -1,2 +1,13 @@
-export { PROTOCOL_VERSION, InputMailbox, parseInput } from './input';
-export type { PlayerInput, PlayerCommand, InputOffer } from './input';
+export {
+  JOIN_REJECTIONS,
+  NAME_MAX_LENGTH,
+  PROTOCOL_VERSION,
+  REJECT_CODE,
+  ROOM_CODE_ALPHABET,
+  ROOM_CODE_LENGTH,
+  createRoomCode,
+  normalizeRoomCode,
+  parseJoinOptions,
+  sanitizeName,
+} from './join';
+export type { JoinOptions, JoinRejection, ParsedJoin } from './join';
