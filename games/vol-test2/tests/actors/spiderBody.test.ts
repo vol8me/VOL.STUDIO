@@ -180,6 +180,66 @@ describe('SpiderBody: düz yürüyüş', () => {
     expect(body.stats.clampedLegFrames / body.stats.legFrames).toBeLessThan(0.01);
   });
 
+  it.each([
+    [60, 0.9, 1.5],
+    [96, 1.3, 1.9],
+    [140, 1.6, 2.4],
+  ])(
+    'sakin yürüyüş: %i birim/sn hızda bacak başına adım hızı %f..%f arasındadır',
+    (speed, lowest, highest) => {
+      const body = new SpiderBody();
+      const seconds = 20;
+      walkStraight(body, { seconds, speed });
+      const rate = body.stats.steps / body.legCount / seconds;
+      expect(rate).toBeGreaterThanOrEqual(lowest);
+      expect(rate).toBeLessThanOrEqual(highest);
+    },
+  );
+
+  it('adım süresi hıza uyar: yavaşta uzun, hızlıda kısa; sınırlar içinde kalır', () => {
+    const longestSwingMs = (speed: number): number => {
+      const body = new SpiderBody();
+      let run = 0;
+      let longest = 0;
+      walkStraight(body, {
+        seconds: 12,
+        speed,
+        onFrame: (b) => {
+          run = b.legs[0].grounded ? 0 : run + 1;
+          longest = Math.max(longest, run);
+        },
+      });
+      return longest * FRAME_MS;
+    };
+    const slow = longestSwingMs(40);
+    const fast = longestSwingMs(140);
+    expect(slow).toBeGreaterThan(fast);
+    expect(slow).toBeLessThanOrEqual(DEFAULT_SPIDER.swingMaxMs + 2 * FRAME_MS);
+    expect(fast).toBeGreaterThanOrEqual(DEFAULT_SPIDER.swingMinMs - 2 * FRAME_MS);
+  });
+
+  it('düzgün bir dönüşte (yarıçap 200, hız 96) sıra çoğunlukla delinmez ve ayak kaymaz', () => {
+    const body = new SpiderBody();
+    const radius = 200;
+    const speed = 96;
+    const omega = speed / radius;
+    let x = 400;
+    let y = 400;
+    let angle = 0;
+    body.reset(x, y, angle);
+    for (let frame = 0; frame < 60 * 20; frame++) {
+      angle += (omega * FRAME_MS) / 1000;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      x += (vx * FRAME_MS) / 1000;
+      y += (vy * FRAME_MS) / 1000;
+      body.update(x, y, angle, vx, vy, FRAME_MS);
+    }
+    expect(body.stats.emergencyFrames / body.stats.frames).toBeLessThan(0.4);
+    expect(body.stats.clampedLegFrames / body.stats.legFrames).toBeLessThan(0.01);
+    expect(body.stats.maxSlide).toBeLessThan(1);
+  });
+
   it('durunca ayaklar yerinde kalır ve adım sayısı artmaz', () => {
     const body = new SpiderBody();
     walkStraight(body, { seconds: 4, speed: 90 });
@@ -257,8 +317,8 @@ describe('SpiderBody: ölçüm mekaniği', () => {
   });
 
   it('özel ayar kullanılır: daha kısa adım süresi daha çok adım üretir', () => {
-    const quick = new SpiderBody({ ...DEFAULT_SPIDER, stepDurationMs: 80 });
-    const slow = new SpiderBody({ ...DEFAULT_SPIDER, stepDurationMs: 220 });
+    const quick = new SpiderBody({ ...DEFAULT_SPIDER, swingMinMs: 80, swingMaxMs: 80 });
+    const slow = new SpiderBody({ ...DEFAULT_SPIDER, swingMinMs: 220, swingMaxMs: 220 });
     walkStraight(quick, { seconds: 8, speed: 90 });
     walkStraight(slow, { seconds: 8, speed: 90 });
     expect(quick.stats.steps).toBeGreaterThan(slow.stats.steps);

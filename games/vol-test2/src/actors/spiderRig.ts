@@ -80,24 +80,41 @@ export function buildLegs(): LegDef[] {
 export interface SpiderConfig {
   /** Dinlenme ayağının kalçadan uzaklığı (erişimin yaklaşık %72'si: diz belirgin bükülür, uzuv gerilmez). */
   readonly homeReach: number;
-  /** Ayak evinden bu kadar uzaklaşınca adım başlar; adım boyunu (≈ 2 × bu) belirler. */
+  /** Ayak evinden bu kadar uzaklaşınca adım başlar; adım boyu ≈ bu + öngörü mesafesidir. */
   readonly stepTriggerPx: number;
-  readonly stepDurationMs: number;
+  /**
+   * Adım süresi (ms) gövdenin ayak hızına göre seçilir ve [swingMinMs, swingMaxMs] aralığındadır:
+   * bir bacak çevrimin en çok `swingDuty` kadarını havada geçer. Yoksa iki tetrapod grubu sırayla
+   * atamaz, sıra delinir ve bacaklar titrer. Yavaşta ağır ve uzun, hızlıda kısa adım atılır.
+   */
+  readonly swingMinMs: number;
+  readonly swingMaxMs: number;
+  readonly swingDuty: number;
+  /** Dönüşün ayak hızına katkısı: dış ayak, gövde merkezinden bu kadar uzakta dönen bir noktadır. */
+  readonly turnArmPx: number;
   readonly stepLeadSeconds: number;
+  /** Adım hedefinin hız yönünde en çok bu kadar ileri konabilmesi: hızlı gövdede ayak erişimi aşıp kaymasın. */
+  readonly maxLeadPx: number;
   readonly maxStrainPx: number;
   /** Adım tepesinde bacak parçalarının büyüme oranı (üstten bakışta ayak kameraya yaklaşır). */
   readonly liftScale: number;
 }
 
 /**
- * Ağır, ağır adımlı yürüyüş: bir bacak saniyede 3 adımı geçmez (kısa tetik ve adım süresi bacağı titretir).
- * Adım tetiği erişim payının içinde kalır: ev + tetik ≤ MAX_REACH, bu yüzden IK kelepçelemez.
+ * Ağır, sakin yürüyüş. CORE `LegGait` ayağı `ev + hız·öngörü` noktasına basar ve ev'in `stepTriggerPx` gerisine
+ * düşünce yeniden adım atar; adım boyu ≈ tetik + öngörü mesafesidir. Tetik ve öngörü uzun, süre ağır tutulur:
+ * 96 birim/sn'de bacak başına ≈ 1,6 adım/sn (eski kısa-tetikli ayar 2,6'ydı ve bacaklar titriyordu).
+ * Ev + tetik ≤ MAX_REACH olduğu için IK düz yürüyüşte kelepçelemez; öngörü mesafesi `maxLeadPx` ile sınırlıdır.
  */
 export const DEFAULT_SPIDER: SpiderConfig = {
   homeReach: 78,
-  stepTriggerPx: 24,
-  stepDurationMs: 150,
-  stepLeadSeconds: 0.12,
-  maxStrainPx: 30,
+  stepTriggerPx: 28,
+  swingMinMs: 80,
+  swingMaxMs: 260,
+  swingDuty: 0.24,
+  turnArmPx: 110,
+  stepLeadSeconds: 0.3,
+  maxLeadPx: 30,
+  maxStrainPx: 34,
   liftScale: 0.14,
 };

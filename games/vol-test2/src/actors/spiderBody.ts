@@ -69,6 +69,8 @@ function kneeScore(def: LegDef, kneeX: number, kneeY: number): number {
 const CENTER_OF_MASS: readonly [number, number] = [-40, 0];
 /** Kare süresi bu değere kelepçelenir (CORE `MAX_SIM_STEP_MS` ile aynı gerekçe). */
 const MAX_STEP_MS = 50;
+/** Dönüş hızı kestirimi bu sürede yeni değere yaklaşır: tek karelik yön sıçraması adımı sarsmaz. */
+const TURN_RATE_SMOOTHING_MS = 150;
 
 /**
  * Bacaklı gövde: CORE `LegGait` (ayak-sabitleyen yürüyüş) + `solveTwoBoneIk` (uyluk/kaval) +
@@ -105,6 +107,9 @@ export class SpiderBody {
   private readonly prevTipWorld: { x: number; y: number; grounded: boolean }[];
   /** İlk kare (kurulum ya da reset sonrası) ölçülmez: önceki uç konumları yoktur. */
   private started = false;
+  /** Önceki karenin yönü ve süzülmüş dönüş hızı (rad/sn): ayak hızı kestirimi için. */
+  private prevAngle: number | null = null;
+  private turnRate = 0;
 
   constructor(private readonly config: SpiderConfig = DEFAULT_SPIDER) {
     const gaitLegs: LegGaitLeg[] = this.defs.map((def) => ({
@@ -114,7 +119,7 @@ export class SpiderBody {
     }));
     this.gait = new LegGait(gaitLegs, {
       stepTriggerPx: config.stepTriggerPx,
-      stepDurationMs: config.stepDurationMs,
+      stepDurationMs: config.swingMaxMs,
       stepLeadSeconds: config.stepLeadSeconds,
       maxStrainPx: config.maxStrainPx,
     });
@@ -162,12 +167,19 @@ export class SpiderBody {
   reset(x: number, y: number, angle: number): void {
     this.gait.reset(x, y, angle);
     this.started = false;
+    this.prevAngle = null;
+    this.turnRate = 0;
     this.pose(x, y, angle);
   }
 
   update(x: number, y: number, angle: number, velX: number, velY: number, deltaMs: number): void {
     const dt = Math.min(deltaMs, MAX_STEP_MS);
-    this.gait.update(x, y, angle, velX, velY, dt);
+    // Öngörü mesafesi sınırlıdır: hız büyüdükçe adım uzar ama hedef erişim payının dışına çıkmaz.
+    const speed = Math.hypot(velX, velY);
+    this.tuneGait(angle, speed, dt);
+    const cap = this.config.maxLeadPx / this.config.stepLeadSeconds;
+    const scale = speed > cap ? cap / speed : 1;
+    this.gait.update(x, y, angle, velX * scale, velY * scale, dt);
     this.pose(x, y, angle);
     if (dt <= 0) return;
     if (!this.started) {
@@ -176,6 +188,35 @@ export class SpiderBody {
       return;
     }
     this.measure(x, y, angle);
+  }
+
+  /**
+   * Adım süresini en hızlı bacağın hızına uydurur: süre = görev oranı × adım boyu / ayak hızı. Bir bacak
+   * çevrimin en çok `swingDuty` kadarını havada geçer; yoksa iki tetrapod grubu sırayla atamaz, sıra
+   * delinir ve dönüşlerde bacaklar titrer. Ayak hızı, ileri hız ile dönüşün dış ayağa kattığı hızın
+   * toplamıdır; dönüş hızı kareler arası yön farkından süzülür, böylece tek karelik yön sıçraması adımı
+   * sarsmaz.
+   */
+  private tuneGait(angle: number, speed: number, dt: number): void {
+    const { config } = this;
+    if (this.prevAngle !== null && dt > 0) {
+      let delta = angle - this.prevAngle;
+      if (delta > Math.PI) delta -= 2 * Math.PI;
+      else if (delta < -Math.PI) delta += 2 * Math.PI;
+      const raw = (delta * 1000) / dt;
+      this.turnRate += (raw - this.turnRate) * Math.min(1, dt / TURN_RATE_SMOOTHING_MS);
+    }
+    this.prevAngle = angle;
+    const footSpeed = speed + Math.abs(this.turnRate) * config.turnArmPx;
+    const lead = Math.min(speed * config.stepLeadSeconds, config.maxLeadPx);
+    const swingMs =
+      footSpeed > 0
+        ? (1000 * config.swingDuty * (config.stepTriggerPx + lead)) / footSpeed
+        : config.swingMaxMs;
+    this.gait.setStepTuning({
+      stepTriggerPx: config.stepTriggerPx,
+      stepDurationMs: Math.min(config.swingMaxMs, Math.max(config.swingMinMs, swingMs)),
+    });
   }
 
   /** İki işaretten dizi gövde ekseninden daha uzağa götüreni seçer (dinlenme pozunda). */

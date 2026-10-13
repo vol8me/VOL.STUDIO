@@ -174,6 +174,32 @@ describe('uzuv uzunlukları ve oranları', () => {
   });
 });
 
+describe('yürüyüş ayarı erişim payının içindedir', () => {
+  const legs = buildLegs();
+  const homeRelative = (leg: (typeof legs)[number]): [number, number] => [
+    Math.cos(leg.stance) * DEFAULT_SPIDER.homeReach,
+    leg.side * Math.sin(leg.stance) * DEFAULT_SPIDER.homeReach,
+  ];
+  const MIN_REACH = Math.abs(FEMUR_LENGTH - LOWER_LENGTH);
+
+  it('acil eşikte geride kalan ayak hiçbir bacağın erişimini aşmaz (IK kelepçelemez)', () => {
+    for (const leg of legs) {
+      const [hx, hy] = homeRelative(leg);
+      const reach = Math.hypot(hx - DEFAULT_SPIDER.maxStrainPx, hy);
+      expect(reach, `çift ${leg.pair} yan ${leg.side}`).toBeLessThanOrEqual(MAX_REACH);
+    }
+  });
+
+  it('öngörü noktası hiçbir bacağı gövdeye katlamaz ya da gerdirmez', () => {
+    for (const leg of legs) {
+      const [hx, hy] = homeRelative(leg);
+      const reach = Math.hypot(hx + DEFAULT_SPIDER.maxLeadPx, hy);
+      expect(reach, `çift ${leg.pair} yan ${leg.side}`).toBeLessThanOrEqual(MAX_REACH);
+      expect(reach, `çift ${leg.pair} yan ${leg.side}`).toBeGreaterThan(MIN_REACH);
+    }
+  });
+});
+
 describe('buildLegs', () => {
   const legs = buildLegs();
 
