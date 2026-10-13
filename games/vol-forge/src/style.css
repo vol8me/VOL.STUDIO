@@ -4,17 +4,141 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background: var(--vol-ui-page, #0d1218);
+  overscroll-behavior: none;
 }
 
 #game {
-  width: 100%;
-  height: 100%;
+  position: fixed;
+  inset: 0;
 }
 
+#game canvas {
+  display: block;
+  touch-action: none;
+}
+
+/* Arayüz katmanı oyun tuvalinin üstündedir; yalnız kendi çocukları girdi alır, geri kalanı sahneye geçer. */
 #hud {
   position: fixed;
-  bottom: env(safe-area-inset-bottom, 0);
-  left: 0;
-  right: 0;
-  padding: 1rem;
+  inset: 0;
+  pointer-events: none;
+}
+
+.forge-app,
+.forge-play {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.forge-app [hidden] {
+  display: none;
+}
+
+.forge-connect {
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  width: min(26rem, calc(100% - 2rem));
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-md, 0.75rem);
+  padding: var(--vol-space-lg, 1rem);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-md, 8px);
+  background: var(--vol-ui-overlay-panel);
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+}
+
+.forge-connect__title {
+  margin: 0;
+  font-size: var(--vol-text-heading, 1.25rem);
+}
+
+.forge-connect__hint {
+  margin: 0;
+  color: var(--vol-ui-text-secondary);
+  font-size: var(--vol-text-label, 0.875rem);
+}
+
+.forge-connect__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vol-space-xs, 0.25rem);
+}
+
+.forge-connect__label {
+  font-size: var(--vol-text-label, 0.875rem);
+  color: var(--vol-ui-text-secondary);
+}
+
+.forge-connect__error {
+  margin: 0;
+  min-height: 1.25em;
+  color: var(--vol-ui-danger-solid);
+  font-size: var(--vol-text-label, 0.875rem);
+}
+
+.forge-hud {
+  pointer-events: auto;
+  position: absolute;
+  top: calc(var(--vol-safe-top, 0px) + 0.5rem);
+  left: calc(var(--vol-safe-left, 0px) + 0.5rem);
+  right: calc(var(--vol-safe-right, 0px) + 0.5rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vol-space-sm, 0.5rem);
+  padding: var(--vol-space-xs, 0.25rem) var(--vol-space-md, 0.75rem);
+  border-radius: var(--vol-radius-md, 8px);
+  background: var(--vol-ui-overlay-panel);
+  color: var(--vol-ui-text);
+  font-family: var(--vol-font-family);
+  font-size: var(--vol-text-label, 0.875rem);
+}
+
+.forge-hud__status {
+  font-weight: 600;
+}
+
+.forge-hud__stats {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--vol-ui-text-secondary);
+}
+
+.forge-tools {
+  pointer-events: auto;
+  position: absolute;
+  bottom: calc(var(--vol-safe-bottom, 0px) + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: min(44rem, calc(100% - 1rem));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: var(--vol-space-sm, 0.5rem);
+}
+
+/* Menü satır satır dolar: dar ekranda ikinci satıra sarar, orta alanı kaplamaz. */
+.forge-tools .vol-build-menu {
+  flex: 1 1 22rem;
+  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+  padding: var(--vol-space-xs, 0.25rem);
+}
+
+.forge-tools .vol-build-menu__item {
+  padding: var(--vol-space-xs, 0.25rem);
+}
+
+.forge-tools > .vol-button {
+  flex: 0 0 auto;
+  align-self: center;
 }

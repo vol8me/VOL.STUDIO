@@ -84,6 +84,8 @@ interface Player {
   tokens: number;
   tokensAt: number;
   violations: number;
+  /** Son kabul edilen el sıkışmanın zaman damgası (performance.now, ms). */
+  helloAt: number;
 }
 
 interface PendingCommand {
@@ -299,6 +301,7 @@ export class ForgeRoom extends Room {
       tokens: PLAYER.commandsPerSecond,
       tokensAt: performance.now(),
       violations: 0,
+      helloAt: -Infinity,
     };
     this.players.set(client.sessionId, player);
     this.byKey.set(key, player);
@@ -390,7 +393,17 @@ export class ForgeRoom extends Room {
 
   private hello(client: Client, bytes: Uint8Array): void {
     const player = this.players.get(client.sessionId);
-    if (!player || player.dropped || player.ready) return;
+    if (!player || player.dropped) return;
+    const now = performance.now();
+    if (player.ready) {
+      // Hazır oyuncunun ikinci el sıkışması yeniden eşitleme isteğidir (istemci sapma saptadı). Yalnız
+      // kilit adımlı kipte anlamlıdır ve hız sınırlıdır: sık istek ihlal sayılır, anlık görüntü gönderilmez.
+      if (this.mode !== SYNC_MODE.lockstep) return;
+      if (now - player.helloAt < NET.minHelloIntervalMs) {
+        this.violate(player);
+        return;
+      }
+    }
     if (this.fault) {
       client.leave(CloseCode.WITH_ERROR);
       return;
@@ -401,6 +414,7 @@ export class ForgeRoom extends Room {
       return;
     }
     player.ready = true;
+    player.helloAt = now;
     client.sendBytes(
       TO_CLIENT.welcome,
       writeWelcome({

@@ -18,7 +18,8 @@
     "test:e2e": "playwright test",
     "scaling": "tsx scripts/scaling.ts",
     "tauri": "tauri",
-    "capacity": "tsx --tsconfig tsconfig.json scripts/capacity.ts"
+    "capacity": "tsx --tsconfig tsconfig.json scripts/capacity.ts",
+    "loadtest": "tsx --tsconfig tsconfig.json scripts/loadtest.ts"
   },
   "dependencies": {
     "@colyseus/core": "0.18.18",

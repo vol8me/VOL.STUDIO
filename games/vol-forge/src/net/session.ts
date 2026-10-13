@@ -17,6 +17,7 @@ import {
   type Welcome,
 } from './protocol';
 import { Replica } from './replica';
+import { NET } from '@/config/forge';
 import { writeCommand, type ForgeCommand, COMMAND } from '@/sim/commands';
 
 export const ROOM_NAME = 'forge';
@@ -26,6 +27,9 @@ const MAY_TRY_RECONNECT = 4010;
 
 /** Bu oturumda ack'i alınamayan ama sunucunun `lastSeq`i kapsadığı komutun sonucu. */
 export const ACK_APPLIED_UNKNOWN = 255;
+
+/** Ağ gecikmesi ve saat farkı için el sıkışma aralığının üstüne eklenen pay (ms). */
+const RESYNC_MARGIN_MS = 250;
 
 export type SessionStatus = 'connecting' | 'syncing' | 'live' | 'reconnecting' | 'closed';
 
@@ -83,6 +87,7 @@ export class ForgeSession {
   readonly received: ReceivedBytes = { ticks: 0, frames: 0, snapshots: 0, acks: 0, other: 0 };
 
   private nextSeq = 1;
+  private lastHelloAt = -Infinity;
   private readonly waiting = new Map<number, Waiting>();
   private readonly listeners = new Set<(event: SessionEvent) => void>();
   private generation = 0;
@@ -201,6 +206,7 @@ export class ForgeSession {
 
   /** Her (yeniden) bağlanışta: eski durum atılır, sunucudan karşılama ve anlık görüntü istenir. */
   private hello(view?: ChunkRect): void {
+    this.lastHelloAt = this.now();
     this.generation++;
     this.lockstep = new LockstepClient();
     this.replica = new Replica();
@@ -277,6 +283,25 @@ export class ForgeSession {
   /** Kilit adımlı simülasyonu en çok `maxSteps` adım ilerletir. */
   advance(maxSteps: number): number {
     return this.lockstep.advance(maxSteps);
+  }
+
+  /** Sıradaki `submit` çağrısının alacağı sıra numarası. */
+  get nextCommandSeq(): number {
+    return this.nextSeq;
+  }
+
+  /**
+   * Durumu atıp sunucudan yeni anlık görüntü ister: sapma saptandığında. Bağlantı kapalıyken, SDK yeniden
+   * bağlanırken (o yol zaten el sıkışır) ya da son el sıkışma çok yakınsa bir şey yapmaz ve false döner;
+   * çağıran sonraki karede yeniden dener.
+   */
+  resync(): boolean {
+    if (this.status === 'closed' || this.status === 'reconnecting') return false;
+    // Sunucu sık el sıkışmayı ihlal sayar: aralığın üstüne güvenlik payı bırakılır.
+    if (this.now() - this.lastHelloAt < NET.minHelloIntervalMs + RESYNC_MARGIN_MS) return false;
+    this.resyncs++;
+    this.hello();
+    return true;
   }
 
   get pendingCommands(): number {

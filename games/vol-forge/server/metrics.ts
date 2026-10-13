@@ -59,12 +59,13 @@ export function summarize(ring: Ring): TickSummary {
   };
 }
 
+const LOOP_RESOLUTION_MS = 10;
 let loopDelay: IntervalHistogram | null = null;
 
 /** Süreç genelinde tek olay döngüsü gecikme ölçeri; ilk çağrıda açılır. */
 export function eventLoopDelay(): IntervalHistogram {
   if (loopDelay === null) {
-    loopDelay = monitorEventLoopDelay({ resolution: 10 });
+    loopDelay = monitorEventLoopDelay({ resolution: LOOP_RESOLUTION_MS });
     loopDelay.enable();
   }
   return loopDelay;
@@ -76,13 +77,19 @@ export interface LoopSummary {
   readonly maxMs: number;
 }
 
-/** Histogram nanosaniye verir; milisaniyeye çevirir. Ölçeri sıfırlar: sonraki özet yeni pencereyi gösterir. */
+/**
+ * Histogram nanosaniye verir ve ölçüm aralığının kendisini (`resolution`) içerir: boşta süreçte bile
+ * değerler ~10 ms'dir. Burada o taban çıkarılır; sonuç olay döngüsünün ek gecikmesidir.
+ * Windows'ta zamanlayıcı ayrıca ~15,6 ms ayrıklıdır; bu taban Linux'ta yoktur.
+ */
 export function drainEventLoopDelay(): LoopSummary {
   const histogram = eventLoopDelay();
   const summary = {
-    meanMs: Number.isFinite(histogram.mean) ? histogram.mean / 1e6 : 0,
-    p99Ms: histogram.percentile(99) / 1e6,
-    maxMs: histogram.max / 1e6,
+    meanMs: Number.isFinite(histogram.mean)
+      ? Math.max(0, histogram.mean / 1e6 - LOOP_RESOLUTION_MS)
+      : 0,
+    p99Ms: Math.max(0, histogram.percentile(99) / 1e6 - LOOP_RESOLUTION_MS),
+    maxMs: Math.max(0, histogram.max / 1e6 - LOOP_RESOLUTION_MS),
   };
   histogram.reset();
   return summary;

@@ -219,6 +219,45 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
       expect((await session.place(next.x, next.y, KIND.wall, 0)).result).toBe(RESULT.ok);
     },
   );
+  it(
+    'istemci sapma saptayınca yeniden el sıkışma ile kendini onarır',
+    { timeout: 40_000 },
+    async () => {
+      forge = await startTestForge({ tickHz: 120 });
+      const session = await live(await forge.connect('player-desync'));
+      pump(session);
+      expect(session.resync()).toBe(false);
+      const { x, y } = emptyTile(session);
+      const state = session.lockstep.sim!.state;
+      const tile = y * state.width + x;
+      // Yerel bozulma: sunucunun hiç görmediği bir yapı. Sonraki karma denetiminde sapma saptanır.
+      state.kind[tile] = KIND.wall;
+      await until(() => session.lockstep.status === 'desynced', 20_000);
+      const broken = session.lockstep;
+      // Oturum, son el sıkışmadan sonra sunucunun ihlal saymayacağı süre dolana dek istek göndermez.
+      await until(() => session.resync(), 20_000);
+      await until(() => session.status === 'live' && session.lockstep !== broken, 20_000);
+      expect(session.lockstep.sim!.state.kind[tile]).toBe(KIND.empty);
+      await until(() => session.lockstep.metrics.hashChecks >= 2, 20_000);
+      expect(session.lockstep.status).toBe('running');
+      expect(session.resyncs).toBe(1);
+    },
+  );
+
+  it('çok sık yeniden el sıkışma anlık görüntü getirmez ve düşürülür', async () => {
+    forge = await startTestForge();
+    const bad = await rawClient(forge, 'player-hellos');
+    const welcomes: number[] = [];
+    bad.room.onMessage(TO_CLIENT.welcome, () => welcomes.push(Date.now()));
+    let closed = false;
+    bad.room.onLeave(() => {
+      closed = true;
+    });
+    for (let index = 0; index < 100; index++)
+      bad.room.sendBytes(TO_SERVER.hello, new Uint8Array(0));
+    await until(() => closed);
+    expect(welcomes).toHaveLength(0);
+  });
 });
 
 describe('komut güvenliği', () => {

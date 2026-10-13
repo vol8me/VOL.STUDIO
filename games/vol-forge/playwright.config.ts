@@ -12,7 +12,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: true,
-  reporter: [['list']],
+  reporter: [['list'], ['../../scripts/quality/countsReporter.mjs', { scope: 'vol-forge' }]],
   timeout: 60_000,
   use: {
     baseURL: BASE_URL,

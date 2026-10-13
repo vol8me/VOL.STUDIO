@@ -34,8 +34,6 @@ export const WORLD = {
   height: 256,
   /** Ağ ilgi alanının ve çizimin birimi: chunk kenarı tile. */
   chunk: 16,
-  /** Yalnız çizim: tile kenarı piksel. */
-  tilePx: 24,
   seed: 0x5eed1234,
   /** Çekirdek kenarı (tile); dünya merkezinde. */
   coreSize: 3,
@@ -166,4 +164,6 @@ export const NET = {
   heartbeatEvery: 30,
   maxMessagesPerSecond: 120,
   reconnectSeconds: 20,
+  /** Aynı oyuncunun ardışık el sıkışmaları (anlık görüntü istekleri) arasındaki en kısa süre (ms). */
+  minHelloIntervalMs: 2000,
 } as const;
