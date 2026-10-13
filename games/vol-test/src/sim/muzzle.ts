@@ -1,4 +1,4 @@
-import type { ChassisPose } from './tank/Tank';
+import type { ChassisPose } from './chassis/ChassisState';
 
 /** Dünya uzayında bir nokta ve bakış yönü. */
 export interface MuzzlePose {

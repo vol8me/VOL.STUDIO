@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SUSPENSION } from '@/config/tank';
-import { Suspension } from '@/sim/tank/Suspension';
+import { Suspension } from '@/sim/chassis/Suspension';
 import { DT } from '../../support/sim';
 
 function settle(suspension: Suspension, forward: number, right: number, seconds: number): void {

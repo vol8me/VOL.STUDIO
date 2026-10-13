@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { WEAPON } from '@/config/tank';
 import type { SimEvent } from '@/sim/events';
 import { muzzlePose } from '@/sim/muzzle';
-import type { ChassisPose } from '@/sim/tank/Tank';
+import type { ChassisPose } from '@/sim/chassis/ChassisState';
 import { command, simulation, STEP_MS } from '../support/sim';
 
 describe('Simulation.previewAim', () => {

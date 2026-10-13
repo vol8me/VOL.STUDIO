@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BoostReserve } from '@/sim/tank/BoostReserve';
+import { BoostReserve } from '@/sim/chassis/BoostReserve';
 
 const config = { boostCapacity: 10, boostDrain: 10, boostRegen: 5, boostRestart: 4 };
 

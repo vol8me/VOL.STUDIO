@@ -1,117 +1,31 @@
 import { approach, clamp } from '@volstudio/core/math/interpolation';
-import {
-  createContact,
-  resolveWallContacts,
-  RigidBody,
-  type Contact,
-  type ContactShape,
-} from '@volstudio/core/physics';
+import type { SuspensionConfig, TankConfig } from '@/config/tank';
 import type { TankCommand } from '../command';
 import type { World } from '../world/World';
-import { BoostReserve } from './BoostReserve';
+import { Chassis, type ChassisKind } from '../chassis/Chassis';
 import { Driver, type TrackTargets } from './Driver';
-import { Suspension } from './Suspension';
 import { computeTrackForces, createTrackForces, type TrackSurface } from './trackForces';
-import { Turret } from './Turret';
-import { createChassisState, type ChassisState } from '../chassis/ChassisState';
-import type { SuspensionConfig, TankConfig } from '@/config/tank';
-
-/** Render ara değeri için tankın poz kaydı. */
-export interface ChassisPose {
-  x: number;
-  y: number;
-  hull: number;
-  turret: number;
-  pitch: number;
-  roll: number;
-}
 
 /** Fizik adımı başına alt adım: sürtünme kuvvetleri sert, 120 Hz kararlı kalır. */
 const SUBSTEPS = 2;
 
 /**
- * Paletli tank: katı cisim gövde, iki palet, stabilizatörlü taret, hızlanma
- * deposu ve yaylı süspansiyon. Her adımda sürücü palet hedeflerini seçer,
- * paletler zemine kuvvet uygular (`trackForces`), gövde bu kuvvetle ilerler,
- * duvar teması çözülür (`wallContact`) ve kuvvetler süspansiyonu sürer.
+ * Paletli tank: iki palet, sürücü ve palet–zemin kuvvetleri. Her adımda sürücü palet hedeflerini
+ * seçer, paletler zemine kuvvet uygular (`trackForces`), gövde bu kuvvetle ilerler, duvar teması
+ * çözülür (`settleAgainst`) ve kuvvetler süspansiyonu sürer. Poz, durum ve temas `Chassis`'tedir.
  */
-export class Tank extends RigidBody {
-  /** Palet yüzey hızları (birim/s). */
-  trackLeft = 0;
-  trackRight = 0;
-  /** Palet yüzeyinin katettiği yol; görünüm palet dokusunu bununla kaydırır. */
-  treadLeft = 0;
-  treadRight = 0;
-  /**
-   * Paletlerin yerde katettiği yol (BİRİM CUMHA, işaretli integral); patinajda
-   * yüzey yolundan ayrışır, iz bununla bırakılır.
-   *
-   * Bu ALAN HIZ DEĞİLDİR: yol her zaman artar, geri koşuda bile. Zemin hızı
-   * `surfaceLeft`/`surfaceRight`'tadır; ikisini karıştıran tüketicı, tank
-   * durduktan sonra da "yük" görür.
-   */
-  groundLeft = 0;
-  groundRight = 0;
-  /** Palet yüzeyinin zemine göre ANLIK hızı (birim/s); hız-arası farkı yüktür. */
-  surfaceLeft = 0;
-  surfaceRight = 0;
-  /** Palet yüzeyinin zemine göre kayma hızı (birim/s); izler ve toz bununla seçilir. */
-  slideLeft = 0;
-  slideRight = 0;
-  /** İki paletin en büyük kayma hızı: patinaj, kilitli kayma ya da yanal kayma. */
-  slip = 0;
-  /** Bu adımdaki en sert DUVAR teması; `speed` 0 ise temas yok. */
-  readonly contact: Contact = createContact();
-  readonly suspension: Suspension;
-  readonly previous: ChassisPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
+export class Tank extends Chassis {
+  readonly kind: ChassisKind = 'tank';
   private readonly driver: Driver;
-  private readonly turretMount: Turret;
-  private readonly reserve: BoostReserve;
-  /** Ayak izi ve temas malzemesi (duvar ve araç teması aynı şekli kullanır). */
-  readonly shape: ContactShape;
   private readonly targets: TrackTargets = { left: 0, right: 0, forward: false, braking: false };
   private readonly forces = createTrackForces();
-  private readonly substepContact: Contact = createContact();
 
   constructor(
-    private readonly config: TankConfig,
+    private readonly tankConfig: TankConfig,
     suspension: SuspensionConfig,
   ) {
-    super(
-      config.mass,
-      RigidBody.boxInertia(config.mass, config.halfLength * 2, config.halfWidth * 2),
-    );
-    this.driver = new Driver(config);
-    this.turretMount = new Turret(config);
-    this.reserve = new BoostReserve(config);
-    this.suspension = new Suspension(suspension);
-    this.shape = {
-      halfLength: config.halfLength,
-      halfWidth: config.halfWidth,
-      restitution: config.wallRestitution,
-      friction: config.wallFriction,
-    };
-  }
-
-  /** Gövde yönü: katı cismin açısı. */
-  get hull(): number {
-    return this.angle;
-  }
-
-  set hull(value: number) {
-    this.angle = value;
-  }
-
-  get turret(): number {
-    return this.turretMount.angle;
-  }
-
-  get boost(): number {
-    return this.reserve.energy;
-  }
-
-  get boosting(): boolean {
-    return this.reserve.active;
+    super(tankConfig, suspension, Chassis.footprintInertia(tankConfig));
+    this.driver = new Driver(tankConfig);
   }
 
   get reversing(): boolean {
@@ -123,126 +37,16 @@ export class Tank extends RigidBody {
     return this.targets.braking;
   }
 
-  /**
-   * Çarpmanın süspansiyona vuruşu: gövde çarpma yönüne yaylanır. Duvar ve
-   * araç teması aynı yoldan geçer.
-   */
-  kickFrom(hit: Contact): void {
-    const fx = Math.cos(this.angle);
-    const fy = Math.sin(this.angle);
-    const kick = hit.speed * this.config.impactKick;
-    this.suspension.kick(
-      -(hit.normalX * fx + hit.normalY * fy) * kick,
-      -(-hit.normalX * fy + hit.normalY * fx) * kick,
-    );
+  protected setReversing(value: boolean): void {
+    this.driver.reversing = value;
   }
 
-  place(x: number, y: number, hull = -Math.PI / 2): void {
-    this.reset(x, y, hull);
-    this.turretMount.reset(this.angle);
-    this.trackLeft = 0;
-    this.trackRight = 0;
-    this.capturePose();
-  }
-
-  /** Yeniden doğan araç önceki sürüşten palet, yay ve depo durumu taşımaz. */
-  resetForRespawn(x: number, y: number, hull = -Math.PI / 2): void {
-    this.place(x, y, hull);
-    this.reserve.reset();
-    this.suspension.reset();
+  protected resetDrive(): void {
     this.driver.reversing = false;
-    this.treadLeft = 0;
-    this.treadRight = 0;
-    this.groundLeft = 0;
-    this.groundRight = 0;
-    this.surfaceLeft = 0;
-    this.surfaceRight = 0;
-    this.slideLeft = 0;
-    this.slideRight = 0;
-    this.slip = 0;
-    this.contact.speed = 0;
     this.targets.left = 0;
     this.targets.right = 0;
     this.targets.forward = false;
     this.targets.braking = false;
-    this.capturePose();
-  }
-
-  /** Bir sonraki adımı belirleyen bütün skaler durumu `out`a yazar. */
-  captureState(out: ChassisState = createChassisState()): ChassisState {
-    out.x = this.x;
-    out.y = this.y;
-    out.vx = this.vx;
-    out.vy = this.vy;
-    out.hull = this.angle;
-    out.angularVelocity = this.angularVelocity;
-    out.turret = this.turretMount.angle;
-    out.trackLeft = this.trackLeft;
-    out.trackRight = this.trackRight;
-    out.treadLeft = this.treadLeft;
-    out.treadRight = this.treadRight;
-    out.groundLeft = this.groundLeft;
-    out.groundRight = this.groundRight;
-    out.surfaceLeft = this.surfaceLeft;
-    out.surfaceRight = this.surfaceRight;
-    out.slideLeft = this.slideLeft;
-    out.slideRight = this.slideRight;
-    out.slip = this.slip;
-    out.boost = this.reserve.energy;
-    out.boosting = this.reserve.active;
-    out.reversing = this.driver.reversing;
-    out.pitch = this.suspension.pitch;
-    out.pitchVelocity = this.suspension.pitchVelocity;
-    out.roll = this.suspension.roll;
-    out.rollVelocity = this.suspension.rollVelocity;
-    return out;
-  }
-
-  /**
-   * Yetkili durumu tanka kurar (ağ uzlaştırması). `previous` poz da yeni konuma çekilir; yoksa
-   * görünüm eski konumdan yeni konuma bir kare süzülürdü.
-   */
-  restoreState(state: ChassisState): void {
-    this.x = state.x;
-    this.y = state.y;
-    this.vx = state.vx;
-    this.vy = state.vy;
-    this.angle = state.hull;
-    this.angularVelocity = state.angularVelocity;
-    this.turretMount.angle = state.turret;
-    this.trackLeft = state.trackLeft;
-    this.trackRight = state.trackRight;
-    this.treadLeft = state.treadLeft;
-    this.treadRight = state.treadRight;
-    this.groundLeft = state.groundLeft;
-    this.groundRight = state.groundRight;
-    this.surfaceLeft = state.surfaceLeft;
-    this.surfaceRight = state.surfaceRight;
-    this.slideLeft = state.slideLeft;
-    this.slideRight = state.slideRight;
-    this.slip = state.slip;
-    this.reserve.energy = state.boost;
-    this.reserve.active = state.boosting;
-    this.driver.reversing = state.reversing;
-    this.suspension.restore(state.pitch, state.pitchVelocity, state.roll, state.rollVelocity);
-    this.contact.speed = 0;
-    this.capturePose();
-  }
-
-  /** Adım başında çağrılır; render bu pozdan günceline ara değer alır. */
-  capturePose(): void {
-    this.readPose(this.previous);
-  }
-
-  /** Güncel adımın pozunu `out`a yazar (atış ve nişan geometrisi bunu okur). */
-  readPose(out: ChassisPose): ChassisPose {
-    out.x = this.x;
-    out.y = this.y;
-    out.hull = this.angle;
-    out.turret = this.turretMount.angle;
-    out.pitch = this.suspension.pitch;
-    out.roll = this.suspension.roll;
-    return out;
   }
 
   step(command: TankCommand, world: World, dt: number, surface?: TrackSurface): void {
@@ -256,7 +60,7 @@ export class Tank extends RigidBody {
       this.integrateTracks(sub, surface);
       this.settleAgainst(world);
     }
-    this.turretMount.update(command, dt);
+    this.updateTurret(command, dt);
   }
 
   private plan(command: TankCommand, boosting: boolean): TrackTargets {
@@ -278,7 +82,7 @@ export class Tank extends RigidBody {
       this.trackLeft,
       this.trackRight,
       this.reserve.active,
-      this.config,
+      this.tankConfig,
       this.forces,
       surface,
     );
@@ -316,7 +120,7 @@ export class Tank extends RigidBody {
    * `driveSlip`ten çok ayıramaz (tork sınırlı).
    */
   private driveTracks(dt: number): void {
-    const config = this.config;
+    const config = this.tankConfig;
     const targets = this.targets;
     if (targets.braking) {
       const lock = config.brakeAcceleration * dt;
@@ -343,17 +147,5 @@ export class Tank extends RigidBody {
       forward - turning - config.driveSlip,
       forward - turning + config.driveSlip,
     );
-  }
-
-  /**
-   * Duvar temasını çözer; adımdaki en sert duvar çarpması kaydedilir. Araç
-   * teması gövdeyi duvara geri itebilir: çağıran, itme sonrası bunu yeniden
-   * çağırarak duvarı son sözü söyleyen sert sınır yapar.
-   */
-  settleAgainst(world: World): void {
-    const hit = resolveWallContacts(this, world.walls, this.shape, this.substepContact);
-    if (hit.speed <= this.contact.speed) return;
-    Object.assign(this.contact, hit);
-    this.kickFrom(hit);
   }
 }

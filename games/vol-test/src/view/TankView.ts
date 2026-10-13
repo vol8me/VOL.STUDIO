@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { poseSourceOf, PoseShadow, type PoseSourceNode } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
-import type { ChassisPose } from '@/sim/tank/Tank';
+import type { ChassisPose } from '@/sim/chassis/ChassisState';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
 import { TreadRig } from './TreadRig';
 import { TankLights } from './TankLights';

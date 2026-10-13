@@ -5,7 +5,7 @@ import { Vehicle } from '@/sim/entities/Vehicle';
 import type { SimEvent } from '@/sim/events';
 import { Simulation } from '@/sim/Simulation';
 import { muzzlePose } from '@/sim/muzzle';
-import type { ChassisPose } from '@/sim/tank/Tank';
+import type { ChassisPose } from '@/sim/chassis/ChassisState';
 import type { ChassisState } from '@/sim/chassis/ChassisState';
 import {
   aimAligned,

@@ -1,6 +1,16 @@
+/** Render ara değeri ile atış ve nişan geometrisinin okuduğu şasi pozu. */
+export interface ChassisPose {
+  x: number;
+  y: number;
+  hull: number;
+  turret: number;
+  pitch: number;
+  roll: number;
+}
+
 /**
- * Tankın bir adımdan ötekine taşıdığı bütün skaler durum. Ağ uzlaştırması sunucudan gelen bu
- * kümeyi yerel tanka yazar ve bekleyen girdileri üstüne yeniden oynatır; kümeden bir alanın eksik
+ * Şasinin bir adımdan ötekine taşıdığı bütün skaler durum. Ağ uzlaştırması sunucudan gelen bu
+ * kümeyi yerel şasiye yazar ve bekleyen girdileri üstüne yeniden oynatır; kümeden bir alanın eksik
  * kalması yeniden oynatmada kalıcı sapma demektir. Anlık türevler (`plan` hedefleri, `contact`,
  * `previous` poz) her adımın başında yeniden hesaplandığı için durum değildir.
  */

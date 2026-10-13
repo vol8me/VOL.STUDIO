@@ -105,7 +105,8 @@ export const TANK = {
   turretTurnRate: 3.2,
 } as const;
 
-export type TankConfig = typeof TANK;
+/** Sayı tablosunun biçimi: varyantlar aynı alanları başka değerlerle doldurur. */
+export type TankConfig = { readonly [K in keyof typeof TANK]: number };
 
 /**
  * Gövdenin yaylı süspansiyonu. Yunuslama (boylamsal) ve yalpa (yanal) ayrı
@@ -130,7 +131,7 @@ export const SUSPENSION = {
   bumpScale: 0.02,
 } as const;
 
-export type SuspensionConfig = typeof SUSPENSION;
+export type SuspensionConfig = { readonly [K in keyof typeof SUSPENSION]: number };
 
 /** Taret ateşi. */
 export const WEAPON = {

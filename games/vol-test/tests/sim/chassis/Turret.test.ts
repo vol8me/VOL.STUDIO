@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Turret } from '@/sim/tank/Turret';
+import { Turret } from '@/sim/chassis/Turret';
 import { command } from '../../support/sim';
 
 const config = { turretTurnRate: 2 };

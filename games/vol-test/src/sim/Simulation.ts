@@ -5,7 +5,7 @@ import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
-import type { ChassisPose } from './tank/Tank';
+import type { ChassisPose } from './chassis/ChassisState';
 import {
   aimAligned,
   applyRecoil,

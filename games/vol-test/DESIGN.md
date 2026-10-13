@@ -15,17 +15,18 @@ Saf headless import kabulü ayrı Node testinde doğrulanır. CORE `SimulationCl
 taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
 Çizim hızı fizik saatini değiştirmez; duraklatma simülasyon adımı üretmez.
 
-| Katman                                 | Sorumluluk                                                 |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `src/app/`                             | Platform ömrü, kayıt, tercihler ve ölçüm kaynakları        |
-| `src/sim/tank/`                        | Katı cisim, palet kuvvetleri, sürücü, süspansiyon ve silah |
-| `src/sim/combat/`                      | Mermi uçuşu, isabet ve nişan önizlemesi                    |
-| `src/sim/scenarios/`                   | Tohumlu araç düzenleri ve komutları                        |
-| `src/sim/seasons/`, `src/sim/weather/` | Mevsim, hava ve kalıcı yüzey durumu                        |
-| `src/view/`                            | Dünya ve tank sunumu, sınırlı efekt havuzları              |
-| `src/hud/`                             | CORE bileşenleriyle metin, harita ve paneller              |
-| `src/scenes/world/`                    | Girdi, kamera, çevre ve olayların bağlanması               |
-| `src/config/`                          | Bütün oynanış ve sunum ölçülerinin tek kaynağı             |
+| Katman                                 | Sorumluluk                                              |
+| -------------------------------------- | ------------------------------------------------------- |
+| `src/app/`                             | Platform ömrü, kayıt, tercihler ve ölçüm kaynakları     |
+| `src/sim/chassis/`                     | Şasi tabanı: poz, durum, süspansiyon, taret ve hızlanma |
+| `src/sim/tank/`                        | Paletli şasi: sürücü ve palet–zemin kuvvetleri          |
+| `src/sim/combat/`                      | Mermi uçuşu, isabet ve nişan önizlemesi                 |
+| `src/sim/scenarios/`                   | Tohumlu araç düzenleri ve komutları                     |
+| `src/sim/seasons/`, `src/sim/weather/` | Mevsim, hava ve kalıcı yüzey durumu                     |
+| `src/view/`                            | Dünya ve tank sunumu, sınırlı efekt havuzları           |
+| `src/hud/`                             | CORE bileşenleriyle metin, harita ve paneller           |
+| `src/scenes/world/`                    | Girdi, kamera, çevre ve olayların bağlanması            |
+| `src/config/`                          | Bütün oynanış ve sunum ölçülerinin tek kaynağı          |
 
 Simülasyon olay kuyruğunu sahne her karede bir kez boşaltır. Görünüm model
 kurallarını üretmez ve modele geri yazmaz. Listener, timer, ses ve native

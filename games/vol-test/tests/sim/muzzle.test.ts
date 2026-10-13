@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { muzzlePose, pivotPose, type MuzzlePose } from '@/sim/muzzle';
-import type { ChassisPose } from '@/sim/tank/Tank';
+import type { ChassisPose } from '@/sim/chassis/ChassisState';
 
 const out = (): MuzzlePose => ({ x: 0, y: 0, angle: 0 });
 const pose = (overrides: Partial<ChassisPose> = {}): ChassisPose => ({

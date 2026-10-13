@@ -3,7 +3,7 @@ import type { TankCommand } from './command';
 import type { WeaponConfig } from '@/config/tank';
 import type { Vehicle } from './entities/Vehicle';
 import { muzzlePose, type MuzzlePose } from './muzzle';
-import type { ChassisPose } from './tank/Tank';
+import type { ChassisPose } from './chassis/ChassisState';
 import type { World } from './world/World';
 
 /**
