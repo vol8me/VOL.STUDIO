@@ -12,7 +12,7 @@ vi.mock('@volstudio/core/i18n', () => ({
 import { App, type AppDeps } from '../../src/app/App';
 import { ForgeHost } from '../../src/app/host';
 import { ITEM } from '../../src/config/forge';
-import { SYNC_MODE } from '../../src/net/protocol';
+import { SIM_MISMATCH, SYNC_MODE } from '../../src/net/protocol';
 import type { ForgeSession, SessionEvent } from '../../src/net/session';
 import { RESULT } from '../../src/sim/commands';
 import { smallSim } from '../helpers/world';
@@ -134,6 +134,15 @@ describe('App bağlantı formu', () => {
     expect(stats.dataset.units).toBe(String(Number(stats.dataset.units)));
     for (const name of ['fps', 'frameP99', 'stepP50', 'stepP99'] as const)
       expect(Number.isFinite(Number(stats.dataset[name]))).toBe(true);
+  });
+
+  it('sunucu simülasyon sürümü uyuşmazlığını bildirirse güncelleme ister', async () => {
+    const mismatch = Object.assign(new Error(SIM_MISMATCH.message), { code: SIM_MISMATCH.code });
+    const { app, host } = setup({ connect: vi.fn(() => Promise.reject(mismatch)) });
+    await app.join();
+    expect(host.controller).toBeNull();
+    expect(connectCard().hidden).toBe(false);
+    expect(errorText()).toBe('connect.simMismatch');
   });
 
   it('bağlantı kurulamazsa formda kalır ve hatayı söyler', async () => {

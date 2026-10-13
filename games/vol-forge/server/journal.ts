@@ -137,20 +137,15 @@ export interface JournalStats {
   maxFsyncMs: number;
 }
 
+export function emptyJournalStats(): JournalStats {
+  return { appended: 0, writes: 0, fsyncs: 0, bytes: 0, lastFsyncMs: 0, maxFsyncMs: 0 };
+}
+
 /**
  * Tek yazarlı, grup onaylı günlük. `append` anında döner; `commit` o ana kadar eklenenlerin
  * kalıcı olduğunu bekler. Eşzamanlı çağrılar tek `write`+`fsync` çevrimini paylaşır.
  */
 export class JournalWriter {
-  readonly stats: JournalStats = {
-    appended: 0,
-    writes: 0,
-    fsyncs: 0,
-    bytes: 0,
-    lastFsyncMs: 0,
-    maxFsyncMs: 0,
-  };
-
   private pending: Uint8Array[] = [];
   private appended = 0;
   private durable = 0;
@@ -162,6 +157,8 @@ export class JournalWriter {
     private readonly opening: Promise<FileHandle>,
     readonly path: string,
     private readonly clock: () => number,
+    /** Verilen sayaç nesnesi günlük değişimlerinde paylaşılır; sayılar dosya başına sıfırlanmaz. */
+    readonly stats: JournalStats,
   ) {
     // Açılış hatası ilk `commit`te görünür; burada yutulmuş bir reddedilmiş söz kalmaz.
     opening.catch((error: unknown) => {
@@ -177,6 +174,7 @@ export class JournalWriter {
     path: string,
     header: JournalHeader,
     clock: () => number = () => performance.now(),
+    stats: JournalStats = emptyJournalStats(),
   ): JournalWriter {
     const opening = (async () => {
       const handle = await open(path, 'wx');
@@ -189,7 +187,7 @@ export class JournalWriter {
       await handle.sync();
       return handle;
     })();
-    return new JournalWriter(opening, path, clock);
+    return new JournalWriter(opening, path, clock, stats);
   }
 
   /** `begin` ve başlığın kalıcı olmasını bekler. */

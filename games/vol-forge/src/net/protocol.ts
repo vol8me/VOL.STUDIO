@@ -7,6 +7,18 @@ import { ByteReader, ByteWriter } from './bytes';
  */
 export const WIRE_VERSION = 1;
 
+/** Katılımda sunucunun simülasyon sürümü uyuşmazlığı için döndürdüğü hata; istemci kullanıcıya güncelleme söyler. */
+export const SIM_MISMATCH = { code: 4426, message: 'sim-version' } as const;
+
+export function isSimMismatch(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (error as { code?: unknown }).code === SIM_MISMATCH.code &&
+    (error as { message?: unknown }).message === SIM_MISMATCH.message
+  );
+}
+
 /**
  * `hello`: istemci mesaj işleyicilerini kurduktan sonra gönderir; sunucu o ana kadar ona yalnız
  * karşılama dışında bir şey yollamaz. Yük boştur ya da ilgi alanı (4 bayt) taşır. Her

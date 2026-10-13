@@ -17,7 +17,7 @@ import {
   type Welcome,
 } from './protocol';
 import { Replica } from './replica';
-import { NET } from '@/config/forge';
+import { NET, SIM_VERSION } from '@/config/forge';
 import { writeCommand, type ForgeCommand, COMMAND } from '@/sim/commands';
 
 export const ROOM_NAME = 'forge';
@@ -112,6 +112,7 @@ export class ForgeSession {
       worldId: options.worldId,
       protocol: PROTOCOL_VERSION,
       wire: WIRE_VERSION,
+      sim: SIM_VERSION,
       key: options.key,
     });
     const session = new ForgeSession(room, options);

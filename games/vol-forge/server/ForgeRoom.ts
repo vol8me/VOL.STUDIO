@@ -2,12 +2,13 @@ import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { deflate } from 'node:zlib';
-import { CloseCode, Room, type Client } from '@colyseus/core';
+import { CloseCode, Room, ServerError, type Client } from '@colyseus/core';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
-import { ITEM, NET, PLAYER, SIM } from '@/config/forge';
+import { ITEM, NET, PLAYER, SIM, SIM_VERSION } from '@/config/forge';
 import { ByteReader } from '@/net/bytes';
 import {
   CHUNK,
+  SIM_MISMATCH,
   SYNC_MODE,
   TO_CLIENT,
   TO_SERVER,
@@ -207,11 +208,14 @@ export class ForgeRoom extends Room {
   }
 
   override onAuth(_client: Client, options: Record<string, unknown>): boolean {
-    return (
+    const valid =
       options?.protocol === PROTOCOL_VERSION &&
       options.wire === WIRE_VERSION &&
-      isPlayerKey(options.key)
-    );
+      isPlayerKey(options.key);
+    // Simülasyon sürümü uyuşmazlığı ayrı bildirilir; anlık görüntü sıkıştırması harcanmadan reddedilir.
+    if (valid && options.sim !== SIM_VERSION)
+      throw new ServerError(SIM_MISMATCH.code, SIM_MISMATCH.message);
+    return valid;
   }
 
   override async onCreate(options: ForgeRoomOptions): Promise<void> {
@@ -737,7 +741,7 @@ export class ForgeRoom extends Room {
         snapshotRawBytes: this.snapshotRawBytes,
         snapshotDeflateMs: summarize(this.deflateRing),
       },
-      journal: this.journal ? { ...this.journal.stats } : null,
+      journal: this.journal ? { ...this.store.journalStats } : null,
       persistence: {
         snapshots: this.snapshotsTaken,
         lastSnapshot: this.lastSnapshot,

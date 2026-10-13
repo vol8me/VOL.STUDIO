@@ -22,13 +22,16 @@ Android hesabının Steam ile ilişkisi henüz kararlaştırılmadı.
 
 **Yaklaşık 20 eşzamanlı dünya × dünya başına 8–14 oyuncu**, değerlendirilecek
 bir kapasite senaryosudur; sabit ürün limiti veya ölçülmüş kapasite değildir.
-Dünyaların tamamı doluysa **160–280 eşzamanlı oyuncu** eder. Tek makinenin bunu
-taşıdığı sonucu çıkarılmaz; gerçek dünya yükü, süreç/host dağılımı ve toplam
+Dünyaların tamamı doluysa **160–280 eşzamanlı oyuncu** eder. VOL.FORGE ölçümünde
+8 iş parçacıklı bir Windows dizüstü, 20 dünya × 12 oyuncuyu (240 gerçek WebSocket
+bağlantısı) dört Node sürecinde taşıdı (aşağıdaki 13 Ekim bölümü). Bu, üretim
+kabulü değildir: Linux sunucu, gerçek ağ, 24 saat üstü işletim ve toplam
 DB/yedek/işletim bütçesi ayrıca ölçülüp seçilir.
 
-Oyuncusuz dünya davranışı (kaydet/durdur, offline üretim veya 7/24 simülasyon),
-dünya boyutu/aktif varlık bütçesi, ilk barındırma sağlayıcısı ve ranked kapsamı
-açık kararlardır. PostgreSQL ve ortak network paketi aşağıdaki mimari önerilerdir;
+Oyuncusuz dünya davranışı VOL.FORGE'da 7/24 simülasyondur ve ölçüldü. Dünya
+boyutu/aktif varlık bütçesi (ölçümler 256×256 tile, en çok 21 bin bant), ilk
+barındırma sağlayıcısı ve ranked kapsamı açık kararlardır. PostgreSQL ve ortak
+network paketi aşağıdaki mimari önerilerdir;
 Colyseus onayı bu alt tercihlerin uygulanmış veya ayrıca onaylanmış olduğu anlamına gelmez.
 
 **Koşullu ilk tercih: Colyseus 0.18 üzerinde sunucu otoriteli TypeScript simülasyonu;
@@ -36,13 +39,37 @@ kalıcı dünya verisi için sunucuya ait PostgreSQL ve gerektiğinde snapshot d
 İlk dikey dilimde tek sunucu süreci ve tek dünya yeterlidir. Çok sayıda dünya
 çalıştırma ihtiyacı ölçülünce süreç sayısı ve eşleştirme altyapısı büyütülür.
 Yerel deneyle doğrulanan repo uyumu, onaylanan framework seçimini destekler;
-bu bir üretim kapasitesi kabulü değildir. **Seçim yeniden açılmıştır;
-ilk kalıcı prototip Colyseus ile doğrulansa da üretim kapasitesi kabulü henüz yapılmadı.**
+bu bir üretim kapasitesi kabulü değildir. **Seçim 12 Ekim'de yeniden açılmıştı;
+VOL.FORGE ölçümleri hedef yükün bu repoda taşınabildiğini gösterdi (aşağıdaki hüküm),
+üretim kapasitesi kabulü ise henüz yapılmadı.**
 Gerçek Node simülasyonu ve Phaser 4 deneyi bu kararı destekliyor. Önceki
 araştırmada WebKit SDK constructor sorunu vardı; yeni `?net` oyun istemcisinde
 Chromium ve WebKit üzerinden iki pencerenin gerçek Colyseus odasına bağlanma,
 hareket ve ayrılma testleri geçti. Linux'un paketli WebKitGTK kabulü ayrıdır.
 “Bütün oyunlar ve bütün cihazlar için tam üretim uyumu” sonucu çıkarmıyorum.
+
+**13 Ekim ölçümü sonrası hüküm.** [VOL.FORGE](../games/vol-forge/DESIGN.md) kanıt oyununda
+hedef yük ölçüldü: binlerce konveyör, yüzlerce birim, oyuncu yokken de işleyen dünya,
+dünya başına 12 oyuncu, 20 dünya.
+
+1. **Simülasyon ucuzdur.** 21 bin bant ve 600 birimle tek adım 0,4–1 ms (bütçe 33,3 ms);
+   dizüstü, Steam Deck ve Android tablette (cihazlarda Chromium motoru).
+2. **Colyseus oda, WebSocket taşıma, yeniden bağlanma ve oturum katmanı olarak bu yükü taşıdı:**
+   20 dünya × 12 bot dört Node sürecinde 30 Hz'i korudu, toplam yaklaşık 0,5–0,7 çekirdek tuttu.
+3. **Yükü durum eşitlemesi değil, deterministik kilit adım taşıdı.** Dünyayı Colyseus `Schema` +
+   `StateView` ile eşitlemek istemci başına 38,7 KB/sn (kontrol ölçümü, sınırları aşağıda), özel
+   ilgi alanı çerçevesi 20–100 KB/sn, kilit adım 0,19 KB/sn tuttu. VOL.FORGE kilit adım kullanır:
+   istemci aynı simülasyonu koşturur, ağdan yalnız komutlar geçer. Colyseus Schema bu işte özel
+   çerçeveden kötü değildir; fakat hiçbir durum çoğaltma biçimi kilit adım kadar ucuz değildir.
+4. **Kilit adımın bedeli:** savaş sisi ve gizli bilgi yoktur; istemci ile sunucu aynı kural sürümünü
+   koşturmalıdır (`SIM_VERSION`, uyuşmayan istemci katılımda reddedilir); her istemci simülasyon CPU'sunu öder
+   (tablette adım başına yaklaşık 1 ms). Gizli bilgi isteyen PvP için ilgi alanı yolu ayrılmıştır, istemcisi yoktur.
+5. **Dayanıklılık:** anlık görüntü + günlük, ack kalıcılıktan sonra, `kill -9` ile kurtarma, sapmada yeniden eşitleme.
+
+Ölçülmeyenler ve sınırlar: bütün sayılar tek Windows dizüstü ve loopback ağdadır. Linux sunucu, gerçek ağ
+kaybı/gecikmesi, 45 dakikadan uzun koşu, işletim sistemi düzeyinde güç kaybı, WebKitGTK ve paketli WebView,
+kimlik/WSS ve süreçler arası dünya eşlemesi ölçülmedi. Cihaz sayıları paketli uygulamadan değil, cihazdaki
+Chromium'dandır.
 
 **Talo'yu ana oynanış sunucusu olarak seçmiyorum.** Gerçek WebSocket/kanal
 özellikleri vardır; fakat araştırılan hazır sözleşme oyun kuralları, tick,
@@ -64,7 +91,8 @@ Kuramsal tartışma yerine hedef yükü taşıyan ayrı bir kanıt oyunu yazıld
 deterministik; konveyör eşyası sabit noktalı, durum düz tiplenmiş dizilerde. Ölçümler Ryzen 5 7235HS
 (4 çekirdek/8 iş parçacığı), 15,7 GB, Node 22.23.1, Windows 11 üzerinde, başka işler (test, kapı)
 çalışırken alındı; güç planı kaydedilmedi. Sayılar bu makineye aittir ve üretim kapasite garantisi
-değildir. Komutlar: `pnpm --filter @volstudio/vol-forge capacity` ve `games/vol-forge/scripts/soak.ts`.
+değildir. Komutlar [VOL.FORGE README'sindedir](../games/vol-forge/README.md) (`capacity`, `loadtest`, `schema-control`,
+`engines`, `device-bench`, `restore-bench`, `soak`).
 
 ### Başsız simülasyon adımı (ağ, disk ve Colyseus yok)
 
@@ -92,6 +120,182 @@ Node/TypeScript için sorun değildir. Tek dünyada 33,3 ms bütçenin ~60 katı
 (3 bin bant) altındayız. Aynı iş parçacığına 20 yoğun dünya yüklenince marj ~2,3 kata düşer ve 60 Hz
 bütçesi aşılır: yoğun 20 dünya tek süreçte değil, çekirdek başına süreç/işçi olarak dağıtılmalıdır.
 Seçim kararı bu yüzden simülasyon maliyetine değil, çoğaltma, dayanıklılık ve işletim sorularına bağlıdır.
+
+### Tam yığın: ayrı süreçlerde sunucu ve gerçek WebSocket botları
+
+`games/vol-forge/scripts/loadtest.ts` gerçek `games/vol-forge/server/index.ts`'i ayrı süreçlerde başlatır; botlar aynı makineden
+gerçek WebSocket ile bağlanır (dünya başına 12 oyuncu, her biri saniyede yaklaşık 2 komut;
+komutların çoğu rastgele konumda olduğu için sunucu reddeder). Sayılar sunucunun kendi `/metrics`
+çıktısından okunur; bot CPU'su aynı makineyi paylaştığı için sayılar temkinlidir. Her koşu 8 sn
+ısınma sonrası 40 sn ölçüm. Ağ döngü içidir (loopback): gerçek ağ gecikmesi ve kaybı yoktur.
+
+Tek dünya, 12 oyuncu:
+
+| Senaryo                            | Hz (en az) | Adım p99 | Çıkış KB/sn/istemci | CPU (çekirdek) | RSS    | Ack p50 / p99 / maks (ms) |
+| ---------------------------------- | ---------- | -------- | ------------------- | -------------- | ------ | ------------------------- |
+| Kilit adım, 8.000 bant, 400 birim  | 30,04      | 4,63 ms  | 0,19                | 0,05           | 81 MB  | 44,5 / 52,9 / 54,5        |
+| Kilit adım, 21.000 bant, 600 birim | 30,04      | 4,47 ms  | 0,20                | 0,06           | 71 MB  | 46,8 / 53,2 / 62,9        |
+| İlgi alanı, dağınık, 8.000 bant    | 30,02      | 4,30 ms  | 48,6                | 0,07           | 113 MB | 48,9 / 54,7 / 69,1        |
+| İlgi alanı, çekirdekte, 8.000 bant | 30,03      | 4,30 ms  | 100,8               | 0,08           | 101 MB | 48,1 / 53,2 / 63,0        |
+
+20 dünya × 12 oyuncu = 240 bağlantı:
+
+| Senaryo                                        | Hz (en az) | Adım p99 | Olay döngüsü p99 | Çıkış KB/sn/istemci | CPU / süreç (çekirdek) | RSS / süreç | Ack p50 / p99 / maks (ms) |
+| ---------------------------------------------- | ---------- | -------- | ---------------- | ------------------- | ---------------------- | ----------- | ------------------------- |
+| Kilit adım, 3.000 bant, 150 birim, **1 süreç** | 29,99      | 3,75 ms  | 34,0 ms          | 0,19                | 0,36                   | 179 MB      | 57,4 / 111,9 / 645        |
+| Kilit adım, 3.000 bant, 150 birim, 4 süreç     | 29,99      | 4,54 ms  | 18,3 ms          | 0,19                | 0,12–0,13              | 110–182 MB  | 48,9 / 63,1 / 90,0        |
+| Kilit adım, 8.000 bant, 400 birim, 4 süreç     | 29,99      | 4,76 ms  | 18,7 ms          | 0,19                | 0,15–0,16              | 108–114 MB  | 49,9 / 64,2 / 104,3       |
+| İlgi alanı, 3.000 bant, 150 birim, 4 süreç     | 30,00      | 4,23 ms  | 21,3 ms          | 20,8                | 0,18                   | 118–124 MB  | 52,1 / 64,0 / 111,5       |
+
+"Adım p99" bir adımın bütünüdür: komut, simülasyon, kodlama ve gönderim. Adımlar arası p99 48–57 ms,
+maks. 50–110 ms görünür; bunun nedeni Windows zamanlayıcı çözünürlüğüdür (yaklaşık 15,6 ms), ortalama
+hız her dünyada 30,0 Hz'dir ve bu tablolardaki koşularda hiçbir dünya 29,99 Hz'in altına düşmedi. Bot hatası 0,
+ölçüm sonunda bütün oyuncular bağlıydı, hız sınırı aşımı 0, geri basınç atlaması 0, dünya hatası (`fault`) 0.
+
+- **Sunucu CPU'su küçüktür.** 20 dünya dört süreçte toplam yaklaşık 0,5–0,7 çekirdek tutar. Ryzen 5 7235HS
+  (8 iş parçacığı) üzerinde 8.000 bantlı 20 dünya, bot CPU'su dahil aynı makinede sorunsuz koştu.
+- **Süreç başına 5 dünya makul görünür; 20 dünya tek süreçte ortalamayı korur ama kuyrukları bozar**
+  (olay döngüsü p99 34 ms, ack maks. 645 ms). Dünya sayısı CPU'dan çok kuyruk gecikmesiyle sınırlanır.
+- **Ack gecikmesi p50 45–57 ms, p99 53–64 ms** (tek süreçte 20 dünyada p99 112 ms). Bileşenlerine
+  (Windows zamanlayıcı çözünürlüğü, günlüğün grup yazımı, adım aralığı) ayrılmadı. Loopback'te ağ
+  gecikmesi yoktur; gerçek ağda üstüne eklenir.
+- **Günlük:** kilit adımlı koşuda dünya başına yaklaşık 11–13 fsync/sn (tek dünya 11,4; 20 dünyada toplam 259),
+  en uzun fsync 4–23 ms (Windows/NTFS). Bu sayılar günlük sayaçlarının kontrol noktalarında sıfırlanmadığı
+  yeniden koşulardan gelir (aynı 8.000 bantlı senaryolar: Hz 30,01–30,03, adım p99 3,9–4,9 ms, ack p99 54–61 ms,
+  sapmasız karma denetimi); ilk koşulardaki günlük sayaçları dosya başına sıfırlandığı için kullanılmaz.
+  Anlık görüntü 1,5 MB ham; serileştirme ana iş parçacığını 4–8,6 ms tutar.
+- **Katılım:** anlık görüntü 1,5 MB ham, zlib sonrası 17–26 KB gider.
+
+### Oyuncusuz dünya
+
+Aynı 20 dünya (8.000 bant, 400 birim, dört süreç) **hiç oyuncu bağlanmadan** 120 sn işletildi: her dünya
+30,00 Hz'de kaldı, süreç başına 0,08–0,09 çekirdek (toplam yaklaşık 0,34), RSS 81–86 MB, adım p99 3,7 ms (yalnız
+simülasyon p99 1,1 ms), olay döngüsü p99 19,7 ms. Her dünya 30 sn'de bir anlık görüntü aldı (120 sn'de 80 adet) ve
+saniyede yaklaşık bir kalp atışı yazdı (toplam 20 fsync/sn, en uzun 9 ms). Dünya oyuncu yokken de işler ve yazar;
+oyuncu bağlanınca CPU yaklaşık ikiye katlanır (aynı senaryo 12 oyuncuyla 0,16–0,17 çekirdek/süreç).
+
+### Eşitleme biçimi: kilit adım, ilgi alanı ve Colyseus Schema
+
+Aynı dünya üç yolla çoğaltıldı. Egress (sunucudan istemciye yük baytı, WebSocket başlığı hariç):
+
+| Yol                                                                      | KB/sn/istemci | 12 oyunculu dünya, Mbit/sn | Not                                                           |
+| ------------------------------------------------------------------------ | ------------- | -------------------------- | ------------------------------------------------------------- |
+| Kilit adım (komut + adım işareti + 5 sn'de bir karma)                    | 0,19–0,20     | 0,018                      | Bant sayısından bağımsız (8 bin ve 21 bin bantta aynı)        |
+| Özel ikili ilgi alanı çerçevesi, dağınık bakış                           | 48,6          | 4,8                        | 8.000 bant, 400 birim                                         |
+| Özel ikili ilgi alanı çerçevesi, herkes çekirdekte                       | 100,8         | 9,9                        | Aynı bölgeyi 12 istemci izler                                 |
+| Özel ikili ilgi alanı, 20 dünya, 3.000 bant                              | 20,8          | 2,0                        | Dünya başına, 240 bağlantı                                    |
+| Colyseus `Schema` + `StateView` (kontrol), aynı ilgi alanı sınırı, 15 Hz | 38,7          | 3,8                        | 8.000 bant, 408 birim, dağınık bakış; yalnız sunucu kodlaması |
+
+Colyseus `Schema` kontrolü (`games/vol-forge/scripts/schema-control.ts`) aynı dünyayı aynı rastgele ilgi alanı sınırıyla (8×6 chunk)
+`StateView` üzerinden eşitler: bant başına ve birim başına birer şema düğümü, 15 Hz yama. İstemci başına 38,7 KB/sn,
+katılımda görünüm başına 39,6 KB. Sunucunun ana iş parçacığında şemayı simülasyondan güncellemek adım başına
+ortalama 1,63 ms (p99 7,2 ms), kodlama yama başına ortalama 0,64 ms (p99 2,0 ms, en çok 36 ms) tuttu. **Sınırlar:**
+yalnız sunucu tarafı kodlama ölçüldü (istemci kod çözümü ve ağ yok); basit bir şema modeli kullanıldı, chunk başına
+paketlenmiş bayt dizisi gibi daha akıllı bir şema bu sayıları değiştirebilir. **Çıkarım:** Schema, özel ilgi alanı
+çerçevesinden kötü değildir; fakat bu yükte durum çoğaltmanın her biçimi (Schema 38,7; özel 20–100 KB/sn)
+kilit adımdan yaklaşık 100–500 kat fazla bayt taşır.
+
+Kilit adımın bedelleri: her istemci simülasyonu kendisi koşturur (aşağıda cihaz maliyeti), her istemci
+bütün dünyayı bilir (**savaş sisi ve gizli bilgi yoktur**), determinizm bozulursa istemci ayrışır
+(karma denetimi ve yeniden eşitleme bunu yakalar ve onarır) ve geç katılan bir anlık görüntü alır.
+İlgi alanı yolu bu yüzden silinmedi: gizli bilgi gereken PvP için ayrılmış yoldur, ancak istemci
+arayüzü onu desteklemez.
+
+### Dayanıklılık ve çökme kurtarma
+
+- **`kill -9` sınaması** (`games/vol-forge/tests/server/crash.test.ts`): gerçek sunucu süreci üç döngüde rastgele bir anda
+  `SIGKILL` ile öldürülür (anlık görüntü her 60 adımda, öldürme anı sıklıkla anlık görüntü ve günlük
+  değişimine denk gelir). Her açılışta önceki döngülerde onaylanan her komut ayakta, oyuncunun son sırası
+  korunmuş, günlük tekrarında karma sapması 0.
+- **Ack kalıcılıktan sonra gider**: günlük kaydı `fsync` ile kalıcı olunca. Süreç ölümünde onaylanmış komut
+  kaybolmaz. **İşletim sistemi çökmesi ya da güç kesintisi altında bu doğrulanmadı**: test süreci
+  öldürür, diski değil.
+- **Yeniden yükleme süresi** (`games/vol-forge/scripts/restore-bench.ts`): 8.000 bantlı, 400 birimli dünya 70 sn komut aldı
+  (300 deneme, 113 kabul), süreç `SIGKILL` ile öldürüldü. Yeniden başlatmada sunucu 1.800. adımdaki anlık
+  görüntüyü yükledi, 44 komutu ve 301 adımı tekrar etti, karma sapması 0, yükleme 103 ms; süreç başlangıcından
+  "hazır"a 685 ms (Node ve tsx başlangıcı dahil). Dünya zamanı öldürme anının 7 adım (0,23 sn) gerisinden devam
+  etti: kayıp yalnız son kayıttan sonraki, komutsuz adımlardır; onaylanan komut kaybolmaz. Bu, süreç ölümü
+  için kurtarma süresidir; disk ya da makine kaybı için değildir.
+- **Yeniden eşitleme**: istemci karma sapmasını saptayınca yeni anlık görüntü ister ve kendini onarır
+  (`games/vol-forge/tests/server/room.test.ts`, gerçek WebSocket); aşırı sık istek anlık görüntü getirmez ve sayılır.
+  Kopan istemci aynı oturum anahtarıyla yeniden bağlanıp yeniden eşitlenir.
+- **Tek yazıcı ve hata**: dünya dizini bir yazıcı kilidiyle korunur, her açılış yeni bir `epoch` alır;
+  günlük yazımı hata verirse dünya salt okunur olur.
+
+### Motorlar ve cihazlar arasında determinizm
+
+Kilit adım, simülasyonun sunucuda (Node/V8) ve her istemci motorunda bit bit aynı çıkmasına dayanır.
+Aynı üç senaryo (64×64 / 500 bant / 6.000 adım; 128×128 / 3.000 bant / 3.000 adım; 256×256 / 12.000 bant /
+1.500 adım; periyodik durum karması) her motorda koşturulup Node referansıyla karşılaştırıldı:
+
+| Ortam                                                    | Motor / mimari      | Karmalar Node ile aynı mı |
+| -------------------------------------------------------- | ------------------- | ------------------------- |
+| Node 22 (Windows, x64)                                   | V8, referans        | referans                  |
+| Chromium 151, Windows (Playwright)                       | V8, x64             | evet (3/3)                |
+| Playwright WebKit 26.5, Windows (Safari/WebKitGTK değil) | JavaScriptCore, x64 | evet (3/3)                |
+| Android 14 tablet, Chrome 154 (Mali-G57, ARM64)          | V8, **ARM64**       | evet (3/3)                |
+| Steam Deck, Chrome 153 (SteamOS, x86_64, Vulkan RADV)    | V8, Linux x64       | evet (3/3)                |
+
+Sonuç yalnız bu üç senaryo ve bu motorlar içindir; durum değiştiren kodda `Math.sqrt` dışında
+`Math` işlevi kullanılmaması bu eşitliğin koşuludur. **WebKitGTK (Steam Deck'te paketli kabuğun
+motoru) ve paketli WebView2/Android WebView ölçülmedi**; Deck'teki Chrome, Deck'in WebKitGTK'sı
+değildir.
+
+Tek simülasyon adımının ortalama maliyeti (adım başına ms; 21.000 bant 608 birim / 8.000 bant 408 birim /
+3.000 bant 150 birim; bütçe 33,3 ms):
+
+| Ortam                             | 21.000 bant | 8.000 bant | 3.000 bant |
+| --------------------------------- | ----------- | ---------- | ---------- |
+| Dizüstü, Chromium 151 (headless)  | 0,43        | 0,17       | 0,08       |
+| Steam Deck, Chrome 153 (headless) | 0,63        | 0,26       | 0,14       |
+| Android tablet, Chrome 154        | 0,96        | 0,40       | 0,22       |
+
+En yoğun senaryoda bile bir adım bütçenin yaklaşık %1,3–2,9'udur.
+
+### İstemci uygulaması gerçek cihazlarda (tarayıcı motoru)
+
+Gerçek istemci (Phaser, CORE arayüzü, kilit adımlı oturum) gerçek sunucuya bağlanıp 8.000 bantlı,
+400 birimli dünyada koşturuldu; sayılar uygulamanın kendi HUD ölçümlerinden (`data-*`) okundu.
+**Paketli Tauri uygulaması değil, cihazdaki Chrome'dur.**
+
+| Ortam                                       | Süre | Kare hızı | Kare p99 | Adım p50 / p99 | Karma denetimi | Yeniden eşitleme |
+| ------------------------------------------- | ---- | --------- | -------- | -------------- | -------------- | ---------------- |
+| Android tablet, Chrome 154 (Mali-G57)       | 5 dk | 59,9–60,6 | 17,5 ms  | 0,8 / 1,4 ms   | 60             | 0                |
+| Steam Deck, Chrome 153 (başsız, ekran dışı) | 1 dk | 60,0–60,3 | 16,7 ms  | 0,5 / 0,7 ms   | 12             | 0                |
+
+Adım p99 sütunu pencere ortancasıdır; katılımdaki yetişme ilk örnekte p99'u yükseltti (tablet 6,6 ms,
+Deck 3,3 ms) ve sonra düştü. Tablet ve Deck aynı anda aynı dünyada iki oyuncu olarak bulundu (ARM64 ve x86_64), sapma olmadı. Tablette
+dokunmatik yerleştirme (araç seçimi + tuvale dokunuş; **gerçek parmak değil, DevTools dokunma olayı**) sunucuya
+ulaştı ve bir denemede kabul edildi, öteki denemeler reddedildi (neden kaydedilmedi). Ekran görüntüleri
+çizimin doğru olduğunu gösterdi. **Deck satırı başsız (ekran dışı) Chrome'dur:** Vulkan GPU görünür ama
+Gamescope, gerçek ekran ve girdi yoktur; kare hızı Deck ekranının ölçümü değildir, simülasyon maliyeti ve
+determinizm ise geçerlidir. Tabletin pil sıcaklığı 5 dakikalık
+oturumda 29,4 → 30,0 °C oldu; kısıtlama gözlenmedi (cihaz şarj ediliyordu, bu kısa oturum sürekli yük
+kabulü değildir).
+
+Dizüstündeki başsız Chromium'da kare hızı 26–29, başsız WebKit'te 40 çıktı; boş dünyada da aynıdır, yani dünya
+yoğunluğundan değil başsız yazılım çizimden gelir ve cihaz kare hızı olarak yorumlanmaz.
+
+### Uzun koşu (45 dakika)
+
+20 dünya × 12 bot, 8.000 bant, 400 birim, dört süreç, 2.700 sn (81.000 adım), dakikada bir pencere örneği:
+
+| Ölçü                                                          | Sonuç                                                                                                                            |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Adım hızı                                                     | en kötü dünya 30,00 Hz; pencere en düşüğü 29,98 Hz                                                                               |
+| Adım p99 (komut+sim+kodlama+gönderim)                         | 4,0 ms (pencere en kötüsü 5,1); olay döngüsü p99 en kötü 5 sn penceresi 27,9 ms                                                  |
+| Ack gecikmesi                                                 | p50 49 ms, pencere p99 58–68 ms, tüm koşunun en büyüğü 304 ms (yaklaşık 1,27 milyon ack içinde)                                  |
+| Bağlantı ve hata                                              | 240 oyuncu baştan sona bağlı, bot hatası 0, dünya hatası 0, hız sınırı 0, geri basınç 0                                          |
+| Komut                                                         | 179.254 kabul, 1.087.276 red (botlar çoğunlukla dolu karoya yazar)                                                               |
+| Anlık görüntü                                                 | 1.800 adet (dünya başına 30 sn'de bir), serileştirme en çok 8,6 ms                                                               |
+| Veri dizini                                                   | 61,4 MB, 45 dakika boyunca değişmedi (günlük ve eski anlık görüntü budanıyor)                                                    |
+| Bellek (süreç başına)                                         | RSS pencere aralığı 84–124 MB; ilk 10 pencere ortalaması 106–115 MB, son 10 pencere 113–118 MB; yığın 24–29 MB, 0,1–0,8 MB artış |
+| Doğrulama botları (aynı simülasyonu istemcide koşturan 2 bot) | 542 karma denetimi sapmasız, gecikme 2 adım                                                                                      |
+
+Doğrulama botlarının 542 karma denetimi, sunucu ile istemci simülasyonunun 81.000 adım boyunca yük altında aynı
+kaldığının en uzun kanıtıdır (aynı makine, aynı motor). **Sınırlar:** 45 dakika 24–72 saatlik kabulün yerine geçmez;
+yığındaki 1 MB altı artış ölçüm gürültüsüdür ama saatte birkaç MB'lık yavaş bir sızıntıyı dışlamaz. Koşu Windows'ta,
+aynı makinedeki botlarla yapıldı.
 
 ## 12 Ekim 2026 ikinci tur: kaynak, uygulama ve maliyet kararı
 
@@ -131,15 +335,15 @@ edilebiliyor. Mindustry'yi mutlak otorite/anti-cheat referansı saymak hatalı.
 
 ### Alternatifler: yeni gereksinime göre
 
-| Çözüm                                    | Buradaki avantaj                                                                               | Maliyet ve tasarım sakıncası                                                                                            | Şu anki karar                                                |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| **Colyseus 0.18 OSS**                    | Saf TS/Node `Simulation`, odalar, schema delta, bağlantı, MTI testleri, kendin barındırma      | Büyük chunk'ı kendisi optimize etmez, 1 room tek JS olay döngüsü, SDK WebKit constructor sorunu                         | **İlk dikey dilim**; son karar yük testine bağlı             |
-| **Kendi ws/uWebSockets protokolümüz**    | Paket formatını/tick/interest'i bütünüyle yönetiriz, ek hosting lisansı yok                    | Reconnect, auth, prediction, snapshot diff, hile sınırı, codec/migration, gözlem ve bakımın tamamı bize ait             | Colyseus transport/codec ölçümü dar boğaz kanıtlarsa         |
-| **Colyseus uWebSockets transport**       | Aynı room/sim üzerinde daha ucuz taşıma adayı, az geçiş maliyeti                               | Codec ve sim CPU sorunlarını çözmez; native TLS/perf testi gerekir                                                      | Özel ağ yığını yazmadan önce A/B testi                       |
-| **SpacetimeDB 2 TypeScript**             | Kalıcılığı ve tablo aboneliğini framework'ün merkezine alır, artık TS server reducer destekler | Reducer/DB-first world mimarisi için simülasyon refaktörü, BSL 1.1 lisans incelemesi ve TeV bazlı veri trafiği faturası | Küçük fabrika reducer deneyiyle açık rakip                   |
-| **Nakama OSS**                           | Auth, sosyal, sıralama, oturumlar ve server framework                                          | TS runtime Goja/ES5 sandbox; mevcut Node/ES2022 `Simulation`ı doğrudan çalıştıramaz; ek Node gameplay sunucusu gerekir  | İleride hesap/sosyal katman adayı                            |
-| **PartyServer/Cloudflare DO**            | Coğrafi yakınlık, stateful actor modeli, entegre edge operasyonu                               | Isolate sınırları, sürekli 60Hz dünya ve büyük RAM yükü, hibernation etkileşimi; hosted PartyKit Ekim 2026 kapanıyor    | Küçük asenkron oda için ayrı deney, bu dünya için önce değil |
-| **Godot dedicated server/Photon Fusion** | Engine'de ayrı multiplayer ekosistemleri                                                       | Phaser/CORE TS simülasyonu yeniden yazılır; Fusion Unity odaklıdır                                                      | Mevcut repo için ekonomik değil                              |
+| Çözüm                                    | Buradaki avantaj                                                                               | Maliyet ve tasarım sakıncası                                                                                                             | Şu anki karar                                                |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Colyseus 0.18 OSS**                    | Saf TS/Node `Simulation`, odalar, schema delta, bağlantı, MTI testleri, kendin barındırma      | Büyük chunk'ı kendisi optimize etmez, 1 room tek JS olay döngüsü, SDK WebKit constructor sorunu (VOL.FORGE'da dar sarmalayıcıyla aşıldı) | **İlk dikey dilim**; son karar yük testine bağlı             |
+| **Kendi ws/uWebSockets protokolümüz**    | Paket formatını/tick/interest'i bütünüyle yönetiriz, ek hosting lisansı yok                    | Reconnect, auth, prediction, snapshot diff, hile sınırı, codec/migration, gözlem ve bakımın tamamı bize ait                              | Colyseus transport/codec ölçümü dar boğaz kanıtlarsa         |
+| **Colyseus uWebSockets transport**       | Aynı room/sim üzerinde daha ucuz taşıma adayı, az geçiş maliyeti                               | Codec ve sim CPU sorunlarını çözmez; native TLS/perf testi gerekir                                                                       | Özel ağ yığını yazmadan önce A/B testi                       |
+| **SpacetimeDB 2 TypeScript**             | Kalıcılığı ve tablo aboneliğini framework'ün merkezine alır, artık TS server reducer destekler | Reducer/DB-first world mimarisi için simülasyon refaktörü, BSL 1.1 lisans incelemesi ve TeV bazlı veri trafiği faturası                  | Küçük fabrika reducer deneyiyle açık rakip                   |
+| **Nakama OSS**                           | Auth, sosyal, sıralama, oturumlar ve server framework                                          | TS runtime Goja/ES5 sandbox; mevcut Node/ES2022 `Simulation`ı doğrudan çalıştıramaz; ek Node gameplay sunucusu gerekir                   | İleride hesap/sosyal katman adayı                            |
+| **PartyServer/Cloudflare DO**            | Coğrafi yakınlık, stateful actor modeli, entegre edge operasyonu                               | Isolate sınırları, sürekli 60Hz dünya ve büyük RAM yükü, hibernation etkileşimi; hosted PartyKit Ekim 2026 kapanıyor                     | Küçük asenkron oda için ayrı deney, bu dünya için önce değil |
+| **Godot dedicated server/Photon Fusion** | Engine'de ayrı multiplayer ekosistemleri                                                       | Phaser/CORE TS simülasyonu yeniden yazılır; Fusion Unity odaklıdır                                                                       | Mevcut repo için ekonomik değil                              |
 
 [Colyseus optimizasyon](https://docs.colyseus.io/state/optimization),
 [Colyseus uWS](https://docs.colyseus.io/server/transport/uwebsockets),
@@ -251,7 +455,8 @@ tanımlamak gerekir. Üretim çözümü: dünya başına **tek writer ve lease/f
 tekil komut ID/idempotent ledger; checkpoint'te entity ID, RNG, tick,
 cooldown, fabrika ağı, inventory ve chunk revisions; journal işlemine
 kalıcı fsync/transaction olmadan ACK gönderilmez. PostgreSQL aday,
-snapshot/yedek nesne deposu ayrıdır. Şimdiki RAM odası bunları sunmaz.
+snapshot/yedek nesne deposu ayrıdır. VOL.TEST'in RAM odası bunları sunmaz; VOL.FORGE odası
+tek yazıcı kilidi, anlık görüntü + günlük ve kalıcılıktan sonra ack sunar (13 Ekim bölümü).
 
 Ölçüm kapısı: 1/5/20 dünya × 8/12/14 gerçek client, farklı 30/60Hz
 sim ve 10/20Hz patch, 0,25/1/4kB payload ve 0/25/100% world aktivitesi.
@@ -439,7 +644,12 @@ kontrolü de bağlandı fakat aynı kayıt kaldı. Bütün kontrollerde
 oyun simülasyonundan gelmediğini doğruluyor; hatayı sessizce filtrelemedik
 ve SDK'yı monkeypatch etmedik.
 
-Sonuç: **WebKit oynanış geçti, temiz browser kabulü geçmedi.** Bilinen
+13 Ekim güncellemesi: VOL.FORGE istemcisi bu sorunu dar bir sarmalayıcıyla aşar
+(`games/vol-forge/src/net/webSocketShim.ts`): SDK `WebSocket`i modül yüklenirken önbelleğe aldığı için sarmalayıcı
+`main.ts`in ilk import'udur ve Node imzasındaki seçenek nesnesini tarayıcı imzasına çevirir.
+Chromium ve WebKit e2e'de `pageerror` yoktur. Upstream düzeltilmedi; paketli WebKitGTK ayrıca sınanmalıdır.
+
+Sonuç (12 Ekim): **WebKit oynanış geçti, temiz browser kabulü geçmedi.** Bilinen
 resmî issue/düzeltme doğrulanmadı. İlgili constructor akışı upstream
 düzeltilmeli veya sürüme bağlı, repo yama politikasına uygun dar düzeltme
 gerçek regresyonuyla kabul edilmeli; paketli WebKitGTK/Deck ayrıca sınanmalı.
@@ -669,11 +879,15 @@ Bu inceleme mevcut master kaynak gözlemidir; onların kapasitesi veya tüm
 hile sınırları bizim ürüne aktarılmaz.
 [Mindustry NetServer](https://raw.githubusercontent.com/Anuken/Mindustry/master/core/src/mindustry/core/NetServer.java).
 
-Lockstep az komutla bant genişliğini düşürebilir, ancak cross-engine
-determinism, geç katılım baseline'ı ve yavaş/kopan oyuncu kararlarını
-gerektirir. Repodaki aynı Node motorunda seed eşitliği bu şartların
-tamamını kanıtlamaz. İlk üründe tüm fabrikanın client lockstep'ini
-zorunlu kılmadan otoriter snapshot/delta yaklaşımını öneriyorum.
+Lockstep az komutla bant genişliğini düşürür, ancak cross-engine determinism,
+geç katılım baseline'ı, yavaş/kopan oyuncu ve sürüm uyumu kararlarını gerektirir.
+VOL.FORGE bunların bir kısmını ölçtü (13 Ekim bölümü): aynı üç senaryo Node,
+Chromium, WebKit (Playwright, Windows), Android ARM64 Chrome ve Linux x64 Chrome'da
+aynı karmayı verdi; geç katılım 17–26 KB'lık sıkıştırılmış anlık görüntüyle
+çözüldü; sapma karma denetimiyle yakalanıp yeniden eşitlemeyle onarıldı. Çözülmeyen:
+gizli bilgi (savaş sisi, PvP), canlı sürüm geçişi ve WebKitGTK. **Öneri:** sis gerektirmeyen
+co-op/PvE'de kilit adım; sis veya gizli bilgi gereken PvP'de sunucu otoriteli ilgi alanı
+eşitlemesi (VOL.FORGE `aoi` yolu bunun ölçüm iskeletidir, 20–100 KB/sn/istemci).
 
 ### Bullet hell ve mini MOBA
 

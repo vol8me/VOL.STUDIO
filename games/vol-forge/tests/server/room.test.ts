@@ -12,13 +12,14 @@ import {
   TO_CLIENT,
   TO_SERVER,
   WIRE_VERSION,
+  isSimMismatch,
   readAck,
   readWelcome,
   type Ack,
 } from '../../src/net/protocol';
 import type { ForgeSession } from '../../src/net/session';
 import { COMMAND, RESULT, writeCommand, type ForgeCommand } from '../../src/sim/commands';
-import { KIND } from '../../src/config/forge';
+import { KIND, SIM_VERSION } from '../../src/config/forge';
 import { startTestForge, until, type TestForge } from '../helpers/server';
 
 let forge: TestForge | undefined;
@@ -100,6 +101,7 @@ describe('dünya yaşam döngüsü', () => {
       worldId: 'test',
       protocol: PROTOCOL_VERSION,
       wire: WIRE_VERSION,
+      sim: SIM_VERSION,
       key: 'player-ok1',
     };
     const endpoint = forge.forge.endpoint;
@@ -110,6 +112,14 @@ describe('dünya yaşam döngüsü', () => {
       new Client(endpoint).join(ROOM_NAME, { ...valid, protocol: 99 }),
     ).rejects.toThrow();
     await expect(new Client(endpoint).join(ROOM_NAME, { ...valid, wire: 99 })).rejects.toThrow();
+    // Simülasyon sürümü uyuşmazlığı ayrı ve tanınır bir hatayla reddedilir (eksik değer de uyuşmazdır).
+    for (const sim of [SIM_VERSION + 1, undefined]) {
+      const error: unknown = await new Client(endpoint).join(ROOM_NAME, { ...valid, sim }).then(
+        () => null,
+        (reason: unknown) => reason,
+      );
+      expect(isSimMismatch(error)).toBe(true);
+    }
     await expect(new Client(endpoint).join(ROOM_NAME, { ...valid, key: 'kısa' })).rejects.toThrow();
     await expect(
       new Client(endpoint).join(ROOM_NAME, { ...valid, key: 'a/b/c/d/e/f' }),

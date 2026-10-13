@@ -164,7 +164,7 @@
     }
   },
   "bundles": {
-    "$comment": "Gzip level 9. 2026-10-12 B36 sağlamlaştırması: aynı app grafiğinde yalnız cursorData modülü HEAD sürümüyle build-load hookunda karşılaştırıldı (kaynak dosyası değişmedi). Eski doğrulayıcıyla app 232502 B, tam katalog/set/hotspot/yol doğrulamasıyla 232649 B: ek maliyet 147 B. Okunabilir sadeleştirme önceki 232708 B çıktısını 59 B azalttı. Vitrin app bütçesi yalnız ölçülen 227.2 KiB değeridir (önce 227.1, +0.1 KiB). 12 Ekim VOL.TEST çevrimdışı açılışı korunurken opt-in Colyseus istemci sahnesi/schema/protokol dinamik chunk eklendi: yeniden üretilebilir pnpm --filter @volstudio/vol-test build ardından bundleSize.mjs ölçümü oyun app 183.7 / vendor 345.6 / css 28.2 KiB gzip. Önceki oyun app bütçesi 128.9 KiB idi; yaklaşık +54.8 KiB oyun JS kabulü yalnız yeni 2 WebKit/Chromium E2E + Windows native online prototip içindir. Phaser vendor veya CSS bütçesi artırılmadı, yeni kod vendor diye gizlenmedi. Genel bütçe işi TODO.md F10.13 sahibindedir; eski ayrıntı docs/monorepo-audit.md §27'dedir. VOL.FORGE kilit adımlı Phaser istemcisi (CORE Input/Button/BuildMenu/Toast ile): ölçülen app 113.3 / vendor 345.6 / css 27.7 KiB gzip; css artışı CORE UI stil kümesinin (VOL.TEST ile aynı küme) ilk kez yüklenmesindendir, vendor değişmedi.",
+    "$comment": "Gzip level 9. 2026-10-12 B36 sağlamlaştırması: aynı app grafiğinde yalnız cursorData modülü HEAD sürümüyle build-load hookunda karşılaştırıldı (kaynak dosyası değişmedi). Eski doğrulayıcıyla app 232502 B, tam katalog/set/hotspot/yol doğrulamasıyla 232649 B: ek maliyet 147 B. Okunabilir sadeleştirme önceki 232708 B çıktısını 59 B azalttı. Vitrin app bütçesi yalnız ölçülen 227.2 KiB değeridir (önce 227.1, +0.1 KiB). 12 Ekim VOL.TEST çevrimdışı açılışı korunurken opt-in Colyseus istemci sahnesi/schema/protokol dinamik chunk eklendi: yeniden üretilebilir pnpm --filter @volstudio/vol-test build ardından bundleSize.mjs ölçümü oyun app 183.7 / vendor 345.6 / css 28.2 KiB gzip. Önceki oyun app bütçesi 128.9 KiB idi; yaklaşık +54.8 KiB oyun JS kabulü yalnız yeni 2 WebKit/Chromium E2E + Windows native online prototip içindir. Phaser vendor veya CSS bütçesi artırılmadı, yeni kod vendor diye gizlenmedi. Genel bütçe işi TODO.md F10.13 sahibindedir; eski ayrıntı docs/monorepo-audit.md §27'dedir. VOL.FORGE kilit adımlı Phaser istemcisi (CORE Input/Button/BuildMenu/Toast ile): ölçülen app 113.4 / vendor 345.6 / css 27.7 KiB gzip (app +0.1 KiB: katılımda SIM_VERSION denetimi ve uyuşmazlık iletisi); css artışı CORE UI stil kümesinin (VOL.TEST ile aynı küme) ilk kez yüklenmesindendir, vendor değişmedi.",
     "devtools/vol-showcase": {
       "app": 227.2,
       "vendor": 1,
@@ -176,7 +176,7 @@
       "css": 28.3
     },
     "games/vol-forge": {
-      "app": 113.3,
+      "app": 113.4,
       "vendor": 360,
       "css": 27.8
     }

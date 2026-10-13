@@ -160,6 +160,20 @@ function worldFor(seed = 21): ForgeSim {
 }
 
 describe('dünya deposu', () => {
+  it('günlük sayaçları günlük değişimleri boyunca birikir', async () => {
+    const store = new WorldStore(await scratch());
+    await store.acquire();
+    for (let round = 0; round < 3; round++) {
+      const journal = store.rotateJournal(round * 30, 1);
+      journal.append(encodeBeatRecord(round * 30, round));
+      await journal.commit();
+    }
+    expect(store.journalStats.appended).toBe(3);
+    expect(store.journalStats.fsyncs).toBeGreaterThanOrEqual(3);
+    expect(store.journalStats.bytes).toBeGreaterThan(0);
+    await store.release();
+  });
+
   it('boş dizinde yeni dünya kurar', async () => {
     const store = new WorldStore(await scratch());
     await store.acquire();

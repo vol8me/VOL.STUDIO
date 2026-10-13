@@ -18,6 +18,7 @@
     "invalidWorld": "Dünya kimliği küçük harf, rakam, tire ve alt çizgiden oluşmalı.",
     "failed": "Dünyaya bağlanılamadı. Adresi ve dünyanın açık olduğunu denetle.",
     "closed": "Bağlantı kapandı.",
+    "simMismatch": "Bu istemci sunucunun simülasyon sürümüyle uyumsuz; uygulamayı güncelle.",
     "unsupportedMode": "Bu dünya ilgi alanı kipinde çalışıyor; bu istemci yalnız kilit adımlı dünyaları gösterir."
   },
   "status": {

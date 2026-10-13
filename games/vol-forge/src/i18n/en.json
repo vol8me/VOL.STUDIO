@@ -18,6 +18,7 @@
     "invalidWorld": "The world id may only use lowercase letters, digits, dashes and underscores.",
     "failed": "Could not join the world. Check the address and that the world is open.",
     "closed": "The connection closed.",
+    "simMismatch": "This client does not match the server simulation version; update the app.",
     "unsupportedMode": "This world runs in area-of-interest mode; this client only shows lockstep worlds."
   },
   "status": {

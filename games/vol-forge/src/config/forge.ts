@@ -43,6 +43,13 @@ export const WORLD = {
   coreClearRadius: 12,
 } as const;
 
+/**
+ * Simülasyon kuralları sürümü. Kilit adımlı istemci sunucuyla aynı kuralları koşturmak zorundadır; bant
+ * hızı, adım sırası ya da bir sabit değişince artırılır. Sunucu farklı sürümdeki istemciyi katılımda
+ * reddeder: aksi hâlde eski istemci her karma denetiminde ayrışıp sürekli yeni anlık görüntü isterdi.
+ */
+export const SIM_VERSION = 1;
+
 export const SIM = {
   /** Sunucu simülasyon hızı. */
   tickRate: 30,

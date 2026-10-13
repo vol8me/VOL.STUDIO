@@ -12,7 +12,13 @@ import {
 import { join } from 'node:path';
 import { ForgeSim, type ForgeSimOptions } from '@/sim/sim';
 import { SnapshotError } from '@/sim/snapshot';
-import { JournalWriter, readJournal, RECORD, type JournalRecord } from './journal';
+import {
+  emptyJournalStats,
+  JournalWriter,
+  readJournal,
+  RECORD,
+  type JournalRecord,
+} from './journal';
 
 const SNAPSHOT_PATTERN = /^snapshot-(\d{10})\.bin$/;
 const JOURNAL_PATTERN = /^journal-(\d{10})\.log$/;
@@ -83,6 +89,9 @@ export async function renameWithRetry(from: string, to: string, attempts = 6): P
 export class WorldStore {
   private lockHandle: FileHandle | null = null;
   private journal: JournalWriter | null = null;
+
+  /** Günlük sayaçları bu deponun ömrü boyunca birikir: günlük her kontrol noktasında değişir. */
+  readonly journalStats = emptyJournalStats();
 
   constructor(readonly dir: string) {}
 
@@ -274,10 +283,12 @@ export class WorldStore {
    */
   rotateJournal(baseTick: number, epoch: number): JournalWriter {
     const previous = this.journal;
-    const next = JournalWriter.begin(join(this.dir, `journal-${padded(baseTick)}.log`), {
-      baseTick,
-      epoch,
-    });
+    const next = JournalWriter.begin(
+      join(this.dir, `journal-${padded(baseTick)}.log`),
+      { baseTick, epoch },
+      undefined,
+      this.journalStats,
+    );
     this.journal = next;
     void previous?.close().catch(() => undefined);
     return next;

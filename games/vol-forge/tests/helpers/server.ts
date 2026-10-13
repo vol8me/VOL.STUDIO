@@ -6,6 +6,7 @@ import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
 import { ROOM_NAME, type ForgeWorldConfig } from '../../server/ForgeRoom';
 import { startForge, type RunningForge } from '../../server/index';
 import { ForgeSession } from '../../src/net/session';
+import { SIM_VERSION } from '../../src/config/forge';
 import { WIRE_VERSION } from '../../src/net/protocol';
 import { SMALL } from './world';
 
@@ -52,6 +53,7 @@ export async function startTestForge(
         worldId,
         protocol: PROTOCOL_VERSION,
         wire: WIRE_VERSION,
+        sim: SIM_VERSION,
         key,
       });
     },

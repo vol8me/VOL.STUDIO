@@ -10,7 +10,7 @@
  * (ölçüm bu yönde temkinlidir). Telde WebSocket çerçeve başlığı sayılmaz, yük baytı sayılır.
  */
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, rm, stat } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { cpus, tmpdir, totalmem } from 'node:os';
 import { join } from 'node:path';
@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { Client, type Room } from '@colyseus/sdk';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
 import { ByteWriter } from '../src/net/bytes';
-import { NET, WORLD } from '../src/config/forge';
+import { NET, SIM_VERSION, WORLD } from '../src/config/forge';
 import {
   TO_CLIENT,
   TO_SERVER,
@@ -46,6 +46,8 @@ interface Args {
   cmds: number;
   verify: number;
   spread: number;
+  /** Sıfırdan büyükse bu kadar saniyede bir pencere örneği alınır (uzun süreli kararlılık koşusu). */
+  sample: number;
   json: boolean;
 }
 
@@ -65,6 +67,7 @@ function parse(argv: string[]): Args {
     cmds: 2,
     verify: 0,
     spread: 1,
+    sample: 0,
     json: false,
   };
   for (let index = 0; index < argv.length; index++) {
@@ -158,6 +161,9 @@ async function startServer(
 // ---- Botlar ---------------------------------------------------------------------------------
 
 const ackRtt = new Ring(1 << 16);
+/** Uzun koşuda halka son pencereyi tutar; pencere yüzdeliği ve genel azami ayrıca izlenir. */
+let windowAcks: number[] = [];
+let ackMaxAll = 0;
 const botStats = { packets: 0, packetBytes: 0, frames: 0, frameBytes: 0, acks: 0, snapshots: 0 };
 let botErrors = 0;
 
@@ -210,6 +216,7 @@ async function thinBot(endpoint: string, worldId: string, index: number): Promis
     worldId,
     protocol: PROTOCOL_VERSION,
     wire: WIRE_VERSION,
+    sim: SIM_VERSION,
     key: `bot-${worldId}-${index}`,
   });
   rooms.push(room);
@@ -234,7 +241,10 @@ async function thinBot(endpoint: string, worldId: string, index: number): Promis
     const sent = sentAt.get(ack.seq);
     if (sent === undefined) return;
     sentAt.delete(ack.seq);
-    ackRtt.push(performance.now() - sent);
+    const rtt = performance.now() - sent;
+    ackRtt.push(rtt);
+    windowAcks.push(rtt);
+    ackMaxAll = Math.max(ackMaxAll, rtt);
     botStats.acks++;
   });
   room.onError(() => {
@@ -303,6 +313,52 @@ async function sample(instance: Instance): Promise<ProcessMetric> {
   return (await response.json()) as ProcessMetric;
 }
 
+async function directoryBytes(dir: string): Promise<number> {
+  let total = 0;
+  for (const entry of await readdir(dir, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    total += (await stat(join(entry.parentPath, entry.name)).catch(() => ({ size: 0 }))).size;
+  }
+  return total;
+}
+
+interface SoakWindow {
+  readonly atSeconds: number;
+  readonly rssMb: number[];
+  readonly heapMb: number[];
+  readonly cpuCores: number[];
+  readonly hzMin: number;
+  readonly tickMsP99Worst: number;
+  readonly intervalMsP99Worst: number;
+  readonly loopP99Ms: number;
+  readonly ackP99Ms: number;
+  readonly ackMaxMs: number;
+  readonly ackSamples: number;
+  readonly dataMb: number;
+  readonly players: number;
+  readonly faults: number;
+  readonly botErrors: number;
+}
+
+/** En küçük kareler doğrusunun eğimi (birim/saat): sızıntı ya da büyüme eğilimi. */
+function slopePerHour(points: readonly { atSeconds: number; value: number }[]): number {
+  if (points.length < 3) return 0;
+  const n = points.length;
+  const meanX = points.reduce((sum, point) => sum + point.atSeconds, 0) / n;
+  const meanY = points.reduce((sum, point) => sum + point.value, 0) / n;
+  let numerator = 0;
+  let denominator = 0;
+  for (const point of points) {
+    numerator += (point.atSeconds - meanX) * (point.value - meanY);
+    denominator += (point.atSeconds - meanX) ** 2;
+  }
+  return denominator === 0 ? 0 : (numerator / denominator) * 3600;
+}
+
+function windowMean(rows: readonly SoakWindow[], pick: (row: SoakWindow) => number): number {
+  return rows.length === 0 ? 0 : rows.reduce((total, row) => total + pick(row), 0) / rows.length;
+}
+
 const dataDir = await mkdtemp(join(tmpdir(), 'vol-forge-load-'));
 const instances: Instance[] = [];
 let exitCode = 0;
@@ -354,7 +410,63 @@ try {
       for (const one of all) loopSamples.push(one.loop.p99Ms);
     });
   }, 5000);
+  const soakWindows: SoakWindow[] = [];
+  const edgeWindows = () => Math.max(1, Math.min(10, Math.floor(soakWindows.length / 3)));
+  let previous = before;
+  let previousAt = performance.now();
+  const takeWindow = async (): Promise<void> => {
+    const now = performance.now();
+    const current = await Promise.all(instances.map(sample));
+    const seconds = (now - previousAt) / 1000;
+    const priorTicks = new Map(
+      previous.flatMap((one) => one.worlds).map((w) => [w.worldId, w.tick]),
+    );
+    const worldsNow = current.flatMap((one) => one.worlds);
+    const sorted = [...windowAcks].sort((a, b) => a - b);
+    soakWindows.push({
+      atSeconds: (now - startedAt) / 1000,
+      rssMb: current.map((one) => one.memory.rss / 2 ** 20),
+      heapMb: current.map((one) => one.memory.heapUsed / 2 ** 20),
+      cpuCores: current.map(
+        (one, index) =>
+          (one.cpu.user + one.cpu.system - previous[index].cpu.user - previous[index].cpu.system) /
+          1e6 /
+          seconds,
+      ),
+      hzMin: Math.min(
+        ...worldsNow.map((w) => (w.tick - (priorTicks.get(w.worldId) ?? w.tick)) / seconds),
+      ),
+      tickMsP99Worst: Math.max(...worldsNow.map((w) => w.tickMs.p99Ms)),
+      intervalMsP99Worst: Math.max(...worldsNow.map((w) => w.intervalMs.p99Ms)),
+      loopP99Ms: Math.max(...current.map((one) => one.loop.p99Ms)),
+      ackP99Ms: sorted.length
+        ? sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.99))]
+        : 0,
+      ackMaxMs: sorted.length ? sorted[sorted.length - 1] : 0,
+      ackSamples: sorted.length,
+      dataMb: (await directoryBytes(dataDir)) / 2 ** 20,
+      players: worldsNow.reduce((total, w) => total + w.players, 0),
+      faults: worldsNow.filter((w) => w.fault).length,
+      botErrors,
+    });
+    windowAcks = [];
+    previous = current;
+    previousAt = now;
+    if (!args.json) {
+      const row = soakWindows[soakWindows.length - 1];
+      console.log(
+        `[${Math.round(row.atSeconds / 60)} dk] Hz en az ${row.hzMin.toFixed(2)} | adım p99 ${row.tickMsP99Worst.toFixed(2)} ms | ` +
+          `ack p99 ${row.ackP99Ms.toFixed(1)} maks ${row.ackMaxMs.toFixed(0)} ms | RSS ${row.rssMb.map((v) => v.toFixed(0)).join('/')} MB | ` +
+          `veri ${row.dataMb.toFixed(1)} MB | oyuncu ${row.players} hata ${row.faults}/${row.botErrors}`,
+      );
+    }
+  };
+  const windowTimer =
+    args.sample > 0
+      ? setInterval(() => void takeWindow().catch(() => undefined), args.sample * 1000)
+      : null;
   await new Promise((resolve) => setTimeout(resolve, args.seconds * 1000));
+  if (windowTimer) clearInterval(windowTimer);
   clearInterval(timeline);
   const after = await Promise.all(instances.map(sample));
   const elapsed = (performance.now() - startedAt) / 1000;
@@ -441,6 +553,36 @@ try {
       },
       errors: botErrors,
     },
+    soak:
+      soakWindows.length > 0
+        ? {
+            windows: soakWindows,
+            ackMaxAllMs: ackMaxAll,
+            // Ilk ve son pencereler ortalaması: tek pencere gürültüsünden etkilenmez (eğim gürültülüdür).
+            rssMeanFirstMb: instances.map((_, index) =>
+              windowMean(soakWindows.slice(0, edgeWindows()), (row) => row.rssMb[index]),
+            ),
+            rssMeanLastMb: instances.map((_, index) =>
+              windowMean(soakWindows.slice(-edgeWindows()), (row) => row.rssMb[index]),
+            ),
+            heapMeanFirstMb: instances.map((_, index) =>
+              windowMean(soakWindows.slice(0, edgeWindows()), (row) => row.heapMb[index]),
+            ),
+            heapMeanLastMb: instances.map((_, index) =>
+              windowMean(soakWindows.slice(-edgeWindows()), (row) => row.heapMb[index]),
+            ),
+            rssSlopeMbPerHour: instances.map((_, index) =>
+              slopePerHour(
+                soakWindows
+                  .slice(2)
+                  .map((row) => ({ atSeconds: row.atSeconds, value: row.rssMb[index] })),
+              ),
+            ),
+            dataSlopeMbPerHour: slopePerHour(
+              soakWindows.slice(2).map((row) => ({ atSeconds: row.atSeconds, value: row.dataMb })),
+            ),
+          }
+        : null,
     verify: verifySessions.map((session) => ({
       status: session.lockstep.status,
       hashChecks: session.lockstep.metrics.hashChecks,
@@ -486,6 +628,16 @@ try {
         `anlık görüntü ${f(s.snapshotBytes / 1024, 0)} KB, serileştirme en çok ${f(s.snapshotSerializeMsMax)} ms ` +
         `(${s.snapshotsTaken} adet) | geri basınç atlaması ${s.backpressureSkips} | hata ${s.faults}/${summary.clients.errors}`,
     );
+    const soak = summary.soak;
+    if (soak) {
+      const pairs = (first: number[], last: number[], digits: number): string =>
+        first.map((value, index) => `${f(value, digits)}→${f(last[index], digits)}`).join(', ');
+      console.log(
+        `kararlılık: ${soak.windows.length} pencere | RSS ort. ilk→son MB ${pairs(soak.rssMeanFirstMb, soak.rssMeanLastMb, 0)} | ` +
+          `yığın ${pairs(soak.heapMeanFirstMb, soak.heapMeanLastMb, 1)} | ` +
+          `veri eğimi ${f(soak.dataSlopeMbPerHour, 1)} MB/sa | genel ack maks ${f(soak.ackMaxAllMs, 0)} ms`,
+      );
+    }
     for (const verify of summary.verify)
       console.log(
         `doğrulama botu: ${verify.status}, ${verify.hashChecks} karma denetimi, gecikme ${verify.lagTicks} adım`,

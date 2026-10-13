@@ -2,7 +2,7 @@ import { DisposableScope } from '@volstudio/core/lifecycle';
 import { BuildMenu, Button, Input, ToastManager } from '@volstudio/core/ui';
 import { BUILDING } from '@/config/forge';
 import { TOOLS, type ToolId } from '@/config/game';
-import { SYNC_MODE } from '@/net/protocol';
+import { SYNC_MODE, isSimMismatch } from '@/net/protocol';
 import type { ForgeSession, SessionOptions } from '@/net/session';
 import { ForgeController, type HudView, type Notice } from './ForgeController';
 import {
@@ -229,9 +229,9 @@ export class App {
         worldId,
         key: this.deps.settings.key,
       });
-    } catch {
+    } catch (error) {
       this.show('connect');
-      this.setError('connect.failed');
+      this.setError(isSimMismatch(error) ? 'connect.simMismatch' : 'connect.failed');
       return;
     }
     if (this.destroyed) {
