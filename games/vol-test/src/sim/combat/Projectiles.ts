@@ -187,6 +187,31 @@ export class Projectiles {
   }
 
   /**
+   * `owner`ın `(x, y)` noktasına en yakın canlı mermisini, `radius` içindeyse, kaldırır. Mermiye
+   * kimlik verilmez: görünüm modeli sunucunun bildirdiği isabeti/patlamayı, aynı sahibin en yakın
+   * mermisiyle eşleştirir. Kaldırdıysa `true` döner.
+   */
+  retire(owner: EntityId, x: number, y: number, radius: number): boolean {
+    let nearest = -1;
+    let best = radius * radius;
+    for (let index = 0; index < this.live; index++) {
+      const projectile = this.items[index];
+      if (projectile.owner !== owner) continue;
+      const distance = (projectile.x - x) ** 2 + (projectile.y - y) ** 2;
+      if (distance <= best) {
+        best = distance;
+        nearest = index;
+      }
+    }
+    if (nearest < 0) return false;
+    this.live--;
+    const removed = this.items[nearest];
+    this.items[nearest] = this.items[this.live];
+    this.items[this.live] = removed;
+    return true;
+  }
+
+  /**
    * Mermileri ilerletir. Adımın süpürdüğü yol üzerinde bir aracın ayak izine
    * değen mermi isabet eder; dünya duvarını aşan mermi duvarda, ömrü dolan
    * mermi menzil sonunda yerde patlar.

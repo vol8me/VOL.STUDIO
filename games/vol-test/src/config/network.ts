@@ -13,6 +13,8 @@ export const NETWORK = {
    * nominalin dört katıdır, aşan istemci Colyseus tarafından düşürülür.
    */
   maxMessagesPerSecond: 240,
+  /** Geliştirme sunucusu; üretim adresi derleme zamanı `VITE_VOLTEST_SERVER` ile verilir. */
+  defaultEndpoint: 'http://127.0.0.1:2567',
   /** Ad vermeyen oyuncuya atanan ad; araç numarası eklenir. */
   fallbackName: 'Pilot',
   /** Doğma yuvalarının dünya merkezine uzaklığı. */

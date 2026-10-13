@@ -15,6 +15,33 @@ export function aimAligned(vehicle: Vehicle, command: TankCommand): boolean {
   );
 }
 
+/** Atış anında mermiyi belirleyen değerler: namlu ucu, ilk hız ve yön. */
+export interface Launch {
+  readonly x: number;
+  readonly y: number;
+  readonly vx: number;
+  readonly vy: number;
+  readonly angle: number;
+}
+
+/**
+ * Mermi namlu ucundan tankın hızını devralarak çıkar. Geri tepme mermi doğduktan SONRA
+ * uygulanır; bu yüzden çağrı `applyRecoil`den önce yapılmalıdır.
+ */
+export function muzzleLaunch(vehicle: Vehicle): Launch {
+  const tank = vehicle.tank;
+  const weapon = vehicle.weapon;
+  const dirX = Math.cos(tank.turret);
+  const dirY = Math.sin(tank.turret);
+  return {
+    x: tank.x + dirX * weapon.muzzleOffset,
+    y: tank.y + dirY * weapon.muzzleOffset,
+    vx: dirX * weapon.projectileSpeed + tank.vx,
+    vy: dirY * weapon.projectileSpeed + tank.vy,
+    angle: tank.turret,
+  };
+}
+
 /**
  * Atışın tanka geri tepmesi: ters yönde itki ve süspansiyon vuruşu (yandan ateş yalpa yapar).
  * Mermi tankın hızını devralarak çıkar; bu çağrı mermi doğduktan SONRA yapılmalıdır.
@@ -37,13 +64,15 @@ export function applyRecoil(vehicle: Vehicle): void {
  * Tek aracın komutla sürülen adımı: `Simulation.step`in bu araç için yaptığı iş, araç teması ve
  * mermi çözümü olmadan. İstemci öngörüsü ve yeniden oynatma bunu çağırır; sunucuda aynı
  * adımın parçaları `Simulation` içinde bu işlevlerle ortaktır. Mermiyi sunucu doğurur, burada yalnız
- * tankın tepkisi uygulanır. Ateş edildiyse `true` döner.
+ * tankın tepkisi uygulanır; `onLaunch` varsa atışın değerlerini geri tepmeden önce alır (istemci
+ * kendi mermisini görsel olarak aynı değerlerle uçurur). Ateş edildiyse `true` döner.
  */
 export function stepPredictedVehicle(
   vehicle: Vehicle,
   command: TankCommand,
   world: World,
   stepMs: number,
+  onLaunch?: (launch: Launch) => void,
 ): boolean {
   const tank = vehicle.tank;
   tank.capturePose();
@@ -51,6 +80,7 @@ export function stepPredictedVehicle(
   tank.step(command, world, stepMs / 1000);
   vehicle.gun.update(stepMs);
   if (command.fire && aimAligned(vehicle, command) && vehicle.gun.tryTrigger()) {
+    onLaunch?.(muzzleLaunch(vehicle));
     applyRecoil(vehicle);
     return true;
   }

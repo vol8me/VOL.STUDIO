@@ -37,7 +37,7 @@ afterEach(() => {
 describe('routeSimEvents', () => {
   it('oyuncunun atışı: namlu, küçük kamera itmesi ve titreşim; sarsıntı YOK', () => {
     const t = targets();
-    routeSimEvents([{ kind: 'fired', source: PLAYER, x: 1, y: 2, angle: 0.5 }], t);
+    routeSimEvents([{ kind: 'fired', source: PLAYER, x: 1, y: 2, angle: 0.5, vx: 0, vy: 0 }], t);
     expect(t.fire[PLAYER]).toHaveBeenCalled();
     expect(t.effects.muzzle).toHaveBeenCalledWith(1, 2, 0.5);
     expect(t.camera.kick).toHaveBeenCalledWith(0.5, FEEL.fire.cameraKick);
@@ -48,7 +48,7 @@ describe('routeSimEvents', () => {
 
   it('başka aracın atışı görünür ama kamerayı ve titreşimi tetiklemez', () => {
     const t = targets();
-    routeSimEvents([{ kind: 'fired', source: OTHER, x: 1, y: 2, angle: 0 }], t);
+    routeSimEvents([{ kind: 'fired', source: OTHER, x: 1, y: 2, angle: 0, vx: 0, vy: 0 }], t);
     expect(t.fire[OTHER]).toHaveBeenCalled();
     expect(t.effects.muzzle).toHaveBeenCalled();
     expect(t.camera.kick).not.toHaveBeenCalled();

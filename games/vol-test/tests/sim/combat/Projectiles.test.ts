@@ -18,6 +18,48 @@ function band(id: number, minX: number, maxX = Infinity): ProjectileTarget {
   };
 }
 
+describe('Projectiles.retire', () => {
+  it('sahibinin noktaya en yakın mermisini yarıçap içindeyse kaldırır', () => {
+    const projectiles = new Projectiles(8, WEAPON.projectileLifeMs, WEAPON.flight);
+    projectiles.spawn(1, 100, 100, 0, 0);
+    projectiles.spawn(1, 300, 100, 0, 0);
+    projectiles.spawn(2, 310, 100, 0, 0);
+    expect(projectiles.retire(1, 305, 100, 50)).toBe(true);
+    expect(projectiles.count).toBe(2);
+    const left = projectiles.items.slice(0, projectiles.count);
+    expect(left.map((shell) => [shell.owner, shell.x]).sort()).toEqual([
+      [1, 100],
+      [2, 310],
+    ]);
+  });
+
+  it('yarıçap dışındaki ya da başka sahibin mermisine dokunmaz', () => {
+    const projectiles = new Projectiles(4, WEAPON.projectileLifeMs, WEAPON.flight);
+    projectiles.spawn(1, 100, 100, 0, 0);
+    expect(projectiles.retire(1, 400, 100, 50)).toBe(false);
+    expect(projectiles.retire(2, 100, 100, 50)).toBe(false);
+    expect(projectiles.count).toBe(1);
+  });
+
+  it('kaldırılan yuva yeniden kullanılır ve sonraki adım tutarlı kalır', () => {
+    const projectiles = new Projectiles(2, WEAPON.projectileLifeMs, WEAPON.flight);
+    projectiles.spawn(1, 100, 100, 700, 0);
+    projectiles.spawn(1, 500, 100, 700, 0);
+    projectiles.retire(1, 100, 100, 10);
+    projectiles.spawn(3, 900, 100, 700, 0);
+    expect(projectiles.count).toBe(2);
+    const events: SimEvent[] = [];
+    projectiles.step(1000 / 60, world(), events);
+    expect(projectiles.count).toBe(2);
+    expect(
+      projectiles.items
+        .slice(0, 2)
+        .map((shell) => shell.owner)
+        .sort(),
+    ).toEqual([1, 3]);
+  });
+});
+
 describe('Projectiles', () => {
   it('rüzgâr canlı mermi ve önizlemeyi aynı yere taşır; artan hava direnci menzili kısaltır', () => {
     const run = (windY: number, airDrag: number) => {

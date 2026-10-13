@@ -127,6 +127,30 @@ describe('Simulation', () => {
     expect(sim.projectiles.count).toBe(2);
   });
 
+  it('atış olayı mermi ilk hızını taşır: duran tankta namlu hızı, giden tankta tankın hızı da', () => {
+    const still = simulation();
+    still.step(command({ fire: true }), STEP_MS);
+    const shot = still.drainEvents([]).find((event) => event.kind === 'fired');
+    if (shot?.kind !== 'fired') throw new Error('atış olayı yok');
+    expect(shot.vx).toBeCloseTo(Math.cos(shot.angle) * WEAPON.projectileSpeed, 6);
+    expect(shot.vy).toBeCloseTo(Math.sin(shot.angle) * WEAPON.projectileSpeed, 6);
+
+    // Aynı sürüşün atışsız ikizi, atış anındaki tank hızını verir (geri tepme atıştan sonradır).
+    const driveOnly = command({ moveY: -1, boost: true });
+    const reference = simulation();
+    for (let step = 0; step < 91; step++) reference.step(driveOnly, STEP_MS);
+    const moving = simulation();
+    for (let step = 0; step < 90; step++) moving.step(driveOnly, STEP_MS);
+    moving.drainEvents([]);
+    moving.step(command({ moveY: -1, boost: true, fire: true }), STEP_MS);
+    const driven = moving.drainEvents([]).find((event) => event.kind === 'fired');
+    if (driven?.kind !== 'fired') throw new Error('atış olayı yok');
+    const { vx, vy } = reference.player.tank;
+    expect(Math.hypot(vx, vy)).toBeGreaterThan(50);
+    expect(driven.vx).toBeCloseTo(Math.cos(driven.angle) * WEAPON.projectileSpeed + vx, 6);
+    expect(driven.vy).toBeCloseTo(Math.sin(driven.angle) * WEAPON.projectileSpeed + vy, 6);
+  });
+
   it('nişan değişince hedefe oturmadan ateş etmez ve dolumu tüketmez', () => {
     const sim = simulation();
     const input = command({ aimX: -1, fire: true });
@@ -190,6 +214,26 @@ describe('Simulation', () => {
     sim.despawn(999);
     expect(sim.vehicles).toHaveLength(1);
     expect(sim.spawn(0, 0).id).toBeGreaterThan(other.id);
+  });
+
+  it('açık kimlikle doğan araç kimliği korur ve sonraki kimlikler çakışmaz', () => {
+    const sim = simulation();
+    const remote = sim.spawn(1000, 1000, 0, null, 40);
+    expect(remote.id).toBe(40);
+    expect(sim.vehicle(40)).toBe(remote);
+    expect(sim.spawn(2000, 2000, 0).id).toBe(41);
+    // Küçük bir açık kimlik sayacı geri sarmaz.
+    expect(sim.spawn(3000, 3000, 0, null, 5).id).toBe(5);
+    expect(sim.spawn(3100, 3100, 0).id).toBe(42);
+  });
+
+  it('açık kimlik pozitif, güvenli ve tekil olmalıdır', () => {
+    const sim = simulation();
+    const taken = sim.player.id;
+    for (const id of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 2, taken]) {
+      expect(() => sim.spawn(0, 0, 0, null, id)).toThrow(RangeError);
+    }
+    expect(sim.vehicles).toHaveLength(1);
   });
 
   it('bir adımdaki komut kaynağını araç başına bir kez örnekler', () => {

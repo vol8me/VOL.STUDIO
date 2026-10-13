@@ -5,7 +5,7 @@ import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
 import { createContact, resolveBodyContact } from '@volstudio/core/physics';
-import { aimAligned, applyRecoil } from './vehicleStep';
+import { aimAligned, applyRecoil, muzzleLaunch } from './vehicleStep';
 import type { World } from './world/World';
 import type { WeatherSystem } from './weather/WeatherSystem';
 import { WEATHER } from '@/config/weather';
@@ -87,13 +87,25 @@ export class Simulation {
     return this.vehicleList.find((vehicle) => vehicle.id === id);
   }
 
-  /** Yeni araç yerleştirir; kimlik simülasyon ömrü boyunca yeniden kullanılmaz. */
-  spawn(x: number, y: number, hull = -Math.PI / 2, team: number | null = null): Vehicle {
+  /**
+   * Yeni araç yerleştirir; kimlik simülasyon ömrü boyunca yeniden kullanılmaz. `id` yalnız başka
+   * bir otoritenin (ağ sunucusu) kimlik verdiği görünüm modelleri içindir: tekil tutmak çağıranındır.
+   */
+  spawn(
+    x: number,
+    y: number,
+    hull = -Math.PI / 2,
+    team: number | null = null,
+    id?: EntityId,
+  ): Vehicle {
     if (team !== null && !Number.isSafeInteger(team))
       throw new RangeError('Takım kimliği güvenli tamsayı olmalı');
+    if (id !== undefined && (!Number.isSafeInteger(id) || id < 1 || this.vehicle(id)))
+      throw new RangeError('Araç kimliği pozitif, güvenli ve tekil tamsayı olmalı');
     const options = this.options;
+    this.nextId = Math.max(this.nextId, (id ?? 0) + 1);
     const vehicle = new Vehicle(
-      this.nextId++,
+      id ?? this.nextId++,
       options.tank,
       options.suspension,
       options.weapon,
@@ -390,21 +402,18 @@ export class Simulation {
    * uygulanır; gövde ateş yönünün tersine yaylanır (yandan ateş yalpa yapar).
    */
   private fire(vehicle: Vehicle): void {
-    const tank = vehicle.tank;
-    const weapon = vehicle.weapon;
-    const dirX = Math.cos(tank.turret);
-    const dirY = Math.sin(tank.turret);
-    const x = tank.x + dirX * weapon.muzzleOffset;
-    const y = tank.y + dirY * weapon.muzzleOffset;
-    this.projectiles.spawn(
-      vehicle.id,
-      x,
-      y,
-      dirX * weapon.projectileSpeed + tank.vx,
-      dirY * weapon.projectileSpeed + tank.vy,
-    );
+    const launch = muzzleLaunch(vehicle);
+    this.projectiles.spawn(vehicle.id, launch.x, launch.y, launch.vx, launch.vy);
     applyRecoil(vehicle);
-    this.emit({ kind: 'fired', source: vehicle.id, x, y, angle: tank.turret });
+    this.emit({
+      kind: 'fired',
+      source: vehicle.id,
+      x: launch.x,
+      y: launch.y,
+      angle: launch.angle,
+      vx: launch.vx,
+      vy: launch.vy,
+    });
   }
 
   private applyImpactDamage(

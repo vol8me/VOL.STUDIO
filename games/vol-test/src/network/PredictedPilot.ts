@@ -5,7 +5,7 @@ import { GAME } from '@/config/game';
 import { NETWORK } from '@/config/network';
 import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
 import { Vehicle } from '@/sim/entities/Vehicle';
-import { stepPredictedVehicle } from '@/sim/vehicleStep';
+import { stepPredictedVehicle, type Launch } from '@/sim/vehicleStep';
 import { createTankState } from '@/sim/tank/TankState';
 import type { World } from '@/sim/world/World';
 import type { TankCommand } from '@/sim/command';
@@ -46,8 +46,16 @@ export interface PilotOptions {
    * geliştirme bayrağında açılır.
    */
   readonly divergenceTolerance?: number;
-  /** Canlı (yeniden oynatma olmayan) adımda ateş edildiğinde çağrılır; mermiyi sunucu doğurur. */
-  readonly onFired?: (vehicle: Vehicle) => void;
+  /**
+   * Sürülecek araç; verilmezse pilot kendisi kurar. Görünüm modeli aracı kendi `Simulation`ında
+   * doğurup verir: çizim, ses ve HUD aynı nesneyi okur.
+   */
+  readonly vehicle?: Vehicle;
+  /**
+   * Canlı (yeniden oynatma olmayan) adımda ateş edildiğinde çağrılır; mermiyi sunucu doğurur,
+   * istemci kendi mermisini bu değerlerle görsel olarak uçurur.
+   */
+  readonly onFired?: (launch: Launch) => void;
 }
 
 /**
@@ -63,14 +71,16 @@ export class PredictedPilot {
 
   constructor(private readonly options: PilotOptions) {
     const { room, predict, self, space } = options;
-    this.vehicle = new Vehicle(
-      self.vehicleId,
-      TANK,
-      SUSPENSION,
-      WEAPON,
-      COMBAT,
-      self.team === NO_TEAM ? null : self.team,
-    );
+    this.vehicle =
+      options.vehicle ??
+      new Vehicle(
+        self.vehicleId,
+        TANK,
+        SUSPENSION,
+        WEAPON,
+        COMBAT,
+        self.team === NO_TEAM ? null : self.team,
+      );
     this.input = room.input<TankInputData>();
     if (this.input.stepMs !== GAME.simulationStepMs)
       throw new Error(
@@ -84,13 +94,14 @@ export class PredictedPilot {
       snap: NETWORK.seatRadius / 2,
       warnOnDivergence: options.divergenceTolerance,
       step: (ctx, world, command) => {
-        const fired = stepPredictedVehicle(
+        stepPredictedVehicle(
           world.vehicle,
           toCommand(command),
           world.space,
           GAME.simulationStepMs,
+          // Yeniden oynatılan atış zaten bildirildi; yalnız canlı adım mermi uçurur.
+          ctx.isReplay ? undefined : this.options.onFired,
         );
-        if (fired && !ctx.isReplay) this.options.onFired?.(world.vehicle);
       },
       adopt: (world) => this.adopt(world.vehicle),
       pose: (world) => this.readPose(world.vehicle),

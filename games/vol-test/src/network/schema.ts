@@ -119,6 +119,9 @@ export const MatchState = schema(
 
 export type MatchSnapshot = SchemaType<typeof MatchState>;
 
+/** Colyseus istemcisine verilen kök şema sınıfı; sunucu ve istemci aynı tanımı okur. */
+export const MATCH_SCHEMA = MatchState as unknown as new () => MatchSnapshot;
+
 /**
  * Colyseus'un girdi kesicisine verilen aralıklar (NaN-güvenli: NaN alt sınıra iner). Kesme
  * idempotenttir; dürüst istemcinin değerini değiştirmez, bu yüzden öngörü ile sunucu aynı sayıyı görür.

@@ -486,6 +486,25 @@ describe('MatchRoom ayrılma ve bağlantı kopması', () => {
     await until(() => matchMaker.getLocalRoomById(id) === undefined, 'oda kapanışı');
   });
 
+  it('sunucu bağlı oyuncuyla durdurulunca işlenmemiş söz reddi sızmaz', async () => {
+    await boot();
+    await join({ name: 'Son' });
+    const leaked: unknown[] = [];
+    const watch = (reason: unknown): void => {
+      leaked.push(reason);
+    };
+    process.on('unhandledRejection', watch);
+    try {
+      await server!.stop();
+      server = undefined;
+      // Reddedilen söz ancak mikro görev ve zamanlayıcı turundan sonra işlenmemiş sayılır.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    } finally {
+      process.off('unhandledRejection', watch);
+    }
+    expect(leaked).toEqual([]);
+  });
+
   it('kopan bağlantı bekletilir; geri gelince aynı kayıtla öngörü ve tüketim sürer', async () => {
     await boot();
     const seat = await join({ name: 'Yolcu' });
@@ -494,8 +513,10 @@ describe('MatchRoom ayrılma ve bağlantı kopması', () => {
     const vehicleId = record.vehicleId;
     const local = serverRoom(seat);
     const run = drive(seat);
-    let starved = 0;
-    let corrections: number[] = [];
+    const settled = (): boolean => {
+      const tail = run.corrections.slice(-6);
+      return tail.length === 6 && tail.every((magnitude) => magnitude < 1e-3);
+    };
     try {
       await until(() => local.inputStats(sessionId)!.consumed > 20, 'kopma öncesi girdi');
       seat.reconnection.enabled = true;
@@ -509,10 +530,11 @@ describe('MatchRoom ayrılma ve bağlantı kopması', () => {
       await until(() => local.state.players.get(sessionId)?.connected === true, 'yeniden bağlanma');
       // Yeni pacer sıfırdan sayar: tüketim yeniden artmalı.
       await until(() => local.inputStats(sessionId)!.consumed > 25, 'kopma sonrası girdi');
+      // Kopmanın yarattığı sıçrama ve yük altındaki aç kalma düzeltmeleri söner: öngörü yeniden
+      // sunucuyla bit bit uyuşan altı ardışık uzlaştırmaya oturur. Süre, yüklü makinede aç kalma
+      // aralarındaki sakin pencereyi bulmaya yeter.
       run.corrections.length = 0;
-      await until(() => run.corrections.length > 12, 'kopma sonrası uzlaştırma', 4000);
-      starved = local.inputStats(sessionId)!.starved;
-      corrections = run.corrections.slice();
+      await until(settled, 'kopma sonrası uzlaştırmanın oturması', 12000);
     } finally {
       run.stop();
     }
@@ -520,11 +542,8 @@ describe('MatchRoom ayrılma ve bağlantı kopması', () => {
     expect(seat.sessionId).toBe(sessionId);
     // İstemci aynı kayıt nesnesini izlemeye devam eder: öngörü ölü bir nesneye bağlanmadı.
     expect(seat.state.players.get(sessionId)).toBe(record);
-    // Kopmanın yarattığı sıçrama söner. Sunucu girdisi yeniden geç kalmadıysa (yük altında olabilir)
-    // son düzeltmeler sıfıra yakındır.
-    if (starved === 0) expect(Math.max(...corrections.slice(-6))).toBeLessThan(1e-3);
     run.pilot.dispose();
-  });
+  }, 20000);
 });
 
 describe('MatchRoom öngörü', () => {

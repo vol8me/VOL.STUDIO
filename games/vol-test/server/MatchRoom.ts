@@ -202,7 +202,9 @@ export class MatchRoom extends Room {
     const slot = this.players.get(client.sessionId);
     if (slot) slot.state.connected = false;
     this.log?.log('info', 'player.drop', { session: client.sessionId });
-    void this.allowReconnection(client, NETWORK.reconnectSeconds);
+    // Sonucu çekirdek `onReconnect`/`onLeave` ile bildirir; oda kapanırken reddedilen söz
+    // ("disposing") dinleyicisiz kalıp süreci düşürmesin diye yutulur.
+    this.allowReconnection(client, NETWORK.reconnectSeconds).catch(() => undefined);
   }
 
   override onReconnect(client: Client): void {

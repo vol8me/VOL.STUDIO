@@ -41,6 +41,9 @@ export type SimEvent =
       readonly x: number;
       readonly y: number;
       readonly angle: number;
+      /** Mermi ilk hızı (tankın hızı dahil): uzaktan izleyen istemci mermiyi aynı yörüngede uçurur. */
+      readonly vx: number;
+      readonly vy: number;
     }
   /**
    * Mermi patladı: dünya duvarına çarptı (`wall`) ya da menzil sonunda yere

@@ -1,10 +1,13 @@
 import type { Predict, Room } from '@volstudio/network/client';
 import { describe, expect, it, vi } from 'vitest';
+import { COMBAT } from '@/config/combat';
 import { GAME } from '@/config/game';
+import { SUSPENSION, TANK, WEAPON } from '@/config/tank';
+import { Vehicle } from '@/sim/entities/Vehicle';
 import { WORLD } from '@/config/world';
 import { PredictedPilot, type PilotPose } from '@/network/PredictedPilot';
 import { NO_TEAM, PlayerState, type MatchSnapshot, type PlayerSnapshot } from '@/network/schema';
-import type { Vehicle } from '@/sim/entities/Vehicle';
+import type { Launch } from '@/sim/vehicleStep';
 import { World } from '@/sim/world/World';
 import { command } from '../support/sim';
 
@@ -81,6 +84,22 @@ describe('PredictedPilot kurulum', () => {
     expect(gun.getRemaining()).toBe(123.5);
   });
 
+  it('dışarıdan verilen aracı sürer ve kendisi yenisini kurmaz', () => {
+    const { build, record } = wire();
+    const supplied = new Vehicle(record.vehicleId, TANK, SUSPENSION, WEAPON, COMBAT);
+    const wired = wire();
+    const pilot = new PredictedPilot({
+      room: { input: () => wired.handle } as unknown as Room<MatchSnapshot>,
+      predict: wired.predict as unknown as Predict,
+      self: wired.record,
+      space: new World(WORLD.width, WORLD.height, WORLD.gridStep),
+      vehicle: supplied,
+    });
+    expect(pilot.vehicle).toBe(supplied);
+    expect(supplied.tank.x).toBe(1000);
+    expect(build().vehicle).not.toBe(supplied);
+  });
+
   it('takımlı oyuncunun aracı takım taşır', () => {
     const { build } = wire(undefined, recordOf({ team: 1 }));
     expect(build().vehicle.team).toBe(1);
@@ -110,7 +129,10 @@ describe('PredictedPilot adım', () => {
 
     config().step({ isReplay: false }, world, { ...command(live) });
     expect(fired).toHaveBeenCalledTimes(1);
-    expect(fired).toHaveBeenCalledWith(pilot.vehicle);
+    // Atış değerleri geri tepmeden ÖNCE alınır: namlu ucu ve tankın hızını devralan ilk hız.
+    const launch = fired.mock.calls[0]?.[0] as Launch;
+    expect(Object.keys(launch).sort()).toEqual(['angle', 'vx', 'vy', 'x', 'y']);
+    for (const value of Object.values(launch)) expect(Number.isFinite(value)).toBe(true);
     expect(pilot.vehicle.gun.getRemaining()).toBeGreaterThan(0);
 
     for (let step = 0; step < 30; step++) {

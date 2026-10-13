@@ -3,7 +3,8 @@ import { Client, type Room } from '@colyseus/sdk';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
 import { startHost, type Logger, type StartedHost } from '@volstudio/network/server';
 import { MATCH, type MatchConfig } from '@/config/network';
-import { MatchState, type MatchSnapshot } from '@/network/schema';
+import { OnlineSession, type OnlineRequest } from '@/network/OnlineSession';
+import { MATCH_SCHEMA, type MatchSnapshot } from '@/network/schema';
 import { ROOM } from '@/network/rooms';
 import { MatchRoom, PrivateRoom } from '../../server/MatchRoom';
 import { createRooms, type Rooms } from '../../server/index';
@@ -52,8 +53,6 @@ export interface JoinParams {
   readonly protocol?: number;
 }
 
-const SCHEMA = MatchState as unknown as new () => MatchSnapshot;
-
 /** Herkese açık odaya katılır (yoksa kurar); `protocol` varsayılan olarak güncel sürümdür. */
 export function joinPublic(
   server: TestServer,
@@ -62,7 +61,7 @@ export function joinPublic(
   return new Client(server.endpoint).joinOrCreate<MatchSnapshot>(
     ROOM.match,
     { protocol: PROTOCOL_VERSION, ...params },
-    SCHEMA,
+    MATCH_SCHEMA,
   ) as Promise<Room<MatchSnapshot>>;
 }
 
@@ -75,7 +74,7 @@ export function privateRoom(
   return new Client(server.endpoint)[method]<MatchSnapshot>(
     ROOM.private,
     { protocol: PROTOCOL_VERSION, ...params },
-    SCHEMA,
+    MATCH_SCHEMA,
   ) as Promise<Room<MatchSnapshot>>;
 }
 
@@ -103,4 +102,15 @@ export async function until(
 export async function joined(room: Room<MatchSnapshot>) {
   await until(() => room.state.players.get(room.sessionId) !== undefined, 'oyuncu kaydı');
   return room.state.players.get(room.sessionId)!;
+}
+
+/** Oyunun istemci oturumuyla katılır; otomatik yeniden bağlanma yalnız onu sınayan testte açılır. */
+export async function openSession(
+  server: TestServer,
+  request: OnlineRequest,
+  name = 'Pilot',
+): Promise<OnlineSession> {
+  const session = await OnlineSession.open({ endpoint: server.endpoint, name, request });
+  session.room.reconnection.enabled = false;
+  return session;
 }
