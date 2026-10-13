@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { BELT, NET } from '../../src/config/factory';
+import { BELT, NET, UNIT, UNIT_KIND } from '../../src/config/factory';
 import { ByteWriter } from '../../src/net/bytes';
 import {
   CHUNK,
@@ -22,6 +22,8 @@ import {
   type Hud,
 } from '../../src/net/protocol';
 import { Replica } from '../../src/net/replica';
+import { COMMAND } from '../../src/sim/commands';
+import { SHOT_SOURCE } from '../../src/sim/shot';
 import { buildComb } from '../../src/sim/scenario';
 import { FactorySim } from '../../src/sim/sim';
 import { dueAt, Replicator } from '../../server/replication';
@@ -63,7 +65,6 @@ function welcomeOf(sim: FactorySim) {
     lastSeq: 0,
     mode: SYNC_MODE.aoi,
     sustainUnits: 0,
-    slot: 0,
   };
 }
 
@@ -146,6 +147,52 @@ describe('çoğaltma gidiş-dönüşü', () => {
     }
     expect(seen).toBeGreaterThan(0);
     expect(cursor.bytes.dynamics).toBeGreaterThan(0);
+  });
+
+  it('tanklar çerçevede gelir; ayrılan tank kopyadan düşer', () => {
+    const sim = busy();
+    for (const key of ['player-aoi-a', 'player-aoi-b'])
+      sim.applyRaw({ type: COMMAND.join, key }, -1);
+    sim.apply('player-aoi-a', 1, { type: COMMAND.move, dir: 3 });
+    const { replica, pump } = connect(sim);
+    pump(NET.dynamicsEvery * 3);
+    while (sim.tick % NET.dynamicsEvery !== 0) pump(1);
+    const tanks = sim.state.players;
+    expect(replica.players.size).toBe(2);
+    for (const slot of [0, 1]) {
+      const remote = replica.players.get(slot)!;
+      expect(remote.status).toBe(tanks.status[slot]);
+      expect(remote.hp).toBe(tanks.hp[slot]);
+      expect(Math.abs(remote.x - tanks.x[slot])).toBeLessThanOrEqual(0.5 / POS_SCALE + 1e-9);
+      expect(Math.abs(remote.y - tanks.y[slot])).toBeLessThanOrEqual(0.5 / POS_SCALE + 1e-9);
+      expect(Math.abs(remote.aimX - tanks.aimX[slot])).toBeLessThanOrEqual(1 / 127);
+      expect(Math.abs(remote.aimY - tanks.aimY[slot])).toBeLessThanOrEqual(1 / 127);
+    }
+    // Hareket eden tankın önceki konumu bir çerçeve geridedir: çizim iki konum arasında kayar.
+    const moving = replica.players.get(0)!;
+    expect(moving.x).toBeGreaterThan(moving.prevX);
+
+    sim.applyRaw({ type: COMMAND.leave }, 1);
+    pump(NET.dynamicsEvery * 2);
+    expect(replica.players.size).toBe(1);
+    expect(replica.players.has(1)).toBe(false);
+  });
+
+  it('oyuncu atışı kaynak türüyle ve tankın çıkış noktasıyla gelir', () => {
+    const sim = FactorySim.create({ ...SMALL, seed: 4 });
+    sim.state.nextWaveTick = 1_000_000;
+    sim.applyRaw({ type: COMMAND.join, key: 'player-aoi-c' }, -1);
+    const tank = sim.state.players;
+    sim.state.allocateUnit(UNIT_KIND.brute, tank.x[0] + 3, tank.y[0], UNIT.brute.hp);
+    const { replica, pump } = connect(sim);
+    let shot: (typeof replica.shots)[number] | undefined;
+    for (let step = 0; step < NET.dynamicsEvery * 4 && !shot; step++) {
+      pump(1, step * 33);
+      shot = replica.shots.find((entry) => entry.source === SHOT_SOURCE.player);
+    }
+    expect(shot).toBeDefined();
+    expect(Math.abs(shot!.fromX - tank.x[0])).toBeLessThanOrEqual(0.5 / POS_SCALE + 1e-9);
+    expect(Math.abs(shot!.fromY - tank.y[0])).toBeLessThanOrEqual(0.5 / POS_SCALE + 1e-9);
   });
 
   it('HUD bölümü gelir', () => {
@@ -304,7 +351,6 @@ describe('küçük mesajlar', () => {
       lastSeq: 42,
       mode: SYNC_MODE.lockstep,
       sustainUnits: 300,
-      slot: 5,
     };
     expect(readWelcome(writeWelcome(welcome))).toEqual(welcome);
     expect(readAck(writeAck({ seq: 9, result: 3, tick: 11 }))).toEqual({

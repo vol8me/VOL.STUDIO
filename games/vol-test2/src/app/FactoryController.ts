@@ -1,9 +1,10 @@
-import { PACE, STATS, VIEW, type ToolId } from '@/config/game';
+import { PACE, STATS, STEER, VIEW, type ToolId } from '@/config/game';
 import { ITEM, SIM, UNIT_POOL } from '@/config/factory';
 import { Pacer } from '@/net/pacer';
 import type { FactorySession, SessionStatus } from '@/net/session';
 import type { Ack } from '@/net/protocol';
-import type { FactoryCommand } from '@/sim/commands';
+import { COMMAND, type FactoryCommand } from '@/sim/commands';
+import type { ShotSource } from '@/sim/shot';
 import type { FactorySim } from '@/sim/sim';
 import { RingStats } from './ringStats';
 import { commandFor, nextRotation, resultKey } from './tools';
@@ -11,7 +12,7 @@ import { commandFor, nextRotation, resultKey } from './tools';
 /** Oturumun denetleyicinin kullandığı kısmı; testte sahte oturum verilir. */
 export type ControllerSession = Pick<
   FactorySession,
-  'lockstep' | 'status' | 'rttMs' | 'submit' | 'advance' | 'resync' | 'nextCommandSeq'
+  'lockstep' | 'status' | 'rttMs' | 'submit' | 'advance' | 'resync' | 'nextCommandSeq' | 'key'
 >;
 
 export interface Ghost {
@@ -24,7 +25,9 @@ export interface Ghost {
 }
 
 export interface ShotView {
-  readonly tile: number;
+  readonly fromX: number;
+  readonly fromY: number;
+  readonly source: ShotSource;
   readonly targetX: number;
   readonly targetY: number;
   readonly until: number;
@@ -91,6 +94,9 @@ export class FactoryController {
   private lastSimulated: FactorySim | null = null;
   private resyncedAt = -Infinity;
   private wasDesynced = false;
+  private wantedDirection = 0;
+  private sentDirection = 0;
+  private sentAt = -Infinity;
 
   constructor(
     readonly session: ControllerSession,
@@ -124,12 +130,40 @@ export class FactoryController {
     return this.submit(command);
   }
 
+  /** Oyuncunun tankının yuvası; dünyada yoksa -1 (katılım henüz uygulanmadı ya da tank yok). */
+  get playerSlot(): number {
+    return this.sim?.state.players.slotOf(this.session.key) ?? -1;
+  }
+
+  /** Hareket niyeti (0 durur, 1..16 yön). Gönderim `frame` içinde sınırlanarak yapılır. */
+  steer(direction: number): void {
+    this.wantedDirection = direction;
+  }
+
+  private pumpSteering(): void {
+    if (this.session.status !== 'live') return;
+    const now = this.now();
+    const elapsed = now - this.sentAt;
+    const changed = this.wantedDirection !== this.sentDirection;
+    if (
+      changed
+        ? elapsed < STEER.minIntervalMs
+        : this.wantedDirection === 0 || elapsed < STEER.refreshMs
+    )
+      return;
+    this.sentDirection = this.wantedDirection;
+    this.sentAt = now;
+    void this.session.submit({ type: COMMAND.move, dir: this.wantedDirection });
+  }
+
   private submit(command: FactoryCommand): Promise<Ack> {
     const seq = this.session.nextCommandSeq;
     const pending = this.session.submit(command);
-    const kind = command.type === 1 ? command.kind : null;
-    const rot = command.type === 1 ? command.rot : 0;
+    if (command.type === COMMAND.move) return pending;
+    const kind = command.type === COMMAND.place ? command.kind : null;
+    const rot = command.type === COMMAND.place ? command.rot : 0;
     const until = this.now() + VIEW.ghostMs;
+    if (command.type === COMMAND.join || command.type === COMMAND.leave) return pending;
     this.ghosts.push({ x: command.x, y: command.y, kind, rot, seq, until });
     return pending.then((ack) => {
       this.ghosts = this.ghosts.filter((ghost) => ghost.seq !== seq);
@@ -160,6 +194,9 @@ export class FactoryController {
       this.lastSimulated = sim;
       this.previousGen.fill(0);
       this.pacer.reset();
+      // Yeni durumda niyet sunucuda sönmüş olabilir: bir sonraki karede yeniden gönderilir.
+      this.sentAt = -Infinity;
+      this.sentDirection = 0;
     }
     if (sim === null) return;
     if (lockstep.status === 'desynced') {
@@ -186,6 +223,7 @@ export class FactoryController {
       this.stepMs.push(this.now() - startedAt);
       this.collectShots(sim);
     }
+    this.pumpSteering();
   }
 
   /** Her adımın atışları sonraki adımda silinir; kare birden çok adım koşturabildiği için burada toplanır. */
@@ -194,7 +232,14 @@ export class FactoryController {
     const until = this.now() + VIEW.shotMs;
     for (const shot of sim.shots) {
       if (this.shots.length >= MAX_SHOTS) this.shots.shift();
-      this.shots.push({ tile: shot.tile, targetX: shot.targetX, targetY: shot.targetY, until });
+      this.shots.push({
+        fromX: shot.fromX,
+        fromY: shot.fromY,
+        source: shot.source,
+        targetX: shot.targetX,
+        targetY: shot.targetY,
+        until,
+      });
     }
   }
 

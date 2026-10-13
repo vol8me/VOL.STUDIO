@@ -1,9 +1,10 @@
-import { BELT, NET, UNIT, UNIT_KIND, UNIT_POOL } from '@/config/factory';
+import { BELT, NET, PLAYER, UNIT, UNIT_KIND, UNIT_POOL } from '@/config/factory';
 import { ByteWriter, fnv1a } from '@/net/bytes';
 import {
   CHUNK,
   CHUNK_TILES,
   FRAME_HEADER_BYTES,
+  AIM_SCALE,
   POS_SCALE,
   SECTION,
   SECTION_HEADER_BYTES,
@@ -17,7 +18,8 @@ import {
   type Hud,
 } from '@/net/protocol';
 import type { FactorySim } from '@/sim/sim';
-import type { Shot } from '@/sim/units';
+import type { Shot, ShotSource } from '@/sim/shot';
+import { PLAYER_STATUS } from '@/sim/state';
 
 /** Bir çerçevede en çok gönderilen yapı chunk'ı; ilk bağlanışta yük birkaç çerçeveye yayılır. */
 const STRUCTURE_PER_FRAME = 24;
@@ -141,7 +143,7 @@ export class Replicator {
   private readonly shotCounts: Uint8Array;
   private readonly shotStart: Uint32Array;
   private shotBytes = new Uint8Array(MAX_SHOTS_PENDING * SHOT_RECORD_BYTES);
-  private pendingShots: { x: number; y: number; tx: number; ty: number }[] = [];
+  private pendingShots: { x: number; y: number; tx: number; ty: number; source: ShotSource }[] = [];
   private dynamicsTick = -1;
 
   private readonly frame = new ByteWriter(64 * 1024);
@@ -172,12 +174,12 @@ export class Replicator {
   collectShots(shots: readonly Shot[]): void {
     for (const shot of shots) {
       if (this.pendingShots.length >= MAX_SHOTS_PENDING) return;
-      const s = this.sim.state;
       this.pendingShots.push({
-        x: shot.tile % s.width,
-        y: Math.floor(shot.tile / s.width),
+        x: shot.fromX,
+        y: shot.fromY,
         tx: shot.targetX,
         ty: shot.targetY,
+        source: shot.source,
       });
     }
   }
@@ -244,12 +246,29 @@ export class Replicator {
       const chunk = this.chunkAt(shot.x, shot.y);
       if (shotFill[chunk] >= this.shotCounts[chunk]) continue;
       const at = this.shotStart[chunk] + shotFill[chunk]++ * SHOT_RECORD_BYTES;
-      shotView.setUint16(at, shot.x, true);
-      shotView.setUint16(at + 2, shot.y, true);
+      shotView.setUint16(at, Math.round(shot.x * POS_SCALE), true);
+      shotView.setUint16(at + 2, Math.round(shot.y * POS_SCALE), true);
       shotView.setUint16(at + 4, Math.round(shot.tx * POS_SCALE), true);
       shotView.setUint16(at + 6, Math.round(shot.ty * POS_SCALE), true);
+      this.shotBytes[at + 8] = shot.source;
     }
     this.pendingShots = [];
+  }
+
+  /** Bütün tanklar (en çok `PLAYER.slots`): ilgi alanı dışı tank da küçük haritada ve kamerada gerekir. */
+  private writePlayers(out: ByteWriter): void {
+    const p = this.sim.state.players;
+    out.u8(p.count);
+    for (let slot = 0; slot < PLAYER.slots; slot++) {
+      if (p.status[slot] === PLAYER_STATUS.free) continue;
+      out.u8(slot);
+      out.u8(p.status[slot]);
+      out.u16(p.hp[slot]);
+      out.u16(Math.round(p.x[slot] * POS_SCALE));
+      out.u16(Math.round(p.y[slot] * POS_SCALE));
+      out.u8(Math.round(p.aimX[slot] * AIM_SCALE) + AIM_SCALE);
+      out.u8(Math.round(p.aimY[slot] * AIM_SCALE) + AIM_SCALE);
+    }
   }
 
   private structureBlob(chunk: number): Uint8Array {
@@ -375,6 +394,9 @@ export class Replicator {
         }
       }
       endSection(at, 'dynamics');
+      const tanks = beginSection(SECTION.players);
+      this.writePlayers(out);
+      endSection(tanks, 'dynamics');
     }
 
     if (due.belts) {

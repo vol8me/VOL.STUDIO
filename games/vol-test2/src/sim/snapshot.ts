@@ -1,10 +1,18 @@
 import { ByteReader, ByteWriter, fnv1a } from '@/net/bytes';
-import { BELT, ITEM_COUNT, KIND, UNIT_KIND, UNIT_POOL } from '@/config/factory';
+import {
+  BELT,
+  ITEM_COUNT,
+  KIND,
+  MOVE_DIRECTIONS,
+  PLAYER,
+  UNIT_KIND,
+  UNIT_POOL,
+} from '@/config/factory';
 import { isPlayerKey, type Ledger } from './commands';
-import type { FactoryState } from './state';
+import { PLAYER_STATUS, type FactoryState } from './state';
 
 const MAGIC = 0x53574656; // "VFWS"
-const VERSION = 1;
+const VERSION = 2;
 
 export class SnapshotError extends Error {
   constructor(message: string) {
@@ -58,6 +66,8 @@ export function writeSnapshot(s: FactoryState, rngState: number, ledger: Ledger)
     out.f64(unit.y);
     out.f64(unit.hp);
   }
+
+  writePlayers(out, s);
 
   out.u32(ledger.size);
   ledger.forEach((key, seq, result) => {
@@ -147,6 +157,7 @@ export function readSnapshot(bytes: Uint8Array, s: FactoryState, ledger: Ledger)
       hp: input.f64(),
     }));
     validateUnits(s, free, units);
+    const tanks = readPlayers(input, s);
     const entries = input.u32();
     const players: { key: string; seq: number; result: number }[] = [];
     for (let index = 0; index < entries; index++) {
@@ -183,6 +194,7 @@ export function readSnapshot(bytes: Uint8Array, s: FactoryState, ledger: Ledger)
       unit.hp = saved.hp;
     }
     s.aliveUnits = alive;
+    applyPlayers(s, tanks);
     ledger.clear();
     for (const entry of players) ledger.record(entry.key, entry.seq, entry.result);
     s.listsDirty = true;
@@ -195,6 +207,95 @@ export function readSnapshot(bytes: Uint8Array, s: FactoryState, ledger: Ledger)
 }
 
 const BAD_STATE = 'Anlık görüntü içeriği geçersiz: ';
+
+interface SavedPlayer {
+  slot: number;
+  status: number;
+  key: string;
+  x: number;
+  y: number;
+  aimX: number;
+  aimY: number;
+  dir: number;
+  moveUntil: number;
+  hp: number;
+  cooldown: number;
+  respawnAt: number;
+}
+
+/** Yuva başına durum baytı; boş olmayan yuvanın alanları arkasından gelir. */
+function writePlayers(out: ByteWriter, s: FactoryState): void {
+  const p = s.players;
+  for (let slot = 0; slot < PLAYER.slots; slot++) {
+    out.u8(p.status[slot]);
+    if (p.status[slot] === PLAYER_STATUS.free) continue;
+    const encoded = new TextEncoder().encode(p.keys[slot] ?? '');
+    out.u8(encoded.length);
+    out.bytes(encoded);
+    out.f64(p.x[slot]);
+    out.f64(p.y[slot]);
+    out.f64(p.aimX[slot]);
+    out.f64(p.aimY[slot]);
+    out.u8(p.dir[slot]);
+    out.u32(p.moveUntil[slot]);
+    out.u16(p.hp[slot]);
+    out.u8(p.cooldown[slot]);
+    out.u32(p.respawnAt[slot]);
+  }
+}
+
+function readPlayers(input: ByteReader, s: FactoryState): SavedPlayer[] {
+  const saved: SavedPlayer[] = [];
+  const seen = new Set<string>();
+  for (let slot = 0; slot < PLAYER.slots; slot++) {
+    const status = input.u8();
+    if (status === PLAYER_STATUS.free) continue;
+    if (status !== PLAYER_STATUS.alive && status !== PLAYER_STATUS.dead)
+      throw new SnapshotError(BAD_STATE + 'oyuncu durumu');
+    const key = new TextDecoder().decode(input.bytes(input.u8()));
+    if (!isPlayerKey(key) || seen.has(key)) throw new SnapshotError(BAD_STATE + 'oyuncu anahtarı');
+    seen.add(key);
+    const player: SavedPlayer = {
+      slot,
+      status,
+      key,
+      x: input.f64(),
+      y: input.f64(),
+      aimX: input.f64(),
+      aimY: input.f64(),
+      dir: input.u8(),
+      moveUntil: input.u32(),
+      hp: input.u16(),
+      cooldown: input.u8(),
+      respawnAt: input.u32(),
+    };
+    const finite = [player.x, player.y, player.aimX, player.aimY].every(Number.isFinite);
+    const inside = player.x >= 0 && player.y >= 0 && player.x <= s.width && player.y <= s.height;
+    if (!finite || !inside || player.dir > MOVE_DIRECTIONS || player.hp > PLAYER.hp)
+      throw new SnapshotError(BAD_STATE + 'oyuncu konumu');
+    saved.push(player);
+  }
+  return saved;
+}
+
+function applyPlayers(s: FactoryState, saved: SavedPlayer[]): void {
+  const p = s.players;
+  p.clear();
+  for (const player of saved) {
+    const slot = player.slot;
+    p.status[slot] = player.status;
+    p.keys[slot] = player.key;
+    p.x[slot] = player.x;
+    p.y[slot] = player.y;
+    p.aimX[slot] = player.aimX;
+    p.aimY[slot] = player.aimY;
+    p.dir[slot] = player.dir;
+    p.moveUntil[slot] = player.moveUntil;
+    p.hp[slot] = player.hp;
+    p.cooldown[slot] = player.cooldown;
+    p.respawnAt[slot] = player.respawnAt;
+  }
+}
 
 /** Tile dizilerinin değer aralıkları; sağlaması geçerli ama anlamsız dosya canlı durumu bozamaz. */
 function validateTiles(s: FactoryState, target: ArrayBufferView[], staged: Uint8Array[]): void {

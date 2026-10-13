@@ -4,8 +4,8 @@ import {
   type ControllerSession,
   type Notice,
 } from '../../src/app/FactoryController';
-import { KIND } from '../../src/config/factory';
-import { VIEW } from '../../src/config/game';
+import { KIND, PLAYER, SIM } from '../../src/config/factory';
+import { STEER, VIEW } from '../../src/config/game';
 import type { Ack } from '../../src/net/protocol';
 import { COMMAND, RESULT } from '../../src/sim/commands';
 import type { FactorySim } from '../../src/sim/sim';
@@ -40,6 +40,7 @@ function harness(options: { lag?: number } = {}) {
   const session = {
     lockstep,
     status: 'live' as ControllerSession['status'],
+    key: 'player-ctl-01',
     rttMs: 42,
     submit,
     advance,
@@ -194,12 +195,17 @@ describe('FactoryController.frame', () => {
     const h = harness();
     h.advance.mockImplementation((steps: number) => {
       h.sim.shots.length = 0;
-      h.sim.shots.push({ tile: 9, targetX: 3, targetY: 4 });
+      h.sim.shots.push({ tile: 9, fromX: 1.5, fromY: 2.5, targetX: 3, targetY: 4, source: 0 });
       return steps;
     });
     h.controller.frame(100);
     expect(h.controller.activeShots().length).toBeGreaterThan(0);
-    expect(h.controller.activeShots()[0]).toMatchObject({ tile: 9, targetX: 3, targetY: 4 });
+    expect(h.controller.activeShots()[0]).toMatchObject({
+      fromX: 1.5,
+      fromY: 2.5,
+      targetX: 3,
+      targetY: 4,
+    });
     h.setClock(VIEW.shotMs + 1);
     expect(h.controller.activeShots()).toHaveLength(0);
   });
@@ -247,5 +253,99 @@ describe('FactoryController.hud', () => {
     expect(h.controller.frameMs.count).toBe(0);
     expect(hud.fps).toBe(0);
     expect(hud.stepMsP99).toBe(0);
+  });
+});
+
+describe('FactoryController.steer', () => {
+  const moves = (h: ReturnType<typeof harness>) =>
+    h.submit.mock.calls
+      .map((call) => call[0] as { type: number; dir?: number })
+      .filter((command) => command.type === COMMAND.move)
+      .map((command) => command.dir);
+
+  it('yön değişince hemen, sürerken yenileme aralığında, bırakınca bir kez durdurma gönderir', () => {
+    const h = harness();
+    h.setClock(1000);
+    h.controller.steer(3);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([3]);
+
+    h.setClock(1000 + STEER.refreshMs - 1);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([3]);
+    h.setClock(1000 + STEER.refreshMs);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([3, 3]);
+
+    // Yön değişimi komut hızını aşmaz: en az minIntervalMs sonra gider.
+    const sentAt = 1000 + STEER.refreshMs;
+    h.controller.steer(5);
+    h.setClock(sentAt + STEER.minIntervalMs - 1);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([3, 3]);
+    h.setClock(sentAt + STEER.minIntervalMs);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([3, 3, 5]);
+
+    h.controller.steer(0);
+    h.setClock(sentAt + STEER.minIntervalMs * 2);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([3, 3, 5, 0]);
+    // Duran tank için yenileme gönderilmez.
+    h.setClock(sentAt + STEER.refreshMs * 5);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([3, 3, 5, 0]);
+  });
+
+  it('niyet gönderimi komut hız sınırının altında kalır ve süre sonundan önce yenilenir', () => {
+    // En kötü durumda yön her aralıkta değişir: kalan hız payı inşa dokunuşlarına yeter.
+    const steerPerSecond = 1000 / STEER.minIntervalMs;
+    expect(steerPerSecond).toBeLessThan(PLAYER.commandsPerSecond / 1.5);
+    const ttlMs = (PLAYER.moveTtlTicks * 1000) / SIM.tickRate;
+    expect(STEER.refreshMs).toBeLessThan(ttlMs / 2);
+  });
+
+  it('hareket komutu bildirim üretmez ve inşa hayaleti bırakmaz', () => {
+    const h = harness();
+    h.setClock(500);
+    h.controller.steer(7);
+    h.controller.frame(16);
+    expect(h.controller.activeGhosts()).toHaveLength(0);
+    expect(h.notices).toHaveLength(0);
+  });
+
+  it('oturum canlı değilken göndermez; canlanınca bekleyen yönü gönderir', () => {
+    const h = harness();
+    (h.session as { status: string }).status = 'reconnecting';
+    h.setClock(1000);
+    h.controller.steer(2);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([]);
+    (h.session as { status: string }).status = 'live';
+    h.setClock(1100);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([2]);
+  });
+
+  it('yeni anlık görüntüde (yeniden eşitleme) aynı yön yeniden gönderilir', () => {
+    const h = harness();
+    h.setClock(1000);
+    h.controller.steer(4);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([4]);
+    h.lockstep.sim = smallSim({ sustainUnits: 0 });
+    h.setClock(1010);
+    h.controller.frame(16);
+    expect(moves(h)).toEqual([4, 4]);
+  });
+
+  it('oyuncunun tank yuvasını anahtarından bulur; tank yoksa -1', () => {
+    const h = harness();
+    expect(h.controller.playerSlot).toBe(-1);
+    h.sim.applyRaw({ type: COMMAND.join, key: 'player-other1' }, -1);
+    h.sim.applyRaw({ type: COMMAND.join, key: 'player-ctl-01' }, -1);
+    expect(h.controller.playerSlot).toBe(1);
+    h.lockstep.sim = null;
+    expect(h.controller.playerSlot).toBe(-1);
   });
 });

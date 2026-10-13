@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILDING, ITEM, KIND, UNIT_KIND, WAVES } from '../../src/config/factory';
+import { BUILDING, ITEM, KIND, PLAYER, UNIT_KIND, WAVES } from '../../src/config/factory';
 import { fnv1a } from '../../src/net/bytes';
 import { COMMAND, Ledger, type FactoryCommand } from '../../src/sim/commands';
 import { buildComb } from '../../src/sim/scenario';
@@ -35,9 +35,14 @@ describe('determinizm', () => {
   it('aynı tohum ve aynı komutlar bit düzeyinde aynı durumu verir', () => {
     const a = busy();
     const b = busy();
+    for (const sim of [a, b]) sim.applyRaw({ type: COMMAND.join, key: 'player-p' }, -1);
     for (let step = 0; step < 900; step++) {
+      if (step % 100 === 25) {
+        const move: FactoryCommand = { type: COMMAND.move, dir: 1 + ((step / 100) % 16) };
+        expect(a.apply('player-p', step + 1, move)).toEqual(b.apply('player-p', step + 1, move));
+      }
       if (step % 100 === 50) {
-        const command = place(10 + (step % 30), 10, KIND.wall);
+        const command = place(26 + (step % 12), 26, KIND.wall);
         a.state.inventory[ITEM.plate] += 8;
         b.state.inventory[ITEM.plate] += 8;
         expect(a.apply('player-p', step, command)).toEqual(b.apply('player-p', step, command));
@@ -251,5 +256,65 @@ describe('çekirdek ve yenilgi durumu', () => {
     expect(restored.state.defeats).toBe(1);
     expect(restored.state.coreHp).toBe(BUILDING[KIND.core].hp);
     expect(restored.state.nextWaveTick).toBe(WAVES.firstDelay);
+  });
+});
+
+describe('tanklar (anlık görüntü sürüm 2)', () => {
+  function withTanks(): FactorySim {
+    const sim = busy();
+    for (const key of ['player-ali', 'player-veli', 'player-ayse'])
+      sim.applyRaw({ type: COMMAND.join, key }, -1);
+    sim.apply('player-ali', 1, { type: COMMAND.move, dir: 3 });
+    sim.apply('player-veli', 1, { type: COMMAND.move, dir: 11 });
+    sim.applyRaw({ type: COMMAND.leave }, 2);
+    sim.run(200);
+    return sim;
+  }
+
+  it('konum, nişan, can, niyet ve anahtar-yuva eşlemesi korunur; gelecek aynıdır', () => {
+    const live = withTanks();
+    const restored = FactorySim.restore(live.snapshot(), { sustainUnits: 60 });
+    const a = live.state.players;
+    const b = restored.state.players;
+    expect([...b.status]).toEqual([...a.status]);
+    expect([...b.x]).toEqual([...a.x]);
+    expect([...b.y]).toEqual([...a.y]);
+    expect([...b.aimX]).toEqual([...a.aimX]);
+    expect([...b.hp]).toEqual([...a.hp]);
+    expect([...b.moveUntil]).toEqual([...a.moveUntil]);
+    expect(b.keys).toEqual(a.keys);
+    expect(b.slotOf('player-ali')).toBe(0);
+    expect(b.slotOf('player-ayse')).toBe(-1);
+    for (let step = 0; step < 300; step++) {
+      live.step();
+      restored.step();
+    }
+    expect(restored.stateHash()).toBe(live.stateHash());
+    expect(restored.snapshot()).toEqual(live.snapshot());
+  });
+
+  it('boş yuvada kalıntı olmaz: ayrılan tankın konumu ve anahtarı sıfırlanır', () => {
+    const live = withTanks();
+    const p = live.state.players;
+    expect([p.x[2], p.y[2], p.hp[2], p.dir[2]]).toEqual([0, 0, 0, 0]);
+    expect(p.keys[2]).toBeNull();
+  });
+
+  it.each([
+    ['geçersiz yön', (s: FactorySim) => (s.state.players.dir[0] = 99)],
+    ['dünya dışı konum', (s: FactorySim) => (s.state.players.x[0] = s.state.width + 5)],
+    ['sonlu olmayan konum', (s: FactorySim) => (s.state.players.y[0] = Number.NaN)],
+    ['aşırı can', (s: FactorySim) => (s.state.players.hp[0] = PLAYER.hp + 1)],
+    ['çift anahtar', (s: FactorySim) => (s.state.players.keys[1] = s.state.players.keys[0])],
+    ['geçersiz anahtar', (s: FactorySim) => (s.state.players.keys[0] = 'kısa')],
+    ['geçersiz durum', (s: FactorySim) => (s.state.players.status[0] = 7)],
+  ])('mantıksal olarak bozuk tank bloğunu reddeder: %s', (_name, corrupt) => {
+    const live = withTanks();
+    corrupt(live);
+    const target = FactorySim.create({ ...SMALL });
+    const before = target.hash();
+    expect(() => readSnapshot(live.snapshot(), target.state, target.ledger)).toThrow(SnapshotError);
+    // Reddedilen dosya canlı durumu kirletmez.
+    expect(target.hash()).toBe(before);
   });
 });

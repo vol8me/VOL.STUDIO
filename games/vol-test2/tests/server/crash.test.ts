@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { KIND } from '../../src/config/factory';
 import { FactorySession } from '../../src/net/session';
 import { RESULT } from '../../src/sim/commands';
-import { until } from '../helpers/server';
+import { tankReady, tilesNearTank, until } from '../helpers/server';
 
 const packageDir = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -70,16 +70,9 @@ async function boot(dataDir: string): Promise<Child> {
   return { process: child, endpoint, metricsUrl, exited };
 }
 
-function emptyTiles(session: FactorySession, count: number, skip: number) {
-  const s = session.lockstep.sim!.state;
-  const tiles: { x: number; y: number }[] = [];
-  let seen = 0;
-  for (let y = 4; y < s.height - 4 && tiles.length < count; y++)
-    for (let x = 4; x < s.width - 4 && tiles.length < count; x++) {
-      const tile = y * s.width + x;
-      if (s.kind[tile] === KIND.empty && s.ore[tile] === 0 && seen++ >= skip) tiles.push({ x, y });
-    }
-  return tiles;
+async function emptyTiles(session: FactorySession, count: number) {
+  const slot = await tankReady(session);
+  return tilesNearTank(session.lockstep.sim!.state, slot, count);
 }
 
 const children: Child[] = [];
@@ -138,7 +131,7 @@ describe('süreç öldürülünce (SIGKILL)', () => {
         }
 
         // Rastgele bir anda öldürülecek bir komut akışı; ack gelenler kayda geçer.
-        const tiles = emptyTiles(session, 40, cycle * 40);
+        const tiles = await emptyTiles(session, 40);
         const killAfterMs = 300 + ((cycle * 397) % 900);
         const started = Date.now();
         for (const tile of tiles) {

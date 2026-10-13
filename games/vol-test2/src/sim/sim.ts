@@ -1,21 +1,22 @@
 import { createStatefulRandom, type StatefulRandom } from '@volstudio/core/random';
 import { SpatialIndex } from '@volstudio/core/spatial';
-import { BUILDING, ITEM_COUNT, KIND, MACHINES, WAVES, WORLD } from '@/config/factory';
+import { BUILDING, ITEM_COUNT, KIND, MACHINES, PLAYER, WAVES, WORLD } from '@/config/factory';
 import { fnv1a, hashBuffer } from '@/net/bytes';
-import { applyCommand, Ledger, RESULT, type FactoryCommand } from './commands';
+import {
+  applyCommand,
+  COMMAND,
+  isSystemCommand,
+  Ledger,
+  RESULT,
+  type FactoryCommand,
+} from './commands';
+import { joinPlayer, leavePlayerSlot, playerStep } from './players';
+import type { Shot } from './shot';
 import { readSnapshot, snapshotDimensions, writeSnapshot, type SnapshotMeta } from './snapshot';
 import { stepBelts, stepMachines } from './belts';
 import { FactoryState, type Unit } from './state';
 import { generateTerrain, placeCore } from './terrain';
-import {
-  FlowSolver,
-  refreshFlow,
-  spawnWave,
-  sustainUnits,
-  turretStep,
-  unitStep,
-  type Shot,
-} from './units';
+import { FlowSolver, refreshFlow, spawnWave, sustainUnits, turretStep, unitStep } from './units';
 
 export interface FactorySimOptions {
   readonly seed?: number;
@@ -37,6 +38,7 @@ export const PHASES = [
   'spawn',
   'index',
   'turrets',
+  'players',
   'units',
   'housekeeping',
 ] as const;
@@ -105,21 +107,31 @@ export class FactorySim {
     return this.state.tick;
   }
 
-  /** Aynı oyuncudan aynı `seq` ikinci kez uygulanmaz; sonuç önbellekten gelir. */
+  /**
+   * Oyuncu komutunu anahtarının yuvası adına uygular; aynı `seq` ikinci kez uygulanmaz, sonuç
+   * önbellekten gelir. Yuvası olmayan anahtarın komutu `noPlayer` döner (ve deftere yazılır).
+   */
   apply(key: string, seq: number, command: FactoryCommand): ApplyOutcome {
+    // Sistem komutu oyuncu yolundan geçmez: defter ve sıra numarası ona ait değildir.
+    if (isSystemCommand(command)) return { fresh: false, result: RESULT.malformed };
     const seen = this.ledger.lookup(key, seq);
     if (!seen.fresh) return { fresh: false, result: seen.result };
-    const result = applyCommand(this.state, command);
+    const result = this.applyRaw(command, this.state.players.slotOf(key));
     this.ledger.record(key, seq, result);
     return { fresh: true, result };
   }
 
   /**
-   * Defter ve sıra denetimi olmadan uygular. Kilit adımlı istemci sunucunun zaten kabul ettiği
-   * komutları bu yoldan uygular; ağdan gelen ham komut için `apply` kullanılır.
+   * Defter ve sıra denetimi olmadan `slot` adına uygular. Kilit adımlı istemci sunucunun zaten
+   * kabul ettiği komutları bu yoldan uygular; ağdan gelen ham komut için `apply` kullanılır.
+   * Sistem komutları (`join`/`leave`) da buradan geçer: `join` anahtara yuva açar (`slot` yok sayılır),
+   * `leave` verilen yuvayı boşaltır.
    */
-  applyRaw(command: FactoryCommand): number {
-    return applyCommand(this.state, command);
+  applyRaw(command: FactoryCommand, slot: number): number {
+    if (!isSystemCommand(command)) return applyCommand(this.state, command, slot);
+    if (command.type === COMMAND.join)
+      return joinPlayer(this.state, command.key).slot >= 0 ? RESULT.ok : RESULT.noPlayer;
+    return leavePlayerSlot(this.state, slot) ? RESULT.ok : RESULT.noPlayer;
   }
 
   /** Rastgele akışın anlık durumu; anlık görüntüye ve testlere girer. */
@@ -162,6 +174,8 @@ export class FactorySim {
     this.mark(PHASE.index);
     turretStep(s, this.index, this.shots);
     this.mark(PHASE.turrets);
+    playerStep(s, this.index, this.shots);
+    this.mark(PHASE.players);
     unitStep(s);
     this.mark(PHASE.units);
     if (s.coreHp <= 0) this.defeat();
@@ -253,6 +267,22 @@ export class FactorySim {
       record[3] = unit.y;
       record[4] = unit.hp;
       hash = hashBuffer(record, hash);
+    }
+    const p = s.players;
+    const tank = new Float64Array(11);
+    for (let slot = 0; slot < PLAYER.slots; slot++) {
+      tank[0] = p.status[slot];
+      tank[1] = p.keys[slot] === null ? 0 : fnv1a(new TextEncoder().encode(p.keys[slot]!));
+      tank[2] = p.x[slot];
+      tank[3] = p.y[slot];
+      tank[4] = p.aimX[slot];
+      tank[5] = p.aimY[slot];
+      tank[6] = p.dir[slot];
+      tank[7] = p.moveUntil[slot];
+      tank[8] = p.hp[slot];
+      tank[9] = p.cooldown[slot];
+      tank[10] = p.respawnAt[slot];
+      hash = hashBuffer(tank, hash);
     }
     return hash;
   }

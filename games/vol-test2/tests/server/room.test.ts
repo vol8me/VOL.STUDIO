@@ -19,8 +19,14 @@ import {
 } from '../../src/net/protocol';
 import type { FactorySession } from '../../src/net/session';
 import { COMMAND, RESULT, writeCommand, type FactoryCommand } from '../../src/sim/commands';
-import { KIND, SIM_VERSION } from '../../src/config/factory';
-import { startTestFactory, until, type TestFactory } from '../helpers/server';
+import { KIND, PLAYER, SIM_VERSION } from '../../src/config/factory';
+import {
+  startTestFactory,
+  tankReady,
+  tilesNearTank,
+  until,
+  type TestFactory,
+} from '../helpers/server';
 
 let factory: TestFactory | undefined;
 const pumps: ReturnType<typeof setInterval>[] = [];
@@ -41,16 +47,12 @@ async function live(session: FactorySession): Promise<FactorySession> {
   return session;
 }
 
-/** Çekirdekten uzak, boş ve cevhersiz bir tile. */
-function emptyTile(session: FactorySession, skip = 0): { x: number; y: number } {
-  const s = session.lockstep.sim!.state;
-  let found = 0;
-  for (let y = 4; y < s.height - 4; y++)
-    for (let x = 4; x < s.width - 4; x++) {
-      const tile = y * s.width + x;
-      if (s.kind[tile] === KIND.empty && s.ore[tile] === 0 && found++ >= skip) return { x, y };
-    }
-  throw new Error('Boş tile yok.');
+/** Oyuncunun tankının inşa menzilinde boş, cevhersiz bir tile (tank gelene dek kopya ilerletilir). */
+async function emptyTile(session: FactorySession, skip = 0): Promise<{ x: number; y: number }> {
+  const slot = await tankReady(session);
+  const [tile] = tilesNearTank(session.lockstep.sim!.state, slot, 1, skip);
+  if (!tile) throw new Error('Boş tile yok.');
+  return tile;
 }
 
 async function journalRecords(dataDir: string, worldId = 'test'): Promise<JournalRecord[]> {
@@ -140,7 +142,121 @@ describe('dünya yaşam döngüsü', () => {
     const second = await live(await factory.connect('player-twin'));
     await until(() => first.status === 'closed');
     expect(second.status).toBe('live');
-    expect(factory.factory.rooms.get('test')!.metrics().players).toBe(1);
+    const room = factory.factory.rooms.get('test')!;
+    expect(room.metrics().players).toBe(1);
+    // Yerinden etme tankı kaldırmaz: oyuncu cihaz değiştirmiştir, yuvası ve tankı yerinde kalır.
+    expect(room.simulation.state.players.count).toBe(1);
+    expect(room.simulation.state.players.slotOf('player-twin')).toBe(0);
+  });
+});
+
+describe('oyuncu tankı (gerçek WebSocket)', () => {
+  it(
+    'katılım JOIN, ayrılış LEAVE olarak günlüğe yazılır ve tank dünyadan kalkar',
+    { timeout: 30_000 },
+    async () => {
+      factory = await startTestFactory({ tickHz: 120 });
+      const room = factory.factory.rooms.get('test')!;
+      const session = await live(await factory.connect('player-tank01'));
+      pump(session);
+      const slot = await tankReady(session);
+      expect(room.simulation.state.players.slotOf('player-tank01')).toBe(slot);
+      expect(room.simulation.state.players.status[slot]).toBe(1);
+
+      let records = await journalRecords(factory.dataDir);
+      expect(
+        records.some(
+          (record) =>
+            record.kind === RECORD.system &&
+            record.slot === slot &&
+            record.command.type === COMMAND.join &&
+            record.command.key === 'player-tank01',
+        ),
+      ).toBe(true);
+
+      await session.leave();
+      await until(() => room.simulation.state.players.slotOf('player-tank01') === -1);
+      // Kayıt adımda eklenir, diske arka planda yazılır: kısa süre yoklanır.
+      const left = (record: JournalRecord): boolean =>
+        record.kind === RECORD.system &&
+        record.slot === slot &&
+        record.command.type === COMMAND.leave;
+      for (let attempt = 0; attempt < 50 && !records.some(left); attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        records = await journalRecords(factory.dataDir);
+      }
+      expect(records.some(left)).toBe(true);
+    },
+  );
+
+  it(
+    'iki oyuncu aynı dünyada sürer; hareket komutu iki kopyada da sunucuyla aynı sonucu verir',
+    { timeout: 40_000 },
+    async () => {
+      factory = await startTestFactory({ tickHz: 120 });
+      const a = await live(await factory.connect('player-aaaa2'));
+      const b = await live(await factory.connect('player-bbbb2'));
+      pump(a);
+      pump(b);
+      const slotA = await tankReady(a);
+      const slotB = await tankReady(b);
+      expect(slotA).not.toBe(slotB);
+      const room = factory.factory.rooms.get('test')!;
+      const tanks = room.simulation.state.players;
+      const startX = tanks.x[slotA];
+
+      expect((await a.steer(1)).result).toBe(RESULT.ok);
+      expect((await b.steer(9)).result).toBe(RESULT.ok);
+      await until(() => Math.abs(tanks.x[slotA] - startX) > 0.5);
+      // A doğuya, B batıya: yön komutu her tankı kendi yuvasında sürer.
+      expect(tanks.x[slotA]).toBeGreaterThan(startX);
+
+      await until(
+        () => a.lockstep.metrics.hashChecks >= 3 && b.lockstep.metrics.hashChecks >= 3,
+        20000,
+      );
+      expect(a.lockstep.status).toBe('running');
+      expect(b.lockstep.status).toBe('running');
+      // İki kopyada da iki tank aynı yuvadadır (anahtar-yuva eşlemesi sim durumudur).
+      for (const session of [a, b]) {
+        const state = session.lockstep.sim!.state.players;
+        expect(state.slotOf('player-aaaa2')).toBe(slotA);
+        expect(state.slotOf('player-bbbb2')).toBe(slotB);
+      }
+    },
+  );
+
+  it(
+    'menzil dışına inşa tooFar ile reddedilir ve ack olarak iletilir',
+    { timeout: 20_000 },
+    async () => {
+      factory = await startTestFactory({ tickHz: 120 });
+      const session = await live(await factory.connect('player-reach'));
+      pump(session);
+      const slot = await tankReady(session);
+      const s = session.lockstep.sim!.state;
+      const farX = s.players.x[slot] < s.width / 2 ? s.width - 3 : 2;
+      const ack = await session.place(farX, 2, KIND.wall, 0);
+      expect(ack.result).toBe(RESULT.tooFar);
+      expect(factory.factory.rooms.get('test')!.metrics().commands.rejected).toBe(1);
+      const reach = Math.hypot(farX - s.players.x[slot], 2 - s.players.y[slot]);
+      expect(reach).toBeGreaterThan(PLAYER.buildRange);
+    },
+  );
+
+  it('istemci JOIN ya da LEAVE gönderemez: bozuk mesaj sayılır', async () => {
+    factory = await startTestFactory();
+    const client = await rawClient(factory, 'player-sneak');
+    const room = factory.factory.rooms.get('test')!;
+    client.room.sendBytes(
+      TO_SERVER.command,
+      commandBytes(1, { type: COMMAND.join, key: 'player-hijack1' }),
+    );
+    client.room.sendBytes(TO_SERVER.command, commandBytes(2, { type: COMMAND.leave }));
+    await until(() => room.metrics().commands.malformed >= 2);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(room.simulation.state.players.slotOf('player-hijack1')).toBe(-1);
+    expect(room.simulation.state.players.slotOf('player-sneak')).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -152,7 +268,8 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
       factory = await startTestFactory({ tickHz: 120 });
       const session = await live(await factory.connect('player-sync1'));
       pump(session);
-      expect(session.welcome).toMatchObject({ mode: SYNC_MODE.lockstep, lastSeq: 0, slot: 0 });
+      expect(session.welcome).toMatchObject({ mode: SYNC_MODE.lockstep, lastSeq: 0 });
+      await tankReady(session);
       await until(() => session.lockstep.metrics.hashChecks >= 3, 12000);
       expect(session.lockstep.status).toBe('running');
       expect(session.received.snapshots).toBeGreaterThan(0);
@@ -169,7 +286,7 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
       const b = await live(await factory.connect('player-bbbb1'));
       pump(a);
       pump(b);
-      const { x, y } = emptyTile(a);
+      const { x, y } = await emptyTile(a);
 
       const ack = await a.place(x, y, KIND.conveyor, 0);
       expect(ack.result).toBe(RESULT.ok);
@@ -197,7 +314,7 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
   it('reddedilen komutun sonucu iletilir ve durum değişmez', async () => {
     factory = await startTestFactory();
     const a = await live(await factory.connect('player-rej01'));
-    const { x, y } = emptyTile(a);
+    const { x, y } = await emptyTile(a);
     const first = await a.place(x, y, KIND.wall, 0);
     const second = await a.place(x, y, KIND.wall, 0);
     expect(first.result).toBe(RESULT.ok);
@@ -212,7 +329,7 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
       factory = await startTestFactory({ tickHz: 120 });
       const session = await live(await factory.connect('player-recon'));
       pump(session);
-      const { x, y } = emptyTile(session);
+      const { x, y } = await emptyTile(session);
       expect((await session.place(x, y, KIND.wall, 0)).result).toBe(RESULT.ok);
       const epoch = session.welcome!.epoch;
       session.simulateDrop();
@@ -225,7 +342,7 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
       await until(() => session.lockstep.metrics.hashChecks >= 2, 12000);
       expect(session.lockstep.status).toBe('running');
       // Yeniden bağlanan oyuncu yeni sıra numarasıyla devam eder.
-      const next = emptyTile(session, 5);
+      const next = await emptyTile(session, 5);
       expect((await session.place(next.x, next.y, KIND.wall, 0)).result).toBe(RESULT.ok);
     },
   );
@@ -237,7 +354,7 @@ describe('kilit adımlı eşitleme (gerçek WebSocket)', () => {
       const session = await live(await factory.connect('player-desync'));
       pump(session);
       expect(session.resync()).toBe(false);
-      const { x, y } = emptyTile(session);
+      const { x, y } = await emptyTile(session);
       const state = session.lockstep.sim!.state;
       const tile = y * state.width + x;
       // Yerel bozulma: sunucunun hiç görmediği bir yapı. Sonraki karma denetiminde sapma saptanır.
@@ -342,7 +459,7 @@ describe('kalıcılık (yeniden başlatma)', () => {
     async () => {
       factory = await startTestFactory({ tickHz: 120 }, { keepData: false });
       const first = await live(await factory.connect('player-keep1'));
-      const { x, y } = emptyTile(first);
+      const { x, y } = await emptyTile(first);
       expect((await first.place(x, y, KIND.wall, 0)).result).toBe(RESULT.ok);
       const room = factory.factory.rooms.get('test')!;
       await until(() => room.simulation.tick > 90);
@@ -352,14 +469,18 @@ describe('kalıcılık (yeniden başlatma)', () => {
       await factory.restart();
       const restored = factory.factory.rooms.get('test')!;
       expect(restored.metrics().persistence.load).toMatchObject({ source: 'snapshot' });
+      // Sahipsiz tank kalmaz: önceki süreçten gelen yuvalar açılışta boşaltılır.
+      expect(restored.simulation.state.players.count).toBe(0);
       expect(restored.simulation.tick).toBeGreaterThanOrEqual(tickBefore);
       const tile = y * restored.simulation.state.width + x;
       expect(restored.simulation.state.kind[tile]).toBe(KIND.wall);
 
       const again = await live(await factory.connect('player-keep1'));
+      await tankReady(again);
+      expect(restored.simulation.state.players.slotOf('player-keep1')).toBeGreaterThanOrEqual(0);
       expect(again.welcome!.epoch).not.toBe(epochBefore);
       expect(again.welcome!.lastSeq).toBe(1);
-      const next = emptyTile(again, 3);
+      const next = await emptyTile(again, 3);
       const ack = await again.place(next.x, next.y, KIND.wall, 0);
       expect(ack.result).toBe(RESULT.ok);
       expect(ack.seq).toBe(2);
@@ -375,11 +496,9 @@ describe('ilgi alanı biçimi (gerçek WebSocket)', () => {
     await until(() => session.replica.hud !== null);
     const room = factory.factory.rooms.get('test')!;
     const s = room.simulation.state;
-    let target = -1;
-    for (let tile = 0; tile < s.count && target < 0; tile++)
-      if (s.kind[tile] === KIND.empty && s.ore[tile] === 0 && tile > s.width * 6) target = tile;
-    const x = target % s.width;
-    const y = Math.floor(target / s.width);
+    await until(() => s.players.slotOf('player-aoi01') >= 0);
+    const [{ x, y }] = tilesNearTank(s, s.players.slotOf('player-aoi01'), 1);
+    const target = y * s.width + x;
     expect((await session.place(x, y, KIND.wall, 0)).result).toBe(RESULT.ok);
     await until(() => session.replica.kind[target] === KIND.wall);
     expect(session.received.frames).toBeGreaterThan(0);

@@ -3,11 +3,10 @@ import { LockstepClient, type TickPacket } from '@/net/lockstep';
 import { LockstepFeed } from '@/net/lockstepFeed';
 import type { Ack } from '@/net/protocol';
 import type { SessionStatus } from '@/net/session';
-import type { FactoryCommand } from '@/sim/commands';
+import { COMMAND, type FactoryCommand } from '@/sim/commands';
 import { RESULT, type FactorySim } from '@/sim/sim';
 
 const PLAYER_KEY = 'lab-local';
-const PLAYER_SLOT = 0;
 
 /** Duvar saati geride kalırsa (sekme arka planı) tek `pump`ta yetişilecek en çok adım. */
 const MAX_CATCH_UP = 8;
@@ -34,6 +33,7 @@ interface Waiting {
  */
 export class LocalSession {
   status: SessionStatus = 'live';
+  readonly key = PLAYER_KEY;
   rttMs = 0;
   readonly lockstep = new LockstepClient();
   /** Yetkili simülasyonun tek adım süresi penceresi (ms). */
@@ -58,6 +58,8 @@ export class LocalSession {
     this.now = options.now ?? (() => performance.now());
     this.sustainUnits = options.sustainUnits ?? 0;
     this.feed = new LockstepFeed(authority.tick);
+    // Tank istemci anlık görüntüsünden önce doğar: sunucudaki JOIN'in karşılığı.
+    authority.applyRaw({ type: COMMAND.join, key: PLAYER_KEY }, -1);
     this.install();
   }
 
@@ -100,7 +102,7 @@ export class LocalSession {
     for (const entry of batch) {
       const outcome = authority.apply(PLAYER_KEY, entry.seq, entry.command);
       if (outcome.fresh && outcome.result === RESULT.ok)
-        this.feed.record(authority.tick, PLAYER_SLOT, entry.command);
+        this.feed.record(authority.tick, authority.state.players.slotOf(PLAYER_KEY), entry.command);
       this.rttMs = now - entry.sentAt;
       entry.resolve({ seq: entry.seq, result: outcome.result, tick: authority.tick });
     }

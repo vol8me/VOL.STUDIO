@@ -1,6 +1,6 @@
 import { open, readFile, type FileHandle } from 'node:fs/promises';
 import { ByteReader, ByteWriter, crc32 } from '@/net/bytes';
-import { readCommand, writeCommand, type FactoryCommand } from '@/sim/commands';
+import { isSystemCommand, readCommand, writeCommand, type FactoryCommand } from '@/sim/commands';
 
 /**
  * Komut günlüğü: anlık görüntüden sonra gelen her kabul edilmiş komut ve düzenli kalp atışları.
@@ -8,11 +8,11 @@ import { readCommand, writeCommand, type FactoryCommand } from '@/sim/commands';
  * durur. Ack, kayıt `commit()` ile kalıcı olduktan sonra gönderilir.
  */
 const MAGIC = 0x4c4a4656; // "VFJL"
-const VERSION = 1;
+const VERSION = 2;
 const HEADER_BYTES = 16;
 const MAX_RECORD_BYTES = 1024;
 
-export const RECORD = { command: 1, beat: 2 } as const;
+export const RECORD = { command: 1, beat: 2, system: 3 } as const;
 
 export interface JournalHeader {
   readonly baseTick: number;
@@ -27,7 +27,14 @@ export type JournalRecord =
       readonly seq: number;
       readonly command: FactoryCommand;
     }
-  | { readonly kind: typeof RECORD.beat; readonly tick: number; readonly hash: number };
+  | { readonly kind: typeof RECORD.beat; readonly tick: number; readonly hash: number }
+  /** Sunucunun kendi komutu (JOIN/LEAVE): oyuncu anahtarı ve sırası yoktur, `slot` leave için gereklidir. */
+  | {
+      readonly kind: typeof RECORD.system;
+      readonly tick: number;
+      readonly slot: number;
+      readonly command: FactoryCommand;
+    };
 
 export function encodeCommandRecord(
   tick: number,
@@ -42,6 +49,19 @@ export function encodeCommandRecord(
   const encoded = new TextEncoder().encode(key);
   out.u8(encoded.length);
   out.bytes(encoded);
+  writeCommand(out, command);
+  return out.finish();
+}
+
+export function encodeSystemRecord(
+  tick: number,
+  slot: number,
+  command: FactoryCommand,
+): Uint8Array {
+  const out = new ByteWriter(80);
+  out.u8(RECORD.system);
+  out.u32(tick);
+  out.u8(slot);
   writeCommand(out, command);
   return out.finish();
 }
@@ -71,6 +91,14 @@ function decode(payload: Uint8Array): JournalRecord {
     const hash = input.u32();
     if (input.remaining !== 0) throw new RangeError('Kalp atışı kaydında artık bayt var.');
     return { kind, tick, hash };
+  }
+  if (kind === RECORD.system) {
+    const slot = input.u8();
+    const command = readCommand(input);
+    if (command === null || !isSystemCommand(command))
+      throw new RangeError('Sistem kaydındaki komut geçersiz.');
+    if (input.remaining !== 0) throw new RangeError('Sistem kaydında artık bayt var.');
+    return { kind, tick, slot, command };
   }
   if (kind !== RECORD.command) throw new RangeError(`Bilinmeyen günlük kaydı: ${kind}`);
   const seq = input.u32();

@@ -164,11 +164,9 @@ export class WorldView {
     if (shots.length > 0) {
       g.lineStyle(2, PALETTE.shot, 1);
       for (const shot of shots) {
-        const ty = Math.floor(shot.tile / s.width);
-        const tx = shot.tile - ty * s.width;
         g.lineBetween(
-          (tx + 0.5) * tilePx,
-          (ty + 0.5) * tilePx,
+          shot.fromX * tilePx,
+          shot.fromY * tilePx,
           shot.targetX * tilePx,
           shot.targetY * tilePx,
         );

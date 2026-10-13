@@ -48,7 +48,7 @@ export const WORLD = {
  * hızı, adım sırası ya da bir sabit değişince artırılır. Sunucu farklı sürümdeki istemciyi katılımda
  * reddeder: aksi hâlde eski istemci her karma denetiminde ayrışıp sürekli yeni anlık görüntü isterdi.
  */
-export const SIM_VERSION = 1;
+export const SIM_VERSION = 2;
 
 export const SIM = {
   /** Sunucu simülasyon hızı. */
@@ -122,6 +122,9 @@ export const UNIT_KIND = { crawler: 1, brute: 2 } as const;
 
 export const UNIT_POOL = 2048;
 
+/** Birimin oyuncuya temas başına hasarı (bina hasarından ayrıdır). */
+export const UNIT_PLAYER_DAMAGE = { crawler: 1, brute: 3 } as const;
+
 /**
  * Çekirdek, yarıçapındaki taretleri bant gerektirmeden besler: lojistik sadeleştirmesi.
  * Bant ile beslemek de çalışır (`offer`); bu kural savunmayı otomatik ayakta tutar.
@@ -144,11 +147,57 @@ export const START_RESOURCES = { ore: 300, plate: 40 } as const;
 /** Yol alanı en çok bu aralıkta yeniden hesaplanır (katı bina değişimi sonrası). */
 export const FLOW_RECOMPUTE_MIN_TICKS = 15;
 
-/** Oyuncu sınırları. Komutlar dünya genelinde geçerlidir: oyuncunun konumu ya da menzili yoktur. */
+/**
+ * Oyuncu: dünyada bir tank. Kimlik anahtarla gelir, yuvayı sim verir (JOIN); hareket niyeti komutla,
+ * konum ve ateş simülasyondadır. Yapı komutları yalnız oyuncunun `buildRange` menzilindeki tile'a geçer.
+ */
 export const PLAYER = {
   commandsPerSecond: 20,
   maxPlayers: 12,
+  /** Oyuncu yuvası dizi boyutu; bağlı oyuncu sınırından büyüktür (kopuk oyuncu yuvası bir süre dolu kalır). */
+  slots: 16,
+  hp: 300,
+  /** Düz zeminde adım başına tile. */
+  speed: 5.2 / 30,
+  /** Çarpışma dairesi yarıçapı (tile). */
+  radius: 0.38,
+  buildRange: 12,
+  /** Hareket niyeti bu kadar adım yenilenmezse tank durur: kopan ya da donan istemci kaçak bırakmaz. */
+  moveTtlTicks: 90,
+  respawnTicks: 150,
+  gun: { range: 7.5, damage: 5, cooldown: 5 },
+  /** Birim bu yarıçap içindeyse her `contactEvery` adımda oyuncuya vurur. */
+  contact: { radius: 0.75, every: 3 },
+  /** Doğuş: çekirdek merkezinden bu uzaklıktaki halkada ilk boş nokta. */
+  spawnRing: 3.4,
 } as const;
+
+/**
+ * Hareket niyeti yönleri: 0 durur, 1..16 doğudan başlayıp saat yönünde 22,5° adımla. Sabit sayılar
+ * bilinçlidir: `Math.cos`/`Math.sin` motorlar arasında bit özdeş olmayabilir ve konum karmaya girer.
+ */
+export const MOVE_DIRECTIONS = 16;
+const C = 0.9238795325112867;
+const S = 0.3826834323650898;
+const D = 0.7071067811865476;
+export const DIR_VECTORS: readonly (readonly [number, number])[] = [
+  [1, 0],
+  [C, S],
+  [D, D],
+  [S, C],
+  [0, 1],
+  [-S, C],
+  [-D, D],
+  [-C, S],
+  [-1, 0],
+  [-C, -S],
+  [-D, -D],
+  [-S, -C],
+  [0, -1],
+  [S, -C],
+  [D, -D],
+  [C, -S],
+];
 
 /** Ağ ayarları (sunucu ve istemci ortak). */
 export const NET = {

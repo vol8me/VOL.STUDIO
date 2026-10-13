@@ -228,6 +228,9 @@ export class WorldStore {
       if (record.kind === RECORD.command) {
         sim.apply(record.key, record.seq, record.command);
         commands++;
+      } else if (record.kind === RECORD.system) {
+        sim.applyRaw(record.command, record.slot);
+        commands++;
       } else if (sim.stateHash() !== record.hash) {
         mismatches++;
       }

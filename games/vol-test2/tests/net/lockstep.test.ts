@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createStatefulRandom } from '@volstudio/core/random';
-import { KIND, NET } from '../../src/config/factory';
+import { KIND, MOVE_DIRECTIONS, NET } from '../../src/config/factory';
 import { ByteWriter } from '../../src/net/bytes';
 import {
   LockstepClient,
@@ -15,6 +15,8 @@ import { LockstepFeed } from '@/net/lockstepFeed';
 import { SMALL } from '../helpers/world';
 
 /** Sunucu tarafı: gerçek akış, gerçek kodlama; ağ yerine doğrudan teslim. */
+const PLAYER_KEY = 'player-synthetic';
+
 class Server {
   readonly sim: FactorySim;
   readonly feed: LockstepFeed;
@@ -28,13 +30,42 @@ class Server {
   constructor(seed = 21) {
     this.sim = FactorySim.create({ ...SMALL, seed });
     buildComb(this.sim, { maxBelts: 300, turrets: 6, fill: 1, smelterEvery: 2 });
+    this.sim.applyRaw({ type: COMMAND.join, key: PLAYER_KEY }, -1);
     this.feed = new LockstepFeed(this.sim.tick);
+  }
+
+  /** Sunucunun kendi komutu (odadaki `applyOrders`ın karşılığı): uygular ve akışa yazar. */
+  system(command: FactoryCommand, key: string): void {
+    const tanks = this.sim.state.players;
+    const slot = tanks.slotOf(key);
+    this.sim.applyRaw(command, slot);
+    this.feed.record(
+      this.sim.tick,
+      command.type === COMMAND.leave ? slot : tanks.slotOf(key),
+      command,
+    );
+  }
+
+  /** Bir oyuncu komutu: yalnız kabul edileni akışa yazılır (odadaki `advance`ın karşılığı). */
+  submit(key: string, seq: number, command: FactoryCommand): number {
+    const outcome = this.sim.apply(key, seq, command);
+    if (outcome.fresh && outcome.result === RESULT.ok) {
+      this.feed.record(this.sim.tick, this.sim.state.players.slotOf(key), command);
+      this.accepted++;
+    }
+    return outcome.result;
   }
 
   private randomCommand(): FactoryCommand {
     const r = this.random;
-    const x = Math.floor(r.next() * SMALL.width);
-    const y = Math.floor(r.next() * SMALL.height);
+    const tanks = this.sim.state.players;
+    const slot = tanks.slotOf(PLAYER_KEY);
+    const near = (center: number, limit: number): number =>
+      Math.min(limit - 1, Math.max(0, Math.floor(center + (r.next() - 0.5) * 20)));
+    if (r.next() < 0.3)
+      return { type: COMMAND.move, dir: Math.floor(r.next() * (MOVE_DIRECTIONS + 1)) };
+    const x = near(tanks.x[slot], SMALL.width);
+    const y = near(tanks.y[slot], SMALL.height);
     const roll = r.next();
     if (roll < 0.55)
       return {
@@ -53,9 +84,9 @@ class Server {
     const sim = this.sim;
     while (this.random.next() < commandsPerTick / (1 + commandsPerTick)) {
       const command = this.randomCommand();
-      const outcome = sim.apply('player-synthetic', this.seq++, command);
+      const outcome = sim.apply(PLAYER_KEY, this.seq++, command);
       if (outcome.fresh && outcome.result === RESULT.ok) {
-        this.feed.record(sim.tick, 0, command);
+        this.feed.record(sim.tick, sim.state.players.slotOf(PLAYER_KEY), command);
         this.accepted++;
       }
     }
@@ -91,6 +122,24 @@ describe('kilit adımlı eşitleme', () => {
     expect(client.metrics.hashChecks).toBeGreaterThan(6);
     expect(client.metrics.commandsApplied).toBe(server.accepted);
     expect(server.accepted).toBeGreaterThan(50);
+  });
+
+  it('ikinci oyuncunun katılımı, hareketi ve ayrılışı da akışla birebir taşınır', () => {
+    const server = new Server(14);
+    const client = server.join();
+    const other = 'player-second';
+    for (let step = 0; step < 900; step++) {
+      if (step === 100) server.system({ type: COMMAND.join, key: other }, other);
+      if (step === 130)
+        expect(server.submit(other, 1, { type: COMMAND.move, dir: 3 })).toBe(RESULT.ok);
+      if (step === 700) server.system({ type: COMMAND.leave }, other);
+      server.tick();
+      client.advance(Infinity);
+    }
+    expect(server.sim.state.players.slotOf(other)).toBe(-1);
+    expect(client.status).toBe('running');
+    expect(client.sim!.stateHash()).toBe(server.sim.stateHash());
+    expect(client.metrics.hashChecks).toBeGreaterThan(3);
   });
 
   it('paket sınırında olmayan bir adımda geç katılan, anlık görüntüyle yetişir', () => {

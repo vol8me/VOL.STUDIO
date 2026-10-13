@@ -5,13 +5,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createStatefulRandom } from '@volstudio/core/random';
-import { KIND } from '../../src/config/factory';
+import { KIND, MOVE_DIRECTIONS } from '../../src/config/factory';
 import { COMMAND, type FactoryCommand } from '../../src/sim/commands';
 import { buildComb } from '../../src/sim/scenario';
 import { FactorySim } from '../../src/sim/sim';
 import {
   encodeBeatRecord,
   encodeCommandRecord,
+  encodeSystemRecord,
   JournalWriter,
   readJournal,
   RECORD,
@@ -45,6 +46,23 @@ describe('günlük', () => {
     expect(read.records).toEqual([
       { kind: RECORD.command, tick: 80, key: 'player-one', seq: 1, command },
       { kind: RECORD.beat, tick: 90, hash: 0xabcdef },
+    ]);
+  });
+
+  it('sistem kaydı (JOIN/LEAVE) yuva ve komutuyla aynen okunur; istemci komutu sistem kaydına giremez', async () => {
+    const path = join(await scratch(), 'j.log');
+    const journal = await JournalWriter.create(path, { baseTick: 0, epoch: 1 });
+    const joined: FactoryCommand = { type: COMMAND.join, key: 'player-late1' };
+    journal.append(encodeSystemRecord(12, 3, joined));
+    journal.append(encodeSystemRecord(40, 3, { type: COMMAND.leave }));
+    journal.append(encodeSystemRecord(41, 0, command));
+    await journal.close();
+    const read = (await readJournal(path))!;
+    // Üçüncü kayıt sistem komutu değildir: okuyucu kuyruğu keser, öncekiler geçerlidir.
+    expect(read.torn).toBe(true);
+    expect(read.records).toEqual([
+      { kind: RECORD.system, tick: 12, slot: 3, command: joined },
+      { kind: RECORD.system, tick: 40, slot: 3, command: { type: COMMAND.leave } },
     ]);
   });
 
@@ -124,12 +142,29 @@ class Driver {
     this.journal = this.store.rotateJournal(this.sim.tick, 1);
   }
 
+  private joined = false;
+
+  /** Sunucu odasının yaptığı gibi: dünya durumunu değiştirir ve sistem kaydı yazar. */
+  system(command: FactoryCommand, key: string): void {
+    const tanks = this.sim.state.players;
+    const slot = tanks.slotOf(key);
+    this.sim.applyRaw(command, slot);
+    const effective = command.type === COMMAND.leave ? slot : tanks.slotOf(key);
+    this.journal.append(encodeSystemRecord(this.sim.tick, effective, command));
+  }
+
   private command(): FactoryCommand {
     const r = this.random;
+    const tanks = this.sim.state.players;
+    const slot = tanks.slotOf('player-driver');
+    if (r.next() < 0.3)
+      return { type: COMMAND.move, dir: Math.floor(r.next() * (MOVE_DIRECTIONS + 1)) };
+    const near = (center: number, limit: number): number =>
+      Math.min(limit - 1, Math.max(0, Math.floor(center + (r.next() - 0.5) * 20)));
     return {
       type: COMMAND.place,
-      x: Math.floor(r.next() * SMALL.width),
-      y: Math.floor(r.next() * SMALL.height),
+      x: near(tanks.x[slot], SMALL.width),
+      y: near(tanks.y[slot], SMALL.height),
       kind: r.next() < 0.7 ? KIND.conveyor : KIND.wall,
       rot: Math.floor(r.next() * 4),
     };
@@ -137,6 +172,12 @@ class Driver {
 
   tick(): void {
     const sim = this.sim;
+    if (!this.joined) {
+      this.joined = true;
+      this.system({ type: COMMAND.join, key: 'player-driver' }, 'player-driver');
+    }
+    if (sim.tick === 400) this.system({ type: COMMAND.join, key: 'player-late1' }, 'player-late1');
+    if (sim.tick === 650) this.system({ type: COMMAND.leave }, 'player-late1');
     if (this.random.next() < 0.4) {
       const next = this.command();
       const seq = this.seq++;

@@ -5,7 +5,7 @@ import { ByteReader, ByteWriter } from './bytes';
  * İstemci-sunucu ikili sözleşmesi. Colyseus yalnız taşıyıcıdır: mesaj türü sayıdır, yük ham
  * bayttır. Hem sunucu hem istemci bu dosyadan okur; biçim yalnız burada tanımlanır.
  */
-export const WIRE_VERSION = 1;
+export const WIRE_VERSION = 2;
 
 /** Colyseus oda adı: istemci katılımı ve sunucu kaydı aynı değeri okur. */
 export const ROOM_NAME = 'factory';
@@ -44,7 +44,7 @@ export const SYNC_MODE = { lockstep: 0, aoi: 1 } as const;
 export type SyncMode = (typeof SYNC_MODE)[keyof typeof SYNC_MODE];
 
 /** Bir çerçevedeki bölüm türleri. */
-export const SECTION = { structure: 1, dynamics: 2, belts: 3, hud: 4 } as const;
+export const SECTION = { structure: 1, dynamics: 2, belts: 3, hud: 4, players: 5 } as const;
 
 /** Birim konumu 1/64 tile çözünürlüğündedir; 1024 tile'a kadar u16'ya sığar. */
 export const POS_SCALE = 64;
@@ -53,8 +53,11 @@ export const CHUNK_TILES = CHUNK * CHUNK;
 
 /** Birim kaydı: yuva u16, nesil u8, tür+can u8, x u16, y u16. */
 export const UNIT_RECORD_BYTES = 8;
-/** Taret atışı kaydı: kaynak x,y ve hedef x,y; hepsi u16 (tile için 1, hedef için 1/64). */
-export const SHOT_RECORD_BYTES = 8;
+/** Atış kaydı: çıkış x,y ve hedef x,y (u16, 1/64 tile) ile kaynak türü (u8, `SHOT_SOURCE`). */
+export const SHOT_RECORD_BYTES = 9;
+/** Tank kaydı: yuva u8, durum u8, can u16, x u16, y u16 (1/64 tile), nişan x,y u8 (birim vektör × 127 + 127). */
+export const PLAYER_RECORD_BYTES = 10;
+export const AIM_SCALE = 127;
 
 /** Chunk koordinatında kapalı dikdörtgen. */
 export interface ChunkRect {
@@ -101,8 +104,6 @@ export interface Welcome {
   readonly mode: SyncMode;
   /** Dünyanın canlı birim hedefi (ölçüm dünyaları); kilit adımlı istemci aynısını kullanmalıdır. */
   readonly sustainUnits: number;
-  /** Bu oyuncunun kilit adımlı paketlerdeki oyuncu numarası. */
-  readonly slot: number;
 }
 
 export function writeWelcome(welcome: Welcome): Uint8Array {
@@ -119,7 +120,6 @@ export function writeWelcome(welcome: Welcome): Uint8Array {
   out.u32(welcome.lastSeq);
   out.u8(welcome.mode);
   out.u16(welcome.sustainUnits);
-  out.u8(welcome.slot);
   return out.finish();
 }
 
@@ -139,7 +139,6 @@ export function readWelcome(bytes: Uint8Array): Welcome {
     lastSeq: input.u32(),
     mode: input.u8() === SYNC_MODE.aoi ? SYNC_MODE.aoi : SYNC_MODE.lockstep,
     sustainUnits: input.u16(),
-    slot: input.u8(),
   };
 }
 

@@ -2,7 +2,9 @@ import { BELT } from '@/config/factory';
 import { ByteReader } from './bytes';
 import {
   CHUNK,
+  AIM_SCALE,
   CHUNK_TILES,
+  PLAYER_RECORD_BYTES,
   POS_SCALE,
   SECTION,
   SHOT_RECORD_BYTES,
@@ -33,7 +35,23 @@ export interface RemoteShot {
   readonly fromY: number;
   readonly toX: number;
   readonly toY: number;
+  /** `SHOT_SOURCE`: taret ya da oyuncu tankı. */
+  readonly source: number;
   readonly at: number;
+}
+
+/** Uzaktaki tankın son iki konumu ve nişanı. */
+export interface RemotePlayer {
+  readonly slot: number;
+  status: number;
+  hp: number;
+  x: number;
+  y: number;
+  prevX: number;
+  prevY: number;
+  aimX: number;
+  aimY: number;
+  at: number;
 }
 
 /**
@@ -57,6 +75,7 @@ export class Replica {
   beltPos = new Uint16Array(0);
 
   readonly units = new Map<number, RemoteUnit>();
+  readonly players = new Map<number, RemotePlayer>();
   /** Son çerçevelerdeki atışlar; çizim bunları kısa süre gösterir. */
   readonly shots: RemoteShot[] = [];
 
@@ -80,6 +99,7 @@ export class Replica {
     this.beltItem = new Uint8Array(count * BELT.slots);
     this.beltPos = new Uint16Array(count * BELT.slots);
     this.units.clear();
+    this.players.clear();
     this.shots.length = 0;
     this.rect = null;
     this.hud = null;
@@ -105,6 +125,9 @@ export class Replica {
           break;
         case SECTION.belts:
           this.applyBelts(body);
+          break;
+        case SECTION.players:
+          this.applyPlayers(body, now);
           break;
         case SECTION.hud:
           this.hud = readHud(body);
@@ -175,10 +198,11 @@ export class Replica {
         for (let index = 0; index < shots; index++) {
           const record = new ByteReader(input.bytes(SHOT_RECORD_BYTES));
           this.shots.push({
-            fromX: record.u16() + 0.5,
-            fromY: record.u16() + 0.5,
+            fromX: record.u16() / POS_SCALE,
+            fromY: record.u16() / POS_SCALE,
             toX: record.u16() / POS_SCALE,
             toY: record.u16() / POS_SCALE,
+            source: record.u8(),
             at: now,
           });
         }
@@ -186,6 +210,39 @@ export class Replica {
     }
     for (const [slot, unit] of this.units) if (unit.seen !== generation) this.units.delete(slot);
     while (this.shots.length > 0 && now - this.shots[0].at > 400) this.shots.shift();
+  }
+
+  private applyPlayers(input: ByteReader, now: number): void {
+    const count = input.u8();
+    const present = new Set<number>();
+    for (let index = 0; index < count; index++) {
+      const record = new ByteReader(input.bytes(PLAYER_RECORD_BYTES));
+      const slot = record.u8();
+      const status = record.u8();
+      const hp = record.u16();
+      const x = record.u16() / POS_SCALE;
+      const y = record.u16() / POS_SCALE;
+      const aimX = (record.u8() - AIM_SCALE) / AIM_SCALE;
+      const aimY = (record.u8() - AIM_SCALE) / AIM_SCALE;
+      present.add(slot);
+      const known = this.players.get(slot);
+      if (known === undefined) {
+        this.players.set(slot, { slot, status, hp, x, y, prevX: x, prevY: y, aimX, aimY, at: now });
+        continue;
+      }
+      // Doğuşta ışınlanma gelir: eski konumdan kayma çizilmez.
+      const respawned = known.status !== status && status === 1;
+      known.prevX = respawned ? x : known.x;
+      known.prevY = respawned ? y : known.y;
+      known.status = status;
+      known.hp = hp;
+      known.x = x;
+      known.y = y;
+      known.aimX = aimX;
+      known.aimY = aimY;
+      known.at = now;
+    }
+    for (const slot of this.players.keys()) if (!present.has(slot)) this.players.delete(slot);
   }
 
   private applyBelts(input: ByteReader): void {

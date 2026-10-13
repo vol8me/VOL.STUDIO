@@ -173,7 +173,7 @@ export class LockstepClient {
       while (this.cursor < this.queued.length && this.queued[this.cursor].tick === tick) {
         const entry = this.queued[this.cursor++];
         // Sonuç sunucuyla aynıdır; istemci defteri tutmaz, bu yüzden doğrudan uygulanır.
-        sim.applyRaw(entry.command);
+        sim.applyRaw(entry.command, entry.player);
         this.metrics.commandsApplied++;
       }
       if (this.cursor > 4096) {

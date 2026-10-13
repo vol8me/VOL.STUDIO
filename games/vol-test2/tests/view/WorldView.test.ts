@@ -237,7 +237,7 @@ describe('WorldView', () => {
     const sim = smallSim();
     const controller = controllerFor(sim);
     vi.spyOn(controller, 'activeShots').mockReturnValue([
-      { tile: sim.state.index(2, 2), targetX: 4, targetY: 4, until: Infinity },
+      { fromX: 2.5, fromY: 2.5, source: 0, targetX: 4, targetY: 4, until: Infinity },
     ]);
     const fake = fakeScene({ x: 0, y: 0, width: CHUNK_PX, height: CHUNK_PX });
     new WorldView(fake.scene, controller).update();

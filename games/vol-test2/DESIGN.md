@@ -17,7 +17,7 @@ karar [backend araştırmasındadır](../../docs/backend-research.md).
   (`Math.hypot` ve trigonometri durum değiştiren kodda yoktur). Aynı sayıların farklı motor
   ve işlemci mimarisinde aynı çıkması buna bağlıdır; kural bozulursa `scripts/engines.ts` ve
   cihaz denemesi karmaların ayrıştığını gösterir.
-- Adım sırası sabittir: yol alanı, makineler, bantlar, dalga, uzamsal indeks, taretler, birimler.
+- Adım sırası sabittir: yol alanı, makineler, bantlar, dalga, uzamsal indeks, taretler, oyuncular, birimler.
   Komutlar adımlar arasında uygulanır ve `state.tick` ile damgalanır. RNG `mulberry32`'dir ve
   durumu anlık görüntüye girer.
 - Yol alanı çekirdekten genişlik öncelikli taramadır (`FlowSolver`). CORE `FlowField` hücre
@@ -26,6 +26,16 @@ karar [backend araştırmasındadır](../../docs/backend-research.md).
 - Taret hedefi eşit uzaklıkta düşük yuvayı seçer; hücre içi sıra geri yüklemede değişse de
   sonuç aynıdır. Çekirdek, yarıçapındaki taretleri levha harcayarak besler (lojistik
   sadeleştirmesi); bantla beslemek de çalışır.
+- Oyuncu dünyada bir tanktır (`players.ts`, `playerMove.ts`). Kimlik anahtardır, yuvayı simülasyon verir:
+  `JOIN`/`LEAVE` yalnız sunucunun komutudur (istemci mesajında ve `FactorySim.apply`'da reddedilir) ve
+  anahtar-yuva eşlemesi anlık görüntüye giren durumdur. `MOVE` 16 yönlü bir niyettir ve
+  `PLAYER.moveTtlTicks` sonra söner: kopan ya da donan istemci kaçak tank bırakmaz. Çarpışma daire–kare
+  sınamasıdır, yalnız dört işlem kullanır; yön vektörleri sabit sayıdır (trigonometri yok) ve görünümdeki
+  öngörü aynı `moveCircle`'ı koşar. Yapı komutları yaşayan tankın `PLAYER.buildRange` menzilindeki tile'a
+  geçer (`tooFar`); katı bina tankın altına konmaz. Tank menzildeki en yakın birime kendiliğinden ateş
+  eder (eşit uzaklıkta düşük yuva), birim teması hasar verir, ölen tank `respawnTicks` sonra çekirdek
+  halkasında doğar. Reddedilen komut durumu değiştirmez: kilit adımlı istemciler yalnız kabul edilen
+  komutları alır.
 - `Ledger` oyuncu başına son komut sırasını tutar. Yeniden gönderilen komut ikinci kez
   uygulanmaz, önbellekteki sonuç döner. Defter anlık görüntüye girer.
 
@@ -55,18 +65,20 @@ Dünya durumu Colyseus `Schema` ile eşitlenmez: mesajlar sayıyla adlandırılm
   eşitleme isteğidir. Anlık görüntü sıkıştırması iş parçacığı havuzundadır, adım döngüsünü
   bekletmez; eşzamanlı katılım sayısı sınırlıdır.
 - **Komut.** İstemci komutu oyuncu sırası ile yollar; sunucu doğrular, uygular ve günlüğe yazar,
-  kalıcı olduktan sonra `ack` döner (sonuç kodu ve adım). Oyuncu başına saniyede 20 komut,
+  kalıcı olduktan sonra `ack` döner (sonuç kodu ve adım). Sunucunun kendi `JOIN`/`LEAVE` emirleri adım
+  başında, istemci komutlarından önce uygulanır, günlüğe `system` kaydı olarak ve pakete yuva numarasıyla
+  yazılır; anlık görüntü adımlar arasında alındığı için yeni katılan istemci bir emri iki kez uygulamaz.
+  Aynı anahtarla yerinden etme tankı kaldırmaz, oturumun son kapanışı kaldırır. İstemci hareket niyetini
+  `STEER` ile sınırlı gönderir (komut hızının altında; yön değişince hemen, sürerken yenileyerek). Oyuncu başına saniyede 20 komut,
   bağlantı başına saniyede 120 mesaj sınırı vardır; bozuk mesaj yağdıran oyuncu düşürülür.
 - **Sürüm uyumu.** Katılımda istemci `protocol`, `wire` ve `sim` sürümünü yollar; sunucu uyuşmazlığı
   anlık görüntü sıkıştırması harcamadan reddeder (`sim` için tanınan hata kodu, istemci güncelleme ister).
-  `SIM_VERSION` kurallar (bant hızı, adım sırası, sabitler) değişince elle artırılır; unutulmasını
+  `SIM_VERSION` kurallar (bant hızı, adım sırası, oyuncu sabitleri) değişince elle artırılır; unutulmasını
   `tests/sim/golden.test.ts` kural parmak iziyle yakalar. Farklı kuralları koşturan bir istemci her karma
   denetiminde ayrışıp sürekli yeni anlık görüntü isteyeceği için eski istemciyi sunucuda tutmak desteklenmez:
   Steam ve Android güncellemeleri aynı anda yayımlanmazsa eski sürüm güncellenene dek bağlanamaz.
-  `Forge*` adlarının `Factory*` olarak değişmesi (oda adı `factory`, veri dizini `records/factory-data`)
-  mesaj baytlarını ve kuralları değiştirmedi (`golden.test.ts` karması aynı); bu yüzden `WIRE_VERSION`
-  ve `SIM_VERSION` artmadı. Dağıtılmış istemci olmadığı için oda adı için uyumluluk penceresi yoktur;
-  eski `records/forge-data` varsa elle taşınır.
+  Eski sürümün anlık görüntü ve günlük dosyaları okunmaz: sürüm uyuşmazlığı `SnapshotError` olur ve dünya
+  yeniden kurulur (`records/factory-data` elle silinebilir).
 - **Oyuncu anahtarı kimlik doğrulaması değildir.** İstemcinin ürettiği rastgele bir dizedir;
   aynı anahtarla yeni bağlantı eskisini yerinden eder. Gerçek kimlik (Steam, hesap) ürün
   kararıdır ve burada yoktur.
@@ -79,15 +91,16 @@ Dünya durumu Colyseus `Schema` ile eşitlenmez: mesajlar sayıyla adlandırılm
   Okuyucu önce bütün alanları ayrıştırır, sonra uygular: bozuk dosya canlı durumu kirletmez.
   Türetilmiş listeler ve chunk sürümleri kaydedilmez, geri yüklemede kurulur. Son iki anlık
   görüntü tutulur; bozuk olan atlanıp öncekine düşülür.
-- Günlük (`journal.ts`) anlık görüntüden sonra kabul edilen her komutu ve her 30 adımda bir
-  durum karmasını taşır. Çerçeve `[uzunluk][crc32][yük]`'tür; kesik ya da bozuk kuyruk ilk
+- Günlük (`journal.ts`) anlık görüntüden sonra kabul edilen her komutu, sunucunun `JOIN`/`LEAVE`
+  emirlerini (`system` kaydı) ve her 30 adımda bir durum karmasını taşır. Çerçeve `[uzunluk][crc32][yük]`'tür; kesik ya da bozuk kuyruk ilk
   kötü çerçevede durur. Komutlar grup halinde yazılır ve **ack, kayıt kalıcı olduktan sonra**
   gider.
 - Geri yüklemede günlük yeniden oynatılır ve karma kayıtlarıyla doğrulanır; sapma sayılır
   (`hashMismatches`). Dünya başına tek yazıcı kilidi vardır; ikinci süreç `WorldLockedError`
   alır. Her açılış yeni bir `epoch` üretir. Günlük yazımı hata verirse dünya salt okunur olur
   (`fault`) ve komutlar kabul edilmez; sessizce kayıpla devam etmez.
-- Oyuncu yokken dünya adım atmaya devam eder; anlık görüntü aralığı oyuncudan bağımsızdır.
+- Oyuncu yokken dünya adım atmaya devam eder; anlık görüntü aralığı oyuncudan bağımsızdır. Açılışta önceki
+  süreçten kalan tanklar boşaltılır: bağlantılar yeniden `JOIN` ile gelir.
 
 ## İstemci
 

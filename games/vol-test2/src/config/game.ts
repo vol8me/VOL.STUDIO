@@ -34,6 +34,12 @@ export const PACE = {
   maxStepsPerFrame: 8,
 } as const;
 
+/**
+ * Hareket niyetinin gönderimi: yön değişince en az `minIntervalMs` arayla, yön sürüyorsa `refreshMs`
+ * arayla yenilenir (sunucu niyeti `PLAYER.moveTtlTicks` sonra söndürür). Komut hız sınırının altında kalır.
+ */
+export const STEER = { minIntervalMs: 90, refreshMs: 900 } as const;
+
 /** HUD ve cihaz ölçümü için kayan pencere: son bu kadar kare ve simülasyon adımı. */
 export const STATS = { windowSamples: 240 } as const;
 

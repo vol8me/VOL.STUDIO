@@ -4,33 +4,24 @@ import {
   ITEM,
   KIND,
   MACHINES,
+  PLAYER,
   SUPPLY,
   UNIT,
   UNIT_KIND,
+  UNIT_PLAYER_DAMAGE,
   WAVES,
   WORLD,
 } from '@/config/factory';
-import { DX, DY, type FactoryState, type Unit } from './state';
+import { damagePlayer } from './players';
+import { SHOT_SOURCE, type Shot } from './shot';
+import { isSolid } from './solid';
+import { DX, DY, PLAYER_STATUS, type FactoryState, type Unit } from './state';
 
-/** Taret ateşi: kaynak tile ve hedef konum (tile uzayı). Bir adım için geçerlidir. */
-export interface Shot {
-  tile: number;
-  targetX: number;
-  targetY: number;
-}
+export type { Shot } from './shot';
 
 const specOf = (kind: number) => (kind === UNIT_KIND.brute ? UNIT.brute : UNIT.crawler);
 
-/** Katı bina birim yolunu keser; bant ve boş tile'lar geçilebilirdir. */
-export function isSolid(kind: number): boolean {
-  return (
-    kind === KIND.drill ||
-    kind === KIND.smelter ||
-    kind === KIND.turret ||
-    kind === KIND.wall ||
-    kind === KIND.core
-  );
-}
+export { isSolid } from './solid';
 
 /**
  * Çekirdekten geriye 4 komşuluklu genişlik öncelikli tarama. Maliyetler eşit
@@ -161,10 +152,26 @@ export function clearTile(s: FactoryState, tile: number): void {
   s.touchStructure(tile);
 }
 
+/** Birim, temas yarıçapındaki yaşayan oyunculara vurur; her `contact.every` adımda bir kez. */
+function contactPlayers(s: FactoryState, unit: Unit): void {
+  const p = s.players;
+  const radiusSq = PLAYER.contact.radius * PLAYER.contact.radius;
+  const damage =
+    unit.kind === UNIT_KIND.brute ? UNIT_PLAYER_DAMAGE.brute : UNIT_PLAYER_DAMAGE.crawler;
+  for (let slot = 0; slot < PLAYER.slots; slot++) {
+    if (p.status[slot] !== PLAYER_STATUS.alive) continue;
+    const dx = unit.x - p.x[slot];
+    const dy = unit.y - p.y[slot];
+    if (dx * dx + dy * dy < radiusSq) damagePlayer(s, slot, damage);
+  }
+}
+
 export function unitStep(s: FactoryState): void {
   const center = s.coreCenter;
+  const playersAlive = s.players.anyAlive;
   for (const unit of s.units) {
     if (!unit.alive) continue;
+    if (playersAlive && (s.tick + unit.slot) % PLAYER.contact.every === 0) contactPlayers(s, unit);
     const spec = specOf(unit.kind);
     const cx = Math.min(s.width - 1, Math.max(0, Math.floor(unit.x)));
     const cy = Math.min(s.height - 1, Math.max(0, Math.floor(unit.y)));
@@ -269,7 +276,14 @@ export function turretStep(s: FactoryState, index: SpatialIndex<Unit>, shots: Sh
     target.hp -= MACHINES.turret.damage;
     s.bufA[tile]--;
     s.timer[tile] = MACHINES.turret.cooldown;
-    shots.push({ tile, targetX: target.x, targetY: target.y });
+    shots.push({
+      tile,
+      fromX: x + 0.5,
+      fromY: y + 0.5,
+      targetX: target.x,
+      targetY: target.y,
+      source: SHOT_SOURCE.turret,
+    });
     if (target.hp <= 0) s.releaseUnit(target);
   }
 }

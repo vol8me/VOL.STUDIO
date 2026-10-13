@@ -1,9 +1,5 @@
 # İş listesi
 
-- [ ] Gömülü oyuncu (sim): sunucunun verdiği JOIN/LEAVE ile slot, MOVE niyeti, bina ve arazi çarpışması,
-      süzgeçli otomatik ateş, ölüm ve doğuş; yuva komutla günlüğe ve tick paketine girer, kopunca sıfır niyet.
-      Kapanır: SIM_VERSION 2, anlık görüntü v2, yeni altın karma, günlük tekrarında özdeş durum, iki istemcide
-      aynı `stateHash`, hız sınırına takılmayan niyet kodlaması testle kanıtlı.
 - [ ] İstemci dilimi: statik sanat chunk dokusuna pişer, PropField yalnız hareketli katmanları çizer; tank
       görünümü, `FollowCamera` ile sabit px/tile, birim hareket yumuşatıcısı, örümcek LOD'u.
       Kapanır: gerçek yakınlıkta (≈0,5 px/birim) ekran görüntüsü vol-test tankıyla yan yana değerlendirildi;
@@ -49,6 +45,10 @@
       `@volstudio/network`a taşı. Kapanır: ikinci tüketici ve paylaşılan testler.
 
 ## Kapatılanlar
+
+- [x] Gömülü oyuncu (sim): sunucunun verdiği JOIN/LEAVE ile yuva, MOVE niyeti (süre sonunda söner), bina
+      çarpışması, otomatik ateş, ölüm ve doğuş, inşa menzili; SIM_VERSION 2, anlık görüntü v2, yeni altın
+      karma, günlük tekrarında özdeş durum, iki istemcide aynı `stateHash` testle kanıtlı.
 
 - [x] Kanıt oyunu: başsız simülasyon, kalıcı Colyseus dünya odası (günlük, çökme kurtarma, yeniden
       eşitleme), kilit adımlı Phaser istemcisi, yük testi, motor/cihaz determinizmi ve ölçüm

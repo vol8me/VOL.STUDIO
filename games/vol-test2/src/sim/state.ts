@@ -1,4 +1,4 @@
-import { BELT, ITEM_COUNT, KIND, UNIT_POOL, WORLD } from '@/config/factory';
+import { BELT, ITEM_COUNT, KIND, PLAYER, UNIT_POOL, WORLD } from '@/config/factory';
 
 /** Yön 0=doğu, 1=güney, 2=batı, 3=kuzey. */
 export const DX = [1, 0, -1, 0] as const;
@@ -12,6 +12,66 @@ export class Unit {
   kind = 0;
   alive = false;
   constructor(readonly slot: number) {}
+}
+
+/** Oyuncu yuvasının durumu: 0 boş, 1 yaşıyor, 2 ölü (doğuşu bekliyor). */
+export const PLAYER_STATUS = { free: 0, alive: 1, dead: 2 } as const;
+
+/**
+ * Oyuncu tankları: yuva başına düz tipli diziler. Anahtar-yuva eşlemesi simülasyon durumudur (JOIN ile
+ * kurulur, anlık görüntüde taşınır); böylece günlük tekrarında ve kilit adımlı istemcide aynı yuva çıkar.
+ */
+export class Players {
+  readonly status = new Uint8Array(PLAYER.slots);
+  readonly x = new Float64Array(PLAYER.slots);
+  readonly y = new Float64Array(PLAYER.slots);
+  /** Taret yönü: birim vektör. Açı `Math.atan2` ile görünümde türetilir; simülasyon açı tutmaz. */
+  readonly aimX = new Float64Array(PLAYER.slots).fill(1);
+  readonly aimY = new Float64Array(PLAYER.slots);
+  /** Hareket niyeti: 0 durur, 1..16 yön. */
+  readonly dir = new Uint8Array(PLAYER.slots);
+  /** Niyetin geçerli olduğu son adım (hariç). */
+  readonly moveUntil = new Uint32Array(PLAYER.slots);
+  readonly hp = new Uint16Array(PLAYER.slots);
+  readonly cooldown = new Uint8Array(PLAYER.slots);
+  readonly respawnAt = new Uint32Array(PLAYER.slots);
+  readonly keys: (string | null)[] = Array.from({ length: PLAYER.slots }, () => null);
+
+  /** Anahtarın yuvası; yoksa -1. */
+  slotOf(key: string): number {
+    return this.keys.indexOf(key);
+  }
+
+  /** En düşük boş yuva; hepsi doluysa -1. */
+  lowestFree(): number {
+    return this.status.indexOf(PLAYER_STATUS.free);
+  }
+
+  /** Dolu yuva sayısı. */
+  get count(): number {
+    let count = 0;
+    for (const status of this.status) if (status !== PLAYER_STATUS.free) count++;
+    return count;
+  }
+
+  /** Yaşayan bir oyuncu var mı (birim-oyuncu etkileşimi bu durumda atlanır). */
+  get anyAlive(): boolean {
+    return this.status.includes(PLAYER_STATUS.alive);
+  }
+
+  clear(): void {
+    this.status.fill(0);
+    this.x.fill(0);
+    this.y.fill(0);
+    this.aimX.fill(1);
+    this.aimY.fill(0);
+    this.dir.fill(0);
+    this.moveUntil.fill(0);
+    this.hp.fill(0);
+    this.cooldown.fill(0);
+    this.respawnAt.fill(0);
+    this.keys.fill(null);
+  }
 }
 
 /**
@@ -52,6 +112,7 @@ export class FactoryState {
   readonly beltItem: Uint8Array;
   readonly beltPos: Uint16Array;
 
+  readonly players = new Players();
   readonly inventory = new Uint32Array(ITEM_COUNT);
   /** Çekirdeğe ulaşan toplam eşya (ölçüm). */
   readonly delivered = new Uint32Array(ITEM_COUNT);

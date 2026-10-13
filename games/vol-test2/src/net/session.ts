@@ -93,10 +93,14 @@ export class FactorySession {
   private readonly inflate: (bytes: Uint8Array) => Promise<Uint8Array>;
   private readonly now: () => number;
 
+  /** Oyuncu anahtarı: dünyadaki tankın yuvası `state.players.slotOf(key)` ile bulunur. */
+  readonly key: string;
+
   private constructor(
     private readonly room: Room,
     options: SessionOptions,
   ) {
+    this.key = options.key;
     this.inflate = options.inflate ?? inflateDeflate;
     this.now = options.now ?? (() => performance.now());
     // SDK varsayılanı 5 sn: bağlantı o süreden önce koparsa yeniden bağlanmaz, odadan düşer.
@@ -269,6 +273,11 @@ export class FactorySession {
 
   rotate(x: number, y: number, rot: number): Promise<Ack> {
     return this.submit({ type: COMMAND.rotate, x, y, rot });
+  }
+
+  /** Hareket niyeti: 0 durur, 1..16 yön. Sonuç beklenmez; sunucu niyeti süre sonunda söndürür. */
+  steer(dir: number): Promise<Ack> {
+    return this.submit({ type: COMMAND.move, dir });
   }
 
   /** İlgi alanı dünyasında görünümü değiştirir. */

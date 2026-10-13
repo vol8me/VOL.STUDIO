@@ -21,10 +21,23 @@ import {
   type Hud,
   type SyncMode,
 } from '@/net/protocol';
-import { isPlayerKey, readCommand, RESULT, type FactoryCommand } from '@/sim/commands';
+import {
+  COMMAND,
+  isPlayerKey,
+  isSystemCommand,
+  readCommand,
+  RESULT,
+  type FactoryCommand,
+} from '@/sim/commands';
 import { FactorySim } from '@/sim/sim';
+import { PLAYER_STATUS } from '@/sim/state';
 import type { JournalWriter } from './journal';
-import { encodeBeatRecord, encodeCommandRecord, type JournalStats } from './journal';
+import {
+  encodeBeatRecord,
+  encodeCommandRecord,
+  encodeSystemRecord,
+  type JournalStats,
+} from './journal';
 import { LockstepFeed } from '@/net/lockstepFeed';
 import type { ClientCursor } from './replication';
 import { Replicator, dueAt, emptySectionBytes, type SectionBytes } from './replication';
@@ -76,7 +89,6 @@ export type FactoryRoomOptions = FactoryWorldConfig & { readonly boot: string };
 interface Player {
   client: Client;
   readonly key: string;
-  readonly slot: number;
   ready: boolean;
   dropped: boolean;
   cursor: ClientCursor | null;
@@ -85,6 +97,12 @@ interface Player {
   violations: number;
   /** Son kabul edilen el sıkışmanın zaman damgası (performance.now, ms). */
   helloAt: number;
+}
+
+/** Sunucunun dünyaya vereceği yuva emri: adım başında, istemci komutlarından önce uygulanır. */
+interface SystemOrder {
+  readonly kind: 'join' | 'leave';
+  readonly key: string;
 }
 
 interface PendingCommand {
@@ -172,8 +190,8 @@ export class FactoryRoom extends Room {
 
   private readonly players = new Map<string, Player>();
   private readonly byKey = new Map<string, Player>();
-  private readonly slots: boolean[] = [];
   private readonly pending: PendingCommand[] = [];
+  private readonly orders: SystemOrder[] = [];
   private skip: Client[] = [];
   private pendingJoins = 0;
 
@@ -253,6 +271,8 @@ export class FactoryRoom extends Room {
     });
     this.sim = loaded.sim;
     this.loadReport = loaded.report;
+    // Önceki süreçten kalan tanklar sahipsizdir: bağlantılar yeniden JOIN ile gelir.
+    this.vacateAll();
     // Açılış kontrol noktası: tekrar edilen günlük anlık görüntüye katlanır, yeni günlük başlar.
     this.lastSnapshot = await this.store.snapshot(this.sim);
     this.journal = this.store.rotateJournal(this.sim.tick, this.epoch);
@@ -285,18 +305,16 @@ export class FactoryRoom extends Room {
     // kopan oturumu sunucu henüz fark etmemiştir.
     const previous = this.byKey.get(key);
     if (previous) {
-      this.removePlayer(previous);
+      this.removePlayer(previous, false);
       try {
         previous.client.leave(CloseCode.CONSENTED);
       } catch {
         // Bağlantı zaten kapanmış olabilir.
       }
     }
-    const slot = this.acquireSlot();
     const player: Player = {
       client,
       key,
-      slot,
       ready: false,
       dropped: false,
       cursor: null,
@@ -307,6 +325,7 @@ export class FactoryRoom extends Room {
     };
     this.players.set(client.sessionId, player);
     this.byKey.set(key, player);
+    this.orders.push({ kind: 'join', key });
     this.refreshSkip();
   }
 
@@ -340,7 +359,7 @@ export class FactoryRoom extends Room {
       this.players.delete(client.sessionId);
       return;
     }
-    this.removePlayer(player);
+    this.removePlayer(player, true);
   }
 
   override async onDispose(): Promise<void> {
@@ -362,21 +381,59 @@ export class FactoryRoom extends Room {
     await this.disconnect();
   }
 
-  private acquireSlot(): number {
-    for (let slot = 0; slot < this.maxClients + 1; slot++) {
-      if (!this.slots[slot]) {
-        this.slots[slot] = true;
-        return slot;
-      }
-    }
-    throw new Error('Oyuncu yuvası kalmadı.');
-  }
-
-  private removePlayer(player: Player): void {
+  /**
+   * Oyuncuyu odadan çıkarır. `vacate` tankı da dünyadan kaldırır; aynı anahtarla yeni bağlantı eskisini
+   * yerinden ederken tank yerinde kalır (oyuncu cihaz değiştirmiştir).
+   */
+  private removePlayer(player: Player, vacate: boolean): void {
     this.players.delete(player.client.sessionId);
     if (this.byKey.get(player.key) === player) this.byKey.delete(player.key);
-    this.slots[player.slot] = false;
+    if (vacate) this.orders.push({ kind: 'leave', key: player.key });
     this.refreshSkip();
+  }
+
+  /** Açılışta dünyada kalmış bütün tankları kaldırır; ilk kontrol noktası bunu kalıcı yapar. */
+  private vacateAll(): void {
+    const tanks = this.sim.state.players;
+    for (let slot = 0; slot < PLAYER.slots; slot++)
+      if (tanks.status[slot] !== PLAYER_STATUS.free)
+        this.sim.applyRaw({ type: COMMAND.leave }, slot);
+  }
+
+  /**
+   * Yuva emirlerini uygular, günlüğe ve kilit adımlı akışa yazar. İstemci komutlarıyla aynı yerde
+   * (adım başında) koşar: anlık görüntü her zaman adımlar arasında alındığı için yeni katılan istemci
+   * bir emri hem durumda hem paketinde görüp iki kez uygulamaz. Durum değiştirmeyen emir kaydedilmez.
+   */
+  private applyOrders(): boolean {
+    if (this.orders.length === 0) return false;
+    const sim = this.sim;
+    const tanks = sim.state.players;
+    let dirty = false;
+    for (const order of this.orders.splice(0, this.orders.length)) {
+      if (this.fault) continue;
+      const before = tanks.slotOf(order.key);
+      let command: FactoryCommand;
+      let slot: number;
+      if (order.kind === 'leave') {
+        if (before < 0) continue;
+        command = { type: COMMAND.leave };
+        slot = before;
+        sim.applyRaw(command, slot);
+      } else {
+        if (before >= 0) continue;
+        command = { type: COMMAND.join, key: order.key };
+        if (sim.applyRaw(command, -1) !== RESULT.ok) {
+          this.byKey.get(order.key)?.client.leave(CloseCode.WITH_ERROR);
+          continue;
+        }
+        slot = tanks.slotOf(order.key);
+      }
+      this.record(encodeSystemRecord(sim.tick, slot, command));
+      this.feed.record(sim.tick, slot, command);
+      dirty = true;
+    }
+    return dirty;
   }
 
   /** Kilit adımlı yayını alacak olmayan istemciler: el sıkışmamış olanlar ve ilgi alanı biçimindekiler. */
@@ -431,11 +488,11 @@ export class FactoryRoom extends Room {
         lastSeq: sim.ledger.lastSeq(player.key),
         mode: this.mode,
         sustainUnits: this.config.sustainUnits ?? 0,
-        slot: player.slot,
       }),
     );
     if (this.mode === SYNC_MODE.aoi) {
-      const cursor = this.replicator!.createCursor(NET.maxAoiChunks, player.slot);
+      const phase = Math.max(0, sim.state.players.slotOf(player.key));
+      const cursor = this.replicator!.createCursor(NET.maxAoiChunks, phase);
       const rect = readView(bytes);
       if (rect) cursor.setRect(rect);
       player.cursor = cursor;
@@ -487,7 +544,8 @@ export class FactoryRoom extends Room {
       const input = new ByteReader(bytes);
       seq = input.u32();
       command = readCommand(input);
-      if (input.remaining !== 0) command = null;
+      // Katılım ve ayrılış yalnız sunucunun verdiği komuttur: istemci başkası adına yuva açıp kapatamaz.
+      if (input.remaining !== 0 || (command !== null && isSystemCommand(command))) command = null;
     } catch {
       command = null;
     }
@@ -546,7 +604,7 @@ export class FactoryRoom extends Room {
     const sim = this.sim;
 
     const acks: PendingAck[] = [];
-    let dirty = false;
+    let dirty = this.applyOrders();
     if (this.pending.length > 0) {
       const batch = this.pending.splice(0, this.pending.length);
       for (const { player, seq, command } of batch) {
@@ -568,7 +626,7 @@ export class FactoryRoom extends Room {
           dirty = true;
           if (outcome.result === RESULT.ok) {
             this.accepted++;
-            this.feed.record(sim.tick, player.slot, command);
+            this.feed.record(sim.tick, sim.state.players.slotOf(player.key), command);
           } else {
             this.rejected++;
           }
