@@ -94,6 +94,7 @@ function mount(services?: GameServices, data?: WorldStartData): Harness {
     input: {
       on: (name: string, handler: (...args: unknown[]) => void) => handlers.set(name, handler),
       off: vi.fn(),
+      activePointer: { x: 0, y: 0, isDown: false },
     },
     events: { once: (_name: string, handler: () => void) => (shutdown = handler) },
     scene: { restart },

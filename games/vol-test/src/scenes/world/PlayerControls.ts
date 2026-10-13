@@ -33,8 +33,15 @@ export class PlayerControls {
   private readonly edges = new ActionEdges<TestAction>();
   private readonly position = new Vector2();
   private readonly intent = new ControlIntent();
+  /** Fare nişanı için son karedeki imleç konumu ve son nişan etkinliğinden bu yana geçen süre. */
+  private readonly pointerAt = { x: Number.NaN, y: Number.NaN };
+  private aimIdleMs = Number.POSITIVE_INFINITY;
+  private aimEngaged = false;
 
-  constructor(scene: Phaser.Scene, initialMode?: string) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    initialMode?: string,
+  ) {
     this.manager = new InputManager<TestAction>(scene, {
       actions: TEST_ACTIONS,
       inputMode: { initial: initialMode },
@@ -74,7 +81,32 @@ export class PlayerControls {
       }
     }
     this.buffer.sample({ ...state, actions, heldActions, pressedActions });
+    this.trackAim(deltaMs, state.actions.fire);
     return this.command;
+  }
+
+  /**
+   * Nişan etkinliği: dokunmatikte nişan çubuğu tutulurken, kolda sağ çubuk sapmışken; farede imleç
+   * hareket ederken, düğme basılıyken ve durduktan sonra kısa bir süre. Fare konumu her zaman bir
+   * nişan yönü verdiği için yalnız yön bakılsaydı lazer fareyle sürekli yanardı.
+   */
+  private trackAim(deltaMs: number, fireHeld: boolean): void {
+    const kind = this.manager.inputMode;
+    if (kind === 'touch' || kind === 'gamepad') {
+      this.aimEngaged =
+        this.stickSource.isHeld('aim') || this.command.aimX !== 0 || this.command.aimY !== 0;
+      this.aimIdleMs = Number.POSITIVE_INFINITY;
+      return;
+    }
+    const pointer = this.scene.input.activePointer;
+    const moved =
+      !Number.isNaN(this.pointerAt.x) &&
+      Math.hypot(pointer.x - this.pointerAt.x, pointer.y - this.pointerAt.y) >= CONTROLS.aimMovePx;
+    this.pointerAt.x = pointer.x;
+    this.pointerAt.y = pointer.y;
+    if (moved || pointer.isDown || fireHeld) this.aimIdleMs = 0;
+    else this.aimIdleMs += deltaMs;
+    this.aimEngaged = this.aimIdleMs < CONTROLS.aimHoldMs;
   }
 
   get command(): TankCommand {
@@ -94,8 +126,9 @@ export class PlayerControls {
     return this.intent.update(command, stepMs);
   }
 
+  /** Oyuncu şu an nişan alıyor mu: nişan çizgisi buna göre açılır ve söner. */
   get aiming(): boolean {
-    return this.stickSource.isHeld('aim') || this.command.aimX !== 0 || this.command.aimY !== 0;
+    return this.aimEngaged;
   }
 
   snapshot(): ReturnType<InputManager<TestAction>['getDebugSnapshot']> {
@@ -130,6 +163,8 @@ export class PlayerControls {
     this.manager.reset({ preserveHeld: true });
     this.buffer.reset();
     this.intent.reset();
+    this.aimIdleMs = Number.POSITIVE_INFINITY;
+    this.aimEngaged = false;
     this.actionSource.clear();
     this.stickSource.clear();
   }

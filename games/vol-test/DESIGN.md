@@ -137,6 +137,13 @@ türetilir ve mermi yolunu (rüzgâr ve direnç eğrisi dahil) namlu ucundan çi
 Fare nişanı da son çizilen karedeki taret milinden hesaplanır; simülasyonun
 bir sonraki adımdaki konumundan değil.
 
+Nişan çizgisi (lazer) yalnız nişan alırken yanar ve `AimPresence` ile açılıp söner:
+dokunmatikte nişan çubuğu tutulurken, kolda sağ çubuk sapmışken; farede imleç
+hareket ederken, sol düğme basılıyken ve durduktan sonra `CONTROLS.aimHoldMs`
+boyunca. Fare konumu her zaman bir yön verdiği için yön bakılsaydı lazer fareyle
+sürekli yanardı. Açılış çabuk (90 ms), sönüş yavaştır (320 ms); çizgi namludan
+uzanır ve sönerken namluya geri çekilir.
+
 İsabet, adımın süpürdüğü doğru parçasının gövdenin yönlü ayak iziyle ilk
 kesişimidir; uç noktaları örnekleyen test dönmüş gövdenin köşesini ve dar
 kirişi kaçırırdı. Aynı adımda birden çok araç kesişirse en erken temas

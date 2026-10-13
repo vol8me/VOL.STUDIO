@@ -7,6 +7,11 @@ export const FX = {
     markerRadius: 5,
     /** Yörünge örneklerinden kaçta biri çizilir (örnekler 1/60 s arayla). */
     stride: 3,
+    /** Çizginin açılma ve sönme süresi: açılış çabuk, sönüş yavaş. */
+    fadeInMs: 90,
+    fadeOutMs: 320,
+    /** Çizgi, görünürlüğün bu çarpanla kısıtlanmış oranında uzanır: tam uzunluğa alfa dolmadan varır. */
+    revealGain: 1.6,
     alpha: 0.55,
     pulseMs: 180,
     pulseAlpha: 0.08,

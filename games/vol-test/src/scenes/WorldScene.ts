@@ -6,12 +6,14 @@ import {
   type SimulationClockFrame,
 } from '@volstudio/core';
 import { AimGuide } from '@/view/effects/AimGuide';
+import { AimPresence } from '@/view/effects/AimPresence';
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { createSceneAudio } from '@/audio/sceneAudio';
 import type { GameAudio } from '@/audio/GameAudio';
 import type { GameServices } from '@/app/GameServices';
 import { CAMERA } from '@/config/camera';
 import { FEEL } from '@/config/feel';
+import { FX } from '@/config/fx';
 import { GAME } from '@/config/game';
 import {
   EFFECT_LEVELS,
@@ -60,6 +62,7 @@ export class WorldScene extends Phaser.Scene {
   private vehicles!: VehicleViews;
   private effects!: EffectsView;
   private aimGuide!: AimGuide;
+  private readonly aimPresence = new AimPresence(FX.aimGuide.fadeInMs, FX.aimGuide.fadeOutMs);
   private environment!: EnvironmentController;
   private hud!: Hud;
   private quality!: GraphicsQuality<EffectLevel, EffectProfile>;
@@ -162,6 +165,7 @@ export class WorldScene extends Phaser.Scene {
 
     this.effects = this.scope.addDestroyable(new EffectsView(this, quality.getProfile()));
     this.aimGuide = this.scope.addDestroyable(new AimGuide(this));
+    this.aimPresence.reset();
     this.scope.addSubscription(
       quality.onChange((_level, profile) => {
         this.effects.applyProfile(profile);
@@ -304,7 +308,8 @@ export class WorldScene extends Phaser.Scene {
     const view = tankFrame(player.tank, alpha);
     pivotPose(view, this.aimOrigin);
     const aiming = !paused && player.vitality.alive && this.controls.aiming;
-    if (aiming) {
+    const presence = this.aimPresence.update(aiming, delta);
+    if (presence > 0 && player.vitality.alive) {
       const preview = this.sim.previewAim(player, GAME.simulationStepMs, view);
       this.aimGuide.draw(
         {
@@ -313,6 +318,7 @@ export class WorldScene extends Phaser.Scene {
           aligned: aimAligned(player, command),
         },
         time,
+        presence,
       );
     } else this.aimGuide.draw(null, time);
     measurements?.mark('aim');

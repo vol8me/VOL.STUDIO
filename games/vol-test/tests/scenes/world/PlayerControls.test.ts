@@ -4,6 +4,7 @@ import type * as CoreModule from '@volstudio/core';
 import { SimulationClock } from '@volstudio/core';
 import { PlayerControls } from '@/scenes/world/PlayerControls';
 import { type TestAction } from '@/input/bindings';
+import { CONTROLS } from '@/config/controls';
 import { simulation } from '../../support/sim';
 
 const pads = vi.hoisted(() => ({ values: [] as Array<Gamepad | null> }));
@@ -181,6 +182,74 @@ describe('PlayerControls — renderdan sabit ticke', () => {
       expect(kind === 'pc' ? command.boost : command.fire).toBe(true);
     },
   );
+
+  describe('nişan etkinliği (lazerin görünme koşulu)', () => {
+    it('farede imleç hiç oynamadıysa lazer yanmaz; hareket ve basış yakar', () => {
+      const { control, pointer } = mount();
+      control.read(1000, 1000, 16);
+      expect(control.aiming).toBe(false);
+      control.read(1000, 1000, 16);
+      expect(control.aiming).toBe(false);
+      pointer.x += 40;
+      control.read(1000, 1000, 16);
+      expect(control.aiming).toBe(true);
+    });
+
+    it('fare durunca lazer bekleme süresince yanık kalır, sonra söner', () => {
+      const { control, pointer } = mount();
+      control.read(1000, 1000, 16);
+      pointer.y += 30;
+      control.read(1000, 1000, 16);
+      expect(control.aiming).toBe(true);
+      for (let elapsed = 0; elapsed < CONTROLS.aimHoldMs - 40; elapsed += 20)
+        control.read(1000, 1000, 20);
+      expect(control.aiming).toBe(true);
+      for (let elapsed = 0; elapsed < 100; elapsed += 20) control.read(1000, 1000, 20);
+      expect(control.aiming).toBe(false);
+    });
+
+    it('donanım titremesi altındaki hareket lazeri yakmaz', () => {
+      const { control, pointer } = mount();
+      control.read(1000, 1000, 16);
+      for (let frame = 0; frame < 20; frame++) {
+        pointer.x += frame % 2 === 0 ? 0.5 : -0.5;
+        control.read(1000, 1000, 16);
+      }
+      expect(control.aiming).toBe(false);
+    });
+
+    it('sol düğme basılıyken (ateş) imleç durağan olsa da lazer yanar', () => {
+      const { control, pointer } = mount();
+      control.read(1000, 1000, 16);
+      pointer.left = true;
+      pointer.isDown = true;
+      for (let frame = 0; frame < 120; frame++) control.read(1000, 1000, 16);
+      expect(control.aiming).toBe(true);
+    });
+
+    it('dokunmatikte nişan çubuğu tutulurken yanar, bırakılınca söner (fare süresi uygulanmaz)', () => {
+      const { control } = mount();
+      control.stickSource.set('aim', 0.3, 0);
+      control.read(1000, 1000, 16);
+      expect(control.aiming).toBe(true);
+      control.stickSource.release('aim');
+      for (let frame = 0; frame < 3; frame++) {
+        control.read(1000, 1000, 16);
+        control.step(16);
+      }
+      expect(control.aiming).toBe(false);
+    });
+
+    it('duraklatma geçişi (release) etkinliği sıfırlar', () => {
+      const { control, pointer } = mount();
+      control.read(1000, 1000, 16);
+      pointer.x += 50;
+      control.read(1000, 1000, 16);
+      expect(control.aiming).toBe(true);
+      control.release();
+      expect(control.aiming).toBe(false);
+    });
+  });
 
   it('aynı tick ham girdisi 30/60/90/144Hz ve jitterde gerçek simülasyonu aynı yere getirir', () => {
     function run(frameDeltas: number[]) {

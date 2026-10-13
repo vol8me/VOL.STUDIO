@@ -60,4 +60,35 @@ describe('AimGuide', () => {
     guide.draw({ ...straight(0, 0, 1, 10), aligned: true }, 1);
     expect(graphics.calls.filter(([method]) => method === 'strokePath')).toHaveLength(strokes);
   });
+
+  it('görünürlük çizgiyi namludan uzatır ve işareti ucuna taşır; sıfırda hiçbir şey çizilmez', () => {
+    const scene = fakeScene();
+    const guide = new AimGuide(scene as unknown as Phaser.Scene);
+    const graphics = scene.created[0];
+    const frame = { ...straight(0, 0, 11, 100), aligned: true };
+    guide.draw(frame, 0, 0.2);
+    const end = lastCall(graphics, 'lineTo') as number[];
+    expect(end[1]).toBe(0);
+    expect(end[0]).toBeGreaterThan(0);
+    expect(end[0]).toBeLessThan(1000);
+    const marker = lastCall(graphics, 'strokeCircle') as number[];
+    expect(marker.slice(0, 2)).toEqual(end);
+    expect(marker[2]).toBeLessThan(5);
+    guide.draw(frame, 0, 1);
+    expect(lastCall(graphics, 'lineTo')).toEqual([1000, 0]);
+    const strokes = graphics.calls.filter(([method]) => method === 'strokePath').length;
+    guide.draw(frame, 0, 0);
+    expect(graphics.calls.filter(([method]) => method === 'strokePath')).toHaveLength(strokes);
+  });
+
+  it('alfa görünürlükle ölçeklenir', () => {
+    const scene = fakeScene();
+    const guide = new AimGuide(scene as unknown as Phaser.Scene);
+    const graphics = scene.created[0];
+    const frame = { ...straight(0, 0, 11, 100), aligned: true };
+    guide.draw(frame, 0, 1);
+    const full = lastCall(graphics, 'lineStyle')?.[2] as number;
+    guide.draw(frame, 0, 0.5);
+    expect(lastCall(graphics, 'lineStyle')?.[2] as number).toBeCloseTo(full * 0.5, 9);
+  });
 });
