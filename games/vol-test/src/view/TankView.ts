@@ -8,6 +8,7 @@ import { TEXTURE_SCALE, tankTexture } from './textures';
 import { TreadRig } from './TreadRig';
 import { TankLights } from './TankLights';
 import type { TankFrame, VehicleView } from './VehicleView';
+import { setCharred } from './charring';
 
 export type { TankFrame } from './VehicleView';
 
@@ -123,6 +124,11 @@ export class TankView implements VehicleView {
     if (present) return;
     this.shadow.clear();
     this.lights.silence();
+  }
+
+  setWrecked(wrecked: boolean): void {
+    setCharred(this.root, wrecked);
+    if (wrecked) this.lights.silence();
   }
 
   destroy(): void {

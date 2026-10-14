@@ -139,11 +139,16 @@ export class EffectsView {
     const wreck = DEBRIS.wreck;
     const count = this.range(wreck.count, true);
     const turn = this.random.next() * Math.PI * 2;
+    // Büyük parçalar sırayla (başlangıcı rastgele) seçilir: aynı parça iki kez, yani iki taret çıkmaz.
+    const first = Math.floor(this.random.next() * art.big.length);
     for (let index = 0; index < count; index++) {
       const big = index < wreck.big;
       const pool = big ? art.big : art.shards;
       const angle = turn + ((index + this.random.next() * 0.6) / count) * Math.PI * 2;
-      this.launch(pool[Math.floor(this.random.next() * pool.length)], {
+      const pick = big
+        ? (first + index) % pool.length
+        : Math.floor(this.random.next() * pool.length);
+      this.launch(pool[pick], {
         x,
         y,
         angle,

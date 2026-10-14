@@ -9,6 +9,7 @@ import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { TEXTURE, TEXTURE_SCALE, addHoverImage } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
+import { setCharred } from './charring';
 
 const INV = 1 / TEXTURE_SCALE;
 /** Işık dokusu (`TEXTURE.blast`) 64 px'tir. */
@@ -149,6 +150,13 @@ export class HoverView implements VehicleView {
     this.flashMs = 0;
     this.barrel.value = 0;
     this.barrel.velocity = 0;
+    this.flash.setVisible(false);
+  }
+
+  setWrecked(wrecked: boolean): void {
+    setCharred(this.root, wrecked);
+    if (!wrecked) return;
+    this.flashMs = 0;
     this.flash.setVisible(false);
   }
 

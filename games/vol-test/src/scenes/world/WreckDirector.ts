@@ -22,7 +22,8 @@ interface Seen {
 /**
  * Araç imhasının ve parça kopmasının sahne yönetmeni. Her kare araçların canlılığını ve kırık parça
  * maskesini bir önceki kareyle karşılaştırır: canlıdan ölüye geçişte tek bir patlama oynar, görünüm
- * tümden gizlenir (hayalet, kalan gölge ve ışık kalmaz) ve yeniden doğunca geri gelir; maskede yeni bir
+ * olduğu yerde yanmış bir gövde olarak kalır (ışık ve hayalet söner, poz donar) ve yeniden doğunca
+ * eski hâline döner; maskede yeni bir
  * bit açılınca parça koptuğu noktadan savrulur ve görünüm kırık hâle geçer. Karşılaştırma simülasyon
  * olayına değil durumun kendisine dayanır, böylece çevrimdışı sandbox ve çevrimiçi istemci aynı yoldan
  * geçer. İlk görülen araç (örn. odaya geç katılım) efektsiz kurulur: ölüyse gizlenir, parçalıysa kırık görünür.
@@ -40,7 +41,7 @@ export class WreckDirector {
   /** Aracı bu kare için yönetir; çizilip güncellenmesi gerekiyorsa (canlıysa) `true` döner. */
   track(
     subject: WreckSubject,
-    view: Pick<VehicleView, 'setPresent' | 'setParts'> | undefined,
+    view: Pick<VehicleView, 'setWrecked' | 'setParts'> | undefined,
     frame: WreckFrame,
   ): boolean {
     const alive = subject.vitality.alive;
@@ -48,15 +49,15 @@ export class WreckDirector {
     const before = this.seen.get(subject.id);
     if (before === undefined) {
       this.seen.set(subject.id, { alive, parts });
-      if (!alive) view?.setPresent(false);
+      if (!alive) view?.setWrecked(true);
       if (parts !== 0) view?.setParts(parts);
       return alive;
     }
     if (before.alive && !alive) {
       this.effects.wreck(subject.spec, frame.x, frame.y, frame.vx, frame.vy);
       this.onWreck?.(frame.x, frame.y);
-      view?.setPresent(false);
-    } else if (!before.alive && alive) view?.setPresent(true);
+      view?.setWrecked(true);
+    } else if (!before.alive && alive) view?.setWrecked(false);
     before.alive = alive;
     if (alive && parts !== before.parts) {
       this.shed(subject.spec, before.parts, parts, frame);

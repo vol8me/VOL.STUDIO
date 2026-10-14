@@ -391,6 +391,18 @@ describe('EffectsView enkaz', () => {
     );
   });
 
+  it('aracın büyük parçası enkazda tekrar etmez: tek taret, tek duyarga', () => {
+    // Büyük parçalar rastgele seçilseydi (yerine koymalı) aynı taret iki kez savrulabilirdi.
+    for (let run = 0; run < 12; run++) {
+      const { view, scene } = build();
+      view.wreck(STRIKER, 300, 400, 0, 0);
+      const big = debrisOf(scene)
+        .textures.slice(0, DEBRIS.wreck.big)
+        .map((key) => String(key));
+      expect(new Set(big).size).toBe(big.length);
+    }
+  });
+
   it('örümcek enkazı örümcek atlasından parça verir', () => {
     const { view, scene } = build();
     view.wreck(ARACHNID, 300, 400, 0, 0);

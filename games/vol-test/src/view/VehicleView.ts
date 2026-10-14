@@ -37,5 +37,10 @@ export interface VehicleView {
    * yeniden doğunca geri gelir. Gizliyken `update` çağrılmaz.
    */
   setPresent(present: boolean): void;
+  /**
+   * Araç imha edildi mi: ölen araç olduğu yerde yanmış, kararmış, ışıksız bir gövde olarak kalır ve
+   * yeniden doğana dek çizilmez (dondurulmuş poz). `false` gövdeyi eski hâline getirir.
+   */
+  setWrecked(wrecked: boolean): void;
   destroy(): void;
 }

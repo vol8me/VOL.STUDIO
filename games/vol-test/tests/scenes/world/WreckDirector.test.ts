@@ -11,7 +11,7 @@ function build() {
     shed: vi.fn<(spec: VehicleSpec, x: number, y: number, outward: number) => void>(),
   };
   const onWreck = vi.fn();
-  const view = { setPresent: vi.fn(), setParts: vi.fn() };
+  const view = { setWrecked: vi.fn(), setParts: vi.fn() };
   const director = new WreckDirector(effects, onWreck);
   const subject = (id: number, alive: boolean, spec: VehicleSpec = STRIKER, parts = 0) => ({
     id,
@@ -28,7 +28,7 @@ describe('WreckDirector: ölüm', () => {
     expect(director.track(subject(1, true), view, frame)).toBe(true);
     expect(director.track(subject(1, true), view, frame)).toBe(true);
     expect(effects.wreck).not.toHaveBeenCalled();
-    expect(view.setPresent).not.toHaveBeenCalled();
+    expect(view.setWrecked).not.toHaveBeenCalled();
     expect(view.setParts).not.toHaveBeenCalled();
   });
 
@@ -39,7 +39,7 @@ describe('WreckDirector: ölüm', () => {
     expect(effects.wreck).toHaveBeenCalledOnce();
     expect(effects.wreck).toHaveBeenCalledWith(ARACHNID, 40, 60, 12, -8);
     expect(onWreck).toHaveBeenCalledWith(40, 60);
-    expect(view.setPresent).toHaveBeenCalledWith(false);
+    expect(view.setWrecked).toHaveBeenCalledWith(true);
     // Ölü kaldığı sürece yeniden patlamaz.
     director.track(subject(1, false, ARACHNID), view, frame);
     director.track(subject(1, false, ARACHNID), view, frame);
@@ -51,7 +51,7 @@ describe('WreckDirector: ölüm', () => {
     director.track(subject(1, true), view, frame);
     director.track(subject(1, false), view, frame);
     expect(director.track(subject(1, true), view, frame)).toBe(true);
-    expect(view.setPresent).toHaveBeenLastCalledWith(true);
+    expect(view.setWrecked).toHaveBeenLastCalledWith(false);
     director.track(subject(1, false), view, frame);
     expect(effects.wreck).toHaveBeenCalledTimes(2);
   });
@@ -59,7 +59,7 @@ describe('WreckDirector: ölüm', () => {
   it('ilk görülen ölü araç patlamadan gizlenir (geç katılım)', () => {
     const { director, subject, view, effects, onWreck } = build();
     expect(director.track(subject(7, false), view, frame)).toBe(false);
-    expect(view.setPresent).toHaveBeenCalledWith(false);
+    expect(view.setWrecked).toHaveBeenCalledWith(true);
     expect(effects.wreck).not.toHaveBeenCalled();
     expect(onWreck).not.toHaveBeenCalled();
   });

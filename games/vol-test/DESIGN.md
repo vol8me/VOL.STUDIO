@@ -400,12 +400,14 @@ alanı seçimi bu simülasyon mekanizmasının üzerindeki oyun kurallarıdır.
 
 Ölen araç soluklaşıp hayalet olarak kalmaz: `WreckDirector` (`src/scenes/world/WreckDirector.ts`) her kare
 canlılığı bir önceki kareyle karşılaştırır ve canlıdan ölüye geçişte tek bir patlama oynatır; araç görünümü
-`VehicleView.setPresent(false)` ile tümden gizlenir (gövde, `PoseShadow` gölgesi, ağız parlaması, örümcek
-hayaletleri) ve yeniden doğunca geri gelir. Karşılaştırma simülasyon olayına değil canlılık durumuna
+`VehicleView.setWrecked(true)` ile olduğu yerde kalır: gövde isli renge çekilir (`src/view/charring.ts`; ışık ve
+ağız parlaması söner, örümcek hayaletleri silinir), poz donar ve gölgesi yerinde durur, yani araç birden yok
+olmaz; yeniden doğunca `setWrecked(false)` her rengi eski hâline getirir. Karşılaştırma simülasyon olayına değil canlılık durumuna
 dayandığı için çevrimdışı sandbox ve çevrimiçi istemci aynı yoldan geçer; ilk görülen ölü araç (geç katılım)
 patlamadan gizlenir. Patlama `EffectsView.wreck`tir: parlama, şok halkası, yanık, kor/kıvılcım/toz parçacıkları
 ve `src/config/debris.ts` ayarlarıyla 6-8 enkaz parçası. İlk iki parça aracın gerçek çizimidir (tankta taret ve
-duyarga, örümcekte femur, tibia ve ayak), kalanı levha kıymığıdır (`debrisArt.ts`). Parçalar `Debris`
+duyarga, örümcekte femur, tibia ve ayak), kalanı levha kıymığıdır (`debrisArt.ts`); büyük parçalar sırayla
+seçilir, böylece aynı parça (örn. taret) iki kez savrulmaz. Parçalar `Debris`
 havuzunda gerçek fizikle ilerler: yerde (x, y) ve havada yükseklik (z), yerçekimi, hava sürtünmesi, sekme
 (hız kaybıyla), dünya duvarından sekme, durunca yuvarlanma sönümü; perspektifle büyür, gölgesi ışığın tersine
 yükseklikle kayar, ilk anda kor gibi parlayıp soğur, 3,6-5,6 sn sonra söner ve havuza döner. Havuz tavanı
