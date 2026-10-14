@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { selectTab } from './support/determinism';
 
 /**
- * Kart durum matrisi (UI-04.1): nadirlik × normal / devre dışı / kilitli; salt sunum, kompakt, ikincil
+ * Kart durum matrisi (UI-04.1): nadirlik × normal / devre dışı / kilitli / seçili; salt sunum, kompakt, ikincil
  * eylem, sürüklenebilir ve sürüklenen kart; uzun metin + 6 haneli fiyat kartları. Sözleşme: eylem düğmesi her durumda kartın içinde görünür kalır, metin kartın dışına taşmaz,
  * nadirlik renk dışı işaretle (baklava sayısı) de okunur, kilitli kart kesikli çerçeve taşır, düğmeler
  * kartın adıyla adlandırılır. İki kaplama (default/aurum), iki görünüm alanı ve metin %200 büyütülmüş
@@ -31,6 +31,8 @@ interface TileReport {
   outlineStyle: string;
   disabled: boolean;
   grouped: boolean;
+  selected: boolean;
+  pressed: string | null;
 }
 
 async function measure(page: Page, grow: boolean): Promise<TileReport[]> {
@@ -88,6 +90,8 @@ async function measure(page: Page, grow: boolean): Promise<TileReport[]> {
         clipped,
         outlineStyle: getComputedStyle(tile).outlineStyle,
         disabled: actions[0] instanceof HTMLButtonElement && actions[0].disabled,
+        selected: tile.classList.contains('vol-card--selected'),
+        pressed: actions[0]?.getAttribute('aria-pressed') ?? null,
         grouped:
           tile.getAttribute('role') === 'group' &&
           !!document.getElementById(tile.getAttribute('aria-labelledby') ?? ''),
@@ -120,9 +124,9 @@ for (const skin of ['default', 'aurum'] as const) {
         await selectTab(page, 'cards');
 
         const reports = await measure(page, grow);
-        expect(reports, 'matris: 9 durum + 5 varyant + 3 stres kartı').toHaveLength(17);
+        expect(reports, 'matris: 12 durum + 5 varyant + 3 stres kartı').toHaveLength(20);
         expect(new Set(reports.map((r) => r.state))).toEqual(
-          new Set([...Object.keys(ACTIONS), 'normal', 'disabled', 'locked']),
+          new Set([...Object.keys(ACTIONS), 'normal', 'disabled', 'locked', 'selected']),
         );
         for (const r of reports) {
           const id = `${r.state}/${r.rarity}`;
@@ -135,6 +139,8 @@ for (const skin of ['default', 'aurum'] as const) {
           expect(r.clipped, `${id} metin kırpılmaz`).toEqual([]);
           expect(r.outlineStyle, `${id} çerçeve`).toBe(r.state === 'locked' ? 'dashed' : 'none');
           expect(r.disabled, `${id} devre dışı`).toBe(r.state === 'disabled');
+          expect(r.selected, `${id} seçili çerçevesi`).toBe(r.state === 'selected');
+          expect(r.pressed, `${id} basılı durumu`).toBe(r.state === 'selected' ? 'true' : null);
         }
       });
     }
@@ -146,11 +152,11 @@ test('kart düğmeleri aynı etikete rağmen kartın adıyla ayrışır', async 
   await page.waitForSelector('[role="tablist"]');
   await selectTab(page, 'cards');
   const matrix = page.locator('[data-card-matrix="states"]');
-  // Etiket aynı ("BUY"), kart adı farklı: okuyucu üç nadirliği ayırt eder.
+  // Etiket aynı ("BUY"), kart adı farklı: okuyucu üç nadirliği ayırt eder (her nadirlikte dört durum).
   for (const title of ['Turret', 'Chain Lightning', 'Inferno']) {
-    await expect(matrix.getByRole('button', { name: `BUY ${title}`, exact: true })).toHaveCount(3);
+    await expect(matrix.getByRole('button', { name: `BUY ${title}`, exact: true })).toHaveCount(4);
   }
-  await expect(matrix.getByRole('group', { name: 'Turret', exact: true })).toHaveCount(3);
+  await expect(matrix.getByRole('group', { name: 'Turret', exact: true })).toHaveCount(4);
 });
 
 test.describe('seçici durumları (seviye atlama)', () => {

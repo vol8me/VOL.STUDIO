@@ -450,6 +450,21 @@
   outline-offset: -2px;
 }
 
+/* Kalıcı seçim (`setSelected`): vurgu çerçevesi ve dolu zemin; renkten bağımsız, kalınlıkla da okunur. */
+.vol-card--selected {
+  background: var(--vol-ui-accent-subtle);
+  border-color: var(--vol-ui-accent-border);
+  box-shadow: 0 0 0 1px var(--vol-ui-accent-border);
+}
+
+/* Oyunun eklediği ayrıntı bloğu (`addDetail`). */
+.vol-card__detail {
+  gap: var(--vol-space-xs);
+  flex-direction: column;
+  min-width: 0;
+  display: flex;
+}
+
 /* Seçilen kart: 1,04 ölçek + çerçeve vurgusu (azaltılmış harekette ölçek yok, çerçeve kalır). */
 .vol-card--picked {
   border-color: var(--vol-ui-brand-border);

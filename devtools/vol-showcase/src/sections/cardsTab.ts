@@ -111,7 +111,7 @@ function buildRarityCard(disposables: DisposableScope): HTMLElement {
 }
 
 /**
- * CardTile durum matrisi (UI-04.1): nadirlik × normal / devre dışı / kilitli, ardından uzun metin
+ * CardTile durum matrisi (UI-04.1): nadirlik × normal / devre dışı / kilitli / seçili, ardından uzun metin
  * ve 6 haneli fiyatla stres kartları. Eylem düğmesi her durumda kartın içinde görünür kalmalıdır
  * (bkz. `cardMatrix.spec.ts`).
  */
@@ -123,12 +123,13 @@ function buildStateMatrixCard(disposables: DisposableScope): HTMLElement {
   matrix.className = 'vol-showcase-card-row vol-showcase-card-matrix';
   matrix.dataset.cardMatrix = 'states';
   const tiers: readonly DemoCardId[] = ['turret', 'chain', 'inferno'];
-  for (const state of ['normal', 'disabled', 'locked'] as const) {
+  for (const state of ['normal', 'disabled', 'locked', 'selected'] as const) {
     for (const id of tiers) {
       const tile = new CardTile({
         data: { ...demoCard(id, { withPrice: true }), statusLabel: '' },
         actionLabel: i18next.t('volui:cards.buy'),
         disabled: state === 'disabled',
+        selected: state === 'selected' ? true : undefined,
       });
       if (state === 'disabled') {
         tile.setDisabled(true, i18next.t('volui:cards.tooExpensive'));

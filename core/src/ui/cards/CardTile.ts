@@ -29,6 +29,11 @@ export interface CardTileOptions {
   actionLabel?: string;
   /** Buton devre dışı mı? */
   disabled?: boolean;
+  /**
+   * Tek seçimli listede kartın seçili olup olmadığı. Verilirse kart seçilebilirdir: eylem düğmesi
+   * `aria-pressed` taşır, seçili kart kalıcı çerçeve vurgusu alır (`markPicked` geçicidir).
+   */
+  selected?: boolean;
   onAction?: (id: string) => void;
   /**
    * İkinci bir eylem (örn. "TAK"). Sürükle-bırak keşfedilebilir olmadığı için
@@ -111,6 +116,8 @@ export class CardTile {
   private readonly compact: boolean;
   private readonly baseClassName: string | undefined;
   private currentRarity: CardRarity;
+  /** `null`: kart seçilebilir değil; aksi halde seçili durum. */
+  private selectedState: boolean | null;
   private currentDragData: string | undefined;
   private boundDragStart: (event: DragEvent) => void;
   private boundDragEnd: () => void;
@@ -125,6 +132,7 @@ export class CardTile {
     this.onAction = onAction;
     this.compact = compact;
     this.baseClassName = className;
+    this.selectedState = options.selected ?? null;
 
     this.element = document.createElement('div');
     this.applyBaseClassName();
@@ -188,6 +196,7 @@ export class CardTile {
     }
 
     this.element.appendChild(this.footer);
+    if (this.selectedState === true) this.element.classList.add('vol-card--selected');
 
     this.boundDragStart = (event: DragEvent) => {
       event.dataTransfer?.setData(CARD_DRAG_MIME, this.currentDragData ?? '');
@@ -307,6 +316,8 @@ export class CardTile {
       `${this.actionButton.id} ${this.titleElement.id}`,
     );
     this.actionButton.textContent = label;
+    if (this.selectedState !== null)
+      this.actionButton.setAttribute('aria-pressed', String(this.selectedState));
     this.actionButton.addEventListener('click', this.handleAction);
     // İkincil buton (varsa) önce gelmemeli; aksiyon butonu önce DOM'da
     // dursun ki querySelector('.vol-card__action') güvenli olsun.
@@ -361,6 +372,25 @@ export class CardTile {
       this.pickedTimeout = null;
       this.element.classList.remove('vol-card--picked');
     }, PICKED_MS);
+  }
+
+  /**
+   * Seçili durumu değiştirir ve kartı seçilebilir yapar: kalıcı çerçeve vurgusu (`vol-card--selected`)
+   * ve eylem düğmesinde `aria-pressed`. Çerçeve renkten bağımsız da okunur: seçili kart dolu zemin alır.
+   */
+  setSelected(selected: boolean): void {
+    this.selectedState = selected;
+    this.element.classList.toggle('vol-card--selected', selected);
+    this.actionButton?.setAttribute('aria-pressed', String(selected));
+  }
+
+  /**
+   * Açıklamayla alt şerit arasına oyunun kendi içeriğini (ör. ölçü çubukları) ekler. Kart yalnız yer
+   * verir; içeriğin yaşam döngüsü ve erişilebilirliği ekleyenindir.
+   */
+  addDetail(node: { element: HTMLElement }): void {
+    node.element.classList.add('vol-card__detail');
+    this.element.insertBefore(node.element, this.footer);
   }
 
   /** Kartın kimliği (seçici, olayı bildiren kartı bununla bulur). */
