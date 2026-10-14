@@ -256,6 +256,7 @@ kısmi sahnelemede kapı commit'e girecek indeksi değil çalışma ağacını s
 - [x] VT-R3 — Joystick/fren/hızlanma/minimap ve mobil örtüşme E2E'si var.
 - [x] VT-R4 — Mermi/patlama/palet izi ve kalite kademeli efektler uygulandı.
 - [x] VT-R5 — Önceki oyun ses setinin kullanıcı dinleme beyanı kaydedildi; yeni üretim şartı değildir.
+- [x] VT-R6 — VOL.TEST araç sesleri (pervane, yay atışı, atılım, parça kopması ve önceki set) ile Goliath/Manta görsel ve denge beğenisi 2026-10-14'te kullanıcı tarafından onaylandı (kullanıcı beyanı; ajan dinleme ya da beğeni testi yapmadı). Teknik kabul audio-synth kapılarındadır; bot düellosu dengesi insan oyun testi değildir.
 - [x] VT-H2 alt kabulü — Kullanıcı dizüstünde görünür pencere ve ekran kilidi sonrası girdi turunu eliyle onayladı; Deck/haptik kalanları F08/F09'da açık.
 - [x] VT4 alt kabulü — İki Android cihazda kurulum/açılış/yatay/tam ekran/joystick/ateş/duraklatma/arka plan/kapanış turu kaydedildi; görünür panel, kısa Samsung dokunuşu ve uzun oturum F09'da açık.
 - [x] VT-C — Genel camera/math/input/physics/pose mekanizmaları CORE'a taşındı.

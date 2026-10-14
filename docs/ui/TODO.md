@@ -27,6 +27,9 @@ Görsel, ses ve imleç beğenisi isteğe bağlı tasarım feedback’idir; tekni
 
 ## Dürüst başlangıç (2026-10-07)
 
+Tarihsel karşılaştırma tabanıdır ([VERIFICATION](VERIFICATION.md) ses ölçümünde atıf yapar); bugünkü durum
+"Gerçek kalan iş" bölümündedir.
+
 | Alan             | Durum                                                                                                                                                                                                                                           |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Temalar          | `default` (çelik zemin + kor turuncusu) ve `ember` (kahve zemin + biraz farklı turuncu) aynı marka ailesinde; ayırt edilemiyorlar.                                                                                                              |
@@ -92,6 +95,10 @@ Kalan doğrulama: yeni UI/perf değişikliklerinden sonra ilgili E2E ve kapılar
 regresyonu açık. Ayrıca Deck'in açık cihaz oturumları. 2026-10-11'de tam CORE Vitest 249 dosya / 3.394 test geçti;
 Lenovo `hudInteraction` dikey/yatay/%200 yazı koşuldu. Cihazlar bağlı olduğundan yapılabilir cihaz satırları
 "yapılacak"tır; yapılmayan kabul PASS değildir.
+
+Güncelleme (2026-10-14): CORE `MinimapPanel` işaretlerine isteğe bağlı `label` eklendi (VOL.TEST bölge adları,
+vitrin örneği, testli). VOL.TEST araç sesleri ve görselleri için kullanıcı onayı kök TODO VT-R6'da kayıtlıdır; bu
+liste kalan UI-13.4 insan kabullerini (gerçek AT, haptik, UI ses seti kulak kabulü) kapsamaz ve açık kalır.
 
 ### Yapılamayan/NOT-RUN kalacak kabuller
 
