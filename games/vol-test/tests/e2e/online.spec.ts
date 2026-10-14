@@ -294,10 +294,10 @@ test('ölüm ve yeniden doğuş: skor tablosu, akış ve can çubuğu tarayıcı
   for (const page of [killer, victim])
     await expect(page.getByTestId('online-feed')).toContainText(`${tag}-K » ${tag}-V`);
   // Öldürenin satırında öldürme, ölenin satırında ölüm bir artar.
-  const cell = (page: Page, who: string, column: number) =>
-    page.locator('.vol-datatable__row', { hasText: who }).locator('td').nth(column);
-  await expect(cell(killer, `${tag}-K`, 2)).toHaveText('1');
-  await expect(cell(killer, `${tag}-V`, 3)).toHaveText('1');
+  const cell = (page: Page, who: string, part: 'value' | 'secondary') =>
+    page.locator('.vol-rank__row', { hasText: who }).locator(`.vol-rank__${part}`);
+  await expect(cell(killer, `${tag}-K`, 'value')).toHaveText('1');
+  await expect(cell(killer, `${tag}-V`, 'secondary')).toHaveText('1');
 
   // Doğma süresi dolunca araç korumayla geri gelir; can çubuğu dolar.
   vehicle(`${tag}-V`).vitality.respawnRemainingMs = 5;

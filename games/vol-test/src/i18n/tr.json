@@ -197,7 +197,7 @@
     "board": {
       "title": "Skor tablosu",
       "titleLegend": "{{title}} · {{kills}} / {{deaths}}",
-      "killsShort": "Öldürme",
+      "killsShort": "Öld.",
       "deathsShort": "Ölüm",
       "you": "{{name}} (siz)",
       "away": "{{name}} (bağlantı yok)",

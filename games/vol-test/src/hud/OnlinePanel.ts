@@ -289,7 +289,7 @@ export class OnlinePanel {
       label: factionName(faction.index),
       value: faction.score,
       color: hex(ONLINE_VIEW.colors.teams[faction.index] ?? ONLINE_VIEW.colors.foe),
-      wins: faction.wins,
+      wins: faction.wins > 0 ? faction.wins : undefined,
       own: faction.index === view.selfFaction,
     }));
     this.banner.setSides(sides);

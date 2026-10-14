@@ -58,7 +58,7 @@
   position: absolute;
   top: var(--vt-online-top);
   left: calc(var(--vol-safe-left) + 20px);
-  width: min(236px, 24vw);
+  width: min(248px, 26vw);
 }
 
 .vt-online__notice {

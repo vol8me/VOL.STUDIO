@@ -197,8 +197,8 @@
     "board": {
       "title": "Scoreboard",
       "titleLegend": "{{title}} · {{kills}} / {{deaths}}",
-      "killsShort": "Kills",
-      "deathsShort": "Deaths",
+      "killsShort": "K",
+      "deathsShort": "D",
       "you": "{{name}} (you)",
       "away": "{{name}} (disconnected)",
       "botTag": "bot",
