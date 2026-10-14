@@ -36,7 +36,9 @@ async function tap(page: Page, key: string): Promise<void> {
 test('oyun açılır, HUD ve kontrol ipuçları görünür, konsol temiz', async ({ page }) => {
   const errors = collectErrors(page);
   await open(page);
-  await expect(page.getByTestId('telemetry')).toContainText('m/s');
+  await expect(page.getByTestId('vitals')).toBeVisible();
+  await expect(page.getByTestId('vitals').locator('.vol-bar')).toHaveCount(3);
+  await expect(page.getByTestId('telemetry')).toHaveCount(0);
   await expect(page.getByTestId('control-hints')).toBeVisible();
   await expect(page.getByTestId('touch-boost')).toBeHidden();
   // Alıştırma dünyası 384 m'dir ve oyuncu merkezde açılır.
@@ -57,7 +59,6 @@ test('klavyeyle sürülen tank dünyada ilerler', async ({ page }) => {
   await expect
     .poll(async () => (await position(page)).x, { timeout: 6000 })
     .toBeGreaterThan(start.x + 2);
-  await expect(page.getByTestId('telemetry')).not.toContainText('0.0 m/s');
   await page.keyboard.up('d');
 });
 
@@ -65,17 +66,31 @@ test('Space fren: paletler kilitlenir, tank gaz basılıyken bile durur', async 
   await open(page);
   await page.locator('#game > canvas').hover();
   await page.keyboard.down('d');
-  await expect(page.getByTestId('telemetry')).not.toContainText('0.0 m/s', { timeout: 6000 });
+  const start = (await position(page)).x;
+  await expect
+    .poll(async () => (await position(page)).x, { timeout: 6000 })
+    .toBeGreaterThan(start + 2);
   await page.keyboard.down('Space');
-  await expect(page.getByTestId('telemetry')).toContainText('Fren');
-  await expect(page.getByTestId('telemetry')).toContainText('0.0 m/s', { timeout: 4000 });
+  // Fren kilidi hızı sıfırlar: ardışık örnekler arasında konum artık ilerlemez.
+  let last = (await position(page)).x;
+  await expect
+    .poll(
+      async () => {
+        const now = (await position(page)).x;
+        const moved = now - last;
+        last = now;
+        return moved;
+      },
+      { timeout: 6000, intervals: [400] },
+    )
+    .toBeLessThanOrEqual(0);
   await page.keyboard.up('Space');
   await page.keyboard.up('d');
 });
 
 test('atış barı tek atıştan sonra boşalır, bekler ve yeniden hazır olur', async ({ page }) => {
   await open(page);
-  const bar = page.locator('.vt-hud__fire-bar');
+  const bar = page.locator('.vt-hud__vitals .vol-bar--cooldown');
   await expect(bar).toHaveAttribute('aria-valuenow', '100');
   await bar.evaluate((element) => {
     element.setAttribute('data-observed-min', '100');
@@ -179,10 +194,7 @@ test.describe('dokunmatik', () => {
       '.vt-hud__touch > :not([hidden])',
       '.vt-hud__map',
       '.vt-hud__fullscreen',
-      '.vt-hud__telemetry',
-      '.vt-hud__title',
-      '.vt-hud__boost-bar',
-      '.vt-hud__fire-bar',
+      '.vt-hud__vitals',
       '.vt-hud__climate',
     ];
     const boxes = [];
@@ -207,13 +219,14 @@ test.describe('dokunmatik', () => {
     expect(overlaps).toEqual([]);
     const pause = (await page.getByTestId('touch-pause').boundingBox())!;
     const zoom = (await page.getByTestId('touch-zoomIn').boundingBox())!;
-    const boost = (await page.locator('.vt-hud__boost-bar').boundingBox())!;
-    const fire = (await page.locator('.vt-hud__fire-bar').boundingBox())!;
+    const climate = (await page.locator('.vt-hud__climate').boundingBox())!;
+    const vitals = (await page.locator('.vt-hud__vitals').boundingBox())!;
     expect(pause.x + pause.width).toBeLessThan(zoom.x);
     expect(pause.y).toBeCloseTo(zoom.y, 0);
     expect(zoom.x - pause.x - pause.width).toBeLessThan(20);
-    expect(fire.x).toBeGreaterThan(boost.x + boost.width);
-    expect(fire.y).toBeCloseTo(boost.y, 0);
+    // Göstergeler sol üstte, iklim rozetinin hemen altındadır.
+    expect(vitals.y).toBeGreaterThanOrEqual(climate.y + climate.height);
+    expect(vitals.x).toBeCloseTo(climate.x, 0);
     for (const box of boxes) {
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.y + box.height).toBeLessThanOrEqual(390);
@@ -225,7 +238,7 @@ test.describe('dokunmatik', () => {
     await page.touchscreen.tap(640, 400);
     const box = (await page.getByTestId('stick-aim').locator('.vol-joystick__base').boundingBox())!;
     const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-    const bar = page.locator('.vt-hud__fire-bar');
+    const bar = page.locator('.vt-hud__vitals .vol-bar--cooldown');
     await page.evaluate(({ x, y }) => {
       const target = document.querySelector('[data-testid="stick-aim"] .vol-joystick__base')!;
       target.dispatchEvent(

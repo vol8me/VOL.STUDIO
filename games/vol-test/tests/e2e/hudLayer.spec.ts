@@ -70,15 +70,7 @@ async function passiveReport(page: Page): Promise<
 > {
   return page.evaluate(() => {
     const hud = document.querySelector('[data-testid="hud"]')!;
-    const selectors = [
-      '.vt-hud__title',
-      '.vt-hud__telemetry',
-      '.vt-hud__hints',
-      '.vt-hud__climate',
-      '.vol-fps-meter',
-      '.vt-hud__boost-bar',
-      '.vt-hud__fire-bar',
-    ];
+    const selectors = ['.vt-hud__vitals', '.vt-hud__hints', '.vt-hud__climate', '.vol-fps-meter'];
     const rows: Array<{
       selector: string;
       pointerEvents: string;
@@ -113,7 +105,7 @@ test.describe('masaüstü', () => {
   }) => {
     await open(page);
     const rows = await passiveReport(page);
-    expect(rows.length, 'pasif plakalar bulundu').toBeGreaterThanOrEqual(5);
+    expect(rows.length, 'pasif plakalar bulundu').toBeGreaterThanOrEqual(4);
     for (const row of rows) {
       expect(row.pointerEvents, `${row.selector} işaretçi olayı`).toBe('none');
       expect(row.hitInsideHud, `${row.selector} merkezi HUD tarafından yakalanıyor`).toBe(false);
@@ -234,7 +226,9 @@ test.describe('dokunmatik (telefon yatayı)', () => {
     ).toEqual([]);
   });
 
-  test('yeniden doğma bildirimi telemetri, başlık ve denetimlerle çakışmaz', async ({ page }) => {
+  test('yeniden doğma bildirimi göstergeler, iklim rozeti ve denetimlerle çakışmaz', async ({
+    page,
+  }) => {
     for (const viewport of [
       { width: 844, height: 390 },
       { width: 1250, height: 750 },
@@ -247,8 +241,8 @@ test.describe('dokunmatik (telefon yatayı)', () => {
         banner.textContent = 'Araç imha oldu · 10 sn sonra yeniden doğacak';
         const box = banner.getBoundingClientRect();
         const others = [
-          '.vt-hud__title',
-          '[data-testid="telemetry"]',
+          '.vt-hud__vitals',
+          '.vt-hud__climate',
           '.vt-hud__map',
           '.vt-hud__touch > :not([hidden])',
         ];

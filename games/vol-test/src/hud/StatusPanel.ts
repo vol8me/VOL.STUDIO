@@ -1,77 +1,81 @@
 import { i18next } from '@volstudio/core/i18n';
-import { Bar, Text } from '@volstudio/core/ui';
-import { formatHeading, formatSpeed } from './format';
+import { Bar, Panel, Text } from '@volstudio/core/ui';
+import type { MessageKey } from '@/i18n/keys';
 import type { HudFrame } from './HudFrame';
 
+interface Gauge {
+  readonly bar: Bar;
+  /** Okuyucuya okunan ad (uzun) ve çubuk üstünde görünen etiket (kısa) anahtarları. */
+  readonly name: MessageKey;
+  readonly short: MessageKey;
+}
+
 /**
- * Oyun durumu: başlık (`Text`), hızlanma deposu (dikey `Bar`) ve telemetri
- * (`Text`: hız, rota, vites). Telemetri metni yalnız değişince yazılır.
+ * Araç göstergeleri ve yaşam durumu: can, hızlanma deposu ve atış dolumu etiketli yatay `Bar`lardır ve
+ * tek bir CORE `Panel` içinde durur; yeniden doğma ve koruma bildirimi `Text`tir. Sürüş hızı ve yön
+ * HUD'da yoktur: ayrıntı oyuncuya değil teşhise aittir, harita yön ve konumu verir.
  */
 export class StatusPanel {
   readonly elements: readonly HTMLElement[];
-  private readonly title: Text;
-  private readonly boost: Bar;
-  private readonly fire: Bar;
-  private readonly health: Bar;
+  private readonly vitals: Panel;
+  private readonly gauges: Readonly<Record<'health' | 'boost' | 'reload', Gauge>>;
   private readonly lifecycle: Text;
-  private readonly telemetry: Text;
-  private lastTelemetry = '';
 
-  constructor(private readonly metre: number) {
-    this.title = new Text(i18next.t('voltest:app.title'), { variant: 'title', tag: 'h1' });
-    this.title.element.classList.add('vt-hud__title');
-    this.boost = new Bar({
-      max: 100,
-      value: 100,
-      orientation: 'vertical',
-      variant: 'boost',
-      lowThreshold: 0.2,
-      animateMs: 0,
-      ariaLabel: i18next.t('voltest:hud.boost'),
-      className: 'vt-hud__boost-bar',
-    });
-    this.fire = new Bar({
-      max: 100,
-      value: 100,
-      orientation: 'vertical',
-      variant: 'cooldown',
-      lowThreshold: null,
-      animateMs: 0,
-      ariaLabel: i18next.t('voltest:hud.fireReload'),
-      className: 'vt-hud__fire-bar',
-    });
-    this.health = new Bar({
-      max: 100,
-      value: 100,
-      orientation: 'vertical',
-      variant: 'health',
-      lowThreshold: 0.25,
-      animateMs: 0,
-      ariaLabel: i18next.t('voltest:hud.health'),
-      className: 'vt-hud__health-bar',
-    });
+  constructor() {
+    this.vitals = new Panel({ className: 'vt-hud__vitals' });
+    this.vitals.element.dataset.testid = 'vitals';
+    const gauge = (
+      variant: string,
+      name: MessageKey,
+      short: MessageKey,
+      options: { lowThreshold: number | null; trail: boolean; percent?: boolean },
+    ): Gauge => {
+      const text = (value: number, max: number): string =>
+        options.percent ? `${Math.round(value)}%` : `${Math.ceil(value)}/${Math.ceil(max)}`;
+      const bar = new Bar({
+        max: 100,
+        value: 100,
+        variant,
+        lowThreshold: options.lowThreshold,
+        trail: options.trail,
+        animateMs: 0,
+        ariaLabel: i18next.t(name),
+        label: (value, max) => `${i18next.t(short)} ${text(value, max)}`,
+        valueText: text,
+      });
+      this.vitals.add(bar);
+      return { bar, name, short };
+    };
+    this.gauges = {
+      health: gauge('health', 'voltest:hud.health', 'voltest:hud.vitals.health', {
+        lowThreshold: 0.25,
+        trail: true,
+      }),
+      boost: gauge('stamina', 'voltest:hud.boost', 'voltest:hud.vitals.boost', {
+        lowThreshold: 0.2,
+        trail: false,
+      }),
+      reload: gauge('cooldown', 'voltest:hud.fireReload', 'voltest:hud.vitals.reload', {
+        lowThreshold: null,
+        trail: false,
+        percent: true,
+      }),
+    };
+    this.vitals.show();
     this.lifecycle = new Text('', { variant: 'muted', tag: 'p' });
     this.lifecycle.element.classList.add('vt-hud__lifecycle');
     this.lifecycle.element.dataset.testid = 'lifecycle';
     this.lifecycle.element.setAttribute('role', 'status');
-    this.telemetry = new Text('', { variant: 'muted', tag: 'p' });
-    this.telemetry.element.classList.add('vt-hud__telemetry');
-    this.telemetry.element.dataset.testid = 'telemetry';
-    this.elements = [
-      this.title.element,
-      this.boost.element,
-      this.fire.element,
-      this.health.element,
-      this.lifecycle.element,
-      this.telemetry.element,
-    ];
+    this.elements = [this.vitals.element, this.lifecycle.element];
   }
 
   update(frame: HudFrame): void {
-    this.boost.setValue((100 * frame.boost) / frame.boostCapacity);
-    this.fire.setValue(frame.fireProgress * 100);
-    this.health.setMax(frame.maxHealth);
-    this.health.setValue(frame.health);
+    const { health, boost, reload } = this.gauges;
+    health.bar.setMax(frame.maxHealth);
+    health.bar.setValue(frame.health);
+    boost.bar.setMax(frame.boostCapacity);
+    boost.bar.setValue(frame.boost);
+    reload.bar.setValue(frame.fireProgress * 100);
     this.lifecycle.setContent(
       !frame.alive
         ? i18next.t('voltest:hud.respawnIn', {
@@ -83,36 +87,16 @@ export class StatusPanel {
             })
           : '',
     );
-    const text = i18next.t('voltest:hud.telemetry', {
-      speed: formatSpeed(frame.speed, this.metre),
-      heading: formatHeading(frame.hull),
-      gear: i18next.t(
-        frame.braking
-          ? 'voltest:hud.brake'
-          : frame.reversing
-            ? 'voltest:hud.reverse'
-            : 'voltest:hud.forward',
-      ),
-    });
-    if (text === this.lastTelemetry) return;
-    this.lastTelemetry = text;
-    this.telemetry.setContent(text);
   }
 
   refreshLabels(): void {
-    this.title.setContent(i18next.t('voltest:app.title'));
-    this.boost.element.setAttribute('aria-label', i18next.t('voltest:hud.boost'));
-    this.fire.element.setAttribute('aria-label', i18next.t('voltest:hud.fireReload'));
-    this.health.element.setAttribute('aria-label', i18next.t('voltest:hud.health'));
-    this.lastTelemetry = '';
+    for (const { bar, name } of Object.values(this.gauges))
+      bar.element.setAttribute('aria-label', i18next.t(name));
   }
 
   destroy(): void {
-    this.title.destroy();
-    this.boost.destroy();
-    this.fire.destroy();
-    this.health.destroy();
+    for (const { bar } of Object.values(this.gauges)) bar.destroy();
+    this.vitals.destroy();
     this.lifecycle.destroy();
-    this.telemetry.destroy();
   }
 }

@@ -4,6 +4,7 @@ import * as Platform from '@volstudio/tauri-v2';
 import type * as CoreModule from '@volstudio/core';
 import { triggerBack, Vector2, type InputState } from '@volstudio/core';
 import { TANK } from '@/config/tank';
+import { WORLD } from '@/config/world';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
 import type { SimEvent } from '@/sim/events';
 import { Simulation } from '@/sim/Simulation';
@@ -307,14 +308,16 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     expect(parent.querySelector('[data-testid="hud"]')).not.toBeNull();
   });
 
-  it('hareket girdisi tankı sürer, kamera ve telemetri izler', () => {
+  it('hareket girdisi tankı sürer, kamera ve harita izler', () => {
     const { sim, frame, parent, camera } = mount();
     const start = sim.player.chassis.x;
     for (let step = 0; step < 120; step++) frame({ move: new Vector2(1, 0) });
     expect(sim.player.chassis.x).toBeGreaterThan(start + 100);
     const [x] = lastCall(camera, 'centerOn') as [number, number];
     expect(Math.abs(x - sim.player.chassis.x)).toBeLessThan(40);
-    expect(parent.querySelector('[data-testid="telemetry"]')!.textContent).toMatch(/m\/s/);
+    // Harita oyuncunun konumunu metre olarak yazar (HUD'da sürüş hızı yoktur).
+    const position = parent.querySelector<HTMLElement>('.vt-hud__map')!.dataset.position!;
+    expect(Number(position.split(',')[0])).toBeGreaterThan(start / WORLD.metre + 2);
   });
 
   it('ateş mermi üretir, kamerayı atışın tersine iter ve titreşim çalar', () => {

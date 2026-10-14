@@ -9,14 +9,14 @@
   --vt-edge: 16px;
   --vt-map: 168px;
   --vt-chip-padding: 6px 10px;
+  --vt-vitals: 224px;
 
   pointer-events: none;
   position: absolute;
   inset: 0;
 }
 
-.vt-hud__title,
-.vt-hud__telemetry,
+.vt-hud__climate,
 .vt-hud__hints {
   padding: var(--vt-chip-padding);
   border: 1px solid var(--vol-ui-border-soft);
@@ -24,45 +24,37 @@
   background: var(--vol-ui-overlay-panel);
 }
 
-.vt-hud__title {
-  position: absolute;
-  top: calc(var(--vol-safe-top) + 12px);
+/*
+ * Göstergeler (can, hızlanma, atış dolumu): tek CORE `Panel` içinde üç etiketli yatay `Bar`. Panel
+ * HUD'da pasiftir: işaretçi altındaki oyun tuvaline geçer. Masaüstünde sol altta, dokunmatikte sol
+ * üstte iklim rozetinin altındadır.
+ */
+.vol-panel.vt-hud__vitals {
+  pointer-events: none;
+  bottom: calc(var(--vol-safe-bottom) + var(--vt-edge));
   left: calc(var(--vol-safe-left) + 20px);
-  margin: 0;
-  font-size: 17px;
-  letter-spacing: 0.14em;
+  gap: var(--vol-space-xs);
+  box-sizing: border-box;
+  width: var(--vt-vitals);
+  padding: var(--vol-space-xs);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
 }
 
-.vt-hud__boost-bar,
-.vt-hud__fire-bar {
-  position: absolute;
-  top: 50%;
-  left: calc(var(--vol-safe-left) + 24px);
-  width: 14px;
-  height: min(34vh, 300px);
-  transform: translateY(-50%);
-}
-
-.vt-hud__fire-bar {
-  left: calc(var(--vol-safe-left) + 48px);
-}
-
-.vt-hud__health-bar {
-  position: absolute;
-  top: 50%;
-  left: calc(var(--vol-safe-left) + 72px);
-  width: 14px;
-  height: min(34vh, 300px);
-  transform: translateY(-50%);
+.vt-hud__vitals .vol-bar {
+  height: 18px;
 }
 
 .vt-hud__lifecycle {
   position: absolute;
-  top: calc(var(--vol-safe-top) + 54px);
-  left: calc(var(--vol-safe-left) + 20px);
+  top: calc(var(--vol-safe-top) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
   margin: 0;
   padding: 4px 8px;
   background: var(--vol-ui-overlay-panel);
+  white-space: nowrap;
 }
 
 .vt-hud__lifecycle:empty {
@@ -83,21 +75,18 @@
   right: calc(var(--vol-safe-right) + var(--vt-edge));
 }
 
-.vt-hud__telemetry {
-  position: absolute;
-  right: calc(var(--vol-safe-right) + var(--vt-edge));
-  bottom: calc(var(--vol-safe-bottom) + 44px);
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.06em;
-}
-
 .vt-hud__hints {
   position: absolute;
   bottom: calc(var(--vol-safe-bottom) + var(--vt-edge));
-  left: calc(var(--vol-safe-left) + 20px);
-  display: grid;
-  gap: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+
+  /* Göstergelerin ve haritanın arasında kalan genişlik; sığmazsa ipuçları satıra bölünür. */
+  max-width: calc(100vw - 2 * (var(--vt-vitals) + var(--vt-edge) + 48px));
 }
 
 .vt-hud__hint {
@@ -173,23 +162,18 @@
   top: calc(var(--vol-safe-top) + 66px);
 }
 
-/* Dokunmatikte sağ sütun düğmelerindir; telemetri başlığın altına geçer. */
-.vt-hud[data-mode='touch'] .vt-hud__telemetry {
-  inset: calc(var(--vol-safe-top) + 56px) auto auto calc(var(--vol-safe-left) + 20px);
+/* Dokunmatikte sağ sütun düğmelerindir; göstergeler sol üstte, iklim rozetinin altındadır. */
+.vt-hud[data-mode='touch'] {
+  --vt-vitals: 168px;
 }
 
-/* Dokunmatikte telemetri sol üstte lifecycle ile aynı satıra düşer; bildirim üst ortaya alınır. */
-.vt-hud[data-mode='touch'] .vt-hud__lifecycle {
-  left: 50%;
-  transform: translateX(-50%);
+.vt-hud[data-mode='touch'] .vol-panel.vt-hud__vitals {
+  inset: calc(var(--vol-safe-top) + 44px) auto auto calc(var(--vol-safe-left) + 20px);
 }
 
-.vt-hud[data-mode='touch'] .vt-hud__boost-bar,
-.vt-hud[data-mode='touch'] .vt-hud__fire-bar,
-.vt-hud[data-mode='touch'] .vt-hud__health-bar {
-  top: calc(var(--vol-safe-top) + 104px);
-  height: min(24vh, 160px);
-  transform: none;
+/* Dokunmatikte harita küçüktür: 44 px'lik yakınlaştırma düğmeleri haritayı örter, kamera zoom düğmeleri vardır. */
+.vt-hud[data-mode='touch'] .vol-minimap__controls {
+  display: none;
 }
 
 @media (height <= 520px) {
@@ -203,21 +187,11 @@
   }
 }
 
-@media (height <= 520px) {
-  .vt-hud[data-mode='touch'] .vt-hud__boost-bar,
-  .vt-hud[data-mode='touch'] .vt-hud__fire-bar,
-  .vt-hud[data-mode='touch'] .vt-hud__health-bar {
-    height: min(24vh, calc(100vh - 310px - var(--vol-safe-top) - var(--vol-safe-bottom)));
-  }
-}
-
 .vt-hud__climate {
   position: absolute;
-  left: calc(var(--vol-safe-left) + 96px);
-  top: calc(var(--vol-safe-top) + 104px);
+  left: calc(var(--vol-safe-left) + 20px);
+  top: calc(var(--vol-safe-top) + 12px);
   margin: 0;
-  padding: 4px 8px;
-  background: var(--vol-ui-surface-1);
   font-size: 12px;
   line-height: 16px;
   white-space: nowrap;

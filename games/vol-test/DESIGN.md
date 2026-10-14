@@ -385,7 +385,13 @@ CORE `FollowCamera` ara değerli gövdeyi takip eder; kare hızından bağımsı
 Geri tepme ve sarsıntı ayrı ötelemelerdir. Olay → kamera/titreşim eşlemesi
 `src/config/feel.ts` içinde tutulur.
 
-HUD görünür bileşenleri CORE'dan alır; oyun CSS'i yerleşim ve yüzeyi kurar.
+HUD görünür bileşenleri CORE'dan alır; oyun CSS'i yerleşim ve yüzeyi kurar. Yalnız oyuncunun
+karar verdirdiği bilgi vardır: can, hızlanma deposu ve atış dolumu tek bir CORE `Panel` içinde üç
+etiketli yatay `Bar`dır (masaüstünde sol altta, dokunmatikte sol üstte); iklim rozeti sol üstte,
+yeniden doğma ve koruma bildirimi üst ortada, harita sağ üstte, kontrol ipuçları masaüstünde alt
+ortadadır. Sürüş hızı, yön ve vites HUD'da yoktur (teşhise aittir, harita yön ve konumu verir);
+oyun adı rozeti de yoktur. Dokunmatikte haritanın 44 px'lik yakınlaştırma düğmeleri haritayı
+örteceğinden gizlenir (kamera zoom düğmeleri vardır); masaüstünde tekerlek ve düğmeler çalışır.
 Harita (CORE `MinimapPanel`) çizilen her karede, ekrandaki ara değerli pozdan güncellenir:
 adım konumu ya da seyreltilmiş güncelleme işareti sıçratır. İşaretler yerinde güncellenir
 (çerçeve başına nesne üretilmez), pikselin 1/8'inden küçük değişim çizim istemez, özet yalnız

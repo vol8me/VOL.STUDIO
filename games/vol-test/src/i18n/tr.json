@@ -71,10 +71,11 @@
     "mapSummary": "Harita: siz ve {{vehicles}} diğer araç, yakınlaştırma {{zoom}}x",
     "map": "Harita",
     "fullscreen": "Tam ekran",
-    "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",
-    "forward": "İleri",
-    "reverse": "Geri",
-    "brake": "Fren",
+    "vitals": {
+      "health": "Can",
+      "boost": "Hızlanma",
+      "reload": "Dolum"
+    },
     "fireReload": "Atış dolumu",
     "health": "Araç canı",
     "respawnIn": "Araç imha oldu · {{seconds}} sn sonra yeniden doğacak",

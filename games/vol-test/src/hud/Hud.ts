@@ -104,7 +104,7 @@ export class Hud {
         context: () => options.services?.glyphContext ?? {},
       }),
     );
-    this.status = this.scope.addDestroyable(new StatusPanel(options.metre));
+    this.status = this.scope.addDestroyable(new StatusPanel());
     this.climate = this.scope.addDestroyable(new ClimateStatus());
     this.map = this.scope.addDestroyable(
       new MapPanel({

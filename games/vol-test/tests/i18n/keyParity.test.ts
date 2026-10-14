@@ -10,9 +10,11 @@ function keys(value: object, prefix = ''): string[] {
   );
 }
 
-function values(value: object): string[] {
-  return Object.values(value).flatMap((child) =>
-    typeof child === 'object' && child !== null ? values(child as object) : [String(child)],
+function entries(value: object, prefix = ''): Array<[string, string]> {
+  return Object.entries(value).flatMap(([key, child]): Array<[string, string]> =>
+    typeof child === 'object' && child !== null
+      ? entries(child as object, `${prefix}${key}.`)
+      : [[`${prefix}${key}`, String(child)]],
   );
 }
 
@@ -24,8 +26,14 @@ describe('i18n', () => {
     expect(keys(en).sort()).toEqual(keys(tr).sort());
   });
 
-  it('boş çeviri yok, yer tutucular iki dilde aynı', () => {
-    for (const text of [...values(tr), ...values(en)]) expect(text.trim()).not.toBe('');
-    expect(placeholders(en.hud.telemetry)).toEqual(placeholders(tr.hud.telemetry));
+  it('boş çeviri yok', () => {
+    for (const [key, text] of [...entries(tr), ...entries(en)])
+      expect(text.trim(), key).not.toBe('');
+  });
+
+  it('yer tutucular iki dilde aynıdır', () => {
+    const english = new Map(entries(en));
+    for (const [key, text] of entries(tr))
+      expect(placeholders(english.get(key) ?? ''), key).toEqual(placeholders(text));
   });
 });

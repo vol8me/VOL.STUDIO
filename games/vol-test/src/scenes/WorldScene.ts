@@ -149,7 +149,7 @@ export class WorldScene extends Phaser.Scene {
           ? 'gamepad'
           : touch
             ? 'touch'
-            : undefined,
+            : 'pc',
       ),
     );
     this.driver = (data?.createDriver ?? ((context) => new OfflineDriver(context)))({

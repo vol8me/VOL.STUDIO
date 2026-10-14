@@ -36,7 +36,6 @@ describe('frames', () => {
     });
     expect(frame).toMatchObject({
       boost: TANK.boostCapacity,
-      reversing: false,
       view: { width: 3 },
     });
   });

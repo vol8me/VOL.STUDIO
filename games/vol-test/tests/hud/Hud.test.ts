@@ -102,7 +102,7 @@ function pointer(type: string): PointerEvent {
 describe('Hud', () => {
   it('can çubuğu, ölüm sayacı ve koruma durumu HUD karesini izler ve dil değiştirir', async () => {
     const { hud, parent, find } = mount();
-    const health = parent.querySelector<HTMLElement>('.vt-hud__health-bar')!;
+    const health = parent.querySelector<HTMLElement>('.vt-hud__vitals .vol-bar--health')!;
     expect(health.getAttribute('aria-label')).toBe('Araç canı');
     hud.update(hudFrame({ health: 25 }), 100);
     expect(health.getAttribute('aria-valuenow')).toBe('25');
@@ -117,7 +117,7 @@ describe('Hud', () => {
     expect(find('lifecycle').textContent).toContain('respawn in 3 s');
     await i18next.changeLanguage('tr');
     hud.destroy();
-    expect(parent.querySelector('.vt-hud__health-bar')).toBeNull();
+    expect(parent.querySelector('.vt-hud__vitals')).toBeNull();
   });
 
   it('harita adı ve araç özeti HUD dil geçişinde birlikte yenilenir', async () => {
@@ -155,7 +155,7 @@ describe('Hud', () => {
 
   it('atış dolum barı kalan beklemeyi gösterir ve dil değişiminde erişilebilir adı yenilenir', async () => {
     const { hud, parent } = mount();
-    const bar = parent.querySelector<HTMLElement>('.vt-hud__fire-bar')!;
+    const bar = parent.querySelector<HTMLElement>('.vt-hud__vitals .vol-bar--cooldown')!;
     expect(bar).not.toBeNull();
     expect(bar.getAttribute('aria-label')).toBe('Atış dolumu');
     hud.update(hudFrame({ fireProgress: 0.25 }), 0);
@@ -166,13 +166,15 @@ describe('Hud', () => {
     expect(bar.getAttribute('aria-label')).toBe('Shot reload');
     await i18next.changeLanguage('tr');
     hud.destroy();
-    expect(parent.querySelector('.vt-hud__fire-bar')).toBeNull();
+    expect(parent.querySelector('.vt-hud__vitals')).toBeNull();
   });
 
   it('görünen her parça CORE bileşenidir', () => {
     const { hud, parent } = mount();
     const layer = parent.querySelector('.vt-hud')!;
     const containers = new Set(['vt-hud__hints', 'vt-hud__touch']);
+    // Göstergeler tek CORE `Panel` içindedir (`vol-panel`); çubukları CORE `Bar`dır.
+    expect(layer.querySelectorAll('.vt-hud__vitals > .vol-bar')).toHaveLength(3);
     for (const child of layer.children) {
       const isContainer = [...child.classList].some((name) => containers.has(name));
       const isCore = [...child.classList].some((name) => name.startsWith('vol-'));
@@ -187,16 +189,24 @@ describe('Hud', () => {
     hud.destroy();
   });
 
-  it('telemetri hız, rota ve vitesi yazar; güncelleme seyreltilir', () => {
-    const { hud, find } = mount();
-    hud.update(hudFrame({ speed: 64, hull: 0 }), 1000);
-    expect(find('telemetry').textContent).toBe('2.0 m/s · 090° · İleri');
-    hud.update(hudFrame({ speed: 128, reversing: true }), 1010);
-    expect(find('telemetry').textContent).toBe('2.0 m/s · 090° · İleri');
-    hud.update(hudFrame({ speed: 128, reversing: true }), 1200);
-    expect(find('telemetry').textContent).toBe('4.0 m/s · 090° · Geri');
-    hud.update(hudFrame({ speed: 128, reversing: true, braking: true }), 1400);
-    expect(find('telemetry').textContent).toBe('4.0 m/s · 090° · Fren');
+  it('göstergeler can, hızlanma ve atış dolumunu etiketli CORE çubuklarında yazar; güncelleme seyreltilir', () => {
+    const { hud, find, parent } = mount();
+    hud.update(hudFrame({ health: 60, maxHealth: 100, boost: 45, fireProgress: 0.5 }), 1000);
+    const labels = (): string[] =>
+      [...find('vitals').querySelectorAll('.vol-bar__label')].map((label) => label.textContent);
+    expect(labels()).toEqual(['Can 60/100', 'Hızlanma 45/100', 'Dolum 50%']);
+    // Sıradaki güncelleme aralıktan önce gelirse göstergeler yerinde kalır.
+    hud.update(hudFrame({ health: 10 }), 1010);
+    expect(labels()[0]).toBe('Can 60/100');
+    hud.update(hudFrame({ health: 10 }), 1200);
+    expect(labels()[0]).toBe('Can 10/100');
+    // Sürüş hızı, yön ve vites HUD'da yoktur.
+    expect(parent.querySelector('[data-testid="telemetry"]')).toBeNull();
+    expect(parent.querySelector('.vt-hud__title')).toBeNull();
+    // Okuyucu çubuğun adını ve değerini duyar.
+    const health = find('vitals').querySelector('[role="progressbar"]')!;
+    expect(health.getAttribute('aria-label')).toBe('Araç canı');
+    expect(health.getAttribute('aria-valuetext')).toContain('10/100');
     hud.destroy();
   });
 
@@ -301,7 +311,7 @@ describe('Hud', () => {
     expect(parent.querySelector('.vt-hud__fullscreen')).toBeNull();
     await i18next.changeLanguage('en');
     hud.update(hudFrame(), 0);
-    expect(find('telemetry').textContent).toContain('Forward');
+    expect(find('vitals').querySelector('.vol-bar__label')!.textContent).toContain('Health');
     expect(find('touch-boost').getAttribute('aria-label')).toBe('Boost');
     expect(find('touch-brake').getAttribute('aria-label')).toBe('Brake');
     await i18next.changeLanguage('tr');

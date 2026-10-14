@@ -71,10 +71,11 @@
     "mapSummary": "Map: you and {{vehicles}} other vehicles, zoom {{zoom}}x",
     "map": "Map",
     "fullscreen": "Fullscreen",
-    "telemetry": "{{speed}} m/s · {{heading}} · {{gear}}",
-    "forward": "Forward",
-    "reverse": "Reverse",
-    "brake": "Brake",
+    "vitals": {
+      "health": "Health",
+      "boost": "Boost",
+      "reload": "Reload"
+    },
     "fireReload": "Shot reload",
     "health": "Vehicle health",
     "respawnIn": "Vehicle destroyed · respawn in {{seconds}} s",
