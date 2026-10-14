@@ -46,6 +46,7 @@ const NAME_KEYS = {
   bulwark: 'voltest:garage.vehicles.bulwark.name',
   dart: 'voltest:garage.vehicles.dart.name',
   arachnid: 'voltest:garage.vehicles.arachnid.name',
+  widow: 'voltest:garage.vehicles.widow.name',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 const ROLE_KEYS = {
@@ -53,6 +54,7 @@ const ROLE_KEYS = {
   bulwark: 'voltest:garage.vehicles.bulwark.role',
   dart: 'voltest:garage.vehicles.dart.role',
   arachnid: 'voltest:garage.vehicles.arachnid.role',
+  widow: 'voltest:garage.vehicles.widow.role',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 const CLASS_KEYS = {
@@ -60,6 +62,7 @@ const CLASS_KEYS = {
   bulwark: 'voltest:garage.vehicles.bulwark.class',
   dart: 'voltest:garage.vehicles.dart.class',
   arachnid: 'voltest:garage.vehicles.arachnid.class',
+  widow: 'voltest:garage.vehicles.widow.class',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 /** Kart kademesi: CORE kartın nadirlik gösterimi araç sınıfının ağırlığını taşır. */
@@ -68,6 +71,7 @@ const TIER = {
   striker: 'rare',
   bulwark: 'epic',
   arachnid: 'legendary',
+  widow: 'legendary',
 } as const satisfies Record<VehicleId, CardRarity>;
 
 const STAT_KEYS = {

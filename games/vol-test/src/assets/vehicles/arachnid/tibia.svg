@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="34.6" height="15" viewBox="0 0 34.6 15">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8957f"/><stop offset="0.5" stop-color="#51443a"/><stop offset="1" stop-color="#211a15"/></linearGradient>
+    <linearGradient id="plateh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8957f"/><stop offset="0.45" stop-color="#51443a"/><stop offset="1" stop-color="#211a15"/></linearGradient>
+    <radialGradient id="dome" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#a8957f"/><stop offset="0.5" stop-color="#51443a"/><stop offset="1" stop-color="#211a15"/></radialGradient>
+    <radialGradient id="shell" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#ec4a5e"/><stop offset="0.5" stop-color="#96203a"/><stop offset="1" stop-color="#3d0d1a"/></radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6"><stop offset="0" stop-color="#fff0f2"/><stop offset="0.45" stop-color="#ff5a6e"/><stop offset="1" stop-color="#6a0f22"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8f8274"/><stop offset="0.5" stop-color="#463d35"/><stop offset="1" stop-color="#1e1915"/></linearGradient>
+  </defs>
+  <g transform="translate(5.2 7.5)">
+    <path d="M0 -3.6 L26 -1.8 A1.8 1.8 0 0 1 26 1.8 L0 3.6 A3.6 3.6 0 0 1 0 -3.6 Z" fill="url(#plate)" stroke="#0d1217" stroke-width="0.9" stroke-linejoin="round"/>
+    <path d="M2.16 -2.15 L23.4 -0.68" fill="none" stroke="#d8c4aa" stroke-opacity=".45" stroke-width=".65" stroke-linecap="round"/>
+    <path d="M7.54 -2.79 L10.34 -2.79 L11.44 -4.99 Z" fill="#1e1915" stroke="#0d1217" stroke-width=".5" stroke-linejoin="round"/>
+    <path d="M7.54 2.79 L10.34 2.79 L11.44 4.99 Z" fill="#1e1915" stroke="#0d1217" stroke-width=".5" stroke-linejoin="round"/>
+    <path d="M13.78 -2.36 L16.58 -2.36 L17.68 -4.56 Z" fill="#1e1915" stroke="#0d1217" stroke-width=".5" stroke-linejoin="round"/>
+    <path d="M13.78 2.36 L16.58 2.36 L17.68 4.56 Z" fill="#1e1915" stroke="#0d1217" stroke-width=".5" stroke-linejoin="round"/>
+    <path d="M19.5 -1.96 L22.3 -1.96 L23.4 -4.16 Z" fill="#1e1915" stroke="#0d1217" stroke-width=".5" stroke-linejoin="round"/>
+    <path d="M19.5 1.96 L22.3 1.96 L23.4 4.16 Z" fill="#1e1915" stroke="#0d1217" stroke-width=".5" stroke-linejoin="round"/>
+    <path d="M5.72 -2.6V2.6M14.56 -1.99V1.99" stroke="#0d1217" stroke-opacity=".55" stroke-width=".6"/>
+    <path d="M6.76 0H13" stroke="#ff5a6e" stroke-opacity=".7" stroke-width=".6" stroke-linecap="round"/>
+    <path d="M1.3 -4H4.46V4H1.3Z" fill="url(#steel)" stroke="#0d1217" stroke-width=".55" stroke-linejoin="round"/>
+    <g fill="#c9b8a3"><circle cx="10.4" cy="0" r="0.45"/><circle cx="18.72" cy="0" r="0.45"/></g>
+  </g>
+</svg>

@@ -20,8 +20,7 @@
     "load": "tsx scripts/combinedLoad.ts",
     "drive": "tsx scripts/drive.ts",
     "tauri": "tauri",
-    "icon:source": "tsx scripts/app-icon.ts",
-    "rig:sync": "tsx ../../devtools/pen.dev/scripts/sync-rig.ts enemies arachnid src/assets/rig/arachnid.metadata.json public/assets/rig/arachnid/parts assets/rig/arachnid/parts && tsx ../../devtools/pen.dev/scripts/sync-rig.ts weapons plasma_cannon src/assets/rig/plasma_cannon.metadata.json public/assets/rig/plasma_cannon/parts assets/rig/plasma_cannon/parts"
+    "icon:source": "tsx scripts/app-icon.ts"
   },
   "dependencies": {
     "@volstudio/core": "workspace:*",

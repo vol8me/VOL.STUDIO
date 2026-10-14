@@ -218,8 +218,11 @@ yay-sönümlü bakış yönü ve dönüş hızı. Simülasyon state'ini değişt
 
 Basılı ayağı dünya konumunda tutar, strain eşiğinde adımı başlatır. Hiç ayak
 adımda değilken en gergin grup sırayı alır; sıra bitmeden grup değişmez.
-`maxStrainPx` erişimi koruyan acil eşiktir. `setLegHome` duruşu canlı değiştirir,
-basılı ayağı kaydırmaz; `justPlanted` yalnız temasın bittiği kareyi bildirir.
+`maxStrainPx` erişimi koruyan acil eşiktir. `turnWindow` (adım süresinin kesri) sırayı
+sınırlar: yerinde yavaş dönüşte grup üyelerinin eşik anları adım süresinden sık dizilir ve sıra
+hiç el değiştirmezdi; pencere dolunca yeni üye alınmaz, geç kalan üye sonraki sırayı bekler.
+`setLegHome` duruşu canlı değiştirir, basılı ayağı kaydırmaz; `justPlanted` yalnız temasın
+bittiği kareyi bildirir.
 
 ### `GazeDriver`
 

@@ -4,9 +4,8 @@ import { PALETTE } from '@/config/palette';
 import { TANK_LIGHTS } from '@/config/tankView';
 import type { VehicleSpec } from '@/config/vehicles';
 import { renderQualityOf } from '@/scenes/world/CameraRig';
-import { TankView } from './TankView';
+import { createVehicleView } from './createView';
 import type { TankFrame, VehicleView } from './VehicleView';
-import { WalkerView } from './WalkerView';
 
 const SHOWROOM = MENU.showroom;
 
@@ -56,10 +55,7 @@ export class Showroom {
     // Bacaklar dünya uzayında basılır: tablada dönen gövde ayakları geride bırakıp dolaşık bir poza sürükler.
     // Yürüyücü bu yüzden dönmez; taretleri salınır.
     this.turns = spec.kind === 'tank';
-    this.view =
-      spec.kind === 'tank'
-        ? new TankView(this.scene, spec, this.lighting)
-        : new WalkerView(this.scene, spec, this.lighting);
+    this.view = createVehicleView(this.scene, spec, this.lighting);
     this.view.root.setDepth(10);
   }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type * as Textures from '@/view/textures';
-import { ARACHNID_RIG, PLASMA_CANNON_RIG } from '@/config/rigAssets';
+import { SPIDER_PARTS } from '@/config/spiders';
+import { WALKER_IDS } from '@/config/vehicles';
 import { BootScene } from '@/scenes/BootScene';
 
 vi.mock('@/view/textures', async (importOriginal) => ({
@@ -31,7 +32,7 @@ describe('BootScene', () => {
     expect(created({ measurements: {} }).start).toHaveBeenCalledWith('World');
   });
 
-  it('tank SVG parçalarının yanında arachnid ve plazma topu rig dokularını yükler', () => {
+  it('tank SVG parçalarının yanında iki örümceğin her parçasını SVG olarak yükler', () => {
     const scene = new BootScene();
     const load = { on: vi.fn(), svg: vi.fn(), image: vi.fn() };
     Object.assign(scene, {
@@ -41,11 +42,9 @@ describe('BootScene', () => {
     });
     scene.preload();
 
-    const keys = load.image.mock.calls.map(([key]) => key as string);
-    const expected = [...ARACHNID_RIG.parts, ...PLASMA_CANNON_RIG.parts].map(
-      (part) => part.textureKey,
-    );
-    expect(keys.sort()).toEqual(expected.sort());
-    expect(load.svg).toHaveBeenCalled();
+    const keys = load.svg.mock.calls.map(([key]) => key as string);
+    for (const look of WALKER_IDS)
+      for (const part of SPIDER_PARTS) expect(keys).toContain(`spider-${look}-${part}`);
+    expect(load.image).not.toHaveBeenCalled();
   });
 });

@@ -1,11 +1,11 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
-import { ARACHNID, BULWARK, DART, STRIKER } from '@/config/vehicles';
+import { ARACHNID, BULWARK, DART, STRIKER, WIDOW } from '@/config/vehicles';
 import { tankTexture } from '@/view/textures';
 import { VehicleViews } from '@/view/VehicleViews';
-import { WalkerView } from '@/view/WalkerView';
+import { SpiderView } from '@/view/SpiderView';
+import { TankView } from '@/view/TankView';
 import { fakeScene, lastCall } from '../support/fakeScene';
-import { walkerScene } from '../support/rigScene';
 
 const striker = (id: number) => ({ id, spec: STRIKER });
 
@@ -50,14 +50,19 @@ describe('VehicleViews', () => {
     expect(used(tankTexture('dart', 'hull'))).toBe(1);
     views.destroy();
   });
-  it('bacaklı araç için `WalkerView`, paletli araç için tank görünümü kurar', () => {
-    const scene = walkerScene();
+  it('bacaklı araç için `SpiderView`, paletli araç için `TankView` kurar', () => {
+    const scene = fakeScene();
     const views = new VehicleViews(scene as unknown as Phaser.Scene);
-    views.sync([{ id: 1, spec: ARACHNID }]);
-    expect(views.get(1)).toBeInstanceOf(WalkerView);
+    views.sync([
+      { id: 1, spec: ARACHNID },
+      { id: 2, spec: WIDOW },
+      { id: 3, spec: STRIKER },
+    ]);
+    expect(views.get(1)).toBeInstanceOf(SpiderView);
+    expect(views.get(2)).toBeInstanceOf(SpiderView);
+    expect(views.get(3)).toBeInstanceOf(TankView);
     expect(views.get(1)?.impact).toBeTypeOf('function');
-    // Üç top ve gövde rig'i: topların her biri kendi katı ağacını taşır.
-    expect(views.sync([])).toEqual([1]);
+    expect(views.sync([])).toEqual([1, 2, 3]);
     views.destroy();
   });
 });

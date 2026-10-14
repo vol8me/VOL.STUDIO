@@ -47,6 +47,11 @@
         "name": "Arachnid",
         "role": "Bacaklı savaş canavarı",
         "class": "YÜRÜYÜCÜ"
+      },
+      "widow": {
+        "name": "Widow",
+        "role": "Yüksek bacaklı iğne nişancısı",
+        "class": "YÜRÜYÜCÜ"
       }
     }
   },

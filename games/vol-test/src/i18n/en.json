@@ -47,6 +47,11 @@
         "name": "Arachnid",
         "role": "Legged war beast",
         "class": "WALKER"
+      },
+      "widow": {
+        "name": "Widow",
+        "role": "Tall needle sniper",
+        "class": "WALKER"
       }
     }
   },

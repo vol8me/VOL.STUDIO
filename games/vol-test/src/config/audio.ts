@@ -59,12 +59,14 @@ export const AUDIO = {
     bulwark: { engine: 0.66, engineGain: 1.25, tracks: 0.78 },
     dart: { engine: 1.38, engineGain: 0.85, tracks: 1.3 },
     arachnid: { engine: 0.88, engineGain: 0.7, tracks: 1.1 },
+    widow: { engine: 1.2, engineGain: 0.55, tracks: 1.45 },
   } satisfies Record<VehicleId, VehicleVoice>,
-  /** Kabuk referanstır; ağır mermi gümbürder, ray tiz çatlar, plazma yükselir. */
+  /** Kabuk referanstır; ağır mermi gümbürder, ray tiz çatlar, plazma yükselir, iğne ince ve çabuk tıkırdar. */
   weaponVoice: {
     shell: { rate: 1, gain: 1 },
     slug: { rate: 0.68, gain: 1.2 },
     rail: { rate: 1.4, gain: 0.85 },
     plasma: { rate: 1.18, gain: 0.9 },
+    needle: { rate: 1.6, gain: 0.7 },
   } satisfies Record<WeaponStyle, WeaponVoice>,
 } as const;

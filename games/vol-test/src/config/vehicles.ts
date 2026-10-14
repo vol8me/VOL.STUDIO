@@ -13,7 +13,7 @@ export const TANK_IDS = ['striker', 'bulwark', 'dart'] as const;
 export type TankId = (typeof TANK_IDS)[number];
 
 /** Bacaklı yürüyücüler. */
-export const WALKER_IDS = ['arachnid'] as const;
+export const WALKER_IDS = ['arachnid', 'widow'] as const;
 export type WalkerId = (typeof WALKER_IDS)[number];
 
 /** Seçilebilir araçlar; sıra ağ protokolündeki `model` indeksidir, sona eklenir ve yeniden sıralanmaz. */
@@ -230,9 +230,10 @@ export const DART: TankSpec = {
 };
 
 /**
- * Arachnid: bacaklı savaş canavarı. Her yöne çevik yürür, gövdesi nişana bakar ve atılımla
- * kısa sürede mesafe kapatır; iki plazma topu iki yan omuzdadır (sırayla ateşler, gövde ekseninde
- * odaklanır) ve gövde kabuğunu örtmez, toplar gövdeden bağımsız döner. Zırhı ağır tanklardan ince, çevikliği Striker'dan yüksektir.
+ * Arachnid: bacaklı savaş canavarı, zırhlı bir tarantula. Her yöne çevik yürür, gövdesi nişana bakar ve
+ * atılımla kısa sürede mesafe kapatır; iki plazma topu kabuğun ön omuzlarındadır (sırayla ateşler, gövde
+ * ekseninde odaklanır) ve kabuğun orta hattını örtmez, toplar gövdeden bağımsız döner. Mil ve ağız
+ * konumları `ARACHNID_LOOK` ile aynı çizimden gelir. Zırhı ağır tanklardan ince, çevikliği Striker'dan yüksektir.
  */
 export const ARACHNID: WalkerSpec = {
   kind: 'walker',
@@ -263,12 +264,76 @@ export const ARACHNID: WalkerSpec = {
       style: 'plasma',
     },
     mounts: [
-      { x: 4, y: -31, reach: 19.2 },
-      { x: 4, y: 31, reach: 19.2 },
+      { x: 22, y: -11, reach: 23 },
+      { x: 22, y: 11, reach: 23 },
     ],
-    pivot: { x: 4, y: 0 },
+    pivot: { x: 22, y: 0 },
     salvo: [[0], [1]],
     toeInRange: 460,
+  },
+};
+
+/**
+ * Widow: yüksek bacaklı keskin nişancı. Arachnid'den hafif, hızlı ve ince gövdelidir; bacakları uzun
+ * olduğundan tabana yakın çömelip hızla açılır. İki iğne atıcı gövdenin önünde yan yana durur ve ince,
+ * hızlı iğneleri sırayla ateşler: her isabet hafiftir ama tempo yüksek, menzil uzundur. Zırhı ince,
+ * hata kaldırmaz.
+ */
+export const WIDOW: WalkerSpec = {
+  kind: 'walker',
+  id: 'widow',
+  health: 96,
+  walker: {
+    ...WALKER,
+    mass: 1250,
+    halfLength: 38,
+    halfWidth: 19,
+    trackOffset: 15,
+    maxSpeed: 172,
+    acceleration: 1500,
+    braking: 1900,
+    dashMultiplier: 1.7,
+    dashAcceleration: 3000,
+    maxTurnRate: 3.4,
+    turnAcceleration: 20,
+    steerGain: 7,
+    boostCapacity: 80,
+    boostDrain: 50,
+    boostRegen: 19,
+    wallRestitution: 0.38,
+    impactKick: 0.14,
+    turretTurnRate: 6.4,
+  },
+  suspension: {
+    ...SUSPENSION,
+    frequency: 3.8,
+    damping: 0.42,
+    pitchPerAccel: 0.006,
+    rollPerAccel: 0.006,
+    maxOffset: 2.4,
+    roughness: 0.15,
+  },
+  armament: {
+    weapon: {
+      // İki atıcı sırayla ateşler: her biri 460 ms'de bir atar, birleşik tempo 230 ms.
+      intervalMs: 230,
+      aimTolerance: 0.02,
+      projectileSpeed: 1250,
+      projectileLifeMs: 900,
+      flight: { muzzleHeight: 24, launchSpeed: 70, gravity: 314, drag: 0.15, maxRange: 700 },
+      recoilImpulse: 5500,
+      hitImpulse: 12000,
+      recoilKick: 12,
+      damage: 9,
+      style: 'needle',
+    },
+    mounts: [
+      { x: 28, y: -10.5, reach: 26 },
+      { x: 28, y: 10.5, reach: 26 },
+    ],
+    pivot: { x: 28, y: 0 },
+    salvo: [[0], [1]],
+    toeInRange: 560,
   },
 };
 
@@ -277,6 +342,7 @@ export const VEHICLES: Readonly<Record<VehicleId, VehicleSpec>> = {
   bulwark: BULWARK,
   dart: DART,
   arachnid: ARACHNID,
+  widow: WIDOW,
 };
 
 export function isVehicleId(value: unknown): value is VehicleId {

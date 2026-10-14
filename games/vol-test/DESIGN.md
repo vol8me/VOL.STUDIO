@@ -109,6 +109,7 @@ silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca de
 | Bulwark  | Ağır kuşatma tankı       | 170 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi       |
 | Dart     | Hafif, hızlı keşif tankı | 64  | 330 | 4,4   | 16 hasar, 360 ms, uzun menzilli ray |
 | Arachnid | Bacaklı savaş canavarı   | 140 | 150 | 2,7   | 24 hasar, 470 ms, iki plazma topu   |
+| Widow    | Bacaklı keskin nişancı   | 96  | 172 | 3,4   | 9 hasar, 230 ms, iki iğne atıcı     |
 
 Tablo `src/config/vehicles.ts` değerlerinin özetidir; saniyelik hasar araçlar arasında %35'ten
 az ayrışır ve karakter farkı hızlanmadan, dönüşten, frenden ve geri tepmeden gelir
@@ -118,47 +119,73 @@ az ayrışır ve karakter farkı hızlanmadan, dönüşten, frenden ve geri tepm
 Araçlar tek bakışta ve kulakla ayrışır; kimlik üç yerden gelir ve tek tabloda tanımlıdır.
 Renk: her tankın gövde ve taret SVG'si kendi paletini taşır (Striker çelik mavisi ve bordo kabuk,
 Bulwark koyu adaçayı zırh ve pas kabuğu, sarı uyarı şeritli, turuncu enerji; Dart buz mavisi hafif
-gövde ve çivit kabuk, camgöbeği enerji) ve `TANK_ART` çekirdek ışığını ile palet tonunu araca
+gövde ve çivit kabuk, camgöbeği enerji; Arachnid sıcak bronz zırh ve kızıl kabuk, Widow obsidyen gövde ve zehir yeşili) ve `TANK_ART` çekirdek ışığını ile palet tonunu araca
 bağlar; `tests/config/vehicleIdentity.test.ts` paletlerin çakışmamasını kilitler. Mermi: her
 silah stilinin kendi iz rengi ve kalınlığı vardır (`SHOT_LOOK`: kehribar kabuk, turuncu ağır
-mermi, ince ve uzun buz mavisi ray, turkuaz plazma). Ses: motor perdesi ve gücü araca
+mermi, ince ve uzun buz mavisi ray, kızıl plazma, zehir yeşili iğne). Ses: motor perdesi ve gücü araca
 (`AUDIO.vehicleVoice`), top sesinin perdesi ve gücü silah stiline (`AUDIO.weaponVoice`) göre
 işlenir; teslimler aynıdır, yeni sentez gerekmez. Araca özgü gerçek motor ve top kayıtları ayrı iştir.
 
 Silahlanma (`Armament`) bir silahın sayılarını, namlu yuvalarını ve atış gruplarını
 (`salvo`) taşır. `pivot` yoksa 0. yuva nişan taretidir; öteki yuvalar nişan noktasına (0. yuvadan
 `toeInRange` ileride) bakar. `pivot` verilirse nişan başlangıcı odur ve bütün yuvalar nişan
-noktasına bakar (Arachnid'in simetrik yan topları). Her yuvanın yönü yalnız poza bağlıdır ve ağda
+noktasına bakar (örümceklerin simetrik omuz topları). Her yuvanın yönü yalnız poza bağlıdır ve ağda
 namlu açısı taşınmaz. Her tetik çekişi sıradaki grubu ateşler; sıra `Vehicle.salvo` ile döner ve
 sunucu durumunda (`PlayerState.salvo`) öngörüyle uzlaştırılır. Mermi, ateşleyen silahın
 profilini (`Projectiles.addProfile`: ömür, uçuş, stil) taşır; isabet hasarı ve itkisi
 aynı silahın tanımından okunur.
 
-### Arachnid: bacaklı yürüyücü
+### Bacaklı yürüyücüler: Arachnid ve Widow
 
-Arachnid paletli değil bacaklıdır (`WalkerSpec`, `src/sim/walker/Walker.ts`): her yöne (yan, geri)
+İkisi de paletli değil bacaklıdır (`WalkerSpec`, `src/sim/walker/Walker.ts`): her yöne (yan, geri)
 aynı çevikliğiyle yürür, gövdesi nişana bakar, hızlanması kısa bir atılımdır ve zemin tutuşundan
-palet kadar etkilenmez. Hız tavanı 150 birim/s'dir ve bilerek düşüktür: bacak yürüyüşü sanat
-uzayında ~475 px/s'nin üstünde ayakları gövdeye yetiştiremez (acil adım), sanat ölçeğiyle
-(`WALKER_ART.scale`) birlikte bu tavanı `tests/config/walkerRig.test.ts` ve
-`tests/view/walker/ArachnidLegs.test.ts` kilitler. Bacaklar yalnız sunumdur; ağ durumuna ek alan
-girmez, `ChassisState` aynıdır. Çarpışan gövde çizilen kabuğun içindedir, bacak açıklığı değildir.
+palet kadar etkilenmez. Arachnid ağır kavgacıdır (150 birim/s, 140 can, zırhlı tarantula); Widow
+hafif keskin nişancıdır (172 birim/s, 96 can, ince ve uzun bacaklı kara dul). Hız tavanları
+bilerek düşüktür: bacak yürüyüşü tavan hızda ayakları kemik erişiminde tutar ve bunu
+`tests/view/spider/SpiderLegs.test.ts` ile `tests/config/spiders.test.ts` kilitler. Bacaklar yalnız
+sunumdur; ağ durumuna ek alan girmez, `ChassisState` aynıdır. Çarpışan gövde çizilen kabuğun
+içindedir, bacak açıklığı değildir.
 
-Silahı iki plazma topudur: gövdenin iki yan omzunda, kabuğun dışında durur ve gövde üstten
-görünür kalır. İki top gövde eksenindeki odağa bakar ve sırayla ateşler; her top 940 ms'de bir atar,
-birleşik tempo 470 ms'dir (ateş gücü tek toplu Striker'la aynı sınıftadır). Top resmi `entities.pen`
-içindeki tek bir silahtan gelir ve iki yuvada kullanılır; boyu kabuğun yarısı kadardır
-(`WALKER_ART.cannonScale`);
-mermi, geri tepme ve ağız parlaması oyunun kendi efekt katmanındandır (resimden mermi alınmaz).
-Yuvanın `reach` değeri top resminin ağız mesafesinin ölçeklenmişidir (`CANNON_MUZZLE_PX`).
+Sanat tamamen elle çizilmiş SVG'dir ve tanklarla aynı aileden gelir: parçalar tank parçalarıyla aynı
+ölçekte (dünya birimi) çizilir, yani kenar kalınlığı, perçin ve mercek boyu ekranda tankla eşittir; aynı
+koyu kenar, sol-üstten aydınlanan üç duraklı degrade, kabuk panelleri, mercek, ucu ışıklı duyargalar
+(palpler) ve halkalı namlu ile oluklu ağız freni kullanılır. Silüet ve renk ise ayrıdır. Arachnid:
+geniş zırhlı kabuk, kısa kalın dikenli bacaklar, sıcak bronz gövde ve kızıl kabuk, tek mercek, kabuğun
+ön omuzlarında iki plazma topu. Widow: dar kabuk, iri yumurta karın ve kum saati, uzun ve yüksek
+bacaklar, obsidyen gövde ve zehir yeşili, dört göz, ön omuzlarda iki iğne atıcı. Parçalar
+`src/assets/vehicles/arachnid/` ile `src/assets/vehicles/widow/` altındadır (femur, tibia, pençe, diz, temas karartısı,
+göğüs, karın, iki gölge, top yuvası, namlu demeti); pen export kullanılmaz. Ölçüler ve eklem
+merkezleri `SPIDER_LOOKS` (`src/config/spiders/`) içindedir ve `tests/assets/spiders.test.ts` SVG
+kutularıyla birebir eşitliğini kilitler.
 
-Görünüm (`src/view/WalkerView.ts`) dışa aktarılmış rig'i sürer: ayaklar dünyada sabitlenir ve
-gövde ilerledikçe adım atar (`LegGait`), her bacağın açısı ayağın durduğu yerden ters kinematikle
-çıkar (`ArachnidLegs`); kabuk hızdan ve ivmeden türeyen ikincil harekete uyar (`ArachnidMotion`:
-yaslanma, çömelme, atılım gerilmesi, bakış). İvme, hızın değiştiği simülasyon adımları arasından
-okunur. Her ayak basışı bir toz tutamı bırakır; palet ve kayma izi bırakmaz. Rig metadata'sı
-`src/assets/rig/`, parça PNG'leri `public/assets/rig/` altındadır; `pnpm --filter @volstudio/vol-test rig:sync`
-`devtools/pen.dev` export'undan kopyalar ve oyun build'i devtools olmadan geçer.
+**Bacaklar gövdenin altındadır.** Çizim sırası sabittir: zemin gölgeleri, bacaklar, karın, göğüs,
+toplar (`SpiderView`); hiçbir bacak parçası, ne kadar yüksekte olursa olsun, kabuğun üstüne çıkmaz
+(`tests/view/SpiderView.test.ts`). Kalçalar kabuk hattının içindedir: femur kabuğun altından çıkar,
+diz ve ayak dışarıdadır. Bacak yukarıdan düz bir şerit değil, kalça yüksekliğinden yere inen iki
+kemiktir (`solveLeg`): havadaki ayak kalkarken diz yükselir ve büyür, basılı ayakta tibia dik iner.
+Yükseklik üç şeye dönüşür: parçanın perspektifle büyümesi, konumun gövde merkezinden dışarı itilmesi
+ve yere düşen gölgenin yükseklikle orantılı kayması.
+
+Görünüm (`src/view/SpiderView.ts`) iki araç için aynı sınıftır; fark `SpiderLook`tadır (kalça
+yerleşimi, kemik boyu, yürüyüş, hareket, top). Ayaklar dünyada sabitlenir ve gövde ilerledikçe
+dönüşümlü dört-ayaklı adım atar (`LegGait`: bir yanın 1. ve 3., ötekinin 2. ve 4. bacağı birlikte
+kalkar). Yerinde yavaş dönüşte grup üyelerinin eşik anları adım süresinden sık dizilir ve sıra el
+değiştirmezdi; `turnWindow` sırayı kısıtlar ve karşı grup aç kalmaz. Kabuk hızdan ve ivmeden türeyen
+ikincil harekete uyar (`SpiderMotion`: yaslanma, çömelme, atılım gerilmesi, adım sarsıntısı; karın
+dönüşü geriden izler ve ivmeyle sıkışıp uzar). İvme, hızın değiştiği simülasyon adımları arasından
+okunur (`LocomotionReader`). Her ayak basışı bir toz tutamı ve kısa bir gövde çökmesi bırakır.
+
+Silahlar iki parçadır: yuva (gövde) ve namlu demeti. Demet yuvanın altından çıkar ve atışta geri
+kayar, yuva sarsılır, ısınma ışığı yanıp söner ve ağız parlaması geri teperken kısalan namlunun
+ucunda açılır (`SpiderCannon`). Plazma topu kalın ve halkalıdır, kızıl hortumlu, oluklu ağız frenli;
+iğne atıcı ince ve uzun, zehir bobinli ve iğne uçludur. İki top gövde eksenindeki odağa bakar ve
+sırayla ateşler: Arachnid'in her topu 940 ms'de bir atar (birleşik tempo 470 ms), Widow'un her atıcısı
+460 ms'de bir (birleşik 230 ms). Yuvanın `reach` değeri çizimdeki ağız mesafesidir
+(`SpiderLook.cannon.muzzleX`); mermi, geri tepme ve ağız parlaması oyunun efekt katmanındandır.
+
+Bütün örümcek parçaları açılışta TEK doku atlasına çizilir (`spider-atlas`): bir karede 14'ten fazla
+ayrı doku GL toplu çiziminde parçaları kesiyordu ve büyük SVG'ler GL'ye doğrudan yüklenince parça
+parça rasterleniyordu; tek atlas ikisini de önler ve iki araç aynı dokuyu paylaşır.
 
 ## Sürüş ve süspansiyon
 
@@ -352,7 +379,7 @@ dar ekranda alt levha); `full` ekranı kaplar (garaj, ayarlar), garaj sunum içi
 bölgesi ayırır. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
 ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, denetimler `Input`,
 `SegmentedControl`, `Select`, `Checkbox`; `menu.css` yalnız yerleşim verir. Arkada oyunun gerçek araç
-görünümleri (`TankView`, `WalkerView`) dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde onları dolaşık bir poza sürükler, taretleri salınır); kamera `stage` bölgesinin kaydırma gövdesinde
+görünümleri (`TankView`, `SpiderView`) dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde onları dolaşık bir poza sürükler, taretleri salınır); kamera `stage` bölgesinin kaydırma gövdesinde
 görünen kısmına (alçak yatay ekranda sahne görünümden uzun olabilir) ya da `sheet`in bıraktığı alana kurulur ve sığmazsa yakınlaştırma küçülür (`src/config/menu.ts`). Ekran
 değişimi solarak yapılır (`prefers-reduced-motion`da anında); geçiş sürerken ikinci seçim yok sayılır.
 Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış onayını açar ya da kapatır.

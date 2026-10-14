@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { angleDelta } from '@volstudio/core/math';
+import { ARACHNID_LOOK } from '@/config/spiders';
 import { ARACHNID } from '@/config/vehicles';
 import { WALKER } from '@/config/walker';
 import { createChassisState } from '@/sim/chassis/ChassisState';
@@ -172,7 +173,7 @@ describe('Walker sürüşü', () => {
 });
 
 describe('Arachnid tanımı', () => {
-  it('iki yan top sırayla ateşler; simetriktir ve gövde kabuğunun dışındadır', () => {
+  it('iki omuz topu sırayla ateşler; simetriktir ve kabuğun orta hattını açık bırakır', () => {
     const { mounts, salvo, pivot } = ARACHNID.armament;
     expect(mounts).toHaveLength(2);
     expect(salvo).toEqual([[0], [1]]);
@@ -180,8 +181,10 @@ describe('Arachnid tanımı', () => {
     expect(left.y).toBe(-right.y);
     expect(left.x).toBe(right.x);
     expect(left.reach).toBe(right.reach);
-    // Toplar gövdenin yan kenarının dışında durur: kabuk üstten görünür.
-    expect(Math.abs(left.y)).toBeGreaterThan(SPEC.halfWidth);
+    // Toplar omuzlardadır, orta hat (mercek) iki topun arasında görünür kalır; ağız çizimle aynı yerdedir.
+    expect(Math.abs(left.y)).toBeGreaterThan(8);
+    expect(Math.abs(left.y)).toBeLessThan(SPEC.halfWidth);
+    expect(left.reach).toBe(ARACHNID_LOOK.cannon.muzzleX);
     // Nişan başlangıcı gövde ekseninde, iki topun ortasındadır.
     expect(pivot).toEqual({ x: left.x, y: 0 });
   });

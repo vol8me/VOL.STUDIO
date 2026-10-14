@@ -13,7 +13,8 @@ import strikerFeelerUrl from '@/assets/vehicles/striker/feeler.svg?url';
 import strikerHullUrl from '@/assets/vehicles/striker/hull.svg?url';
 import strikerTurretUrl from '@/assets/vehicles/striker/turret.svg?url';
 import { tankSpecs, treadView } from '@/config/tankView';
-import type { TankId } from '@/config/vehicles';
+import { SPIDER_PARTS, type SpiderPartId } from '@/config/spiders';
+import { WALKER_IDS, type TankId, type WalkerId } from '@/config/vehicles';
 import { createTreadTexture } from './TreadTexture';
 
 /**
@@ -62,6 +63,94 @@ const SHARED_PARTS: ReadonlyArray<readonly [string, string]> = [
   [TEXTURE.flash, flashUrl],
 ];
 
+/** Örümceklerin el çizimi SVG parçaları: `assets/vehicles/<araç>/<parça>.svg`. */
+const SPIDER_PART_URLS = import.meta.glob('../assets/vehicles/{arachnid,widow}/*.svg', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+}) as Readonly<Record<string, string>>;
+
+/** Bir örümcek parçasının doku anahtarı (atlasa çizilmeden önce) ve atlas kare adı. */
+function spiderTexture(look: WalkerId, part: SpiderPartId): string {
+  return `spider-${look}-${part}`;
+}
+function spiderFrame(look: WalkerId, part: SpiderPartId): string {
+  return `${look}/${part}`;
+}
+
+/** İki örümceğin tek doku atlası: bütün parçalar bir tuvalde, kare adı `<araç>/<parça>`dır. */
+const SPIDER_ATLAS = 'spider-atlas';
+/** Atlas karelerinin arası (px): doğrusal süzmede komşu kareden sızmayı önler. */
+const ATLAS_GAP = 4;
+const ATLAS_WIDTH = 2048;
+
+/** Örümcek parçasının atlas karesiyle bir görüntü nesnesi yaratır. */
+export function addSpiderImage(
+  scene: Phaser.Scene,
+  look: WalkerId,
+  part: SpiderPartId,
+  x = 0,
+  y = 0,
+): Phaser.GameObjects.Image {
+  return scene.add.image(x, y, SPIDER_ATLAS, spiderFrame(look, part));
+}
+
+/**
+ * Örümcek parçalarını TEK atlasa çizer ve ayrı dokuları söker. Neden: bir karede 14+ ayrı doku GL
+ * toplu çizim sınırında yanlış dokuyla karışıp parçaları kesiyordu; tek atlas toplu çizimi tek doku
+ * yapar, iki örümcek de aynı atlası paylaştığı için sahneye doku eklemez (ölçüm: `DESIGN.md`).
+ * Ayrıca büyük SVG'ler GL'ye `Image` olarak doğrudan yüklenince parça parça rasterlenir; önce 2B
+ * tuvale çizmek rasterlamayı tamamlar. Kareler satır satır dizilir.
+ */
+function bakeSpiderAtlas(scene: Phaser.Scene): void {
+  const placed: Array<{
+    frame: string;
+    key: string;
+    image: HTMLImageElement;
+    x: number;
+    y: number;
+  }> = [];
+  let x = 0;
+  let y = 0;
+  let rowHeight = 0;
+  for (const look of WALKER_IDS) {
+    for (const part of SPIDER_PARTS) {
+      const key = spiderTexture(look, part);
+      const image = scene.textures.get(key).getSourceImage();
+      if (!(image instanceof HTMLImageElement)) return;
+      if (x + image.width > ATLAS_WIDTH) {
+        x = 0;
+        y += rowHeight + ATLAS_GAP;
+        rowHeight = 0;
+      }
+      placed.push({ frame: spiderFrame(look, part), key, image, x, y });
+      x += image.width + ATLAS_GAP;
+      rowHeight = Math.max(rowHeight, image.height);
+    }
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = ATLAS_WIDTH;
+  canvas.height = y + rowHeight;
+  const g = canvas.getContext('2d');
+  if (!g) throw new Error('Örümcek atlası için 2B canvas bağlamı alınamadı');
+  for (const { image, x: left, y: top } of placed) g.drawImage(image, left, top);
+  for (const { key } of placed) scene.textures.remove(key);
+  const atlas = scene.textures.addCanvas(SPIDER_ATLAS, canvas);
+  if (!atlas) throw new Error('Örümcek atlası dokusu eklenemedi');
+  for (const { frame, image, x: left, y: top } of placed)
+    atlas.add(frame, 0, left, top, image.width, image.height);
+}
+
+/** Örümcek parçalarını yükleme kuyruğuna ekler (BootScene `preload`). */
+export function queueSpiderTextures(loader: Phaser.Loader.LoaderPlugin): void {
+  for (const look of WALKER_IDS) {
+    for (const part of SPIDER_PARTS) {
+      const url = SPIDER_PART_URLS[`../assets/vehicles/${look}/${part}.svg`];
+      loader.svg(spiderTexture(look, part), url, { scale: TEXTURE_SCALE });
+    }
+  }
+}
+
 /** Tank parçalarını yükleme kuyruğuna ekler (BootScene `preload`). */
 export function queueTankTextures(loader: Phaser.Loader.LoaderPlugin): void {
   for (const [key, url] of SHARED_PARTS) loader.svg(key, url, { scale: TEXTURE_SCALE });
@@ -90,6 +179,7 @@ function canvasTexture(
 
 /** Çalışma anında çizilen efekt dokuları. */
 export function createRuntimeTextures(scene: Phaser.Scene): void {
+  bakeSpiderAtlas(scene);
   for (const spec of tankSpecs())
     createTreadTexture(
       scene,

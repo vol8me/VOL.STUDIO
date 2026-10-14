@@ -65,6 +65,15 @@ export interface LegGaitConfig {
    * (ya da `stepTriggerPx`in altındaysa) kural kapalıdır.
    */
   maxStrainPx?: number;
+  /**
+   * Sıranın açık kalma payı: adım süresinin kesri (0,1]. Sırası gelen grubun bacakları eşiği
+   * aynı anda aşmaz; ilk üye adıma girdikten sonra sonradan eşiği aşan üye de kendi grubunun
+   * sırası sürdüğü için adım atar. Yavaş harekette (yerinde dönüş) üyelerin eşik anları adım
+   * süresinden daha sık dizilir ve zincir sırayı hiç bırakmaz: karşı grup aç kalır, gerginliği acil
+   * eşiğe kadar çıkar. Verilirse sıra, ilk adımdan bu kadar sonra yeni üye almaz; geç kalan üye bir
+   * sonraki sırayı bekler. Verilmezse (varsayılan) sıra, grubun son üyesi basana kadar açıktır.
+   */
+  turnWindow?: number;
 }
 
 export type LegGaitStepTuning = Pick<LegGaitConfig, 'stepTriggerPx' | 'stepDurationMs'>;
@@ -130,6 +139,8 @@ export class LegGait {
   private emergencyStepping = 0;
   /** Sırası gelen grup; sıraya dahil hiçbir bacak adımda değilken `null`. */
   private turnGroup: number | null = null;
+  /** Sıranın ilk adımından bu yana geçen süre (ms); `turnWindow` bunu sınar. */
+  private turnAgeMs = 0;
   private initialised = false;
 
   constructor(legs: readonly LegGaitLeg[], config: LegGaitConfig) {
@@ -144,6 +155,12 @@ export class LegGait {
     }
     if (config.maxStrainPx !== undefined) {
       requireFinite(config.maxStrainPx, 'LegGaitConfig.maxStrainPx');
+    }
+    if (config.turnWindow !== undefined) {
+      requireFinite(config.turnWindow, 'LegGaitConfig.turnWindow');
+      if (config.turnWindow <= 0 || config.turnWindow > 1) {
+        throw new RangeError('LegGait: turnWindow (0,1] aralığında olmalı');
+      }
     }
 
     this.config = { ...config };
@@ -294,6 +311,7 @@ export class LegGait {
     this.lockedStepping = 0;
     this.emergencyStepping = 0;
     this.turnGroup = null;
+    this.turnAgeMs = 0;
     this.initialised = true;
   }
 
@@ -323,6 +341,7 @@ export class LegGait {
     const sin = Math.sin(bodyAngleRad);
     const leadX = velX * this.config.stepLeadSeconds;
     const leadY = velY * this.config.stepLeadSeconds;
+    if (this.lockedStepping > 0) this.turnAgeMs += dt;
 
     // 1) Süren adımları ilerlet — yeni adım kararlarından ÖNCE, ki biten
     //    adımlar sırayı aynı karede serbest bıraksın.
@@ -366,11 +385,16 @@ export class LegGait {
 
     // 4) Yeni adımlar.
     const emergency = this.resolveEmergencyStrain();
+    const turnClosed =
+      this.config.turnWindow !== undefined &&
+      this.lockedStepping > 0 &&
+      this.turnAgeMs > this.config.turnWindow * this.config.stepDurationMs;
     for (const state of this.states) {
       if (state.stepping) continue;
       if (state.strain <= this.config.stepTriggerPx * state.strideScale) continue;
       const urgent = emergency !== null && state.strain >= emergency;
       if (!urgent && !state.leg.freeStep && state.leg.group !== this.turnGroup) continue;
+      if (!urgent && !state.leg.freeStep && turnClosed) continue;
 
       // Sırayı gerçekten DELEN adım: acil olmasa reddedilirdi. Sırası gelmiş ya
       // da serbest bir bacağın acil eşiği aşması disiplini delmez.
@@ -386,6 +410,7 @@ export class LegGait {
       state.lift = 0;
       this.steppingTotal++;
       if (state.leg.freeStep) continue;
+      if (this.lockedStepping === 0) this.turnAgeMs = 0;
       this.lockedStepping++;
       // Acil adım sırayı da devralır; aksi halde `turnGroup` bir sonraki kareye
       // kadar boşta kalan bir gruba işaret eder ve sıra iki kez dağıtılırdı.

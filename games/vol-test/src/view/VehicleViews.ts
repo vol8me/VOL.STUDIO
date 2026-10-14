@@ -1,9 +1,8 @@
 import Phaser from 'phaser';
 import { TANK_LIGHTS } from '@/config/tankView';
 import type { VehicleSpec } from '@/config/vehicles';
-import { TankView } from './TankView';
+import { createVehicleView } from './createView';
 import type { VehicleView } from './VehicleView';
-import { WalkerView } from './WalkerView';
 
 /** Kayıttaki bir aracın görünüm için gereken kimliği ve tanımı. */
 export interface ViewedVehicle {
@@ -59,8 +58,6 @@ export class VehicleViews {
   }
 
   private create(spec: VehicleSpec): VehicleView {
-    return spec.kind === 'tank'
-      ? new TankView(this.scene, spec, this.lighting)
-      : new WalkerView(this.scene, spec, this.lighting);
+    return createVehicleView(this.scene, spec, this.lighting);
   }
 }

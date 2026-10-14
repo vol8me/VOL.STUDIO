@@ -187,8 +187,8 @@ describe('LegGait — sıra disiplini ve canlı duruş', () => {
 
   it('acil eşik, sırasını bekleyen ama aşırı gerilmiş bacağı serbest bırakır', () => {
     const legs: LegGaitLeg[] = [
-      { homeX: 40, homeY: 0, group: 0 },
-      { homeX: -40, homeY: 0, group: 1 },
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: -60, homeY: 0, group: 1 },
     ];
     const patient = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000 });
     const urgent = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000, maxStrainPx: 60 });
@@ -313,5 +313,58 @@ describe('LegGait — sıra disiplini ve canlı duruş', () => {
     gait.update(0, 0, 0, 0, 0, DT);
 
     expect(gait.strain(0)).toBeLessThan(1);
+  });
+  describe('turnWindow', () => {
+    /** Her grupta bir yakın, bir uzak bacak: yavaş dönüşte eşik anları adım süresinden sık dizilir. */
+    const RING: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: 0, homeY: 80, group: 0 },
+      { homeX: -60, homeY: 0, group: 1 },
+      { homeX: 0, homeY: -80, group: 1 },
+    ];
+    const RING_CONFIG = {
+      stepTriggerPx: 10,
+      stepDurationMs: 200,
+      stepLeadSeconds: 0,
+      maxStrainPx: 40,
+    };
+
+    /** Gövdeyi yerinde `rate` rad/s döndürür; en büyük bekleme gerginliğini ve acil kare sayısını döner. */
+    function spin(config: typeof RING_CONFIG & { turnWindow?: number }, rate: number) {
+      const gait = new LegGait(RING, config);
+      gait.reset(0, 0, 0);
+      let angle = 0;
+      let worstStrain = 0;
+      let emergencyFrames = 0;
+      const stepsPerGroup = [0, 0];
+      for (let frame = 0; frame < 600; frame++) {
+        angle += (rate * DT) / 1000;
+        gait.update(0, 0, angle, 0, 0, DT);
+        if (gait.emergencySteppingCount > 0) emergencyFrames++;
+        RING.forEach((leg, i) => {
+          worstStrain = Math.max(worstStrain, gait.strain(i));
+          if (gait.justPlanted(i)) stepsPerGroup[leg.group]++;
+        });
+      }
+      return { worstStrain, emergencyFrames, stepsPerGroup };
+    }
+
+    it('turnWindow olmadan yavaş dönüş zincirlenir: karşı grup aç kalır ve acil rejime düşer', () => {
+      const result = spin(RING_CONFIG, 0.6);
+      expect(result.emergencyFrames).toBeGreaterThan(0);
+    });
+
+    it('turnWindow ile sıra devredilir: iki grup dönüşümlü adım atar, acil rejim gerekmez', () => {
+      const result = spin({ ...RING_CONFIG, turnWindow: 0.4 }, 0.6);
+      expect(result.emergencyFrames).toBe(0);
+      expect(result.stepsPerGroup[0]).toBeGreaterThan(5);
+      expect(result.stepsPerGroup[1]).toBeGreaterThan(5);
+      expect(result.worstStrain).toBeLessThan(RING_CONFIG.maxStrainPx);
+    });
+
+    it('geçersiz pencere reddedilir', () => {
+      expect(() => new LegGait(LEGS, { ...CONFIG, turnWindow: 0 })).toThrow(RangeError);
+      expect(() => new LegGait(LEGS, { ...CONFIG, turnWindow: 1.5 })).toThrow(RangeError);
+    });
   });
 });
