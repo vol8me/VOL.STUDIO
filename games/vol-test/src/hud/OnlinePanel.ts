@@ -1,9 +1,18 @@
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { DataTable, EventLog, Text, type DataTableColumn } from '@volstudio/core/ui';
+import {
+  ActivityFeed,
+  RankList,
+  Text,
+  VersusBar,
+  type RankListRow,
+  type VersusBarPip,
+  type VersusBarSide,
+} from '@volstudio/core/ui';
 import { ONLINE_VIEW, PING_GRADES } from '@/config/onlineView';
 import type { MessageKey } from '@/i18n/keys';
 import type { ConnectionStatus } from '@/network/OnlineSession';
+import { WAR } from '@/config/war';
 import { NO_TEAM } from '@/network/schema';
 import type { BoardRow, FeedLine, WarView } from '@/network/warView';
 import './online.css';
@@ -25,9 +34,6 @@ export interface LinkView {
   readonly poseX: number;
   readonly poseY: number;
 }
-
-/** Akış, son satırdan bu kadar sonra soluklaşır. */
-const FEED_IDLE_MS = 6000;
 
 function hex(color: number): string {
   return `#${color.toString(16).padStart(6, '0')}`;
@@ -110,53 +116,49 @@ function grade(pingMs: number): 'good' | 'fair' | 'bad' {
 }
 
 /**
- * Kalıcı savaşın HUD parçaları: cephe puanları ve bölge rozetleri, bağlantı göstergesi, skor
- * tablosu, bildirim akışı ve bağlantı uyarısı. Tamamı CORE bileşenidir (`DataTable`, `EventLog`,
- * `Text`); panel yalnız savaş görüntüsünü (`WarView`) okur ve değişmeyen yerlere DOM yazmaz.
+ * Kalıcı savaşın HUD parçaları: cephe puanları ve bölge rozetleri (`VersusBar`), bağlantı göstergesi
+ * (şeridin ek öğesi), skor tablosu (`RankList`), bildirim akışı (`ActivityFeed`) ve bağlantı uyarısı.
+ * Tamamı CORE bileşenidir; panel yalnız savaş görüntüsünü (`WarView`) okur ve değişmeyen yerlere DOM
+ * yazmaz.
  */
 export class OnlinePanel {
   readonly element: HTMLElement;
   private readonly scope = new DisposableScope();
-  private readonly banner: HTMLElement;
-  private readonly factions: HTMLElement;
-  private readonly zones: HTMLElement;
+  private readonly banner: VersusBar;
   private readonly ping: HTMLElement;
   private readonly pingText: Text;
   private readonly board: HTMLElement;
-  private table: DataTable<BoardRow>;
+  private readonly ranking: RankList;
   private readonly notice: Text;
-  private readonly feed: HTMLElement;
-  private readonly log: EventLog;
+  private readonly feed: ActivityFeed;
   private view: WarView | undefined;
   private link: LinkView | undefined;
   private signature = '';
-  private lastFeedMs = 0;
 
   constructor() {
     this.element = document.createElement('div');
     this.element.className = 'vt-online';
     this.element.dataset.testid = 'online';
 
-    this.banner = document.createElement('div');
-    this.banner.className = 'vt-online__banner';
-    this.factions = document.createElement('span');
-    this.factions.className = 'vt-online__scores';
-    this.factions.dataset.testid = 'online-factions';
-    this.zones = document.createElement('span');
-    this.zones.className = 'vt-online__zones';
-    this.zones.dataset.testid = 'online-zones';
+    this.banner = new VersusBar({ target: WAR.score.dominance, className: 'vt-online__banner' });
+    this.banner.element.dataset.testid = 'online-banner';
     this.ping = document.createElement('span');
     this.ping.className = 'vt-online__ping';
     this.ping.dataset.testid = 'online-ping';
     this.pingText = new Text('', { variant: 'muted', tag: 'span' });
     this.ping.append(this.pingText.element);
-    this.banner.append(this.factions, this.zones, this.ping);
+    this.banner.setTrailing(this.ping);
 
+    this.ranking = new RankList({
+      capacity: ONLINE_VIEW.board.compactRows,
+      title: this.boardTitle(),
+      ariaLabel: () => i18next.t('voltest:online.board.title'),
+      emptyText: () => i18next.t('voltest:online.board.empty'),
+    });
     this.board = document.createElement('div');
     this.board.className = 'vt-online__board';
     this.board.dataset.testid = 'online-board';
-    this.table = this.createTable();
-    this.board.append(this.table.element);
+    this.board.append(this.ranking.element);
 
     this.notice = new Text('', { variant: 'body', tag: 'p' });
     this.notice.element.classList.add('vt-online__notice');
@@ -164,16 +166,14 @@ export class OnlinePanel {
     this.notice.element.setAttribute('role', 'status');
     this.notice.element.hidden = true;
 
-    this.log = new EventLog({
-      height: 22 * ONLINE_VIEW.feedEntries,
-      maxEntries: ONLINE_VIEW.feedEntries,
+    this.feed = new ActivityFeed({
+      capacity: ONLINE_VIEW.feedEntries,
+      lifetimeMs: ONLINE_VIEW.feedLifetimeMs,
+      className: 'vt-online__feed',
     });
-    this.feed = document.createElement('div');
-    this.feed.className = 'vt-online__feed';
-    this.feed.dataset.testid = 'online-feed';
-    this.feed.append(this.log.element);
+    this.feed.element.dataset.testid = 'online-feed';
 
-    this.element.append(this.banner, this.board, this.feed, this.notice.element);
+    this.element.append(this.banner.element, this.board, this.feed.element, this.notice.element);
     this.refreshLabels();
     const onLanguage = (): void => this.refreshLabels();
     i18next.on('languageChanged', onLanguage);
@@ -193,91 +193,56 @@ export class OnlinePanel {
     this.paint();
   }
 
-  /** Bildirim akışına bir satır ekler. */
+  /** Bildirim akışına bir satır ekler; satırlar kendi süresi dolunca söner. */
   push(line: FeedLine): void {
-    this.log.push({ text: feedText(line), tone: line.tone });
-    this.lastFeedMs = performance.now();
-    this.feed.classList.remove('vt-online__feed--idle');
+    this.feed.push({ text: feedText(line), tone: line.tone }, performance.now());
   }
 
-  /** Bildirim akışını sessizce soluklaştırır; sürücü her karede sürer. */
+  /** Süresi dolan akış satırlarını söndürür; sürücü her karede sürer. */
   tick(nowMs: number): void {
-    this.feed.classList.toggle('vt-online__feed--idle', nowMs - this.lastFeedMs > FEED_IDLE_MS);
+    this.feed.tick(nowMs);
   }
 
   refreshLabels(): void {
-    this.table.destroy();
-    this.table = this.createTable();
-    this.board.replaceChildren(this.table.element);
+    this.ranking.setTitle(this.boardTitle());
     this.signature = '';
     this.paint();
   }
 
   destroy(): void {
     this.scope.dispose();
-    this.table.destroy();
-    this.log.destroy();
+    this.banner.destroy();
+    this.ranking.destroy();
+    this.feed.destroy();
     this.pingText.destroy();
     this.notice.destroy();
     this.element.remove();
   }
 
-  private createTable(): DataTable<BoardRow> {
-    const columns: DataTableColumn<BoardRow>[] = [
-      {
-        key: 'rank',
-        header: i18next.t('voltest:online.board.rank'),
-        align: 'right',
-        width: '2.5em',
-      },
-      {
-        key: 'name',
-        header: i18next.t('voltest:online.board.player'),
-        render: (row) => this.nameCell(row),
-      },
-      { key: 'kills', header: i18next.t('voltest:online.board.kills'), align: 'right' },
-      { key: 'deaths', header: i18next.t('voltest:online.board.deaths'), align: 'right' },
-    ];
-    return new DataTable<BoardRow>({
-      columns,
-      rows: [],
-      rowKey: 'id',
-      emptyText: i18next.t('voltest:online.board.empty'),
-      ariaLabel: i18next.t('voltest:online.board.title'),
+  /** Başlık sütun anlamını da taşır: değer öldürme, sönük ikinci değer ölümdür. */
+  private boardTitle(): string {
+    return i18next.t('voltest:online.board.titleLegend', {
+      title: i18next.t('voltest:online.board.title'),
+      kills: i18next.t('voltest:online.board.killsShort'),
+      deaths: i18next.t('voltest:online.board.deathsShort'),
     });
-  }
-
-  private nameCell(row: BoardRow): Node {
-    const cell = document.createElement('span');
-    cell.className = 'vt-online__player';
-    const color = teamColor(row.team);
-    if (color !== undefined) {
-      const dot = document.createElement('span');
-      dot.className = 'vt-online__dot';
-      dot.style.background = hex(color);
-      cell.append(dot);
-    }
-    const label = document.createElement('span');
-    label.textContent = this.nameText(row);
-    if (row.self) label.className = 'vt-online__self';
-    cell.append(label);
-    return cell;
   }
 
   private nameText(row: BoardRow): string {
     if (row.self) return i18next.t('voltest:online.board.you', { name: row.name });
     if (!row.connected) return i18next.t('voltest:online.board.away', { name: row.name });
-    return row.bot ? i18next.t('voltest:online.board.bot', { name: row.name }) : row.name;
+    return row.name;
   }
 
   private paint(): void {
     const { view, link } = this;
     if (!view || !link) return;
-    const rows = this.compactRows(view.rows);
+    const rows = view.rows;
     const signature = JSON.stringify([
       view.factions.map((faction) => [faction.score, faction.wins, faction.zones]),
-      view.zones.map((zone) => [zone.owner, Math.round(zone.progress * 20), zone.contested]),
+      view.zones.map((zone) => [zone.owner, zone.contested]),
       view.selfFaction,
+      view.dominance,
       rows.map((row) => [
         row.id,
         row.name,
@@ -285,7 +250,6 @@ export class OnlinePanel {
         row.deaths,
         row.connected,
         row.bot,
-        row.rank,
         row.team,
       ]),
       link.status,
@@ -295,55 +259,60 @@ export class OnlinePanel {
     if (signature === this.signature) return;
     this.signature = signature;
 
-    this.paintFactions(view);
-    this.paintZones(view);
+    this.paintBanner(view);
     this.paintPing(link);
-    this.table.setRows([...rows]);
+    this.ranking.setRows(rows.map((row) => this.rankRow(row)));
     const reconnecting = link.status !== 'live';
     this.notice.element.hidden = !reconnecting;
     if (reconnecting) this.notice.setContent(i18next.t('voltest:online.reconnecting'));
   }
 
-  /** Skor tablosunda en çok `compactRows` satır; kendi satırınız dışarıda kalırsa sona eklenir. */
-  private compactRows(rows: readonly BoardRow[]): BoardRow[] {
-    const limit = ONLINE_VIEW.board.compactRows;
-    const top = rows.slice(0, limit);
-    const own = rows.find((row) => row.self);
-    if (own && !top.includes(own)) top[top.length - 1] = own;
-    return top;
+  private rankRow(row: BoardRow): RankListRow {
+    const color = teamColor(row.team);
+    return {
+      id: String(row.id),
+      label: this.nameText(row),
+      value: String(row.kills),
+      secondary: String(row.deaths),
+      color: color === undefined ? undefined : hex(color),
+      self: row.self,
+      muted: !row.connected,
+      tag: row.bot ? i18next.t('voltest:online.board.botTag') : undefined,
+    };
   }
 
-  private paintFactions(view: WarView): void {
-    this.factions.replaceChildren();
-    for (const faction of view.factions) {
-      const chip = document.createElement('span');
-      chip.className = 'vt-online__score';
-      chip.dataset.faction = String(faction.index);
-      chip.dataset.own = String(faction.index === view.selfFaction);
-      chip.title = `${factionName(faction.index)} · ${i18next.t('voltest:online.wins', { count: faction.wins })}`;
-      const dot = document.createElement('span');
-      dot.className = 'vt-online__dot';
-      dot.style.background = hex(ONLINE_VIEW.colors.teams[faction.index] ?? ONLINE_VIEW.colors.foe);
-      chip.append(dot, `${Math.floor(faction.score)}/${view.dominance}`);
-      this.factions.append(chip);
-    }
-  }
-
-  /** Her bölge bir rozet: sahibin rengi, tartışmalıysa çerçeveli, ilerleme alt çizgide. */
-  private paintZones(view: WarView): void {
-    this.zones.replaceChildren();
-    for (const zone of view.zones) {
-      const pip = document.createElement('span');
-      pip.className = 'vt-online__zone';
-      pip.dataset.zone = zone.id;
-      pip.dataset.owner = String(zone.owner);
-      pip.dataset.contested = String(zone.contested);
+  /** Cephe puanları iki uçta, bölgeler ortada rozet: sahibin rengi dolgu, tartışmalı bölge çerçevelidir. */
+  private paintBanner(view: WarView): void {
+    this.banner.setTarget(view.dominance);
+    const sides = view.factions.map<VersusBarSide>((faction) => ({
+      id: String(faction.index),
+      label: factionName(faction.index),
+      value: faction.score,
+      color: hex(ONLINE_VIEW.colors.teams[faction.index] ?? ONLINE_VIEW.colors.foe),
+      wins: faction.wins,
+      own: faction.index === view.selfFaction,
+    }));
+    this.banner.setSides(sides);
+    // Taraf kökleri ölçüm ve E2E için cephe indeksini taşır.
+    this.banner.element
+      .querySelectorAll<HTMLElement>('.vol-versus__side')
+      .forEach((side, index) => {
+        side.dataset.testid = 'online-faction';
+        side.dataset.faction = sides[index].id;
+      });
+    const pips = view.zones.map<VersusBarPip>((zone) => {
       const owner = zone.owner === -1 ? i18next.t('voltest:war.neutral') : factionName(zone.owner);
-      pip.title = `${zoneName(zone.id)} · ${zone.contested ? i18next.t('voltest:war.contested') : owner}`;
       const color = teamColor(zone.owner);
-      if (color !== undefined) pip.style.background = hex(color);
-      this.zones.append(pip);
-    }
+      return {
+        id: zone.id,
+        label: `${zoneName(zone.id)} · ${zone.contested ? i18next.t('voltest:war.contested') : owner}`,
+        color: color === undefined ? undefined : hex(color),
+        contested: zone.contested,
+      };
+    });
+    this.banner.setPips(pips);
+    const zones = this.banner.element.querySelector<HTMLElement>('.vol-versus__pips');
+    if (zones) zones.dataset.testid = 'online-zones';
   }
 
   private paintPing(link: LinkView): void {

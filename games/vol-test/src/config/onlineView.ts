@@ -30,6 +30,8 @@ export const ONLINE_VIEW = {
   panelIntervalMs: 250,
   /** Bildirim akışında tutulan satır sayısı. */
   feedEntries: 6,
+  /** Bir akış satırının ekranda kalma süresi (ms); sonra söner. */
+  feedLifetimeMs: 7000,
 } as const;
 
 /** Bağlantı kalitesi eşikleri (ms gidiş-dönüş): iyi, orta, kötü. */

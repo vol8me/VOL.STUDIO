@@ -770,16 +770,16 @@ altındadır (`build:server` çıktısı Node ile başlar) ve [network](../../ne
 çalışma zamanının üstünde Colyseus odası koşar; sunucu adresi `?server=host:port`, derleme zamanı
 `VITE_VOLTEST_SERVER` ya da geliştirme adresidir.
 
-| Parça                                             | Sorumluluk                                                                   |
-| ------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `server/WorldRoom.ts`                             | Kalıcı savaş dünyası: 60 Hz adım, 20 Hz yama, `War` nesnesini sarar          |
-| `server/index.ts`                                 | Oda kaydı ve birincil dünya (insan kalmasa da kapanmaz)                      |
-| `server/InputPacer.ts`                            | Girdi titreşim tamponu; geç girdi sayılı boşta adım olur                     |
-| `src/network/OnlineSession.ts`                    | Bağlanma, bağlantı durumu, ping/titreşim, olay dağıtımı                      |
-| `src/network/PredictedPilot.ts`, `OnlineWorld.ts` | Kendi aracın öngörüsü, uzlaştırma, uzak araç ara değeri                      |
-| `src/network/warView.ts`                          | Şemadan savaş görüntüsü (cepheler, bölgeler, tablo) ve bildirim akışı satırı |
-| `src/scenes/world/`                               | `WorldDriver` sözleşmesi: çevrimdışı ve çevrimiçi sürücü, katılım            |
-| `src/hud/LobbyPanel.ts`, `OnlinePanel.ts`         | CORE Modal/Input/DataTable/EventLog ile katılım paneli, puan, tablo, akış    |
+| Parça                                             | Sorumluluk                                                                                    |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `server/WorldRoom.ts`                             | Kalıcı savaş dünyası: 60 Hz adım, 20 Hz yama, `War` nesnesini sarar                           |
+| `server/index.ts`                                 | Oda kaydı ve birincil dünya (insan kalmasa da kapanmaz)                                       |
+| `server/InputPacer.ts`                            | Girdi titreşim tamponu; geç girdi sayılı boşta adım olur                                      |
+| `src/network/OnlineSession.ts`                    | Bağlanma, bağlantı durumu, ping/titreşim, olay dağıtımı                                       |
+| `src/network/PredictedPilot.ts`, `OnlineWorld.ts` | Kendi aracın öngörüsü, uzlaştırma, uzak araç ara değeri                                       |
+| `src/network/warView.ts`                          | Şemadan savaş görüntüsü (cepheler, bölgeler, tablo) ve bildirim akışı satırı                  |
+| `src/scenes/world/`                               | `WorldDriver` sözleşmesi: çevrimdışı ve çevrimiçi sürücü, katılım                             |
+| `src/hud/LobbyPanel.ts`, `OnlinePanel.ts`         | CORE Modal/Input ile katılım paneli; VersusBar/RankList/ActivityFeed ile puan, sıralama, akış |
 
 Maç, özel oda ve oda kodu yoktur: tek tür oda vardır, kalıcı savaş dünyası. Sunucu açıldığında birincil
 dünya kurulur (`createPrimaryWorld`); insan kalmasa da kapanmaz ve botlar savaşı sürdürür. Oyuncular

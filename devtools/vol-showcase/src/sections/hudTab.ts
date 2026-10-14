@@ -17,6 +17,7 @@ import {
   buildXPBarCard,
 } from './hudFeedbackCards';
 import { buildBuildMenuCard } from './hudBuildCard';
+import { buildActivityFeedCard, buildRankListCard, buildVersusBarCard } from './hudScoreboardCards';
 import {
   buildFpsMeterCard,
   buildMinimapCard,
@@ -48,6 +49,9 @@ export function buildHudTab(): { element: HTMLElement; destroy: () => void } {
     buildStatsPanelCard(disposables),
     buildBuildMenuCard(disposables),
     buildFloatingTextCard(disposables),
+    buildVersusBarCard(disposables),
+    buildRankListCard(disposables),
+    buildActivityFeedCard(disposables),
     buildFpsMeterCard(disposables),
   ];
 

@@ -218,6 +218,17 @@
     "next": "Next",
     "finish": "Finish"
   },
+  "versusBar": {
+    "label": "Score",
+    "side": "{{name}} {{value}} of {{target}}"
+  },
+  "rankList": {
+    "label": "Ranking",
+    "empty": "No entries"
+  },
+  "activityFeed": {
+    "label": "Activity"
+  },
   "minimap": {
     "summary_one": "{{label}}: {{count, number}} marker, zoom {{zoom}}x",
     "summary_other": "{{label}}: {{count, number}} markers, zoom {{zoom}}x",

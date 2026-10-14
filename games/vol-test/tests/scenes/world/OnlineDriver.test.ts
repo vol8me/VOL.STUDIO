@@ -219,7 +219,9 @@ describe('OnlineDriver panel ve etiket', () => {
       i18next.t('voltest:online.board.you', { name: 'Birinci' }),
     );
     expect(byId(first.parent, 'online-zones').children).toHaveLength(WAR.zones.length);
-    expect(byId(first.parent, 'online-factions').children).toHaveLength(WAR.factions);
+    expect(first.parent.querySelectorAll('[data-testid="online-faction"]')).toHaveLength(
+      WAR.factions,
+    );
 
     // İkinci oyuncu aynı odaya düşer: ilkinin akışında katılma, tablosunda iki satır olur.
     const room = serverRoom(first.session.room);
@@ -232,8 +234,7 @@ describe('OnlineDriver panel ve etiket', () => {
       );
       await until(
         () =>
-          first.parent.querySelectorAll('[data-testid="online-board"] .vol-datatable__row')
-            .length === 2,
+          first.parent.querySelectorAll('[data-testid="online-board"] .vol-rank__row').length === 2,
         'iki satır',
       );
     } finally {

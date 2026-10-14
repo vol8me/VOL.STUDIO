@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { i18next } from '@volstudio/core/i18n';
+import { ONLINE_VIEW } from '@/config/onlineView';
 import { WAR } from '@/config/war';
 import { OnlinePanel, factionName, teamColor, zoneName, type LinkView } from '@/hud/OnlinePanel';
 import { NO_TEAM } from '@/network/schema';
@@ -76,8 +77,8 @@ const live: LinkView = {
 
 const text = (panel: OnlinePanel, id: string): string =>
   panel.element.querySelector(`[data-testid="${id}"]`)?.textContent ?? '';
-const tableRows = (panel: OnlinePanel): string[] =>
-  [...panel.element.querySelectorAll('.vol-datatable__row')].map((tr) => tr.textContent ?? '');
+const rankRows = (panel: OnlinePanel): string[] =>
+  [...panel.element.querySelectorAll('.vol-rank__row')].map((row) => row.textContent ?? '');
 
 describe('OnlinePanel çubuk', () => {
   it('ping rozeti gecikmeye göre derecelenir; bağlantı yoksa kötü sayılır', () => {
@@ -95,26 +96,31 @@ describe('OnlinePanel çubuk', () => {
     expect(grade()).toBe('bad');
   });
 
-  it('cephe puanları renkli noktayla ve hedefle görünür; kendi cephe işaretlidir', () => {
+  it('cephe puanları iki uçta ve iz olarak görünür; kendi cephe işaretlidir', () => {
     const panel = mount();
-    const scores = panel.element.querySelector<HTMLElement>('[data-testid="online-factions"]')!;
     const next = factions.map((faction) => ({
       ...faction,
       score: faction.index === 0 ? 410.7 : 90,
     }));
     panel.update(view({ factions: next, selfFaction: 1 }), live);
-    expect(scores.querySelectorAll('.vt-online__dot')).toHaveLength(WAR.factions);
-    expect(scores.textContent).toBe(`410/${WAR.score.dominance}90/${WAR.score.dominance}`);
-    const own = scores.querySelectorAll<HTMLElement>('[data-own="true"]');
+    const sides = [
+      ...panel.element.querySelectorAll<HTMLElement>('[data-testid="online-faction"]'),
+    ];
+    expect(sides).toHaveLength(WAR.factions);
+    expect(sides[0].textContent).toContain('410');
+    expect(sides[1].textContent).toContain('90');
+    const own = sides.filter((side) => side.dataset.own === 'true');
     expect(own).toHaveLength(1);
     expect(own[0].dataset.faction).toBe('1');
+    const fills = panel.element.querySelectorAll<HTMLElement>('.vol-versus__fill');
+    expect(fills[0].style.width).toBe(`${((410.7 / WAR.score.dominance) * 50).toFixed(2)}%`);
   });
 
   it('her bölge bir rozettir: sahibin rengi dolgu, tartışmalı bölge işaretli', () => {
     const panel = mount();
     const pips = (): HTMLElement[] => [
       ...panel.element.querySelectorAll<HTMLElement>(
-        '[data-testid="online-zones"] .vt-online__zone',
+        '[data-testid="online-zones"] .vol-versus__pip',
       ),
     ];
     const next = zones.map((zone) =>
@@ -127,14 +133,14 @@ describe('OnlinePanel çubuk', () => {
     panel.update(view({ zones: next }), live);
     expect(pips()).toHaveLength(WAR.zones.length);
     expect(pips()[0].dataset).toMatchObject({
-      zone: WAR.zones[0].id,
-      owner: '0',
+      pipId: WAR.zones[0].id,
+      owned: 'true',
       contested: 'false',
     });
-    expect(pips()[0].style.background).not.toBe('');
-    expect(pips()[1].dataset).toMatchObject({ owner: '1', contested: 'true' });
-    expect(pips()[2].dataset.owner).toBe('-1');
-    expect(pips()[2].style.background).toBe('');
+    expect(pips()[0].style.background).not.toBe('transparent');
+    expect(pips()[1].dataset).toMatchObject({ owned: 'true', contested: 'true' });
+    expect(pips()[2].dataset.owned).toBe('false');
+    expect(pips()[2].style.background).toBe('transparent');
     expect(pips()[0].title).toContain(zoneName(WAR.zones[0].id));
     expect(pips()[0].title).toContain(factionName(0));
     expect(pips()[1].title).toContain(i18next.t('voltest:war.contested'));
@@ -167,20 +173,21 @@ describe('OnlinePanel çubuk', () => {
 });
 
 describe('OnlinePanel skor tablosu', () => {
-  it('en çok beş satır gösterir ve dışarıda kalan kendi satırını sona koyar', () => {
+  it('en çok beş satır gösterir ve dışarıda kalan kendi satırını gerçek sırasıyla sona koyar', () => {
     const panel = mount();
     const all = Array.from({ length: 8 }, (_, index) =>
       row(index + 1, { self: index === 6, kills: 9 - index }),
     );
     panel.update(view({ rows: all }), live);
-    const shown = tableRows(panel);
+    const shown = rankRows(panel);
     expect(shown).toHaveLength(5);
     expect(shown[0]).toContain('Oyuncu1');
     expect(shown[4]).toContain(i18next.t('voltest:online.board.you', { name: 'Oyuncu7' }));
+    expect(shown[4].startsWith('7')).toBe(true);
     expect(shown.join('')).not.toContain('Oyuncu5');
   });
 
-  it('kendi satırı ilk beşteyse yerinde kalır; kopuk oyuncu ve bot işaretlenir', () => {
+  it('kendi satırı ilk beşteyse yerinde kalır; kopuk oyuncu sönük, bot etiketli', () => {
     const panel = mount();
     panel.update(
       view({
@@ -188,52 +195,61 @@ describe('OnlinePanel skor tablosu', () => {
       }),
       live,
     );
-    const shown = tableRows(panel);
+    const shown = rankRows(panel);
     expect(shown[0]).toContain(i18next.t('voltest:online.board.you', { name: 'Oyuncu1' }));
     expect(shown[1]).toContain(i18next.t('voltest:online.board.away', { name: 'Oyuncu2' }));
     expect(shown[2]).toContain('Oyuncu3');
-    expect(shown[3]).toContain(i18next.t('voltest:online.board.bot', { name: 'Oyuncu4' }));
+    expect(shown[3]).toContain(i18next.t('voltest:online.board.botTag'));
+    const rows = panel.element.querySelectorAll<HTMLElement>('.vol-rank__row');
+    expect(rows[1].dataset.muted).toBe('true');
+    expect(rows[0].dataset.self).toBe('true');
+    expect(rows[2].querySelector('.vol-rank__tag')?.hasAttribute('hidden')).toBe(true);
   });
 
-  it('cephe rengi satırda nokta olur', () => {
+  it('cephe rengi satırda işaret olur', () => {
     const panel = mount();
     panel.update(view({ rows: [row(1, { team: 0 }), row(2, { team: NO_TEAM })] }), live);
-    expect(panel.element.querySelectorAll('.vol-datatable .vt-online__dot')).toHaveLength(1);
+    const swatches = panel.element.querySelectorAll<HTMLElement>('.vol-rank__swatch');
+    expect([...swatches].filter((swatch) => !swatch.hidden)).toHaveLength(1);
     expect(teamColor(0)).toBeDefined();
     expect(teamColor(NO_TEAM)).toBeUndefined();
     expect(teamColor(9)).toBeUndefined();
   });
 
-  it('aynı görüntüyü tekrar yazmaz', () => {
+  it('öldürme ana, ölüm ikinci değerdir; aynı görüntüyü tekrar yazmaz', () => {
     const panel = mount();
-    const first = view({ rows: [row(1, { self: true })] });
+    const first = view({ rows: [row(1, { self: true, kills: 4, deaths: 2 })] });
     panel.update(first, live);
-    const body = panel.element.querySelector('tbody')!;
-    const before = body.firstElementChild;
+    const line = panel.element.querySelector('.vol-rank__row')!;
+    expect(line.querySelector('.vol-rank__value')?.textContent).toBe('4');
+    expect(line.querySelector('.vol-rank__secondary')?.textContent).toBe('2');
     panel.update({ ...first }, { ...live });
-    expect(body.firstElementChild).toBe(before);
-    panel.update(view({ rows: [row(1, { self: true, kills: 1 })] }), live);
-    expect(body.firstElementChild).not.toBe(before);
+    expect(panel.element.querySelector('.vol-rank__row')).toBe(line);
+    panel.update(view({ rows: [row(1, { self: true, kills: 5, deaths: 2 })] }), live);
+    // Satır kimliğe göre yerinde güncellenir: düğüm aynı, değer yeni.
+    expect(panel.element.querySelector('.vol-rank__row')).toBe(line);
+    expect(line.querySelector('.vol-rank__value')?.textContent).toBe('5');
   });
 });
 
 describe('OnlinePanel akış', () => {
-  it('satırları yazar ve sessizlikte soluklaştırır', () => {
+  it('satırları yazar; süresi dolan satır kalkar', () => {
     const panel = mount();
     const feed = panel.element.querySelector<HTMLElement>('[data-testid="online-feed"]')!;
+    expect(feed.hidden).toBe(true);
     panel.push({ kind: 'kill', killer: 'Ben', victim: 'Rakip', tone: 'success' });
     panel.push({ kind: 'down', victim: 'Ben', tone: 'danger' });
     panel.push({ kind: 'drowned', victim: 'Rakip', tone: 'default' });
     panel.push({ kind: 'joined', name: 'Yeni', tone: 'default' });
     panel.push({ kind: 'left', name: 'Giden', tone: 'default' });
+    expect(feed.hidden).toBe(false);
     expect(feed.textContent).toContain('Ben » Rakip');
     expect(feed.textContent).toContain('Rakip boğuldu');
     panel.tick(performance.now());
-    expect(feed.classList.contains('vt-online__feed--idle')).toBe(false);
-    panel.tick(performance.now() + 60_000);
-    expect(feed.classList.contains('vt-online__feed--idle')).toBe(true);
-    panel.push({ kind: 'left', name: 'Giden', tone: 'default' });
-    expect(feed.classList.contains('vt-online__feed--idle')).toBe(false);
+    expect(feed.querySelectorAll('.vol-feed__line')).toHaveLength(5);
+    panel.tick(performance.now() + ONLINE_VIEW.feedLifetimeMs * 2);
+    expect(feed.querySelectorAll('.vol-feed__line')).toHaveLength(0);
+    expect(feed.hidden).toBe(true);
   });
 
   it('bölge ve zafer satırları bölge/cephe adıyla yazılır; tarafsızlaşma ayrı metindir', () => {
@@ -264,17 +280,17 @@ describe('OnlinePanel akış', () => {
     const panel = mount();
     panel.update(view({ rows: [row(1, { self: true })] }), live);
     const before = panel.element
-      .querySelector('[data-testid="online-zones"] .vt-online__zone')!
+      .querySelector('[data-testid="online-zones"] .vol-versus__pip')!
       .getAttribute('title');
     const language = i18next.language;
     try {
       await i18next.changeLanguage(language === 'en' ? 'tr' : 'en');
       const after = panel.element
-        .querySelector('[data-testid="online-zones"] .vt-online__zone')!
+        .querySelector('[data-testid="online-zones"] .vol-versus__pip')!
         .getAttribute('title');
       expect(after).not.toBe(before);
-      expect(panel.element.querySelector('th')?.textContent).toContain(
-        i18next.t('voltest:online.board.rank'),
+      expect(panel.element.querySelector('.vol-rank__title')?.textContent).toContain(
+        i18next.t('voltest:online.board.title'),
       );
     } finally {
       await i18next.changeLanguage(language);

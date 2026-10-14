@@ -219,6 +219,52 @@
       ]
     },
     {
+      "export": "ActivityFeed",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "direct",
+      "showcase": ["sections/hudScoreboardCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "satır ekler; kapasite aşılınca en eski satır hemen kalkar"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "süresi dolan satır söner, sönme süresi bitince kalkar; boşalınca akış gizlenir"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "kök okunabilir bir günlüktür ama canlı bölge değildir; kaydırma bölgesi yoktur"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "temizle satırları siler; kapanıştan sonra çağrılar etkisizdir"
+        }
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "satır ekler; kapasite aşılınca en eski satır hemen kalkar"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "indirgenmiş harekette satır geçişi kapanır (CSS)"
+          }
+        ]
+      },
+      "stateNa": {
+        "long30": "Satır tek satıra sığar ve üç nokta ile kırpılır; uzun metnin düzeni CSS ellipsis kuralıdır.",
+        "digits6": "Akış sayı göstermez; satır metni çağıranın verdiği serbest metindir, hane sınırı yoktur."
+      }
+    },
+    {
       "export": "AnimatedLabel",
       "kind": "class",
       "tier": 2,
@@ -786,7 +832,7 @@
       "phase": "UI-09",
       "anchor": "A4",
       "archetype": "container",
-      "consumer": "direct",
+      "consumer": "catalog",
       "showcase": ["sections/advancedDataCards.ts"],
       "tests": [
         {
@@ -895,7 +941,7 @@
       "phase": "UI-09",
       "anchor": "A4",
       "archetype": "display",
-      "consumer": "direct",
+      "consumer": "catalog",
       "showcase": ["sections/advancedDataCards.ts"],
       "tests": [
         {
@@ -2254,6 +2300,64 @@
       "extraStates": ["digits6"]
     },
     {
+      "export": "RankList",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "direct",
+      "showcase": ["sections/hudScoreboardCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "kapasite kadar satır gösterir; sıra numarası dizideki konumdur"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "kendi satırı kapasite dışında kalırsa son yuvayı alır, gerçek sırası ve ayırıcıyla"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "satırlar kimliğe göre yerinde güncellenir; giden satır silinir"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "sönük satır işaretlenir; renk noktası yalnız renk verilince çizilir"
+        }
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "kapasite kadar satır gösterir; sıra numarası dizideki konumdur"
+          }
+        ],
+        "empty": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "boş liste boş metni gösterir ve listeyi gizler; dil değişince yenilenir"
+          }
+        ],
+        "long30": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "altı haneli değerler (999999) ve uzun adlar satırı bozmadan yazılır"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "altı haneli değerler (999999) ve uzun adlar satırı bozmadan yazılır"
+          }
+        ]
+      },
+      "extraStates": ["empty"],
+      "stateNa": {
+        "reducedMotion": "Satır güncellemesi anidir; bileşende geçiş ya da animasyon yoktur, kapatılacak hareket yok."
+      }
+    },
+    {
       "export": "ResourceBar",
       "kind": "class",
       "tier": 2,
@@ -3300,6 +3404,64 @@
           "title": "güvenli SVG registry üretir ve dekoratif/etiketli kipleri ayırır"
         }
       ]
+    },
+    {
+      "export": "VersusBar",
+      "kind": "class",
+      "tier": 1,
+      "phase": "UI-08",
+      "anchor": "A1",
+      "archetype": "display",
+      "consumer": "direct",
+      "showcase": ["sections/hudScoreboardCards.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "iki tarafın değerini yazar; iz hedefe oranla uçlardan yarıya uzanır"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "kök adlı bir gruptur; okuyucu özeti her tarafı hedefle söyler"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "kendi tarafı ve galibiyet sayısı işaretlenir"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "işaretler kimliğe göre yerinde güncellenir, kalkanlar silinir, çekişme çerçevelenir"
+        },
+        {
+          "file": "core/tests/ui/hud/scoreboard.test.ts",
+          "title": "sağdaki ek öğe konur ve kaldırılır"
+        }
+      ],
+      "states": {
+        "normal": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "iki tarafın değerini yazar; iz hedefe oranla uçlardan yarıya uzanır"
+          }
+        ],
+        "reducedMotion": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "indirgenmiş harekette iz geçişi kapanır (CSS)"
+          }
+        ],
+        "long30": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "uzun taraf adı ipucunda ve okuyucu özetinde olduğu gibi kalır"
+          }
+        ],
+        "digits6": [
+          {
+            "file": "core/tests/ui/hud/scoreboard.test.ts",
+            "title": "altı haneli değerler (999999) taşmadan yazılır ve biçimleyici uygulanır"
+          }
+        ]
+      }
     },
     {
       "export": "VirtualList",

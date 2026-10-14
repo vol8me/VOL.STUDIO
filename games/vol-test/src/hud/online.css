@@ -16,63 +16,16 @@
   pointer-events: none;
 }
 
+/*
+ * Üst orta şerit (`VersusBar`): iki cephe ve ortada hedefe uzanan iz. Sağ üstte harita, solda
+ * sıralama durur; şerit ikisinin arasında kalır.
+ */
 .vt-online__banner {
   position: absolute;
   top: var(--vt-online-top);
   left: 50%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: calc(100% - 2 * var(--vt-map, 168px) - 48px);
-  padding: 6px 12px;
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-sm);
-  background: var(--vol-ui-overlay-panel);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  width: min(420px, calc(100% - 2 * var(--vt-map, 168px) - 96px));
   transform: translateX(-50%);
-}
-
-.vt-online__scores {
-  display: inline-flex;
-  gap: 8px;
-}
-
-/* Bölge rozetleri: sahibin rengi dolgu, tartışmalı bölge çerçevelidir. */
-.vt-online__zones {
-  display: inline-flex;
-  gap: 4px;
-}
-
-.vt-online__zone {
-  width: 10px;
-  height: 10px;
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: 2px;
-  background: transparent;
-}
-
-.vt-online__zone[data-contested='true'] {
-  border-color: var(--vol-ui-warning-solid);
-  box-shadow: 0 0 0 1px var(--vol-ui-warning-solid);
-}
-
-.vt-online__score[data-own='true'] {
-  font-weight: 700;
-}
-
-.vt-online__score,
-.vt-online__player {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.vt-online__dot {
-  flex: none;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
 }
 
 .vt-online__ping {
@@ -81,6 +34,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
 }
 
 .vt-online__ping::before {
@@ -99,20 +53,12 @@
   --vt-grade: var(--vol-ui-danger-solid);
 }
 
+/* Sıralama sol üsttedir (sol alt göstergelere ve akışa ait); sürücü kendi satırını görür. */
 .vt-online__board {
   position: absolute;
-  top: calc(var(--vt-online-top) + 44px);
-  left: 50%;
-  width: min(300px, 34vw);
-  border-radius: var(--vol-radius-md);
-  background: var(--vol-ui-overlay-panel);
-  font-size: 12px;
-  line-height: 16px;
-  transform: translateX(-50%);
-}
-
-.vt-online__self {
-  font-weight: 700;
+  top: var(--vt-online-top);
+  left: calc(var(--vol-safe-left) + 20px);
+  width: min(236px, 24vw);
 }
 
 .vt-online__notice {
@@ -131,31 +77,23 @@
   display: none;
 }
 
-/* Akış haritanın ve tam ekran düğmesinin altında, sağ kenardadır; sessizken soluklaşır. */
+/* Akış sol altta, göstergelerin üstündedir; satırlar süresi dolunca kendiliğinden söner. */
 .vt-online__feed {
   position: absolute;
-  top: calc(var(--vt-online-top) + var(--vt-map, 168px) + 56px);
-  right: calc(var(--vol-safe-right) + 16px);
-  width: min(280px, 30vw);
-  font-size: 12px;
-  opacity: 1;
-  transition: opacity 0.4s;
+  bottom: calc(var(--vol-safe-bottom) + 16px + var(--vt-feed-lift, 112px));
+  left: calc(var(--vol-safe-left) + 20px);
+  width: min(300px, 32vw);
 }
 
-.vt-online__feed--idle {
-  opacity: 0.35;
-}
-
-/* Akış ve skor tablosu ancak yeterli alan varken gösterilir; bağlantı çubuğu her zaman görünür. */
-@media (height <= 520px), (width <= 760px) {
+/* Akış ve sıralama ancak yeterli alan ve işaretçi varken gösterilir; şerit her zaman görünür. */
+@media (height <= 520px), (width <= 760px), (pointer: coarse) {
   .vt-online__feed,
   .vt-online__board {
     display: none;
   }
 
   .vt-online__banner {
-    max-width: calc(100% - 2 * var(--vt-map, 120px) - 24px);
-    padding: 4px 8px;
+    width: min(360px, calc(100% - 2 * var(--vt-map, 120px) - 24px));
   }
 }
 

@@ -243,6 +243,14 @@ ve fonts alt yollarını kullanır. `Sheet` Modal geri/odak sözleşmesini ve d�
 ScrollView'ı birleştirir; iç popup önce kendi Escape'ini tüketir. `StatsPanel`
 kimlikli grupları DOM'u yıkmadan günceller; stat hesabı tüketicinindir.
 
+`VersusBar`, `RankList` ve `ActivityFeed` sıkı HUD sunumudur: ikisi iki taraflı
+hedef şeridi ve sabit satırlı sıralamadır, üçüncüsü kısa ömürlü olay akışıdır.
+Kaydırma ve geçmiş yoktur; satırlar kimliğe göre yerinde güncellenir. Puan
+kuralı, sıralama ve renk seçimi çağırana aittir. `RankList` kendi satırını
+kapasite dışında kalsa da son yuvada gerçek sırasıyla tutar. `ActivityFeed`
+zamanı çağırandan alır (`push(entry, nowMs)`, `tick(nowMs)`) ve kendi
+zamanlayıcısını açmaz; duraklatmada ve testte belirleyicidir.
+
 `SplitPane` tercih edilen boyutu dar ekrandaki geçici kısıttan ayrı tutar.
 Toolbar aksiyon düğmesi `toggle: false` ile seçim kümesinden ayrılır.
 Popover dış tıklamayla kapanınca yeni odağı çalmaz. SettingsForm yalnız

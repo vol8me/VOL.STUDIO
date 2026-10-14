@@ -194,16 +194,14 @@
     "lost": "Bağlantı kesildi; çevrimdışı dünyaya dönüldü.",
     "reconnecting": "Bağlantı koptu — yeniden bağlanılıyor…",
     "ping": "{{ms}} ms",
-    "wins": "{{count}} zafer",
     "board": {
       "title": "Skor tablosu",
-      "rank": "#",
-      "player": "Oyuncu",
-      "kills": "Öldürme",
-      "deaths": "Ölüm",
+      "titleLegend": "{{title}} · {{kills}} / {{deaths}}",
+      "killsShort": "Öldürme",
+      "deathsShort": "Ölüm",
       "you": "{{name}} (siz)",
       "away": "{{name}} (bağlantı yok)",
-      "bot": "{{name}} (bot)",
+      "botTag": "bot",
       "empty": "Oyuncu yok"
     },
     "feed": {

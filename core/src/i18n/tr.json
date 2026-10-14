@@ -218,6 +218,17 @@
     "next": "İleri",
     "finish": "Bitir"
   },
+  "versusBar": {
+    "label": "Skor",
+    "side": "{{name}} {{value}} / {{target}}"
+  },
+  "rankList": {
+    "label": "Sıralama",
+    "empty": "Kayıt yok"
+  },
+  "activityFeed": {
+    "label": "Etkinlik"
+  },
   "minimap": {
     "summary_one": "{{label}}: {{count, number}} işaret, yakınlaştırma {{zoom}}x",
     "summary_other": "{{label}}: {{count, number}} işaret, yakınlaştırma {{zoom}}x",

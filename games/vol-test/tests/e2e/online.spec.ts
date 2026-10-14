@@ -127,12 +127,10 @@ test('iki tarayıcı aynı dünyaya girer: tablo, gözlemci ve çubuk birbirini 
     const board = page.getByTestId('online-board');
     await expect(board).toContainText(`${tag}-A`);
     await expect(board).toContainText(`${tag}-B`);
-    await expect(page.locator('[data-testid="online-zones"] .vt-online__zone')).toHaveCount(
+    await expect(page.locator('[data-testid="online-zones"] .vol-versus__pip')).toHaveCount(
       WAR.zones.length,
     );
-    await expect(page.locator('[data-testid="online-factions"] .vt-online__score')).toHaveCount(
-      WAR.factions,
-    );
+    await expect(page.getByTestId('online-faction')).toHaveCount(WAR.factions);
   }
   await expect.poll(() => watcher.room.state.players.size).toBeGreaterThanOrEqual(3);
   expect(watcher.find(`${tag}-A`)?.connected).toBe(true);
@@ -151,7 +149,7 @@ test('cephe seçimi: istenen cephe sunucuda kayda geçer, kendi cephe puanı vur
   await enter(blue, `${tag}-M`, 1);
   const watcher = await observe(`${tag}-W`);
   await expect.poll(() => watcher.find(`${tag}-M`)?.team).toBe(1);
-  await expect(blue.locator('[data-testid="online-factions"] [data-own="true"]')).toHaveAttribute(
+  await expect(blue.locator('[data-testid="online-faction"][data-own="true"]')).toHaveAttribute(
     'data-faction',
     '1',
   );
@@ -169,7 +167,7 @@ test('savaş dünyası botlarla dolu: tabloda botlar görünür, bölge rozetler
   const tag = info.project.name.slice(0, 4);
   const page = await newPage(browser);
   await enter(page, `${tag}-P`);
-  await expect(page.getByTestId('online-board')).toContainText('(bot)', { timeout: 15_000 });
+  await expect(page.getByTestId('online-board')).toContainText('bot', { timeout: 15_000 });
   const watcher = await observe(`${tag}-W`);
   await expect
     .poll(() => [...watcher.room.state.players.values()].filter((player) => player.bot).length, {

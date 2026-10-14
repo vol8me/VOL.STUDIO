@@ -194,16 +194,14 @@
     "lost": "Connection lost; returned to the offline world.",
     "reconnecting": "Connection dropped — reconnecting…",
     "ping": "{{ms}} ms",
-    "wins": "{{count}} wins",
     "board": {
       "title": "Scoreboard",
-      "rank": "#",
-      "player": "Player",
-      "kills": "Kills",
-      "deaths": "Deaths",
+      "titleLegend": "{{title}} · {{kills}} / {{deaths}}",
+      "killsShort": "Kills",
+      "deathsShort": "Deaths",
       "you": "{{name}} (you)",
       "away": "{{name}} (disconnected)",
-      "bot": "{{name}} (bot)",
+      "botTag": "bot",
       "empty": "No players"
     },
     "feed": {

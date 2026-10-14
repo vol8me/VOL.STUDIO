@@ -13,6 +13,7 @@
 @import url('./feedback/feedback.css');
 @import url('./hud/hud.css');
 @import url('./hud/skillTree.css');
+@import url('./hud/scoreboard.css');
 @import url('./touch/touch.css');
 @import url('./buttons/buttons.css');
 @import url('./layout/scroll.css');
