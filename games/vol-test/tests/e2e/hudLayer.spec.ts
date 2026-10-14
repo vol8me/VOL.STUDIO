@@ -14,7 +14,7 @@ const INTERACTIVE = [
 ].join(', ');
 
 async function open(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?start=world');
   await expect(page.locator('#game > canvas')).toBeVisible();
   await expect(page.getByTestId('hud')).toBeVisible();
   // Açılış yükleme perdesi (kapanırken 240 ms geçiş) meşru olarak işaretçi yakalar; ölçüm perde kalktıktan sonra yapılır.

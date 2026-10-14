@@ -10,7 +10,11 @@ import type { PlayerControls } from '@/scenes/world/PlayerControls';
 import type { DriverContext } from '@/scenes/world/WorldDriver';
 import { World } from '@/sim/world/World';
 
-function driver(vehicle?: VehicleId): { driver: OfflineDriver; scope: DisposableScope } {
+function driver(vehicle?: VehicleId): {
+  driver: OfflineDriver;
+  scope: DisposableScope;
+  context: DriverContext;
+} {
   const scope = new DisposableScope();
   const services =
     vehicle === undefined
@@ -31,8 +35,9 @@ function driver(vehicle?: VehicleId): { driver: OfflineDriver; scope: Disposable
     seed: 1,
     scope,
     restart: vi.fn(),
+    toMenu: vi.fn(),
   };
-  return { driver: new OfflineDriver(context), scope };
+  return { driver: new OfflineDriver(context), scope, context };
 }
 
 describe('OfflineDriver', () => {
@@ -42,6 +47,18 @@ describe('OfflineDriver', () => {
       expect(offline.player.spec).toBe(VEHICLES[id]);
       scope.dispose();
     }
+  });
+
+  it('duraklatma menüsüne çevrimiçi katılım ve ana menü eylemlerini koyar', () => {
+    const { driver: offline, scope, context } = driver('striker');
+    const actions: Array<{ id: string; run: () => void }> = [];
+    offline.attachHud({
+      setPauseActions: (next: typeof actions) => actions.push(...next),
+    } as never);
+    expect(actions.map((action) => action.id)).toEqual(['online', 'menu']);
+    actions[1].run();
+    expect(context.toMenu).toHaveBeenCalledTimes(1);
+    scope.dispose();
   });
 
   it('ayar servisi yoksa Striker ile açılır', () => {

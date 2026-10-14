@@ -10,6 +10,7 @@ import {
 } from '@volstudio/core';
 import { BootLoading } from '@/app/bootLoading';
 import { GameServices } from '@/app/GameServices';
+import { applyLanguage } from '@/app/language';
 import { RenderMeasurements } from '@/app/RenderMeasurements';
 import { GAME } from '@/config/game';
 import { PALETTE } from '@/config/palette';
@@ -17,6 +18,9 @@ import en from '@/i18n/en.json';
 import tr from '@/i18n/tr.json';
 import '@/i18n/i18next-augment';
 import { BootScene } from '@/scenes/BootScene';
+import { GarageScene } from '@/scenes/GarageScene';
+import { MenuScene } from '@/scenes/MenuScene';
+import { SettingsScene } from '@/scenes/SettingsScene';
 import { BOOT_EVENT } from '@/scenes/bootEvents';
 import { WorldScene } from '@/scenes/WorldScene';
 
@@ -37,13 +41,20 @@ async function boot(): Promise<void> {
   const loading = new BootLoading();
   try {
     const services = scope.add(await GameServices.create());
+    await applyLanguage(services.settings.get().language);
     loading.servicesReady();
     game = await createVolGame({
       parent: 'game',
       backgroundColor: PALETTE.void,
       strategy: 'resize',
       maxDpr: GAME.maxDpr,
-      scenes: [BootScene, new WorldScene(services)],
+      scenes: [
+        new BootScene(services),
+        new MenuScene(services),
+        new GarageScene(services),
+        new SettingsScene(services),
+        new WorldScene(services),
+      ],
       diagnostics: services.diagnostics,
       audio: { noAudio: false, disableWebAudio: false },
     });

@@ -70,19 +70,17 @@ const serverUrl = (): string => `/?server=${encodeURIComponent(server.endpoint)}
 /** Cephe seçimindeki düğmenin (tr-TR) görünen adı. */
 const FACTION_LABEL = ['Kehribar', 'Mavi'] as const;
 
-/** Duraklatma menüsünden katılım panelini açıp savaşa girer; cephe verilmezse sunucu dengeler. */
+/** Ana menüden garaja geçip savaşa girer; cephe verilmezse sunucu dengeler. */
 async function enter(page: Page, name: string, faction?: 0 | 1): Promise<void> {
   await page.goto(serverUrl());
-  await expect(page.getByTestId('hud')).toBeVisible();
-  await page.keyboard.press('Escape');
-  await page.getByTestId('pause-online').click();
-  await page.getByTestId('lobby-name').fill(name);
+  await page.getByTestId('menu-play').click();
+  await page.getByTestId('garage-name').fill(name);
   if (faction !== undefined)
     await page
-      .getByTestId('lobby-faction')
+      .getByTestId('garage-faction')
       .getByRole('radio', { name: FACTION_LABEL[faction] })
       .click();
-  await page.getByTestId('lobby-enter').click();
+  await page.getByTestId('garage-join').click();
   await expect(page.getByTestId('online')).toBeVisible({ timeout: 15_000 });
 }
 
@@ -306,10 +304,13 @@ test('Ayrıl: oyuncu sunucudan düşer ve oyun çevrimdışı dünyaya döner', 
 
   await page.keyboard.press('Escape');
   await page.getByTestId('pause-leave').click();
+  await expect(page.getByTestId('menu')).toBeVisible();
   await expect(page.getByTestId('online')).toHaveCount(0);
-  await expect(page.getByTestId('hud')).toBeVisible();
   await expect.poll(() => watcher.find(`${tag}-L`)).toBeUndefined();
-  // Çevrimdışı dünyada çubuk yok, ama duraklatma menüsünde "Savaşa katıl" yine var.
+  // Alıştırma dünyasında çubuk yok, ama duraklatma menüsünde "Savaşa katıl" yine var.
+  await page.getByTestId('menu-practice').click();
+  await expect(page.getByTestId('hud')).toBeVisible();
+  await expect(page.getByTestId('online')).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('pause-online')).toBeVisible();
 });
@@ -321,7 +322,7 @@ test('çevrimdışı açılış ağ parçasını yüklemez ve soket açmaz; kat�
   const sockets: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
   page.on('websocket', (socket) => sockets.push(socket.url()));
-  await page.goto('/');
+  await page.goto('/?start=world');
   await expect(page.getByTestId('hud')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('pause-online')).toBeVisible();
@@ -335,10 +336,24 @@ test('çevrimdışı açılış ağ parçasını yüklemez ve soket açmaz; kat�
   expect(sockets).toEqual([]);
 });
 
-test('ulaşılamayan sunucuda katılım paneli hatayı yazar ve yeniden denemeye açık kalır', async ({
+test('ulaşılamayan sunucuda garaj hatayı yazar ve yeniden denemeye açık kalır', async ({
   page,
 }) => {
   await page.goto('/?server=127.0.0.1:1');
+  await page.getByTestId('menu-play').click();
+  await page.getByTestId('garage-join').click();
+  await expect(page.getByTestId('garage-status')).toHaveAttribute('data-tone', 'danger', {
+    timeout: 15_000,
+  });
+  await expect(page.getByTestId('garage-status')).not.toBeEmpty();
+  await expect(page.getByTestId('garage-join')).toBeEnabled();
+  await expect(page.getByTestId('online')).toHaveCount(0);
+});
+
+test('ulaşılamayan sunucuda oyun içi katılım paneli hatayı yazar ve yeniden denemeye açık kalır', async ({
+  page,
+}) => {
+  await page.goto('/?start=world&server=127.0.0.1:1');
   await expect(page.getByTestId('hud')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByTestId('pause-online').click();

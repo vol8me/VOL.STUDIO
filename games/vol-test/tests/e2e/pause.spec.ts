@@ -10,7 +10,7 @@ const OPEN = /vol-modal--visible/;
 const CONTROLS = `${DIALOG} button, ${DIALOG} input, ${DIALOG} select, ${DIALOG} [role="radio"]`;
 
 async function openPause(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?start=world');
   await expect(page.locator('[data-testid="hud"]')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('.vt-pause')).toHaveClass(OPEN);

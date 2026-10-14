@@ -6,7 +6,8 @@ import type { MessageKey } from '@/i18n/keys';
 import { resolveEndpoint } from '@/network/endpoint';
 import { OnlineSession } from '@/network/OnlineSession';
 import { OnlineDriver } from './OnlineDriver';
-import type { DriverContext } from './WorldDriver';
+import type { GameServices } from '@/app/GameServices';
+import type { DriverContext, WorldStartData } from './WorldDriver';
 
 const ERROR_KEYS = {
   protocol: 'voltest:online.error.protocol',
@@ -28,6 +29,34 @@ export function sessionEndpoint(): string {
     location.search,
     import.meta.env.VITE_VOLTEST_SERVER as string | undefined,
   );
+}
+
+/** Kurulmuş bir savaş oturumu: sahne başlatma verisi ve sahne başlamadan vazgeçilirse bırakma. */
+export interface WarConnection {
+  readonly start: WorldStartData;
+  /** Sahne bu oturumu devralmadan vazgeçildi; sunucuda hayalet kalmaması için bağlantıyı bırakır. */
+  abandon(): void;
+}
+
+/**
+ * Savaş dünyasına bağlanır. Menüdeki garaj ve oyun içi katılım paneli aynı yolu kullanır: seçilen araç
+ * tercihlerden, ad ve cephe çağıranın seçiminden gelir. Hata `JoinError` olarak fırlar
+ * (`lobbyErrorKey` ile iletiye çevrilir).
+ */
+export async function connectWar(
+  services: GameServices | undefined,
+  choice: LobbyChoice,
+): Promise<WarConnection> {
+  const session = await OnlineSession.open({
+    endpoint: sessionEndpoint(),
+    name: choice.name,
+    model: modelOf(VEHICLES[services?.settings.get().vehicle ?? STRIKER.id]),
+    faction: choice.faction,
+  });
+  return {
+    start: { createDriver: (next) => new OnlineDriver(next, session), weather: 'clear' },
+    abandon: () => session.dispose(),
+  };
 }
 
 /**
@@ -57,27 +86,19 @@ export function createLobby(hud: Hud, context: DriverContext): LobbyPanel {
   async function connect(choice: LobbyChoice): Promise<void> {
     const mine = ++attempt;
     lobby.setBusy(true);
-    let session: OnlineSession;
+    let connection: WarConnection;
     try {
-      session = await OnlineSession.open({
-        endpoint: sessionEndpoint(),
-        name: choice.name,
-        model: modelOf(VEHICLES[services?.settings.get().vehicle ?? STRIKER.id]),
-        faction: choice.faction,
-      });
+      connection = await connectWar(services, choice);
     } catch (error) {
       if (alive && mine === attempt) lobby.showError(lobbyErrorKey(error));
       return;
     }
     if (!alive || mine !== attempt) {
-      session.dispose();
+      connection.abandon();
       return;
     }
     lobby.close();
-    context.restart({
-      createDriver: (next) => new OnlineDriver(next, session),
-      weather: 'clear',
-    });
+    context.restart(connection.start);
   }
 
   return lobby;

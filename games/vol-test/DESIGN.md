@@ -5,7 +5,7 @@
 VOL.TEST, CORE mekanizmaları ve native kabuğun gerçek oyun tüketicisidir.
 Açık sürüş alanı tank fiziğini, nişanı, çevreyi ve platform servislerini
 birlikte sınar. Kalıcı dünya engeli yoktur; seçilen senaryo araç veya hedef
-ekler. Ana menü yoktur; HUD ile duraklatma, ayar ve senaryo panelleri vardır.
+ekler. Oyun ana menüyle açılır; menü, garaj ve ayarlar ekranları ile HUD, duraklatma ve senaryo panelleri vardır.
 
 ## Model ve sunum
 
@@ -25,6 +25,7 @@ taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
 | `src/sim/seasons/`, `src/sim/weather/` | Mevsim, hava ve kalıcı yüzey durumu                     |
 | `src/view/`                            | Dünya ve tank sunumu, sınırlı efekt havuzları           |
 | `src/hud/`                             | CORE bileşenleriyle metin, harita ve paneller           |
+| `src/menu/`                            | Ana menü, garaj ve ayarlar ekranlarının DOM panelleri   |
 | `src/scenes/world/`                    | Girdi, kamera, çevre ve olayların bağlanması            |
 | `src/config/`                          | Bütün oynanış ve sunum ölçülerinin tek kaynağı          |
 
@@ -317,6 +318,33 @@ durmuş gibi görünürdü; bu yüzden açılış yakınlaştırması `WORLD.map
 tavanı `WORLD.mapMaxZoom`dur, zoom 1 bütün cephe hattını gösterir
 (`tests/hud/MapPanel.test.ts` yavaş aracın her karede çizildiğini kilitler).
 
+## Ekranlar
+
+Açılış sırası Boot → Menu → (Garage | Settings | World). `BootScene` dokuları yükler ve
+`firstScene` ile ilk ekranı seçer: oyuncu ana menüyü görür; ölçüm koşusu (Deck sondası) ve
+`?start=world` geliştirme bağlantısı menüyü atlayıp alıştırma dünyasını açar.
+
+| Ekran      | İçerik                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı  |
+| `Garage`   | Dört araç kartı (ad, görev, üç ölçü), ad, cephe; savaşa katıl, alıştırmaya çık, geri       |
+| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi, senaryo ve tohum |
+| `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)       |
+
+Üç ekran `ScreenScene` iskeletini paylaşır: `UIRoot` içinde CORE bileşenlerinden kurulan bir DOM
+paneli ve arkada oyunun gerçek araç görünümlerini (`TankView`, `WalkerView`) dönen tablada gösteren
+`Showroom`. Vitrin kamerasını panelin ekrandaki dikdörtgenine göre kurar: geniş ekranda araç panelin
+yanında, dar ekranda panelin üstünde durur ve boş alana sığmazsa yakınlaştırma küçülür
+(`src/config/menu.ts`). Ekran değişimi solarak yapılır (`prefers-reduced-motion`da anında); geçiş
+sürerken ikinci seçim yok sayılır. Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış
+onayını açar ya da kapatır.
+
+Garajdaki seçim (araç, cephe, ad) ve ayarlardaki dil `GameSettings`e yazılır ve oturumlar arasında
+kalır; alıştırma ve savaş aynı araç tercihini kullanır. Savaşa katılma çevrimiçi parçayı ilk kullanımda
+tembel yükler (`connectWar`); bağlanırken geri dönülür ya da ekran kapanırsa geç gelen oturum bırakılır,
+odada hayalet kalmaz. Menü, garaj ve ayarlar çevrimiçi ağ kodunu yüklemez. Ekranlarda ses ve müzik
+yoktur; menü sesi ve müziği ayrı iştir.
+
 ## Girdi, kamera ve HUD
 
 Tuş ve kol eşlemesi `src/scenes/world/PlayerControls.ts`, hareket yumuşatma
@@ -447,8 +475,8 @@ verilir; dinleme yapıldığı iddiası teknik sonuçtan türetilmez.
 
 ## Çok oyunculu
 
-Çevrimiçi oyun opt-in'dir: duraklatma menüsündeki "Savaşa katıl" katılım panelini açar, çevrimdışı
-açılış ağ kodunu yüklemez (`online-*.js` ayrı parçadır, bütçesi `quality.json`'dadır). Sunucu `server/`
+Çevrimiçi oyun opt-in'dir: ana menüdeki "Savaşa katıl" garaja götürür (alıştırma dünyasındaki duraklatma
+menüsünde de "Savaşa katıl" katılım panelini açar); çevrimdışı açılış ağ kodunu yüklemez (`online-*.js` ayrı parçadır, bütçesi `quality.json`'dadır). Sunucu `server/`
 altındadır (`build:server` çıktısı Node ile başlar) ve [network](../../network/README.md)
 çalışma zamanının üstünde Colyseus odası koşar; sunucu adresi `?server=host:port`, derleme zamanı
 `VITE_VOLTEST_SERVER` ya da geliştirme adresidir.
@@ -515,8 +543,8 @@ oturum boyunca kalıcı tercihlerden önce gelir; ses veya titreşim ayarı bu
 koşulları değiştirmez ve ölçüm seçimi kayda yazılmaz.
 
 E2E gönderilen build'i Chromium ve WebKit'te klavye, sanal kol ve dokunmatik
-girdiyle açar; ayarlar, senaryolar, duraklatma, hava görünümü ve temiz konsol
-sınanır. Çok oyunculu E2E gerçek Colyseus sunucusunu test işleminde kurar (iki sayfa, bir Node
+girdiyle açar; menü, garaj, ayarlar (dil kalıcılığı, dar ekran sığması), senaryolar, duraklatma,
+hava görünümü ve temiz konsol sınanır. Menüyü ilgilendirmeyen spec'ler `?start=world` ile açılır. Çok oyunculu E2E gerçek Colyseus sunucusunu test işleminde kurar (iki sayfa, bir Node
 gözlemcisi: ortak dünya, cephe seçimi, botlar, sürüş/uzlaştırma, ateş, ölüm/doğuş, ayrılma, ulaşılamayan sunucu); ölümü
 sunucudaki yetkili `Simulation`a hasar vererek tetikler. Kapsam, bundle ve algoritmik ölçekleme eşikleri kök `quality.json`
 içindedir. Gerçek cihaz performansı, görsel ve haptik kabulü otomatik testlerden

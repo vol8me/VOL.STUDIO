@@ -82,6 +82,7 @@ export class OfflineDriver implements WorldDriver {
   attachHud(hud: Hud): void {
     hud.setPauseActions([
       { id: 'online', labelKey: 'voltest:online.title', run: () => void this.openLobby(hud) },
+      { id: 'menu', labelKey: 'voltest:pause.menu', run: () => this.context.toMenu() },
     ]);
   }
 

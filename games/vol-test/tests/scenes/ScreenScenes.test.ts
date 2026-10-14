@@ -1,0 +1,321 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type * as CoreModule from '@volstudio/core';
+import { getBackHandlerCount, triggerBack } from '@volstudio/core';
+import { i18next } from '@volstudio/core/i18n';
+import type { GameServices } from '@/app/GameServices';
+import { FACTION_AUTO, type GamePreferences } from '@/app/GameSettings';
+import { VEHICLES } from '@/config/vehicles';
+import { GarageScene } from '@/scenes/GarageScene';
+import { MenuScene } from '@/scenes/MenuScene';
+import { SettingsScene } from '@/scenes/SettingsScene';
+import type { ScreenScene } from '@/scenes/ScreenScene';
+
+const showroom = vi.hoisted(() => ({
+  setVehicle: vi.fn(),
+  update: vi.fn(),
+  destroy: vi.fn(),
+}));
+const online = vi.hoisted(() => ({
+  connectWar: vi.fn(),
+  lobbyErrorKey: vi.fn(() => 'voltest:online.error.unreachable'),
+}));
+
+vi.mock('@/view/Showroom', () => ({
+  Showroom: class {
+    setVehicle = showroom.setVehicle;
+    update = showroom.update;
+    destroy = showroom.destroy;
+  },
+}));
+vi.mock('@/scenes/world/online', () => online);
+vi.mock('@volstudio/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof CoreModule>()),
+  applyVolViewport: vi.fn(),
+}));
+
+interface Harness<T extends ScreenScene> {
+  scene: T;
+  parent: HTMLElement;
+  start: ReturnType<typeof vi.fn>;
+  fadeOut: ReturnType<typeof vi.fn>;
+  /** Solma bitti: bekleyen sahne geçişini tamamlar. */
+  finishFade: () => void;
+  shutdown: () => void;
+  find: <E extends HTMLElement = HTMLElement>(id: string) => E;
+  update: ReturnType<typeof vi.fn>;
+}
+
+const harnesses: Array<Harness<ScreenScene>> = [];
+
+function services(
+  overrides: Partial<GamePreferences> = {},
+  platform = 'windows',
+): {
+  services: GameServices;
+  update: ReturnType<typeof vi.fn>;
+} {
+  const preferences = {
+    vehicle: 'striker',
+    faction: FACTION_AUTO,
+    playerName: 'Ada',
+    quality: 'high',
+    language: 'auto',
+    volume: 1,
+    haptics: true,
+    display: 'windowed',
+    scenario: 'empty',
+    seed: 1,
+    ...overrides,
+  };
+  const update = vi.fn(() => Promise.resolve());
+  return {
+    update,
+    services: {
+      platform,
+      displayAvailable: true,
+      settings: { get: () => preferences, update, subscribe: () => () => undefined },
+    } as unknown as GameServices,
+  };
+}
+
+function mount<T extends ScreenScene>(make: () => T): Harness<T> {
+  const scene = make();
+  const parent = document.createElement('div');
+  document.body.append(parent);
+  const start = vi.fn();
+  const fadeOut = vi.fn();
+  const handlers: Array<() => void> = [];
+  let shutdown = (): void => undefined;
+  Object.assign(scene, {
+    cameras: {
+      main: {
+        width: 1280,
+        height: 800,
+        setBackgroundColor: vi.fn(),
+        fadeIn: vi.fn(),
+        fadeOut,
+        once: (_event: string, handler: () => void) => handlers.push(handler),
+      },
+    },
+    game: { canvas: { parentElement: parent }, registry: { get: () => undefined } },
+    events: { once: (_name: string, handler: () => void) => (shutdown = handler) },
+    scene: { start },
+  });
+  scene.create();
+  const harness: Harness<T> = {
+    scene,
+    parent,
+    start,
+    fadeOut,
+    finishFade: () => handlers.splice(0).forEach((handler) => handler()),
+    shutdown: () => shutdown(),
+    find: <E extends HTMLElement = HTMLElement>(id: string): E =>
+      parent.querySelector<E>(`[data-testid="${id}"]`)!,
+    update: showroom.update,
+  };
+  harnesses.push(harness);
+  return harness;
+}
+
+afterEach(async () => {
+  for (const harness of harnesses.splice(0)) {
+    harness.shutdown();
+    harness.parent.remove();
+  }
+  vi.clearAllMocks();
+  await i18next.changeLanguage('tr');
+});
+
+function nativeWindow(available = true) {
+  return { isAvailable: () => available, close: vi.fn(() => Promise.resolve()) };
+}
+
+describe('MenuScene', () => {
+  it('menüyü kurar, vitrini çizer ve her seçeneği solarak ilgili sahneye götürür', () => {
+    const { services: env } = services();
+    const harness = mount(() => new MenuScene(env, nativeWindow() as never));
+    expect(harness.find('menu')).not.toBeNull();
+    harness.scene.update(0, 16);
+    expect(showroom.update).toHaveBeenCalledWith(16, expect.anything());
+
+    harness.find('menu-play').click();
+    expect(harness.find('menu').dataset.leaving).toBe('true');
+    expect(harness.fadeOut).toHaveBeenCalledTimes(1);
+    expect(harness.start).not.toHaveBeenCalled();
+    // Geçiş sürerken ikinci seçim yok sayılır.
+    harness.find('menu-practice').click();
+    expect(harness.fadeOut).toHaveBeenCalledTimes(1);
+    harness.finishFade();
+    expect(harness.start).toHaveBeenCalledWith('Garage', undefined);
+  });
+
+  it.each([
+    ['menu-practice', 'World'],
+    ['menu-settings', 'Settings'],
+  ])('%s → %s', (id, target) => {
+    const { services: env } = services();
+    const harness = mount(() => new MenuScene(env, nativeWindow() as never));
+    harness.find(id).click();
+    harness.finishFade();
+    expect(harness.start).toHaveBeenCalledWith(target, undefined);
+  });
+
+  it('çıkış yalnız native masaüstünde vardır; Android ve tarayıcıda yoktur', () => {
+    const desktop = mount(() => new MenuScene(services().services, nativeWindow() as never));
+    expect(desktop.find('menu-exit')).not.toBeNull();
+    const android = mount(
+      () => new MenuScene(services({}, 'android').services, nativeWindow() as never),
+    );
+    expect(android.find('menu-exit')).toBeNull();
+    const web = mount(
+      () => new MenuScene(services({}, 'web').services, nativeWindow(false) as never),
+    );
+    expect(web.find('menu-exit')).toBeNull();
+  });
+
+  it('çıkış onaylanınca uygulama kapanır, vazgeçilince kapanmaz', async () => {
+    const native = nativeWindow();
+    const { services: env } = services();
+    const harness = mount(() => new MenuScene(env, native as never));
+    // Kapanan önceki modal geçiş süresince DOM'da kalır; en son açılan geçerlidir.
+    const confirmButton = (label: string): HTMLButtonElement | undefined =>
+      [...harness.parent.querySelectorAll<HTMLButtonElement>('.vol-modal button')]
+        .filter((button) => button.textContent === label)
+        .at(-1);
+
+    harness.find('menu-exit').click();
+    await vi.waitFor(() => expect(confirmButton('Vazgeç')).toBeDefined());
+    confirmButton('Vazgeç')?.click();
+    await vi.waitFor(() => expect(harness.parent.querySelector('.vol-modal--open')).toBeNull());
+    expect(native.close).not.toHaveBeenCalled();
+
+    harness.find('menu-exit').click();
+    await vi.waitFor(() => expect(confirmButton('Çık')).toBeDefined());
+    confirmButton('Çık')?.click();
+    await vi.waitFor(() => expect(native.close).toHaveBeenCalledTimes(1));
+  });
+
+  it('geri tuşu çıkış onayını açar, ikinci basış kapatır; sahne kapanınca kayıt kalkar', async () => {
+    const native = nativeWindow();
+    const { services: env } = services();
+    const before = getBackHandlerCount();
+    const harness = mount(() => new MenuScene(env, native as never));
+    expect(getBackHandlerCount()).toBe(before + 1);
+    expect(triggerBack()).toBe(true);
+    await vi.waitFor(() => expect(harness.parent.querySelector('.vol-modal')).not.toBeNull());
+    expect(triggerBack()).toBe(true);
+    await vi.waitFor(() => expect(harness.parent.querySelector('.vol-modal--open')).toBeNull());
+    expect(native.close).not.toHaveBeenCalled();
+    harness.shutdown();
+    expect(getBackHandlerCount()).toBe(before);
+    expect(harness.parent.querySelector('[data-testid="menu"]')).toBeNull();
+    expect(showroom.destroy).toHaveBeenCalled();
+  });
+});
+
+describe('SettingsScene', () => {
+  it('geri düğmesi de geri tuşu da menüye döner', () => {
+    const { services: env } = services();
+    const harness = mount(() => new SettingsScene(env));
+    expect(harness.find('settings')).not.toBeNull();
+    harness.find('settings-back').click();
+    harness.finishFade();
+    expect(harness.start).toHaveBeenCalledWith('Menu', undefined);
+
+    const again = mount(() => new SettingsScene(env));
+    expect(triggerBack()).toBe(true);
+    again.finishFade();
+    expect(again.start).toHaveBeenCalledWith('Menu', undefined);
+  });
+});
+
+describe('GarageScene', () => {
+  it('kayıtlı seçimle açılır; araç seçimi tercihe yazılır ve vitrini değiştirir', () => {
+    const { services: env, update } = services({ vehicle: 'dart', faction: 1, playerName: 'Ada' });
+    const harness = mount(() => new GarageScene(env));
+    expect(harness.find<HTMLInputElement>('garage-name').value).toBe('Ada');
+    expect(harness.find('garage-vehicle-dart').getAttribute('aria-checked')).toBe('true');
+    harness.find('garage-vehicle-arachnid').click();
+    expect(update).toHaveBeenCalledWith({ vehicle: 'arachnid' });
+    expect(showroom.setVehicle).toHaveBeenCalledWith(VEHICLES.arachnid);
+  });
+
+  it('savaşa katılır: seçimle bağlanır ve çevrimiçi başlatma verisiyle dünyaya geçer', async () => {
+    const { services: env, update } = services({ faction: 1 });
+    const start = { weather: 'clear' as const };
+    online.connectWar.mockResolvedValue({ start, abandon: vi.fn() });
+    const harness = mount(() => new GarageScene(env));
+    harness.find('garage-join').click();
+    expect(harness.find('garage-status').textContent).toBe(i18next.t('voltest:online.connecting'));
+    await vi.waitFor(() => expect(harness.fadeOut).toHaveBeenCalled());
+    expect(online.connectWar).toHaveBeenCalledWith(env, { name: 'Ada', faction: 1 });
+    expect(update).toHaveBeenCalledWith({ playerName: 'Ada' });
+    harness.finishFade();
+    expect(harness.start).toHaveBeenCalledWith('World', start);
+  });
+
+  it('cephe otomatikse sunucuya cephe istemez', async () => {
+    const { services: env } = services({ faction: FACTION_AUTO });
+    online.connectWar.mockResolvedValue({ start: {}, abandon: vi.fn() });
+    const harness = mount(() => new GarageScene(env));
+    harness.find('garage-join').click();
+    await vi.waitFor(() => expect(online.connectWar).toHaveBeenCalled());
+    expect(online.connectWar).toHaveBeenCalledWith(env, { name: 'Ada', faction: undefined });
+  });
+
+  it('bağlantı hatası durum satırında kalır ve ekran açık kalır', async () => {
+    const { services: env } = services();
+    online.connectWar.mockRejectedValue(new Error('yok'));
+    const harness = mount(() => new GarageScene(env));
+    harness.find('garage-join').click();
+    await vi.waitFor(() =>
+      expect(harness.find('garage-status').textContent).toBe(
+        i18next.t('voltest:online.error.unreachable'),
+      ),
+    );
+    expect(harness.find<HTMLButtonElement>('garage-join').disabled).toBe(false);
+    expect(harness.fadeOut).not.toHaveBeenCalled();
+  });
+
+  it('bağlanırken geri dönülürse geç gelen oturum bırakılır', async () => {
+    const { services: env } = services();
+    const abandon = vi.fn();
+    let resolve: (value: unknown) => void = () => undefined;
+    online.connectWar.mockReturnValue(new Promise((done) => (resolve = done)));
+    const harness = mount(() => new GarageScene(env));
+    harness.find('garage-join').click();
+    await vi.waitFor(() => expect(online.connectWar).toHaveBeenCalled());
+    harness.find('garage-back').click();
+    harness.finishFade();
+    expect(harness.start).toHaveBeenCalledWith('Menu', undefined);
+    resolve({ start: {}, abandon });
+    await vi.waitFor(() => expect(abandon).toHaveBeenCalledTimes(1));
+    expect(harness.start).toHaveBeenCalledTimes(1);
+  });
+
+  it('ekran kapanırsa geç gelen oturum bırakılır', async () => {
+    const { services: env } = services();
+    const abandon = vi.fn();
+    let resolve: (value: unknown) => void = () => undefined;
+    online.connectWar.mockReturnValue(new Promise((done) => (resolve = done)));
+    const harness = mount(() => new GarageScene(env));
+    harness.find('garage-join').click();
+    await vi.waitFor(() => expect(online.connectWar).toHaveBeenCalled());
+    harness.shutdown();
+    resolve({ start: {}, abandon });
+    await vi.waitFor(() => expect(abandon).toHaveBeenCalledTimes(1));
+  });
+
+  it('alıştırma çevrimdışı dünyayı açar, geri tuşu menüye döner', () => {
+    const { services: env } = services();
+    const practice = mount(() => new GarageScene(env));
+    practice.find('garage-practice').click();
+    practice.finishFade();
+    expect(practice.start).toHaveBeenCalledWith('World', undefined);
+
+    const back = mount(() => new GarageScene(env));
+    expect(triggerBack()).toBe(true);
+    back.finishFade();
+    expect(back.start).toHaveBeenCalledWith('Menu', undefined);
+  });
+});

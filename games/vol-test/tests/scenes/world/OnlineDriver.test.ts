@@ -42,6 +42,7 @@ interface Rig {
   driver: OnlineDriver;
   session: OnlineSession;
   restart: ReturnType<typeof vi.fn<(data?: WorldStartData) => void>>;
+  toMenu: ReturnType<typeof vi.fn<() => void>>;
   steps: { count: number };
   fake: ReturnType<typeof fakeScene>;
   scope: DisposableScope;
@@ -67,6 +68,7 @@ async function rig(name = 'Pilot', faction?: number): Promise<Rig> {
     },
   } as unknown as PlayerControls;
   const restart = vi.fn<(data?: WorldStartData) => void>();
+  const toMenu = vi.fn<() => void>();
   const context: DriverContext = {
     scene: { add: fake.add } as unknown as Phaser.Scene,
     world: new World(WORLD.width, WORLD.height, WORLD.gridStep),
@@ -75,6 +77,7 @@ async function rig(name = 'Pilot', faction?: number): Promise<Rig> {
     seed: 0,
     scope,
     restart,
+    toMenu,
   };
   const driver = new OnlineDriver(context, session);
   const parent = document.createElement('div');
@@ -104,6 +107,7 @@ async function rig(name = 'Pilot', faction?: number): Promise<Rig> {
     driver,
     session,
     restart,
+    toMenu,
     steps,
     fake,
     scope,
@@ -296,21 +300,21 @@ describe('OnlineDriver panel ve etiket', () => {
 });
 
 describe('OnlineDriver çıkış', () => {
-  it('Savaştan ayrıl: sunucudan ayrılır, çevrimdışı dünyaya döner ve bağlantı koptu demez', async () => {
-    const { driver, restart, session, parent, run } = await rig();
+  it('Savaştan ayrıl: sunucudan ayrılır, ana menüye döner ve bağlantı koptu demez', async () => {
+    const { driver, restart, toMenu, session, parent, run } = await rig();
     run();
     await until(() => session.self !== undefined, 'oturum');
     const leave = byId(parent, 'pause-leave');
     expect(leave.textContent).toBe(i18next.t('voltest:online.leave'));
     leave.click();
     leave.click();
-    await until(() => restart.mock.calls.length > 0, 'yeniden başlatma');
+    await until(() => toMenu.mock.calls.length > 0, 'ana menü');
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(restart).toHaveBeenCalledTimes(1);
-    expect(restart).toHaveBeenCalledWith();
+    expect(toMenu).toHaveBeenCalledTimes(1);
+    expect(restart).not.toHaveBeenCalled();
     expect(session.status).toBe('closed');
     await driver.leave();
-    expect(restart).toHaveBeenCalledTimes(1);
+    expect(toMenu).toHaveBeenCalledTimes(1);
   });
 
   it('bağlantı bilerek ayrılmadan kapanırsa uyarıyla çevrimdışı dünyaya döner', async () => {

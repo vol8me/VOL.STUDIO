@@ -23,6 +23,8 @@ describe('cihaz tercihleri', () => {
       seed: 731,
       playerName: '',
       vehicle: 'striker',
+      faction: -1,
+      language: 'auto',
     });
     await settings.update({
       quality: 'high',
@@ -31,6 +33,8 @@ describe('cihaz tercihleri', () => {
       display: 'fullscreen',
       playerName: '  Kaptan   Ada ',
       vehicle: 'bulwark',
+      faction: 1,
+      language: 'en',
     });
     await settings.flush();
     settings.dispose();
@@ -45,6 +49,8 @@ describe('cihaz tercihleri', () => {
       seed: 731,
       playerName: 'Kaptan Ada',
       vehicle: 'bulwark',
+      faction: 1,
+      language: 'en',
     });
     expect(localStorage.getItem('synced.voltest.preferences')).toBeNull();
     next.dispose();
@@ -59,6 +65,8 @@ describe('cihaz tercihleri', () => {
       display: 'minimized',
       playerName: 42,
       vehicle: 'hovercraft',
+      faction: 7,
+      language: 'de',
     });
     const settings = new GameSettings(saves, 'Linux');
     await settings.load();
@@ -71,6 +79,8 @@ describe('cihaz tercihleri', () => {
       seed: 731,
       playerName: '',
       vehicle: 'striker',
+      faction: -1,
+      language: 'auto',
     });
     const changes: unknown[] = [];
     const off = settings.subscribe((value) => changes.push(value));

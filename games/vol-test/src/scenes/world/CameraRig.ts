@@ -37,7 +37,12 @@ export class CameraRig {
   }
 
   private renderQuality(): number {
-    const manager: unknown = this.scene.game.registry.get(VIEWPORT_REGISTRY_KEY);
-    return manager instanceof ViewportManager ? manager.resolveRenderQuality() : 1;
+    return renderQualityOf(this.scene);
   }
+}
+
+/** Ekranın rasterleme çarpanı (DPR × çözünürlük ölçeği); görüntüleyici yoksa 1. */
+export function renderQualityOf(scene: Phaser.Scene): number {
+  const manager: unknown = scene.game.registry.get(VIEWPORT_REGISTRY_KEY);
+  return manager instanceof ViewportManager ? manager.resolveRenderQuality() : 1;
 }

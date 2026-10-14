@@ -4243,7 +4243,7 @@
       "phase": "UI-09",
       "anchor": null,
       "archetype": "helper",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["ShowcaseApp.ts", "sections/panelsTab.ts"],
       "tests": [
         {

@@ -5,7 +5,7 @@ test('senaryo ve tohum tercihi tekrar açılışta korunur; boş dünya geri se�
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/?start=world');
   await expect(page.getByTestId('hud')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByTestId('pause-scenario').click();

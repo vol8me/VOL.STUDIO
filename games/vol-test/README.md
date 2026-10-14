@@ -2,7 +2,7 @@
 
 CORE ve paylaşılan Tauri kabuğunu gerçek oyunla sınayan test oyunu.
 Fizik tabanlı tank sürüşü, nişan, ateş, araç senaryoları ve mevsim/hava
-aynı dünyada çalışır. HUD, ayarlar ve duraklatma CORE bileşenlerini tüketir.
+aynı dünyada çalışır. Ana menü, garaj, ayarlar, HUD ve duraklatma CORE bileşenlerini tüketir.
 
 ## Çalıştırma
 
@@ -32,13 +32,15 @@ Kapsam/bundle/scaling bütçeleri quality.json sahibindedir; komut kapsamı
 | Duraklat | Esc             | Menu      | Duraklat düğmesi, geri   |
 
 Senaryo paneli boş dünya, slalom, hedefler, fizik alanı ve çoklu tankı
-seçer. Seçim oyuncuyu başlangıç konumuna taşımaz. Önizleme örneği
+seçer (Ayarlar ya da duraklatma menüsü). Seçim oyuncuyu başlangıç konumuna taşımaz. `?start=world` ana menüyü
+atlayıp alıştırma dünyasını doğrudan açar. Önizleme örneği
 `?season=winter&weather=snow`; season spring/summer/autumn/winter,
 weather clear/dust/rain/snow olabilir. Sorgusuz oturum normal takvimdir.
 
 ## Çok oyunculu
 
-Duraklat → "Savaşa katıl" katılım panelini açar: ad ve cephe (ya da "dengeye göre"). Dünya kalıcıdır:
+Ana menü → "Savaşa katıl" garaja götürür: araç, ad ve cephe (ya da "dengeye göre") seçilir. Alıştırma dünyasında
+Duraklat → "Savaşa katıl" aynı seçimi panel olarak açar. Dünya kalıcıdır:
 sunucu açık kaldıkça iki cephe bölgeler için savaşır, botlar insan olmasa da sürdürür.
 Sunucu ayrı süreçtir; adres `?server=host:port` ile verilir (varsayılan `127.0.0.1:2567`).
 

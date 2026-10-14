@@ -24,6 +24,8 @@ export interface DriverContext {
   readonly seed: number;
   /** Sürücünün kaynakları sahneyle birlikte kapanır. */
   readonly scope: DisposableScope;
+  /** Ana menüye döner; sahne kapanırken sürücünün kaynakları (bağlantı dahil) sahneyle birlikte sökülür. */
+  readonly toMenu: () => void;
   /** Dünyayı başka kipte yeniden kurar; veri verilmezse çevrimdışı sandbox açılır. */
   readonly restart: (data?: WorldStartData) => void;
 }

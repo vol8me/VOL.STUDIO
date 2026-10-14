@@ -1,0 +1,191 @@
+/*
+ * Menü, garaj ve ayar ekranları. Bileşenlerin görünümü CORE'undur; bu dosya yerleşimi verir.
+ * Ekran sol şerittir ve arkasında canlı araç vitrini görünür; dar ekranda alt levhaya iner
+ * (Showroom paneli dikdörtgenden okur, eşik `MENU.showroom.stackedFraction`). Metin taşıyan şerit
+ * UI yüzey tokenıyla zeminlenir, oyun paletine dokunmaz.
+ */
+.vt-screen {
+  --vt-screen-pad: 24px;
+
+  pointer-events: auto;
+  position: absolute;
+  inset: 0 auto 0 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(440px, 100%);
+  padding: calc(var(--vol-safe-top) + var(--vt-screen-pad)) var(--vt-screen-pad)
+    calc(var(--vol-safe-bottom) + var(--vt-screen-pad))
+    calc(var(--vol-safe-left) + var(--vt-screen-pad));
+  overflow-y: auto;
+  background: linear-gradient(90deg, var(--vol-ui-overlay-panel) 78%, transparent);
+  animation: vt-screen-in var(--vol-transition-medium) ease-out;
+  transition: opacity var(--vol-transition-medium) ease-in;
+}
+
+.vt-screen[data-leaving='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes vt-screen-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-screen {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Dar ekran: panel alta iner, araç üstte kalır. */
+@media (width <= 719px) {
+  .vt-screen {
+    --vt-screen-pad: 16px;
+
+    inset: auto 0 0;
+    width: 100%;
+    max-height: 62%;
+    background: var(--vol-ui-overlay-panel);
+  }
+
+  /* Seçenekler kaydırmada da erişilir kalsın: altlık panelin zemininde yapışkan ve yatay dizilir. */
+  .vt-screen:not(.vt-menu) .vt-screen__actions {
+    position: sticky;
+    z-index: 2;
+    bottom: calc(-1 * var(--vt-screen-pad));
+    flex-flow: row wrap;
+    margin-inline: calc(-1 * var(--vt-screen-pad));
+    padding: 8px var(--vt-screen-pad) var(--vt-screen-pad);
+    background: var(--vol-ui-panel);
+  }
+
+  /* CORE düğmesi varsayılan tam genişliktir; satırda içeriği kadar büyür. */
+  .vt-screen:not(.vt-menu) .vt-screen__actions > .vol-button {
+    flex: 1 1 auto;
+    width: auto;
+  }
+}
+
+.vt-screen__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-block-start: auto;
+  padding-block-start: 8px;
+}
+
+.vt-screen__status {
+  min-height: 1.5em;
+  margin: 0;
+}
+
+.vt-screen__status[data-tone='danger'] {
+  color: var(--vol-ui-danger-solid);
+}
+
+.vt-menu {
+  justify-content: center;
+}
+
+.vt-menu .vt-screen__actions {
+  margin-block-start: 16px;
+}
+
+/* Garaj: araç kartları iki sütun; seçili kart vurgu renginde çerçevelenir. */
+.vt-garage__vehicles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.vt-vehicle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.vt-vehicle[aria-checked='true'] {
+  border-color: var(--vol-ui-accent-border);
+  background: var(--vol-ui-accent-subtle);
+  box-shadow: 0 0 0 1px var(--vol-ui-accent-border);
+}
+
+.vt-vehicle:focus-visible {
+  outline: 2px solid var(--vol-ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.vt-vehicle:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.vt-vehicle:hover:not(:disabled, [aria-checked='true']) {
+  background: var(--vol-ui-hover-fill);
+}
+
+.vt-vehicle__name {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.vt-vehicle__role {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.vt-vehicle__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-block-start: 4px;
+}
+
+.vt-stat {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.vt-stat__bar {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--vol-ui-border-soft);
+}
+
+.vt-stat__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: scaleX(var(--vt-stat, 0));
+  transform-origin: left center;
+  background: var(--vol-ui-accent-solid);
+}
+
+[dir='rtl'] .vt-stat__bar::after {
+  transform-origin: right center;
+}
+
+.vt-settings__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

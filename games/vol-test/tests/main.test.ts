@@ -9,6 +9,7 @@ const boundary = vi.hoisted(() => ({
   stopEditMenu: vi.fn(),
   editMenu: vi.fn(),
   fatal: vi.fn(),
+  applyLanguage: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('@volstudio/core', () => ({
@@ -28,7 +29,11 @@ vi.mock('@/app/bootLoading', () => ({
   },
 }));
 vi.mock('@/app/GameServices', () => ({ GameServices: { create: boundary.createServices } }));
+vi.mock('@/app/language', () => ({ applyLanguage: boundary.applyLanguage }));
 vi.mock('@/scenes/BootScene', () => ({ BootScene: class {} }));
+vi.mock('@/scenes/MenuScene', () => ({ MenuScene: class {} }));
+vi.mock('@/scenes/GarageScene', () => ({ GarageScene: class {} }));
+vi.mock('@/scenes/SettingsScene', () => ({ SettingsScene: class {} }));
 vi.mock('@/scenes/WorldScene', () => ({ WorldScene: class {} }));
 
 describe('oyun açılış sahipliği', () => {
@@ -36,7 +41,10 @@ describe('oyun açılış sahipliği', () => {
     vi.resetModules();
     vi.clearAllMocks();
     history.replaceState({}, '', '/');
-    boundary.createServices.mockResolvedValue({ dispose: boundary.disposeServices });
+    boundary.createServices.mockResolvedValue({
+      dispose: boundary.disposeServices,
+      settings: { get: () => ({ language: 'auto' }) },
+    });
     boundary.suppressMenus.mockReturnValue(boundary.stopMenus);
     boundary.editMenu.mockReturnValue(boundary.stopEditMenu);
   });
@@ -79,6 +87,7 @@ describe('oyun açılış sahipliği', () => {
     await import('../src/main');
     await vi.waitFor(() => expect(boundary.editMenu).toHaveBeenCalledTimes(1));
     expect(boundary.suppressMenus).toHaveBeenCalledTimes(1);
+    expect(boundary.applyLanguage).toHaveBeenCalledWith('auto');
     expect(boundary.stopMenus).not.toHaveBeenCalled();
     expect(boundary.stopEditMenu).not.toHaveBeenCalled();
     handlers.destroy();

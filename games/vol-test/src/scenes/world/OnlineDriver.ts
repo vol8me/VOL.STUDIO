@@ -167,12 +167,12 @@ export class OnlineDriver implements WorldDriver {
     });
   }
 
-  /** Bilerek ayrılır: sunucu oyuncuyu hemen düşürür, sonra çevrimdışı dünya açılır. */
+  /** Bilerek ayrılır: sunucu oyuncuyu hemen düşürür, sonra ana menü açılır. */
   async leave(): Promise<void> {
     if (this.leaving) return;
     this.leaving = true;
     await this.session.leave();
-    this.context.restart();
+    this.context.toMenu();
   }
 
   private *tagFrames(): Generator<TagFrame> {

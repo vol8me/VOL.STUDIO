@@ -11,7 +11,7 @@ test('mevsim etiketi ve hava seçenekleri gönderilen oyunda görünür, bilinme
     ['dust', 'Toz'],
     ['unknown', 'Açık'],
   ] as const) {
-    await page.goto(`/?weather=${kind}`);
+    await page.goto(`/?start=world&weather=${kind}`);
     await expect(page.getByTestId('hud')).toBeVisible();
     await expect(page.locator('.vt-hud__climate')).toHaveText(`İlkbahar · ${label}`);
   }

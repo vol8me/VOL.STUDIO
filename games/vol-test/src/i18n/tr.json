@@ -3,6 +3,57 @@
     "title": "VOL.TEST",
     "fatal": "VOL.TEST başlatılamadı"
   },
+  "menu": {
+    "title": "VOL.TEST",
+    "subtitle": "Kalıcı savaş dünyası",
+    "play": "Savaşa katıl",
+    "practice": "Alıştırma",
+    "settings": "Ayarlar",
+    "exit": "Çıkış",
+    "exitTitle": "Oyundan çıkılsın mı?",
+    "exitConfirm": "Çık",
+    "exitCancel": "Vazgeç"
+  },
+  "garage": {
+    "title": "Garaj",
+    "vehicle": "Araç",
+    "join": "Savaşa katıl",
+    "practice": "Alıştırmaya çık",
+    "back": "Geri",
+    "stat": {
+      "durability": "Dayanıklılık",
+      "speed": "Hız",
+      "firepower": "Ateş gücü"
+    },
+    "vehicles": {
+      "striker": {
+        "name": "Striker",
+        "role": "Dengeli ana tank"
+      },
+      "bulwark": {
+        "name": "Bulwark",
+        "role": "Ağır kuşatma tankı"
+      },
+      "dart": {
+        "name": "Dart",
+        "role": "Hafif keşif tankı"
+      },
+      "arachnid": {
+        "name": "Arachnid",
+        "role": "Bacaklı savaş canavarı"
+      }
+    }
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "language": "Dil",
+    "languageOption": {
+      "auto": "Otomatik",
+      "tr": "Türkçe",
+      "en": "English"
+    },
+    "back": "Geri"
+  },
   "boot": {
     "title": "VOL.TEST",
     "services": "Hizmetler başlatılıyor",
@@ -68,7 +119,8 @@
       "targets": "Hedef atış",
       "sandbox": "Fizik alanı",
       "multitank": "Çoklu tank"
-    }
+    },
+    "menu": "Ana menü"
   },
   "season": {
     "spring": "İlkbahar",

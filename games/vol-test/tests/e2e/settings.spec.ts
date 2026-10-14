@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('cihaz ayarları yeniden açılışta korunur, ilerleme ayrı kapsamda kalır', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?start=world');
   await expect(page.locator('[data-testid="hud"]')).toBeVisible();
   await page.keyboard.press('Escape');
   const quality = page.locator('[data-testid="pause-quality"] button');

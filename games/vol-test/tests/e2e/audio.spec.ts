@@ -52,7 +52,7 @@ test('boşta sessiz kalır; OGG araç eyleminde başlar ve duraklatmada durur', 
         (window as unknown as { __audioProbe: { loops: number; stopped: number; shots: number } })
           .__audioProbe,
     );
-  await page.goto('/');
+  await page.goto('/?start=world');
   await expect(page.getByTestId('hud')).toBeVisible();
   await page.locator('#game > canvas').click({ position: { x: 640, y: 400 } });
   await expect.poll(async () => (await read()).loops - (await read()).stopped).toBe(0);

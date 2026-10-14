@@ -3,6 +3,57 @@
     "title": "VOL.TEST",
     "fatal": "VOL.TEST failed to start"
   },
+  "menu": {
+    "title": "VOL.TEST",
+    "subtitle": "A persistent war world",
+    "play": "Join the war",
+    "practice": "Practice",
+    "settings": "Settings",
+    "exit": "Exit",
+    "exitTitle": "Exit the game?",
+    "exitConfirm": "Exit",
+    "exitCancel": "Cancel"
+  },
+  "garage": {
+    "title": "Garage",
+    "vehicle": "Vehicle",
+    "join": "Join the war",
+    "practice": "Go to practice",
+    "back": "Back",
+    "stat": {
+      "durability": "Durability",
+      "speed": "Speed",
+      "firepower": "Firepower"
+    },
+    "vehicles": {
+      "striker": {
+        "name": "Striker",
+        "role": "Balanced main tank"
+      },
+      "bulwark": {
+        "name": "Bulwark",
+        "role": "Heavy siege tank"
+      },
+      "dart": {
+        "name": "Dart",
+        "role": "Light scout tank"
+      },
+      "arachnid": {
+        "name": "Arachnid",
+        "role": "Legged war beast"
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageOption": {
+      "auto": "Automatic",
+      "tr": "Türkçe",
+      "en": "English"
+    },
+    "back": "Back"
+  },
   "boot": {
     "title": "VOL.TEST",
     "services": "Starting services",
@@ -68,7 +119,8 @@
       "targets": "Target shooting",
       "sandbox": "Physics sandbox",
       "multitank": "Multiple tanks"
-    }
+    },
+    "menu": "Main menu"
   },
   "season": {
     "spring": "Spring",

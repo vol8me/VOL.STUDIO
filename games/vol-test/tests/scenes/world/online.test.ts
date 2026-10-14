@@ -6,12 +6,12 @@ import { i18next } from '@volstudio/core/i18n';
 import { JoinError } from '@volstudio/network/client';
 import type { GameServices } from '@/app/GameServices';
 import { EFFECT_LEVELS, type EffectLevel, type EffectProfile } from '@/config/quality';
-import { DART, modelOf } from '@/config/vehicles';
+import { DART, modelOf, STRIKER } from '@/config/vehicles';
 import { WORLD } from '@/config/world';
 import { Hud } from '@/hud/Hud';
 import type { TestAction } from '@/input/bindings';
 import { OnlineSession } from '@/network/OnlineSession';
-import { createLobby, lobbyErrorKey, sessionEndpoint } from '@/scenes/world/online';
+import { connectWar, createLobby, lobbyErrorKey, sessionEndpoint } from '@/scenes/world/online';
 import type { PlayerControls } from '@/scenes/world/PlayerControls';
 import type { DriverContext, WorldStartData } from '@/scenes/world/WorldDriver';
 import { World } from '@/sim/world/World';
@@ -86,6 +86,7 @@ function setup(): Setup {
     seed: 0,
     scope,
     restart,
+    toMenu: vi.fn(),
   };
   const lobby = createLobby(hud, context);
   cleanups.push(() => {
@@ -123,6 +124,38 @@ function spyOpen() {
 
 const fakeSession = () => ({ dispose: vi.fn() }) as unknown as OnlineSession;
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+describe('connectWar', () => {
+  const choice = { name: 'Ada', faction: 1 } as const;
+  const services = {
+    settings: { get: () => ({ vehicle: 'dart' }) },
+  } as unknown as GameServices;
+
+  it('tercihlerdeki araçla bağlanır ve çevrimiçi sürücülü başlatma verisi döner', async () => {
+    const session = fakeSession();
+    const open = spyOpen().mockResolvedValue(session);
+    const connection = await connectWar(services, choice);
+    expect(open).toHaveBeenCalledWith({
+      endpoint: 'http://127.0.0.1:2567',
+      name: 'Ada',
+      model: modelOf(DART),
+      faction: 1,
+    });
+    expect(connection.start.weather).toBe('clear');
+    expect(typeof connection.start.createDriver).toBe('function');
+    expect(session.dispose).not.toHaveBeenCalled();
+    connection.abandon();
+    expect(session.dispose).toHaveBeenCalledTimes(1);
+  });
+
+  it('hizmet yoksa Striker ile bağlanır; hata çağırana fırlar', async () => {
+    const open = spyOpen().mockResolvedValue(fakeSession());
+    await connectWar(undefined, { name: '', faction: undefined });
+    expect(open).toHaveBeenCalledWith(expect.objectContaining({ model: modelOf(STRIKER) }));
+    open.mockRejectedValue(new JoinError('full'));
+    await expect(connectWar(services, choice)).rejects.toBeInstanceOf(JoinError);
+  });
+});
 
 describe('createLobby', () => {
   it('kayıtlı adla açılır ve seçim bağlandığında sahneyi çevrimiçi sürücüyle yeniden başlatır', async () => {

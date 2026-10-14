@@ -1,6 +1,7 @@
 export { createScopedStores, migrateScopedStores } from './adapters/scopedStores';
 export type { StoreIntegrityEvent } from './adapters/TauriStoreAdapter';
 export { DisplayModeController } from './window/DisplayModeController';
+export { TauriWindowAdapter } from './window/TauriWindowAdapter';
 export { getRuntimePlatform, type RuntimePlatform } from './platform/runtimePlatform';
 export { getSessionKind, type SessionKind } from './platform/sessionKind';
 export { registerShutdownFlush } from './platform/shutdownFlush';

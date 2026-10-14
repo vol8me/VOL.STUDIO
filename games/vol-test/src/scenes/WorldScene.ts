@@ -163,6 +163,7 @@ export class WorldScene extends Phaser.Scene {
       // Phaser boş veriyi yok sayıp ÖNCEKİ sahne verisini korur: `{}` olmadan "Ayrıl" eski çevrimiçi
       // sürücü fabrikasını ölü oturumla yeniden kurardı.
       restart: (next) => this.scene.restart(next ?? {}),
+      toMenu: () => this.scene.start('Menu'),
     });
 
     this.effects = this.scope.addDestroyable(new EffectsView(this, quality.getProfile()));
