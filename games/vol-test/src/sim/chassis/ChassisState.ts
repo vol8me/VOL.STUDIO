@@ -40,6 +40,8 @@ export interface ChassisState {
   pitchVelocity: number;
   roll: number;
   rollVelocity: number;
+  /** Kırık parçaların bit maskesi (`sim/chassis/parts.ts`): tamsayıdır, ağda ara değer ALMAZ. */
+  parts: number;
 }
 
 export const CHASSIS_STATE_NUMBERS = [
@@ -74,6 +76,9 @@ export const CHASSIS_STATE_FLAGS = ['boosting', 'reversing'] as const satisfies 
   [K in keyof ChassisState]: ChassisState[K] extends boolean ? K : never;
 }[keyof ChassisState][];
 
+/** Ara değer alınmayan tamsayı alanlar: uzak araçta anında geçer. */
+export const CHASSIS_STATE_SNAPPED = ['parts'] as const satisfies readonly (keyof ChassisState)[];
+
 export function createChassisState(): ChassisState {
   return {
     x: 0,
@@ -101,5 +106,6 @@ export function createChassisState(): ChassisState {
     pitchVelocity: 0,
     roll: 0,
     rollVelocity: 0,
+    parts: 0,
   };
 }

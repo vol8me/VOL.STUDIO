@@ -3,6 +3,7 @@ import type { SuspensionConfig, TankConfig } from '@/config/tank';
 import type { TankCommand } from '../command';
 import type { World } from '../world/World';
 import { Chassis, type ChassisKind } from '../chassis/Chassis';
+import { TRACK_LEFT, TRACK_RIGHT } from '../chassis/parts';
 import { Driver, type TrackTargets } from './Driver';
 import { computeTrackForces, createTrackForces, type TrackSurface } from './trackForces';
 
@@ -19,6 +20,8 @@ export class Tank extends Chassis {
   private readonly driver: Driver;
   private readonly targets: TrackTargets = { left: 0, right: 0, forward: false, braking: false };
   private readonly forces = createTrackForces();
+  /** Kırık paletler: sürmez, serbest döner ve yerde sürünür (`PARTS.tank`). */
+  private readonly broken = { left: false, right: false };
 
   constructor(
     private readonly tankConfig: TankConfig,
@@ -51,6 +54,8 @@ export class Tank extends Chassis {
 
   step(command: TankCommand, world: World, dt: number, surface?: TrackSurface): void {
     this.contact.speed = 0;
+    this.broken.left = (this.parts & TRACK_LEFT) !== 0;
+    this.broken.right = (this.parts & TRACK_RIGHT) !== 0;
     const forward = this.plan(command, false).forward;
     this.reserve.update(command.boost && forward, dt);
     this.plan(command, this.reserve.active);
@@ -85,6 +90,7 @@ export class Tank extends Chassis {
       this.tankConfig,
       this.forces,
       surface,
+      this.broken,
     );
     const fx = Math.cos(this.angle);
     const fy = Math.sin(this.angle);
@@ -120,6 +126,15 @@ export class Tank extends Chassis {
    * `driveSlip`ten çok ayıramaz (tork sınırlı).
    */
   private driveTracks(dt: number): void {
+    this.driveWorkingTracks(dt);
+    // Kırık palet zeminle aynı hızda serbest döner: itki vermez, kayma da üretmez.
+    const free = this.forwardSpeed;
+    const turning = this.angularVelocity * this.tankConfig.trackOffset;
+    if (this.broken.left) this.trackLeft = free + turning;
+    if (this.broken.right) this.trackRight = free - turning;
+  }
+
+  private driveWorkingTracks(dt: number): void {
     const config = this.tankConfig;
     const targets = this.targets;
     if (targets.braking) {

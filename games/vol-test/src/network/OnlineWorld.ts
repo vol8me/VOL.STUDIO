@@ -44,6 +44,7 @@ export function involvesPlayer(event: NetEvent, id: number): boolean {
     case 'healed':
     case 'died':
       return event.target === id || event.source === id;
+    case 'broke':
     case 'respawned':
       return event.target === id;
     default:

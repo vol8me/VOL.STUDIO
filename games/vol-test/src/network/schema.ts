@@ -90,6 +90,8 @@ export const PlayerState = schema(
     pitchVelocity: f64(),
     roll: f64(),
     rollVelocity: f64(),
+    /** Kırık parçaların bit maskesi (`sim/chassis/parts.ts`); tamsayıdır ve ara değer almaz. */
+    parts: t.uint16().default(0),
   },
   'TankPlayer',
 );

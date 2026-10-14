@@ -1,6 +1,8 @@
 import { WEAPON_STYLES, type WeaponConfig } from '@/config/tank';
 import { STRIKER, type VehicleSpec } from '@/config/vehicles';
 import { COMBAT, PROJECTILE_CAPACITY, type CombatConfig } from '@/config/combat';
+import { PARTS } from '@/config/parts';
+import { bitIndex, partSide } from './chassis/parts';
 import { idleCommand, type TankCommand } from './command';
 import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
@@ -181,6 +183,7 @@ export class Simulation {
     if (source !== undefined && this.isFriendly(source, target)) return 0;
     const applied = target.vitality.damage(amount);
     if (applied === 0) return 0;
+    target.wear.touch();
     this.emit({
       kind: 'damaged',
       target: targetId,
@@ -243,6 +246,7 @@ export class Simulation {
       nextHull,
     );
     vehicle.gun.reset();
+    vehicle.wear.reset();
     vehicle.salvo = 0;
     vehicle.vitality.respawn();
     this.emit({
@@ -251,6 +255,25 @@ export class Simulation {
       x: vehicle.chassis.x,
       y: vehicle.chassis.y,
     });
+  }
+
+  /**
+   * İsabetin parça aşınması: temas noktasındaki parça aşınır ve dayanımı bitince kopar. Kopan parça
+   * `chassis.parts`a yazılır, gövdeyi o yana sarsar ve `broke` olayı yayar.
+   */
+  private wearParts(vehicle: Vehicle, x: number, y: number, damage: number): void {
+    const broken = vehicle.wear.strike(vehicle.chassis, x, y, damage);
+    const kind = vehicle.spec.kind;
+    for (let bits = broken; bits !== 0; bits &= bits - 1) {
+      const bit = bits & -bits;
+      const part = bitIndex(bit);
+      vehicle.chassis.parts |= bit;
+      vehicle.chassis.jolt(
+        partSide(kind, part),
+        kind === 'tank' ? PARTS.tank.jolt : PARTS.walker.jolt,
+      );
+      this.emit({ kind: 'broke', target: vehicle.id, part, x, y });
+    }
   }
 
   /** Birbirini vuramayan takım üyeleri mermiler için de saydamdır. */
@@ -286,6 +309,7 @@ export class Simulation {
     for (const vehicle of this.vehicleList) {
       const tick = vehicle.vitality.step(stepMs);
       if (tick.respawnReady) this.respawnVehicle(vehicle.id);
+      if (vehicle.vitality.alive) vehicle.wear.step(vehicle.chassis, stepMs);
       const tank = vehicle.chassis;
       tank.capturePose();
       const command = this.inputs.get(vehicle.id)!;
@@ -353,7 +377,9 @@ export class Simulation {
           projectile.x,
           projectile.y,
         );
-        this.applyDamage(struck.id, weapon.damage, projectile.owner, 'projectile');
+        const applied = this.applyDamage(struck.id, weapon.damage, projectile.owner, 'projectile');
+        if (applied > 0 && struck.vitality.alive)
+          this.wearParts(struck, projectile.x, projectile.y, applied);
       },
       (owner, target) => this.canProjectileHit(owner, target),
     );

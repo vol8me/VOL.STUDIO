@@ -8,6 +8,7 @@ import {
   createChassisState,
   CHASSIS_STATE_FLAGS,
   CHASSIS_STATE_NUMBERS,
+  CHASSIS_STATE_SNAPPED,
   type ChassisState,
 } from '@/sim/chassis/ChassisState';
 import { NO_TEAM, type WorldSnapshot, type PlayerSnapshot } from './schema';
@@ -82,6 +83,7 @@ export class RemoteTanks {
       const { record, vehicle, state } = remote;
       for (const key of CHASSIS_STATE_NUMBERS) state[key] = this.predict.value(record, key);
       for (const key of CHASSIS_STATE_FLAGS) state[key] = record[key];
+      for (const key of CHASSIS_STATE_SNAPPED) state[key] = record[key];
       vehicle.chassis.restoreState(state);
       applyVitals(vehicle, record, ageMs);
     }

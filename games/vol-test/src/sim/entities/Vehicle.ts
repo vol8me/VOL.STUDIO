@@ -3,6 +3,7 @@ import { Cooldown } from '@volstudio/core/time';
 import type { WeaponConfig } from '@/config/tank';
 import type { Armament, VehicleSpec } from '@/config/vehicles';
 import { COMBAT, type CombatConfig } from '@/config/combat';
+import { PartWear } from '../combat/PartWear';
 import { Vitality } from '../combat/Vitality';
 import type { Chassis } from '../chassis/Chassis';
 import { Tank } from '../tank/Tank';
@@ -19,6 +20,8 @@ export class Vehicle {
   readonly chassis: Chassis;
   readonly gun: Cooldown;
   readonly vitality: Vitality;
+  /** Palet ve bacak aşınması: konuma göre birikir, sonuç `chassis.parts`tadır (aşınmanın kendisi ağa gitmez). */
+  readonly wear: PartWear;
   /** Sıradaki tetik çekişinde ateşlenecek `armament.salvo` grubu; ağ durumunun parçasıdır. */
   salvo = 0;
   /** Yeniden doğma konumu sunucu veya senaryo tarafından açıkça güncellenebilir. */
@@ -36,6 +39,7 @@ export class Vehicle {
         : new Walker(spec.walker, spec.suspension);
     this.gun = new Cooldown(spec.armament.weapon.intervalMs);
     this.vitality = new Vitality({ ...combat, maxHealth: spec.health });
+    this.wear = new PartWear(spec);
     this.spawnPoint = { x: 0, y: 0, hull: -Math.PI / 2 };
   }
 

@@ -15,6 +15,7 @@ import {
   createChassisState,
   CHASSIS_STATE_FLAGS,
   CHASSIS_STATE_NUMBERS,
+  CHASSIS_STATE_SNAPPED,
 } from '@/sim/chassis/ChassisState';
 
 /** Tankın dinamik durumu olmayan, oyuncu kaydına özgü alanlar. */
@@ -57,6 +58,7 @@ describe('PlayerState', () => {
     const state = new PlayerState();
     for (const key of CHASSIS_STATE_NUMBERS) expect(state[key], key).toBe(0);
     for (const key of CHASSIS_STATE_FLAGS) expect(state[key], key).toBe(false);
+    for (const key of CHASSIS_STATE_SNAPPED) expect(state[key], key).toBe(0);
   });
 
   it('kayıt alanları tanımlı başlangıç değeriyle gelir', () => {

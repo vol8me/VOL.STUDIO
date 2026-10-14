@@ -65,6 +65,8 @@ export abstract class Chassis extends RigidBody {
   slideRight = 0;
   /** İki yanın en büyük kayma hızı: patinaj, kilitli kayma ya da yanal kayma. */
   slip = 0;
+  /** Kırık parçaların bit maskesi (`parts.ts`); yalnız simülasyon yazar, sürüş okur. */
+  parts = 0;
   /** Bu adımdaki en sert DUVAR teması; `speed` 0 ise temas yok. */
   readonly contact: Contact = createContact();
   readonly suspension: Suspension;
@@ -166,6 +168,18 @@ export abstract class Chassis extends RigidBody {
     );
   }
 
+  /**
+   * Bir parça koptu: gövde kırılan yana çöker. Hız kesilir, gövde o yana döner ve süspansiyon sarsılır;
+   * `side` -1 sol, +1 sağ, `strength` [0, 1].
+   */
+  jolt(side: number, strength: number): void {
+    const keep = 1 - 0.45 * strength;
+    this.vx *= keep;
+    this.vy *= keep;
+    this.angularVelocity += side * strength * 1.6;
+    this.suspension.kick(-strength * 24, side * strength * 36);
+  }
+
   place(x: number, y: number, hull = -Math.PI / 2): void {
     this.reset(x, y, hull);
     this.turretMount.reset(this.angle);
@@ -179,6 +193,7 @@ export abstract class Chassis extends RigidBody {
     this.place(x, y, hull);
     this.reserve.reset();
     this.suspension.reset();
+    this.parts = 0;
     this.treadLeft = 0;
     this.treadRight = 0;
     this.groundLeft = 0;
@@ -220,6 +235,7 @@ export abstract class Chassis extends RigidBody {
     out.pitchVelocity = this.suspension.pitchVelocity;
     out.roll = this.suspension.roll;
     out.rollVelocity = this.suspension.rollVelocity;
+    out.parts = this.parts;
     return out;
   }
 
@@ -250,6 +266,7 @@ export abstract class Chassis extends RigidBody {
     this.reserve.active = state.boosting;
     this.setReversing(state.reversing);
     this.suspension.restore(state.pitch, state.pitchVelocity, state.roll, state.rollVelocity);
+    this.parts = state.parts;
     this.contact.speed = 0;
     this.capturePose();
   }

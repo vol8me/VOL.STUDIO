@@ -29,6 +29,14 @@ export type SimEvent =
       readonly source?: EntityId;
       readonly cause: DamageCause;
     }
+  /** Bir parça koptu (palet ya da bacak); `part`, `Chassis.parts` bit sırasıdır ve (x, y) kopma noktasıdır. */
+  | {
+      readonly kind: 'broke';
+      readonly target: EntityId;
+      readonly part: number;
+      readonly x: number;
+      readonly y: number;
+    }
   | {
       readonly kind: 'respawned';
       readonly target: EntityId;

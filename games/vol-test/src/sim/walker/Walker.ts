@@ -1,10 +1,12 @@
 import { angleDelta } from '@volstudio/core/math';
 import { clamp } from '@volstudio/core/math/interpolation';
+import { PARTS } from '@/config/parts';
 import type { SuspensionConfig } from '@/config/tank';
 import type { WalkerConfig } from '@/config/walker';
 import type { TankCommand } from '../command';
 import type { World } from '../world/World';
 import { Chassis, type ChassisKind } from '../chassis/Chassis';
+import { LEGS_PER_SIDE, lostLegs } from '../chassis/parts';
 
 /** Fizik adımı başına alt adım: duvar teması ve hız hedefi 120 Hz çözülür (palet ile aynı). */
 const SUBSTEPS = 2;
@@ -17,14 +19,17 @@ export interface WalkerSurface {
 /**
  * Bacaklı yürüyücü. Paletli araçtan farkı sürüştedir: komut hedef hız vektörüdür ve gövde hareket
  * yönüne döner (nişan yalnız tareti sürer); hızı gövdenin hedefe dönüklüğüyle ölçeklenir. Space ile
- * kilitli bir atılım başlar (av atılışı): depo boşalana dek tavanı ve ivmeyi yükseltir, geri alınamaz. Bacak yürüyüşü yalnız görünümdedir: ayaklar
- * yüzeye bastığı yerde kalır ve poz ile hızdan türer, bu yüzden şasi durumuna ek alan girmez.
+ * kilitli bir atılım başlar (av atılışı): depo boşalana dek tavanı ve ivmeyi yükseltir, geri alınamaz. Bacak yürüyüşü görünümdedir (ayaklar
+ * yüzeye bastığı yerde kalır); fizikte yalnız kırık bacaklar vardır: hız kaybı, sürüklenme ve tökezleme.
  *
  * Yan yüzey alanları (`track*`, `tread*`, `ground*`, `surface*`) bu gövdede bacak sıralarının yüzey
  * hızıdır; kayma yoktur (`slide*`, `slip` sıfır).
  */
 export class Walker extends Chassis {
   readonly kind: ChassisKind = 'walker';
+  /** Eksik bacakların bu adıma etkisi: hız/ivme kapasitesi ve yöne eklenen dönüş (`limp`). */
+  private capacity = 1;
+  private yawBias = 0;
 
   constructor(
     private readonly walkerConfig: WalkerConfig,
@@ -54,6 +59,7 @@ export class Walker extends Chassis {
   step(command: TankCommand, world: World, dt: number, surface?: WalkerSurface): void {
     this.contact.speed = 0;
     const config = this.walkerConfig;
+    this.limp();
     const length = Math.hypot(command.moveX, command.moveY);
     const moving = length > config.moveDeadzone;
     // Atılım kilitlidir: Space ile başlar (depo eşiği aşılmışsa) ve bırakılsa da depo boşalana dek sürer.
@@ -66,7 +72,8 @@ export class Walker extends Chassis {
     const wantY = moving ? command.moveY / length : Math.sin(heading);
     const pull = dashing ? 1 : moving ? Math.min(1, length) : 0;
     const align = this.alignment(heading, moving || dashing);
-    const top = config.maxSpeed * (dashing ? config.dashMultiplier : align) * mobility;
+    const top =
+      config.maxSpeed * (dashing ? config.dashMultiplier : align) * mobility * this.capacity;
     const targetX = wantX * pull * top;
     const targetY = wantY * pull * top;
     const facing = moving || dashing ? heading : null;
@@ -90,6 +97,34 @@ export class Walker extends Chassis {
     return floor + (1 - floor) * facing;
   }
 
+  /**
+   * Kırık bacakların sürüşe etkisi. Her kayıp bacak tavanı ve ivmeyi keser; bir yanın bacakları
+   * eksikse yürüyüş o yana sürüklenir. Eksik yan, kendi yürüyüş döngüsünde (katettiği yoldan türer,
+   * rastgelelik yok) çöker: hız kesilir ve gövde o yana savrulur. Durum yolu ağ durumundadır, bu yüzden
+   * sunucu ile öngörü aynı tökezlemeyi yürür.
+   */
+  private limp(): void {
+    const lostLeft = lostLegs(this.parts, 0);
+    const lostRight = lostLegs(this.parts, 1);
+    if (lostLeft + lostRight === 0) {
+      this.capacity = 1;
+      this.yawBias = 0;
+      return;
+    }
+    const config = PARTS.walker;
+    const { stride, dip, sway } = config.stumble;
+    const collapse = (lost: number, ground: number): number =>
+      (lost / LEGS_PER_SIDE) * 0.5 * (1 - Math.cos((ground / stride) * Math.PI * 2));
+    const left = collapse(lostLeft, this.groundLeft);
+    const right = collapse(lostRight, this.groundRight);
+    const ratio = Math.min(1, this.speed / this.walkerConfig.maxSpeed);
+    const lost = lostLeft + lostRight;
+    this.capacity =
+      Math.max(config.floor, 1 - config.legLoss * lost) * (1 - Math.min(0.9, dip * (left + right)));
+    this.yawBias =
+      ratio * ((config.drift * (lostRight - lostLeft)) / LEGS_PER_SIDE + sway * (right - left));
+  }
+
   private integrateLegs(
     dt: number,
     targetX: number,
@@ -109,22 +144,21 @@ export class Walker extends Chassis {
     let forceY = 0;
     if (gap > 1e-6) {
       const slowing = gapX * this.vx + gapY * this.vy < 0;
-      const limit =
-        (slowing ? config.braking : dashing ? config.dashAcceleration : config.acceleration) *
-        mobility;
+      const drive = dashing ? config.dashAcceleration : config.acceleration;
+      const limit = (slowing ? config.braking : drive * this.capacity) * mobility;
       const accel = Math.min(limit, gap / dt);
       forceX = (gapX / gap) * accel * this.mass;
       forceY = (gapY / gap) * accel * this.mass;
     }
 
     const wantedRate =
-      facing === null
+      (facing === null
         ? 0
         : clamp(
             angleDelta(this.angle, facing) * config.steerGain,
             -config.maxTurnRate,
             config.maxTurnRate,
-          );
+          )) + this.yawBias;
     const spin = clamp(
       (wantedRate - this.angularVelocity) / dt,
       -config.turnAcceleration,

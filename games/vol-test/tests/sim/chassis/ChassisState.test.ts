@@ -5,6 +5,7 @@ import {
   createChassisState,
   CHASSIS_STATE_FLAGS,
   CHASSIS_STATE_NUMBERS,
+  CHASSIS_STATE_SNAPPED,
 } from '@/sim/chassis/ChassisState';
 import { commandAt } from '../../support/commands';
 import { DT, world } from '../../support/sim';
@@ -21,9 +22,26 @@ function fresh(): Tank {
 
 describe('ChassisState', () => {
   it('anahtar listeleri durum biçimini eksiksiz ve tekrarsız kapsar', () => {
-    const keys = [...CHASSIS_STATE_NUMBERS, ...CHASSIS_STATE_FLAGS].sort();
+    const keys = [
+      ...CHASSIS_STATE_NUMBERS,
+      ...CHASSIS_STATE_FLAGS,
+      ...CHASSIS_STATE_SNAPPED,
+    ].sort();
     expect(keys).toEqual(Object.keys(createChassisState()).sort());
     expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('kırık parça maskesi durumla taşınır ve yeniden doğuşta temizlenir; ara değer listesinde değildir', () => {
+    const tank = fresh();
+    tank.parts = 0b10;
+    const state = tank.captureState();
+    expect(state.parts).toBe(0b10);
+    const copy = fresh();
+    copy.restoreState(state);
+    expect(copy.parts).toBe(0b10);
+    expect((CHASSIS_STATE_NUMBERS as readonly string[]).includes('parts')).toBe(false);
+    copy.resetForRespawn(2048, 2048, 0);
+    expect(copy.parts).toBe(0);
   });
 
   it('captureState her alanı doldurur ve hedef nesneyi yeniden kullanır', () => {

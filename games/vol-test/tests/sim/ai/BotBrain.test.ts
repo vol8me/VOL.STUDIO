@@ -250,6 +250,40 @@ describe('BotBrain', () => {
     expect(modes.at(-1)).not.toBe('hold');
   });
 
+  it('iki paleti de kırık bot yerinde kalır ama nişan almaya ve ateş etmeye devam eder', () => {
+    const sim = arena();
+    const bot = addBot(sim, STRIKER, 1000, 1000, 0, 21);
+    const foe = addBot(sim, STRIKER, 1500, 1000, 1, 22);
+    foe.vehicle.vitality.health = 1e6;
+    bot.vehicle.chassis.parts = 3;
+    bot.brain.objective = { x: 3000, y: 3000, radius: 100 };
+    const events = run(sim, [bot], 12);
+    const chassis = bot.vehicle.chassis;
+    expect(Number.isFinite(chassis.x + chassis.y + chassis.hull)).toBe(true);
+    expect(Math.hypot(chassis.x - 1000, chassis.y - 1000)).toBeLessThan(120);
+    expect(events.some((event) => event.kind === 'fired' && event.source === bot.vehicle.id)).toBe(
+      true,
+    );
+  });
+
+  it('tek paleti kırık bot sürüklenir ama sonlu ve dünyanın içinde kalır; kurtulma döngüsü gövdeyi savurmaz', () => {
+    const sim = arena();
+    const bot = addBot(sim, STRIKER, 1000, 1000, 0, 23);
+    bot.vehicle.chassis.parts = 1;
+    bot.brain.objective = { x: 3000, y: 1000, radius: 100 };
+    let maxSpin = 0;
+    run(sim, [bot], 25, () => {
+      maxSpin = Math.max(maxSpin, Math.abs(bot.vehicle.chassis.angularVelocity));
+    });
+    const chassis = bot.vehicle.chassis;
+    expect(Number.isFinite(chassis.x + chassis.y + chassis.hull)).toBe(true);
+    expect(chassis.x).toBeGreaterThan(0);
+    expect(chassis.x).toBeLessThan(4096);
+    expect(chassis.y).toBeGreaterThan(0);
+    expect(chassis.y).toBeLessThan(4096);
+    expect(maxSpin).toBeLessThan(6);
+  });
+
   it('ölü araç boşta kalır ve doğunca kaldığı yerden karar verir', () => {
     const sim = arena();
     const bot = addBot(sim, STRIKER, 1000, 1000, 0, 14);

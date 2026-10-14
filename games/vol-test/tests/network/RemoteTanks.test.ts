@@ -202,6 +202,28 @@ describe('RemoteTanks can sayaçları', () => {
   });
 });
 
+describe('RemoteTanks kırık parçalar', () => {
+  it('sunucudaki parça maskesi uzak araca ara değersiz, olduğu gibi geçer', async () => {
+    const watcher = await join();
+    const target = await join();
+    const remotes = await observe(watcher);
+    frames(watcher, remotes);
+    const vehicle = remotes.vehicle(target.self!.vehicleId)!;
+    const local = serverRoom(target.room).vehicleOf(target.room.sessionId)!;
+    local.chassis.parts = 0b101;
+    const seen = new Set<number>();
+    const watch = setInterval(() => seen.add(vehicle.chassis.parts), 2);
+    timers.push(watch);
+    await until(() => vehicle.chassis.parts === 0b101, 'parça maskesi');
+    clearInterval(watch);
+    // Ara değer alınsaydı 0 ile 5 arasında sahte maskeler görülürdü.
+    expect([...seen].every((mask) => mask === 0 || mask === 0b101)).toBe(true);
+    local.chassis.parts = 0;
+    await until(() => vehicle.chassis.parts === 0, 'onarım');
+    remotes.dispose();
+  });
+});
+
 describe('applyVitals', () => {
   it('sayaçları yama yaşı kadar ilerletir ve sıfırın altına düşürmez', () => {
     const record = new PlayerState();

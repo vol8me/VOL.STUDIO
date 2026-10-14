@@ -1,10 +1,17 @@
 import { clamp } from '@volstudio/core/math/interpolation';
 import type { RigidBody } from '@volstudio/core/physics';
+import { PARTS } from '@/config/parts';
 import type { TankConfig } from '@/config/tank';
 
 export interface TrackSurface {
   readonly grip: number;
   readonly rollingResistance: number;
+}
+
+/** Kırık paletler: itki vermez, yerde sürünerek yuvarlanma direncini büyütür. */
+export interface BrokenTracks {
+  readonly left: boolean;
+  readonly right: boolean;
 }
 
 /** Bir alt adımda paletlerin gövdeye uyguladığı kuvvetler (gövde çerçevesi). */
@@ -71,6 +78,7 @@ export function computeTrackForces(
   config: TankConfig,
   out: TrackForces,
   surface?: TrackSurface,
+  broken?: BrokenTracks,
 ): TrackForces {
   const surfaceGrip = surface?.grip ?? 1;
   const mass = body.mass;
@@ -110,8 +118,8 @@ export function computeTrackForces(
     config.slidingSpeed,
   );
 
-  const rawLeft = stiffness * (trackLeft - groundLeft);
-  const rawRight = stiffness * (trackRight - groundRight);
+  const rawLeft = broken?.left ? 0 : stiffness * (trackLeft - groundLeft);
+  const rawRight = broken?.right ? 0 : stiffness * (trackRight - groundRight);
   const grip = Math.min(muLeft, muRight) * load;
   const difference = clamp((rawLeft - rawRight) / 2, -grip, grip);
   const headroom = grip - Math.abs(difference);
@@ -156,10 +164,14 @@ export function computeTrackForces(
     sideRight * load,
   );
 
-  const rolling = (speed: number): number =>
-    config.rollingResistance * (surface?.rollingResistance ?? 1) * load * Math.tanh(speed / 8);
-  const forceLeft = driveLeft - rolling(groundLeft);
-  const forceRight = driveRight - rolling(groundRight);
+  const rolling = (speed: number, dead: boolean | undefined): number =>
+    config.rollingResistance *
+    (dead ? PARTS.tank.dragGain : 1) *
+    (surface?.rollingResistance ?? 1) *
+    load *
+    Math.tanh(speed / 8);
+  const forceLeft = driveLeft - rolling(groundLeft, broken?.left);
+  const forceRight = driveRight - rolling(groundRight, broken?.right);
 
   // Dönme direnci: palet boyuna yayılmış yanal sürtünme; kayan palet onu taşımaz.
   const turnGrip = (sideLeft / Math.max(1, usageLeft) + sideRight / Math.max(1, usageRight)) / 2;

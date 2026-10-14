@@ -162,9 +162,10 @@ değiştirir), atılışın başında ayakların altından toz patlar ve gövden
 kare aşabilir; çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır kavgacıdır (150 birim/s, 140 can, zırhlı tarantula); Widow
 hafif keskin nişancıdır (172 birim/s, 96 can, ince ve uzun bacaklı kara dul). Hız tavanları
 bilerek düşüktür: bacak yürüyüşü tavan hızda ayakları kemik erişiminde tutar ve bunu
-`tests/view/spider/SpiderLegs.test.ts` ile `tests/config/spiders.test.ts` kilitler. Bacaklar yalnız
-sunumdur; ağ durumuna ek alan girmez, `ChassisState` aynıdır. Çarpışan gövde çizilen kabuğun
-içindedir, bacak açıklığı değildir.
+`tests/view/spider/SpiderLegs.test.ts` ile `tests/config/spiders.test.ts` kilitler. Yürüyüş döngüsü
+sunumdur (ayaklar yüzeye basıldığı yerde kalır); yalnız KIRIK bacaklar fizikte ve ağ durumundadır
+(`ChassisState.parts`, bkz. "Parça hasarı"). Çarpışan gövde çizilen kabuğun içindedir, bacak açıklığı
+değildir.
 
 Sanat tamamen elle çizilmiş SVG'dir ve tanklarla aynı aileden gelir: parçalar tank parçalarıyla aynı
 ölçekte (dünya birimi) çizilir, yani kenar kalınlığı, perçin ve mercek boyu ekranda tankla eşittir; aynı
@@ -208,6 +209,33 @@ ayrı doku GL toplu çiziminde parçaları kesiyordu ve büyük SVG'ler GL'ye do
 parça rasterleniyordu; tek atlas ikisini de önler ve iki araç aynı dokuyu paylaşır.
 
 ## Sürüş ve süspansiyon
+
+### Parça hasarı
+
+Mermi isabeti canın yanında bir PARÇAYI da aşındırır: tankta iki yan palet, yürüyücüde sekiz bacak.
+`PartWear` (`src/sim/combat/PartWear.ts`) merminin TEMAS NOKTASINI gövde çerçevesine çevirir (mermi
+temas noktasına çekilmiştir, adım sonuna değil) ve hasarı o bölgenin parçasına yazar: tankta gövde
+yarı genişliğinin `sideStart` oranından dışa düşen darbe `(sol|sağ)` paleti, yürüyücüde en yakın bacağı
+(istasyonlar `SpiderLook.hips` x'idir, iki bacak arasına düşen darbe ikisini de aşındırır; ön/arka yüz
+daha az, yan tam) aşındırır; gövde kenarındaki isabet kritiktir (`criticalGain`). Parça dayanımı aracın
+canının oranıdır (`PARTS`, `src/config/parts.ts`), bu yüzden zayıf araç parçasını çabuk, ağır zırhlı geç
+kaybeder; `tests/sim/combat/PartWear.test.ts` kaç isabette kırıldığını araç araç kilitler ve parçanın
+ölümden ÖNCE kırıldığını doğrular. Rastgelelik yoktur: aynı atış dizisi aynı parçayı kırar. Aşınma bir
+süre dinlenen parçada söner; kırık parça, aracın hasar almadığı `repair.quietMs` boyunca sessizlik
+sürerse birer birer yerine oturur (can yenilenmesiyle aynı sessizlik fikri) ve doğuş/sıfırlama hepsini
+onarır.
+
+Kırık parçanın sürüşe etkisi şasidedir ve `Chassis.parts` (bit maskesi) ile ağ durumuna girer: tamsayıdır,
+`CHASSIS_STATE_SNAPPED` listesindedir ve uzak araçta ara değer ALMAZ (`RemoteTanks`); aşınmanın kendisi
+ağa gitmez, yalnız sonuç. Kırık palet itki vermez, zeminle serbest döner (kayma üretmez) ve yerde
+sürünerek yuvarlanma direncini `dragGain` katına çıkarır: tek palet kırıkken tank kırık yana sürüklenir ve
+dönüşü bozulur, iki palet de kırıksa sürülemez ve yerde kalır (taret ve ateş sürer). Kırık bacak
+yürüyücünün tavan hızını ve ivmesini kaybedilen bacak başına `legLoss` kadar keser (`floor` taban),
+bir yanın bacakları eksikse yürüyüşü o yana sürükler (`drift`) ve eksik yan, kendi yürüyüş döngüsünde
+(katettiği yoldan türer, rastgele değil) çöker: hız kesilir ve gövde o yana savrulur (tökezleme,
+`stumble`). Parça koptuğu anda gövde ayrıca `Chassis.jolt` ile kırılan yana sarsılır ve `broke` olayı
+yayılır. Bot kırık araçla da çalışır: iki paleti kırık bot yerinde kalıp nişan almaya ve ateşe devam eder
+(`tests/sim/ai/BotBrain.test.ts`).
 
 Araç gövdesi bir katı cisimdir (`Chassis`: poz, durum, taret, hızlanma deposu, süspansiyon
 ve duvar teması; tank `Chassis`'e palet kuvvetlerini ekler). Striker'ın kütlesi ve ayak izi

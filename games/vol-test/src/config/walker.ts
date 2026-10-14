@@ -3,9 +3,9 @@
  * Yürüyücü paletli araçtan iki yerde ayrışır: her yöne (yan kayarak, geri geri) aynı çevikliğiyle
  * yürür ve gövdesi nişan yönüne bakar; hızlanması ise kısa bir atılımdır.
  *
- * Bacaklar yalnızca sunumdur: yürüyüş döngüsü görünümde yüzeye basan ayaklardan türer, ağ durumuna
- * girmez. Bu yüzden `trackOffset` bacak sırasının gövde ekseninden uzaklığıdır ve yalnızca yan
- * yüzey yolunu (iz, toz, kar ezilmesi) besler.
+ * Yürüyüş döngüsü yalnız sunumdur (ayaklar görünümde yüzeye basan noktalardan türer); fizikte yalnız
+ * KIRIK bacaklar vardır (`Chassis.parts`, `config/parts.ts`). `trackOffset` bacak sırasının gövde
+ * ekseninden uzaklığıdır ve yalnızca yan yüzey yolunu (iz, toz, kar ezilmesi) besler.
  */
 export const WALKER = {
   mass: 1700,

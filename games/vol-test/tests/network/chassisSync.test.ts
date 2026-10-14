@@ -5,6 +5,7 @@ import {
   createChassisState,
   CHASSIS_STATE_FLAGS,
   CHASSIS_STATE_NUMBERS,
+  CHASSIS_STATE_SNAPPED,
 } from '@/sim/chassis/ChassisState';
 
 /** Her sayısal alan ayrı ve float32'de temsil edilemeyen bir değer taşır. */
@@ -14,6 +15,7 @@ function distinct() {
     state[key] = index + 0.1 + 1 / 3;
   });
   for (const key of CHASSIS_STATE_FLAGS) state[key] = true;
+  state.parts = 0b1010_0101;
   return state;
 }
 
@@ -28,6 +30,14 @@ describe('chassisSync', () => {
       expect(Object.is(copy[key], original[key]), key).toBe(true);
       expect(copy[key], key).not.toBe(Math.fround(original[key]));
     }
+  });
+
+  it('kırık parça maskesi tamsayı olarak geçer', () => {
+    const record = new PlayerState();
+    writeChassisState(record, distinct());
+    expect(record.parts).toBe(0b1010_0101);
+    for (const key of CHASSIS_STATE_SNAPPED)
+      expect(readChassisState(record, createChassisState())[key]).toBe(0b1010_0101);
   });
 
   it('okuma hedef nesneyi yeniden kullanır ve bayrakları da taşır', () => {
