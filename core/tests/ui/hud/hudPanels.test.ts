@@ -45,6 +45,7 @@ beforeAll(() => {
     scale: vi.fn(),
     setTransform: vi.fn(),
     fillText: vi.fn(),
+    strokeText: vi.fn(),
     drawImage: vi.fn(),
     measureText: vi.fn().mockReturnValue({ width: 42 }),
     set fillStyle(_v: unknown) {},
