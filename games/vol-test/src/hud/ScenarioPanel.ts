@@ -4,6 +4,7 @@ import { Input, Select, SettingsRow } from '@volstudio/core/ui';
 import type { GameSettings } from '@/app/GameSettings';
 import { isScenario, validSeed, SCENARIO, SCENARIOS, type ScenarioId } from '@/config/scenarios';
 
+/** Geliştirici ayarları: alıştırma dünyasının senaryosu ve tohumu. */
 export class ScenarioPanel {
   readonly elements: readonly HTMLElement[];
   private readonly scope = new DisposableScope();
@@ -22,7 +23,7 @@ export class ScenarioPanel {
         },
       }),
     );
-    this.picker.element.dataset.testid = 'pause-scenario';
+    this.picker.element.dataset.testid = 'dev-scenario';
     this.seed = this.scope.addDestroyable(
       new Input({
         type: 'number',
@@ -38,7 +39,7 @@ export class ScenarioPanel {
     this.seed.element.min = '0';
     this.seed.element.max = String(SCENARIO.maxSeed);
     this.seed.element.step = '1';
-    this.seed.element.dataset.testid = 'pause-seed';
+    this.seed.element.dataset.testid = 'dev-seed';
     this.pickerRow = this.scope.addDestroyable(
       new SettingsRow({
         label: i18next.t('voltest:pause.scenario'),

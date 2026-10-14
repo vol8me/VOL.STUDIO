@@ -16,8 +16,8 @@ describe('ScenarioPanel', () => {
     await settings.load();
     const panel = new ScenarioPanel(settings);
     document.body.append(...panel.elements);
-    const picker = document.querySelector<HTMLButtonElement>('[data-testid=pause-scenario]')!;
-    const seed = document.querySelector<HTMLInputElement>('[data-testid=pause-seed]')!;
+    const picker = document.querySelector<HTMLButtonElement>('[data-testid=dev-scenario]')!;
+    const seed = document.querySelector<HTMLInputElement>('[data-testid=dev-seed]')!;
     picker.click();
     document.querySelector<HTMLButtonElement>('[data-value=targets]')?.click();
     await settings.update({ scenario: 'targets' });
@@ -34,6 +34,6 @@ describe('ScenarioPanel', () => {
     expect(picker.textContent).toContain('Boş dünya');
     panel.destroy();
     settings.dispose();
-    expect(document.querySelector('[data-testid=pause-scenario]')).toBeNull();
+    expect(document.querySelector('[data-testid=dev-scenario]')).toBeNull();
   });
 });

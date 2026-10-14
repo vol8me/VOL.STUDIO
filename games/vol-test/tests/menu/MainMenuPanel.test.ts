@@ -5,11 +5,18 @@ import { MainMenuPanel } from '@/menu/MainMenuPanel';
 const panels: MainMenuPanel[] = [];
 
 function mount(withExit: boolean) {
-  const calls = { play: vi.fn(), practice: vi.fn(), settings: vi.fn(), exit: vi.fn() };
+  const calls = {
+    play: vi.fn(),
+    practice: vi.fn(),
+    settings: vi.fn(),
+    dev: vi.fn(),
+    exit: vi.fn(),
+  };
   const panel = new MainMenuPanel({
     onPlay: calls.play,
     onPractice: calls.practice,
     onSettings: calls.settings,
+    onDev: calls.dev,
     onExit: withExit ? calls.exit : undefined,
   });
   document.body.append(panel.element);
@@ -32,10 +39,12 @@ describe('MainMenuPanel', () => {
     find('menu-play')?.click();
     find('menu-practice')?.click();
     find('menu-settings')?.click();
+    find('menu-dev')?.click();
     find('menu-exit')?.click();
     expect(calls.play).toHaveBeenCalledTimes(1);
     expect(calls.practice).toHaveBeenCalledTimes(1);
     expect(calls.settings).toHaveBeenCalledTimes(1);
+    expect(calls.dev).toHaveBeenCalledTimes(1);
     expect(calls.exit).toHaveBeenCalledTimes(1);
   });
 

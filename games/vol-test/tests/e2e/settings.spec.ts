@@ -4,12 +4,13 @@ test('cihaz ayarları yeniden açılışta korunur, ilerleme ayrı kapsamda kal�
   await page.goto('/?start=world');
   await expect(page.locator('[data-testid="hud"]')).toBeVisible();
   await page.keyboard.press('Escape');
-  const quality = page.locator('[data-testid="pause-quality"] button');
+  await page.getByTestId('pause-settings').click();
+  const quality = page.locator('[data-testid="settings-quality"] button');
   await quality.last().click();
-  const checkbox = page.locator('[data-testid="pause-haptics"] input');
-  await page.locator('[data-testid="pause-haptics"]').click();
+  const checkbox = page.locator('[data-testid="settings-haptics"] input');
+  await page.locator('[data-testid="settings-haptics"]').click();
   await expect(checkbox).not.toBeChecked();
-  const range = page.locator('[data-testid="pause-volume"] input');
+  const range = page.locator('[data-testid="settings-volume"] input');
   await range.fill('0.3');
   await range.dispatchEvent('change');
   await expect
@@ -18,6 +19,7 @@ test('cihaz ayarları yeniden açılışta korunur, ilerleme ayrı kapsamda kal�
   await page.reload();
   await expect(page.locator('[data-testid="hud"]')).toBeVisible();
   await page.keyboard.press('Escape');
+  await page.getByTestId('pause-settings').click();
   await expect(checkbox).not.toBeChecked();
   await expect(range).toHaveValue('0.3');
   await expect(quality.last()).toHaveAttribute('aria-checked', 'true');

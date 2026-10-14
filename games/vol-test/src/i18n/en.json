@@ -9,6 +9,7 @@
     "play": "Join the war",
     "practice": "Practice",
     "settings": "Settings",
+    "dev": "Developer",
     "exit": "Exit",
     "exitTitle": "Exit the game?",
     "exitConfirm": "Exit",
@@ -30,30 +31,28 @@
     "vehicles": {
       "striker": {
         "name": "Striker",
-        "role": "Balanced main tank",
         "class": "MEDIUM"
       },
       "bulwark": {
         "name": "Bulwark",
-        "role": "Heavy siege tank",
         "class": "HEAVY"
       },
       "dart": {
         "name": "Dart",
-        "role": "Light scout tank",
         "class": "LIGHT"
       },
       "arachnid": {
         "name": "Arachnid",
-        "role": "Legged war beast",
         "class": "WALKER"
       },
       "widow": {
         "name": "Widow",
-        "role": "Tall needle sniper",
         "class": "WALKER"
       }
     }
+  },
+  "dev": {
+    "title": "Developer"
   },
   "settings": {
     "title": "Settings",
@@ -76,11 +75,6 @@
     "mapSummary": "Map: you and {{vehicles}} other vehicles, zoom {{zoom}}x",
     "map": "Map",
     "fullscreen": "Fullscreen",
-    "vitals": {
-      "health": "Health",
-      "boost": "Boost",
-      "reload": "Reload"
-    },
     "fireReload": "Shot reload",
     "health": "Vehicle health",
     "respawnIn": "Vehicle destroyed · respawn in {{seconds}} s",
@@ -111,6 +105,8 @@
     "reset": "Your save was damaged and could not be restored; a fresh save was started (the damaged file was kept)."
   },
   "pause": {
+    "settings": "Settings",
+    "dev": "Developer",
     "title": "Paused",
     "resume": "Resume",
     "liveTitle": "Menu",

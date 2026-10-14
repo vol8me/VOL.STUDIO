@@ -5,7 +5,7 @@ import type { GameServices } from '@/app/GameServices';
 import { MainMenuPanel } from '@/menu/MainMenuPanel';
 import { ScreenScene, type ScreenPanel } from './ScreenScene';
 
-/** Ana menü: savaşa katıl (garaj), alıştırma, ayarlar ve (yalnız native'de) çıkış. */
+/** Ana menü: savaşa katıl (garaj), alıştırma, ayarlar, geliştirici ayarları ve (yalnız native'de) çıkış. */
 export class MenuScene extends ScreenScene {
   private exitPrompt: AbortController | undefined;
 
@@ -29,6 +29,7 @@ export class MenuScene extends ScreenScene {
       onPlay: () => this.goto('Garage'),
       onPractice: () => this.goto('World'),
       onSettings: () => this.goto('Settings'),
+      onDev: () => this.goto('Dev'),
       onExit: this.canExit ? () => void this.confirmExit() : undefined,
     });
   }

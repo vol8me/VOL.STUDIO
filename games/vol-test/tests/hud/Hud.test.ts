@@ -1,15 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Vector2, VirtualActionSource, VirtualStickSource } from '@volstudio/core';
 import { GraphicsQuality } from '@volstudio/core/graphics';
+import { LocalStorageAdapter, ScopedSaveManager } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
 import { EFFECT_LEVELS, type EffectLevel, type EffectProfile } from '@/config/quality';
 import { IntegrityFeed } from '@/app/IntegrityFeed';
 import type { GameServices } from '@/app/GameServices';
+import { GameSettings } from '@/app/GameSettings';
 import { Hud } from '@/hud/Hud';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
 import { hudFrame } from './support';
 
-function mount(touch = false, fullscreen = true, live = false) {
+function mount(touch = false, fullscreen = true, live = false, services?: GameServices) {
   const parent = document.createElement('div');
   document.body.append(parent);
   const onResume = vi.fn();
@@ -33,6 +35,7 @@ function mount(touch = false, fullscreen = true, live = false) {
     onResume,
     quality,
     live,
+    services,
   });
   const find = <T extends HTMLElement = HTMLElement>(id: string): T =>
     parent.querySelector<T>(`[data-testid="${id}"]`)!;
@@ -190,17 +193,21 @@ describe('Hud', () => {
     hud.destroy();
   });
 
-  it('göstergeler can, hızlanma ve atış dolumunu etiketli CORE çubuklarında yazar; güncelleme seyreltilir', () => {
+  it('göstergeler can, hızlanma ve atış dolumunu yazısız CORE çubuklarında taşır, değeri okuyucuya söyler; güncelleme seyreltilir', () => {
     const { hud, find, parent } = mount();
     hud.update(hudFrame({ health: 60, maxHealth: 100, boost: 45, fireProgress: 0.5 }), 1000);
+    // Çubuğun üstünde yazı yoktur; ad ve değer yalnız erişilebilirlik özelliklerindedir.
+    expect(find('vitals').querySelector('.vol-bar__label')).toBeNull();
     const labels = (): string[] =>
-      [...find('vitals').querySelectorAll('.vol-bar__label')].map((label) => label.textContent);
-    expect(labels()).toEqual(['Can 60/100', 'Hızlanma 45/100', 'Dolum 50%']);
+      [...find('vitals').querySelectorAll('[role="progressbar"]')].map(
+        (bar) => `${bar.getAttribute('aria-label')} ${bar.getAttribute('aria-valuetext')}`,
+      );
+    expect(labels()).toEqual(['Araç canı 60/100', 'Hızlanma deposu 45/100', 'Atış dolumu 50%']);
     // Sıradaki güncelleme aralıktan önce gelirse göstergeler yerinde kalır.
     hud.update(hudFrame({ health: 10 }), 1010);
-    expect(labels()[0]).toBe('Can 60/100');
+    expect(labels()[0]).toBe('Araç canı 60/100');
     hud.update(hudFrame({ health: 10 }), 1200);
-    expect(labels()[0]).toBe('Can 10/100');
+    expect(labels()[0]).toBe('Araç canı 10/100, düşük');
     // Sürüş hızı, yön ve vites HUD'da yoktur.
     expect(parent.querySelector('[data-testid="telemetry"]')).toBeNull();
     expect(parent.querySelector('.vt-hud__title')).toBeNull();
@@ -332,14 +339,68 @@ describe('Hud', () => {
     hud.destroy();
   });
 
-  it('duraklatmada efekt kalitesi CORE GraphicsQuality kademesini değiştirir', () => {
-    const { hud, find, quality } = mount();
+  it('duraklatma ayar satırı taşımaz; ayarlar ve geliştirici ayrı düğmeyle şeridin içinde açılır', async () => {
+    localStorage.clear();
+    const settings = new GameSettings(
+      new ScopedSaveManager({
+        synced: new LocalStorageAdapter(),
+        device: new LocalStorageAdapter(),
+      }),
+      'Linux',
+    );
+    await settings.load();
+    const { hud, find, parent } = mount(false, true, false, {
+      settings,
+      displayAvailable: true,
+    } as unknown as GameServices);
     hud.showPause();
-    const picker = find('pause-quality');
-    const buttons = [...picker.querySelectorAll<HTMLButtonElement>('button')];
+    const sheet = find('pause');
+    // Ana görünüm: yalnız düğmeler; ses, kalite, senaryo ve tohum satırı yoktur.
+    expect(sheet.querySelector('input, select, [role="radio"]')).toBeNull();
+    expect(find('pause-settings').textContent).toBe('Ayarlar');
+    expect(find('pause-dev').textContent).toBe('Geliştirici');
+
+    find('pause-settings').click();
+    expect(sheet.hidden).toBe(true);
+    const settingsScreen = find('settings');
+    expect(settingsScreen.hidden).toBe(false);
+    expect(find('dev').hidden).toBe(true);
+    const buttons = [...find('settings-quality').querySelectorAll<HTMLButtonElement>('button')];
     expect(buttons.map((button) => button.textContent)).toEqual(['Yüksek', 'Düşük']);
     buttons[1].click();
-    expect(quality.getLevel()).toBe('low');
+    await vi.waitFor(() => expect(settings.get().quality).toBe('low'));
+    expect(settingsScreen.querySelector('[data-testid="settings-volume"]')).not.toBeNull();
+    expect(settingsScreen.querySelector('[data-testid="dev-scenario"]')).toBeNull();
+    find('settings-back').click();
+    expect(sheet.hidden).toBe(false);
+    expect(settingsScreen.hidden).toBe(true);
+    expect(document.activeElement).toBe(find('pause-settings'));
+
+    find('pause-dev').click();
+    expect(find('dev').hidden).toBe(false);
+    expect(find('dev').querySelector('[data-testid="dev-scenario"]')).not.toBeNull();
+    expect(find('dev').querySelector('[data-testid="dev-seed"]')).not.toBeNull();
+    find('dev-back').click();
+    expect(sheet.hidden).toBe(false);
+
+    // Katmanı kapatmak görünümü ana şeride döndürür.
+    find('pause-settings').click();
+    find('pause-resume');
+    hud.hidePause();
+    hud.showPause();
+    expect(sheet.hidden).toBe(false);
+    expect(find('settings').hidden).toBe(true);
+    expect(parent.querySelectorAll('[data-testid="pause"]')).toHaveLength(1);
+    hud.destroy();
+    settings.dispose();
+  });
+
+  it('ayar kaydı yoksa (servissiz HUD) ayarlar ve geliştirici düğmesi de yoktur', () => {
+    const { hud, find } = mount();
+    hud.showPause();
+    expect(find('pause-settings')).toBeNull();
+    expect(find('pause-dev')).toBeNull();
+    expect(find('pause-resume')).not.toBeNull();
     hud.destroy();
   });
 
@@ -348,7 +409,9 @@ describe('Hud', () => {
     expect(parent.querySelector('.vt-hud__fullscreen')).toBeNull();
     await i18next.changeLanguage('en');
     hud.update(hudFrame(), 0);
-    expect(find('vitals').querySelector('.vol-bar__label')!.textContent).toContain('Health');
+    expect(find('vitals').querySelector('[role="progressbar"]')!.getAttribute('aria-label')).toBe(
+      'Vehicle health',
+    );
     expect(find('touch-boost').getAttribute('aria-label')).toBe('Boost');
     expect(find('touch-brake').getAttribute('aria-label')).toBe('Brake');
     await i18next.changeLanguage('tr');

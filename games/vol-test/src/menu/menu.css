@@ -101,6 +101,13 @@
   color: var(--vol-ui-danger-solid);
 }
 
+/* Başlık şeridin genişliğine sığar: uzun başlık ("Duraklatıldı") şeridin dışına taşmaz. */
+.vt-screen--sheet .vt-screen__heading > h1 {
+  max-width: 100%;
+  font-size: clamp(26px, 2.6vw, 44px);
+  overflow-wrap: anywhere;
+}
+
 /* Ana menü: başlık şeridi üstte, eylemler altta. */
 .vt-screen--sheet .vt-screen__actions {
   padding-block-start: var(--vol-space-sm);
@@ -118,6 +125,9 @@
 .vt-settings__form {
   width: min(720px, 100%);
   margin-inline: auto;
+
+  /* Şerit dar olunca geniş denetimli satırlar (dil, ekran kipi) etiketin altına iner: CORE kapsayıcı kuralı. */
+  container-type: inline-size;
 }
 
 /* Garaj: araçlar | sunum | katılım. */
@@ -140,6 +150,10 @@
 
 .vt-garage__vehicles > h2 {
   margin: 0;
+}
+
+.vt-garage__card .vol-card__description {
+  display: none;
 }
 
 .vt-garage__cards {
@@ -246,10 +260,6 @@
   .vt-garage__card {
     flex: 0 0 min(44vw, 180px);
     scroll-snap-align: center;
-  }
-
-  .vt-garage__card .vol-card__description {
-    display: none;
   }
 
   .vt-garage__stat {

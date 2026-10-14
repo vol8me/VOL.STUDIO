@@ -130,7 +130,6 @@ export class Hud {
     this.pause = this.scope.addDestroyable(
       new PauseOverlay(
         options.onResume,
-        options.quality,
         options.services?.settings,
         options.services?.displayAvailable,
         options.live,

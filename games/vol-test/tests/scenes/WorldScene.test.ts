@@ -215,10 +215,11 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     frame();
     expect(sim.vehicles.map((vehicle) => vehicle.id)).toEqual(vehicles);
     expect(services.settings.get().quality).toBe('high');
+    // Ölçüm oturumunun kalitesi geçicidir: ayarlar ekranı kayıtlı tercihi (yüksek) gösterir ve değiştirmez.
     expect(
-      parent.querySelector('[data-testid="pause-quality"] button[aria-checked="true"]')
+      parent.querySelector('[data-testid="settings-quality"] button[aria-checked="true"]')
         ?.textContent,
-    ).toContain('Düşük');
+    ).toContain('Yüksek');
     active?.shutdown();
     active = null;
     await services.flush();
@@ -250,7 +251,7 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     frame({ move: new Vector2(1, 0) });
     expect(sim.timeMs).toBe(pausedAt);
     const buttons = parent.querySelectorAll<HTMLButtonElement>(
-      '[data-testid="pause-quality"] button',
+      '[data-testid="settings-quality"] button',
     );
     buttons[0].click();
     await services.settings.flush();

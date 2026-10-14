@@ -34,6 +34,7 @@ vi.mock('@/scenes/BootScene', () => ({ BootScene: class {} }));
 vi.mock('@/scenes/MenuScene', () => ({ MenuScene: class {} }));
 vi.mock('@/scenes/GarageScene', () => ({ GarageScene: class {} }));
 vi.mock('@/scenes/SettingsScene', () => ({ SettingsScene: class {} }));
+vi.mock('@/scenes/DevScene', () => ({ DevScene: class {} }));
 vi.mock('@/scenes/WorldScene', () => ({ WorldScene: class {} }));
 
 describe('oyun açılış sahipliği', () => {

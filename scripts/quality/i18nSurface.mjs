@@ -122,12 +122,6 @@ export const DYNAMIC_FAMILIES = [
   },
   {
     ns: 'voltest',
-    prefix: 'pause.qualityLevel.',
-    suffix: '',
-    reason: 'kalite seçeneği etiketi seviyeden türer',
-  },
-  {
-    ns: 'voltest',
     prefix: 'pause.scenarioMode.',
     suffix: '',
     reason: 'senaryo modu etiketi moddan türer',

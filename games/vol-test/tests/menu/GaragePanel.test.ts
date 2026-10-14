@@ -70,9 +70,8 @@ describe('GaragePanel', () => {
     expect(card('bulwark').textContent).toContain(
       i18next.t('voltest:garage.vehicles.bulwark.name'),
     );
-    expect(card('bulwark').textContent).toContain(
-      i18next.t('voltest:garage.vehicles.bulwark.role'),
-    );
+    // Araç açıklama metni yoktur; kartta ad, sınıf rozeti ve ölçüler kalır.
+    expect(card('bulwark').querySelector('.vol-card__description')!.textContent).toBe('');
     expect(card('bulwark').textContent).toContain(
       i18next.t('voltest:garage.vehicles.bulwark.class'),
     );
@@ -168,7 +167,7 @@ describe('GaragePanel', () => {
     panel.setBusy(true);
     await i18next.changeLanguage('en');
     expect(find('garage-join').textContent).toBe('Join the war');
-    expect(find('garage-vehicle-arachnid').textContent).toContain('Legged war beast');
+    expect(find('garage-vehicle-arachnid').textContent).toContain('WALKER');
     expect(find('garage-vehicle-arachnid').textContent).toContain('WALKER');
     expect(find('garage-status').textContent).toBe('Connecting…');
     expect(factionButton('Blue').getAttribute('aria-checked')).toBe('true');

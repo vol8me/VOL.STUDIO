@@ -9,6 +9,7 @@
     "play": "Savaşa katıl",
     "practice": "Alıştırma",
     "settings": "Ayarlar",
+    "dev": "Geliştirici",
     "exit": "Çıkış",
     "exitTitle": "Oyundan çıkılsın mı?",
     "exitConfirm": "Çık",
@@ -30,30 +31,28 @@
     "vehicles": {
       "striker": {
         "name": "Striker",
-        "role": "Dengeli ana tank",
         "class": "ORTA"
       },
       "bulwark": {
         "name": "Bulwark",
-        "role": "Ağır kuşatma tankı",
         "class": "AĞIR"
       },
       "dart": {
         "name": "Dart",
-        "role": "Hafif keşif tankı",
         "class": "HAFİF"
       },
       "arachnid": {
         "name": "Arachnid",
-        "role": "Bacaklı savaş canavarı",
         "class": "YÜRÜYÜCÜ"
       },
       "widow": {
         "name": "Widow",
-        "role": "Yüksek bacaklı iğne nişancısı",
         "class": "YÜRÜYÜCÜ"
       }
     }
+  },
+  "dev": {
+    "title": "Geliştirici"
   },
   "settings": {
     "title": "Ayarlar",
@@ -76,11 +75,6 @@
     "mapSummary": "Harita: siz ve {{vehicles}} diğer araç, yakınlaştırma {{zoom}}x",
     "map": "Harita",
     "fullscreen": "Tam ekran",
-    "vitals": {
-      "health": "Can",
-      "boost": "Hızlanma",
-      "reload": "Dolum"
-    },
     "fireReload": "Atış dolumu",
     "health": "Araç canı",
     "respawnIn": "Araç imha oldu · {{seconds}} sn sonra yeniden doğacak",
@@ -111,6 +105,8 @@
     "reset": "Kaydınız bozulmuştu ve geri yüklenemedi; yeni kayıt başlatıldı (bozuk dosya saklandı)."
   },
   "pause": {
+    "settings": "Ayarlar",
+    "dev": "Geliştirici",
     "title": "Duraklatıldı",
     "resume": "Devam et",
     "liveTitle": "Menü",

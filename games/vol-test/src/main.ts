@@ -20,6 +20,7 @@ import '@/i18n/i18next-augment';
 import { BootScene } from '@/scenes/BootScene';
 import { GarageScene } from '@/scenes/GarageScene';
 import { MenuScene } from '@/scenes/MenuScene';
+import { DevScene } from '@/scenes/DevScene';
 import { SettingsScene } from '@/scenes/SettingsScene';
 import { BOOT_EVENT } from '@/scenes/bootEvents';
 import { WorldScene } from '@/scenes/WorldScene';
@@ -53,6 +54,7 @@ async function boot(): Promise<void> {
         new MenuScene(services),
         new GarageScene(services),
         new SettingsScene(services),
+        new DevScene(services),
         new WorldScene(services),
       ],
       diagnostics: services.diagnostics,

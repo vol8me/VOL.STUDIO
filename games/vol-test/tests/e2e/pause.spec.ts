@@ -17,11 +17,9 @@ async function openPause(page: Page): Promise<void> {
   await expect(page.locator('.vt-pause')).toHaveClass(OPEN);
 }
 
-test('duraklatma katmanı ekrana sığar; her denetim adlıdır ve merkezi hit-test ile kendisidir', async ({
-  page,
-}) => {
-  await openPause(page);
-  const report = await page.evaluate((selector) => {
+/** Görünür her denetimin ekran içinde, adlı ve merkezinden tıklanabilir olduğunu raporlar. */
+async function controlReport(page: Page) {
+  return page.evaluate((selector) => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const controls = [...document.querySelectorAll<HTMLElement>(selector)].filter(
@@ -55,27 +53,58 @@ test('duraklatma katmanı ekrana sığar; her denetim adlıdır ve merkezi hit-t
       };
     });
   }, CONTROLS);
+}
 
-  expect(report.length, 'duraklatma denetimleri bulundu').toBeGreaterThanOrEqual(4);
-  for (const control of report) {
-    expect(control.inside, `${control.tag} "${control.name}" ekran içinde`).toBe(true);
-    expect(control.name, `${control.tag} adı boş değil`).not.toBe('');
-    expect(control.hitIsSelf, `${control.tag} "${control.name}" merkezi örtülmüyor`).toBe(true);
-  }
-});
-
-test('ayar satırı etiketi geniş denetimle (senaryo listesi) harf harf kırılmaz', async ({
+test('duraklatma şeridi ve ayar görünümleri ekrana sığar; her denetim adlıdır ve merkezi hit-test ile kendisidir', async ({
   page,
 }) => {
   await openPause(page);
-  const labels = await page.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('.vt-pause .vol-settings-row__label')]
-      .map((el) => el.getBoundingClientRect())
-      .filter((rect) => rect.width > 0)
-      .map((rect) => rect.width),
-  );
-  expect(labels.length, 'etiketli ayar satırları bulundu').toBeGreaterThanOrEqual(3);
-  for (const width of labels) expect(width, 'etiket sütunu sıkışmadı').toBeGreaterThanOrEqual(80);
+  // Ana şeritte yalnız düğmeler: devam, ayarlar, geliştirici ve sürücü eylemleri.
+  const views: Array<[string, string, number]> = [
+    ['ana', '', 4],
+    ['ayarlar', 'pause-settings', 4],
+    ['geliştirici', 'pause-dev', 3],
+  ];
+  for (const [name, open, least] of views) {
+    if (open) await page.getByTestId(open).click();
+    const report = await controlReport(page);
+    expect(report.length, `${name} görünümünde denetimler bulundu`).toBeGreaterThanOrEqual(least);
+    for (const control of report) {
+      expect(control.inside, `${name}: ${control.tag} "${control.name}" ekran içinde`).toBe(true);
+      expect(control.name, `${name}: ${control.tag} adı boş değil`).not.toBe('');
+      expect(
+        control.hitIsSelf,
+        `${name}: ${control.tag} "${control.name}" merkezi örtülmüyor`,
+      ).toBe(true);
+    }
+    if (open) {
+      await page.getByTestId(name === 'ayarlar' ? 'settings-back' : 'dev-back').click();
+    }
+  }
+});
+
+test('duraklatmada ayar satırı yoktur; ayar etiketleri geniş denetimle harf harf kırılmaz', async ({
+  page,
+}) => {
+  await openPause(page);
+  const rows = (): Promise<number[]> =>
+    page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('.vt-pause .vol-settings-row__label')]
+        .map((el) => el.getBoundingClientRect())
+        .filter((rect) => rect.width > 0)
+        .map((rect) => rect.width),
+    );
+  expect(await rows(), 'ana şeritte ayar satırı yok').toHaveLength(0);
+  for (const [open, back] of [
+    ['pause-settings', 'settings-back'],
+    ['pause-dev', 'dev-back'],
+  ]) {
+    await page.getByTestId(open).click();
+    const widths = await rows();
+    expect(widths.length, `${open}: etiketli satırlar bulundu`).toBeGreaterThanOrEqual(2);
+    for (const width of widths) expect(width, 'etiket sütunu sıkışmadı').toBeGreaterThanOrEqual(80);
+    await page.getByTestId(back).click();
+  }
 });
 
 test('klavye: odak katmanın içindedir, Escape kapatır ve oyun devam eder', async ({ page }) => {

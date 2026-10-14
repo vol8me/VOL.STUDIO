@@ -1,13 +1,12 @@
 import { DisposableScope } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
 import { Checkbox, SegmentedControl, SettingsRow, Slider } from '@volstudio/core/ui';
-import { ScenarioPanel } from './ScenarioPanel';
 import type { GameSettings } from '@/app/GameSettings';
 
+/** Ses, titreşim ve ekran kipi satırları; senaryo ve tohum geliştirici ayarıdır (`ScenarioPanel`). */
 export class SettingsPanel {
   readonly elements: readonly HTMLElement[];
   private readonly scope = new DisposableScope();
-  private readonly scenarios: ScenarioPanel;
   private readonly volume: Slider;
   private readonly haptics: Checkbox;
   private readonly display: SegmentedControl | null;
@@ -27,7 +26,7 @@ export class SettingsPanel {
         onCommit: (volume) => void settings.update({ volume }),
       }),
     );
-    this.volume.element.dataset.testid = 'pause-volume';
+    this.volume.element.dataset.testid = 'settings-volume';
     this.haptics = this.scope.addDestroyable(
       new Checkbox({
         checked: value.haptics,
@@ -35,7 +34,7 @@ export class SettingsPanel {
         onCommit: (haptics) => void settings.update({ haptics }),
       }),
     );
-    this.haptics.element.dataset.testid = 'pause-haptics';
+    this.haptics.element.dataset.testid = 'settings-haptics';
     this.display = displayAvailable
       ? this.scope.addDestroyable(
           new SegmentedControl({
@@ -48,7 +47,7 @@ export class SettingsPanel {
           }),
         )
       : null;
-    if (this.display) this.display.element.dataset.testid = 'pause-display';
+    if (this.display) this.display.element.dataset.testid = 'settings-display';
     this.displayRow = this.display
       ? this.scope.addDestroyable(
           new SettingsRow({
@@ -63,10 +62,8 @@ export class SettingsPanel {
       this.scope.addDestroyable(new SettingsRow({ control: this.volume })),
       this.scope.addDestroyable(new SettingsRow({ control: this.haptics })),
     ];
-    this.scenarios = this.scope.addDestroyable(new ScenarioPanel(settings));
     this.elements = [
       ...this.rows.map((row) => row.element),
-      ...this.scenarios.elements,
       ...(this.displayRow ? [this.displayRow.element] : []),
     ];
     this.scope.addSubscription(
@@ -80,7 +77,6 @@ export class SettingsPanel {
   }
 
   refreshLabels(): void {
-    this.scenarios.refreshLabels();
     this.volume.setLabel(i18next.t('voltest:pause.volume'));
     this.haptics.setLabel(i18next.t('voltest:pause.haptics'));
     this.displayRow?.setLabel(i18next.t('voltest:pause.display'));

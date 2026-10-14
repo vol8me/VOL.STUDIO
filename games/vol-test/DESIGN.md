@@ -5,7 +5,7 @@
 VOL.TEST, CORE mekanizmaları ve native kabuğun gerçek oyun tüketicisidir.
 Açık sürüş alanı tank fiziğini, nişanı, çevreyi ve platform servislerini
 birlikte sınar. Kalıcı dünya engeli yoktur; seçilen senaryo araç veya hedef
-ekler; senaryo kadrosu yuvaya göre dört aracı döndürür, böylece her araç görünüm, atış ve ses yoluyla sınanır. Oyun ana menüyle açılır; menü, garaj ve ayarlar ekranları ile HUD, duraklatma ve senaryo panelleri vardır.
+ekler; senaryo kadrosu yuvaya göre dört aracı döndürür, böylece her araç görünüm, atış ve ses yoluyla sınanır. Oyun ana menüyle açılır; menü, garaj, ayarlar ve geliştirici ekranları ile HUD ve duraklatma katmanı vardır.
 
 ## Model ve sunum
 
@@ -25,7 +25,7 @@ taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
 | `src/sim/seasons/`, `src/sim/weather/` | Mevsim, hava ve kalıcı yüzey durumu                     |
 | `src/view/`                            | Dünya ve tank sunumu, sınırlı efekt havuzları           |
 | `src/hud/`                             | CORE bileşenleriyle metin, harita ve paneller           |
-| `src/menu/`                            | Ana menü, garaj ve ayarlar ekranlarının DOM panelleri   |
+| `src/menu/`                            | Ana menü, garaj, ayarlar ve geliştirici ekranları       |
 | `src/scenes/world/`                    | Girdi, kamera, çevre ve olayların bağlanması            |
 | `src/config/`                          | Bütün oynanış ve sunum ölçülerinin tek kaynağı          |
 
@@ -397,11 +397,13 @@ kayan gövde (`ScrollView`) ve eylem şeridini kurar; ekranlar yalnız içerikle
 şeride koyar. İki düzen vardır. `sheet` sol şerittir ve arkasında canlı araç vitrini ya da oyun görünür (ana menü,
 ayarlar ve duraklatma; dar ekranda alt levha); `full` yalnız garajdır ve sunum için ortada bir `stage`
 bölgesi ayırır. Duraklatma (`PauseOverlay`) aynı `ScreenFrame` `sheet`ini CORE `Modal` içinde taşır: modal yalnız
-odak tuzağı, Escape ve Android geri sözleşmesini verir; başlık, ayar satırları ve eylem şeridi ana menü ve
-ayarlarla aynı iskelettir (devam ana eylemdir, sürücü eylemleri altında dizilir). Geniş denetimli satırlar
+odak tuzağı, Escape ve Android geri sözleşmesini verir. Katman ayar satırı taşımaz: yalnız düğmeler vardır
+(Devam et, Ayarlar, Geliştirici, sürücü eylemleri). "Ayarlar" ana menüdeki `SettingsScreen`i (dil, kalite, ses,
+titreşim, ekran kipi), "Geliştirici" `DevScreen`i (senaryo ve tohum) şeridin içinde açar; geri düğmesi menüye
+döner. Oyuncu ayarı ile geliştirici ayarı böylece tek yerde ve ayrı durur. Geniş denetimli satırlar
 (dil, ekran kipi, senaryo) `stackOnNarrow` ile dar ekranda etiketin altına iner.
 **Telefonda garaj.** Dikeyde sunum üstte ve esnektir, araç kartları tek satırlık yatay `scroll-snap` şeridinde
-kayar (açıklama gizlenir, ölçü çubukları ve seçim düğmesi kalır), katılım formu altta durur; hepsi gövdeye
+kayar (ölçü çubukları ve seçim düğmesi kalır), katılım formu altta durur; hepsi gövdeye
 kaymadan sığar. Alçak yatayda başlık şeridi ile eylem şeridi tek alt çubukta birleşir, kartlar sütunda dikey
 yaslanarak kayar. İkisi de `tests/e2e/menu.spec.ts` ile 390×844 ve 844×390'da kilitlidir. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
 ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, denetimler `Input`,
@@ -441,7 +443,7 @@ Geri tepme ve sarsıntı ayrı ötelemelerdir. Olay → kamera/titreşim eşleme
 
 HUD görünür bileşenleri CORE'dan alır; oyun CSS'i yerleşim ve yüzeyi kurar. Yalnız oyuncunun
 karar verdirdiği bilgi vardır: can, hızlanma deposu ve atış dolumu tek bir CORE `Panel` içinde üç
-etiketli yatay `Bar`dır (masaüstünde sol altta, dokunmatikte sol üstte); iklim rozeti sol üstte,
+yatay `Bar`dır; çubuklar yazı taşımaz (dolum çubuğun kendisidir, değer yalnız erişilebilir ad ve değer metnindedir) (masaüstünde sol altta, dokunmatikte sol üstte); iklim rozeti sol üstte,
 yeniden doğma ve koruma bildirimi üst ortada, harita sağ üstte, kontrol ipuçları masaüstünde alt
 ortadadır. Sürüş hızı, yön ve vites HUD'da yoktur (teşhise aittir, harita yön ve konumu verir);
 oyun adı rozeti de yoktur. Dokunmatikte haritanın 44 px'lik yakınlaştırma düğmeleri haritayı

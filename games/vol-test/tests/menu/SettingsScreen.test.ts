@@ -53,9 +53,12 @@ describe('SettingsScreen', () => {
 
   it('duraklatma menüsüyle ortak satırları taşır ve tercihten tazelenir', async () => {
     const { settings, screen } = await mount();
-    expect(screen.element.querySelector('[data-testid="pause-volume"]')).not.toBeNull();
-    expect(screen.element.querySelector('[data-testid="pause-haptics"]')).not.toBeNull();
-    expect(screen.element.querySelector('[data-testid="pause-display"]')).not.toBeNull();
+    expect(screen.element.querySelector('[data-testid="settings-volume"]')).not.toBeNull();
+    expect(screen.element.querySelector('[data-testid="settings-haptics"]')).not.toBeNull();
+    expect(screen.element.querySelector('[data-testid="settings-display"]')).not.toBeNull();
+    // Senaryo ve tohum geliştirici ayarıdır: ayarlar ekranında yoktur.
+    expect(screen.element.querySelector('[data-testid="dev-scenario"]')).toBeNull();
+    expect(screen.element.querySelector('[data-testid="dev-seed"]')).toBeNull();
     await settings.update({ quality: 'low', language: 'en' });
     const active = screen.element.querySelector(
       '[data-testid="settings-quality"] [role="radio"][aria-checked="true"]',

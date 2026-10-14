@@ -7,6 +7,7 @@ import { FACTION_AUTO, type GamePreferences } from '@/app/GameSettings';
 import { VEHICLES } from '@/config/vehicles';
 import { GarageScene } from '@/scenes/GarageScene';
 import { MenuScene } from '@/scenes/MenuScene';
+import { DevScene } from '@/scenes/DevScene';
 import { SettingsScene } from '@/scenes/SettingsScene';
 import type { ScreenScene } from '@/scenes/ScreenScene';
 
@@ -174,6 +175,7 @@ describe('MenuScene', () => {
   it.each([
     ['menu-practice', 'World'],
     ['menu-settings', 'Settings'],
+    ['menu-dev', 'Dev'],
   ])('%s → %s', (id, target) => {
     const { services: env } = services();
     const harness = mount(() => new MenuScene(env, nativeWindow() as never));
@@ -245,6 +247,24 @@ describe('SettingsScene', () => {
     expect(harness.start).toHaveBeenCalledWith('Menu', {});
 
     const again = mount(() => new SettingsScene(env));
+    expect(triggerBack()).toBe(true);
+    again.finishFade();
+    expect(again.start).toHaveBeenCalledWith('Menu', {});
+  });
+});
+
+describe('DevScene', () => {
+  it('senaryo ve tohum burada; geri düğmesi de geri tuşu da menüye döner', () => {
+    const { services: env } = services();
+    const harness = mount(() => new DevScene(env));
+    expect(harness.find('dev')).not.toBeNull();
+    expect(harness.find('dev-scenario')).not.toBeNull();
+    expect(harness.find('dev-seed')).not.toBeNull();
+    harness.find('dev-back').click();
+    harness.finishFade();
+    expect(harness.start).toHaveBeenCalledWith('Menu', {});
+
+    const again = mount(() => new DevScene(env));
     expect(triggerBack()).toBe(true);
     again.finishFade();
     expect(again.start).toHaveBeenCalledWith('Menu', {});

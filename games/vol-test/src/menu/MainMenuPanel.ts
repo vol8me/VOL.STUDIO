@@ -7,6 +7,7 @@ export interface MainMenuOptions {
   readonly onPlay: () => void;
   readonly onPractice: () => void;
   readonly onSettings: () => void;
+  readonly onDev: () => void;
   /** Verilmezse çıkış düğmesi yoktur (tarayıcıda uygulama kapatılamaz). */
   readonly onExit?: () => void;
 }
@@ -21,6 +22,7 @@ export class MainMenuPanel {
   private readonly play: Button;
   private readonly practice: Button;
   private readonly settings: Button;
+  private readonly dev: Button;
   private readonly exit: Button | undefined;
 
   constructor(options: MainMenuOptions) {
@@ -33,6 +35,7 @@ export class MainMenuPanel {
     this.play = button('menu-play', options.onPlay, 'primary');
     this.practice = button('menu-practice', options.onPractice);
     this.settings = button('menu-settings', options.onSettings);
+    this.dev = button('menu-dev', options.onDev);
     this.exit = options.onExit && button('menu-exit', options.onExit);
     this.refreshLabels();
     const onLanguage = (): void => this.refreshLabels();
@@ -54,6 +57,7 @@ export class MainMenuPanel {
     this.play.setLabel(i18next.t('voltest:menu.play'));
     this.practice.setLabel(i18next.t('voltest:menu.practice'));
     this.settings.setLabel(i18next.t('voltest:menu.settings'));
+    this.dev.setLabel(i18next.t('voltest:menu.dev'));
     this.exit?.setLabel(i18next.t('voltest:menu.exit'));
   }
 

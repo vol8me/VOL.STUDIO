@@ -29,9 +29,9 @@ const QUALITY_KEYS = {
 } as const satisfies Record<EffectLevel, MessageKey>;
 
 /**
- * Ayarlar ekranı (ana menü ve duraklatmayla aynı sol şerit): dil, efekt kalitesi ve duraklatma menüsüyle ortak ses, titreşim, ekran ve
- * senaryo satırları. Satırların hepsi CORE `SettingsRow`dur; değerler aynı `GameSettings` kaydına yazılır,
- * menüden değişen değer oyunda geçerlidir.
+ * Ayarlar ekranı (ana menü ve duraklatmayla aynı sol şerit): dil, efekt kalitesi, ses, titreşim ve ekran
+ * satırları; senaryo ve tohum `DevScreen`dedir. Satırların hepsi CORE `SettingsRow`dur; değerler aynı
+ * `GameSettings` kaydına yazılır, menüden değişen değer oyunda geçerlidir.
  */
 export class SettingsScreen {
   private readonly frame: ScreenFrame;

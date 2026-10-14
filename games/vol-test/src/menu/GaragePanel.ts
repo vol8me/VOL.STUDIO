@@ -49,14 +49,6 @@ const NAME_KEYS = {
   widow: 'voltest:garage.vehicles.widow.name',
 } as const satisfies Record<VehicleId, MessageKey>;
 
-const ROLE_KEYS = {
-  striker: 'voltest:garage.vehicles.striker.role',
-  bulwark: 'voltest:garage.vehicles.bulwark.role',
-  dart: 'voltest:garage.vehicles.dart.role',
-  arachnid: 'voltest:garage.vehicles.arachnid.role',
-  widow: 'voltest:garage.vehicles.widow.role',
-} as const satisfies Record<VehicleId, MessageKey>;
-
 const CLASS_KEYS = {
   striker: 'voltest:garage.vehicles.striker.class',
   bulwark: 'voltest:garage.vehicles.bulwark.class',
@@ -92,7 +84,7 @@ interface Entry {
 }
 
 /**
- * Garaj (tam ekran): araç, cephe ve ad seçimi. Araçlar CORE `CardTile`dır (ad, görev, sınıf rozeti, üç
+ * Garaj (tam ekran): araç, cephe ve ad seçimi. Araçlar CORE `CardTile`dır (ad, sınıf rozeti, üç
  * ölçü `Bar`ı), katılım alanı `SettingsRow`lardır. Ortadaki `stage` bölgesi boş bırakılır: canlı araç
  * vitrini oraya kurulur. Panel ağa dokunmaz: katılma niyetini `onJoin`e verir, sonucu sahibi bildirir.
  */
@@ -251,7 +243,6 @@ export class GaragePanel {
     for (const entry of this.entries) {
       entry.card.update({
         title: i18next.t(NAME_KEYS[entry.id]),
-        description: i18next.t(ROLE_KEYS[entry.id]),
         rarityLabel: i18next.t(CLASS_KEYS[entry.id]),
       });
       for (const [stat, label] of entry.statLabels) label.setContent(i18next.t(STAT_KEYS[stat]));

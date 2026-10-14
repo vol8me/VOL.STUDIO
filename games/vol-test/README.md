@@ -34,7 +34,7 @@ Kapsam/bundle/scaling bütçeleri quality.json sahibindedir; komut kapsamı
 Çevrimiçi dünya sunucuda aktığı için bu tuş orada "Menü" açar ve dünyayı durdurmaz. Alt kontrol ipuçları her girişte 10 sn görünür.
 
 Senaryo paneli boş dünya, slalom, hedefler, fizik alanı ve çoklu tankı
-seçer (Ayarlar ya da duraklatma menüsü). Seçim oyuncuyu başlangıç konumuna taşımaz. `?start=world` ana menüyü
+seçer (ana menü ya da duraklatma menüsündeki "Geliştirici" ekranı; oyuncu ayarları "Ayarlar" ekranındadır). Seçim oyuncuyu başlangıç konumuna taşımaz. `?start=world` ana menüyü
 atlayıp alıştırma dünyasını doğrudan açar. Önizleme örneği
 `?season=winter&weather=snow`; season spring/summer/autumn/winter,
 weather clear/dust/rain/snow olabilir. Sorgusuz oturum normal takvimdir.

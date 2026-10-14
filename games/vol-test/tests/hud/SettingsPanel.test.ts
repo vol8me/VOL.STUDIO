@@ -19,11 +19,13 @@ async function mount(display: boolean) {
 describe('SettingsPanel', () => {
   it('ses, titreşim ve ekran seçimini gerçek kayda bağlar, dış değişimi ekrana taşır', async () => {
     const { settings, panel, parent } = await mount(true);
-    parent.querySelector<HTMLElement>('[data-testid="pause-haptics"]')!.click();
+    parent.querySelector<HTMLElement>('[data-testid="settings-haptics"]')!.click();
     const range = parent.querySelector<HTMLInputElement>('input[type=range]')!;
     range.value = '0.4';
     range.dispatchEvent(new Event('change', { bubbles: true }));
-    parent.querySelectorAll<HTMLButtonElement>('[data-testid="pause-display"] button')[1].click();
+    parent
+      .querySelectorAll<HTMLButtonElement>('[data-testid="settings-display"] button')[1]
+      .click();
     await settings.flush();
     expect(settings.get()).toMatchObject({ volume: 0.4, haptics: false, display: 'fullscreen' });
     await settings.update({ volume: 0.8, haptics: true, display: 'windowed' });
@@ -37,7 +39,7 @@ describe('SettingsPanel', () => {
   });
   it('pencere yeteneği olmayan oturumda ekran kipi sunmaz', async () => {
     const { settings, panel, parent } = await mount(false);
-    expect(parent.querySelector('[data-testid="pause-display"]')).toBeNull();
+    expect(parent.querySelector('[data-testid="settings-display"]')).toBeNull();
     panel.refreshLabels();
     panel.destroy();
     settings.dispose();

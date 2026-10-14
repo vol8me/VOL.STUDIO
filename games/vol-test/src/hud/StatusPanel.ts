@@ -5,14 +5,13 @@ import type { HudFrame } from './HudFrame';
 
 interface Gauge {
   readonly bar: Bar;
-  /** Okuyucuya okunan ad (uzun) ve çubuk üstünde görünen etiket (kısa) anahtarları. */
+  /** Okuyucuya okunan ad; çubuğun üstünde yazı yoktur, doluluk çubuğun kendisidir. */
   readonly name: MessageKey;
-  readonly short: MessageKey;
 }
 
 /**
- * Araç göstergeleri ve yaşam durumu: can, hızlanma deposu ve atış dolumu etiketli yatay `Bar`lardır ve
- * tek bir CORE `Panel` içinde durur; yeniden doğma ve koruma bildirimi `Text`tir. Sürüş hızı ve yön
+ * Araç göstergeleri ve yaşam durumu: can, hızlanma deposu ve atış dolumu yazısız yatay `Bar`lardır (doluluk
+ * çubuğun kendisidir, değer okuyucuya `aria-valuetext` ile söylenir) ve tek bir CORE `Panel` içinde durur; yeniden doğma ve koruma bildirimi `Text`tir. Sürüş hızı ve yön
  * HUD'da yoktur: ayrıntı oyuncuya değil teşhise aittir, harita yön ve konumu verir.
  */
 export class StatusPanel {
@@ -27,7 +26,6 @@ export class StatusPanel {
     const gauge = (
       variant: string,
       name: MessageKey,
-      short: MessageKey,
       options: { lowThreshold: number | null; trail: boolean; percent?: boolean },
     ): Gauge => {
       const text = (value: number, max: number): string =>
@@ -40,22 +38,21 @@ export class StatusPanel {
         trail: options.trail,
         animateMs: 0,
         ariaLabel: i18next.t(name),
-        label: (value, max) => `${i18next.t(short)} ${text(value, max)}`,
         valueText: text,
       });
       this.vitals.add(bar);
-      return { bar, name, short };
+      return { bar, name };
     };
     this.gauges = {
-      health: gauge('health', 'voltest:hud.health', 'voltest:hud.vitals.health', {
+      health: gauge('health', 'voltest:hud.health', {
         lowThreshold: 0.25,
         trail: true,
       }),
-      boost: gauge('stamina', 'voltest:hud.boost', 'voltest:hud.vitals.boost', {
+      boost: gauge('stamina', 'voltest:hud.boost', {
         lowThreshold: 0.2,
         trail: false,
       }),
-      reload: gauge('cooldown', 'voltest:hud.fireReload', 'voltest:hud.vitals.reload', {
+      reload: gauge('cooldown', 'voltest:hud.fireReload', {
         lowThreshold: null,
         trail: false,
         percent: true,

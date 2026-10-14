@@ -43,7 +43,7 @@
 }
 
 .vt-hud__vitals .vol-bar {
-  height: 18px;
+  height: 10px;
 }
 
 .vt-hud__lifecycle {
@@ -237,6 +237,11 @@
 
   /* Oyun HUD'u şeridin arkasında kalır: geçiş yalnız kenarda, gövde opak. */
   background: linear-gradient(90deg, var(--vol-ui-surface-1) 94%, transparent);
+}
+
+/* Şeridin içindeki ayar ekranları sırayla görünür; gizli olan yer kaplamaz. */
+.vt-pause .vt-screen[hidden] {
+  display: none;
 }
 
 @media (width <= 720px) {
