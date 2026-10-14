@@ -16,20 +16,20 @@ export const HOVER = {
   trackOffset: 19,
 
   /** Düz zeminde hız tavanı (birim/s) ve komutun hızı hedefe çekme ivmesi (birim/s²). */
-  maxSpeed: 300,
-  acceleration: 560,
+  maxSpeed: 240,
+  acceleration: 470,
   /** Hız hedefe ters ya da hedeften fazlayken yavaşlama ivmesi: bilerek düşüktür, araç süzülür. */
   braking: 300,
   /** Atılım: tavan çarpanı ve atılırken ivme. */
-  dashMultiplier: 1.9,
-  dashAcceleration: 2200,
+  dashMultiplier: 1.55,
+  dashAcceleration: 1500,
   /** Zemin tutuşunun ivme ve hızı kısma oranı (süzülen araç zeminden az etkilenir). */
   gripSensitivity: 0.2,
 
   /** Gövde yönünün nişana dönme hızı tavanı, ivmesi ve hata kazancı. */
-  maxTurnRate: 6.5,
-  turnAcceleration: 44,
-  steerGain: 9,
+  maxTurnRate: 5.2,
+  turnAcceleration: 30,
+  steerGain: 7,
   /** Komutun bu uzunluğun altındaki hareketi yön belirlemez. */
   moveDeadzone: 0.2,
 

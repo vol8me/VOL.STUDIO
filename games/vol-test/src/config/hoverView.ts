@@ -44,6 +44,11 @@ export const HOVER_VIEW = {
   shadowAlpha: 0.26,
   /** Gövdenin süzülürkenki nefesi: yavaş dikey ölçek salınımı ve atılımda şişmesi. */
   bob: { periodMs: 1700, amount: 0.014, boost: 0.035 },
+  /**
+   * Dönerken gövdenin yatışı: açısal hızdan türeyen hedef yatış (rad, işaret dönüşün tersi), üst sınır
+   * ve yay. Taret yatıştan arındırılır, yani nişan görseli değişmez; yalnız gövde yatar.
+   */
+  bank: { perTurn: 0.032, max: 0.17, spring: { stiffness: 70, damping: 9 } },
   /** İtici gövdesi sarsıntıya gövdeden daha az uyar (daha aşağıda ve ağırdır). */
   podFollow: 0.45,
   /** Pervane dönüşü (rad/s): boştaki, hızla artan ve atılımdaki. */
@@ -52,15 +57,28 @@ export const HOVER_VIEW = {
   dust: {
     emitter: {
       speed: { min: 8, max: 32 },
-      lifespan: { min: 260, max: 520 },
-      scale: { start: 0.26, end: 0.8 },
-      alpha: { start: 0.18, end: 0 },
+      lifespan: { min: 420, max: 900 },
+      scale: { start: 0.3, end: 1.15 },
+      alpha: { start: 0.3, end: 0 },
       tint: PALETTE.dust,
       emitting: false,
     },
     depth: 7,
     /** Bu hızın (birim/s) altında toz kalkmaz; üstünde hızla artar. */
     minSpeed: 40,
+    countMax: 3,
+  },
+  /** İticilerin arkasında kalan enerji izi: yerinde kalıp sönen parlak kıvılcımlar (ışık rengindedir). */
+  glow: {
+    emitter: {
+      speed: { min: 0, max: 14 },
+      lifespan: { min: 180, max: 380 },
+      scale: { start: 0.34, end: 0 },
+      alpha: { start: 0.85, end: 0 },
+      emitting: false,
+    },
+    depth: 11,
+    minSpeed: 24,
     countMax: 2,
   },
 } as const;

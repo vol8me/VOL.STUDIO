@@ -139,6 +139,40 @@ describe('HoverView (manta)', () => {
     expect(byTexture(hoverFrame('manta', 'fan'))[0].visible).toBe(true);
   });
 
+  it('dönerken gövde dönüşün tersine yatar ve sınırlanır; taret dünya açısını korur', () => {
+    const { view, body, turretRig } = build();
+    for (let step = 0; step < 90; step++) view.update(frame({ angularVelocity: 9 }), 16);
+    const [bank] = lastCall(body, 'setRotation') as [number];
+    expect(bank).toBeLessThan(-0.05);
+    expect(bank).toBeGreaterThanOrEqual(-HOVER_VIEW.bank.max * 1.35);
+    const [turret] = lastCall(turretRig, 'setRotation') as [number];
+    expect(turret + bank).toBeCloseTo(1.2 - 0.5, 6);
+    for (let step = 0; step < 240; step++) view.update(frame({ angularVelocity: 0 }), 16);
+    expect(Math.abs((lastCall(body, 'setRotation') as [number])[0])).toBeLessThan(0.005);
+  });
+
+  it('hızlı süzülürken iki iticiden toz ve enerji kıvılcımı çıkar; yavaşken ve kırıkta çıkmaz', () => {
+    const emitters = (scene: ReturnType<typeof build>['scene']) =>
+      scene.created.filter((object) => object.kind === 'particles');
+    const count = (emitter: FakeObject) =>
+      emitter.calls.filter(([name]) => name === 'emitParticleAt').length;
+
+    const slow = build();
+    slow.view.update(frame({ speed: 5 }), 16);
+    expect(emitters(slow.scene).reduce((sum, emitter) => sum + count(emitter), 0)).toBe(0);
+
+    const fast = build();
+    for (let step = 0; step < 30; step++) fast.view.update(frame({ speed: 220 }), 16);
+    const [dust, glow] = emitters(fast.scene);
+    expect(count(glow)).toBe(60);
+    expect(count(dust)).toBeGreaterThan(0);
+
+    const broken = build();
+    broken.view.setParts(TRACK_LEFT | TRACK_RIGHT);
+    for (let step = 0; step < 10; step++) broken.view.update(frame({ speed: 220 }), 16);
+    expect(emitters(broken.scene).reduce((sum, emitter) => sum + count(emitter), 0)).toBe(0);
+  });
+
   it('imha edilince gövde, gölge ve ağız parlaması gizlenir; geri gelince görünür', () => {
     const { view, root, byTexture } = build();
     view.fire();
@@ -149,10 +183,15 @@ describe('HoverView (manta)', () => {
     expect(root.visible).toBe(true);
   });
 
-  it('kapanışta kökü ve parlamayı söker', () => {
-    const { view, root, byTexture } = build();
+  it('kapanışta kökü, parlamayı ve parçacıkları söker', () => {
+    const { view, root, byTexture, scene } = build();
     view.destroy();
     expect(root.calls.some(([name]) => name === 'destroy')).toBe(true);
     expect(byTexture(TEXTURE.flash)[0].calls.some(([name]) => name === 'destroy')).toBe(true);
+    const particles = scene.created.filter((object) => object.kind === 'particles');
+    expect(particles).toHaveLength(2);
+    expect(particles.every((emitter) => emitter.calls.some(([name]) => name === 'destroy'))).toBe(
+      true,
+    );
   });
 });

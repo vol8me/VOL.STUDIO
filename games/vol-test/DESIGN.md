@@ -159,7 +159,7 @@ silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca de
 | Arachnid | Bacaklı savaş canavarı    | 108 | 162 | 2,7   | 21 hasar, 470 ms, iki plazma topu     |
 | Widow    | Bacaklı keskin nişancı    | 92  | 160 | 3,4   | 8 hasar, 230 ms, iki iğne atıcı       |
 | Goliath  | Devasa kuşatma yürüyücüsü | 360 | 86  | 1,5   | 38 hasar, 760 ms, iki ağır havan      |
-| Manta    | Süzülen avcı              | 120 | 300 | 6,5   | 9 hasar, 150 ms, mor yay tekrarlayıcı |
+| Manta    | Süzülen avcı              | 120 | 240 | 5,2   | 9 hasar, 150 ms, mor yay tekrarlayıcı |
 
 Tablo `src/config/vehicles.ts` değerlerinin özetidir; karakter farkı hızlanmadan, dönüşten,
 frenden ve geri tepmeden gelir (`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler).
@@ -215,10 +215,11 @@ Manta ne paletli ne bacaklıdır (`HoverSpec`, `src/sim/hover/Hover.ts`, sayıla
 itici fanıyla zeminin üstünde kayar. Komut hedef hız vektörüdür (dünya ekseninde) ve araç ona dönmez:
 gövde NİŞANA bakar (nişan yoksa harekete, o da yoksa olduğu gibi kalır), yani yana ve geriye ileri kadar
 hızlı süzülür ve arkasına bakmadan kaçarken ateş eder. Yanal sürtünme yoktur; hızlanması dikkatlidir
-(560 birim/s²) ama frenlemesi bilerek yumuşaktır (300 birim/s²): araç momentum taşır, köşede yana kayar,
-bırakılınca ~1 sn süzülerek durur. Zemin tutuşuna neredeyse duyarsızdır (`gripSensitivity` 0,2). Space
+(470 birim/s²) ama frenlemesi bilerek yumuşaktır (300 birim/s²): araç momentum taşır, köşede yana kayar,
+bırakılınca ~0,8 sn süzülerek durur. Hız tavanı bilerek Striker'a yakındır (240): üstünlüğü hızı değil
+yön özgürlüğü ve atılımdır; gövde nişana ağırlıklı döner (`maxTurnRate` 5,2, `turnAcceleration` 30). Zemin tutuşuna neredeyse duyarsızdır (`gripSensitivity` 0,2). Space
 BASILI TUTULDUĞU sürece iticilere yüklenir (kilitli değildir, yürüyücünün av atılışından farkı budur):
-tavan ×1,9 ve ivme 2200'e çıkar, depo ~0,47 sn'de boşalır ve bırakılınca dolar; hareketsizken atılım
+tavan ×1,55 ve ivme 1500'e çıkar, depo ~0,47 sn'de boşalır ve bırakılınca dolar; hareketsizken atılım
 gövdenin baktığı yöne fırlar. Yan yüzey alanları (`track*`, `tread*`, `ground*`, `surface*`) iki itici
 kanalın yüzey hızıdır; kayma ve patinaj yoktur, bu yüzden palet izi ve kayma çizgisi bırakmaz (`tracked`
 yanlıştır) ve palet gümbürtüsü yerine pervane uğultusu çalar.
@@ -232,7 +233,10 @@ savrulur (`drift`), iki itici de kopunca yalnız taban itki kalır; taret ve ate
 Sanat elle çizilmiş SVG'dir ve ailenin dilini taşır (koyu kenar, sol-üstten aydınlanan degrade, sedef
 levhalar, mor enerji): `src/assets/vehicles/manta/` altında gövde (kanat), yan itici, kaldırma pervanesi
 ve taret (kupola ve çift bobin raylı) vardır. `HoverView` iticileri yerde, gövdeyi onların üstünde çizer;
-gövde süzülürken nefes alır ve süspansiyonla kayar, iticiler bundan daha az kayar. Gölge tanktan çok
+gövde süzülürken nefes alır ve süspansiyonla kayar, iticiler bundan daha az kayar. Dönerken gövde dönüşün
+tersine yatar (`HOVER_VIEW.bank`, yaylı ve sınırlı); taret yatıştan arındırılır, yani nişan görseli kaymaz.
+İticilerin arkasında toz savrulur ve yerinde sönen mor enerji kıvılcımları bir iz çizer (hızla yoğunlaşır,
+atılımda tavana varır; kırık itici izsizdir). Gölge tanktan çok
 daha yüksekten (26 birim) düşer ve gövdeden belirgin ayrılır, araç yerde yüzer görünür. Pervane hızla ve
 atılımla hızlanır; kopan itici kısa koyu bir kütüğe döner, pervanesi durur. Ağız parlaması `sim/muzzle`
 ucundadır. Bot, tank dışı araçlar gibi uzak hedefe atılımla kapanır.

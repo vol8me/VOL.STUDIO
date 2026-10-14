@@ -1,31 +1,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="18" viewBox="0 0 40 18">
   <defs>
-    <radialGradient id="dome" cx="0.38" cy="0.32" r="0.75">
-      <stop offset="0" stop-color="#e9edf3"/>
-      <stop offset="0.5" stop-color="#9aa5b4"/>
-      <stop offset="1" stop-color="#4a5666"/>
+    <radialGradient id="dome" cx="0.38" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#f3f6fa"/>
+      <stop offset="0.5" stop-color="#a6b1c0"/>
+      <stop offset="1" stop-color="#46515f"/>
     </radialGradient>
     <linearGradient id="rail" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#7a8696"/>
-      <stop offset="0.5" stop-color="#363f4b"/>
-      <stop offset="1" stop-color="#171d24"/>
+      <stop offset="0" stop-color="#8a96a6"/>
+      <stop offset="0.5" stop-color="#3a4350"/>
+      <stop offset="1" stop-color="#151a21"/>
     </linearGradient>
     <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6">
       <stop offset="0" stop-color="#fbf0ff"/>
       <stop offset="0.45" stop-color="#b15cff"/>
       <stop offset="1" stop-color="#3b1070"/>
     </radialGradient>
+    <linearGradient id="coil" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5a1fb0"/>
+      <stop offset="0.5" stop-color="#e2c4ff"/>
+      <stop offset="1" stop-color="#5a1fb0"/>
+    </linearGradient>
   </defs>
-  <rect x="13" y="4.6" width="20" height="2.6" rx="1" fill="url(#rail)" stroke="#0d1217" stroke-width=".6"/>
-  <rect x="13" y="10.8" width="20" height="2.6" rx="1" fill="url(#rail)" stroke="#0d1217" stroke-width=".6"/>
-  <g fill="#b15cff" stroke="#0d1217" stroke-width=".4">
-    <rect x="18" y="3.9" width="1.8" height="4" rx=".5"/><rect x="18" y="10.1" width="1.8" height="4" rx=".5"/>
-    <rect x="24" y="3.9" width="1.8" height="4" rx=".5"/><rect x="24" y="10.1" width="1.8" height="4" rx=".5"/>
+  <!-- çift ray -->
+  <rect x="12.6" y="4.4" width="20.6" height="3" rx="1.1" fill="url(#rail)" stroke="#0d1217" stroke-width=".6"/>
+  <rect x="12.6" y="10.6" width="20.6" height="3" rx="1.1" fill="url(#rail)" stroke="#0d1217" stroke-width=".6"/>
+  <path d="M13.8 5.3H32M13.8 11.5H32" stroke="#c9d1dc" stroke-opacity=".55" stroke-width=".4" stroke-linecap="round"/>
+  <!-- enerji bobinleri -->
+  <g fill="url(#coil)" stroke="#0d1217" stroke-width=".4">
+    <rect x="17.6" y="3.7" width="1.9" height="4.4" rx=".5"/><rect x="17.6" y="9.9" width="1.9" height="4.4" rx=".5"/>
+    <rect x="22.2" y="3.7" width="1.9" height="4.4" rx=".5"/><rect x="22.2" y="9.9" width="1.9" height="4.4" rx=".5"/>
+    <rect x="26.8" y="3.7" width="1.9" height="4.4" rx=".5"/><rect x="26.8" y="9.9" width="1.9" height="4.4" rx=".5"/>
   </g>
-  <rect x="32" y="6" width="7.4" height="6" rx="1.2" fill="#2a333d" stroke="#0d1217" stroke-width=".6"/>
-  <rect x="35.4" y="7.4" width="3.4" height="3.2" rx=".7" fill="#0b0f13"/>
-  <path d="M9 1.8L15.4 5.4V12.6L9 16.2L2.6 12.6V5.4Z" fill="url(#dome)" stroke="#0d1217" stroke-width=".8" stroke-linejoin="round"/>
-  <path d="M4.2 9H8" stroke="#6b7686" stroke-width=".5" stroke-linecap="round"/>
-  <circle cx="10.6" cy="9" r="2.5" fill="url(#lens)" stroke="#0d1217" stroke-width=".5"/>
-  <circle cx="9.9" cy="8.3" r=".6" fill="#fff" fill-opacity=".85"/>
+  <!-- namlu ağzı: genişleyen fren -->
+  <path d="M32 5.2L36.4 4.6H38.6C39.4 4.6 39.8 5.1 39.8 5.8V12.2C39.8 12.9 39.4 13.4 38.6 13.4H36.4L32 12.8Z" fill="#2a333d" stroke="#0d1217" stroke-width=".6" stroke-linejoin="round"/>
+  <rect x="35.6" y="7.2" width="4" height="3.6" rx=".8" fill="#07090c"/>
+  <path d="M34 6V12" stroke="#5a6676" stroke-width=".5" stroke-linecap="round"/>
+  <!-- kubbe -->
+  <path d="M9 1.4L15.8 5.2V12.8L9 16.6L2.2 12.8V5.2Z" fill="url(#dome)" stroke="#0d1217" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M9 1.4V6M2.2 5.2L6.2 7.6M15.8 5.2L11.8 7.6M2.2 12.8L6.2 10.4M15.8 12.8L11.8 10.4M9 16.6V12" stroke="#5f6a7a" stroke-width=".5" stroke-linecap="round"/>
+  <circle cx="9" cy="9" r="3" fill="url(#lens)" stroke="#0d1217" stroke-width=".6"/>
+  <circle cx="8.1" cy="8.1" r=".8" fill="#fff" fill-opacity=".9"/>
 </svg>

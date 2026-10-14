@@ -39,6 +39,8 @@ export class HoverView implements VehicleView {
   private readonly nozzles: Phaser.GameObjects.Image[];
   private readonly flash: Phaser.GameObjects.Image;
   private readonly dust: Phaser.GameObjects.Particles.ParticleEmitter;
+  private readonly glow: Phaser.GameObjects.Particles.ParticleEmitter;
+  private readonly bank = new Spring1D();
   private readonly barrel = new Spring1D();
   private readonly tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private broken = 0;
@@ -97,6 +99,10 @@ export class HoverView implements VehicleView {
     this.dust = scene.add
       .particles(0, 0, TEXTURE.spark, HOVER_VIEW.dust.emitter)
       .setDepth(HOVER_VIEW.dust.depth);
+    this.glow = scene.add
+      .particles(0, 0, TEXTURE.spark, { ...HOVER_VIEW.glow.emitter, tint: art.glow })
+      .setDepth(HOVER_VIEW.glow.depth)
+      .setBlendMode(Phaser.BlendModes.ADD);
   }
 
   /** Atışta namlu geri teper ve ağız parlaması yanar. */
@@ -131,16 +137,24 @@ export class HoverView implements VehicleView {
     this.barrel.value = Phaser.Math.Clamp(this.barrel.value, -art.barrel.max, 0);
     const effort = clamp01(frame.speed / hover.maxSpeed);
     const bob = Math.sin((this.elapsedMs / HOVER_VIEW.bob.periodMs) * Math.PI * 2);
+    const lean = HOVER_VIEW.bank;
+    const bank = this.bank.update(
+      Phaser.Math.Clamp(-frame.angularVelocity * lean.perTurn, -lean.max, lean.max),
+      deltaMs,
+      lean.spring,
+    );
     this.body
       .setPosition(frame.pitch, frame.roll)
+      .setRotation(bank)
       .setScale(1 + bob * HOVER_VIEW.bob.amount + (frame.boosting ? HOVER_VIEW.bob.boost : 0));
-    this.turretRig.setRotation(frame.turret - frame.hull);
+    // Yatış yalnız gövdeyi eğer: taret dünya açısını korur (nişan görseli kaymaz).
+    this.turretRig.setRotation(frame.turret - frame.hull - bank);
     this.turret.setX(this.barrel.value);
 
     this.spinFans(frame, effort, deltaMs);
     this.glowNozzles(frame, effort);
     this.placeFlash(frame, deltaMs);
-    this.exhaustDust(frame);
+    this.exhaustTrail(frame, effort);
     this.shadow.update(this.shadowSource);
   }
 
@@ -170,6 +184,7 @@ export class HoverView implements VehicleView {
     this.shadow.destroy();
     this.flash.destroy();
     this.dust.destroy();
+    this.glow.destroy();
     this.root.destroy();
   }
 
@@ -226,24 +241,29 @@ export class HoverView implements VehicleView {
     this.flash.setVisible(this.flashMs > 0);
   }
 
-  /** Hızlı süzülürken iticilerin arkasından zemini savuran hafif toz çıkar. */
-  private exhaustDust(frame: TankFrame): void {
-    const { dust } = HOVER_VIEW;
-    if (frame.speed < dust.minSpeed) return;
-    const count = frame.boosting ? dust.countMax : Math.random() < 0.35 ? 1 : 0;
-    if (count === 0) return;
+  /**
+   * Süzülürken iticilerin arkasından zemini savuran toz ve yerinde sönen enerji kıvılcımı çıkar:
+   * hız arttıkça yoğunlaşır, atılımda tavana varır. Kırık itici izsizdir.
+   */
+  private exhaustTrail(frame: TankFrame, effort: number): void {
+    const { dust, glow } = HOVER_VIEW;
+    const dusty = frame.speed >= dust.minSpeed;
+    const sparkling = frame.speed >= glow.minSpeed;
+    if (!dusty && !sparkling) return;
     const cos = Math.cos(frame.hull);
     const sin = Math.sin(frame.hull);
     const offset = this.spec.hover.trackOffset;
+    const dustChance = frame.boosting ? 1 : 0.35 + effort * 0.55;
+    const dustCount = frame.boosting ? dust.countMax : 1;
+    const sparkCount = frame.boosting ? glow.countMax : 1;
     for (let index = 0; index < 2; index++) {
       if ((this.broken & (index === 0 ? TRACK_LEFT : TRACK_RIGHT)) !== 0) continue;
       const side = index === 0 ? -1 : 1;
       const back = this.art.nozzle.x - 3;
-      this.dust.emitParticleAt(
-        frame.x + back * cos - side * offset * sin,
-        frame.y + back * sin + side * offset * cos,
-        count,
-      );
+      const x = frame.x + back * cos - side * offset * sin;
+      const y = frame.y + back * sin + side * offset * cos;
+      if (dusty && Math.random() < dustChance) this.dust.emitParticleAt(x, y, dustCount);
+      if (sparkling) this.glow.emitParticleAt(x, y, sparkCount);
     }
   }
 }
