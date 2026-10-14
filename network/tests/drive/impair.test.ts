@@ -144,7 +144,7 @@ describe('ImpairedLink', () => {
     const proxy = await link();
     const socket = await open(proxy.port);
     const closed = new Promise<void>((resolve) => socket.once('close', () => resolve()));
-    // Okunmayan veri kapanýþý (end) geciktirir: akýþý açýk tut.
+    // Okunmayan veri kapanÄ±ÅŸÄ± (end) geciktirir: akÄ±ÅŸÄ± aÃ§Ä±k tut.
     socket.resume();
     socket.write('x');
     await new Promise((resolve) => setTimeout(resolve, 50));

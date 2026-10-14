@@ -49,10 +49,10 @@ kullanÄ±lÄ±r); yÃ¼zdelik kovanÄ±n Ã¼st sÄ±nÄ±rÄ±dÄ±r, en Ã§ok bir kova yukarÄ± y
 `onStateChange` olaylarÄ± arasÄ±ndaki sÃ¼redir; Windows'ta sunucu `setPatchRate(50)` ile 20 Hz ister ama
 zamanlayÄ±cÄ± ~15,6 ms ayrÄ±k olduÄŸundan yama aralÄ±ÄŸÄ± ~62,5 ms (16 Hz) Ã¶lÃ§Ã¼lÃ¼r.
 
-## Bozuk ağ aracısı (`ImpairedLink`)
+## Bozuk aÄŸ aracÄ±sÄ± (`ImpairedLink`)
 
-Gerçek sunucuyla istemci arasına konan TCP aracısıdır; WebSocket üstüne bindiği için tarayıcı ya da SDK
-istemcisi adresini `endpoint`e çevirir. Loopback'te rastgele portta dinler.
+GerÃ§ek sunucuyla istemci arasÄ±na konan TCP aracÄ±sÄ±dÄ±r; WebSocket Ã¼stÃ¼ne bindiÄŸi iÃ§in tarayÄ±cÄ± ya da SDK
+istemcisi adresini `endpoint`e Ã§evirir. Loopback'te rastgele portta dinler.
 
 ```ts
 const link = await ImpairedLink.start(
@@ -60,17 +60,17 @@ const link = await ImpairedLink.start(
   { profile: { latencyMs: 80, jitterMs: 40, stallProbability: 0.02, stallMs: 300 } },
 );
 // istemci: link.endpoint
-link.setProfile({ latencyMs: 250 }); // yeni parçalar için
-link.blackhole(); // iki yönde her şey tutulur, bağlantı açık kalır (telefon uykuya girdi)
-link.release(); // tutulan sırayla teslim edilir
-link.sever(); // bağlantıları hemen yok eder (Wi-Fi'dan LTE'ye geçiş)
+link.setProfile({ latencyMs: 250 }); // yeni parÃ§alar iÃ§in
+link.blackhole(); // iki yÃ¶nde her ÅŸey tutulur, baÄŸlantÄ± aÃ§Ä±k kalÄ±r (telefon uykuya girdi)
+link.release(); // tutulan sÄ±rayla teslim edilir
+link.sever(); // baÄŸlantÄ±larÄ± hemen yok eder (Wi-Fi'dan LTE'ye geÃ§iÅŸ)
 ```
 
-TCP sıralı olduğundan gecikme ve titreşim sırayı bozmaz; paket kaybı yeniden iletim bekleyişi olarak
-(`stallMs`, arkadaki her şeyi geciktirir) modellenir, gerçek paket kaybı bu katmanın altındadır.
-`bytesPerSecond` yön başına bant genişliğini sınırlar. `stats()` bağlantı, bayt ve geciktirilen parça
-sayar. Bu bir ağ emülatörü değil, tekrarlanabilir bir bozulma kaynağıdır; ölçülen sayılar o profilin
-sonucudur, gerçek ağ ya da cihaz kabulü değildir.
+TCP sÄ±ralÄ± olduÄŸundan gecikme ve titreÅŸim sÄ±rayÄ± bozmaz; paket kaybÄ± yeniden iletim bekleyiÅŸi olarak
+(`stallMs`, arkadaki her ÅŸeyi geciktirir) modellenir, gerÃ§ek paket kaybÄ± bu katmanÄ±n altÄ±ndadÄ±r.
+`bytesPerSecond` yÃ¶n baÅŸÄ±na bant geniÅŸliÄŸini sÄ±nÄ±rlar. `stats()` baÄŸlantÄ±, bayt ve geciktirilen parÃ§a
+sayar. Bu bir aÄŸ emÃ¼latÃ¶rÃ¼ deÄŸil, tekrarlanabilir bir bozulma kaynaÄŸÄ±dÄ±r; Ã¶lÃ§Ã¼len sayÄ±lar o profilin
+sonucudur, gerÃ§ek aÄŸ ya da cihaz kabulÃ¼ deÄŸildir.
 
 ## VOL.TEST
 

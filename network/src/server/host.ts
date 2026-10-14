@@ -14,6 +14,13 @@ export interface HostOptions {
   readonly logger?: Logger;
   /** Verilirse bağlantı kapısı kurulur (adres başına hız/soket sınırı, köken izin listesi). */
   readonly guard?: GuardSettings;
+  /**
+   * Canlılık yoklaması: sunucu her `pingIntervalMs`te ping yollar, `pingMaxRetries` yanıtsız yoklamadan
+   * sonra soketi kapatır (sessiz ölen bağlantı odaya düşer, yeniden bağlanma penceresi başlar).
+   * Varsayılan Colyseus'unkidir (3000 ms, 2 deneme: ~9 sn).
+   */
+  readonly pingIntervalMs?: number;
+  readonly pingMaxRetries?: number;
 }
 
 export interface Host<T extends Record<string, RegisteredHandler>> {
@@ -39,6 +46,8 @@ export function createHost<T extends Record<string, RegisteredHandler>>(
     transport: new WebSocketTransport({
       server: http,
       maxPayload: options.maxPayload ?? DEFAULT_MAX_PAYLOAD_BYTES,
+      pingInterval: options.pingIntervalMs,
+      pingMaxRetries: options.pingMaxRetries,
     }),
     rooms,
   });

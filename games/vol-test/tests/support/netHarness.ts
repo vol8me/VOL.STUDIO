@@ -1,7 +1,12 @@
 import { matchMaker } from '@colyseus/core';
 import { Client, type Room } from '@colyseus/sdk';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
-import { startHost, type Logger, type StartedHost } from '@volstudio/network/server';
+import {
+  startHost,
+  type HostOptions,
+  type Logger,
+  type StartedHost,
+} from '@volstudio/network/server';
 import { OnlineSession } from '@/network/OnlineSession';
 import { ROOM } from '@/network/rooms';
 import { WORLD_SCHEMA, type WorldSnapshot } from '@/network/schema';
@@ -20,8 +25,9 @@ export type TestWorld = Omit<WorldRoomOptions, 'logger' | 'primary'>;
 export function startServer(
   logger?: Logger,
   world: TestWorld = { perFaction: 0 },
+  host: Omit<HostOptions, 'logger'> = {},
 ): Promise<TestServer> {
-  return startHost(createRooms(logger, world), { port: 0, host: '127.0.0.1' }, { logger });
+  return startHost(createRooms(logger, world), { port: 0, host: '127.0.0.1' }, { ...host, logger });
 }
 
 export interface JoinParams {
@@ -34,7 +40,7 @@ export interface JoinParams {
 
 /** Savaş dünyasına katılır (yoksa kurar); `protocol` varsayılan olarak güncel sürümdür. */
 export function joinWorld(
-  server: TestServer,
+  server: Pick<TestServer, 'endpoint'>,
   params: JoinParams = {},
 ): Promise<Room<WorldSnapshot>> {
   return new Client(server.endpoint).joinOrCreate<WorldSnapshot>(

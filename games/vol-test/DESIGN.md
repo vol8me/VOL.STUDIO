@@ -530,6 +530,16 @@ köken izin listesi) kurar; `VOL_NET_OPS_PORT` verilirse loopback'te `/healthz`,
 Yazma kuyruğu `NETWORK.slowConsumer.limitBytes` üstünde tolerans süresince kalan istemci `1013` koduyla atılır.
 Kapıya takılan katılım istemcide `online.error.busy` ("sunucu yoğun") olarak görünür.
 
+Oturum yaşam döngüsü (`tests/server/lifecycle.test.ts`, gerçek sunucu ve SDK istemcisi): oyuncu ölü yeniden
+doğmayı beklerken, doğma korumasındayken, savaşı bitiren ölümle aynı anda ya da arka arkaya iki kez kopsa
+aynı oturum, kayıt ve araca döner; ikinci `joined` olayı yayılmaz ve ölüm bir kez yazılır. Pencere
+(`reconnectSeconds`) dolunca oyuncu kalkar ve eski belirteç reddedilir; sunucu kopuk oyuncuyla kapanırsa
+işlenmemiş söz reddi sızmaz. Sessiz ölüm (uyuyan telefon, kopan Wi-Fi) `ImpairedLink.blackhole()` ile kurulur:
+sunucu canlılık yoklamasıyla oyuncuyu kopuk işaretler (Colyseus varsayılanı ~9 sn; testte
+`HostOptions.pingIntervalMs` ile hızlandırılır), ağ gelince aynı oturum döner. Ağ değişimi (Wi-Fi yerine LTE)
+yeni soketle sürer: kimlik IP değil yeniden bağlanma belirtecidir. Arka plan süresi pencereyi (15 sn)
+aşarsa oyuncu düşer ve yeni oyuncu olarak katılır; bu bilinçli bir ödündür.
+
 Ölçüm ve sınırlar: sapma ölçümü SDK'da yalnız bir eşik verilince açılır (`NETWORK.divergenceTolerance`);
 eşiksiz "sapma 0" hiçbir şey söylemez. E2E yetkili aracı kaydırıp sapmanın görünmesini ve istemcinin
 yakınsamasını doğrular. Gerçek sunucuya karşı düz sürüş + fren denemesinde (yerel döngü) iki motorda

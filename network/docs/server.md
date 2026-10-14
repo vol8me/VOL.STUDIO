@@ -22,6 +22,11 @@ kapalıdır: her sunucu örneği `process`e dinleyici eklerdi ve iki kapanış y
 (`EADDRINUSE`) Colyseus `listen` sözü hiç çözülmeden asılı kalır; `startHost` hatayı önceden yakalar,
 günlüğe yazar ve reddeder.
 
+Canlılık yoklaması: sunucu her `pingIntervalMs`te (varsayılan 3000) ping yollar ve `pingMaxRetries` (2)
+yanıtsız yoklamadan sonra soketi kapatır; sessiz ölen bağlantı (uyuyan telefon, kopan Wi-Fi) böylece
+~9 sn içinde odaya `onDrop` olarak düşer. Değerler `HostOptions`tan değişir; kısaltmak sessiz ölümü
+erken bulur ama geçici ağ takılmasında bağlantıyı gereksiz koparır.
+
 `installShutdown(stop, { logger })` SIGINT/SIGTERM'de ve yakalanmamış hata ya da reddedilmiş sözde
 `stop`u çalıştırır, günlüğü kapatır ve süreci çıkarır (çökmede kod 1). `stop` hata verir ya da
 `graceMs` (10 sn) içinde bitmezse kod 1 ile çıkılır; kapanış sürerken gelen ikinci olay beklemeyi bırakır.
