@@ -562,7 +562,7 @@ describe('EffectsView: ayak izi', () => {
   const feet = (scene: ReturnType<typeof fakeScene>) =>
     scene.created.filter((object) => object.args[2] === TEXTURE.footPrint);
 
-  it('basan pençe gövde yönüne dönük, boyuna ölçekli bir iz basar', () => {
+  it('basan pençe boyuna ölçekli küçük bir delik basar', () => {
     const { view, scene } = build();
     view.footprint(40, 50, 0.7, 2);
     const [print] = feet(scene);
@@ -570,7 +570,10 @@ describe('EffectsView: ayak izi', () => {
     expect(print.y).toBe(50);
     expect(print.rotation).toBeCloseTo(0.7);
     const size = lastCall(print, 'setDisplaySize') as number[];
-    expect(size[0]).toBeGreaterThan(20);
+    expect(size[0]).toBeGreaterThan(10);
+    // Delik pençe ucu kadar küçüktür: referans yürüyücüde bir ayak izi kenarı 8 birimi geçmez.
+    const reference = lastCall(feet(scene)[0], 'setDisplaySize') as number[];
+    expect(reference[0] / 2).toBeLessThan(8);
     expect(size[0]).toBe(size[1]);
     expect(print.alpha).toBeCloseTo(FX.feet.alpha);
   });

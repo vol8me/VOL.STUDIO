@@ -6,3 +6,5 @@ export { Histogram, summarizeHistogram } from './histogram';
 export type { DistributionSummary } from './histogram';
 export { JsonlReport } from './report';
 export type { ReportRecord } from './report';
+export { judgeFleet, observeServer } from './verdict';
+export type { FleetBudget, ServerObservation, Verdict, VerdictCheck } from './verdict';

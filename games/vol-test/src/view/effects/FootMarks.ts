@@ -4,11 +4,11 @@ import { PALETTE } from '@/config/palette';
 import { TEXTURE } from '../textures';
 import { DecalPool } from './DecalPool';
 
-/** Bir ayak izinin ölçeksiz kenarı (birim); ayak izi dokusu kareden ibarettir. */
-const SIDE = 15;
+/** Bir ayak izinin ölçeksiz kenarı (birim): sivri pençenin deliği, bacaktan büyük görünmeyecek kadar küçüktür. */
+const SIDE = 7;
 
 /**
- * Örümcek ayak izleri: yere basan her pençe, gövdenin baktığı yöne üç tırnaklı bir çukur basar.
+ * Örümcek ayak izleri: yere basan her pençe, zemine küçük yuvarlak bir delik açar.
  * Palet izinden kısa yaşar ve seyrektir; izi araç değil basış üretir, bu yüzden araç başına durum tutmaz.
  */
 export class FootMarks {

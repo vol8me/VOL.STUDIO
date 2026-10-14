@@ -285,26 +285,25 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
     g.fillRect(0, 0, 8 * FX.marks.grousers, 2);
     g.fillRect(0, 14, 8 * FX.marks.grousers, 2);
   });
-  // Örümcek ayak izi: ileri bakan üç pençe çukuru ve arkada yuvarlak bir topuk.
+  // Örümcek ayak izi: sivri pençenin zemine açtığı küçük, yuvarlak delik. Koyu çekirdek, yumuşak
+  // kenar ve çevresinde ezilmiş toprağın ince halkası; yönsüzdür, bacak ucu gibi küçük ve diktir.
   canvasTexture(scene, TEXTURE.footPrint, 16, 16, (g) => {
-    g.fillStyle = 'rgba(255,255,255,0.55)';
+    const lip = g.createRadialGradient(8, 8, 3.4, 8, 8, 7.4);
+    lip.addColorStop(0, 'rgba(255,255,255,0.0)');
+    lip.addColorStop(0.45, 'rgba(255,255,255,0.32)');
+    lip.addColorStop(1, 'rgba(255,255,255,0.0)');
+    g.fillStyle = lip;
     g.beginPath();
-    g.arc(5, 8, 3.2, 0, Math.PI * 2);
+    g.arc(8, 8, 7.4, 0, Math.PI * 2);
     g.fill();
-    g.fillStyle = 'rgba(255,255,255,0.95)';
-    for (const angle of [-0.62, 0, 0.62]) {
-      g.save();
-      g.translate(7, 8);
-      g.rotate(angle);
-      g.beginPath();
-      g.moveTo(1, -1.1);
-      g.lineTo(8.6, -0.3);
-      g.lineTo(8.6, 0.3);
-      g.lineTo(1, 1.1);
-      g.closePath();
-      g.fill();
-      g.restore();
-    }
+    const core = g.createRadialGradient(8, 8, 0.4, 8, 8, 3.6);
+    core.addColorStop(0, 'rgba(255,255,255,1)');
+    core.addColorStop(0.7, 'rgba(255,255,255,0.95)');
+    core.addColorStop(1, 'rgba(255,255,255,0.0)');
+    g.fillStyle = core;
+    g.beginPath();
+    g.arc(8, 8, 3.6, 0, Math.PI * 2);
+    g.fill();
   });
   // Yanık: merkezde koyu, dışa doğru lekeli sönen iz. Lekeler sabit bir
   // karma dizisiyle yerleşir; doku her açılışta aynıdır.

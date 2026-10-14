@@ -58,7 +58,7 @@ izler; patinajda bant döner fakat tank ilerlemez. Palet izi temas yolunu,
 kayma çizgisi ise kaymanın şiddetini izler. Kar sıkışması görsel izden ayrı,
 modeldeki palet temasıyla hesaplanır.
 
-Zemin izleri havuzludur ve kalabalıkta bozulmaz: palet izi parçası iki pabuç adımı taşır (12 birimde bir, doku tekrarlıdır), kapasite 2400'dür; ışınlanan araç (yeniden doğuş) `FX.marks.maxJump`tan uzağa atlarsa iz kesilir, eski noktadan yeniye köprü çizilmez; ekran dışındaki araç (görüş dikdörtgeni + `FX.cullMargin`) iz bırakmaz ve izi unutulur, böylece havuz görünmeyen tanklara harcanmaz. Örümcek yere her bastığında gövde yönünde üç tırnaklı bir ayak izi basar (`FootMarks`, kısa ömürlü ve seyrek, boyuna ölçekli); alıcıyı `VehicleViews` yürüyücü görünümüne verir, vitrinde iz basılmaz.
+Zemin izleri havuzludur ve kalabalıkta bozulmaz: palet izi parçası iki pabuç adımı taşır (12 birimde bir, doku tekrarlıdır), kapasite 2400'dür; ışınlanan araç (yeniden doğuş) `FX.marks.maxJump`tan uzağa atlarsa iz kesilir, eski noktadan yeniye köprü çizilmez; ekran dışındaki araç (görüş dikdörtgeni + `FX.cullMargin`) iz bırakmaz ve izi unutulur, böylece havuz görünmeyen tanklara harcanmaz. Örümcek yere her bastığında sivri pençe ucunun açtığı küçük, yuvarlak bir delik basar (`FootMarks`: koyu çekirdek ve ezilmiş toprağın ince halkası, yönsüz, bacak ucundan büyük görünmez; kısa ömürlü ve seyrek, boyuna ölçekli); alıcıyı `VehicleViews` yürüyücü görünümüne verir, vitrinde iz basılmaz.
 
 Palet bandı `TreadTexture` ile aynı SVG'den araç başına bir kez üretilen
 32 karelik dokuyu kullanır (bant boyu araca göre değişir); faz aralığı 0,25 dünya birimidir. Her araç kendi pozunu
