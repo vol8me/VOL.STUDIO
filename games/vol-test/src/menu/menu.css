@@ -66,6 +66,11 @@
   min-height: 0;
 }
 
+/* Kayan içerik sarmalayıcısı gövdeyi doldurur: garaj düzeni yüzdelik yükseklikle gövdeye yayılır. */
+.vt-screen__body > .vol-scroll-view__content {
+  height: 100%;
+}
+
 .vt-screen__actions {
   display: flex;
   flex-direction: column;
@@ -193,7 +198,10 @@
   }
 }
 
-/* Dar ekran: sunum üstte, araçlar ve katılım altta tek sütun; gövde kayar, eylemler sabit kalır. */
+/*
+ * Dar ekran (telefon dikey): sunum üstte ve esnek, araçlar tek satırlık yatay kaydırma şeridi, katılım
+ * alanı altta; hepsi gövdeye sığar, taşarsa gövde kayar. Kartlar şeritte yaslanır (`scroll-snap`).
+ */
 @media (width <= 719px) {
   .vol-panel.vt-screen {
     --vt-screen-pad: var(--vol-space-md);
@@ -208,17 +216,60 @@
 
   .vt-garage__layout {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--vol-space-md);
+    grid-template-rows: minmax(120px, 1fr) auto auto;
+    gap: var(--vol-space-sm);
+    height: 100%;
   }
 
   .vt-garage__stage {
     order: -1;
     position: relative;
-    min-height: 32vh;
+    min-height: 0;
+  }
+
+  .vt-garage__vehicles {
+    padding: var(--vol-space-sm);
+  }
+
+  .vt-garage__vehicles > h2 {
+    display: none;
+  }
+
+  .vt-garage__cards {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .vt-garage__card {
+    flex: 0 0 min(44vw, 180px);
+    scroll-snap-align: center;
+  }
+
+  .vt-garage__card .vol-card__description {
+    display: none;
+  }
+
+  .vt-garage__stat {
+    grid-template-columns: 5.6em minmax(0, 1fr);
+    gap: var(--vol-space-xs);
+    font-size: 12px;
+  }
+
+  .vt-garage__form [role='radio'] {
+    padding-inline: var(--vol-space-sm);
+    white-space: nowrap;
+  }
+
+  .vt-garage__join .vt-screen__status:empty {
+    display: none;
   }
 
   .vt-garage__join {
     grid-column: auto;
+    padding: var(--vol-space-sm) var(--vol-space-md);
   }
 
   .vt-screen--full .vt-screen__actions {
@@ -231,22 +282,68 @@
   }
 }
 
-/* Alçak yatay ekran (telefon): üç sütun korunur, kartlar tek sütuna iner. */
+/*
+ * Alçak yatay ekran (telefon): başlık şeridi ile eylem şeridi tek alt çubukta birleşir, gövde yüksekliğin
+ * çoğunu alır. Üç sütun korunur; araç kartları sütunda dikey yaslanarak kayar.
+ */
 @media (height <= 520px) and (width > 719px) {
   .vol-panel.vt-screen--full {
     --vt-screen-pad: var(--vol-space-sm);
+
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .vt-screen--full > .vt-screen__body {
+    grid-area: 1 / 1 / 2 / -1;
+  }
+
+  .vt-screen--full > .vt-screen__header {
+    grid-area: 2 / 1;
+  }
+
+  .vt-screen--full > .vt-screen__actions {
+    grid-area: 2 / 2;
+  }
+
+  .vt-screen--full .vt-screen__heading > p {
+    display: none;
+  }
+
+  .vt-garage__layout {
+    grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) minmax(220px, 280px);
+    height: 100%;
+    align-items: stretch;
+  }
+
+  .vt-garage__vehicles {
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .vt-garage__vehicles > h2 {
+    display: none;
   }
 
   .vt-garage__cards {
     grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+  }
+
+  .vt-garage__card {
+    scroll-snap-align: start;
   }
 
   .vt-garage__join {
     grid-column: auto;
+    align-self: start;
   }
 
-  .vt-garage__layout {
-    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr) minmax(220px, 280px);
+  .vt-garage__stage {
+    min-height: 0;
   }
 }
 
