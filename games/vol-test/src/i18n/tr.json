@@ -20,6 +20,8 @@
     "join": "Savaşa katıl",
     "practice": "Alıştırmaya çık",
     "back": "Geri",
+    "select": "Seç",
+    "selected": "Seçili",
     "stat": {
       "durability": "Dayanıklılık",
       "speed": "Hız",
@@ -28,19 +30,23 @@
     "vehicles": {
       "striker": {
         "name": "Striker",
-        "role": "Dengeli ana tank"
+        "role": "Dengeli ana tank",
+        "class": "ORTA"
       },
       "bulwark": {
         "name": "Bulwark",
-        "role": "Ağır kuşatma tankı"
+        "role": "Ağır kuşatma tankı",
+        "class": "AĞIR"
       },
       "dart": {
         "name": "Dart",
-        "role": "Hafif keşif tankı"
+        "role": "Hafif keşif tankı",
+        "class": "HAFİF"
       },
       "arachnid": {
         "name": "Arachnid",
-        "role": "Bacaklı savaş canavarı"
+        "role": "Bacaklı savaş canavarı",
+        "class": "YÜRÜYÜCÜ"
       }
     }
   },

@@ -38,13 +38,14 @@ test('garaj: araç seçimi kalıcıdır, alıştırma seçilen araçla açılır
   await page.goto('/');
   await page.getByTestId('menu-play').click();
   await expect(page.getByTestId('garage')).toBeVisible();
-  await page.getByTestId('garage-vehicle-arachnid').click();
-  await expect(page.getByTestId('garage-vehicle-arachnid')).toHaveAttribute('aria-checked', 'true');
+  const arachnid = page.getByTestId('garage-vehicle-arachnid').locator('.vol-card__action');
+  await arachnid.click();
+  await expect(arachnid).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('garage-back').click();
   await expect(page.getByTestId('menu')).toBeVisible();
   await page.reload();
   await page.getByTestId('menu-play').click();
-  await expect(page.getByTestId('garage-vehicle-arachnid')).toHaveAttribute('aria-checked', 'true');
+  await expect(arachnid).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('garage-practice').click();
   await expect(page.getByTestId('hud')).toBeVisible();
 });
@@ -54,7 +55,7 @@ test('ayarlar: dil değişimi menüye yansır ve yeniden açılışta korunur', 
   await page.getByTestId('menu-settings').click();
   await expect(page.getByTestId('settings')).toBeVisible();
   await page.getByTestId('settings-language').getByRole('radio', { name: 'English' }).click();
-  await expect(page.getByTestId('settings-back')).toHaveText('Back');
+  await expect(page.getByTestId('settings-back')).toHaveAttribute('aria-label', 'Back');
   await page.getByTestId('settings-back').click();
   await expect(page.getByTestId('menu-play')).toHaveText('Join the war');
   await page.reload();

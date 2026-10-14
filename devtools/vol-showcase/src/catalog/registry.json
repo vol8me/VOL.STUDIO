@@ -476,7 +476,7 @@
       "phase": "UI-04",
       "anchor": "A2",
       "archetype": "collection",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/cardsTab.ts"],
       "tests": [
         {
@@ -1992,7 +1992,7 @@
       "phase": "UI-05",
       "anchor": "A5",
       "archetype": "container",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/panelsTab.ts"],
       "tests": [
         {
@@ -2334,7 +2334,7 @@
       "phase": "UI-05",
       "anchor": "A5",
       "archetype": "container",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/scrollTab.ts"],
       "tests": [
         {
@@ -2511,7 +2511,7 @@
       "phase": "UI-05",
       "anchor": "A5",
       "archetype": "container",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/formsTab.ts"],
       "tests": [
         {
@@ -2555,7 +2555,7 @@
       "phase": "UI-05",
       "anchor": "A5",
       "archetype": "container",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/formsTab.ts"],
       "tests": [
         {

@@ -1,14 +1,14 @@
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { Button, SegmentedControl, Text } from '@volstudio/core/ui';
+import { SegmentedControl, SettingsForm, SettingsRow } from '@volstudio/core/ui';
 import { applyLanguage } from '@/app/language';
 import { LANGUAGES, type GameSettings, type LanguagePreference } from '@/app/GameSettings';
 import { EFFECT_LEVELS, type EffectLevel } from '@/config/quality';
-
-const LEVELS = Object.keys(EFFECT_LEVELS) as EffectLevel[];
 import type { MessageKey } from '@/i18n/keys';
 import { SettingsPanel } from '@/hud/SettingsPanel';
-import './menu.css';
+import { ScreenFrame } from './ScreenFrame';
+
+const LEVELS = Object.keys(EFFECT_LEVELS) as EffectLevel[];
 
 export interface SettingsScreenOptions {
   readonly settings: GameSettings;
@@ -29,63 +29,58 @@ const QUALITY_KEYS = {
 } as const satisfies Record<EffectLevel, MessageKey>;
 
 /**
- * Ayarlar ekranı: dil, efekt kalitesi ve duraklatma menüsüyle ortak ses, titreşim, ekran ve
- * senaryo satırları. Hepsi aynı `GameSettings` kaydına yazar; menüden değişen değer oyunda geçerlidir.
+ * Ayarlar ekranı (tam ekran): dil, efekt kalitesi ve duraklatma menüsüyle ortak ses, titreşim, ekran ve
+ * senaryo satırları. Satırların hepsi CORE `SettingsRow`dur; değerler aynı `GameSettings` kaydına yazılır,
+ * menüden değişen değer oyunda geçerlidir.
  */
 export class SettingsScreen {
-  readonly element: HTMLElement;
+  private readonly frame: ScreenFrame;
   private readonly scope = new DisposableScope();
-  private readonly title = new Text('', { variant: 'heading', tag: 'h2' });
-  private readonly languageLabel = new Text('', { variant: 'muted', tag: 'span' });
   private readonly language: SegmentedControl;
-  private readonly qualityLabel = new Text('', { variant: 'muted', tag: 'span' });
+  private readonly languageRow: SettingsRow;
   private readonly quality: SegmentedControl;
+  private readonly qualityRow: SettingsRow;
   private readonly panel: SettingsPanel;
-  private readonly back: Button;
 
   constructor(private readonly options: SettingsScreenOptions) {
     const { settings } = options;
-    this.element = document.createElement('section');
-    this.element.className = 'vt-screen vt-settings';
-    this.element.dataset.testid = 'settings';
-
-    this.language = new SegmentedControl({
-      options: this.languageOptions(),
-      value: settings.get().language,
-      onCommit: (value) => {
-        const language = LANGUAGES.find((candidate) => candidate === value);
-        if (!language) return;
-        void settings.update({ language });
-        void applyLanguage(language);
-      },
-    });
-    this.language.element.dataset.testid = 'settings-language';
-    this.quality = new SegmentedControl({
-      options: this.qualityOptions(),
-      value: settings.get().quality,
-      onCommit: (value) => {
-        const quality = LEVELS.find((candidate) => candidate === value);
-        if (quality) void settings.update({ quality });
-      },
-    });
-    this.quality.element.dataset.testid = 'settings-quality';
-    this.panel = new SettingsPanel(settings, options.displayAvailable);
-    this.back = new Button('', { variant: 'primary', onClick: () => options.onBack() });
-    this.back.element.dataset.testid = 'settings-back';
-
-    const body = document.createElement('div');
-    body.className = 'vt-settings__body';
-    body.append(
-      this.languageLabel.element,
-      this.language.element,
-      this.qualityLabel.element,
-      this.quality.element,
-      ...this.panel.elements,
+    this.frame = new ScreenFrame({ testid: 'settings', variant: 'full', onBack: options.onBack });
+    this.language = this.scope.addDestroyable(
+      new SegmentedControl({
+        options: this.languageOptions(),
+        value: settings.get().language,
+        onCommit: (value) => {
+          const language = LANGUAGES.find((candidate) => candidate === value);
+          if (!language) return;
+          void settings.update({ language });
+          void applyLanguage(language);
+        },
+      }),
     );
-    const actions = document.createElement('div');
-    actions.className = 'vt-screen__actions';
-    actions.append(this.back.element);
-    this.element.append(this.title.element, body, actions);
+    this.language.element.dataset.testid = 'settings-language';
+    this.quality = this.scope.addDestroyable(
+      new SegmentedControl({
+        options: this.qualityOptions(),
+        value: settings.get().quality,
+        onCommit: (value) => {
+          const quality = LEVELS.find((candidate) => candidate === value);
+          if (quality) void settings.update({ quality });
+        },
+      }),
+    );
+    this.quality.element.dataset.testid = 'settings-quality';
+    this.languageRow = this.scope.addDestroyable(
+      new SettingsRow({ label: i18next.t('voltest:settings.language'), control: this.language }),
+    );
+    this.qualityRow = this.scope.addDestroyable(
+      new SettingsRow({ label: i18next.t('voltest:pause.quality'), control: this.quality }),
+    );
+    this.panel = this.scope.addDestroyable(new SettingsPanel(settings, options.displayAvailable));
+    const form = this.scope.addDestroyable(new SettingsForm({ className: 'vt-settings__form' }));
+    form.add(this.languageRow);
+    form.add(this.qualityRow);
+    for (const element of this.panel.elements) form.element.append(element);
+    this.frame.body.add(form);
 
     this.scope.addSubscription(
       settings.subscribe((next) => {
@@ -99,6 +94,10 @@ export class SettingsScreen {
     this.scope.addSubscription(() => i18next.off('languageChanged', onLanguage));
   }
 
+  get element(): HTMLElement {
+    return this.frame.element;
+  }
+
   focus(): void {
     this.language.element
       .querySelector<HTMLElement>('button, input')
@@ -106,32 +105,20 @@ export class SettingsScreen {
   }
 
   refreshLabels(): void {
-    this.title.setContent(i18next.t('voltest:settings.title'));
-    this.languageLabel.setContent(i18next.t('voltest:settings.language'));
+    this.frame.setTitle(i18next.t('voltest:settings.title'));
+    this.frame.setBackLabel(i18next.t('voltest:settings.back'));
+    this.languageRow.setLabel(i18next.t('voltest:settings.language'));
     this.language.setOptions(this.languageOptions());
     this.language.setValue(this.options.settings.get().language);
-    this.language.setAriaLabel(i18next.t('voltest:settings.language'));
-    this.qualityLabel.setContent(i18next.t('voltest:pause.quality'));
+    this.qualityRow.setLabel(i18next.t('voltest:pause.quality'));
     this.quality.setOptions(this.qualityOptions());
     this.quality.setValue(this.options.settings.get().quality);
-    this.quality.setAriaLabel(i18next.t('voltest:pause.quality'));
     this.panel.refreshLabels();
-    this.back.setLabel(i18next.t('voltest:settings.back'));
   }
 
   destroy(): void {
     this.scope.dispose();
-    this.panel.destroy();
-    for (const part of [
-      this.title,
-      this.languageLabel,
-      this.language,
-      this.qualityLabel,
-      this.quality,
-      this.back,
-    ])
-      part.destroy();
-    this.element.remove();
+    this.frame.destroy();
   }
 
   private languageOptions(): Array<{ value: string; label: string }> {

@@ -41,7 +41,7 @@ describe('SettingsScreen', () => {
     choice('settings-language', 'English').click();
     await vi.waitFor(() => expect(i18next.language).toBe('en'));
     expect(settings.get().language).toBe('en');
-    expect(find('settings-back').textContent).toBe('Back');
+    expect(find('settings-back').getAttribute('aria-label')).toBe('Back');
     expect(choice('settings-language', 'Automatic')).toBeDefined();
   });
 

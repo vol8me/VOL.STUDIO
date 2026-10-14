@@ -30,13 +30,26 @@ function mount(vehicle: VehicleId = 'striker', faction = FACTION_AUTO, name = 'K
   panels.push(panel);
   const find = <T extends HTMLElement = HTMLElement>(id: string): T =>
     panel.element.querySelector<T>(`[data-testid="${id}"]`)!;
-  const card = (id: VehicleId): HTMLButtonElement =>
-    find<HTMLButtonElement>(`garage-vehicle-${id}`);
+  const card = (id: VehicleId): HTMLElement => find(`garage-vehicle-${id}`);
+  const pick = (id: VehicleId): HTMLButtonElement =>
+    card(id).querySelector<HTMLButtonElement>('.vol-card__action')!;
   const factionButton = (label: string): HTMLButtonElement =>
     [...find('garage-faction').querySelectorAll<HTMLButtonElement>('[role="radio"]')].find(
       (button) => button.textContent === label,
     )!;
-  return { panel, picked, factions, names, joined, onPractice, onBack, find, card, factionButton };
+  return {
+    panel,
+    picked,
+    factions,
+    names,
+    joined,
+    onPractice,
+    onBack,
+    find,
+    card,
+    pick,
+    factionButton,
+  };
 }
 
 afterEach(async () => {
@@ -45,57 +58,60 @@ afterEach(async () => {
 });
 
 describe('GaragePanel', () => {
-  it('her araç için bir kart kurar; kayıtlı araç seçili ve odak sırasındadır', () => {
-    const { card } = mount('dart');
-    expect(VEHICLE_IDS.map((id) => card(id).getAttribute('aria-checked'))).toEqual(
+  it('her araç için bir CORE kartı kurar; kayıtlı araç seçili ve basılı görünür', () => {
+    const { card, pick } = mount('dart');
+    expect(VEHICLE_IDS.map((id) => pick(id).getAttribute('aria-pressed'))).toEqual(
       VEHICLE_IDS.map((id) => String(id === 'dart')),
     );
-    expect(card('dart').tabIndex).toBe(0);
-    expect(card('striker').tabIndex).toBe(-1);
+    expect(card('dart').classList.contains('vol-card--selected')).toBe(true);
+    expect(card('striker').classList.contains('vol-card--selected')).toBe(false);
+    expect(pick('dart').textContent).toBe(i18next.t('voltest:garage.selected'));
+    expect(pick('striker').textContent).toBe(i18next.t('voltest:garage.select'));
     expect(card('bulwark').textContent).toContain(
       i18next.t('voltest:garage.vehicles.bulwark.name'),
     );
     expect(card('bulwark').textContent).toContain(
       i18next.t('voltest:garage.vehicles.bulwark.role'),
     );
+    expect(card('bulwark').textContent).toContain(
+      i18next.t('voltest:garage.vehicles.bulwark.class'),
+    );
   });
 
   it('ölçü çubukları katalog oranını taşır', () => {
     const { card } = mount();
     for (const id of VEHICLE_IDS) {
-      const bars = [...card(id).querySelectorAll<HTMLElement>('.vt-stat__bar')].map((bar) =>
-        Number(bar.style.getPropertyValue('--vt-stat')),
+      const bars = [...card(id).querySelectorAll<HTMLElement>('.vol-bar[data-stat]')].map((bar) =>
+        Number(bar.getAttribute('aria-valuenow')),
       );
       const stats = vehicleStats(id);
-      expect(bars).toEqual([stats.durability, stats.speed, stats.firepower]);
+      expect(bars).toEqual(
+        [stats.durability, stats.speed, stats.firepower].map((ratio) => Math.round(ratio * 100)),
+      );
     }
   });
 
-  it('karta tıklamak aracı seçer ve bildirir; aynı kart tekrar bildirir ama tek seçili kalır', () => {
-    const { card, picked } = mount();
-    card('arachnid').click();
+  it('seç düğmesi aracı seçer ve bildirir; tek kart seçili kalır', () => {
+    const { card, pick, picked } = mount();
+    pick('arachnid').click();
     expect(picked).toEqual(['arachnid']);
-    expect(card('arachnid').getAttribute('aria-checked')).toBe('true');
-    expect(card('striker').getAttribute('aria-checked')).toBe('false');
-    expect(card('arachnid').tabIndex).toBe(0);
+    expect(pick('arachnid').getAttribute('aria-pressed')).toBe('true');
+    expect(pick('striker').getAttribute('aria-pressed')).toBe('false');
+    expect(card('arachnid').classList.contains('vol-card--selected')).toBe(true);
+    expect(pick('arachnid').textContent).toBe(i18next.t('voltest:garage.selected'));
+    expect(pick('striker').textContent).toBe(i18next.t('voltest:garage.select'));
   });
 
-  it('ok tuşları seçimi gezdirir ve uçlarda başa sarar', () => {
-    const { card, picked } = mount('striker');
-    const press = (key: string, id: VehicleId): void => {
-      card(id).dispatchEvent(
-        new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
-      );
-    };
-    press('ArrowRight', 'striker');
-    press('ArrowRight', 'bulwark');
-    press('ArrowLeft', 'dart');
-    press('ArrowLeft', 'bulwark');
-    press('ArrowLeft', 'striker');
-    expect(picked).toEqual(['bulwark', 'dart', 'bulwark', 'striker', 'arachnid']);
-    expect(document.activeElement).toBe(card('arachnid'));
-    press('Enter', 'arachnid');
-    expect(picked).toHaveLength(5);
+  it('kartın gövdesine tıklamak araç seçmez: eylem her zaman açık düğmedir', () => {
+    const { card, picked } = mount();
+    card('bulwark').click();
+    expect(picked).toEqual([]);
+  });
+
+  it('vitrin bölgesi ayrılır ve ekranın gövdesindedir', () => {
+    const { panel } = mount();
+    expect(panel.stage.className).toBe('vt-garage__stage');
+    expect(panel.element.contains(panel.stage)).toBe(true);
   });
 
   it('katıl: adı ve istenen cepheyi verir; ad alanı sınırlıdır', () => {
@@ -119,13 +135,13 @@ describe('GaragePanel', () => {
   });
 
   it('bağlanırken seçimler kilitlenir, durum görünür; hata durumu açar', () => {
-    const { panel, find, card, joined } = mount();
+    const { panel, find, pick, joined } = mount();
     panel.setBusy(true);
     expect(find('garage-status').textContent).toBe(i18next.t('voltest:online.connecting'));
     expect(find<HTMLButtonElement>('garage-join').disabled).toBe(true);
     expect(find<HTMLButtonElement>('garage-practice').disabled).toBe(true);
     expect(find<HTMLInputElement>('garage-name').disabled).toBe(true);
-    expect(card('dart').disabled).toBe(true);
+    expect(pick('dart').disabled).toBe(true);
     // Geri dönüş bağlanırken de açık kalır: vazgeçmek mümkündür.
     expect(find<HTMLButtonElement>('garage-back').disabled).toBe(false);
     find('garage-join').click();
@@ -135,7 +151,7 @@ describe('GaragePanel', () => {
     expect(find('garage-status').textContent).toBe(i18next.t('voltest:online.error.unreachable'));
     expect(find('garage-status').dataset.tone).toBe('danger');
     expect(find<HTMLButtonElement>('garage-join').disabled).toBe(false);
-    expect(card('dart').disabled).toBe(false);
+    expect(pick('dart').disabled).toBe(false);
   });
 
   it('alıştırma ve geri niyetlerini bildirir', () => {
@@ -147,12 +163,13 @@ describe('GaragePanel', () => {
   });
 
   it('dil değişince araç adları, durum ve cephe seçimi korunarak yenilenir', async () => {
-    const { panel, find, card, factionButton } = mount('striker', FACTION_AUTO);
+    const { panel, find, factionButton } = mount('striker', FACTION_AUTO);
     factionButton(i18next.t('voltest:war.faction.blue')).click();
     panel.setBusy(true);
     await i18next.changeLanguage('en');
     expect(find('garage-join').textContent).toBe('Join the war');
-    expect(card('arachnid').textContent).toContain('Legged war beast');
+    expect(find('garage-vehicle-arachnid').textContent).toContain('Legged war beast');
+    expect(find('garage-vehicle-arachnid').textContent).toContain('WALKER');
     expect(find('garage-status').textContent).toBe('Connecting…');
     expect(factionButton('Blue').getAttribute('aria-checked')).toBe('true');
   });

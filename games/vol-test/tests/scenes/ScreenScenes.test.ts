@@ -137,7 +137,9 @@ describe('ScreenScene odağı', () => {
     const idle = mount(() => new GarageScene(env));
     await frame();
     await frame();
-    expect(document.activeElement).toBe(idle.find('garage-vehicle-striker'));
+    expect(document.activeElement).toBe(
+      idle.find('garage-vehicle-striker').querySelector('.vol-card__action'),
+    );
     idle.shutdown();
     idle.parent.remove();
 
@@ -156,7 +158,7 @@ describe('MenuScene', () => {
     const harness = mount(() => new MenuScene(env, nativeWindow() as never));
     expect(harness.find('menu')).not.toBeNull();
     harness.scene.update(0, 16);
-    expect(showroom.update).toHaveBeenCalledWith(16, expect.anything());
+    expect(showroom.update).toHaveBeenCalledWith(16, expect.anything(), undefined);
 
     harness.find('menu-play').click();
     expect(harness.find('menu').dataset.leaving).toBe('true');
@@ -254,8 +256,10 @@ describe('GarageScene', () => {
     const { services: env, update } = services({ vehicle: 'dart', faction: 1, playerName: 'Ada' });
     const harness = mount(() => new GarageScene(env));
     expect(harness.find<HTMLInputElement>('garage-name').value).toBe('Ada');
-    expect(harness.find('garage-vehicle-dart').getAttribute('aria-checked')).toBe('true');
-    harness.find('garage-vehicle-arachnid').click();
+    const pick = (id: string): HTMLButtonElement =>
+      harness.find(`garage-vehicle-${id}`).querySelector<HTMLButtonElement>('.vol-card__action')!;
+    expect(pick('dart').getAttribute('aria-pressed')).toBe('true');
+    pick('arachnid').click();
     expect(update).toHaveBeenCalledWith({ vehicle: 'arachnid' });
     expect(showroom.setVehicle).toHaveBeenCalledWith(VEHICLES.arachnid);
   });
@@ -337,5 +341,22 @@ describe('GarageScene', () => {
     expect(triggerBack()).toBe(true);
     back.finishFade();
     expect(back.start).toHaveBeenCalledWith('Menu', {});
+  });
+});
+
+describe('ScreenScene vitrin bölgesi', () => {
+  it('garaj kendi sunum bölgesini verir; ana menü vermez ve panelin bıraktığı alanı kullanır', () => {
+    const { services: env } = services();
+    showroom.update.mockClear();
+    const garage = mount(() => new GarageScene(env));
+    garage.scene.update(0, 16);
+    const stage: unknown = showroom.update.mock.calls.at(-1)![2];
+    expect(stage).toBeDefined();
+    garage.shutdown();
+    garage.parent.remove();
+
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    menu.scene.update(0, 16);
+    expect(showroom.update.mock.calls.at(-1)![2]).toBeUndefined();
   });
 });

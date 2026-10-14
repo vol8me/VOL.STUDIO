@@ -10,6 +10,8 @@ import { Showroom } from '@/view/Showroom';
 /** Bir ekranın DOM paneli: sahne onu bağlar, odaklar ve kapanışta söker. */
 export interface ScreenPanel {
   readonly element: HTMLElement;
+  /** Verilirse vitrin bu bölgeye kurulur; yoksa panelin bıraktığı boş alana. */
+  readonly stage?: HTMLElement;
   focus(): void;
   destroy(): void;
 }
@@ -68,7 +70,8 @@ export abstract class ScreenScene extends Phaser.Scene {
   }
 
   override update(_time: number, delta: number): void {
-    this.showroom.update(delta, this.screen?.element.getBoundingClientRect());
+    const stage = this.screen?.stage?.getBoundingClientRect();
+    this.showroom.update(delta, this.screen?.element.getBoundingClientRect(), stage);
   }
 
   /** Bu ekranın panelini kurar; sahne onu bağlar ve kapanışta yok eder. */

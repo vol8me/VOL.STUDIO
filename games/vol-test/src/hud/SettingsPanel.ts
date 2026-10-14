@@ -1,6 +1,6 @@
 import { DisposableScope } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
-import { Checkbox, SegmentedControl, Slider, Text } from '@volstudio/core/ui';
+import { Checkbox, SegmentedControl, SettingsRow, Slider } from '@volstudio/core/ui';
 import { ScenarioPanel } from './ScenarioPanel';
 import type { GameSettings } from '@/app/GameSettings';
 
@@ -11,7 +11,8 @@ export class SettingsPanel {
   private readonly volume: Slider;
   private readonly haptics: Checkbox;
   private readonly display: SegmentedControl | null;
-  private readonly displayLabel: Text | null;
+  private readonly displayRow: SettingsRow | null;
+  private readonly rows: readonly SettingsRow[];
 
   constructor(settings: GameSettings, displayAvailable: boolean) {
     const value = settings.get();
@@ -35,9 +36,6 @@ export class SettingsPanel {
       }),
     );
     this.haptics.element.dataset.testid = 'pause-haptics';
-    this.displayLabel = displayAvailable
-      ? this.scope.addDestroyable(new Text('', { variant: 'muted', tag: 'span' }))
-      : null;
     this.display = displayAvailable
       ? this.scope.addDestroyable(
           new SegmentedControl({
@@ -51,14 +49,21 @@ export class SettingsPanel {
         )
       : null;
     if (this.display) this.display.element.dataset.testid = 'pause-display';
+    this.displayRow = this.display
+      ? this.scope.addDestroyable(
+          new SettingsRow({ label: i18next.t('voltest:pause.display'), control: this.display }),
+        )
+      : null;
+    // Kaydırıcı ve onay kutusu kendi etiketini taşır; satır yalnız ritmi ve ayırıcıyı verir.
+    this.rows = [
+      this.scope.addDestroyable(new SettingsRow({ control: this.volume })),
+      this.scope.addDestroyable(new SettingsRow({ control: this.haptics })),
+    ];
     this.scenarios = this.scope.addDestroyable(new ScenarioPanel(settings));
     this.elements = [
-      this.volume.element,
-      this.haptics.element,
+      ...this.rows.map((row) => row.element),
       ...this.scenarios.elements,
-      ...(this.displayLabel && this.display
-        ? [this.displayLabel.element, this.display.element]
-        : []),
+      ...(this.displayRow ? [this.displayRow.element] : []),
     ];
     this.scope.addSubscription(
       settings.subscribe((next) => {
@@ -74,9 +79,8 @@ export class SettingsPanel {
     this.scenarios.refreshLabels();
     this.volume.setLabel(i18next.t('voltest:pause.volume'));
     this.haptics.setLabel(i18next.t('voltest:pause.haptics'));
-    this.displayLabel?.setContent(i18next.t('voltest:pause.display'));
+    this.displayRow?.setLabel(i18next.t('voltest:pause.display'));
     this.display?.setOptions(this.displayOptions());
-    this.display?.setAriaLabel(i18next.t('voltest:pause.display'));
   }
 
   private displayOptions(): Array<{ value: string; label: string }> {

@@ -17,6 +17,14 @@ export interface PanelRect {
   readonly width: number;
 }
 
+/** Vitrinin kurulacağı bölgenin ekran CSS pikselindeki dikdörtgeni (`DOMRect` bunu karşılar). */
+export interface StageRect {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 /**
  * Menü ve garajın vitrini: oyundaki gerçek araç görünümünü zemin ızgarası üstünde yavaş dönen bir
  * tablada gösterir. Görünüm sınıfları oyunla aynıdır; yeni araç otomatik olarak vitrine girer.
@@ -50,8 +58,11 @@ export class Showroom {
     this.view.root.setDepth(10);
   }
 
-  /** Tablayı ilerletir ve kamerayı panelin bıraktığı alana yerleştirir. */
-  update(deltaMs: number, panel?: PanelRect): void {
+  /**
+   * Tablayı ilerletir ve kamerayı yerleştirir: `stage` verilirse aracı o bölgeye oturtur (tam ekran
+   * ekranlar), yoksa panelin bıraktığı boş alana.
+   */
+  update(deltaMs: number, panel?: PanelRect, stage?: StageRect): void {
     this.elapsedMs += Number.isFinite(deltaMs) && deltaMs > 0 ? deltaMs : 0;
     const seconds = this.elapsedMs / 1000;
     const hull = seconds * SHOWROOM.turntableRate;
@@ -59,7 +70,7 @@ export class Showroom {
       this.frame(hull, hull + Math.sin(seconds * SHOWROOM.turretSweepRate) * SHOWROOM.turretSweep),
       deltaMs,
     );
-    this.frameCamera(panel);
+    this.frameCamera(panel, stage);
   }
 
   destroy(): void {
@@ -91,7 +102,7 @@ export class Showroom {
    * Aracı panelin bıraktığı boş alanın ortasına oturtur: panel yan şeritse alanın sağında, ekranı
    * kaplayan alt levhaysa üstünde. `panel` ekran CSS pikselindeki dikdörtgendir; yoksa tüm ekran boştur.
    */
-  private frameCamera(panel: PanelRect | undefined): void {
+  private frameCamera(panel: PanelRect | undefined, stage: StageRect | undefined): void {
     const camera = this.scene.cameras.main;
     const quality = renderQualityOf(this.scene);
     const width = camera.width / quality;
@@ -100,7 +111,12 @@ export class Showroom {
     let focusY = height / 2;
     let freeWidth = width;
     let freeHeight = height;
-    if (panel && panel.width > 0) {
+    if (stage && stage.width > 0 && stage.height > 0) {
+      focusX = stage.left + stage.width / 2;
+      focusY = stage.top + stage.height / 2;
+      freeWidth = stage.width;
+      freeHeight = stage.height;
+    } else if (panel && panel.width > 0) {
       if (panel.width > width * SHOWROOM.stackedFraction) {
         freeHeight = Math.max(0, panel.top);
         focusY = freeHeight / 2;

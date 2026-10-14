@@ -20,6 +20,8 @@
     "join": "Join the war",
     "practice": "Go to practice",
     "back": "Back",
+    "select": "Select",
+    "selected": "Selected",
     "stat": {
       "durability": "Durability",
       "speed": "Speed",
@@ -28,19 +30,23 @@
     "vehicles": {
       "striker": {
         "name": "Striker",
-        "role": "Balanced main tank"
+        "role": "Balanced main tank",
+        "class": "MEDIUM"
       },
       "bulwark": {
         "name": "Bulwark",
-        "role": "Heavy siege tank"
+        "role": "Heavy siege tank",
+        "class": "HEAVY"
       },
       "dart": {
         "name": "Dart",
-        "role": "Light scout tank"
+        "role": "Light scout tank",
+        "class": "LIGHT"
       },
       "arachnid": {
         "name": "Arachnid",
-        "role": "Legged war beast"
+        "role": "Legged war beast",
+        "class": "WALKER"
       }
     }
   },

@@ -1,27 +1,29 @@
 /*
- * Menü, garaj ve ayar ekranları. Bileşenlerin görünümü CORE'undur; bu dosya yerleşimi verir.
- * Ekran sol şerittir ve arkasında canlı araç vitrini görünür; dar ekranda alt levhaya iner
- * (Showroom paneli dikdörtgenden okur, eşik `MENU.showroom.stackedFraction`). Metin taşıyan şerit
- * UI yüzey tokenıyla zeminlenir, oyun paletine dokunmaz.
+ * Menü, garaj ve ayar ekranları. Görünen her parça CORE bileşenidir; bu dosya yalnız yerleşimi verir.
+ * Üç ekran aynı iskeletten gelir (başlık şeridi, kayan gövde, eylem şeridi): `sheet` sol şerittir ve
+ * arkasında canlı araç vitrini görünür, `full` ekranı kaplar ve sunum için `stage` bölgesi ayırabilir.
+ * Vitrin kamerayı `stage` ya da panelin bıraktığı alana kurar (`Showroom`); dar ekranda `sheet` alt
+ * levhaya iner (eşik `MENU.showroom.stackedFraction`).
  */
-.vt-screen {
-  --vt-screen-pad: 24px;
+.vol-panel.vt-screen {
+  --vt-screen-pad: var(--vol-space-xl);
 
-  pointer-events: auto;
-  position: absolute;
+  /* CORE `Panel` içerik genişliğinde ve ortalı gelir; ekran tüm alanı kullanır. */
   inset: 0 auto 0 0;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--vol-space-md);
+  justify-content: stretch;
   width: min(440px, 100%);
+  max-width: none;
   padding: calc(var(--vol-safe-top) + var(--vt-screen-pad)) var(--vt-screen-pad)
     calc(var(--vol-safe-bottom) + var(--vt-screen-pad))
     calc(var(--vol-safe-left) + var(--vt-screen-pad));
-  overflow-y: auto;
   background: linear-gradient(90deg, var(--vol-ui-overlay-panel) 78%, transparent);
-  animation: vt-screen-in var(--vol-transition-medium) ease-out;
-  transition: opacity var(--vol-transition-medium) ease-in;
+  transition:
+    opacity var(--vol-transition-medium) ease-in,
+    transform var(--vol-transition-medium) ease-out;
 }
 
 .vt-screen[data-leaving='true'] {
@@ -29,55 +31,60 @@
   pointer-events: none;
 }
 
-@keyframes vt-screen-in {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
+/* Tam ekran: araç sunumu yalnız `stage` bölgesinde görünür; geri kalan yüzey opaktır. */
+.vol-panel.vt-screen--full {
+  --vt-screen-pad: var(--vol-space-lg);
+
+  inset: 0;
+  width: 100%;
+  background: var(--vol-ui-surface-1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .vt-screen {
-    animation: none;
-    transition: none;
-  }
+.vol-panel.vt-screen--full:has(.vt-garage__stage) {
+  background: transparent;
 }
 
-/* Dar ekran: panel alta iner, araç üstte kalır. */
-@media (width <= 719px) {
-  .vt-screen {
-    --vt-screen-pad: 16px;
+.vt-screen__header {
+  display: flex;
+  align-items: center;
+  gap: var(--vol-space-md);
+  min-width: 0;
+}
 
-    inset: auto 0 0;
-    width: 100%;
-    max-height: 62%;
-    background: var(--vol-ui-overlay-panel);
-  }
+.vt-screen__heading {
+  display: grid;
+  gap: var(--vol-space-xs);
+  justify-items: start;
+  min-width: 0;
+}
 
-  /* Seçenekler kaydırmada da erişilir kalsın: altlık panelin zemininde yapışkan ve yatay dizilir. */
-  .vt-screen:not(.vt-menu) .vt-screen__actions {
-    position: sticky;
-    z-index: 2;
-    bottom: calc(-1 * var(--vt-screen-pad));
-    flex-flow: row wrap;
-    margin-inline: calc(-1 * var(--vt-screen-pad));
-    padding: 8px var(--vt-screen-pad) var(--vt-screen-pad);
-    background: var(--vol-ui-panel);
-  }
+.vt-screen__heading > * {
+  margin: 0;
+}
 
-  /* CORE düğmesi varsayılan tam genişliktir; satırda içeriği kadar büyür. */
-  .vt-screen:not(.vt-menu) .vt-screen__actions > .vol-button {
-    flex: 1 1 auto;
-    width: auto;
-  }
+.vt-screen__body {
+  min-height: 0;
 }
 
 .vt-screen__actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-block-start: auto;
-  padding-block-start: 8px;
+  gap: var(--vol-space-sm);
+}
+
+.vt-screen__actions:empty {
+  display: none;
+}
+
+.vt-screen--full .vt-screen__actions {
+  flex-flow: row wrap;
+  justify-content: flex-end;
+}
+
+.vt-screen--full .vt-screen__actions > .vol-button {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 14em;
 }
 
 .vt-screen__status {
@@ -89,103 +96,162 @@
   color: var(--vol-ui-danger-solid);
 }
 
-.vt-menu {
-  justify-content: center;
+/* Ana menü: başlık şeridi üstte, eylemler altta. */
+.vt-screen--sheet .vt-screen__actions {
+  padding-block-start: var(--vol-space-sm);
 }
 
-.vt-menu .vt-screen__actions {
-  margin-block-start: 16px;
+/* Başlık şeridi ve eylem şeridi tam ekranda opak bantlardır: vitrin yalnız gövdede görünür. */
+.vt-screen--full:has(.vt-garage__stage) .vt-screen__header,
+.vt-screen--full:has(.vt-garage__stage) .vt-screen__actions {
+  padding: var(--vol-space-sm) var(--vol-space-md);
+  background: var(--vol-ui-overlay-panel);
+  border-radius: var(--vol-radius-md);
 }
 
-/* Garaj: araç kartları iki sütun; seçili kart vurgu renginde çerçevelenir. */
-.vt-garage__vehicles {
+/* Ayarlar: tek sütun, okunur genişlikte ortada. */
+.vt-settings__form {
+  width: min(720px, 100%);
+  margin-inline: auto;
+}
+
+/* Garaj: araçlar | sunum | katılım. */
+.vt-garage__layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr) minmax(260px, 340px);
+  gap: var(--vol-space-lg);
+  align-items: start;
+  min-height: 100%;
+}
+
+.vt-garage__vehicles,
+.vt-garage__join {
+  display: grid;
+  gap: var(--vol-space-sm);
+  padding: var(--vol-space-md);
+  background: var(--vol-ui-overlay-panel);
+  border-radius: var(--vol-radius-md);
+}
+
+.vt-garage__vehicles > h2 {
+  margin: 0;
+}
+
+.vt-garage__cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--vol-space-sm);
 }
 
-.vt-vehicle {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-sm);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
+.vt-garage__stage {
+  position: sticky;
+  top: 0;
+  align-self: stretch;
+  min-height: min(60vh, 520px);
+  pointer-events: none;
 }
 
-.vt-vehicle[aria-checked='true'] {
-  border-color: var(--vol-ui-accent-border);
-  background: var(--vol-ui-accent-subtle);
-  box-shadow: 0 0 0 1px var(--vol-ui-accent-border);
-}
-
-.vt-vehicle:focus-visible {
-  outline: 2px solid var(--vol-ui-focus-ring);
-  outline-offset: 2px;
-}
-
-.vt-vehicle:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.vt-vehicle:hover:not(:disabled, [aria-checked='true']) {
-  background: var(--vol-ui-hover-fill);
-}
-
-.vt-vehicle__name {
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.vt-vehicle__role {
-  font-size: 12px;
-  opacity: 0.75;
-}
-
-.vt-vehicle__stats {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-block-start: 4px;
-}
-
-.vt-stat {
+.vt-garage__stats {
   display: grid;
-  grid-template-columns: 5.5em minmax(0, 1fr);
+  gap: var(--vol-space-xs);
+}
+
+.vt-garage__stat .vol-text {
+  text-align: start;
+}
+
+.vt-garage__stat .vol-bar {
+  width: 100%;
+}
+
+.vt-garage__stat {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr);
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  gap: var(--vol-space-sm);
+  font-size: var(--vol-text-label);
 }
 
-.vt-stat__bar {
-  position: relative;
-  height: 4px;
-  overflow: hidden;
-  border-radius: 2px;
-  background: var(--vol-ui-border-soft);
+/* Katılım sütunu dardır: etiket denetimin üstünde durur. */
+.vt-garage__form .vol-settings-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--vol-space-xs);
 }
 
-.vt-stat__bar::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: scaleX(var(--vt-stat, 0));
-  transform-origin: left center;
-  background: var(--vol-ui-accent-solid);
+.vt-garage__form .vol-settings-row__control {
+  justify-content: stretch;
 }
 
-[dir='rtl'] .vt-stat__bar::after {
-  transform-origin: right center;
+/* Orta genişlik: katılım alanı sunumun altına iner. */
+@media (width <= 1100px) {
+  .vt-garage__layout {
+    grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  }
+
+  .vt-garage__join {
+    grid-column: 1 / -1;
+  }
 }
 
-.vt-settings__body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* Dar ekran: sunum üstte, araçlar ve katılım altta tek sütun; gövde kayar, eylemler sabit kalır. */
+@media (width <= 719px) {
+  .vol-panel.vt-screen {
+    --vt-screen-pad: var(--vol-space-md);
+  }
+
+  .vol-panel.vt-screen--sheet {
+    inset: auto 0 0;
+    width: 100%;
+    max-height: 62%;
+    background: var(--vol-ui-overlay-panel);
+  }
+
+  .vt-garage__layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--vol-space-md);
+  }
+
+  .vt-garage__stage {
+    order: -1;
+    position: relative;
+    min-height: 32vh;
+  }
+
+  .vt-garage__join {
+    grid-column: auto;
+  }
+
+  .vt-screen--full .vt-screen__actions {
+    flex-wrap: nowrap;
+  }
+
+  .vt-screen--full .vt-screen__actions > .vol-button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+/* Alçak yatay ekran (telefon): üç sütun korunur, kartlar tek sütuna iner. */
+@media (height <= 520px) and (width > 719px) {
+  .vol-panel.vt-screen--full {
+    --vt-screen-pad: var(--vol-space-sm);
+  }
+
+  .vt-garage__cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vt-garage__join {
+    grid-column: auto;
+  }
+
+  .vt-garage__layout {
+    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr) minmax(220px, 280px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-screen {
+    transition: none;
+  }
 }

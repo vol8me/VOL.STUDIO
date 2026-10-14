@@ -331,13 +331,17 @@ Açılış sırası Boot → Menu → (Garage | Settings | World). `BootScene` d
 | `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi, senaryo ve tohum |
 | `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)       |
 
-Üç ekran `ScreenScene` iskeletini paylaşır: `UIRoot` içinde CORE bileşenlerinden kurulan bir DOM
-paneli ve arkada oyunun gerçek araç görünümlerini (`TankView`, `WalkerView`) dönen tablada gösteren
-`Showroom`. Vitrin kamerasını panelin ekrandaki dikdörtgenine göre kurar: geniş ekranda araç panelin
-yanında, dar ekranda panelin üstünde durur ve boş alana sığmazsa yakınlaştırma küçülür
-(`src/config/menu.ts`). Ekran değişimi solarak yapılır (`prefers-reduced-motion`da anında); geçiş
-sürerken ikinci seçim yok sayılır. Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış
-onayını açar ya da kapatır.
+Üç ekran aynı taksonomiden gelir: `ScreenFrame` başlık şeridi (geri `IconButton`, başlık, alt başlık),
+kayan gövde (`ScrollView`) ve eylem şeridini kurar; ekranlar yalnız içeriklerini gövdeye, düğmelerini
+şeride koyar. İki düzen vardır. `sheet` sol şerittir ve arkasında canlı araç vitrini görünür (ana menü,
+dar ekranda alt levha); `full` ekranı kaplar (garaj, ayarlar), garaj sunum için ortada bir `stage`
+bölgesi ayırır. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
+ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, denetimler `Input`,
+`SegmentedControl`, `Select`, `Checkbox`; `menu.css` yalnız yerleşim verir. Arkada oyunun gerçek araç
+görünümleri (`TankView`, `WalkerView`) dönen tablada durur (`Showroom`); kamera `stage` bölgesine ya
+da `sheet`in bıraktığı alana kurulur ve sığmazsa yakınlaştırma küçülür (`src/config/menu.ts`). Ekran
+değişimi solarak yapılır (`prefers-reduced-motion`da anında); geçiş sürerken ikinci seçim yok sayılır.
+Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış onayını açar ya da kapatır.
 
 Garajdaki seçim (araç, cephe, ad) ve ayarlardaki dil `GameSettings`e yazılır ve oturumlar arasında
 kalır; alıştırma ve savaş aynı araç tercihini kullanır. Savaşa katılma çevrimiçi parçayı ilk kullanımda

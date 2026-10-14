@@ -1,19 +1,18 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { i18next } from '@volstudio/core/i18n';
-import { Input, Select, Text } from '@volstudio/core/ui';
+import { Input, Select, SettingsRow } from '@volstudio/core/ui';
 import type { GameSettings } from '@/app/GameSettings';
 import { isScenario, validSeed, SCENARIO, SCENARIOS, type ScenarioId } from '@/config/scenarios';
 
 export class ScenarioPanel {
   readonly elements: readonly HTMLElement[];
   private readonly scope = new DisposableScope();
-  private readonly label: Text;
   private readonly picker: Select;
-  private readonly seedLabel: Text;
   private readonly seed: Input;
+  private readonly pickerRow: SettingsRow;
+  private readonly seedRow: SettingsRow;
 
   constructor(settings: GameSettings) {
-    this.label = this.scope.addDestroyable(new Text('', { variant: 'muted', tag: 'label' }));
     this.picker = this.scope.addDestroyable(
       new Select({
         options: this.options(),
@@ -24,7 +23,6 @@ export class ScenarioPanel {
       }),
     );
     this.picker.element.dataset.testid = 'pause-scenario';
-    this.seedLabel = this.scope.addDestroyable(new Text('', { variant: 'muted', tag: 'label' }));
     this.seed = this.scope.addDestroyable(
       new Input({
         type: 'number',
@@ -41,12 +39,13 @@ export class ScenarioPanel {
     this.seed.element.max = String(SCENARIO.maxSeed);
     this.seed.element.step = '1';
     this.seed.element.dataset.testid = 'pause-seed';
-    this.elements = [
-      this.label.element,
-      this.picker.element,
-      this.seedLabel.element,
-      this.seed.element,
-    ];
+    this.pickerRow = this.scope.addDestroyable(
+      new SettingsRow({ label: i18next.t('voltest:pause.scenario'), control: this.picker }),
+    );
+    this.seedRow = this.scope.addDestroyable(
+      new SettingsRow({ label: i18next.t('voltest:pause.seed'), control: this.seed }),
+    );
+    this.elements = [this.pickerRow.element, this.seedRow.element];
     this.scope.addSubscription(
       settings.subscribe((next) => {
         this.picker.setValue(next.scenario);
@@ -59,11 +58,9 @@ export class ScenarioPanel {
   refreshLabels(): void {
     const scenario = i18next.t('voltest:pause.scenario');
     const seed = i18next.t('voltest:pause.seed');
-    this.label.setContent(scenario);
-    this.picker.element.setAttribute('aria-label', scenario);
+    this.pickerRow.setLabel(scenario);
     this.picker.setOptions(this.options());
-    this.seedLabel.setContent(seed);
-    this.seed.element.setAttribute('aria-label', seed);
+    this.seedRow.setLabel(seed);
   }
 
   destroy(): void {
