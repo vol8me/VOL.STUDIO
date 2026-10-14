@@ -2,7 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VehicleAudio } from '@/audio/VehicleAudio';
 import { AUDIO } from '@/config/audio';
 import { WEAPON } from '@/config/tank';
-import { ARACHNID, BULWARK, DART, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
+import {
+  ARACHNID,
+  BULWARK,
+  DART,
+  MANTA,
+  STRIKER,
+  topSpeedOf,
+  type VehicleSpec,
+} from '@/config/vehicles';
 import { tank, world, command, DT } from '../support/sim';
 import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext, type FakeAudioSource } from '../support/fakeAudio';
@@ -86,6 +94,29 @@ describe('araç döngüleri', () => {
     );
     expect(output(legs).gain.value).toBeCloseTo(AUDIO.legs.gain);
     walker.dispose();
+  });
+  it('süzülen araç pervane uğultusu çalar; palet ve bacak döngüsü yüklenmez', async () => {
+    const own = new FakeAudioContext();
+    const hover = new VehicleAudio(
+      own as unknown as AudioContext,
+      own.destination as unknown as AudioNode,
+      MANTA,
+    );
+    await hover.ready;
+    const subject = tank();
+    subject.trackLeft = subject.trackRight = topSpeedOf(MANTA);
+    hover.update(subject, subject, false);
+    const urls = own.sources.map((s) => s.buffer?.url ?? '');
+    expect(urls.some((url) => url.endsWith('/fans.ogg'))).toBe(true);
+    expect(urls.some((url) => url.endsWith('/tracks.ogg') || url.endsWith('/legs.ogg'))).toBe(
+      false,
+    );
+    const fans = own.sources.find((s) => s.buffer?.url?.endsWith('/fans.ogg'))!;
+    expect(fans.playbackRate.value).toBeCloseTo(
+      AUDIO.fans.rateMax * AUDIO.vehicleVoice.manta.tracks,
+    );
+    expect(output(fans).gain.value).toBeCloseTo(AUDIO.fans.gain);
+    hover.dispose();
   });
   it('motor perdesi araca göredir: ağır araç derin, hafif araç tiz; Striker referanstır', async () => {
     const idleRate = async (spec: VehicleSpec) => {

@@ -6,6 +6,7 @@ import {
   type TankConfig,
   type WeaponConfig,
 } from './tank';
+import { HOVER, type HoverConfig } from './hover';
 import { WALKER, type WalkerConfig } from './walker';
 
 /** Paletli araçlar. */
@@ -16,6 +17,10 @@ export type TankId = (typeof TANK_IDS)[number];
 export const WALKER_IDS = ['arachnid', 'widow', 'goliath'] as const;
 export type WalkerId = (typeof WALKER_IDS)[number];
 
+/** Süzülen araçlar. */
+export const HOVER_IDS = ['manta'] as const;
+export type HoverId = (typeof HOVER_IDS)[number];
+
 /** Seçilebilir araçlar; sıra ağ protokolündeki `model` indeksidir, sona eklenir ve yeniden sıralanmaz. */
 export const VEHICLE_IDS = [
   'striker',
@@ -24,7 +29,8 @@ export const VEHICLE_IDS = [
   'arachnid',
   'widow',
   'goliath',
-] as const satisfies readonly [...typeof TANK_IDS, ...typeof WALKER_IDS];
+  'manta',
+] as const satisfies readonly [...typeof TANK_IDS, ...typeof WALKER_IDS, ...typeof HOVER_IDS];
 export type VehicleId = (typeof VEHICLE_IDS)[number];
 
 /** Bir aracın en çok taşıyabileceği namlu: atış arabellekleri ve ağ paketi bu tavana göre boyanır. */
@@ -82,11 +88,25 @@ export interface WalkerSpec extends VehicleBase {
   readonly walker: WalkerConfig;
 }
 
-export type VehicleSpec = TankSpec | WalkerSpec;
+/** Süzülen araç tanımı: iki yan itici üstünde kayar, gövdesi nişana bakar, tek taretli. */
+export interface HoverSpec extends VehicleBase {
+  readonly kind: 'hover';
+  readonly id: HoverId;
+  readonly hover: HoverConfig;
+}
+
+export type VehicleSpec = TankSpec | WalkerSpec | HoverSpec;
 
 /** Şasinin tüm türlerde ortak sayıları (gövde ayak izi, depo, taret hızı). */
-export function chassisConfigOf(spec: VehicleSpec): WalkerConfig | TankSpec['tank'] {
-  return spec.kind === 'tank' ? spec.tank : spec.walker;
+export function chassisConfigOf(spec: VehicleSpec): WalkerConfig | HoverConfig | TankSpec['tank'] {
+  switch (spec.kind) {
+    case 'tank':
+      return spec.tank;
+    case 'walker':
+      return spec.walker;
+    case 'hover':
+      return spec.hover;
+  }
 }
 
 /** Düz zeminde yürüyüş ya da sürüş tavanı (birim/s); atılım hariç. */
@@ -410,6 +430,47 @@ export const GOLIATH: WalkerSpec = {
   },
 };
 
+/**
+ * Manta: süzülen avcı. Ne paletle ne bacakla yürür, iki yan itici fanıyla zeminin üstünde kayar: hızlı
+ * ve çevik ama frenlemesi yumuşaktır, köşede yana süzülür, momentum taşır. Gövdesi yürüdüğü yöne değil
+ * nişana bakar, yani arkasına bakmadan kaçarken ateş eder. Silahı kısa menzilli, hızlı yay çakar:
+ * her atış zayıftır ama tempo yüksektir; mesafe açan keskin nişancıya yenilir, yavaş ağır araçların
+ * çevresinde dönerek ezer. İticileri ince zırhın dışındadır: yandan gelen ateş iticiyi koparır ve araç
+ * o yana savrulur. Space basılı tutulunca iticilere yüklenip atılır.
+ */
+export const MANTA: HoverSpec = {
+  kind: 'hover',
+  id: 'manta',
+  health: 120,
+  hover: HOVER,
+  suspension: {
+    ...SUSPENSION,
+    frequency: 1.5,
+    damping: 0.2,
+    pitchPerAccel: 0.012,
+    rollPerAccel: 0.018,
+    maxOffset: 5.5,
+    roughness: 0.05,
+  },
+  armament: {
+    weapon: {
+      intervalMs: 150,
+      aimTolerance: 0.035,
+      projectileSpeed: 1100,
+      projectileLifeMs: 750,
+      flight: { muzzleHeight: 18, launchSpeed: 60, gravity: 314, drag: 0.25, maxRange: 520 },
+      recoilImpulse: 3000,
+      hitImpulse: 9000,
+      recoilKick: 5,
+      damage: 9,
+      style: 'arc',
+    },
+    mounts: [{ x: 0, y: 0, reach: 30 }],
+    salvo: [[0]],
+    toeInRange: 400,
+  },
+};
+
 export const VEHICLES: Readonly<Record<VehicleId, VehicleSpec>> = {
   striker: STRIKER,
   bulwark: BULWARK,
@@ -417,6 +478,7 @@ export const VEHICLES: Readonly<Record<VehicleId, VehicleSpec>> = {
   arachnid: ARACHNID,
   widow: WIDOW,
   goliath: GOLIATH,
+  manta: MANTA,
 };
 
 export function isVehicleId(value: unknown): value is VehicleId {

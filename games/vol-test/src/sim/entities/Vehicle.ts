@@ -6,6 +6,7 @@ import { COMBAT, type CombatConfig } from '@/config/combat';
 import { PartWear } from '../combat/PartWear';
 import { Vitality } from '../combat/Vitality';
 import type { Chassis } from '../chassis/Chassis';
+import { Hover } from '../hover/Hover';
 import { Tank } from '../tank/Tank';
 import { Walker } from '../walker/Walker';
 
@@ -20,7 +21,7 @@ export class Vehicle {
   readonly chassis: Chassis;
   readonly gun: Cooldown;
   readonly vitality: Vitality;
-  /** Palet ve bacak aşınması: konuma göre birikir, sonuç `chassis.parts`tadır (aşınmanın kendisi ağa gitmez). */
+  /** Palet, bacak ve itici aşınması: konuma göre birikir, sonuç `chassis.parts`tadır (aşınmanın kendisi ağa gitmez). */
   readonly wear: PartWear;
   /** Sıradaki tetik çekişinde ateşlenecek `armament.salvo` grubu; ağ durumunun parçasıdır. */
   salvo = 0;
@@ -33,14 +34,22 @@ export class Vehicle {
     combat: CombatConfig = COMBAT,
     readonly team: number | null = null,
   ) {
-    this.chassis =
-      spec.kind === 'tank'
-        ? new Tank(spec.tank, spec.suspension)
-        : new Walker(spec.walker, spec.suspension);
+    this.chassis = Vehicle.buildChassis(spec);
     this.gun = new Cooldown(spec.armament.weapon.intervalMs);
     this.vitality = new Vitality({ ...combat, maxHealth: spec.health });
     this.wear = new PartWear(spec);
     this.spawnPoint = { x: 0, y: 0, hull: -Math.PI / 2 };
+  }
+
+  private static buildChassis(spec: VehicleSpec): Chassis {
+    switch (spec.kind) {
+      case 'tank':
+        return new Tank(spec.tank, spec.suspension);
+      case 'walker':
+        return new Walker(spec.walker, spec.suspension);
+      case 'hover':
+        return new Hover(spec.hover, spec.suspension);
+    }
   }
 
   get armament(): Armament {

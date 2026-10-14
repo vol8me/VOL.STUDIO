@@ -57,6 +57,8 @@ export class GameAudio {
     }
     for (const asset of new Set(Object.values(AUDIO.shotAsset)))
       this.bank.register(`shot:${asset}`, [audioUrl(`${AUDIO.loopAssetRoot}/${asset}.ogg`)]);
+    for (const asset of Object.values(AUDIO.eventAsset))
+      this.bank.register(`fx:${asset}`, [audioUrl(`${AUDIO.loopAssetRoot}/${asset}.ogg`)]);
     for (const action of ['pause', 'resume'])
       this.bank.register(`ui:${action}`, [audioUrl(`${AUDIO.uiAssetRoot}/${action}.ogg`)]);
   }
@@ -131,6 +133,7 @@ export class GameAudio {
       }
       if (voice.update(vehicle.chassis, listener, this.paused))
         this.play('brake', vehicle.chassis, listener);
+      if (voice.dashStarted && !this.paused) this.playEvent('dash', vehicle.chassis, listener);
       pending.push(voice.ready);
     }
     await Promise.all(pending);
@@ -148,6 +151,9 @@ export class GameAudio {
           break;
         case 'hit':
           this.play('hit', event, listener);
+          break;
+        case 'broke':
+          this.playEvent('snap', event, listener);
           break;
         case 'wallHit':
         case 'collision':
@@ -171,6 +177,20 @@ export class GameAudio {
     if (this.released) return;
     this.released = true;
     this.scope.dispose();
+  }
+
+  /** Tek atımlık araç olayı sesi: konuma göre pan ve seviye. */
+  private playEvent(
+    name: keyof typeof AUDIO.eventAsset,
+    source: AudioPosition,
+    listener: AudioPosition,
+  ): void {
+    const spatial = spatialSound(source, listener);
+    if (spatial.gain === 0) return;
+    this.bank.play(`fx:${AUDIO.eventAsset[name]}`, {
+      pan: spatial.pan,
+      gain: AUDIO.eventGain[name] * spatial.gain,
+    });
   }
 
   private play(

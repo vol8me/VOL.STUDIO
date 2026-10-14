@@ -229,7 +229,8 @@ export class Hud {
     }
     this.hintsUntilMs ??= nowMs + HUD.hintsShowMs;
     if (!this.hints.faded && nowMs >= this.hintsUntilMs) this.hints.setFaded(true);
-    const walker = frame.kind === 'walker';
+    // Tank dışındaki araçlar Shift yerine Space atılımı kullanır (yürüyücü ve süzülen).
+    const walker = frame.kind !== 'tank';
     if (walker !== this.walker) {
       this.walker = walker;
       this.hints.setWalker(walker);

@@ -105,14 +105,15 @@ Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, c
 indeksidir; araç eklenirse sona eklenir, yeniden sıralanmaz. `Vehicle` tanımdan şasi,
 silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca değil tanıma bakar.
 
-| Araç     | Rol                       | Can | Hız | Dönüş | Atış                                |
-| -------- | ------------------------- | --- | --- | ----- | ----------------------------------- |
-| Striker  | Dengeli ana tank          | 130 | 230 | 3,0   | 36 hasar, 650 ms, kabuk             |
-| Bulwark  | Ağır kuşatma tankı        | 175 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi       |
-| Dart     | Hafif, hızlı keşif tankı  | 90  | 330 | 4,4   | 22 hasar, 380 ms, uzun menzilli ray |
-| Arachnid | Bacaklı savaş canavarı    | 108 | 162 | 2,7   | 21 hasar, 470 ms, iki plazma topu   |
-| Widow    | Bacaklı keskin nişancı    | 92  | 160 | 3,4   | 8 hasar, 230 ms, iki iğne atıcı     |
-| Goliath  | Devasa kuşatma yürüyücüsü | 360 | 86  | 1,5   | 38 hasar, 760 ms, iki ağır havan    |
+| Araç     | Rol                       | Can | Hız | Dönüş | Atış                                  |
+| -------- | ------------------------- | --- | --- | ----- | ------------------------------------- |
+| Striker  | Dengeli ana tank          | 130 | 230 | 3,0   | 36 hasar, 650 ms, kabuk               |
+| Bulwark  | Ağır kuşatma tankı        | 175 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi         |
+| Dart     | Hafif, hızlı keşif tankı  | 90  | 330 | 4,4   | 22 hasar, 380 ms, uzun menzilli ray   |
+| Arachnid | Bacaklı savaş canavarı    | 108 | 162 | 2,7   | 21 hasar, 470 ms, iki plazma topu     |
+| Widow    | Bacaklı keskin nişancı    | 92  | 160 | 3,4   | 8 hasar, 230 ms, iki iğne atıcı       |
+| Goliath  | Devasa kuşatma yürüyücüsü | 360 | 86  | 1,5   | 38 hasar, 760 ms, iki ağır havan      |
+| Manta    | Süzülen avcı              | 120 | 300 | 6,5   | 9 hasar, 150 ms, mor yay tekrarlayıcı |
 
 Tablo `src/config/vehicles.ts` değerlerinin özetidir; karakter farkı hızlanmadan, dönüşten,
 frenden ve geri tepmeden gelir (`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler).
@@ -123,11 +124,13 @@ reddeder.
 iki botla iki yönde birçok tohumla dövüşür (`tests/sim/balance.test.ts`, bot yapay zekâsı tankın
 da örümceğin de menzilini ve hızını kullanır). Anma hasarı/s Widow'da düşüktür (isabet, menzil ve
 hızla öder), Goliath'ta canla ve ağır mermiyle öder; bu yüzden anma hasarı yalnız %70 aralıkla
-sınırlıdır. 60 tohumluk son ölçümde her aracın kataloğa karşı toplam galibiyet payı %46-53'tür
-(Striker 46, Bulwark 53, Dart 51, Arachnid 49, Widow 49, Goliath 52); test bu payı %30-70 bandında
+sınırlıdır. 40 tohumluk son ölçümde her aracın kataloğa karşı toplam galibiyet payı %41-61'dir
+(Striker 44, Bulwark 61, Dart 41, Arachnid 47, Widow 43, Goliath 55, Manta 58); test bu payı %30-70 bandında
 tutar. Karşıtlıklar bilinçlidir ve hiçbiri mutlak değildir: Widow menzilden Arachnid'i ve Goliath'ı yener,
 Bulwark'ın ağır mermisine ve Dart'ın hızına yenilir; Goliath Striker'ı ve Bulwark'ı ezer, Dart ve Widow
-onu çevikliğiyle oyalar; Bulwark Widow'u ve Dart'ı yener, Arachnid ona baskındır; Striker Dart'ı ezer.
+onu çevikliğiyle oyalar; Bulwark Widow'u ve Dart'ı yener, Arachnid ona baskındır; Striker Dart'ı ezer. Manta çevikliği ve tempoyla
+Dart'ı, Widow'u ve Arachnid'i yer ama Bulwark'ın ağır mermisine ve Goliath'ın gövdesine yenilir (can ve
+menzil onun sınırıdır).
 Bu ölçüm botlarla yapılır: insan beğenisi ve el becerisi yerine geçmez, ve sayıların insan
 oyunuyla doğrulanması ayrı iştir.
 
@@ -137,7 +140,7 @@ Bulwark koyu adaçayı zırh ve pas kabuğu, sarı uyarı şeritli, turuncu ener
 gövde ve çivit kabuk, camgöbeği enerji; Arachnid sıcak bronz zırh ve kızıl kabuk, Widow obsidyen gövde ve zehir yeşili) ve `TANK_ART` çekirdek ışığını ile palet tonunu araca
 bağlar; `tests/config/vehicleIdentity.test.ts` paletlerin çakışmamasını kilitler. Mermi: her
 silah stilinin kendi iz rengi ve kalınlığı vardır (`SHOT_LOOK`: kehribar kabuk, turuncu ağır
-mermi, ince ve uzun buz mavisi ray, kızıl plazma, zehir yeşili iğne). Ses: motor perdesi ve gücü araca
+mermi, ince ve uzun buz mavisi ray, kızıl plazma, zehir yeşili iğne, mor yay). Ses: motor perdesi ve gücü araca
 (`AUDIO.vehicleVoice`), top sesinin perdesi ve gücü silah stiline (`AUDIO.weaponVoice`) göre
 işlenir; teslimler aynıdır, yeni sentez gerekmez. Araca özgü gerçek motor ve top kayıtları ayrı iştir.
 
@@ -159,6 +162,34 @@ atış sıklığını aynı oranda yükseltir: `Simulation.pace` şasi adımın�
 adımın en sert duvar teması korunur) ve silah beklemesini aynı çarpanla kısaltır. Mermi hızı, hasar ve
 can değişmez, bu yüzden araçlar arası denge korunur. Yalnız çevrimdışı dünyadadır; sunucu dünyası
 1'de kalır.
+
+### Süzülen araç: Manta
+
+Manta ne paletli ne bacaklıdır (`HoverSpec`, `src/sim/hover/Hover.ts`, sayılar `src/config/hover.ts`): iki yan
+itici fanıyla zeminin üstünde kayar. Komut hedef hız vektörüdür (dünya ekseninde) ve araç ona dönmez:
+gövde NİŞANA bakar (nişan yoksa harekete, o da yoksa olduğu gibi kalır), yani yana ve geriye ileri kadar
+hızlı süzülür ve arkasına bakmadan kaçarken ateş eder. Yanal sürtünme yoktur; hızlanması dikkatlidir
+(560 birim/s²) ama frenlemesi bilerek yumuşaktır (300 birim/s²): araç momentum taşır, köşede yana kayar,
+bırakılınca ~1 sn süzülerek durur. Zemin tutuşuna neredeyse duyarsızdır (`gripSensitivity` 0,2). Space
+BASILI TUTULDUĞU sürece iticilere yüklenir (kilitli değildir, yürüyücünün av atılışından farkı budur):
+tavan ×1,9 ve ivme 2200'e çıkar, depo ~0,47 sn'de boşalır ve bırakılınca dolar; hareketsizken atılım
+gövdenin baktığı yöne fırlar. Yan yüzey alanları (`track*`, `tread*`, `ground*`, `surface*`) iki itici
+kanalın yüzey hızıdır; kayma ve patinaj yoktur, bu yüzden palet izi ve kayma çizgisi bırakmaz (`tracked`
+yanlıştır) ve palet gümbürtüsü yerine pervane uğultusu çalar.
+
+Silahı kısa menzilli hızlı yaydır (`arc`): 150 ms'de bir 9 hasar, 520 birim menzil, 1100 birim/s mermi;
+her atış zayıftır, tempo yüksektir. Can 120'dir. İki yan itici ince zırhın dışındadır ve parça sayılır
+(`PARTS.hover`): yandan gelen kenar isabeti iticiyi koparır (tankın palet bitleriyle aynı iki bit,
+`TRACK_LEFT`/`TRACK_RIGHT`). Kopan itici kapasiteyi (`podLoss`, `floor` taban) keser ve araç kırık yana
+savrulur (`drift`), iki itici de kopunca yalnız taban itki kalır; taret ve ateş sürer.
+
+Sanat elle çizilmiş SVG'dir ve ailenin dilini taşır (koyu kenar, sol-üstten aydınlanan degrade, sedef
+levhalar, mor enerji): `src/assets/vehicles/manta/` altında gövde (kanat), yan itici, kaldırma pervanesi
+ve taret (kupola ve çift bobin raylı) vardır. `HoverView` iticileri yerde, gövdeyi onların üstünde çizer;
+gövde süzülürken nefes alır ve süspansiyonla kayar, iticiler bundan daha az kayar. Gölge tanktan çok
+daha yüksekten (26 birim) düşer ve gövdeden belirgin ayrılır, araç yerde yüzer görünür. Pervane hızla ve
+atılımla hızlanır; kopan itici kısa koyu bir kütüğe döner, pervanesi durur. Ağız parlaması `sim/muzzle`
+ucundadır. Bot, tank dışı araçlar gibi uzak hedefe atılımla kapanır.
 
 ### Bacaklı yürüyücüler: Arachnid, Widow ve Goliath
 
@@ -224,15 +255,17 @@ sırayla ateşler: Arachnid'in her topu 940 ms'de bir atar (birleşik tempo 470 
 460 ms'de bir (birleşik 230 ms), Goliath'ın her havanı 1520 ms'de bir (birleşik 760 ms). Yuvanın `reach` değeri çizimdeki ağız mesafesidir
 (`SpiderLook.cannon.muzzleX`); mermi, geri tepme ve ağız parlaması oyunun efekt katmanındandır.
 
-Bütün örümcek parçaları açılışta TEK doku atlasına çizilir (`spider-atlas`): bir karede 14'ten fazla
-ayrı doku GL toplu çiziminde parçaları kesiyordu ve büyük SVG'ler GL'ye doğrudan yüklenince parça
-parça rasterleniyordu; tek atlas ikisini de önler ve iki araç aynı dokuyu paylaşır.
+Bütün örümcek ve süzülen araç parçaları açılışta TEK doku atlasına çizilir (`vehicle-atlas`): bir karede
+14'ten fazla ayrı doku GL toplu çiziminde parçaları kesiyordu (Manta'nın pervaneleri ayrı dokuyken yarım
+ya da kara çiziliyordu) ve büyük SVG'ler GL'ye doğrudan yüklenince parça parça rasterleniyordu; tek atlas
+ikisini de önler ve araçlar aynı dokuyu paylaşır.
 
 ## Sürüş ve süspansiyon
 
 ### Parça hasarı
 
-Mermi isabeti canın yanında bir PARÇAYI da aşındırır: tankta iki yan palet, yürüyücüde sekiz bacak.
+Mermi isabeti canın yanında bir PARÇAYI da aşındırır: tankta iki yan palet, süzülende iki yan itici,
+yürüyücüde sekiz bacak.
 `PartWear` (`src/sim/combat/PartWear.ts`) merminin TEMAS NOKTASINI gövde çerçevesine çevirir (mermi
 temas noktasına çekilmiştir, adım sonuna değil) ve hasarı o bölgenin parçasına yazar: tankta gövde
 yarı genişliğinin `sideStart` oranından dışa düşen darbe `(sol|sağ)` paleti, yürüyücüde en yakın bacağı
@@ -249,7 +282,8 @@ Kırık parçanın sürüşe etkisi şasidedir ve `Chassis.parts` (bit maskesi) 
 `CHASSIS_STATE_SNAPPED` listesindedir ve uzak araçta ara değer ALMAZ (`RemoteTanks`); aşınmanın kendisi
 ağa gitmez, yalnız sonuç. Kırık palet itki vermez, zeminle serbest döner (kayma üretmez) ve yerde
 sürünerek yuvarlanma direncini `dragGain` katına çıkarır: tek palet kırıkken tank kırık yana sürüklenir ve
-dönüşü bozulur, iki palet de kırıksa sürülemez ve yerde kalır (taret ve ateş sürer). Kırık bacak
+dönüşü bozulur, iki palet de kırıksa sürülemez ve yerde kalır (taret ve ateş sürer). Kırık itici
+süzülenin tavanını ve ivmesini keser, kırık yana savurur (bkz. "Süzülen araç"). Kırık bacak
 yürüyücünün tavan hızını ve ivmesini kaybedilen bacak başına `legLoss` kadar keser (`floor` taban),
 bir yanın bacakları eksikse yürüyüşü o yana sürükler (`drift`) ve eksik yan, kendi yürüyüş döngüsünde
 (katettiği yoldan türer, rastgele değil) çöker: hız kesilir ve gövde o yana savrulur (tökezleme,
@@ -638,7 +672,7 @@ dağıtım ve Steam Cloud kabulü ayrı doğrulama işleridir.
 
 ## Ses
 
-37 teslim kuru mekanik programlardan kanonik yayın kapısıyla üretilir.
+41 teslim kuru mekanik programlardan kanonik yayın kapısıyla üretilir.
 `audio-manifests` yeniden üretim kimliğini, `audio-banks` aile seçimini taşır.
 Oyun yalnız bank JSON'unu ve `public/assets/audio` teslimlerini okur;
 audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayıt değil,
@@ -646,9 +680,11 @@ audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayı
 girer (anahtar, rol, etiket, süre, varlık yolu): hash, manifest, ölçüm ve kalite
 kaydı yalnız kanonik dosyada kalır ve `verifyFamily` onu okur.
 
-Sekiz döngü motorun üç devri, palet, bacak adımı, kayma, servo ve hızlanmadır. Yürüyücü palet yerine
-`legs` (sivri uç tıkırtısı ve eklem sürtmesi) çalar; tempo ve güç araca göre (`AUDIO.vehicleVoice.tracks`).
-Ray, plazma ve iğne silahının kendi atış teslimi (`shot-rail/plasma/needle`, `AUDIO.shotAsset`) vardır;
+Dokuz döngü motorun üç devri, palet, bacak adımı, pervane, kayma, servo ve hızlanmadır. Yürüyücü palet yerine
+`legs` (sivri uç tıkırtısı ve eklem sürtmesi), süzülen araç `fans` (kanat geçişi uğultusu) çalar; tempo ve güç
+araca göre (`AUDIO.vehicleVoice.tracks`). Tek atımlık araç sesleri `dash` (yürüyücü ve süzülenin atılımı
+başlarken) ve `snap`tir (`broke` olayında parça kopması; `AUDIO.eventAsset`).
+Ray, plazma, iğne ve yay silahının kendi atış teslimi (`shot-rail/plasma/needle/arc`, `AUDIO.shotAsset`) vardır;
 kabuk ve ağır mermi top ailesini perdeyle çalar. Top,
 patlama, isabet, çarpma ve fren aileleri olaydan seçilir; patlamanın yakın,
 orta ve uzak teslimleri vardır. İki UI sesi duraklatma geçişini bildirir.

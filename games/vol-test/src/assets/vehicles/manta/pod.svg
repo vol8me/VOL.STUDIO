@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="46" height="14" viewBox="0 0 46 14">
+  <defs>
+    <linearGradient id="shell" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6a7686"/>
+      <stop offset="0.5" stop-color="#303a46"/>
+      <stop offset="1" stop-color="#171d24"/>
+    </linearGradient>
+    <radialGradient id="well" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#0a0d12"/>
+      <stop offset="0.7" stop-color="#151b22"/>
+      <stop offset="1" stop-color="#3b4654"/>
+    </radialGradient>
+    <linearGradient id="jet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b15cff"/>
+      <stop offset="1" stop-color="#f4e6ff"/>
+    </linearGradient>
+  </defs>
+  <path d="M2 7C2 3 6 1 12 1H34C40 1 44 3 44 7C44 11 40 13 34 13H12C6 13 2 11 2 7Z" fill="url(#shell)" stroke="#0d1217" stroke-width=".9"/>
+  <path d="M5 4C7 2.6 9 2.2 12 2.2H34C36 2.2 37.6 2.4 39 3" fill="none" stroke="#c7ceda" stroke-opacity=".55" stroke-width=".7" stroke-linecap="round"/>
+  <circle cx="21" cy="7" r="5.6" fill="url(#well)" stroke="#0d1217" stroke-width=".8"/>
+  <circle cx="21" cy="7" r="5.6" fill="none" stroke="#b15cff" stroke-opacity=".55" stroke-width=".5"/>
+  <rect x="2.4" y="5" width="3" height="4" rx="1" fill="url(#jet)" stroke="#0d1217" stroke-width=".5"/>
+  <path d="M30.5 4.2H38.6M30.5 9.8H38.6" stroke="#0d1217" stroke-opacity=".6" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M41 5.4L43 7L41 8.6" fill="none" stroke="#b15cff" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

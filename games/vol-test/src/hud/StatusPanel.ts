@@ -69,8 +69,8 @@ export class StatusPanel {
 
   update(frame: HudFrame): void {
     const { health, boost, reload } = this.gauges;
-    if ((frame.kind === 'walker') !== this.walker) {
-      this.walker = frame.kind === 'walker';
+    if ((frame.kind !== 'tank') !== this.walker) {
+      this.walker = frame.kind !== 'tank';
       this.refreshLabels();
     }
     health.bar.setMax(frame.maxHealth);

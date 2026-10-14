@@ -1,0 +1,389 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -0.000040022375760803
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.6973333333333334,
+        "frames": 33472,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -1.9489773180787928
+        ],
+        "channelRmsDbfs": [
+          -26.61078088845099
+        ],
+        "crestFactorDb": 24.661803570372197,
+        "integratedLufs": -27.246676407095343,
+        "maxMomentaryLufs": -24.437158013554924,
+        "rmsDbfs": -26.61078088845099,
+        "samplePeakDbfs": -1.9489773180787928,
+        "truePeakDbtp": -1.9489773180787928
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -54.94025366364161,
+          "high": -45.950084642755954,
+          "low": -61.643260273203,
+          "mid": -29.04254973871927,
+          "sub": -59.77241729913335
+        },
+        "centroidHz": 947.6280768127383,
+        "flatness": 0.00047583783047099206,
+        "peakHz": 773.4375,
+        "rolloff85Hz": 796.875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.31,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.2,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.024084736004102228,
+        "trailingSilenceSeconds": 0.4073333333333334
+      }
+    },
+    "sourceRecordHash": "sha256:a4a0b52ca1f78e84c52a9c3a22c5bf453b36699e016a7168ffca993fb511a1d7"
+  },
+  "asset": {
+    "bytes": 7452,
+    "encodedHash": "sha256:f9ebdcd1e8976aa863e33d68d397b4ff82db78a19171364a487df04a45d28565",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/snap.ogg"
+  },
+  "assetId": "vt-hardsteel-snap",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 0.85,
+        "min": 0.45
+      },
+      "id": "vt-hardsteel-snap",
+      "intent": "Parça kopması: sert metal çatırtısı, kısa gıcırtı ve düşen parça tıkırtısı; patlama ve müzik yok.",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — kuru mekanik: vt-steel-snap"
+    },
+    "hash": "sha256:3c5b1f1649da2f3650993bdeb0f779f0c87f8a9c4601059970582bb8bebae6fd",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:2c1c3e3aed791e06d9c924e0a2fe0689357496498d05ee37e4366ca1ed750013",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        },
+        {
+          "hash": "sha256:91c81ff2366eae583d7cc0306b88d54c298fe4340b666cdf32ab6099a7037011",
+          "id": "source.friction",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-snap",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-snap",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Parça kopması: metal çatırtısı ve düşen parça.",
+      "durationSeconds": 0.7,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.05,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "crack",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2600,
+                "mode": "bandpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.3,
+              "release": 0.05,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -3,
+          "mechanism": "mechanical",
+          "name": "rupture",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.6,
+                "damping": 0.45,
+                "decay": 0.34,
+                "frequency": 780,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "contactTime": 0.002,
+              "roughness": 0.3
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.01,
+              "curve": "cosine",
+              "decay": 0.22,
+              "release": 0.08,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -14,
+          "mechanism": "mechanical",
+          "name": "screech",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2800,
+                "mode": "bandpass",
+                "q": 1.1
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "texture",
+          "source": {
+            "params": {
+              "granularity": 18,
+              "material": "metal",
+              "pressure": 0.55,
+              "rolling": 0.1,
+              "roughness": 0.7,
+              "speed": 0.8
+            },
+            "primitive": "source.friction",
+            "version": 1
+          },
+          "startSeconds": 0.03
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.14,
+              "release": 0.04,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -8,
+          "mechanism": "mechanical",
+          "name": "clatter",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.7,
+                "damping": 0.5,
+                "decay": 0.16,
+                "frequency": 1700,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "detail",
+          "source": {
+            "params": {
+              "contactTime": 0.001,
+              "roughness": 0.4
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          },
+          "startSeconds": 0.22
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "fadeInSeconds": 0.001,
+        "fadeOutSeconds": 0.08,
+        "normalize": "peak",
+        "peakDbfs": -2
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8604
+    },
+    "hash": "sha256:8af2fa1d0db79979ab765f6d4d3a5acbac67617b9800945edc41dc55db441c7d",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 33600,
+      "hash": "sha256:df55d02b8bcdbcdfdd631793ae4379afac130c801b818c5596e271eefdc90eb4",
+      "sampleRate": 48000
+    },
+    "renderId": "r-073b7b7027b732b1",
+    "rendererVersion": 2,
+    "seed": 8604
+  },
+  "schema": "AudioAssetManifestV1"
+}

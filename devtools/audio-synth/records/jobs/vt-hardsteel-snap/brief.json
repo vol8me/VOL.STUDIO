@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 0.85,
+    "min": 0.45
+  },
+  "id": "vt-hardsteel-snap",
+  "intent": "Parça kopması: sert metal çatırtısı, kısa gıcırtı ve düşen parça tıkırtısı; patlama ve müzik yok.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — kuru mekanik: vt-steel-snap"
+}

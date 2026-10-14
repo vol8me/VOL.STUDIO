@@ -75,6 +75,7 @@ export const WAR = {
       arachnid: 2,
       widow: 1,
       goliath: 1,
+      manta: 2,
     } satisfies Record<VehicleId, number>,
     skill: { min: 0.25, max: 0.85 },
     /** Nüfus ve görev denetim aralığı (ms). */

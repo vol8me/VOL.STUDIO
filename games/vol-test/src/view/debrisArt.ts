@@ -1,11 +1,14 @@
 import { DEBRIS } from '@/config/debris';
+import { HOVER_ART } from '@/config/hoverView';
 import { SPIDER_LOOKS, type SpiderLook } from '@/config/spiders';
 import { TANK_ART, treadView } from '@/config/tankView';
-import type { VehicleSpec } from '@/config/vehicles';
+import type { HoverId, VehicleSpec } from '@/config/vehicles';
 import {
-  SPIDER_ATLAS,
+  VEHICLE_ATLAS,
   TEXTURE,
   TEXTURE_SCALE,
+  hoverFrame,
+  type HoverPart,
   shardTexture,
   spiderFrame,
   tankTexture,
@@ -37,10 +40,22 @@ const cache = new Map<string, WreckArt>();
 function spiderPiece(look: SpiderLook, part: 'femur' | 'tibia' | 'tarsus' | 'joint'): ChunkArt {
   const box = look.parts[part];
   return {
-    texture: SPIDER_ATLAS,
+    texture: VEHICLE_ATLAS,
     frame: spiderFrame(look.id, part),
     originX: box.pivotX / box.width,
     originY: box.pivotY / box.height,
+    scale: INV,
+    tint: null,
+  };
+}
+
+/** Süzülen aracın bir parçasının enkaz sanatı: pervane ve itici ortasından, taret milinden döner. */
+function hoverPiece(id: HoverId, part: HoverPart, originX = 0.5): ChunkArt {
+  return {
+    texture: VEHICLE_ATLAS,
+    frame: hoverFrame(id, part),
+    originX,
+    originY: 0.5,
     scale: INV,
     tint: null,
   };
@@ -50,23 +65,31 @@ const shedCache = new Map<string, readonly ChunkArt[]>();
 
 /**
  * Kopan bir parçanın savrulacak sanatı: tankta palet ucu çarkı ile levha kıymıkları, yürüyücüde bacağın
- * kopan kısmı (tibia ve pençe). Araç başına bir kez kurulur.
+ * kopan kısmı (tibia ve pençe), süzülende itici gövdesi ile pervanesi. Araç başına bir kez kurulur.
  */
 export function shedArt(spec: VehicleSpec): readonly ChunkArt[] {
   const cached = shedCache.get(spec.id);
   if (cached) return cached;
   const shards = wreckArt(spec).shards;
   let pieces: readonly ChunkArt[];
-  if (spec.kind === 'tank') {
-    const wheel = treadView(spec).height / TREAD_END_PX;
-    pieces = [
-      { texture: TEXTURE.treadEnd, originX: 0.5, originY: 0.5, scale: INV * wheel, tint: null },
-      shards[0],
-      shards[1 % shards.length],
-    ];
-  } else {
-    const look = SPIDER_LOOKS[spec.id];
-    pieces = [spiderPiece(look, 'tibia'), spiderPiece(look, 'tarsus')];
+  switch (spec.kind) {
+    case 'tank': {
+      const wheel = treadView(spec).height / TREAD_END_PX;
+      pieces = [
+        { texture: TEXTURE.treadEnd, originX: 0.5, originY: 0.5, scale: INV * wheel, tint: null },
+        shards[0],
+        shards[1 % shards.length],
+      ];
+      break;
+    }
+    case 'walker': {
+      const look = SPIDER_LOOKS[spec.id];
+      pieces = [spiderPiece(look, 'tibia'), spiderPiece(look, 'tarsus')];
+      break;
+    }
+    case 'hover':
+      pieces = [hoverPiece(spec.id, 'pod'), hoverPiece(spec.id, 'fan'), shards[0]];
+      break;
   }
   shedCache.set(spec.id, pieces);
   return pieces;
@@ -85,7 +108,18 @@ export function wreckArt(spec: VehicleSpec): WreckArt {
     tint,
   }));
   let big: ChunkArt[];
-  if (spec.kind === 'tank') {
+  if (spec.kind === 'hover') {
+    big = [
+      hoverPiece(
+        spec.id,
+        'turret',
+        HOVER_ART[spec.id].turret.pivotX / HOVER_ART[spec.id].turret.width,
+      ),
+      hoverPiece(spec.id, 'pod'),
+      hoverPiece(spec.id, 'pod'),
+      hoverPiece(spec.id, 'fan'),
+    ];
+  } else if (spec.kind === 'tank') {
     const art = TANK_ART[spec.id];
     big = [
       {

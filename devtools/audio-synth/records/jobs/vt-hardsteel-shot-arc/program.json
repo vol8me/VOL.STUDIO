@@ -1,0 +1,127 @@
+{
+  "channels": 1,
+  "description": "Yay atışı: kısa elektrik çıtırtısı.",
+  "durationSeconds": 0.24,
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "cosine",
+          "decay": 0.035,
+          "release": 0.02,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "crack",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 3600,
+            "mode": "bandpass",
+            "q": 1.4
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "cosine",
+          "decay": 0.022,
+          "release": 0.015,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -3,
+      "mechanism": "mechanical",
+      "name": "zap",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 5800,
+            "mode": "bandpass",
+            "q": 2.2
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      },
+      "startSeconds": 0.012
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.001,
+          "curve": "cosine",
+          "decay": 0.12,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -6,
+      "mechanism": "mechanical",
+      "name": "ring",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.75,
+            "damping": 0.45,
+            "decay": 0.12,
+            "frequency": 2300,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "contactTime": 0.001,
+          "roughness": 0.08
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "fadeInSeconds": 0.001,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -2
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8602
+}

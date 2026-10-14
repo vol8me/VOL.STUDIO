@@ -1,0 +1,127 @@
+{
+  "channels": 1,
+  "description": "Atılım: hava yarılması ve alçak itki.",
+  "durationSeconds": 0.6,
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.06,
+          "curve": "cosine",
+          "decay": 0.34,
+          "release": 0.12,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "rush",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1500,
+            "mode": "bandpass",
+            "q": 0.5
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.002,
+          "curve": "cosine",
+          "decay": 0.26,
+          "release": 0.06,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -4,
+      "mechanism": "mechanical",
+      "name": "thrust",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.35,
+            "damping": 0.6,
+            "decay": 0.28,
+            "frequency": 140,
+            "layout": "bar",
+            "modes": 6
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "contactTime": 0.004,
+          "roughness": 0.2
+        },
+        "primitive": "exciter.impact",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.04,
+          "curve": "cosine",
+          "decay": 0.2,
+          "release": 0.1,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -12,
+      "mechanism": "mechanical",
+      "name": "hiss",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 5200,
+            "mode": "bandpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      },
+      "startSeconds": 0.02
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "fadeInSeconds": 0.001,
+    "fadeOutSeconds": 0.1,
+    "normalize": "peak",
+    "peakDbfs": -3
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8603
+}

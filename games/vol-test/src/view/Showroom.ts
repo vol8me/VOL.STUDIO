@@ -54,7 +54,7 @@ export class Showroom {
     this.view?.destroy();
     // Bacaklar dünya uzayında basılır: tablada dönen gövde ayakları geride bırakıp dolaşık bir poza sürükler.
     // Yürüyücü bu yüzden dönmez; taretleri salınır.
-    this.turns = spec.kind === 'tank';
+    this.turns = spec.kind !== 'walker';
     this.view = createVehicleView(this.scene, spec, this.lighting);
     this.view.root.setDepth(10);
   }

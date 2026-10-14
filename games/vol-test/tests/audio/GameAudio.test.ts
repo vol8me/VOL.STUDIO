@@ -7,7 +7,15 @@ import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext } from '../support/fakeAudio';
 import { Button, uiIntentBusFor } from '@volstudio/core/ui';
 import { AUDIO } from '@/config/audio';
-import { ARACHNID, BULWARK, DART, STRIKER, WIDOW, type VehicleSpec } from '@/config/vehicles';
+import {
+  ARACHNID,
+  BULWARK,
+  DART,
+  MANTA,
+  STRIKER,
+  WIDOW,
+  type VehicleSpec,
+} from '@/config/vehicles';
 
 describe('GameAudio', () => {
   let context: FakeAudioContext;
@@ -137,6 +145,7 @@ describe('GameAudio', () => {
     const rail = await shotOf(DART);
     const plasma = await shotOf(ARACHNID);
     const needle = await shotOf(WIDOW);
+    const arc = await shotOf(MANTA);
     expect(shell.url).toContain('/cannon/');
     expect(slug.url).toContain('/cannon/');
     expect(shell.rate).toBe(AUDIO.weaponVoice.shell.rate);
@@ -146,7 +155,44 @@ describe('GameAudio', () => {
     expect(rail.url).toMatch(/shot-rail\.ogg$/);
     expect(plasma.url).toMatch(/shot-plasma\.ogg$/);
     expect(needle.url).toMatch(/shot-needle\.ogg$/);
-    for (const own of [rail, plasma, needle]) expect(own.rate).toBe(1);
+    expect(arc.url).toMatch(/shot-arc\.ogg$/);
+    for (const own of [rail, plasma, needle, arc]) expect(own.rate).toBe(1);
+  });
+
+  it('parça kopması yakında snap sesini çalar, uzakta ve duraklatılmışken susar', () => {
+    const count = (): number =>
+      context.sources.filter((s) => s.buffer?.url?.endsWith('/snap.ogg')).length;
+    audio.route([{ kind: 'broke', target: 1, part: 0, x: 40, y: 0 }], listener);
+    expect(count()).toBe(1);
+    audio.route([{ kind: 'broke', target: 1, part: 1, x: 99999, y: 0 }], listener);
+    expect(count()).toBe(1);
+    audio.setPaused(true);
+    audio.route([{ kind: 'broke', target: 1, part: 1, x: 40, y: 0 }], listener);
+    expect(count()).toBe(1);
+  });
+
+  it('yürüyücü ve süzülenin atılımı başlarken dash sesi çalar; tankın hızlanması çalmaz ve atılım sürerken tekrarlanmaz', async () => {
+    const dashes = (): number =>
+      context.sources.filter((s) => s.buffer?.url?.endsWith('/dash.ogg')).length;
+    for (const vehicle of [ARACHNID, MANTA]) {
+      const sim = new Simulation({ world: new World(1000, 1000, 32), vehicle });
+      const subject = sim.player.chassis;
+      const before = dashes();
+      await audio.sync(sim.vehicles, subject);
+      expect(dashes()).toBe(before);
+      sim.step(command({ moveX: 1, brake: true }), STEP_MS);
+      expect(subject.boosting).toBe(true);
+      await audio.sync(sim.vehicles, subject);
+      expect(dashes()).toBe(before + 1);
+      sim.step(command({ moveX: 1, brake: true }), STEP_MS);
+      await audio.sync(sim.vehicles, subject);
+      expect(dashes()).toBe(before + 1);
+    }
+    const tankSim = new Simulation({ world: new World(1000, 1000, 32), vehicle: STRIKER });
+    const before = dashes();
+    tankSim.step(command({ moveX: 1, boost: true }), STEP_MS);
+    await audio.sync(tankSim.vehicles, tankSim.player.chassis);
+    expect(dashes()).toBe(before);
   });
 
   it('fren kenarını ses ailesine bağlar; duraklatılmış ve işitme dışında kalan olaylar susar', async () => {

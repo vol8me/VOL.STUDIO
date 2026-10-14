@@ -1,8 +1,8 @@
 import type { WalkerId } from './vehicles';
 
 /**
- * Parça hasarı: palet ve bacak dayanımı, aşınmanın sönümü, onarım ve kırık parçanın sürüşe etkisi.
- * Sayılar oynanıştır; bölge mantığı `sim/combat/PartWear.ts`, sürüş etkisi `Tank` ve `Walker`dadır.
+ * Parça hasarı: palet, bacak ve itici dayanımı, aşınmanın sönümü, onarım ve kırık parçanın sürüşe etkisi.
+ * Sayılar oynanıştır; bölge mantığı `sim/combat/PartWear.ts`, sürüş etkisi `Tank`, `Walker` ve `Hover`dadır.
  * Dayanım aracın canının oranıdır: zayıf araç parçasını da çabuk kaybeder, ağır zırhlı geç.
  */
 export const PARTS = {
@@ -29,6 +29,20 @@ export const PARTS = {
     dragGain: 5,
     /** Palet koparken gövdenin sarsılması [0, 1]. */
     jolt: 0.55,
+  },
+  hover: {
+    /** Bir yan iticinin dayanımı: aracın canının oranı (itici ince zırhın dışındadır, kolay kopar). */
+    healthShare: 0.45,
+    sideStart: 0.4,
+    criticalStart: 0.85,
+    criticalGain: 1.4,
+    /** Her kopan itici azami hızı ve ivmeyi bu oranda keser; taban çevik kalan alt sınırdır. */
+    podLoss: 0.35,
+    floor: 0.35,
+    /** Eksik iticinin tarafına savrulma (rad/s, tam hızda). */
+    drift: 1.5,
+    /** İtici koparken gövdenin sarsılması [0, 1]. */
+    jolt: 0.6,
   },
   walker: {
     /** Tek bir bacağın dayanımı: aracın canının oranı. */

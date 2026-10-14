@@ -1,0 +1,285 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -0.000004106499561999044
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 3,
+        "frames": 144000,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -8.111687783965907
+        ],
+        "channelRmsDbfs": [
+          -14.66674076574603
+        ],
+        "crestFactorDb": 6.555052981780122,
+        "integratedLufs": -15.426107196490227,
+        "maxMomentaryLufs": -15.400219102009153,
+        "rmsDbfs": -14.66674076574603,
+        "samplePeakDbfs": -8.111687783965907,
+        "truePeakDbtp": -8.111687783965907
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -61.036363393670605,
+          "high": -48.02915781111899,
+          "low": -15.260405194766388,
+          "mid": -23.655237519166526,
+          "sub": -50.66932744894671
+        },
+        "centroidHz": 324.41811085299804,
+        "flatness": 0.0000012552487724321443,
+        "peakHz": 210.9375,
+        "rolloff85Hz": 421.875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 3,
+        "attackSeconds": 0,
+        "decay40Seconds": null,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 2.73,
+        "temporalCentroidSeconds": 1.4982561949785307,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:0cc1cefc1dde78329958921871520a231838578c75d43af19c82949410ff96c1"
+  },
+  "asset": {
+    "bytes": 37940,
+    "encodedHash": "sha256:8fdc562863be82eccf458d621cab4df290eeed7c296bcf920427e5d8d40371b5",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/fans.ogg"
+  },
+  "assetId": "vt-hardsteel-fans",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 4.05,
+        "min": 2.95
+      },
+      "id": "vt-hardsteel-fans",
+      "intent": "Kuru mekanik kaldırma pervanesi uğultusu: ince kanat geçişi ve hafif hava bandı; motor, palet ve müzik yok.",
+      "kind": "acoustic",
+      "loop": true,
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — kuru mekanik: vt-steel-fans"
+    },
+    "hash": "sha256:5d7d293f6b9c50c244f21d8aed799e585dc3fe4ee6a72ca317333ad9ffba97dd",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:970c9f200e77beaf657df05747ce893ac45626b3e9a16f2d169816d34be4824f",
+      "nodes": [
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995",
+          "id": "source.machine",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-fans",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-fans",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Kuru mekanik kaldırma pervanesi: kanat geçişi ve hava bandı.",
+      "durationSeconds": 4,
+      "layers": [
+        {
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "rotor",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 3200,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "tonal",
+          "source": {
+            "params": {
+              "bearing": 0.04,
+              "count": 5,
+              "harmonics": 12,
+              "imbalance": 0.03,
+              "load": 0.5,
+              "mechanism": "fan",
+              "noise": 0.3,
+              "rpm": 2400,
+              "tilt": 0.65
+            },
+            "primitive": "source.machine",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -15,
+          "mechanism": "mechanical",
+          "name": "air",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 1100,
+                "mode": "bandpass",
+                "q": 0.6
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "texture",
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "loop": {
+          "crossfadeSeconds": 1
+        },
+        "normalize": "peak",
+        "peakDbfs": -8
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8601
+    },
+    "hash": "sha256:e739768135245be5e2c66c91213ca1876aed269f634f2869bfcf3ff35ff7c0f8",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 144000,
+      "hash": "sha256:79062b3e3cb1a5534f3ed42809fd4f5526811022b49e77ab9e495fe6f5f39a98",
+      "sampleRate": 48000
+    },
+    "renderId": "r-1941de5f4676cd9f",
+    "rendererVersion": 2,
+    "seed": 8601
+  },
+  "schema": "AudioAssetManifestV1",
+  "seam": {
+    "jumpRatio": 0.7618,
+    "levelStepDb": -0.019,
+    "method": "loop-seam-v1",
+    "pass": true,
+    "reasons": [],
+    "spectralStepDb": -2.023
+  }
+}

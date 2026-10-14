@@ -15,7 +15,7 @@ import strikerTurretUrl from '@/assets/vehicles/striker/turret.svg?url';
 import { FX } from '@/config/fx';
 import { tankSpecs, treadView } from '@/config/tankView';
 import { SPIDER_PARTS, type SpiderPartId } from '@/config/spiders';
-import { WALKER_IDS, type TankId, type WalkerId } from '@/config/vehicles';
+import { HOVER_IDS, WALKER_IDS, type HoverId, type TankId, type WalkerId } from '@/config/vehicles';
 import { createTreadTexture } from './TreadTexture';
 
 /**
@@ -65,6 +65,21 @@ const TANK_PART_URLS: Readonly<Record<TankId, Readonly<Record<TankPart, string>>
   dart: { hull: dartHullUrl, turret: dartTurretUrl, feeler: dartFeelerUrl },
 };
 
+/** Süzülen araçların parçaları: pervane döner, gövde ve itici ayrı katmandır. */
+export type HoverPart = 'hull' | 'pod' | 'fan' | 'turret';
+const HOVER_PARTS: readonly HoverPart[] = ['hull', 'pod', 'fan', 'turret'];
+
+export function hoverTexture(id: HoverId, part: HoverPart): string {
+  return `${id}-${part}`;
+}
+
+/** Süzülen araç klasörleri (`assets/vehicles/<araç>/`); tek elemanlı süslü parantez eşleşmediğinden desen genel kalır. */
+const HOVER_PART_URLS = import.meta.glob('../assets/vehicles/*/*.svg', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+}) as Readonly<Record<string, string>>;
+
 const SHARED_PARTS: ReadonlyArray<readonly [string, string]> = [
   [TEXTURE.tread, treadUrl],
   [TEXTURE.treadEnd, treadEndUrl],
@@ -87,8 +102,17 @@ export function spiderFrame(look: WalkerId, part: SpiderPartId): string {
   return `${look}/${part}`;
 }
 
-/** İki örümceğin tek doku atlası: bütün parçalar bir tuvalde, kare adı `<araç>/<parça>`dır. */
-export const SPIDER_ATLAS = 'spider-atlas';
+/** Süzülen aracın parçasının atlas kare adı (`<araç>/<parça>`). */
+export function hoverFrame(id: HoverId, part: HoverPart): string {
+  return `${id}/${part}`;
+}
+
+/**
+ * Örümceklerin ve süzülen aracın tek doku atlası: bütün parçalar bir tuvalde, kare adı `<araç>/<parça>`dır.
+ * Bu araçlar tek dokuda toplanır, çünkü bir karede çok sayıda ayrı doku GL toplu çiziminde parçaları
+ * yanlış dokuyla karıştırıp keser (ölçüm: `DESIGN.md`).
+ */
+export const VEHICLE_ATLAS = 'vehicle-atlas';
 /** Atlas karelerinin arası (px): doğrusal süzmede komşu kareden sızmayı önler. */
 const ATLAS_GAP = 4;
 const ATLAS_WIDTH = 2048;
@@ -101,17 +125,29 @@ export function addSpiderImage(
   x = 0,
   y = 0,
 ): Phaser.GameObjects.Image {
-  return scene.add.image(x, y, SPIDER_ATLAS, spiderFrame(look, part));
+  return scene.add.image(x, y, VEHICLE_ATLAS, spiderFrame(look, part));
+}
+
+/** Süzülen araç parçasının atlas karesiyle bir görüntü nesnesi yaratır. */
+export function addHoverImage(
+  scene: Phaser.Scene,
+  id: HoverId,
+  part: HoverPart,
+  x = 0,
+  y = 0,
+): Phaser.GameObjects.Image {
+  return scene.add.image(x, y, VEHICLE_ATLAS, hoverFrame(id, part));
 }
 
 /**
- * Örümcek parçalarını TEK atlasa çizer ve ayrı dokuları söker. Neden: bir karede 14+ ayrı doku GL
- * toplu çizim sınırında yanlış dokuyla karışıp parçaları kesiyordu; tek atlas toplu çizimi tek doku
- * yapar, iki örümcek de aynı atlası paylaştığı için sahneye doku eklemez (ölçüm: `DESIGN.md`).
+ * Örümcek ve süzülen araç parçalarını TEK atlasa çizer ve ayrı dokuları söker. Neden: bir karede 14+
+ * ayrı doku GL toplu çizim sınırında yanlış dokuyla karışıp parçaları kesiyordu (süzülen aracın
+ * pervaneleri yarım ya da kara çiziliyordu); tek atlas toplu çizimi tek doku yapar, araçlar aynı atlası
+ * paylaştığı için sahneye doku eklemez (ölçüm: `DESIGN.md`).
  * Ayrıca büyük SVG'ler GL'ye `Image` olarak doğrudan yüklenince parça parça rasterlenir; önce 2B
  * tuvale çizmek rasterlamayı tamamlar. Kareler satır satır dizilir.
  */
-function bakeSpiderAtlas(scene: Phaser.Scene): void {
+function bakeVehicleAtlas(scene: Phaser.Scene): void {
   const placed: Array<{
     frame: string;
     key: string;
@@ -122,30 +158,38 @@ function bakeSpiderAtlas(scene: Phaser.Scene): void {
   let x = 0;
   let y = 0;
   let rowHeight = 0;
-  for (const look of WALKER_IDS) {
-    for (const part of SPIDER_PARTS) {
-      const key = spiderTexture(look, part);
-      const image = scene.textures.get(key).getSourceImage();
-      if (!(image instanceof HTMLImageElement)) return;
-      if (x + image.width > ATLAS_WIDTH) {
-        x = 0;
-        y += rowHeight + ATLAS_GAP;
-        rowHeight = 0;
-      }
-      placed.push({ frame: spiderFrame(look, part), key, image, x, y });
-      x += image.width + ATLAS_GAP;
-      rowHeight = Math.max(rowHeight, image.height);
+  const sources = [
+    ...WALKER_IDS.flatMap((look) =>
+      SPIDER_PARTS.map((part) => ({
+        key: spiderTexture(look, part),
+        frame: spiderFrame(look, part),
+      })),
+    ),
+    ...HOVER_IDS.flatMap((id) =>
+      HOVER_PARTS.map((part) => ({ key: hoverTexture(id, part), frame: hoverFrame(id, part) })),
+    ),
+  ];
+  for (const { key, frame } of sources) {
+    const image = scene.textures.get(key).getSourceImage();
+    if (!(image instanceof HTMLImageElement)) return;
+    if (x + image.width > ATLAS_WIDTH) {
+      x = 0;
+      y += rowHeight + ATLAS_GAP;
+      rowHeight = 0;
     }
+    placed.push({ frame, key, image, x, y });
+    x += image.width + ATLAS_GAP;
+    rowHeight = Math.max(rowHeight, image.height);
   }
   const canvas = document.createElement('canvas');
   canvas.width = ATLAS_WIDTH;
   canvas.height = y + rowHeight;
   const g = canvas.getContext('2d');
-  if (!g) throw new Error('Örümcek atlası için 2B canvas bağlamı alınamadı');
+  if (!g) throw new Error('Araç atlası için 2B canvas bağlamı alınamadı');
   for (const { image, x: left, y: top } of placed) g.drawImage(image, left, top);
   for (const { key } of placed) scene.textures.remove(key);
-  const atlas = scene.textures.addCanvas(SPIDER_ATLAS, canvas);
-  if (!atlas) throw new Error('Örümcek atlası dokusu eklenemedi');
+  const atlas = scene.textures.addCanvas(VEHICLE_ATLAS, canvas);
+  if (!atlas) throw new Error('Araç atlası dokusu eklenemedi');
   for (const { frame, image, x: left, y: top } of placed)
     atlas.add(frame, 0, left, top, image.width, image.height);
 }
@@ -157,6 +201,16 @@ export function queueSpiderTextures(loader: Phaser.Loader.LoaderPlugin): void {
       const url = SPIDER_PART_URLS[`../assets/vehicles/${look}/${part}.svg`];
       loader.svg(spiderTexture(look, part), url, { scale: TEXTURE_SCALE });
     }
+  }
+}
+
+/** Süzülen araç parçalarını yükleme kuyruğuna ekler (BootScene `preload`). */
+export function queueHoverTextures(loader: Phaser.Loader.LoaderPlugin): void {
+  for (const id of HOVER_IDS) {
+    for (const part of HOVER_PARTS)
+      loader.svg(hoverTexture(id, part), HOVER_PART_URLS[`../assets/vehicles/${id}/${part}.svg`], {
+        scale: TEXTURE_SCALE,
+      });
   }
 }
 
@@ -188,7 +242,7 @@ function canvasTexture(
 
 /** Çalışma anında çizilen efekt dokuları. */
 export function createRuntimeTextures(scene: Phaser.Scene): void {
-  bakeSpiderAtlas(scene);
+  bakeVehicleAtlas(scene);
   for (const spec of tankSpecs())
     createTreadTexture(
       scene,

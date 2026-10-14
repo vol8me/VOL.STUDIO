@@ -268,10 +268,7 @@ export class Simulation {
       const bit = bits & -bits;
       const part = bitIndex(bit);
       vehicle.chassis.parts |= bit;
-      vehicle.chassis.jolt(
-        partSide(kind, part),
-        kind === 'tank' ? PARTS.tank.jolt : PARTS.walker.jolt,
-      );
+      vehicle.chassis.jolt(partSide(kind, part), PARTS[kind].jolt);
       this.emit({ kind: 'broke', target: vehicle.id, part, x, y });
     }
   }

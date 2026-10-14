@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-a0b32c254f9d742e": {
+        "hash": "sha256:1066f2bf5840af4cfc30d729b97660029856d0049a3ffe6c0306edb4da43f7aa",
+        "path": "analyses/r-a0b32c254f9d742e.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:f2aa3d1d2982b3ae39b20a293a4c8f0c5481ac2387efbb247084d612dcbc30ea",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:f2aa3d1d2982b3ae39b20a293a4c8f0c5481ac2387efbb247084d612dcbc30ea",
+      "hash": "sha256:785e3a7896ca83c305de18d517adef7a192ea87b29ec11b124b024612fcf7a6a",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:e21c89474c05fdfbd951e774b9b002fbaeddea1be23a7ab58710db6a30c84c2d",
+      "path": "games/vol-test/audio-manifests/sfx/steel/shot-arc.json"
+    },
+    "renders": {
+      "r-a0b32c254f9d742e": {
+        "hash": "sha256:58de7eaccfd1d9b91b90f5f5cac461c3dc9ab23e099e9cd666dad9c07ee1d09c",
+        "path": "renders/r-a0b32c254f9d742e.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:f52612d44d12d660559abda8a099825f33b6f232d77ed0ee7f9db6ce58020174",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-shot-arc",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/shot-arc.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

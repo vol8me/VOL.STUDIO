@@ -4,9 +4,21 @@ import { angleDelta, clamp01, lerp } from '@volstudio/core/math';
 import { AUDIO, type VehicleVoice } from '@/config/audio';
 import { GAME } from '@/config/game';
 import { chassisConfigOf, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
-import type { Chassis } from '@/sim/chassis/Chassis';
+import type { Chassis, ChassisKind } from '@/sim/chassis/Chassis';
 import { audioUrl } from './assets';
 import { spatialSound, type AudioPosition } from './spatial';
+
+/** Şasi türüne göre ayak sesi: döngü dosyası ve sayıları. */
+interface StrideVoice {
+  readonly loop: string;
+  readonly config: { readonly gain: number; readonly rateMin: number; readonly rateMax: number };
+}
+
+const STRIDE: Readonly<Record<ChassisKind, StrideVoice>> = {
+  tank: { loop: 'tracks', config: AUDIO.tracks },
+  walker: { loop: 'legs', config: AUDIO.legs },
+  hover: { loop: 'fans', config: AUDIO.fans },
+};
 
 export class VehicleAudio {
   private readonly scope = new DisposableScope();
@@ -19,10 +31,13 @@ export class VehicleAudio {
   readonly ready: Promise<void>;
   /** Yük ölçeği: yürüyücüde yüzey kayması olmadığından yük hep sıfırdır. */
   private readonly driveSlip: number;
-  /** Yürüyücüde palet gümbürtüsü yerine bacak adımı çalar. */
-  private readonly walker: boolean;
+  /** Yürüyücüde palet gümbürtüsü yerine bacak adımı, süzülende pervane uğultusu çalar. */
+  private readonly stride: StrideVoice;
   private readonly voice: VehicleVoice;
   private braking = false;
+  private dashing = false;
+  /** Bu güncellemede süzülen araç ya da yürüyücünün atılımı başladı (tankın hızlanması döngüdür). */
+  dashStarted = false;
   private released = false;
 
   constructor(
@@ -49,8 +64,8 @@ export class VehicleAudio {
         })),
       ),
     );
-    this.walker = spec.kind === 'walker';
-    this.tracks = loop(this.walker ? 'legs' : 'tracks');
+    this.stride = STRIDE[spec.kind];
+    this.tracks = loop(this.stride.loop);
     this.skid = loop('skid');
     this.servo = loop('servo');
     this.boost = loop('boost');
@@ -87,7 +102,7 @@ export class VehicleAudio {
     this.engine.setPitch(
       lerp(AUDIO.engine.idleRpm, AUDIO.engine.maxRpm, level) * this.voice.engine,
     );
-    const stride = this.walker ? AUDIO.legs : AUDIO.tracks;
+    const stride = this.stride.config;
     this.tracks.setRate(lerp(stride.rateMin, stride.rateMax, motion) * this.voice.tracks);
     this.skid.setRate(lerp(AUDIO.skid.rateMin, AUDIO.skid.rateMax, slide));
     this.servo.setRate(lerp(AUDIO.servo.rateMin, AUDIO.servo.rateMax, turning));
@@ -95,7 +110,7 @@ export class VehicleAudio {
       motion > AUDIO.engine.motionFloor || load > AUDIO.engine.motionFloor || tank.boosting
         ? AUDIO.engine.gain * this.voice.engineGain
         : 0,
-      (this.walker ? AUDIO.legs : AUDIO.tracks).gain * motion,
+      stride.gain * motion,
       AUDIO.skid.gain * slide,
       AUDIO.servo.gain * turning,
       tank.boosting ? AUDIO.boost.gain : 0,
@@ -107,6 +122,8 @@ export class VehicleAudio {
       if (gain <= AUDIO.loopMinGain) voice.stop();
       else voice.start();
     });
+    this.dashStarted = this.spec.kind !== 'tank' && tank.boosting && !this.dashing;
+    this.dashing = tank.boosting;
     const brakeEdge = tank.braking && !this.braking && speed >= AUDIO.brakeMinSpeed;
     this.braking = tank.braking;
     return !paused && brakeEdge;

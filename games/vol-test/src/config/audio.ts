@@ -48,6 +48,8 @@ export const AUDIO = {
   tracks: { gain: 0.3, rateMin: 0.55, rateMax: 1.6 },
   /** Yürüyücünün bacak adımı döngüsü; palet gümbürtüsünün yerine çalar. */
   legs: { gain: 0.3, rateMin: 0.7, rateMax: 1.5 },
+  /** Süzülen aracın kaldırma pervanesi uğultusu; palet gümbürtüsünün yerine çalar. */
+  fans: { gain: 0.34, rateMin: 0.8, rateMax: 1.6 },
   skid: { gain: 0.32, fullSlide: 120, rateMin: 0.8, rateMax: 1.2 },
   servo: { gain: 0.17, rateMin: 0.8, rateMax: 1.1 },
   boost: { gain: 0.28 },
@@ -63,9 +65,10 @@ export const AUDIO = {
     arachnid: { engine: 0.88, engineGain: 0.7, tracks: 0.9 },
     widow: { engine: 1.2, engineGain: 0.55, tracks: 1.3 },
     goliath: { engine: 0.5, engineGain: 1.1, tracks: 0.6 },
+    manta: { engine: 1.5, engineGain: 0.5, tracks: 1 },
   } satisfies Record<VehicleId, VehicleVoice>,
   /**
-   * Kabuk referanstır; ağır mermi gümbürder. Ray, plazma ve iğnenin kendi atış teslimi vardır (`shotAsset`),
+   * Kabuk referanstır; ağır mermi gümbürder. Ray, plazma, iğne ve yayın kendi atış teslimi vardır (`shotAsset`),
    * perde 1'dir; top ailesi yalnız kabuk ve ağır mermiye çalar.
    */
   weaponVoice: {
@@ -74,9 +77,17 @@ export const AUDIO = {
     rail: { rate: 1, gain: 0.95 },
     plasma: { rate: 1, gain: 1 },
     needle: { rate: 1, gain: 0.9 },
+    arc: { rate: 1, gain: 0.85 },
   } satisfies Record<WeaponStyle, WeaponVoice>,
   /** Kendi atış teslimi olan silah stilleri (`loopAssetRoot` altında); olmayan top ailesinden çalar. */
-  shotAsset: { rail: 'shot-rail', plasma: 'shot-plasma', needle: 'shot-needle' } as Partial<
-    Record<WeaponStyle, string>
-  >,
+  /** Tek atımlık araç sesleri (`loopAssetRoot` altında): atılım başlangıcı ve parça kopması. */
+  eventAsset: { dash: 'dash', snap: 'snap' },
+  /** Olay seslerinin kazancı. */
+  eventGain: { dash: 0.6, snap: 0.75 },
+  shotAsset: {
+    rail: 'shot-rail',
+    plasma: 'shot-plasma',
+    needle: 'shot-needle',
+    arc: 'shot-arc',
+  } as Partial<Record<WeaponStyle, string>>,
 } as const;

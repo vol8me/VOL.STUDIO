@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PARTS } from '@/config/parts';
 import {
   ARACHNID,
+  MANTA,
   TANK_IDS,
   VEHICLES,
   WALKER_IDS,
@@ -174,6 +175,39 @@ describe('PartWear: dayanım tablosu (kaç isabette kırılır)', () => {
     for (let round = 0; round < 12; round++)
       for (const station of stations) strike(spider, station, width, 24);
     expect(spider.chassis.parts).toBe(0b1111_0000);
+  });
+});
+
+describe('PartWear: süzülen aracın yan iticileri', () => {
+  it('sağ yan sağ iticiyi, sol yan sol iticiyi aşındırır; orta hat gövdeye gider', () => {
+    const manta = build(MANTA, 0.8);
+    const width = manta.chassis.shape.halfWidth;
+    expect(strike(manta, 0, 0, 20)).toBe(0);
+    expect(manta.wear.wearOf(0) + manta.wear.wearOf(1)).toBe(0);
+    strike(manta, 0, width * 0.9, 10);
+    expect(manta.wear.wearOf(1)).toBeGreaterThan(0);
+    expect(manta.wear.wearOf(0)).toBe(0);
+    strike(manta, 0, -width * 0.9, 10);
+    expect(manta.wear.wearOf(0)).toBeGreaterThan(0);
+  });
+
+  it('kenar isabetiyle itici ölümden önce kırılır ve bit maskesi tankın yan bitleriyle aynıdır', () => {
+    const hits = hitsToBreak(MANTA, 0, 1);
+    expect(hits).toBeGreaterThanOrEqual(2);
+    expect(hits).toBeLessThan(Math.ceil(MANTA.health / MANTA.armament.weapon.damage));
+    const manta = build(MANTA);
+    const width = manta.chassis.shape.halfWidth;
+    let broken = 0;
+    while (broken === 0) broken = strike(manta, 0, -width, MANTA.armament.weapon.damage);
+    expect(broken).toBe(TRACK_LEFT);
+  });
+
+  it('kırık itici sessizlik dolunca yerine oturur', () => {
+    const manta = build(MANTA);
+    manta.chassis.parts = TRACK_RIGHT;
+    manta.wear.touch();
+    manta.wear.step(manta.chassis, PARTS.repair.quietMs + PARTS.repair.intervalMs);
+    expect(manta.chassis.parts).toBe(0);
   });
 });
 

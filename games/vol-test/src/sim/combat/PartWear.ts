@@ -10,7 +10,7 @@ function ramp(value: number, from: number, to: number): number {
 
 /**
  * Bir aracın parça aşınması. Mermi temas noktası gövde çerçevesine çevrilir ve hasar o bölgenin
- * parçasına (yan palet ya da en yakın bacaklar) yazılır; parça dayanımına ulaşınca kırılır. Konum
+ * parçasına (yan palet, yan itici ya da en yakın bacaklar) yazılır; parça dayanımına ulaşınca kırılır. Konum
  * kritikse (gövde kenarı) aşınma büyür. Rastgelelik yoktur: aynı atış dizisi aynı parçayı kırar,
  * bu yüzden sunucu, öngörü ve sınama aynı sonucu görür. Darbeden sonra bir süre dinlenen parçanın
  * aşınması söner; uzun süre hasar alınmazsa kırık parçalar birer birer yerine oturur.
@@ -25,9 +25,8 @@ export class PartWear {
   private mendMs = 0;
 
   constructor(private readonly spec: VehicleSpec) {
-    this.wear = new Array<number>(spec.kind === 'tank' ? TRACK_BITS : LEGS_PER_SIDE * 2).fill(0);
-    const share = spec.kind === 'tank' ? PARTS.tank.healthShare : PARTS.walker.healthShare;
-    this.limit = spec.health * share;
+    this.wear = new Array<number>(spec.kind === 'walker' ? LEGS_PER_SIDE * 2 : TRACK_BITS).fill(0);
+    this.limit = spec.health * PARTS[spec.kind].healthShare;
   }
 
   /** Bir parçanın dayanımı (can karşılığı). */
@@ -61,9 +60,9 @@ export class PartWear {
     const right = -dx * sin + dy * cos;
     const halfWidth = chassis.shape.halfWidth;
     const edge = Math.min(1, Math.abs(right) / halfWidth);
-    return this.spec.kind === 'tank'
-      ? this.strikeTrack(chassis, right, edge, damage)
-      : this.strikeLegs(chassis, forward, right, edge, damage);
+    return this.spec.kind === 'walker'
+      ? this.strikeLegs(chassis, forward, right, edge, damage)
+      : this.strikeSide(chassis, right, edge, damage);
   }
 
   /** Aşınmayı söndürür, sessizlik sürerse kırık parçaları birer birer yerine oturtur; onarılan maskeyi döner. */
@@ -98,15 +97,16 @@ export class PartWear {
     this.mendMs = 0;
   }
 
-  /** Aşınma yuvasının bit maskesi (tankta yuva 0 sol, 1 sağ palet; yürüyücüde `taraf*4 + istasyon`). */
+  /** Aşınma yuvasının bit maskesi (tankta ve süzülende yuva 0 sol, 1 sağ; yürüyücüde `taraf*4 + istasyon`). */
   bitOf(slot: number): number {
-    return this.spec.kind === 'tank'
-      ? 1 << slot
-      : legBit(Math.floor(slot / LEGS_PER_SIDE), slot % LEGS_PER_SIDE);
+    return this.spec.kind === 'walker'
+      ? legBit(Math.floor(slot / LEGS_PER_SIDE), slot % LEGS_PER_SIDE)
+      : 1 << slot;
   }
 
-  private strikeTrack(chassis: Chassis, right: number, edge: number, damage: number): number {
-    const config = PARTS.tank;
+  /** Tankın yan paleti ve süzülenin yan iticisi: gövdenin dışına düşen darbe o yanın parçasına gider. */
+  private strikeSide(chassis: Chassis, right: number, edge: number, damage: number): number {
+    const config = this.spec.kind === 'hover' ? PARTS.hover : PARTS.tank;
     const reach = ramp(edge, config.sideStart, 1);
     if (reach === 0) return 0;
     const critical = edge >= config.criticalStart ? config.criticalGain : 1;

@@ -1,0 +1,8 @@
+{
+  "analysisHash": "sha256:face344db02714c727fb3b678ca95bff64d12c7fc0813122e6d06b9059ac0f1a",
+  "pcmHash": "sha256:c6ae2393cae5aafd72bc88f5b0db6d64533d86c0cf0eace32cded248bb437fa8",
+  "reason": "Analiz temiz: kırpılma, DC ve tık yok; süre ve seviye bütçe içinde (teknik seçim).",
+  "renderHash": "sha256:ed48ff1e9d1964e41959cd8e0e01e6943c7ca022de0b6ef6d4c5a647f284b645",
+  "renderId": "r-191c25ee1f40e501",
+  "schema": "AudioSelectionV1"
+}

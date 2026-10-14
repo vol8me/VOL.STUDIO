@@ -4,7 +4,9 @@ import { DEBRIS } from '@/config/debris';
 import { tankSpecs } from '@/config/tankView';
 import {
   createRuntimeTextures,
+  queueHoverTextures,
   queueTankTextures,
+  hoverTexture,
   TEXTURE,
   TEXTURE_SCALE,
   shardTexture,
@@ -25,6 +27,22 @@ describe('textures', () => {
     expect(keys.sort()).toEqual([...shared, ...own].sort());
     expect(new Set(keys).size).toBe(keys.length);
     expect(scene.load.svg).toHaveBeenCalledWith(TEXTURE.treadEnd, expect.any(String), {
+      scale: TEXTURE_SCALE,
+    });
+  });
+
+  it('süzülen araç parçalarını ölçekli SVG olarak kuyruğa ekler; dosyaları ayrıdır', () => {
+    const scene = fakeScene();
+    queueHoverTextures(scene.load as unknown as Phaser.Loader.LoaderPlugin);
+    const keys = scene.load.svg.mock.calls.map((call) => String(call[0]));
+    expect(keys.sort()).toEqual(
+      (['fan', 'hull', 'pod', 'turret'] as const).map((part) => hoverTexture('manta', part)).sort(),
+    );
+    const urls = scene.load.svg.mock.calls.map((call) => String(call[1]));
+    expect(new Set(urls).size).toBe(urls.length);
+    // Çözülmeyen desen `undefined` adresini kuyruğa sokardı.
+    expect(urls.every((url) => url !== 'undefined' && url.length > 0)).toBe(true);
+    expect(scene.load.svg).toHaveBeenCalledWith(keys[0], expect.any(String), {
       scale: TEXTURE_SCALE,
     });
   });

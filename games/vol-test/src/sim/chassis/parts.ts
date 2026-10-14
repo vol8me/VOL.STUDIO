@@ -1,9 +1,10 @@
 import { PARTS } from '@/config/parts';
 import type { VehicleSpec } from '@/config/vehicles';
+import type { ChassisKind } from './Chassis';
 
 /**
  * Şasi parçalarının bit maskesi (`Chassis.parts`): bir bit, kırık bir parçadır. Tankta iki bit yan
- * paletlerdir; yürüyücüde `taraf * 4 + istasyon` bacağı: sol bacaklar 0-3, sağ bacaklar 4-7, önden arkaya
+ * paletlerdir, süzülen araçta yan iticilerdir (aynı iki bit); yürüyücüde `taraf * 4 + istasyon` bacağı: sol bacaklar 0-3, sağ bacaklar 4-7, önden arkaya
  * (görünümdeki bacak sırasıyla aynı). Maske ağ durumunda tamsayı olarak taşınır ve ara değer ALMAZ.
  */
 export const TRACK_LEFT = 1;
@@ -34,18 +35,26 @@ export interface PartAnchor {
 }
 
 /**
- * Parçanın gövdeye bağlandığı nokta: tankta yan paletin ortası, yürüyücüde bacağın kalçası kenarda.
+ * Parçanın gövdeye bağlandığı nokta: tankta yan paletin ortası, süzülen araçta yan iticinin ortası, yürüyücüde bacağın kalçası kenarda.
  * Kopan parçanın savrulacağı yer ve yön buradan türer (sunum ve ses, fizik değil).
  */
 export function partAnchor(spec: VehicleSpec, index: number, out: PartAnchor): PartAnchor {
   const side = partSide(spec.kind, index);
-  if (spec.kind === 'tank') {
-    out.forward = 0;
-    out.right = side * spec.tank.trackOffset;
-  } else {
-    const stations: readonly number[] = PARTS.walker.stations[spec.id];
-    out.forward = stations[index % LEGS_PER_SIDE];
-    out.right = side * (spec.walker.halfWidth + 4);
+  switch (spec.kind) {
+    case 'tank':
+      out.forward = 0;
+      out.right = side * spec.tank.trackOffset;
+      break;
+    case 'hover':
+      out.forward = -4;
+      out.right = side * spec.hover.trackOffset;
+      break;
+    case 'walker': {
+      const stations: readonly number[] = PARTS.walker.stations[spec.id];
+      out.forward = stations[index % LEGS_PER_SIDE];
+      out.right = side * (spec.walker.halfWidth + 4);
+      break;
+    }
   }
   return out;
 }
@@ -56,7 +65,7 @@ export function bitIndex(bit: number): number {
 }
 
 /** Kırılan parçanın gövdenin hangi yanında olduğu: -1 sol, +1 sağ. */
-export function partSide(kind: 'tank' | 'walker', index: number): -1 | 1 {
-  if (kind === 'tank') return index === 0 ? -1 : 1;
-  return index < LEGS_PER_SIDE ? -1 : 1;
+export function partSide(kind: ChassisKind, index: number): -1 | 1 {
+  if (kind === 'walker') return index < LEGS_PER_SIDE ? -1 : 1;
+  return index === 0 ? -1 : 1;
 }

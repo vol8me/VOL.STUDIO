@@ -1,0 +1,74 @@
+{
+  "channels": 1,
+  "description": "Kuru mekanik kaldırma pervanesi: kanat geçişi ve hava bandı.",
+  "durationSeconds": 4,
+  "layers": [
+    {
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "rotor",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 3200,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.04,
+          "count": 5,
+          "harmonics": 12,
+          "imbalance": 0.03,
+          "load": 0.5,
+          "mechanism": "fan",
+          "noise": 0.3,
+          "rpm": 2400,
+          "tilt": 0.65
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -15,
+      "mechanism": "mechanical",
+      "name": "air",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1100,
+            "mode": "bandpass",
+            "q": 0.6
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "loop": {
+      "crossfadeSeconds": 1
+    },
+    "normalize": "peak",
+    "peakDbfs": -8
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8601
+}

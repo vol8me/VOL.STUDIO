@@ -134,7 +134,7 @@ export const SUSPENSION = {
 export type SuspensionConfig = { readonly [K in keyof typeof SUSPENSION]: number };
 
 /** Mermi görünüm kimliği: iz, ağız parlaması, patlama ve ses ailesi buna göre seçilir. */
-export const WEAPON_STYLES = ['shell', 'slug', 'rail', 'plasma', 'needle'] as const;
+export const WEAPON_STYLES = ['shell', 'slug', 'rail', 'plasma', 'needle', 'arc'] as const;
 export type WeaponStyle = (typeof WEAPON_STYLES)[number];
 
 /** Merminin yükseklik ve menzil modeli (`Projectiles` bunu okur). */

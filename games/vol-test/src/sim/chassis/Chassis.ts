@@ -13,8 +13,8 @@ import { createChassisState, type ChassisPose, type ChassisState } from './Chass
 import { Suspension } from './Suspension';
 import { Turret, type TurretConfig } from './Turret';
 
-/** Şasi türü: paletli tank ya da bacaklı yürüyücü. */
-export type ChassisKind = 'tank' | 'walker';
+/** Şasi türü: paletli tank, bacaklı yürüyücü ya da süzülen araç. */
+export type ChassisKind = 'tank' | 'walker' | 'hover';
 
 /** Her şasinin ortak gövde, temas ve depo sayıları; türe özgü sürüş sayıları kendi yapılandırmasındadır. */
 export interface ChassisConfig extends BoostConfig, TurretConfig {
@@ -34,11 +34,11 @@ export interface ChassisConfig extends BoostConfig, TurretConfig {
 
 /**
  * Sürülebilir bir aracın fiziksel gövdesi: katı cisim, taret, depo ve yaylı süspansiyon. Paletli
- * tank ile yürüyücü yalnızca nasıl itildikleriyle ayrışır (`step`); poz, durum, temas ve
+ * tank, yürüyücü ve süzülen araç yalnızca nasıl itildikleriyle ayrışır (`step`); poz, durum, temas ve
  * ağ uzlaştırması ortaktır, bu yüzden simülasyon, öngörü ve görünüm şasinin türünü bilmeden çalışır.
  *
  * İki yan yüzey alanı (`track*`, `tread*`, `ground*`, `surface*`, `slide*`, `slip`) türe göre
- * yorumlanır: tankta palet, yürüyücüde o yandaki bacak sırası. Anlamları aynı kalır (yüzey hızı,
+ * yorumlanır: tankta palet, yürüyücüde o yandaki bacak sırası, süzülen araçta o yandaki itici. Anlamları aynı kalır (yüzey hızı,
  * katedilen yol, zeminin hızı, kayma), böylece iz, toz, kar ezilmesi ve yürüyüş döngüsü aynı
  * sinyallerden beslenir.
  */
