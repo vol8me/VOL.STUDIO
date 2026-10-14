@@ -70,6 +70,8 @@ const live: LinkView = {
   driftEma: 0.25,
   driftPeak: 1.5,
   driftMax: 6,
+  poseX: 0,
+  poseY: 0,
 };
 
 const text = (panel: OnlinePanel, id: string): string =>
@@ -146,6 +148,9 @@ describe('OnlinePanel çubuk', () => {
     expect(ping.dataset.driftEma).toBe('0.123');
     expect(ping.dataset.driftPeak).toBe('4.568');
     expect(ping.dataset.driftMax).toBe('9.877');
+    panel.update(view(), { ...live, poseX: 1234.56, poseY: -7.04 });
+    expect(ping.dataset.poseX).toBe('1234.6');
+    expect(ping.dataset.poseY).toBe('-7.0');
   });
 
   it('bağlantı koptuğunda uyarı çıkar, dönünce kaybolur', () => {

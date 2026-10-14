@@ -164,6 +164,8 @@ export class OnlineDriver implements WorldDriver {
       driftEma: drift.ema,
       driftPeak: drift.peak,
       driftMax: this.driftMax,
+      poseX: this.player.chassis.x,
+      poseY: this.player.chassis.y,
     });
   }
 

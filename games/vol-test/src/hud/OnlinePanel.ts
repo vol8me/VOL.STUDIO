@@ -21,6 +21,9 @@ export interface LinkView {
   readonly driftEma: number;
   readonly driftPeak: number;
   readonly driftMax: number;
+  /** Öngörülen (görüntülenen) araç konumu, dünya birimi; ölçüm ve teşhis için `data-pose-*` yazılır. */
+  readonly poseX: number;
+  readonly poseY: number;
 }
 
 /** Akış, son satırdan bu kadar sonra soluklaşır. */
@@ -167,6 +170,8 @@ export class OnlinePanel {
     this.ping.dataset.driftEma = link.driftEma.toFixed(3);
     this.ping.dataset.driftPeak = link.driftPeak.toFixed(3);
     this.ping.dataset.driftMax = link.driftMax.toFixed(3);
+    this.ping.dataset.poseX = link.poseX.toFixed(1);
+    this.ping.dataset.poseY = link.poseY.toFixed(1);
     this.paint();
   }
 

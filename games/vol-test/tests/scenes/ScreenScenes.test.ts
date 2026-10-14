@@ -130,6 +130,26 @@ function nativeWindow(available = true) {
   return { isAvailable: () => available, close: vi.fn(() => Promise.resolve()) };
 }
 
+describe('ScreenScene odağı', () => {
+  it('ilk karede varsayılan öğeye odak verir, ama kullanıcının seçtiği alanı çalmaz', async () => {
+    const frame = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => done()));
+    const { services: env } = services();
+    const idle = mount(() => new GarageScene(env));
+    await frame();
+    await frame();
+    expect(document.activeElement).toBe(idle.find('garage-vehicle-striker'));
+    idle.shutdown();
+    idle.parent.remove();
+
+    const typing = mount(() => new GarageScene(env));
+    const name = typing.find<HTMLInputElement>('garage-name');
+    name.focus();
+    await frame();
+    await frame();
+    expect(document.activeElement).toBe(name);
+  });
+});
+
 describe('MenuScene', () => {
   it('menüyü kurar, vitrini çizer ve her seçeneği solarak ilgili sahneye götürür', () => {
     const { services: env } = services();
@@ -146,7 +166,7 @@ describe('MenuScene', () => {
     harness.find('menu-practice').click();
     expect(harness.fadeOut).toHaveBeenCalledTimes(1);
     harness.finishFade();
-    expect(harness.start).toHaveBeenCalledWith('Garage', undefined);
+    expect(harness.start).toHaveBeenCalledWith('Garage', {});
   });
 
   it.each([
@@ -157,7 +177,7 @@ describe('MenuScene', () => {
     const harness = mount(() => new MenuScene(env, nativeWindow() as never));
     harness.find(id).click();
     harness.finishFade();
-    expect(harness.start).toHaveBeenCalledWith(target, undefined);
+    expect(harness.start).toHaveBeenCalledWith(target, {});
   });
 
   it('çıkış yalnız native masaüstünde vardır; Android ve tarayıcıda yoktur', () => {
@@ -220,12 +240,12 @@ describe('SettingsScene', () => {
     expect(harness.find('settings')).not.toBeNull();
     harness.find('settings-back').click();
     harness.finishFade();
-    expect(harness.start).toHaveBeenCalledWith('Menu', undefined);
+    expect(harness.start).toHaveBeenCalledWith('Menu', {});
 
     const again = mount(() => new SettingsScene(env));
     expect(triggerBack()).toBe(true);
     again.finishFade();
-    expect(again.start).toHaveBeenCalledWith('Menu', undefined);
+    expect(again.start).toHaveBeenCalledWith('Menu', {});
   });
 });
 
@@ -287,7 +307,7 @@ describe('GarageScene', () => {
     await vi.waitFor(() => expect(online.connectWar).toHaveBeenCalled());
     harness.find('garage-back').click();
     harness.finishFade();
-    expect(harness.start).toHaveBeenCalledWith('Menu', undefined);
+    expect(harness.start).toHaveBeenCalledWith('Menu', {});
     resolve({ start: {}, abandon });
     await vi.waitFor(() => expect(abandon).toHaveBeenCalledTimes(1));
     expect(harness.start).toHaveBeenCalledTimes(1);
@@ -311,11 +331,11 @@ describe('GarageScene', () => {
     const practice = mount(() => new GarageScene(env));
     practice.find('garage-practice').click();
     practice.finishFade();
-    expect(practice.start).toHaveBeenCalledWith('World', undefined);
+    expect(practice.start).toHaveBeenCalledWith('World', {});
 
     const back = mount(() => new GarageScene(env));
     expect(triggerBack()).toBe(true);
     back.finishFade();
-    expect(back.start).toHaveBeenCalledWith('Menu', undefined);
+    expect(back.start).toHaveBeenCalledWith('Menu', {});
   });
 });

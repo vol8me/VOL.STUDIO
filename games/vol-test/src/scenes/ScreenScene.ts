@@ -56,8 +56,13 @@ export abstract class ScreenScene extends Phaser.Scene {
     this.ui.mount(screen.element);
     this.scope.addSubscription(pushBackHandler(() => this.onBack()));
     if (!reducedMotion()) this.cameras.main.fadeIn(MENU.fadeMs, FADE.red, FADE.green, FADE.blue);
-    // Odak, panelin giriş animasyonu başlamadan taşınmasın diye bir kare sonra verilir.
-    const focus = requestAnimationFrame(() => screen.focus());
+    // Odak, panelin giriş animasyonu başlamadan taşınmasın diye bir kare sonra verilir. Oyuncu ya da
+    // araç o arada panelin içinde bir alana odaklandıysa (yazmaya başladıysa) odak çalınmaz.
+    const focus = requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (active && active !== document.body && screen.element.contains(active)) return;
+      screen.focus();
+    });
     this.scope.addSubscription(() => cancelAnimationFrame(focus));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scope.dispose());
   }
@@ -83,8 +88,12 @@ export abstract class ScreenScene extends Phaser.Scene {
     this.showroom.setVehicle(spec);
   }
 
-  /** Başka sahneye solarak geçer; geçiş sürerken ikinci çağrı yok sayılır. */
-  protected goto(key: string, data?: object): void {
+  /**
+   * Başka sahneye solarak geçer; geçiş sürerken ikinci çağrı yok sayılır. Veri yoksa boş nesne verilir:
+   * Phaser `undefined` veriyi görmezden gelip sahnenin önceki başlatma verisini korur ve savaştan
+   * dönen oyuncunun alıştırması çevrimiçi sürücüyle açılırdı.
+   */
+  protected goto(key: string, data: object = {}): void {
     if (this.leaving) return;
     this.leaving = true;
     if (this.screen) this.screen.element.dataset.leaving = 'true';

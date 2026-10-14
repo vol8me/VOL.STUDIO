@@ -39,7 +39,8 @@ test('oyun açılır, HUD ve kontrol ipuçları görünür, konsol temiz', async
   await expect(page.getByTestId('telemetry')).toContainText('m/s');
   await expect(page.getByTestId('control-hints')).toBeVisible();
   await expect(page.getByTestId('touch-boost')).toBeHidden();
-  await expect.poll(() => position(page)).toEqual({ x: 64, y: 64 });
+  // Alıştırma dünyası 384 m'dir ve oyuncu merkezde açılır.
+  await expect.poll(() => position(page)).toEqual({ x: 192, y: 192 });
   // Tam ekran düğmesi yalnız webde, haritanın ALTINDA.
   const map = (await page.locator('.vt-hud__map').boundingBox())!;
   const fullscreen = (await page.locator('.vt-hud__fullscreen').boundingBox())!;

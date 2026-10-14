@@ -228,9 +228,19 @@
   box-shadow: 0 0 0 var(--vol-space-md) var(--vol-ui-panel);
 }
 
+/*
+ * Menü, ayar satırları, eylemler ve devam düğmesiyle 800 px yüksekliğe (Deck) kayıtsız sığmalıdır:
+ * yapışkan altlık kayan içeriğin üstünü örter, o yüzden CORE'un geniş boşluğu burada daraltılır
+ * ve eylemler yan yana dizilir.
+ */
+.vt-pause .vol-modal__content {
+  gap: var(--vol-space-md);
+  padding-block: var(--vol-space-lg) var(--vol-space-md);
+}
+
 .vt-pause__actions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11em, 1fr));
   gap: var(--vol-space-sm);
 }
 
