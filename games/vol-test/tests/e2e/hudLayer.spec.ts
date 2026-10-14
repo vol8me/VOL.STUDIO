@@ -233,4 +233,39 @@ test.describe('dokunmatik (telefon yatayı)', () => {
       'dokunmatik kipte tuvali örten etkileşimsiz HUD noktası yok',
     ).toEqual([]);
   });
+
+  test('yeniden doğma bildirimi telemetri, başlık ve denetimlerle çakışmaz', async ({ page }) => {
+    for (const viewport of [
+      { width: 844, height: 390 },
+      { width: 1250, height: 750 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await open(page);
+      const overlaps = await page.evaluate(() => {
+        const banner = document.querySelector<HTMLElement>('[data-testid="lifecycle"]')!;
+        // Ölü araç bildirimi en uzun metindir; metin sunucudan değil kare güncellemesinden gelir.
+        banner.textContent = 'Araç imha oldu · 10 sn sonra yeniden doğacak';
+        const box = banner.getBoundingClientRect();
+        const others = [
+          '.vt-hud__title',
+          '[data-testid="telemetry"]',
+          '.vt-hud__map',
+          '.vt-hud__touch > :not([hidden])',
+        ];
+        return others.flatMap((selector) =>
+          [...document.querySelectorAll<HTMLElement>(selector)].flatMap((element) => {
+            const rect = element.getBoundingClientRect();
+            const apart =
+              rect.width === 0 ||
+              rect.right <= box.left ||
+              rect.left >= box.right ||
+              rect.bottom <= box.top ||
+              rect.top >= box.bottom;
+            return apart ? [] : [selector];
+          }),
+        );
+      });
+      expect(overlaps, `${viewport.width}x${viewport.height}: bildirim örtüşmez`).toEqual([]);
+    }
+  });
 });

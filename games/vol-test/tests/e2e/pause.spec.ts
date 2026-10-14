@@ -99,3 +99,25 @@ test('Devam düğmesi Enter ile katmanı kapatır; yeniden açılır', async ({ 
   await page.keyboard.press('Escape');
   await expect(page.locator('.vt-pause')).toHaveClass(OPEN);
 });
+
+test.describe('dokunmatik tablet (yatay, ~750 px CSS yükseklik)', () => {
+  test.use({
+    viewport: { width: 1250, height: 750 },
+    deviceScaleFactor: 1.6,
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  // Android'de ölçülen yerleşim: 44 px denetimlerle içerik kaymadan sığmalı; yoksa son satır
+  // yapışkan altlığın altında yarım kalır.
+  test('duraklatma içeriği kaymadan sığar: son satır yapışkan altlığın altında kalmaz', async ({
+    page,
+  }) => {
+    await openPause(page);
+    const fit = await page.evaluate(() => {
+      const content = document.querySelector<HTMLElement>('.vt-pause .vol-modal__content')!;
+      return { scroll: content.scrollHeight, client: content.clientHeight };
+    });
+    expect(fit.scroll).toBeLessThanOrEqual(fit.client);
+  });
+});

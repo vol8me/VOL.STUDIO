@@ -178,6 +178,12 @@
   inset: calc(var(--vol-safe-top) + 56px) auto auto calc(var(--vol-safe-left) + 20px);
 }
 
+/* Dokunmatikte telemetri sol üstte lifecycle ile aynı satıra düşer; bildirim üst ortaya alınır. */
+.vt-hud[data-mode='touch'] .vt-hud__lifecycle {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .vt-hud[data-mode='touch'] .vt-hud__boost-bar,
 .vt-hud[data-mode='touch'] .vt-hud__fire-bar,
 .vt-hud[data-mode='touch'] .vt-hud__health-bar {
@@ -236,6 +242,22 @@
 .vt-pause .vol-modal__content {
   gap: var(--vol-space-md);
   padding-block: var(--vol-space-lg) var(--vol-space-md);
+}
+
+/*
+ * Dokunmatik cihazlar 44 px denetim yüksekliği ister; ~750 px CSS yükseklikteki yatay tablet (Android,
+ * ölçülen) ve 800 px Deck'te satır boşluğu daraltılmazsa son satır yapışkan altlığın altında kalır.
+ */
+@media (height <= 860px) {
+  .vt-pause .vol-modal__content {
+    gap: var(--vol-space-sm);
+    padding-block: var(--vol-space-md) var(--vol-space-sm);
+  }
+
+  .vt-pause__footer {
+    bottom: var(--vol-space-sm);
+    box-shadow: 0 0 0 var(--vol-space-sm) var(--vol-ui-panel);
+  }
 }
 
 .vt-pause__actions {
