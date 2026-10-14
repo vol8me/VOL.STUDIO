@@ -155,6 +155,16 @@ export class ParticleFx {
     this.burst('smoke', blast.smoke, x, y, 0, 360);
   }
 
+  /** Araç imhası: sıcak bir çekirdek, kıvılcım ve kaldırdığı toz; kısa ve yoğun (tek patlama). */
+  wreck(x: number, y: number): void {
+    const wreck = FX.wreck;
+    this.burst('fire', wreck.fire, x, y, 0, 360);
+    this.burst('sparks', wreck.sparks, x, y, 0, 360);
+    this.burst('debris', wreck.debris, x, y, 0, 360);
+    this.burst('dust', wreck.dust, x, y, 0, 360);
+    this.burst('smoke', wreck.smoke, x, y, 0, 360);
+  }
+
   /** Mermi bir araca isabet etti: geliş yönünün tersine kıvılcım ve duman. */
   hit(x: number, y: number, angle: number): void {
     const back = deg(angle + Math.PI);

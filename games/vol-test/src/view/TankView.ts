@@ -108,6 +108,13 @@ export class TankView implements VehicleView {
     this.shadow.update(this.shadowSource);
   }
 
+  setPresent(present: boolean): void {
+    this.root.setVisible(present);
+    if (present) return;
+    this.shadow.clear();
+    this.lights.silence();
+  }
+
   destroy(): void {
     this.shadow.destroy();
     this.lights.destroy();

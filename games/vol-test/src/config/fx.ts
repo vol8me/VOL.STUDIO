@@ -26,6 +26,8 @@ export const SHOT_LOOK: Readonly<Record<WeaponStyle, ShotLook>> = {
 
 /** Sunum efektlerinin ayarları; renkler `palette.ts`ten gelir. */
 export const FX = {
+  /** Enkaz rastgelesinin tohumu: parça düzeni oturumdan oturuma aynıdır. */
+  debrisSeed: 7013,
   aimGuide: {
     haloWidth: 2.8,
     haloAlpha: 0.3,
@@ -120,6 +122,8 @@ export const FX = {
       depth: 1.8,
     },
   },
+  /** Araç imha edildi: hızlı, tek bir patlama; parçacık sayıları, parlama ve şok halkası çarpanı. */
+  wreck: { fire: 12, sparks: 16, debris: 8, dust: 7, smoke: 7, flashScale: 2.3, ringScale: 1.7 },
   /** Mermi araca isabet etti: yanık bırakmayan küçük patlama. */
   hit: { sparks: 16, smoke: 5, flashScale: 1.1 },
   wallFlash: { span: 260, width: 7, durationMs: 260 },

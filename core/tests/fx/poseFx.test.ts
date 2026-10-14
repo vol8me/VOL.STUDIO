@@ -307,6 +307,19 @@ describe('PoseShadow', () => {
     expect(sprites[1].destroyed).toBe(false);
   });
 
+  it('clear gölgeyi gizler ama spriteları saklar; sonraki update yeniden çizer', () => {
+    const { scene, sprites } = createScene();
+    const shadow = new PoseShadow(scene, { offsetX: 0, offsetY: 0, alpha: 1, depth: 0 });
+
+    shadow.update(tree());
+    shadow.clear();
+    expect(sprites.every((sprite) => !sprite.visible && !sprite.destroyed)).toBe(true);
+
+    shadow.update(tree());
+    expect(sprites.every((sprite) => sprite.visible)).toBe(true);
+    expect(sprites).toHaveLength(2);
+  });
+
   it('destroy tekrarlanabilir ve sonrasında çizim yapmaz', () => {
     const { scene, sprites } = createScene();
     const shadow = new PoseShadow(scene, { offsetX: 0, offsetY: 0, alpha: 1, depth: 0 });

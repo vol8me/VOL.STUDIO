@@ -63,6 +63,13 @@ export class PoseShadow {
     );
   }
 
+  /** Gölgeyi gizler (kaynak sahneden kalktı ama yok edilmedi); sonraki `update` yeniden çizer. */
+  clear(): void {
+    if (this.destroyed) return;
+    this.samples.length = 0;
+    this.sprites.hide();
+  }
+
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;

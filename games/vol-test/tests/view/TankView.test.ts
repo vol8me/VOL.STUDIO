@@ -198,6 +198,24 @@ describe.each(tankSpecs().map((spec) => [spec.id, spec] as const))('TankView (%s
     expect(keys).toContain(hull);
   });
 
+  it('imha edilince kök, gölge ve ağız parlaması gizlenir; geri gelince kök yeniden görünür', () => {
+    const scene = fakeScene();
+    const view = new TankView(scene as unknown as Phaser.Scene, spec);
+    const built = scene.created.length;
+    const root = scene.created.filter((object) => object.kind === 'container').at(-1);
+    view.update(frame(), 16);
+    const shadows = scene.created.slice(built);
+    view.fire();
+    const flash = scene.created.find((object) => object.args.includes(TEXTURE.flash));
+    view.setPresent(false);
+    expect(root?.visible).toBe(false);
+    expect(flash?.visible).toBe(false);
+    expect(shadows.length).toBeGreaterThan(0);
+    expect(shadows.every((sprite) => sprite.visible === false)).toBe(true);
+    view.setPresent(true);
+    expect(root?.visible).toBe(true);
+  });
+
   it('yok edilince kök kaldırılır', () => {
     const { view, root } = build(spec);
     view.destroy();

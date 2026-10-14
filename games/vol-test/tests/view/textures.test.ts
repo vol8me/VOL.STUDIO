@@ -1,11 +1,13 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
+import { DEBRIS } from '@/config/debris';
 import { tankSpecs } from '@/config/tankView';
 import {
   createRuntimeTextures,
   queueTankTextures,
   TEXTURE,
   TEXTURE_SCALE,
+  shardTexture,
   tankTexture,
   treadBandTexture,
 } from '@/view/textures';
@@ -49,6 +51,7 @@ describe('textures', () => {
         TEXTURE.blast,
         TEXTURE.ring,
         TEXTURE.scorch,
+        ...Array.from({ length: DEBRIS.shardVariants }, (_, variant) => shardTexture(variant)),
         TEXTURE.skid,
         TEXTURE.spark,
         TEXTURE.treadBase,

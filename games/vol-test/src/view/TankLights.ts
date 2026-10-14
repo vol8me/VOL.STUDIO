@@ -82,6 +82,14 @@ export class TankLights {
     return this.barrel.value;
   }
 
+  /** Ağız parlaması ve namlu yayı sıfırlanır: gizlenen araçtan ışık kalmaz. */
+  silence(): void {
+    this.flashMs = 0;
+    this.barrel.value = 0;
+    this.barrel.velocity = 0;
+    this.flash.setVisible(false);
+  }
+
   destroy(): void {
     this.bodyPart.destroy();
     this.flash.destroy();

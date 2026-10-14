@@ -27,5 +27,10 @@ export interface VehicleView {
    */
   impact?(strength: number): void;
   update(frame: TankFrame, deltaMs: number): void;
+  /**
+   * Araç sahnede mi: imha edilen araç patlar ve görünümü tümden (gövde, gölge, ışık, hayalet) gizlenir,
+   * yeniden doğunca geri gelir. Gizliyken `update` çağrılmaz.
+   */
+  setPresent(present: boolean): void;
   destroy(): void;
 }

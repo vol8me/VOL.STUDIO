@@ -1,6 +1,7 @@
 import { vibrate } from '@volstudio/core';
 import { FEEL } from '@/config/feel';
 import type { FollowCamera } from '@volstudio/core/camera';
+import type { VehicleSpec } from '@/config/vehicles';
 import type { SimEvent } from '@/sim/events';
 import type { ArenaView } from '@/view/ArenaView';
 import type { EffectsView } from '@/view/EffectsView';
@@ -10,7 +11,9 @@ export interface SimEventTargets {
   /** Kontrol edilen aracın kimliği: kamera ve titreşim yalnız ona tepki verir. */
   readonly player: number;
   readonly tank: (id: number) => Pick<VehicleView, 'fire' | 'impact'> | undefined;
-  readonly effects: Pick<EffectsView, 'muzzle' | 'explode' | 'hit' | 'wallHit'>;
+  /** Hedefin tanımı: isabette gövdeden kopan kıymığın dokusu buradan seçilir. */
+  readonly spec: (id: number) => VehicleSpec | undefined;
+  readonly effects: Pick<EffectsView, 'muzzle' | 'explode' | 'hit' | 'chip' | 'wallHit'>;
   readonly arena: Pick<ArenaView, 'strike'>;
   readonly camera: Pick<FollowCamera, 'kick' | 'addTrauma'>;
   /** Oyuncunun konumu: patlama sarsıntısı ve titreşimi uzaklıkla söner. */
@@ -29,7 +32,11 @@ export function falloff(dx: number, dy: number, radius: number): number {
 }
 
 /** Patlamanın oyuncuya yansıması: uzaklıkla sönen sarsıntı ve yakında titreşim. */
-function feelBlast(targets: SimEventTargets, x: number, y: number): void {
+export function feelBlast(
+  targets: Pick<SimEventTargets, 'camera' | 'listener'>,
+  x: number,
+  y: number,
+): void {
   const blast = FEEL.blast;
   const dx = x - targets.listener.x;
   const dy = y - targets.listener.y;
@@ -44,6 +51,12 @@ function feelImpact(targets: SimEventTargets, strength: number): void {
   const wall = FEEL.wall;
   targets.camera.addTrauma(wall.traumaBase + strength * wall.traumaScale);
   vibrate(strength >= wall.heavyHaptic ? 'warning' : 'tap', strength);
+}
+
+/** İsabet alan aracın gövdesinden ara sıra bir kıymık koparır (şans efektte karma ile belirlenir). */
+function chipTarget(targets: SimEventTargets, event: Extract<SimEvent, { kind: 'hit' }>): void {
+  const spec = targets.spec(event.target);
+  if (spec) targets.effects.chip(spec, event.target, event.x, event.y, event.angle);
 }
 
 /**
@@ -68,6 +81,7 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
         break;
       case 'hit':
         targets.effects.hit(event.x, event.y, event.angle);
+        chipTarget(targets, event);
         if (event.target === targets.player) {
           targets.camera.addTrauma(FEEL.hit.trauma);
           vibrate('warning', 1);

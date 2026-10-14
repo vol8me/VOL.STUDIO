@@ -135,6 +135,17 @@ export class SpiderCannon {
       .setVisible(phase > 0);
   }
 
+  /** Ağız parlamasını söndürür ve yayları sıfırlar: gizlenen araçtan ışık kalmaz. */
+  silence(): void {
+    this.flashMs = 0;
+    this.heatMs = 0;
+    this.recoil.value = 0;
+    this.recoil.velocity = 0;
+    this.kick.value = 0;
+    this.kick.velocity = 0;
+    this.flash.setVisible(false);
+  }
+
   destroy(): void {
     this.flash.destroy();
     this.housingShadow.destroy();

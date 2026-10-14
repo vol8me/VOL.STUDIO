@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type * as CoreModule from '@volstudio/core';
 import { FEEL } from '@/config/feel';
+import { ARACHNID, STRIKER } from '@/config/vehicles';
 import { falloff, routeSimEvents } from '@/scenes/world/SimEventRouter';
 
 const haptics = vi.hoisted(() => ({ patterns: [] as string[], intensities: [] as number[] }));
@@ -22,7 +23,14 @@ function targets() {
     fire,
     player: PLAYER,
     tank: (id: number) => (fire[id] ? { fire: fire[id] } : undefined),
-    effects: { muzzle: vi.fn(), explode: vi.fn(), hit: vi.fn(), wallHit: vi.fn() },
+    spec: (id: number) => (id === OTHER ? ARACHNID : STRIKER),
+    effects: {
+      muzzle: vi.fn(),
+      explode: vi.fn(),
+      hit: vi.fn(),
+      chip: vi.fn(),
+      wallHit: vi.fn(),
+    },
     arena: { strike: vi.fn() },
     camera: { kick: vi.fn(), addTrauma: vi.fn() },
     listener: { x: 0, y: 0 },
@@ -86,6 +94,11 @@ describe('routeSimEvents', () => {
       t,
     );
     expect(t.effects.hit).toHaveBeenCalledTimes(2);
+    // Kıymık, isabet alan aracın tanımıyla ve kimliğiyle istenir (şansı efekt belirler).
+    expect(t.effects.chip.mock.calls).toEqual([
+      [STRIKER, PLAYER, 4, 5, 0],
+      [ARACHNID, OTHER, 4, 5, 0],
+    ]);
     expect(t.camera.addTrauma.mock.calls).toEqual([[FEEL.hit.trauma]]);
     expect(haptics.patterns).toEqual(['warning']);
   });

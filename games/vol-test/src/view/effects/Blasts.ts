@@ -44,10 +44,16 @@ export class Blasts {
   }
 
   /** Patlama: parlama, şok halkası ve (yerde ya da duvarda) yanık. */
-  explode(x: number, y: number, scorch: boolean, flashScale: number = FX.blast.flash.scale): void {
+  explode(
+    x: number,
+    y: number,
+    scorch: boolean,
+    flashScale: number = FX.blast.flash.scale,
+    ringScale = 1,
+  ): void {
     const { flash, ring } = FX.blast;
     this.flashes.emit(x, y, flash.durationMs, flashScale * 0.45, flashScale, 1);
-    this.rings.emit(x, y, ring.durationMs, 0.1, ring.scale, ring.alpha);
+    this.rings.emit(x, y, ring.durationMs, 0.1, ring.scale * ringScale, ring.alpha);
     if (scorch) {
       const size = FX.blast.scorch.size;
       // Dönüş konumdan türer: aynı olay aynı yanığı bırakır (rastgelelik yok).

@@ -103,7 +103,7 @@ export const ARACHNID_LOOK: SpiderLook = {
     countMin: 1,
     countMax: 3,
   },
-  ghost: { count: 5, intervalMs: 45, lifeMs: 240, alpha: 0.34, tint: 0xff5a6e },
+  ghost: { count: 5, intervalMs: 45, lifeMs: 240, alpha: 0.34, tint: 0xff7f93 },
   cannon: {
     muzzleX: 23,
     coilX: 12,

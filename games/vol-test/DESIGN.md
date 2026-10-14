@@ -154,11 +154,11 @@ dönükken yarıya iner), bu yüzden önce döner sonra açılır. Shift hızlan
 av atılışı başlatır: depo doluyken basılır, bırakılsa da ~0,55 sn boşalana dek sürer, geri alınamaz,
 hareketsizken gövdenin baktığı yöne atar ve depo yeniden dolana dek bekler (depo `boost`/`boosting`
 alanlarını kullanır, ağ durumuna ek alan girmez; HUD çubuğu "Atılım deposu"dur). Av atılışının
-görünümü (`SpiderLegs`, `SpiderMotion`, `DashGhosts`): öndeki bacaklar ileri fırlar, arkadakiler geride itiş
+görünümü (`SpiderLegs`, `SpiderMotion`, CORE `GhostTrail`): öndeki bacaklar ileri fırlar, arkadakiler geride itiş
 verir (`dashLungePx`), kalça çöker ve gövde ön bacaklara yüklenir (`dashLeanPx`), adımlar kısalıp sıklaşır
 (`dashTriggerCut`/`dashDurationCut`/`dashStrainCut`; çekirdek `LegGait.setStepTuning` acil eşiği de canlı
 değiştirir), atılışın başında ayakların altından toz patlar ve gövdenin siluetinden soluk hayaletler
-(`SpiderLook.ghost`, en çok `count` kopya, havuzlu) dünyada kalıp söner. Atılış hızında ayak kemik erişimini bir-iki
+(CORE `GhostTrail`, `SpiderLook.ghost`: gövde ve bacakların o anki gerçek pozu, en çok `count` kopya) dünyada kalıp söner. Atılış hızında ayak kemik erişimini bir-iki
 kare aşabilir; çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır kavgacıdır (150 birim/s, 140 can, zırhlı tarantula); Widow
 hafif keskin nişancıdır (172 birim/s, 96 can, ince ve uzun bacaklı kara dul). Hız tavanları
 bilerek düşüktür: bacak yürüyüşü tavan hızda ayakları kemik erişiminde tutar ve bunu
@@ -311,9 +311,27 @@ nişan önizlemesi de aynı kuralı kullanır. Takımsız araçlar herkese
 karşı hedef sayılır. `damaged`, `healed`, `died` ve `respawned`
 olayları araç kimliği ve varsa kaynak kimliğiyle sunuma aktarılır. HUD,
 CORE can çubuğuyla güncel canı ve ölüm/koruma süresini i18n anahtarıyla
-gösterir; ölü araç görünümü soluklaşır. Sunucu tarafı savaş yetkilendirmesi,
-kalıcı ölüm politikası ve spawn alanı seçimi bu simülasyon mekanizmasının
-üzerindeki oyun kurallarıdır.
+gösterir. Sunucu tarafı savaş yetkilendirmesi, kalıcı ölüm politikası ve spawn
+alanı seçimi bu simülasyon mekanizmasının üzerindeki oyun kurallarıdır.
+
+### Ölüm ve enkaz
+
+Ölen araç soluklaşıp hayalet olarak kalmaz: `WreckDirector` (`src/scenes/world/WreckDirector.ts`) her kare
+canlılığı bir önceki kareyle karşılaştırır ve canlıdan ölüye geçişte tek bir patlama oynatır; araç görünümü
+`VehicleView.setPresent(false)` ile tümden gizlenir (gövde, `PoseShadow` gölgesi, ağız parlaması, örümcek
+hayaletleri) ve yeniden doğunca geri gelir. Karşılaştırma simülasyon olayına değil canlılık durumuna
+dayandığı için çevrimdışı sandbox ve çevrimiçi istemci aynı yoldan geçer; ilk görülen ölü araç (geç katılım)
+patlamadan gizlenir. Patlama `EffectsView.wreck`tir: parlama, şok halkası, yanık, kor/kıvılcım/toz parçacıkları
+ve `src/config/debris.ts` ayarlarıyla 6-8 enkaz parçası. İlk iki parça aracın gerçek çizimidir (tankta taret ve
+duyarga, örümcekte femur, tibia ve ayak), kalanı levha kıymığıdır (`debrisArt.ts`). Parçalar `Debris`
+havuzunda gerçek fizikle ilerler: yerde (x, y) ve havada yükseklik (z), yerçekimi, hava sürtünmesi, sekme
+(hız kaybıyla), dünya duvarından sekme, durunca yuvarlanma sönümü; perspektifle büyür, gölgesi ışığın tersine
+yükseklikle kayar, ilk anda kor gibi parlayıp soğur, 3,6-5,6 sn sonra söner ve havuza döner. Havuz tavanı
+vardır (28, kalite profiliyle ölçeklenir) ve dolu havuzda en eski parça yeniden kullanılır; yani kalabalık
+savaşta bile ekran dolmaz ve görüntü nesnesi yaratılmaz. Enkaz sunum zamanıyla ilerler (duraklatmada donar)
+ve tohumlu rastgele kullanır (`FX.debrisSeed`): aynı olay aynı düzeni verir. Mermi isabetinde ara sıra
+(`DEBRIS.hit.chance`) gövdeden küçük bir kıymık kopar; şans isabet noktası ve hedef kimliğinden türeyen bir
+karmayla (`hash01`) belirlenir, `Math.random` yoktur.
 
 ## Bot yapay zekâsı
 

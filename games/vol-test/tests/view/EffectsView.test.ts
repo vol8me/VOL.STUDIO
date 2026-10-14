@@ -1,10 +1,12 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
+import { DEBRIS } from '@/config/debris';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
 import { EFFECT_LEVELS } from '@/config/quality';
 import { Projectiles } from '@/sim/combat/Projectiles';
-import { EffectsView, type VehicleFxFrame } from '@/view/EffectsView';
+import { ARACHNID, STRIKER } from '@/config/vehicles';
+import { EffectsView, hash01, type VehicleFxFrame } from '@/view/EffectsView';
 import { TEXTURE } from '@/view/textures';
 import { fakeScene, lastCall, type FakeObject } from '../support/fakeScene';
 
@@ -342,5 +344,107 @@ describe('EffectsView', () => {
     view.removeVehicle(1);
     view.destroy();
     expect(lastCall(segment, 'destroy')).toBeDefined();
+  });
+});
+
+/** Enkaz havuzundaki görüntüler (parça + gölge çifti) ve parça doku adları. */
+function debrisOf(scene: ReturnType<typeof fakeScene>) {
+  const images = scene.created.filter(
+    (object) => object.kind === 'image' && object.args[2] === '__DEFAULT',
+  );
+  const chunks = images.filter((_, index) => index % 2 === 0);
+  const textures = chunks.map((chunk) => lastCall(chunk, 'setTexture')?.[0]);
+  return { chunks, textures };
+}
+
+/** Karmanın verilen eşiğin altında/üstünde kaldığı bir isabet noktası (x, y). */
+function spot(target: number, below: boolean): { x: number; y: number } {
+  for (let x = 1; x < 2000; x++) {
+    const roll = hash01(target, x, 7);
+    if (below ? roll < DEBRIS.hit.chance : roll >= DEBRIS.hit.chance) return { x, y: 7 };
+  }
+  throw new Error('uygun nokta yok');
+}
+
+describe('EffectsView enkaz', () => {
+  it('ölüm patlaması bir kez, kalabalıksız: hızlı patlama + sınırlı sayıda parça + yanık', () => {
+    const { view, scene, scorches, flashes, rings } = build();
+    view.wreck(STRIKER, 300, 400, 0, 0);
+    const { chunks } = debrisOf(scene);
+    expect(chunks.length).toBeGreaterThanOrEqual(DEBRIS.wreck.count[0]);
+    expect(chunks.length).toBeLessThanOrEqual(DEBRIS.wreck.count[1]);
+    expect(scorches()).toHaveLength(1);
+    expect(flashes().length).toBeGreaterThan(0);
+    expect(rings().length).toBeGreaterThan(0);
+  });
+
+  it('ilk parçalar aracın gerçek parçasıdır, kalanı levha kıymığıdır', () => {
+    const { view, scene } = build();
+    view.wreck(STRIKER, 300, 400, 0, 0);
+    const { textures } = debrisOf(scene);
+    expect(
+      textures.slice(0, DEBRIS.wreck.big).every((key) => String(key).includes('striker')),
+    ).toBe(true);
+    expect(textures.slice(DEBRIS.wreck.big).every((key) => String(key).includes('shard'))).toBe(
+      true,
+    );
+  });
+
+  it('örümcek enkazı örümcek atlasından parça verir', () => {
+    const { view, scene } = build();
+    view.wreck(ARACHNID, 300, 400, 0, 0);
+    const { chunks } = debrisOf(scene);
+    const frames = chunks
+      .slice(0, DEBRIS.wreck.big)
+      .map((chunk) => lastCall(chunk, 'setTexture')?.[1]);
+    expect(frames.every((frame) => String(frame).includes('arachnid'))).toBe(true);
+  });
+
+  it('aynı tohum aynı enkaz düzenini verir (belirlenimli)', () => {
+    const run = () => {
+      const { view, scene } = build();
+      view.wreck(STRIKER, 300, 400, 20, -10);
+      view.update(new Projectiles(1, 1), 0, 600);
+      return debrisOf(scene).chunks.map((chunk) => [chunk.x, chunk.y, chunk.rotation]);
+    };
+    expect(run()).toEqual(run());
+  });
+
+  it('dondurulmuş karede enkaz kıpırdamaz', () => {
+    const { view, scene } = build();
+    view.wreck(STRIKER, 300, 400, 0, 0);
+    view.update(new Projectiles(1, 1), 0, 100);
+    const pose = () => debrisOf(scene).chunks.map((chunk) => [chunk.x, chunk.y]);
+    const before = pose();
+    view.update(new Projectiles(1, 1), 0, 0);
+    expect(pose()).toEqual(before);
+  });
+
+  it('isabet kıymığı ara sıra kopar: eşik altında 1–2 parça, üstünde hiç', () => {
+    const lucky = spot(5, true);
+    const unlucky = spot(5, false);
+    const a = build();
+    a.view.chip(STRIKER, 5, lucky.x, lucky.y, 0);
+    const kept = debrisOf(a.scene).chunks.length;
+    expect(kept).toBeGreaterThanOrEqual(DEBRIS.hit.count[0]);
+    expect(kept).toBeLessThanOrEqual(DEBRIS.hit.count[1]);
+    const b = build();
+    b.view.chip(STRIKER, 5, unlucky.x, unlucky.y, 0);
+    expect(debrisOf(b.scene).chunks).toHaveLength(0);
+  });
+
+  it('hash01 [0,1) aralığında, belirlenimli ve eşiğe yakın oranda isabet verir', () => {
+    expect(hash01(3, 4, 5)).toBe(hash01(3, 4, 5));
+    expect(hash01(3, 4, 5)).not.toBe(hash01(3, 5, 4));
+    let under = 0;
+    const total = 4000;
+    for (let index = 0; index < total; index++) {
+      const roll = hash01(index % 7, index, index * 3);
+      expect(roll).toBeGreaterThanOrEqual(0);
+      expect(roll).toBeLessThan(1);
+      if (roll < DEBRIS.hit.chance) under++;
+    }
+    expect(under / total).toBeGreaterThan(DEBRIS.hit.chance * 0.7);
+    expect(under / total).toBeLessThan(DEBRIS.hit.chance * 1.3);
   });
 });

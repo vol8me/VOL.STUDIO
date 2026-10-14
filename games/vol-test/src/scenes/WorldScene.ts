@@ -42,7 +42,8 @@ import { SEASONS } from '@/config/seasons';
 import { parseSeasonOverride } from '@/sim/seasons/SeasonCycle';
 import { parseWeatherOverride } from '@/sim/weather/WeatherSystem';
 import { PlayerControls } from './world/PlayerControls';
-import { routeSimEvents } from './world/SimEventRouter';
+import { feelBlast, routeSimEvents } from './world/SimEventRouter';
+import { WreckDirector } from './world/WreckDirector';
 import type { WorldDriver, WorldStartData } from './world/WorldDriver';
 
 /**
@@ -60,6 +61,7 @@ export class WorldScene extends Phaser.Scene {
   private camera!: CameraRig;
   private arena!: ArenaView;
   private vehicles!: VehicleViews;
+  private wrecks!: WreckDirector;
   private effects!: EffectsView;
   private zones!: ZonesView;
   private aimGuide!: AimGuide;
@@ -166,7 +168,7 @@ export class WorldScene extends Phaser.Scene {
       toMenu: () => this.scene.start('Menu', {}),
     });
 
-    this.effects = this.scope.addDestroyable(new EffectsView(this, quality.getProfile()));
+    this.effects = this.scope.addDestroyable(new EffectsView(this, quality.getProfile(), world));
     this.aimGuide = this.scope.addDestroyable(new AimGuide(this));
     this.aimPresence.reset();
     this.scope.addSubscription(
@@ -176,6 +178,9 @@ export class WorldScene extends Phaser.Scene {
       }),
     );
     this.vehicles = this.scope.addDestroyable(new VehicleViews(this));
+    this.wrecks = new WreckDirector(this.effects, (x, y) =>
+      feelBlast({ camera: this.camera.model, listener: this.driver.player.chassis }, x, y),
+    );
     this.camera = new CameraRig(this, CAMERA, world.width, world.height);
     const start = this.driver.player.chassis;
     this.camera.model.snapTo(start.x, start.y);
@@ -266,6 +271,7 @@ export class WorldScene extends Phaser.Scene {
 
     for (const removed of this.vehicles.sync(this.sim.vehicles)) {
       this.effects.removeVehicle(removed);
+      this.wrecks.forget(removed);
     }
     this.simEvents.length = 0;
     const events = this.driver.drainEvents(this.simEvents);
@@ -276,6 +282,7 @@ export class WorldScene extends Phaser.Scene {
     routeSimEvents(events, {
       player: player.id,
       tank: (id) => this.vehicles.get(id),
+      spec: (id) => this.sim.vehicle(id)?.spec,
       effects: this.effects,
       arena: this.arena,
       camera: this.camera.model,
@@ -290,10 +297,10 @@ export class WorldScene extends Phaser.Scene {
       const tank = vehicle.chassis;
       const frame = tankFrame(tank, alpha);
       const view = this.vehicles.get(vehicle.id);
+      // Ölen araç patlar ve görünümden kalkar; yeniden doğana kadar çizilmez.
+      if (!this.wrecks.track(vehicle, view, frame)) continue;
       // Kaos tempoyla akan araç adımları görünümde de aynı hızda akar: bacak ve palet döngüsü yetişir.
       view?.update(frame, presentMs * this.sim.pace);
-      view?.root.setAlpha(vehicle.vitality.alive ? 1 : 0.25);
-      if (!vehicle.vitality.alive) continue;
       this.effects.updateVehicle(vehicle.id, {
         x: frame.x,
         y: frame.y,

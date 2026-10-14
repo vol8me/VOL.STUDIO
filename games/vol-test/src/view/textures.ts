@@ -36,7 +36,14 @@ export const TEXTURE = {
   ring: 'fx-ring',
   skid: 'fx-skid',
   treadBase: 'tank-tread-base',
+  /** Enkaz levha kıymığı: `<anahtar>-<varyant>`. */
+  shard: 'fx-shard',
 } as const;
+
+/** Levha kıymığı doku anahtarı (varyant 0..`DEBRIS.shardVariants`-1). */
+export function shardTexture(variant: number): string {
+  return `${TEXTURE.shard}-${variant}`;
+}
 
 /** Araca özgü parçaların doku anahtarı: parça SVG'si araç klasöründedir. */
 export type TankPart = 'hull' | 'turret' | 'feeler';
@@ -74,12 +81,12 @@ const SPIDER_PART_URLS = import.meta.glob('../assets/vehicles/{arachnid,widow}/*
 function spiderTexture(look: WalkerId, part: SpiderPartId): string {
   return `spider-${look}-${part}`;
 }
-function spiderFrame(look: WalkerId, part: SpiderPartId): string {
+export function spiderFrame(look: WalkerId, part: SpiderPartId): string {
   return `${look}/${part}`;
 }
 
 /** İki örümceğin tek doku atlası: bütün parçalar bir tuvalde, kare adı `<araç>/<parça>`dır. */
-const SPIDER_ATLAS = 'spider-atlas';
+export const SPIDER_ATLAS = 'spider-atlas';
 /** Atlas karelerinin arası (px): doğrusal süzmede komşu kareden sızmayı önler. */
 const ATLAS_GAP = 4;
 const ATLAS_WIDTH = 2048;
@@ -251,6 +258,52 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
     band.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = band;
     g.fillRect(0, 0, 64, 64);
+  });
+  // Enkaz kıymıkları: açılı, kenarı açık ve iç yüzü koyulaşan gri levhalar; renk çalışma anında verilir.
+  const shards: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
+    [
+      [2, 14],
+      [6, 3],
+      [17, 1],
+      [22, 9],
+      [14, 21],
+    ],
+    [
+      [1, 8],
+      [10, 2],
+      [21, 6],
+      [23, 17],
+      [9, 22],
+      [3, 17],
+    ],
+    [
+      [3, 20],
+      [4, 8],
+      [14, 2],
+      [22, 14],
+      [12, 22],
+    ],
+  ];
+  shards.forEach((points, variant) => {
+    canvasTexture(scene, shardTexture(variant), 24, 24, (g) => {
+      const fill = g.createLinearGradient(0, 0, 24, 24);
+      fill.addColorStop(0, '#f2f2f2');
+      fill.addColorStop(1, '#6c6c6c');
+      g.beginPath();
+      points.forEach(([x, y], index) => (index === 0 ? g.moveTo(x, y) : g.lineTo(x, y)));
+      g.closePath();
+      g.fillStyle = fill;
+      g.fill();
+      g.lineWidth = 1.4;
+      g.strokeStyle = 'rgba(20,20,20,0.9)';
+      g.stroke();
+      g.beginPath();
+      g.moveTo(points[0][0], points[0][1]);
+      g.lineTo(points[1][0], points[1][1]);
+      g.strokeStyle = 'rgba(255,255,255,0.7)';
+      g.lineWidth = 1;
+      g.stroke();
+    });
   });
   // Patlama parlaması: yumuşak kenarlı ışık diski.
   canvasTexture(scene, TEXTURE.blast, 64, 64, (g) => {

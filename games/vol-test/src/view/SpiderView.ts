@@ -1,9 +1,8 @@
-import type Phaser from 'phaser';
-import { clamp01 } from '@volstudio/core';
+import Phaser from 'phaser';
+import { GhostTrail, clamp01, poseSourceOf, type PoseSourceNode } from '@volstudio/core';
 import { SPIDER_ART, SPIDER_TELEPORT_UNITS, type PartBox, type SpiderLook } from '@/config/spiders';
 import type { WalkerSpec } from '@/config/vehicles';
 import { muzzlePose, mountPose, type MuzzlePose } from '@/sim/muzzle';
-import { DashGhosts } from './spider/DashGhosts';
 import { LocomotionReader } from './spider/LocomotionReader';
 import { SpiderCannon } from './spider/SpiderCannon';
 import { SpiderLegs, lightLocal, type LightLocal } from './spider/SpiderLegs';
@@ -38,7 +37,8 @@ export class SpiderView implements VehicleView {
   private readonly mount: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly locomotion: LocomotionReader;
-  private readonly ghosts: DashGhosts;
+  private readonly ghosts: GhostTrail;
+  private readonly ghostSource: PoseSourceNode;
   private dashing = false;
 
   constructor(
@@ -79,7 +79,17 @@ export class SpiderView implements VehicleView {
     );
     this.root = scene.add.container(0, 0, [this.art, ...this.cannons.map((cannon) => cannon.root)]);
     this.root.setDepth(SPIDER_ART.depth);
-    this.ghosts = new DashGhosts(scene, look, SPIDER_ART.depth - 0.5);
+    // Hayalet gövdenin ve bacakların o anki gerçek pozunu taşır (CORE `GhostTrail`); dünyada kalıp söner.
+    this.ghostSource = poseSourceOf([this.art]);
+    this.ghosts = new GhostTrail(scene, {
+      maxGhosts: look.ghost.count,
+      lifespanMs: look.ghost.lifeMs,
+      captureIntervalMs: look.ghost.intervalMs,
+      startAlpha: look.ghost.alpha,
+      tint: look.ghost.tint,
+      blendMode: Phaser.BlendModes.ADD,
+      depth: SPIDER_ART.depth - 0.5,
+    });
     this.dust = scene.add
       .particles(0, 0, TEXTURE.spark, look.dust.emitter)
       .setDepth(look.dust.depth);
@@ -104,11 +114,21 @@ export class SpiderView implements VehicleView {
     if (fresh) this.legs.reset(signals.x, signals.y, frame.hull, pose, this.light);
     else this.legs.update(signals, pose, deltaMs, this.light);
 
-    this.ghosts.update(signals.x, signals.y, frame.hull, pose, signals.dash01, deltaMs);
+    this.ghosts.update(deltaMs);
+    if (signals.dash01 > 0.35) this.ghosts.capture(this.ghostSource);
     this.huntBurst(frame.boosting);
     this.footfalls(frame.speed);
     this.placeBody(pose);
     this.placeCannons(frame, deltaMs);
+  }
+
+  setPresent(present: boolean): void {
+    this.root.setVisible(present);
+    this.shadowRoot.setVisible(present);
+    if (present) return;
+    this.ghosts.clear();
+    for (const cannon of this.cannons) cannon.silence();
+    this.dashing = false;
   }
 
   destroy(): void {

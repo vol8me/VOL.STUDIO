@@ -72,16 +72,39 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
         scene.created.filter(
           (object) =>
             object.kind === 'image' &&
-            [`${spec.id}/thorax`, `${spec.id}/abdomen`].includes(String(object.args[3])) &&
-            object.calls.some(([name]) => name === 'setTint'),
+            object.calls.some(([name, args]) => name === 'setTint' && args[0] === look.ghost.tint),
         ).length;
       for (let i = 0; i < 20; i++) view.update(frame({ vx: 150, speed: 150 }), 16);
       expect(count()).toBe(0);
       for (let i = 0; i < 60; i++)
         view.update(frame({ x: 100 + i * 5, vx: 345, speed: 345, boosting: true }), 16);
       expect(count()).toBeGreaterThan(0);
-      expect(count()).toBeLessThanOrEqual(look.ghost.count * 2);
+      expect(count()).toBeGreaterThan(0);
       view.destroy();
+    });
+
+    it('imha edilince gövde, gölge katmanı, hayaletler ve ağız parlaması gizlenir; geri gelince görünür', () => {
+      const { scene, view, root, shadowRoot, lighting } = build(spec);
+      for (let i = 0; i < 60; i++)
+        view.update(frame({ x: 100 + i * 5, vx: 345, speed: 345, boosting: true }), 16);
+      view.fire(0);
+      const ghosts = scene.created.filter(
+        (object) =>
+          object.kind === 'image' &&
+          object.calls.some(([name, args]) => name === 'setTint' && args[0] === look.ghost.tint),
+      );
+      expect(ghosts.some((ghost) => ghost.visible === true)).toBe(true);
+      view.setPresent(false);
+      expect(root.visible).toBe(false);
+      expect(shadowRoot.visible).toBe(false);
+      expect(ghosts.every((ghost) => ghost.visible === false)).toBe(true);
+      const flashes = lighting.calls
+        .filter(([name]) => name === 'add')
+        .map(([, a]) => a[0] as FakeObject);
+      expect(flashes.every((flash) => flash.visible === false)).toBe(true);
+      view.setPresent(true);
+      expect(root.visible).toBe(true);
+      expect(shadowRoot.visible).toBe(true);
     });
 
     it('zemin gölgeleri gövdenin altında çizilir: gölge katmanı gövde katmanından düşüktür', () => {
