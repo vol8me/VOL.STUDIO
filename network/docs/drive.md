@@ -49,6 +49,29 @@ kullanÄ±lÄ±r); yÃ¼zdelik kovanÄ±n Ã¼st sÄ±nÄ±rÄ±dÄ±r, en Ã§ok bir kova yukarÄ± y
 `onStateChange` olaylarÄ± arasÄ±ndaki sÃ¼redir; Windows'ta sunucu `setPatchRate(50)` ile 20 Hz ister ama
 zamanlayÄ±cÄ± ~15,6 ms ayrÄ±k olduÄŸundan yama aralÄ±ÄŸÄ± ~62,5 ms (16 Hz) Ã¶lÃ§Ã¼lÃ¼r.
 
+## Bozuk ağ aracısı (`ImpairedLink`)
+
+Gerçek sunucuyla istemci arasına konan TCP aracısıdır; WebSocket üstüne bindiği için tarayıcı ya da SDK
+istemcisi adresini `endpoint`e çevirir. Loopback'te rastgele portta dinler.
+
+```ts
+const link = await ImpairedLink.start(
+  { host: '127.0.0.1', port: serverPort },
+  { profile: { latencyMs: 80, jitterMs: 40, stallProbability: 0.02, stallMs: 300 } },
+);
+// istemci: link.endpoint
+link.setProfile({ latencyMs: 250 }); // yeni parçalar için
+link.blackhole(); // iki yönde her şey tutulur, bağlantı açık kalır (telefon uykuya girdi)
+link.release(); // tutulan sırayla teslim edilir
+link.sever(); // bağlantıları hemen yok eder (Wi-Fi'dan LTE'ye geçiş)
+```
+
+TCP sıralı olduğundan gecikme ve titreşim sırayı bozmaz; paket kaybı yeniden iletim bekleyişi olarak
+(`stallMs`, arkadaki her şeyi geciktirir) modellenir, gerçek paket kaybı bu katmanın altındadır.
+`bytesPerSecond` yön başına bant genişliğini sınırlar. `stats()` bağlantı, bayt ve geciktirilen parça
+sayar. Bu bir ağ emülatörü değil, tekrarlanabilir bir bozulma kaynağıdır; ölçülen sayılar o profilin
+sonucudur, gerçek ağ ya da cihaz kabulü değildir.
+
 ## VOL.TEST
 
 `pnpm --filter @volstudio/vol-test drive -- --clients 24 --seconds 60 --out records/drive/run.jsonl`

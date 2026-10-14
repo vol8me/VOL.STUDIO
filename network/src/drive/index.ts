@@ -1,5 +1,7 @@
 export { runFleet } from './fleet';
 export type { BotHandle, FleetOptions, FleetSummary } from './fleet';
+export { CLEAN_LINK, ImpairedLink } from './impair';
+export type { LinkProfile, LinkStats } from './impair';
 export { Histogram, summarizeHistogram } from './histogram';
 export type { DistributionSummary } from './histogram';
 export { JsonlReport } from './report';
