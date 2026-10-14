@@ -211,6 +211,7 @@
       "left": "{{name}} left",
       "kill": "{{killer}} » {{victim}}",
       "down": "{{victim}} went down",
+      "drowned": "{{victim}} drowned",
       "zoneTaken": "{{zone}} fell to {{faction}}",
       "zoneLost": "{{zone}} turned neutral",
       "warWon": "{{faction}} won the war (win #{{wins}})"

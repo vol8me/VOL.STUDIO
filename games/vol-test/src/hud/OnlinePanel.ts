@@ -88,6 +88,8 @@ function feedText(line: FeedLine): string {
       return i18next.t('voltest:online.feed.kill', { killer: line.killer, victim: line.victim });
     case 'down':
       return i18next.t('voltest:online.feed.down', { victim: line.victim });
+    case 'drowned':
+      return i18next.t('voltest:online.feed.drowned', { victim: line.victim });
     case 'zone':
       return line.owner === -1
         ? i18next.t('voltest:online.feed.zoneLost', { zone: zoneName(line.zone) })

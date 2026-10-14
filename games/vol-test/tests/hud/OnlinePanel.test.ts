@@ -223,9 +223,11 @@ describe('OnlinePanel akış', () => {
     const feed = panel.element.querySelector<HTMLElement>('[data-testid="online-feed"]')!;
     panel.push({ kind: 'kill', killer: 'Ben', victim: 'Rakip', tone: 'success' });
     panel.push({ kind: 'down', victim: 'Ben', tone: 'danger' });
+    panel.push({ kind: 'drowned', victim: 'Rakip', tone: 'default' });
     panel.push({ kind: 'joined', name: 'Yeni', tone: 'default' });
     panel.push({ kind: 'left', name: 'Giden', tone: 'default' });
     expect(feed.textContent).toContain('Ben » Rakip');
+    expect(feed.textContent).toContain('Rakip boğuldu');
     panel.tick(performance.now());
     expect(feed.classList.contains('vt-online__feed--idle')).toBe(false);
     panel.tick(performance.now() + 60_000);

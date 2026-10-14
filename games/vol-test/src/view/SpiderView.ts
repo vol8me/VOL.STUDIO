@@ -11,7 +11,8 @@ import { SpiderMotion, type SpiderPose } from './spider/SpiderMotion';
 import { FX } from '@/config/fx';
 import { TEXTURE, TEXTURE_SCALE, addSpiderImage } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
-import { setCharred } from './charring';
+import { WATER_VIEW } from '@/config/waterView';
+import { setCharred, sinkRoot } from './charring';
 
 /** Yere basan pençenin izi: dünya konumu, gövde yönü ve boy ölçeği. */
 export type FootPrintSink = (x: number, y: number, angle: number, scale: number) => void;
@@ -192,6 +193,11 @@ export class SpiderView implements VehicleView {
     this.ghosts.clear();
     for (const cannon of this.cannons) cannon.silence();
     this.dashing = false;
+  }
+
+  sink(progress: number): void {
+    sinkRoot(this.root, progress, WATER_VIEW.sink.scale);
+    this.shadowRoot.setAlpha(1 - progress * progress);
   }
 
   destroy(): void {

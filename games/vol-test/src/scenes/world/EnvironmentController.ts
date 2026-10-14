@@ -6,7 +6,9 @@ import { WEATHER_VIEW } from '@/config/weatherView';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import { WeatherSystem } from '@/sim/weather/WeatherSystem';
 import type { LakeField } from '@/sim/world/LakeField';
-import { LakeView } from '@/view/water/LakeView';
+import { iceThickness, LakeView } from '@/view/water/LakeView';
+import { WaterTrails, type TrailSubject } from '@/view/water/WaterTrails';
+import type { WreckWater } from './WreckDirector';
 import { WeatherView } from '@/view/weather/WeatherView';
 import type { WeatherRect } from '@/view/weather/WeatherParticles';
 import type { WeatherVehicleFrame } from '@/view/weather/VehicleReflectionPool';
@@ -16,7 +18,10 @@ export class EnvironmentController {
   readonly model: WeatherSystem;
   private readonly view: WeatherView;
   private readonly lakes: LakeView | null;
+  private readonly trails: WaterTrails | null;
+  private readonly trailSubjects: TrailSubject[] = [];
   private quality = 1;
+  private readonly sinkWater: WreckWater | null;
   private readonly frames: WeatherVehicleFrame[] = [];
 
   constructor(
@@ -32,12 +37,25 @@ export class EnvironmentController {
     this.model = new WeatherSystem(width, height, { seed, override, season });
     this.view = new WeatherView(scene, seed, profile);
     this.lakes = lakes && !lakes.isEmpty ? new LakeView(scene, lakes) : null;
+    this.trails = lakes && !lakes.isEmpty ? new WaterTrails(scene, lakes) : null;
+    this.sinkWater =
+      lakes && this.trails
+        ? {
+            depthAt: (x, y) => lakes.depthAt(x, y),
+            splash: (x, y, radius) => this.trails?.splash(x, y, radius),
+          }
+        : null;
     this.quality = profile.particles;
   }
 
   /** Son karede ekrana değen göl sayısı (ölçüm). */
   get visibleLakes(): number {
     return this.lakes?.visibleLakes ?? 0;
+  }
+
+  /** Batışın derinlik ve iz kaynağı; göl yoksa `null` (her ölüm patlar). */
+  get water(): WreckWater | null {
+    return this.sinkWater;
   }
 
   get counts() {
@@ -52,8 +70,10 @@ export class EnvironmentController {
     this.view.applyProfile(profile);
   }
 
-  render(vehicles: readonly Vehicle[], alpha: number, rect: WeatherRect): void {
+  /** `deltaMs` sunum süresidir: duraklatmada sıfırdır ve su izleri donar. */
+  render(vehicles: readonly Vehicle[], alpha: number, rect: WeatherRect, deltaMs = 0): void {
     this.frames.length = 0;
+    this.trailSubjects.length = 0;
     for (const vehicle of vehicles) {
       if (this.frames.length >= WEATHER_VIEW.vehicleCapacity) break;
       const frame = tankFrame(vehicle.chassis, alpha);
@@ -65,12 +85,23 @@ export class EnvironmentController {
       )
         continue;
       this.frames.push({ ...frame, id: vehicle.id, spec: vehicle.spec });
+      if (this.trails && vehicle.vitality.alive)
+        this.trailSubjects.push({
+          id: vehicle.id,
+          kind: vehicle.spec.kind,
+          x: frame.x,
+          y: frame.y,
+          hull: frame.hull,
+          speed: frame.speed,
+        });
     }
     this.view.update(this.model, rect, this.frames);
     this.lakes?.update(rect, this.model.frame, this.quality);
+    this.trails?.update(this.trailSubjects, iceThickness(this.model.frame), deltaMs);
   }
 
   destroy(): void {
+    this.trails?.destroy();
     this.lakes?.destroy();
     this.view.destroy();
   }

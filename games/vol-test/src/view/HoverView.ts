@@ -9,7 +9,8 @@ import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { TEXTURE, TEXTURE_SCALE, addHoverImage } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
-import { setCharred } from './charring';
+import { WATER_VIEW } from '@/config/waterView';
+import { setCharred, sinkRoot } from './charring';
 
 const INV = 1 / TEXTURE_SCALE;
 /** Işık dokusu (`TEXTURE.blast`) 64 px'tir. */
@@ -158,6 +159,11 @@ export class HoverView implements VehicleView {
     if (!wrecked) return;
     this.flashMs = 0;
     this.flash.setVisible(false);
+  }
+
+  sink(progress: number): void {
+    sinkRoot(this.root, progress, WATER_VIEW.sink.scale);
+    if (progress > 0) this.shadow.clear();
   }
 
   destroy(): void {

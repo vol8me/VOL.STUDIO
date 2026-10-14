@@ -62,6 +62,42 @@ export const WATER_VIEW = {
     /** Doku, buz bu kadar kademede değişince yeniden basılır. */
     steps: 40,
   },
+  /**
+   * Araç izleri: yüzeyde kısa ömürlü işaretler. Yürüyen araç (tank, bacaklı) halka bırakır, buzda
+   * kırık delik açar; süzülen araç V şeklinde dalga çeker, buzda yalnız ince bir yarık bırakır.
+   * Hepsi sunumdur: buz kırılması fiziği etkilemez, çevrimiçi hava istemci yereldir.
+   */
+  trails: {
+    depth: -87,
+    capacity: 112,
+    /** İz bırakmak için en küçük derinlik [0, 1] ve en küçük hız (birim/s). */
+    minDepth: 0.04,
+    minSpeed: 24,
+    /** Şasi türüne göre işaret yarıçapı ve iki işaret arasındaki yol (birim). */
+    radius: { tank: 30, walker: 24, hover: 20 },
+    spacing: { tank: 34, walker: 28, hover: 24 },
+    color: 0xe8f6fb,
+    /** Kırık buz deliği: koyu su ve açık kenar; yavaş yavaş yeniden donarak kapanır. */
+    hole: { color: 0x0b2f48, edge: 0xdff1f7, lifeMs: 7000, edgeWidth: 1.4, points: 9 },
+    channel: { color: 0x123d5a, lifeMs: 2600, width: 5, length: 34 },
+    ring: { lifeMs: 1100, grow: 1.9, width: 1.6, alpha: 0.5 },
+    wake: { lifeMs: 1500, spread: 0.42, length: 96, width: 2, alpha: 0.55 },
+  },
+  /**
+   * Batma: derin suda (bu derinlikten sonra) ölen araç patlamaz; kararır, küçülür, solar ve halka ile
+   * kabarcık bırakarak dibe gider; süre bitince sahneden kalkar, yeniden doğunca geri gelir.
+   */
+  sink: {
+    minDepth: 0.5,
+    durationMs: 2100,
+    /** Bitişteki ölçek. */
+    scale: 0.72,
+    rings: 3,
+    ringGapMs: 240,
+    bubbles: 10,
+    bubbleLifeMs: 1300,
+    bubbleRise: 30,
+  },
   ripple: {
     periodMs: 1500,
     maxRadius: 24,

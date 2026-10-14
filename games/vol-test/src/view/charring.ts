@@ -57,3 +57,17 @@ export function setCharred(root: Phaser.GameObjects.Container, on: boolean): voi
     if (before.glow) object.setVisible?.(true);
   });
 }
+
+/**
+ * Batan aracın gövdesi: `progress` [0, 1] ile solar ve küçülür; 0 görünümü eski hâline getirir.
+ * Gölge katmanı kökün dışındadır, onu görünüm kendisi söndürür.
+ */
+export function sinkRoot(
+  root: Phaser.GameObjects.Container,
+  progress: number,
+  endScale: number,
+): void {
+  const p = progress < 0 ? 0 : progress > 1 ? 1 : progress;
+  root.setAlpha(1 - p * p);
+  root.setScale(1 - (1 - endScale) * p);
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ARACHNID, STRIKER, type VehicleSpec } from '@/config/vehicles';
+import { WATER_VIEW } from '@/config/waterView';
 import { WreckDirector } from '@/scenes/world/WreckDirector';
 import { TRACK_LEFT, TRACK_RIGHT, legBit } from '@/sim/chassis/parts';
 
@@ -129,5 +130,94 @@ describe('WreckDirector: kopan parçalar', () => {
     director.track(subject(1, true, STRIKER, 0), view, frame);
     expect(effects.shed).not.toHaveBeenCalled();
     expect(view.setParts).toHaveBeenLastCalledWith(0);
+  });
+});
+
+describe('WreckDirector: batış', () => {
+  const deep = {
+    depthAt: () => 0.9,
+    splash: vi.fn<(x: number, y: number, radius: number) => void>(),
+  };
+  const shallow = { depthAt: () => 0.2, splash: vi.fn() };
+
+  function sinking(water: { depthAt: () => number; splash: typeof deep.splash }) {
+    const effects = { wreck: vi.fn(), shed: vi.fn() };
+    const onWreck = vi.fn();
+    const view = {
+      setWrecked: vi.fn(),
+      setParts: vi.fn(),
+      sink: vi.fn<(progress: number) => void>(),
+      setPresent: vi.fn<(present: boolean) => void>(),
+    };
+    const director = new WreckDirector(effects, onWreck, water);
+    const subject = (alive: boolean) => ({
+      id: 1,
+      spec: STRIKER,
+      vitality: { alive },
+      chassis: { parts: 0 },
+    });
+    return { effects, onWreck, view, director, subject };
+  }
+
+  it('derin suda ölen araç patlamaz: halka bırakır, süre bitince sahneden kalkar', () => {
+    deep.splash.mockClear();
+    const { director, subject, view, effects, onWreck } = sinking(deep);
+    director.track(subject(true), view, frame, 16);
+    expect(director.track(subject(false), view, frame, 16)).toBe(false);
+    expect(effects.wreck).not.toHaveBeenCalled();
+    expect(onWreck).not.toHaveBeenCalled();
+    expect(deep.splash).toHaveBeenCalledOnce();
+    expect(deep.splash).toHaveBeenCalledWith(40, 60, expect.any(Number));
+    expect(view.setWrecked).toHaveBeenCalledWith(true);
+    let previous = 0;
+    for (let ms = 0; ms < WATER_VIEW.sink.durationMs; ms += 100) {
+      director.track(subject(false), view, frame, 100);
+      const progress = view.sink.mock.lastCall?.[0] ?? 0;
+      expect(progress).toBeGreaterThanOrEqual(previous);
+      previous = progress;
+    }
+    expect(previous).toBe(1);
+    expect(view.setPresent).toHaveBeenCalledWith(false);
+    expect(view.setPresent).toHaveBeenCalledOnce();
+    // Battıktan sonra tekrar çağrılar görünüme dokunmaz.
+    const calls = view.sink.mock.calls.length;
+    director.track(subject(false), view, frame, 100);
+    expect(view.sink.mock.calls.length).toBe(calls);
+  });
+
+  it('duraklatmada (sıfır süre) batış ilerlemez', () => {
+    const { director, subject, view } = sinking(deep);
+    director.track(subject(true), view, frame, 16);
+    director.track(subject(false), view, frame, 0);
+    director.track(subject(false), view, frame, 0);
+    expect(view.sink.mock.lastCall?.[0] ?? 0).toBe(0);
+    expect(view.setPresent).not.toHaveBeenCalled();
+  });
+
+  it('yeniden doğan batık araç gövdesi ve görünürlüğüyle geri gelir', () => {
+    const { director, subject, view } = sinking(deep);
+    director.track(subject(true), view, frame, 16);
+    director.track(subject(false), view, frame, WATER_VIEW.sink.durationMs);
+    expect(view.setPresent).toHaveBeenLastCalledWith(false);
+    expect(director.track(subject(true), view, frame, 16)).toBe(true);
+    expect(view.sink).toHaveBeenLastCalledWith(0);
+    expect(view.setPresent).toHaveBeenLastCalledWith(true);
+    expect(view.setWrecked).toHaveBeenLastCalledWith(false);
+  });
+
+  it('sığ suda ölen araç normal patlar', () => {
+    shallow.splash.mockClear();
+    const { director, subject, view, effects } = sinking(shallow);
+    director.track(subject(true), view, frame, 16);
+    director.track(subject(false), view, frame, 16);
+    expect(effects.wreck).toHaveBeenCalledOnce();
+    expect(shallow.splash).not.toHaveBeenCalled();
+    expect(view.sink).not.toHaveBeenCalled();
+  });
+
+  it('geç katılımda derinde ölü görülen araç hiç görünmez', () => {
+    const { director, subject, view } = sinking(deep);
+    director.track(subject(false), view, frame, 16);
+    expect(view.setPresent).toHaveBeenCalledWith(false);
   });
 });

@@ -132,6 +132,18 @@ biraz öne geçer), halka dokuya basılır, çatlaklar kıyıdan merkeze uzanır
 titreşir. Buz salt sunumdur: tank ve yürüyücü buzu kırar ama yüzemez, yani donma kimin boğulacağını
 değiştirmez ve sunucuya mevsim saati taşımak gerekmez.
 
+Suda bırakılan izler (`src/view/water/WaterTrails.ts`) kısa ömürlü ve havuzludur, tek bir Graphics çizer:
+yürüyen araç yol aralığıyla halka bırakır; buz örtülü kıyı şeridinde (`iceFront`) kırık bir delik
+açar (koyu su, açık kenar) ve delik yavaş kapanır; süzülen araç açık suda V şeklinde dalga çeker, buzda
+yalnız ince bir yarık bırakır (dalga hissi yoktur). Suya basan araç zemine palet ve ayak izi basmaz ve
+iz sudan çıkınca eski noktadan köprü kurmadan kopar. Derin suda (`WATER_VIEW.sink.minDepth`) ölen araç
+patlamaz: `WreckDirector` kararmış gövdeyi `VehicleView.sink` ile solar ve küçültür, yüzeyde halka ve
+kabarcık bırakır, süre bitince sahneden kaldırır; yeniden doğunca gövde ve görünürlük geri gelir.
+Geç katılımda derinde ölü görülen araç hiç çizilmez. Boğulma akışta `drowned` satırıdır
+(`feedLine`, `cause: 'drown'`). Göller harita dokusuna da basılır (`src/hud/lakeMap.ts`): CORE
+`MinimapPanel`in `backgroundImage` zemini olarak kıyı şeridi, su ve derin su, `LakeField.outline`
+çokgenleriyle, yani harita kıyısı fizik kıyısıdır. Batış sesi henüz yoktur: yeni bir ses varlığı gerekir.
+
 ## Araçlar
 
 Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, can,

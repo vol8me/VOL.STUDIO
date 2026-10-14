@@ -28,6 +28,8 @@ export interface MapPanelOptions {
   /** Açılış yakınlaştırması (varsayılan 1: bütün dünya) ve kullanıcı üst sınırı (varsayılan 6). */
   readonly zoom?: number;
   readonly maxZoom?: number;
+  /** Dünya boyunca uzanan statik zemin dokusu (göller); CORE haritanın `backgroundImage`ıdır. */
+  readonly terrain?: CanvasImageSource;
 }
 
 /**
@@ -69,6 +71,7 @@ export class MapPanel {
       height: SIZE,
       worldWidth: options.worldWidth,
       worldHeight: options.worldHeight,
+      backgroundImage: options.terrain,
       grid: { step: options.gridStep, majorEvery: options.gridMajorEvery },
       scaleBar: { unitsPerMetre: options.metre, unit: i18next.t('voltest:hud.metre') },
       north: true,

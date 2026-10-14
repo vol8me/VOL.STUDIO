@@ -16,6 +16,7 @@ import { CAMERA } from '@/config/camera';
 import { FEEL } from '@/config/feel';
 import { FX } from '@/config/fx';
 import { GAME } from '@/config/game';
+import { WATER_VIEW } from '@/config/waterView';
 import {
   EFFECT_LEVELS,
   initialEffectLevel,
@@ -24,6 +25,7 @@ import {
 } from '@/config/quality';
 import { WORLD } from '@/config/world';
 import { Hud } from '@/hud/Hud';
+import { bakeLakeMap } from '@/hud/lakeMap';
 import type { SimEvent } from '@/sim/events';
 import { pivotPose, type MuzzlePose } from '@/sim/muzzle';
 import { SCENARIO } from '@/config/scenarios';
@@ -184,10 +186,16 @@ export class WorldScene extends Phaser.Scene {
       }),
     );
     this.vehicles = this.scope.addDestroyable(
-      new VehicleViews(this, (x, y, angle, scale) => this.effects.footprint(x, y, angle, scale)),
+      new VehicleViews(this, (x, y, angle, scale) => {
+        // Suya basan ayak iz bırakmaz: suyun yüzeyine kalıcı iz basılmaz (iz `WaterTrails`ta).
+        if (!this.inWater(x, y)) this.effects.footprint(x, y, angle, scale);
+      }),
     );
-    this.wrecks = new WreckDirector(this.effects, (x, y) =>
-      feelBlast({ camera: this.camera.model, listener: this.driver.player.chassis }, x, y),
+    this.wrecks = new WreckDirector(
+      this.effects,
+      (x, y) =>
+        feelBlast({ camera: this.camera.model, listener: this.driver.player.chassis }, x, y),
+      this.environment.water ?? undefined,
     );
     this.camera = new CameraRig(this, CAMERA, world.width, world.height);
     const start = this.driver.player.chassis;
@@ -208,6 +216,7 @@ export class WorldScene extends Phaser.Scene {
         mapGridMajorEvery: WORLD.mapGridMajorEvery,
         mapZoom: WORLD.mapZoom,
         mapMaxZoom: WORLD.mapMaxZoom,
+        mapTerrain: bakeLakeMap(world.lakes, world.width, world.height),
         actionSource: this.controls.actionSource,
         stickSource: this.controls.stickSource,
         touch,
@@ -294,6 +303,12 @@ export class WorldScene extends Phaser.Scene {
     return lab;
   }
 
+  /** Nokta suyun içinde mi (iz ve ayak izi basılmaz); göl yoksa her zaman kuru. */
+  private inWater(x: number, y: number): boolean {
+    const water = this.environment.water;
+    return water !== null && water.depthAt(x, y) >= WATER_VIEW.trails.minDepth;
+  }
+
   override update(time: number, delta: number): void {
     const diagnostics = this.services?.diagnostics;
     const measurements = this.services?.measurements;
@@ -358,7 +373,7 @@ export class WorldScene extends Phaser.Scene {
       const frame = tankFrame(tank, alpha);
       const view = this.vehicles.get(vehicle.id);
       // Ölen araç patlar ve görünümden kalkar; yeniden doğana kadar çizilmez.
-      if (!this.wrecks.track(vehicle, view, frame)) continue;
+      if (!this.wrecks.track(vehicle, view, frame, presentMs)) continue;
       // Kaos tempoyla akan araç adımları görünümde de aynı hızda akar: bacak ve palet döngüsü yetişir.
       view?.update(frame, presentMs * this.sim.pace);
       this.effects.updateVehicle(vehicle.id, {
@@ -373,7 +388,7 @@ export class WorldScene extends Phaser.Scene {
         slideLeft: tank.slideLeft,
         slideRight: tank.slideRight,
         trackOffset: tank.trackOffset,
-        tracked: vehicle.spec.kind === 'tank',
+        tracked: vehicle.spec.kind === 'tank' && !this.inWater(frame.x, frame.y),
       });
     }
     measurements?.mark('vehicles');
@@ -403,7 +418,7 @@ export class WorldScene extends Phaser.Scene {
 
     this.camera.update(view.x, view.y, delta, frozen);
     const rect = this.camera.model.visibleRect();
-    this.environment.render(this.sim.vehicles, alpha, rect);
+    this.environment.render(this.sim.vehicles, alpha, rect, presentMs);
     measurements?.mark('environmentCamera');
     const front = this.driver.front?.();
     if (front) this.zones.update(front, rect, time);

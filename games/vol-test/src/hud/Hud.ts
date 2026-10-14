@@ -35,6 +35,8 @@ export interface HudOptions {
   /** Haritanın açılış yakınlaştırması ve üst sınırı; verilmezse bütün dünya. */
   readonly mapZoom?: number;
   readonly mapMaxZoom?: number;
+  /** Harita zemini (göller): dünya ölçüsünde, saydam tuval. */
+  readonly mapTerrain?: CanvasImageSource;
   readonly actionSource: VirtualActionSource<TestAction>;
   readonly stickSource: VirtualStickSource;
   /** Ekran üstü düğmeler başlangıçta gösterilsin mi (dokunmatik birincil cihaz). */
@@ -118,6 +120,7 @@ export class Hud {
         gridMajorEvery: options.mapGridMajorEvery,
         zoom: options.mapZoom,
         maxZoom: options.mapMaxZoom,
+        terrain: options.mapTerrain,
       }),
     );
     this.hints = this.scope.addDestroyable(new ControlHints(this.presentation, options.live));

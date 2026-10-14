@@ -252,7 +252,12 @@ export class EffectsView {
       this.trails.set(id, trail);
     }
     trail.follow(frame.x, frame.y, frame.hull, frame.speed, frame.boosting, frame.slipping);
-    if (!frame.tracked) return;
+    if (!frame.tracked) {
+      // Sudan çıkan araç eski noktadan köprü çizmez: iz o noktada kopar.
+      this.marks.forget(id);
+      this.skids.forget(id);
+      return;
+    }
     // Ekran dışı araç iz bırakmaz ve izi unutulur: ekrana dönünce eski noktadan köprü çizilmez.
     if (!this.onScreen(frame.x, frame.y)) {
       this.marks.forget(id);

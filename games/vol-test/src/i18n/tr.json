@@ -211,6 +211,7 @@
       "left": "{{name}} ayrıldı",
       "kill": "{{killer}} » {{victim}}",
       "down": "{{victim}} düştü",
+      "drowned": "{{victim}} boğuldu",
       "zoneTaken": "{{zone}} bölgesi {{faction}} cephesine geçti",
       "zoneLost": "{{zone}} bölgesi tarafsızlaştı",
       "warWon": "{{faction}} savaşı kazandı ({{wins}}. zafer)"

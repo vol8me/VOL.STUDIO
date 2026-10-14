@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import Phaser from 'phaser';
-import { CHAR_TINT, setCharred } from '@/view/charring';
+import { CHAR_TINT, setCharred, sinkRoot } from '@/view/charring';
 
 interface FakeImage {
   tint: number | null;
@@ -69,5 +69,32 @@ describe('setCharred', () => {
   it('boyanamayan nesneleri (grafik) atlar', () => {
     const graphics = { list: undefined, visible: true };
     expect(() => setCharred(container(graphics, image()), true)).not.toThrow();
+  });
+});
+
+describe('sinkRoot', () => {
+  const root = () => {
+    const state = { alpha: 1, scale: 1 };
+    const fake = {
+      state,
+      setAlpha(value: number) {
+        state.alpha = value;
+      },
+      setScale(value: number) {
+        state.scale = value;
+      },
+    };
+    return fake as typeof fake & Phaser.GameObjects.Container;
+  };
+
+  it('ilerledikçe solar ve küçülür; sıfır eski hâle döndürür, taşan değer kenetlenir', () => {
+    const target = root();
+    sinkRoot(target, 0.5, 0.6);
+    expect(target.state.alpha).toBeCloseTo(0.75, 9);
+    expect(target.state.scale).toBeCloseTo(0.8, 9);
+    sinkRoot(target, 3, 0.6);
+    expect(target.state).toEqual({ alpha: 0, scale: 0.6 });
+    sinkRoot(target, -2, 0.6);
+    expect(target.state).toEqual({ alpha: 1, scale: 1 });
   });
 });

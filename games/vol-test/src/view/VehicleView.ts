@@ -42,5 +42,10 @@ export interface VehicleView {
    * yeniden doğana dek çizilmez (dondurulmuş poz). `false` gövdeyi eski hâline getirir.
    */
   setWrecked(wrecked: boolean): void;
+  /**
+   * Batış ilerlemesi [0, 1]: araç derin suda ölünce patlamaz, kararır, küçülür ve solar. 0 görünümü
+   * eski hâline getirir; yalnız `setWrecked(true)` sonrası ve kısa süre çağrılır.
+   */
+  sink?(progress: number): void;
   destroy(): void;
 }

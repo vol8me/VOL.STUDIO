@@ -114,6 +114,13 @@ describe('feedLine', () => {
     expect(kill(42, 2)).toMatchObject({ killer: '?' });
   });
 
+  it('boğulma nedeni düşme yerine boğuldu satırı verir', () => {
+    const drown = (target: number) =>
+      feedLine({ kind: 'died', source: undefined, target, cause: 'drown' }, 1, 0, nameOf);
+    expect(drown(1)).toEqual({ kind: 'drowned', victim: 'Ben', tone: 'danger' });
+    expect(drown(2)).toEqual({ kind: 'drowned', victim: 'Rakip', tone: 'default' });
+  });
+
   it('bölge satırı kimlikle gelir; kendi cephemizin kazancı yeşil, kaybı kırmızıdır', () => {
     const zone = (owner: number, selfFaction: number) =>
       feedLine({ kind: 'zone', zone: 0, owner }, 1, selfFaction, nameOf);

@@ -108,6 +108,8 @@ export type FeedLine = (
   | { readonly kind: 'left'; readonly name: string }
   | { readonly kind: 'kill'; readonly killer: string; readonly victim: string }
   | { readonly kind: 'down'; readonly victim: string }
+  /** Suda boğuldu: kaynaksız ölümün nedeni gölse düşme yerine bu satır yazılır. */
+  | { readonly kind: 'drowned'; readonly victim: string }
   /** Bölge sahip değiştirdi; `owner` -1 ise tarafsızlaştı. */
   | { readonly kind: 'zone'; readonly zone: string; readonly owner: number }
   | { readonly kind: 'warWon'; readonly faction: number; readonly wins: number }
@@ -138,6 +140,12 @@ export function feedLine(
     case 'left':
       return { kind: 'left', name: event.name, tone: 'default' };
     case 'died': {
+      if (event.cause === 'drown')
+        return {
+          kind: 'drowned',
+          victim: who(event.target),
+          tone: event.target === selfId ? 'danger' : 'default',
+        };
       if (event.source === undefined || event.source === event.target)
         return {
           kind: 'down',

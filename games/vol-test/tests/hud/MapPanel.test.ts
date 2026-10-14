@@ -82,6 +82,14 @@ describe('harita', () => {
     map.destroy();
   });
 
+  it('zemin dokusu verilince harita onu dünya boyunca çizer', async () => {
+    const map = new MapPanel({ ...OPTIONS, terrain: document.createElement('canvas') });
+    document.body.appendChild(map.element);
+    await Promise.resolve();
+    expect(calls).toContain('drawImage');
+    map.destroy();
+  });
+
   it('tüm araçları gösterir; oyuncu ve diğerleri okuyucu özetinde ayrışır', () => {
     const map = new MapPanel(OPTIONS);
     document.body.appendChild(map.element);

@@ -1,7 +1,10 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
 import { EFFECT_LEVELS } from '@/config/quality';
+import { LAKE_SPECS } from '@/config/lakes';
+import { WORLD } from '@/config/world';
 import { EnvironmentController } from '@/scenes/world/EnvironmentController';
+import { LakeField } from '@/sim/world/LakeField';
 import { fakeScene, lastCall } from '../../support/fakeScene';
 import { simulation } from '../../support/sim';
 
@@ -34,5 +37,27 @@ describe('EnvironmentController', () => {
         .filter((item) => item.kind === 'graphics')
         .every((item) => lastCall(item, 'destroy') !== undefined),
     ).toBe(true);
+  });
+
+  it('göl yokken batış kaynağı yoktur; göl varsa derinlik ve iz verir', () => {
+    const make = (lakes?: LakeField) =>
+      new EnvironmentController(
+        fakeScene() as unknown as Phaser.Scene,
+        WORLD.width,
+        WORLD.height,
+        7,
+        EFFECT_LEVELS.high,
+        'clear',
+        'summer',
+        lakes,
+      );
+    expect(make().water).toBeNull();
+    const lakes = new LakeField(WORLD.width, WORLD.height, LAKE_SPECS);
+    const water = make(lakes).water;
+    expect(water).not.toBeNull();
+    const lake = lakes.lakes[0];
+    expect(water?.depthAt(lake.x, lake.y)).toBeGreaterThan(0.9);
+    expect(water?.depthAt(8, 8)).toBe(0);
+    expect(() => water?.splash(lake.x, lake.y, 30)).not.toThrow();
   });
 });

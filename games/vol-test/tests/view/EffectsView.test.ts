@@ -245,6 +245,36 @@ describe('EffectsView', () => {
     expect(particles()).toHaveLength(shared + 2);
   });
 
+  it('suya giren palet izi koparır: sudan çıkan araç eski noktadan köprü çizmez', () => {
+    const { view, prints } = build();
+    const step = FX.marks.spacing;
+    view.updateVehicle(1, frame());
+    view.updateVehicle(1, frame({ x: step, groundLeft: step, groundRight: step }));
+    const dry = prints().length;
+    expect(dry).toBe(2);
+    // Su altında yüzlerce birim yürür; iz basılmaz.
+    for (let distance = 2; distance < 40; distance++)
+      view.updateVehicle(
+        1,
+        frame({
+          x: step * distance,
+          groundLeft: step * distance,
+          groundRight: step * distance,
+          tracked: false,
+        }),
+      );
+    expect(prints()).toHaveLength(dry);
+    // Sudan çıkınca ilk karede bant başlar, geçen yolun üstüne köprü çizilmez.
+    const out = step * 40;
+    view.updateVehicle(1, frame({ x: out, groundLeft: out, groundRight: out }));
+    expect(prints()).toHaveLength(dry);
+    view.updateVehicle(
+      1,
+      frame({ x: out + step, groundLeft: out + step, groundRight: out + step }),
+    );
+    expect(prints()).toHaveLength(dry + 2);
+  });
+
   it('palet izi: temas yolunu izleyen sürekli bant, pabuç adımında bir parça', () => {
     const { view, prints } = build();
     const step = FX.marks.spacing;

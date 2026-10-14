@@ -1,4 +1,5 @@
 import type { VehicleSpec } from '@/config/vehicles';
+import { WATER_VIEW } from '@/config/waterView';
 import { bitIndex, partAnchor, partSide, type PartAnchor } from '@/sim/chassis/parts';
 import type { EffectsView } from '@/view/EffectsView';
 import type { TankFrame, VehicleView } from '@/view/VehicleView';
@@ -11,19 +12,34 @@ export interface WreckSubject {
   readonly chassis: { readonly parts: number };
 }
 
+/** Batışın görünümden istediği: ilerleme ve sahneden kalkma. */
+type SinkView = Partial<Pick<VehicleView, 'sink' | 'setPresent'>>;
+
 /** Bir kare için gereken poz ve hız (ara değerli kare). */
 export type WreckFrame = Pick<TankFrame, 'x' | 'y' | 'hull' | 'vx' | 'vy'>;
 
 interface Seen {
   alive: boolean;
   parts: number;
+  /** Batış süresi (ms): `null` batmıyor; `durationMs` olunca araç sahneden kalkmıştır. */
+  sunk: number | null;
 }
+
+/** Suyun batış için sunduğu: konumun derinliği ve dibe giden aracın yüzeyde bıraktığı iz. */
+export interface WreckWater {
+  depthAt(x: number, y: number): number;
+  splash(x: number, y: number, radius: number): void;
+}
+
+/** Batışta halka ve kabarcıkların yarıçapı (birim): aracın boyuna yakın tek değer. */
+const SPLASH_RADIUS = 30;
 
 /**
  * Araç imhasının ve parça kopmasının sahne yönetmeni. Her kare araçların canlılığını ve kırık parça
  * maskesini bir önceki kareyle karşılaştırır: canlıdan ölüye geçişte tek bir patlama oynar, görünüm
  * olduğu yerde yanmış bir gövde olarak kalır (ışık ve hayalet söner, poz donar) ve yeniden doğunca
- * eski hâline döner; maskede yeni bir
+ * eski hâline döner. Derin suda ölen araç patlamaz: halka ve kabarcık bırakarak solar, küçülür ve
+ * süre bitince sahneden kalkar (batış). Maskede yeni bir
  * bit açılınca parça koptuğu noktadan savrulur ve görünüm kırık hâle geçer. Karşılaştırma simülasyon
  * olayına değil durumun kendisine dayanır, böylece çevrimdışı sandbox ve çevrimiçi istemci aynı yoldan
  * geçer. İlk görülen araç (örn. odaya geç katılım) efektsiz kurulur: ölüyse gizlenir, parçalıysa kırık görünür.
@@ -36,29 +52,45 @@ export class WreckDirector {
     private readonly effects: Pick<EffectsView, 'wreck' | 'shed'>,
     /** Patlamanın oyuncuya yansıması (kamera, titreşim); konum dünya birimidir. */
     private readonly onWreck?: (x: number, y: number) => void,
+    /** Göl varsa batışı ve izi buradan alır; yoksa her ölüm patlar. */
+    private readonly water?: WreckWater,
   ) {}
 
   /** Aracı bu kare için yönetir; çizilip güncellenmesi gerekiyorsa (canlıysa) `true` döner. */
   track(
     subject: WreckSubject,
-    view: Pick<VehicleView, 'setWrecked' | 'setParts'> | undefined,
+    view: (Pick<VehicleView, 'setWrecked' | 'setParts'> & Partial<VehicleView>) | undefined,
     frame: WreckFrame,
+    /** Bu karenin sunum süresi (ms): batışı ilerletir; duraklatmada sıfırdır. */
+    deltaMs = 0,
   ): boolean {
     const alive = subject.vitality.alive;
     const parts = subject.chassis.parts;
     const before = this.seen.get(subject.id);
     if (before === undefined) {
-      this.seen.set(subject.id, { alive, parts });
+      // Geç katılımda suya gömülü ölü araç hiç görünmez: batmış sayılır.
+      const sunk = !alive && this.drowned(frame) ? WATER_VIEW.sink.durationMs : null;
+      this.seen.set(subject.id, { alive, parts, sunk });
       if (!alive) view?.setWrecked(true);
+      if (sunk !== null) view?.setPresent?.(false);
       if (parts !== 0) view?.setParts(parts);
       return alive;
     }
     if (before.alive && !alive) {
-      this.effects.wreck(subject.spec, frame.x, frame.y, frame.vx, frame.vy);
-      this.onWreck?.(frame.x, frame.y);
       view?.setWrecked(true);
-    } else if (!before.alive && alive) view?.setWrecked(false);
+      if (this.drowned(frame)) {
+        before.sunk = 0;
+        this.water?.splash(frame.x, frame.y, SPLASH_RADIUS);
+      } else {
+        this.effects.wreck(subject.spec, frame.x, frame.y, frame.vx, frame.vy);
+        this.onWreck?.(frame.x, frame.y);
+      }
+    } else if (!before.alive && alive) {
+      view?.setWrecked(false);
+      this.refloat(before, view);
+    }
     before.alive = alive;
+    if (!alive) this.sink(before, view, deltaMs);
     if (alive && parts !== before.parts) {
       this.shed(subject.spec, before.parts, parts, frame);
       view?.setParts(parts);
@@ -66,6 +98,29 @@ export class WreckDirector {
     // Ölüyken maske değişmez sayılır: yeniden doğuşta temiz maske ilk canlı karede görünüme işlenir.
     if (alive) before.parts = parts;
     return alive;
+  }
+
+  /** Aracın bulunduğu yer batışa yetecek kadar derin mi. */
+  private drowned(frame: WreckFrame): boolean {
+    return (
+      this.water !== undefined && this.water.depthAt(frame.x, frame.y) >= WATER_VIEW.sink.minDepth
+    );
+  }
+
+  private sink(seen: Seen, view: SinkView | undefined, deltaMs: number): void {
+    const { durationMs } = WATER_VIEW.sink;
+    if (seen.sunk === null || seen.sunk >= durationMs) return;
+    seen.sunk = Math.min(durationMs, seen.sunk + deltaMs);
+    view?.sink?.(seen.sunk / durationMs);
+    if (seen.sunk >= durationMs) view?.setPresent?.(false);
+  }
+
+  /** Yeniden doğan araç batmışsa gövde ve görünürlük yerine gelir. */
+  private refloat(seen: Seen, view: SinkView | undefined): void {
+    if (seen.sunk === null) return;
+    seen.sunk = null;
+    view?.sink?.(0);
+    view?.setPresent?.(true);
   }
 
   /** Kaldırılan aracın izini siler. */
