@@ -8,6 +8,7 @@ import { createRandom, type Random } from '@volstudio/core/random';
 import { shedArt, wreckArt, type ChunkArt } from './debrisArt';
 import { Blasts } from './effects/Blasts';
 import { Debris } from './effects/Debris';
+import { FootMarks } from './effects/FootMarks';
 import { ParticleFx } from './effects/ParticleFx';
 import { SkidMarks } from './effects/SkidMarks';
 import { TracerLayer } from './effects/TracerLayer';
@@ -58,10 +59,13 @@ export class EffectsView {
   private readonly blasts: Blasts;
   private readonly marks: TreadMarks;
   private readonly skids: SkidMarks;
+  private readonly feet: FootMarks;
   private readonly debris: Debris;
   private readonly random: Random = createRandom(FX.debrisSeed);
   private readonly trails = new Map<number, VehicleTrail>();
   private frameMs = 0;
+  /** Kameranın gördüğü dünya dikdörtgeni; verilmemişse (örn. vitrin) her şey görünür sayılır. */
+  private view: { x: number; y: number; width: number; height: number } | null = null;
   private timeScale = 1;
   private readonly emitTrail = (
     x: number,
@@ -89,6 +93,7 @@ export class EffectsView {
     this.blasts = new Blasts(scene, profile.decals);
     this.skids = new SkidMarks(scene, profile.decals);
     this.marks = new TreadMarks(scene, profile.decals);
+    this.feet = new FootMarks(scene, profile.decals);
     this.tracers = new TracerLayer(scene);
     this.particles = new ParticleFx(scene);
     this.debris = new Debris(scene, bounds);
@@ -207,6 +212,32 @@ export class EffectsView {
     this.particles.wallHit(x, y, normalX, normalY, strength);
   }
 
+  /** Kameranın görünen dikdörtgeni: ekran dışındaki araçlar iz ve leke bırakmaz (havuz görünmeyene harcanmaz). */
+  setViewport(x: number, y: number, width: number, height: number): void {
+    const view = (this.view ??= { x, y, width, height });
+    view.x = x;
+    view.y = y;
+    view.width = width;
+    view.height = height;
+  }
+
+  /** Örümceğin yere basan pençesi: gövdenin baktığı yöne ayak izi basar (ekran dışındaysa basmaz). */
+  footprint(x: number, y: number, angle: number, scale: number): void {
+    if (this.onScreen(x, y)) this.feet.print(x, y, angle, scale);
+  }
+
+  private onScreen(x: number, y: number): boolean {
+    const view = this.view;
+    if (!view) return true;
+    const margin = FX.cullMargin;
+    return (
+      x >= view.x - margin &&
+      x <= view.x + view.width + margin &&
+      y >= view.y - margin &&
+      y <= view.y + view.height + margin
+    );
+  }
+
   /** Aracın egzoz, toz, palet ve kayma izini günceller; araç ilk görüldüğünde kurulur. */
   updateVehicle(id: number, frame: VehicleFxFrame): void {
     let trail = this.trails.get(id);
@@ -217,6 +248,12 @@ export class EffectsView {
     }
     trail.follow(frame.x, frame.y, frame.hull, frame.speed, frame.boosting, frame.slipping);
     if (!frame.tracked) return;
+    // Ekran dışı araç iz bırakmaz ve izi unutulur: ekrana dönünce eski noktadan köprü çizilmez.
+    if (!this.onScreen(frame.x, frame.y)) {
+      this.marks.forget(id);
+      this.skids.forget(id);
+      return;
+    }
     this.marks.track(
       id,
       frame.x,
@@ -299,6 +336,7 @@ export class EffectsView {
     this.debris.update(deltaMs);
     this.marks.fade(deltaMs);
     this.skids.fade(deltaMs);
+    this.feet.fade(deltaMs);
   }
 
   destroy(): void {
@@ -308,6 +346,7 @@ export class EffectsView {
     this.debris.destroy();
     this.marks.destroy();
     this.skids.destroy();
+    this.feet.destroy();
     for (const trail of this.trails.values()) trail.destroy();
     this.trails.clear();
   }

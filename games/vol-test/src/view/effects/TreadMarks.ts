@@ -68,8 +68,16 @@ export class TreadMarks {
         print.ground = ground;
         continue;
       }
-      if (ground - print.ground < FX.marks.spacing) continue;
+      // Geri giden palet de iz bırakır (yer yolu mutlak sayılır); yeniden doğuşta sıfırlanan yol da yakalanır.
+      if (Math.abs(ground - print.ground) < FX.marks.spacing) continue;
       const length = Math.hypot(px - print.x, py - print.y);
+      // Işınlanma (yeniden doğuş, ekrana dönüş) iz kesintisidir: eski noktadan yeniye köprü çizilmez.
+      if (length > FX.marks.maxJump) {
+        print.x = px;
+        print.y = py;
+        print.ground = ground;
+        continue;
+      }
       if (!skids[index] && length > 0) {
         this.decals.place(
           (print.x + px) / 2,

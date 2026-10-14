@@ -185,3 +185,42 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
     });
   },
 );
+
+describe('SpiderView: ayak izi', () => {
+  function walk(spec: WalkerSpec, steps: number, intact = true) {
+    const scene = fakeScene();
+    const lighting = scene.add.container(0, 0);
+    const prints: { x: number; y: number; angle: number; scale: number }[] = [];
+    const view = new SpiderView(
+      scene as unknown as Phaser.Scene,
+      spec,
+      SPIDER_LOOKS[spec.id],
+      lighting as never,
+      (x, y, angle, scale) => prints.push({ x, y, angle, scale }),
+    );
+    if (!intact) view.setParts(0xff);
+    for (let step = 0; step < steps; step++) {
+      view.update(frame({ x: 100 + step * 3, y: 200, hull: 0.3, vx: 180, speed: 180 }), 1000 / 60);
+    }
+    return prints;
+  }
+
+  it('yürürken yere basan pençeler gövde yönünde, boya ölçekli iz bırakır', () => {
+    const prints = walk(ARACHNID, 180);
+    expect(prints.length).toBeGreaterThan(4);
+    for (const print of prints) {
+      expect(print.angle).toBeCloseTo(0.3);
+      expect(print.scale).toBeCloseTo(1, 0);
+    }
+  });
+
+  it('daha geniş yürüyücünün izi daha büyüktür', () => {
+    const wide = { ...ARACHNID, walker: { ...ARACHNID.walker, halfWidth: 38 } };
+    const [print] = walk(wide, 180);
+    expect(print.scale).toBeGreaterThan(walk(ARACHNID, 180)[0].scale * 1.5);
+  });
+
+  it('bütün bacakları kopmuş yürüyücü iz basmaz', () => {
+    expect(walk(ARACHNID, 180, false)).toHaveLength(0);
+  });
+});

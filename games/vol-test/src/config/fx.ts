@@ -65,9 +65,15 @@ export const FX = {
    * adımıdır ve enine pabuç (grouser) izini taşır.
    */
   marks: {
-    capacity: 1400,
-    /** Pabuç adımı: iki parça arası yer yolu (birim). */
-    spacing: 6,
+    capacity: 2400,
+    /**
+     * Parça arası yer yolu (birim): her parça `grousers` pabuç adımı taşır (doku tekrarlıdır), böylece
+     * aynı yol yarı sayıda çıkartmayla çizilir ve kalabalık sahnede havuz izi hemen yutmaz.
+     */
+    spacing: 12,
+    grousers: 2,
+    /** Bir kareden ötekine bu kadar uzağa giden araç ışınlanmıştır (yeniden doğuş): iz kesilir, köprü çizilmez. */
+    maxJump: 96,
     /** Bant eni: palet eni (birim). */
     width: 11,
     alpha: 0.34,
@@ -75,6 +81,10 @@ export const FX = {
     holdShare: 0.4,
     depth: 2,
   },
+  /** Örümcek ayak izi: yere basan pençenin bıraktığı küçük çukur; yoğunluğu ve ömrü palet izinden kısadır. */
+  feet: { capacity: 700, lifeMs: 9000, holdShare: 0.35, alpha: 0.34, depth: 2, refHalfWidth: 19 },
+  /** Ekran dışındaki araçların izi/lekesi bırakılmaz; görünen dikdörtgen bu pay kadar genişletilir (birim). */
+  cullMargin: 700,
   /** Kayma izi: kayan paletin temas noktasının yerde bıraktığı sürekli çizgi. */
   skid: {
     capacity: 900,

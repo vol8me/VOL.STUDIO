@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { TANK_LIGHTS } from '@/config/tankView';
 import type { VehicleSpec } from '@/config/vehicles';
 import { createVehicleView } from './createView';
+import type { FootPrintSink } from './SpiderView';
 import type { VehicleView } from './VehicleView';
 
 /** Kayıttaki bir aracın görünüm için gereken kimliği ve tanımı. */
@@ -19,7 +20,11 @@ export class VehicleViews {
   private readonly views = new Map<number, VehicleView>();
   private readonly lighting: Phaser.GameObjects.Container;
 
-  constructor(private readonly scene: Phaser.Scene) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    /** Yürüyücülerin ayak izi alıcısı; verilmezse (vitrin, testler) iz basılmaz. */
+    private readonly footprint?: FootPrintSink,
+  ) {
     this.lighting = scene.add
       .container(0, 0)
       .setDepth(TANK_LIGHTS.depth)
@@ -58,6 +63,6 @@ export class VehicleViews {
   }
 
   private create(spec: VehicleSpec): VehicleView {
-    return createVehicleView(this.scene, spec, this.lighting);
+    return createVehicleView(this.scene, spec, this.lighting, this.footprint);
   }
 }

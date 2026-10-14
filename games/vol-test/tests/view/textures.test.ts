@@ -49,6 +49,7 @@ describe('textures', () => {
     expect(keys.sort()).toEqual(
       [
         TEXTURE.blast,
+        TEXTURE.footPrint,
         TEXTURE.ring,
         TEXTURE.scorch,
         ...Array.from({ length: DEBRIS.shardVariants }, (_, variant) => shardTexture(variant)),

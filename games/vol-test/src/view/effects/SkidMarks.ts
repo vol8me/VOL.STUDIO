@@ -71,6 +71,10 @@ export class SkidMarks {
         continue;
       }
       const length = Math.hypot(px - contact.x, py - contact.y);
+      if (length > FX.marks.maxJump) {
+        contact.active = false;
+        continue;
+      }
       if (length < skid.segment) continue;
       const strength = clamp(
         (slide - skid.minSlide) / (skid.fullSlide - skid.minSlide),

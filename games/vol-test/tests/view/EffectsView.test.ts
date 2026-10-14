@@ -285,7 +285,8 @@ describe('EffectsView', () => {
 
   it('palet izi uzun yaşar: önce tam, sonra söner; havuz dolunca en eski yeniden kullanılır', () => {
     const { view, prints } = build();
-    for (let distance = 0; distance < 6 * 800; distance += 6) {
+    const step = FX.marks.spacing;
+    for (let distance = 0; distance < step * FX.marks.capacity; distance += step) {
       view.updateVehicle(1, frame({ x: distance, groundLeft: distance, groundRight: distance }));
     }
     expect(prints()).toHaveLength(FX.marks.capacity);
@@ -493,5 +494,96 @@ describe('EffectsView kopan parça', () => {
       return debrisOf(scene).chunks.map((chunk) => [chunk.x, chunk.y, chunk.rotation]);
     };
     expect(run()).toEqual(run());
+  });
+});
+
+describe('EffectsView: iz disiplini', () => {
+  const far = FX.marks.maxJump * 3;
+
+  it('ışınlanan araç eski noktadan yeniye köprü çizmez; iz yeni noktadan sürer', () => {
+    const { view, prints } = build();
+    view.updateVehicle(1, frame());
+    view.updateVehicle(1, frame({ x: FX.marks.spacing, groundLeft: 12, groundRight: 12 }));
+    const before = prints().length;
+    expect(before).toBeGreaterThan(0);
+    // Yeniden doğuş: yer yolu sıfırlanır, konum çok uzağa atlar.
+    view.updateVehicle(1, frame({ x: far, y: far }));
+    view.updateVehicle(1, frame({ x: far, y: far, groundLeft: 40, groundRight: 40 }));
+    expect(prints()).toHaveLength(before);
+    view.updateVehicle(
+      1,
+      frame({ x: far + FX.marks.spacing, y: far, groundLeft: 52, groundRight: 52 }),
+    );
+    expect(prints().length).toBeGreaterThan(before);
+    for (const print of prints().slice(before)) expect(print.x).toBeGreaterThan(far - 1);
+  });
+
+  it('geri giden araç da iz bırakır', () => {
+    const { view, prints } = build();
+    view.updateVehicle(1, frame({ groundLeft: 100, groundRight: 100 }));
+    view.updateVehicle(
+      1,
+      frame({ x: -FX.marks.spacing, groundLeft: 100 - FX.marks.spacing, groundRight: 88 }),
+    );
+    expect(prints().length).toBeGreaterThan(0);
+  });
+
+  it('kayma çizgisi ışınlanmada kesilir', () => {
+    const { view, skids } = build();
+    const slide = FX.skid.fullSlide;
+    view.updateVehicle(1, frame({ slideLeft: slide }));
+    view.updateVehicle(1, frame({ x: far, y: far, slideLeft: slide }));
+    expect(skids()).toHaveLength(0);
+  });
+
+  it('ekran dışındaki araç iz bırakmaz ve izi unutulur; görüş alanına dönünce köprü çizilmez', () => {
+    const { view, prints } = build();
+    view.setViewport(0, 0, 800, 600);
+    const gone = FX.cullMargin + 5000;
+    view.updateVehicle(1, frame({ x: gone, y: 100 }));
+    view.updateVehicle(1, frame({ x: gone + 24, y: 100, groundLeft: 24, groundRight: 24 }));
+    expect(prints()).toHaveLength(0);
+    // Görüş alanına yaklaşınca yeni izle başlar: ilk görülen kare yalnız noktayı kaydeder.
+    view.updateVehicle(1, frame({ x: 100, y: 100, groundLeft: 60, groundRight: 60 }));
+    expect(prints()).toHaveLength(0);
+    view.updateVehicle(1, frame({ x: 124, y: 100, groundLeft: 84, groundRight: 84 }));
+    expect(prints().length).toBeGreaterThan(0);
+  });
+
+  it('görüş alanı verilmemişse (vitrin) her araç iz bırakır', () => {
+    const { view, prints } = build();
+    view.updateVehicle(1, frame({ x: 90000 }));
+    view.updateVehicle(1, frame({ x: 90000 + 24, groundLeft: 24, groundRight: 24 }));
+    expect(prints().length).toBeGreaterThan(0);
+  });
+});
+
+describe('EffectsView: ayak izi', () => {
+  const feet = (scene: ReturnType<typeof fakeScene>) =>
+    scene.created.filter((object) => object.args[2] === TEXTURE.footPrint);
+
+  it('basan pençe gövde yönüne dönük, boyuna ölçekli bir iz basar', () => {
+    const { view, scene } = build();
+    view.footprint(40, 50, 0.7, 2);
+    const [print] = feet(scene);
+    expect(print.x).toBe(40);
+    expect(print.y).toBe(50);
+    expect(print.rotation).toBeCloseTo(0.7);
+    const size = lastCall(print, 'setDisplaySize') as number[];
+    expect(size[0]).toBeGreaterThan(20);
+    expect(size[0]).toBe(size[1]);
+    expect(print.alpha).toBeCloseTo(FX.feet.alpha);
+  });
+
+  it('ekran dışında basılmaz; söner ve havuz kapasiteyle sınırlıdır', () => {
+    const { view, scene } = build();
+    view.setViewport(0, 0, 800, 600);
+    view.footprint(FX.cullMargin + 5000, 0, 0, 1);
+    expect(feet(scene)).toHaveLength(0);
+    for (let i = 0; i < FX.feet.capacity + 50; i++) view.footprint(10 + i, 10, 0, 1);
+    expect(feet(scene)).toHaveLength(FX.feet.capacity);
+    const print = feet(scene)[0];
+    view.update(new Projectiles(1, 1), 0, FX.feet.lifeMs);
+    expect(print.alpha).toBe(0);
   });
 });

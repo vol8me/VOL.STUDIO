@@ -177,7 +177,9 @@ export class WorldScene extends Phaser.Scene {
         this.environment.applyProfile(profile);
       }),
     );
-    this.vehicles = this.scope.addDestroyable(new VehicleViews(this));
+    this.vehicles = this.scope.addDestroyable(
+      new VehicleViews(this, (x, y, angle, scale) => this.effects.footprint(x, y, angle, scale)),
+    );
     this.wrecks = new WreckDirector(this.effects, (x, y) =>
       feelBlast({ camera: this.camera.model, listener: this.driver.player.chassis }, x, y),
     );
@@ -292,6 +294,8 @@ export class WorldScene extends Phaser.Scene {
 
     const alpha = stepped.alpha;
     const frozen = paused && !this.driver.live;
+    const sight = this.camera.model.visibleRect();
+    this.effects.setViewport(sight.x, sight.y, sight.width, sight.height);
     const presentMs = frozen ? 0 : delta;
     for (const vehicle of this.sim.vehicles) {
       const tank = vehicle.chassis;

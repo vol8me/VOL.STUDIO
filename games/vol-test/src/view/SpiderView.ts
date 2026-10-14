@@ -8,8 +8,12 @@ import { LocomotionReader } from './spider/LocomotionReader';
 import { SpiderCannon } from './spider/SpiderCannon';
 import { SpiderLegs, lightLocal, type LightLocal } from './spider/SpiderLegs';
 import { SpiderMotion, type SpiderPose } from './spider/SpiderMotion';
+import { FX } from '@/config/fx';
 import { TEXTURE, TEXTURE_SCALE, addSpiderImage } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
+
+/** Yere basan pençenin izi: dünya konumu, gövde yönü ve boy ölçeği. */
+export type FootPrintSink = (x: number, y: number, angle: number, scale: number) => void;
 
 const INV = 1 / TEXTURE_SCALE;
 /** Gövdenin kırık yana en çok çökmesi (dünya birimi, kırık yan tam) ve çökmenin oturma süresi (ms). */
@@ -51,6 +55,7 @@ export class SpiderView implements VehicleView {
     private readonly spec: WalkerSpec,
     private readonly look: SpiderLook,
     lighting: Phaser.GameObjects.Container,
+    private readonly footprint?: FootPrintSink,
   ) {
     this.motion = new SpiderMotion(look);
     this.locomotion = new LocomotionReader({
@@ -129,7 +134,7 @@ export class SpiderView implements VehicleView {
     this.ghosts.update(deltaMs);
     if (signals.dash01 > 0.35) this.ghosts.capture(this.ghostSource);
     this.huntBurst(frame.boosting);
-    this.footfalls(frame.speed);
+    this.footfalls(frame.speed, frame.hull);
     this.placeBody(pose);
     this.placeCannons(frame, deltaMs);
   }
@@ -161,13 +166,15 @@ export class SpiderView implements VehicleView {
   }
 
   /** Bu karede yere basan her ayak, gövdeye kısa bir çökme ve hızla ölçeklenen bir toz tutamı verir. */
-  private footfalls(speed: number): void {
+  private footfalls(speed: number, hull: number): void {
     const { dust } = this.look;
     const effort = clamp01(speed / this.spec.walker.maxSpeed);
+    const scale = this.spec.walker.halfWidth / FX.feet.refHalfWidth;
     const count = Math.round(dust.countMin + (dust.countMax - dust.countMin) * effort);
     this.legs.forEachPlant((x, y) => {
       this.motion.plant(0.4 + 0.6 * effort);
       this.dust.emitParticleAt(x, y, count);
+      this.footprint?.(x, y, hull, scale);
     });
   }
 

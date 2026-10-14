@@ -12,6 +12,7 @@ import dartTurretUrl from '@/assets/vehicles/dart/turret.svg?url';
 import strikerFeelerUrl from '@/assets/vehicles/striker/feeler.svg?url';
 import strikerHullUrl from '@/assets/vehicles/striker/hull.svg?url';
 import strikerTurretUrl from '@/assets/vehicles/striker/turret.svg?url';
+import { FX } from '@/config/fx';
 import { tankSpecs, treadView } from '@/config/tankView';
 import { SPIDER_PARTS, type SpiderPartId } from '@/config/spiders';
 import { WALKER_IDS, type TankId, type WalkerId } from '@/config/vehicles';
@@ -31,6 +32,7 @@ export const TEXTURE = {
   flash: 'tank-flash',
   spark: 'fx-spark',
   treadPrint: 'fx-tread-print',
+  footPrint: 'fx-foot-print',
   scorch: 'fx-scorch',
   blast: 'fx-blast',
   ring: 'fx-ring',
@@ -220,14 +222,35 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
   });
   // Palet izinin bir pabuç adımı: x yolu, y paletin enidir. Sıkışmış kum
   // tabanı, enine pabuç (grouser) çukuru ve kenarlara itilmiş kum sırtı.
-  canvasTexture(scene, TEXTURE.treadPrint, 8, 16, (g) => {
+  canvasTexture(scene, TEXTURE.treadPrint, 8 * FX.marks.grousers, 16, (g) => {
     g.fillStyle = 'rgba(255,255,255,0.45)';
-    g.fillRect(0, 2, 8, 12);
+    g.fillRect(0, 2, 8 * FX.marks.grousers, 12);
     g.fillStyle = 'rgba(255,255,255,1)';
-    g.fillRect(0, 3, 3, 10);
+    for (let step = 0; step < FX.marks.grousers; step++) g.fillRect(step * 8, 3, 3, 10);
     g.fillStyle = 'rgba(255,255,255,0.75)';
-    g.fillRect(0, 0, 8, 2);
-    g.fillRect(0, 14, 8, 2);
+    g.fillRect(0, 0, 8 * FX.marks.grousers, 2);
+    g.fillRect(0, 14, 8 * FX.marks.grousers, 2);
+  });
+  // Örümcek ayak izi: ileri bakan üç pençe çukuru ve arkada yuvarlak bir topuk.
+  canvasTexture(scene, TEXTURE.footPrint, 16, 16, (g) => {
+    g.fillStyle = 'rgba(255,255,255,0.55)';
+    g.beginPath();
+    g.arc(5, 8, 3.2, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.95)';
+    for (const angle of [-0.62, 0, 0.62]) {
+      g.save();
+      g.translate(7, 8);
+      g.rotate(angle);
+      g.beginPath();
+      g.moveTo(1, -1.1);
+      g.lineTo(8.6, -0.3);
+      g.lineTo(8.6, 0.3);
+      g.lineTo(1, 1.1);
+      g.closePath();
+      g.fill();
+      g.restore();
+    }
   });
   // Yanık: merkezde koyu, dışa doğru lekeli sönen iz. Lekeler sabit bir
   // karma dizisiyle yerleşir; doku her açılışta aynıdır.
