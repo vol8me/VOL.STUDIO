@@ -123,8 +123,8 @@ reddeder.
 **Denge** anma sayılarla değil düellolarla ölçülür: her araç çifti açık alanda, usta (`skill 0,75`)
 iki botla iki yönde birçok tohumla dövüşür (`tests/sim/balance.test.ts`, bot yapay zekâsı tankın
 da örümceğin de menzilini ve hızını kullanır). Anma hasarı/s Widow'da düşüktür (isabet, menzil ve
-hızla öder), Goliath'ta canla ve ağır mermiyle öder; bu yüzden anma hasarı yalnız %70 aralıkla
-sınırlıdır. 40 tohumluk son ölçümde her aracın kataloğa karşı toplam galibiyet payı %41-61'dir
+hızla öder), Goliath'ta canla ve ağır mermiyle, Manta'da kısa menzille ve ince canla öder; bu yüzden anma
+hasarı yalnız %80 aralıkla sınırlıdır. 40 tohumluk son ölçümde her aracın kataloğa karşı toplam galibiyet payı %41-61'dir
 (Striker 44, Bulwark 61, Dart 41, Arachnid 47, Widow 43, Goliath 55, Manta 58); test bu payı %30-70 bandında
 tutar. Karşıtlıklar bilinçlidir ve hiçbiri mutlak değildir: Widow menzilden Arachnid'i ve Goliath'ı yener,
 Bulwark'ın ağır mermisine ve Dart'ın hızına yenilir; Goliath Striker'ı ve Bulwark'ı ezer, Dart ve Widow

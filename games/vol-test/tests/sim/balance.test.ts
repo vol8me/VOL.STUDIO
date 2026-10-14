@@ -13,6 +13,19 @@ const TRIALS = 4;
 /** Tek bir aracın katalogun geri kalanına karşı toplam galibiyet payı bu aralıkta kalmalıdır. */
 const FAIR = { min: 0.3, max: 0.7 };
 
+/** Sıralı (a, b, tohum) üçlüsünün sonucu: her düello iki aracın payına da yazıldığından bir kez koşulur. */
+const duelCache = new Map<string, number>();
+
+function cachedDuel(a: VehicleId, b: VehicleId, seed: number): number {
+  const key = `${a}|${b}|${seed}`;
+  let result = duelCache.get(key);
+  if (result === undefined) {
+    result = duel(a, b, seed);
+    duelCache.set(key, result);
+  }
+  return result;
+}
+
 /** İki botun açık alanda tek ölümlük düellosu: 1 = `a` kazandı, 0 = `b`, 0,5 = süre doldu. */
 function duel(a: VehicleId, b: VehicleId, seed: number): number {
   const sim = new Simulation({ world: new World(4096, 4096, 128), spawnPlayer: false });
@@ -53,7 +66,7 @@ describe('araç dengesi (bot düellosu)', () => {
       for (const b of VEHICLE_IDS) {
         if (a === b) continue;
         for (let seed = 1; seed <= TRIALS; seed++) {
-          score += duel(a, b, seed) + (1 - duel(b, a, seed));
+          score += cachedDuel(a, b, seed) + (1 - cachedDuel(b, a, seed));
           games += 2;
         }
       }
