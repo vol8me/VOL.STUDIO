@@ -5,7 +5,7 @@
 VOL.TEST, CORE mekanizmaları ve native kabuğun gerçek oyun tüketicisidir.
 Açık sürüş alanı tank fiziğini, nişanı, çevreyi ve platform servislerini
 birlikte sınar. Kalıcı dünya engeli yoktur; seçilen senaryo araç veya hedef
-ekler. Oyun ana menüyle açılır; menü, garaj ve ayarlar ekranları ile HUD, duraklatma ve senaryo panelleri vardır.
+ekler; senaryo kadrosu yuvaya göre dört aracı döndürür, böylece her araç görünüm, atış ve ses yoluyla sınanır. Oyun ana menüyle açılır; menü, garaj ve ayarlar ekranları ile HUD, duraklatma ve senaryo panelleri vardır.
 
 ## Model ve sunum
 

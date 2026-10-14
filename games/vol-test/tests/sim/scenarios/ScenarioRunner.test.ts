@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { VEHICLE_IDS } from '@/config/vehicles';
 import { ScenarioRunner } from '@/sim/scenarios/ScenarioRunner';
 import { command, simulation, STEP_MS } from '../../support/sim';
 
@@ -21,6 +22,17 @@ describe('ScenarioRunner', () => {
     }
     runner.destroy();
     expect(sim.vehicles).toEqual([player]);
+  });
+
+  it('kadro dört aracı da döndürür ve her tohumda aynı sırada kurulur', () => {
+    const roster = (seed: number) => {
+      const sim = simulation();
+      new ScenarioRunner(sim).select('sandbox', seed);
+      return sim.vehicles.slice(1).map((vehicle) => vehicle.spec.id);
+    };
+    const first = roster(1);
+    expect(new Set(first)).toEqual(new Set(VEHICLE_IDS));
+    expect(roster(2)).toEqual(first);
   });
 
   it('aynı tohum ve adım aynı yerleşimi, komutu ve fizik sonucunu üretir', () => {

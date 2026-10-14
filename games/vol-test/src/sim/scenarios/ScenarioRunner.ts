@@ -2,6 +2,7 @@ import { createRandom } from '@volstudio/core/random';
 import { SpatialIndex } from '@volstudio/core/spatial';
 import { TANK } from '@/config/tank';
 import { SCENARIO, SCENARIOS, type ScenarioId } from '@/config/scenarios';
+import { VEHICLE_IDS, VEHICLES } from '@/config/vehicles';
 import type { Vehicle } from '../entities/Vehicle';
 import { idleCommand, type TankCommand } from '../command';
 import type { Simulation } from '../Simulation';
@@ -58,7 +59,9 @@ export class ScenarioRunner {
       const tank = TANK;
       x = Math.max(tank.halfLength, Math.min(this.sim.world.width - tank.halfLength, x));
       y = Math.max(tank.halfLength, Math.min(this.sim.world.height - tank.halfLength, y));
-      this.spawned.push(this.sim.spawn(x, y, angle));
+      // Kadro yuvaya göre dört aracı döndürür: senaryo her aracı (görünüm, atış, ses) sınar ve tohumla aynı kalır.
+      const spec = VEHICLES[VEHICLE_IDS[slot % VEHICLE_IDS.length]];
+      this.spawned.push(this.sim.spawn(x, y, angle, null, undefined, spec));
       this.phases.push(random.next() * Math.PI * 2);
     }
     this.neighbors = this.sim.vehicles.map((vehicle) => ({

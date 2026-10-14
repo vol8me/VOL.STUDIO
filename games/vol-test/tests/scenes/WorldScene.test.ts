@@ -89,6 +89,8 @@ function mount(services?: GameServices, data?: WorldStartData): Harness {
   let shutdown = (): void => undefined;
   Object.assign(scene, {
     add: fake.add,
+    // Senaryo kadrosu yürüyücü de içerir: rig dokuları yüklü sayılır.
+    textures: { ...fake.textures, exists: () => true },
     cameras: { main: camera },
     scale: { on: vi.fn(), off: vi.fn() },
     game: { canvas: { parentElement: parent }, registry: { get: () => undefined } },
