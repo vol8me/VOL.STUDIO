@@ -63,6 +63,20 @@ test('duraklatma katmanı ekrana sığar; her denetim adlıdır ve merkezi hit-t
   }
 });
 
+test('ayar satırı etiketi geniş denetimle (senaryo listesi) harf harf kırılmaz', async ({
+  page,
+}) => {
+  await openPause(page);
+  const labels = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.vt-pause .vol-settings-row__label')]
+      .map((el) => el.getBoundingClientRect())
+      .filter((rect) => rect.width > 0)
+      .map((rect) => rect.width),
+  );
+  expect(labels.length, 'etiketli ayar satırları bulundu').toBeGreaterThanOrEqual(3);
+  for (const width of labels) expect(width, 'etiket sütunu sıkışmadı').toBeGreaterThanOrEqual(80);
+});
+
 test('klavye: odak katmanın içindedir, Escape kapatır ve oyun devam eder', async ({ page }) => {
   await openPause(page);
   const focusInside = await page.evaluate(

@@ -225,9 +225,10 @@
   display: grid;
 }
 
+/* Etiket asgari genişliğini korur; geniş denetim (açılır liste) satırı doldurmak yerine küçülür. */
 .vol-settings-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
+  grid-template-columns: minmax(min(8em, 100%), 1fr) minmax(0, max-content);
   gap: var(--vol-space-md);
   align-items: center;
   min-width: 0;

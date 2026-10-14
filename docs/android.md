@@ -183,7 +183,7 @@ node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.ap
 ```
 
 - **Kapsam:** kurulu APK'nın verilen artifact ile bayt eşitliği (sürümü commit'e bağlar: APK temiz ağaçtan
-  üretilmelidir), soğuk açılış, yatay görünüm ve dokunmatik işaretçi, güvenli alan, geri tuşu (1. basış
+  üretilmelidir), soğuk açılış (ana menü), yatay görünüm ve dokunmatik işaretçi, güvenli alan, menüden Alıştırma ile dünyaya giriş (HUD göstergeleri görünür), geri tuşu (1. basış
   duraklatma paneli, 2. basış devam), arka plana gidip dönüş (süreç ve sayfa aynı, kareler akıyor), dört yön
   isteğinde yatay kilit (Activity yeniden yaratılmaz), ekran klavyesi açılışı ve metin alanının klavyenin üstündeki
   görsel görünümde kalması, uzun basışta yerel seçim çubuğunun (Kes/Kopyala/Tümünü seç) açılması ve Kes ile

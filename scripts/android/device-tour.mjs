@@ -370,6 +370,29 @@ try {
         },
       );
 
+      // Uygulama ana menüde açılır: duraklatma, metin ve titreşim adımları oyun içindir; alıştırma oturumu
+      // çevrimdışı açılır ve HUD göstergeleri görününce dünya hazırdır.
+      const entered = await page.evaluate(`(async () => {
+        const button = document.querySelector('[data-testid="menu-practice"]');
+        if (!button) return false;
+        button.click();
+        for (let wait = 0; wait < 60; wait += 1) {
+          const vitals = document.querySelector('[data-testid="vitals"]');
+          if (vitals && vitals.getBoundingClientRect().width > 0 && Number(getComputedStyle(vitals).opacity) > 0) return true;
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
+        return false;
+      })()`);
+      await sleep(1);
+      await screenshot('world');
+      add(
+        'menu.practice-enters-world',
+        entered ? 'PASS' : 'FAIL',
+        entered
+          ? 'alıştırma açıldı, HUD göstergeleri görünür'
+          : 'HUD göstergeleri 15 sn içinde görünmedi',
+      );
+
       // Geri tuşu: uygulamayı kapatmaz; duraklatma panelini açar, ikinci basış devam ettirir.
       adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
       await sleep(1.5);
