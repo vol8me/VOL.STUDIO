@@ -352,8 +352,8 @@ dar ekranda alt levha); `full` ekranı kaplar (garaj, ayarlar), garaj sunum içi
 bölgesi ayırır. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
 ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, denetimler `Input`,
 `SegmentedControl`, `Select`, `Checkbox`; `menu.css` yalnız yerleşim verir. Arkada oyunun gerçek araç
-görünümleri (`TankView`, `WalkerView`) dönen tablada durur (`Showroom`); kamera `stage` bölgesine ya
-da `sheet`in bıraktığı alana kurulur ve sığmazsa yakınlaştırma küçülür (`src/config/menu.ts`). Ekran
+görünümleri (`TankView`, `WalkerView`) dönen tablada durur (`Showroom`); kamera `stage` bölgesinin kaydırma gövdesinde
+görünen kısmına (alçak yatay ekranda sahne görünümden uzun olabilir) ya da `sheet`in bıraktığı alana kurulur ve sığmazsa yakınlaştırma küçülür (`src/config/menu.ts`). Ekran
 değişimi solarak yapılır (`prefers-reduced-motion`da anında); geçiş sürerken ikinci seçim yok sayılır.
 Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış onayını açar ya da kapatır.
 

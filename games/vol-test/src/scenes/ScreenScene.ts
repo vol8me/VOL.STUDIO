@@ -5,7 +5,8 @@ import type { GameServices } from '@/app/GameServices';
 import { MENU } from '@/config/menu';
 import { PALETTE } from '@/config/palette';
 import { VEHICLES, type VehicleSpec } from '@/config/vehicles';
-import { Showroom } from '@/view/Showroom';
+import { Showroom, type StageRect } from '@/view/Showroom';
+import { clipStage } from '@/view/stageClip';
 
 /** Bir ekranın DOM paneli: sahne onu bağlar, odaklar ve kapanışta söker. */
 export interface ScreenPanel {
@@ -70,7 +71,10 @@ export abstract class ScreenScene extends Phaser.Scene {
   }
 
   override update(_time: number, delta: number): void {
-    const stage = this.screen?.stage?.getBoundingClientRect();
+    const element = this.screen?.stage;
+    let stage: StageRect | undefined = element?.getBoundingClientRect();
+    const visible = element?.closest('.vt-screen__body')?.getBoundingClientRect();
+    if (stage && visible) stage = clipStage(stage, visible);
     this.showroom.update(delta, this.screen?.element.getBoundingClientRect(), stage);
   }
 

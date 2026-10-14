@@ -359,4 +359,23 @@ describe('ScreenScene vitrin bölgesi', () => {
     menu.scene.update(0, 16);
     expect(showroom.update.mock.calls.at(-1)![2]).toBeUndefined();
   });
+
+  it('görünümden uzun sunum bölgesi kaydırma gövdesinin görünür alanına kırpılır', () => {
+    const { services: env } = services();
+    const garage = mount(() => new GarageScene(env));
+    const rect = (left: number, top: number, width: number, height: number) =>
+      ({ left, top, width, height, right: left + width, bottom: top + height }) as DOMRect;
+    const stageElement = garage.parent.querySelector('.vt-garage__stage')!;
+    const bodyElement = garage.parent.querySelector('.vt-screen__body')!;
+    vi.spyOn(stageElement, 'getBoundingClientRect').mockReturnValue(rect(300, 80, 200, 900));
+    vi.spyOn(bodyElement, 'getBoundingClientRect').mockReturnValue(rect(40, 80, 760, 200));
+    showroom.update.mockClear();
+    garage.scene.update(0, 16);
+    expect(showroom.update.mock.calls.at(-1)![2]).toEqual({
+      left: 300,
+      top: 80,
+      width: 200,
+      height: 200,
+    });
+  });
 });
