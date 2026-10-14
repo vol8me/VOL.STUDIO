@@ -579,8 +579,10 @@ describe('WorldRoom öngörü', () => {
 
     // Öngörü ile sunucu arasındaki tek sapma kaynağı, sunucunun istemcinin yollamadığı bir adım
     // atmasıdır (girdi geç kalınca boşta adım). Geç kalma yoksa tek bir düzeltme bile olamaz;
-    // yük altında geç kalma varsa düzeltmeler sınırlı kalır.
-    const ceiling = starved === 0 ? 1e-6 : NETWORK.snapDistance / 2;
+    // yük altında geç kalma ya da istemci zamanlayıcısının takılıp girdileri toplu göndermesi
+    // varsa düzeltmeler sınırlı kalır.
+    const stalled = run.stall() > STALL_MS;
+    const ceiling = starved === 0 && !stalled ? 1e-6 : NETWORK.snapDistance / 2;
     expect(Math.max(...corrections)).toBeLessThan(ceiling);
     expect(run.pilot.drift.ema).toBeLessThan(1);
     expect(run.fired()).toBeGreaterThan(0);
@@ -594,6 +596,9 @@ describe('WorldRoom öngörü', () => {
 });
 
 /** Odaya öngörülü bir pilot bağlar ve çeşitli girdi akışıyla sürer; düzeltme büyüklüklerini toplar. */
+/** Bu süreyi aşan zamanlayıcı kesintisi yük sayılır (4 ms vuruşun çok üstü). */
+const STALL_MS = 60;
+
 function drive(seat: Seat) {
   const predict = Predict.get(seat);
   let fired = 0;
@@ -608,15 +613,27 @@ function drive(seat: Seat) {
   const corrections: number[] = [];
   let step = 0;
   let seen = 0;
+  let lastAt = performance.now();
+  let stall = 0;
   const timer = setInterval(() => {
-    const due = predict.tick(performance.now());
+    const at = performance.now();
+    stall = Math.max(stall, at - lastAt);
+    lastAt = at;
+    const due = predict.tick(at);
     for (let index = 0; index < due; index++) pilot.send(commandAt(step++));
     if (pilot.reconciler.reconcileSeq !== seen) {
       seen = pilot.reconciler.reconcileSeq;
       corrections.push(pilot.reconciler.lastCorrectionMag);
     }
   }, 4);
-  return { pilot, corrections, fired: () => fired, stop: () => clearInterval(timer) };
+  return {
+    pilot,
+    corrections,
+    /** Zamanlayıcının iki vuruşu arasındaki en uzun süre (ms): yüklü makinede istemci kesintisi. */
+    stall: () => stall,
+    fired: () => fired,
+    stop: () => clearInterval(timer),
+  };
 }
 
 function serverRoomCount(): number {
