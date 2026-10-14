@@ -163,6 +163,36 @@ describe('quality.json şema doğrulaması', () => {
     assert.ok(problems.some((problem) => problem.includes('snapshot40Over10')));
   });
 
+  it('bozuk ağ profili ve bütçesi geçerli olmalı', () => {
+    const config = validConfig();
+    const good = {
+      latencyMs: 40,
+      jitterMs: 10,
+      stallPct: 2,
+      stallMs: 200,
+      driftMax: 20,
+      pingMaxMs: 600,
+      snaps: 0,
+    };
+    config.networkImpairment = { 'games/sample-game': { wan: good } };
+    assert.deepEqual(validateQualityConfig(config), []);
+    config.networkImpairment = {
+      'games/sample-game': {
+        wan: { ...good, stallPct: 140, driftMax: 0, snaps: 1.5, latencyMs: -1 },
+        empty: 'x',
+      },
+      'games/other': {},
+    };
+    const problems = validateQualityConfig(config);
+    for (const key of ['stallPct', 'driftMax', 'snaps', 'latencyMs'])
+      assert.ok(
+        problems.some((problem) => problem.includes(`.${key}`)),
+        key,
+      );
+    assert.ok(problems.some((problem) => problem.includes('"empty"')));
+    assert.ok(problems.some((problem) => problem.includes('games/other')));
+  });
+
   it('kapsam koşularının birleşimi her eşikli aktif paketi ölçer', () => {
     const broken = validConfig();
     broken.coverageRuns = {

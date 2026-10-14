@@ -569,6 +569,14 @@ eşiksiz "sapma 0" hiçbir şey söylemez. E2E yetkili aracı kaydırıp sapman�
 yakınsamasını doğrular. Gerçek sunucuya karşı düz sürüş + fren denemesinde (yerel döngü) iki motorda
 oturum boyunca en büyük sapma 0–0,05 birimdir (7 koşu; `data-drift-max`). Bu, manevra, çarpışma ve
 ateşte cihazlar arası determinizm kanıtı değildir. Gecikme telafisi yoktur: isabet, sunucunun o adımdaki dünyasına göredir.
+Bozuk ağ: `tests/e2e/impairedNetwork.spec.ts` sayfayı gerçek sunucunun önündeki TCP vekilinden
+(`tests/support/impairedProxy.ts`) bağlar. Vekil her yöne sabit gecikme ve titreşim ekler; WebSocket TCP
+üstünde olduğundan kayıp, yüzdesi `stallPct` olan parçaların `stallMs` beklemesi ve arkasındakileri de tutması
+olarak modellenir (gerçek paket kaybı değildir). Profiller ve bütçeler (en büyük düzeltme, en büyük gidiş-dönüş,
+ani sıçrama sayısı) `quality.json` → `networkImpairment` içindedir; sürüş konum eşiğine bağlıdır, sabit bekleme
+yoktur ve durunca sayfa yetkiyle 0,5 m içinde aynı yere oturur. Ölçülen: Chromium/WebKit'te kayıpsız, 40 ms ±15 ve
+60 ms ±30 + %3×250 ms bekleme profillerinde en büyük sapma 2,9–29,8 birim, snap 0 (ölçüm yazılım çizimli tek makinededir;
+bütçe tepenin 2,5–3 katıdır). Bu gerçek ağ, paketli uygulama ya da cihaz ölçümü değildir.
 Tüm durum her yamada her istemciye gider (ilgi alanı süzmesi yoktur); 24 insan + bot nüfusunda bant
 genişliği ölçülmemiştir ve kapasite iddiası yapılmaz. Paketli Windows/Android ağ kabulü ve insan sunum
 beğenisi yapılmamıştır.

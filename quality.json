@@ -241,5 +241,37 @@
       },
       "projectiles512Over128": 6
     }
+  },
+  "networkImpairment": {
+    "$comment": "TCP vekili (games/vol-test/tests/support/impairedProxy.ts) her yöne latencyMs + 0..jitterMs ekler; WebSocket TCP üstünde olduğundan kayıp, stallPct yüzdesindeki parçaların stallMs kadar bekleyip arkasındakileri de tutması olarak modellenir (gerçek paket kaybı değil). Ölçümler Windows 11, 8 çekirdek, yazılım çizimi, 2 sayfa değil tek sayfa ve yerel sunucu ile alındı: driftMax öngörü uzlaştırmasının oturum boyunca en büyük düzeltmesi (dünya birimi), pingMaxMs HUD'daki en büyük gidiş-dönüş ölçümü, snaps tek örnekte hız tavanının (maxSpeed × boost) ve yarım snapDistance payının aştığı ani sıçrama sayısı. 14 Ekim ölçümü Chromium/WebKit: control drift 7.7/5.1 ping 182/129; wan drift 5.6/2.9 ping 313/234; lossy drift 29.8/14.6 ping 441/365; hepsinde snaps 0. Bütçeler ölçülen tepenin yaklaşık 2,5-3 katıdır: ana iş parçacığı açlığı tek koşuda ping'i şişirir, bütçe büyüklük mertebesi gerilemesini (uzlaştırma bozulması, ani sıçrama) yakalar. Gerçek ağ, paketli uygulama ve cihaz ölçümü NOT-RUN'dır.",
+    "games/vol-test": {
+      "control": {
+        "latencyMs": 0,
+        "jitterMs": 0,
+        "stallPct": 0,
+        "stallMs": 0,
+        "driftMax": 20,
+        "pingMaxMs": 600,
+        "snaps": 0
+      },
+      "wan": {
+        "latencyMs": 40,
+        "jitterMs": 15,
+        "stallPct": 0,
+        "stallMs": 0,
+        "driftMax": 20,
+        "pingMaxMs": 800,
+        "snaps": 0
+      },
+      "lossy": {
+        "latencyMs": 60,
+        "jitterMs": 30,
+        "stallPct": 3,
+        "stallMs": 250,
+        "driftMax": 80,
+        "pingMaxMs": 1100,
+        "snaps": 0
+      }
+    }
   }
 }

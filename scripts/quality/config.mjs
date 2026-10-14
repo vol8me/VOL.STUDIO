@@ -158,6 +158,40 @@ export function validateQualityConfig(raw) {
     }
   }
 
+  if (raw.networkImpairment !== undefined) {
+    if (!isPlainObject(raw.networkImpairment)) {
+      problems.push('networkImpairment: nesne olmalı (paket yolu → profil adı → profil ve bütçe)');
+    } else {
+      const nonNegative = ['latencyMs', 'jitterMs', 'stallMs'];
+      const positive = ['driftMax', 'pingMaxMs'];
+      for (const [path, profiles] of Object.entries(raw.networkImpairment)) {
+        if (path.startsWith('$')) continue;
+        if (!isPlainObject(profiles) || Object.keys(profiles).every((key) => key.startsWith('$'))) {
+          problems.push(`networkImpairment[${JSON.stringify(path)}]: en az bir profil gerekli`);
+          continue;
+        }
+        for (const [name, profile] of Object.entries(profiles)) {
+          if (name.startsWith('$')) continue;
+          const where = `networkImpairment[${JSON.stringify(path)}][${JSON.stringify(name)}]`;
+          if (!isPlainObject(profile)) {
+            problems.push(`${where}: nesne olmalı`);
+            continue;
+          }
+          for (const key of nonNegative)
+            if (!Number.isFinite(profile[key]) || profile[key] < 0)
+              problems.push(`${where}.${key}: sıfır ya da pozitif sayı olmalı`);
+          for (const key of positive)
+            if (!Number.isFinite(profile[key]) || profile[key] <= 0)
+              problems.push(`${where}.${key}: pozitif bütçe olmalı`);
+          if (!Number.isFinite(profile.stallPct) || profile.stallPct < 0 || profile.stallPct > 100)
+            problems.push(`${where}.stallPct: 0–100 arası yüzde olmalı`);
+          if (!Number.isInteger(profile.snaps) || profile.snaps < 0)
+            problems.push(`${where}.snaps: sıfır ya da pozitif tam sayı olmalı`);
+        }
+      }
+    }
+  }
+
   if (raw.coverageShape !== undefined) {
     if (!isPlainObject(raw.coverageShape)) {
       problems.push('coverageShape: nesne olmalı');
