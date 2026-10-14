@@ -58,9 +58,10 @@ function duel(a: VehicleId, b: VehicleId, seed: number): number {
 }
 
 describe('araç dengesi (bot düellosu)', () => {
-  it('hiçbir araç kataloğa hükmetmez ya da ezilmez: toplam galibiyet payı adil bantta kalır', () => {
-    const share = new Map<VehicleId, number>();
-    for (const a of VEHICLE_IDS) {
+  // Araç başına ayrı test: her biri kendi süre payını alır, genel süre büyütülmez; düellolar önbelleği paylaşır.
+  it.each(VEHICLE_IDS)(
+    '%s kataloğa hükmetmez ya da ezilmez: galibiyet payı adil bantta kalır',
+    (a) => {
       let score = 0;
       let games = 0;
       for (const b of VEHICLE_IDS) {
@@ -70,13 +71,11 @@ describe('araç dengesi (bot düellosu)', () => {
           games += 2;
         }
       }
-      share.set(a, score / games);
-    }
-    for (const [id, value] of share) {
-      expect(value, `${id} galibiyet payı ${value.toFixed(2)}`).toBeGreaterThan(FAIR.min);
-      expect(value, `${id} galibiyet payı ${value.toFixed(2)}`).toBeLessThan(FAIR.max);
-    }
-  });
+      const value = score / games;
+      expect(value, `${a} galibiyet payı ${value.toFixed(2)}`).toBeGreaterThan(FAIR.min);
+      expect(value, `${a} galibiyet payı ${value.toFixed(2)}`).toBeLessThan(FAIR.max);
+    },
+  );
 
   it('düello belirlenimlidir: aynı çift ve tohum aynı sonucu verir', () => {
     expect(duel('striker', 'goliath', 2)).toBe(duel('striker', 'goliath', 2));
