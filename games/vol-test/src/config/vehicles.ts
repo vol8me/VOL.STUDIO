@@ -33,15 +33,23 @@ export interface MountSpec {
   readonly reach: number;
 }
 
+/** Gövde-yerel nokta (ileri x, sağ y). */
+export interface BodyPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
 /**
- * Araç silahlanması. 0. yuva nişan taretidir: yönü komuttaki nişandır. Öteki yuvalar nişan
- * noktasına (0. yuvadan `toeInRange` ileride) bakar; böylece her yuvanın yönü yalnız poza
- * bağlıdır ve ağ üzerinde ek durum taşınmaz. `salvo` her tetik çekişinde ateşlenen yuva
+ * Araç silahlanması. `pivot` yoksa 0. yuva nişan taretidir: yönü komuttaki nişandır. Öteki yuvalar
+ * nişan noktasına (0. yuvadan `toeInRange` ileride) bakar; böylece her yuvanın yönü yalnız poza
+ * bağlıdır ve ağ üzerinde ek durum taşınmaz. `pivot` verilirse nişan başlangıcı odur ve bütün
+ * yuvalar nişan noktasına bakar (simetrik yan toplar). `salvo` her tetik çekişinde ateşlenen yuva
  * gruplarıdır ve sırayla döner.
  */
 export interface Armament {
   readonly weapon: WeaponConfig;
   readonly mounts: readonly MountSpec[];
+  readonly pivot?: BodyPoint;
   readonly salvo: readonly (readonly number[])[];
   readonly toeInRange: number;
 }
@@ -223,8 +231,8 @@ export const DART: TankSpec = {
 
 /**
  * Arachnid: bacaklı savaş canavarı. Her yöne çevik yürür, gövdesi nişana bakar ve atılımla
- * kısa sürede mesafe kapatır; üç plazma topu vardır (orta top tek, yan iki top çifte atış) ve
- * toplar gövdeden bağımsız döner. Zırhı ağır tanklardan ince, çevikliği Striker'dan yüksektir.
+ * kısa sürede mesafe kapatır; iki plazma topu iki yan omuzdadır (sırayla ateşler, gövde ekseninde
+ * odaklanır) ve gövde kabuğunu örtmez, toplar gövdeden bağımsız döner. Zırhı ağır tanklardan ince, çevikliği Striker'dan yüksektir.
  */
 export const ARACHNID: WalkerSpec = {
   kind: 'walker',
@@ -242,7 +250,8 @@ export const ARACHNID: WalkerSpec = {
   },
   armament: {
     weapon: {
-      intervalMs: 700,
+      // İki top sırayla ateşler: her top 940 ms'de bir atar, birleşik tempo 470 ms.
+      intervalMs: 470,
       aimTolerance: 0.045,
       projectileSpeed: 700,
       projectileLifeMs: 1400,
@@ -254,11 +263,11 @@ export const ARACHNID: WalkerSpec = {
       style: 'plasma',
     },
     mounts: [
-      { x: 21, y: 0, reach: 27.2 },
-      { x: -5.7, y: -21, reach: 27.2 },
-      { x: -5.7, y: 21, reach: 27.2 },
+      { x: 4, y: -31, reach: 19.2 },
+      { x: 4, y: 31, reach: 19.2 },
     ],
-    salvo: [[0], [1, 2]],
+    pivot: { x: 4, y: 0 },
+    salvo: [[0], [1]],
     toeInRange: 460,
   },
 };

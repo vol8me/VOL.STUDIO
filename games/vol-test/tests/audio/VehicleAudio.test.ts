@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VehicleAudio } from '@/audio/VehicleAudio';
+import { AUDIO } from '@/config/audio';
 import { WEAPON } from '@/config/tank';
+import { BULWARK, DART, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
 import { tank, world, command, DT } from '../support/sim';
 import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext, type FakeAudioSource } from '../support/fakeAudio';
@@ -63,6 +65,36 @@ describe('araç döngüleri', () => {
     expect(output(byName('boost')).gain.value).toBe(0.28);
     voice.stop();
     expect(context.sources.every((s) => s.stopped)).toBe(true);
+  });
+  it('motor perdesi araca göredir: ağır araç derin, hafif araç tiz; Striker referanstır', async () => {
+    const idleRate = async (spec: VehicleSpec) => {
+      const own = new FakeAudioContext();
+      const engine = new VehicleAudio(
+        own as unknown as AudioContext,
+        own.destination as unknown as AudioNode,
+        spec,
+      );
+      await engine.ready;
+      const subject = tank();
+      // Her araç kendi tavan hızının yarısında: devir aynı, fark yalnız aracın perde çarpanıdır.
+      const half = topSpeedOf(spec) / 2;
+      subject.trackLeft = subject.trackRight = subject.surfaceLeft = subject.surfaceRight = half;
+      engine.update(subject, subject, false);
+      const find = (name: string) => own.sources.find((s) => s.buffer?.url?.endsWith(name))!;
+      const rate = find('engine-idle.ogg').playbackRate.value;
+      const gain = output(find('engine-drive.ogg'));
+      engine.dispose();
+      return { rate, gain: gain.gain.value };
+    };
+    const striker = await idleRate(STRIKER);
+    const bulwark = await idleRate(BULWARK);
+    const dart = await idleRate(DART);
+    expect(bulwark.rate).toBeLessThan(striker.rate);
+    expect(dart.rate).toBeGreaterThan(striker.rate);
+    expect(bulwark.rate / striker.rate).toBeCloseTo(
+      AUDIO.vehicleVoice.bulwark.engine / AUDIO.vehicleVoice.striker.engine,
+    );
+    expect(bulwark.gain).toBeGreaterThan(dart.gain);
   });
   it('atış geri tepmesinden sonra da motor döngüsü kapanır', () => {
     // Geri tepme tankı kaydırır ve palet YOLU artığını (`groundLeft`) bırakır.

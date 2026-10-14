@@ -6,7 +6,8 @@ import { World } from '@/sim/world/World';
 import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext } from '../support/fakeAudio';
 import { Button, uiIntentBusFor } from '@volstudio/core/ui';
-import { STRIKER } from '@/config/vehicles';
+import { AUDIO } from '@/config/audio';
+import { ARACHNID, BULWARK, DART, STRIKER, type VehicleSpec } from '@/config/vehicles';
 
 describe('GameAudio', () => {
   let context: FakeAudioContext;
@@ -111,6 +112,35 @@ describe('GameAudio', () => {
     audio.setPaused(true);
     expect(context.sources).toHaveLength(count);
     expect(context.gains.every((n) => n.disconnected)).toBe(true);
+  });
+
+  it('top sesi ateşleyen silahın perdesini ve gücünü taşır: ağır mermi gümbürder, ray çatlar', async () => {
+    const cannonOf = async (vehicle: VehicleSpec) => {
+      const sim = new Simulation({ world: new World(1000, 1000, 32), vehicle });
+      await audio.sync(sim.vehicles, sim.player.chassis);
+      const before = context.sources.length;
+      audio.route(
+        [{ kind: 'fired', mount: 0, source: sim.player.id, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }],
+        listener,
+      );
+      const source = context.sources.slice(before).find((s) => s.buffer?.url?.includes('/cannon/'));
+      return {
+        rate: source!.playbackRate.value,
+        gain: (source!.connections[0] as FakeAudioGain).gain.value,
+      };
+    };
+    const shell = await cannonOf(STRIKER);
+    const slug = await cannonOf(BULWARK);
+    const rail = await cannonOf(DART);
+    const plasma = await cannonOf(ARACHNID);
+    expect(shell.rate).toBe(AUDIO.weaponVoice.shell.rate);
+    expect(slug.rate).toBe(AUDIO.weaponVoice.slug.rate);
+    expect(rail.rate).toBe(AUDIO.weaponVoice.rail.rate);
+    expect(plasma.rate).toBe(AUDIO.weaponVoice.plasma.rate);
+    expect(slug.rate).toBeLessThan(shell.rate);
+    expect(rail.rate).toBeGreaterThan(shell.rate);
+    expect(slug.gain).toBeGreaterThan(shell.gain);
+    expect(rail.gain).toBeLessThan(shell.gain);
   });
 
   it('fren kenarını ses ailesine bağlar; duraklatılmış ve işitme dışında kalan olaylar susar', async () => {

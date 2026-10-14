@@ -80,7 +80,7 @@ describe('WalkerView', () => {
     expect(root.rotation).toBe(-1.2);
   });
 
-  it('toplar yuvalarında `mountPose` açısıyla durur: orta top taret yönüne, yanlar odağa bakar', () => {
+  it('toplar yuvalarında `mountPose` açısıyla durur: ikisi de gövde eksenindeki odağa bakar', () => {
     const { view, cannons } = build();
     const pose = frame({ hull: 0.3, turret: 0.9, pitch: 1.5, roll: -0.8 });
     view.update(pose, 16);
@@ -92,10 +92,11 @@ describe('WalkerView', () => {
       expect(cannons[index].y, `${index} y`).toBeCloseTo(pose.roll + mount.y, 9);
       expect(cannons[index].rotation, `${index} açı`).toBeCloseTo(out.angle - pose.hull, 9);
     });
-    expect(cannons[0].rotation).toBeCloseTo(pose.turret - pose.hull, 9);
-    // Yan toplar birbirine doğru hafifçe kırılır (sol yuva y<0 sağa, sağ yuva sola döner).
-    expect(cannons[1].rotation).toBeGreaterThan(cannons[0].rotation);
-    expect(cannons[2].rotation).toBeLessThan(cannons[0].rotation);
+    // Toplar birbirine doğru hafifçe kırılır (sol yuva y<0 sağa, sağ yuva sola döner); taret
+    // yönü ikisinin ortasındadır.
+    const aim = pose.turret - pose.hull;
+    expect(cannons[0].rotation).toBeGreaterThan(aim);
+    expect(cannons[1].rotation).toBeLessThan(aim);
   });
 
   it('atış yalnız ateşleyen yuvanın topunu geri tepirir ve parlatır', () => {
@@ -104,7 +105,7 @@ describe('WalkerView', () => {
     view.fire(1);
     view.update(frame(), 16);
     const visible = flashes().map((flash) => flash.visible);
-    expect(visible).toEqual([false, true, false]);
+    expect(visible).toEqual([false, true]);
     // Geri tepen namlu çubuğu yalnız ilgili topta kayar.
     const rodShift = (cannon: FakeContainer) =>
       ((cannon.list[0] as FakeContainer).list[0] as FakeContainer).x;
@@ -120,12 +121,14 @@ describe('WalkerView', () => {
     view.update(pose, 16);
     view.fire(0);
     view.update(pose, 16);
-    const [centre] = SPEC.armament.mounts;
+    const [left] = SPEC.armament.mounts;
     const flash = flashes()[0];
-    // Dinlenme ucu: yuva + reach; geri tepme bunu kısaltır, uzatmaz.
-    expect(flash.x).toBeLessThanOrEqual(pose.x + centre.x + centre.reach + 1e-9);
-    expect(flash.x).toBeGreaterThan(pose.x + centre.x);
-    expect(flash.y).toBeCloseTo(pose.y + centre.y, 6);
+    // Dinlenme ucu: yuva + reach (odağa hafif içe bakar); geri tepme bunu kısaltır, uzatmaz.
+    const rest = Math.hypot(flash.x - (pose.x + left.x), flash.y - (pose.y + left.y));
+    expect(rest).toBeLessThanOrEqual(left.reach + 1e-9);
+    expect(flash.x).toBeGreaterThan(pose.x + left.x);
+    // Sol yuva (y<0) odağa doğru içe, yani +y'ye bakar.
+    expect(flash.y).toBeGreaterThan(pose.y + left.y);
   });
 
   it('ivmeyi hızın değiştiği adımlar arasından okur ve sonraki değişime dek tutar', () => {

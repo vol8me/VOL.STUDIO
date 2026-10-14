@@ -108,17 +108,28 @@ silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca de
 | Striker  | Dengeli ana tank         | 100 | 230 | 3,0   | 34 hasar, 650 ms, kabuk             |
 | Bulwark  | Ağır kuşatma tankı       | 170 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi       |
 | Dart     | Hafif, hızlı keşif tankı | 64  | 330 | 4,4   | 16 hasar, 360 ms, uzun menzilli ray |
-| Arachnid | Bacaklı savaş canavarı   | 140 | 150 | 2,7   | 24 hasar, 700 ms, üç plazma topu    |
+| Arachnid | Bacaklı savaş canavarı   | 140 | 150 | 2,7   | 24 hasar, 470 ms, iki plazma topu   |
 
 Tablo `src/config/vehicles.ts` değerlerinin özetidir; saniyelik hasar araçlar arasında %35'ten
 az ayrışır ve karakter farkı hızlanmadan, dönüşten, frenden ve geri tepmeden gelir
 (`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler). Aracı oyuncu katılırken
 `model` seçeneğiyle seçer; sunucu tanımsız indeksi protokol ihlali sayıp reddeder.
 
+Araçlar tek bakışta ve kulakla ayrışır; kimlik üç yerden gelir ve tek tabloda tanımlıdır.
+Renk: her tankın gövde ve taret SVG'si kendi paletini taşır (Striker çelik mavisi ve bordo kabuk,
+Bulwark koyu adaçayı zırh ve pas kabuğu, sarı uyarı şeritli, turuncu enerji; Dart buz mavisi hafif
+gövde ve çivit kabuk, camgöbeği enerji) ve `TANK_ART` çekirdek ışığını ile palet tonunu araca
+bağlar; `tests/config/vehicleIdentity.test.ts` paletlerin çakışmamasını kilitler. Mermi: her
+silah stilinin kendi iz rengi ve kalınlığı vardır (`SHOT_LOOK`: kehribar kabuk, turuncu ağır
+mermi, ince ve uzun buz mavisi ray, turkuaz plazma). Ses: motor perdesi ve gücü araca
+(`AUDIO.vehicleVoice`), top sesinin perdesi ve gücü silah stiline (`AUDIO.weaponVoice`) göre
+işlenir; teslimler aynıdır, yeni sentez gerekmez. Araca özgü gerçek motor ve top kayıtları ayrı iştir.
+
 Silahlanma (`Armament`) bir silahın sayılarını, namlu yuvalarını ve atış gruplarını
-(`salvo`) taşır. 0. yuva nişan taretidir; öteki yuvalar nişan noktasına (0. yuvadan
-`toeInRange` ileride) bakar, yani her yuvanın yönü yalnız poza bağlıdır ve ağda namlu açısı
-taşınmaz. Her tetik çekişi sıradaki grubu ateşler; sıra `Vehicle.salvo` ile döner ve
+(`salvo`) taşır. `pivot` yoksa 0. yuva nişan taretidir; öteki yuvalar nişan noktasına (0. yuvadan
+`toeInRange` ileride) bakar. `pivot` verilirse nişan başlangıcı odur ve bütün yuvalar nişan
+noktasına bakar (Arachnid'in simetrik yan topları). Her yuvanın yönü yalnız poza bağlıdır ve ağda
+namlu açısı taşınmaz. Her tetik çekişi sıradaki grubu ateşler; sıra `Vehicle.salvo` ile döner ve
 sunucu durumunda (`PlayerState.salvo`) öngörüyle uzlaştırılır. Mermi, ateşleyen silahın
 profilini (`Projectiles.addProfile`: ömür, uçuş, stil) taşır; isabet hasarı ve itkisi
 aynı silahın tanımından okunur.
@@ -133,8 +144,11 @@ uzayında ~475 px/s'nin üstünde ayakları gövdeye yetiştiremez (acil adım),
 `tests/view/walker/ArachnidLegs.test.ts` kilitler. Bacaklar yalnız sunumdur; ağ durumuna ek alan
 girmez, `ChassisState` aynıdır. Çarpışan gövde çizilen kabuğun içindedir, bacak açıklığı değildir.
 
-Silahı üç plazma topudur (orta top nişan taretidir, yan toplar odağa bakar; iki grup sırayla
-ateşler). Top resmi `entities.pen` içindeki tek bir silahtan gelir ve üç yuvada kullanılır;
+Silahı iki plazma topudur: gövdenin iki yan omzunda, kabuğun dışında durur ve gövde üstten
+görünür kalır. İki top gövde eksenindeki odağa bakar ve sırayla ateşler; her top 940 ms'de bir atar,
+birleşik tempo 470 ms'dir (ateş gücü tek toplu Striker'la aynı sınıftadır). Top resmi `entities.pen`
+içindeki tek bir silahtan gelir ve iki yuvada kullanılır; boyu kabuğun yarısı kadardır
+(`WALKER_ART.cannonScale`);
 mermi, geri tepme ve ağız parlaması oyunun kendi efekt katmanındandır (resimden mermi alınmaz).
 Yuvanın `reach` değeri top resminin ağız mesafesinin ölçeklenmişidir (`CANNON_MUZZLE_PX`).
 

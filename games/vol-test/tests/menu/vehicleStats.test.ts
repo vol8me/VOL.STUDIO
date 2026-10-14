@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { VEHICLE_IDS } from '@/config/vehicles';
+import { VEHICLE_IDS, VEHICLES, type VehicleSpec } from '@/config/vehicles';
 import { rawStats, vehicleStats } from '@/menu/vehicleStats';
-import { VEHICLES } from '@/config/vehicles';
 
 describe('vehicleStats', () => {
   it('her ölçüde katalogun en iyisi 1 olur ve hiçbiri 0 ile 1 dışına çıkmaz', () => {
@@ -23,11 +22,20 @@ describe('vehicleStats', () => {
   });
 
   it('çok yuvalı salvo ateş gücünü yuva ortalamasıyla çarpar', () => {
+    const striker = VEHICLES.striker;
     const arachnid = VEHICLES.arachnid;
-    const { weapon } = arachnid.armament;
-    // Salvo [[0], [1, 2]]: atış başına ortalama 1,5 yuva.
-    expect(rawStats(arachnid).firepower).toBeCloseTo(
-      (weapon.damage * 1.5) / (weapon.intervalMs / 1000),
+    const grouped: VehicleSpec = {
+      ...arachnid,
+      armament: { ...arachnid.armament, salvo: [[0, 1]] },
+    };
+    // Grup tek atıştır: iki yuva birlikte ateşlenince ateş gücü yuva sayısıyla çarpılır.
+    expect(rawStats(grouped).firepower).toBeCloseTo(
+      (arachnid.armament.weapon.damage * 2) / (arachnid.armament.weapon.intervalMs / 1000),
     );
+    expect(rawStats(arachnid).firepower).toBeCloseTo(
+      arachnid.armament.weapon.damage / (arachnid.armament.weapon.intervalMs / 1000),
+    );
+    // Sırayla ateşleyen iki top Striker'ın tek topuyla aynı sınıftadır.
+    expect(rawStats(arachnid).firepower).toBeGreaterThan(rawStats(striker).firepower * 0.8);
   });
 });

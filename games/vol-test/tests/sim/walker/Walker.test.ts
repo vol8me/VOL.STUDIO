@@ -172,14 +172,18 @@ describe('Walker sürüşü', () => {
 });
 
 describe('Arachnid tanımı', () => {
-  it('atış grupları orta topla yan çifti sırayla çevirir ve üç topu da kullanır', () => {
-    expect(ARACHNID.armament.mounts).toHaveLength(3);
-    expect(ARACHNID.armament.salvo).toEqual([[0], [1, 2]]);
-    const [centre, left, right] = ARACHNID.armament.mounts;
-    expect(centre.y).toBe(0);
+  it('iki yan top sırayla ateşler; simetriktir ve gövde kabuğunun dışındadır', () => {
+    const { mounts, salvo, pivot } = ARACHNID.armament;
+    expect(mounts).toHaveLength(2);
+    expect(salvo).toEqual([[0], [1]]);
+    const [left, right] = mounts;
     expect(left.y).toBe(-right.y);
     expect(left.x).toBe(right.x);
     expect(left.reach).toBe(right.reach);
+    // Toplar gövdenin yan kenarının dışında durur: kabuk üstten görünür.
+    expect(Math.abs(left.y)).toBeGreaterThan(SPEC.halfWidth);
+    // Nişan başlangıcı gövde ekseninde, iki topun ortasındadır.
+    expect(pivot).toEqual({ x: left.x, y: 0 });
   });
 
   it('çarpışan gövde bacak açıklığı değil gövdedir', () => {

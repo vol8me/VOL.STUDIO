@@ -47,6 +47,10 @@ export interface TankArt {
   };
   /** Çekirdek ışığının ölçeği (turret milinin altındaki nabız). */
   readonly coreScale: number;
+  /** Çekirdek ışığının rengi: aracın enerji kimliği (kabuktaki ışık çizgileriyle aynı ton). */
+  readonly glow: number;
+  /** Palet bandına çarpan renk: ağır araçta kirli ve koyu, hafif araçta açık. */
+  readonly treadTint: number;
   /** Ağız parlamasının ölçeği. */
   readonly flashScale: number;
   /** Namlunun (taret resminin) geri tepme yayı: vuruş, sertlik, sönüm ve azami geri kayma. */
@@ -64,6 +68,8 @@ export const TANK_ART: Readonly<Record<TankId, TankArt>> = {
     turret: { width: 44, height: 24, pivotX: 12 },
     feeler: { width: 18, height: 6, anchorX: -17, anchorY: 6.5, rest: 0.35 },
     coreScale: 0.75,
+    glow: 0x52f5cf,
+    treadTint: 0xffffff,
     flashScale: 1,
     barrel: { kick: -210, stiffness: 420, damping: 22, max: 5 },
   },
@@ -72,6 +78,8 @@ export const TANK_ART: Readonly<Record<TankId, TankArt>> = {
     turret: { width: 62, height: 40, pivotX: 18 },
     feeler: { width: 14, height: 7, anchorX: -24, anchorY: 9, rest: 0.28 },
     coreScale: 0.95,
+    glow: 0xff8a3a,
+    treadTint: 0xb9b49a,
     flashScale: 1.6,
     barrel: { kick: -320, stiffness: 360, damping: 24, max: 8 },
   },
@@ -80,6 +88,8 @@ export const TANK_ART: Readonly<Record<TankId, TankArt>> = {
     turret: { width: 50, height: 22, pivotX: 11 },
     feeler: { width: 26, height: 6, anchorX: -14, anchorY: 4.5, rest: 0.42 },
     coreScale: 0.62,
+    glow: 0x62d8ff,
+    treadTint: 0xdbeaf5,
     flashScale: 0.8,
     barrel: { kick: -150, stiffness: 520, damping: 20, max: 3.5 },
   },

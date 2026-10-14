@@ -22,8 +22,10 @@ function placeMount(pose: ChassisPose, x: number, y: number, out: MuzzlePose): M
 }
 
 /**
- * Yuva milinin konumu ve yönü. 0. yuvanın yönü taretin yönüdür; öteki yuvalar nişan noktasına
- * (0. yuvadan taret yönünde `toeInRange` ileride) bakar. Yön yalnız poza bağlıdır: ağ üzerinde
+ * Yuva milinin konumu ve yönü. `Armament.pivot` yoksa 0. yuva nişan taretidir: yönü taretin yönüdür,
+ * öteki yuvalar nişan noktasına (0. yuvadan taret yönünde `toeInRange` ileride) bakar. `pivot` varsa
+ * nişan başlangıcı odur ve her yuva (0. dahil) nişan noktasına bakar; simetrik iki yan top böyle
+ * gövde eksenine odaklanır. Yön yalnız poza bağlıdır: ağ üzerinde
  * namlu açısı taşınmaz, görünüm ara değerli poz ile aynı açıyı bulur.
  */
 export function mountPose(
@@ -34,11 +36,11 @@ export function mountPose(
 ): MuzzlePose {
   const mount = armament.mounts[index];
   placeMount(pose, mount.x, mount.y, out);
-  if (index === 0) {
+  if (index === 0 && !armament.pivot) {
     out.angle = pose.turret;
     return out;
   }
-  const first = armament.mounts[0];
+  const first = armament.pivot ?? armament.mounts[0];
   placeMount(pose, first.x, first.y, origin);
   const focusX = origin.x + Math.cos(pose.turret) * armament.toeInRange;
   const focusY = origin.y + Math.sin(pose.turret) * armament.toeInRange;
@@ -65,7 +67,10 @@ export function muzzlePose(
   return out;
 }
 
-/** Nişan taretinin (0. yuva) mili: nişan çizgisinin ve dönüş merkezinin başlangıcı. */
+/** Nişan başlangıcı (`pivot`, yoksa 0. yuvanın mili): nişan çizgisinin ve dönüş merkezinin başlangıcı. */
 export function pivotPose(pose: ChassisPose, armament: Armament, out: MuzzlePose): MuzzlePose {
-  return mountPose(pose, armament, 0, out);
+  if (!armament.pivot) return mountPose(pose, armament, 0, out);
+  placeMount(pose, armament.pivot.x, armament.pivot.y, out);
+  out.angle = pose.turret;
+  return out;
 }

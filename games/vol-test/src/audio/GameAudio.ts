@@ -7,6 +7,7 @@ import type { UiIntentBus } from '@volstudio/core/ui';
 import { AUDIO } from '@/config/audio';
 import type { SimEvent } from '@/sim/events';
 import type { Vehicle } from '@/sim/entities/Vehicle';
+import type { WeaponConfig } from '@/config/tank';
 import { audioUrl, blastPath, FAMILIES, type FamilyName } from './assets';
 import { blastDistance, spatialSound, type AudioPosition } from './spatial';
 import { VehicleAudio } from './VehicleAudio';
@@ -16,6 +17,8 @@ export class GameAudio {
   private readonly bank: SoundBank;
   private readonly bus: GainNode;
   private readonly vehicles = new Map<number, VehicleAudio>();
+  /** Ateş olayının ses kimliği için her aracın silahı (duyulabilir olmasa da bilinir). */
+  private readonly weapons = new Map<number, WeaponConfig>();
   private paused = false;
   private released = false;
   private eventIndex = 0;
@@ -101,6 +104,8 @@ export class GameAudio {
 
   async sync(vehicles: readonly Vehicle[], listener: AudioPosition): Promise<void> {
     if (this.released) return;
+    this.weapons.clear();
+    for (const vehicle of vehicles) this.weapons.set(vehicle.id, vehicle.spec.armament.weapon);
     const audible = [...vehicles]
       .sort(
         (a, b) =>
@@ -134,7 +139,7 @@ export class GameAudio {
     for (const event of events) {
       switch (event.kind) {
         case 'fired':
-          this.play('cannon', event, listener);
+          this.play('cannon', event, listener, undefined, this.weapons.get(event.source));
           break;
         case 'impact':
           this.play('blast', event, listener);
@@ -171,6 +176,7 @@ export class GameAudio {
     source: AudioPosition,
     listener: AudioPosition,
     speed?: number,
+    weapon?: WeaponConfig,
   ): void {
     const variant = FAMILIES[name].choose(
       `${this.seed}:${this.eventIndex++}:${name}`,
@@ -186,9 +192,11 @@ export class GameAudio {
         ? `:${blastDistance(Math.hypot(source.x - listener.x, source.y - listener.y))}`
         : '';
     const strength = speed === undefined ? 1 : Math.min(1, speed / AUDIO.fullCrashSpeed);
+    const voice = weapon ? AUDIO.weaponVoice[weapon.style] : undefined;
     this.bank.play(`${name}:${variant.key}${suffix}`, {
       pan: spatial.pan,
-      gain: AUDIO.shotGain[name] * spatial.gain * strength,
+      gain: AUDIO.shotGain[name] * spatial.gain * strength * (voice?.gain ?? 1),
+      ...(voice ? { rate: voice.rate } : {}),
     });
   }
 }

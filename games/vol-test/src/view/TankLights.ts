@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Spring1D } from '@volstudio/core/math';
+import { SHOT_LOOK } from '@/config/fx';
 import { TANK_ART, TANK_LIGHTS, type TankArt } from '@/config/tankView';
 import type { TankSpec } from '@/config/vehicles';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
@@ -33,9 +34,13 @@ export class TankLights {
     this.layer =
       layer ??
       scene.add.container(0, 0).setDepth(TANK_LIGHTS.depth).setBlendMode(Phaser.BlendModes.ADD);
-    this.bodyPart = scene.add.image(0, 0, TEXTURE.core).setScale(INV * this.art.coreScale);
+    this.bodyPart = scene.add
+      .image(0, 0, TEXTURE.core)
+      .setScale(INV * this.art.coreScale)
+      .setTint(this.art.glow);
     this.flash = scene.add
       .image(0, 0, TEXTURE.flash)
+      .setTint(SHOT_LOOK[spec.armament.weapon.style].glow)
       .setOrigin(0, 0.5)
       .setScale(INV * this.art.flashScale)
       .setVisible(false);

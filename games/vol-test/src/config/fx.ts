@@ -1,3 +1,29 @@
+import { PALETTE } from './palette';
+import type { WeaponStyle } from './tank';
+
+/**
+ * Silahın görünümü: mermi izi ve ağız parlaması rengi ile gövde çarpanları. Her silah kendi
+ * rengiyle okunur (kehribar kabuk, turuncu ağır mermi, buz mavisi ray, turkuaz plazma); böylece
+ * kimin ateş ettiği mermiden de anlaşılır. Çarpanlar `FX.shell` ölçülerine uygulanır.
+ */
+export interface ShotLook {
+  /** Dış hale ve parıltı rengi. */
+  readonly glow: number;
+  /** İz çekirdeği ve gövde rengi. */
+  readonly hot: number;
+  /** İz uzunluğu, iz/gövde eni ve hale yarıçapı çarpanları. */
+  readonly length: number;
+  readonly width: number;
+  readonly halo: number;
+}
+
+export const SHOT_LOOK: Readonly<Record<WeaponStyle, ShotLook>> = {
+  shell: { glow: 0xffb347, hot: 0xfff0cc, length: 1, width: 1, halo: 1 },
+  slug: { glow: 0xff6a2e, hot: 0xffe0c2, length: 0.75, width: 1.6, halo: 1.6 },
+  rail: { glow: 0x62d8ff, hot: 0xf2fdff, length: 2, width: 0.6, halo: 0.8 },
+  plasma: { glow: PALETTE.energy, hot: PALETTE.energyHot, length: 1.1, width: 1.15, halo: 1.25 },
+};
+
 /** Sunum efektlerinin ayarları; renkler `palette.ts`ten gelir. */
 export const FX = {
   aimGuide: {

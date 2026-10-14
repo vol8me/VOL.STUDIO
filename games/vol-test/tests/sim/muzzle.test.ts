@@ -77,6 +77,43 @@ describe('muzzlePose', () => {
   });
 });
 
+describe('nişan başlangıcı (pivot)', () => {
+  const twin: Armament = {
+    ...STRIKER.armament,
+    mounts: [
+      { x: 4, y: -30, reach: 20 },
+      { x: 4, y: 30, reach: 20 },
+    ],
+    pivot: { x: 4, y: 0 },
+    salvo: [[0], [1]],
+    toeInRange: 400,
+  };
+
+  it('nişan çizgisi pivottan başlar, taret yönündedir', () => {
+    const state = pose({ hull: 0.5, turret: 1.1 });
+    const pivot = pivotPose(state, twin, out());
+    expect(pivot.angle).toBe(1.1);
+    expect(pivot.x).toBeCloseTo(100 + 4 * Math.cos(0.5));
+    expect(pivot.y).toBeCloseTo(200 + 4 * Math.sin(0.5));
+  });
+
+  it('pivot varken 0. yuva dahil her yuva nişan noktasına bakar', () => {
+    const state = pose({ hull: 0, turret: 0 });
+    const left = mountPose(state, twin, 0, out());
+    const right = mountPose(state, twin, 1, out());
+    expect(left.angle).toBeGreaterThan(0);
+    expect(left.angle).toBeCloseTo(-right.angle, 12);
+    // Ayarlanan odak: iki ışın da pivotun 400 ileride kesişir.
+    const focusX = 100 + 4 + 400;
+    expect(left.x + Math.cos(left.angle) * ((focusX - left.x) / Math.cos(left.angle))).toBeCloseTo(
+      focusX,
+    );
+    expect(left.y + Math.sin(left.angle) * ((focusX - left.x) / Math.cos(left.angle))).toBeCloseTo(
+      200,
+    );
+  });
+});
+
 describe('yan yuvalar', () => {
   it('yuva konumu gövdeyle döner ve süspansiyon kaymasını taşır', () => {
     const state = pose({ hull: Math.PI / 2, pitch: 2, roll: 1 });

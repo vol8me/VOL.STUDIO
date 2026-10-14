@@ -13,7 +13,7 @@ export const WALKER_ART = {
    * Silah yuvası resminin ölçeği (plazma topu 80 px uzunlukta çizilmiştir). Ağız, yuva milinden
    * `CANNON_MUZZLE_PX` piksel ileridedir; `ARACHNID` yuvalarının `reach` değeri bunun ürünüdür.
    */
-  cannonScale: 0.567,
+  cannonScale: 0.4,
   /** Gölge ışığın tersine düşer; biçimi parçaların pozundan gelir (CORE `PoseShadow`). */
   shadow: { offsetX: 2.5, offsetY: 3.5, alpha: 0.22, depth: 9 },
   depth: 10,

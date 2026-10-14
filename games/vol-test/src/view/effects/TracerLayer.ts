@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
-import { FX } from '@/config/fx';
+import { FX, SHOT_LOOK } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
+import { WEAPON_STYLES } from '@/config/tank';
 import type { Projectiles } from '@/sim/combat/Projectiles';
 
 export type ShellVisitor = (
@@ -67,23 +68,24 @@ export class TracerLayer {
       const dy = projectile.vy / speed;
       // Menzil başında iz kısa: mermi namludan yeni çıktıysa iz tankın içine uzanmaz.
       const travelled = projectile.travelled;
-      const length = Math.min(shell.tracerLength, travelled + shell.headLength);
+      const look = SHOT_LOOK[WEAPON_STYLES[projectiles.styleOf(projectile)] ?? 'shell'];
+      const length = Math.min(shell.tracerLength * look.length, travelled + shell.headLength);
       for (let step = 0; step < TAPER_STEPS; step++) {
         const from = (length * step) / TAPER_STEPS;
         const to = (length * (step + 1)) / TAPER_STEPS;
         const fade = 1 - step / TAPER_STEPS;
-        graphics.lineStyle(HALO_WIDTH * fade, PALETTE.energy, 0.4 * fade);
+        graphics.lineStyle(HALO_WIDTH * look.width * fade, look.glow, 0.4 * fade);
         graphics.lineBetween(x - dx * from, y - dy * from, x - dx * to, y - dy * to);
-        graphics.lineStyle(CORE_WIDTH * fade, PALETTE.energyHot, 0.9 * fade);
+        graphics.lineStyle(CORE_WIDTH * look.width * fade, look.hot, 0.9 * fade);
         graphics.lineBetween(x - dx * from, y - dy * from, x - dx * to, y - dy * to);
       }
       if (this.glow) {
-        graphics.fillStyle(PALETTE.energy, 0.14);
-        graphics.fillCircle(x, y, HALO_OUTER);
-        graphics.fillStyle(PALETTE.energy, 0.26);
-        graphics.fillCircle(x, y, HALO_INNER);
+        graphics.fillStyle(look.glow, 0.14);
+        graphics.fillCircle(x, y, HALO_OUTER * look.halo);
+        graphics.fillStyle(look.glow, 0.26);
+        graphics.fillCircle(x, y, HALO_INNER * look.halo);
       }
-      graphics.lineStyle(shell.headWidth, PALETTE.energyHot, 1);
+      graphics.lineStyle(shell.headWidth * look.width, look.hot, 1);
       graphics.lineBetween(x - dx * shell.headLength, y - dy * shell.headLength, x, y);
       visit?.(x, y, dx, dy, travelled, speed);
     }

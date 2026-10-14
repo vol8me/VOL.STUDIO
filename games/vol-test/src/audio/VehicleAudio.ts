@@ -1,7 +1,7 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { LoopBlend } from '@volstudio/core/audio/sfx';
 import { angleDelta, clamp01, lerp } from '@volstudio/core/math';
-import { AUDIO } from '@/config/audio';
+import { AUDIO, type VehicleVoice } from '@/config/audio';
 import { GAME } from '@/config/game';
 import { chassisConfigOf, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
 import type { Chassis } from '@/sim/chassis/Chassis';
@@ -19,6 +19,7 @@ export class VehicleAudio {
   readonly ready: Promise<void>;
   /** Yük ölçeği: yürüyücüde yüzey kayması olmadığından yük hep sıfırdır. */
   private readonly driveSlip: number;
+  private readonly voice: VehicleVoice;
   private braking = false;
   private released = false;
 
@@ -28,6 +29,7 @@ export class VehicleAudio {
     private readonly spec: VehicleSpec = STRIKER,
   ) {
     this.driveSlip = spec.kind === 'tank' ? spec.tank.driveSlip : 1;
+    this.voice = AUDIO.vehicleVoice[spec.id];
     const loop = (name: string): LoopBlend =>
       this.scope.add(
         new LoopBlend(context, destination, [
@@ -79,13 +81,17 @@ export class VehicleAudio {
         chassisConfigOf(this.spec).turretTurnRate,
     );
     this.engine.setLevel(level);
-    this.engine.setPitch(lerp(AUDIO.engine.idleRpm, AUDIO.engine.maxRpm, level));
-    this.tracks.setRate(lerp(AUDIO.tracks.rateMin, AUDIO.tracks.rateMax, motion));
+    this.engine.setPitch(
+      lerp(AUDIO.engine.idleRpm, AUDIO.engine.maxRpm, level) * this.voice.engine,
+    );
+    this.tracks.setRate(
+      lerp(AUDIO.tracks.rateMin, AUDIO.tracks.rateMax, motion) * this.voice.tracks,
+    );
     this.skid.setRate(lerp(AUDIO.skid.rateMin, AUDIO.skid.rateMax, slide));
     this.servo.setRate(lerp(AUDIO.servo.rateMin, AUDIO.servo.rateMax, turning));
     const gains = [
       motion > AUDIO.engine.motionFloor || load > AUDIO.engine.motionFloor || tank.boosting
-        ? AUDIO.engine.gain
+        ? AUDIO.engine.gain * this.voice.engineGain
         : 0,
       AUDIO.tracks.gain * motion,
       AUDIO.skid.gain * slide,
