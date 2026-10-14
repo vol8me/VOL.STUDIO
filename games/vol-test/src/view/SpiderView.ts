@@ -140,7 +140,7 @@ export class SpiderView implements VehicleView {
     this.huntBurst(frame.boosting);
     this.footfalls(frame.speed, frame.hull);
     this.placeBody(pose);
-    this.placeCannons(frame, deltaMs);
+    this.placeCannons(frame, deltaMs, pose);
   }
 
   setPresent(present: boolean): void {
@@ -217,18 +217,22 @@ export class SpiderView implements VehicleView {
    * Topları yuvalarına yerleştirir. Konum ve açı `sim/muzzle` işlevlerindendir: görünüm kendi
    * geometrisini türetmez, yoksa çizilen namlu ile mermi çıkışı kayardı.
    */
-  private placeCannons(frame: TankFrame, deltaMs: number): void {
+  private placeCannons(frame: TankFrame, deltaMs: number, pose: SpiderPose): void {
+    const lift = pose.hipHeight - this.look.body.hipHeight;
+    const leanX = pose.leanX;
+    const leanY = pose.leanY + this.sag;
     const armament = this.spec.armament;
     const light = this.light;
     this.cannons.forEach((cannon, index) => {
       const mount = armament.mounts[index];
       cannon.advance(deltaMs);
       mountPose(frame, armament, index, this.mount);
-      const x = frame.pitch + mount.x;
-      const y = frame.roll + mount.y;
+      // Toplar göğüsle birlikte yaslanır ve çöker; yalnız ağız parlaması simülasyondaki gerçek çıkışta kalır.
+      const x = frame.pitch + mount.x + leanX;
+      const y = frame.roll + mount.y + leanY;
       const angle = this.mount.angle - frame.hull;
       cannon.root.setPosition(x, y).setRotation(angle);
-      cannon.shadowAt(x, y, angle, light.x, light.y);
+      cannon.shadowAt(x, y, angle, light.x, light.y, lift);
       muzzlePose(frame, armament, index, this.tip, mount.reach + cannon.recoilWorld);
       cannon.flashAt(deltaMs, this.tip.x, this.tip.y, this.tip.angle);
     });

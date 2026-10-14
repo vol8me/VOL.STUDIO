@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { poseSourceOf, PoseShadow, type PoseSourceNode } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
+import { LIGHT, TANK_SHADOW_HEIGHT } from '@/config/light';
 import { TANK_ART, type TankArt } from '@/config/tankView';
 import type { TankSpec } from '@/config/vehicles';
 import { TEXTURE_SCALE, tankTexture } from './textures';
@@ -13,7 +14,12 @@ export type { TankFrame } from './VehicleView';
 const INV = 1 / TEXTURE_SCALE;
 const FEELER_SPRING = { stiffness: 90, damping: 9 };
 /** Gölge ışığın tersine düşer; biçimi parçaların pozundan gelir (CORE `PoseShadow`). */
-const SHADOW = { offsetX: 3, offsetY: 5, alpha: 0.32, depth: 9 };
+const SHADOW = {
+  offsetX: LIGHT.x * TANK_SHADOW_HEIGHT,
+  offsetY: LIGHT.y * TANK_SHADOW_HEIGHT,
+  alpha: 0.32,
+  depth: 9,
+};
 
 /**
  * Organik-robotik tankın sahne karşılığı. Paletler (`TreadRig`) yerdedir.

@@ -1,4 +1,5 @@
 import type { SpringConfig } from '@volstudio/core/math';
+import { LIGHT } from '../light';
 import type { WalkerId } from '../vehicles';
 
 /** Bir parçanın SVG kutusu (dünya birimi) ve eklem merkezi; `assets/vehicles/<örümcek>/<parça>.svg` ile aynıdır. */
@@ -44,7 +45,7 @@ export const SPIDER_ART = {
   perspective: 0.0117,
   parallax: 0.0061,
   /** Işığın tersine düşen gölge kayması (yükseklik başına): güneş sol-üstten gelir. */
-  light: { x: 0.38, y: 0.5 },
+  light: LIGHT,
   /** Göğüs ve karın gölgesinin koyuluğu: tank gölgesine (0,32) yakın, bacak çizgisinden biraz koyu. */
   shadowAlpha: 0.36,
 } as const;

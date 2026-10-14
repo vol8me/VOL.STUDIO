@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Spring1D } from '@volstudio/core/math';
-import type { SpiderLook } from '@/config/spiders';
+import { SPIDER_ART, type SpiderLook } from '@/config/spiders';
 import { TEXTURE, TEXTURE_SCALE, addSpiderImage } from '../textures';
 
 const INV = 1 / TEXTURE_SCALE;
@@ -53,7 +53,7 @@ export class SpiderCannon {
     this.root = scene.add.container(0, 0, [this.barrels, this.housing, this.coil]);
 
     const dark = (image: Phaser.GameObjects.Image): Phaser.GameObjects.Image =>
-      image.setTint(0x000000).setAlpha(0.3);
+      image.setTint(0x000000).setAlpha(SPIDER_ART.shadowAlpha);
     this.housingShadow = dark(place(addSpiderImage(scene, look.id, 'cannon-housing'), housingBox));
     this.barrelShadow = dark(place(addSpiderImage(scene, look.id, 'cannon-barrels'), barrelBox));
     shadowLayer.add([this.barrelShadow, this.housingShadow]);
@@ -102,10 +102,11 @@ export class SpiderCannon {
 
   /**
    * Gölgeyi topun şu anki pozuna koyar. `x`/`y`/`angle` topun gövde-yerel konumu ve yönüdür; kayma
-   * ışığın gövde-yerel yönüdür (dünya birimi/yükseklik).
+   * ışığın gövde-yerel yönüdür (dünya birimi/yükseklik); `lift` gövdenin duruş yüksekliğindeki değişimidir
+   * (çömelince gölge gövdeyle birlikte yaklaşır).
    */
-  shadowAt(x: number, y: number, angle: number, lightX: number, lightY: number): void {
-    const height = this.look.cannon.height;
+  shadowAt(x: number, y: number, angle: number, lightX: number, lightY: number, lift = 0): void {
+    const height = this.look.cannon.height + lift;
     const px = x + lightX * height;
     const py = y + lightY * height;
     const cos = Math.cos(angle);

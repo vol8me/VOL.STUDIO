@@ -1,3 +1,5 @@
+import { LIGHT } from './light';
+
 /**
  * Enkaz: ölen ya da kırılan araçtan savrulan fiziksel parçalar. Parçalar havada yükseklik (`z`) taşır,
  * yere sekerek durur, bir süre kalır ve söner. Kalabalık olmasın diye tavan vardır (kalite profiliyle
@@ -21,7 +23,7 @@ export const DEBRIS = {
   hotMs: 520,
   hotTint: 0xffb25e,
   /** Işığın tersine düşen gölge kayması (yükseklik başına) ve perspektifle büyüme. */
-  light: { x: 0.38, y: 0.5 },
+  light: LIGHT,
   perspective: 0.0105,
   shadowAlpha: 0.3,
   /** Dünya kenarından bu kadar içeride parça sekip geri döner. */
