@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28.8" height="28.8" viewBox="0 0 28.8 28.8">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.5" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></linearGradient>
+    <linearGradient id="plateh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.45" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></linearGradient>
+    <radialGradient id="dome" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.5" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></radialGradient>
+    <radialGradient id="shell" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#f2b13c"/><stop offset="0.5" stop-color="#a8661a"/><stop offset="1" stop-color="#44270a"/></radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6"><stop offset="0" stop-color="#fff6df"/><stop offset="0.45" stop-color="#ffc54d"/><stop offset="1" stop-color="#6b3d0b"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a949e"/><stop offset="0.5" stop-color="#3b444d"/><stop offset="1" stop-color="#161b20"/></linearGradient>
+  </defs>
+  <g transform="scale(1.6 1.6)">
+
+  <g transform="translate(9 9)">
+    <path d="M-7 -6 L5 -6.8 L7.4 -4.4 L7.4 4.4 L5 6.8 L-7 6 Z" fill="url(#dome)" stroke="#0d1217" stroke-width=".95" stroke-linejoin="round"/>
+    <path d="M-6 -5L1.6 -5.6L1.6 5.6L-6 5Z" fill="url(#shell)" stroke="#2a1604" stroke-width=".5" stroke-linejoin="round"/>
+    <g stroke="#5b6670" stroke-width=".5"><path d="M-5 -4V4M-3.6 -4.2V4.2M-2.2 -4.4V4.4"/></g>
+    <path d="M3 -5.2H5.4M3 5.2H5.4" stroke="#cdd6df" stroke-opacity=".5" stroke-width=".5" stroke-linecap="round"/>
+    <rect x="4.4" y="-4.2" width="3.2" height="8.4" rx=".8" fill="url(#steel)" stroke="#0d1217" stroke-width=".6"/>
+    <rect x="5.6" y="-3.2" width="2.2" height="6.4" rx=".5" fill="#0b0f13"/>
+    <g fill="#ffc54d" stroke="#0d1217" stroke-width=".35"><circle cx="2.8" cy="-4.2" r=".95"/><circle cx="2.8" cy="4.2" r=".95"/></g>
+    <g fill="#b8c3cd"><circle cx="-5.4" cy="-5.2" r="0.42"/><circle cx="-5.4" cy="5.2" r="0.42"/></g>
+  </g>
+  </g>
+</svg>

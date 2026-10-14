@@ -11,13 +11,13 @@ describe('Simulation savaş yaşam döngüsü', () => {
     const enemy = sim.spawn(2400, 2048, 0);
     expect(sim.applyDamage(enemy.id, 40, sim.player.id)).toBe(40);
     expect(sim.healVehicle(enemy.id, 10, sim.player.id)).toBe(10);
-    expect(sim.applyDamage(enemy.id, 1000, sim.player.id)).toBe(70);
+    expect(sim.applyDamage(enemy.id, 1000, sim.player.id)).toBe(STRIKER.health - 30);
     expect(enemy.vitality.alive).toBe(false);
     expect(sim.healVehicle(enemy.id, 10)).toBe(0);
     expect(sim.applyDamage(enemy.id, 10)).toBe(0);
     const events = sim.drainEvents([]);
     expect(events.map((event) => event.kind)).toEqual(['damaged', 'healed', 'damaged', 'died']);
-    expect(events[2]).toMatchObject({ amount: 70, health: 0, cause: 'direct' });
+    expect(events[2]).toMatchObject({ amount: STRIKER.health - 30, health: 0, cause: 'direct' });
     const at = { x: enemy.chassis.x, y: enemy.chassis.y };
     for (let tick = 0; tick < 20; tick++)
       sim.step(
@@ -43,7 +43,7 @@ describe('Simulation savaş yaşam döngüsü', () => {
     expect(vehicle.chassis.vx).toBe(0);
     expect(vehicle.chassis.trackLeft).toBe(0);
     expect(vehicle.gun.isReady()).toBe(true);
-    expect(vehicle.vitality.health).toBe(COMBAT.maxHealth);
+    expect(vehicle.vitality.health).toBe(STRIKER.health);
     expect(vehicle.vitality.protectionRemainingMs).toBe(COMBAT.respawnProtectionMs);
     expect(sim.drainEvents([])).toContainEqual({
       kind: 'respawned',
@@ -73,7 +73,7 @@ describe('Simulation savaş yaşam döngüsü', () => {
     expect(target.chassis.trackRight).toBe(0);
     expect(target.chassis.suspension.pitch).toBe(0);
     expect(target.chassis.suspension.roll).toBe(0);
-    expect(target.vitality.health).toBe(COMBAT.maxHealth);
+    expect(target.vitality.health).toBe(STRIKER.health);
     expect(sim.applyDamage(target.id, 100)).toBe(0);
     expect(sim.respawnVehicle(target.id)).toBe(false);
     expect(sim.drainEvents([])).toContainEqual({
@@ -130,8 +130,8 @@ describe('Simulation savaş yaşam döngüsü', () => {
         STEP_MS,
       );
     }
-    expect(teammate.vitality.health).toBe(COMBAT.maxHealth);
-    expect(enemy.vitality.health).toBeLessThan(COMBAT.maxHealth);
+    expect(teammate.vitality.health).toBe(STRIKER.health);
+    expect(enemy.vitality.health).toBeLessThan(STRIKER.health);
     expect(sim.drainEvents([]).filter((event) => event.kind === 'hit')).toEqual([
       expect.objectContaining({ owner: shooter.id, target: enemy.id }),
     ]);

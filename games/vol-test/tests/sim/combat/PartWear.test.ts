@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { PARTS } from '@/config/parts';
-import { ARACHNID, BULWARK, DART, STRIKER, WIDOW, type VehicleSpec } from '@/config/vehicles';
+import {
+  ARACHNID,
+  TANK_IDS,
+  VEHICLES,
+  WALKER_IDS,
+  WIDOW,
+  STRIKER,
+  type TankSpec,
+  type VehicleSpec,
+  type WalkerSpec,
+} from '@/config/vehicles';
 import { LEGS_PER_SIDE, TRACK_LEFT, TRACK_RIGHT, legBit } from '@/sim/chassis/parts';
 import { Vehicle } from '@/sim/entities/Vehicle';
 
 const AT = { x: 2000, y: 2000 };
+/** Katalogdaki bütün tanklar ve yürüyücüler: yeni araç dayanım tablosuna kendiliğinden girer. */
+const TANKS: readonly TankSpec[] = TANK_IDS.map((id) => VEHICLES[id] as TankSpec);
+const WALKERS: readonly WalkerSpec[] = WALKER_IDS.map((id) => VEHICLES[id] as WalkerSpec);
 
 function build(spec: VehicleSpec, hull = 0): Vehicle {
   const vehicle = new Vehicle(1, spec);
@@ -124,7 +137,7 @@ describe('PartWear: dayanım tablosu (kaç isabette kırılır)', () => {
   const flank = 0.7;
 
   it('kenar isabetiyle her tankın yan paleti 1-3 isabette kırılır; yan gelen isabetle daha geç', () => {
-    for (const spec of [STRIKER, BULWARK, DART]) {
+    for (const spec of TANKS) {
       const edge = hitsToBreak(spec, 0, critical);
       const side = hitsToBreak(spec, 0, flank);
       expect(edge, spec.id).toBeGreaterThanOrEqual(1);
@@ -135,18 +148,18 @@ describe('PartWear: dayanım tablosu (kaç isabette kırılır)', () => {
   });
 
   it('palet, aracın ölmesinden ÖNCE kırılır (kırılmadan ölüm olmaz)', () => {
-    for (const spec of [STRIKER, BULWARK, DART]) {
+    for (const spec of TANKS) {
       const killHits = Math.ceil(spec.health / spec.armament.weapon.damage);
       expect(hitsToBreak(spec, 0, critical), spec.id).toBeLessThan(killHits);
     }
   });
 
   it('orta hat isabeti hiçbir tank parçasını kırmaz', () => {
-    for (const spec of [STRIKER, BULWARK, DART]) expect(hitsToBreak(spec, 0, 0)).toBe(Infinity);
+    for (const spec of TANKS) expect(hitsToBreak(spec, 0, 0)).toBe(Infinity);
   });
 
   it('yürüyücünün yandan vurulan bacağı birkaç isabette kopar, ölümden önce', () => {
-    for (const spec of [ARACHNID, WIDOW]) {
+    for (const spec of WALKERS) {
       const hits = hitsToBreak(spec, frontStation(spec), critical);
       const killHits = Math.ceil(spec.health / spec.armament.weapon.damage);
       expect(hits, spec.id).toBeGreaterThanOrEqual(2);

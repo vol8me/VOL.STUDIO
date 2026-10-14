@@ -33,9 +33,9 @@ export class BotDirector {
   ) {
     this.random = createStatefulRandom(seed);
     this.roster = new WeightedPicker(
-      VEHICLE_IDS.map((id, index) => ({
+      VEHICLE_IDS.map((id) => ({
         value: VEHICLES[id],
-        weight: WAR.population.roster[index] ?? 0,
+        weight: WAR.population.roster[id],
       })),
     );
     // Takma adlar tohumla karıştırılır: aynı tohum aynı sırayı, farklı tohum başka sırayı verir.

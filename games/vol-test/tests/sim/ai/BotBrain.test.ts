@@ -379,7 +379,7 @@ describe('BotBrain taktik', () => {
 
   it('menzil üstünlüğü olan bot düşmanın menzilinin dışından vurur', () => {
     const long = DART;
-    const short = BULWARK;
+    const short = ARACHNID;
     expect(rangeOf(long)).toBeGreaterThan(rangeOf(short) * BOT.tactics.kiteRangeRatio);
     const sim = arena();
     const sniper = addBot(sim, long, 2000, 2000, 0, 47, 1);
@@ -399,7 +399,7 @@ describe('BotBrain taktik', () => {
 
   it('menzili kısa bot düşmanın içine girer', () => {
     const sim = arena();
-    const brawler = addBot(sim, BULWARK, 2000, 2000, 0, 49, 1);
+    const brawler = addBot(sim, ARACHNID, 2000, 2000, 0, 49, 1);
     const target = addBot(sim, DART, 2000 + 700, 2000, 1, 50);
     let sum = 0;
     let count = 0;
@@ -410,7 +410,7 @@ describe('BotBrain taktik', () => {
       sum += gap(brawler.vehicle, target.vehicle);
       count++;
     });
-    expect(sum / count).toBeLessThan(rangeOf(BULWARK) * 0.7);
+    expect(sum / count).toBeLessThan(rangeOf(ARACHNID) * 0.7);
   });
 
   describe('sayısal üstünlük', () => {

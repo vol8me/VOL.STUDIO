@@ -82,7 +82,7 @@ export const FX = {
     depth: 2,
   },
   /** Örümcek ayak izi: yere basan pençenin bıraktığı küçük çukur; yoğunluğu ve ömrü palet izinden kısadır. */
-  feet: { capacity: 700, lifeMs: 9000, holdShare: 0.35, alpha: 0.34, depth: 2, refHalfWidth: 19 },
+  feet: { capacity: 700, lifeMs: 9000, holdShare: 0.35, alpha: 0.34, depth: 2, refHalfWidth: 22 },
   /** Ekran dışındaki araçların izi/lekesi bırakılmaz; görünen dikdörtgen bu pay kadar genişletilir (birim). */
   cullMargin: 700,
   /** Kayma izi: kayan paletin temas noktasının yerde bıraktığı sürekli çizgi. */

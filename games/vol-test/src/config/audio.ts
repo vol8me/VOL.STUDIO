@@ -62,6 +62,7 @@ export const AUDIO = {
     dart: { engine: 1.38, engineGain: 0.85, tracks: 1.3 },
     arachnid: { engine: 0.88, engineGain: 0.7, tracks: 0.9 },
     widow: { engine: 1.2, engineGain: 0.55, tracks: 1.3 },
+    goliath: { engine: 0.5, engineGain: 1.1, tracks: 0.6 },
   } satisfies Record<VehicleId, VehicleVoice>,
   /**
    * Kabuk referanstır; ağır mermi gümbürder. Ray, plazma ve iğnenin kendi atış teslimi vardır (`shotAsset`),

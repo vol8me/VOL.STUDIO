@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { VEHICLE_IDS, VEHICLES, type VehicleSpec } from '@/config/vehicles';
+import { TANK_IDS, VEHICLE_IDS, VEHICLES, type VehicleSpec } from '@/config/vehicles';
 import { rawStats, vehicleStats } from '@/menu/vehicleStats';
 
 describe('vehicleStats', () => {
@@ -14,8 +14,11 @@ describe('vehicleStats', () => {
     }
   });
 
-  it('araç kimliği karakterini yansıtır: Bulwark en dayanıklı, Dart en hızlı', () => {
-    expect(vehicleStats('bulwark').durability).toBe(1);
+  it('araç kimliği karakterini yansıtır: Goliath en dayanıklı (tanklarda Bulwark), Dart en hızlı', () => {
+    expect(vehicleStats('goliath').durability).toBe(1);
+    for (const id of TANK_IDS.filter((tank) => tank !== 'bulwark'))
+      expect(vehicleStats('bulwark').durability).toBeGreaterThan(vehicleStats(id).durability);
+    expect(vehicleStats('goliath').speed).toBeLessThan(vehicleStats('bulwark').speed);
     expect(vehicleStats('dart').speed).toBe(1);
     expect(vehicleStats('dart').durability).toBeLessThan(vehicleStats('striker').durability);
     expect(vehicleStats('bulwark').speed).toBeLessThan(vehicleStats('striker').speed);

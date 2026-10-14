@@ -73,7 +73,7 @@ const SHARED_PARTS: ReadonlyArray<readonly [string, string]> = [
 ];
 
 /** Örümceklerin el çizimi SVG parçaları: `assets/vehicles/<araç>/<parça>.svg`. */
-const SPIDER_PART_URLS = import.meta.glob('../assets/vehicles/{arachnid,widow}/*.svg', {
+const SPIDER_PART_URLS = import.meta.glob('../assets/vehicles/{arachnid,widow,goliath}/*.svg', {
   query: '?url',
   import: 'default',
   eager: true,

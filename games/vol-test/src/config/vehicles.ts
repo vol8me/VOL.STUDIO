@@ -13,11 +13,18 @@ export const TANK_IDS = ['striker', 'bulwark', 'dart'] as const;
 export type TankId = (typeof TANK_IDS)[number];
 
 /** Bacaklı yürüyücüler. */
-export const WALKER_IDS = ['arachnid', 'widow'] as const;
+export const WALKER_IDS = ['arachnid', 'widow', 'goliath'] as const;
 export type WalkerId = (typeof WALKER_IDS)[number];
 
 /** Seçilebilir araçlar; sıra ağ protokolündeki `model` indeksidir, sona eklenir ve yeniden sıralanmaz. */
-export const VEHICLE_IDS = [...TANK_IDS, ...WALKER_IDS] as const;
+export const VEHICLE_IDS = [
+  'striker',
+  'bulwark',
+  'dart',
+  'arachnid',
+  'widow',
+  'goliath',
+] as const satisfies readonly [...typeof TANK_IDS, ...typeof WALKER_IDS];
 export type VehicleId = (typeof VEHICLE_IDS)[number];
 
 /** Bir aracın en çok taşıyabileceği namlu: atış arabellekleri ve ağ paketi bu tavana göre boyanır. */
@@ -91,7 +98,7 @@ export function topSpeedOf(spec: VehicleSpec): number {
 export const STRIKER: TankSpec = {
   kind: 'tank',
   id: 'striker',
-  health: 100,
+  health: 130,
   tank: TANK,
   suspension: SUSPENSION,
   armament: {
@@ -109,7 +116,7 @@ export const STRIKER: TankSpec = {
 export const BULWARK: TankSpec = {
   kind: 'tank',
   id: 'bulwark',
-  health: 170,
+  health: 175,
   tank: {
     ...TANK,
     mass: 2400,
@@ -137,7 +144,7 @@ export const BULWARK: TankSpec = {
     wallRestitution: 0.2,
     impactEventSpeed: 30,
     impactKick: 0.08,
-    turretTurnRate: 2.2,
+    turretTurnRate: 3.2,
   },
   suspension: {
     ...SUSPENSION,
@@ -151,9 +158,9 @@ export const BULWARK: TankSpec = {
     weapon: {
       intervalMs: 1250,
       aimTolerance: 0.03,
-      projectileSpeed: 760,
+      projectileSpeed: 860,
       projectileLifeMs: 1500,
-      flight: { muzzleHeight: 28, launchSpeed: 110, gravity: 314, drag: 0.4, maxRange: 520 },
+      flight: { muzzleHeight: 28, launchSpeed: 110, gravity: 314, drag: 0.4, maxRange: 620 },
       recoilImpulse: 150000,
       hitImpulse: 170000,
       recoilKick: 60,
@@ -173,7 +180,7 @@ export const BULWARK: TankSpec = {
 export const DART: TankSpec = {
   kind: 'tank',
   id: 'dart',
-  health: 64,
+  health: 90,
   tank: {
     ...TANK,
     mass: 650,
@@ -212,15 +219,15 @@ export const DART: TankSpec = {
   },
   armament: {
     weapon: {
-      intervalMs: 360,
+      intervalMs: 380,
       aimTolerance: 0.02,
       projectileSpeed: 1300,
       projectileLifeMs: 1000,
-      flight: { muzzleHeight: 20, launchSpeed: 60, gravity: 314, drag: 0.2, maxRange: 760 },
+      flight: { muzzleHeight: 20, launchSpeed: 60, gravity: 314, drag: 0.2, maxRange: 680 },
       recoilImpulse: 11000,
       hitImpulse: 22000,
       recoilKick: 22,
-      damage: 16,
+      damage: 22,
       style: 'rail',
     },
     mounts: [{ x: 0, y: 0, reach: 38 }],
@@ -238,8 +245,8 @@ export const DART: TankSpec = {
 export const ARACHNID: WalkerSpec = {
   kind: 'walker',
   id: 'arachnid',
-  health: 140,
-  walker: WALKER,
+  health: 108,
+  walker: { ...WALKER, maxSpeed: 162 },
   suspension: {
     ...SUSPENSION,
     frequency: 3.2,
@@ -254,13 +261,13 @@ export const ARACHNID: WalkerSpec = {
       // İki top sırayla ateşler: her top 940 ms'de bir atar, birleşik tempo 470 ms.
       intervalMs: 470,
       aimTolerance: 0.045,
-      projectileSpeed: 700,
+      projectileSpeed: 820,
       projectileLifeMs: 1400,
       flight: { muzzleHeight: 26, launchSpeed: 80, gravity: 314, drag: 0.3, maxRange: 560 },
       recoilImpulse: 24000,
       hitImpulse: 52000,
       recoilKick: 26,
-      damage: 24,
+      damage: 21,
       style: 'plasma',
     },
     mounts: [
@@ -282,14 +289,14 @@ export const ARACHNID: WalkerSpec = {
 export const WIDOW: WalkerSpec = {
   kind: 'walker',
   id: 'widow',
-  health: 96,
+  health: 92,
   walker: {
     ...WALKER,
     mass: 1250,
     halfLength: 38,
     halfWidth: 19,
     trackOffset: 15,
-    maxSpeed: 172,
+    maxSpeed: 160,
     acceleration: 1500,
     braking: 1900,
     dashMultiplier: 2.1,
@@ -321,11 +328,11 @@ export const WIDOW: WalkerSpec = {
       aimTolerance: 0.02,
       projectileSpeed: 1250,
       projectileLifeMs: 900,
-      flight: { muzzleHeight: 24, launchSpeed: 70, gravity: 314, drag: 0.15, maxRange: 700 },
+      flight: { muzzleHeight: 24, launchSpeed: 70, gravity: 314, drag: 0.15, maxRange: 600 },
       recoilImpulse: 5500,
       hitImpulse: 12000,
       recoilKick: 12,
-      damage: 9,
+      damage: 8,
       style: 'needle',
     },
     mounts: [
@@ -338,12 +345,78 @@ export const WIDOW: WalkerSpec = {
   },
 };
 
+/**
+ * Goliath: devasa kuşatma yürüyücüsü. Arachnid'in ~1,9 katı boyda, ağır ve yavaştır; yürüyüşü ve dönüşü
+ * ağır, atılışı kısadır. Kalın zırhı çok can taşır ve bacakları ancak uzun, yandan ya da sürekli ateşle
+ * kopar. İki ağır plazma havanı yavaş ve dolu mermi atar: tek isabeti sert, tempo düşük, mermisi yavaştır,
+ * bu yüzden hızlı hedefi kaçırır. Çevik tanklar (Dart, Striker) ve yürüyücüler onu yan ve arkadan oyalar.
+ */
+export const GOLIATH: WalkerSpec = {
+  kind: 'walker',
+  id: 'goliath',
+  health: 360,
+  walker: {
+    ...WALKER,
+    mass: 9200,
+    halfLength: 46,
+    halfWidth: 40,
+    trackOffset: 25,
+    maxSpeed: 86,
+    acceleration: 520,
+    braking: 820,
+    dashMultiplier: 1.7,
+    dashAcceleration: 1500,
+    maxTurnRate: 1.5,
+    turnAcceleration: 7,
+    steerGain: 3,
+    boostCapacity: 110,
+    boostDrain: 190,
+    boostRegen: 24,
+    boostRestart: 100,
+    wallRestitution: 0.16,
+    impactKick: 0.03,
+    turretTurnRate: 3.4,
+  },
+  suspension: {
+    ...SUSPENSION,
+    frequency: 2.6,
+    damping: 0.62,
+    pitchPerAccel: 0.003,
+    rollPerAccel: 0.003,
+    maxOffset: 1.6,
+    roughness: 0.12,
+  },
+  armament: {
+    weapon: {
+      // İki havan sırayla ateşler: her biri 1520 ms'de bir atar, birleşik tempo 760 ms.
+      intervalMs: 760,
+      aimTolerance: 0.05,
+      projectileSpeed: 640,
+      projectileLifeMs: 1500,
+      flight: { muzzleHeight: 40, launchSpeed: 60, gravity: 314, drag: 0.35, maxRange: 540 },
+      recoilImpulse: 90000,
+      hitImpulse: 110000,
+      recoilKick: 38,
+      damage: 38,
+      style: 'plasma',
+    },
+    mounts: [
+      { x: 44, y: -22, reach: 37 },
+      { x: 44, y: 22, reach: 37 },
+    ],
+    pivot: { x: 44, y: 0 },
+    salvo: [[0], [1]],
+    toeInRange: 520,
+  },
+};
+
 export const VEHICLES: Readonly<Record<VehicleId, VehicleSpec>> = {
   striker: STRIKER,
   bulwark: BULWARK,
   dart: DART,
   arachnid: ARACHNID,
   widow: WIDOW,
+  goliath: GOLIATH,
 };
 
 export function isVehicleId(value: unknown): value is VehicleId {

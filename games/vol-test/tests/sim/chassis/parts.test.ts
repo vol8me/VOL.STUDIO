@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PARTS } from '@/config/parts';
 import { SPIDER_LOOKS } from '@/config/spiders';
-import { ARACHNID, STRIKER } from '@/config/vehicles';
+import { ARACHNID, STRIKER, WALKER_IDS } from '@/config/vehicles';
 import {
   LEGS_PER_SIDE,
   TRACK_LEFT,
@@ -40,7 +40,7 @@ describe('parça bit maskesi', () => {
   });
 
   it('bacak istasyonları görünümün kalça konumlarıyla aynıdır (sunum ve fizik aynı bacağı kırar)', () => {
-    for (const id of ['arachnid', 'widow'] as const) {
+    for (const id of WALKER_IDS) {
       const hips = SPIDER_LOOKS[id].hips.map((hip) => hip.x);
       expect([...PARTS.walker.stations[id]], id).toEqual(hips);
     }

@@ -48,6 +48,10 @@
       "widow": {
         "name": "Widow",
         "class": "YÜRÜYÜCÜ"
+      },
+      "goliath": {
+        "name": "Goliath",
+        "class": "DEV YÜRÜYÜCÜ"
       }
     }
   },

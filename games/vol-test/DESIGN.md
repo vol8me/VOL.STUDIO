@@ -105,18 +105,31 @@ Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, c
 indeksidir; araç eklenirse sona eklenir, yeniden sıralanmaz. `Vehicle` tanımdan şasi,
 silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca değil tanıma bakar.
 
-| Araç     | Rol                      | Can | Hız | Dönüş | Atış                                |
-| -------- | ------------------------ | --- | --- | ----- | ----------------------------------- |
-| Striker  | Dengeli ana tank         | 100 | 230 | 3,0   | 34 hasar, 650 ms, kabuk             |
-| Bulwark  | Ağır kuşatma tankı       | 170 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi       |
-| Dart     | Hafif, hızlı keşif tankı | 64  | 330 | 4,4   | 16 hasar, 360 ms, uzun menzilli ray |
-| Arachnid | Bacaklı savaş canavarı   | 140 | 150 | 2,7   | 24 hasar, 470 ms, iki plazma topu   |
-| Widow    | Bacaklı keskin nişancı   | 96  | 172 | 3,4   | 9 hasar, 230 ms, iki iğne atıcı     |
+| Araç     | Rol                       | Can | Hız | Dönüş | Atış                                |
+| -------- | ------------------------- | --- | --- | ----- | ----------------------------------- |
+| Striker  | Dengeli ana tank          | 130 | 230 | 3,0   | 36 hasar, 650 ms, kabuk             |
+| Bulwark  | Ağır kuşatma tankı        | 175 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi       |
+| Dart     | Hafif, hızlı keşif tankı  | 90  | 330 | 4,4   | 22 hasar, 380 ms, uzun menzilli ray |
+| Arachnid | Bacaklı savaş canavarı    | 108 | 162 | 2,7   | 21 hasar, 470 ms, iki plazma topu   |
+| Widow    | Bacaklı keskin nişancı    | 92  | 160 | 3,4   | 8 hasar, 230 ms, iki iğne atıcı     |
+| Goliath  | Devasa kuşatma yürüyücüsü | 360 | 86  | 1,5   | 38 hasar, 760 ms, iki ağır havan    |
 
-Tablo `src/config/vehicles.ts` değerlerinin özetidir; saniyelik hasar araçlar arasında %35'ten
-az ayrışır ve karakter farkı hızlanmadan, dönüşten, frenden ve geri tepmeden gelir
-(`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler). Aracı oyuncu katılırken
-`model` seçeneğiyle seçer; sunucu tanımsız indeksi protokol ihlali sayıp reddeder.
+Tablo `src/config/vehicles.ts` değerlerinin özetidir; karakter farkı hızlanmadan, dönüşten,
+frenden ve geri tepmeden gelir (`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler).
+Aracı oyuncu katılırken `model` seçeneğiyle seçer; sunucu tanımsız indeksi protokol ihlali sayıp
+reddeder.
+
+**Denge** anma sayılarla değil düellolarla ölçülür: her araç çifti açık alanda, usta (`skill 0,75`)
+iki botla iki yönde birçok tohumla dövüşür (`tests/sim/balance.test.ts`, bot yapay zekâsı tankın
+da örümceğin de menzilini ve hızını kullanır). Anma hasarı/s Widow'da düşüktür (isabet, menzil ve
+hızla öder), Goliath'ta canla ve ağır mermiyle öder; bu yüzden anma hasarı yalnız %70 aralıkla
+sınırlıdır. 60 tohumluk son ölçümde her aracın kataloğa karşı toplam galibiyet payı %46-53'tür
+(Striker 46, Bulwark 53, Dart 51, Arachnid 49, Widow 49, Goliath 52); test bu payı %30-70 bandında
+tutar. Karşıtlıklar bilinçlidir ve hiçbiri mutlak değildir: Widow menzilden Arachnid'i ve Goliath'ı yener,
+Bulwark'ın ağır mermisine ve Dart'ın hızına yenilir; Goliath Striker'ı ve Bulwark'ı ezer, Dart ve Widow
+onu çevikliğiyle oyalar; Bulwark Widow'u ve Dart'ı yener, Arachnid ona baskındır; Striker Dart'ı ezer.
+Bu ölçüm botlarla yapılır: insan beğenisi ve el becerisi yerine geçmez, ve sayıların insan
+oyunuyla doğrulanması ayrı iştir.
 
 Araçlar tek bakışta ve kulakla ayrışır; kimlik üç yerden gelir ve tek tabloda tanımlıdır.
 Renk: her tankın gövde ve taret SVG'si kendi paletini taşır (Striker çelik mavisi ve bordo kabuk,
@@ -147,9 +160,9 @@ adımın en sert duvar teması korunur) ve silah beklemesini aynı çarpanla kı
 can değişmez, bu yüzden araçlar arası denge korunur. Yalnız çevrimdışı dünyadadır; sunucu dünyası
 1'de kalır.
 
-### Bacaklı yürüyücüler: Arachnid ve Widow
+### Bacaklı yürüyücüler: Arachnid, Widow ve Goliath
 
-İkisi de paletli değil bacaklıdır (`WalkerSpec`, `src/sim/walker/Walker.ts`): her yöne (yan, geri)
+Üçü de paletli değil bacaklıdır (`WalkerSpec`, `src/sim/walker/Walker.ts`): her yöne (yan, geri)
 aynı çevikliğiyle yürür; gövdesi WASD yönüne döner (nişan yalnız silah yuvalarını sürer, tank gibi
 nişana bakmaz) ve yürüyüş tavanı gövdenin hedefe dönüklüğüyle ölçeklenir (`turnSpeedFloor`: ters
 dönükken yarıya iner), bu yüzden önce döner sonra açılır. Shift hızlanması yoktur; Space kilitli bir
@@ -161,8 +174,10 @@ verir (`dashLungePx`), kalça çöker ve gövde ön bacaklara yüklenir (`dashLe
 (`dashTriggerCut`/`dashDurationCut`/`dashStrainCut`; çekirdek `LegGait.setStepTuning` acil eşiği de canlı
 değiştirir), atılışın başında ayakların altından toz patlar ve gövdenin siluetinden soluk hayaletler
 (CORE `GhostTrail`, `SpiderLook.ghost`: gövde ve bacakların o anki gerçek pozu, en çok `count` kopya) dünyada kalıp söner. Atılış hızında ayak kemik erişimini bir-iki
-kare aşabilir; çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır kavgacıdır (150 birim/s, 140 can, zırhlı tarantula); Widow
-hafif keskin nişancıdır (172 birim/s, 96 can, ince ve uzun bacaklı kara dul). Hız tavanları
+kare aşabilir; çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır kavgacıdır (162 birim/s, 108 can, zırhlı tarantula); Widow
+hafif keskin nişancıdır (160 birim/s, 92 can, ince ve uzun bacaklı kara dul); Goliath devasa ve yavaştır
+(86 birim/s, 360 can, Arachnid'in ~1,9 katı boyda): adımları ağır basar, gövdesi geç yaslanır, atılışı
+kısadır ve bacakları ancak uzun ya da sürekli ateşle kopar. Hız tavanları
 bilerek düşüktür: bacak yürüyüşü tavan hızda ayakları kemik erişiminde tutar ve bunu
 `tests/view/spider/SpiderLegs.test.ts` ile `tests/config/spiders.test.ts` kilitler. Yürüyüş döngüsü
 sunumdur (ayaklar yüzeye basıldığı yerde kalır); yalnız KIRIK bacaklar fizikte ve ağ durumundadır
@@ -175,8 +190,11 @@ koyu kenar, sol-üstten aydınlanan üç duraklı degrade, kabuk panelleri, merc
 (palpler) ve halkalı namlu ile oluklu ağız freni kullanılır. Silüet ve renk ise ayrıdır. Arachnid:
 geniş zırhlı kabuk, kısa kalın dikenli bacaklar, sıcak bronz gövde ve kızıl kabuk, tek mercek, kabuğun
 ön omuzlarında iki plazma topu. Widow: dar kabuk, iri yumurta karın ve kum saati, uzun ve yüksek
-bacaklar, obsidyen gövde ve zehir yeşili, dört göz, ön omuzlarda iki iğne atıcı. Parçalar
-`src/assets/vehicles/arachnid/` ile `src/assets/vehicles/widow/` altındadır (femur, tibia, pençe, diz, temas karartısı,
+bacaklar, obsidyen gövde ve zehir yeşili, dört göz, ön omuzlarda iki iğne atıcı. Goliath: Arachnid'in
+kabuk dilini büyütür (kurşun gri levha, kehribar damar ve mercek, omuzlarda ek zırh levhaları, iki ağır
+plazma havanı). Parçalar Arachnid çiziminden `scale` grubuyla ölçeklenip yeniden boyanmıştır;
+boyut ve eklem merkezleri `GOLIATH_LOOK` ile birebir aynıdır. Parçalar
+`src/assets/vehicles/arachnid/`, `src/assets/vehicles/widow/` ve `src/assets/vehicles/goliath/` altındadır (femur, tibia, pençe, diz, temas karartısı,
 göğüs, karın, iki gölge, top yuvası, namlu demeti); pen export kullanılmaz. Ölçüler ve eklem
 merkezleri `SPIDER_LOOKS` (`src/config/spiders/`) içindedir ve `tests/assets/spiders.test.ts` SVG
 kutularıyla birebir eşitliğini kilitler.
@@ -189,7 +207,7 @@ kemiktir (`solveLeg`): havadaki ayak kalkarken diz yükselir ve büyür, basıl�
 Yükseklik üç şeye dönüşür: parçanın perspektifle büyümesi, konumun gövde merkezinden dışarı itilmesi
 ve yere düşen gölgenin yükseklikle orantılı kayması.
 
-Görünüm (`src/view/SpiderView.ts`) iki araç için aynı sınıftır; fark `SpiderLook`tadır (kalça
+Görünüm (`src/view/SpiderView.ts`) üç araç için aynı sınıftır; fark `SpiderLook`tadır (kalça
 yerleşimi, kemik boyu, yürüyüş, hareket, top). Ayaklar dünyada sabitlenir ve gövde ilerledikçe
 dönüşümlü dört-ayaklı adım atar (`LegGait`: bir yanın 1. ve 3., ötekinin 2. ve 4. bacağı birlikte
 kalkar). Yerinde yavaş dönüşte grup üyelerinin eşik anları adım süresinden sık dizilir ve sıra el
@@ -203,7 +221,7 @@ kayar, yuva sarsılır, ısınma ışığı yanıp söner ve ağız parlaması g
 ucunda açılır (`SpiderCannon`). Plazma topu kalın ve halkalıdır, kızıl hortumlu, oluklu ağız frenli;
 iğne atıcı ince ve uzun, zehir bobinli ve iğne uçludur. İki top gövde eksenindeki odağa bakar ve
 sırayla ateşler: Arachnid'in her topu 940 ms'de bir atar (birleşik tempo 470 ms), Widow'un her atıcısı
-460 ms'de bir (birleşik 230 ms). Yuvanın `reach` değeri çizimdeki ağız mesafesidir
+460 ms'de bir (birleşik 230 ms), Goliath'ın her havanı 1520 ms'de bir (birleşik 760 ms). Yuvanın `reach` değeri çizimdeki ağız mesafesidir
 (`SpiderLook.cannon.muzzleX`); mermi, geri tepme ve ağız parlaması oyunun efekt katmanındandır.
 
 Bütün örümcek parçaları açılışta TEK doku atlasına çizilir (`spider-atlas`): bir karede 14'ten fazla

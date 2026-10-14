@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40.0" height="24.0" viewBox="0 0 40.0 24.0">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.5" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></linearGradient>
+    <linearGradient id="plateh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.45" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></linearGradient>
+    <radialGradient id="dome" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#9ba3ac"/><stop offset="0.5" stop-color="#465059"/><stop offset="1" stop-color="#1a2026"/></radialGradient>
+    <radialGradient id="shell" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#f2b13c"/><stop offset="0.5" stop-color="#a8661a"/><stop offset="1" stop-color="#44270a"/></radialGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6"><stop offset="0" stop-color="#fff6df"/><stop offset="0.45" stop-color="#ffc54d"/><stop offset="1" stop-color="#6b3d0b"/></radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a949e"/><stop offset="0.5" stop-color="#3b444d"/><stop offset="1" stop-color="#161b20"/></linearGradient>
+    <linearGradient id="heat" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffc54d" stop-opacity="0"/><stop offset="1" stop-color="#ffc54d" stop-opacity=".85"/></linearGradient>
+  </defs>
+  <g transform="scale(1.6 1.6)">
+
+  <g transform="translate(0 7.5)">
+    <g fill="none" stroke-linecap="round">
+      <path d="M3 -4.6C8 -6.6 12 -3.6 18 -5" stroke="#44270a" stroke-width="2.4"/><path d="M3 -4.6C8 -6.6 12 -3.6 18 -5" stroke="#f0a62e" stroke-width="1.3"/>
+      <path d="M3 4.6C8 6.6 12 3.6 18 5" stroke="#44270a" stroke-width="2.4"/><path d="M3 4.6C8 6.6 12 3.6 18 5" stroke="#f0a62e" stroke-width="1.3"/>
+    </g>
+    <rect x="0" y="-3.2" width="16" height="6.4" rx="1" fill="url(#steel)" stroke="#0d1217" stroke-width=".8"/>
+    <rect x="8.4" y="-3" width="6.4" height="6" fill="url(#heat)" opacity=".55"/>
+    <rect x="5.6" y="-4.7" width="2.2" height="9.4" rx=".6" fill="#262d33" stroke="#0d1217" stroke-width=".5"/>
+    <rect x="11.6" y="-4.7" width="1.8" height="9.4" rx=".5" fill="#262d33" stroke="#0d1217" stroke-width=".45"/>
+    <path d="M15 -5.5H21.6L23.4 -3.7V3.7L21.6 5.5H15Z" fill="#262d33" stroke="#0d1217" stroke-width=".8" stroke-linejoin="round"/>
+    <path d="M17 -4.6v2.2M19 -4.6v2.2M17 4.6v-2.2M19 4.6v-2.2" stroke="#0b0f13" stroke-width=".9"/>
+    <path d="M22.4 -2.8v5.6" stroke="#ffc54d" stroke-opacity=".75" stroke-width=".7" stroke-linecap="round"/>
+  </g>
+  </g>
+</svg>

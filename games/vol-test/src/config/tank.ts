@@ -180,6 +180,6 @@ export const WEAPON: WeaponConfig = {
   recoilImpulse: 42000,
   hitImpulse: 60000,
   recoilKick: 34,
-  damage: 34,
+  damage: 36,
   style: 'shell',
 };

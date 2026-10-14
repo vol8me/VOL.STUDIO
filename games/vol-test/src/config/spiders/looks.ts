@@ -1,5 +1,6 @@
 import type { WalkerId } from '../vehicles';
 import { ARACHNID_LOOK } from './arachnid';
+import { GOLIATH_LOOK } from './goliath';
 import type { SpiderLook } from './types';
 import { WIDOW_LOOK } from './widow';
 
@@ -7,4 +8,5 @@ import { WIDOW_LOOK } from './widow';
 export const SPIDER_LOOKS: Readonly<Record<WalkerId, SpiderLook>> = {
   arachnid: ARACHNID_LOOK,
   widow: WIDOW_LOOK,
+  goliath: GOLIATH_LOOK,
 };

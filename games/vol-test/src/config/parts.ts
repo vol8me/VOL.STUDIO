@@ -1,3 +1,5 @@
+import type { WalkerId } from './vehicles';
+
 /**
  * Parça hasarı: palet ve bacak dayanımı, aşınmanın sönümü, onarım ve kırık parçanın sürüşe etkisi.
  * Sayılar oynanıştır; bölge mantığı `sim/combat/PartWear.ts`, sürüş etkisi `Tank` ve `Walker`dadır.
@@ -39,7 +41,11 @@ export const PARTS = {
     /** Darbe iki bacak arasına düşünce ikisi de aşınır: yayılma, istasyon aralığının oranıdır. */
     spread: 0.62,
     /** Bacak istasyonlarının gövde boyunca konumu (önden arkaya, dünya birimi): `SpiderLook.hips` x'i ile aynı. */
-    stations: { arachnid: [20, 11, 2, -5], widow: [28, 21, 14, 10] },
+    stations: {
+      arachnid: [20, 11, 2, -5],
+      widow: [28, 21, 14, 10],
+      goliath: [38, 20.9, 3.8, -9.5],
+    } satisfies Record<WalkerId, readonly number[]>,
     /** Her kaybedilen bacak azami hızı ve ivmeyi bu oranda keser; taban çevik kalan alt sınırdır. */
     legLoss: 0.075,
     floor: 0.3,

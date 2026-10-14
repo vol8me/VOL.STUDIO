@@ -220,6 +220,17 @@ describe('BotDirector', () => {
     for (const id of specs) expect(VEHICLE_IDS).toContain(id);
   });
 
+  it('kadroda hiçbir araç dışarıda kalmaz: her kimliğin ağırlığı pozitiftir ve tohumlar boyunca hepsi doğar', () => {
+    for (const id of VEHICLE_IDS) expect(WAR.population.roster[id], id).toBeGreaterThan(0);
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 24 && seen.size < VEHICLE_IDS.length; seed++) {
+      const war = newWar({ populate: true, seed });
+      run(war, 1);
+      for (const combatant of war.combatants.values()) seen.add(combatant.vehicle.spec.id);
+    }
+    expect([...seen].sort()).toEqual([...VEHICLE_IDS].sort());
+  });
+
   it('insan ayrılınca boşalan yer botla dolar', () => {
     const war = newWar({ populate: true, seed: 3 });
     const human = war.join({ name: 'A', spec: ARACHNID, faction: 0 });

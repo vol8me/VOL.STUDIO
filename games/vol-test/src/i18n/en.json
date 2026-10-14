@@ -48,6 +48,10 @@
       "widow": {
         "name": "Widow",
         "class": "WALKER"
+      },
+      "goliath": {
+        "name": "Goliath",
+        "class": "GIANT WALKER"
       }
     }
   },

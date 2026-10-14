@@ -47,6 +47,7 @@ const NAME_KEYS = {
   dart: 'voltest:garage.vehicles.dart.name',
   arachnid: 'voltest:garage.vehicles.arachnid.name',
   widow: 'voltest:garage.vehicles.widow.name',
+  goliath: 'voltest:garage.vehicles.goliath.name',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 const CLASS_KEYS = {
@@ -55,6 +56,7 @@ const CLASS_KEYS = {
   dart: 'voltest:garage.vehicles.dart.class',
   arachnid: 'voltest:garage.vehicles.arachnid.class',
   widow: 'voltest:garage.vehicles.widow.class',
+  goliath: 'voltest:garage.vehicles.goliath.class',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 /** Kart kademesi: CORE kartın nadirlik gösterimi araç sınıfının ağırlığını taşır. */
@@ -64,6 +66,7 @@ const TIER = {
   bulwark: 'epic',
   arachnid: 'legendary',
   widow: 'legendary',
+  goliath: 'legendary',
 } as const satisfies Record<VehicleId, CardRarity>;
 
 const STAT_KEYS = {

@@ -1,3 +1,5 @@
+import type { VehicleId } from './vehicles';
+
 /**
  * Kalıcı savaş dünyasının kuralları. Konumlar dünya ölçüsünün oranıdır (0..1): dünya büyüyünce
  * harita aynı düzeni korur. Hiçbir sayı ağdan değiştirilemez; sunucu ve çevrimdışı alıştırma
@@ -65,8 +67,15 @@ export const WAR = {
   population: {
     /** Cephe başına hedef araç sayısı (insan + bot); insan girince bir bot yerini bırakır. */
     perFaction: 8,
-    /** Bot kadrosundaki araç ağırlıkları (`VEHICLE_IDS` sırası: striker, bulwark, dart, arachnid). */
-    roster: [3, 2, 2, 2] as readonly number[],
+    /** Bot kadrosundaki araç ağırlıkları: her araç kadroda olmak zorundadır (eksik kimlik derlenmez). */
+    roster: {
+      striker: 3,
+      bulwark: 2,
+      dart: 2,
+      arachnid: 2,
+      widow: 1,
+      goliath: 1,
+    } satisfies Record<VehicleId, number>,
     skill: { min: 0.25, max: 0.85 },
     /** Nüfus ve görev denetim aralığı (ms). */
     reviewMs: 1000,

@@ -122,7 +122,9 @@ export class PartWear {
     damage: number,
   ): number {
     const config = PARTS.walker;
-    const stations: readonly number[] = config.stations[this.spec.id as 'arachnid' | 'widow'];
+    const spec = this.spec;
+    if (spec.kind !== 'walker') return 0;
+    const stations: readonly number[] = config.stations[spec.id];
     const side = right < 0 ? 0 : 1;
     const critical = edge >= config.criticalStart ? config.criticalGain : 1;
     const reach = config.centreWeight + (1 - config.centreWeight) * ramp(edge, config.sideStart, 1);
