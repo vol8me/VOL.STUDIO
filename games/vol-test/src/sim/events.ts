@@ -1,6 +1,7 @@
 import type { EntityId } from './entities/Vehicle';
 
-export type DamageCause = 'projectile' | 'wall' | 'collision' | 'direct';
+/** `drown`: kaynaksız hasar; yüzemeyen araç derin suda boğulur (`sim/world/wading`). */
+export type DamageCause = 'projectile' | 'wall' | 'collision' | 'direct' | 'drown';
 
 /**
  * Simülasyonun sunuma bildirdiği olaylar. Her olay kaynağını (ve varsa

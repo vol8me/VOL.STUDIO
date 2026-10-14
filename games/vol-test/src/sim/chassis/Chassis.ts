@@ -8,6 +8,7 @@ import {
 import type { SuspensionConfig } from '@/config/tank';
 import type { TankCommand } from '../command';
 import type { World } from '../world/World';
+import { wadingSpeed } from '../world/wading';
 import { BoostReserve, type BoostConfig } from './BoostReserve';
 import { createChassisState, type ChassisPose, type ChassisState } from './ChassisState';
 import { Suspension } from './Suspension';
@@ -44,6 +45,12 @@ export interface ChassisConfig extends BoostConfig, TurretConfig {
  */
 export abstract class Chassis extends RigidBody {
   abstract readonly kind: ChassisKind;
+
+  /**
+   * Şasinin bu adımda bastığı su derinliği [0, 1] (`World.lakes`). Türetilmiş ara değerdir: konumdan
+   * her adım yeniden hesaplanır, ağ durumuna girmez; sunucu ve istemci öngörüsü aynı değeri bulur.
+   */
+  waterDepth = 0;
 
   /** Yan yüzey hızları (birim/s). */
   trackLeft = 0;
@@ -134,6 +141,15 @@ export abstract class Chassis extends RigidBody {
     return this.config.boostCapacity;
   }
 
+  /**
+   * Bu adımın su derinliğini yazar ve yüzemeyen şasi için hız çarpanını döndürür. Süzülen araç yüzer:
+   * derinliği not edilir (dalga ve iz için) ama hızı kesilmez.
+   */
+  protected wade(world: World): number {
+    this.waterDepth = world.lakes.isEmpty ? 0 : world.lakes.depthAt(this.x, this.y);
+    return this.kind === 'hover' ? 1 : wadingSpeed(this.waterDepth);
+  }
+
   /** Geri vitesteyim (yalnız paletli tankta anlamlıdır). */
   abstract get reversing(): boolean;
 
@@ -194,6 +210,7 @@ export abstract class Chassis extends RigidBody {
     this.reserve.reset();
     this.suspension.reset();
     this.parts = 0;
+    this.waterDepth = 0;
     this.treadLeft = 0;
     this.treadRight = 0;
     this.groundLeft = 0;

@@ -34,6 +34,16 @@ export const BOT = {
   /** Duvara bu mesafeden (birim) yaklaşan araç içe doğru itilir. */
   wallMargin: 320,
   wallWeight: 1.7,
+  /**
+   * Göl kaçınması (süzülen araç hariç): hareket yönünün önündeki bu mesafeler (birim) taranır, suya
+   * bakan bileşen sıyrılır ve kıyıdan `retreat` kadar geri itilir; suyun içindeki bot `escape`
+   * kuvvetiyle kıyıya yürür.
+   */
+  lakeLookahead: [110, 230, 380] as readonly number[],
+  lakeRetreat: 0.9,
+  lakeEscape: 2.2,
+  /** Suya doğru giden hareketin kıyı teğetine kayan payı (kıyıda kilitlenmeyi önler). */
+  lakeSlide: 0.9,
   /** Başka araçlardan bu yarıçap (birim) içinde ayrışma kuvveti uygulanır. */
   separationRadius: 120,
   separationWeight: 1.3,

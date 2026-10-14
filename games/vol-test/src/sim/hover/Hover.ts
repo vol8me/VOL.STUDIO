@@ -66,6 +66,7 @@ export class Hover extends Chassis {
     this.reserve.update(command.brake || command.boost, dt);
     const dashing = this.reserve.active;
     const mobility = 1 - config.gripSensitivity * (1 - clamp(surface?.grip ?? 1, 0, 1));
+    this.wade(world);
     // Hareket yoksa atılım gövdenin baktığı yöne gider: durduğu yerden de fırlar.
     const wantX = moving ? command.moveX / length : Math.cos(this.angle);
     const wantY = moving ? command.moveY / length : Math.sin(this.angle);

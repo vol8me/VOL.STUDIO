@@ -65,7 +65,8 @@ export class Walker extends Chassis {
     // Atılım kilitlidir: Space ile başlar (depo eşiği aşılmışsa) ve bırakılsa da depo boşalana dek sürer.
     this.reserve.update(command.brake || this.reserve.active, dt);
     const dashing = this.reserve.active;
-    const mobility = 1 - config.gripSensitivity * (1 - clamp(surface?.grip ?? 1, 0, 1));
+    const mobility =
+      (1 - config.gripSensitivity * (1 - clamp(surface?.grip ?? 1, 0, 1))) * this.wade(world);
     // Hareket yoksa atılım gövdenin baktığı yöne gider: av atılışı durduğu yerden de başlar.
     const heading = moving ? Math.atan2(command.moveY, command.moveX) : this.angle;
     const wantX = moving ? command.moveX / length : Math.cos(heading);

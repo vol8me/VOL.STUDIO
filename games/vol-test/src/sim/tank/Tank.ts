@@ -59,6 +59,9 @@ export class Tank extends Chassis {
     const forward = this.plan(command, false).forward;
     this.reserve.update(command.boost && forward, dt);
     this.plan(command, this.reserve.active);
+    const wade = this.wade(world);
+    this.targets.left *= wade;
+    this.targets.right *= wade;
 
     const sub = dt / SUBSTEPS;
     for (let index = 0; index < SUBSTEPS; index++) {

@@ -16,6 +16,8 @@ import type { World } from './world/World';
 import type { WeatherSystem } from './weather/WeatherSystem';
 import { WEATHER } from '@/config/weather';
 import { WORLD } from '@/config/world';
+import { WADING } from '@/config/lakes';
+import { drowningRate } from './world/wading';
 
 export interface SimulationOptions {
   readonly world: World;
@@ -65,6 +67,8 @@ export class Simulation {
   private readonly pacedContact = createContact();
   private tempo: number = CHAOS.default;
   private readonly inputs = new Map<EntityId, TankCommand>();
+  /** Boğulma hasarının henüz olaya dönmemiş birikimi (araç başına, can birimi). */
+  private readonly drownCarry = new Map<EntityId, number>();
   private readonly collisionDamagePairs = new Set<string>();
   private nextId: EntityId = 1;
   private playerId: EntityId | null = null;
@@ -169,6 +173,7 @@ export class Simulation {
     if (index < 0) return;
     this.vehicleList.splice(index, 1);
     this.inputs.delete(id);
+    this.drownCarry.delete(id);
   }
 
   /** Yetkili komutların ve savaş çözümünün ortak hasar kapısı; gerçek düşen canı döndürür. */
@@ -194,6 +199,25 @@ export class Simulation {
     });
     if (!target.vitality.alive) this.emit({ kind: 'died', target: targetId, source, cause });
     return applied;
+  }
+
+  /**
+   * Yüzemeyen araç derin suda can yitirir; hasar kaynaksızdır (`drown`). Küçük parçalar birikir ve
+   * `WADING.hurtChunk` oranında tek olayla uygulanır. Süzülen araç yüzer, hasar almaz.
+   */
+  private drown(vehicle: Vehicle, dt: number): void {
+    const rate = vehicle.chassis.kind === 'hover' ? 0 : drowningRate(vehicle.chassis.waterDepth);
+    if (rate <= 0) {
+      this.drownCarry.delete(vehicle.id);
+      return;
+    }
+    const carry = (this.drownCarry.get(vehicle.id) ?? 0) + rate * vehicle.vitality.maxHealth * dt;
+    if (carry < vehicle.vitality.maxHealth * WADING.hurtChunk) {
+      this.drownCarry.set(vehicle.id, carry);
+      return;
+    }
+    this.drownCarry.delete(vehicle.id);
+    this.applyDamage(vehicle.id, carry, undefined, 'drown');
   }
 
   /** Ölü hedefe can basmaz; ölümden çıkış yalnız respawnVehicle ile gerçekleşir. */
@@ -238,6 +262,7 @@ export class Simulation {
     const nextHull = hull ?? point.hull;
     if (![nextX, nextY, nextHull].every(Number.isFinite))
       throw new RangeError('Yeniden doğma konumu sonlu olmalı');
+    this.drownCarry.delete(vehicle.id);
     const { halfLength, halfWidth } = vehicle.chassis.shape;
     const bodyRadius = Math.hypot(halfLength, halfWidth);
     vehicle.chassis.resetForRespawn(
@@ -317,6 +342,7 @@ export class Simulation {
       const groundLeft = tank.groundLeft;
       const groundRight = tank.groundRight;
       this.driveChassis(vehicle, command, dt, this.weather?.sample(x, y));
+      this.drown(vehicle, dt);
       if (this.weather) {
         const amountPerUnit = WEATHER.tank.snowCompactionPerMetre / WORLD.metre / 2;
         const offsetX = -Math.sin(tank.hull) * tank.trackOffset;

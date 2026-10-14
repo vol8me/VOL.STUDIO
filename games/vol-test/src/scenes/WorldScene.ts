@@ -29,7 +29,7 @@ import { pivotPose, type MuzzlePose } from '@/sim/muzzle';
 import { SCENARIO } from '@/config/scenarios';
 import type { Simulation } from '@/sim/Simulation';
 import { aimAligned } from '@/sim/vehicleStep';
-import { World } from '@/sim/world/World';
+import { createBattleWorld } from '@/sim/world/battleWorld';
 import { ArenaView } from '@/view/ArenaView';
 import { EffectsView } from '@/view/EffectsView';
 import { VehicleViews } from '@/view/VehicleViews';
@@ -104,7 +104,7 @@ export class WorldScene extends Phaser.Scene {
       });
       void this.audio.load();
     }
-    const world = new World(WORLD.width, WORLD.height, WORLD.gridStep);
+    const world = createBattleWorld();
     const preferences = this.services?.settings.get();
     const overrides = this.services?.overrides;
     const seed = overrides?.seed ?? preferences?.seed ?? SCENARIO.defaultSeed;

@@ -98,6 +98,29 @@ Tam ekran filtre veya shader kullanılmaz. HUD mevsim ve hava yazısı taşımaz
 kök `data-season`/`data-weather` özniteliği testlere ve ölçüme kalır. Görünüm önizlemesi README'deki mevsim/hava sorgularıyla seçilir;
 normal oturumun takvimi bu önizlemeden bağımsızdır.
 
+### Göller
+
+Dünyanın değişmez coğrafyası sekiz göldür (`src/config/lakes.ts`): dört yazılı göl ve dünyanın merkezine
+göre nokta simetrik dört ikizi. Her göl dönük bir elips ile birkaç harmonikle dalgalanan kıyıdan oluşur.
+Konumlar dünya oranıdır; hiçbir göl bir üsse, bölge çemberine ya da dünya kenarına değmez ve karşıt üsler
+aynı coğrafyayı görür (testle kilitli: `tests/sim/world/LakeField.test.ts`).
+
+Derinlik tek bir saf işlevdir: `LakeField.depthAt(x, y)`, kıyıda 0, merkezde 1. Simülasyon yavaşlamayı,
+hasarı ve boğulmayı, bot kaçınmayı ve görünüm derinlik bantlarını aynı işlevden okur; çizilen kıyı ile
+fizik kıyısı ayrışamaz. Göl verisi ağdan geçmez: sunucu odası ve istemci sahnesi dünyayı aynı yerden
+(`createBattleWorld`) kurar, `World.lakes` her şasinin `step`inde okunur. Bu yüzden istemci öngörüsü
+sunucuyla göl kıyısında da bit bit aynıdır (`tests/sim/wading.test.ts`).
+
+Araçlar suya şöyle tepki verir (`WADING`):
+
+- Tank ve yürüyücü yüzemez: derinlikle hız tavanı sürekli düşer (`wadingSpeed`, tabanda ~%22), diz boyu
+  suyun (`hurtDepth`) ötesinde can kaybeder (`drowningRate`, derinlikle kareli büyür) ve can bitince
+  boğulur. Hasar kaynaksız `drown` nedenidir; küçük parçalar birikir ve `hurtChunk` oranında tek olayla
+  uygulanır (olay seli yoktur). Kıyıdan dönen araç sağ çıkar; derine inen ise zor çıkar.
+- Süzülen araç yüzer: yavaşlamaz, hasar almaz; derinliği yalnız sunum için (dalga, iz) not edilir.
+- Bot yüzemeyen araçta gölün önündeki mesafeleri tarar, suya bakan bileşeni sıyırır ve kıyı teğetine
+  kayar; suyun içindeyse kıyıya çıkış yönüne gider (`BotBrain.lakePush`).
+
 ## Araçlar
 
 Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, can,

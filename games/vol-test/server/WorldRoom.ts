@@ -16,7 +16,6 @@ import { GAME } from '../src/config/game';
 import { NETWORK } from '../src/config/network';
 import { STRIKER, modelOf, vehicleAt, type VehicleSpec } from '../src/config/vehicles';
 import { WAR } from '../src/config/war';
-import { WORLD } from '../src/config/world';
 import { writeChassisState } from '../src/network/chassisSync';
 import { EVENT_MESSAGE, type EventBatch, type NetEvent } from '../src/network/events';
 import {
@@ -34,7 +33,7 @@ import { idleCommand, type TankCommand } from '../src/sim/command';
 import type { EntityId, Vehicle } from '../src/sim/entities/Vehicle';
 import { Simulation } from '../src/sim/Simulation';
 import { War, type Combatant, type WarStepEvent } from '../src/sim/war/War';
-import { World } from '../src/sim/world/World';
+import { createBattleWorld } from '../src/sim/world/battleWorld';
 import { InputPacer, type PacerStats } from './InputPacer';
 
 /** Oda oluşturma seçenekleri; `logger` süreç içi bir bağdır, ağdan gelmez. */
@@ -106,7 +105,7 @@ export class WorldRoom extends Room {
   override state = new WorldState();
 
   private readonly sim = new Simulation({
-    world: new World(WORLD.width, WORLD.height, WORLD.gridStep),
+    world: createBattleWorld(),
     vehicle: STRIKER,
     spawnPlayer: false,
   });

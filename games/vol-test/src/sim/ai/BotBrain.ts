@@ -111,6 +111,7 @@ export class BotBrain {
   private hasRally = false;
   private dodgeX = 0;
   private dodgeY = 0;
+  private readonly lakeGrade = { x: 0, y: 0 };
 
   constructor(
     readonly vehicle: Vehicle,
@@ -214,6 +215,7 @@ export class BotBrain {
       dy += this.avoidY + this.dodgeY * dodge;
       [dx, dy] = this.wallPush(sim.world, dx, dy);
     }
+    [dx, dy] = this.lakePush(sim.world, dx, dy);
     const length = Math.hypot(dx, dy);
     if (length > 1) {
       dx /= length;
@@ -456,6 +458,47 @@ export class BotBrain {
     const [ux, uy] = this.toward(this.patrolX, this.patrolY);
     const pace = clamp(distance / 160, 0.25, 0.6);
     return [ux * pace, uy * pace];
+  }
+
+  /**
+   * Yüzemeyen bot göle girmez: gittiği yönün önünde su varsa suya bakan bileşeni sıyırır (kıyı boyunca
+   * yürür) ve kıyıdan biraz geri çekilir; zaten suyun içindeyse kıyıya çıkış yönüne tam kuvvetle gider.
+   * Süzülen araç yüzer, onun için su engel değildir.
+   */
+  private lakePush(world: World, dx: number, dy: number): [number, number] {
+    const lakes = world.lakes;
+    const chassis = this.vehicle.chassis;
+    if (lakes.isEmpty || chassis.kind === 'hover') return [dx, dy];
+    const grade = this.lakeGrade;
+    const { x, y } = chassis;
+    if (lakes.depthAt(x, y) > 0) {
+      lakes.gradient(x, y, grade);
+      return [dx - grade.x * BOT.lakeEscape, dy - grade.y * BOT.lakeEscape];
+    }
+    const length = Math.hypot(dx, dy);
+    if (length < 1e-6) return [dx, dy];
+    const ux = dx / length;
+    const uy = dy / length;
+    let px = dx;
+    let py = dy;
+    for (const ahead of BOT.lakeLookahead) {
+      const sx = x + ux * ahead;
+      const sy = y + uy * ahead;
+      const depth = lakes.depthAt(sx, sy);
+      if (depth <= 0) continue;
+      lakes.gradient(sx, sy, grade);
+      const into = ux * grade.x + uy * grade.y;
+      if (into <= 0) continue;
+      // Suya bakan bileşeni sıyır, kıyıdan geri çek: ağırlık yaklaştıkça artar.
+      const closeness = 1 - ahead / BOT.lakeLookahead[BOT.lakeLookahead.length - 1] + 0.3;
+      px -= grade.x * into * length * (1 + closeness) + grade.x * BOT.lakeRetreat * closeness;
+      py -= grade.y * into * length * (1 + closeness) + grade.y * BOT.lakeRetreat * closeness;
+      // Gölün tam karşısına giden bot kıyıda kilitlenmesin: yörünge yönünde teğete kayar.
+      px -= grade.y * this.orbit * into * length * BOT.lakeSlide;
+      py += grade.x * this.orbit * into * length * BOT.lakeSlide;
+      break;
+    }
+    return [px, py];
   }
 
   /** Dünya sınırına yaklaşan aracı içe iter; itme, hareket vektörüne eklenir. */
