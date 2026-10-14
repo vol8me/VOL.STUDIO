@@ -23,6 +23,17 @@ Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `sign
 değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. **20–26 dk vitrin E2E maliyeti kabul edilemez**; yalnız push yolundan
 çıkarılmıştır, henüz hızlandırılmamıştır: bkz. [F10.13](../TODO.md).
 
+## Signoff onayı
+
+`pnpm signoff` kullanıcının onayı olmadan koşulmaz; ajan da koşucu da bunu kendiliğinden başlatmaz.
+Gerekçe: ~40 dk'lık tam koşu makineyi tutar (yük altında zamana duyarlı testleri de sarsar), e2e piksel
+temellerini değiştirebilir ve `high` yeşilken zaten kanıtlanan aşamaları tekrar eder. Onay istenirken şu
+dördü yazılır: hangi değişiklik hangi aşamayı kanıtsız bırakıyor, `high`in kanıtladığı kısım, tahmini süre,
+düşerse çalışma ağacının durumu. Kullanıcı açıkça serbest bıraktıysa onayın kapsadığı koşu ya da oturum
+boyunca yeniden sorulmaz; düşen koşunun düzeltme sonrası tekrarı onayda yazılı değilse yeniden sorulur.
+Onay yoksa teslim `high` yeşiliyle yapılır ve `signoff` NOT-RUN raporlanır. Kuralın kaynağı
+[AGENTS.md](../AGENTS.md)'dir.
+
 ## Kapı koşucusu
 
 `pnpm quick`, `pnpm fast`, `pnpm high`, `pnpm signoff` ve git kancaları `scripts/quality/gate.mjs`yi çağırır.

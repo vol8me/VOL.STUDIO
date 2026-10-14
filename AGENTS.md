@@ -70,6 +70,13 @@ makbuzu yok sayar. Düşen birim, çıktıdaki `tekrar:` komutuyla yeniden koşu
 `quick` ~1,5 dk, `high` ~5 dk, `signoff` ~40 dk; `signoff` arka planda koşulur ve ilk düşende durur,
 koşulmayan aşama NOT-RUN'dır ([ölçüm](docs/gates.md)).
 
+**`pnpm signoff` kullanıcının onayı olmadan koşulmaz.** Makineyi ~40 dk tutar, e2e piksel temellerine
+dokunabilir ve düşen aşamayı "yeniden deneme" ya da "emin olma" için başlatılmaz. Önce gerekçeyle onaya
+sunulur: hangi değişiklik hangi aşamayı kanıtsız bırakıyor, `high` ne kadarını zaten kanıtladı, tahmini süre
+ve düşerse çalışma ağacının durumu. Kullanıcı açıkça serbest bıraktıysa (ör. "signoff'u koş", "signoff serbest")
+onayın kapsadığı koşu ya da oturum boyunca yeniden sorulmaz; düşen koşunun düzeltmeden sonra tekrarı onayın
+kapsamında değilse yeniden sorulur. Onay yoksa teslim `high` yeşiliyle yapılır ve signoff NOT-RUN yazılır.
+
 Yeni davranış ve hata düzeltmesi anlamlı regresyon testi bırakır; tests ağacı
 src ağacını yansıtır. Disk testleri gerçek geçici dizindedir. Genel timeout
 büyütülmez; kapsam yalnız çalıştırılabilir satırı olmayan dosyaları dışlar.
