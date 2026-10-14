@@ -51,6 +51,8 @@ pnpm --filter @volstudio/vol-test dev
 
 Uzak erişimde (`VOL_NET_HOST=0.0.0.0`) `VOL_NET_ORIGINS` verilir; ölçüm için `VOL_NET_OPS_PORT=9100`
 loopback'te `/metrics` açar. Değişkenler [network sunucu belgesindedir](../../network/docs/server.md).
+`pnpm --filter @volstudio/vol-test drive -- --clients 24 --seconds 60` başsız botlarla yük üretir ve
+JSONL rapor yazar ([yük sürücüsü](../../network/docs/drive.md)).
 
 Öngörü, uzlaştırma ve sınırlar [DESIGN](DESIGN.md) "Çok oyunculu" bölümündedir.
 

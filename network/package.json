@@ -15,6 +15,10 @@
     "./server": {
       "import": "./src/server/index.ts",
       "types": "./src/server/index.ts"
+    },
+    "./drive": {
+      "import": "./src/drive/index.ts",
+      "types": "./src/drive/index.ts"
     }
   },
   "scripts": {

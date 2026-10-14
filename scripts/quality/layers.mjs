@@ -39,10 +39,17 @@ const SKIP_DIRS = new Set([
 const SOURCE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
 
 /**
- * `network/src` üç yüzeye bölünür: protokol ve istemci tarayıcıda da çalışır, sunucu yalnız Node'dadır.
- * Her yüzeyin içe aktaramayacağı kardeş yüzeyler.
+ * `network/src` dört yüzeye bölünür: protokol ve istemci tarayıcıda da çalışır, sunucu ve yük sürücüsü
+ * (`drive`) yalnız Node'dadır. Sürücü gerçek istemciyi kullanır ama sunucu kodunu içe aktarmaz; hiçbir
+ * yüzey sürücüye uzanamaz. Her yüzeyin içe aktaramayacağı kardeş yüzeyler.
  */
-const NETWORK_SIDES = { protocol: ['client', 'server'], client: ['server'], server: ['client'] };
+const NETWORK_SIDES = {
+  protocol: ['client', 'server', 'drive'],
+  client: ['server', 'drive'],
+  server: ['client', 'drive'],
+  drive: ['server'],
+};
+const NODE_SIDES = new Set(['server', 'drive']);
 const NODE_ONLY_PACKAGES = new Set(['@colyseus/core', '@colyseus/ws-transport']);
 const NODE_BUILTINS = new Set(builtinModules);
 
@@ -106,7 +113,7 @@ function networkSideProblems(owner, file, specifier, where) {
       problems.push(`${where}: network ${side} kodu ${other} kodunu içe aktaramaz.`);
     }
   }
-  if (side !== 'server') {
+  if (!NODE_SIDES.has(side)) {
     const bare = specifier.startsWith('node:') ? specifier.slice(5) : specifier;
     if (
       specifier.startsWith('node:') ||
@@ -235,10 +242,10 @@ export function validateLayerBoundaries(root, lifecycle = loadRepoLifecycle(root
           if (
             owner.kind === 'game' &&
             directory === 'src' &&
-            specifier === '@volstudio/network/server'
+            (specifier === '@volstudio/network/server' || specifier === '@volstudio/network/drive')
           ) {
             problems.push(
-              `${where}: oyun istemcisi network sunucu çalışma zamanını içe aktaramaz.`,
+              `${where}: oyun istemcisi network sunucu çalışma zamanını ya da yük sürücüsünü içe aktaramaz.`,
             );
           }
           if (owner.kind === 'network') {

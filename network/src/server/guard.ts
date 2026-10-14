@@ -20,10 +20,12 @@ export interface GuardSettings {
 }
 
 export const DEFAULT_GUARD: GuardSettings = {
-  maxSocketsPerAddress: 16,
+  // Bir ağ (aile, LAN, kafe) arkasındaki tek adresten bir dünyanın tamamı (24 insan) girebilmelidir;
+  // ani birikim ona yetecek kadardır (bir katılım iki jeton).
+  maxSocketsPerAddress: 32,
   maxSockets: 512,
-  requestsPerSecond: 10,
-  requestBurst: 40,
+  requestsPerSecond: 20,
+  requestBurst: 60,
   origins: [],
   trustProxy: false,
 };

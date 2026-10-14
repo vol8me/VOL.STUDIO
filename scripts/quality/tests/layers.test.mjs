@@ -133,7 +133,12 @@ test('oyun istemcisi network sunucu çalışma zamanını içe aktaramaz; oyun s
   write('games/demo/src/main.ts', 'import "@volstudio/network/server";');
   assert.match(
     validateLayerBoundaries(root).join('\n'),
-    /oyun istemcisi network sunucu çalışma zamanını içe aktaramaz/,
+    /oyun istemcisi network sunucu çalışma zamanını ya da yük sürücüsünü içe aktaramaz/,
+  );
+  write('games/demo/src/main.ts', 'import "@volstudio/network/drive";');
+  assert.match(
+    validateLayerBoundaries(root).join('\n'),
+    /oyun istemcisi network sunucu çalışma zamanını ya da yük sürücüsünü içe aktaramaz/,
   );
 });
 
@@ -142,6 +147,10 @@ test('network yüzeyleri birbirine ve Node bağımlılığına yalnız izin veri
   write('network/src/protocol/input.ts', 'export const v = 1;');
   write('network/src/client/room.ts', 'import "../protocol/input";\nimport "@colyseus/sdk";');
   write('network/src/server/host.ts', 'import "../protocol/input";\nimport "node:http";');
+  write(
+    'network/src/drive/fleet.ts',
+    'import "../protocol/input";\nimport "../client/room";\nimport "node:fs";',
+  );
   assert.deepEqual(validateLayerBoundaries(root), []);
 
   for (const [file, source, pattern] of [
@@ -155,6 +164,10 @@ test('network yüzeyleri birbirine ve Node bağımlılığına yalnız izin veri
     ['network/src/client/h.ts', 'import "fs/promises";', /Node\/sunucu bağımlılığı/],
     ['network/src/protocol/i.ts', 'import "@colyseus/core";', /Node\/sunucu bağımlılığı/],
     ['network/src/client/j.ts', 'import "@colyseus/ws-transport";', /Node\/sunucu bağımlılığı/],
+    ['network/src/drive/k.ts', 'import "../server/host";', /drive kodu server kodunu/],
+    ['network/src/server/l.ts', 'import "../drive/fleet";', /server kodu drive kodunu/],
+    ['network/src/client/m.ts', 'import "../drive/fleet";', /client kodu drive kodunu/],
+    ['network/src/protocol/n.ts', 'import "../drive/fleet";', /protocol kodu drive kodunu/],
   ]) {
     write(file, source);
     assert.match(validateLayerBoundaries(root).join('\n'), pattern, file);

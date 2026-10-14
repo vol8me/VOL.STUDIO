@@ -57,6 +57,7 @@ devtools/*/export/
 /devtools/deck/web/vendor/
 /devtools/deck/records/
 /devtools/vol-showcase/records/
+/games/vol-test/records/
 
 # Editör ve işletim sistemi
 .idea/

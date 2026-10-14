@@ -46,9 +46,9 @@ kurulmaz (kütüphane varsayılanı kapalıdır; oyunun sunucu girişi açar).
 
 | Sınır                    | Ortam değişkeni                   | Varsayılan | Ret                      |
 | ------------------------ | --------------------------------- | ---------- | ------------------------ |
-| Adres başına hız         | `VOL_NET_REQUEST_RATE` (saniye)   | 10         | `429` + `Retry-After`    |
-| Adres başına ani birikim | `VOL_NET_REQUEST_BURST`           | 40         | `429` + `Retry-After`    |
-| Adres başına açık soket  | `VOL_NET_MAX_SOCKETS_PER_ADDRESS` | 16         | `429` + `Retry-After: 5` |
+| Adres başına hız         | `VOL_NET_REQUEST_RATE` (saniye)   | 20         | `429` + `Retry-After`    |
+| Adres başına ani birikim | `VOL_NET_REQUEST_BURST`           | 60         | `429` + `Retry-After`    |
+| Adres başına açık soket  | `VOL_NET_MAX_SOCKETS_PER_ADDRESS` | 32         | `429` + `Retry-After: 5` |
 | Toplam açık soket        | `VOL_NET_MAX_SOCKETS`             | 512        | `503` + `Retry-After: 5` |
 | Köken izin listesi       | `VOL_NET_ORIGINS` (virgüllü)      | boş (açık) | `403`                    |
 | Ters vekil adresi        | `VOL_NET_TRUST_PROXY`             | kapalı     | —                        |

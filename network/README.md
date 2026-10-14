@@ -8,7 +8,7 @@ bu paket odayı çalıştıran zemini verir. Paket belirli bir oyuna bağlı de�
 
 ## Yüzeyler
 
-`src/` üç yüzeye bölünür ve `exports` haritası da öyledir. Yüzeyler arası kenarlar
+`src/` dört yüzeye bölünür ve `exports` haritası da öyledir. Yüzeyler arası kenarlar
 `scripts/quality/layers.mjs` ile denetlenir.
 
 | Export       | Çalıştığı yer    | İçerik                                                                |
@@ -16,10 +16,13 @@ bu paket odayı çalıştıran zemini verir. Paket belirli bir oyuna bağlı de�
 | `./protocol` | tarayıcı + Node  | `PROTOCOL_VERSION`, katılım seçenekleri, ad ve oda kodu kuralları     |
 | `./client`   | tarayıcı/webview | `createLobby` eşleştirme girişi, `JoinError`, Colyseus öngörü API'si  |
 | `./server`   | yalnız Node      | döngü, ana makine, katılım ve bağlantı kapısı, kapanış, günlük, ölçüm |
+| `./drive`    | yalnız Node      | başsız çok istemcili yük sürücüsü, JSONL rapor                        |
 
 Protokol ve istemci Node yerleşiklerini, `@colyseus/core` ile `@colyseus/ws-transport`'u içe
-aktaramaz; sunucu istemciyi aktaramaz. Oyunun tarayıcı kodu `./server`'a uzanamaz. Sunucu
-çalışma zamanının sözleşmesi [docs/server.md](docs/server.md) içindedir.
+aktaramaz; sunucu istemciyi aktaramaz; sürücü sunucuyu aktaramaz ve hiçbir yüzey sürücüye uzanamaz. Oyunun
+tarayıcı kodu `./server`'a ve `./drive`'a uzanamaz. Sunucu
+çalışma zamanının sözleşmesi [docs/server.md](docs/server.md), yük sürücüsünün sözleşmesi
+[docs/drive.md](docs/drive.md) içindedir.
 
 ## Protokol ve istemci
 
