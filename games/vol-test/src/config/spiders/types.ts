@@ -45,6 +45,8 @@ export const SPIDER_ART = {
   parallax: 0.0061,
   /** Işığın tersine düşen gölge kayması (yükseklik başına): güneş sol-üstten gelir. */
   light: { x: 0.38, y: 0.5 },
+  /** Göğüs ve karın gölgesinin koyuluğu: tank gölgesine (0,32) yakın, bacak çizgisinden biraz koyu. */
+  shadowAlpha: 0.36,
 } as const;
 
 /** Bir kareden ötekine bu kadar uzağa giden araç ışınlanmıştır (yeniden doğuş). */

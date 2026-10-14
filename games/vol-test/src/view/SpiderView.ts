@@ -72,8 +72,12 @@ export class SpiderView implements VehicleView {
     // Gölge katmanı: dünyada bacağın altında; ışık dünyada sabit olduğundan gövdeyle döner ve kaymayı
     // her karede gövde-yerel yöne çevirir.
     const groundLayer = scene.add.container(0, 0);
-    this.thoraxShadow = image('thorax-shadow', look.parts['thorax-shadow']).setAlpha(0.5);
-    this.abdomenShadow = image('abdomen-shadow', look.parts['abdomen-shadow']).setAlpha(0.5);
+    this.thoraxShadow = image('thorax-shadow', look.parts['thorax-shadow']).setAlpha(
+      SPIDER_ART.shadowAlpha,
+    );
+    this.abdomenShadow = image('abdomen-shadow', look.parts['abdomen-shadow']).setAlpha(
+      SPIDER_ART.shadowAlpha,
+    );
     this.shadowRoot = scene.add
       .container(0, 0, [groundLayer, this.abdomenShadow, this.thoraxShadow])
       .setDepth(SPIDER_ART.depth - 1);

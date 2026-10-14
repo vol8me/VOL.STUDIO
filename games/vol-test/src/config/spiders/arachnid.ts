@@ -43,7 +43,7 @@ export const ARACHNID_LOOK: SpiderLook = {
     swingPeak: 11,
     contactPx: 11,
     shadowWidth: 3.2,
-    shadowAlpha: 0.22,
+    shadowAlpha: 0.3,
     crouchReachDrop: 0.05,
     dashReachGain: 0.2,
     dashLungePx: 9,

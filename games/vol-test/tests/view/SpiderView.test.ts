@@ -123,6 +123,15 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       expect(legParts.every((part) => part.visible !== false)).toBe(true);
     });
 
+    it('göğüs ve karın gölgesi ortak koyulukta; bacak çizgisi ondan açıktır, ikisi de tank gölgesine yakındır', () => {
+      const { scene } = build(spec);
+      const bodies = scene.created.filter((object) => object.alpha === SPIDER_ART.shadowAlpha);
+      expect(bodies).toHaveLength(2);
+      expect(look.leg.shadowAlpha).toBeLessThan(SPIDER_ART.shadowAlpha);
+      expect(SPIDER_ART.shadowAlpha).toBeGreaterThan(0.25);
+      expect(SPIDER_ART.shadowAlpha).toBeLessThan(0.45);
+    });
+
     it('zemin gölgeleri gövdenin altında çizilir: gölge katmanı gövde katmanından düşüktür', () => {
       const { root, shadowRoot } = build(spec);
       expect(shadowRoot.depth).toBeLessThan(root.depth as number);

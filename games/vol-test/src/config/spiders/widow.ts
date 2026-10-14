@@ -42,7 +42,7 @@ export const WIDOW_LOOK: SpiderLook = {
     swingPeak: 16.5,
     contactPx: 9.4,
     shadowWidth: 2.6,
-    shadowAlpha: 0.2,
+    shadowAlpha: 0.28,
     crouchReachDrop: 0.06,
     dashReachGain: 0.2,
     dashLungePx: 12,
