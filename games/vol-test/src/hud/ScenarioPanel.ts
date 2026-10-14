@@ -40,10 +40,18 @@ export class ScenarioPanel {
     this.seed.element.step = '1';
     this.seed.element.dataset.testid = 'pause-seed';
     this.pickerRow = this.scope.addDestroyable(
-      new SettingsRow({ label: i18next.t('voltest:pause.scenario'), control: this.picker }),
+      new SettingsRow({
+        label: i18next.t('voltest:pause.scenario'),
+        control: this.picker,
+        stackOnNarrow: true,
+      }),
     );
     this.seedRow = this.scope.addDestroyable(
-      new SettingsRow({ label: i18next.t('voltest:pause.seed'), control: this.seed }),
+      new SettingsRow({
+        label: i18next.t('voltest:pause.seed'),
+        control: this.seed,
+        stackOnNarrow: true,
+      }),
     );
     this.elements = [this.pickerRow.element, this.seedRow.element];
     this.scope.addSubscription(

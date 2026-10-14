@@ -51,7 +51,11 @@ export class SettingsPanel {
     if (this.display) this.display.element.dataset.testid = 'pause-display';
     this.displayRow = this.display
       ? this.scope.addDestroyable(
-          new SettingsRow({ label: i18next.t('voltest:pause.display'), control: this.display }),
+          new SettingsRow({
+            label: i18next.t('voltest:pause.display'),
+            control: this.display,
+            stackOnNarrow: true,
+          }),
         )
       : null;
     // Kaydırıcı ve onay kutusu kendi etiketini taşır; satır yalnız ritmi ve ayırıcıyı verir.

@@ -2,12 +2,13 @@ import type { MessageKey } from '@/i18n/keys';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import type { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
-import { Button, Modal, SegmentedControl, Text } from '@volstudio/core/ui';
+import { Button, Modal, SegmentedControl, SettingsForm, SettingsRow } from '@volstudio/core/ui';
 import type { GameSettings } from '@/app/GameSettings';
+import { ScreenFrame } from '@/menu/ScreenFrame';
 import { SettingsPanel } from './SettingsPanel';
 import type { EffectLevel, EffectProfile } from '@/config/quality';
 
-/** Duraklatma menüsünde sürdür düğmesinin üstünde duran, sürücüye özgü eylem. */
+/** Duraklatma menüsünde sürdür düğmesinin altında duran, sürücüye özgü eylem. */
 export interface PauseAction {
   readonly id: string;
   /** Düğme etiketinin i18n anahtarı. */
@@ -18,17 +19,18 @@ export interface PauseAction {
 }
 
 /**
- * Duraklatma katmanı: başlık, efekt kalitesi seçimi (CORE `SegmentedControl`
- * → CORE `GraphicsQuality`) ve devam düğmesi. Modal kapanınca (düğme, Escape, Android geri) `onResume`
- * çağrılır. Scrim kapatmaz: duraklatma düğmesine dokunuşun ardından gelen
- * uyumluluk `click`i yeni açılan scrim'e düşüp katmanı anında kapatırdı.
+ * Duraklatma katmanı: ana menü ve ayarlarla aynı sol şerit (`ScreenFrame` `sheet`). Başlık şeridi,
+ * kayan gövde (efekt kalitesi ve ayar satırları) ve eylem şeridi (devam, sürücü eylemleri) üç ekranda
+ * aynı iskeletten gelir. `Modal` yalnız odak tuzağını, Escape'i ve Android geri sözleşmesini verir; kapanınca
+ * (düğme, Escape, geri) `onResume` çağrılır. Scrim kapatmaz: duraklatma düğmesine dokunuşun ardından
+ * gelen uyumluluk `click`i yeni açılan scrim'e düşüp katmanı anında kapatırdı.
  */
 export class PauseOverlay {
   private readonly scope = new DisposableScope();
   private readonly modal: Modal;
-  private readonly title: Text;
+  private readonly frame: ScreenFrame;
   private readonly resume: Button;
-  private readonly qualityLabel: Text;
+  private readonly qualityRow: SettingsRow;
   private readonly qualityPicker: SegmentedControl;
   private readonly settingsPanel: SettingsPanel | null;
   private readonly actionList: HTMLDivElement;
@@ -44,33 +46,43 @@ export class PauseOverlay {
     this.modal = new Modal({
       className: 'vt-pause',
       closeOnScrimClick: false,
+      initialFocus: () => this.resume.element,
       onClose: () => {
         if (!this.closingFromGame) onResume();
       },
     });
-    this.title = new Text('', { variant: 'heading', tag: 'h2' });
-    this.resume = new Button('', { variant: 'primary', onClick: () => this.modal.close() });
+    this.frame = this.scope.addDestroyable(new ScreenFrame({ testid: 'pause', variant: 'sheet' }));
+    this.resume = this.scope.addDestroyable(
+      new Button('', { variant: 'primary', onClick: () => this.modal.close() }),
+    );
     this.resume.element.dataset.testid = 'pause-resume';
-    this.qualityLabel = new Text('', { variant: 'muted', tag: 'span' });
-    this.qualityPicker = new SegmentedControl({
-      options: this.qualityOptions(),
-      value: quality.getLevel(),
-      onCommit: (value) => {
-        if (quality.isLevel(value)) quality.setLevel(value);
-      },
-    });
+    this.qualityPicker = this.scope.addDestroyable(
+      new SegmentedControl({
+        options: this.qualityOptions(),
+        value: quality.getLevel(),
+        onCommit: (value) => {
+          if (quality.isLevel(value)) quality.setLevel(value);
+        },
+      }),
+    );
     this.qualityPicker.element.dataset.testid = 'pause-quality';
     this.scope.addSubscription(quality.onChange((level) => this.qualityPicker.setValue(level)));
-    this.modal.add(this.title).add(this.qualityLabel).add(this.qualityPicker);
+    this.qualityRow = this.scope.addDestroyable(
+      new SettingsRow({ label: i18next.t('voltest:pause.quality'), control: this.qualityPicker }),
+    );
     this.settingsPanel = settings ? new SettingsPanel(settings, displayAvailable) : null;
-    for (const element of this.settingsPanel?.elements ?? []) this.modal.add({ element });
+
+    const form = this.scope.addDestroyable(new SettingsForm({ className: 'vt-settings__form' }));
+    form.add(this.qualityRow);
+    for (const element of this.settingsPanel?.elements ?? []) form.element.append(element);
+    this.frame.body.add(form);
+
     this.actionList = document.createElement('div');
     this.actionList.className = 'vt-pause__actions';
-    // Eylemler ve devam düğmesi tek yapışkan altlıktadır: panel 800 px yükseklikte kayarken ikisi de erişilebilir kalır.
-    const footer = document.createElement('div');
-    footer.className = 'vt-pause__footer';
-    footer.append(this.actionList, this.resume.element);
-    this.modal.add({ element: footer });
+    // Devam ana eylemdir ve ilk sıradadır; sürücü eylemleri (katıl, ayrıl, ana menü) altında dizilir.
+    this.frame.footer.classList.add('vt-pause__footer');
+    this.frame.footer.append(this.resume.element, this.actionList);
+    this.modal.add({ element: this.frame.element });
     this.refreshLabels();
   }
 
@@ -112,9 +124,9 @@ export class PauseOverlay {
 
   refreshLabels(): void {
     this.settingsPanel?.refreshLabels();
-    this.title.setContent(i18next.t('voltest:pause.title'));
+    this.frame.setTitle(i18next.t('voltest:pause.title'));
     this.resume.setLabel(i18next.t('voltest:pause.resume'));
-    this.qualityLabel.setContent(i18next.t('voltest:pause.quality'));
+    this.qualityRow.setLabel(i18next.t('voltest:pause.quality'));
     this.qualityPicker.setOptions(this.qualityOptions());
     this.qualityPicker.setValue(this.quality.getLevel());
     this.qualityPicker.setAriaLabel(i18next.t('voltest:pause.quality'));
@@ -134,10 +146,6 @@ export class PauseOverlay {
     this.settingsPanel?.destroy();
     for (const { button } of this.actionButtons) button.destroy();
     this.modal.destroy();
-    this.title.destroy();
-    this.resume.destroy();
-    this.qualityLabel.destroy();
-    this.qualityPicker.destroy();
     this.modal.element.remove();
   }
 }

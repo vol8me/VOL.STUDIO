@@ -394,9 +394,12 @@ Açılış sırası Boot → Menu → (Garage | Settings | World). `BootScene` d
 
 Üç ekran aynı taksonomiden gelir: `ScreenFrame` başlık şeridi (geri `IconButton`, başlık, alt başlık),
 kayan gövde (`ScrollView`) ve eylem şeridini kurar; ekranlar yalnız içeriklerini gövdeye, düğmelerini
-şeride koyar. İki düzen vardır. `sheet` sol şerittir ve arkasında canlı araç vitrini görünür (ana menü,
-dar ekranda alt levha); `full` ekranı kaplar (garaj, ayarlar), garaj sunum için ortada bir `stage`
-bölgesi ayırır. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
+şeride koyar. İki düzen vardır. `sheet` sol şerittir ve arkasında canlı araç vitrini ya da oyun görünür (ana menü,
+ayarlar ve duraklatma; dar ekranda alt levha); `full` yalnız garajdır ve sunum için ortada bir `stage`
+bölgesi ayırır. Duraklatma (`PauseOverlay`) aynı `ScreenFrame` `sheet`ini CORE `Modal` içinde taşır: modal yalnız
+odak tuzağı, Escape ve Android geri sözleşmesini verir; başlık, ayar satırları ve eylem şeridi ana menü ve
+ayarlarla aynı iskelettir (devam ana eylemdir, sürücü eylemleri altında dizilir). Geniş denetimli satırlar
+(dil, ekran kipi, senaryo) `stackOnNarrow` ile dar ekranda etiketin altına iner. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
 ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, denetimler `Input`,
 `SegmentedControl`, `Select`, `Checkbox`; `menu.css` yalnız yerleşim verir. Arkada oyunun gerçek araç
 görünümleri (`TankView`, `SpiderView`) dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde onları dolaşık bir poza sürükler, taretleri salınır); kamera `stage` bölgesinin kaydırma gövdesinde

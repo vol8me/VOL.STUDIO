@@ -5,9 +5,10 @@ import { expect, test, type Page } from '@playwright/test';
  * davranışı (UI-03.3). Yeni menü yok; her denetim adlıdır, ekrana sığar ve merkezi başka öğe tarafından
  * örtülmez; klavye açar, Escape kapatır ve oyun devam eder.
  */
-const DIALOG = '.vt-pause [role="dialog"], [role="dialog"].vt-pause, .vt-pause';
 const OPEN = /vol-modal--visible/;
-const CONTROLS = `${DIALOG} button, ${DIALOG} input, ${DIALOG} select, ${DIALOG} [role="radio"]`;
+const CONTROLS = ['button', 'input', 'select', '[role="radio"]']
+  .map((control) => `.vt-pause ${control}`)
+  .join(', ');
 
 async function openPause(page: Page): Promise<void> {
   await page.goto('/?start=world');
@@ -122,16 +123,23 @@ test.describe('dokunmatik tablet (yatay, ~750 px CSS yükseklik)', () => {
     isMobile: true,
   });
 
-  // Android'de ölçülen yerleşim: 44 px denetimlerle içerik kaymadan sığmalı; yoksa son satır
-  // yapışkan altlığın altında yarım kalır.
-  test('duraklatma içeriği kaymadan sığar: son satır yapışkan altlığın altında kalmaz', async ({
-    page,
-  }) => {
+  // Android'de ölçülen yerleşim: şeridin gövdesi kayar ama eylem şeridi (devam ve sürücü eylemleri)
+  // hiçbir koşulda ekranın dışına düşmez ve gövdeyle üst üste binmez.
+  test('duraklatma eylem şeridi ekran içindedir ve gövdeyi örtmez', async ({ page }) => {
     await openPause(page);
     const fit = await page.evaluate(() => {
-      const content = document.querySelector<HTMLElement>('.vt-pause .vol-modal__content')!;
-      return { scroll: content.scrollHeight, client: content.clientHeight };
+      const box = (selector: string): DOMRect =>
+        document.querySelector<HTMLElement>(selector)!.getBoundingClientRect();
+      const footer = box('.vt-pause .vt-screen__actions');
+      const body = box('.vt-pause .vt-screen__body');
+      return {
+        footerBottom: footer.bottom,
+        bodyBottom: body.bottom,
+        footerTop: footer.top,
+        viewport: window.innerHeight,
+      };
     });
-    expect(fit.scroll).toBeLessThanOrEqual(fit.client);
+    expect(fit.footerBottom).toBeLessThanOrEqual(fit.viewport);
+    expect(fit.bodyBottom).toBeLessThanOrEqual(fit.footerTop + 1);
   });
 });

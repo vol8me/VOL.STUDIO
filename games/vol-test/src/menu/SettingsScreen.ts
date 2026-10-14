@@ -29,7 +29,7 @@ const QUALITY_KEYS = {
 } as const satisfies Record<EffectLevel, MessageKey>;
 
 /**
- * Ayarlar ekranı (tam ekran): dil, efekt kalitesi ve duraklatma menüsüyle ortak ses, titreşim, ekran ve
+ * Ayarlar ekranı (ana menü ve duraklatmayla aynı sol şerit): dil, efekt kalitesi ve duraklatma menüsüyle ortak ses, titreşim, ekran ve
  * senaryo satırları. Satırların hepsi CORE `SettingsRow`dur; değerler aynı `GameSettings` kaydına yazılır,
  * menüden değişen değer oyunda geçerlidir.
  */
@@ -44,7 +44,7 @@ export class SettingsScreen {
 
   constructor(private readonly options: SettingsScreenOptions) {
     const { settings } = options;
-    this.frame = new ScreenFrame({ testid: 'settings', variant: 'full', onBack: options.onBack });
+    this.frame = new ScreenFrame({ testid: 'settings', variant: 'sheet', onBack: options.onBack });
     this.language = this.scope.addDestroyable(
       new SegmentedControl({
         options: this.languageOptions(),
@@ -70,7 +70,11 @@ export class SettingsScreen {
     );
     this.quality.element.dataset.testid = 'settings-quality';
     this.languageRow = this.scope.addDestroyable(
-      new SettingsRow({ label: i18next.t('voltest:settings.language'), control: this.language }),
+      new SettingsRow({
+        label: i18next.t('voltest:settings.language'),
+        control: this.language,
+        stackOnNarrow: true,
+      }),
     );
     this.qualityRow = this.scope.addDestroyable(
       new SettingsRow({ label: i18next.t('voltest:pause.quality'), control: this.quality }),

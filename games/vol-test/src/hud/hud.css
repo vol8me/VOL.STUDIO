@@ -197,46 +197,46 @@
   white-space: nowrap;
 }
 
-/* Duraklatma paneli 800 px yüksekliğte (Deck) taşar ve kayar; eylemler ve devam düğmesi kayarken de erişilebilir kalır. */
-.vt-pause__footer {
-  position: sticky;
-  bottom: var(--vol-space-md);
-  flex: none;
+/*
+ * Duraklatma: ana menü ve ayarlarla aynı sol şerit (`ScreenFrame` `sheet`). CORE `Modal` yalnız odak
+ * tuzağı, Escape ve geri sözleşmesini verir; kutusu ekranı kaplar ve şeridi taşır, scrim oyunu hafifçe
+ * karartır (menüde scrim yoktur ama oyun arkada görünür kalır).
+ */
+.vt-pause .vol-modal__scrim {
+  background: color-mix(in srgb, var(--vol-ui-scrim) 45%, transparent);
+}
+
+.vt-pause .vol-modal__content {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  pointer-events: none;
+}
+
+.vt-pause .vt-screen {
+  opacity: 1;
+
+  /* Oyun HUD'u şeridin arkasında kalır: geçiş yalnız kenarda, gövde opak. */
+  background: linear-gradient(90deg, var(--vol-ui-surface-1) 94%, transparent);
+}
+
+@media (width <= 720px) {
+  .vt-pause .vt-screen {
+    background: var(--vol-ui-surface-1);
+  }
+}
+
+/* Sürücü eylemleri devam düğmesinin altında, ana menüdeki düğmeler gibi tek sütun dizilir. */
+.vt-pause__actions {
   display: flex;
   flex-direction: column;
-  gap: var(--vol-space-sm);
-  box-shadow: 0 0 0 var(--vol-space-md) var(--vol-ui-panel);
-}
-
-/*
- * Menü, ayar satırları, eylemler ve devam düğmesiyle 800 px yüksekliğe (Deck) kayıtsız sığmalıdır:
- * yapışkan altlık kayan içeriğin üstünü örter, o yüzden CORE'un geniş boşluğu burada daraltılır
- * ve eylemler yan yana dizilir.
- */
-.vt-pause .vol-modal__content {
-  gap: var(--vol-space-md);
-  padding-block: var(--vol-space-lg) var(--vol-space-md);
-}
-
-/*
- * Dokunmatik cihazlar 44 px denetim yüksekliği ister; ~750 px CSS yükseklikteki yatay tablet (Android,
- * ölçülen) ve 800 px Deck'te satır boşluğu daraltılmazsa son satır yapışkan altlığın altında kalır.
- */
-@media (height <= 860px) {
-  .vt-pause .vol-modal__content {
-    gap: var(--vol-space-sm);
-    padding-block: var(--vol-space-md) var(--vol-space-sm);
-  }
-
-  .vt-pause__footer {
-    bottom: var(--vol-space-sm);
-    box-shadow: 0 0 0 var(--vol-space-sm) var(--vol-ui-panel);
-  }
-}
-
-.vt-pause__actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11em, 1fr));
   gap: var(--vol-space-sm);
 }
 
