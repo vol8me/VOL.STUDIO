@@ -68,6 +68,18 @@ describe('Showroom', () => {
     expect(centre()[1]).toBeCloseTo((390 - 148) / zoom);
   });
 
+  it('paletli araç tablada döner; bacaklı yürüyücü dönmez (ayaklar dolaşmaz)', () => {
+    const { showroom } = build();
+    showroom.update(2000);
+    expect(showroom.facing).toBeGreaterThan(0);
+    showroom.setVehicle(ARACHNID);
+    showroom.update(2000);
+    expect(showroom.facing).toBe(0);
+    showroom.setVehicle(STRIKER);
+    showroom.update(16);
+    expect(showroom.facing).toBeGreaterThan(0);
+  });
+
   it('aracı değiştirir, bozuk kare süresini yok sayar ve kapanışta her şeyi söker', () => {
     const { fake, showroom } = build();
     const before = fake.created.length;

@@ -34,6 +34,8 @@ export class Showroom {
   private readonly lighting: Phaser.GameObjects.Container;
   private view: VehicleView | undefined;
   private elapsedMs = 0;
+  private turns = true;
+  private hull = 0;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -51,6 +53,9 @@ export class Showroom {
   /** Vitrindeki aracı değiştirir; eskinin görünümü sökülür. */
   setVehicle(spec: VehicleSpec): void {
     this.view?.destroy();
+    // Bacaklar dünya uzayında basılır: tablada dönen gövde ayakları geride bırakıp dolaşık bir poza sürükler.
+    // Yürüyücü bu yüzden dönmez; taretleri salınır.
+    this.turns = spec.kind === 'tank';
     this.view =
       spec.kind === 'tank'
         ? new TankView(this.scene, spec, this.lighting)
@@ -65,12 +70,18 @@ export class Showroom {
   update(deltaMs: number, panel?: PanelRect, stage?: StageRect): void {
     this.elapsedMs += Number.isFinite(deltaMs) && deltaMs > 0 ? deltaMs : 0;
     const seconds = this.elapsedMs / 1000;
-    const hull = seconds * SHOWROOM.turntableRate;
+    const hull = this.turns ? seconds * SHOWROOM.turntableRate : 0;
+    this.hull = hull;
     this.view?.update(
       this.frame(hull, hull + Math.sin(seconds * SHOWROOM.turretSweepRate) * SHOWROOM.turretSweep),
       deltaMs,
     );
     this.frameCamera(panel, stage);
+  }
+
+  /** Vitrindeki gövdenin güncel yönü (rad). */
+  get facing(): number {
+    return this.hull;
   }
 
   destroy(): void {
