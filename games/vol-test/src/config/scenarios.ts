@@ -13,9 +13,9 @@ export const SCENARIO = {
   maxSeed: 0xffffffff,
   slalom: { start: 180, step: 95, width: 125, jitter: 12 },
   targets: { distance: 390, spacing: 120 },
-  dynamic: { radius: 310, jitter: 110, turnRate: 0.45, fireCycleMs: 1950, fireWindowMs: 30 },
+  dynamic: { radius: 560, jitter: 150, turnRate: 0.45, fireCycleMs: 1950, fireWindowMs: 30 },
   neighborCell: 300,
-  aimRadius: 620,
+  aimRadius: 800,
 } as const;
 
 export function isScenario(value: unknown): value is ScenarioId {

@@ -62,6 +62,12 @@ export class VehicleTrail {
     this.dust.setVisible(this.dust.emitting || this.dust.getAliveParticleCount() > 0);
   }
 
+  /** Dondurulmuş dünyada egzoz ve toz da durur (bkz. `ParticleFx.setTimeScale`). */
+  setTimeScale(scale: number): void {
+    this.exhaust.timeScale = scale;
+    this.dust.timeScale = scale;
+  }
+
   destroy(): void {
     this.exhaust.destroy();
     this.dust.destroy();

@@ -8,6 +8,7 @@ import {
   showFatalStartupError,
   suppressNativeMenus,
 } from '@volstudio/core';
+import { AdaptiveResolution } from '@/app/AdaptiveResolution';
 import { BootLoading } from '@/app/bootLoading';
 import { GameServices } from '@/app/GameServices';
 import { applyLanguage } from '@/app/language';
@@ -40,6 +41,7 @@ async function boot(): Promise<void> {
   const scope = new DisposableScope();
   let game: Awaited<ReturnType<typeof createVolGame>> | undefined;
   const loading = new BootLoading();
+  const resolution = new AdaptiveResolution();
   try {
     const services = scope.add(await GameServices.create());
     await applyLanguage(services.settings.get().language);
@@ -49,6 +51,10 @@ async function boot(): Promise<void> {
       backgroundColor: PALETTE.void,
       strategy: 'resize',
       maxDpr: GAME.maxDpr,
+      maxPixels: GAME.maxPixels,
+      renderScale: () => resolution.scale,
+      // Hibrit GPU'lu dizüstünde tarayıcı varsayılanı tümleşik GPU'dur; oyun ayrık GPU'yu ister.
+      render: { powerPreference: 'high-performance' },
       scenes: [
         new BootScene(services),
         new MenuScene(services),
@@ -69,6 +75,7 @@ async function boot(): Promise<void> {
           onGpuSample: (sample) => services.measurements!.renderGpu(sample),
         }),
       );
+    if (!services.measurements) scope.addSubscription(resolution.attach(game));
     scope.addSubscription(suppressNativeMenus(document));
     // Yerel menü kapalıyken düzenlenebilir alanlar (senaryo paneli) kendi Kes/Kopyala/Yapıştır menüsünü alır.
     scope.addSubscription(installEditMenu(document));

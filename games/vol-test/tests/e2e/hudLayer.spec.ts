@@ -70,7 +70,7 @@ async function passiveReport(page: Page): Promise<
 > {
   return page.evaluate(() => {
     const hud = document.querySelector('[data-testid="hud"]')!;
-    const selectors = ['.vt-hud__vitals', '.vt-hud__hints', '.vt-hud__climate', '.vol-fps-meter'];
+    const selectors = ['.vt-hud__vitals', '.vt-hud__hints', '.vol-fps-meter'];
     const rows: Array<{
       selector: string;
       pointerEvents: string;
@@ -240,12 +240,7 @@ test.describe('dokunmatik (telefon yatayı)', () => {
         // Ölü araç bildirimi en uzun metindir; metin sunucudan değil kare güncellemesinden gelir.
         banner.textContent = 'Araç imha oldu · 10 sn sonra yeniden doğacak';
         const box = banner.getBoundingClientRect();
-        const others = [
-          '.vt-hud__vitals',
-          '.vt-hud__climate',
-          '.vt-hud__map',
-          '.vt-hud__touch > :not([hidden])',
-        ];
+        const others = ['.vt-hud__vitals', '.vt-hud__map', '.vt-hud__touch > :not([hidden])'];
         return others.flatMap((selector) =>
           [...document.querySelectorAll<HTMLElement>(selector)].flatMap((element) => {
             const rect = element.getBoundingClientRect();

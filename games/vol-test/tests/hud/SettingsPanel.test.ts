@@ -22,6 +22,7 @@ describe('SettingsPanel', () => {
     parent.querySelector<HTMLElement>('[data-testid="settings-haptics"]')!.click();
     const range = parent.querySelector<HTMLInputElement>('input[type=range]')!;
     range.value = '0.4';
+    range.dispatchEvent(new Event('input', { bubbles: true }));
     range.dispatchEvent(new Event('change', { bubbles: true }));
     parent
       .querySelectorAll<HTMLButtonElement>('[data-testid="settings-display"] button')[1]

@@ -98,18 +98,6 @@ export const DYNAMIC_FAMILIES = [
   },
   {
     ns: 'voltest',
-    prefix: 'season.',
-    suffix: '',
-    reason: 'mevsim etiketi iklim durumunun mevsiminden türer',
-  },
-  {
-    ns: 'voltest',
-    prefix: 'weather.',
-    suffix: '',
-    reason: 'hava etiketi iklim durumunun türünden türer',
-  },
-  {
-    ns: 'voltest',
     prefix: 'controls.',
     suffix: '',
     reason: 'kontrol ipucu etiketi eylem adından türer',

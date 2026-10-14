@@ -44,6 +44,15 @@ export interface ViewportConfig {
    * iç çözünürlükle çalışır.
    */
   renderScale?: ViewportScaleSetting;
+  /**
+   * Canvas backing store'unun piksel sayısı tavanı (genişlik × yükseklik, cihaz pikseli).
+   *
+   * `maxDpr` yalnız yoğunluğu kısar: 2560×1440 CSS piksel tam ekranda DPR 2 ile 14,7 milyon piksel eder ve
+   * orta sınıf GPU'da kare hızını yarıya indirir. Tavan aşılırsa çarpan, görüntü boyutu ve dünya
+   * AYNI kalacak biçimde `sqrt(tavan / alan)` oranında kısılır (`renderScale` ile birlikte uygulanır,
+   * alt sınır 0,25). Tam ekrana geçiş ve pencere boyutu değişimi `resize` ile tavanı yeniden okur.
+   */
+  maxPixels?: ViewportScaleSetting;
 }
 
 export interface ViewportResult {
@@ -149,7 +158,18 @@ export class ViewportManager {
       scale !== undefined && Number.isFinite(scale)
         ? Math.min(MAX_RENDER_SCALE, Math.max(MIN_RENDER_SCALE, scale))
         : 1;
-    return Math.max(MIN_RENDER_SCALE, clampedDpr * renderScale);
+    const quality = Math.max(MIN_RENDER_SCALE, clampedDpr * renderScale);
+    return this.capPixels(quality);
+  }
+
+  /** Backing store piksel tavanını aşan çarpanı, alanı tavana oturacak kadar kısar. */
+  private capPixels(quality: number): number {
+    const limit = resolveSetting(this.config.maxPixels);
+    if (limit === undefined || !Number.isFinite(limit) || limit <= 0) return quality;
+    const world = this.getWorldSize();
+    const pixels = world.width * world.height * quality * quality;
+    if (pixels <= limit) return quality;
+    return Math.max(MIN_RENDER_SCALE, Math.sqrt(limit / (world.width * world.height)));
   }
 
   /**
@@ -211,22 +231,27 @@ export class ViewportManager {
    * oranına sıkışır.
    */
   attachResize(game: Phaser.Game): () => void {
-    const handler = (): void => {
-      const quality = this.resolveRenderQuality();
-      const world = this.getWorldSize();
-      const width = Math.max(1, world.width * quality);
-      const height = Math.max(1, world.height * quality);
-
-      game.scale.resize(width, height);
-      game.scale.setZoom(1 / quality);
-
-      for (const scene of game.scene.getScenes(true)) {
-        this.applyToScene(scene);
-      }
-    };
-
+    const handler = (): void => this.refresh(game);
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
+  }
+
+  /**
+   * Canvas ve kamera viewport'unu geçerli ölçülerle yeniden kurar (`resize` olayı, ya da `renderScale`/
+   * `maxPixels` sağlayıcısının değeri pencere değişmeden değiştiğinde: uyarlanır çözünürlük).
+   */
+  refresh(game: Phaser.Game): void {
+    const quality = this.resolveRenderQuality();
+    const world = this.getWorldSize();
+    const width = Math.max(1, world.width * quality);
+    const height = Math.max(1, world.height * quality);
+
+    game.scale.resize(width, height);
+    game.scale.setZoom(1 / quality);
+
+    for (const scene of game.scene.getScenes(true)) {
+      this.applyToScene(scene);
+    }
   }
 }
 

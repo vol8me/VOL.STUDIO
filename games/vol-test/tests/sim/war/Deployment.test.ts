@@ -29,13 +29,22 @@ describe('spawnCandidates', () => {
     }
   });
 
+  it.each([0, 1])('%i. cephenin bütün adayları dünyanın içindedir (gövde payıyla)', (faction) => {
+    for (const candidate of spawnCandidates(WORLD, faction)) {
+      expect(candidate.x).toBeGreaterThan(80);
+      expect(candidate.y).toBeGreaterThan(80);
+      expect(candidate.x).toBeLessThan(SIZE - 80);
+      expect(candidate.y).toBeLessThan(SIZE - 80);
+    }
+  });
+
   it('komşu adaylar araç gövdesinden uzaktır', () => {
     const candidates = spawnCandidates(WORLD, 0);
     for (let a = 0; a < candidates.length; a++)
       for (let b = a + 1; b < candidates.length; b++)
         expect(
           Math.hypot(candidates[a].x - candidates[b].x, candidates[a].y - candidates[b].y),
-        ).toBeGreaterThan(70);
+        ).toBeGreaterThan(130);
   });
 });
 

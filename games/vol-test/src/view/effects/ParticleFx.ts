@@ -114,6 +114,14 @@ export class ParticleFx {
     };
   }
 
+  /**
+   * Phaser yayıcıları sahne saatiyle akar; duraklatılmış (dondurulmuş) dünyada duman ve kıvılcım
+   * ilerlemesin diye zaman ölçeği 0 olur. Yeni parçacık da doğmaz.
+   */
+  setTimeScale(scale: number): void {
+    for (const emitter of Object.values(this.emitters)) emitter.timeScale = scale;
+  }
+
   /** Efekt kalite çarpanı (0–1): her patlamadaki parçacık sayısını ölçekler. */
   setScale(scale: number): void {
     this.scale = scale;

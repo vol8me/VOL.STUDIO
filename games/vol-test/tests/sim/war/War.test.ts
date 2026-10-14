@@ -191,6 +191,27 @@ describe('BotDirector', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it('ilk nüfus üsse yığılmaz: aynı cephenin hiçbir iki aracı birbirine yakın doğmaz', () => {
+    const war = newWar({ populate: true, seed: 5 });
+    run(war, 1);
+    for (let faction = 0; faction < WAR.factions; faction++) {
+      const own = [...war.combatants.values()].filter((combatant) => combatant.faction === faction);
+      expect(own).toHaveLength(WAR.population.perFaction);
+      let nearest = Infinity;
+      for (const a of own)
+        for (const b of own)
+          if (a !== b)
+            nearest = Math.min(
+              nearest,
+              Math.hypot(
+                a.vehicle.chassis.x - b.vehicle.chassis.x,
+                a.vehicle.chassis.y - b.vehicle.chassis.y,
+              ),
+            );
+      expect(nearest).toBeGreaterThan(150);
+    }
+  });
+
   it('kadro dört araç ailesini de içerir', () => {
     const war = newWar({ populate: true, seed: 9 });
     run(war, 1);

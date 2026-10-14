@@ -103,6 +103,30 @@ function pointer(type: string): PointerEvent {
   return event;
 }
 
+describe('Hud odak koruması', () => {
+  it('oynarken Tab düğme seçtirmez; HUD düğmesi odak almaz; giriş alanı Tab tuşunu korur', () => {
+    const { hud, parent } = mount();
+    const tab = (target: EventTarget = document.body): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      return event;
+    };
+    expect(tab().defaultPrevented).toBe(true);
+    const fullscreen = parent.querySelector<HTMLButtonElement>(
+      '.vt-hud__fullscreen button, button.vt-hud__fullscreen',
+    );
+    fullscreen?.focus();
+    expect(document.activeElement).not.toBe(fullscreen);
+    // Giriş alanı Tab'ı kendi sözleşmesiyle alır (katılım paneli adı).
+    const field = document.createElement('input');
+    parent.append(field);
+    expect(tab(field).defaultPrevented).toBe(false);
+    hud.showPause();
+    expect(hud.paused).toBe(true);
+    hud.destroy();
+  });
+});
+
 describe('Hud', () => {
   it('can çubuğu, ölüm sayacı ve koruma durumu HUD karesini izler ve dil değiştirir', async () => {
     const { hud, parent, find } = mount();

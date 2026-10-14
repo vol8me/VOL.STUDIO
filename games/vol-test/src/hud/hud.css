@@ -16,18 +16,10 @@
   inset: 0;
 }
 
-.vt-hud__climate,
-.vt-hud__hints {
-  padding: var(--vt-chip-padding);
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-sm);
-  background: var(--vol-ui-overlay-panel);
-}
-
 /*
  * Göstergeler (can, hızlanma, atış dolumu): tek CORE `Panel` içinde üç etiketli yatay `Bar`. Panel
  * HUD'da pasiftir: işaretçi altındaki oyun tuvaline geçer. Masaüstünde sol altta, dokunmatikte sol
- * üstte iklim rozetinin altındadır.
+ * üsttedir.
  */
 .vol-panel.vt-hud__vitals {
   pointer-events: none;
@@ -76,6 +68,10 @@
 }
 
 .vt-hud__hints {
+  padding: var(--vt-chip-padding);
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: var(--vol-radius-sm);
+  background: var(--vol-ui-overlay-panel);
   position: absolute;
   bottom: calc(var(--vol-safe-bottom) + var(--vt-edge));
   left: 50%;
@@ -174,13 +170,13 @@
   top: calc(var(--vol-safe-top) + 66px);
 }
 
-/* Dokunmatikte sağ sütun düğmelerindir; göstergeler sol üstte, iklim rozetinin altındadır. */
+/* Dokunmatikte sağ sütun düğmelerindir; göstergeler sol üsttedir. */
 .vt-hud[data-mode='touch'] {
   --vt-vitals: 168px;
 }
 
 .vt-hud[data-mode='touch'] .vol-panel.vt-hud__vitals {
-  inset: calc(var(--vol-safe-top) + 44px) auto auto calc(var(--vol-safe-left) + 20px);
+  inset: calc(var(--vol-safe-top) + 12px) auto auto calc(var(--vol-safe-left) + 20px);
 }
 
 /* Dokunmatikte harita küçüktür: 44 px'lik yakınlaştırma düğmeleri haritayı örter, kamera zoom düğmeleri vardır. */
@@ -197,16 +193,6 @@
     width: var(--vt-map);
     height: var(--vt-map);
   }
-}
-
-.vt-hud__climate {
-  position: absolute;
-  left: calc(var(--vol-safe-left) + 20px);
-  top: calc(var(--vol-safe-top) + 12px);
-  margin: 0;
-  font-size: 12px;
-  line-height: 16px;
-  white-space: nowrap;
 }
 
 /*

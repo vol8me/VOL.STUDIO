@@ -35,7 +35,7 @@ abonelikler sahibinin kapanışında sökülür.
 
 ## Dünya ve sanat
 
-Dünya 4096 × 4096 birimdir; bir metre 32 birime karşılık gelir.
+Dünya 12288 × 12288 birimdir (384 m); bir metre 32 birime karşılık gelir.
 İnce ızgara 128 birimde, ana çizgi her sekiz hücrededir. Dört duvar fiziksel
 sınırdır; çarpılan kenar şiddete göre kısa süre parlar.
 
@@ -92,8 +92,8 @@ sıkışmayı, yansıma tankın gerçek gövde, taret ve palet dokularını kull
 
 Yağış, toz, dalga ve araç yansıması havuzlarının kapasitesi sabittir.
 Düşük kalite sunum yoğunluğunu azaltır; birikim veya fizik değişmez.
-Tam ekran filtre veya shader kullanılmaz. HUD mevsim ve havayı i18n metniyle
-gösterir. Görünüm önizlemesi README'deki mevsim/hava sorgularıyla seçilir;
+Tam ekran filtre veya shader kullanılmaz. HUD mevsim ve hava yazısı taşımaz (hava dünyada görünür);
+kök `data-season`/`data-weather` özniteliği testlere ve ölçüme kalır. Görünüm önizlemesi README'deki mevsim/hava sorgularıyla seçilir;
 normal oturumun takvimi bu önizlemeden bağımsızdır.
 
 ## Araçlar
@@ -410,14 +410,16 @@ ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, d
 `SegmentedControl`, `Select`, `Checkbox`; `menu.css` yalnız yerleşim verir. Arkada oyunun gerçek araç
 görünümleri (`TankView`, `SpiderView`) dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde onları dolaşık bir poza sürükler, taretleri salınır); kamera `stage` bölgesinin kaydırma gövdesinde
 görünen kısmına (alçak yatay ekranda sahne görünümden uzun olabilir) ya da `sheet`in bıraktığı alana kurulur ve sığmazsa yakınlaştırma küçülür (`src/config/menu.ts`). Ekran
-değişimi solarak yapılır (`prefers-reduced-motion`da anında); geçiş sürerken ikinci seçim yok sayılır.
+değişimi vitrin zemininin kum rengine solarak yapılır (koyu renge solmak parlak zemine dönüşte göz alıyordu;
+`prefers-reduced-motion`da anında); geçiş sürerken ikinci seçim yok sayılır.
 Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış onayını açar ya da kapatır.
 
 Garajdaki seçim (araç, cephe, ad) ve ayarlardaki dil `GameSettings`e yazılır ve oturumlar arasında
 kalır; alıştırma ve savaş aynı araç tercihini kullanır. Savaşa katılma çevrimiçi parçayı ilk kullanımda
 tembel yükler (`connectWar`); bağlanırken geri dönülür ya da ekran kapanırsa geç gelen oturum bırakılır,
-odada hayalet kalmaz. Menü, garaj ve ayarlar çevrimiçi ağ kodunu yüklemez. Ekranlarda ses ve müzik
-yoktur; menü sesi ve müziği ayrı iştir.
+odada hayalet kalmaz. Menü, garaj, ayarlar ve geliştirici çevrimiçi ağ kodunu yüklemez. Ekranlarda oyun içiyle aynı CORE UI sesleri
+çalar (`ScreenScene.attachAudio`: düğme, seçim, kaydırıcı, odak; ses düzeyi ayardan, kaydırıcıyla canlı); yalnız UI
+kiti yüklenir, oyun SFX'i yüklenmez. Müzik yoktur.
 
 ## Girdi, kamera ve HUD
 
@@ -443,7 +445,7 @@ Geri tepme ve sarsıntı ayrı ötelemelerdir. Olay → kamera/titreşim eşleme
 
 HUD görünür bileşenleri CORE'dan alır; oyun CSS'i yerleşim ve yüzeyi kurar. Yalnız oyuncunun
 karar verdirdiği bilgi vardır: can, hızlanma deposu ve atış dolumu tek bir CORE `Panel` içinde üç
-yatay `Bar`dır; çubuklar yazı taşımaz (dolum çubuğun kendisidir, değer yalnız erişilebilir ad ve değer metnindedir) (masaüstünde sol altta, dokunmatikte sol üstte); iklim rozeti sol üstte,
+yatay `Bar`dır; çubuklar yazı taşımaz (dolum çubuğun kendisidir, değer yalnız erişilebilir ad ve değer metnindedir) (masaüstünde sol altta, dokunmatikte sol üstte);
 yeniden doğma ve koruma bildirimi üst ortada, harita sağ üstte, kontrol ipuçları masaüstünde alt
 ortadadır. Sürüş hızı, yön ve vites HUD'da yoktur (teşhise aittir, harita yön ve konumu verir);
 oyun adı rozeti de yoktur. Dokunmatikte haritanın 44 px'lik yakınlaştırma düğmeleri haritayı
@@ -475,6 +477,12 @@ Düşük profil parçacık ve iz havuzlarını azaltır, mermi halesini kapatır
 Başlangıç profili platform ve ölçülmüş cihaz kuralından gelir; kayıtlı
 tercih bunun önüne geçer. Kalite seçimi kalıcıdır ve uygun görünüm kaynaklarına
 uygulanır. Hale yerel yarı saydam geometriyle çizilir.
+
+Çizim çözünürlüğü CORE `ViewportManager`ın iki sınırıyla kısılır: `maxDpr` (2) yoğunluğu, `maxPixels` (`GAME.maxPixels`,
+3,5 milyon) backing store alanını sınırlar. Tavan olmadan 2560×1440 tam ekran DPR 2'de 14,7 milyon piksel çizilir; tavanla 1440p neredeyse tam, 4K 2494×1403
+çözünürlükte çizilir (dünya ve ekran boyutu değişmez, tam ekrana geçişte yeniden okunur). Tavan korumadır: 1080p
+DPR 1 ekranı (~2 milyon piksel) değiştirmez, kare hızı kazancı cihazda ölçülür. Renderer ayrık GPU ister (`powerPreference`).
+Gerçek GPU kare süresi bu makinede ölçülmedi; kabul cihazdadır.
 
 Gönderilen app/vendor/css bütçeleri kök quality.json sahibindedir;
 ölçü güncel üretim build'iyle bundle kapısından alınır.

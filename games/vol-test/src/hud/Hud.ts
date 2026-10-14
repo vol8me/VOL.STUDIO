@@ -14,7 +14,6 @@ import { HUD } from '@/config/hud';
 import type { EffectLevel, EffectProfile } from '@/config/quality';
 import type { GameServices } from '@/app/GameServices';
 import type { TestAction } from '@/input/bindings';
-import { ClimateStatus } from './ClimateStatus';
 import { ControlHints } from './ControlHints';
 import { FullscreenToggle } from './FullscreenToggle';
 import type { HudFrame } from './HudFrame';
@@ -70,7 +69,6 @@ export class Hud {
   private readonly uiRoot: UIRoot;
   private readonly presentation: InputPresentationController;
   private readonly status: StatusPanel;
-  private readonly climate: ClimateStatus;
   private readonly map: MapPanel;
   private readonly hints: ControlHints;
   private readonly touch: TouchControls;
@@ -110,7 +108,6 @@ export class Hud {
       }),
     );
     this.status = this.scope.addDestroyable(new StatusPanel());
-    this.climate = this.scope.addDestroyable(new ClimateStatus());
     this.map = this.scope.addDestroyable(
       new MapPanel({
         worldWidth: options.worldWidth,
@@ -145,7 +142,6 @@ export class Hud {
 
     this.layer.append(
       ...this.status.elements,
-      this.climate.element,
       this.map.element,
       this.hints.element,
       this.touch.element,
@@ -173,6 +169,7 @@ export class Hud {
       );
     }
     this.scope.addSubscription(() => this.layer.remove());
+    this.guardFocus();
 
     this.setTouchMode(options.touch);
     this.presentation.start();
@@ -235,7 +232,8 @@ export class Hud {
     if (nowMs >= this.statusDueMs) {
       this.statusDueMs = nowMs + STATUS_INTERVAL_MS;
       this.status.update(frame);
-      this.climate.update(frame.climate);
+      this.layer.dataset.season = frame.climate?.season ?? '';
+      this.layer.dataset.weather = frame.climate?.kind ?? '';
     }
     if (nowMs >= this.mapDueMs) {
       this.mapDueMs = nowMs + this.quality.getProfile().mapIntervalMs;
@@ -247,9 +245,29 @@ export class Hud {
     this.scope.dispose();
   }
 
+  /**
+   * Oynarken odak HUD düğmelerine geçmez: Tab düğme seçtirir, tıklanan düğme odakta kalırsa Space (fren)
+   * ve Enter onu yeniden tetiklerdi. Modal, giriş alanı ve seçim kutusu Tab'ı kendi sözleşmesiyle alır.
+   */
+  private guardFocus(): void {
+    this.scope.addListener<KeyboardEvent>(
+      document,
+      'keydown',
+      (event) => {
+        if (event.key !== 'Tab' || this.pause.isOpen) return;
+        const target = event.target instanceof Element ? event.target : null;
+        if (target?.closest('.vol-modal, input, textarea, select')) return;
+        event.preventDefault();
+      },
+      true,
+    );
+    this.scope.addListener<FocusEvent>(this.layer, 'focusin', (event) => {
+      if (!this.pause.isOpen && event.target instanceof HTMLElement) event.target.blur();
+    });
+  }
+
   private refreshLabels(): void {
     this.status.refreshLabels();
-    this.climate.refreshLabels();
     this.statusDueMs = 0;
     this.hints.refreshLabels();
     this.touch.refreshLabels();

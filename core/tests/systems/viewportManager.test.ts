@@ -154,6 +154,21 @@ describe('ViewportManager — DPR kelepçesi', () => {
     expect(recorded.zoom).toBe(1);
   });
 
+  it('refresh pencere değişmeden sağlayıcı değerini canvas ve zoom a uygular', () => {
+    setEnvironment(1, 1200, 800);
+    let scale = 1;
+    const manager = new ViewportManager({ strategy: 'resize', renderScale: () => scale });
+    const recorded = { width: 0, height: 0, zoom: Number.NaN };
+    const game = makeFakeGame(recorded);
+    manager.refresh(game);
+    expect(recorded).toEqual({ width: 1200, height: 800, zoom: 1 });
+    scale = 0.5;
+    manager.refresh(game);
+    expect(recorded.width).toBe(600);
+    expect(recorded.height).toBe(400);
+    expect(recorded.zoom).toBe(2);
+  });
+
   it('detach sonrası resize dinleyicisi çalışmaz', () => {
     setEnvironment(1, 500, 500);
 
@@ -321,6 +336,41 @@ describe('ViewportManager — render ölçeği ve dünya ayrımı', () => {
     expect(
       new ViewportManager({ strategy: 'resize', renderScale: Number.NaN }).resolveRenderQuality(),
     ).toBe(1);
+  });
+
+  it('maxPixels büyük ve yoğun ekranda backing store alanını tavana oturtur, dünya ve CSS boyutu aynı kalır', () => {
+    // 2560×1440 CSS, DPR 2 → 14,7 milyon piksel; tavan 3,5 milyon.
+    setEnvironment(2, 2560, 1440);
+    const manager = new ViewportManager({ strategy: 'resize', maxPixels: 3_500_000 });
+    const config = manager.getConfig();
+    expect(config.width * config.height).toBeLessThanOrEqual(3_500_000 * 1.0001);
+    expect(config.width * config.height).toBeGreaterThan(3_400_000);
+    expect((config.zoom ?? 0) * config.width).toBeCloseTo(2560, 3);
+    expect((config.zoom ?? 0) * config.height).toBeCloseTo(1440, 3);
+    expect(manager.getWorldSize()).toEqual({ width: 2560, height: 1440 });
+  });
+
+  it('maxPixels tavan altındaki ekranı değiştirmez; tavan canlı okunur ve alt sınır 0,25tir', () => {
+    setEnvironment(1, 1280, 720);
+    let limit = 3_500_000;
+    const manager = new ViewportManager({ strategy: 'resize', maxPixels: () => limit });
+    expect(manager.getConfig().width).toBe(1280);
+    limit = 460_800; // 1280×720'nin yarısı
+    expect(manager.getConfig().width).toBeCloseTo(1280 * Math.sqrt(0.5), 3);
+    limit = 1;
+    expect(manager.getConfig().width).toBe(1280 * 0.25);
+  });
+
+  it('maxPixels renderScale ve maxDpr ile birlikte en kısıtlayıcı olanı uygular', () => {
+    setEnvironment(3, 1920, 1080);
+    const manager = new ViewportManager({
+      strategy: 'resize',
+      maxDpr: 2,
+      renderScale: 0.9,
+      maxPixels: 100_000_000,
+    });
+    // Tavan geniş: maxDpr 2 × renderScale 0,9 = 1,8
+    expect(manager.getConfig().width).toBeCloseTo(1920 * 1.8, 3);
   });
 
   it('renderScale fonksiyon olarak verilince CANLI okunur', () => {

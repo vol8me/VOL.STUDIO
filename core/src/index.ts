@@ -314,6 +314,8 @@ export {
   type FontManagerOptions,
 } from './fonts/FontManager';
 export {
+  AdaptiveRenderScale,
+  type AdaptiveRenderScaleOptions,
   GraphicsQuality,
   type GraphicsQualityListener,
   type GraphicsQualityOptions,
@@ -330,6 +332,7 @@ export { VOL_FONTS, type VolFontFamily } from './fonts/DefaultFonts';
 export {
   applyVolViewport,
   createVolGame,
+  refreshVolViewport,
   VIEWPORT_REGISTRY_KEY,
   type VolGameConfig,
   type RendererRequest,

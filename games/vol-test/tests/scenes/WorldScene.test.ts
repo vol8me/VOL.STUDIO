@@ -204,7 +204,11 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     frame();
     expect(sim.weather?.frame).toMatchObject({ kind: 'snow', season: 'winter' });
     expect(sim.vehicles.length).toBeGreaterThan(1);
-    expect(parent.querySelector('.vt-hud__climate')?.textContent).toContain('Kış');
+    expect(parent.querySelector<HTMLElement>('[data-testid="hud"]')?.dataset).toMatchObject({
+      season: 'winter',
+      weather: 'snow',
+    });
+    expect(parent.querySelector('.vt-hud__climate')).toBeNull();
     expect(services.settings.get()).toMatchObject({
       quality: 'high',
       scenario: 'empty',
@@ -365,7 +369,7 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     const { sim, frame, parent } = mount();
     for (let step = 0; step < 60; step++) frame();
     expect(sim.weather?.frame.elapsedMs).toBeCloseTo(sim.timeMs);
-    expect(parent.querySelector('.vt-hud__climate')?.textContent).toContain('İlkbahar');
+    expect(parent.querySelector<HTMLElement>('[data-testid="hud"]')?.dataset.season).toBe('spring');
     frame({ press: ['pause'] });
     const elapsed = sim.weather!.frame.elapsedMs;
     for (let step = 0; step < 60; step++) frame();
@@ -539,7 +543,7 @@ describe('WorldScene sürücüleri', () => {
     });
     frame();
     expect(parent.textContent).toContain('Bağlantı kesildi');
-    expect(parent.querySelector('.vt-hud__climate')?.textContent).toContain('Kar');
+    expect(parent.querySelector<HTMLElement>('[data-testid="hud"]')?.dataset.weather).toBe('snow');
   });
 
   it('çevrimdışı sandbox duraklatma menüsünde çok oyunculu lobiyi tembel açar', async () => {

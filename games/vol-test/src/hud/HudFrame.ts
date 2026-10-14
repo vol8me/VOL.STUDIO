@@ -1,5 +1,5 @@
+import type { WeatherFrame } from '@/sim/weather/types';
 import type { FrontFrame } from '@/view/front';
-import type { ClimateFrame } from './ClimateStatus';
 
 /** Haritada gösterilen araç: dünya birimi konum ve gövde yönü. */
 export interface HudVehicle {
@@ -29,7 +29,8 @@ export interface HudFrame {
   readonly alive: boolean;
   readonly respawnRemainingMs: number;
   readonly protectionRemainingMs: number;
-  readonly climate?: ClimateFrame;
+  /** Mevsim ve hava HUD'da yazı değildir; yalnız yerleşim kökünün `data-season`/`data-weather` özniteliğidir. */
+  readonly climate?: Pick<WeatherFrame, 'season' | 'kind'>;
   /**
    * Haritada gösterilecek tüm araçlar. Tembel: yalnız harita güncellenirken çağrılır (düşük kalitede
    * seyreltilir). Çağrı başına nesne üretmemek için yineleyici AYNI `HudVehicle` nesnelerini yeniden

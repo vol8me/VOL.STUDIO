@@ -57,6 +57,21 @@ function lines(graphics: FakeObject): number {
 }
 
 describe('EffectsView', () => {
+  it('dondurulmuş karede (duraklatma) bütün parçacık yayıcıları durur, akış sürünce açılır', () => {
+    const { view, particles } = build();
+    const projectiles = new Projectiles(8, 1000);
+    view.updateVehicle(1, frame({ speed: 200 }));
+    const scales = (): unknown[] => particles().map((emitter) => emitter.timeScale);
+    view.update(projectiles, 1, 0);
+    expect(scales().length).toBeGreaterThan(7);
+    expect(new Set(scales())).toEqual(new Set([0]));
+    // Dondurulmuşken kurulan yeni araç yayıcıları da durur.
+    view.updateVehicle(2, frame());
+    expect(new Set(scales())).toEqual(new Set([0]));
+    view.update(projectiles, 1, 16);
+    expect(new Set(scales())).toEqual(new Set([1]));
+  });
+
   it('mermi: parlak gövde ve incelen iz; iz namlu ağzında tankın içine uzanmaz', () => {
     const { view, graphics } = build();
     const projectiles = new Projectiles(8, 1000);

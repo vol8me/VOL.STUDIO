@@ -23,7 +23,8 @@ export class SettingsPanel {
         step: 0.05,
         value: value.volume,
         formatValue: (volume) => `${Math.round(volume * 100)}%`,
-        onCommit: (volume) => void settings.update({ volume }),
+        // Sürüklerken canlı: ses bırakmayı beklemez (CORE `Slider.onInput`).
+        onInput: (volume) => void settings.update({ volume }),
       }),
     );
     this.volume.element.dataset.testid = 'settings-volume';
@@ -68,7 +69,7 @@ export class SettingsPanel {
     ];
     this.scope.addSubscription(
       settings.subscribe((next) => {
-        this.volume.setValue(next.volume);
+        if (this.volume.getValue() !== next.volume) this.volume.setValue(next.volume);
         this.haptics.setChecked(next.haptics);
         this.display?.setValue(next.display);
       }),

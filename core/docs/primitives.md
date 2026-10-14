@@ -273,9 +273,15 @@ Yerel ekran klavyesi iptalde modal ve geri aboneliğini kapatır.
 
 `GraphicsQuality` generic kademe ve profile sahiptir; profil knobları ve
 kalıcılık tüketicinindir. `ViewportManager.renderScale` DPR'den bağımsız
-raster ölçüsüdür. Resize stratejisinde kamera zoom'u görünür dünya alanını
+raster ölçüsüdür; `maxPixels` backing store alanını tavana oturtur (tam ekran 4K/DPR 2'de dolum
+maliyetini sınırlar, dünya ve ekran boyutu değişmez, resize'ta yeniden okunur). Resize stratejisinde kamera zoom'u görünür dünya alanını
 CSS pikseline sabitler; sahne `applyVolViewport` kullanır. Backing store
 boyutu zoom ve input koordinatlarıyla aynı viewport'a bağlanır.
+
+`AdaptiveRenderScale` bilinmeyen GPU'da sürekli yavaş kareleri (pencere ortalaması eşiğin üstünde) `renderScale`i
+bir adım kısarak toparlar; saf ve belirlenimcidir, yalnız KISAR (ekran yenilemesine kilitli karede boş pay
+okunamaz, yükseltme salınır) ve tam ekran gibi pencere değişiminde `reset` ile yeniden ölçer.
+Çarpan değişince `refreshVolViewport(game)` canvas ve kameraları aynı pencerede yeniden kurar.
 
 `scrollFactor: 0` kamera ölçeğinden muafiyet değildir. İşaretçi gerektiğinde
 kamera uzayına dönüştürülür. Dokunma joystick ölçüsü CSS pikselinde korunur.

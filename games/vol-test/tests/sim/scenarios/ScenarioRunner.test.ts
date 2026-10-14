@@ -24,6 +24,33 @@ describe('ScenarioRunner', () => {
     expect(sim.vehicles).toEqual([player]);
   });
 
+  it.each(['multitank', 'sandbox'] as const)(
+    '%s: ilk doğuşta hiçbir iki araç birbirine yakın değildir',
+    (mode) => {
+      for (const seed of [1, 2, 3, 731]) {
+        const sim = simulation();
+        new ScenarioRunner(sim).select(mode, seed);
+        let nearest = Infinity;
+        for (const a of sim.vehicles)
+          for (const b of sim.vehicles)
+            if (a !== b)
+              nearest = Math.min(
+                nearest,
+                Math.hypot(a.chassis.x - b.chassis.x, a.chassis.y - b.chassis.y),
+              );
+        // ~7 m: gövdeler ve ilk atış menzili birbirine girmez; oyuncuya da en az 13 m uzak doğar.
+        expect(nearest).toBeGreaterThan(230);
+        for (const other of sim.vehicles.slice(1))
+          expect(
+            Math.hypot(
+              other.chassis.x - sim.player.chassis.x,
+              other.chassis.y - sim.player.chassis.y,
+            ),
+          ).toBeGreaterThan(400);
+      }
+    },
+  );
+
   it('kadro dört aracı da döndürür ve her tohumda aynı sırada kurulur', () => {
     const roster = (seed: number) => {
       const sim = simulation();

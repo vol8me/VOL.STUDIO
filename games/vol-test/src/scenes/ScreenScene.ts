@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { applyVolViewport, DisposableScope, pushBackHandler } from '@volstudio/core';
 import { UIRoot } from '@volstudio/core/ui';
+import { createSceneAudio } from '@/audio/sceneAudio';
 import type { GameServices } from '@/app/GameServices';
 import { MENU } from '@/config/menu';
 import { PALETTE } from '@/config/palette';
@@ -17,8 +18,15 @@ export interface ScreenPanel {
   destroy(): void;
 }
 
-/** Solma rengi: `PALETTE.void` ile aynı (Phaser kanal değerleri ister). */
-const FADE = { red: 29, green: 24, blue: 18 } as const;
+/**
+ * Solma rengi vitrin zemininin kumudur (`PALETTE.sand`, Phaser kanal değerleri ister): koyu bir renge solup
+ * parlak zemine açılmak her geçişte göz alan bir parlama yapıyordu; kum rengi aracı eritir, aydınlık değişmez.
+ */
+const FADE = {
+  red: (PALETTE.sand >> 16) & 0xff,
+  green: (PALETTE.sand >> 8) & 0xff,
+  blue: PALETTE.sand & 0xff,
+} as const;
 
 function reducedMotion(): boolean {
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -57,6 +65,7 @@ export abstract class ScreenScene extends Phaser.Scene {
     this.screen = screen;
     this.scope.addDestroyable(screen);
     this.ui.mount(screen.element);
+    this.attachAudio();
     this.scope.addSubscription(pushBackHandler(() => this.onBack()));
     if (!reducedMotion()) this.cameras.main.fadeIn(MENU.fadeMs, FADE.red, FADE.green, FADE.blue);
     // Odak, panelin giriş animasyonu başlamadan taşınmasın diye bir kare sonra verilir. Oyuncu ya da
@@ -68,6 +77,23 @@ export abstract class ScreenScene extends Phaser.Scene {
     });
     this.scope.addSubscription(() => cancelAnimationFrame(focus));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scope.dispose());
+  }
+
+  /**
+   * Menü, garaj, ayarlar ve geliştirici ekranlarının arayüz sesi: düğme, seçim, kaydırıcı ve odak niyetleri
+   * oyun içiyle aynı CORE `UiSoundKit`ten çalar. Yalnız UI kiti yüklenir (oyun SFX'i `load()` ile istenir,
+   * burada çağrılmaz); ses düzeyi ayardan gelir ve kaydırıcıyla canlı değişir.
+   */
+  private attachAudio(): void {
+    const audio = createSceneAudio(this);
+    if (!audio) return;
+    this.scope.add(audio);
+    audio.attachUi(this.ui.intents, this.ui.element);
+    audio.setVolume(this.services.settings.get().volume);
+    this.scope.addSubscription(
+      this.services.settings.subscribe((value) => audio.setVolume(value.volume)),
+    );
+    this.scope.addSubscription(this.services.onResume(() => audio.resumeAfterWake()));
   }
 
   override update(_time: number, delta: number): void {

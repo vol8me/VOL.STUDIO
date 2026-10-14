@@ -43,6 +43,7 @@ export class EffectsView {
   private readonly skids: SkidMarks;
   private readonly trails = new Map<number, VehicleTrail>();
   private frameMs = 0;
+  private timeScale = 1;
   private readonly emitTrail = (
     x: number,
     y: number,
@@ -109,6 +110,7 @@ export class EffectsView {
     let trail = this.trails.get(id);
     if (!trail) {
       trail = new VehicleTrail(this.scene);
+      trail.setTimeScale(this.timeScale);
       this.trails.set(id, trail);
     }
     trail.follow(frame.x, frame.y, frame.hull, frame.speed, frame.boosting, frame.slipping);
@@ -146,6 +148,12 @@ export class EffectsView {
   /** Sunum karesi: mermiler ve duman izleri, patlama katmanları, iz sönümü. */
   update(projectiles: Projectiles, alpha: number, deltaMs: number): void {
     this.frameMs = deltaMs;
+    const timeScale = deltaMs > 0 ? 1 : 0;
+    if (timeScale !== this.timeScale) {
+      this.timeScale = timeScale;
+      this.particles.setTimeScale(timeScale);
+      for (const trail of this.trails.values()) trail.setTimeScale(timeScale);
+    }
     this.tracers.draw(projectiles, alpha, deltaMs > 0 ? this.emitTrail : undefined);
     this.blasts.update(deltaMs);
     this.marks.fade(deltaMs);

@@ -202,7 +202,6 @@ test.describe('dokunmatik', () => {
       '.vt-hud__map',
       '.vt-hud__fullscreen',
       '.vt-hud__vitals',
-      '.vt-hud__climate',
     ];
     const boxes = [];
     for (const selector of selectors) {
@@ -226,14 +225,13 @@ test.describe('dokunmatik', () => {
     expect(overlaps).toEqual([]);
     const pause = (await page.getByTestId('touch-pause').boundingBox())!;
     const zoom = (await page.getByTestId('touch-zoomIn').boundingBox())!;
-    const climate = (await page.locator('.vt-hud__climate').boundingBox())!;
     const vitals = (await page.locator('.vt-hud__vitals').boundingBox())!;
     expect(pause.x + pause.width).toBeLessThan(zoom.x);
     expect(pause.y).toBeCloseTo(zoom.y, 0);
     expect(zoom.x - pause.x - pause.width).toBeLessThan(20);
-    // Göstergeler sol üstte, iklim rozetinin hemen altındadır.
-    expect(vitals.y).toBeGreaterThanOrEqual(climate.y + climate.height);
-    expect(vitals.x).toBeCloseTo(climate.x, 0);
+    // Göstergeler sol üst köşededir.
+    expect(vitals.x).toBeLessThan(60);
+    expect(vitals.y).toBeLessThan(40);
     for (const box of boxes) {
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.y + box.height).toBeLessThanOrEqual(390);

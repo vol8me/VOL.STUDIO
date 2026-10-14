@@ -78,8 +78,7 @@
     "fireReload": "Shot reload",
     "health": "Vehicle health",
     "respawnIn": "Vehicle destroyed · respawn in {{seconds}} s",
-    "protection": "Respawn protection · {{seconds}} s",
-    "climate": "{{season}} · {{weather}}"
+    "protection": "Respawn protection · {{seconds}} s"
   },
   "controls": {
     "move": "Move",
@@ -134,18 +133,6 @@
       "multitank": "Multiple tanks"
     },
     "menu": "Main menu"
-  },
-  "season": {
-    "spring": "Spring",
-    "summer": "Summer",
-    "autumn": "Autumn",
-    "winter": "Winter"
-  },
-  "weather": {
-    "clear": "Clear",
-    "dust": "Dust",
-    "rain": "Rain",
-    "snow": "Snow"
   },
   "war": {
     "faction": {

@@ -45,6 +45,21 @@ describe('SettingsScreen', () => {
     expect(choice('settings-language', 'Automatic')).toBeDefined();
   });
 
+  it('ses kaydırıcısı bırakılmadan, sürüklerken canlı uygulanır', async () => {
+    const { settings, screen } = await mount();
+    const range = screen.element.querySelector<HTMLInputElement>(
+      '[data-testid="settings-volume"] input',
+    )!;
+    range.value = '0.4';
+    // Yalnız `input` olayı: `change` (bırakma) gelmeden tercih ve ses değişir.
+    range.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.waitFor(() => expect(settings.get().volume).toBe(0.4));
+    range.value = '0.2';
+    range.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.waitFor(() => expect(settings.get().volume).toBe(0.2));
+    expect(range.value).toBe('0.2');
+  });
+
   it('kalite seçimi tercihe yazılır', async () => {
     const { settings, choice } = await mount();
     choice('settings-quality', i18next.t('voltest:pause.qualityLevel.low')).click();

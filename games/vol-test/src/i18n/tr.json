@@ -78,8 +78,7 @@
     "fireReload": "Atış dolumu",
     "health": "Araç canı",
     "respawnIn": "Araç imha oldu · {{seconds}} sn sonra yeniden doğacak",
-    "protection": "Yeniden doğma koruması · {{seconds}} sn",
-    "climate": "{{season}} · {{weather}}"
+    "protection": "Yeniden doğma koruması · {{seconds}} sn"
   },
   "controls": {
     "move": "Hareket",
@@ -134,18 +133,6 @@
       "multitank": "Çoklu tank"
     },
     "menu": "Ana menü"
-  },
-  "season": {
-    "spring": "İlkbahar",
-    "summer": "Yaz",
-    "autumn": "Sonbahar",
-    "winter": "Kış"
-  },
-  "weather": {
-    "clear": "Açık",
-    "dust": "Toz",
-    "rain": "Yağmur",
-    "snow": "Kar"
   },
   "war": {
     "faction": {

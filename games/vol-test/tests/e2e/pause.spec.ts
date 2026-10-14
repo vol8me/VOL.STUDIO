@@ -17,6 +17,19 @@ async function openPause(page: Page): Promise<void> {
   await expect(page.locator('.vt-pause')).toHaveClass(OPEN);
 }
 
+/** `count` çizim karesi bekler (sabit süre beklemeden). */
+function frames(page: Page, count: number): Promise<void> {
+  return page.evaluate(
+    (total) =>
+      new Promise<void>((resolve) => {
+        let left = total;
+        const tick = (): void => (--left <= 0 ? resolve() : void requestAnimationFrame(tick));
+        requestAnimationFrame(tick);
+      }),
+    count,
+  );
+}
+
 /** Görünür her denetimin ekran içinde, adlı ve merkezinden tıklanabilir olduğunu raporlar. */
 async function controlReport(page: Page) {
   return page.evaluate((selector) => {
@@ -54,6 +67,33 @@ async function controlReport(page: Page) {
     });
   }, CONTROLS);
 }
+
+test('duraklatılmış dünya donar: araçlar, duman ve kıvılcımlar, yağış dahil hiçbir şey ilerlemez', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'device.voltest.preferences',
+      JSON.stringify({ scenario: 'multitank', seed: 5 }),
+    );
+  });
+  await page.goto('/?start=world&season=winter&weather=snow');
+  await expect(page.locator('[data-testid="hud"]')).toBeVisible();
+  // Botlar ateş edip duman ve kıvılcım üretene dek akış sürer.
+  await frames(page, 240);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.vt-pause')).toHaveClass(OPEN);
+  // Katman geçişi (scrim solması) bitsin.
+  await frames(page, 60);
+  // Şerit ve kare sayacı ile alt ipucu çubuğu dışında kalan dünya bölgesi.
+  const clip = { x: 440, y: 20, width: 640, height: 600 };
+  const first = await page.screenshot({ clip });
+  await frames(page, 90);
+  const second = await page.screenshot({ clip });
+  expect(second.equals(first), 'duraklatılmış dünya iki kare arasında piksel piksel aynıdır').toBe(
+    true,
+  );
+});
 
 test('duraklatma şeridi ve ayar görünümleri ekrana sığar; her denetim adlıdır ve merkezi hit-test ile kendisidir', async ({
   page,

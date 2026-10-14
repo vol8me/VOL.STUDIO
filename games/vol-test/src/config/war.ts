@@ -29,8 +29,8 @@ export const WAR = {
 
   /** Üsler dünyanın karşıt köşelerinde, çaprazın iki ucundadır. */
   bases: [
-    { x: 0.14, y: 0.86, radius: 460 },
-    { x: 0.86, y: 0.14, radius: 460 },
+    { x: 0.14, y: 0.86, radius: 760 },
+    { x: 0.86, y: 0.14, radius: 760 },
   ] as readonly BaseSpec[],
 
   /** Ele geçirilecek bölgeler: çapraz hat üzerinde ve iki yanında. */
@@ -92,9 +92,9 @@ export const WAR = {
 
   spawn: {
     /** Doğma halkasında adaylar ve yarıçapın bu oranı aralığında dağılır. */
-    candidates: 14,
-    /** Taze doğan araç düşman ve dost araçlardan bu kadar uzağı tercih eder (birim). */
-    clearance: 160,
+    candidates: 28,
+    /** Taze doğan araç düşman ve dost araçlardan bu kadar uzağı tercih eder (birim, ~9 m). */
+    clearance: 300,
   },
 
   /** Bot adları: cepheye göre ek önek alır, `Ad 2` gibi çakışmalar çözülür. */

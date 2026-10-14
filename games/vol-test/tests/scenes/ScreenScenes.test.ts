@@ -21,6 +21,9 @@ const online = vi.hoisted(() => ({
   lobbyErrorKey: vi.fn(() => 'voltest:online.error.unreachable'),
 }));
 
+const sceneAudio = vi.hoisted(() => ({ create: vi.fn((): unknown => null) }));
+vi.mock('@/audio/sceneAudio', () => ({ createSceneAudio: sceneAudio.create }));
+
 vi.mock('@/view/Showroom', () => ({
   Showroom: class {
     setVehicle = showroom.setVehicle;
@@ -75,6 +78,7 @@ function services(
       platform,
       displayAvailable: true,
       settings: { get: () => preferences, update, subscribe: () => () => undefined },
+      onResume: () => () => undefined,
     } as unknown as GameServices,
   };
 }
@@ -130,6 +134,30 @@ afterEach(async () => {
 function nativeWindow(available = true) {
   return { isAvailable: () => available, close: vi.fn(() => Promise.resolve()) };
 }
+
+describe('ScreenScene arayüz sesi', () => {
+  it('menü ekranları oyun içi UI ses kitini kökün niyet veriyoluna bağlar, ayardaki ses düzeyini uygular ve kapanışta söker', () => {
+    const audio = {
+      attachUi: vi.fn(),
+      setVolume: vi.fn(),
+      resumeAfterWake: vi.fn(() => Promise.resolve()),
+      dispose: vi.fn(),
+    };
+    sceneAudio.create.mockReturnValueOnce(audio);
+    const { services: env } = services({ volume: 0.4 });
+    const menu = mount(() => new MenuScene(env, nativeWindow() as never));
+    expect(audio.attachUi).toHaveBeenCalledTimes(1);
+    expect(audio.setVolume).toHaveBeenCalledWith(0.4);
+    menu.shutdown();
+    expect(audio.dispose).toHaveBeenCalledTimes(1);
+  });
+
+  it('Web Audio yoksa ekran sessiz açılır', () => {
+    sceneAudio.create.mockReturnValueOnce(null);
+    const { services: env } = services();
+    expect(() => mount(() => new MenuScene(env, nativeWindow() as never))).not.toThrow();
+  });
+});
 
 describe('ScreenScene odağı', () => {
   it('ilk karede varsayılan öğeye odak verir, ama kullanıcının seçtiği alanı çalmaz', async () => {

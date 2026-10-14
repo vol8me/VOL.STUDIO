@@ -29,6 +29,12 @@ vi.mock('@/app/bootLoading', () => ({
   },
 }));
 vi.mock('@/app/GameServices', () => ({ GameServices: { create: boundary.createServices } }));
+vi.mock('@/app/AdaptiveResolution', () => ({
+  AdaptiveResolution: class {
+    scale = 1;
+    attach = () => () => undefined;
+  },
+}));
 vi.mock('@/app/language', () => ({ applyLanguage: boundary.applyLanguage }));
 vi.mock('@/scenes/BootScene', () => ({ BootScene: class {} }));
 vi.mock('@/scenes/MenuScene', () => ({ MenuScene: class {} }));

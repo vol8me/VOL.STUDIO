@@ -20,6 +20,8 @@ export interface VolGameConfig {
    * ekrandaki görüntü boyutu değişmez; yalnız işlenen piksel sayısı düşer.
    */
   renderScale?: ViewportScaleSetting;
+  /** Backing store piksel tavanı (bkz. `ViewportConfig.maxPixels`): büyük ve yoğun ekranda dolum maliyetini sınırlar. */
+  maxPixels?: ViewportScaleSetting;
   scenes: Phaser.Types.Core.GameConfig['scene'];
   physics?: Phaser.Types.Core.GameConfig['physics'];
   input?: Phaser.Types.Core.InputConfig;
@@ -114,6 +116,7 @@ export async function createVolGame(config: VolGameConfig): Promise<Phaser.Game>
     strategy: config.strategy,
     maxDpr: config.maxDpr,
     renderScale: config.renderScale,
+    maxPixels: config.maxPixels,
   });
 
   const requestedRenderer: RendererRequest = config.renderer ?? 'auto';
@@ -195,6 +198,16 @@ function describeRenderer(game: Phaser.Game, requested: RendererRequest): Render
 
 /** `ViewportManager`ın Phaser registry anahtarı. */
 export const VIEWPORT_REGISTRY_KEY = 'volViewportManager';
+
+/**
+ * `createVolGame` oyununun canvas ve kameralarını geçerli viewport ölçüleriyle yeniden kurar. Pencere
+ * boyutu değişmeden `renderScale`/`maxPixels` sağlayıcıları değiştiğinde (uyarlanır çözünürlük) çağrılır;
+ * `createVolGame` dışındaki oyunda no-op.
+ */
+export function refreshVolViewport(game: Phaser.Game): void {
+  const manager: unknown = game.registry?.get(VIEWPORT_REGISTRY_KEY);
+  if (manager instanceof ViewportManager) manager.refresh(game);
+}
 
 /**
  * Sahnenin kamerasını oyunun viewport sözleşmesine göre kurar.
