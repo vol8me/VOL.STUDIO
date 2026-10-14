@@ -9,7 +9,7 @@ import { Hud } from '@/hud/Hud';
 import { TEST_ACTIONS, type TestAction } from '@/input/bindings';
 import { hudFrame } from './support';
 
-function mount(touch = false, fullscreen = true) {
+function mount(touch = false, fullscreen = true, live = false) {
   const parent = document.createElement('div');
   document.body.append(parent);
   const onResume = vi.fn();
@@ -32,6 +32,7 @@ function mount(touch = false, fullscreen = true) {
     fullscreen,
     onResume,
     quality,
+    live,
   });
   const find = <T extends HTMLElement = HTMLElement>(id: string): T =>
     parent.querySelector<T>(`[data-testid="${id}"]`)!;
@@ -208,6 +209,42 @@ describe('Hud', () => {
     expect(health.getAttribute('aria-label')).toBe('Araç canı');
     expect(health.getAttribute('aria-valuetext')).toContain('10/100');
     hud.destroy();
+  });
+
+  it('kontrol ipuçları girişten 10 sn sonra solar; sayaç ilk güncellemede başlar', () => {
+    const { hud, find } = mount();
+    const hints = find('control-hints');
+    // Sahne saati sahneyle başlamaz: sayaç ilk güncellemeden sayılır.
+    hud.update(hudFrame(), 50_000);
+    hud.update(hudFrame(), 59_900);
+    expect(hints.classList.contains('vt-hud__hints--faded')).toBe(false);
+    hud.update(hudFrame(), 60_000);
+    expect(hints.classList.contains('vt-hud__hints--faded')).toBe(true);
+    // Solduktan sonra geri gelmez.
+    hud.update(hudFrame(), 61_000);
+    expect(hints.classList.contains('vt-hud__hints--faded')).toBe(true);
+    hud.destroy();
+  });
+
+  it('çevrimdışı duraklatma "Duraklatıldı" der, canlı dünyada "Menü" ve not gösterir', () => {
+    const offline = mount();
+    offline.hud.showPause();
+    expect(offline.find('pause').textContent).toContain('Duraklatıldı');
+    expect(offline.find('pause-resume').textContent).toBe('Devam et');
+    expect(offline.find('pause').textContent).not.toContain('sunucuda');
+    expect(offline.find('touch-pause').getAttribute('aria-label')).toBe('Duraklat');
+    offline.hud.destroy();
+
+    const live = mount(false, true, true);
+    live.hud.showPause();
+    const sheet = live.find('pause');
+    expect(sheet.querySelector('h1')!.textContent).toBe('Menü');
+    expect(sheet.textContent).toContain('Dünya sunucuda akmaya devam eder');
+    expect(live.find('pause-resume').textContent).toBe('Savaşa dön');
+    expect(live.find('touch-pause').getAttribute('aria-label')).toBe('Menü');
+    expect(live.find('control-hints').textContent).toContain('Menü');
+    expect(live.find('control-hints').textContent).not.toContain('Duraklat');
+    live.hud.destroy();
   });
 
   it('hızlanma durumu HUD katmanına yansır', () => {

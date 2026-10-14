@@ -95,6 +95,7 @@
     "zoom": "Zoom",
     "grid": "Grid",
     "pause": "Pause",
+    "menu": "Menu",
     "brake": "Brake"
   },
   "touch": {
@@ -102,6 +103,7 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "pause": "Pause",
+    "menu": "Menu",
     "brake": "Brake"
   },
   "integrity": {
@@ -111,6 +113,9 @@
   "pause": {
     "title": "Paused",
     "resume": "Resume",
+    "liveTitle": "Menu",
+    "liveResume": "Back to battle",
+    "liveNote": "The world keeps running on the server; your vehicle sends no input while the menu is open.",
     "quality": "Effects quality",
     "qualityLevel": {
       "high": "High",

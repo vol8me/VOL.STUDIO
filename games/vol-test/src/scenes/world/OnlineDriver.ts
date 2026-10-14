@@ -39,6 +39,8 @@ function isSimEvent(event: NetEvent): event is SimEvent {
  */
 export class OnlineDriver implements WorldDriver {
   readonly world: OnlineWorld;
+  /** Dünya sunucuda akar: menü dünyayı durdurmaz (`WorldDriver.live`). */
+  readonly live = true;
   private readonly tags: NameTags;
   private readonly batch: NetEvent[] = [];
   private readonly pending: FeedLine[] = [];

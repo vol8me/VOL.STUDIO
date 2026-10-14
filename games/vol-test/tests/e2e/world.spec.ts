@@ -33,6 +33,13 @@ async function tap(page: Page, key: string): Promise<void> {
   await page.keyboard.up(key);
 }
 
+test('kontrol ipuçları girişten 10 sn sonra solar', async ({ page }) => {
+  await open(page);
+  await expect(page.getByTestId('control-hints')).toBeVisible();
+  await expect(page.getByTestId('control-hints')).toBeHidden({ timeout: 15_000 });
+  await expect(page.getByTestId('control-hints')).toBeHidden();
+});
+
 test('oyun açılır, HUD ve kontrol ipuçları görünür, konsol temiz', async ({ page }) => {
   const errors = collectErrors(page);
   await open(page);

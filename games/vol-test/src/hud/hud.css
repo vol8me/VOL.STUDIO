@@ -84,6 +84,9 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 4px 14px;
+  transition:
+    opacity 0.6s ease,
+    visibility 0s;
 
   /* Göstergelerin ve haritanın arasında kalan genişlik; sığmazsa ipuçları satıra bölünür. */
   max-width: calc(100vw - 2 * (var(--vt-vitals) + var(--vt-edge) + 48px));
@@ -101,6 +104,15 @@
 
 .vt-hud__hint > :last-child {
   margin-left: 6px;
+}
+
+/* Girişten sonra solar; görünmez olunca okuyucudan da çıkar ve tıklamayı tutmaz. */
+.vt-hud__hints--faded {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.6s ease,
+    visibility 0s 0.6s;
 }
 
 .vt-hud__hints[hidden],

@@ -42,7 +42,11 @@ export class ControlHints {
   readonly element: HTMLElement;
   private readonly labels = new Map<HintKey, Text>();
 
-  constructor(presentation: InputPresentationController) {
+  /** `live`: dünya sunucuda aktığı için son satır "Duraklat" değil "Menü" der. */
+  constructor(
+    presentation: InputPresentationController,
+    private readonly live = false,
+  ) {
     this.element = document.createElement('div');
     this.element.className = 'vt-hud__hints';
     this.element.dataset.testid = 'control-hints';
@@ -61,11 +65,24 @@ export class ControlHints {
   }
 
   refreshLabels(): void {
-    for (const [key, label] of this.labels) label.setContent(i18next.t(`voltest:controls.${key}`));
+    for (const [key, label] of this.labels) {
+      const name = key === 'pause' && this.live ? 'menu' : key;
+      label.setContent(i18next.t(`voltest:controls.${name}`));
+    }
   }
 
+  /** Girdi kipine göre: dokunmatikte klavye/kol ipuçları hiç gösterilmez. */
   setVisible(visible: boolean): void {
     this.element.hidden = !visible;
+  }
+
+  /** Giriş süresi dolunca ipuçları solar (yer kaplamaz, okuyucuya da kapanır). */
+  setFaded(faded: boolean): void {
+    this.element.classList.toggle('vt-hud__hints--faded', faded);
+  }
+
+  get faded(): boolean {
+    return this.element.classList.contains('vt-hud__hints--faded');
   }
 
   destroy(): void {

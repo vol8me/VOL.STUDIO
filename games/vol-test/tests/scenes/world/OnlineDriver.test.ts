@@ -158,6 +158,7 @@ describe('OnlineDriver sürüş', () => {
     expect(
       Math.hypot(driver.player.chassis.x - start.x, driver.player.chassis.y - start.y),
     ).toBeGreaterThan(5);
+    expect(driver.live).toBe(true);
     expect(driver.sim).toBe(driver.world.sim);
     expect(driver.measurement).toEqual({ scenario: ONLINE_SCENARIO, seed: 0 });
     expect(driver.advance(performance.now(), 16, false)).toEqual({ alpha: 0 });

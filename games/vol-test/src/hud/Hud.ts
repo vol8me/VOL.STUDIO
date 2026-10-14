@@ -10,6 +10,7 @@ import {
   UIRoot,
   type UiIntentBus,
 } from '@volstudio/core/ui';
+import { HUD } from '@/config/hud';
 import type { EffectLevel, EffectProfile } from '@/config/quality';
 import type { GameServices } from '@/app/GameServices';
 import type { TestAction } from '@/input/bindings';
@@ -51,6 +52,8 @@ export interface HudOptions {
   readonly quality: GraphicsQuality<EffectLevel, EffectProfile>;
   readonly services?: GameServices;
   readonly onResume: () => void;
+  /** Dünya sunucuda akar (çevrimiçi): duraklatma yoktur, katman canlı "Menü"dür. */
+  readonly live?: boolean;
 }
 
 /** Telemetri saniyede ~15 kez yenilenir; her karede DOM yazılmaz. Harita kalite profilindeki aralıkla yenilenir. */
@@ -78,6 +81,8 @@ export class Hud {
   private readonly quality: HudOptions['quality'];
   private statusDueMs = 0;
   private mapDueMs = 0;
+  /** İpuçlarının solacağı kare saati; ilk güncellemede kurulur (sahne saati sahneyle başlamaz). */
+  private hintsUntilMs: number | null = null;
 
   /** HUD kökünün anlamsal UI niyet veriyolu: arayüz sesi ve titreşim buna abone olur. */
   get intents(): UiIntentBus {
@@ -117,9 +122,9 @@ export class Hud {
         maxZoom: options.mapMaxZoom,
       }),
     );
-    this.hints = this.scope.addDestroyable(new ControlHints(this.presentation));
+    this.hints = this.scope.addDestroyable(new ControlHints(this.presentation, options.live));
     this.touch = this.scope.addDestroyable(
-      new TouchControls(options.actionSource, options.stickSource),
+      new TouchControls(options.actionSource, options.stickSource, options.live),
     );
     const fps = this.scope.addDestroyable(new FpsMeter({ position: 'bottom-right' }));
     this.pause = this.scope.addDestroyable(
@@ -128,6 +133,7 @@ export class Hud {
         options.quality,
         options.services?.settings,
         options.services?.displayAvailable,
+        options.live,
       ),
     );
     this.fullscreen = options.fullscreen
@@ -224,6 +230,8 @@ export class Hud {
       this.inputMode = mode;
       this.setTouchMode(mode === 'touch');
     }
+    this.hintsUntilMs ??= nowMs + HUD.hintsShowMs;
+    if (!this.hints.faded && nowMs >= this.hintsUntilMs) this.hints.setFaded(true);
     this.layer.classList.toggle('vt-hud--boosting', frame.boosting);
     if (nowMs >= this.statusDueMs) {
       this.statusDueMs = nowMs + STATUS_INTERVAL_MS;

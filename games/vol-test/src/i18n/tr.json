@@ -95,6 +95,7 @@
     "zoom": "Yakınlaştır",
     "grid": "Izgara",
     "pause": "Duraklat",
+    "menu": "Menü",
     "brake": "Fren"
   },
   "touch": {
@@ -102,6 +103,7 @@
     "zoomIn": "Yakınlaştır",
     "zoomOut": "Uzaklaştır",
     "pause": "Duraklat",
+    "menu": "Menü",
     "brake": "Fren"
   },
   "integrity": {
@@ -111,6 +113,9 @@
   "pause": {
     "title": "Duraklatıldı",
     "resume": "Devam et",
+    "liveTitle": "Menü",
+    "liveResume": "Savaşa dön",
+    "liveNote": "Dünya sunucuda akmaya devam eder; menüdeyken aracın girdi vermez.",
     "quality": "Efekt kalitesi",
     "qualityLevel": {
       "high": "Yüksek",

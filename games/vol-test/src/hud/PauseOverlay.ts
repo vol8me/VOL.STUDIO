@@ -19,7 +19,7 @@ export interface PauseAction {
 }
 
 /**
- * Duraklatma katmanı: ana menü ve ayarlarla aynı sol şerit (`ScreenFrame` `sheet`). Başlık şeridi,
+ * Duraklatma katmanı (canlı dünyada "Menü": dünya durmaz, yalnız girdi kesilir): ana menü ve ayarlarla aynı sol şerit (`ScreenFrame` `sheet`). Başlık şeridi,
  * kayan gövde (efekt kalitesi ve ayar satırları) ve eylem şeridi (devam, sürücü eylemleri) üç ekranda
  * aynı iskeletten gelir. `Modal` yalnız odak tuzağını, Escape'i ve Android geri sözleşmesini verir; kapanınca
  * (düğme, Escape, geri) `onResume` çağrılır. Scrim kapatmaz: duraklatma düğmesine dokunuşun ardından
@@ -42,6 +42,7 @@ export class PauseOverlay {
     private readonly quality: GraphicsQuality<EffectLevel, EffectProfile>,
     settings?: GameSettings,
     displayAvailable = false,
+    private readonly live = false,
   ) {
     this.modal = new Modal({
       className: 'vt-pause',
@@ -124,8 +125,13 @@ export class PauseOverlay {
 
   refreshLabels(): void {
     this.settingsPanel?.refreshLabels();
-    this.frame.setTitle(i18next.t('voltest:pause.title'));
-    this.resume.setLabel(i18next.t('voltest:pause.resume'));
+    this.frame.setTitle(
+      i18next.t(this.live ? 'voltest:pause.liveTitle' : 'voltest:pause.title'),
+      this.live ? i18next.t('voltest:pause.liveNote') : '',
+    );
+    this.resume.setLabel(
+      i18next.t(this.live ? 'voltest:pause.liveResume' : 'voltest:pause.resume'),
+    );
     this.qualityRow.setLabel(i18next.t('voltest:pause.quality'));
     this.qualityPicker.setOptions(this.qualityOptions());
     this.qualityPicker.setValue(this.quality.getLevel());

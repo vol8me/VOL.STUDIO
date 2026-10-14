@@ -54,6 +54,8 @@ export interface WorldDriver {
   /** Kontrol edilen araç. */
   readonly player: Vehicle;
   readonly measurement: DriverMeasurement;
+  /** Dünya sunucuda akar, durdurulamaz: duraklatma "Menü"ye döner, yalnız araca boş girdi gider. */
+  readonly live?: boolean;
   /**
    * Gerçek zamanlı kare süresini dünyaya yedirir. `timeMs` sahnenin kare saatidir; `paused`
    * çevrimdışı dünyayı dondurur, çevrimiçi dünya sunucuda aktığı için yalnız girdiyi keser.

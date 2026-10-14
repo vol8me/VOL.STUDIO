@@ -476,6 +476,16 @@ describe('WorldScene sürücüleri', () => {
     expect(driver().drainEvents).toHaveBeenCalled();
   });
 
+  it('canlı sürücüde Esc dünyayı durduran duraklatma değil, girdiyi kesen Menü açar', () => {
+    const { factory, driver } = stub({ live: true });
+    const { frame, parent } = mount(undefined, { createDriver: factory });
+    frame({ press: ['pause'] });
+    expect(driver().advance).toHaveBeenLastCalledWith(expect.any(Number), expect.any(Number), true);
+    const sheet = parent.querySelector('[data-testid="pause"]')!;
+    expect(sheet.querySelector('h1')!.textContent).toBe('Menü');
+    expect(parent.querySelector('[data-testid="pause-resume"]')!.textContent).toBe('Savaşa dön');
+  });
+
   it('sürücü bağlamı sahnenin dünyasını, kontrolünü, tohumunu ve yeniden başlatmayı taşır', () => {
     const { factory, context } = stub();
     const next: WorldStartData = { createDriver: factory, weather: 'clear' };

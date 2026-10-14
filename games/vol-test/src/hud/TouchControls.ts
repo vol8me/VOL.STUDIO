@@ -25,6 +25,8 @@ export class TouchControls {
   constructor(
     private readonly source: VirtualActionSource<TestAction>,
     private readonly sticks: VirtualStickSource,
+    /** Dünya sunucuda aktığı için üst düğme "Duraklat" değil "Menü" der. */
+    private readonly live = false,
   ) {
     this.element = document.createElement('div');
     this.element.className = 'vt-hud__touch';
@@ -56,7 +58,7 @@ export class TouchControls {
 
     const tap = (action: TapAction, icon: string | Node, className: string): IconButton => {
       const button = new IconButton(icon, {
-        label: i18next.t(`voltest:touch.${action}`),
+        label: this.tapLabel(action),
         size: 'lg',
         onClick: () => {
           source.press(action);
@@ -85,8 +87,13 @@ export class TouchControls {
       button.element.setAttribute('aria-label', i18next.t(`voltest:touch.${action}`));
     }
     for (const [button, action] of this.buttons) {
-      button.setLabel(i18next.t(`voltest:touch.${action}`));
+      button.setLabel(this.tapLabel(action));
     }
+  }
+
+  private tapLabel(action: TapAction): string {
+    const name = action === 'pause' && this.live ? 'menu' : action;
+    return i18next.t(`voltest:touch.${name}`);
   }
 
   setVisible(visible: boolean): void {

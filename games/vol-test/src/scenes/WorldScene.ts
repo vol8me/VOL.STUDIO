@@ -202,6 +202,7 @@ export class WorldScene extends Phaser.Scene {
         services: this.services,
         readInputState: () => this.controls.presentationState(),
         onResume: () => this.pause.resume(),
+        live: this.driver.live === true,
         quality,
       }),
     );
@@ -212,7 +213,8 @@ export class WorldScene extends Phaser.Scene {
       new PauseController({
         surface: this.hud,
         onChange: (paused) => {
-          this.audio?.setPaused(paused);
+          // Canlı dünyada sahne ve ses sürer; yalnız girdi kesilir.
+          if (!this.driver.live) this.audio?.setPaused(paused);
           void this.services?.setPaused(paused);
           if (!paused) this.services?.diagnostics?.markResume();
         },
@@ -282,7 +284,8 @@ export class WorldScene extends Phaser.Scene {
     measurements?.mark('eventsAudio');
 
     const alpha = stepped.alpha;
-    const presentMs = paused ? 0 : delta;
+    const frozen = paused && !this.driver.live;
+    const presentMs = frozen ? 0 : delta;
     for (const vehicle of this.sim.vehicles) {
       const tank = vehicle.chassis;
       const frame = tankFrame(tank, alpha);
@@ -295,8 +298,8 @@ export class WorldScene extends Phaser.Scene {
         y: frame.y,
         hull: frame.hull,
         speed: frame.speed,
-        boosting: frame.boosting && !paused,
-        slipping: !paused && tank.slip > FEEL.slipSpeed,
+        boosting: frame.boosting && !frozen,
+        slipping: !frozen && tank.slip > FEEL.slipSpeed,
         groundLeft: tank.groundLeft,
         groundRight: tank.groundRight,
         slideLeft: tank.slideLeft,
@@ -330,7 +333,7 @@ export class WorldScene extends Phaser.Scene {
     } else this.aimGuide.draw(null, time);
     measurements?.mark('aim');
 
-    this.camera.update(view.x, view.y, delta, paused);
+    this.camera.update(view.x, view.y, delta, frozen);
     const rect = this.camera.model.visibleRect();
     this.environment.render(this.sim.vehicles, alpha, rect);
     measurements?.mark('environmentCamera');

@@ -451,6 +451,11 @@ adım konumu ya da seyreltilmiş güncelleme işareti sıçratır. İşaretler y
 (çerçeve başına nesne üretilmez), pikselin 1/8'inden küçük değişim çizim istemez, özet yalnız
 tür sayıları değişince yazılır. Düşük kalite profili haritayı 33 ms aralıkla seyreltir
 (`EffectProfile.mapIntervalMs`).
+Kontrol ipuçları dünyaya her girişte `HUD.hintsShowMs` (10 sn) görünür, sonra solar ve geri gelmez;
+sayaç HUD'un ilk güncellemesinde başlar (sahne saati sahneyle başlamaz), dokunmatikte hiç görünmez.
+Çevrimiçi dünya sunucuda aktığı için duraklatılamaz: sürücü `live` bildirir, Esc ve düğme "Menü" açar
+(başlık "Menü", not "Dünya sunucuda akmaya devam eder", ana eylem "Savaşa dön", ipucu ve dokunmatik düğme
+"Menü"). Sahne çizimi, kamera ve ses sürer, araca yalnız boş girdi gider. Çevrimdışı sandbox gerçekten durur.
 Duraklatma Esc, Menu, düğme veya Android geri hareketiyle kapanır; arka plana
 dokunmak kapatmaz. Uygulama arka plana geçince ve sistem uyuyunca duraklar.
 Uyanış kendiliğinden devam etmez. Tarayıcı tam ekranı CORE kontrolüyle,
@@ -590,7 +595,8 @@ ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağ�
 - Çizim pozu `tank.previous` içinde ara değerlidir; sahne çevrimiçi alfa 0 ile çizer.
 - Kendi `fired` yankısı bastırılır (öngörü atışı zaten gösterdi); yerel mermi yerelde ilerler.
 - Hava senkronlanmaz; çevrimiçi dünya `clear` açılır.
-- Duraklatma dünyayı dondurmaz (saat sunucudadır): araç yalnız boş girdi yollar.
+- Duraklatma dünyayı dondurmaz (saat sunucudadır): menü canlı "Menü"dür (`WorldDriver.live`), sahne çizimi
+  ve ses sürer, araç yalnız boş girdi yollar; menüdeyken araç savunmasızdır ve arayüz bunu söyler.
 - Sahne başlarken ve yeniden başlarken (`restart`, ekran geçişleri, `toMenu`) veri her zaman bir nesnedir.
   Phaser boş veriyi yok sayıp önceki veriyi korur; "Ayrıl" sonrası eski çevrimiçi sürücü fabrikası ölü
   oturumla yeniden kurulurdu ve menüden açılan alıştırma çevrimiçi sürücüyle gelirdi.
