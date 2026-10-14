@@ -7,7 +7,7 @@ import type { WeatherSource } from './SurfaceLayer';
 import { TerrainField } from './TerrainField';
 import { TerrainContours } from './TerrainContours';
 
-function mixColor(a: number, b: number, t: number): number {
+export function mixColor(a: number, b: number, t: number): number {
   let result = 0;
   for (const shift of [16, 8, 0]) {
     const from = (a >> shift) & 255;
@@ -37,7 +37,7 @@ export function seasonPalette(frame: Pick<WeatherFrame, 'season' | 'seasonProgre
   };
 }
 
-function daylightColor(color: number, daylight: number): number {
+export function daylightColor(color: number, daylight: number): number {
   const brightness = 0.8 + daylight * (2 / 7);
   let result = 0;
   for (const shift of [16, 8, 0]) {

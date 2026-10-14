@@ -121,6 +121,17 @@ Araçlar suya şöyle tepki verir (`WADING`):
 - Bot yüzemeyen araçta gölün önündeki mesafeleri tarar, suya bakan bileşeni sıyırır ve kıyı teğetine
   kayar; suyun içindeyse kıyıya çıkış yönüne gider (`BotBrain.lakePush`).
 
+Sunum (`src/view/water/LakeView.ts`, `src/config/waterView.ts`) salt görsel katmandır; fiziği etkileyen hiçbir
+sayı burada yoktur. Kıyı şeridi ve dokuz derinlik bandı, `LakeField`in derinlik eğrisinden göl başına
+küçük bir canvas dokusuna bir kez basılır (her karede ekranı kaplayan çoklu üst üste çizim yerine tek
+görüntü); renk (mevsim, gün ışığı) ya da donma değişince en sık 500 ms aralıkla yeniden basılır. Hareketli
+katman yalnız çizgidir: dalga çizgileri, kıyıda yanıp sönen köpük ve kıyı çizgisi (yarım çözünürlüklü
+kıyı çokgeniyle, parça başına tek yol). Yağmurda su yüzünde halkalar genişler (kalite çarpanıyla azalır).
+Kışın göl kıyıdan merkeze doğru donar: buz kalınlığı sıcaklıktan türer (`iceThickness`, kar yağarken
+biraz öne geçer), halka dokuya basılır, çatlaklar kıyıdan merkeze uzanır ve cephede ışıklı bir çizgi
+titreşir. Buz salt sunumdur: tank ve yürüyücü buzu kırar ama yüzemez, yani donma kimin boğulacağını
+değiştirmez ve sunucuya mevsim saati taşımak gerekmez.
+
 ## Araçlar
 
 Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, can,
@@ -837,6 +848,7 @@ tablosu `tests/app/AgentLab.test.ts` ile birebir eşitlenir:
 | `volLab.telemetry` | Son durum örnekleri (`count`, en çok 600), eskiden yeniye.                                             |
 | `volLab.events`    | Son oyun olayları ve işaretler (`count`, en çok 600), eskiden yeniye.                                  |
 | `volLab.input`     | Oyuncu girdisini geçersiz kılar: `moveX`, `moveY`, `aimX`, `aimY` ([-1, 1]), `fire`, `boost`, `brake`. |
+| `volLab.teleport`  | Oyuncu aracını (`x`, `y`) noktasına koyar; isteğe bağlı `hull` (rad). Çevrimiçi oturumda fırlatır.     |
 | `volLab.release`   | Girdi geçersiz kılmayı bırakır.                                                                        |
 | `volLab.mark`      | Olay halkasına etiketli bir işaret yazar (`label`).                                                    |
 | `volLab.jsonl`     | Telemetri ve olay halkasını zamana göre sıralı, satır başına bir JSON verir.                           |

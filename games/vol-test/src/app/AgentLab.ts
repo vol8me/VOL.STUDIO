@@ -25,6 +25,8 @@ export interface LabSource {
   state(): LabState;
   /** `null` girdiyi bırakır; verilen alanlar oyuncu komutunun üstüne yazılır. */
   setInput(patch: Partial<TankCommand> | null): void;
+  /** Oyuncu aracını verilen yere koyar (çevrimdışı alıştırma; çevrimiçi oturumda fırlatır). */
+  teleport(x: number, y: number, hull?: number): void;
 }
 
 export interface LabRecord {
@@ -106,6 +108,9 @@ export class AgentLab {
       'Oyuncu girdisini geçersiz kılar: moveX, moveY, aimX, aimY, fire, boost, brake.',
       (args) => this.setInput(args),
     );
+    add('teleport', 'Oyuncu aracını (x, y) noktasına koyar; isteğe bağlı hull (rad).', (args) =>
+      this.teleport(args),
+    );
     add('release', 'Girdi geçersiz kılmayı bırakır.', () => {
       this.source.setInput(null);
       return { released: true };
@@ -177,6 +182,21 @@ export class AgentLab {
     }
     this.source.setInput(patch);
     return { input: patch };
+  }
+
+  private teleport(args: Json): Json {
+    const { x, y, hull } = args;
+    if (
+      typeof x !== 'number' ||
+      typeof y !== 'number' ||
+      !Number.isFinite(x) ||
+      !Number.isFinite(y)
+    )
+      throw new RangeError('x ve y sonlu sayı olmalı');
+    if (hull !== undefined && (typeof hull !== 'number' || !Number.isFinite(hull)))
+      throw new RangeError('hull sonlu sayı olmalı');
+    this.source.teleport(x, y, hull);
+    return { x, y, hull: hull ?? null };
   }
 
   private jsonl(): string {

@@ -28,12 +28,14 @@ function state(patch: Partial<LabState> = {}): LabState {
 
 function lab() {
   const inputs: Array<Partial<TankCommand> | null> = [];
+  const placed: Array<[number, number, number | undefined]> = [];
   const world = { current: state() };
   const instance = new AgentLab({
     state: () => world.current,
     setInput: (patch) => inputs.push(patch),
+    teleport: (x, y, hull) => placed.push([x, y, hull]),
   });
-  return { lab: instance, inputs, world };
+  return { lab: instance, inputs, world, placed };
 }
 
 describe('AgentLab', () => {
@@ -79,6 +81,24 @@ describe('AgentLab', () => {
     expect(inputs).toHaveLength(1);
     instance.run('release');
     expect(inputs[1]).toBeNull();
+  });
+
+  it('ışınlama sayıyı doğrular ve kaynağa iletir', () => {
+    const { lab: instance, placed } = lab();
+    expect(instance.run('teleport', { x: 1500, y: 2500 })).toEqual({
+      x: 1500,
+      y: 2500,
+      hull: null,
+    });
+    expect(instance.run('teleport', { x: 1, y: 2, hull: 0.5 })).toMatchObject({ hull: 0.5 });
+    expect(placed).toEqual([
+      [1500, 2500, undefined],
+      [1, 2, 0.5],
+    ]);
+    expect(() => instance.run('teleport', { x: 'a', y: 1 })).toThrow(RangeError);
+    expect(() => instance.run('teleport', { x: Number.NaN, y: 1 })).toThrow(RangeError);
+    expect(() => instance.run('teleport', { x: 1, y: 1, hull: 'x' })).toThrow(RangeError);
+    expect(placed).toHaveLength(2);
   });
 
   it('olaylar ve işaretler zaman damgalı satırlar olarak jsonl çıktısında sıralanır', () => {

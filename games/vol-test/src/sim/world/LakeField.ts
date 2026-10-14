@@ -128,6 +128,14 @@ export class LakeField {
     return out;
   }
 
+  /** Kıyının `theta` yönündeki yarıçap çarpanı (1 dairesel elips; harmonikler dalgalandırır). */
+  boundAt(lake: Lake, theta: number): number {
+    let bound = 1;
+    for (const [count, amplitude, phase] of lake.shape)
+      bound += amplitude * Math.cos(count * theta + phase);
+    return bound;
+  }
+
   /**
    * Göl kıyısının (ya da `scale` > 1 ile kıyı şeridinin dış kenarının) kapalı çokgeni: `points`
    * nokta, `[x0, y0, x1, y1, ...]`. Sunum ve harita bunu bir kez kurar; kare başına hesap yoktur.
@@ -136,9 +144,7 @@ export class LakeField {
     const out = new Float64Array(points * 2);
     for (let index = 0; index < points; index++) {
       const theta = (index / points) * Math.PI * 2;
-      let bound = 1;
-      for (const [count, amplitude, phase] of lake.shape)
-        bound += amplitude * Math.cos(count * theta + phase);
+      const bound = this.boundAt(lake, theta);
       const u = Math.cos(theta) * lake.rx * bound * scale;
       const v = Math.sin(theta) * lake.ry * bound * scale;
       out[index * 2] = lake.x + u * lake.cos - v * lake.sin;

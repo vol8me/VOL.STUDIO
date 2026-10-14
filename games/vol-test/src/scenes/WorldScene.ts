@@ -145,6 +145,7 @@ export class WorldScene extends Phaser.Scene {
         quality.getProfile(),
         data?.weather ?? parseWeatherOverride(query.get('weather')) ?? overrides?.weather,
         previewSeason,
+        world.lakes,
       ),
     );
     if (previewSeason) this.environment.model.step(SEASONS.previewWarmupMs);
@@ -280,6 +281,13 @@ export class WorldScene extends Phaser.Scene {
         };
       },
       setInput: (patch) => this.controls.setLabInput(patch),
+      teleport: (x, y, hull) => {
+        if (this.driver.live === true)
+          throw new RangeError('Işınlama çevrimiçi oturumda kullanılamaz');
+        const chassis = this.driver.player.chassis;
+        chassis.place(x, y, hull ?? chassis.hull);
+        this.camera.model.snapTo(x, y);
+      },
     });
     this.scope.addSubscription(installAgentLab(window, lab));
     this.scope.addSubscription(() => this.controls.setLabInput(null));
