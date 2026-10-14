@@ -108,6 +108,10 @@ export class TankView implements VehicleView {
     this.shadow.update(this.shadowSource);
   }
 
+  setParts(mask: number): void {
+    this.treads.setBroken(mask);
+  }
+
   setPresent(present: boolean): void {
     this.root.setVisible(present);
     if (present) return;

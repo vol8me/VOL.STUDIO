@@ -5,7 +5,7 @@ import type { Projectiles } from '@/sim/combat/Projectiles';
 import { DEBRIS } from '@/config/debris';
 import type { VehicleSpec } from '@/config/vehicles';
 import { createRandom, type Random } from '@volstudio/core/random';
-import { wreckArt, type ChunkArt } from './debrisArt';
+import { shedArt, wreckArt, type ChunkArt } from './debrisArt';
 import { Blasts } from './effects/Blasts';
 import { Debris } from './effects/Debris';
 import { ParticleFx } from './effects/ParticleFx';
@@ -149,6 +149,30 @@ export class EffectsView {
         height: 10,
         hot: true,
         inherit: { vx: vx * 0.35, vy: vy * 0.35 },
+      });
+    }
+  }
+
+  /**
+   * Bir parça koptu (palet ya da bacak): koptuğu noktada kıvılcım ve kısa parlama, kopan parçalar
+   * `outward` yönünde (gövdeden dışarı) savrulur, yere düşer, bir süre kalır ve söner.
+   */
+  shed(spec: VehicleSpec, x: number, y: number, outward: number): void {
+    this.particles.snap(x, y, outward);
+    this.blasts.explode(x, y, false, FX.snap.flashScale);
+    const part = DEBRIS.part;
+    for (const art of shedArt(spec)) {
+      this.launch(art, {
+        x,
+        y,
+        angle: outward + (this.random.next() - 0.5) * 0.9,
+        speed: this.range(part.speed),
+        lift: this.range(part.lift),
+        spin: this.range(part.spin) * (this.random.next() < 0.5 ? -1 : 1),
+        scale: 1,
+        height: 8,
+        hot: false,
+        inherit: { vx: 0, vy: 0 },
       });
     }
   }

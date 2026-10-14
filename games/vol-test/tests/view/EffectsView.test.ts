@@ -448,3 +448,50 @@ describe('EffectsView enkaz', () => {
     expect(under / total).toBeLessThan(DEBRIS.hit.chance * 1.3);
   });
 });
+
+describe('EffectsView kopan parça', () => {
+  it('tankın palet parçaları ve örümceğin bacak parçası kopma noktasından dışarı savrulur', () => {
+    for (const [spec, count] of [
+      [STRIKER, 3],
+      [ARACHNID, 2],
+    ] as const) {
+      const { view, scene } = build();
+      view.shed(spec, 300, 400, Math.PI / 2);
+      const { chunks } = debrisOf(scene);
+      expect(chunks, spec.id).toHaveLength(count);
+      for (let frame = 0; frame < 30; frame++) view.update(new Projectiles(1, 1), 0, 16);
+      // Dışarı yönü +y: parçalar kopma noktasının altına (daha büyük y) düşmüş olmalı.
+      const moved = chunks.map((chunk) => (chunk.y as number) - 400);
+      expect(Math.max(...moved), spec.id).toBeGreaterThan(20);
+    }
+  });
+
+  it('kopma kıvılcım, kısa parlama ve toz üretir; yanık bırakmaz (araç patlaması değildir)', () => {
+    const { view, scorches, flashes, particles } = build();
+    const before = particles().reduce((sum, emitter) => sum + burst(emitter), 0);
+    view.shed(STRIKER, 300, 400, 0);
+    expect(particles().reduce((sum, emitter) => sum + burst(emitter), 0)).toBeGreaterThan(before);
+    expect(flashes().length).toBeGreaterThan(0);
+    expect(scorches()).toHaveLength(0);
+  });
+
+  it('tankın kopan parçası aracın palet çarkıdır, örümceğinki bacağın tibia ve pençesidir', () => {
+    const tank = build();
+    tank.view.shed(STRIKER, 0, 0, 0);
+    expect(debrisOf(tank.scene).textures[0]).toBe(TEXTURE.treadEnd);
+    const spider = build();
+    spider.view.shed(ARACHNID, 0, 0, 0);
+    const frames = debrisOf(spider.scene).chunks.map((chunk) => lastCall(chunk, 'setTexture')?.[1]);
+    expect(frames).toEqual(['arachnid/tibia', 'arachnid/tarsus']);
+  });
+
+  it('aynı tohum aynı savrulma düzenini verir', () => {
+    const run = () => {
+      const { view, scene } = build();
+      view.shed(ARACHNID, 100, 100, 1);
+      for (let frame = 0; frame < 25; frame++) view.update(new Projectiles(1, 1), 0, 16);
+      return debrisOf(scene).chunks.map((chunk) => [chunk.x, chunk.y, chunk.rotation]);
+    };
+    expect(run()).toEqual(run());
+  });
+});

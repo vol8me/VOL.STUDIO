@@ -1,3 +1,6 @@
+import { PARTS } from '@/config/parts';
+import type { VehicleSpec } from '@/config/vehicles';
+
 /**
  * Şasi parçalarının bit maskesi (`Chassis.parts`): bir bit, kırık bir parçadır. Tankta iki bit yan
  * paletlerdir; yürüyücüde `taraf * 4 + istasyon` bacağı: sol bacaklar 0-3, sağ bacaklar 4-7, önden arkaya
@@ -22,6 +25,29 @@ export function lostLegs(parts: number, side: number): number {
     bits >>= 1;
   }
   return count;
+}
+
+/** Parçanın gövde çerçevesindeki bağlantı noktası: ileri ve sağ ekseni (dünya birimi). */
+export interface PartAnchor {
+  forward: number;
+  right: number;
+}
+
+/**
+ * Parçanın gövdeye bağlandığı nokta: tankta yan paletin ortası, yürüyücüde bacağın kalçası kenarda.
+ * Kopan parçanın savrulacağı yer ve yön buradan türer (sunum ve ses, fizik değil).
+ */
+export function partAnchor(spec: VehicleSpec, index: number, out: PartAnchor): PartAnchor {
+  const side = partSide(spec.kind, index);
+  if (spec.kind === 'tank') {
+    out.forward = 0;
+    out.right = side * spec.tank.trackOffset;
+  } else {
+    const stations: readonly number[] = PARTS.walker.stations[spec.id];
+    out.forward = stations[index % LEGS_PER_SIDE];
+    out.right = side * (spec.walker.halfWidth + 4);
+  }
+  return out;
 }
 
 /** Tek bitin sırası (0 tabanlı). */

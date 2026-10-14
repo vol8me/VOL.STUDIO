@@ -165,6 +165,14 @@ export class ParticleFx {
     this.burst('smoke', wreck.smoke, x, y, 0, 360);
   }
 
+  /** Bir parça koptu (palet, bacak): koptuğu yandan kıvılcım ve toz. */
+  snap(x: number, y: number, outward: number): void {
+    const away = deg(outward);
+    this.burst('sparks', FX.snap.sparks, x, y, away - 80, away + 80);
+    this.burst('dust', FX.snap.dust, x, y, away - 90, away + 90);
+    this.burst('smoke', FX.snap.smoke, x, y, 0, 360);
+  }
+
   /** Mermi bir araca isabet etti: geliş yönünün tersine kıvılcım ve duman. */
   hit(x: number, y: number, angle: number): void {
     const back = deg(angle + Math.PI);

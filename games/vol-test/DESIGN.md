@@ -361,6 +361,16 @@ ve tohumlu rastgele kullanır (`FX.debrisSeed`): aynı olay aynı düzeni verir.
 (`DEBRIS.hit.chance`) gövdeden küçük bir kıymık kopar; şans isabet noktası ve hedef kimliğinden türeyen bir
 karmayla (`hash01`) belirlenir, `Math.random` yoktur.
 
+Parça kopması aynı yönetmendedir: `WreckDirector` canlılığın yanında `Chassis.parts` maskesini de
+karşılaştırır. Yeni açılan her bit bir parça koptu demektir: `EffectsView.shed` parçayı bağlantı
+noktasından (`partAnchor`: tankta yan paletin ortası, yürüyücüde bacağın kalçası) gövdenin kırılan
+yanına doğru savurur (tankta palet çarkı ve levha kıymıkları, örümcekte bacağın tibiası ve pençesi), kıvılcım ve
+kısa bir parlama verir; görünüm `VehicleView.setParts` ile kırık hâle geçer: kırık palet kararır,
+yerinden oynar ve arka çarkını düşürür (`TreadRig.setBroken`), kırık bacak femurun kısa bir kütüğü
+kalır, tibia, pençe ve temas karartısı kalkar, ayak yere basmaz ve gövde kırık yana çöker
+(`SpiderLegs.setBroken`, `SpiderView` çökmesi). Maske sunucudan olduğu gibi geldiği için aynı yol
+çevrimiçi uzak araçlarda da çalışır; onarım (bit kapanması) efektsiz görünüme işlenir.
+
 ## Bot yapay zekâsı
 
 `src/sim/ai/BotBrain.ts` bir aracın komutunu üreten saf benzetim kodudur: Phaser, ağ ve gerçek saat

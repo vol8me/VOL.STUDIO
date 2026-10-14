@@ -107,6 +107,22 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       expect(shadowRoot.visible).toBe(true);
     });
 
+    it('kırık bacaklar bacak katmanına işlenir ve gövde kırık yana çöker; onarım geri alır', () => {
+      const { view, art } = build(spec);
+      const [legLayer, , thorax] = art.list as FakeObject[];
+      const legParts = (lastCall(legLayer, 'add') ?? []).flat() as FakeObject[];
+      // Sağ bacaklar (4-7) kırık: sağ yan +y'dir, gövde oraya çöker.
+      view.setParts(0b1111_0000);
+      for (let i = 0; i < 40; i++) view.update(frame(), 16);
+      const sagged = thorax.y as number;
+      expect(sagged).toBeGreaterThan(0.5);
+      expect(legParts.some((part) => part.visible === false)).toBe(true);
+      view.setParts(0);
+      for (let i = 0; i < 80; i++) view.update(frame(), 16);
+      expect(Math.abs(thorax.y as number)).toBeLessThan(sagged);
+      expect(legParts.every((part) => part.visible !== false)).toBe(true);
+    });
+
     it('zemin gölgeleri gövdenin altında çizilir: gölge katmanı gövde katmanından düşüktür', () => {
       const { root, shadowRoot } = build(spec);
       expect(shadowRoot.depth).toBeLessThan(root.depth as number);

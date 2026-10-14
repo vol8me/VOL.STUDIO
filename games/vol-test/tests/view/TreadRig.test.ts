@@ -39,6 +39,33 @@ describe('TreadRig', () => {
     }
   });
 
+  it('kırık palet kararır, yerinden oynar ve arka çarkını düşürür; öteki yan etkilenmez; onarım geri alır', () => {
+    const scene = fakeScene();
+    const rig = new TreadRig(scene as unknown as Phaser.Scene, STRIKER);
+    const bands = rig.parts.slice(-2) as unknown as typeof scene.created;
+    const ends = rig.parts.slice(2, 6) as unknown as typeof scene.created;
+    const tintOf = (band: (typeof bands)[number]): unknown => lastCall(band, 'setTint')?.[0];
+    const intact = tintOf(bands[0]);
+    rig.setBroken(1);
+    expect(tintOf(bands[0])).not.toBe(intact);
+    expect(bands[0].rotation).not.toBe(0);
+    expect(bands[0].alpha).toBeLessThan(1);
+    expect(ends[0].visible).toBe(false);
+    expect(ends[1].visible).not.toBe(false);
+    expect(tintOf(bands[1])).toBe(intact);
+    expect(bands[1].rotation).toBe(0);
+    expect(ends[2].visible).not.toBe(false);
+    rig.setBroken(2);
+    expect(tintOf(bands[0])).toBe(intact);
+    expect(ends[0].visible).toBe(true);
+    expect(bands[1].rotation).not.toBe(0);
+    expect(bands[1].rotation).toBeGreaterThan(0);
+    expect(bands[0].rotation).toBe(0);
+    rig.setBroken(0);
+    expect(tintOf(bands[1])).toBe(intact);
+    expect(ends[2].visible).toBe(true);
+  });
+
   it('araçların palet ölçüleri birbirinden ayrışır', () => {
     const sizes = tankSpecs().map((spec) => {
       const view = treadView(spec);

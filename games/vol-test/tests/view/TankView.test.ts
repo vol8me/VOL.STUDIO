@@ -216,6 +216,18 @@ describe.each(tankSpecs().map((spec) => [spec.id, spec] as const))('TankView (%s
     expect(root?.visible).toBe(true);
   });
 
+  it('kırık parça maskesi paletlere işlenir: kırık palet kararır, onarılınca geri gelir', () => {
+    const { view, byTexture } = build(spec);
+    const bands = byTexture(treadBandTexture(spec.id));
+    const tintOf = (band: (typeof bands)[number]): unknown => lastCall(band, 'setTint')?.[0];
+    const intact = tintOf(bands[0]);
+    view.setParts(1);
+    expect(tintOf(bands[0])).not.toBe(intact);
+    expect(tintOf(bands[1])).toBe(intact);
+    view.setParts(0);
+    expect(tintOf(bands[0])).toBe(intact);
+  });
+
   it('yok edilince kök kaldırılır', () => {
     const { view, root } = build(spec);
     view.destroy();

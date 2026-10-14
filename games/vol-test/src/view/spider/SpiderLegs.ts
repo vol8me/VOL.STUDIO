@@ -14,6 +14,8 @@ import { solveLeg, type LegSolution } from './legSolve';
 import type { SpiderPose } from './SpiderMotion';
 
 const DEG = Math.PI / 180;
+/** Kopan bacağın kütüğü: femurun kalan oranı, aşağı sarkma açısı (rad), mafsal ölçeği, gölge yüksekliği. */
+const STUMP = { length: 0.5, droop: 0.4, knee: 0.55, height: 2 } as const;
 const INV = 1 / TEXTURE_SCALE;
 
 /**
@@ -66,6 +68,9 @@ export class SpiderLegs {
   private readonly solution: LegSolution = { kneeU: 0, kneeHeight: 0, footU: 0 };
   private readonly stanceRadiusPx: number;
   private readonly homeScratch = { x: 0, y: 0 };
+  /** Kırık bacakların bit maskesi (bit sırası bacak sırasıdır) ve gövdenin kırık yana çökmesi. */
+  private broken = 0;
+  private sag = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -173,16 +178,42 @@ export class SpiderLegs {
     return this.gait.emergencySteppingCount;
   }
 
-  /** Bu karede yere basan ayakların dünya konumlarını gezer (toz, ses, gövde sarsıntısı). */
+  /** Bu karede yere basan ayakların dünya konumlarını gezer (toz, ses, gövde sarsıntısı); kırık bacak basmaz. */
   forEachPlant(visit: (x: number, y: number) => void): void {
     for (let i = 0; i < this.legs.length; i++) {
+      if (this.isBroken(i)) continue;
       if (this.gait.justPlanted(i)) visit(this.gait.footX(i), this.gait.footY(i));
     }
   }
 
-  /** Bütün ayakların dünya konumunu gezer (atılış başlangıç tozu). */
+  /** Bütün sağlam ayakların dünya konumunu gezer (atılış başlangıç tozu). */
   forEachFoot(visit: (x: number, y: number) => void): void {
-    for (let i = 0; i < this.legs.length; i++) visit(this.gait.footX(i), this.gait.footY(i));
+    for (let i = 0; i < this.legs.length; i++) {
+      if (!this.isBroken(i)) visit(this.gait.footX(i), this.gait.footY(i));
+    }
+  }
+
+  /**
+   * Kırık bacaklar: femurun kısa bir kütüğü kalır, tibia ve pençe yoktur, ayak yere basmaz ve temas
+   * karartısı çizilmez.
+   */
+  setBroken(mask: number): void {
+    this.broken = mask;
+    this.legs.forEach((leg, index) => {
+      const intact = !this.isBroken(index);
+      leg.tibia.setVisible(intact);
+      leg.tarsus.setVisible(intact);
+      leg.contact.setVisible(intact);
+    });
+  }
+
+  /** Gövdenin kırık yana çökmesi (gövde-yerel y, dünya birimi); görünüm yumuşatarak verir. */
+  setSag(sag: number): void {
+    this.sag = sag;
+  }
+
+  private isBroken(index: number): boolean {
+    return (this.broken & (1 << index)) !== 0;
   }
 
   /** Bacağın dünyadaki ayak konumu ve havadaki payı — ölçüm ve sınama için. */
@@ -246,6 +277,37 @@ export class SpiderLegs {
     }
   }
 
+  /**
+   * Kopmuş bacağın kütüğü: femur kısalmış ve aşağı sarkmış, ucunda diz mafsalı; gölgesi kısa bir çizgidir.
+   * Kütük gövdenin hareketiyle sarkar, yürüyüş döngüsüne katılmaz.
+   */
+  private placeStump(
+    leg: LegNodes,
+    hipX: number,
+    hipY: number,
+    hipHeight: number,
+    hipScale: number,
+    light: LightLocal,
+  ): void {
+    const { leg: spec } = this.look;
+    const hipPar = parallax(hipHeight);
+    const hx = hipX * hipPar;
+    const hy = hipY * hipPar;
+    const angle = leg.hip.angleDeg * DEG + leg.side * STUMP.droop;
+    const length = spec.femur * STUMP.length;
+    const kx = hx + Math.cos(angle) * length;
+    const ky = hy + Math.sin(angle) * length;
+    leg.femur
+      .setPosition(hx, hy)
+      .setRotation(angle)
+      .setScale(INV * STUMP.length, INV * hipScale);
+    leg.knee.setPosition(kx, ky).setScale(INV * STUMP.knee);
+    this.shadow.beginPath();
+    this.shadow.moveTo(hx + light.x * hipHeight, hy + light.y * hipHeight);
+    this.shadow.lineTo(kx + light.x * STUMP.height, ky + light.y * STUMP.height);
+    this.shadow.strokePath();
+  }
+
   /** Her bacağı iki kemiğe çözer ve parçaları, gölgeleri ve temas karartılarını yerleştirir. */
   private place(pose: SpiderPose, light: LightLocal): void {
     const { leg: spec, gait, parts } = this.look;
@@ -259,7 +321,11 @@ export class SpiderLegs {
       const leg = this.legs[i];
       const lift = this.lift[i];
       const hipX = leg.hip.x + pose.leanX;
-      const hipY = leg.hip.y + pose.leanY;
+      const hipY = leg.hip.y + pose.leanY + this.sag;
+      if (this.isBroken(i)) {
+        this.placeStump(leg, hipX, hipY, hipHeight, hipScale, light);
+        continue;
+      }
       const dx = this.footX[i] - hipX;
       const dy = this.footY[i] - hipY;
       const reach = Math.hypot(dx, dy);

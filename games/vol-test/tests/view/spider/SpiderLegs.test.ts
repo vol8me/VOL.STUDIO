@@ -5,7 +5,7 @@ import { WALKER_IDS } from '@/config/vehicles';
 import type { LocomotionSignals } from '@/view/spider/signals';
 import { SpiderLegs, lightLocal } from '@/view/spider/SpiderLegs';
 import { SpiderMotion } from '@/view/spider/SpiderMotion';
-import { fakeScene, lastCall } from '../../support/fakeScene';
+import { fakeScene, lastCall, type FakeObject } from '../../support/fakeScene';
 
 const STEP_MS = 1000 / 60;
 
@@ -191,6 +191,53 @@ describe.each(WALKER_IDS.map((id) => [id, SPIDER_LOOKS[id]] as const))(
       );
       expect(Math.min(...alphas)).toBeLessThan(0.5);
       expect(Math.max(...alphas)).toBeGreaterThan(0.85);
+    });
+
+    it('kırık bacak kütük bırakır: tibia, pençe ve temas karartısı gizlenir, femur kısalır, diz kalır; onarım geri getirir', () => {
+      const { legs, walk } = build();
+      walk(60, topSpeed * 0.6);
+      const [femur, tibia, tarsus, knee] = legs.partsOf(5) as unknown as FakeObject[];
+      const intactScale = lastCall(femur, 'setScale')?.[0] as number;
+      legs.setBroken(1 << 5);
+      walk(10, topSpeed * 0.6);
+      expect(tibia.visible).toBe(false);
+      expect(tarsus.visible).toBe(false);
+      expect(lastCall(femur, 'setScale')?.[0] as number).toBeLessThan(intactScale);
+      expect(knee.visible).not.toBe(false);
+      // Sağlam bacak etkilenmez.
+      const [, otherTibia] = legs.partsOf(1);
+      expect(otherTibia.visible).not.toBe(false);
+      legs.setBroken(0);
+      walk(10, topSpeed * 0.6);
+      expect(tibia.visible).toBe(true);
+      expect(tarsus.visible).toBe(true);
+    });
+
+    it('kırık bacak yere basmaz: toz/iz ziyaret listelerinden çıkar', () => {
+      const { legs, walk } = build();
+      const planted = new Set<string>();
+      legs.setBroken(0b0000_1111);
+      let feet = 0;
+      legs.forEachFoot(() => feet++);
+      expect(feet).toBe(legs.legCount - 4);
+      walk(180, topSpeed * 0.7, () =>
+        legs.forEachPlant((x, y) => planted.add(`${Math.round(x)},${Math.round(y)}`)),
+      );
+      expect(planted.size).toBeGreaterThan(0);
+      legs.setBroken(0);
+      feet = 0;
+      legs.forEachFoot(() => feet++);
+      expect(feet).toBe(legs.legCount);
+    });
+
+    it('gövde çökmesi kalçaları kırık yana kaydırır', () => {
+      const a = build();
+      const b = build();
+      b.legs.setSag(4);
+      a.walk(2, 0);
+      b.walk(2, 0);
+      const hipY = (rig: ReturnType<typeof build>): number => rig.legs.partsOf(0)[0].y;
+      expect(hipY(b) - hipY(a)).toBeCloseTo(4, 0);
     });
 
     it('ışık dünyada sabittir: gövde dönünce gölge kayması gövde-yerel yönde döner', () => {

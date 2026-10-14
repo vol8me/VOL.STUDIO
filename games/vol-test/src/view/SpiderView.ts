@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GhostTrail, clamp01, poseSourceOf, type PoseSourceNode } from '@volstudio/core';
 import { SPIDER_ART, SPIDER_TELEPORT_UNITS, type PartBox, type SpiderLook } from '@/config/spiders';
 import type { WalkerSpec } from '@/config/vehicles';
+import { LEGS_PER_SIDE, lostLegs } from '@/sim/chassis/parts';
 import { muzzlePose, mountPose, type MuzzlePose } from '@/sim/muzzle';
 import { LocomotionReader } from './spider/LocomotionReader';
 import { SpiderCannon } from './spider/SpiderCannon';
@@ -11,6 +12,8 @@ import { TEXTURE, TEXTURE_SCALE, addSpiderImage } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
 
 const INV = 1 / TEXTURE_SCALE;
+/** Gövdenin kırık yana en çok çökmesi (dünya birimi, kırık yan tam) ve çökmenin oturma süresi (ms). */
+const SAG = { px: 3.2, settleMs: 180 } as const;
 
 /**
  * Sekiz bacaklı yürüyücülerin (Arachnid, Widow) sahne karşılığı: tamamen el çizimi SVG parçalardan
@@ -40,6 +43,8 @@ export class SpiderView implements VehicleView {
   private readonly ghosts: GhostTrail;
   private readonly ghostSource: PoseSourceNode;
   private dashing = false;
+  private sag = 0;
+  private sagTarget = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -103,6 +108,11 @@ export class SpiderView implements VehicleView {
     this.locomotion.impact(strength);
   }
 
+  setParts(mask: number): void {
+    this.legs.setBroken(mask);
+    this.sagTarget = ((lostLegs(mask, 1) - lostLegs(mask, 0)) / LEGS_PER_SIDE) * SAG.px;
+  }
+
   update(frame: TankFrame, deltaMs: number): void {
     this.root.setPosition(frame.x, frame.y).setRotation(frame.hull);
     this.shadowRoot.setPosition(frame.x, frame.y).setRotation(frame.hull);
@@ -110,6 +120,8 @@ export class SpiderView implements VehicleView {
     const signals = this.locomotion.signals;
     const fresh = this.locomotion.read(frame, deltaMs);
     lightLocal(frame.hull, this.light);
+    this.sag += (this.sagTarget - this.sag) * (1 - Math.exp(-deltaMs / SAG.settleMs));
+    this.legs.setSag(this.sag);
     const pose = this.motion.update(signals, deltaMs);
     if (fresh) this.legs.reset(signals.x, signals.y, frame.hull, pose, this.light);
     else this.legs.update(signals, pose, deltaMs, this.light);
@@ -164,11 +176,12 @@ export class SpiderView implements VehicleView {
     const { body } = this.look;
     const lift = pose.hipHeight - body.hipHeight;
     const thoraxScale = INV * (1 + lift * SPIDER_ART.perspective);
+    const leanY = pose.leanY + this.sag;
     const thoraxX = body.thoraxX + pose.leanX;
-    this.thorax.setPosition(thoraxX, pose.leanY).setRotation(pose.thoraxYaw).setScale(thoraxScale);
+    this.thorax.setPosition(thoraxX, leanY).setRotation(pose.thoraxYaw).setScale(thoraxScale);
 
     const pivotX = body.abdomenPivotX + pose.leanX * 0.7;
-    const pivotY = pose.leanY * 0.7;
+    const pivotY = leanY * 0.7;
     const abdomenScaleX = INV * pose.abdomenScale;
     this.abdomen
       .setPosition(pivotX, pivotY)
@@ -178,7 +191,7 @@ export class SpiderView implements VehicleView {
     const light = this.light;
     const thoraxHeight = body.thoraxHeight + lift;
     this.thoraxShadow
-      .setPosition(thoraxX + light.x * thoraxHeight, pose.leanY + light.y * thoraxHeight)
+      .setPosition(thoraxX + light.x * thoraxHeight, leanY + light.y * thoraxHeight)
       .setRotation(pose.thoraxYaw)
       .setScale(thoraxScale);
 

@@ -1,8 +1,15 @@
 import { DEBRIS } from '@/config/debris';
-import { SPIDER_LOOKS } from '@/config/spiders';
-import { TANK_ART } from '@/config/tankView';
+import { SPIDER_LOOKS, type SpiderLook } from '@/config/spiders';
+import { TANK_ART, treadView } from '@/config/tankView';
 import type { VehicleSpec } from '@/config/vehicles';
-import { SPIDER_ATLAS, TEXTURE_SCALE, shardTexture, spiderFrame, tankTexture } from './textures';
+import {
+  SPIDER_ATLAS,
+  TEXTURE,
+  TEXTURE_SCALE,
+  shardTexture,
+  spiderFrame,
+  tankTexture,
+} from './textures';
 
 /** Bir enkaz parçasının dokusu ve dönüş merkezi; `scale` doku pikselinden dünya birimine çarpandır. */
 export interface ChunkArt {
@@ -22,7 +29,48 @@ export interface WreckArt {
 }
 
 const INV = 1 / TEXTURE_SCALE;
+/** tread-end.svg içindeki dairenin çapı (`TreadRig` ile aynı). */
+const TREAD_END_PX = 11.2;
 const cache = new Map<string, WreckArt>();
+
+/** Bir örümcek parçasının enkaz sanatı: atlas karesi ve dönüş merkezi. */
+function spiderPiece(look: SpiderLook, part: 'femur' | 'tibia' | 'tarsus' | 'joint'): ChunkArt {
+  const box = look.parts[part];
+  return {
+    texture: SPIDER_ATLAS,
+    frame: spiderFrame(look.id, part),
+    originX: box.pivotX / box.width,
+    originY: box.pivotY / box.height,
+    scale: INV,
+    tint: null,
+  };
+}
+
+const shedCache = new Map<string, readonly ChunkArt[]>();
+
+/**
+ * Kopan bir parçanın savrulacak sanatı: tankta palet ucu çarkı ile levha kıymıkları, yürüyücüde bacağın
+ * kopan kısmı (tibia ve pençe). Araç başına bir kez kurulur.
+ */
+export function shedArt(spec: VehicleSpec): readonly ChunkArt[] {
+  const cached = shedCache.get(spec.id);
+  if (cached) return cached;
+  const shards = wreckArt(spec).shards;
+  let pieces: readonly ChunkArt[];
+  if (spec.kind === 'tank') {
+    const wheel = treadView(spec).height / TREAD_END_PX;
+    pieces = [
+      { texture: TEXTURE.treadEnd, originX: 0.5, originY: 0.5, scale: INV * wheel, tint: null },
+      shards[0],
+      shards[1 % shards.length],
+    ];
+  } else {
+    const look = SPIDER_LOOKS[spec.id];
+    pieces = [spiderPiece(look, 'tibia'), spiderPiece(look, 'tarsus')];
+  }
+  shedCache.set(spec.id, pieces);
+  return pieces;
+}
 
 /** Aracın enkaz sanatı; araç başına bir kez kurulur. */
 export function wreckArt(spec: VehicleSpec): WreckArt {
@@ -57,17 +105,8 @@ export function wreckArt(spec: VehicleSpec): WreckArt {
     ];
   } else {
     const look = SPIDER_LOOKS[spec.id];
-    const piece = (part: 'femur' | 'tibia' | 'tarsus' | 'joint'): ChunkArt => {
-      const box = look.parts[part];
-      return {
-        texture: SPIDER_ATLAS,
-        frame: spiderFrame(spec.id, part),
-        originX: box.pivotX / box.width,
-        originY: box.pivotY / box.height,
-        scale: INV,
-        tint: null,
-      };
-    };
+    const piece = (part: 'femur' | 'tibia' | 'tarsus' | 'joint'): ChunkArt =>
+      spiderPiece(look, part);
     big = [piece('femur'), piece('tibia'), piece('femur'), piece('tibia'), piece('tarsus')];
   }
   const art = { big, shards };

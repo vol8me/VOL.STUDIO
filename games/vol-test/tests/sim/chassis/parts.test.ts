@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PARTS } from '@/config/parts';
 import { SPIDER_LOOKS } from '@/config/spiders';
+import { ARACHNID, STRIKER } from '@/config/vehicles';
 import {
   LEGS_PER_SIDE,
   TRACK_LEFT,
@@ -8,6 +9,7 @@ import {
   bitIndex,
   legBit,
   lostLegs,
+  partAnchor,
   partSide,
 } from '@/sim/chassis/parts';
 
@@ -42,5 +44,22 @@ describe('parça bit maskesi', () => {
       const hips = SPIDER_LOOKS[id].hips.map((hip) => hip.x);
       expect([...PARTS.walker.stations[id]], id).toEqual(hips);
     }
+  });
+});
+
+describe('partAnchor', () => {
+  it('tankta yan paletin ortasında, yürüyücüde bacak istasyonunda kenardadır', () => {
+    const out = { forward: 0, right: 0 };
+    expect(partAnchor(STRIKER, 0, out)).toEqual({
+      forward: 0,
+      right: -STRIKER.tank.trackOffset,
+    });
+    expect(partAnchor(STRIKER, 1, out).right).toBe(STRIKER.tank.trackOffset);
+    const front = partAnchor(ARACHNID, 4, out);
+    expect(front.forward).toBe(PARTS.walker.stations.arachnid[0]);
+    expect(front.right).toBeGreaterThan(ARACHNID.walker.halfWidth);
+    const rearLeft = partAnchor(ARACHNID, 3, out);
+    expect(rearLeft.forward).toBe(PARTS.walker.stations.arachnid[3]);
+    expect(rearLeft.right).toBeLessThan(-ARACHNID.walker.halfWidth);
   });
 });

@@ -7,6 +7,8 @@ import { treadFrame } from './TreadTexture';
 const INV = 1 / TEXTURE_SCALE;
 /** tread-end.svg içindeki dairenin çapı. */
 const TREAD_END_TEXTURE_DIAMETER = 11.2;
+/** Kırık paletin rengi, bandın yerinden oynama açısı (rad) ve saydamlığı. */
+const BROKEN = { tint: 0x2b2326, skew: 0.07, alpha: 0.85 } as const;
 
 /**
  * İki palet: yüzey yoluyla kayan bant ve bandın döndüğü yarım daire uçlar.
@@ -21,10 +23,12 @@ export class TreadRig {
   private readonly bands: [Phaser.GameObjects.Image, Phaser.GameObjects.Image];
   private readonly ends: Phaser.GameObjects.Image[];
   private readonly endRadius: number;
+  private readonly tint: number;
 
   constructor(scene: Phaser.Scene, spec: TankSpec) {
     const view: TreadView = treadView(spec);
     const tint = TANK_ART[spec.id].treadTint;
+    this.tint = tint;
     this.endRadius = view.height / 2;
     this.ends = [-1, 1].flatMap((side) =>
       [-1, 1].map((end) =>
@@ -47,6 +51,21 @@ export class TreadRig {
     this.bands = [band(-1), band(1)];
     this.parts = [...bases, ...this.ends, ...this.bands];
     this.shadowCasters = [...bases, ...this.ends];
+  }
+
+  /**
+   * Kırık paletler (bit 0 sol, bit 1 sağ): bant kararır, yerinden oynar ve arka çarkı düşer; palet
+   * yine zeminle birlikte akar (serbest döner), yani yerde sürünen ölü bir bant görünür.
+   */
+  setBroken(mask: number): void {
+    this.bands.forEach((band, side) => {
+      const broken = (mask & (1 << side)) !== 0;
+      band
+        .setTint(broken ? BROKEN.tint : this.tint)
+        .setAlpha(broken ? BROKEN.alpha : 1)
+        .setRotation(broken ? (side === 0 ? -BROKEN.skew : BROKEN.skew) : 0);
+      this.ends[side * 2].setVisible(!broken);
+    });
   }
 
   /** Palet yüzey yolları (birim): bant dokusu kayar, uçlar döner. */
