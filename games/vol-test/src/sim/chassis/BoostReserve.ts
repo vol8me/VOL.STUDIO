@@ -9,7 +9,7 @@ export interface BoostConfig {
 
 /**
  * Hızlanma deposu. Hızlanma istendikçe tükenir, istenmezken dolar. Tükenen
- * depo eşiğe kadar dolmadan yeniden hızlanmaya izin vermez; eşik titremeyi
+ * depo eşiğe (dahil) kadar dolmadan yeniden hızlanmaya izin vermez; eşik titremeyi
  * (tükendi → bir kare doldu → yine tükendi) önler.
  */
 export class BoostReserve {
@@ -27,8 +27,7 @@ export class BoostReserve {
 
   update(wanted: boolean, dt: number): void {
     const config = this.config;
-    const threshold = this.active ? 0 : config.boostRestart;
-    this.active = wanted && this.energy > threshold;
+    this.active = wanted && (this.active ? this.energy > 0 : this.energy >= config.boostRestart);
     this.energy = this.active
       ? Math.max(0, this.energy - config.boostDrain * dt)
       : Math.min(config.boostCapacity, this.energy + config.boostRegen * dt);

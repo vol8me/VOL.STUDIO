@@ -22,7 +22,7 @@ function driver(vehicle?: VehicleId): {
       ? undefined
       : ({
           settings: {
-            get: () => ({ scenario: 'empty', seed: 1, vehicle }) as GamePreferences,
+            get: () => ({ scenario: 'empty', seed: 1, chaos: 1.5, vehicle }) as GamePreferences,
             subscribe: () => () => undefined,
           },
           progress: { travel: vi.fn() },
@@ -48,6 +48,12 @@ describe('OfflineDriver', () => {
       expect(offline.player.spec).toBe(VEHICLES[id]);
       scope.dispose();
     }
+  });
+
+  it('kaydedilen kaos çarpanı simülasyonun temposu olur', () => {
+    const { driver: offline, scope } = driver('striker');
+    expect(offline.sim.pace).toBe(1.5);
+    scope.dispose();
   });
 
   it('oyuncudan başka her aracı bot sayar', () => {

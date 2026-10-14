@@ -54,15 +54,19 @@ describe('Walker sürüşü', () => {
     expect(idle.x).toBe(4096);
   });
 
-  it('gövde nişana bakar; nişan yoksa hareket yönüne döner; ikisi de yoksa yerinde kalır', () => {
+  it('gövde hareket yönüne döner, nişan yalnız tareti sürer; hareket yoksa yerinde kalır', () => {
     const aiming = walker();
     run(aiming, { moveX: 1, aimY: 1 }, 2);
-    expect(angleDelta(aiming.hull, Math.PI / 2)).toBeCloseTo(0, 1);
-    expect(aiming.forwardSpeed).toBeLessThan(SPEC.maxSpeed * 0.2);
+    expect(angleDelta(aiming.hull, 0)).toBeCloseTo(0, 1);
+    expect(aiming.turret).toBeGreaterThan(1);
 
     const moving = walker();
-    run(moving, { moveY: -1 }, 2);
+    run(moving, { moveY: -1, aimX: 1 }, 2);
     expect(angleDelta(moving.hull, -Math.PI / 2)).toBeCloseTo(0, 1);
+
+    const aimOnly = walker();
+    run(aimOnly, { aimY: 1 }, 1);
+    expect(aimOnly.hull).toBeCloseTo(0, 6);
 
     const idle = walker({ x: 4096, y: 4096, hull: 1 });
     run(idle, {}, 1);
@@ -72,7 +76,7 @@ describe('Walker sürüşü', () => {
   it('gövde dönüşü sınırlıdır; silah yuvası ondan hızlı döner', () => {
     const subject = walker();
     let peak = 0;
-    const full = command({ aimX: -1 });
+    const full = command({ moveX: -1 });
     for (let step = 0; step < 120; step++) {
       subject.step(full, space, DT);
       peak = Math.max(peak, Math.abs(subject.angularVelocity));
@@ -82,21 +86,45 @@ describe('Walker sürüşü', () => {
     expect(SPEC.turretTurnRate).toBeGreaterThan(SPEC.maxTurnRate * 1.5);
   });
 
-  it('atılım tavanı yükseltir, depoyu tüketir ve hareket etmeden başlamaz', () => {
-    const idle = walker();
-    run(idle, { boost: true }, 1);
-    expect(idle.boosting).toBe(false);
-    expect(idle.boost).toBe(SPEC.boostCapacity);
+  it('Shift hızlandırmaz: yürüyücünün atılımı yalnız Space iledir', () => {
+    const subject = walker();
+    run(subject, { moveX: 1, boost: true }, 1);
+    expect(subject.boosting).toBe(false);
+    expect(subject.speed).toBeLessThan(SPEC.maxSpeed * 1.02);
+  });
 
+  it('Space kilitli atılım başlatır: bırakılsa da depo boşalana dek sürer, hareketsiz de atılır', () => {
     const dash = walker();
-    run(dash, { moveX: 1, boost: true }, 0.6);
+    run(dash, { brake: true }, 0.05);
+    expect(dash.boosting).toBe(true);
+    run(dash, {}, 0.2);
     expect(dash.boosting).toBe(true);
     expect(dash.speed).toBeGreaterThan(SPEC.maxSpeed * 1.4);
-    expect(dash.boost).toBeLessThan(SPEC.boostCapacity);
-    // Depo ~1,7 sn'de biter; yeniden başlama eşiğine dolana dek atılım kapalı kalır.
-    run(dash, { moveX: 1, boost: true }, 1.5);
+    expect(dash.x).toBeGreaterThan(4096);
+    expect(dash.y).toBeCloseTo(4096, 0);
+    const lunge = SPEC.boostCapacity / SPEC.boostDrain;
+    run(dash, {}, lunge);
     expect(dash.boosting).toBe(false);
-    expect(dash.speed).toBeLessThan(SPEC.maxSpeed * 1.05);
+    expect(dash.boost).toBeLessThan(SPEC.boostRestart);
+  });
+
+  it('atılım eşiğe dolana dek yeniden başlamaz ve doluluk sonunda tekrar açılır', () => {
+    const dash = walker();
+    run(dash, { brake: true }, 0.05);
+    run(dash, {}, SPEC.boostCapacity / SPEC.boostDrain + 0.05);
+    run(dash, { brake: true }, 0.3);
+    expect(dash.boosting).toBe(false);
+    run(dash, {}, (SPEC.boostRestart - dash.boost) / SPEC.boostRegen + 0.1);
+    run(dash, { brake: true }, 0.05);
+    expect(dash.boosting).toBe(true);
+  });
+
+  it('gövde hedef yöne dönükse hızlı yürür; ters dönükken tavan kısılır', () => {
+    const aligned = walker();
+    run(aligned, { moveX: 1 }, 0.25);
+    const behind = walker({ x: 4096, y: 4096, hull: Math.PI });
+    run(behind, { moveX: 1 }, 0.25);
+    expect(behind.speed).toBeLessThan(aligned.speed * 0.8);
   });
 
   it('komut bırakılınca kısa sürede durur', () => {
@@ -140,12 +168,12 @@ describe('Walker sürüşü', () => {
     expect(straight.reversing).toBe(false);
 
     const turning = walker();
-    run(turning, { aimY: 1 }, 0.3);
+    run(turning, { moveY: 1 }, 0.3);
     expect(turning.trackLeft).toBeGreaterThan(turning.trackRight);
   });
 
   it('durum yakala/geri yükle bir sonraki adımı bit bit korur', () => {
-    const driven = command({ moveX: 0.8, moveY: -0.4, aimX: 0.2, aimY: 1, boost: true });
+    const driven = command({ moveX: 0.8, moveY: -0.4, aimX: 0.2, aimY: 1, brake: true });
     const original = walker();
     for (let step = 0; step < 90; step++) original.step(driven, space, DT);
     const state = original.captureState(createChassisState());
@@ -163,7 +191,7 @@ describe('Walker sürüşü', () => {
 
   it('yeniden doğuş sürüş ve depo belleğini sıfırlar', () => {
     const subject = walker();
-    run(subject, { moveX: 1, boost: true }, 1);
+    run(subject, { moveX: 1, brake: true }, 0.2);
     subject.resetForRespawn(1000, 1000, 0);
     expect(subject.speed).toBe(0);
     expect(subject.boost).toBe(SPEC.boostCapacity);

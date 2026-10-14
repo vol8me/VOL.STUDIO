@@ -19,11 +19,20 @@ describe('BoostReserve', () => {
     expect(reserve.energy).toBe(0);
     reserve.update(true, 0.1);
     expect(reserve.active).toBe(false);
-    reserve.update(false, 0.7);
+    reserve.update(false, 0.6);
     reserve.update(true, 0.01);
     expect(reserve.active).toBe(false);
     reserve.update(false, 0.2);
     reserve.update(true, 0.01);
+    expect(reserve.active).toBe(true);
+  });
+
+  it('eşik dahildir: tam eşikteki depo açılır', () => {
+    const reserve = new BoostReserve({ ...config, boostRestart: 10 });
+    reserve.update(true, 1);
+    reserve.update(false, 2);
+    expect(reserve.energy).toBe(10);
+    reserve.update(true, 0);
     expect(reserve.active).toBe(true);
   });
 });

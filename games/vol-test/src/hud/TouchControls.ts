@@ -21,6 +21,7 @@ export class TouchControls {
   private readonly holds: Array<[HoldButton, HoldAction]>;
   private readonly joysticks: Joystick[];
   private readonly buttons: Array<[IconButton, TapAction]> = [];
+  private walker = false;
 
   constructor(
     private readonly source: VirtualActionSource<TestAction>,
@@ -84,11 +85,22 @@ export class TouchControls {
 
   refreshLabels(): void {
     for (const [button, action] of this.holds) {
-      button.element.setAttribute('aria-label', i18next.t(`voltest:touch.${action}`));
+      const name = action === 'brake' && this.walker ? 'dash' : action;
+      button.element.setAttribute('aria-label', i18next.t(`voltest:touch.${name}`));
     }
     for (const [button, action] of this.buttons) {
       button.setLabel(this.tapLabel(action));
     }
+  }
+
+  /** Yürüyücüde hızlan düğmesi kalkar, fren düğmesi atılım olur. */
+  setWalker(walker: boolean): void {
+    if (walker === this.walker) return;
+    this.walker = walker;
+    for (const [button, action] of this.holds) {
+      if (action === 'boost') button.element.hidden = walker;
+    }
+    this.refreshLabels();
   }
 
   private tapLabel(action: TapAction): string {

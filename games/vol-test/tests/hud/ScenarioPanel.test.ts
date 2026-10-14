@@ -29,6 +29,12 @@ describe('ScenarioPanel', () => {
     seed.dispatchEvent(new Event('change'));
     expect(settings.get().seed).toBe(17);
     expect(seed.value).toBe('17');
+    const chaos = document.querySelector<HTMLInputElement>('[data-testid=dev-chaos] input')!;
+    chaos.value = '2';
+    chaos.dispatchEvent(new Event('input'));
+    expect(settings.get().chaos).toBe(2);
+    await settings.update({ chaos: 1.25 });
+    expect(chaos.value).toBe('1.25');
     await settings.update({ scenario: 'empty', seed: 123 });
     expect(seed.value).toBe('123');
     expect(picker.textContent).toContain('Boş dünya');

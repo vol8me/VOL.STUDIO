@@ -78,7 +78,8 @@
     "fireReload": "Atış dolumu",
     "health": "Araç canı",
     "respawnIn": "Araç imha oldu · {{seconds}} sn sonra yeniden doğacak",
-    "protection": "Yeniden doğma koruması · {{seconds}} sn"
+    "protection": "Yeniden doğma koruması · {{seconds}} sn",
+    "dash": "Atılım deposu"
   },
   "controls": {
     "move": "Hareket",
@@ -89,7 +90,8 @@
     "grid": "Izgara",
     "pause": "Duraklat",
     "menu": "Menü",
-    "brake": "Fren"
+    "brake": "Fren",
+    "dash": "Atılım"
   },
   "touch": {
     "boost": "Hızlan",
@@ -97,7 +99,8 @@
     "zoomOut": "Uzaklaştır",
     "pause": "Duraklat",
     "menu": "Menü",
-    "brake": "Fren"
+    "brake": "Fren",
+    "dash": "Atılım"
   },
   "integrity": {
     "recovered": "Kaydınız bozulmuştu ve yedeğinden geri yüklendi.",
@@ -125,6 +128,7 @@
     },
     "scenario": "Test senaryosu",
     "seed": "Tohum",
+    "chaos": "Kaos tempo",
     "scenarioMode": {
       "empty": "Boş dünya",
       "slalom": "Slalom",

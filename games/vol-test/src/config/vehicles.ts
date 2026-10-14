@@ -68,7 +68,7 @@ export interface TankSpec extends VehicleBase {
   readonly tank: TankConfig;
 }
 
-/** Bacaklı yürüyücü tanımı: her yöne yürür, gövdesi nişana bakar, birden çok silah yuvası taşır. */
+/** Bacaklı yürüyücü tanımı: her yöne yürür, gövdesi yürüdüğü yöne döner, birden çok silah yuvası taşır. */
 export interface WalkerSpec extends VehicleBase {
   readonly kind: 'walker';
   readonly id: WalkerId;
@@ -230,8 +230,8 @@ export const DART: TankSpec = {
 };
 
 /**
- * Arachnid: bacaklı savaş canavarı, zırhlı bir tarantula. Her yöne çevik yürür, gövdesi nişana bakar ve
- * atılımla kısa sürede mesafe kapatır; iki plazma topu kabuğun ön omuzlarındadır (sırayla ateşler, gövde
+ * Arachnid: bacaklı savaş canavarı, zırhlı bir tarantula. Her yöne çevik yürür, gövdesi yürüdüğü yöne döner ve
+ * Space atılışıyla kısa sürede mesafe kapatır; iki plazma topu kabuğun ön omuzlarındadır (sırayla ateşler, gövde
  * ekseninde odaklanır) ve kabuğun orta hattını örtmez, toplar gövdeden bağımsız döner. Mil ve ağız
  * konumları `ARACHNID_LOOK` ile aynı çizimden gelir. Zırhı ağır tanklardan ince, çevikliği Striker'dan yüksektir.
  */
@@ -292,14 +292,15 @@ export const WIDOW: WalkerSpec = {
     maxSpeed: 172,
     acceleration: 1500,
     braking: 1900,
-    dashMultiplier: 1.7,
-    dashAcceleration: 3000,
+    dashMultiplier: 2.1,
+    dashAcceleration: 4200,
     maxTurnRate: 3.4,
     turnAcceleration: 20,
     steerGain: 7,
     boostCapacity: 80,
-    boostDrain: 50,
-    boostRegen: 19,
+    boostDrain: 160,
+    boostRegen: 32,
+    boostRestart: 80,
     wallRestitution: 0.38,
     impactKick: 0.14,
     turretTurnRate: 6.4,

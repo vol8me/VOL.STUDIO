@@ -242,6 +242,33 @@ describe('Hud', () => {
     hud.destroy();
   });
 
+  it('yürüyücüde Shift hızlanması yoktur: çubuk "Atılım deposu", Space ipucu ve düğmesi "Atılım" olur', () => {
+    const { hud, find, parent } = mount(true);
+    const label = (): string | null =>
+      find('vitals').querySelectorAll('[role="progressbar"]')[1].getAttribute('aria-label');
+    const hints = (): string[] =>
+      [...parent.querySelectorAll<HTMLElement>('.vt-hud__hint:not([hidden])')].map(
+        (row) => row.textContent ?? '',
+      );
+    hud.update(hudFrame({ walker: false }), 1000);
+    expect(label()).toBe('Hızlanma deposu');
+    expect(hints().some((text) => text.includes('Hızlanma'))).toBe(true);
+    expect(find('touch-boost').hidden).toBe(false);
+    expect(find('touch-brake').getAttribute('aria-label')).toBe('Fren');
+
+    hud.update(hudFrame({ walker: true }), 2000);
+    expect(label()).toBe('Atılım deposu');
+    expect(hints().some((text) => text.includes('Hızlanma'))).toBe(false);
+    expect(hints().some((text) => text.includes('Atılım'))).toBe(true);
+    expect(find('touch-boost').hidden).toBe(true);
+    expect(find('touch-brake').getAttribute('aria-label')).toBe('Atılım');
+
+    hud.update(hudFrame({ walker: false }), 3000);
+    expect(label()).toBe('Hızlanma deposu');
+    expect(find('touch-boost').hidden).toBe(false);
+    hud.destroy();
+  });
+
   it('kontrol ipuçları girişten 10 sn sonra solar; sayaç ilk güncellemede başlar', () => {
     const { hud, find } = mount();
     const hints = find('control-hints');

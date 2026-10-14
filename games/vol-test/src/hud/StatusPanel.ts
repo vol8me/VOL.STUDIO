@@ -19,6 +19,7 @@ export class StatusPanel {
   private readonly vitals: Panel;
   private readonly gauges: Readonly<Record<'health' | 'boost' | 'reload', Gauge>>;
   private readonly lifecycle: Text;
+  private walker = false;
 
   constructor() {
     this.vitals = new Panel({ className: 'vt-hud__vitals' });
@@ -68,6 +69,10 @@ export class StatusPanel {
 
   update(frame: HudFrame): void {
     const { health, boost, reload } = this.gauges;
+    if (frame.walker !== this.walker) {
+      this.walker = frame.walker;
+      this.refreshLabels();
+    }
     health.bar.setMax(frame.maxHealth);
     health.bar.setValue(frame.health);
     boost.bar.setMax(frame.boostCapacity);
@@ -87,8 +92,11 @@ export class StatusPanel {
   }
 
   refreshLabels(): void {
-    for (const { bar, name } of Object.values(this.gauges))
-      bar.element.setAttribute('aria-label', i18next.t(name));
+    for (const [key, { bar, name }] of Object.entries(this.gauges))
+      bar.element.setAttribute(
+        'aria-label',
+        i18next.t(key === 'boost' && this.walker ? 'voltest:hud.dash' : name),
+      );
   }
 
   destroy(): void {

@@ -41,6 +41,8 @@ const HINTS: ReadonlyArray<readonly [HintKey, readonly Omit<ControlGlyphBinding,
 export class ControlHints {
   readonly element: HTMLElement;
   private readonly labels = new Map<HintKey, Text>();
+  private readonly rows = new Map<HintKey, HTMLElement>();
+  private walker = false;
 
   /** `live`: dünya sunucuda aktığı için son satır "Duraklat" değil "Menü" der. */
   constructor(
@@ -58,6 +60,7 @@ export class ControlHints {
       }
       const label = new Text('', { variant: 'muted', tag: 'span' });
       this.labels.set(key, label);
+      this.rows.set(key, row);
       row.append(label.element);
       this.element.append(row);
     }
@@ -66,9 +69,19 @@ export class ControlHints {
 
   refreshLabels(): void {
     for (const [key, label] of this.labels) {
-      const name = key === 'pause' && this.live ? 'menu' : key;
+      const name =
+        key === 'pause' && this.live ? 'menu' : key === 'brake' && this.walker ? 'dash' : key;
       label.setContent(i18next.t(`voltest:controls.${name}`));
     }
+  }
+
+  /** Yürüyücüde Shift hızlanması yoktur; Space fren değil atılımdır. */
+  setWalker(walker: boolean): void {
+    if (walker === this.walker) return;
+    this.walker = walker;
+    const boost = this.rows.get('boost');
+    if (boost) boost.hidden = walker;
+    this.refreshLabels();
   }
 
   /** Girdi kipine göre: dokunmatikte klavye/kol ipuçları hiç gösterilmez. */

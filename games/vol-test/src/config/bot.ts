@@ -59,6 +59,8 @@ export const BOT = {
   boostDistance: 1500,
   boostStartFraction: 0.5,
   boostStopFraction: 0.1,
+  /** Yürüyücü hedef menzilinin bu oranından uzaktaysa av atılışıyla kapanır. */
+  walkerPounceRange: 0.6,
 
   /** Geri çekilen bot canı bu orana dönünce savaşa döner. */
   retreatExitHealth: 0.65,

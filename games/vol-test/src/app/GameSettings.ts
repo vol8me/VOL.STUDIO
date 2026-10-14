@@ -1,5 +1,6 @@
 import { PersistedObservableState, type ScopedSaveManager } from '@volstudio/core';
 import { sanitizeName } from '@volstudio/network/protocol';
+import { CHAOS, validChaos } from '@/config/chaos';
 import { isScenario, validSeed, SCENARIO, type ScenarioId } from '@/config/scenarios';
 import { initialEffectLevel, type EffectLevel } from '@/config/quality';
 import { isVehicleId, STRIKER, type VehicleId } from '@/config/vehicles';
@@ -19,6 +20,8 @@ export interface GamePreferences {
   display: 'windowed' | 'fullscreen';
   scenario: ScenarioId;
   seed: number;
+  /** Kaos kadranı (`CHAOS`): alıştırma dünyasında hareket hızı ve atış sıklığı çarpanı. */
+  chaos: number;
   /** Çevrimiçi maçlarda görünen ad; boşsa sunucu ad atar. */
   playerName: string;
   /** Oyuncunun sürdüğü araç; çevrimdışı sandbox ve çevrimiçi katılım bunu kullanır. */
@@ -35,6 +38,7 @@ function parsePreferences(value: unknown, fallback: GamePreferences): GamePrefer
   return {
     scenario: isScenario(input.scenario) ? input.scenario : fallback.scenario,
     seed: validSeed(input.seed) ? input.seed : fallback.seed,
+    chaos: validChaos(input.chaos) ? input.chaos : fallback.chaos,
     quality: input.quality === 'high' || input.quality === 'low' ? input.quality : fallback.quality,
     volume:
       typeof input.volume === 'number' && Number.isFinite(input.volume)
@@ -70,6 +74,7 @@ export class GameSettings {
       display: 'windowed',
       scenario: 'empty',
       seed: SCENARIO.defaultSeed,
+      chaos: CHAOS.default,
       playerName: '',
       vehicle: STRIKER.id,
       faction: FACTION_AUTO,
@@ -87,6 +92,7 @@ export class GameSettings {
         a.display === b.display &&
         a.scenario === b.scenario &&
         a.seed === b.seed &&
+        a.chaos === b.chaos &&
         a.playerName === b.playerName &&
         a.vehicle === b.vehicle &&
         a.faction === b.faction &&

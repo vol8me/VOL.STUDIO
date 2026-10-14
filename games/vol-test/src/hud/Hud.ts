@@ -76,6 +76,7 @@ export class Hud {
   private readonly toasts: ToastManager;
   private readonly fullscreen: FullscreenToggle | null;
   private inputMode: string | undefined;
+  private walker = false;
   private readonly quality: HudOptions['quality'];
   private statusDueMs = 0;
   private mapDueMs = 0;
@@ -228,6 +229,11 @@ export class Hud {
     }
     this.hintsUntilMs ??= nowMs + HUD.hintsShowMs;
     if (!this.hints.faded && nowMs >= this.hintsUntilMs) this.hints.setFaded(true);
+    if (frame.walker !== this.walker) {
+      this.walker = frame.walker;
+      this.hints.setWalker(frame.walker);
+      this.touch.setWalker(frame.walker);
+    }
     this.layer.classList.toggle('vt-hud--boosting', frame.boosting);
     if (nowMs >= this.statusDueMs) {
       this.statusDueMs = nowMs + STATUS_INTERVAL_MS;

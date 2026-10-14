@@ -23,26 +23,26 @@ export const WALKER = {
   acceleration: 1250,
   /** Komut bırakılınca ya da hedef hıza göre fazla hızlıyken yavaşlama ivmesi. */
   braking: 1700,
-  /** Atılım: tavan çarpanı ve atılırken ivme. */
-  dashMultiplier: 1.9,
-  dashAcceleration: 2600,
-  /**
-   * Zemin tutuşunun ivme ve hızı kısma oranı (0 hiç etkilemez, 1 palet gibi tam etkiler). Bacak
-   * ayağını kaygan zemine bastığı yerden seçer; palet kadar kaymaz.
-   */
+  /** Atılım (av atılışı): tavan çarpanı ve atılırken ivme. */
+  dashMultiplier: 2.3,
+  dashAcceleration: 3600,
+  /** Zemin tutuşunun ivme ve hızı kısma oranı (0 etkilemez, 1 palet gibi tam etkiler). */
   gripSensitivity: 0.55,
 
-  /** Gövde yönünün nişana (nişan yoksa harekete) dönme hızı tavanı, ivmesi ve hata kazancı. */
-  maxTurnRate: 2.7,
-  turnAcceleration: 16,
+  /** Gövde yönünün harekete dönme hızı tavanı, ivmesi ve hata kazancı. */
+  maxTurnRate: 3.3,
+  turnAcceleration: 18,
   steerGain: 6,
-  /** Komutun bu uzunluğun altındaki hareketi yön belirlemez (gövde olduğu yerde kalır). */
+  /** Gövde hedefe ters dönükken yürüyüş tavanının oranı (dönüklük arttıkça 1'e çıkar). */
+  turnSpeedFloor: 0.5,
+  /** Komutun bu uzunluğun altındaki hareketi yön belirlemez. */
   moveDeadzone: 0.2,
 
+  /** Atılım deposu: kapasite/boşalma atılım süresi (~0,55 sn), dolum bekleme süresidir. */
   boostCapacity: 90,
-  boostDrain: 52,
-  boostRegen: 17,
-  boostRestart: 24,
+  boostDrain: 165,
+  boostRegen: 36,
+  boostRestart: 90,
 
   wallRestitution: 0.3,
   wallFriction: 0.35,

@@ -33,6 +33,7 @@ export class OfflineDriver implements WorldDriver {
       vehicle: services ? VEHICLES[services.settings.get().vehicle] : STRIKER,
       weather,
     });
+    if (services) this.sim.pace = services.settings.get().chaos;
     this.scenarios = scope.addDestroyable(new ScenarioRunner(this.sim));
     this.scenarios.select(
       overrides?.scenario ?? services?.settings.get().scenario ?? 'empty',
@@ -41,6 +42,7 @@ export class OfflineDriver implements WorldDriver {
     if (services)
       scope.addSubscription(
         services.settings.subscribe((value) => {
+          this.sim.pace = value.chaos;
           this.scenarios.select(
             overrides?.scenario ?? value.scenario,
             overrides?.seed ?? value.seed,

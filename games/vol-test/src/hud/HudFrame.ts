@@ -21,6 +21,8 @@ export interface HudFrame {
   readonly y: number;
   readonly hull: number;
   readonly boosting: boolean;
+  /** Bacaklı yürüyücü mü: hızlanma çubuğu "Atılım" olur, Shift ipucu ve düğmesi kalkar, Space atılım olur. */
+  readonly walker: boolean;
   readonly boost: number;
   readonly boostCapacity: number;
   readonly fireProgress: number;

@@ -6,6 +6,7 @@ export function hudFrame(overrides: Partial<HudFrame> = {}): HudFrame {
     y: 2048,
     hull: 0,
     boosting: false,
+    walker: false,
     boost: 100,
     boostCapacity: 100,
     fireProgress: 1,

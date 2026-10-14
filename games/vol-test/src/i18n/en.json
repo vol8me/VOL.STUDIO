@@ -78,7 +78,8 @@
     "fireReload": "Shot reload",
     "health": "Vehicle health",
     "respawnIn": "Vehicle destroyed · respawn in {{seconds}} s",
-    "protection": "Respawn protection · {{seconds}} s"
+    "protection": "Respawn protection · {{seconds}} s",
+    "dash": "Dash reserve"
   },
   "controls": {
     "move": "Move",
@@ -89,7 +90,8 @@
     "grid": "Grid",
     "pause": "Pause",
     "menu": "Menu",
-    "brake": "Brake"
+    "brake": "Brake",
+    "dash": "Dash"
   },
   "touch": {
     "boost": "Boost",
@@ -97,7 +99,8 @@
     "zoomOut": "Zoom out",
     "pause": "Pause",
     "menu": "Menu",
-    "brake": "Brake"
+    "brake": "Brake",
+    "dash": "Dash"
   },
   "integrity": {
     "recovered": "Your save was damaged and restored from its backup.",
@@ -125,6 +128,7 @@
     },
     "scenario": "Test scenario",
     "seed": "Seed",
+    "chaos": "Chaos tempo",
     "scenarioMode": {
       "empty": "Empty world",
       "slalom": "Slalom",

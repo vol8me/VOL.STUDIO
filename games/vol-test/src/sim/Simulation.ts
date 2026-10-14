@@ -5,7 +5,9 @@ import { idleCommand, type TankCommand } from './command';
 import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
-import { createContact, resolveBodyContact } from '@volstudio/core/physics';
+import { createContact, resolveBodyContact, type Contact } from '@volstudio/core/physics';
+import { CHAOS, validChaos } from '@/config/chaos';
+import type { Chassis } from './chassis/Chassis';
 import type { ChassisPose } from './chassis/ChassisState';
 import { aimAligned, launchFrom, triggerVolley, type LaunchBuffer } from './vehicleStep';
 import type { World } from './world/World';
@@ -58,6 +60,8 @@ export class Simulation {
   private readonly previewPose: ChassisPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
   private readonly previewLaunch: LaunchBuffer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0 };
   private readonly contact = createContact();
+  private readonly pacedContact = createContact();
+  private tempo: number = CHAOS.default;
   private readonly inputs = new Map<EntityId, TankCommand>();
   private readonly collisionDamagePairs = new Set<string>();
   private nextId: EntityId = 1;
@@ -86,6 +90,19 @@ export class Simulation {
 
   get vehicles(): readonly Vehicle[] {
     return this.vehicleList;
+  }
+
+  /**
+   * Kaos çarpanı (`CHAOS`): araçların hareketi bu kadar hızlı akar, silah beklemesi bu kadar kısalır.
+   * Fizik adımı sabit kalır; çarpan 1'in üstündeyse aynı karede birkaç küçük alt adım atılır.
+   */
+  get pace(): number {
+    return this.tempo;
+  }
+
+  set pace(value: number) {
+    if (!validChaos(value)) throw new RangeError('Kaos çarpanı izinli aralıkta olmalı');
+    this.tempo = value;
   }
 
   /** Kontrol edilen araç. */
@@ -278,7 +295,7 @@ export class Simulation {
       const y = tank.y;
       const groundLeft = tank.groundLeft;
       const groundRight = tank.groundRight;
-      tank.step(command, this.world, dt, this.weather?.sample(x, y));
+      this.driveChassis(vehicle, command, dt, this.weather?.sample(x, y));
       if (this.weather) {
         const amountPerUnit = WEATHER.tank.snowCompactionPerMetre / WORLD.metre / 2;
         const offsetX = -Math.sin(tank.hull) * tank.trackOffset;
@@ -314,7 +331,7 @@ export class Simulation {
     }
     for (const vehicle of this.vehicleList) {
       if (!vehicle.vitality.alive) continue;
-      vehicle.gun.update(stepMs);
+      vehicle.gun.update(stepMs * this.tempo);
       const command = this.inputs.get(vehicle.id)!;
       if (command.fire && aimAligned(vehicle, command) && vehicle.gun.tryTrigger())
         this.fire(vehicle);
@@ -341,6 +358,33 @@ export class Simulation {
       (owner, target) => this.canProjectileHit(owner, target),
     );
     if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS);
+  }
+
+  /**
+   * Şasiyi bir adım sürer. Kaos çarpanı kadar zaman akar: 1'in üstünde adım eşit alt adımlara bölünür
+   * (her alt adım en çok bir adım uzunluğundadır; çarpışma ve süspansiyon kararlı kalır) ve adımın en sert
+   * duvar teması korunur, yoksa ilk alt adımdaki çarpma sonrakilerce silinirdi.
+   */
+  private driveChassis(
+    vehicle: Vehicle,
+    command: TankCommand,
+    dt: number,
+    surface: Parameters<Chassis['step']>[3],
+  ): void {
+    const chassis = vehicle.chassis;
+    const calls = Math.max(1, Math.ceil(this.tempo));
+    if (calls === 1 && this.tempo === 1) {
+      chassis.step(command, this.world, dt, surface);
+      return;
+    }
+    const slice = (dt * this.tempo) / calls;
+    const hardest: Contact = this.pacedContact;
+    hardest.speed = 0;
+    for (let index = 0; index < calls; index++) {
+      chassis.step(command, this.world, slice, surface);
+      if (chassis.contact.speed > hardest.speed) Object.assign(hardest, chassis.contact);
+    }
+    if (hardest.speed > chassis.contact.speed) Object.assign(chassis.contact, hardest);
   }
 
   /**

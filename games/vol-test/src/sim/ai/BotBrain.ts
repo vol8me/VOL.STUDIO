@@ -193,6 +193,8 @@ export class BotBrain {
       }
       case 'engage': {
         [dx, dy] = this.engageVector(target!, targetDistance, range);
+        // Yürüyücü uzak hedefe av atılışıyla kapanır.
+        wantsBoost = chassis.kind === 'walker' && targetDistance > range * BOT.walkerPounceRange;
         break;
       }
       case 'advance': {
@@ -220,7 +222,10 @@ export class BotBrain {
     out.moveX = dx;
     out.moveY = dy;
     this.lastMove = Math.min(1, length);
-    out.boost = this.decideBoost(wantsBoost && this.lastMove > 0.5);
+    const boosting = this.decideBoost(wantsBoost && this.lastMove > 0.5);
+    // Yürüyücünün hızlanması Shift değil Space atılımıdır (`brake` alanı); tank Shift ile hızlanır.
+    if (chassis.kind === 'walker') out.brake = boosting;
+    else out.boost = boosting;
 
     if (target) this.aimAt(target, targetDistance, range, out);
     else this.aimAlong(dx, dy, stepMs, out);

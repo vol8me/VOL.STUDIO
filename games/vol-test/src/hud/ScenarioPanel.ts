@@ -1,7 +1,8 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { i18next } from '@volstudio/core/i18n';
-import { Input, Select, SettingsRow } from '@volstudio/core/ui';
+import { Input, Select, SettingsRow, Slider } from '@volstudio/core/ui';
 import type { GameSettings } from '@/app/GameSettings';
+import { CHAOS } from '@/config/chaos';
 import { isScenario, validSeed, SCENARIO, SCENARIOS, type ScenarioId } from '@/config/scenarios';
 
 /** Geliştirici ayarları: alıştırma dünyasının senaryosu ve tohumu. */
@@ -12,6 +13,7 @@ export class ScenarioPanel {
   private readonly seed: Input;
   private readonly pickerRow: SettingsRow;
   private readonly seedRow: SettingsRow;
+  private readonly chaos: Slider;
 
   constructor(settings: GameSettings) {
     this.picker = this.scope.addDestroyable(
@@ -54,11 +56,24 @@ export class ScenarioPanel {
         stackOnNarrow: true,
       }),
     );
-    this.elements = [this.pickerRow.element, this.seedRow.element];
+    this.chaos = this.scope.addDestroyable(
+      new Slider({
+        label: i18next.t('voltest:pause.chaos'),
+        min: CHAOS.min,
+        max: CHAOS.max,
+        step: CHAOS.step,
+        value: settings.get().chaos,
+        formatValue: (value) => `×${value.toFixed(2).replace(/\.?0+$/, '')}`,
+        onInput: (chaos) => void settings.update({ chaos }),
+      }),
+    );
+    this.chaos.element.dataset.testid = 'dev-chaos';
+    this.elements = [this.pickerRow.element, this.seedRow.element, this.chaos.element];
     this.scope.addSubscription(
       settings.subscribe((next) => {
         this.picker.setValue(next.scenario);
         this.seed.setValue(String(next.seed));
+        this.chaos.setValue(next.chaos);
       }),
     );
     this.refreshLabels();
@@ -70,6 +85,7 @@ export class ScenarioPanel {
     this.pickerRow.setLabel(scenario);
     this.picker.setOptions(this.options());
     this.seedRow.setLabel(seed);
+    this.chaos.setLabel(i18next.t('voltest:pause.chaos'));
   }
 
   destroy(): void {

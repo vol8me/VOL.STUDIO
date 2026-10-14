@@ -15,9 +15,9 @@ export interface WalkerSurface {
 }
 
 /**
- * Bacaklı yürüyücü. Paletli araçtan farkı sürüştedir: komut hedef hız vektörüdür ve gövde o hıza
- * her yönde (yan, geri) aynı çevikliğiyle ivmelenir; gövde nişana (nişan yoksa harekete) bakar.
- * Atılım (`boost`) tavanı ve ivmeyi geçici yükseltir. Bacak yürüyüşü yalnız görünümdedir: ayaklar
+ * Bacaklı yürüyücü. Paletli araçtan farkı sürüştedir: komut hedef hız vektörüdür ve gövde hareket
+ * yönüne döner (nişan yalnız tareti sürer); hızı gövdenin hedefe dönüklüğüyle ölçeklenir. Space ile
+ * kilitli bir atılım başlar (av atılışı): depo boşalana dek tavanı ve ivmeyi yükseltir, geri alınamaz. Bacak yürüyüşü yalnız görünümdedir: ayaklar
  * yüzeye bastığı yerde kalır ve poz ile hızdan türer, bu yüzden şasi durumuna ek alan girmez.
  *
  * Yan yüzey alanları (`track*`, `tread*`, `ground*`, `surface*`) bu gövdede bacak sıralarının yüzey
@@ -56,14 +56,20 @@ export class Walker extends Chassis {
     const config = this.walkerConfig;
     const length = Math.hypot(command.moveX, command.moveY);
     const moving = length > config.moveDeadzone;
-    this.reserve.update(command.boost && moving, dt);
+    // Atılım kilitlidir: Space ile başlar (depo eşiği aşılmışsa) ve bırakılsa da depo boşalana dek sürer.
+    this.reserve.update(command.brake || this.reserve.active, dt);
     const dashing = this.reserve.active;
     const mobility = 1 - config.gripSensitivity * (1 - clamp(surface?.grip ?? 1, 0, 1));
-    const top = config.maxSpeed * (dashing ? config.dashMultiplier : 1) * mobility;
-    const scale = moving ? (Math.min(1, length) * top) / length : 0;
-    const targetX = command.moveX * scale;
-    const targetY = command.moveY * scale;
-    const facing = this.facing(command, moving);
+    // Hareket yoksa atılım gövdenin baktığı yöne gider: av atılışı durduğu yerden de başlar.
+    const heading = moving ? Math.atan2(command.moveY, command.moveX) : this.angle;
+    const wantX = moving ? command.moveX / length : Math.cos(heading);
+    const wantY = moving ? command.moveY / length : Math.sin(heading);
+    const pull = dashing ? 1 : moving ? Math.min(1, length) : 0;
+    const align = this.alignment(heading, moving || dashing);
+    const top = config.maxSpeed * (dashing ? config.dashMultiplier : align) * mobility;
+    const targetX = wantX * pull * top;
+    const targetY = wantY * pull * top;
+    const facing = moving || dashing ? heading : null;
 
     const sub = dt / SUBSTEPS;
     for (let index = 0; index < SUBSTEPS; index++) {
@@ -73,10 +79,15 @@ export class Walker extends Chassis {
     this.updateTurret(command, dt);
   }
 
-  /** Gövdenin bakmak istediği yön: nişan, yoksa hareket; ikisi de yoksa `null` (olduğu yerde kalır). */
-  private facing(command: TankCommand, moving: boolean): number | null {
-    if (command.aimX !== 0 || command.aimY !== 0) return Math.atan2(command.aimY, command.aimX);
-    return moving ? Math.atan2(command.moveY, command.moveX) : null;
+  /**
+   * Gövde hedef yöne ne kadar dönükse o kadar hızlı yürür: tam yan ya da ters yönde `turnSpeedFloor`
+   * oranına düşer. Böylece yürüyücü tank gibi yana kaymaz; önce döner, sonra açılır.
+   */
+  private alignment(heading: number, active: boolean): number {
+    if (!active) return 1;
+    const floor = this.walkerConfig.turnSpeedFloor;
+    const facing = (1 + Math.cos(angleDelta(this.angle, heading))) / 2;
+    return floor + (1 - floor) * facing;
   }
 
   private integrateLegs(

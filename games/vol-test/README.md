@@ -20,16 +20,17 @@ Kapsam/bundle/scaling bütçeleri quality.json sahibindedir; komut kapsamı
 
 ## Kontroller
 
-| Eylem    | Klavye / fare   | Kol       | Dokunmatik               |
-| -------- | --------------- | --------- | ------------------------ |
-| Hareket  | WASD            | Sol çubuk | Sol joystick             |
-| Nişan    | Fare            | Sağ çubuk | Sağ joystick iç bölgesi  |
-| Ateş     | Sol tık         | RT        | Sağ joystick dış bölgesi |
-| Hızlanma | Shift           | LT        | Hızlanma düğmesi         |
-| Fren     | Space           | B         | Fren düğmesi             |
-| Zoom     | Tekerlek, Q / E | LB / RB   | + / − düğmeleri          |
-| Izgara   | G               | View      | —                        |
-| Duraklat | Esc             | Menu      | Duraklat düğmesi, geri   |
+| Eylem    | Klavye / fare   | Kol       | Dokunmatik                   |
+| -------- | --------------- | --------- | ---------------------------- |
+| Hareket  | WASD            | Sol çubuk | Sol joystick                 |
+| Nişan    | Fare            | Sağ çubuk | Sağ joystick iç bölgesi      |
+| Ateş     | Sol tık         | RT        | Sağ joystick dış bölgesi     |
+| Hızlanma | Shift (tank)    | LT        | Hızlanma düğmesi             |
+| Fren     | Space (tank)    | B         | Fren düğmesi                 |
+| Atılım   | Space (örümcek) | B         | Atılım düğmesi (fren yerine) |
+| Zoom     | Tekerlek, Q / E | LB / RB   | + / − düğmeleri              |
+| Izgara   | G               | View      | —                            |
+| Duraklat | Esc             | Menu      | Duraklat düğmesi, geri       |
 
 Çevrimiçi dünya sunucuda aktığı için bu tuş orada "Menü" açar ve dünyayı durdurmaz. Alt kontrol ipuçları her girişte 10 sn görünür.
 

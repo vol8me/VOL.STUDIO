@@ -135,10 +135,25 @@ sunucu durumunda (`PlayerState.salvo`) öngörüyle uzlaştırılır. Mermi, ate
 profilini (`Projectiles.addProfile`: ömür, uçuş, stil) taşır; isabet hasarı ve itkisi
 aynı silahın tanımından okunur.
 
+### Kaos kadranı
+
+Geliştirici ekranındaki "Kaos tempo" kaydırıcısı (×0,5–×3, adım 0,25; `src/config/chaos.ts`, tercih `chaos`)
+alıştırma dünyasının ana temposudur. Tek değer araçların hareketini (sürüş, dönüş, atılım, taret) ve
+atış sıklığını aynı oranda yükseltir: `Simulation.pace` şasi adımını çarpan kadar zamanla ilerletir
+(çarpan 1'in üstündeyse adım eşit alt adımlara bölünür, her alt adım en çok bir adım uzunluğundadır;
+adımın en sert duvar teması korunur) ve silah beklemesini aynı çarpanla kısaltır. Mermi hızı, hasar ve
+can değişmez, bu yüzden araçlar arası denge korunur. Yalnız çevrimdışı dünyadadır; sunucu dünyası
+1'de kalır.
+
 ### Bacaklı yürüyücüler: Arachnid ve Widow
 
 İkisi de paletli değil bacaklıdır (`WalkerSpec`, `src/sim/walker/Walker.ts`): her yöne (yan, geri)
-aynı çevikliğiyle yürür, gövdesi nişana bakar, hızlanması kısa bir atılımdır ve zemin tutuşundan
+aynı çevikliğiyle yürür; gövdesi WASD yönüne döner (nişan yalnız silah yuvalarını sürer, tank gibi
+nişana bakmaz) ve yürüyüş tavanı gövdenin hedefe dönüklüğüyle ölçeklenir (`turnSpeedFloor`: ters
+dönükken yarıya iner), bu yüzden önce döner sonra açılır. Shift hızlanması yoktur; Space kilitli bir
+av atılışı başlatır: depo doluyken basılır, bırakılsa da ~0,55 sn boşalana dek sürer, geri alınamaz,
+hareketsizken gövdenin baktığı yöne atar ve depo yeniden dolana dek bekler (depo `boost`/`boosting`
+alanlarını kullanır, ağ durumuna ek alan girmez; HUD çubuğu "Atılım deposu"dur). Zemin tutuşundan
 palet kadar etkilenmez. Arachnid ağır kavgacıdır (150 birim/s, 140 can, zırhlı tarantula); Widow
 hafif keskin nişancıdır (172 birim/s, 96 can, ince ve uzun bacaklı kara dul). Hız tavanları
 bilerek düşüktür: bacak yürüyüşü tavan hızda ayakları kemik erişiminde tutar ve bunu
