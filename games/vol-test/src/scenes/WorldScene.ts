@@ -290,7 +290,8 @@ export class WorldScene extends Phaser.Scene {
       const tank = vehicle.chassis;
       const frame = tankFrame(tank, alpha);
       const view = this.vehicles.get(vehicle.id);
-      view?.update(frame, presentMs);
+      // Kaos tempoyla akan araç adımları görünümde de aynı hızda akar: bacak ve palet döngüsü yetişir.
+      view?.update(frame, presentMs * this.sim.pace);
       view?.root.setAlpha(vehicle.vitality.alive ? 1 : 0.25);
       if (!vehicle.vitality.alive) continue;
       this.effects.updateVehicle(vehicle.id, {

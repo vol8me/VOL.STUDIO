@@ -76,7 +76,10 @@ export interface LegGaitConfig {
   turnWindow?: number;
 }
 
-export type LegGaitStepTuning = Pick<LegGaitConfig, 'stepTriggerPx' | 'stepDurationMs'>;
+export type LegGaitStepTuning = Pick<LegGaitConfig, 'stepTriggerPx' | 'stepDurationMs'> & {
+  /** Verilirse acil gerginlik eşiğini de canlı değiştirir (atılışta bacaklar sırayı daha erken deler). */
+  maxStrainPx?: number;
+};
 
 interface LegState {
   leg: LegGaitLeg;
@@ -218,6 +221,9 @@ export class LegGait {
     }
     this.config.stepTriggerPx = tuning.stepTriggerPx;
     this.config.stepDurationMs = tuning.stepDurationMs;
+    if (tuning.maxStrainPx !== undefined) {
+      this.config.maxStrainPx = requireFinite(tuning.maxStrainPx, 'LegGaitStepTuning.maxStrainPx');
+    }
   }
 
   /**

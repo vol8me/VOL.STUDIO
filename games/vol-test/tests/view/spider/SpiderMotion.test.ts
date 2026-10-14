@@ -43,6 +43,12 @@ describe.each(WALKER_IDS.map((id) => [id, SPIDER_LOOKS[id]] as const))(
       expect(walking.hipHeight).toBeCloseTo(body.hipHeight, 0);
     });
 
+    it('av atılışı gövdeyi ön bacaklara yükler: ileri uzanma ivmeli yaslanmanın yönünü kısmen alır', () => {
+      const cruise = run(make(), signals({ speed: fast }), 2).leanX;
+      const hunting = run(make(), signals({ speed: fast, dash01: 1 }), 2).leanX;
+      expect(hunting - cruise).toBeCloseTo(tuning.dashLeanPx, 1);
+    });
+
     it('atılım ve çarpma kalçayı indirir; çarpmanın etkisi sönünce geri döner', () => {
       const base = run(make(), signals({ speed: fast }), 2).hipHeight;
       const dashing = run(make(), signals({ speed: fast, dash01: 1 }), 2).hipHeight;

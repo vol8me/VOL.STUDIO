@@ -76,6 +76,11 @@ export interface SpiderLeg {
   /** Çömelme uzuvları gövdeye çeker, atılım açar (dinlenme mesafesi oranı). */
   readonly crouchReachDrop: number;
   readonly dashReachGain: number;
+  /**
+   * Av atılışında ayak evleri gövde ekseninde kayar: öndeki bacaklar ileri fırlar, arkadakiler geride
+   * itiş izi bırakır (dünya birimi; bacağın ileri bakışıyla orantılı).
+   */
+  readonly dashLungePx: number;
   /** Pençenin havada kıvrılması ve yerde düzelmesi (derece). */
   readonly clawLiftCurlDeg: number;
   readonly clawPlantedCurlDeg: number;
@@ -94,6 +99,12 @@ export interface SpiderGait {
   readonly stepLeadSeconds: number;
   /** Bu hızda (birim/s) tam tempo adım değerleri kullanılır: yürüyüş tavanı. */
   readonly fullTempoSpeed: number;
+  /** Av atılışında adım tetik eşiği ve süresi bu oranlarda kısalır; öngörü tavanı bu oranda genişler. */
+  readonly dashTriggerCut: number;
+  readonly dashDurationCut: number;
+  readonly dashLeadGain: number;
+  /** Av atılışında acil gerginlik eşiği bu oranda iner: bacaklar sırayı daha erken deler. */
+  readonly dashStrainCut: number;
   /** Havadaki ayağı kalçaya çeken kısaltma: diz bükülür, uzuv yerden toplanır. */
   readonly swingTuckPx: number;
 }
@@ -102,6 +113,8 @@ export interface SpiderGait {
 export interface SpiderMotion {
   readonly idleHeightDrop: number;
   readonly dashHeightDrop: number;
+  /** Atılış sırasında gövdenin ileri uzanması (dünya birimi): av pozunda ön bacaklara yüklenir. */
+  readonly dashLeanPx: number;
   readonly impactHeightDrop: number;
   readonly heightSpring: SpringConfig;
   /** Her adımda gövde kısa bir iner. */
@@ -167,6 +180,16 @@ export interface SpiderCannon {
   };
 }
 
+/** Atılış hayaleti: yalnız atılışta, gövdenin yakın geçmişinden soluk kopyalar. */
+export interface SpiderGhost {
+  /** Aynı anda yaşayan en çok hayalet ve ardışık hayaletler arası süre. */
+  readonly count: number;
+  readonly intervalMs: number;
+  readonly lifeMs: number;
+  readonly alpha: number;
+  readonly tint: number;
+}
+
 export interface SpiderLook {
   readonly id: WalkerId;
   readonly parts: Readonly<Record<SpiderPartId, PartBox>>;
@@ -177,5 +200,6 @@ export interface SpiderLook {
   readonly gait: SpiderGait;
   readonly motion: SpiderMotion;
   readonly dust: SpiderDust;
+  readonly ghost: SpiderGhost;
   readonly cannon: SpiderCannon;
 }

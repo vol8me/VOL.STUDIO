@@ -3,6 +3,7 @@ import { clamp01 } from '@volstudio/core';
 import { SPIDER_ART, SPIDER_TELEPORT_UNITS, type PartBox, type SpiderLook } from '@/config/spiders';
 import type { WalkerSpec } from '@/config/vehicles';
 import { muzzlePose, mountPose, type MuzzlePose } from '@/sim/muzzle';
+import { DashGhosts } from './spider/DashGhosts';
 import { LocomotionReader } from './spider/LocomotionReader';
 import { SpiderCannon } from './spider/SpiderCannon';
 import { SpiderLegs, lightLocal, type LightLocal } from './spider/SpiderLegs';
@@ -37,6 +38,8 @@ export class SpiderView implements VehicleView {
   private readonly mount: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly locomotion: LocomotionReader;
+  private readonly ghosts: DashGhosts;
+  private dashing = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -76,6 +79,7 @@ export class SpiderView implements VehicleView {
     );
     this.root = scene.add.container(0, 0, [this.art, ...this.cannons.map((cannon) => cannon.root)]);
     this.root.setDepth(SPIDER_ART.depth);
+    this.ghosts = new DashGhosts(scene, look, SPIDER_ART.depth - 0.5);
     this.dust = scene.add
       .particles(0, 0, TEXTURE.spark, look.dust.emitter)
       .setDepth(look.dust.depth);
@@ -100,16 +104,28 @@ export class SpiderView implements VehicleView {
     if (fresh) this.legs.reset(signals.x, signals.y, frame.hull, pose, this.light);
     else this.legs.update(signals, pose, deltaMs, this.light);
 
+    this.ghosts.update(signals.x, signals.y, frame.hull, pose, signals.dash01, deltaMs);
+    this.huntBurst(frame.boosting);
     this.footfalls(frame.speed);
     this.placeBody(pose);
     this.placeCannons(frame, deltaMs);
   }
 
   destroy(): void {
+    this.ghosts.destroy();
     for (const cannon of this.cannons) cannon.destroy();
     this.dust.destroy();
     this.shadowRoot.destroy();
     this.root.destroy();
+  }
+
+  /** Av atılışının başladığı karede arka ayakların altından bir toz patlaması fırlar. */
+  private huntBurst(dashing: boolean): void {
+    if (dashing && !this.dashing) {
+      const { dust } = this.look;
+      this.legs.forEachFoot((x, y) => this.dust.emitParticleAt(x, y, dust.countMax * 2));
+    }
+    this.dashing = dashing;
   }
 
   /** Bu karede yere basan her ayak, gövdeye kısa bir çökme ve hızla ölçeklenen bir toz tutamı verir. */

@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-press/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "press"
-      ],
+      "tags": ["press"],
       "variantId": "v-3f1c1708ca8c72a5"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "press"
-      ],
+      "tags": ["press"],
       "variantId": "v-e29a8e207387e3f2"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "press"
-      ],
+      "tags": ["press"],
       "variantId": "v-d4dfb51091a19a1f"
     }
   ]

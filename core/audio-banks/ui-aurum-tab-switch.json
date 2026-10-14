@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-tab-switch/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "tab-switch"
-      ],
+      "tags": ["tab-switch"],
       "variantId": "v-47b905189c554aae"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "tab-switch"
-      ],
+      "tags": ["tab-switch"],
       "variantId": "v-0a21183f5c131b7a"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "tab-switch"
-      ],
+      "tags": ["tab-switch"],
       "variantId": "v-03daf8683f55acb0"
     }
   ]

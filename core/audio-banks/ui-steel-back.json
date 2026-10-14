@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-back/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "back"
-      ],
+      "tags": ["back"],
       "variantId": "v-0dd701a53dcee752"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "back"
-      ],
+      "tags": ["back"],
       "variantId": "v-420f674cbad2d46d"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "back"
-      ],
+      "tags": ["back"],
       "variantId": "v-047dbda245e32040"
     }
   ]

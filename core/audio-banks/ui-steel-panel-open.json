@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-panel-open/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "panel-open"
-      ],
+      "tags": ["panel-open"],
       "variantId": "v-d1b51b19a04bd214"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "panel-open"
-      ],
+      "tags": ["panel-open"],
       "variantId": "v-81da4cd5e7e2c5be"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "panel-open"
-      ],
+      "tags": ["panel-open"],
       "variantId": "v-e568b7d78f662138"
     }
   ]

@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-key-delete/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "key-delete"
-      ],
+      "tags": ["key-delete"],
       "variantId": "v-9c969f0901d5d89d"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "key-delete"
-      ],
+      "tags": ["key-delete"],
       "variantId": "v-c694a59ee541c4c2"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "key-delete"
-      ],
+      "tags": ["key-delete"],
       "variantId": "v-aea8b6ff2011fa37"
     }
   ]

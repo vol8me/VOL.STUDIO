@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-level-up/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "level-up"
-      ],
+      "tags": ["level-up"],
       "variantId": "v-32b9573c97b3e44f"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "level-up"
-      ],
+      "tags": ["level-up"],
       "variantId": "v-46193dd78122297a"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "level-up"
-      ],
+      "tags": ["level-up"],
       "variantId": "v-9a090c27f8254c65"
     }
   ]

@@ -229,10 +229,11 @@ export class Hud {
     }
     this.hintsUntilMs ??= nowMs + HUD.hintsShowMs;
     if (!this.hints.faded && nowMs >= this.hintsUntilMs) this.hints.setFaded(true);
-    if (frame.walker !== this.walker) {
-      this.walker = frame.walker;
-      this.hints.setWalker(frame.walker);
-      this.touch.setWalker(frame.walker);
+    const walker = frame.kind === 'walker';
+    if (walker !== this.walker) {
+      this.walker = walker;
+      this.hints.setWalker(walker);
+      this.touch.setWalker(walker);
     }
     this.layer.classList.toggle('vt-hud--boosting', frame.boosting);
     if (nowMs >= this.statusDueMs) {

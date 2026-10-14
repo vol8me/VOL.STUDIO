@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-focus/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "focus"
-      ],
+      "tags": ["focus"],
       "variantId": "v-d1f047b6ac15d377"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "focus"
-      ],
+      "tags": ["focus"],
       "variantId": "v-73d665652673e90e"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "focus"
-      ],
+      "tags": ["focus"],
       "variantId": "v-633b3591bb51cb87"
     }
   ]

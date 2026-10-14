@@ -1,3 +1,4 @@
+import type { ChassisKind } from '@/sim/chassis/Chassis';
 import type { WeatherFrame } from '@/sim/weather/types';
 import type { FrontFrame } from '@/view/front';
 
@@ -21,8 +22,8 @@ export interface HudFrame {
   readonly y: number;
   readonly hull: number;
   readonly boosting: boolean;
-  /** Bacaklı yürüyücü mü: hızlanma çubuğu "Atılım" olur, Shift ipucu ve düğmesi kalkar, Space atılım olur. */
-  readonly walker: boolean;
+  /** Şasi türü: yürüyücüde hızlanma çubuğu "Atılım" olur, Shift ipucu ve düğmesi kalkar, Space atılım olur. */
+  readonly kind: ChassisKind;
   readonly boost: number;
   readonly boostCapacity: number;
   readonly fireProgress: number;

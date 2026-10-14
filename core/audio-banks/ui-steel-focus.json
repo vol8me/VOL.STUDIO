@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-focus/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "focus"
-      ],
+      "tags": ["focus"],
       "variantId": "v-86e88f5d7cfd0454"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "focus"
-      ],
+      "tags": ["focus"],
       "variantId": "v-9bfc5d77a87ac7cf"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "focus"
-      ],
+      "tags": ["focus"],
       "variantId": "v-9373691e821173d5"
     }
   ]

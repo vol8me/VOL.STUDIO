@@ -132,6 +132,49 @@ describe.each(WALKER_IDS.map((id) => [id, SPIDER_LOOKS[id]] as const))(
       expect(worst).toBeLessThan(reach);
     });
 
+    it('av atılışında ön ayaklar ileri fırlar, arka ayaklar geride kalır ve ayaklar kemik erişiminin kısa bir payı içinde kalır', () => {
+      const idle = build();
+      idle.walk(120, topSpeed * 0.6);
+      const dash = build();
+      dash.signals.dash01 = 1;
+      const dashSpeed = topSpeed * 2.3;
+      dash.walk(120, dashSpeed);
+      const relative = (subject: ReturnType<typeof build>, index: number): number =>
+        subject.legs.footOf(index).x - subject.signals.x - subject.legs.hipOf(index).x;
+      const front = 0;
+      const rear = look.hips.length - 1;
+      // Aynı uzaklıkta ölçmek için ayakların yürüyüş döngüsündeki fazı yerine en uzak erişim alınır.
+      let frontReach = -Infinity;
+      let rearReach = Infinity;
+      dash.walk(60, dashSpeed, () => {
+        frontReach = Math.max(frontReach, relative(dash, front), relative(dash, front + 4));
+        rearReach = Math.min(rearReach, relative(dash, rear), relative(dash, rear + 4));
+      });
+      let idleFront = -Infinity;
+      let idleRear = Infinity;
+      idle.walk(60, topSpeed * 0.6, () => {
+        idleFront = Math.max(idleFront, relative(idle, front), relative(idle, front + 4));
+        idleRear = Math.min(idleRear, relative(idle, rear), relative(idle, rear + 4));
+      });
+      expect(frontReach).toBeGreaterThan(idleFront + look.leg.dashLungePx * 0.4);
+      expect(rearReach).toBeLessThan(idleRear - look.leg.dashLungePx * 0.4);
+      const reach = look.leg.femur + look.leg.tibia;
+      let worst = 0;
+      dash.walk(120, dashSpeed, () => {
+        for (let i = 0; i < dash.legs.legCount; i++) {
+          const foot = dash.legs.footOf(i);
+          const hip = dash.legs.hipOf(i);
+          worst = Math.max(
+            worst,
+            Math.hypot(foot.x - dash.signals.x - hip.x, foot.y - dash.signals.y - hip.y),
+          );
+        }
+      });
+      // Atılış hızında ayak, hatırı sayılır bir geç kalmayla en çok bir-iki kare erişimi aşabilir; çizimde
+      // `solveLeg` ayağı kemik erişimine kelepçeler, yani kemikler geçerli kalır.
+      expect(worst).toBeLessThan(reach * 1.15);
+    });
+
     it('adım atan ayak yükselir: havadaki ayağın temas karartısı soluklaşır', () => {
       const { legs, walk, scene } = build();
       let lifted = -1;

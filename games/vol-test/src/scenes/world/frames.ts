@@ -47,7 +47,7 @@ export function hudFrame(
     y: frame.y,
     hull: frame.hull,
     boosting: tank.boosting,
-    walker: tank.kind === 'walker',
+    kind: tank.kind,
     boost: tank.boost,
     boostCapacity,
     fireProgress,

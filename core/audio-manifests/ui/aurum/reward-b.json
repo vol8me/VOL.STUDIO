@@ -4,9 +4,7 @@
     "encoded": {
       "analyzerVersion": 1,
       "dc": {
-        "channelOffset": [
-          -0.000004065051960525014
-        ]
+        "channelOffset": [-0.000004065051960525014]
       },
       "defects": {
         "clicks": {
@@ -16,9 +14,7 @@
         "clips": {
           "channelSamples": 0,
           "frames": 0,
-          "perChannel": [
-            0
-          ]
+          "perChannel": [0]
         }
       },
       "format": {
@@ -28,12 +24,8 @@
         "sampleRate": 48000
       },
       "level": {
-        "channelPeakDbfs": [
-          -2.9864255382944997
-        ],
-        "channelRmsDbfs": [
-          -20.589684256662395
-        ],
+        "channelPeakDbfs": [-2.9864255382944997],
+        "channelRmsDbfs": [-20.589684256662395],
         "crestFactorDb": 17.603258718367893,
         "integratedLufs": -19.84639154602254,
         "maxMomentaryLufs": -16.697354581348954,
@@ -80,10 +72,7 @@
     "document": {
       "assetClass": "ui",
       "channels": 1,
-      "descriptors": [
-        "weight:medium",
-        "reward"
-      ],
+      "descriptors": ["weight:medium", "reward"],
       "durationSeconds": {
         "max": 0.98,
         "min": 0.36
@@ -105,15 +94,7 @@
     "schema": "AudioBriefV1"
   },
   "encoder": {
-    "arguments": [
-      "-f",
-      "f32le",
-      "-c:a",
-      "libvorbis",
-      "-q:a",
-      "6",
-      "-bitexact"
-    ],
+    "arguments": ["-f", "f32le", "-c:a", "libvorbis", "-q:a", "6", "-bitexact"],
     "codec": "libvorbis",
     "fingerprint": "sha256:bc4a390a2bf21a203aec467181016f9b63b511faa9ece7dd3979ff2d5573a275",
     "libraries": {
@@ -123,9 +104,7 @@
     },
     "quality": 6,
     "tool": "ffmpeg",
-    "unreported": [
-      "libvorbis"
-    ],
+    "unreported": ["libvorbis"],
     "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
   },
   "encoding": {
@@ -215,18 +194,9 @@
         "thump-pitch": {
           "curve": "curve.spline",
           "points": [
-            [
-              0,
-              155.79999999999998
-            ],
-            [
-              0.04,
-              73.8
-            ],
-            [
-              0.14,
-              70.848
-            ]
+            [0, 155.79999999999998],
+            [0.04, 73.8],
+            [0.14, 70.848]
           ],
           "version": 1
         }

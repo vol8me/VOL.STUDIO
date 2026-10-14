@@ -62,7 +62,7 @@ export class SpiderLegs {
   private readonly footX: number[];
   private readonly footY: number[];
   private readonly lift: number[];
-  private readonly stepTuning = { stepTriggerPx: 0, stepDurationMs: 0 };
+  private readonly stepTuning = { stepTriggerPx: 0, stepDurationMs: 0, maxStrainPx: 0 };
   private readonly solution: LegSolution = { kneeU: 0, kneeHeight: 0, footU: 0 };
   private readonly stanceRadiusPx: number;
   private readonly homeScratch = { x: 0, y: 0 };
@@ -146,12 +146,18 @@ export class SpiderLegs {
     // Dönüş de tempo kaynağıdır: yerinde dönen gövdenin ayak evleri teğetsel savrulur.
     const tangential = Math.abs(turnRate) * this.stanceRadiusPx;
     const tempo = clamp01(Math.max(speed, tangential) / gait.fullTempoSpeed);
-    this.stepTuning.stepTriggerPx = lerp(gait.stepTriggerPx, gait.runStepTriggerPx, tempo);
-    this.stepTuning.stepDurationMs = lerp(gait.stepDurationMs, gait.runStepDurationMs, tempo);
+    // Av atılışında adımlar kısalır ve sıklaşır: bacaklar yürüyüşten çok koşu/atlayış gibi çalışır.
+    this.stepTuning.stepTriggerPx =
+      lerp(gait.stepTriggerPx, gait.runStepTriggerPx, tempo) * (1 - gait.dashTriggerCut * dash01);
+    this.stepTuning.stepDurationMs =
+      lerp(gait.stepDurationMs, gait.runStepDurationMs, tempo) *
+      (1 - gait.dashDurationCut * dash01);
+    this.stepTuning.maxStrainPx = gait.emergencyStrainPx * (1 - gait.dashStrainCut * dash01);
     this.gait.setStepTuning(this.stepTuning);
 
-    // Atılım hızı adım hedefini erişim dışına fırlatmasın: öngörü tam tempo hızında doyar.
-    const leadScale = speed > gait.fullTempoSpeed ? gait.fullTempoSpeed / speed : 1;
+    // Atılış hızı adım hedefini erişim dışına fırlatmasın: öngörü, atılışta genişleyen bir tavanda doyar.
+    const leadCap = gait.fullTempoSpeed * (1 + gait.dashLeadGain * dash01);
+    const leadScale = speed > leadCap ? leadCap / speed : 1;
     this.gait.update(bodyX, bodyY, rad, velX * leadScale, velY * leadScale, stepMs);
     this.readFeet(bodyX, bodyY, rad);
     this.place(pose, light);
@@ -172,6 +178,11 @@ export class SpiderLegs {
     for (let i = 0; i < this.legs.length; i++) {
       if (this.gait.justPlanted(i)) visit(this.gait.footX(i), this.gait.footY(i));
     }
+  }
+
+  /** Bütün ayakların dünya konumunu gezer (atılış başlangıç tozu). */
+  forEachFoot(visit: (x: number, y: number) => void): void {
+    for (let i = 0; i < this.legs.length; i++) visit(this.gait.footX(i), this.gait.footY(i));
   }
 
   /** Bacağın dünyadaki ayak konumu ve havadaki payı — ölçüm ve sınama için. */
@@ -214,7 +225,10 @@ export class SpiderLegs {
       leg.restDistance *
       (1 + leg.dashReachGain * dash01 + 0.03 * motion01) *
       (1 - leg.crouchReachDrop * crouch01);
-    this.homeScratch.x = hip.x + Math.cos(angle) * reach;
+    // Av atılışı: öndeki bacaklar ileri fırlar, arkadakiler geride itiş verir (daha az: kemik erişimi dar).
+    const forward = Math.cos(angle);
+    const lunge = leg.dashLungePx * dash01 * (forward > 0 ? forward : forward * 0.35);
+    this.homeScratch.x = hip.x + Math.cos(angle) * reach + lunge;
     this.homeScratch.y = hip.y + Math.sin(angle) * reach;
     return this.homeScratch;
   }

@@ -208,6 +208,35 @@ describe('LegGait — sıra disiplini ve canlı duruş', () => {
     expect(urgent.steppingCount).toBe(2);
   });
 
+  it('canlı tempo ayarı acil eşiği de indirir: gevşek eşikte beklenen bacak sıkı eşikte adım atar', () => {
+    const legs: LegGaitLeg[] = [
+      { homeX: 60, homeY: 0, group: 0 },
+      { homeX: -60, homeY: 0, group: 1 },
+    ];
+    const loose = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000, maxStrainPx: 5000 });
+    const tight = new LegGait(legs, { ...CONFIG, stepDurationMs: 4000, maxStrainPx: 5000 });
+    loose.reset(0, 0, 0);
+    tight.reset(0, 0, 0);
+    tight.setStepTuning({
+      stepTriggerPx: CONFIG.stepTriggerPx,
+      stepDurationMs: 4000,
+      maxStrainPx: 60,
+    });
+
+    let x = 0;
+    for (let frame = 0; frame < 40; frame++) {
+      x += (900 * DT) / 1000;
+      loose.update(x, 0, 0, 900, 0, DT);
+      tight.update(x, 0, 0, 900, 0, DT);
+    }
+
+    expect(loose.steppingCount).toBe(1);
+    expect(tight.steppingCount).toBe(2);
+    expect(() =>
+      tight.setStepTuning({ stepTriggerPx: 30, stepDurationMs: 60, maxStrainPx: NaN }),
+    ).toThrow(/sonlu/);
+  });
+
   it('setLegHome duruşu canlı değiştirir ama BASILI ayağı kaydırmaz', () => {
     const gait = new LegGait(LEGS, CONFIG);
     gait.reset(0, 0, 0);

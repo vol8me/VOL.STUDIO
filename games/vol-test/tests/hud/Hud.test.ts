@@ -250,20 +250,20 @@ describe('Hud', () => {
       [...parent.querySelectorAll<HTMLElement>('.vt-hud__hint:not([hidden])')].map(
         (row) => row.textContent ?? '',
       );
-    hud.update(hudFrame({ walker: false }), 1000);
+    hud.update(hudFrame({ kind: 'tank' }), 1000);
     expect(label()).toBe('Hızlanma deposu');
     expect(hints().some((text) => text.includes('Hızlanma'))).toBe(true);
     expect(find('touch-boost').hidden).toBe(false);
     expect(find('touch-brake').getAttribute('aria-label')).toBe('Fren');
 
-    hud.update(hudFrame({ walker: true }), 2000);
+    hud.update(hudFrame({ kind: 'walker' }), 2000);
     expect(label()).toBe('Atılım deposu');
     expect(hints().some((text) => text.includes('Hızlanma'))).toBe(false);
     expect(hints().some((text) => text.includes('Atılım'))).toBe(true);
     expect(find('touch-boost').hidden).toBe(true);
     expect(find('touch-brake').getAttribute('aria-label')).toBe('Atılım');
 
-    hud.update(hudFrame({ walker: false }), 3000);
+    hud.update(hudFrame({ kind: 'tank' }), 3000);
     expect(label()).toBe('Hızlanma deposu');
     expect(find('touch-boost').hidden).toBe(false);
     hud.destroy();

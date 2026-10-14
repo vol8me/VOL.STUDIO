@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-level-up/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "level-up"
-      ],
+      "tags": ["level-up"],
       "variantId": "v-671f3b963582d37e"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "level-up"
-      ],
+      "tags": ["level-up"],
       "variantId": "v-e5aa090e098f3f3d"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "level-up"
-      ],
+      "tags": ["level-up"],
       "variantId": "v-2910ea54c901c9c6"
     }
   ]

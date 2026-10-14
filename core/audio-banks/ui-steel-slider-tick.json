@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-slider-tick/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "slider-tick"
-      ],
+      "tags": ["slider-tick"],
       "variantId": "v-8bec8e65258e372f"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "slider-tick"
-      ],
+      "tags": ["slider-tick"],
       "variantId": "v-9e48dbf09cc94920"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "slider-tick"
-      ],
+      "tags": ["slider-tick"],
       "variantId": "v-c49ea97eae9158a6"
     }
   ]

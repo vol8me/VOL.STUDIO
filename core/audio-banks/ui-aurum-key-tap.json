@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-key-tap/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "key-tap"
-      ],
+      "tags": ["key-tap"],
       "variantId": "v-9a991b5c0d794205"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "key-tap"
-      ],
+      "tags": ["key-tap"],
       "variantId": "v-2a7a7a5420ebd70c"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "key-tap"
-      ],
+      "tags": ["key-tap"],
       "variantId": "v-d2413b3745e0fc16"
     }
   ]

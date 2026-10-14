@@ -153,8 +153,13 @@ nişana bakmaz) ve yürüyüş tavanı gövdenin hedefe dönüklüğüyle ölçe
 dönükken yarıya iner), bu yüzden önce döner sonra açılır. Shift hızlanması yoktur; Space kilitli bir
 av atılışı başlatır: depo doluyken basılır, bırakılsa da ~0,55 sn boşalana dek sürer, geri alınamaz,
 hareketsizken gövdenin baktığı yöne atar ve depo yeniden dolana dek bekler (depo `boost`/`boosting`
-alanlarını kullanır, ağ durumuna ek alan girmez; HUD çubuğu "Atılım deposu"dur). Zemin tutuşundan
-palet kadar etkilenmez. Arachnid ağır kavgacıdır (150 birim/s, 140 can, zırhlı tarantula); Widow
+alanlarını kullanır, ağ durumuna ek alan girmez; HUD çubuğu "Atılım deposu"dur). Av atılışının
+görünümü (`SpiderLegs`, `SpiderMotion`, `DashGhosts`): öndeki bacaklar ileri fırlar, arkadakiler geride itiş
+verir (`dashLungePx`), kalça çöker ve gövde ön bacaklara yüklenir (`dashLeanPx`), adımlar kısalıp sıklaşır
+(`dashTriggerCut`/`dashDurationCut`/`dashStrainCut`; çekirdek `LegGait.setStepTuning` acil eşiği de canlı
+değiştirir), atılışın başında ayakların altından toz patlar ve gövdenin siluetinden soluk hayaletler
+(`SpiderLook.ghost`, en çok `count` kopya, havuzlu) dünyada kalıp söner. Atılış hızında ayak kemik erişimini bir-iki
+kare aşabilir; çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır kavgacıdır (150 birim/s, 140 can, zırhlı tarantula); Widow
 hafif keskin nişancıdır (172 birim/s, 96 can, ince ve uzun bacaklı kara dul). Hız tavanları
 bilerek düşüktür: bacak yürüyüşü tavan hızda ayakları kemik erişiminde tutar ve bunu
 `tests/view/spider/SpiderLegs.test.ts` ile `tests/config/spiders.test.ts` kilitler. Bacaklar yalnız

@@ -87,8 +87,10 @@ export class SpiderMotion {
 
     const perUnit = motion.maxLeanPx / motion.accelForMaxLean;
     const lean = motion.maxLeanPx;
+    // Av atılışında gövde ön bacaklara yüklenir: ivme gövdeyi geri yaslarken atılış onu ileri uzatır.
+    const hunt = motion.dashLeanPx * clamp01(signals.dash01);
     pose.leanX = this.leanX.update(
-      clamp(-accelForward * perUnit, -lean, lean),
+      clamp(-accelForward * perUnit, -lean, lean) + hunt,
       deltaMs,
       motion.leanSpring,
     );

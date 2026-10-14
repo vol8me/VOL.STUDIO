@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-back/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "back"
-      ],
+      "tags": ["back"],
       "variantId": "v-0e4d9255df221993"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "back"
-      ],
+      "tags": ["back"],
       "variantId": "v-54e3fdff17d113fb"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "back"
-      ],
+      "tags": ["back"],
       "variantId": "v-6e7d8564435bc12b"
     }
   ]

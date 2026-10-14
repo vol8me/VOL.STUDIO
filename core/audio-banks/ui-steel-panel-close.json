@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-panel-close/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "panel-close"
-      ],
+      "tags": ["panel-close"],
       "variantId": "v-5fd97d70aab53b19"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "panel-close"
-      ],
+      "tags": ["panel-close"],
       "variantId": "v-aabb8adf260a7a63"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "panel-close"
-      ],
+      "tags": ["panel-close"],
       "variantId": "v-4e7b840260192f60"
     }
   ]

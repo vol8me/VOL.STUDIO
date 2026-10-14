@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-key-delete/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "key-delete"
-      ],
+      "tags": ["key-delete"],
       "variantId": "v-88c47b41c8a286f2"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "key-delete"
-      ],
+      "tags": ["key-delete"],
       "variantId": "v-bdf2cc2bda23db80"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "key-delete"
-      ],
+      "tags": ["key-delete"],
       "variantId": "v-120f3d3a6c7034cf"
     }
   ]

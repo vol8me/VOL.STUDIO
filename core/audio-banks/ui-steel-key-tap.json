@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-key-tap/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "key-tap"
-      ],
+      "tags": ["key-tap"],
       "variantId": "v-0e826d7b3efa5fc7"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "key-tap"
-      ],
+      "tags": ["key-tap"],
       "variantId": "v-f55fc7717137c04f"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "key-tap"
-      ],
+      "tags": ["key-tap"],
       "variantId": "v-c3894a4e94d9e92c"
     }
   ]

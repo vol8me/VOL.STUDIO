@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-purchase/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "purchase"
-      ],
+      "tags": ["purchase"],
       "variantId": "v-494e3873678d189e"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "purchase"
-      ],
+      "tags": ["purchase"],
       "variantId": "v-6c9fc7d4c8801283"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "purchase"
-      ],
+      "tags": ["purchase"],
       "variantId": "v-4bccded81d92e380"
     }
   ]

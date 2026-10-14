@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-toggle-on/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "toggle-on"
-      ],
+      "tags": ["toggle-on"],
       "variantId": "v-460d93854eee7bb3"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "toggle-on"
-      ],
+      "tags": ["toggle-on"],
       "variantId": "v-47ebcb51c1522192"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "toggle-on"
-      ],
+      "tags": ["toggle-on"],
       "variantId": "v-659e876c0e99f475"
     }
   ]

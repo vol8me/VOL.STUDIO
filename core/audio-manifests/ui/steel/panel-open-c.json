@@ -4,9 +4,7 @@
     "encoded": {
       "analyzerVersion": 1,
       "dc": {
-        "channelOffset": [
-          0.00007821277724438547
-        ]
+        "channelOffset": [0.00007821277724438547]
       },
       "defects": {
         "clicks": {
@@ -16,9 +14,7 @@
         "clips": {
           "channelSamples": 0,
           "frames": 0,
-          "perChannel": [
-            0
-          ]
+          "perChannel": [0]
         }
       },
       "format": {
@@ -28,12 +24,8 @@
         "sampleRate": 48000
       },
       "level": {
-        "channelPeakDbfs": [
-          -4.902710272229975
-        ],
-        "channelRmsDbfs": [
-          -18.316415581462017
-        ],
+        "channelPeakDbfs": [-4.902710272229975],
+        "channelRmsDbfs": [-18.316415581462017],
         "crestFactorDb": 13.413705309232043,
         "integratedLufs": null,
         "maxMomentaryLufs": -20.53006341933313,
@@ -80,10 +72,7 @@
     "document": {
       "assetClass": "ui",
       "channels": 1,
-      "descriptors": [
-        "weight:heavy",
-        "panel-open"
-      ],
+      "descriptors": ["weight:heavy", "panel-open"],
       "durationSeconds": {
         "max": 0.48,
         "min": 0.144
@@ -105,15 +94,7 @@
     "schema": "AudioBriefV1"
   },
   "encoder": {
-    "arguments": [
-      "-f",
-      "f32le",
-      "-c:a",
-      "libvorbis",
-      "-q:a",
-      "6",
-      "-bitexact"
-    ],
+    "arguments": ["-f", "f32le", "-c:a", "libvorbis", "-q:a", "6", "-bitexact"],
     "codec": "libvorbis",
     "fingerprint": "sha256:bc4a390a2bf21a203aec467181016f9b63b511faa9ece7dd3979ff2d5573a275",
     "libraries": {
@@ -123,9 +104,7 @@
     },
     "quality": 6,
     "tool": "ffmpeg",
-    "unreported": [
-      "libvorbis"
-    ],
+    "unreported": ["libvorbis"],
     "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
   },
   "encoding": {
@@ -205,32 +184,17 @@
         "rise-pitch": {
           "curve": "curve.spline",
           "points": [
-            [
-              0,
-              330
-            ],
-            [
-              0.14,
-              520
-            ]
+            [0, 330],
+            [0.14, 520]
           ],
           "version": 1
         },
         "thump-pitch": {
           "curve": "curve.spline",
           "points": [
-            [
-              0,
-              150
-            ],
-            [
-              0.06,
-              78
-            ],
-            [
-              0.16,
-              74.88
-            ]
+            [0, 150],
+            [0.06, 78],
+            [0.16, 74.88]
           ],
           "version": 1
         }

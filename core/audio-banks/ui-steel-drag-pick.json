@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-drag-pick/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "drag-pick"
-      ],
+      "tags": ["drag-pick"],
       "variantId": "v-978f27b77d49455d"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "drag-pick"
-      ],
+      "tags": ["drag-pick"],
       "variantId": "v-e34afa27833d4444"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "drag-pick"
-      ],
+      "tags": ["drag-pick"],
       "variantId": "v-be4b653945cef3b3"
     }
   ]

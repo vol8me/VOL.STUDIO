@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-release/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "release"
-      ],
+      "tags": ["release"],
       "variantId": "v-95b261684ed4ecf7"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "release"
-      ],
+      "tags": ["release"],
       "variantId": "v-4886aad276fb3060"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "release"
-      ],
+      "tags": ["release"],
       "variantId": "v-0dbcbf2dddc4dfe5"
     }
   ]

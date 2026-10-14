@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-reward/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "reward"
-      ],
+      "tags": ["reward"],
       "variantId": "v-931654f7c68c7fd8"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "reward"
-      ],
+      "tags": ["reward"],
       "variantId": "v-bc38dbe5857ffdd3"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "reward"
-      ],
+      "tags": ["reward"],
       "variantId": "v-1d521152d7861384"
     }
   ]

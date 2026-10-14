@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-equip/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "equip"
-      ],
+      "tags": ["equip"],
       "variantId": "v-5e74da913e0c979a"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "equip"
-      ],
+      "tags": ["equip"],
       "variantId": "v-b88733174ded6055"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "equip"
-      ],
+      "tags": ["equip"],
       "variantId": "v-2c642d3efe942468"
     }
   ]

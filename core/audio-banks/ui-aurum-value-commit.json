@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-value-commit/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "value-commit"
-      ],
+      "tags": ["value-commit"],
       "variantId": "v-69aecc1e207217e7"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "value-commit"
-      ],
+      "tags": ["value-commit"],
       "variantId": "v-eefeb535c5375d81"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "value-commit"
-      ],
+      "tags": ["value-commit"],
       "variantId": "v-a2dc7f307fef41a7"
     }
   ]

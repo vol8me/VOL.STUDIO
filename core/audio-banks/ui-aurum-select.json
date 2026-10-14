@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-aurum-select/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "select"
-      ],
+      "tags": ["select"],
       "variantId": "v-b81faffda7d7c84c"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "select"
-      ],
+      "tags": ["select"],
       "variantId": "v-2163b49f96df0ab3"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "select"
-      ],
+      "tags": ["select"],
       "variantId": "v-a273b0bd5a8819b5"
     }
   ]

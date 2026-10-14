@@ -158,7 +158,9 @@ export class PlayerControls {
   release(): void {
     this.blocked.add('fire');
     this.blocked.add('boost');
-    this.actionSource.suppressUntilRelease(['fire', 'boost']);
+    // Menüde basılı kalan Space yürüyücüde geri alınamaz bir atılım başlatırdı.
+    this.blocked.add('brake');
+    this.actionSource.suppressUntilRelease(['fire', 'boost', 'brake']);
     this.stickSource.suppressUntilRelease('aim');
     this.manager.reset({ preserveHeld: true });
     this.buffer.reset();

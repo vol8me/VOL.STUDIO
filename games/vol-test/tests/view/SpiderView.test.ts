@@ -66,6 +66,24 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       }
     });
 
+    it('av atılışında hayalet kopyalar doğar ve atılış bitip söndüğünde kalmaz; dururken görüntü yaratılmaz', () => {
+      const { scene, view } = build(spec);
+      const count = (): number =>
+        scene.created.filter(
+          (object) =>
+            object.kind === 'image' &&
+            [`${spec.id}/thorax`, `${spec.id}/abdomen`].includes(String(object.args[3])) &&
+            object.calls.some(([name]) => name === 'setTint'),
+        ).length;
+      for (let i = 0; i < 20; i++) view.update(frame({ vx: 150, speed: 150 }), 16);
+      expect(count()).toBe(0);
+      for (let i = 0; i < 60; i++)
+        view.update(frame({ x: 100 + i * 5, vx: 345, speed: 345, boosting: true }), 16);
+      expect(count()).toBeGreaterThan(0);
+      expect(count()).toBeLessThanOrEqual(look.ghost.count * 2);
+      view.destroy();
+    });
+
     it('zemin gölgeleri gövdenin altında çizilir: gölge katmanı gövde katmanından düşüktür', () => {
       const { root, shadowRoot } = build(spec);
       expect(shadowRoot.depth).toBeLessThan(root.depth as number);

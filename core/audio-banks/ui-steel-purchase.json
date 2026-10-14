@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-purchase/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "purchase"
-      ],
+      "tags": ["purchase"],
       "variantId": "v-65e029f2fbd55e43"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "purchase"
-      ],
+      "tags": ["purchase"],
       "variantId": "v-a4ef816084b06043"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "purchase"
-      ],
+      "tags": ["purchase"],
       "variantId": "v-ecf25d7cb71d11d6"
     }
   ]

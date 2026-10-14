@@ -24,11 +24,7 @@
     "path": "devtools/audio-synth/records/families/ui-steel-toggle-off/quality.json"
   },
   "roleAxes": {
-    "weight": [
-      "heavy",
-      "light",
-      "medium"
-    ]
+    "weight": ["heavy", "light", "medium"]
   },
   "schema": "SoundFamilyBankV1",
   "variants": [
@@ -59,9 +55,7 @@
       "roles": {
         "weight": "light"
       },
-      "tags": [
-        "toggle-off"
-      ],
+      "tags": ["toggle-off"],
       "variantId": "v-aa56bd5385c8cfe2"
     },
     {
@@ -91,9 +85,7 @@
       "roles": {
         "weight": "medium"
       },
-      "tags": [
-        "toggle-off"
-      ],
+      "tags": ["toggle-off"],
       "variantId": "v-a7b9d9c57e53f91b"
     },
     {
@@ -123,9 +115,7 @@
       "roles": {
         "weight": "heavy"
       },
-      "tags": [
-        "toggle-off"
-      ],
+      "tags": ["toggle-off"],
       "variantId": "v-27e84e47ff3b1d2a"
     }
   ]
