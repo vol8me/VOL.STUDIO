@@ -9,6 +9,7 @@ import type { SimEvent } from '@/sim/events';
 import type { Simulation } from '@/sim/Simulation';
 import type { WeatherSystem } from '@/sim/weather/WeatherSystem';
 import type { World } from '@/sim/world/World';
+import type { FrontFrame } from '@/view/front';
 import type { PlayerControls } from './PlayerControls';
 
 /** Sahnenin sürücüye verdiği kurulum bağlamı. */
@@ -62,6 +63,11 @@ export interface WorldDriver {
   attachHud?(hud: Hud): void;
   /** Her karenin sonunda sunum tarafı için çağrılır (panel ve etiket güncellemesi). */
   present?(nowMs: number): void;
+  /**
+   * Savaş dünyasında cephe hattı: bölgelerin ve üslerin bu karedeki durumu. Dünyada cephe
+   * yoksa tanımsızdır. Sürücü durumu yerinde günceller; çağıran saklamaz.
+   */
+  front?(): FrontFrame | undefined;
   /** Ölçüm kaydına eklenen sürücüye özgü sayılar (örn. ağ gecikmesi). */
   metrics?(): Readonly<Record<string, number>>;
 }

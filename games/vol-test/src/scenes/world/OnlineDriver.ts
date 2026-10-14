@@ -3,6 +3,7 @@ import { ONLINE_VIEW } from '@/config/onlineView';
 import type { Hud } from '@/hud/Hud';
 import { OnlinePanel, teamColor } from '@/hud/OnlinePanel';
 import type { NetEvent } from '@/network/events';
+import { createFront, type FrontFrame } from '@/view/front';
 import { NO_TEAM } from '@/network/schema';
 import { OnlineWorld } from '@/network/OnlineWorld';
 import type { OnlineSession } from '@/network/OnlineSession';
@@ -41,6 +42,7 @@ export class OnlineDriver implements WorldDriver {
   private readonly tags: NameTags;
   private readonly batch: NetEvent[] = [];
   private readonly pending: FeedLine[] = [];
+  private readonly frontFrame: FrontFrame;
   private panel: OnlinePanel | undefined;
   private panelDueMs = 0;
   private leaving = false;
@@ -52,6 +54,7 @@ export class OnlineDriver implements WorldDriver {
   ) {
     const { scope } = context;
     this.world = new OnlineWorld(session, context.world);
+    this.frontFrame = createFront(context.world);
     // Sahne kapanırken önce dünya, sonra bağlantı sökülür (dünya oturumun dinleyicisini bırakır).
     scope.addSubscription(() => {
       this.world.dispose();
@@ -76,6 +79,19 @@ export class OnlineDriver implements WorldDriver {
 
   get measurement(): DriverMeasurement {
     return { scenario: ONLINE_SCENARIO, seed: 0 };
+  }
+
+  /** Bölge durumu sunucu şemasından okunur; geometri dünya ölçüsünden bir kez türetilmiştir. */
+  front(): FrontFrame {
+    const state = this.session.room.state.zones;
+    for (const zone of this.frontFrame.zones) {
+      const live = state[zone.index];
+      if (!live) continue;
+      zone.owner = live.owner;
+      zone.progress = live.progress;
+      zone.contested = live.contested;
+    }
+    return this.frontFrame;
   }
 
   metrics(): Readonly<Record<string, number>> {

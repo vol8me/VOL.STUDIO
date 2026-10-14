@@ -305,6 +305,18 @@ elindeki bölge en az çekicidir; yakınlık çekiciliği artırır, aynı bölg
 görevden ancak belirgin biçimde daha iyi bir bölge için vazgeçilir. Bu kararların hepsi tohumludur:
 aynı tohum aynı savaşı üretir (`tests/sim/war/War.test.ts`).
 
+**Sunum.** Cephe hattının çizimi kural bilmez: `src/view/front.ts` bölge ve üs geometrisini sunucunun
+kullandığı `ZoneField`/`baseCenter` hesabından türetir, sürücü (`WorldDriver.front`) durum alanlarını
+yerinde günceller. `src/view/ZonesView.ts` bölge çemberlerini (sahibin renginde halka, ilerleme yayı,
+tartışmada nabız) ve üsleri kameraya yakınsa çizer; `MapPanel` aynı kareyi alanlı işaret olarak
+(CORE `MinimapMarker.worldRadius`) gösterir ve araç işaretlerini cephe rengine boyar. Renk ve ölçüler
+`src/config/frontView.ts` içindedir. Çevrimdışı sandbox'ta cephe hattı yoktur.
+
+Harita 384 m'lik dünyada tüm dünyayı gösterseydi araç kare başına piksel altı yürür ve harita
+durmuş gibi görünürdü; bu yüzden açılış yakınlaştırması `WORLD.mapZoom` (4, çevredeki ~96 m) ve
+tavanı `WORLD.mapMaxZoom`dur, zoom 1 bütün cephe hattını gösterir
+(`tests/hud/MapPanel.test.ts` yavaş aracın her karede çizildiğini kilitler).
+
 ## Girdi, kamera ve HUD
 
 Tuş ve kol eşlemesi `src/scenes/world/PlayerControls.ts`, hareket yumuşatma

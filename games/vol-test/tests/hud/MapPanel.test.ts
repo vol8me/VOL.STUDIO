@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { i18n, i18next } from '@volstudio/core/i18n';
 import { MapPanel } from '@/hud/MapPanel';
+import { WORLD } from '@/config/world';
+import { createFront } from '@/view/front';
 import { hudFrame } from './support';
 
 function fakeContext() {
@@ -171,5 +173,79 @@ describe('harita', () => {
     map.update(hudFrame({ x: 3000, y: 3000, view: { x: 2800, y: 2800, width: 400, height: 300 } }));
     expect(zoomIn.getAttribute('aria-label')).toBeTruthy();
     map.destroy();
+  });
+  it('cephe hattı alanlı işaret olarak çizilir; yalnız sahip ya da tartışma değişince yeniden çizilir', async () => {
+    const map = new MapPanel({ ...OPTIONS, worldWidth: WORLD.width, worldHeight: WORLD.height });
+    document.body.appendChild(map.element);
+    const front = createFront(WORLD);
+    const frame = () => hudFrame({ x: 6000, y: 6000, front });
+    const arcs = (): number => calls.filter((c) => c === 'arc').length;
+    const draws = (): number => calls.filter((c) => c === 'clearRect').length;
+    map.update(frame());
+    await Promise.resolve();
+    // Her bölge ve her üs bir alan diski çizer.
+    expect(arcs()).toBeGreaterThanOrEqual(front.zones.length + front.bases.length);
+    const settled = draws();
+    map.update(frame());
+    await Promise.resolve();
+    expect(draws()).toBe(settled);
+    front.zones[0].owner = 0;
+    map.update(frame());
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 1);
+    front.zones[0].contested = true;
+    map.update(frame());
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 2);
+    map.destroy();
+  });
+
+  it('cephe hattı olmayan karede bölge işareti yoktur', async () => {
+    const map = new MapPanel(OPTIONS);
+    document.body.appendChild(map.element);
+    map.update(hudFrame());
+    await Promise.resolve();
+    expect(calls.filter((c) => c === 'arc')).toHaveLength(0);
+    map.destroy();
+  });
+  it('savaş dünyası ölçeğinde açılış yakınlaştırmasıyla yavaş araç her karede akar', async () => {
+    const options = {
+      ...OPTIONS,
+      worldWidth: WORLD.width,
+      worldHeight: WORLD.height,
+      zoom: WORLD.mapZoom,
+      maxZoom: WORLD.mapMaxZoom,
+    };
+    const map = new MapPanel(options);
+    document.body.appendChild(map.element);
+    let x = 6000;
+    const frame = () =>
+      hudFrame({ x, y: 6000, vehicles: () => [{ id: 2, x, y: 5800, hull: 0, player: false }] });
+    map.update(frame());
+    await Promise.resolve();
+    const settled = calls.filter((c) => c === 'clearRect').length;
+    // Araç karede 3,8 birim yürür; zoom 4'te çizim eşiği 2,3 birimdir, her kare çizilir.
+    for (let step = 0; step < 30; step++) {
+      x += 3.8;
+      map.update(frame());
+      await Promise.resolve();
+    }
+    expect(calls.filter((c) => c === 'clearRect').length).toBe(settled + 30);
+    map.destroy();
+
+    // Tüm dünya görünümünde (zoom 1) aynı yürüyüş piksel altıdır: çizimlerin çoğu elenir.
+    const wide = new MapPanel({ ...options, zoom: 1 });
+    document.body.appendChild(wide.element);
+    x = 6000;
+    wide.update(frame());
+    await Promise.resolve();
+    const before = calls.filter((c) => c === 'clearRect').length;
+    for (let step = 0; step < 30; step++) {
+      x += 3.8;
+      wide.update(frame());
+      await Promise.resolve();
+    }
+    expect(calls.filter((c) => c === 'clearRect').length - before).toBeLessThan(30);
+    wide.destroy();
   });
 });

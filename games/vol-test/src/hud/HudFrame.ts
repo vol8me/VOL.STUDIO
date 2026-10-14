@@ -1,3 +1,4 @@
+import type { FrontFrame } from '@/view/front';
 import type { ClimateFrame } from './ClimateStatus';
 
 /** Haritada gösterilen araç: dünya birimi konum ve gövde yönü. */
@@ -8,6 +9,8 @@ export interface HudVehicle {
   readonly hull: number;
   /** Oyuncunun kendi aracı mı (haritada vurgulanır). */
   readonly player: boolean;
+  /** Cephe indeksi; cepheye bağlı değilse -1 ya da yok. */
+  readonly team?: number;
 }
 
 /** HUD'un her güncellemede okuduğu oyun durumu; simülasyon sınıflarına bağlı değildir. */
@@ -34,6 +37,8 @@ export interface HudFrame {
    * kullanabilir; tüketici onları saklamaz.
    */
   readonly vehicles?: () => Iterable<HudVehicle>;
+  /** Cephe hattı (bölgeler, üsler); savaş dünyası olmayan kipte yoktur. */
+  readonly front?: FrontFrame;
   readonly view: {
     readonly x: number;
     readonly y: number;

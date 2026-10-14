@@ -80,6 +80,11 @@ export interface MinimapMarker {
   outline?: boolean;
   /** true ise görünür alanın dışına çıkınca kenarda yön oku olarak gösterilir (yakınlaştırılmış haritada). */
   edge?: boolean;
+  /**
+   * Dünya birimi cinsinden alan yarıçapı (bölge, menzil): işaretin altına yarı saydam disk ve halka
+   * çizilir, yakınlaştırınca dünya ile birlikte büyür. Varsayılan 0 (alan yok).
+   */
+  worldRadius?: number;
 }
 
 interface Ping {
@@ -107,6 +112,7 @@ interface StoredMarker {
   priority: number;
   outline: boolean;
   edge: boolean;
+  worldRadius: number;
   /** Son `setMarker` çağrısının senkron nesli (`syncMarkers` görülmeyeni bununla ayıklar). */
   stamp: number;
 }
@@ -123,6 +129,7 @@ function createStored(marker: MinimapMarker, stamp: number): StoredMarker {
     priority: marker.priority ?? 0,
     outline: marker.outline ?? true,
     edge: marker.edge ?? false,
+    worldRadius: marker.worldRadius ?? 0,
     stamp,
   };
 }
@@ -168,6 +175,7 @@ export class MinimapPanel {
     rotation: 0,
     outline: true,
     edge: false,
+    worldRadius: 0,
   };
   private readonly counts: Record<string, number> = {};
   private readonly pings: Ping[] = [];
@@ -304,6 +312,7 @@ export class MinimapPanel {
     stored.priority = priority;
     stored.outline = marker.outline ?? true;
     stored.edge = marker.edge ?? false;
+    stored.worldRadius = marker.worldRadius ?? 0;
     if (this.followId === id && this.zoom > 1) this.recenter(stored.worldX, stored.worldY);
     if (recount) this.refreshDescription();
     this.invalidate();
@@ -696,6 +705,7 @@ export class MinimapPanel {
       stored.priority !== (next.priority ?? 0) ||
       stored.outline !== (next.outline ?? true) ||
       stored.edge !== (next.edge ?? false) ||
+      stored.worldRadius !== (next.worldRadius ?? 0) ||
       Math.abs(stored.worldX - next.worldX) >= eps ||
       Math.abs(stored.worldY - next.worldY) >= eps ||
       Math.abs(stored.rotation - (next.rotation ?? 0)) >= ROTATION_EPSILON
@@ -834,6 +844,7 @@ export class MinimapPanel {
       drawable.rotation = marker.rotation;
       drawable.outline = marker.outline;
       drawable.edge = marker.edge;
+      drawable.worldRadius = marker.worldRadius;
       drawMarker(ctx, view, palette, drawable);
       if (marker.edge) drawEdgeMarker(ctx, view, palette, drawable);
     }

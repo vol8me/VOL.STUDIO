@@ -33,6 +33,9 @@ export interface MinimapView {
   height: number;
 }
 
+const AREA_FILL_ALPHA = 0.16;
+const AREA_RING_ALPHA = 0.75;
+
 export type MinimapShape = 'dot' | 'arrow' | 'square' | 'diamond';
 
 export interface DrawableMarker {
@@ -44,6 +47,8 @@ export interface DrawableMarker {
   rotation: number;
   outline: boolean;
   edge: boolean;
+  /** Dünya birimi alan yarıçapı; 0 ise alan çizilmez. */
+  worldRadius: number;
 }
 
 const TOKENS: ReadonlyArray<readonly [keyof MinimapPalette, string, string]> = [
@@ -209,6 +214,26 @@ function shapePath(
   ctx.arc(x, y, radius, 0, Math.PI * 2);
 }
 
+/** Alan işareti: yarı saydam disk ve ince halka; bulanıklık ve gradyan yok (HUD bütçesi). */
+function drawArea(
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  x: number,
+  y: number,
+  radius: number,
+): void {
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.globalAlpha = AREA_FILL_ALPHA;
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.globalAlpha = AREA_RING_ALPHA;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
 /** Tek işaret: koyu kenar (zemin ne olursa olsun okunur) + dolgu. */
 export function drawMarker(
   ctx: CanvasRenderingContext2D,
@@ -217,7 +242,10 @@ export function drawMarker(
   marker: DrawableMarker,
 ): void {
   const { x, y } = worldToCanvas(view, marker.worldX, marker.worldY);
-  if (x < -12 || y < -12 || x > view.width + 12 || y > view.height + 12) return;
+  const area = (marker.worldRadius * view.width) / view.visible.width;
+  const reach = Math.max(12, area);
+  if (x < -reach || y < -reach || x > view.width + reach || y > view.height + reach) return;
+  if (area > 0) drawArea(ctx, marker.color, x, y, area);
   shapePath(ctx, marker, x, y, marker.radius);
   if (marker.outline) {
     ctx.strokeStyle = palette.rim;

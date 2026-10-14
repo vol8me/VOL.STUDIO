@@ -32,6 +32,9 @@ export interface HudOptions {
   readonly mapGridStep: number;
   /** Haritada kaç ızgara aralığında bir belirgin çizgi çekileceği. */
   readonly mapGridMajorEvery: number;
+  /** Haritanın açılış yakınlaştırması ve üst sınırı; verilmezse bütün dünya. */
+  readonly mapZoom?: number;
+  readonly mapMaxZoom?: number;
   readonly actionSource: VirtualActionSource<TestAction>;
   readonly stickSource: VirtualStickSource;
   /** Ekran üstü düğmeler başlangıçta gösterilsin mi (dokunmatik birincil cihaz). */
@@ -110,6 +113,8 @@ export class Hud {
         metre: options.metre,
         gridStep: options.mapGridStep,
         gridMajorEvery: options.mapGridMajorEvery,
+        zoom: options.mapZoom,
+        maxZoom: options.mapMaxZoom,
       }),
     );
     this.hints = this.scope.addDestroyable(new ControlHints(this.presentation));

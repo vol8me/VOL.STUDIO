@@ -237,6 +237,52 @@ describe('MinimapPanel — çizim sözleşmesi', () => {
     expect(draws()).toBe(settled + 2);
   });
 
+  it('dünya yarıçaplı işaret alan diski çizer ve yarıçap değişimi yeniden çizim ister', async () => {
+    const panel = make();
+    panel.setMarker('zone', { worldX: 1000, worldY: 1000, color: '#fff', shape: 'diamond' });
+    await Promise.resolve();
+    const arcs = (): number => fake.calls.filter((c) => c === 'arc').length;
+    const plain = arcs();
+    const settled = draws();
+    panel.setMarker('zone', {
+      worldX: 1000,
+      worldY: 1000,
+      color: '#fff',
+      shape: 'diamond',
+      worldRadius: 300,
+    });
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 1);
+    expect(arcs()).toBe(plain + 1);
+    panel.setMarker('zone', {
+      worldX: 1000,
+      worldY: 1000,
+      color: '#fff',
+      shape: 'diamond',
+      worldRadius: 300,
+    });
+    await Promise.resolve();
+    expect(draws()).toBe(settled + 1);
+  });
+
+  it('merkezi görünür alanın dışındaki alan, kenarı içeri taşıyorsa yine çizilir', async () => {
+    const panel = make();
+    const arcs = (): number => fake.calls.filter((c) => c === 'arc').length;
+    // 2000 birim / 200 px: merkez tuvalin 50 px dışında, yarıçap 800 birim = 80 px içeri taşar.
+    panel.setMarker('far', { worldX: -500, worldY: 1000, color: '#fff', shape: 'diamond' });
+    await Promise.resolve();
+    const hidden = arcs();
+    panel.setMarker('far', {
+      worldX: -500,
+      worldY: 1000,
+      color: '#fff',
+      shape: 'diamond',
+      worldRadius: 800,
+    });
+    await Promise.resolve();
+    expect(arcs()).toBe(hidden + 1);
+  });
+
   it('hareket eden işaret özeti çevirmez ve DOM yazmaz; yalnız tür sayısı değişince', () => {
     const describe = vi.fn((counts: Readonly<Record<string, number>>) => JSON.stringify(counts));
     const panel = make({ describe });

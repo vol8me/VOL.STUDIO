@@ -236,6 +236,23 @@ describe('OnlineDriver panel ve etiket', () => {
     }
   });
 
+  it('cephe hattını sunucu şemasından okur ve geometriyi dünya ölçüsünden türetir', async () => {
+    const { driver, session, run } = await rig('Cepheci');
+    run();
+    const front = driver.front();
+    expect(front.zones).toHaveLength(WAR.zones.length);
+    expect(front.bases).toHaveLength(WAR.factions);
+    expect(front.zones[1].x).toBe(WAR.zones[1].x * WORLD.width);
+    expect(front.zones[1].owner).toBe(-1);
+    const zone = serverRoom(session.room).battle.zones.zones[1];
+    zone.progress = -1;
+    zone.owner = 1;
+    await until(() => driver.front().zones[1].owner === 1, 'bölge sahibi');
+    expect(driver.front()).toBe(front);
+    expect(front.zones[1].progress).toBe(-1);
+    expect(front.zones[0].owner).toBe(-1);
+  });
+
   it('her araca ad etiketi çizer: kendisi yeşil, diğerleri cephe renginde', async () => {
     const mine = await rig('Ben', 0);
     mine.run();

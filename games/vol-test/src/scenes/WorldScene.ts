@@ -32,6 +32,7 @@ import { World } from '@/sim/world/World';
 import { ArenaView } from '@/view/ArenaView';
 import { EffectsView } from '@/view/EffectsView';
 import { VehicleViews } from '@/view/VehicleViews';
+import { ZonesView } from '@/view/ZonesView';
 import { CameraRig } from './world/CameraRig';
 import { hudFrame, hudVehicles, tankFrame } from './world/frames';
 import { OfflineDriver } from './world/OfflineDriver';
@@ -60,6 +61,7 @@ export class WorldScene extends Phaser.Scene {
   private arena!: ArenaView;
   private vehicles!: VehicleViews;
   private effects!: EffectsView;
+  private zones!: ZonesView;
   private aimGuide!: AimGuide;
   private readonly aimPresence = new AimPresence(FX.aimGuide.fadeInMs, FX.aimGuide.fadeOutMs);
   private environment!: EnvironmentController;
@@ -124,6 +126,7 @@ export class WorldScene extends Phaser.Scene {
       );
     }
     this.arena = this.scope.addDestroyable(new ArenaView(this, world));
+    this.zones = this.scope.addDestroyable(new ZonesView(this));
     const query = new URLSearchParams(location.search);
     const previewSeason = parseSeasonOverride(query.get('season')) ?? overrides?.season;
     this.environment = this.scope.addDestroyable(
@@ -189,6 +192,8 @@ export class WorldScene extends Phaser.Scene {
         worldHeight: world.height,
         mapGridStep: WORLD.mapGridStep,
         mapGridMajorEvery: WORLD.mapGridMajorEvery,
+        mapZoom: WORLD.mapZoom,
+        mapMaxZoom: WORLD.mapMaxZoom,
         actionSource: this.controls.actionSource,
         stickSource: this.controls.stickSource,
         touch,
@@ -328,6 +333,8 @@ export class WorldScene extends Phaser.Scene {
     const rect = this.camera.model.visibleRect();
     this.environment.render(this.sim.vehicles, alpha, rect);
     measurements?.mark('environmentCamera');
+    const front = this.driver.front?.();
+    if (front) this.zones.update(front, rect, time);
     this.hud.update(
       hudFrame(
         player.chassis,
@@ -338,6 +345,7 @@ export class WorldScene extends Phaser.Scene {
         this.environment.climate,
         () => hudVehicles(this.sim.vehicles, player.id, alpha),
         player.vitality,
+        front,
       ),
       time,
     );

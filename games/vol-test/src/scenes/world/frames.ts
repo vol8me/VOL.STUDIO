@@ -40,6 +40,7 @@ export function hudFrame(
   climate?: HudFrame['climate'],
   vehicles?: HudFrame['vehicles'],
   vitality?: Vitality,
+  front?: HudFrame['front'],
 ): HudFrame {
   return {
     x: frame.x,
@@ -59,6 +60,7 @@ export function hudFrame(
     protectionRemainingMs: vitality?.protectionRemainingMs ?? 0,
     climate,
     vehicles,
+    front,
     view,
   };
 }
@@ -81,13 +83,14 @@ export function* hudVehicles(
   for (const vehicle of vehicles) {
     if (!vehicle.vitality.alive) continue;
     const { previous, x, y, hull } = vehicle.chassis;
-    const entry = (mapPool[used] ??= { id: 0, x: 0, y: 0, hull: 0, player: false });
+    const entry = (mapPool[used] ??= { id: 0, x: 0, y: 0, hull: 0, player: false, team: -1 });
     used++;
     entry.id = vehicle.id;
     entry.x = previous.x + (x - previous.x) * alpha;
     entry.y = previous.y + (y - previous.y) * alpha;
     entry.hull = lerpAngle(previous.hull, hull, alpha);
     entry.player = vehicle.id === playerId;
+    entry.team = vehicle.team ?? -1;
     yield entry;
   }
 }
