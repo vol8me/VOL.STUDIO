@@ -114,6 +114,10 @@ export class OnlineDriver implements WorldDriver {
     return { alpha: 0 };
   }
 
+  isBot(vehicleId: number): boolean {
+    return vehicleId !== this.player.id && this.world.isBot(vehicleId);
+  }
+
   drainEvents(out: SimEvent[]): SimEvent[] {
     this.batch.length = 0;
     const selfId = this.player.id;
@@ -192,6 +196,7 @@ export class OnlineDriver implements WorldDriver {
         health: vitality.health / vitality.maxHealth,
         alive: vitality.alive,
         protected: vitality.protectionRemainingMs > 0,
+        bot: vehicle.id !== ownId && this.world.isBot(vehicle.id),
       };
     }
   }

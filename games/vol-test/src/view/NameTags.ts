@@ -13,6 +13,8 @@ export interface TagFrame {
   readonly alive: boolean;
   /** Yeniden doğma koruması sürüyor: bar çerçevesi parlar. */
   readonly protected: boolean;
+  /** Bot mu: adın yanına küçük sarı rozet noktası çizilir. */
+  readonly bot: boolean;
 }
 
 const TAG = ONLINE_VIEW.tag;
@@ -58,6 +60,14 @@ export class NameTags {
           TAG.barWidth * Math.min(1, Math.max(0, frame.health)),
           TAG.barHeight,
         );
+      }
+      if (frame.bot) {
+        const badgeX = frame.x - label.width / 2 - TAG.badgeGap;
+        const badgeY = top - TAG.barHeight - 2 - label.height / 2;
+        graphics.fillStyle(0x14100c, 0.8 * alpha);
+        graphics.fillCircle(badgeX, badgeY, TAG.badgeRadius + 1);
+        graphics.fillStyle(ONLINE_VIEW.colors.bot, alpha);
+        graphics.fillCircle(badgeX, badgeY, TAG.badgeRadius);
       }
       if (frame.protected) {
         graphics.lineStyle(1, 0xffffff, FRAME_ALPHA);

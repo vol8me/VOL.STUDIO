@@ -224,6 +224,7 @@
     "zoomIn": "Zoom map in",
     "zoomOut": "Zoom map out",
     "label": "Map",
+    "north": "N",
     "interactive": "{{label}}, interactive — press Enter to jump to center"
   },
   "selectionInfo": {

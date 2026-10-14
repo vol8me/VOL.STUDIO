@@ -19,6 +19,11 @@ export function fakeObject(kind: string, args: unknown[] = []): FakeObject {
   state.list = kind === 'container' ? (args[2] ?? []) : undefined;
   state.texture = kind === 'image' ? { key: args[2] } : undefined;
   state.frame = undefined;
+  if (kind === 'text') {
+    // Gerçek Text ölçüsü yazıdan gelir; sahte: karakter başına 7 px, 14 px yükseklik.
+    state.width = (typeof args[2] === 'string' ? args[2].length : 0) * 7;
+    state.height = 14;
+  }
   state.originX = 0.5;
   state.originY = 0.5;
   state.getWorldTransformMatrix = () => ({

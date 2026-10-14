@@ -344,7 +344,8 @@ export class WorldScene extends Phaser.Scene {
         rect,
         player.gun.getProgress(),
         this.environment.climate,
-        () => hudVehicles(this.sim.vehicles, player.id, alpha),
+        () =>
+          hudVehicles(this.sim.vehicles, player.id, alpha, this.driver.isBot?.bind(this.driver)),
         player.vitality,
         front,
       ),

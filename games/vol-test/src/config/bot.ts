@@ -63,6 +63,33 @@ export const BOT = {
   /** Geri çekilen bot canı bu orana dönünce savaşa döner. */
   retreatExitHealth: 0.65,
 
+  /** Taktik katman; hepsi beceriyle ölçeklenir ve `minSkill` altındaki botta kapalıdır. */
+  tactics: {
+    minSkill: 0.35,
+    /** Hedef puanında can açığının ağırlığı [acemi, usta]: usta, canı yarı olanı bu oranda yakın sayar. */
+    focusWeak: [0, 0.5] as Span,
+    /** Doğma korumalı düşman hedef puanında bu çarpanla uzak sayılır (vurulamaz). */
+    protectedPenalty: 3,
+    /** Kendi menzili düşmanınkinin bu katından uzunsa onun menzilinin `kiteMargin` katında durulur. */
+    kiteRangeRatio: 1.15,
+    kiteMargin: 1.08,
+    /** Kendi menzili düşmanınkinin bu oranının altındaysa kendi menzilinin `rushStandoff` katına girilir. */
+    rushRangeRatio: 0.85,
+    rushStandoff: 0.4,
+    /** Sayım yarıçapı (birim): düşman, müttefikten (kendisi dahil) `outnumberedEnter` fazlaysa çekilir. */
+    packRadius: 760,
+    outnumberedEnter: 2,
+    outnumberedExit: 0,
+    /** Müttefik kümesi bu yarıçapta aranır; bu mesafede varılmış sayılır. */
+    rallyRadius: 1700,
+    rallyArrive: 240,
+    /** Mermiden kaçınma: menzil, en yakın geçişe kalan süre (sn) ve vuruş payı (araç yarıçapı + pay). */
+    dodgeRange: 520,
+    dodgeHorizonS: 0.75,
+    dodgeMiss: 70,
+    dodgeWeight: 1.5,
+  },
+
   profile: {
     /** Hedefi fark ettikten sonra ilk atışa kadar tepki süresi (ms). */
     reactionMs: [520, 150] as Span,

@@ -224,6 +224,7 @@
     "zoomIn": "Haritayı yakınlaştır",
     "zoomOut": "Haritayı uzaklaştır",
     "label": "Harita",
+    "north": "K",
     "interactive": "{{label}}, etkileşimli — Enter ile merkeze zıpla"
   },
   "selectionInfo": {

@@ -369,6 +369,56 @@ describe('MinimapPanel — çizim sözleşmesi', () => {
     }
   });
 
+  it('rozetli işaret ortasına ek nokta çizer; rozet değişimi yeniden çizim ister', async () => {
+    const panel = make();
+    const arcs = (): number => fake.calls.filter((call) => call === 'arc').length;
+    panel.setMarker('a', { worldX: 400, worldY: 400, color: '#fff', shape: 'arrow' });
+    await Promise.resolve();
+    const plain = arcs();
+    const before = draws();
+    panel.setMarker('a', {
+      worldX: 400,
+      worldY: 400,
+      color: '#fff',
+      shape: 'arrow',
+      badge: '#ffd23c',
+    });
+    await Promise.resolve();
+    expect(draws()).toBe(before + 1);
+    const perDraw = arcs() - plain;
+    expect(perDraw).toBeGreaterThan(0);
+    // Aynı rozetle tekrar çağrı çizim istemez.
+    panel.setMarker('a', {
+      worldX: 400,
+      worldY: 400,
+      color: '#fff',
+      shape: 'arrow',
+      badge: '#ffd23c',
+    });
+    await Promise.resolve();
+    expect(draws()).toBe(before + 1);
+  });
+
+  it('kuzey harfi yerelleştirilir ve dil değişince yeniden çizilir', async () => {
+    const texts: string[] = [];
+    (fake.ctx as unknown as Record<string, unknown>).fillText = (text: string): void => {
+      texts.push(text);
+    };
+    await i18next.changeLanguage('tr');
+    try {
+      make({ north: true });
+      await Promise.resolve();
+      expect(texts).toContain('K');
+      expect(texts).not.toContain('N');
+      texts.length = 0;
+      await i18next.changeLanguage('en');
+      await Promise.resolve();
+      expect(texts).toContain('N');
+    } finally {
+      await i18next.changeLanguage('tr');
+    }
+  });
+
   it('canvas cihaz piksel oranına göre ölçeklenir (üst sınır 2), CSS boyutu sabit kalır', () => {
     vi.stubGlobal('devicePixelRatio', 3);
     const panel = make({ width: 160, height: 120 });

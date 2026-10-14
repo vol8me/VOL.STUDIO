@@ -14,6 +14,7 @@ function frame(id: number, patch: Partial<TagFrame> = {}): TagFrame {
     health: 1,
     alive: true,
     protected: false,
+    bot: false,
     ...patch,
   };
 }
@@ -106,5 +107,24 @@ describe('NameTags', () => {
     for (const text of texts()) expect(lastCall(text, 'destroy')).toBeDefined();
     expect(lastCall(graphics, 'destroy')).toBeDefined();
     expect(tags.count).toBe(0);
+  });
+
+  it('bot adın soluna sarı rozet noktası çizer; insana çizmez', () => {
+    const { tags, graphics } = setup();
+    const circles = (): unknown[][] =>
+      graphics.calls.filter(([name]) => name === 'fillCircle').map(([, args]) => args);
+    tags.update([frame(1)]);
+    expect(circles()).toHaveLength(0);
+    graphics.calls.length = 0;
+    tags.update([frame(1, { bot: true })]);
+    const drawn = circles();
+    // Koyu halka ve sarı nokta; ikisi de adın solunda (etiket merkezinden küçük x).
+    expect(drawn).toHaveLength(2);
+    for (const [x] of drawn) expect(x as number).toBeLessThanOrEqual(100);
+    const fills = graphics.calls
+      .filter(([name]) => name === 'fillStyle')
+      .map(([, args]) => args[0]);
+    expect(fills).toContain(ONLINE_VIEW.colors.bot);
+    expect((drawn[1][2] as number) < (drawn[0][2] as number)).toBe(true);
   });
 });

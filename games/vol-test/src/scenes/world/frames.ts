@@ -75,18 +75,28 @@ export function* hudVehicles(
   vehicles: readonly Vehicle[],
   playerId: number,
   alpha: number,
+  isBot: (vehicleId: number) => boolean = () => false,
 ): Generator<HudVehicle> {
   let used = 0;
   for (const vehicle of vehicles) {
     if (!vehicle.vitality.alive) continue;
     const { previous, x, y, hull } = vehicle.chassis;
-    const entry = (mapPool[used] ??= { id: 0, x: 0, y: 0, hull: 0, player: false, team: -1 });
+    const entry = (mapPool[used] ??= {
+      id: 0,
+      x: 0,
+      y: 0,
+      hull: 0,
+      player: false,
+      bot: false,
+      team: -1,
+    });
     used++;
     entry.id = vehicle.id;
     entry.x = previous.x + (x - previous.x) * alpha;
     entry.y = previous.y + (y - previous.y) * alpha;
     entry.hull = lerpAngle(previous.hull, hull, alpha);
     entry.player = vehicle.id === playerId;
+    entry.bot = entry.player ? false : isBot(vehicle.id);
     entry.team = vehicle.team ?? -1;
     yield entry;
   }

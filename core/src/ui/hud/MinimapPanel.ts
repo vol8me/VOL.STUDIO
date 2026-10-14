@@ -85,6 +85,11 @@ export interface MinimapMarker {
    * çizilir, yakınlaştırınca dünya ile birlikte büyür. Varsayılan 0 (alan yok).
    */
   worldRadius?: number;
+  /**
+   * İşaretin ortasına çizilen küçük rozet noktasının rengi (örn. insan olmayan oyuncuyu ayırmak).
+   * Verilmezse rozet yoktur; renk dışında bir bilgi taşımaz, okuyucu özeti `kind`dan türer.
+   */
+  badge?: string;
 }
 
 interface Ping {
@@ -113,6 +118,7 @@ interface StoredMarker {
   outline: boolean;
   edge: boolean;
   worldRadius: number;
+  badge: string;
   /** Son `setMarker` çağrısının senkron nesli (`syncMarkers` görülmeyeni bununla ayıklar). */
   stamp: number;
 }
@@ -130,6 +136,7 @@ function createStored(marker: MinimapMarker, stamp: number): StoredMarker {
     outline: marker.outline ?? true,
     edge: marker.edge ?? false,
     worldRadius: marker.worldRadius ?? 0,
+    badge: marker.badge ?? '',
     stamp,
   };
 }
@@ -176,6 +183,7 @@ export class MinimapPanel {
     outline: true,
     edge: false,
     worldRadius: 0,
+    badge: '',
   };
   private readonly counts: Record<string, number> = {};
   private readonly pings: Ping[] = [];
@@ -203,6 +211,8 @@ export class MinimapPanel {
     if (typeof this.options.label === 'function') this.label = this.options.label();
     else if (this.labelIsI18n) this.label = i18next.t('core:minimap.label');
     this.applyLabels();
+    // Kuzey harfi tuvale çizilir: dil değişince yeniden çizilmeden eski dilde kalırdı.
+    this.invalidate();
   };
 
   constructor(options: MinimapPanelOptions) {
@@ -313,6 +323,7 @@ export class MinimapPanel {
     stored.outline = marker.outline ?? true;
     stored.edge = marker.edge ?? false;
     stored.worldRadius = marker.worldRadius ?? 0;
+    stored.badge = marker.badge ?? '';
     if (this.followId === id && this.zoom > 1) this.recenter(stored.worldX, stored.worldY);
     if (recount) this.refreshDescription();
     this.invalidate();
@@ -706,6 +717,7 @@ export class MinimapPanel {
       stored.outline !== (next.outline ?? true) ||
       stored.edge !== (next.edge ?? false) ||
       stored.worldRadius !== (next.worldRadius ?? 0) ||
+      stored.badge !== (next.badge ?? '') ||
       Math.abs(stored.worldX - next.worldX) >= eps ||
       Math.abs(stored.worldY - next.worldY) >= eps ||
       Math.abs(stored.rotation - (next.rotation ?? 0)) >= ROTATION_EPSILON
@@ -845,6 +857,7 @@ export class MinimapPanel {
       drawable.outline = marker.outline;
       drawable.edge = marker.edge;
       drawable.worldRadius = marker.worldRadius;
+      drawable.badge = marker.badge;
       drawMarker(ctx, view, palette, drawable);
       if (marker.edge) drawEdgeMarker(ctx, view, palette, drawable);
     }
@@ -866,6 +879,6 @@ export class MinimapPanel {
     if (scaleBar) {
       drawScaleBar(ctx, view, palette, scaleBar.unitsPerMetre, scaleBar.unit ?? 'm');
     }
-    if (this.options.north) drawNorth(ctx, view, palette);
+    if (this.options.north) drawNorth(ctx, view, palette, i18next.t('core:minimap.north'));
   }
 }

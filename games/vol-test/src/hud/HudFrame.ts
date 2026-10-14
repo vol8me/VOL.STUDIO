@@ -9,6 +9,8 @@ export interface HudVehicle {
   readonly hull: number;
   /** Oyuncunun kendi aracı mı (haritada vurgulanır). */
   readonly player: boolean;
+  /** Bot mu: harita işaretine sarı rozet düşer. Verilmezse insandır. */
+  readonly bot?: boolean;
   /** Cephe indeksi; cepheye bağlı değilse -1 ya da yok. */
   readonly team?: number;
 }

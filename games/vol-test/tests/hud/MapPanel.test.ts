@@ -100,6 +100,24 @@ describe('harita', () => {
     map.destroy();
   });
 
+  it('bot aracın işaretine rozet noktası çizer; insan araca çizmez', async () => {
+    const arcs = (): number => calls.filter((call) => call === 'arc').length;
+    const count = async (bot: boolean): Promise<number> => {
+      const map = new MapPanel(OPTIONS);
+      document.body.appendChild(map.element);
+      await Promise.resolve();
+      const before = arcs();
+      map.update(
+        hudFrame({ vehicles: () => [{ id: 2, x: 900, y: 900, hull: 1, player: false, bot }] }),
+      );
+      await Promise.resolve();
+      const drawn = arcs() - before;
+      map.destroy();
+      return drawn;
+    };
+    expect(await count(true)).toBeGreaterThan(await count(false));
+  });
+
   it('durağan harita (aynı kare) yeniden çizim istemez', async () => {
     const map = new MapPanel(OPTIONS);
     document.body.appendChild(map.element);

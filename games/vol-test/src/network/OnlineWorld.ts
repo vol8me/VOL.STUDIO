@@ -114,6 +114,13 @@ export class OnlineWorld {
     return undefined;
   }
 
+  /** Araç bir bot mu: kayıtta `bot` bayrağı sunucuca konur; bilinmeyen araç için false. */
+  isBot(vehicleId: number): boolean {
+    for (const record of this.session.room.state.players.values())
+      if (record.vehicleId === vehicleId) return record.bot;
+    return false;
+  }
+
   /** Bir sabit adımın niyetini sunucuya yollar ve yerelde öngörür. */
   step(command: TankCommand): void {
     this.pilot.send(command);

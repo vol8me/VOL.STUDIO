@@ -101,11 +101,17 @@ describe('hudVehicles', () => {
     const vehicles = pair();
     const half = [...hudVehicles(vehicles, 1, 0.5)].map((entry) => ({ ...entry }));
     expect(half).toEqual([
-      { id: 1, x: 1020, y: 990, hull: 0, player: true, team: -1 },
-      { id: 2, x: 2020, y: 1490, hull: 1, player: false, team: -1 },
+      { id: 1, x: 1020, y: 990, hull: 0, player: true, bot: false, team: -1 },
+      { id: 2, x: 2020, y: 1490, hull: 1, player: false, bot: false, team: -1 },
     ]);
     expect([...hudVehicles(vehicles, 1, 0)].map((entry) => entry.x)).toEqual([1000, 2000]);
     expect([...hudVehicles(vehicles, 1, 1)].map((entry) => entry.x)).toEqual([1040, 2040]);
+  });
+
+  it('botları işaretler ama oyuncuyu hiçbir koşulda bot saymaz', () => {
+    const vehicles = pair();
+    const entries = [...hudVehicles(vehicles, 1, 0, () => true)].map((entry) => ({ ...entry }));
+    expect(entries.map((entry) => entry.bot)).toEqual([false, true]);
   });
 
   it('ölü araçları atlar ve nesneleri çağrılar arasında yeniden kullanır', () => {

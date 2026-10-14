@@ -9,6 +9,7 @@ import { OfflineDriver } from '@/scenes/world/OfflineDriver';
 import type { PlayerControls } from '@/scenes/world/PlayerControls';
 import type { DriverContext } from '@/scenes/world/WorldDriver';
 import { World } from '@/sim/world/World';
+import { fakeScene } from '../../support/fakeScene';
 
 function driver(vehicle?: VehicleId): {
   driver: OfflineDriver;
@@ -27,7 +28,7 @@ function driver(vehicle?: VehicleId): {
           progress: { travel: vi.fn() },
         } as unknown as GameServices);
   const context: DriverContext = {
-    scene: {} as Phaser.Scene,
+    scene: fakeScene() as unknown as Phaser.Scene,
     world: new World(WORLD.width, WORLD.height, WORLD.gridStep),
     weather: undefined as never,
     controls: {} as PlayerControls,
@@ -47,6 +48,13 @@ describe('OfflineDriver', () => {
       expect(offline.player.spec).toBe(VEHICLES[id]);
       scope.dispose();
     }
+  });
+
+  it('oyuncudan başka her aracı bot sayar', () => {
+    const { driver: offline, scope } = driver('striker');
+    expect(offline.isBot(offline.player.id)).toBe(false);
+    expect(offline.isBot(offline.player.id + 1)).toBe(true);
+    scope.dispose();
   });
 
   it('duraklatma menüsüne çevrimiçi katılım ve ana menü eylemlerini koyar', () => {

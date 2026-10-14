@@ -119,6 +119,7 @@ export class MapPanel {
           entry.marker.worldY = vehicle.y;
           entry.marker.rotation = vehicle.hull;
           entry.marker.color = factionCss(vehicle.team ?? -1) ?? VOL_COLORS.uiTextSecondary;
+          entry.marker.badge = vehicle.bot ? css(ONLINE_VIEW.colors.bot) : undefined;
           set(entry.key, entry.marker);
         }
       });

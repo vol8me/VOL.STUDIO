@@ -278,6 +278,24 @@ describe('OnlineDriver panel ve etiket', () => {
     }
   });
 
+  it('botu kayıttaki bayraktan tanır; oyuncunun kendisi hiçbir zaman bot değildir', async () => {
+    const mine = await rig('Ben', 0);
+    mine.run();
+    const other = await openSession(server!, 'Rakip', 1);
+    try {
+      await until(() => mine.driver.sim.vehicles.length === 2, 'iki araç');
+      const record = [...mine.session.room.state.players.values()].find(
+        (player) => player.name === 'Rakip',
+      )!;
+      expect(mine.driver.isBot(record.vehicleId)).toBe(false);
+      record.bot = true;
+      expect(mine.driver.isBot(record.vehicleId)).toBe(true);
+      expect(mine.driver.isBot(mine.driver.player.id)).toBe(false);
+    } finally {
+      other.dispose();
+    }
+  });
+
   it('düşman ve dost etiketi cephe rengini taşır', async () => {
     const mine = await rig('Takımcı', 1);
     mine.run();

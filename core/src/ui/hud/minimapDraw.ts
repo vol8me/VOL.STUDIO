@@ -49,6 +49,8 @@ export interface DrawableMarker {
   edge: boolean;
   /** Dünya birimi alan yarıçapı; 0 ise alan çizilmez. */
   worldRadius: number;
+  /** Ortadaki rozet noktasının rengi; boşsa rozet çizilmez. */
+  badge: string;
 }
 
 const TOKENS: ReadonlyArray<readonly [keyof MinimapPalette, string, string]> = [
@@ -256,6 +258,17 @@ export function drawMarker(
   }
   ctx.fillStyle = marker.color;
   ctx.fill();
+  if (marker.badge) {
+    // Rozet ana dolgunun üstünde, ince koyu halkalı küçük nokta: renkten bağımsız okunur.
+    const dot = Math.max(1.4, marker.radius * 0.4);
+    ctx.beginPath();
+    ctx.arc(x, y, dot, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.rim;
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+    ctx.fillStyle = marker.badge;
+    ctx.fill();
+  }
 }
 
 /** Görünür alanın dışındaki işaretli öğe: kenara sıkıştırılmış, dışa bakan küçük üçgen. */
@@ -385,18 +398,19 @@ export function drawScaleBar(
   ctx.fillText(`${metres} ${unit}`, x, y - 4);
 }
 
-/** Kuzey işareti (sağ üst): "N" ve yukarı bakan ok. */
+/** Kuzey işareti (sağ üst): yerelleştirilmiş kısa harf ve yukarı bakan ok. */
 export function drawNorth(
   ctx: CanvasRenderingContext2D,
   view: MinimapView,
   palette: MinimapPalette,
+  label: string,
 ): void {
   const x = view.width - 12;
   ctx.fillStyle = palette.text;
   ctx.font = `700 10px ${palette.font}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText('N', x, 15);
+  ctx.fillText(label, x, 15);
   ctx.beginPath();
   ctx.moveTo(x, 4);
   ctx.lineTo(x - 4, 12);

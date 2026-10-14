@@ -6,6 +6,9 @@ import type { Hud } from '@/hud/Hud';
 import type { LobbyPanel } from '@/hud/LobbyPanel';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import type { SimEvent } from '@/sim/events';
+import { NameTags, type TagFrame } from '@/view/NameTags';
+import { ONLINE_VIEW } from '@/config/onlineView';
+import { tankFrame } from './frames';
 import { ScenarioRunner } from '@/sim/scenarios/ScenarioRunner';
 import { Simulation } from '@/sim/Simulation';
 import type { DriverContext, DriverFrame, DriverMeasurement, WorldDriver } from './WorldDriver';
@@ -19,6 +22,8 @@ export class OfflineDriver implements WorldDriver {
   private readonly scenarios: ScenarioRunner;
   private readonly clock: SimulationClock;
   private lobby: LobbyPanel | undefined;
+  private readonly tags: NameTags;
+  private alpha = 1;
 
   constructor(private readonly context: DriverContext) {
     const { world, weather, services, seed, scope } = context;
@@ -42,6 +47,7 @@ export class OfflineDriver implements WorldDriver {
           );
         }),
       );
+    this.tags = scope.addDestroyable(new NameTags(context.scene));
     this.clock = new SimulationClock({
       fixedStepMs: GAME.simulationStepMs,
       maxStepsPerFrame: GAME.maxStepsPerFrame,
@@ -72,7 +78,18 @@ export class OfflineDriver implements WorldDriver {
       },
       { acceptedDeltaMs: clampSimulationStep(deltaMs), paused },
     );
-    return { alpha: this.clock.getInterpolationAlpha(), clock };
+    this.alpha = this.clock.getInterpolationAlpha();
+    return { alpha: this.alpha, clock };
+  }
+
+  /** Çevrimdışı sandbox'ta oyuncudan başka her araç senaryonun sürdüğü bottur. */
+  isBot(vehicleId: number): boolean {
+    return vehicleId !== this.sim.player.id;
+  }
+
+  /** Botların sağlık çubuğu ve sarı rozeti; adları yoktur. */
+  present(): void {
+    this.tags.update(this.botFrames());
   }
 
   drainEvents(out: SimEvent[]): SimEvent[] {
@@ -84,6 +101,25 @@ export class OfflineDriver implements WorldDriver {
       { id: 'online', labelKey: 'voltest:online.title', run: () => void this.openLobby(hud) },
       { id: 'menu', labelKey: 'voltest:pause.menu', run: () => this.context.toMenu() },
     ]);
+  }
+
+  private *botFrames(): Generator<TagFrame> {
+    for (const vehicle of this.sim.vehicles) {
+      if (!this.isBot(vehicle.id)) continue;
+      const frame = tankFrame(vehicle.chassis, this.alpha);
+      const vitality = vehicle.vitality;
+      yield {
+        id: vehicle.id,
+        x: frame.x,
+        y: frame.y,
+        name: '',
+        color: ONLINE_VIEW.colors.foe,
+        health: vitality.health / vitality.maxHealth,
+        alive: vitality.alive,
+        protected: vitality.protectionRemainingMs > 0,
+        bot: true,
+      };
+    }
   }
 
   /** Çevrimiçi kod ilk kullanımda yüklenir; çevrimdışı oyun onu hiç indirmeyebilir. */

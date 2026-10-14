@@ -306,18 +306,31 @@ Karar iki katmandır. Algı `thinkIntervalMs` aralığıyla tazelenir: en yakın
 herkese düşmandır; histerezis ve "belirgin yakın" kuralı hedef titreşimini önler), diğer araçlardan
 ayrışma vektörü, nişan sapması ve yörünge yönü. Her adımda bu kararlar hareket, nişan ve tetiğe çevrilir:
 
-| Kip       | Ne zaman                                            | Hareket                                                  |
-| --------- | --------------------------------------------------- | -------------------------------------------------------- |
-| `engage`  | hedef menzilin 1,25 katında ya da görev bağı içinde | standoff mesafesini tutar, hedefin çevresinde şerit atar |
-| `advance` | görev noktasına varılmamış                          | göreve yürür, uzaksa atılım kullanır                     |
-| `hold`    | görev noktasına varıldı ya da görev yok             | bölgede yavaş dolaşır, namlu çevreyi tarar               |
-| `retreat` | can kişiliğin eşiğinin altında                      | geri çekilme noktasına koşar, iyileşince döner           |
-| `unstick` | komut verildiği hâlde ilerlenemiyor                 | kısa süre geri ve yana kaçar                             |
+| Kip       | Ne zaman                                                | Hareket                                                   |
+| --------- | ------------------------------------------------------- | --------------------------------------------------------- |
+| `engage`  | hedef menzilin 1,25 katında ya da görev bağı içinde     | standoff mesafesini tutar, hedefin çevresinde şerit atar  |
+| `advance` | görev noktasına varılmamış                              | göreve yürür, uzaksa atılım kullanır                      |
+| `hold`    | görev noktasına varıldı ya da görev yok                 | bölgede yavaş dolaşır, namlu çevreyi tarar                |
+| `retreat` | can kişiliğin eşiğinin altında                          | geri çekilme noktasına koşar, iyileşince döner            |
+| `regroup` | düşman, çevredeki müttefikten (kendisi dahil) iki fazla | müttefik kümesine ya da üsse çekilir, namlu hedefte kalır |
+| `unstick` | komut verildiği hâlde ilerlenemiyor                     | kısa süre geri ve yana kaçar                              |
 
 Nişan hedefin hızını önden gider (`interceptTime`: sabit hızlı mermi ve sabit hızlı hedef için kapalı
 çözüm, çözüm yoksa düz uçuşa düşer); ateş yalnız tepki süresi geçince, menzilin %92'sinde ve namlu
 `aimTolerance`ın iki katı içinde açılır. Beceri (0 acemi, 1 usta) tepki süresini, nişan sapmasını, önden
 gitme doğruluğunu ve geri çekilme eşiğini bir aralıkta kaydırır; tüm sayılar `src/config/bot.ts`'dedir.
+
+**Taktik katman.** Beceri `BOT.tactics.minSkill` ve üstündeyse bot dört şey daha yapar; hepsi tohumlu ve
+saftır. (1) Hedef mesafeden değil puandan seçilir: canı azalmış düşman beceriyle orantılı daha yakın
+sayılır (usta bitirir), doğma korumalı düşman vurulamayacağı için üç kat uzak sayılır; tek düşman
+korumalıysa yine de ona dönülür. (2) İki silahın menzili kıyaslanır: kendi menzili belirgin uzunsa düşman
+menzilinin hemen dışında durup vurulur, belirgin kısaysa düşmanın içine girilir (Dart, Bulwark'a menzil
+dışından; Bulwark, Dart'a içeriden oynar). (3) `packRadius` içindeki düşman, müttefikten (kendisi dahil)
+iki fazlaysa `regroup`: bot yakındaki müttefik kümesinin ağırlık merkezine (yoksa üsse) çekilir, yan sapma
+ve atılımla koşar, namlu hedefte kalır ve ateşi sürer; fark sıfıra inince bırakılır (giriş ve çıkış
+eşikleri farklıdır). (4) Beceriyle ölçeklenen kaçınma: algı adımında düşman mermilerinin en yakın geçişi
+kısa sürede ve araç yarıçapı içinde kalıyorsa mermi yolunun dikine, geçeceği yerin ters yanına sapılır.
+Acemi bot bunların hiçbirini yapmaz; yalnız en yakına ateş eder.
 Görev ve geri çekilme noktasını dışarıdaki yönetici verir (sunucuda savaş dünyası; bkz. Çok oyunculu).
 
 ## Savaş katmanı
@@ -353,6 +366,13 @@ yerinde günceller. `src/view/ZonesView.ts` bölge çemberlerini (sahibin rengin
 tartışmada nabız) ve üsleri kameraya yakınsa çizer; `MapPanel` aynı kareyi alanlı işaret olarak
 (CORE `MinimapMarker.worldRadius`) gösterir ve araç işaretlerini cephe rengine boyar. Renk ve ölçüler
 `src/config/frontView.ts` içindedir. Çevrimdışı sandbox'ta cephe hattı yoktur.
+
+**Bot rozeti.** Haritada ve dünyada hangi aracın insan, hangisinin bot olduğu aynı küçük sarı nokta
+ile söylenir (`ONLINE_VIEW.colors.bot`). Harita araç işaretinin ortasına CORE `MinimapMarker.badge`
+ile nokta düşer; dünyada `NameTags` adın soluna aynı noktayı çizer. Kaynak sürücüdür
+(`WorldDriver.isBot`): çevrimiçi sunucu kaydındaki `bot` bayrağı, çevrimdışı sandbox'ta oyuncudan başka
+her araç. Çevrimdışı botların adı yoktur; yalnız sağlık çubuğu ve rozet çizilir. Kendi aracınız hiçbir
+koşulda bot sayılmaz.
 
 Harita 384 m'lik dünyada tüm dünyayı gösterseydi araç kare başına piksel altı yürür ve harita
 durmuş gibi görünürdü; bu yüzden açılış yakınlaştırması `WORLD.mapZoom` (4, çevredeki ~96 m) ve

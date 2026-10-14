@@ -306,3 +306,142 @@ describe('BotBrain', () => {
     expect(checked).toBeGreaterThan(1000);
   });
 });
+
+describe('BotBrain taktik', () => {
+  const rangeOf = (spec: VehicleSpec): number => spec.armament.weapon.flight.maxRange;
+  const gap = (a: Vehicle, b: Vehicle): number =>
+    Math.hypot(a.chassis.x - b.chassis.x, a.chassis.y - b.chassis.y);
+
+  it('usta zayıf hedefe yüklenir; acemi yalnız mesafeye bakar', () => {
+    const pick = (skill: number): number | null => {
+      const sim = arena();
+      const bot = addBot(sim, STRIKER, 2000, 2000, 0, 41, skill);
+      addBot(sim, STRIKER, 2500, 2000, 1, 42);
+      const weak = addBot(sim, STRIKER, 2000, 2620, 1, 43);
+      weak.vehicle.vitality.health = weak.vehicle.vitality.maxHealth * 0.1;
+      run(sim, [bot], 0.5);
+      return bot.brain.targetId === weak.vehicle.id ? 1 : 0;
+    };
+    expect(pick(1)).toBe(1);
+    expect(pick(0)).toBe(0);
+  });
+
+  it('doğma korumalı düşman, vurulabilir bir düşman varken hedef seçilmez', () => {
+    const sim = arena();
+    const bot = addBot(sim, STRIKER, 2000, 2000, 0, 44, 0.6);
+    const guarded = addBot(sim, STRIKER, 2400, 2000, 1, 45);
+    guarded.vehicle.vitality.protectionRemainingMs = 8000;
+    const open = addBot(sim, STRIKER, 2000, 2700, 1, 46);
+    run(sim, [bot], 0.5);
+    expect(bot.brain.targetId).toBe(open.vehicle.id);
+    // Tek düşman korumalıysa yine de ona döner (hedefsiz kalmaz).
+    const solo = arena();
+    const hunter = addBot(solo, STRIKER, 2000, 2000, 0, 44, 0.6);
+    const only = addBot(solo, STRIKER, 2400, 2000, 1, 45);
+    only.vehicle.vitality.protectionRemainingMs = 8000;
+    run(solo, [hunter], 0.5);
+    expect(hunter.brain.targetId).toBe(only.vehicle.id);
+  });
+
+  it('menzil üstünlüğü olan bot düşmanın menzilinin dışından vurur', () => {
+    const long = DART;
+    const short = BULWARK;
+    expect(rangeOf(long)).toBeGreaterThan(rangeOf(short) * BOT.tactics.kiteRangeRatio);
+    const sim = arena();
+    const sniper = addBot(sim, long, 2000, 2000, 0, 47, 1);
+    const target = addBot(sim, short, 2000 + rangeOf(short) * 0.6, 2000, 1, 48);
+    let sum = 0;
+    let count = 0;
+    let elapsed = 0;
+    run(sim, [sniper], 10, () => {
+      elapsed += STEP;
+      if (elapsed < 6000) return;
+      sum += gap(sniper.vehicle, target.vehicle);
+      count++;
+    });
+    expect(sum / count).toBeGreaterThan(rangeOf(short));
+    expect(sum / count).toBeLessThan(rangeOf(long) * BOT.fireRangeFraction);
+  });
+
+  it('menzili kısa bot düşmanın içine girer', () => {
+    const sim = arena();
+    const brawler = addBot(sim, BULWARK, 2000, 2000, 0, 49, 1);
+    const target = addBot(sim, DART, 2000 + 700, 2000, 1, 50);
+    let sum = 0;
+    let count = 0;
+    let elapsed = 0;
+    run(sim, [brawler], 22, () => {
+      elapsed += STEP;
+      if (elapsed < 16000) return;
+      sum += gap(brawler.vehicle, target.vehicle);
+      count++;
+    });
+    expect(sum / count).toBeLessThan(rangeOf(BULWARK) * 0.7);
+  });
+
+  describe('sayısal üstünlük', () => {
+    const setup = (skill: number, allies: number) => {
+      const sim = arena();
+      const bot = addBot(sim, STRIKER, 2000, 2000, 0, 51, skill);
+      bot.brain.retreatPoint = { x: 300, y: 2000 };
+      for (let index = 0; index < allies; index++)
+        addBot(sim, STRIKER, 2000, 2200 + index * 60, 0, 60 + index);
+      // Küme uzaktaki müttefikler: sayım çemberinin dışında ama toplanma yarıçapının içinde.
+      const rally = addBot(sim, STRIKER, 1000, 2000, 0, 70);
+      for (const offset of [-120, 0, 120])
+        addBot(sim, STRIKER, 2420, 2000 + offset, 1, 80 + offset);
+      return { sim, bot, rally };
+    };
+
+    it('sayıca ezilen taktik bot müttefik kümesine çekilir ve ateş etmeyi bırakmaz', () => {
+      const { sim, bot, rally } = setup(1, 0);
+      const before = gap(bot.vehicle, rally.vehicle);
+      let fired = false;
+      run(sim, [bot], 2.5, undefined, (command) => {
+        if (command.fire) fired = true;
+      });
+      expect(bot.brain.mode).toBe('regroup');
+      expect(gap(bot.vehicle, rally.vehicle)).toBeLessThan(before - 200);
+      expect(bot.brain.targetId).not.toBeNull();
+      expect(fired).toBe(true);
+    });
+
+    it('yanında yeterli müttefik varsa çekilmez; acemi bot hiç çekilmez', () => {
+      const covered = setup(1, 3);
+      run(covered.sim, [covered.bot], 1);
+      expect(covered.bot.brain.mode).not.toBe('regroup');
+      const novice = setup(0, 0);
+      run(novice.sim, [novice.bot], 1);
+      expect(novice.bot.brain.mode).not.toBe('regroup');
+    });
+  });
+
+  describe('mermiden kaçınma', () => {
+    const FOE_ID = 9999;
+    const dodge = (skill: number, offsetY: number, ownerTeam?: number) => {
+      const sim = arena();
+      const bot = addBot(sim, STRIKER, 2000, 2000, 0, 52, skill);
+      let owner = FOE_ID;
+      if (ownerTeam !== undefined) {
+        const shooter = addBot(sim, STRIKER, 3300, 3300, ownerTeam, 53);
+        owner = shooter.vehicle.id;
+      }
+      sim.projectiles.spawn(owner, 2400, 2000 + offsetY, -600, 0);
+      const command = idleCommand();
+      for (let step = 0; step < 15; step++) bot.brain.think(sim, STEP, command);
+      return command;
+    };
+
+    it('yoluna gelen mermiden dikine, mermi geçeceği yerin ters yanına kaçar', () => {
+      expect(dodge(1, 30).moveY).toBeLessThan(-0.3);
+      expect(dodge(1, -30).moveY).toBeGreaterThan(0.3);
+      expect(Math.abs(dodge(1, 0).moveY)).toBeGreaterThan(0.3);
+    });
+
+    it('acemi bot kaçmaz; müttefik mermisinden ve ıskalayan mermiden de kaçılmaz', () => {
+      expect(dodge(0.1, 30).moveY).toBe(0);
+      expect(dodge(1, 30, 0).moveY).toBe(0);
+      expect(dodge(1, 400).moveY).toBe(0);
+    });
+  });
+});

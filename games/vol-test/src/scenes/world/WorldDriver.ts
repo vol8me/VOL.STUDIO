@@ -70,6 +70,8 @@ export interface WorldDriver {
    * yoksa tanımsızdır. Sürücü durumu yerinde günceller; çağıran saklamaz.
    */
   front?(): FrontFrame | undefined;
+  /** Araç bir bot mu (insan oyunculardan ayırt etmek için harita ve etiket rozeti); yoksa hiçbiri bot değildir. */
+  isBot?(vehicleId: number): boolean;
   /** Ölçüm kaydına eklenen sürücüye özgü sayılar (örn. ağ gecikmesi). */
   metrics?(): Readonly<Record<string, number>>;
 }
