@@ -253,6 +253,31 @@ gösterir; ölü araç görünümü soluklaşır. Sunucu tarafı savaş yetkilen
 kalıcı ölüm politikası ve spawn alanı seçimi bu simülasyon mekanizmasının
 üzerindeki oyun kurallarıdır.
 
+## Bot yapay zekâsı
+
+`src/sim/ai/BotBrain.ts` bir aracın komutunu üreten saf benzetim kodudur: Phaser, ağ ve gerçek saat
+bilmez, oyuncuyla aynı `TankCommand` sözleşmesiyle sürer (hile yok, ışınlanma yok) ve kendi tohumlu
+rastgeleliğini kullanır; aynı tohum, beceri ve dünya bit bit aynı yolu izler. Dört paletli ve bacaklı
+araç ailesini de sürer, çünkü yalnız `Vehicle` yüzeyini (poz, hız, silah menzili, depo) okur.
+
+Karar iki katmandır. Algı `thinkIntervalMs` aralığıyla tazelenir: en yakın düşman (takımsız araç
+herkese düşmandır; histerezis ve "belirgin yakın" kuralı hedef titreşimini önler), diğer araçlardan
+ayrışma vektörü, nişan sapması ve yörünge yönü. Her adımda bu kararlar hareket, nişan ve tetiğe çevrilir:
+
+| Kip       | Ne zaman                                            | Hareket                                                  |
+| --------- | --------------------------------------------------- | -------------------------------------------------------- |
+| `engage`  | hedef menzilin 1,25 katında ya da görev bağı içinde | standoff mesafesini tutar, hedefin çevresinde şerit atar |
+| `advance` | görev noktasına varılmamış                          | göreve yürür, uzaksa atılım kullanır                     |
+| `hold`    | görev noktasına varıldı ya da görev yok             | bölgede yavaş dolaşır, namlu çevreyi tarar               |
+| `retreat` | can kişiliğin eşiğinin altında                      | geri çekilme noktasına koşar, iyileşince döner           |
+| `unstick` | komut verildiği hâlde ilerlenemiyor                 | kısa süre geri ve yana kaçar                             |
+
+Nişan hedefin hızını önden gider (`interceptTime`: sabit hızlı mermi ve sabit hızlı hedef için kapalı
+çözüm, çözüm yoksa düz uçuşa düşer); ateş yalnız tepki süresi geçince, menzilin %92'sinde ve namlu
+`aimTolerance`ın iki katı içinde açılır. Beceri (0 acemi, 1 usta) tepki süresini, nişan sapmasını, önden
+gitme doğruluğunu ve geri çekilme eşiğini bir aralıkta kaydırır; tüm sayılar `src/config/bot.ts`'dedir.
+Görev ve geri çekilme noktasını dışarıdaki yönetici verir (sunucuda savaş dünyası; bkz. Çok oyunculu).
+
 ## Girdi, kamera ve HUD
 
 Tuş ve kol eşlemesi `src/scenes/world/PlayerControls.ts`, hareket yumuşatma

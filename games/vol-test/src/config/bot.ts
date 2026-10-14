@@ -1,0 +1,76 @@
+/**
+ * Bot yapay zekâsının sayıları. Beceri (`skill`, 0..1) her bot için bir kez seçilir ve aşağıdaki
+ * aralıklardan bir kişilik üretir; aynı tohum ve beceri her zaman aynı botu verir.
+ */
+
+/** [acemi, usta] uçları; kişilik bu iki değer arasında doğrusal ara değerdir. */
+type Span = readonly [novice: number, expert: number];
+
+export const BOT = {
+  /** Algı yenileme aralığı (ms): hedef seçimi ve kaçınma vektörü bu aralıkla tazelenir. */
+  thinkIntervalMs: 160,
+  /** Düşmanı fark etme mesafesi (birim); en uzun silah menzilinden büyüktür. */
+  sightRange: 1100,
+  /** Hedef bu çarpanla büyütülmüş görüş mesafesine çıkana dek bırakılmaz (titreşimi önler). */
+  loseSightFactor: 1.2,
+  /** Yeni hedef, güncelinden bu oranda yakınsa hedef değiştirilir. */
+  switchCloserFactor: 0.6,
+  /** Ateş yalnız menzilin bu oranının içinde açılır (mermi menzil sonunda düşer). */
+  fireRangeFraction: 0.92,
+  /** Namlu nişan açısına `aimTolerance` bu çarpanın içinde yakınsa tetik çekilir. */
+  fireToleranceFactor: 2,
+  /** Hedef menzilin bu oranına girmeden bot hedefe dönüp savaşmaya başlamaz (görev bölgesi yoksa her zaman savaşır). */
+  engageRangeFactor: 1.25,
+  /** Savaşırken hedefe tutulan mesafenin menzile oranı: orta değer ve sapması kişilikten gelir. */
+  standoff: { novice: 0.6, expert: 0.7, spread: 0.08 },
+  /** Yörüngede dönme (şerit atma) yönü bu aralıkta rastgele çevrilir (ms). */
+  strafeFlipMs: [1500, 3600] as Span,
+  /** Yörünge hızı: hedef menzil içindeyken ve dışındayken hareket vektörünün yanal payı. */
+  orbitNear: 0.75,
+  orbitFar: 0.2,
+  /** Mesafe hatasının hız tavanına çevrildiği genişlik (standoff mesafesinin oranı). */
+  rangeBand: 0.35,
+
+  /** Duvara bu mesafeden (birim) yaklaşan araç içe doğru itilir. */
+  wallMargin: 320,
+  wallWeight: 1.7,
+  /** Başka araçlardan bu yarıçap (birim) içinde ayrışma kuvveti uygulanır. */
+  separationRadius: 120,
+  separationWeight: 1.3,
+
+  /** Takılma denetimi: bu sürede (ms) bu kadar yol (birim) alınamazsa sıkışma sayılır. */
+  stuckCheckMs: 600,
+  stuckDistance: 7,
+  /** Komut bu uzunluğun üstündeyse araç gerçekten ilerlemek istiyordur; altı bekleme sayılır. */
+  stuckMinMove: 0.25,
+  /** Üst üste bu kadar denetim sıkışık çıkarsa kurtulma manevrası başlar. */
+  stuckChecks: 2,
+  unstickMs: 1100,
+
+  /** Bölge içinde bekleyen bot, yarıçapın bu oranındaki rastgele noktalara dolaşır. */
+  patrolRadiusFraction: 0.55,
+  patrolMs: [3500, 8000] as Span,
+  /** Görev noktasına varış payı: yarıçapın bu oranında varılmış sayılır. */
+  arriveFraction: 0.5,
+  /** Bekleme sırasında namlunun taradığı hız (rad/s). */
+  sweepRadPerSec: 0.7,
+
+  /** Hedefe bu mesafeden (birim) uzak görevde atılım kullanılır; depo bu orandan fazlaysa başlar. */
+  boostDistance: 1500,
+  boostStartFraction: 0.5,
+  boostStopFraction: 0.1,
+
+  /** Geri çekilen bot canı bu orana dönünce savaşa döner. */
+  retreatExitHealth: 0.65,
+
+  profile: {
+    /** Hedefi fark ettikten sonra ilk atışa kadar tepki süresi (ms). */
+    reactionMs: [520, 150] as Span,
+    /** Nişan sapması (rad, 1σ'ya yakın tepe değer): her algı adımında yeniden çekilir. */
+    aimErrorRad: [0.085, 0.01] as Span,
+    /** Hedefin hızını önden gitme oranı (1: tam önden gider). */
+    leadAccuracy: [0.5, 1] as Span,
+    /** Can bu orana inince geri çekilir. */
+    retreatHealth: [0.4, 0.22] as Span,
+  },
+} as const;
