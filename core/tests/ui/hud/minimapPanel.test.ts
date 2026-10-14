@@ -26,6 +26,7 @@ function fakeContext() {
     'scale',
     'setTransform',
     'fillText',
+    'strokeText',
     'drawImage',
   ])
     ctx[name] = (): void => {
@@ -397,6 +398,30 @@ describe('MinimapPanel — çizim sözleşmesi', () => {
     });
     await Promise.resolve();
     expect(draws()).toBe(before + 1);
+  });
+
+  it('etiketli işaret yazısını işaretin yanına çizer; etiket değişimi yeniden çizim ister', async () => {
+    const texts: string[] = [];
+    (fake.ctx as unknown as Record<string, unknown>).fillText = (text: string): void => {
+      texts.push(text);
+    };
+    const panel = make();
+    panel.setMarker('z', { worldX: 400, worldY: 400, color: '#fff', shape: 'diamond' });
+    await Promise.resolve();
+    expect(texts).toEqual([]);
+    const before = draws();
+    panel.setMarker('z', { worldX: 400, worldY: 400, color: '#fff', shape: 'diamond', label: 'A' });
+    await Promise.resolve();
+    expect(draws()).toBe(before + 1);
+    expect(texts).toEqual(['A']);
+    expect(fake.calls).toContain('strokeText');
+    // Aynı etiketle tekrar çağrı çizim istemez.
+    panel.setMarker('z', { worldX: 400, worldY: 400, color: '#fff', shape: 'diamond', label: 'A' });
+    await Promise.resolve();
+    expect(draws()).toBe(before + 1);
+    panel.setMarker('z', { worldX: 400, worldY: 400, color: '#fff', shape: 'diamond', label: 'B' });
+    await Promise.resolve();
+    expect(texts).toEqual(['A', 'B']);
   });
 
   it('kuzey harfi yerelleştirilir ve dil değişince yeniden çizilir', async () => {

@@ -50,6 +50,16 @@ const ZONE_KEYS: Readonly<Record<string, MessageKey>> = {
   frontSouth: 'voltest:war.zone.frontSouth',
 };
 
+const ZONE_SHORT_KEYS: Readonly<Record<string, MessageKey>> = {
+  core: 'voltest:war.zoneShort.core',
+  outpostWest: 'voltest:war.zoneShort.outpostWest',
+  outpostEast: 'voltest:war.zoneShort.outpostEast',
+  ridgeNorth: 'voltest:war.zoneShort.ridgeNorth',
+  ridgeSouth: 'voltest:war.zoneShort.ridgeSouth',
+  frontNorth: 'voltest:war.zoneShort.frontNorth',
+  frontSouth: 'voltest:war.zoneShort.frontSouth',
+};
+
 /** Cephenin görünen adı; bilinmeyen indeks için sıra numarası. */
 export function factionName(faction: number): string {
   const key = FACTION_KEYS[faction];
@@ -60,6 +70,12 @@ export function factionName(faction: number): string {
 export function zoneName(id: string): string {
   const key = ZONE_KEYS[id];
   return key ? i18next.t(key) : id;
+}
+
+/** Bölgenin haritadaki kısa adı (bir ya da iki harf); bilinmeyen kimlik için boş (etiket çizilmez). */
+export function zoneShortName(id: string): string {
+  const key = ZONE_SHORT_KEYS[id];
+  return key ? i18next.t(key) : '';
 }
 
 function feedText(line: FeedLine): string {

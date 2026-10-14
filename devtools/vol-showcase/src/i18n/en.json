@@ -385,6 +385,8 @@
     "minimap": "Minimap",
     "minimapHint": "Click or drag on the map. Focus it: arrows move the cursor, Enter jumps, + and - zoom, Home resets. Wheel zooms at the cursor.",
     "minimapFollow": "Follow player",
+    "minimapLabelBase": "B",
+    "minimapLabelObjective": "O",
     "minimapPing": "Ping enemy",
     "minimapSummary": "Map: {{enemies}} enemies, {{structures}} structures, zoom {{zoom}}x",
     "cameraJumped": "Camera jumped to: ({{x}}, {{y}})",

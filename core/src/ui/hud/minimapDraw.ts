@@ -51,6 +51,8 @@ export interface DrawableMarker {
   worldRadius: number;
   /** Ortadaki rozet noktasının rengi; boşsa rozet çizilmez. */
   badge: string;
+  /** İşaretin sağına yazılan kısa ad; boşsa yazı çizilmez. */
+  label: string;
 }
 
 const TOKENS: ReadonlyArray<readonly [keyof MinimapPalette, string, string]> = [
@@ -269,6 +271,27 @@ export function drawMarker(
     ctx.fillStyle = marker.badge;
     ctx.fill();
   }
+  if (marker.label) drawMarkerLabel(ctx, palette, marker, x, y);
+}
+
+/** İşaretin sağında, koyu halkalı kısa yazı: hangi zemin olursa olsun okunur. */
+function drawMarkerLabel(
+  ctx: CanvasRenderingContext2D,
+  palette: MinimapPalette,
+  marker: DrawableMarker,
+  x: number,
+  y: number,
+): void {
+  ctx.font = `700 9px ${palette.font}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  const at = x + marker.radius + 3;
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = palette.rim;
+  ctx.strokeText(marker.label, at, y);
+  ctx.fillStyle = palette.text;
+  ctx.fillText(marker.label, at, y);
 }
 
 /** Görünür alanın dışındaki işaretli öğe: kenara sıkıştırılmış, dışa bakan küçük üçgen. */

@@ -4,6 +4,7 @@ import { ONLINE_VIEW } from '@/config/onlineView';
 import { MinimapPanel, VOL_COLORS, type MinimapMarker } from '@volstudio/core/ui';
 import { formatMetres } from './format';
 import type { HudFrame } from './HudFrame';
+import { zoneShortName } from './OnlinePanel';
 
 const SIZE = 168;
 
@@ -55,6 +56,8 @@ export class MapPanel {
   /** Bölge ve üs işaretleri; anahtar `z<indeks>`/`b<cephe>`. */
   private readonly front = new Map<string, MinimapMarker>();
   private generation = 0;
+  /** Bölge etiketlerinin çözüldüğü dil: değişince etiketler yeni dille yeniden yazılır. */
+  private labelLanguage = '';
   /** Konum yazısının son yazıldığı konum: ilk güncelleme her zaman yazar. */
   private shownX = Number.POSITIVE_INFINITY;
   private shownY = Number.POSITIVE_INFINITY;
@@ -67,7 +70,7 @@ export class MapPanel {
       worldWidth: options.worldWidth,
       worldHeight: options.worldHeight,
       grid: { step: options.gridStep, majorEvery: options.gridMajorEvery },
-      scaleBar: { unitsPerMetre: options.metre, unit: 'm' },
+      scaleBar: { unitsPerMetre: options.metre, unit: i18next.t('voltest:hud.metre') },
       north: true,
       wheelZoom: true,
       controls: true,
@@ -146,6 +149,8 @@ export class MapPanel {
     const front = frame.front;
     if (!front) return;
     const neutral = css(FRONT_VIEW.colors.neutral);
+    const relabel = this.labelLanguage !== i18next.language;
+    this.labelLanguage = i18next.language;
     for (const zone of front.zones) {
       const key = `z${zone.index}`;
       let marker = this.front.get(key);
@@ -160,12 +165,14 @@ export class MapPanel {
           priority: 2,
           worldRadius: zone.radius,
           outline: false,
+          label: zoneShortName(zone.id),
         };
         this.front.set(key, marker);
       }
       marker.color = factionCss(zone.owner) ?? neutral;
       marker.radius = zone.contested ? 4.5 : 3;
       marker.outline = zone.contested;
+      if (relabel) marker.label = zoneShortName(zone.id);
       set(key, marker);
     }
     for (const base of front.bases) {

@@ -385,6 +385,8 @@
     "minimap": "Minimap",
     "minimapHint": "Haritaya tıkla ya da sürükle. Odaklanınca: oklar imleci taşır, Enter oraya zıplar, + ve - yakınlaştırır, Home sıfırlar. Tekerlek imleçte yakınlaştırır.",
     "minimapFollow": "Oyuncuyu izle",
+    "minimapLabelBase": "Ü",
+    "minimapLabelObjective": "H",
     "minimapPing": "Düşmanı işaretle",
     "minimapSummary": "Harita: {{enemies}} düşman, {{structures}} yapı, yakınlaştırma {{zoom}}x",
     "cameraJumped": "Kamera zıplatıldı: ({{x}}, {{y}})",

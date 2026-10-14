@@ -494,7 +494,10 @@ aynı tohum aynı savaşı üretir (`tests/sim/war/War.test.ts`).
 kullandığı `ZoneField`/`baseCenter` hesabından türetir, sürücü (`WorldDriver.front`) durum alanlarını
 yerinde günceller. `src/view/ZonesView.ts` bölge çemberlerini (sahibin renginde halka, ilerleme yayı,
 tartışmada nabız) ve üsleri kameraya yakınsa çizer; `MapPanel` aynı kareyi alanlı işaret olarak
-(CORE `MinimapMarker.worldRadius`) gösterir ve araç işaretlerini cephe rengine boyar. Renk ve ölçüler
+(CORE `MinimapMarker.worldRadius`) gösterir ve araç işaretlerini cephe rengine boyar. Her bölgenin yanına
+yerelleştirilmiş kısa adı (`voltest:war.zoneShort.*`, bir-iki harf) CORE `MinimapMarker.label` ile yazılır;
+hangi çemberin hangi bölge olduğu renge bakmadan okunur ve dil değişince etiketler yeni dille yazılır. Ölçek
+çubuğunun birimi de çeviri anahtarıdır (`voltest:hud.metre`). Renk ve ölçüler
 `src/config/frontView.ts` içindedir. Çevrimdışı sandbox'ta cephe hattı yoktur.
 
 **Bot rozeti.** Haritada ve dünyada hangi aracın insan, hangisinin bot olduğu aynı küçük sarı nokta

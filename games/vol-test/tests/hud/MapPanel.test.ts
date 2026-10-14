@@ -27,6 +27,7 @@ function fakeContext() {
     'scale',
     'setTransform',
     'fillText',
+    'strokeText',
     'drawImage',
   ])
     ctx[name] = (): void => {
@@ -216,6 +217,34 @@ describe('harita', () => {
     await Promise.resolve();
     expect(draws()).toBe(settled + 2);
     map.destroy();
+  });
+
+  it('bölgeler yerelleştirilmiş kısa adlarını taşır; dil değişince etiketler yeni dille yazılır', async () => {
+    await i18next.changeLanguage('tr');
+    const texts: string[] = [];
+    const ctx = HTMLCanvasElement.prototype.getContext('2d') as unknown as Record<string, unknown>;
+    ctx.fillText = (text: string): void => {
+      texts.push(text);
+    };
+    const map = new MapPanel({ ...OPTIONS, worldWidth: WORLD.width, worldHeight: WORLD.height });
+    document.body.appendChild(map.element);
+    const front = createFront(WORLD);
+    const frame = () => hudFrame({ x: 6000, y: 6000, front });
+    map.update(frame());
+    await Promise.resolve();
+    expect(texts).toContain(i18next.t('voltest:war.zoneShort.core'));
+    expect(texts).toContain('M');
+    expect(texts.some((text) => text.endsWith(` ${i18next.t('voltest:hud.metre')}`))).toBe(true);
+    await i18next.changeLanguage('en');
+    // Haritanın kendi dil dinleyicisi eski etiketle çizer; çizelgeyi sonraki güncellemeden başlat.
+    await Promise.resolve();
+    texts.length = 0;
+    map.update(frame());
+    await Promise.resolve();
+    expect(texts).toContain('C');
+    expect(texts).not.toContain('M');
+    map.destroy();
+    await i18next.changeLanguage('tr');
   });
 
   it('cephe hattı olmayan karede bölge işareti yoktur', async () => {

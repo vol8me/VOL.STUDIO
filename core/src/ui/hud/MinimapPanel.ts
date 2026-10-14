@@ -90,6 +90,11 @@ export interface MinimapMarker {
    * Verilmezse rozet yoktur; renk dışında bir bilgi taşımaz, okuyucu özeti `kind`dan türer.
    */
   badge?: string;
+  /**
+   * İşaretin sağına yazılan kısa ad (bölge harfi gibi, en çok birkaç karakter). Yerelleştirme çağıranındır;
+   * boşsa yazı yoktur. Okuyucu özeti `kind`dan türer, yazı ona karışmaz.
+   */
+  label?: string;
 }
 
 interface Ping {
@@ -119,6 +124,7 @@ interface StoredMarker {
   edge: boolean;
   worldRadius: number;
   badge: string;
+  label: string;
   /** Son `setMarker` çağrısının senkron nesli (`syncMarkers` görülmeyeni bununla ayıklar). */
   stamp: number;
 }
@@ -137,6 +143,7 @@ function createStored(marker: MinimapMarker, stamp: number): StoredMarker {
     edge: marker.edge ?? false,
     worldRadius: marker.worldRadius ?? 0,
     badge: marker.badge ?? '',
+    label: marker.label ?? '',
     stamp,
   };
 }
@@ -184,6 +191,7 @@ export class MinimapPanel {
     edge: false,
     worldRadius: 0,
     badge: '',
+    label: '',
   };
   private readonly counts: Record<string, number> = {};
   private readonly pings: Ping[] = [];
@@ -324,6 +332,7 @@ export class MinimapPanel {
     stored.edge = marker.edge ?? false;
     stored.worldRadius = marker.worldRadius ?? 0;
     stored.badge = marker.badge ?? '';
+    stored.label = marker.label ?? '';
     if (this.followId === id && this.zoom > 1) this.recenter(stored.worldX, stored.worldY);
     if (recount) this.refreshDescription();
     this.invalidate();
@@ -718,6 +727,7 @@ export class MinimapPanel {
       stored.edge !== (next.edge ?? false) ||
       stored.worldRadius !== (next.worldRadius ?? 0) ||
       stored.badge !== (next.badge ?? '') ||
+      stored.label !== (next.label ?? '') ||
       Math.abs(stored.worldX - next.worldX) >= eps ||
       Math.abs(stored.worldY - next.worldY) >= eps ||
       Math.abs(stored.rotation - (next.rotation ?? 0)) >= ROTATION_EPSILON
@@ -858,6 +868,7 @@ export class MinimapPanel {
       drawable.edge = marker.edge;
       drawable.worldRadius = marker.worldRadius;
       drawable.badge = marker.badge;
+      drawable.label = marker.label;
       drawMarker(ctx, view, palette, drawable);
       if (marker.edge) drawEdgeMarker(ctx, view, palette, drawable);
     }

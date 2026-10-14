@@ -328,6 +328,7 @@ export function buildMinimapCard(disposables: DisposableScope): HTMLElement {
     shape: 'square',
     radius: 4.5,
     kind: 'structure',
+    label: i18next.t('volui:hud.minimapLabelBase'),
   });
   minimap.setMarker('objective', {
     worldX: 650,
@@ -337,6 +338,7 @@ export function buildMinimapCard(disposables: DisposableScope): HTMLElement {
     radius: 4,
     kind: 'structure',
     priority: 5,
+    label: i18next.t('volui:hud.minimapLabelObjective'),
   });
   minimap.setViewport(-300, -300, 600, 600);
   const started = performance.now();

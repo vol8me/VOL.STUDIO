@@ -82,6 +82,7 @@
     "boost": "Boost reserve",
     "mapSummary": "Map: you and {{vehicles}} other vehicles, zoom {{zoom}}x",
     "map": "Map",
+    "metre": "m",
     "fullscreen": "Fullscreen",
     "fireReload": "Shot reload",
     "health": "Vehicle health",
@@ -159,6 +160,15 @@
       "ridgeSouth": "South Ridge",
       "frontNorth": "North Front",
       "frontSouth": "South Front"
+    },
+    "zoneShort": {
+      "core": "C",
+      "outpostWest": "WO",
+      "outpostEast": "EO",
+      "ridgeNorth": "NR",
+      "ridgeSouth": "SR",
+      "frontNorth": "NF",
+      "frontSouth": "SF"
     },
     "neutral": "Neutral",
     "contested": "Contested"
