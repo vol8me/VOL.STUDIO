@@ -132,6 +132,23 @@ describe.each(WALKER_IDS.map((id) => [id, SPIDER_LOOKS[id]] as const))(
       expect(worst).toBeLessThan(reach);
     });
 
+    it('atılışta bacaklar hızlanmaz, adımlar uzar: adım sıklığı yürüyüşün 1,6 katını aşmaz, adım boyu artar', () => {
+      const cadence = (speed: number, dash01: number) => {
+        const subject = build();
+        subject.signals.dash01 = dash01;
+        subject.walk(60, speed);
+        let plants = 0;
+        const frames = 240;
+        subject.walk(frames, speed, () => subject.legs.forEachPlant(() => (plants += 1)));
+        const seconds = (frames * STEP_MS) / 1000;
+        return { perSecond: plants / seconds, stride: speed / (plants / seconds) };
+      };
+      const walking = cadence(topSpeed, 0);
+      const dashing = cadence(topSpeed * 2.3, 1);
+      expect(dashing.perSecond).toBeLessThan(walking.perSecond * 1.6);
+      expect(dashing.stride).toBeGreaterThan(walking.stride * 1.3);
+    });
+
     it('av atılışında ön ayaklar ileri fırlar, arka ayaklar geride kalır ve ayaklar kemik erişiminin kısa bir payı içinde kalır', () => {
       const idle = build();
       idle.walk(120, topSpeed * 0.6);

@@ -102,7 +102,10 @@ export interface SpiderGait {
   readonly stepLeadSeconds: number;
   /** Bu hızda (birim/s) tam tempo adım değerleri kullanılır: yürüyüş tavanı. */
   readonly fullTempoSpeed: number;
-  /** Av atılışında adım tetik eşiği ve süresi bu oranlarda kısalır; öngörü tavanı bu oranda genişler. */
+  /**
+   * Av atılışında adım tetik eşiği ve süresi bu oranlarda kısalır; öngörü tavanı bu oranda genişler.
+   * Eksi tetik kesintisi adımı UZATIR: atılış bacağı hızlandırmaz, adımı uzatır (koşan hayvan gibi).
+   */
   readonly dashTriggerCut: number;
   readonly dashDurationCut: number;
   readonly dashLeadGain: number;

@@ -15,6 +15,13 @@ export const FEEL = {
     haptic: 0.7,
   },
   /**
+   * Atılış (dash) başlangıcı: kamera hareketin tersine bir kez itilir ve yayla geri oturur; atılış
+   * ekranda bir kopuş gibi okunur, sürekli sarsıntı yoktur.
+   */
+  dash: {
+    cameraKick: 150,
+  },
+  /**
    * Patlama sarsıntısı oyuncuya uzaklıkla söner (`1 - d / radius`, karesi) ve
    * tavanlıdır; ekranın öbür ucundaki patlama görüntüyü oynatmaz.
    */

@@ -73,6 +73,8 @@ export class WorldScene extends Phaser.Scene {
   private lab: AgentLab | null = null;
   private quality!: GraphicsQuality<EffectLevel, EffectProfile>;
   private readonly simEvents: SimEvent[] = [];
+  /** Oyuncunun önceki karede atılışta olup olmadığı: kamera tekmesi yalnız yükselen kenarda verilir. */
+  private playerDashing = false;
   /** Son çizilen karedeki taret mili: fare nişanı ekranda görünen noktadan hesaplanır. */
   private readonly aimOrigin: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private scope = new DisposableScope();
@@ -319,6 +321,12 @@ export class WorldScene extends Phaser.Scene {
       this.lab.sample(time);
       for (const event of events) this.lab.record(event.kind, { ...event });
     }
+    const dashing = player.chassis.kind !== 'tank' && player.chassis.boosting;
+    if (dashing && !this.playerDashing && !paused) {
+      const { vx, vy } = player.chassis;
+      this.camera.model.kick(Math.atan2(vy, vx), FEEL.dash.cameraKick);
+    }
+    this.playerDashing = dashing;
     this.audio?.route(events, player.chassis);
     void this.audio?.sync(this.sim.vehicles, player.chassis);
     routeSimEvents(events, {

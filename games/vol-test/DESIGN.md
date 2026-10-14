@@ -201,9 +201,12 @@ av atılışı başlatır: depo doluyken basılır, bırakılsa da ~0,55 sn boş
 hareketsizken gövdenin baktığı yöne atar ve depo yeniden dolana dek bekler (depo `boost`/`boosting`
 alanlarını kullanır, ağ durumuna ek alan girmez; HUD çubuğu "Atılım deposu"dur). Av atılışının
 görünümü (`SpiderLegs`, `SpiderMotion`, CORE `GhostTrail`): öndeki bacaklar ileri fırlar, arkadakiler geride itiş
-verir (`dashLungePx`), kalça çöker ve gövde ön bacaklara yüklenir (`dashLeanPx`), adımlar kısalıp sıklaşır
-(`dashTriggerCut`/`dashDurationCut`/`dashStrainCut`; çekirdek `LegGait.setStepTuning` acil eşiği de canlı
-değiştirir), atılışın başında ayakların altından toz patlar ve gövdenin siluetinden soluk hayaletler
+verir (`dashLungePx`), kalça çöker ve gövde ön bacaklara yüklenir (`dashLeanPx`, gövde ~8–14 birim ileri
+uzanır), adımlar UZAR ama sıklaşmaz: bacak hızı atılışta ikiye katlanmaz, adım boyu 1,3 katın üstüne çıkar
+(`dashTriggerCut` eksidir, `dashDurationCut` ≈ 0,1; adım sıklığı yürüyüşün 1,6 katını aşmaz, testi
+`SpiderLegs.test.ts`; çekirdek `LegGait.setStepTuning` acil eşiği de canlı değiştirir), oyuncunun atılışında
+kamera hareketin tersine bir kez itilip yayla oturur (`FEEL.dash.cameraKick`; yalnız yürüyücü ve süzülen,
+yükselen kenarda), atılışın başında ayakların altından toz patlar ve gövdenin siluetinden soluk hayaletler
 (CORE `GhostTrail`, `SpiderLook.ghost`: gövde ve bacakların o anki gerçek pozu, en çok `count` kopya) dünyada kalıp söner. Atılış hızında ayak kemik erişimini bir-iki
 kare aşabilir; çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır kavgacıdır (162 birim/s, 108 can, zırhlı tarantula); Widow
 hafif keskin nişancıdır (160 birim/s, 92 can, ince ve uzun bacaklı kara dul); Goliath devasa ve yavaştır
