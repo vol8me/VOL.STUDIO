@@ -278,6 +278,33 @@ Nişan hedefin hızını önden gider (`interceptTime`: sabit hızlı mermi ve s
 gitme doğruluğunu ve geri çekilme eşiğini bir aralıkta kaydırır; tüm sayılar `src/config/bot.ts`'dedir.
 Görev ve geri çekilme noktasını dışarıdaki yönetici verir (sunucuda savaş dünyası; bkz. Çok oyunculu).
 
+## Savaş katmanı
+
+`src/sim/war/` kalıcı savaşın saf kuralıdır; Phaser ve ağ bilmez, sunucu odası ve çevrimdışı alıştırma
+aynı `War` nesnesini sürer. Sayıların tek sahibi `src/config/war.ts`'tir; konumlar dünya ölçüsünün
+oranıdır, dünya büyüyünce düzen korunur.
+
+| Parça            | Sorumluluk                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `Zones.ts`       | Yedi bölge: çemberdeki canlı araç farkı ilerletir, sahiplik tarafsızlaşarak el değiştirir |
+| `Deployment.ts`  | Üs çevresindeki doğma adayları; tehditten en uzak olanı seçer, ardışık doğanları dağıtır  |
+| `BotDirector.ts` | Cephe başına hedef nüfus, takma adlar, bölge görevlendirmesi (yakınlık, kalabalık, durum) |
+| `War.ts`         | Katılım ve cephe dengesi, ölüm skoru, üsde yeniden doğma, hâkimiyet puanı ve zafer        |
+
+Maç yoktur. İki cephe karşıt köşelerdeki üslerden doğar; bir bölgeyi tek araç `soloSeconds` içinde, üç
+araç ve üstü üç kat hızlı alır, iki cepheden de araç varsa bölge tartışmalıdır ve ilerleme sayı farkıyla
+gider. Sahip bölgeyi tutarken saniyede puan kazandırır, düşman aracı etkisiz kılmak da puan verir. Bir
+cephe `dominance` puanına ulaşınca savaşı kazanır: puanlar ve bölgeler sıfırlanır, kazanma sayısı
+artar ve savaş aynı dünyada sürer.
+
+İnsan oyuncu `War.join` ile girer: istediği cephe insan dengesini bozmayacaksa verilir, yoksa insanı
+az olana (eşitse puanı düşük olana) gidilir. Nüfus cephe başına `perFaction` araca tamamlanır; insan
+girince bir bot çıkar (önce ölü, sonra oyunculardan en uzaktaki), insan gidince yenisi gelir. Botlar
+her `reassignMs` içinde bölgeleri yeniden değerlendirir: tartışmalı bölge en çekici, sakin ve kendi
+elindeki bölge en az çekicidir; yakınlık çekiciliği artırır, aynı bölgedeki kalabalık azaltır ve eski
+görevden ancak belirgin biçimde daha iyi bir bölge için vazgeçilir. Bu kararların hepsi tohumludur:
+aynı tohum aynı savaşı üretir (`tests/sim/war/War.test.ts`).
+
 ## Girdi, kamera ve HUD
 
 Tuş ve kol eşlemesi `src/scenes/world/PlayerControls.ts`, hareket yumuşatma
