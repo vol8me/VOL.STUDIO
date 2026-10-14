@@ -570,6 +570,14 @@ describe('WorldRoom öngörü', () => {
     let starved = 0;
     let corrections: number[] = [];
     try {
+      // Tüketim başlamadan önceki adımlar hep boştadır (pacer hazırlığı) ve ilk düzeltmeleri doğurur;
+      // yüklü makinede bu hazırlık uzar. Bit eşitliği yalnız tüketim oturduktan sonra sınanır.
+      await until(
+        () => serverRoom(seat).inputStats(seat.sessionId)!.consumed > 20,
+        'girdi tüketiminin başlaması',
+        8000,
+      );
+      run.corrections.length = 0;
       await until(() => run.corrections.length > 15, 'uzlaştırmalar', 4000);
       corrections = run.corrections.slice();
     } finally {
