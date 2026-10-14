@@ -27,7 +27,10 @@ export class BotDirector {
   private cursor = 0;
   private reviewAtMs = 0;
 
-  constructor(seed: number) {
+  constructor(
+    seed: number,
+    private readonly perFaction: number = WAR.population.perFaction,
+  ) {
     this.random = createStatefulRandom(seed);
     this.roster = new WeightedPicker(
       VEHICLE_IDS.map((id, index) => ({
@@ -49,14 +52,14 @@ export class BotDirector {
     this.reviewAtMs = war.timeMs + WAR.population.reviewMs;
     for (let faction = 0; faction < WAR.factions; faction++) {
       this.trim(war, faction);
-      while (war.population(faction) < WAR.population.perFaction) this.spawnBot(war, faction);
+      while (war.population(faction) < this.perFaction) this.spawnBot(war, faction);
     }
     this.assign(war);
   }
 
   /** Cephedeki fazla botları çıkarır: ölü botlar önce, yoksa insanlardan en uzaktaki bot gider. */
   trim(war: War, faction: number): void {
-    while (war.population(faction) > WAR.population.perFaction) {
+    while (war.population(faction) > this.perFaction) {
       const victim = this.removable(war, faction);
       if (!victim) return;
       this.assignments.delete(victim.vehicle.id);

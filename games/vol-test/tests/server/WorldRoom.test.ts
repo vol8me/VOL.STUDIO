@@ -1,30 +1,31 @@
-import { Client } from '@colyseus/sdk';
 import { matchMaker } from '@colyseus/core';
+import { Client } from '@colyseus/sdk';
 import { Predict, classifyJoinError, type JoinFailure, type Room } from '@volstudio/network/client';
 import { afterEach, describe, expect, it } from 'vitest';
-import { MATCH, NETWORK } from '@/config/network';
+import { NETWORK } from '@/config/network';
 import { TANK } from '@/config/tank';
 import { STRIKER, VEHICLE_IDS, VEHICLES, modelOf } from '@/config/vehicles';
+import { WAR } from '@/config/war';
 import { WORLD } from '@/config/world';
 import { EVENT_MESSAGE, type EventBatch, type NetEvent } from '@/network/events';
 import { PredictedPilot } from '@/network/PredictedPilot';
 import { ROOM } from '@/network/rooms';
-import type { MatchSnapshot, TankInputData } from '@/network/schema';
+import type { WorldSnapshot, TankInputData } from '@/network/schema';
 import { World } from '@/sim/world/World';
+import { createPrimaryWorld } from '../../server/index';
 import { commandAt } from '../support/commands';
 import {
   joined,
-  joinPublic,
-  privateRoom,
+  joinWorld,
   serverRoom,
-  startQuickServer,
   startServer,
   until,
   type JoinParams,
   type TestServer,
+  type TestWorld,
 } from '../support/netHarness';
 
-type Seat = Room<MatchSnapshot>;
+type Seat = Room<WorldSnapshot>;
 
 let server: TestServer | undefined;
 const seats: Seat[] = [];
@@ -56,11 +57,8 @@ async function track(pending: Promise<Seat>): Promise<Seat> {
   return seat;
 }
 
-const boot = async () => (server = await startServer());
-const bootQuick = async () => (server = await startQuickServer());
-const join = (params: JoinParams = {}) => track(joinPublic(server!, params));
-const create = (params: JoinParams = {}) => track(privateRoom(server!, 'create', params));
-const enter = (params: JoinParams = {}) => track(privateRoom(server!, 'join', params));
+const boot = async (world?: TestWorld) => (server = await startServer(undefined, world));
+const join = (params: JoinParams = {}) => track(joinWorld(server!, params));
 
 /** Katılım hatasının oyunun göreceği nedeni. */
 async function failure(pending: Promise<unknown>): Promise<JoinFailure> {
@@ -87,8 +85,8 @@ function exposed(...group: Seat[]): void {
   for (const seat of group) vehicleOf(seat).vitality.protectionRemainingMs = 0;
 }
 
-describe('MatchRoom katılım', () => {
-  it('oyuncu kaydı adı, aracı, sağlığı ve maç kurallarıyla görünür', async () => {
+describe('WorldRoom katılım', () => {
+  it('oyuncu kaydı adı, aracı, cephesi ve sağlığıyla görünür; dünya durumu cephe ve bölge taşır', async () => {
     await boot();
     const seat = await join({ name: 'Ada' });
     const player = self(seat);
@@ -96,11 +94,11 @@ describe('MatchRoom katılım', () => {
     expect(player.vehicleId).toBeGreaterThan(0);
     expect(player.alive).toBe(true);
     expect(player.connected).toBe(true);
-    expect(player.team).toBe(-1);
-    expect(seat.state.mode).toBe('ffa');
-    expect(seat.state.phase).toBe('live');
-    expect(seat.state.scoreLimit).toBe(MATCH.scoreLimit.ffa);
-    expect(seat.state.code).toBe('');
+    expect(player.bot).toBe(false);
+    expect(player.team).toBeGreaterThanOrEqual(0);
+    expect(player.team).toBeLessThan(WAR.factions);
+    expect(seat.state.factions.length).toBe(WAR.factions);
+    expect(seat.state.zones.length).toBe(WAR.zones.length);
     await until(() => seat.state.tick > 5, 'sunucu adımları');
     expect(Number.isFinite(seat.state.timeMs)).toBe(true);
   });
@@ -122,6 +120,14 @@ describe('MatchRoom katılım', () => {
     await boot();
     for (const model of [VEHICLE_IDS.length, -1, 1.5, '1', null, Number.NaN]) {
       expect(await failure(join({ model })), String(model)).toBe('protocol');
+    }
+    expect(serverRoomCount()).toBe(0);
+  });
+
+  it('tanımsız, aralık dışı ya da tamsayı olmayan cephe protokol ihlali olarak reddedilir', async () => {
+    await boot();
+    for (const faction of [WAR.factions, -1, 0.5, '0', null, Number.NaN]) {
+      expect(await failure(join({ faction })), String(faction)).toBe('protocol');
     }
     expect(serverRoomCount()).toBe(0);
   });
@@ -160,29 +166,20 @@ describe('MatchRoom katılım', () => {
   it('protokol sürümü uyuşmayan ya da yollanmayan katılım reddedilir', async () => {
     await boot();
     const client = new Client(server!.endpoint);
-    expect(await failure(client.joinOrCreate(ROOM.match, { protocol: 1 }))).toBe('protocol');
-    expect(await failure(client.joinOrCreate(ROOM.match, {}))).toBe('protocol');
+    expect(await failure(client.joinOrCreate(ROOM.world, { protocol: 1 }))).toBe('protocol');
+    expect(await failure(client.joinOrCreate(ROOM.world, {}))).toBe('protocol');
     expect(serverRoomCount()).toBe(0);
   });
 
-  it('aynı moddaki oyuncular aynı odaya, farklı mod ayrı odaya düşer', async () => {
+  it('oyuncular aynı dünyaya düşer ve birbirini görür', async () => {
     await boot();
-    const a = await join({ mode: 'ffa' });
-    const b = await join({ mode: 'ffa' });
-    const c = await join({ mode: 'teams' });
+    const a = await join({ name: 'Bir' });
+    const b = await join({ name: 'İki' });
     expect(b.roomId).toBe(a.roomId);
-    expect(c.roomId).not.toBe(a.roomId);
-    expect(c.state.mode).toBe('teams');
-    expect(c.state.scoreLimit).toBe(MATCH.scoreLimit.teams);
+    await until(() => a.state.players.size === 2, 'iki oyuncunun görünmesi');
   });
 
-  it('geçersiz mod takımsız maça düşer', async () => {
-    await boot();
-    const seat = await join({ mode: 'ctf' });
-    expect(seat.state.mode).toBe('ffa');
-  });
-
-  it('oda dolunca bir sonraki oyuncu ikinci odaya düşer', async () => {
+  it('dünya dolunca bir sonraki oyuncu taşma dünyasına düşer', async () => {
     await boot();
     const first: Seat[] = [];
     for (let index = 0; index < NETWORK.maxPlayers; index++) first.push(await join());
@@ -194,108 +191,88 @@ describe('MatchRoom katılım', () => {
   });
 });
 
-describe('MatchRoom takımlar', () => {
-  it('oyuncuları küçük takıma dağıtır ve çıkan yerine dengeyi korur', async () => {
+describe('WorldRoom cepheler', () => {
+  it('istenen cepheyi dengeyi bozmuyorsa verir ve araç cepheyi taşır', async () => {
+    await boot();
+    const blue = await join({ faction: 1 });
+    expect(self(blue).team).toBe(1);
+    expect(vehicleOf(blue).team).toBe(1);
+    const amber = await join({ faction: 0 });
+    expect(self(amber).team).toBe(0);
+  });
+
+  it('cephe istemeyen oyuncuları dengeler ve çıkan yerine dengeyi korur', async () => {
     await boot();
     const group: Seat[] = [];
-    for (let index = 0; index < 4; index++) group.push(await join({ mode: 'teams' }));
-    expect(group.map((seat) => self(seat).team)).toEqual([0, 1, 0, 1]);
+    for (let index = 0; index < 4; index++) group.push(await join());
+    const teams = group.map((seat) => self(seat).team);
+    expect(teams.filter((team) => team === 0)).toHaveLength(2);
+    expect(teams.filter((team) => team === 1)).toHaveLength(2);
     for (const seat of group) expect(vehicleOf(seat).team).toBe(self(seat).team);
 
+    const left = self(group[1]).team;
     await group[1].leave();
     await until(() => group[0].state.players.size === 3, 'oyuncu çıkışı');
-    const next = await join({ mode: 'teams' });
-    expect(self(next).team).toBe(1);
+    const next = await join();
+    expect(self(next).team).toBe(left);
   });
 
-  it('takımsız maçta araçlar takım taşımaz', async () => {
+  it('kalabalık cepheyi isteyen oyuncu dengesiz cepheye alınmaz', async () => {
     await boot();
-    const seat = await join({ mode: 'ffa' });
-    expect(vehicleOf(seat).team).toBeNull();
+    for (let index = 0; index < 3; index++) await join({ faction: 0 });
+    const late = await join({ faction: 0 });
+    expect(self(late).team).toBe(1);
   });
 });
 
-describe('MatchRoom özel odalar', () => {
-  it('kodla kurulur, kodla katılınır ve kod odada görünür', async () => {
-    await boot();
-    const host = await create({ code: 'ABCDE', name: 'Ev' });
-    expect(host.state.code).toBe('ABCDE');
-    const guest = await enter({ code: 'ABCDE', name: 'Konuk' });
-    expect(guest.roomId).toBe(host.roomId);
-    expect(guest.state.players.size).toBe(2);
+describe('WorldRoom botlar ve kalıcılık', () => {
+  it('her cephe hedef sayıya botla tamamlanır; insan girince fazla bot çıkar', async () => {
+    await boot({ perFaction: 3 });
+    const seat = await join({ name: 'Ada', faction: 0 });
+    await until(() => seat.state.players.size === 2 * 3, 'cephe başına üç araç', 8000);
+    const players = [...seat.state.players.values()];
+    expect(players.filter((player) => player.bot)).toHaveLength(5);
+    expect(players.filter((player) => player.team === 0)).toHaveLength(3);
+    expect(players.filter((player) => player.team === 1)).toHaveLength(3);
+    const front = seat.state.factions;
+    await until(() => front[0].vehicles === 3 && front[1].vehicles === 3, 'cephe sayaçları');
+    expect(front[0].humans).toBe(1);
+    expect(front[1].humans).toBe(0);
   });
 
-  it('aynı kodla ikinci oda kurulamaz, kod boşalınca yeniden kullanılır', async () => {
+  it('botlar kendi başına sürer: insan yokken de dünya akar ve botlar hareket eder', async () => {
+    await boot({ perFaction: 2 });
+    const seat = await join({ name: 'Gözcü' });
+    await until(() => seat.state.players.size === 4, 'botların kaydı', 8000);
+    const bot = [...seat.state.players.values()].find((player) => player.bot)!;
+    const start = { x: bot.x, y: bot.y };
+    await until(() => Math.hypot(bot.x - start.x, bot.y - start.y) > 40, 'botun yürüyüşü', 15000);
+  }, 20000);
+
+  it('birincil dünya son insan ayrılsa da kapanmaz ve adım atmaya devam eder', async () => {
     await boot();
-    const host = await create({ code: 'KDE23' });
-    expect(await failure(privateRoom(server!, 'create', { code: 'KDE23' }))).toBe('code');
-    const id = host.roomId;
-    await host.leave();
+    const room = await createPrimaryWorld({ perFaction: 0 });
+    const seat = await join({ name: 'Geçici' });
+    expect(seat.roomId).toBe(room.roomId);
+    const id = seat.roomId;
+    await seat.leave();
+    await until(() => serverRoom(seat).playerCount === 0, 'oyuncu çıkışı');
+    const local = matchMaker.getLocalRoomById(id);
+    const before = (local.state as { tick: number }).tick;
+    await until(() => (local.state as { tick: number }).tick > before + 10, 'dünyanın akması');
+    expect(matchMaker.getLocalRoomById(id)).toBeDefined();
+  });
+
+  it('taşma dünyası son insan ayrılınca kapanır', async () => {
+    await boot();
+    const seat = await join();
+    const id = seat.roomId;
+    await seat.leave();
     await until(() => matchMaker.getLocalRoomById(id) === undefined, 'oda kapanışı');
-    const again = await create({ code: 'KDE23' });
-    expect(again.roomId).not.toBe(id);
-  });
-
-  it('reddedilen kuruluş yetim oda bırakmaz ve kodun gerçek sahibini bozmaz', async () => {
-    await boot();
-    const host = await create({ code: 'KDE23' });
-    await failure(privateRoom(server!, 'create', { code: 'KDE23' }));
-    await failure(privateRoom(server!, 'create', { code: 'kde23' }));
-    await until(() => serverRoomCount() === 1, 'yetim odaların kapanışı');
-    const guest = await enter({ code: 'KDE23' });
-    expect(guest.roomId).toBe(host.roomId);
-  });
-
-  it('aynı kodla eşzamanlı iki kuruluştan yalnız biri başarılır', async () => {
-    await boot();
-    const results = await Promise.allSettled(
-      [0, 1, 2].map(() => track(privateRoom(server!, 'create', { code: 'KDE23' }))),
-    );
-    expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
-    const reasons = results
-      .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
-      .map((result) => classifyJoinError(result.reason));
-    expect(reasons).toEqual(['code', 'code']);
-  });
-
-  it('kodsuz ya da kurala uymayan kodla oda kurulamaz', async () => {
-    await boot();
-    for (const code of [undefined, 'abcde', 'ABCD', 'ABCDEF', 'ABCD0', 'ABC-E']) {
-      expect(await failure(privateRoom(server!, 'create', { code }))).toBe('code');
-    }
-  });
-
-  it('olmayan kod bulunamaz, kodsuz katılım var olan odaya da giremez', async () => {
-    await boot();
-    expect(await failure(privateRoom(server!, 'join', { code: 'ZZZZZ' }))).toBe('not-found');
-    await create({ code: 'ABCDE' });
-    expect(await failure(privateRoom(server!, 'join', { code: 'ZZZZZ' }))).toBe('not-found');
-    expect(await failure(privateRoom(server!, 'join', {}))).toBe('code');
-  });
-
-  it('istemcinin normalleştirmediği kod eşleşmez', async () => {
-    await boot();
-    await create({ code: 'ABCDE' });
-    expect(await failure(privateRoom(server!, 'join', { code: 'abcde' }))).toBe('not-found');
-  });
-
-  it('sekiz oyuncuda dolar ve dokuzuncu girmez', async () => {
-    await boot();
-    await create({ code: 'ABCDE' });
-    for (let index = 1; index < MATCH.privateMaxPlayers; index++) await enter({ code: 'ABCDE' });
-    expect(await failure(privateRoom(server!, 'join', { code: 'ABCDE' }))).toBe('not-found');
-  });
-
-  it('herkese açık odanın kodu boştur ve özel oda herkese açık eşleşmeye girmez', async () => {
-    await boot();
-    await create({ code: 'ABCDE' });
-    const open = await join();
-    expect(open.state.code).toBe('');
-    expect(open.name).toBe(ROOM.match);
   });
 });
 
-describe('MatchRoom girdi yetkisi', () => {
+describe('WorldRoom girdi yetkisi', () => {
   it('girdiye göre ilerler: sunucu aracı sürer, durum istemciye yansır', async () => {
     await boot();
     const seat = await join();
@@ -353,7 +330,7 @@ describe('MatchRoom girdi yetkisi', () => {
     expect(state.y).toBeLessThanOrEqual(WORLD.height);
   });
 
-  it('ateş girdisi sunucuda mermi doğurur ve olayı odaya yayar', async () => {
+  it('ateş girdisi sunucuda mermi doğurur ve olayı dünyaya yayar', async () => {
     await boot();
     const shooter = await join({ name: 'Nişancı' });
     const watcher = await join({ name: 'Gözcü' });
@@ -384,11 +361,11 @@ describe('MatchRoom girdi yetkisi', () => {
   });
 });
 
-describe('MatchRoom skor', () => {
+describe('WorldRoom skor ve savaş', () => {
   async function pair() {
     await boot();
-    const killer = await join({ name: 'Av' });
-    const victim = await join({ name: 'Kurban' });
+    const killer = await join({ name: 'Av', faction: 0 });
+    const victim = await join({ name: 'Kurban', faction: 1 });
     exposed(killer, victim);
     return { killer, victim, sim: serverRoom(killer).simulation };
   }
@@ -405,19 +382,23 @@ describe('MatchRoom skor', () => {
       target: self(victim).vehicleId,
       source: self(killer).vehicleId,
     });
+    await until(() => killer.state.factions[0].score === WAR.score.perKill, 'cephe puanı');
   });
 
-  it('kendi kendini yok eden ve kaynaksız ölen yalnız ölüm yazar', async () => {
+  it('kaynaksız ölüm yalnız ölüm yazar; aynı cephenin ateşi hasar vermez', async () => {
     const { killer, victim, sim } = await pair();
-    sim.applyDamage(self(killer).vehicleId, 1e6, self(killer).vehicleId);
+    // Aynı cepheden kaynak dost ateştir (kendi kendine dahil): araç hasar almaz.
+    expect(sim.applyDamage(self(killer).vehicleId, 1e6, self(killer).vehicleId)).toBe(0);
     sim.applyDamage(self(victim).vehicleId, 1e6);
-    await until(() => self(killer).deaths === 1 && self(victim).deaths === 1, 'ölümler');
+    await until(() => self(victim).deaths === 1, 'ölüm');
+    expect(self(killer).deaths).toBe(0);
     expect(self(killer).kills).toBe(0);
     expect(self(victim).kills).toBe(0);
   });
 
-  it('ölen araç doğma süresi dolunca korumayla, düşmandan uzakta yeniden doğar', async () => {
+  it('ölen araç doğma süresi dolunca korumayla, kendi üssünde yeniden doğar', async () => {
     const { killer, victim, sim } = await pair();
+    const base = serverRoom(victim).battle.base(self(victim).team);
     sim.applyDamage(self(victim).vehicleId, 1e6, self(killer).vehicleId);
     await until(() => !self(victim).alive, 'ölüm');
     vehicleOf(victim).vitality.respawnRemainingMs = 5;
@@ -425,70 +406,49 @@ describe('MatchRoom skor', () => {
     const reborn = self(victim);
     expect(reborn.health).toBeGreaterThan(0);
     expect(reborn.protectionMs).toBeGreaterThan(0);
+    expect(Math.hypot(reborn.x - base.x, reborn.y - base.y)).toBeLessThan(1200);
     expect(Math.hypot(reborn.x - self(killer).x, reborn.y - self(killer).y)).toBeGreaterThan(200);
   });
-});
 
-describe('MatchRoom maç döngüsü', () => {
-  it('skor sınırı maçı bitirir, ara verme sonunda skorlar sıfırlanıp yeni maç başlar', async () => {
-    await bootQuick();
-    const winner = await join({ name: 'Galip' });
-    const loser = await join({ name: 'Mağlup' });
-    const seen = collect(loser);
-    exposed(winner, loser);
-    const sim = serverRoom(winner).simulation;
-
-    for (let kill = 1; kill <= 2; kill++) {
-      sim.applyDamage(self(loser).vehicleId, 1e6, self(winner).vehicleId);
-      await until(() => self(winner).kills === kill, `${kill}. öldürme`);
-      if (kill < 2) {
-        vehicleOf(loser).vitality.respawnRemainingMs = 5;
-        await until(() => self(loser).alive, 'karşı tarafın dirilmesi');
-        exposed(loser);
-      }
-    }
-
-    await until(() => winner.state.phase === 'intermission', 'ara verme');
-    expect(winner.state.winner).toBe(`p:${self(winner).vehicleId}`);
-    await until(() => seen.some((event) => event.kind === 'matchEnd'), 'maç sonu olayı');
-
-    await until(() => winner.state.phase === 'live', 'yeni maç');
-    expect(winner.state.winner).toBe('');
-    expect(winner.state.intermissionMs).toBe(0);
-    expect(self(winner).kills).toBe(0);
-    expect(self(loser).deaths).toBe(0);
-    expect(self(loser).alive).toBe(true);
-    expect(self(loser).protectionMs).toBeGreaterThan(0);
-    await until(() => seen.some((event) => event.kind === 'matchStart'), 'maç başlangıcı olayı');
+  it('çemberdeki araç bölgeyi ele geçirir: durum ve olay yayılır', async () => {
+    const { killer } = await pair();
+    const seen = collect(killer);
+    const battle = serverRoom(killer).battle;
+    const zone = battle.zones.zones[0];
+    // Tam ele geçirmeye bir adım kala: araç çembere ışınlanır, kalan süre beklenmez.
+    zone.progress = 0.999;
+    const vehicle = vehicleOf(killer);
+    vehicle.chassis.x = zone.x;
+    vehicle.chassis.y = zone.y;
+    await until(() => killer.state.zones[0].owner === 0, 'bölgenin el değiştirmesi');
+    await until(
+      () => seen.some((event) => event.kind === 'zone' && event.zone === 0 && event.owner === 0),
+      'bölge olayı',
+    );
+    expect(killer.state.factions[0].zones).toBe(1);
+    expect(killer.state.zones[0].presentFirst).toBeGreaterThanOrEqual(1);
   });
 
-  it('ara vermede öldürme sayılmaz', async () => {
-    await bootQuick();
-    const winner = await join();
-    const loser = await join();
-    exposed(winner, loser);
-    const sim = serverRoom(winner).simulation;
-    const id = (seat: Seat) => self(seat).vehicleId;
-    for (let kill = 1; kill <= 2; kill++) {
-      sim.applyDamage(id(loser), 1e6, id(winner));
-      await until(() => self(winner).kills === kill, `${kill}. öldürme`);
-      if (kill < 2) {
-        vehicleOf(loser).vitality.respawnRemainingMs = 5;
-        await until(() => self(loser).alive, 'diriliş');
-        exposed(loser);
-      }
-    }
-    await until(() => winner.state.phase === 'intermission', 'ara verme');
-    // Ara vermede ölen oyuncu yine ölür ama skor değişmez.
-    exposed(winner);
-    sim.applyDamage(id(winner), 1e6, id(loser));
-    await until(() => !self(winner).alive || winner.state.phase === 'live', 'ara verme ölümü');
-    expect(self(loser).kills).toBe(0);
+  it('hâkimiyet puanına ulaşan cephe savaşı kazanır; savaş aynı dünyada yeniden başlar', async () => {
+    const { killer, victim, sim } = await pair();
+    const seen = collect(victim);
+    const battle = serverRoom(killer).battle;
+    battle.scores[0] = WAR.score.dominance - 1;
+    sim.applyDamage(self(victim).vehicleId, 1e6, self(killer).vehicleId);
+    await until(() => killer.state.factions[0].wins === 1, 'zafer sayacı');
+    expect(killer.state.factions[0].score).toBe(0);
+    await until(
+      () => seen.some((event) => event.kind === 'warWon' && event.faction === 0),
+      'zafer olayı',
+    );
+    // Savaş sürer: oyuncular çıkarılmaz, kayıtlar kalır.
+    expect(killer.state.players.get(killer.sessionId)).toBeDefined();
+    expect(self(killer).connected).toBe(true);
   });
 });
 
-describe('MatchRoom ayrılma ve bağlantı kopması', () => {
-  it('çıkan oyuncunun kaydı ve aracı kalkar, diğerleri görür, boş oda kapanır', async () => {
+describe('WorldRoom ayrılma ve bağlantı kopması', () => {
+  it('çıkan oyuncunun kaydı ve aracı kalkar, diğerleri görür', async () => {
     await boot();
     const stays = await join({ name: 'Kalan' });
     const goes = await join({ name: 'Giden' });
@@ -502,10 +462,6 @@ describe('MatchRoom ayrılma ve bağlantı kopması', () => {
       () => seen.some((event) => event.kind === 'left' && event.vehicleId === goneId),
       'çıkış olayı',
     );
-
-    const id = stays.roomId;
-    await stays.leave();
-    await until(() => matchMaker.getLocalRoomById(id) === undefined, 'oda kapanışı');
   });
 
   it('sunucu bağlı oyuncuyla durdurulunca işlenmemiş söz reddi sızmaz', async () => {
@@ -568,7 +524,7 @@ describe('MatchRoom ayrılma ve bağlantı kopması', () => {
   }, 20000);
 });
 
-describe('MatchRoom öngörü', () => {
+describe('WorldRoom öngörü', () => {
   it('sunucu girdisi geç kalmadıkça istemci öngörüsü sunucuyla bit bit uyuşur', async () => {
     await boot();
     const seat = await join({ name: 'Pilot' });
@@ -590,7 +546,7 @@ describe('MatchRoom öngörü', () => {
     // Öngörü ile sunucu arasındaki tek sapma kaynağı, sunucunun istemcinin yollamadığı bir adım
     // atmasıdır (girdi geç kalınca boşta adım). Geç kalma yoksa tek bir düzeltme bile olamaz;
     // yük altında geç kalma varsa düzeltmeler sınırlı kalır.
-    const ceiling = starved === 0 ? 1e-6 : NETWORK.seatRadius / 2;
+    const ceiling = starved === 0 ? 1e-6 : NETWORK.snapDistance / 2;
     expect(Math.max(...corrections)).toBeLessThan(ceiling);
     expect(run.pilot.drift.ema).toBeLessThan(1);
     expect(run.fired()).toBeGreaterThan(0);

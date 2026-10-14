@@ -1,4 +1,4 @@
-import { defineRoom } from '@colyseus/core';
+import { defineRoom, matchMaker } from '@colyseus/core';
 import {
   installShutdown,
   isEntryModule,
@@ -8,25 +8,36 @@ import {
   stdoutSink,
 } from '@volstudio/network/server';
 import { ROOM } from '../src/network/rooms';
-import { MatchRoom, PrivateRoom } from './MatchRoom';
+import { WorldRoom, type WorldRoomOptions } from './WorldRoom';
 
 /**
- * Oda kaydı. Herkese açık odalar moda göre, özel odalar koda göre eşleşir; `filterBy`
- * seçenekleri oda ilk kurulurken bellekteki listeye yazar.
+ * Oda kaydı: tek tür oda, kalıcı savaş dünyası. `defaults` her odaya geçen işletim seçenekleridir
+ * (tohum, cephe başına araç sayısı); istemci bunları belirleyemez.
  */
-export function createRooms(logger?: Logger) {
-  const claims = new Set<string>();
+export function createRooms(
+  logger?: Logger,
+  defaults: Omit<WorldRoomOptions, 'logger' | 'primary'> = {},
+) {
   return {
-    [ROOM.match]: defineRoom(MatchRoom, { logger }).filterBy(['mode']),
-    [ROOM.private]: defineRoom(PrivateRoom, { logger, claims }).filterBy(['code']),
+    [ROOM.world]: defineRoom(WorldRoom, { ...defaults, logger }),
   };
 }
 
 export type Rooms = ReturnType<typeof createRooms>;
 
+/**
+ * Birincil dünyayı kurar: insan kalmasa da kapanmaz, bot savaşı sürer. Oyuncular `joinOrCreate`
+ * ile bu odaya düşer; dolarsa Colyseus bir taşma dünyası kurar.
+ */
+export async function createPrimaryWorld(options: Omit<WorldRoomOptions, 'primary'> = {}) {
+  return matchMaker.createRoom(ROOM.world, { ...options, primary: true });
+}
+
 /** Geliştirmede loopback; uzak testte listen adresi açıkça verilir. */
-export function startWorldServer(port = 2567, host = '127.0.0.1', logger?: Logger) {
-  return startHost(createRooms(logger), { port, host }, { logger });
+export async function startWorldServer(port = 2567, host = '127.0.0.1', logger?: Logger) {
+  const started = await startHost(createRooms(logger), { port, host }, { logger });
+  await createPrimaryWorld({ seed: Date.now() >>> 0 });
+  return started;
 }
 
 if (isEntryModule(import.meta.url, process.argv[1])) {

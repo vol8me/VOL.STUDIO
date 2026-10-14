@@ -26,7 +26,7 @@ afterEach(() => {
 describe('lobbyErrorKey', () => {
   it('katılım hatasını oyuncuya gösterilecek ileti anahtarına çevirir', () => {
     expect(lobbyErrorKey(new JoinError('full'))).toBe('voltest:online.error.full');
-    expect(lobbyErrorKey(new JoinError('code'))).toBe('voltest:online.error.code');
+    expect(lobbyErrorKey(new JoinError('code'))).toBe('voltest:online.error.failed');
     expect(lobbyErrorKey(new JoinError('protocol'))).toBe('voltest:online.error.protocol');
     expect(lobbyErrorKey(new JoinError('not-found'))).toBe('voltest:online.error.notFound');
     expect(lobbyErrorKey(new Error('ağ'))).toBe('voltest:online.error.unreachable');
@@ -131,14 +131,14 @@ describe('createLobby', () => {
     const open = spyOpen().mockResolvedValue(session);
     lobby.open();
     expect(find<HTMLInputElement>('lobby-name').value).toBe('Ada');
-    find('lobby-quick').click();
+    find('lobby-enter').click();
     expect(find('lobby-status').textContent).toBe(i18next.t('voltest:online.connecting'));
     await settle();
     expect(open).toHaveBeenCalledWith({
       endpoint: 'http://127.0.0.1:2567',
       name: 'Ada',
       model: modelOf(DART),
-      request: { kind: 'quick', mode: 'ffa' },
+      faction: undefined,
     });
     expect(update).toHaveBeenCalledWith({ playerName: 'Ada' });
     expect(lobby.isOpen).toBe(false);
@@ -153,11 +153,11 @@ describe('createLobby', () => {
     const { lobby, restart, find } = setup();
     spyOpen().mockRejectedValue(new JoinError('full'));
     lobby.open();
-    find('lobby-quick').click();
+    find('lobby-enter').click();
     await settle();
     expect(find('lobby-status').textContent).toBe(i18next.t('voltest:online.error.full'));
     expect(lobby.isOpen).toBe(true);
-    expect(find('lobby-quick').hasAttribute('disabled')).toBe(false);
+    expect(find('lobby-enter').hasAttribute('disabled')).toBe(false);
     expect(restart).not.toHaveBeenCalled();
   });
 
@@ -166,9 +166,9 @@ describe('createLobby', () => {
     const pending = deferred<OnlineSession>();
     spyOpen().mockReturnValue(pending.promise);
     lobby.open();
-    find('lobby-quick').click();
+    find('lobby-enter').click();
     find('lobby-cancel').click();
-    expect(find('lobby-quick').hasAttribute('disabled')).toBe(false);
+    expect(find('lobby-enter').hasAttribute('disabled')).toBe(false);
     const session = fakeSession();
     pending.resolve(session);
     await settle();
@@ -183,10 +183,10 @@ describe('createLobby', () => {
     const open = spyOpen();
     open.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
     lobby.open();
-    find('lobby-quick').click();
+    find('lobby-enter').click();
     find('lobby-cancel').click();
     lobby.open();
-    find('lobby-quick').click();
+    find('lobby-enter').click();
     first.reject(new JoinError('unreachable'));
     await settle();
     expect(find('lobby-status').textContent).toBe(i18next.t('voltest:online.connecting'));
@@ -200,7 +200,7 @@ describe('createLobby', () => {
     const pending = deferred<OnlineSession>();
     spyOpen().mockReturnValue(pending.promise);
     lobby.open();
-    find('lobby-quick').click();
+    find('lobby-enter').click();
     scope.dispose();
     expect(parent.querySelector('.vt-lobby')).toBeNull();
     const session = fakeSession();
@@ -210,18 +210,17 @@ describe('createLobby', () => {
     expect(restart).not.toHaveBeenCalled();
   });
 
-  it('özel oda kurma ve koda katılma isteklerini olduğu gibi iletir', async () => {
+  it('seçilen cepheyi oturum seçeneğine iletir', async () => {
     const { lobby, find } = setup();
-    const open = spyOpen().mockRejectedValue(new JoinError('code'));
+    const open = spyOpen().mockRejectedValue(new JoinError('full'));
     lobby.open();
-    find('lobby-create').click();
+    const blue = i18next.t('voltest:war.faction.blue');
+    [...find('lobby-faction').querySelectorAll<HTMLButtonElement>('[role="radio"]')]
+      .find((button) => button.textContent === blue)!
+      .click();
+    find('lobby-enter').click();
     await settle();
-    const created = open.mock.calls[0][0].request;
-    expect(created.kind).toBe('create');
-    find<HTMLInputElement>('lobby-code').value = 'ab12';
-    find('lobby-join').click();
-    await settle();
-    expect(open.mock.calls[1][0].request).toEqual({ kind: 'join', code: 'ab12' });
-    expect(find('lobby-status').textContent).toBe(i18next.t('voltest:online.error.code'));
+    expect(open.mock.calls[0][0].faction).toBe(1);
+    expect(find('lobby-status').textContent).toBe(i18next.t('voltest:online.error.full'));
   });
 });

@@ -4,11 +4,12 @@ import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
 import { WORLD } from '../../src/config/world';
 import { EVENT_MESSAGE, type EventBatch } from '../../src/network/events';
 import { ROOM } from '../../src/network/rooms';
-import { MATCH_SCHEMA, type MatchSnapshot, type PlayerSnapshot } from '../../src/network/schema';
+import { WAR } from '../../src/config/war';
+import { WORLD_SCHEMA, type PlayerSnapshot, type WorldSnapshot } from '../../src/network/schema';
 import { serverRoom, startServer, type TestServer } from '../support/netHarness';
 
 /**
- * Çok oyunculu tüketici: gönderilen istemci gerçek tarayıcıda, gerçek Colyseus sunucusuna (bu
+ * Çevrimiçi savaş tüketicisi: gönderilen istemci gerçek tarayıcıda, gerçek Colyseus sunucusuna (bu
  * işlemde, rastgele portta) bağlanır. Sunucu tarafı yetkili durumu bir Node gözlemcisi okur;
  * sayfaların gösterdiği (öngörülen) konumla karşılaştırılır. Ölüm gibi sürüşle zor üretilen olaylar
  * sunucudaki yetkili `Simulation`a hasar verilerek tetiklenir; sayfa gerçek tel olayını işler.
@@ -28,7 +29,7 @@ test.afterEach(async () => {
 });
 
 interface Observer {
-  readonly room: Room<MatchSnapshot>;
+  readonly room: Room<WorldSnapshot>;
   readonly events: EventBatch[];
   find(name: string): PlayerSnapshot | undefined;
   /** Oyuncunun oturum kimliği (sunucudaki araca ulaşmak için). */
@@ -37,11 +38,11 @@ interface Observer {
 
 /** Odaya görünmez bir tanık olarak girer: durumu ve olay iletilerini kaydeder. */
 async function observe(name: string): Promise<Observer> {
-  const room = await (new Client(server.endpoint).joinOrCreate<MatchSnapshot>(
-    ROOM.match,
-    { protocol: PROTOCOL_VERSION, name, mode: 'ffa' },
-    MATCH_SCHEMA,
-  ) as Promise<Room<MatchSnapshot>>);
+  const room = await (new Client(server.endpoint).joinOrCreate<WorldSnapshot>(
+    ROOM.world,
+    { protocol: PROTOCOL_VERSION, name },
+    WORLD_SCHEMA,
+  ) as Promise<Room<WorldSnapshot>>);
   observers.push(room);
   const events: EventBatch[] = [];
   room.onMessage(EVENT_MESSAGE, (batch: EventBatch) => events.push(batch));
@@ -66,23 +67,22 @@ async function observe(name: string): Promise<Observer> {
 /** Sayfayı bu testin sunucusuna yönlendiren adres. */
 const serverUrl = (): string => `/?server=${encodeURIComponent(server.endpoint)}`;
 
-type Entry = 'quick' | 'create' | { readonly join: string };
+/** Cephe seçimindeki düğmenin (tr-TR) görünen adı. */
+const FACTION_LABEL = ['Kehribar', 'Mavi'] as const;
 
-/** Duraklatma menüsünden lobiyi açıp seçilen yolla maça girer. */
-async function enter(page: Page, name: string, how: Entry = 'quick'): Promise<void> {
+/** Duraklatma menüsünden katılım panelini açıp savaşa girer; cephe verilmezse sunucu dengeler. */
+async function enter(page: Page, name: string, faction?: 0 | 1): Promise<void> {
   await page.goto(serverUrl());
   await expect(page.getByTestId('hud')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByTestId('pause-online').click();
   await page.getByTestId('lobby-name').fill(name);
-  if (how === 'quick') {
-    await page.getByTestId('lobby-quick').click();
-  } else if (how === 'create') {
-    await page.getByTestId('lobby-create').click();
-  } else {
-    await page.getByTestId('lobby-code').fill(how.join);
-    await page.getByTestId('lobby-join').click();
-  }
+  if (faction !== undefined)
+    await page
+      .getByTestId('lobby-faction')
+      .getByRole('radio', { name: FACTION_LABEL[faction] })
+      .click();
+  await page.getByTestId('lobby-enter').click();
   await expect(page.getByTestId('online')).toBeVisible({ timeout: 15_000 });
 }
 
@@ -103,7 +103,7 @@ async function position(page: Page): Promise<{ x: number; y: number }> {
 
 const ping = (page: Page) => page.getByTestId('online-ping');
 
-test('iki tarayıcı aynı odaya girer: tablo, gözlemci ve çubuk birbirini görür', async ({
+test('iki tarayıcı aynı dünyaya girer: tablo, gözlemci ve çubuk birbirini görür', async ({
   browser,
 }, info) => {
   const tag = info.project.name.slice(0, 4);
@@ -117,7 +117,12 @@ test('iki tarayıcı aynı odaya girer: tablo, gözlemci ve çubuk birbirini gö
     const board = page.getByTestId('online-board');
     await expect(board).toContainText(`${tag}-A`);
     await expect(board).toContainText(`${tag}-B`);
-    await expect(page.getByTestId('online-room')).not.toBeEmpty();
+    await expect(page.locator('[data-testid="online-zones"] .vt-online__zone')).toHaveCount(
+      WAR.zones.length,
+    );
+    await expect(page.locator('[data-testid="online-factions"] .vt-online__score')).toHaveCount(
+      WAR.factions,
+    );
   }
   await expect.poll(() => watcher.room.state.players.size).toBeGreaterThanOrEqual(3);
   expect(watcher.find(`${tag}-A`)?.connected).toBe(true);
@@ -126,34 +131,40 @@ test('iki tarayıcı aynı odaya girer: tablo, gözlemci ve çubuk birbirini gö
   await expect(ping(first)).toHaveAttribute('data-grade', /good|fair/);
 });
 
-test('özel oda: kuran kodu görür, kodla gelen aynı odaya düşer, yanlış kod hata verir', async ({
+test('cephe seçimi: istenen cephe sunucuda kayda geçer, kendi cephe puanı vurgulanır', async ({
   browser,
 }, info) => {
   const tag = info.project.name.slice(0, 4);
-  const host = await newPage(browser);
-  await enter(host, `${tag}-H`, 'create');
-  const label = (await host.getByTestId('online-room').textContent()) ?? '';
-  const code = /[A-Z0-9]{5}/.exec(label)?.[0];
-  expect(code, `Oda etiketinde kod yok: ${label}`).toBeDefined();
+  const blue = await newPage(browser);
+  await enter(blue, `${tag}-M`, 1);
+  const watcher = await observe(`${tag}-W`);
+  await expect.poll(() => watcher.find(`${tag}-M`)?.team).toBe(1);
+  await expect(blue.locator('[data-testid="online-factions"] [data-own="true"]')).toHaveAttribute(
+    'data-faction',
+    '1',
+  );
 
-  const guest = await newPage(browser);
-  await enter(guest, `${tag}-G`, { join: code! });
-  await expect(guest.getByTestId('online-room')).toContainText(code!);
-  for (const page of [host, guest]) {
-    await expect(page.getByTestId('online-board')).toContainText(`${tag}-H`);
-    await expect(page.getByTestId('online-board')).toContainText(`${tag}-G`);
-  }
+  const amber = await newPage(browser);
+  await enter(amber, `${tag}-K`, 0);
+  await expect.poll(() => watcher.find(`${tag}-K`)?.team).toBe(0);
+});
 
-  // Var olmayan kod: lobi hatayı yazar, oyuncu çevrimdışı dünyada kalır.
-  const stray = await newPage(browser);
-  await stray.goto(serverUrl());
-  await expect(stray.getByTestId('hud')).toBeVisible();
-  await stray.keyboard.press('Escape');
-  await stray.getByTestId('pause-online').click();
-  await stray.getByTestId('lobby-code').fill('ZZZZZ');
-  await stray.getByTestId('lobby-join').click();
-  await expect(stray.getByTestId('lobby-status')).toHaveAttribute('data-tone', 'danger');
-  await expect(stray.getByTestId('online')).toHaveCount(0);
+test('savaş dünyası botlarla dolu: tabloda botlar görünür, bölge rozetleri sunucuyla akar', async ({
+  browser,
+}, info) => {
+  await server.stop();
+  server = await startServer(undefined, { perFaction: 2 });
+  const tag = info.project.name.slice(0, 4);
+  const page = await newPage(browser);
+  await enter(page, `${tag}-P`);
+  await expect(page.getByTestId('online-board')).toContainText('(bot)', { timeout: 15_000 });
+  const watcher = await observe(`${tag}-W`);
+  await expect
+    .poll(() => [...watcher.room.state.players.values()].filter((player) => player.bot).length, {
+      timeout: 15_000,
+    })
+    .toBeGreaterThanOrEqual(2);
+  expect(watcher.room.state.zones.length).toBe(WAR.zones.length);
 });
 
 test('klavyeyle sürülen tank sunucudaki konumla aynı yere oturur', async ({ browser }, info) => {
@@ -298,12 +309,12 @@ test('Ayrıl: oyuncu sunucudan düşer ve oyun çevrimdışı dünyaya döner', 
   await expect(page.getByTestId('online')).toHaveCount(0);
   await expect(page.getByTestId('hud')).toBeVisible();
   await expect.poll(() => watcher.find(`${tag}-L`)).toBeUndefined();
-  // Çevrimdışı dünyada çubuk yok, ama duraklatma menüsünde "Çok oyunculu" yine var.
+  // Çevrimdışı dünyada çubuk yok, ama duraklatma menüsünde "Savaşa katıl" yine var.
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('pause-online')).toBeVisible();
 });
 
-test('çevrimdışı açılış ağ parçasını yüklemez ve soket açmaz; lobi açılınca parça gelir', async ({
+test('çevrimdışı açılış ağ parçasını yüklemez ve soket açmaz; katılım paneli açılınca parça gelir', async ({
   page,
 }) => {
   const requests: string[] = [];
@@ -319,21 +330,23 @@ test('çevrimdışı açılış ağ parçasını yüklemez ve soket açmaz; lobi
   expect(sockets).toEqual([]);
 
   await page.getByTestId('pause-online').click();
-  await expect(page.getByTestId('lobby-quick')).toBeVisible();
+  await expect(page.getByTestId('lobby-enter')).toBeVisible();
   expect(requests.some(online)).toBe(true);
   expect(sockets).toEqual([]);
 });
 
-test('ulaşılamayan sunucuda lobi hatayı yazar ve yeniden denemeye açık kalır', async ({ page }) => {
+test('ulaşılamayan sunucuda katılım paneli hatayı yazar ve yeniden denemeye açık kalır', async ({
+  page,
+}) => {
   await page.goto('/?server=127.0.0.1:1');
   await expect(page.getByTestId('hud')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByTestId('pause-online').click();
-  await page.getByTestId('lobby-quick').click();
+  await page.getByTestId('lobby-enter').click();
   await expect(page.getByTestId('lobby-status')).toHaveAttribute('data-tone', 'danger', {
     timeout: 15_000,
   });
   await expect(page.getByTestId('lobby-status')).not.toBeEmpty();
-  await expect(page.getByTestId('lobby-quick')).toBeEnabled();
+  await expect(page.getByTestId('lobby-enter')).toBeEnabled();
   await expect(page.getByTestId('online')).toHaveCount(0);
 });

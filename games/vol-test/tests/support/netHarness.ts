@@ -1,90 +1,54 @@
-import { defineRoom, matchMaker } from '@colyseus/core';
+import { matchMaker } from '@colyseus/core';
 import { Client, type Room } from '@colyseus/sdk';
 import { PROTOCOL_VERSION } from '@volstudio/network/protocol';
 import { startHost, type Logger, type StartedHost } from '@volstudio/network/server';
-import { MATCH, type MatchConfig } from '@/config/network';
-import { OnlineSession, type OnlineRequest } from '@/network/OnlineSession';
-import { MATCH_SCHEMA, type MatchSnapshot } from '@/network/schema';
+import { OnlineSession } from '@/network/OnlineSession';
 import { ROOM } from '@/network/rooms';
-import { MatchRoom, PrivateRoom } from '../../server/MatchRoom';
+import { WORLD_SCHEMA, type WorldSnapshot } from '@/network/schema';
 import { createRooms, type Rooms } from '../../server/index';
+import type { WorldRoom, WorldRoomOptions } from '../../server/WorldRoom';
 
 export type TestServer = StartedHost<Rooms>;
 
-/** Rastgele portta gerçek bir oyun sunucusu başlatır. */
-export function startServer(logger?: Logger): Promise<TestServer> {
-  return startHost(createRooms(logger), { port: 0, host: '127.0.0.1' }, { logger });
-}
+/** Testte odaya geçen işletim seçenekleri: varsayılan olarak botsuz, yalnız insanlı dünya. */
+export type TestWorld = Omit<WorldRoomOptions, 'logger' | 'primary'>;
 
-/** Hızlı maç kuralları: iki öldürmede biter, ara verme çeyrek saniyedir. */
-export const QUICK_RULES: MatchConfig = {
-  ...MATCH,
-  scoreLimit: { ffa: 2, teams: 2 },
-  intermissionMs: 250,
-};
-
-class QuickMatchRoom extends MatchRoom {
-  protected override readonly config = QUICK_RULES;
-}
-
-class QuickPrivateRoom extends PrivateRoom {
-  protected override readonly config = QUICK_RULES;
-}
-
-/** Kısa maç kurallı sunucu; oda adları ve eşleştirme üretimle aynıdır. */
-export function startQuickServer(logger?: Logger): Promise<TestServer> {
-  const rooms = {
-    [ROOM.match]: defineRoom(QuickMatchRoom, { logger }).filterBy(['mode']),
-    [ROOM.private]: defineRoom(QuickPrivateRoom, { logger, claims: new Set<string>() }).filterBy([
-      'code',
-    ]),
-  };
-  return startHost(
-    rooms,
-    { port: 0, host: '127.0.0.1' },
-    { logger },
-  ) as unknown as Promise<TestServer>;
+/**
+ * Rastgele portta gerçek bir oyun sunucusu başlatır. Odalar `joinOrCreate` ile kurulur ve son insan
+ * ayrılınca kapanır; bot gerektiren testler `world.perFaction` verir.
+ */
+export function startServer(
+  logger?: Logger,
+  world: TestWorld = { perFaction: 0 },
+): Promise<TestServer> {
+  return startHost(createRooms(logger, world), { port: 0, host: '127.0.0.1' }, { logger });
 }
 
 export interface JoinParams {
   readonly name?: string;
-  readonly mode?: string;
-  readonly code?: string;
+  readonly faction?: unknown;
   readonly protocol?: number;
   /** Seçilen aracın `VEHICLE_IDS` indeksi; sunucu doğrular. Kasıtlı geçersiz değer için `unknown`. */
   readonly model?: unknown;
 }
 
-/** Herkese açık odaya katılır (yoksa kurar); `protocol` varsayılan olarak güncel sürümdür. */
-export function joinPublic(
+/** Savaş dünyasına katılır (yoksa kurar); `protocol` varsayılan olarak güncel sürümdür. */
+export function joinWorld(
   server: TestServer,
   params: JoinParams = {},
-): Promise<Room<MatchSnapshot>> {
-  return new Client(server.endpoint).joinOrCreate<MatchSnapshot>(
-    ROOM.match,
+): Promise<Room<WorldSnapshot>> {
+  return new Client(server.endpoint).joinOrCreate<WorldSnapshot>(
+    ROOM.world,
     { protocol: PROTOCOL_VERSION, ...params },
-    MATCH_SCHEMA,
-  ) as Promise<Room<MatchSnapshot>>;
-}
-
-/** Özel oda yöntemleri: `create` kurar, `join` yalnız var olana katılır. */
-export function privateRoom(
-  server: TestServer,
-  method: 'create' | 'join',
-  params: JoinParams = {},
-): Promise<Room<MatchSnapshot>> {
-  return new Client(server.endpoint)[method]<MatchSnapshot>(
-    ROOM.private,
-    { protocol: PROTOCOL_VERSION, ...params },
-    MATCH_SCHEMA,
-  ) as Promise<Room<MatchSnapshot>>;
+    WORLD_SCHEMA,
+  ) as Promise<Room<WorldSnapshot>>;
 }
 
 /** Sunucu içindeki odayı (yetkili örnek) verir; yalnız süreç içi testlerde kullanılır. */
-export function serverRoom(room: Room): MatchRoom {
+export function serverRoom(room: Room): WorldRoom {
   const local = matchMaker.getLocalRoomById(room.roomId);
   if (!local) throw new Error(`Oda süreç içinde yok: ${room.roomId}`);
-  return local as unknown as MatchRoom;
+  return local as unknown as WorldRoom;
 }
 
 /** Koşul sağlanana dek yoklar; süre dolarsa neyi beklediğini söyleyen hata atar. */
@@ -101,7 +65,7 @@ export async function until(
 }
 
 /** Sunucudan ilk tam durum gelip oyuncu kaydı görünene dek bekler. */
-export async function joined(room: Room<MatchSnapshot>) {
+export async function joined(room: Room<WorldSnapshot>) {
   await until(() => room.state.players.get(room.sessionId) !== undefined, 'oyuncu kaydı');
   return room.state.players.get(room.sessionId)!;
 }
@@ -109,10 +73,10 @@ export async function joined(room: Room<MatchSnapshot>) {
 /** Oyunun istemci oturumuyla katılır; otomatik yeniden bağlanma yalnız onu sınayan testte açılır. */
 export async function openSession(
   server: TestServer,
-  request: OnlineRequest,
   name = 'Pilot',
+  faction?: number,
 ): Promise<OnlineSession> {
-  const session = await OnlineSession.open({ endpoint: server.endpoint, name, request });
+  const session = await OnlineSession.open({ endpoint: server.endpoint, name, faction });
   session.room.reconnection.enabled = false;
   return session;
 }

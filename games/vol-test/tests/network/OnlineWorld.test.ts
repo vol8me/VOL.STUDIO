@@ -29,7 +29,7 @@ afterEach(async () => {
 
 async function join(name = 'Pilot'): Promise<OnlineSession> {
   server ??= await startServer();
-  const session = await openSession(server, { kind: 'quick', mode: 'ffa' }, name);
+  const session = await openSession(server, name);
   sessions.push(session);
   return session;
 }
@@ -255,8 +255,8 @@ describe('involvesPlayer', () => {
     [{ kind: 'respawned', target: other, x: 0, y: 0 }, false],
     [{ kind: 'joined', vehicleId: other, name: 'X' }, true],
     [{ kind: 'left', vehicleId: other, name: 'X' }, true],
-    [{ kind: 'matchStart' }, true],
-    [{ kind: 'matchEnd', winner: 'p:1' }, true],
+    [{ kind: 'zone', zone: 0, owner: 1 }, true],
+    [{ kind: 'warWon', faction: 0, wins: 1 }, true],
   ];
   it.each(cases)('%j → %s', (event, expected) => {
     expect(involvesPlayer(event, me)).toBe(expected);

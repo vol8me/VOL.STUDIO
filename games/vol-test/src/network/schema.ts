@@ -44,11 +44,15 @@ export const NO_TEAM = -1;
  */
 export const PlayerState = schema(
   {
-    vehicleId: t.uint16().default(0),
+    /** Araç kimliği; sunucu ömrü boyunca tekildir ve botlar dahil herkesi ayırt eder. */
+    vehicleId: t.uint32().default(0),
     /** Seçilen aracın `VEHICLE_IDS` indeksi; katılırken doğrulanır, oyuncu ömrü boyunca değişmez. */
     model: t.uint8().default(0),
     name: t.string().default(''),
+    /** Cephe indeksi (`WAR.factions`); savaşta herkes bir cepheye aittir. */
     team: t.int8().default(NO_TEAM),
+    /** Bot mu: botlar da kayıtta görünür (skor tablosu, harita) ama bağlantısı yoktur. */
+    bot: flag(),
     connected: flag(),
     kills: t.uint16().default(0),
     deaths: t.uint16().default(0),
@@ -92,39 +96,53 @@ export const PlayerState = schema(
 
 export type PlayerSnapshot = SchemaType<typeof PlayerState>;
 
-export const MATCH_PHASES = ['live', 'intermission'] as const;
-export type MatchPhase = (typeof MATCH_PHASES)[number];
-
-export const MATCH_MODES = ['ffa', 'teams'] as const;
-export type MatchMode = (typeof MATCH_MODES)[number];
-
-export function isMatchMode(value: unknown): value is MatchMode {
-  return (MATCH_MODES as readonly unknown[]).includes(value);
-}
-
-export const MatchState = schema(
+/** Bir bölgenin herkese açık durumu; konum ve yarıçap `WAR.zones` ile dünya ölçüsünden türer. */
+export const ZoneState = schema(
   {
-    phase: t.string().default('live'),
-    mode: t.string().default('ffa'),
-    /** Özel oda kodu; herkese açık odada boş. */
-    code: t.string().default(''),
+    /** Ele geçirme ilerlemesi [-1, 1]: +1 tam 0. cephe, -1 tam 1. cephe. */
+    progress: f32(),
+    /** Sahip cephe; yoksa -1. */
+    owner: t.int8().default(-1),
+    contested: flag(),
+    /** Çemberdeki canlı araç sayısı, cephe başına. */
+    presentFirst: t.uint8().default(0),
+    presentSecond: t.uint8().default(0),
+  },
+  'TankZone',
+);
+
+/** Bir cephenin herkese açık durumu. */
+export const FactionState = schema(
+  {
+    /** Hâkimiyet puanı; `WAR.score.dominance`a ulaşınca savaş kazanılır. */
+    score: f32(),
+    /** Kazanılmış savaş sayısı (dünyanın ömrü boyunca). */
+    wins: t.uint16().default(0),
+    zones: t.uint8().default(0),
+    vehicles: t.uint8().default(0),
+    humans: t.uint8().default(0),
+  },
+  'TankFaction',
+);
+
+export const WorldState = schema(
+  {
     tick: t.uint32().default(0),
     /** Sunucunun sabit adım saati (ms); olaylar bu saatle damgalanır. */
     timeMs: f64(),
-    scoreLimit: t.uint16().default(0),
-    /** Ara vermenin kalan süresi; canlıyken 0. */
-    intermissionMs: f32(),
-    /** Biten maçın kazananı: takımsızda `p:<araç>`, takımlıda `t:<takım>`; yoksa boş. */
-    winner: t.string().default(''),
     players: t.map(PlayerState),
+    zones: t.array(ZoneState),
+    factions: t.array(FactionState),
   },
-  'TankMatch',
+  'TankWorld',
 );
 
-export type MatchSnapshot = SchemaType<typeof MatchState>;
+export type WorldSnapshot = SchemaType<typeof WorldState>;
+export type ZoneSnapshot = SchemaType<typeof ZoneState>;
+export type FactionSnapshot = SchemaType<typeof FactionState>;
 
 /** Colyseus istemcisine verilen kök şema sınıfı; sunucu ve istemci aynı tanımı okur. */
-export const MATCH_SCHEMA = MatchState as unknown as new () => MatchSnapshot;
+export const WORLD_SCHEMA = WorldState as unknown as new () => WorldSnapshot;
 
 /**
  * Colyseus'un girdi kesicisine verilen aralıklar (NaN-güvenli: NaN alt sınıra iner). Kesme

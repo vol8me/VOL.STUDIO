@@ -12,7 +12,7 @@ import type { TankCommand } from '@/sim/command';
 import {
   NO_TEAM,
   toCommand,
-  type MatchSnapshot,
+  type WorldSnapshot,
   type PlayerSnapshot,
   type TankInputData,
   type TankInputFields,
@@ -36,7 +36,7 @@ interface PilotWorld {
 }
 
 export interface PilotOptions {
-  readonly room: Room<MatchSnapshot>;
+  readonly room: Room<WorldSnapshot>;
   readonly predict: Predict;
   readonly self: PlayerSnapshot;
   readonly space: World;
@@ -89,7 +89,7 @@ export class PredictedPilot {
       input: this.input,
       world: { vehicle: this.vehicle, space },
       // Büyük sıçrama (yeniden doğma) kayan düzeltme değil, ışınlanmadır.
-      snap: NETWORK.seatRadius / 2,
+      snap: NETWORK.snapDistance,
       warnOnDivergence: options.divergenceTolerance,
       step: (ctx, world, command) => {
         stepPredictedVehicle(

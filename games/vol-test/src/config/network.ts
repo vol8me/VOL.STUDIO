@@ -1,7 +1,10 @@
 /** Çok oyunculu oda değerleri yalnız oyunun yapılandırmasındadır. */
 export const NETWORK = {
-  /** Oda başına eşzamanlı araç; dolu odadan sonra `joinOrCreate` yenisini kurar. */
-  maxPlayers: 12,
+  /**
+   * Dünya başına eşzamanlı insan. Dolu dünyadan sonra `joinOrCreate` bir taşma dünyası kurar;
+   * ölçüm kanıtı olmadan artırılmaz (bkz. DESIGN: kapasite).
+   */
+  maxPlayers: 24,
   /**
    * Sunucunun ve istemci öngörüsünün sabit adım hızı (Hz). `GAME.simulationStepMs` ile aynı
    * adımdır (testle kilitli): öngörü ve yeniden oynatma sunucuyla aynı `dt` ile ilerler.
@@ -17,8 +20,11 @@ export const NETWORK = {
   defaultEndpoint: 'http://127.0.0.1:2567',
   /** Ad vermeyen oyuncuya atanan ad; araç numarası eklenir. */
   fallbackName: 'Pilot',
-  /** Doğma yuvalarının dünya merkezine uzaklığı. */
-  seatRadius: 360,
+  /**
+   * Bu mesafeden (birim) büyük konum sıçraması yeniden doğma/ışınlanmadır: kayan düzeltme ya da ara
+   * değer değil, anında yerleştirme uygulanır.
+   */
+  snapDistance: 180,
   /** Sunucu durum yayını aralığı; uzlaştırma ve uzak araç ara değeri bu aralıkla beslenir. */
   patchRateMs: 50,
   /** Girdi gelmeyen adımda son niyetin kaç sabit adım daha tutulacağı (ateş tutulmaz). */
@@ -38,21 +44,3 @@ export const NETWORK = {
   /** Eşik yoksa SDK sapmayı ölçmez (hep 0); kalıcı sapma bunu aşarsa uyarır. 1 m = 32 birim. */
   divergenceTolerance: 4,
 } as const;
-
-export interface MatchConfig {
-  readonly scoreLimit: { readonly ffa: number; readonly teams: number };
-  readonly intermissionMs: number;
-  readonly teams: number;
-  readonly privateMaxPlayers: number;
-}
-
-/** Maç kuralları: skor sınırı, ara verme ve takım sayısı. */
-export const MATCH: MatchConfig = {
-  /** Takımsız maçta ilk bu kadar öldürmeye ulaşan, takımlıda takım toplamı. */
-  scoreLimit: { ffa: 10, teams: 20 },
-  /** Maç bitince sonuç ekranının sürdüğü süre; sonra skorlar sıfırlanır ve herkes doğar. */
-  intermissionMs: 8000,
-  teams: 2,
-  /** Özel odanın en çok kaç oyuncuyla kurulacağı. */
-  privateMaxPlayers: 8,
-};

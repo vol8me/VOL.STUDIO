@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NETWORK } from '@/config/network';
 import type { EventBatch } from '@/network/events';
 import { ROOM } from '@/network/rooms';
-import { OnlineSession, type ConnectionStatus, type OnlineRequest } from '@/network/OnlineSession';
-import type { MatchSnapshot } from '@/network/schema';
+import { OnlineSession, type ConnectionStatus } from '@/network/OnlineSession';
+import type { WorldSnapshot } from '@/network/schema';
 import { openSession, startServer, until, type TestServer } from '../support/netHarness';
 
 let server: TestServer | undefined;
@@ -16,9 +16,9 @@ afterEach(async () => {
   server = undefined;
 });
 
-async function open(request: OnlineRequest, name = 'Pilot'): Promise<OnlineSession> {
+async function open(name = 'Pilot', faction?: number): Promise<OnlineSession> {
   server ??= await startServer();
-  const session = await openSession(server, request, name);
+  const session = await openSession(server, name, faction);
   sessions.push(session);
   return session;
 }
@@ -34,13 +34,12 @@ async function failure(pending: Promise<unknown>): Promise<string> {
 }
 
 describe('OnlineSession katılım', () => {
-  it('hızlı maça katılır ve kendi kaydını, sunucu eksenini, gecikmeyi hazır verir', async () => {
-    const session = await open({ kind: 'quick', mode: 'teams' }, 'Yolcu');
+  it('savaş dünyasına katılır ve kendi kaydını, sunucu eksenini, gecikmeyi hazır verir', async () => {
+    const session = await open('Yolcu');
     expect(session.status).toBe('live');
     expect(session.self?.name).toBe('Yolcu');
     expect(session.self?.vehicleId).toBeGreaterThan(0);
-    expect(session.code).toBe('');
-    expect(session.room.state.mode).toBe('teams');
+    expect(session.self?.team).toBeGreaterThanOrEqual(0);
     await until(() => session.timeline.known, 'sunucu ekseni');
     // Olaylar benzetim saatiyle gelir; eksen dönüşümü SDK sunucu saatine yakın düşmelidir.
     await until(() => session.room.state.timeMs > 200, 'yama akışı');
@@ -57,49 +56,20 @@ describe('OnlineSession katılım', () => {
     expect(session.jitterMs).toBeGreaterThanOrEqual(0);
   });
 
-  it('özel oda kurar, kodu büyük-küçük harf ve ayraçtan bağımsız eşler', async () => {
-    const host = await open({ kind: 'create', code: 'KMN23' }, 'Ev');
-    expect(host.code).toBe('KMN23');
-    const guest = await open({ kind: 'join', code: ' km-n23 ' }, 'Konuk');
-    expect(guest.code).toBe('KMN23');
-    expect(guest.room.roomId).toBe(host.room.roomId);
-    await until(() => host.room.state.players.size === 2, 'iki oyuncu');
+  it('iki oyuncu aynı dünyaya düşer; istenen cephe seçeneği sunucuya ulaşır', async () => {
+    const first = await open('Ev', 1);
+    const second = await open('Konuk', 0);
+    expect(second.room.roomId).toBe(first.room.roomId);
+    expect(first.self?.team).toBe(1);
+    expect(second.self?.team).toBe(0);
+    await until(() => first.room.state.players.size === 2, 'iki oyuncu');
   });
 
-  it('var olmayan kodla katılım not-found, biçimi bozuk kod code olarak reddedilir', async () => {
+  it('geçersiz cephe isteği protocol olarak reddedilir', async () => {
     server = await startServer();
     expect(
-      await failure(
-        OnlineSession.open({
-          endpoint: server.endpoint,
-          name: 'A',
-          request: { kind: 'join', code: 'PQRS3' },
-        }),
-      ),
-    ).toBe('not-found');
-    expect(
-      await failure(
-        OnlineSession.open({
-          endpoint: server.endpoint,
-          name: 'A',
-          request: { kind: 'create', code: '0O1I' },
-        }),
-      ),
-    ).toBe('code');
-  });
-
-  it('biçimi bozuk kod eşleştiriciye hiç gitmez', async () => {
-    const lobby = { joinOrCreate: vi.fn(), create: vi.fn(), join: vi.fn() };
-    const reason = await failure(
-      OnlineSession.open({
-        endpoint: 'http://127.0.0.1:1',
-        name: 'A',
-        request: { kind: 'join', code: 'x' },
-        lobby: lobby,
-      }),
-    );
-    expect(reason).toBe('code');
-    expect(lobby.join).not.toHaveBeenCalled();
+      await failure(OnlineSession.open({ endpoint: server.endpoint, name: 'A', faction: 9 })),
+    ).toBe('protocol');
   });
 
   it('ulaşılamayan sunucu unreachable olarak bildirilir', async () => {
@@ -107,7 +77,6 @@ describe('OnlineSession katılım', () => {
       OnlineSession.open({
         endpoint: 'http://127.0.0.1:1',
         name: 'A',
-        request: { kind: 'quick', mode: 'ffa' },
       }),
     );
     expect(reason).toBe('unreachable');
@@ -116,23 +85,23 @@ describe('OnlineSession katılım', () => {
 
 describe('OnlineSession olaylar ve durum', () => {
   it('olay paketlerini abonelere dağıtır; abonelik kaldırılınca durur', async () => {
-    const first = await open({ kind: 'quick', mode: 'ffa' }, 'Bir');
+    const first = await open('Bir');
     const received: EventBatch[] = [];
     const stop = first.onEvents((batch) => received.push(batch));
-    await open({ kind: 'quick', mode: 'ffa' }, 'İki');
+    await open('İki');
     await until(
       () => received.some((batch) => batch.events.some((event) => event.kind === 'joined')),
       'katılma olayı',
     );
     stop();
     const count = received.length;
-    await open({ kind: 'quick', mode: 'ffa' }, 'Üç');
+    await open('Üç');
     await until(() => first.room.state.players.size === 3, 'üçüncü oyuncu');
     expect(received).toHaveLength(count);
   });
 
   it('leave kapanışı bildirir ve ikinci leave bekletmez', async () => {
-    const session = await open({ kind: 'quick', mode: 'ffa' });
+    const session = await open();
     const seen: ConnectionStatus[] = [];
     session.onStatus((status) => seen.push(status));
     await session.leave();
@@ -143,7 +112,7 @@ describe('OnlineSession olaylar ve durum', () => {
   });
 
   it('kopan bağlantı reconnecting olur, geri gelince live olur ve kayıt korunur', async () => {
-    const session = await open({ kind: 'quick', mode: 'ffa' });
+    const session = await open();
     const record = session.self;
     const seen: ConnectionStatus[] = [];
     session.onStatus((status) => seen.push(status));
@@ -158,7 +127,7 @@ describe('OnlineSession olaylar ve durum', () => {
   });
 
   it('dispose dinleyicileri bırakır ve odadan ayrılır', async () => {
-    const session = await open({ kind: 'quick', mode: 'ffa' });
+    const session = await open();
     const listener = vi.fn();
     session.onEvents(listener);
     session.onStatus(listener);
@@ -200,7 +169,7 @@ function emptyRoom() {
   const lobby = {
     joinOrCreate: vi.fn(() => Promise.resolve(room)),
   } as unknown as Lobby;
-  return { room: room as unknown as Room<MatchSnapshot>, raw: room, lobby };
+  return { room: room as unknown as Room<WorldSnapshot>, raw: room, lobby };
 }
 
 describe('OnlineSession yerleşme', () => {
@@ -210,7 +179,6 @@ describe('OnlineSession yerleşme', () => {
       OnlineSession.open({
         endpoint: 'http://127.0.0.1:1',
         name: 'A',
-        request: { kind: 'quick', mode: 'ffa' },
         lobby,
         settleTimeoutMs: 20,
       }),
@@ -226,7 +194,6 @@ describe('OnlineSession yerleşme', () => {
         OnlineSession.open({
           endpoint: 'http://127.0.0.1:1',
           name: 'A',
-          request: { kind: 'quick', mode: 'ffa' },
           ...(model === undefined ? {} : { model }),
           lobby,
           settleTimeoutMs: 5,
@@ -236,14 +203,14 @@ describe('OnlineSession yerleşme', () => {
     await join();
     expect(lobby.joinOrCreate).toHaveBeenNthCalledWith(
       1,
-      ROOM.match,
-      { name: 'A', model: 2, mode: 'ffa' },
+      ROOM.world,
+      { name: 'A', model: 2 },
       expect.anything(),
     );
     expect(lobby.joinOrCreate).toHaveBeenNthCalledWith(
       2,
-      ROOM.match,
-      { name: 'A', model: 0, mode: 'ffa' },
+      ROOM.world,
+      { name: 'A', model: 0 },
       expect.anything(),
     );
   });
@@ -253,7 +220,6 @@ describe('OnlineSession yerleşme', () => {
     const pending = OnlineSession.open({
       endpoint: 'http://127.0.0.1:1',
       name: 'A',
-      request: { kind: 'quick', mode: 'ffa' },
       lobby,
       settleTimeoutMs: 5000,
     });

@@ -55,7 +55,7 @@ export class EventQueue<T> {
 }
 
 /**
- * Sunucunun benzetim saatini (`MatchState.timeMs`) SDK'nın sunucu-saati eksenine bağlar. Pozlar
+ * Sunucunun benzetim saatini (`WorldState.timeMs`) SDK'nın sunucu-saati eksenine bağlar. Pozlar
  * SDK'da yama kodlama anıyla (`clock.lastServerTime`) damgalanır; olaylar ise benzetim saatiyle
  * gelir. Yama başına bir (benzetim, sunucu) çifti gözlenir ve fark üstel ortalamayla izlenir.
  */

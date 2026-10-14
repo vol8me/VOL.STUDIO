@@ -3,9 +3,10 @@ import { ONLINE_VIEW } from '@/config/onlineView';
 import type { Hud } from '@/hud/Hud';
 import { OnlinePanel, teamColor } from '@/hud/OnlinePanel';
 import type { NetEvent } from '@/network/events';
-import { feedLine, readMatch, type FeedLine } from '@/network/matchView';
+import { NO_TEAM } from '@/network/schema';
 import { OnlineWorld } from '@/network/OnlineWorld';
 import type { OnlineSession } from '@/network/OnlineSession';
+import { feedLine, readWar, type FeedLine } from '@/network/warView';
 import { idleCommand } from '@/sim/command';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import type { SimEvent } from '@/sim/events';
@@ -24,8 +25,8 @@ function isSimEvent(event: NetEvent): event is SimEvent {
   return (
     event.kind !== 'joined' &&
     event.kind !== 'left' &&
-    event.kind !== 'matchStart' &&
-    event.kind !== 'matchEnd'
+    event.kind !== 'zone' &&
+    event.kind !== 'warWon'
   );
 }
 
@@ -100,8 +101,9 @@ export class OnlineDriver implements WorldDriver {
   drainEvents(out: SimEvent[]): SimEvent[] {
     this.batch.length = 0;
     const selfId = this.player.id;
+    const selfFaction = this.player.team ?? NO_TEAM;
     for (const event of this.world.drainEvents(this.batch)) {
-      const line = feedLine(event, selfId, (id) => this.world.nameOf(id));
+      const line = feedLine(event, selfId, selfFaction, (id) => this.world.nameOf(id));
       if (line) this.pending.push(line);
       if (isSimEvent(event)) out.push(event);
     }
@@ -139,7 +141,7 @@ export class OnlineDriver implements WorldDriver {
     this.panelDueMs = nowMs + ONLINE_VIEW.panelIntervalMs;
     const session = this.session;
     const { drift } = this.world.pilot;
-    panel.update(readMatch(session.room.state, this.player.id), {
+    panel.update(readWar(session.room.state, this.player.id), {
       status: session.status,
       pingMs: session.pingMs,
       jitterMs: session.jitterMs,
@@ -159,7 +161,6 @@ export class OnlineDriver implements WorldDriver {
 
   private *tagFrames(): Generator<TagFrame> {
     const ownId = this.player.id;
-    const teams = this.session.room.state.mode === 'teams';
     for (const vehicle of this.sim.vehicles) {
       const frame = tankFrame(vehicle.chassis, 0);
       const vitality = vehicle.vitality;
@@ -169,12 +170,7 @@ export class OnlineDriver implements WorldDriver {
         x: frame.x,
         y: frame.y,
         name: this.world.nameOf(vehicle.id) ?? '',
-        color:
-          teams && team !== undefined
-            ? team
-            : vehicle.id === ownId
-              ? ONLINE_VIEW.colors.self
-              : ONLINE_VIEW.colors.foe,
+        color: vehicle.id === ownId ? ONLINE_VIEW.colors.self : (team ?? ONLINE_VIEW.colors.foe),
         health: vitality.health / vitality.maxHealth,
         alive: vitality.alive,
         protected: vitality.protectionRemainingMs > 0,

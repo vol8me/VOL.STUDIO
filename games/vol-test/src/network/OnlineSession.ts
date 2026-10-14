@@ -1,17 +1,10 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { JoinError, Predict, createLobby, type Lobby, type Room } from '@volstudio/network/client';
-import { normalizeRoomCode } from '@volstudio/network/protocol';
 import { NETWORK } from '@/config/network';
 import { EVENT_MESSAGE, type EventBatch } from './events';
 import { ROOM } from './rooms';
-import { MATCH_SCHEMA, type MatchMode, type MatchSnapshot, type PlayerSnapshot } from './schema';
+import { WORLD_SCHEMA, type WorldSnapshot, type PlayerSnapshot } from './schema';
 import { ServerTimeline } from './timeline';
-
-/** Oyuncunun istediği katılım biçimi. */
-export type OnlineRequest =
-  | { readonly kind: 'quick'; readonly mode: MatchMode }
-  | { readonly kind: 'create'; readonly code: string }
-  | { readonly kind: 'join'; readonly code: string };
 
 /** `reconnecting` bağlantı koptuğunda Colyseus'un yeniden bağlanmayı denediği süredir. */
 export type ConnectionStatus = 'live' | 'reconnecting' | 'closed';
@@ -19,7 +12,8 @@ export type ConnectionStatus = 'live' | 'reconnecting' | 'closed';
 export interface SessionOptions {
   readonly endpoint: string;
   readonly name: string;
-  readonly request: OnlineRequest;
+  /** İstenen cephe (`WAR.factions` indeksi); sunucu dengeyi bozacaksa kendi seçer. */
+  readonly faction?: number;
   /** Seçilen aracın `VEHICLE_IDS` indeksi; verilmezse ilk araçla katılır. */
   readonly model?: number;
   /** Testte sahte eşleştirici; verilmezse `endpoint` için gerçek istemci kurulur. */
@@ -33,7 +27,7 @@ const DEFAULT_SETTLE_MS = 5000;
 type Listener<T> = (value: T) => void;
 
 /**
- * Bir maça bağlı oturum. Phaser'dan bağımsızdır: oda, öngörü sürücüsü, sunucu zaman ekseni,
+ * Savaş dünyasına bağlı oturum. Phaser'dan bağımsızdır: oda, öngörü sürücüsü, sunucu zaman ekseni,
  * bağlantı durumu ve olay dağıtımı burada toplanır; sahne yalnız bunu okur. Oturum bir kez
  * `dispose` edildikten sonra kullanılmaz.
  */
@@ -46,12 +40,12 @@ export class OnlineSession {
   private readonly eventListeners = new Set<Listener<EventBatch>>();
   private readonly scope = new DisposableScope();
 
-  private constructor(readonly room: Room<MatchSnapshot>) {
+  private constructor(readonly room: Room<WorldSnapshot>) {
     this.predict = Predict.get(room, {
       name: 'vol-test',
       delay: NETWORK.interpolationDelayMs,
     });
-    const stateChange = (state: MatchSnapshot): void => {
+    const stateChange = (state: WorldSnapshot): void => {
       this.timeline.observe(state.timeMs, room.clock.lastServerTime());
     };
     room.onStateChange(stateChange);
@@ -92,19 +86,14 @@ export class OnlineSession {
     return new OnlineSession(room);
   }
 
-  private static connect(lobby: Lobby, options: SessionOptions): Promise<Room<MatchSnapshot>> {
-    const { request, name, model = 0 } = options;
-    if (request.kind === 'quick')
-      return lobby.joinOrCreate(ROOM.match, { name, model, mode: request.mode }, MATCH_SCHEMA);
-    const code = normalizeRoomCode(request.code);
-    if (code === null) return Promise.reject(new JoinError('code'));
-    return request.kind === 'create'
-      ? lobby.create(ROOM.private, { name, model, code }, MATCH_SCHEMA)
-      : lobby.join(ROOM.private, { name, model, code }, MATCH_SCHEMA);
+  private static connect(lobby: Lobby, options: SessionOptions): Promise<Room<WorldSnapshot>> {
+    const { name, model = 0, faction } = options;
+    const join = faction === undefined ? { name, model } : { name, model, faction };
+    return lobby.joinOrCreate(ROOM.world, join, WORLD_SCHEMA);
   }
 
   /** İlk durum gelip kayıt görünene dek bekler; oda önce kapanır ya da süre dolarsa `failed`. */
-  private static settle(room: Room<MatchSnapshot>, timeoutMs: number): Promise<void> {
+  private static settle(room: Room<WorldSnapshot>, timeoutMs: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const present = (): boolean => room.state.players.get(room.sessionId) !== undefined;
       const finish = (error?: JoinError): void => {
@@ -137,11 +126,6 @@ export class OnlineSession {
   /** Kendi oyuncu kaydı; sunucu kaydı kopmada da tutar (`connected` yalnız bayrağı değiştirir). */
   get self(): PlayerSnapshot | undefined {
     return this.room.state.players.get(this.room.sessionId);
-  }
-
-  /** Özel odanın kodu; herkese açık odada boş. */
-  get code(): string {
-    return this.room.state.code;
   }
 
   /** Yumuşatılmış gidiş-dönüş gecikmesi (ms). */

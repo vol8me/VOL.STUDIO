@@ -10,7 +10,7 @@ import type { DriverContext } from './WorldDriver';
 
 const ERROR_KEYS = {
   protocol: 'voltest:online.error.protocol',
-  code: 'voltest:online.error.code',
+  code: 'voltest:online.error.failed',
   full: 'voltest:online.error.full',
   'not-found': 'voltest:online.error.notFound',
   unreachable: 'voltest:online.error.unreachable',
@@ -31,7 +31,7 @@ export function sessionEndpoint(): string {
 }
 
 /**
- * Lobiyi kurar (açmaz). Seçim sunucuya bağlanır; oturum kurulunca sahne çevrimiçi sürücüyle yeniden
+ * Katılım panelini kurar (açmaz). Seçim sunucuya bağlanır; oturum kurulunca sahne çevrimiçi sürücüyle yeniden
  * başlar. Vazgeçilirse ya da sahne kapanırsa geç gelen oturum bırakılır (odada hayalet bırakmaz).
  */
 export function createLobby(hud: Hud, context: DriverContext): LobbyPanel {
@@ -63,7 +63,7 @@ export function createLobby(hud: Hud, context: DriverContext): LobbyPanel {
         endpoint: sessionEndpoint(),
         name: choice.name,
         model: modelOf(VEHICLES[services?.settings.get().vehicle ?? STRIKER.id]),
-        request: choice.request,
+        faction: choice.faction,
       });
     } catch (error) {
       if (alive && mine === attempt) lobby.showError(lobbyErrorKey(error));

@@ -531,7 +531,7 @@ describe('WorldScene sürücüleri', () => {
     expect(parent.querySelector('.vt-lobby')).toBeNull();
     frame({ press: ['pause'] });
     const open = parent.querySelector<HTMLButtonElement>('[data-testid="pause-online"]')!;
-    expect(open.textContent).toBe('Çok oyunculu');
+    expect(open.textContent).toBe('Savaşa katıl');
     open.click();
     await vi.waitFor(() =>
       expect(parent.querySelector('.vt-lobby.vol-modal--visible')).not.toBeNull(),

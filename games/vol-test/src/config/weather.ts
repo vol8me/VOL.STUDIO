@@ -30,7 +30,7 @@ export const WEATHER = {
   surface: {
     stepMs: 100,
     cellSize: 128,
-    maxCells: 4096,
+    maxCells: 9216,
     maxPuddleDepth: 0.035,
     maxSnowDepth: 0.3,
     rainMetresPerSecond: 0.00035,

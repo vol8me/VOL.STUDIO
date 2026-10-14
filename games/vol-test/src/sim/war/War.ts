@@ -35,6 +35,8 @@ export interface WarOptions {
   readonly seed?: number;
   /** `false`: bot nüfusu kendiliğinden tutulmaz (testler botları elle ekler). */
   readonly populate?: boolean;
+  /** Cephe başına hedef araç sayısı; verilmezse `WAR.population.perFaction`. */
+  readonly perFaction?: number;
 }
 
 export interface JoinRequest {
@@ -81,7 +83,7 @@ export class War {
     this.candidates = Array.from({ length: WAR.factions }, (_, faction) =>
       spawnCandidates(sim.world, faction),
     );
-    this.director = new BotDirector(options.seed ?? 1);
+    this.director = new BotDirector(options.seed ?? 1, options.perFaction);
   }
 
   /** Savaşın saati (ms): yalnız `step` ile ilerler. */

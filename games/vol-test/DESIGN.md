@@ -435,27 +435,35 @@ verilir; dinleme yapıldığı iddiası teknik sonuçtan türetilmez.
 
 ## Çok oyunculu
 
-Çevrimiçi oyun opt-in'dir: duraklatma menüsündeki "Çok oyunculu" lobiyi açar, çevrimdışı açılış ağ
-kodunu yüklemez (`online-*.js` ayrı parçadır, bütçesi `quality.json`'dadır). Sunucu `server/`
+Çevrimiçi oyun opt-in'dir: duraklatma menüsündeki "Savaşa katıl" katılım panelini açar, çevrimdışı
+açılış ağ kodunu yüklemez (`online-*.js` ayrı parçadır, bütçesi `quality.json`'dadır). Sunucu `server/`
 altındadır (`build:server` çıktısı Node ile başlar) ve [network](../../network/README.md)
 çalışma zamanının üstünde Colyseus odası koşar; sunucu adresi `?server=host:port`, derleme zamanı
 `VITE_VOLTEST_SERVER` ya da geliştirme adresidir.
 
-| Parça                                             | Sorumluluk                                                          |
-| ------------------------------------------------- | ------------------------------------------------------------------- |
-| `server/MatchRoom.ts`                             | Tek yetkili dünya: 60 Hz adım, 20 Hz yama, skor, doğma, maç döngüsü |
-| `server/InputPacer.ts`                            | Girdi titreşim tamponu; geç girdi sayılı boşta adım olur            |
-| `src/network/OnlineSession.ts`                    | Eşleştirme, bağlantı durumu, ping/titreşim, olay dağıtımı           |
-| `src/network/PredictedPilot.ts`, `OnlineWorld.ts` | Kendi aracın öngörüsü, uzlaştırma, uzak araç ara değeri             |
-| `src/scenes/world/`                               | `WorldDriver` sözleşmesi: çevrimdışı ve çevrimiçi sürücü, lobi      |
-| `src/hud/LobbyPanel.ts`, `OnlinePanel.ts`         | CORE Modal/Input/DataTable/EventLog ile lobi, tablo, akış           |
+| Parça                                             | Sorumluluk                                                                   |
+| ------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `server/WorldRoom.ts`                             | Kalıcı savaş dünyası: 60 Hz adım, 20 Hz yama, `War` nesnesini sarar          |
+| `server/index.ts`                                 | Oda kaydı ve birincil dünya (insan kalmasa da kapanmaz)                      |
+| `server/InputPacer.ts`                            | Girdi titreşim tamponu; geç girdi sayılı boşta adım olur                     |
+| `src/network/OnlineSession.ts`                    | Bağlanma, bağlantı durumu, ping/titreşim, olay dağıtımı                      |
+| `src/network/PredictedPilot.ts`, `OnlineWorld.ts` | Kendi aracın öngörüsü, uzlaştırma, uzak araç ara değeri                      |
+| `src/network/warView.ts`                          | Şemadan savaş görüntüsü (cepheler, bölgeler, tablo) ve bildirim akışı satırı |
+| `src/scenes/world/`                               | `WorldDriver` sözleşmesi: çevrimdışı ve çevrimiçi sürücü, katılım            |
+| `src/hud/LobbyPanel.ts`, `OnlinePanel.ts`         | CORE Modal/Input/DataTable/EventLog ile katılım paneli, puan, tablo, akış    |
 
-Oda herkese açık (mod başına, 12 araç) ya da kodlu özel (en çok 8) olur; kip herkes-tek ya da iki
-takımdır. Skor sınırına ulaşan maç biter, ara vermeden sonra skorlar sıfırlanır ve herkes yeniden
-doğar. Doğan araç kısa süre korumalıdır ve düşmandan uzağa konur. Kurallar yalnız `src/config/network.ts`
-içindedir; testler kısa maçı alt sınıfla verir, ağdan değiştirilemez.
+Maç, özel oda ve oda kodu yoktur: tek tür oda vardır, kalıcı savaş dünyası. Sunucu açıldığında birincil
+dünya kurulur (`createPrimaryWorld`); insan kalmasa da kapanmaz ve botlar savaşı sürdürür. Oyuncular
+`joinOrCreate` ile bu dünyaya düşer; dünya `NETWORK.maxPlayers` insana ulaşınca Colyseus bir taşma
+dünyası kurar, taşma dünyası son insan ayrılınca kapanır. Savaşın kuralı (bölgeler, cepheler, doğma, bot
+nüfusu) saf `War` nesnesindedir; oda yalnız ağ yaşamını (katılım, girdi tamponu, durum yayını, olay
+dağıtımı) taşır. Katılım seçenekleri `name`, `model` (`VEHICLE_IDS` indeksi) ve isteğe bağlı `faction`'dır;
+tanımsız araç ya da aralık dışı cephe protokol ihlali olarak reddedilir, istenen cephe insan dengesini
+bozacaksa sunucu kendi seçer. Botlar da oyuncu kaydında görünür (`bot` alanı: skor tablosu, harita).
+Kurallar yalnız `src/config/network.ts` ve `src/config/war.ts` içindedir; testler dünya seçeneklerini
+(`perFaction`, tohum) `createRooms`a verir, ağdan değiştirilemez.
 
-Sunucu yalnız niyeti (`TankInput`) kabul eder; poz, hasar, skor ve ateş sonucu onundur. İstemci her
+Sunucu yalnız niyeti (`TankInput`) kabul eder; poz, hasar, skor, bölge ve ateş sonucu onundur. İstemci her
 sabit adımda aynı `Simulation` adımıyla kendi aracını öngörür, Colyseus `Predict` sunucu durumunu
 bit bit alıp bekleyen girdileri yeniden oynatır (sapma `data-drift-peak` ile ölçülür). Uzak araçlar
 `interpolationDelayMs` geriden iki yama arasında ara değerlenir; olaylar aynı görüntü zamanına
@@ -469,13 +477,18 @@ ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağ�
   önceki veriyi korur; "Ayrıl" sonrası eski çevrimiçi sürücü fabrikası ölü oturumla yeniden kurulurdu.
 - Bilerek ayrılma `leave(true)` ile hemen düşer; kopma 15 sn yeniden bağlanma ister ve çubukta
   uyarı verir; bağlantı kapanırsa oyuncu çevrimdışı dünyaya `online.lost` bildirimiyle döner.
+- Oyuncu araçları da cepheye bağlıdır (`Vehicle.team`): aynı cepheden ateş hasar vermez, kendi
+  kendine hasar da yoktur.
+- Savaş kazanılınca (`warWon`) puanlar ve bölgeler sıfırlanır; oyuncular çıkarılmaz, dünya sürer.
 
 Ölçüm ve sınırlar: sapma ölçümü SDK'da yalnız bir eşik verilince açılır (`NETWORK.divergenceTolerance`);
 eşiksiz "sapma 0" hiçbir şey söylemez. E2E yetkili aracı kaydırıp sapmanın görünmesini ve istemcinin
 yakınsamasını doğrular. Gerçek sunucuya karşı düz sürüş + fren denemesinde (yerel döngü) iki motorda
 oturum boyunca en büyük sapma 0–0,05 birimdir (7 koşu; `data-drift-max`). Bu, manevra, çarpışma ve
 ateşte cihazlar arası determinizm kanıtı değildir. Gecikme telafisi yoktur: isabet, sunucunun o adımdaki dünyasına göredir.
-Paketli Windows/Android ağ kabulü ve insan sunum beğenisi yapılmamıştır.
+Tüm durum her yamada her istemciye gider (ilgi alanı süzmesi yoktur); 24 insan + bot nüfusunda bant
+genişliği ölçülmemiştir ve kapasite iddiası yapılmaz. Paketli Windows/Android ağ kabulü ve insan sunum
+beğenisi yapılmamıştır.
 
 ## Doğrulama
 
@@ -492,7 +505,7 @@ koşulları değiştirmez ve ölçüm seçimi kayda yazılmaz.
 E2E gönderilen build'i Chromium ve WebKit'te klavye, sanal kol ve dokunmatik
 girdiyle açar; ayarlar, senaryolar, duraklatma, hava görünümü ve temiz konsol
 sınanır. Çok oyunculu E2E gerçek Colyseus sunucusunu test işleminde kurar (iki sayfa, bir Node
-gözlemcisi: eşleşme, özel oda, sürüş/uzlaştırma, ateş, ölüm/doğuş, ayrılma, ulaşılamayan sunucu); ölümü
+gözlemcisi: ortak dünya, cephe seçimi, botlar, sürüş/uzlaştırma, ateş, ölüm/doğuş, ayrılma, ulaşılamayan sunucu); ölümü
 sunucudaki yetkili `Simulation`a hasar vererek tetikler. Kapsam, bundle ve algoritmik ölçekleme eşikleri kök `quality.json`
 içindedir. Gerçek cihaz performansı, görsel ve haptik kabulü otomatik testlerden
 ayrı kalır; ses yayın kabulü teknik QA sözleşmesidir. Açık kabul işleri kök [TODO.md](../../TODO.md) içinde izlenir.

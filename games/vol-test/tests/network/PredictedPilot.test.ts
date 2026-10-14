@@ -6,7 +6,7 @@ import { GAME } from '@/config/game';
 import { Vehicle } from '@/sim/entities/Vehicle';
 import { WORLD } from '@/config/world';
 import { PredictedPilot, type PilotPose } from '@/network/PredictedPilot';
-import { NO_TEAM, PlayerState, type MatchSnapshot, type PlayerSnapshot } from '@/network/schema';
+import { NO_TEAM, PlayerState, type WorldSnapshot, type PlayerSnapshot } from '@/network/schema';
 import type { Launch } from '@/sim/vehicleStep';
 import { World } from '@/sim/world/World';
 import { command } from '../support/sim';
@@ -57,7 +57,7 @@ function wire(stepMs = GAME.simulationStepMs, record = recordOf()) {
   const fired = vi.fn();
   const build = () =>
     new PredictedPilot({
-      room: room as unknown as Room<MatchSnapshot>,
+      room: room as unknown as Room<WorldSnapshot>,
       predict: predict as unknown as Predict,
       self: record,
       space: new World(WORLD.width, WORLD.height, WORLD.gridStep),
@@ -91,7 +91,7 @@ describe('PredictedPilot kurulum', () => {
     const supplied = new Vehicle(record.vehicleId, STRIKER, COMBAT);
     const wired = wire();
     const pilot = new PredictedPilot({
-      room: { input: () => wired.handle } as unknown as Room<MatchSnapshot>,
+      room: { input: () => wired.handle } as unknown as Room<WorldSnapshot>,
       predict: wired.predict as unknown as Predict,
       self: wired.record,
       space: new World(WORLD.width, WORLD.height, WORLD.gridStep),

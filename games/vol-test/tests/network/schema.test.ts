@@ -2,13 +2,12 @@ import { Metadata } from '@colyseus/schema';
 import { describe, expect, it } from 'vitest';
 import {
   INPUT_RANGES,
-  MATCH_MODES,
-  MATCH_PHASES,
-  MatchState,
+  FactionState,
+  WorldState,
   NO_TEAM,
   PlayerState,
   TankInput,
-  isMatchMode,
+  ZoneState,
   toCommand,
   type TankInputFields,
 } from '@/network/schema';
@@ -24,6 +23,7 @@ const RECORD_FIELDS = [
   'model',
   'name',
   'team',
+  'bot',
   'connected',
   'kills',
   'deaths',
@@ -63,6 +63,7 @@ describe('PlayerState', () => {
     const state = new PlayerState();
     expect(state.name).toBe('');
     expect(state.team).toBe(NO_TEAM);
+    expect(state.bot).toBe(false);
     expect(state.connected).toBe(false);
     expect(state.alive).toBe(false);
     for (const key of ['vehicleId', 'kills', 'deaths', 'health', 'respawnMs', 'protectionMs']) {
@@ -78,29 +79,41 @@ describe('PlayerState', () => {
   });
 });
 
-describe('MatchState', () => {
+describe('WorldState', () => {
   it('alanlar tanımlı başlar: sayaçlar NaN olmaz', () => {
-    const state = new MatchState();
-    expect(state.phase).toBe('live');
-    expect(state.mode).toBe('ffa');
-    expect(state.code).toBe('');
-    expect(state.winner).toBe('');
+    const state = new WorldState();
     expect(state.tick).toBe(0);
     expect(state.timeMs).toBe(0);
-    expect(state.intermissionMs).toBe(0);
-    expect(state.scoreLimit).toBe(0);
     expect(state.players.size).toBe(0);
+    expect(state.zones.length).toBe(0);
+    expect(state.factions.length).toBe(0);
     state.tick++;
     state.timeMs += 1000 / 60;
     expect(Number.isFinite(state.tick + state.timeMs)).toBe(true);
   });
 
-  it('evre ve mod adları sabit kümelerdir', () => {
-    expect([...MATCH_PHASES]).toEqual(['live', 'intermission']);
-    expect([...MATCH_MODES]).toEqual(['ffa', 'teams']);
-    expect(isMatchMode('ffa')).toBe(true);
-    expect(isMatchMode('teams')).toBe(true);
-    for (const value of ['ctf', '', null, undefined, 1, {}]) expect(isMatchMode(value)).toBe(false);
+  it('maç alanları yoktur: dünya kalıcıdır', () => {
+    const fields = Object.keys(Metadata.getFields(WorldState) as Record<string, number>).sort();
+    expect(fields).toEqual(['factions', 'players', 'tick', 'timeMs', 'zones']);
+  });
+});
+
+describe('ZoneState', () => {
+  it('bölge tarafsız ve ilerlemesiz başlar', () => {
+    const zone = new ZoneState();
+    expect(zone.owner).toBe(-1);
+    expect(zone.progress).toBe(0);
+    expect(zone.contested).toBe(false);
+    expect(zone.presentFirst).toBe(0);
+    expect(zone.presentSecond).toBe(0);
+  });
+});
+
+describe('FactionState', () => {
+  it('cephe sayaçları sıfırdan başlar', () => {
+    const faction = new FactionState();
+    for (const key of ['score', 'wins', 'zones', 'vehicles', 'humans'] as const)
+      expect(faction[key], key).toBe(0);
   });
 });
 

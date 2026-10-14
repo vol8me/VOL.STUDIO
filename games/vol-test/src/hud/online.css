@@ -1,5 +1,5 @@
 /*
- * Çevrimiçi maç HUD'u. Bileşenlerin görünümü CORE'undur; bu dosya konum ve aralık verir. Metin
+ * Çevrimiçi savaş HUD'u. Bileşenlerin görünümü CORE'undur; bu dosya konum ve aralık verir. Metin
  * taşıyan bölgeler UI yüzey tokenıyla zeminlenir (hud.css ile aynı kural). Panel dokunmayı
  * yakalamaz; tablo ve akış yalnız okunur.
  */
@@ -38,8 +38,27 @@
   gap: 8px;
 }
 
-.vt-online__scores[hidden] {
-  display: none;
+/* Bölge rozetleri: sahibin rengi dolgu, tartışmalı bölge çerçevelidir. */
+.vt-online__zones {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.vt-online__zone {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--vol-ui-border-soft);
+  border-radius: 2px;
+  background: transparent;
+}
+
+.vt-online__zone[data-contested='true'] {
+  border-color: var(--vol-ui-warning-solid);
+  box-shadow: 0 0 0 1px var(--vol-ui-warning-solid);
+}
+
+.vt-online__score[data-own='true'] {
+  font-weight: 700;
 }
 
 .vt-online__score,
@@ -96,39 +115,6 @@
   font-weight: 700;
 }
 
-/* Maç sonu: sonuç ve tam tablo ekranın ortasındadır. */
-.vt-online--result .vt-online__board {
-  top: 50%;
-  width: min(460px, 90vw);
-  font-size: 14px;
-  line-height: 20px;
-  transform: translate(-50%, 0);
-}
-
-.vt-online__result {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  gap: 4px;
-  justify-items: center;
-  min-width: min(460px, 90vw);
-  padding: 10px 16px;
-  border: 1px solid var(--vol-ui-border-soft);
-  border-radius: var(--vol-radius-md);
-  background: var(--vol-ui-overlay-panel);
-  text-align: center;
-  transform: translate(-50%, calc(-100% - 12px));
-}
-
-.vt-online__result[hidden] {
-  display: none;
-}
-
-.vt-online__result > * {
-  margin: 0;
-}
-
 .vt-online__notice {
   position: absolute;
   top: 30%;
@@ -163,7 +149,7 @@
 /* Akış ve skor tablosu ancak yeterli alan varken gösterilir; bağlantı çubuğu her zaman görünür. */
 @media (height <= 520px), (width <= 760px) {
   .vt-online__feed,
-  .vt-online:not(.vt-online--result) .vt-online__board {
+  .vt-online__board {
     display: none;
   }
 
@@ -173,12 +159,7 @@
   }
 }
 
-/* Lobi: CORE modalının içeriği dikey akar; yalnız kod alanı ve durum satırı oyuna özgüdür. */
-.vt-lobby__code {
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-}
-
+/* Katılım paneli: CORE modalının içeriği dikey akar; yalnız durum satırı oyuna özgüdür. */
 .vt-lobby__status {
   min-height: 1.5em;
   margin: 0;

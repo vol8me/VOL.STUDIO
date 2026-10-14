@@ -26,9 +26,9 @@ afterEach(async () => {
   server = undefined;
 });
 
-async function join(mode: 'ffa' | 'teams' = 'ffa', name = 'Pilot'): Promise<OnlineSession> {
+async function join(name = 'Pilot'): Promise<OnlineSession> {
   server ??= await startServer();
-  const session = await openSession(server, { kind: 'quick', mode }, name);
+  const session = await openSession(server, name);
   sessions.push(session);
   return session;
 }
@@ -72,17 +72,17 @@ function cruise(session: OnlineSession): void {
 
 describe('RemoteTanks kurulum', () => {
   it('yalnız diğer oyuncuları ekler ve kimliği sunucununkiyle eşler', async () => {
-    const first = await join('ffa', 'Bir');
+    const first = await join('Bir');
     const sim = viewSim();
     const remotes = new RemoteTanks(first.room, first.predict, sim);
     expect(remotes.count).toBe(0);
-    const second = await join('ffa', 'İki');
+    const second = await join('İki');
     await until(() => remotes.count === 1, 'uzak araç');
     const vehicle = remotes.vehicle(second.self!.vehicleId)!;
     expect(vehicle).toBeDefined();
     expect(sim.vehicle(second.self!.vehicleId)).toBe(vehicle);
     expect(sim.vehicle(first.self!.vehicleId)).toBeUndefined();
-    expect(vehicle.team).toBeNull();
+    expect(vehicle.team).toBe(second.self!.team);
     expect(remotes.vehicle(first.self!.vehicleId)).toBeUndefined();
     remotes.dispose();
   });
@@ -96,9 +96,9 @@ describe('RemoteTanks kurulum', () => {
     remotes.dispose();
   });
 
-  it('takımlı maçta takım numarasını taşır', async () => {
-    const first = await join('teams');
-    const second = await join('teams');
+  it('cephe numarasını taşır', async () => {
+    const first = await join('Bir');
+    const second = await join('İki');
     const remotes = await observe(first);
     const vehicle = remotes.vehicle(second.self!.vehicleId)!;
     expect(vehicle.team).toBe(second.self!.team);
@@ -135,8 +135,8 @@ describe('RemoteTanks kurulum', () => {
 
 describe('RemoteTanks ara değer', () => {
   it('uzak araç sunucudaki konuma doğru, onu aşmadan ilerler', async () => {
-    const watcher = await join('ffa', 'İzleyici');
-    const driver = await join('ffa', 'Sürücü');
+    const watcher = await join('İzleyici');
+    const driver = await join('Sürücü');
     const remotes = await observe(watcher);
     frames(watcher, remotes);
     const vehicle = remotes.vehicle(driver.self!.vehicleId)!;
@@ -159,14 +159,14 @@ describe('RemoteTanks ara değer', () => {
   });
 
   it('yeniden doğma sıçraması süzülmez, ışınlanır', async () => {
-    const watcher = await join('ffa', 'İzleyici');
-    const target = await join('ffa', 'Hedef');
+    const watcher = await join('İzleyici');
+    const target = await join('Hedef');
     const remotes = await observe(watcher);
     frames(watcher, remotes);
     const vehicle = remotes.vehicle(target.self!.vehicleId)!;
     await until(() => watcher.room.state.timeMs > 400, 'yama akışı');
     const local = serverRoom(target.room).vehicleOf(target.room.sessionId)!;
-    const far = { x: local.chassis.x + NETWORK.seatRadius * 2, y: local.chassis.y };
+    const far = { x: local.chassis.x + NETWORK.snapDistance * 2, y: local.chassis.y };
     local.chassis.place(far.x, far.y, 0);
     const samples: number[] = [];
     const watch = setInterval(() => samples.push(vehicle.chassis.x), 4);
@@ -175,7 +175,7 @@ describe('RemoteTanks ara değer', () => {
     clearInterval(watch);
     // Ara değerli kayma olsaydı aradaki konumlar (yarı yol) görülürdü.
     const midway = samples.filter(
-      (x) => Math.abs(x - far.x) > 40 && Math.abs(x - (far.x - NETWORK.seatRadius * 2)) > 40,
+      (x) => Math.abs(x - far.x) > 40 && Math.abs(x - (far.x - NETWORK.snapDistance * 2)) > 40,
     );
     expect(midway).toEqual([]);
     remotes.dispose();

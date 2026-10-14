@@ -3,11 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DisposableScope, VirtualActionSource, VirtualStickSource } from '@volstudio/core';
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
+import { WAR } from '@/config/war';
 import { WORLD } from '@/config/world';
 import { EFFECT_LEVELS, type EffectLevel, type EffectProfile } from '@/config/quality';
 import { Hud } from '@/hud/Hud';
 import type { TestAction } from '@/input/bindings';
-import type { OnlineRequest, OnlineSession } from '@/network/OnlineSession';
+import type { OnlineSession } from '@/network/OnlineSession';
 import { OnlineDriver, ONLINE_SCENARIO } from '@/scenes/world/OnlineDriver';
 import type { PlayerControls } from '@/scenes/world/PlayerControls';
 import type { DriverContext, WorldStartData } from '@/scenes/world/WorldDriver';
@@ -51,12 +52,9 @@ interface Rig {
   run: (paused?: () => boolean) => void;
 }
 
-async function rig(
-  request: OnlineRequest = { kind: 'quick', mode: 'ffa' },
-  name = 'Pilot',
-): Promise<Rig> {
+async function rig(name = 'Pilot', faction?: number): Promise<Rig> {
   server ??= await startServer();
-  const session = await openSession(server, request, name);
+  const session = await openSession(server, name, faction);
   const scope = new DisposableScope();
   scopes.push(scope);
   const fake = fakeScene();
@@ -199,14 +197,14 @@ describe('OnlineDriver sürüş', () => {
     setCommand(command());
     const fired = events.find((event) => event.kind === 'fired');
     expect(fired).toMatchObject({ source: driver.player.id });
-    const roomLife = new Set(['joined', 'left', 'matchStart', 'matchEnd']);
+    const roomLife = new Set(['joined', 'left', 'zone', 'warWon']);
     expect(events.filter((event) => roomLife.has(event.kind))).toEqual([]);
   });
 });
 
 describe('OnlineDriver panel ve etiket', () => {
   it('HUD parçasını bağlar, skor tablosunu doldurur ve oyuncu katılımını akışa yazar', async () => {
-    const first = await rig({ kind: 'quick', mode: 'ffa' }, 'Birinci');
+    const first = await rig('Birinci');
     first.run();
     await until(
       () => byId(first.parent, 'online-board').textContent?.includes('Birinci') === true,
@@ -215,13 +213,12 @@ describe('OnlineDriver panel ve etiket', () => {
     expect(byId(first.parent, 'online-board').textContent).toContain(
       i18next.t('voltest:online.board.you', { name: 'Birinci' }),
     );
-    expect(byId(first.parent, 'online-room').textContent).toBe(
-      i18next.t('voltest:online.publicRoom'),
-    );
+    expect(byId(first.parent, 'online-zones').children).toHaveLength(WAR.zones.length);
+    expect(byId(first.parent, 'online-factions').children).toHaveLength(WAR.factions);
 
     // İkinci oyuncu aynı odaya düşer: ilkinin akışında katılma, tablosunda iki satır olur.
     const room = serverRoom(first.session.room);
-    const second = await openSession(server!, { kind: 'quick', mode: 'ffa' }, 'İkinci');
+    const second = await openSession(server!, 'İkinci');
     try {
       await until(() => room.state.players.size === 2, 'iki oyuncu');
       await until(
@@ -239,10 +236,10 @@ describe('OnlineDriver panel ve etiket', () => {
     }
   });
 
-  it('her araca ad etiketi çizer: kendisi, rakipler ve takım renkleri', async () => {
-    const mine = await rig({ kind: 'quick', mode: 'ffa' }, 'Ben');
+  it('her araca ad etiketi çizer: kendisi yeşil, diğerleri cephe renginde', async () => {
+    const mine = await rig('Ben', 0);
     mine.run();
-    const other = await openSession(server!, { kind: 'quick', mode: 'ffa' }, 'Rakip');
+    const other = await openSession(server!, 'Rakip', 1);
     try {
       await until(() => mine.driver.sim.vehicles.length === 2, 'iki araç');
       await until(
@@ -254,26 +251,35 @@ describe('OnlineDriver panel ve etiket', () => {
         texts.map((text) => [text.args[2] as string, (text.args[3] as { color: string }).color]),
       );
       expect(colors.get('Ben')).toBe('#52f5cf');
-      expect(colors.get('Rakip')).toBe('#e8644a');
+      expect(colors.get('Rakip')).toBe('#4aa8e8');
     } finally {
       other.dispose();
     }
   });
 
-  it('takımlı maçta etiket rengi takımdan gelir', async () => {
-    const mine = await rig({ kind: 'quick', mode: 'teams' }, 'Takımcı');
+  it('düşman ve dost etiketi cephe rengini taşır', async () => {
+    const mine = await rig('Takımcı', 1);
     mine.run();
-    await until(() => mine.fake.created.some((object) => object.kind === 'text'), 'etiket');
-    const text = mine.fake.created.find((object) => object.kind === 'text')!;
-    const team = mine.driver.player.team;
-    expect(team).not.toBeNull();
-    const expected = team === 0 ? '#e8964a' : '#4aa8e8';
-    await until(() => (text.args[3] as { color: string }).color === expected, 'takım rengi');
+    const ally = await openSession(server!, 'Dost', 1);
+    try {
+      await until(() => mine.driver.sim.vehicles.length === 2, 'iki araç');
+      // Aynı cepheden iki oyuncu: dengeyi bozmayacağı sürece istenen cephe verilir.
+      expect(mine.driver.player.team).toBe(1);
+      await until(
+        () => mine.fake.created.some((object) => object.args[2] === 'Dost'),
+        'dost etiketi',
+      );
+      const text = mine.fake.created.find((object) => object.args[2] === 'Dost')!;
+      const expected = ally.self!.team === 0 ? '#e8964a' : '#4aa8e8';
+      await until(() => (text.args[3] as { color: string }).color === expected, 'cephe rengi');
+    } finally {
+      ally.dispose();
+    }
   });
 });
 
 describe('OnlineDriver çıkış', () => {
-  it('Maçtan ayrıl: sunucudan ayrılır, çevrimdışı dünyaya döner ve bağlantı koptu demez', async () => {
+  it('Savaştan ayrıl: sunucudan ayrılır, çevrimdışı dünyaya döner ve bağlantı koptu demez', async () => {
     const { driver, restart, session, parent, run } = await rig();
     run();
     await until(() => session.self !== undefined, 'oturum');

@@ -38,7 +38,8 @@ weather clear/dust/rain/snow olabilir. Sorgusuz oturum normal takvimdir.
 
 ## Çok oyunculu
 
-Duraklat → "Çok oyunculu" lobiyi açar: hızlı oyun, özel oda kodu, ad ve takım/herkes-tek kipi.
+Duraklat → "Savaşa katıl" katılım panelini açar: ad ve cephe (ya da "dengeye göre"). Dünya kalıcıdır:
+sunucu açık kaldıkça iki cephe bölgeler için savaşır, botlar insan olmasa da sürdürür.
 Sunucu ayrı süreçtir; adres `?server=host:port` ile verilir (varsayılan `127.0.0.1:2567`).
 
 ```bash

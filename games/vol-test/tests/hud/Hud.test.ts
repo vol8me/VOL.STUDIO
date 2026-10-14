@@ -348,7 +348,7 @@ describe('Hud', () => {
       { id: 'leave', labelKey: 'voltest:online.leave', variant: 'danger', run: vi.fn() },
     ]);
     hud.showPause();
-    expect(find('pause-online').textContent).toBe('Çok oyunculu');
+    expect(find('pause-online').textContent).toBe('Savaşa katıl');
     expect(find('pause-leave').className).toContain('danger');
     find('pause-online').click();
     expect(run).toHaveBeenCalledOnce();
@@ -356,7 +356,7 @@ describe('Hud', () => {
     expect(onResume).not.toHaveBeenCalled();
 
     await i18next.changeLanguage('en');
-    expect(find('pause-online').textContent).toBe('Multiplayer');
+    expect(find('pause-online').textContent).toBe('Join the war');
     await i18next.changeLanguage('tr');
 
     hud.setPauseActions([{ id: 'only', labelKey: 'voltest:online.leave', run }]);

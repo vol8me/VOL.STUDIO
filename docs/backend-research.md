@@ -92,18 +92,19 @@ edilebiliyor. Mindustry'yi mutlak otorite/anti-cheat referansı saymak hatalı.
 ### Gerçek yerel prototip: neler PASS?
 
 `network/` aktif workspace paketi ve `@volstudio/network` exports'udur. `games/vol-test/server/`
-Colyseus 0.18 Node odalarını kurar: `MatchRoom` (herkese açık, moda göre eşleşir) ve `PrivateRoom`
-(5 harfli kodla). Otorite `Simulation`dır: sunucu 60 Hz sabit adımla koşar, durumu 20 Hz yamalar,
-odada 12 (özel odada 8) araç, ileti başına 1 KiB ve saniyede 240 ileti sınırı vardır. Girdi
+Colyseus 0.18 Node odasını kurar: `WorldRoom`, kalıcı savaş dünyası (sunucu açıldığında birincil
+dünya kurulur, dolarsa taşma dünyası açılır). Otorite `Simulation`dır: sunucu 60 Hz sabit adımla koşar,
+durumu 20 Hz yamalar, dünyada 24 insan ve cephe başına hedef sayıya tamamlayan botlar, ileti başına
+1 KiB ve saniyede 240 ileti sınırı vardır. Girdi
 Colyseus `defineInput` tamponundan adım başına bir kez tüketilir ve tüketilen sayı onay olarak
 döner; istemci aracı aynı adım işleviyle öngörür, SDK sunucu durumuna göre yeniden oynatır.
 
 Gerçek `startHost` sunucusu ve SDK istemcisiyle entegrasyon testleri şunları doğrular: katılım,
-ad çakışması ve temizliği, protokol reddi, mod başına oda, 13. oyuncunun ikinci odaya düşmesi,
-özel oda kurma/katılma/çakışma/eşzamanlı kuruluş, bozuk girdi, ateş olayı, ileti taşmasında
-düşürme, skor ve maç döngüsü, bağlantı kopması ve yeniden bağlanma, öngörü sapması (yerel
+ad çakışması ve temizliği, protokol reddi, 25. oyuncunun taşma dünyasına düşmesi, cephe
+dengesi ve istenen cephe, bot nüfusu, birincil dünyanın kalıcılığı, bozuk girdi, ateş olayı, ileti
+taşmasında düşürme, skor, bölge ele geçirme ve savaş zaferi, bağlantı kopması ve yeniden bağlanma, öngörü sapması (yerel
 koşuda uzlaştırmaların çoğunda düzeltme sıfırdır; sunucu girdisi geç kalırsa küçük bir düzeltme
-doğar ve testte ayrı sayılır). Ölçüm ve sınırlar `games/vol-test/tests/server/MatchRoom.test.ts`
+doğar ve testte ayrı sayılır). Ölçüm ve sınırlar `games/vol-test/tests/server/WorldRoom.test.ts`
 içindedir.
 
 Bu **üretim kabulü değildir**; şunlar NOT-RUN'dır: çok oyunculu yük ölçümü (CPU, bellek, bant,

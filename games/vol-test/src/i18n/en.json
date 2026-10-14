@@ -82,37 +82,44 @@
     "rain": "Rain",
     "snow": "Snow"
   },
+  "war": {
+    "faction": {
+      "amber": "Amber",
+      "blue": "Blue"
+    },
+    "zone": {
+      "core": "Core",
+      "outpostWest": "West Outpost",
+      "outpostEast": "East Outpost",
+      "ridgeNorth": "North Ridge",
+      "ridgeSouth": "South Ridge",
+      "frontNorth": "North Front",
+      "frontSouth": "South Front"
+    },
+    "neutral": "Neutral",
+    "contested": "Contested"
+  },
   "online": {
-    "title": "Multiplayer",
-    "leave": "Leave match",
+    "title": "Join the war",
+    "leave": "Leave the war",
     "name": "Player name",
     "namePlaceholder": "Pilot",
-    "mode": "Match type",
-    "modeKind": {
-      "ffa": "Free for all",
-      "teams": "Teams"
-    },
-    "quick": "Quick play",
-    "create": "Create private room",
-    "join": "Join room",
-    "code": "Room code",
-    "codePlaceholder": "ABCDE",
+    "faction": "Faction",
+    "factionAuto": "Balance for me",
+    "enter": "Join",
     "cancel": "Cancel",
     "connecting": "Connecting…",
     "error": {
       "protocol": "The server is incompatible with this version; update the game.",
-      "code": "The room code must be 5 letters or digits.",
-      "full": "The room is full.",
-      "notFound": "No open room has this code.",
+      "full": "The server is full.",
+      "notFound": "No open war world was found.",
       "unreachable": "Could not reach the server.",
-      "failed": "Could not join the room."
+      "failed": "Could not join the war."
     },
     "lost": "Connection lost; returned to the offline world.",
     "reconnecting": "Connection dropped — reconnecting…",
-    "room": "Room {{code}}",
-    "publicRoom": "Public room",
-    "target": "Target {{count}}",
     "ping": "{{ms}} ms",
+    "wins": "{{count}} wins",
     "board": {
       "title": "Scoreboard",
       "rank": "#",
@@ -121,26 +128,17 @@
       "deaths": "Deaths",
       "you": "{{name}} (you)",
       "away": "{{name}} (disconnected)",
+      "bot": "{{name}} (bot)",
       "empty": "No players"
     },
-    "team": {
-      "amber": "Amber team",
-      "blue": "Blue team"
-    },
-    "winner": {
-      "self": "You won!",
-      "player": "{{name}} won",
-      "team": "{{team}} won",
-      "none": "Draw"
-    },
-    "matchEnd": "Match over",
-    "next": "Next match starts in {{seconds}} s",
     "feed": {
       "joined": "{{name}} joined",
       "left": "{{name}} left",
       "kill": "{{killer}} » {{victim}}",
       "down": "{{victim}} went down",
-      "matchStart": "A new match began"
+      "zoneTaken": "{{zone}} fell to {{faction}}",
+      "zoneLost": "{{zone}} turned neutral",
+      "warWon": "{{faction}} won the war (win #{{wins}})"
     }
   }
 }

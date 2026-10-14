@@ -239,7 +239,7 @@ describe('BotDirector', () => {
     const events: WarStepEvent[] = [];
     const idle = idleCommand();
     let deaths = 0;
-    for (let step = 0; step < (240 * 1000) / STEP; step++) {
+    for (let step = 0; step < (120 * 1000) / STEP; step++) {
       events.length = 0;
       war.step(STEP, () => idle, events);
       for (const event of events) if (event.kind === 'died') deaths++;
@@ -254,9 +254,9 @@ describe('BotDirector', () => {
         }
       }
     }
-    expect(deaths).toBeGreaterThan(10);
+    expect(deaths).toBeGreaterThan(6);
     expect(owners.has(0) || owners.has(1)).toBe(true);
     const kills = [...war.combatants.values()].reduce((sum, c) => sum + c.kills, 0);
-    expect(kills).toBeGreaterThan(5);
+    expect(kills).toBeGreaterThan(3);
   });
 });

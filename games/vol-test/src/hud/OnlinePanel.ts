@@ -2,9 +2,10 @@ import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { DataTable, EventLog, Text, type DataTableColumn } from '@volstudio/core/ui';
 import { ONLINE_VIEW, PING_GRADES } from '@/config/onlineView';
-import { parseWinner, type BoardRow, type FeedLine, type MatchView } from '@/network/matchView';
+import type { MessageKey } from '@/i18n/keys';
 import type { ConnectionStatus } from '@/network/OnlineSession';
 import { NO_TEAM } from '@/network/schema';
+import type { BoardRow, FeedLine, WarView } from '@/network/warView';
 import './online.css';
 
 /** Bağlantının panele gösterilen özeti. */
@@ -29,16 +30,33 @@ function hex(color: number): string {
   return `#${color.toString(16).padStart(6, '0')}`;
 }
 
-/** Takımın çizim rengi; takımsızda `undefined`. */
+/** Cephenin çizim rengi; cepheye girmemişte `undefined`. */
 export function teamColor(team: number): number | undefined {
   return team === NO_TEAM ? undefined : ONLINE_VIEW.colors.teams[team];
 }
 
-const TEAM_KEYS = ['voltest:online.team.amber', 'voltest:online.team.blue'] as const;
+const FACTION_KEYS = ['voltest:war.faction.amber', 'voltest:war.faction.blue'] as const;
 
-function teamLabel(team: number): string {
-  const key = TEAM_KEYS[team];
-  return key ? i18next.t(key) : String(team + 1);
+const ZONE_KEYS: Readonly<Record<string, MessageKey>> = {
+  core: 'voltest:war.zone.core',
+  outpostWest: 'voltest:war.zone.outpostWest',
+  outpostEast: 'voltest:war.zone.outpostEast',
+  ridgeNorth: 'voltest:war.zone.ridgeNorth',
+  ridgeSouth: 'voltest:war.zone.ridgeSouth',
+  frontNorth: 'voltest:war.zone.frontNorth',
+  frontSouth: 'voltest:war.zone.frontSouth',
+};
+
+/** Cephenin görünen adı; bilinmeyen indeks için sıra numarası. */
+export function factionName(faction: number): string {
+  const key = FACTION_KEYS[faction];
+  return key ? i18next.t(key) : String(faction + 1);
+}
+
+/** Bölgenin görünen adı; bilinmeyen kimlik için kimliğin kendisi. */
+export function zoneName(id: string): string {
+  const key = ZONE_KEYS[id];
+  return key ? i18next.t(key) : id;
 }
 
 function feedText(line: FeedLine): string {
@@ -51,8 +69,18 @@ function feedText(line: FeedLine): string {
       return i18next.t('voltest:online.feed.kill', { killer: line.killer, victim: line.victim });
     case 'down':
       return i18next.t('voltest:online.feed.down', { victim: line.victim });
-    case 'matchStart':
-      return i18next.t('voltest:online.feed.matchStart');
+    case 'zone':
+      return line.owner === -1
+        ? i18next.t('voltest:online.feed.zoneLost', { zone: zoneName(line.zone) })
+        : i18next.t('voltest:online.feed.zoneTaken', {
+            zone: zoneName(line.zone),
+            faction: factionName(line.owner),
+          });
+    case 'warWon':
+      return i18next.t('voltest:online.feed.warWon', {
+        faction: factionName(line.faction),
+        wins: line.wins,
+      });
   }
 }
 
@@ -61,29 +89,24 @@ function grade(pingMs: number): 'good' | 'fair' | 'bad' {
 }
 
 /**
- * Çevrimiçi maçın HUD parçaları: oda ve bağlantı çubuğu, skor tablosu, bildirim akışı, bağlantı
- * uyarısı ve maç sonu sonucu. Tamamı CORE bileşenidir (`DataTable`, `EventLog`, `Text`); panel yalnız
- * maç görüntüsünü (`MatchView`) okur ve değişmeyen yerlere DOM yazmaz.
+ * Kalıcı savaşın HUD parçaları: cephe puanları ve bölge rozetleri, bağlantı göstergesi, skor
+ * tablosu, bildirim akışı ve bağlantı uyarısı. Tamamı CORE bileşenidir (`DataTable`, `EventLog`,
+ * `Text`); panel yalnız savaş görüntüsünü (`WarView`) okur ve değişmeyen yerlere DOM yazmaz.
  */
 export class OnlinePanel {
   readonly element: HTMLElement;
   private readonly scope = new DisposableScope();
   private readonly banner: HTMLElement;
-  private readonly room: Text;
-  private readonly kind: Text;
-  private readonly scores: HTMLElement;
+  private readonly factions: HTMLElement;
+  private readonly zones: HTMLElement;
   private readonly ping: HTMLElement;
   private readonly pingText: Text;
   private readonly board: HTMLElement;
   private table: DataTable<BoardRow>;
-  private readonly result: HTMLElement;
-  private readonly resultTitle: Text;
-  private readonly resultWinner: Text;
-  private readonly resultNext: Text;
   private readonly notice: Text;
   private readonly feed: HTMLElement;
   private readonly log: EventLog;
-  private view: MatchView | undefined;
+  private view: WarView | undefined;
   private link: LinkView | undefined;
   private signature = '';
   private lastFeedMs = 0;
@@ -95,32 +118,18 @@ export class OnlinePanel {
 
     this.banner = document.createElement('div');
     this.banner.className = 'vt-online__banner';
-    this.room = new Text('', { variant: 'body', tag: 'span' });
-    this.room.element.dataset.testid = 'online-room';
-    this.kind = new Text('', { variant: 'muted', tag: 'span' });
-    this.kind.element.dataset.testid = 'online-kind';
-    this.scores = document.createElement('span');
-    this.scores.className = 'vt-online__scores';
-    this.scores.dataset.testid = 'online-scores';
+    this.factions = document.createElement('span');
+    this.factions.className = 'vt-online__scores';
+    this.factions.dataset.testid = 'online-factions';
+    this.zones = document.createElement('span');
+    this.zones.className = 'vt-online__zones';
+    this.zones.dataset.testid = 'online-zones';
     this.ping = document.createElement('span');
     this.ping.className = 'vt-online__ping';
     this.ping.dataset.testid = 'online-ping';
     this.pingText = new Text('', { variant: 'muted', tag: 'span' });
     this.ping.append(this.pingText.element);
-    this.banner.append(this.room.element, this.kind.element, this.scores, this.ping);
-
-    this.result = document.createElement('div');
-    this.result.className = 'vt-online__result';
-    this.result.dataset.testid = 'online-result';
-    this.result.hidden = true;
-    this.resultTitle = new Text('', { variant: 'heading', tag: 'h2' });
-    this.resultWinner = new Text('', { variant: 'body', tag: 'p' });
-    this.resultNext = new Text('', { variant: 'muted', tag: 'p' });
-    this.result.append(
-      this.resultTitle.element,
-      this.resultWinner.element,
-      this.resultNext.element,
-    );
+    this.banner.append(this.factions, this.zones, this.ping);
 
     this.board = document.createElement('div');
     this.board.className = 'vt-online__board';
@@ -143,7 +152,7 @@ export class OnlinePanel {
     this.feed.dataset.testid = 'online-feed';
     this.feed.append(this.log.element);
 
-    this.element.append(this.banner, this.result, this.board, this.feed, this.notice.element);
+    this.element.append(this.banner, this.board, this.feed, this.notice.element);
     this.refreshLabels();
     const onLanguage = (): void => this.refreshLabels();
     i18next.on('languageChanged', onLanguage);
@@ -151,7 +160,7 @@ export class OnlinePanel {
   }
 
   /** Sayaçları ve tabloyu yeniler; değişmeyen parçalara dokunmaz. */
-  update(view: MatchView, link: LinkView): void {
+  update(view: WarView, link: LinkView): void {
     this.view = view;
     this.link = link;
     // Ölçüm ve E2E için: öngörü sapması imzaya girmez (her yenilemede değişir), yalnız özniteliğe yazılır.
@@ -178,7 +187,6 @@ export class OnlinePanel {
     this.table = this.createTable();
     this.board.replaceChildren(this.table.element);
     this.signature = '';
-    this.resultTitle.setContent(i18next.t('voltest:online.matchEnd'));
     this.paint();
   }
 
@@ -186,16 +194,8 @@ export class OnlinePanel {
     this.scope.dispose();
     this.table.destroy();
     this.log.destroy();
-    for (const text of [
-      this.room,
-      this.kind,
-      this.pingText,
-      this.resultTitle,
-      this.resultWinner,
-      this.resultNext,
-      this.notice,
-    ])
-      text.destroy();
+    this.pingText.destroy();
+    this.notice.destroy();
     this.element.remove();
   }
 
@@ -234,33 +234,34 @@ export class OnlinePanel {
       dot.style.background = hex(color);
       cell.append(dot);
     }
-    const key = !row.connected ? 'voltest:online.board.away' : 'voltest:online.board.you';
     const label = document.createElement('span');
-    label.textContent = row.self || !row.connected ? i18next.t(key, { name: row.name }) : row.name;
+    label.textContent = this.nameText(row);
     if (row.self) label.className = 'vt-online__self';
     cell.append(label);
     return cell;
   }
 
+  private nameText(row: BoardRow): string {
+    if (row.self) return i18next.t('voltest:online.board.you', { name: row.name });
+    if (!row.connected) return i18next.t('voltest:online.board.away', { name: row.name });
+    return row.bot ? i18next.t('voltest:online.board.bot', { name: row.name }) : row.name;
+  }
+
   private paint(): void {
     const { view, link } = this;
     if (!view || !link) return;
-    const live = view.phase === 'live';
-    const rows = live ? this.compactRows(view.rows) : view.rows;
+    const rows = this.compactRows(view.rows);
     const signature = JSON.stringify([
-      view.code,
-      view.mode,
-      view.phase,
-      view.scoreLimit,
-      view.winner,
-      Math.ceil(view.intermissionMs / 1000),
-      view.teamScores,
+      view.factions.map((faction) => [faction.score, faction.wins, faction.zones]),
+      view.zones.map((zone) => [zone.owner, Math.round(zone.progress * 20), zone.contested]),
+      view.selfFaction,
       rows.map((row) => [
         row.id,
         row.name,
         row.kills,
         row.deaths,
         row.connected,
+        row.bot,
         row.rank,
         row.team,
       ]),
@@ -271,32 +272,16 @@ export class OnlinePanel {
     if (signature === this.signature) return;
     this.signature = signature;
 
-    this.room.setContent(
-      view.code
-        ? i18next.t('voltest:online.room', { code: view.code })
-        : i18next.t('voltest:online.publicRoom'),
-    );
-    this.kind.setContent(
-      `${i18next.t(view.mode === 'teams' ? 'voltest:online.modeKind.teams' : 'voltest:online.modeKind.ffa')} · ${i18next.t('voltest:online.target', { count: view.scoreLimit })}`,
-    );
-    this.paintScores(view);
+    this.paintFactions(view);
+    this.paintZones(view);
     this.paintPing(link);
     this.table.setRows([...rows]);
-
-    this.result.hidden = live;
-    this.element.classList.toggle('vt-online--result', !live);
-    if (!live) {
-      this.resultWinner.setContent(this.winnerText(view));
-      this.resultNext.setContent(
-        i18next.t('voltest:online.next', { seconds: Math.ceil(view.intermissionMs / 1000) }),
-      );
-    }
     const reconnecting = link.status !== 'live';
     this.notice.element.hidden = !reconnecting;
     if (reconnecting) this.notice.setContent(i18next.t('voltest:online.reconnecting'));
   }
 
-  /** Canlı maçta en çok `compactRows` satır; kendi satırınız dışarıda kalırsa sona eklenir. */
+  /** Skor tablosunda en çok `compactRows` satır; kendi satırınız dışarıda kalırsa sona eklenir. */
   private compactRows(rows: readonly BoardRow[]): BoardRow[] {
     const limit = ONLINE_VIEW.board.compactRows;
     const top = rows.slice(0, limit);
@@ -305,37 +290,41 @@ export class OnlinePanel {
     return top;
   }
 
-  private paintScores(view: MatchView): void {
-    this.scores.replaceChildren();
-    this.scores.hidden = view.mode !== 'teams';
-    if (view.mode !== 'teams') return;
-    ONLINE_VIEW.colors.teams.forEach((color, team) => {
+  private paintFactions(view: WarView): void {
+    this.factions.replaceChildren();
+    for (const faction of view.factions) {
       const chip = document.createElement('span');
       chip.className = 'vt-online__score';
-      chip.title = teamLabel(team);
+      chip.dataset.faction = String(faction.index);
+      chip.dataset.own = String(faction.index === view.selfFaction);
+      chip.title = `${factionName(faction.index)} · ${i18next.t('voltest:online.wins', { count: faction.wins })}`;
       const dot = document.createElement('span');
       dot.className = 'vt-online__dot';
-      dot.style.background = hex(color);
-      chip.append(dot, String(view.teamScores[team] ?? 0));
-      this.scores.append(chip);
-    });
+      dot.style.background = hex(ONLINE_VIEW.colors.teams[faction.index] ?? ONLINE_VIEW.colors.foe);
+      chip.append(dot, `${Math.floor(faction.score)}/${view.dominance}`);
+      this.factions.append(chip);
+    }
+  }
+
+  /** Her bölge bir rozet: sahibin rengi, tartışmalıysa çerçeveli, ilerleme alt çizgide. */
+  private paintZones(view: WarView): void {
+    this.zones.replaceChildren();
+    for (const zone of view.zones) {
+      const pip = document.createElement('span');
+      pip.className = 'vt-online__zone';
+      pip.dataset.zone = zone.id;
+      pip.dataset.owner = String(zone.owner);
+      pip.dataset.contested = String(zone.contested);
+      const owner = zone.owner === -1 ? i18next.t('voltest:war.neutral') : factionName(zone.owner);
+      pip.title = `${zoneName(zone.id)} · ${zone.contested ? i18next.t('voltest:war.contested') : owner}`;
+      const color = teamColor(zone.owner);
+      if (color !== undefined) pip.style.background = hex(color);
+      this.zones.append(pip);
+    }
   }
 
   private paintPing(link: LinkView): void {
     this.ping.dataset.grade = link.status === 'live' ? grade(link.pingMs) : 'bad';
     this.pingText.setContent(i18next.t('voltest:online.ping', { ms: link.pingMs }));
-  }
-
-  private winnerText(view: MatchView): string {
-    const winner = parseWinner(view.winner);
-    if (!winner) return i18next.t('voltest:online.winner.none');
-    if (winner.kind === 'team')
-      return i18next.t('voltest:online.winner.team', {
-        team: teamLabel(winner.team),
-      });
-    const row = view.rows.find((candidate) => candidate.id === winner.id);
-    return row?.self
-      ? i18next.t('voltest:online.winner.self')
-      : i18next.t('voltest:online.winner.player', { name: row?.name ?? '?' });
   }
 }

@@ -10,7 +10,7 @@ import {
   CHASSIS_STATE_NUMBERS,
   type ChassisState,
 } from '@/sim/chassis/ChassisState';
-import { NO_TEAM, type MatchSnapshot, type PlayerSnapshot } from './schema';
+import { NO_TEAM, type WorldSnapshot, type PlayerSnapshot } from './schema';
 
 type AttachConfig = Parameters<Predict['attach']>[1];
 
@@ -28,7 +28,7 @@ function interpolation(): AttachConfig {
       mode: 'lerp',
       delay: NETWORK.interpolationDelayMs,
       angle: ANGLE_FIELDS.has(key),
-      snap: key === 'x' || key === 'y' ? NETWORK.seatRadius / 2 : 0,
+      snap: key === 'x' || key === 'y' ? NETWORK.snapDistance : 0,
     };
   }
   return config;
@@ -53,7 +53,7 @@ export class RemoteTanks {
   private readonly attachConfig = interpolation();
 
   constructor(
-    private readonly room: Room<MatchSnapshot>,
+    private readonly room: Room<WorldSnapshot>,
     private readonly predict: Predict,
     private readonly sim: Simulation,
   ) {
