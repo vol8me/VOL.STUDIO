@@ -106,6 +106,14 @@ describe('kırık bacak', () => {
     expect(spread(limp)).toBeGreaterThan(ARACHNID.walker.maxSpeed * 0.04);
   });
 
+  it('tek bacak kaybı bile hissedilir: ortalama hız belirgin düşer, her adımda çöküşle hız zıplar', () => {
+    const intact = mean(spiderDriven(0, 4).speeds.slice(-120));
+    const one = spiderDriven(0b0000_0001, 4).speeds.slice(-120);
+    const spread = Math.max(...one) - Math.min(...one);
+    expect(mean(one)).toBeLessThan(intact * 0.85);
+    expect(spread).toBeGreaterThan(ARACHNID.walker.maxSpeed * 0.15);
+  });
+
   it('tökezleme belirlenimlidir: aynı girdi aynı yolu çizer', () => {
     const a = spiderDriven(0b0000_0111, 3, WIDOW);
     const b = spiderDriven(0b0000_0111, 3, WIDOW);

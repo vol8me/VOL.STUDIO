@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GhostTrail, clamp01, poseSourceOf, type PoseSourceNode } from '@volstudio/core';
 import { SPIDER_ART, SPIDER_TELEPORT_UNITS, type PartBox, type SpiderLook } from '@/config/spiders';
 import type { WalkerSpec } from '@/config/vehicles';
-import { LEGS_PER_SIDE, lostLegs } from '@/sim/chassis/parts';
+import { LEGS_PER_SIDE, limpCollapse, lostLegs } from '@/sim/chassis/parts';
 import { muzzlePose, mountPose, type MuzzlePose } from '@/sim/muzzle';
 import { LocomotionReader } from './spider/LocomotionReader';
 import { SpiderCannon } from './spider/SpiderCannon';
@@ -19,6 +19,11 @@ export type FootPrintSink = (x: number, y: number, angle: number, scale: number)
 const INV = 1 / TEXTURE_SCALE;
 /** Gövdenin kırık yana en çok çökmesi (dünya birimi, kırık yan tam) ve çökmenin oturma süresi (ms). */
 const SAG = { px: 3.2, settleMs: 180 } as const;
+/**
+ * Eksik bacaklı yanın her adımdaki çöküşü gövdeye yansır (`limpCollapse`, simülasyondaki tökezleme ile
+ * aynı faz): kalça çöker, gövde o yana yatar ve göğüs kısa bir kıvrılır. Değerler dünya birimi ve radyandır.
+ */
+const LIMP = { dipPx: 7, swayPx: 8, yaw: 0.2, baseSeverity: 0.6 } as const;
 
 /**
  * Sekiz bacaklı yürüyücülerin (Arachnid, Widow) sahne karşılığı: tamamen el çizimi SVG parçalardan
@@ -50,6 +55,10 @@ export class SpiderView implements VehicleView {
   private dashing = false;
   private sag = 0;
   private sagTarget = 0;
+  private lostLeft = 0;
+  private lostRight = 0;
+  /** O karenin tökezleme yatışı (dünya birimi): `sag` yavaş oturur, bu adım hızında salınır. */
+  private limpSway = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -120,6 +129,8 @@ export class SpiderView implements VehicleView {
 
   setParts(mask: number): void {
     this.legs.setBroken(mask);
+    this.lostLeft = lostLegs(mask, 0);
+    this.lostRight = lostLegs(mask, 1);
     this.sagTarget = ((lostLegs(mask, 1) - lostLegs(mask, 0)) / LEGS_PER_SIDE) * SAG.px;
   }
 
@@ -131,8 +142,9 @@ export class SpiderView implements VehicleView {
     const fresh = this.locomotion.read(frame, deltaMs);
     lightLocal(frame.hull, this.light);
     this.sag += (this.sagTarget - this.sag) * (1 - Math.exp(-deltaMs / SAG.settleMs));
-    this.legs.setSag(this.sag);
     const pose = this.motion.update(signals, deltaMs);
+    this.stumble(frame, pose);
+    this.legs.setSag(this.sag + this.limpSway);
     if (fresh) this.legs.reset(signals.x, signals.y, frame.hull, pose, this.light);
     else this.legs.update(signals, pose, deltaMs, this.light);
 
@@ -142,6 +154,27 @@ export class SpiderView implements VehicleView {
     this.footfalls(frame.speed, frame.hull);
     this.placeBody(pose);
     this.placeCannons(frame, deltaMs, pose);
+  }
+
+  /**
+   * Eksik bacaklı yan adım döngüsünde çöker: kalça iner, gövde o yana yatar. Faz, simülasyonun
+   * yürüyüş yolundan (`treadLeft/Right`) türer; sağlam yürüyücüde bu işlev hiçbir şey değiştirmez.
+   */
+  private stumble(frame: TankFrame, pose: SpiderPose): void {
+    if (this.lostLeft + this.lostRight === 0) {
+      this.limpSway = 0;
+      return;
+    }
+    // Tek bacak kaybı da net okunur: şiddet kayıpla `baseSeverity`den tam çöküşe çıkar.
+    const severity = (lost: number): number =>
+      lost === 0 ? 0 : LIMP.baseSeverity + (1 - LIMP.baseSeverity) * (lost / LEGS_PER_SIDE);
+    const left = severity(this.lostLeft) * limpCollapse(LEGS_PER_SIDE, Math.abs(frame.treadLeft));
+    const right =
+      severity(this.lostRight) * limpCollapse(LEGS_PER_SIDE, Math.abs(frame.treadRight));
+    const moving = clamp01(frame.speed / this.spec.walker.maxSpeed);
+    pose.hipHeight -= LIMP.dipPx * (left + right) * moving;
+    pose.thoraxYaw += LIMP.yaw * (right - left) * moving;
+    this.limpSway = LIMP.swayPx * (right - left) * moving;
   }
 
   setPresent(present: boolean): void {
@@ -196,7 +229,7 @@ export class SpiderView implements VehicleView {
     const { body } = this.look;
     const lift = pose.hipHeight - body.hipHeight;
     const thoraxScale = INV * (1 + lift * SPIDER_ART.perspective);
-    const leanY = pose.leanY + this.sag;
+    const leanY = pose.leanY + this.sag + this.limpSway;
     const thoraxX = body.thoraxX + pose.leanX;
     this.thorax.setPosition(thoraxX, leanY).setRotation(pose.thoraxYaw).setScale(thoraxScale);
 
@@ -229,7 +262,7 @@ export class SpiderView implements VehicleView {
   private placeCannons(frame: TankFrame, deltaMs: number, pose: SpiderPose): void {
     const lift = pose.hipHeight - this.look.body.hipHeight;
     const leanX = pose.leanX;
-    const leanY = pose.leanY + this.sag;
+    const leanY = pose.leanY + this.sag + this.limpSway;
     const armament = this.spec.armament;
     const light = this.light;
     this.cannons.forEach((cannon, index) => {

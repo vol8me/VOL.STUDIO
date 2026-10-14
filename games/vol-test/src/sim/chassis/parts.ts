@@ -28,6 +28,16 @@ export function lostLegs(parts: number, side: number): number {
   return count;
 }
 
+/**
+ * Eksik bacaklı yanın yürüyüş döngüsündeki çöküşü [0, 1]: yan başına kayıp bacak oranı ile yürüyüş
+ * döngüsünün fazından türer (rastgelelik yok). Sim tökezleme kapasitesini kayıpla ölçekleyerek, görünüm
+ * gövdenin çökmesini yalnız fazı için (`lost` = tam yan) okur; çizilen çökme ile hız kesintisi aynı karede olur.
+ */
+export function limpCollapse(lost: number, ground: number): number {
+  const phase = (ground / PARTS.walker.stumble.stride) * Math.PI * 2;
+  return (lost / LEGS_PER_SIDE) * 0.5 * (1 - Math.cos(phase));
+}
+
 /** Parçanın gövde çerçevesindeki bağlantı noktası: ileri ve sağ ekseni (dünya birimi). */
 export interface PartAnchor {
   forward: number;

@@ -61,12 +61,15 @@ export const PARTS = {
       goliath: [38, 20.9, 3.8, -9.5],
     } satisfies Record<WalkerId, readonly number[]>,
     /** Her kaybedilen bacak azami hızı ve ivmeyi bu oranda keser; taban çevik kalan alt sınırdır. */
-    legLoss: 0.075,
+    legLoss: 0.1,
     floor: 0.3,
     /** Bir yanın bacakları eksikse yürüyüş o yana sürüklenir (rad/s, tam tek yanlı kayıpta, hız oranıyla). */
-    drift: 0.9,
-    /** Tökezleme: eksik bacaklı yan, adım uzunluğunda bir kez çöker (hız kesilir, gövde o yana savrulur). */
-    stumble: { stride: 56, dip: 0.45, sway: 1.1 },
+    drift: 1.3,
+    /**
+     * Tökezleme: eksik bacaklı yan, adım uzunluğunda bir kez çöker (hız kesilir, gövde o yana savrulur).
+     * Tek bacak kaybı bile her adımda hissedilir: çöküşte hız ~%27 düşer, yan yatışın yönü değişir.
+     */
+    stumble: { stride: 44, dip: 1.1, sway: 2.4 },
     /** Bacak koparken gövdenin sarsılması [0, 1]. */
     jolt: 0.6,
   },

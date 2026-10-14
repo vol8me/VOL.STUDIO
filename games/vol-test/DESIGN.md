@@ -290,7 +290,10 @@ süzülenin tavanını ve ivmesini keser, kırık yana savurur (bkz. "Süzülen 
 yürüyücünün tavan hızını ve ivmesini kaybedilen bacak başına `legLoss` kadar keser (`floor` taban),
 bir yanın bacakları eksikse yürüyüşü o yana sürükler (`drift`) ve eksik yan, kendi yürüyüş döngüsünde
 (katettiği yoldan türer, rastgele değil) çöker: hız kesilir ve gövde o yana savrulur (tökezleme,
-`stumble`). Parça koptuğu anda gövde ayrıca `Chassis.jolt` ile kırılan yana sarsılır ve `broke` olayı
+`stumble`). Tek bacak kaybı bile hissedilir: ortalama hız ~%25 düşer ve her adımda ~%25'lik bir hız
+çukuru açılır (`tests/sim/partsDrive.test.ts`); görünüm aynı fazdan (`limpCollapse`) kalçayı indirip
+gövdeyi çöken yana yatırır ve göğsü büker (`SpiderView.stumble`, yalnız yürürken; duran yürüyücü
+tökezlemez), yani "bir bacağım yok" topallaması hem hızda hem silüette okunur. Parça koptuğu anda gövde ayrıca `Chassis.jolt` ile kırılan yana sarsılır ve `broke` olayı
 yayılır. Bot kırık araçla da çalışır: iki paleti kırık bot yerinde kalıp nişan almaya ve ateşe devam eder
 (`tests/sim/ai/BotBrain.test.ts`).
 

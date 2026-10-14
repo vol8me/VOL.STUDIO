@@ -6,7 +6,7 @@ import type { WalkerConfig } from '@/config/walker';
 import type { TankCommand } from '../command';
 import type { World } from '../world/World';
 import { Chassis, type ChassisKind } from '../chassis/Chassis';
-import { LEGS_PER_SIDE, lostLegs } from '../chassis/parts';
+import { LEGS_PER_SIDE, limpCollapse, lostLegs } from '../chassis/parts';
 
 /** Fizik adımı başına alt adım: duvar teması ve hız hedefi 120 Hz çözülür (palet ile aynı). */
 const SUBSTEPS = 2;
@@ -112,15 +112,13 @@ export class Walker extends Chassis {
       return;
     }
     const config = PARTS.walker;
-    const { stride, dip, sway } = config.stumble;
-    const collapse = (lost: number, ground: number): number =>
-      (lost / LEGS_PER_SIDE) * 0.5 * (1 - Math.cos((ground / stride) * Math.PI * 2));
-    const left = collapse(lostLeft, this.groundLeft);
-    const right = collapse(lostRight, this.groundRight);
+    const { dip, sway } = config.stumble;
+    const left = limpCollapse(lostLeft, this.groundLeft);
+    const right = limpCollapse(lostRight, this.groundRight);
     const ratio = Math.min(1, this.speed / this.walkerConfig.maxSpeed);
     const lost = lostLeft + lostRight;
     this.capacity =
-      Math.max(config.floor, 1 - config.legLoss * lost) * (1 - Math.min(0.9, dip * (left + right)));
+      Math.max(config.floor, 1 - config.legLoss * lost) * (1 - Math.min(0.6, dip * (left + right)));
     this.yawBias =
       ratio * ((config.drift * (lostRight - lostLeft)) / LEGS_PER_SIDE + sway * (right - left));
   }

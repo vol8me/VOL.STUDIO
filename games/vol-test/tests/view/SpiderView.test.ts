@@ -123,6 +123,31 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       expect(legParts.every((part) => part.visible !== false)).toBe(true);
     });
 
+    it('eksik bacaklı yan yürürken adım döngüsüyle çöker: gövde tökezler, sağlam yürüyüş ve duruş sabit kalır', () => {
+      const sway = (mask: number, speed: number): number => {
+        const { view, art } = build(spec);
+        const [, , thorax] = art.list as FakeObject[];
+        view.setParts(mask);
+        let low = Infinity;
+        let high = -Infinity;
+        let treadRight = 0;
+        for (let i = 0; i < 240; i++) {
+          treadRight += (speed * 16) / 1000;
+          view.update(frame({ speed, treadLeft: treadRight, treadRight }), 16);
+          if (i > 120) {
+            low = Math.min(low, thorax.y as number);
+            high = Math.max(high, thorax.y as number);
+          }
+        }
+        return high - low;
+      };
+      const top = spec.walker.maxSpeed;
+      expect(sway(0b0001_0000, top * 0.8)).toBeGreaterThan(3);
+      expect(sway(0b0001_0000, top * 0.8)).toBeGreaterThan(sway(0, top * 0.8) * 3);
+      // Duran yürüyücü tökezlemez: çöküş yürüyüş hızıyla ölçeklenir.
+      expect(sway(0b0001_0000, 0)).toBeLessThan(0.5);
+    });
+
     it('göğüs ve karın gölgesi ortak koyulukta; bacak çizgisi ondan açıktır, ikisi de tank gölgesine yakındır', () => {
       const { scene } = build(spec);
       const bodies = scene.created.filter((object) => object.alpha === SPIDER_ART.shadowAlpha);
