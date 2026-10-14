@@ -1,7 +1,15 @@
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { JsonlReport, runFleet, type BotHandle } from '@volstudio/network/drive';
+import {
+  JsonlReport,
+  judgeFleet,
+  observeServer,
+  runFleet,
+  type BotHandle,
+  type FleetBudget,
+} from '@volstudio/network/drive';
+import { loadQualityConfig } from '../../../scripts/quality/config.mjs';
 import { NETWORK } from '../src/config/network';
 import { ROOM } from '../src/network/rooms';
 import { WORLD_SCHEMA, type TankInputData, type WorldSnapshot } from '../src/network/schema';
@@ -14,6 +22,10 @@ import { VEHICLE_IDS } from '../src/config/vehicles';
  * yama aralığı, ping, kopma ve hataları JSONL rapora yazar. `--ops` verilirse sunucunun `/metrics`
  * (oda adım süresi, trafik, bağlantı kapısı) her örnekte rapora `server` satırı olarak eklenir.
  * Yalnız ağ ve sunucu yükü ölçülür; çizim, öngörü ve uzlaştırma tarayıcıdadır ve burada yoktur.
+ *
+ * `--profile` verilirse özet `quality.json` `fleetBudget` profiline karşı yargılanır: hüküm rapora
+ * `verdict` satırı olarak yazılır, geçmezse süreç 1 ile çıkar. Sunucu maddeleri `--ops` olmadan
+ * denetlenmez ve hüküm `complete: false` kalır (tam hüküm için `--ops` şarttır).
  */
 const { values } = parseArgs({
   options: {
@@ -24,6 +36,7 @@ const { values } = parseArgs({
     ramp: { type: 'string' },
     out: { type: 'string', default: 'records/drive/last.jsonl' },
     reconnect: { type: 'boolean', default: false },
+    profile: { type: 'string' },
   },
 });
 
@@ -61,11 +74,15 @@ function drive({ index, room }: BotHandle<WorldSnapshot>): void {
 }
 
 const metricsUrl = values.ops ? `${values.ops.replace(/\/$/, '')}/metrics` : null;
+const observed: unknown[] = [];
 const poll = metricsUrl
   ? setInterval(() => {
       fetch(metricsUrl)
-        .then((response) => response.json())
-        .then((metrics) => report.write('server', { metrics }))
+        .then((response) => response.json() as Promise<unknown>)
+        .then((metrics) => {
+          observed.push({ metrics });
+          report.write('server', { metrics });
+        })
         .catch((error: unknown) => report.write('serverError', { message: String(error) }));
     }, 1000)
   : undefined;
@@ -87,5 +104,16 @@ const summary = await runFleet<WorldSnapshot>({
   report,
 });
 clearInterval(poll);
+let verdict = null;
+if (values.profile !== undefined) {
+  const config = loadQualityConfig(resolve(import.meta.dirname, '../../../quality.json')) as {
+    fleetBudget?: Record<string, Record<string, FleetBudget>>;
+  };
+  const budget = config.fleetBudget?.['games/vol-test']?.[values.profile];
+  if (!budget) throw new RangeError(`--profile ${values.profile}: quality.json fleetBudget'ta yok`);
+  verdict = judgeFleet(summary, budget, observeServer(observed));
+  report.write('verdict', { profile: values.profile, ...verdict });
+}
 await report.close();
-console.log(JSON.stringify({ out, summary }, null, 2));
+console.log(JSON.stringify({ out, summary, verdict }, null, 2));
+if (verdict && !verdict.pass) process.exitCode = 1;

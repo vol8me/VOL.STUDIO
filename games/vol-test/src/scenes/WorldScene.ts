@@ -9,6 +9,7 @@ import { AimGuide } from '@/view/effects/AimGuide';
 import { AimPresence } from '@/view/effects/AimPresence';
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { createSceneAudio } from '@/audio/sceneAudio';
+import { AgentLab, installAgentLab } from '@/app/AgentLab';
 import type { GameAudio } from '@/audio/GameAudio';
 import type { GameServices } from '@/app/GameServices';
 import { CAMERA } from '@/config/camera';
@@ -68,6 +69,8 @@ export class WorldScene extends Phaser.Scene {
   private readonly aimPresence = new AimPresence(FX.aimGuide.fadeInMs, FX.aimGuide.fadeOutMs);
   private environment!: EnvironmentController;
   private hud!: Hud;
+  /** `?lab=1` ile açılan ajan laboratuvarı; yoksa hiçbir şey kurulmaz. */
+  private lab: AgentLab | null = null;
   private quality!: GraphicsQuality<EffectLevel, EffectProfile>;
   private readonly simEvents: SimEvent[] = [];
   /** Son çizilen karedeki taret mili: fare nişanı ekranda görünen noktadan hesaplanır. */
@@ -214,6 +217,7 @@ export class WorldScene extends Phaser.Scene {
       }),
     );
     this.audio?.attachUi(this.hud.intents, this.hud.rootElement);
+    this.lab = query.get('lab') === '1' ? this.createLab() : null;
     this.driver.attachHud?.(this.hud);
     if (data?.notice) this.hud.notify(data.notice, 'warning');
     this.pause = this.scope.addDestroyable(
@@ -248,6 +252,38 @@ export class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scope.dispose());
   }
 
+  /** Laboratuvarı kurar ve pencereye bağlar; sahne kapanınca kaldırılır. */
+  private createLab(): AgentLab {
+    const lab = new AgentLab({
+      state: () => {
+        const player = this.driver.player;
+        const chassis = player.chassis;
+        const context = this.driver.measurement;
+        return {
+          scenario: context.scenario,
+          seed: context.seed,
+          online: this.driver.live === true,
+          vehicle: player.spec.id,
+          kind: player.spec.kind,
+          x: chassis.x,
+          y: chassis.y,
+          hull: chassis.hull,
+          speed: chassis.speed,
+          health: player.vitality.health,
+          alive: player.vitality.alive,
+          vehicles: this.sim.vehicles.length,
+          projectiles: this.sim.projectiles.count,
+          paused: this.pause.paused,
+          extra: this.driver.metrics?.() ?? {},
+        };
+      },
+      setInput: (patch) => this.controls.setLabInput(patch),
+    });
+    this.scope.addSubscription(installAgentLab(window, lab));
+    this.scope.addSubscription(() => this.controls.setLabInput(null));
+    return lab;
+  }
+
   override update(time: number, delta: number): void {
     const diagnostics = this.services?.diagnostics;
     const measurements = this.services?.measurements;
@@ -279,6 +315,10 @@ export class WorldScene extends Phaser.Scene {
     const events = this.driver.drainEvents(this.simEvents);
     for (const event of events)
       if (event.kind === 'fired' && event.source === player.id) this.services?.progress.fired();
+    if (this.lab) {
+      this.lab.sample(time);
+      for (const event of events) this.lab.record(event.kind, { ...event });
+    }
     this.audio?.route(events, player.chassis);
     void this.audio?.sync(this.sim.vehicles, player.chassis);
     routeSimEvents(events, {

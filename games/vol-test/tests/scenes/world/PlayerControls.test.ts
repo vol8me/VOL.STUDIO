@@ -251,6 +251,29 @@ describe('PlayerControls — renderdan sabit ticke', () => {
     });
   });
 
+  it('laboratuvar girdisi oyuncunun komut yolundan geçer ve bırakılınca oyuncuya döner', () => {
+    const { control, keys } = mount();
+    control.read(0, 0, 16);
+    expect(control.step(16).fire).toBe(false);
+    control.setLabInput({ fire: true, aimX: 1 });
+    control.read(0, 0, 16);
+    const held = control.step(16);
+    expect(held.fire).toBe(true);
+    expect(held.aimX).toBe(1);
+    // Oyuncunun tuşu laboratuvar alanını ezmez, laboratuvarın vermediği alan oyuncudan gelir.
+    keys.get(68)!.isDown = true;
+    control.setLabInput({ brake: true });
+    control.read(0, 0, 16);
+    const merged = control.step(16);
+    expect(merged.fire).toBe(true);
+    expect(merged.brake).toBe(true);
+    control.setLabInput(null);
+    control.read(0, 0, 16);
+    const back = control.step(16);
+    expect(back.fire).toBe(false);
+    expect(back.brake).toBe(false);
+  });
+
   it('aynı tick ham girdisi 30/60/90/144Hz ve jitterde gerçek simülasyonu aynı yere getirir', () => {
     function run(frameDeltas: number[]) {
       const { control, keys } = mount();

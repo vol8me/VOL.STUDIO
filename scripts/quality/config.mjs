@@ -192,6 +192,59 @@ export function validateQualityConfig(raw) {
     }
   }
 
+  if (raw.fleetBudget !== undefined) {
+    if (!isPlainObject(raw.fleetBudget)) {
+      problems.push('fleetBudget: nesne olmalı (paket yolu → profil adı → yük bütçesi)');
+    } else {
+      const count = ['clients'];
+      const tolerated = [
+        'maxJoinFailures',
+        'maxDropped',
+        'maxErrors',
+        'maxActErrors',
+        'serverEvictions',
+      ];
+      const ceilings = [
+        'joinP99Ms',
+        'patchGapP99Ms',
+        'pingP99Ms',
+        'serverStepP95Ms',
+        'serverLoopP99Ms',
+      ];
+      const floors = ['minPatchesPerSecond'];
+      for (const [path, profiles] of Object.entries(raw.fleetBudget)) {
+        if (path.startsWith('$')) continue;
+        if (!isPlainObject(profiles) || Object.keys(profiles).every((key) => key.startsWith('$'))) {
+          problems.push(`fleetBudget[${JSON.stringify(path)}]: en az bir profil gerekli`);
+          continue;
+        }
+        for (const [name, budget] of Object.entries(profiles)) {
+          if (name.startsWith('$')) continue;
+          const where = `fleetBudget[${JSON.stringify(path)}][${JSON.stringify(name)}]`;
+          if (!isPlainObject(budget)) {
+            problems.push(`${where}: nesne olmalı`);
+            continue;
+          }
+          for (const key of count)
+            if (!Number.isInteger(budget[key]) || budget[key] < 1)
+              problems.push(`${where}.${key}: pozitif tam sayı olmalı`);
+          for (const key of tolerated)
+            if (!Number.isInteger(budget[key]) || budget[key] < 0)
+              problems.push(`${where}.${key}: sıfır ya da pozitif tam sayı olmalı`);
+          for (const key of [...ceilings, ...floors])
+            if (!Number.isFinite(budget[key]) || budget[key] <= 0)
+              problems.push(`${where}.${key}: pozitif bütçe olmalı`);
+          for (const key of Object.keys(budget))
+            if (
+              ![...count, ...tolerated, ...ceilings, ...floors].includes(key) &&
+              !key.startsWith('$')
+            )
+              problems.push(`${where}.${key}: tanınmayan yük bütçesi alanı`);
+        }
+      }
+    }
+  }
+
   if (raw.coverageShape !== undefined) {
     if (!isPlainObject(raw.coverageShape)) {
       problems.push('coverageShape: nesne olmalı');

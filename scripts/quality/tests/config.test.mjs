@@ -193,6 +193,43 @@ describe('quality.json şema doğrulaması', () => {
     assert.ok(problems.some((problem) => problem.includes('games/other')));
   });
 
+  it('yük bütçesi tam ve tanınan alanlardan oluşmalı', () => {
+    const config = validConfig();
+    const good = {
+      clients: 8,
+      maxJoinFailures: 0,
+      maxDropped: 0,
+      maxErrors: 0,
+      maxActErrors: 0,
+      joinP99Ms: 500,
+      patchGapP99Ms: 100,
+      pingP99Ms: 80,
+      minPatchesPerSecond: 15,
+      serverStepP95Ms: 4,
+      serverLoopP99Ms: 20,
+      serverEvictions: 0,
+    };
+    config.fleetBudget = { 'games/sample-game': { lan: good } };
+    assert.deepEqual(validateQualityConfig(config), []);
+    config.fleetBudget = {
+      'games/sample-game': {
+        lan: { ...good, clients: 0, maxDropped: -1, pingP99Ms: 0, surprise: 1 },
+        empty: 'x',
+      },
+      'games/other': {},
+    };
+    const problems = validateQualityConfig(config);
+    for (const key of ['clients', 'maxDropped', 'pingP99Ms', 'surprise'])
+      assert.ok(
+        problems.some((problem) => problem.includes(`.${key}`)),
+        key,
+      );
+    assert.ok(problems.some((problem) => problem.includes('"empty"')));
+    assert.ok(problems.some((problem) => problem.includes('games/other')));
+    delete config.fleetBudget['games/sample-game'].lan.pingP99Ms;
+    assert.ok(validateQualityConfig(config).some((problem) => problem.includes('pingP99Ms')));
+  });
+
   it('kapsam koşularının birleşimi her eşikli aktif paketi ölçer', () => {
     const broken = validConfig();
     broken.coverageRuns = {

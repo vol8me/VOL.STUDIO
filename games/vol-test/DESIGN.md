@@ -789,6 +789,33 @@ Tüm durum her yamada her istemciye gider (ilgi alanı süzmesi yoktur); 24 insa
 genişliği ölçülmemiştir ve kapasite iddiası yapılmaz. Paketli Windows/Android ağ kabulü ve insan sunum
 beğenisi yapılmamıştır.
 
+### Ajan laboratuvarı
+
+Bir ajan (insan ya da model) çalışan oyunu okuyup sürebilsin diye `?lab=1` ile açılan `window.volLab`
+yüzeyi vardır (`src/app/AgentLab.ts`; sayılar `src/config/lab.ts`). Bayrak yoksa hiçbir şey kurulmaz ve
+sayfa farkı yoktur. Girdi geçersiz kılma oyuncunun kendi komut yolundan (`PlayerControls.step`) geçer;
+simülasyon saati, RNG ve kurallar aynıdır, yani laboratuvarla sürülen oturum insan oturumuyla aynı
+dünyadır. Telemetri sınırlı halkadadır (600 durum örneği, 400 olay), uzun oturumda bellek büyümez.
+Kullanım: `volLab.run('state')`, `volLab.run('input', { moveX: 1, fire: true })`. Komutlar ve belge
+tablosu `tests/app/AgentLab.test.ts` ile birebir eşitlenir:
+
+| Komut              | Ne yapar                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `volLab.help`      | Komut adlarını ve açıklamalarını döner.                                                                |
+| `volLab.state`     | Dünyanın o anki özeti: oyuncu, araç sayısı, senaryo, tohum.                                            |
+| `volLab.telemetry` | Son durum örnekleri (`count`, en çok 600), eskiden yeniye.                                             |
+| `volLab.events`    | Son oyun olayları ve işaretler (`count`, en çok 600), eskiden yeniye.                                  |
+| `volLab.input`     | Oyuncu girdisini geçersiz kılar: `moveX`, `moveY`, `aimX`, `aimY` ([-1, 1]), `fire`, `boost`, `brake`. |
+| `volLab.release`   | Girdi geçersiz kılmayı bırakır.                                                                        |
+| `volLab.mark`      | Olay halkasına etiketli bir işaret yazar (`label`).                                                    |
+| `volLab.jsonl`     | Telemetri ve olay halkasını zamana göre sıralı, satır başına bir JSON verir.                           |
+
+Sunucu tarafı `games/vol-test/scripts/drive.ts` ile ölçülür: `--profile lan --ops <url>` özeti `quality.json` →
+`fleetBudget` profiline karşı yargılar (`@volstudio/network/drive` `judgeFleet`) ve geçmezse süreç 1 ile
+çıkar; `/metrics` verilmezse sunucu maddeleri atlanır ve hüküm tamamlanmış sayılmaz. 14 Ekim ölçümü
+(8 istemci, 30 sn, yerel sunucu): katılım p99 34-49 ms, yama aralığı p99 65 ms, bot başına 16,1 yama/s,
+sunucu adım p95 1,2-1,3 ms; bu LAN ölçümüdür, kapasite ya da soak kabulü değildir (F13.5).
+
 ## Doğrulama
 
 `tests/sim/feel.test.ts` sürüş, fren, kayma, dönüş, hızlanma, taret, geri

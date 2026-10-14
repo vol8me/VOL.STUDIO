@@ -242,6 +242,25 @@
       "projectiles512Over128": 6
     }
   },
+  "fleetBudget": {
+    "$comment": "Başsız çok istemcili sürücü (games/vol-test/scripts/drive.ts --profile <ad> --ops <url>) özetini bu bütçeye karşı yargılar; geçmezse süreç 1 ile çıkar. Ölçüm 14 Ekim, Windows 11, 8 çekirdek, yerel sunucu (dist-server) ve 8 istemci, 30 sn, iki koşu: katılım p99 34-49 ms, yama aralığı p99 65 ms, ping p99 3 ms, bot başına 16,1 yama/s, sunucu adım p95 1,2-1,3 ms, olay döngüsü gecikmesi p99 7-10 ms, atılan bağlantı ve hata 0. Tavanlar ölçülenin yaklaşık 3-8 katıdır (aynı makinede koşan istemci ve sunucu birbirinin zamanlayıcısını ezer); amaç büyüklük mertebesi gerilemesini yakalamaktır. Sunucu maddeleri yalnız --ops verilince denetlenir. Gerçek ağ, 12 kişilik tam oda ve uzun soak (F13.5) ölçülmemiştir ve bu bütçe onları kapsamaz.",
+    "games/vol-test": {
+      "lan": {
+        "clients": 8,
+        "maxJoinFailures": 0,
+        "maxDropped": 0,
+        "maxErrors": 0,
+        "maxActErrors": 0,
+        "joinP99Ms": 400,
+        "patchGapP99Ms": 200,
+        "pingP99Ms": 100,
+        "minPatchesPerSecond": 10,
+        "serverStepP95Ms": 5,
+        "serverLoopP99Ms": 40,
+        "serverEvictions": 0
+      }
+    }
+  },
   "networkImpairment": {
     "$comment": "TCP vekili (games/vol-test/tests/support/impairedProxy.ts) her yöne latencyMs + 0..jitterMs ekler; WebSocket TCP üstünde olduğundan kayıp, stallPct yüzdesindeki parçaların stallMs kadar bekleyip arkasındakileri de tutması olarak modellenir (gerçek paket kaybı değil). Ölçümler Windows 11, 8 çekirdek, yazılım çizimi, 2 sayfa değil tek sayfa ve yerel sunucu ile alındı: driftMax öngörü uzlaştırmasının oturum boyunca en büyük düzeltmesi (dünya birimi), pingMaxMs HUD'daki en büyük gidiş-dönüş ölçümü, snaps tek örnekte hız tavanının (maxSpeed × boost) ve yarım snapDistance payının aştığı ani sıçrama sayısı. 14 Ekim ölçümü Chromium/WebKit: control drift 7.7/5.1 ping 182/129; wan drift 5.6/2.9 ping 313/234; lossy drift 29.8/14.6 ping 441/365; hepsinde snaps 0. Bütçeler ölçülen tepenin yaklaşık 2,5-3 katıdır: ana iş parçacığı açlığı tek koşuda ping'i şişirir, bütçe büyüklük mertebesi gerilemesini (uzlaştırma bozulması, ani sıçrama) yakalar. Gerçek ağ, paketli uygulama ve cihaz ölçümü NOT-RUN'dır.",
     "games/vol-test": {

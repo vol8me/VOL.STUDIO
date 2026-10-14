@@ -37,6 +37,8 @@ export class PlayerControls {
   private readonly pointerAt = { x: Number.NaN, y: Number.NaN };
   private aimIdleMs = Number.POSITIVE_INFINITY;
   private aimEngaged = false;
+  /** Ajan laboratuvarının girdi geçersiz kılması (`?lab=1`); `null` ise oyuncunun kendi girdisi geçerlidir. */
+  private labInput: Partial<TankCommand> | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -123,7 +125,13 @@ export class PlayerControls {
     command.fire = state.actions.fire;
     command.boost = state.actions.boost;
     command.brake = state.actions.brake;
+    if (this.labInput) Object.assign(command, this.labInput);
     return this.intent.update(command, stepMs);
+  }
+
+  /** Ajan laboratuvarının girdisini koyar ya da (`null`) bırakır; oyuncu komut yolundan geçer. */
+  setLabInput(patch: Partial<TankCommand> | null): void {
+    this.labInput = patch ? { ...this.labInput, ...patch } : null;
   }
 
   /** Oyuncu şu an nişan alıyor mu: nişan çizgisi buna göre açılır ve söner. */
