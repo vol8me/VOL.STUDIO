@@ -6,6 +6,7 @@ import { COMBAT, type CombatConfig } from '@/config/combat';
 import { Vitality } from '../combat/Vitality';
 import type { Chassis } from '../chassis/Chassis';
 import { Tank } from '../tank/Tank';
+import { Walker } from '../walker/Walker';
 
 /** Simülasyondaki varlıkların kimliği; simülasyon ömrü boyunca tekildir. */
 export type EntityId = number;
@@ -29,7 +30,10 @@ export class Vehicle {
     combat: CombatConfig = COMBAT,
     readonly team: number | null = null,
   ) {
-    this.chassis = new Tank(spec.tank, spec.suspension);
+    this.chassis =
+      spec.kind === 'tank'
+        ? new Tank(spec.tank, spec.suspension)
+        : new Walker(spec.walker, spec.suspension);
     this.gun = new Cooldown(spec.armament.weapon.intervalMs);
     this.vitality = new Vitality({ ...combat, maxHealth: spec.health });
     this.spawnPoint = { x: 0, y: 0, hull: -Math.PI / 2 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BULWARK, DART, STRIKER, type VehicleSpec } from '@/config/vehicles';
+import { BULWARK, chassisConfigOf, DART, STRIKER, type VehicleSpec } from '@/config/vehicles';
 import { WEAPON_STYLES } from '@/config/tank';
 import { Simulation } from '@/sim/Simulation';
 import type { SimEvent } from '@/sim/events';
@@ -58,7 +58,8 @@ describe('araç tanımına göre doğuş', () => {
     sim.applyDamage(light.id, 1000);
     sim.respawnVehicle(heavy.id, 0, 0, 0);
     sim.respawnVehicle(light.id, 0, 0, 0);
-    const radius = (spec: VehicleSpec) => Math.hypot(spec.tank.halfLength, spec.tank.halfWidth);
+    const radius = (spec: VehicleSpec) =>
+      Math.hypot(chassisConfigOf(spec).halfLength, chassisConfigOf(spec).halfWidth);
     expect(heavy.chassis.x).toBeCloseTo(radius(BULWARK));
     expect(light.chassis.x).toBeCloseTo(radius(DART));
   });

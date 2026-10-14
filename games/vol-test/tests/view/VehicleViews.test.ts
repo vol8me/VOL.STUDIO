@@ -1,9 +1,11 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
-import { BULWARK, DART, STRIKER } from '@/config/vehicles';
+import { ARACHNID, BULWARK, DART, STRIKER } from '@/config/vehicles';
 import { tankTexture } from '@/view/textures';
 import { VehicleViews } from '@/view/VehicleViews';
+import { WalkerView } from '@/view/WalkerView';
 import { fakeScene, lastCall } from '../support/fakeScene';
+import { walkerScene } from '../support/rigScene';
 
 const striker = (id: number) => ({ id, spec: STRIKER });
 
@@ -46,6 +48,16 @@ describe('VehicleViews', () => {
     expect(used(tankTexture('striker', 'hull'))).toBe(1);
     expect(used(tankTexture('bulwark', 'hull'))).toBe(1);
     expect(used(tankTexture('dart', 'hull'))).toBe(1);
+    views.destroy();
+  });
+  it('bacaklı araç için `WalkerView`, paletli araç için tank görünümü kurar', () => {
+    const scene = walkerScene();
+    const views = new VehicleViews(scene as unknown as Phaser.Scene);
+    views.sync([{ id: 1, spec: ARACHNID }]);
+    expect(views.get(1)).toBeInstanceOf(WalkerView);
+    expect(views.get(1)?.impact).toBeTypeOf('function');
+    // Üç top ve gövde rig'i: topların her biri kendi katı ağacını taşır.
+    expect(views.sync([])).toEqual([1]);
     views.destroy();
   });
 });

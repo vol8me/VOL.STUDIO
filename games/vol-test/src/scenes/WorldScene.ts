@@ -296,6 +296,7 @@ export class WorldScene extends Phaser.Scene {
         slideLeft: tank.slideLeft,
         slideRight: tank.slideRight,
         trackOffset: tank.trackOffset,
+        tracked: vehicle.spec.kind === 'tank',
       });
     }
     measurements?.mark('vehicles');

@@ -17,6 +17,8 @@ const frame = (overrides: Partial<TankFrame> = {}): TankFrame => ({
   treadLeft: 0,
   treadRight: 0,
   speed: 0,
+  vx: 0,
+  vy: 0,
   angularVelocity: 0,
   boosting: false,
   ...overrides,

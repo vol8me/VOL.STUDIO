@@ -9,7 +9,7 @@ import type { VehicleView } from '@/view/VehicleView';
 export interface SimEventTargets {
   /** Kontrol edilen aracın kimliği: kamera ve titreşim yalnız ona tepki verir. */
   readonly player: number;
-  readonly tank: (id: number) => Pick<VehicleView, 'fire'> | undefined;
+  readonly tank: (id: number) => Pick<VehicleView, 'fire' | 'impact'> | undefined;
   readonly effects: Pick<EffectsView, 'muzzle' | 'explode' | 'hit' | 'wallHit'>;
   readonly arena: Pick<ArenaView, 'strike'>;
   readonly camera: Pick<FollowCamera, 'kick' | 'addTrauma'>;
@@ -77,12 +77,15 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
         const strength = strengthOf(event.speed);
         targets.arena.strike(event.x, event.y, event.normalX, event.speed);
         targets.effects.wallHit(event.x, event.y, event.normalX, event.normalY, strength);
+        targets.tank(event.source)?.impact?.(strength);
         if (event.source === targets.player) feelImpact(targets, strength);
         break;
       }
       case 'collision': {
         const strength = strengthOf(event.speed);
         targets.effects.wallHit(event.x, event.y, event.normalX, event.normalY, strength);
+        targets.tank(event.a)?.impact?.(strength);
+        targets.tank(event.b)?.impact?.(strength);
         if (event.a === targets.player || event.b === targets.player) {
           feelImpact(targets, strength);
         }

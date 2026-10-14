@@ -22,6 +22,8 @@ describe('frames', () => {
     expect(half.x).toBeCloseTo((start.x + end.x) / 2);
     expect(half.pitch).toBeCloseTo((start.pitch + end.pitch) / 2);
     expect(end.turret).toBeCloseTo(subject.turret);
+    // Hız ara değerlenmez: simülasyonun son adımındaki dünya hızıdır (bacaklı araç ivmeyi buradan okur).
+    expect([start.vx, start.vy]).toEqual([subject.vx, subject.vy]);
   });
 
   it('HUD karesi sürüş durumunu ve görünen alanı taşır', () => {

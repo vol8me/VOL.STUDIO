@@ -65,6 +65,8 @@ export function vehicle(id = 1, overrides: Partial<WeatherVehicleFrame> = {}): W
     treadLeft: 3,
     treadRight: 5,
     speed: 100,
+    vx: 100,
+    vy: 0,
     angularVelocity: 0,
     boosting: false,
     ...overrides,

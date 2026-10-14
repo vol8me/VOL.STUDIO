@@ -6,13 +6,18 @@ import {
   type TankConfig,
   type WeaponConfig,
 } from './tank';
+import { WALKER, type WalkerConfig } from './walker';
 
 /** Paletli araçlar. */
 export const TANK_IDS = ['striker', 'bulwark', 'dart'] as const;
 export type TankId = (typeof TANK_IDS)[number];
 
+/** Bacaklı yürüyücüler. */
+export const WALKER_IDS = ['arachnid'] as const;
+export type WalkerId = (typeof WALKER_IDS)[number];
+
 /** Seçilebilir araçlar; sıra ağ protokolündeki `model` indeksidir, sona eklenir ve yeniden sıralanmaz. */
-export const VEHICLE_IDS = [...TANK_IDS] as const;
+export const VEHICLE_IDS = [...TANK_IDS, ...WALKER_IDS] as const;
 export type VehicleId = (typeof VEHICLE_IDS)[number];
 
 /** Bir aracın en çok taşıyabileceği namlu: atış arabellekleri ve ağ paketi bu tavana göre boyanır. */
@@ -55,7 +60,24 @@ export interface TankSpec extends VehicleBase {
   readonly tank: TankConfig;
 }
 
-export type VehicleSpec = TankSpec;
+/** Bacaklı yürüyücü tanımı: her yöne yürür, gövdesi nişana bakar, birden çok silah yuvası taşır. */
+export interface WalkerSpec extends VehicleBase {
+  readonly kind: 'walker';
+  readonly id: WalkerId;
+  readonly walker: WalkerConfig;
+}
+
+export type VehicleSpec = TankSpec | WalkerSpec;
+
+/** Şasinin tüm türlerde ortak sayıları (gövde ayak izi, depo, taret hızı). */
+export function chassisConfigOf(spec: VehicleSpec): WalkerConfig | TankSpec['tank'] {
+  return spec.kind === 'tank' ? spec.tank : spec.walker;
+}
+
+/** Düz zeminde yürüyüş ya da sürüş tavanı (birim/s); atılım hariç. */
+export function topSpeedOf(spec: VehicleSpec): number {
+  return chassisConfigOf(spec).maxSpeed;
+}
 
 /** Striker: dengeli ana tank; öteki araçlar bundan türer. */
 export const STRIKER: TankSpec = {
@@ -199,10 +221,53 @@ export const DART: TankSpec = {
   },
 };
 
+/**
+ * Arachnid: bacaklı savaş canavarı. Her yöne çevik yürür, gövdesi nişana bakar ve atılımla
+ * kısa sürede mesafe kapatır; üç plazma topu vardır (orta top tek, yan iki top çifte atış) ve
+ * toplar gövdeden bağımsız döner. Zırhı ağır tanklardan ince, çevikliği Striker'dan yüksektir.
+ */
+export const ARACHNID: WalkerSpec = {
+  kind: 'walker',
+  id: 'arachnid',
+  health: 140,
+  walker: WALKER,
+  suspension: {
+    ...SUSPENSION,
+    frequency: 3.2,
+    damping: 0.5,
+    pitchPerAccel: 0.005,
+    rollPerAccel: 0.005,
+    maxOffset: 2.2,
+    roughness: 0.2,
+  },
+  armament: {
+    weapon: {
+      intervalMs: 700,
+      aimTolerance: 0.045,
+      projectileSpeed: 700,
+      projectileLifeMs: 1400,
+      flight: { muzzleHeight: 26, launchSpeed: 80, gravity: 314, drag: 0.3, maxRange: 560 },
+      recoilImpulse: 24000,
+      hitImpulse: 52000,
+      recoilKick: 26,
+      damage: 24,
+      style: 'plasma',
+    },
+    mounts: [
+      { x: 21, y: 0, reach: 27.2 },
+      { x: -5.7, y: -21, reach: 27.2 },
+      { x: -5.7, y: 21, reach: 27.2 },
+    ],
+    salvo: [[0], [1, 2]],
+    toeInRange: 460,
+  },
+};
+
 export const VEHICLES: Readonly<Record<VehicleId, VehicleSpec>> = {
   striker: STRIKER,
   bulwark: BULWARK,
   dart: DART,
+  arachnid: ARACHNID,
 };
 
 export function isVehicleId(value: unknown): value is VehicleId {

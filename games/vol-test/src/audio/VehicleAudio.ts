@@ -3,7 +3,7 @@ import { LoopBlend } from '@volstudio/core/audio/sfx';
 import { angleDelta, clamp01, lerp } from '@volstudio/core/math';
 import { AUDIO } from '@/config/audio';
 import { GAME } from '@/config/game';
-import { STRIKER, type VehicleSpec } from '@/config/vehicles';
+import { chassisConfigOf, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
 import type { Chassis } from '@/sim/chassis/Chassis';
 import { audioUrl } from './assets';
 import { spatialSound, type AudioPosition } from './spatial';
@@ -17,6 +17,8 @@ export class VehicleAudio {
   private readonly boost: LoopBlend;
   private readonly loops: readonly LoopBlend[];
   readonly ready: Promise<void>;
+  /** Yük ölçeği: yürüyücüde yüzey kayması olmadığından yük hep sıfırdır. */
+  private readonly driveSlip: number;
   private braking = false;
   private released = false;
 
@@ -25,6 +27,7 @@ export class VehicleAudio {
     destination: AudioNode,
     private readonly spec: VehicleSpec = STRIKER,
   ) {
+    this.driveSlip = spec.kind === 'tank' ? spec.tank.driveSlip : 1;
     const loop = (name: string): LoopBlend =>
       this.scope.add(
         new LoopBlend(context, destination, [
@@ -55,7 +58,7 @@ export class VehicleAudio {
     const spatial = spatialSound(tank, listener);
     const speed = Math.hypot(tank.vx, tank.vy);
     const motion = clamp01(
-      Math.max(Math.abs(tank.trackLeft), Math.abs(tank.trackRight)) / this.spec.tank.maxSpeed,
+      Math.max(Math.abs(tank.trackLeft), Math.abs(tank.trackRight)) / topSpeedOf(this.spec),
     );
     // Yük, palet yüzeyi ile ZEMİN HIZI arasındaki farktandır.
     // `groundLeft/groundRight` katettiği YOLDUR (işaretli integral), hız
@@ -63,7 +66,7 @@ export class VehicleAudio {
     // ve motor döngüsü hiç durmaz.
     const slipLeft = Math.abs(tank.trackLeft - tank.surfaceLeft);
     const slipRight = Math.abs(tank.trackRight - tank.surfaceRight);
-    const load = clamp01((slipLeft + slipRight) / (2 * this.spec.tank.driveSlip));
+    const load = clamp01((slipLeft + slipRight) / (2 * this.driveSlip));
     const level = clamp01(
       motion * AUDIO.engine.speedWeight +
         load * AUDIO.engine.loadWeight +
@@ -73,7 +76,7 @@ export class VehicleAudio {
     const turning = clamp01(
       Math.abs(angleDelta(tank.previous.turret, tank.turret)) /
         (GAME.simulationStepMs / 1000) /
-        this.spec.tank.turretTurnRate,
+        chassisConfigOf(this.spec).turretTurnRate,
     );
     this.engine.setLevel(level);
     this.engine.setPitch(lerp(AUDIO.engine.idleRpm, AUDIO.engine.maxRpm, level));

@@ -23,6 +23,8 @@ export interface VehicleFxFrame {
   readonly slideLeft: number;
   readonly slideRight: number;
   readonly trackOffset: number;
+  /** Araç paletle sürülür: palet ve kayma izi bırakır. Bacaklı araç izini kendi ayak basışıyla verir. */
+  readonly tracked: boolean;
 }
 
 /**
@@ -110,6 +112,7 @@ export class EffectsView {
       this.trails.set(id, trail);
     }
     trail.follow(frame.x, frame.y, frame.hull, frame.speed, frame.boosting, frame.slipping);
+    if (!frame.tracked) return;
     this.marks.track(
       id,
       frame.x,

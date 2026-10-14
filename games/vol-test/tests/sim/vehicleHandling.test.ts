@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { BULWARK, DART, STRIKER, VEHICLES, type TankSpec } from '@/config/vehicles';
+import {
+  BULWARK,
+  chassisConfigOf,
+  DART,
+  STRIKER,
+  VEHICLES,
+  type TankSpec,
+  type VehicleSpec,
+} from '@/config/vehicles';
 import { Tank } from '@/sim/tank/Tank';
 import { drive, world } from '../support/sim';
 
@@ -81,7 +89,7 @@ describe('araç sürüş karakteri', () => {
 
 describe('araç silah dengesi', () => {
   /** Tetik başına ortalama mermi sayısıyla saniyelik hasar. */
-  const dps = (spec: TankSpec) => {
+  const dps = (spec: VehicleSpec) => {
     const { weapon, salvo } = spec.armament;
     const shots = salvo.reduce((sum, group) => sum + group.length, 0) / salvo.length;
     return (weapon.damage * shots * 1000) / weapon.intervalMs;
@@ -97,7 +105,7 @@ describe('araç silah dengesi', () => {
       expect(heavier.armament.weapon.intervalMs).toBeGreaterThan(
         lighter.armament.weapon.intervalMs,
       );
-      expect(heavier.tank.mass).toBeGreaterThan(lighter.tank.mass);
+      expect(chassisConfigOf(heavier).mass).toBeGreaterThan(chassisConfigOf(lighter).mass);
     }
   });
 
@@ -107,7 +115,8 @@ describe('araç silah dengesi', () => {
   });
 
   it('geri tepme hız farkı olarak ölçülür: ağır araç daha az sarsılır, ama ağır top daha çok vurur', () => {
-    const kick = (spec: TankSpec) => spec.armament.weapon.recoilImpulse / spec.tank.mass;
+    const kick = (spec: VehicleSpec) =>
+      spec.armament.weapon.recoilImpulse / chassisConfigOf(spec).mass;
     expect(kick(DART)).toBeLessThan(kick(STRIKER));
     expect(kick(BULWARK)).toBeGreaterThan(kick(STRIKER));
   });

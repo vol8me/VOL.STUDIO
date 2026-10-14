@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WEAPON_STYLES } from '@/config/tank';
 import {
+  chassisConfigOf,
   MAX_MOUNTS,
   VEHICLE_IDS,
   VEHICLES,
@@ -38,7 +39,7 @@ describe('araç tanımı geçerliliği', () => {
       it('sayılar sonlu ve pozitiftir', () => {
         expect(spec.health).toBeGreaterThan(0);
         const numbers = [
-          ...Object.values(spec.tank),
+          ...Object.values(chassisConfigOf(spec)),
           ...Object.values(spec.suspension),
           armament.weapon.intervalMs,
           armament.weapon.projectileSpeed,
@@ -83,14 +84,15 @@ describe('araç tanımı geçerliliği', () => {
       it('namlu ucu ayak izinin dışında başlar ama yakın kalır', () => {
         for (const mount of armament.mounts) {
           const tip = Math.hypot(mount.x + mount.reach, mount.y);
-          expect(tip).toBeGreaterThan(spec.tank.halfWidth);
-          expect(tip).toBeLessThan(spec.tank.halfLength * 2.4);
+          expect(tip).toBeGreaterThan(chassisConfigOf(spec).halfWidth);
+          expect(tip).toBeLessThan(chassisConfigOf(spec).halfLength * 2.4);
         }
       });
 
       it('doğma kelepçesi için ayak izi paletleri kapsar', () => {
-        expect(spec.tank.halfWidth).toBeGreaterThan(spec.tank.trackOffset);
-        expect(spec.tank.halfLength).toBeGreaterThan(spec.tank.halfWidth * 0.9);
+        const chassis = chassisConfigOf(spec);
+        expect(chassis.halfWidth).toBeGreaterThan(chassis.trackOffset);
+        expect(chassis.halfLength).toBeGreaterThan(chassis.halfWidth * 0.9);
       });
     });
   }

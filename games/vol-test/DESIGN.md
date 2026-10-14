@@ -102,11 +102,12 @@ Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, c
 indeksidir; araç eklenirse sona eklenir, yeniden sıralanmaz. `Vehicle` tanımdan şasi,
 silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca değil tanıma bakar.
 
-| Araç    | Rol                      | Can | Hız | Dönüş | Atış                                |
-| ------- | ------------------------ | --- | --- | ----- | ----------------------------------- |
-| Striker | Dengeli ana tank         | 100 | 230 | 3,0   | 34 hasar, 650 ms, kabuk             |
-| Bulwark | Ağır kuşatma tankı       | 170 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi       |
-| Dart    | Hafif, hızlı keşif tankı | 64  | 330 | 4,4   | 16 hasar, 360 ms, uzun menzilli ray |
+| Araç     | Rol                      | Can | Hız | Dönüş | Atış                                |
+| -------- | ------------------------ | --- | --- | ----- | ----------------------------------- |
+| Striker  | Dengeli ana tank         | 100 | 230 | 3,0   | 34 hasar, 650 ms, kabuk             |
+| Bulwark  | Ağır kuşatma tankı       | 170 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi       |
+| Dart     | Hafif, hızlı keşif tankı | 64  | 330 | 4,4   | 16 hasar, 360 ms, uzun menzilli ray |
+| Arachnid | Bacaklı savaş canavarı   | 140 | 150 | 2,7   | 24 hasar, 700 ms, üç plazma topu    |
 
 Tablo `src/config/vehicles.ts` değerlerinin özetidir; saniyelik hasar araçlar arasında %35'ten
 az ayrışır ve karakter farkı hızlanmadan, dönüşten, frenden ve geri tepmeden gelir
@@ -120,6 +121,29 @@ taşınmaz. Her tetik çekişi sıradaki grubu ateşler; sıra `Vehicle.salvo` i
 sunucu durumunda (`PlayerState.salvo`) öngörüyle uzlaştırılır. Mermi, ateşleyen silahın
 profilini (`Projectiles.addProfile`: ömür, uçuş, stil) taşır; isabet hasarı ve itkisi
 aynı silahın tanımından okunur.
+
+### Arachnid: bacaklı yürüyücü
+
+Arachnid paletli değil bacaklıdır (`WalkerSpec`, `src/sim/walker/Walker.ts`): her yöne (yan, geri)
+aynı çevikliğiyle yürür, gövdesi nişana bakar, hızlanması kısa bir atılımdır ve zemin tutuşundan
+palet kadar etkilenmez. Hız tavanı 150 birim/s'dir ve bilerek düşüktür: bacak yürüyüşü sanat
+uzayında ~475 px/s'nin üstünde ayakları gövdeye yetiştiremez (acil adım), sanat ölçeğiyle
+(`WALKER_ART.scale`) birlikte bu tavanı `tests/config/walkerRig.test.ts` ve
+`tests/view/walker/ArachnidLegs.test.ts` kilitler. Bacaklar yalnız sunumdur; ağ durumuna ek alan
+girmez, `ChassisState` aynıdır. Çarpışan gövde çizilen kabuğun içindedir, bacak açıklığı değildir.
+
+Silahı üç plazma topudur (orta top nişan taretidir, yan toplar odağa bakar; iki grup sırayla
+ateşler). Top resmi `entities.pen` içindeki tek bir silahtan gelir ve üç yuvada kullanılır;
+mermi, geri tepme ve ağız parlaması oyunun kendi efekt katmanındandır (resimden mermi alınmaz).
+Yuvanın `reach` değeri top resminin ağız mesafesinin ölçeklenmişidir (`CANNON_MUZZLE_PX`).
+
+Görünüm (`src/view/WalkerView.ts`) dışa aktarılmış rig'i sürer: ayaklar dünyada sabitlenir ve
+gövde ilerledikçe adım atar (`LegGait`), her bacağın açısı ayağın durduğu yerden ters kinematikle
+çıkar (`ArachnidLegs`); kabuk hızdan ve ivmeden türeyen ikincil harekete uyar (`ArachnidMotion`:
+yaslanma, çömelme, atılım gerilmesi, bakış). İvme, hızın değiştiği simülasyon adımları arasından
+okunur. Her ayak basışı bir toz tutamı bırakır; palet ve kayma izi bırakmaz. Rig metadata'sı
+`src/assets/rig/`, parça PNG'leri `public/assets/rig/` altındadır; `pnpm --filter @volstudio/vol-test rig:sync`
+`devtools/pen.dev` export'undan kopyalar ve oyun build'i devtools olmadan geçer.
 
 ## Sürüş ve süspansiyon
 

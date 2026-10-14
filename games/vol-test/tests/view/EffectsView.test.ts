@@ -41,6 +41,7 @@ const frame = (overrides: Partial<VehicleFxFrame> = {}): VehicleFxFrame => ({
   slideLeft: 0,
   slideRight: 0,
   trackOffset: 15,
+  tracked: true,
   ...overrides,
 });
 
@@ -203,6 +204,28 @@ describe('EffectsView', () => {
     expect(lastCall(dustB, 'destroy')).toBeDefined();
     view.updateVehicle(1, frame());
     expect(particles()).toHaveLength(shared + 4);
+  });
+
+  it('bacaklı araç palet ve kayma izi bırakmaz ama egzoz ve tozunu taşır', () => {
+    const { view, prints, skids, particles } = build();
+    const shared = particles().length;
+    for (let distance = 0; distance < 600; distance += 6) {
+      view.updateVehicle(
+        1,
+        frame({
+          x: distance,
+          groundLeft: distance,
+          groundRight: distance,
+          slideLeft: 400,
+          slideRight: 400,
+          speed: 200,
+          tracked: false,
+        }),
+      );
+    }
+    expect(prints()).toHaveLength(0);
+    expect(skids()).toHaveLength(0);
+    expect(particles()).toHaveLength(shared + 2);
   });
 
   it('palet izi: temas yolunu izleyen sürekli bant, pabuç adımında bir parça', () => {

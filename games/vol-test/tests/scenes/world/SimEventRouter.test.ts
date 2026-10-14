@@ -135,4 +135,33 @@ describe('routeSimEvents', () => {
     expect(haptics.patterns).toEqual(['warning']);
     expect(t.effects.wallHit).toHaveBeenCalledTimes(2);
   });
+
+  it('çarpma şiddeti etkilenen araçların görünümüne iletilir (yoksa atlanır)', () => {
+    const impact = { [PLAYER]: vi.fn(), [OTHER]: vi.fn() };
+    const t = {
+      ...targets(),
+      tank: (id: number) =>
+        impact[id as 1 | 2] ? { fire: vi.fn(), impact: impact[id as 1 | 2] } : undefined,
+    };
+    const speed = FEEL.wall.fullSpeed * 0.5;
+    routeSimEvents(
+      [{ kind: 'wallHit', source: OTHER, x: 0, y: 0, normalX: 1, normalY: 0, speed }],
+      t,
+    );
+    expect(impact[OTHER]).toHaveBeenCalledWith(0.5);
+    expect(impact[PLAYER]).not.toHaveBeenCalled();
+    routeSimEvents(
+      [{ kind: 'collision', a: PLAYER, b: OTHER, x: 0, y: 0, normalX: 1, normalY: 0, speed }],
+      t,
+    );
+    expect(impact[PLAYER]).toHaveBeenCalledWith(0.5);
+    expect(impact[OTHER]).toHaveBeenCalledTimes(2);
+    // Görünümü olmayan araç ve `impact` taşımayan görünüm (paletli araç) sessizce atlanır.
+    expect(() =>
+      routeSimEvents(
+        [{ kind: 'collision', a: 7, b: 8, x: 0, y: 0, normalX: 1, normalY: 0, speed }],
+        { ...t, tank: () => ({ fire: vi.fn() }) },
+      ),
+    ).not.toThrow();
+  });
 });

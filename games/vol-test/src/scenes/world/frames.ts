@@ -23,6 +23,8 @@ export function tankFrame(tank: Chassis, alpha: number): TankFrame {
     treadLeft: tank.treadLeft,
     treadRight: tank.treadRight,
     speed: tank.speed,
+    vx: tank.vx,
+    vy: tank.vy,
     angularVelocity: tank.angularVelocity,
     boosting: tank.boosting,
   };
