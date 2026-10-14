@@ -36,6 +36,47 @@ görünen `ServerError(4400, neden)` üretir. Ret **`onAuth`ta** yapılır: `onC
 `ServerError`un kodu Colyseus'un HTTP katmanında durum kodu olur ve 4400 geçersiz olduğu için istemci
 nedensiz `500` görür. `uniqueName(istenen, alınanlar)` odada çakışan adı `Ada 2`, `Ada 3` diye açar.
 
+## Bağlantı kapısı ve kötüye kullanım sınırları
+
+`startHost(rooms, listen, { guard: guardSettings(process.env) })` Node `http` sunucusunun `request` ve
+`upgrade` olaylarının önüne `ConnectionGuard` koyar. Colyseus eşleştirmesi HTTP, oyun trafiği WebSocket
+olduğundan ikisi de kapıdan geçer. Kapı `http.emit`i sarar: dinleyici sırasına ve Colyseus'un onları ne
+zaman eklediğine bağlı değildir ve reddedilen istek hiçbir dinleyiciye ulaşmaz. `guard` verilmezse kapı
+kurulmaz (kütüphane varsayılanı kapalıdır; oyunun sunucu girişi açar).
+
+| Sınır                    | Ortam değişkeni                   | Varsayılan | Ret                      |
+| ------------------------ | --------------------------------- | ---------- | ------------------------ |
+| Adres başına hız         | `VOL_NET_REQUEST_RATE` (saniye)   | 10         | `429` + `Retry-After`    |
+| Adres başına ani birikim | `VOL_NET_REQUEST_BURST`           | 40         | `429` + `Retry-After`    |
+| Adres başına açık soket  | `VOL_NET_MAX_SOCKETS_PER_ADDRESS` | 16         | `429` + `Retry-After: 5` |
+| Toplam açık soket        | `VOL_NET_MAX_SOCKETS`             | 512        | `503` + `Retry-After: 5` |
+| Köken izin listesi       | `VOL_NET_ORIGINS` (virgüllü)      | boş (açık) | `403`                    |
+| Ters vekil adresi        | `VOL_NET_TRUST_PROXY`             | kapalı     | —                        |
+
+Bir katılım iki jeton harcar (eşleştirme isteği ve yükseltme). Adres, `req.socket.remoteAddress`tir:
+Colyseus `context.ip`si `x-real-ip` ve `x-forwarded-for` başlıklarına güvenir ve bu başlıkları istemci
+yazabildiği için sınır olarak kullanılmaz. Önde güvenilir bir ters vekil varsa `VOL_NET_TRUST_PROXY=1`
+adresi `X-Forwarded-For`un **sağ** ucundan okur (vekilin eklediği değer). IPv6 adresleri /64 önekine
+indirgenir: bir ağ tek adres sayılır ve saldırgan aynı önek içinde adres döndürerek sınırı aşamaz.
+Toplam soket sınırı oda sayısını dolaylı bağlar; oda başına oyuncu sınırı odanın `maxClients`idir.
+
+İstemcide kapının reddi `JoinError('busy')` olur (`429`/`503`); oyun "biraz sonra dene" der. Yükseltme aşamasındaki ret
+WebSocket hatası olarak göründüğünden `unreachable` kalır. Köken denetimi yalnız `Origin` başlığı gönderen istemciyi (tarayıcı, Tauri/Android webview) sınar;
+başlıksız Node istemcisi geçer, çünkü başlığı sahteleyebilen istemci için köken zaten güvenlik sınırı
+değildir. Liste boşsa denetim yoktur; uzak erişim açılırken (`VOL_NET_HOST=0.0.0.0`) liste verilmelidir.
+Tauri kabuğunun kökenleri `tauri://localhost`, `http://tauri.localhost` ve `https://tauri.localhost`tur.
+İzlenen adres sayısı 50 000 ile sınırlıdır; boşta kalan adresler süpürülür. Saldırı sırasında günlük
+şişmesin diye her ret nedeni günlüğe bir kez yazılır; sayaçlar `ConnectionGuard.stats()`tadır.
+
+### Yavaş tüketici
+
+`SlowConsumerWatch` ve `evictSlowConsumers(clients, watch, nowMs)`: soketin yazma kuyruğu
+(`bufferedAmount`) `limitBytes` (256 KiB) üstünde `graceMs` (5 sn) kesintisiz kalırsa istemci
+`1013` koduyla atılır. Aksi halde bağlantıyı kesmeden yavaş okuyan istemci sunucu belleğini şişirirdi.
+Oda döngüsünden saniyede birkaç kez çağrılır; kısa dalgalanma bağışlanır. `clientTraffic(client)`
+istemci başına kuyruktaki bayt ile toplam gönderilen/alınan baytı verir; alanlar `ws`nin iç yapısından
+okunur, yoksa 0 döner (ölçüm eksik olabilir, sunucuyu düşüremez).
+
 ## Günlük
 
 `Logger` yapılandırılmış JSONL yazar: `{ seq, t, lvl, src, ev, data? }`. `ev` noktalı küçük harfli
@@ -69,9 +110,10 @@ ajan ve betikler Node'dan okur.
   sonraki ilk örnek yalnız zaman çıpasıdır, ölçülmez.
 - `processSnapshot()`: bellek, işlemci, çalışma süresi, süreç ve sürüm bilgisi.
 - `Ring`/`summarize`: son N ölçümün ortalama, p50, p99 ve en büyük değeri; ayırma yapmaz.
-- `TokenBucket(ratePerSecond, burst, startAt)`: oyuncu başına komut sınırı; saat dışarıdan verilir.
+- `TokenBucket(ratePerSecond, burst, startAt)`: oyuncu başına komut ve adres başına istek sınırı; saat dışarıdan verilir.
 - `envInteger`, `envText`, `envChoice`, `envFlag`: geçersiz değer başlatmayı `RangeError` ile durdurur.
   `listenSettings`: `VOL_NET_PORT` (varsayılan 2567) ve `VOL_NET_HOST` (varsayılan loopback).
+  `opsSettings`: `VOL_NET_OPS_PORT` verilmedikçe işletim kapısı kapalıdır (`null`); `VOL_NET_OPS_HOST` varsayılan loopback'tir.
 
 ## Oyun iskeleti
 

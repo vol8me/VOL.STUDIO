@@ -15,6 +15,7 @@ const ERROR_KEYS = {
   full: 'voltest:online.error.full',
   'not-found': 'voltest:online.error.notFound',
   unreachable: 'voltest:online.error.unreachable',
+  busy: 'voltest:online.error.busy',
   failed: 'voltest:online.error.failed',
 } as const satisfies Record<JoinFailure, MessageKey>;
 

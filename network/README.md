@@ -11,11 +11,11 @@ bu paket odayı çalıştıran zemini verir. Paket belirli bir oyuna bağlı de�
 `src/` üç yüzeye bölünür ve `exports` haritası da öyledir. Yüzeyler arası kenarlar
 `scripts/quality/layers.mjs` ile denetlenir.
 
-| Export       | Çalıştığı yer    | İçerik                                                               |
-| ------------ | ---------------- | -------------------------------------------------------------------- |
-| `./protocol` | tarayıcı + Node  | `PROTOCOL_VERSION`, katılım seçenekleri, ad ve oda kodu kuralları    |
-| `./client`   | tarayıcı/webview | `createLobby` eşleştirme girişi, `JoinError`, Colyseus öngörü API'si |
-| `./server`   | yalnız Node      | döngü, ana makine, katılım kapısı, kapanış, günlük, ölçüm            |
+| Export       | Çalıştığı yer    | İçerik                                                                |
+| ------------ | ---------------- | --------------------------------------------------------------------- |
+| `./protocol` | tarayıcı + Node  | `PROTOCOL_VERSION`, katılım seçenekleri, ad ve oda kodu kuralları     |
+| `./client`   | tarayıcı/webview | `createLobby` eşleştirme girişi, `JoinError`, Colyseus öngörü API'si  |
+| `./server`   | yalnız Node      | döngü, ana makine, katılım ve bağlantı kapısı, kapanış, günlük, ölçüm |
 
 Protokol ve istemci Node yerleşiklerini, `@colyseus/core` ile `@colyseus/ws-transport`'u içe
 aktaramaz; sunucu istemciyi aktaramaz. Oyunun tarayıcı kodu `./server`'a uzanamaz. Sunucu
@@ -27,8 +27,8 @@ aktaramaz; sunucu istemciyi aktaramaz. Oyunun tarayıcı kodu `./server`'a uzana
 (`protocol`, `name`, `code`), görünen ad temizliği ve oda kodu alfabesi. Sunucu her katılımı
 `authenticateJoin` ile doğrular; ret nedeni (`protocol`, `code`, `full`) `ServerError(4400, neden)`
 olarak gider. `./client` içindeki `createLobby(endpoint)` Colyseus eşleştirmesini sarar, sürümü her
-isteğe ekler ve her hatayı `JoinError.reason` kümesine indirger (`not-found`, `unreachable`, `failed`
-eklenir). Girdi şeması, oda durumu ve öngörü **oyunundur**: oyun `defineInput` şemasını tanımlar,
+isteğe ekler ve her hatayı `JoinError.reason` kümesine indirger (`not-found`, `unreachable`, `busy`
+[bağlantı kapısı reddi], `failed` eklenir). Girdi şeması, oda durumu ve öngörü **oyunundur**: oyun `defineInput` şemasını tanımlar,
 uzlaştırmayı Colyseus SDK'nın `Predict`i yapar ([VOL.TEST tasarımı](../games/vol-test/DESIGN.md)).
 
 ## Çalıştırma

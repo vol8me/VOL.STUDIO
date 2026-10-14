@@ -77,6 +77,12 @@ describe('classifyJoinError', () => {
     expect(classifyJoinError(new ServerError(523, 'unhandled'))).toBe('failed');
   });
 
+  it('bağlantı kapısının 429 ve 503 reddini meşgul sayar', () => {
+    expect(classifyJoinError(new ServerError(429, 'Too Many Requests'))).toBe('busy');
+    expect(classifyJoinError(new ServerError(503, 'Service Unavailable'))).toBe('busy');
+    expect(classifyJoinError(new ServerError(403, 'Forbidden'))).toBe('failed');
+  });
+
   it('SDK MatchMakeError adını da tanır; adı ya da kodu tutmayan hata sunucu hatası sayılmaz', () => {
     const matchMake = Object.assign(new Error('no rooms'), { name: 'MatchMakeError', code: 521 });
     expect(classifyJoinError(matchMake)).toBe('not-found');

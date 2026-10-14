@@ -1,8 +1,11 @@
 import { Room, type Client } from '@colyseus/core';
 import {
   Ring,
+  SlowConsumerWatch,
   authenticateJoin,
+  clientTraffic,
   errorData,
+  evictSlowConsumers,
   rejectJoin,
   runRoomLoop,
   uniqueName,
@@ -119,6 +122,11 @@ export class WorldRoom extends Room {
   private pending: NetEvent[] = [];
   private log: Logger | undefined;
   private faults = 0;
+  private readonly slow = new SlowConsumerWatch({
+    limitBytes: NETWORK.slowConsumer.limitBytes,
+    graceMs: NETWORK.slowConsumer.graceMs,
+  });
+  private evictions = 0;
 
   override readonly inputs = this.defineInput(TankInput, {
     sanitize: INPUT_RANGES,
@@ -140,6 +148,7 @@ export class WorldRoom extends Room {
       this.state.factions.push(new FactionState());
     this.setPatchRate(NETWORK.patchRateMs);
     runRoomLoop(this, NETWORK.tickRate, () => this.guardedAdvance());
+    this.clock.setInterval(() => this.sweepSlowClients(), NETWORK.slowConsumer.sweepMs);
     this.log?.log('info', 'room.create', {
       room: this.roomName,
       primary: options.primary === true,
@@ -202,6 +211,7 @@ export class WorldRoom extends Room {
   }
 
   override onLeave(client: Client, code?: number): void {
+    this.slow.forget(client.sessionId);
     const slot = this.players.get(client.sessionId);
     if (!slot) return;
     this.players.delete(client.sessionId);
@@ -370,6 +380,47 @@ export class WorldRoom extends Room {
   /** Bağlı insan sayısı (botlar hariç). */
   get playerCount(): number {
     return this.players.size;
+  }
+
+  /** Yazma kuyruğu sınırı aşıp tolerans süresini dolduran istemcileri atar. */
+  private sweepSlowClients(): void {
+    for (const session of evictSlowConsumers(this.clients, this.slow, performance.now())) {
+      this.evictions++;
+      this.log?.log('warn', 'player.slow', {
+        session,
+        limitBytes: NETWORK.slowConsumer.limitBytes,
+      });
+    }
+  }
+
+  /** İstemcilerin toplam trafiği ve atılan yavaş tüketici sayısı; `/metrics` bunu okur. */
+  trafficSummary(): {
+    clients: number;
+    bufferedBytes: number;
+    bufferedMaxBytes: number;
+    sentBytes: number;
+    receivedBytes: number;
+    evictions: number;
+  } {
+    let bufferedBytes = 0;
+    let bufferedMaxBytes = 0;
+    let sentBytes = 0;
+    let receivedBytes = 0;
+    for (const client of this.clients) {
+      const traffic = clientTraffic(client);
+      bufferedBytes += traffic.bufferedBytes;
+      bufferedMaxBytes = Math.max(bufferedMaxBytes, traffic.bufferedBytes);
+      sentBytes += traffic.sentBytes;
+      receivedBytes += traffic.receivedBytes;
+    }
+    return {
+      clients: this.clients.length,
+      bufferedBytes,
+      bufferedMaxBytes,
+      sentBytes,
+      receivedBytes,
+      evictions: this.evictions,
+    };
   }
 
   /** Adım süresi özeti (ms); `/metrics` bunu okur. */

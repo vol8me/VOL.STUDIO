@@ -166,6 +166,7 @@
       "full": "The server is full.",
       "notFound": "No open war world was found.",
       "unreachable": "Could not reach the server.",
+      "busy": "The server is busy right now; try again shortly.",
       "failed": "Could not join the war."
     },
     "lost": "Connection lost; returned to the offline world.",

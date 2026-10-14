@@ -41,6 +41,12 @@ export const NETWORK = {
   reconnectSeconds: 15,
   /** Uzak araçların çizildiği geriye dönük süre (ms): iki yama arasını ara değerle doldurur. */
   interpolationDelayMs: 100,
+  /**
+   * Yavaş tüketici: soketin yazma kuyruğu `limitBytes` üstünde `graceMs` kesintisiz kalan istemci
+   * atılır; kuyruk `sweepMs` aralığıyla taranır. 24 oyunculu durum yaması birkaç KiB'dir, sınır
+   * onlarca yamayı karşılar.
+   */
+  slowConsumer: { limitBytes: 256 * 1024, graceMs: 5000, sweepMs: 1000 },
   /** Eşik yoksa SDK sapmayı ölçmez (hep 0); kalıcı sapma bunu aşarsa uyarır. 1 m = 32 birim. */
   divergenceTolerance: 4,
 } as const;

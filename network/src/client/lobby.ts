@@ -9,9 +9,10 @@ import {
 
 /**
  * Katılımın başarısızlık nedeni. `not-found` eşleşen oda yok demektir: kodu yanlış ya da dolu
- * oda Colyseus eşleştiricisinde aynı görünür (dolu oda kilitlenir ve aramadan düşer).
+ * oda Colyseus eşleştiricisinde aynı görünür (dolu oda kilitlenir ve aramadan düşer). `busy`
+ * sunucunun bağlantı kapısı geçici olarak reddetti (HTTP 429 hız sınırı, 503 doluluk): biraz sonra denenir.
  */
-export type JoinFailure = JoinRejection | 'not-found' | 'unreachable' | 'failed';
+export type JoinFailure = JoinRejection | 'not-found' | 'unreachable' | 'busy' | 'failed';
 
 /** Katılım hatası; kullanıcıya gösterilecek metin çağıranın i18n anahtarıdır, `reason`dan türer. */
 export class JoinError extends Error {
@@ -25,6 +26,7 @@ export class JoinError extends Error {
 }
 
 const NOT_FOUND_CODES: ReadonlySet<number> = new Set([521, 522]);
+const BUSY_CODES: ReadonlySet<number> = new Set([429, 503]);
 
 interface CodedError {
   readonly code: number;
@@ -52,6 +54,7 @@ export function classifyJoinError(error: unknown): JoinFailure {
         ? (error.message as JoinRejection)
         : 'failed';
     }
+    if (BUSY_CODES.has(error.code)) return 'busy';
     return NOT_FOUND_CODES.has(error.code) ? 'not-found' : 'failed';
   }
   // Bağlantı kurulamayınca fetch/WebSocket TypeError ya da `CloseEvent` benzeri bir hata atar.

@@ -60,3 +60,16 @@ export function listenSettings(env: Env): ListenSettings {
     host: envText(env, 'VOL_NET_HOST', '127.0.0.1'),
   };
 }
+
+/**
+ * İşletim kapısının adresi: `VOL_NET_OPS_PORT` verilmezse kapı kapalıdır (`null`); verilirse
+ * `VOL_NET_OPS_HOST` (varsayılan loopback) üzerinde dinler. Kapı oyun trafiğinden ayrıdır.
+ */
+export function opsSettings(env: Env): ListenSettings | null {
+  const raw = env.VOL_NET_OPS_PORT;
+  if (raw === undefined || raw === '') return null;
+  return {
+    port: envInteger(env, 'VOL_NET_OPS_PORT', 0, 0, 65535),
+    host: envText(env, 'VOL_NET_OPS_HOST', '127.0.0.1'),
+  };
+}

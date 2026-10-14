@@ -2,6 +2,7 @@ import { createServer, type Server as HttpServer } from 'node:http';
 import { defineServer, type RegisteredHandler, type Server } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import type { ListenSettings } from './env';
+import { ConnectionGuard, installGuard, type GuardSettings } from './guard';
 import { errorData, type Logger } from './log';
 import { eventLoopDelay } from './metrics';
 
@@ -11,11 +12,15 @@ export const DEFAULT_MAX_PAYLOAD_BYTES = 1024;
 export interface HostOptions {
   readonly maxPayload?: number;
   readonly logger?: Logger;
+  /** Verilirse bağlantı kapısı kurulur (adres başına hız/soket sınırı, köken izin listesi). */
+  readonly guard?: GuardSettings;
 }
 
 export interface Host<T extends Record<string, RegisteredHandler>> {
   readonly http: HttpServer;
   readonly server: Server<T>;
+  /** `guard` seçeneği verilmediyse yoktur. */
+  readonly guard: ConnectionGuard | null;
 }
 
 /**
@@ -37,7 +42,12 @@ export function createHost<T extends Record<string, RegisteredHandler>>(
     }),
     rooms,
   });
-  return { http, server: server as Server<T> };
+  let guard: ConnectionGuard | null = null;
+  if (options.guard) {
+    guard = new ConnectionGuard(options.guard);
+    installGuard(http, guard, options.logger?.child('guard'));
+  }
+  return { http, server: server as Server<T>, guard };
 }
 
 /**

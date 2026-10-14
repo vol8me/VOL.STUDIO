@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { envChoice, envFlag, envInteger, envText, listenSettings } from '../../src/server';
+import {
+  envChoice,
+  envFlag,
+  envInteger,
+  envText,
+  listenSettings,
+  opsSettings,
+} from '../../src/server';
 
 describe('ortam okuyucuları', () => {
   it('tam sayıyı aralıkta okur, boşta varsayılanı verir, dışını reddeder', () => {
@@ -42,5 +49,16 @@ describe('ortam okuyucuları', () => {
     for (const port of ['-1', '65536', '1.5', 'x']) {
       expect(() => listenSettings({ VOL_NET_PORT: port })).toThrow(RangeError);
     }
+  });
+
+  it('işletim kapısı port verilmedikçe kapalıdır; verilince loopback varsayılandır', () => {
+    expect(opsSettings({})).toBeNull();
+    expect(opsSettings({ VOL_NET_OPS_PORT: '' })).toBeNull();
+    expect(opsSettings({ VOL_NET_OPS_PORT: '9100' })).toEqual({ port: 9100, host: '127.0.0.1' });
+    expect(opsSettings({ VOL_NET_OPS_PORT: '0', VOL_NET_OPS_HOST: '0.0.0.0' })).toEqual({
+      port: 0,
+      host: '0.0.0.0',
+    });
+    expect(() => opsSettings({ VOL_NET_OPS_PORT: '70000' })).toThrow(RangeError);
   });
 });

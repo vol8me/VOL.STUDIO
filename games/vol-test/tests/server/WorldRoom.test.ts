@@ -1,7 +1,7 @@
 import { matchMaker } from '@colyseus/core';
 import { Client } from '@colyseus/sdk';
 import { Predict, classifyJoinError, type JoinFailure, type Room } from '@volstudio/network/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NETWORK } from '@/config/network';
 import { TANK } from '@/config/tank';
 import { STRIKER, VEHICLE_IDS, VEHICLES, modelOf } from '@/config/vehicles';
@@ -358,6 +358,40 @@ describe('WorldRoom girdi yetkisi', () => {
     for (let index = 0; index < NETWORK.maxMessagesPerSecond * 3; index++)
       seat.send('flood', index);
     expect(await left).toBeGreaterThan(0);
+  });
+});
+
+describe('WorldRoom trafik ve yavaş tüketici', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('trafik özeti istemci sayısını ve gönderilen baytı verir', async () => {
+    await boot();
+    const seat = await join();
+    await until(() => serverRoom(seat).trafficSummary().sentBytes > 0, 'gönderilen bayt');
+    const traffic = serverRoom(seat).trafficSummary();
+    expect(traffic).toMatchObject({ clients: 1, evictions: 0 });
+    expect(traffic.receivedBytes).toBeGreaterThan(0);
+    expect(traffic.bufferedBytes).toBeGreaterThanOrEqual(0);
+  });
+
+  it('yazma kuyruğu sınırı tolerans boyunca aşan istemci 1013 koduyla atılır, sağlıklı kalır', async () => {
+    await boot();
+    const slow = await join({ name: 'Yavas' });
+    const fine = await join({ name: 'Saglam' });
+    const room = serverRoom(slow);
+    const wire = [...room.clients].find((client) => client.sessionId === slow.sessionId)!;
+    Object.defineProperty(wire.ref, 'bufferedAmount', {
+      value: NETWORK.slowConsumer.limitBytes * 4,
+    });
+    const left = new Promise<number>((resolve) => slow.onLeave((code) => resolve(code)));
+    // İlk tarama sayacı başlatır; saat tolerans kadar ileri alınınca sonraki tarama atar.
+    await new Promise((resolve) => setTimeout(resolve, NETWORK.slowConsumer.sweepMs + 200));
+    expect(room.trafficSummary().evictions).toBe(0);
+    const now = performance.now();
+    vi.spyOn(performance, 'now').mockReturnValue(now + NETWORK.slowConsumer.graceMs + 1000);
+    expect(await left).toBe(1013);
+    expect(room.trafficSummary().evictions).toBe(1);
+    expect(fine.connection.isOpen).toBe(true);
   });
 });
 

@@ -513,13 +513,22 @@ ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağ�
 - Kendi `fired` yankısı bastırılır (öngörü atışı zaten gösterdi); yerel mermi yerelde ilerler.
 - Hava senkronlanmaz; çevrimiçi dünya `clear` açılır.
 - Duraklatma dünyayı dondurmaz (saat sunucudadır): araç yalnız boş girdi yollar.
-- Sahne yeniden başlarken `restart` her zaman bir nesne geçirir. Phaser boş veriyi yok sayıp
-  önceki veriyi korur; "Ayrıl" sonrası eski çevrimiçi sürücü fabrikası ölü oturumla yeniden kurulurdu.
+- Sahne başlarken ve yeniden başlarken (`restart`, ekran geçişleri, `toMenu`) veri her zaman bir nesnedir.
+  Phaser boş veriyi yok sayıp önceki veriyi korur; "Ayrıl" sonrası eski çevrimiçi sürücü fabrikası ölü
+  oturumla yeniden kurulurdu ve menüden açılan alıştırma çevrimiçi sürücüyle gelirdi.
 - Bilerek ayrılma `leave(true)` ile hemen düşer; kopma 15 sn yeniden bağlanma ister ve çubukta
   uyarı verir; bağlantı kapanırsa oyuncu çevrimdışı dünyaya `online.lost` bildirimiyle döner.
 - Oyuncu araçları da cepheye bağlıdır (`Vehicle.team`): aynı cepheden ateş hasar vermez, kendi
   kendine hasar da yoktur.
 - Savaş kazanılınca (`warWon`) puanlar ve bölgeler sıfırlanır; oyuncular çıkarılmaz, dünya sürer.
+
+Sunucu işletimi (ortam değişkenleri ve sınırların gerekçesi [network sunucu belgesindedir](../../network/docs/server.md)):
+`server:dev` girişi `VOL_NET_*` değişkenlerinden bağlantı kapısını (adres başına hız ve soket sınırı, toplam soket,
+köken izin listesi) kurar; `VOL_NET_OPS_PORT` verilirse loopback'te `/healthz`, `/metrics` ve `/logs` açılır.
+`/metrics` her dünya odası için insan sayısı, adım süresi özeti (ortalama, p95, en büyük) ve trafik özeti
+(istemci sayısı, kuyruktaki ve toplam gönderilen/alınan bayt, atılan yavaş tüketici) ile kapı sayaçlarını verir.
+Yazma kuyruğu `NETWORK.slowConsumer.limitBytes` üstünde tolerans süresince kalan istemci `1013` koduyla atılır.
+Kapıya takılan katılım istemcide `online.error.busy` ("sunucu yoğun") olarak görünür.
 
 Ölçüm ve sınırlar: sapma ölçümü SDK'da yalnız bir eşik verilince açılır (`NETWORK.divergenceTolerance`);
 eşiksiz "sapma 0" hiçbir şey söylemez. E2E yetkili aracı kaydırıp sapmanın görünmesini ve istemcinin

@@ -166,6 +166,7 @@
       "full": "Sunucu dolu.",
       "notFound": "Açık bir savaş dünyası bulunamadı.",
       "unreachable": "Sunucuya ulaşılamadı.",
+      "busy": "Sunucu şu an yoğun; biraz sonra yeniden deneyin.",
       "failed": "Savaşa katılınamadı."
     },
     "lost": "Bağlantı kesildi; çevrimdışı dünyaya dönüldü.",
