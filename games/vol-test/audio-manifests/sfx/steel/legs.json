@@ -1,0 +1,301 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          8.629834032574977e-7
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 3,
+        "frames": 144000,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -7.947326551286949
+        ],
+        "channelRmsDbfs": [
+          -25.81398804830269
+        ],
+        "crestFactorDb": 17.86666149701574,
+        "integratedLufs": -24.46938677801479,
+        "maxMomentaryLufs": -24.0562557294852,
+        "rmsDbfs": -25.81398804830269,
+        "samplePeakDbfs": -7.947326551286949,
+        "truePeakDbtp": -7.947326551286949
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -76.97011453123201,
+          "high": -61.947326762896694,
+          "low": -57.93166198583756,
+          "mid": -25.982924482877543,
+          "sub": -64.72359739465907
+        },
+        "centroidHz": 1470.8603926459625,
+        "flatness": 1.4339487863911063e-7,
+        "peakHz": 1453.125,
+        "rolloff85Hz": 1523.4375
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 3,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.61,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 1,
+        "temporalCentroidSeconds": 1.4492236613988019,
+        "trailingSilenceSeconds": 0
+      }
+    },
+    "sourceRecordHash": "sha256:2c3549ae318e533c103aaed1598b116dd30058a7be5c0877416af451910c7807"
+  },
+  "asset": {
+    "bytes": 41881,
+    "encodedHash": "sha256:cb076763842f920bd5db7dd24c19ce24a5df455bb68193141ca2359e35a22362",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/legs.ogg"
+  },
+  "assetId": "vt-hardsteel-legs",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 4.05,
+        "min": 2.95
+      },
+      "id": "vt-hardsteel-legs",
+      "intent": "Kuru mekanik örümcek bacak adımı: sivri metal uç tıkırtısı ve hafif eklem sürtmesi; palet gümbürtüsü, motor ve müzik yok.",
+      "kind": "acoustic",
+      "loop": true,
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — kuru mekanik: vt-steel-legs"
+    },
+    "hash": "sha256:d649eb958c7d4baa7ca30fc8987b39d8475293677c2fa1341e1860641d911192",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:384900debeab0bbf962f291e1d38e789ee39df9fd72bfbf24c3ce9d0f0bb2670",
+      "nodes": [
+        {
+          "hash": "sha256:b9f7f769ee1231cdeb3308f02c54b955be69705286885e0805f92f23f9d56d96",
+          "id": "exciter.membrane",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        },
+        {
+          "hash": "sha256:91c81ff2366eae583d7cc0306b88d54c298fe4340b666cdf32ab6099a7037011",
+          "id": "source.friction",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": true,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-legs",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-legs",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Kuru mekanik örümcek bacak adımı: sivri metal uç tıkırtısı ve hafif eklem sürtmesi.",
+      "durationSeconds": 4,
+      "layers": [
+        {
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "tips",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.45,
+                "damping": 0.7,
+                "decay": 0.05,
+                "frequency": 1450,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 3400,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "buckleDecay": 0.009,
+              "rate": 9,
+              "tension": 0.62
+            },
+            "primitive": "exciter.membrane",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -16,
+          "mechanism": "mechanical",
+          "name": "joints",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2200,
+                "mode": "bandpass",
+                "q": 1.1
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "texture",
+          "source": {
+            "params": {
+              "granularity": 18,
+              "material": "metal",
+              "pressure": 0.3,
+              "rolling": 0.2,
+              "roughness": 0.55,
+              "speed": 0.7
+            },
+            "primitive": "source.friction",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "loop": {
+          "crossfadeSeconds": 1
+        },
+        "normalize": "peak",
+        "peakDbfs": -8
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8410
+    },
+    "hash": "sha256:28cda164af85528235679e68b7bcfc8fdb3fb5c72ab89e7c875adc7d078d5e98",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 144000,
+      "hash": "sha256:5d1634346d68ccf1570a67e0c3e8b75d476e2486e92468ec23c025a124fdce00",
+      "sampleRate": 48000
+    },
+    "renderId": "r-b0db7f9d2bdbf237",
+    "rendererVersion": 2,
+    "seed": 8410
+  },
+  "schema": "AudioAssetManifestV1",
+  "seam": {
+    "jumpRatio": 0.0245,
+    "levelStepDb": 0.046,
+    "method": "loop-seam-v1",
+    "pass": true,
+    "reasons": [],
+    "spectralStepDb": -16.269
+  }
+}

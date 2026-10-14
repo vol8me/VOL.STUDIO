@@ -19,6 +19,8 @@ export class VehicleAudio {
   readonly ready: Promise<void>;
   /** Yük ölçeği: yürüyücüde yüzey kayması olmadığından yük hep sıfırdır. */
   private readonly driveSlip: number;
+  /** Yürüyücüde palet gümbürtüsü yerine bacak adımı çalar. */
+  private readonly walker: boolean;
   private readonly voice: VehicleVoice;
   private braking = false;
   private released = false;
@@ -47,7 +49,8 @@ export class VehicleAudio {
         })),
       ),
     );
-    this.tracks = loop('tracks');
+    this.walker = spec.kind === 'walker';
+    this.tracks = loop(this.walker ? 'legs' : 'tracks');
     this.skid = loop('skid');
     this.servo = loop('servo');
     this.boost = loop('boost');
@@ -84,16 +87,15 @@ export class VehicleAudio {
     this.engine.setPitch(
       lerp(AUDIO.engine.idleRpm, AUDIO.engine.maxRpm, level) * this.voice.engine,
     );
-    this.tracks.setRate(
-      lerp(AUDIO.tracks.rateMin, AUDIO.tracks.rateMax, motion) * this.voice.tracks,
-    );
+    const stride = this.walker ? AUDIO.legs : AUDIO.tracks;
+    this.tracks.setRate(lerp(stride.rateMin, stride.rateMax, motion) * this.voice.tracks);
     this.skid.setRate(lerp(AUDIO.skid.rateMin, AUDIO.skid.rateMax, slide));
     this.servo.setRate(lerp(AUDIO.servo.rateMin, AUDIO.servo.rateMax, turning));
     const gains = [
       motion > AUDIO.engine.motionFloor || load > AUDIO.engine.motionFloor || tank.boosting
         ? AUDIO.engine.gain * this.voice.engineGain
         : 0,
-      AUDIO.tracks.gain * motion,
+      (this.walker ? AUDIO.legs : AUDIO.tracks).gain * motion,
       AUDIO.skid.gain * slide,
       AUDIO.servo.gain * turning,
       tank.boosting ? AUDIO.boost.gain : 0,

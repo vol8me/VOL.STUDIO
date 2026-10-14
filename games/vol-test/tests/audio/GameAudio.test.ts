@@ -7,7 +7,7 @@ import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext } from '../support/fakeAudio';
 import { Button, uiIntentBusFor } from '@volstudio/core/ui';
 import { AUDIO } from '@/config/audio';
-import { ARACHNID, BULWARK, DART, STRIKER, type VehicleSpec } from '@/config/vehicles';
+import { ARACHNID, BULWARK, DART, STRIKER, WIDOW, type VehicleSpec } from '@/config/vehicles';
 
 describe('GameAudio', () => {
   let context: FakeAudioContext;
@@ -114,8 +114,8 @@ describe('GameAudio', () => {
     expect(context.gains.every((n) => n.disconnected)).toBe(true);
   });
 
-  it('top sesi ateşleyen silahın perdesini ve gücünü taşır: ağır mermi gümbürder, ray çatlar', async () => {
-    const cannonOf = async (vehicle: VehicleSpec) => {
+  it('atış sesi silah stiline göredir: kabuk ve ağır mermi topu perdeyle, ray, plazma ve iğne kendi teslimiyle çalar', async () => {
+    const shotOf = async (vehicle: VehicleSpec) => {
       const sim = new Simulation({ world: new World(1000, 1000, 32), vehicle });
       await audio.sync(sim.vehicles, sim.player.chassis);
       const before = context.sources.length;
@@ -123,24 +123,30 @@ describe('GameAudio', () => {
         [{ kind: 'fired', mount: 0, source: sim.player.id, x: 0, y: 0, angle: 0, vx: 0, vy: 0 }],
         listener,
       );
-      const source = context.sources.slice(before).find((s) => s.buffer?.url?.includes('/cannon/'));
+      const source = context.sources
+        .slice(before)
+        .find((s) => /\/(cannon|shot-[a-z]+)/.test(s.buffer?.url ?? ''));
       return {
+        url: source!.buffer!.url!,
         rate: source!.playbackRate.value,
         gain: (source!.connections[0] as FakeAudioGain).gain.value,
       };
     };
-    const shell = await cannonOf(STRIKER);
-    const slug = await cannonOf(BULWARK);
-    const rail = await cannonOf(DART);
-    const plasma = await cannonOf(ARACHNID);
+    const shell = await shotOf(STRIKER);
+    const slug = await shotOf(BULWARK);
+    const rail = await shotOf(DART);
+    const plasma = await shotOf(ARACHNID);
+    const needle = await shotOf(WIDOW);
+    expect(shell.url).toContain('/cannon/');
+    expect(slug.url).toContain('/cannon/');
     expect(shell.rate).toBe(AUDIO.weaponVoice.shell.rate);
     expect(slug.rate).toBe(AUDIO.weaponVoice.slug.rate);
-    expect(rail.rate).toBe(AUDIO.weaponVoice.rail.rate);
-    expect(plasma.rate).toBe(AUDIO.weaponVoice.plasma.rate);
     expect(slug.rate).toBeLessThan(shell.rate);
-    expect(rail.rate).toBeGreaterThan(shell.rate);
     expect(slug.gain).toBeGreaterThan(shell.gain);
-    expect(rail.gain).toBeLessThan(shell.gain);
+    expect(rail.url).toMatch(/shot-rail\.ogg$/);
+    expect(plasma.url).toMatch(/shot-plasma\.ogg$/);
+    expect(needle.url).toMatch(/shot-needle\.ogg$/);
+    for (const own of [rail, plasma, needle]) expect(own.rate).toBe(1);
   });
 
   it('fren kenarını ses ailesine bağlar; duraklatılmış ve işitme dışında kalan olaylar susar', async () => {

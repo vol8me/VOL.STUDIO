@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-40a509caf9125478": {
+        "hash": "sha256:eaa3bcae8d3ba1227e31957422c563359ecf5ab36d7a4f76bc30713b9bbf7723",
+        "path": "analyses/r-40a509caf9125478.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:7b2f7662fd005b9960346563103f5f26319243914de9d49b5637d1bc3ce5fce1",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:7b2f7662fd005b9960346563103f5f26319243914de9d49b5637d1bc3ce5fce1",
+      "hash": "sha256:1d973652c39940b6f3796b578d846e81cd595c4b7adbfa1e38ae08c55647c61e",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:8172a3ddbfe4e32d5d556490089c031e150716072c9b31d9d2f1df6292ec9076",
+      "path": "games/vol-test/audio-manifests/sfx/steel/shot-plasma.json"
+    },
+    "renders": {
+      "r-40a509caf9125478": {
+        "hash": "sha256:b9d8434464ff9f688f363feae3b1ec9ea55d87ed48ef65fd54c2d205af7e509d",
+        "path": "renders/r-40a509caf9125478.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:b606d6ca53fac01a243d77dad7f28ff35b72f8815f454b0a9f64717a63b21ed1",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-shot-plasma",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/shot-plasma.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

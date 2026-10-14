@@ -55,6 +55,8 @@ export class GameAudio {
         } else this.bank.register(`${name}:${variant.key}`, [audioUrl(variant.path)]);
       }
     }
+    for (const asset of new Set(Object.values(AUDIO.shotAsset)))
+      this.bank.register(`shot:${asset}`, [audioUrl(`${AUDIO.loopAssetRoot}/${asset}.ogg`)]);
     for (const action of ['pause', 'resume'])
       this.bank.register(`ui:${action}`, [audioUrl(`${AUDIO.uiAssetRoot}/${action}.ogg`)]);
   }
@@ -178,6 +180,17 @@ export class GameAudio {
     speed?: number,
     weapon?: WeaponConfig,
   ): void {
+    // Kendi atış teslimi olan silah (ray, plazma, iğne) top ailesini perdeyle işlemez.
+    const own = name === 'cannon' && weapon ? AUDIO.shotAsset[weapon.style] : undefined;
+    if (weapon && own) {
+      const spatial = spatialSound(source, listener);
+      if (spatial.gain === 0) return;
+      this.bank.play(`shot:${own}`, {
+        pan: spatial.pan,
+        gain: AUDIO.shotGain.cannon * spatial.gain * AUDIO.weaponVoice[weapon.style].gain,
+      });
+      return;
+    }
     const variant = FAMILIES[name].choose(
       `${this.seed}:${this.eventIndex++}:${name}`,
       name === 'crash'

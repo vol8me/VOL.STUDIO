@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VehicleAudio } from '@/audio/VehicleAudio';
 import { AUDIO } from '@/config/audio';
 import { WEAPON } from '@/config/tank';
-import { BULWARK, DART, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
+import { ARACHNID, BULWARK, DART, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
 import { tank, world, command, DT } from '../support/sim';
 import type { FakeAudioGain } from '../support/fakeAudio';
 import { FakeAudioContext, type FakeAudioSource } from '../support/fakeAudio';
@@ -65,6 +65,27 @@ describe('araç döngüleri', () => {
     expect(output(byName('boost')).gain.value).toBe(0.28);
     voice.stop();
     expect(context.sources.every((s) => s.stopped)).toBe(true);
+  });
+  it('yürüyücü palet gümbürtüsü yerine bacak adımı çalar ve adım temposu hızla artar', async () => {
+    const own = new FakeAudioContext();
+    const walker = new VehicleAudio(
+      own as unknown as AudioContext,
+      own.destination as unknown as AudioNode,
+      ARACHNID,
+    );
+    await walker.ready;
+    const subject = tank();
+    subject.trackLeft = subject.trackRight = topSpeedOf(ARACHNID);
+    walker.update(subject, subject, false);
+    const urls = own.sources.map((s) => s.buffer?.url ?? '');
+    expect(urls.some((url) => url.endsWith('/legs.ogg'))).toBe(true);
+    expect(urls.some((url) => url.endsWith('/tracks.ogg'))).toBe(false);
+    const legs = own.sources.find((s) => s.buffer?.url?.endsWith('/legs.ogg'))!;
+    expect(legs.playbackRate.value).toBeCloseTo(
+      AUDIO.legs.rateMax * AUDIO.vehicleVoice.arachnid.tracks,
+    );
+    expect(output(legs).gain.value).toBeCloseTo(AUDIO.legs.gain);
+    walker.dispose();
   });
   it('motor perdesi araca göredir: ağır araç derin, hafif araç tiz; Striker referanstır', async () => {
     const idleRate = async (spec: VehicleSpec) => {

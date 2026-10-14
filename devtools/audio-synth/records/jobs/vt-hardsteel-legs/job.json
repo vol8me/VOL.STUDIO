@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-b0db7f9d2bdbf237": {
+        "hash": "sha256:2c3549ae318e533c103aaed1598b116dd30058a7be5c0877416af451910c7807",
+        "path": "analyses/r-b0db7f9d2bdbf237.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:d649eb958c7d4baa7ca30fc8987b39d8475293677c2fa1341e1860641d911192",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:d649eb958c7d4baa7ca30fc8987b39d8475293677c2fa1341e1860641d911192",
+      "hash": "sha256:28cda164af85528235679e68b7bcfc8fdb3fb5c72ab89e7c875adc7d078d5e98",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:370ba4657df8a16ccca9db156488f16dccbb4a5fc97ce0bbfc63219821ac8592",
+      "path": "games/vol-test/audio-manifests/sfx/steel/legs.json"
+    },
+    "renders": {
+      "r-b0db7f9d2bdbf237": {
+        "hash": "sha256:f73d860aead855ca767c929d636a787843b401e08580530449b2bc9bea15f736",
+        "path": "renders/r-b0db7f9d2bdbf237.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:b03f873c88cecfdbc69923993ec0ec7cfbf5208d1effc5be1da888573cfb6489",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-legs",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/legs.ogg",
+    "integration": {
+      "loop": true,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

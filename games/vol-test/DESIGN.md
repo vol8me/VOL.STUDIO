@@ -532,7 +532,7 @@ dağıtım ve Steam Cloud kabulü ayrı doğrulama işleridir.
 
 ## Ses
 
-33 teslim kuru mekanik programlardan kanonik yayın kapısıyla üretilir.
+37 teslim kuru mekanik programlardan kanonik yayın kapısıyla üretilir.
 `audio-manifests` yeniden üretim kimliğini, `audio-banks` aile seçimini taşır.
 Oyun yalnız bank JSON'unu ve `public/assets/audio` teslimlerini okur;
 audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayıt değil,
@@ -540,7 +540,10 @@ audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayı
 girer (anahtar, rol, etiket, süre, varlık yolu): hash, manifest, ölçüm ve kalite
 kaydı yalnız kanonik dosyada kalır ve `verifyFamily` onu okur.
 
-Yedi döngü motorun üç devri, palet, kayma, servo ve hızlanmadır. Top,
+Sekiz döngü motorun üç devri, palet, bacak adımı, kayma, servo ve hızlanmadır. Yürüyücü palet yerine
+`legs` (sivri uç tıkırtısı ve eklem sürtmesi) çalar; tempo ve güç araca göre (`AUDIO.vehicleVoice.tracks`).
+Ray, plazma ve iğne silahının kendi atış teslimi (`shot-rail/plasma/needle`, `AUDIO.shotAsset`) vardır;
+kabuk ve ağır mermi top ailesini perdeyle çalar. Top,
 patlama, isabet, çarpma ve fren aileleri olaydan seçilir; patlamanın yakın,
 orta ve uzak teslimleri vardır. İki UI sesi duraklatma geçişini bildirir.
 Kazanç, mesafe, perde ve ses bütçeleri `src/config/audio.ts` içindedir.

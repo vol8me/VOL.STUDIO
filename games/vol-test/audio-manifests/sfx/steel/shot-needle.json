@@ -1,0 +1,339 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -0.00042109465434050295
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.23733333333333334,
+        "frames": 11392,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -5.0548046967586995
+        ],
+        "channelRmsDbfs": [
+          -23.12416800025964
+        ],
+        "crestFactorDb": 18.069363303500943,
+        "integratedLufs": null,
+        "maxMomentaryLufs": -22.3521005693616,
+        "rmsDbfs": -23.12416800025964,
+        "samplePeakDbfs": -5.0548046967586995,
+        "truePeakDbtp": -4.702360028379046
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -33.145799884753856,
+          "high": -26.51145939138686,
+          "low": -55.70607918224253,
+          "mid": -32.55763734424789,
+          "sub": -62.03520358016309
+        },
+        "centroidHz": 5186.585053757606,
+        "flatness": 0.08631271564099072,
+        "peakHz": 1898.4375,
+        "rolloff85Hz": 7992.1875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.1,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.09,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0,
+        "temporalCentroidSeconds": 0.024764931390495227,
+        "trailingSilenceSeconds": 0.13733333333333334
+      }
+    },
+    "sourceRecordHash": "sha256:04853d7856cba1cc208bc6dee1a94d72e891eecfa592b7389e23b7c8ed950abf"
+  },
+  "asset": {
+    "bytes": 5579,
+    "encodedHash": "sha256:12179f444a0e627160edfdca69e91132f71a013effb8ffae9112a608b179a28c",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/shot-needle.ogg"
+  },
+  "assetId": "vt-hardsteel-shot-needle",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 0.3,
+        "min": 0.2
+      },
+      "id": "vt-hardsteel-shot-needle",
+      "intent": "İğne silahı: çok kısa ince metal çift tık ve küçük yay tınısı; hızlı ateşte yormaz, kuyruk yok.",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — kuru mekanik: vt-steel-shot-needle"
+    },
+    "hash": "sha256:c7b45f4a7105f99005e2e43c5301d6b2e5b311bcde798b56296ed00cd6fa4699",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:935982a1539d1bd75bbda14aee2a396264c918580eab8ba2be66e2ad3e6dfa38",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-shot-needle",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-shot-needle",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "İğne atışı: kısa ince çift tık.",
+      "durationSeconds": 0.24,
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.05,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "tick",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 4200,
+                "mode": "bandpass",
+                "q": 1
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.05,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -2,
+          "mechanism": "mechanical",
+          "name": "tock",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 2600,
+                "mode": "bandpass",
+                "q": 1
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          },
+          "startSeconds": 0.045
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.14,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -5,
+          "mechanism": "mechanical",
+          "name": "spring",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.6,
+                "damping": 0.5,
+                "decay": 0.14,
+                "frequency": 1900,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.001,
+              "roughness": 0.05
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "fadeInSeconds": 0.001,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -2
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8440
+    },
+    "hash": "sha256:7a673a6fa4595aed55cbd47fc8e77ffc33bbe71e1257c75b9ab1be7833b103f7",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 11520,
+      "hash": "sha256:ea6d8169e0930652008a70d13d3c4d13c0071406780587754dcc80fd53a63e25",
+      "sampleRate": 48000
+    },
+    "renderId": "r-39c326309e26010b",
+    "rendererVersion": 2,
+    "seed": 8440
+  },
+  "schema": "AudioAssetManifestV1"
+}

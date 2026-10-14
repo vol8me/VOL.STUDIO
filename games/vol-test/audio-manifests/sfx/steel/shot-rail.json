@@ -1,0 +1,366 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          -0.0000066230248947227095
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 0.49733333333333335,
+        "frames": 23872,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -5.9029502511455885
+        ],
+        "channelRmsDbfs": [
+          -25.004022900379802
+        ],
+        "crestFactorDb": 19.10107264923421,
+        "integratedLufs": -21.497632809746158,
+        "maxMomentaryLufs": -21.497632809746158,
+        "rmsDbfs": -25.004022900379802,
+        "samplePeakDbfs": -5.9029502511455885,
+        "truePeakDbtp": -5.317117245977863
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -41.23756020280612,
+          "high": -29.928290813542766,
+          "low": -63.07465552947114,
+          "mid": -27.834622626640503,
+          "sub": -85.58868184907524
+        },
+        "centroidHz": 2799.963957344193,
+        "flatness": 0.006705418651577125,
+        "peakHz": 1875,
+        "rolloff85Hz": 4242.1875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 0.18,
+        "attackSeconds": 0,
+        "decay40Seconds": 0.16,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.01,
+        "temporalCentroidSeconds": 0.03983212904283929,
+        "trailingSilenceSeconds": 0.32733333333333337
+      }
+    },
+    "sourceRecordHash": "sha256:b04a0dfe90fa1311327754a64b5273d0f1f0db490e906614fbe06169c183a114"
+  },
+  "asset": {
+    "bytes": 6385,
+    "encodedHash": "sha256:e492738dcf22d5e379d6ef280b36ce56ba98c7a6e1fb1780fd7aa22aa63651bd",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/shot-rail.ogg"
+  },
+  "assetId": "vt-hardsteel-shot-rail",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 0.6,
+        "min": 0.4
+      },
+      "id": "vt-hardsteel-shot-rail",
+      "intent": "Ray silahı: keskin yüksek çatlak, hızla düşen ince tını ve kısa metal çınlaması; kuru, uğultu ve kuyruk yok.",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — kuru mekanik: vt-steel-shot-rail"
+    },
+    "hash": "sha256:354a76fc63919830867939b2731c1b994254a5cef089587203b060295da20a8b",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:fb4262675620fc0646f3ec244b036e1f901e30d992aa676701617fde6eccc02f",
+      "nodes": [
+        {
+          "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
+          "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:0e4c4fd94b6fceede5a28d47f6fe957eba773a5f9c11bb8086d7c5d23946c79c",
+          "id": "exciter.impact",
+          "version": 1
+        },
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f24fa5c87c6aecf74eab9406650b96dcbc6c29891df1676fc98b15871c4d251c",
+          "id": "resonator.modal",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        },
+        {
+          "hash": "sha256:b0c800b997b33e21c77db26196fffeb7162495c77939084b2b3eb1fd4639561b",
+          "id": "source.oscillator",
+          "version": 2
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-shot-rail",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-shot-rail",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Ray silahı atışı: keskin çatlak ve düşen tını.",
+      "durationSeconds": 0.5,
+      "gestures": {
+        "zip-pitch": {
+          "curve": "curve.spline",
+          "points": [
+            [
+              0,
+              4800
+            ],
+            [
+              0.03,
+              2100
+            ],
+            [
+              0.18,
+              780
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "layers": [
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.001,
+              "curve": "cosine",
+              "decay": 0.05,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": 0,
+          "mechanism": "mechanical",
+          "name": "snap",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 3600,
+                "mode": "bandpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "color": "white"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.18,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -6,
+          "mechanism": "mechanical",
+          "name": "zip",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 5200,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "frequency": {
+                "gesture": "zip-pitch"
+              },
+              "waveform": "sawtooth"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
+        },
+        {
+          "articulation": {
+            "params": {
+              "attack": 0.002,
+              "curve": "cosine",
+              "decay": 0.28,
+              "release": 0.03,
+              "sustainLevel": 0
+            },
+            "primitive": "articulation.envelope",
+            "version": 1
+          },
+          "gainDb": -16,
+          "mechanism": "mechanical",
+          "name": "ring",
+          "resonators": [
+            {
+              "params": {
+                "brightness": 0.7,
+                "damping": 0.45,
+                "decay": 0.3,
+                "frequency": 2350,
+                "layout": "bar",
+                "modes": 8
+              },
+              "primitive": "resonator.modal",
+              "version": 1
+            }
+          ],
+          "role": "transient",
+          "source": {
+            "params": {
+              "contactTime": 0.001,
+              "roughness": 0.05
+            },
+            "primitive": "exciter.impact",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "fadeInSeconds": 0.001,
+        "fadeOutSeconds": 0.03,
+        "normalize": "peak",
+        "peakDbfs": -6
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 8420
+    },
+    "hash": "sha256:97076c7386bc2ec8a54be43310646db89cb9d23ea79bb19e9a9673317bf8f02a",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 24000,
+      "hash": "sha256:4d16371b5745a4c4109c3fa60edd42780a610de7b51c52019996fcaf58882615",
+      "sampleRate": 48000
+    },
+    "renderId": "r-ead196b464ee3ed4",
+    "rendererVersion": 2,
+    "seed": 8420
+  },
+  "schema": "AudioAssetManifestV1"
+}

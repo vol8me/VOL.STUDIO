@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-ead196b464ee3ed4": {
+        "hash": "sha256:b04a0dfe90fa1311327754a64b5273d0f1f0db490e906614fbe06169c183a114",
+        "path": "analyses/r-ead196b464ee3ed4.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:354a76fc63919830867939b2731c1b994254a5cef089587203b060295da20a8b",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:354a76fc63919830867939b2731c1b994254a5cef089587203b060295da20a8b",
+      "hash": "sha256:97076c7386bc2ec8a54be43310646db89cb9d23ea79bb19e9a9673317bf8f02a",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:b88fbb9d520dafef3ba6e47fd6a6b04af7cb24d27f2a4e6c4b36c14ad2bfe42b",
+      "path": "games/vol-test/audio-manifests/sfx/steel/shot-rail.json"
+    },
+    "renders": {
+      "r-ead196b464ee3ed4": {
+        "hash": "sha256:86b677fc23e6bf03e9f968d34ce11654b4fa533c0516b42928609071f09d6197",
+        "path": "renders/r-ead196b464ee3ed4.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:f75523bb451ec9c407bb74a270b0a8de858047e97a92f0fce4d491dacd8bb5ef",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-shot-rail",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 6,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/shot-rail.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

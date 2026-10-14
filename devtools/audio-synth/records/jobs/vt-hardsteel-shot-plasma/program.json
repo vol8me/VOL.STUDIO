@@ -1,0 +1,144 @@
+{
+  "channels": 1,
+  "description": "Plazma atışı: dolgun, alçalan gövde ve titreşen sıcak yüzey.",
+  "durationSeconds": 0.6,
+  "gestures": {
+    "beat-pitch": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          920
+        ],
+        [
+          0.05,
+          640
+        ],
+        [
+          0.16,
+          410
+        ]
+      ],
+      "version": 1
+    },
+    "vump-pitch": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          260
+        ],
+        [
+          0.06,
+          140
+        ],
+        [
+          0.3,
+          82
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.006,
+          "curve": "cosine",
+          "decay": 0.3,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "body",
+      "role": "transient",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "vump-pitch"
+          },
+          "waveform": "triangle"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.015,
+          "curve": "cosine",
+          "decay": 0.22,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -4,
+      "mechanism": "mechanical",
+      "name": "heat",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 900,
+            "mode": "bandpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.004,
+          "curve": "cosine",
+          "decay": 0.16,
+          "release": 0.03,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": -9,
+      "mechanism": "mechanical",
+      "name": "beat",
+      "role": "transient",
+      "source": {
+        "params": {
+          "frequency": {
+            "gesture": "beat-pitch"
+          },
+          "waveform": "sine"
+        },
+        "primitive": "source.oscillator",
+        "version": 2
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "fadeInSeconds": 0.001,
+    "fadeOutSeconds": 0.03,
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8430
+}

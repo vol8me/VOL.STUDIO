@@ -111,8 +111,14 @@ test('Devam düğmesi Enter ile katmanı kapatır; yeniden açılır', async ({ 
       ),
     )
     .toBe(true);
-  await page.keyboard.press('Escape');
+  // Sürdürme basışı bastırır (`suppress`): oyun en az bir kare tuşun bırakıldığını görmeden Escape kenarı yutulur.
+  await page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  );
+  // Basış bir kare sürmeli: kare başında okunan klavye, aynı karede basılıp bırakılan tuşu görmez (WebKit).
+  await page.keyboard.down('Escape');
   await expect(page.locator('.vt-pause')).toHaveClass(OPEN);
+  await page.keyboard.up('Escape');
 });
 
 test.describe('dokunmatik tablet (yatay, ~750 px CSS yükseklik)', () => {

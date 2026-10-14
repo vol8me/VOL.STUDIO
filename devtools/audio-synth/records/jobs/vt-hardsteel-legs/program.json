@@ -1,0 +1,85 @@
+{
+  "channels": 1,
+  "description": "Kuru mekanik örümcek bacak adımı: sivri metal uç tıkırtısı ve hafif eklem sürtmesi.",
+  "durationSeconds": 4,
+  "layers": [
+    {
+      "gainDb": 0,
+      "mechanism": "mechanical",
+      "name": "tips",
+      "resonators": [
+        {
+          "params": {
+            "brightness": 0.45,
+            "damping": 0.7,
+            "decay": 0.05,
+            "frequency": 1450,
+            "layout": "bar",
+            "modes": 8
+          },
+          "primitive": "resonator.modal",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 3400,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "buckleDecay": 0.009,
+          "rate": 9,
+          "tension": 0.62
+        },
+        "primitive": "exciter.membrane",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -16,
+      "mechanism": "mechanical",
+      "name": "joints",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2200,
+            "mode": "bandpass",
+            "q": 1.1
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "granularity": 18,
+          "material": "metal",
+          "pressure": 0.3,
+          "rolling": 0.2,
+          "roughness": 0.55,
+          "speed": 0.7
+        },
+        "primitive": "source.friction",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "loop": {
+      "crossfadeSeconds": 1
+    },
+    "normalize": "peak",
+    "peakDbfs": -8
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 8410
+}

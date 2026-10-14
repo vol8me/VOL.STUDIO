@@ -69,5 +69,5 @@ JSONL rapor yazar ([yük sürücüsü](../../network/docs/drive.md)).
 
 Native kimlik `com.volstudio.voltest`; Steamworks opt-in, varsayılan stub
 gerçek istemci kabulü değildir. App ID 480 geliştirme yer tutucusudur.
-33 kuru mekanik ses kanonik yayın/manifest doğrulamasından gelir; müzik
+37 kuru mekanik ses kanonik yayın/manifest doğrulamasından gelir; müzik
 ve ambiyans yoktur. Ses yayın kabulü teknik QA ile tamamlanır.
