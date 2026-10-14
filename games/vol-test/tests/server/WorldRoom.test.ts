@@ -571,11 +571,13 @@ describe('WorldRoom öngörü', () => {
     let corrections: number[] = [];
     try {
       await until(() => run.corrections.length > 15, 'uzlaştırmalar', 4000);
-      starved = serverRoom(seat).inputStats(seat.sessionId)!.starved;
       corrections = run.corrections.slice();
     } finally {
       run.stop();
     }
+    // Aç kalma sayısı düzeltmeler kopyalandıktan SONRA okunur: aradaki aç kalma düzeltmeyi gevşek
+    // sayar; önce okunsa araya giren aç kalma sıfır sanılır ve gerçek bir sapma hata görünürdü.
+    starved = serverRoom(seat).inputStats(seat.sessionId)!.starved;
 
     // Öngörü ile sunucu arasındaki tek sapma kaynağı, sunucunun istemcinin yollamadığı bir adım
     // atmasıdır (girdi geç kalınca boşta adım). Geç kalma yoksa tek bir düzeltme bile olamaz;
