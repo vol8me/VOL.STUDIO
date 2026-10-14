@@ -176,6 +176,9 @@ describe('War.step', () => {
   });
 });
 
+/** Dakikalarca savaş simülasyonu kapsam araçlıyken 5 sn varsayılanını aşar; yalnız bu testler genişler. */
+const SLOW_MS = 30_000;
+
 describe('BotDirector', () => {
   it('her cepheyi hedef nüfusa botlarla tamamlar ve araçlar farklı takma ad taşır', () => {
     const war = newWar({ populate: true, seed: 5 });
@@ -220,43 +223,51 @@ describe('BotDirector', () => {
     expect(objectives.size).toBeGreaterThanOrEqual(3);
   });
 
-  it('aynı tohum aynı savaşı üretir, farklı tohum farklısını', () => {
-    const trace = (seed: number): number[] => {
-      const war = newWar({ populate: true, seed });
-      run(war, 20);
-      return [...war.combatants.values()].flatMap((c) => [
-        c.vehicle.chassis.x,
-        c.vehicle.chassis.y,
-      ]);
-    };
-    expect(trace(4)).toEqual(trace(4));
-    expect(trace(4)).not.toEqual(trace(5));
-  });
+  it(
+    'aynı tohum aynı savaşı üretir, farklı tohum farklısını',
+    () => {
+      const trace = (seed: number): number[] => {
+        const war = newWar({ populate: true, seed });
+        run(war, 20);
+        return [...war.combatants.values()].flatMap((c) => [
+          c.vehicle.chassis.x,
+          c.vehicle.chassis.y,
+        ]);
+      };
+      expect(trace(4)).toEqual(trace(4));
+      expect(trace(4)).not.toEqual(trace(5));
+    },
+    SLOW_MS,
+  );
 
-  it('dakikalarca bot-bot savaşı: nüfus sabit, öldürmeler artar, cepheler bölge kapar', () => {
-    const war = newWar({ populate: true, seed: 21 });
-    const owners = new Set<number>();
-    const events: WarStepEvent[] = [];
-    const idle = idleCommand();
-    let deaths = 0;
-    for (let step = 0; step < (120 * 1000) / STEP; step++) {
-      events.length = 0;
-      war.step(STEP, () => idle, events);
-      for (const event of events) if (event.kind === 'died') deaths++;
-      if (step % 60 === 0) {
-        for (const zone of war.zones.zones) owners.add(zone.owner);
-        for (let faction = 0; faction < WAR.factions; faction++)
-          expect(war.population(faction)).toBe(WAR.population.perFaction);
-        for (const { vehicle } of war.combatants.values()) {
-          const { x, y } = vehicle.chassis;
-          expect(Number.isFinite(x) && Number.isFinite(y)).toBe(true);
-          expect(war.sim.world.contains(x, y)).toBe(true);
+  it(
+    'dakikalarca bot-bot savaşı: nüfus sabit, öldürmeler artar, cepheler bölge kapar',
+    () => {
+      const war = newWar({ populate: true, seed: 21 });
+      const owners = new Set<number>();
+      const events: WarStepEvent[] = [];
+      const idle = idleCommand();
+      let deaths = 0;
+      for (let step = 0; step < (120 * 1000) / STEP; step++) {
+        events.length = 0;
+        war.step(STEP, () => idle, events);
+        for (const event of events) if (event.kind === 'died') deaths++;
+        if (step % 60 === 0) {
+          for (const zone of war.zones.zones) owners.add(zone.owner);
+          for (let faction = 0; faction < WAR.factions; faction++)
+            expect(war.population(faction)).toBe(WAR.population.perFaction);
+          for (const { vehicle } of war.combatants.values()) {
+            const { x, y } = vehicle.chassis;
+            expect(Number.isFinite(x) && Number.isFinite(y)).toBe(true);
+            expect(war.sim.world.contains(x, y)).toBe(true);
+          }
         }
       }
-    }
-    expect(deaths).toBeGreaterThan(6);
-    expect(owners.has(0) || owners.has(1)).toBe(true);
-    const kills = [...war.combatants.values()].reduce((sum, c) => sum + c.kills, 0);
-    expect(kills).toBeGreaterThan(3);
-  });
+      expect(deaths).toBeGreaterThan(6);
+      expect(owners.has(0) || owners.has(1)).toBe(true);
+      const kills = [...war.combatants.values()].reduce((sum, c) => sum + c.kills, 0);
+      expect(kills).toBeGreaterThan(3);
+    },
+    SLOW_MS,
+  );
 });

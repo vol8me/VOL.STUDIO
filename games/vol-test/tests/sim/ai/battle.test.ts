@@ -8,6 +8,8 @@ import { Simulation } from '@/sim/Simulation';
 import { World } from '@/sim/world/World';
 
 const STEP = GAME.simulationStepMs;
+/** Dakikalarca savaş simülasyonu kapsam araçlıyken 5 sn varsayılanını aşar; yalnız bu test genişler. */
+const SLOW_MS = 30_000;
 const SPECS = [STRIKER, BULWARK, DART, ARACHNID];
 
 /** İki takım, dört araç ailesi: botlar ortadaki bölge için savaşır. */
@@ -34,40 +36,44 @@ function battle(perTeam: number) {
 }
 
 describe('bot savaşı', () => {
-  it('iki takımın botları dakikalarca sürekli savaşır: ateş eder, öldürür, yeniden doğar', () => {
-    const { sim, bots } = battle(6);
-    const commands = new Map(bots.map((bot) => [bot.vehicle.id, idleCommand()]));
-    const origin = bots.map((bot) => ({ x: bot.vehicle.chassis.x, y: bot.vehicle.chassis.y }));
-    const travelled = bots.map(() => 0);
-    const last = origin.map((point) => ({ ...point }));
-    const events: SimEvent[] = [];
-    let fired = 0;
-    let deaths = 0;
-    let respawns = 0;
-    for (let step = 0; step < (60 * 1000) / STEP; step++) {
-      sim.step((vehicle) => {
-        const bot = bots.find((candidate) => candidate.vehicle === vehicle);
-        const command = commands.get(vehicle.id);
-        return bot && command ? bot.think(sim, STEP, command) : idleCommand();
-      }, STEP);
-      events.length = 0;
-      for (const event of sim.drainEvents(events)) {
-        if (event.kind === 'fired') fired++;
-        if (event.kind === 'died') deaths++;
-        if (event.kind === 'respawned') respawns++;
+  it(
+    'iki takımın botları dakikalarca sürekli savaşır: ateş eder, öldürür, yeniden doğar',
+    () => {
+      const { sim, bots } = battle(6);
+      const commands = new Map(bots.map((bot) => [bot.vehicle.id, idleCommand()]));
+      const origin = bots.map((bot) => ({ x: bot.vehicle.chassis.x, y: bot.vehicle.chassis.y }));
+      const travelled = bots.map(() => 0);
+      const last = origin.map((point) => ({ ...point }));
+      const events: SimEvent[] = [];
+      let fired = 0;
+      let deaths = 0;
+      let respawns = 0;
+      for (let step = 0; step < (60 * 1000) / STEP; step++) {
+        sim.step((vehicle) => {
+          const bot = bots.find((candidate) => candidate.vehicle === vehicle);
+          const command = commands.get(vehicle.id);
+          return bot && command ? bot.think(sim, STEP, command) : idleCommand();
+        }, STEP);
+        events.length = 0;
+        for (const event of sim.drainEvents(events)) {
+          if (event.kind === 'fired') fired++;
+          if (event.kind === 'died') deaths++;
+          if (event.kind === 'respawned') respawns++;
+        }
+        bots.forEach((bot, index) => {
+          const { x, y } = bot.vehicle.chassis;
+          expect(sim.world.contains(x, y)).toBe(true);
+          travelled[index] += Math.hypot(x - last[index].x, y - last[index].y);
+          last[index].x = x;
+          last[index].y = y;
+        });
       }
-      bots.forEach((bot, index) => {
-        const { x, y } = bot.vehicle.chassis;
-        expect(sim.world.contains(x, y)).toBe(true);
-        travelled[index] += Math.hypot(x - last[index].x, y - last[index].y);
-        last[index].x = x;
-        last[index].y = y;
-      });
-    }
-    expect(fired).toBeGreaterThan(100);
-    expect(deaths).toBeGreaterThan(5);
-    expect(respawns).toBeGreaterThan(0);
-    // Hiçbir bot donup kalmaz.
-    for (const distance of travelled) expect(distance).toBeGreaterThan(200);
-  });
+      expect(fired).toBeGreaterThan(100);
+      expect(deaths).toBeGreaterThan(5);
+      expect(respawns).toBeGreaterThan(0);
+      // Hiçbir bot donup kalmaz.
+      for (const distance of travelled) expect(distance).toBeGreaterThan(200);
+    },
+    SLOW_MS,
+  );
 });
