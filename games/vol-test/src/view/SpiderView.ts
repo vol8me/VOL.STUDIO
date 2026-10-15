@@ -13,6 +13,7 @@ import { SpiderMotion, type SpiderPose } from './spider/SpiderMotion';
 import { FX } from '@/config/fx';
 import { TEXTURE, TEXTURE_SCALE, addSpiderImage } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
+import { ROCK_VIEW } from '@/config/rockView';
 import { WATER_VIEW } from '@/config/waterView';
 import { setCharred, sinkRoot } from './charring';
 
@@ -74,6 +75,8 @@ export class SpiderView implements VehicleView {
   private lostRight = 0;
   /** O karenin tökezleme yatışı (dünya birimi): `sag` yavaş oturur, bu adım hızında salınır. */
   private limpSway = 0;
+  /** Yumuşatılmış kaya tırmanışı [0, 1] (`TankFrame.climb`): kalçayı kaldırır, ayakları ağırlaştırır. */
+  private climbEase = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -169,6 +172,7 @@ export class SpiderView implements VehicleView {
     this.sag += (this.sagTarget - this.sag) * (1 - Math.exp(-deltaMs / SAG.settleMs));
     const pose = this.motion.update(signals, deltaMs);
     this.stumble(frame, pose);
+    this.climbRock(frame, pose, deltaMs);
     this.legs.setSag(this.sag + this.limpSway);
     if (fresh) this.legs.reset(signals.x, signals.y, frame.hull, pose, this.light);
     else this.legs.update(signals, pose, deltaMs, this.light);
@@ -181,6 +185,23 @@ export class SpiderView implements VehicleView {
     this.placeBody(pose);
     this.animateSensors(frame, pose, deltaMs);
     this.placeCannons(frame, deltaMs, pose);
+  }
+
+  /**
+   * Kaya tırmanışı: kalça kalkar ve gövde geriye yaslanır; değer simülasyonun `climb` türevinden gelir ve
+   * giriş/çıkışta yumuşatılır. Bacak çözümü yükselmiş kalçayı okur: ayaklar kayaya gerilir, tırmanış
+   * dümdüz yürüyüşten görünür biçimde ayrılır.
+   */
+  private climbRock(frame: TankFrame, pose: SpiderPose, deltaMs: number): void {
+    const climb = ROCK_VIEW.spiderClimb;
+    this.climbEase +=
+      ((frame.climb ?? 0) - this.climbEase) * (1 - Math.exp(-deltaMs / climb.settleMs));
+    if (this.climbEase < 0.002) {
+      this.climbEase = 0;
+      return;
+    }
+    pose.hipHeight += this.look.body.hipHeight * climb.hipRise * this.climbEase;
+    pose.leanX -= climb.leanBack * this.climbEase;
   }
 
   /**
@@ -250,9 +271,13 @@ export class SpiderView implements VehicleView {
     const { dust } = this.look;
     const effort = clamp01(speed / this.spec.walker.maxSpeed);
     const scale = this.spec.walker.halfWidth / FX.feet.refHalfWidth;
-    const count = Math.round(dust.countMin + (dust.countMax - dust.countMin) * effort);
+    const rocky = ROCK_VIEW.spiderClimb;
+    const count = Math.round(
+      (dust.countMin + (dust.countMax - dust.countMin) * effort) *
+        (1 + rocky.dustBoost * this.climbEase),
+    );
     this.legs.forEachPlant((x, y) => {
-      this.motion.plant(0.4 + 0.6 * effort);
+      this.motion.plant(Math.min(1, 0.4 + 0.6 * effort + rocky.plantBoost * this.climbEase));
       this.dust.emitParticleAt(x, y, count);
       this.footprint?.(x, y, hull, scale);
     });

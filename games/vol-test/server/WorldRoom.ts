@@ -13,10 +13,13 @@ import {
   type Logger,
 } from '@volstudio/network/server';
 import { GAME } from '../src/config/game';
+import { CLIMATE_NET } from '../src/config/climate';
 import { NETWORK } from '../src/config/network';
 import { STRIKER, modelOf, vehicleAt, type VehicleSpec } from '../src/config/vehicles';
 import { WAR } from '../src/config/war';
+import { WEATHER } from '../src/config/weather';
 import { writeChassisState } from '../src/network/chassisSync';
+import { CLIMATE_MESSAGE, CLIMATE_REQUEST } from '../src/network/climate';
 import { EVENT_MESSAGE, type EventBatch, type NetEvent } from '../src/network/events';
 import {
   FactionState,
@@ -33,7 +36,10 @@ import { idleCommand, type TankCommand } from '../src/sim/command';
 import type { EntityId, Vehicle } from '../src/sim/entities/Vehicle';
 import { Simulation } from '../src/sim/Simulation';
 import { War, type Combatant, type WarStepEvent } from '../src/sim/war/War';
+import { WeatherSystem } from '../src/sim/weather/WeatherSystem';
+import { fertilityOf } from '../src/sim/world/fertility';
 import { createBattleWorld } from '../src/sim/world/battleWorld';
+import type { ClimateStore } from './ClimateStore';
 import { InputPacer, type PacerStats } from './InputPacer';
 
 /** Oda oluşturma seçenekleri; `logger` süreç içi bir bağdır, ağdan gelmez. */
@@ -48,6 +54,11 @@ export interface WorldRoomOptions {
   readonly seed?: number;
   /** Cephe başına hedef araç sayısı (testler ve işletim); verilmezse `WAR.population.perFaction`. */
   readonly perFaction?: number;
+  /**
+   * İklimin kalıcı deposu: oda açılırken yüklenir, düzenli aralıkla ve kapanırken yazılır. Süreç içi
+   * bir bağdır (ağdan gelmez); verilmezse iklim yalnız bellektedir.
+   */
+  readonly climateStore?: ClimateStore;
 }
 
 interface Slot {
@@ -104,11 +115,27 @@ export class WorldRoom extends Room {
   override maxMessagesPerSecond = NETWORK.maxMessagesPerSecond;
   override state = new WorldState();
 
+  private readonly world = createBattleWorld();
+  /**
+   * Dünyanın ortak iklimi: hava, zemin ve yeşillik sunucuda yaşar ve yeniden başlamada korunur
+   * (`climateStore`). İstemciler aynı belirli takvimi yerelde sürer, sunucu yalnız uyumlar. Hava
+   * yalnız ilerler ve araç izini alır; sürüşü ve mermiyi etkilemez (`weatherEffects: false`),
+   * böylece öngörüyü yapan istemcinin fiziği sunucununkiyle aynı kalır.
+   */
+  private readonly climate = new WeatherSystem(this.world.width, this.world.height, {
+    seed: WEATHER.seed,
+    fertility: fertilityOf(this.world),
+  });
   private readonly sim = new Simulation({
-    world: createBattleWorld(),
+    world: this.world,
     vehicle: STRIKER,
     spawnPlayer: false,
+    weather: this.climate,
+    weatherEffects: false,
   });
+  private store: ClimateStore | undefined;
+  /** İstemci başına son iklim yanıtının saati (istek sıklığını sınırlar). */
+  private readonly climateSentAt = new Map<string, number>();
   private war!: War;
   private readonly players = new Map<string, Slot>();
   private readonly byVehicle = new Map<EntityId, Slot>();
@@ -137,6 +164,15 @@ export class WorldRoom extends Room {
   override onCreate(options: WorldRoomOptions = {}): void {
     this.log = options.logger?.child(`room:${this.roomId}`);
     this.autoDispose = options.primary !== true;
+    this.store = options.climateStore;
+    const saved = this.store?.load();
+    if (saved) {
+      const restored = this.climate.restore(saved);
+      this.log?.log(restored ? 'info' : 'warn', 'climate.load', {
+        restored,
+        elapsedMs: saved.elapsedMs,
+      });
+    }
     this.war = new War(this.sim, {
       seed: options.seed ?? 1,
       perFaction: options.perFaction,
@@ -148,6 +184,13 @@ export class WorldRoom extends Room {
     this.setPatchRate(NETWORK.patchRateMs);
     runRoomLoop(this, NETWORK.tickRate, () => this.guardedAdvance());
     this.clock.setInterval(() => this.sweepSlowClients(), NETWORK.slowConsumer.sweepMs);
+    this.clock.setInterval(
+      () => this.broadcast(CLIMATE_MESSAGE, this.climate.snapshot()),
+      CLIMATE_NET.syncMs,
+    );
+    this.clock.setInterval(() => this.saveClimate(), CLIMATE_NET.saveMs);
+    // Katılan istemci dinleyicisini kurunca iklimi ister: yeşillik, kar ve saat sunucuyla aynı olur.
+    this.onMessage(CLIMATE_REQUEST, (client) => this.sendClimate(client));
     this.log?.log('info', 'room.create', {
       room: this.roomName,
       primary: options.primary === true,
@@ -211,6 +254,7 @@ export class WorldRoom extends Room {
 
   override onLeave(client: Client, code?: number): void {
     this.slow.forget(client.sessionId);
+    this.climateSentAt.delete(client.sessionId);
     const slot = this.players.get(client.sessionId);
     if (!slot) return;
     this.players.delete(client.sessionId);
@@ -232,7 +276,23 @@ export class WorldRoom extends Room {
   }
 
   override onDispose(): void {
+    this.saveClimate();
     this.log?.log('info', 'room.dispose', { room: this.roomName, tick: this.state.tick });
+  }
+
+  /** İstemciye iklimi yollar; aynı istemciye en sık `CLIMATE_NET.requestGapMs`de bir. */
+  private sendClimate(client: Client): void {
+    const now = performance.now();
+    const last = this.climateSentAt.get(client.sessionId);
+    if (last !== undefined && now - last < CLIMATE_NET.requestGapMs) return;
+    this.climateSentAt.set(client.sessionId, now);
+    client.send(CLIMATE_MESSAGE, this.climate.snapshot());
+  }
+
+  /** İklimi depoya yazar; depo yoksa ya da yazılamazsa dünya sürer (hata günlüğe düşer). */
+  private saveClimate(): void {
+    if (!this.store) return;
+    if (!this.store.save(this.climate.snapshot())) this.log?.log('warn', 'climate.save.failed', {});
   }
 
   /**

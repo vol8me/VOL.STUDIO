@@ -55,7 +55,7 @@ export async function connectWar(
     faction: choice.faction,
   });
   return {
-    start: { createDriver: (next) => new OnlineDriver(next, session), weather: 'clear' },
+    start: { createDriver: (next) => new OnlineDriver(next, session), online: true },
     abandon: () => session.dispose(),
   };
 }

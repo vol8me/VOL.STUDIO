@@ -85,6 +85,32 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       expect(stalks[1].y as number).toBeGreaterThan(0);
     });
 
+    it('kayaya tırmanırken kalça kalkar ve gövde geriye yaslanır; yumuşak girer, çıkınca düzelir', () => {
+      const flat = build(spec);
+      const climbing = build(spec);
+      const thorax = (b: ReturnType<typeof build>) => (b.art.list as FakeObject[])[6];
+      for (let step = 0; step < 30; step++) {
+        flat.view.update(frame({ vx: 80, speed: 80 }), 16);
+        climbing.view.update(frame({ vx: 80, speed: 80, climb: 1 }), 16);
+      }
+      expect(thorax(climbing).scale as number).toBeGreaterThan(thorax(flat).scale as number);
+      expect(thorax(climbing).x as number).toBeLessThan(thorax(flat).x as number);
+
+      // İlk karede sıçramaz: geçiş birkaç karede oturur.
+      const first = build(spec);
+      first.view.update(frame({ vx: 80, speed: 80 }), 16);
+      const rest = thorax(first).scale as number;
+      first.view.update(frame({ vx: 80, speed: 80, climb: 1 }), 16);
+      const early = thorax(first).scale as number;
+      for (let step = 0; step < 30; step++)
+        first.view.update(frame({ vx: 80, speed: 80, climb: 1 }), 16);
+      expect(early).toBeGreaterThanOrEqual(rest);
+      expect(thorax(first).scale as number).toBeGreaterThan(early);
+      for (let step = 0; step < 60; step++)
+        first.view.update(frame({ vx: 80, speed: 80, climb: 0 }), 16);
+      expect(thorax(first).scale as number).toBeCloseTo(rest, 2);
+    });
+
     it('çekirdek atılımda büyür; duyargalar dönüşte geride sürüklenir', () => {
       const calm = build(spec);
       const boosted = build(spec);

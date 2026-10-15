@@ -44,6 +44,13 @@ export const BOT = {
   lakeEscape: 2.2,
   /** Suya doğru giden hareketin kıyı teğetine kayan payı (kıyıda kilitlenmeyi önler). */
   lakeSlide: 0.9,
+  /**
+   * Kaya kaçınması (tırmanan yürüyücü hariç): önündeki bu mesafeler (birim) taranır, kayaya bakan
+   * bileşen sıyrılır ve yüzeyden uzağa itilir; `margin` gövde yarı genişliğine eklenen paydır.
+   */
+  rockLookahead: [60, 130, 220] as readonly number[],
+  rockMargin: 18,
+  rockSlide: 0.8,
   /** Başka araçlardan bu yarıçap (birim) içinde ayrışma kuvveti uygulanır. */
   separationRadius: 120,
   separationWeight: 1.3,

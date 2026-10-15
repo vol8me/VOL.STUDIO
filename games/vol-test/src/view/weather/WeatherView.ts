@@ -6,6 +6,7 @@ import { TerrainField } from './TerrainField';
 import { SeasonGround } from './SeasonGround';
 import { SurfaceLayer, type WeatherSource } from './SurfaceLayer';
 import { VehicleReflectionPool, type WeatherVehicleFrame } from './VehicleReflectionPool';
+import { VegetationLayer } from './VegetationLayer';
 import { VehicleWakePool } from './VehicleWakePool';
 import { WeatherParticles, type WeatherRect } from './WeatherParticles';
 
@@ -22,6 +23,7 @@ export class WeatherView {
   private readonly surface: SurfaceLayer;
   private readonly season: SeasonGround;
   private readonly field: TerrainField;
+  private readonly vegetation: VegetationLayer;
   private readonly reflections: VehicleReflectionPool;
   private readonly wakes: VehicleWakePool;
   private readonly particles: WeatherParticles;
@@ -40,6 +42,10 @@ export class WeatherView {
     const wakes = this.scope.addDestroyable(scene.add.graphics().setDepth(WEATHER_VIEW.wakeDepth));
     this.precipitation = this.scope.addDestroyable(
       scene.add.graphics().setDepth(WEATHER_VIEW.precipitationDepth),
+    );
+    this.vegetation = new VegetationLayer(
+      this.scope.addDestroyable(scene.add.graphics().setDepth(WEATHER_VIEW.vegetation.depth)),
+      this.scope.addDestroyable(scene.add.graphics().setDepth(WEATHER_VIEW.vegetation.tipDepth)),
     );
     this.surface = new SurfaceLayer(surface, this.field);
     this.wakes = new VehicleWakePool(wakes);
@@ -60,6 +66,7 @@ export class WeatherView {
     if (this.scope.isDisposed()) return;
     this.field.prepare(weather, rect);
     this.season.draw(weather, rect, true);
+    this.vegetation.draw(this.field, weather.frame, rect, this.quality);
     this.counts.wakes = this.wakes.update(weather, rect, vehicles);
     this.counts.surfaceCells = this.surface.draw(
       weather,

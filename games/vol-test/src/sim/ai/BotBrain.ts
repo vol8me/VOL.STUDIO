@@ -112,6 +112,7 @@ export class BotBrain {
   private dodgeX = 0;
   private dodgeY = 0;
   private readonly lakeGrade = { x: 0, y: 0 };
+  private readonly rockGrade = { x: 0, y: 0 };
 
   constructor(
     readonly vehicle: Vehicle,
@@ -216,6 +217,7 @@ export class BotBrain {
       [dx, dy] = this.wallPush(sim.world, dx, dy);
     }
     [dx, dy] = this.lakePush(sim.world, dx, dy);
+    [dx, dy] = this.rockPush(sim.world, dx, dy);
     const length = Math.hypot(dx, dy);
     if (length > 1) {
       dx /= length;
@@ -499,6 +501,36 @@ export class BotBrain {
       break;
     }
     return [px, py];
+  }
+
+  /**
+   * Kayadan geçemeyen bot (tırmanan yürüyücü hariç) kayanın önünde yönü sıyırır: kayaya bakan bileşen
+   * çıkarılır, yüzeyden uzağa itilir ve yörünge yönünde teğete kayılır; böylece kayanın önünde kilitlenmez.
+   */
+  private rockPush(world: World, dx: number, dy: number): [number, number] {
+    const rocks = world.rocks;
+    const chassis = this.vehicle.chassis;
+    if (rocks.isEmpty || chassis.kind === 'walker') return [dx, dy];
+    const length = Math.hypot(dx, dy);
+    if (length < 1e-6) return [dx, dy];
+    const { x, y } = chassis;
+    const ux = dx / length;
+    const uy = dy / length;
+    const grade = this.rockGrade;
+    const reach = chassis.shape.halfWidth + BOT.rockMargin;
+    const last = BOT.rockLookahead[BOT.rockLookahead.length - 1];
+    for (const ahead of BOT.rockLookahead) {
+      const gap = rocks.nearest(x + ux * ahead, y + uy * ahead, grade) - reach;
+      if (gap > 0) continue;
+      // `grade` kayadan noktaya bakar: hareket ona doğruysa (negatif iç çarpım) kayaya gidiyordur.
+      const into = -(ux * grade.x + uy * grade.y);
+      if (into <= 0) continue;
+      const closeness = 1 - ahead / last + 0.3;
+      const push = into * length * (1 + closeness);
+      const slide = this.orbit * into * length * BOT.rockSlide;
+      return [dx + grade.x * push - grade.y * slide, dy + grade.y * push + grade.x * slide];
+    }
+    return [dx, dy];
   }
 
   /** Dünya sınırına yaklaşan aracı içe iter; itme, hareket vektörüne eklenir. */

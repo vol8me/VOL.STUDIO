@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LAKE_SPECS } from '@/config/lakes';
+import { OUTCROP_SPECS } from '@/config/rocks';
 import { WORLD } from '@/config/world';
 import { bakeLakeMap } from '@/hud/lakeMap';
 import { LakeField } from '@/sim/world/LakeField';
+import { RockField } from '@/sim/world/RockField';
 
 const field = new LakeField(WORLD.width, WORLD.height, LAKE_SPECS);
+const rocks = new RockField(WORLD.width, WORLD.height, OUTCROP_SPECS);
 
 function countingContext() {
   const calls: string[] = [];
@@ -30,6 +33,20 @@ describe('bakeLakeMap', () => {
     expect(canvas).toBeDefined();
     expect(calls.filter((call) => call === 'fill')).toHaveLength(field.lakes.length * 3);
     expect(calls.filter((call) => call === 'closePath')).toHaveLength(field.lakes.length * 3);
+  });
+
+  it('kaya loblarını da çizer; yalnız kayalı dünyada gölsüz de olsa doku üretir', () => {
+    const { ctx, calls } = countingContext();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(ctx);
+    expect(bakeLakeMap(field, WORLD.width, WORLD.height, rocks)).toBeDefined();
+    expect(calls.filter((call) => call === 'ellipse')).toHaveLength(rocks.rocks.length);
+    calls.length = 0;
+    const empty = new LakeField(WORLD.width, WORLD.height);
+    expect(bakeLakeMap(empty, WORLD.width, WORLD.height, rocks)).toBeDefined();
+    expect(calls.filter((call) => call === 'ellipse')).toHaveLength(rocks.rocks.length);
+    expect(
+      bakeLakeMap(empty, WORLD.width, WORLD.height, new RockField(WORLD.width, WORLD.height)),
+    ).toBeUndefined();
   });
 
   it('doku dünyanın en-boy oranını korur ve uzun kenarı sınırlar', () => {

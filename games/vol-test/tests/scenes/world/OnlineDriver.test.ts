@@ -4,6 +4,8 @@ import { DisposableScope, VirtualActionSource, VirtualStickSource } from '@volst
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
 import { WAR } from '@/config/war';
+import { WEATHER } from '@/config/weather';
+import { WeatherSystem } from '@/sim/weather/WeatherSystem';
 import { WORLD } from '@/config/world';
 import { EFFECT_LEVELS, type EffectLevel, type EffectProfile } from '@/config/quality';
 import { Hud } from '@/hud/Hud';
@@ -41,6 +43,7 @@ afterEach(async () => {
 interface Rig {
   driver: OnlineDriver;
   session: OnlineSession;
+  weather: WeatherSystem;
   restart: ReturnType<typeof vi.fn<(data?: WorldStartData) => void>>;
   toMenu: ReturnType<typeof vi.fn<() => void>>;
   steps: { count: number };
@@ -69,10 +72,11 @@ async function rig(name = 'Pilot', faction?: number): Promise<Rig> {
   } as unknown as PlayerControls;
   const restart = vi.fn<(data?: WorldStartData) => void>();
   const toMenu = vi.fn<() => void>();
+  const weather = new WeatherSystem(WORLD.width, WORLD.height, { seed: WEATHER.seed });
   const context: DriverContext = {
     scene: { add: fake.add } as unknown as Phaser.Scene,
     world: new World(WORLD.width, WORLD.height, WORLD.gridStep),
-    weather: undefined as never,
+    weather,
     controls,
     seed: 0,
     scope,
@@ -106,6 +110,7 @@ async function rig(name = 'Pilot', faction?: number): Promise<Rig> {
   const result: Rig = {
     driver,
     session,
+    weather,
     restart,
     toMenu,
     steps,
@@ -147,6 +152,18 @@ describe('OnlineDriver sürüş', () => {
     const seen = driver.metrics()['online.driftMax'];
     await until(() => driver.metrics()['online.driftPeak'] < seen / 2, 'sönümlü tepenin düşmesi');
     expect(driver.metrics()['online.driftMax']).toBeGreaterThanOrEqual(seen);
+  });
+
+  it('sunucu iklimini yerel hava modeline uygular ve hava saati kareyle ilerler', async () => {
+    const { driver, session, weather, run } = await rig();
+    await until(() => session.climate !== undefined, 'sunucu iklimi');
+    const received = session.climate!;
+    // Anlık görüntü uygulanmıştır: yerel saat sunucunun saatinden geridde değildir.
+    await until(() => weather.frame.elapsedMs >= received.elapsedMs, 'iklim uyumu');
+    const before = weather.frame.elapsedMs;
+    run();
+    await until(() => weather.frame.elapsedMs > before + 100, 'hava saatinin akışı');
+    expect(driver.live).toBe(true);
   });
 
   it('girdiyi öngörüyle sürer, ölçüm bağlamını ve ağ sayılarını verir', async () => {

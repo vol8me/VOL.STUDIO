@@ -1,7 +1,9 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
 import { JoinError, Predict, createLobby, type Lobby, type Room } from '@volstudio/network/client';
 import { NETWORK } from '@/config/network';
+import { CLIMATE_MESSAGE, CLIMATE_REQUEST, isClimateSnapshot } from './climate';
 import { EVENT_MESSAGE, type EventBatch } from './events';
+import type { ClimateSnapshot } from '@/sim/weather/types';
 import { ROOM } from './rooms';
 import { WORLD_SCHEMA, type WorldSnapshot, type PlayerSnapshot } from './schema';
 import { ServerTimeline } from './timeline';
@@ -38,6 +40,8 @@ export class OnlineSession {
   private closedCode: number | undefined;
   private readonly statusListeners = new Set<Listener<ConnectionStatus>>();
   private readonly eventListeners = new Set<Listener<EventBatch>>();
+  private readonly climateListeners = new Set<Listener<ClimateSnapshot>>();
+  private latestClimate: ClimateSnapshot | undefined;
   private readonly scope = new DisposableScope();
 
   private constructor(readonly room: Room<WorldSnapshot>) {
@@ -68,6 +72,16 @@ export class OnlineSession {
         for (const listener of [...this.eventListeners]) listener(batch);
       }),
     );
+    this.scope.addSubscription(
+      room.onMessage(CLIMATE_MESSAGE, (value: unknown) => {
+        // Geçersiz yük yok sayılır: istemci kendi belirli hava saatiyle sürer.
+        if (!isClimateSnapshot(value)) return;
+        this.latestClimate = value;
+        for (const listener of [...this.climateListeners]) listener(value);
+      }),
+    );
+    // Dinleyici hazır: sunucudan ilk iklim görüntüsü istenir (katılımda kendiliğinden gelene güvenilmez).
+    room.send(CLIMATE_REQUEST);
   }
 
   /**
@@ -166,6 +180,17 @@ export class OnlineSession {
     return () => this.eventListeners.delete(listener);
   }
 
+  /** Sunucunun son iklim anlık görüntüsü; henüz gelmediyse `undefined`. */
+  get climate(): ClimateSnapshot | undefined {
+    return this.latestClimate;
+  }
+
+  /** Yeni iklim anlık görüntüsü gelince çağrılır (katılımda ve düzenli aralıkla). */
+  onClimate(listener: Listener<ClimateSnapshot>): () => void {
+    this.climateListeners.add(listener);
+    return () => this.climateListeners.delete(listener);
+  }
+
   /** Odadan bilerek ayrılır (sunucu oyuncuyu hemen düşürür, yeniden bağlanma beklenmez). */
   async leave(): Promise<void> {
     if (this.currentStatus === 'closed') return;
@@ -177,6 +202,7 @@ export class OnlineSession {
     this.scope.dispose();
     this.statusListeners.clear();
     this.eventListeners.clear();
+    this.climateListeners.clear();
     this.predict.dispose();
     if (this.currentStatus !== 'closed') void this.room.leave(true).catch(() => undefined);
     this.currentStatus = 'closed';

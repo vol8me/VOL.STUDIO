@@ -5,7 +5,9 @@ import type { WeatherKind } from '@/config/weather';
 import { WEATHER_VIEW } from '@/config/weatherView';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import { WeatherSystem } from '@/sim/weather/WeatherSystem';
-import type { LakeField } from '@/sim/world/LakeField';
+import { fertilityOf } from '@/sim/world/fertility';
+import type { World } from '@/sim/world/World';
+import { RockView } from '@/view/terrain/RockView';
 import { iceThickness, LakeView } from '@/view/water/LakeView';
 import { WaterTrails, type TrailSubject } from '@/view/water/WaterTrails';
 import type { WreckWater } from './WreckDirector';
@@ -18,6 +20,7 @@ export class EnvironmentController {
   readonly model: WeatherSystem;
   private readonly view: WeatherView;
   private readonly lakes: LakeView | null;
+  private readonly rocks: RockView | null;
   private readonly trails: WaterTrails | null;
   private readonly trailSubjects: TrailSubject[] = [];
   private quality = 1;
@@ -32,10 +35,17 @@ export class EnvironmentController {
     profile: EffectProfile,
     override?: WeatherKind,
     season?: SeasonKind,
-    lakes?: LakeField,
+    world?: World,
   ) {
-    this.model = new WeatherSystem(width, height, { seed, override, season });
+    const lakes = world?.lakes;
+    this.model = new WeatherSystem(width, height, {
+      seed,
+      override,
+      season,
+      fertility: world ? fertilityOf(world) : undefined,
+    });
     this.view = new WeatherView(scene, seed, profile);
+    this.rocks = world && !world.rocks.isEmpty ? new RockView(scene, world.rocks) : null;
     this.lakes = lakes && !lakes.isEmpty ? new LakeView(scene, lakes) : null;
     this.trails = lakes && !lakes.isEmpty ? new WaterTrails(scene, lakes) : null;
     this.sinkWater =
@@ -46,6 +56,11 @@ export class EnvironmentController {
           }
         : null;
     this.quality = profile.particles;
+  }
+
+  /** Son karede çizilen kaya sayısı (ölçüm). */
+  get drawnRocks(): number {
+    return this.rocks?.drawn ?? 0;
   }
 
   /** Son karede ekrana değen göl sayısı (ölçüm). */
@@ -97,11 +112,13 @@ export class EnvironmentController {
     }
     this.view.update(this.model, rect, this.frames);
     this.lakes?.update(rect, this.model.frame, this.quality);
+    this.rocks?.update(rect, this.model);
     this.trails?.update(this.trailSubjects, iceThickness(this.model.frame), deltaMs);
   }
 
   destroy(): void {
     this.trails?.destroy();
+    this.rocks?.destroy();
     this.lakes?.destroy();
     this.view.destroy();
   }

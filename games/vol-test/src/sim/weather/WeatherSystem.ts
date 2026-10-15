@@ -1,15 +1,23 @@
 import type { SeasonKind } from '@/config/seasons';
 import { WEATHER, type WeatherKind } from '@/config/weather';
-import { SurfaceGrid } from './SurfaceGrid';
+import { SurfaceGrid, type FertilityMask } from './SurfaceGrid';
 import { WeatherSchedule } from './WeatherSchedule';
-import type { SurfaceCell, SurfaceSample, WeatherFrame, WeatherState } from './types';
+import type {
+  ClimateSnapshot,
+  SurfaceCell,
+  SurfaceSample,
+  WeatherFrame,
+  WeatherState,
+} from './types';
 
-export type { SurfaceCell, SurfaceSample, WeatherFrame } from './types';
+export type { ClimateSnapshot, SurfaceCell, SurfaceSample, WeatherFrame } from './types';
 
 export interface WeatherOptions {
   readonly seed?: number;
   readonly override?: WeatherKind;
   readonly season?: SeasonKind;
+  /** Yeşilliğin kök salabileceği yerler: göl ve kaya gibi coğrafya çarpanı [0, 1]. */
+  readonly fertility?: FertilityMask;
 }
 
 export function parseWeatherOverride(value: string | null | undefined): WeatherKind | undefined {
@@ -21,7 +29,9 @@ export class WeatherSystem {
   readonly columns: number;
   readonly rows: number;
   private readonly surface: SurfaceGrid;
-  private readonly schedule: WeatherSchedule;
+  private schedule: WeatherSchedule;
+  private readonly seed: number;
+  private initialSeason: SeasonKind;
   private elapsedMs = 0;
   private surfaceMs = 0;
   private windMs = 0;
@@ -33,7 +43,9 @@ export class WeatherSystem {
 
   constructor(width: number, height: number, options: WeatherOptions = {}) {
     const seed = options.seed ?? WEATHER.seed;
-    this.surface = new SurfaceGrid(width, height, seed);
+    this.seed = seed;
+    this.initialSeason = options.season ?? 'spring';
+    this.surface = new SurfaceGrid(width, height, seed, options.fertility);
     this.schedule = new WeatherSchedule(seed, options.override, options.season);
     this.cellSize = this.surface.cellSize;
     this.columns = this.surface.columns;
@@ -78,6 +90,71 @@ export class WeatherSystem {
 
   compress(x: number, y: number, amount: number): void {
     this.surface.compress(x, y, amount);
+  }
+
+  /** Aracın bastığı yeşilliği ezer (`amount` sonlu, negatif olmayan üstel azalma). */
+  trample(x: number, y: number, amount: number): void {
+    this.surface.trample(x, y, amount);
+  }
+
+  /**
+   * Dünya iklimini bir anlık görüntüye yazar: sunucu bunu bütün istemcilere yayar ve diske yazar.
+   * Hava tohum ve saatten türediği için yalnız saat, rüzgâr birikimi ve zemin hücreleri taşınır.
+   */
+  snapshot(): ClimateSnapshot {
+    return {
+      version: 1,
+      seed: this.seed,
+      season: this.initialSeason,
+      elapsedMs: this.elapsedMs,
+      surfaceMs: this.surfaceMs,
+      windMs: this.windMs,
+      windTravelX: this.windTravelX,
+      windTravelY: this.windTravelY,
+      windX: this.windX,
+      windY: this.windY,
+      surface: this.surface.snapshot(),
+    };
+  }
+
+  /**
+   * Anlık görüntüyü yükler: saat, rüzgâr ve zemin onunla aynı olur. Tohum ya da zemin ölçüsü
+   * uyuşmuyorsa `false` döner ve hiçbir şey değişmez (başka dünyanın kaydı bu dünyayı bozmaz).
+   */
+  restore(snapshot: ClimateSnapshot): boolean {
+    const numbers = [
+      snapshot.elapsedMs,
+      snapshot.surfaceMs,
+      snapshot.windMs,
+      snapshot.windTravelX,
+      snapshot.windTravelY,
+      snapshot.windX,
+      snapshot.windY,
+    ];
+    if (
+      snapshot.version !== 1 ||
+      snapshot.seed !== this.seed ||
+      !numbers.every(Number.isFinite) ||
+      snapshot.elapsedMs < 0 ||
+      snapshot.surfaceMs < 0 ||
+      snapshot.surfaceMs > snapshot.elapsedMs
+    )
+      return false;
+    if (!this.surface.restore(snapshot.surface)) return false;
+    // Mevsim saati başlangıç mevsiminden sayılır: sunucunun takvimi, istemcinin yerel seçimini ezer.
+    if (snapshot.season !== this.initialSeason) {
+      this.initialSeason = snapshot.season;
+      this.schedule = new WeatherSchedule(this.seed, undefined, snapshot.season);
+    }
+    this.elapsedMs = snapshot.elapsedMs;
+    this.surfaceMs = snapshot.surfaceMs;
+    this.windMs = snapshot.windMs;
+    this.windTravelX = snapshot.windTravelX;
+    this.windTravelY = snapshot.windTravelY;
+    this.windX = snapshot.windX;
+    this.windY = snapshot.windY;
+    this.currentFrame = this.withTravel(this.schedule.frameAt(this.elapsedMs));
+    return true;
   }
 
   private integrateWind(state: WeatherState): void {

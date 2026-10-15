@@ -43,6 +43,7 @@ import { PauseController } from './world/PauseController';
 import { EnvironmentController } from './world/EnvironmentController';
 import { SEASONS } from '@/config/seasons';
 import { parseSeasonOverride } from '@/sim/seasons/SeasonCycle';
+import { WEATHER } from '@/config/weather';
 import { parseWeatherOverride } from '@/sim/weather/WeatherSystem';
 import { PlayerControls } from './world/PlayerControls';
 import { feelBlast, routeSimEvents } from './world/SimEventRouter';
@@ -137,17 +138,24 @@ export class WorldScene extends Phaser.Scene {
     this.arena = this.scope.addDestroyable(new ArenaView(this, world));
     this.zones = this.scope.addDestroyable(new ZonesView(this));
     const query = new URLSearchParams(location.search);
-    const previewSeason = parseSeasonOverride(query.get('season')) ?? overrides?.season;
+    const online = data?.online === true;
+    // Çevrimiçi dünyada hava yerel seçimle değil sunucunun iklimiyledir: tohum sabit, mevsim ve
+    // saat sunucudan gelen anlık görüntüyle uyumlanır; yerel önizleme parametreleri yok sayılır.
+    const previewSeason = online
+      ? undefined
+      : (parseSeasonOverride(query.get('season')) ?? overrides?.season);
     this.environment = this.scope.addDestroyable(
       new EnvironmentController(
         this,
         world.width,
         world.height,
-        seed,
+        online ? WEATHER.seed : seed,
         quality.getProfile(),
-        data?.weather ?? parseWeatherOverride(query.get('weather')) ?? overrides?.weather,
+        online
+          ? undefined
+          : (data?.weather ?? parseWeatherOverride(query.get('weather')) ?? overrides?.weather),
         previewSeason,
-        world.lakes,
+        world,
       ),
     );
     if (previewSeason) this.environment.model.step(SEASONS.previewWarmupMs);
@@ -216,7 +224,7 @@ export class WorldScene extends Phaser.Scene {
         mapGridMajorEvery: WORLD.mapGridMajorEvery,
         mapZoom: WORLD.mapZoom,
         mapMaxZoom: WORLD.mapMaxZoom,
-        mapTerrain: bakeLakeMap(world.lakes, world.width, world.height),
+        mapTerrain: bakeLakeMap(world.lakes, world.width, world.height, world.rocks),
         actionSource: this.controls.actionSource,
         stickSource: this.controls.stickSource,
         touch,

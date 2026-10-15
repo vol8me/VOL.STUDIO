@@ -9,6 +9,7 @@ export function sample(overrides: Partial<SurfaceSample> = {}): SurfaceSample {
     puddleDepth: 0.03,
     snowDepth: 0,
     snowCompaction: 0,
+    growth: 0,
     grip: 1,
     rollingResistance: 1,
     windX: 0,

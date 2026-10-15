@@ -17,6 +17,60 @@ export const WEATHER_VIEW = {
     waterNoise: 0.75,
     waterThreshold: 0.72,
   },
+  /**
+   * Yeşillik: ekilebilir yamalarda yağmurla büyüyen çim tutamları. Kar katmanının (`surfaceDepth`)
+   * altında çizilir: ince kar yeşilliği saydam örter, kalın kar tümden gizler.
+   */
+  vegetation: {
+    depth: -92,
+    /** Kar üstünde görünen uçlar (yüzey katmanının üstü, su katmanının altı). */
+    tipDepth: -88.5,
+    /** Çayır bu aralıktan (ms, sim saati) sık yeniden çizilmez; kamera görünür alandan çıkınca çizilir. */
+    redrawMs: 600,
+    /** Küme ızgarası aralığı (birim) ve kare başına küme tavanı (uzaklaşınca seyrelir). */
+    spacing: 26,
+    capacity: 1500,
+    /** Bu örtünün altı çıplak toprak; çayır bölgesi örtü + kenar gürültüsü eşiği aşınca başlar. */
+    minGrowth: 0.04,
+    threshold: 0.16,
+    /** Kenar tırtıklanma genliği (örtü birimi) ve kenardan içeriye kümelerin sıklaşma hızı. */
+    edgeNoise: 0.34,
+    density: 3.2,
+    /** Küme öbeklenmesi: gürültü bu orandan (`min`) 1'e kadar kabul olasılığını çarpar. */
+    clump: { min: 0.3 },
+    /** Kontur dolgusu örnekleme adımı (birim): kenar bu çözünürlükte tırtıklıdır. */
+    edgeStep: 20,
+    /** Çayır tabanı: yaprak renginde yumuşak dolgu; çekirdek, yoğun (olgun) örtüde daha koyu leke. */
+    base: { alpha: 0.4 },
+    core: { threshold: 0.62, alpha: 0.2 },
+    /** Küme boyu (birim) en küçük ve en büyük örtüde; küme başına yaprak, yelpaze açısı ve çizgi kalınlığı. */
+    length: [5, 12],
+    blades: 6,
+    spread: 1.9,
+    bladeWidth: 1.4,
+    /** Küme altı temas gölgesi: saydamlık ve koyu yapraktan karartma oranı. */
+    shadeAlpha: 0.2,
+    shadeDarken: 0.5,
+    bloomRadius: 1.9,
+    /** Kar üstündeki uçlar: bu kar derinliğinin (m) altında çizilmez, tam derinliğin `fadeDepth` katında `floor` payına iner (derin karda da birkaç ucu görünür). */
+    tip: {
+      minSnow: 0.002,
+      fadeDepth: 2.2,
+      floor: 0.22,
+      length: 0.6,
+      snowColor: 0xe4eef2,
+      snowMix: 0.15,
+    },
+    /** Mevsim başına yaprak, açık yaprak ve çiçek; geçişte bir sonrakine karışır (`seasons` gibi). */
+    palette: {
+      spring: { leaf: 0x4f8a34, light: 0x8cc156, bloom: 0xf3e07a },
+      summer: { leaf: 0x5f8a2f, light: 0x9fb24a, bloom: 0xf2c4d8 },
+      autumn: { leaf: 0x86722a, light: 0xc79a3a, bloom: 0xd9722f },
+      winter: { leaf: 0x6f7c5c, light: 0x93a381, bloom: 0xdde6ea },
+    },
+    /** Çiçekli kümelerin payı [0, 1]; yalnız bahar ve yaz. */
+    bloomShare: { spring: 0.22, summer: 0.1, autumn: 0, winter: 0 },
+  },
   surfaceDepth: -89,
   reflectionDepth: 8,
   precipitationDepth: 20,

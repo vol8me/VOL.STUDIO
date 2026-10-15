@@ -4,7 +4,10 @@ import {
   RigidBody,
   type Contact,
   type ContactShape,
+  type Wall,
 } from '@volstudio/core/physics';
+import { lerp } from '@volstudio/core/math/interpolation';
+import { ROCKS } from '@/config/rocks';
 import type { SuspensionConfig } from '@/config/tank';
 import type { TankCommand } from '../command';
 import type { World } from '../world/World';
@@ -51,6 +54,12 @@ export abstract class Chassis extends RigidBody {
    * her adım yeniden hesaplanır, ağ durumuna girmez; sunucu ve istemci öngörüsü aynı değeri bulur.
    */
   waterDepth = 0;
+  /**
+   * Şasinin bu adımda tırmandığı kaya yüksekliği [0, 1] (`World.rocks`); yalnız tırmanabilen şasi
+   * (`climbs`) sıfırdan büyük okur. `waterDepth` gibi türetilmiş ara değerdir: konumdan her adım
+   * yeniden hesaplanır, ağ durumuna girmez; sunucu ve istemci öngörüsü aynı değeri bulur.
+   */
+  climb = 0;
 
   /** Yan yüzey hızları (birim/s). */
   trackLeft = 0;
@@ -83,6 +92,8 @@ export abstract class Chassis extends RigidBody {
   protected readonly turretMount: Turret;
   protected readonly reserve: BoostReserve;
   private readonly substepContact: Contact = createContact();
+  /** Dünya duvarları ve değen kayaların birleşik listesi; adım başına yeniden kullanılır. */
+  private readonly boundaries: Wall[] = [];
 
   protected constructor(
     protected readonly config: ChassisConfig,
@@ -142,12 +153,23 @@ export abstract class Chassis extends RigidBody {
   }
 
   /**
-   * Bu adımın su derinliğini yazar ve yüzemeyen şasi için hız çarpanını döndürür. Süzülen araç yüzer:
-   * derinliği not edilir (dalga ve iz için) ama hızı kesilmez.
+   * Bu şasi kayanın üstünden geçer mi: yürüyücü (örümcek) tırmanır, yavaşlar; tank, süzülen araç ve
+   * mech kayaya çarpar. Türetilmiş sınıf (zıplayan şasi) havadayken geçebilir.
    */
-  protected wade(world: World): number {
+  protected get climbs(): boolean {
+    return this.kind === 'walker';
+  }
+
+  /**
+   * Bu adımın zemin etkilerini yazar ve hız çarpanını döndürür: su derinliği (`waterDepth`) ve kaya
+   * tırmanışı (`climb`). Süzülen araç yüzer: derinliği not edilir (dalga ve iz için) ama hızı kesilmez.
+   * Tırmanan yürüyücü yüksekliğe göre yavaşlar; engel değil, dirençtir.
+   */
+  protected traverse(world: World): number {
     this.waterDepth = world.lakes.isEmpty ? 0 : world.lakes.depthAt(this.x, this.y);
-    return this.kind === 'hover' ? 1 : wadingSpeed(this.waterDepth);
+    this.climb = this.climbs && !world.rocks.isEmpty ? world.rocks.heightAt(this.x, this.y) : 0;
+    const wading = this.kind === 'hover' ? 1 : wadingSpeed(this.waterDepth);
+    return wading * lerp(1, ROCKS.climb.speedFloor, this.climb);
   }
 
   /** Geri vitesteyim (yalnız paletli tankta anlamlıdır). */
@@ -211,6 +233,7 @@ export abstract class Chassis extends RigidBody {
     this.suspension.reset();
     this.parts = 0;
     this.waterDepth = 0;
+    this.climb = 0;
     this.treadLeft = 0;
     this.treadRight = 0;
     this.groundLeft = 0;
@@ -315,9 +338,29 @@ export abstract class Chassis extends RigidBody {
    * sınır yapar.
    */
   settleAgainst(world: World): void {
-    const hit = resolveWallContacts(this, world.walls, this.shape, this.substepContact);
+    const hit = resolveWallContacts(this, this.wallsFor(world), this.shape, this.substepContact);
     if (hit.speed <= this.contact.speed) return;
     Object.assign(this.contact, hit);
     this.kickFrom(hit);
+  }
+
+  /**
+   * Bu şasinin bu konumda çarpacağı sınırlar: dünya duvarları ve (kayadan geçemiyorsa) ayak izine
+   * değen kayaların teğet duvarları. Kaya yoksa ya da şasi tırmanıyorsa dünya duvarlarının kendisidir.
+   */
+  private wallsFor(world: World): readonly Wall[] {
+    if (world.rocks.isEmpty || this.climbs) return world.walls;
+    const walls = this.boundaries;
+    walls.length = 0;
+    for (const wall of world.walls) walls.push(wall);
+    world.rocks.contactWalls(
+      this.x,
+      this.y,
+      this.angle,
+      this.shape.halfLength,
+      this.shape.halfWidth,
+      walls,
+    );
+    return walls;
   }
 }

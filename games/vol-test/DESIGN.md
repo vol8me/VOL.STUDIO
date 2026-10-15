@@ -144,6 +144,54 @@ Geç katılımda derinde ölü görülen araç hiç çizilmez. Boğulma akışta
 `MinimapPanel`in `backgroundImage` zemini olarak kıyı şeridi, su ve derin su, `LakeField.outline`
 çokgenleriyle, yani harita kıyısı fizik kıyısıdır. Batış sesi henüz yoktur: yeni bir ses varlığı gerekir.
 
+### Kayalar
+
+Dünyanın ikinci değişmez coğrafyası kaya öbekleridir (`src/config/rocks.ts`): sekiz yazılı öbek ve dünyanın
+merkezine göre nokta simetrik ikizleri. Öbek birkaç dairesel lobdan oluşur (`RockField`); lob yarıçapı,
+yüksekliği ve yeri öbek tohumundan türer. Göl gibi veri ağdan geçmez: sunucu, çevrimdışı alıştırma ve istemci
+öngörüsü `createBattleWorld` ile aynı lobları kurar, yani çarpışma bit bit aynıdır. Kaya dünya kenarından
+`edgeMargin` içeride, üs ve bölgeden uzaktadır (`tests/sim/rocks.test.ts`).
+
+Araçlar kayaya türüne göre tepki verir (`ROCKS`):
+
+- Tank, süzülen araç ve mech kayadan geçemez: lob, `resolveWallContacts` ile aynı duvar çözücüsüne teğet
+  duvarlar olarak girer (şasi `wallsFor`), çarpma hasar ve ses olayı üretir ve kaymadan sıyrılır.
+- Örümcek (`kind: 'walker'`) tırmanır: kaya içinde hız `speedFloor` oranına kadar düşer (`Chassis.traverse`),
+  `climb` değeri lob yüksekliğiyle [0, 1] artar. Duvar değil, ağırlaşmadır: alçak lob zor fark edilir, yüksek
+  lob belirgin yavaşlatır.
+- Düz mermi `coverHeight × lob yüksekliği` altında kayaya çarpar ve söner; yüksek yaylı mermi üstünden aşar.
+- Bot yüzemeyen araçta kayanın önündeki mesafeleri tarar ve teğete sıyrılır (`BotBrain.rockPush`); örümcek
+  botu kayayı engel saymaz.
+
+Sunum `src/view/terrain/RockView.ts`, `src/config/rockView.ts`: lob çokgeni düzensizdir, kubbe basamakları
+ışığa (`LIGHT`) doğru kayar, gölge lob yüksekliğiyle uzar; ıslaklıkla koyulaşır, kar derinliği başlık olarak
+birikir, dibinde yosun tutamları vardır. Örümcek tırmanırken kalçası kalkar, gövdesi geriye yaslanır ve
+ayaklar daha ağır basıp toz kaldırır (`SpiderView.climbRock`, `ROCK_VIEW.spiderClimb`; değer yumuşatılır,
+ağdan gelmez, her istemci kendi öngörüsünden türetir). Kayalar harita dokusuna da basılır (`src/hud/lakeMap.ts`).
+
+### Yeşillik ve kalıcı iklim
+
+Yağmur yalnız su biriktirmez, ekilebilir yamalarda yeşillik büyütür. `SurfaceGrid` her hücrede `growth`
+[0, `fertility`] tutar: ıslaklık ve ılık hava büyütür, kuru zemin yavaşça (kışın daha da yavaş) çeker, don
+ve kar örtüsü örtüyü solar ama dayanıklı çim tabanının (`hardyFloor`, taşıma gücünün %30'u) altına
+indirmez, palet ezer (`WEATHER.growth`). Verimli yamalar tohumdan türeyen sabit
+coğrafyadır (`fertility.ts`): göl ve kaya çıplaktır, göl kıyı şeridi yarı verimlidir. Kar yağınca yeşillik
+yok olmaz: altta kalır, üstüne kar katmanı (yeşillik −92, kar yüzeyi −89) binerek örter; hafif karda kısa,
+karlı uçlar kar üstüne çıkar (`tipDepth` −88,5) ve derinleşen karda solar, kar çekilince yeşil yeniden açılır. Sunum `VegetationLayer`: örtü büyüdükçe önce tutam sayısı, sonra boyu
+artar; konum hücre ve sıra numarasından türer (karede titremez), tutam sayısı kare başına tavanlıdır ve
+yalnız görünür alan ya da belirgin saat değişimi yeniden çizim ister.
+
+Sunucu dünyası hep açıktır, bu yüzden iklim sunucuda yaşar ve kalıcıdır. `WorldRoom` iklimi sunucu saatiyle
+ilerletir ve `ClimateStore` (`server/ClimateStore.ts`; dosya `VOLTEST_CLIMATE_FILE` ile verilir, yoksa çalışma dizinindeki `.state` klasörüne yazılır)
+arkasında `NETWORK.climateSaveMs` aralığıyla ve oda kapanırken atomik (geçici dosya + yeniden adlandırma)
+yazar; yeniden başlayınca saat ve yeşillik kaldığı yerden sürer. Başka tohumun, bozuk ya da ölçüsü tutmayan
+kayıt yok sayılır ve temiz iklimle açılır. İstemci dinleyicisini kurunca `CLIMATE_REQUEST` yollar,
+sunucu `CLIMATE_MESSAGE` ile anlık görüntüyü (`ClimateSnapshot`, hücre alanları bayt dizisi) verir ve
+sonrakini düzenli aralıkla yollar; istek sıklığı istemci başına sınırlıdır (`climateRequestGapMs`).
+Yerel hava saati aynı belirli takvimde akar, anlık görüntü yalnız uyumlar. Çevrimiçi oyunda yüzey
+etkileri (tutuş, hava direnci) bilerek yoktur (`Simulation.weatherEffects`): hava yalnız sunumdur, bu yüzden
+öngörü sunucuyla ayrışmaz.
+
 ## Araçlar
 
 Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, can,
@@ -855,7 +903,8 @@ ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağ�
 
 - Çizim pozu `tank.previous` içinde ara değerlidir; sahne çevrimiçi alfa 0 ile çizer.
 - Kendi `fired` yankısı bastırılır (öngörü atışı zaten gösterdi); yerel mermi yerelde ilerler.
-- Hava senkronlanmaz; çevrimiçi dünya `clear` açılır.
+- Hava ve yeşillik sunucu iklimidir (`CLIMATE_MESSAGE`); istemci yalnız sunumu uygular, yüzey etkisi (tutuş,
+  hava direnci) çevrimiçi yoktur. Ayrıntı: Yeşillik ve kalıcı iklim.
 - Duraklatma dünyayı dondurmaz (saat sunucudadır): menü canlı "Menü"dür (`WorldDriver.live`), sahne çizimi
   ve ses sürer, araç yalnız boş girdi yollar; menüdeyken araç savunmasızdır ve arayüz bunu söyler.
 - Sahne başlarken ve yeniden başlarken (`restart`, ekran geçişleri, `toMenu`) veri her zaman bir nesnedir.

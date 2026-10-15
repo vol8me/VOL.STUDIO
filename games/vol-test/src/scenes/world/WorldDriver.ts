@@ -86,8 +86,10 @@ export type DriverFactory = (context: DriverContext) => WorldDriver;
  */
 export interface WorldStartData {
   readonly createDriver?: DriverFactory;
-  /** Çizilen havayı sabitler: çevrimiçi dünyada hava benzetime girmez. */
+  /** Çizilen havayı sabitler (çevrimdışı önizleme ve test). */
   readonly weather?: WeatherKind;
+  /** Çevrimiçi dünya: hava ve zemin sunucunun iklimiyle uyumlanır (yerel seçim yok sayılır). */
+  readonly online?: boolean;
   /** Sahne açılınca oyuncuya gösterilecek ileti (i18n anahtarı; örn. bağlantı koptu). */
   readonly notice?: MessageKey;
 }

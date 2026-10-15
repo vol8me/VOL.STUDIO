@@ -31,6 +31,8 @@ export interface SurfaceSample {
   /** Metre. */
   readonly snowDepth: number;
   readonly snowCompaction: number;
+  /** Yeşillik örtüsü [0, 1]: yağmurla büyür, kuraklık, don ve kar örtüsüyle çekilir. */
+  readonly growth: number;
   readonly grip: number;
   readonly rollingResistance: number;
   readonly windX: number;
@@ -43,4 +45,38 @@ export interface SurfaceCell extends SurfaceSample {
   readonly y: number;
   readonly width: number;
   readonly height: number;
+}
+
+/**
+ * Zemin hücrelerinin sıkıştırılmış hâli: alan başına hücre başına bir bayt (1/255 çözünürlük).
+ * Ağ yayını ve disk kalıcılığı aynı biçimi kullanır; sıkıştırma kaybı hava tohumundan ve saatten
+ * türeyen bir sonraki adımlarda sönümlenir.
+ */
+export interface SurfaceSnapshot {
+  readonly columns: number;
+  readonly rows: number;
+  readonly wetness: Uint8Array;
+  readonly puddle: Uint8Array;
+  readonly snow: Uint8Array;
+  readonly compaction: Uint8Array;
+  readonly growth: Uint8Array;
+}
+
+/**
+ * Dünya iklimi anlık görüntüsü: hava saati, rüzgâr birikimi ve zemin. Hava belirli (tohum + saat)
+ * olduğundan hava yalnız saatle taşınır; hücre durumu ise geçmişin sonucudur ve bayt dizisiyle gelir.
+ */
+export interface ClimateSnapshot {
+  readonly version: 1;
+  readonly seed: number;
+  /** Hava takviminin başlangıç mevsimi: mevsim saati bundan sayılır. */
+  readonly season: SeasonKind;
+  readonly elapsedMs: number;
+  readonly surfaceMs: number;
+  readonly windMs: number;
+  readonly windTravelX: number;
+  readonly windTravelY: number;
+  readonly windX: number;
+  readonly windY: number;
+  readonly surface: SurfaceSnapshot;
 }

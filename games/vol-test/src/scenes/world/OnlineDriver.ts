@@ -12,6 +12,7 @@ import { idleCommand } from '@/sim/command';
 import type { Vehicle } from '@/sim/entities/Vehicle';
 import type { SimEvent } from '@/sim/events';
 import type { Simulation } from '@/sim/Simulation';
+import type { ClimateSnapshot } from '@/sim/weather/types';
 import { NameTags, type TagFrame } from '@/view/NameTags';
 import { tankFrame } from './frames';
 import type { DriverContext, DriverFrame, DriverMeasurement, WorldDriver } from './WorldDriver';
@@ -63,6 +64,10 @@ export class OnlineDriver implements WorldDriver {
       session.dispose();
     });
     this.tags = scope.addDestroyable(new NameTags(context.scene));
+    // Sunucu iklimi: katılımda gelen anlık görüntü hemen, sonrakiler düzenli aralıkla uygulanır.
+    const apply = (snapshot: ClimateSnapshot): void => void context.weather.restore(snapshot);
+    if (session.climate) apply(session.climate);
+    scope.addSubscription(session.onClimate(apply));
     scope.addSubscription(
       session.onStatus((status) => {
         if (status === 'closed' && !this.leaving)
@@ -112,6 +117,8 @@ export class OnlineDriver implements WorldDriver {
     for (let index = 0; index < due; index++)
       this.world.step(paused ? IDLE : this.context.controls.step(GAME.simulationStepMs));
     this.world.advance(deltaMs);
+    // Hava saati yerelde sunucuyla aynı belirli takvimde akar; anlık görüntü yalnız uyumlar.
+    this.context.weather.step(deltaMs);
     // Çizim pozu zaten `previous`ta ara değerlidir (OnlineWorld sözleşmesi): alfa 0.
     return { alpha: 0 };
   }

@@ -26,6 +26,13 @@ export interface SimulationOptions {
   readonly combat?: CombatConfig;
   readonly weather?: WeatherSystem;
   /**
+   * Varsayılan `true`: hava sürüşe (tutuş, direnç) ve mermiye (rüzgâr, sürükleme) etki eder.
+   * `false`: hava yalnız ilerler ve araçların izini (kar sıkışması, ezilen yeşillik) alır; sürüş ve
+   * mermi hava yokmuş gibi davranır. Çevrimiçi sunucu böyle kurulur: hava ortak iklimdir ama yetkili
+   * fizik, öngörüyü yapan istemciyle aynı kalır.
+   */
+  readonly weatherEffects?: boolean;
+  /**
    * Varsayılan `true`: dünya merkezinde kontrol edilen bir araç doğar. Sunucu
    * dünyası `false` verir; araçlar bağlanan oyuncuyla doğar ve çıkınca kalkar,
    * sahipsiz bir gövde dünyada kalmaz.
@@ -53,6 +60,8 @@ export class Simulation {
   readonly world: World;
   readonly projectiles: Projectiles;
   readonly weather: WeatherSystem | undefined;
+  /** Hava sürüşe ve mermiye etki ediyor mu (`SimulationOptions.weatherEffects`). */
+  private readonly weatherEffects: boolean;
   private readonly vehicleList: Vehicle[] = [];
   private readonly options: SimulationOptions;
   private readonly defaultSpec: VehicleSpec;
@@ -80,6 +89,7 @@ export class Simulation {
     this.combat = options.combat ?? COMBAT;
     this.world = options.world;
     this.weather = options.weather;
+    this.weatherEffects = options.weatherEffects !== false;
     const weapon = this.defaultSpec.armament.weapon;
     this.projectiles = new Projectiles(
       options.projectileCapacity ?? PROJECTILE_CAPACITY,
@@ -87,7 +97,7 @@ export class Simulation {
       weapon.flight,
     );
     this.profileWeapons[0] = weapon;
-    if (this.weather) this.projectiles.setAir(this.weather.frame);
+    this.applyAir();
     if (options.spawnPlayer !== false) {
       const center = this.world.center;
       this.playerId = this.spawn(center.x, center.y).id;
@@ -319,7 +329,7 @@ export class Simulation {
     if (!Number.isFinite(stepMs) || stepMs < 0)
       throw new RangeError('Simülasyon adımı sonlu ve negatif olmayan süre olmalı');
     this.weather?.step(stepMs);
-    if (this.weather) this.projectiles.setAir(this.weather.frame);
+    this.applyAir();
     const dt = stepMs / 1000;
     this.timeMs += stepMs;
     const commandFor: CommandSource =
@@ -341,22 +351,27 @@ export class Simulation {
       const y = tank.y;
       const groundLeft = tank.groundLeft;
       const groundRight = tank.groundRight;
-      this.driveChassis(vehicle, command, dt, this.weather?.sample(x, y));
+      this.driveChassis(
+        vehicle,
+        command,
+        dt,
+        this.weather && this.weatherEffects ? this.weather.sample(x, y) : undefined,
+      );
       this.drown(vehicle, dt);
       if (this.weather) {
         const amountPerUnit = WEATHER.tank.snowCompactionPerMetre / WORLD.metre / 2;
+        const tramplePerUnit = WEATHER.growth.tramplePerMetre / WORLD.metre / 2;
         const offsetX = -Math.sin(tank.hull) * tank.trackOffset;
         const offsetY = Math.cos(tank.hull) * tank.trackOffset;
-        this.weather.compress(
-          tank.x - offsetX,
-          tank.y - offsetY,
-          (tank.groundLeft - groundLeft) * amountPerUnit,
-        );
-        this.weather.compress(
-          tank.x + offsetX,
-          tank.y + offsetY,
-          (tank.groundRight - groundRight) * amountPerUnit,
-        );
+        const left = tank.groundLeft - groundLeft;
+        const right = tank.groundRight - groundRight;
+        this.weather.compress(tank.x - offsetX, tank.y - offsetY, left * amountPerUnit);
+        this.weather.compress(tank.x + offsetX, tank.y + offsetY, right * amountPerUnit);
+        // Geçen palet ve ayak yeşilliği ezer; süzülen araç yere değmez.
+        if (tank.kind !== 'hover') {
+          this.weather.trample(tank.x - offsetX, tank.y - offsetY, left * tramplePerUnit);
+          this.weather.trample(tank.x + offsetX, tank.y + offsetY, right * tramplePerUnit);
+        }
       }
     }
     this.settleContacts();
@@ -436,13 +451,18 @@ export class Simulation {
     if (hardest.speed > chassis.contact.speed) Object.assign(chassis.contact, hardest);
   }
 
+  /** Hava mermiye etki ediyorsa güncel rüzgâr ve sürükleme mermilere bildirilir. */
+  private applyAir(): void {
+    if (this.weather && this.weatherEffects) this.projectiles.setAir(this.weather.frame);
+  }
+
   /**
    * Aracın şimdi ateş etmesi hâlinde mermisinin gideceği yol. `pose` verilirse atış o pozdan
    * türetilir (görünümün ara değerli karesi: nişan çizgisi ekrandaki namluyla aynı doğrultuda
    * kalır); verilmezse güncel adımın pozu kullanılır.
    */
   previewAim(vehicle: Vehicle, stepMs: number, pose?: ChassisPose) {
-    if (this.weather) this.projectiles.setAir(this.weather.frame);
+    this.applyAir();
     const tank = vehicle.chassis;
     const launch = launchFrom(
       pose ?? tank.readPose(this.previewPose),

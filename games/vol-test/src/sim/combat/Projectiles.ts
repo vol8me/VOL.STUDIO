@@ -392,9 +392,21 @@ export class Projectiles {
     };
   }
 
-  /** Hedef taramasına yalnız dünya içindeki yol girer; ilk duvarın gerisi vurulamaz. */
+  /**
+   * Hedef taramasına yalnız dünya içindeki ve ilk kayadan öncesindeki yol girer; ilk duvarın ya da
+   * kayanın gerisi vurulamaz.
+   */
   private clipToWorld(projectile: Projectile, world: World): boolean {
     const { px, py, x, y } = projectile;
+    if (!world.rocks.isEmpty && world.contains(px, py)) {
+      // Kaya, siper yüksekliğinin altında uçan mermiyi ilk girdiği noktada durdurur.
+      const t = world.rocks.segmentHit(px, py, x, y, projectile.previousHeight, projectile.height);
+      if (t >= 0) {
+        projectile.x = px + (x - px) * t;
+        projectile.y = py + (y - py) * t;
+        return true;
+      }
+    }
     if (!world.contains(px, py)) {
       // Namlu gövdenin önündedir: sınır dışında doğarsa ilk nokta hemen duvardır.
       projectile.x = Math.min(world.width, Math.max(0, px));

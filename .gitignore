@@ -30,11 +30,13 @@ playwright-report/
 #   ayar (model yönlendirmesi) ve alt ajan tanımları izlenir
 # - graphify bilgi grafiği
 # - audio-synth dinleme/inceleme çıktısı
+# - vol-test sunucusunun kalıcı iklim kaydı (`.state/climate.json`): çalışma zamanı verisi
 .claude/*
 !.claude/settings.json
 !.claude/agents/
 graphify-out/
 devtools/*/export/
+.state/
 
 # Tauri'nin ürettiği kodlar; `gen/android` elle düzenlendiği için izlenir,
 # yalnız Gradle derleme çıktısı dışarıdadır.

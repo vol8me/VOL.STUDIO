@@ -27,6 +27,7 @@ export function tankFrame(tank: Chassis, alpha: number): TankFrame {
     vy: tank.vy,
     angularVelocity: tank.angularVelocity,
     boosting: tank.boosting,
+    climb: tank.climb,
   };
 }
 

@@ -11,6 +11,11 @@ export interface TankFrame extends ChassisPose {
   readonly vy: number;
   readonly angularVelocity: number;
   readonly boosting: boolean;
+  /**
+   * Kaya tırmanışı [0, 1] (yalnız yürüyücü; yoksa 0): bacaklı görünüm kalçasını kaldırıp ağır basar.
+   * Simülasyonun türetilmiş değeridir, ağdan gelmez.
+   */
+  readonly climb?: number;
 }
 
 /**

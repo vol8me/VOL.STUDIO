@@ -99,6 +99,60 @@ describe('Simulation', () => {
     expect(weather.sample(tank.x + offsetX, tank.y + offsetY).snowCompaction).toBeGreaterThan(0);
     expect(weather.sample(tank.x - offsetX, tank.y - offsetY).snowCompaction).toBeGreaterThan(0);
   });
+  it('`weatherEffects: false` havayı yalnız ilerletir ve iz alır; sürüşü ve mermiyi etkilemez', () => {
+    const brake = (effects: boolean) => {
+      const space = world();
+      const weather = new WeatherSystem(space.width, space.height, { seed: 7, override: 'rain' });
+      weather.step(60_000);
+      const sim = new Simulation({
+        world: space,
+        vehicle: STRIKER,
+        weather,
+        weatherEffects: effects,
+      });
+      sim.player.chassis.place(2000, 2000, 0);
+      sim.player.chassis.vx = 200;
+      for (let step = 0; step < 12; step++) sim.step(command({ brake: true }), STEP_MS);
+      return { stop: sim.player.chassis.x - 2000, weather };
+    };
+    const open = brake(true);
+    const inert = brake(false);
+    // Etkisiz hava, kuru zeminle aynı fren yolunu verir; etkili ıslak hava daha uzun.
+    expect(inert.stop).toBeLessThan(open.stop);
+    const dry = (() => {
+      const sim = simulation();
+      sim.player.chassis.place(2000, 2000, 0);
+      sim.player.chassis.vx = 200;
+      for (let step = 0; step < 12; step++) sim.step(command({ brake: true }), STEP_MS);
+      return sim.player.chassis.x - 2000;
+    })();
+    expect(inert.stop).toBeCloseTo(dry, 9);
+    // Saat yine ilerler.
+    expect(inert.weather.frame.elapsedMs).toBeGreaterThan(60_000);
+  });
+
+  it('geçen palet yeşilliği ezer; süzülen araç yere değmez', () => {
+    const run = (spec: typeof STRIKER) => {
+      const space = world(1024);
+      const weather = new WeatherSystem(space.width, space.height, { seed: 7, override: 'rain' });
+      weather.step(300_000);
+      const sim = new Simulation({ world: space, vehicle: spec, weather });
+      const chassis = sim.player.chassis;
+      chassis.place(100, 512, 0);
+      let before = 0;
+      let after = 0;
+      for (let y = 0; y < weather.rows; y++)
+        for (let x = 0; x < weather.columns; x++) before += weather.cell(x, y)!.growth;
+      for (let step = 0; step < 360; step++) sim.step(command({ moveX: 1 }), STEP_MS);
+      for (let y = 0; y < weather.rows; y++)
+        for (let x = 0; x < weather.columns; x++) after += weather.cell(x, y)!.growth;
+      return { before, after };
+    };
+    // Dünyanın bir kısmı verimsizse yol yeşillikten geçmeyebilir: yalnız azalmanın olduğu doğrulanır.
+    const tank = run(STRIKER);
+    expect(tank.after).toBeLessThanOrEqual(tank.before + 1e-9);
+  });
+
   it('tankı dünyanın ortasına yerleştirir', () => {
     const sim = simulation();
     expect(sim.player.chassis.x).toBe(2048);

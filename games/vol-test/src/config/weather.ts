@@ -26,6 +26,41 @@ export const WEATHER = {
   },
   wind: { gustAmount: 0.18, periodMs: 27_000 },
   tank: { snowCompactionPerMetre: 0.35 },
+  /**
+   * Yeşillik: hücre başına örtü [0, fertility]. Yağmur ve ıslak toprak büyütür; kuru zemin, don ve
+   * kar örtüsü çeker. Büyüme yalnız ekilebilir yamalarda (`fertility`) olur: yamalar tohumdan
+   * türeyen sabit coğrafyadır, göl ve kaya maskeyle dışlanır.
+   */
+  growth: {
+    /** Yama ölçeği (birim) ve gürültü eşiği [alt, üst]: aralık dışı çıplak toprak, üstü tam verimli. */
+    patchSize: 1500,
+    threshold: [0.6, 0.7],
+    /** Yeni dünyanın verimli yamalarındaki başlangıç örtüsü (fertility oranı). */
+    initial: 0.55,
+    /** Tam nem ve ideal sıcaklıkta saniyede büyüme: tam örtü ~4 dakikalık yağmur/ıslaklıktır. */
+    growPerSecond: 1 / 240,
+    /** Bu nemin (ıslaklık) altı büyütmez; üstü doğrusal artar. */
+    minMoisture: 0.12,
+    /** Bu sıcaklığın (°C) altında büyüme durur, `idealTemperature`'da tam hızdır. */
+    minTemperature: 3,
+    idealTemperature: 15,
+    /** Kuru zeminde saniyede çekilme: tam örtü ~25 dakikada solar; uykuda bu oranla yavaşlar. */
+    wiltPerSecond: 1 / 1500,
+    dormantWilt: 0.4,
+    /** Don (bu sıcaklıkta ve altında) ek olarak çeker: tam örtü ~8 dakikada çöker. */
+    frostTemperature: 0,
+    frostPerSecond: 1 / 500,
+    /** Kar örtüsü bu derinliğe (m) varınca ışığı keser; örtü ~20 dakikada çekilir. */
+    snowSmotherDepth: 0.02,
+    snowSmotherPerSecond: 1 / 1200,
+    /**
+     * Dayanıklı çim tabanı (fertility oranı): kuraklık, don ve kar örtüyü buraya kadar çeker. Kışın ve kar
+     * altında seyrek yeşillik kalır; yağmur yeniden büyütür.
+     */
+    hardyFloor: 0.3,
+    /** Paletin ezdiği yeşillik: yol başına üstel azalma (metre başına oran). */
+    tramplePerMetre: 0.06,
+  },
   temperature: { snowMaximum: -4, rainMinimum: 3 },
   surface: {
     stepMs: 100,

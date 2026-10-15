@@ -141,7 +141,8 @@ describe('connectWar', () => {
       model: modelOf(DART),
       faction: 1,
     });
-    expect(connection.start.weather).toBe('clear');
+    expect(connection.start.online).toBe(true);
+    expect(connection.start.weather).toBeUndefined();
     expect(typeof connection.start.createDriver).toBe('function');
     expect(session.dispose).not.toHaveBeenCalled();
     connection.abandon();
@@ -177,7 +178,8 @@ describe('createLobby', () => {
     expect(lobby.isOpen).toBe(false);
     expect(restart).toHaveBeenCalledTimes(1);
     const data = restart.mock.calls[0][0]!;
-    expect(data.weather).toBe('clear');
+    expect(data.online).toBe(true);
+    expect(data.weather).toBeUndefined();
     expect(typeof data.createDriver).toBe('function');
     expect(session.dispose).not.toHaveBeenCalled();
   });

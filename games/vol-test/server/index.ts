@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { defineRoom, matchMaker } from '@colyseus/core';
 import {
   guardSettings,
@@ -14,6 +15,7 @@ import {
   type StartedHost,
 } from '@volstudio/network/server';
 import { ROOM } from '../src/network/rooms';
+import { FileClimateStore, type ClimateStore } from './ClimateStore';
 import { WorldRoom, type WorldRoomOptions } from './WorldRoom';
 
 /**
@@ -40,6 +42,8 @@ export async function createPrimaryWorld(options: Omit<WorldRoomOptions, 'primar
 }
 
 export interface WorldServerOptions {
+  /** Dünya iklimini kalıcı tutan depo; verilmezse iklim yalnız bellektedir. */
+  readonly climateStore?: ClimateStore;
   /** Bağlantı kapısı (hız, soket ve köken sınırları); verilmezse kurulmaz. */
   readonly guard?: GuardSettings;
   /** İşletim kapısı (`/healthz`, `/metrics`, `/logs`); verilmezse açılmaz. */
@@ -74,7 +78,7 @@ export async function startWorldServer(
     { port, host },
     { logger, guard: options.guard },
   );
-  await createPrimaryWorld({ seed: Date.now() >>> 0 });
+  await createPrimaryWorld({ seed: Date.now() >>> 0, climateStore: options.climateStore });
   const ops = options.ops
     ? await serveOps({ ...options.ops, logger, metrics: () => worldMetrics(started.guard) })
     : null;
@@ -97,9 +101,13 @@ if (isEntryModule(import.meta.url, process.argv[1])) {
       host,
       hint: 'VOL_NET_ORIGINS ile köken izin listesi verin',
     });
+  // İklim dosyası: yeşillik ve kar sunucu yeniden başlayınca da korunur (git dışı `.state/`).
+  const climatePath =
+    process.env.VOLTEST_CLIMATE_FILE ?? join(process.cwd(), '.state', 'climate.json');
   const started = await startWorldServer(port, host, logger, {
     guard,
     ops: opsSettings(process.env) ?? undefined,
+    climateStore: new FileClimateStore(climatePath),
   });
   installShutdown(started.stop, { logger });
 }

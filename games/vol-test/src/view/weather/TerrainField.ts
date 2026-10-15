@@ -3,7 +3,7 @@ import { WEATHER_VIEW } from '@/config/weatherView';
 import type { WeatherRect } from './WeatherParticles';
 import type { WeatherSource } from './SurfaceLayer';
 
-export type SurfaceChannel = 'wetness' | 'puddleDepth' | 'snowDepth' | 'snowCompaction';
+export type SurfaceChannel = 'wetness' | 'puddleDepth' | 'snowDepth' | 'snowCompaction' | 'growth';
 export type ContourKind = 'ground' | 'water' | 'snow' | 'packed';
 
 const smooth = (value: number): number => value * value * (3 - 2 * value);
@@ -15,6 +15,7 @@ export class TerrainField {
     puddleDepth: new Float64Array(WEATHER.surface.maxCells),
     snowDepth: new Float64Array(WEATHER.surface.maxCells),
     snowCompaction: new Float64Array(WEATHER.surface.maxCells),
+    growth: new Float64Array(WEATHER.surface.maxCells),
   };
   private columns = 0;
   private rows = 0;
@@ -46,6 +47,7 @@ export class TerrainField {
         this.samples.puddleDepth[index] = cell?.puddleDepth ?? 0;
         this.samples.snowDepth[index] = cell?.snowDepth ?? 0;
         this.samples.snowCompaction[index] = cell?.snowCompaction ?? 0;
+        this.samples.growth[index] = cell?.growth ?? 0;
       }
     }
   }
