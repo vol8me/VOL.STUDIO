@@ -54,6 +54,9 @@ const NAME_KEYS = {
   warhound: 'voltest:garage.vehicles.warhound.name',
   templar: 'voltest:garage.vehicles.templar.name',
   juggernaut: 'voltest:garage.vehicles.juggernaut.name',
+  jackal: 'voltest:garage.vehicles.jackal.name',
+  panther: 'voltest:garage.vehicles.panther.name',
+  rhino: 'voltest:garage.vehicles.rhino.name',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 const CLASS_KEYS = {
@@ -69,6 +72,9 @@ const CLASS_KEYS = {
   warhound: 'voltest:garage.vehicles.warhound.class',
   templar: 'voltest:garage.vehicles.templar.class',
   juggernaut: 'voltest:garage.vehicles.juggernaut.class',
+  jackal: 'voltest:garage.vehicles.jackal.class',
+  panther: 'voltest:garage.vehicles.panther.class',
+  rhino: 'voltest:garage.vehicles.rhino.class',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 /** Kart kademesi: CORE kartın nadirlik gösterimi araç sınıfının ağırlığını taşır. */
@@ -85,6 +91,9 @@ const TIER = {
   warhound: 'rare',
   templar: 'epic',
   juggernaut: 'legendary',
+  jackal: 'rare',
+  panther: 'epic',
+  rhino: 'legendary',
 } as const satisfies Record<VehicleId, CardRarity>;
 
 const STAT_KEYS = {

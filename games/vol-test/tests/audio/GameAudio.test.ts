@@ -11,6 +11,7 @@ import {
   ARACHNID,
   BULWARK,
   DART,
+  JACKAL,
   MANTA,
   STRIKER,
   WIDOW,
@@ -213,6 +214,30 @@ describe('GameAudio', () => {
     tankSim.step(command({ moveX: 1, boost: true }), STEP_MS);
     await audio.sync(tankSim.vehicles, tankSim.player.chassis);
     expect(dashes()).toBe(before);
+  });
+
+  it('sıçrayıcı sıçrarken leap, inerken land çalar; dash çalmaz ve her biri bir kez tekrarlanır', async () => {
+    const count = (name: string): number =>
+      context.sources.filter((s) => s.buffer?.url?.endsWith(`/${name}.ogg`)).length;
+    const sim = new Simulation({ world: new World(1000, 1000, 32), vehicle: JACKAL });
+    const subject = sim.player.chassis;
+    await audio.sync(sim.vehicles, subject);
+    sim.step(command({ moveX: 1, brake: true }), STEP_MS);
+    expect(subject.boosting).toBe(true);
+    await audio.sync(sim.vehicles, subject);
+    expect(count('leap')).toBe(1);
+    expect(count('dash')).toBe(0);
+    expect(count('land')).toBe(0);
+    for (let i = 0; i < 120 && subject.boosting; i++) {
+      sim.step(command({ moveX: 1 }), STEP_MS);
+      if (subject.boosting) await audio.sync(sim.vehicles, subject);
+    }
+    expect(subject.boosting).toBe(false);
+    await audio.sync(sim.vehicles, subject);
+    expect(count('land')).toBe(1);
+    expect(count('leap')).toBe(1);
+    await audio.sync(sim.vehicles, subject);
+    expect(count('land')).toBe(1);
   });
 
   it('fren kenarını ses ailesine bağlar; duraklatılmış ve işitme dışında kalan olaylar susar', async () => {

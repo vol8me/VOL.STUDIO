@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 1.188,
+    "min": 0.76
+  },
+  "id": "vt-hardsteel-leap",
+  "intent": "Sıçrayıcının sıçrayışı: hidrolik bırakma, itici ateşlemesi ve hava kükremesi.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — leap"
+}

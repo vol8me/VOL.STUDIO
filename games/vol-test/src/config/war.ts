@@ -81,6 +81,9 @@ export const WAR = {
       warhound: 2,
       templar: 2,
       juggernaut: 1,
+      jackal: 2,
+      panther: 1,
+      rhino: 1,
     } satisfies Record<VehicleId, number>,
     skill: { min: 0.25, max: 0.85 },
     /** Nüfus ve görev denetim aralığı (ms). */

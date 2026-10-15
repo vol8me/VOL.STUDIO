@@ -6,6 +6,7 @@ import {
   ARACHNID,
   BULWARK,
   DART,
+  JACKAL,
   JUGGERNAUT,
   MANTA,
   STRIKER,
@@ -115,6 +116,23 @@ describe('araç döngüleri', () => {
     const steps = own.sources.find((s) => s.buffer?.url?.endsWith('/steps.ogg'))!;
     expect(output(steps).gain.value).toBeCloseTo(AUDIO.steps.gain);
     mech.dispose();
+  });
+  it('sıçrayıcı sekme döngüsü çalar; palet, bacak ve ayak basışı yüklenmez', async () => {
+    const own = new FakeAudioContext();
+    const leaper = new VehicleAudio(
+      own as unknown as AudioContext,
+      own.destination as unknown as AudioNode,
+      JACKAL,
+    );
+    await leaper.ready;
+    const subject = tank();
+    subject.trackLeft = subject.trackRight = topSpeedOf(JACKAL);
+    leaper.update(subject, subject, false);
+    const urls = own.sources.map((s) => s.buffer?.url ?? '');
+    expect(urls.some((url) => url.endsWith('/bounds.ogg'))).toBe(true);
+    expect(urls.some((url) => /\/(tracks|legs|steps)\.ogg$/.test(url))).toBe(false);
+    expect(leaper.landed).toBe(false);
+    leaper.dispose();
   });
   it('süzülen araç pervane uğultusu çalar; palet ve bacak döngüsü yüklenmez', async () => {
     const own = new FakeAudioContext();

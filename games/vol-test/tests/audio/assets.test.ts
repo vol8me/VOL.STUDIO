@@ -47,6 +47,7 @@ describe('gönderilen ses bankaları', () => {
       'legs',
       'steps',
       'fans',
+      'bounds',
       'servo',
       'skid',
       'boost',

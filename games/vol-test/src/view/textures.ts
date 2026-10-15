@@ -17,9 +17,11 @@ import { tankSpecs, treadView } from '@/config/tankView';
 import { SPIDER_PARTS, type SpiderPartId } from '@/config/spiders';
 import {
   HOVER_IDS,
+  LEAPER_IDS,
   MECH_IDS,
   WALKER_IDS,
   type HoverId,
+  type LeaperId,
   type MechId,
   type TankId,
   type WalkerId,
@@ -87,16 +89,21 @@ const HOVER_PARTS: Readonly<Record<HoverId, readonly HoverPart[]>> = {
   leviathan: [...HOVER_BASE_PARTS, 'gun'],
 };
 
-/** İki bacaklı robotun parçaları: gövde, uyluk/baldır şeritleri, eklem diski, ayak ve silah kolu. */
+/**
+ * Bacaklı robotun parçaları: gövde, uyluk/baldır şeritleri, eklem diski, ayak ve silah kolu. İki
+ * bacaklı mech ve dört bacaklı sıçrayıcı aynı parça kümesini paylaşır.
+ */
 export type MechPart = 'hull' | 'thigh' | 'shin' | 'joint' | 'foot' | 'arm';
 const MECH_PARTS: readonly MechPart[] = ['hull', 'thigh', 'shin', 'joint', 'foot', 'arm'];
+/** Bacaklı robot ailesinin kimlikleri (mech ve sıçrayıcı). */
+const ROBOT_IDS: readonly (MechId | LeaperId)[] = [...MECH_IDS, ...LEAPER_IDS];
 
-export function mechTexture(id: MechId, part: MechPart): string {
+export function mechTexture(id: MechId | LeaperId, part: MechPart): string {
   return `${id}-${part}`;
 }
 
-/** Mech'in parçasının atlas kare adı (`<araç>/<parça>`). */
-export function mechFrame(id: MechId, part: MechPart): string {
+/** Bacaklı robotun parçasının atlas kare adı (`<araç>/<parça>`). */
+export function mechFrame(id: MechId | LeaperId, part: MechPart): string {
   return `${id}/${part}`;
 }
 
@@ -159,10 +166,10 @@ export function addSpiderImage(
   return scene.add.image(x, y, VEHICLE_ATLAS, spiderFrame(look, part));
 }
 
-/** Mech parçasının atlas karesiyle bir görüntü nesnesi yaratır. */
+/** Bacaklı robot (mech ya da sıçrayıcı) parçasının atlas karesiyle bir görüntü nesnesi yaratır. */
 export function addMechImage(
   scene: Phaser.Scene,
-  id: MechId,
+  id: MechId | LeaperId,
   part: MechPart,
   x = 0,
   y = 0,
@@ -210,7 +217,7 @@ function bakeVehicleAtlas(scene: Phaser.Scene): void {
     ...HOVER_IDS.flatMap((id) =>
       HOVER_PARTS[id].map((part) => ({ key: hoverTexture(id, part), frame: hoverFrame(id, part) })),
     ),
-    ...MECH_IDS.flatMap((id) =>
+    ...ROBOT_IDS.flatMap((id) =>
       MECH_PARTS.map((part) => ({ key: mechTexture(id, part), frame: mechFrame(id, part) })),
     ),
   ];
@@ -257,7 +264,7 @@ export function queueHoverTextures(loader: Phaser.Loader.LoaderPlugin): void {
         scale: TEXTURE_SCALE,
       });
   }
-  for (const id of MECH_IDS) {
+  for (const id of ROBOT_IDS) {
     for (const part of MECH_PARTS)
       loader.svg(mechTexture(id, part), HOVER_PART_URLS[`../assets/vehicles/${id}/${part}.svg`], {
         scale: TEXTURE_SCALE,

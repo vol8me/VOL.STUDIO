@@ -19,6 +19,7 @@ const STRIDE: Readonly<Record<ChassisKind, StrideVoice>> = {
   walker: { loop: 'legs', config: AUDIO.legs },
   hover: { loop: 'fans', config: AUDIO.fans },
   mech: { loop: 'steps', config: AUDIO.steps },
+  leaper: { loop: 'bounds', config: AUDIO.bounds },
 };
 
 export class VehicleAudio {
@@ -39,6 +40,8 @@ export class VehicleAudio {
   private dashing = false;
   /** Bu güncellemede süzülen araç ya da yürüyücünün atılımı başladı (tankın hızlanması döngüdür). */
   dashStarted = false;
+  /** Bu güncellemede sıçrayıcı yere indi (sıçramanın bitişi); başka araçta hep `false`. */
+  landed = false;
   private released = false;
 
   constructor(
@@ -124,6 +127,7 @@ export class VehicleAudio {
       else voice.start();
     });
     this.dashStarted = this.spec.kind !== 'tank' && tank.boosting && !this.dashing;
+    this.landed = this.spec.kind === 'leaper' && this.dashing && !tank.boosting;
     this.dashing = tank.boosting;
     const brakeEdge = tank.braking && !this.braking && speed >= AUDIO.brakeMinSpeed;
     this.braking = tank.braking;

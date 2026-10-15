@@ -2,17 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { PARTS } from '@/config/parts';
 import {
   ARACHNID,
+  JACKAL,
+  LEAPER_IDS,
   MANTA,
+  RHINO,
   TANK_IDS,
   VEHICLES,
   WALKER_IDS,
   WIDOW,
   STRIKER,
+  type LeaperSpec,
   type TankSpec,
   type VehicleSpec,
   type WalkerSpec,
 } from '@/config/vehicles';
-import { LEGS_PER_SIDE, TRACK_LEFT, TRACK_RIGHT, legBit } from '@/sim/chassis/parts';
+import {
+  LEAPER_LEGS_PER_SIDE,
+  LEGS_PER_SIDE,
+  TRACK_LEFT,
+  TRACK_RIGHT,
+  legBit,
+} from '@/sim/chassis/parts';
 import { Vehicle } from '@/sim/entities/Vehicle';
 
 const AT = { x: 2000, y: 2000 };
@@ -175,6 +185,46 @@ describe('PartWear: dayanım tablosu (kaç isabette kırılır)', () => {
     for (let round = 0; round < 12; round++)
       for (const station of stations) strike(spider, station, width, 24);
     expect(spider.chassis.parts).toBe(0b1111_0000);
+  });
+});
+
+describe('PartWear: sıçrayıcının bacakları', () => {
+  it('yan isabet en yakın bacağı kırar; öteki yanın bacakları ve ön-arka komşu etkilenmez', () => {
+    const jackal = build(JACKAL);
+    const [front] = PARTS.leaper.stations.jackal;
+    const width = jackal.chassis.shape.halfWidth;
+    let broken = 0;
+    while (broken === 0) broken = strike(jackal, front, width, 20);
+    expect(broken).toBe(legBit(1, 0));
+    expect(jackal.wear.wearOf(0)).toBe(0);
+    expect(jackal.wear.wearOf(LEGS_PER_SIDE + 1)).toBeLessThan(jackal.wear.wearOf(LEGS_PER_SIDE));
+  });
+
+  it('her sıçrayıcının yandan vurulan bacağı ölümden önce kopar', () => {
+    for (const id of LEAPER_IDS) {
+      const spec = VEHICLES[id] as LeaperSpec;
+      const vehicle = build(spec);
+      const [front] = PARTS.leaper.stations[id];
+      const width = vehicle.chassis.shape.halfWidth;
+      const damage = spec.armament.weapon.damage;
+      let hits = 0;
+      let broken = 0;
+      while (broken === 0 && hits < 100) {
+        broken = strike(vehicle, front, width, damage);
+        hits++;
+      }
+      expect(broken, id).not.toBe(0);
+      expect(hits, id).toBeLessThan(Math.ceil(spec.health / damage));
+    }
+  });
+
+  it('sürekli ateş yanın iki bacağını da tüketir', () => {
+    const rhino = build(RHINO);
+    const width = rhino.chassis.shape.halfWidth;
+    for (let round = 0; round < 20; round++)
+      for (const station of PARTS.leaper.stations.rhino) strike(rhino, station, -width, 30);
+    const both = (1 << LEAPER_LEGS_PER_SIDE) - 1;
+    expect(rhino.chassis.parts).toBe(both);
   });
 });
 

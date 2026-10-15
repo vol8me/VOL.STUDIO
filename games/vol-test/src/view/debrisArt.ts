@@ -2,8 +2,9 @@ import { DEBRIS } from '@/config/debris';
 import { HOVER_ART } from '@/config/hoverView';
 import { SPIDER_LOOKS, type SpiderLook } from '@/config/spiders';
 import { TANK_ART, treadView } from '@/config/tankView';
+import { LEAPER_ART } from '@/config/leaperView';
 import { MECH_ART } from '@/config/mechView';
-import type { HoverId, MechId, VehicleSpec } from '@/config/vehicles';
+import type { HoverId, LeaperId, MechId, VehicleSpec } from '@/config/vehicles';
 import {
   VEHICLE_ATLAS,
   TEXTURE,
@@ -52,8 +53,8 @@ function spiderPiece(look: SpiderLook, part: 'femur' | 'tibia' | 'tarsus' | 'joi
   };
 }
 
-/** İki bacaklı robotun bir parçasının enkaz sanatı: şeritler başlarından, ayak bileğinden döner. */
-function mechPiece(id: MechId, part: MechPart, originX = 0.5): ChunkArt {
+/** Bacaklı robotun (mech, sıçrayıcı) bir parçasının enkaz sanatı: şeritler başlarından, ayak bileğinden döner. */
+function mechPiece(id: MechId | LeaperId, part: MechPart, originX = 0.5): ChunkArt {
   return {
     texture: VEHICLE_ATLAS,
     frame: mechFrame(id, part),
@@ -114,6 +115,15 @@ export function shedArt(spec: VehicleSpec): readonly ChunkArt[] {
       ];
       break;
     }
+    case 'leaper': {
+      const foot = LEAPER_ART[spec.id].foot;
+      pieces = [
+        mechPiece(spec.id, 'shin', 0),
+        mechPiece(spec.id, 'foot', foot.ankleX / foot.width),
+        shards[0],
+      ];
+      break;
+    }
   }
   shedCache.set(spec.id, pieces);
   return pieces;
@@ -150,6 +160,14 @@ export function wreckArt(spec: VehicleSpec): WreckArt {
       mechPiece(spec.id, 'thigh', 0),
       mechPiece(spec.id, 'shin', 0),
       mechPiece(spec.id, 'foot', MECH_ART[spec.id].foot.ankleX / MECH_ART[spec.id].foot.width),
+    ];
+  } else if (spec.kind === 'leaper') {
+    const { arm, foot } = LEAPER_ART[spec.id];
+    big = [
+      mechPiece(spec.id, 'arm', arm.pivotX / arm.width),
+      mechPiece(spec.id, 'thigh', 0),
+      mechPiece(spec.id, 'shin', 0),
+      mechPiece(spec.id, 'foot', foot.ankleX / foot.width),
     ];
   } else if (spec.kind === 'tank') {
     const art = TANK_ART[spec.id];

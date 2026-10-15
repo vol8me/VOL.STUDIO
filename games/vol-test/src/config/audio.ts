@@ -50,6 +50,8 @@ export const AUDIO = {
   legs: { gain: 0.3, rateMin: 0.7, rateMax: 1.5 },
   /** Mech'in ağır ayak basışı döngüsü; palet gümbürtüsünün yerine çalar. */
   steps: { gain: 0.34, rateMin: 0.7, rateMax: 1.45 },
+  /** Sıçrayıcının dört pençeli sekme döngüsü; palet gümbürtüsünün yerine çalar. */
+  bounds: { gain: 0.32, rateMin: 0.7, rateMax: 1.5 },
   /** Süzülen aracın kaldırma pervanesi uğultusu; palet gümbürtüsünün yerine çalar. */
   fans: { gain: 0.34, rateMin: 0.8, rateMax: 1.6 },
   skid: { gain: 0.32, fullSlide: 120, rateMin: 0.8, rateMax: 1.2 },
@@ -73,6 +75,9 @@ export const AUDIO = {
     warhound: { engine: 1.15, engineGain: 0.7, tracks: 1.25 },
     templar: { engine: 0.9, engineGain: 0.9, tracks: 0.95 },
     juggernaut: { engine: 0.5, engineGain: 1.2, tracks: 0.62 },
+    jackal: { engine: 1.3, engineGain: 0.6, tracks: 1.2 },
+    panther: { engine: 1.05, engineGain: 0.75, tracks: 1 },
+    rhino: { engine: 0.55, engineGain: 1.15, tracks: 0.66 },
   } satisfies Record<VehicleId, VehicleVoice>,
   /**
    * Kabuk top ailesinden, ağır mermi aynı aileden alçak perdeyle çalar; diğer her stilin kendi atış teslimi vardır
@@ -91,10 +96,13 @@ export const AUDIO = {
     lance: { rate: 1, gain: 1 },
     howitzer: { rate: 1, gain: 1.1 },
   } satisfies Record<WeaponStyle, WeaponVoice>,
-  /** Tek atımlık araç sesleri (`loopAssetRoot` altında): atılım başlangıcı, parça kopması ve boğulma. */
-  eventAsset: { dash: 'dash', snap: 'snap', sink: 'sink' },
+  /**
+   * Tek atımlık araç sesleri (`loopAssetRoot` altında): atılım başlangıcı, parça kopması, boğulma ve
+   * sıçrayıcının sıçrayışı ile inişi.
+   */
+  eventAsset: { dash: 'dash', snap: 'snap', sink: 'sink', leap: 'leap', land: 'land' },
   /** Olay seslerinin kazancı. */
-  eventGain: { dash: 0.6, snap: 0.75, sink: 0.8 },
+  eventGain: { dash: 0.6, snap: 0.75, sink: 0.8, leap: 0.65, land: 0.8 },
   /** Kendi atış teslimi olan silah stilleri (`loopAssetRoot` altında); olmayan top ailesinden çalar. */
   shotAsset: {
     rail: 'shot-rail',

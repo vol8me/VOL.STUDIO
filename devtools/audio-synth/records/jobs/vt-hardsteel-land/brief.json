@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 1.25,
+    "min": 0.8
+  },
+  "id": "vt-hardsteel-land",
+  "intent": "Sıçrayıcının inişi: gövdeli zemin çöküşü, pençe gömülmesi ve savrulan toz.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — land"
+}

@@ -1,4 +1,4 @@
-import type { WalkerId } from './vehicles';
+import type { LeaperId, WalkerId } from './vehicles';
 
 /**
  * Parça hasarı: palet, bacak ve itici dayanımı, aşınmanın sönümü, onarım ve kırık parçanın sürüşe etkisi.
@@ -88,5 +88,31 @@ export const PARTS = {
     stumble: { stride: 44, dip: 1.1, sway: 2.4 },
     /** Bacak koparken gövdenin sarsılması [0, 1]. */
     jolt: 0.6,
+  },
+  leaper: {
+    /** Tek bir bacağın dayanımı: aracın canının oranı (dört bacak, her yanda iki; kolay kopar). */
+    healthShare: 0.36,
+    /** Gövdenin ön/arka yüzüne gelen darbe bacağı bu oranda aşındırır (yanlar tam). */
+    centreWeight: 0.4,
+    sideStart: 0.3,
+    criticalStart: 0.85,
+    criticalGain: 1.3,
+    /** Darbe iki bacak arasına düşünce ikisi de aşınır: yayılma, istasyon aralığının oranıdır. */
+    spread: 0.62,
+    /** Bacak istasyonları (önden arkaya, dünya birimi): ön ve arka bacak çifti; `LeaperLook` kalçalarıyla aynı. */
+    stations: {
+      jackal: [11, -12],
+      panther: [14, -14],
+      rhino: [21, -20],
+    } satisfies Record<LeaperId, readonly number[]>,
+    /** Her kopan bacak (yanda yalnız iki var) tavanı ve ivmeyi bu oranda keser; taban topal koşunun alt sınırıdır. */
+    legLoss: 0.22,
+    floor: 0.3,
+    /** Bir yanın bacakları eksikse koşu o yana sürüklenir (rad/s, tam tek yanlı kayıpta, hız oranıyla). */
+    drift: 1.5,
+    /** Tökezleme: eksik bacaklı yan, sekme uzunluğunda bir kez çöker (hız kesilir, gövde o yana savrulur). */
+    stumble: { stride: 54, dip: 1, sway: 2.3 },
+    /** Bacak koparken gövdenin sarsılması [0, 1]. */
+    jolt: 0.65,
   },
 } as const;

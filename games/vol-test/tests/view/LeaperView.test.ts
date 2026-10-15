@@ -1,0 +1,85 @@
+import type Phaser from 'phaser';
+import { describe, expect, it } from 'vitest';
+import { LEAPER_ART } from '@/config/leaperView';
+import { LEAPER_IDS, RHINO, VEHICLES } from '@/config/vehicles';
+import { legBit } from '@/sim/chassis/parts';
+import { LeaperView } from '@/view/LeaperView';
+import { mechFrame } from '@/view/textures';
+import type { TankFrame } from '@/view/VehicleView';
+import { fakeScene } from '../support/fakeScene';
+
+const frame = (overrides: Partial<TankFrame> = {}): TankFrame => ({
+  x: 100,
+  y: 200,
+  hull: 0.5,
+  turret: 1.2,
+  pitch: 0,
+  roll: 0,
+  treadLeft: 0,
+  treadRight: 0,
+  speed: 0,
+  vx: 0,
+  vy: 0,
+  angularVelocity: 0,
+  boosting: false,
+  ...overrides,
+});
+
+describe('LeaperView', () => {
+  it('her sıçrayıcı için parçalar atlas karesi olarak ve sanat ölçüleri tutarlı vardır', () => {
+    for (const id of LEAPER_IDS) {
+      const art = LEAPER_ART[id];
+      expect(mechFrame(id, 'hull')).toBe(`${id}/hull`);
+      expect(VEHICLES[id].kind).toBe('leaper');
+      // Kalçalar gövdenin içindedir ve ön çift arka çiftin önündedir.
+      expect(art.hips.front, id).toBeGreaterThan(art.hips.rear);
+      expect(Math.abs(art.hips.front), id).toBeLessThan(art.hull.width / 2);
+      // Namlu ucu (mil + uzanım) silah resminin boyuna eşittir: çizilen namlu atışın çıktığı yerdir.
+      const mounts = VEHICLES[id].armament.mounts;
+      for (const mount of mounts)
+        expect(art.arm.pivotX + mount.reach, id).toBeCloseTo(art.arm.width, 0);
+    }
+  });
+
+  it('çizilir, sıçrar, iner, ateşler, bacak kaybını ve enkazı işler; kapanışta nesneleri bırakır', () => {
+    const scene = fakeScene();
+    const lighting = scene.add.container(0, 0);
+    const prints: number[] = [];
+    const view = new LeaperView(
+      scene as unknown as Phaser.Scene,
+      RHINO,
+      lighting as never,
+      (_x, _y, _angle, scale) => prints.push(scale),
+    );
+    for (let step = 0; step < 120; step++) {
+      view.update(frame({ treadLeft: step * 2, treadRight: step * 2, speed: 90, vx: 90 }), 16.7);
+    }
+    // Sıçrama: kalkış, havada, iniş.
+    for (let step = 0; step < 30; step++) {
+      view.update(
+        frame({
+          treadLeft: 300 + step * 9,
+          treadRight: 300 + step * 9,
+          speed: 260,
+          boosting: true,
+        }),
+        16.7,
+      );
+    }
+    const printsBeforeLanding = prints.length;
+    view.update(frame({ treadLeft: 600, treadRight: 600, speed: 120 }), 16.7);
+    // İniş dört pençe izi bırakır.
+    expect(prints.length - printsBeforeLanding).toBeGreaterThanOrEqual(4);
+    view.fire(0);
+    view.fire(1);
+    view.impact(0.6);
+    view.setParts(legBit(0, 0) | legBit(1, 1));
+    view.update(frame({ treadLeft: 700, treadRight: 700, speed: 40 }), 16.7);
+    view.setWrecked(true);
+    view.update(frame(), 16.7);
+    view.setPresent(false);
+    view.destroy();
+    expect(prints.length).toBeGreaterThan(0);
+    expect(prints.every((scale) => scale > 0)).toBe(true);
+  });
+});

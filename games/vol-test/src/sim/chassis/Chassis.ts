@@ -17,8 +17,8 @@ import { createChassisState, type ChassisPose, type ChassisState } from './Chass
 import { Suspension } from './Suspension';
 import { Turret, type TurretConfig } from './Turret';
 
-/** Şasi türü: paletli tank, çok bacaklı yürüyücü, süzülen araç ya da iki bacaklı mech. */
-export type ChassisKind = 'tank' | 'walker' | 'hover' | 'mech';
+/** Şasi türü: paletli tank, çok bacaklı yürüyücü, süzülen araç, iki bacaklı mech ya da dört bacaklı sıçrayıcı. */
+export type ChassisKind = 'tank' | 'walker' | 'hover' | 'mech' | 'leaper';
 
 /** Her şasinin ortak gövde, temas ve depo sayıları; türe özgü sürüş sayıları kendi yapılandırmasındadır. */
 export interface ChassisConfig extends BoostConfig, TurretConfig {
@@ -154,7 +154,7 @@ export abstract class Chassis extends RigidBody {
 
   /**
    * Bu şasi kayanın üstünden geçer mi: yürüyücü (örümcek) tırmanır, yavaşlar; tank, süzülen araç ve
-   * mech kayaya çarpar. Türetilmiş sınıf (zıplayan şasi) havadayken geçebilir.
+   * mech kayaya çarpar. Sıçrayıcı yalnız havadayken (sıçramada) geçer.
    */
   protected get climbs(): boolean {
     return this.kind === 'walker';

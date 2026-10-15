@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="82" height="52" viewBox="0 0 82 52">
+  <defs>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dcc29c"/>
+      <stop offset="0.5" stop-color="#8b6a45"/>
+      <stop offset="1" stop-color="#2e2014"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ecd5b0"/>
+      <stop offset="0.5" stop-color="#a9825a"/>
+      <stop offset="1" stop-color="#4a3622"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#55402b"/>
+      <stop offset="1" stop-color="#150e07"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="0.4" cy="0.4" r="0.65">
+      <stop offset="0" stop-color="#eefdff"/>
+      <stop offset="0.45" stop-color="#5ef0ff"/>
+      <stop offset="1" stop-color="#0c5a66"/>
+    </radialGradient>
+    <linearGradient id="ram" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f0e0c4"/>
+      <stop offset="0.5" stop-color="#b08e63"/>
+      <stop offset="1" stop-color="#4f3a24"/>
+    </linearGradient>
+  </defs>
+  <path d="M81.4 17L79 8.4L70 5.2L63 6.6L58.6 2.4L48 1.6L40 4L36 8.4L28 6L20 1.8L10 2.4L3.2 6.6L1 14L1 26L1 38L3.2 45.4L10 49.6L20 50.2L28 46L36 43.6L40 48L48 50.4L58.6 49.6L63 45.4L70 46.8L79 43.6L81.4 35Z" fill="url(#deck)" stroke="#0d1217" stroke-width="1.3" stroke-linejoin="round"/>
+  <path d="M72.4 20L70 13.4L63 11.2L57 12.6L52 8.4L45.4 8L41.4 12.4L34.6 13.4L28 11.4L20 7.6L12 8.4L7.6 13L6.4 26L7.6 39L12 43.6L20 44.4L28 40.6L34.6 38.6L41.4 39.6L45.4 44L52 43.6L57 39.4L63 40.8L70 38.6L72.4 32Z" fill="url(#plate)" stroke="#0d1217" stroke-opacity=".8" stroke-width=".85" stroke-linejoin="round"/>
+  <path d="M58.4 3L71.2 5.2L80.4 12.4V39.6L71.2 46.8L58.4 49Z" fill="url(#ram)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M64 8.2L73 11M64 43.8L73 41M62 14.4H77M62 37.6H77" stroke="#0d1217" stroke-opacity=".5" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M12 6.4L26 10.4L36 14.4M12 45.6L26 41.6L36 37.6" fill="none" stroke="#0d1217" stroke-opacity=".6" stroke-width=".7" stroke-linecap="round"/>
+  <path d="M10 17H22M10 20H22M10 23H22M10 29H22M10 32H22M10 35H22" stroke="#0d1217" stroke-opacity=".62" stroke-width="1.4" stroke-linecap="round"/>
+  <rect x="24" y="20" width="26" height="12" rx="2" fill="url(#dark)" stroke="#0d1217" stroke-width=".9"/>
+  <path d="M26 22.4H48M26 29.6H48" stroke="#5ef0ff" stroke-opacity=".5" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M52 21L59 23.4V28.6L52 31Z" fill="url(#dark)" stroke="#0d1217" stroke-width=".85" stroke-linejoin="round"/>
+  <path d="M54 23.6L58 24.8V27.2L54 28.4Z" fill="url(#glass)" stroke="#0d1217" stroke-width=".45" stroke-linejoin="round"/>
+  <path d="M55 24.8L57 25.4" stroke="#ffffff" stroke-opacity=".75" stroke-width=".5" stroke-linecap="round"/>
+  <g stroke="#5ef0ff" stroke-opacity=".8" stroke-width=".8" stroke-linecap="round" fill="none">
+    <path d="M44 4.4L52 3.6M44 47.6L52 48.4"/><path d="M4.4 16V36"/>
+  </g>
+  <g fill="#e0bf94" stroke="#0d1217" stroke-width=".4">
+    <circle cx="14" cy="9.6" r=".95"/><circle cx="14" cy="42.4" r=".95"/>
+    <circle cx="36" cy="10.6" r=".95"/><circle cx="36" cy="41.4" r=".95"/>
+    <circle cx="66" cy="12.6" r=".95"/><circle cx="66" cy="39.4" r=".95"/>
+  </g>
+  <ellipse cx="4" cy="14.4" rx="3.91" ry="3.4" fill="#0d1217" fill-opacity=".85"/>
+  <ellipse cx="4" cy="14.4" rx="2.79" ry="2.45" fill="#1b130b" stroke="#5ef0ff" stroke-opacity=".85" stroke-width=".55"/>
+  <ellipse cx="3.66" cy="14.4" rx="1.16" ry="1.02" fill="#5ef0ff" fill-opacity=".9"/>
+  <ellipse cx="4" cy="26" rx="3.91" ry="3.4" fill="#0d1217" fill-opacity=".85"/>
+  <ellipse cx="4" cy="26" rx="2.79" ry="2.45" fill="#1b130b" stroke="#5ef0ff" stroke-opacity=".85" stroke-width=".55"/>
+  <ellipse cx="3.66" cy="26" rx="1.16" ry="1.02" fill="#5ef0ff" fill-opacity=".9"/>
+  <ellipse cx="4" cy="37.6" rx="3.91" ry="3.4" fill="#0d1217" fill-opacity=".85"/>
+  <ellipse cx="4" cy="37.6" rx="2.79" ry="2.45" fill="#1b130b" stroke="#5ef0ff" stroke-opacity=".85" stroke-width=".55"/>
+  <ellipse cx="3.66" cy="37.6" rx="1.16" ry="1.02" fill="#5ef0ff" fill-opacity=".9"/>
+</svg>

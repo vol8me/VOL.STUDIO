@@ -51,7 +51,7 @@ describe('ScenarioRunner', () => {
     },
   );
 
-  it('kadro dört aracı da döndürür ve her tohumda aynı sırada kurulur', () => {
+  it('kadro bütün araçları döndürür ve her tohumda aynı sırada kurulur', () => {
     const roster = (seed: number) => {
       const sim = simulation();
       new ScenarioRunner(sim).select('sandbox', seed);

@@ -59,7 +59,7 @@ export class ScenarioRunner {
       const tank = TANK;
       x = Math.max(tank.halfLength, Math.min(this.sim.world.width - tank.halfLength, x));
       y = Math.max(tank.halfLength, Math.min(this.sim.world.height - tank.halfLength, y));
-      // Kadro yuvaya göre dört aracı döndürür: senaryo her aracı (görünüm, atış, ses) sınar ve tohumla aynı kalır.
+      // Kadro yuvaya göre bütün araçları döndürür: senaryo her aracı (görünüm, atış, ses) sınar ve tohumla aynı kalır.
       const spec = VEHICLES[VEHICLE_IDS[slot % VEHICLE_IDS.length]];
       this.spawned.push(this.sim.spawn(x, y, angle, null, undefined, spec));
       this.phases.push(random.next() * Math.PI * 2);

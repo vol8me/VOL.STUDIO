@@ -68,9 +68,12 @@ export class Walker extends Chassis {
     const mobility =
       (1 - config.gripSensitivity * (1 - clamp(surface?.grip ?? 1, 0, 1))) * this.traverse(world);
     // Hareket yoksa atılım gövdenin baktığı yöne gider: av atılışı durduğu yerden de başlar.
-    const heading = moving ? Math.atan2(command.moveY, command.moveX) : this.angle;
-    const wantX = moving ? command.moveX / length : Math.cos(heading);
-    const wantY = moving ? command.moveY / length : Math.sin(heading);
+    const heading = this.steerHeading(
+      moving ? Math.atan2(command.moveY, command.moveX) : this.angle,
+      dashing,
+    );
+    const wantX = Math.cos(heading);
+    const wantY = Math.sin(heading);
     const pull = dashing ? 1 : moving ? Math.min(1, length) : 0;
     const align = this.alignment(heading, moving || dashing);
     const top =
@@ -89,6 +92,24 @@ export class Walker extends Chassis {
       this.settleAgainst(world);
     }
     this.updateTurret(command, dt);
+  }
+
+  /**
+   * Hareket yönü: komutun istediği yönü sürüşün kullanacağı yöne çevirir. Yürüyücü komutu olduğu gibi
+   * izler; sıçrayıcı havadayken fırlatma yönüne kilitlenir.
+   */
+  protected steerHeading(wanted: number, _dashing: boolean): number {
+    return wanted;
+  }
+
+  /** Bir yandaki bacak sayısı: kayıp oranı ve tökezleme bununla ölçeklenir. */
+  protected get legsPerSide(): number {
+    return LEGS_PER_SIDE;
+  }
+
+  /** Kırık bacağın sürüşe etkisinin sayıları (`config/parts.ts`). */
+  protected get limpConfig(): typeof PARTS.walker | typeof PARTS.leaper {
+    return PARTS.walker;
   }
 
   /** Adım döngüsünün tavana çarpanı; çok bacaklı yürüyücüde adım hıza dokunmaz. */
@@ -121,16 +142,16 @@ export class Walker extends Chassis {
       this.yawBias = 0;
       return;
     }
-    const config = PARTS.walker;
-    const { dip, sway } = config.stumble;
-    const left = limpCollapse(lostLeft, this.groundLeft);
-    const right = limpCollapse(lostRight, this.groundRight);
+    const config = this.limpConfig;
+    const legs = this.legsPerSide;
+    const { dip, sway, stride } = config.stumble;
+    const left = limpCollapse(lostLeft, this.groundLeft, legs, stride);
+    const right = limpCollapse(lostRight, this.groundRight, legs, stride);
     const ratio = Math.min(1, this.speed / this.walkerConfig.maxSpeed);
     const lost = lostLeft + lostRight;
     this.capacity =
       Math.max(config.floor, 1 - config.legLoss * lost) * (1 - Math.min(0.6, dip * (left + right)));
-    this.yawBias =
-      ratio * ((config.drift * (lostRight - lostLeft)) / LEGS_PER_SIDE + sway * (right - left));
+    this.yawBias = ratio * ((config.drift * (lostRight - lostLeft)) / legs + sway * (right - left));
   }
 
   private integrateLegs(

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="15" height="5.8" viewBox="0 0 15 5.8">
+  <defs>
+    <linearGradient id="arm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9aa1b3"/>
+      <stop offset="0.45" stop-color="#4f5667"/>
+      <stop offset="1" stop-color="#171a22"/>
+    </linearGradient>
+    <linearGradient id="cyl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#171a22"/>
+      <stop offset="0.35" stop-color="#9aa1b3"/>
+      <stop offset="1" stop-color="#171a22"/>
+    </linearGradient>
+    <linearGradient id="rod" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9d0d8"/>
+      <stop offset="0.5" stop-color="#6d7681"/>
+      <stop offset="1" stop-color="#252a31"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 1.86Q0 1.16 0.93 1.16L14.07 0.12Q15 0.12 15 0.81V4.99Q15 5.68 14.07 5.68L0.93 4.64Q0 4.64 0 3.94Z" fill="url(#arm)" stroke="#0d1217" stroke-width=".9" stroke-linejoin="round"/>
+  <rect x="3" y="1.97" width="9" height="1.86" rx="0.58" fill="url(#rod)" stroke="#0d1217" stroke-opacity=".7" stroke-width=".45"/>
+  <path d="M2.7 2.9H12.3" stroke="#ff5a3c" stroke-opacity=".8" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M1.5 2.32H13.5" stroke="#ffffff" stroke-opacity=".28" stroke-width=".5" stroke-linecap="round"/>
+</svg>

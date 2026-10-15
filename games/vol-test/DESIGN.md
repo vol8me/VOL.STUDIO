@@ -161,11 +161,13 @@ yüksekliği ve yeri öbek tohumundan türer. Göl gibi veri ağdan geçmez: sun
 
 Araçlar kayaya türüne göre tepki verir (`ROCKS`):
 
-- Tank, süzülen araç ve mech kayadan geçemez: lob, `resolveWallContacts` ile aynı duvar çözücüsüne teğet
+- Tank, süzülen araç, mech ve yerdeki sıçrayıcı kayadan geçemez: lob, `resolveWallContacts` ile aynı duvar çözücüsüne teğet
   duvarlar olarak girer (şasi `wallsFor`), çarpma hasar ve ses olayı üretir ve kaymadan sıyrılır.
 - Örümcek (`kind: 'walker'`) tırmanır: kaya içinde hız `speedFloor` oranına kadar düşer (`Chassis.traverse`),
   `climb` değeri lob yüksekliğiyle [0, 1] artar. Duvar değil, ağırlaşmadır: alçak lob zor fark edilir, yüksek
   lob belirgin yavaşlatır.
+- Sıçrayıcı havadayken (`boosting`) kayanın üstünden geçer: duvar listesi atlanır (`Chassis.climbs`). Kaya
+  içine inen sıçrayıcı normal duvar çözümüyle dışarı itilir.
 - Düz mermi `coverHeight × lob yüksekliği` altında kayaya çarpar ve söner; yüksek yaylı mermi üstünden aşar.
 - Bot yüzemeyen araçta kayanın önündeki mesafeleri tarar ve teğete sıyrılır (`BotBrain.rockPush`); örümcek
   botu kayayı engel saymaz.
@@ -220,6 +222,9 @@ silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca de
 | Warhound   | Mech keşif                | 100 | 225 | 3,6   | 8 hasar, 170 ms, iki kol otomatik topu       |
 | Templar    | Mech hat                  | 190 | 152 | 2,1   | 6 hasar, 105 ms, döner çok namlulu           |
 | Juggernaut | Ağır mech                 | 245 | 96  | 1,3   | 62 hasar, 1050 ms, iki kol havanı            |
+| Jackal     | Hafif sıçrayıcı avcı      | 100 | 250 | 5,0   | 2×14 hasar, 560 ms, iki saçma topu           |
+| Panther    | Sıçrayıcı nişancı         | 100 | 190 | 3,8   | 24 hasar, 1150 ms, raylı top                 |
+| Rhino      | Ağır sıçrayıcı            | 200 | 128 | 2,4   | 30 hasar, 640 ms, iki kütle topu (sırayla)   |
 
 Tablo `src/config/vehicles.ts` değerlerinin özetidir; karakter farkı hızlanmadan, dönüşten,
 frenden ve geri tepmeden gelir (`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler).
@@ -230,10 +235,10 @@ reddeder.
 iki botla iki yönde birçok tohumla dövüşür (`tests/sim/balance.test.ts`, bot yapay zekâsı tankın
 da örümceğin de menzilini ve hızını kullanır). Anma hasarı/s Widow'da düşüktür (isabet, menzil ve
 hızla öder), Goliath'ta canla ve ağır mermiyle, Manta'da kısa menzille ve ince canla öder; bu yüzden anma
-hasarı yalnız %80 aralıkla sınırlıdır. 40 tohumluk son ölçümde her aracın kataloğa karşı toplam galibiyet payı %41-61'dir
-(Striker 44, Bulwark 61, Dart 41, Arachnid 47, Widow 43, Goliath 55, Manta 58); beş yeni aracın eklenmesinden sonra
-testin dört tohumuyla ölçülen paylar Striker 50, Bulwark 63, Dart 38, Arachnid 48, Widow 47, Goliath 37, Manta 59,
-Barracuda 52, Leviathan 45, Warhound 44, Templar 57, Juggernaut 61'dir; test bu payı %30-70 bandında tutar. Karşıtlıklar bilinçlidir ve hiçbiri mutlak değildir: Widow menzilden Arachnid'i ve Goliath'ı yener,
+hasarı yalnız üç katla sınırlıdır (en düşüğü Panther'in menzilli raylı atışıdır, menzil ve sıçrayarak kaçma onu öder).
+Testin dört tohumuyla ölçülen on beş aracın kataloğa karşı galibiyet payı Striker 53, Bulwark 59, Dart 41,
+Arachnid 44, Widow 43, Goliath 34, Manta 60, Barracuda 50, Leviathan 55, Warhound 51, Templar 55, Juggernaut 54,
+Jackal 42, Panther 50, Rhino 58'dir; test bu payı %30-70 bandında tutar. Karşıtlıklar bilinçlidir ve hiçbiri mutlak değildir: Widow menzilden Arachnid'i ve Goliath'ı yener,
 Bulwark'ın ağır mermisine ve Dart'ın hızına yenilir; Goliath Striker'ı ve Bulwark'ı ezer, Dart ve Widow
 onu çevikliğiyle oyalar; Bulwark Widow'u ve Dart'ı yener, Arachnid ona baskındır; Striker Dart'ı ezer. Manta çevikliği ve tempoyla
 Dart'ı, Widow'u ve Arachnid'i yer ama Bulwark'ın ağır mermisine ve Goliath'ın gövdesine yenilir (can ve
@@ -331,6 +336,27 @@ Sanat `src/assets/vehicles/<araç>/` altında gövde, uyluk, baldır, eklem, aya
 her robot tek bir enerji rengi taşır (Warhound sarı, Templar pembe, Juggernaut turuncu).
 Üç robotu "gerçek bacaklı yürüyen" sanat olarak üstten bakışta okutmak için bacaklar gövdenin
 dışına çıkar (`trackOffset`); bu bir seçimdir, boyut ve oranın insan beğenisi doğrulaması ayrı iştir.
+
+### Sıçrayıcılar: dört ayaklı zıplayanlar (Jackal, Panther, Rhino)
+
+Beşinci şasi ailesidir (`LeaperSpec`, `src/sim/leaper/Leaper.ts`, sayılar `src/config/leaper.ts`).
+`Walker`dan türer: komut hedef hız vektörüdür, gövde harekete döner, nişan yalnız silahı sürer. İki
+şey ayırır. Yerde yürüyüş sekmedir: her sekme hızı çukura indirir ve toparlar (`strideDip`, faz zemin
+yolundan türer). Space sıçramadır: `boosting` rezervi `boostDrain` ile boşalırken gövde havalanır; ilk
+adımda yön komuttur, sonra mermi gibi gider ve hız vektörü komuta doğru yalnız `leapTurnRate` (rad/s)
+hızıyla döner (Jackal 1,4, Panther 1, Rhino 0,55): sıçrayan taahhüt eder, ağır olan daha az döner.
+Havadayken kaya duvarları atlanır, derin su boğmaz ve tırmanış yavaşlatması yoktur; yere iner inmez
+bunlar geri gelir. Havadaki durum ağda zaten taşınan `reserve.active`tir, yeni ağ alanı yoktur.
+
+Her yanda iki bacak vardır (`LEAPER_LEGS_PER_SIDE`, bit sırası yürüyücüyle aynı: sol 0-1, sağ 4-5;
+istasyonlar `PARTS.leaper.stations`). Bacak kopunca tavan ve ivme düşer, sıçrayıcı o yana sürüklenir
+ve her sekmede gövdesi çöker; Jackal'ın zırhı kâğıt gibi olduğundan en çabuk topallar.
+
+Sanat `src/assets/vehicles/{jackal,panther,rhino}/` altında gövde, uyluk, baldır, eklem, ayak ve kol
+SVG'leridir; `LeaperView` bacakları sekmeye göre (ön çift, kısa aradan sonra arka çift), sıçramada ön
+ayağı öne arka ayağı arkaya uzatır, arka iticilerden alev çıkarır ve inişte gövdeyi çökertip toz kaldırır.
+Enerji tonları: Jackal limon, Panther kızıl, Rhino camgöbeği. Oran ve renk beğenisinin insan doğrulaması
+ayrı iştir (TODO).
 
 ### Bacaklı yürüyücüler: Arachnid, Widow ve Goliath
 
@@ -838,7 +864,7 @@ dağıtım ve Steam Cloud kabulü ayrı doğrulama işleridir.
 
 ## Ses
 
-48 teslim kanonik yayın kapısıyla üretilir: 46 oyun sesi (30 tekil teslim, 16 aile varyantı) ve iki UI sesi.
+51 teslim kanonik yayın kapısıyla üretilir: 49 oyun sesi (33 tekil teslim, 16 aile varyantı) ve iki UI sesi.
 Oyun sesleri sıfırdan yazılmış gerçekçi programlardır: ağır dizel ateşleme serisi, gövdeli basınç dalgası
 atışları, alçak ve dolgun spektrum (çoğu teslimde 85. yüzdelik rolloff ~230-1200 Hz); ince, tiz ya da
 oyuncak tınılı katman yoktur. Seviyeler katman başına ölçülerek kurulur; dinleme onayı değil teknik ölçümdür.
@@ -849,11 +875,13 @@ audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayı
 girer (anahtar, rol, etiket, süre, varlık yolu): hash, manifest, ölçüm ve kalite
 kaydı yalnız kanonik dosyada kalır ve `verifyFamily` onu okur.
 
-On döngü motorun üç devri, palet, bacak adımı, mech ayak basışı, pervane, kayma, servo ve hızlanmadır. Yürüyücü
-palet yerine `legs` (hidrolik bacak basışları ve servo), mech `steps` (ağır ayak basışı ve gövde gümbürtüsü),
-süzülen araç `fans` (kanat geçişi ve aşağı itki) çalar; tempo ve güç
-araca göre (`AUDIO.vehicleVoice.tracks`). Tek atımlık araç sesleri `dash` (yürüyücü ve süzülenin atılımı
-başlarken), `snap` (`broke` olayında parça kopması) ve `sink`tir (derin suda boğulan aracın batışı: `died`
+On bir döngü motorun üç devri, palet, bacak adımı, mech ayak basışı, sıçrayıcı sekmesi, pervane, kayma, servo
+ve hızlanmadır. Yürüyücü palet yerine `legs` (hidrolik bacak basışları ve servo), mech `steps` (ağır ayak
+basışı ve gövde gümbürtüsü), sıçrayıcı `bounds` (ön ve arka çift basış, piston tıslaması), süzülen araç `fans`
+(kanat geçişi ve aşağı itki) çalar; tempo ve güç araca göre (`AUDIO.vehicleVoice.tracks`). Tek atımlık araç
+sesleri `dash` (yürüyücü ve süzülenin atılımı başlarken), `leap` (sıçrayıcının sıçrayışı: hidrolik bırakma,
+itici ateşlemesi), `land` (sıçrayışın bitişinde yere inen gövde: çöküş, pençe gömülmesi, toz), `snap`
+(`broke` olayında parça kopması) ve `sink`tir (derin suda boğulan aracın batışı: `died`
 olayı `drown` nedenliyse aracın son şasisinde çalar; `AUDIO.eventAsset`).
 Kabuk ve ağır mermi dışındaki her silah stilinin kendi atış teslimi (`shot-rail/plasma/needle/arc/autocannon/
 gatling/flak/lance/howitzer`, `AUDIO.shotAsset`) vardır; kabuk ve ağır mermi top ailesini perdeyle çalar. Top,

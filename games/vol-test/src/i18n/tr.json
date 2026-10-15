@@ -76,6 +76,18 @@
       "juggernaut": {
         "name": "Juggernaut",
         "class": "AĞIR MECH"
+      },
+      "jackal": {
+        "name": "Jackal",
+        "class": "SIÇRAYICI AKINCI"
+      },
+      "panther": {
+        "name": "Panther",
+        "class": "SIÇRAYICI NİŞANCI"
+      },
+      "rhino": {
+        "name": "Rhino",
+        "class": "AĞIR SIÇRAYICI"
       }
     }
   },

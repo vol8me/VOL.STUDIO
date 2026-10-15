@@ -76,6 +76,18 @@
       "juggernaut": {
         "name": "Juggernaut",
         "class": "HEAVY MECH"
+      },
+      "jackal": {
+        "name": "Jackal",
+        "class": "LEAPER SKIRMISHER"
+      },
+      "panther": {
+        "name": "Panther",
+        "class": "LEAPER SNIPER"
+      },
+      "rhino": {
+        "name": "Rhino",
+        "class": "HEAVY LEAPER"
       }
     }
   },

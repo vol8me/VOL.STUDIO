@@ -2,7 +2,7 @@ import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
 import { DEBRIS } from '@/config/debris';
 import { tankSpecs } from '@/config/tankView';
-import { HOVER_IDS, MECH_IDS } from '@/config/vehicles';
+import { HOVER_IDS, LEAPER_IDS, MECH_IDS } from '@/config/vehicles';
 import {
   createRuntimeTextures,
   queueHoverTextures,
@@ -33,7 +33,7 @@ describe('textures', () => {
     });
   });
 
-  it('süzülen araç ve mech parçalarını ölçekli SVG olarak kuyruğa ekler; dosyaları ayrıdır', () => {
+  it('süzülen araç, mech ve sıçrayıcı parçalarını ölçekli SVG olarak kuyruğa ekler; dosyaları ayrıdır', () => {
     const scene = fakeScene();
     queueHoverTextures(scene.load as unknown as Phaser.Loader.LoaderPlugin);
     const keys = scene.load.svg.mock.calls.map((call) => String(call[0]));
@@ -43,7 +43,7 @@ describe('textures', () => {
         ...(id === 'leviathan' ? (['gun'] as const) : []),
       ].map((part) => hoverTexture(id, part)),
     );
-    const mechs = MECH_IDS.flatMap((id) =>
+    const mechs = [...MECH_IDS, ...LEAPER_IDS].flatMap((id) =>
       (['hull', 'thigh', 'shin', 'joint', 'foot', 'arm'] as const).map((part) =>
         mechTexture(id, part),
       ),

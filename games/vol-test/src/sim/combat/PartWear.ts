@@ -1,7 +1,7 @@
 import { PARTS } from '@/config/parts';
 import type { VehicleSpec } from '@/config/vehicles';
 import type { Chassis } from '../chassis/Chassis';
-import { LEGS_PER_SIDE, TRACK_BITS, legBit } from '../chassis/parts';
+import { LEGS_PER_SIDE, TRACK_BITS, hasLegStations, legBit, legStations } from '../chassis/parts';
 
 /** Doğrusal basamak: `from`un altı 0, `to`nun üstü 1. */
 function ramp(value: number, from: number, to: number): number {
@@ -25,7 +25,9 @@ export class PartWear {
   private mendMs = 0;
 
   constructor(private readonly spec: VehicleSpec) {
-    this.wear = new Array<number>(spec.kind === 'walker' ? LEGS_PER_SIDE * 2 : TRACK_BITS).fill(0);
+    this.wear = new Array<number>(hasLegStations(spec.kind) ? LEGS_PER_SIDE * 2 : TRACK_BITS).fill(
+      0,
+    );
     this.limit = spec.health * PARTS[spec.kind].healthShare;
   }
 
@@ -60,7 +62,7 @@ export class PartWear {
     const right = -dx * sin + dy * cos;
     const halfWidth = chassis.shape.halfWidth;
     const edge = Math.min(1, Math.abs(right) / halfWidth);
-    return this.spec.kind === 'walker'
+    return hasLegStations(this.spec.kind)
       ? this.strikeLegs(chassis, forward, right, edge, damage)
       : this.strikeSide(chassis, right, edge, damage);
   }
@@ -99,14 +101,14 @@ export class PartWear {
 
   /** Aşınma yuvasının bit maskesi (tankta ve süzülende yuva 0 sol, 1 sağ; yürüyücüde `taraf*4 + istasyon`). */
   bitOf(slot: number): number {
-    return this.spec.kind === 'walker'
+    return hasLegStations(this.spec.kind)
       ? legBit(Math.floor(slot / LEGS_PER_SIDE), slot % LEGS_PER_SIDE)
       : 1 << slot;
   }
 
   /** Tankın yan paleti ve süzülenin yan iticisi: gövdenin dışına düşen darbe o yanın parçasına gider. */
   private strikeSide(chassis: Chassis, right: number, edge: number, damage: number): number {
-    const config = PARTS[this.spec.kind === 'walker' ? 'tank' : this.spec.kind];
+    const config = PARTS[hasLegStations(this.spec.kind) ? 'tank' : this.spec.kind];
     const reach = ramp(edge, config.sideStart, 1);
     if (reach === 0) return 0;
     const critical = edge >= config.criticalStart ? config.criticalGain : 1;
@@ -121,10 +123,10 @@ export class PartWear {
     edge: number,
     damage: number,
   ): number {
-    const config = PARTS.walker;
     const spec = this.spec;
-    if (spec.kind !== 'walker') return 0;
-    const stations: readonly number[] = config.stations[spec.id];
+    if (spec.kind !== 'walker' && spec.kind !== 'leaper') return 0;
+    const config = PARTS[spec.kind];
+    const stations = legStations(spec);
     const side = right < 0 ? 0 : 1;
     const critical = edge >= config.criticalStart ? config.criticalGain : 1;
     const reach = config.centreWeight + (1 - config.centreWeight) * ramp(edge, config.sideStart, 1);

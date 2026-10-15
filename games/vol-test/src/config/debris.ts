@@ -58,5 +58,11 @@ export const DEBRIS = {
   },
   /** Levha kıymığı dokuları ve rengi (doku gri, renk çarpılır). */
   shardVariants: 3,
-  shardTint: { tank: 0x7b6a58, walker: 0x6a5846, hover: 0x666072, mech: 0x6c6258 },
+  shardTint: {
+    tank: 0x7b6a58,
+    walker: 0x6a5846,
+    hover: 0x666072,
+    mech: 0x6c6258,
+    leaper: 0x5f6459,
+  },
 } as const;

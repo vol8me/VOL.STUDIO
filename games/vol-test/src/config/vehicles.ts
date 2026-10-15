@@ -7,8 +7,13 @@ import {
   type WeaponConfig,
 } from './tank';
 import { HOVER, type HoverConfig } from './hover';
+import type { LeaperConfig } from './leaper';
+import { JACKAL, PANTHER, RHINO } from './leaperVehicles';
 import { MECH, type MechConfig } from './mech';
 import { WALKER, type WalkerConfig } from './walker';
+
+/** Sıçrayıcı tanımları dosya boyu sınırı için `leaperVehicles.ts`tedir; buradan dışa aktarılır. */
+export { JACKAL, PANTHER, RHINO };
 
 /** Paletli araçlar. */
 export const TANK_IDS = ['striker', 'bulwark', 'dart'] as const;
@@ -26,6 +31,10 @@ export type HoverId = (typeof HOVER_IDS)[number];
 export const MECH_IDS = ['warhound', 'templar', 'juggernaut'] as const;
 export type MechId = (typeof MECH_IDS)[number];
 
+/** Dört bacaklı sıçrayıcılar. */
+export const LEAPER_IDS = ['jackal', 'panther', 'rhino'] as const;
+export type LeaperId = (typeof LEAPER_IDS)[number];
+
 /** Seçilebilir araçlar; sıra ağ protokolündeki `model` indeksidir, sona eklenir ve yeniden sıralanmaz. */
 export const VEHICLE_IDS = [
   'striker',
@@ -40,11 +49,15 @@ export const VEHICLE_IDS = [
   'warhound',
   'templar',
   'juggernaut',
+  'jackal',
+  'panther',
+  'rhino',
 ] as const satisfies readonly [
   ...typeof TANK_IDS,
   ...typeof WALKER_IDS,
   ...typeof HOVER_IDS,
   ...typeof MECH_IDS,
+  ...typeof LEAPER_IDS,
 ];
 export type VehicleId = (typeof VEHICLE_IDS)[number];
 
@@ -120,12 +133,22 @@ export interface MechSpec extends VehicleBase {
   readonly mech: MechConfig;
 }
 
-export type VehicleSpec = TankSpec | WalkerSpec | HoverSpec | MechSpec;
+/**
+ * Sıçrayıcı tanımı: dört bacaklı, yürüyücü gibi sürülür ama atılımı kayanın ve suyun üstünden geçen bir
+ * sıçramadır; silah yuvaları (`armament.mounts`) gövdeden bağımsız nişan alır.
+ */
+export interface LeaperSpec extends VehicleBase {
+  readonly kind: 'leaper';
+  readonly id: LeaperId;
+  readonly leaper: LeaperConfig;
+}
+
+export type VehicleSpec = TankSpec | WalkerSpec | HoverSpec | MechSpec | LeaperSpec;
 
 /** Şasinin tüm türlerde ortak sayıları (gövde ayak izi, depo, taret hızı). */
 export function chassisConfigOf(
   spec: VehicleSpec,
-): WalkerConfig | HoverConfig | MechConfig | TankSpec['tank'] {
+): WalkerConfig | HoverConfig | MechConfig | LeaperConfig | TankSpec['tank'] {
   switch (spec.kind) {
     case 'tank':
       return spec.tank;
@@ -135,6 +158,8 @@ export function chassisConfigOf(
       return spec.hover;
     case 'mech':
       return spec.mech;
+    case 'leaper':
+      return spec.leaper;
   }
 }
 
@@ -840,6 +865,9 @@ export const VEHICLES: Readonly<Record<VehicleId, VehicleSpec>> = {
   warhound: WARHOUND,
   templar: TEMPLAR,
   juggernaut: JUGGERNAUT,
+  jackal: JACKAL,
+  panther: PANTHER,
+  rhino: RHINO,
 };
 
 export function isVehicleId(value: unknown): value is VehicleId {

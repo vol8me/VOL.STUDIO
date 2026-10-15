@@ -109,11 +109,12 @@ describe('araç silah dengesi', () => {
     }
   });
 
-  it('anma hasarı/s araçlar arasında yakındır (en çok %80 fark); gerisini isabet, menzil ve hız dengeler', () => {
+  it('anma hasarı/s araçlar arasında sınırlıdır (en çok 3 kat); gerisini isabet, menzil ve hız dengeler', () => {
     // Hızlı ve uzun menzilli Widow düşük anma hasarını isabetle, Goliath ağır mermisini canıyla, Manta yüksek
-    // temposunu kısa menzil ve ince canla öder: gerçek denge `balance.test.ts` düellolarında ölçülür.
+    // temposunu kısa menzil ve ince canla öder; Panther'in menzil raylı atışı en düşük anma hasarıdır ve bunu
+    // 640 birimlik menzil ile sıçrayarak kaçma öder: gerçek denge `balance.test.ts` düellolarında ölçülür.
     const values = Object.values(VEHICLES).map(dps);
-    expect(Math.max(...values) / Math.min(...values)).toBeLessThan(1.8);
+    expect(Math.max(...values) / Math.min(...values)).toBeLessThan(3);
   });
 
   it('geri tepme hız farkı olarak ölçülür: ağır araç daha az sarsılır, ama ağır top daha çok vurur', () => {

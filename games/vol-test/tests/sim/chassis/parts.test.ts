@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { PARTS } from '@/config/parts';
 import { SPIDER_LOOKS } from '@/config/spiders';
-import { ARACHNID, MANTA, STRIKER, WALKER_IDS } from '@/config/vehicles';
+import { ARACHNID, JACKAL, LEAPER_IDS, MANTA, RHINO, STRIKER, WALKER_IDS } from '@/config/vehicles';
 import {
+  LEAPER_LEGS_PER_SIDE,
   LEGS_PER_SIDE,
   TRACK_LEFT,
   TRACK_RIGHT,
   bitIndex,
   legBit,
+  legStations,
+  limpCollapse,
   lostLegs,
   partAnchor,
   partSide,
@@ -39,6 +42,8 @@ describe('parça bit maskesi', () => {
     expect(partSide('walker', 4)).toBe(1);
     expect(partSide('hover', 0)).toBe(-1);
     expect(partSide('hover', 1)).toBe(1);
+    expect(partSide('leaper', 1)).toBe(-1);
+    expect(partSide('leaper', 4)).toBe(1);
   });
 
   it('bacak istasyonları görünümün kalça konumlarıyla aynıdır (sunum ve fizik aynı bacağı kırar)', () => {
@@ -63,6 +68,30 @@ describe('partAnchor', () => {
     const rearLeft = partAnchor(ARACHNID, 3, out);
     expect(rearLeft.forward).toBe(PARTS.walker.stations.arachnid[3]);
     expect(rearLeft.right).toBeLessThan(-ARACHNID.walker.halfWidth);
+  });
+
+  it('sıçrayıcıda her yanın iki bacağı vardır ve istasyonlar ön-arka sıralıdır', () => {
+    const out = { forward: 0, right: 0 };
+    for (const id of LEAPER_IDS) {
+      const [front, rear] = PARTS.leaper.stations[id];
+      expect(front, id).toBeGreaterThan(rear);
+      expect(PARTS.leaper.stations[id]).toHaveLength(LEAPER_LEGS_PER_SIDE);
+    }
+    expect(legStations(JACKAL)).toEqual([...PARTS.leaper.stations.jackal]);
+    expect(legStations(STRIKER)).toEqual([]);
+    const frontRight = partAnchor(RHINO, 4, out);
+    expect(frontRight.forward).toBe(PARTS.leaper.stations.rhino[0]);
+    expect(frontRight.right).toBeGreaterThan(RHINO.leaper.halfWidth);
+    expect(partAnchor(RHINO, 1, out).right).toBeLessThan(-RHINO.leaper.halfWidth);
+  });
+
+  it('eksik bacak çöküşü bacak sayısıyla ölçeklenir: iki bacaklı yanda tek kayıp yarım yan demektir', () => {
+    const stride = PARTS.leaper.stumble.stride;
+    const half = limpCollapse(1, stride / 2, LEAPER_LEGS_PER_SIDE, stride);
+    const full = limpCollapse(2, stride / 2, LEAPER_LEGS_PER_SIDE, stride);
+    expect(half).toBeCloseTo(0.5, 6);
+    expect(full).toBeCloseTo(1, 6);
+    expect(limpCollapse(1, 0, LEAPER_LEGS_PER_SIDE, stride)).toBe(0);
   });
 
   it('süzülen araçta yan iticinin ortasındadır', () => {

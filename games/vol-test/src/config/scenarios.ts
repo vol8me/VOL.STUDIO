@@ -2,7 +2,7 @@ export const SCENARIOS = {
   empty: { count: 0 },
   slalom: { count: 8 },
   targets: { count: 5 },
-  sandbox: { count: 12 },
+  sandbox: { count: 15 },
   multitank: { count: 6 },
 } as const;
 
@@ -13,7 +13,7 @@ export const SCENARIO = {
   maxSeed: 0xffffffff,
   slalom: { start: 180, step: 95, width: 125, jitter: 12 },
   targets: { distance: 390, spacing: 120 },
-  dynamic: { radius: 560, jitter: 150, turnRate: 0.45, fireCycleMs: 1950, fireWindowMs: 30 },
+  dynamic: { radius: 700, jitter: 150, turnRate: 0.45, fireCycleMs: 1950, fireWindowMs: 30 },
   neighborCell: 300,
   aimRadius: 800,
 } as const;
