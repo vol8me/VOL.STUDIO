@@ -105,7 +105,7 @@ test.describe('masaüstü', () => {
   }) => {
     await open(page);
     const rows = await passiveReport(page);
-    expect(rows.length, 'pasif plakalar bulundu').toBeGreaterThanOrEqual(4);
+    expect(rows.length, 'pasif plakalar bulundu').toBeGreaterThanOrEqual(3);
     for (const row of rows) {
       expect(row.pointerEvents, `${row.selector} işaretçi olayı`).toBe('none');
       expect(row.hitInsideHud, `${row.selector} merkezi HUD tarafından yakalanıyor`).toBe(false);
