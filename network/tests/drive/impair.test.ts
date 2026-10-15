@@ -56,7 +56,8 @@ describe('ImpairedLink', () => {
     socket.write('merhaba');
     const { text, ms } = await reply;
     expect(text).toBe('merhaba');
-    expect(ms).toBeLessThan(100);
+    // Duvar saati yük altında (paralel kapsam koşusu) şişer; gecikme eklenmediğini asıl `delayed: 0` söyler.
+    expect(ms).toBeLessThan(250);
     expect(proxy.stats()).toMatchObject({ connections: 1, bytesUp: 7, bytesDown: 7, delayed: 0 });
     expect(proxy.endpoint).toBe(`http://127.0.0.1:${proxy.port}`);
   });
