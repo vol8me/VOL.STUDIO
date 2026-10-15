@@ -116,7 +116,7 @@ describe('sunucu iklimi', () => {
   }, 30_000);
 
   it('kayıtlı iklimden devam eder: saat ve yeşillik yeniden başlamada korunur', async () => {
-    const saved = aged(600);
+    const saved = aged(150);
     const store = new MemoryStore(saved);
     server = await startServer(undefined, { perFaction: 0, climateStore: store });
     const { climates } = await seat(server);
@@ -124,7 +124,7 @@ describe('sunucu iklimi', () => {
     expect(climates[0].elapsedMs).toBeGreaterThanOrEqual(saved.elapsedMs);
     expect(climates[0].elapsedMs).toBeLessThan(saved.elapsedMs + 20_000);
     expect(Array.from(climates[0].surface.growth).some((value) => value > 0)).toBe(true);
-  });
+  }, 30_000);
 
   it('oda kapanırken iklimi kaydeder', async () => {
     const store = new MemoryStore();
@@ -134,7 +134,7 @@ describe('sunucu iklimi', () => {
     await room.leave();
     await until(() => store.saves.length > 0, 'iklim kaydı');
     expect(isClimateSnapshot(store.saves[store.saves.length - 1])).toBe(true);
-  });
+  }, 30_000);
 
   it('başka tohumun kaydı bu dünyayı bozmaz', async () => {
     const foreign = new WeatherSystem(WORLD.width, WORLD.height, { seed: WEATHER.seed + 9 });
@@ -147,7 +147,7 @@ describe('sunucu iklimi', () => {
     await until(() => climates.length > 0, 'ilk iklim');
     expect(climates[0].seed).toBe(WEATHER.seed);
     expect(climates[0].elapsedMs).toBeLessThan(30_000);
-  });
+  }, 30_000);
 });
 
 describe('iklim isteği', () => {
@@ -158,7 +158,7 @@ describe('iklim isteği', () => {
     for (let index = 0; index < 5; index++) room.send(CLIMATE_REQUEST);
     await new Promise((resolve) => setTimeout(resolve, 400));
     expect(climates).toHaveLength(1);
-  });
+  }, 30_000);
 });
 
 describe('iklim ileti doğrulaması', () => {

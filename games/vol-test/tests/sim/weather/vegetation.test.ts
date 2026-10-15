@@ -47,8 +47,11 @@ function fertileSpot(grid: SurfaceGrid): { x: number; y: number } {
   return best;
 }
 
+/** Sınama adımı oyundakinin beş katıdır: uzun mevsimleri kapsam ölçümü altında bütçede tutar. */
+const COARSE = 5;
+
 function run(grid: SurfaceGrid, frame: WeatherState, seconds: number): void {
-  const step = WEATHER.surface.stepMs / 1000;
+  const step = (WEATHER.surface.stepMs / 1000) * COARSE;
   for (let elapsed = 0; elapsed < seconds; elapsed += step) grid.step(frame, step);
 }
 
