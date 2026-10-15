@@ -109,7 +109,7 @@ export function submergeRoot(root: Phaser.GameObjects.Container, depth: number):
   const cfg = WATER_VIEW.submerge;
   const t = clamp01((depth - cfg.startDepth) / (1 - cfg.startDepth));
   const mix = Math.round(t * cfg.tintMax * 100) / 100;
-  if ((lastMix.get(root) ?? 0) === mix) return;
+  if (lastMix.get(root) === mix) return;
   lastMix.set(root, mix);
   tintTree(root, wetTint, cfg.tint, mix);
   root.setAlpha(1 - t * (1 - cfg.alphaMin));
@@ -141,9 +141,11 @@ export function sinkRoot(
       root.setPosition(base.x, base.y).setRotation(base.rotation);
       sinkBase.delete(root);
     }
-    // Yeniden doğan araç suda doğabilir: canlı batış karışımı yeniden hesaplanır.
-    lastMix.delete(root);
+    // Renk katmanları iç içedir (suya çekilme → isli → batış) ve ters sırayla çözülür: burada yalnız
+    // batış geri alınır; isli renk `setCharred(false)`, suya çekilme ise sonraki `submergeRoot` karesinde
+    // (karışım hafızası silindiği için sıfır da işlenir) geri alınır. Yoksa yeniden doğan araç soluk kalır.
     tintTree(root, sinkTint, cfg.tint, 0);
+    lastMix.delete(root);
     root.setAlpha(1);
     root.setScale(1);
     return;

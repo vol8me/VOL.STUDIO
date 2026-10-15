@@ -137,6 +137,35 @@ describe('sinkRoot', () => {
     expect(a.state.rotation).toBe(b.state.rotation);
   });
 
+  it('suya çekilmiş araç batıp yeniden doğunca batmadan önceki orijinal renge döner (soluk kalmaz)', () => {
+    const hull = image(0xc0b090);
+    const target = fakeRoot(hull);
+    submergeRoot(target, 0.9);
+    expect(hull.tint).not.toBe(0xc0b090);
+    sinkRoot(target, 0.4, 0.6);
+    sinkRoot(target, 0.9, 0.6);
+    sinkRoot(target, 0, 0.6);
+    // Suda doğmadı: kıyıda ilk kare 0 verir; renk ve saydamlık tamamen eski hâlindedir.
+    submergeRoot(target, 0);
+    expect(hull.tint).toBe(0xc0b090);
+    expect(target.state.alpha).toBe(1);
+  });
+
+  it('dipteyken ölüp batan ve yeniden doğan araç WreckDirector sırasıyla orijinal renge döner', () => {
+    const hull = image(0xc0b090);
+    const target = fakeRoot(hull);
+    // Canlı: suya çekilir. Ölüm: isli renk üstüne biner, ardından batış başlar.
+    submergeRoot(target, 0.9);
+    setCharred(target, true);
+    sinkRoot(target, 0.5, 0.6);
+    // Yeniden doğuş: önce batış geri alınır, sonra isli renk, sonra kıyıda ilk canlı kare.
+    sinkRoot(target, 0, 0.6);
+    setCharred(target, false);
+    submergeRoot(target, 0);
+    expect(hull.tint).toBe(0xc0b090);
+    expect(target.state.alpha).toBe(1);
+  });
+
   it('batıp yeniden doğan araç eski renge döner (isli → batış → geri)', () => {
     const hull = image(0x9a8f7a);
     const target = fakeRoot(hull);
