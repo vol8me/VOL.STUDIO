@@ -100,6 +100,58 @@ describe('NameTags', () => {
     ]);
   });
 
+  it('can düşünce çubuk beyaza parlar ve kaybedilen can soluk iz olarak kalıp erir', () => {
+    const { tags, graphics } = setup();
+    const tag = ONLINE_VIEW.tag;
+    const frameCalls = () => {
+      const calls = [...graphics.calls];
+      graphics.calls.length = 0;
+      return calls;
+    };
+    tags.update([frame(1)], 0);
+    frameCalls();
+    tags.update([frame(1, { health: 0.5 })], 100);
+    const hit = frameCalls();
+    const styles = hit.filter(([name]) => name === 'fillStyle').map(([, args]) => args[0]);
+    // Zemin, iz (soluk sarı), parlayan dolgu (beyaz).
+    expect(styles).toEqual([0x14100c, tag.trailColor, 0xffffff]);
+    const rects = hit.filter(([name]) => name === 'fillRect').map(([, args]) => args[2] as number);
+    expect(rects[1]).toBeCloseTo(tag.barWidth * 0.5);
+
+    // Parlama bitti, iz bekleme süresinde tutulur.
+    tags.update([frame(1, { health: 0.5 })], 100 + tag.flashMs + 10);
+    const held = frameCalls();
+    const heldStyles = held.filter(([name]) => name === 'fillStyle').map(([, args]) => args[0]);
+    expect(heldStyles).toEqual([0x14100c, tag.trailColor, 0x52f5cf]);
+
+    // Bekleme sonrası erir ve can seviyesine varınca iz kaybolur.
+    tags.update([frame(1, { health: 0.5 })], 100 + tag.trailHoldMs + 100);
+    const draining = frameCalls().filter(([name]) => name === 'fillRect');
+    expect(draining[1][1][2] as number).toBeLessThan(tag.barWidth * 0.5);
+    tags.update([frame(1, { health: 0.5 })], 5000);
+    frameCalls();
+    tags.update([frame(1, { health: 0.5 })], 5016);
+    expect(frameCalls().filter(([name]) => name === 'fillRect')).toHaveLength(2);
+  });
+
+  it('iyileşme ve yeniden doğuş izi sıfırlar; ilk görünen kare iz taşımaz', () => {
+    const { tags, graphics } = setup();
+    const rects = () => graphics.calls.filter(([name]) => name === 'fillRect').length;
+    tags.update([frame(1, { health: 0.4 })], 0);
+    expect(rects()).toBe(2);
+    tags.update([frame(1, { health: 0.2 })], 10);
+    expect(rects()).toBe(5);
+    graphics.calls.length = 0;
+    tags.update([frame(1, { health: 0.9 })], 20);
+    expect(rects()).toBe(2);
+    graphics.calls.length = 0;
+    tags.update([frame(1, { health: 0.1 })], 30);
+    tags.update([frame(1, { alive: false, health: 0 })], 40);
+    graphics.calls.length = 0;
+    tags.update([frame(1, { health: 1 })], 50);
+    expect(rects()).toBe(2);
+  });
+
   it('söküldüğünde yazıları ve çizimi yok eder', () => {
     const { tags, texts, graphics } = setup();
     tags.update([frame(1), frame(2)]);

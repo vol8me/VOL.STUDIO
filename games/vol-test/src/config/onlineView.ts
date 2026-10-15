@@ -23,6 +23,13 @@ export const ONLINE_VIEW = {
     deadAlpha: 0.35,
     /** Etiket yazısının çizim çözünürlüğü; kamera yakınlaşınca bulanmasın. */
     resolution: 2,
+    /** Can çubuğunun isabet geri bildirimi: kaybedilen can solgun bir iz olarak kalır, sonra erir. */
+    trailColor: 0xffe9a8,
+    /** İzin erimeden önce tutulduğu süre (ms) ve sonra saniyede eriyen can oranı. */
+    trailHoldMs: 260,
+    trailDrainPerSec: 1.1,
+    /** İsabette çubuğun beyaza döndüğü süre (ms). */
+    flashMs: 130,
   },
   /** Skor tablosu: kompakt görünümde en çok bu kadar satır (kendi satırınız her zaman görünür). */
   board: { compactRows: 5 },

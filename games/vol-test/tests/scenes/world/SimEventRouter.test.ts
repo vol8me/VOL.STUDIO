@@ -30,7 +30,9 @@ function targets() {
       hit: vi.fn(),
       chip: vi.fn(),
       wallHit: vi.fn(),
+      damage: vi.fn(),
     },
+    position: (id: number) => (id === OTHER ? { x: 70, y: 80 } : { x: 30, y: 40 }),
     arena: { strike: vi.fn() },
     camera: { kick: vi.fn(), addTrauma: vi.fn() },
     listener: { x: 0, y: 0 },
@@ -122,6 +124,65 @@ describe('routeSimEvents', () => {
     expect(haptics.intensities).toEqual([0.2, 1]);
     const [light, heavy] = t.camera.addTrauma.mock.calls.map(([value]) => value as number);
     expect(heavy).toBeGreaterThan(light);
+  });
+
+  it('hasar sayısı yönünü oyuncuya göre alır: verilen, alınan, başkaları; boğulma yazılmaz', () => {
+    const t = targets();
+    routeSimEvents(
+      [
+        {
+          kind: 'damaged',
+          target: OTHER,
+          source: PLAYER,
+          cause: 'projectile',
+          amount: 12,
+          health: 8,
+        },
+        {
+          kind: 'damaged',
+          target: PLAYER,
+          source: OTHER,
+          cause: 'projectile',
+          amount: 9,
+          health: 1,
+        },
+        { kind: 'damaged', target: OTHER, source: 7, cause: 'projectile', amount: 3, health: 5 },
+        { kind: 'damaged', target: PLAYER, cause: 'drown', amount: 1, health: 4 },
+        { kind: 'damaged', target: PLAYER, cause: 'wall', amount: 2, health: 3 },
+      ],
+      t,
+    );
+    expect(t.effects.damage.mock.calls).toEqual([
+      [70, 80, 12, 'dealt'],
+      [30, 40, 9, 'taken'],
+      [70, 80, 3, 'other'],
+      [30, 40, 2, 'taken'],
+    ]);
+  });
+
+  it('hasar sayısı aynı paketteki isabetin noktasına konur; aracı olmayan hasar atlanır', () => {
+    const t = targets();
+    routeSimEvents(
+      [
+        {
+          kind: 'damaged',
+          target: OTHER,
+          source: PLAYER,
+          cause: 'projectile',
+          amount: 5,
+          health: 5,
+        },
+        { kind: 'hit', owner: PLAYER, target: OTHER, x: 111, y: 222, angle: 0 },
+      ],
+      t,
+    );
+    expect(t.effects.damage).toHaveBeenCalledWith(111, 222, 5, 'dealt');
+    t.effects.damage.mockClear();
+    routeSimEvents(
+      [{ kind: 'damaged', target: 9, source: PLAYER, cause: 'projectile', amount: 5, health: 5 }],
+      { ...t, position: () => undefined },
+    );
+    expect(t.effects.damage).not.toHaveBeenCalled();
   });
 
   it('araç çarpışması yalnız oyuncu tarafsa hissedilir', () => {

@@ -74,6 +74,21 @@ describe('EffectsView', () => {
     expect(new Set(scales())).toEqual(new Set([1]));
   });
 
+  it('hasar sayısı süzülür, kare ilerledikçe söner ve söküldüğünde yazısı yıkılır', () => {
+    const { view, scene } = build();
+    const projectiles = new Projectiles(8, 1000);
+    view.damage(40, 60, 18, 'taken');
+    const text = scene.created.find((object) => object.kind === 'text' && object.text === '18')!;
+    expect(text.visible).toBe(true);
+    view.update(projectiles, 1, FX.damageNumbers.lifeMs / 2);
+    expect(Number(text.y)).toBeLessThan(60);
+    view.update(projectiles, 1, FX.damageNumbers.lifeMs);
+    expect(text.visible).toBe(false);
+    view.damage(40, 60, 3, 'dealt');
+    view.destroy();
+    expect(text.calls.some(([name]) => name === 'destroy')).toBe(true);
+  });
+
   it('mermi: parlak gövde ve incelen iz; iz namlu ağzında tankın içine uzanmaz', () => {
     const { view, graphics } = build();
     const projectiles = new Projectiles(8, 1000);

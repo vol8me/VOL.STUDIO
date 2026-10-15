@@ -356,6 +356,7 @@ export class WorldScene extends Phaser.Scene {
       player: player.id,
       tank: (id) => this.vehicles.get(id),
       spec: (id) => this.sim.vehicle(id)?.spec,
+      position: (id) => this.sim.vehicle(id)?.chassis,
       effects: this.effects,
       arena: this.arena,
       camera: this.camera.model,

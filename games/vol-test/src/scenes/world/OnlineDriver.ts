@@ -151,7 +151,7 @@ export class OnlineDriver implements WorldDriver {
   }
 
   present(nowMs: number): void {
-    this.tags.update(this.tagFrames());
+    this.tags.update(this.tagFrames(), nowMs);
     // Sönümlü tepe yama aralığında kaybolur; en büyük değer her karede izlenir.
     this.driftMax = Math.max(this.driftMax, this.world.pilot.drift.peak);
     const panel = this.panel;

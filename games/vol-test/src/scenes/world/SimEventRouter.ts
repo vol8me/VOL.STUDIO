@@ -4,6 +4,7 @@ import type { FollowCamera } from '@volstudio/core/camera';
 import type { VehicleSpec } from '@/config/vehicles';
 import type { SimEvent } from '@/sim/events';
 import type { ArenaView } from '@/view/ArenaView';
+import type { DamageKind } from '@/view/effects/DamageNumbers';
 import type { EffectsView } from '@/view/EffectsView';
 import type { VehicleView } from '@/view/VehicleView';
 
@@ -13,7 +14,9 @@ export interface SimEventTargets {
   readonly tank: (id: number) => Pick<VehicleView, 'fire' | 'impact'> | undefined;
   /** Hedefin tanımı: isabette gövdeden kopan kıymığın dokusu buradan seçilir. */
   readonly spec: (id: number) => VehicleSpec | undefined;
-  readonly effects: Pick<EffectsView, 'muzzle' | 'explode' | 'hit' | 'chip' | 'wallHit'>;
+  readonly effects: Pick<EffectsView, 'muzzle' | 'explode' | 'hit' | 'chip' | 'wallHit' | 'damage'>;
+  /** Aracın şu anki konumu: isabet olayı yoksa hasar sayısı buraya konur. */
+  readonly position: (id: number) => { readonly x: number; readonly y: number } | undefined;
   readonly arena: Pick<ArenaView, 'strike'>;
   readonly camera: Pick<FollowCamera, 'kick' | 'addTrauma'>;
   /** Oyuncunun konumu: patlama sarsıntısı ve titreşimi uzaklıkla söner. */
@@ -60,6 +63,28 @@ function chipTarget(targets: SimEventTargets, event: Extract<SimEvent, { kind: '
 }
 
 /**
+ * Hasar sayısının yeri: aynı paketteki isabetin noktası (mermi gövdeye değdiği yer), yoksa aracın
+ * konumu. Boğulma gibi kaynaksız hasar sayı üretmez; çünkü canı sürekli eritir ve ekranı doldurur.
+ */
+function damageNumber(
+  events: readonly SimEvent[],
+  event: Extract<SimEvent, { kind: 'damaged' }>,
+  targets: SimEventTargets,
+): void {
+  if (event.cause === 'drown') return;
+  let at: { readonly x: number; readonly y: number } | undefined;
+  for (const other of events) {
+    if (other.kind === 'hit' && other.target === event.target) at = other;
+  }
+  at ??= targets.position(event.target);
+  if (!at) return;
+  let kind: DamageKind = 'other';
+  if (event.source === targets.player) kind = 'dealt';
+  else if (event.target === targets.player) kind = 'taken';
+  targets.effects.damage(at.x, at.y, event.amount, kind);
+}
+
+/**
  * Simülasyon olaylarını sunuma dağıtır: görünüm, efekt, kamera ve titreşim.
  * Görsel efekt her araç için oynar; kamera ve titreşim yalnız kontrol edilen
  * araç kaynak ya da hedefse tepki verir. Ölçüler `config/feel.ts`ten gelir.
@@ -86,6 +111,9 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
           targets.camera.addTrauma(FEEL.hit.trauma);
           vibrate('warning', 1);
         }
+        break;
+      case 'damaged':
+        damageNumber(events, event, targets);
         break;
       case 'wallHit': {
         const strength = strengthOf(event.speed);

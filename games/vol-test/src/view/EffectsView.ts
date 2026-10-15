@@ -7,6 +7,7 @@ import type { VehicleSpec } from '@/config/vehicles';
 import { createRandom, type Random } from '@volstudio/core/random';
 import { shedArt, wreckArt, type ChunkArt } from './debrisArt';
 import { Blasts } from './effects/Blasts';
+import { DamageNumbers, type DamageKind } from './effects/DamageNumbers';
 import { Debris } from './effects/Debris';
 import { FootMarks } from './effects/FootMarks';
 import { ParticleFx } from './effects/ParticleFx';
@@ -61,6 +62,7 @@ export class EffectsView {
   private readonly skids: SkidMarks;
   private readonly feet: FootMarks;
   private readonly debris: Debris;
+  private readonly damageNumbers: DamageNumbers;
   private readonly random: Random = createRandom(FX.debrisSeed);
   private readonly trails = new Map<number, VehicleTrail>();
   private frameMs = 0;
@@ -97,6 +99,7 @@ export class EffectsView {
     this.tracers = new TracerLayer(scene);
     this.particles = new ParticleFx(scene);
     this.debris = new Debris(scene, bounds);
+    this.damageNumbers = new DamageNumbers(scene);
     this.applyProfile(profile);
   }
 
@@ -120,6 +123,11 @@ export class EffectsView {
   explode(x: number, y: number, angle: number, surface: 'wall' | 'ground'): void {
     this.particles.blast(x, y, surface === 'wall' ? angle + Math.PI : null);
     this.blasts.explode(x, y, true);
+  }
+
+  /** İsabetin hasar sayısı: `kind` oyuncuya göre yönüdür (verilen, alınan, başkalarının). */
+  damage(x: number, y: number, amount: number, kind: DamageKind): void {
+    this.damageNumbers.spawn(x, y, amount, kind);
   }
 
   /** Mermi araca isabet etti: yanıksız küçük patlama. */
@@ -344,6 +352,7 @@ export class EffectsView {
     this.tracers.draw(projectiles, alpha, deltaMs > 0 ? this.emitTrail : undefined);
     this.blasts.update(deltaMs);
     this.debris.update(deltaMs);
+    this.damageNumbers.update(deltaMs);
     this.marks.fade(deltaMs);
     this.skids.fade(deltaMs);
     this.feet.fade(deltaMs);
@@ -354,6 +363,7 @@ export class EffectsView {
     this.particles.destroy();
     this.blasts.destroy();
     this.debris.destroy();
+    this.damageNumbers.destroy();
     this.marks.destroy();
     this.skids.destroy();
     this.feet.destroy();

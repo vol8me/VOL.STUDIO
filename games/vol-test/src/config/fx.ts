@@ -27,6 +27,25 @@ export const SHOT_LOOK: Readonly<Record<WeaponStyle, ShotLook>> = {
 
 /** Sunum efektlerinin ayarları; renkler `palette.ts`ten gelir. */
 export const FX = {
+  /**
+   * Hasar sayıları: ömür, toplam yükseliş, yan kayma adımı, sönmeye başlama kesri, havuz kapasitesi ve
+   * yazı çözünürlüğü; yön başına renk ve boy. Yarım puandan az hasar yazılmaz.
+   */
+  damageNumbers: {
+    lifeMs: 820,
+    risePx: 34,
+    driftPerStep: 5,
+    fadeStart: 0.55,
+    capacity: 14,
+    resolution: 2,
+    depth: 40,
+    minAmount: 0.5,
+    kinds: {
+      dealt: { color: 0xffd45c, size: 15 },
+      taken: { color: 0xff5a5a, size: 17 },
+      other: { color: 0xd7d0c4, size: 11 },
+    },
+  },
   /** Enkaz rastgelesinin tohumu: parça düzeni oturumdan oturuma aynıdır. */
   debrisSeed: 7013,
   aimGuide: {

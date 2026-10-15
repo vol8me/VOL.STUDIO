@@ -572,6 +572,15 @@ ile nokta düşer; dünyada `NameTags` adın soluna aynı noktayı çizer. Kayna
 her araç. Çevrimdışı botların adı yoktur; yalnız sağlık çubuğu ve rozet çizilir. Kendi aracınız hiçbir
 koşulda bot sayılmaz.
 
+**İsabet geri bildirimi.** Çok oyunculu ateşte kimin kime ne kadar vurduğu üç şeyle okunur. Her `damaged`
+olayı isabetin noktasında hasar sayısı (`src/view/effects/DamageNumbers.ts`) doğurur: verilen hasar sarı,
+alınan kırmızı ve büyük, başkalarının isabeti soluk ve küçüktür (`FX.damageNumbers`). Yön
+`src/scenes/world/SimEventRouter.ts` içinde oyuncunun kimliğine göre seçilir; boğulma sayı üretmez, çünkü
+canı sürekli eritir. Sayılar sabit bir yazı havuzundan gelir; yoğun ateşte nesne üretilmez. `NameTags` can
+çubuğu isabette kısa süre beyaza parlar ve kaybedilen can soluk bir iz olarak kalıp erir
+(`ONLINE_VIEW.tag.trail*`); iyileşme ve yeniden doğuş izi sıfırlar. Hasarın kendisi sunucuda uygulanır; bu
+katman yalnız görünürlüktür.
+
 Harita 384 m'lik dünyada tüm dünyayı gösterseydi araç kare başına piksel altı yürür ve harita
 durmuş gibi görünürdü; bu yüzden açılış yakınlaştırması `WORLD.mapZoom` (4, çevredeki ~96 m) ve
 tavanı `WORLD.mapMaxZoom`dur, zoom 1 bütün cephe hattını gösterir
