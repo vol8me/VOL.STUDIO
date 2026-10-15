@@ -1,4 +1,5 @@
 import { PALETTE } from './palette';
+import type { SensorArt } from './sensors';
 import type { HoverId } from './vehicles';
 
 /** Bir süzülen aracın parçalarının sanat ölçüleri (SVG piksel birimi = dünya birimi). */
@@ -22,6 +23,8 @@ export interface HoverArt {
   };
   /** İticinin arka lüle ışığının gövde-yerel boylamsal konumu ve ölçeği. */
   readonly nozzle: { readonly x: number; readonly scale: number };
+  /** Reaktör penceresindeki çekirdek ışığı ve kanat uçlarındaki duyargalar (gövde-yerel). */
+  readonly sensors: SensorArt;
 }
 
 export const HOVER_ART: Readonly<Record<HoverId, HoverArt>> = {
@@ -34,6 +37,20 @@ export const HOVER_ART: Readonly<Record<HoverId, HoverArt>> = {
     flashScale: 0.9,
     barrel: { kick: -170, stiffness: 520, damping: 20, max: 3 },
     nozzle: { x: -25, scale: 0.55 },
+    sensors: {
+      core: { x: -13.2, y: 0, scale: 0.8, tint: 0xb15cff },
+      feelers: {
+        anchorX: -21,
+        anchorY: 13,
+        length: 15,
+        thickness: 2.4,
+        rest: 0.5,
+        facing: -1,
+        tint: 0xc9d1dc,
+        glow: 0xb15cff,
+        tipSize: 6.5,
+      },
+    },
   },
 };
 

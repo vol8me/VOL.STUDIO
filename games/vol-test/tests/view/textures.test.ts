@@ -66,6 +66,7 @@ describe('textures', () => {
     const keys = scene.textures.addCanvas.mock.calls.map((call) => String(call[0]));
     expect(keys.sort()).toEqual(
       [
+        TEXTURE.antenna,
         TEXTURE.blast,
         TEXTURE.footPrint,
         TEXTURE.ring,

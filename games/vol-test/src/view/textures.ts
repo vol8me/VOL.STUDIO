@@ -29,6 +29,8 @@ export const TEXTURE = {
   tread: 'tank-tread',
   treadEnd: 'tank-tread-end',
   core: 'tank-core',
+  /** Duyarga gövdesi: çalışma anında çizilen, uca doğru incelen çubuk (renk araçtan verilir). */
+  antenna: 'fx-antenna',
   flash: 'tank-flash',
   spark: 'fx-spark',
   treadPrint: 'fx-tread-print',
@@ -251,6 +253,19 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
       TEXTURE_SCALE,
       treadView(spec),
     );
+  // Duyarga: tabanda kalın, uca doğru incelen açık gri çubuk; ince bir üst parlaması ona silindir hissi verir.
+  canvasTexture(scene, TEXTURE.antenna, 32, 4, (g) => {
+    g.fillStyle = 'rgba(255,255,255,0.95)';
+    g.beginPath();
+    g.moveTo(0, 0.5);
+    g.lineTo(32, 1.5);
+    g.lineTo(32, 2.5);
+    g.lineTo(0, 3.5);
+    g.closePath();
+    g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.6)';
+    g.fillRect(0, 1.2, 30, 0.8);
+  });
   canvasTexture(scene, TEXTURE.spark, 16, 16, (g) => {
     const gradient = g.createRadialGradient(8, 8, 0, 8, 8, 8);
     gradient.addColorStop(0, 'rgba(255,255,255,1)');

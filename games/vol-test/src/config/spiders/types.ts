@@ -1,5 +1,6 @@
 import type { SpringConfig } from '@volstudio/core/math';
 import { LIGHT } from '../light';
+import type { SensorArt } from '../sensors';
 import type { WalkerId } from '../vehicles';
 
 /** Bir parçanın SVG kutusu (dünya birimi) ve eklem merkezi; `assets/vehicles/<örümcek>/<parça>.svg` ile aynıdır. */
@@ -208,4 +209,9 @@ export interface SpiderLook {
   readonly dust: SpiderDust;
   readonly ghost: SpiderGhost;
   readonly cannon: SpiderCannon;
+  /**
+   * Göğsün çekirdek ışığı ve ön duyargaları (konumlar göğüs milinden başlar). Striker'ın çekirdek
+   * nabzı ve yaylı duyargalarıyla aynı hareket dilidir.
+   */
+  readonly sensors: SensorArt;
 }

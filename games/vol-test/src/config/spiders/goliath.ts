@@ -120,4 +120,18 @@ export const GOLIATH_LOOK: SpiderLook = {
     heatMs: 800,
     idleGlow: { alpha: 0.06, pulseAlpha: 0.05, pulseHz: 0.8 },
   },
+  sensors: {
+    core: { x: 6, y: 0, scale: 1.3, tint: 0xffb23a },
+    feelers: {
+      anchorX: 50,
+      anchorY: 6,
+      length: 28,
+      thickness: 4.4,
+      rest: 0.4,
+      facing: 1,
+      tint: 0xa9b2bf,
+      glow: 0xffb23a,
+      tipSize: 12,
+    },
+  },
 };

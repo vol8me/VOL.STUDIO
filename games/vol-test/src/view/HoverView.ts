@@ -7,6 +7,8 @@ import { LIGHT } from '@/config/light';
 import type { HoverSpec } from '@/config/vehicles';
 import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
+import { CorePulse } from './CorePulse';
+import { Feelers } from './Feelers';
 import { TEXTURE, TEXTURE_SCALE, addHoverImage } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
 import { WATER_VIEW } from '@/config/waterView';
@@ -38,6 +40,8 @@ export class HoverView implements VehicleView {
   private readonly fans: Phaser.GameObjects.Image[];
   private readonly nozzles: Phaser.GameObjects.Image[];
   private readonly flash: Phaser.GameObjects.Image;
+  private readonly core: CorePulse;
+  private readonly feelers: Feelers;
   private readonly dust: Phaser.GameObjects.Particles.ParticleEmitter;
   private readonly glow: Phaser.GameObjects.Particles.ParticleEmitter;
   private readonly bank = new Spring1D();
@@ -84,10 +88,20 @@ export class HoverView implements VehicleView {
       .setOrigin(art.turret.pivotX / art.turret.width, 0.5)
       .setScale(INV);
     this.turretRig = scene.add.container(0, 0, [this.turret]);
-    this.body = scene.add.container(0, 0, [hull, this.turretRig]);
+    // Reaktör çekirdeği ve kanat ucu duyargaları gövdeyle yatar ve nefes alır; taret hepsinin üstündedir.
+    const { sensors } = art;
+    this.core = new CorePulse(scene, sensors.core.scale, sensors.core.tint);
+    this.core.place(sensors.core.x, sensors.core.y);
+    this.feelers = new Feelers(scene, sensors.feelers);
+    this.body = scene.add.container(0, 0, [
+      hull,
+      this.core.image,
+      ...this.feelers.objects,
+      this.turretRig,
+    ]);
     this.root = scene.add.container(0, 0, [...this.pods, ...this.fans, ...this.nozzles, this.body]);
     this.root.setDepth(HOVER_VIEW.depth);
-    this.shadowSource = poseSourceOf([...this.pods, hull, this.turret]);
+    this.shadowSource = poseSourceOf([...this.pods, ...this.feelers.parts, hull, this.turret]);
 
     this.flash = scene.add
       .image(0, 0, TEXTURE.flash)
@@ -151,6 +165,17 @@ export class HoverView implements VehicleView {
     this.turretRig.setRotation(frame.turret - frame.hull - bank);
     this.turret.setX(this.barrel.value);
 
+    this.core.update(effort, frame.boosting, deltaMs);
+    // Duyargalar gövde kapsayıcısının yerel uzayındadır: konum ve dönüş kapsayıcıdan gelir.
+    this.feelers.update(
+      0,
+      0,
+      0,
+      1,
+      { angularVelocity: frame.angularVelocity, effort },
+      this.elapsedMs,
+      deltaMs,
+    );
     this.spinFans(frame, effort, deltaMs);
     this.glowNozzles(frame, effort);
     this.placeFlash(frame, deltaMs);
@@ -183,6 +208,8 @@ export class HoverView implements VehicleView {
   destroy(): void {
     this.shadow.destroy();
     this.flash.destroy();
+    this.core.destroy();
+    this.feelers.destroy();
     this.dust.destroy();
     this.glow.destroy();
     this.root.destroy();

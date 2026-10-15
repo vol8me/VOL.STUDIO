@@ -118,4 +118,18 @@ export const WIDOW_LOOK: SpiderLook = {
     heatMs: 420,
     idleGlow: { alpha: 0.05, pulseAlpha: 0.04, pulseHz: 1.1 },
   },
+  sensors: {
+    core: { x: 4, y: 0, scale: 0.5, tint: 0x9dff3a },
+    feelers: {
+      anchorX: 22,
+      anchorY: 2.5,
+      length: 14,
+      thickness: 2.2,
+      rest: 0.45,
+      facing: 1,
+      tint: 0xa9b2bf,
+      glow: 0x9dff3a,
+      tipSize: 6.5,
+    },
+  },
 };

@@ -4,6 +4,7 @@ import { SPIDER_ART, SPIDER_LOOKS } from '@/config/spiders';
 import { ARACHNID, WIDOW, type WalkerSpec } from '@/config/vehicles';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { SpiderView } from '@/view/SpiderView';
+import { TEXTURE } from '@/view/textures';
 import type { TankFrame } from '@/view/VehicleView';
 import { fakeScene, lastCall, type FakeObject } from '../support/fakeScene';
 
@@ -64,6 +65,41 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
         const frameName = String(part.args[3]);
         expect(frameName).toMatch(new RegExp(`^${spec.id}/(femur|tibia|tarsus|joint)$`));
       }
+    });
+
+    it('göğsün çekirdeği ve ön duyargaları göğse bağlıdır: çizim sırası göğüsten sonra, toplardan önce', () => {
+      const { art, view } = build(spec);
+      const children = art.list as FakeObject[];
+      const core = children.find((child) => child.args[2] === TEXTURE.core)!;
+      const stalks = children.filter((child) => child.args[2] === TEXTURE.antenna);
+      const thorax = children[2];
+      expect(stalks).toHaveLength(2);
+      expect(children.indexOf(core)).toBeGreaterThan(children.indexOf(thorax));
+      expect(children.indexOf(stalks[0])).toBeGreaterThan(children.indexOf(core));
+      view.update(frame({ boosting: true, speed: spec.walker.maxSpeed }), 16);
+      // Çekirdek göğüs lensindedir; duyargalar önde (gövde +x) ve iki yanda durur.
+      expect(core.x as number).toBeGreaterThan(look.body.thoraxX);
+      expect(stalks[1].x as number).toBeGreaterThan(core.x as number);
+      expect(stalks[0].y as number).toBeLessThan(0);
+      expect(stalks[1].y as number).toBeGreaterThan(0);
+    });
+
+    it('çekirdek atılımda büyür; duyargalar dönüşte geride sürüklenir', () => {
+      const calm = build(spec);
+      const boosted = build(spec);
+      calm.view.update(frame(), 16);
+      boosted.view.update(frame({ boosting: true, speed: spec.walker.maxSpeed }), 16);
+      const core = (b: ReturnType<typeof build>) =>
+        (b.art.list as FakeObject[]).find((child) => child.args[2] === TEXTURE.core)!;
+      expect(core(boosted).scale as number).toBeGreaterThan(core(calm).scale as number);
+
+      const turning = build(spec);
+      const stalk = () =>
+        (turning.art.list as FakeObject[]).filter((child) => child.args[2] === TEXTURE.antenna)[1];
+      turning.view.update(frame(), 16);
+      const rest = stalk().rotation as number;
+      for (let step = 0; step < 20; step++) turning.view.update(frame({ angularVelocity: 3 }), 16);
+      expect(stalk().rotation as number).not.toBeCloseTo(rest, 2);
     });
 
     it('av atılışında hayalet kopyalar doğar ve atılış bitip söndüğünde kalmaz; dururken görüntü yaratılmaz', () => {

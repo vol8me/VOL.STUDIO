@@ -236,7 +236,9 @@ ve taret (kupola ve çift bobin raylı) vardır. `HoverView` iticileri yerde, g�
 gövde süzülürken nefes alır ve süspansiyonla kayar, iticiler bundan daha az kayar. Dönerken gövde dönüşün
 tersine yatar (`HOVER_VIEW.bank`, yaylı ve sınırlı); taret yatıştan arındırılır, yani nişan görseli kaymaz.
 İticilerin arkasında toz savrulur ve yerinde sönen mor enerji kıvılcımları bir iz çizer (hızla yoğunlaşır,
-atılımda tavana varır; kırık itici izsizdir). Gölge tanktan çok
+atılımda tavana varır; kırık itici izsizdir). Reaktör penceresinde Striker'ınkiyle aynı hesapla atan bir
+çekirdek (`CorePulse`) ve kanat uçlarında yaylı, uçları ışıklı iki duyarga (`Feelers`) vardır; ikisi de
+gövdeyle yatar ve nefes alır, duyargalar dönüşte geride sürüklenir. Gölge tanktan çok
 daha yüksekten (26 birim) düşer ve gövdeden belirgin ayrılır, araç yerde yüzer görünür. Pervane hızla ve
 atılımla hızlanır; kopan itici kısa koyu bir kütüğe döner, pervanesi durur. Ağız parlaması `sim/muzzle`
 ucundadır. Bot, tank dışı araçlar gibi uzak hedefe atılımla kapanır.
@@ -292,7 +294,9 @@ Yükseklik üç şeye dönüşür: parçanın perspektifle büyümesi, konumun g
 ve yere düşen gölgenin yükseklikle orantılı kayması.
 
 Görünüm (`src/view/SpiderView.ts`) üç araç için aynı sınıftır; fark `SpiderLook`tadır (kalça
-yerleşimi, kemik boyu, yürüyüş, hareket, top). Ayaklar dünyada sabitlenir ve gövde ilerledikçe
+yerleşimi, kemik boyu, yürüyüş, hareket, top, `sensors`). Göğüs lensinde Striker'la aynı hesapla atan bir
+çekirdek ışığı (`CorePulse`) ve göğse bağlı, öne bakan iki yaylı duyarga (`Feelers`) durur; ikisi de göğüsle
+birlikte yaslanır, döner ve perspektifle büyür, çekirdek hızla ve atılımla sıklaşıp parlar. Ayaklar dünyada sabitlenir ve gövde ilerledikçe
 dönüşümlü dört-ayaklı adım atar (`LegGait`: bir yanın 1. ve 3., ötekinin 2. ve 4. bacağı birlikte
 kalkar). Yerinde yavaş dönüşte grup üyelerinin eşik anları adım süresinden sık dizilir ve sıra el
 değiştirmezdi; `turnWindow` sırayı kısıtlar ve karşı grup aç kalmaz. Kabuk hızdan ve ivmeden türeyen

@@ -4,6 +4,8 @@ import { SPIDER_ART, SPIDER_TELEPORT_UNITS, type PartBox, type SpiderLook } from
 import type { WalkerSpec } from '@/config/vehicles';
 import { LEGS_PER_SIDE, limpCollapse, lostLegs } from '@/sim/chassis/parts';
 import { muzzlePose, mountPose, type MuzzlePose } from '@/sim/muzzle';
+import { CorePulse } from './CorePulse';
+import { Feelers } from './Feelers';
 import { LocomotionReader } from './spider/LocomotionReader';
 import { SpiderCannon } from './spider/SpiderCannon';
 import { SpiderLegs, lightLocal, type LightLocal } from './spider/SpiderLegs';
@@ -44,6 +46,8 @@ export class SpiderView implements VehicleView {
   private readonly thorax: Phaser.GameObjects.Image;
   private readonly thoraxShadow: Phaser.GameObjects.Image;
   private readonly legs: SpiderLegs;
+  private readonly core: CorePulse;
+  private readonly feelers: Feelers;
   private readonly motion: SpiderMotion;
   private readonly cannons: SpiderCannon[];
   private readonly dust: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -54,6 +58,7 @@ export class SpiderView implements VehicleView {
   private readonly ghosts: GhostTrail;
   private readonly ghostSource: PoseSourceNode;
   private dashing = false;
+  private elapsedMs = 0;
   private sag = 0;
   private sagTarget = 0;
   private lostLeft = 0;
@@ -97,7 +102,17 @@ export class SpiderView implements VehicleView {
     this.legs = new SpiderLegs(scene, look, { ground: groundLayer, legs: legLayer });
     this.abdomen = image('abdomen', look.parts.abdomen);
     this.thorax = image('thorax', look.parts.thorax);
-    this.art = scene.add.container(0, 0, [legLayer, this.abdomen, this.thorax]);
+    // Çekirdek ve duyargalar göğsün üstündedir; toplar onlardan da yukarıdadır.
+    const { sensors } = look;
+    this.core = new CorePulse(scene, sensors.core.scale, sensors.core.tint);
+    this.feelers = new Feelers(scene, sensors.feelers);
+    this.art = scene.add.container(0, 0, [
+      legLayer,
+      this.abdomen,
+      this.thorax,
+      this.core.image,
+      ...this.feelers.objects,
+    ]);
 
     this.cannons = this.spec.armament.mounts.map(
       () => new SpiderCannon(scene, look, lighting, this.shadowRoot),
@@ -149,11 +164,13 @@ export class SpiderView implements VehicleView {
     if (fresh) this.legs.reset(signals.x, signals.y, frame.hull, pose, this.light);
     else this.legs.update(signals, pose, deltaMs, this.light);
 
+    this.elapsedMs += deltaMs;
     this.ghosts.update(deltaMs);
     if (signals.dash01 > 0.35) this.ghosts.capture(this.ghostSource);
     this.huntBurst(frame.boosting);
     this.footfalls(frame.speed, frame.hull);
     this.placeBody(pose);
+    this.animateSensors(frame, pose, deltaMs);
     this.placeCannons(frame, deltaMs, pose);
   }
 
@@ -203,6 +220,8 @@ export class SpiderView implements VehicleView {
   destroy(): void {
     this.ghosts.destroy();
     for (const cannon of this.cannons) cannon.destroy();
+    this.core.destroy();
+    this.feelers.destroy();
     this.dust.destroy();
     this.shadowRoot.destroy();
     this.root.destroy();
@@ -259,6 +278,35 @@ export class SpiderView implements VehicleView {
       .setPosition(pivotX + light.x * abdomenHeight, pivotY + light.y * abdomenHeight)
       .setRotation(pose.abdomenYaw)
       .setScale(abdomenScaleX, INV);
+  }
+
+  /**
+   * Çekirdek göğsün lensinde atar ve duyargalar göğüse bağlı yaylanır: ikisi de göğüsle birlikte yaslanır,
+   * döner ve perspektifle büyür. Hız ve atılım nabzı sıklaştırır, dönüş duyargaları geride sürükler.
+   */
+  private animateSensors(frame: TankFrame, pose: SpiderPose, deltaMs: number): void {
+    const { body, sensors } = this.look;
+    const size = 1 + (pose.hipHeight - body.hipHeight) * SPIDER_ART.perspective;
+    const x = body.thoraxX + pose.leanX;
+    const y = pose.leanY + this.sag + this.limpSway;
+    const cos = Math.cos(pose.thoraxYaw);
+    const sin = Math.sin(pose.thoraxYaw);
+    const { core } = sensors;
+    this.core.place(
+      x + (core.x * cos - core.y * sin) * size,
+      y + (core.x * sin + core.y * cos) * size,
+    );
+    const effort = clamp01(frame.speed / this.spec.walker.maxSpeed);
+    this.core.update(effort, frame.boosting, deltaMs, size);
+    this.feelers.update(
+      x,
+      y,
+      pose.thoraxYaw,
+      size,
+      { angularVelocity: frame.angularVelocity, effort },
+      this.elapsedMs,
+      deltaMs,
+    );
   }
 
   /**

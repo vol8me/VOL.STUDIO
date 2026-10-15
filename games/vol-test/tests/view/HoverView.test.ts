@@ -58,6 +58,36 @@ describe('HoverView (manta)', () => {
     expect(byTexture(hoverFrame('manta', 'hull'))[0].scale).toBe(INV);
   });
 
+  it('reaktör çekirdeği pencerede atar ve atılımla büyür; duyargalar kanat uçlarında dönüşe savrulur', () => {
+    const sensors = art.sensors;
+    const calm = build();
+    const boosted = build();
+    calm.view.update(frame(), 16);
+    boosted.view.update(frame({ boosting: true, speed: 300 }), 16);
+    const core = (b: ReturnType<typeof build>) => b.byTexture(TEXTURE.core)[0];
+    expect(core(calm).x).toBe(sensors.core.x);
+    expect(core(calm).y).toBe(sensors.core.y);
+    expect(core(boosted).scale as number).toBeGreaterThan(core(calm).scale as number);
+    // Çekirdek ve duyargalar gövde kapsayıcısındadır: yatış ve nefes onları da taşır; taret üsttedir.
+    expect(calm.body.list).toContain(core(calm));
+    const stalksOf = (b: ReturnType<typeof build>) =>
+      (b.body.list as FakeObject[]).filter((child) => child.args[2] === TEXTURE.antenna);
+    const stalks = stalksOf(calm);
+    expect(stalks).toHaveLength(2);
+    expect(stalks.map((stalk) => stalk.y)).toEqual([
+      -sensors.feelers.anchorY,
+      sensors.feelers.anchorY,
+    ]);
+    const list = calm.body.list as unknown[];
+    expect(list.indexOf(stalks[0])).toBeLessThan(list.indexOf(calm.turretRig));
+
+    const turning = build();
+    turning.view.update(frame(), 16);
+    const rest = stalksOf(turning)[1].rotation as number;
+    for (let step = 0; step < 20; step++) turning.view.update(frame({ angularVelocity: 3 }), 16);
+    expect(stalksOf(turning)[1].rotation as number).not.toBeCloseTo(rest, 2);
+  });
+
   it('iticiler fizik yan aralığında durur ve sol yan sağın aynasıdır', () => {
     const { byTexture } = build();
     const [left, right] = byTexture(hoverFrame('manta', 'pod'));

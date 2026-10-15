@@ -119,4 +119,18 @@ export const ARACHNID_LOOK: SpiderLook = {
     heatMs: 560,
     idleGlow: { alpha: 0.06, pulseAlpha: 0.05, pulseHz: 0.9 },
   },
+  sensors: {
+    core: { x: 18, y: 0, scale: 0.8, tint: 0xff5a6e },
+    feelers: {
+      anchorX: 24,
+      anchorY: 3,
+      length: 15,
+      thickness: 2.6,
+      rest: 0.4,
+      facing: 1,
+      tint: 0xa9b2bf,
+      glow: 0xff5a6e,
+      tipSize: 7,
+    },
+  },
 };

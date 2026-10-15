@@ -4,24 +4,22 @@ import { SHOT_LOOK } from '@/config/fx';
 import { TANK_ART, TANK_LIGHTS, type TankArt } from '@/config/tankView';
 import type { TankSpec } from '@/config/vehicles';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
+import { CorePulse } from './CorePulse';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
 import type { TankFrame } from './VehicleView';
 
 const INV = 1 / TEXTURE_SCALE;
-/** Çekirdek ölçeği nabzın ortalamasıdır; striker'ın 0.75'i referans alınır. */
-const CORE_REFERENCE = 0.75;
 
 export class TankLights {
   private readonly layer: Phaser.GameObjects.Container;
   private readonly ownsLayer: boolean;
+  private readonly core: CorePulse;
   readonly bodyPart: Phaser.GameObjects.Image;
   private readonly flash: Phaser.GameObjects.Image;
   private readonly barrel = new Spring1D();
   private readonly tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly art: TankArt;
-  private readonly coreGain: number;
   private flashMs = 0;
-  private pulse = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -29,15 +27,12 @@ export class TankLights {
     layer?: Phaser.GameObjects.Container,
   ) {
     this.art = TANK_ART[spec.id];
-    this.coreGain = this.art.coreScale / CORE_REFERENCE;
     this.ownsLayer = !layer;
     this.layer =
       layer ??
       scene.add.container(0, 0).setDepth(TANK_LIGHTS.depth).setBlendMode(Phaser.BlendModes.ADD);
-    this.bodyPart = scene.add
-      .image(0, 0, TEXTURE.core)
-      .setScale(INV * this.art.coreScale)
-      .setTint(this.art.glow);
+    this.core = new CorePulse(scene, this.art.coreScale, this.art.glow);
+    this.bodyPart = this.core.image;
     this.flash = scene.add
       .image(0, 0, TEXTURE.flash)
       .setTint(SHOT_LOOK[spec.armament.weapon.style].glow)
@@ -59,11 +54,7 @@ export class TankLights {
     const barrel = this.art.barrel;
     this.barrel.update(0, deltaMs, barrel);
     this.barrel.value = Phaser.Math.Clamp(this.barrel.value, -barrel.max, 0);
-    const effort = Math.min(1, frame.speed / this.spec.tank.maxSpeed) + (frame.boosting ? 0.8 : 0);
-    this.pulse += (deltaMs / 1000) * (1.4 + effort * 3.2) * Math.PI * 2;
-    const beat = 0.5 + 0.5 * Math.sin(this.pulse);
-    this.bodyPart.setScale(INV * this.coreGain * (0.68 + beat * 0.14 + (frame.boosting ? 0.1 : 0)));
-    this.bodyPart.setAlpha(0.55 + beat * 0.35);
+    this.core.update(Math.min(1, frame.speed / this.spec.tank.maxSpeed), frame.boosting, deltaMs);
     const armament = this.spec.armament;
     const tip = muzzlePose(
       frame,
