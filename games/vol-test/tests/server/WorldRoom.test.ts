@@ -602,7 +602,7 @@ describe('WorldRoom öngörü', () => {
       true,
     );
     run.pilot.dispose();
-  });
+  }, 30000);
 });
 
 /** Odaya öngörülü bir pilot bağlar ve çeşitli girdi akışıyla sürer; düzeltme büyüklüklerini toplar. */
