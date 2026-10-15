@@ -6,7 +6,7 @@ import { HOVER_ART, HOVER_VIEW, type HoverArt } from '@/config/hoverView';
 import { LIGHT } from '@/config/light';
 import type { HoverSpec } from '@/config/vehicles';
 import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
-import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
+import { mountPose, muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { CorePulse } from './CorePulse';
 import { Feelers } from './Feelers';
 import { TEXTURE, TEXTURE_SCALE, addHoverImage } from './textures';
@@ -39,7 +39,12 @@ export class HoverView implements VehicleView {
   private readonly pods: Phaser.GameObjects.Image[];
   private readonly fans: Phaser.GameObjects.Image[];
   private readonly nozzles: Phaser.GameObjects.Image[];
-  private readonly flash: Phaser.GameObjects.Image;
+  /** Her yuvanın ağız parlaması (çok namlulu araçta yuva başına bir tane) ve kalan süresi. */
+  private readonly flashes: Phaser.GameObjects.Image[];
+  private readonly flashMs: number[];
+  /** Yan toplar (`HoverArt.gun`): her yuvada ayrı dönen resim ve kendi geri kayışı; yoksa boş. */
+  private readonly guns: Array<{ image: Phaser.GameObjects.Image; recoil: Spring1D }>;
+  private readonly mount: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly core: CorePulse;
   private readonly feelers: Feelers;
   private readonly dust: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -48,7 +53,6 @@ export class HoverView implements VehicleView {
   private readonly barrel = new Spring1D();
   private readonly tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private broken = 0;
-  private flashMs = 0;
   private elapsedMs = 0;
   private fanAngle = 0;
 
@@ -93,23 +97,42 @@ export class HoverView implements VehicleView {
     this.core = new CorePulse(scene, sensors.core.scale, sensors.core.tint);
     this.core.place(sensors.core.x, sensors.core.y);
     this.feelers = new Feelers(scene, sensors.feelers);
+    const gun = art.gun;
+    this.guns = gun
+      ? spec.armament.mounts.map(() => ({
+          image: addHoverImage(scene, spec.id, 'gun')
+            .setOrigin(gun.pivotX / gun.width, 0.5)
+            .setScale(INV),
+          recoil: new Spring1D(),
+        }))
+      : [];
     this.body = scene.add.container(0, 0, [
       hull,
       this.core.image,
       ...this.feelers.objects,
+      ...this.guns.map((g) => g.image),
       this.turretRig,
     ]);
     this.root = scene.add.container(0, 0, [...this.pods, ...this.fans, ...this.nozzles, this.body]);
     this.root.setDepth(HOVER_VIEW.depth);
-    this.shadowSource = poseSourceOf([...this.pods, ...this.feelers.parts, hull, this.turret]);
+    this.shadowSource = poseSourceOf([
+      ...this.pods,
+      ...this.feelers.parts,
+      hull,
+      ...this.guns.map((g) => g.image),
+      this.turret,
+    ]);
 
-    this.flash = scene.add
-      .image(0, 0, TEXTURE.flash)
-      .setTint(SHOT_LOOK[spec.armament.weapon.style].glow)
-      .setOrigin(0, 0.5)
-      .setScale(INV * art.flashScale)
-      .setVisible(false);
-    lighting.add(this.flash);
+    this.flashes = spec.armament.mounts.map(() =>
+      scene.add
+        .image(0, 0, TEXTURE.flash)
+        .setTint(SHOT_LOOK[spec.armament.weapon.style].glow)
+        .setOrigin(0, 0.5)
+        .setScale(INV * art.flashScale)
+        .setVisible(false),
+    );
+    this.flashMs = this.flashes.map(() => 0);
+    for (const flash of this.flashes) lighting.add(flash);
     this.dust = scene.add
       .particles(0, 0, TEXTURE.spark, HOVER_VIEW.dust.emitter)
       .setDepth(HOVER_VIEW.dust.depth);
@@ -119,12 +142,15 @@ export class HoverView implements VehicleView {
       .setBlendMode(Phaser.BlendModes.ADD);
   }
 
-  /** Atışta namlu geri teper ve ağız parlaması yanar. */
-  fire(): void {
-    this.barrel.velocity += this.art.barrel.kick;
-    this.flashMs = HOVER_VIEW.flashMs;
-    this.flash.setScale(INV * this.art.flashScale * (0.85 + Math.random() * 0.35));
-    this.flash.setVisible(true);
+  /** Atışta ateşleyen namlu geri teper ve ağız parlaması yanar; tek taretli araç `mount`u yok sayar. */
+  fire(mount = 0): void {
+    const index = Math.min(mount, this.flashes.length - 1);
+    if (this.guns.length > 0) this.guns[index].recoil.velocity += this.art.barrel.kick;
+    else this.barrel.velocity += this.art.barrel.kick;
+    this.flashMs[index] = HOVER_VIEW.flashMs;
+    const flash = this.flashes[index];
+    flash.setScale(INV * this.art.flashScale * (0.85 + Math.random() * 0.35));
+    flash.setVisible(true);
   }
 
   /** Kopan iticinin pervanesi durur ve itici kısa bir kütüğe döner (bit 0 sol, bit 1 sağ). */
@@ -149,6 +175,11 @@ export class HoverView implements VehicleView {
 
     this.barrel.update(0, deltaMs, art.barrel);
     this.barrel.value = Phaser.Math.Clamp(this.barrel.value, -art.barrel.max, 0);
+    // Yan toplar için kendi yayları: tek taretli araçta `guns` boştur.
+    for (const gun of this.guns) {
+      gun.recoil.update(0, deltaMs, art.barrel);
+      gun.recoil.value = Phaser.Math.Clamp(gun.recoil.value, -art.barrel.max, 0);
+    }
     const effort = clamp01(frame.speed / hover.maxSpeed);
     const bob = Math.sin((this.elapsedMs / HOVER_VIEW.bob.periodMs) * Math.PI * 2);
     const lean = HOVER_VIEW.bank;
@@ -164,6 +195,7 @@ export class HoverView implements VehicleView {
     // Yatış yalnız gövdeyi eğer: taret dünya açısını korur (nişan görseli kaymaz).
     this.turretRig.setRotation(frame.turret - frame.hull - bank);
     this.turret.setX(this.barrel.value);
+    this.placeGuns(frame, bank);
 
     this.core.update(effort, frame.boosting, deltaMs);
     // Duyargalar gövde kapsayıcısının yerel uzayındadır: konum ve dönüş kapsayıcıdan gelir.
@@ -187,17 +219,25 @@ export class HoverView implements VehicleView {
     this.root.setVisible(present);
     if (present) return;
     this.shadow.clear();
-    this.flashMs = 0;
     this.barrel.value = 0;
     this.barrel.velocity = 0;
-    this.flash.setVisible(false);
+    this.flashes.forEach((flash, index) => {
+      this.flashMs[index] = 0;
+      flash.setVisible(false);
+    });
+    for (const gun of this.guns) {
+      gun.recoil.value = 0;
+      gun.recoil.velocity = 0;
+    }
   }
 
   setWrecked(wrecked: boolean): void {
     setCharred(this.root, wrecked);
     if (!wrecked) return;
-    this.flashMs = 0;
-    this.flash.setVisible(false);
+    this.flashes.forEach((flash, index) => {
+      this.flashMs[index] = 0;
+      flash.setVisible(false);
+    });
   }
 
   sink(progress: number): void {
@@ -207,7 +247,7 @@ export class HoverView implements VehicleView {
 
   destroy(): void {
     this.shadow.destroy();
-    this.flash.destroy();
+    for (const flash of this.flashes) flash.destroy();
     this.core.destroy();
     this.feelers.destroy();
     this.dust.destroy();
@@ -252,20 +292,33 @@ export class HoverView implements VehicleView {
     }
   }
 
+  /** Yan topları yuvalarında `sim/muzzle` açısıyla döndürür; gövde yatışı topları da yatırır, nişan bozulmaz. */
+  private placeGuns(frame: TankFrame, bank: number): void {
+    const armament = this.spec.armament;
+    this.guns.forEach((gun, index) => {
+      const mount = armament.mounts[index];
+      const pose = mountPose(frame, armament, index, this.mount);
+      const local = pose.angle - frame.hull - bank;
+      gun.image
+        .setPosition(
+          mount.x + Math.cos(local) * gun.recoil.value,
+          mount.y + Math.sin(local) * gun.recoil.value,
+        )
+        .setRotation(local);
+    });
+  }
+
   private placeFlash(frame: TankFrame, deltaMs: number): void {
     const armament = this.spec.armament;
-    const tip = muzzlePose(
-      frame,
-      armament,
-      0,
-      this.tip,
-      armament.mounts[0].reach + this.barrel.value,
-    );
-    this.flash.setPosition(tip.x, tip.y).setRotation(tip.angle);
-    if (this.flashMs <= 0) return;
-    this.flashMs = Math.max(0, this.flashMs - deltaMs);
-    this.flash.setAlpha(this.flashMs / HOVER_VIEW.flashMs);
-    this.flash.setVisible(this.flashMs > 0);
+    this.flashes.forEach((flash, index) => {
+      const kick = this.guns.length > 0 ? this.guns[index].recoil.value : this.barrel.value;
+      const tip = muzzlePose(frame, armament, index, this.tip, armament.mounts[index].reach + kick);
+      flash.setPosition(tip.x, tip.y).setRotation(tip.angle);
+      if (this.flashMs[index] <= 0) return;
+      this.flashMs[index] = Math.max(0, this.flashMs[index] - deltaMs);
+      flash.setAlpha(this.flashMs[index] / HOVER_VIEW.flashMs);
+      flash.setVisible(this.flashMs[index] > 0);
+    });
   }
 
   /**

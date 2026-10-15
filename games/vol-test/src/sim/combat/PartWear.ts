@@ -106,7 +106,7 @@ export class PartWear {
 
   /** Tankın yan paleti ve süzülenin yan iticisi: gövdenin dışına düşen darbe o yanın parçasına gider. */
   private strikeSide(chassis: Chassis, right: number, edge: number, damage: number): number {
-    const config = this.spec.kind === 'hover' ? PARTS.hover : PARTS.tank;
+    const config = PARTS[this.spec.kind === 'walker' ? 'tank' : this.spec.kind];
     const reach = ramp(edge, config.sideStart, 1);
     if (reach === 0) return 0;
     const critical = edge >= config.criticalStart ? config.criticalGain : 1;

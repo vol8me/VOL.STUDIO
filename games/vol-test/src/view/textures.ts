@@ -15,7 +15,15 @@ import strikerTurretUrl from '@/assets/vehicles/striker/turret.svg?url';
 import { FX } from '@/config/fx';
 import { tankSpecs, treadView } from '@/config/tankView';
 import { SPIDER_PARTS, type SpiderPartId } from '@/config/spiders';
-import { HOVER_IDS, WALKER_IDS, type HoverId, type TankId, type WalkerId } from '@/config/vehicles';
+import {
+  HOVER_IDS,
+  MECH_IDS,
+  WALKER_IDS,
+  type HoverId,
+  type MechId,
+  type TankId,
+  type WalkerId,
+} from '@/config/vehicles';
 import { createTreadTexture } from './TreadTexture';
 
 /**
@@ -35,6 +43,8 @@ export const TEXTURE = {
   spark: 'fx-spark',
   treadPrint: 'fx-tread-print',
   footPrint: 'fx-foot-print',
+  /** Mech'in bot izi: topuk ve burun levhası, aralarında sıkışmış zemin. */
+  bootPrint: 'fx-boot-print',
   scorch: 'fx-scorch',
   blast: 'fx-blast',
   ring: 'fx-ring',
@@ -67,15 +77,34 @@ const TANK_PART_URLS: Readonly<Record<TankId, Readonly<Record<TankPart, string>>
   dart: { hull: dartHullUrl, turret: dartTurretUrl, feeler: dartFeelerUrl },
 };
 
-/** Süzülen araçların parçaları: pervane döner, gövde ve itici ayrı katmandır. */
-export type HoverPart = 'hull' | 'pod' | 'fan' | 'turret';
-const HOVER_PARTS: readonly HoverPart[] = ['hull', 'pod', 'fan', 'turret'];
+/** Süzülen araçların parçaları: pervane döner, gövde ve itici ayrı katmandır; `gun` yan toplardır. */
+export type HoverPart = 'hull' | 'pod' | 'fan' | 'turret' | 'gun';
+const HOVER_BASE_PARTS: readonly HoverPart[] = ['hull', 'pod', 'fan', 'turret'];
+/** Yan topları (`HoverArt.guns`) olan araçlar bir parça daha yükler. */
+const HOVER_PARTS: Readonly<Record<HoverId, readonly HoverPart[]>> = {
+  manta: HOVER_BASE_PARTS,
+  barracuda: HOVER_BASE_PARTS,
+  leviathan: [...HOVER_BASE_PARTS, 'gun'],
+};
+
+/** İki bacaklı robotun parçaları: gövde, uyluk/baldır şeritleri, eklem diski, ayak ve silah kolu. */
+export type MechPart = 'hull' | 'thigh' | 'shin' | 'joint' | 'foot' | 'arm';
+const MECH_PARTS: readonly MechPart[] = ['hull', 'thigh', 'shin', 'joint', 'foot', 'arm'];
+
+export function mechTexture(id: MechId, part: MechPart): string {
+  return `${id}-${part}`;
+}
+
+/** Mech'in parçasının atlas kare adı (`<araç>/<parça>`). */
+export function mechFrame(id: MechId, part: MechPart): string {
+  return `${id}/${part}`;
+}
 
 export function hoverTexture(id: HoverId, part: HoverPart): string {
   return `${id}-${part}`;
 }
 
-/** Süzülen araç klasörleri (`assets/vehicles/<araç>/`); tek elemanlı süslü parantez eşleşmediğinden desen genel kalır. */
+/** Süzülen araç ve mech klasörleri (`assets/vehicles/<araç>/`); tek elemanlı süslü parantez eşleşmediğinden desen genel kalır. */
 const HOVER_PART_URLS = import.meta.glob('../assets/vehicles/*/*.svg', {
   query: '?url',
   import: 'default',
@@ -130,6 +159,17 @@ export function addSpiderImage(
   return scene.add.image(x, y, VEHICLE_ATLAS, spiderFrame(look, part));
 }
 
+/** Mech parçasının atlas karesiyle bir görüntü nesnesi yaratır. */
+export function addMechImage(
+  scene: Phaser.Scene,
+  id: MechId,
+  part: MechPart,
+  x = 0,
+  y = 0,
+): Phaser.GameObjects.Image {
+  return scene.add.image(x, y, VEHICLE_ATLAS, mechFrame(id, part));
+}
+
 /** Süzülen araç parçasının atlas karesiyle bir görüntü nesnesi yaratır. */
 export function addHoverImage(
   scene: Phaser.Scene,
@@ -168,7 +208,10 @@ function bakeVehicleAtlas(scene: Phaser.Scene): void {
       })),
     ),
     ...HOVER_IDS.flatMap((id) =>
-      HOVER_PARTS.map((part) => ({ key: hoverTexture(id, part), frame: hoverFrame(id, part) })),
+      HOVER_PARTS[id].map((part) => ({ key: hoverTexture(id, part), frame: hoverFrame(id, part) })),
+    ),
+    ...MECH_IDS.flatMap((id) =>
+      MECH_PARTS.map((part) => ({ key: mechTexture(id, part), frame: mechFrame(id, part) })),
     ),
   ];
   for (const { key, frame } of sources) {
@@ -206,11 +249,17 @@ export function queueSpiderTextures(loader: Phaser.Loader.LoaderPlugin): void {
   }
 }
 
-/** Süzülen araç parçalarını yükleme kuyruğuna ekler (BootScene `preload`). */
+/** Süzülen araç ve mech parçalarını yükleme kuyruğuna ekler (BootScene `preload`). */
 export function queueHoverTextures(loader: Phaser.Loader.LoaderPlugin): void {
   for (const id of HOVER_IDS) {
-    for (const part of HOVER_PARTS)
+    for (const part of HOVER_PARTS[id])
       loader.svg(hoverTexture(id, part), HOVER_PART_URLS[`../assets/vehicles/${id}/${part}.svg`], {
+        scale: TEXTURE_SCALE,
+      });
+  }
+  for (const id of MECH_IDS) {
+    for (const part of MECH_PARTS)
+      loader.svg(mechTexture(id, part), HOVER_PART_URLS[`../assets/vehicles/${id}/${part}.svg`], {
         scale: TEXTURE_SCALE,
       });
   }
@@ -319,6 +368,27 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
     g.beginPath();
     g.arc(8, 8, 3.6, 0, Math.PI * 2);
     g.fill();
+  });
+  // Mech bot izi: yola paralel uzun levha. Orta oluk, enine pabuç çukurları ve kenarlara itilmiş toprak
+  // sırtı; ucu hafif daralır. Genişlik ve boy ölçeği izi basan ayaktan gelir.
+  canvasTexture(scene, TEXTURE.bootPrint, 32, 16, (g) => {
+    g.fillStyle = 'rgba(255,255,255,0.42)';
+    g.beginPath();
+    g.moveTo(1, 2);
+    g.lineTo(26, 2);
+    g.lineTo(31, 5);
+    g.lineTo(31, 11);
+    g.lineTo(26, 14);
+    g.lineTo(1, 14);
+    g.closePath();
+    g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.95)';
+    for (let at = 3; at < 28; at += 4) g.fillRect(at, 3.5, 2, 9);
+    g.fillStyle = 'rgba(255,255,255,0.7)';
+    g.fillRect(1, 0.5, 29, 1.5);
+    g.fillRect(1, 14, 29, 1.5);
+    g.fillStyle = 'rgba(0,0,0,0.55)';
+    g.fillRect(14, 7.4, 17, 1.2);
   });
   // Yanık: merkezde koyu, dışa doğru lekeli sönen iz. Lekeler sabit bir
   // karma dizisiyle yerleşir; doku her açılışta aynıdır.

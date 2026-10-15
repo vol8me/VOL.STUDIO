@@ -49,6 +49,11 @@ const NAME_KEYS = {
   widow: 'voltest:garage.vehicles.widow.name',
   goliath: 'voltest:garage.vehicles.goliath.name',
   manta: 'voltest:garage.vehicles.manta.name',
+  barracuda: 'voltest:garage.vehicles.barracuda.name',
+  leviathan: 'voltest:garage.vehicles.leviathan.name',
+  warhound: 'voltest:garage.vehicles.warhound.name',
+  templar: 'voltest:garage.vehicles.templar.name',
+  juggernaut: 'voltest:garage.vehicles.juggernaut.name',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 const CLASS_KEYS = {
@@ -59,6 +64,11 @@ const CLASS_KEYS = {
   widow: 'voltest:garage.vehicles.widow.class',
   goliath: 'voltest:garage.vehicles.goliath.class',
   manta: 'voltest:garage.vehicles.manta.class',
+  barracuda: 'voltest:garage.vehicles.barracuda.class',
+  leviathan: 'voltest:garage.vehicles.leviathan.class',
+  warhound: 'voltest:garage.vehicles.warhound.class',
+  templar: 'voltest:garage.vehicles.templar.class',
+  juggernaut: 'voltest:garage.vehicles.juggernaut.class',
 } as const satisfies Record<VehicleId, MessageKey>;
 
 /** Kart kademesi: CORE kartın nadirlik gösterimi araç sınıfının ağırlığını taşır. */
@@ -70,6 +80,11 @@ const TIER = {
   widow: 'legendary',
   goliath: 'legendary',
   manta: 'epic',
+  barracuda: 'rare',
+  leviathan: 'legendary',
+  warhound: 'rare',
+  templar: 'epic',
+  juggernaut: 'legendary',
 } as const satisfies Record<VehicleId, CardRarity>;
 
 const STAT_KEYS = {

@@ -2,7 +2,7 @@ import type { WeaponStyle } from './tank';
 
 /**
  * Silahın görünümü: mermi izi ve ağız parlaması rengi ile gövde çarpanları. Her silah kendi
- * rengiyle okunur (kehribar kabuk, turuncu ağır mermi, buz mavisi ray, kızıl plazma, zehir yeşili iğne, mor yay); böylece
+ * rengiyle okunur (kehribar kabuk, turuncu ağır mermi, buz mavisi ray, kızıl plazma, zehir yeşili iğne, mor yay, limon otomatik top, pembe döner makineli, zümrüt saçma, derin mavi mızrak, sedef havan); böylece
  * kimin ateş ettiği mermiden de anlaşılır. Çarpanlar `FX.shell` ölçülerine uygulanır.
  */
 export interface ShotLook {
@@ -23,6 +23,11 @@ export const SHOT_LOOK: Readonly<Record<WeaponStyle, ShotLook>> = {
   plasma: { glow: 0xff5a6e, hot: 0xffe4e8, length: 1.1, width: 1.15, halo: 1.25 },
   needle: { glow: 0x9dff3a, hot: 0xf3ffd6, length: 1.7, width: 0.55, halo: 0.9 },
   arc: { glow: 0xb15cff, hot: 0xf4e6ff, length: 1.35, width: 0.7, halo: 1.1 },
+  autocannon: { glow: 0xffe45e, hot: 0xfffbe0, length: 1.25, width: 0.8, halo: 0.9 },
+  gatling: { glow: 0xff7ad9, hot: 0xffe6f6, length: 0.9, width: 0.6, halo: 0.7 },
+  flak: { glow: 0x3ddc97, hot: 0xdcfff0, length: 0.7, width: 0.85, halo: 0.8 },
+  lance: { glow: 0x3a6bff, hot: 0xdce6ff, length: 2.4, width: 1.3, halo: 1.5 },
+  howitzer: { glow: 0xffd0a0, hot: 0xffffff, length: 1.2, width: 1.9, halo: 1.9 },
 };
 
 /** Sunum efektlerinin ayarları; renkler `palette.ts`ten gelir. */
@@ -102,7 +107,18 @@ export const FX = {
     depth: 2,
   },
   /** Örümcek ayak izi: yere basan sivri pençenin açtığı küçük delik; yoğunluğu ve ömrü palet izinden kısadır. */
-  feet: { capacity: 700, lifeMs: 9000, holdShare: 0.35, alpha: 0.5, depth: 2, refHalfWidth: 22 },
+  feet: {
+    capacity: 700,
+    lifeMs: 9000,
+    holdShare: 0.35,
+    alpha: 0.5,
+    depth: 2,
+    refHalfWidth: 22,
+    /** Mech bot izi: pençe deliğinden büyük ve kalıcıdır, ama iki bacaklı araç az iz bırakır. */
+    bootCapacity: 260,
+    bootLifeMs: 12000,
+    bootAlpha: 0.55,
+  },
   /** Ekran dışındaki araçların izi/lekesi bırakılmaz; görünen dikdörtgen bu pay kadar genişletilir (birim). */
   cullMargin: 700,
   /** Kayma izi: kayan paletin temas noktasının yerde bıraktığı sürekli çizgi. */

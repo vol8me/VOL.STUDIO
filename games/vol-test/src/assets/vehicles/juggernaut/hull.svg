@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="78" height="58" viewBox="0 0 78 58">
+  <defs>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c8a58c"/>
+      <stop offset="0.5" stop-color="#845841"/>
+      <stop offset="1" stop-color="#33201a"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9b8a0"/>
+      <stop offset="0.5" stop-color="#94684f"/>
+      <stop offset="1" stop-color="#40281f"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4f3a30"/>
+      <stop offset="1" stop-color="#150d09"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="0.4" cy="0.4" r="0.65">
+      <stop offset="0" stop-color="#fff8ef"/>
+      <stop offset="0.45" stop-color="#ffd0a0"/>
+      <stop offset="1" stop-color="#7a4310"/>
+    </radialGradient>
+    <linearGradient id="vent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241711"/>
+      <stop offset="1" stop-color="#0a0605"/>
+    </linearGradient>
+    <radialGradient id="core" cx="0.5" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.4" stop-color="#ffd0a0"/>
+      <stop offset="1" stop-color="#8a3a10"/>
+    </radialGradient>
+  </defs>
+  <g transform="scale(1 0.8056)">
+  <path d="M21 14L30 5L56 5L74 17V55L56 67H30L21 58L12 50V22Z" fill="url(#deck)" stroke="#0d1217" stroke-width="1.3" stroke-linejoin="round"/>
+  <path d="M4 22L11 14H25V58H11L4 50Z" fill="url(#dark)" stroke="#0d1217" stroke-width="1.2" stroke-linejoin="round"/>
+  <g stroke="#ffd0a0" stroke-opacity=".34" stroke-width=".9" stroke-linecap="round">
+    <path d="M6.6 24H22.6M6.6 29H22.6M6.6 34H22.6M6.6 39H22.6M6.6 44H22.6M6.6 49H22.6"/>
+  </g>
+  <rect x="9" y="26" width="6" height="20" rx="1.4" fill="url(#vent)" stroke="#0d1217" stroke-width=".8"/>
+  <circle cx="12" cy="36" r="3.4" fill="url(#core)" stroke="#0d1217" stroke-width=".7"/>
+  <path d="M30 12H54L66 21V51L54 60H30L25 54V18Z" fill="url(#plate)" stroke="#0d1217" stroke-opacity=".85" stroke-width=".9" stroke-linejoin="round"/>
+  <path d="M36 12.4V59.6M44 12.2V59.8" stroke="#0d1217" stroke-opacity=".5" stroke-width=".7"/>
+  <path d="M50 23L68 26V46L50 49Z" fill="url(#deck)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M54 28L66.4 29.8V42.2L54 44Z" fill="#0d1217" fill-opacity=".9"/>
+  <path d="M55.4 29.6L65 30.9V41.1L55.4 42.4Z" fill="url(#glass)" stroke="#0d1217" stroke-width=".5" stroke-linejoin="round"/>
+  <path d="M57 32L63 32.9" stroke="#ffffff" stroke-opacity=".8" stroke-width=".7" stroke-linecap="round"/>
+  <path d="M30 0.8H60L68 7V14.5H26Z" fill="url(#plate)" stroke="#0d1217" stroke-width="1.1" stroke-linejoin="round"/>
+  <path d="M30 57.5H68V65L60 71.2H30L26 66Z" fill="url(#plate)" stroke="#0d1217" stroke-width="1.1" stroke-linejoin="round"/>
+  <g stroke="#0d1217" stroke-opacity=".55" stroke-width=".7" stroke-linecap="round">
+    <path d="M32 4H62M31 7.4H66M30 10.8H66M30 61H66M31 64.4H62M32 67.8H58"/>
+  </g>
+  <g stroke="#ffd0a0" stroke-opacity=".85" stroke-width=".85" stroke-linecap="round" fill="none">
+    <path d="M70 22V50"/><path d="M26 15.6H32M26 56.4H32"/>
+  </g>
+  <g fill="#e2c0a6" stroke="#0d1217" stroke-width=".5">
+    <circle cx="33" cy="16" r=".95"/><circle cx="33" cy="56" r=".95"/>
+    <circle cx="49" cy="14.4" r=".95"/><circle cx="49" cy="57.6" r=".95"/>
+    <circle cx="62" cy="20" r=".95"/><circle cx="62" cy="52" r=".95"/>
+  </g>
+  </g>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="40" viewBox="0 0 50 40">
+  <defs>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a9b98e"/>
+      <stop offset="0.5" stop-color="#66754f"/>
+      <stop offset="1" stop-color="#2a3220"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c4d1a8"/>
+      <stop offset="0.5" stop-color="#7d8d62"/>
+      <stop offset="1" stop-color="#3a4529"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#454d38"/>
+      <stop offset="1" stop-color="#14180f"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="0.4" cy="0.4" r="0.65">
+      <stop offset="0" stop-color="#fff0fb"/>
+      <stop offset="0.45" stop-color="#ff7ad9"/>
+      <stop offset="1" stop-color="#6a1257"/>
+    </radialGradient>
+    <linearGradient id="vent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#232a1a"/>
+      <stop offset="1" stop-color="#0a0c07"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d7e2bf"/>
+      <stop offset="0.5" stop-color="#8a9a6c"/>
+      <stop offset="1" stop-color="#3f4a2c"/>
+    </linearGradient>
+  </defs>
+  <g transform="scale(1 0.8696)">
+  <path d="M14 11L19 6L38 6L47 12.6V33.4L38 40L19 40L14 35Z" fill="url(#deck)" stroke="#0d1217" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M3 14L8.4 10.4H16.6V35.6H8.4L3 32Z" fill="url(#dark)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M5.2 16.4H14.6M5.2 19.6H14.6M5.2 22.8H14.6M5.2 26H14.6M5.2 29.2H14.6" stroke="#ff7ad9" stroke-opacity=".38" stroke-width=".75" stroke-linecap="round"/>
+  <path d="M6 14.8H15.4V31.2H6" fill="none" stroke="#0d1217" stroke-opacity=".6" stroke-width=".6"/>
+  <path d="M20 9.2H36.6L43.6 14.4V31.6L36.6 36.8H20L17 33.2V12.8Z" fill="url(#plate)" stroke="#0d1217" stroke-opacity=".8" stroke-width=".75" stroke-linejoin="round"/>
+  <path d="M24 9.6V36.4M30 9.4V36.6" stroke="#0d1217" stroke-opacity=".5" stroke-width=".55"/>
+  <path d="M33 15L43 17.2V28.8L33 31Z" fill="url(#deck)" stroke="#0d1217" stroke-width=".85" stroke-linejoin="round"/>
+  <path d="M36 18.6L41.4 19.6V26.4L36 27.4Z" fill="#0d1217" fill-opacity=".88"/>
+  <path d="M36.6 19.4L40.6 20.2V25.8L36.6 26.6Z" fill="url(#glass)" stroke="#0d1217" stroke-width=".4" stroke-linejoin="round"/>
+  <path d="M37.6 20.6L39.6 21" stroke="#ffffff" stroke-opacity=".8" stroke-width=".55" stroke-linecap="round"/>
+  <path d="M19 0.8H36.4L39.4 4.6V11.4H17Z" fill="url(#shield)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M21 3.4H35M21 6H37.2M21 8.6H37.6" stroke="#0d1217" stroke-opacity=".55" stroke-width=".55" stroke-linecap="round"/>
+  <path d="M19.4 2L36 2" stroke="#ffffff" stroke-opacity=".45" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M20 35.2H38.4L41 39.4V43.6H18.4Z" fill="url(#plate)" stroke="#0d1217" stroke-width="1" stroke-linejoin="round"/>
+  <circle cx="29.6" cy="40.2" r="3.6" fill="#0d1217" fill-opacity=".8"/>
+  <circle cx="29.6" cy="40.2" r="2.6" fill="url(#vent)" stroke="#ff7ad9" stroke-opacity=".7" stroke-width=".5"/>
+  <g stroke="#ff7ad9" stroke-opacity=".8" stroke-width=".65" stroke-linecap="round" fill="none">
+    <path d="M44.4 14.4V31.6"/><path d="M16 10.2H20M16 35.8H20"/>
+  </g>
+  <g fill="#9cac82" stroke="#0d1217" stroke-width=".4">
+    <circle cx="24" cy="12.6" r=".75"/><circle cx="24" cy="33.4" r=".75"/>
+    <circle cx="35" cy="11.2" r=".75"/><circle cx="35" cy="34.8" r=".75"/>
+  </g>
+  </g>
+</svg>

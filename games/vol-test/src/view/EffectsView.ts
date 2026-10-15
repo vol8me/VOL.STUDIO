@@ -234,9 +234,11 @@ export class EffectsView {
     view.height = height;
   }
 
-  /** Örümceğin yere basan pençesi: gövdenin baktığı yöne ayak izi basar (ekran dışındaysa basmaz). */
-  footprint(x: number, y: number, angle: number, scale: number): void {
-    if (this.onScreen(x, y)) this.feet.print(x, y, angle, scale);
+  /** Yere basan ayak: pençe deliği (örümcek) ya da `width` verilince bot izi (mech); ekran dışındaysa basmaz. */
+  footprint(x: number, y: number, angle: number, scale: number, width?: number): void {
+    if (!this.onScreen(x, y)) return;
+    if (width === undefined) this.feet.print(x, y, angle, scale);
+    else this.feet.printBoot(x, y, angle, scale, width);
   }
 
   private onScreen(x: number, y: number): boolean {

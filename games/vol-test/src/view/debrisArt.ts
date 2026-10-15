@@ -2,13 +2,16 @@ import { DEBRIS } from '@/config/debris';
 import { HOVER_ART } from '@/config/hoverView';
 import { SPIDER_LOOKS, type SpiderLook } from '@/config/spiders';
 import { TANK_ART, treadView } from '@/config/tankView';
-import type { HoverId, VehicleSpec } from '@/config/vehicles';
+import { MECH_ART } from '@/config/mechView';
+import type { HoverId, MechId, VehicleSpec } from '@/config/vehicles';
 import {
   VEHICLE_ATLAS,
   TEXTURE,
   TEXTURE_SCALE,
   hoverFrame,
   type HoverPart,
+  mechFrame,
+  type MechPart,
   shardTexture,
   spiderFrame,
   tankTexture,
@@ -44,6 +47,18 @@ function spiderPiece(look: SpiderLook, part: 'femur' | 'tibia' | 'tarsus' | 'joi
     frame: spiderFrame(look.id, part),
     originX: box.pivotX / box.width,
     originY: box.pivotY / box.height,
+    scale: INV,
+    tint: null,
+  };
+}
+
+/** İki bacaklı robotun bir parçasının enkaz sanatı: şeritler başlarından, ayak bileğinden döner. */
+function mechPiece(id: MechId, part: MechPart, originX = 0.5): ChunkArt {
+  return {
+    texture: VEHICLE_ATLAS,
+    frame: mechFrame(id, part),
+    originX,
+    originY: 0.5,
     scale: INV,
     tint: null,
   };
@@ -90,6 +105,15 @@ export function shedArt(spec: VehicleSpec): readonly ChunkArt[] {
     case 'hover':
       pieces = [hoverPiece(spec.id, 'pod'), hoverPiece(spec.id, 'fan'), shards[0]];
       break;
+    case 'mech': {
+      const foot = MECH_ART[spec.id].foot;
+      pieces = [
+        mechPiece(spec.id, 'shin', 0),
+        mechPiece(spec.id, 'foot', foot.ankleX / foot.width),
+        shards[0],
+      ];
+      break;
+    }
   }
   shedCache.set(spec.id, pieces);
   return pieces;
@@ -118,6 +142,14 @@ export function wreckArt(spec: VehicleSpec): WreckArt {
       hoverPiece(spec.id, 'pod'),
       hoverPiece(spec.id, 'pod'),
       hoverPiece(spec.id, 'fan'),
+    ];
+  } else if (spec.kind === 'mech') {
+    const arm = MECH_ART[spec.id].arm;
+    big = [
+      mechPiece(spec.id, 'arm', arm.pivotX / arm.width),
+      mechPiece(spec.id, 'thigh', 0),
+      mechPiece(spec.id, 'shin', 0),
+      mechPiece(spec.id, 'foot', MECH_ART[spec.id].foot.ankleX / MECH_ART[spec.id].foot.width),
     ];
   } else if (spec.kind === 'tank') {
     const art = TANK_ART[spec.id];

@@ -16,8 +16,17 @@ import type { TankFrame, VehicleView } from './VehicleView';
 import { WATER_VIEW } from '@/config/waterView';
 import { setCharred, sinkRoot } from './charring';
 
-/** Yere basan pençenin izi: dünya konumu, gövde yönü ve boy ölçeği. */
-export type FootPrintSink = (x: number, y: number, angle: number, scale: number) => void;
+/**
+ * Yere basan ayağın izi: dünya konumu, gövde yönü ve boy ölçeği. `width` verilirse bu bir bot izidir
+ * (mech): `scale` izin boyu, `width` eni (dünya birimi); verilmezse pençe deliğidir.
+ */
+export type FootPrintSink = (
+  x: number,
+  y: number,
+  angle: number,
+  scale: number,
+  width?: number,
+) => void;
 
 const INV = 1 / TEXTURE_SCALE;
 /** Gövdenin kırık yana en çok çökmesi (dünya birimi, kırık yan tam) ve çökmenin oturma süresi (ms). */

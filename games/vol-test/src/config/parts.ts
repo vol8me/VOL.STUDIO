@@ -44,6 +44,22 @@ export const PARTS = {
     /** İtici koparken gövdenin sarsılması [0, 1]. */
     jolt: 0.6,
   },
+  mech: {
+    /** Tek bir bacağın dayanımı: aracın canının oranı (iki bacak da gövdenin yanındadır, kolay kopar). */
+    healthShare: 0.42,
+    sideStart: 0.3,
+    criticalStart: 0.85,
+    criticalGain: 1.35,
+    /** Kopan her bacak tavanı ve ivmeyi bu oranda keser; taban topal yürüyüşün alt sınırıdır. */
+    legLoss: 0.42,
+    floor: 0.3,
+    /** Tek bacak eksikse yürüyüş o yana sürüklenir (rad/s, tam hızda). */
+    drift: 1.7,
+    /** Topal bacağın her adımında çöküş: hız çukuru ve gövdenin o yana savrulması. */
+    stumble: { stride: 64, dip: 0.55, sway: 2.2 },
+    /** Bacak koparken gövdenin sarsılması [0, 1]. */
+    jolt: 0.7,
+  },
   walker: {
     /** Tek bir bacağın dayanımı: aracın canının oranı. */
     healthShare: 0.3,

@@ -74,8 +74,8 @@ export const WATER_VIEW = {
     minDepth: 0.04,
     minSpeed: 24,
     /** Şasi türüne göre işaret yarıçapı ve iki işaret arasındaki yol (birim). */
-    radius: { tank: 30, walker: 24, hover: 20 },
-    spacing: { tank: 34, walker: 28, hover: 24 },
+    radius: { tank: 30, walker: 24, hover: 20, mech: 28 },
+    spacing: { tank: 34, walker: 28, hover: 24, mech: 32 },
     color: 0xe8f6fb,
     /** Kırık buz deliği: koyu su ve açık kenar; yavaş yavaş yeniden donarak kapanır. */
     hole: { color: 0x0b2f48, edge: 0xdff1f7, lifeMs: 7000, edgeWidth: 1.4, points: 9 },

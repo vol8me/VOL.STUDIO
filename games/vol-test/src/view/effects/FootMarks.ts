@@ -13,6 +13,7 @@ const SIDE = 7;
  */
 export class FootMarks {
   private readonly decals: DecalPool;
+  private readonly boots: DecalPool;
 
   constructor(scene: Phaser.Scene, capacityScale = 1) {
     const feet = FX.feet;
@@ -24,18 +25,33 @@ export class FootMarks {
       lifeMs: feet.lifeMs,
       holdShare: feet.holdShare,
     });
+    this.boots = new DecalPool(scene, {
+      texture: TEXTURE.bootPrint,
+      tint: PALETTE.treadMark,
+      capacity: Math.max(1, Math.round(feet.bootCapacity * capacityScale)),
+      depth: feet.depth,
+      lifeMs: feet.bootLifeMs,
+      holdShare: feet.holdShare,
+    });
   }
 
-  /** `scale` aracın boyuna göredir (1 = referans yürüyücü). */
+  /** Mech'in bot izi: `length` yön boyunca, `width` yan eksende (dünya birimi). */
+  printBoot(x: number, y: number, angle: number, length: number, width: number): void {
+    this.boots.place(x, y, angle, length, width, FX.feet.bootAlpha);
+  }
+
+  /** `scale` aracın boyuna göredir (1 = referans yürüyücü). Bot izi `printBoot`tur. */
   print(x: number, y: number, angle: number, scale: number): void {
     this.decals.place(x, y, angle, SIDE * scale, SIDE * scale, FX.feet.alpha);
   }
 
   fade(deltaMs: number): void {
     this.decals.fade(deltaMs);
+    this.boots.fade(deltaMs);
   }
 
   destroy(): void {
     this.decals.destroy();
+    this.boots.destroy();
   }
 }

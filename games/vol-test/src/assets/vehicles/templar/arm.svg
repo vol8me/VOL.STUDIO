@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="35" height="14" viewBox="0 0 35 14">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9aa28a"/>
+      <stop offset="0.5" stop-color="#454c37"/>
+      <stop offset="1" stop-color="#14180f"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c4d1a8"/>
+      <stop offset="0.5" stop-color="#7d8d62"/>
+      <stop offset="1" stop-color="#3a4529"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d6d0c0"/>
+      <stop offset="0.5" stop-color="#8a8474"/>
+      <stop offset="1" stop-color="#3c382e"/>
+    </linearGradient>
+  </defs>
+  <path d="M4 3.4L9.4 1.6H15.6L17.4 3V11L15.6 12.4H9.4L4 10.6L1.8 8.6V5.4Z" fill="url(#plate)" stroke="#0d1217" stroke-width=".95" stroke-linejoin="round"/>
+  <path d="M5 4H13.6" stroke="#ffffff" stroke-opacity=".4" stroke-width=".55" stroke-linecap="round"/>
+  <circle cx="8.4" cy="7" r="2.6" fill="#0d1217" fill-opacity=".82"/>
+  <circle cx="8.4" cy="7" r="1.4" fill="#ff7ad9"/>
+  <rect x="16.4" y="2.9" width="15.6" height="2.2" rx=".8" fill="url(#steel)" stroke="#0d1217" stroke-width=".55"/>
+  <rect x="16.4" y="5.9" width="15.6" height="2.2" rx=".8" fill="url(#steel)" stroke="#0d1217" stroke-width=".55"/>
+  <rect x="16.4" y="8.9" width="15.6" height="2.2" rx=".8" fill="url(#steel)" stroke="#0d1217" stroke-width=".55"/>
+  <path d="M17.4 3.5H31M17.4 6.5H31M17.4 9.5H31" stroke="#d8dec8" stroke-opacity=".45" stroke-width=".4" stroke-linecap="round"/>
+  <rect x="19.6" y="2.2" width="1.6" height="9.6" rx=".4" fill="url(#band)" stroke="#0d1217" stroke-width=".45"/>
+  <rect x="25.2" y="2.2" width="1.6" height="9.6" rx=".4" fill="url(#band)" stroke="#0d1217" stroke-width=".45"/>
+  <rect x="30.2" y="1.9" width="3.6" height="10.2" rx="1" fill="#2e3524" stroke="#0d1217" stroke-width=".6"/>
+  <path d="M31.2 3.6H32.8M31.2 7H32.8M31.2 10.4H32.8" stroke="#0a0c07" stroke-width=".9" stroke-linecap="round"/>
+  <path d="M33 5V9" stroke="#ff7ad9" stroke-opacity=".85" stroke-width=".6" stroke-linecap="round"/>
+</svg>

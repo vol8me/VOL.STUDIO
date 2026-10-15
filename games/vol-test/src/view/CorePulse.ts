@@ -1,4 +1,4 @@
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
 import { TEXTURE, TEXTURE_SCALE } from './textures';
 
 const INV = 1 / TEXTURE_SCALE;
@@ -24,13 +24,14 @@ export class CorePulse {
   /**
    * @param scale araç çekirdeğinin ölçeği (Striker 0.75); nabız bunu `CORE_REFERENCE`a göre büyütür.
    * @param tint çekirdek rengi.
+   * @param fill doku turkuazdır: çarpan ton sıcak renkleri yeşile boğar; `fill` rengi dokunun
+   *   saydamlığına olduğu gibi boyar (mech'in sarı, pembe ve turuncu çekirdekleri bunu ister).
    */
-  constructor(scene: Phaser.Scene, scale: number, tint: number) {
+  constructor(scene: Phaser.Scene, scale: number, tint: number, fill = false) {
     this.gain = scale / CORE_REFERENCE;
-    this.image = scene.add
-      .image(0, 0, TEXTURE.core)
-      .setScale(INV * this.gain)
-      .setTint(tint);
+    const image = scene.add.image(0, 0, TEXTURE.core).setScale(INV * this.gain);
+    this.image = image.setTint(tint);
+    if (fill) this.image.setTintMode(Phaser.TintModes.FILL);
   }
 
   /**

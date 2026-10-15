@@ -151,15 +151,20 @@ Oynanabilir her araç bir `VehicleSpec`tir (`src/config/vehicles.ts`): kimlik, c
 indeksidir; araç eklenirse sona eklenir, yeniden sıralanmaz. `Vehicle` tanımdan şasi,
 silah beklemesi ve can kurar; simülasyon, öngörü, ses ve görünüm araca değil tanıma bakar.
 
-| Araç     | Rol                       | Can | Hız | Dönüş | Atış                                  |
-| -------- | ------------------------- | --- | --- | ----- | ------------------------------------- |
-| Striker  | Dengeli ana tank          | 130 | 230 | 3,0   | 36 hasar, 650 ms, kabuk               |
-| Bulwark  | Ağır kuşatma tankı        | 175 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi         |
-| Dart     | Hafif, hızlı keşif tankı  | 90  | 330 | 4,4   | 22 hasar, 380 ms, uzun menzilli ray   |
-| Arachnid | Bacaklı savaş canavarı    | 108 | 162 | 2,7   | 21 hasar, 470 ms, iki plazma topu     |
-| Widow    | Bacaklı keskin nişancı    | 92  | 160 | 3,4   | 8 hasar, 230 ms, iki iğne atıcı       |
-| Goliath  | Devasa kuşatma yürüyücüsü | 360 | 86  | 1,5   | 38 hasar, 760 ms, iki ağır havan      |
-| Manta    | Süzülen avcı              | 120 | 240 | 5,2   | 9 hasar, 150 ms, mor yay tekrarlayıcı |
+| Araç       | Rol                       | Can | Hız | Dönüş | Atış                                         |
+| ---------- | ------------------------- | --- | --- | ----- | -------------------------------------------- |
+| Striker    | Dengeli ana tank          | 130 | 230 | 3,0   | 36 hasar, 650 ms, kabuk                      |
+| Bulwark    | Ağır kuşatma tankı        | 175 | 158 | 1,9   | 62 hasar, 1250 ms, ağır mermi                |
+| Dart       | Hafif, hızlı keşif tankı  | 90  | 330 | 4,4   | 22 hasar, 380 ms, uzun menzilli ray          |
+| Arachnid   | Bacaklı savaş canavarı    | 108 | 162 | 2,7   | 21 hasar, 470 ms, iki plazma topu            |
+| Widow      | Bacaklı keskin nişancı    | 92  | 160 | 3,4   | 8 hasar, 230 ms, iki iğne atıcı              |
+| Goliath    | Devasa kuşatma yürüyücüsü | 360 | 86  | 1,5   | 38 hasar, 760 ms, iki ağır havan             |
+| Manta      | Süzülen avcı              | 120 | 240 | 5,2   | 9 hasar, 150 ms, mor yay tekrarlayıcı        |
+| Barracuda  | Süzülen akıncı            | 120 | 305 | 6,4   | 3×11 hasar, 540 ms, üç namlulu parçacık topu |
+| Leviathan  | Süzülen savaş gemisi      | 170 | 150 | 2,4   | 26 hasar, 540 ms, iki yan mızrak topu        |
+| Warhound   | Mech keşif                | 100 | 225 | 3,6   | 8 hasar, 170 ms, iki kol otomatik topu       |
+| Templar    | Mech hat                  | 190 | 152 | 2,1   | 6 hasar, 105 ms, döner çok namlulu           |
+| Juggernaut | Ağır mech                 | 245 | 96  | 1,3   | 62 hasar, 1050 ms, iki kol havanı            |
 
 Tablo `src/config/vehicles.ts` değerlerinin özetidir; karakter farkı hızlanmadan, dönüşten,
 frenden ve geri tepmeden gelir (`tests/sim/vehicleHandling.test.ts` bu sıralamaları kilitler).
@@ -171,8 +176,9 @@ iki botla iki yönde birçok tohumla dövüşür (`tests/sim/balance.test.ts`, b
 da örümceğin de menzilini ve hızını kullanır). Anma hasarı/s Widow'da düşüktür (isabet, menzil ve
 hızla öder), Goliath'ta canla ve ağır mermiyle, Manta'da kısa menzille ve ince canla öder; bu yüzden anma
 hasarı yalnız %80 aralıkla sınırlıdır. 40 tohumluk son ölçümde her aracın kataloğa karşı toplam galibiyet payı %41-61'dir
-(Striker 44, Bulwark 61, Dart 41, Arachnid 47, Widow 43, Goliath 55, Manta 58); test bu payı %30-70 bandında
-tutar. Karşıtlıklar bilinçlidir ve hiçbiri mutlak değildir: Widow menzilden Arachnid'i ve Goliath'ı yener,
+(Striker 44, Bulwark 61, Dart 41, Arachnid 47, Widow 43, Goliath 55, Manta 58); beş yeni aracın eklenmesinden sonra
+testin dört tohumuyla ölçülen paylar Striker 50, Bulwark 63, Dart 38, Arachnid 48, Widow 47, Goliath 37, Manta 59,
+Barracuda 52, Leviathan 45, Warhound 44, Templar 57, Juggernaut 61'dir; test bu payı %30-70 bandında tutar. Karşıtlıklar bilinçlidir ve hiçbiri mutlak değildir: Widow menzilden Arachnid'i ve Goliath'ı yener,
 Bulwark'ın ağır mermisine ve Dart'ın hızına yenilir; Goliath Striker'ı ve Bulwark'ı ezer, Dart ve Widow
 onu çevikliğiyle oyalar; Bulwark Widow'u ve Dart'ı yener, Arachnid ona baskındır; Striker Dart'ı ezer. Manta çevikliği ve tempoyla
 Dart'ı, Widow'u ve Arachnid'i yer ama Bulwark'ın ağır mermisine ve Goliath'ın gövdesine yenilir (can ve
@@ -242,6 +248,33 @@ gövdeyle yatar ve nefes alır, duyargalar dönüşte geride sürüklenir. Gölg
 daha yüksekten (26 birim) düşer ve gövdeden belirgin ayrılır, araç yerde yüzer görünür. Pervane hızla ve
 atılımla hızlanır; kopan itici kısa koyu bir kütüğe döner, pervanesi durur. Ağız parlaması `sim/muzzle`
 ucundadır. Bot, tank dışı araçlar gibi uzak hedefe atılımla kapanır.
+
+### İki yeni süzülen: Barracuda ve Leviathan
+
+İkisi de Manta'nın şasisini (`Hover`) paylaşır, yalnız sayıları ve silahlanması farklıdır. Barracuda
+gövdeyi tek bir namlu kümesine indirmiş keskin hızlı akıncıdır: `flak` stilinde üç namlu aynı anda
+ateşler (`salvo: [[0, 1, 2]]`, `HoverView` her yuva için ayrı ağız parlaması yakar), menzil kısa,
+mermi dağınıktır; tavan hızı 305'tir ama can 120'dir. Leviathan iki yan top taşıyan ağır süzülen savaş
+gemisidir: toplar (`HoverArt.gun`) kendi yuvalarında `sim/muzzle` açısıyla döner, her biri 1080 ms'de bir
+`lance` atar, birleşik tempo 540 ms'dir; kütlesi büyük, dönüşü yavaştır (`maxTurnRate` 2,4).
+
+### Mech: iki bacaklı robotlar (Warhound, Templar, Juggernaut)
+
+Dördüncü şasi ailesidir (`MechSpec`, `src/sim/mech/Mech.ts`, sayılar `src/config/mech.ts`). Sürüş
+mantığı yürüyücüyle aynıdır (komut hedef hız vektörüdür, gövde harekete döner, nişan yalnız kolları
+sürer) ama iki şey ayırır: robot iki bacaklıdır, adım çukuru (`strideDip`) her ayak basışında hızı
+düşürüp toparlar (faz iki bacağın katettiği yoldan türer, rastgelelik yoktur); tek bacak kopunca
+(`TRACK_LEFT`/`TRACK_RIGHT` biti) tavan ve ivme düşer, robot kopan yana sürüklenir ve o bacağın her
+adımında gövdesi çöker (`PARTS.mech`). Palet izi bırakmaz, her ayak basışı ağırlığına göre toz ve bot
+izi (`FX.feet.boot*`) bırakır. Silah kolları yuvalarında döner ve geri teper; üç robot üç ayrı
+silah stili taşır: Warhound ince `autocannon`, Templar `gatling`, Juggernaut `howitzer`.
+`MechView` bacakları gövdeye göre adım fazından çizer (uyluk ve baldır şeritleri, eklem diskleri,
+ayak); ayak basıldığı yerde kalır, yerinde dönen robot bacaklarını zıt yönde atar.
+
+Sanat `src/assets/vehicles/<araç>/` altında gövde, uyluk, baldır, eklem, ayak ve kol SVG'leridir;
+her robot tek bir enerji rengi taşır (Warhound sarı, Templar pembe, Juggernaut turuncu).
+Üç robotu "gerçek bacaklı yürüyen" sanat olarak üstten bakışta okutmak için bacaklar gövdenin
+dışına çıkar (`trackOffset`); bu bir seçimdir, boyut ve oranın insan beğenisi doğrulaması ayrı iştir.
 
 ### Bacaklı yürüyücüler: Arachnid, Widow ve Goliath
 

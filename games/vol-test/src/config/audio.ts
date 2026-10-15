@@ -48,6 +48,8 @@ export const AUDIO = {
   tracks: { gain: 0.3, rateMin: 0.55, rateMax: 1.6 },
   /** Yürüyücünün bacak adımı döngüsü; palet gümbürtüsünün yerine çalar. */
   legs: { gain: 0.3, rateMin: 0.7, rateMax: 1.5 },
+  /** Mech'in ağır ayak basışı döngüsü; palet gümbürtüsünün yerine çalar. */
+  steps: { gain: 0.34, rateMin: 0.7, rateMax: 1.45 },
   /** Süzülen aracın kaldırma pervanesi uğultusu; palet gümbürtüsünün yerine çalar. */
   fans: { gain: 0.34, rateMin: 0.8, rateMax: 1.6 },
   skid: { gain: 0.32, fullSlide: 120, rateMin: 0.8, rateMax: 1.2 },
@@ -66,6 +68,11 @@ export const AUDIO = {
     widow: { engine: 1.2, engineGain: 0.55, tracks: 1.3 },
     goliath: { engine: 0.5, engineGain: 1.1, tracks: 0.6 },
     manta: { engine: 1.5, engineGain: 0.5, tracks: 1 },
+    barracuda: { engine: 1.4, engineGain: 0.55, tracks: 1.15 },
+    leviathan: { engine: 0.55, engineGain: 1.2, tracks: 0.7 },
+    warhound: { engine: 1.15, engineGain: 0.7, tracks: 1.25 },
+    templar: { engine: 0.9, engineGain: 0.9, tracks: 0.95 },
+    juggernaut: { engine: 0.5, engineGain: 1.2, tracks: 0.62 },
   } satisfies Record<VehicleId, VehicleVoice>,
   /**
    * Kabuk referanstır; ağır mermi gümbürder. Ray, plazma, iğne ve yayın kendi atış teslimi vardır (`shotAsset`),
@@ -78,6 +85,11 @@ export const AUDIO = {
     plasma: { rate: 1, gain: 1 },
     needle: { rate: 1, gain: 0.9 },
     arc: { rate: 1, gain: 0.85 },
+    autocannon: { rate: 1, gain: 1 },
+    gatling: { rate: 1, gain: 0.9 },
+    flak: { rate: 1, gain: 1 },
+    lance: { rate: 1, gain: 1 },
+    howitzer: { rate: 1, gain: 1.1 },
   } satisfies Record<WeaponStyle, WeaponVoice>,
   /** Kendi atış teslimi olan silah stilleri (`loopAssetRoot` altında); olmayan top ailesinden çalar. */
   /** Tek atımlık araç sesleri (`loopAssetRoot` altında): atılım başlangıcı, parça kopması ve boğulma. */

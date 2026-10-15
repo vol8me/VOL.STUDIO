@@ -5,7 +5,7 @@ import type { ChassisKind } from './Chassis';
 /**
  * Şasi parçalarının bit maskesi (`Chassis.parts`): bir bit, kırık bir parçadır. Tankta iki bit yan
  * paletlerdir, süzülen araçta yan iticilerdir (aynı iki bit); yürüyücüde `taraf * 4 + istasyon` bacağı: sol bacaklar 0-3, sağ bacaklar 4-7, önden arkaya
- * (görünümdeki bacak sırasıyla aynı). Maske ağ durumunda tamsayı olarak taşınır ve ara değer ALMAZ.
+ * (görünümdeki bacak sırasıyla aynı); mech'te aynı iki bit sol ve sağ bacaktır. Maske ağ durumunda tamsayı olarak taşınır ve ara değer ALMAZ.
  */
 export const TRACK_LEFT = 1;
 export const TRACK_RIGHT = 2;
@@ -58,6 +58,10 @@ export function partAnchor(spec: VehicleSpec, index: number, out: PartAnchor): P
     case 'hover':
       out.forward = -4;
       out.right = side * spec.hover.trackOffset;
+      break;
+    case 'mech':
+      out.forward = 0;
+      out.right = side * spec.mech.trackOffset;
       break;
     case 'walker': {
       const stations: readonly number[] = PARTS.walker.stations[spec.id];

@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
 import { HOVER_ART, HOVER_VIEW } from '@/config/hoverView';
-import { MANTA } from '@/config/vehicles';
+import { BARRACUDA, LEVIATHAN, MANTA, type HoverSpec } from '@/config/vehicles';
 import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
 import { muzzlePose } from '@/sim/muzzle';
 import { HoverView } from '@/view/HoverView';
@@ -223,5 +223,46 @@ describe('HoverView (manta)', () => {
     expect(particles.every((emitter) => emitter.calls.some(([name]) => name === 'destroy'))).toBe(
       true,
     );
+  });
+});
+
+describe('HoverView (çok yuvalı araçlar)', () => {
+  function buildOf(spec: HoverSpec) {
+    const scene = fakeScene();
+    const lighting = scene.add.container(0, 0);
+    const view = new HoverView(scene as unknown as Phaser.Scene, spec, lighting as never);
+    const byTexture = (key: string) => scene.created.filter((object) => object.args.includes(key));
+    return { view, byTexture };
+  }
+
+  it('Leviathan her yuvaya ayrı yan top ve ayrı ağız parlaması koyar; namlu ucu sim ile çakışır', () => {
+    const { view, byTexture } = buildOf(LEVIATHAN);
+    expect(byTexture(hoverFrame('leviathan', 'gun'))).toHaveLength(2);
+    const flashes = byTexture(TEXTURE.flash);
+    expect(flashes).toHaveLength(2);
+    const pose = frame({ hull: 0.4, turret: -0.8, pitch: 1.5, roll: -2 });
+    view.update(pose, 16);
+    flashes.forEach((flash, index) => {
+      const tip = muzzlePose(pose, LEVIATHAN.armament, index, { x: 0, y: 0, angle: 0 });
+      expect(flash.x).toBeCloseTo(tip.x, 6);
+      expect(flash.y).toBeCloseTo(tip.y, 6);
+      expect(flash.rotation).toBeCloseTo(tip.angle, 9);
+    });
+  });
+
+  it('atış yalnız ateşleyen yuvanın parlamasını yakar', () => {
+    const { view, byTexture } = buildOf(LEVIATHAN);
+    const [first, second] = byTexture(TEXTURE.flash);
+    view.fire(1);
+    expect(first.visible).toBe(false);
+    expect(second.visible).toBe(true);
+    view.update(frame(), HOVER_VIEW.flashMs + 1);
+    expect(second.visible).toBe(false);
+  });
+
+  it('Barracuda üç yuvalı tek taretlidir: yan top yok, üç parlama', () => {
+    const { byTexture } = buildOf(BARRACUDA);
+    expect(byTexture(TEXTURE.flash)).toHaveLength(BARRACUDA.armament.mounts.length);
+    expect(byTexture(hoverFrame('barracuda', 'turret'))).toHaveLength(1);
   });
 });

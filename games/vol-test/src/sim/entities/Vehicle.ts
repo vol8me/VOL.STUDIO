@@ -7,6 +7,7 @@ import { PartWear } from '../combat/PartWear';
 import { Vitality } from '../combat/Vitality';
 import type { Chassis } from '../chassis/Chassis';
 import { Hover } from '../hover/Hover';
+import { Mech } from '../mech/Mech';
 import { Tank } from '../tank/Tank';
 import { Walker } from '../walker/Walker';
 
@@ -49,6 +50,8 @@ export class Vehicle {
         return new Walker(spec.walker, spec.suspension);
       case 'hover':
         return new Hover(spec.hover, spec.suspension);
+      case 'mech':
+        return new Mech(spec.mech, spec.suspension);
     }
   }
 

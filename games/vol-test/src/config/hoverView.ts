@@ -11,6 +11,11 @@ export interface HoverArt {
   readonly fan: { readonly x: number };
   /** Taret resmi ve milinin resim içindeki yeri (milin dikey konumu hep ortadır). */
   readonly turret: { readonly width: number; readonly height: number; readonly pivotX: number };
+  /**
+   * Yan toplar: her silah yuvasında gövde-yerel konumda ayrı dönen resim (`gun.svg`); milin yeri resim
+   * içindedir, dikey konumu hep ortadır. Yoksa araç tek taretlidir ve namlular `turret` resmindedir.
+   */
+  readonly gun?: { readonly width: number; readonly height: number; readonly pivotX: number };
   /** Enerji kimliği: pervane göbeği, itici ışığı ve ağız parlaması bu tondadır. */
   readonly glow: number;
   /** Ağız parlamasının ölçeği ve namlu yayı (vuruş, sertlik, sönüm, azami geri kayma). */
@@ -49,6 +54,55 @@ export const HOVER_ART: Readonly<Record<HoverId, HoverArt>> = {
         tint: 0xc9d1dc,
         glow: 0xb15cff,
         tipSize: 6.5,
+      },
+    },
+  },
+  barracuda: {
+    hull: { width: 52, height: 32 },
+    pod: { width: 40, height: 12, x: -3 },
+    fan: { x: -1 },
+    turret: { width: 38, height: 16, pivotX: 10 },
+    glow: 0x3ddc97,
+    flashScale: 0.75,
+    barrel: { kick: -150, stiffness: 600, damping: 22, max: 3 },
+    nozzle: { x: -21, scale: 0.5 },
+    sensors: {
+      core: { x: -10, y: 0, scale: 0.65, tint: 0x3ddc97 },
+      feelers: {
+        anchorX: -15,
+        anchorY: 10,
+        length: 12,
+        thickness: 2,
+        rest: 0.45,
+        facing: -1,
+        tint: 0xc9d1dc,
+        glow: 0x3ddc97,
+        tipSize: 5.5,
+      },
+    },
+  },
+  leviathan: {
+    hull: { width: 76, height: 62 },
+    pod: { width: 66, height: 20, x: -6 },
+    fan: { x: 0 },
+    turret: { width: 30, height: 16, pivotX: 8 },
+    gun: { width: 38, height: 12, pivotX: 7 },
+    glow: 0x3a6bff,
+    flashScale: 1.1,
+    barrel: { kick: -220, stiffness: 480, damping: 18, max: 4 },
+    nozzle: { x: -36, scale: 0.8 },
+    sensors: {
+      core: { x: -20, y: 0, scale: 0.95, tint: 0x3a6bff },
+      feelers: {
+        anchorX: -30,
+        anchorY: 22,
+        length: 20,
+        thickness: 3,
+        rest: 0.5,
+        facing: -1,
+        tint: 0xc9d1dc,
+        glow: 0x3a6bff,
+        tipSize: 8,
       },
     },
   },

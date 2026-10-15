@@ -56,6 +56,26 @@
       "manta": {
         "name": "Manta",
         "class": "HOVER HUNTER"
+      },
+      "barracuda": {
+        "name": "Barracuda",
+        "class": "HOVER RAIDER"
+      },
+      "leviathan": {
+        "name": "Leviathan",
+        "class": "HOVER GUNSHIP"
+      },
+      "warhound": {
+        "name": "Warhound",
+        "class": "MECH SCOUT"
+      },
+      "templar": {
+        "name": "Templar",
+        "class": "MECH LINE"
+      },
+      "juggernaut": {
+        "name": "Juggernaut",
+        "class": "HEAVY MECH"
       }
     }
   },

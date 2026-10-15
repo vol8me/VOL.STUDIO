@@ -7,6 +7,7 @@ import {
   type WeaponConfig,
 } from './tank';
 import { HOVER, type HoverConfig } from './hover';
+import { MECH, type MechConfig } from './mech';
 import { WALKER, type WalkerConfig } from './walker';
 
 /** Paletli araçlar. */
@@ -18,8 +19,12 @@ export const WALKER_IDS = ['arachnid', 'widow', 'goliath'] as const;
 export type WalkerId = (typeof WALKER_IDS)[number];
 
 /** Süzülen araçlar. */
-export const HOVER_IDS = ['manta'] as const;
+export const HOVER_IDS = ['manta', 'barracuda', 'leviathan'] as const;
 export type HoverId = (typeof HOVER_IDS)[number];
+
+/** İki bacaklı savaş robotları (mech). */
+export const MECH_IDS = ['warhound', 'templar', 'juggernaut'] as const;
+export type MechId = (typeof MECH_IDS)[number];
 
 /** Seçilebilir araçlar; sıra ağ protokolündeki `model` indeksidir, sona eklenir ve yeniden sıralanmaz. */
 export const VEHICLE_IDS = [
@@ -30,7 +35,17 @@ export const VEHICLE_IDS = [
   'widow',
   'goliath',
   'manta',
-] as const satisfies readonly [...typeof TANK_IDS, ...typeof WALKER_IDS, ...typeof HOVER_IDS];
+  'barracuda',
+  'leviathan',
+  'warhound',
+  'templar',
+  'juggernaut',
+] as const satisfies readonly [
+  ...typeof TANK_IDS,
+  ...typeof WALKER_IDS,
+  ...typeof HOVER_IDS,
+  ...typeof MECH_IDS,
+];
 export type VehicleId = (typeof VEHICLE_IDS)[number];
 
 /** Bir aracın en çok taşıyabileceği namlu: atış arabellekleri ve ağ paketi bu tavana göre boyanır. */
@@ -95,10 +110,22 @@ export interface HoverSpec extends VehicleBase {
   readonly hover: HoverConfig;
 }
 
-export type VehicleSpec = TankSpec | WalkerSpec | HoverSpec;
+/**
+ * İki bacaklı mech tanımı: gövdesi yürüdüğü yöne yavaş döner, ağır adımlar atar ve silah kolları
+ * (`armament.mounts`) gövdeden bağımsız nişan alır; bacağı kopan topallar.
+ */
+export interface MechSpec extends VehicleBase {
+  readonly kind: 'mech';
+  readonly id: MechId;
+  readonly mech: MechConfig;
+}
+
+export type VehicleSpec = TankSpec | WalkerSpec | HoverSpec | MechSpec;
 
 /** Şasinin tüm türlerde ortak sayıları (gövde ayak izi, depo, taret hızı). */
-export function chassisConfigOf(spec: VehicleSpec): WalkerConfig | HoverConfig | TankSpec['tank'] {
+export function chassisConfigOf(
+  spec: VehicleSpec,
+): WalkerConfig | HoverConfig | MechConfig | TankSpec['tank'] {
   switch (spec.kind) {
     case 'tank':
       return spec.tank;
@@ -106,6 +133,8 @@ export function chassisConfigOf(spec: VehicleSpec): WalkerConfig | HoverConfig |
       return spec.walker;
     case 'hover':
       return spec.hover;
+    case 'mech':
+      return spec.mech;
   }
 }
 
@@ -471,6 +500,333 @@ export const MANTA: HoverSpec = {
   },
 };
 
+/**
+ * Barracuda: hafif akıncı. Manta'dan küçük ve çok daha hızlıdır, iticileri güçlüdür ama zırhı kâğıt gibidir.
+ * Üç namlulu saçma topu yakın mesafede çok sert vurur, uzakta saçılıp işe yaramaz; bu yüzden hedefin
+ * yanından geçip dönerek ateş eder, atılımla fırlayıp açılır. Hızlı tanklar ve keskin nişancılar ondan
+ * kaçar, ağır ve yavaş araçlar etrafında dönerken ezilir.
+ */
+export const BARRACUDA: HoverSpec = {
+  kind: 'hover',
+  id: 'barracuda',
+  health: 120,
+  hover: {
+    ...HOVER,
+    mass: 620,
+    halfLength: 26,
+    halfWidth: 21,
+    trackOffset: 16,
+    maxSpeed: 305,
+    acceleration: 780,
+    braking: 360,
+    dashMultiplier: 1.6,
+    dashAcceleration: 2300,
+    maxTurnRate: 6.4,
+    turnAcceleration: 42,
+    steerGain: 8,
+    boostCapacity: 70,
+    boostDrain: 160,
+    boostRegen: 34,
+    wallRestitution: 0.6,
+    impactKick: 0.24,
+    turretTurnRate: 8.5,
+  },
+  suspension: {
+    ...SUSPENSION,
+    frequency: 1.9,
+    damping: 0.22,
+    pitchPerAccel: 0.014,
+    rollPerAccel: 0.02,
+    maxOffset: 5,
+    roughness: 0.06,
+  },
+  armament: {
+    weapon: {
+      intervalMs: 540,
+      aimTolerance: 0.05,
+      projectileSpeed: 1050,
+      projectileLifeMs: 480,
+      flight: { muzzleHeight: 16, launchSpeed: 40, gravity: 314, drag: 0.5, maxRange: 340 },
+      recoilImpulse: 9000,
+      hitImpulse: 15000,
+      recoilKick: 12,
+      damage: 11,
+      style: 'flak',
+    },
+    // Üç namlu tek taretin ağzında yan yana durur; hepsi aynı anda ateşlenir ve 200 birimde odaklanır.
+    mounts: [
+      { x: 0, y: -5.5, reach: 27 },
+      { x: 0, y: 0, reach: 28 },
+      { x: 0, y: 5.5, reach: 27 },
+    ],
+    pivot: { x: 0, y: 0 },
+    salvo: [[0, 1, 2]],
+    toeInRange: 200,
+  },
+};
+
+/**
+ * Leviathan: ağır süzülen savaş gemisi. Geniş iticileri üstünde ağır ve yavaş kayar, çok can taşır;
+ * iki yan topu (itici başlarında) sırayla derin mavi mızrak çakar: her isabet sert, menzil uzun, tempo
+ * düşüktür. Gövdesi büyük hedeftir ve iticileri uzakta durduğundan yandan gelen ateşte kolay kopar;
+ * pilot onu kıyıdan kıyıya yavaş ama istikrarlı sürer.
+ */
+export const LEVIATHAN: HoverSpec = {
+  kind: 'hover',
+  id: 'leviathan',
+  health: 170,
+  hover: {
+    ...HOVER,
+    mass: 3100,
+    halfLength: 40,
+    halfWidth: 38,
+    trackOffset: 31,
+    maxSpeed: 150,
+    acceleration: 300,
+    braking: 190,
+    dashMultiplier: 1.4,
+    dashAcceleration: 700,
+    gripSensitivity: 0.12,
+    maxTurnRate: 2.4,
+    turnAcceleration: 10,
+    steerGain: 4,
+    boostCapacity: 100,
+    boostDrain: 150,
+    boostRegen: 22,
+    boostRestart: 100,
+    wallRestitution: 0.3,
+    impactKick: 0.07,
+    turretTurnRate: 3.6,
+  },
+  suspension: {
+    ...SUSPENSION,
+    frequency: 1.2,
+    damping: 0.34,
+    pitchPerAccel: 0.006,
+    rollPerAccel: 0.009,
+    maxOffset: 3.4,
+    roughness: 0.04,
+  },
+  armament: {
+    weapon: {
+      // İki top sırayla ateşler: her biri 1080 ms'de bir atar, birleşik tempo 540 ms.
+      intervalMs: 540,
+      aimTolerance: 0.035,
+      projectileSpeed: 980,
+      projectileLifeMs: 1100,
+      flight: { muzzleHeight: 30, launchSpeed: 70, gravity: 314, drag: 0.22, maxRange: 700 },
+      recoilImpulse: 62000,
+      hitImpulse: 76000,
+      recoilKick: 30,
+      damage: 26,
+      style: 'lance',
+    },
+    mounts: [
+      { x: 26, y: -31, reach: 30 },
+      { x: 26, y: 31, reach: 30 },
+    ],
+    pivot: { x: 26, y: 0 },
+    salvo: [[0], [1]],
+    toeInRange: 620,
+  },
+};
+
+/**
+ * Warhound: hafif keşif robotu. İki bacaklı en çevik araçtır; hızlı koşar, yönünü çabuk çevirir ama
+ * zırhı incedir ve topal kalınca neredeyse yürüyemez. İki kol topu sırayla ateşler: her mermi hafif,
+ * tempo yüksektir, menzil orta. Tankların yan ve arkasına koşup yapışmak için tasarlanmıştır.
+ */
+export const WARHOUND: MechSpec = {
+  kind: 'mech',
+  id: 'warhound',
+  health: 100,
+  mech: {
+    ...MECH,
+    mass: 1500,
+    halfLength: 20,
+    halfWidth: 19,
+    trackOffset: 18,
+    maxSpeed: 225,
+    acceleration: 1100,
+    braking: 1500,
+    dashMultiplier: 1.6,
+    dashAcceleration: 2400,
+    maxTurnRate: 3.6,
+    turnAcceleration: 16,
+    steerGain: 6,
+    turnSpeedFloor: 0.5,
+    strideLength: 32,
+    strideDip: 0.12,
+    boostCapacity: 80,
+    boostDrain: 150,
+    boostRegen: 34,
+    boostRestart: 80,
+    wallRestitution: 0.34,
+    impactKick: 0.12,
+    turretTurnRate: 6.2,
+  },
+  suspension: {
+    ...SUSPENSION,
+    frequency: 3.4,
+    damping: 0.45,
+    pitchPerAccel: 0.007,
+    rollPerAccel: 0.007,
+    maxOffset: 2.4,
+    roughness: 0.18,
+  },
+  armament: {
+    weapon: {
+      // İki kol topu sırayla ateşler: her biri 340 ms'de bir atar, birleşik tempo 170 ms.
+      intervalMs: 170,
+      aimTolerance: 0.04,
+      projectileSpeed: 1050,
+      projectileLifeMs: 640,
+      flight: { muzzleHeight: 24, launchSpeed: 55, gravity: 314, drag: 0.22, maxRange: 470 },
+      recoilImpulse: 5200,
+      hitImpulse: 14000,
+      recoilKick: 9,
+      damage: 8,
+      style: 'autocannon',
+    },
+    mounts: [
+      { x: 8, y: -13, reach: 21 },
+      { x: 8, y: 13, reach: 21 },
+    ],
+    pivot: { x: 8, y: 0 },
+    salvo: [[0], [1]],
+    toeInRange: 440,
+  },
+};
+
+/**
+ * Templar: orta sınıf hat robotu. Zırhlı ve sabırlıdır; sağ omzundaki döner makineli seri ateş eder,
+ * tek tek hafif ama kesintisiz ve isabetli mermilerle hedefi eritir. Çevik değildir: dönüşü ağır,
+ * adımı kararlıdır. Dengeli bir cephe aracıdır; yan yana dizilince ağır araçları da durdurur.
+ */
+export const TEMPLAR: MechSpec = {
+  kind: 'mech',
+  id: 'templar',
+  health: 190,
+  mech: {
+    ...MECH,
+    mass: 2700,
+    halfLength: 25,
+    halfWidth: 24,
+    trackOffset: 23,
+    maxSpeed: 152,
+    acceleration: 640,
+    braking: 1000,
+    dashMultiplier: 1.55,
+    dashAcceleration: 1300,
+    maxTurnRate: 2.1,
+    turnAcceleration: 8.5,
+    steerGain: 4.2,
+    turnSpeedFloor: 0.36,
+    strideLength: 42,
+    boostCapacity: 90,
+    boostDrain: 150,
+    boostRegen: 28,
+    boostRestart: 90,
+    wallRestitution: 0.2,
+    impactKick: 0.06,
+    turretTurnRate: 4.4,
+  },
+  suspension: {
+    ...SUSPENSION,
+    frequency: 2.8,
+    damping: 0.55,
+    pitchPerAccel: 0.005,
+    rollPerAccel: 0.005,
+    maxOffset: 2,
+    roughness: 0.14,
+  },
+  armament: {
+    weapon: {
+      intervalMs: 105,
+      aimTolerance: 0.05,
+      projectileSpeed: 980,
+      projectileLifeMs: 560,
+      flight: { muzzleHeight: 26, launchSpeed: 50, gravity: 314, drag: 0.26, maxRange: 430 },
+      recoilImpulse: 3400,
+      hitImpulse: 7500,
+      recoilKick: 5,
+      damage: 6,
+      style: 'gatling',
+    },
+    mounts: [{ x: 6, y: 13, reach: 28 }],
+    salvo: [[0]],
+    toeInRange: 420,
+  },
+};
+
+/**
+ * Juggernaut: ağır kuşatma robotu. Devasa ve yavaştır, bacağı ağırlığı zor taşır: dönmek bir iştir.
+ * Omuzlarındaki iki havan sırayla ateşler; mermi yüksek kavisle uzağa gider ve çok sert düşer ama
+ * yavaştır, hızlı hedefi kaçırır. Çevik araçlar onu arkadan oyalar; yakınında tek isabetle ezilir.
+ */
+export const JUGGERNAUT: MechSpec = {
+  kind: 'mech',
+  id: 'juggernaut',
+  health: 245,
+  mech: {
+    ...MECH,
+    mass: 8200,
+    halfLength: 38,
+    halfWidth: 36,
+    trackOffset: 35,
+    maxSpeed: 96,
+    acceleration: 420,
+    braking: 700,
+    dashMultiplier: 1.45,
+    dashAcceleration: 800,
+    gripSensitivity: 0.3,
+    maxTurnRate: 1.3,
+    turnAcceleration: 5,
+    steerGain: 3,
+    turnSpeedFloor: 0.3,
+    strideLength: 58,
+    strideDip: 0.18,
+    boostCapacity: 110,
+    boostDrain: 160,
+    boostRegen: 22,
+    boostRestart: 100,
+    wallRestitution: 0.14,
+    impactKick: 0.03,
+    turretTurnRate: 2.8,
+  },
+  suspension: {
+    ...SUSPENSION,
+    frequency: 2.2,
+    damping: 0.65,
+    pitchPerAccel: 0.003,
+    rollPerAccel: 0.003,
+    maxOffset: 1.5,
+    roughness: 0.1,
+  },
+  armament: {
+    weapon: {
+      // İki havan sırayla ateşler: her biri 2100 ms'de bir atar, birleşik tempo 1050 ms.
+      intervalMs: 1050,
+      aimTolerance: 0.05,
+      projectileSpeed: 560,
+      projectileLifeMs: 1700,
+      flight: { muzzleHeight: 44, launchSpeed: 120, gravity: 314, drag: 0.3, maxRange: 700 },
+      recoilImpulse: 120000,
+      hitImpulse: 140000,
+      recoilKick: 46,
+      damage: 62,
+      style: 'howitzer',
+    },
+    mounts: [
+      { x: 14, y: -24, reach: 40 },
+      { x: 14, y: 24, reach: 40 },
+    ],
+    pivot: { x: 14, y: 0 },
+    salvo: [[0], [1]],
+    toeInRange: 560,
+  },
+};
+
 export const VEHICLES: Readonly<Record<VehicleId, VehicleSpec>> = {
   striker: STRIKER,
   bulwark: BULWARK,
@@ -479,6 +835,11 @@ export const VEHICLES: Readonly<Record<VehicleId, VehicleSpec>> = {
   widow: WIDOW,
   goliath: GOLIATH,
   manta: MANTA,
+  barracuda: BARRACUDA,
+  leviathan: LEVIATHAN,
+  warhound: WARHOUND,
+  templar: TEMPLAR,
+  juggernaut: JUGGERNAUT,
 };
 
 export function isVehicleId(value: unknown): value is VehicleId {

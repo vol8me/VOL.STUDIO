@@ -28,11 +28,11 @@ export interface WalkerSurface {
 export class Walker extends Chassis {
   readonly kind: ChassisKind = 'walker';
   /** Eksik bacakların bu adıma etkisi: hız/ivme kapasitesi ve yöne eklenen dönüş (`limp`). */
-  private capacity = 1;
-  private yawBias = 0;
+  protected capacity = 1;
+  protected yawBias = 0;
 
   constructor(
-    private readonly walkerConfig: WalkerConfig,
+    protected readonly walkerConfig: WalkerConfig,
     suspension: SuspensionConfig,
   ) {
     super(walkerConfig, suspension, Chassis.footprintInertia(walkerConfig));
@@ -74,7 +74,11 @@ export class Walker extends Chassis {
     const pull = dashing ? 1 : moving ? Math.min(1, length) : 0;
     const align = this.alignment(heading, moving || dashing);
     const top =
-      config.maxSpeed * (dashing ? config.dashMultiplier : align) * mobility * this.capacity;
+      config.maxSpeed *
+      (dashing ? config.dashMultiplier : align) *
+      mobility *
+      this.capacity *
+      this.gaitFactor();
     const targetX = wantX * pull * top;
     const targetY = wantY * pull * top;
     const facing = moving || dashing ? heading : null;
@@ -85,6 +89,11 @@ export class Walker extends Chassis {
       this.settleAgainst(world);
     }
     this.updateTurret(command, dt);
+  }
+
+  /** Adım döngüsünün tavana çarpanı; çok bacaklı yürüyücüde adım hıza dokunmaz. */
+  protected gaitFactor(): number {
+    return 1;
   }
 
   /**
@@ -104,7 +113,7 @@ export class Walker extends Chassis {
    * rastgelelik yok) çöker: hız kesilir ve gövde o yana savrulur. Durum yolu ağ durumundadır, bu yüzden
    * sunucu ile öngörü aynı tökezlemeyi yürür.
    */
-  private limp(): void {
+  protected limp(): void {
     const lostLeft = lostLegs(this.parts, 0);
     const lostRight = lostLegs(this.parts, 1);
     if (lostLeft + lostRight === 0) {

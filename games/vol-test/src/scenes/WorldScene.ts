@@ -186,9 +186,9 @@ export class WorldScene extends Phaser.Scene {
       }),
     );
     this.vehicles = this.scope.addDestroyable(
-      new VehicleViews(this, (x, y, angle, scale) => {
+      new VehicleViews(this, (x, y, angle, scale, width) => {
         // Suya basan ayak iz bırakmaz: suyun yüzeyine kalıcı iz basılmaz (iz `WaterTrails`ta).
-        if (!this.inWater(x, y)) this.effects.footprint(x, y, angle, scale);
+        if (!this.inWater(x, y)) this.effects.footprint(x, y, angle, scale, width);
       }),
     );
     this.wrecks = new WreckDirector(

@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import { SPIDER_LOOKS } from '@/config/spiders';
 import type { VehicleSpec } from '@/config/vehicles';
 import { HoverView } from './HoverView';
+import { MechView } from './MechView';
 import { SpiderView, type FootPrintSink } from './SpiderView';
 import { TankView } from './TankView';
 import type { VehicleView } from './VehicleView';
@@ -20,5 +21,7 @@ export function createVehicleView(
       return new SpiderView(scene, spec, SPIDER_LOOKS[spec.id], lighting, footprint);
     case 'hover':
       return new HoverView(scene, spec, lighting);
+    case 'mech':
+      return new MechView(scene, spec, lighting, footprint);
   }
 }

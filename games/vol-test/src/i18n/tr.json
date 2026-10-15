@@ -56,6 +56,26 @@
       "manta": {
         "name": "Manta",
         "class": "SÜZÜLEN AVCI"
+      },
+      "barracuda": {
+        "name": "Barracuda",
+        "class": "SÜZÜLEN AKINCI"
+      },
+      "leviathan": {
+        "name": "Leviathan",
+        "class": "SÜZÜLEN SAVAŞ GEMİSİ"
+      },
+      "warhound": {
+        "name": "Warhound",
+        "class": "MECH KEŞİF"
+      },
+      "templar": {
+        "name": "Templar",
+        "class": "MECH HAT"
+      },
+      "juggernaut": {
+        "name": "Juggernaut",
+        "class": "AĞIR MECH"
       }
     }
   },

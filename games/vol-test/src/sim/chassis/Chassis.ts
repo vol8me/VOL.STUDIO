@@ -14,8 +14,8 @@ import { createChassisState, type ChassisPose, type ChassisState } from './Chass
 import { Suspension } from './Suspension';
 import { Turret, type TurretConfig } from './Turret';
 
-/** Şasi türü: paletli tank, bacaklı yürüyücü ya da süzülen araç. */
-export type ChassisKind = 'tank' | 'walker' | 'hover';
+/** Şasi türü: paletli tank, çok bacaklı yürüyücü, süzülen araç ya da iki bacaklı mech. */
+export type ChassisKind = 'tank' | 'walker' | 'hover' | 'mech';
 
 /** Her şasinin ortak gövde, temas ve depo sayıları; türe özgü sürüş sayıları kendi yapılandırmasındadır. */
 export interface ChassisConfig extends BoostConfig, TurretConfig {

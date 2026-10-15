@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="38" height="16" viewBox="0 0 38 16">
+  <defs>
+    <radialGradient id="dome" cx="0.38" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#f3f8fc"/>
+      <stop offset="0.5" stop-color="#a9bdd1"/>
+      <stop offset="1" stop-color="#3d5470"/>
+    </radialGradient>
+    <linearGradient id="rail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fb4c8"/>
+      <stop offset="0.5" stop-color="#3a4a5c"/>
+      <stop offset="1" stop-color="#121a24"/>
+    </linearGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#f0fff8"/>
+      <stop offset="0.45" stop-color="#3ddc97"/>
+      <stop offset="1" stop-color="#0a4a2e"/>
+    </radialGradient>
+  </defs>
+  <rect x="14" y="3.4" width="16" height="2.6" rx="1" fill="url(#rail)" stroke="#0d1217" stroke-width=".55"/>
+  <rect x="14" y="6.7" width="17" height="2.6" rx="1" fill="url(#rail)" stroke="#0d1217" stroke-width=".55"/>
+  <rect x="14" y="10" width="16" height="2.6" rx="1" fill="url(#rail)" stroke="#0d1217" stroke-width=".55"/>
+  <path d="M15.2 4.3H29M15.2 7.6H30M15.2 10.9H29" stroke="#dbe5ee" stroke-opacity=".5" stroke-width=".4" stroke-linecap="round"/>
+  <path d="M29 2.8H34.6L37 4.6V11.6L34.6 13.4H29Z" fill="#26323f" stroke="#0d1217" stroke-width=".7" stroke-linejoin="round"/>
+  <path d="M30.8 4.6V11.4M32.8 4.6V11.4" stroke="#0a0f14" stroke-width=".8" stroke-linecap="round"/>
+  <path d="M36 4.6V11.4" stroke="#3ddc97" stroke-opacity=".85" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M10 1.2L16 4.2V11.8L10 14.8L4 11.8V4.2Z" fill="url(#dome)" stroke="#0d1217" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="M10 1.2V5M4 4.2L7.4 6M16 4.2L12.6 6M4 11.8L7.4 10M16 11.8L12.6 10M10 14.8V11" stroke="#5f7388" stroke-width=".5" stroke-linecap="round"/>
+  <circle cx="10" cy="8" r="2.6" fill="url(#lens)" stroke="#0d1217" stroke-width=".55"/>
+  <circle cx="9.2" cy="7.2" r=".7" fill="#fff" fill-opacity=".9"/>
+</svg>

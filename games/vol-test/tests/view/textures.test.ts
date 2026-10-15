@@ -2,11 +2,13 @@ import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
 import { DEBRIS } from '@/config/debris';
 import { tankSpecs } from '@/config/tankView';
+import { HOVER_IDS, MECH_IDS } from '@/config/vehicles';
 import {
   createRuntimeTextures,
   queueHoverTextures,
   queueTankTextures,
   hoverTexture,
+  mechTexture,
   TEXTURE,
   TEXTURE_SCALE,
   shardTexture,
@@ -31,13 +33,22 @@ describe('textures', () => {
     });
   });
 
-  it('süzülen araç parçalarını ölçekli SVG olarak kuyruğa ekler; dosyaları ayrıdır', () => {
+  it('süzülen araç ve mech parçalarını ölçekli SVG olarak kuyruğa ekler; dosyaları ayrıdır', () => {
     const scene = fakeScene();
     queueHoverTextures(scene.load as unknown as Phaser.Loader.LoaderPlugin);
     const keys = scene.load.svg.mock.calls.map((call) => String(call[0]));
-    expect(keys.sort()).toEqual(
-      (['fan', 'hull', 'pod', 'turret'] as const).map((part) => hoverTexture('manta', part)).sort(),
+    const hovers = HOVER_IDS.flatMap((id) =>
+      [
+        ...(['fan', 'hull', 'pod', 'turret'] as const),
+        ...(id === 'leviathan' ? (['gun'] as const) : []),
+      ].map((part) => hoverTexture(id, part)),
     );
+    const mechs = MECH_IDS.flatMap((id) =>
+      (['hull', 'thigh', 'shin', 'joint', 'foot', 'arm'] as const).map((part) =>
+        mechTexture(id, part),
+      ),
+    );
+    expect(keys.sort()).toEqual([...hovers, ...mechs].sort());
     const urls = scene.load.svg.mock.calls.map((call) => String(call[1]));
     expect(new Set(urls).size).toBe(urls.length);
     // Çözülmeyen desen `undefined` adresini kuyruğa sokardı.
@@ -68,6 +79,7 @@ describe('textures', () => {
       [
         TEXTURE.antenna,
         TEXTURE.blast,
+        TEXTURE.bootPrint,
         TEXTURE.footPrint,
         TEXTURE.ring,
         TEXTURE.scorch,
