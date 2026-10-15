@@ -197,6 +197,7 @@ describe('RankList', () => {
     list.setRows([row('a', { value: '999999', label: longLabel })]);
     expect(list.element.querySelector('.vol-rank__value')!.textContent).toBe('999999');
     expect(list.element.querySelector('.vol-rank__name')!.textContent).toBe(longLabel);
+    expect(list.element.querySelector<HTMLElement>('.vol-rank__name')!.title).toBe(longLabel);
     expect(css).toMatch(/\.vol-rank__name[^}]*text-overflow: ellipsis/);
   });
 

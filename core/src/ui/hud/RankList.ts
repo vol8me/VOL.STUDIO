@@ -164,6 +164,8 @@ export class RankList {
   private paintRow(view: RowView, row: RankListRow, rank: number, gap: boolean): void {
     this.write(view.rank, String(rank));
     this.write(view.name, row.label);
+    // Kısaltılan ad (üç nokta) tam metne `title` ile kavuşur.
+    if (view.name.title !== row.label) view.name.title = row.label;
     this.write(view.value, row.value);
     this.write(view.secondary, row.secondary ?? '');
     view.secondary.hidden = row.secondary === undefined;
