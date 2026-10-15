@@ -43,11 +43,14 @@ describe('textures', () => {
         ...(id === 'leviathan' ? (['gun'] as const) : []),
       ].map((part) => hoverTexture(id, part)),
     );
-    const mechs = [...MECH_IDS, ...LEAPER_IDS].flatMap((id) =>
-      (['hull', 'thigh', 'shin', 'joint', 'foot', 'arm'] as const).map((part) =>
-        mechTexture(id, part),
+    const core = ['hull', 'thigh', 'shin', 'joint', 'foot', 'arm'] as const;
+    // Sıçrayıcı hayvandır: kafa ve kuyruk ayrı parçadır, mech'te yoktur.
+    const mechs = [
+      ...MECH_IDS.flatMap((id) => core.map((part) => mechTexture(id, part))),
+      ...LEAPER_IDS.flatMap((id) =>
+        [...core, 'head' as const, 'tail' as const].map((part) => mechTexture(id, part)),
       ),
-    );
+    ];
     expect(keys.sort()).toEqual([...hovers, ...mechs].sort());
     const urls = scene.load.svg.mock.calls.map((call) => String(call[1]));
     expect(new Set(urls).size).toBe(urls.length);

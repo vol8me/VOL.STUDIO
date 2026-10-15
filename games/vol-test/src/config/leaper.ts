@@ -43,8 +43,12 @@ export const LEAPER = {
   strideDip: 0.22,
   /** Havada hız yönünün komuta dönme hızı (rad/s): sıçrama kavisli ama büyük ölçüde kilitlidir. */
   leapTurnRate: 1,
+  /** İniş: tavanın üstündeki hız `landBraking` ile kayar; depo `landRecovery`e dolana dek tavan `landFloor`dan toparlanır. */
+  landBraking: 900,
+  landFloor: 0.7,
+  landRecovery: 0.3,
 
-  /** Sıçrama deposu: kapasite/boşalma sıçrama süresi (~0,5 sn), dolum bekleme süresidir. */
+  /** Sıçrama deposu: kapasite/boşalma sıçrama süresi, dolum bekleme süresidir. */
   boostCapacity: 72,
   boostDrain: 150,
   boostRegen: 24,

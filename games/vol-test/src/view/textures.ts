@@ -91,10 +91,16 @@ const HOVER_PARTS: Readonly<Record<HoverId, readonly HoverPart[]>> = {
 
 /**
  * Bacaklı robotun parçaları: gövde, uyluk/baldır şeritleri, eklem diski, ayak ve silah kolu. İki
- * bacaklı mech ve dört bacaklı sıçrayıcı aynı parça kümesini paylaşır.
+ * bacaklı mech ve dört bacaklı sıçrayıcı bu çekirdek kümeyi paylaşır; sıçrayıcı hayvandır ve ayrıca
+ * boyun ekseninde dönen `head` ile gövdeden savrulan `tail` parçalarını taşır.
  */
-export type MechPart = 'hull' | 'thigh' | 'shin' | 'joint' | 'foot' | 'arm';
+export type MechPart = 'hull' | 'thigh' | 'shin' | 'joint' | 'foot' | 'arm' | 'head' | 'tail';
 const MECH_PARTS: readonly MechPart[] = ['hull', 'thigh', 'shin', 'joint', 'foot', 'arm'];
+const LEAPER_PARTS: readonly MechPart[] = [...MECH_PARTS, 'head', 'tail'];
+/** Bir bacaklı robotun yüklediği parçalar: mech çekirdek kümeyi, sıçrayıcı kafa ve kuyruğu da taşır. */
+function robotParts(id: MechId | LeaperId): readonly MechPart[] {
+  return (LEAPER_IDS as readonly string[]).includes(id) ? LEAPER_PARTS : MECH_PARTS;
+}
 /** Bacaklı robot ailesinin kimlikleri (mech ve sıçrayıcı). */
 const ROBOT_IDS: readonly (MechId | LeaperId)[] = [...MECH_IDS, ...LEAPER_IDS];
 
@@ -218,7 +224,7 @@ function bakeVehicleAtlas(scene: Phaser.Scene): void {
       HOVER_PARTS[id].map((part) => ({ key: hoverTexture(id, part), frame: hoverFrame(id, part) })),
     ),
     ...ROBOT_IDS.flatMap((id) =>
-      MECH_PARTS.map((part) => ({ key: mechTexture(id, part), frame: mechFrame(id, part) })),
+      robotParts(id).map((part) => ({ key: mechTexture(id, part), frame: mechFrame(id, part) })),
     ),
   ];
   for (const { key, frame } of sources) {
@@ -265,7 +271,7 @@ export function queueHoverTextures(loader: Phaser.Loader.LoaderPlugin): void {
       });
   }
   for (const id of ROBOT_IDS) {
-    for (const part of MECH_PARTS)
+    for (const part of robotParts(id))
       loader.svg(mechTexture(id, part), HOVER_PART_URLS[`../assets/vehicles/${id}/${part}.svg`], {
         scale: TEXTURE_SCALE,
       });

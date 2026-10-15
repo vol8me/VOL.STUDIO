@@ -6,9 +6,9 @@
       <stop offset="1" stop-color="#162320"/>
     </linearGradient>
     <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#d8f4ea"/>
-      <stop offset="0.5" stop-color="#86bfae"/>
-      <stop offset="1" stop-color="#335a52"/>
+      <stop offset="0" stop-color="#cfe9dc"/>
+      <stop offset="0.5" stop-color="#5a9686"/>
+      <stop offset="1" stop-color="#183630"/>
     </linearGradient>
   </defs>
   <path d="M1.6 2.4L5 0.9H11.4L12.8 2.4V8.6L11.4 10.1H5L1.6 8.6Z" fill="url(#plate)" stroke="#0d1217" stroke-width=".9" stroke-linejoin="round"/>

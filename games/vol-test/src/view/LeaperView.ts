@@ -6,7 +6,7 @@ import {
   type PoseShadowOptions,
   type PoseSourceNode,
 } from '@volstudio/core';
-import { Spring1D } from '@volstudio/core/math';
+import { Spring1D, angleDelta } from '@volstudio/core/math';
 import { LEAPER_ART, LEAPER_VIEW, type LeaperArt } from '@/config/leaperView';
 import { LIGHT } from '@/config/light';
 import { PARTS } from '@/config/parts';
@@ -89,6 +89,11 @@ export class LeaperView implements VehicleView {
   /** Dönüşte gövdenin yana kayması ve yönünün hizadan geri kalması: iki yay dönüş bitince sallanır. */
   private readonly lean = new Spring1D();
   private readonly twist = new Spring1D();
+  /** Kafanın nişana bakışı (rad, gövdeye göre) ve kuyruğun savrulması (rad): iki yay. */
+  private readonly gaze = new Spring1D();
+  private readonly swing = new Spring1D();
+  private readonly head: Phaser.GameObjects.Image;
+  private readonly tail: Phaser.GameObjects.Image;
   /** Bu karenin dönüş yükü [-1, 1] (işaret açısal hızınki): bacak kaldırma ve toz bunu okur. */
   private turnLoad = 0;
   private readonly mount: MuzzlePose = { x: 0, y: 0, angle: 0 };
@@ -149,6 +154,16 @@ export class LeaperView implements VehicleView {
     );
 
     const hull = addMechImage(scene, spec.id, 'hull').setScale(INV);
+    this.head = addMechImage(scene, spec.id, 'head')
+      .setOrigin(art.head.pivotX / art.head.width, 0.5)
+      .setScale(INV)
+      .setPosition(art.head.x, art.head.y);
+    // Kuyruk kökünden geriye uzanır: resim sağa çizilidir, yarım tur döndürülür.
+    this.tail = addMechImage(scene, spec.id, 'tail')
+      .setOrigin(0, 0.5)
+      .setScale(INV)
+      .setPosition(art.tail.x, art.tail.y)
+      .setRotation(Math.PI);
     this.core = new CorePulse(scene, art.core.scale, art.core.tint, true);
     this.core.place(art.core.x, art.core.y);
     this.arms = spec.armament.mounts.map(() => ({
@@ -174,10 +189,13 @@ export class LeaperView implements VehicleView {
     }));
     for (const flame of this.flames) lighting.add(flame.image);
 
+    const armImages = this.arms.map((a) => a.image);
+    // Omuz silahlı sıçrayıcıda kafa silahların üstündedir (kulaklar görünür); sırt raylıda silah kafanın üstünden geçer.
     this.body = scene.add.container(0, 0, [
+      this.tail,
       hull,
+      ...(art.head.over ? [...armImages, this.head] : [this.head, ...armImages]),
       this.core.image,
-      ...this.arms.map((a) => a.image),
     ]);
     const legImages = this.legs.flatMap((leg) => [
       leg.thigh,
@@ -191,8 +209,10 @@ export class LeaperView implements VehicleView {
     this.root.setDepth(LEAPER_VIEW.depth);
     this.shadowSource = poseSourceOf([
       ...this.legs.flatMap((leg) => [leg.thigh, leg.shin, leg.foot]),
+      this.tail,
       hull,
-      ...this.arms.map((a) => a.image),
+      this.head,
+      ...armImages,
     ]);
     this.dust = scene.add
       .particles(0, 0, TEXTURE.spark, LEAPER_VIEW.dust.emitter)
@@ -284,6 +304,8 @@ export class LeaperView implements VehicleView {
       )
       .setScale((1 + view.leap.rise * arc) * bob * (1 - this.weight.value * art.weight.dip));
 
+    this.placeHead(frame, deltaMs);
+    this.placeTail(turnLoad, strideAngle, effort * ground, deltaMs);
     this.core.update(effort, leaping, deltaMs);
     this.placeArms(frame, deltaMs);
     this.placeFlames(frame, leaping);
@@ -298,6 +320,10 @@ export class LeaperView implements VehicleView {
     this.air = 0;
     this.flightMs = 0;
     this.wasBoosting = false;
+    this.gaze.value = 0;
+    this.gaze.velocity = 0;
+    this.swing.value = 0;
+    this.swing.velocity = 0;
     for (const flame of this.flames) flame.image.setVisible(false);
     for (const arm of this.arms) {
       arm.flashMs = 0;
@@ -345,6 +371,7 @@ export class LeaperView implements VehicleView {
       this.burst(frame, -this.spec.leaper.halfLength, 0, view.pawsDust);
     } else if (!leaping && this.wasBoosting) {
       this.weight.velocity += this.art.weight.kick * view.landKick * 1.6;
+      this.swing.velocity += LEAPER_VIEW.tail.whip * (this.swing.value >= 0 ? -1 : 1);
       this.burst(frame, 0, 0, view.landDust);
       for (const leg of this.legs) this.stamp(frame, leg);
       this.flightMs = 0;
@@ -489,6 +516,42 @@ export class LeaperView implements VehicleView {
     const cos = Math.cos(frame.hull);
     const sin = Math.sin(frame.hull);
     this.dust.emitParticleAt(frame.x + x * cos - y * sin, frame.y + x * sin + y * cos, count);
+  }
+
+  /**
+   * Kafa nişana bakar (gövde yönünden `yaw` kadar sapar, yay oturur); sıçramada öne uzanır, ağırlık
+   * çöküşüyle birlikte hafifçe aşağı iner. Silah yuvaları nişanı zaten sürer; kafa bunu yumuşak izler.
+   */
+  private placeHead(frame: TankFrame, deltaMs: number): void {
+    const { head } = this.art;
+    const view = LEAPER_VIEW.head;
+    const wanted = Phaser.Math.Clamp(
+      angleDelta(frame.hull, frame.turret) * head.follow,
+      -head.yaw,
+      head.yaw,
+    );
+    this.gaze.update(wanted, deltaMs, view.spring);
+    const reach = head.reach * this.air;
+    const dip = 1 - Math.max(0, this.weight.value) * this.art.weight.dip * view.dip;
+    this.head
+      .setPosition(head.x + reach, head.y)
+      .setRotation(this.gaze.value)
+      .setScale(INV * dip);
+  }
+
+  /**
+   * Kuyruk: dönüşün dışına savrulur, koşuda sekmeyle kıvrılır, havada düz uzanır; inişte gövdeyle gelen
+   * ağırlık darbesi yayı kırbaç gibi atar.
+   */
+  private placeTail(turnLoad: number, strideAngle: number, run: number, deltaMs: number): void {
+    const { tail } = this.art;
+    const view = LEAPER_VIEW.tail;
+    const wag = Math.sin(strideAngle) * view.stride * run;
+    const wanted = (turnLoad * 1.4 + wag) * tail.swing * (1 - this.air);
+    this.swing.update(wanted, deltaMs, view.spring);
+    this.swing.value = Phaser.Math.Clamp(this.swing.value, -tail.swing, tail.swing);
+    const rise = view.lift * this.air;
+    this.tail.setRotation(Math.PI + this.swing.value).setScale(INV * (1 + rise), INV);
   }
 
   private placeArms(frame: TankFrame, deltaMs: number): void {

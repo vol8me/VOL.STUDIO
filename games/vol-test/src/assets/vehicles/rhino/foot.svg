@@ -1,20 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="22" height="15" viewBox="0 0 22 15">
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="15" viewBox="0 0 20 15">
   <defs>
     <linearGradient id="pad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#e0bf94"/>
-      <stop offset="0.5" stop-color="#93693f"/>
-      <stop offset="1" stop-color="#3a2819"/>
+      <stop offset="0" stop-color="#e6c9a0"/>
+      <stop offset="0.5" stop-color="#94693f"/>
+      <stop offset="1" stop-color="#35241a"/>
     </linearGradient>
-    <linearGradient id="claw" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#eef2f6"/>
-      <stop offset="0.45" stop-color="#9aa3ad"/>
-      <stop offset="1" stop-color="#3a4048"/>
+    <linearGradient id="nail" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#efe2c8"/>
+      <stop offset="0.5" stop-color="#b69a72"/>
+      <stop offset="1" stop-color="#4b3a24"/>
     </linearGradient>
   </defs>
-  <path d="M9.55 0.6L21.4 1.12L9.55 4.2Z" fill="url(#claw)" stroke="#0d1217" stroke-width=".6" stroke-linejoin="round"/>
-  <path d="M9.55 5.7L21.4 7.5L9.55 9.3Z" fill="url(#claw)" stroke="#0d1217" stroke-width=".6" stroke-linejoin="round"/>
-  <path d="M9.55 10.8L21.4 13.88L9.55 14.4Z" fill="url(#claw)" stroke="#0d1217" stroke-width=".6" stroke-linejoin="round"/>
-  <path d="M1 7.5Q1 1.8 6.82 1.5Q13.64 1.8 13.64 7.5Q13.64 13.2 6.82 13.5Q1 13.2 1 7.5Z" fill="url(#pad)" stroke="#0d1217" stroke-width=".95" stroke-linejoin="round"/>
-  <path d="M2.73 4.5Q6.82 2.7 10.91 4.8" fill="none" stroke="#ffffff" stroke-opacity=".34" stroke-width=".55" stroke-linecap="round"/>
-  <circle cx="7" cy="7.5" r="3" fill="#0d1217" fill-opacity=".55"/>
+  <path d="M13.4 2.7H18.8Q20 2.7 20 4.2V5.7Q20 7.2 18.8 7.2H13.4Z" fill="url(#nail)" stroke="#0d1217" stroke-width=".65" stroke-linejoin="round"/>
+  <path d="M13.4 7.5H18.8Q20 7.5 20 9V10.5Q20 12 18.8 12H13.4Z" fill="url(#nail)" stroke="#0d1217" stroke-width=".65" stroke-linejoin="round"/>
+  <path d="M13.4 12.3H18.8Q20 12.3 20 13.8V15.3Q20 16.8 18.8 16.8H13.4Z" fill="url(#nail)" stroke="#0d1217" stroke-width=".65" stroke-linejoin="round"/>
+  <path d="M2 3.3Q2 0.9 4 0.9H13.2Q16 0.9 16 3V12Q16 14.1 13.2 14.1H4Q2 14.1 2 11.7Z" fill="url(#pad)" stroke="#0d1217" stroke-width="1.05" stroke-linejoin="round"/>
+  <path d="M2.8 3.6H12.8" stroke="#ffffff" stroke-opacity=".3" stroke-width=".6" stroke-linecap="round"/>
+  <path d="M6 2.1V12.9M10 2.1V12.9" stroke="#0d1217" stroke-opacity=".4" stroke-width=".6" stroke-linecap="round"/>
+  <circle cx="6.5" cy="7.5" r="3" fill="#0d1217" fill-opacity=".55"/>
 </svg>

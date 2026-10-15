@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="29" height="9" viewBox="0 0 29 9">
+  <defs>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a4abc0"/>
+      <stop offset="0.5" stop-color="#464d62"/>
+      <stop offset="1" stop-color="#12151c"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#aeb5ca"/>
+      <stop offset="0.5" stop-color="#4d546a"/>
+      <stop offset="1" stop-color="#141720"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d4251"/>
+      <stop offset="1" stop-color="#0b0d12"/>
+    </linearGradient>
+    <linearGradient id="trim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8d9c4"/>
+      <stop offset="0.5" stop-color="#a78f72"/>
+      <stop offset="1" stop-color="#3d2f20"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="0.4" cy="0.4" r="0.65">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#ff5a3c"/>
+      <stop offset="1" stop-color="#6b1608"/>
+    </radialGradient>
+    <linearGradient id="rail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8d95a8"/>
+      <stop offset="0.5" stop-color="#383d4b"/>
+      <stop offset="1" stop-color="#0e1015"/>
+    </linearGradient>
+  </defs>
+  <path d="M22 3.1L28.2 0.6L25 3.5Z" fill="url(#plate)" stroke="#0d1217" stroke-width="0.7" stroke-linejoin="round"/>
+  <path d="M23 2.6L27 1.1" fill="none" stroke="#ff5a3c" stroke-opacity="0.9" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 5.9L28.2 8.4L25 5.5Z" fill="url(#plate)" stroke="#0d1217" stroke-width="0.7" stroke-linejoin="round"/>
+  <path d="M23 6.4L27 7.9" fill="none" stroke="#ff5a3c" stroke-opacity="0.9" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 4.5L22.88 3.64L20.9 3.29L18.1 3.01L15.9 2.79L13.1 2.51L10.68 2.29L7.32 2.01L4.68 1.83L1.32 1.67L0 2.24L0 4.5L0 6.76L1.32 7.33L4.68 7.17L7.32 6.99L10.68 6.71L13.1 6.49L15.9 6.21L18.1 5.99L20.9 5.71L22.88 5.36Z" fill="url(#deck)" stroke="#0d1217" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M4 2.46L4 6.54" fill="none" stroke="#0d1217" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M9 2.66L9 6.34" fill="none" stroke="#0d1217" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M14 2.86L14 6.14" fill="none" stroke="#0d1217" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M19 3.06L19 5.94" fill="none" stroke="#0d1217" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M2 3.3L20 3.9" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="24.4" cy="4.5" r="0.85" fill="#ff5a3c" stroke="#0d1217" stroke-width="0.3"/>
+</svg>

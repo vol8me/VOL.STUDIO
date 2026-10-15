@@ -208,4 +208,32 @@ describe('Leaper ve zemin', () => {
     expect(subject.airborne).toBe(false);
     expect(subject.waterDepth).toBeGreaterThanOrEqual(0);
   });
+
+  it('sıçramadan kalan hız kayarak erir: yerdeki aşırı hız `landBraking` ile söner, duruş freni sert kalır', () => {
+    const slide = (landBraking: number): number => {
+      const result = new Leaper({ ...JACKAL.leaper, landBraking }, JACKAL.suspension);
+      result.place(4096, 4096, 0);
+      result.capturePose();
+      // Sıçra, in; sonra komutu bırak ve iniş anındaki konumdan durana dek katedilen yolu ölç.
+      for (let step = 0; step < 120 && !(step > 4 && !result.airborne); step++)
+        result.step(command({ moveX: 1, aimX: 1, brake: true }), space, DT);
+      const landed = result.x;
+      for (let step = 0; step < 240; step++) result.step(command({ aimX: 1 }), space, DT);
+      expect(result.speed).toBeLessThan(1);
+      return result.x - landed;
+    };
+    // Aynı iniş hızından yumuşak fren daha uzağa kaydırır; sert fren (yürüyüş freni) kısa keser.
+    expect(slide(JACKAL.leaper.landBraking)).toBeGreaterThan(slide(JACKAL.leaper.braking) + 4);
+  });
+
+  it('iniş bir çömelmedir: sıçramadan hemen sonra tavan `landFloor`a iner, depo dolunca toparlar', () => {
+    const subject = leaper(JACKAL);
+    for (let step = 0; step < 120 && !(step > 4 && !subject.airborne); step++)
+      subject.step(command({ moveX: 1, aimX: 1, brake: true }), space, DT);
+    // Kayma bitene dek bekle, sonra tavanı depo boşken ölç.
+    const crouched = Math.max(...speeds(subject, { moveX: 1, aimX: 1 }, 0.5).slice(40));
+    expect(crouched).toBeLessThan(JACKAL.leaper.maxSpeed * (JACKAL.leaper.landFloor + 0.18));
+    const recovered = Math.max(...speeds(subject, { moveX: 1, aimX: 1 }, 3));
+    expect(recovered).toBeGreaterThan(JACKAL.leaper.maxSpeed * 0.97);
+  });
 });

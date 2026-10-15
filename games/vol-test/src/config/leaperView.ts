@@ -6,6 +6,33 @@ import type { LeaperId } from './vehicles';
 export interface LeaperArt {
   /** Gövde (gövde merkezinde ortalı). */
   readonly hull: { readonly width: number; readonly height: number };
+  /**
+   * Kafa: boyun ekseni `(x, y)` gövde-yerel, `pivotX` resmin solundan boyuna uzaklık. Nişana `follow`
+   * oranında bakar, en çok `yaw` rad döner; sıçramada `reach` birim öne uzanır. `over` kafa silahların
+   * üstünde çizilir (omuz silahlı Jackal ve Rhino); değilse silah kafanın üstünden geçer (sırt raylı Panther).
+   */
+  readonly head: {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+    readonly pivotX: number;
+    readonly yaw: number;
+    readonly follow: number;
+    readonly reach: number;
+    readonly over: boolean;
+  };
+  /**
+   * Kuyruk: kök `(x, y)` gövde-yerel, resim kökten geriye uzanır. Dönüşte yayla savrulur (en çok `swing` rad),
+   * koşuda sekmeyle kıvrılır, sıçramada düz uzanır, inişte kırbaç atar.
+   */
+  readonly tail: {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+    readonly swing: number;
+  };
   /** Kalçaların gövde eksenindeki yeri: ön ve arka bacak çifti (y, `LeaperConfig.trackOffset`tir). */
   readonly hips: { readonly front: number; readonly rear: number };
   /** Uyluk ve baldır ŞERİTLERİ: başlangıç solda, orta çizgide; boy sanat boyudur, yürürken gerilir. */
@@ -51,50 +78,74 @@ export interface LeaperArt {
 
 export const LEAPER_ART: Readonly<Record<LeaperId, LeaperArt>> = {
   jackal: {
-    hull: { width: 50, height: 28 },
-    hips: { front: 11, rear: -12 },
-    thigh: { length: 11, thickness: 5.6 },
-    shin: { length: 12, thickness: 4.8 },
-    joint: 6.9,
-    foot: { width: 11.5, height: 7.6, ankleX: 3.4 },
+    hull: { width: 44, height: 24 },
+    head: {
+      x: 10,
+      y: 0,
+      width: 22,
+      height: 28,
+      pivotX: 6,
+      yaw: 0.55,
+      follow: 0.65,
+      reach: 2.2,
+      over: true,
+    },
+    tail: { x: -21.6, y: 0, width: 17, height: 7, swing: 0.5 },
+    hips: { front: 5, rear: -15 },
+    thigh: { length: 12, thickness: 5.2 },
+    shin: { length: 16, thickness: 3.6 },
+    joint: 5.8,
+    foot: { width: 10.5, height: 7, ankleX: 3.2 },
     gait: {
-      footFront: 10,
-      footRear: 2,
-      splay: 7,
+      footFront: 9,
+      footRear: 1,
+      splay: 6,
       kneeOut: 4.4,
-      kneeShift: 2.2,
+      kneeShift: 2.4,
       footOut: 1.8,
       lift: 0.18,
-      leapReach: 11,
+      leapReach: 12,
     },
     arm: { width: 23, height: 11, pivotX: 5.6 },
     glow: 0xb7ff5e,
     flashScale: 0.85,
     recoil: { kick: -120, stiffness: 520, damping: 22, max: 2.6 },
-    core: { x: -4, y: 0, scale: 0.5, tint: 0xb7ff5e },
+    core: { x: -5, y: 0, scale: 0.5, tint: 0xb7ff5e },
     weight: { kick: 5, dip: 0.012 },
     thrusters: [
-      { x: -22, y: -4.6 },
-      { x: -22, y: 4.6 },
+      { x: -20, y: -5 },
+      { x: -20, y: 5 },
     ],
     flame: 0.9,
   },
   panther: {
-    hull: { width: 60, height: 34 },
-    hips: { front: 14, rear: -14 },
-    thigh: { length: 14, thickness: 6.8 },
-    shin: { length: 15, thickness: 5.8 },
-    joint: 8.4,
-    foot: { width: 13.5, height: 9.2, ankleX: 4.2 },
+    hull: { width: 50, height: 26 },
+    head: {
+      x: 13,
+      y: 0,
+      width: 25,
+      height: 21,
+      pivotX: 4,
+      yaw: 0.5,
+      follow: 0.6,
+      reach: 2.6,
+      over: false,
+    },
+    tail: { x: -24.8, y: 0, width: 29, height: 9, swing: 0.38 },
+    hips: { front: 8, rear: -17 },
+    thigh: { length: 14, thickness: 6.2 },
+    shin: { length: 19, thickness: 4.4 },
+    joint: 7,
+    foot: { width: 13.5, height: 8.6, ankleX: 4 },
     gait: {
-      footFront: 12,
-      footRear: 2,
-      splay: 8,
-      kneeOut: 5.4,
-      kneeShift: 2.6,
+      footFront: 11,
+      footRear: 1,
+      splay: 7,
+      kneeOut: 5.2,
+      kneeShift: 2.8,
       footOut: 2.2,
       lift: 0.16,
-      leapReach: 13,
+      leapReach: 14,
     },
     arm: { width: 46, height: 11, pivotX: 7 },
     glow: 0xff5a3c,
@@ -103,22 +154,34 @@ export const LEAPER_ART: Readonly<Record<LeaperId, LeaperArt>> = {
     core: { x: -6, y: 0, scale: 0.6, tint: 0xff5a3c },
     weight: { kick: 7, dip: 0.013 },
     thrusters: [
-      { x: -27, y: -5.6 },
-      { x: -27, y: 5.6 },
+      { x: -23.2, y: -5.6 },
+      { x: -23.2, y: 5.6 },
     ],
     flame: 1.1,
   },
   rhino: {
-    hull: { width: 82, height: 52 },
-    hips: { front: 21, rear: -20 },
+    hull: { width: 68, height: 54 },
+    head: {
+      x: 25,
+      y: 0,
+      width: 27,
+      height: 24,
+      pivotX: 5,
+      yaw: 0.34,
+      follow: 0.5,
+      reach: 3,
+      over: true,
+    },
+    tail: { x: -33.8, y: 0, width: 18, height: 11, swing: 0.22 },
+    hips: { front: 18, rear: -22 },
     thigh: { length: 22, thickness: 11 },
-    shin: { length: 23, thickness: 9.6 },
+    shin: { length: 22, thickness: 8.2 },
     joint: 13.6,
-    foot: { width: 22, height: 15, ankleX: 7 },
+    foot: { width: 20, height: 15, ankleX: 6.5 },
     gait: {
-      footFront: 18,
-      footRear: 3,
-      splay: 13,
+      footFront: 15,
+      footRear: 2,
+      splay: 12,
       kneeOut: 8,
       kneeShift: 4,
       footOut: 3.4,
@@ -129,12 +192,12 @@ export const LEAPER_ART: Readonly<Record<LeaperId, LeaperArt>> = {
     glow: 0x5ef0ff,
     flashScale: 1.3,
     recoil: { kick: -260, stiffness: 400, damping: 15, max: 7 },
-    core: { x: -2, y: 0, scale: 0.95, tint: 0x5ef0ff },
+    core: { x: -4, y: 0, scale: 0.95, tint: 0x5ef0ff },
     weight: { kick: 15, dip: 0.02 },
     thrusters: [
-      { x: -37, y: -11.6 },
-      { x: -37, y: 0 },
-      { x: -37, y: 11.6 },
+      { x: -33, y: -11.6 },
+      { x: -33, y: 0 },
+      { x: -33, y: 11.6 },
     ],
     flame: 1.5,
   },
@@ -182,6 +245,18 @@ export const LEAPER_VIEW = {
     landKick: 1.8,
     landDust: 7,
     pawsDust: 3,
+  },
+  /**
+   * Kafa ve kuyruk yayları. Kafa nişana bakarken `spring` ile oturur; sıçramada ileri uzanır, inişte
+   * ağırlıkla birlikte çöker. Kuyruk gevşek bir yaydır: dönüşün dışına savrulur (`swing`), koşuda sekmeyle
+   * kıvrılır (`stride`), sıçramada düz uzanır ve inişte kırbaç atar (`whip`).
+   */
+  head: { spring: { stiffness: 220, damping: 16 } satisfies SpringConfig, dip: 0.6 },
+  tail: {
+    spring: { stiffness: 70, damping: 5 } satisfies SpringConfig,
+    stride: 0.2,
+    whip: 7,
+    lift: 0.12,
   },
   /** Kırık bacağın kütüğü: koyu, kısa, yarı saydam; gövdenin o yana çökmesi (dünya birimi). */
   stub: { tint: 0x2b2326, length: 0.5, alpha: 0.92, sag: 3.4, roll: 0.14 },

@@ -112,6 +112,11 @@ export class Walker extends Chassis {
     return PARTS.walker;
   }
 
+  /** Hedefin altındaki hıza inerken ya da yön değiştirirken fren ivmesi; sıçrayıcı inişte kaydığı için değiştirir. */
+  protected brakingLimit(): number {
+    return this.walkerConfig.braking;
+  }
+
   /** Adım döngüsünün tavana çarpanı; çok bacaklı yürüyücüde adım hıza dokunmaz. */
   protected gaitFactor(): number {
     return 1;
@@ -182,7 +187,7 @@ export class Walker extends Chassis {
     if (gap > 1e-6) {
       const slowing = gapX * this.vx + gapY * this.vy < 0;
       const drive = dashing ? config.dashAcceleration : config.acceleration;
-      const limit = (slowing ? config.braking : drive * this.capacity) * mobility;
+      const limit = (slowing ? this.brakingLimit() : drive * this.capacity) * mobility;
       const accel = Math.min(limit, gap / dt);
       forceX = (gapX / gap) * accel * this.mass;
       forceY = (gapY / gap) * accel * this.mass;

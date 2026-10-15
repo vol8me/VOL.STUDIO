@@ -11,6 +11,8 @@ import { Walker, type WalkerSurface } from '../walker/Walker';
 
 /** Havadaki aracın hızı bunun altındaysa fırlatma yönü yoktur: komutun yönü kullanılır. */
 const LEAP_MIN_SPEED = 30;
+/** Tavanın bu oranının üstündeki yerdeki hız sıçramadan kalmıştır: kayarak erir. */
+const COAST_RATIO = 1.08;
 
 /**
  * Dört bacaklı sıçrayıcı. Yürüyücünün sürüşünü paylaşır (komut hedef hız vektörüdür, gövde yürüdüğü
@@ -77,7 +79,9 @@ export class Leaper extends Walker {
 
   /**
    * Sekme fazı: bir sekmede tek hız çukuru vardır, başlangıçta en derindir; havada çukur yoktur.
-   * Sert dönüşte (`turnDip`) pençeler yere basar: tavan dönüş hızıyla orantılı kısılır.
+   * Sert dönüşte (`turnDip`) pençeler yere basar: tavan dönüş hızıyla orantılı kısılır. Sıçramadan sonra
+   * depo dolana dek (`landRecovery`) tavan `landFloor`dan toparlanır; depo ağ durumundadır, bu yüzden
+   * sunucu ve öngörü aynı çömelmeyi yürür.
    */
   protected override gaitFactor(): number {
     if (this.airborne) return 1;
@@ -86,7 +90,23 @@ export class Leaper extends Walker {
     const phase = (travelled / config.strideLength) * Math.PI * 2;
     const stride = 1 - config.strideDip * 0.5 * (1 + Math.cos(phase));
     const turning = clamp(Math.abs(this.angularVelocity) / config.maxTurnRate, 0, 1);
-    return stride * (1 - config.turnDip * turning);
+    const recovered = clamp(
+      this.reserve.energy / (config.boostCapacity * config.landRecovery),
+      0,
+      1,
+    );
+    const crouch = config.landFloor + (1 - config.landFloor) * recovered;
+    return stride * (1 - config.turnDip * turning) * crouch;
+  }
+
+  /**
+   * Koşu tavanının üstündeki hız (sıçramadan kalan) kayarak erir: yerde ve tavandan hızlıyken fren ivmesi
+   * `landBraking`dir. Normal yön değiştirme ve duruş frenine dokunulmaz.
+   */
+  protected override brakingLimit(): number {
+    const config = this.leaperConfig;
+    const coasting = !this.airborne && this.speed > config.maxSpeed * COAST_RATIO;
+    return coasting ? config.landBraking : config.braking;
   }
 
   /** Hız arttıkça dönüş tavanı `carve` oranına kadar düşer: koşuda geniş yay, yavaşken yerinde dönüş. */

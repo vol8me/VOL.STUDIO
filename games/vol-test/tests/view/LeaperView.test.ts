@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
 import { LEAPER_ART } from '@/config/leaperView';
-import { LEAPER_IDS, RHINO, VEHICLES } from '@/config/vehicles';
+import { JACKAL, LEAPER_IDS, PANTHER, RHINO, VEHICLES } from '@/config/vehicles';
 import { legBit } from '@/sim/chassis/parts';
 import { LeaperView } from '@/view/LeaperView';
 import { mechFrame } from '@/view/textures';
@@ -116,5 +116,72 @@ describe('LeaperView', () => {
     for (let step = 0; step < 240; step++) tick(0);
     expect(Math.abs(body.y - straight)).toBeLessThan(0.8);
     expect(Math.abs(body.rotation)).toBeLessThan(0.03);
+  });
+
+  it('kafa nişana bakar ve sınırı aşmaz; kuyruk dönüşün dışına savrulur, sıçramada düz uzanır', () => {
+    const scene = fakeScene();
+    const view = new LeaperView(
+      scene as unknown as Phaser.Scene,
+      JACKAL,
+      scene.add.container(0, 0) as never,
+    );
+    const list = view.root.list as unknown as Array<{ list?: Array<Record<string, unknown>> }>;
+    const body = list[list.length - 1];
+    const part = (name: string) =>
+      body.list!.find(
+        (object) => object.args && (object.args as unknown[])[3] === `jackal/${name}`,
+      )!;
+    const head = part('head') as unknown as { rotation: number };
+    const tail = part('tail') as unknown as { rotation: number };
+    const art = LEAPER_ART.jackal;
+    const run = { speed: JACKAL.leaper.maxSpeed, vx: JACKAL.leaper.maxSpeed };
+    // Hafif nişan sapması: kafa `follow` oranında bakar.
+    for (let step = 0; step < 90; step++)
+      view.update(frame({ hull: 0, turret: 0.4, treadLeft: 30, treadRight: 30 }), 16.7);
+    expect(head.rotation).toBeCloseTo(0.4 * art.head.follow, 1);
+    // Ters yöne tam sapma: kafa `yaw` sınırında kalır.
+    for (let step = 0; step < 90; step++)
+      view.update(frame({ hull: 0, turret: -2.4, treadLeft: 30, treadRight: 30 }), 16.7);
+    expect(head.rotation).toBeCloseTo(-art.head.yaw, 1);
+    // Sağa dönüş: kuyruk arkaya doğru (π) ve dönüşün dışına, yani artı yana savrulur.
+    for (let step = 0; step < 90; step++)
+      view.update(
+        frame({
+          angularVelocity: JACKAL.leaper.maxTurnRate,
+          treadLeft: 30,
+          treadRight: 30,
+          ...run,
+        }),
+        16.7,
+      );
+    expect(tail.rotation).toBeGreaterThan(Math.PI + 0.05);
+    expect(tail.rotation).toBeLessThanOrEqual(Math.PI + art.tail.swing + 1e-6);
+    // Sıçrama: kuyruk dümdüz geriye uzanır.
+    for (let step = 0; step < 40; step++)
+      view.update(frame({ boosting: true, treadLeft: 30, treadRight: 30, ...run }), 16.7);
+    expect(Math.abs(tail.rotation - Math.PI)).toBeLessThan(0.08);
+  });
+
+  it('omuz silahlı sıçrayıcıda kafa silahların üstünde, sırt raylıda altındadır', () => {
+    const order = (spec: typeof JACKAL) => {
+      const scene = fakeScene();
+      const view = new LeaperView(
+        scene as unknown as Phaser.Scene,
+        spec,
+        scene.add.container(0, 0) as never,
+      );
+      const list = view.root.list as unknown as Array<{ list?: Array<{ args?: unknown[] }> }>;
+      const names = list[list.length - 1].list!.map((object) => String(object.args?.[3]));
+      return {
+        head: names.indexOf(`${spec.id}/head`),
+        arm: names.indexOf(`${spec.id}/arm`),
+      };
+    };
+    const jackal = order(JACKAL);
+    expect(jackal.head).toBeGreaterThan(jackal.arm);
+    const panther = order(PANTHER);
+    expect(panther.head).toBeLessThan(panther.arm);
+    expect(LEAPER_ART.jackal.head.over).toBe(true);
+    expect(LEAPER_ART.panther.head.over).toBe(false);
   });
 });

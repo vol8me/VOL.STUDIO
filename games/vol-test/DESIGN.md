@@ -379,16 +379,33 @@ hızıyla döner (Jackal 1,4, Panther 1, Rhino 0,55): sıçrayan taahhüt eder, 
 Havadayken kaya duvarları atlanır, derin su boğmaz ve tırmanış yavaşlatması yoktur; yere iner inmez
 bunlar geri gelir. Havadaki durum ağda zaten taşınan `reserve.active`tir, yeni ağ alanı yoktur.
 
+İniş bir çömelmedir (v2). Yere inen sıçrayıcı duvara çarpmış gibi kesilmez: koşu tavanının üstündeki hız
+`landBraking` ivmesiyle kayarak erir (Jackal 1000, Panther 800, Rhino 600; yürüyüş freni 1400–2200) ve depo
+`landRecovery` (0,3) oranında dolana dek koşu tavanı `landFloor`dan (0,75 / 0,7 / 0,6) tavana toparlanır.
+İkisi de ağdaki depo ve hızdan türer, ek durum yoktur; sunucu ile öngörü aynı kaymayı yürür. Sekme çukuru
+(`strideDip`) 0,22'den 0,09–0,14'e indi: koşuda hız dalgası kamerayı titretmez, sekme sunumdadır.
+
 Her yanda iki bacak vardır (`LEAPER_LEGS_PER_SIDE`, bit sırası yürüyücüyle aynı: sol 0-1, sağ 4-5;
 istasyonlar `PARTS.leaper.stations`). Bacak kopunca tavan ve ivme düşer, sıçrayıcı o yana sürüklenir
 ve her sekmede gövdesi çöker; Jackal'ın zırhı kâğıt gibi olduğundan en çabuk topallar.
 
-Sanat `src/assets/vehicles/{jackal,panther,rhino}/` altında gövde, uyluk, baldır, eklem, ayak ve kol
-SVG'leridir; `LeaperView` bacakları sekmeye göre (ön çift, kısa aradan sonra arka çift), sıçramada ön
-ayağı öne arka ayağı arkaya uzatır, arka iticilerden alev çıkarır ve inişte gövdeyi çökertip toz kaldırır.
-Koşuda gövde sekmeyle ileri-geri savrulur ve her basışta hafifçe yükselir; dönüşte gövde dönüşün dışına
-kayar, yönü hizadan geri kalır ve yay dönüş bitince sallanıp yatışır, iç bacaklar daha yüksek kalkar, dış
-pençe toz savurur (`LEAPER_VIEW.turn`, `LEAPER_VIEW.stride`).
+Sanat (v2) `src/assets/vehicles/{jackal,panther,rhino}/` altında hayvandır: gövde (`hull`), boyun ekseninde
+dönen kafa (`head`), kuyruk (`tail`), uyluk, baldır, eklem, ayak ve silah (`arm`) SVG'leridir; hepsi
+`LEAPER_ART` ölçüleriyle yerleşir. Jackal çakal (ince gövde, sivri kafa, geriye süpürülmüş kulak bıçakları,
+iki omuz topu), Panther pars (alçak, uzun; sol omuzda raylı top, sağ omuzda duyarga kubbesi, dümen kuyruk),
+Rhino gergedandır (plaka plaka gövde, çekiç kafa ve boynuz, topuzlu kuyruk, iki omuz kütle topu). Bacaklar
+dijitigrattır: kısa kalın uyluk, uzun ince baldır (Jackal/Panther pençeli, Rhino toynaklı). `LeaperView`
+bacakları sekmeye göre (ön çift, kısa aradan sonra arka çift) yürütür, sıçramada ön ayağı öne arka ayağı
+arkaya uzatır, arka iticilerden alev çıkarır ve inişte gövdeyi çökertip toz kaldırır. Kafa nişana bakar
+(`head.follow` oranında, en çok `head.yaw`; yay), sıçramada öne uzanır ve ağırlıkla birlikte çöker; kuyruk
+dönüşün dışına savrulur, koşuda sekmeyle kıvrılır, havada düz uzanır ve inişte kırbaç atar
+(`LEAPER_VIEW.head`, `LEAPER_VIEW.tail`). Omuz silahlı Jackal ve Rhino'da kafa silahların üstünde çizilir
+(kulak ve boynuz görünür), sırt raylı Panther'de silah kafanın üstünden geçer (`head.over`). Koşuda gövde
+sekmeyle ileri-geri savrulur ve her basışta hafifçe yükselir; dönüşte gövde dönüşün dışına kayar, yönü
+hizadan geri kalır ve yay dönüş bitince sallanıp yatışır, iç bacaklar daha yüksek kalkar, dış pençe toz
+savurur (`LEAPER_VIEW.turn`, `LEAPER_VIEW.stride`). Çarpışan ayak izi sanatla birlikte güncellendi
+(Jackal 26×13, Panther 32×16, Rhino 42×26 yarım ölçü); kafa burun ucunda biter, kuyruk ve kulaklar çarpışmaya
+girmez.
 Enerji tonları: Jackal limon, Panther kızıl, Rhino camgöbeği. Oran ve renk beğenisinin insan doğrulaması
 ayrı iştir (TODO).
 
