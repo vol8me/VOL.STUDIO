@@ -74,7 +74,7 @@ describe('iklim dosya deposu', () => {
     const path = tempFile();
     const store = new FileClimateStore(path);
     expect(store.load()).toBeUndefined();
-    const snapshot = aged(90);
+    const snapshot = aged(30);
     expect(store.save(snapshot)).toBe(true);
     const loaded = store.load()!;
     expect(loaded.elapsedMs).toBe(snapshot.elapsedMs);
