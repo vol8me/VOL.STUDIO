@@ -12,6 +12,8 @@ const SECONDS = 75;
 const TRIALS = 4;
 /** Tek bir aracın katalogun geri kalanına karşı toplam galibiyet payı bu aralıkta kalmalıdır. */
 const FAIR = { min: 0.3, max: 0.7 };
+/** İlk araç testi tüm düelloları ısıtır; kapsam ölçümü ve yük altında 5 sn'lik genel sınırı aşar, genel sınır büyütülmez. */
+const DUEL_BUDGET_MS = 60_000;
 
 /** Sıralı (a, b, tohum) üçlüsünün sonucu: her düello iki aracın payına da yazıldığından bir kez koşulur. */
 const duelCache = new Map<string, number>();
@@ -75,6 +77,7 @@ describe('araç dengesi (bot düellosu)', () => {
       expect(value, `${a} galibiyet payı ${value.toFixed(2)}`).toBeGreaterThan(FAIR.min);
       expect(value, `${a} galibiyet payı ${value.toFixed(2)}`).toBeLessThan(FAIR.max);
     },
+    DUEL_BUDGET_MS,
   );
 
   it('düello belirlenimlidir: aynı çift ve tohum aynı sonucu verir', () => {
