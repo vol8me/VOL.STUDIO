@@ -100,32 +100,40 @@ describe('arama kalıcılığı', () => {
     expect(existsSync(join(repo.root, 'devtools/audio-synth/export'))).toBe(false);
   });
 
-  it('raporu olmayan (yarım kalmış) arama aynı spec ile yeniden koşulabilir', () => {
-    runSearch(repo.root, ROOT, shellSpec());
-    const report = readFileSync(join(dir(), 'report.json'), 'utf8');
-    rmSync(join(dir(), 'report.json'));
-    expect(runSearch(repo.root, ROOT, shellSpec()).report).toEqual(JSON.parse(report));
-  });
+  it(
+    'raporu olmayan (yarım kalmış) arama aynı spec ile yeniden koşulabilir',
+    () => {
+      runSearch(repo.root, ROOT, shellSpec());
+      const report = readFileSync(join(dir(), 'report.json'), 'utf8');
+      rmSync(join(dir(), 'report.json'));
+      expect(runSearch(repo.root, ROOT, shellSpec()).report).toEqual(JSON.parse(report));
+    },
+    RENDER_TIMEOUT,
+  );
 
-  it('bütünlük: değişen aday programı ve spec adıyla raporlanır', () => {
-    runSearch(repo.root, ROOT, shellSpec());
-    const id = passedId();
-    const file = join(dir(), 'candidates', `${id}.json`);
-    writeFileSync(
-      file,
-      prettyCanonicalJson({ ...JSON.parse(readFileSync(file, 'utf8')), seed: 1 }),
-    );
-    expect(searchStatus(search).problems).toEqual([
-      `aday programı rapordan sonra değişti: candidates/${id}.json`,
-    ]);
-    expect(verifySearch(search).ok).toBe(false);
-    const spec = join(dir(), 'spec.json');
-    writeFileSync(
-      spec,
-      prettyCanonicalJson({ ...JSON.parse(readFileSync(spec, 'utf8')), seed: 8 }),
-    );
-    expect(codeOf(() => loadSearch(search))).toBe('identity');
-  });
+  it(
+    'bütünlük: değişen aday programı ve spec adıyla raporlanır',
+    () => {
+      runSearch(repo.root, ROOT, shellSpec());
+      const id = passedId();
+      const file = join(dir(), 'candidates', `${id}.json`);
+      writeFileSync(
+        file,
+        prettyCanonicalJson({ ...JSON.parse(readFileSync(file, 'utf8')), seed: 1 }),
+      );
+      expect(searchStatus(search).problems).toEqual([
+        `aday programı rapordan sonra değişti: candidates/${id}.json`,
+      ]);
+      expect(verifySearch(search).ok).toBe(false);
+      const spec = join(dir(), 'spec.json');
+      writeFileSync(
+        spec,
+        prettyCanonicalJson({ ...JSON.parse(readFileSync(spec, 'utf8')), seed: 8 }),
+      );
+      expect(codeOf(() => loadSearch(search))).toBe('identity');
+    },
+    RENDER_TIMEOUT,
+  );
 });
 
 describe('arama kararları (SearchSelectionV1)', () => {

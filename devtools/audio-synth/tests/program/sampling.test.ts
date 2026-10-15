@@ -10,7 +10,7 @@ import { resolveProgram } from '../../src/program/schema';
 import { shiftAndStretch } from '../../src/synthesis/stretch';
 import { hashPcm } from '../../src/kernel/canonical';
 import { probeResolver, probeSample, probeStereoSample, registerSample } from '../support/samples';
-import { RENDER_BLOCK } from '../support/timeouts';
+import { RENDER_BLOCK, RENDER_TIMEOUT } from '../support/timeouts';
 import { node } from '../support/program';
 
 /**
@@ -274,40 +274,44 @@ describe('source.granular', () => {
       { durationSeconds: 2, ...extra },
     );
 
-  it('donmuş, hareketli ve yoğun bulut: tekrarlanabilir, ayrışık, tıksız', () => {
-    const cases = [
-      cloud({
-        position: 0.5,
-        spread: 0,
-        pitchSpread: 0,
-        density: 60,
-        regularity: 1,
-        stereoSpread: 0,
-      }),
-      {
-        ...cloud({ position: { gesture: 'p' }, spread: 0.05, pitchSpread: 0.5, stereoSpread: 0 }),
-        gestures: {
-          p: {
-            curve: 'curve.linear',
-            version: 1,
-            points: [
-              [0, 0.05],
-              [2, 0.95],
-            ],
+  it(
+    'donmuş, hareketli ve yoğun bulut: tekrarlanabilir, ayrışık, tıksız',
+    () => {
+      const cases = [
+        cloud({
+          position: 0.5,
+          spread: 0,
+          pitchSpread: 0,
+          density: 60,
+          regularity: 1,
+          stereoSpread: 0,
+        }),
+        {
+          ...cloud({ position: { gesture: 'p' }, spread: 0.05, pitchSpread: 0.5, stereoSpread: 0 }),
+          gestures: {
+            p: {
+              curve: 'curve.linear',
+              version: 1,
+              points: [
+                [0, 0.05],
+                [2, 0.95],
+              ],
+            },
           },
         },
-      },
-      cloud({ density: 800, pitchSpread: 7, spread: 0.8, grainSeconds: 0.04, stereoSpread: 0 }),
-    ];
-    const hashes = cases.map((p) => {
-      const a = renderProgram(p, { samples: probeResolver });
-      const b = renderProgram(p, { samples: probeResolver });
-      expect(hashPcm(a.channels, RATE)).toBe(hashPcm(b.channels, RATE));
-      expect(analyzeAudio(a.channels, RATE, 'source-pcm').defects.clicks.count).toBe(0);
-      return hashPcm(a.channels, RATE);
-    });
-    expect(new Set(hashes).size).toBe(3);
-  });
+        cloud({ density: 800, pitchSpread: 7, spread: 0.8, grainSeconds: 0.04, stereoSpread: 0 }),
+      ];
+      const hashes = cases.map((p) => {
+        const a = renderProgram(p, { samples: probeResolver });
+        const b = renderProgram(p, { samples: probeResolver });
+        expect(hashPcm(a.channels, RATE)).toBe(hashPcm(b.channels, RATE));
+        expect(analyzeAudio(a.channels, RATE, 'source-pcm').defects.clicks.count).toBe(0);
+        return hashPcm(a.channels, RATE);
+      });
+      expect(new Set(hashes).size).toBe(3);
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('stereo yerleşim iki kanalı ayırır; aşırı yoğunluk tanecik tavanında durur (kaçak ayırma yok)', () => {
     const stereo = renderProgram(cloud({ stereoSpread: 1, density: 200 }, { channels: 2 }), {

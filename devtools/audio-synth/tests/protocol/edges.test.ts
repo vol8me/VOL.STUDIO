@@ -31,6 +31,7 @@ import {
 } from '../../src/protocol/search';
 import { shellSpec } from '../search/fixtures';
 import { edited } from '../support/json';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 import { createTestRepo, type TestRepo } from './repo';
 
 const ROOT = 'devtools/audio-synth/records/searches';
@@ -125,19 +126,23 @@ describe('arama protokolü — kenar dalları', () => {
     expect(code(() => promoteCandidate(job, loc, filtered))).toBe('invalid');
   });
 
-  it('dinleme kopyası PCM’i rapordan saparsa yazılmaz (bayat)', () => {
-    runSearch(repo.root, ROOT, shellSpec());
-    const reportFile = join(dir(), 'report.json');
-    const doc = JSON.parse(readFileSync(reportFile, 'utf8')) as {
-      candidates: { render: { pcmHash: string } | null }[];
-    };
-    const target = doc.candidates.find((c) => c.render);
-    if (!target?.render) throw new Error('render yok');
-    target.render.pcmHash = `sha256:${'8'.repeat(64)}`;
-    writeFileSync(reportFile, prettyCanonicalJson(doc));
-    expect(code(() => exportSearchAudition(loc))).toBe('stale');
-    expect(verifySearch(loc).checks.find((c) => c.name === 'reproduction')?.ok).toBe(false);
-  });
+  it(
+    'dinleme kopyası PCM’i rapordan saparsa yazılmaz (bayat)',
+    () => {
+      runSearch(repo.root, ROOT, shellSpec());
+      const reportFile = join(dir(), 'report.json');
+      const doc = JSON.parse(readFileSync(reportFile, 'utf8')) as {
+        candidates: { render: { pcmHash: string } | null }[];
+      };
+      const target = doc.candidates.find((c) => c.render);
+      if (!target?.render) throw new Error('render yok');
+      target.render.pcmHash = `sha256:${'8'.repeat(64)}`;
+      writeFileSync(reportFile, prettyCanonicalJson(doc));
+      expect(code(() => exportSearchAudition(loc))).toBe('stale');
+      expect(verifySearch(loc).checks.find((c) => c.name === 'reproduction')?.ok).toBe(false);
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('dinleme sunucusu IPv6 loopback’e de bağlanabilir; sabit dosyalar ve durum servis edilir', async (ctx) => {
     runSearch(repo.root, ROOT, shellSpec());

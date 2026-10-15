@@ -16,7 +16,7 @@ import { RENDER_CACHE_ROOT, repoRenderCache } from '../../src/protocol/renderCac
 import { runSearch } from '../../src/protocol/search';
 import { shellFamily } from '../family/fixtures';
 import { shellSpec } from '../search/fixtures';
-import { PIPELINE_TIMEOUT } from '../support/timeouts';
+import { HEAVY_RENDER_TIMEOUT, PIPELINE_TIMEOUT } from '../support/timeouts';
 import { createTestRepo, testProgram, type TestRepo } from './repo';
 
 const REPO = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -117,7 +117,7 @@ describe('paralel toplu iş seri ile aynı sonucu aynı sırayla verir', () => {
         key(checkMusic(REPO, docs, { workers: 1 })),
       );
     },
-    PIPELINE_TIMEOUT,
+    HEAVY_RENDER_TIMEOUT,
   );
 
   it(

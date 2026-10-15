@@ -10,6 +10,7 @@ import { applyBiquad, biquadResponseDb, eqCoefficients, passCascade } from '../.
 import { limitTruePeak } from '../../src/effects/limiter';
 import { crush, saturate } from '../../src/synthesis/saturation';
 import { powerSpectrum } from '../../src/analysis/spectrum';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 /**
  * İşleme kanıtları: EQ standart frekans yanıtı fixture'ları
@@ -262,30 +263,34 @@ describe('transient şekillendirici, doygunluk, bit indirgeme', () => {
     expect(head(Float32Array.from(scaled, (v) => v * 10))).toBeCloseTo(head(attack), 3);
   });
 
-  it('doygunluk tanh tek, asymmetric çift harmonik üretir; 4× aşırı örnekleme alias’ı bastırır', () => {
-    const f = 1000;
-    const level = (y: Float32Array, hz: number) => {
-      const size = 16384;
-      const p = powerSpectrum(y, 8192, size);
-      const k = Math.round((hz * size) / RATE);
-      return 10 * Math.log10(Math.max(p[k - 1], p[k], p[k + 1]) + 1e-30);
-    };
-    const odd = sine(f, 1, 0.9);
-    saturate([odd], { driveDb: 18, character: 'tanh', mix: 1, outputDb: 0 });
-    const even = sine(f, 1, 0.9);
-    saturate([even], { driveDb: 18, character: 'asymmetric', mix: 1, outputDb: 0 });
-    expect(level(odd, 3 * f) - level(odd, 2 * f)).toBeGreaterThan(30);
-    expect(level(even, 2 * f)).toBeGreaterThan(level(odd, 2 * f) + 30);
-    const high = sine(7000, 1, 0.9);
-    const naive = high.map((v) => Math.max(-1, Math.min(1, v * Math.pow(10, 24 / 20))));
-    saturate([high], { driveDb: 24, character: 'hard', mix: 1, outputDb: 0 });
-    const alias = 48000 - 5 * 7000;
-    const naiveAlias = level(naive, alias) - level(naive, 7000);
-    const oversampledAlias = level(high, alias) - level(high, 7000);
-    expect(naiveAlias).toBeGreaterThan(-20);
-    expect(oversampledAlias).toBeLessThan(-45);
-    expect(naiveAlias - oversampledAlias).toBeGreaterThan(30);
-  });
+  it(
+    'doygunluk tanh tek, asymmetric çift harmonik üretir; 4× aşırı örnekleme alias’ı bastırır',
+    () => {
+      const f = 1000;
+      const level = (y: Float32Array, hz: number) => {
+        const size = 16384;
+        const p = powerSpectrum(y, 8192, size);
+        const k = Math.round((hz * size) / RATE);
+        return 10 * Math.log10(Math.max(p[k - 1], p[k], p[k + 1]) + 1e-30);
+      };
+      const odd = sine(f, 1, 0.9);
+      saturate([odd], { driveDb: 18, character: 'tanh', mix: 1, outputDb: 0 });
+      const even = sine(f, 1, 0.9);
+      saturate([even], { driveDb: 18, character: 'asymmetric', mix: 1, outputDb: 0 });
+      expect(level(odd, 3 * f) - level(odd, 2 * f)).toBeGreaterThan(30);
+      expect(level(even, 2 * f)).toBeGreaterThan(level(odd, 2 * f) + 30);
+      const high = sine(7000, 1, 0.9);
+      const naive = high.map((v) => Math.max(-1, Math.min(1, v * Math.pow(10, 24 / 20))));
+      saturate([high], { driveDb: 24, character: 'hard', mix: 1, outputDb: 0 });
+      const alias = 48000 - 5 * 7000;
+      const naiveAlias = level(naive, alias) - level(naive, 7000);
+      const oversampledAlias = level(high, alias) - level(high, 7000);
+      expect(naiveAlias).toBeGreaterThan(-20);
+      expect(oversampledAlias).toBeLessThan(-45);
+      expect(naiveAlias - oversampledAlias).toBeGreaterThan(30);
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('bit indirgeme seviye sayısı ve örnek tutma ile basamak üretir', () => {
     const x = sine(100, 0.1, 0.8);

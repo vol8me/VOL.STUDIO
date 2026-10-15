@@ -8,7 +8,7 @@ import { eventsFor, renderScoreRaw, voicesOf } from '../../src/music/render';
 import { expandProgram } from '../../src/music/score';
 import { renderMusicStem } from '../../src/music/stem';
 import { hashPcm } from '../../src/kernel/canonical';
-import { RENDER_BLOCK } from '../support/timeouts';
+import { HEAVY_RENDER_TIMEOUT, RENDER_BLOCK } from '../support/timeouts';
 
 const LOOP = new URL('../../records/music/reference-loop/music.json', import.meta.url);
 const LOOP_STEM = new URL(
@@ -57,16 +57,20 @@ function uniqueVoicesOf(program: MusicProgramV1, lane: string): number {
 }
 
 describe('müzik: ses önbelleği ve artımlı render', RENDER_BLOCK, () => {
-  it('önbellek açık ve kapalı partisyon ve stem render’ı aynıdır', () => {
-    const cache = new MemoryRenderCache({ maxBytes: 1 << 28 });
-    expect(render(reference(), cache)).toBe(render(reference(), null));
-    const stem = JSON.parse(readFileSync(LOOP_STEM, 'utf8')) as unknown;
-    const plain = renderMusicStem(stem);
-    const cached = renderMusicStem(stem, { cache });
-    expect(hashPcm(cached.channels, cached.sampleRate)).toBe(
-      hashPcm(plain.channels, plain.sampleRate),
-    );
-  });
+  it(
+    'önbellek açık ve kapalı partisyon ve stem render’ı aynıdır',
+    () => {
+      const cache = new MemoryRenderCache({ maxBytes: 1 << 28 });
+      expect(render(reference(), cache)).toBe(render(reference(), null));
+      const stem = JSON.parse(readFileSync(LOOP_STEM, 'utf8')) as unknown;
+      const plain = renderMusicStem(stem);
+      const cached = renderMusicStem(stem, { cache });
+      expect(hashPcm(cached.channels, cached.sampleRate)).toBe(
+        hashPcm(plain.channels, plain.sampleRate),
+      );
+    },
+    HEAVY_RENDER_TIMEOUT,
+  );
 
   it('şerit kazancı değişince hiçbir ses yeniden sentezlenmez', () => {
     const cache = new MemoryRenderCache({ maxBytes: 1 << 28 });
@@ -76,13 +80,17 @@ describe('müzik: ses önbelleği ve artımlı render', RENDER_BLOCK, () => {
     expect(render(quieter, cache)).toBe(render(quieter, null));
   });
 
-  it('şerit enstrümanı değişince yalnız o şeridin sesleri sentezlenir', () => {
-    const cache = new MemoryRenderCache({ maxBytes: 1 << 28 });
-    render(reference(), cache);
-    const swapped = withLane(reference(), 'keys', { instrument: 'preset:harp' });
-    const expected = uniqueVoicesOf(swapped, 'keys');
-    expect(expected).toBeGreaterThan(0);
-    expect(writesDuring(cache, () => render(swapped, cache))).toBe(expected);
-    expect(render(swapped, cache)).toBe(render(swapped, null));
-  });
+  it(
+    'şerit enstrümanı değişince yalnız o şeridin sesleri sentezlenir',
+    () => {
+      const cache = new MemoryRenderCache({ maxBytes: 1 << 28 });
+      render(reference(), cache);
+      const swapped = withLane(reference(), 'keys', { instrument: 'preset:harp' });
+      const expected = uniqueVoicesOf(swapped, 'keys');
+      expect(expected).toBeGreaterThan(0);
+      expect(writesDuring(cache, () => render(swapped, cache))).toBe(expected);
+      expect(render(swapped, cache)).toBe(render(swapped, null));
+    },
+    HEAVY_RENDER_TIMEOUT,
+  );
 });

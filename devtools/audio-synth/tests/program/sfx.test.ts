@@ -8,6 +8,7 @@ import { renderProgram } from '../../src/program/render';
 import { soundGraph } from '../../src/program/soundGraph';
 import { hashPcm } from '../../src/kernel/canonical';
 import { centroid, envelopeRate, peakFrequency } from '../support/measure';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 /**
  * SFX ailesi kanıtları. Her aile registry yapı taşıdır; bu
@@ -227,17 +228,21 @@ describe('Weapon/Launcher (archetype.launcher)', () => {
     ['tank', 'turret', 0, 1],
     ['tank', 'scifi', 0, 2],
     ['turret', 'scifi', 1, 2],
-  ] as const)('%s ve %s tam PCM kimlikleri ayrışır', (_a, _b, a, b) => {
-    const programs = variants();
-    const rendered = [render(programs[a]), render(programs[b])];
-    expect(hashPcm([rendered[0]], 24000)).not.toBe(hashPcm([rendered[1]], 24000));
-    const peakTime = (x: Float32Array) =>
-      x.reduce((best, v, i) => (Math.abs(v) > Math.abs(x[best]) ? i : best), 0) / 24000;
-    for (const [slot, index] of [a, b].entries()) {
-      if (index === 0) expect(peakTime(rendered[slot])).toBeLessThan(0.3);
-      if (index === 2) expect(peakTime(rendered[slot])).toBeGreaterThan(0.6);
-    }
-  });
+  ] as const)(
+    '%s ve %s tam PCM kimlikleri ayrışır',
+    (_a, _b, a, b) => {
+      const programs = variants();
+      const rendered = [render(programs[a]), render(programs[b])];
+      expect(hashPcm([rendered[0]], 24000)).not.toBe(hashPcm([rendered[1]], 24000));
+      const peakTime = (x: Float32Array) =>
+        x.reduce((best, v, i) => (Math.abs(v) > Math.abs(x[best]) ? i : best), 0) / 24000;
+      for (const [slot, index] of [a, b].entries()) {
+        if (index === 0) expect(peakTime(rendered[slot])).toBeLessThan(0.3);
+        if (index === 2) expect(peakTime(rendered[slot])).toBeGreaterThan(0.6);
+      }
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('profil kabul etmeyen archetype’a materyal verilemez; bilinmeyen materyal reddedilir', () => {
     expect(() =>

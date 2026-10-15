@@ -20,5 +20,11 @@ export const PIPELINE_TIMEOUT = 120_000;
  */
 export const CORPUS_TIMEOUT = 480_000;
 
+/**
+ * Kapsamsız 10–25 sn süren çok parçalı müzik render süpürmeleri: kapsam altında ~4.5 kat yavaşlayıp
+ * `PIPELINE_TIMEOUT`u aşar (ölçülen: 15–25 sn → 70–140 sn).
+ */
+export const HEAVY_RENDER_TIMEOUT = 240_000;
+
 export const RENDER_BLOCK = { timeout: RENDER_TIMEOUT } as const;
 export const PIPELINE_BLOCK = { timeout: PIPELINE_TIMEOUT } as const;

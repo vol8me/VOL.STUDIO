@@ -151,6 +151,17 @@ ateş tetiğini sürekli basılı tutup sol çubuğu dört yönde döndürdü. 6
 SLR4 derlemesiyle yeniden ölçülür, F08.5). GPU/panel süreleri `null`. Bu, fiziksel kol, gerçek uyku ve Steam
 istemci kabulü değildir.
 
+### 15 Ekim yapısı, 120 saniyelik ölçüm
+
+`e6395317` ağacından WSL Ubuntu 24.04'te üretilen **host** AppImage (SLR4 değil; yeni çevrimiçi HUD, çekirdek nabzı ve
+duyargalar, hasar sayıları, göller ve batış sesi dahil), aynı Deck, gamescope, 1280×800, çoklu tank, kar, yüksek
+kalite, ölçüm kipi, girdi verilmedi. 12 pencerede (10 sn) FPS 52,7 → 59,9: ilk iki pencere ısınmadır (52,7 ve 56,8
+FPS, p95 29 ve 23 ms), sonraki on pencerede 58,1–59,9 FPS ve p95 19–21 ms; 34 ms'yi aşan kare toplam 30. **≥59 FPS ve
+p95 ≤18 ms hedefi (F08.5) karşılanmadı**: ısınma dışında bile p95 19–21 ms'dedir ve karelerin 16,7/20 ms basamaklarında
+kümelenmesi önceki ölçümle aynıdır. Ekran görüntüsü yeni HUD'u (can/enerji çubukları, harita ve göller) ve 60 FPS
+göstergesini gösterir. Bu fiziksel kol, gerçek uyku ve Steam istemci kabulü değildir; SLR4 derlemesi ve insan
+beğenisi yapılmadı.
+
 ### Ölçüm çağrısı
 
 deck mode taban kimliğe, deploy ayrı release kısayoluna yazar.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Presets } from '../../src/index';
 import { synthesize } from '../../src/engine';
 import type { SynthParams } from '../../src/types';
+import { RENDER_TIMEOUT } from '../support/timeouts';
 
 function toneEnergy(samples: Float32Array, sampleRate: number, frequency: number): number {
   const omega = (2 * Math.PI * frequency) / sampleRate;
@@ -139,16 +140,20 @@ describe('piano presetleri', () => {
     expect(rms(prepSamples.slice(-1000))).toBeLessThan(0.15);
   });
 
-  it('piano presetleri normalize öncesi clip yapmaz', () => {
-    for (const presetName of ['grandPiano', 'uprightPiano', 'honkyTonkPiano', 'preparedPiano']) {
-      const fn = Presets[presetName as keyof typeof Presets] as (
-        f?: number,
-        d?: number,
-      ) => SynthParams;
-      const { samples } = render(fn(330, 1.0));
-      expect(peak(samples)).toBeLessThanOrEqual(1.0);
-    }
-  });
+  it(
+    'piano presetleri normalize öncesi clip yapmaz',
+    () => {
+      for (const presetName of ['grandPiano', 'uprightPiano', 'honkyTonkPiano', 'preparedPiano']) {
+        const fn = Presets[presetName as keyof typeof Presets] as (
+          f?: number,
+          d?: number,
+        ) => SynthParams;
+        const { samples } = render(fn(330, 1.0));
+        expect(peak(samples)).toBeLessThanOrEqual(1.0);
+      }
+    },
+    RENDER_TIMEOUT,
+  );
 
   it('uprightPiano grandPianodan daha çabuk söner', () => {
     const { samples: up, sampleRate } = render(Presets.uprightPiano(220, 1.2));
