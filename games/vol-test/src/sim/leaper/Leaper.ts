@@ -21,6 +21,8 @@ const LEAP_MIN_SPEED = 30;
  *   olmak yeni bir ağ durumu değildir: depo ve hız zaten durumdadır, sunucu ve öngörü aynı kavisi çizer.
  * - Yerde koşarken her sekmenin başında hız çukuru (`strideDip`) vardır; faz iki yanın katettiği
  *   yoldan türer (rastgelelik yok).
+ * - Dönüş bir yük taşır: hızlandıkça gövde geniş yay çizer (`carve`) ve sert dönüşte pençeler yere
+ *   basıp hızı keser (`turnDip`). İkisi de hız ve açısal hızdan türer, ek ağ durumu yoktur.
  * - Dört bacak (yanda iki) kaybedilebilir; bir yanı eksik sıçrayıcı o yana topallar.
  */
 export class Leaper extends Walker {
@@ -73,13 +75,25 @@ export class Leaper extends Walker {
     return Math.atan2(this.vy, this.vx);
   }
 
-  /** Sekme fazı: bir sekmede tek hız çukuru vardır, başlangıçta en derindir; havada çukur yoktur. */
+  /**
+   * Sekme fazı: bir sekmede tek hız çukuru vardır, başlangıçta en derindir; havada çukur yoktur.
+   * Sert dönüşte (`turnDip`) pençeler yere basar: tavan dönüş hızıyla orantılı kısılır.
+   */
   protected override gaitFactor(): number {
     if (this.airborne) return 1;
     const config = this.leaperConfig;
     const travelled = (this.groundLeft + this.groundRight) / 2;
     const phase = (travelled / config.strideLength) * Math.PI * 2;
-    return 1 - config.strideDip * 0.5 * (1 + Math.cos(phase));
+    const stride = 1 - config.strideDip * 0.5 * (1 + Math.cos(phase));
+    const turning = clamp(Math.abs(this.angularVelocity) / config.maxTurnRate, 0, 1);
+    return stride * (1 - config.turnDip * turning);
+  }
+
+  /** Hız arttıkça dönüş tavanı `carve` oranına kadar düşer: koşuda geniş yay, yavaşken yerinde dönüş. */
+  protected override turnRateLimit(): number {
+    const config = this.leaperConfig;
+    const effort = clamp(this.speed / config.maxSpeed, 0, 1);
+    return config.maxTurnRate * (1 - config.carve * effort);
   }
 
   protected override get legsPerSide(): number {

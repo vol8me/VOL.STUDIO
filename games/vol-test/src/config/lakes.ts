@@ -123,4 +123,9 @@ export const WADING = {
   hurtPerSecond: 0.34,
   /** Boğulma hasarı bu can oranına birikince tek olayla uygulanır: olay seli ve ağ yükü yoktur. */
   hurtChunk: 0.03,
+  /**
+   * Merkez bu derinliğe inince araç dibe çöker: canı ne olursa olsun (koruma dahil) ölür. Kıyıdan
+   * bu derinliğe varmak zaman alır (hız `speedFloor`a düşer) ama varan kurtulamaz.
+   */
+  bottomDepth: 0.9,
 } as const;

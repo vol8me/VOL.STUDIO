@@ -15,7 +15,7 @@ import { TEXTURE, TEXTURE_SCALE, addSpiderImage } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
 import { ROCK_VIEW } from '@/config/rockView';
 import { WATER_VIEW } from '@/config/waterView';
-import { setCharred, sinkRoot } from './charring';
+import { setCharred, sinkRoot, submergeRoot } from './charring';
 
 /**
  * Yere basan ayağın izi: dünya konumu, gövde yönü ve boy ölçeği. `width` verilirse bu bir bot izidir
@@ -240,6 +240,10 @@ export class SpiderView implements VehicleView {
     this.ghosts.clear();
     for (const cannon of this.cannons) cannon.silence();
     this.dashing = false;
+  }
+
+  submerge(depth: number): void {
+    submergeRoot(this.root, depth);
   }
 
   sink(progress: number): void {

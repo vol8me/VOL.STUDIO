@@ -156,6 +156,8 @@ export class WaterTrails {
   splash(x: number, y: number, radius: number): void {
     for (let ring = 0; ring < SINK.rings; ring++)
       this.add('ring', x, y, 0, radius * (1 + ring * 0.35), 1, ring * SINK.ringGapMs);
+    // Gövde kapanırken yüzeye vuran son kabarma: geniş, güçlü halka.
+    this.add('ring', x, y, 0, radius * SINK.boil.radius, 1, SINK.durationMs * SINK.boil.at);
     for (let bubble = 0; bubble < SINK.bubbles; bubble++) {
       const seed = this.seeds++;
       const spread = radius * 0.9;
@@ -166,7 +168,7 @@ export class WaterTrails {
         0,
         2 + hash(seed, 3) * 2.2,
         1,
-        hash(seed, 4) * SINK.durationMs * 0.7,
+        hash(seed, 4) * SINK.durationMs * 0.9,
       );
     }
   }

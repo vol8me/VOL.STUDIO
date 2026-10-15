@@ -66,6 +66,49 @@ describe('hız ve boğulma eğrileri', () => {
   });
 });
 
+describe('dip', () => {
+  /** Gölün tam ortasına yerleştirilmiş araç. */
+  function atBottom(spec: VehicleSpec, protectionMs = 0): { sim: Simulation; vehicle: Vehicle } {
+    const simulation = new Simulation({ world, vehicle: spec, spawnPlayer: false });
+    const vehicle = simulation.spawn(lake.x, lake.y, 0, null, undefined, spec);
+    vehicle.vitality.protectionRemainingMs = protectionMs;
+    return { sim: simulation, vehicle };
+  }
+
+  it('merkez dibe değince yüzemeyen araç canı ne olursa olsun tek adımda çöker: kaynaksız `drown`', () => {
+    for (const spec of [STRIKER, ARACHNID]) {
+      const subject = atBottom(spec);
+      expect(subject.vehicle.vitality.health).toBe(spec.health);
+      const events: SimEvent[] = [];
+      subject.sim.step(() => idleCommand(), STEP_MS);
+      subject.sim.drainEvents(events);
+      expect(subject.vehicle.chassis.waterDepth, spec.id).toBeGreaterThanOrEqual(
+        WADING.bottomDepth,
+      );
+      expect(subject.vehicle.vitality.alive, spec.id).toBe(false);
+      const died = events.find((event) => event.kind === 'died');
+      expect(died).toMatchObject({ kind: 'died', cause: 'drown' });
+    }
+  });
+
+  it('doğma koruması dibe çökmeyi engellemez', () => {
+    const subject = atBottom(STRIKER, 5000);
+    subject.sim.step(() => idleCommand(), STEP_MS);
+    expect(subject.vehicle.vitality.alive).toBe(false);
+  });
+
+  it('süzülen araç dipte de yüzer; eşiğin hemen üstündeki sığ nokta öldürmez', () => {
+    const hover = atBottom(MANTA);
+    hover.sim.step(() => idleCommand(), STEP_MS);
+    expect(hover.vehicle.vitality.alive).toBe(true);
+    const shallow = new Simulation({ world, vehicle: STRIKER, spawnPlayer: false });
+    const vehicle = shallow.spawn(START.x, START.y, 0, null, undefined, STRIKER);
+    vehicle.vitality.protectionRemainingMs = 0;
+    shallow.step(() => idleCommand(), STEP_MS);
+    expect(vehicle.vitality.alive).toBe(true);
+  });
+});
+
 describe('göl ve araç', () => {
   it('kıyıdan suya giren tank yavaşlar, derinde hasar alır ve boğulur: ölüm kaynaksız `drown`dur', () => {
     const subject = sim(STRIKER);

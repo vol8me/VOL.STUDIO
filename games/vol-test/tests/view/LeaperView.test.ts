@@ -82,4 +82,39 @@ describe('LeaperView', () => {
     expect(prints.length).toBeGreaterThan(0);
     expect(prints.every((scale) => scale > 0)).toBe(true);
   });
+
+  it('dönüşte gövde dönüşün dışına kayar ve geriden gelir; dönüş bitince yay sallanıp yatışır', () => {
+    const scene = fakeScene();
+    const view = new LeaperView(
+      scene as unknown as Phaser.Scene,
+      RHINO,
+      scene.add.container(0, 0) as never,
+    );
+    const list = view.root.list as unknown as Array<{ x: number; y: number; rotation: number }>;
+    const body = list[list.length - 1];
+    const max = RHINO.leaper.maxTurnRate;
+    const run = { speed: RHINO.leaper.maxSpeed, vx: RHINO.leaper.maxSpeed };
+    // Adım fazı sabit tutulur: yalnız dönüş yükü gövdeyi oynatır (sekme salınımı karışmaz).
+    const tread = 30;
+    const tick = (omega: number): void => {
+      view.update(
+        frame({ treadLeft: tread, treadRight: tread, angularVelocity: omega, ...run }),
+        16.7,
+      );
+    };
+    for (let step = 0; step < 90; step++) tick(0);
+    const straight = body.y;
+    // Sağa (artı açısal hız) tam dönüş: gövde sola (eksi y) kayar, yönü hizadan geri kalır (eksi).
+    for (let step = 0; step < 60; step++) tick(max);
+    expect(body.y).toBeLessThan(straight - 1);
+    expect(body.rotation).toBeLessThan(-0.05);
+    // Sola dönüş aynadır.
+    for (let step = 0; step < 60; step++) tick(-max);
+    expect(body.y).toBeGreaterThan(straight + 1);
+    expect(body.rotation).toBeGreaterThan(0.05);
+    // Dönüş bitince yay aşıp yatışır: yeniden düzleşir.
+    for (let step = 0; step < 240; step++) tick(0);
+    expect(Math.abs(body.y - straight)).toBeLessThan(0.8);
+    expect(Math.abs(body.rotation)).toBeLessThan(0.03);
+  });
 });

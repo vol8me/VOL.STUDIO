@@ -116,7 +116,9 @@ Araçlar suya şöyle tepki verir (`WADING`):
 - Tank ve yürüyücü yüzemez: derinlikle hız tavanı sürekli düşer (`wadingSpeed`, tabanda ~%22), diz boyu
   suyun (`hurtDepth`) ötesinde can kaybeder (`drowningRate`, derinlikle kareli büyür) ve can bitince
   boğulur. Hasar kaynaksız `drown` nedenidir; küçük parçalar birikir ve `hurtChunk` oranında tek olayla
-  uygulanır (olay seli yoktur). Kıyıdan dönen araç sağ çıkar; derine inen ise zor çıkar.
+  uygulanır (olay seli yoktur). Kıyıdan dönen araç sağ çıkar; derine inen ise zor çıkar. Merkez dibe
+  (`bottomDepth`, 0,9) varınca araç canına ve doğma korumasına bakılmadan çöker: derin suyun sonu kesin
+  ölümdür, yavaşlama onu yalnız geciktirir.
 - Süzülen araç yüzer: yavaşlamaz, hasar almaz; derinliği yalnız sunum için (dalga, iz) not edilir.
 - Bot yüzemeyen araçta gölün önündeki mesafeleri tarar, suya bakan bileşeni sıyırır ve kıyı teğetine
   kayar; suyun içindeyse kıyıya çıkış yönüne gider (`BotBrain.lakePush`).
@@ -144,8 +146,11 @@ yürüyen araç yol aralığıyla halka bırakır; buz örtülü kıyı şeridin
 açar (koyu su, açık kenar) ve delik yavaş kapanır; süzülen araç açık suda V şeklinde dalga çeker, buzda
 yalnız ince bir yarık bırakır (dalga hissi yoktur). Suya basan araç zemine palet ve ayak izi basmaz ve
 iz sudan çıkınca eski noktadan köprü kurmadan kopar. Derin suda (`WATER_VIEW.sink.minDepth`) ölen araç
-patlamaz: `WreckDirector` kararmış gövdeyi `VehicleView.sink` ile solar ve küçültür, yüzeyde halka ve
-kabarcık bırakır, süre bitince sahneden kaldırır; yeniden doğunca gövde ve görünürlük geri gelir.
+patlamaz: `WreckDirector` gövdeyi `VehicleView.sink` ile batırır (önce havanın kabarttığı bir soluk,
+sonra yan yatış, titreme, suyun rengine kararma, küçülme ve solma; yüzeyde halkalar, kabarcık sütunu ve
+gövde kapanırken son bir kabarma halkası), süre bitince sahneden kaldırır; yeniden doğunca gövde ve
+görünürlük geri gelir. Sağ araç da dibe yaklaşırken (`VehicleView.submerge`, `WATER_VIEW.submerge`)
+derinlikle suyun rengine çekilir ve solar: oyuncu merkezin dibe vardığını ölmeden önce görür.
 Geç katılımda derinde ölü görülen araç hiç çizilmez. Boğulma akışta `drowned` satırıdır
 (`feedLine`, `cause: 'drown'`). Göller harita dokusuna da basılır (`src/hud/lakeMap.ts`): CORE
 `MinimapPanel`in `backgroundImage` zemini olarak kıyı şeridi, su ve derin su, `LakeField.outline`
@@ -342,7 +347,9 @@ dışına çıkar (`trackOffset`); bu bir seçimdir, boyut ve oranın insan beğ
 Beşinci şasi ailesidir (`LeaperSpec`, `src/sim/leaper/Leaper.ts`, sayılar `src/config/leaper.ts`).
 `Walker`dan türer: komut hedef hız vektörüdür, gövde harekete döner, nişan yalnız silahı sürer. İki
 şey ayırır. Yerde yürüyüş sekmedir: her sekme hızı çukura indirir ve toparlar (`strideDip`, faz zemin
-yolundan türer). Space sıçramadır: `boosting` rezervi `boostDrain` ile boşalırken gövde havalanır; ilk
+yolundan türer). Dönüş yük taşır: hızlandıkça dönüş tavanı `carve` oranında düşer (koşuda geniş yay,
+yavaşken yerinde dönüş; Jackal 0,3, Panther 0,42, Rhino 0,5) ve sert dönüşte pençeler basıp koşu tavanını
+`turnDip` kadar keser; ikisi de hız ve açısal hızdan türer, ağ durumu değişmez. Space sıçramadır: `boosting` rezervi `boostDrain` ile boşalırken gövde havalanır; ilk
 adımda yön komuttur, sonra mermi gibi gider ve hız vektörü komuta doğru yalnız `leapTurnRate` (rad/s)
 hızıyla döner (Jackal 1,4, Panther 1, Rhino 0,55): sıçrayan taahhüt eder, ağır olan daha az döner.
 Havadayken kaya duvarları atlanır, derin su boğmaz ve tırmanış yavaşlatması yoktur; yere iner inmez
@@ -355,6 +362,9 @@ ve her sekmede gövdesi çöker; Jackal'ın zırhı kâğıt gibi olduğundan en
 Sanat `src/assets/vehicles/{jackal,panther,rhino}/` altında gövde, uyluk, baldır, eklem, ayak ve kol
 SVG'leridir; `LeaperView` bacakları sekmeye göre (ön çift, kısa aradan sonra arka çift), sıçramada ön
 ayağı öne arka ayağı arkaya uzatır, arka iticilerden alev çıkarır ve inişte gövdeyi çökertip toz kaldırır.
+Koşuda gövde sekmeyle ileri-geri savrulur ve her basışta hafifçe yükselir; dönüşte gövde dönüşün dışına
+kayar, yönü hizadan geri kalır ve yay dönüş bitince sallanıp yatışır, iç bacaklar daha yüksek kalkar, dış
+pençe toz savurur (`LEAPER_VIEW.turn`, `LEAPER_VIEW.stride`).
 Enerji tonları: Jackal limon, Panther kızıl, Rhino camgöbeği. Oran ve renk beğenisinin insan doğrulaması
 ayrı iştir (TODO).
 

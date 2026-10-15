@@ -213,10 +213,23 @@ export class Simulation {
 
   /**
    * Yüzemeyen araç derin suda can yitirir; hasar kaynaksızdır (`drown`). Küçük parçalar birikir ve
-   * `WADING.hurtChunk` oranında tek olayla uygulanır. Süzülen araç yüzer, hasar almaz.
+   * `WADING.hurtChunk` oranında tek olayla uygulanır; merkez dibe (`WADING.bottomDepth`) varınca
+   * araç canına bakılmadan çöker. Süzülen araç yüzer, hasar almaz.
    */
   private drown(vehicle: Vehicle, dt: number): void {
-    const rate = vehicle.chassis.kind === 'hover' ? 0 : drowningRate(vehicle.chassis.waterDepth);
+    const chassis = vehicle.chassis;
+    if (
+      chassis.kind !== 'hover' &&
+      chassis.waterDepth >= WADING.bottomDepth &&
+      vehicle.vitality.alive
+    ) {
+      // Merkez dibe değdi: can ve doğma koruması ne olursa olsun araç çöker.
+      this.drownCarry.delete(vehicle.id);
+      vehicle.vitality.protectionRemainingMs = 0;
+      this.applyDamage(vehicle.id, vehicle.vitality.maxHealth, undefined, 'drown');
+      return;
+    }
+    const rate = chassis.kind === 'hover' ? 0 : drowningRate(chassis.waterDepth);
     if (rate <= 0) {
       this.drownCarry.delete(vehicle.id);
       return;

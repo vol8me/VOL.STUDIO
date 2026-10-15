@@ -26,12 +26,15 @@ export const LEAPER = {
   /** Zemin tutuşunun ivme ve hızı kısma oranı. */
   gripSensitivity: 0.4,
 
-  /** Gövde yönünün harekete dönme hızı tavanı, ivmesi ve hata kazancı. */
+  /** Gövde yönünün dönme hızı tavanı, ivmesi ve hata kazancı. */
   maxTurnRate: 4.2,
   turnAcceleration: 24,
   steerGain: 7,
-  /** Gövde hedefe ters dönükken koşu tavanının oranı: dönüşte hızını az kaybeder. */
+  /** Gövde hedefe ters dönükken koşu tavanının oranı. */
   turnSpeedFloor: 0.62,
+  /** Tam hızda dönüş tavanı `maxTurnRate * (1 - carve)`; sert dönüşte koşu tavanı `turnDip` kesilir. */
+  carve: 0.42,
+  turnDip: 0.18,
   /** Komutun bu uzunluğun altındaki hareketi yön belirlemez. */
   moveDeadzone: 0.2,
 

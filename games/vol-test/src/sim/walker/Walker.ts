@@ -118,6 +118,14 @@ export class Walker extends Chassis {
   }
 
   /**
+   * Gövdenin dönüş hızı tavanı (rad/s). Yürüyücü her hızda aynı tavanı kullanır; sıçrayıcı hızlandıkça
+   * geniş yay çizer.
+   */
+  protected turnRateLimit(): number {
+    return this.walkerConfig.maxTurnRate;
+  }
+
+  /**
    * Gövde hedef yöne ne kadar dönükse o kadar hızlı yürür: tam yan ya da ters yönde `turnSpeedFloor`
    * oranına düşer. Böylece yürüyücü tank gibi yana kaymaz; önce döner, sonra açılır.
    */
@@ -180,14 +188,12 @@ export class Walker extends Chassis {
       forceY = (gapY / gap) * accel * this.mass;
     }
 
+    const turnLimit = this.turnRateLimit();
     const wantedRate =
       (facing === null
         ? 0
-        : clamp(
-            angleDelta(this.angle, facing) * config.steerGain,
-            -config.maxTurnRate,
-            config.maxTurnRate,
-          )) + this.yawBias;
+        : clamp(angleDelta(this.angle, facing) * config.steerGain, -turnLimit, turnLimit)) +
+      this.yawBias;
     const spin = clamp(
       (wantedRate - this.angularVelocity) / dt,
       -config.turnAcceleration,

@@ -8,7 +8,7 @@ import type { MechSpec } from '@/config/vehicles';
 import { WATER_VIEW } from '@/config/waterView';
 import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
 import { mountPose, muzzlePose, type MuzzlePose } from '@/sim/muzzle';
-import { setCharred, sinkRoot } from './charring';
+import { setCharred, sinkRoot, submergeRoot } from './charring';
 import { CorePulse } from './CorePulse';
 import type { FootPrintSink } from './SpiderView';
 import { TEXTURE, TEXTURE_SCALE, addMechImage } from './textures';
@@ -271,6 +271,10 @@ export class MechView implements VehicleView {
       arm.flashMs = 0;
       arm.flash.setVisible(false);
     }
+  }
+
+  submerge(depth: number): void {
+    submergeRoot(this.root, depth);
   }
 
   sink(progress: number): void {

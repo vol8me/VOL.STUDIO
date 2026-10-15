@@ -154,6 +154,23 @@ export const LEAPER_VIEW = {
   /** Bir bacak çiftinin diğerine fazı ve sol/sağ bacağın sekmedeki küçük gecikmesi (gait çevrimi). */
   bound: { pairOffset: 0.5, sideLag: 0.1 },
   /**
+   * Sekmenin gövdeye yansıması: koşuda gövde ileri-geri savrulur (`surge`, dünya birimi) ve her
+   * sekmede iki kez hafifçe yükselir (`bob`, ölçek oranı); ikisi de hızla ölçeklenir.
+   */
+  stride: { surge: 1.5, bob: 0.032 },
+  /**
+   * Dönüşün yükü (`turn` = açısal hız / tavan, hızla ağırlaşır): gövde dönüşün dışına kayar (`shift`,
+   * dünya birimi) ve ağırlığı arkadan gelir (`twist`, rad; yay aşımı dönüş bitince sallanır); iç
+   * bacaklar daha yüksek kalkar (`lift`) ve sert dönüşte basış tozu artar (`dust`).
+   */
+  turn: {
+    shift: 2.6,
+    twist: 0.2,
+    lift: 0.55,
+    dust: 2,
+    spring: { stiffness: 150, damping: 9 } satisfies SpringConfig,
+  },
+  /**
    * Sıçrama: gövdenin tepe noktasında büyümesi (perspektif), gölgenin ek yüksekliği, bacakların
    * toplanıp uzanma süresi, itici alevinin ömrü ve iniş çöküşü.
    */

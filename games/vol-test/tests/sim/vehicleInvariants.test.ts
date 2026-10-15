@@ -56,6 +56,9 @@ describe('araç başına değişmezler (göl ve kayalı dünya)', () => {
         const spec = VEHICLES[id];
         const world = new World(SIZE, SIZE, 128, [LAKE], [ROCK]);
         const sim = new Simulation({ world, vehicle: spec });
+        // Kıyıdan başlar: merkezde doğan yüzemeyen araç ilk adımda dibe çökerdi ve sınanacak yol kalmazdı.
+        sim.player.chassis.place(SIZE / 2 - 150, SIZE / 2, 0);
+        sim.player.chassis.capturePose();
         const random = createRandom(seed);
         const next = (): number => random.next();
         const ceiling = topSpeedOf(spec) * SPEED_MARGIN;
@@ -65,6 +68,8 @@ describe('araç başına değişmezler (göl ve kayalı dünya)', () => {
         };
         let current = command();
         let travelled = 0;
+        // Gölün merkezine inen yüzemeyen araç dibe çöker (`WADING.bottomDepth`): ölüm yol almaktan sayılır.
+        let sank = false;
         for (let step = 0; step < STEPS; step++) {
           current = randomCommand(next, current);
           sim.step(current, STEP_MS);
@@ -82,6 +87,7 @@ describe('araç başına değişmezler (göl ve kayalı dünya)', () => {
             sim.player.vitality.health,
           ];
           travelled += chassis.speed * (STEP_MS / 1000);
+          if (!sim.player.vitality.alive) sank = true;
           if (!values.every(Number.isFinite)) {
             record(`adım ${step}: sonlu olmayan değer ${values.join(', ')}`);
             break;
@@ -103,7 +109,7 @@ describe('araç başına değişmezler (göl ve kayalı dünya)', () => {
         }
         expect(found).toEqual([]);
         // Sınama boş durmaz: araç gerçekten yol alır.
-        expect(travelled, `${id} yol`).toBeGreaterThan(50);
+        if (!sank) expect(travelled, `${id} yol`).toBeGreaterThan(50);
         sim.drainEvents([]);
       });
     }

@@ -86,8 +86,9 @@ export class WreckDirector {
         this.onWreck?.(frame.x, frame.y);
       }
     } else if (!before.alive && alive) {
-      view?.setWrecked(false);
+      // Önce batış geri alınır: isli renk ancak batış rengi sökülünce eski hâline döner.
       this.refloat(before, view);
+      view?.setWrecked(false);
     }
     before.alive = alive;
     if (!alive) this.sink(before, view, deltaMs);

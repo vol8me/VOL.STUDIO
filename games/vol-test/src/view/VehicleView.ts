@@ -52,5 +52,7 @@ export interface VehicleView {
    * eski hâline getirir; yalnız `setWrecked(true)` sonrası ve kısa süre çağrılır.
    */
   sink?(progress: number): void;
+  /** Canlı aracın suyun derinliği [0, 1]: derinde gövde suyun rengine çekilir ve solar; 0 kıyıdır. */
+  submerge?(depth: number): void;
   destroy(): void;
 }

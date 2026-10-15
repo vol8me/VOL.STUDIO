@@ -100,6 +100,51 @@ describe('Leaper sürüşü', () => {
     expect(top(all)).toBeGreaterThan(0);
   });
 
+  it('koşu hızında geniş yay çizer: dönüş tavanı `carve` kadar düşer, `carve` yoksa çevik kalır', () => {
+    // Komutun ilk çeyrek saniyesi: hız hâlâ tavandadır, dönüşün tavanı koşu hızına bağlıdır.
+    const peakTurn = (carve: number): number => {
+      const subject = new Leaper({ ...PANTHER.leaper, carve }, PANTHER.suspension);
+      subject.place(4096, 4096, 0);
+      subject.capturePose();
+      speeds(subject, { moveX: 1, aimX: 1 }, 4);
+      const turn = command({ moveY: -1, aimX: 1 });
+      let peak = 0;
+      for (let step = 0; step < Math.round(0.25 / DT); step++) {
+        subject.step(turn, space, DT);
+        peak = Math.max(peak, Math.abs(subject.angularVelocity));
+      }
+      return peak;
+    };
+    const stiff = peakTurn(0);
+    const arcing = peakTurn(PANTHER.leaper.carve);
+    expect(arcing).toBeLessThan(PANTHER.leaper.maxTurnRate * (1 - PANTHER.leaper.carve * 0.6));
+    expect(stiff).toBeGreaterThan(arcing * 1.2);
+  });
+
+  it('sert dönüşte pençeler basar: `turnDip` dönerken koşu hızını düz koşudan fazla keser', () => {
+    const meanSpeed = (turnDip: number, turning: boolean): number => {
+      const result = new Leaper({ ...RHINO.leaper, turnDip }, RHINO.suspension);
+      result.place(4096, 4096, 0);
+      result.capturePose();
+      speeds(result, { moveX: 1, aimX: 1 }, 4);
+      // Komutu her 0,3 sn'de ters çevir: gövde sürekli döner ve doğrultu kalıcı değişir.
+      const run = command({ moveX: 1, aimX: 1 });
+      const flip = command({ moveX: -0.2, moveY: 1, aimX: 1 });
+      let total = 0;
+      const steps = Math.round(1.2 / DT);
+      for (let step = 0; step < steps; step++) {
+        result.step(turning && Math.floor((step * DT) / 0.3) % 2 === 0 ? flip : run, space, DT);
+        total += result.speed;
+      }
+      return total / steps;
+    };
+    const dipped = meanSpeed(RHINO.leaper.turnDip, true);
+    const free = meanSpeed(0, true);
+    expect(dipped).toBeLessThan(free * 0.99);
+    // Düz koşuda açısal hız yoktur: `turnDip` düz koşuyu etkilemez.
+    expect(meanSpeed(RHINO.leaper.turnDip, false)).toBeCloseTo(meanSpeed(0, false), 1);
+  });
+
   it('aynı komut dizisi aynı konumu verir (belirlenimli sekme ve sıçrama)', () => {
     const run = (): [number, number] => {
       const subject = leaper(RHINO);

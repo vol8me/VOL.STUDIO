@@ -116,7 +116,8 @@ describe('WaterTrails: araç izleri', () => {
   it('batış halka ve kabarcık bırakır; kabarcıklar gecikmeyle başlar ve çizilir', () => {
     const { trails, graphics } = build();
     trails.splash(lake.x, lake.y, 30);
-    expect(trails.count('ring')).toBe(WATER_VIEW.sink.rings);
+    // Halkalar ve gövde kapanırken yüzeye vuran son kabarma.
+    expect(trails.count('ring')).toBe(WATER_VIEW.sink.rings + 1);
     expect(trails.count('bubble')).toBe(WATER_VIEW.sink.bubbles);
     trails.update([], 0, 16);
     expect(graphics.calls.some(([name]) => name === 'strokeCircle')).toBe(true);

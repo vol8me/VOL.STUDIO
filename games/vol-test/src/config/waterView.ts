@@ -156,14 +156,32 @@ export const WATER_VIEW = {
    */
   sink: {
     minDepth: 0.5,
-    durationMs: 2100,
-    /** Bitişteki ölçek. */
-    scale: 0.72,
-    rings: 3,
-    ringGapMs: 240,
-    bubbles: 10,
-    bubbleLifeMs: 1300,
-    bubbleRise: 30,
+    durationMs: 2800,
+    /** Bitişteki ölçek ve ilk anda havanın sıkıştırdığı kabarma (ölçek oranı). */
+    scale: 0.62,
+    swell: 0.045,
+    /** Batarken yan yatış (rad), titreme (birim, tur sayısıyla) ve dibe inerken gövdenin kararacağı renk. */
+    list: 0.28,
+    wobble: 1.6,
+    wobbleCycles: 5,
+    tint: 0x14414f,
+    rings: 4,
+    ringGapMs: 260,
+    bubbles: 26,
+    bubbleLifeMs: 1500,
+    bubbleRise: 34,
+    /** Gövde kapanırken yüzeye vuran son kabarma: halka büyüklüğü (yarıçap oranı) ve zamanı (süre oranı). */
+    boil: { radius: 1.9, at: 0.72 },
+  },
+  /**
+   * Suya batan canlı araç: derinlik bu eşikten sonra gövde suyun rengine çekilir ve solar (derine indikçe
+   * artar); dibe (`WADING.bottomDepth`) yaklaşan araç neredeyse suyun renginde ve yarı saydamdır.
+   */
+  submerge: {
+    startDepth: 0.14,
+    tint: 0x1f5d70,
+    tintMax: 0.68,
+    alphaMin: 0.52,
   },
   ripple: {
     periodMs: 1500,

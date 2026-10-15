@@ -9,7 +9,7 @@ import { TreadRig } from './TreadRig';
 import { TankLights } from './TankLights';
 import type { TankFrame, VehicleView } from './VehicleView';
 import { WATER_VIEW } from '@/config/waterView';
-import { setCharred, sinkRoot } from './charring';
+import { setCharred, sinkRoot, submergeRoot } from './charring';
 
 export type { TankFrame } from './VehicleView';
 
@@ -130,6 +130,10 @@ export class TankView implements VehicleView {
   setWrecked(wrecked: boolean): void {
     setCharred(this.root, wrecked);
     if (wrecked) this.lights.silence();
+  }
+
+  submerge(depth: number): void {
+    submergeRoot(this.root, depth);
   }
 
   sink(progress: number): void {

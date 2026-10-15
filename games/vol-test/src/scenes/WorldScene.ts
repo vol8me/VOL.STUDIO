@@ -377,6 +377,7 @@ export class WorldScene extends Phaser.Scene {
     const sight = this.camera.model.visibleRect();
     this.effects.setViewport(sight.x, sight.y, sight.width, sight.height);
     const presentMs = frozen ? 0 : delta;
+    const lakes = this.sim.world.lakes;
     for (const vehicle of this.sim.vehicles) {
       const tank = vehicle.chassis;
       const frame = tankFrame(tank, alpha);
@@ -384,6 +385,9 @@ export class WorldScene extends Phaser.Scene {
       // Ölen araç patlar ve görünümden kalkar; yeniden doğana kadar çizilmez.
       if (!this.wrecks.track(vehicle, view, frame, presentMs)) continue;
       // Kaos tempoyla akan araç adımları görünümde de aynı hızda akar: bacak ve palet döngüsü yetişir.
+      // Suya batan yüzemeyen araç derinleştikçe suyun rengine çekilir (süzülen ve havadaki sıçrayıcı değil).
+      const floats = tank.kind === 'hover' || (tank.kind === 'leaper' && frame.boosting);
+      view?.submerge?.(floats || lakes.isEmpty ? 0 : lakes.depthAt(frame.x, frame.y));
       view?.update(frame, presentMs * this.sim.pace);
       this.effects.updateVehicle(vehicle.id, {
         x: frame.x,

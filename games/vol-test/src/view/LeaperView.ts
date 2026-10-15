@@ -14,7 +14,7 @@ import type { LeaperSpec } from '@/config/vehicles';
 import { WATER_VIEW } from '@/config/waterView';
 import { LEAPER_LEGS_PER_SIDE, legBit, limpCollapse } from '@/sim/chassis/parts';
 import { mountPose, muzzlePose, type MuzzlePose } from '@/sim/muzzle';
-import { setCharred, sinkRoot } from './charring';
+import { setCharred, sinkRoot, submergeRoot } from './charring';
 import { CorePulse } from './CorePulse';
 import { gaitOf } from './MechView';
 import type { FootPrintSink } from './SpiderView';
@@ -86,6 +86,11 @@ export class LeaperView implements VehicleView {
   private readonly core: CorePulse;
   private readonly dust: Phaser.GameObjects.Particles.ParticleEmitter;
   private readonly weight = new Spring1D();
+  /** Dönüşte gövdenin yana kayması ve yönünün hizadan geri kalması: iki yay dönüş bitince sallanır. */
+  private readonly lean = new Spring1D();
+  private readonly twist = new Spring1D();
+  /** Bu karenin dönüş yükü [-1, 1] (işaret açısal hızınki): bacak kaldırma ve toz bunu okur. */
+  private turnLoad = 0;
   private readonly mount: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly gait = { x: 0, lift: 0 };
@@ -241,6 +246,16 @@ export class LeaperView implements VehicleView {
     this.air += ((leaping ? 1 : 0) - this.air) * (1 - Math.exp(-deltaMs / view.leap.poseMs));
     const arc = leaping ? Math.sin(Math.PI * clamp01(this.flightMs / this.leapMs)) : 0;
 
+    // Dönüş yükü: açısal hız tavana oranlanır, koşu hızıyla ağırlaşır (havada gövde dönmez).
+    const turnLoad =
+      clamp01(Math.abs(frame.angularVelocity) / config.maxTurnRate) *
+      Math.sign(frame.angularVelocity) *
+      (0.35 + 0.65 * effort) *
+      (1 - this.air);
+    this.turnLoad = turnLoad;
+    this.lean.update(-turnLoad * view.turn.shift, deltaMs, view.turn.spring);
+    this.twist.update(-turnLoad * view.turn.twist, deltaMs, view.turn.spring);
+
     const amp = config.strideLength / 4;
     const liftGain = (1 - this.rest) * (1 + this.air);
     const collapse = this.stepLegs(frame, amp, liftGain, idle ? settle : 0, effort);
@@ -249,15 +264,25 @@ export class LeaperView implements VehicleView {
     this.weight.value = Phaser.Math.Clamp(this.weight.value, -6, 6);
     const moving = 1 - this.rest;
     // Ağırlık aktarımı: ön ve arka çiftin basış farkı gövdeyi yana yatırır (önde basan sol bacak).
-    const stance = Math.sin(((frame.treadLeft + frame.treadRight) * Math.PI) / config.strideLength);
+    const strideAngle = ((frame.treadLeft + frame.treadRight) * Math.PI) / config.strideLength;
+    const stance = Math.sin(strideAngle);
+    const ground = moving * (1 - this.air);
     const shift = stance * view.sway.px * moving * (0.35 + effort * 0.65);
     const limp = collapse * view.stub.sag;
+    // Koşuda gövde sekmeyle ileri-geri savrulur ve her basışta (sekmede iki kez) hafifçe yükselir.
+    const surge = Math.cos(strideAngle) * view.stride.surge * effort * ground;
+    const bob = 1 + Math.cos(strideAngle * 2) * view.stride.bob * effort * ground;
     this.body
-      .setPosition(frame.pitch, frame.roll + shift * (1 - this.air) + limp)
-      .setRotation(
-        -stance * view.sway.roll * moving * effort * (1 - this.air) + collapse * view.stub.roll,
+      .setPosition(
+        frame.pitch + surge,
+        frame.roll + shift * (1 - this.air) + limp + this.lean.value,
       )
-      .setScale((1 + view.leap.rise * arc) * (1 - this.weight.value * art.weight.dip));
+      .setRotation(
+        -stance * view.sway.roll * moving * effort * (1 - this.air) +
+          collapse * view.stub.roll +
+          this.twist.value,
+      )
+      .setScale((1 + view.leap.rise * arc) * bob * (1 - this.weight.value * art.weight.dip));
 
     this.core.update(effort, leaping, deltaMs);
     this.placeArms(frame, deltaMs);
@@ -290,6 +315,10 @@ export class LeaperView implements VehicleView {
       arm.flash.setVisible(false);
     }
     for (const flame of this.flames) flame.image.setVisible(false);
+  }
+
+  submerge(depth: number): void {
+    submergeRoot(this.root, depth);
   }
 
   sink(progress: number): void {
@@ -350,7 +379,9 @@ export class LeaperView implements VehicleView {
         leg.offset += (rest - raw - leg.offset) * settle;
       }
       const phase = raw + leg.offset;
-      this.stepLeg(leg, phase, amp, liftGain, frame, effort);
+      // Dönüşün iç yanındaki bacaklar daha yüksek kalkar: ayak izini kısalan yayın içine toplar.
+      const inner = Math.max(0, leg.side * this.turnLoad);
+      this.stepLeg(leg, phase, amp, liftGain * (1 + LEAPER_VIEW.turn.lift * inner), frame, effort);
       if ((this.broken & leg.bit) !== 0) {
         const lost = limpCollapse(1, leg.ground, LEAPER_LEGS_PER_SIDE, PARTS.leaper.stumble.stride);
         collapse += leg.side * lost;
@@ -436,8 +467,11 @@ export class LeaperView implements VehicleView {
     if (((half % 2) + 2) % 2 !== 0) return;
     this.weight.velocity += this.art.weight.kick * (0.3 + effort * 0.8);
     if (frame.speed < 6) return;
-    const { dust } = LEAPER_VIEW;
-    this.stamp(frame, leg, Math.round(dust.countMin + (dust.countMax - dust.countMin) * effort));
+    const { dust, turn } = LEAPER_VIEW;
+    // Sert dönüşte dışa basan pençe toz savurur: dönüş yükü ek toz sayısıdır.
+    const outer = Math.max(0, -leg.side * this.turnLoad);
+    const count = dust.countMin + (dust.countMax - dust.countMin) * effort + turn.dust * outer;
+    this.stamp(frame, leg, Math.round(count));
   }
 
   /** Ayağın dünya konumuna toz ve pençe izi bırakır. */
