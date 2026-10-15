@@ -16,6 +16,7 @@ import { artifactFile, loadJob, saveJob } from '../../src/protocol/location';
 import { publishJob } from '../../src/protocol/publish';
 import { jobStatus } from '../../src/protocol/status';
 import { createTestRepo, REFERENCE_TARGET, testBrief, testProgram, type TestRepo } from './repo';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 let repo: TestRepo;
 beforeEach(() => {
@@ -43,7 +44,7 @@ function throughSelect(jobId = 'knock', program = testProgram()): void {
   selectCandidate(loc, undefined, 'tek aday');
 }
 
-describe('AudioJob durum makinesi', () => {
+describe('AudioJob durum makinesi', RENDER_BLOCK, () => {
   it('her aşamada sonraki geçerli adım yalnız dosyalardan hesaplanır', () => {
     const loc = repo.loc();
     initJob(loc, { target: REFERENCE_TARGET });
@@ -131,7 +132,7 @@ describe('AudioJob durum makinesi', () => {
   });
 });
 
-describe('özet zinciri ve bayatlık', () => {
+describe('özet zinciri ve bayatlık', RENDER_BLOCK, () => {
   it('program değişince analiz/seçim bayatlar ve publish REDDEDİLİR', () => {
     throughSelect();
     const loc = repo.loc();
@@ -229,7 +230,7 @@ describe('özet zinciri ve bayatlık', () => {
   });
 });
 
-describe('dosya sistemi güvenliği', () => {
+describe('dosya sistemi güvenliği', RENDER_BLOCK, () => {
   it('jobId ve jobs kökü kaçışa izin vermez', () => {
     expect(
       code(() => initJob({ ...repo.loc(), jobId: '../escape' }, { target: REFERENCE_TARGET })),

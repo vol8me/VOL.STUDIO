@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Presets, pluck } from '../../src/index';
 import { synthesize } from '../../src/engine';
 import type { SynthParams } from '../../src/types';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
  * Akustik presetlerin İDDİALARINI ölçer.
@@ -85,7 +86,7 @@ function rippleDepth(params: SynthParams, rateHz: number, fromSec: number, toSec
   return ratios.length ? ratios.reduce((a, b) => a + b, 0) / ratios.length : 0;
 }
 
-describe('akustik presetler — kısmi ton yapısı ölçülür', () => {
+describe('akustik presetler — kısmi ton yapısı ölçülür', RENDER_BLOCK, () => {
   const names = [
     'drawbarOrgan',
     'harpsichord',
@@ -265,7 +266,7 @@ describe('akustik presetler — kısmi ton yapısı ölçülür', () => {
   });
 });
 
-describe('telli presetler — kısmi ton yapısı ölçülür', () => {
+describe('telli presetler — kısmi ton yapısı ölçülür', RENDER_BLOCK, () => {
   it('gitarın temel baskın; lowpass üst tonları sınırlıyor', () => {
     const f0 = 330;
     const { samples, sampleRate } = render(Presets.guitar(f0, 1.0));
@@ -346,7 +347,7 @@ describe('telli presetler — kısmi ton yapısı ölçülür', () => {
   });
 });
 
-describe('pluck fiziksel modeli', () => {
+describe('pluck fiziksel modeli', RENDER_BLOCK, () => {
   it('temelde enerji vardır ve harmonikler sönümlenir', () => {
     const { channels, sampleRate } = pluck({ frequency: 220, duration: 1.0, decay: 0.995 });
     const samples = channels[0];

@@ -11,8 +11,9 @@ import {
   selectCandidate,
 } from '../../src/protocol/job';
 import { publishJob } from '../../src/protocol/publish';
+import { RENDER_BLOCK } from '../support/timeouts';
 
-describe('karakter politikası yayın kapısı', () => {
+describe('karakter politikası yayın kapısı', RENDER_BLOCK, () => {
   it('kaynak sınıf politikası geçse de beyan edilen karakter düşerse asset yazılmaz', () => {
     const repo = createTestRepo();
     try {

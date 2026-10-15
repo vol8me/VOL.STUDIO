@@ -30,7 +30,12 @@ import { repoSampleResolver } from '../../src/protocol/samples';
 import { withRenderSession } from '../../src/kernel/session';
 import { edited } from '../support/json';
 import { createTestRepo, type TestRepo } from '../protocol/repo';
-import { CORPUS_TIMEOUT, PIPELINE_TIMEOUT, RENDER_TIMEOUT } from '../support/timeouts';
+import {
+  CORPUS_TIMEOUT,
+  PIPELINE_TIMEOUT,
+  RENDER_BLOCK,
+  RENDER_TIMEOUT,
+} from '../support/timeouts';
 
 /**
  * Sürümlü benchmark derlemi: 14 görev + 19 canary tek raporda. Mekanik
@@ -79,7 +84,7 @@ const failingKinds = (
   checks: readonly ({ kind: string; pass: boolean } | CheckResult)[],
 ): string[] => checks.filter((c) => !c.pass).map((c) => ('check' in c ? c.check.kind : c.kind));
 
-describe('benchmark görev derlemi (gerçek depo)', () => {
+describe('benchmark görev derlemi (gerçek depo)', RENDER_BLOCK, () => {
   const tasks = loadBenchmarkTasks(REPO);
 
   it('14 görev sürümlü, kategorili, rehberli ve üç kaynak türünü de kapsar', () => {
@@ -145,7 +150,7 @@ describe('benchmark görev derlemi (gerçek depo)', () => {
   );
 });
 
-describe('benchmark kriterleri gerçek davranışı ayırt eder', () => {
+describe('benchmark kriterleri gerçek davranışı ayırt eder', RENDER_BLOCK, () => {
   const tasks = loadBenchmarkTasks(REPO);
   const task = (id: string): BenchmarkTaskV1 => {
     const t = tasks.find((x) => x.id === id);
@@ -254,7 +259,7 @@ describe('benchmark kriterleri gerçek davranışı ayırt eder', () => {
   );
 });
 
-describe('benchmark görev yükleme', () => {
+describe('benchmark görev yükleme', RENDER_BLOCK, () => {
   let repo: TestRepo;
   beforeEach(() => {
     repo = createTestRepo();

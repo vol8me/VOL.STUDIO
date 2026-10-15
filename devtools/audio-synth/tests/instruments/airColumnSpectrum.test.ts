@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { synth } from '../../src/engine/synthesize';
 import { flute, clarinet, oboe, bassoon } from '../../src/presets/airColumn';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 function toneEnergy(samples: Float32Array, sampleRate: number, frequency: number): number {
   const omega = (2 * Math.PI * frequency) / sampleRate;
@@ -30,7 +31,7 @@ function highPartialRatio(samples: Float32Array, sampleRate: number, fundamental
   return f0 > 0 ? high / f0 : 0;
 }
 
-describe('airColumn preset spektrumu', () => {
+describe('airColumn preset spektrumu', RENDER_BLOCK, () => {
   // Yapısal iddialar (harmonik spektrum) modülasyonsuz ölçülür: vibrato
   // frekans modülasyonudur ve her kısmi tonun enerjisini ±vibratoRate
   // yan bantlara yayar — Goertzel tek frekans ölçtüğü için taşıyıcı

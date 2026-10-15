@@ -17,6 +17,7 @@ import { hashCanonical, hashPcm } from '../../src/kernel/canonical';
 import { peakFrequency } from '../support/measure';
 import { tankFire } from './graphFixtures';
 import { node } from '../support/program';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
  * Stil ve materyal kanıtları: aynı tank
@@ -33,7 +34,7 @@ const styled = (profile: string) =>
     master: { normalize: 'peak', peakDbfs: -3, fadeOutSeconds: 0.02 },
   });
 
-describe('StyleProfile', () => {
+describe('StyleProfile', RENDER_BLOCK, () => {
   const profiles = ['realistic-heavy', 'arcade-industrial', 'minimal-synthetic'] as const;
   const reports = Object.fromEntries(profiles.map((p) => [p, report(styled(p))])) as Record<
     (typeof profiles)[number],
@@ -134,7 +135,7 @@ describe('StyleProfile', () => {
   });
 });
 
-describe('MaterialProfile', () => {
+describe('MaterialProfile', RENDER_BLOCK, () => {
   const struck = (material: string, extra: Record<string, unknown> = {}) => ({
     schema: 'AcousticProgramV1',
     sampleRate: 48000,

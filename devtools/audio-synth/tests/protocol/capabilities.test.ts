@@ -25,6 +25,7 @@ import {
   REFERENCE_TARGET,
   type TestRepo,
 } from './repo';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 let repo: TestRepo;
 afterEach(() => repo?.cleanup());
@@ -67,7 +68,7 @@ function noiseLevel(report: ReturnType<typeof runBenchmarks>) {
   return qualityMatrix(repo.root, report).rows.find((r) => r.mechanism === 'noise')?.level;
 }
 
-describe('üretim seviyesinin güncel teknik kanıtı', () => {
+describe('üretim seviyesinin güncel teknik kanıtı', RENDER_BLOCK, () => {
   let baseline: TestRepo;
   let publication: ReturnType<typeof prepare>;
   beforeAll(() => {

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Presets } from '../../src/index';
 import { synthesize } from '../../src/engine';
 import { INSTRUMENTS, measure } from './instrumentContractShared';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
  * Enstrüman kataloğu sözleşmesi — uzun süre, determinizm ve kısa nota davranışı.
@@ -16,7 +17,7 @@ import { INSTRUMENTS, measure } from './instrumentContractShared';
 const PIANOS = INSTRUMENTS.filter(({ name }) => name.endsWith('Piano'));
 const OTHERS = INSTRUMENTS.filter(({ name }) => !name.endsWith('Piano'));
 
-describe('enstrüman kataloğu sözleşmesi', () => {
+describe('enstrüman kataloğu sözleşmesi', RENDER_BLOCK, () => {
   it('katalog boş değil ve enstrümanlar bulunuyor', () => {
     expect(INSTRUMENTS.length).toBeGreaterThan(20);
   });

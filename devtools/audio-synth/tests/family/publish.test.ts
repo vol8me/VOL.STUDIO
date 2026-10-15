@@ -19,7 +19,7 @@ import { jobStatus } from '../../src/protocol/status';
 import { BatchBudgetError } from '../../src/guard/batch';
 import { cloneTestRepo, createTestRepo, type TestRepo } from '../protocol/repo';
 import { shellFamily } from './fixtures';
-import { PIPELINE_TIMEOUT, RENDER_TIMEOUT } from '../support/timeouts';
+import { PIPELINE_TIMEOUT, RENDER_BLOCK, RENDER_TIMEOUT } from '../support/timeouts';
 
 const ROOT = 'devtools/audio-synth/records/families';
 const BANK = 'devtools/audio-synth/reference/production/banks/shell-hits.json';
@@ -46,7 +46,7 @@ const codeOf = (fn: () => unknown) => {
   throw new Error('hata beklenirdi');
 };
 
-describe('aile yayını — varyant başına kanonik akış', () => {
+describe('aile yayını — varyant başına kanonik akış', RENDER_BLOCK, () => {
   let golden: TestRepo;
   const at0 = (rel: string) => join(golden.root, rel);
   const goldenLoc = (): FamilyLocation => ({
@@ -182,7 +182,7 @@ describe('aile yayını — varyant başına kanonik akış', () => {
   );
 });
 
-describe('aile ön-denetimi ve kalite kapısı — hiçbir şey yazılmadan', () => {
+describe('aile ön-denetimi ve kalite kapısı — hiçbir şey yazılmadan', RENDER_BLOCK, () => {
   it('bütçe aşımı adıyla reddedilir, dosya açılmaz', () => {
     expect(
       codeOf(() =>

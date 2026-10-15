@@ -2,10 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { Presets } from '@volstudio/audio-synth';
 import { synth } from '../../src/engine';
 import { compose } from '../../src/arrange/compose';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 const presetNames = Presets.findPresets();
 
-describe('Preset kütüphanesi', () => {
+describe('Preset kütüphanesi', RENDER_BLOCK, () => {
   it('catalog boş değil', () => {
     expect(presetNames.length).toBeGreaterThan(0);
   });
@@ -106,7 +107,7 @@ describe('Preset kütüphanesi', () => {
   });
 });
 
-describe('Sekans presetleri', () => {
+describe('Sekans presetleri', RENDER_BLOCK, () => {
   /*
    * Sekanslar `SynthParams` değil `SequenceParams` döner ve bu yüzden
    * `PRESET_CATALOG`un dışındadır — `getPreset`in sözleşmesine girmezler.

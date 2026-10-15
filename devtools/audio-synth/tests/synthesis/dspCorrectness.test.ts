@@ -5,6 +5,7 @@ import { blepResidual, getWaveSampleWithPhase } from '../../src/synthesis/wavefo
 import { Envelope } from '../../src/synthesis/envelope';
 import { createRandom } from '@volstudio/core/random';
 import { writeWav } from '../../src/writer';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
  * DSP doğruluk testleri.
@@ -37,7 +38,7 @@ function peak(buf: Float32Array): number {
   return max;
 }
 
-describe('S1 — osilatör fazı frekansın integrali', () => {
+describe('S1 — osilatör fazı frekansın integrali', RENDER_BLOCK, () => {
   it('lineer slide nota sonunda hedef frekansa varır', () => {
     const r = synth(1, {
       wave: 'sine',
@@ -82,7 +83,7 @@ describe('S1 — osilatör fazı frekansın integrali', () => {
   });
 });
 
-describe('S3 — dikdörtgen dalga PolyBLEP', () => {
+describe('S3 — dikdörtgen dalga PolyBLEP', RENDER_BLOCK, () => {
   it('square, pulse(pw=0.5) ile birebir aynı', () => {
     for (const phase of [0, 0.005, 0.25, 0.495, 0.5, 0.505, 0.75, 0.995]) {
       expect(getWaveSampleWithPhase('square', phase, 0.5, 0.01)).toBeCloseTo(
@@ -116,7 +117,7 @@ describe('S3 — dikdörtgen dalga PolyBLEP', () => {
   });
 });
 
-describe('S4 — normalize opsiyonel', () => {
+describe('S4 — normalize opsiyonel', RENDER_BLOCK, () => {
   it('normalize:false doğal seviyeyi korur', () => {
     const params = { wave: 'sine' as const, frequency: 440, gain: 0.5, sampleRate: SR };
     const normalized = synth(0.1, params).channels[0];
@@ -128,7 +129,7 @@ describe('S4 — normalize opsiyonel', () => {
   });
 });
 
-describe('S5 — StereoWidener kazanç korunumu', () => {
+describe('S5 — StereoWidener kazanç korunumu', RENDER_BLOCK, () => {
   it('mono kaynak her genişlikte aynı seviyede kalır', () => {
     for (const width of [0, 0.5, 1, 1.5, 2]) {
       const [l, r] = new StereoWidener(width).process(0.5, 0.5);
@@ -145,7 +146,7 @@ describe('S5 — StereoWidener kazanç korunumu', () => {
   });
 });
 
-describe('S6 — limiter transfer eğrisi', () => {
+describe('S6 — limiter transfer eğrisi', RENDER_BLOCK, () => {
   it('monoton artan', () => {
     const inputs: number[] = [];
     for (let v = 0; v <= 1.5; v += 0.01) inputs.push(v);
@@ -172,7 +173,7 @@ describe('S6 — limiter transfer eğrisi', () => {
   });
 });
 
-describe('S7 — foldback distortion aralığı', () => {
+describe('S7 — foldback distortion aralığı', RENDER_BLOCK, () => {
   it('çıktı [-1, 1] içinde kalır', () => {
     const dist = new Distortion({ amount: 1, type: 'foldback', mix: 1 });
     for (let i = -500; i <= 500; i++) {
@@ -182,7 +183,7 @@ describe('S7 — foldback distortion aralığı', () => {
   });
 });
 
-describe('S8 — applyGlobalEffects girdiyi bozmaz', () => {
+describe('S8 — applyGlobalEffects girdiyi bozmaz', RENDER_BLOCK, () => {
   it('kaynak buffer değişmeden kalır', () => {
     const input = new Float32Array([0.1, 0.2, 0.3, 0.4]);
     const snapshot = Array.from(input);
@@ -193,7 +194,7 @@ describe('S8 — applyGlobalEffects girdiyi bozmaz', () => {
   });
 });
 
-describe('S12 — kuyruk süresi gerçek sönümden hesaplanır', () => {
+describe('S12 — kuyruk süresi gerçek sönümden hesaplanır', RENDER_BLOCK, () => {
   it('feedback arttıkça kuyruk uzar', () => {
     const short = estimateDelayTail({ time: 0.25, feedback: 0.3 });
     const long = estimateDelayTail({ time: 0.25, feedback: 0.8 });
@@ -208,7 +209,7 @@ describe('S12 — kuyruk süresi gerçek sönümden hesaplanır', () => {
   });
 });
 
-describe('S14 — üretim deterministik', () => {
+describe('S14 — üretim deterministik', RENDER_BLOCK, () => {
   it('aynı parametreler birebir aynı çıktıyı verir', () => {
     const params = { wave: 'noise' as const, sampleRate: SR };
     const a = synth(0.05, params).channels[0];
@@ -238,7 +239,7 @@ describe('S14 — üretim deterministik', () => {
   });
 });
 
-describe('S30 — zarf uç noktalara tam varır', () => {
+describe('S30 — zarf uç noktalara tam varır', RENDER_BLOCK, () => {
   it('exponential attack 1.0, release 0.0 döner', () => {
     const env = new Envelope(
       { attack: 0.1, decay: 0, sustain: 0.1, release: 0.1, sustainLevel: 1, curve: 'exponential' },
@@ -252,7 +253,7 @@ describe('S30 — zarf uç noktalara tam varır', () => {
   });
 });
 
-describe('S13 — WAV yazımı çift gain uygulamaz', () => {
+describe('S13 — WAV yazımı çift gain uygulamaz', RENDER_BLOCK, () => {
   it('normalize edilmiş tepe dosyada korunur', async () => {
     const { mkdtempSync, readFileSync, rmSync } = await import('node:fs');
     const { tmpdir } = await import('node:os');

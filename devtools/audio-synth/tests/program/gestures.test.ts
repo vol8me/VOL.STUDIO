@@ -14,6 +14,7 @@ import { resolveProgram } from '../../src/program/schema';
 import type { CurveEntry } from '../../src/program/registry';
 import { createRandom } from '@volstudio/core/random';
 import { autocorrelationPitch, centroid, isStrictlyMonotone, rms } from '../support/measure';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 const render = (points: GesturePoint[], curve: CurveEntry, frames: number, rate: number) => {
   const out = new Float32Array(frames);
@@ -21,7 +22,7 @@ const render = (points: GesturePoint[], curve: CurveEntry, frames: number, rate:
   return out;
 };
 
-describe('gesture eğrileri', () => {
+describe('gesture eğrileri', RENDER_BLOCK, () => {
   it('her eğri noktalardan TAM geçer', () => {
     const points: GesturePoint[] = [
       [0, 100],
@@ -137,7 +138,7 @@ describe('gesture eğrileri', () => {
   });
 });
 
-describe('aynı kaynak üzerinde üç bağımsız gesture', () => {
+describe('aynı kaynak üzerinde üç bağımsız gesture', RENDER_BLOCK, () => {
   const program = {
     schema: 'AcousticProgramV1',
     sampleRate: 48000,

@@ -11,6 +11,7 @@ import {
   WALK,
 } from '../../src/program/primitives/modulators';
 import type { ResolvedParams } from '../../src/program/params';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 const RATE = 8000;
 
@@ -47,7 +48,7 @@ const correlation = (a: Float32Array, b: Float32Array) => {
 };
 const SEEDS = Array.from({ length: 32 }, (_, i) => 1000 + i * 7919);
 
-describe('adla türeyen alt akışlar', () => {
+describe('adla türeyen alt akışlar', RENDER_BLOCK, () => {
   it('etiket kimliktir: aynı etiket aynı dizi, farklı etiket ilintisiz dizi', () => {
     const a = substream(42, 'layer:voice/source/noise');
     const b = substream(42, 'layer:voice/source/noise');
@@ -106,7 +107,7 @@ describe('adla türeyen alt akışlar', () => {
   });
 });
 
-describe('modülatör istatistikleri (32 tohumluk korpus)', () => {
+describe('modülatör istatistikleri (32 tohumluk korpus)', RENDER_BLOCK, () => {
   it.each([DRIFT, WALK, SAMPLE_GLIDE, JITTER, SHIMMER].map((e) => [e.id, e] as const))(
     '%s: sınırlı, deterministik, korpus ortalaması ~0',
     (_id, entry) => {
@@ -183,7 +184,7 @@ describe('modülatör istatistikleri (32 tohumluk korpus)', () => {
   });
 });
 
-describe('stokastik yük bütçesi', () => {
+describe('stokastik yük bütçesi', RENDER_BLOCK, () => {
   it('16 modülatör × 600 sn × 192 kHz ayırmadan reddedilir', () => {
     const modulators = Object.fromEntries(
       Array.from({ length: 16 }, (_, i) => [`m${i}`, { modulator: 'modulator.walk', version: 1 }]),

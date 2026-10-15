@@ -8,7 +8,7 @@ import { renderProgram } from '../../src/program/render';
 import { soundGraph } from '../../src/program/soundGraph';
 import { hashPcm } from '../../src/kernel/canonical';
 import { centroid, envelopeRate, peakFrequency } from '../support/measure';
-import { RENDER_TIMEOUT } from '../support/timeouts';
+import { RENDER_BLOCK, RENDER_TIMEOUT } from '../support/timeouts';
 
 /**
  * SFX ailesi kanıtları. Her aile registry yapı taşıdır; bu
@@ -46,7 +46,7 @@ const energy = (x: Float32Array, from = 0, to = x.length) => {
 const strictlyIncreasing = (values: readonly number[]) =>
   values.every((v, i) => i === 0 || v > values[i - 1]);
 
-describe('Impact/Contact', () => {
+describe('Impact/Contact', RENDER_BLOCK, () => {
   it('hız arttıkça uyarım enerjisi ve atak parlaklığı monoton artar (t_c ∝ v^(−1/5) çözülebilir çiftte)', () => {
     const shots = [1, 3, 6, 12].map((velocity) =>
       render(
@@ -81,7 +81,7 @@ describe('Impact/Contact', () => {
   });
 });
 
-describe('Pressure/Explosion/Discharge (archetype.pressure-event)', () => {
+describe('Pressure/Explosion/Discharge (archetype.pressure-event)', RENDER_BLOCK, () => {
   const event = (params: Record<string, number>, variation = 0) =>
     expandArchetype({
       schema: 'ArchetypeRequestV1',
@@ -164,7 +164,7 @@ describe('Pressure/Explosion/Discharge (archetype.pressure-event)', () => {
   });
 });
 
-describe('Weapon/Launcher (archetype.launcher)', () => {
+describe('Weapon/Launcher (archetype.launcher)', RENDER_BLOCK, () => {
   const launcher = (params: Record<string, number>, profiles: Record<string, unknown>) =>
     expandArchetype({
       schema: 'ArchetypeRequestV1',
@@ -258,7 +258,7 @@ describe('Weapon/Launcher (archetype.launcher)', () => {
   });
 });
 
-describe('Airflow/Turbulence/Hiss', () => {
+describe('Airflow/Turbulence/Hiss', RENDER_BLOCK, () => {
   const flow = (
     params: Record<string, unknown>,
     gesture?: readonly (readonly [number, number])[],
@@ -333,7 +333,7 @@ describe('Airflow/Turbulence/Hiss', () => {
   });
 });
 
-describe('Friction/Scrape/Rolling', () => {
+describe('Friction/Scrape/Rolling', RENDER_BLOCK, () => {
   const scrape = (speed: number, params: Record<string, unknown> = {}) =>
     render(
       single(
@@ -399,7 +399,7 @@ describe('Friction/Scrape/Rolling', () => {
   });
 });
 
-describe('Machine/Motor/Rotor', () => {
+describe('Machine/Motor/Rotor', RENDER_BLOCK, () => {
   it.each(['engine', 'fan', 'gear'] as const)(
     '%s: RPM iki katına çıkınca baskın döngü ×2 kayar',
     (mechanism) => {
@@ -457,7 +457,7 @@ describe('Machine/Motor/Rotor', () => {
   });
 });
 
-describe('Electrical/Energy', () => {
+describe('Electrical/Energy', RENDER_BLOCK, () => {
   const electric = (params: Record<string, unknown>, seconds = 1) =>
     render(single(node('source.electrical', params), seconds, 24000));
 
@@ -495,7 +495,7 @@ describe('Electrical/Energy', () => {
   });
 });
 
-describe('Çevresel dokular (wind/rain/fire)', () => {
+describe('Çevresel dokular (wind/rain/fire)', RENDER_BLOCK, () => {
   const texture = (
     primitive: string,
     params: Record<string, unknown> = {},

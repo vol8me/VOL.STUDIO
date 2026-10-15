@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { brass } from '../../src/instruments/brass/brass';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 function allFinite(channels: Float32Array[]): boolean {
   return channels.every((ch) => ch.every((s) => Number.isFinite(s)));
@@ -46,7 +47,7 @@ function highPartialEnergy(
   return sum;
 }
 
-describe('brass (lip-reed fiziksel modeli)', () => {
+describe('brass (lip-reed fiziksel modeli)', RENDER_BLOCK, () => {
   it('aynı parametrelerle deterministik ve sonlu çıktı üretir', () => {
     const a = brass({ frequency: 220, duration: 0.5, seed: 42 });
     const b = brass({ frequency: 220, duration: 0.5, seed: 42 });

@@ -31,7 +31,7 @@ import {
 import { jobStatus } from '../../src/protocol/status';
 import { shellSpec } from '../search/fixtures';
 import { createTestRepo, REFERENCE_TARGET, testBrief, type TestRepo } from './repo';
-import { RENDER_TIMEOUT } from '../support/timeouts';
+import { RENDER_BLOCK, RENDER_TIMEOUT } from '../support/timeouts';
 
 const ROOT = 'devtools/audio-synth/records/searches';
 const PACKAGE = fileURLToPath(new URL('../..', import.meta.url));
@@ -78,7 +78,7 @@ function codeOf(fn: () => unknown): string {
   throw new Error('hata beklenirdi');
 }
 
-describe('arama kalıcılığı', () => {
+describe('arama kalıcılığı', RENDER_BLOCK, () => {
   it('spec, aday programları ve rapor yazılır; tamamlanmış arama üzerine yazılmaz', () => {
     const outcome = runSearch(repo.root, ROOT, shellSpec());
     expect(readdirSync(dir()).sort()).toEqual(['candidates', 'report.json', 'spec.json']);
@@ -136,7 +136,7 @@ describe('arama kalıcılığı', () => {
   );
 });
 
-describe('arama kararları (SearchSelectionV1)', () => {
+describe('arama kararları (SearchSelectionV1)', RENDER_BLOCK, () => {
   it('yalnız passed adaya karar yazılır; kimlik biçimi ve varlığı denetlenir', () => {
     runSearch(
       repo.root,
@@ -181,7 +181,7 @@ describe('arama kararları (SearchSelectionV1)', () => {
   );
 });
 
-describe('terfi (promote) — kanonik akışa tek giriş', () => {
+describe('terfi (promote) — kanonik akışa tek giriş', RENDER_BLOCK, () => {
   it('onaysız aday terfi etmez; onaylı adayın TAM programı job programı olur ve köken yazılır', () => {
     runSearch(repo.root, ROOT, shellSpec());
     const id = passedId();
@@ -312,7 +312,7 @@ describe('terfi (promote) — kanonik akışa tek giriş', () => {
   );
 });
 
-describe('dinleme kopyaları', () => {
+describe('dinleme kopyaları', RENDER_BLOCK, () => {
   it('yalnız export/ altına yazılır; programdan yeniden üretilir', () => {
     runSearch(repo.root, ROOT, shellSpec());
     const written = exportSearchAudition(search);

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Presets } from '../../src/index';
 import { synthesize } from '../../src/engine';
 import { INSTRUMENTS, measure, testPitches } from './instrumentContractShared';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 /**
  * Enstrüman kataloğunun KULLANIM sözleşmesi — aralık ve kuyruk.
@@ -11,7 +12,7 @@ import { INSTRUMENTS, measure, testPitches } from './instrumentContractShared';
  * Vitest worker RPC zaman aşımına düştüğü için parçalandı.
  */
 
-describe('enstrüman kataloğu sözleşmesi', () => {
+describe('enstrüman kataloğu sözleşmesi', RENDER_BLOCK, () => {
   const RANGE_CASES = INSTRUMENTS.flatMap(({ name, meta }) =>
     testPitches(meta.range!).map((frequency) => ({ name, meta, frequency })),
   );

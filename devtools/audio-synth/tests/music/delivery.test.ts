@@ -6,9 +6,9 @@ import { renderAndPlan } from '../../src/music/bundle';
 import { expandProgram } from '../../src/music/score';
 import { createTestRepo } from '../protocol/repo';
 import { unitProgram, musicBrief } from './fixtures';
-import { RENDER_TIMEOUT } from '../support/timeouts';
+import { RENDER_BLOCK, RENDER_TIMEOUT } from '../support/timeouts';
 
-describe('açık müzik dosya teslimi', () => {
+describe('açık müzik dosya teslimi', RENDER_BLOCK, () => {
   it('varsayılan yol aynı kalır; mix eski olay dosyasına yönlendirilebilir', () => {
     const program = validateMusicProgram(
       unitProgram({

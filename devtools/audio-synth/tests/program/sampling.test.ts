@@ -118,7 +118,7 @@ describe('bağımsız perde kaydırma ve zaman germe', RENDER_BLOCK, () => {
   });
 });
 
-describe('source.sample', () => {
+describe('source.sample', RENDER_BLOCK, () => {
   const a = probeSample(0);
 
   it('bildirimsiz başvuru, kullanılmayan bildirim, çözücüsüz render ve uyumsuz veri adıyla düşer', () => {
@@ -188,7 +188,7 @@ describe('source.sample', () => {
   });
 });
 
-describe('source.sampler (SampleBankV1)', () => {
+describe('source.sampler (SampleBankV1)', RENDER_BLOCK, () => {
   const soft = probeSample(0);
   const hard = probeSample(1);
   const hardRr = probeSample(2);
@@ -265,7 +265,7 @@ describe('source.sampler (SampleBankV1)', () => {
   });
 });
 
-describe('source.granular', () => {
+describe('source.granular', RENDER_BLOCK, () => {
   const texture = registerSample('granular-src', { channels: [tone(330, 1.5)], sampleRate: RATE });
   const cloud = (params: Record<string, unknown>, extra: Record<string, unknown> = {}) =>
     program(
@@ -327,7 +327,7 @@ describe('source.granular', () => {
   });
 });
 
-describe('effect.convolution', () => {
+describe('effect.convolution', RENDER_BLOCK, () => {
   const impulse = registerSample('ir-unit', {
     channels: [Float32Array.from({ length: 64 }, (_, i) => (i === 0 ? 1 : 0))],
     sampleRate: RATE,
@@ -416,7 +416,7 @@ describe('effect.convolution', () => {
   });
 });
 
-describe('transient/gövde ayrıştırması (HPSS)', () => {
+describe('transient/gövde ayrıştırması (HPSS)', RENDER_BLOCK, () => {
   const fixture = withClick(tone(220, 1), Math.round(0.25 * RATE));
 
   it('kontrollü fixture: transient zamanı ±2 ms ve tepesi korunur; toplam yeniden kurulur', () => {

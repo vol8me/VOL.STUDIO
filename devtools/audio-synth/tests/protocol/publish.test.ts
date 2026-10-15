@@ -37,6 +37,7 @@ import {
   testProgram,
   type TestRepo,
 } from './repo';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 let repo: TestRepo;
 beforeEach(() => {
@@ -77,7 +78,7 @@ function readManifest(path = referenceManifest): AudioAssetManifestV1 {
   return JSON.parse(readFileSync(join(repo.root, path), 'utf8')) as AudioAssetManifestV1;
 }
 
-describe('kanonik publish kapısı', () => {
+describe('kanonik publish kapısı', RENDER_BLOCK, () => {
   it('asset + manifest yazar; manifest KENDİ BAŞINA yeniden üretime yeter', () => {
     const loc = prepare();
     const { manifestPath, manifest } = publishJob(loc);
@@ -196,7 +197,7 @@ describe('kanonik publish kapısı', () => {
   });
 });
 
-describe('manifest doğrulaması ve fark sınıfı', () => {
+describe('manifest doğrulaması ve fark sınıfı', RENDER_BLOCK, () => {
   it('yeni publish: PCM + bayt + araç zinciri aynı → identical', () => {
     publishJob(prepare());
     const report = verifyManifest(repo.root, referenceManifest);

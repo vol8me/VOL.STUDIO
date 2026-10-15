@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bowedString } from '../../src/instruments/strings/bowed';
+import { RENDER_BLOCK } from '../support/timeouts';
 
 function allFinite(channels: Float32Array[]): boolean {
   return channels.every((ch) => ch.every((s) => Number.isFinite(s)));
@@ -24,7 +25,7 @@ function toneEnergy(samples: Float32Array, sampleRate: number, frequency: number
   return Math.sqrt(Math.max(0, s1 * s1 + s2 * s2 - coeff * s1 * s2)) / samples.length;
 }
 
-describe('bowedString (yaylı tel fiziksel modeli)', () => {
+describe('bowedString (yaylı tel fiziksel modeli)', RENDER_BLOCK, () => {
   it('aynı parametrelerle deterministik ve sonlu çıktı üretir', () => {
     const a = bowedString({ frequency: 220, duration: 0.5, seed: 42 });
     const b = bowedString({ frequency: 220, duration: 0.5, seed: 42 });
@@ -105,7 +106,7 @@ describe('bowedString (yaylı tel fiziksel modeli)', () => {
   });
 });
 
-describe('bowedString gain yalnız çıkış seviyesidir', () => {
+describe('bowedString gain yalnız çıkış seviyesidir', RENDER_BLOCK, () => {
   it('çıktı gain ile orantılıdır — ton/gürültü oranı gain ile değişmez', () => {
     // Değişmez: out(g) = g · out(1). Oran korunmuyorsa gain tınıyı da
     // değiştiriyordur (düşük gain'de yay gürültüsü orantısız büyür).
