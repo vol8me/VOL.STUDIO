@@ -805,6 +805,9 @@ uygulanır. Hale yerel yarı saydam geometriyle çizilir.
 çözünürlükte çizilir (dünya ve ekran boyutu değişmez, tam ekrana geçişte yeniden okunur). Tavan korumadır: 1080p
 DPR 1 ekranı (~2 milyon piksel) değiştirmez, kare hızı kazancı cihazda ölçülür. Renderer ayrık GPU ister (`powerPreference`).
 Gerçek GPU kare süresi bu makinede ölçülmedi; kabul cihazdadır.
+Uyarlanır çözünürlük (`AdaptiveResolution`) 90 karelik pencerede ortalama kare süresi 22 ms'yi aşarsa çizim
+ölçeğini kısar (alt sınır 0,5) ve canvas'ı yeniden kurar. Duraklatılmışken ölçmez: dünya donmuştur, kare süresi
+oynanışı temsil etmez ve yeniden kurulum donmuş görüntüyü değiştirirdi; pause e2e'si bu sözleşmeye dayanır.
 
 Gönderilen app/vendor/css bütçeleri kök quality.json sahibindedir;
 ölçü güncel üretim build'iyle bundle kapısından alınır.

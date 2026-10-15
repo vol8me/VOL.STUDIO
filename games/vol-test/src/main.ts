@@ -41,9 +41,9 @@ async function boot(): Promise<void> {
   const scope = new DisposableScope();
   let game: Awaited<ReturnType<typeof createVolGame>> | undefined;
   const loading = new BootLoading();
-  const resolution = new AdaptiveResolution();
   try {
     const services = scope.add(await GameServices.create());
+    const resolution = new AdaptiveResolution(() => services.isPaused);
     await applyLanguage(services.settings.get().language);
     loading.servicesReady();
     game = await createVolGame({

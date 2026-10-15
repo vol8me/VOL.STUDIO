@@ -215,6 +215,11 @@ export class GameServices {
     return this.steamState;
   }
 
+  /** Oyun duraklatılmış mı (`setPaused`); uyarlanır çözünürlük duraklatmada ölçmez. */
+  get isPaused(): boolean {
+    return this.paused;
+  }
+
   setPaused(paused: boolean): Promise<void> {
     this.paused = paused;
     return this.refreshNativeInput();

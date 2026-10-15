@@ -40,6 +40,20 @@ describe('AdaptiveResolution', () => {
     detach();
   });
 
+  it('duraklatılmış oyunda ölçmez: donmuş görüntü yeniden kurulmaz, devam edince ölçüm sürer', () => {
+    let paused = true;
+    const resolution = new AdaptiveResolution(() => paused);
+    const { game, step } = fakeGame();
+    const detach = resolution.attach(game);
+    for (let frame = 0; frame < 600; frame++) step(40);
+    expect(resolution.scale).toBe(1);
+    expect(core.refresh).not.toHaveBeenCalled();
+    paused = false;
+    for (let frame = 0; frame < 400; frame++) step(40);
+    expect(resolution.scale).toBeLessThan(1);
+    detach();
+  });
+
   it('pencere boyutu değişince çarpan 1e döner (tam ekran yeniden ölçülür); ayrılınca dinleyici kalmaz', () => {
     const resolution = new AdaptiveResolution();
     const { game, step, listeners } = fakeGame();
