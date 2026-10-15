@@ -622,10 +622,10 @@ export const LEVIATHAN: HoverSpec = {
       style: 'lance',
     },
     mounts: [
-      { x: 8, y: -13, reach: 30 },
-      { x: 8, y: 13, reach: 30 },
+      { x: -8, y: -13, reach: 45 },
+      { x: -8, y: 13, reach: 45 },
     ],
-    pivot: { x: 8, y: 0 },
+    pivot: { x: -8, y: 0 },
     salvo: [[0], [1]],
     toeInRange: 620,
   },

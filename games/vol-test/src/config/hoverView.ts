@@ -86,7 +86,7 @@ export const HOVER_ART: Readonly<Record<HoverId, HoverArt>> = {
     pod: { width: 66, height: 20, x: -6 },
     fan: { x: 0 },
     turret: { width: 30, height: 16, pivotX: 8 },
-    gun: { width: 38, height: 12, pivotX: 7 },
+    gun: { width: 52, height: 12, pivotX: 7 },
     glow: 0x3a6bff,
     flashScale: 1.1,
     barrel: { kick: -220, stiffness: 480, damping: 18, max: 4 },
