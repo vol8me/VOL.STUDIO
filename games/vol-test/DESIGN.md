@@ -291,7 +291,10 @@ toplar (`SpiderView`); hiçbir bacak parçası, ne kadar yüksekte olursa olsun,
 diz ve ayak dışarıdadır. Bacak yukarıdan düz bir şerit değil, kalça yüksekliğinden yere inen iki
 kemiktir (`solveLeg`): havadaki ayak kalkarken diz yükselir ve büyür, basılı ayakta tibia dik iner.
 Yükseklik üç şeye dönüşür: parçanın perspektifle büyümesi, konumun gövde merkezinden dışarı itilmesi
-ve yere düşen gölgenin yükseklikle orantılı kayması.
+ve yere düşen gölgenin yükseklikle orantılı kayması. Bacak gölgesi bir çizgi değil kemik kalınlığında tek
+kapalı çokgendir (`limbOutline`: kalça, diz ve ayak, uca doğru incelir, dirsekte köşe birleşir); eklemler
+ZEMİN konumundan kendi yükseklikleriyle kayar, çünkü paralaks yalnız çizimi iter, gölgeyi itmez (aksi hâlde
+gölge göğüs gölgesinden dışarı kayardı).
 
 Görünüm (`src/view/SpiderView.ts`) üç araç için aynı sınıftır; fark `SpiderLook`tadır (kalça
 yerleşimi, kemik boyu, yürüyüş, hareket, top, `sensors`). Göğüs lensinde Striker'la aynı hesapla atan bir

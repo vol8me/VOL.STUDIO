@@ -11,12 +11,16 @@ import { SPIDER_ART, type PartBox, type SpiderHip, type SpiderLook } from '@/con
 import { TEXTURE_SCALE, addSpiderImage } from '../textures';
 import type { LocomotionSignals } from './signals';
 import { solveLeg, type LegSolution } from './legSolve';
+import { createLimbOutline, limbOutline, type LimbOutline } from './limbShadow';
 import type { SpiderPose } from './SpiderMotion';
 
 const DEG = Math.PI / 180;
 /** Kopan bacağın kütüğü: femurun kalan oranı, aşağı sarkma açısı (rad), mafsal ölçeği, gölge yüksekliği. */
 const STUMP = { length: 0.5, droop: 0.4, knee: 0.55, height: 2 } as const;
 const INV = 1 / TEXTURE_SCALE;
+/** Gölge şeridinin dizde ve ayakta kalınlığı (kalçadaki kalınlığa oranla): bacak uca doğru incelir. */
+const KNEE_TAPER = 0.88;
+const FOOT_TAPER = 0.5;
 
 /**
  * Bacak parçalarının tek katmanı. Bütün bacaklar GÖVDENİN ALTINDA kalır: çizim sırası zemin
@@ -61,6 +65,10 @@ export class SpiderLegs {
   private readonly gait: LegGait;
   private readonly legs: LegNodes[];
   private readonly shadow: Phaser.GameObjects.Graphics;
+  private readonly outline: LimbOutline = createLimbOutline();
+  private readonly jointX = [0, 0, 0];
+  private readonly jointY = [0, 0, 0];
+  private readonly jointWidth = [0, 0, 0];
   private readonly footX: number[];
   private readonly footY: number[];
   private readonly lift: number[];
@@ -302,10 +310,26 @@ export class SpiderLegs {
       .setRotation(angle)
       .setScale(INV * STUMP.length, INV * hipScale);
     leg.knee.setPosition(kx, ky).setScale(INV * STUMP.knee);
+    // Gölge zemin konumundan düşer (paralaks yalnız çizimi iter): kalça ve kütük ucu kendi yüksekliğiyle kayar.
+    const { shadowWidth } = spec;
+    this.jointX[0] = hipX + light.x * hipHeight;
+    this.jointY[0] = hipY + light.y * hipHeight;
+    this.jointX[1] = hipX + Math.cos(angle) * length + light.x * STUMP.height;
+    this.jointY[1] = hipY + Math.sin(angle) * length + light.y * STUMP.height;
+    this.jointWidth[0] = shadowWidth * hipScale;
+    this.jointWidth[1] = shadowWidth * STUMP.knee;
+    this.fillLimb(2);
+  }
+
+  /** Eklem tamponlarındaki uzvu tek çokgen olarak zemin gölgesine doldurur. */
+  private fillLimb(joints: number): void {
+    const outline = limbOutline(this.jointX, this.jointY, this.jointWidth, joints, this.outline);
     this.shadow.beginPath();
-    this.shadow.moveTo(hx + light.x * hipHeight, hy + light.y * hipHeight);
-    this.shadow.lineTo(kx + light.x * STUMP.height, ky + light.y * STUMP.height);
-    this.shadow.strokePath();
+    this.shadow.moveTo(outline.points[0], outline.points[1]);
+    for (let i = 1; i < outline.count; i++)
+      this.shadow.lineTo(outline.points[i * 2], outline.points[i * 2 + 1]);
+    this.shadow.closePath();
+    this.shadow.fillPath();
   }
 
   /** Her bacağı iki kemiğe çözer ve parçaları, gölgeleri ve temas karartılarını yerleştirir. */
@@ -313,7 +337,7 @@ export class SpiderLegs {
     const { leg: spec, gait, parts } = this.look;
     const shadow = this.shadow;
     shadow.clear();
-    shadow.lineStyle(spec.shadowWidth, 0x000000, spec.shadowAlpha);
+    shadow.fillStyle(0x000000, spec.shadowAlpha);
     const hipHeight = pose.hipHeight;
     const hipScale = perspective(hipHeight);
 
@@ -370,18 +394,24 @@ export class SpiderLegs {
         .setScale(INV * perspective(footHeight));
       leg.knee.setPosition(kx, ky).setScale(INV * kneeScale * 0.8);
 
-      // Gölge: her nokta KENDİ yüksekliğiyle orantılı kayar; basılı ayak gölgesiyle birleşir.
-      const s0x = hx + light.x * hipHeight;
-      const s0y = hy + light.y * hipHeight;
-      const s1x = kx + light.x * sol.kneeHeight;
-      const s1y = ky + light.y * sol.kneeHeight;
-      const s2x = fx + light.x * footHeight;
-      const s2y = fy + light.y * footHeight;
-      shadow.beginPath();
-      shadow.moveTo(s0x, s0y);
-      shadow.lineTo(s1x, s1y);
-      shadow.lineTo(s2x, s2y);
-      shadow.strokePath();
+      // Gölge: her eklem zemin konumundan KENDİ yüksekliğiyle orantılı kayar (paralaks çizimi iter, gölgeyi
+      // değil) ve kemiğin kalınlığı kadar şerit olur; basılı ayak gölgesiyle birleşir.
+      const gx1 = hipX + dirX * sol.kneeU;
+      const gy1 = hipY + dirY * sol.kneeU;
+      const gx2 = hipX + dirX * sol.footU;
+      const gy2 = hipY + dirY * sol.footU;
+      const s2x = gx2 + light.x * footHeight;
+      const s2y = gy2 + light.y * footHeight;
+      this.jointX[0] = hipX + light.x * hipHeight;
+      this.jointY[0] = hipY + light.y * hipHeight;
+      this.jointX[1] = gx1 + light.x * sol.kneeHeight;
+      this.jointY[1] = gy1 + light.y * sol.kneeHeight;
+      this.jointX[2] = s2x;
+      this.jointY[2] = s2y;
+      this.jointWidth[0] = spec.shadowWidth * hipScale;
+      this.jointWidth[1] = spec.shadowWidth * KNEE_TAPER * kneeScale;
+      this.jointWidth[2] = spec.shadowWidth * FOOT_TAPER * perspective(footHeight);
+      this.fillLimb(3);
       leg.contact
         .setPosition(s2x, s2y)
         .setScale(INV * (spec.contactPx / parts.contact.width) * (1 - 0.45 * lift))

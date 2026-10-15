@@ -43,7 +43,7 @@ export const GOLIATH_LOOK: SpiderLook = {
     restDistance: 53.2,
     swingPeak: 19,
     contactPx: 20.9,
-    shadowWidth: 6,
+    shadowWidth: 14,
     shadowAlpha: 0.3,
     crouchReachDrop: 0.05,
     dashReachGain: 0.2,
