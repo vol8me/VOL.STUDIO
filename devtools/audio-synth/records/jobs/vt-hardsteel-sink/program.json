@@ -1,0 +1,80 @@
+{
+  "channels": 1,
+  "description": "Suya gömülen ağır araç: iri kabarcık gurultusu, yükselen kabarcık bulutu ve alçak su gövdesi.",
+  "durationSeconds": 1.9,
+  "layers": [
+    {
+      "gainDb": -9,
+      "name": "glug",
+      "source": {
+        "params": {
+          "damping": 1.1,
+          "radius": 9,
+          "rise": 0.35
+        },
+        "primitive": "source.bubble",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": 0,
+      "name": "bubbles",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.6
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "source": {
+        "params": {
+          "clustering": 0.4,
+          "damping": 1.5,
+          "levelSpread": 6,
+          "radius": 3.2,
+          "rate": 20,
+          "regularity": 0.25,
+          "rise": 0.5,
+          "sizeSpread": 0.7
+        },
+        "primitive": "source.bubbles",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -8,
+      "name": "body",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 520,
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 25,
+    "fadeOutSeconds": 0.45,
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 9173
+}

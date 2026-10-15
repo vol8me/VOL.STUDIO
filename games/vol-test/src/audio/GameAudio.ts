@@ -19,6 +19,8 @@ export class GameAudio {
   private readonly vehicles = new Map<number, VehicleAudio>();
   /** Ateş olayının ses kimliği için her aracın silahı (duyulabilir olmasa da bilinir). */
   private readonly weapons = new Map<number, WeaponConfig>();
+  /** Konumsuz olayların (ölüm) yeri: araç şasisi, canlı nesne olarak tutulur. */
+  private readonly chassis = new Map<number, AudioPosition>();
   private paused = false;
   private released = false;
   private eventIndex = 0;
@@ -109,7 +111,11 @@ export class GameAudio {
   async sync(vehicles: readonly Vehicle[], listener: AudioPosition): Promise<void> {
     if (this.released) return;
     this.weapons.clear();
-    for (const vehicle of vehicles) this.weapons.set(vehicle.id, vehicle.spec.armament.weapon);
+    this.chassis.clear();
+    for (const vehicle of vehicles) {
+      this.weapons.set(vehicle.id, vehicle.spec.armament.weapon);
+      this.chassis.set(vehicle.id, vehicle.chassis);
+    }
     const audible = [...vehicles]
       .sort(
         (a, b) =>
@@ -155,6 +161,12 @@ export class GameAudio {
         case 'broke':
           this.playEvent('snap', event, listener);
           break;
+        case 'died': {
+          // Boğulan araç patlamaz; batışı kendi sesiyle duyulur (yeri son bilinen şasisidir).
+          const at = this.chassis.get(event.target);
+          if (event.cause === 'drown' && at) this.playEvent('sink', at, listener);
+          break;
+        }
         case 'wallHit':
         case 'collision':
           this.play('crash', event, listener, event.speed);

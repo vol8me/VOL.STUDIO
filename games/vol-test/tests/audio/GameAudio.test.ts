@@ -171,6 +171,26 @@ describe('GameAudio', () => {
     expect(count()).toBe(1);
   });
 
+  it('boğulma batış sesini çalar; başka ölüm, uzak araç ve duraklatma susar', async () => {
+    const count = (): number =>
+      context.sources.filter((s) => s.buffer?.url?.endsWith('/sink.ogg')).length;
+    const sim = new Simulation({ world: new World(1000, 1000, 32), vehicle: STRIKER });
+    const id = sim.player.id;
+    // Konum son eşlenen şasiden gelir: eşlenmeden önce yeri bilinmez ve çalmaz.
+    audio.route([{ kind: 'died', target: id, cause: 'drown' }], listener);
+    expect(count()).toBe(0);
+    await audio.sync(sim.vehicles, sim.player.chassis);
+    audio.route([{ kind: 'died', target: id, cause: 'projectile' }], listener);
+    expect(count()).toBe(0);
+    audio.route([{ kind: 'died', target: id, cause: 'drown' }], sim.player.chassis);
+    expect(count()).toBe(1);
+    audio.route([{ kind: 'died', target: id, cause: 'drown' }], { x: 99999, y: 0 });
+    expect(count()).toBe(1);
+    audio.setPaused(true);
+    audio.route([{ kind: 'died', target: id, cause: 'drown' }], sim.player.chassis);
+    expect(count()).toBe(1);
+  });
+
   it('yürüyücü ve süzülenin atılımı başlarken dash sesi çalar; tankın hızlanması çalmaz ve atılım sürerken tekrarlanmaz', async () => {
     const dashes = (): number =>
       context.sources.filter((s) => s.buffer?.url?.endsWith('/dash.ogg')).length;

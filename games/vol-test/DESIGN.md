@@ -760,7 +760,8 @@ kaydı yalnız kanonik dosyada kalır ve `verifyFamily` onu okur.
 Dokuz döngü motorun üç devri, palet, bacak adımı, pervane, kayma, servo ve hızlanmadır. Yürüyücü palet yerine
 `legs` (sivri uç tıkırtısı ve eklem sürtmesi), süzülen araç `fans` (kanat geçişi uğultusu) çalar; tempo ve güç
 araca göre (`AUDIO.vehicleVoice.tracks`). Tek atımlık araç sesleri `dash` (yürüyücü ve süzülenin atılımı
-başlarken) ve `snap`tir (`broke` olayında parça kopması; `AUDIO.eventAsset`).
+başlarken), `snap` (`broke` olayında parça kopması) ve `sink`tir (derin suda boğulan aracın batışı: `died`
+olayı `drown` nedenliyse aracın son şasisinde çalar; `AUDIO.eventAsset`).
 Ray, plazma, iğne ve yay silahının kendi atış teslimi (`shot-rail/plasma/needle/arc`, `AUDIO.shotAsset`) vardır;
 kabuk ve ağır mermi top ailesini perdeyle çalar. Top,
 patlama, isabet, çarpma ve fren aileleri olaydan seçilir; patlamanın yakın,

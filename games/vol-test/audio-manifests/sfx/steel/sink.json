@@ -1,0 +1,287 @@
+{
+  "analysis": {
+    "analyzerVersion": 1,
+    "encoded": {
+      "analyzerVersion": 1,
+      "dc": {
+        "channelOffset": [
+          0.000050049894973210594
+        ]
+      },
+      "defects": {
+        "clicks": {
+          "count": 0,
+          "method": "d2>8*rms(±0.01s)&d2>0.001&isolated(<0.5*d2 beyond 0.001s);cluster 0.001s"
+        },
+        "clips": {
+          "channelSamples": 0,
+          "frames": 0,
+          "perChannel": [
+            0
+          ]
+        }
+      },
+      "format": {
+        "channels": 1,
+        "durationSeconds": 1.9,
+        "frames": 91200,
+        "sampleRate": 48000
+      },
+      "level": {
+        "channelPeakDbfs": [
+          -5.2687350761124705
+        ],
+        "channelRmsDbfs": [
+          -23.01278139693951
+        ],
+        "crestFactorDb": 17.74404632082704,
+        "integratedLufs": -22.914056256645672,
+        "maxMomentaryLufs": -19.41744791567531,
+        "rmsDbfs": -23.01278139693951,
+        "samplePeakDbfs": -5.2687350761124705,
+        "truePeakDbtp": -5.2687350761124705
+      },
+      "measuredFrom": "decoded-encoded",
+      "schema": "AudioAnalysisReportV1",
+      "spectral": {
+        "bandsDb": {
+          "air": -95.60439750009257,
+          "high": -49.71507827825533,
+          "low": -31.54999405844867,
+          "mid": -24.08701450031527,
+          "sub": -36.873752175380986
+        },
+        "centroidHz": 767.2307349768007,
+        "flatness": 1.1893823801428478e-7,
+        "peakHz": 703.125,
+        "rolloff85Hz": 1054.6875
+      },
+      "stereo": null,
+      "temporal": {
+        "activeSeconds": 1.88,
+        "attackSeconds": 0.99,
+        "decay40Seconds": 0.87,
+        "leadingSilenceSeconds": 0,
+        "peakTimeSeconds": 0.99,
+        "temporalCentroidSeconds": 0.8641577039174294,
+        "trailingSilenceSeconds": 0.029999999999999805
+      }
+    },
+    "sourceRecordHash": "sha256:31cb8ca1bebcb74b2ffdf1ab31555bc47e7e47f443682332f591e1af9a052f93"
+  },
+  "asset": {
+    "bytes": 33239,
+    "encodedHash": "sha256:09a7188345ebdb16f5140450722d94d85daf876a98335835e4273e2efc55b28e",
+    "format": "ogg-vorbis",
+    "path": "games/vol-test/public/assets/audio/sfx/steel/sink.ogg"
+  },
+  "assetId": "vt-hardsteel-sink",
+  "brief": {
+    "document": {
+      "assetClass": "sfx",
+      "channels": 1,
+      "durationSeconds": {
+        "max": 2.2,
+        "min": 1.2
+      },
+      "id": "vt-hardsteel-sink",
+      "intent": "Derin suda boğulan ağır araç: gövdenin suya gömülüşü, iri kabarcıkların yükselen gurultusu ve sönen su sesi; tek seferlik, perdesiz, metalik tık yok.",
+      "kind": "acoustic",
+      "placement": "positional",
+      "provenance": {
+        "author": "agent",
+        "by": "claude"
+      },
+      "schema": "AudioBriefV1",
+      "subtype": "sfx",
+      "title": "VOL.TEST — kuru mekanik: vt-steel-sink"
+    },
+    "hash": "sha256:d7077c389df075acc8615e7ba68956b282855c4a7d47a1b7f4c9fb0d0095f9f6",
+    "kind": "acoustic",
+    "schema": "AudioBriefV1"
+  },
+  "encoder": {
+    "arguments": [
+      "-f",
+      "f32le",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      "7",
+      "-bitexact"
+    ],
+    "codec": "libvorbis",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
+    "libraries": {
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
+    },
+    "quality": 7,
+    "tool": "ffmpeg",
+    "unreported": [
+      "libvorbis"
+    ],
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "encoding": {
+    "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
+    "quality": 7,
+    "scheme": "encode-profile-v1"
+  },
+  "engine": {
+    "package": "@volstudio/audio-synth",
+    "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
+    "renderSurface": {
+      "hash": "sha256:ab5ce6cedae9e12e3caee1698b85066dd46789ca7d6121481d4d3a3779f5f01c",
+      "nodes": [
+        {
+          "hash": "sha256:6867f7a6260db813c356107e68ef9e8aeeb536a81853ff89284c9350342cf40c",
+          "id": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "hash": "sha256:cae56a4c84b9fd2485849032345166cbd165d453a1e1c46ceb57024ffe7c18c5",
+          "id": "source.bubble",
+          "version": 1
+        },
+        {
+          "hash": "sha256:7088c7db2247ae6a56332df99b7ab9929921dae2d33e2503edb06872b05a3243",
+          "id": "source.bubbles",
+          "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        }
+      ],
+      "scheme": "render-surface-v1"
+    },
+    "rendererVersion": 2,
+    "runtime": {
+      "node": "v22.23.1"
+    }
+  },
+  "integration": {
+    "loop": false,
+    "package": "@volstudio/vol-test",
+    "runtimeDeclaration": "games/vol-test/audio-target.json",
+    "runtimeKey": null,
+    "targetKind": "game"
+  },
+  "job": {
+    "jobId": "vt-hardsteel-sink",
+    "path": "devtools/audio-synth/records/jobs/vt-hardsteel-sink",
+    "protocolVersion": 1
+  },
+  "layout": {
+    "channels": 1,
+    "image": null,
+    "placement": "positional",
+    "scheme": "channel-layout-v1"
+  },
+  "policy": {
+    "assetClass": "sfx",
+    "policyVersion": 1,
+    "verdict": "pass",
+    "violations": []
+  },
+  "program": {
+    "document": {
+      "channels": 1,
+      "description": "Suya gömülen ağır araç: iri kabarcık gurultusu, yükselen kabarcık bulutu ve alçak su gövdesi.",
+      "durationSeconds": 1.9,
+      "layers": [
+        {
+          "gainDb": -9,
+          "name": "glug",
+          "source": {
+            "params": {
+              "damping": 1.1,
+              "radius": 9,
+              "rise": 0.35
+            },
+            "primitive": "source.bubble",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": 0,
+          "name": "bubbles",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 1800,
+                "mode": "lowpass",
+                "q": 0.6
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "source": {
+            "params": {
+              "clustering": 0.4,
+              "damping": 1.5,
+              "levelSpread": 6,
+              "radius": 3.2,
+              "rate": 20,
+              "regularity": 0.25,
+              "rise": 0.5,
+              "sizeSpread": 0.7
+            },
+            "primitive": "source.bubbles",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -8,
+          "name": "body",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 520,
+                "mode": "lowpass",
+                "q": 0.8
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "source": {
+            "params": {
+              "color": "brown"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        }
+      ],
+      "master": {
+        "dcBlockHz": 25,
+        "fadeOutSeconds": 0.45,
+        "normalize": "peak",
+        "peakDbfs": -4
+      },
+      "sampleRate": 48000,
+      "schema": "AcousticProgramV1",
+      "seed": 9173
+    },
+    "hash": "sha256:aa064c3fb6edd75f307c42051cad0c83171752cb8b5747965bad62a3712dc499",
+    "schema": "AcousticProgramV1"
+  },
+  "render": {
+    "pcm": {
+      "channels": 1,
+      "format": "f32le-interleaved-clamped",
+      "frames": 91200,
+      "hash": "sha256:096b49bf605fbc3096c103be961ba42165928a52a3a9120726c19846502353b7",
+      "sampleRate": 48000
+    },
+    "renderId": "r-1d639e3b21b87c7e",
+    "rendererVersion": 2,
+    "seed": 9173
+  },
+  "schema": "AudioAssetManifestV1"
+}

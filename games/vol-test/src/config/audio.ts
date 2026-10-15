@@ -80,10 +80,10 @@ export const AUDIO = {
     arc: { rate: 1, gain: 0.85 },
   } satisfies Record<WeaponStyle, WeaponVoice>,
   /** Kendi atış teslimi olan silah stilleri (`loopAssetRoot` altında); olmayan top ailesinden çalar. */
-  /** Tek atımlık araç sesleri (`loopAssetRoot` altında): atılım başlangıcı ve parça kopması. */
-  eventAsset: { dash: 'dash', snap: 'snap' },
+  /** Tek atımlık araç sesleri (`loopAssetRoot` altında): atılım başlangıcı, parça kopması ve boğulma. */
+  eventAsset: { dash: 'dash', snap: 'snap', sink: 'sink' },
   /** Olay seslerinin kazancı. */
-  eventGain: { dash: 0.6, snap: 0.75 },
+  eventGain: { dash: 0.6, snap: 0.75, sink: 0.8 },
   shotAsset: {
     rail: 'shot-rail',
     plasma: 'shot-plasma',
