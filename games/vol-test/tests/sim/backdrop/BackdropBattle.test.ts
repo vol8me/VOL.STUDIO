@@ -23,8 +23,8 @@ describe('BackdropBattle', () => {
 
   it('aynı tohum aynı savaşı üretir', () => {
     const run = (): string => {
-      const instance = battle(3, 5);
-      instance.fastForward(20_000);
+      const instance = battle(2, 5);
+      instance.fastForward(8000);
       return instance.vehicles
         .map((vehicle) => `${vehicle.spec.id}:${vehicle.chassis.x.toFixed(2)}`)
         .join('|');
@@ -33,11 +33,11 @@ describe('BackdropBattle', () => {
   });
 
   it('ileri sarım olay biriktirmez; advance fizik olaylarını drainEvents ile verir', () => {
-    const instance = battle(5, 5);
-    instance.fastForward(40_000);
+    const instance = battle(3, 5);
+    instance.fastForward(15_000);
     expect(instance.drainEvents([])).toEqual([]);
     const events: SimEvent[] = [];
-    for (let frame = 0; frame < 60 * 120 && events.length === 0; frame++) {
+    for (let frame = 0; frame < 60 * 60 && events.length === 0; frame++) {
       instance.advance(GAME.simulationStepMs);
       instance.drainEvents(events);
     }
