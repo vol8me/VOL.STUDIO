@@ -26,6 +26,7 @@ taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
 | `src/view/`                            | Dünya ve tank sunumu, sınırlı efekt havuzları           |
 | `src/hud/`                             | CORE bileşenleriyle metin, harita ve paneller           |
 | `src/menu/`                            | Ana menü, garaj, ayarlar ve geliştirici ekranları       |
+| `src/sim/backdrop/`                    | Menü arka planı: savaş sarmalayıcısı ve sinema kamerası |
 | `src/scenes/world/`                    | Girdi, kamera, çevre ve olayların bağlanması            |
 | `src/config/`                          | Bütün oynanış ve sunum ölçülerinin tek kaynağı          |
 
@@ -198,8 +199,12 @@ karlı uçlar kar üstüne çıkar (`tipDepth` −88,5) ve derinleşen karda sol
 
 Sunum `VegetationLayer`: örtü büyüdükçe önce tutam sayısı, sonra boyu artar; konum hücre ve sıra
 numarasından türer (karede titremez). Çayır her karede yeniden çizilmez, dünyaya hizalı döşemelere
-(`vegetation.tile.size` birim) pişirilir: her döşeme dört katmanı (taban, çekirdek, tutamlar, uçlar) bir
-`RenderTexture`a basar ve kamera yalnız görünür döşemeleri sahneye koyar. Yeniden pişirme tek kaynaktan,
+(`vegetation.tile.size` birim) pişirilir: her döşeme iki `RenderTexture` tutar. `body` taban, çekirdek ve
+tutamları, `tips` kar üstüne çıkan uçları taşır; taban ve çekirdek kalemleri kendi saydamlığını (`base.alpha`,
+`core.alpha`) taşır ve alfa karışımı birleşimli olduğundan tek dokuya basılmaları ayrı katmanlarla aynı
+görüntüyü verir. Ekranı kaplayan doku sayısı bu yüzden ikidir (dolgu maliyeti: yazılım GL'de her tam ekran
+katman karede ~30 ms tutar, dört katman ölçümde en uzak yakınlaştırmada kare hızını yarıya indiriyordu).
+Kamera yalnız görünür döşemeleri sahneye koyar. Yeniden pişirme tek kaynaktan,
 döşemenin imzasından (kademeli büyüme, kar, kalite) karar verir; gün ışığı dokuya basılmaz, boya olarak
 uygulanır. Doku piksel yoğunluğu ekran yoğunluğundan seçilir (`tile.texel` kademeleri) ve kademe değişince
 yeniden kurulur; pişirmeler kare başına zaman bütçelidir (`bakeBudgetMs`) ve görünürden uzak döşemeler
@@ -754,37 +759,58 @@ tavanı `WORLD.mapMaxZoom`dur, zoom 1 bütün cephe hattını gösterir
 
 ## Ekranlar
 
-Açılış sırası Boot → Menu → (Garage | Settings | World). `BootScene` dokuları yükler ve
+Açılış sırası Boot → Backdrop + Menu → (Garage | Settings | Dev | World). `BootScene` dokuları yükler ve
 `firstScene` ile ilk ekranı seçer: oyuncu ana menüyü görür; ölçüm koşusu (Deck sondası) ve
 `?start=world` geliştirme bağlantısı menüyü atlayıp alıştırma dünyasını açar.
 
-| Ekran      | İçerik                                                                                     |
-| ---------- | ------------------------------------------------------------------------------------------ |
-| `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı  |
-| `Garage`   | Dört araç kartı (ad, görev, üç ölçü), ad, cephe; savaşa katıl, alıştırmaya çık, geri       |
-| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi, senaryo ve tohum |
-| `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)       |
+| Ekran      | İçerik                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| `Backdrop` | Menülerin altında oynayan canlı savaş (insansız, sessiz); dünya açılınca durur            |
+| `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı |
+| `Garage`   | Araç kartları (ad, görev, üç ölçü), ad, cephe; savaşa katıl, alıştırmaya çık, geri        |
+| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi, menü arka planı |
+| `Dev`      | Mevsim, hava, araç, arka plan yoğunluğu; senaryo, tohum ve kaos kadranı                   |
+| `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)      |
 
-Üç ekran aynı taksonomiden gelir: `ScreenFrame` başlık şeridi (geri `IconButton`, başlık, alt başlık),
-kayan gövde (`ScrollView`) ve eylem şeridini kurar; ekranlar yalnız içeriklerini gövdeye, düğmelerini
-şeride koyar. İki düzen vardır. `sheet` sol şerittir ve arkasında canlı araç vitrini ya da oyun görünür (ana menü,
-ayarlar ve duraklatma; dar ekranda alt levha); `full` yalnız garajdır ve sunum için ortada bir `stage`
-bölgesi ayırır. Duraklatma (`PauseOverlay`) aynı `ScreenFrame` `sheet`ini CORE `Modal` içinde taşır: modal yalnız
-odak tuzağı, Escape ve Android geri sözleşmesini verir. Katman ayar satırı taşımaz: yalnız düğmeler vardır
-(Devam et, Ayarlar, Geliştirici, sürücü eylemleri). "Ayarlar" ana menüdeki `SettingsScreen`i (dil, kalite, ses,
-titreşim, ekran kipi), "Geliştirici" `DevScreen`i (senaryo ve tohum) şeridin içinde açar; geri düğmesi menüye
-döner. Oyuncu ayarı ile geliştirici ayarı böylece tek yerde ve ayrı durur. Geniş denetimli satırlar
-(dil, ekran kipi, senaryo) `stackOnNarrow` ile dar ekranda etiketin altına iner.
-**Telefonda garaj.** Dikeyde sunum üstte ve esnektir, araç kartları tek satırlık yatay `scroll-snap` şeridinde
-kayar (ölçü çubukları ve seçim düğmesi kalır), katılım formu altta durur; hepsi gövdeye
-kaymadan sığar. Alçak yatayda başlık şeridi ile eylem şeridi tek alt çubukta birleşir, kartlar sütunda dikey
-yaslanarak kayar. İkisi de `tests/e2e/menu.spec.ts` ile 390×844 ve 844×390'da kilitlidir. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
+Bütün ekranlar aynı taksonomiden gelir: `ScreenFrame` başlık şeridi (geri `IconButton`, başlık, alt başlık),
+kayan gövde (`ScrollView`) ve eylem şeridini kurar; ekranlar yalnız içeriklerini gövdeye, düğmelerini şeride
+koyar. Tek düzen vardır: sağ şerit (`sheet`, 440 px; ≤719 px'te alt levha). Ana menü, garaj, ayarlar,
+geliştirici ve duraklatma aynı şeridi paylaşır, ekranlar arası geçiş şeridin kenara kayıp yeniden girmesidir
+(`MENU.fadeMs`, `slidePx`; CSS `--vt-slide`/`--vt-slide-ms` aynı sayıyı taşır, `prefers-reduced-motion`da
+anında). Duraklatma (`PauseOverlay`) aynı `ScreenFrame`i CORE `Modal` içinde taşır: modal yalnız odak tuzağı,
+Escape ve Android geri sözleşmesini verir. Katman ayar satırı taşımaz: yalnız düğmeler vardır (Devam et,
+Ayarlar, Geliştirici, sürücü eylemleri). "Ayarlar" `SettingsScreen`i (dil, kalite, ses, titreşim, ekran kipi,
+menü arka planı), "Geliştirici" `DevScreen`i şeridin içinde açar; geri düğmesi menüye döner. Oyuncu ayarı ile
+geliştirici ayarı böylece tek yerde ve ayrı durur. Geniş denetimli satırlar `stackOnNarrow` ile dar ekranda
+etiketin altına iner.
+
+**Geliştirici ekranı.** Dünya bölümü (`DevWorldPanel`) mevsim, hava, araç ve arka plan yoğunluğunu verir;
+seçim `GameSettings`e yazılır ve anında uygulanır: menü arka planı ve açık alıştırma dünyası mevsimi ve
+havayı `WeatherSystem.setSeason`/`setOverride` ile hemen değiştirir (öncelik: bağlantı parametresi, ölçüm
+geçersiz kılması, ayar; `climateChoice`), araç seçimi vitrine ve bir sonraki girişe geçer. Alıştırma bölümü
+senaryo, tohum ve kaos kadranıdır.
+
+**Telefonda garaj.** Dikeyde şerit alt levhadır; araç kartları tek satırlık yatay `scroll-snap` şeridinde
+kayar (ölçü çubukları ve seçim düğmesi kalır), katılım formu altta durur; hepsi gövdeye kaymadan sığar.
+Alçak yatayda şerit 540 px'tir ve kartlar iki sütundur. İkisi de `tests/e2e/menu.spec.ts` ile 390×844 ve
+844×390'da kilitlidir. Görünen her parça CORE bileşenidir: araç seçimi `CardTile` (`selected` + `addDetail`
 ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, denetimler `Input`,
-`SegmentedControl`, `Select`, `Checkbox`; `menu.css` yalnız yerleşim verir. Arkada oyunun gerçek araç
-görünümleri (`TankView`, `SpiderView`) dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde onları dolaşık bir poza sürükler, taretleri salınır); kamera `stage` bölgesinin kaydırma gövdesinde
-görünen kısmına (alçak yatay ekranda sahne görünümden uzun olabilir) ya da `sheet`in bıraktığı alana kurulur ve sığmazsa yakınlaştırma küçülür (`src/config/menu.ts`). Ekran
-değişimi vitrin zemininin kum rengine solarak yapılır (koyu renge solmak parlak zemine dönüşte göz alıyordu;
-`prefers-reduced-motion`da anında); geçiş sürerken ikinci seçim yok sayılır.
+`SegmentedControl`, `Select`, `Slider`, `Checkbox`; `menu.css` yalnız yerleşim verir.
+
+**Arka plan.** `BackdropScene` menü sahnelerinin altında (sahne sırası: oluşturma sırası) gerçek `War`
+simülasyonunu botlarla oynatır; menü kamerası saydamdır, bu yüzden savaş görünür. Savaş `BackdropBattle`
+sarmalayıcısındadır (oyuncu yok, bölge ve zafer olayları süzülür, `fastForward` açılışta `prerollMs` kadar
+ilerletir: kamera saydamlığı 0 iken ve kare başına `prerollPerFrameMs` ile bölünerek, böylece takılma
+olmaz ve ilk görünen kare çatışmadadır). Kamera `CameraDirector` sinema yönetmenidir: en yakın düşman çiftini
+çerçeveler, çift bitince ya da açılınca karartıp yeni çifte keser. Menü şeridi savaşı örtmesin diye
+menü sahnesi boş alanı oyun kayıt defterine yazar (`MENU_AREA_KEY`, `freeArea`); arka plan odağı ve araç
+vitrini aynı alana oturur. Arka plan sessizdir, hasar ve titreşim geri bildirimi yoktur, üstüne `dim` karartması
+konur. Ayar `backdrop` (varsayılan: kalite `low` değilse açık) ve `backdropDensity` (cephe başına 2–8 bot);
+yoğunluk değişince savaş baştan kurulur, mevsim/hava/kalite yalnız ilgili parçayı yeniler. Dünya sahnesi açılırken
+önce arka plan durdurulur (doku anahtarları çakışmasın). Arkada ayrıca oyunun gerçek araç görünümleri
+(`TankView`, `SpiderView`) saydam zeminde dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü
+ayaklar dünya uzayında basılır ve dönen gövde onları dolaşık bir poza sürükler, taretleri salınır); kamera
+şeridin bıraktığı boş alana kurulur ve sığmazsa yakınlaştırma küçülür (`src/config/menu.ts`).
 Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış onayını açar ya da kapatır.
 
 Garajdaki seçim (araç, cephe, ad) ve ayarlardaki dil `GameSettings`e yazılır ve oturumlar arasında

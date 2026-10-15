@@ -60,6 +60,16 @@ describe('SettingsScreen', () => {
     expect(range.value).toBe('0.2');
   });
 
+  it('canlı menü arka planı onay kutusu tercihe yazılır ve tercihten tazelenir', async () => {
+    const { settings, find } = await mount();
+    const box = find('settings-backdrop').querySelector<HTMLInputElement>('input')!;
+    expect(box.checked).toBe(true);
+    box.click();
+    await vi.waitFor(() => expect(settings.get().backdrop).toBe(false));
+    await settings.update({ backdrop: true });
+    await vi.waitFor(() => expect(box.checked).toBe(true));
+  });
+
   it('kalite seçimi tercihe yazılır', async () => {
     const { settings, choice } = await mount();
     choice('settings-quality', i18next.t('voltest:pause.qualityLevel.low')).click();

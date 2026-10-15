@@ -42,9 +42,8 @@ import { OfflineDriver } from './world/OfflineDriver';
 import { PauseController } from './world/PauseController';
 import { EnvironmentController } from './world/EnvironmentController';
 import { SEASONS } from '@/config/seasons';
-import { parseSeasonOverride } from '@/sim/seasons/SeasonCycle';
 import { WEATHER } from '@/config/weather';
-import { parseWeatherOverride } from '@/sim/weather/WeatherSystem';
+import { climateChoice } from './world/climateChoice';
 import { PlayerControls } from './world/PlayerControls';
 import { feelBlast, routeSimEvents } from './world/SimEventRouter';
 import { WorldCursor } from './world/WorldCursor';
@@ -151,9 +150,8 @@ export class WorldScene extends Phaser.Scene {
     const online = data?.online === true;
     // Çevrimiçi dünyada hava yerel seçimle değil sunucunun iklimiyledir: tohum sabit, mevsim ve
     // saat sunucudan gelen anlık görüntüyle uyumlanır; yerel önizleme parametreleri yok sayılır.
-    const previewSeason = online
-      ? undefined
-      : (parseSeasonOverride(query.get('season')) ?? overrides?.season);
+    const choice = climateChoice(preferences, query, overrides);
+    const previewSeason = online ? undefined : choice.season;
     this.environment = this.scope.addDestroyable(
       new EnvironmentController(
         this,
@@ -161,14 +159,25 @@ export class WorldScene extends Phaser.Scene {
         world.height,
         online ? WEATHER.seed : seed,
         quality.getProfile(),
-        online
-          ? undefined
-          : (data?.weather ?? parseWeatherOverride(query.get('weather')) ?? overrides?.weather),
+        online ? undefined : (data?.weather ?? choice.weather),
         previewSeason,
         world,
       ),
     );
     if (previewSeason) this.environment.model.step(SEASONS.previewWarmupMs);
+    if (this.services && !online) {
+      // Geliştirici ekranından seçilen mevsim ve hava, açık dünyada da anında uygulanır.
+      let applied = choice;
+      this.scope.addSubscription(
+        this.services.settings.subscribe((value) => {
+          const next = climateChoice(value, query, overrides);
+          if (next.season && next.season !== applied.season)
+            this.environment.model.setSeason(next.season, SEASONS.previewWarmupMs);
+          if (next.weather !== applied.weather) this.environment.model.setOverride(next.weather);
+          applied = next;
+        }),
+      );
+    }
     const touch = shouldUseTouchControls();
     this.controls = this.scope.addDestroyable(
       new PlayerControls(

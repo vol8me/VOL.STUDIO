@@ -1,4 +1,4 @@
-import type { SeasonKind } from '@/config/seasons';
+import { SEASONS, type SeasonKind } from '@/config/seasons';
 import { CLIMATE_NET } from '@/config/climate';
 import { WEATHER, type WeatherKind } from '@/config/weather';
 import { SurfaceGrid, type FertilityMask } from './SurfaceGrid';
@@ -31,6 +31,7 @@ export class WeatherSystem {
   readonly rows: number;
   private readonly surface: SurfaceGrid;
   private schedule: WeatherSchedule;
+  private forced: WeatherKind | undefined;
   private readonly seed: number;
   private initialSeason: SeasonKind;
   private elapsedMs = 0;
@@ -47,6 +48,7 @@ export class WeatherSystem {
     this.seed = seed;
     this.initialSeason = options.season ?? 'spring';
     this.surface = new SurfaceGrid(width, height, seed, options.fertility);
+    this.forced = options.override;
     this.schedule = new WeatherSchedule(seed, options.override, options.season);
     this.cellSize = this.surface.cellSize;
     this.columns = this.surface.columns;
@@ -76,9 +78,26 @@ export class WeatherSystem {
   }
 
   setOverride(kind: WeatherKind | undefined): void {
+    this.forced = kind;
     this.integrateWind(this.currentFrame);
     this.schedule.setOverride(kind, this.elapsedMs);
     this.currentFrame = this.withTravel(this.schedule.frameAt(this.elapsedMs));
+  }
+
+  /**
+   * Mevsimi anında değiştirir: takvim saati yerinde kalır, başlangıç mevsimi öyle kaydırılır ki şu anki
+   * mevsim `season` olur. `warmupMs` zemini yeni mevsime alıştırır (kar örtüsü, yeşillik); sıfırsa yalnız
+   * takvim ve hava değişir. Çevrimiçi dünyada takvimi sunucu yönetir; çağıran orada bunu kullanmaz.
+   */
+  setSeason(season: SeasonKind, warmupMs = 0): void {
+    const count = SEASONS.order.length;
+    const phase = Math.floor(this.elapsedMs / SEASONS.durationMs);
+    const index = SEASONS.order.indexOf(season);
+    this.integrateWind(this.currentFrame);
+    this.initialSeason = SEASONS.order[(((index - phase) % count) + count) % count];
+    this.schedule = new WeatherSchedule(this.seed, this.forced, this.initialSeason);
+    this.currentFrame = this.withTravel(this.schedule.frameAt(this.elapsedMs));
+    if (warmupMs > 0) this.step(warmupMs);
   }
 
   sample(x: number, y: number): SurfaceSample {

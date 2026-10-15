@@ -56,10 +56,56 @@ describe('cihaz tercihleri', () => {
       vehicle: 'bulwark',
       faction: 1,
       language: 'en',
+      season: 'auto',
+      weather: 'auto',
+      backdrop: false,
+      backdropDensity: 5,
     });
     expect(localStorage.getItem('synced.voltest.preferences')).toBeNull();
     next.dispose();
   });
+  it('mevsim, hava, arka plan ve yoğunluk seçimleri kaydedilir; geçersiz değer eskisini korur', async () => {
+    localStorage.clear();
+    const settings = new GameSettings(store(), 'Linux');
+    await settings.load();
+    expect(settings.get()).toMatchObject({ backdrop: true, season: 'auto', weather: 'auto' });
+    await settings.update({
+      season: 'winter',
+      weather: 'snow',
+      backdrop: false,
+      backdropDensity: 7,
+    });
+    expect(settings.get()).toMatchObject({
+      season: 'winter',
+      weather: 'snow',
+      backdrop: false,
+      backdropDensity: 7,
+    });
+    await settings.update({
+      season: 'monsoon' as never,
+      weather: 'fog' as never,
+      backdrop: 'yes' as never,
+      backdropDensity: 99,
+    });
+    expect(settings.get()).toMatchObject({
+      season: 'winter',
+      weather: 'snow',
+      backdrop: false,
+      backdropDensity: 7,
+    });
+    await settings.update({ season: 'auto', weather: 'auto', backdropDensity: 2 });
+    expect(settings.get()).toMatchObject({ season: 'auto', weather: 'auto', backdropDensity: 2 });
+    settings.dispose();
+  });
+
+  it('düşük kalite varsayılanı canlı menü arka planını kapalı açar', async () => {
+    localStorage.clear();
+    const settings = new GameSettings(store(), 'Mozilla/5.0 (Linux; Android 16)');
+    await settings.load();
+    expect(settings.get().backdrop).toBe(false);
+    settings.dispose();
+  });
+
   it('bozuk kaydı doğrular ve eksik alanların cihaz varsayılanını kullanır', async () => {
     localStorage.clear();
     const saves = store();
@@ -88,6 +134,10 @@ describe('cihaz tercihleri', () => {
       vehicle: 'striker',
       faction: -1,
       language: 'auto',
+      season: 'auto',
+      weather: 'auto',
+      backdrop: true,
+      backdropDensity: 5,
     });
     const changes: unknown[] = [];
     const off = settings.subscribe((value) => changes.push(value));

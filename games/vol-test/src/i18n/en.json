@@ -92,7 +92,27 @@
     }
   },
   "dev": {
-    "title": "Developer"
+    "title": "Developer",
+    "world": "World",
+    "practice": "Practice",
+    "season": "Season",
+    "seasonOption": {
+      "auto": "Calendar flow",
+      "spring": "Spring",
+      "summer": "Summer",
+      "autumn": "Autumn",
+      "winter": "Winter"
+    },
+    "weather": "Weather",
+    "weatherOption": {
+      "auto": "By season",
+      "clear": "Clear",
+      "dust": "Dust",
+      "rain": "Rain",
+      "snow": "Snow"
+    },
+    "vehicle": "Vehicle",
+    "density": "Battle density (bots per side)"
   },
   "settings": {
     "title": "Settings",
@@ -102,7 +122,8 @@
       "tr": "Türkçe",
       "en": "English"
     },
-    "back": "Back"
+    "back": "Back",
+    "backdrop": "Live menu backdrop"
   },
   "boot": {
     "title": "VOL.TEST",

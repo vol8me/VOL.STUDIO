@@ -5,28 +5,20 @@ import { TANK_LIGHTS } from '@/config/tankView';
 import type { VehicleSpec } from '@/config/vehicles';
 import { renderQualityOf } from '@/scenes/world/CameraRig';
 import { createVehicleView } from './createView';
+import { freeArea, type FreeArea, type PanelRect } from './menuLayout';
 import type { TankFrame, VehicleView } from './VehicleView';
 
 const SHOWROOM = MENU.showroom;
 
-/** Panelin ekran CSS pikselindeki kenarları (`DOMRect` bunu karşılar). */
-export interface PanelRect {
-  readonly top: number;
-  readonly right: number;
-  readonly width: number;
-}
-
-/** Vitrinin kurulacağı bölgenin ekran CSS pikselindeki dikdörtgeni (`DOMRect` bunu karşılar). */
-export interface StageRect {
-  readonly left: number;
-  readonly top: number;
-  readonly width: number;
-  readonly height: number;
-}
+/**
+ * Vitrinin zemini: `plane` ızgaralı kum zeminidir (arkada başka sahne yokken); `disc` araca yalnız bir
+ * gölge ve halka verir, zemini saydam bırakır (arkada canlı savaş oynarken).
+ */
+export type ShowroomGround = 'plane' | 'disc';
 
 /**
- * Menü ve garajın vitrini: oyundaki gerçek araç görünümünü zemin ızgarası üstünde yavaş dönen bir
- * tablada gösterir. Görünüm sınıfları oyunla aynıdır; yeni araç otomatik olarak vitrine girer.
+ * Menü ve garajın vitrini: oyundaki gerçek araç görünümünü yavaş dönen bir tablada gösterir. Görünüm
+ * sınıfları oyunla aynıdır; yeni araç otomatik olarak vitrine girer.
  */
 export class Showroom {
   private readonly ground: Phaser.GameObjects.Graphics;
@@ -36,10 +28,12 @@ export class Showroom {
   private turns = true;
   private hull = 0;
   private extent: number = SHOWROOM.extent;
+  private area: FreeArea | undefined;
 
   constructor(
     private readonly scene: Phaser.Scene,
     spec: VehicleSpec,
+    private mode: ShowroomGround = 'plane',
   ) {
     this.ground = scene.add.graphics().setDepth(-100);
     this.lighting = scene.add
@@ -61,11 +55,27 @@ export class Showroom {
     this.view.root.setDepth(10);
   }
 
+  /** Zemin kipini değiştirir; aynı kipte işlem yapmaz. */
+  setGround(mode: ShowroomGround): void {
+    if (mode === this.mode) return;
+    this.mode = mode;
+    this.drawGround();
+  }
+
   /**
-   * Tablayı ilerletir ve kamerayı yerleştirir: `stage` verilirse aracı o bölgeye oturtur (tam ekran
-   * ekranlar), yoksa panelin bıraktığı boş alana.
+   * Tabla saati (ms). Ekranlar arası geçişte saat taşınır: aynı araç aynı açıda kalır ve dönüş yeni
+   * sahnede başa sarmaz.
    */
-  update(deltaMs: number, panel?: PanelRect, stage?: StageRect): void {
+  get clockMs(): number {
+    return this.elapsedMs;
+  }
+
+  set clockMs(value: number) {
+    if (Number.isFinite(value) && value >= 0) this.elapsedMs = value;
+  }
+
+  /** Tablayı ilerletir ve kamerayı panelin bıraktığı boş alana yerleştirir. */
+  update(deltaMs: number, panel?: PanelRect): void {
     this.elapsedMs += Number.isFinite(deltaMs) && deltaMs > 0 ? deltaMs : 0;
     const seconds = this.elapsedMs / 1000;
     const hull = this.turns ? seconds * SHOWROOM.turntableRate : 0;
@@ -74,7 +84,12 @@ export class Showroom {
       this.frame(hull, hull + Math.sin(seconds * SHOWROOM.turretSweepRate) * SHOWROOM.turretSweep),
       deltaMs,
     );
-    this.frameCamera(panel, stage);
+    this.frameCamera(panel);
+  }
+
+  /** Son karede araca ayrılan boş alan (CSS piksel); henüz kare yoksa `undefined`. */
+  get freeArea(): FreeArea | undefined {
+    return this.area;
   }
 
   /** Vitrindeki gövdenin güncel yönü (rad). */
@@ -108,39 +123,31 @@ export class Showroom {
   }
 
   /**
-   * Aracı panelin bıraktığı boş alanın ortasına oturtur: panel yan şeritse alanın sağında, ekranı
-   * kaplayan alt levhaysa üstünde. `panel` ekran CSS pikselindeki dikdörtgendir; yoksa tüm ekran boştur.
+   * Aracı panelin bıraktığı boş alanın ortasına oturtur: panel yan şeritse alanın geniş kalan yanında,
+   * ekranı kaplayan alt levhaysa üstünde. `panel` ekran CSS pikselindeki dikdörtgendir; yoksa tüm ekran boştur.
    */
-  private frameCamera(panel: PanelRect | undefined, stage: StageRect | undefined): void {
+  private frameCamera(panel: PanelRect | undefined): void {
     const camera = this.scene.cameras.main;
     const quality = renderQualityOf(this.scene);
     const width = camera.width / quality;
     const height = camera.height / quality;
-    let focusX = width / 2;
-    let focusY = height / 2;
-    let freeWidth = width;
-    let freeHeight = height;
-    if (stage && stage.width > 0 && stage.height > 0) {
-      focusX = stage.left + stage.width / 2;
-      focusY = stage.top + stage.height / 2;
-      freeWidth = stage.width;
-      freeHeight = stage.height;
-    } else if (panel && panel.width > 0) {
-      if (panel.width > width * SHOWROOM.stackedFraction) {
-        freeHeight = Math.max(0, panel.top);
-        focusY = freeHeight / 2;
-      } else {
-        freeWidth = Math.max(0, width - panel.right);
-        focusX = panel.right + freeWidth / 2;
-      }
-    }
+    const free = freeArea(width, height, SHOWROOM.stackedFraction, panel);
+    this.area = free;
     // Boş alana sığmayan araç kırpılmasın: yakınlaştırma alanın kısa kenarına göre küçülür.
-    const zoom = Math.min(SHOWROOM.zoom, Math.min(freeWidth, freeHeight) / this.extent);
+    const zoom = Math.min(SHOWROOM.zoom, Math.min(free.width, free.height) / this.extent);
     camera.setZoom(quality * zoom);
-    camera.centerOn((width / 2 - focusX) / zoom, (height / 2 - focusY) / zoom);
+    camera.centerOn(
+      (width / 2 - (free.x + free.width / 2)) / zoom,
+      (height / 2 - (free.y + free.height / 2)) / zoom,
+    );
   }
 
   private drawGround(): void {
+    this.ground.clear();
+    if (this.mode === 'disc') {
+      this.drawDisc();
+      return;
+    }
     const half = SHOWROOM.groundHalf;
     this.ground.fillStyle(PALETTE.sand, 1);
     this.ground.fillRect(-half, -half, half * 2, half * 2);
@@ -157,5 +164,17 @@ export class Showroom {
       }
       this.ground.strokePath();
     }
+  }
+
+  /** Saydam zeminde aracı yerine bağlayan yumuşak gölge ve ince bir tabla halkası. */
+  private drawDisc(): void {
+    const { shadow, ring } = SHOWROOM.disc;
+    const radius = this.extent * ring.radius;
+    for (const layer of shadow.layers) {
+      this.ground.fillStyle(0x000000, shadow.alpha / shadow.layers.length);
+      this.ground.fillCircle(0, 0, radius * layer);
+    }
+    this.ground.lineStyle(ring.width, PALETTE.gridMajor.color, ring.alpha);
+    this.ground.strokeCircle(0, 0, radius);
   }
 }

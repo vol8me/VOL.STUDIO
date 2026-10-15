@@ -196,7 +196,7 @@
 }
 
 /*
- * Duraklatma: ana menü ve ayarlarla aynı sol şerit (`ScreenFrame` `sheet`). CORE `Modal` yalnız odak
+ * Duraklatma: ana menü ve ayarlarla aynı sağ şerit (`ScreenFrame`). CORE `Modal` yalnız odak
  * tuzağı, Escape ve geri sözleşmesini verir; kutusu ekranı kaplar ve şeridi taşır, scrim oyunu hafifçe
  * karartır (menüde scrim yoktur ama oyun arkada görünür kalır).
  */
@@ -222,7 +222,7 @@
   opacity: 1;
 
   /* Oyun HUD'u şeridin arkasında kalır: geçiş yalnız kenarda, gövde opak. */
-  background: linear-gradient(90deg, var(--vol-ui-surface-1) 94%, transparent);
+  background: linear-gradient(270deg, var(--vol-ui-surface-1) 94%, transparent);
 }
 
 /* Şeridin içindeki ayar ekranları sırayla görünür; gizli olan yer kaplamaz. */

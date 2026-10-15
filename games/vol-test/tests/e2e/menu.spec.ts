@@ -77,6 +77,27 @@ test('dar ekranda menü ve garaj panelleri ekrana sığar', async ({ page }) => 
   await fits('garage');
 });
 
+test('masaüstünde menü ve garaj sağ şerittir; geçişte şerit kaybolmadan yerine gelir', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  const menu = page.getByTestId('menu');
+  await expect(menu).toBeVisible();
+  const box = await menu.boundingBox();
+  expect(box).not.toBeNull();
+  // Şerit ekranın sağ kenarına yaslıdır ve solda araç için geniş alan kalır.
+  expect(box!.x + box!.width).toBeGreaterThanOrEqual(1280 - 1);
+  expect(box!.x).toBeGreaterThan(1280 / 2);
+  await page.getByTestId('menu-play').click();
+  const garage = page.getByTestId('garage');
+  await expect(garage).toBeVisible();
+  await expect(menu).toHaveCount(0);
+  const garageBox = await garage.boundingBox();
+  expect(garageBox!.x + garageBox!.width).toBeGreaterThanOrEqual(1280 - 1);
+  expect(garageBox!.x).toBeGreaterThan(1280 / 2);
+});
+
 /** Telefonda garajın her parçası ekran içinde ve erişilebilir olmalı; kullanıcı kaydırma aramamalı. */
 async function garageReport(page: Page) {
   return page.evaluate(() => {
@@ -93,7 +114,7 @@ async function garageReport(page: Page) {
       join: rect('[data-testid="garage-join"]'),
       name: rect('[data-testid="garage-name"]'),
       faction: rect('[data-testid="garage-faction"]'),
-      stage: rect('.vt-garage__stage'),
+      sheet: rect('[data-testid="garage"]'),
     };
   });
 }
@@ -112,8 +133,8 @@ test('telefon dikey: garaj kaymadan sığar, araçlar yatay şeritte kayar, kat�
     expect(box.top).toBeGreaterThanOrEqual(0);
     expect(box.bottom).toBeLessThanOrEqual(report.vh);
   }
-  // Sunum alanı araçları çizecek kadar yüksek kalır.
-  expect(report.stage.height).toBeGreaterThanOrEqual(120);
+  // Levhanın üstünde araç vitrini çizecek kadar boşluk kalır.
+  expect(report.sheet.top).toBeGreaterThanOrEqual(120);
 });
 
 test('telefon yatay: garaj tek alt çubukla sığar, kartlar sütunda dikey kayar', async ({

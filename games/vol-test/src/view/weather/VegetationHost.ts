@@ -1,9 +1,11 @@
 import type Phaser from 'phaser';
 import type { Disposable } from '@volstudio/core';
-import { WEATHER_VIEW } from '@/config/weatherView';
-import type { VegetationHost, VegetationImage, VegetationLayerKind } from './VegetationLayer';
-
-const VEGETATION = WEATHER_VIEW.vegetation;
+import type {
+  VegetationHost,
+  VegetationImage,
+  VegetationLayerKind,
+  VegetationPenKind,
+} from './VegetationLayer';
 
 /**
  * Döşeme dokusu: bir `RenderTexture` ve gün ışığı boyası. Doku piksel boyu kademe değişince yeniden kurulur.
@@ -18,7 +20,6 @@ class BakedImage implements VegetationImage {
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly depth: number,
-    private readonly alpha: number,
   ) {}
 
   bake(
@@ -36,7 +37,6 @@ class BakedImage implements VegetationImage {
         .renderTexture(originX, originY, pixels, pixels)
         .setOrigin(0, 0)
         .setDepth(this.depth)
-        .setAlpha(this.alpha)
         .setTint(this.tint)
         .setVisible(this.visible);
       this.texture = texture;
@@ -69,7 +69,7 @@ class BakedImage implements VegetationImage {
 
 /** Çayır döşemelerinin Phaser ayağı: sahneye eklenmeyen geçici kalemler ve döşeme dokuları. */
 export class PhaserVegetationHost implements VegetationHost, Disposable {
-  private readonly pens: Record<VegetationLayerKind, Phaser.GameObjects.Graphics>;
+  private readonly pens: Record<VegetationPenKind, Phaser.GameObjects.Graphics>;
   private readonly images = new Set<BakedImage>();
 
   constructor(
@@ -82,19 +82,12 @@ export class PhaserVegetationHost implements VegetationHost, Disposable {
     this.pens = { region: pen(), core: pen(), clumps: pen(), tips: pen() };
   }
 
-  pen(kind: VegetationLayerKind): Phaser.GameObjects.Graphics {
+  pen(kind: VegetationPenKind): Phaser.GameObjects.Graphics {
     return this.pens[kind];
   }
 
   create(kind: VegetationLayerKind): VegetationImage {
-    // Aynı derinlikte sıra ekleme sırasına bağlı kalırdı: komşu döşeme tabanı taşan yaprakları örterdi.
-    const layer = {
-      region: { depth: this.depth - 0.002, alpha: VEGETATION.base.alpha },
-      core: { depth: this.depth - 0.001, alpha: VEGETATION.core.alpha },
-      clumps: { depth: this.depth, alpha: 1 },
-      tips: { depth: this.tipDepth, alpha: 1 },
-    }[kind];
-    const image = new BakedImage(this.scene, layer.depth, layer.alpha);
+    const image = new BakedImage(this.scene, kind === 'body' ? this.depth : this.tipDepth);
     this.images.add(image);
     return image;
   }

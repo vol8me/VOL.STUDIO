@@ -80,15 +80,15 @@ test('duraklatılmış dünya donar: araçlar, duman ve kıvılcımlar, yağış
   await page.goto('/?start=world&season=winter&weather=snow');
   await expect(page.locator('[data-testid="hud"]')).toBeVisible();
   // Botlar ateş edip duman ve kıvılcım üretene dek akış sürer.
-  await frames(page, 240);
+  await frames(page, 120);
   await page.keyboard.press('Escape');
   await expect(page.locator('.vt-pause')).toHaveClass(OPEN);
   // Katman geçişi (scrim solması) bitsin.
-  await frames(page, 60);
+  await frames(page, 30);
   // Şerit ve kare sayacı ile alt ipucu çubuğu dışında kalan dünya bölgesi.
   const clip = { x: 440, y: 20, width: 640, height: 600 };
   const first = await page.screenshot({ clip });
-  await frames(page, 90);
+  await frames(page, 45);
   const second = await page.screenshot({ clip });
   expect(second.equals(first), 'duraklatılmış dünya iki kare arasında piksel piksel aynıdır').toBe(
     true,

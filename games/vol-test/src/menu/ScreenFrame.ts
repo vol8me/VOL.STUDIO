@@ -2,24 +2,17 @@ import { DisposableScope } from '@volstudio/core/lifecycle';
 import { Icon, IconButton, Panel, ScrollView, Text } from '@volstudio/core/ui';
 import './menu.css';
 
-/**
- * `sheet`: sol şerit, arkasında oyun sunumu görünür (ana menü). `full`: ekranı kaplar (garaj, ayarlar);
- * sunum için `stage` bölgesi ayırabilir. İkisi de aynı başlık, gövde ve eylem şeridinden kurulur.
- */
-export type ScreenVariant = 'sheet' | 'full';
-
 export interface ScreenFrameOptions {
   readonly testid: string;
-  readonly variant: ScreenVariant;
   /** Verilirse başlığın solunda geri düğmesi çıkar; ana menüde yoktur. */
   readonly onBack?: () => void;
 }
 
 /**
- * Menü, garaj ve ayarların ortak iskeleti: başlık şeridi (geri düğmesi, başlık, alt başlık), kayan gövde
- * ve eylem şeridi. Yalnız CORE bileşenlerinden kurulur (`Panel`, `Text`, `IconButton`, `ScrollView`);
- * oyun yerleşimi `menu.css` verir, görünüm CORE'undur. Ekranlar içeriklerini `body`ye, düğmelerini
- * `footer`a koyar; böylece üç ekran aynı taksonomiden gelir.
+ * Menü, garaj, ayarlar, geliştirici ve duraklatmanın ortak iskeleti: sağ şerit (dar ekranda alt levha);
+ * başlık şeridi (geri düğmesi, başlık, alt başlık), kayan gövde ve eylem şeridi. Yalnız CORE
+ * bileşenlerinden kurulur (`Panel`, `Text`, `IconButton`, `ScrollView`); oyun yerleşimi `menu.css`
+ * verir, görünüm CORE'undur. Ekranlar içeriklerini `body`ye, düğmelerini `footer`a koyar.
  */
 export class ScreenFrame {
   readonly panel: Panel;
@@ -32,9 +25,7 @@ export class ScreenFrame {
   private readonly scope = new DisposableScope();
 
   constructor(options: ScreenFrameOptions) {
-    this.panel = this.scope.addDestroyable(
-      new Panel({ className: `vt-screen vt-screen--${options.variant}` }),
-    );
+    this.panel = this.scope.addDestroyable(new Panel({ className: 'vt-screen' }));
     this.panel.element.dataset.testid = options.testid;
 
     const header = document.createElement('header');
@@ -51,9 +42,7 @@ export class ScreenFrame {
     }
     const heading = document.createElement('div');
     heading.className = 'vt-screen__heading';
-    this.title = this.scope.addDestroyable(
-      new Text('', { variant: options.variant === 'sheet' ? 'title' : 'heading', tag: 'h1' }),
-    );
+    this.title = this.scope.addDestroyable(new Text('', { variant: 'title', tag: 'h1' }));
     this.subtitle = this.scope.addDestroyable(new Text('', { variant: 'muted', tag: 'p' }));
     heading.append(this.title.element, this.subtitle.element);
     header.append(heading);

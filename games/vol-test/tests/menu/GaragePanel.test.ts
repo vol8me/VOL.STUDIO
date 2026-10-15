@@ -107,10 +107,14 @@ describe('GaragePanel', () => {
     expect(picked).toEqual([]);
   });
 
-  it('vitrin bölgesi ayrılır ve ekranın gövdesindedir', () => {
+  it('ad ve cephe formu araç kartlarının üstündedir; eylemler altta, vitrin bölgesi yoktur', () => {
     const { panel } = mount();
-    expect(panel.stage.className).toBe('vt-garage__stage');
-    expect(panel.element.contains(panel.stage)).toBe(true);
+    const layout = panel.element.querySelector('.vt-garage__layout')!;
+    expect([...layout.children].map((child) => child.className)).toEqual([
+      'vt-garage__join',
+      'vt-garage__vehicles',
+    ]);
+    expect(panel.element.querySelector('.vt-garage__stage')).toBeNull();
   });
 
   it('katıl: adı ve istenen cepheyi verir; ad alanı sınırlıdır', () => {

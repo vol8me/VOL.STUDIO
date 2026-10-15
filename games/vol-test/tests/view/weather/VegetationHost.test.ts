@@ -1,10 +1,7 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
-import { WEATHER_VIEW } from '@/config/weatherView';
 import { PhaserVegetationHost } from '@/view/weather/VegetationHost';
 import { fakeObject, fakeScene, lastCall, type FakeObject } from '../../support/fakeScene';
-
-const VEGETATION = WEATHER_VIEW.vegetation;
 
 /** Doku boyu gerçek `RenderTexture` gibi okunabilir: sahte nesne `width`i kurulurken yazılır. */
 function host() {
@@ -42,7 +39,7 @@ describe('PhaserVegetationHost', () => {
     const { host: vegetation, textures } = host();
     const brush = fakeObject('graphics');
     vegetation
-      .create('clumps')
+      .create('body')
       .bake([brush as unknown as Phaser.GameObjects.Graphics], 784, 7184, 432, 1.5);
     const [texture] = textures();
     // 432 birim × 1,5 = 648 piksel; konum dünyadaki köşe, görünür boy 432 birimdir.
@@ -57,22 +54,17 @@ describe('PhaserVegetationHost', () => {
     expect(order.indexOf('draw')).toBeLessThan(order.lastIndexOf('render'));
   });
 
-  it('katman derinliği ve saydamlığını taşır: taban ve çekirdek yaprakların altında, uçlar karın üstünde', () => {
+  it('katman derinliğini taşır: gövde karın altında, uçlar karın üstünde', () => {
     const { host: vegetation, textures } = host();
-    for (const kind of ['region', 'core', 'clumps', 'tips'] as const)
+    for (const kind of ['body', 'tips'] as const)
       vegetation.create(kind).bake([pen()], 0, 0, 100, 1);
     const depths = textures().map((object) => lastCall(object, 'setDepth')![0] as number);
-    const alphas = textures().map((object) => lastCall(object, 'setAlpha')![0] as number);
-    expect(depths[0]).toBeLessThan(depths[1]);
-    expect(depths[1]).toBeLessThan(depths[2]);
-    expect(depths[2]).toBe(-92);
-    expect(depths[3]).toBe(-88.5);
-    expect(alphas).toEqual([VEGETATION.base.alpha, VEGETATION.core.alpha, 1, 1]);
+    expect(depths).toEqual([-92, -88.5]);
   });
 
   it('doku boyu kademe değişince dokuyu yeniden kurar, aynı boyda aynı dokuyu yeniden kullanır', () => {
     const { host: vegetation, textures } = host();
-    const image = vegetation.create('clumps');
+    const image = vegetation.create('body');
     image.bake([pen()], 0, 0, 100, 1);
     image.bake([pen()], 0, 0, 100, 1);
     expect(textures()).toHaveLength(1);
@@ -83,7 +75,7 @@ describe('PhaserVegetationHost', () => {
 
   it('boya ve görünürlüğü sonradan kurulan dokuya da uygular; dispose her şeyi bırakır', () => {
     const { host: vegetation, textures, pens } = host();
-    const image = vegetation.create('region');
+    const image = vegetation.create('body');
     image.tone(0x808080);
     image.show(false);
     image.bake([pen()], 0, 0, 100, 1);

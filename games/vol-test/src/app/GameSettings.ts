@@ -1,10 +1,13 @@
 import { PersistedObservableState, type ScopedSaveManager } from '@volstudio/core';
 import { sanitizeName } from '@volstudio/network/protocol';
+import { BACKDROP } from '@/config/backdrop';
 import { CHAOS, validChaos } from '@/config/chaos';
 import { isScenario, validSeed, SCENARIO, type ScenarioId } from '@/config/scenarios';
 import { initialEffectLevel, type EffectLevel } from '@/config/quality';
+import { SEASONS, type SeasonKind } from '@/config/seasons';
 import { isVehicleId, STRIKER, type VehicleId } from '@/config/vehicles';
 import { WAR } from '@/config/war';
+import { WEATHER, type WeatherKind } from '@/config/weather';
 
 /** Arayüz dili tercihi; `auto` cihaz dilini izler. */
 export const LANGUAGES = ['auto', 'tr', 'en'] as const;
@@ -12,6 +15,21 @@ export type LanguagePreference = (typeof LANGUAGES)[number];
 
 /** Cephe tercihinde "dengeye göre sunucu seçsin" değeri. */
 export const FACTION_AUTO = -1;
+
+/** Mevsim ve hava tercihinde "takvim ve hava kendi akışında kalsın" değeri. */
+export const CLIMATE_AUTO = 'auto';
+export type SeasonChoice = SeasonKind | typeof CLIMATE_AUTO;
+export type WeatherChoice = WeatherKind | typeof CLIMATE_AUTO;
+
+export function isSeasonChoice(value: unknown): value is SeasonChoice {
+  return value === CLIMATE_AUTO || SEASONS.order.includes(value as SeasonKind);
+}
+
+export function isWeatherChoice(value: unknown): value is WeatherChoice {
+  return (
+    value === CLIMATE_AUTO || (typeof value === 'string' && Object.hasOwn(WEATHER.profiles, value))
+  );
+}
 
 export interface GamePreferences {
   quality: EffectLevel;
@@ -31,6 +49,14 @@ export interface GamePreferences {
   /** Savaşta istenen cephe (`FACTION_AUTO`: sunucu dengeye göre seçer). */
   faction: number;
   language: LanguagePreference;
+  /** Menü arka planında ve alıştırma dünyasında zorlanan mevsim (`auto`: takvim akar). */
+  season: SeasonChoice;
+  /** Zorlanan hava durumu (`auto`: mevsim takvimi seçer). */
+  weather: WeatherChoice;
+  /** Menülerin arkasında canlı savaş sahnesi oynar; kapalıysa düz vitrin zemini görünür. */
+  backdrop: boolean;
+  /** Menü arka planındaki savaşın cephe başına bot sayısı. */
+  backdropDensity: number;
 }
 
 const KEY = 'device.voltest.preferences';
@@ -63,6 +89,15 @@ function parsePreferences(value: unknown, fallback: GamePreferences): GamePrefer
       input.display === 'fullscreen' || input.display === 'windowed'
         ? input.display
         : fallback.display,
+    season: isSeasonChoice(input.season) ? input.season : fallback.season,
+    weather: isWeatherChoice(input.weather) ? input.weather : fallback.weather,
+    backdrop: typeof input.backdrop === 'boolean' ? input.backdrop : fallback.backdrop,
+    backdropDensity:
+      Number.isInteger(input.backdropDensity) &&
+      (input.backdropDensity as number) >= BACKDROP.density.min &&
+      (input.backdropDensity as number) <= BACKDROP.density.max
+        ? (input.backdropDensity as number)
+        : fallback.backdropDensity,
   };
 }
 
@@ -83,6 +118,11 @@ export class GameSettings {
       vehicle: STRIKER.id,
       faction: FACTION_AUTO,
       language: 'auto',
+      season: CLIMATE_AUTO,
+      weather: CLIMATE_AUTO,
+      // Düşük kalite (Android varsayılanı) canlı arka planı kapalı açar: ikinci bir dünya çizilmez.
+      backdrop: initialEffectLevel(userAgent) !== 'low',
+      backdropDensity: BACKDROP.density.default,
     };
     this.state = new PersistedObservableState({
       key: KEY,
@@ -101,7 +141,11 @@ export class GameSettings {
         a.playerName === b.playerName &&
         a.vehicle === b.vehicle &&
         a.faction === b.faction &&
-        a.language === b.language,
+        a.language === b.language &&
+        a.season === b.season &&
+        a.weather === b.weather &&
+        a.backdrop === b.backdrop &&
+        a.backdropDensity === b.backdropDensity,
       store: {
         load: (_key, fallback) => store.load(KEY, fallback),
         save: (_key, value) => store.save(KEY, value),

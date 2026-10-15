@@ -380,6 +380,22 @@ describe('WorldScene', { timeout: 20_000 }, () => {
     expect(sim.weather!.frame.elapsedMs).toBe(elapsed);
   });
 
+  it('geliştirici ayarındaki mevsim ve hava açık dünyada anında uygulanır', async () => {
+    localStorage.clear();
+    const services = await GameServices.create();
+    const { sim, frame } = mount(services);
+    frame();
+    expect(sim.weather?.frame.season).toBe('spring');
+    await services.settings.update({ season: 'winter', weather: 'snow' });
+    frame();
+    expect(sim.weather?.frame).toMatchObject({ season: 'winter' });
+    for (let step = 0; step < 400; step++) frame();
+    expect(sim.weather?.frame.snow).toBeGreaterThan(0.9);
+    await services.settings.update({ weather: 'auto' });
+    frame();
+    services.dispose();
+  });
+
   it('modal düğmesiyle sürdürme aynı basışı yeniden duraklatmaz', () => {
     const { frame, parent } = mount();
     frame({ press: ['pause'] });

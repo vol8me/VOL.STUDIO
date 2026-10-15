@@ -92,7 +92,27 @@
     }
   },
   "dev": {
-    "title": "Geliştirici"
+    "title": "Geliştirici",
+    "world": "Dünya",
+    "practice": "Alıştırma",
+    "season": "Mevsim",
+    "seasonOption": {
+      "auto": "Takvim akışı",
+      "spring": "İlkbahar",
+      "summer": "Yaz",
+      "autumn": "Sonbahar",
+      "winter": "Kış"
+    },
+    "weather": "Hava",
+    "weatherOption": {
+      "auto": "Mevsime göre",
+      "clear": "Açık",
+      "dust": "Toz",
+      "rain": "Yağmur",
+      "snow": "Kar"
+    },
+    "vehicle": "Araç",
+    "density": "Savaş yoğunluğu (cephe başına bot)"
   },
   "settings": {
     "title": "Ayarlar",
@@ -102,7 +122,8 @@
       "tr": "Türkçe",
       "en": "English"
     },
-    "back": "Geri"
+    "back": "Geri",
+    "backdrop": "Canlı menü arka planı"
   },
   "boot": {
     "title": "VOL.TEST",

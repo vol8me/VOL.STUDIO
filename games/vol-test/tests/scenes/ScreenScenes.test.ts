@@ -13,8 +13,12 @@ import type { ScreenScene } from '@/scenes/ScreenScene';
 
 const showroom = vi.hoisted(() => ({
   setVehicle: vi.fn(),
+  setGround: vi.fn(),
   update: vi.fn(),
   destroy: vi.fn(),
+  clock: 0,
+  area: undefined as { x: number; y: number; width: number; height: number } | undefined,
+  created: [] as Array<{ mode: string | undefined }>,
 }));
 const online = vi.hoisted(() => ({
   connectWar: vi.fn(),
@@ -27,8 +31,16 @@ vi.mock('@/audio/sceneAudio', () => ({ createSceneAudio: sceneAudio.create }));
 vi.mock('@/view/Showroom', () => ({
   Showroom: class {
     setVehicle = showroom.setVehicle;
+    setGround = showroom.setGround;
     update = showroom.update;
     destroy = showroom.destroy;
+    clockMs = 0;
+    constructor(_scene: unknown, _spec: unknown, mode?: string) {
+      showroom.created.push({ mode });
+    }
+    get freeArea() {
+      return showroom.area;
+    }
   },
 }));
 vi.mock('@/scenes/world/online', () => online);
@@ -41,8 +53,16 @@ interface Harness<T extends ScreenScene> {
   scene: T;
   parent: HTMLElement;
   start: ReturnType<typeof vi.fn>;
-  fadeOut: ReturnType<typeof vi.fn>;
-  /** Solma bitti: bekleyen sahne geçişini tamamlar. */
+  /** Şerit çıkış süresine kurulan zamanlayıcı çağrıları (`time.delayedCall`). */
+  transition: ReturnType<typeof vi.fn>;
+  registry: Map<string, unknown>;
+  scenePlugin: {
+    start: ReturnType<typeof vi.fn>;
+    stop: ReturnType<typeof vi.fn>;
+    launch: ReturnType<typeof vi.fn>;
+    active: Set<string>;
+  };
+  /** Kayma bitti: bekleyen sahne geçişini tamamlar. */
   finishFade: () => void;
   shutdown: () => void;
   find: <E extends HTMLElement = HTMLElement>(id: string) => E;
@@ -57,6 +77,8 @@ function services(
 ): {
   services: GameServices;
   update: ReturnType<typeof vi.fn>;
+  /** Ayar değişimini abonelere yayar (kayıt `patch` ile güncellenir). */
+  emit: (patch: Partial<GamePreferences>) => void;
 } {
   const preferences = {
     vehicle: 'striker',
@@ -70,15 +92,31 @@ function services(
     display: 'windowed',
     scenario: 'empty',
     seed: 1,
+    backdrop: false,
+    backdropDensity: 5,
+    season: 'auto',
+    weather: 'auto',
     ...overrides,
   };
   const update = vi.fn(() => Promise.resolve());
+  const listeners = new Set<(value: typeof preferences) => void>();
   return {
     update,
+    emit: (patch) => {
+      Object.assign(preferences, patch);
+      for (const listener of listeners) listener(preferences);
+    },
     services: {
       platform,
       displayAvailable: true,
-      settings: { get: () => preferences, update, subscribe: () => () => undefined },
+      settings: {
+        get: () => preferences,
+        update,
+        subscribe: (listener: (value: typeof preferences) => void) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      },
       onResume: () => () => undefined,
     } as unknown as GameServices,
   };
@@ -89,30 +127,44 @@ function mount<T extends ScreenScene>(make: () => T): Harness<T> {
   const parent = document.createElement('div');
   document.body.append(parent);
   const start = vi.fn();
-  const fadeOut = vi.fn();
   const handlers: Array<() => void> = [];
+  const registry = new Map<string, unknown>();
+  const active = new Set<string>();
+  const scenePlugin = {
+    start,
+    stop: vi.fn((key: string) => active.delete(key)),
+    launch: vi.fn((key: string) => active.add(key)),
+    active,
+  };
+  const transition = vi.fn((_ms: number, handler: () => void) => handlers.push(handler));
   let shutdown = (): void => undefined;
   Object.assign(scene, {
-    cameras: {
-      main: {
-        width: 1280,
-        height: 800,
-        setBackgroundColor: vi.fn(),
-        fadeIn: vi.fn(),
-        fadeOut,
-        once: (_event: string, handler: () => void) => handlers.push(handler),
+    cameras: { main: { width: 1280, height: 800, setBackgroundColor: vi.fn() } },
+    game: {
+      canvas: { parentElement: parent },
+      registry: {
+        get: (key: string) => registry.get(key),
+        set: (key: string, value: unknown) => registry.set(key, value),
       },
     },
-    game: { canvas: { parentElement: parent }, registry: { get: () => undefined } },
     events: { once: (_name: string, handler: () => void) => (shutdown = handler) },
-    scene: { start },
+    time: { delayedCall: transition },
+    scene: {
+      start,
+      get: (key: string) => (key === 'Backdrop' ? {} : null),
+      isActive: (key: string) => active.has(key),
+      launch: scenePlugin.launch,
+      stop: scenePlugin.stop,
+    },
   });
   scene.create();
   const harness: Harness<T> = {
     scene,
     parent,
     start,
-    fadeOut,
+    transition,
+    registry,
+    scenePlugin,
     finishFade: () => handlers.splice(0).forEach((handler) => handler()),
     shutdown: () => shutdown(),
     find: <E extends HTMLElement = HTMLElement>(id: string): E =>
@@ -188,15 +240,15 @@ describe('MenuScene', () => {
     const harness = mount(() => new MenuScene(env, nativeWindow() as never));
     expect(harness.find('menu')).not.toBeNull();
     harness.scene.update(0, 16);
-    expect(showroom.update).toHaveBeenCalledWith(16, expect.anything(), undefined);
+    expect(showroom.update).toHaveBeenCalledWith(16, expect.anything());
 
     harness.find('menu-play').click();
     expect(harness.find('menu').dataset.leaving).toBe('true');
-    expect(harness.fadeOut).toHaveBeenCalledTimes(1);
+    expect(harness.transition).toHaveBeenCalledTimes(1);
     expect(harness.start).not.toHaveBeenCalled();
     // Geçiş sürerken ikinci seçim yok sayılır.
     harness.find('menu-practice').click();
-    expect(harness.fadeOut).toHaveBeenCalledTimes(1);
+    expect(harness.transition).toHaveBeenCalledTimes(1);
     harness.finishFade();
     expect(harness.start).toHaveBeenCalledWith('Garage', {});
   });
@@ -320,7 +372,7 @@ describe('GarageScene', () => {
     const harness = mount(() => new GarageScene(env));
     harness.find('garage-join').click();
     expect(harness.find('garage-status').textContent).toBe(i18next.t('voltest:online.connecting'));
-    await vi.waitFor(() => expect(harness.fadeOut).toHaveBeenCalled());
+    await vi.waitFor(() => expect(harness.transition).toHaveBeenCalled());
     expect(online.connectWar).toHaveBeenCalledWith(env, { name: 'Ada', faction: 1 });
     expect(update).toHaveBeenCalledWith({ playerName: 'Ada' });
     harness.finishFade();
@@ -347,7 +399,7 @@ describe('GarageScene', () => {
       ),
     );
     expect(harness.find<HTMLButtonElement>('garage-join').disabled).toBe(false);
-    expect(harness.fadeOut).not.toHaveBeenCalled();
+    expect(harness.transition).not.toHaveBeenCalled();
   });
 
   it('bağlanırken geri dönülürse geç gelen oturum bırakılır', async () => {
@@ -393,38 +445,86 @@ describe('GarageScene', () => {
   });
 });
 
-describe('ScreenScene vitrin bölgesi', () => {
-  it('garaj kendi sunum bölgesini verir; ana menü vermez ve panelin bıraktığı alanı kullanır', () => {
-    const { services: env } = services();
-    showroom.update.mockClear();
-    const garage = mount(() => new GarageScene(env));
-    garage.scene.update(0, 16);
-    const stage: unknown = showroom.update.mock.calls.at(-1)![2];
-    expect(stage).toBeDefined();
-    garage.shutdown();
-    garage.parent.remove();
-
+describe('ScreenScene canlı arka plan', () => {
+  it('açıkken arka plan sahnesini başlatır, vitrin zeminini gölgeye indirir ve boş alanı yayınlar', () => {
+    const { services: env } = services({ backdrop: true });
+    showroom.created.length = 0;
     const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    expect(showroom.created.at(-1)?.mode).toBe('disc');
+    expect(menu.scenePlugin.launch).toHaveBeenCalledWith('Backdrop');
+    showroom.area = { x: 0, y: 0, width: 840, height: 800 };
     menu.scene.update(0, 16);
-    expect(showroom.update.mock.calls.at(-1)![2]).toBeUndefined();
+    expect(menu.registry.get('vol-test:menu-area')).toEqual(showroom.area);
+    showroom.area = undefined;
   });
 
-  it('görünümden uzun sunum bölgesi kaydırma gövdesinin görünür alanına kırpılır', () => {
+  it('kapalıyken arka plan başlatılmaz ve vitrin ızgaralı zeminde kalır', () => {
+    const { services: env } = services({ backdrop: false });
+    showroom.created.length = 0;
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    expect(showroom.created.at(-1)?.mode).toBe('plane');
+    expect(menu.scenePlugin.launch).not.toHaveBeenCalled();
+  });
+
+  it('dünyaya geçerken arka plan sahnesi sahne değişmeden önce durdurulur', () => {
+    const { services: env } = services({ backdrop: true });
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    menu.find('menu-practice').click();
+    expect(menu.scenePlugin.stop).not.toHaveBeenCalled();
+    menu.finishFade();
+    expect(menu.scenePlugin.stop).toHaveBeenCalledWith('Backdrop');
+    const order = [
+      menu.scenePlugin.stop.mock.invocationCallOrder[0],
+      menu.start.mock.invocationCallOrder[0],
+    ];
+    expect(order[0]).toBeLessThan(order[1]);
+  });
+
+  it('diğer menü ekranlarına geçerken arka plan sürer; tabla saati ekranlar arası taşınır', () => {
+    const { services: env } = services({ backdrop: true });
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    menu.find('menu-settings').click();
+    menu.finishFade();
+    expect(menu.scenePlugin.stop).not.toHaveBeenCalled();
+    menu.shutdown();
+    expect(menu.registry.has('vol-test:showroom-clock')).toBe(true);
+  });
+});
+
+describe('ScreenScene ayar değişimi', () => {
+  it('canlı arka plan ayarı açılıp kapanınca sahneyi başlatır, durdurur ve zemini değiştirir', () => {
+    const { services: env, emit } = services({ backdrop: false });
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    expect(menu.scenePlugin.launch).not.toHaveBeenCalled();
+    emit({ backdrop: true });
+    expect(menu.scenePlugin.launch).toHaveBeenCalledWith('Backdrop');
+    expect(showroom.setGround).toHaveBeenLastCalledWith('disc');
+    emit({ backdrop: false });
+    expect(menu.scenePlugin.stop).toHaveBeenCalledWith('Backdrop');
+    expect(showroom.setGround).toHaveBeenLastCalledWith('plane');
+  });
+
+  it('geliştirici ekranında araç seçimi vitrine anında yansır', () => {
+    const { services: env, emit } = services();
+    mount(() => new DevScene(env));
+    showroom.setVehicle.mockClear();
+    emit({ vehicle: 'rhino' });
+    expect(showroom.setVehicle).toHaveBeenCalledWith(VEHICLES.rhino);
+    // Araçla ilgisiz değişim vitrini tazelemez.
+    showroom.setVehicle.mockClear();
+    emit({ volume: 0.2 });
+    expect(showroom.setVehicle).not.toHaveBeenCalled();
+  });
+});
+
+describe('ScreenScene geçiş', () => {
+  it('geçiş süresi ve kayma mesafesi panele CSS değişkeni olarak yazılır', () => {
     const { services: env } = services();
-    const garage = mount(() => new GarageScene(env));
-    const rect = (left: number, top: number, width: number, height: number) =>
-      ({ left, top, width, height, right: left + width, bottom: top + height }) as DOMRect;
-    const stageElement = garage.parent.querySelector('.vt-garage__stage')!;
-    const bodyElement = garage.parent.querySelector('.vt-screen__body')!;
-    vi.spyOn(stageElement, 'getBoundingClientRect').mockReturnValue(rect(300, 80, 200, 900));
-    vi.spyOn(bodyElement, 'getBoundingClientRect').mockReturnValue(rect(40, 80, 760, 200));
-    showroom.update.mockClear();
-    garage.scene.update(0, 16);
-    expect(showroom.update.mock.calls.at(-1)![2]).toEqual({
-      left: 300,
-      top: 80,
-      width: 200,
-      height: 200,
-    });
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    const panel = menu.find('menu');
+    expect(panel.style.getPropertyValue('--vt-slide')).toBe('36px');
+    expect(panel.style.getPropertyValue('--vt-slide-ms')).toBe('200ms');
+    menu.find('menu-settings').click();
+    expect(menu.transition).toHaveBeenCalledWith(200, expect.any(Function));
   });
 });

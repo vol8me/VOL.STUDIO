@@ -80,16 +80,21 @@ export interface VegetationImage {
   destroy(): void;
 }
 
-/** Döşemenin dokulu katmanları; yığın sırası aşağıdan yukarıdadır. */
-export type VegetationLayerKind = 'region' | 'core' | 'clumps' | 'tips';
-const LAYERS: readonly VegetationLayerKind[] = ['region', 'core', 'clumps', 'tips'];
+/**
+ * Döşemenin çizim kalemleri; yığın sırası aşağıdan yukarıdadır. Taban, çekirdek ve kümeler tek dokuya
+ * (`body`) basılır, uçlar kardan sonra çizildiği için ayrı dokudur (`tips`): ekranı kaplayan doku sayısı
+ * (dolgu maliyeti) iki olur.
+ */
+export type VegetationPenKind = 'region' | 'core' | 'clumps' | 'tips';
+export type VegetationLayerKind = 'body' | 'tips';
+const LAYERS: readonly VegetationLayerKind[] = ['body', 'tips'];
 
 export interface VegetationHost {
   /**
    * Katman başına geçici çizim kalemi; yalnız pişirme sırasında kullanılır. Çayır tabanı ve çekirdeği opak
    * çizilir (üst üste binen çokgenler birikmez, çatlak çizgiyle kapanır) ve saydamlığı doku katmanı taşır.
    */
-  pen(kind: VegetationLayerKind): Phaser.GameObjects.Graphics;
+  pen(kind: VegetationPenKind): Phaser.GameObjects.Graphics;
   create(kind: VegetationLayerKind): VegetationImage;
 }
 
@@ -216,7 +221,7 @@ export class VegetationLayer {
         row,
         x: column * TILE.size,
         y: row * TILE.size,
-        layers: { region: null, core: null, clumps: null, tips: null },
+        layers: { body: null, tips: null },
         signature: null,
         texel: 0,
         checkedAt: Number.NEGATIVE_INFINITY,
@@ -350,15 +355,16 @@ export class VegetationLayer {
       clumps: this.host.pen('clumps'),
       tips: this.host.pen('tips'),
     };
-    for (const kind of LAYERS) pens[kind].clear();
+    for (const pen of Object.values(pens)) pen.clear();
+    // Taban ve çekirdek opak çizilir, saydamlığı kalem taşır: dokuya ayrı ayrı bu saydamlıkla basılırlar
+    // (alfa karışımı birleşimlidir: iki ayrı doku katmanıyla aynı görüntüyü verir).
+    pens.region.setAlpha(VEGETATION.base.alpha);
+    pens.core.setAlpha(VEGETATION.core.alpha);
+    pens.clumps.setAlpha(1);
+    pens.tips.setAlpha(1);
     tile.drawn = 0;
     this.collect(field, clip);
-    const filled: Record<VegetationLayerKind, boolean> = {
-      region: false,
-      core: false,
-      clumps: false,
-      tips: false,
-    };
+    const filled: Record<VegetationLayerKind, boolean> = { body: false, tips: false };
     if (this.count > 0) {
       // Dokular tam gün ışığında pişer; gün ışığı doku boyasıdır (`toneOf`).
       const palette = vegetationPalette({ ...frame, daylight: 1 });
@@ -374,9 +380,7 @@ export class VegetationLayer {
       const cap = TILE.capacity * Math.max(0.25, Math.min(1, quality));
       const keep = Math.min(1, cap / this.count);
       tile.drawn = this.drawClumps(pens.clumps, palette, frame.season, keep);
-      filled.region = true;
-      filled.core = true;
-      filled.clumps = tile.drawn > 0;
+      filled.body = true;
       filled.tips = this.drawTips(pens.tips, field, palette, keep);
     }
     const originX = tile.x - pad;
@@ -386,7 +390,8 @@ export class VegetationLayer {
       // Boş katman için doku üretilmez; önceden pişmiş içerik varsa boşaltılır.
       if (!filled[kind] && !tile.layers[kind]) continue;
       const image = (tile.layers[kind] ??= this.host.create(kind));
-      image.bake([pens[kind]], originX, originY, size, level);
+      const layerPens = kind === 'body' ? [pens.region, pens.core, pens.clumps] : [pens.tips];
+      image.bake(layerPens, originX, originY, size, level);
       image.tone(this.tint);
     }
     tile.texel = level;

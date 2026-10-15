@@ -1,6 +1,6 @@
 import { i18next } from '@volstudio/core/i18n';
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { SegmentedControl, SettingsForm, SettingsRow } from '@volstudio/core/ui';
+import { Checkbox, SegmentedControl, SettingsForm, SettingsRow } from '@volstudio/core/ui';
 import { applyLanguage } from '@/app/language';
 import { LANGUAGES, type GameSettings, type LanguagePreference } from '@/app/GameSettings';
 import { EFFECT_LEVELS, type EffectLevel } from '@/config/quality';
@@ -29,8 +29,8 @@ const QUALITY_KEYS = {
 } as const satisfies Record<EffectLevel, MessageKey>;
 
 /**
- * Ayarlar ekranı (ana menü ve duraklatmayla aynı sol şerit): dil, efekt kalitesi, ses, titreşim ve ekran
- * satırları; senaryo ve tohum `DevScreen`dedir. Satırların hepsi CORE `SettingsRow`dur; değerler aynı
+ * Ayarlar ekranı (ana menü ve duraklatmayla aynı sağ şerit): dil, efekt kalitesi, canlı menü arka planı,
+ * ses, titreşim ve ekran satırları; senaryo ve tohum `DevScreen`dedir. Satırların hepsi CORE `SettingsRow`dur; değerler aynı
  * `GameSettings` kaydına yazılır, menüden değişen değer oyunda geçerlidir.
  */
 export class SettingsScreen {
@@ -40,11 +40,13 @@ export class SettingsScreen {
   private readonly languageRow: SettingsRow;
   private readonly quality: SegmentedControl;
   private readonly qualityRow: SettingsRow;
+  private readonly backdrop: Checkbox;
+  private readonly backdropRow: SettingsRow;
   private readonly panel: SettingsPanel;
 
   constructor(private readonly options: SettingsScreenOptions) {
     const { settings } = options;
-    this.frame = new ScreenFrame({ testid: 'settings', variant: 'sheet', onBack: options.onBack });
+    this.frame = new ScreenFrame({ testid: 'settings', onBack: options.onBack });
     this.language = this.scope.addDestroyable(
       new SegmentedControl({
         options: this.languageOptions(),
@@ -79,10 +81,21 @@ export class SettingsScreen {
     this.qualityRow = this.scope.addDestroyable(
       new SettingsRow({ label: i18next.t('voltest:pause.quality'), control: this.quality }),
     );
+    this.backdrop = this.scope.addDestroyable(
+      new Checkbox({
+        checked: settings.get().backdrop,
+        label: i18next.t('voltest:settings.backdrop'),
+        onCommit: (backdrop) => void settings.update({ backdrop }),
+      }),
+    );
+    this.backdrop.element.dataset.testid = 'settings-backdrop';
+    // Onay kutusu kendi etiketini taşır; satır yalnız ritmi ve ayırıcıyı verir.
+    this.backdropRow = this.scope.addDestroyable(new SettingsRow({ control: this.backdrop }));
     this.panel = this.scope.addDestroyable(new SettingsPanel(settings, options.displayAvailable));
     const form = this.scope.addDestroyable(new SettingsForm({ className: 'vt-settings__form' }));
     form.add(this.languageRow);
     form.add(this.qualityRow);
+    form.add(this.backdropRow);
     for (const element of this.panel.elements) form.element.append(element);
     this.frame.body.add(form);
 
@@ -90,6 +103,7 @@ export class SettingsScreen {
       settings.subscribe((next) => {
         this.language.setValue(next.language);
         this.quality.setValue(next.quality);
+        this.backdrop.setChecked(next.backdrop);
       }),
     );
     this.refreshLabels();
@@ -117,6 +131,7 @@ export class SettingsScreen {
     this.qualityRow.setLabel(i18next.t('voltest:pause.quality'));
     this.quality.setOptions(this.qualityOptions());
     this.quality.setValue(this.options.settings.get().quality);
+    this.backdrop.setLabel(i18next.t('voltest:settings.backdrop'));
     this.panel.refreshLabels();
   }
 

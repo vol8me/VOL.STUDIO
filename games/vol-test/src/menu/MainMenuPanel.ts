@@ -17,7 +17,7 @@ export interface MainMenuOptions {
  * niyeti dışarı verir; sahne geçişi, çıkış onayı ve ağ bağlantısı sahnenin işidir.
  */
 export class MainMenuPanel {
-  private readonly frame = new ScreenFrame({ testid: 'menu', variant: 'sheet' });
+  private readonly frame = new ScreenFrame({ testid: 'menu' });
   private readonly scope = new DisposableScope();
   private readonly play: Button;
   private readonly practice: Button;

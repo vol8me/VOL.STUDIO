@@ -24,6 +24,25 @@ describe('WeatherSystem', () => {
     expect(a.frame.season).toBe('winter');
   });
 
+  it('mevsimi anında değiştirir: takvim saati ve zorlanan hava yerinde kalır, ısınma zemini ilerletir', () => {
+    const model = new WeatherSystem(256, 256, { seed: 7, override: 'rain', season: 'spring' });
+    model.step(40_000);
+    expect(model.frame.season).toBe('spring');
+    model.setSeason('winter');
+    expect(model.frame.season).toBe('winter');
+    expect(model.frame.elapsedMs).toBe(40_000);
+    expect(model.frame.rain).toBeGreaterThan(0.9);
+    // Her mevsimden her mevsime geçilebilir ve saat ilerlese bile seçim tutar.
+    for (const season of ['summer', 'autumn', 'spring', 'winter'] as const) {
+      model.setSeason(season);
+      expect(model.frame.season).toBe(season);
+    }
+    const cold = new WeatherSystem(256, 256, { seed: 7, season: 'winter' });
+    cold.setSeason('winter', 90_000);
+    expect(cold.frame.elapsedMs).toBe(90_000);
+    expect(cold.frame.season).toBe('winter');
+  });
+
   it('sabit yüzey adımı arasındaki override geçmiş rüzgâr mesafesini değiştirmez', () => {
     const a = weather('dust');
     const b = weather('dust');

@@ -18,6 +18,7 @@ import { PALETTE } from '@/config/palette';
 import en from '@/i18n/en.json';
 import tr from '@/i18n/tr.json';
 import '@/i18n/i18next-augment';
+import { BackdropScene } from '@/scenes/BackdropScene';
 import { BootScene } from '@/scenes/BootScene';
 import { GarageScene } from '@/scenes/GarageScene';
 import { MenuScene } from '@/scenes/MenuScene';
@@ -57,6 +58,8 @@ async function boot(): Promise<void> {
       render: { powerPreference: 'high-performance' },
       scenes: [
         new BootScene(services),
+        // Menü sahnelerinin altında çizilsin diye onlardan önce kaydedilir (Phaser sahneleri liste sırasıyla çizer).
+        new BackdropScene(services),
         new MenuScene(services),
         new GarageScene(services),
         new SettingsScene(services),

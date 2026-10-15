@@ -20,7 +20,17 @@ export const MENU = {
     /** Zemin ızgarasının yarı genişliği ve adımı (dünya birimi). */
     groundHalf: 1600,
     gridStep: 64,
+    /** Saydam zeminde araç altı: gölgenin katman yarıçap oranları ve toplam saydamlığı, halka ölçüsü. */
+    disc: {
+      shadow: { layers: [1, 0.82, 0.64, 0.46] as readonly number[], alpha: 0.5 },
+      ring: { radius: 0.5, width: 1.5, alpha: 0.55 },
+    },
   },
-  /** Ekranlar arası geçişin solma süresi (ms). */
-  fadeMs: 180,
+  /**
+   * Ekranlar arası geçişin süresi (ms): panel kenardan kayarak çıkar ve bu sürenin sonunda sahne değişir.
+   * CSS çıkış geçişi aynı süreyi `ScreenScene.goto`dan alır.
+   */
+  fadeMs: 200,
+  /** Panelin giriş ve çıkışta kaydığı mesafe (CSS piksel). */
+  slidePx: 36,
 } as const;

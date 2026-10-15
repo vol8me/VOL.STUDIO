@@ -37,6 +37,7 @@ vi.mock('@/app/AdaptiveResolution', () => ({
 }));
 vi.mock('@/app/language', () => ({ applyLanguage: boundary.applyLanguage }));
 vi.mock('@/scenes/BootScene', () => ({ BootScene: class {} }));
+vi.mock('@/scenes/BackdropScene', () => ({ BackdropScene: class {} }));
 vi.mock('@/scenes/MenuScene', () => ({ MenuScene: class {} }));
 vi.mock('@/scenes/GarageScene', () => ({ GarageScene: class {} }));
 vi.mock('@/scenes/SettingsScene', () => ({ SettingsScene: class {} }));

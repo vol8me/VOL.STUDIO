@@ -18,6 +18,7 @@ import { WAR } from '@/config/war';
 import type { MessageKey } from '@/i18n/keys';
 import { ScreenFrame } from './ScreenFrame';
 import { vehicleStats, type VehicleStats } from './vehicleStats';
+import { VEHICLE_CLASS_KEYS, VEHICLE_NAME_KEYS } from './vehicleNames';
 
 /** Garajdan çıkan katılım seçimi. */
 export interface GarageChoice {
@@ -40,42 +41,6 @@ export interface GarageOptions {
   readonly onPractice: () => void;
   readonly onBack: () => void;
 }
-
-const NAME_KEYS = {
-  striker: 'voltest:garage.vehicles.striker.name',
-  bulwark: 'voltest:garage.vehicles.bulwark.name',
-  dart: 'voltest:garage.vehicles.dart.name',
-  arachnid: 'voltest:garage.vehicles.arachnid.name',
-  widow: 'voltest:garage.vehicles.widow.name',
-  goliath: 'voltest:garage.vehicles.goliath.name',
-  manta: 'voltest:garage.vehicles.manta.name',
-  barracuda: 'voltest:garage.vehicles.barracuda.name',
-  leviathan: 'voltest:garage.vehicles.leviathan.name',
-  warhound: 'voltest:garage.vehicles.warhound.name',
-  templar: 'voltest:garage.vehicles.templar.name',
-  juggernaut: 'voltest:garage.vehicles.juggernaut.name',
-  jackal: 'voltest:garage.vehicles.jackal.name',
-  panther: 'voltest:garage.vehicles.panther.name',
-  rhino: 'voltest:garage.vehicles.rhino.name',
-} as const satisfies Record<VehicleId, MessageKey>;
-
-const CLASS_KEYS = {
-  striker: 'voltest:garage.vehicles.striker.class',
-  bulwark: 'voltest:garage.vehicles.bulwark.class',
-  dart: 'voltest:garage.vehicles.dart.class',
-  arachnid: 'voltest:garage.vehicles.arachnid.class',
-  widow: 'voltest:garage.vehicles.widow.class',
-  goliath: 'voltest:garage.vehicles.goliath.class',
-  manta: 'voltest:garage.vehicles.manta.class',
-  barracuda: 'voltest:garage.vehicles.barracuda.class',
-  leviathan: 'voltest:garage.vehicles.leviathan.class',
-  warhound: 'voltest:garage.vehicles.warhound.class',
-  templar: 'voltest:garage.vehicles.templar.class',
-  juggernaut: 'voltest:garage.vehicles.juggernaut.class',
-  jackal: 'voltest:garage.vehicles.jackal.class',
-  panther: 'voltest:garage.vehicles.panther.class',
-  rhino: 'voltest:garage.vehicles.rhino.class',
-} as const satisfies Record<VehicleId, MessageKey>;
 
 /** Kart kademesi: CORE kartın nadirlik gösterimi araç sınıfının ağırlığını taşır. */
 const TIER = {
@@ -114,9 +79,9 @@ interface Entry {
 }
 
 /**
- * Garaj (tam ekran): araç, cephe ve ad seçimi. Araçlar CORE `CardTile`dır (ad, sınıf rozeti, üç
- * ölçü `Bar`ı), katılım alanı `SettingsRow`lardır. Ortadaki `stage` bölgesi boş bırakılır: canlı araç
- * vitrini oraya kurulur. Panel ağa dokunmaz: katılma niyetini `onJoin`e verir, sonucu sahibi bildirir.
+ * Garaj (sağ şerit): ad, cephe ve araç seçimi. Araçlar CORE `CardTile`dır (ad, sınıf rozeti, üç
+ * ölçü `Bar`ı), katılım alanı `SettingsRow`lardır. Şeridin solundaki boş alanda canlı araç vitrini
+ * durur. Panel ağa dokunmaz: katılma niyetini `onJoin`e verir, sonucu sahibi bildirir.
  */
 export class GaragePanel {
   private readonly frame: ScreenFrame;
@@ -131,7 +96,6 @@ export class GaragePanel {
   private readonly vehiclesLabel: Text;
   private readonly entries: Entry[];
   private readonly cards: HTMLElement;
-  private readonly stageElement: HTMLElement;
   private selected: VehicleId;
   private factionValue: string;
   private statusKey: MessageKey | undefined;
@@ -140,7 +104,7 @@ export class GaragePanel {
   constructor(private readonly options: GarageOptions) {
     this.selected = options.vehicle;
     this.factionValue = String(options.faction);
-    this.frame = new ScreenFrame({ testid: 'garage', variant: 'full', onBack: options.onBack });
+    this.frame = new ScreenFrame({ testid: 'garage', onBack: options.onBack });
     this.status = this.scope.addDestroyable(new Text('', { variant: 'body', tag: 'p' }));
     this.vehiclesLabel = this.scope.addDestroyable(new Text('', { variant: 'muted', tag: 'h2' }));
 
@@ -152,10 +116,6 @@ export class GaragePanel {
     const vehicles = document.createElement('section');
     vehicles.className = 'vt-garage__vehicles';
     vehicles.append(this.vehiclesLabel.element, this.cards);
-
-    this.stageElement = document.createElement('div');
-    this.stageElement.className = 'vt-garage__stage';
-    this.stageElement.setAttribute('aria-hidden', 'true');
 
     this.name = this.scope.addDestroyable(
       new Input({
@@ -204,7 +164,7 @@ export class GaragePanel {
 
     const layout = document.createElement('div');
     layout.className = 'vt-garage__layout';
-    layout.append(vehicles, this.stageElement, joinSection);
+    layout.append(joinSection, vehicles);
     this.frame.body.add({ element: layout });
 
     this.join = this.scope.addDestroyable(
@@ -226,11 +186,6 @@ export class GaragePanel {
 
   get element(): HTMLElement {
     return this.frame.element;
-  }
-
-  /** Vitrinin kurulacağı boş bölge. */
-  get stage(): HTMLElement {
-    return this.stageElement;
   }
 
   /** Klavye ve kol gezintisi seçili araçtan başlasın. */
@@ -272,8 +227,8 @@ export class GaragePanel {
     this.cards.setAttribute('aria-label', i18next.t('voltest:garage.vehicle'));
     for (const entry of this.entries) {
       entry.card.update({
-        title: i18next.t(NAME_KEYS[entry.id]),
-        rarityLabel: i18next.t(CLASS_KEYS[entry.id]),
+        title: i18next.t(VEHICLE_NAME_KEYS[entry.id]),
+        rarityLabel: i18next.t(VEHICLE_CLASS_KEYS[entry.id]),
       });
       for (const [stat, label] of entry.statLabels) label.setContent(i18next.t(STAT_KEYS[stat]));
       this.syncSelect(entry);

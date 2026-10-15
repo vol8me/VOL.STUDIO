@@ -56,7 +56,7 @@ export class PauseOverlay {
         if (!this.closingFromGame) onResume();
       },
     });
-    this.frame = this.scope.addDestroyable(new ScreenFrame({ testid: 'pause', variant: 'sheet' }));
+    this.frame = this.scope.addDestroyable(new ScreenFrame({ testid: 'pause' }));
     this.resume = this.scope.addDestroyable(
       new Button('', { variant: 'primary', onClick: () => this.modal.close() }),
     );
