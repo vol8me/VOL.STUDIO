@@ -1,39 +1,55 @@
 {
   "artifacts": {
     "analyses": {
+      "r-6e87f4d8149c41b8": {
+        "hash": "sha256:7b9cd367a01569cd7e4054ac6498085d2278f052d00d33f92d2a9419bc433c6e",
+        "path": "analyses/r-6e87f4d8149c41b8.json"
+      },
       "r-b3afff7aaafa5742": {
         "hash": "sha256:2f76c1c32c332098074b34aa9ad6a87ea3039214691faf8b52b0b6ecc4960fc0",
         "path": "analyses/r-b3afff7aaafa5742.json"
+      },
+      "r-e63eb794937cdc47": {
+        "hash": "sha256:97b25a675e89741f50b4f93d42b44b07890f2a6ec39e03d1e643b25bea4194da",
+        "path": "analyses/r-e63eb794937cdc47.json"
       }
     },
     "brief": {
-      "hash": "sha256:0a92b90e0464f453468c0fe003826bd5647093de8b2d9f820af9322921ed5a74",
+      "hash": "sha256:833509d3041aeb2b971459e5e28737e432e6aaee208e49f1abd0f7d0388e4d26",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:0a92b90e0464f453468c0fe003826bd5647093de8b2d9f820af9322921ed5a74",
-      "hash": "sha256:92dcfef7c156e084c693fdf074a862d9f3893e6b5a242621298c9bf270623fa8",
+      "brief": "sha256:833509d3041aeb2b971459e5e28737e432e6aaee208e49f1abd0f7d0388e4d26",
+      "hash": "sha256:c52a83c327ac53c425530ed7e84482fc4349b4d170bc092d4fb523a344d4a7f1",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:e8a3e67717b151efe722049361386ae41514b10dae1cc91bc0e919cfd26a7fb2",
+      "hash": "sha256:c3a15220489d332f38bc803f1fa5ba8da24e8546d23adbf723adbc7e5637748c",
       "path": "games/vol-test/audio-manifests/sfx/steel/families/brake/brake-a.json"
     },
     "renders": {
+      "r-6e87f4d8149c41b8": {
+        "hash": "sha256:64b6a9a2fe005a2360cd8e4ef6a5db9068750b6d81cbb7ffe204a2d400249601",
+        "path": "renders/r-6e87f4d8149c41b8.json"
+      },
       "r-b3afff7aaafa5742": {
         "hash": "sha256:03e1c1d465b1fd891b89a7e51c210ef70fe7cbf2ec8672ec545099b9e8c8f10a",
         "path": "renders/r-b3afff7aaafa5742.json"
+      },
+      "r-e63eb794937cdc47": {
+        "hash": "sha256:04153a6e3f17b80b22e2c1bc5bcc4786bae53428e0fbe8636df4156e2d39f9b5",
+        "path": "renders/r-e63eb794937cdc47.json"
       }
     },
     "selection": {
-      "hash": "sha256:22301c8dae2f93522a4a56ab548b237d4177c325c833924827ca442b4e1d6f0c",
+      "hash": "sha256:9a1169cff82ba59f4b95d0d176560d0fa7bdbaba97651daa1f46754a8707dcd8",
       "path": "selection.json"
     }
   },
   "jobId": "brake-a",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 17,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

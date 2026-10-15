@@ -1,47 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-b624374c445658e3": {
-        "hash": "sha256:7cd5706b94ac6ac0db31e9599732cb99687f720f0e1b45e4bd47430e6d1743cb",
-        "path": "analyses/r-b624374c445658e3.json"
-      },
-      "r-ced0aeb6ecf20d45": {
-        "hash": "sha256:edb20d376c8f9776f198f7609a89b9144ef6d356eeec0c8698227162d19a6dc4",
-        "path": "analyses/r-ced0aeb6ecf20d45.json"
+      "r-6b56632198adfe6c": {
+        "hash": "sha256:3eb2d9abd41b2eebc13f73fa92aa90d0f1c880c2fb299cffe9283c07f07ac537",
+        "path": "analyses/r-6b56632198adfe6c.json"
       }
     },
     "brief": {
-      "hash": "sha256:3ed18fa886b67cceb56dd16e2334cce1291939c3480121653d4702dc6c8104c4",
+      "hash": "sha256:326d5bc7d457e928af7fd8d9db1ce12774603a391bdb2825bb014585cd537897",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:3ed18fa886b67cceb56dd16e2334cce1291939c3480121653d4702dc6c8104c4",
-      "hash": "sha256:4b64f1d184bfa5d0b9fa508730839ba9a2adfb372573986cced347479148749d",
+      "brief": "sha256:326d5bc7d457e928af7fd8d9db1ce12774603a391bdb2825bb014585cd537897",
+      "hash": "sha256:997268594f65cbac1d3e8cba42ad40968de9b24da56f0259dfde8b7412be31b1",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:9496c47a9a2ab249b23195f37d1f8e1b704180dd586df51774673fdffc109a5e",
+      "hash": "sha256:c32352a90c46287c061585132ccd6e16984273311f33f428ee0295048953145e",
       "path": "games/vol-test/audio-manifests/sfx/steel/blast-mid-blast-c.json"
     },
     "renders": {
-      "r-b624374c445658e3": {
-        "hash": "sha256:ef81ff3c31b9d9404924c20de25c35138db8906f20e54aec75576b8a7f32fa72",
-        "path": "renders/r-b624374c445658e3.json"
-      },
-      "r-ced0aeb6ecf20d45": {
-        "hash": "sha256:ecd5c1d1a9f112fec7ab6da529ccd1f5bca638ff4367651bdf8295895e43ff8b",
-        "path": "renders/r-ced0aeb6ecf20d45.json"
+      "r-6b56632198adfe6c": {
+        "hash": "sha256:d876e5dac6ff16ffdce4a48c603617e139245891ce9bf174000d8c7e34e66bf5",
+        "path": "renders/r-6b56632198adfe6c.json"
       }
     },
     "selection": {
-      "hash": "sha256:3d095571b37468c00675400038d2d8f669ba31f46d02f55d228218695a4009c8",
+      "hash": "sha256:2d7b82d0db6dac4f71c556e6af781a8dc446f5577a418a1f32fd2d7bed35e153",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-blast-c-mid",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 17,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

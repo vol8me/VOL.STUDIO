@@ -1,12 +1,12 @@
 {
-  "programHash": "sha256:14bc7063f3c3ebd0f69f07b4c5462280bbf433d636ea09f4aee93486f0d61e69",
+  "programHash": "sha256:f07d5e7882e663d427bf4baedc6f7bb4cf58fd29dfc7c55a74d72be1c0e59634",
   "schema": "ProgramOriginV1",
   "source": {
     "familiesRoot": "devtools/audio-synth/records/families",
-    "familyHash": "sha256:225aac657d3f5ace36e5d1180738beba2da6caf536c1c390a41a7c89300ae4b6",
+    "familyHash": "sha256:06e518417f5e1226fadc2789b4864a87f8089f20135d92d5a6c99ab877aa4171",
     "familyId": "vt-hardsteel-brake",
     "kind": "family-variant",
-    "variantId": "v-23cbf193db1840ed",
+    "variantId": "v-8111d50cd1837c71",
     "variantKey": "brake-b"
   }
 }

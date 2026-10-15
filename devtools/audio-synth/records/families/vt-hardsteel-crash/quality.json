@@ -2,32 +2,32 @@
   "coherence": {
     "distributions": {
       "activeSeconds": {
-        "max": 0.29,
+        "max": 0.68,
         "measured": 4,
-        "median": 0.258263,
-        "min": 0.22,
-        "scale": 0.247905
+        "median": 0.68,
+        "min": 0.68,
+        "scale": 0.1
       },
       "centroidHz": {
-        "max": 907.876,
+        "max": 717.658,
         "measured": 4,
-        "median": 657.605,
-        "min": 318.296,
-        "scale": 0.406101
+        "median": 460.623,
+        "min": 316.293,
+        "scale": 0.744767
       },
       "maxMomentaryLufs": {
-        "max": -20.8378,
+        "max": -20.2616,
         "measured": 4,
-        "median": -22.1716,
-        "min": -25.2836,
-        "scale": 1.46905
+        "median": -20.4399,
+        "min": -21.0897,
+        "scale": 1
       },
       "pitchHz": {
-        "max": null,
-        "measured": 2,
-        "median": null,
-        "min": null,
-        "scale": null
+        "max": 226.557,
+        "measured": 4,
+        "median": 225.74,
+        "min": 213.498,
+        "scale": 0.05
       }
     },
     "outliers": [],
@@ -36,35 +36,35 @@
   "descriptorSpace": "family-descriptors-v1",
   "diversity": {
     "collapsed": false,
-    "maxDistance": 0.697972,
-    "medianDistance": 0.558563,
-    "minDistance": 0.0806406,
+    "maxDistance": 0.653933,
+    "medianDistance": 0.509279,
+    "minDistance": 0.165689,
     "nearIdentical": [],
     "pairs": 6
   },
   "duplicates": [],
   "identity": {
     "limit": 13,
-    "maxDistance": 11.232,
-    "medoid": "soft-b",
+    "maxDistance": 6.412,
+    "medoid": "soft-a",
     "members": [
       {
-        "distance": 8.892,
+        "distance": 4.219,
         "key": "hard-a",
-        "shiftOctaves": -2.667
+        "shiftOctaves": 0
       },
       {
-        "distance": 4.744,
+        "distance": 6.412,
         "key": "hard-b",
         "shiftOctaves": 0
       },
       {
-        "distance": 11.232,
+        "distance": 0,
         "key": "soft-a",
-        "shiftOctaves": -1.5
+        "shiftOctaves": 0
       },
       {
-        "distance": 0,
+        "distance": 4.451,
         "key": "soft-b",
         "shiftOctaves": 0
       }
@@ -76,34 +76,34 @@
     {
       "key": "hard-a",
       "nearest": {
-        "distance": 0.0806406,
-        "key": "hard-b"
+        "distance": 0.165689,
+        "key": "soft-a"
       },
-      "pcmHash": "sha256:cff67a9f00345d5682f564d5b324415f6bc39468f1ef914c2b0871ab28c01f9c"
+      "pcmHash": "sha256:df53ac4fb1c064233a7da74a89f54450c2e8c617d1d1ca93d78b7e76d76724f8"
     },
     {
       "key": "hard-b",
       "nearest": {
-        "distance": 0.0806406,
-        "key": "hard-a"
+        "distance": 0.584212,
+        "key": "soft-b"
       },
-      "pcmHash": "sha256:f4b3fec946be44f9b9075bdb2b5cea556bbde374616e57ea10eb05aa7ae14fac"
+      "pcmHash": "sha256:dddeeac6499be02f877290d2f22afa6e323bfb009ade6c2f5c4c0b32292028f4"
     },
     {
       "key": "soft-a",
       "nearest": {
-        "distance": 0.504886,
+        "distance": 0.165689,
         "key": "hard-a"
       },
-      "pcmHash": "sha256:8282ca80ed4f72f1f899088288d9ac4f5c782e5403236e3a59757d4d04379d43"
+      "pcmHash": "sha256:b96cbe17b7988f940c61193286406b6cf9382dac3444c1558e54e230c9fc1368"
     },
     {
       "key": "soft-b",
       "nearest": {
-        "distance": 0.605938,
-        "key": "hard-b"
+        "distance": 0.369332,
+        "key": "soft-a"
       },
-      "pcmHash": "sha256:e0401652f315bb85c68a12e2a2fa4c301a67673c5735ac002486d82eea140005"
+      "pcmHash": "sha256:3e0be23ca61a7e07247fb3a92fd1dea0c28d0bbcc88c35c2a883e28017e32d52"
     }
   ],
   "policy": {

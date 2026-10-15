@@ -1,39 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-073b7b7027b732b1": {
-        "hash": "sha256:a4a0b52ca1f78e84c52a9c3a22c5bf453b36699e016a7168ffca993fb511a1d7",
-        "path": "analyses/r-073b7b7027b732b1.json"
+      "r-fb8b286f3026d578": {
+        "hash": "sha256:51c728c421f8b1577b833a011609596dc291ff9370cf8d0e6178a87a3cda0cf2",
+        "path": "analyses/r-fb8b286f3026d578.json"
       }
     },
     "brief": {
-      "hash": "sha256:3c5b1f1649da2f3650993bdeb0f779f0c87f8a9c4601059970582bb8bebae6fd",
+      "hash": "sha256:8fca971a40ff6f09dfccfa506c10098c95c725c48c2bdae127c0515ac5a6d94c",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:3c5b1f1649da2f3650993bdeb0f779f0c87f8a9c4601059970582bb8bebae6fd",
-      "hash": "sha256:8af2fa1d0db79979ab765f6d4d3a5acbac67617b9800945edc41dc55db441c7d",
+      "brief": "sha256:8fca971a40ff6f09dfccfa506c10098c95c725c48c2bdae127c0515ac5a6d94c",
+      "hash": "sha256:cd722cea193af2c3a8811cad3ef315995c8ee21e11f71dd8a446b92710858b44",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:ed0b2c36aeb15ae64738ce0dbc0b779899a9fe3724f424d12765bb566ff887a2",
+      "hash": "sha256:a43825cc15d8cfdc5f7013363e98e292a995613768ebe778541990fc7006f0d1",
       "path": "games/vol-test/audio-manifests/sfx/steel/snap.json"
     },
     "renders": {
-      "r-073b7b7027b732b1": {
-        "hash": "sha256:e2783a008b26ea54c533487da426d6f247d7875255624d1ed58d929910cb67ec",
-        "path": "renders/r-073b7b7027b732b1.json"
+      "r-fb8b286f3026d578": {
+        "hash": "sha256:07f0f067063cba77524a4acdc9946666624a56f26777833c8ede888a96eae7cf",
+        "path": "renders/r-fb8b286f3026d578.json"
       }
     },
     "selection": {
-      "hash": "sha256:646131b4620c7375040aa9ae995ec0f554674e552103bb4288aa0c3668b2db27",
+      "hash": "sha256:b665b0fb4afeab32021a2fcec307f04017adb437e2393629002c71353b298eaf",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-snap",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 44,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

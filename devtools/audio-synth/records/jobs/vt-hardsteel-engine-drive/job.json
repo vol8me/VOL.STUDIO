@@ -1,55 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-9d6950d674b8c633": {
-        "hash": "sha256:099a84519e7212943e44a3f5980e18317ef15b4ddcf4e7f3fb3e8fee2300fe22",
-        "path": "analyses/r-9d6950d674b8c633.json"
-      },
-      "r-bc2b95f14b75dda2": {
-        "hash": "sha256:0b53cf59e0b795306a5eacbc8bf3daf1599e8c4e8966aa3512c68e022be15434",
-        "path": "analyses/r-bc2b95f14b75dda2.json"
-      },
-      "r-d2f7bf1d983c6a15": {
-        "hash": "sha256:4b3b0e9ed2ff4ae9ee97401f115921361e285dd9cff2ba30cbc08ee277048788",
-        "path": "analyses/r-d2f7bf1d983c6a15.json"
+      "r-115a3ee5a130c716": {
+        "hash": "sha256:ffafa8c5e1b51fb8545299c70afad844a2ba93ec5dbbfa1705cfad0452cde54a",
+        "path": "analyses/r-115a3ee5a130c716.json"
       }
     },
     "brief": {
-      "hash": "sha256:1b7e6a81273520d450e89d6b3d199aa3651ae4acb3d01b8c45dddfad2a9c37cb",
+      "hash": "sha256:ef0248e69de3cc072d044f02dc8fd8f74c7c9ece7da029bb519d57b10b1879d7",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:1b7e6a81273520d450e89d6b3d199aa3651ae4acb3d01b8c45dddfad2a9c37cb",
-      "hash": "sha256:b0ab6b57ff22b29445d93b5389ed79fba6363be64da8ae8bcefb566ed371bbad",
+      "brief": "sha256:ef0248e69de3cc072d044f02dc8fd8f74c7c9ece7da029bb519d57b10b1879d7",
+      "hash": "sha256:32d85cf82d24b07d4c927b0d940baf6df1d6b5fe00bea43804f6bb0a5a80a98f",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:0dea0a84641049b086a39a3144f355bf809df9f98024fae043a3d3c6f6f561e4",
+      "hash": "sha256:2360b97e54dcb2c58e39347dc7aa2e4d260a860f7d5e1bbe3d22ff30c1b4909b",
       "path": "games/vol-test/audio-manifests/sfx/steel/engine-drive.json"
     },
     "renders": {
-      "r-9d6950d674b8c633": {
-        "hash": "sha256:59528892621d96d6d786789aefa5411b793e5f7f9e1b73b0e2a23ba0cc755417",
-        "path": "renders/r-9d6950d674b8c633.json"
-      },
-      "r-bc2b95f14b75dda2": {
-        "hash": "sha256:1e3425d490bd8b121cfb43a871631e37a5bb98cff108b2360d788ecd91792482",
-        "path": "renders/r-bc2b95f14b75dda2.json"
-      },
-      "r-d2f7bf1d983c6a15": {
-        "hash": "sha256:fa718d311400828449c49f76953cdcbeda5cf9185a556e02d2f37ed32d179d7e",
-        "path": "renders/r-d2f7bf1d983c6a15.json"
+      "r-115a3ee5a130c716": {
+        "hash": "sha256:9fd17af89f4c341d4777344407bf691e744a8ec887085d984394a982f073044b",
+        "path": "renders/r-115a3ee5a130c716.json"
       }
     },
     "selection": {
-      "hash": "sha256:fe933c6534317ece4dd275b365afdfc808ee8fa9b2ac91f606b3c3f8d66c59d2",
+      "hash": "sha256:711e9e5b508fbb5d9d04f0b53e516715d2d1912611ca41841b5045a04c07c535",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-engine-drive",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 16,
+  "revision": 42,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

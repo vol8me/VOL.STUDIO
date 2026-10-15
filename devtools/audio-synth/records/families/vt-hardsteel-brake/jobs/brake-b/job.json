@@ -4,36 +4,44 @@
       "r-c38e58d9e18a832a": {
         "hash": "sha256:668c377bb4749e584be998302d3e76c86dc2e5336caab1348a319c8c0856c135",
         "path": "analyses/r-c38e58d9e18a832a.json"
+      },
+      "r-f695ad1bc17158d8": {
+        "hash": "sha256:ce38f7ea4514018217224741a09eeb9e99a3ac6efca76739885a93d5029ae0b7",
+        "path": "analyses/r-f695ad1bc17158d8.json"
       }
     },
     "brief": {
-      "hash": "sha256:cb5cddd52740493c9fab4773e0a267e731109b357f9d4f99775c7d9921191aa6",
+      "hash": "sha256:9672f2bde245141af6e703ffbba36d1afee7763e3783016a9d23c3c672d25bdb",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:cb5cddd52740493c9fab4773e0a267e731109b357f9d4f99775c7d9921191aa6",
-      "hash": "sha256:14bc7063f3c3ebd0f69f07b4c5462280bbf433d636ea09f4aee93486f0d61e69",
+      "brief": "sha256:9672f2bde245141af6e703ffbba36d1afee7763e3783016a9d23c3c672d25bdb",
+      "hash": "sha256:f07d5e7882e663d427bf4baedc6f7bb4cf58fd29dfc7c55a74d72be1c0e59634",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:88ecd25fe0d6f134d80936121bef9319f46bfe08c75f58ff67853bd5bebf92cd",
+      "hash": "sha256:c67883eec6e61ed7e79ba273e5c698e773711977d40c437832ff5f2e3d166cda",
       "path": "games/vol-test/audio-manifests/sfx/steel/families/brake/brake-b.json"
     },
     "renders": {
       "r-c38e58d9e18a832a": {
         "hash": "sha256:11080016ded8e46fce74bad5f22989b728175177dcfa8c3f9e913d6c0b9e585c",
         "path": "renders/r-c38e58d9e18a832a.json"
+      },
+      "r-f695ad1bc17158d8": {
+        "hash": "sha256:ae32b790d9bc9badd9a6ea8899f1e0a38496ea23b9208f08a44f0ee631f62b59",
+        "path": "renders/r-f695ad1bc17158d8.json"
       }
     },
     "selection": {
-      "hash": "sha256:f9a3f2458a3c0d72b4481bdc78dbf9dd470a4a31eb14f715d26647ddb2cf2cec",
+      "hash": "sha256:d521133a97a6e5039893006508050d016a72075238dd7b128857ea8732d6c52e",
       "path": "selection.json"
     }
   },
   "jobId": "brake-b",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 12,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

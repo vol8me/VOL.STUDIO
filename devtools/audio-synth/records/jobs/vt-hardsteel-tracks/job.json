@@ -1,47 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-0d2de42fc308f4c4": {
-        "hash": "sha256:08ebbdcec0c5677a43070866a4aa22f945a6fb69c2a4a7364fa6ea012ca31587",
-        "path": "analyses/r-0d2de42fc308f4c4.json"
-      },
-      "r-a8a3cadba5ac092a": {
-        "hash": "sha256:f07bf88cb2764aeef0dc78987dd3f183079dc94002b8e0b07042676c2304c1c5",
-        "path": "analyses/r-a8a3cadba5ac092a.json"
+      "r-cbbd95ed3e9cef9f": {
+        "hash": "sha256:e3176ecd60362579f1ec625bdd6a28f69eb9c2776def5d454e23486d0938368a",
+        "path": "analyses/r-cbbd95ed3e9cef9f.json"
       }
     },
     "brief": {
-      "hash": "sha256:aa6a0dd100b9171c8f62d8f510d1a5cb8c542e99772d692e4a564dacc22f1f9e",
+      "hash": "sha256:fabea817adca6f63d30b3370f4761f4fd1b8c26151495803389801dd3524eab0",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:aa6a0dd100b9171c8f62d8f510d1a5cb8c542e99772d692e4a564dacc22f1f9e",
-      "hash": "sha256:db08ad99ec9d79a8523a99e2f8b72137593ad98776cd036b6f69777b537b6b2c",
+      "brief": "sha256:fabea817adca6f63d30b3370f4761f4fd1b8c26151495803389801dd3524eab0",
+      "hash": "sha256:4a7e3c94e4ea98a46a60bc5a7ba026c2171b84b2a32967ccd1fe8893dfa86d95",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:065e53861416aaf74f64adcc33c02289008ff73039851718d9f83a8fbb27b22b",
+      "hash": "sha256:4fa5c665c8d6de23da774056e5c8e634751766a048c325e61cb0611a9d59aaa3",
       "path": "games/vol-test/audio-manifests/sfx/steel/tracks.json"
     },
     "renders": {
-      "r-0d2de42fc308f4c4": {
-        "hash": "sha256:eb4d65dcacd1ea2e0147c7a20a09f18fc38590dd5f291bc98bf4ae913d9ec1f7",
-        "path": "renders/r-0d2de42fc308f4c4.json"
-      },
-      "r-a8a3cadba5ac092a": {
-        "hash": "sha256:37bfb599dbddf066bced7fac922eb8584a2419c18d67b1bc5b084f59ded9562a",
-        "path": "renders/r-a8a3cadba5ac092a.json"
+      "r-cbbd95ed3e9cef9f": {
+        "hash": "sha256:62608054dccc205c59d67861efec9775e37d7b8e9ee699b95d79690024240b25",
+        "path": "renders/r-cbbd95ed3e9cef9f.json"
       }
     },
     "selection": {
-      "hash": "sha256:49cd8802dd6418faee2d77fa2e8c59e83b99b448176f864b8120989399736de1",
+      "hash": "sha256:0593526400a1698d26fdaa3f1929581eb217682f35498dcf1f007b5012eca806",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-tracks",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 14,
+  "revision": 72,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

@@ -1,47 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-5e492b852ec623aa": {
-        "hash": "sha256:b167ecebe75dfb9e961360d07bb4da6217f16c0b705f9dd00244c03627dfcf2d",
-        "path": "analyses/r-5e492b852ec623aa.json"
-      },
-      "r-74cfdf8e5d1ac959": {
-        "hash": "sha256:e4b9c409a905b54d05e076e52ce7cb1cf5ca49c0125829223242dae3cafe5699",
-        "path": "analyses/r-74cfdf8e5d1ac959.json"
+      "r-b2d47f33e7e8e434": {
+        "hash": "sha256:682b43d37ce30f34715bcd976427b2d32fdfa093125fd2f7973eb1ed8ea6dc5c",
+        "path": "analyses/r-b2d47f33e7e8e434.json"
       }
     },
     "brief": {
-      "hash": "sha256:1e2a7de55e092a0a1b5165ea12ba187b30c6e71ca118ba9ea7ee35c8bf1f2c55",
+      "hash": "sha256:bbc8633ffaf5f021de18463d64f5185647e248aa2d58941d8159f471578d7d87",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:1e2a7de55e092a0a1b5165ea12ba187b30c6e71ca118ba9ea7ee35c8bf1f2c55",
-      "hash": "sha256:742c180559cfd596b8fbe838b9c82e8b741c4216baceeb27a9fbd8b4b385c145",
+      "brief": "sha256:bbc8633ffaf5f021de18463d64f5185647e248aa2d58941d8159f471578d7d87",
+      "hash": "sha256:d450b9cac74c6f5f4de797f9b62e1cd756f4836a1544ce22cace2819b42acebc",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:6873cb862851c68ae88ab43931b0214fd358cc194404de9d686d2a793c154b6d",
+      "hash": "sha256:de46dee3bb02564d9802205842ab2108b3b8d5fd9f99acc8b45c21858b42aa9a",
       "path": "games/vol-test/audio-manifests/sfx/steel/blast-far-blast-a.json"
     },
     "renders": {
-      "r-5e492b852ec623aa": {
-        "hash": "sha256:06859d031144bac4437b80882ad377966b01aaecefa3cc3d614a1471f1e704db",
-        "path": "renders/r-5e492b852ec623aa.json"
-      },
-      "r-74cfdf8e5d1ac959": {
-        "hash": "sha256:427c16620c8a4999ea4db210e408d75d4514fdf1378b71e1591d59860cf5300a",
-        "path": "renders/r-74cfdf8e5d1ac959.json"
+      "r-b2d47f33e7e8e434": {
+        "hash": "sha256:f9ce7a66b015794363e543b0e8b4531302292de26549552731adb8c8bea8f390",
+        "path": "renders/r-b2d47f33e7e8e434.json"
       }
     },
     "selection": {
-      "hash": "sha256:1c57674233aabdcd7c40b45f2d901398014d45a246bc9d7bb97f5417dc3da5f0",
+      "hash": "sha256:0f528a7a3128e6cf62686828b64a2b55b0db2766abfa90001ba657f0c9743457",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-blast-a-far",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 17,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

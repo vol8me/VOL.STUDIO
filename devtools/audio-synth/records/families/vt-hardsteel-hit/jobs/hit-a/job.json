@@ -1,6 +1,10 @@
 {
   "artifacts": {
     "analyses": {
+      "r-46d469201907eb38": {
+        "hash": "sha256:494fad9bd6400587e3c571b2dd43621c4790be268a8225dcb492e788135be49c",
+        "path": "analyses/r-46d469201907eb38.json"
+      },
       "r-4f60d44563396c87": {
         "hash": "sha256:3bac2ef8c1336bf9ce9c6ab7c22244e569c382129ded65bd258510b4a4ead3b9",
         "path": "analyses/r-4f60d44563396c87.json"
@@ -11,19 +15,23 @@
       }
     },
     "brief": {
-      "hash": "sha256:e2ee83288b4e2973d5821777788ec1d28083cc0dbcf8bfe91cdb423253e77ac7",
+      "hash": "sha256:655b9e450390ae4daa06bff95527430cb4360152b7fc446c78f88b557b6c7319",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:e2ee83288b4e2973d5821777788ec1d28083cc0dbcf8bfe91cdb423253e77ac7",
-      "hash": "sha256:87cf1060e920c4cb91a760984430bb2c6282a41fb380ddff860d80ef2f1173d3",
+      "brief": "sha256:655b9e450390ae4daa06bff95527430cb4360152b7fc446c78f88b557b6c7319",
+      "hash": "sha256:2e49913d2469ff4ff8153b86adc6b9db9462ee34c167859411fee63727c1b7a4",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:445bd22eec80a7b3bb07fba101e69bc0c5db2716b0f913da4b42fdf31cc4eb1f",
+      "hash": "sha256:068f8bb68fac9ee41d66b90d6e15500087beec7e0f9c4b891fbc4ef2f731dbd0",
       "path": "games/vol-test/audio-manifests/sfx/steel/families/hit/hit-a.json"
     },
     "renders": {
+      "r-46d469201907eb38": {
+        "hash": "sha256:6d1389ecd528563a7cb4ebdc531d36a23ea89c242730edd9f83e8bcd87933a45",
+        "path": "renders/r-46d469201907eb38.json"
+      },
       "r-4f60d44563396c87": {
         "hash": "sha256:48ccfdfb66bec02be6d36a9ac0fa3ed7fb449ad9f687b90f1e14f2406d61d2ac",
         "path": "renders/r-4f60d44563396c87.json"
@@ -34,14 +42,14 @@
       }
     },
     "selection": {
-      "hash": "sha256:08d9800d0e122a6c6c5ed32fa53d78a5a20c4e9b74ac14c036e5649c42c1fb58",
+      "hash": "sha256:3fdc7b6ac6ee90f894a684eaacd06fba9f63963f7627911a25dd39c9a801256f",
       "path": "selection.json"
     }
   },
   "jobId": "hit-a",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 10,
+  "revision": 16,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

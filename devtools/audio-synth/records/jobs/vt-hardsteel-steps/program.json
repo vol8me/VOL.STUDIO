@@ -1,0 +1,491 @@
+{
+  "channels": 1,
+  "description": "Mech adımları: ağır ayak basışı, hidrolik ve gövde gümbürtüsü.",
+  "durationSeconds": 3.9,
+  "effects": [
+    {
+      "params": {
+        "frequency": 34,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 280,
+        "gainDb": 2.5,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 7,
+        "mix": 0.5,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 7000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": -11.91,
+      "mechanism": "pressure",
+      "name": "ft-th0",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.26,
+          "bodyHz": 65.12,
+          "decay": 1.4,
+          "positive": 0.007,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.3
+    },
+    {
+      "gainDb": -13.69,
+      "mechanism": "pressure",
+      "name": "ft-pu0",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.16,
+          "bodyHz": 176,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.3
+    },
+    {
+      "gainDb": -60.61,
+      "mechanism": "mechanical",
+      "name": "ft-ct0",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 24,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.9,
+          "velocity": 1.9
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.303
+    },
+    {
+      "gainDb": -12.06,
+      "mechanism": "pressure",
+      "name": "ft-th1",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.26,
+          "bodyHz": 74,
+          "decay": 1.4,
+          "positive": 0.007,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.8999999999999999
+    },
+    {
+      "gainDb": -13.15,
+      "mechanism": "pressure",
+      "name": "ft-pu1",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.16,
+          "bodyHz": 200,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.8999999999999999
+    },
+    {
+      "gainDb": -61.42,
+      "mechanism": "mechanical",
+      "name": "ft-ct1",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 24,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.9,
+          "velocity": 1.9
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.9029999999999999
+    },
+    {
+      "gainDb": -11.97,
+      "mechanism": "pressure",
+      "name": "ft-th2",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.26,
+          "bodyHz": 82.88000000000001,
+          "decay": 1.4,
+          "positive": 0.007,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1.5
+    },
+    {
+      "gainDb": -12.48,
+      "mechanism": "pressure",
+      "name": "ft-pu2",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.16,
+          "bodyHz": 224.00000000000003,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1.5
+    },
+    {
+      "gainDb": -62.09,
+      "mechanism": "mechanical",
+      "name": "ft-ct2",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 24,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.9,
+          "velocity": 1.9
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 1.503
+    },
+    {
+      "gainDb": -12.01,
+      "mechanism": "pressure",
+      "name": "ft-th3",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.26,
+          "bodyHz": 69.56,
+          "decay": 1.4,
+          "positive": 0.007,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.0999999999999996
+    },
+    {
+      "gainDb": -13.44,
+      "mechanism": "pressure",
+      "name": "ft-pu3",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.16,
+          "bodyHz": 188,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.0999999999999996
+    },
+    {
+      "gainDb": -61.21,
+      "mechanism": "mechanical",
+      "name": "ft-ct3",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 24,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.9,
+          "velocity": 1.9
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 2.1029999999999998
+    },
+    {
+      "gainDb": -12.04,
+      "mechanism": "pressure",
+      "name": "ft-th4",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.26,
+          "bodyHz": 78.44,
+          "decay": 1.4,
+          "positive": 0.007,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.6999999999999997
+    },
+    {
+      "gainDb": -12.83,
+      "mechanism": "pressure",
+      "name": "ft-pu4",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.16,
+          "bodyHz": 212,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.6999999999999997
+    },
+    {
+      "gainDb": -60.77,
+      "mechanism": "mechanical",
+      "name": "ft-ct4",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 24,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.9,
+          "velocity": 1.9
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 2.703
+    },
+    {
+      "gainDb": -11.91,
+      "mechanism": "pressure",
+      "name": "ft-th5",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.26,
+          "bodyHz": 65.12,
+          "decay": 1.4,
+          "positive": 0.007,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 3.3
+    },
+    {
+      "gainDb": -13.69,
+      "mechanism": "pressure",
+      "name": "ft-pu5",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.16,
+          "bodyHz": 176,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 3.3
+    },
+    {
+      "gainDb": -60.82,
+      "mechanism": "mechanical",
+      "name": "ft-ct5",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.6,
+          "mass": 24,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.9,
+          "velocity": 1.9
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 3.303
+    },
+    {
+      "gainDb": -20.12,
+      "mechanism": "motor",
+      "name": "hum",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1100,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.1,
+          "count": 13,
+          "harmonics": 8,
+          "imbalance": 0.2,
+          "load": 0.6,
+          "mechanism": "gear",
+          "noise": 0.1,
+          "rpm": 1100,
+          "tilt": 0.55
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -14.54,
+      "mechanism": "noise",
+      "name": "hiss",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 250,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2200,
+            "mode": "lowpass",
+            "q": 0.6
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -17.35,
+      "mechanism": "noise",
+      "name": "sub",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 80,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "loop": {
+      "crossfadeSeconds": 0.3
+    },
+    "normalize": "peak",
+    "peakDbfs": -6
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 730103
+}

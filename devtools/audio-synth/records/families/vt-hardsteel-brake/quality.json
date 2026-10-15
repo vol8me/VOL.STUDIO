@@ -24,7 +24,7 @@
       },
       "pitchHz": {
         "max": null,
-        "measured": 2,
+        "measured": 0,
         "median": null,
         "min": null,
         "scale": null
@@ -36,16 +36,16 @@
   "descriptorSpace": "family-descriptors-v1",
   "diversity": {
     "collapsed": false,
-    "maxDistance": 0.497819,
-    "medianDistance": 0.497819,
-    "minDistance": 0.497819,
+    "maxDistance": 0.777609,
+    "medianDistance": 0.777609,
+    "minDistance": 0.777609,
     "nearIdentical": [],
     "pairs": 1
   },
   "duplicates": [],
   "identity": {
     "limit": 13,
-    "maxDistance": 6.961,
+    "maxDistance": 6.728,
     "medoid": "brake-a",
     "members": [
       {
@@ -54,9 +54,9 @@
         "shiftOctaves": 0
       },
       {
-        "distance": 6.961,
+        "distance": 6.728,
         "key": "brake-b",
-        "shiftOctaves": -1.333
+        "shiftOctaves": 0
       }
     ],
     "method": "timbre-envelope-v1",
@@ -66,18 +66,18 @@
     {
       "key": "brake-a",
       "nearest": {
-        "distance": 0.497819,
+        "distance": 0.777609,
         "key": "brake-b"
       },
-      "pcmHash": "sha256:7c54eb0fae62fe243fc851c2de0c7eeb76f12b1f0f352d406338797008aea048"
+      "pcmHash": "sha256:5b597174d707d5e9223752c8636a692e7a93151efe2b6ccfa963597c52c769dd"
     },
     {
       "key": "brake-b",
       "nearest": {
-        "distance": 0.497819,
+        "distance": 0.777609,
         "key": "brake-a"
       },
-      "pcmHash": "sha256:131ae2447d16a91e48b66843703b1432f2983784eef8401cf778b10699a5ce08"
+      "pcmHash": "sha256:27792767f14c6f9045106c55ee0697130b89562093071cfd6c88590f206dddf4"
     }
   ],
   "policy": {

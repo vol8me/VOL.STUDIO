@@ -1,6 +1,10 @@
 {
   "artifacts": {
     "analyses": {
+      "r-21c9580fdb47a00f": {
+        "hash": "sha256:bf74230bfcc4c7531fbff37e0ae121a139404f6ddba766f86244b4185731b01b",
+        "path": "analyses/r-21c9580fdb47a00f.json"
+      },
       "r-333bf380fb6dcd1d": {
         "hash": "sha256:ab086bc2f7d940a2de375f6009e2225324a8857fa6eda615c8c8288ee933692a",
         "path": "analyses/r-333bf380fb6dcd1d.json"
@@ -15,19 +19,23 @@
       }
     },
     "brief": {
-      "hash": "sha256:c62564f3c6d638eadab28b517e49ff2bed32e2918c9c9dc2828870d6bbcb80a8",
+      "hash": "sha256:678fdb0ad8c306894783052c06b02bd9ba002dfdadeb0b919366477426de3a9e",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:c62564f3c6d638eadab28b517e49ff2bed32e2918c9c9dc2828870d6bbcb80a8",
-      "hash": "sha256:29b77a86874fa8ddb847e674a4d140bf6e0ddeb64885a397041922f900f380ef",
+      "brief": "sha256:678fdb0ad8c306894783052c06b02bd9ba002dfdadeb0b919366477426de3a9e",
+      "hash": "sha256:2fa6c782739b6500fead386c5f21d9b4e2d81e75fd29bc3643d53ddab3c81968",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:06f4582f2113a256feba11bed34e7869437a85bfcffd7641c020ca36f77fec1e",
+      "hash": "sha256:c6327f55f35b87bbe03afedf61d3e49a3f04b4f8012985de1163f4a2e1b56afc",
       "path": "games/vol-test/audio-manifests/sfx/steel/families/blast/blast-c.json"
     },
     "renders": {
+      "r-21c9580fdb47a00f": {
+        "hash": "sha256:aa5834b92e7294e543682276493ccac2ddb94bbb6442e2de9241add71381cee1",
+        "path": "renders/r-21c9580fdb47a00f.json"
+      },
       "r-333bf380fb6dcd1d": {
         "hash": "sha256:4b0741b84ba20fcc05e8ed0e7f3af6bec7ce48dd694c87a698367e6d1c5af8cc",
         "path": "renders/r-333bf380fb6dcd1d.json"
@@ -42,14 +50,14 @@
       }
     },
     "selection": {
-      "hash": "sha256:edf0720d9045848448cfa769035218ddb299e0fb9c828e0c6b4c46168baecfe6",
+      "hash": "sha256:01e779e4042951e4316678ac6c27df466f6421694fd3c07fcbda42b058b68075",
       "path": "selection.json"
     }
   },
   "jobId": "blast-c",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 16,
+  "revision": 22,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

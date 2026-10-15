@@ -1,12 +1,12 @@
 {
-  "programHash": "sha256:29506a28fb45f3b5744a829be6cd6ae7ea3fa980e908037e807f67cc9e579914",
+  "programHash": "sha256:2afaebdcf880e97f004b23a3a3f25936bfefce62d233489db5f1b68a7f653240",
   "schema": "ProgramOriginV1",
   "source": {
     "familiesRoot": "devtools/audio-synth/records/families",
-    "familyHash": "sha256:8dc5e0b5b3eeb87ba38c2aca82ff05d4aa04cf03a57af723854a3304d29f4b0e",
+    "familyHash": "sha256:6d7050c42b7ac54bb4d05d57894d080cf90eff05a38be4d026d7ee50bd77ec97",
     "familyId": "vt-hardsteel-blast",
     "kind": "family-variant",
-    "variantId": "v-3a119568987c4278",
+    "variantId": "v-1d8bf9093823f132",
     "variantKey": "blast-d"
   }
 }

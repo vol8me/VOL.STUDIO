@@ -1,0 +1,19 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 0.787,
+    "min": 0.504
+  },
+  "id": "vt-hardsteel-shot-flak",
+  "intent": "Flak: üç namlunun üst üste binen tok gümbürtüsü.",
+  "kind": "acoustic",
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — shot-flak"
+}

@@ -1,0 +1,466 @@
+{
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "amount": 0.34,
+            "damp": 0.55,
+            "decay": 0.8,
+            "preDelay": 0.012,
+            "roomSize": 0.7
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "Flak atışı: üç namlunun birlikte gümbürdemesi.",
+  "durationSeconds": 0.7,
+  "effects": [
+    {
+      "params": {
+        "frequency": 34,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "low",
+        "frequency": 100,
+        "gainDb": -2
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 300,
+        "gainDb": 2.5,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 1700,
+        "gainDb": 3,
+        "q": 0.7
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 5.5,
+        "mix": 0.75,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "high",
+        "frequency": 4500,
+        "gainDb": 2.5
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 11000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "layers": [
+    {
+      "gainDb": -11.96,
+      "mechanism": "pressure",
+      "name": "thump0",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.8,
+          "bodyDecay": 0.24,
+          "bodyHz": 78,
+          "decay": 1.3,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -12.28,
+      "mechanism": "pressure",
+      "name": "punch0",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 187.2,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0008,
+          "curve": "exponential",
+          "decay": 0.012,
+          "release": 0.01,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 5.41,
+      "mechanism": "noise",
+      "name": "crack0",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2000,
+            "mode": "bandpass",
+            "q": 0.7
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 900,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": 10.31,
+      "mechanism": "explosion",
+      "name": "blast0",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.3,
+          "color": "pink",
+          "crackle": 0.2,
+          "darkening": 0.75,
+          "decay": 0.24
+        },
+        "primitive": "source.blast",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -13,
+      "mechanism": "pressure",
+      "name": "thump1",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.8,
+          "bodyDecay": 0.24,
+          "bodyHz": 66,
+          "decay": 1.3,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.006
+    },
+    {
+      "gainDb": -14.29,
+      "mechanism": "pressure",
+      "name": "punch1",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 158.4,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.006
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0008,
+          "curve": "exponential",
+          "decay": 0.012,
+          "release": 0.01,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 4.5,
+      "mechanism": "noise",
+      "name": "crack1",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2500,
+            "mode": "bandpass",
+            "q": 0.7
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 900,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      },
+      "startSeconds": 0.006
+    },
+    {
+      "gainDb": 7.98,
+      "mechanism": "explosion",
+      "name": "blast1",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.3,
+          "color": "pink",
+          "crackle": 0.2,
+          "darkening": 0.75,
+          "decay": 0.24
+        },
+        "primitive": "source.blast",
+        "version": 1
+      },
+      "startSeconds": 0.006
+    },
+    {
+      "gainDb": -14.59,
+      "mechanism": "pressure",
+      "name": "thump2",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.8,
+          "bodyDecay": 0.24,
+          "bodyHz": 88,
+          "decay": 1.3,
+          "positive": 0.005,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.013
+    },
+    {
+      "gainDb": -14.21,
+      "mechanism": "pressure",
+      "name": "punch2",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 211.2,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.013
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0008,
+          "curve": "exponential",
+          "decay": 0.012,
+          "release": 0.01,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 1.96,
+      "mechanism": "noise",
+      "name": "crack2",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 3000,
+            "mode": "bandpass",
+            "q": 0.7
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 900,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "source": {
+        "params": {
+          "color": "white"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      },
+      "startSeconds": 0.013
+    },
+    {
+      "gainDb": 6.9,
+      "mechanism": "explosion",
+      "name": "blast2",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "brightness": 0.3,
+          "color": "pink",
+          "crackle": 0.2,
+          "darkening": 0.75,
+          "decay": 0.24
+        },
+        "primitive": "source.blast",
+        "version": 1
+      },
+      "startSeconds": 0.013
+    },
+    {
+      "gainDb": -59.82,
+      "mechanism": "mechanical",
+      "name": "breech",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.1,
+          "mass": 3,
+          "materialA": "metal",
+          "materialB": "metal",
+          "size": 0.4,
+          "velocity": 2.2
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.04
+    }
+  ],
+  "master": {
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.1,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
+    "normalize": "peak",
+    "peakDbfs": -4
+  },
+  "sampleRate": 48000,
+  "schema": "AcousticProgramV1",
+  "seed": 720107
+}

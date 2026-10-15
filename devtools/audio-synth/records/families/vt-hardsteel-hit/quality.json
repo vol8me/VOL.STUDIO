@@ -36,16 +36,16 @@
   "descriptorSpace": "family-descriptors-v1",
   "diversity": {
     "collapsed": false,
-    "maxDistance": 0.192105,
-    "medianDistance": 0.192105,
-    "minDistance": 0.192105,
+    "maxDistance": 0.23763,
+    "medianDistance": 0.23763,
+    "minDistance": 0.23763,
     "nearIdentical": [],
     "pairs": 1
   },
   "duplicates": [],
   "identity": {
     "limit": 13,
-    "maxDistance": 5.628,
+    "maxDistance": 8.751,
     "medoid": "hit-a",
     "members": [
       {
@@ -54,7 +54,7 @@
         "shiftOctaves": 0
       },
       {
-        "distance": 5.628,
+        "distance": 8.751,
         "key": "hit-b",
         "shiftOctaves": 0
       }
@@ -66,18 +66,18 @@
     {
       "key": "hit-a",
       "nearest": {
-        "distance": 0.192105,
+        "distance": 0.23763,
         "key": "hit-b"
       },
-      "pcmHash": "sha256:b0009cbb522e400cf8b7715214e38ebadbe21e976f9d31bcbc261a303a20e489"
+      "pcmHash": "sha256:aa829af484a017fbd48d08514bdd2b9153e4567abb8d3b859fff7805f520ea16"
     },
     {
       "key": "hit-b",
       "nearest": {
-        "distance": 0.192105,
+        "distance": 0.23763,
         "key": "hit-a"
       },
-      "pcmHash": "sha256:fa593fc019ead791b2563d0972ec24f118b175957d57cc81ac8e0db141acc978"
+      "pcmHash": "sha256:48c46c25ba2193bd39f7eacfed96702da6947af69a473a5d72614e835642a542"
     }
   ],
   "policy": {

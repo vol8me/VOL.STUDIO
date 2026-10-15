@@ -1,57 +1,172 @@
 {
-  "channels": 1,
-  "description": "Suya gömülen ağır araç: iri kabarcık gurultusu, yükselen kabarcık bulutu ve alçak su gövdesi.",
-  "durationSeconds": 1.9,
-  "layers": [
-    {
-      "gainDb": -9,
-      "name": "glug",
-      "source": {
-        "params": {
-          "damping": 1.1,
-          "radius": 9,
-          "rise": 0.35
-        },
-        "primitive": "source.bubble",
-        "version": 1
-      }
-    },
-    {
-      "gainDb": 0,
-      "name": "bubbles",
-      "resonators": [
+  "buses": {
+    "space": {
+      "effects": [
         {
           "params": {
-            "frequency": 1800,
-            "mode": "lowpass",
-            "q": 0.6
+            "amount": 0.3,
+            "damp": 0.8,
+            "decay": 0.9,
+            "preDelay": 0.012,
+            "roomSize": 0.6
           },
-          "primitive": "resonator.biquad",
+          "primitive": "effect.reverb",
           "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "channels": 1,
+  "description": "Batış: suya çarpma, boğuk su ve yükselen kabarcıklar.",
+  "durationSeconds": 2,
+  "effects": [
+    {
+      "params": {
+        "frequency": 34,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 180,
+        "gainDb": 3,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 6,
+        "mix": 0.5,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 5000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "sink-lp": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          1800
+        ],
+        [
+          0.5,
+          500
+        ],
+        [
+          1.9,
+          160
+        ]
+      ],
+      "version": 1
+    }
+  },
+  "layers": [
+    {
+      "gainDb": -13.75,
+      "mechanism": "pressure",
+      "name": "plunge",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -10
         }
       ],
       "source": {
         "params": {
-          "clustering": 0.4,
-          "damping": 1.5,
-          "levelSpread": 6,
-          "radius": 3.2,
-          "rate": 20,
-          "regularity": 0.25,
-          "rise": 0.5,
-          "sizeSpread": 0.7
+          "body": 0.95,
+          "bodyDecay": 0.7,
+          "bodyHz": 52,
+          "decay": 2,
+          "positive": 0.012,
+          "rise": 0.001
         },
-        "primitive": "source.bubbles",
+        "primitive": "source.pressure-wave",
         "version": 1
       }
     },
     {
-      "gainDb": -8,
-      "name": "body",
+      "gainDb": -16.93,
+      "mechanism": "pressure",
+      "name": "splash-body",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -12
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.3,
+          "bodyHz": 140,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.004,
+          "curve": "exponential",
+          "decay": 1.3,
+          "release": 0.3,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 1.7,
+      "gainDb": 2.46,
+      "mechanism": "noise",
+      "name": "splash",
       "resonators": [
         {
           "params": {
-            "frequency": 520,
+            "frequency": 900,
+            "mode": "bandpass",
+            "q": 0.5
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": {
+              "gesture": "sink-lp"
+            },
             "mode": "lowpass",
             "q": 0.8
           },
@@ -59,9 +174,140 @@
           "version": 1
         }
       ],
+      "role": "texture",
       "source": {
         "params": {
-          "color": "brown"
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.02,
+          "curve": "exponential",
+          "decay": 1.4,
+          "release": 0.3,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 1.7,
+      "gainDb": -24.54,
+      "mechanism": "fluid",
+      "name": "bubbles",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "clustering": 0.5,
+          "damping": 1,
+          "levelSpread": 10,
+          "radius": 6,
+          "rate": 60,
+          "regularity": 0,
+          "rise": 0.15,
+          "sizeSpread": 0.7
+        },
+        "primitive": "source.bubbles",
+        "version": 1
+      },
+      "startSeconds": 0.1
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.05,
+          "curve": "exponential",
+          "decay": 1.4,
+          "release": 0.3,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 1.5,
+      "gainDb": -16.54,
+      "mechanism": "fluid",
+      "name": "gurgle",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1200,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "bubblesPerPulse": 8,
+          "damping": 1,
+          "pulseRate": 3,
+          "radius": 9,
+          "rise": 0.15
+        },
+        "primitive": "source.gurgle",
+        "version": 1
+      },
+      "startSeconds": 0.3
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.01,
+          "curve": "exponential",
+          "decay": 1.4,
+          "release": 0.4,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "durationSeconds": 1.8,
+      "gainDb": 2.22,
+      "mechanism": "noise",
+      "name": "rumble",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 40,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 240,
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
         },
         "primitive": "source.noise",
         "version": 1
@@ -69,12 +315,16 @@
     }
   ],
   "master": {
-    "dcBlockHz": 25,
-    "fadeOutSeconds": 0.45,
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.25,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
     "normalize": "peak",
-    "peakDbfs": -4
+    "peakDbfs": -5
   },
   "sampleRate": 48000,
   "schema": "AcousticProgramV1",
-  "seed": 9173
+  "seed": 730203
 }

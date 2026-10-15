@@ -9,22 +9,26 @@
         "hash": "sha256:99368f9d8f469bcbe578ec2e8a4ebe9b64625f1ae8fd5e37923b5fc382c0796a",
         "path": "analyses/r-4d5bed44d03bfe6a.json"
       },
+      "r-7f150663e38d312f": {
+        "hash": "sha256:9eedb22f6dbad41863acf6ea67e127f6ea4f7e54d47c6382df30cd3b42fcb799",
+        "path": "analyses/r-7f150663e38d312f.json"
+      },
       "r-996c49c100f5eecd": {
         "hash": "sha256:0b53844fb29e61395683b62312d8411ee3f89eccbd8e905581c646fcb4a6bd2d",
         "path": "analyses/r-996c49c100f5eecd.json"
       }
     },
     "brief": {
-      "hash": "sha256:bcd7b9afd07ba27f6c403cba3598b2e7bd0ce848f1080fc09c099f1c7b7ddc78",
+      "hash": "sha256:f2246b4a6f11cd27e86a5f6f42eac44394ae86c0772841101b6e17e5f12d54ae",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:bcd7b9afd07ba27f6c403cba3598b2e7bd0ce848f1080fc09c099f1c7b7ddc78",
-      "hash": "sha256:4520944634a4ad18b1f77530565369887e0febd15f499b2c9f605d41ad361ab6",
+      "brief": "sha256:f2246b4a6f11cd27e86a5f6f42eac44394ae86c0772841101b6e17e5f12d54ae",
+      "hash": "sha256:5e049450caa942cd8662addea26c8f73c55b4396d014df7d5e2e8dd81b46b6f5",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:ef3e47b7e6843bb97c8ff2be4d81eb365f3482d9829db32020f01d8d00cab5d1",
+      "hash": "sha256:4e9825e66da4483d2838a0f41f1c5ca6fd31b489143f85532e1a00761d4b120e",
       "path": "games/vol-test/audio-manifests/sfx/steel/families/blast/blast-b.json"
     },
     "renders": {
@@ -36,20 +40,24 @@
         "hash": "sha256:0c80a05f9e54566ad46d558f56f055d3f658cf3fb95f643dcacae7aa1c86c90b",
         "path": "renders/r-4d5bed44d03bfe6a.json"
       },
+      "r-7f150663e38d312f": {
+        "hash": "sha256:a7ba39cc8193459490ebcaaa8a3ec8c04d026767d5fb69f69ef494c2db359b9a",
+        "path": "renders/r-7f150663e38d312f.json"
+      },
       "r-996c49c100f5eecd": {
         "hash": "sha256:6f7c67002faf89977fe24604876bbf8c791535a3664f75d0d29c27f293dec294",
         "path": "renders/r-996c49c100f5eecd.json"
       }
     },
     "selection": {
-      "hash": "sha256:f02995cf5f75fb9b2fd8f91aa5e42d78f5b9b07978039faa8732302331c873b1",
+      "hash": "sha256:b8dddd6634793a44106c46651ef92529471133e26981c19b4aefb899337fdfaf",
       "path": "selection.json"
     }
   },
   "jobId": "blast-b",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 16,
+  "revision": 22,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

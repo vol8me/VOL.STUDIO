@@ -1,47 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-4cb8cf7d88d860fa": {
-        "hash": "sha256:63f17d85e4b3950d32146886f2fd767b3334fe8080ec137dc2b10d109c6b1259",
-        "path": "analyses/r-4cb8cf7d88d860fa.json"
-      },
-      "r-5771d064ce5d6c17": {
-        "hash": "sha256:8a806f8d69c9bc9483b18b410c45ce0187276fb09ec4f58449f44be1f5a9a8dc",
-        "path": "analyses/r-5771d064ce5d6c17.json"
+      "r-5e9c5251603b0d0b": {
+        "hash": "sha256:3d5e869c23801e26f3c377ab36495968863f04bc4d309aa2373c7ea2a059842b",
+        "path": "analyses/r-5e9c5251603b0d0b.json"
       }
     },
     "brief": {
-      "hash": "sha256:3e0e7582e524b9737f3067c51fc0e266e58a096c11ef4014595e04826649339f",
+      "hash": "sha256:a36b8368453ffd48075f0d38da465c1fa62060d3d3a76a7600c04b007a188f60",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:3e0e7582e524b9737f3067c51fc0e266e58a096c11ef4014595e04826649339f",
-      "hash": "sha256:097d616d64ec9aa8a9e7d6ea7c8993f99025af92041ed62d0a2dd0e4375c8f39",
+      "brief": "sha256:a36b8368453ffd48075f0d38da465c1fa62060d3d3a76a7600c04b007a188f60",
+      "hash": "sha256:20b49fe97e279aba594586a522988fc617a395897ce455ee8b6cde100f72bda5",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:daeb7154640a0e28fd294fa330088b105f63eaf7bae90c8e2e45a83597fe33d6",
+      "hash": "sha256:91dc13fc1acdc1451e164f0188532c38e1792942afab07899d4cfc498d2ff83d",
       "path": "games/vol-test/audio-manifests/sfx/steel/boost.json"
     },
     "renders": {
-      "r-4cb8cf7d88d860fa": {
-        "hash": "sha256:1f7631e0eb63aafff4d2f2feca7fd8c5a1aadb0fa3058c3241c5491cbd376941",
-        "path": "renders/r-4cb8cf7d88d860fa.json"
-      },
-      "r-5771d064ce5d6c17": {
-        "hash": "sha256:08ecc20399054db06c04378e08e5d4deadccc5bf0a5c58b94c18c3936cd37243",
-        "path": "renders/r-5771d064ce5d6c17.json"
+      "r-5e9c5251603b0d0b": {
+        "hash": "sha256:34a51aad1867e310cefded0b2035a528f4bd165bd078435680705928fd42517f",
+        "path": "renders/r-5e9c5251603b0d0b.json"
       }
     },
     "selection": {
-      "hash": "sha256:9ea0959ab2fea9504d99d08b395edd91785f92a5def86c459fa75190cdc1f67c",
+      "hash": "sha256:9ab33ee49e54d5db836c3473c1b032728873acc627e076782aadb57bf0c0ab04",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-boost",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 14,
+  "revision": 64,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

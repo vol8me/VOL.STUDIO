@@ -1,25 +1,96 @@
 {
   "channels": 1,
-  "description": "Kuru mekanik servo; yalnız ilgili araç eylemi boyunca çalışır, ortam sesi ve müzik içermez.",
-  "durationSeconds": 4,
+  "description": "Taret servosu: dişli uğultusu ve hidrolik.",
+  "durationSeconds": 3.6,
+  "effects": [
+    {
+      "params": {
+        "frequency": 45,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 380,
+        "gainDb": 2,
+        "q": 0.9
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 6,
+        "mix": 0.5,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 6500,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
   "layers": [
     {
-      "gainDb": 0,
-      "mechanism": "mechanical",
-      "name": "worm-gear",
+      "gainDb": -8.88,
+      "mechanism": "motor",
+      "name": "gear",
       "resonators": [
         {
           "params": {
-            "frequency": 1800,
+            "frequency": 2400,
             "mode": "lowpass",
-            "q": 0.707
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.2,
+          "count": 19,
+          "harmonics": 12,
+          "imbalance": 0.2,
+          "load": 0.6,
+          "mechanism": "gear",
+          "noise": 0.12,
+          "rpm": 1800,
+          "tilt": 0.35
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -3.84,
+      "mechanism": "noise",
+      "name": "hum",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 190,
+            "mode": "bandpass",
+            "q": 1.4
           },
           "primitive": "resonator.biquad",
           "version": 1
         },
         {
           "params": {
-            "frequency": 1800,
+            "frequency": 500,
             "mode": "lowpass",
             "q": 0.707
           },
@@ -27,48 +98,85 @@
           "version": 1
         }
       ],
-      "role": "mechanism",
+      "role": "body",
       "source": {
         "params": {
-          "buckleDecay": 0.0024,
-          "rate": 60,
-          "tension": 0.37
+          "color": "pink"
         },
-        "primitive": "exciter.membrane",
+        "primitive": "source.noise",
         "version": 1
       }
     },
     {
-      "gainDb": -28,
-      "mechanism": "mechanical",
-      "name": "servo-body",
-      "role": "tonal",
+      "gainDb": -10.99,
+      "mechanism": "noise",
+      "name": "hydraulic",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 120,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1100,
+            "mode": "lowpass",
+            "q": 0.7
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
       "source": {
         "params": {
-          "bearing": 0,
-          "count": 20,
-          "harmonics": 6,
-          "imbalance": 0,
-          "load": 0.2,
-          "mechanism": "gear",
-          "noise": 0,
-          "rpm": 1800,
-          "tilt": 0.9
+          "color": "pink"
         },
-        "primitive": "source.machine",
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -8.37,
+      "mechanism": "noise",
+      "name": "sub",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 70,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
+      "source": {
+        "params": {
+          "color": "brown"
+        },
+        "primitive": "source.noise",
         "version": 1
       }
     }
   ],
   "master": {
-    "dcBlockHz": 25,
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
     "loop": {
-      "crossfadeSeconds": 1
+      "crossfadeSeconds": 0.3
     },
     "normalize": "peak",
-    "peakDbfs": -7
+    "peakDbfs": -9
   },
   "sampleRate": 48000,
   "schema": "AcousticProgramV1",
-  "seed": 8122
+  "seed": 730104
 }

@@ -5,7 +5,7 @@
       "analyzerVersion": 1,
       "dc": {
         "channelOffset": [
-          0.00017867620491529115
+          -0.000027660240099888762
         ]
       },
       "defects": {
@@ -23,55 +23,55 @@
       },
       "format": {
         "channels": 1,
-        "durationSeconds": 0.44733333333333336,
-        "frames": 21472,
+        "durationSeconds": 0.6973333333333334,
+        "frames": 33472,
         "sampleRate": 48000
       },
       "level": {
         "channelPeakDbfs": [
-          -4.98006218258345
+          -4.132245952294696
         ],
         "channelRmsDbfs": [
-          -23.95156672397213
+          -21.655742229370766
         ],
-        "crestFactorDb": 18.971504541388683,
-        "integratedLufs": -25.24527501003081,
-        "maxMomentaryLufs": -25.24527501003081,
-        "rmsDbfs": -23.95156672397213,
-        "samplePeakDbfs": -4.98006218258345,
-        "truePeakDbtp": -4.98006218258345
+        "crestFactorDb": 17.52349627707607,
+        "integratedLufs": -23.421806381200465,
+        "maxMomentaryLufs": -20.61038492736339,
+        "rmsDbfs": -21.655742229370766,
+        "samplePeakDbfs": -4.132245952294696,
+        "truePeakDbtp": -4.1231995149365614
       },
       "measuredFrom": "decoded-encoded",
       "schema": "AudioAnalysisReportV1",
       "spectral": {
         "bandsDb": {
-          "air": -79.13946357418742,
-          "high": -55.80155313824001,
-          "low": -29.624749849187726,
-          "mid": -31.80132743751851,
-          "sub": -29.434492209143666
+          "air": -50.874922229627956,
+          "high": -41.02631927209286,
+          "low": -28.493601367705118,
+          "mid": -28.427982198283075,
+          "sub": -25.39838352748813
         },
-        "centroidHz": 314.7951760220281,
-        "flatness": 1.5669486492615514e-7,
-        "peakHz": 23.4375,
-        "rolloff85Hz": 796.875
+        "centroidHz": 325.0920903524826,
+        "flatness": 0.000006526042999248938,
+        "peakHz": 70.3125,
+        "rolloff85Hz": 585.9375
       },
       "stereo": null,
       "temporal": {
-        "activeSeconds": 0.23,
-        "attackSeconds": 0,
-        "decay40Seconds": 0.16,
+        "activeSeconds": 0.68,
+        "attackSeconds": 0.01,
+        "decay40Seconds": 0.61,
         "leadingSilenceSeconds": 0,
-        "peakTimeSeconds": 0,
-        "temporalCentroidSeconds": 0.03172073171040462,
-        "trailingSilenceSeconds": 0.26733333333333337
+        "peakTimeSeconds": 0.01,
+        "temporalCentroidSeconds": 0.03637185776399455,
+        "trailingSilenceSeconds": 0.03733333333333333
       }
     },
-    "sourceRecordHash": "sha256:455ba31c0b631caa8f7ed5530f743bcfcc084aaa3a360bbb69dc28909e2242d5"
+    "sourceRecordHash": "sha256:1d709e0deef2d9831cc931dbf9fb9bb934a6c2786492fa816a65e58f685297a3"
   },
   "asset": {
-    "bytes": 6035,
-    "encodedHash": "sha256:da3ac3d0ff57eb3f29500b545e03ae2d058c6a7b58ca2b0fc07806abc2286e22",
+    "bytes": 9585,
+    "encodedHash": "sha256:e1baefc78b2b17fbd31f114db1a01144b636ce5a2b12fa0e8c9cabe329676b9f",
     "format": "ogg-vorbis",
     "path": "games/vol-test/public/assets/audio/sfx/steel/families/crash/soft-a.ogg"
   },
@@ -86,11 +86,11 @@
         "crash"
       ],
       "durationSeconds": {
-        "max": 0.5,
-        "min": 0.4
+        "max": 0.95,
+        "min": 0.55
       },
       "id": "vt-hardsteel-crash-soft-a",
-      "intent": "Ağır araç teması: kısa zırh plakası darbesi, sıkı şasi rezonansı ve kuru sürtünme. Uzun ortam kuyruğu yok. Varyant soft-a (intensity:soft, rarity:common).",
+      "intent": "Engel çarpması: ağır gövde, plaka çınlaması ve savrulan çakıl. Varyant soft-a (intensity:soft, rarity:common).",
       "kind": "acoustic",
       "placement": "positional",
       "provenance": {
@@ -99,9 +99,9 @@
       },
       "schema": "AudioBriefV1",
       "subtype": "sfx",
-      "title": "VOL.TEST kuru mekanik crash — soft-a"
+      "title": "VOL.TEST crash — soft-a"
     },
-    "hash": "sha256:71b77dce3fa96f6617baf8196b2ce8a56fc53c345f5283fd5b8bfbf9e8562683",
+    "hash": "sha256:c3118315933fb9fdbfdf822e5605758dd727624568390fb6788e4367797e2c15",
     "kind": "acoustic",
     "schema": "AudioBriefV1"
   },
@@ -116,18 +116,18 @@
       "-bitexact"
     ],
     "codec": "libvorbis",
-    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
     "libraries": {
-      "libavcodec": "62.28.103",
-      "libavformat": "62.12.103",
-      "libavutil": "60.26.103"
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
     },
     "quality": 7,
     "tool": "ffmpeg",
     "unreported": [
       "libvorbis"
     ],
-    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
   },
   "encoding": {
     "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
@@ -138,11 +138,36 @@
     "package": "@volstudio/audio-synth",
     "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
     "renderSurface": {
-      "hash": "sha256:935982a1539d1bd75bbda14aee2a396264c918580eab8ba2be66e2ad3e6dfa38",
+      "hash": "sha256:0959866fcf698943960d58649a6e313d275b0306ea7201309e3d9460ef304261",
       "nodes": [
         {
           "hash": "sha256:cbc3afbc28bfe11e00ccbf44986900ef177c65df6d1daf3c435deec7cd4b31c0",
           "id": "articulation.envelope",
+          "version": 1
+        },
+        {
+          "hash": "sha256:73c932af5fb3389065aa8cf48494308d8bd2e21e5df0e7dda63201f24c11c42b",
+          "id": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:7cda5a83fd27a1f1c041ff57e691885d70fa5a84dfdf29d555c60cf3d5e212be",
+          "id": "effect.eq-shelf",
+          "version": 1
+        },
+        {
+          "hash": "sha256:7e3ae986781771d633de1f73e9d814b4e9f542fdb2e0ce6eed209e20dd989fe0",
+          "id": "effect.reverb",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07",
+          "id": "effect.saturation",
           "version": 1
         },
         {
@@ -161,8 +186,18 @@
           "version": 1
         },
         {
+          "hash": "sha256:409d5e0697cf0e2444ca3ba4939b5fcb01c58f4fabbf07c1294b73b02ce9a52d",
+          "id": "source.contact",
+          "version": 1
+        },
+        {
           "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
           "id": "source.noise",
+          "version": 1
+        },
+        {
+          "hash": "sha256:2356f7e48539c60b39edfbd3ca1287f94e8902e6d4bbda072d5476c6ca7e02a3",
+          "id": "source.pressure-wave",
           "version": 1
         }
       ],
@@ -199,53 +234,131 @@
   },
   "program": {
     "document": {
+      "buses": {
+        "space": {
+          "effects": [
+            {
+              "params": {
+                "amount": 0.28,
+                "damp": 0.55,
+                "decay": 0.7,
+                "preDelay": 0.012,
+                "roomSize": 0.55
+              },
+              "primitive": "effect.reverb",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 110,
+                "order": 2,
+                "response": "highpass"
+              },
+              "primitive": "effect.eq-pass",
+              "version": 1
+            }
+          ]
+        }
+      },
       "channels": 1,
-      "description": "Ağır araç teması: kısa zırh plakası darbesi, sıkı şasi rezonansı ve kuru sürtünme. Uzun ortam kuyruğu yok.",
-      "durationSeconds": 0.45,
+      "description": "Engel çarpması: ağır gövde, plaka çınlaması ve savrulan çakıl.",
+      "durationSeconds": 0.7,
+      "effects": [
+        {
+          "params": {
+            "frequency": 34,
+            "order": 3,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "edge": "low",
+            "frequency": 100,
+            "gainDb": -2
+          },
+          "primitive": "effect.eq-shelf",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 300,
+            "gainDb": 2.5,
+            "q": 0.8
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1700,
+            "gainDb": 3,
+            "q": 0.7
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "character": "tanh",
+            "driveDb": 5,
+            "mix": 0.75,
+            "outputDb": 0
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        },
+        {
+          "params": {
+            "edge": "high",
+            "frequency": 4500,
+            "gainDb": 2.5
+          },
+          "primitive": "effect.eq-shelf",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 11000,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
       "layers": [
         {
-          "articulation": {
-            "params": {
-              "attack": 0.003,
-              "curve": "cosine",
-              "decay": 0.32,
-              "hold": 0.008,
-              "release": 0.03,
-              "sustainLevel": 0
-            },
-            "primitive": "articulation.envelope",
-            "version": 1
-          },
-          "gainDb": -15,
-          "mechanism": "mechanical",
+          "gainDb": -29.57,
+          "mechanism": "impact",
           "name": "plate",
           "resonators": [
             {
               "params": {
-                "brightness": 0.45,
-                "damping": 0.6,
-                "decay": 0.333795,
-                "frequency": 828.789,
+                "brightness": 0.5,
+                "damping": 0.7,
+                "decay": 0.360007,
+                "frequency": 592.289,
+                "inharmonicity": 0.002,
                 "layout": "bar",
-                "modes": 8
+                "modes": 10
               },
               "primitive": "resonator.modal",
               "version": 1
-            },
-            {
-              "params": {
-                "frequency": 2800,
-                "mode": "lowpass",
-                "q": 0.707
-              },
-              "primitive": "resonator.biquad",
-              "version": 1
             }
           ],
-          "role": "transient",
+          "role": "detail",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -14
+            }
+          ],
           "source": {
             "params": {
-              "contactTime": 0.0023,
+              "contactTime": 0.0008,
               "roughness": 0.2
             },
             "primitive": "exciter.impact",
@@ -253,75 +366,82 @@
           }
         },
         {
-          "articulation": {
-            "params": {
-              "attack": 0.003,
-              "curve": "cosine",
-              "decay": 0.32,
-              "hold": 0.008,
-              "release": 0.03,
-              "sustainLevel": 0
-            },
-            "primitive": "articulation.envelope",
-            "version": 1
-          },
-          "gainDb": -27,
-          "mechanism": "mechanical",
+          "gainDb": -12.67,
+          "mechanism": "pressure",
           "name": "body",
-          "resonators": [
+          "role": "body",
+          "sends": [
             {
-              "params": {
-                "brightness": 0.45,
-                "damping": 0.6,
-                "decay": 0.4,
-                "frequency": 520,
-                "layout": "bar",
-                "modes": 8
-              },
-              "primitive": "resonator.modal",
-              "version": 1
-            },
-            {
-              "params": {
-                "frequency": 2800,
-                "mode": "lowpass",
-                "q": 0.707
-              },
-              "primitive": "resonator.biquad",
-              "version": 1
+              "bus": "space",
+              "levelDb": -10
             }
           ],
-          "role": "transient",
           "source": {
             "params": {
-              "contactTime": 0.004,
-              "roughness": 0.1
+              "body": 0.9,
+              "bodyDecay": 0.3,
+              "bodyHz": 72,
+              "decay": 1.8,
+              "positive": 0.007,
+              "rise": 0.0002
             },
-            "primitive": "exciter.impact",
+            "primitive": "source.pressure-wave",
             "version": 1
-          },
-          "startSeconds": 0.006
+          }
+        },
+        {
+          "gainDb": -14.3,
+          "mechanism": "pressure",
+          "name": "punch",
+          "role": "body",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -12
+            }
+          ],
+          "source": {
+            "params": {
+              "body": 0.85,
+              "bodyDecay": 0.18,
+              "bodyHz": 170,
+              "decay": 1.2,
+              "positive": 0.003,
+              "rise": 0.0003
+            },
+            "primitive": "source.pressure-wave",
+            "version": 1
+          }
         },
         {
           "articulation": {
             "params": {
-              "attack": 0.004,
-              "curve": "cosine",
-              "decay": 0.16,
-              "release": 0.03,
+              "attack": 0.0008,
+              "curve": "exponential",
+              "decay": 0.25,
+              "release": 0.01,
               "sustainLevel": 0
             },
             "primitive": "articulation.envelope",
             "version": 1
           },
-          "gainDb": 0,
-          "mechanism": "mechanical",
+          "gainDb": -2.8,
+          "mechanism": "noise",
           "name": "grit",
           "resonators": [
             {
               "params": {
-                "frequency": 871.947,
-                "mode": "lowpass",
+                "frequency": 707.991,
+                "mode": "bandpass",
+                "q": 0.5
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 250,
+                "mode": "highpass",
                 "q": 0.707
               },
               "primitive": "resonator.biquad",
@@ -329,40 +449,65 @@
             }
           ],
           "role": "transient",
+          "sends": [
+            {
+              "bus": "space",
+              "levelDb": -16
+            }
+          ],
           "source": {
             "params": {
-              "color": "pink"
+              "color": "white"
             },
             "primitive": "source.noise",
             "version": 1
           }
+        },
+        {
+          "gainDb": -74.26,
+          "mechanism": "mechanical",
+          "name": "debris",
+          "role": "mechanism",
+          "source": {
+            "params": {
+              "debris": 0.9,
+              "mass": 40,
+              "materialA": "metal",
+              "materialB": "stone",
+              "size": 0.9,
+              "velocity": 2
+            },
+            "primitive": "source.contact",
+            "version": 1
+          },
+          "startSeconds": 0.004
         }
       ],
       "master": {
-        "dcBlockHz": 25,
-        "fadeInSeconds": 0.001,
-        "fadeOutSeconds": 0.03,
+        "dcBlockHz": 20,
+        "fadeInSeconds": 0.0005,
+        "fadeOutSeconds": 0.1,
         "normalize": "peak",
-        "peakDbfs": -5
+        "peakDbfs": -4
       },
       "sampleRate": 48000,
       "schema": "AcousticProgramV1",
-      "seed": 8204
+      "seed": 8404
     },
-    "hash": "sha256:9d39cbf505b7bb03cafe4d635f0ddb30a37cabd900733d13ec31b1c44d381c05",
+    "hash": "sha256:1e0b3b49e26731aac8b9cccabaaf9c6244bf35298880f767d37ef61f256628ae",
     "schema": "AcousticProgramV1"
   },
   "render": {
     "pcm": {
       "channels": 1,
       "format": "f32le-interleaved-clamped",
-      "frames": 21600,
-      "hash": "sha256:8282ca80ed4f72f1f899088288d9ac4f5c782e5403236e3a59757d4d04379d43",
+      "frames": 33600,
+      "hash": "sha256:b96cbe17b7988f940c61193286406b6cf9382dac3444c1558e54e230c9fc1368",
       "sampleRate": 48000
     },
-    "renderId": "r-62b60d4055ab025e",
+    "renderId": "r-f87fa2dad09ddc28",
     "rendererVersion": 2,
-    "seed": 8204
+    "seed": 8404
   },
   "schema": "AudioAssetManifestV1"
 }

@@ -8,19 +8,23 @@
       "r-877c022ba60ed15a": {
         "hash": "sha256:abfd03cbc3fbeb66ed6304f449b73e5762a1c315e6685d3c231828d02566dc41",
         "path": "analyses/r-877c022ba60ed15a.json"
+      },
+      "r-e1c5903ebea2b4f8": {
+        "hash": "sha256:63ff1afdedf57199e224ad70b4adbeb217cc7d7c18b70bb2722b4507265ec733",
+        "path": "analyses/r-e1c5903ebea2b4f8.json"
       }
     },
     "brief": {
-      "hash": "sha256:dc30c6274e9f9bebbc2e55938f1044def1a61468bf78b8231240c33d042f7970",
+      "hash": "sha256:da81c6d5e5ec52bdd279b5ca9ca9a16fc513f87285b54bd0a8b6a7954a371631",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:dc30c6274e9f9bebbc2e55938f1044def1a61468bf78b8231240c33d042f7970",
-      "hash": "sha256:f0888e22b25df3ee4236699a8a7890db6c712e5011e4f8a8d961bfe0b0380ce7",
+      "brief": "sha256:da81c6d5e5ec52bdd279b5ca9ca9a16fc513f87285b54bd0a8b6a7954a371631",
+      "hash": "sha256:6e9099c0d769b39f19013dce9131147c8b0273954dd34a5ca18135761f6a88e5",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:6f3f2185de3a49929e18ea53306970bdc6a06abd1cc7144d96fbf324249a940b",
+      "hash": "sha256:fed0edfc880acc4dae4ab5b0a54e26145d20c3413660fd8144d6df92bdf94616",
       "path": "games/vol-test/audio-manifests/sfx/steel/families/cannon/cannon-d.json"
     },
     "renders": {
@@ -31,17 +35,21 @@
       "r-877c022ba60ed15a": {
         "hash": "sha256:86985853ea27455b8bb5e2718d66fe01b8d566e26096eabbbe7cb21dd4930b97",
         "path": "renders/r-877c022ba60ed15a.json"
+      },
+      "r-e1c5903ebea2b4f8": {
+        "hash": "sha256:c9acae563832ad20cbdf8d35ae6ba2da7ff6cb70a52e77f5e8b9ab68e5bc706a",
+        "path": "renders/r-e1c5903ebea2b4f8.json"
       }
     },
     "selection": {
-      "hash": "sha256:8786ab9a138b3b1c6bbcc0f40ccf11f9afcb00042a46fc049567a9367eb089f5",
+      "hash": "sha256:fd1478fcc17a1d04036b20eb2ee0f16e156cfa4789e67b58f367c970d6e71d05",
       "path": "selection.json"
     }
   },
   "jobId": "cannon-d",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 17,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

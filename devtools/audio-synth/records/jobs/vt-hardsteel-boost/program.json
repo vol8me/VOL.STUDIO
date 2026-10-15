@@ -1,17 +1,56 @@
 {
   "channels": 1,
-  "description": "Kuru mekanik boost; yalnız ilgili araç eylemi boyunca çalışır, ortam sesi ve müzik içermez.",
-  "durationSeconds": 4,
+  "description": "Atılım: hava kükremesi, türbin ve alçak itki.",
+  "durationSeconds": 3.6,
+  "effects": [
+    {
+      "params": {
+        "frequency": 38,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 220,
+        "gainDb": 3,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 9,
+        "mix": 0.6,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 7000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
   "layers": [
     {
-      "gainDb": 0,
-      "mechanism": "mechanical",
-      "name": "drive-ratchet",
+      "gainDb": -0.61,
+      "mechanism": "airflow",
+      "name": "roar",
       "resonators": [
         {
           "params": {
-            "frequency": 1800,
-            "mode": "lowpass",
+            "frequency": 100,
+            "mode": "highpass",
             "q": 0.707
           },
           "primitive": "resonator.biquad",
@@ -20,6 +59,110 @@
         {
           "params": {
             "frequency": 1800,
+            "mode": "lowpass",
+            "q": 0.5
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "aperture": 40,
+          "cavity": 2,
+          "cavityMix": 0.3,
+          "pressure": 0.92,
+          "sibilance": 0.1,
+          "tilt": -0.5,
+          "turbulence": 1
+        },
+        "primitive": "source.airflow",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -4.66,
+      "mechanism": "noise",
+      "name": "body",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 90,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1300,
+            "mode": "lowpass",
+            "q": 0.6
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "texture",
+      "source": {
+        "params": {
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -17.98,
+      "mechanism": "motor",
+      "name": "turbine",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 2800,
+            "mode": "lowpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "tonal",
+      "source": {
+        "params": {
+          "bearing": 0.1,
+          "count": 13,
+          "harmonics": 12,
+          "imbalance": 0.2,
+          "load": 0.9,
+          "mechanism": "fan",
+          "noise": 0.3,
+          "rpm": 5200,
+          "tilt": 0.35
+        },
+        "primitive": "source.machine",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -21.61,
+      "mechanism": "debris",
+      "name": "crackle",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 150,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 2500,
             "mode": "lowpass",
             "q": 0.707
           },
@@ -27,48 +170,58 @@
           "version": 1
         }
       ],
-      "role": "mechanism",
+      "role": "detail",
       "source": {
         "params": {
-          "buckleDecay": 0.0032,
-          "rate": 80,
-          "tension": 0.5
+          "clustering": 0.6,
+          "event": "pop",
+          "levelSpread": 12,
+          "pitch": 0.6,
+          "rate": 70,
+          "regularity": 0,
+          "sizeSpread": 0.6
         },
-        "primitive": "exciter.membrane",
+        "primitive": "source.micro-events",
         "version": 1
       }
     },
     {
-      "gainDb": -25,
-      "mechanism": "mechanical",
-      "name": "loaded-gears",
-      "role": "tonal",
+      "gainDb": -6.34,
+      "mechanism": "noise",
+      "name": "sub",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 90,
+            "mode": "lowpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "body",
       "source": {
         "params": {
-          "bearing": 0.02,
-          "count": 12,
-          "harmonics": 10,
-          "imbalance": 0.01,
-          "load": 0.9,
-          "mechanism": "gear",
-          "noise": 0.03,
-          "rpm": 3600,
-          "tilt": 0.8
+          "color": "brown"
         },
-        "primitive": "source.machine",
+        "primitive": "source.noise",
         "version": 1
       }
     }
   ],
   "master": {
-    "dcBlockHz": 25,
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
     "loop": {
-      "crossfadeSeconds": 1
+      "crossfadeSeconds": 0.3
     },
     "normalize": "peak",
-    "peakDbfs": -7
+    "peakDbfs": -8
   },
   "sampleRate": 48000,
   "schema": "AcousticProgramV1",
-  "seed": 8123
+  "seed": 730107
 }

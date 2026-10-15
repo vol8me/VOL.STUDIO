@@ -1,5 +1,5 @@
 {
-  "programHash": "sha256:5ddd5a3680fce9906b093de2803b777d0b301e4b849620a6d319abf29401dbca",
+  "programHash": "sha256:bbf2488a4a29a5fcd100d7c899b3e318861a975abf6bf5b4eb0e2c7aa571613b",
   "schema": "ProgramOriginV1",
   "source": {
     "kind": "treatment",
@@ -11,9 +11,9 @@
     "source": {
       "assetId": "vt-hardsteel-blast-blast-b",
       "manifest": "games/vol-test/audio-manifests/sfx/steel/families/blast/blast-b.json",
-      "pcmHash": "sha256:e6c729f7222ac4ee36c20bbc55da60993d8eb6ec346899ee25cee21df4853349",
-      "programHash": "sha256:4520944634a4ad18b1f77530565369887e0febd15f499b2c9f605d41ad361ab6",
-      "seed": 8202
+      "pcmHash": "sha256:6dac0152fd78d48c81227c4170a3b1670c255dbc273c12ec279180685e23164a",
+      "programHash": "sha256:5e049450caa942cd8662addea26c8f73c55b4396d014df7d5e2e8dd81b46b6f5",
+      "seed": 8402
     }
   }
 }

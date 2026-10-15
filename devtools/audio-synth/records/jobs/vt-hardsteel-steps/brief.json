@@ -1,0 +1,20 @@
+{
+  "assetClass": "sfx",
+  "channels": 1,
+  "durationSeconds": {
+    "max": 4.5,
+    "min": 2.88
+  },
+  "id": "vt-hardsteel-steps",
+  "intent": "Mech yürüyüşü: ağır, alçak ayak basışları ve hidrolik uğultusu.",
+  "kind": "acoustic",
+  "loop": true,
+  "placement": "positional",
+  "provenance": {
+    "author": "agent",
+    "by": "claude"
+  },
+  "schema": "AudioBriefV1",
+  "subtype": "sfx",
+  "title": "VOL.TEST — steps"
+}

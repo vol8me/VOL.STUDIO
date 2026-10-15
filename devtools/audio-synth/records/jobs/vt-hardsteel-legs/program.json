@@ -1,28 +1,340 @@
 {
   "channels": 1,
-  "description": "Kuru mekanik örümcek bacak adımı: sivri metal uç tıkırtısı ve hafif eklem sürtmesi.",
-  "durationSeconds": 4,
+  "description": "Bacaklı yürüyücü: ağır hidrolik adımlar, servo ve eklem gıcırtısı.",
+  "durationSeconds": 3.8,
+  "effects": [
+    {
+      "params": {
+        "frequency": 40,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 300,
+        "gainDb": 2.5,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 7,
+        "mix": 0.5,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 7500,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
   "layers": [
     {
-      "gainDb": 0,
+      "gainDb": -11.88,
+      "mechanism": "pressure",
+      "name": "st-th0",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.16,
+          "bodyHz": 88,
+          "decay": 1.4,
+          "positive": 0.004,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.3
+    },
+    {
+      "gainDb": -11.22,
+      "mechanism": "pressure",
+      "name": "st-pu0",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.1,
+          "bodyHz": 202.4,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 0.3
+    },
+    {
+      "gainDb": -35.83,
       "mechanism": "mechanical",
-      "name": "tips",
+      "name": "st-ct0",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.4,
+          "mass": 1.8,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.35,
+          "velocity": 1.6
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 0.303
+    },
+    {
+      "gainDb": -12.01,
+      "mechanism": "pressure",
+      "name": "st-th1",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.16,
+          "bodyHz": 100,
+          "decay": 1.4,
+          "positive": 0.004,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1
+    },
+    {
+      "gainDb": -10.48,
+      "mechanism": "pressure",
+      "name": "st-pu1",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.1,
+          "bodyHz": 230,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1
+    },
+    {
+      "gainDb": -32.77,
+      "mechanism": "mechanical",
+      "name": "st-ct1",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.4,
+          "mass": 1.8,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.35,
+          "velocity": 1.6
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 1.003
+    },
+    {
+      "gainDb": -11.99,
+      "mechanism": "pressure",
+      "name": "st-th2",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.16,
+          "bodyHz": 112.00000000000001,
+          "decay": 1.4,
+          "positive": 0.004,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1.7
+    },
+    {
+      "gainDb": -9.87,
+      "mechanism": "pressure",
+      "name": "st-pu2",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.1,
+          "bodyHz": 250,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 1.7
+    },
+    {
+      "gainDb": -35.07,
+      "mechanism": "mechanical",
+      "name": "st-ct2",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.4,
+          "mass": 1.8,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.35,
+          "velocity": 1.6
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 1.7029999999999998
+    },
+    {
+      "gainDb": -11.97,
+      "mechanism": "pressure",
+      "name": "st-th3",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.16,
+          "bodyHz": 94,
+          "decay": 1.4,
+          "positive": 0.004,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.3999999999999995
+    },
+    {
+      "gainDb": -10.87,
+      "mechanism": "pressure",
+      "name": "st-pu3",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.1,
+          "bodyHz": 216.2,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 2.3999999999999995
+    },
+    {
+      "gainDb": -33.58,
+      "mechanism": "mechanical",
+      "name": "st-ct3",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.4,
+          "mass": 1.8,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.35,
+          "velocity": 1.6
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 2.4029999999999996
+    },
+    {
+      "gainDb": -12.02,
+      "mechanism": "pressure",
+      "name": "st-th4",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.9,
+          "bodyDecay": 0.16,
+          "bodyHz": 106,
+          "decay": 1.4,
+          "positive": 0.004,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 3.0999999999999996
+    },
+    {
+      "gainDb": -10.07,
+      "mechanism": "pressure",
+      "name": "st-pu4",
+      "role": "body",
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.1,
+          "bodyHz": 243.8,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      },
+      "startSeconds": 3.0999999999999996
+    },
+    {
+      "gainDb": -35.91,
+      "mechanism": "mechanical",
+      "name": "st-ct4",
+      "role": "mechanism",
+      "source": {
+        "params": {
+          "debris": 0.4,
+          "mass": 1.8,
+          "materialA": "metal",
+          "materialB": "stone",
+          "size": 0.35,
+          "velocity": 1.6
+        },
+        "primitive": "source.contact",
+        "version": 1
+      },
+      "startSeconds": 3.1029999999999998
+    },
+    {
+      "gainDb": -18.87,
+      "mechanism": "motor",
+      "name": "servo",
       "resonators": [
         {
           "params": {
-            "brightness": 0.45,
-            "damping": 0.7,
-            "decay": 0.05,
-            "frequency": 1450,
-            "layout": "bar",
-            "modes": 8
-          },
-          "primitive": "resonator.modal",
-          "version": 1
-        },
-        {
-          "params": {
-            "frequency": 3400,
+            "frequency": 1500,
             "mode": "lowpass",
             "q": 0.707
           },
@@ -30,27 +342,42 @@
           "version": 1
         }
       ],
-      "role": "mechanism",
+      "role": "tonal",
       "source": {
         "params": {
-          "buckleDecay": 0.009,
-          "rate": 9,
-          "tension": 0.62
+          "bearing": 0.1,
+          "count": 17,
+          "harmonics": 8,
+          "imbalance": 0.2,
+          "load": 0.5,
+          "mechanism": "gear",
+          "noise": 0.1,
+          "rpm": 1500,
+          "tilt": 0.5
         },
-        "primitive": "exciter.membrane",
+        "primitive": "source.machine",
         "version": 1
       }
     },
     {
-      "gainDb": -16,
-      "mechanism": "mechanical",
-      "name": "joints",
+      "gainDb": -12.89,
+      "mechanism": "noise",
+      "name": "hydraulic",
       "resonators": [
         {
           "params": {
-            "frequency": 2200,
-            "mode": "bandpass",
-            "q": 1.1
+            "frequency": 200,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 1600,
+            "mode": "lowpass",
+            "q": 0.6
           },
           "primitive": "resonator.biquad",
           "version": 1
@@ -59,12 +386,35 @@
       "role": "texture",
       "source": {
         "params": {
-          "granularity": 18,
+          "color": "pink"
+        },
+        "primitive": "source.noise",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -22.52,
+      "mechanism": "friction",
+      "name": "creak",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 520,
+            "mode": "bandpass",
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "detail",
+      "source": {
+        "params": {
+          "granularity": 2,
           "material": "metal",
-          "pressure": 0.3,
-          "rolling": 0.2,
-          "roughness": 0.55,
-          "speed": 0.7
+          "pressure": 0.7,
+          "roughness": 0.6,
+          "speed": 0.5
         },
         "primitive": "source.friction",
         "version": 1
@@ -72,14 +422,17 @@
     }
   ],
   "master": {
-    "dcBlockHz": 25,
+    "dcBlockHz": 20,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
     "loop": {
-      "crossfadeSeconds": 1
+      "crossfadeSeconds": 0.3
     },
     "normalize": "peak",
-    "peakDbfs": -8
+    "peakDbfs": -7
   },
   "sampleRate": 48000,
   "schema": "AcousticProgramV1",
-  "seed": 8410
+  "seed": 730102
 }

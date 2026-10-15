@@ -6,11 +6,11 @@
     "brake"
   ],
   "durationSeconds": {
-    "max": 0.45,
-    "min": 0.35000000000000003
+    "max": 0.65,
+    "min": 0.4
   },
   "id": "vt-hardsteel-brake-brake-b",
-  "intent": "Fren kilidi: kuru palet sıyrılması ve kısa mekanik kilit; pnömatik ortam tıslaması yok. Varyant brake-b (weight:heavy).",
+  "intent": "Ağır fren: gövdeli metal-toprak sürtünmesi, alçak gümbürtü ve kısa plaka sızlaması. Varyant brake-b (weight:heavy).",
   "kind": "acoustic",
   "placement": "positional",
   "provenance": {
@@ -19,5 +19,5 @@
   },
   "schema": "AudioBriefV1",
   "subtype": "sfx",
-  "title": "VOL.TEST kuru mekanik brake — brake-b"
+  "title": "VOL.TEST brake — brake-b"
 }

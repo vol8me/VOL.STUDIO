@@ -1,39 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-40a509caf9125478": {
-        "hash": "sha256:eaa3bcae8d3ba1227e31957422c563359ecf5ab36d7a4f76bc30713b9bbf7723",
-        "path": "analyses/r-40a509caf9125478.json"
+      "r-dbe978f8a82f1d19": {
+        "hash": "sha256:5a524a7df49dcb8f1d1a490fc5a8c9ff5be2e6df5cf3d182f5a268e88840fd0b",
+        "path": "analyses/r-dbe978f8a82f1d19.json"
       }
     },
     "brief": {
-      "hash": "sha256:7b2f7662fd005b9960346563103f5f26319243914de9d49b5637d1bc3ce5fce1",
+      "hash": "sha256:37aabe4773ed81393561a370caf4a062a08c70373c1040a4fa50ca390c8ea776",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:7b2f7662fd005b9960346563103f5f26319243914de9d49b5637d1bc3ce5fce1",
-      "hash": "sha256:1d973652c39940b6f3796b578d846e81cd595c4b7adbfa1e38ae08c55647c61e",
+      "brief": "sha256:37aabe4773ed81393561a370caf4a062a08c70373c1040a4fa50ca390c8ea776",
+      "hash": "sha256:a3a6b3eb920b304edefd1d2155b3abdb6ac81f80cea751c485265d7234589633",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:8172a3ddbfe4e32d5d556490089c031e150716072c9b31d9d2f1df6292ec9076",
+      "hash": "sha256:a5c56a87a5e3b44622011c0db0239fee4010e64057d23cc14cbb0b19ca8ca00a",
       "path": "games/vol-test/audio-manifests/sfx/steel/shot-plasma.json"
     },
     "renders": {
-      "r-40a509caf9125478": {
-        "hash": "sha256:b9d8434464ff9f688f363feae3b1ec9ea55d87ed48ef65fd54c2d205af7e509d",
-        "path": "renders/r-40a509caf9125478.json"
+      "r-dbe978f8a82f1d19": {
+        "hash": "sha256:948ea57c315f67806432b95ef8a5ef070ebd31f813d59853de7a9679de126e61",
+        "path": "renders/r-dbe978f8a82f1d19.json"
       }
     },
     "selection": {
-      "hash": "sha256:b606d6ca53fac01a243d77dad7f28ff35b72f8815f454b0a9f64717a63b21ed1",
+      "hash": "sha256:0c681a33dca0bb409fdf23bb8c670cd57523cdd9167cc411d9df38fb2557a6f6",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-shot-plasma",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 6,
+  "revision": 76,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

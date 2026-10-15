@@ -1,47 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-10714e929387467c": {
-        "hash": "sha256:9f983b2c3982fdd671253c576f55dff73073a092e90c3a6e61fb000af74a6234",
-        "path": "analyses/r-10714e929387467c.json"
-      },
-      "r-9649cdd0cb99be40": {
-        "hash": "sha256:bf06adaf5cab9969a6c88b4f7dcf0182f29c7c4b60eecd625969a9c2864a233b",
-        "path": "analyses/r-9649cdd0cb99be40.json"
+      "r-a84b82ef5529cf9f": {
+        "hash": "sha256:bb7b1259cbd9b9b8acf0cfee4af095a6e9b9ee26f8fa50530243a671d6b7c9e5",
+        "path": "analyses/r-a84b82ef5529cf9f.json"
       }
     },
     "brief": {
-      "hash": "sha256:3f09a3bebeded5591d171b9e26afa25fb8cc864e09d378f3fd4c5b0a87be5ce6",
+      "hash": "sha256:5768bbba7426481f475be2be790b4b98dc1ef200ffb4d44568d0804c5486494e",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:3f09a3bebeded5591d171b9e26afa25fb8cc864e09d378f3fd4c5b0a87be5ce6",
-      "hash": "sha256:b2cfcd368c37c7abdc11422eb0fbe1ff49deb63a36c857afd35e490f911b25a4",
+      "brief": "sha256:5768bbba7426481f475be2be790b4b98dc1ef200ffb4d44568d0804c5486494e",
+      "hash": "sha256:d7cf3e99b9a1ceda337d9804c5f0bf1e2fa91ab224fe8dcdacbe4b41ced0050b",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:15fa30e090d90f1aa0b732f424fc70bd29b90c67d2e415361de72f378dc399ab",
+      "hash": "sha256:8a9b7468d9f06b2f59169faa6e1596b034191e868b118fc87ac82373029e40ca",
       "path": "games/vol-test/audio-manifests/sfx/steel/servo.json"
     },
     "renders": {
-      "r-10714e929387467c": {
-        "hash": "sha256:3ee87c18ce1735cab5b6d5c629bcb7460147d2c520f7b5816748be778a972daa",
-        "path": "renders/r-10714e929387467c.json"
-      },
-      "r-9649cdd0cb99be40": {
-        "hash": "sha256:7d2abdb5dc925832f98e76a11c01acb67444d269f53464d45fd26c5c576ac1c8",
-        "path": "renders/r-9649cdd0cb99be40.json"
+      "r-a84b82ef5529cf9f": {
+        "hash": "sha256:08360eba41ae1819e6b685f8751d19768e9a8946de487abf52384333d945c4cf",
+        "path": "renders/r-a84b82ef5529cf9f.json"
       }
     },
     "selection": {
-      "hash": "sha256:5ec9ca91cb117a587a1daa9779e89a88ba1b7792d9ca9580d0fcfa8ddc7e13fb",
+      "hash": "sha256:ac6f2e554fb846f55860065b6309394216633b05c87ef788f44525707f68cb30",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-servo",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 14,
+  "revision": 56,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

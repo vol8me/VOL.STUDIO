@@ -1,0 +1,47 @@
+{
+  "artifacts": {
+    "analyses": {
+      "r-9a837b53484a6fd5": {
+        "hash": "sha256:65b9f6f032b7ce6028390a9080d9710f1c5378d14db27e8399448f0b0ef49a1c",
+        "path": "analyses/r-9a837b53484a6fd5.json"
+      }
+    },
+    "brief": {
+      "hash": "sha256:17bf221011a1691c1c295bac8c37ef18709c0ca04f77737d113e15744087e150",
+      "path": "brief.json"
+    },
+    "program": {
+      "brief": "sha256:17bf221011a1691c1c295bac8c37ef18709c0ca04f77737d113e15744087e150",
+      "hash": "sha256:52976b5b4b189151df5b1c3d874c4fd986ad6c8a20d407f077cfcc9457d7b618",
+      "path": "program.json"
+    },
+    "publication": {
+      "hash": "sha256:e24b99a60b724aa16a3093762bdf77a603f77685f3f5734567f11b46618fa177",
+      "path": "games/vol-test/audio-manifests/sfx/steel/shot-autocannon.json"
+    },
+    "renders": {
+      "r-9a837b53484a6fd5": {
+        "hash": "sha256:e22dc394cb3f2434c60d57b26103392d229c0430e0918af8311ac2edd463621e",
+        "path": "renders/r-9a837b53484a6fd5.json"
+      }
+    },
+    "selection": {
+      "hash": "sha256:425aff25e8d51651debb1db98aff2061e9c07f4681699c46b48652ab3bdd5aa0",
+      "path": "selection.json"
+    }
+  },
+  "jobId": "vt-hardsteel-shot-autocannon",
+  "kind": "acoustic",
+  "protocolVersion": 1,
+  "revision": 94,
+  "schema": "AudioJobV1",
+  "stage": "published",
+  "target": {
+    "asset": "public/assets/audio/sfx/steel/shot-autocannon.ogg",
+    "integration": {
+      "loop": false,
+      "runtimeKey": null
+    },
+    "package": "@volstudio/vol-test"
+  }
+}

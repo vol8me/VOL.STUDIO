@@ -75,8 +75,8 @@ export const AUDIO = {
     juggernaut: { engine: 0.5, engineGain: 1.2, tracks: 0.62 },
   } satisfies Record<VehicleId, VehicleVoice>,
   /**
-   * Kabuk referanstır; ağır mermi gümbürder. Ray, plazma, iğne ve yayın kendi atış teslimi vardır (`shotAsset`),
-   * perde 1'dir; top ailesi yalnız kabuk ve ağır mermiye çalar.
+   * Kabuk top ailesinden, ağır mermi aynı aileden alçak perdeyle çalar; diğer her stilin kendi atış teslimi vardır
+   * (`shotAsset`) ve perdesi 1'dir.
    */
   weaponVoice: {
     shell: { rate: 1, gain: 1 },
@@ -86,20 +86,25 @@ export const AUDIO = {
     needle: { rate: 1, gain: 0.9 },
     arc: { rate: 1, gain: 0.85 },
     autocannon: { rate: 1, gain: 1 },
-    gatling: { rate: 1, gain: 0.9 },
+    gatling: { rate: 1, gain: 1.1 },
     flak: { rate: 1, gain: 1 },
     lance: { rate: 1, gain: 1 },
     howitzer: { rate: 1, gain: 1.1 },
   } satisfies Record<WeaponStyle, WeaponVoice>,
-  /** Kendi atış teslimi olan silah stilleri (`loopAssetRoot` altında); olmayan top ailesinden çalar. */
   /** Tek atımlık araç sesleri (`loopAssetRoot` altında): atılım başlangıcı, parça kopması ve boğulma. */
   eventAsset: { dash: 'dash', snap: 'snap', sink: 'sink' },
   /** Olay seslerinin kazancı. */
   eventGain: { dash: 0.6, snap: 0.75, sink: 0.8 },
+  /** Kendi atış teslimi olan silah stilleri (`loopAssetRoot` altında); olmayan top ailesinden çalar. */
   shotAsset: {
     rail: 'shot-rail',
     plasma: 'shot-plasma',
     needle: 'shot-needle',
     arc: 'shot-arc',
+    autocannon: 'shot-autocannon',
+    gatling: 'shot-gatling',
+    flak: 'shot-flak',
+    lance: 'shot-lance',
+    howitzer: 'shot-howitzer',
   } as Partial<Record<WeaponStyle, string>>,
 } as const;

@@ -194,7 +194,8 @@ bağlar; `tests/config/vehicleIdentity.test.ts` paletlerin çakışmamasını ki
 silah stilinin kendi iz rengi ve kalınlığı vardır (`SHOT_LOOK`: kehribar kabuk, turuncu ağır
 mermi, ince ve uzun buz mavisi ray, kızıl plazma, zehir yeşili iğne, mor yay). Ses: motor perdesi ve gücü araca
 (`AUDIO.vehicleVoice`), top sesinin perdesi ve gücü silah stiline (`AUDIO.weaponVoice`) göre
-işlenir; teslimler aynıdır, yeni sentez gerekmez. Araca özgü gerçek motor ve top kayıtları ayrı iştir.
+işlenir; her silah stilinin atışı ayrı sentezdir (`AUDIO.shotAsset`). Araca özgü gerçek motor ve top
+kayıtları ayrı iştir.
 
 Silahlanma (`Armament`) bir silahın sayılarını, namlu yuvalarını ve atış gruplarını
 (`salvo`) taşır. `pivot` yoksa 0. yuva nişan taretidir; öteki yuvalar nişan noktasına (0. yuvadan
@@ -782,7 +783,10 @@ dağıtım ve Steam Cloud kabulü ayrı doğrulama işleridir.
 
 ## Ses
 
-41 teslim kuru mekanik programlardan kanonik yayın kapısıyla üretilir.
+48 teslim kanonik yayın kapısıyla üretilir: 46 oyun sesi (30 tekil teslim, 16 aile varyantı) ve iki UI sesi.
+Oyun sesleri sıfırdan yazılmış gerçekçi programlardır: ağır dizel ateşleme serisi, gövdeli basınç dalgası
+atışları, alçak ve dolgun spektrum (çoğu teslimde 85. yüzdelik rolloff ~230-1200 Hz); ince, tiz ya da
+oyuncak tınılı katman yoktur. Seviyeler katman başına ölçülerek kurulur; dinleme onayı değil teknik ölçümdür.
 `audio-manifests` yeniden üretim kimliğini, `audio-banks` aile seçimini taşır.
 Oyun yalnız bank JSON'unu ve `public/assets/audio` teslimlerini okur;
 audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayıt değil,
@@ -790,13 +794,14 @@ audio-synth çalışma zamanı bağımlılığı değildir. Pakete kanonik kayı
 girer (anahtar, rol, etiket, süre, varlık yolu): hash, manifest, ölçüm ve kalite
 kaydı yalnız kanonik dosyada kalır ve `verifyFamily` onu okur.
 
-Dokuz döngü motorun üç devri, palet, bacak adımı, pervane, kayma, servo ve hızlanmadır. Yürüyücü palet yerine
-`legs` (sivri uç tıkırtısı ve eklem sürtmesi), süzülen araç `fans` (kanat geçişi uğultusu) çalar; tempo ve güç
+On döngü motorun üç devri, palet, bacak adımı, mech ayak basışı, pervane, kayma, servo ve hızlanmadır. Yürüyücü
+palet yerine `legs` (hidrolik bacak basışları ve servo), mech `steps` (ağır ayak basışı ve gövde gümbürtüsü),
+süzülen araç `fans` (kanat geçişi ve aşağı itki) çalar; tempo ve güç
 araca göre (`AUDIO.vehicleVoice.tracks`). Tek atımlık araç sesleri `dash` (yürüyücü ve süzülenin atılımı
 başlarken), `snap` (`broke` olayında parça kopması) ve `sink`tir (derin suda boğulan aracın batışı: `died`
 olayı `drown` nedenliyse aracın son şasisinde çalar; `AUDIO.eventAsset`).
-Ray, plazma, iğne ve yay silahının kendi atış teslimi (`shot-rail/plasma/needle/arc`, `AUDIO.shotAsset`) vardır;
-kabuk ve ağır mermi top ailesini perdeyle çalar. Top,
+Kabuk ve ağır mermi dışındaki her silah stilinin kendi atış teslimi (`shot-rail/plasma/needle/arc/autocannon/
+gatling/flak/lance/howitzer`, `AUDIO.shotAsset`) vardır; kabuk ve ağır mermi top ailesini perdeyle çalar. Top,
 patlama, isabet, çarpma ve fren aileleri olaydan seçilir; patlamanın yakın,
 orta ve uzak teslimleri vardır. İki UI sesi duraklatma geçişini bildirir.
 Kazanç, mesafe, perde ve ses bütçeleri `src/config/audio.ts` içindedir.

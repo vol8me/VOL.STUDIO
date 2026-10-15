@@ -18,7 +18,7 @@ const STRIDE: Readonly<Record<ChassisKind, StrideVoice>> = {
   tank: { loop: 'tracks', config: AUDIO.tracks },
   walker: { loop: 'legs', config: AUDIO.legs },
   hover: { loop: 'fans', config: AUDIO.fans },
-  mech: { loop: 'legs', config: AUDIO.steps },
+  mech: { loop: 'steps', config: AUDIO.steps },
 };
 
 export class VehicleAudio {

@@ -5,7 +5,7 @@
       "analyzerVersion": 1,
       "dc": {
         "channelOffset": [
-          -0.000009216142519104755
+          0.00009567069659093088
         ]
       },
       "defects": {
@@ -23,55 +23,55 @@
       },
       "format": {
         "channels": 1,
-        "durationSeconds": 3,
-        "frames": 144000,
+        "durationSeconds": 3.7,
+        "frames": 177600,
         "sampleRate": 48000
       },
       "level": {
         "channelPeakDbfs": [
-          -6.840665639554158
+          -12.579084501586202
         ],
         "channelRmsDbfs": [
-          -26.677306849924925
+          -22.491049313732127
         ],
-        "crestFactorDb": 19.836641210370768,
-        "integratedLufs": -27.3500144507523,
-        "maxMomentaryLufs": -26.756445172132196,
-        "rmsDbfs": -26.677306849924925,
-        "samplePeakDbfs": -6.840665639554158,
-        "truePeakDbtp": -6.838681406524401
+        "crestFactorDb": 9.911964812145925,
+        "integratedLufs": -24.86669080875825,
+        "maxMomentaryLufs": -24.681345187440378,
+        "rmsDbfs": -22.491049313732127,
+        "samplePeakDbfs": -12.579084501586202,
+        "truePeakDbtp": -12.576345804514817
       },
       "measuredFrom": "decoded-encoded",
       "schema": "AudioAnalysisReportV1",
       "spectral": {
         "bandsDb": {
-          "air": -123.97523811076313,
-          "high": -76.90526206073297,
-          "low": -30.52625812538706,
-          "mid": -29.331283058344578,
-          "sub": -41.92706124179548
+          "air": -123.28339701380042,
+          "high": -64.58182803294689,
+          "low": -28.396920662393264,
+          "mid": -31.887160270281626,
+          "sub": -24.516092034975987
         },
-        "centroidHz": 496.7049777976218,
-        "flatness": 4.550260417248338e-9,
-        "peakHz": 539.0625,
-        "rolloff85Hz": 632.8125
+        "centroidHz": 203.01841906754206,
+        "flatness": 4.449936963769048e-9,
+        "peakHz": 46.875,
+        "rolloff85Hz": 421.875
       },
       "stereo": null,
       "temporal": {
-        "activeSeconds": 3,
-        "attackSeconds": 0,
+        "activeSeconds": 3.7,
+        "attackSeconds": 0.01,
         "decay40Seconds": null,
         "leadingSilenceSeconds": 0,
-        "peakTimeSeconds": 1.23,
-        "temporalCentroidSeconds": 1.4639558653604972,
+        "peakTimeSeconds": 2.48,
+        "temporalCentroidSeconds": 1.8800688144972542,
         "trailingSilenceSeconds": 0
       }
     },
-    "sourceRecordHash": "sha256:c598e81d6735261cc424fe4f03a3bc1d352063b0a6dba9fd53a6431da28bf86e"
+    "sourceRecordHash": "sha256:8da6f70244be758992983a22355561265bb9d9eed42f4df08cbcd8686195b195"
   },
   "asset": {
-    "bytes": 32066,
-    "encodedHash": "sha256:ed8b4bd286bf9b6222eda0ddf783554fa15cea95c5754682cb8f27f0ed611cea",
+    "bytes": 42141,
+    "encodedHash": "sha256:0dbf49cea7cb15a7365c77becd3982edd76ed4509042a57715683a9fb453d809",
     "format": "ogg-vorbis",
     "path": "games/vol-test/public/assets/audio/sfx/steel/engine-idle.ogg"
   },
@@ -81,23 +81,23 @@
       "assetClass": "sfx",
       "channels": 1,
       "durationSeconds": {
-        "max": 4.05,
-        "min": 2.95
+        "max": 4.625,
+        "min": 2.96
       },
       "id": "vt-hardsteel-engine-idle",
-      "intent": "Yalnız sürüş komutunda duyulan kuru dişli/palet aktarımı; boşta sessiz. Organik nefes, ortam yatağı ve müzik yok.",
+      "intent": "Ağır savaş aracı motoru: dolgun alçak ateşleme serisi, egzoz ve dişli kutusu. Tonlu, yük altında doygun; ince ya da tıkırtılı değil.",
       "kind": "acoustic",
       "loop": true,
       "placement": "positional",
       "provenance": {
         "author": "agent",
-        "by": "codex"
+        "by": "claude"
       },
       "schema": "AudioBriefV1",
       "subtype": "sfx",
-      "title": "VOL.TEST — kuru mekanik: vt-steel-engine-idle"
+      "title": "VOL.TEST — Boşta dizel"
     },
-    "hash": "sha256:44417fb4863d1e7ad00f978725e7c7183b940e3553b5d6eb1457889c8083c4bd",
+    "hash": "sha256:0d41bc2fa6fb0cde5844834b93a45b3b3f08279f3b52fcf50401db721f932633",
     "kind": "acoustic",
     "schema": "AudioBriefV1"
   },
@@ -112,18 +112,18 @@
       "-bitexact"
     ],
     "codec": "libvorbis",
-    "fingerprint": "sha256:9fa39e07e300f3253b7efdb9d818171f96ea2ed45bc9cf7a394f2ff3ea6140be",
+    "fingerprint": "sha256:9d2852e8fa81d029021bc5591eb4192dac5844297430c331ac836f0d8c04c469",
     "libraries": {
-      "libavcodec": "62.28.103",
-      "libavformat": "62.12.103",
-      "libavutil": "60.26.103"
+      "libavcodec": "63.1.102",
+      "libavformat": "63.1.102",
+      "libavutil": "61.1.102"
     },
     "quality": 7,
     "tool": "ffmpeg",
     "unreported": [
       "libvorbis"
     ],
-    "version": "ffmpeg version 8.1.3 Copyright (c) 2000-2026 the FFmpeg developers"
+    "version": "ffmpeg version 9.0.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers"
   },
   "encoding": {
     "policyHash": "sha256:1ae74428adfbefd9d3e19a6441e8ada697b657fe835d5a4a39a1e5af7692d41d",
@@ -134,11 +134,31 @@
     "package": "@volstudio/audio-synth",
     "registryHash": "sha256:ef7a069969bff88b2363b27b7ca14654464632896f368e32b2ed80660da43381",
     "renderSurface": {
-      "hash": "sha256:2d98e3d395fe2d4df8dd54778d1e33fa10a7cab370fcbadbcd269a56b12c8c43",
+      "hash": "sha256:5f5beb06587eb65019195c3b0deda397e043536ec28cf4546548606c6dd51c48",
       "nodes": [
         {
-          "hash": "sha256:b9f7f769ee1231cdeb3308f02c54b955be69705286885e0805f92f23f9d56d96",
-          "id": "exciter.membrane",
+          "hash": "sha256:f0afde4a936a776490e1567d572c5572f503de6b3f3502238c85bf5f8a9a8a2c",
+          "id": "articulation.amplitude",
+          "version": 1
+        },
+        {
+          "hash": "sha256:b215e9dc2aee21a070909ad3b24f97ba5a7c6c500500c7cc9ced765073ee9fd8",
+          "id": "effect.compressor",
+          "version": 1
+        },
+        {
+          "hash": "sha256:73c932af5fb3389065aa8cf48494308d8bd2e21e5df0e7dda63201f24c11c42b",
+          "id": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "hash": "sha256:a8c80efe417630e7e3195525fd6fdefdca9ad4d0edb3981c35e8092715f7f722",
+          "id": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "hash": "sha256:f1618b5458b7b327a4415cc22bede9a5976a0e37c57273b6dd7b2712acd16e07",
+          "id": "effect.saturation",
           "version": 1
         },
         {
@@ -150,6 +170,16 @@
           "hash": "sha256:378e408dfec3d4bb8f618707b3f2427556203baa54b5a4100742edf14a2c0995",
           "id": "source.machine",
           "version": 1
+        },
+        {
+          "hash": "sha256:298e4d34b0022ff9100ab49513043ceac3b79c3a04a52dda4354ced4e3f62cb6",
+          "id": "source.noise",
+          "version": 1
+        },
+        {
+          "hash": "sha256:b0c800b997b33e21c77db26196fffeb7162495c77939084b2b3eb1fd4639561b",
+          "id": "source.oscillator",
+          "version": 2
         }
       ],
       "scheme": "render-surface-v1"
@@ -186,52 +216,182 @@
   "program": {
     "document": {
       "channels": 1,
-      "description": "Yalnız sürüş komutunda duyulan kuru dişli/palet aktarımı; boşta sessiz. Organik nefes, ortam yatağı ve müzik yok.",
+      "description": "Boşta dizel: ağır dizel; 8 silindir, 780 dev/dk.",
       "durationSeconds": 4,
+      "effects": [
+        {
+          "params": {
+            "frequency": 40,
+            "order": 3,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 230,
+            "gainDb": 4,
+            "q": 0.9
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 460,
+            "gainDb": 3.5,
+            "q": 0.9
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 900,
+            "gainDb": 2,
+            "q": 0.8
+          },
+          "primitive": "effect.eq-bell",
+          "version": 1
+        },
+        {
+          "params": {
+            "character": "asymmetric",
+            "driveDb": 4,
+            "mix": 0.6,
+            "outputDb": 0
+          },
+          "primitive": "effect.saturation",
+          "version": 1
+        },
+        {
+          "params": {
+            "attackSeconds": 0.02,
+            "kneeDb": 6,
+            "makeupDb": 2,
+            "ratio": 3,
+            "releaseSeconds": 0.18,
+            "thresholdDb": -22
+          },
+          "primitive": "effect.compressor",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 4800,
+            "order": 2,
+            "response": "lowpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ],
       "layers": [
         {
           "gainDb": 0,
-          "mechanism": "mechanical",
-          "name": "drive-pulses",
+          "mechanism": "motor",
+          "name": "firing",
           "resonators": [
             {
               "params": {
-                "frequency": 1800,
+                "frequency": 974,
                 "mode": "lowpass",
-                "q": 0.707
+                "q": 0.8
               },
               "primitive": "resonator.biquad",
               "version": 1
             },
             {
               "params": {
-                "frequency": 1800,
-                "mode": "lowpass",
-                "q": 0.707
+                "frequency": 95,
+                "mode": "bandpass",
+                "q": 1.4
               },
               "primitive": "resonator.biquad",
               "version": 1
             }
           ],
-          "role": "mechanism",
+          "role": "body",
+          "routing": "parallel",
           "source": {
             "params": {
-              "buckleDecay": 0.014,
-              "rate": 13,
-              "tension": 0.22
+              "bearing": 0.08,
+              "count": 8,
+              "harmonics": 32,
+              "imbalance": 0.5,
+              "load": 0.35,
+              "mechanism": "engine",
+              "noise": 0.22,
+              "rpm": 780,
+              "tilt": 0.2
             },
-            "primitive": "exciter.membrane",
+            "primitive": "source.machine",
             "version": 1
           }
         },
         {
-          "gainDb": -26,
-          "mechanism": "mechanical",
-          "name": "gear-body",
+          "articulation": {
+            "params": {
+              "level": -3
+            },
+            "primitive": "articulation.amplitude",
+            "version": 1
+          },
+          "gainDb": -6,
+          "inserts": [
+            {
+              "params": {
+                "attackSeconds": 0.02,
+                "kneeDb": 6,
+                "makeupDb": 0,
+                "ratio": 3,
+                "releaseSeconds": 0.12,
+                "thresholdDb": -30
+              },
+              "primitive": "effect.compressor",
+              "version": 1
+            }
+          ],
+          "mechanism": "noise",
+          "name": "exhaust",
           "resonators": [
             {
               "params": {
-                "frequency": 2400,
+                "frequency": 380,
+                "mode": "lowpass",
+                "q": 0.9
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            },
+            {
+              "params": {
+                "frequency": 110,
+                "mode": "highpass",
+                "q": 0.8
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "texture",
+          "source": {
+            "params": {
+              "color": "pink"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -23,
+          "mechanism": "motor",
+          "name": "gearbox",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 1800,
                 "mode": "lowpass",
                 "q": 0.707
               },
@@ -242,55 +402,107 @@
           "role": "tonal",
           "source": {
             "params": {
-              "bearing": 0.02,
-              "count": 18,
-              "harmonics": 8,
-              "imbalance": 0.015,
-              "load": 0.4,
+              "bearing": 0.2,
+              "count": 23,
+              "harmonics": 6,
+              "imbalance": 0.05,
+              "load": 0.35,
               "mechanism": "gear",
-              "noise": 0.015,
-              "rpm": 780,
-              "tilt": 0.85
+              "noise": 0.05,
+              "rpm": 483.6,
+              "tilt": 0.8
             },
             "primitive": "source.machine",
             "version": 1
           }
+        },
+        {
+          "gainDb": -18,
+          "mechanism": "noise",
+          "name": "rumble",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 70,
+                "mode": "lowpass",
+                "q": 1.1
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "color": "brown"
+            },
+            "primitive": "source.noise",
+            "version": 1
+          }
+        },
+        {
+          "gainDb": -14,
+          "mechanism": "tonal",
+          "name": "chassis",
+          "resonators": [
+            {
+              "params": {
+                "frequency": 260,
+                "mode": "lowpass",
+                "q": 0.707
+              },
+              "primitive": "resonator.biquad",
+              "version": 1
+            }
+          ],
+          "role": "body",
+          "source": {
+            "params": {
+              "frequency": 52,
+              "waveform": "triangle"
+            },
+            "primitive": "source.oscillator",
+            "version": 2
+          }
         }
       ],
       "master": {
-        "dcBlockHz": 25,
+        "dcBlockHz": 20,
+        "limiter": {
+          "ceilingDbtp": -1.5
+        },
         "loop": {
-          "crossfadeSeconds": 1
+          "crossfadeSeconds": 0.3
         },
         "normalize": "peak",
-        "peakDbfs": -7
+        "peakDbfs": -6
       },
       "sampleRate": 48000,
       "schema": "AcousticProgramV1",
-      "seed": 8110
+      "seed": 710101
     },
-    "hash": "sha256:ae6423ce821d22fe0290e697146691fe0092fd7b325650bc66f496247404d753",
+    "hash": "sha256:d329b74c14ea7315679788a1746938fa48ea23f405c5fa6058cbac0718989fe6",
     "schema": "AcousticProgramV1"
   },
   "render": {
     "pcm": {
       "channels": 1,
       "format": "f32le-interleaved-clamped",
-      "frames": 144000,
-      "hash": "sha256:21e5a59c59094b4283414b7dcff9a84d6b1c0d072c2c9986b2b8590626c5d5bc",
+      "frames": 177600,
+      "hash": "sha256:272ad4ce1e540a4ae7cf14a1d367d8b1ff9da06a331f2d5f2e4ed70be3fb50e9",
       "sampleRate": 48000
     },
-    "renderId": "r-6af8e89b866a9e87",
+    "renderId": "r-ee4cf9209dbc3dd5",
     "rendererVersion": 2,
-    "seed": 8110
+    "seed": 710101
   },
   "schema": "AudioAssetManifestV1",
   "seam": {
-    "jumpRatio": 0.1034,
-    "levelStepDb": -0.051,
+    "jumpRatio": 0.0562,
+    "levelStepDb": -1.292,
     "method": "loop-seam-v1",
     "pass": true,
     "reasons": [],
-    "spectralStepDb": -36.539
+    "spectralStepDb": -13.434
   }
 }

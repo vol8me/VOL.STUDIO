@@ -5,22 +5,26 @@
         "hash": "sha256:6e52d87271341cada0a59d89069f10a20438ad9e4648c2de03c026702ee053f6",
         "path": "analyses/r-29fc8ad759a131b0.json"
       },
+      "r-93f1c2b4345d6a39": {
+        "hash": "sha256:6d8dfecb818c1f1cfbd2300ba972fdf0be80f9854b364c5ea022b36565dc801c",
+        "path": "analyses/r-93f1c2b4345d6a39.json"
+      },
       "r-a28bd927254af437": {
         "hash": "sha256:0f3f7363a60a337f91ff11858338037380e33668d4ab86a86d92dc7d24827080",
         "path": "analyses/r-a28bd927254af437.json"
       }
     },
     "brief": {
-      "hash": "sha256:a5654652a92872a0b9c0fe4536fe081cc4d1760a25a607ac3970fbb0da9d74fe",
+      "hash": "sha256:2a53ec9cbaedb97aeff4ac8e060c114ee546073727f48efe41dad12536ff009c",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:a5654652a92872a0b9c0fe4536fe081cc4d1760a25a607ac3970fbb0da9d74fe",
-      "hash": "sha256:d3472c228b2d5fc2a7ea7f6747002ee44d33164dded41b60234ac3c4c7d5e4aa",
+      "brief": "sha256:2a53ec9cbaedb97aeff4ac8e060c114ee546073727f48efe41dad12536ff009c",
+      "hash": "sha256:502eadffe9cd60d0069a1da35a669ab7b2f086df211d16760eb495cc3de4db57",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:7ca22f71a0adf328a10870a178d3f4253b3cf405e69cca9b921fbaa7976dd080",
+      "hash": "sha256:d366cba69d51544adbf83b25319e76acbbf565e3e6f880da50292027feae2312",
       "path": "games/vol-test/audio-manifests/sfx/steel/families/crash/hard-b.json"
     },
     "renders": {
@@ -28,20 +32,24 @@
         "hash": "sha256:c10a839690eaa1fd6271872f76bc6b739bf5d9674911200258c698639c48c424",
         "path": "renders/r-29fc8ad759a131b0.json"
       },
+      "r-93f1c2b4345d6a39": {
+        "hash": "sha256:eb4f33a15d7e0ef90764bd9e3d8709b43b39a4989a29c417b64414ae14edee35",
+        "path": "renders/r-93f1c2b4345d6a39.json"
+      },
       "r-a28bd927254af437": {
         "hash": "sha256:c24d01f16b376fb01d318355c6b49d313853a5fc44db6b0d42c09c62b02ad65b",
         "path": "renders/r-a28bd927254af437.json"
       }
     },
     "selection": {
-      "hash": "sha256:425a5b9ba3188e79fea88d6bf9b65b0c9508b3ce35858f37c88e4da7db97ef11",
+      "hash": "sha256:a74227ccd8006dec6099fa90163f9a560c6899a77de5daa5f72928cb532a9c4c",
       "path": "selection.json"
     }
   },
   "jobId": "hard-b",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 17,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

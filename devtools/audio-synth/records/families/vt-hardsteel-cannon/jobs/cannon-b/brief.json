@@ -7,11 +7,11 @@
     "cannon"
   ],
   "durationSeconds": {
-    "max": 0.65,
-    "min": 0.5499999999999999
+    "max": 1.15,
+    "min": 0.7
   },
   "id": "vt-hardsteel-cannon-cannon-b",
-  "intent": "Kompakt ağır mekanik top: kısa gövde darbesi, namlu kırılması ve kuru kızak. Şarj, organik enerji ve uzun uğultu yok. Varyant cannon-b (rarity:common, weight:heavy).",
+  "intent": "Ağır top atışı: derin gövde, namlu çatlağı ve kızak; kısa ve dolgun. Varyant cannon-b (rarity:common, weight:heavy).",
   "kind": "acoustic",
   "placement": "positional",
   "provenance": {
@@ -20,5 +20,5 @@
   },
   "schema": "AudioBriefV1",
   "subtype": "sfx",
-  "title": "VOL.TEST kuru mekanik cannon — cannon-b"
+  "title": "VOL.TEST cannon — cannon-b"
 }

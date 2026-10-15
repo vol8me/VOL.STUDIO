@@ -2,31 +2,31 @@
   "coherence": {
     "distributions": {
       "activeSeconds": {
-        "max": 0.16,
+        "max": 0.89,
         "measured": 4,
-        "median": 0.16,
-        "min": 0.16,
+        "median": 0.89,
+        "min": 0.89,
         "scale": 0.1
       },
       "centroidHz": {
-        "max": 278.126,
+        "max": 407.265,
         "measured": 4,
-        "median": 239.755,
-        "min": 163.743,
-        "scale": 0.301797
+        "median": 379.749,
+        "min": 356.092,
+        "scale": 0.134544
       },
       "maxMomentaryLufs": {
-        "max": -22.5777,
+        "max": -20.3417,
         "measured": 4,
-        "median": -22.8607,
-        "min": -23.8298,
+        "median": -20.8537,
+        "min": -22.4222,
         "scale": 1
       },
       "pitchHz": {
-        "max": 74.2114,
+        "max": 171.773,
         "measured": 4,
-        "median": 74.211,
-        "min": 74.2099,
+        "median": 171.757,
+        "min": 171.756,
         "scale": 0.05
       }
     },
@@ -36,35 +36,35 @@
   "descriptorSpace": "family-descriptors-v1",
   "diversity": {
     "collapsed": false,
-    "maxDistance": 0.796375,
-    "medianDistance": 0.74622,
-    "minDistance": 0.142483,
+    "maxDistance": 0.178556,
+    "medianDistance": 0.146583,
+    "minDistance": 0.0723528,
     "nearIdentical": [],
     "pairs": 6
   },
   "duplicates": [],
   "identity": {
     "limit": 13,
-    "maxDistance": 4.851,
-    "medoid": "cannon-b",
+    "maxDistance": 7.325,
+    "medoid": "cannon-d",
     "members": [
       {
-        "distance": 3.686,
+        "distance": 7.325,
         "key": "cannon-a",
         "shiftOctaves": 0
       },
       {
-        "distance": 0,
+        "distance": 0.957,
         "key": "cannon-b",
         "shiftOctaves": 0
       },
       {
-        "distance": 4.851,
+        "distance": 6.779,
         "key": "cannon-c",
         "shiftOctaves": 0
       },
       {
-        "distance": 2.778,
+        "distance": 0,
         "key": "cannon-d",
         "shiftOctaves": 0
       }
@@ -76,34 +76,34 @@
     {
       "key": "cannon-a",
       "nearest": {
-        "distance": 0.269892,
+        "distance": 0.0723528,
         "key": "cannon-c"
       },
-      "pcmHash": "sha256:4f5ef4a3fcee908acf321f4ff7dd60e0235186c9655ea5fd7af67ced705801be"
+      "pcmHash": "sha256:09f156f93a7c55b1fbefaaf29560490b34e27474116ecbd36a9e183d00e8d55b"
     },
     {
       "key": "cannon-b",
       "nearest": {
-        "distance": 0.142483,
-        "key": "cannon-d"
+        "distance": 0.13083,
+        "key": "cannon-a"
       },
-      "pcmHash": "sha256:490e5261452b3c08c58ff6f0e5da635474e8b39a8b01b94b4d539b98603ade80"
+      "pcmHash": "sha256:c9baed9af3909559b9ba196909e668e428a1fc2bfaadb8cad7ec03d014f5acbe"
     },
     {
       "key": "cannon-c",
       "nearest": {
-        "distance": 0.269892,
+        "distance": 0.0723528,
         "key": "cannon-a"
       },
-      "pcmHash": "sha256:c8b840d75afe84d4defa890fb4201a625563bae5a357c886de78527b4b5f2d9f"
+      "pcmHash": "sha256:f1206b0fcfd3e02593f6441250394b0f509ccaf6a4b472cd9aa74871be1fba0c"
     },
     {
       "key": "cannon-d",
       "nearest": {
-        "distance": 0.142483,
-        "key": "cannon-b"
+        "distance": 0.139119,
+        "key": "cannon-c"
       },
-      "pcmHash": "sha256:e37dbe78a53ebaa2b4eacbe1df5de1125cadd8e5f9bbb28933cbb3d9430c280c"
+      "pcmHash": "sha256:f52147ff289808cd36fff2c17ee4402745dbca9b526928db0a4432aa407bd68c"
     }
   ],
   "policy": {

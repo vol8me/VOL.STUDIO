@@ -6,6 +6,7 @@ import {
   ARACHNID,
   BULWARK,
   DART,
+  JUGGERNAUT,
   MANTA,
   STRIKER,
   topSpeedOf,
@@ -94,6 +95,26 @@ describe('araç döngüleri', () => {
     );
     expect(output(legs).gain.value).toBeCloseTo(AUDIO.legs.gain);
     walker.dispose();
+  });
+  it('mech bacak adımı yerine ağır ayak basışı çalar', async () => {
+    const own = new FakeAudioContext();
+    const mech = new VehicleAudio(
+      own as unknown as AudioContext,
+      own.destination as unknown as AudioNode,
+      JUGGERNAUT,
+    );
+    await mech.ready;
+    const subject = tank();
+    subject.trackLeft = subject.trackRight = topSpeedOf(JUGGERNAUT);
+    mech.update(subject, subject, false);
+    const urls = own.sources.map((s) => s.buffer?.url ?? '');
+    expect(urls.some((url) => url.endsWith('/steps.ogg'))).toBe(true);
+    expect(urls.some((url) => url.endsWith('/legs.ogg') || url.endsWith('/tracks.ogg'))).toBe(
+      false,
+    );
+    const steps = own.sources.find((s) => s.buffer?.url?.endsWith('/steps.ogg'))!;
+    expect(output(steps).gain.value).toBeCloseTo(AUDIO.steps.gain);
+    mech.dispose();
   });
   it('süzülen araç pervane uğultusu çalar; palet ve bacak döngüsü yüklenmez', async () => {
     const own = new FakeAudioContext();

@@ -2,11 +2,11 @@
   "assetClass": "sfx",
   "channels": 1,
   "durationSeconds": {
-    "max": 0.6,
-    "min": 0.4
+    "max": 1.069,
+    "min": 0.684
   },
   "id": "vt-hardsteel-shot-rail",
-  "intent": "Ray silahı: keskin yüksek çatlak, hızla düşen ince tını ve kısa metal çınlaması; kuru, uğultu ve kuyruk yok.",
+  "intent": "Ray topu: sert çatlak, kapasitör boşalması ve gövdeli alçak itki.",
   "kind": "acoustic",
   "placement": "positional",
   "provenance": {
@@ -15,5 +15,5 @@
   },
   "schema": "AudioBriefV1",
   "subtype": "sfx",
-  "title": "VOL.TEST — kuru mekanik: vt-steel-shot-rail"
+  "title": "VOL.TEST — shot-rail"
 }

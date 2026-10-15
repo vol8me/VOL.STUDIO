@@ -2,11 +2,11 @@
   "assetClass": "sfx",
   "channels": 1,
   "durationSeconds": {
-    "max": 0.3,
-    "min": 0.2
+    "max": 0.473,
+    "min": 0.302
   },
   "id": "vt-hardsteel-shot-needle",
-  "intent": "İğne silahı: çok kısa ince metal çift tık ve küçük yay tınısı; hızlı ateşte yormaz, kuyruk yok.",
+  "intent": "İğne atıcı: kuru çatlak ve gövdeli kısa vuruş.",
   "kind": "acoustic",
   "placement": "positional",
   "provenance": {
@@ -15,5 +15,5 @@
   },
   "schema": "AudioBriefV1",
   "subtype": "sfx",
-  "title": "VOL.TEST — kuru mekanik: vt-steel-shot-needle"
+  "title": "VOL.TEST — shot-needle"
 }

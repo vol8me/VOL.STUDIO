@@ -8,19 +8,23 @@
       "r-ef732c8985d45789": {
         "hash": "sha256:2a5c8e4682370ff7ff162779e97245dcfbe4a0757555e6ce064ed35302b518bb",
         "path": "analyses/r-ef732c8985d45789.json"
+      },
+      "r-f6cb6aa07912c6d8": {
+        "hash": "sha256:d68cfcabb40ebc182cd099070de18d5a5f317e29c0828034d20b60e13e66d79b",
+        "path": "analyses/r-f6cb6aa07912c6d8.json"
       }
     },
     "brief": {
-      "hash": "sha256:309499dc87422482a807468bf6fe6c15b77975c75c82e55c2641c07fa68f4d22",
+      "hash": "sha256:edcf494c18ad1162e93b4ab8edd5b6f8c9b156641836c9d034ad67ec73f03bbf",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:309499dc87422482a807468bf6fe6c15b77975c75c82e55c2641c07fa68f4d22",
-      "hash": "sha256:7a55e36e27797e8156a52ece1c5e20b5ead793edbe4ae312063cbe507a493c9f",
+      "brief": "sha256:edcf494c18ad1162e93b4ab8edd5b6f8c9b156641836c9d034ad67ec73f03bbf",
+      "hash": "sha256:a20bba3ec5e1c02329059aa55a275793c35d7dd5edee997e66899f12eb434edf",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:640ad0d8492f9a651ff7416a24fecefe15d5134508f4094f681445d54aa018e1",
+      "hash": "sha256:b33cf0c95bdaf149da94722dfd0ffd979be8e72352e86c68e63db42f8796e83f",
       "path": "games/vol-test/audio-manifests/sfx/steel/families/crash/hard-a.json"
     },
     "renders": {
@@ -31,17 +35,21 @@
       "r-ef732c8985d45789": {
         "hash": "sha256:7bef64384ea6cfef2b55360ec86da19906881125c6b8f5becd100d02e0a37fd6",
         "path": "renders/r-ef732c8985d45789.json"
+      },
+      "r-f6cb6aa07912c6d8": {
+        "hash": "sha256:59cd55fa635acb25b1a6a143c9cfdda4a6d5b01664fa268d13870b8312fe0c71",
+        "path": "renders/r-f6cb6aa07912c6d8.json"
       }
     },
     "selection": {
-      "hash": "sha256:13dd6d4153c6ca4729c24e8f21dc6997e8e8ede06fd7292ed2463dfad7c2f62e",
+      "hash": "sha256:68c83c46a57e31a954f62da543d98d73ee285db6687cd58855de2253a2e0b57c",
       "path": "selection.json"
     }
   },
   "jobId": "hard-a",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 17,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

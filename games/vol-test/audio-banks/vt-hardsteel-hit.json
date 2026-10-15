@@ -9,17 +9,17 @@
   },
   "family": {
     "familyId": "vt-hardsteel-hit",
-    "hash": "sha256:6ef57c0b65065979d5fac323e5456b41387c0150feb2b1056669fc6b6f075997",
+    "hash": "sha256:ab9b80c2e4624fdea522e7d9a015378d168e534949f50de3e72b7488201aaed5",
     "path": "devtools/audio-synth/records/families/vt-hardsteel-hit/family.json",
-    "seed": 8302,
+    "seed": 8303,
     "variationPolicy": "role-subrange-v1",
-    "version": 2
+    "version": 3
   },
   "lookupContract": "sound-family-lookup-v1",
   "ordering": "key",
   "package": "@volstudio/vol-test",
   "quality": {
-    "hash": "sha256:2210c2428c6ca7b3a32a1a0e28efa73860fff6b1b4f5aaf440305b7df26beba4",
+    "hash": "sha256:f591a8edf3eac157cf92f7167d18a036e82f6583ed198b5996b8aeb327019bab",
     "pass": true,
     "path": "devtools/audio-synth/records/families/vt-hardsteel-hit/quality.json"
   },
@@ -33,67 +33,67 @@
   "variants": [
     {
       "asset": {
-        "bytes": 5240,
-        "encodedHash": "sha256:ec8e348fc6c19bd52f29de87092bc1d3ad9a0cce7b517f38616b9386ed77e909",
+        "bytes": 8134,
+        "encodedHash": "sha256:5a1e6f83cbe4657d5d8381de2049a7af6bc72bc872343c425c1197faf324f961",
         "path": "public/assets/audio/sfx/steel/families/hit/hit-a.ogg"
       },
       "descriptors": {
-        "activeSeconds": 0.09,
-        "centroidHz": 601.2273542743187,
-        "pitchHz": 580.2342083712671
+        "activeSeconds": 0.53,
+        "centroidHz": 260.34063530518023,
+        "pitchHz": 340.7299070864359
       },
-      "durationSeconds": 0.44733333333333336,
+      "durationSeconds": 0.5473541666666667,
       "key": "hit-a",
       "loudness": {
-        "integratedLufs": -20.883285237639978,
-        "maxMomentaryLufs": -20.883285237639978,
-        "truePeakDbtp": -4.8483400567600174
+        "integratedLufs": -22.1170004468661,
+        "maxMomentaryLufs": -22.1170004468661,
+        "truePeakDbtp": -3.8922004769194203
       },
       "manifest": {
-        "hash": "sha256:445bd22eec80a7b3bb07fba101e69bc0c5db2716b0f913da4b42fdf31cc4eb1f",
+        "hash": "sha256:068f8bb68fac9ee41d66b90d6e15500087beec7e0f9c4b891fbc4ef2f731dbd0",
         "path": "audio-manifests/sfx/steel/families/hit/hit-a.json"
       },
-      "pcmHash": "sha256:b0009cbb522e400cf8b7715214e38ebadbe21e976f9d31bcbc261a303a20e489",
-      "programHash": "sha256:87cf1060e920c4cb91a760984430bb2c6282a41fb380ddff860d80ef2f1173d3",
+      "pcmHash": "sha256:aa829af484a017fbd48d08514bdd2b9153e4567abb8d3b859fff7805f520ea16",
+      "programHash": "sha256:2e49913d2469ff4ff8153b86adc6b9db9462ee34c167859411fee63727c1b7a4",
       "roles": {
         "weight": "light"
       },
       "tags": [
         "hit"
       ],
-      "variantId": "v-bbf0741a8b552148"
+      "variantId": "v-240267db0dc39b41"
     },
     {
       "asset": {
-        "bytes": 5253,
-        "encodedHash": "sha256:0d85c43b274f884561517c658943729a1b770c94f04b350aeaafb41fec32f3cb",
+        "bytes": 8100,
+        "encodedHash": "sha256:39053391391e556fb6939ce02fa3b336cb59405eabbdfc0dc7dc56b214f77357",
         "path": "public/assets/audio/sfx/steel/families/hit/hit-b.ogg"
       },
       "descriptors": {
-        "activeSeconds": 0.12,
-        "centroidHz": 613.7580700147118,
-        "pitchHz": 578.7432348698547
+        "activeSeconds": 0.53,
+        "centroidHz": 318.85627255569767,
+        "pitchHz": 340.7781525472692
       },
-      "durationSeconds": 0.44733333333333336,
+      "durationSeconds": 0.5473541666666667,
       "key": "hit-b",
       "loudness": {
-        "integratedLufs": -22.399707616176688,
-        "maxMomentaryLufs": -22.399707616176688,
-        "truePeakDbtp": -4.851748692429752
+        "integratedLufs": -20.317744490911892,
+        "maxMomentaryLufs": -20.317744490911892,
+        "truePeakDbtp": -3.9202573851510687
       },
       "manifest": {
-        "hash": "sha256:6f457ac35f1fa370385814b79d30c446708fb0052c8bb1b919149bb122aacd3b",
+        "hash": "sha256:3fe49da7c5036f4f26b75f4bb4a4daca47b48f040360c50214afd18fe94a507e",
         "path": "audio-manifests/sfx/steel/families/hit/hit-b.json"
       },
-      "pcmHash": "sha256:fa593fc019ead791b2563d0972ec24f118b175957d57cc81ac8e0db141acc978",
-      "programHash": "sha256:a2027475b7d680918958a962f2af051a334f129e66a7289e7117e84d05ffd633",
+      "pcmHash": "sha256:48c46c25ba2193bd39f7eacfed96702da6947af69a473a5d72614e835642a542",
+      "programHash": "sha256:4220a0edda083d63158635a3819b9667dd3da10496af26ca82843ab394b2260a",
       "roles": {
         "weight": "heavy"
       },
       "tags": [
         "hit"
       ],
-      "variantId": "v-3724db42f8483e02"
+      "variantId": "v-8ffee39f7ccf9377"
     }
   ]
 }

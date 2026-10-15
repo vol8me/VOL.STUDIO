@@ -1,47 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-742ff08c6b1897c2": {
-        "hash": "sha256:b88bdd0d1b9b56e6da0ba44386ea62d79979267fcf3d767175301e1f5c2be31b",
-        "path": "analyses/r-742ff08c6b1897c2.json"
-      },
-      "r-a4aeef70bac03a16": {
-        "hash": "sha256:6744cef3559ad9b6c72fac391ced89f61fdc6eaa84d3a5fbf63e75b409cb744b",
-        "path": "analyses/r-a4aeef70bac03a16.json"
+      "r-cc3cce79c848efdd": {
+        "hash": "sha256:5cebb9292d9277428670cb4aa848011c2c7453788891eff0217aa501bddd633c",
+        "path": "analyses/r-cc3cce79c848efdd.json"
       }
     },
     "brief": {
-      "hash": "sha256:043ce29edf8e94a05bfdfd084a5b542afd7bf348f0bc7c62888db21b73e3ab67",
+      "hash": "sha256:46ec5377a286e76d62030634f06f51c21c9cd0ac4deaec420ae4e34629a68755",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:043ce29edf8e94a05bfdfd084a5b542afd7bf348f0bc7c62888db21b73e3ab67",
-      "hash": "sha256:96423eeccfd74d981acb3d7a06056c9b80573e6c74dd353071d94af48fc89eaa",
+      "brief": "sha256:46ec5377a286e76d62030634f06f51c21c9cd0ac4deaec420ae4e34629a68755",
+      "hash": "sha256:633fb85610c13030f86aa48bda20b8f5b552ad229f03399ddb1681da0236f04c",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:baaa75ec3ccd8ca11ea406c0f1362939cd8068f3e142462b5be0f55f2ca894b7",
+      "hash": "sha256:cefc744b38d04152ac69590ccf22191e34972a70dadaabf6cebf0789b3e56e03",
       "path": "games/vol-test/audio-manifests/sfx/steel/skid.json"
     },
     "renders": {
-      "r-742ff08c6b1897c2": {
-        "hash": "sha256:3d2586409441e8e9ce38ff3b543f54a539e96ece082121bb9a409ccdde30d5c3",
-        "path": "renders/r-742ff08c6b1897c2.json"
-      },
-      "r-a4aeef70bac03a16": {
-        "hash": "sha256:20211cba3894016915873ed003be437262455a62623314a83182738a81ee9381",
-        "path": "renders/r-a4aeef70bac03a16.json"
+      "r-cc3cce79c848efdd": {
+        "hash": "sha256:9e9de9b8219394874ca9a59be5225dc12ae087a4c83c44732396c31e75306545",
+        "path": "renders/r-cc3cce79c848efdd.json"
       }
     },
     "selection": {
-      "hash": "sha256:9a1a667d47f9d1f42f5fca0dc1cf3667abd6c69afaf71b1d9b51e8f7aed405c3",
+      "hash": "sha256:1f67794f4ce21806a039a220994a926d50e17eea97700f733a0584244b85153c",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-skid",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 14,
+  "revision": 64,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {

@@ -1,29 +1,246 @@
 {
+  "buses": {
+    "space": {
+      "effects": [
+        {
+          "params": {
+            "amount": 0.28,
+            "damp": 0.55,
+            "decay": 0.55,
+            "preDelay": 0.012,
+            "roomSize": 0.55
+          },
+          "primitive": "effect.reverb",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 110,
+            "order": 2,
+            "response": "highpass"
+          },
+          "primitive": "effect.eq-pass",
+          "version": 1
+        }
+      ]
+    }
+  },
   "channels": 1,
-  "description": "Yay atışı: kısa elektrik çıtırtısı.",
-  "durationSeconds": 0.24,
+  "description": "Ark atışı: elektrik atlaması, basınç patlaması ve vızıltı.",
+  "durationSeconds": 0.5,
+  "effects": [
+    {
+      "params": {
+        "frequency": 34,
+        "order": 3,
+        "response": "highpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "low",
+        "frequency": 100,
+        "gainDb": -2
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 300,
+        "gainDb": 2.5,
+        "q": 0.8
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 1700,
+        "gainDb": 3,
+        "q": 0.7
+      },
+      "primitive": "effect.eq-bell",
+      "version": 1
+    },
+    {
+      "params": {
+        "character": "tanh",
+        "driveDb": 5,
+        "mix": 0.75,
+        "outputDb": 0
+      },
+      "primitive": "effect.saturation",
+      "version": 1
+    },
+    {
+      "params": {
+        "edge": "high",
+        "frequency": 4500,
+        "gainDb": 2.5
+      },
+      "primitive": "effect.eq-shelf",
+      "version": 1
+    },
+    {
+      "params": {
+        "frequency": 11000,
+        "order": 2,
+        "response": "lowpass"
+      },
+      "primitive": "effect.eq-pass",
+      "version": 1
+    }
+  ],
+  "gestures": {
+    "buzz-f": {
+      "curve": "curve.spline",
+      "points": [
+        [
+          0,
+          340
+        ],
+        [
+          0.2,
+          120
+        ],
+        [
+          0.4,
+          120
+        ]
+      ],
+      "version": 1
+    }
+  },
   "layers": [
     {
       "articulation": {
         "params": {
           "attack": 0.001,
-          "curve": "cosine",
-          "decay": 0.035,
-          "release": 0.02,
+          "curve": "exponential",
+          "decay": 0.3,
+          "release": 0.06,
           "sustainLevel": 0
         },
         "primitive": "articulation.envelope",
         "version": 1
       },
-      "gainDb": 0,
-      "mechanism": "mechanical",
-      "name": "crack",
+      "durationSeconds": 0.4,
+      "gainDb": 14.82,
+      "mechanism": "discharge",
+      "name": "arc",
       "resonators": [
         {
           "params": {
-            "frequency": 3600,
+            "frequency": 240,
+            "mode": "highpass",
+            "q": 0.707
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        }
+      ],
+      "role": "transient",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -16
+        }
+      ],
+      "source": {
+        "params": {
+          "arcs": 1,
+          "buzz": 0.7,
+          "hum": 0.3,
+          "instability": 0.6,
+          "mains": 100,
+          "ring": 0.5,
+          "ringHz": 1100
+        },
+        "primitive": "source.electrical",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -10.9,
+      "mechanism": "pressure",
+      "name": "pop",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -14
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.75,
+          "bodyDecay": 0.18,
+          "bodyHz": 120,
+          "decay": 1.2,
+          "positive": 0.004,
+          "rise": 0.0002
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "gainDb": -10.99,
+      "mechanism": "pressure",
+      "name": "punch",
+      "role": "body",
+      "sends": [
+        {
+          "bus": "space",
+          "levelDb": -16
+        }
+      ],
+      "source": {
+        "params": {
+          "body": 0.85,
+          "bodyDecay": 0.12,
+          "bodyHz": 200,
+          "decay": 1.2,
+          "positive": 0.003,
+          "rise": 0.0003
+        },
+        "primitive": "source.pressure-wave",
+        "version": 1
+      }
+    },
+    {
+      "articulation": {
+        "params": {
+          "attack": 0.0008,
+          "curve": "exponential",
+          "decay": 0.012,
+          "release": 0.01,
+          "sustainLevel": 0
+        },
+        "primitive": "articulation.envelope",
+        "version": 1
+      },
+      "gainDb": 2.82,
+      "mechanism": "noise",
+      "name": "snap",
+      "resonators": [
+        {
+          "params": {
+            "frequency": 1900,
             "mode": "bandpass",
-            "q": 1.4
+            "q": 0.8
+          },
+          "primitive": "resonator.biquad",
+          "version": 1
+        },
+        {
+          "params": {
+            "frequency": 800,
+            "mode": "highpass",
+            "q": 0.707
           },
           "primitive": "resonator.biquad",
           "version": 1
@@ -41,87 +258,53 @@
     {
       "articulation": {
         "params": {
-          "attack": 0.001,
-          "curve": "cosine",
-          "decay": 0.022,
-          "release": 0.015,
+          "attack": 0.002,
+          "curve": "exponential",
+          "decay": 0.4,
+          "release": 0.05,
           "sustainLevel": 0
         },
         "primitive": "articulation.envelope",
         "version": 1
       },
-      "gainDb": -3,
-      "mechanism": "mechanical",
-      "name": "zap",
+      "gainDb": -13.23,
+      "mechanism": "tonal",
+      "name": "buzz",
       "resonators": [
         {
           "params": {
-            "frequency": 5800,
-            "mode": "bandpass",
-            "q": 2.2
+            "frequency": 900,
+            "mode": "lowpass",
+            "q": 0.707
           },
           "primitive": "resonator.biquad",
           "version": 1
         }
       ],
-      "role": "transient",
+      "role": "tonal",
       "source": {
         "params": {
-          "color": "white"
-        },
-        "primitive": "source.noise",
-        "version": 1
-      },
-      "startSeconds": 0.012
-    },
-    {
-      "articulation": {
-        "params": {
-          "attack": 0.001,
-          "curve": "cosine",
-          "decay": 0.12,
-          "release": 0.03,
-          "sustainLevel": 0
-        },
-        "primitive": "articulation.envelope",
-        "version": 1
-      },
-      "gainDb": -6,
-      "mechanism": "mechanical",
-      "name": "ring",
-      "resonators": [
-        {
-          "params": {
-            "brightness": 0.75,
-            "damping": 0.45,
-            "decay": 0.12,
-            "frequency": 2300,
-            "layout": "bar",
-            "modes": 8
+          "frequency": {
+            "gesture": "buzz-f"
           },
-          "primitive": "resonator.modal",
-          "version": 1
-        }
-      ],
-      "role": "transient",
-      "source": {
-        "params": {
-          "contactTime": 0.001,
-          "roughness": 0.08
+          "waveform": "sawtooth"
         },
-        "primitive": "exciter.impact",
-        "version": 1
+        "primitive": "source.oscillator",
+        "version": 2
       }
     }
   ],
   "master": {
-    "dcBlockHz": 25,
-    "fadeInSeconds": 0.001,
-    "fadeOutSeconds": 0.03,
+    "dcBlockHz": 20,
+    "fadeInSeconds": 0.0005,
+    "fadeOutSeconds": 0.08,
+    "limiter": {
+      "ceilingDbtp": -1.5
+    },
     "normalize": "peak",
-    "peakDbfs": -2
+    "peakDbfs": -4
   },
   "sampleRate": 48000,
   "schema": "AcousticProgramV1",
-  "seed": 8602
+  "seed": 720104
 }

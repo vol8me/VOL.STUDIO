@@ -7,11 +7,11 @@
     "crash"
   ],
   "durationSeconds": {
-    "max": 0.5,
-    "min": 0.4
+    "max": 0.95,
+    "min": 0.55
   },
   "id": "vt-hardsteel-crash-hard-a",
-  "intent": "Ağır araç teması: kısa zırh plakası darbesi, sıkı şasi rezonansı ve kuru sürtünme. Uzun ortam kuyruğu yok. Varyant hard-a (intensity:hard, rarity:common).",
+  "intent": "Engel çarpması: ağır gövde, plaka çınlaması ve savrulan çakıl. Varyant hard-a (intensity:hard, rarity:common).",
   "kind": "acoustic",
   "placement": "positional",
   "provenance": {
@@ -20,5 +20,5 @@
   },
   "schema": "AudioBriefV1",
   "subtype": "sfx",
-  "title": "VOL.TEST kuru mekanik crash — hard-a"
+  "title": "VOL.TEST crash — hard-a"
 }

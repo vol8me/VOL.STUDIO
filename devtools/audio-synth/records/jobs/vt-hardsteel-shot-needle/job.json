@@ -1,47 +1,39 @@
 {
   "artifacts": {
     "analyses": {
-      "r-39c326309e26010b": {
-        "hash": "sha256:04853d7856cba1cc208bc6dee1a94d72e891eecfa592b7389e23b7c8ed950abf",
-        "path": "analyses/r-39c326309e26010b.json"
-      },
-      "r-c916f5e57331344c": {
-        "hash": "sha256:4ea688fdefc93204f9591fbf7b9d3a5c96acf10b597866d56848701deb6b026a",
-        "path": "analyses/r-c916f5e57331344c.json"
+      "r-8f0dd1a009177880": {
+        "hash": "sha256:a0291171302c63ae601d5913f4877dbe5184ffcf7092ab7b32a5c1607a03f805",
+        "path": "analyses/r-8f0dd1a009177880.json"
       }
     },
     "brief": {
-      "hash": "sha256:c7b45f4a7105f99005e2e43c5301d6b2e5b311bcde798b56296ed00cd6fa4699",
+      "hash": "sha256:21f360e42395feb7f62c59ce1a56cdc323b3d0ca7de7c0cd6ba999babc15a611",
       "path": "brief.json"
     },
     "program": {
-      "brief": "sha256:c7b45f4a7105f99005e2e43c5301d6b2e5b311bcde798b56296ed00cd6fa4699",
-      "hash": "sha256:7a673a6fa4595aed55cbd47fc8e77ffc33bbe71e1257c75b9ab1be7833b103f7",
+      "brief": "sha256:21f360e42395feb7f62c59ce1a56cdc323b3d0ca7de7c0cd6ba999babc15a611",
+      "hash": "sha256:bcbf898702c5af44ed70780c9865008f8361c69c676c909dca3d51ea85b0c9e6",
       "path": "program.json"
     },
     "publication": {
-      "hash": "sha256:4931ed9ec8673000d429f1b8823805f7c42b5d799938bee8db525c6002a6bfc9",
+      "hash": "sha256:56a9158c1390789a78d986959eaa00d8734aaeca7338aacf54417d6410e4c183",
       "path": "games/vol-test/audio-manifests/sfx/steel/shot-needle.json"
     },
     "renders": {
-      "r-39c326309e26010b": {
-        "hash": "sha256:ab7de94d844f4ea93aa71f64372d6f6c119cd07efae71c3cbe076573def1c34b",
-        "path": "renders/r-39c326309e26010b.json"
-      },
-      "r-c916f5e57331344c": {
-        "hash": "sha256:f5f999b361a019f7b3c8672ac289f1ff1e93723f4a651295b6cb89a33dbd0e78",
-        "path": "renders/r-c916f5e57331344c.json"
+      "r-8f0dd1a009177880": {
+        "hash": "sha256:77d40ba09c823f069bc6972e052dc9c8ece5a2877971b205c2c20f39f5ed48b0",
+        "path": "renders/r-8f0dd1a009177880.json"
       }
     },
     "selection": {
-      "hash": "sha256:3d46ac2dc6872262eb3b21e2a2862fa94a750552239ce9ea57e200421b5649c7",
+      "hash": "sha256:4dabbd35f42cc78355290fb0e2b3be672e155f830e642099ed332f0ef825856e",
       "path": "selection.json"
     }
   },
   "jobId": "vt-hardsteel-shot-needle",
   "kind": "acoustic",
   "protocolVersion": 1,
-  "revision": 11,
+  "revision": 81,
   "schema": "AudioJobV1",
   "stage": "published",
   "target": {
