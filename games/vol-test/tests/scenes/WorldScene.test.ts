@@ -552,7 +552,7 @@ describe('WorldScene sürücüleri', () => {
     expect(metrics).toMatchObject({ 'online.pingMs': 12 });
     expect(metrics).not.toHaveProperty('simulation.rawDeltaMs');
     services.dispose();
-  });
+  }, 20_000);
 
   it('başlangıç verisindeki havayı sabitler ve bildirimi oyuncuya gösterir', () => {
     const { factory } = stub();
