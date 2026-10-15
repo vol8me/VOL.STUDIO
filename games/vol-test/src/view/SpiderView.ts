@@ -163,6 +163,8 @@ export class SpiderView implements VehicleView {
   }
 
   update(frame: TankFrame, deltaMs: number): void {
+    // Parçacıklar sahnenin saatiyle akar: duraklatmada (süre 0) emisyon ve ömür birlikte durur.
+    this.dust.timeScale = deltaMs > 0 ? 1 : 0;
     this.root.setPosition(frame.x, frame.y).setRotation(frame.hull);
     this.shadowRoot.setPosition(frame.x, frame.y).setRotation(frame.hull);
 

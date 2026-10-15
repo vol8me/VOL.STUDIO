@@ -194,6 +194,8 @@ export class MechView implements VehicleView {
   }
 
   update(frame: TankFrame, deltaMs: number): void {
+    // Parçacıklar sahnenin saatiyle akar: duraklatmada (süre 0) emisyon ve ömür birlikte durur.
+    this.dust.timeScale = deltaMs > 0 ? 1 : 0;
     const { art } = this;
     const mech = this.spec.mech;
     const view = MECH_VIEW;

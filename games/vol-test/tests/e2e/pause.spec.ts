@@ -6,13 +6,18 @@ import { expect, test, type Page } from '@playwright/test';
  * örtülmez; klavye açar, Escape kapatır ve oyun devam eder.
  */
 const OPEN = /vol-modal--visible/;
+/**
+ * HUD, yükleme ekranının arkasındaki gölgelendirici ısınması bitince görünür: yazılım GL'li WebKit'te
+ * tablet çözünürlüğünde 5 sn'yi aşar. Kare ve etkileşim beklemeleri değişmez; yalnız açılış beklemesi uzar.
+ */
+const BOOT_MS = 30_000;
 const CONTROLS = ['button', 'input', 'select', '[role="radio"]']
   .map((control) => `.vt-pause ${control}`)
   .join(', ');
 
 async function openPause(page: Page): Promise<void> {
   await page.goto('/?start=world');
-  await expect(page.locator('[data-testid="hud"]')).toBeVisible();
+  await expect(page.locator('[data-testid="hud"]')).toBeVisible({ timeout: BOOT_MS });
   await page.keyboard.press('Escape');
   await expect(page.locator('.vt-pause')).toHaveClass(OPEN);
 }
@@ -68,6 +73,44 @@ async function controlReport(page: Page) {
   }, CONTROLS);
 }
 
+/** Donmuş kareler arasında hoş görülen dağınık piksel sayısı (kareler ~384.000 pikseldir). */
+const NOISE_PIXELS = 40;
+
+/** İki PNG ekran görüntüsü arasında herhangi bir kanalı farklı piksellerin sayısı. */
+function changedPixels(page: Page, first: Buffer, second: Buffer): Promise<number> {
+  return page.evaluate(
+    async ([a, b]) => {
+      const read = async (base64: string): Promise<ImageData> => {
+        const image = new Image();
+        await new Promise<void>((resolve, reject) => {
+          image.onload = () => resolve();
+          image.onerror = () => reject(new Error('ekran görüntüsü çözülemedi'));
+          image.src = `data:image/png;base64,${base64}`;
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext('2d')!;
+        context.drawImage(image, 0, 0);
+        return context.getImageData(0, 0, image.width, image.height);
+      };
+      const [x, y] = await Promise.all([read(a), read(b)]);
+      if (x.width !== y.width || x.height !== y.height) return Number.POSITIVE_INFINITY;
+      let count = 0;
+      for (let index = 0; index < x.data.length; index += 4) {
+        if (
+          x.data[index] !== y.data[index] ||
+          x.data[index + 1] !== y.data[index + 1] ||
+          x.data[index + 2] !== y.data[index + 2]
+        )
+          count++;
+      }
+      return count;
+    },
+    [first.toString('base64'), second.toString('base64')] as const,
+  );
+}
+
 test('duraklatılmış dünya donar: araçlar, duman ve kıvılcımlar, yağış dahil hiçbir şey ilerlemez', async ({
   page,
 }) => {
@@ -78,21 +121,26 @@ test('duraklatılmış dünya donar: araçlar, duman ve kıvılcımlar, yağış
     );
   });
   await page.goto('/?start=world&season=winter&weather=snow');
-  await expect(page.locator('[data-testid="hud"]')).toBeVisible();
+  await expect(page.locator('[data-testid="hud"]')).toBeVisible({ timeout: BOOT_MS });
   // Botlar ateş edip duman ve kıvılcım üretene dek akış sürer.
   await frames(page, 120);
   await page.keyboard.press('Escape');
   await expect(page.locator('.vt-pause')).toHaveClass(OPEN);
   // Katman geçişi (scrim solması) bitsin.
   await frames(page, 30);
-  // Şerit ve kare sayacı ile alt ipucu çubuğu dışında kalan dünya bölgesi.
-  const clip = { x: 440, y: 20, width: 640, height: 600 };
+  // Sağ şerit (440 px), kare sayacı ve alt ipucu çubuğu dışında kalan dünya bölgesi.
+  const clip = { x: 20, y: 20, width: 780, height: 600 };
   const first = await page.screenshot({ clip });
   await frames(page, 45);
   const second = await page.screenshot({ clip });
-  expect(second.equals(first), 'duraklatılmış dünya iki kare arasında piksel piksel aynıdır').toBe(
-    true,
-  );
+  // Donmuş dünyada tek tük piksel WebKit'in 1 piksellik duyarga uçlarını yeniden tarayışından oynar
+  // (ölçüm: kare çifti başına 0–25 piksel, duyarga kaydı tüm karelerde aynıdır); gerçek hareket binlercesini
+  // değiştirir. Eşik gürültüyü geçirir, ilerleyen duman, kıvılcım ya da yağışı yakalar.
+  const changed = await changedPixels(page, first, second);
+  expect(
+    changed,
+    'duraklatılmış dünya iki kare arasında değişen piksel sayısı',
+  ).toBeLessThanOrEqual(NOISE_PIXELS);
 });
 
 test('duraklatma şeridi ve ayar görünümleri ekrana sığar; her denetim adlıdır ve merkezi hit-test ile kendisidir', async ({

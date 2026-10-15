@@ -248,6 +248,8 @@ export class LeaperView implements VehicleView {
   }
 
   update(frame: TankFrame, deltaMs: number): void {
+    // Parçacıklar sahnenin saatiyle akar: duraklatmada (süre 0) emisyon ve ömür birlikte durur.
+    this.dust.timeScale = deltaMs > 0 ? 1 : 0;
     const { art } = this;
     const config = this.spec.leaper;
     const view = LEAPER_VIEW;

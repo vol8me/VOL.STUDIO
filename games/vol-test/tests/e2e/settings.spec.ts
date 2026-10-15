@@ -7,8 +7,9 @@ test('cihaz ayarları yeniden açılışta korunur, ilerleme ayrı kapsamda kal�
   await page.getByTestId('pause-settings').click();
   const quality = page.locator('[data-testid="settings-quality"] button');
   await quality.last().click();
-  const checkbox = page.locator('[data-testid="settings-haptics"] input');
-  await page.locator('[data-testid="settings-haptics"]').click();
+  // Titreşim satırı yalnız Android ve Deck'te görünür; masaüstünde cihaz ayarı örneği ızgaradır.
+  const checkbox = page.locator('[data-testid="settings-grid"] input');
+  await page.locator('[data-testid="settings-grid"]').click();
   await expect(checkbox).not.toBeChecked();
   const range = page.locator('[data-testid="settings-volume"] input');
   await range.fill('0.3');

@@ -169,6 +169,10 @@ export class HoverView implements VehicleView {
   }
 
   update(frame: TankFrame, deltaMs: number): void {
+    // Parçacıklar sahnenin saatiyle akar: duraklatmada (süre 0) emisyon ve ömür birlikte durur.
+    const running = deltaMs > 0 ? 1 : 0;
+    this.dust.timeScale = running;
+    this.glow.timeScale = running;
     const { art } = this;
     const hover = this.spec.hover;
     this.elapsedMs += deltaMs;
