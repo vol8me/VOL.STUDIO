@@ -111,16 +111,16 @@ export class SpiderView implements VehicleView {
     this.legs = new SpiderLegs(scene, look, { ground: groundLayer, legs: legLayer });
     this.abdomen = image('abdomen', look.parts.abdomen);
     this.thorax = image('thorax', look.parts.thorax);
-    // Çekirdek ve duyargalar göğsün üstündedir; toplar onlardan da yukarıdadır.
+    // Duyargalar göğsün ALTINDAN çıkar; çekirdek göğsün üstündedir, toplar onlardan da yukarıdadır.
     const { sensors } = look;
     this.core = new CorePulse(scene, sensors.core.scale, sensors.core.tint);
     this.feelers = new Feelers(scene, sensors.feelers);
     this.art = scene.add.container(0, 0, [
       legLayer,
+      ...this.feelers.objects,
       this.abdomen,
       this.thorax,
       this.core.image,
-      ...this.feelers.objects,
     ]);
 
     this.cannons = this.spec.armament.mounts.map(

@@ -567,7 +567,7 @@ export const BARRACUDA: HoverSpec = {
 
 /**
  * Leviathan: ağır süzülen savaş gemisi. Geniş iticileri üstünde ağır ve yavaş kayar, çok can taşır;
- * iki yan topu (itici başlarında) sırayla derin mavi mızrak çakar: her isabet sert, menzil uzun, tempo
+ * iki topu (gövde üstünde, nişan taretinin iki yanında) sırayla derin mavi mızrak çakar: her isabet sert, menzil uzun, tempo
  * düşüktür. Gövdesi büyük hedeftir ve iticileri uzakta durduğundan yandan gelen ateşte kolay kopar;
  * pilot onu kıyıdan kıyıya yavaş ama istikrarlı sürer.
  */
@@ -622,10 +622,10 @@ export const LEVIATHAN: HoverSpec = {
       style: 'lance',
     },
     mounts: [
-      { x: 26, y: -31, reach: 30 },
-      { x: 26, y: 31, reach: 30 },
+      { x: 8, y: -13, reach: 30 },
+      { x: 8, y: 13, reach: 30 },
     ],
-    pivot: { x: 26, y: 0 },
+    pivot: { x: 8, y: 0 },
     salvo: [[0], [1]],
     toeInRange: 620,
   },
@@ -689,10 +689,10 @@ export const WARHOUND: MechSpec = {
       style: 'autocannon',
     },
     mounts: [
-      { x: 8, y: -13, reach: 21 },
-      { x: 8, y: 13, reach: 21 },
+      { x: 4, y: -10, reach: 21 },
+      { x: 4, y: 10, reach: 21 },
     ],
-    pivot: { x: 8, y: 0 },
+    pivot: { x: 4, y: 0 },
     salvo: [[0], [1]],
     toeInRange: 440,
   },
@@ -818,10 +818,10 @@ export const JUGGERNAUT: MechSpec = {
       style: 'howitzer',
     },
     mounts: [
-      { x: 14, y: -24, reach: 40 },
-      { x: 14, y: 24, reach: 40 },
+      { x: 12, y: -18, reach: 40 },
+      { x: 12, y: 18, reach: 40 },
     ],
-    pivot: { x: 14, y: 0 },
+    pivot: { x: 12, y: 0 },
     salvo: [[0], [1]],
     toeInRange: 560,
   },

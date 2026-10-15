@@ -48,9 +48,10 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
   (_id, spec) => {
     const look = SPIDER_LOOKS[spec.id];
 
-    it('bacaklar gövdenin ALTINDA kalır: çizim sırası bacaklar, karın, göğüs, toplar', () => {
+    it('bacaklar gövdenin ALTINDA kalır: çizim sırası bacaklar, duyargalar, karın, göğüs, toplar', () => {
       const { art, root } = build(spec);
-      const [legLayer, abdomen, thorax] = art.list as FakeObject[];
+      // Duyargalar (iki gövde, iki uç) göğsün altından çıkar: bacak katmanı ile karın arasındadır.
+      const [legLayer, , , , , abdomen, thorax] = art.list as FakeObject[];
       expect(legLayer.kind).toBe('container');
       expect(abdomen.args[3]).toBe(`${spec.id}/abdomen`);
       expect(thorax.args[3]).toBe(`${spec.id}/thorax`);
@@ -67,15 +68,15 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       }
     });
 
-    it('göğsün çekirdeği ve ön duyargaları göğse bağlıdır: çizim sırası göğüsten sonra, toplardan önce', () => {
+    it('göğsün çekirdeği göğüsten sonra, ön duyargalar göğsün ALTINDA çizilir', () => {
       const { art, view } = build(spec);
       const children = art.list as FakeObject[];
       const core = children.find((child) => child.args[2] === TEXTURE.core)!;
       const stalks = children.filter((child) => child.args[2] === TEXTURE.antenna);
-      const thorax = children[2];
+      const thorax = children.find((child) => child.args[3] === `${spec.id}/thorax`)!;
       expect(stalks).toHaveLength(2);
       expect(children.indexOf(core)).toBeGreaterThan(children.indexOf(thorax));
-      expect(children.indexOf(stalks[0])).toBeGreaterThan(children.indexOf(core));
+      expect(children.indexOf(stalks[0])).toBeLessThan(children.indexOf(thorax));
       view.update(frame({ boosting: true, speed: spec.walker.maxSpeed }), 16);
       // Çekirdek göğüs lensindedir; duyargalar önde (gövde +x) ve iki yanda durur.
       expect(core.x as number).toBeGreaterThan(look.body.thoraxX);

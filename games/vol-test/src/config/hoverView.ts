@@ -45,7 +45,7 @@ export const HOVER_ART: Readonly<Record<HoverId, HoverArt>> = {
     sensors: {
       core: { x: -13.2, y: 0, scale: 0.8, tint: 0xb15cff },
       feelers: {
-        anchorX: -21,
+        anchorX: -24,
         anchorY: 13,
         length: 15,
         thickness: 2.4,
@@ -60,7 +60,7 @@ export const HOVER_ART: Readonly<Record<HoverId, HoverArt>> = {
   barracuda: {
     hull: { width: 52, height: 32 },
     pod: { width: 40, height: 12, x: -3 },
-    fan: { x: -1 },
+    fan: { x: 1 },
     turret: { width: 38, height: 16, pivotX: 10 },
     glow: 0x3ddc97,
     flashScale: 0.75,
@@ -69,7 +69,7 @@ export const HOVER_ART: Readonly<Record<HoverId, HoverArt>> = {
     sensors: {
       core: { x: -10, y: 0, scale: 0.65, tint: 0x3ddc97 },
       feelers: {
-        anchorX: -15,
+        anchorX: -19,
         anchorY: 10,
         length: 12,
         thickness: 2,
@@ -94,7 +94,7 @@ export const HOVER_ART: Readonly<Record<HoverId, HoverArt>> = {
     sensors: {
       core: { x: -20, y: 0, scale: 0.95, tint: 0x3a6bff },
       feelers: {
-        anchorX: -30,
+        anchorX: -33,
         anchorY: 22,
         length: 20,
         thickness: 3,

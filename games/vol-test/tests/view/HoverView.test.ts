@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
 import { HOVER_ART, HOVER_VIEW } from '@/config/hoverView';
@@ -56,6 +58,38 @@ describe('HoverView (manta)', () => {
     expect(children.at(-1)).toBe(body);
     expect(body.list).toContain(turretRig);
     expect(byTexture(hoverFrame('manta', 'hull'))[0].scale).toBe(INV);
+  });
+
+  it('duyargalar gövdenin ALTINDAN çıkar: gövde kapsayıcısında gövdeden ve çekirdekten önce gelir', () => {
+    const { body, byTexture } = build();
+    const list = body.list as FakeObject[];
+    const hull = byTexture(hoverFrame('manta', 'hull'))[0];
+    const stalks = list.filter((child) => child.args[2] === TEXTURE.antenna);
+    expect(stalks).toHaveLength(2);
+    for (const stalk of stalks) expect(list.indexOf(stalk)).toBeLessThan(list.indexOf(hull));
+  });
+
+  it('Leviathan toplarını pervane yuvalarına değil gövdeye yerleştirir', () => {
+    const half = HOVER_ART.leviathan.hull.height / 2;
+    for (const mount of LEVIATHAN.armament.mounts) {
+      expect(Math.abs(mount.y)).toBeLessThan(half - 6);
+      expect(Math.abs(mount.y)).toBeLessThan(
+        LEVIATHAN.hover.trackOffset - HOVER_ART.leviathan.pod.height / 2,
+      );
+    }
+  });
+
+  it('pervane hedef yuvasının merkezindedir: her itici resminde pervane çemberi aynı boylamda', () => {
+    for (const id of ['manta', 'barracuda', 'leviathan'] as const) {
+      const art = HOVER_ART[id];
+      const svg = readFileSync(
+        resolve(import.meta.dirname, `../../src/assets/vehicles/${id}/pod.svg`),
+        'utf8',
+      );
+      const width = Number(svg.match(/width="([\d.]+)"/)![1]);
+      const wellX = Number(svg.match(/<circle cx="([\d.]+)"/)![1]);
+      expect(art.fan.x, id).toBeCloseTo(wellX - width / 2, 6);
+    }
   });
 
   it('reaktör çekirdeği pencerede atar ve atılımla büyür; duyargalar kanat uçlarında dönüşe savrulur', () => {

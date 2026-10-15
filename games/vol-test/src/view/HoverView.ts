@@ -92,7 +92,8 @@ export class HoverView implements VehicleView {
       .setOrigin(art.turret.pivotX / art.turret.width, 0.5)
       .setScale(INV);
     this.turretRig = scene.add.container(0, 0, [this.turret]);
-    // Reaktör çekirdeği ve kanat ucu duyargaları gövdeyle yatar ve nefes alır; taret hepsinin üstündedir.
+    // Reaktör çekirdeği gövdeyle yatar ve nefes alır; duyargalar gövdenin ALTINDAN çıkar (kapsayıcı
+    // sırasında gövdeden önce gelir) ve taret hepsinin üstündedir.
     const { sensors } = art;
     this.core = new CorePulse(scene, sensors.core.scale, sensors.core.tint);
     this.core.place(sensors.core.x, sensors.core.y);
@@ -107,9 +108,9 @@ export class HoverView implements VehicleView {
         }))
       : [];
     this.body = scene.add.container(0, 0, [
+      ...this.feelers.objects,
       hull,
       this.core.image,
-      ...this.feelers.objects,
       ...this.guns.map((g) => g.image),
       this.turretRig,
     ]);
