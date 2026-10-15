@@ -481,6 +481,18 @@ try {
         await sleep(1);
         before = await page.evaluate(PAGE_STATE);
       }
+      // Alıştırmanın duraklatma menüsünde metin alanı yoktur: "Savaşa katıl" garaja götürür ve oyuncu adı
+      // alanı orada sürülür. Sayfa gezintisi DOM tıklamasıdır; klavye, odak ve seçim gerçek dokunuştur.
+      let leftWorld = false;
+      if (!before.field) {
+        leftWorld = await page.evaluate(
+          `(() => { const button = document.querySelector('[data-testid="pause-online"]'); if (!button) return false; button.click(); return true; })()`,
+        );
+        for (let attempt = 0; leftWorld && attempt < 8 && !before.field; attempt += 1) {
+          await sleep(1);
+          before = await page.evaluate(PAGE_STATE);
+        }
+      }
       await screenshot('text-before');
       // Dar yatay ekranda panel görünümden uzun olabilir: kullanıcı gibi önce alanı görünüme kaydırır.
       const needsScroll =
@@ -513,13 +525,17 @@ try {
           shown === true && typing.field?.active && fieldVisible ? 'PASS' : 'FAIL',
           `${needsScroll ? 'kaydırma gerekti; ' : ''}klavye=${shown} alan odakta=${typing.field?.active} alan görsel görünümde=${fieldVisible} (alan y=${Math.round(field?.y ?? -1)}, görsel görünüm üst=${Math.round(typing.visual.top)} yükseklik=${Math.round(typing.visual.height)}/${typing.height})`,
         );
+        // Alanın özgün değeri turdan sonra geri yazılır (garajdaki oyuncu adı kalıcıdır).
+        const originalValue = await page.evaluate(
+          `(() => { const field = document.activeElement; return field && 'value' in field ? String(field.value) : ''; })()`,
+        );
         // Seçim sınaması için alana bilinen bir değer yazılır (rakam: sayı alanı da kabul eder).
         adb(['shell', 'input', 'text', '24680']);
         await sleep(0.8);
         // Uzun basış METNİN üstüne yapılır. Klavye görsel görünümü kaydırır: `getBoundingClientRect` düzen
         // görünümünün koordinatıdır, ekrana dokunmak için görsel görünümün ofseti çıkarılır (çıkarılmazsa
         // dokunuş klavyenin tuşlarına düşer ve alana rakam yazar).
-        const textX = String(Math.round((typing.field.x - typing.visual.left + 60) * typing.dpr));
+        const textX = String(Math.round((typing.field.x - typing.visual.left + 34) * typing.dpr));
         const textY = String(
           Math.round((typing.field.y - typing.visual.top + typing.field.height / 2) * typing.dpr),
         );
@@ -538,6 +554,9 @@ try {
             : `${context.count} contextmenu olayı, ${context.prevented} engellendi`,
         );
         await selectionProbe(Number(textX), Number(textY));
+        await page.evaluate(
+          `(() => { const field = document.activeElement; if (field && 'value' in field) { field.value = ${JSON.stringify(originalValue)}; field.dispatchEvent(new Event('input', { bubbles: true })); field.dispatchEvent(new Event('change', { bubbles: true })); } })()`,
+        );
         adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
         await sleep(1);
         adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
@@ -546,8 +565,19 @@ try {
         add(
           'text.keyboard-opens-field-visible',
           'NOT-RUN',
-          'duraklatma panelinde metin alanı bulunamadı',
+          'duraklatma panelinde ve garajda metin alanı bulunamadı',
         );
+      }
+
+      // Garaja geçildiyse titreşim adımı için alıştırma dünyasına dönülür (garajdan ya da ana menüden).
+      if (leftWorld) {
+        for (const testid of ['garage-practice', 'menu-practice']) {
+          const clicked = await page.evaluate(
+            `(() => { const button = document.querySelector('[data-testid="${testid}"]'); if (!button) return false; button.click(); return true; })()`,
+          );
+          if (clicked) break;
+        }
+        await sleep(3);
       }
 
       // Titreşim istekleri oyun alanındaki kumanda dokunuşlarından gelir (geri tuşu her cihazda üretmez).

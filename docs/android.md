@@ -186,7 +186,8 @@ node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.ap
   üretilmelidir), soğuk açılış (ana menü), yatay görünüm ve dokunmatik işaretçi, güvenli alan, menüden Alıştırma ile dünyaya giriş (HUD göstergeleri görünür), geri tuşu (1. basış
   duraklatma paneli, 2. basış devam), arka plana gidip dönüş (süreç ve sayfa aynı, kareler akıyor), dört yön
   isteğinde yatay kilit (Activity yeniden yaratılmaz), ekran klavyesi açılışı ve metin alanının klavyenin üstündeki
-  görsel görünümde kalması, uzun basışta yerel seçim çubuğunun (Kes/Kopyala/Tümünü seç) açılması ve Kes ile
+  görsel görünümde kalması (alıştırmanın duraklatma menüsünde alan yoktur: tur "Savaşa katıl"la garaja geçip oyuncu adı alanını
+  sürer, sonra alıştırmaya döner), uzun basışta yerel seçim çubuğunun (Kes/Kopyala/Tümünü seç) açılması ve Kes ile
   Yapıştır'ın alanın değerini gerçekten değiştirmesi, titreşim isteklerinin sistem servisine ulaşması ve çalınması.
 - **Kilit aşılmaz:** cihaz kilitli ya da uykudaysa `--wait-unlock` süresince ekranı uyandırıp bekler, kilit açılmazsa
   tur NOT-RUN olur. `--keep-awake` ekran zaman aşımını tur süresince uzatır; yön ve yoğunluk ayarlarıyla birlikte
@@ -207,6 +208,9 @@ node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.ap
 - **Sayı alanı:** `type=number` alanında `selectionStart` null döner; "kelime seçildi" hükmü NOT-RUN yazılır, seçimin
   varlığını çubuğun Kes/Kopyala düğümleri kanıtlar.
 - **Sınır:** dokunma hissi, ses dinleme ve gerçek AT insan kabulüdür. Bölünmüş ekran ve yüzen klavye turda sürülmez.
+- **Son koşu (2026-10-15, `abd8f606` temiz ağacından debug APK):** Lenovo TB350FU (Android 14) 16 kontrolün hepsi PASS;
+  titreşim isteklerinin altısı çalındı, on kadarı cihaz ayarı yüzünden `ignored_for_settings` sayıldı. Samsung
+  (Android 16) kilitliydi ve kilit aşılmaz: NOT-RUN, bu cihazda bu yapı için tur koşulmadı.
 
 ## Fiziksel kabulün kanıt sınırı
 
