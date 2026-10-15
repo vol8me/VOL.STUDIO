@@ -17,6 +17,8 @@ export interface GamePreferences {
   quality: EffectLevel;
   volume: number;
   haptics: boolean;
+  /** Zemin ızgarası: dokunmatik cihazda `G` tuşu yoktur, bu ayar açıp kapatır. */
+  grid: boolean;
   display: 'windowed' | 'fullscreen';
   scenario: ScenarioId;
   seed: number;
@@ -45,6 +47,7 @@ function parsePreferences(value: unknown, fallback: GamePreferences): GamePrefer
         ? Math.max(0, Math.min(1, input.volume))
         : fallback.volume,
     haptics: typeof input.haptics === 'boolean' ? input.haptics : fallback.haptics,
+    grid: typeof input.grid === 'boolean' ? input.grid : fallback.grid,
     playerName: sanitizeName(input.playerName) ?? fallback.playerName,
     vehicle: isVehicleId(input.vehicle) ? input.vehicle : fallback.vehicle,
     faction:
@@ -71,6 +74,7 @@ export class GameSettings {
       quality: initialEffectLevel(userAgent),
       volume: 1,
       haptics: true,
+      grid: true,
       display: 'windowed',
       scenario: 'empty',
       seed: SCENARIO.defaultSeed,
@@ -89,6 +93,7 @@ export class GameSettings {
         a.quality === b.quality &&
         a.volume === b.volume &&
         a.haptics === b.haptics &&
+        a.grid === b.grid &&
         a.display === b.display &&
         a.scenario === b.scenario &&
         a.seed === b.seed &&

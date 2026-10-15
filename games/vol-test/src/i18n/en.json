@@ -162,6 +162,7 @@
     },
     "volume": "Volume",
     "haptics": "Haptics",
+    "grid": "Ground grid",
     "display": "Display mode",
     "displayMode": {
       "windowed": "Windowed",

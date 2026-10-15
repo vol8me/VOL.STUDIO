@@ -174,6 +174,9 @@ Araçlar kayaya türüne göre tepki verir (`ROCKS`):
 - Sıçrayıcı havadayken (`boosting`) kayanın üstünden geçer: duvar listesi atlanır (`Chassis.climbs`). Kaya
   içine inen sıçrayıcı normal duvar çözümüyle dışarı itilir.
 - Düz mermi `coverHeight × lob yüksekliği` altında kayaya çarpar ve söner; yüksek yaylı mermi üstünden aşar.
+  Kaya üstündeki örümceğin mermisi kendi yüksekliğinden doğar (`Simulation.elevationOf` = `climb × coverHeight`;
+  namlu yüksekliğine eklenir): kayanın içinden başlayan mermi yalnız hâlâ kayanın tavanı altındaysa gömülür,
+  üstündeyse kayayı bırakır ve kaya modeli düz üst silindirdir (yükseklik soyutlaması, yamaç yok).
 - Bot yüzemeyen araçta kayanın önündeki mesafeleri tarar ve teğete sıyrılır (`BotBrain.rockPush`); örümcek
   botu kayayı engel saymaz.
 
@@ -202,7 +205,12 @@ yazar; yeniden başlayınca saat ve yeşillik kaldığı yerden sürer. Başka t
 kayıt yok sayılır ve temiz iklimle açılır. İstemci dinleyicisini kurunca `CLIMATE_REQUEST` yollar,
 sunucu `CLIMATE_MESSAGE` ile anlık görüntüyü (`ClimateSnapshot`, hücre alanları bayt dizisi) verir ve
 sonrakini düzenli aralıkla yollar; istek sıklığı istemci başına sınırlıdır (`climateRequestGapMs`).
-Yerel hava saati aynı belirli takvimde akar, anlık görüntü yalnız uyumlar. Çevrimiçi oyunda yüzey
+Yerel hava saati aynı belirli takvimde akar, anlık görüntü yalnız uyumlar. Sonraki anlık görüntüler hücreleri
+tek adımda değiştirmez: `SurfaceGrid.blendToward` ıslaklık, su, kar ve yeşilliği `CLIMATE.blendMs` boyunca
+hedefe yaklaştırır (saat farkı `clockToleranceMs` içindeyse; aksi hâlde ya da ilk kayıtta sert yükleme), bu
+yüzden her 15 sn'lik eşitlemede su birikintisi ya da yeşil yama ekranda sıçramaz. `VegetationLayer`
+tutamların boyu, gölgesi ve ucunu hücrenin eşik marjından yumuşak basamakla (`WEATHER_VIEW.sprout`) büyütür;
+çiçek yalnız olgun tutamda açar. Çevrimiçi oyunda yüzey
 etkileri (tutuş, hava direnci) bilerek yoktur (`Simulation.weatherEffects`): hava yalnız sunumdur, bu yüzden
 öngörü sunucuyla ayrışmaz.
 
@@ -762,7 +770,14 @@ yaklaşır, nişan yönü geciktirilmez. Sağ dokunmatik çubuğun iç bölgesi 
 dış bölgesi ateş üretir; giriş ve çıkış eşikleri titremeyi önler. Eşik kararını CORE `TouchStickState.aimStickGate` taşır; `PlayerControls`
 kare girdisini `InputStepBuffer`'a verir. Kısa basış kenarı ve nişan yönü
 ilk tüketilen tick'e korunarak gider; mekanizma sözleşmesi
-[primitifler](../../core/docs/primitives.md#sabit-ticke-girdi-taşıma) içindedir. Zoom, ızgara ve duraklatma kenar tetiklidir.
+[primitifler](../../core/docs/primitives.md#sabit-ticke-girdi-taşıma) içindedir. Zoom, ızgara ve duraklatma kenar tetiklidir. Izgara
+`GameSettings.grid` ile kalıcıdır (Ayarlar'daki onay kutusu ya da `G`; dokunmatik ve Android'de tek yol ayardır).
+İmleçler CORE'dandır: `GameServices.cursors` uygulama geneli arayüz imleçlerini (`--vol-cursor-*`) kurar, `WorldCursor`
+dünya tuvalinde yalnız fare/klavye girdisinde, canlıyken ve duraklatılmamışken CORE nişangâhını (`ringDot`) çizer;
+atışta büyür, isabette ton değiştirir. Kol ve dokunmada nişangâh yoktur, ince işaretçisiz aygıtta denetleyici
+etkisizdir. Odak halkası `startFocusModality` ile girdi aygıtına bağlıdır: fareyle açılan menüde ilk düğme halka
+çizmez, ilk klavye/kol girdisiyle açılır (Deck ve kol bağlıyken baştan açıktır). Titreşim satırı yalnız
+`getHapticsCapability().supported` iken görünür.
 Dokunmatik düğmeler CORE `VirtualActionSource` üzerinden tek karelik dokunuşu
 da korur.
 

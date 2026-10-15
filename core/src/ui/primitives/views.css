@@ -136,7 +136,7 @@
   border-color: var(--vol-ui-brand-border);
 }
 
-.vol-color-picker__swatch:focus-visible {
+.vol-color-picker__swatch:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
 }
@@ -208,7 +208,10 @@
   position: absolute;
 }
 
-.vol-curve-editor__point:is(:focus-visible, .vol-focusnav-current) {
+.vol-curve-editor__point:is(
+  :focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-focusnav-current
+) {
   outline: 3px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
   box-shadow: 0 0 0 6px var(--vol-ui-focus-halo);

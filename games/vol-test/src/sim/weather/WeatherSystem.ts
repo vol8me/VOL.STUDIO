@@ -1,4 +1,5 @@
 import type { SeasonKind } from '@/config/seasons';
+import { CLIMATE_NET } from '@/config/climate';
 import { WEATHER, type WeatherKind } from '@/config/weather';
 import { SurfaceGrid, type FertilityMask } from './SurfaceGrid';
 import { WeatherSchedule } from './WeatherSchedule';
@@ -120,8 +121,12 @@ export class WeatherSystem {
   /**
    * Anlık görüntüyü yükler: saat, rüzgâr ve zemin onunla aynı olur. Tohum ya da zemin ölçüsü
    * uyuşmuyorsa `false` döner ve hiçbir şey değişmez (başka dünyanın kaydı bu dünyayı bozmaz).
+   *
+   * `smooth` verilirse canlı bir dünyaya uyum yapılır (sunucu yayını): zemin hücreleri sert yazılmaz,
+   * `CLIMATE_NET.blendMs` içinde hedefe yaklaşır; saat yerelden `clockToleranceMs` kadar sapmadıysa yerel
+   * takvim ve rüzgâr korunur (yağmur ve parçacıklar sıçramaz). Katılımdaki ilk görüntü sert yüklenir.
    */
-  restore(snapshot: ClimateSnapshot): boolean {
+  restore(snapshot: ClimateSnapshot, smooth = false): boolean {
     const numbers = [
       snapshot.elapsedMs,
       snapshot.surfaceMs,
@@ -140,6 +145,12 @@ export class WeatherSystem {
       snapshot.surfaceMs > snapshot.elapsedMs
     )
       return false;
+    const aligned =
+      smooth && Math.abs(snapshot.elapsedMs - this.elapsedMs) <= CLIMATE_NET.clockToleranceMs;
+    if (aligned) {
+      if (snapshot.season !== this.initialSeason) return false;
+      return this.surface.blendToward(snapshot.surface, CLIMATE_NET.blendMs);
+    }
     if (!this.surface.restore(snapshot.surface)) return false;
     // Mevsim saati başlangıç mevsiminden sayılır: sunucunun takvimi, istemcinin yerel seçimini ezer.
     if (snapshot.season !== this.initialSeason) {

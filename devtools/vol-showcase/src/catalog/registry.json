@@ -732,7 +732,7 @@
       "phase": "UI-01",
       "anchor": "A1",
       "archetype": "mechanism",
-      "consumer": "catalog",
+      "consumer": "direct",
       "showcase": ["sections/kimlikCursors.ts"],
       "tests": [
         {
@@ -1040,6 +1040,82 @@
         {
           "file": "core/tests/ui/feedback/hudStates.test.ts",
           "title": "aynı anda en çok maxActive metin durur; en eski toplanır, en yeni her zaman görünür"
+        }
+      ]
+    },
+    {
+      "export": "FOCUS_MODALITY_ATTR",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/focus/focusModality.test.ts",
+          "title": "hiçbir girdi yokken sessizdir: fareyle açılan menüde programatik odak halka çizmez"
+        }
+      ]
+    },
+    {
+      "export": "FocusModalityTracker",
+      "kind": "class",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": "A5",
+      "archetype": "mechanism",
+      "consumer": "catalog",
+      "showcase": ["ShowcaseApp.ts"],
+      "tests": [
+        {
+          "file": "core/tests/ui/focus/focusModality.test.ts",
+          "title": "basılı kol düğmesi ya da kol çubuğu halkayı açar"
+        }
+      ]
+    },
+    {
+      "export": "startFocusModality",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "direct",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/focus/focusModality.test.ts",
+          "title": "ikinci başlatma mevcut izleyiciyi döner ve başlangıç kipini değiştirmez"
+        }
+      ]
+    },
+    {
+      "export": "stopFocusModality",
+      "kind": "helper",
+      "tier": 2,
+      "phase": "UI-12",
+      "anchor": null,
+      "archetype": "helper",
+      "consumer": "catalog",
+      "showcase": [],
+      "shownVia": {
+        "via": null,
+        "reason": "görsel olmayan yardımcı; davranış testiyle sınanır"
+      },
+      "tests": [
+        {
+          "file": "core/tests/ui/focus/focusModality.test.ts",
+          "title": "durdurma özniteliği söker ve sonraki başlatma yeni izleyici kurar"
         }
       ]
     },

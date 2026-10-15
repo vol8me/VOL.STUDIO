@@ -162,6 +162,7 @@
     },
     "volume": "Ses düzeyi",
     "haptics": "Titreşim",
+    "grid": "Zemin ızgarası",
     "display": "Ekran kipi",
     "displayMode": {
       "windowed": "Pencereli",

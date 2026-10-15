@@ -62,6 +62,8 @@ export class VegetationLayer {
   private readonly xs = new Float32Array(MAX_CANDIDATES);
   private readonly ys = new Float32Array(MAX_CANDIDATES);
   private readonly growths = new Float32Array(MAX_CANDIDATES);
+  /** Kümenin filizlenme oranı [0, 1]: eşiği yeni geçen küme küçüktür, kabul değeri arttıkça tam boya varır. */
+  private readonly sprouts = new Float32Array(MAX_CANDIDATES);
   private readonly ids = new Int32Array(MAX_CANDIDATES);
   private count = 0;
   private rowA = new Float64Array(0);
@@ -169,9 +171,13 @@ export class VegetationLayer {
         // Kenarda seyrek, içeride sık; düşük frekanslı gürültü kümeleri öbekler ve ızgara düzenini kırar.
         const clump = VEGETATION.clump;
         const dense = clump.min + (1 - clump.min) * field.noise(x * 1.9 + 53, y * 1.9 + 17);
-        if (hash(gx, gy, 3) > Math.min(1, value * VEGETATION.density) * dense) continue;
+        const accept = Math.min(1, value * VEGETATION.density) * dense;
+        const margin = accept - hash(gx, gy, 3);
+        if (margin <= 0) continue;
         if (this.count >= MAX_CANDIDATES) return;
         const index = this.count++;
+        const sprout = Math.min(1, margin / VEGETATION.sprout);
+        this.sprouts[index] = sprout * sprout * (3 - 2 * sprout);
         this.xs[index] = x;
         this.ys[index] = y;
         // Boy çeşitliliği: aynı örtüde bile kümeler farklı boydadır.
@@ -224,7 +230,8 @@ export class VegetationLayer {
     g.fillStyle(palette.shade, VEGETATION.shadeAlpha);
     for (let index = 0; index < this.count; index++) {
       if (hash(this.ids[index], 0, 4) > keep) continue;
-      const length = minLength + (maxLength - minLength) * this.growths[index];
+      const length =
+        (minLength + (maxLength - minLength) * this.growths[index]) * this.sprouts[index];
       g.fillEllipse(this.xs[index], this.ys[index] + 1.2, length * 1.25, length * 0.5);
     }
 
@@ -237,7 +244,8 @@ export class VegetationLayer {
         if (pass === 0) this.drawn++;
         const x = this.xs[index];
         const y = this.ys[index];
-        const length = minLength + (maxLength - minLength) * this.growths[index];
+        const length =
+          (minLength + (maxLength - minLength) * this.growths[index]) * this.sprouts[index];
         const lean = (hash(id, 0, 5) - 0.5) * 0.5;
         // Açık yapraklar tutamın arasındadır ve biraz kısadır: tutama hacim ve ışık verir.
         for (let blade = pass; blade < blades; blade += 2) {
@@ -266,6 +274,7 @@ export class VegetationLayer {
     g.fillStyle(palette.bloom, 1);
     for (let index = 0; index < this.count; index++) {
       const id = this.ids[index];
+      if (this.sprouts[index] < 0.8) continue;
       if (hash(id, 0, 4) > keep || hash(id, 0, 9) > bloomShare * this.growths[index]) continue;
       const lift = (minLength + (maxLength - minLength) * this.growths[index]) * 0.8;
       g.fillCircle(
@@ -300,7 +309,10 @@ export class VegetationLayer {
       // Kar derinleştikçe uç seyrelir; hiç kar yoksa uç yoktur (altta zaten tam küme çizilidir).
       const alive = Math.max(tip.floor, 1 - Math.min(1, snow / (fullDepth * tip.fadeDepth)));
       if (hash(id, 0, 10) > alive) continue;
-      const length = (minLength + (maxLength - minLength) * this.growths[index]) * tip.length;
+      const length =
+        (minLength + (maxLength - minLength) * this.growths[index]) *
+        tip.length *
+        this.sprouts[index];
       for (let blade = 0; blade < 3; blade++) {
         const angle = -PI / 2 + (blade - 1) * 0.7 + (hash(id, blade, 11) - 0.5) * 0.4;
         tips.moveTo(x, y);

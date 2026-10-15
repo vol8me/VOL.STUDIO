@@ -20,11 +20,22 @@ export type FertilityMask = (x: number, y: number) => number;
 
 const quantize = (value: number): number => Math.round(clamp01(value) * 255);
 
+/** Sürmekte olan yumuşak uyum: her kanalın hedefe kalan farkı ve kalan süre. */
+interface Blend {
+  remainingMs: number;
+  readonly wetness: Float32Array;
+  readonly puddle: Float32Array;
+  readonly snowWater: Float32Array;
+  readonly compaction: Float32Array;
+  readonly growth: Float32Array;
+}
+
 export class SurfaceGrid {
   readonly cellSize: number;
   readonly columns: number;
   readonly rows: number;
   private readonly cells: StoredCell[];
+  private blend: Blend | null = null;
 
   constructor(
     private readonly width: number,
@@ -142,6 +153,7 @@ export class SurfaceGrid {
       else if (next > fertility) next = fertility;
       cell.growth = next;
     }
+    this.applyBlend(seconds * 1000);
   }
 
   sample(x: number, y: number, frame: WeatherState): SurfaceSample {
@@ -208,6 +220,68 @@ export class SurfaceGrid {
       out.growth[index] = quantize(cell.growth);
     }
     return out;
+  }
+
+  /**
+   * `snapshot`a `durationMs` içinde doğrusal olarak yaklaşır: hücreler sert yazılmaz, `step` her adımda farkın
+   * kalan süreye oranını uygular. Sürmekte olan uyum varsa yenisi güncel hücreden yeniden hesaplanır.
+   * Uyuşmayan ölçüde `false` döner ve hiçbir şey değişmez.
+   */
+  blendToward(snapshot: SurfaceSnapshot, durationMs: number): boolean {
+    const count = this.cells.length;
+    if (
+      !(durationMs > 0) ||
+      snapshot.columns !== this.columns ||
+      snapshot.rows !== this.rows ||
+      [snapshot.wetness, snapshot.puddle, snapshot.snow, snapshot.compaction, snapshot.growth].some(
+        (field) => field.length !== count,
+      )
+    )
+      return false;
+    const config = WEATHER.surface;
+    const snowCapacity = config.maxSnowDepth * config.looseSnowDensity;
+    const blend: Blend = this.blend ?? {
+      remainingMs: 0,
+      wetness: new Float32Array(count),
+      puddle: new Float32Array(count),
+      snowWater: new Float32Array(count),
+      compaction: new Float32Array(count),
+      growth: new Float32Array(count),
+    };
+    for (let index = 0; index < count; index++) {
+      const cell = this.cells[index];
+      blend.wetness[index] = snapshot.wetness[index] / 255 - cell.wetness;
+      blend.puddle[index] = (snapshot.puddle[index] / 255) * config.maxPuddleDepth - cell.puddle;
+      blend.snowWater[index] = (snapshot.snow[index] / 255) * snowCapacity - cell.snowWater;
+      blend.compaction[index] = snapshot.compaction[index] / 255 - cell.compaction;
+      blend.growth[index] = Math.min(cell.fertility, snapshot.growth[index] / 255) - cell.growth;
+    }
+    blend.remainingMs = durationMs;
+    this.blend = blend;
+    return true;
+  }
+
+  /** Sürmekte olan uyumun bu adıma düşen payını hücrelere uygular (`step` sonunda çağrılır). */
+  private applyBlend(ms: number): void {
+    const blend = this.blend;
+    if (!blend) return;
+    const share = ms >= blend.remainingMs ? 1 : ms / blend.remainingMs;
+    blend.remainingMs -= ms;
+    for (let index = 0; index < this.cells.length; index++) {
+      const cell = this.cells[index];
+      cell.wetness = clamp01(cell.wetness + blend.wetness[index] * share);
+      cell.puddle = Math.max(0, cell.puddle + blend.puddle[index] * share);
+      cell.snowWater = Math.max(0, cell.snowWater + blend.snowWater[index] * share);
+      cell.compaction = clamp01(cell.compaction + blend.compaction[index] * share);
+      cell.growth = clamp(cell.growth + blend.growth[index] * share, 0, cell.fertility);
+      // Kalan fark bu adımın payı kadar azalır: sonraki adım kalan süreye göre orantılanır.
+      blend.wetness[index] *= 1 - share;
+      blend.puddle[index] *= 1 - share;
+      blend.snowWater[index] *= 1 - share;
+      blend.compaction[index] *= 1 - share;
+      blend.growth[index] *= 1 - share;
+    }
+    if (blend.remainingMs <= 0) this.blend = null;
   }
 
   /**

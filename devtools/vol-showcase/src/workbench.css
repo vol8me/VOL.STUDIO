@@ -32,7 +32,7 @@
 }
 
 .vol-showcase-workbench-asset:hover,
-.vol-showcase-workbench-asset:focus-visible {
+.vol-showcase-workbench-asset:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   color: var(--vol-ui-text);
   background: var(--vol-ui-hover-fill);
 }

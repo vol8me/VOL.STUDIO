@@ -65,7 +65,13 @@ export class OnlineDriver implements WorldDriver {
     });
     this.tags = scope.addDestroyable(new NameTags(context.scene));
     // Sunucu iklimi: katılımda gelen anlık görüntü hemen, sonrakiler düzenli aralıkla uygulanır.
-    const apply = (snapshot: ClimateSnapshot): void => void context.weather.restore(snapshot);
+    // Katılımdaki ilk görüntü sert yüklenir (henüz görünür bir şey yok); sonrakiler yumuşakça uyumlanır:
+    // su birikintisi ve yeşillik her yayında sıçramaz.
+    let joined = false;
+    const apply = (snapshot: ClimateSnapshot): void => {
+      context.weather.restore(snapshot, joined);
+      joined = true;
+    };
     if (session.climate) apply(session.climate);
     scope.addSubscription(session.onClimate(apply));
     scope.addSubscription(

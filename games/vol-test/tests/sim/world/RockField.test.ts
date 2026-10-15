@@ -135,6 +135,17 @@ describe('RockField', () => {
     expect(field.segmentHit(rock.x, rock.y, rock.x + r * 3, rock.y, 0)).toBe(0);
   });
 
+  it('kayada duran atıcının mermisi kendi kayasına çarpmaz: yüzeyin üstünden başlar, altından başlayan durur', () => {
+    const rock = field.rocks[0];
+    const surface = field.heightAt(rock.x, rock.y) * ROCKS.coverHeight;
+    expect(surface).toBeGreaterThan(0);
+    const r = rock.radius * ROCKS.collisionInset;
+    // Merkezden dışarı yatay atış, yüzeyin biraz üstünden: kayayı yok sayar ve dışarı çıkar.
+    expect(field.segmentHit(rock.x, rock.y, rock.x + r * 2, rock.y, surface + 3)).toBe(-1);
+    // Yüzeyin altından başlayan (gömülü) parça aynı noktada durur.
+    expect(field.segmentHit(rock.x, rock.y, rock.x + r * 2, rock.y, surface * 0.5)).toBe(0);
+  });
+
   it('en yakın kaya: yüzeye uzaklık ve kayadan uzağa bakan yön', () => {
     const rock = field.rocks[0];
     const out = { x: 0, y: 0 };

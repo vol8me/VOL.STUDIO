@@ -139,7 +139,19 @@ export class Projectiles {
     Object.assign(this.air, { windX: air.windX, windY: air.windY, airDrag: air.airDrag });
   }
 
-  spawn(owner: EntityId, x: number, y: number, vx: number, vy: number, profile = 0): Projectile {
+  /**
+   * `elevation`, atıcının zeminden yüksekliğidir (kayanın üstündeki araç): namlu yüksekliğine eklenir,
+   * böylece kayada duran atıcı altındaki kayaya çarpmaz.
+   */
+  spawn(
+    owner: EntityId,
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    profile = 0,
+    elevation = 0,
+  ): Projectile {
     let slot: Projectile;
     if (this.live < this.capacity) {
       slot = this.items[this.live++]!;
@@ -150,7 +162,7 @@ export class Projectiles {
       }
       slot = this.items[oldest]!;
     }
-    this.reset(slot, owner, x, y, vx, vy, profile);
+    this.reset(slot, owner, x, y, vx, vy, profile, elevation);
     return slot;
   }
 
@@ -165,11 +177,12 @@ export class Projectiles {
     sampleStepMs = 1000 / 60,
     canHit?: ProjectileCanHit,
     profile = 0,
+    elevation = 0,
   ): AimPreview {
     if (!(Number.isFinite(sampleStepMs) && sampleStepMs > 0))
       throw new RangeError('Önizleme adımı pozitif ve sonlu olmalı');
     const shell = this.previewShell;
-    this.reset(shell, owner, x, y, vx, vy, profile);
+    this.reset(shell, owner, x, y, vx, vy, profile, elevation);
     const result = this.aim;
     result.targetId = null;
     result.surface = 'ground';
@@ -218,6 +231,7 @@ export class Projectiles {
     vx: number,
     vy: number,
     profile: number,
+    elevation: number,
   ): void {
     const entry = this.profiles[profile];
     if (!entry) throw new RangeError(`Mermi profili yok: ${profile}`);
@@ -227,7 +241,7 @@ export class Projectiles {
     slot.vx = vx;
     slot.vy = vy;
     slot.ageMs = 0;
-    slot.height = slot.previousHeight = flight?.muzzleHeight ?? 0;
+    slot.height = slot.previousHeight = (flight?.muzzleHeight ?? 0) + elevation;
     slot.verticalSpeed = flight?.launchSpeed ?? 0;
     slot.travelled = 0;
     slot.owner = owner;

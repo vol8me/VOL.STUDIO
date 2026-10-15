@@ -344,7 +344,7 @@
   background: var(--vol-ui-brand-subtle);
 }
 
-.vol-dialogue__control:focus-visible {
+.vol-dialogue__control:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
 }
@@ -398,7 +398,7 @@
   border-color: var(--vol-ui-brand-border);
 }
 
-.vol-dialogue__choice:focus-visible {
+.vol-dialogue__choice:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
 }
@@ -471,7 +471,7 @@
   color: var(--vol-ui-text-disabled);
 }
 
-.vol-command-palette__input:focus-visible {
+.vol-command-palette__input:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: none;
 }
 
@@ -781,7 +781,7 @@
   overscroll-behavior: contain;
 }
 
-.vol-fatal-startup:focus-visible {
+.vol-fatal-startup:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: -4px;
 }

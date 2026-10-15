@@ -13,7 +13,7 @@
   cursor: var(--vol-cursor-grabbing, grabbing);
 }
 
-.vol-dual-scroll:focus-visible {
+.vol-dual-scroll:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: -2px;
 }

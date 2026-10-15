@@ -87,13 +87,16 @@ function mount(services?: GameServices, data?: WorldStartData): Harness {
   const handlers = new Map<string, (...args: unknown[]) => void>();
   const restart = vi.fn();
   let shutdown = (): void => undefined;
+  // Dünya imleci tuval öğesine `style` ve dinleyici bağlar: gerçek bir öğe ve gerçek ebeveyni gerekir.
+  const canvas = document.createElement('canvas');
+  parent.appendChild(canvas);
   Object.assign(scene, {
     add: fake.add,
     // Senaryo kadrosu yürüyücü de içerir: rig dokuları yüklü sayılır.
     textures: { ...fake.textures, exists: () => true },
     cameras: { main: camera },
     scale: { on: vi.fn(), off: vi.fn() },
-    game: { canvas: { parentElement: parent }, registry: { get: () => undefined } },
+    game: { canvas, registry: { get: () => undefined } },
     input: {
       on: (name: string, handler: (...args: unknown[]) => void) => handlers.set(name, handler),
       off: vi.fn(),

@@ -54,7 +54,7 @@
   border-color: var(--vol-ui-brand-border);
 }
 
-.vol-tool-button:focus-visible {
+.vol-tool-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 1px;
 }
@@ -108,7 +108,7 @@
   background: var(--vol-ui-hover-fill);
 }
 
-.vol-property-field__reset:focus-visible {
+.vol-property-field__reset:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 1px;
 }

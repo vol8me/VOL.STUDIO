@@ -35,6 +35,11 @@ Canlı yüzey, tüketici ve tier sahipliği [CATALOG](CATALOG.md) içindedir.
 | Girdi            | Mouse + klavye                           | Kol-only + trackpad; aktif action glifi/fallback                                  | Dokunma + sistem geri; donanım klavye değişimi                             |
 | Odak             | Görünür ring                             | Ring + hale; uzamsal ve bileşik widget navigasyonu                                | Dokunmada gereksiz hover yok; klavye/AT odağı görünür                      |
 
+Odak halkası girdi aygıtına bağlıdır: `FocusModalityTracker` köke `data-vol-focus="ring|quiet"` yazar (Tab/ok/Enter ve
+kol `ring`, fare/dokunma `quiet`; `UIRoot` kendiliğinden başlatır, kol-only cihaz `initial: 'ring'` verir). Tüm
+`:focus-visible` kuralları `:where(:root:not([data-vol-focus='quiet']) *)` ile geçitlenir; böylece programatik
+`focus()` (menü açılışı) fareli oturumda halka çizmez, öznitelik hiç yoksa halka eskisi gibi görünür.
+
 Yoğunluk `data-vol-density` ile açık seçilir. Pointer coarse yalnız otomatik
 varsayılan girdidir; Deck mouse modunda küçük hedefe düşmez. Density,
 erişilebilir metin ölçeği ve mevcut layout-zoom ayrı politikalardır.

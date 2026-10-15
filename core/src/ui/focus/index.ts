@@ -7,3 +7,11 @@ export {
 export { FOCUSABLE_SELECTOR, listFocusable } from './focusable';
 export { FocusNavController, FOCUS_NAV_CLASS, type FocusNavOptions } from './FocusNavController';
 export { GamepadPointerController, type GamepadPointerOptions } from './GamepadPointerController';
+export {
+  FOCUS_MODALITY_ATTR,
+  FocusModalityTracker,
+  startFocusModality,
+  stopFocusModality,
+  type FocusModality,
+  type FocusModalityOptions,
+} from './focusModality';

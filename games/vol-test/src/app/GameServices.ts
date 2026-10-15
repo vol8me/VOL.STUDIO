@@ -6,10 +6,12 @@ import {
   ScopedSaveManager,
   setHapticsEnabled,
   setTextEntryProvider,
+  startFocusModality,
   type Diagnostics,
   type GlyphFamilyContext,
   type ScopedStores,
 } from '@volstudio/core';
+import { CursorController } from '@volstudio/core/ui';
 import {
   androidScreenOrientation,
   activateSteamActionSet,
@@ -48,6 +50,11 @@ export class GameServices {
   readonly display: DisplayModeController | null;
   readonly diagnostics?: Diagnostics;
   readonly measurements?: GameMeasurements;
+  /**
+   * Uygulama geneli arayüz imleçleri (düğme eli, metin, sürükleme, boyutlandırma): kökte `--vol-cursor-*`
+   * değişkenlerini kurar, CORE bileşenleri bunları okur. Dokunmatik girdide ve ince işaretçi yokken etkisizdir.
+   */
+  readonly cursors: CursorController;
   readonly displayAvailable: boolean;
   /** Kayıt kurtarma/sıfırlama olayları; HUD abone olunca geçmişi de alır. */
   readonly integrity = new IntegrityFeed();
@@ -78,6 +85,7 @@ export class GameServices {
     const store = new ScopedSaveManager(this.stores);
     this.settings = new GameSettings(store, navigator.userAgent);
     this.progress = new GameProgress(store);
+    this.cursors = this.scope.add(new CursorController({ mode: 'ui' }));
     this.scope.addSubscription(() => this.settings.dispose());
     this.scope.addSubscription(() => this.progress.dispose());
     this.displayAvailable =
@@ -116,12 +124,16 @@ export class GameServices {
       steamworksStatus(),
     ]);
     const pad = singleVirtualPad(pads);
+    const deck = session === 'gamescope' || steam.deck;
+    // Odak halkası: Deck'te tek girdi kol olduğundan ilk kareden görünür; fareli ve dokunmatik cihazda
+    // programatik odak (menü açılışı) halka çizmez, ilk klavye/kol girdisiyle açılır.
+    startFocusModality({ initial: deck || pad ? 'ring' : 'quiet' });
     const services = new GameServices(
       platform,
       session,
       {
         ...context,
-        steamDeckSession: session === 'gamescope' || steam.deck,
+        steamDeckSession: deck,
         ...(pad ? { virtualPad: pad } : {}),
       },
       steam,

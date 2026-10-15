@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CLIMATE_NET } from '@/config/climate';
 import { LAKE_SPECS } from '@/config/lakes';
 import { OUTCROP_SPECS } from '@/config/rocks';
 import { WEATHER } from '@/config/weather';
@@ -167,6 +168,56 @@ describe('iklim anlık görüntüsü', () => {
     copy.step(60_000);
     expect(copy.frame.kind).toBe(source.frame.kind);
     expect(copy.frame.temperature).toBeCloseTo(source.frame.temperature, 9);
+  });
+
+  it('sunucu yayını zemini sıçratmaz: hücreler `blendMs` içinde hedefe doğrusal yaklaşır, saat ve takvim yerel kalır', () => {
+    // İki dünya aynı takvimde ama zemini farklı: sunucu yağmur görmüş (birikinti), yerel kuru kalmış.
+    const server = new WeatherSystem(SIZE, SIZE, {
+      seed: SEED,
+      season: 'spring',
+      override: 'rain',
+    });
+    server.step(120_000);
+    const local = new WeatherSystem(SIZE, SIZE, {
+      seed: SEED,
+      season: 'spring',
+      override: 'clear',
+    });
+    local.step(120_000);
+    const snapshot = server.snapshot();
+    const spot = { x: 1500, y: 1500 };
+    const target = server.sample(spot.x, spot.y).puddleDepth;
+    const before = local.sample(spot.x, spot.y).puddleDepth;
+    expect(target).toBeGreaterThan(before + 1e-4);
+
+    const clock = local.frame.elapsedMs;
+    expect(local.restore(snapshot, true)).toBe(true);
+    // Yumuşak uyum: hemen hiçbir şey değişmez ve yerel saat korunur.
+    expect(local.sample(spot.x, spot.y).puddleDepth).toBeCloseTo(before, 9);
+    expect(local.frame.elapsedMs).toBe(clock);
+
+    let last = before;
+    let progress = 0;
+    const steps = Math.round(CLIMATE_NET.blendMs / 100);
+    for (let index = 1; index <= steps; index++) {
+      local.step(100);
+      const value = local.sample(spot.x, spot.y).puddleDepth;
+      // Her adım hedefe doğru ilerler ve tek adımda büyük sıçrama yapmaz.
+      expect(value).toBeGreaterThanOrEqual(last - 1e-9);
+      expect(value - last).toBeLessThan((target - before) * 0.2);
+      last = value;
+      progress = value;
+    }
+    expect(progress).toBeGreaterThan(before + (target - before) * 0.7);
+  });
+
+  it('yerelden çok ayrık sunucu saati sert yüklenir (uyku dönüşü): takvim sunucununkine geçer', () => {
+    const server = new WeatherSystem(SIZE, SIZE, { seed: SEED });
+    server.step(300_000);
+    const local = new WeatherSystem(SIZE, SIZE, { seed: SEED });
+    local.step(20_000);
+    expect(local.restore(server.snapshot(), true)).toBe(true);
+    expect(local.frame.elapsedMs).toBe(server.frame.elapsedMs);
   });
 
   it('başka tohum, başka ölçü ya da bozuk sayı reddedilir ve dünyayı değiştirmez', () => {

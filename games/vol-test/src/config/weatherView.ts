@@ -38,6 +38,11 @@ export const WEATHER_VIEW = {
     density: 3.2,
     /** Küme öbeklenmesi: gürültü bu orandan (`min`) 1'e kadar kabul olasılığını çarpar. */
     clump: { min: 0.3 },
+    /**
+     * Kümenin belirme bandı: kabul değeri küme eşiğini bu kadar aşana dek küme küçükten tam boya büyür.
+     * Eşiği geçen küme bir anda belirmez, filizlenir; örtü azalırken de aynı yoldan küçülür.
+     */
+    sprout: 0.3,
     /** Kontur dolgusu örnekleme adımı (birim): kenar bu çözünürlükte tırtıklıdır. */
     edgeStep: 20,
     /** Çayır tabanı: yaprak renginde yumuşak dolgu; çekirdek, yoğun (olgun) örtüde daha koyu leke. */

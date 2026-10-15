@@ -206,7 +206,9 @@ export class RockField {
         const my = py - rock.y;
         const c = mx * mx + my * my - r * r;
         if (c <= 0) {
-          if (h0 < top) return 0;
+          // Başlangıç kayanın içinde: yamacın yüzeyinin altındaysa duvardır (0), üstündeyse kayada duran
+          // atıcıdır ve kendi kayasını yok sayar. Yüzey yüksekliği kenara doğru düşer; silindir tavanı değil.
+          if (h0 < top && h0 < this.heightAt(px, py) * ROCKS.coverHeight) return 0;
           continue;
         }
         if (a === 0) continue;

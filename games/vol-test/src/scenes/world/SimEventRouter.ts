@@ -21,6 +21,8 @@ export interface SimEventTargets {
   readonly camera: Pick<FollowCamera, 'kick' | 'addTrauma'>;
   /** Oyuncunun konumu: patlama sarsıntısı ve titreşimi uzaklıkla söner. */
   readonly listener: { readonly x: number; readonly y: number };
+  /** Fare nişangâhı: oyuncunun atışında büyür, isabetinde ton değiştirir. */
+  readonly reticle?: { fired(): void; hit(): void };
 }
 
 /** Çarpma şiddeti [0, 1]: bu hızda tam şiddet. */
@@ -98,6 +100,7 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
         if (event.source === targets.player) {
           targets.camera.kick(event.angle, FEEL.fire.cameraKick);
           vibrate('tap', FEEL.fire.haptic);
+          targets.reticle?.fired();
         }
         break;
       case 'impact':
@@ -107,6 +110,8 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
       case 'hit':
         targets.effects.hit(event.x, event.y, event.angle);
         chipTarget(targets, event);
+        if (event.owner === targets.player && event.target !== targets.player)
+          targets.reticle?.hit();
         if (event.target === targets.player) {
           targets.camera.addTrauma(FEEL.hit.trauma);
           vibrate('warning', 1);

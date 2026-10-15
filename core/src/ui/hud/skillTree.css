@@ -21,7 +21,7 @@
   touch-action: none;
 }
 
-.vol-skill-tree__viewport:focus-visible {
+.vol-skill-tree__viewport:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: -2px;
 }
@@ -155,7 +155,7 @@
   background: var(--vol-ui-accent-solid);
 }
 
-.vol-skill-tree__node:focus-visible {
+.vol-skill-tree__node:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
 }

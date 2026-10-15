@@ -147,7 +147,7 @@
   background: var(--vol-ui-hover-fill);
 }
 
-.vol-datatable__sort-button:focus-visible {
+.vol-datatable__sort-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: -2px;
 }

@@ -308,3 +308,14 @@ describe('Projectiles profilleri', () => {
     expect(() => projectiles.spawn(1, 0, 0, 0, 0, 5)).toThrow(RangeError);
   });
 });
+
+describe('Projectiles yükseklik', () => {
+  it('çıkış yüksekliği namlu yüksekliğine atıcının zemin yüksekliğini ekler', () => {
+    const projectiles = new Projectiles(2, WEAPON.projectileLifeMs, WEAPON.flight);
+    const ground = projectiles.spawn(1, 0, 0, 100, 0);
+    const high = projectiles.spawn(2, 0, 0, 100, 0, 0, 40);
+    expect(ground.height).toBe(WEAPON.flight.muzzleHeight);
+    expect(high.height).toBe(WEAPON.flight.muzzleHeight + 40);
+    expect(high.previousHeight).toBe(high.height);
+  });
+});

@@ -535,7 +535,7 @@
   min-width: var(--vol-hit-target-min, auto);
 }
 
-.vol-card__action:focus-visible {
+.vol-card__action:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
 }
@@ -685,7 +685,7 @@
   min-width: var(--vol-hit-target-min, auto);
 }
 
-.vol-card-shop__reroll:focus-visible {
+.vol-card-shop__reroll:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
 }
@@ -806,7 +806,7 @@
   background: var(--vol-ui-brand-fill-hover);
 }
 
-.vol-card-shop__close:focus-visible {
+.vol-card-shop__close:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
 }

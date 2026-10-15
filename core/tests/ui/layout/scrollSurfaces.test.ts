@@ -166,7 +166,7 @@ describe('Kaydırma yüzeyi CSS politikası', () => {
   it('odaklanabilir kaydırma yüzeyleri temanın odak halkasını taşır (varsayılan tarayıcı halkası değil)', () => {
     const layout = readUiCss('layout/layout.css').replace(/\/\*[\s\S]*?\*\//g, '');
     const rule =
-      /\.vol-scroll-view:focus-visible,\s*\.vol-virtual-list:focus-visible\s*\{([^}]*)\}/.exec(
+      /\.vol-scroll-view:focus-visible[^{,]*,\s*\.vol-virtual-list:focus-visible[^{]*\{([^}]*)\}/.exec(
         layout,
       )?.[1] ?? '';
     expect(rule).toMatch(/outline:\s*2px solid var\(--vol-ui-focus-ring\)/);

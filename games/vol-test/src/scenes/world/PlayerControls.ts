@@ -143,6 +143,11 @@ export class PlayerControls {
     return this.manager.getDebugSnapshot();
   }
 
+  /** Son anlamlı girdi kipi (`pc`/`touch`/`gamepad`); kare başına ucuz okunur. */
+  get inputMode(): string | undefined {
+    return this.manager.inputMode;
+  }
+
   presentationState(): { mode: string | undefined; padId: string; padConnected: boolean } {
     const pad = this.manager.getDebugSnapshot().providers?.gamepad;
     return {

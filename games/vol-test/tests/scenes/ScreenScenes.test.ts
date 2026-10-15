@@ -66,6 +66,7 @@ function services(
     language: 'auto',
     volume: 1,
     haptics: true,
+    grid: true,
     display: 'windowed',
     scenario: 'empty',
     seed: 1,

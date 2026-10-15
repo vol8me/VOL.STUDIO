@@ -8,8 +8,11 @@ import {
   Icon,
   IconButton,
   type EditMenuResult,
+  type FocusModalityTracker,
   type IconName,
   installEditMenu,
+  startFocusModality,
+  stopFocusModality,
   listFocusable,
   THEME_IDS,
   Tabs,
@@ -186,6 +189,10 @@ export class ShowcaseApp {
       }),
     );
     this.focusNav.start();
+    // Odak halkası girdi aygıtına bağlıdır: fare/dokunma sessiz, klavye ve kol halkayı açar.
+    const modality: FocusModalityTracker = startFocusModality();
+    this.element.dataset.focusModality = modality.modality;
+    this.lifecycle.addSubscription(() => stopFocusModality());
     // Düzenlenebilir alanların kendi bağlam menüsü (Kes/Kopyala/Yapıştır/Tümünü seç); yerel menünün yerine geçer.
     this.lifecycle.addSubscription(
       installEditMenu(document, { onResult: (result) => this.onEditMenuResult(result) }),

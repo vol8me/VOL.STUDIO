@@ -59,6 +59,29 @@ describe('routeSimEvents', () => {
     expect(haptics.intensities).toEqual([FEEL.fire.haptic]);
   });
 
+  it('nişangâh yalnız oyuncunun atışında büyür ve oyuncunun isabetinde ton değiştirir', () => {
+    const reticle = { fired: vi.fn(), hit: vi.fn() };
+    const t = { ...targets(), reticle };
+    routeSimEvents(
+      [
+        { kind: 'fired', mount: 0, source: OTHER, x: 0, y: 0, angle: 0, vx: 0, vy: 0 },
+        { kind: 'hit', owner: OTHER, target: PLAYER, x: 0, y: 0, angle: 0 },
+      ],
+      t,
+    );
+    expect(reticle.fired).not.toHaveBeenCalled();
+    expect(reticle.hit).not.toHaveBeenCalled();
+    routeSimEvents(
+      [
+        { kind: 'fired', mount: 0, source: PLAYER, x: 0, y: 0, angle: 0, vx: 0, vy: 0 },
+        { kind: 'hit', owner: PLAYER, target: OTHER, x: 0, y: 0, angle: 0 },
+      ],
+      t,
+    );
+    expect(reticle.fired).toHaveBeenCalledTimes(1);
+    expect(reticle.hit).toHaveBeenCalledTimes(1);
+  });
+
   it('başka aracın atışı görünür ama kamerayı ve titreşimi tetiklemez', () => {
     const t = targets();
     routeSimEvents(

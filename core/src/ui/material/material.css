@@ -618,14 +618,14 @@
 }
 
 /* Odak nabzı: klavye/kol odağı iki kez parlar; halka kalıcıdır, nabız yalnız dikkat çeker. */
-.vol-button:focus-visible,
-.vol-icon-button:focus-visible,
-.vol-osk__key:focus-visible,
-.vol-dialogue__choice:focus-visible,
-.vol-dialogue__control:focus-visible,
-.vol-wizard__nav-button:focus-visible,
-.vol-card__action:focus-visible,
-.vol-card-shop__reroll:focus-visible {
+.vol-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-icon-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-osk__key:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-dialogue__choice:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-dialogue__control:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-wizard__nav-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-card__action:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-card-shop__reroll:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   animation: vol-juice-focus var(--vol-motion-juice-focus-pulse) ease-in-out 2;
 }
 
@@ -698,14 +698,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vol-button:focus-visible,
-  .vol-icon-button:focus-visible,
-  .vol-osk__key:focus-visible,
-  .vol-dialogue__choice:focus-visible,
-  .vol-dialogue__control:focus-visible,
-  .vol-wizard__nav-button:focus-visible,
-  .vol-card__action:focus-visible,
-  .vol-card-shop__reroll:focus-visible,
+  .vol-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-icon-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-osk__key:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-dialogue__choice:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-dialogue__control:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-wizard__nav-button:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-card__action:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+  .vol-card-shop__reroll:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
   .vol-juice--pop,
   .vol-juice--enter {
     animation: none;

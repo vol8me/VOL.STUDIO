@@ -47,6 +47,7 @@ import { WEATHER } from '@/config/weather';
 import { parseWeatherOverride } from '@/sim/weather/WeatherSystem';
 import { PlayerControls } from './world/PlayerControls';
 import { feelBlast, routeSimEvents } from './world/SimEventRouter';
+import { WorldCursor } from './world/WorldCursor';
 import { WreckDirector } from './world/WreckDirector';
 import type { WorldDriver, WorldStartData } from './world/WorldDriver';
 
@@ -62,6 +63,7 @@ export class WorldScene extends Phaser.Scene {
   private clockFrame: SimulationClockFrame | undefined;
   private controls!: PlayerControls;
   private pause!: PauseController;
+  private cursor!: WorldCursor;
   private camera!: CameraRig;
   private arena!: ArenaView;
   private vehicles!: VehicleViews;
@@ -136,6 +138,14 @@ export class WorldScene extends Phaser.Scene {
       );
     }
     this.arena = this.scope.addDestroyable(new ArenaView(this, world));
+    if (this.services) {
+      // Izgara ayardan gelir; `G` tuşu ayarı çevirir, böylece oyuncunun tercihi oturumlar arası kalır.
+      const settings = this.services.settings;
+      this.arena.setGridVisible(settings.get().grid);
+      this.scope.addSubscription(
+        settings.subscribe((value) => this.arena.setGridVisible(value.grid)),
+      );
+    }
     this.zones = this.scope.addDestroyable(new ZonesView(this));
     const query = new URLSearchParams(location.search);
     const online = data?.online === true;
@@ -170,6 +180,7 @@ export class WorldScene extends Phaser.Scene {
             : 'pc',
       ),
     );
+    this.cursor = this.scope.add(new WorldCursor({ target: this.game.canvas }));
     this.driver = (data?.createDriver ?? ((context) => new OfflineDriver(context)))({
       scene: this,
       world,
@@ -329,11 +340,20 @@ export class WorldScene extends Phaser.Scene {
     if (this.controls.pressed('pause')) this.pause.toggle();
 
     const paused = this.pause.paused;
+    this.cursor.update({
+      mode: this.controls.inputMode,
+      paused,
+      alive: player.vitality.alive,
+    });
     measurements?.mark('input');
     if (!paused) {
       if (this.controls.pressed('zoomIn')) this.camera.model.zoomBy(1);
       if (this.controls.pressed('zoomOut')) this.camera.model.zoomBy(-1);
-      if (this.controls.pressed('grid')) this.arena.setGridVisible(!this.arena.gridVisible);
+      if (this.controls.pressed('grid')) {
+        const visible = !this.arena.gridVisible;
+        this.arena.setGridVisible(visible);
+        if (this.services) void this.services.settings.update({ grid: visible });
+      }
     }
     const stepped = this.driver.advance(time, delta, paused);
     this.clockFrame = stepped.clock;
@@ -369,6 +389,7 @@ export class WorldScene extends Phaser.Scene {
       arena: this.arena,
       camera: this.camera.model,
       listener: player.chassis,
+      reticle: this.cursor,
     });
     measurements?.mark('eventsAudio');
 

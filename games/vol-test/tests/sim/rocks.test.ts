@@ -124,6 +124,23 @@ describe('kaya ve mermi', () => {
     expect(shots.items[0].x).toBeGreaterThan(rock.x + edge);
   });
 
+  it('kayanın tepesindeki atıcının mermisi kendi kayasında patlamaz; yüksekliksiz aynı atış dibinde biter', () => {
+    const elevation = world.rocks.heightAt(rock.x, rock.y) * ROCKS.coverHeight;
+    const events: SimEvent[] = [];
+    const buried = projectiles();
+    buried.spawn(1, rock.x, rock.y, 900, 0);
+    buried.step(1000 / 60, world, events);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ kind: 'impact', surface: 'wall' });
+
+    events.length = 0;
+    const aloft = projectiles();
+    aloft.spawn(1, rock.x, rock.y, 900, 0, 0, elevation);
+    for (let step = 0; step < 20; step++) aloft.step(1000 / 60, world, events);
+    expect(events).toEqual([]);
+    expect(aloft.items[0].x).toBeGreaterThan(rock.x + edge);
+  });
+
   it('nişan önizlemesi kayada biter ve yüzeyi `wall` bildirir', () => {
     const shots = projectiles();
     const preview = shots.preview(1, rock.x - edge - 200, rock.y, 900, 0, world, [], 1000 / 60);

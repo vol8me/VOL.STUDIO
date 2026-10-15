@@ -53,8 +53,8 @@
   border-color: var(--vol-ui-brand-border);
 }
 
-.vol-joystick__base:focus-visible,
-.vol-square-joystick__base:focus-visible {
+.vol-joystick__base:focus-visible:where(:root:not([data-vol-focus='quiet']) *),
+.vol-square-joystick__base:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 3px;
 }
@@ -146,7 +146,7 @@
   overflow-y: auto;
 }
 
-.vol-pull-refresh__scroll-area:focus-visible {
+.vol-pull-refresh__scroll-area:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: -2px;
 }

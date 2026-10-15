@@ -1,5 +1,6 @@
 import '../theme.css';
 import { uiIntentBusFor, type UiIntentBus } from '../feedback/uiIntent';
+import { startFocusModality } from '../focus/focusModality';
 
 const ROOT_CLASS = 'vol-ui-root';
 /** Aynı DOM element'ini paylasan UIRoot ornek sayısı (dataset üzerinde tutulur). */
@@ -33,6 +34,8 @@ export class UIRoot {
       target.appendChild(this.element);
     }
     this.retain();
+    // Odak halkası giriş aygıtını izler: fareyle açılan menüde programatik odak halka çizmez.
+    startFocusModality();
     // Paylaşılan kök tek niyet veriyolunu paylaşır: ikinci UIRoot dinleyici/ses çoğaltmaz.
     this.intentHandle = uiIntentBusFor(this.element);
   }

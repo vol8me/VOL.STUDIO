@@ -576,7 +576,7 @@
   opacity: 0.4;
 }
 
-.vol-minimap__canvas:focus-visible {
+.vol-minimap__canvas:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: -2px;
 }

@@ -164,7 +164,15 @@ export class OnlineWorld {
   private fireLocally(launch: Launch, mount: number): void {
     const id = this.player.id;
     const profile = this.sim.profileFor(this.player.weapon);
-    this.sim.projectiles.spawn(id, launch.x, launch.y, launch.vx, launch.vy, profile);
+    this.sim.projectiles.spawn(
+      id,
+      launch.x,
+      launch.y,
+      launch.vx,
+      launch.vy,
+      profile,
+      this.sim.elevationOf(this.player),
+    );
     this.outbox.push({
       kind: 'fired',
       source: id,
@@ -195,7 +203,15 @@ export class OnlineWorld {
         {
           const shooter = this.sim.vehicle(event.source);
           const profile = this.sim.profileFor((shooter ?? this.player).weapon);
-          this.sim.projectiles.spawn(event.source, event.x, event.y, event.vx, event.vy, profile);
+          this.sim.projectiles.spawn(
+            event.source,
+            event.x,
+            event.y,
+            event.vx,
+            event.vy,
+            profile,
+            shooter ? this.sim.elevationOf(shooter) : 0,
+          );
         }
         break;
       case 'impact':

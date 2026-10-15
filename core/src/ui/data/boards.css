@@ -245,7 +245,7 @@
   color: var(--vol-ui-text-disabled);
 }
 
-.vol-kanban__search-input:focus-visible {
+.vol-kanban__search-input:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   border-color: var(--vol-ui-focus-ring);
   outline: none;
 }
@@ -389,7 +389,7 @@
   cursor: var(--vol-cursor-grabbing, grabbing);
 }
 
-.vol-kanban__card:focus-visible {
+.vol-kanban__card:focus-visible:where(:root:not([data-vol-focus='quiet']) *) {
   outline: 2px solid var(--vol-ui-focus-ring);
   outline-offset: 2px;
 }

@@ -216,10 +216,10 @@ test('arketip durum matrisi eksiksiz olmalı: her eksen uygulanabilir ya da gere
   assert.equal(Object.keys(everything).length, STATE_AXES.length);
 });
 
-test('gerçek CORE UI yüzeyi 98 sınıf ve 70 yardımcıdır', () => {
+test('gerçek CORE UI yüzeyi 99 sınıf ve 73 yardımcıdır', () => {
   const real = uiSurface(ROOT);
-  assert.equal(real.classes.length, 98);
-  assert.equal(real.helpers.length, 70);
+  assert.equal(real.classes.length, 99);
+  assert.equal(real.helpers.length, 73);
   assert.ok(real.types > 100);
 });
 

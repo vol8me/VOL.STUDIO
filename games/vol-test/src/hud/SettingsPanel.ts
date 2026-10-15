@@ -1,4 +1,4 @@
-import { DisposableScope } from '@volstudio/core';
+import { DisposableScope, getHapticsCapability } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
 import { Checkbox, SegmentedControl, SettingsRow, Slider } from '@volstudio/core/ui';
 import type { GameSettings } from '@/app/GameSettings';
@@ -9,6 +9,7 @@ export class SettingsPanel {
   private readonly scope = new DisposableScope();
   private readonly volume: Slider;
   private readonly haptics: Checkbox;
+  private readonly grid: Checkbox;
   private readonly display: SegmentedControl | null;
   private readonly displayRow: SettingsRow | null;
   private readonly rows: readonly SettingsRow[];
@@ -36,6 +37,14 @@ export class SettingsPanel {
       }),
     );
     this.haptics.element.dataset.testid = 'settings-haptics';
+    this.grid = this.scope.addDestroyable(
+      new Checkbox({
+        checked: value.grid,
+        label: i18next.t('voltest:pause.grid'),
+        onCommit: (grid) => void settings.update({ grid }),
+      }),
+    );
+    this.grid.element.dataset.testid = 'settings-grid';
     this.display = displayAvailable
       ? this.scope.addDestroyable(
           new SegmentedControl({
@@ -62,7 +71,16 @@ export class SettingsPanel {
     this.rows = [
       this.scope.addDestroyable(new SettingsRow({ control: this.volume })),
       this.scope.addDestroyable(new SettingsRow({ control: this.haptics })),
+      this.scope.addDestroyable(new SettingsRow({ control: this.grid })),
     ];
+    // Titreşim satırı yalnız titreşim üretebilen cihazda görünür (Android, Deck/kol); masaüstü tarayıcıda
+    // `navigator.vibrate` var ama hiçbir şey yapmaz. Kol oyun ortasında takılabilir: yetenek canlı ölçülür.
+    const syncHaptics = (): void => {
+      this.rows[1].element.hidden = !getHapticsCapability().supported;
+    };
+    syncHaptics();
+    for (const event of ['gamepadconnected', 'gamepaddisconnected'])
+      this.scope.addListener(window, event, syncHaptics);
     this.elements = [
       ...this.rows.map((row) => row.element),
       ...(this.displayRow ? [this.displayRow.element] : []),
@@ -71,6 +89,7 @@ export class SettingsPanel {
       settings.subscribe((next) => {
         if (this.volume.getValue() !== next.volume) this.volume.setValue(next.volume);
         this.haptics.setChecked(next.haptics);
+        this.grid.setChecked(next.grid);
         this.display?.setValue(next.display);
       }),
     );
@@ -80,6 +99,7 @@ export class SettingsPanel {
   refreshLabels(): void {
     this.volume.setLabel(i18next.t('voltest:pause.volume'));
     this.haptics.setLabel(i18next.t('voltest:pause.haptics'));
+    this.grid.setLabel(i18next.t('voltest:pause.grid'));
     this.displayRow?.setLabel(i18next.t('voltest:pause.display'));
     this.display?.setOptions(this.displayOptions());
   }

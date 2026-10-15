@@ -66,6 +66,17 @@ describe('VegetationLayer', () => {
     expect(draw(0.25)).toBeLessThan(full);
   });
 
+  it('eşiği yeni geçen küme bir anda tam boyda belirmez: filizlenir (en küçük küme tam boyun yarısından küçük)', () => {
+    const young = layer(0.22);
+    young.view.draw(young.field, young.source.frame, rect);
+    const widths = young.graphics.calls
+      .filter(([name]) => name === 'fillEllipse')
+      .map(([, args]) => Number(args[2]));
+    expect(widths.length).toBeGreaterThan(0);
+    const minimum = VEGETATION.length[0] * 1.25;
+    expect(Math.min(...widths)).toBeLessThan(minimum * 0.5);
+  });
+
   it('çizim seedlidir: aynı alan iki katmanda aynı çizgileri verir', () => {
     const a = layer(0.6);
     const b = layer(0.6);

@@ -16,6 +16,7 @@ import type { World } from './world/World';
 import type { WeatherSystem } from './weather/WeatherSystem';
 import { WEATHER } from '@/config/weather';
 import { WORLD } from '@/config/world';
+import { ROCKS } from '@/config/rocks';
 import { WADING } from '@/config/lakes';
 import { drowningRate } from './world/wading';
 
@@ -496,7 +497,16 @@ export class Simulation {
       stepMs,
       (owner, target) => this.canProjectileHit(owner, target),
       this.profileFor(vehicle.weapon),
+      this.elevationOf(vehicle),
     );
+  }
+
+  /**
+   * Aracın zeminden yüksekliği (dünya birimi): kayaya tırmanan araç `climb` oranında yükselir. Mermi
+   * namlu yüksekliğine bunu ekler; kayanın tepesindeki araç siper yüksekliğinin üstünden ateş eder.
+   */
+  elevationOf(vehicle: Vehicle): number {
+    return vehicle.chassis.climb * ROCKS.coverHeight;
   }
 
   /** Birikmiş olayları `out`a aktarır ve kuyruğu boşaltır. */
@@ -580,7 +590,15 @@ export class Simulation {
   private fire(vehicle: Vehicle): void {
     const profile = this.profileFor(vehicle.weapon);
     triggerVolley(vehicle, (launch, mount) => {
-      this.projectiles.spawn(vehicle.id, launch.x, launch.y, launch.vx, launch.vy, profile);
+      this.projectiles.spawn(
+        vehicle.id,
+        launch.x,
+        launch.y,
+        launch.vx,
+        launch.vy,
+        profile,
+        this.elevationOf(vehicle),
+      );
       this.emit({
         kind: 'fired',
         source: vehicle.id,
