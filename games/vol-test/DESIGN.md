@@ -132,6 +132,13 @@ biraz öne geçer), halka dokuya basılır, çatlaklar kıyıdan merkeze uzanır
 titreşir. Buz salt sunumdur: tank ve yürüyücü buzu kırar ama yüzemez, yani donma kimin boğulacağını
 değiştirmez ve sunucuya mevsim saati taşımak gerekmez.
 
+Yüzey canlılığı: rüzgâr yönünde kayan parıltı sırtları (`glints`, göl içinde, gün ışığıyla), kıyıya vuran ve
+kırık bir hat bırakan dalga takımları (`swash`) ve donma cephesinde kırağı tüyleri salt sunumdur; buzdaki kırıklar
+yan dallar taşır. Suda ilerleyen her araç arkasında sürekli bir yarık bırakır (`WaterTrails` şeridi): açılan ve
+kapanan koyu su şeridi, mesafeyle açılan köpüklü kollar, çapraz dalga sırtları, kıçta köpük ve önde pruva
+dalgası. Buzu kıran araç deliğin çevresinde yıldız çatlak ve savrulan buz parçaları bırakır; çatlak delik
+kapandıktan sonra uzun süre seçilir.
+
 Suda bırakılan izler (`src/view/water/WaterTrails.ts`) kısa ömürlü ve havuzludur, tek bir Graphics çizer:
 yürüyen araç yol aralığıyla halka bırakır; buz örtülü kıyı şeridinde (`iceFront`) kırık bir delik
 açar (koyu su, açık kenar) ve delik yavaş kapanır; süzülen araç açık suda V şeklinde dalga çeker, buzda

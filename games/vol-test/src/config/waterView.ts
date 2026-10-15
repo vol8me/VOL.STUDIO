@@ -48,6 +48,27 @@ export const WATER_VIEW = {
     speed: 0.0006,
     segments: 24,
   },
+  /**
+   * Rüzgârın yüzeyde sürüklediği parıltı çizgileri: göl içinde rüzgâr yönünde kayan, ışığı vuran kısa
+   * dalga sırtları. `count` göl başına en çok sayıdır (kalite ile azalır), `driftUnits` bir çevrimde
+   * kat edilen yoldur.
+   */
+  glints: {
+    count: 34,
+    periodMs: 5200,
+    driftUnits: 70,
+    length: [6, 15],
+    width: 1.3,
+    color: 0xf2fbff,
+    alpha: 0.5,
+    /** Rüzgâr çok zayıfken kullanılan yön (kıyıya göre sabit esinti). */
+    calm: { x: 0.8, y: 0.3 },
+  },
+  /**
+   * Kıyıya vuran dalga takımları: köpük çizgisi kıyıdan içeri yavaşça ilerler, söner ve dalgalar arası
+   * duraklar. Aynı göl için faz kaydırılır, iki göl aynı anda vurmaz.
+   */
+  swash: { periodMs: 6400, reach: 0.07, alpha: 0.55, width: 2, segments: 18, share: 0.7 },
   ice: {
     color: 0xdcf0f7,
     shade: 0x9fc4d6,
@@ -59,6 +80,10 @@ export const WATER_VIEW = {
     snowBoost: 0.18,
     alpha: 0.82,
     cracks: 9,
+    /** Donma cephesindeki kırağı tüyleri: sayı ve uzunluk (kıyı oranı), sunum sıklığı ve sertliği. */
+    feathers: { length: 0.05, alpha: 0.45 },
+    /** Kırıkların yan dalları: kırık başına dal sayısı ve boyu (göl yarıçapı oranı). */
+    twigs: { perCrack: 3, length: 0.09 },
     /** Doku, buz bu kadar kademede değişince yeniden basılır. */
     steps: 40,
   },
@@ -69,7 +94,7 @@ export const WATER_VIEW = {
    */
   trails: {
     depth: -87,
-    capacity: 112,
+    capacity: 168,
     /** İz bırakmak için en küçük derinlik [0, 1] ve en küçük hız (birim/s). */
     minDepth: 0.04,
     minSpeed: 24,
@@ -81,7 +106,49 @@ export const WATER_VIEW = {
     hole: { color: 0x0b2f48, edge: 0xdff1f7, lifeMs: 7000, edgeWidth: 1.4, points: 9 },
     channel: { color: 0x123d5a, lifeMs: 2600, width: 5, length: 34 },
     ring: { lifeMs: 1100, grow: 1.9, width: 1.6, alpha: 0.5 },
-    wake: { lifeMs: 1500, spread: 0.42, length: 96, width: 2, alpha: 0.55 },
+    wake: {
+      lifeMs: 1500,
+      spread: 0.42,
+      length: 96,
+      width: 2,
+      alpha: 0.3,
+      /** Sürekli yarık: nokta sayısı ve aralığı (birim), ömrü; şerit genişliği araç yarıçapının oranıdır. */
+      points: 20,
+      sample: 14,
+      widthScale: 1.05,
+      fullSpeed: 260,
+      color: 0xeaf7fb,
+      channelColor: 0x0f3a56,
+      channelAlpha: 0.42,
+      /** Kollar: Kelvin kamasına yakın açı (mesafe başına yanal yayılım), en çok açıklık ve çizgi kalınlıkları. */
+      armSpread: 0.3,
+      armMax: 64,
+      armWidth: 1.5,
+      armAlpha: 0.5,
+      edgeWidth: 1.1,
+      edgeAlpha: 0.38,
+      crestWidth: 1.2,
+      crestAlpha: 0.42,
+      crestLength: 11,
+      foamPoints: 5,
+      foamAlpha: 0.7,
+      /** Pruva dalgası: yay yarıçapı (şerit genişliğinin oranı), açısı ve çizgisi. */
+      bowScale: 0.95,
+      bowArc: 0.95,
+      bowWidth: 1.8,
+      bowAlpha: 0.55,
+    },
+    /** Buz kırığı: delik çevresinde yıldız çatlak (uzun yaşar) ve yüzen buz parçaları. */
+    crack: {
+      lifeMs: 16_000,
+      rays: 6,
+      reach: 2.6,
+      width: 1.1,
+      alpha: 0.75,
+      color: 0xf2fbfe,
+      shade: 0x5d8aa0,
+    },
+    shard: { count: 3, lifeMs: 3400, size: 7, drift: 24, color: 0xcfe8f1, edge: 0xf5fcff },
   },
   /**
    * Batma: derin suda (bu derinlikten sonra) ölen araç patlamaz; kararır, küçülür, solar ve halka ile

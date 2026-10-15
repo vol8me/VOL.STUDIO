@@ -75,6 +75,34 @@ describe('WaterTrails: araç izleri', () => {
     }
   });
 
+  it('açık suda ilerleyen araç sürekli yarık bırakır; durunca yarık sönüp kalkar', () => {
+    for (const kind of ['hover', 'tank'] as const) {
+      const { trails, graphics } = build();
+      walk(trails, kind, 200);
+      expect(trails.ribbonCount).toBe(1);
+      // Yarık şeridi doldurur, kolları ve pruva yayını çizer.
+      expect(graphics.calls.some(([name]) => name === 'fillPath')).toBe(true);
+      expect(graphics.calls.some(([name]) => name === 'arc')).toBe(true);
+      trails.update([], 0, TRAILS.wake.lifeMs + 100);
+      trails.update([], 0, 16);
+      expect(trails.ribbonCount).toBe(0);
+    }
+  });
+
+  it('buzda yarık yoktur; kıran araç yıldız çatlak ve buz parçası bırakır, çatlak delikten uzun yaşar', () => {
+    const { trails } = build();
+    walk(trails, 'tank', 160, 1);
+    expect(trails.ribbonCount).toBe(0);
+    expect(trails.count('crack')).toBeGreaterThan(3);
+    expect(trails.count('shard')).toBe(trails.count('hole') * WATER_VIEW.trails.shard.count);
+    trails.update([], 1, TRAILS.hole.lifeMs + 100);
+    expect(trails.count('hole')).toBe(0);
+    expect(trails.count('shard')).toBe(0);
+    expect(trails.count('crack')).toBeGreaterThan(0);
+    trails.update([], 1, TRAILS.crack.lifeMs);
+    expect(trails.count('crack')).toBe(0);
+  });
+
   it('duraklatmada (sıfır süre) işaretler donar; havuz sınırı aşılmaz', () => {
     const { trails } = build();
     walk(trails, 'tank', 120);

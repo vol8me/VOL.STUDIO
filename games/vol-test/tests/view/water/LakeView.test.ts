@@ -158,3 +158,68 @@ describe('LakeView', () => {
     expect(lastCall(images[0], 'destroy')).toBeDefined();
   });
 });
+
+describe('LakeView: rüzgâr parıltısı, kıyı dalgası ve kırağı', () => {
+  const lineCount = (graphics: FakeObject): number =>
+    graphics.calls.filter(([name]) => name === 'lineTo' || name === 'moveTo').length;
+
+  it('rüzgâr parıltıları rüzgâr yönünde kayar; gün ışığı ve kalite çizgi sayısını azaltır', () => {
+    const run = (patch: Partial<WeatherFrame>, quality = 1) => {
+      const { view, graphics } = build();
+      view.update(around(0), frame({ elapsedMs: 5000, ...patch }), quality);
+      return lineCount(graphics);
+    };
+    const bright = run({ windX: 80, daylight: 1 });
+    expect(bright).toBeGreaterThan(0);
+    // Gece parıltı azalır; düşük kalite daha az çizgi çizer.
+    expect(run({ windX: 80, daylight: 0.05 })).toBeLessThanOrEqual(bright);
+    expect(run({ windX: 80, daylight: 1 }, 0.2)).toBeLessThan(bright);
+    // Zaman aynı değilse parıltı yeri değişir (rüzgârla sürüklenir).
+    const a = build();
+    const b = build();
+    a.view.update(around(0), frame({ elapsedMs: 5000, windX: 80 }), 1);
+    b.view.update(around(0), frame({ elapsedMs: 7300, windX: 80 }), 1);
+    expect(a.graphics.calls).not.toEqual(b.graphics.calls);
+  });
+
+  it('aynı karede çizim bire bir aynıdır (tohumlu, rasgele değil)', () => {
+    const a = build();
+    const b = build();
+    a.view.update(around(0), frame({ elapsedMs: 12_345, windX: 30, windY: -20 }), 1);
+    b.view.update(around(0), frame({ elapsedMs: 12_345, windX: 30, windY: -20 }), 1);
+    expect(a.graphics.calls).toEqual(b.graphics.calls);
+  });
+
+  it('kıyı dalgası takım başına bir kez vurur; donma kıyıyı kapatınca vurmaz', () => {
+    const { swash } = WATER_VIEW;
+    const paths = (elapsedMs: number, temperature = 20) => {
+      const { view, graphics } = build();
+      view.update(around(0), frame({ elapsedMs, temperature }), 1);
+      return lineCount(graphics);
+    };
+    const lakeOffset = field.lakes[0].index * 1733;
+    // Çevrimin sessiz kısmı ile vuruş anı arasında çizgi sayısı farkı dalga çizgisidir.
+    const quiet = paths(
+      (Math.ceil((swash.periodMs * (swash.share + 0.05) - lakeOffset) / 1) % swash.periodMs) +
+        swash.periodMs * 3,
+    );
+    const hit = paths(Math.floor(swash.periodMs * 0.3 - lakeOffset) + swash.periodMs * 3);
+    expect(hit).toBeGreaterThan(quiet);
+    expect(
+      paths(Math.floor(swash.periodMs * 0.3 - lakeOffset) + swash.periodMs * 3, -12),
+    ).toBeLessThan(hit);
+  });
+
+  it('donma cephesinde kırağı tüyleri çizilir; donma yokken çizilmez', () => {
+    const feathers = (temperature: number): number => {
+      const { view, graphics } = build();
+      view.update(around(0), frame({ temperature }), 1);
+      return graphics.calls.filter(
+        ([name, args]) =>
+          name === 'lineStyle' && args[0] === 1.1 && args[1] === WATER_VIEW.ice.crack,
+      ).length;
+    };
+    expect(feathers(20)).toBe(0);
+    expect(feathers(-8)).toBeGreaterThan(0);
+  });
+});

@@ -170,7 +170,7 @@ export class LakeView {
       if (!visible) continue;
       this.visibleLakes++;
       this.bake(entry, colors, ice, frame.elapsedMs);
-      this.drawLake(lake, frame.elapsedMs, ice, frame.rain, quality);
+      this.drawLake(lake, frame, ice, quality);
     }
   }
 
@@ -245,7 +245,7 @@ export class LakeView {
     c.fill('evenodd');
 
     c.strokeStyle = hex(crack, 0.55 * ice);
-    c.lineWidth = Math.max(1, 1.4 * scale * 3);
+    c.lineWidth = Math.max(1, 0.9 * scale * 3);
     c.lineJoin = 'round';
     for (const angles of this.cracks.get(lake.index) ?? []) {
       c.beginPath();
@@ -263,6 +263,31 @@ export class LakeView {
         started = true;
       }
       c.stroke();
+      // Yan dallar: kırığın düğüm noktalarından kısa ve ince çatlaklar.
+      c.lineWidth = Math.max(1, 0.6 * scale * 3);
+      c.beginPath();
+      const { twigs } = WATER_VIEW.ice;
+      for (let twig = 0; twig < twigs.perCrack; twig++) {
+        const step = 1 + (twig % 3);
+        if (step >= angles.length) continue;
+        const r = 1 - step * 0.2;
+        if (r < front - 0.02) continue;
+        const bound = this.field.boundAt(lake, angles[step]);
+        const u = Math.cos(angles[step]) * lake.rx * bound * r;
+        const v = Math.sin(angles[step]) * lake.ry * bound * r;
+        const wx = lake.x + u * lake.cos - v * lake.sin;
+        const wy = lake.y + u * lake.sin + v * lake.cos;
+        const side = hash(lake.index, twig + step * 7, 61) > 0.5 ? 1 : -1;
+        const turn = angles[step] + side * (0.7 + 0.5 * hash(lake.index, twig, 62));
+        const reach = lake.rx * twigs.length * (0.6 + 0.8 * hash(lake.index, twig, 63));
+        c.moveTo((wx - entry.originX) * scale, (wy - entry.originY) * scale);
+        c.lineTo(
+          (wx + Math.cos(turn) * reach - entry.originX) * scale,
+          (wy + Math.sin(turn) * reach - entry.originY) * scale,
+        );
+      }
+      c.stroke();
+      c.lineWidth = Math.max(1, 0.9 * scale * 3);
     }
   }
 
@@ -282,11 +307,100 @@ export class LakeView {
     c.fill();
   }
 
-  private drawLake(lake: Lake, time: number, ice: number, rain: number, quality: number): void {
+  private drawLake(lake: Lake, frame: WeatherFrame, ice: number, quality: number): void {
+    const time = frame.elapsedMs;
+    const front = iceFront(ice);
     this.drawWaves(lake, time, quality);
+    this.drawGlints(lake, frame, front, quality);
     this.drawFoam(lake, time);
+    this.drawSwash(lake, time, ice);
     if (ice > 0.001) this.drawFrostLine(lake, time, ice);
-    if (rain > 0.05) this.drawRipples(lake, time, rain, quality, iceFront(ice));
+    if (frame.rain > 0.05) this.drawRipples(lake, time, frame.rain, quality, front);
+  }
+
+  /**
+   * Rüzgârın sürüklediği parıltı sırtları: göl içinde rastgele noktalarda doğar, rüzgâr yönünde kayar ve
+   * ömrünün ortasında en parlaktır. Konum göl, sıra ve çevrim numarasından türer (karede titremez).
+   * Buzun altında ve gün ışığı zayıfken görünmez.
+   */
+  private drawGlints(lake: Lake, frame: WeatherFrame, front: number, quality: number): void {
+    const { count, periodMs, driftUnits, length, width, color, alpha, calm } = WATER_VIEW.glints;
+    const shown = Math.round(count * Math.max(0.25, Math.min(1, quality)));
+    const strength = alpha * (0.35 + 0.65 * frame.daylight);
+    if (shown === 0 || strength <= 0.01) return;
+    const windSpeed = Math.hypot(frame.windX, frame.windY);
+    // Rüzgâr çok zayıfsa sabit esinti yönü; kuvvetliyse gerçek yön ve daha çok sürüklenme.
+    const dirX = windSpeed > 6 ? frame.windX / windSpeed : calm.x / Math.hypot(calm.x, calm.y);
+    const dirY = windSpeed > 6 ? frame.windY / windSpeed : calm.y / Math.hypot(calm.x, calm.y);
+    const drift = driftUnits * (0.7 + Math.min(1, windSpeed / 90) * 0.9);
+    const g = this.graphics;
+    g.lineStyle(width, color, strength);
+    g.beginPath();
+    for (let index = 0; index < shown; index++) {
+      const clock = frame.elapsedMs + hash(lake.index, index, 91) * periodMs;
+      const cycle = Math.floor(clock / periodMs);
+      const phase = (clock % periodMs) / periodMs;
+      // Yerleşim göl koordinatında: elips içinde bir nokta.
+      const s = 0.1 + 0.8 * Math.sqrt(hash(lake.index, index, cycle * 7 + 3));
+      if (s >= front - 0.06) continue;
+      const theta = hash(lake.index, index, cycle * 7 + 5) * TWO_PI;
+      const bound = this.field.boundAt(lake, theta);
+      const u = Math.cos(theta) * lake.rx * bound * s;
+      const v = Math.sin(theta) * lake.ry * bound * s;
+      const x = lake.x + u * lake.cos - v * lake.sin + dirX * drift * (phase - 0.5);
+      const y = lake.y + u * lake.sin + v * lake.cos + dirY * drift * (phase - 0.5);
+      if (this.field.ratio(lake, x, y) >= front - 0.04) continue;
+      const fade = Math.sin(Math.PI * phase);
+      // Sırt rüzgâra dik uzanır; her parıltı biraz farklı uzunluk ve eğimdedir.
+      const half =
+        (length[0] + (length[1] - length[0]) * hash(lake.index, index, 17)) *
+        0.5 *
+        (0.6 + 0.4 * fade);
+      const tilt = (hash(lake.index, index, 23) - 0.5) * 0.5;
+      const px = -dirY * Math.cos(tilt) + dirX * Math.sin(tilt);
+      const py = dirX * Math.cos(tilt) + dirY * Math.sin(tilt);
+      g.moveTo(x - px * half, y - py * half);
+      g.lineTo(x + px * half, y + py * half);
+    }
+    g.strokePath();
+  }
+
+  /**
+   * Kıyıya vuran dalga: köpük çizgisi kıyıdan içeri yavaşça ilerler, ince ve kırık bir hat bırakır, sonra
+   * söner. Dalgalar arası duraklar; buz kıyıyı kapatınca dalga vurmaz.
+   */
+  private drawSwash(lake: Lake, time: number, ice: number): void {
+    const { periodMs, reach, alpha, width, segments, share } = WATER_VIEW.swash;
+    if (ice > 0.35) return;
+    const clock = time + lake.index * 1733;
+    const set = Math.floor(clock / periodMs);
+    const phase = (clock % periodMs) / periodMs;
+    // Çevrimin ilk `share` kısmında bir dalga ilerler; kalanı sakin.
+    if (phase > share) return;
+    const t = phase / share;
+    const eased = 1 - (1 - t) * (1 - t);
+    const inset = 0.008 + reach * eased;
+    const g = this.graphics;
+    const coarse = this.coarse;
+    this.trace(lake, 1, coarse);
+    const count = coarse.length;
+    const step = count / segments;
+    g.lineStyle(width * (1 - 0.4 * t), WATER_VIEW.foam.color, alpha * (1 - t) * (1 - ice * 2));
+    g.beginPath();
+    for (let segment = 0; segment < segments; segment++) {
+      // Bazı parçalar eksiktir: dalga kıyıda bütün bir halka değil kırık bir hattır.
+      if (hash(lake.index, segment, set) < 0.3) continue;
+      const from = Math.floor(segment * step);
+      const to = Math.floor((segment + 0.85) * step);
+      for (let at = from; at <= to; at++) {
+        const point = coarse[at % count];
+        const x = point.x + (lake.x - point.x) * inset;
+        const y = point.y + (lake.y - point.y) * inset;
+        if (at === from) g.moveTo(x, y);
+        else g.lineTo(x, y);
+      }
+    }
+    g.strokePath();
   }
 
   /** Kıyı çokgenini `scale` oranında `out`a yazar (dalgalı kıyı harmonikleriyle). */
@@ -371,6 +485,32 @@ export class LakeView {
     this.graphics.lineStyle(1.8, crack, shimmer * ice);
     this.trace(lake, front, this.coarse);
     this.graphics.strokePoints(this.coarse, true, true);
+
+    // Kırağı tüyleri: cepheden içeri doğru, yeni donan yerde kısa kristal çizgiler. Cephenin düzgün bir
+    // halka gibi görünmesini bozar; kalın buzda tüyler kısalır (cephe merkeze çekilir).
+    const { feathers } = WATER_VIEW.ice;
+    const coarse = this.coarse;
+    const fresh = Math.max(0.25, 1 - ice);
+    this.graphics.lineStyle(
+      1.1,
+      crack,
+      feathers.alpha * Math.min(1, ice * 3) * (0.5 + 0.5 * shimmer),
+    );
+    this.graphics.beginPath();
+    for (let index = 0; index < coarse.length; index++) {
+      const size = feathers.length * fresh * (0.4 + 1.2 * hash(lake.index, index, 55));
+      const toward = size * (0.6 + 0.4 * Math.sin(time * 0.0007 + index));
+      const point = coarse[index];
+      const swing = (hash(lake.index, index, 56) - 0.5) * 0.5;
+      const dx = lake.x - point.x;
+      const dy = lake.y - point.y;
+      this.graphics.moveTo(point.x, point.y);
+      this.graphics.lineTo(
+        point.x + dx * toward - dy * swing * toward,
+        point.y + dy * toward + dx * swing * toward,
+      );
+    }
+    this.graphics.strokePath();
   }
 
   /** Yağmurda su yüzünde genişleyen halkalar; buzun altına düşenler çizilmez. */
