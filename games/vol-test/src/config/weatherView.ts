@@ -25,11 +25,28 @@ export const WEATHER_VIEW = {
     depth: -92,
     /** Kar üstünde görünen uçlar (yüzey katmanının üstü, su katmanının altı). */
     tipDepth: -88.5,
-    /** Çayır bu aralıktan (ms, sim saati) sık yeniden çizilmez; kamera görünür alandan çıkınca çizilir. */
-    redrawMs: 600,
-    /** Küme ızgarası aralığı (birim) ve kare başına küme tavanı (uzaklaşınca seyrelir). */
+    /**
+     * Çayır, dünya ızgarasına oturan döşemeler olarak dokuya pişirilir: döşeme içerik değişince bir kez çizilir,
+     * kamera onu bedavaya taşır (çizim komutları her karede yeniden üçgenlenmez). `size` birim, kontur adımına
+     * (`edgeStep`) bölünür: döşeme sınırında kenar çizgisi kesintisizdir. `pad`, taşan yaprak ucu payıdır.
+     * `texel`: birim başına doku pikseli kademeleri (ekrandaki yoğunluğa göre seçilir). `bakeBudgetMs`: karede
+     * pişirmeye ayrılan süre (en az bir döşeme). `checkMs`: değişim denetim aralığı (sim saati). `retain`:
+     * görünürün dışında tutulan döşeme sayısı. `capacity`: döşeme başına küme tavanı (kaliteyle seyrelir).
+     */
+    tile: {
+      size: 400,
+      pad: 16,
+      texel: [0.5, 0.75, 1, 1.5, 2],
+      bakeBudgetMs: 5,
+      checkMs: 400,
+      retain: 12,
+      capacity: 280,
+      growthSteps: 24,
+      snowSteps: 8,
+      toneSteps: 48,
+    },
+    /** Küme ızgarası aralığı (birim). */
     spacing: 26,
-    capacity: 1500,
     /** Bu örtünün altı çıplak toprak; çayır bölgesi örtü + kenar gürültüsü eşiği aşınca başlar. */
     minGrowth: 0.04,
     threshold: 0.16,

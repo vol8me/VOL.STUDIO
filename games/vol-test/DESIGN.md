@@ -194,9 +194,25 @@ ve kar örtüsü örtüyü solar ama dayanıklı çim tabanının (`hardyFloor`,
 indirmez, palet ezer (`WEATHER.growth`). Verimli yamalar tohumdan türeyen sabit
 coğrafyadır (`fertility.ts`): göl ve kaya çıplaktır, göl kıyı şeridi yarı verimlidir. Kar yağınca yeşillik
 yok olmaz: altta kalır, üstüne kar katmanı (yeşillik −92, kar yüzeyi −89) binerek örter; hafif karda kısa,
-karlı uçlar kar üstüne çıkar (`tipDepth` −88,5) ve derinleşen karda solar, kar çekilince yeşil yeniden açılır. Sunum `VegetationLayer`: örtü büyüdükçe önce tutam sayısı, sonra boyu
-artar; konum hücre ve sıra numarasından türer (karede titremez), tutam sayısı kare başına tavanlıdır ve
-yalnız görünür alan ya da belirgin saat değişimi yeniden çizim ister.
+karlı uçlar kar üstüne çıkar (`tipDepth` −88,5) ve derinleşen karda solar, kar çekilince yeşil yeniden açılır.
+
+Sunum `VegetationLayer`: örtü büyüdükçe önce tutam sayısı, sonra boyu artar; konum hücre ve sıra
+numarasından türer (karede titremez). Çayır her karede yeniden çizilmez, dünyaya hizalı döşemelere
+(`vegetation.tile.size` birim) pişirilir: her döşeme dört katmanı (taban, çekirdek, tutamlar, uçlar) bir
+`RenderTexture`a basar ve kamera yalnız görünür döşemeleri sahneye koyar. Yeniden pişirme tek kaynaktan,
+döşemenin imzasından (kademeli büyüme, kar, kalite) karar verir; gün ışığı dokuya basılmaz, boya olarak
+uygulanır. Doku piksel yoğunluğu ekran yoğunluğundan seçilir (`tile.texel` kademeleri) ve kademe değişince
+yeniden kurulur; pişirmeler kare başına zaman bütçelidir (`bakeBudgetMs`) ve görünürden uzak döşemeler
+`retain` ile sınırlı tutulur, taşan en eski olan atılır. Bitişik bölge dolguları arasındaki ince çatlak,
+dolguyla aynı yoldan çizilen iki dokulu çerçeveyle kapatılır (`TerrainContours` `outline`). Phaser ayağı
+`PhaserVegetationHost`tur; katman `VegetationHost` arayüzü üzerinden sürülür, bu yüzden pişirme mantığı
+WebGL'siz sınanır. Ölçüm (en uzak yakınlaştırma, çok araçlı dünya): kare süresi ~18,7 ms'den ~6 ms'ye indi.
+
+Gölgelendirici ısınması (`src/view/shaderWarmup.ts`): Phaser toplu çizimdeki doku sayısına göre ayrı program
+derler ve her birini ilk gereken karede eşzamanlı bekleyerek (15–45 ms) derler. `BootScene` yükleme
+ekranının arkasında 1'den en çok 16 dokuya kadar her kademeyi bir karede çizdirir; böylece derleme
+oynanıştan önceye taşınır ve dünyanın ilk saniyesinde art arda takılma kalmaz. WebGL olmayan ya da sahte
+bağlamlı oturum (ölçüm, test) ısınmayı atlar.
 
 Sunucu dünyası hep açıktır, bu yüzden iklim sunucuda yaşar ve kalıcıdır. `WorldRoom` iklimi sunucu saatiyle
 ilerletir ve `ClimateStore` (`server/ClimateStore.ts`; dosya `VOLTEST_CLIMATE_FILE` ile verilir, yoksa çalışma dizinindeki `.state` klasörüne yazılır)

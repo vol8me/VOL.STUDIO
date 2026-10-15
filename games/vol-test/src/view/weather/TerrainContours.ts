@@ -22,6 +22,7 @@ export class TerrainContours {
     b: number,
     c: number,
     d: number,
+    outline = false,
   ): boolean {
     const values = this.values;
     values[0] = a;
@@ -48,7 +49,7 @@ export class TerrainContours {
         this.points[0].y = corners[corner].y;
         this.cross(corner, next, this.points[1]);
         this.cross(previous, corner, this.points[2]);
-        this.paint(graphics, rect, 3);
+        this.paint(graphics, rect, 3, outline);
       }
       return true;
     }
@@ -61,7 +62,7 @@ export class TerrainContours {
       }
       if (values[corner] > 0 !== values[next] > 0) this.cross(corner, next, this.points[count++]);
     }
-    return this.paint(graphics, rect, count);
+    return this.paint(graphics, rect, count, outline);
   }
 
   private cross(from: number, to: number, target: Point): void {
@@ -70,7 +71,13 @@ export class TerrainContours {
     target.y = this.corners[from].y + (this.corners[to].y - this.corners[from].y) * ratio;
   }
 
-  private paint(graphics: Phaser.GameObjects.Graphics, rect: WeatherRect, count: number): boolean {
+  /** `outline`: dolgudan sonra aynı yolu çizgiyle de çizer (aynı renkte; bitişik çokgenler arasındaki ince çatlakları kapatır). */
+  private paint(
+    graphics: Phaser.GameObjects.Graphics,
+    rect: WeatherRect,
+    count: number,
+    outline: boolean,
+  ): boolean {
     let source = this.points;
     let target = this.clipped;
     for (let edge = 0; edge < 4; edge++) {
@@ -111,6 +118,7 @@ export class TerrainContours {
     for (let index = 1; index < count; index++) graphics.lineTo(source[index].x, source[index].y);
     graphics.closePath();
     graphics.fillPath();
+    if (outline) graphics.strokePath();
     return true;
   }
 }

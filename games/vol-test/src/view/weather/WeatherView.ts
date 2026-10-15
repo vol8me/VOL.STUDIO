@@ -7,6 +7,7 @@ import { SeasonGround } from './SeasonGround';
 import { SurfaceLayer, type WeatherSource } from './SurfaceLayer';
 import { VehicleReflectionPool, type WeatherVehicleFrame } from './VehicleReflectionPool';
 import { VegetationLayer } from './VegetationLayer';
+import { PhaserVegetationHost } from './VegetationHost';
 import { VehicleWakePool } from './VehicleWakePool';
 import { WeatherParticles, type WeatherRect } from './WeatherParticles';
 
@@ -30,7 +31,11 @@ export class WeatherView {
   private readonly precipitation: Phaser.GameObjects.Graphics;
   private quality = 1;
 
-  constructor(scene: Phaser.Scene, seed: number, profile: EffectProfile) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    seed: number,
+    profile: EffectProfile,
+  ) {
     this.field = new TerrainField(seed);
     const season = this.scope.addDestroyable(
       scene.add.graphics().setDepth(WEATHER_VIEW.seasonDepth),
@@ -43,10 +48,15 @@ export class WeatherView {
     this.precipitation = this.scope.addDestroyable(
       scene.add.graphics().setDepth(WEATHER_VIEW.precipitationDepth),
     );
-    this.vegetation = new VegetationLayer(
-      this.scope.addDestroyable(scene.add.graphics().setDepth(WEATHER_VIEW.vegetation.depth)),
-      this.scope.addDestroyable(scene.add.graphics().setDepth(WEATHER_VIEW.vegetation.tipDepth)),
+    const host = this.scope.add(
+      new PhaserVegetationHost(
+        scene,
+        WEATHER_VIEW.vegetation.depth,
+        WEATHER_VIEW.vegetation.tipDepth,
+      ),
     );
+    this.vegetation = new VegetationLayer(host);
+    this.scope.addSubscription(() => this.vegetation.destroy());
     this.surface = new SurfaceLayer(surface, this.field);
     this.wakes = new VehicleWakePool(wakes);
     this.reflections = this.scope.addDestroyable(new VehicleReflectionPool(scene));
@@ -66,7 +76,7 @@ export class WeatherView {
     if (this.scope.isDisposed()) return;
     this.field.prepare(weather, rect);
     this.season.draw(weather, rect, true);
-    this.vegetation.draw(this.field, weather.frame, rect, this.quality);
+    this.vegetation.draw(this.field, weather, rect, this.quality, this.pixelsPerUnit(rect));
     this.counts.wakes = this.wakes.update(weather, rect, vehicles);
     this.counts.surfaceCells = this.surface.draw(
       weather,
@@ -113,6 +123,13 @@ export class WeatherView {
         this.precipitation.fillCircle(particle.x, particle.y, particle.size);
       }
     }
+  }
+
+  /** Ekranda birim başına aygıt pikseli (kamera yakınlığı × çözünürlük); çayır doku yoğunluğunu seçer. */
+  private pixelsPerUnit(rect: WeatherRect): number {
+    const canvas = (this.scene as { sys?: { game?: { canvas?: { width: number } } } }).sys?.game
+      ?.canvas;
+    return canvas && rect.width > 0 ? canvas.width / rect.width : 1;
   }
 
   destroy(): void {

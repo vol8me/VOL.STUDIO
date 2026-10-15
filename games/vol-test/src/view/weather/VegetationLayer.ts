@@ -5,12 +5,14 @@ import type { WeatherFrame } from '@/sim/weather/WeatherSystem';
 import { daylightColor, mixColor } from './SeasonGround';
 import type { TerrainField } from './TerrainField';
 import { TerrainContours } from './TerrainContours';
+import type { WeatherSource } from './SurfaceLayer';
 import type { WeatherRect } from './WeatherParticles';
 
 const VEGETATION = WEATHER_VIEW.vegetation;
+const TILE = VEGETATION.tile;
 const PI = Math.PI;
-/** Bir karede tutulan en çok küme adayı (kapasite bunun çok altındadır; yalnız alan taşmasına karşı). */
-const MAX_CANDIDATES = 12_288;
+/** Bir döşemede tutulan en çok küme adayı (kapasite bunun çok altındadır; yalnız alan taşmasına karşı). */
+const MAX_CANDIDATES = 4096;
 
 function hash(a: number, b: number, c: number): number {
   let value = Math.imul(a | 0, 73856093) ^ Math.imul(b | 0, 19349663) ^ Math.imul(c | 0, 83492791);
@@ -26,6 +28,13 @@ interface Palette {
   shade: number;
 }
 
+/** Mevsim geçişi karışım oranı [0, 1] (`seasonPalette` ile aynı eğri). */
+function seasonBlend(frame: Pick<WeatherFrame, 'seasonProgress'>): number {
+  const fraction = SEASONS.transitionFraction;
+  const phase = Math.max(0, Math.min(1, (frame.seasonProgress - (1 - fraction)) / fraction));
+  return phase * phase * (3 - 2 * phase);
+}
+
 /** Mevsim paleti: geçiş döneminde bir sonraki mevsime karışır (`seasonPalette` ile aynı eğri). */
 export function vegetationPalette(
   frame: Pick<WeatherFrame, 'season' | 'seasonProgress' | 'daylight'>,
@@ -33,9 +42,7 @@ export function vegetationPalette(
   const current = VEGETATION.palette[frame.season];
   const order = SEASONS.order;
   const next = VEGETATION.palette[order[(order.indexOf(frame.season) + 1) % order.length]];
-  const fraction = SEASONS.transitionFraction;
-  const phase = Math.max(0, Math.min(1, (frame.seasonProgress - (1 - fraction)) / fraction));
-  const t = phase * phase * (3 - 2 * phase);
+  const t = seasonBlend(frame);
   const leaf = daylightColor(mixColor(current.leaf, next.leaf, t), frame.daylight);
   return {
     leaf,
@@ -45,19 +52,81 @@ export function vegetationPalette(
   };
 }
 
+/** Gün ışığının doku boyası: dokular tam gün ışığında pişer, çarpan geceye doğru karartır. */
+function toneOf(daylight: number): number {
+  const steps = TILE.toneSteps;
+  const light = Math.round(Math.max(0, Math.min(1, daylight)) * steps) / steps;
+  const brightness = (0.8 + light * (2 / 7)) / (0.8 + 2 / 7);
+  const channel = Math.round(Math.max(0, Math.min(1, brightness)) * 255);
+  return (channel << 16) | (channel << 8) | channel;
+}
+
+/** Bir döşeme görüntüsü: pişirilen doku ve gün ışığı boyası; sunum katmanına özgü (Phaser) ayrıntı burada. */
+export interface VegetationImage {
+  /**
+   * Kalemler dünya birimiyle çizilmiştir ve verilen sırayla dokuya basılır; `origin` döşemenin sol üst
+   * köşesi, `size` kenarı (birim), `texel` birim başına doku pikseli. İçerik eskisinin yerine geçer; boş
+   * kalemler görüntüyü boşaltır.
+   */
+  bake(
+    pens: readonly Phaser.GameObjects.Graphics[],
+    originX: number,
+    originY: number,
+    size: number,
+    texel: number,
+  ): void;
+  tone(tint: number): void;
+  show(visible: boolean): void;
+  destroy(): void;
+}
+
+/** Döşemenin dokulu katmanları; yığın sırası aşağıdan yukarıdadır. */
+export type VegetationLayerKind = 'region' | 'core' | 'clumps' | 'tips';
+const LAYERS: readonly VegetationLayerKind[] = ['region', 'core', 'clumps', 'tips'];
+
+export interface VegetationHost {
+  /**
+   * Katman başına geçici çizim kalemi; yalnız pişirme sırasında kullanılır. Çayır tabanı ve çekirdeği opak
+   * çizilir (üst üste binen çokgenler birikmez, çatlak çizgiyle kapanır) ve saydamlığı doku katmanı taşır.
+   */
+  pen(kind: VegetationLayerKind): Phaser.GameObjects.Graphics;
+  create(kind: VegetationLayerKind): VegetationImage;
+}
+
+interface Tile {
+  readonly column: number;
+  readonly row: number;
+  readonly x: number;
+  readonly y: number;
+  readonly layers: Record<VegetationLayerKind, VegetationImage | null>;
+  /** Son pişirmenin içerik imzası; `null` henüz pişmedi. */
+  signature: number | null;
+  /** Son pişirmenin birim başına doku pikseli. */
+  texel: number;
+  checkedAt: number;
+  /** İmza denetimi sonuçlandı: içerik pişenden farklı. */
+  stale: boolean;
+  seen: number;
+  drawn: number;
+}
+
 /**
  * Çayır katmanı. Yeşillik bölge bölgedir: örtü alanı gürültüyle tırtıklanmış bir kenarla çevrilir
  * (kontur dolgusu), içinde kümeler sabit bir ızgaranın titreşik noktalarındadır ve kenara doğru seyrelir.
- * Küme konumu dünya ızgarasından türer: karede titremez, her istemci aynı çayırı görür. Kare başına küme
- * tavanı vardır (uzaklaşınca seyrelir); yeniden çizim yalnız görünür alan taşınca ya da sim saati
- * `redrawMs` ilerleyince olur.
+ * Küme konumu dünya ızgarasından türer: karede titremez, her istemci aynı çayırı görür.
+ *
+ * Çizim dünya ızgarasına oturan döşemeler olarak dokuya pişirilir (`VEGETATION.tile`). Çizim komutları
+ * her karede yeniden üçgenlenir; binlerce çizgi ve kontur çokgenini her kare yeniden çizmek uzaklaşmış
+ * kamerada karenin üçte ikisini yerdi. Döşeme yalnız içeriği (örtü, kar, mevsim paleti) niceliklenmiş
+ * imzasıyla değişince yeniden pişer; gün ışığı doku boyasıdır, kamera kaymak bedavadır. Karede pişirme
+ * süre bütçelidir ve en yakın eksik döşemeden başlar; eskimiş döşeme yenisi pişene dek görünmeye devam eder.
  */
 export class VegetationLayer {
-  /** Son karede çizilen küme sayısı (ölçüm). */
+  /** Görünür döşemelerdeki küme sayısı (ölçüm). */
   drawn = 0;
-  private covered: { left: number; top: number; right: number; bottom: number } | undefined;
-  private drawnAt = Number.NEGATIVE_INFINITY;
-  private drawnQuality = -1;
+  /** Son karede pişirilen döşeme sayısı (ölçüm). */
+  baked = 0;
+  private readonly tiles = new Map<number, Tile>();
   private readonly contours = new TerrainContours();
   private readonly xs = new Float32Array(MAX_CANDIDATES);
   private readonly ys = new Float32Array(MAX_CANDIDATES);
@@ -68,78 +137,299 @@ export class VegetationLayer {
   private count = 0;
   private rowA = new Float64Array(0);
   private rowB = new Float64Array(0);
+  private level = 0;
+  private tint = -1;
+  private pass = 0;
+  private readonly wanted: Tile[] = [];
 
-  /** `tips` kar üstünde çizilen uç katmanıdır (yoksa kar altındaki yeşillik yalnız kar alfasıyla sezilir). */
-  constructor(
-    private readonly graphics: Phaser.GameObjects.Graphics,
-    private readonly tips?: Phaser.GameObjects.Graphics,
-  ) {}
+  constructor(private readonly host: VegetationHost) {}
 
-  draw(field: TerrainField, frame: WeatherFrame, rect: WeatherRect, quality = 1): void {
-    const g = this.graphics;
+  /**
+   * @param detail ekranda birim başına aygıt pikseli (kamera yakınlığı × çözünürlük); doku yoğunluğunu seçer.
+   */
+  draw(
+    field: TerrainField,
+    weather: WeatherSource,
+    rect: WeatherRect,
+    quality = 1,
+    detail = 1,
+  ): void {
+    const frame = weather.frame;
+    this.baked = 0;
+    this.drawn = 0;
     if (rect.width <= 0 || rect.height <= 0 || field.cellSize <= 0) {
-      g.clear();
-      this.tips?.clear();
-      this.drawn = 0;
-      this.covered = undefined;
+      this.hideAll();
       return;
     }
-    const left = rect.x;
-    const top = rect.y;
-    const right = rect.x + rect.width;
-    const bottom = rect.y + rect.height;
-    const held = this.covered;
-    if (
-      held &&
-      quality === this.drawnQuality &&
-      left >= held.left &&
-      top >= held.top &&
-      right <= held.right &&
-      bottom <= held.bottom &&
-      Math.abs(frame.elapsedMs - this.drawnAt) < VEGETATION.redrawMs
-    )
-      return;
+    this.pass++;
+    const level = this.pickLevel(detail);
+    const tint = toneOf(frame.daylight);
+    const toneChanged = tint !== this.tint;
+    this.tint = tint;
 
-    g.clear();
-    this.tips?.clear();
-    this.drawn = 0;
-    const size = field.cellSize;
-    const columns = Math.ceil(field.width / size);
-    const rows = Math.ceil(field.height / size);
-    // Bir hücre pay (alan `TerrainField.prepare` payıyla aynı): kamera biraz kayınca yeniden çizilmez.
-    const firstCol = Math.max(0, Math.floor(left / size) - 1);
-    const lastCol = Math.min(columns - 1, Math.ceil(right / size));
-    const firstRow = Math.max(0, Math.floor(top / size) - 1);
-    const lastRow = Math.min(rows - 1, Math.ceil(bottom / size));
-    const clip = {
-      x: firstCol * size,
-      y: firstRow * size,
-      width: (lastCol + 1 - firstCol) * size,
-      height: (lastRow + 1 - firstRow) * size,
-    };
-    this.covered = {
-      left: clip.x,
-      top: clip.y,
-      right: clip.x + clip.width,
-      bottom: clip.y + clip.height,
-    };
-    this.drawnAt = frame.elapsedMs;
-    this.drawnQuality = quality;
+    const size = TILE.size;
+    const reach = TILE.pad;
+    const firstColumn = Math.max(0, Math.floor((rect.x - reach) / size));
+    const firstRow = Math.max(0, Math.floor((rect.y - reach) / size));
+    const lastColumn = Math.min(
+      Math.max(0, Math.ceil(field.width / size) - 1),
+      Math.floor((rect.x + rect.width + reach) / size),
+    );
+    const lastRow = Math.min(
+      Math.max(0, Math.ceil(field.height / size) - 1),
+      Math.floor((rect.y + rect.height + reach) / size),
+    );
+    const centerX = rect.x + rect.width / 2;
+    const centerY = rect.y + rect.height / 2;
+    this.wanted.length = 0;
+    for (let row = firstRow; row <= lastRow; row++) {
+      for (let column = firstColumn; column <= lastColumn; column++) {
+        const tile = this.tile(column, row);
+        tile.seen = this.pass;
+        if (toneChanged) this.applyTone(tile);
+        for (const kind of LAYERS) tile.layers[kind]?.show(true);
+        if (this.needsBake(tile, field, weather, quality, level, frame)) this.wanted.push(tile);
+      }
+    }
+    this.bakeWanted(field, weather, quality, level, frame, centerX, centerY);
+    for (const tile of this.tiles.values()) if (tile.seen === this.pass) this.drawn += tile.drawn;
+    this.evict();
+  }
 
+  /** Tüm döşemeleri ve bellekteki dokularını bırakır. */
+  destroy(): void {
+    for (const tile of this.tiles.values()) this.release(tile);
+    this.tiles.clear();
+  }
+
+  /** Bellekte tutulan döşeme sayısı (ölçüm ve test). */
+  get tileCount(): number {
+    return this.tiles.size;
+  }
+
+  private tile(column: number, row: number): Tile {
+    const key = row * 65536 + column;
+    let tile = this.tiles.get(key);
+    if (!tile) {
+      tile = {
+        column,
+        row,
+        x: column * TILE.size,
+        y: row * TILE.size,
+        layers: { region: null, core: null, clumps: null, tips: null },
+        signature: null,
+        texel: 0,
+        checkedAt: Number.NEGATIVE_INFINITY,
+        stale: false,
+        seen: 0,
+        drawn: 0,
+      };
+      this.tiles.set(key, tile);
+    }
+    return tile;
+  }
+
+  /** Ekran yoğunluğunu en yakın üst doku kademesine yuvarlar; kademe titremesin diye aralıklıdır (histerezis). */
+  private pickLevel(detail: number): number {
+    const levels = TILE.texel;
+    const need = Number.isFinite(detail) && detail > 0 ? detail : 1;
+    let best = levels[levels.length - 1];
+    for (const candidate of levels) {
+      if (candidate >= need * 0.9) {
+        best = candidate;
+        break;
+      }
+    }
+    if (this.level === 0) this.level = best;
+    else if (best !== this.level) {
+      const ratio = need / this.level;
+      if (ratio > 1.25 || ratio < 0.55) this.level = best;
+    }
+    return this.level;
+  }
+
+  private applyTone(tile: Tile): void {
+    for (const kind of LAYERS) tile.layers[kind]?.tone(this.tint);
+  }
+
+  /**
+   * Döşemenin pişmesi gerekir mi: hiç pişmediyse ya da doku kademesi değiştiyse evet; aksi hâlde içerik
+   * imzası `checkMs` aralığıyla denetlenir, farklıysa eskidir.
+   */
+  private needsBake(
+    tile: Tile,
+    field: TerrainField,
+    weather: WeatherSource,
+    quality: number,
+    level: number,
+    frame: WeatherFrame,
+  ): boolean {
+    if (tile.signature === null || tile.texel !== level) return true;
+    if (Math.abs(frame.elapsedMs - tile.checkedAt) >= TILE.checkMs) {
+      tile.checkedAt = frame.elapsedMs;
+      this.prepare(field, weather, tile);
+      tile.stale = this.signatureOf(field, tile, frame, quality) !== tile.signature;
+    }
+    return tile.stale;
+  }
+
+  private bakeWanted(
+    field: TerrainField,
+    weather: WeatherSource,
+    quality: number,
+    level: number,
+    frame: WeatherFrame,
+    centerX: number,
+    centerY: number,
+  ): void {
+    if (this.wanted.length === 0) return;
+    const half = TILE.size / 2;
+    // Hiç pişmemiş döşeme bayatlamışa göre önce gelir; aynı sınıfta kameraya en yakın başta.
+    const rank = (tile: Tile): number =>
+      Math.hypot(tile.x + half - centerX, tile.y + half - centerY) +
+      (tile.signature === null ? 0 : 1e6);
+    this.wanted.sort((a, b) => rank(a) - rank(b));
+    const deadline = performance.now() + TILE.bakeBudgetMs;
+    for (const tile of this.wanted) {
+      if (this.baked > 0 && performance.now() >= deadline) break;
+      this.bake(tile, field, weather, quality, level, frame);
+      this.baked++;
+    }
+  }
+
+  private prepare(field: TerrainField, weather: WeatherSource, tile: Tile): void {
+    const pad = TILE.pad + weather.cellSize;
+    field.prepare(weather, {
+      x: tile.x - pad,
+      y: tile.y - pad,
+      width: TILE.size + pad * 2,
+      height: TILE.size + pad * 2,
+    });
+  }
+
+  /** İçerik imzası: örtü ve kar derinliğinin niceliklenmiş örnekleri, palet karışımı ve kalite. */
+  private signatureOf(
+    field: TerrainField,
+    tile: Tile,
+    frame: WeatherFrame,
+    quality: number,
+  ): number {
+    const step = Math.max(8, field.cellSize / 2);
+    const fullDepth = WEATHER_VIEW.surface.snowFullDepth * VEGETATION.tip.fadeDepth;
+    let value = Math.imul(SEASONS.order.indexOf(frame.season) + 1, 40503);
+    value ^= Math.round(seasonBlend(frame) * 16) * 977;
+    value = Math.imul(value ^ Math.round(Math.max(0, Math.min(1, quality)) * 8), 2654435761);
+    for (let y = tile.y; y <= tile.y + TILE.size; y += step) {
+      for (let x = tile.x; x <= tile.x + TILE.size; x += step) {
+        const growth = Math.round(field.sample('growth', x, y) * TILE.growthSteps);
+        const snow = field.sample('snowDepth', x, y);
+        const tip =
+          snow > VEGETATION.tip.minSnow
+            ? 1 + Math.round(Math.min(1, snow / fullDepth) * TILE.snowSteps)
+            : 0;
+        value = Math.imul(value ^ (growth * 31 + tip), 16777619);
+      }
+    }
+    return value >>> 0;
+  }
+
+  private bake(
+    tile: Tile,
+    field: TerrainField,
+    weather: WeatherSource,
+    quality: number,
+    level: number,
+    frame: WeatherFrame,
+  ): void {
+    const pad = TILE.pad;
+    const clip = { x: tile.x, y: tile.y, width: TILE.size, height: TILE.size };
+    this.prepare(field, weather, tile);
+    const pens = {
+      region: this.host.pen('region'),
+      core: this.host.pen('core'),
+      clumps: this.host.pen('clumps'),
+      tips: this.host.pen('tips'),
+    };
+    for (const kind of LAYERS) pens[kind].clear();
+    tile.drawn = 0;
     this.collect(field, clip);
-    if (this.count === 0) return;
-    const palette = vegetationPalette(frame);
+    const filled: Record<VegetationLayerKind, boolean> = {
+      region: false,
+      core: false,
+      clumps: false,
+      tips: false,
+    };
+    if (this.count > 0) {
+      // Dokular tam gün ışığında pişer; gün ışığı doku boyasıdır (`toneOf`).
+      const palette = vegetationPalette({ ...frame, daylight: 1 });
+      // Taban ve çekirdek iki doku pikseli kalınlığında çizgiyle mühürlenir (bitişik çokgenler arası çatlak);
+      // çizgi döşeme sınırını aşmasın diye çokgenler o kadar içeriden kırpılır.
+      const seal = 2 / level;
+      pens.region.fillStyle(palette.leaf, 1);
+      pens.region.lineStyle(seal, palette.leaf, 1);
+      this.fillRegion(pens.region, field, clip, VEGETATION.threshold, seal);
+      pens.core.fillStyle(palette.shade, 1);
+      pens.core.lineStyle(seal, palette.shade, 1);
+      this.fillRegion(pens.core, field, clip, VEGETATION.core.threshold, seal);
+      const cap = TILE.capacity * Math.max(0.25, Math.min(1, quality));
+      const keep = Math.min(1, cap / this.count);
+      tile.drawn = this.drawClumps(pens.clumps, palette, frame.season, keep);
+      filled.region = true;
+      filled.core = true;
+      filled.clumps = tile.drawn > 0;
+      filled.tips = this.drawTips(pens.tips, field, palette, keep);
+    }
+    const originX = tile.x - pad;
+    const originY = tile.y - pad;
+    const size = TILE.size + pad * 2;
+    for (const kind of LAYERS) {
+      // Boş katman için doku üretilmez; önceden pişmiş içerik varsa boşaltılır.
+      if (!filled[kind] && !tile.layers[kind]) continue;
+      const image = (tile.layers[kind] ??= this.host.create(kind));
+      image.bake([pens[kind]], originX, originY, size, level);
+      image.tone(this.tint);
+    }
+    tile.texel = level;
+    tile.stale = false;
+    tile.checkedAt = frame.elapsedMs;
+    tile.signature = this.signatureOf(field, tile, frame, quality);
+  }
 
-    // Çayır tabanı ve yoğun çekirdek: kenarı gürültüyle tırtıklı iki kontur dolgusu.
-    g.fillStyle(palette.leaf, VEGETATION.base.alpha);
-    this.fillRegion(field, clip, VEGETATION.threshold);
-    g.fillStyle(palette.shade, VEGETATION.core.alpha);
-    this.fillRegion(field, clip, VEGETATION.core.threshold);
+  private hideAll(): void {
+    for (const tile of this.tiles.values())
+      for (const kind of LAYERS) tile.layers[kind]?.show(false);
+  }
 
-    const cap = VEGETATION.capacity * Math.max(0.25, Math.min(1, quality));
-    const keep = Math.min(1, cap / this.count);
-    this.drawClumps(palette, frame.season, keep);
-    this.drawTips(field, palette, keep);
+  /**
+   * Görünmeyen döşemeleri gizler; en eskileri `retain` kadarı kalacak biçimde bırakır (kamera hızla dönerse
+   * yeniden pişmesin diye).
+   */
+  private evict(): void {
+    let visible = 0;
+    for (const tile of this.tiles.values()) {
+      if (tile.seen === this.pass) {
+        visible++;
+        continue;
+      }
+      for (const kind of LAYERS) tile.layers[kind]?.show(false);
+    }
+    const surplus = this.tiles.size - visible - TILE.retain;
+    if (surplus <= 0) return;
+    const gone = [...this.tiles.entries()]
+      .filter(([, tile]) => tile.seen !== this.pass)
+      .sort((a, b) => a[1].seen - b[1].seen)
+      .slice(0, surplus);
+    for (const [key, tile] of gone) {
+      this.release(tile);
+      this.tiles.delete(key);
+    }
+  }
+
+  private release(tile: Tile): void {
+    for (const kind of LAYERS) {
+      tile.layers[kind]?.destroy();
+      tile.layers[kind] = null;
+    }
   }
 
   /** Bölge değeri (> 0 çayır içi): bilinear örtü, gürültüyle kenar tırtıklanır; çıplak toprakta -1. */
@@ -190,8 +480,24 @@ export class VegetationLayer {
   }
 
   /** `threshold` üstündeki bölgeyi satır satır konturla doldurur (kenar adımı `edgeStep`). */
-  private fillRegion(field: TerrainField, clip: WeatherRect, threshold: number): void {
+  private fillRegion(
+    pen: Phaser.GameObjects.Graphics,
+    field: TerrainField,
+    clip: WeatherRect,
+    threshold: number,
+    seal: number,
+  ): void {
     const step = VEGETATION.edgeStep;
+    const edge = seal / 2;
+    const bounds =
+      seal > 0
+        ? {
+            x: clip.x + edge,
+            y: clip.y + edge,
+            width: clip.width - seal,
+            height: clip.height - seal,
+          }
+        : clip;
     const columns = Math.ceil(clip.width / step);
     const rows = Math.ceil(clip.height / step);
     if (this.rowA.length < columns + 1) {
@@ -214,18 +520,26 @@ export class VegetationLayer {
         const c = current[col + 1];
         const d = current[col];
         if (a <= 0 && b <= 0 && c <= 0 && d <= 0) continue;
-        this.contours.draw(this.graphics, clip, clip.x + col * step, y, step, a, b, c, d);
+        this.contours.draw(pen, bounds, clip.x + col * step, y, step, a, b, c, d, seal > 0);
       }
       [previous, current] = [current, previous];
     }
   }
 
-  /** Kümeler: zemine temas gölgesi, iki tonlu yukarı açılan yapraklar ve seyrek çiçekler. */
-  private drawClumps(palette: Palette, season: WeatherFrame['season'], keep: number): void {
-    const g = this.graphics;
+  /**
+   * Kümeler: zemine temas gölgesi, iki tonlu yukarı açılan yapraklar ve seyrek çiçekler. Çizilen küme
+   * sayısını döner.
+   */
+  private drawClumps(
+    g: Phaser.GameObjects.Graphics,
+    palette: Palette,
+    season: WeatherFrame['season'],
+    keep: number,
+  ): number {
     const [minLength, maxLength] = VEGETATION.length;
     const { blades, spread, bladeWidth } = VEGETATION;
     const fan = spread / (blades - 1);
+    let drawn = 0;
 
     g.fillStyle(palette.shade, VEGETATION.shadeAlpha);
     for (let index = 0; index < this.count; index++) {
@@ -241,7 +555,7 @@ export class VegetationLayer {
       for (let index = 0; index < this.count; index++) {
         const id = this.ids[index];
         if (hash(id, 0, 4) > keep) continue;
-        if (pass === 0) this.drawn++;
+        if (pass === 0) drawn++;
         const x = this.xs[index];
         const y = this.ys[index];
         const length =
@@ -270,7 +584,7 @@ export class VegetationLayer {
     }
 
     const bloomShare = VEGETATION.bloomShare[season];
-    if (bloomShare <= 0) return;
+    if (bloomShare <= 0) return drawn;
     g.fillStyle(palette.bloom, 1);
     for (let index = 0; index < this.count; index++) {
       const id = this.ids[index];
@@ -283,16 +597,20 @@ export class VegetationLayer {
         VEGETATION.bloomRadius,
       );
     }
+    return drawn;
   }
 
   /**
    * Karın içinden görünen uçlar: küme konumları aynıdır, yalnız karlı yerde kısa, kara karışmış uçlar
    * kar katmanının üstüne çizilir; kar derinleştikçe seyrelir. Yeşillik kar altında tümden silinmez:
-   * "hafif yeşillik, üstünde kar birikmesi" okunur.
+   * "hafif yeşillik, üstünde kar birikmesi" okunur. Hiç uç çizildiyse `true`.
    */
-  private drawTips(field: TerrainField, palette: Palette, keep: number): void {
-    const tips = this.tips;
-    if (!tips) return;
+  private drawTips(
+    tips: Phaser.GameObjects.Graphics,
+    field: TerrainField,
+    palette: Palette,
+    keep: number,
+  ): boolean {
     const { tip } = VEGETATION;
     const fullDepth = WEATHER_VIEW.surface.snowFullDepth;
     const [minLength, maxLength] = VEGETATION.length;
@@ -321,5 +639,6 @@ export class VegetationLayer {
       any = true;
     }
     if (any) tips.strokePath();
+    return any;
   }
 }

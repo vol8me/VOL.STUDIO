@@ -5,6 +5,7 @@ import {
   queueSpiderTextures,
   queueTankTextures,
 } from '@/view/textures';
+import { warmShaders } from '@/view/shaderWarmup';
 import type { GameServices } from '@/app/GameServices';
 import { BOOT_EVENT } from './bootEvents';
 import { firstScene } from './firstScene';
@@ -24,7 +25,10 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     createRuntimeTextures(this);
-    this.game.events.emit(BOOT_EVENT.ready);
-    this.scene.start(firstScene(this.services, location.search));
+    // Gölgelendirici derlemesi yükleme ekranının arkasında biter: ilk oynanış karesi takılmaz.
+    warmShaders(this, () => {
+      this.game.events.emit(BOOT_EVENT.ready);
+      this.scene.start(firstScene(this.services, location.search));
+    });
   }
 }

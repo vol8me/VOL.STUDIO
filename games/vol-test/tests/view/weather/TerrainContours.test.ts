@@ -68,4 +68,17 @@ describe('TerrainContours', () => {
     renderer.draw(full as unknown as Phaser.GameObjects.Graphics, rect, 0, 0, 64, 2, -1, 2, -1);
     expect(full.calls.filter(([name]) => name === 'fillPath')).toHaveLength(2);
   });
+
+  it('çerçeve isteniyorsa dolgudan sonra aynı yolu çizgiyle de çizer; istenmezse çizmez', () => {
+    const renderer = new TerrainContours();
+    const plain = fakeObject('graphics');
+    const sealed = fakeObject('graphics');
+    const asGraphics = (object: typeof plain) => object as unknown as Phaser.GameObjects.Graphics;
+    renderer.draw(asGraphics(plain), rect, 0, 0, 64, 1, 1, 1, -1);
+    renderer.draw(asGraphics(sealed), rect, 0, 0, 64, 1, 1, 1, -1, true);
+    const names = (object: typeof plain) => object.calls.map(([name]) => name);
+    expect(names(plain)).not.toContain('strokePath');
+    expect(names(sealed)).toEqual([...names(plain), 'strokePath']);
+    expect(names(sealed).indexOf('fillPath')).toBeLessThan(names(sealed).indexOf('strokePath'));
+  });
 });

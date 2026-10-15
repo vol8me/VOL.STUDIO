@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { describe, expect, it, vi } from 'vitest';
 import type * as Textures from '@/view/textures';
 import { SPIDER_PARTS } from '@/config/spiders';
@@ -30,6 +31,46 @@ describe('BootScene', () => {
   it('start=world bağlantısı ve ölçüm koşusu menüyü atlar', () => {
     expect(created({}, '?start=world').start).toHaveBeenCalledWith('World');
     expect(created({ measurements: {} }).start).toHaveBeenCalledWith('World');
+  });
+
+  it('gölgelendirici ısınması bitene dek hazır olayı ve ilk sahne beklenir', () => {
+    history.replaceState(null, '', '/');
+    const scene = new BootScene({} as never);
+    const start = vi.fn();
+    const emit = vi.fn();
+    const frames: Array<() => void> = [];
+    const keys = new Set<string>();
+    const image = () => {
+      const chain = {
+        setOrigin: () => chain,
+        setScrollFactor: () => chain,
+        setAlpha: () => chain,
+        setVisible: () => chain,
+        destroy: () => undefined,
+      };
+      return chain;
+    };
+    Object.assign(scene, {
+      scene: { start },
+      game: { events: { emit } },
+      sys: { game: { renderer: { type: Phaser.WEBGL, maxTextures: 2 } } },
+      textures: {
+        exists: (key: string) => keys.has(key),
+        addCanvas: (key: string) => keys.add(key),
+        remove: (key: string) => keys.delete(key),
+      },
+      add: { image },
+      events: {
+        on: (_name: string, listener: () => void) => frames.push(listener),
+        off: () => undefined,
+      },
+    });
+    scene.create();
+    expect(start).not.toHaveBeenCalled();
+    expect(emit).not.toHaveBeenCalled();
+    for (let frame = 0; frame < 3; frame++) [...frames].forEach((listener) => listener());
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(start).toHaveBeenCalledWith('Menu');
   });
 
   it('tank SVG parçalarının yanında iki örümceğin her parçasını SVG olarak yükler', () => {

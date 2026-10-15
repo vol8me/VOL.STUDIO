@@ -67,6 +67,8 @@ export function lastCall(object: FakeObject, method: string): unknown[] | undefi
 export interface FakeScene {
   readonly created: FakeObject[];
   readonly add: Record<string, (...args: unknown[]) => FakeObject>;
+  /** `scene.make.*`: sahneye eklenmeyen nesneler; yine `created` listesine yazılır. */
+  readonly make: Record<string, (...args: unknown[]) => FakeObject>;
   readonly textures: {
     exists: (key: string) => boolean;
     addCanvas: ReturnType<typeof vi.fn>;
@@ -95,10 +97,17 @@ export function fakeScene(): FakeScene {
       get: (_target, kind: string) => factory(kind),
     },
   );
+  const make = new Proxy(
+    {},
+    {
+      get: (_target, kind: string) => factory(kind),
+    },
+  );
   const textureKeys = new Set<string>();
   return {
     created,
     add,
+    make,
     textures: {
       exists: (key) => textureKeys.has(key),
       addCanvas: vi.fn((key: string, canvas: HTMLCanvasElement) => {

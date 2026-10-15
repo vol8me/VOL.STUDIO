@@ -92,6 +92,7 @@ function mount(services?: GameServices, data?: WorldStartData): Harness {
   parent.appendChild(canvas);
   Object.assign(scene, {
     add: fake.add,
+    make: fake.make,
     // Senaryo kadrosu yürüyücü de içerir: rig dokuları yüklü sayılır.
     textures: { ...fake.textures, exists: () => true },
     cameras: { main: camera },
