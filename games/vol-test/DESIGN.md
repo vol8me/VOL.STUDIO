@@ -218,6 +218,10 @@ derler ve her birini ilk gereken karede eşzamanlı bekleyerek (15–45 ms) derl
 ekranının arkasında 1'den en çok 16 dokuya kadar her kademeyi bir karede çizdirir; böylece derleme
 oynanıştan önceye taşınır ve dünyanın ilk saniyesinde art arda takılma kalmaz. WebGL olmayan ya da sahte
 bağlamlı oturum (ölçüm, test) ısınmayı atlar.
+Maliyet ölçüldü: ısınma açılışa Chromium'da (GPU) ~1 sn, yazılım GL'li Playwright WebKit'te ~3,3 sn ekler
+(`?start=world` → HUD 1,65 → 5,0 sn); bu süre yükleme ekranının arkasındadır, E2E açılış beklemeleri buna göre
+uzundur. Araç görünümlerinin kendi parçacıkları (örümcek, süzülen, sıçrayıcı ve mech tozu) sahnenin saatiyle
+aktığı için görünüm süresi 0 iken `timeScale` 0'lanır; yoksa duraklatılmış dünyada toz sönmeye devam ederdi.
 
 Sunucu dünyası hep açıktır, bu yüzden iklim sunucuda yaşar ve kalıcıdır. `WorldRoom` iklimi sunucu saatiyle
 ilerletir ve `ClimateStore` (`server/ClimateStore.ts`; dosya `VOLTEST_CLIMATE_FILE` ile verilir, yoksa çalışma dizinindeki `.state` klasörüne yazılır)
