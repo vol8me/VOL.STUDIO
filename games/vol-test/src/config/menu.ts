@@ -5,6 +5,11 @@ export const MENU = {
     zoom: 4,
     /** Araç ve uzuvlarının kapladığı en geniş alan (dünya birimi): boş alan darsa yakınlaştırma bununla küçülür. */
     extent: 150,
+    /**
+     * Varsayılandan geniş kaplayan araçların alanı (dünya birimi): bacak açıklığı gövdeden büyük
+     * yürüyücü, dar boş alanda kenara değmesin diye daha çok küçülür.
+     */
+    vehicleExtent: { goliath: 190 } as Readonly<Partial<Record<string, number>>>,
     /** Panel genişliği ekranın bu oranını aşarsa alt levha sayılır ve araç panelin üstünde durur. */
     stackedFraction: 0.7,
     /** Dönen tabla hızı (rad/s). */

@@ -35,6 +35,7 @@ export class Showroom {
   private elapsedMs = 0;
   private turns = true;
   private hull = 0;
+  private extent: number = SHOWROOM.extent;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -55,6 +56,7 @@ export class Showroom {
     // Bacaklar dünya uzayında basılır: tablada dönen gövde ayakları geride bırakıp dolaşık bir poza sürükler.
     // Yürüyücü bu yüzden dönmez; taretleri salınır.
     this.turns = spec.kind !== 'walker';
+    this.extent = SHOWROOM.vehicleExtent[spec.id] ?? SHOWROOM.extent;
     this.view = createVehicleView(this.scene, spec, this.lighting);
     this.view.root.setDepth(10);
   }
@@ -133,7 +135,7 @@ export class Showroom {
       }
     }
     // Boş alana sığmayan araç kırpılmasın: yakınlaştırma alanın kısa kenarına göre küçülür.
-    const zoom = Math.min(SHOWROOM.zoom, Math.min(freeWidth, freeHeight) / SHOWROOM.extent);
+    const zoom = Math.min(SHOWROOM.zoom, Math.min(freeWidth, freeHeight) / this.extent);
     camera.setZoom(quality * zoom);
     camera.centerOn((width / 2 - focusX) / zoom, (height / 2 - focusY) / zoom);
   }

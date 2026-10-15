@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { describe, expect, it, vi } from 'vitest';
 import { MENU } from '@/config/menu';
-import { ARACHNID, STRIKER } from '@/config/vehicles';
+import { ARACHNID, GOLIATH, STRIKER } from '@/config/vehicles';
 import { Showroom } from '@/view/Showroom';
 import { fakeObject, fakeScene } from '../support/fakeScene';
 
@@ -66,6 +66,19 @@ describe('Showroom', () => {
     expect(zoom).toBeLessThan(SHOWROOM.zoom);
     expect(camera.setZoom).toHaveBeenLastCalledWith(zoom);
     expect(centre()[1]).toBeCloseTo((390 - 148) / zoom);
+  });
+
+  it('bacak açıklığı geniş yürüyücü daha çok küçülür; varsayılan araç değişmez', () => {
+    const { showroom, camera } = build(390, 780);
+    showroom.update(16, { top: 296, right: 390, width: 390 });
+    expect(camera.setZoom).toHaveBeenLastCalledWith(296 / SHOWROOM.extent);
+    showroom.setVehicle(GOLIATH);
+    showroom.update(16, { top: 296, right: 390, width: 390 });
+    expect(SHOWROOM.vehicleExtent.goliath).toBeGreaterThan(SHOWROOM.extent);
+    expect(camera.setZoom).toHaveBeenLastCalledWith(296 / SHOWROOM.vehicleExtent.goliath!);
+    showroom.setVehicle(ARACHNID);
+    showroom.update(16, { top: 296, right: 390, width: 390 });
+    expect(camera.setZoom).toHaveBeenLastCalledWith(296 / SHOWROOM.extent);
   });
 
   it('paletli araç tablada döner; bacaklı yürüyücü dönmez (ayaklar dolaşmaz)', () => {
