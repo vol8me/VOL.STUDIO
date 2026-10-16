@@ -7,6 +7,7 @@ export function hudFrame(overrides: Partial<HudFrame> = {}): HudFrame {
     hull: 0,
     boosting: false,
     kind: 'tank',
+    skill: 'dash',
     boost: 100,
     boostCapacity: 100,
     fireProgress: 1,

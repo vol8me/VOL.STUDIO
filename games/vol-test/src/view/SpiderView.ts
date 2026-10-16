@@ -1,13 +1,15 @@
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import { Spring1D } from '@volstudio/core/math';
-import { GhostTrail, clamp01, poseSourceOf, type PoseSourceNode } from '@volstudio/core';
+import { clamp01 } from '@volstudio/core';
 import { SPIDER_ART, SPIDER_TELEPORT_UNITS, type PartBox, type SpiderLook } from '@/config/spiders';
 import type { WalkerSpec } from '@/config/vehicles';
 import { LEGS_PER_SIDE, limpCollapse, lostLegs } from '@/sim/chassis/parts';
 import { muzzlePose, mountPose, type MuzzlePose } from '@/sim/muzzle';
 import { CorePulse } from './CorePulse';
 import { Feelers } from './Feelers';
+import { GROUNDED, LeapTracker, type LeapPhase } from './spider/LeapTracker';
 import { LocomotionReader } from './spider/LocomotionReader';
+import { ShieldView } from './spider/ShieldView';
 import { SpiderCannon } from './spider/SpiderCannon';
 import { SpiderLegs, lightLocal, type LightLocal } from './spider/SpiderLegs';
 import { SpiderMotion, type SpiderPose } from './spider/SpiderMotion';
@@ -38,6 +40,8 @@ const SAG = { px: 3.2, settleMs: 180 } as const;
  * aynı faz): kalça çöker, gövde o yana yatar ve göğüs kısa bir kıvrılır. Değerler dünya birimi ve radyandır.
  */
 const LIMP = { dipPx: 7, swayPx: 8, yaw: 0.2, baseSeverity: 0.6 } as const;
+/** İniş toz halkası: nokta sayısı, noktadaki parçacık sayısı ve halkanın bacak erişimine oranı. */
+const LANDING_RING = { points: 12, count: 2, reach: 1.15 } as const;
 
 /**
  * Sekiz bacaklı yürüyücülerin (Arachnid, Widow) sahne karşılığı: tamamen el çizimi SVG parçalardan
@@ -47,6 +51,10 @@ const LIMP = { dipPx: 7, swayPx: 8, yaw: 0.2, baseSeverity: 0.6 } as const;
  * göre yaslanır, çöker, karnı geriden sallanır (`SpiderMotion`). Gölge her parçanın kendi yüksekliğiyle
  * orantılı kayar. Toplar yuvalarında poza göre döner; yuva açıları ve namlu uçları `sim/muzzle` ile
  * aynıdır, yani çizilen namlu atışın çıktığı yeri gösterir.
+ *
+ * Yetenek görünümü `look`tan gelir: sıçrayan örümcek (`look.leap`) kalkışta çömelir, uçuşta bacaklarını
+ * toplayıp yükselir ve gölgesi ayrılır, inişte çöker ve toz halkası bırakır (`LeapTracker`); kalkanlı
+ * örümcek (`look.shield`) gövdesini enerji kubbesiyle çevreler (`ShieldView`).
  */
 export class SpiderView implements VehicleView {
   readonly root: Phaser.GameObjects.Container;
@@ -66,9 +74,8 @@ export class SpiderView implements VehicleView {
   private readonly mount: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
   private readonly locomotion: LocomotionReader;
-  private readonly ghosts: GhostTrail;
-  private readonly ghostSource: PoseSourceNode;
-  private dashing = false;
+  private readonly leap?: LeapTracker;
+  private readonly shield?: ShieldView;
   private elapsedMs = 0;
   private sag = 0;
   private sagTarget = 0;
@@ -90,7 +97,6 @@ export class SpiderView implements VehicleView {
     this.motion = new SpiderMotion(look);
     this.locomotion = new LocomotionReader({
       worldToArt: 1,
-      dashSpring: look.motion.dashSpring,
       impactFalloffMs: look.motion.impactFalloffMs,
       teleportUnits: SPIDER_TELEPORT_UNITS,
     });
@@ -133,17 +139,11 @@ export class SpiderView implements VehicleView {
     );
     this.root = scene.add.container(0, 0, [this.art, ...this.cannons.map((cannon) => cannon.root)]);
     this.root.setDepth(SPIDER_ART.depth);
-    // Hayalet gövdenin ve bacakların o anki gerçek pozunu taşır (CORE `GhostTrail`); dünyada kalıp söner.
-    this.ghostSource = poseSourceOf([this.art]);
-    this.ghosts = new GhostTrail(scene, {
-      maxGhosts: look.ghost.count,
-      lifespanMs: look.ghost.lifeMs,
-      captureIntervalMs: look.ghost.intervalMs,
-      startAlpha: look.ghost.alpha,
-      tint: look.ghost.tint,
-      blendMode: Phaser.BlendModes.ADD,
-      depth: SPIDER_ART.depth - 0.5,
-    });
+    const { boostCapacity, boostDrain } = spec.walker;
+    // Yetenek süresi hız deposundan türer: sıçramanın uçuşu ve kalkanın ömrü `kapasite / boşalma`dır.
+    const abilityMs = (boostCapacity / boostDrain) * 1000;
+    if (look.leap) this.leap = new LeapTracker(abilityMs);
+    if (look.shield) this.shield = new ShieldView(scene, look.shield, abilityMs);
     this.dust = scene.add
       .particles(0, 0, TEXTURE.spark, look.dust.emitter)
       .setDepth(look.dust.depth);
@@ -164,6 +164,11 @@ export class SpiderView implements VehicleView {
     this.sagTarget = ((lostLegs(mask, 1) - lostLegs(mask, 0)) / LEGS_PER_SIDE) * SAG.px;
   }
 
+  /** Mermi kubbeye değdi (dünya konumu); kalkan açıksa dalga başlar ve `true` döner. */
+  absorb(x: number, y: number): boolean {
+    return this.shield?.absorb(x, y) ?? false;
+  }
+
   update(frame: TankFrame, deltaMs: number): void {
     // Parçacıklar sahnenin saatiyle akar: duraklatmada (süre 0) emisyon ve ömür birlikte durur.
     this.dust.timeScale = deltaMs > 0 ? 1 : 0;
@@ -173,18 +178,19 @@ export class SpiderView implements VehicleView {
     const signals = this.locomotion.signals;
     const fresh = this.locomotion.read(frame, deltaMs);
     lightLocal(frame.hull, this.light);
+    if (fresh) this.leap?.reset();
+    const air = this.leap?.update(frame.boosting && !fresh, deltaMs) ?? GROUNDED;
     this.sag += (this.sagTarget - this.sag) * (1 - Math.exp(-deltaMs / SAG.settleMs));
-    const pose = this.motion.update(signals, deltaMs);
+    const pose = this.motion.update(signals, deltaMs, air);
     this.stumble(frame, pose);
     this.climbRock(frame, pose, deltaMs);
     this.legs.setSag(this.sag + this.limpSway);
     if (fresh) this.legs.reset(signals.x, signals.y, frame.hull, pose, this.light);
-    else this.legs.update(signals, pose, deltaMs, this.light);
+    else this.legs.update(signals, pose, deltaMs, this.light, air);
 
     this.elapsedMs += deltaMs;
-    this.ghosts.update(deltaMs);
-    if (signals.dash01 > 0.35) this.ghosts.capture(this.ghostSource);
-    this.huntBurst(frame.boosting);
+    this.leapEffects(air, frame.hull);
+    this.shield?.update(frame.boosting, deltaMs, frame.x, frame.y);
     this.footfalls(frame.speed, frame.hull);
     this.placeBody(pose);
     this.animateSensors(frame, pose, deltaMs);
@@ -238,17 +244,20 @@ export class SpiderView implements VehicleView {
     this.root.setVisible(present);
     this.shadowRoot.setVisible(present);
     if (present) return;
-    this.ghosts.clear();
-    for (const cannon of this.cannons) cannon.silence();
-    this.dashing = false;
+    this.vanish();
   }
 
   setWrecked(wrecked: boolean): void {
     setCharred(this.root, wrecked);
-    if (!wrecked) return;
-    this.ghosts.clear();
+    if (wrecked) this.vanish();
+  }
+
+  /** Araç sahneden çıktı ya da enkaz oldu: kubbe, sıçrama pozu ve top efektleri anında söner. */
+  private vanish(): void {
+    this.shield?.hide();
+    this.leap?.reset();
+    this.shadowRoot.setAlpha(1);
     for (const cannon of this.cannons) cannon.silence();
-    this.dashing = false;
   }
 
   submerge(depth: number): void {
@@ -261,7 +270,7 @@ export class SpiderView implements VehicleView {
   }
 
   destroy(): void {
-    this.ghosts.destroy();
+    this.shield?.destroy();
     for (const cannon of this.cannons) cannon.destroy();
     this.core.destroy();
     this.feelers.destroy();
@@ -270,13 +279,41 @@ export class SpiderView implements VehicleView {
     this.root.destroy();
   }
 
-  /** Av atılışının başladığı karede arka ayakların altından bir toz patlaması fırlar. */
-  private huntBurst(dashing: boolean): void {
-    if (dashing && !this.dashing) {
-      const { dust } = this.look;
-      this.legs.forEachFoot((x, y) => this.dust.emitParticleAt(x, y, dust.countMax * 2));
+  /**
+   * Sıçrama efektleri. Kalkışta ayakların altından toz fırlar ve pençe delikleri kalır; inişte her ayağın
+   * altında toz ve iz, gövdenin çevresinde de dışa yayılan bir toz halkası oluşur. Uçuşta gölge soluklaşır:
+   * gövde yükseldikçe zemin gölgesi seyrelir.
+   */
+  private leapEffects(air: LeapPhase, hull: number): void {
+    const leap = this.look.leap;
+    if (!leap) return;
+    this.shadowRoot.setAlpha(1 - leap.shadowFade * air.arc);
+    if (!air.takeoff && !air.landed) return;
+    const { dust, leg } = this.look;
+    const scale = this.spec.walker.halfWidth / FX.feet.refHalfWidth;
+    const count = Math.round(dust.countMax * (air.takeoff ? leap.dustLaunch : leap.dustLand));
+    let cx = 0;
+    let cy = 0;
+    let feet = 0;
+    this.legs.forEachFoot((x, y) => {
+      this.dust.emitParticleAt(x, y, count);
+      this.footprint?.(x, y, hull, scale);
+      cx += x;
+      cy += y;
+      feet++;
+    });
+    if (!air.landed || feet === 0) return;
+    cx /= feet;
+    cy /= feet;
+    const ring = LANDING_RING.points;
+    for (let point = 0; point < ring; point++) {
+      const angle = (point / ring) * Math.PI * 2 + hull;
+      this.dust.emitParticleAt(
+        cx + Math.cos(angle) * leg.restDistance * LANDING_RING.reach,
+        cy + Math.sin(angle) * leg.restDistance * LANDING_RING.reach,
+        LANDING_RING.count,
+      );
     }
-    this.dashing = dashing;
   }
 
   /** Bu karede yere basan her ayak, gövdeye kısa bir çökme ve hızla ölçeklenen bir toz tutamı verir. */

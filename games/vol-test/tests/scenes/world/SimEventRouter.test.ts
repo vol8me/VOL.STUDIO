@@ -59,6 +59,32 @@ describe('routeSimEvents', () => {
     expect(haptics.intensities).toEqual([FEEL.fire.haptic]);
   });
 
+  it('kalkan vuruşu emerse gövde kıvılcımı ve kıymığı çizilmez; kalkan kapalıysa çizilir', () => {
+    const t = targets();
+    const absorb = vi.fn(() => true);
+    const shielded = { ...t, tank: () => ({ fire: vi.fn(), absorb }) };
+    routeSimEvents([{ kind: 'hit', owner: PLAYER, target: OTHER, x: 7, y: 8, angle: 1 }], shielded);
+    expect(absorb).toHaveBeenCalledWith(7, 8);
+    expect(t.effects.hit).not.toHaveBeenCalled();
+    expect(t.effects.chip).not.toHaveBeenCalled();
+
+    const open = { ...t, tank: () => ({ fire: vi.fn(), absorb: vi.fn(() => false) }) };
+    routeSimEvents([{ kind: 'hit', owner: PLAYER, target: OTHER, x: 7, y: 8, angle: 1 }], open);
+    expect(t.effects.hit).toHaveBeenCalledWith(7, 8, 1);
+    expect(t.effects.chip).toHaveBeenCalled();
+  });
+
+  it('kalkanlı hedefin isabeti yine oyuncu geri bildirimini tetikler (titreşim ve nişangâh)', () => {
+    const t = targets();
+    const reticle = { fired: vi.fn(), hit: vi.fn() };
+    const shielded = { ...t, reticle, tank: () => ({ fire: vi.fn(), absorb: () => true }) };
+    routeSimEvents([{ kind: 'hit', owner: PLAYER, target: OTHER, x: 0, y: 0, angle: 0 }], shielded);
+    expect(reticle.hit).toHaveBeenCalled();
+    routeSimEvents([{ kind: 'hit', owner: OTHER, target: PLAYER, x: 0, y: 0, angle: 0 }], shielded);
+    expect(t.camera.addTrauma).toHaveBeenCalledWith(FEEL.hit.trauma);
+    expect(haptics.patterns).toContain('warning');
+  });
+
   it('nişangâh yalnız oyuncunun atışında büyür ve oyuncunun isabetinde ton değiştirir', () => {
     const reticle = { fired: vi.fn(), hit: vi.fn() };
     const t = { ...targets(), reticle };

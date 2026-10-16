@@ -1,16 +1,14 @@
 import { clamp01 } from '@volstudio/core';
-import { Spring1D, type SpringConfig } from '@volstudio/core/math';
 import type { TankFrame } from '../VehicleView';
 import type { LocomotionSignals } from './signals';
 
 /** Simülasyon adımı: ivme, hızın değiştiği iki kare arasından okunur ve bundan kısa süreye bölünmez. */
 const SIM_STEP_SECONDS = 1 / 60;
 
-/** Okuyucunun türe özgü sayıları: sanat ölçeği, atılım yumuşatması, çarpma sönmesi, ışınlanma eşiği. */
+/** Okuyucunun türe özgü sayıları: sanat ölçeği, çarpma sönmesi, ışınlanma eşiği. */
 export interface LocomotionTuning {
   /** Dünya biriminden sanat pikseline çarpan. */
   readonly worldToArt: number;
-  readonly dashSpring: SpringConfig;
   readonly impactFalloffMs: number;
   /** Bir kareden ötekine bu kadar uzağa giden araç ışınlanmıştır (dünya birimi). */
   readonly teleportUnits: number;
@@ -35,10 +33,8 @@ export class LocomotionReader {
     travelHeadingRad: 0,
     facingHeadingRad: 0,
     turnRateRadPerSec: 0,
-    dash01: 0,
     impact01: 0,
   };
-  private readonly dashSpring = new Spring1D();
   private placed = false;
   private lastX = 0;
   private lastY = 0;
@@ -97,9 +93,6 @@ export class LocomotionReader {
     // Gövde durunca hızın yönü anlamsızdır; bakış yönüne düşülür (bkz. `LocomotionSignals`).
     signals.travelHeadingRad = signals.speed > 1e-3 ? Math.atan2(velY, velX) : frame.hull;
     signals.turnRateRadPerSec = frame.angularVelocity;
-    signals.dash01 = clamp01(
-      this.dashSpring.update(frame.boosting ? 1 : 0, deltaMs, this.tuning.dashSpring),
-    );
     // Sönme kare başında alınır: bu karede kurulan yankı anında sönmez.
     this.impact01 = Math.max(0, this.impact01 - deltaMs / this.tuning.impactFalloffMs);
     signals.impact01 = this.impact01;

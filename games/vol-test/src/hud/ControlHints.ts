@@ -1,4 +1,5 @@
 import { i18next } from '@volstudio/core/i18n';
+import type { SkillId } from '@/config/skills';
 import {
   Text,
   type ControlGlyphBinding,
@@ -42,7 +43,7 @@ export class ControlHints {
   readonly element: HTMLElement;
   private readonly labels = new Map<HintKey, Text>();
   private readonly rows = new Map<HintKey, HTMLElement>();
-  private walker = false;
+  private skill: SkillId | null = null;
 
   /** `live`: dünya sunucuda aktığı için son satır "Duraklat" değil "Menü" der. */
   constructor(
@@ -70,17 +71,21 @@ export class ControlHints {
   refreshLabels(): void {
     for (const [key, label] of this.labels) {
       const name =
-        key === 'pause' && this.live ? 'menu' : key === 'brake' && this.walker ? 'dash' : key;
+        key === 'pause' && this.live
+          ? 'menu'
+          : key === 'brake' && this.skill
+            ? (`skill.${this.skill}` as const)
+            : key;
       label.setContent(i18next.t(`voltest:controls.${name}`));
     }
   }
 
-  /** Yürüyücüde Shift hızlanması yoktur; Space fren değil atılımdır. */
-  setWalker(walker: boolean): void {
-    if (walker === this.walker) return;
-    this.walker = walker;
+  /** Tank dışında Shift hızlanması yoktur; Space fren değil aracın yeteneğidir (`null`: tank). */
+  setSkill(skill: SkillId | null): void {
+    if (skill === this.skill) return;
+    this.skill = skill;
     const boost = this.rows.get('boost');
-    if (boost) boost.hidden = walker;
+    if (boost) boost.hidden = skill !== null;
     this.refreshLabels();
   }
 

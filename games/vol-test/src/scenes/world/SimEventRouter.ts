@@ -11,7 +11,7 @@ import type { VehicleView } from '@/view/VehicleView';
 export interface SimEventTargets {
   /** Kontrol edilen aracın kimliği: kamera ve titreşim yalnız ona tepki verir. */
   readonly player: number;
-  readonly tank: (id: number) => Pick<VehicleView, 'fire' | 'impact'> | undefined;
+  readonly tank: (id: number) => Pick<VehicleView, 'fire' | 'impact' | 'absorb'> | undefined;
   /** Hedefin tanımı: isabette gövdeden kopan kıymığın dokusu buradan seçilir. */
   readonly spec: (id: number) => VehicleSpec | undefined;
   readonly effects: Pick<EffectsView, 'muzzle' | 'explode' | 'hit' | 'chip' | 'wallHit' | 'damage'>;
@@ -108,8 +108,11 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
         feelBlast(targets, event.x, event.y);
         break;
       case 'hit':
-        targets.effects.hit(event.x, event.y, event.angle);
-        chipTarget(targets, event);
+        // Kalkan vuruşu emdiyse dalgayı kendisi çizer: gövde kıymığı ve kıvılcımı yoktur.
+        if (!targets.tank(event.target)?.absorb?.(event.x, event.y)) {
+          targets.effects.hit(event.x, event.y, event.angle);
+          chipTarget(targets, event);
+        }
         if (event.owner === targets.player && event.target !== targets.player)
           targets.reticle?.hit();
         if (event.target === targets.player) {

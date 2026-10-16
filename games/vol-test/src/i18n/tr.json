@@ -141,7 +141,14 @@
     "health": "Araç canı",
     "respawnIn": "Araç imha oldu · {{seconds}} sn sonra yeniden doğacak",
     "protection": "Yeniden doğma koruması · {{seconds}} sn",
-    "dash": "Atılım deposu"
+    "skill": {
+      "dash": "Atılım deposu",
+      "leap": "Sıçrama deposu",
+      "shield": "Kalkan deposu",
+      "overdrive": "Aşırı yük deposu",
+      "ram": "Çarpma atağı deposu",
+      "siege": "Kuşatma deposu"
+    }
   },
   "controls": {
     "move": "Hareket",
@@ -153,7 +160,14 @@
     "pause": "Duraklat",
     "menu": "Menü",
     "brake": "Fren",
-    "dash": "Atılım"
+    "skill": {
+      "dash": "Atılım",
+      "leap": "Sıçrama",
+      "shield": "Kalkan",
+      "overdrive": "Aşırı yük",
+      "ram": "Çarpma atağı",
+      "siege": "Kuşatma"
+    }
   },
   "touch": {
     "boost": "Hızlan",
@@ -162,7 +176,14 @@
     "pause": "Duraklat",
     "menu": "Menü",
     "brake": "Fren",
-    "dash": "Atılım"
+    "skill": {
+      "dash": "Atılım",
+      "leap": "Sıçrama",
+      "shield": "Kalkan",
+      "overdrive": "Aşırı yük",
+      "ram": "Çarpma atağı",
+      "siege": "Kuşatma"
+    }
   },
   "integrity": {
     "recovered": "Kaydınız bozulmuştu ve yedeğinden geri yüklendi.",

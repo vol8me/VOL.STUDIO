@@ -1,8 +1,20 @@
 import { PALETTE } from './palette';
 import type { SensorArt } from './sensors';
+import type { SkillId } from './skills';
 import type { HoverId } from './vehicles';
 
 /** Bir süzülen aracın parçalarının sanat ölçüleri (SVG piksel birimi = dünya birimi). */
+/** Yetenek açıkken süzülen aracın görünüm sayıları (`HOVER_VIEW.skills`). */
+export interface HoverSkillLook {
+  readonly bob: number;
+  readonly fan: number;
+  readonly flare: number;
+  readonly dust: number;
+  readonly sparks: number;
+  readonly bow: number;
+  readonly burst: boolean;
+}
+
 export interface HoverArt {
   readonly hull: { readonly width: number; readonly height: number };
   /** Yan itici gövdesi; sol yan aynadır. `x` iticinin gövde merkezine göre boylamsal yeridir. */
@@ -114,7 +126,20 @@ export const HOVER_VIEW = {
   shadowHeight: 26,
   shadowAlpha: 0.26,
   /** Gövdenin süzülürkenki nefesi: yavaş dikey ölçek salınımı ve atılımda şişmesi. */
-  bob: { periodMs: 1700, amount: 0.014, boost: 0.035 },
+  bob: { periodMs: 1700, amount: 0.014 },
+  /**
+   * Yetenek açıkken görünüm (`config/skills.ts`): gövdenin şişmesi (eksi: yere oturur), pervane hızı
+   * (rad/s), meme parlaması, toz ve kıvılcım payı, burun kıvılcımı sayısı ve açılış/kapanışta yer tozu
+   * halkası. Burada olmayan yetenek `dash` gibi görünür.
+   */
+  skills: {
+    dash: { bob: 0.035, fan: 38, flare: 0.5, dust: 1, sparks: 1, bow: 0, burst: false },
+    overdrive: { bob: 0.045, fan: 56, flare: 0.95, dust: 1, sparks: 1.6, bow: 0, burst: false },
+    ram: { bob: 0.055, fan: 46, flare: 0.65, dust: 1, sparks: 1, bow: 3, burst: false },
+    siege: { bob: -0.045, fan: 7, flare: 0, dust: 0, sparks: 0, bow: 0, burst: true },
+  } satisfies Partial<Record<SkillId, HoverSkillLook>>,
+  /** Kuşatma duruşunun yer tozu halkası: nokta sayısı, noktadaki parçacık ve gövde boyuna oranla yarıçap. */
+  burst: { points: 10, count: 2, reach: 1.2 },
   /**
    * Dönerken gövdenin yatışı: açısal hızdan türeyen hedef yatış (rad, işaret dönüşün tersi), üst sınır
    * ve yay. Taret yatıştan arındırılır, yani nişan görseli değişmez; yalnız gövde yatar.

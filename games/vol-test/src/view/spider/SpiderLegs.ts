@@ -9,6 +9,7 @@ import {
 } from '@volstudio/core';
 import { SPIDER_ART, type PartBox, type SpiderHip, type SpiderLook } from '@/config/spiders';
 import { TEXTURE_SCALE, addSpiderImage } from '../textures';
+import { GROUNDED, type LeapPhase } from './LeapTracker';
 import type { LocomotionSignals } from './signals';
 import { solveLeg, type LegSolution } from './legSolve';
 import { createLimbOutline, limbOutline, type LimbOutline } from './limbShadow';
@@ -21,6 +22,10 @@ const INV = 1 / TEXTURE_SCALE;
 /** Gölge şeridinin dizde ve ayakta kalınlığı (kalçadaki kalınlığa oranla): bacak uca doğru incelir. */
 const KNEE_TAPER = 0.88;
 const FOOT_TAPER = 0.5;
+/** Havalanmada yürüyüş pozundan hava pozuna geçiş süresi, inişte hava pozundan oturma süresi (ms). */
+const AIR_BLEND = { inMs: 70, outMs: 170 } as const;
+/** Hava pozunun evreleri (uçuş ilerlemesi): itiş bu eşiğe dek sürer, iniş uzanışı bu eşikten başlar. */
+const AIR_PHASE = { pushEnd: 0.3, reachStart: 0.55, frontLead: 0.08, footRamp: 0.14 } as const;
 
 /**
  * Bacak parçalarının tek katmanı. Bütün bacaklar GÖVDENİN ALTINDA kalır: çizim sırası zemin
@@ -42,6 +47,11 @@ interface LegNodes {
   tarsus: Phaser.GameObjects.Image;
   knee: Phaser.GameObjects.Image;
   contact: Phaser.GameObjects.Image;
+}
+
+/** [0, 1] üzerinde yumuşak geçiş (smoothstep). */
+function smooth(t: number): number {
+  return t * t * (3 - 2 * t);
 }
 
 /** Yüksekliğin parçayı büyütme çarpanı. */
@@ -81,6 +91,12 @@ export class SpiderLegs {
   private sag = 0;
   private elevation = 0;
   private swingGain = 1;
+  /** Hava pozunun ağırlığı [0, 1] ve bu karenin ayak yüksekliği: kalkışta dolar, inişte boşalır. */
+  private airBlend = 0;
+  private airFoot = 0;
+  private airPhase = 0;
+  /** Yürüyüş döngüsü bu karede koştu mu: uçuşta donuk döngünün eski basış bayrağı yeniden sayılmaz. */
+  private stepped = true;
 
   constructor(
     scene: Phaser.Scene,
@@ -112,7 +128,7 @@ export class SpiderLegs {
         layers.ground.add(contact);
         layers.legs.add([nodes.tarsus, nodes.tibia, nodes.femur, nodes.knee]);
         parts.push(nodes);
-        const home = this.restingHome(mirrored, 0, 0, 1);
+        const home = this.restingHome(mirrored, 0, 1);
         entries.push({
           homeX: home.x,
           homeY: home.y,
@@ -138,13 +154,20 @@ export class SpiderLegs {
 
   /** Ayakları gövdenin altına adımsız yerleştirir (doğuş/ışınlanma). */
   reset(bodyX: number, bodyY: number, bodyRad: number, pose: SpiderPose, light: LightLocal): void {
-    this.applyStance(0, 0, 1);
+    this.applyStance(0, 1);
+    this.airBlend = 0;
     this.gait.reset(bodyX, bodyY, bodyRad);
     this.readFeet(bodyX, bodyY, bodyRad);
     this.place(pose, light);
   }
 
-  update(body: LocomotionSignals, pose: SpiderPose, deltaMs: number, light: LightLocal): void {
+  update(
+    body: LocomotionSignals,
+    pose: SpiderPose,
+    deltaMs: number,
+    light: LightLocal,
+    air: LeapPhase = GROUNDED,
+  ): void {
     const { gait } = this.look;
     const stepMs = clampSimulationStep(deltaMs);
     const bodyX = finiteOr(body.x, 0);
@@ -152,29 +175,29 @@ export class SpiderLegs {
     const velX = finiteOr(body.velX, 0);
     const velY = finiteOr(body.velY, 0);
     const turnRate = finiteOr(body.turnRateRadPerSec, 0);
-    const dash01 = clamp01(finiteOr(body.dash01, 0));
     const rad = finiteOr(body.facingHeadingRad, 0);
 
-    this.applyStance(pose.motion01, dash01, pose.crouch01);
+    this.applyStance(pose.motion01, pose.crouch01);
 
     const speed = Math.hypot(velX, velY);
     // Dönüş de tempo kaynağıdır: yerinde dönen gövdenin ayak evleri teğetsel savrulur.
     const tangential = Math.abs(turnRate) * this.stanceRadiusPx;
     const tempo = clamp01(Math.max(speed, tangential) / gait.fullTempoSpeed);
-    // Av atılışında adımlar kısalır ve sıklaşır: bacaklar yürüyüşten çok koşu/atlayış gibi çalışır.
-    this.stepTuning.stepTriggerPx =
-      lerp(gait.stepTriggerPx, gait.runStepTriggerPx, tempo) * (1 - gait.dashTriggerCut * dash01);
-    this.stepTuning.stepDurationMs =
-      lerp(gait.stepDurationMs, gait.runStepDurationMs, tempo) *
-      (1 - gait.dashDurationCut * dash01);
-    this.stepTuning.maxStrainPx = gait.emergencyStrainPx * (1 - gait.dashStrainCut * dash01);
+    this.stepTuning.stepTriggerPx = lerp(gait.stepTriggerPx, gait.runStepTriggerPx, tempo);
+    this.stepTuning.stepDurationMs = lerp(gait.stepDurationMs, gait.runStepDurationMs, tempo);
+    this.stepTuning.maxStrainPx = gait.emergencyStrainPx;
     this.gait.setStepTuning(this.stepTuning);
 
-    // Atılış hızı adım hedefini erişim dışına fırlatmasın: öngörü, atılışta genişleyen bir tavanda doyar.
-    const leadCap = gait.fullTempoSpeed * (1 + gait.dashLeadGain * dash01);
-    const leadScale = speed > leadCap ? leadCap / speed : 1;
-    this.gait.update(bodyX, bodyY, rad, velX * leadScale, velY * leadScale, stepMs);
+    // Sıçrama hızı adım hedefini erişim dışına fırlatmasın: öngörü yürüyüş tavanında doyar.
+    const leadScale = speed > gait.fullTempoSpeed ? gait.fullTempoSpeed / speed : 1;
+    // Uçuşta ayaklar yere bağlı değildir: yürüyüş döngüsü donar. İnişte ayaklar gövdenin altına oturur.
+    this.stepped = !air.airborne;
+    if (!air.airborne) {
+      if (air.landed) this.gait.reset(bodyX, bodyY, rad);
+      this.gait.update(bodyX, bodyY, rad, velX * leadScale, velY * leadScale, stepMs);
+    }
     this.readFeet(bodyX, bodyY, rad);
+    this.blendAir(air, pose, deltaMs);
     this.place(pose, light);
   }
 
@@ -190,13 +213,14 @@ export class SpiderLegs {
 
   /** Bu karede yere basan ayakların dünya konumlarını gezer (toz, ses, gövde sarsıntısı); kırık bacak basmaz. */
   forEachPlant(visit: (x: number, y: number) => void): void {
+    if (!this.stepped) return;
     for (let i = 0; i < this.legs.length; i++) {
       if (this.isBroken(i)) continue;
       if (this.gait.justPlanted(i)) visit(this.gait.footX(i), this.gait.footY(i));
     }
   }
 
-  /** Bütün sağlam ayakların dünya konumunu gezer (atılış başlangıç tozu). */
+  /** Bütün sağlam ayakların dünya konumunu gezer (sıçrama kalkış ve iniş tozu). */
   forEachFoot(visit: (x: number, y: number) => void): void {
     for (let i = 0; i < this.legs.length; i++) {
       if (!this.isBroken(i)) visit(this.gait.footX(i), this.gait.footY(i));
@@ -255,9 +279,9 @@ export class SpiderLegs {
     return [leg.femur, leg.tibia, leg.tarsus, leg.knee];
   }
 
-  private applyStance(motion01: number, dash01: number, crouch01: number): void {
+  private applyStance(motion01: number, crouch01: number): void {
     for (let i = 0; i < this.legs.length; i++) {
-      const home = this.restingHome(this.legs[i].hip, motion01, dash01, crouch01);
+      const home = this.restingHome(this.legs[i].hip, motion01, crouch01);
       this.gait.setLegHome(i, home.x, home.y);
     }
   }
@@ -266,21 +290,70 @@ export class SpiderLegs {
   private restingHome(
     hip: SpiderHip,
     motion01: number,
-    dash01: number,
     crouch01: number,
   ): { x: number; y: number } {
     const { leg } = this.look;
     const angle = hip.angleDeg * DEG;
-    const reach =
-      leg.restDistance *
-      (1 + leg.dashReachGain * dash01 + 0.03 * motion01) *
-      (1 - leg.crouchReachDrop * crouch01);
-    // Av atılışı: öndeki bacaklar ileri fırlar, arkadakiler geride itiş verir (daha az: kemik erişimi dar).
-    const forward = Math.cos(angle);
-    const lunge = leg.dashLungePx * dash01 * (forward > 0 ? forward : forward * 0.35);
-    this.homeScratch.x = hip.x + Math.cos(angle) * reach + lunge;
+    const reach = leg.restDistance * (1 + 0.03 * motion01) * (1 - leg.crouchReachDrop * crouch01);
+    this.homeScratch.x = hip.x + Math.cos(angle) * reach;
     this.homeScratch.y = hip.y + Math.sin(angle) * reach;
     return this.homeScratch;
+  }
+
+  /** Bacağın gövde-yerel ayak konumu (hava pozu karışmış); sınama ve ölçüm için. */
+  localFootOf(index: number): { x: number; y: number } {
+    return { x: this.footX[index], y: this.footY[index] };
+  }
+
+  /** Hava pozunun ağırlığı [0, 1]: sınama ve ölçüm için. */
+  get airWeight(): number {
+    return this.airBlend;
+  }
+
+  /**
+   * Hava pozunu yürüyüş pozuna karıştırır: kalkışta dolar, inişte boşalır. Uçuş ayakları gövde-yereldir
+   * (gövdeyle uçar): kalkışta arka bacaklar itilir, zirvede hepsi toplanır, inişe doğru öndekiler öne
+   * uzanır (öndekiler biraz erken). Ayak yüksekliği kalkışta hızla çıkar, inişe doğru yere iner.
+   */
+  private blendAir(air: LeapPhase, pose: SpiderPose, deltaMs: number): void {
+    const leap = this.look.leap;
+    if (!leap) {
+      this.airBlend = 0;
+      return;
+    }
+    const step = air.airborne ? deltaMs / AIR_BLEND.inMs : -deltaMs / AIR_BLEND.outMs;
+    this.airBlend = clamp01(this.airBlend + step);
+    if (air.airborne) this.airPhase = air.phase;
+    if (this.airBlend <= 0) {
+      this.airFoot = 0;
+      return;
+    }
+    const phase = this.airPhase;
+    const ramp = Math.min(1, phase / AIR_PHASE.footRamp, (1 - phase) / (AIR_PHASE.footRamp * 1.4));
+    this.airFoot = air.airborne ? pose.hipHeight * leap.footLift * smooth(ramp) : 0;
+    const push = phase < AIR_PHASE.pushEnd ? smooth(1 - phase / AIR_PHASE.pushEnd) : 0;
+    const { restDistance } = this.look.leg;
+    for (let i = 0; i < this.legs.length; i++) {
+      const hip = this.legs[i].hip;
+      const angle = hip.angleDeg * DEG;
+      const forward = Math.cos(angle);
+      const reach = clamp01(phase + AIR_PHASE.frontLead * forward);
+      const land = smooth(clamp01((reach - AIR_PHASE.reachStart) / (1 - AIR_PHASE.reachStart)));
+      const rear = clamp01(0.35 - forward * 0.65);
+      const front = clamp01(0.35 + forward * 0.65);
+      const span =
+        restDistance *
+        (leap.tuckReach +
+          push * rear * (leap.pushReach - leap.tuckReach) +
+          land * front * (leap.landReach - leap.tuckReach));
+      const shift =
+        leap.reachShiftPx * (land * Math.max(0, forward) - push * Math.max(0, -forward));
+      const x = hip.x + pose.leanX + Math.cos(angle) * span + shift;
+      const y = hip.y + pose.leanY + this.sag + Math.sin(angle) * span;
+      this.footX[i] = lerp(this.footX[i], x, this.airBlend);
+      this.footY[i] = lerp(this.footY[i], y, this.airBlend);
+      this.lift[i] = lerp(this.lift[i], 1, this.airBlend);
+    }
   }
 
   /** Yürüyüş döngüsünün dünya ayaklarını gövde-yerel uzaya çevirir. */
@@ -366,7 +439,8 @@ export class SpiderLegs {
       const reach = Math.hypot(dx, dy);
       const dirX = reach > 1e-3 ? dx / reach : 1;
       const dirY = reach > 1e-3 ? dy / reach : 0;
-      const footHeight = this.elevation + lift * spec.swingPeak * this.swingGain;
+      const ground = this.elevation + lift * spec.swingPeak * this.swingGain;
+      const footHeight = this.airBlend > 0 ? lerp(ground, this.airFoot, this.airBlend) : ground;
       const tucked = Math.max(reach - gait.swingTuckPx * lift, spec.femur * 0.32);
       const sol = solveLeg(tucked, hipHeight, footHeight, spec.femur, spec.tibia, this.solution);
 

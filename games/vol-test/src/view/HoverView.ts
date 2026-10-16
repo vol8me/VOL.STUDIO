@@ -2,9 +2,9 @@ import Phaser from 'phaser';
 import { poseSourceOf, PoseShadow, clamp01, type PoseSourceNode } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
 import { SHOT_LOOK } from '@/config/fx';
-import { HOVER_ART, HOVER_VIEW, type HoverArt } from '@/config/hoverView';
+import { HOVER_ART, HOVER_VIEW, type HoverArt, type HoverSkillLook } from '@/config/hoverView';
 import { LIGHT } from '@/config/light';
-import type { HoverSpec } from '@/config/vehicles';
+import { skillOf, type HoverSpec } from '@/config/vehicles';
 import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
 import { mountPose, muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { CorePulse } from './CorePulse';
@@ -55,6 +55,9 @@ export class HoverView implements VehicleView {
   private broken = 0;
   private elapsedMs = 0;
   private fanAngle = 0;
+  /** Yeteneğin açıkken görünümü ve önceki karedeki açıklığı (açılış/kapanış kenarı için). */
+  private readonly skill: HoverSkillLook;
+  private wasBoosting = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -63,6 +66,8 @@ export class HoverView implements VehicleView {
   ) {
     const art = HOVER_ART[spec.id];
     this.art = art;
+    const skills: Partial<Record<string, HoverSkillLook>> = HOVER_VIEW.skills;
+    this.skill = skills[skillOf(spec)] ?? HOVER_VIEW.skills.dash;
     const offset = spec.hover.trackOffset;
     this.shadow = new PoseShadow(scene, {
       offsetX: LIGHT.x * HOVER_VIEW.shadowHeight,
@@ -196,7 +201,7 @@ export class HoverView implements VehicleView {
     this.body
       .setPosition(frame.pitch, frame.roll)
       .setRotation(bank)
-      .setScale(1 + bob * HOVER_VIEW.bob.amount + (frame.boosting ? HOVER_VIEW.bob.boost : 0));
+      .setScale(1 + bob * HOVER_VIEW.bob.amount + (frame.boosting ? this.skill.bob : 0));
     // Yatış yalnız gövdeyi eğer: taret dünya açısını korur (nişan görseli kaymaz).
     this.turretRig.setRotation(frame.turret - frame.hull - bank);
     this.turret.setX(this.barrel.value);
@@ -217,6 +222,8 @@ export class HoverView implements VehicleView {
     this.glowNozzles(frame, effort);
     this.placeFlash(frame, deltaMs);
     this.exhaustTrail(frame, effort);
+    this.skillAccents(frame);
+    this.wasBoosting = frame.boosting;
     this.shadow.update(this.shadowSource);
   }
 
@@ -263,7 +270,7 @@ export class HoverView implements VehicleView {
   /** İticiler gövdeden az sarsılır; pervane hız ve atılımla hızlanır, kırık yanın pervanesi durur. */
   private spinFans(frame: TankFrame, effort: number, deltaMs: number): void {
     const { fan } = HOVER_VIEW;
-    const rate = frame.boosting ? fan.boost : fan.idle + frame.speed * fan.perSpeed;
+    const rate = frame.boosting ? this.skill.fan : fan.idle + frame.speed * fan.perSpeed;
     this.fanAngle += rate * (deltaMs / 1000);
     const offset = this.spec.hover.trackOffset;
     for (let index = 0; index < 2; index++) {
@@ -289,7 +296,7 @@ export class HoverView implements VehicleView {
         this.art.nozzle.x + frame.pitch * HOVER_VIEW.podFollow,
         side * offset + frame.roll * HOVER_VIEW.podFollow,
       );
-      const flare = frame.boosting ? 0.5 : 0;
+      const flare = frame.boosting ? this.skill.flare : 0;
       nozzle.setAlpha(gone ? 0 : 0.28 + effort * 0.32 + flare);
       nozzle.setScale(
         ((this.art.nozzle.scale * 24) / GLOW_TEXTURE_PX) * (1 + effort * 0.5 + flare),
@@ -338,9 +345,10 @@ export class HoverView implements VehicleView {
     const cos = Math.cos(frame.hull);
     const sin = Math.sin(frame.hull);
     const offset = this.spec.hover.trackOffset;
-    const dustChance = frame.boosting ? 1 : 0.35 + effort * 0.55;
-    const dustCount = frame.boosting ? dust.countMax : 1;
-    const sparkCount = frame.boosting ? glow.countMax : 1;
+    const { skill } = this;
+    const dustChance = frame.boosting ? skill.dust : 0.35 + effort * 0.55;
+    const dustCount = frame.boosting ? Math.max(1, Math.round(dust.countMax * skill.dust)) : 1;
+    const sparkCount = frame.boosting ? Math.round(glow.countMax * skill.sparks) : 1;
     for (let index = 0; index < 2; index++) {
       if ((this.broken & (index === 0 ? TRACK_LEFT : TRACK_RIGHT)) !== 0) continue;
       const side = index === 0 ? -1 : 1;
@@ -348,7 +356,34 @@ export class HoverView implements VehicleView {
       const x = frame.x + back * cos - side * offset * sin;
       const y = frame.y + back * sin + side * offset * cos;
       if (dusty && Math.random() < dustChance) this.dust.emitParticleAt(x, y, dustCount);
-      if (sparkling) this.glow.emitParticleAt(x, y, sparkCount);
+      if (sparkling && sparkCount > 0) this.glow.emitParticleAt(x, y, sparkCount);
+    }
+  }
+
+  /**
+   * Yeteneğe özgü vurgular: çarpma atağında burnun önünde kıvılcım savrulur; kuşatma duruşu açılırken ve
+   * kapanırken gövde yere oturur ya da kalkar ve çevresinde bir toz halkası yükselir.
+   */
+  private skillAccents(frame: TankFrame): void {
+    const { skill } = this;
+    const cos = Math.cos(frame.hull);
+    const sin = Math.sin(frame.hull);
+    const hover = this.spec.hover;
+    if (frame.boosting && skill.bow > 0)
+      this.glow.emitParticleAt(
+        frame.x + cos * (hover.halfLength + 2),
+        frame.y + sin * (hover.halfLength + 2),
+        skill.bow,
+      );
+    if (!skill.burst || frame.boosting === this.wasBoosting) return;
+    const { burst } = HOVER_VIEW;
+    for (let point = 0; point < burst.points; point++) {
+      const angle = (point / burst.points) * Math.PI * 2;
+      this.dust.emitParticleAt(
+        frame.x + Math.cos(angle) * hover.halfLength * burst.reach,
+        frame.y + Math.sin(angle) * hover.halfWidth * burst.reach,
+        burst.count,
+      );
     }
   }
 }

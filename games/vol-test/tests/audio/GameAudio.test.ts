@@ -9,9 +9,12 @@ import { Button, uiIntentBusFor } from '@volstudio/core/ui';
 import { AUDIO } from '@/config/audio';
 import {
   ARACHNID,
+  BARRACUDA,
   BULWARK,
   DART,
+  GOLIATH,
   JACKAL,
+  LEVIATHAN,
   MANTA,
   STRIKER,
   WIDOW,
@@ -192,10 +195,10 @@ describe('GameAudio', () => {
     expect(count()).toBe(1);
   });
 
-  it('yürüyücü ve süzülenin atılımı başlarken dash sesi çalar; tankın hızlanması çalmaz ve atılım sürerken tekrarlanmaz', async () => {
+  it('Manta ve Barracuda yeteneği başlarken dash sesi çalar; tankın hızlanması çalmaz ve yetenek sürerken tekrarlanmaz', async () => {
     const dashes = (): number =>
       context.sources.filter((s) => s.buffer?.url?.endsWith('/dash.ogg')).length;
-    for (const vehicle of [ARACHNID, MANTA]) {
+    for (const vehicle of [MANTA, BARRACUDA]) {
       const sim = new Simulation({ world: new World(1000, 1000, 32), vehicle });
       const subject = sim.player.chassis;
       const before = dashes();
@@ -214,6 +217,40 @@ describe('GameAudio', () => {
     tankSim.step(command({ moveX: 1, boost: true }), STEP_MS);
     await audio.sync(tankSim.vehicles, tankSim.player.chassis);
     expect(dashes()).toBe(before);
+  });
+
+  it('sıçrayan örümcek leap ve land çalar, dash çalmaz; Goliath kalkanı ve Leviathan kuşatması sessizdir', async () => {
+    const count = (name: string): number =>
+      context.sources.filter((s) => s.buffer?.url?.endsWith(`/${name}.ogg`)).length;
+    for (const vehicle of [ARACHNID, WIDOW]) {
+      const sim = new Simulation({ world: new World(1000, 1000, 32), vehicle });
+      const subject = sim.player.chassis;
+      const leaps = count('leap');
+      const lands = count('land');
+      await audio.sync(sim.vehicles, subject);
+      sim.step(command({ moveX: 1, brake: true }), STEP_MS);
+      await audio.sync(sim.vehicles, subject);
+      expect(count('leap')).toBe(leaps + 1);
+      for (let i = 0; i < 120 && subject.boosting; i++) sim.step(command({ moveX: 1 }), STEP_MS);
+      await audio.sync(sim.vehicles, subject);
+      expect(count('land')).toBe(lands + 1);
+    }
+    expect(count('dash')).toBe(0);
+    const events = ['dash', 'leap', 'land'].map((name) => [name, count(name)] as const);
+    for (const vehicle of [GOLIATH, LEVIATHAN]) {
+      const sim = new Simulation({ world: new World(1000, 1000, 32), vehicle });
+      const subject = sim.player.chassis;
+      // Önceki simülasyonun aynı kimlikli sesi bırakılır: ses kimliğe bağlıdır.
+      await audio.sync([], subject);
+      await audio.sync(sim.vehicles, subject);
+      sim.step(command({ brake: true }), STEP_MS);
+      expect(subject.boosting).toBe(true);
+      await audio.sync(sim.vehicles, subject);
+      for (let i = 0; i < 300; i++) sim.step(command({ brake: true }), STEP_MS);
+      await audio.sync(sim.vehicles, subject);
+      for (const [name, before] of events)
+        expect(count(name), `${vehicle.id} ${name}`).toBe(before);
+    }
   });
 
   it('sıçrayıcı sıçrarken leap, inerken land çalar; dash çalmaz ve her biri bir kez tekrarlanır', async () => {

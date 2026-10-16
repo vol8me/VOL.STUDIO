@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
 import { HOVER_ART, HOVER_VIEW } from '@/config/hoverView';
-import { BARRACUDA, LEVIATHAN, MANTA, type HoverSpec } from '@/config/vehicles';
+import { BARRACUDA, LEVIATHAN, MANTA, skillOf, type HoverSpec } from '@/config/vehicles';
 import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
 import { muzzlePose } from '@/sim/muzzle';
 import { HoverView } from '@/view/HoverView';
@@ -298,5 +298,91 @@ describe('HoverView (çok yuvalı araçlar)', () => {
     const { byTexture } = buildOf(BARRACUDA);
     expect(byTexture(TEXTURE.flash)).toHaveLength(BARRACUDA.armament.mounts.length);
     expect(byTexture(hoverFrame('barracuda', 'turret'))).toHaveLength(1);
+  });
+});
+
+describe('HoverView: yetenek vurguları', () => {
+  const rig = (spec: HoverSpec) => {
+    const scene = fakeScene();
+    const lighting = scene.add.container(0, 0);
+    const view = new HoverView(scene as unknown as Phaser.Scene, spec, lighting as never);
+    const containers = scene.created.filter((object) => object.kind === 'container');
+    const body = containers.at(-2) as FakeObject;
+    const particles = scene.created.filter((object) => object.kind === 'particles');
+    const emitted = (): number =>
+      particles.reduce(
+        (sum, emitter) => sum + emitter.calls.filter(([name]) => name === 'emitParticleAt').length,
+        0,
+      );
+    const fans = scene.created.filter((object) => object.args.includes(hoverFrame(spec.id, 'fan')));
+    return { scene, view, body, emitted, fans };
+  };
+
+  it('yetenek tablosu her süzülen aracın yeteneğini kapsar ve sayılar sonludur', () => {
+    for (const spec of [MANTA, BARRACUDA, LEVIATHAN]) {
+      const skills: Record<string, unknown> = HOVER_VIEW.skills;
+      const look = (skills[skillOf(spec)] ?? HOVER_VIEW.skills.dash) as Record<string, unknown>;
+      expect(look, spec.id).toBeDefined();
+      for (const value of Object.values(look)) {
+        if (typeof value === 'number') expect(Number.isFinite(value)).toBe(true);
+      }
+    }
+    expect(HOVER_VIEW.skills.siege.bob).toBeLessThan(0);
+    expect(HOVER_VIEW.skills.overdrive.fan).toBeGreaterThan(HOVER_VIEW.skills.dash.fan);
+  });
+
+  it('Manta aşırı yükte pervanesini ve meme parlamasını Barracuda atılımından daha çok açar', () => {
+    const spin = (spec: HoverSpec, boosting: boolean): number => {
+      const { view, fans } = rig(spec);
+      view.update(frame({ speed: 300, boosting }), 100);
+      return Math.abs(Number(fans[1].rotation));
+    };
+    expect(spin(MANTA, true)).toBeGreaterThan(spin(MANTA, false) * 1.2);
+    expect(spin(MANTA, true)).toBeGreaterThan(spin(BARRACUDA, true));
+  });
+
+  it('Leviathan kuşatmada yere oturur: gövde küçülür, pervane yavaşlar, itiş tozu ve kıvılcımı çıkmaz', () => {
+    const calm = rig(LEVIATHAN);
+    const siege = rig(LEVIATHAN);
+    calm.view.update(frame({ speed: 150 }), 16);
+    siege.view.update(frame({ speed: 150, boosting: true }), 16);
+    expect(Number(lastCall(siege.body, 'setScale')?.[0])).toBeLessThan(
+      Number(lastCall(calm.body, 'setScale')?.[0]),
+    );
+    expect(Math.abs(Number(siege.fans[1].rotation))).toBeLessThan(
+      Math.abs(Number(calm.fans[1].rotation)),
+    );
+    // Yalnız açılış kenarındaki yer tozu halkası vardır; sonraki karelerde emisyon yoktur.
+    const afterOpen = siege.emitted();
+    expect(afterOpen).toBe(HOVER_VIEW.burst.points);
+    for (let i = 0; i < 20; i++) siege.view.update(frame({ speed: 150, boosting: true }), 16);
+    expect(siege.emitted()).toBe(afterOpen);
+  });
+
+  it('kuşatma kapanırken ikinci bir toz halkası yükselir; başka yeteneklerde halka yoktur', () => {
+    const siege = rig(LEVIATHAN);
+    siege.view.update(frame({ speed: 150, boosting: true }), 16);
+    const open = siege.emitted();
+    siege.view.update(frame({ speed: 150, boosting: false }), 16);
+    expect(siege.emitted() - open).toBeGreaterThanOrEqual(HOVER_VIEW.burst.points);
+    const manta = rig(MANTA);
+    manta.view.update(frame({ speed: 0 }), 16);
+    const idle = manta.emitted();
+    manta.view.update(frame({ speed: 0, boosting: true }), 16);
+    expect(manta.emitted() - idle).toBeLessThan(HOVER_VIEW.burst.points);
+  });
+
+  it('Barracuda çarpma atağında burnun önünden kıvılcım savurur; Manta savurmaz', () => {
+    const ram = rig(BARRACUDA);
+    const plain = rig(MANTA);
+    for (const subject of [ram, plain]) subject.view.update(frame({ speed: 0 }), 16);
+    const ramBefore = ram.emitted();
+    const plainBefore = plain.emitted();
+    for (let i = 0; i < 10; i++) {
+      ram.view.update(frame({ speed: 300, boosting: true }), 16);
+      plain.view.update(frame({ speed: 300, boosting: true }), 16);
+    }
+    // Aynı karede iki aracın iticilerinden çıkan emisyon eşittir; fazlalık burun kıvılcımıdır.
+    expect(ram.emitted() - ramBefore).toBeGreaterThan(plain.emitted() - plainBefore);
   });
 });

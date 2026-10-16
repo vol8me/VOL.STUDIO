@@ -31,7 +31,6 @@ describe.each(WALKER_IDS.map((id) => [id, SPIDER_LOOKS[id]] as const))(
         travelHeadingRad: 0,
         facingHeadingRad: 0,
         turnRateRadPerSec: 0,
-        dash01: 0,
         impact01: 0,
       };
       legs.reset(0, 0, 0, motion.update(signals, STEP_MS), light);
@@ -130,67 +129,6 @@ describe.each(WALKER_IDS.map((id) => [id, SPIDER_LOOKS[id]] as const))(
         }
       });
       expect(worst).toBeLessThan(reach);
-    });
-
-    it('atılışta bacaklar hızlanmaz, adımlar uzar: adım sıklığı yürüyüşün 1,6 katını aşmaz, adım boyu artar', () => {
-      const cadence = (speed: number, dash01: number) => {
-        const subject = build();
-        subject.signals.dash01 = dash01;
-        subject.walk(60, speed);
-        let plants = 0;
-        const frames = 240;
-        subject.walk(frames, speed, () => subject.legs.forEachPlant(() => (plants += 1)));
-        const seconds = (frames * STEP_MS) / 1000;
-        return { perSecond: plants / seconds, stride: speed / (plants / seconds) };
-      };
-      const walking = cadence(topSpeed, 0);
-      const dashing = cadence(topSpeed * 2.3, 1);
-      expect(dashing.perSecond).toBeLessThan(walking.perSecond * 1.6);
-      expect(dashing.stride).toBeGreaterThan(walking.stride * 1.3);
-    });
-
-    it('av atılışında ön ayaklar ileri fırlar, arka ayaklar geride kalır ve ayaklar kemik erişiminin kısa bir payı içinde kalır', () => {
-      const idle = build();
-      idle.walk(120, topSpeed * 0.6);
-      const dash = build();
-      dash.signals.dash01 = 1;
-      const dashSpeed = topSpeed * 2.3;
-      dash.walk(120, dashSpeed);
-      const relative = (subject: ReturnType<typeof build>, index: number): number =>
-        subject.legs.footOf(index).x - subject.signals.x - subject.legs.hipOf(index).x;
-      const front = 0;
-      const rear = look.hips.length - 1;
-      // Aynı uzaklıkta ölçmek için ayakların yürüyüş döngüsündeki fazı yerine en uzak erişim alınır.
-      let frontReach = -Infinity;
-      let rearReach = Infinity;
-      dash.walk(60, dashSpeed, () => {
-        frontReach = Math.max(frontReach, relative(dash, front), relative(dash, front + 4));
-        rearReach = Math.min(rearReach, relative(dash, rear), relative(dash, rear + 4));
-      });
-      let idleFront = -Infinity;
-      let idleRear = Infinity;
-      idle.walk(60, topSpeed * 0.6, () => {
-        idleFront = Math.max(idleFront, relative(idle, front), relative(idle, front + 4));
-        idleRear = Math.min(idleRear, relative(idle, rear), relative(idle, rear + 4));
-      });
-      expect(frontReach).toBeGreaterThan(idleFront + look.leg.dashLungePx * 0.3);
-      // Arka ayaklar kemik erişimi sınırına dayanır; atılışta idle'dan en az 1 birim daha geride kalırlar.
-      expect(rearReach).toBeLessThan(idleRear - 1);
-      const reach = look.leg.femur + look.leg.tibia;
-      let worst = 0;
-      dash.walk(120, dashSpeed, () => {
-        for (let i = 0; i < dash.legs.legCount; i++) {
-          const foot = dash.legs.footOf(i);
-          const hip = dash.legs.hipOf(i);
-          worst = Math.max(
-            worst,
-            Math.hypot(foot.x - dash.signals.x - hip.x, foot.y - dash.signals.y - hip.y),
-          );
-        }
-      });
-      // Atılış hızında ayak, hatırı sayılır bir geç kalmayla en çok bir-iki kare erişimi aşabilir; çizimde
-      // `solveLeg` ayağı kemik erişimine kelepçeler, yani kemikler geçerli kalır.
-      expect(worst).toBeLessThan(reach * 1.15);
     });
 
     it('adım atan ayak yükselir: havadaki ayağın temas karartısı soluklaşır', () => {

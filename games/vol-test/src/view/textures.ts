@@ -15,6 +15,7 @@ import strikerTurretUrl from '@/assets/vehicles/striker/turret.svg?url';
 import { FX } from '@/config/fx';
 import { tankSpecs, treadView } from '@/config/tankView';
 import { SPIDER_PARTS, type SpiderPartId } from '@/config/spiders';
+import { createShieldTextures } from './spider/shieldTextures';
 import {
   HOVER_IDS,
   LEAPER_IDS,
@@ -307,6 +308,7 @@ function canvasTexture(
 /** Çalışma anında çizilen efekt dokuları. */
 export function createRuntimeTextures(scene: Phaser.Scene): void {
   bakeVehicleAtlas(scene);
+  createShieldTextures(scene);
   for (const spec of tankSpecs())
     createTreadTexture(
       scene,

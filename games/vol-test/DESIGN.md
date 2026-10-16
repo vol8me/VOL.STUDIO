@@ -351,7 +351,7 @@ atılımda tavana varır; kırık itici izsizdir). Reaktör penceresinde Striker
 gövdeyle yatar ve nefes alır, duyargalar dönüşte geride sürüklenir. Gölge tanktan çok
 daha yüksekten (26 birim) düşer ve gövdeden belirgin ayrılır, araç yerde yüzer görünür. Pervane hızla ve
 atılımla hızlanır; kopan itici kısa koyu bir kütüğe döner, pervanesi durur. Ağız parlaması `sim/muzzle`
-ucundadır. Bot, tank dışı araçlar gibi uzak hedefe atılımla kapanır.
+ucundadır. Bot, atılım ve sıçrama yetenekli araçlarla uzak hedefe atılımla kapanır; öteki yetenekleri durumuna göre açar (aşağıda).
 
 ### İki yeni süzülen: Barracuda ve Leviathan
 
@@ -361,6 +361,16 @@ ateşler (`salvo: [[0, 1, 2]]`, `HoverView` her yuva için ayrı ağız parlamas
 mermi dağınıktır; tavan hızı 305'tir ama can 120'dir. Leviathan iki yan top taşıyan ağır süzülen savaş
 gemisidir: toplar (`HoverArt.gun`) kendi yuvalarında `sim/muzzle` açısıyla döner, her biri 1080 ms'de bir
 `lance` atar, birleşik tempo 540 ms'dir; kütlesi büyük, dönüşü yavaştır (`maxTurnRate` 2,4).
+
+Süzülenlerin Space yeteneği araçtan araca farklıdır (`skill`, `src/config/skills.ts`; hepsi aynı hız deposundan
+beslenir, ağa ek alan girmez, çarpanları tek hasar kapısı uygular): Manta AŞIRI YÜK açar (`overdrive`:
+iticilere yük biner, silah ×1,45 sık ateşler, hız tavanı artar); Barracuda ÇARPMA ATAĞI açar (`ram`:
+hızla çarptığı rakibe ×2,4 çarpışma hasarı verir ve kendi çarpışma hasarını %30'a indirir, yani
+akıncı hedefe kafa atar); Leviathan KUŞATMA duruşuna geçer (`siege`: gemi yavaşlar, gelen hasar ×0,9,
+verilen ×1,05, mermi itmesi ×0,6, yürüyüşe zorlanmaz). Görünümleri `HoverView`de `HOVER_VIEW.skills`
+ile ayrışır: aşırı yükte pervane ve itici izleri yoğunlaşır, çarpma atağında gövdenin pruvasında
+kıvılcımlar çıkar, kuşatmada gövde yere oturur ve açılış/kapanışta bir toz halkası yayılır. Kuşatma ve
+kalkan sessizdir (yeni ses sentezlenmedi); aşırı yük ve çarpma atağı süzülen atılım sesini çalar.
 
 ### Mech: iki bacaklı robotlar (Warhound, Templar, Juggernaut)
 
@@ -430,27 +440,45 @@ ayrı iştir (TODO).
 Üçü de paletli değil bacaklıdır (`WalkerSpec`, `src/sim/walker/Walker.ts`): her yöne (yan, geri)
 aynı çevikliğiyle yürür; gövdesi WASD yönüne döner (nişan yalnız silah yuvalarını sürer, tank gibi
 nişana bakmaz) ve yürüyüş tavanı gövdenin hedefe dönüklüğüyle ölçeklenir (`turnSpeedFloor`: ters
-dönükken yarıya iner), bu yüzden önce döner sonra açılır. Shift hızlanması yoktur; Space kilitli bir
-av atılışı başlatır: depo doluyken basılır, bırakılsa da ~0,55 sn boşalana dek sürer, geri alınamaz,
-hareketsizken gövdenin baktığı yöne atar ve depo yeniden dolana dek bekler (depo `boost`/`boosting`
-alanlarını kullanır, ağ durumuna ek alan girmez; HUD çubuğu "Atılım deposu"dur). Av atılışının
-görünümü (`SpiderLegs`, `SpiderMotion`, CORE `GhostTrail`): öndeki bacaklar ileri fırlar, arkadakiler geride itiş
-verir (`dashLungePx`), kalça çöker ve gövde ön bacaklara yüklenir (`dashLeanPx`, gövde ~8–14 birim ileri
-uzanır), adımlar UZAR ama sıklaşmaz: bacak hızı atılışta ikiye katlanmaz, adım boyu 1,3 katın üstüne çıkar
-(`dashTriggerCut` eksidir, `dashDurationCut` ≈ 0,1; adım sıklığı yürüyüşün 1,6 katını aşmaz, testi
-`SpiderLegs.test.ts`; çekirdek `LegGait.setStepTuning` acil eşiği de canlı değiştirir), oyuncunun atılışında
-kamera hareketin tersine bir kez itilip yayla oturur (`FEEL.dash.cameraKick`; yalnız yürüyücü ve süzülen,
-yükselen kenarda), atılışın başında ayakların altından toz patlar ve gövdenin siluetinden soluk hayaletler
-(CORE `GhostTrail`, `SpiderLook.ghost`: gövde ve bacakların o anki gerçek pozu, en çok `count` kopya) dünyada kalıp söner. Atılış hızında ayak kemik erişimini bir-iki
-kare aşabilir; çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır kavgacıdır (162 birim/s, 108 can, zırhlı tarantula); Widow
-hafif keskin nişancıdır (160 birim/s, 92 can, ince ve uzun bacaklı kara dul); Goliath devasa ve yavaştır
-(86 birim/s, 360 can, Arachnid'in ~1,9 katı boyda): adımları ağır basar, gövdesi geç yaslanır, atılışı
-kısadır ve bacakları ancak uzun ya da sürekli ateşle kopar. Hız tavanları
+dönükken yarıya iner), bu yüzden önce döner sonra açılır. Shift hızlanması yoktur. Space her yürüyücüde
+yeteneği (`src/config/skills.ts`) açar; depo (`boost`/`boosting`, ağ durumuna ek alan girmez) yeteneğin süresi
+ve beklemesidir, HUD çubuğu yeteneğin adını taşır ("Atılım", "Kalkan"). Arachnid ve Widow SIÇRAR
+(`skill: 'leap'`, sim zinciri `LeapingWalker`: sıçrayıcılarla aynı kalkış, uçuş ve iniş; ~0,5 sn, geri
+alınamaz, hareketsizken gövdenin baktığı yöne atar, kayanın ve suyun üstünden geçer). Goliath sıçramaz,
+KALKAN açar (aşağıda). Sıçrayışın görünümü sıçrayıcılarla aynı dildedir ve üç parçadır. `LeapTracker`
+uçuş evresini `frame.boosting` ve depo süresinden türetir (kalkış, uçuş yayı, iniş; ağ alanı yoktur);
+`SpiderMotion` kalkışta kısa bir çömelme (`SpiderLeap.coilMs`), uçuşta yaya göre yükselen kalça
+(`rise`), gövdede geri-ileri yaslanma ve karında gerilme, inişte yaylı bir çökme (`landKick`) verir;
+`SpiderLegs` uçuşta yürüyüş döngüsünü dondurur ve bacakları üç evrede çizer: kalkışta arka bacaklar
+iter, zirvede toplanır (`tuckReach`), inişe doğru ön bacaklar uzanır (`landReach`); ayaklar havada
+yere basmaz, iniş anında yürüyüş yeniden başlar. Kalkışta ve inişte ayakların altından toz, iniş
+halkası ve ayak izleri çıkar, gölge uçuşta solar. Oyuncunun sıçrayışında kamera hareketin tersine bir
+kez itilir (`FEEL.dash.cameraKick`; yalnız fırlayan yetenekte, `skillLunges`: kalkan ve kuşatma
+duran yetenektir, kameraya dokunmaz). Atılış hızında ayak kemik erişimini bir-iki kare aşabilir;
+çizimde `solveLeg` onu erişime kelepçeler. Zemin tutuşundan palet kadar etkilenmez. Arachnid ağır
+kavgacıdır (162 birim/s, 108 can, zırhlı tarantula); Widow hafif keskin nişancıdır (160 birim/s,
+92 can, ince ve uzun bacaklı kara dul); Goliath devasa ve yavaştır (86 birim/s, 360 can,
+Arachnid'in ~1,9 katı boyda): adımları ağır basar, gövdesi geç yaslanır, kalkanı 2,3 sn sürer
+(tükenince depo ~5,4 sn'de yeniden açılır) ve bacakları ancak uzun ya da sürekli ateşle kopar. Hız tavanları
 bilerek düşüktür: bacak yürüyüşü tavan hızda ayakları kemik erişiminde tutar ve bunu
 `tests/view/spider/SpiderLegs.test.ts` ile `tests/config/spiders.test.ts` kilitler. Yürüyüş döngüsü
 sunumdur (ayaklar yüzeye basıldığı yerde kalır); yalnız KIRIK bacaklar fizikte ve ağ durumundadır
 (`ChassisState.parts`, bkz. "Parça hasarı"). Çarpışan gövde çizilen kabuğun içindedir, bacak açıklığı
 değildir.
+
+Goliath'ın kalkanı (`skill: 'shield'`, `SKILLS.shield`) süreli bir enerji kubbesidir: açıkken savaş
+hasarı (mermi, duvar, çarpışma) sıfırlanır (`taken` 0; boğulma kalkanı aşar), mermi itmesi %15'e iner ve
+Goliath yürüyüşe zorlanmaz (`dashPull` 0, yani Space hız kazandırmaz, yalnız kubbeyi açar). Sunucu ve
+öngörü kalkanı aynı depodan türetir, yeniden doğma korumasıyla aynı hasar kapısından geçer
+(`Simulation.applyDamage`). Görünümü `ShieldView`dir (`src/view/spider/`): çalışma anında çizilen üç
+doku (`shieldTextures.ts`: kenara doğru parlayan kubbe gövdesi, altıgen enerji örgüsü, çentikli ve
+düğümlü kenar halkası) toplamsal harmanla katmanlanır; örgü iki katman olarak ters yönlere yavaş döner,
+kenarda kuyruklu yaylar dolanır, açılışta kubbe yaylı bir aşımla büyür ve genişleyen bir halka yayılır,
+yerde kehribar bir ışık kalır. Kalkan açıkken gelen mermi gövdeye değil kubbeye çarpar: isabet noktasının
+kubbe merkezine göre açısında bir parlama ve kenar boyunca yayılan bir dalga çıkar (`absorb`; olay
+yönlendirici bu durumda normal isabet kıvılcımını ve zırh kırıntısını çizmez, aynı anda en çok dört
+dalga). Süre bitmeden `warnMs` önce kenar titreşir, bitince kubbe söner. Duraklatma kubbeyi dondurur.
+Kalkanın sesi yoktur (yeni ses sentezlenmedi, bkz. TODO).
 
 Sanat tamamen elle çizilmiş SVG'dir ve tanklarla aynı aileden gelir: parçalar tank parçalarıyla aynı
 ölçekte (dünya birimi) çizilir, yani kenar kalınlığı, perçin ve mercek boyu ekranda tankla eşittir; aynı
@@ -646,7 +674,7 @@ alanı seçimi bu simülasyon mekanizmasının üzerindeki oyun kurallarıdır.
 Ölen araç soluklaşıp hayalet olarak kalmaz: `WreckDirector` (`src/scenes/world/WreckDirector.ts`) her kare
 canlılığı bir önceki kareyle karşılaştırır ve canlıdan ölüye geçişte tek bir patlama oynatır; araç görünümü
 `VehicleView.setWrecked(true)` ile olduğu yerde kalır: gövde isli renge çekilir (`src/view/charring.ts`; ışık ve
-ağız parlaması söner, örümcek hayaletleri silinir), poz donar ve gölgesi yerinde durur, yani araç birden yok
+ağız parlaması söner, kalkan kubbesi ve sıçrama pozu silinir), poz donar ve gölgesi yerinde durur, yani araç birden yok
 olmaz; yeniden doğunca `setWrecked(false)` her rengi eski hâline getirir. Enkaz katıdır: canlı araç ölünün
 gövdesinden geçemez, `Simulation.collideWreck` ölüyü sabit bir kütle olarak (`WRECK_MASS`) aynı çarpışma
 çözücüsünden geçirir; ölü yerinden oynamaz, çarpan hasar almaz (yalnız `collision` olayı ve geri tepme). Karşılaştırma simülasyon olayına değil canlılık durumuna
@@ -710,6 +738,12 @@ ve atılımla koşar, namlu hedefte kalır ve ateşi sürer; fark sıfıra ininc
 eşikleri farklıdır). (4) Beceriyle ölçeklenen kaçınma: algı adımında düşman mermilerinin en yakın geçişi
 kısa sürede ve araç yarıçapı içinde kalıyorsa mermi yolunun dikine, geçeceği yerin ters yanına sapılır.
 Acemi bot bunların hiçbirini yapmaz; yalnız en yakına ateş eder.
+
+Yetenek seçimi araca göredir (`BotBrain.wantsSkill`, `BOT.skills`; yalnız `engage` kipinde ve hedef varken,
+sıkışma kurtarması sırasında hiç): atılım ve sıçrama yukarıdaki yaklaşma kurallarıyla açılır; kalkan
+yalnız yoluna mermi geldiğinde (`threatened`, kaçınma kişiliği sıfır olsa da mermi taranır), aşırı
+yük hedef ateş menzilindeyken, çarpma atağı `ramMin`–`ramRange` aralığında (bu durumda bot yörünge
+yerine hedefe düz yüklenir), kuşatma da ateş menzilinin içinde ve `siegeMin` uzaklıktan yakındayken.
 Görev ve geri çekilme noktasını dışarıdaki yönetici verir (sunucuda savaş dünyası; bkz. Çok oyunculu).
 
 ## Savaş katmanı
@@ -985,7 +1019,7 @@ On bir döngü motorun üç devri, palet, bacak adımı, mech ayak basışı, s�
 ve hızlanmadır. Yürüyücü palet yerine `legs` (hidrolik bacak basışları ve servo), mech `steps` (ağır ayak
 basışı ve gövde gümbürtüsü), sıçrayıcı `bounds` (ön ve arka çift basış, piston tıslaması), süzülen araç `fans`
 (kanat geçişi ve aşağı itki) çalar; tempo ve güç araca göre (`AUDIO.vehicleVoice.tracks`). Tek atımlık araç
-sesleri `dash` (yürüyücü ve süzülenin atılımı başlarken), `leap` (sıçrayıcının sıçrayışı: hidrolik bırakma,
+sesleri `dash` (atılım, aşırı yük ve çarpma atağı başlarken), `leap` (sıçrayıcının, Arachnid'in ve Widow'un sıçrayışı: hidrolik bırakma,
 itici ateşlemesi), `land` (sıçrayışın bitişinde yere inen gövde: çöküş, pençe gömülmesi, toz), `snap`
 (`broke` olayında parça kopması) ve `sink`tir (derin suda boğulan aracın batışı: `died`
 olayı `drown` nedenliyse aracın son şasisinde çalar; `AUDIO.eventAsset`).

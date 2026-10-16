@@ -1,6 +1,7 @@
 import { clamp, clamp01 } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
 import type { SpiderLook } from '@/config/spiders';
+import { GROUNDED, type LeapPhase } from './LeapTracker';
 import type { LocomotionSignals } from './signals';
 
 /** Gövdenin bir karedeki ikincil hareketi: uzuvlar ve parçalar bunu tüketir (dünya birimi, rad). */
@@ -26,7 +27,8 @@ const MS = 1000;
  * Örümceğin gövde hareketi. Her bileşen kendi yayıdır; hepsi gövdenin GERÇEK hız ve ivmesinden
  * beslenir (ham girdiden değil): atılım ve duvar çarpması da girdisiz hareket olduğu için ancak
  * böyle tepki verir. Karın göğse esnek saplanmıştır ve dönüşü geriden izler; örümcek yürürken gövdesi
- * sabit kalmaz.
+ * sabit kalmaz. Sıçrayan örümcekte (`look.leap`) kalkışta çömelir, uçuşta yükselip geriye yaslanır ve
+ * karnı gerilir, inişte çöker; yükselme yayın üstüne eklenir, yani yayın gecikmesi zirveyi yutmaz.
  */
 export class SpiderMotion {
   readonly pose: SpiderPose;
@@ -59,8 +61,8 @@ export class SpiderMotion {
     this.bob.velocity -= this.look.motion.stepBobPx * 22 * clamp01(strength);
   }
 
-  update(signals: LocomotionSignals, deltaMs: number): SpiderPose {
-    const { body, motion } = this.look;
+  update(signals: LocomotionSignals, deltaMs: number, air: LeapPhase = GROUNDED): SpiderPose {
+    const { body, motion, leap } = this.look;
     this.elapsedMs += deltaMs;
     const pose = this.pose;
     const cos = Math.cos(-signals.facingHeadingRad);
@@ -75,22 +77,32 @@ export class SpiderMotion {
       this.crouch.update(1 - stand, deltaMs, { stiffness: 46, damping: 8.5 }),
     );
 
+    // Kalkış çömelmesi `coilMs` boyunca çukur çizer ve yükselme devralınca biter; yükselme `arc^1.6` ile
+    // geç başlar, yoksa ilk karelerde çömelmeyi yutardı.
+    const coil =
+      leap && air.airborne && air.sinceLaunchMs < leap.coilMs
+        ? Math.sin((Math.PI * air.sinceLaunchMs) / leap.coilMs)
+        : 0;
+    if (leap && air.landed)
+      this.height.velocity -= leap.landKick * Math.sqrt(motion.heightSpring.stiffness);
     const heightTarget =
       body.hipHeight -
       motion.idleHeightDrop * pose.crouch01 -
-      motion.dashHeightDrop * clamp01(signals.dash01) -
       motion.impactHeightDrop * clamp01(signals.impact01);
     this.height.update(heightTarget, deltaMs, motion.heightSpring);
     this.bob.update(0, deltaMs, motion.bobSpring);
     this.bob.value = clamp(this.bob.value, -motion.stepBobPx * 2, motion.stepBobPx);
-    pose.hipHeight = this.height.value + this.bob.value;
+    pose.hipHeight =
+      this.height.value +
+      this.bob.value +
+      (leap ? leap.rise * air.arc ** 1.6 - leap.coilDrop * coil : 0);
 
     const perUnit = motion.maxLeanPx / motion.accelForMaxLean;
     const lean = motion.maxLeanPx;
-    // Av atılışında gövde ön bacaklara yüklenir: ivme gövdeyi geri yaslarken atılış onu ileri uzatır.
-    const hunt = motion.dashLeanPx * clamp01(signals.dash01);
+    // Uçuşta gövde kalkışta geri, inişe doğru ileri yaslanır (yay yüksekliğiyle sıfırdan geçer).
+    const pitch = leap && air.airborne ? -leap.leanPx * Math.cos(Math.PI * air.phase) : 0;
     pose.leanX = this.leanX.update(
-      clamp(-accelForward * perUnit, -lean, lean) + hunt,
+      clamp(-accelForward * perUnit, -lean, lean) + pitch,
       deltaMs,
       motion.leanSpring,
     );
@@ -120,7 +132,8 @@ export class SpiderMotion {
       this.stretch.update(forwardLoad * motion.abdomenStretch, deltaMs, {
         stiffness: 90,
         damping: 11,
-      });
+      }) +
+      (leap ? leap.stretch * air.arc : 0);
     pose.thoraxYaw = this.thorax.update(
       clamp(
         signals.turnRateRadPerSec * motion.thoraxYawPerRadPerSec,

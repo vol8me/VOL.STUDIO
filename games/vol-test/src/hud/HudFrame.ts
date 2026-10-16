@@ -1,3 +1,4 @@
+import type { SkillId } from '@/config/skills';
 import type { ChassisKind } from '@/sim/chassis/Chassis';
 import type { WeatherFrame } from '@/sim/weather/types';
 import type { FrontFrame } from '@/view/front';
@@ -24,6 +25,8 @@ export interface HudFrame {
   readonly boosting: boolean;
   /** Şasi türü: yürüyücüde hızlanma çubuğu "Atılım" olur, Shift ipucu ve düğmesi kalkar, Space atılım olur. */
   readonly kind: ChassisKind;
+  /** Aracın yeteneği: Space/düğme ve hız çubuğu bu adı taşır (`config/skills.ts`). */
+  readonly skill: SkillId;
   readonly boost: number;
   readonly boostCapacity: number;
   readonly fireProgress: number;

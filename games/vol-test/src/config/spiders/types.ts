@@ -55,7 +55,7 @@ export const SPIDER_ART = {
 export const SPIDER_TELEPORT_UNITS = 160;
 
 export interface SpiderBody {
-  /** Kalçanın zeminden yüksekliği: ayakta duruş. Çömelme ve atılım bunu değiştirir. */
+  /** Kalçanın zeminden yüksekliği: ayakta duruş. Çömelme, sıçrama ve çarpma bunu değiştirir. */
   readonly hipHeight: number;
   /** Göğüs ve karın üst yüzeyinin yerden yüksekliği: gölge kaymasını belirler. */
   readonly thoraxHeight: number;
@@ -77,14 +77,8 @@ export interface SpiderLeg {
   readonly contactPx: number;
   readonly shadowWidth: number;
   readonly shadowAlpha: number;
-  /** Çömelme uzuvları gövdeye çeker, atılım açar (dinlenme mesafesi oranı). */
+  /** Çömelme uzuvları gövdeye çeker (dinlenme mesafesi oranı). */
   readonly crouchReachDrop: number;
-  readonly dashReachGain: number;
-  /**
-   * Av atılışında ayak evleri gövde ekseninde kayar: öndeki bacaklar ileri fırlar, arkadakiler geride
-   * itiş izi bırakır (dünya birimi; bacağın ileri bakışıyla orantılı).
-   */
-  readonly dashLungePx: number;
   /** Pençenin havada kıvrılması ve yerde düzelmesi (derece). */
   readonly clawLiftCurlDeg: number;
   readonly clawPlantedCurlDeg: number;
@@ -103,15 +97,6 @@ export interface SpiderGait {
   readonly stepLeadSeconds: number;
   /** Bu hızda (birim/s) tam tempo adım değerleri kullanılır: yürüyüş tavanı. */
   readonly fullTempoSpeed: number;
-  /**
-   * Av atılışında adım tetik eşiği ve süresi bu oranlarda kısalır; öngörü tavanı bu oranda genişler.
-   * Eksi tetik kesintisi adımı UZATIR: atılış bacağı hızlandırmaz, adımı uzatır (koşan hayvan gibi).
-   */
-  readonly dashTriggerCut: number;
-  readonly dashDurationCut: number;
-  readonly dashLeadGain: number;
-  /** Av atılışında acil gerginlik eşiği bu oranda iner: bacaklar sırayı daha erken deler. */
-  readonly dashStrainCut: number;
   /** Havadaki ayağı kalçaya çeken kısaltma: diz bükülür, uzuv yerden toplanır. */
   readonly swingTuckPx: number;
 }
@@ -119,9 +104,6 @@ export interface SpiderGait {
 /** Gövdenin ikincil hareketi: hepsi yaylardır, ham girdiden değil gerçek hız ve ivmeden beslenir. */
 export interface SpiderMotion {
   readonly idleHeightDrop: number;
-  readonly dashHeightDrop: number;
-  /** Atılış sırasında gövdenin ileri uzanması (dünya birimi): av pozunda ön bacaklara yüklenir. */
-  readonly dashLeanPx: number;
   readonly impactHeightDrop: number;
   readonly heightSpring: SpringConfig;
   /** Her adımda gövde kısa bir iner. */
@@ -146,7 +128,6 @@ export interface SpiderMotion {
   /** Bu hızda tam ayağa kalkılır. */
   readonly standSpeed: number;
   readonly impactFalloffMs: number;
-  readonly dashSpring: SpringConfig;
 }
 
 export interface SpiderDust {
@@ -187,14 +168,54 @@ export interface SpiderCannon {
   };
 }
 
-/** Atılış hayaleti: yalnız atılışta, gövdenin yakın geçmişinden soluk kopyalar. */
-export interface SpiderGhost {
-  /** Aynı anda yaşayan en çok hayalet ve ardışık hayaletler arası süre. */
-  readonly count: number;
-  readonly intervalMs: number;
-  readonly lifeMs: number;
-  readonly alpha: number;
+/**
+ * Sıçrayan örümceğin (Arachnid, Widow) hava pozu. Sıçrama balistik bir yaydır: bacaklar kalkışta arkaya
+ * itilir, zirvede gövdeye toplanır, inişe doğru öne uzanır; gövde zirvede perspektifle büyür ve gölgesi
+ * ayrılır. Kalkış kısa bir çömelmeyle başlar, iniş gövdeyi çökertir ve ayakları sırayla basar.
+ */
+export interface SpiderLeap {
+  /** Zirvede kalçanın kalktığı yükseklik (dünya birimi). */
+  readonly rise: number;
+  /** Ayakların kalçadan uzaklığı (dinlenme mesafesi oranı): kalkışta itilmiş, zirvede toplanmış, inişte uzanmış. */
+  readonly pushReach: number;
+  readonly tuckReach: number;
+  readonly landReach: number;
+  /** Uç bacakların gövde ekseninde kayması (dünya birimi): kalkışta arkadakiler geri, inişte öndekiler ileri. */
+  readonly reachShiftPx: number;
+  /** Zirvede ayakların yerden yüksekliği (kalça yüksekliğinin oranı). */
+  readonly footLift: number;
+  /** Kalkış çömelmesi (kalça inişi) ve süresi; iniş çökmesinin hız darbesi. */
+  readonly coilDrop: number;
+  readonly coilMs: number;
+  readonly landKick: number;
+  /** Uçuşta zemin gölgesinin soluklaşması (yay tepesinde saydamlığın azalan payı). */
+  readonly shadowFade: number;
+  /** Gövdenin kalkışta geri, inişte ileri yaslanması (dünya birimi) ve karnın kalkışta gerilmesi. */
+  readonly leanPx: number;
+  readonly stretch: number;
+  /** Kalkışta ve inişte ayak başına toz sayısı. */
+  readonly dustLaunch: number;
+  readonly dustLand: number;
+}
+
+/**
+ * Kalkanlı örümceğin (Goliath) enerji kubbesi. Kubbe gövdeyi çevreler: iç gradyan, iki katmanlı altıgen
+ * örgü, parlak kenar ve dönen yay vurguları. Hasar emilince vuruş açısında dalga yayılır.
+ */
+export interface SpiderShield {
+  /** Kubbe yarıçapı (dünya birimi). */
+  readonly radius: number;
+  /** Kubbe gövdesinin ve sıcak kenarının rengi. */
   readonly tint: number;
+  readonly rim: number;
+  /** Örgünün dönüş hızı (rad/s) ve nabız sıklığı (Hz). */
+  readonly spin: number;
+  readonly pulseHz: number;
+  /** Bitişten önce kubbenin titreyerek uyardığı son süre (ms) ve vuruş dalgasının ömrü (ms). */
+  readonly warnMs: number;
+  readonly rippleMs: number;
+  /** Açılış yayı: kubbe küçükten büyür, aşar ve oturur. */
+  readonly raise: SpringConfig;
 }
 
 export interface SpiderLook {
@@ -207,7 +228,10 @@ export interface SpiderLook {
   readonly gait: SpiderGait;
   readonly motion: SpiderMotion;
   readonly dust: SpiderDust;
-  readonly ghost: SpiderGhost;
+  /** Yalnız sıçrayan örümcekte (yetenek `leap`). */
+  readonly leap?: SpiderLeap;
+  /** Yalnız kalkanlı örümcekte (yetenek `shield`). */
+  readonly shield?: SpiderShield;
   readonly cannon: SpiderCannon;
   /**
    * Göğsün çekirdek ışığı ve ön duyargaları (konumlar göğüs milinden başlar). Striker'ın çekirdek

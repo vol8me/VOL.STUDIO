@@ -1,4 +1,5 @@
 import type { VirtualActionSource, VirtualStickSource } from '@volstudio/core';
+import type { SkillId } from '@/config/skills';
 import { i18next } from '@volstudio/core/i18n';
 import { HoldButton, Icon, IconButton, Joystick, type IconName } from '@volstudio/core/ui';
 import type { TestAction } from '@/input/bindings';
@@ -21,7 +22,7 @@ export class TouchControls {
   private readonly holds: Array<[HoldButton, HoldAction]>;
   private readonly joysticks: Joystick[];
   private readonly buttons: Array<[IconButton, TapAction]> = [];
-  private walker = false;
+  private skill: SkillId | null = null;
 
   constructor(
     private readonly source: VirtualActionSource<TestAction>,
@@ -85,7 +86,7 @@ export class TouchControls {
 
   refreshLabels(): void {
     for (const [button, action] of this.holds) {
-      const name = action === 'brake' && this.walker ? 'dash' : action;
+      const name = action === 'brake' && this.skill ? (`skill.${this.skill}` as const) : action;
       button.element.setAttribute('aria-label', i18next.t(`voltest:touch.${name}`));
     }
     for (const [button, action] of this.buttons) {
@@ -93,12 +94,12 @@ export class TouchControls {
     }
   }
 
-  /** Yürüyücüde hızlan düğmesi kalkar, fren düğmesi atılım olur. */
-  setWalker(walker: boolean): void {
-    if (walker === this.walker) return;
-    this.walker = walker;
+  /** Tank dışında hızlan düğmesi kalkar, fren düğmesi aracın yeteneği olur (`null`: tank). */
+  setSkill(skill: SkillId | null): void {
+    if (skill === this.skill) return;
+    this.skill = skill;
     for (const [button, action] of this.holds) {
-      if (action === 'boost') button.element.hidden = walker;
+      if (action === 'boost') button.element.hidden = skill !== null;
     }
     this.refreshLabels();
   }

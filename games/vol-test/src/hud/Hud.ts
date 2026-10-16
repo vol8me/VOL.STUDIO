@@ -1,4 +1,5 @@
 import type { VirtualActionSource, VirtualStickSource } from '@volstudio/core';
+import type { SkillId } from '@/config/skills';
 import type { MessageKey } from '@/i18n/keys';
 import type { GraphicsQuality } from '@volstudio/core/graphics';
 import { i18next } from '@volstudio/core/i18n';
@@ -78,7 +79,8 @@ export class Hud {
   private readonly toasts: ToastManager;
   private readonly fullscreen: FullscreenToggle | null;
   private inputMode: string | undefined;
-  private walker = false;
+  /** Tank dışı araçta yetenek (Space); tankta `null`. */
+  private skill: SkillId | null = null;
   private readonly quality: HudOptions['quality'];
   private statusDueMs = 0;
   private mapDueMs = 0;
@@ -232,12 +234,12 @@ export class Hud {
     }
     this.hintsUntilMs ??= nowMs + HUD.hintsShowMs;
     if (!this.hints.faded && nowMs >= this.hintsUntilMs) this.hints.setFaded(true);
-    // Tank dışındaki araçlar Shift yerine Space atılımı kullanır (yürüyücü ve süzülen).
-    const walker = frame.kind !== 'tank';
-    if (walker !== this.walker) {
-      this.walker = walker;
-      this.hints.setWalker(walker);
-      this.touch.setWalker(walker);
+    // Tank dışındaki araçlar Shift yerine Space ile kendi yeteneğini kullanır; etiket yeteneğin adıdır.
+    const skill = frame.kind === 'tank' ? null : frame.skill;
+    if (skill !== this.skill) {
+      this.skill = skill;
+      this.hints.setSkill(skill);
+      this.touch.setSkill(skill);
     }
     this.layer.classList.toggle('vt-hud--boosting', frame.boosting);
     if (nowMs >= this.statusDueMs) {

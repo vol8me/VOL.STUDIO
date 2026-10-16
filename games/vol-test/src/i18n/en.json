@@ -141,7 +141,14 @@
     "health": "Vehicle health",
     "respawnIn": "Vehicle destroyed · respawn in {{seconds}} s",
     "protection": "Respawn protection · {{seconds}} s",
-    "dash": "Dash reserve"
+    "skill": {
+      "dash": "Dash reserve",
+      "leap": "Leap reserve",
+      "shield": "Shield reserve",
+      "overdrive": "Overdrive reserve",
+      "ram": "Ram reserve",
+      "siege": "Siege reserve"
+    }
   },
   "controls": {
     "move": "Move",
@@ -153,7 +160,14 @@
     "pause": "Pause",
     "menu": "Menu",
     "brake": "Brake",
-    "dash": "Dash"
+    "skill": {
+      "dash": "Dash",
+      "leap": "Leap",
+      "shield": "Shield",
+      "overdrive": "Overdrive",
+      "ram": "Ram",
+      "siege": "Siege"
+    }
   },
   "touch": {
     "boost": "Boost",
@@ -162,7 +176,14 @@
     "pause": "Pause",
     "menu": "Menu",
     "brake": "Brake",
-    "dash": "Dash"
+    "skill": {
+      "dash": "Dash",
+      "leap": "Leap",
+      "shield": "Shield",
+      "overdrive": "Overdrive",
+      "ram": "Ram",
+      "siege": "Siege"
+    }
   },
   "integrity": {
     "recovered": "Your save was damaged and restored from its backup.",

@@ -104,6 +104,12 @@ export const DYNAMIC_FAMILIES = [
   },
   {
     ns: 'voltest',
+    prefix: 'hud.skill.',
+    suffix: '',
+    reason: 'durum çubuğu yetenek etiketi araç yeteneğinden türer',
+  },
+  {
+    ns: 'voltest',
     prefix: 'touch.',
     suffix: '',
     reason: 'dokunmatik düğme etiketi eylem adından türer',

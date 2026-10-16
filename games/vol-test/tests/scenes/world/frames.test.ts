@@ -28,7 +28,7 @@ describe('frames', () => {
 
   it('HUD karesi sürüş durumunu ve görünen alanı taşır', () => {
     const subject = tank();
-    const frame = hudFrame(subject, tankFrame(subject, 1), TANK.boostCapacity, {
+    const frame = hudFrame(subject, 'leap', tankFrame(subject, 1), TANK.boostCapacity, {
       x: 1,
       y: 2,
       width: 3,
@@ -36,6 +36,7 @@ describe('frames', () => {
     });
     expect(frame).toMatchObject({
       boost: TANK.boostCapacity,
+      skill: 'leap',
       view: { width: 3 },
     });
   });

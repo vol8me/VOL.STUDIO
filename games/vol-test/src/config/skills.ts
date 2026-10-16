@@ -47,3 +47,8 @@ export const SKILLS: Readonly<Record<SkillId, SkillEffect>> = {
   ram: { ...NEUTRAL, ram: 2.4, ramTaken: 0.3 },
   siege: { ...NEUTRAL, taken: 0.9, dealt: 1.05, push: 0.6 },
 };
+
+/** Yetenek açılırken araç fırlar mı? Kalkan ve kuşatma yerinde durur; kamera itmesi ve hız çizgisi yalnız fırlayanlarındır. */
+export function skillLunges(skill: SkillId): boolean {
+  return skill !== 'shield' && skill !== 'siege';
+}

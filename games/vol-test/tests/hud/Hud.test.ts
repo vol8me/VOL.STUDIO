@@ -269,6 +269,37 @@ describe('Hud', () => {
     hud.destroy();
   });
 
+  it('tank dışında çubuk, ipucu ve düğme aracın yeteneğinin adını taşır; yetenek değişince etiket yenilenir', () => {
+    const { hud, find, parent } = mount(true);
+    const label = (): string | null =>
+      find('vitals').querySelectorAll('[role="progressbar"]')[1].getAttribute('aria-label');
+    const hints = (): string =>
+      [...parent.querySelectorAll<HTMLElement>('.vt-hud__hint:not([hidden])')]
+        .map((row) => row.textContent ?? '')
+        .join('|');
+    const names = [
+      ['leap', 'Sıçrama'],
+      ['shield', 'Kalkan'],
+      ['overdrive', 'Aşırı yük'],
+      ['ram', 'Çarpma atağı'],
+      ['siege', 'Kuşatma'],
+      ['dash', 'Atılım'],
+    ] as const;
+    let now = 1000;
+    for (const [skill, name] of names) {
+      hud.update(hudFrame({ kind: 'walker', skill }), (now += 500));
+      expect(label(), skill).toBe(`${name} deposu`);
+      expect(hints(), skill).toContain(name);
+      expect(find('touch-brake').getAttribute('aria-label'), skill).toBe(name);
+      expect(find('touch-boost').hidden).toBe(true);
+    }
+    // Tanka dönünce yetenek adı bırakılır.
+    hud.update(hudFrame({ kind: 'tank', skill: 'dash' }), (now += 500));
+    expect(label()).toBe('Hızlanma deposu');
+    expect(hints()).not.toContain('Atılım');
+    hud.destroy();
+  });
+
   it('kontrol ipuçları girişten 10 sn sonra solar; sayaç ilk güncellemede başlar', () => {
     const { hud, find } = mount();
     const hints = find('control-hints');

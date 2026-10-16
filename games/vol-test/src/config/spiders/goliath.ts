@@ -6,7 +6,7 @@ import type { SpiderLook } from './types';
  * Goliath'ın sunumu: Arachnid'in zırhlı kabuk dilini ~1,9 kat büyütülmüş, kurşun gri levhalar ve kehribar
  * damarlarla yeniden boyanmış devasa bir yürüyücü. Parça ölçüleri `assets/vehicles/goliath/*.svg` ile aynıdır;
  * bütün uzunluklar dünya birimidir. Ağırlığı hareketine yansır: adımlar yavaş ve ağır basar, gövde geç
- * yaslanır ve çöker, atılış kısa ve gürültülüdür. Kabuğun omuzlarındaki iki ağır plazma havanı yuvalarında
+ * yaslanır ve çöker; yeteneği zıplamak değil, kendini çevreleyen süreli bir enerji kalkanıdır. Kabuğun omuzlarındaki iki ağır plazma havanı yuvalarında
  * durur; ağız parlaması Arachnid'inkinden büyüktür.
  */
 export const GOLIATH_LOOK: SpiderLook = {
@@ -46,8 +46,6 @@ export const GOLIATH_LOOK: SpiderLook = {
     shadowWidth: 14,
     shadowAlpha: 0.3,
     crouchReachDrop: 0.05,
-    dashReachGain: 0.2,
-    dashLungePx: 17,
     clawLiftCurlDeg: 16,
     clawPlantedCurlDeg: -5,
   },
@@ -60,16 +58,10 @@ export const GOLIATH_LOOK: SpiderLook = {
     turnWindow: 0.5,
     stepLeadSeconds: 0.08,
     fullTempoSpeed: GOLIATH.walker.maxSpeed,
-    dashTriggerCut: -0.15,
-    dashDurationCut: 0.15,
-    dashLeadGain: 0.7,
-    dashStrainCut: 0.3,
     swingTuckPx: 8.5,
   },
   motion: {
     idleHeightDrop: 3.4,
-    dashHeightDrop: 11.5,
-    dashLeanPx: 14,
     impactHeightDrop: 8.7,
     heightSpring: { stiffness: 60, damping: 12 },
     stepBobPx: 2.9,
@@ -89,7 +81,16 @@ export const GOLIATH_LOOK: SpiderLook = {
     thoraxMaxYawRad: 0.07,
     standSpeed: GOLIATH.walker.maxSpeed * 0.6,
     impactFalloffMs: 420,
-    dashSpring: { stiffness: 120, damping: 19 },
+  },
+  shield: {
+    radius: 112,
+    tint: 0xffb347,
+    rim: 0xfff0c8,
+    spin: 0.35,
+    pulseHz: 0.8,
+    warnMs: 600,
+    rippleMs: 520,
+    raise: { stiffness: 170, damping: 12 },
   },
   dust: {
     emitter: {
@@ -104,7 +105,6 @@ export const GOLIATH_LOOK: SpiderLook = {
     countMin: 2,
     countMax: 5,
   },
-  ghost: { count: 4, intervalMs: 60, lifeMs: 280, alpha: 0.3, tint: 0xffc54d },
   cannon: {
     muzzleX: 37,
     coilX: 19,

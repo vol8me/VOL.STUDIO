@@ -4,6 +4,7 @@ import { lerpAngle } from '@volstudio/core/math';
 import type { Chassis } from '@/sim/chassis/Chassis';
 import type { Vitality } from '@/sim/combat/Vitality';
 import { COMBAT } from '@/config/combat';
+import type { SkillId } from '@/config/skills';
 import type { TankFrame } from '@/view/TankView';
 
 /**
@@ -34,6 +35,7 @@ export function tankFrame(tank: Chassis, alpha: number): TankFrame {
 /** HUD karesi: ara değerli poz, sürüş durumu ve kameranın görünen alanı. */
 export function hudFrame(
   tank: Chassis,
+  skill: SkillId,
   frame: TankFrame,
   boostCapacity: number,
   view: HudFrame['view'],
@@ -49,6 +51,7 @@ export function hudFrame(
     hull: frame.hull,
     boosting: tank.boosting,
     kind: tank.kind,
+    skill,
     boost: tank.boost,
     boostCapacity,
     fireProgress,

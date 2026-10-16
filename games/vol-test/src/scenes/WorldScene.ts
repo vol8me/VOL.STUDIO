@@ -14,6 +14,7 @@ import type { GameAudio } from '@/audio/GameAudio';
 import type { GameServices } from '@/app/GameServices';
 import { CAMERA } from '@/config/camera';
 import { FEEL } from '@/config/feel';
+import { skillLunges } from '@/config/skills';
 import { FX } from '@/config/fx';
 import { GAME } from '@/config/game';
 import { WATER_VIEW } from '@/config/waterView';
@@ -381,7 +382,8 @@ export class WorldScene extends Phaser.Scene {
       this.lab.sample(time);
       for (const event of events) this.lab.record(event.kind, { ...event });
     }
-    const dashing = player.chassis.kind !== 'tank' && player.chassis.boosting;
+    const dashing =
+      player.chassis.kind !== 'tank' && skillLunges(player.skill) && player.chassis.boosting;
     if (dashing && !this.playerDashing && !paused) {
       const { vx, vy } = player.chassis;
       this.camera.model.kick(Math.atan2(vy, vx), FEEL.dash.cameraKick);
@@ -415,8 +417,8 @@ export class WorldScene extends Phaser.Scene {
       // Ölen araç patlar ve görünümden kalkar; yeniden doğana kadar çizilmez.
       if (!this.wrecks.track(vehicle, view, frame, presentMs)) continue;
       // Kaos tempoyla akan araç adımları görünümde de aynı hızda akar: bacak ve palet döngüsü yetişir.
-      // Suya batan yüzemeyen araç derinleştikçe suyun rengine çekilir (süzülen ve havadaki sıçrayıcı değil).
-      const floats = tank.kind === 'hover' || (tank.kind === 'leaper' && frame.boosting);
+      // Suya batan yüzemeyen araç derinleştikçe suyun rengine çekilir (süzülen ve havadaki sıçrayıcı ya da örümcek değil).
+      const floats = tank.kind === 'hover' || tank.airborne;
       view?.submerge?.(floats || lakes.isEmpty ? 0 : lakes.depthAt(frame.x, frame.y));
       view?.update(frame, presentMs * this.sim.pace);
       this.effects.updateVehicle(vehicle.id, {
@@ -469,6 +471,7 @@ export class WorldScene extends Phaser.Scene {
     this.hud.update(
       hudFrame(
         player.chassis,
+        player.skill,
         view,
         player.chassis.boostCapacity,
         rect,

@@ -187,7 +187,7 @@ export class BackdropScene extends Phaser.Scene {
       const frame = tankFrame(tank, alpha);
       const view = this.vehicles.get(vehicle.id);
       if (!this.wrecks.track(vehicle, view, frame, delta)) continue;
-      const floats = tank.kind === 'hover' || (tank.kind === 'leaper' && frame.boosting);
+      const floats = tank.kind === 'hover' || tank.airborne;
       view?.submerge?.(floats || lakes.isEmpty ? 0 : lakes.depthAt(frame.x, frame.y));
       view?.update(frame, delta);
       this.effects.updateVehicle(vehicle.id, {

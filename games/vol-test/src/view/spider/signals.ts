@@ -21,8 +21,6 @@ export interface LocomotionSignals {
   facingHeadingRad: number;
   /** Dönüşün anlık şiddeti (rad/s). */
   turnRateRadPerSec: number;
-  /** [0,1] atılım şiddeti: boost bayrağının yumuşatılmış hâli. */
-  dash01: number;
   /** [0,1] duvar çarpmasının sönen yankısı: uzuvların görebilmesi için birkaç kare yaşar. */
   impact01: number;
 }

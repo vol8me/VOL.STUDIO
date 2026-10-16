@@ -3,7 +3,7 @@ import { LoopBlend } from '@volstudio/core/audio/sfx';
 import { angleDelta, clamp01, lerp } from '@volstudio/core/math';
 import { AUDIO, type VehicleVoice } from '@/config/audio';
 import { GAME } from '@/config/game';
-import { chassisConfigOf, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
+import { chassisConfigOf, skillOf, STRIKER, topSpeedOf, type VehicleSpec } from '@/config/vehicles';
 import type { Chassis, ChassisKind } from '@/sim/chassis/Chassis';
 import { audioUrl } from './assets';
 import { spatialSound, type AudioPosition } from './spatial';
@@ -37,6 +37,11 @@ export class VehicleAudio {
   private readonly stride: StrideVoice;
   private readonly voice: VehicleVoice;
   private braking = false;
+  /** Yetenek itiş mi (atılım, sıçrama, aşırı yük, çarpma): kalkan ve kuşatma motoru zorlamaz. */
+  private readonly thrusts: boolean;
+  /** Yetenek açılırken çalacak olay sesi (`AUDIO.skillEvent`); sessizse `null`. */
+  readonly skillEvent: 'dash' | 'leap' | null;
+  private readonly leaps: boolean;
   private dashing = false;
   /** Bu güncellemede süzülen araç ya da yürüyücünün atılımı başladı (tankın hızlanması döngüdür). */
   dashStarted = false;
@@ -68,6 +73,10 @@ export class VehicleAudio {
         })),
       ),
     );
+    const skill = skillOf(spec);
+    this.skillEvent = AUDIO.skillEvent[skill];
+    this.thrusts = skill !== 'shield' && skill !== 'siege';
+    this.leaps = skill === 'leap';
     this.stride = STRIDE[spec.kind];
     this.tracks = loop(this.stride.loop);
     this.skid = loop('skid');
@@ -94,7 +103,7 @@ export class VehicleAudio {
     const level = clamp01(
       motion * AUDIO.engine.speedWeight +
         load * AUDIO.engine.loadWeight +
-        (tank.boosting ? AUDIO.engine.boostLoad : 0),
+        (tank.boosting && this.thrusts ? AUDIO.engine.boostLoad : 0),
     );
     const slide = clamp01(Math.max(tank.slideLeft, tank.slideRight) / AUDIO.skid.fullSlide);
     const turning = clamp01(
@@ -111,13 +120,15 @@ export class VehicleAudio {
     this.skid.setRate(lerp(AUDIO.skid.rateMin, AUDIO.skid.rateMax, slide));
     this.servo.setRate(lerp(AUDIO.servo.rateMin, AUDIO.servo.rateMax, turning));
     const gains = [
-      motion > AUDIO.engine.motionFloor || load > AUDIO.engine.motionFloor || tank.boosting
+      motion > AUDIO.engine.motionFloor ||
+      load > AUDIO.engine.motionFloor ||
+      (tank.boosting && this.thrusts)
         ? AUDIO.engine.gain * this.voice.engineGain
         : 0,
       stride.gain * motion,
       AUDIO.skid.gain * slide,
       AUDIO.servo.gain * turning,
-      tank.boosting ? AUDIO.boost.gain : 0,
+      tank.boosting && this.thrusts ? AUDIO.boost.gain : 0,
     ];
     this.loops.forEach((voice, index) => {
       const gain = paused ? 0 : gains[index] * spatial.gain;
@@ -127,7 +138,7 @@ export class VehicleAudio {
       else voice.start();
     });
     this.dashStarted = this.spec.kind !== 'tank' && tank.boosting && !this.dashing;
-    this.landed = this.spec.kind === 'leaper' && this.dashing && !tank.boosting;
+    this.landed = this.leaps && this.dashing && !tank.boosting;
     this.dashing = tank.boosting;
     const brakeEdge = tank.braking && !this.braking && speed >= AUDIO.brakeMinSpeed;
     this.braking = tank.braking;

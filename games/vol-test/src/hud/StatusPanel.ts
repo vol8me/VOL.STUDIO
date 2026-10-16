@@ -1,4 +1,5 @@
 import { i18next } from '@volstudio/core/i18n';
+import type { SkillId } from '@/config/skills';
 import { Bar, Panel, Text } from '@volstudio/core/ui';
 import type { MessageKey } from '@/i18n/keys';
 import type { HudFrame } from './HudFrame';
@@ -19,7 +20,7 @@ export class StatusPanel {
   private readonly vitals: Panel;
   private readonly gauges: Readonly<Record<'health' | 'boost' | 'reload', Gauge>>;
   private readonly lifecycle: Text;
-  private walker = false;
+  private skill: SkillId | null = null;
 
   constructor() {
     this.vitals = new Panel({ className: 'vt-hud__vitals' });
@@ -69,8 +70,9 @@ export class StatusPanel {
 
   update(frame: HudFrame): void {
     const { health, boost, reload } = this.gauges;
-    if ((frame.kind !== 'tank') !== this.walker) {
-      this.walker = frame.kind !== 'tank';
+    const skill = frame.kind === 'tank' ? null : frame.skill;
+    if (skill !== this.skill) {
+      this.skill = skill;
       this.refreshLabels();
     }
     health.bar.setMax(frame.maxHealth);
@@ -95,7 +97,7 @@ export class StatusPanel {
     for (const [key, { bar, name }] of Object.entries(this.gauges))
       bar.element.setAttribute(
         'aria-label',
-        i18next.t(key === 'boost' && this.walker ? 'voltest:hud.dash' : name),
+        i18next.t(key === 'boost' && this.skill ? `voltest:hud.skill.${this.skill}` : name),
       );
   }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SKILL_IDS, SKILLS } from '@/config/skills';
+import { SKILL_IDS, SKILLS, skillLunges } from '@/config/skills';
 import {
   ARACHNID,
   BARRACUDA,
@@ -95,5 +95,9 @@ describe('araç yetenekleri', () => {
       ).toBeLessThanOrEqual(config.boostCapacity);
       expect(config.boostCapacity / config.boostDrain, id).toBeGreaterThan(0.4);
     }
+  });
+
+  it('yalnız kalkan ve kuşatma yerinde durur; ötekiler fırlar (kamera itmesi bu ayrıma bakar)', () => {
+    expect(SKILL_IDS.filter((skill) => !skillLunges(skill))).toEqual(['shield', 'siege']);
   });
 });

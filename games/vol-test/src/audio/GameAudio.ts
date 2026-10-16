@@ -139,8 +139,8 @@ export class GameAudio {
       }
       if (voice.update(vehicle.chassis, listener, this.paused))
         this.play('brake', vehicle.chassis, listener);
-      if (voice.dashStarted && !this.paused)
-        this.playEvent(vehicle.spec.kind === 'leaper' ? 'leap' : 'dash', vehicle.chassis, listener);
+      if (voice.dashStarted && !this.paused && voice.skillEvent)
+        this.playEvent(voice.skillEvent, vehicle.chassis, listener);
       if (voice.landed && !this.paused) this.playEvent('land', vehicle.chassis, listener);
       pending.push(voice.ready);
     }

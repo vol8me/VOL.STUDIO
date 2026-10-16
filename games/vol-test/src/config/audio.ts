@@ -1,3 +1,4 @@
+import type { SkillId } from './skills';
 import type { WeaponStyle } from './tank';
 import type { VehicleId } from './vehicles';
 
@@ -101,6 +102,18 @@ export const AUDIO = {
    * sıçrayıcının sıçrayışı ile inişi.
    */
   eventAsset: { dash: 'dash', snap: 'snap', sink: 'sink', leap: 'leap', land: 'land' },
+  /**
+   * Yeteneğin açılışında çalan olay sesi (`null`: sessiz). Kalkan ve kuşatma itiş değil duruştur: iticiye
+   * benzeyen hiçbir ses çalmaz, motor yükü ve itiş döngüsü de artmaz.
+   */
+  skillEvent: {
+    dash: 'dash',
+    leap: 'leap',
+    overdrive: 'dash',
+    ram: 'dash',
+    shield: null,
+    siege: null,
+  } as const satisfies Record<SkillId, 'dash' | 'leap' | null>,
   /** Olay seslerinin kazancı. */
   eventGain: { dash: 0.6, snap: 0.75, sink: 0.8, leap: 0.65, land: 0.8 },
   /** Kendi atış teslimi olan silah stilleri (`loopAssetRoot` altında); olmayan top ailesinden çalar. */

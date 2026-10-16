@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { describe, expect, it } from 'vitest';
 import { SPIDER_ART, SPIDER_LOOKS } from '@/config/spiders';
-import { ARACHNID, WIDOW, type WalkerSpec } from '@/config/vehicles';
+import { ARACHNID, GOLIATH, WIDOW, skillOf, type WalkerSpec } from '@/config/vehicles';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { SpiderView } from '@/view/SpiderView';
 import { TEXTURE } from '@/view/textures';
@@ -140,38 +140,69 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       expect(stalk().rotation as number).not.toBeCloseTo(rest, 2);
     });
 
-    it('av atılışında hayalet kopyalar doğar ve atılış bitip söndüğünde kalmaz; dururken görüntü yaratılmaz', () => {
-      const { scene, view } = build(spec);
-      const count = (): number =>
-        scene.created.filter(
-          (object) =>
-            object.kind === 'image' &&
-            object.calls.some(([name, args]) => name === 'setTint' && args[0] === look.ghost.tint),
-        ).length;
-      for (let i = 0; i < 20; i++) view.update(frame({ vx: 150, speed: 150 }), 16);
-      expect(count()).toBe(0);
-      for (let i = 0; i < 60; i++)
-        view.update(frame({ x: 100 + i * 5, vx: 345, speed: 345, boosting: true }), 16);
-      expect(count()).toBeGreaterThan(0);
-      expect(count()).toBeGreaterThan(0);
-      view.destroy();
+    it('sıçrama: uçuşta gövde yükselip büyür ve zemin gölgesi soluklaşır; inişte her şey yere döner', () => {
+      const { view, art, shadowRoot } = build(spec);
+      const thorax = (art.list as FakeObject[])[6];
+      for (let i = 0; i < 40; i++) view.update(frame({ vx: 150, speed: 150 }), 16);
+      const grounded = thorax.scale as number;
+      expect(shadowRoot.alpha).toBe(1);
+      let peak = grounded;
+      let faintest = 1;
+      const flight = Math.floor(((spec.walker.boostCapacity / spec.walker.boostDrain) * 1000) / 16);
+      for (let i = 0; i < flight; i++) {
+        view.update(frame({ x: 100 + i * 6, vx: 345, speed: 345, boosting: true }), 16);
+        peak = Math.max(peak, thorax.scale as number);
+        faintest = Math.min(faintest, shadowRoot.alpha as number);
+      }
+      expect(peak).toBeGreaterThan(grounded * 1.15);
+      expect(faintest).toBeLessThan(1 - look.leap!.shadowFade * 0.5);
+      for (let i = 0; i < 90; i++) view.update(frame({ x: 400 + i, vx: 150, speed: 150 }), 16);
+      expect(shadowRoot.alpha).toBe(1);
+      expect(thorax.scale as number).toBeCloseTo(grounded, 1);
     });
 
-    it('imha edilince gövde, gölge katmanı, hayaletler ve ağız parlaması gizlenir; geri gelince görünür', () => {
-      const { scene, view, root, shadowRoot, lighting } = build(spec);
+    it('kalkışta ve inişte ayakların altından toz çıkar; uçuşta yürüyüş tozu çıkmaz', () => {
+      const { scene, view } = build(spec);
+      const dust = scene.created.find((object) => object.kind === 'particles') as FakeObject;
+      const emitted = (): number => dust.calls.filter(([name]) => name === 'emitParticleAt').length;
+      for (let i = 0; i < 40; i++) view.update(frame({ vx: 150, speed: 150 }), 16);
+      const walking = emitted();
+      view.update(frame({ x: 110, vx: 345, speed: 345, boosting: true }), 16);
+      const launched = emitted();
+      expect(launched - walking).toBeGreaterThanOrEqual(look.hips.length * 2);
+      for (let i = 0; i < 20; i++)
+        view.update(frame({ x: 120 + i * 6, vx: 345, speed: 345, boosting: true }), 16);
+      expect(emitted()).toBe(launched);
+      view.update(frame({ x: 300, vx: 150, speed: 150 }), 16);
+      expect(emitted() - launched).toBeGreaterThan(look.hips.length * 2);
+    });
+
+    it('dash artık yoktur: sıçramayan hızlı yürüyüş gövdeyi büyütmez, hayalet kopya doğmaz', () => {
+      const { scene, view, art } = build(spec);
+      const thorax = (art.list as FakeObject[])[6];
+      for (let i = 0; i < 60; i++) view.update(frame({ x: 100 + i * 3, vx: 150, speed: 150 }), 16);
+      const base = thorax.scale as number;
       for (let i = 0; i < 60; i++)
-        view.update(frame({ x: 100 + i * 5, vx: 345, speed: 345, boosting: true }), 16);
-      view.fire(0);
-      const ghosts = scene.created.filter(
+        view.update(frame({ x: 400 + i * 3, vx: 150, speed: 150, boosting: false }), 16);
+      expect(thorax.scale as number).toBeCloseTo(base, 2);
+      const tinted = scene.created.filter(
         (object) =>
           object.kind === 'image' &&
-          object.calls.some(([name, args]) => name === 'setTint' && args[0] === look.ghost.tint),
+          object.calls.some(([name, args]) => name === 'setTint' && args[0] === 0xff7f93),
       );
-      expect(ghosts.some((ghost) => ghost.visible === true)).toBe(true);
+      expect(tinted).toHaveLength(0);
+    });
+
+    it('imha edilince gövde, gölge katmanı ve ağız parlaması gizlenir; sıçrama pozu sıfırlanır', () => {
+      const { view, root, shadowRoot, lighting } = build(spec);
+      for (let i = 0; i < 20; i++)
+        view.update(frame({ x: 100 + i * 5, vx: 345, speed: 345, boosting: true }), 16);
+      view.fire(0);
+      expect(shadowRoot.alpha as number).toBeLessThan(1);
       view.setPresent(false);
       expect(root.visible).toBe(false);
       expect(shadowRoot.visible).toBe(false);
-      expect(ghosts.every((ghost) => ghost.visible === false)).toBe(true);
+      expect(shadowRoot.alpha).toBe(1);
       const flashes = lighting.calls
         .filter(([name]) => name === 'add')
         .map(([, a]) => a[0] as FakeObject);
@@ -343,5 +374,87 @@ describe('SpiderView: ayak izi', () => {
 
   it('bütün bacakları kopmuş yürüyücü iz basmaz', () => {
     expect(walk(ARACHNID, 180, false)).toHaveLength(0);
+  });
+});
+
+describe('SpiderView: yetenek görünümü', () => {
+  const build2 = (spec: WalkerSpec) => {
+    const scene = fakeScene();
+    const lighting = scene.add.container(0, 0);
+    const view = new SpiderView(
+      scene as unknown as Phaser.Scene,
+      spec,
+      SPIDER_LOOKS[spec.id],
+      lighting as never,
+    );
+    const dome = scene.created.find(
+      (object) => object.kind === 'image' && object.args[2] === 'fx-shield-dome',
+    );
+    return { scene, view, dome };
+  };
+
+  it('yalnız Goliath kalkan kubbesi taşır; sıçrayan örümceklerde kubbe yoktur ve absorb false döner', () => {
+    expect(build2(GOLIATH).dome).toBeDefined();
+    for (const spec of [ARACHNID, WIDOW]) {
+      const rig = build2(spec);
+      expect(rig.dome).toBeUndefined();
+      expect(rig.view.absorb(0, 0)).toBe(false);
+    }
+  });
+
+  it('look tanımı yeteneğe uyar: leap yalnız sıçrayanda, shield yalnız kalkanlıda', () => {
+    for (const spec of [ARACHNID, WIDOW, GOLIATH]) {
+      const look = SPIDER_LOOKS[spec.id];
+      expect(look.leap !== undefined, `${spec.id} leap`).toBe(skillOf(spec) === 'leap');
+      expect(look.shield !== undefined, `${spec.id} shield`).toBe(skillOf(spec) === 'shield');
+    }
+  });
+
+  it('Goliath kalkan açıkken kubbe görünür, vuruşu emer; kalkan kapanınca absorb false olur', () => {
+    const { view } = build2(GOLIATH);
+    for (let i = 0; i < 20; i++) view.update(frame({ vx: 40, speed: 40 }), 16);
+    expect(view.absorb(120, 200)).toBe(false);
+    for (let i = 0; i < 30; i++) view.update(frame({ boosting: true }), 16);
+    expect(view.absorb(160, 200)).toBe(true);
+    for (let i = 0; i < 300; i++) view.update(frame({ boosting: false }), 16);
+    expect(view.absorb(160, 200)).toBe(false);
+  });
+
+  it('Goliath kalkanla gövdesini yükseltmez ve zemin gölgesini soluklaştırmaz (zıplamaz)', () => {
+    const calm = build2(GOLIATH);
+    const shielded = build2(GOLIATH);
+    const thorax = (rig: ReturnType<typeof build2>) =>
+      (rig.view.root.list as unknown as FakeObject[])[0];
+    for (let i = 0; i < 60; i++) {
+      calm.view.update(frame(), 16);
+      shielded.view.update(frame({ boosting: true }), 16);
+    }
+    const body = (rig: ReturnType<typeof build2>) =>
+      (
+        (thorax(rig).list as FakeObject[]).find(
+          (child) => child.args[3] === 'goliath/thorax',
+        ) as FakeObject
+      ).scale as number;
+    expect(body(shielded)).toBeCloseTo(body(calm), 3);
+  });
+
+  it('imha edilince kubbe anında gizlenir; yeniden doğunca temiz başlar', () => {
+    const { view, dome } = build2(GOLIATH);
+    for (let i = 0; i < 40; i++) view.update(frame({ boosting: true }), 16);
+    view.setWrecked(true);
+    expect(view.absorb(160, 200)).toBe(false);
+    view.setPresent(false);
+    expect(dome).toBeDefined();
+    view.setPresent(true);
+    view.setWrecked(false);
+    view.update(frame(), 16);
+    expect(view.absorb(160, 200)).toBe(false);
+  });
+
+  it('yok edilince kubbe ve yer ışığı yok edilir', () => {
+    const { scene, view } = build2(GOLIATH);
+    view.destroy();
+    const destroyed = scene.created.filter((object) => lastCall(object, 'destroy') !== undefined);
+    expect(destroyed.length).toBeGreaterThan(2);
   });
 });

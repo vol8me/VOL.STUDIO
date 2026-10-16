@@ -5,7 +5,6 @@ import type { TankFrame } from '@/view/VehicleView';
 const STEP = 1000 / 60;
 const tuning = {
   worldToArt: 1,
-  dashSpring: { stiffness: 170, damping: 20 },
   impactFalloffMs: 300,
   teleportUnits: 160,
 };
@@ -66,12 +65,9 @@ describe('LocomotionReader', () => {
     expect(reader.signals.travelHeadingRad).toBe(1);
   });
 
-  it('atılım yumuşar ve çarpma yankısı süre içinde söner', () => {
+  it('çarpma yankısı süre içinde söner', () => {
     const reader = new LocomotionReader(tuning);
     reader.read(frame(), STEP);
-    for (let i = 0; i < 6; i++) reader.read(frame({ boosting: true }), STEP);
-    expect(reader.signals.dash01).toBeGreaterThan(0);
-    expect(reader.signals.dash01).toBeLessThan(1);
     reader.impact(1);
     reader.read(frame(), STEP);
     expect(reader.signals.impact01).toBeGreaterThan(0.9);
