@@ -39,7 +39,7 @@ describe('BackdropParade', () => {
   });
 
   it('araçlar hedefe yürür, çıkınca yenisi başlar; sayı sabit kalır ve bütün modeller sırayla gelir', () => {
-    const instance = parade(4);
+    const instance = parade(5);
     const seen = new Set<string>();
     const ids = new Set<number>();
     const events: SimEvent[] = [];
@@ -51,8 +51,8 @@ describe('BackdropParade', () => {
       instance.drainEvents(events);
     };
     record();
-    run(instance, 400, record);
-    // Dört şerit 400 sn'de birçok kez döner: yeni kimlikler doğar, eski araçlar kaldırılır.
+    run(instance, 100, record);
+    // Beş şerit 100 sn'de birçok kez döner: yeni kimlikler doğar, eski araçlar kaldırılır.
     expect(ids.size).toBeGreaterThan(VEHICLE_IDS.length);
     expect(seen.size).toBe(VEHICLE_IDS.length);
     // Araçlar dünya içinde kalır, hiç ölmez ve hasar almaz.

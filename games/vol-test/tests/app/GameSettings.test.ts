@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LocalStorageAdapter, ScopedSaveManager } from '@volstudio/core';
 import { GameSettings } from '@/app/GameSettings';
+import { BACKDROP } from '@/config/backdrop';
 
 function store(): ScopedSaveManager {
   return new ScopedSaveManager({
@@ -59,7 +60,7 @@ describe('cihaz tercihleri', () => {
       season: 'auto',
       weather: 'auto',
       backdrop: false,
-      backdropDensity: 5,
+      backdropDensity: BACKDROP.density.default,
     });
     expect(localStorage.getItem('synced.voltest.preferences')).toBeNull();
     next.dispose();
@@ -137,7 +138,7 @@ describe('cihaz tercihleri', () => {
       season: 'auto',
       weather: 'auto',
       backdrop: true,
-      backdropDensity: 5,
+      backdropDensity: BACKDROP.density.default,
     });
     const changes: unknown[] = [];
     const off = settings.subscribe((value) => changes.push(value));
