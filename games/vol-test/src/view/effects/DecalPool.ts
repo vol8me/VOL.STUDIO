@@ -15,13 +15,28 @@ interface Decal {
   readonly image: Phaser.GameObjects.Image;
   bornMs: number;
   alpha: number;
+  /** Havuzda en son gösterilen alfa basamağı (`ALPHA_STEPS`); sönmeyen çıkartma her karede yeniden yazılmaz. */
+  level: number;
+  /** Bu görüntü kaç kez yeniden kullanıldı: eski bir `DecalRef` yeni çıkartmayı bozmasın. */
+  generation: number;
 }
+
+/** Yaşayan bir çıkartmaya tutamak: görüntü başkasına devredildiyse (`reshape`) geçersizdir. */
+export interface DecalRef {
+  readonly decal: Decal;
+  readonly generation: number;
+}
+
+/** Sönüş basamağı: alfa bu kadar adımda yazılır; göz farkı görmez, her karede onlarca `setAlpha` gitmez. */
+const ALPHA_STEPS = 48;
 
 /**
  * Zemine basılan çıkartmaların havuzu: palet izi, kayma çizgisi, yanık.
  * Görüntüler kapasiteye dek bir kez kurulur; havuz dolunca en eski çıkartma
  * yeniden kullanılır. Her çıkartma ömrünün ilk payında tam görünür, sonra
- * doğrusal söner. Karede ayırma yapılmaz.
+ * doğrusal söner. Karede ayırma yapılmaz; sönüş yalnız yaşı tutuş süresini
+ * aşan çıkartmalara ve alfa basamağı değişince uygulanır (halka doğum sırasındadır,
+ * ilk genç çıkartmada tarama biter).
  */
 export class DecalPool {
   private readonly decals: RingBuffer<Decal>;
@@ -42,7 +57,8 @@ export class DecalPool {
     width: number,
     height: number,
     alpha: number,
-  ): void {
+    frame?: string | number,
+  ): DecalRef {
     const config = this.config;
     let decal: Decal;
     if (this.pool.length < config.capacity) {
@@ -53,11 +69,15 @@ export class DecalPool {
           .setDepth(config.depth),
         bornMs: this.nowMs,
         alpha,
+        level: ALPHA_STEPS,
+        generation: 0,
       };
       this.pool.push(decal);
     } else {
       decal = this.decals.first!;
+      decal.generation += 1;
     }
+    if (frame !== undefined) decal.image.setFrame(frame);
     decal.image
       .setPosition(x, y)
       .setRotation(rotation)
@@ -65,7 +85,29 @@ export class DecalPool {
       .setAlpha(alpha);
     decal.bornMs = this.nowMs;
     decal.alpha = alpha;
+    decal.level = ALPHA_STEPS;
     this.decals.push(decal);
+    return { decal, generation: decal.generation };
+  }
+
+  /**
+   * Yerleştirilmiş çıkartmayı yeniden biçimlendirir (devam eden palet bandı uzar). Görüntü bu arada
+   * havuz dolduğu için başkasına verildiyse dokunmaz ve `false` döner; doğum zamanı değişmez.
+   */
+  reshape(
+    ref: DecalRef,
+    x: number,
+    y: number,
+    rotation: number,
+    width: number,
+    height: number,
+    frame?: string | number,
+  ): boolean {
+    const { decal } = ref;
+    if (decal.generation !== ref.generation) return false;
+    if (frame !== undefined) decal.image.setFrame(frame);
+    decal.image.setPosition(x, y).setRotation(rotation).setDisplaySize(width, height);
+    return true;
   }
 
   fade(deltaMs: number): void {
@@ -76,8 +118,13 @@ export class DecalPool {
       const decal = this.decals.at(index);
       if (!decal) continue;
       const age = this.nowMs - decal.bornMs;
-      const remaining = age <= hold ? 1 : 1 - (age - hold) / (lifeMs - hold);
-      decal.image.setAlpha(Math.max(0, remaining) * decal.alpha);
+      // Doğum sırasıyla dizili: ilk tutuştaki çıkartmadan ötesi daha gençtir, söndürülecek şey yoktur.
+      if (age <= hold) break;
+      const remaining = Math.max(0, 1 - (age - hold) / (lifeMs - hold));
+      const level = Math.round(remaining * ALPHA_STEPS);
+      if (level === decal.level) continue;
+      decal.level = level;
+      decal.image.setAlpha((level / ALPHA_STEPS) * decal.alpha);
     }
   }
 

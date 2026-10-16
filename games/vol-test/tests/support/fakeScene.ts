@@ -112,7 +112,13 @@ export function fakeScene(): FakeScene {
       exists: (key) => textureKeys.has(key),
       addCanvas: vi.fn((key: string, canvas: HTMLCanvasElement) => {
         textureKeys.add(key);
-        return { key, getSourceImage: () => canvas, refresh: vi.fn(), destroy: vi.fn() };
+        return {
+          key,
+          getSourceImage: () => canvas,
+          refresh: vi.fn(),
+          destroy: vi.fn(),
+          add: vi.fn(),
+        };
       }),
       addSpriteSheet: vi.fn((key: string) => textureKeys.add(key)),
       get: () => ({ getSourceImage: () => document.createElement('canvas') }),

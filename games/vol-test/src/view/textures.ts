@@ -294,15 +294,23 @@ function canvasTexture(
   width: number,
   height: number,
   paint: (g: CanvasRenderingContext2D) => void,
-): void {
-  if (scene.textures.exists(key)) return;
+): Phaser.Textures.CanvasTexture | undefined {
+  if (scene.textures.exists(key)) return undefined;
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const g = canvas.getContext('2d');
   if (!g) throw new Error(`"${key}" dokusu için 2B canvas bağlamı alınamadı`);
   paint(g);
-  scene.textures.addCanvas(key, canvas);
+  return scene.textures.addCanvas(key, canvas) ?? undefined;
+}
+
+/** Palet izi dokusunda bir pabuç adımının piksel eni. */
+const TREAD_STEP_PX = 8;
+
+/** Palet izi dokusunun `steps` pabuç adımı taşıyan çerçevesinin adı (1..`FX.marks.maxGrousers`). */
+export function treadFrame(steps: number): string {
+  return `steps-${steps}`;
 }
 
 /** Çalışma anında çizilen efekt dokuları. */
@@ -355,15 +363,20 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
   });
   // Palet izinin bir pabuç adımı: x yolu, y paletin enidir. Sıkışmış kum
   // tabanı, enine pabuç (grouser) çukuru ve kenarlara itilmiş kum sırtı.
-  canvasTexture(scene, TEXTURE.treadPrint, 8 * FX.marks.grousers, 16, (g) => {
+  // Doku en uzun bandın pabuç sayısı kadar adım taşır; kısa bantlar baştan kesilmiş çerçeveler (`treadFrame`).
+  const treadWidth = TREAD_STEP_PX * FX.marks.maxGrousers;
+  const tread = canvasTexture(scene, TEXTURE.treadPrint, treadWidth, 16, (g) => {
     g.fillStyle = 'rgba(255,255,255,0.45)';
-    g.fillRect(0, 2, 8 * FX.marks.grousers, 12);
+    g.fillRect(0, 2, treadWidth, 12);
     g.fillStyle = 'rgba(255,255,255,1)';
-    for (let step = 0; step < FX.marks.grousers; step++) g.fillRect(step * 8, 3, 3, 10);
+    for (let step = 0; step < FX.marks.maxGrousers; step++)
+      g.fillRect(step * TREAD_STEP_PX, 3, 3, 10);
     g.fillStyle = 'rgba(255,255,255,0.75)';
-    g.fillRect(0, 0, 8 * FX.marks.grousers, 2);
-    g.fillRect(0, 14, 8 * FX.marks.grousers, 2);
+    g.fillRect(0, 0, treadWidth, 2);
+    g.fillRect(0, 14, treadWidth, 2);
   });
+  for (let steps = 1; steps <= FX.marks.maxGrousers; steps++)
+    tread?.add(treadFrame(steps), 0, 0, 0, TREAD_STEP_PX * steps, 16);
   // Örümcek ayak izi: sivri pençenin zemine açtığı küçük, yuvarlak delik. Koyu çekirdek, yumuşak
   // kenar ve çevresinde ezilmiş toprağın ince halkası; yönsüzdür, bacak ucu gibi küçük ve diktir.
   canvasTexture(scene, TEXTURE.footPrint, 16, 16, (g) => {

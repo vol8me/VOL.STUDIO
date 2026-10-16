@@ -86,44 +86,49 @@ export const FX = {
   /** Bu hızın üstünde paletler toz kaldırır (birim/s). */
   dustSpeed: 90,
   /**
-   * Palet izi: paletin temas yolunu izleyen sürekli bant; her parça bir pabuç
-   * adımıdır ve enine pabuç (grouser) izini taşır.
+   * Palet izi: paletin temas yolunu izleyen sürekli bant; enine pabuç (grouser) izini taşır. Düz yürüyüşte
+   * bant tek çıkartma olarak uzar (`runMax`e dek), dönüşte `bend`i aşınca yeni parçaya geçer; böylece
+   * kalabalık savaşta havuz izi hemen yutmaz ve iz arkadan kuyruk gibi silinmez.
    */
   marks: {
-    capacity: 2400,
-    /**
-     * Parça arası yer yolu (birim): her parça `grousers` pabuç adımı taşır (doku tekrarlıdır), böylece
-     * aynı yol yarı sayıda çıkartmayla çizilir ve kalabalık sahnede havuz izi hemen yutmaz.
-     */
+    capacity: 5000,
+    /** Bantın uzayıp örneklendiği yer yolu aralığı (birim): her örnekte çıkartma yeni uca uzatılır. */
     spacing: 12,
-    grousers: 2,
+    /** Bir pabuç adımının yer yolu (birim); doku bu adımla tekrarlanır, çıkartma uzunluğu kadar adım gösterir. */
+    pitch: 6,
+    /** Tek çıkartmanın en uzun bandı (birim) ve dokudaki en çok pabuç sayısı (`runMax / pitch`). */
+    runMax: 36,
+    maxGrousers: 6,
+    /** Düz banttan en çok bu kadar sapma (birim) tek çıkartmada sürer; ötesinde dönüşe uyup yeni parça başlar. */
+    bend: 0.7,
     /** Bir kareden ötekine bu kadar uzağa giden araç ışınlanmıştır (yeniden doğuş): iz kesilir, köprü çizilmez. */
     maxJump: 96,
     /** Bant eni: palet eni (birim). */
     width: 11,
     alpha: 0.34,
-    lifeMs: 16000,
-    holdShare: 0.4,
+    /** İz bir dakika yerde kalır: ömrün ilk %60'ı tam, sonra söner. */
+    lifeMs: 60000,
+    holdShare: 0.6,
     depth: 2,
   },
   /** Örümcek ayak izi: yere basan sivri pençenin açtığı küçük delik; yoğunluğu ve ömrü palet izinden kısadır. */
   feet: {
-    capacity: 700,
-    lifeMs: 9000,
-    holdShare: 0.35,
+    capacity: 1600,
+    lifeMs: 30000,
+    holdShare: 0.5,
     alpha: 0.5,
     depth: 2,
     refHalfWidth: 22,
     /** Mech bot izi: pençe deliğinden büyük ve kalıcıdır, ama iki bacaklı araç az iz bırakır. */
-    bootCapacity: 260,
-    bootLifeMs: 12000,
+    bootCapacity: 520,
+    bootLifeMs: 30000,
     bootAlpha: 0.55,
   },
   /** Ekran dışındaki araçların izi/lekesi bırakılmaz; görünen dikdörtgen bu pay kadar genişletilir (birim). */
   cullMargin: 700,
   /** Kayma izi: kayan paletin temas noktasının yerde bıraktığı sürekli çizgi. */
   skid: {
-    capacity: 900,
+    capacity: 1800,
     /** Bu kayma hızının altında palet tutunur, çizgi kesilir (birim/s). */
     minSlide: 35,
     /** Çizginin tam koyuluğa çıktığı kayma hızı. */

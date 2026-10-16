@@ -214,10 +214,13 @@ describe('EffectsView', () => {
 
   it('düşük kademede zemin izi havuzları küçük kurulur', () => {
     const { view, prints } = build(EFFECT_LEVELS.low);
-    for (let distance = 0; distance < 6 * 2000; distance += 6) {
+    const capacity = Math.round(FX.marks.capacity * EFFECT_LEVELS.low.decals);
+    // İki palet, çıkartma başına `runMax` birim: havuzu aşmak için bu kadar yol gerekir.
+    const reach = (capacity * FX.marks.runMax) / 2 + FX.marks.runMax * 4;
+    for (let distance = 0; distance < reach; distance += FX.marks.spacing) {
       view.updateVehicle(1, frame({ x: distance, groundLeft: distance, groundRight: distance }));
     }
-    expect(prints()).toHaveLength(Math.round(FX.marks.capacity * EFFECT_LEVELS.low.decals));
+    expect(prints()).toHaveLength(capacity);
   });
 
   it('her araç kendi egzoz ve tozunu taşır; egzoz hızlanmada, toz hızda ya da patinajda', () => {
@@ -331,7 +334,8 @@ describe('EffectsView', () => {
   it('palet izi uzun yaşar: önce tam, sonra söner; havuz dolunca en eski yeniden kullanılır', () => {
     const { view, prints } = build();
     const step = FX.marks.spacing;
-    for (let distance = 0; distance < step * FX.marks.capacity; distance += step) {
+    const reach = (FX.marks.capacity * FX.marks.runMax) / 2 + FX.marks.runMax * 4;
+    for (let distance = 0; distance < reach; distance += step) {
       view.updateVehicle(1, frame({ x: distance, groundLeft: distance, groundRight: distance }));
     }
     expect(prints()).toHaveLength(FX.marks.capacity);
@@ -640,7 +644,7 @@ describe('EffectsView: ayak izi', () => {
     view.setViewport(0, 0, 800, 600);
     view.footprint(FX.cullMargin + 5000, 0, 0, 1);
     expect(feet(scene)).toHaveLength(0);
-    for (let i = 0; i < FX.feet.capacity + 50; i++) view.footprint(10 + i, 10, 0, 1);
+    for (let i = 0; i < FX.feet.capacity + 50; i++) view.footprint(10 + (i % 100), 10, 0, 1);
     expect(feet(scene)).toHaveLength(FX.feet.capacity);
     const print = feet(scene)[0];
     view.update(new Projectiles(1, 1), 0, FX.feet.lifeMs);
