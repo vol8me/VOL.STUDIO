@@ -14,7 +14,7 @@ import { World } from '@/sim/world/World';
 import { WORLD } from '@/config/world';
 import { ArenaView } from '@/view/ArenaView';
 import { EffectsView } from '@/view/EffectsView';
-import { MENU_AREA_KEY, type FreeArea } from '@/view/menuLayout';
+import { MENU_AREA_KEY, MENU_DIM_KEY, type FreeArea } from '@/view/menuLayout';
 import { VehicleViews } from '@/view/VehicleViews';
 import { CameraRig, renderQualityOf } from './world/CameraRig';
 import { climateChoice } from './world/climateChoice';
@@ -55,6 +55,7 @@ export class BackdropScene extends Phaser.Scene {
   private wrecks!: WreckDirector;
   private environment!: EnvironmentController;
   private dim!: Phaser.GameObjects.Rectangle;
+  private dimAlpha: number = BACKDROP.dim.alpha;
   private readonly simEvents: SimEvent[] = [];
   private visibility = 0;
   private target = { x: 0, y: 0 };
@@ -225,9 +226,20 @@ export class BackdropScene extends Phaser.Scene {
     const rect = this.rig.model.visibleRect();
     this.environment.render(sim.vehicles, alpha, rect, delta);
     const margin = Math.max(rect.width, rect.height) * 0.05;
+    this.easeDim(delta);
     this.dim
       .setPosition(rect.x - margin, rect.y - margin)
       .setSize(rect.width + margin * 2, rect.height + margin * 2);
+  }
+
+  /** Karartma, açık menü ekranının istediği seviyeye süzülür (garaja girince koyulaşır, çıkınca açılır). */
+  private easeDim(delta: number): void {
+    const wanted = this.game.registry.get(MENU_DIM_KEY) as unknown;
+    const target = typeof wanted === 'number' ? wanted : BACKDROP.dim.alpha;
+    const step =
+      (Math.abs(BACKDROP.dim.showcase - BACKDROP.dim.alpha) * delta) / BACKDROP.dim.easeMs;
+    this.dimAlpha += Math.max(-step, Math.min(step, target - this.dimAlpha));
+    this.dim.setFillStyle(0x000000, this.dimAlpha);
   }
 
   /**

@@ -3,9 +3,16 @@ import { applyVolViewport, DisposableScope, pushBackHandler } from '@volstudio/c
 import { UIRoot } from '@volstudio/core/ui';
 import { createSceneAudio } from '@/audio/sceneAudio';
 import type { GameServices } from '@/app/GameServices';
+import { BACKDROP } from '@/config/backdrop';
 import { MENU } from '@/config/menu';
 import { VEHICLES, type VehicleSpec } from '@/config/vehicles';
-import { freeArea, MENU_AREA_KEY, type FreeArea, type PanelRect } from '@/view/menuLayout';
+import {
+  freeArea,
+  MENU_AREA_KEY,
+  MENU_DIM_KEY,
+  type FreeArea,
+  type PanelRect,
+} from '@/view/menuLayout';
 import { Showroom } from '@/view/Showroom';
 import { renderQualityOf } from './world/CameraRig';
 
@@ -77,6 +84,10 @@ export abstract class ScreenScene extends Phaser.Scene {
     const clock = this.game.registry.get(CLOCK_KEY) as unknown;
     if (this.showroom && typeof clock === 'number') this.showroom.clockMs = clock;
     this.startBackdrop();
+    this.game.registry.set(
+      MENU_DIM_KEY,
+      this.showroom ? BACKDROP.dim.showcase : BACKDROP.dim.alpha,
+    );
     const screen = this.createScreen(data);
     this.screen = screen;
     this.scope.addDestroyable(screen);

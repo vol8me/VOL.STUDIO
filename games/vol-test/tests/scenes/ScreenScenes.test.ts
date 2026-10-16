@@ -4,6 +4,7 @@ import { getBackHandlerCount, triggerBack } from '@volstudio/core';
 import { i18next } from '@volstudio/core/i18n';
 import type { GameServices } from '@/app/GameServices';
 import { FACTION_AUTO, type GamePreferences } from '@/app/GameSettings';
+import { BACKDROP } from '@/config/backdrop';
 import { VEHICLES } from '@/config/vehicles';
 import { GarageScene } from '@/scenes/GarageScene';
 import { MenuScene } from '@/scenes/MenuScene';
@@ -487,6 +488,15 @@ describe('ScreenScene canlı arka plan', () => {
     const area = menu.registry.get('vol-test:menu-area');
     menu.scene.update(0, 16);
     expect(menu.registry.get('vol-test:menu-area')).toBe(area);
+  });
+
+  it('vitrinli ekran arka planı koyulaştırır, vitrinsiz ekran standart karartmada bırakır', () => {
+    const { services: env } = services();
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
+    expect(menu.registry.get('vol-test:menu-dim')).toBe(BACKDROP.dim.alpha);
+    const garage = mount(() => new GarageScene(env));
+    expect(garage.registry.get('vol-test:menu-dim')).toBe(BACKDROP.dim.showcase);
+    expect(BACKDROP.dim.showcase).toBeGreaterThan(BACKDROP.dim.alpha);
   });
 
   it('vitrinli ekran boş alanı vitrinin kamera alanından yayınlar', () => {

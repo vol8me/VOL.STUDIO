@@ -17,6 +17,9 @@ export interface FreeArea {
 /** Oyun kayıt defterindeki anahtar: menü sahnesi boş alanı yazar, arka plan sahnesi okur. */
 export const MENU_AREA_KEY = 'vol-test:menu-area';
 
+/** Karartma seviyesi anahtarı: vitrinli ekran `showcase`, diğerleri `base` yazar; arka plan sahnesi okur. */
+export const MENU_DIM_KEY = 'vol-test:menu-dim';
+
 /**
  * Panelin bıraktığı boş alanı bulur. Panel kenar şeritse (en çok `stackedFraction` genişlikte) boş
  * alan şeridin geniş kalan yanıdır; ekranı kaplayan alt levhaysa levhanın üstüdür. Panel yoksa tüm

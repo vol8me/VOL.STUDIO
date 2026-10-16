@@ -28,8 +28,8 @@ export const BACKDROP = {
   },
   /** Kamera: sabit yakınlaştırma, sahnenin menüdeki boş alanda oturduğu yükseklik (0 üst, 1 alt) ve oturma süresi. */
   camera: { zoom: 1.05, focusHeight: 0.5, followMs: 700 },
-  /** Menü okunurluğu için sahnenin üstüne konan karartma. */
-  dim: { alpha: 0.3 },
+  /** Menü okunurluğu için sahnenin üstüne konan karartma; vitrinli ekranda (garaj) araç öne çıksın diye koyulaşır, geçiş `easeMs`de olur. */
+  dim: { alpha: 0.3, showcase: 0.62, easeMs: 350 },
   /** Sahne hazır olunca arka planın görünüşe girme süresi (ms). */
   fadeInMs: 700,
 } as const;

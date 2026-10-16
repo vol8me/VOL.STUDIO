@@ -857,7 +857,8 @@ dolu açılır (her araç yolunun rastgele bir yerinden başlar), ön ısınma v
 kayasız düz karadır: yürüyüş hiçbir yerde takılmaz. Kamera sabittir (`BACKDROP.camera.zoom`); sahnenin
 merkezi, menü şeridi alayı örtmesin diye menü sahnesinin oyun kayıt defterine yazdığı boş alana
 (`MENU_AREA_KEY`, `freeArea`) oturur. Arka plan sessizdir, hasar ve titreşim geri bildirimi yoktur, üstüne
-`dim` karartması konur. Alay standarttır: kapatma ayarı yoktur ve her menü ekranında çalışır. Tek ayar
+`dim` karartması konur; vitrinli ekranda (garaj, geliştirici) araç öne çıksın diye koyulaşır
+(`BACKDROP.dim.showcase`, `MENU_DIM_KEY`, `easeMs`de süzülür). Alay standarttır: kapatma ayarı yoktur ve her menü ekranında çalışır. Tek ayar
 `backdropDensity`dir (aynı anda 2–10 araç, varsayılan 6) ve yalnız geliştirici ekranındadır; düşük kalitede
 sayı çalışma anında `BACKDROP.density.low` (3) ile sınırlanır (`paradeUnits`: kayıtlı eski değerler de hafif
 kalır, alay kapanmaz seyrelir); yoğunluk değişince alay baştan kurulur, mevsim/hava/kalite yalnız ilgili parçayı yeniler.

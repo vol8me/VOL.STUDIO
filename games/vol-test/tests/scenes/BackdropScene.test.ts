@@ -3,7 +3,7 @@ import type * as CoreModule from '@volstudio/core';
 import type { GameServices } from '@/app/GameServices';
 import { BACKDROP } from '@/config/backdrop';
 import { BackdropScene, paradeUnits } from '@/scenes/BackdropScene';
-import { MENU_AREA_KEY } from '@/view/menuLayout';
+import { MENU_AREA_KEY, MENU_DIM_KEY } from '@/view/menuLayout';
 import { fakeObject, fakeScene, lastCall } from '../support/fakeScene';
 
 vi.mock('@volstudio/core', async (importOriginal) => ({
@@ -110,6 +110,25 @@ describe('BackdropScene', { timeout: 30_000 }, () => {
     expect(alpha).toBeLessThan(1);
     harness.update(BACKDROP.fadeInMs * 2);
     expect(lastCall(harness.camera, 'setAlpha')).toEqual([1]);
+  });
+
+  it('karartma menü ekranının istediği seviyeye süzülür: garajda koyulaşır, çıkınca açılır', () => {
+    const harness = mount();
+    const scrim = harness.created.find(
+      (object) => object.kind === 'rectangle' && object.args[4] === 0x000000,
+    )!;
+    const level = (): number => lastCall(scrim, 'setFillStyle')![1] as number;
+    harness.update();
+    expect(level()).toBeCloseTo(BACKDROP.dim.alpha);
+    harness.registry.set(MENU_DIM_KEY, BACKDROP.dim.showcase);
+    harness.update(BACKDROP.dim.easeMs / 4);
+    expect(level()).toBeGreaterThan(BACKDROP.dim.alpha);
+    expect(level()).toBeLessThan(BACKDROP.dim.showcase);
+    harness.update(BACKDROP.dim.easeMs * 2);
+    expect(level()).toBeCloseTo(BACKDROP.dim.showcase);
+    harness.registry.set(MENU_DIM_KEY, BACKDROP.dim.alpha);
+    harness.update(BACKDROP.dim.easeMs * 2);
+    expect(level()).toBeCloseTo(BACKDROP.dim.alpha);
   });
 
   it('dünya sahnesi açılınca kendini durdurur', () => {
