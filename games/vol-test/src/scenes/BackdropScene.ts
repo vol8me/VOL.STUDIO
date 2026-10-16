@@ -3,16 +3,15 @@ import { applyVolViewport, DisposableScope } from '@volstudio/core';
 import type { GameServices } from '@/app/GameServices';
 import { BACKDROP } from '@/config/backdrop';
 import { CAMERA } from '@/config/camera';
-import { PALETTE } from '@/config/palette';
 import { EFFECT_LEVELS } from '@/config/quality';
 import { FEEL } from '@/config/feel';
 import { SEASONS } from '@/config/seasons';
 import { WATER_VIEW } from '@/config/waterView';
 import { WEATHER } from '@/config/weather';
-import { BackdropBattle } from '@/sim/backdrop/BackdropBattle';
-import { CameraDirector, type DirectedVehicle, type Shot } from '@/sim/backdrop/CameraDirector';
+import { BackdropParade } from '@/sim/backdrop/BackdropParade';
 import type { SimEvent } from '@/sim/events';
-import { createBattleWorld } from '@/sim/world/battleWorld';
+import { World } from '@/sim/world/World';
+import { WORLD } from '@/config/world';
 import { ArenaView } from '@/view/ArenaView';
 import { EffectsView } from '@/view/EffectsView';
 import { MENU_AREA_KEY, type FreeArea } from '@/view/menuLayout';
@@ -30,19 +29,17 @@ const STILL_CAMERA = { kick: () => undefined, addTrauma: () => undefined };
 /** Dinleyici çok uzaktadır: patlama titreşimi ve sarsıntısı hiçbir olayda eşiğe girmez. */
 const FAR_LISTENER = { x: -1e9, y: -1e9 };
 
-const FADE = Phaser.Display.Color.HexStringToColor(PALETTE.void);
-
 /**
- * Menülerin arkasında oynayan canlı savaş: oyunun gerçek simülasyonu, görünümleri ve havasıyla, ama
- * insansız ve sessiz. Menü sahneleri altında çalışır (sahne sırası onları üstte tutar) ve kameraları saydam
- * olduğu için görünür; dünya sahnesi açılırken durur. Odak bir sinema yönetmenindedir (`CameraDirector`):
- * en yakın düşman çiftini çerçeveler, çift bitince karartıp yenisine keser. Menü paneli savaşın üstünü
- * örtmesin diye odak, panelin bıraktığı boş alana oturtulur (`MENU_AREA_KEY`).
+ * Menülerin arkasında yürüyen araç alayı: oyunun gerçek simülasyonu, görünümleri ve havasıyla, ama
+ * savaşsız ve sessiz. Araçlar ekran dışından girip sahnenin içinden karşı yöne yürür, çıkınca sıradaki
+ * model olarak yeniden başlar (`BackdropParade`): menü araçları sergiler. Menü sahneleri altında çalışır
+ * (sahne sırası onları üstte tutar) ve kameraları saydam olduğu için görünür; dünya sahnesi açılırken
+ * durur. Kamera sabittir; sahnenin merkezi, menü panelinin bıraktığı boş alana oturtulur
+ * (`MENU_AREA_KEY`). Dünya düz karadır: göl ve kaya yoktur, yürüyüş hiçbir yerde takılmaz.
  */
 export class BackdropScene extends Phaser.Scene {
   private scope = new DisposableScope();
-  private battle!: BackdropBattle;
-  private director!: CameraDirector;
+  private parade!: BackdropParade;
   private rig!: CameraRig;
   private arena!: ArenaView;
   private vehicles!: VehicleViews;
@@ -51,10 +48,7 @@ export class BackdropScene extends Phaser.Scene {
   private environment!: EnvironmentController;
   private dim!: Phaser.GameObjects.Rectangle;
   private readonly simEvents: SimEvent[] = [];
-  private readonly directed: DirectedVehicle[] = [];
-  private prerollLeftMs = 0;
   private visibility = 0;
-  private cutting = false;
   private target = { x: 0, y: 0 };
 
   constructor(private readonly services: GameServices) {
@@ -64,12 +58,11 @@ export class BackdropScene extends Phaser.Scene {
   create(): void {
     this.scope.dispose();
     this.scope = new DisposableScope();
-    this.cutting = false;
     this.visibility = 0;
     applyVolViewport(this);
     const { settings } = this.services;
     const preferences = settings.get();
-    const world = createBattleWorld();
+    const world = new World(WORLD.width, WORLD.height, WORLD.gridStep);
     const profile = EFFECT_LEVELS[preferences.quality];
     const choice = climateChoice(
       preferences,
@@ -92,11 +85,11 @@ export class BackdropScene extends Phaser.Scene {
       ),
     );
     if (choice.season) this.environment.model.step(SEASONS.previewWarmupMs);
-    this.battle = new BackdropBattle({
+    this.parade = new BackdropParade({
       world,
       weather: this.environment.model,
       seed: BACKDROP.seed,
-      perFaction: preferences.backdropDensity,
+      units: preferences.backdropDensity,
     });
     this.effects = this.scope.addDestroyable(new EffectsView(this, profile, world));
     this.vehicles = this.scope.addDestroyable(
@@ -108,7 +101,6 @@ export class BackdropScene extends Phaser.Scene {
       }),
     );
     this.wrecks = new WreckDirector(this.effects, undefined, this.environment.water ?? undefined);
-    this.director = new CameraDirector();
     this.rig = new CameraRig(
       this,
       { ...CAMERA, followMs: BACKDROP.camera.followMs },
@@ -120,9 +112,10 @@ export class BackdropScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setDepth(10_000);
 
-    // Açılışta kamera görünmez: ileri sarım biterken savaş zaten çatışmadadır, sonra yavaşça belirir.
+    // Açılışta kamera görünmez; alay ilk karede doludur, sonra yavaşça belirir.
     this.cameras.main.setAlpha(0);
-    this.prerollLeftMs = BACKDROP.prerollMs;
+    this.vehicles.sync(this.parade.vehicles);
+    this.place(true);
 
     // Ayar değişimi yalnız ilgili parçayı yeniler: ses ya da araç seçimi havayı ve kamerayı etkilemez.
     let applied = { ...choice, quality: preferences.quality, density: preferences.backdropDensity };
@@ -141,7 +134,7 @@ export class BackdropScene extends Phaser.Scene {
           this.effects.applyProfile(level);
           this.environment.applyProfile(level);
         }
-        // Kadro büyüklüğü savaş kurulurken belirlenir: değişince savaş baştan kurulur.
+        // Alay büyüklüğü kurulurken belirlenir: değişince alay baştan kurulur.
         const restart = value.backdropDensity !== applied.density;
         applied = { ...next, quality: value.quality, density: value.backdropDensity };
         if (restart) this.scene.restart();
@@ -157,14 +150,7 @@ export class BackdropScene extends Phaser.Scene {
       this.scene.stop();
       return;
     }
-    if (this.prerollLeftMs > 0) {
-      const chunk = Math.min(this.prerollLeftMs, BACKDROP.prerollPerFrameMs);
-      this.battle.fastForward(chunk);
-      this.prerollLeftMs -= chunk;
-      if (this.prerollLeftMs <= 0) this.begin();
-      return;
-    }
-    this.battle.advance(delta);
+    this.parade.advance(delta);
     this.present(delta);
     if (this.visibility < 1) {
       this.visibility = Math.min(1, this.visibility + delta / BACKDROP.fadeInMs);
@@ -172,35 +158,16 @@ export class BackdropScene extends Phaser.Scene {
     }
   }
 
-  /** İleri sarım bitti: kamera ilk çekime yerleşir ve görünümler kurulur. */
-  private begin(): void {
-    this.vehicles.sync(this.battle.vehicles);
-    this.place(this.shot(0), true);
-  }
-
-  private shot(delta: number): Shot {
-    this.directed.length = 0;
-    for (const vehicle of this.battle.vehicles)
-      this.directed.push({
-        id: vehicle.id,
-        team: vehicle.team,
-        alive: vehicle.vitality.alive,
-        x: vehicle.chassis.x,
-        y: vehicle.chassis.y,
-      });
-    return this.director.update(this.directed, delta);
-  }
-
   /** Kareyi çizer: görünümler, olaylar, etkiler, kamera, hava ve karartma. */
   private present(delta: number): void {
-    const sim = this.battle.sim;
-    const alpha = this.battle.alpha;
+    const sim = this.parade.sim;
+    const alpha = this.parade.alpha;
     for (const removed of this.vehicles.sync(sim.vehicles)) {
       this.effects.removeVehicle(removed);
       this.wrecks.forget(removed);
     }
     this.simEvents.length = 0;
-    const events = this.battle.drainEvents(this.simEvents);
+    const events = this.parade.drainEvents(this.simEvents);
     routeSimEvents(events, {
       player: -1,
       tank: (id) => this.vehicles.get(id),
@@ -241,10 +208,9 @@ export class BackdropScene extends Phaser.Scene {
     this.arena.update(delta);
     this.effects.update(sim.projectiles, alpha, delta);
 
-    const shot = this.shot(delta);
-    if (shot.cut && !this.cutting) this.cutTo(shot);
-    else if (!this.cutting) this.place(shot, false);
-    if (!this.cutting) this.rig.update(this.target.x, this.target.y, delta, false);
+    // Menü ekranı değişince boş alan değişir: hedef her kare okunur, kamera oraya süzülür.
+    this.place(false);
+    this.rig.update(this.target.x, this.target.y, delta, false);
 
     const rect = this.rig.model.visibleRect();
     this.environment.render(sim.vehicles, alpha, rect, delta);
@@ -255,27 +221,12 @@ export class BackdropScene extends Phaser.Scene {
   }
 
   /**
-   * Yeni çifte keser: görüntü kararır, kamera yeni noktaya oturur, görüntü açılır. Karartma sürerken
-   * kamera durur (eski konumdan yeniye süzülmek yerine temiz kesme).
+   * Sahnenin merkezini menü panelinin bıraktığı boş alana oturtur: alay panelin yanında görünsün diye
+   * kamera hedefi merkezden kaydırılır. `snap`: kamera hedefe atlar (açılış), yoksa süzülür.
    */
-  private cutTo(shot: Shot): void {
-    const main = this.cameras.main;
-    this.cutting = true;
-    main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.cutting = false;
-      this.place(shot, true);
-      main.fadeIn(BACKDROP.camera.cutInMs, FADE.red, FADE.green, FADE.blue);
-    });
-    main.fadeOut(BACKDROP.camera.cutOutMs, FADE.red, FADE.green, FADE.blue);
-  }
-
-  /**
-   * Çekimi ekrana yerleştirir: odak, menü panelinin bıraktığı alanda (üst yarıda, vitrinin üstünde)
-   * görünsün diye kamera hedefi odaktan kaydırılır.
-   */
-  private place(shot: Shot, snap: boolean): void {
+  private place(snap: boolean): void {
     const model = this.rig.model;
-    model.setZoom(shot.zoom);
+    model.setZoom(BACKDROP.camera.zoom);
     const quality = renderQualityOf(this);
     const width = this.cameras.main.width / quality;
     const height = this.cameras.main.height / quality;
@@ -287,9 +238,10 @@ export class BackdropScene extends Phaser.Scene {
     };
     const focusX = area.x + area.width / 2;
     const focusY = area.y + area.height * BACKDROP.camera.focusHeight;
+    const center = this.parade.sim.world.center;
     this.target = {
-      x: shot.x - (focusX - width / 2) / model.zoom,
-      y: shot.y - (focusY - height / 2) / model.zoom,
+      x: center.x - (focusX - width / 2) / model.zoom,
+      y: center.y - (focusY - height / 2) / model.zoom,
     };
     if (snap) model.snapTo(this.target.x, this.target.y);
   }

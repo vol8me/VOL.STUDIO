@@ -53,9 +53,9 @@ export interface GamePreferences {
   season: SeasonChoice;
   /** Zorlanan hava durumu (`auto`: mevsim takvimi seçer). */
   weather: WeatherChoice;
-  /** Menülerin arkasında canlı savaş sahnesi oynar; kapalıysa düz vitrin zemini görünür. */
+  /** Menülerin arkasında yürüyen araç alayı oynar; kapalıysa düz vitrin zemini görünür. */
   backdrop: boolean;
-  /** Menü arka planındaki savaşın cephe başına bot sayısı. */
+  /** Menü arka planındaki alayda aynı anda yürüyen araç sayısı. */
   backdropDensity: number;
 }
 

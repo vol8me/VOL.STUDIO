@@ -1,32 +1,33 @@
-/** Menü arka planı: menülerin arkasında oynayan canlı savaşın sayıları (sahne `BackdropScene`). */
+/** Menü arka planı: menülerin arkasında ekrandan geçen yürüyüş alayının sayıları (sahne `BackdropScene`). */
 export const BACKDROP = {
-  /** Cephe başına bot sayısı: seçilebilir aralık ve varsayılan. */
-  density: { min: 2, max: 8, default: 5 },
-  /** Bot kadrosunu ve görev seçimini tohumlar. */
+  /** Aynı anda ekrandan geçen araç sayısı: seçilebilir aralık ve varsayılan. */
+  density: { min: 2, max: 10, default: 6 },
+  /** Araç sırasını, giriş yönlerini ve zamanlamaları tohumlar. */
   seed: 1907,
   /**
-   * Açılışta savaş kendi hâlinde bu kadar ilerletilir: botlar üslerinden çıkıp karşılaşır ve ilk kareden
-   * çatışma vardır. Süre kare başına `prerollPerFrameMs` ile bölünür; tek karede takılma olmaz.
+   * Alay: araçlar dünya merkezindeki sahnenin `radius` uzağındaki bir noktadan girer, karşı yöne yakın
+   * bir noktaya (`skew` rad kadar sapmış: çaprazdan ve bir yandan geçerler) yürür ve çıkınca yeniden
+   * başlar. `radius` ekranın köşegeninden büyüktür: araç hep ekran dışında doğar ve söner.
    */
-  prerollMs: 36_000,
-  prerollPerFrameMs: 1500,
-  /** Kamera: yakınlaştırma aralığı, çatışma noktasının ekrandaki yüksekliği (0 üst, 1 alt) ve tutuş süreleri. */
-  camera: {
-    zoomMin: 0.95,
-    zoomMax: 1.3,
-    focusHeight: 0.38,
-    holdMs: 7000,
-    maxHoldMs: 16_000,
-    /** Çiftin birbirine bu mesafeden (birim) yakın olması çatışma sayılır. */
-    engageRange: 650,
-    /** Odak çifti bu mesafeden fazla açılırsa kesilir. */
-    breakRange: 1100,
-    /** Kesme geçişi: karartma ve açılma süresi (ms). */
-    cutOutMs: 160,
-    cutInMs: 320,
-    /** Kesmeden sonra kameranın yeni odağa oturması için bırakılan yakalama hızı. */
-    followMs: 700,
+  parade: {
+    radius: 1250,
+    skew: 0.7,
+    /** Açılışta araçlar arası en az uzaklık ve yol verme: kaçınma menzili ile ağırlığı (birim). */
+    spawnGap: 320,
+    avoidRange: 240,
+    avoidWeight: 1.6,
+    /** Hedefe bu kadar yaklaşan araç yoldan kalkar (birim). */
+    arrive: 90,
+    /** Bu kadar ms yerinden oynamayan araç sıkışmış sayılır ve yeniden başlatılır. */
+    stuckMs: 5000,
+    /** Atılım/sıçrama gösterisi: iki gösteri arası ve gösteri süresi (ms, [en az, en çok]). */
+    boostGapMs: [4500, 11_000],
+    boostMs: [900, 1500],
+    /** Ayrılan aracın yerine yenisi gelmeden önceki bekleme (ms, [en az, en çok]). */
+    respawnMs: [400, 2400],
   },
+  /** Kamera: sabit yakınlaştırma, sahnenin menüdeki boş alanda oturduğu yükseklik (0 üst, 1 alt) ve oturma süresi. */
+  camera: { zoom: 1.05, focusHeight: 0.5, followMs: 700 },
   /** Menü okunurluğu için sahnenin üstüne konan karartma. */
   dim: { alpha: 0.3 },
   /** Sahne hazır olunca arka planın görünüşe girme süresi (ms). */

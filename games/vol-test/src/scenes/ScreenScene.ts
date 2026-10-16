@@ -41,7 +41,7 @@ function sameArea(a: FreeArea | undefined, b: FreeArea): boolean {
 
 /**
  * Menü, garaj, ayarlar ve geliştirici ekranlarının iskeleti: sağ şerit paneli ve araç vitrini. Canlı
- * arka plan açıksa (`backdrop` ayarı) altlarındaki `Backdrop` sahnesi savaşı oynatır; sahne saydam
+ * arka plan açıksa (`backdrop` ayarı) altlarındaki `Backdrop` sahnesi yürüyüş alayını oynatır; sahne saydam
  * kalır ve vitrin zemini yalnız bir gölgeye iner. Vitrin kamerayı panelin bıraktığı alana kurar; geri
  * tuşu (Android geri, Escape köprüsü) `onBack`e gider; ekran değişimi şeridin kenara kaymasıyla yapılır.
  * Alt sınıf yalnız panelini kurar ve geçişlerini söyler.
@@ -141,7 +141,7 @@ export abstract class ScreenScene extends Phaser.Scene {
 
   override update(_time: number, delta: number): void {
     this.showroom.update(delta, this.screen?.element.getBoundingClientRect());
-    // Arka plan sahnesi savaşın odağını bu alana göre kurar; yalnız değişince yazılır.
+    // Arka plan sahnesi alayın odağını bu alana göre kurar; yalnız değişince yazılır.
     const area = this.showroom.freeArea;
     if (area && !sameArea(this.published, area)) {
       this.published = area;

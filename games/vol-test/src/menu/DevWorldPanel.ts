@@ -93,7 +93,7 @@ export class DevWorldPanel {
         step: 1,
         value: value.backdropDensity,
         formatValue: (count) => String(Math.round(count)),
-        // Bırakınca uygulanır: her adımda savaş baştan kurulmasın (CORE `Slider.onCommit`).
+        // Bırakınca uygulanır: her adımda alay baştan kurulmasın (CORE `Slider.onCommit`).
         onCommit: (backdropDensity) => void settings.update({ backdropDensity }),
       }),
     );

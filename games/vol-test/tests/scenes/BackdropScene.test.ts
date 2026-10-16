@@ -98,21 +98,13 @@ afterEach(() => {
   active = undefined;
 });
 
-const preroll = (harness: Harness): void => {
-  const frames = Math.ceil(BACKDROP.prerollMs / BACKDROP.prerollPerFrameMs) + 1;
-  for (let frame = 0; frame < frames; frame++) harness.update();
-};
-
 describe('BackdropScene', { timeout: 30_000 }, () => {
-  it('kurulur kurulmaz görünmezdir; ileri sarım bitince savaş görünümleri kurulur ve belirir', () => {
+  it('kurulur kurulmaz görünmezdir ama alay hazırdır; sonra yavaşça belirir', () => {
     const harness = mount();
     expect(lastCall(harness.camera, 'setAlpha')).toEqual([0]);
-    const before = harness.created.length;
+    // Ön ısınma yoktur: araç görünümleri kurulurken (ilk güncellemeden önce) vardır.
+    expect(harness.created.some((object) => object.kind === 'image')).toBe(true);
     harness.update();
-    // İleri sarım süresince görünüm kurulmaz.
-    expect(harness.created.length).toBe(before);
-    preroll(harness);
-    expect(harness.created.length).toBeGreaterThan(before);
     harness.update(BACKDROP.fadeInMs / 4);
     const alpha = lastCall(harness.camera, 'setAlpha')![0] as number;
     expect(alpha).toBeGreaterThan(0);
@@ -132,7 +124,6 @@ describe('BackdropScene', { timeout: 30_000 }, () => {
 
   it('menü boş alanını okuyup odağı oraya kurar; alan yoksa tüm ekranı kullanır', () => {
     const harness = mount();
-    preroll(harness);
     harness.update();
     const full = lastCall(harness.camera, 'centerOn');
     expect(full).toBeDefined();
@@ -146,7 +137,6 @@ describe('BackdropScene', { timeout: 30_000 }, () => {
 
   it('ayar değişimi yalnız ilgili parçayı yeniler; yoğunluk değişince savaş baştan kurulur', () => {
     const harness = mount();
-    preroll(harness);
     harness.update();
     harness.push({ volume: 0.3 });
     expect(harness.restart).not.toHaveBeenCalled();
@@ -162,7 +152,6 @@ describe('BackdropScene', { timeout: 30_000 }, () => {
 
   it('mevsim ayarıyla açılır ve savaş sürerken kareler hatasız ilerler', () => {
     const harness = mount({ season: 'winter', weather: 'snow' });
-    preroll(harness);
     for (let frame = 0; frame < 120; frame++) harness.update();
     expect(harness.created.some((object) => object.kind === 'graphics')).toBe(true);
   });

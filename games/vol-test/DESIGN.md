@@ -26,7 +26,7 @@ taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
 | `src/view/`                            | Dünya ve tank sunumu, sınırlı efekt havuzları           |
 | `src/hud/`                             | CORE bileşenleriyle metin, harita ve paneller           |
 | `src/menu/`                            | Ana menü, garaj, ayarlar ve geliştirici ekranları       |
-| `src/sim/backdrop/`                    | Menü arka planı: savaş sarmalayıcısı ve sinema kamerası |
+| `src/sim/backdrop/`                    | Menü arka planı: yürüyüş alayı                          |
 | `src/scenes/world/`                    | Girdi, kamera, çevre ve olayların bağlanması            |
 | `src/config/`                          | Bütün oynanış ve sunum ölçülerinin tek kaynağı          |
 
@@ -775,7 +775,7 @@ Açılış sırası Boot → Backdrop + Menu → (Garage | Settings | Dev | Worl
 
 | Ekran      | İçerik                                                                                    |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| `Backdrop` | Menülerin altında oynayan canlı savaş (insansız, sessiz); dünya açılınca durur            |
+| `Backdrop` | Menülerin altında yürüyen araç alayı (savaşsız, sessiz); dünya açılınca durur             |
 | `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı |
 | `Garage`   | Araç kartları (ad, görev, üç ölçü), ad, cephe; savaşa katıl, alıştırmaya çık, geri        |
 | `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi, menü arka planı |
@@ -807,20 +807,26 @@ Alçak yatayda şerit 540 px'tir ve kartlar iki sütundur. İkisi de `tests/e2e/
 ile ölçü çubukları), ölçüler `Bar`, form `SettingsForm`/`SettingsRow`, denetimler `Input`,
 `SegmentedControl`, `Select`, `Slider`, `Checkbox`; `menu.css` yalnız yerleşim verir.
 
-**Arka plan.** `BackdropScene` menü sahnelerinin altında (sahne sırası: oluşturma sırası) gerçek `War`
-simülasyonunu botlarla oynatır; menü kamerası saydamdır, bu yüzden savaş görünür. Savaş `BackdropBattle`
-sarmalayıcısındadır (oyuncu yok, bölge ve zafer olayları süzülür, `fastForward` açılışta `prerollMs` kadar
-ilerletir: kamera saydamlığı 0 iken ve kare başına `prerollPerFrameMs` ile bölünerek, böylece takılma
-olmaz ve ilk görünen kare çatışmadadır). Kamera `CameraDirector` sinema yönetmenidir: en yakın düşman çiftini
-çerçeveler, çift bitince ya da açılınca karartıp yeni çifte keser. Menü şeridi savaşı örtmesin diye
-menü sahnesi boş alanı oyun kayıt defterine yazar (`MENU_AREA_KEY`, `freeArea`); arka plan odağı ve araç
-vitrini aynı alana oturur. Arka plan sessizdir, hasar ve titreşim geri bildirimi yoktur, üstüne `dim` karartması
-konur. Ayar `backdrop` (varsayılan: kalite `low` değilse açık) ve `backdropDensity` (cephe başına 2–8 bot);
-yoğunluk değişince savaş baştan kurulur, mevsim/hava/kalite yalnız ilgili parçayı yeniler. Dünya sahnesi açılırken
-önce arka plan durdurulur (doku anahtarları çakışmasın). Arkada ayrıca oyunun gerçek araç görünümleri
-(`TankView`, `SpiderView`) saydam zeminde dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü
-ayaklar dünya uzayında basılır ve dönen gövde onları dolaşık bir poza sürükler, taretleri salınır); kamera
-şeridin bıraktığı boş alana kurulur ve sığmazsa yakınlaştırma küçülür (`src/config/menu.ts`).
+**Arka plan.** `BackdropScene` menü sahnelerinin altında (sahne sırası: oluşturma sırası) bir yürüyüş alayı
+oynatır; menü kamerası saydamdır, bu yüzden alay görünür. Gerçek savaş yoktur: karmaşa yerine araçlar
+sergilenir. `BackdropParade` aynı `Simulation`ı sürer (hareket, çarpışma ve görünüm oyundakiyle aynı), ama
+komutlar bot değil düz yol takibidir: her şerit dünya merkezindeki sahnenin `parade.radius` uzağındaki bir
+noktadan (şeritler çevrenin ayrı dilimlerinden) girer, karşı yöne yakın bir noktaya `parade.skew` kadar
+sapmış yürür (çaprazdan ve bir yandan geçerler), ekran dışına varınca söner ve sıradaki model olarak yeniden
+başlar. Model sırası tohumdan karışır ve her model bir kez gelir, yani menü bütün araçları sergiler. Araçlar
+yakındakilerden yana kayarak yol verir, aralıklı olarak atılım/sıçrama gösterir (`boostGapMs`), hasar almaz
+(doğuşta sonsuz koruma) ve atış yapmaz; yerinde 5 sn kalan araç sıkışmış sayılıp yeniden başlatılır. İlk kare
+dolu açılır (her araç yolunun rastgele bir yerinden başlar), ön ısınma ve ileri sarım yoktur. Dünya göl ve
+kayasız düz karadır: yürüyüş hiçbir yerde takılmaz. Kamera sabittir (`BACKDROP.camera.zoom`); sahnenin
+merkezi, menü şeridi alayı örtmesin diye menü sahnesinin oyun kayıt defterine yazdığı boş alana
+(`MENU_AREA_KEY`, `freeArea`) oturur ve araç vitrini aynı alanı paylaşır. Arka plan sessizdir, hasar ve
+titreşim geri bildirimi yoktur, üstüne `dim` karartması konur. Ayar `backdrop` (varsayılan: kalite `low`
+değilse açık) ve `backdropDensity` (aynı anda 2–10 araç, varsayılan 6); yoğunluk değişince alay baştan kurulur,
+mevsim/hava/kalite yalnız ilgili parçayı yeniler. Dünya sahnesi açılırken önce arka plan durdurulur (doku
+anahtarları çakışmasın). Arkada ayrıca oyunun gerçek araç görünümleri (`TankView`, `SpiderView`) saydam zeminde
+dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde
+onları dolaşık bir poza sürükler, taretleri salınır); kamera şeridin bıraktığı boş alana kurulur ve sığmazsa
+yakınlaştırma küçülür (`src/config/menu.ts`).
 Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış onayını açar ya da kapatır.
 
 Garajdaki seçim (araç, cephe, ad) ve ayarlardaki dil `GameSettings`e yazılır ve oturumlar arasında

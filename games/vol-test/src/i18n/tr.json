@@ -112,7 +112,7 @@
       "snow": "Kar"
     },
     "vehicle": "Araç",
-    "density": "Savaş yoğunluğu (cephe başına bot)"
+    "density": "Arka plan alayı (aynı anda araç)"
   },
   "settings": {
     "title": "Ayarlar",

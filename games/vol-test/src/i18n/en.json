@@ -112,7 +112,7 @@
       "snow": "Snow"
     },
     "vehicle": "Vehicle",
-    "density": "Battle density (bots per side)"
+    "density": "Backdrop parade (vehicles at once)"
   },
   "settings": {
     "title": "Settings",
