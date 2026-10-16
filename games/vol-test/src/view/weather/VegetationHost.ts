@@ -4,6 +4,7 @@ import type {
   VegetationHost,
   VegetationImage,
   VegetationLayerKind,
+  VegetationPaint,
   VegetationPenKind,
 } from './VegetationLayer';
 
@@ -20,10 +21,11 @@ class BakedImage implements VegetationImage {
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly depth: number,
+    private readonly scratch: () => Phaser.GameObjects.RenderTexture,
   ) {}
 
   bake(
-    pens: readonly Phaser.GameObjects.Graphics[],
+    layers: readonly VegetationPaint[],
     originX: number,
     originY: number,
     size: number,
@@ -44,9 +46,21 @@ class BakedImage implements VegetationImage {
     texture.setPosition(originX, originY).setDisplaySize(size, size);
     texture.clear();
     // Kalemler dünya birimiyle çizilmiştir: döşeme köşesi doku orijinine kayar, birim doku pikseline ölçeklenir.
-    for (const pen of pens) {
+    // Saydam katman önce opak çizilen bir ara dokuya basılır, sonra bütün olarak saydamlıkla geçirilir.
+    let staging: Phaser.GameObjects.RenderTexture | null = null;
+    for (const { pen, alpha } of layers) {
       pen.setScale(texel);
-      texture.draw(pen, -originX * texel, -originY * texel);
+      if (alpha >= 1) {
+        texture.draw(pen, -originX * texel, -originY * texel);
+        continue;
+      }
+      staging ??= this.scratch();
+      if (staging.width !== pixels) staging.resize(pixels, pixels);
+      staging.clear();
+      staging.draw(pen, -originX * texel, -originY * texel);
+      staging.render();
+      staging.setAlpha(alpha);
+      texture.draw(staging, 0, 0);
     }
     texture.render();
   }
@@ -71,6 +85,7 @@ class BakedImage implements VegetationImage {
 export class PhaserVegetationHost implements VegetationHost, Disposable {
   private readonly pens: Record<VegetationPenKind, Phaser.GameObjects.Graphics>;
   private readonly images = new Set<BakedImage>();
+  private staging: Phaser.GameObjects.RenderTexture | null = null;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -87,12 +102,24 @@ export class PhaserVegetationHost implements VegetationHost, Disposable {
   }
 
   create(kind: VegetationLayerKind): VegetationImage {
-    const image = new BakedImage(this.scene, kind === 'body' ? this.depth : this.tipDepth);
+    const image = new BakedImage(this.scene, kind === 'body' ? this.depth : this.tipDepth, () =>
+      this.stagingTexture(),
+    );
     this.images.add(image);
     return image;
   }
 
+  /** Saydam katmanların opak çizildiği ara doku: sahneye eklenmez, döşemeler arasında paylaşılır. */
+  private stagingTexture(): Phaser.GameObjects.RenderTexture {
+    this.staging ??= this.scene.make
+      .renderTexture({ x: 0, y: 0, width: 2, height: 2 }, false)
+      .setOrigin(0, 0);
+    return this.staging;
+  }
+
   dispose(): void {
+    this.staging?.destroy();
+    this.staging = null;
     for (const image of this.images) image.destroy();
     this.images.clear();
     for (const pen of Object.values(this.pens)) pen.destroy();

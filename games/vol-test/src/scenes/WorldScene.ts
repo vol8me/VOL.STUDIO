@@ -462,6 +462,7 @@ export class WorldScene extends Phaser.Scene {
     this.camera.update(view.x, view.y, delta, frozen);
     const rect = this.camera.model.visibleRect();
     this.environment.render(this.sim.vehicles, alpha, rect, presentMs);
+    this.arena.fitGrid(rect, this.environment.grassCovers, time);
     measurements?.mark('environmentCamera');
     const front = this.driver.front?.();
     if (front) this.zones.update(front, rect, time);

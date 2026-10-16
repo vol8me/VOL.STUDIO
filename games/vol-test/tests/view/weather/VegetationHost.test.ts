@@ -25,7 +25,10 @@ function host() {
   };
 }
 
-const pen = () => fakeObject('graphics') as unknown as Phaser.GameObjects.Graphics;
+const pen = (alpha = 1) => ({
+  pen: fakeObject('graphics') as unknown as Phaser.GameObjects.Graphics,
+  alpha,
+});
 
 describe('PhaserVegetationHost', () => {
   it('geçici kalemleri sahneye eklemeden kurar ve katman başına ayrı kalem verir', () => {
@@ -40,7 +43,13 @@ describe('PhaserVegetationHost', () => {
     const brush = fakeObject('graphics');
     vegetation
       .create('body')
-      .bake([brush as unknown as Phaser.GameObjects.Graphics], 784, 7184, 432, 1.5);
+      .bake(
+        [{ pen: brush as unknown as Phaser.GameObjects.Graphics, alpha: 1 }],
+        784,
+        7184,
+        432,
+        1.5,
+      );
     const [texture] = textures();
     // 432 birim × 1,5 = 648 piksel; konum dünyadaki köşe, görünür boy 432 birimdir.
     expect(texture.args).toEqual([784, 7184, 648, 648]);
@@ -60,6 +69,36 @@ describe('PhaserVegetationHost', () => {
       vegetation.create(kind).bake([pen()], 0, 0, 100, 1);
     const depths = textures().map((object) => lastCall(object, 'setDepth')![0] as number);
     expect(depths).toEqual([-92, -88.5]);
+  });
+
+  it('saydam katmanı önce opak ara dokuya basar, sonra bütün olarak saydamlıkla geçirir', () => {
+    const { host: vegetation, textures } = host();
+    const brush = fakeObject('graphics');
+    const image = vegetation.create('body');
+    image.bake(
+      [{ pen: brush as unknown as Phaser.GameObjects.Graphics, alpha: 0.4 }],
+      0,
+      0,
+      100,
+      2,
+    );
+    const [texture, staging] = textures();
+    // Kalem ara dokuya basılır; ana dokuya kalem değil ara doku, katman saydamlığıyla basılır.
+    expect(lastCall(staging, 'draw')![0]).toBe(brush);
+    expect(lastCall(staging, 'setAlpha')).toEqual([0.4]);
+    expect(lastCall(texture, 'draw')![0]).toBe(staging);
+    // Ara doku sonraki pişirmede yeniden kullanılır ve dispose onu da bırakır.
+    image.bake(
+      [{ pen: brush as unknown as Phaser.GameObjects.Graphics, alpha: 0.2 }],
+      0,
+      0,
+      100,
+      2,
+    );
+    expect(textures()).toHaveLength(2);
+    expect(lastCall(staging, 'setAlpha')).toEqual([0.2]);
+    vegetation.dispose();
+    expect(lastCall(staging, 'destroy')).toBeDefined();
   });
 
   it('doku boyu kademe değişince dokuyu yeniden kurar, aynı boyda aynı dokuyu yeniden kullanır', () => {

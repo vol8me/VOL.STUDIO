@@ -80,6 +80,10 @@ export class EnvironmentController {
     return this.model.frame;
   }
 
+  /** Çayır örtüsü bu noktada zemin ızgarasını kapatır mı (`ArenaView.fitGrid`). */
+  readonly grassCovers = (x: number, y: number): boolean =>
+    this.model.sample(x, y).growth >= WEATHER_VIEW.vegetation.threshold;
+
   applyProfile(profile: EffectProfile): void {
     this.quality = profile.particles;
     this.view.applyProfile(profile);

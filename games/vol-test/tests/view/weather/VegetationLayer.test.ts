@@ -9,7 +9,7 @@ import {
   type VegetationLayerKind,
   type VegetationPenKind,
 } from '@/view/weather/VegetationLayer';
-import { fakeObject, lastCall, type FakeObject } from '../../support/fakeScene';
+import { fakeObject, type FakeObject } from '../../support/fakeScene';
 import { frame, sample, weather } from '../../support/weatherFixtures';
 
 const rect = { x: 0, y: 0, width: 256, height: 256 };
@@ -23,6 +23,7 @@ interface FakeImage {
   visible: boolean;
   destroyed: boolean;
   texel: number;
+  alphas: number[];
   origin: { x: number; y: number };
 }
 
@@ -45,12 +46,14 @@ function fakeHost() {
         visible: true,
         destroyed: false,
         texel: 0,
+        alphas: [],
         origin: { x: 0, y: 0 },
       };
       images.push(image);
       return {
-        bake: (_pens, x, y, _size, texel) => {
+        bake: (layers, x, y, _size, texel) => {
           image.bakes++;
+          image.alphas = layers.map((layer) => layer.alpha);
           image.texel = texel;
           image.origin = { x, y };
         },
@@ -132,9 +135,8 @@ describe('VegetationLayer', () => {
     expect(count(lush.pens.clumps, 'fillEllipse')).toBeGreaterThan(0);
     // Taban, çekirdek ve kümeler tek gövde dokusudur; kar yokken uç dokusu yoktur.
     expect(new Set(lush.images.map((image) => image.kind))).toEqual(new Set(['body']));
-    // Taban ve çekirdek kalemleri kendi saydamlığını taşır (tek dokuya basılırken katman saydamlığı yerine).
-    expect(lastCall(lush.pens.region, 'setAlpha')).toEqual([VEGETATION.base.alpha]);
-    expect(lastCall(lush.pens.core, 'setAlpha')).toEqual([VEGETATION.core.alpha]);
+    // Taban ve çekirdek tek dokuya kendi saydamlığıyla, kümeler opak basılır.
+    expect(lush.images[0].alphas).toEqual([VEGETATION.base.alpha, VEGETATION.core.alpha, 1]);
   });
 
   it('döşeme başına küme tavanını aşmaz ve kalite düşünce seyrelir', () => {

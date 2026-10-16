@@ -478,12 +478,14 @@ export class Simulation {
   previewAim(vehicle: Vehicle, stepMs: number, pose?: ChassisPose) {
     this.applyAir();
     const tank = vehicle.chassis;
+    // Çizgi sıradaki atışın namlusundan çıkar: iki silahlı araçta yuvalar sırayla ateşlenir ve çizgi onları izler.
+    const mount = vehicle.armament.salvo[vehicle.salvo]?.[0] ?? 0;
     const launch = launchFrom(
       pose ?? tank.readPose(this.previewPose),
       tank.vx,
       tank.vy,
       vehicle.armament,
-      0,
+      mount,
       this.previewLaunch,
     );
     return this.projectiles.preview(

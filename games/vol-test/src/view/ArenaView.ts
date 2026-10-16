@@ -12,6 +12,20 @@ const BORDER_WIDTH = 4;
 const FLASH = FX.wallFlash;
 /** Sekme dönüşünde tek karede yankının tamamı sönmesin diye süre tavanı. */
 const MAX_FLASH_DELTA_MS = 50;
+/** Örtü altındaki ızgara kesimlerinin örnekleme adımı (dünya birimi) ve görünür alana eklenen pay. */
+const COVER_STEP = 32;
+const COVER_MARGIN = 256;
+/** Izgara bu kadar kaymadan ya da bu süre dolmadan yeniden kurulmaz. */
+const COVER_REFIT_MOVE = 160;
+const COVER_REFIT_MS = 1500;
+
+/** Dünya birimindeki dikdörtgen. */
+export interface ViewRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
 
 interface Flash {
   x: number;
@@ -33,6 +47,7 @@ export class ArenaView {
   private readonly border: Phaser.GameObjects.Graphics;
   private readonly flashLayer: Phaser.GameObjects.Graphics;
   private flash: Flash | null = null;
+  private fitted: { x: number; y: number; width: number; height: number; at: number } | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -51,6 +66,36 @@ export class ArenaView {
 
   setGridVisible(visible: boolean): void {
     this.grid.setVisible(visible);
+  }
+
+  /**
+   * Izgarayı çayır örtüsünün altında gizler: görünen alandaki çizgiler `covered` doğru olan kesimlerden
+   * kesilir. Dünya boyunca çizilen ilk ızgara yerine yalnız görünen (payla genişletilmiş) çizgiler kurulur
+   * ve kamera `COVER_REFIT_MOVE` kayınca ya da `COVER_REFIT_MS` geçince yenilenir; örtü dakikalar içinde
+   * değiştiği için bu sıklık yeter.
+   */
+  fitGrid(view: ViewRect, covered: (x: number, y: number) => boolean, nowMs: number): void {
+    if (!this.grid.visible) return;
+    const last = this.fitted;
+    if (
+      last &&
+      nowMs - last.at < COVER_REFIT_MS &&
+      Math.abs(view.x - last.x) < COVER_REFIT_MOVE &&
+      Math.abs(view.y - last.y) < COVER_REFIT_MOVE &&
+      view.width === last.width &&
+      view.height === last.height
+    )
+      return;
+    this.fitted = { x: view.x, y: view.y, width: view.width, height: view.height, at: nowMs };
+    this.grid.clear();
+    const { width, height } = this.world;
+    this.drawGrid(
+      Math.max(0, view.x - COVER_MARGIN),
+      Math.min(width, view.x + view.width + COVER_MARGIN),
+      Math.max(0, view.y - COVER_MARGIN),
+      Math.min(height, view.y + view.height + COVER_MARGIN),
+      covered,
+    );
   }
 
   /** Duvar çarpmasını görünür kılar; süren yankı yenisiyle değişir. */
@@ -110,26 +155,74 @@ export class ArenaView {
   }
 
   private draw(): void {
-    const { width, height, gridStep } = this.world;
+    const { width, height } = this.world;
     this.ground.fillStyle(PALETTE.sand, 1);
     this.ground.fillRect(0, 0, width, height);
+    this.drawGrid(0, width, 0, height);
+    this.border.lineStyle(BORDER_WIDTH, PALETTE.border, 1);
+    this.border.strokeRect(0, 0, width, height);
+  }
+
+  /** Verilen dikdörtgendeki ızgara çizgileri; `covered` verilirse örtülü kesimler atlanır. */
+  private drawGrid(
+    left: number,
+    right: number,
+    top: number,
+    bottom: number,
+    covered?: (x: number, y: number) => boolean,
+  ): void {
+    const { width, height, gridStep } = this.world;
     for (const major of [false, true]) {
       const style = major ? PALETTE.gridMajor : PALETTE.gridMinor;
       this.grid.lineStyle(GRID_WIDTH * (major ? 1.5 : 1), style.color, style.alpha);
       this.grid.beginPath();
       for (let index = 1; index * gridStep < width; index++) {
-        if ((index % WORLD.gridMajorEvery === 0) !== major) continue;
-        this.grid.moveTo(index * gridStep, 0);
-        this.grid.lineTo(index * gridStep, height);
+        const x = index * gridStep;
+        if ((index % WORLD.gridMajorEvery === 0) !== major || x < left || x > right) continue;
+        this.stroke(
+          top,
+          bottom,
+          (along) => covered?.(x, along) ?? false,
+          (a, b) => {
+            this.grid.moveTo(x, a);
+            this.grid.lineTo(x, b);
+          },
+        );
       }
       for (let index = 1; index * gridStep < height; index++) {
-        if ((index % WORLD.gridMajorEvery === 0) !== major) continue;
-        this.grid.moveTo(0, index * gridStep);
-        this.grid.lineTo(width, index * gridStep);
+        const y = index * gridStep;
+        if ((index % WORLD.gridMajorEvery === 0) !== major || y < top || y > bottom) continue;
+        this.stroke(
+          left,
+          right,
+          (along) => covered?.(along, y) ?? false,
+          (a, b) => {
+            this.grid.moveTo(a, y);
+            this.grid.lineTo(b, y);
+          },
+        );
       }
       this.grid.strokePath();
     }
-    this.border.lineStyle(BORDER_WIDTH, PALETTE.border, 1);
-    this.border.strokeRect(0, 0, width, height);
+  }
+
+  /** Bir çizginin `from`–`to` aralığını örtülü olmayan kesimlere bölerek `line`a verir. */
+  private stroke(
+    from: number,
+    to: number,
+    covered: (along: number) => boolean,
+    line: (a: number, b: number) => void,
+  ): void {
+    let start: number | null = null;
+    for (let along = from; along < to; along += COVER_STEP) {
+      const next = Math.min(to, along + COVER_STEP);
+      const hidden = covered((along + next) / 2);
+      if (!hidden && start === null) start = along;
+      if (hidden && start !== null) {
+        line(start, along);
+        start = null;
+      }
+    }
+    if (start !== null) line(start, to);
   }
 }

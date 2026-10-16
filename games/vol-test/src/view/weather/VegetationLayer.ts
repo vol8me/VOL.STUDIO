@@ -61,15 +61,22 @@ function toneOf(daylight: number): number {
   return (channel << 16) | (channel << 8) | channel;
 }
 
+/** Dokuya basılacak bir kalem ve katmanın saydamlığı. */
+export interface VegetationPaint {
+  readonly pen: Phaser.GameObjects.Graphics;
+  readonly alpha: number;
+}
+
 /** Bir döşeme görüntüsü: pişirilen doku ve gün ışığı boyası; sunum katmanına özgü (Phaser) ayrıntı burada. */
 export interface VegetationImage {
   /**
-   * Kalemler dünya birimiyle çizilmiştir ve verilen sırayla dokuya basılır; `origin` döşemenin sol üst
-   * köşesi, `size` kenarı (birim), `texel` birim başına doku pikseli. İçerik eskisinin yerine geçer; boş
-   * kalemler görüntüyü boşaltır.
+   * Katmanlar dünya birimiyle çizilmiş opak kalemlerdir ve verilen sırayla dokuya basılır; `alpha` o
+   * katmanın bütünüyle uygulanan saydamlığıdır (kalemin içindeki dolgu ile çizgi çakışması koyulaşmaz).
+   * `origin` döşemenin sol üst köşesi, `size` kenarı (birim), `texel` birim başına doku pikseli. İçerik
+   * eskisinin yerine geçer; boş kalemler görüntüyü boşaltır.
    */
   bake(
-    pens: readonly Phaser.GameObjects.Graphics[],
+    layers: readonly VegetationPaint[],
     originX: number,
     originY: number,
     size: number,
@@ -356,12 +363,6 @@ export class VegetationLayer {
       tips: this.host.pen('tips'),
     };
     for (const pen of Object.values(pens)) pen.clear();
-    // Taban ve çekirdek opak çizilir, saydamlığı kalem taşır: dokuya ayrı ayrı bu saydamlıkla basılırlar
-    // (alfa karışımı birleşimlidir: iki ayrı doku katmanıyla aynı görüntüyü verir).
-    pens.region.setAlpha(VEGETATION.base.alpha);
-    pens.core.setAlpha(VEGETATION.core.alpha);
-    pens.clumps.setAlpha(1);
-    pens.tips.setAlpha(1);
     tile.drawn = 0;
     this.collect(field, clip);
     const filled: Record<VegetationLayerKind, boolean> = { body: false, tips: false };
@@ -390,8 +391,17 @@ export class VegetationLayer {
       // Boş katman için doku üretilmez; önceden pişmiş içerik varsa boşaltılır.
       if (!filled[kind] && !tile.layers[kind]) continue;
       const image = (tile.layers[kind] ??= this.host.create(kind));
-      const layerPens = kind === 'body' ? [pens.region, pens.core, pens.clumps] : [pens.tips];
-      image.bake(layerPens, originX, originY, size, level);
+      // Taban ve çekirdek dokuya ayrı ayrı bu saydamlıkla basılır (alfa karışımı birleşimlidir: iki ayrı doku
+      // katmanıyla aynı görüntüyü verir, ama çokgen dolgusu ile mühür çizgisi çakıştığı yerde koyulaşmaz).
+      const paints: readonly VegetationPaint[] =
+        kind === 'body'
+          ? [
+              { pen: pens.region, alpha: VEGETATION.base.alpha },
+              { pen: pens.core, alpha: VEGETATION.core.alpha },
+              { pen: pens.clumps, alpha: 1 },
+            ]
+          : [{ pen: pens.tips, alpha: 1 }];
+      image.bake(paints, originX, originY, size, level);
       image.tone(this.tint);
     }
     tile.texel = level;
