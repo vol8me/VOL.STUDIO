@@ -23,6 +23,20 @@ function run(instance: BackdropParade, seconds: number, visit?: () => void): voi
   }
 }
 
+/** Koşul sağlanana dek (en çok `maxSeconds` sn) ilerletir: gereksiz adım koşmaz, kapsam koşusunda yük altında zaman aşmaz. */
+function runUntil(
+  instance: BackdropParade,
+  maxSeconds: number,
+  visit: () => void,
+  done: () => boolean,
+): void {
+  const frames = Math.round((maxSeconds * 1000) / GAME.simulationStepMs);
+  for (let frame = 0; frame < frames && !done(); frame++) {
+    instance.advance(GAME.simulationStepMs);
+    visit();
+  }
+}
+
 describe('BackdropParade', () => {
   it('ilk karede her şerit dolu, araçlar takımsız ve dokunulmazdır; savaş yoktur', () => {
     const instance = parade(5);
@@ -51,8 +65,14 @@ describe('BackdropParade', () => {
       instance.drainEvents(events);
     };
     record();
-    run(instance, 100, record);
-    // Beş şerit 100 sn'de birçok kez döner: yeni kimlikler doğar, eski araçlar kaldırılır.
+    // Beş şerit birkaç on saniyede tüm modelleri dolaşır (ölçülen ≈35 sn); üst sınır 100 sn.
+    runUntil(
+      instance,
+      100,
+      record,
+      () => seen.size === VEHICLE_IDS.length && ids.size > VEHICLE_IDS.length,
+    );
+    // Şeritler döner: yeni kimlikler doğar, eski araçlar kaldırılır.
     expect(ids.size).toBeGreaterThan(VEHICLE_IDS.length);
     expect(seen.size).toBe(VEHICLE_IDS.length);
     // Araçlar dünya içinde kalır, hiç ölmez ve hasar almaz.
