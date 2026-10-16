@@ -230,9 +230,15 @@ node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.ap
 - **Sayı alanı:** `type=number` alanında `selectionStart` null döner; "kelime seçildi" hükmü NOT-RUN yazılır, seçimin
   varlığını çubuğun Kes/Kopyala düğümleri kanıtlar.
 - **Sınır:** dokunma hissi, ses dinleme ve gerçek AT insan kabulüdür. Bölünmüş ekran ve yüzen klavye turda sürülmez.
-- **Son koşu (2026-10-15, `abd8f606` temiz ağacından debug APK):** Lenovo TB350FU (Android 14) 16 kontrolün hepsi PASS;
-  titreşim isteklerinin altısı çalındı, on kadarı cihaz ayarı yüzünden `ignored_for_settings` sayıldı. Samsung
-  (Android 16) kilitliydi ve kilit aşılmaz: NOT-RUN, bu cihazda bu yapı için tur koşulmadı.
+- **Son koşu (2026-10-17, temiz `07ae25a9`, debug aarch64 APK):** Lenovo TB350FU
+  (Android 14) **18/18 çevrimdışı + 16/16 native ağ kontrolü PASS**. Kurulu
+  APK hash'i yerel artifact ile üç kez eşleşti. Soğuk açılış 684 ms; katılımdan
+  1.126 ms sonraki kopuş otomatik toparlandı, aynı oda/oyuncu ve ilerleyen
+  simülasyon/iklim korundu. Dokunmatik sürüş, süresi dolan oturumun reddi ve
+  yeniden katılım geçti. Ayarlar geri yazıldı, uygulama verisi korundu.
+  Bu local HTTP/WS debug kabulüdür; release WSS/TLS, internet, fiziksel
+  haptik/ses ve Samsung'da bu kaynak için kabul NOT-RUN'dır. Ayrıntı
+  [sağlamlaştırma raporu §28](monorepo-audit.md) içindedir.
 
 ## Fiziksel kabulün kanıt sınırı
 
@@ -267,8 +273,10 @@ Cihazlarda ölçülen tek sayı HUD FPS göstergesinin tek anlık okumasıdır;
 ölçüm penceresi değildir. Uzun oturum bütçesi, kar/çoklu tank yükü ve
 titreşim hissi yeniden kabul edilmiş değildir.
 
-Sistem ekran yakalamasında siyah çıktı ve Mali EGL bellek hatası görüldü.
+Önceki sistem ekran yakalamasında siyah çıktı ve Mali EGL bellek hatası görüldü.
 Aynı oturumda GPU kare örneği tank piksellerini, açık WebGL bağlamını ve sıfır
 GL hatasını gösterdi. Çalışan simülasyon ya da FPS sayısı tek başına görünür
-panel kabulü değildir; yakalama sorunu çözülmeden güncel Lenovo görsel kabulü
-kapanmaz.
+panel kabulü değildir. 17 Ekim turunun doğrudan ekran görüntülerinde oyun,
+araç ve duraklatma paneli görünür; bazı karelerde üstte Android USB bildirimi
+vardır. Bu kanıt önceki yakalama hatasının kök nedeninin giderildiğini veya
+insan görsel beğenisini göstermez.

@@ -339,14 +339,36 @@ mod delivery_tests {
     }
 
     fn temp_dir() -> PathBuf {
-        std::env::temp_dir().join(format!(
-            "vol-diagnostics-delivery-{}-{}",
-            std::process::id(),
+        temp_dir_at(
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
-                .as_nanos()
+                .as_nanos(),
+        )
+    }
+
+    fn temp_dir_at(stamp: u128) -> PathBuf {
+        // Duvar saati paralel testlerde aynı değeri döndürebilir; sahipliği sayaç ayırır.
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        std::env::temp_dir().join(format!(
+            "vol-diagnostics-delivery-{}-{}-{}",
+            std::process::id(),
+            stamp,
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ))
+    }
+
+    #[test]
+    fn parallel_disk_tests_do_not_share_paths_when_clock_does_not_advance() {
+        let paths: std::collections::HashSet<_> = std::thread::scope(|scope| {
+            let tasks: Vec<_> = (0..32).map(|_| scope.spawn(|| temp_dir_at(1))).collect();
+            tasks.into_iter().map(|task| task.join().unwrap()).collect()
+        });
+        assert_eq!(
+            paths.len(),
+            32,
+            "Aynı saat damgası disk sahipliğini birleştiremez"
+        );
     }
 
     #[test]

@@ -1136,8 +1136,8 @@ ana ajan girdi, UI, AgentLab ve native görüntü kipi yaşamını ele aldı.
 Graphify sorguları kaynakla karşılaştırıldı. Kullanıcı bu oturum için bütün
 kapıları ve git işlemlerini açıkça yetkilendirdi.
 
-**Kaynakta kapatılan 113 ayrı kusur grubu:** CORE 26, girdi/UI/native 21,
-oyun 32, network 30 ve cihaz araçları 4. NaN/Infinity/negatif varyantları,
+**Kaynakta kapatılan 114 ayrı kusur grubu:** CORE 26, girdi/UI/native 21,
+oyun 32, network 30, cihaz araçları 4 ve native test izolasyonu 1. NaN/Infinity/negatif varyantları,
 araç başına parametreler ve mimari taşımalar ayrı bulgu sayılmadı. Network
 iklim doğrulaması N23, aynı invariantın simülasyon sınırındaki G22 kaydıyla
 birleştirildi; aşağıda ayrıca sayılmaz. Bu sayı test sayısı veya üretim
@@ -1427,6 +1427,17 @@ Regresyonlar `scripts/android/tests/webviewClient.test.mjs` ve
 `devtools/deck/tests/deckContract.test.mjs` altındadır. Cihazın bağlı olması,
 önceki kurulu uygulama veya SDK içinde derleme güncel paketin kabulü değildir.
 
+### Native test izolasyonu — Q01
+
+Taze `signoff`, diagnostics disk testlerinde `AlreadyExists` ile düştü.
+Geçici yol yalnız süreç kimliği ve duvar saatinden üretiliyordu; paralel
+testler aynı damgada aynı dosyaya sahip olabiliyordu. Atomik sıra numarası
+sahipliği ayırır. `tauri-v2/plugins/vol-diagnostics/src/lib.rs` içindeki
+`parallel_disk_tests_do_not_share_paths_when_clock_does_not_advance`
+regresyonu sabit saat altında 32 paralel çağrıda önce 1 ayrı yol üreterek
+RED, düzeltmeden sonra 32 ayrı yolla GREEN verdi. Crate fmt/clippy ve 12
+test PASS. Değişiklik yalnız `cfg(test)` içindedir; ürün runtime'ı değişmez.
+
 ### Birleşik doğrulama ve açık kabul
 
 İlk `fast` koşusu 3,3 dk'da durdu: yeni CDP yardımcısının iki checkJs
@@ -1463,14 +1474,64 @@ ve oyun/ağ sınır doğrulamalarının maliyetidir. App bütçeleri ölçülen
 taşınmadı. Graphify kaynak indeksi yenilendi; iki barrel sözdizimi uyarısı
 nedeniyle mimari hükümler kaynakla ayrıca doğrulandı.
 
-Nihai high/signoff ve güncel paketlerin Lenovo/Deck sonuçları henüz
-tamamlanmadı; bu aşamada NOT-RUN. Kapsam, atlama veya güvenlik eşiği ve
-piksel temeli gevşetilmedi. Genel timeout artırılmadı.
+İkinci `high`, ölçekleme probundaki sonsuz mermi ömrünü yeni fiziksel sınır
+doğrulaması reddettiği için durdu. Probun ömrü en uzun ölçüm penceresinden
+bir adım uzun sonlu değere taşındı. Sonraki koşu native görüntü denetleyicisinin
+başlangıç hata temizliğinde eksik işlev kapsamını buldu (%99,42 / %100).
+Başarısız abonelikten sonra F11 sahipliğinin bırakıldığını sınayan testle
+native paketin 197 testi ve %100 işlev kapsamı geçti.
+
+**`high` PASS: 10,4 dk.** CORE 260 dosyada 3.613 test; satır %96,79, dal
+%88,33. Ölçekleme, ses alt takımı ve tüm kapsam/şekil eşikleri geçti.
+Rust değişmeyen kaynak makbuzunu kullandı. Kaynak `07ae25a9` olarak temiz
+ağaçta commit edildi; pre-commit `quick` geçti. Ardından taze `signoff`
+7,1 dk'da Q01'den durdu; kapsam/E2E/tam ses/güvenlik aşamaları NOT-RUN.
+Q01 düzeltildi ve odaklı Rust kapısı geçti; taze tam tekrar henüz tamamlanmadı.
+Kapsam, atlama veya güvenlik eşiği ve piksel temeli gevşetilmedi; genel
+timeout artırılmadı.
+
+### Üretim sunucu build'i ve native cihaz kanıtı
+
+Temiz `07ae25a9` üretim `dist-server` build'i, rastgele loopback portlarında
+24 gerçek istemciyle 65 sn sürüldü. 24/24 katılım ve tam nüfusla 62,27 sn
+sunucu örneği doğrulandı. Mevcut LAN profili eksiksiz PASS: katılım p99
+57,67 ms, yama aralığı p99 69 ms, ping p99 8 ms, adım p95 4,715 ms / 5 ms,
+olay döngüsü p99 21,834 ms / 40 ms. Kopma, hata, başarısız katılım ve tahliye
+sıfır. Bozuk protokol/model/cephe HTTP 400, yasak köken 403; primary dahil
+dört oda korunurken beşinci oda 503 ile reddedildi. Retler oda yaratmadı.
+Bu kısa loopback kabulüdür; adım bütçesinin payı dardır, WAN/soak kapasitesi değildir.
+
+Aynı kaynakta normal Tauri Android beforeBuild ile üretilen `chrome105`
+frontend'in 454 dosyalık hash'i hem debug aarch64 APK hem steamrt4 release
+AppImage için aynı kaldı. Lenovo TB350FU/Android 14'te kurulu APK hash'i
+yerel artifact ile üç kez eşleşti: **18/18 çevrimdışı + 16/16 ağ kontrolü PASS**.
+Soğuk açılış 684 ms; katılımdan 1.126 ms sonra kopuş ve otomatik dönüşte aynı
+oda/oyuncu nesnesi, ilerleyen simülasyon/iklim ve aynı iklim tohumu korundu.
+Dokunmatik sürüş, 17 sn kesinti sonrası expired-session reddi, erişim geri
+gelince tekrar katılım ve menüye dönüş geçti. Bu HTTP/WS debug tünel kabulüdür;
+release WSS veya fiziksel haptik/ses beğenisi değildir. Ayarlar geri döndü,
+veri korundu; geçici süreçler ve adb yönlendirmeleri kapandı.
+
+Steamrt4 SDK `4.0.20260805.254769` release/AppImage paketlemesi PASS: 280 ELF
+GLIBC ≤ 2.41, yasak sürücü kütüphanesi sıfır, 14 GStreamer eklentisi ve
+OGG/Vorbis çözme başarılı. Deck hazırlıkta GameMode'da erişilebildi, fakat
+güncel paket öncesinde ağ adı ve bilinen SSH adresi erişilemez oldu. Tek
+doğrulanmış MAC'e uyandırma paketi de erişim sağlamadı. **Güncel Deck deploy,
+paket hash'i, GameMode/ağ ve SLR4 runtime NOT-RUN**; fiziksel erişim bekleniyor.
+SDK derlemesi cihazda çalıştırma kabulü sayılmadı.
+
+Yerel makine kanıtları VOL.TEST paketinin git dışı records alanındadır:
+`hardening-fast.json`, `hardening-high.json`, `hardening-signoff.json`,
+24 istemci koşusunun `acceptance.json` kaydı, `native-build-manifest.json`,
+`android-device-tour.json` ve `android-network.json`. Kimlik/adresler
+halka açık rapora alınmaz. Native artifactler Q01'in yalnız test değişikliğinden önceki
+`07ae25a9` runtime'ına aittir.
 
 Üretim hesap kimliği/auth sağlayıcısı, internet WSS/sertifika dağıtımı,
 gerçek WAN ve 1/24 saat soak kabulü bu kaynak testlerinden türetilemez.
 Protokol katılım doğrulaması hesap kimlik doğrulaması değildir. A* özel
 maliyet fonksiyonunda doğru alt sınır bilinmediği için sezgisel sıfırlanır;
-daha fazla düğüm ziyaret edebilir, performans hükmü scaling ölçümüne bağlıdır.
+daha fazla düğüm ziyaret edebilir. Mevcut scaling kapısı uzamsal dizin ve
+mermileri ölçer; özel maliyetli A* için cihaz performans kabulü yapılmadı.
 İnsan beğenisi, fiziksel kol/haptik hissi ve yapılmamış platform kabulleri
 F07–F09/F13 sahiplerinde açık kalır.

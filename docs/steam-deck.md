@@ -40,6 +40,16 @@ kapısı çıktıdaki GLIBC gereksiniminin hedef tabanı aşmadığını doğrul
 Host'ta üretilmiş daha yeni glibc bağımlı paket aynı hedefte kabul edilmez.
 Paketleme ayrıntıları [Linux rehberindedir](linux.md).
 
+**Güncel VOL.TEST paket kanıtı (2026-10-17):** temiz `07ae25a9` kaynağındaki
+aynı `chrome105` frontend'den steamrt4 SDK `4.0.20260805.254769` release
+AppImage üretildi. 280 ELF dosyası GLIBC ≤ 2.41 sınırında, yasak GPU sürücü
+kütüphanesi sıfır; 14 GStreamer eklentisi ve paketli OGG/Vorbis çözme PASS.
+Cihaz hazırlıkta `gamescope-wl` ile GameMode'da erişilebildi; güncel paket
+öncesinde mDNS ve bilinen SSH adresi erişilemez oldu. Tek hedefli uyandırma
+denemesi de erişim sağlamadı. Güncel deploy/paket hash'i, GameMode/ağ ve
+SLR4 runtime **NOT-RUN**; fiziksel erişim bekleniyor. Bu SDK/paket kanıtı
+çalışma zamanı kabulü değildir; [rapor §28](monorepo-audit.md) kapsamı ayırır.
+
 ### Host derlemesiyle vitrin (SLR4 kabı yokken)
 
 UI vitrini (`devtools/vol-showcase`) steamrt4 kabı olmadan Deck'te açılabilir;
