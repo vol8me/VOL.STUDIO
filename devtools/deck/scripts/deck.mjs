@@ -23,7 +23,7 @@
  *
  * Ortam: DECK_HOST, DECK_SSH_KEY (varsayılan ~/.config/steamos-devkit/devkit_rsa)
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../../../scripts/quality/command.mjs';
 import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';

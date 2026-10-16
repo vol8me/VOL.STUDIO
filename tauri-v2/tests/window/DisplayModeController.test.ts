@@ -73,6 +73,146 @@ afterEach(() => {
 });
 
 describe('DisplayModeController — native pencere', () => {
+  it('başlangıç aboneliği reddedilince F11 sahipliğini bırakır ve yeniden kurulmaz', async () => {
+    const native = makeNativeWindow();
+    const failure = new Error('tercih aboneliği kurulamadı');
+    const subscribe = vi.fn(() => {
+      throw failure;
+    });
+    const controller = create({
+      ...makePreference('windowed'),
+      subscribe,
+      windowAdapter: native.adapter,
+    });
+
+    await expect(controller.start()).rejects.toBe(failure);
+    const event = new KeyboardEvent('keydown', { key: 'F11', cancelable: true });
+    window.dispatchEvent(event);
+    await controller.toggle();
+    await controller.start();
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(subscribe).toHaveBeenCalledOnce();
+    expect(native.adapter.isFullscreen).not.toHaveBeenCalled();
+    expect(native.adapter.onFullscreenChange).not.toHaveBeenCalled();
+  });
+
+  it('eşzamanlı start çağrıları aynı kurulumun tamamlanmasını bekler', async () => {
+    const native = makeNativeWindow();
+    let release!: (active: boolean) => void;
+    native.adapter.isFullscreen.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    const controller = create({ ...makePreference('windowed'), windowAdapter: native.adapter });
+    const first = controller.start();
+    let ready = false;
+    const second = controller.start().then(() => {
+      ready = true;
+    });
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+    expect(ready).toBe(false);
+    release(false);
+    await Promise.all([first, second]);
+    expect(native.adapter.onFullscreenChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('eski native tam ekran yankısı daha yeni pencere tercihini geri alamaz', async () => {
+    const preference = makePreference('windowed');
+    const native = makeNativeWindow();
+    const controller = create({ ...preference, windowAdapter: native.adapter });
+    await controller.start();
+    let release!: () => void;
+    native.adapter.setFullscreen.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    await preference.setMode('fullscreen');
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+    await preference.setMode('windowed');
+    native.emitNative(true);
+    release();
+    await controller.flush();
+    expect(preference.getMode()).toBe('windowed');
+    expect(native.adapter.setFullscreen).toHaveBeenLastCalledWith(false);
+  });
+
+  it('native değişimin kalıcılık reddi flush ile görünür ve sonraki başarı toparlar', async () => {
+    const native = makeNativeWindow();
+    const preference = makePreference('windowed');
+    const failure = new Error('kayıt yok');
+    const onError = vi.fn();
+    const setMode = vi.fn((): Promise<void> => Promise.reject(failure));
+    const controller = create({ ...preference, setMode, windowAdapter: native.adapter, onError });
+    await controller.start();
+    native.emitNative(true);
+    await expect(controller.flush()).rejects.toBe(failure);
+    expect(onError).toHaveBeenCalledWith(failure);
+    setMode.mockResolvedValueOnce();
+    native.emitNative(true);
+    await expect(controller.flush()).resolves.toBeUndefined();
+  });
+
+  it('bir native abonelik kapanışı hata verse de diğer kaynakları bırakır', async () => {
+    const native = makeNativeWindow();
+    const preference = makePreference('windowed');
+    const controller = create({ ...preference, windowAdapter: native.adapter });
+    await controller.start();
+    native.stop.mockImplementation(() => {
+      throw new Error('kapanış');
+    });
+    const report = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      controller.destroy();
+    } catch {
+      /* Sonraki sahipler yine bırakılmalı. */
+    }
+    expect(preference.listenerCount()).toBe(0);
+    report.mockRestore();
+  });
+
+  it('native olayın kayıt hatasından sonra başarılı F11 yazımı flush sonucunu toparlar', async () => {
+    const native = makeNativeWindow();
+    const preference = makePreference('windowed');
+    const failure = new Error('kayıt yok');
+    const controller = create({ ...preference, windowAdapter: native.adapter, onError: vi.fn() });
+    await controller.start();
+    preference.setMode.mockRejectedValueOnce(failure);
+    native.emitNative(true);
+    await expect(controller.flush()).rejects.toBe(failure);
+
+    await controller.toggle();
+
+    await expect(controller.flush()).resolves.toBeUndefined();
+    expect(preference.getMode()).toBe('windowed');
+    expect(native.adapter.setFullscreen).toHaveBeenLastCalledWith(false);
+  });
+
+  it('eski native kaydın geç reddi daha yeni başarılı F11 yazımını bozamaz', async () => {
+    const native = makeNativeWindow();
+    const preference = makePreference('windowed');
+    let rejectPrevious!: (error: Error) => void;
+    const controller = create({ ...preference, windowAdapter: native.adapter, onError: vi.fn() });
+    await controller.start();
+    preference.setMode.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectPrevious = reject;
+        }),
+    );
+    native.emitNative(true);
+    const toggled = controller.toggle();
+    await vi.waitFor(() => expect(preference.setMode).toHaveBeenCalledTimes(2));
+    rejectPrevious(new Error('eski kayıt'));
+    await toggled;
+
+    await expect(controller.flush()).resolves.toBeUndefined();
+    expect(preference.getMode()).toBe('windowed');
+  });
   it('bekleyen F11 sorgusu bitmeden flush tamamlanmaz ve son tercih uygulanır', async () => {
     const preference = makePreference('windowed');
     const native = makeNativeWindow();

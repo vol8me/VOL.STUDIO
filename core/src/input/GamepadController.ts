@@ -79,6 +79,7 @@ export class GamepadController<TAction extends string> implements InputProvider<
   private readonly onConnectionChange?: (connected: boolean, padId: string) => void;
   /** Son görülen kol — `getDebugSnapshot` update'ler arasında da çalışsın diye. */
   private pad: PadLike | null = null;
+  private destroyed = false;
 
   constructor(options: GamepadControllerOptions<TAction> & { actions: readonly TAction[] }) {
     this.actionBindings = options.actionBindings ?? ({} as Record<TAction, GamepadActionBinding>);
@@ -97,12 +98,14 @@ export class GamepadController<TAction extends string> implements InputProvider<
 
   private selectPad(): PadLike | null {
     return selectGamepad(this.getGamepads(), this.pad, {
+      ...this.options,
       padIndex: this.padIndex,
       deadZone: this.options.moveDeadZone,
     });
   }
 
   update(_delta: number): void {
+    if (this.destroyed) return;
     const previous = this.pad;
     this.pad = this.selectPad();
     if ((previous === null) !== (this.pad === null)) {
@@ -112,8 +115,7 @@ export class GamepadController<TAction extends string> implements InputProvider<
 
   get isActive(): boolean {
     return (
-      this.pad !== null &&
-      isGamepadInputActive(this.pad, this.options.moveDeadZone ?? GAMEPAD_DEFAULT_DEAD_ZONE)
+      this.pad !== null && isGamepadInputActive(this.pad, GAMEPAD_DEFAULT_DEAD_ZONE, this.options)
     );
   }
 
@@ -130,7 +132,11 @@ export class GamepadController<TAction extends string> implements InputProvider<
       this.actionBindings,
       (index) => pad.buttons[index]?.pressed ?? false,
     );
-    return computeGamepadInput(pad, actions, this.options);
+    return computeGamepadInput(
+      pad,
+      { ...createIdleActions(this.actions), ...actions },
+      this.options,
+    );
   }
 
   getDebugSnapshot(): InputSnapshot {
@@ -155,6 +161,7 @@ export class GamepadController<TAction extends string> implements InputProvider<
   }
 
   destroy(): void {
+    this.destroyed = true;
     this.pad = null;
   }
 }

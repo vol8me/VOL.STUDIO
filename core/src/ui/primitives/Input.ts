@@ -34,6 +34,7 @@ export class Input {
   private committedValue: string;
   private readonly scope = new DisposableScope();
   private cancelTextEntry: (() => void) | undefined;
+  private destroyed = false;
 
   constructor(options: InputOptions = {}) {
     this.scope.add({ dispose: () => this.cancelTextEntry?.() });
@@ -83,8 +84,9 @@ export class Input {
       // IME bileşimi sürerken Enter adayı onaylar; alanı göndermez (keyCode 229: bileşim sırasındaki eski tarayıcı kodu).
       if (isComposingKey(event)) return;
       if (event.key === 'Enter') {
-        this.onEnterHandler?.(this.element.value);
+        if (event.repeat || this.element.disabled || this.element.readOnly) return;
         this.commitUserValue(event);
+        if (!this.destroyed) this.onEnterHandler?.(this.element.value);
       } else if (event.key === 'Escape' && this.element.value !== this.committedValue) {
         // Kaydedilmemiş taslak: ilk Escape taslağı geri alır; katmanı kapatan ikinci Escape'tir.
         event.preventDefault();
@@ -123,17 +125,20 @@ export class Input {
   setValue(value: string): void {
     this.cancelTextEntry?.();
     this.element.value = value;
-    this.committedValue = value;
+    this.committedValue = this.element.value;
   }
 
   /** Eski "değeri ayarla ve kullanıcıyı taklit et" ihtiyaçları için açık API. */
   setValueAndNotify(value: string): void {
     this.cancelTextEntry?.();
-    const changed = value !== this.element.value;
+    const previous = this.element.value;
     this.element.value = value;
-    if (changed) this.onInputHandler?.(value);
-    this.committedValue = value;
-    if (changed) this.onCommitHandler?.(value);
+    const actual = this.element.value;
+    this.committedValue = actual;
+    if (actual !== previous) {
+      this.onInputHandler?.(actual);
+      if (!this.destroyed) this.onCommitHandler?.(actual);
+    }
   }
 
   setDisabled(disabled: boolean): void {
@@ -156,6 +161,8 @@ export class Input {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     this.scope.dispose();
     this.element.remove();
   }

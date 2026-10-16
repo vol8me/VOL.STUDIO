@@ -166,6 +166,38 @@ describe('textEntry — kolla metin girişi', () => {
     );
   });
 
+  it('sıfır sınır ve sağlayıcının fazla metni alanın UTF-16 sınırını aşamaz', async () => {
+    const open = vi.fn(() => Promise.resolve({ value: 'a😀b', canceled: false }));
+    setTextEntryProvider({ open });
+    input.maxLength = 2;
+    focus();
+    await flush();
+    expect(applied).toEqual(['a']);
+    input.maxLength = 0;
+    focus();
+    await flush();
+    expect(open).toHaveBeenLastCalledWith(
+      expect.objectContaining({ maxLength: 0 }),
+      expect.any(AbortSignal),
+    );
+    expect(applied).toEqual(['a', '']);
+  });
+
+  it('bekleyen sağlayıcı sırasında yerel readOnly değişirse sonuç yazılmaz', async () => {
+    let finish!: (result: { value: string; canceled: boolean }) => void;
+    setTextEntryProvider({
+      open: () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    });
+    focus();
+    input.readOnly = true;
+    finish({ value: 'geç', canceled: false });
+    await flush();
+    expect(applied).toEqual([]);
+  });
+
   it('sağlayıcı reddederse değer değişmez ve işlenmemiş ret kalmaz', async () => {
     setTextEntryProvider({ open: () => Promise.reject(new Error('steam kapandı')) });
     focus();

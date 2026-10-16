@@ -89,6 +89,7 @@ export {
   Cooldown,
   RoundLoop,
   Clock,
+  EventQueue,
   clampSimulationStep,
   SimulationClock,
 } from './time';
@@ -119,6 +120,7 @@ export {
 } from './grid';
 export {
   RingBuffer,
+  RollingWindow,
   Deck,
   SlotContainer,
   MinHeap,
@@ -139,6 +141,7 @@ export {
   wrap,
 } from './math/interpolation';
 export { Spring1D, type SpringConfig } from './math/Spring';
+export { PresenceEnvelope } from './math/PresenceEnvelope';
 export { wrapAngle, angleDelta, rotateTowards, lerpAngle } from './math/angle';
 export { valueNoise } from './random/noise';
 export { FollowCamera, type FollowCameraConfig } from './camera';

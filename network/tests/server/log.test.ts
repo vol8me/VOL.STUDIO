@@ -31,6 +31,43 @@ function collect(): { sink: LogSink; lines: string[]; records: LogRecord[] } {
 }
 
 describe('Logger', () => {
+  it('halka JSONL ile aynı güvenli anlık görüntüyü tutar', () => {
+    const logger = Logger.create({ src: 'test' });
+    const data = { value: 1, big: 2n };
+    logger.info('snapshot', data);
+    data.value = 9;
+    expect(logger.since().records[0].data).toEqual({ value: 1, big: '2' });
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    logger.info('circular', circular);
+    expect(() => JSON.stringify(logger.since())).not.toThrow();
+    expect(logger.since().records[1].data).toEqual({ unserializable: true });
+  });
+
+  it('hatalı hedef kapanışı diğerlerini engellemez ve kapanış bir kez yapılır', () => {
+    let closed = 0;
+    const logger = Logger.create({
+      src: 'test',
+      sinks: [
+        {
+          write: () => undefined,
+          close: () => {
+            throw new Error('disk');
+          },
+        },
+        {
+          write: () => undefined,
+          close: () => {
+            closed++;
+          },
+        },
+      ],
+    });
+    expect(() => logger.close()).not.toThrow();
+    logger.child('child').close();
+    expect(closed).toBe(1);
+  });
+
   it('kaydı sabit alanlarla ve JSONL satırı olarak yazar', () => {
     const { sink, lines, records } = collect();
     const logger = Logger.create({ src: 'host', sinks: [sink], now: () => FIXED });

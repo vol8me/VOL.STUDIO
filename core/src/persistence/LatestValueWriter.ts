@@ -12,7 +12,7 @@ interface PendingWrite<T> {
 /** Seri yazım sürerken bekleyen ara değerleri en güncel değerle birleştirir. */
 export class LatestValueWriter<T> {
   private pending: PendingWrite<T> | null = null;
-  private running: Promise<void> | null = null;
+  private running = false;
   private failure: { readonly error: unknown } | null = null;
   private readonly idleWaiters = new Set<() => void>();
 
@@ -46,8 +46,10 @@ export class LatestValueWriter<T> {
 
   private startDrain(): void {
     if (this.running) return;
-    this.running = this.drain().finally(() => {
-      this.running = null;
+    // write eşzamanlı enqueue çağırabilir; kilit kullanıcı kodundan önce alınır.
+    this.running = true;
+    void this.drain().finally(() => {
+      this.running = false;
       if (this.pending) this.startDrain();
       else this.resolveIdle();
     });

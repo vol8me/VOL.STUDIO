@@ -1,6 +1,6 @@
-import { Room, type Client } from '@colyseus/core';
+import { Room, ServerError, type Client } from '@colyseus/core';
+import { RollingWindow } from '@volstudio/core/collections';
 import {
-  Ring,
   SlowConsumerWatch,
   authenticateJoin,
   clientTraffic,
@@ -9,6 +9,8 @@ import {
   rejectJoin,
   runRoomLoop,
   uniqueName,
+  InputPacer,
+  type PacerStats,
   type AuthenticatedJoin,
   type Logger,
 } from '@volstudio/network/server';
@@ -40,7 +42,6 @@ import { WeatherSystem } from '../src/sim/weather/WeatherSystem';
 import { fertilityOf } from '../src/sim/world/fertility';
 import { createBattleWorld } from '../src/sim/world/battleWorld';
 import type { ClimateStore } from './ClimateStore';
-import { InputPacer, type PacerStats } from './InputPacer';
 
 /** Oda oluşturma seçenekleri; `logger` süreç içi bir bağdır, ağdan gelmez. */
 export interface WorldRoomOptions {
@@ -102,6 +103,11 @@ function chooseFaction(options: unknown): number | undefined {
   return faction;
 }
 
+function authenticateWorld(options: unknown): WarJoin {
+  const join = authenticateJoin(options);
+  return { ...join, spec: chooseVehicle(options), faction: chooseFaction(options) };
+}
+
 /**
  * Kalıcı savaş dünyası: tek yetkili oda, sunucu açıldığı sürece sürer. İstemci yalnız niyet
  * (`TankInput`) yollar; poz, hasar, skor, bölge ve ateş sonucu sunucudadır. Savaşın kendisi saf
@@ -111,6 +117,16 @@ function chooseFaction(options: unknown): number | undefined {
  * bu onaya göre yeniden oynatır.
  */
 export class WorldRoom extends Room {
+  static override onAuth(_token: string, options: unknown): Promise<boolean> {
+    try {
+      authenticateWorld(options);
+      return Promise.resolve(true);
+    } catch (error) {
+      // Statik onAuth HTTP aşamasıdır: 4400 geçerli HTTP durum kodu değildir.
+      if (error instanceof ServerError) throw new ServerError(400, error.message);
+      throw error;
+    }
+  }
   override maxClients: number = NETWORK.maxPlayers;
   override maxMessagesPerSecond = NETWORK.maxMessagesPerSecond;
   override state = new WorldState();
@@ -144,7 +160,7 @@ export class WorldRoom extends Room {
   private readonly commands = new Map<EntityId, TankCommand>();
   private readonly scratch = createChassisState();
   private readonly events: WarStepEvent[] = [];
-  private readonly stepTimes = new Ring(300);
+  private readonly stepTimes = new RollingWindow(300);
   private pending: NetEvent[] = [];
   private log: Logger | undefined;
   private faults = 0;
@@ -199,8 +215,7 @@ export class WorldRoom extends Room {
   }
 
   override onAuth(_client: Client, options: unknown): WarJoin {
-    const join = authenticateJoin(options);
-    return { ...join, spec: chooseVehicle(options), faction: chooseFaction(options) };
+    return authenticateWorld(options);
   }
 
   override onJoin(client: Client, _options: unknown, auth: WarJoin): void {
@@ -223,9 +238,7 @@ export class WorldRoom extends Room {
     this.state.players.set(client.sessionId, state);
     this.pending.push({ kind: 'joined', vehicleId: vehicle.id, name });
     this.log?.log('info', 'player.join', {
-      session: client.sessionId,
       vehicle: vehicle.id,
-      name,
       faction: combatant.faction,
       humans: this.players.size,
     });
@@ -233,9 +246,14 @@ export class WorldRoom extends Room {
 
   /** Bağlantı koptu: araç kısa süre yerinde bekler (girdi boşta), süre dolarsa `onLeave` çalışır. */
   override onDrop(client: Client): void {
+    this.slow.forget(client.sessionId);
+    this.climateSentAt.delete(client.sessionId);
     const slot = this.players.get(client.sessionId);
-    if (slot) slot.state.connected = false;
-    this.log?.log('info', 'player.drop', { session: client.sessionId });
+    if (slot) {
+      slot.state.connected = false;
+      slot.pacer = this.newPacer();
+    }
+    this.log?.log('info', 'player.drop');
     // Sonucu çekirdek `onReconnect`/`onLeave` ile bildirir; oda kapanırken reddedilen söz
     // ("disposing") dinleyicisiz kalıp süreci düşürmesin diye yutulur.
     this.allowReconnection(client, NETWORK.reconnectSeconds).catch(() => undefined);
@@ -249,7 +267,7 @@ export class WorldRoom extends Room {
       // tüketim durumu ilk adımlarda yanlış girdiyi tutardı.
       slot.pacer = this.newPacer();
     }
-    this.log?.log('info', 'player.reconnect', { session: client.sessionId });
+    this.log?.log('info', 'player.reconnect');
   }
 
   override onLeave(client: Client, code?: number): void {
@@ -268,8 +286,6 @@ export class WorldRoom extends Room {
       name: slot.state.name,
     });
     this.log?.log('info', 'player.leave', {
-      session: client.sessionId,
-      name: slot.state.name,
       code,
       humans: this.players.size,
     });
@@ -334,6 +350,7 @@ export class WorldRoom extends Room {
 
   /** Bu adımda aracın süreceği komut; tüketim ve boşta adım kuralı `InputPacer`dadır. */
   private nextCommand(sessionId: string, slot: Slot): TankCommand {
+    if (!slot.state.connected) return IDLE;
     return slot.pacer.pull(
       this.inputs.get(sessionId),
       toCommand,
@@ -443,10 +460,9 @@ export class WorldRoom extends Room {
 
   /** Yazma kuyruğu sınırı aşıp tolerans süresini dolduran istemcileri atar. */
   private sweepSlowClients(): void {
-    for (const session of evictSlowConsumers(this.clients, this.slow, performance.now())) {
+    for (const _session of evictSlowConsumers(this.clients, this.slow, performance.now())) {
       this.evictions++;
       this.log?.log('warn', 'player.slow', {
-        session,
         limitBytes: NETWORK.slowConsumer.limitBytes,
       });
     }
@@ -486,9 +502,9 @@ export class WorldRoom extends Room {
   stepSummary(): { count: number; mean: number; p95: number; max: number } {
     return {
       count: this.stepTimes.count,
-      mean: this.stepTimes.mean,
+      mean: this.stepTimes.average,
       p95: this.stepTimes.percentile(0.95),
-      max: this.stepTimes.percentile(1),
+      max: this.stepTimes.max,
     };
   }
 }

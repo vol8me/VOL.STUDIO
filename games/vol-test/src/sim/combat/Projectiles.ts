@@ -1,4 +1,5 @@
 import type { WeaponFlight } from '@/config/tank';
+import { PROJECTILE_PREVIEW_MAX_STEPS } from '@/config/combat';
 import type { EntityId } from '../entities/Vehicle';
 import type { SimEvent } from '../events';
 import type { World } from '../world/World';
@@ -20,6 +21,14 @@ export interface Projectile {
   owner: EntityId;
   /** `Projectiles.addProfile` indeksi: merminin ömrü ve uçuş modeli. */
   profile: number;
+  /** Atış anındaki cephe ve güç: atıcı ayrılsa veya yeteneği kapansa da mermi bunları korur. */
+  sourceTeam: number | null;
+  damageScale: number;
+}
+
+export interface ProjectileOrigin {
+  readonly team: number | null;
+  readonly damageScale: number;
 }
 
 export type ProjectileFlight = WeaponFlight;
@@ -29,6 +38,22 @@ interface ProjectileProfile {
   readonly lifeMs: number;
   readonly flight: ProjectileFlight | undefined;
   readonly tag: number;
+}
+
+function validateProfile(lifeMs: number, flight: ProjectileFlight | undefined): void {
+  if (!(Number.isFinite(lifeMs) && lifeMs > 0))
+    throw new RangeError('Mermi ömrü pozitif ve sonlu olmalı');
+  if (
+    flight &&
+    (![flight.gravity, flight.drag, flight.maxRange, flight.muzzleHeight, flight.launchSpeed].every(
+      Number.isFinite,
+    ) ||
+      flight.gravity <= 0 ||
+      flight.drag < 0 ||
+      flight.maxRange <= 0 ||
+      flight.muzzleHeight < 0)
+  )
+    throw new RangeError('Mermi uçuş profili sonlu ve fiziksel sınırlar içinde olmalı');
 }
 
 export interface ProjectileAir {
@@ -63,6 +88,8 @@ function createProjectile(): Projectile {
     travelled: 0,
     owner: 0,
     profile: 0,
+    sourceTeam: null,
+    damageScale: 1,
   };
 }
 
@@ -79,7 +106,11 @@ export interface ProjectileTarget {
 /** İsabet anında çağrılır; hedefe itki uygulamak simülasyonun işidir. */
 export type ProjectileHit = (projectile: Projectile, target: ProjectileTarget) => void;
 /** Dost ateşi gibi hedefe göre çarpışma kurallarını çağıran belirler. */
-export type ProjectileCanHit = (owner: EntityId, target: ProjectileTarget) => boolean;
+export type ProjectileCanHit = (
+  owner: EntityId,
+  target: ProjectileTarget,
+  projectile: Projectile,
+) => boolean;
 
 /**
  * Sabit kapasiteli mermi kümesi. Canlı mermiler dizinin başında yoğun durur;
@@ -108,18 +139,19 @@ export class Projectiles {
     readonly capacity: number,
     lifeMs: number,
     flight?: ProjectileFlight,
+    tag = 0,
   ) {
     if (!(Number.isInteger(capacity) && capacity > 0)) {
       throw new RangeError(`Mermi kapasitesi pozitif tamsayı olmalı: ${capacity}`);
     }
+    validateProfile(lifeMs, flight);
     this.items = Array.from({ length: capacity }, createProjectile);
-    this.profiles = [{ lifeMs, flight, tag: 0 }];
+    this.profiles = [{ lifeMs, flight, tag }];
   }
 
   /** Yeni mermi profili ekler ve indeksini döndürür; mermi `spawn`da bu indeksle doğar. */
   addProfile(lifeMs: number, flight: ProjectileFlight | undefined, tag = 0): number {
-    if (!(Number.isFinite(lifeMs) && lifeMs > 0))
-      throw new RangeError('Mermi ömrü pozitif ve sonlu olmalı');
+    validateProfile(lifeMs, flight);
     this.profiles.push({ lifeMs, flight, tag });
     return this.profiles.length - 1;
   }
@@ -151,7 +183,16 @@ export class Projectiles {
     vy: number,
     profile = 0,
     elevation = 0,
+    origin?: ProjectileOrigin,
   ): Projectile {
+    this.validateLaunch(x, y, vx, vy, profile, elevation);
+    if (
+      origin &&
+      ((origin.team !== null && !Number.isSafeInteger(origin.team)) ||
+        !Number.isFinite(origin.damageScale) ||
+        origin.damageScale < 0)
+    )
+      throw new RangeError('Mermi kaynağı geçerli cephe ve sonlu, negatif olmayan güç taşımalı');
     let slot: Projectile;
     if (this.live < this.capacity) {
       slot = this.items[this.live++]!;
@@ -163,6 +204,8 @@ export class Projectiles {
       slot = this.items[oldest]!;
     }
     this.reset(slot, owner, x, y, vx, vy, profile, elevation);
+    slot.sourceTeam = origin?.team ?? null;
+    slot.damageScale = origin?.damageScale ?? 1;
     return slot;
   }
 
@@ -181,13 +224,15 @@ export class Projectiles {
   ): AimPreview {
     if (!(Number.isFinite(sampleStepMs) && sampleStepMs > 0))
       throw new RangeError('Önizleme adımı pozitif ve sonlu olmalı');
+    this.validateLaunch(x, y, vx, vy, profile, elevation);
     const shell = this.previewShell;
     this.reset(shell, owner, x, y, vx, vy, profile, elevation);
     const result = this.aim;
     result.targetId = null;
     result.surface = 'ground';
     const lifeMs = this.profiles[profile].lifeMs;
-    const steps = Math.ceil(lifeMs / sampleStepMs);
+    const sliceMs = Math.max(sampleStepMs, lifeMs / PROJECTILE_PREVIEW_MAX_STEPS);
+    const steps = Math.min(PROJECTILE_PREVIEW_MAX_STEPS, Math.ceil(lifeMs / sliceMs));
     if (result.path.length < (steps + 2) * 2) result.path = new Float32Array((steps + 2) * 2);
     const path = result.path;
     path[0] = x;
@@ -196,7 +241,7 @@ export class Projectiles {
     for (let step = 0; step <= steps; step++) {
       shell.px = shell.x;
       shell.py = shell.y;
-      const landed = this.advance(shell, sampleStepMs);
+      const landed = this.advance(shell, sliceMs);
       const outsideStart = !world.contains(shell.px, shell.py);
       const wall = this.clipToWorld(shell, world);
       path[points * 2] = shell.x;
@@ -234,7 +279,6 @@ export class Projectiles {
     elevation: number,
   ): void {
     const entry = this.profiles[profile];
-    if (!entry) throw new RangeError(`Mermi profili yok: ${profile}`);
     const flight = entry.flight;
     slot.x = slot.px = x;
     slot.y = slot.py = y;
@@ -246,6 +290,21 @@ export class Projectiles {
     slot.travelled = 0;
     slot.owner = owner;
     slot.profile = profile;
+    slot.sourceTeam = null;
+    slot.damageScale = 1;
+  }
+
+  private validateLaunch(
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    profile: number,
+    elevation: number,
+  ): void {
+    if (!this.profiles[profile]) throw new RangeError(`Mermi profili yok: ${profile}`);
+    if (![x, y, vx, vy, elevation].every(Number.isFinite) || elevation < 0)
+      throw new RangeError('Mermi doğuşu sonlu, yüksekliği negatif olmayan değerler taşımalı');
   }
 
   clear(): void {
@@ -258,6 +317,8 @@ export class Projectiles {
    * mermisiyle eşleştirir. Kaldırdıysa `true` döner.
    */
   retire(owner: EntityId, x: number, y: number, radius: number): boolean {
+    if (![x, y, radius].every(Number.isFinite) || radius < 0)
+      throw new RangeError('Mermi eşleme konumu sonlu, yarıçapı negatif olmayan sayı olmalı');
     let nearest = -1;
     let best = radius * radius;
     for (let index = 0; index < this.live; index++) {
@@ -290,6 +351,9 @@ export class Projectiles {
     onHit?: ProjectileHit,
     canHit?: ProjectileCanHit,
   ): void {
+    if (!Number.isFinite(dtMs) || dtMs < 0)
+      throw new RangeError('Mermi adımı sonlu ve negatif olmayan süre olmalı');
+    if (dtMs === 0) return;
     let index = 0;
     while (index < this.live) {
       const projectile = this.items[index];
@@ -453,7 +517,11 @@ export class Projectiles {
     let nearest: ProjectileTarget | null = null;
     let nearestT = Infinity;
     for (const target of targets) {
-      if (target.id === projectile.owner || (canHit && !canHit(projectile.owner, target))) continue;
+      if (
+        target.id === projectile.owner ||
+        (canHit && !canHit(projectile.owner, target, projectile))
+      )
+        continue;
       const t = target.entryT(px, py, x, y);
       if (t !== null && t < nearestT) {
         nearest = target;

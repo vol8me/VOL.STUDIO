@@ -98,6 +98,45 @@ describe('Cooldown', () => {
 });
 
 describe('RoundLoop', () => {
+  it('pause sonrası start mevcut turu yeniden başlatmaz', () => {
+    const onRoundStart = vi.fn();
+    const loop = new RoundLoop({ breakMs: 100, onRoundStart });
+    loop.start();
+    loop.update(40);
+    loop.pause();
+    loop.start();
+    expect(onRoundStart).toHaveBeenCalledTimes(1);
+    expect(loop.getRemainingMs()).toBe(60);
+  });
+
+  it('ilk start öncesi resume ilk turu atlamaz', () => {
+    const onRoundStart = vi.fn();
+    const loop = new RoundLoop({ breakMs: 100, onRoundStart });
+    loop.resume();
+    loop.update(100);
+    expect(loop.isRunning()).toBe(false);
+    expect(onRoundStart).not.toHaveBeenCalled();
+    loop.start();
+    expect(onRoundStart).toHaveBeenCalledWith(1);
+  });
+
+  it('tur kancası güncellemeyi yeniden çağırınca tur zinciri başlamaz', () => {
+    const rounds: number[] = [];
+    const loop = new RoundLoop({
+      breakMs: 100,
+      totalRounds: 3,
+      onRoundStart: (round) => {
+        rounds.push(round);
+        loop.update(100);
+        loop.skipBreak();
+      },
+    });
+    loop.start();
+    expect(rounds).toEqual([1]);
+    loop.update(100);
+    expect(rounds).toEqual([1, 2]);
+  });
+
   it('start() İLK turu hemen bildirir (mola beklemeden)', () => {
     // Molanın önce gelmesi oyuncuyu ilk saniyede boş ekranla karşılardı.
     const onRoundStart = vi.fn();

@@ -53,6 +53,8 @@ export class PartWear {
    * parçaların bit maskesini döner (`Chassis.parts`a yazmak çağıranındır).
    */
   strike(chassis: Chassis, x: number, y: number, damage: number): number {
+    if (![x, y, damage].every(Number.isFinite) || damage < 0)
+      throw new RangeError('Parça isabeti sonlu, hasarı negatif olmayan değerler taşımalı');
     if (!(damage > 0)) return 0;
     const dx = x - chassis.x;
     const dy = y - chassis.y;
@@ -69,26 +71,39 @@ export class PartWear {
 
   /** Aşınmayı söndürür, sessizlik sürerse kırık parçaları birer birer yerine oturtur; onarılan maskeyi döner. */
   step(chassis: Chassis, stepMs: number): number {
+    if (!Number.isFinite(stepMs) || stepMs < 0)
+      throw new RangeError('Parça adımı sonlu ve negatif olmayan süre olmalı');
+    if (stepMs === 0) return 0;
+    const previousHit = this.sinceHitMs;
+    const previousDamage = this.sinceDamageMs;
     this.sinceHitMs += stepMs;
     this.sinceDamageMs += stepMs;
     if (this.sinceHitMs > PARTS.wear.decayDelayMs) {
-      const fade = (PARTS.wear.decayPerSecond * stepMs) / 1000;
+      const activeMs =
+        Math.max(0, this.sinceHitMs - PARTS.wear.decayDelayMs) -
+        Math.max(0, previousHit - PARTS.wear.decayDelayMs);
+      const fade = (PARTS.wear.decayPerSecond * activeMs) / 1000;
       for (let slot = 0; slot < this.wear.length; slot++) {
         if (this.wear[slot] < this.limit) this.wear[slot] = Math.max(0, this.wear[slot] - fade);
       }
     }
     if (chassis.parts === 0 || this.sinceDamageMs < PARTS.repair.quietMs) return 0;
-    this.mendMs += stepMs;
+    this.mendMs +=
+      Math.max(0, this.sinceDamageMs - PARTS.repair.quietMs) -
+      Math.max(0, previousDamage - PARTS.repair.quietMs);
     if (this.mendMs < PARTS.repair.intervalMs) return 0;
-    this.mendMs = 0;
+    let repaired = 0;
     for (let slot = 0; slot < this.wear.length; slot++) {
       const bit = this.bitOf(slot);
       if ((chassis.parts & bit) === 0) continue;
       chassis.parts &= ~bit;
       this.wear[slot] = 0;
-      return bit;
+      repaired |= bit;
+      this.mendMs -= PARTS.repair.intervalMs;
+      if (this.mendMs < PARTS.repair.intervalMs) break;
     }
-    return 0;
+    if (chassis.parts === 0) this.mendMs = 0;
+    return repaired;
   }
 
   /** Doğuş ya da sıfırlama: bütün parçalar sağlam, aşınma boş. */

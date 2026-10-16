@@ -7,6 +7,51 @@ interface Bullet {
 }
 
 describe('ObjectPool', () => {
+  it('factory aktif örneği yeniden verirse ikinci sahip oluşturmaz', () => {
+    const item = {};
+    const p = new ObjectPool({ create: () => item });
+    expect(p.acquire()).toBe(item);
+    expect(() => p.acquire()).toThrow(/factory/);
+    expect(p.getActiveCount()).toBe(1);
+    p.release(item);
+    expect(p.acquire()).toBe(item);
+  });
+
+  it('prewarm sırasında yinelenen factory sonucu reddedilir', () => {
+    const item = {};
+    expect(() => new ObjectPool({ create: () => item, prewarm: 2 })).toThrow(/factory/);
+  });
+
+  it('prewarm maxIdle bütçesini aşacak nesneler üretmez', () => {
+    const create = vi.fn(() => ({}));
+    const p = new ObjectPool({ create, prewarm: 10, maxIdle: 2 });
+    expect(p.getIdleCount()).toBe(2);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'geçersiz prewarm %s kaynak üretmeden reddedilir',
+    (prewarm) => {
+      const create = vi.fn(() => ({}));
+      expect(() => new ObjectPool({ create, prewarm })).toThrow(/prewarm/);
+      expect(create).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([-1, 1.5, Number.NaN])('geçersiz maxIdle %s reddedilir', (maxIdle) => {
+    expect(() => new ObjectPool({ create: () => ({}), maxIdle })).toThrow(/maxIdle/);
+  });
+
+  it.each([null, undefined])('generic %s örneği boş havuz sanılmaz', (item) => {
+    const create = vi.fn(() => item);
+    const p = new ObjectPool({ create, prewarm: 1 });
+    expect(p.acquire()).toBe(item);
+    p.release(item);
+    expect(p.acquire()).toBe(item);
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(p.getIdleCount()).toBe(0);
+  });
+
   function pool(overrides: Partial<{ prewarm: number; maxIdle: number }> = {}) {
     let next = 0;
     return new ObjectPool<Bullet>({

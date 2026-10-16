@@ -12,18 +12,18 @@ export interface PacerStats {
   /** Boşta adımların sunucu adım numaraları (ilk 16). */
   readonly underflowTicks: readonly number[];
   /**
-   * İlk tüketimden SONRAKİ boşta adım sayısı: aracın gerçekten ilerlediği bir sırada istemcinin
+   * İlk tüketimden SONRAKİ boşta adım sayısı: tüketimin başladığı bir sırada istemcinin
    * öngörmediği adımlar. Sıfırsa sunucu durumu istemci öngörüsüyle bit bit aynı olmalıdır.
    */
   readonly starved: number;
 }
 
 /**
- * Sunucu her sabit adımda dünyayı ilerletir; girdisi geç kalan araç için bu adım istemcinin
+ * Sunucu her sabit adımda benzetimi ilerletir; girdisi geç kalan istemci için bu adım istemcinin
  * öngörmediği bir "boşta" adımdır ve uzlaştırmada düzeltme olarak geri döner. Pacer, tüketime
  * ancak tamponda `lead` girdi birikince başlayarak `lead - 1` adımı aşmayan geç kalmaları eler
  * (titreşim tamponu). Tampon boşalırsa yeniden dolana dek boşta adım atılır. Boşta adım, son
- * TÜKETİLEN komutu `holdSteps` adım sürdürür (ateş tutulmaz): henüz tüketilmemiş bir girdiyi
+ * TÜKETİLEN komutu `holdSteps` adım çağıranın `hold` dönüşümüyle sürdürür: henüz tüketilmemiş bir girdiyi
  * tutmak onu sonradan bir kez daha uygulatırdı. İlk girdi tüketilmeden önceki adımlar hep
  * boştadır.
  */

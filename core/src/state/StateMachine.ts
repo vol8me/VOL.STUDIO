@@ -45,6 +45,8 @@ export class StateMachine<TState extends string> {
     this.onRejected = options.onRejected;
     this.onTransitionError = options.onTransitionError;
     this.current = options.initial;
+    if (!Object.hasOwn(this.states, this.current))
+      throw new RangeError('StateMachine: başlangıç durumu kayıtlı olmalı');
     this.states[this.current]?.onEnter?.(null);
   }
 
@@ -59,7 +61,7 @@ export class StateMachine<TState extends string> {
   /** Hedefe geçiş bu an meşru mu? */
   canTransition(to: TState): boolean {
     if (to === this.current) return false;
-    if (!(to in this.states)) return false;
+    if (!Object.hasOwn(this.states, to)) return false;
     const allowed = this.states[this.current]?.transitions;
     return allowed === undefined || allowed.includes(to);
   }
@@ -96,6 +98,7 @@ export class StateMachine<TState extends string> {
       // `onTransitionError` ile makine bilinçli bir kurtarma durumuna
       // taşınmalıdır.
       this.current = from;
+      this.transitioning = false;
       this.onTransitionError?.(error, from, to);
       throw error;
     } finally {

@@ -18,6 +18,51 @@ function parse(rows: string[]) {
 }
 
 describe('findPath (A*)', () => {
+  it('birden küçük maliyetler uzun fakat daha ucuz rotayı seçebilir', () => {
+    const path = findPath(
+      { cols: 5, rows: 2 },
+      { col: 0, row: 0 },
+      { col: 4, row: 0 },
+      { cost: ({ row }) => (row === 0 ? 1 : 0.1) },
+    );
+    const cost = path!.slice(1).reduce((sum, point) => sum + (point.row === 0 ? 1 : 0.1), 0);
+    expect(cost).toBeCloseTo(1.5);
+  });
+
+  it('kesirli koordinatlar başka hücrenin indeksine dönüşmez', () => {
+    expect(findPath({ cols: 2, rows: 2 }, { col: 0, row: 0.5 }, { col: 1, row: 0 })).toBeNull();
+  });
+
+  it('tek hücrelik sonuç başlangıç nesnesine bağlı kalmaz', () => {
+    const start = { col: 1, row: 1 };
+    const path = findPath({ cols: 3, rows: 3 }, start, start);
+    start.col = 2;
+    expect(path).toEqual([{ col: 1, row: 1 }]);
+  });
+
+  it('PathFinder callback içindeki arama dış aramanın tamponlarını bozmaz', () => {
+    const finder = new PathFinder(3, 1);
+    let nested = false;
+    const path = finder.find(
+      { col: 0, row: 0 },
+      { col: 2, row: 0 },
+      {
+        isWalkable: () => {
+          if (!nested) {
+            nested = true;
+            expect(() => finder.find({ col: 2, row: 0 }, { col: 0, row: 0 })).toThrow(/yeniden/);
+          }
+          return true;
+        },
+      },
+    );
+    expect(path).toEqual([
+      { col: 0, row: 0 },
+      { col: 1, row: 0 },
+      { col: 2, row: 0 },
+    ]);
+  });
+
   it('engelsiz ızgarada en kısa yolu bulur', () => {
     const path = findPath({ cols: 5, rows: 1 }, { col: 0, row: 0 }, { col: 4, row: 0 });
     expect(path).toHaveLength(5);

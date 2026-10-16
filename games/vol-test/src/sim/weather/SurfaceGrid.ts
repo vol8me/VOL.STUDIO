@@ -230,6 +230,7 @@ export class SurfaceGrid {
   blendToward(snapshot: SurfaceSnapshot, durationMs: number): boolean {
     const count = this.cells.length;
     if (
+      !Number.isFinite(durationMs) ||
       !(durationMs > 0) ||
       snapshot.columns !== this.columns ||
       snapshot.rows !== this.rows ||
@@ -270,8 +271,16 @@ export class SurfaceGrid {
     for (let index = 0; index < this.cells.length; index++) {
       const cell = this.cells[index];
       cell.wetness = clamp01(cell.wetness + blend.wetness[index] * share);
-      cell.puddle = Math.max(0, cell.puddle + blend.puddle[index] * share);
-      cell.snowWater = Math.max(0, cell.snowWater + blend.snowWater[index] * share);
+      cell.puddle = clamp(
+        cell.puddle + blend.puddle[index] * share,
+        0,
+        WEATHER.surface.maxPuddleDepth,
+      );
+      cell.snowWater = clamp(
+        cell.snowWater + blend.snowWater[index] * share,
+        0,
+        WEATHER.surface.maxSnowDepth * WEATHER.surface.looseSnowDensity,
+      );
       cell.compaction = clamp01(cell.compaction + blend.compaction[index] * share);
       cell.growth = clamp(cell.growth + blend.growth[index] * share, 0, cell.fertility);
       // Kalan fark bu adımın payı kadar azalır: sonraki adım kalan süreye göre orantılanır.
@@ -298,6 +307,7 @@ export class SurfaceGrid {
       )
     )
       return false;
+    this.blend = null;
     const config = WEATHER.surface;
     const snowCapacity = config.maxSnowDepth * config.looseSnowDensity;
     for (let index = 0; index < count; index++) {

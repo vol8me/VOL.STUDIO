@@ -83,6 +83,8 @@ export async function serveOps(options: OpsOptions): Promise<OpsServer> {
   const host = options.host ?? '127.0.0.1';
   const wildcard = host === '0.0.0.0' || host === '::';
   const limit = options.maxBodyBytes ?? 64 * 1024;
+  if (!Number.isSafeInteger(limit) || limit < 1)
+    throw new RangeError('Gövde sınırı pozitif tam sayı olmalı.');
   const routes = options.routes ?? {};
   const log = options.logger?.child('ops');
   const guard = (header: string | undefined): boolean =>
@@ -96,6 +98,12 @@ export async function serveOps(options: OpsOptions): Promise<OpsServer> {
     void (async () => {
       try {
         if (!guard(request.headers.host)) throw new OpsError(403, 'Host başlığı reddedildi.');
+        // CORS yalnız yanıt okumayı engeller; basit POST isteği rotayı yine çalıştırabilir.
+        if (
+          request.headers.origin !== undefined ||
+          request.headers['sec-fetch-site'] === 'cross-site'
+        )
+          throw new OpsError(403, 'Tarayıcı kökenli işletim isteği reddedildi.');
         const method = request.method ?? 'GET';
         const url = new URL(request.url ?? '/', 'http://ops.local');
         const key = `${method} ${url.pathname}`;
@@ -144,7 +152,7 @@ export async function serveOps(options: OpsOptions): Promise<OpsServer> {
   return {
     http,
     port,
-    endpoint: `http://${host}:${port}`,
+    endpoint: `http://${host.includes(':') && !host.startsWith('[') ? `[${host}]` : host}:${port}`,
     close: () =>
       new Promise<void>((resolve) => {
         http.close(() => resolve());

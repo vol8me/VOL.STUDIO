@@ -17,6 +17,7 @@
 
 import { OnScreenKeyboard } from './OnScreenKeyboard';
 import { DisposableScope } from '../../lifecycle/DisposableScope';
+import { fitToRoom } from './graphemes';
 
 export interface TextEntryRequest {
   /** Alanın mevcut değeri — klavye düzenlemeye bundan başlar. */
@@ -163,11 +164,12 @@ export function requestTextEntryForElement(
     value: expectedValue,
     multiline: options.multiline,
     purpose: options.purpose,
-    ...(element.maxLength > 0 ? { maxLength: element.maxLength } : {}),
+    ...(element.maxLength >= 0 ? { maxLength: element.maxLength } : {}),
   };
   const isCurrent = (): boolean =>
     !controller.signal.aborted &&
     !element.disabled &&
+    !element.readOnly &&
     element.isConnected &&
     element.value === expectedValue &&
     cancelActiveSession === cancel;
@@ -175,7 +177,9 @@ export function requestTextEntryForElement(
     try {
       const result = await requestGamepadTextEntry(request, controller.signal);
       if (isCurrent() && result && !result.canceled) {
-        options.apply(result.value);
+        options.apply(
+          element.maxLength >= 0 ? fitToRoom(result.value, element.maxLength) : result.value,
+        );
         expectedValue = element.value;
       }
     } finally {

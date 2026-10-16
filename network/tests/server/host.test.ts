@@ -43,6 +43,14 @@ describe('createHost', () => {
 });
 
 describe('startHost', () => {
+  it('IPv6 endpoint gerçek istemciyle kullanılabilir', async () => {
+    const host = await startHost(rooms, { port: 0, host: '::1' });
+    started.push(host);
+    const room = await createLobby(host.endpoint).joinOrCreate('ping');
+    expect(host.endpoint).toBe(`http://[::1]:${host.port}`);
+    await room.leave();
+  });
+
   it('rastgele portta dinler, adresi döner ve gerçek istemci odaya katılır', async () => {
     const logger = Logger.create({ src: 'test' });
     const host = await start(logger);
@@ -156,6 +164,22 @@ describe('installShutdown', () => {
     await new Promise((resolve) => setTimeout(resolve, 80));
     expect(exit).toHaveBeenCalledExactlyOnceWith(1);
     expect(logger.since().records.some((record) => record.ev === 'host.stop.timeout')).toBe(true);
+  });
+
+  it('zaman aşımı ardından geç biten stop ikinci çıkış çağrısı üretmez', async () => {
+    let complete!: () => void;
+    const { target, exit } = setup(
+      () =>
+        new Promise<void>((resolve) => {
+          complete = resolve;
+        }),
+      10,
+    );
+    target.emit('SIGTERM');
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    complete();
+    await tick();
+    expect(exit).toHaveBeenCalledExactlyOnceWith(1);
   });
 
   it('kayıt kaldırılınca olaylar artık işlenmez', () => {

@@ -7,6 +7,65 @@ import { command, simulation, STEP_MS, world } from '../support/sim';
 import { STRIKER, VEHICLES } from '@/config/vehicles';
 
 describe('Simulation', () => {
+  it('sıfır adım komut okumaz, ateşlemez ve örtüşen araçları yerinden oynatmaz', () => {
+    const sim = simulation();
+    const twin = sim.spawn(sim.player.chassis.x, sim.player.chassis.y);
+    const before = sim.vehicles.map((vehicle) => vehicle.chassis.captureState());
+    sim.step(() => {
+      throw new Error('Sıfır adım komut okuyamaz');
+    }, 0);
+    sim.step(command({ fire: true }), 0);
+    expect(sim.vehicles.map((vehicle) => vehicle.chassis.captureState())).toEqual(before);
+    expect(sim.projectiles.count).toBe(0);
+    expect(sim.drainEvents([])).toEqual([]);
+    expect(twin.chassis.x).toBe(sim.player.chassis.x);
+  });
+
+  it('bozuk doğuş konumu kimlik tüketmez ve dünyaya NaN sokmaz', () => {
+    const sim = simulation();
+    for (const values of [
+      [NaN, 100, 0],
+      [100, Infinity, 0],
+      [100, 100, NaN],
+    ])
+      expect(() => sim.spawn(values[0], values[1], values[2])).toThrow(RangeError);
+    expect(sim.vehicles).toHaveLength(1);
+    expect(sim.spawn(100, 100).id).toBe(2);
+  });
+
+  it('otomatik kimlik güvenli tamsayı sınırını aşamaz; başarısız araç değişimi oyuncuyu korur', () => {
+    const sim = simulation();
+    const player = sim.player;
+    sim.spawn(100, 100, 0, null, Number.MAX_SAFE_INTEGER);
+    expect(() => sim.spawn(200, 200)).toThrow(RangeError);
+    expect(() => sim.replacePlayer(VEHICLES.goliath)).toThrow(RangeError);
+    expect(sim.player).toBe(player);
+    expect(sim.vehicles).toHaveLength(2);
+  });
+
+  it('adım dışı hasar ve iyileştirme kuyruğu da sınırlıdır', () => {
+    const sim = simulation();
+    for (let i = 0; i < 1000; i++) {
+      sim.applyDamage(sim.player.id, 1);
+      sim.healVehicle(sim.player.id, 1);
+    }
+    const events = sim.drainEvents([]);
+    expect(events).toHaveLength(512);
+    expect(events.at(-1)?.kind).toBe('healed');
+  });
+
+  it('süzülen araç karı sıkıştırmaz', () => {
+    const space = world(1024);
+    const weather = new WeatherSystem(1024, 1024, { seed: 7, override: 'snow' });
+    weather.step(60_000);
+    const sim = new Simulation({ world: space, weather, vehicle: VEHICLES.manta });
+    for (let i = 0; i < 120; i++) sim.step(command({ moveX: 1 }), STEP_MS);
+    expect(sim.player.chassis.groundLeft).toBeGreaterThan(0);
+    for (let row = 0; row < weather.rows; row++)
+      for (let col = 0; col < weather.columns; col++)
+        expect(weather.cell(col, row)!.snowCompaction).toBe(0);
+  });
+
   it('spawnPlayer kapalıyken kontrol edilen araç doğmaz, araçlar komut kaynağıyla sürülür', () => {
     const sim = new Simulation({
       world: world(1024),

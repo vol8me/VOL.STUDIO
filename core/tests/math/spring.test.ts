@@ -4,6 +4,14 @@ import { Spring1D } from '../../src/math/Spring';
 const CONFIG = { stiffness: 120, damping: 14 };
 
 describe('Spring1D', () => {
+  it('sonlu girdilerin aritmetik taşması önceki poz ve hızı bozmaz', () => {
+    const spring = new Spring1D(5);
+    spring.velocity = 2;
+    expect(spring.update(Number.MAX_VALUE, 16, CONFIG)).toBe(5);
+    expect(spring.velocity).toBe(2);
+    expect(Number.isFinite(spring.update(6, 16, CONFIG))).toBe(true);
+  });
+
   it('sabit bir hedefe zamanla yakınsar', () => {
     const spring = new Spring1D(0);
     for (let i = 0; i < 300; i++) {

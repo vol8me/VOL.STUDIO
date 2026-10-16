@@ -117,14 +117,26 @@ export function readStick(pad: PadLike, axes: readonly [number, number]): { x: n
  * yanlış eşlenen bir kolun basılı düğmesi "kol elde" sinyalini yine de verir
  * (state'e yalnız standard eşleme yansır).
  */
-export function isGamepadInputActive(pad: PadLike, deadZone: number): boolean {
+export function isGamepadInputActive(
+  pad: PadLike,
+  deadZone: number,
+  options: GamepadInputOptions = {},
+): boolean {
+  if (!pad.connected) return false;
   for (const button of pad.buttons) {
     if (button.pressed) return true;
   }
-  for (const axis of pad.axes) {
-    if (Math.abs(axis) > deadZone) return true;
+  if (pad.mapping !== 'standard') {
+    return pad.axes.some((axis) => Number.isFinite(axis) && Math.abs(axis) > deadZone);
   }
-  return false;
+  const move = readStick(pad, options.moveAxes ?? DEFAULT_MOVE_AXES);
+  const aim = readStick(pad, options.aimAxes ?? DEFAULT_AIM_AXES);
+  // Sağlayıcı seçimi ile üretilen vektör aynı radyal sınırı kullanır; çapraz hafif itiş kaybolmaz.
+  const aimLength = Math.hypot(aim.x, aim.y);
+  return (
+    Math.hypot(move.x, move.y) > (options.moveDeadZone ?? deadZone) ||
+    (aimLength > 0 && aimLength >= (options.aimDeadZone ?? deadZone))
+  );
 }
 
 /**
@@ -141,6 +153,16 @@ export function computeGamepadInput<TAction extends string>(
   actions: Readonly<Record<TAction, boolean>>,
   options: GamepadInputOptions = {},
 ): InputState<TAction> {
+  if (!pad.connected || pad.mapping !== 'standard') {
+    return {
+      move: Vector2.zero(),
+      aim: Vector2.zero(),
+      actions: Object.fromEntries(Object.keys(actions).map((action) => [action, false])) as Record<
+        TAction,
+        boolean
+      >,
+    };
+  }
   const moveRaw = readStick(pad, options.moveAxes ?? DEFAULT_MOVE_AXES);
   const aimRaw = readStick(pad, options.aimAxes ?? DEFAULT_AIM_AXES);
   return {

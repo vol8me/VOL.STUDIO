@@ -1,11 +1,12 @@
 import { join } from 'node:path';
-import { defineRoom, matchMaker } from '@colyseus/core';
+import { defineRoom, matchMaker, ServerError } from '@colyseus/core';
 import {
   guardSettings,
   installShutdown,
   isEntryModule,
   listenSettings,
   Logger,
+  RoomSlots,
   opsSettings,
   serveOps,
   startHost,
@@ -15,8 +16,12 @@ import {
   type StartedHost,
 } from '@volstudio/network/server';
 import { ROOM } from '../src/network/rooms';
+import { NETWORK } from '../src/config/network';
 import { FileClimateStore, type ClimateStore } from './ClimateStore';
 import { WorldRoom, type WorldRoomOptions } from './WorldRoom';
+
+// Ağdan gelen JSON, süreç içinde üretilmiş bu nesne kimliğini taklit edemez.
+const creations = new WeakMap<object, WorldRoomOptions>();
 
 /**
  * Oda kaydı: tek tür oda, kalıcı savaş dünyası. `defaults` her odaya geçen işletim seçenekleridir
@@ -25,9 +30,44 @@ import { WorldRoom, type WorldRoomOptions } from './WorldRoom';
 export function createRooms(
   logger?: Logger,
   defaults: Omit<WorldRoomOptions, 'logger' | 'primary'> = {},
+  maxRooms: number = NETWORK.maxRooms,
 ) {
+  const slots = new RoomSlots(maxRooms);
+  class RegisteredWorld extends WorldRoom {
+    private readonly releaseSlot: () => void;
+
+    constructor() {
+      const release = slots.claim();
+      if (!release) throw new ServerError(503, 'busy');
+      try {
+        super();
+        this.releaseSlot = release;
+      } catch (error) {
+        release();
+        throw error;
+      }
+    }
+
+    override onCreate(request: WorldRoomOptions & { internal?: object } = {}): void {
+      const internal = request.internal && creations.get(request.internal);
+      try {
+        super.onCreate({ ...defaults, ...internal, logger });
+      } catch (error) {
+        this.releaseSlot();
+        throw error;
+      }
+    }
+
+    override onDispose(): void {
+      try {
+        super.onDispose();
+      } finally {
+        this.releaseSlot();
+      }
+    }
+  }
   return {
-    [ROOM.world]: defineRoom(WorldRoom, { ...defaults, logger }),
+    [ROOM.world]: defineRoom(RegisteredWorld),
   };
 }
 
@@ -38,7 +78,9 @@ export type Rooms = ReturnType<typeof createRooms>;
  * ile bu odaya düşer; dolarsa Colyseus bir taşma dünyası kurar.
  */
 export async function createPrimaryWorld(options: Omit<WorldRoomOptions, 'primary'> = {}) {
-  return matchMaker.createRoom(ROOM.world, { ...options, primary: true });
+  const internal = {};
+  creations.set(internal, { ...options, primary: true });
+  return matchMaker.createRoom(ROOM.world, { internal });
 }
 
 export interface WorldServerOptions {
@@ -78,16 +120,28 @@ export async function startWorldServer(
     { port, host },
     { logger, guard: options.guard },
   );
-  await createPrimaryWorld({ seed: Date.now() >>> 0, climateStore: options.climateStore });
-  const ops = options.ops
-    ? await serveOps({ ...options.ops, logger, metrics: () => worldMetrics(started.guard) })
-    : null;
+  let ops: Awaited<ReturnType<typeof serveOps>> | null = null;
+  try {
+    await createPrimaryWorld({ seed: Date.now() >>> 0, climateStore: options.climateStore });
+    if (options.ops)
+      ops = await serveOps({ ...options.ops, logger, metrics: () => worldMetrics(started.guard) });
+  } catch (error) {
+    await started.stop();
+    throw error;
+  }
+  let stopping: Promise<void> | undefined;
   return {
     ...started,
     ops,
-    async stop() {
-      await ops?.close();
-      await started.stop();
+    stop() {
+      stopping ??= (async () => {
+        try {
+          await ops?.close();
+        } finally {
+          await started.stop();
+        }
+      })();
+      return stopping;
     },
   };
 }

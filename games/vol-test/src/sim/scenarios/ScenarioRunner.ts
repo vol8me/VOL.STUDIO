@@ -1,8 +1,7 @@
 import { createRandom } from '@volstudio/core/random';
 import { SpatialIndex } from '@volstudio/core/spatial';
-import { TANK } from '@/config/tank';
-import { SCENARIO, SCENARIOS, type ScenarioId } from '@/config/scenarios';
-import { VEHICLE_IDS, VEHICLES } from '@/config/vehicles';
+import { SCENARIO, SCENARIOS, isScenario, validSeed, type ScenarioId } from '@/config/scenarios';
+import { VEHICLE_IDS, VEHICLES, chassisConfigOf } from '@/config/vehicles';
 import type { Vehicle } from '../entities/Vehicle';
 import { idleCommand, type TankCommand } from '../command';
 import type { Simulation } from '../Simulation';
@@ -14,13 +13,17 @@ interface Neighbor {
 }
 
 export class ScenarioRunner {
-  private readonly index = new SpatialIndex<Neighbor>(SCENARIO.neighborCell);
+  private readonly index = new SpatialIndex<Neighbor>(
+    SCENARIO.neighborCell,
+    (neighbor) => neighbor.vehicle.vitality.alive,
+  );
   private readonly spawned: Vehicle[] = [];
   private neighbors: Neighbor[] = [];
   private mode: ScenarioId = 'empty';
   private seed = SCENARIO.defaultSeed as number;
   private epoch = 0;
   private indexedAt = -1;
+  private rosterRevision = -1;
   private phases: number[] = [];
 
   constructor(private readonly sim: Simulation) {}
@@ -33,6 +36,8 @@ export class ScenarioRunner {
   }
 
   select(mode: ScenarioId, seed: number): void {
+    if (!isScenario(mode) || !validSeed(seed))
+      throw new RangeError('Senaryo ve tohum geçerli olmalı');
     if (this.mode === mode && this.seed === seed) return;
     this.clear();
     this.mode = mode;
@@ -56,31 +61,24 @@ export class ScenarioRunner {
         x = player.x + (slot - (count - 1) / 2) * SCENARIO.targets.spacing;
         y = player.y - SCENARIO.targets.distance;
       }
-      const tank = TANK;
-      x = Math.max(tank.halfLength, Math.min(this.sim.world.width - tank.halfLength, x));
-      y = Math.max(tank.halfLength, Math.min(this.sim.world.height - tank.halfLength, y));
       // Kadro yuvaya göre bütün araçları döndürür: senaryo her aracı (görünüm, atış, ses) sınar ve tohumla aynı kalır.
       const spec = VEHICLES[VEHICLE_IDS[slot % VEHICLE_IDS.length]];
+      const chassis = chassisConfigOf(spec);
+      const bodyRadius = Math.hypot(chassis.halfLength, chassis.halfWidth);
+      x = Math.max(bodyRadius, Math.min(this.sim.world.width - bodyRadius, x));
+      y = Math.max(bodyRadius, Math.min(this.sim.world.height - bodyRadius, y));
       this.spawned.push(this.sim.spawn(x, y, angle, null, undefined, spec));
       this.phases.push(random.next() * Math.PI * 2);
     }
-    this.neighbors = this.sim.vehicles.map((vehicle) => ({
-      vehicle,
-      get x() {
-        return vehicle.chassis.x;
-      },
-      get y() {
-        return vehicle.chassis.y;
-      },
-    }));
-    this.index.rebuild(this.neighbors);
+    this.refreshNeighbors();
   }
 
   commandFor(vehicle: Vehicle, player: TankCommand): TankCommand {
     if (vehicle.id === this.sim.player.id) return player;
     const slot = this.spawned.indexOf(vehicle);
     if (slot < 0 || this.mode === 'slalom' || this.mode === 'targets') return idleCommand();
-    if (this.indexedAt !== this.sim.timeMs) {
+    if (this.rosterRevision !== this.sim.vehicleRevision) this.refreshNeighbors();
+    else if (this.indexedAt !== this.sim.timeMs) {
       this.index.refresh(this.neighbors);
       this.indexedAt = this.sim.timeMs;
     }
@@ -111,6 +109,21 @@ export class ScenarioRunner {
     this.clear();
   }
 
+  private refreshNeighbors(): void {
+    this.neighbors = this.sim.vehicles.map((vehicle) => ({
+      vehicle,
+      get x() {
+        return vehicle.chassis.x;
+      },
+      get y() {
+        return vehicle.chassis.y;
+      },
+    }));
+    this.index.rebuild(this.neighbors);
+    this.rosterRevision = this.sim.vehicleRevision;
+    this.indexedAt = this.sim.timeMs;
+  }
+
   private clear(): void {
     for (const vehicle of this.spawned) this.sim.despawn(vehicle.id);
     this.spawned.length = 0;
@@ -119,5 +132,6 @@ export class ScenarioRunner {
     this.index.clear();
     this.sim.projectiles.clear();
     this.indexedAt = -1;
+    this.rosterRevision = -1;
   }
 }

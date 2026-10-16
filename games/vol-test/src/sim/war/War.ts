@@ -147,6 +147,9 @@ export class War {
    * ve puanı ilerletir, nüfusu tutar. Üretilen olaylar `out`a eklenir.
    */
   step(stepMs: number, humanCommand: CommandSource, out: WarStepEvent[]): void {
+    if (!Number.isFinite(stepMs) || stepMs < 0 || !Number.isFinite(this.clockMs + stepMs))
+      throw new RangeError('Savaş adımı sonlu ve negatif olmayan süre olmalı');
+    if (stepMs === 0) return;
     this.clockMs += stepMs;
     this.steps++;
     this.prepareRespawns(stepMs);
@@ -195,14 +198,23 @@ export class War {
     faction: number,
     makeBrain: ((vehicle: Vehicle) => BotBrain) | null,
   ): Combatant {
+    if (!Number.isInteger(faction) || faction < 0 || faction >= WAR.factions)
+      throw new RangeError('Cephe geçerli bir tamsayı olmalı');
     const point = this.spawnPoint(faction, 0);
     const vehicle = this.sim.spawn(point.x, point.y, point.hull, faction, undefined, spec);
     vehicle.vitality.protectionRemainingMs = COMBAT.respawnProtectionMs;
+    let brain: BotBrain | null;
+    try {
+      brain = makeBrain ? makeBrain(vehicle) : null;
+    } catch (error) {
+      this.sim.despawn(vehicle.id);
+      throw error;
+    }
     const combatant: Combatant = {
       vehicle,
       faction,
       name,
-      brain: makeBrain ? makeBrain(vehicle) : null,
+      brain,
       kills: 0,
       deaths: 0,
       command: idleCommand(),

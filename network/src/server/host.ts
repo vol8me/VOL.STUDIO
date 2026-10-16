@@ -104,7 +104,9 @@ export async function startHost<T extends Record<string, RegisteredHandler>>(
     await host.server.gracefullyShutdown(false).catch(() => undefined);
     throw error;
   }
-  const endpoint = `http://${listen.host}:${port}`;
+  const hostname =
+    listen.host.includes(':') && !listen.host.startsWith('[') ? `[${listen.host}]` : listen.host;
+  const endpoint = `http://${hostname}:${port}`;
   log?.info('listening', { endpoint, rooms: Object.keys(rooms) });
   let stopped: Promise<void> | null = null;
   return {
@@ -153,16 +155,24 @@ export function installShutdown(
     target = process,
   } = options;
   let stopping = false;
+  let finished = false;
+  let timer: NodeJS.Timeout | undefined;
   const finish = (code: number): void => {
-    logger?.close();
-    exit(code);
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    try {
+      logger?.close();
+    } finally {
+      exit(code);
+    }
   };
   const begin = (event: string, data: Record<string, unknown>, failed: boolean): void => {
     if (stopping) return finish(1);
     stopping = true;
     if (failed) logger?.error(event, data);
     else logger?.info(event, data);
-    const timer = setTimeout(() => {
+    timer = setTimeout(() => {
       logger?.error('host.stop.timeout', { graceMs });
       finish(1);
     }, graceMs);
@@ -194,6 +204,7 @@ export function installShutdown(
   }
   for (const [event, handler] of handlers) target.on(event, handler);
   return () => {
+    clearTimeout(timer);
     for (const [event, handler] of handlers) target.off(event, handler);
   };
 }

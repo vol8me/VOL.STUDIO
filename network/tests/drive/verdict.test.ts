@@ -38,6 +38,24 @@ function summary(patch: Partial<FleetSummary> = {}): FleetSummary {
 }
 
 describe('judgeFleet', () => {
+  it('ölçülmemiş gecikme sıfır ms başarı sayılamaz', () => {
+    const result = judgeFleet(summary({ pingMs: { ...distribution(0), count: 0 } }), BUDGET, {
+      stepP95Ms: 1,
+      loopP99Ms: 1,
+      evictions: 0,
+    });
+    expect(result.complete).toBe(false);
+    expect(result.checks.find((item) => item.name === 'pingP99Ms')).toMatchObject({
+      skipped: true,
+      ok: false,
+    });
+  });
+
+  it('sonlu olmayan veya negatif ölçüm bütçeyi geçmiş sayılmaz', () => {
+    for (const ping of [-1, Infinity, NaN])
+      expect(judgeFleet(summary({ pingMs: distribution(ping) }), BUDGET).pass).toBe(false);
+  });
+
   it('bütçe içindeki koşu geçer; sunucu gözlemi yoksa sunucu maddeleri atlanır ve hüküm tamamlanmış sayılmaz', () => {
     const verdict = judgeFleet(summary(), BUDGET);
     expect(verdict.pass).toBe(true);
@@ -81,6 +99,24 @@ describe('judgeFleet', () => {
 });
 
 describe('observeServer', () => {
+  it('eksik veya bozuk ölçüm sıfır değere dönüşmez, hüküm eksik kalır', () => {
+    const observation = observeServer([{ metrics: { loop: { p99Ms: 2 }, rooms: [null, {}] } }]);
+    expect(observation).toEqual({ stepP95Ms: null, loopP99Ms: 2, evictions: null });
+    expect(judgeFleet(summary(), BUDGET, observation).complete).toBe(false);
+    expect(observeServer([{ metrics: { loop: { p99Ms: NaN }, rooms: [] } }])).toBeNull();
+  });
+
+  it('aynı ölçümde bütün odaların atımlarını toplar', () => {
+    const observation = observeServer([
+      { metrics: { rooms: [{ traffic: { evictions: 2 } }, { traffic: { evictions: 3 } }] } },
+    ]);
+    expect(observation?.evictions).toBe(5);
+  });
+
+  it('hiç adım ölçmemiş oda gecikmesi bilinmez kalır', () => {
+    expect(observeServer([{ metrics: { rooms: [{ step: { count: 0, p95: 0 } }] } }])).toBeNull();
+  });
+
   const sample = (step: number, loop: number, evictions: number) => ({
     t: 1,
     ev: 'server',

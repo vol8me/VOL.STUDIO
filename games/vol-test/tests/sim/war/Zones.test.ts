@@ -25,6 +25,18 @@ function setup() {
 }
 
 describe('ZoneField', () => {
+  it('geçersiz ve sıfır süre bölgenin durumunu değiştirmez', () => {
+    const { field, place, core } = setup();
+    place(0, core.x, core.y);
+    const before = structuredClone(field.zones);
+    const events: WarEvent[] = [];
+    for (const step of [-1, NaN, Infinity])
+      expect(() => field.step(step, [], events)).toThrow(RangeError);
+    field.step(0, [], events);
+    expect(field.zones).toEqual(before);
+    expect(events).toEqual([]);
+  });
+
   it('bölgeleri dünya ölçüsüne göre çözer ve hepsi dünyanın içindedir', () => {
     const { field } = setup();
     expect(field.zones).toHaveLength(WAR.zones.length);

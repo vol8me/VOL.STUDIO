@@ -9,6 +9,27 @@ type Resource = 'gold' | 'energy' | 'research';
 const initial = (): Record<Resource, number> => ({ gold: 100, energy: 5, research: 0 });
 
 describe('ResourcePool', () => {
+  it('maliyet getterı harcama boyunca bir kez okunur ve atomiklik korunur', () => {
+    const pool = new ResourcePool({ amount: 5 });
+    let reads = 0;
+    const cost = {
+      get amount() {
+        return ++reads === 1 ? 2 : 10;
+      },
+    };
+    expect(pool.spend(cost)).toBe(true);
+    expect(pool.get('amount')).toBe(3);
+    expect(reads).toBe(1);
+  });
+
+  it('prototiple aynı adlı kaynak gerçek sayı olarak tutulur', () => {
+    const pool = new ResourcePool<'toString' | '__proto__'>({ toString: 4, ['__proto__']: 8 });
+    expect(pool.snapshot()).toEqual({ toString: 4, ['__proto__']: 8 });
+    expect(pool.spend({ toString: 2, ['__proto__']: 3 })).toBe(true);
+    expect(pool.get('toString')).toBe(2);
+    expect(pool.get('__proto__')).toBe(5);
+  });
+
   it('başlangıç miktarlarını taşır ve kopyalar (dışarıdaki mutasyon sızmaz)', () => {
     const base = initial();
     const pool = new ResourcePool<Resource>(base);

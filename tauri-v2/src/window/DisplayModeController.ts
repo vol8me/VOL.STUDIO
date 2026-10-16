@@ -1,4 +1,5 @@
 import { FullscreenController } from '@volstudio/core/platform';
+import { DisposableScope } from '@volstudio/core/lifecycle';
 import { TauriWindowAdapter } from './TauriWindowAdapter';
 
 export type DisplayMode = 'windowed' | 'fullscreen';
@@ -40,11 +41,14 @@ export class DisplayModeController {
   private applyQueue: Promise<void> = Promise.resolve();
   private applyGeneration = 0;
   private applyFailure: { error: unknown } | null = null;
+  private preferenceFailure: { error: unknown } | null = null;
+  private readonly preferenceWrites = new Set<Promise<void>>();
+  private preferenceGeneration = 0;
+  private applyingFullscreen = false;
+  private readonly scope = new DisposableScope();
   /** Pencereye en son uygulanan boyut: tercih deposundaki başka bir değişim pencereyi yeniden ortalamaz. */
   private appliedSize: string | null = null;
-  private stopPreference: (() => void) | null = null;
-  private stopNativeWatch: (() => void) | null = null;
-  private started = false;
+  private startup: Promise<void> | null = null;
   private destroyed = false;
 
   constructor(private readonly options: DisplayModeControllerOptions) {
@@ -53,31 +57,38 @@ export class DisplayModeController {
       options.onError ??
       ((error) => console.warn('[DisplayModeController] Görüntü kipi uygulanamadı:', error));
     const native = this.window.isAvailable();
-    this.fullscreen = new FullscreenController({
-      target: options.target,
-      onToggleRequest: native ? () => this.toggleNative() : undefined,
-      onChange: native ? undefined : (active) => void options.setMode(toMode(active)),
-      onError: (error) => this.recordApplyError(error),
-    });
+    this.fullscreen = this.scope.addDestroyable(
+      new FullscreenController({
+        target: options.target,
+        onToggleRequest: native ? () => this.toggleNative() : undefined,
+        onChange: native ? undefined : (active) => this.syncMode(active),
+        onError: (error) => this.recordApplyError(error),
+      }),
+    );
   }
 
   hasNativeWindow(): boolean {
     return this.window.isAvailable();
   }
 
-  async start(): Promise<void> {
-    if (this.started || this.destroyed) return;
-    this.started = true;
-    this.stopPreference = this.options.subscribe(() => void this.apply());
+  start(): Promise<void> {
+    if (this.destroyed) return Promise.resolve();
+    return (this.startup ??= this.startInternal().catch((error: unknown) => {
+      this.destroy();
+      throw error;
+    }));
+  }
+
+  private async startInternal(): Promise<void> {
+    this.scope.addSubscription(this.options.subscribe(() => void this.apply()));
     await this.apply();
     if (this.destroyed || !this.window.isAvailable()) return;
 
     try {
       const stop = await this.window.onFullscreenChange((active) => {
-        if (!this.destroyed) void this.options.setMode(toMode(active));
+        this.syncMode(active);
       });
-      if (this.destroyed) stop();
-      else this.stopNativeWatch = stop;
+      this.scope.addSubscription(stop);
     } catch (error) {
       this.onError(error);
     }
@@ -93,8 +104,9 @@ export class DisplayModeController {
     let pending: Promise<void>;
     do {
       pending = this.applyQueue;
-      await pending;
-    } while (pending !== this.applyQueue);
+      await Promise.all([pending, ...this.preferenceWrites]);
+    } while (pending !== this.applyQueue || this.preferenceWrites.size > 0);
+    if (this.preferenceFailure) throw this.preferenceFailure.error;
     if (this.applyFailure) throw this.applyFailure.error;
   }
 
@@ -102,11 +114,7 @@ export class DisplayModeController {
     if (this.destroyed) return;
     this.destroyed = true;
     this.applyGeneration++;
-    this.stopNativeWatch?.();
-    this.stopNativeWatch = null;
-    this.stopPreference?.();
-    this.stopPreference = null;
-    this.fullscreen.destroy();
+    this.scope.dispose();
   }
 
   private apply(): Promise<void> {
@@ -125,14 +133,24 @@ export class DisplayModeController {
     const wantsFullscreen = this.options.getMode() === 'fullscreen';
 
     if (!this.window.isAvailable()) {
-      await this.fullscreen.setFullscreen(wantsFullscreen);
+      this.applyingFullscreen = true;
+      try {
+        await this.fullscreen.setFullscreen(wantsFullscreen);
+      } finally {
+        this.applyingFullscreen = false;
+      }
       return;
     }
 
     const isFullscreen = await this.window.isFullscreen();
     if (this.isStale(generation)) return;
     if (isFullscreen !== wantsFullscreen) {
-      await this.window.setFullscreen(wantsFullscreen);
+      this.applyingFullscreen = true;
+      try {
+        await this.window.setFullscreen(wantsFullscreen);
+      } finally {
+        this.applyingFullscreen = false;
+      }
       // Tam ekrandan çıkış ve girişte pencere boyutu sistemin elindedir: pencereliye dönünce yeniden uygulanır.
       this.appliedSize = null;
     }
@@ -158,6 +176,32 @@ export class DisplayModeController {
     }
   }
 
+  private syncMode(active: boolean): void {
+    // Kendi gecikmeli pencere olayımız daha yeni kullanıcı niyetini kalıcı tercihten silemez.
+    if (this.destroyed || this.applyingFullscreen) return;
+    const pending = this.persistMode(toMode(active))
+      .catch((error: unknown) => {
+        try {
+          this.onError(error);
+        } catch {
+          // Tanı hatası kuyruk sözleşmesini bozamaz.
+        }
+      })
+      .finally(() => this.preferenceWrites.delete(pending));
+    this.preferenceWrites.add(pending);
+  }
+
+  private async persistMode(mode: DisplayMode): Promise<void> {
+    const generation = ++this.preferenceGeneration;
+    try {
+      await this.options.setMode(mode);
+      if (generation === this.preferenceGeneration) this.preferenceFailure = null;
+    } catch (error) {
+      if (generation === this.preferenceGeneration) this.preferenceFailure = { error };
+      throw error;
+    }
+  }
+
   private isStale(generation: number): boolean {
     return this.destroyed || generation !== this.applyGeneration;
   }
@@ -170,7 +214,7 @@ export class DisplayModeController {
         if (this.isStale(generation)) return;
         const active = await this.window.isFullscreen();
         if (this.isStale(generation)) return;
-        await this.options.setMode(toMode(!active));
+        await this.persistMode(toMode(!active));
         if (!this.destroyed) void this.apply();
       })
       .catch((error: unknown) => this.recordApplyError(error));

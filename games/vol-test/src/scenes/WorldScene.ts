@@ -6,7 +6,7 @@ import {
   type SimulationClockFrame,
 } from '@volstudio/core';
 import { AimGuide } from '@/view/effects/AimGuide';
-import { AimPresence } from '@/view/effects/AimPresence';
+import { PresenceEnvelope } from '@volstudio/core/math';
 import { GraphicsQuality } from '@volstudio/core/graphics';
 import { createSceneAudio } from '@/audio/sceneAudio';
 import { AgentLab, installAgentLab } from '@/app/AgentLab';
@@ -71,7 +71,7 @@ export class WorldScene extends Phaser.Scene {
   private effects!: EffectsView;
   private zones!: ZonesView;
   private aimGuide!: AimGuide;
-  private readonly aimPresence = new AimPresence(FX.aimGuide.fadeInMs, FX.aimGuide.fadeOutMs);
+  private readonly aimPresence = new PresenceEnvelope(FX.aimGuide.fadeInMs, FX.aimGuide.fadeOutMs);
   private environment!: EnvironmentController;
   private hud!: Hud;
   /** `?lab=1` ile açılan ajan laboratuvarı; yoksa hiçbir şey kurulmaz. */

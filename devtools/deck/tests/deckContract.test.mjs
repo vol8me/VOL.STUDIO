@@ -12,9 +12,14 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import posix from 'node:path/posix';
-import { isWindows, runCommand, writeCommand } from '../../../scripts/quality/tests/runCommand.mjs';
+import {
+  isWindows,
+  runCommand,
+  writeCommand,
+  writeNodeCommand,
+} from '../../../scripts/quality/tests/runCommand.mjs';
 import {
   assertCleanConfirmation,
   assertInventoryPreserved,
@@ -741,6 +746,24 @@ test('rsync kendi yeni release dizinine korumali argumanlarla silmeden kopyalar'
   assert.throws(() =>
     buildRsyncArgs({ host: 'host;bad', key: '/key', source: '/build', directory: '/upload' }),
   );
+});
+
+test('keşif CLI platformun komut shim’ini PATH üzerinden çalıştırır', () => {
+  inDisk((disk) => {
+    const bin = join(disk, 'bin');
+    mkdirSync(bin);
+    writeNodeCommand(bin, 'getent', '#!/usr/bin/env node\nconsole.log("fake host");\n');
+    const result = spawnSync(
+      process.execPath,
+      [join(import.meta.dirname, '../scripts/deck.mjs'), 'discover'],
+      {
+        encoding: 'utf8',
+        env: { ...process.env, PATH: `${bin}${delimiter}${process.env.PATH}`, DECK_HOST: '' },
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /steamdeck\.local.*nsswitch/);
+  });
 });
 
 test('clean CLI onaysizken SSH dahil hicbir uzak islem baslatmaz', () => {

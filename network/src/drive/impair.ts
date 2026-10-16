@@ -19,11 +19,26 @@ export interface LinkProfile {
 
 export const CLEAN_LINK: LinkProfile = { latencyMs: 0 };
 
+function validateProfile(profile: LinkProfile): void {
+  for (const value of [profile.latencyMs, profile.jitterMs ?? 0, profile.stallMs ?? 0])
+    if (!Number.isFinite(value) || value < 0)
+      throw new RangeError('Hat süreleri sonlu ve negatif olmayan sayı olmalı.');
+  const probability = profile.stallProbability ?? 0;
+  if (!Number.isFinite(probability) || probability < 0 || probability > 1)
+    throw new RangeError('Bekleyiş olasılığı [0, 1] aralığında olmalı.');
+  if (
+    profile.bytesPerSecond !== undefined &&
+    (!Number.isFinite(profile.bytesPerSecond) || profile.bytesPerSecond <= 0)
+  )
+    throw new RangeError('Bant genişliği sonlu ve pozitif olmalı.');
+}
+
 export interface LinkStats {
   readonly connections: number;
   readonly bytesUp: number;
   readonly bytesDown: number;
   readonly delayed: number;
+  readonly bufferedBytes: number;
 }
 
 type Direction = 'up' | 'down';
@@ -39,10 +54,14 @@ class Lane {
   private timer: NodeJS.Timeout | null = null;
   private lastAt = 0;
   private busyUntil = 0;
+  private bytes = 0;
+  private blocked = false;
 
   constructor(
-    private readonly deliver: (chunk: Buffer | null) => void,
+    private readonly deliver: (chunk: Buffer | null) => boolean,
     private readonly held: () => boolean,
+    private readonly source: Socket,
+    private readonly limit: number,
   ) {}
 
   push(chunk: Buffer | null, profile: LinkProfile, random: () => number): number {
@@ -59,6 +78,8 @@ class Lane {
     const at = Math.max(now + delay, this.lastAt);
     this.lastAt = at;
     this.queue.push({ at, chunk });
+    this.bytes += chunk?.length ?? 0;
+    if (this.bytes >= this.limit) this.source.pause();
     this.schedule();
     return delay;
   }
@@ -68,21 +89,36 @@ class Lane {
     this.schedule();
   }
 
+  drained(): void {
+    this.blocked = false;
+    if (this.bytes < this.limit) this.source.resume();
+    this.schedule();
+  }
+
+  get bufferedBytes(): number {
+    return this.bytes;
+  }
+
   clear(): void {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     this.queue.length = 0;
+    this.bytes = 0;
   }
 
   private schedule(): void {
-    if (this.timer || this.queue.length === 0 || this.held()) return;
-    const wait = Math.max(0, this.queue[0].at - performance.now());
+    if (this.timer || this.queue.length === 0 || this.held() || this.blocked) return;
+    const wait = Math.min(0x7fffffff, Math.max(0, this.queue[0].at - performance.now()));
     this.timer = setTimeout(() => {
       this.timer = null;
       const now = performance.now();
-      while (this.queue.length > 0 && this.queue[0].at <= now && !this.held()) {
-        this.deliver(this.queue.shift()!.chunk);
+      while (this.queue.length > 0 && this.queue[0].at <= now && !this.held() && !this.blocked) {
+        const chunk = this.queue.shift()!.chunk;
+        this.bytes -= chunk?.length ?? 0;
+        this.blocked = !this.deliver(chunk);
       }
+      if (this.blocked) this.source.pause();
+      else if (this.bytes < this.limit) this.source.resume();
       this.schedule();
     }, wait);
   }
@@ -109,6 +145,7 @@ export class ImpairedLink {
     readonly port: number,
     profile: LinkProfile,
     private readonly random: () => number,
+    private readonly maxBufferedBytes: number,
   ) {
     this.profileNow = profile;
   }
@@ -116,8 +153,12 @@ export class ImpairedLink {
   /** Loopback'te rastgele portta dinler ve `target`a yönlendirir. */
   static async start(
     target: { host: string; port: number },
-    options: { profile?: LinkProfile; random?: () => number } = {},
+    options: { profile?: LinkProfile; random?: () => number; maxBufferedBytes?: number } = {},
   ): Promise<ImpairedLink> {
+    const maxBufferedBytes = options.maxBufferedBytes ?? 1024 * 1024;
+    if (!Number.isSafeInteger(maxBufferedBytes) || maxBufferedBytes < 1)
+      throw new RangeError('Aracı tampon sınırı pozitif tam sayı olmalı.');
+    validateProfile(options.profile ?? CLEAN_LINK);
     // Yarım açık bağlantı korunur: bir uç `end` derse öteki yönde kuyruktaki veri hâlâ teslim edilir.
     const server = createServer({ allowHalfOpen: true });
     await new Promise<void>((resolve, reject) => {
@@ -131,6 +172,7 @@ export class ImpairedLink {
       address.port,
       options.profile ?? CLEAN_LINK,
       options.random ?? Math.random,
+      maxBufferedBytes,
     );
     server.on('connection', (client) => link.accept(client, target));
     return link;
@@ -146,6 +188,7 @@ export class ImpairedLink {
 
   /** Profili yeni parçalar için değiştirir; kuyruktakiler eski zamanlarıyla teslim edilir. */
   setProfile(profile: LinkProfile): void {
+    validateProfile(profile);
     this.profileNow = profile;
   }
 
@@ -172,6 +215,7 @@ export class ImpairedLink {
       bytesUp: this.up,
       bytesDown: this.down,
       delayed: this.delayedCount,
+      bufferedBytes: [...this.lanes].reduce((sum, lane) => sum + lane.bufferedBytes, 0),
     };
   }
 
@@ -187,16 +231,20 @@ export class ImpairedLink {
     this.sockets.add(client).add(upstream);
     const own: Lane[] = [];
     const lane = (direction: Direction, to: Socket): void => {
+      const from = direction === 'up' ? client : upstream;
       const created = new Lane(
         (chunk) => {
-          if (chunk === null) to.end();
-          else to.write(chunk);
+          if (chunk !== null) return to.write(chunk);
+          to.end();
+          return true;
         },
         () => this.holding,
+        from,
+        this.maxBufferedBytes,
       );
       own.push(created);
       this.lanes.add(created);
-      const from = direction === 'up' ? client : upstream;
+      to.on('drain', () => created.drained());
       from.on('data', (chunk: Buffer) => {
         if (direction === 'up') this.up += chunk.length;
         else this.down += chunk.length;

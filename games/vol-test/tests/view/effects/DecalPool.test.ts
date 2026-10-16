@@ -15,6 +15,24 @@ function build(capacity = 4) {
 }
 
 describe('DecalPool', () => {
+  it('kapanıştan sonra eski tutamak görüntüyü kullanamaz; ikinci kapanış güvenlidir', () => {
+    const { pool, images } = build();
+    const ref = pool.place(0, 0, 0, 10, 4, 1);
+    pool.destroy();
+    expect(pool.reshape(ref, 99, 99, 0, 10, 4)).toBe(false);
+    expect(() => pool.place(0, 0, 0, 10, 4, 1)).toThrow('Kapanmış');
+    pool.destroy();
+    expect(images()[0].calls.filter(([name]) => name === 'destroy')).toHaveLength(1);
+  });
+
+  it('bozuk kare süresi çıkartmaların sönüş saatini zehirlemez', () => {
+    const { pool, images } = build();
+    pool.place(0, 0, 0, 10, 4, 1);
+    for (const delta of [NaN, Infinity, -100]) pool.fade(delta);
+    pool.fade(1000);
+    expect(images()[0].alpha).toBe(0);
+  });
+
   it('çıkartmayı kapasiteye dek bir kez kurar, dolunca en eskiyi yeniden kullanır', () => {
     const { pool, images } = build(3);
     for (let i = 0; i < 3; i++) pool.place(i, 0, 0, 10, 4, 1);

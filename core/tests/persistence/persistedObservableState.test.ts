@@ -12,6 +12,67 @@ const parse = (value: unknown): State => {
 };
 
 describe('PersistedObservableState', () => {
+  it('dinleyicinin yeni state yazması diğer dinleyicilere eski değeri en son göndermez', async () => {
+    const state = new PersistedObservableState({
+      store: { load: () => Promise.resolve(undefined), save: () => Promise.resolve() },
+      key: 'settings',
+      initial: { value: 0 },
+      parse,
+      clone,
+    });
+    const seen: number[] = [];
+    state.subscribe(({ value }) => {
+      if (value === 1) void state.set({ value: 2 });
+    });
+    state.subscribe(({ value }) => seen.push(value));
+    await state.set({ value: 1 });
+    expect(seen).toEqual([1, 2]);
+    await state.flushAndDispose();
+  });
+
+  it('bildirim sırasında eklenen abonelik mevcut yayına katılmaz', async () => {
+    const state = new PersistedObservableState({
+      store: { load: () => Promise.resolve(undefined), save: () => Promise.resolve() },
+      key: 'settings',
+      initial: { value: 0 },
+      parse,
+      clone,
+    });
+    const late = vi.fn();
+    state.subscribe(() => state.subscribe(late));
+    await state.set({ value: 1 });
+    expect(late).not.toHaveBeenCalled();
+    await state.set({ value: 2 });
+    expect(late).toHaveBeenCalledOnce();
+    await state.flushAndDispose();
+  });
+
+  it('debounce gecikmesi ilk değişimden değil son değişimden ölçülür', async () => {
+    vi.useFakeTimers();
+    const save = vi.fn(() => Promise.resolve());
+    const state = new PersistedObservableState({
+      store: { load: () => Promise.resolve(undefined), save },
+      key: 'settings',
+      initial: { value: 0 },
+      parse,
+      clone,
+      debounceMs: 100,
+    });
+    try {
+      void state.set({ value: 1 });
+      await vi.advanceTimersByTimeAsync(80);
+      const saved = state.set({ value: 2 });
+      await vi.advanceTimersByTimeAsync(99);
+      expect(save).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      await saved;
+      expect(save).toHaveBeenCalledExactlyOnceWith('settings', { value: 2 });
+    } finally {
+      state.dispose();
+      vi.useRealTimers();
+    }
+  });
+
   it.each([0, 100])(
     'dinleyici kapanışı başlatsa da son yazım reddi bariyere ulaşır (%d ms)',
     async (debounceMs) => {

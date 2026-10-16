@@ -10,6 +10,40 @@ import { StateMachine } from '../../src/state/StateMachine';
 type Phase = 'draft' | 'review' | 'published' | 'archived';
 
 describe('StateMachine', () => {
+  it('hata kancası bilinçli kurtarma durumuna geçebilir', () => {
+    const failure = new Error('bozuk hedef');
+    const m = new StateMachine<'ready' | 'broken' | 'recovered'>({
+      initial: 'ready',
+      states: {
+        ready: {},
+        broken: {
+          onEnter: () => {
+            throw failure;
+          },
+        },
+        recovered: {},
+      },
+      onTransitionError: () => {
+        m.transition('recovered');
+      },
+    });
+    expect(() => m.transition('broken')).toThrow(failure);
+    expect(m.getState()).toBe('recovered');
+  });
+
+  it('prototip alanları kayıtlı durum sayılmaz', () => {
+    const m = new StateMachine<string>({ initial: 'ready', states: { ready: {} } });
+    expect(m.canTransition('toString')).toBe(false);
+    expect(m.transition('__proto__')).toBe(false);
+    expect(m.getState()).toBe('ready');
+  });
+
+  it('kayıtlı olmayan başlangıç durumu kurulurken reddedilir', () => {
+    expect(() => new StateMachine<string>({ initial: 'missing', states: { ready: {} } })).toThrow(
+      /başlangıç/,
+    );
+  });
+
   function machine(overrides: Partial<Record<Phase, unknown>> = {}) {
     return new StateMachine<Phase>({
       initial: 'draft',

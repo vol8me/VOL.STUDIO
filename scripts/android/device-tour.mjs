@@ -24,6 +24,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from '../quality/command.mjs';
 import { selectDevice } from './device-benchmark-contract.mjs';
+import { connectWebView } from './webviewClient.mjs';
 import {
   findEditAction,
   judgeOrientation,
@@ -184,55 +185,6 @@ async function selectionProbe(x, y) {
   );
 }
 
-/** WebView hata ayıklama kanalı: sayfada ifade değerlendirir. */
-async function connectPage(pid) {
-  const port = adb(['forward', 'tcp:0', `localabstract:webview_devtools_remote_${pid}`]).trim();
-  const pages = /** @type {{ type: string, webSocketDebuggerUrl: string }[]} */ (
-    await (await fetch(`http://127.0.0.1:${port}/json`)).json()
-  );
-  const page = pages.find((entry) => entry.type === 'page');
-  if (!page) throw new Error('WebView sayfası bulunamadı.');
-  const socket = new globalThis.WebSocket(page.webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => {
-    socket.onopen = resolve;
-    socket.onerror = () => reject(new Error('WebView kanalı açılamadı.'));
-  });
-  let nextId = 0;
-  const pending = new Map();
-  socket.onmessage = (event) => {
-    const message = JSON.parse(event.data);
-    pending.get(message.id)?.(message);
-  };
-  return {
-    evaluate(expression) {
-      const id = ++nextId;
-      return new Promise((resolve, reject) => {
-        pending.set(id, (message) => {
-          pending.delete(id);
-          if (message.error || message.result?.exceptionDetails) {
-            reject(new Error(JSON.stringify(message.error ?? message.result.exceptionDetails)));
-          } else resolve(message.result.result.value);
-        });
-        socket.send(
-          JSON.stringify({
-            id,
-            method: 'Runtime.evaluate',
-            params: { expression, returnByValue: true, awaitPromise: true },
-          }),
-        );
-      });
-    },
-    close() {
-      socket.close();
-      try {
-        adb(['forward', '--remove', `tcp:${port}`]);
-      } catch {
-        // Kanal zaten kapandıysa kaldırılacak yönlendirme kalmamıştır.
-      }
-    },
-  };
-}
-
 const PAGE_STATE = `(() => {
   // Kapalı modal DOM'da kalır: görünmezlik atadan gelen opaklık, inert ve aria-hidden ile verilir.
   const visible = (element) => {
@@ -348,7 +300,7 @@ try {
 
     if (pid) {
       await sleep(5);
-      page = await connectPage(pid);
+      page = await connectWebView(adb, pid);
       const expected = Math.random().toString(36).slice(2);
       await page.evaluate(
         `(window.__tourToken = window.__tourExpected = ${JSON.stringify(expected)})`,

@@ -55,3 +55,24 @@ it('beklenmeyen yazım reddini idle yutarken flush kayıpsız taşır', async ()
   await expect(writer.whenIdle()).resolves.toBeUndefined();
   await expect(writer.flush()).rejects.toBe(failure);
 });
+
+it('save içinden eşzamanlı enqueue ikinci yazımı ilk yazımla çakıştırmaz', async () => {
+  const firstWrite = deferred();
+  const writes: number[] = [];
+  let nested: Promise<void> | undefined;
+  const writer = new LatestValueWriter<number>(async (value) => {
+    writes.push(value);
+    if (value === 1) {
+      nested = writer.enqueue(2);
+      await firstWrite.promise;
+    }
+  });
+
+  const first = writer.enqueue(1);
+  expect(writes).toEqual([1]);
+  firstWrite.resolve();
+  await first;
+  await nested;
+  await writer.flush();
+  expect(writes).toEqual([1, 2]);
+});

@@ -44,6 +44,7 @@ export class DecalPool {
   private readonly decals: RingBuffer<Decal>;
   private readonly pool: Decal[] = [];
   private nowMs = 0;
+  private disposed = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -61,6 +62,7 @@ export class DecalPool {
     alpha: number,
     frame?: string | number,
   ): DecalRef {
+    if (this.disposed) throw new Error('Kapanmış çıkartma havuzuna eklenemez');
     const config = this.config;
     let decal: Decal;
     if (this.pool.length < config.capacity) {
@@ -106,13 +108,14 @@ export class DecalPool {
     frame?: string | number,
   ): boolean {
     const { decal } = ref;
-    if (decal.generation !== ref.generation) return false;
+    if (this.disposed || decal.generation !== ref.generation) return false;
     if (frame !== undefined) decal.image.setFrame(frame);
     decal.image.setPosition(x, y).setRotation(rotation).setDisplaySize(width, height);
     return true;
   }
 
   fade(deltaMs: number): void {
+    if (this.disposed || !Number.isFinite(deltaMs) || deltaMs <= 0) return;
     this.nowMs += deltaMs;
     const { lifeMs, holdShare } = this.config;
     const hold = lifeMs * holdShare;
@@ -131,6 +134,10 @@ export class DecalPool {
   }
 
   destroy(): void {
+    if (this.disposed) return;
+    this.disposed = true;
     for (const decal of this.pool) decal.image.destroy();
+    this.decals.clear();
+    this.pool.length = 0;
   }
 }

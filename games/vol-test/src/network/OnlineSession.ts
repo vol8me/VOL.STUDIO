@@ -1,12 +1,18 @@
 import { DisposableScope } from '@volstudio/core/lifecycle';
-import { JoinError, Predict, createLobby, type Lobby, type Room } from '@volstudio/network/client';
+import {
+  JoinError,
+  Predict,
+  ServerTimeline,
+  createLobby,
+  type Lobby,
+  type Room,
+} from '@volstudio/network/client';
 import { NETWORK } from '@/config/network';
 import { CLIMATE_MESSAGE, CLIMATE_REQUEST, isClimateSnapshot } from './climate';
-import { EVENT_MESSAGE, type EventBatch } from './events';
+import { EVENT_MESSAGE, isEventBatch, type EventBatch } from './events';
 import type { ClimateSnapshot } from '@/sim/weather/types';
 import { ROOM } from './rooms';
 import { WORLD_SCHEMA, type WorldSnapshot, type PlayerSnapshot } from './schema';
-import { ServerTimeline } from './timeline';
 
 /** `reconnecting` bağlantı koptuğunda Colyseus'un yeniden bağlanmayı denediği süredir. */
 export type ConnectionStatus = 'live' | 'reconnecting' | 'closed';
@@ -43,20 +49,37 @@ export class OnlineSession {
   private readonly climateListeners = new Set<Listener<ClimateSnapshot>>();
   private latestClimate: ClimateSnapshot | undefined;
   private readonly scope = new DisposableScope();
+  private disposed = false;
+  private leaving: Promise<void> | undefined;
 
   private constructor(readonly room: Room<WorldSnapshot>) {
     this.predict = Predict.get(room, {
       name: 'vol-test',
       delay: NETWORK.interpolationDelayMs,
     });
+    try {
+      this.initialize();
+    } catch (error) {
+      this.scope.dispose();
+      this.predict.dispose();
+      throw error;
+    }
+  }
+
+  private initialize(): void {
+    const room = this.room;
     const stateChange = (state: WorldSnapshot): void => {
       this.timeline.observe(state.timeMs, room.clock.lastServerTime());
     };
     room.onStateChange(stateChange);
     this.scope.addSubscription(() => room.onStateChange.remove(stateChange));
+    stateChange(room.state);
 
     const dropped = (): void => this.setStatus('reconnecting');
-    const restored = (): void => this.setStatus('live');
+    const restored = (): void => {
+      this.setStatus('live');
+      room.send(CLIMATE_REQUEST);
+    };
     const left = (code: number): void => {
       this.closedCode = code;
       this.setStatus('closed');
@@ -68,7 +91,8 @@ export class OnlineSession {
     this.scope.addSubscription(() => room.onReconnect.remove(restored));
     this.scope.addSubscription(() => room.onLeave.remove(left));
     this.scope.addSubscription(
-      room.onMessage(EVENT_MESSAGE, (batch: EventBatch) => {
+      room.onMessage(EVENT_MESSAGE, (batch: unknown) => {
+        if (!isEventBatch(batch)) return;
         for (const listener of [...this.eventListeners]) listener(batch);
       }),
     );
@@ -89,15 +113,18 @@ export class OnlineSession {
    * `JoinError`dır (kod biçimi, sürüm, dolu oda, ulaşılamayan sunucu, zaman aşımı).
    */
   static async open(options: SessionOptions): Promise<OnlineSession> {
+    const timeout = options.settleTimeoutMs ?? DEFAULT_SETTLE_MS;
+    if (!Number.isFinite(timeout) || timeout <= 0) throw new JoinError('failed');
     const lobby = options.lobby ?? createLobby(options.endpoint);
     const room = await OnlineSession.connect(lobby, options);
     try {
-      await OnlineSession.settle(room, options.settleTimeoutMs ?? DEFAULT_SETTLE_MS);
+      room.reconnection.minUptime = NETWORK.reconnectMinUptimeMs;
+      await OnlineSession.settle(room, timeout);
+      return new OnlineSession(room);
     } catch (error) {
       void room.leave().catch(() => undefined);
-      throw error;
+      throw error instanceof JoinError ? error : new JoinError('failed', { cause: error });
     }
-    return new OnlineSession(room);
   }
 
   private static connect(lobby: Lobby, options: SessionOptions): Promise<Room<WorldSnapshot>> {
@@ -109,7 +136,7 @@ export class OnlineSession {
   /** İlk durum gelip kayıt görünene dek bekler; oda önce kapanır ya da süre dolarsa `failed`. */
   private static settle(room: Room<WorldSnapshot>, timeoutMs: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      const present = (): boolean => room.state.players.get(room.sessionId) !== undefined;
+      const present = (): boolean => room.state?.players?.get(room.sessionId) !== undefined;
       const finish = (error?: JoinError): void => {
         clearTimeout(timer);
         room.onStateChange.remove(check);
@@ -194,17 +221,23 @@ export class OnlineSession {
   /** Odadan bilerek ayrılır (sunucu oyuncuyu hemen düşürür, yeniden bağlanma beklenmez). */
   async leave(): Promise<void> {
     if (this.currentStatus === 'closed') return;
-    await this.room.leave(true).catch(() => undefined);
+    this.leaving ??= this.room.leave(true).then(
+      () => undefined,
+      () => undefined,
+    );
+    await this.leaving;
   }
 
   /** Dinleyicileri ve öngörü sürücüsünü kaldırır, bağlantıyı kapatır. */
   dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
     this.scope.dispose();
     this.statusListeners.clear();
     this.eventListeners.clear();
     this.climateListeners.clear();
     this.predict.dispose();
-    if (this.currentStatus !== 'closed') void this.room.leave(true).catch(() => undefined);
+    if (this.currentStatus !== 'closed') void this.leave();
     this.currentStatus = 'closed';
   }
 

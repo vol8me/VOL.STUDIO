@@ -6,6 +6,9 @@ tarayıcı istemcisi ve Node'da Colyseus sunucu çalışma zamanı. CORE simüla
 bu paket odayı çalıştıran zemini verir. Paket belirli bir oyuna bağlı değildir; ilk tüketici
 [VOL.TEST](../games/vol-test/README.md)'tir.
 
+Genel mekanizmalar CORE'un saf alt yollarından tüketilir; örneğin sayısal ölçüm penceresi
+`@volstudio/core/collections` içindedir. Node ölçeri, ağ protokolü ve bağlantı politikası bu pakette kalır.
+
 ## Yüzeyler
 
 `src/` dört yüzeye bölünür ve `exports` haritası da öyledir. Yüzeyler arası kenarlar

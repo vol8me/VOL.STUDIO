@@ -47,6 +47,7 @@ interface Shared {
   readonly now: () => Date;
   level: LogLevel;
   seq: number;
+  closed: boolean;
 }
 
 /** Hata nesnesini günlüğe konabilir hale getirir; yığın ilk beş satırla sınırlıdır. */
@@ -92,6 +93,7 @@ export class Logger {
         now: options.now ?? (() => new Date()),
         level: options.level ?? 'info',
         seq: 0,
+        closed: false,
       },
       options.src,
     );
@@ -111,6 +113,7 @@ export class Logger {
 
   log(lvl: LogLevel, ev: string, data?: Record<string, unknown>): void {
     const shared = this.shared;
+    if (shared.closed) return;
     if (ORDER[lvl] < ORDER[shared.level]) return;
     const record: LogRecord = {
       seq: ++shared.seq,
@@ -120,8 +123,8 @@ export class Logger {
       ev,
       ...(data ? { data } : {}),
     };
-    shared.ring[(record.seq - 1) % shared.ring.length] = record;
     const line = safeStringify(record);
+    shared.ring[(record.seq - 1) % shared.ring.length] = JSON.parse(line) as LogRecord;
     for (const sink of shared.sinks) {
       try {
         sink.write(record, line);
@@ -165,7 +168,15 @@ export class Logger {
   }
 
   close(): void {
-    for (const sink of this.shared.sinks) sink.close?.();
+    if (this.shared.closed) return;
+    this.shared.closed = true;
+    for (const sink of this.shared.sinks) {
+      try {
+        sink.close?.();
+      } catch {
+        // Bir hedefin kapanış hatası diğer hedefleri ve süreç kapanışını engellemez.
+      }
+    }
   }
 }
 

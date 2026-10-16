@@ -71,12 +71,23 @@ function chipTarget(targets: SimEventTargets, event: Extract<SimEvent, { kind: '
 function damageNumber(
   events: readonly SimEvent[],
   event: Extract<SimEvent, { kind: 'damaged' }>,
+  index: number,
   targets: SimEventTargets,
 ): void {
   if (event.cause === 'drown') return;
   let at: { readonly x: number; readonly y: number } | undefined;
-  for (const other of events) {
-    if (other.kind === 'hit' && other.target === event.target) at = other;
+  for (let prior = index - 1; event.cause === 'projectile' && prior >= 0; prior--) {
+    const other = events[prior];
+    if (other.kind === 'hit' && other.target === event.target && other.owner === event.source) {
+      at = other;
+      break;
+    }
+  }
+  // Ağdan aynı pakette farklı sırada gelebilir: önceki eşleşme yoksa ilk sonraki isabeti kullanır.
+  for (let next = index + 1; !at && event.cause === 'projectile' && next < events.length; next++) {
+    const other = events[next];
+    if (other.kind === 'hit' && other.target === event.target && other.owner === event.source)
+      at = other;
   }
   at ??= targets.position(event.target);
   if (!at) return;
@@ -92,7 +103,8 @@ function damageNumber(
  * araç kaynak ya da hedefse tepki verir. Ölçüler `config/feel.ts`ten gelir.
  */
 export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTargets): void {
-  for (const event of events) {
+  for (let index = 0; index < events.length; index++) {
+    const event = events[index];
     switch (event.kind) {
       case 'fired':
         targets.tank(event.source)?.fire(event.mount);
@@ -127,7 +139,7 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
         }
         break;
       case 'damaged':
-        damageNumber(events, event, targets);
+        damageNumber(events, event, index, targets);
         break;
       case 'wallHit': {
         const strength = strengthOf(event.speed);

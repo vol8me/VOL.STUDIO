@@ -69,3 +69,10 @@ export function lastGraphemeLength(text: string): number {
 export function firstGraphemeLength(text: string): number {
   return splitGraphemes(text)[0]?.length ?? 0;
 }
+
+/** HTML uzunluk sınırı UTF-16 birimidir; kesim vekil çiftin yarısını bırakmaz. */
+export function fitToRoom(text: string, room: number): string {
+  const cut = text.slice(0, Math.max(0, room));
+  const last = cut.charCodeAt(cut.length - 1);
+  return last >= 0xd800 && last <= 0xdbff ? cut.slice(0, -1) : cut;
+}

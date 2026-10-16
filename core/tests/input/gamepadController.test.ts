@@ -40,6 +40,16 @@ function withAxes(pad: PadLike, axes: readonly number[]): PadLike {
 }
 
 describe('GamepadState saf mantık', () => {
+  it('çapraz çubuk etkinliği eksen başına değil radyal ölü bölgeyle ölçülür', () => {
+    const pad = makePad({ axes: [0.12, 0.12, 0, 0] });
+    expect(computeGamepadInput(pad, {}).move.length()).toBeGreaterThan(0);
+    expect(isGamepadInputActive(pad, 0.15)).toBe(true);
+  });
+
+  it('kopuk kol ve sonlu olmayan eksen etkin girdi sayılmaz', () => {
+    expect(isGamepadInputActive(makePad({ axes: [Infinity, 0, NaN, 0] }), 0.15)).toBe(false);
+    expect(isGamepadInputActive(makePad({ connected: false, axes: [1, 0] }), 0.15)).toBe(false);
+  });
   it('sol çubuk hareketi analog büyüklük taşır', () => {
     const pad = withAxes(makePad(), [0.5, -0.5, 0, 0]);
     const state = computeGamepadInput(
@@ -90,6 +100,53 @@ describe('GamepadState saf mantık', () => {
 });
 
 describe('GamepadController sağlayıcı', () => {
+  it('özel nişan ekseni ve eşiği sağlayıcı seçiminde de kullanılır', () => {
+    const idle = makePad();
+    const aiming = makePad({ index: 1, id: 'aiming', axes: [0, 0, 0, 0, 0.08, 0.08] });
+    const controller = new GamepadController<TestAction>({
+      actions: TEST_ACTIONS,
+      getGamepads: () => [idle, aiming],
+      aimAxes: [4, 5],
+      moveDeadZone: 0.3,
+      aimDeadZone: 0.1,
+    });
+    controller.update(16);
+    expect(controller.isActive).toBe(true);
+    expect(controller.getState().aim.length()).toBeCloseTo(1);
+    expect(controller.getState().actions).toEqual({ fire: false, dash: false });
+    controller.destroy();
+  });
+
+  it('standart dışı eşleme kip sinyali verir ama tahmini oyun komutu üretmez', () => {
+    const pad = withButton(makePad({ mapping: '', axes: [1, 0] }), GAMEPAD_BUTTON.primary);
+    const controller = new GamepadController<TestAction>({
+      actions: TEST_ACTIONS,
+      actionBindings: BINDINGS,
+      getGamepads: () => [pad],
+    });
+    controller.update(16);
+    expect(controller.isActive).toBe(true);
+    expect(controller.getState().move.length()).toBe(0);
+    expect(controller.getState().actions).toEqual({ fire: false, dash: false });
+    controller.destroy();
+  });
+
+  it('kapatılan sağlayıcı sonraki karede kolu yeniden sahiplenmez', () => {
+    let polls = 0;
+    const controller = new GamepadController<TestAction>({
+      actions: TEST_ACTIONS,
+      getGamepads: () => {
+        polls++;
+        return [makePad({ axes: [1, 0] })];
+      },
+    });
+    controller.update(16);
+    controller.destroy();
+    controller.update(16);
+    expect(polls).toBe(1);
+    expect(controller.isActive).toBe(false);
+    expect(controller.getState().move.length()).toBe(0);
+  });
   it("update sonrası seçilen kol durumu getState'e yansır", () => {
     const pad = withAxes(withButton(makePad(), GAMEPAD_BUTTON.rightTrigger), [1, 0, 0, 0]);
     const controller = new GamepadController<TestAction>({

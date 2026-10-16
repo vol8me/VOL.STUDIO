@@ -197,6 +197,8 @@ ses ve insan kabulü yerine geçmez.
 
 `scripts/android/device-tour.mjs` bağlı bir cihazda kurulu uygulamayı adb girdisi ve WebView hata ayıklama
 kanalıyla sürer; her kontrol PASS / FAIL / NOT-RUN yazar ve JSON çıktıda cihaz seri numarası bulunmaz.
+WebView keşfi, bağlantı açılışı ve ifade değerlendirmesi 30 saniyeyle sınırlıdır. Kanal koparsa bekleyen
+işler hata ile sonlanır; keşif veya bağlantı açılışı başarısız olsa da adb yönlendirmesi kaldırılır.
 
 ```bash
 node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.apk>   [--wait-unlock <sn>] [--keep-awake] [--simulate-large-screen] [--shots <dizin>]

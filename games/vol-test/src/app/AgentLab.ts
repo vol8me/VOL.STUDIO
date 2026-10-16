@@ -1,3 +1,4 @@
+import { RingBuffer } from '@volstudio/core/collections';
 import { LAB } from '@/config/lab';
 import type { TankCommand } from '@/sim/command';
 
@@ -45,29 +46,6 @@ interface LabCommand {
 const INPUT_NUMBERS = ['moveX', 'moveY', 'aimX', 'aimY'] as const;
 const INPUT_FLAGS = ['fire', 'boost', 'brake'] as const;
 
-/** Sabit uzunluklu halka: dolunca en eskiyi ezer; okuma eskiden yeniye gider. */
-class Ring<T> {
-  private readonly items: T[] = [];
-  private next = 0;
-
-  constructor(private readonly capacity: number) {}
-
-  push(item: T): void {
-    if (this.items.length < this.capacity) this.items.push(item);
-    else this.items[this.next] = item;
-    this.next = (this.next + 1) % this.capacity;
-  }
-
-  /** Son `count` kayıt, eskiden yeniye. */
-  last(count: number): T[] {
-    const full = this.items.length >= this.capacity;
-    const ordered = full
-      ? [...this.items.slice(this.next), ...this.items.slice(0, this.next)]
-      : this.items;
-    return ordered.slice(Math.max(0, ordered.length - count));
-  }
-}
-
 function clampCount(value: unknown): number {
   const count =
     typeof value === 'number' && Number.isFinite(value) ? Math.floor(value) : LAB.defaultCount;
@@ -82,8 +60,8 @@ function clampCount(value: unknown): number {
  * kılma oyuncunun kendi komut yolundan geçer; simülasyon saati, RNG ve kurallar aynıdır.
  */
 export class AgentLab {
-  private readonly telemetry = new Ring<LabRecord>(LAB.telemetryCapacity);
-  private readonly events = new Ring<LabRecord>(LAB.eventCapacity);
+  private readonly telemetry = new RingBuffer<LabRecord>(LAB.telemetryCapacity);
+  private readonly events = new RingBuffer<LabRecord>(LAB.eventCapacity);
   private readonly registry = new Map<string, LabCommand>();
   private sampledAt = Number.NEGATIVE_INFINITY;
   private startedAt: number | null = null;
@@ -95,13 +73,13 @@ export class AgentLab {
     };
     add('help', 'Komut adlarını ve açıklamalarını döner.', () => this.help());
     add('state', 'Dünyanın o anki özeti: oyuncu, araç sayısı, senaryo, tohum.', () =>
-      this.source.state(),
+      structuredClone(this.source.state()),
     );
     add('telemetry', 'Son durum örnekleri (count, en çok 600), eskiden yeniye.', (args) =>
-      this.telemetry.last(clampCount(args.count)),
+      structuredClone(this.telemetry.toArray().slice(-clampCount(args.count))),
     );
     add('events', 'Son oyun olayları ve işaretler (count, en çok 600), eskiden yeniye.', (args) =>
-      this.events.last(clampCount(args.count)),
+      structuredClone(this.events.toArray().slice(-clampCount(args.count))),
     );
     add(
       'input',
@@ -141,21 +119,22 @@ export class AgentLab {
 
   /** Sahne karesinde çağrılır: örnekleme aralığı dolduysa durum örneği yazar. */
   sample(timeMs: number): void {
+    if (!Number.isFinite(timeMs) || timeMs < this.lastTimeMs) return;
     this.startedAt ??= timeMs;
     this.lastTimeMs = timeMs;
     if (timeMs - this.sampledAt < LAB.sampleMs) return;
     this.sampledAt = timeMs;
     this.telemetry.push({
+      ...structuredClone(this.source.state()),
       t: Math.round(timeMs - this.startedAt),
       ev: 'sample',
-      ...this.source.state(),
     });
   }
 
   /** Oyun olayını ya da işareti olay halkasına yazar (zaman: son örneklenen sahne saati). */
   record(ev: string, data: Json = {}): void {
     const started = this.startedAt ?? this.lastTimeMs;
-    this.events.push({ t: Math.round(this.lastTimeMs - started), ev, ...data });
+    this.events.push({ ...structuredClone(data), t: Math.round(this.lastTimeMs - started), ev });
   }
 
   private help(): Array<{ name: string; description: string }> {
@@ -200,9 +179,10 @@ export class AgentLab {
   }
 
   private jsonl(): string {
-    const rows = [...this.telemetry.last(LAB.maxCount), ...this.events.last(LAB.maxCount)].sort(
-      (a, b) => a.t - b.t,
-    );
+    const rows = [
+      ...this.telemetry.toArray().slice(-LAB.maxCount),
+      ...this.events.toArray().slice(-LAB.maxCount),
+    ].sort((a, b) => a.t - b.t);
     return rows.map((row) => JSON.stringify(row)).join('\n');
   }
 }
@@ -216,9 +196,21 @@ export interface VolLabApi {
 /** Laboratuvarı pencereye bağlar ve kaldıran işlevi döner. */
 export function installAgentLab(target: object, lab: AgentLab): () => void {
   const host = target as { volLab?: VolLabApi };
-  const api: VolLabApi = { commands: lab.commands, run: (name, args) => lab.run(name, args) };
+  let closed = false;
+  const api: VolLabApi = {
+    commands: lab.commands,
+    run: (name, args) => {
+      if (closed) throw new Error('Laboratuvar kapalı.');
+      return lab.run(name, args);
+    },
+  };
   host.volLab = api;
   return () => {
-    if (host.volLab === api) delete host.volLab;
+    if (closed) return;
+    closed = true;
+    if (host.volLab === api) {
+      delete host.volLab;
+      lab.run('release');
+    }
   };
 }

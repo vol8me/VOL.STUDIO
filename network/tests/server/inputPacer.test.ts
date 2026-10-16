@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { InputPacer, type InputSource } from '../../server/InputPacer';
+import { InputPacer, type InputSource } from '../../src/server/inputPacer';
 
 /** Sıralı bir girdi kuyruğu; Colyseus erişicisinin pacer'ın okuduğu kısmını taklit eder. */
 class Queue implements InputSource<number> {

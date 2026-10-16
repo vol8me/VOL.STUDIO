@@ -89,6 +89,25 @@ describe('JsonlReport', () => {
 });
 
 describe('runFleet', () => {
+  it('koşu bitince henüz başlamamış katılım bekleyişlerini iptal eder', async () => {
+    const host = await start();
+    const summary = await runFleet({
+      endpoint: host.endpoint,
+      roomName: 'tick',
+      clients: 2,
+      durationMs: 50,
+      rampMs: 3000,
+    });
+    expect(summary.durationMs).toBeLessThan(1000);
+    expect(summary.joined).toBeLessThanOrEqual(1);
+  });
+
+  it('sonsuz süre timer taşmasıyla bir milisaniyelik koşuya dönüşemez', async () => {
+    await expect(
+      runFleet({ endpoint: '', roomName: 'tick', clients: 1, durationMs: Infinity }),
+    ).rejects.toThrow(RangeError);
+  });
+
   it('istemcileri katar, girdi yollatır ve katılım, yama aralığı ve ping özetini verir', async () => {
     const host = await start();
     const report = JsonlReport.toMemory();

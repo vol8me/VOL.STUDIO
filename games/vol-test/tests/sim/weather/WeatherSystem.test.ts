@@ -9,6 +9,46 @@ function weather(override?: 'clear' | 'dust' | 'rain' | 'snow', seed = 7) {
 }
 
 describe('WeatherSystem', () => {
+  it('bozuk iklim takvimi hücreler ve saat değişmeden reddedilir', () => {
+    const model = weather();
+    model.step(350);
+    const before = model.snapshot();
+    const patches = [
+      { season: 'invalid' },
+      { elapsedMs: Number.MAX_SAFE_INTEGER + 1 },
+      { windMs: -1 },
+      { windMs: before.elapsedMs + 1 },
+      { surfaceMs: 1 },
+      { surfaceMs: 0 },
+    ];
+    for (const patch of patches) {
+      expect(model.restore({ ...before, ...patch } as typeof before)).toBe(false);
+      expect(model.snapshot()).toEqual(before);
+    }
+  });
+
+  it('yetkili iklim aynı mevsimdeki yerel hava zorlamasını da temizler', () => {
+    const source = weather();
+    source.step(1234);
+    const local = weather('snow');
+    expect(local.restore(source.snapshot())).toBe(true);
+    expect(local.frame).toEqual(source.frame);
+    local.setSeason('summer');
+    const natural = new WeatherSystem(512, 512, { seed: 7, season: 'summer' });
+    natural.step(1234);
+    expect(local.frame.snow).toBe(natural.frame.snow);
+  });
+
+  it('geçersiz mevsim ve alıştırma süresi mevcut takvimi değiştirmez', () => {
+    const model = weather('rain');
+    model.step(53);
+    const before = model.snapshot();
+    expect(() => model.setSeason('invalid' as 'summer')).toThrow(RangeError);
+    for (const warmup of [-1, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])
+      expect(() => model.setSeason('summer', warmup)).toThrow(RangeError);
+    expect(model.snapshot()).toEqual(before);
+  });
+
   it('rüzgâr mesafesi tek saatten birikir, delta bölünmesi ve duraklama sonucu değiştirmez', () => {
     const a = new WeatherSystem(128, 128, { seed: 7, override: 'dust', season: 'winter' });
     const b = new WeatherSystem(128, 128, { seed: 7, override: 'dust', season: 'winter' });
@@ -62,7 +102,8 @@ describe('WeatherSystem', () => {
     for (const size of [0, -1, NaN, Infinity])
       expect(() => new WeatherSystem(size, 32, { seed: 1 })).toThrow(RangeError);
     const model = weather();
-    for (const step of [-1, NaN, Infinity]) expect(() => model.step(step)).toThrow(RangeError);
+    for (const step of [-1, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])
+      expect(() => model.step(step)).toThrow(RangeError);
     model.step(0);
     expect(model.frame.elapsedMs).toBe(0);
     expect(model.sample(50, 50).grip).toBe(1);

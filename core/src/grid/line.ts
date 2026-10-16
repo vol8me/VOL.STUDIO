@@ -17,6 +17,13 @@ export function bresenhamLine(from: GridPoint, to: GridPoint): GridPoint[] {
   const targetCol = Math.trunc(to.col);
   const targetRow = Math.trunc(to.row);
 
+  if (![col, row, targetCol, targetRow].every(Number.isSafeInteger))
+    throw new RangeError('bresenhamLine: hücre koordinatları güvenli tam sayı olmalı');
+
+  // Yarım hücre eşitliğinde aynı taraf seçilsin; görüş sorgusu yönle değişmez.
+  if (col > targetCol || (col === targetCol && row > targetRow))
+    return bresenhamLine(to, from).reverse();
+
   const dCol = Math.abs(targetCol - col);
   const dRow = Math.abs(targetRow - row);
   const stepCol = col < targetCol ? 1 : -1;

@@ -20,7 +20,7 @@ export interface Zone {
   progress: number;
   /** Bölgenin sahibi; ilerleme sahibin ucuna ulaşınca değişir, sıfırı geçince tarafsızlaşır. */
   owner: number;
-  /** İki cepheden de araç çemberin içindeyse `true`: ilerleme durur. */
+  /** İki cepheden de araç çemberin içindeyse `true`; ilerleme yalnız sayı eşitliğinde durur. */
   contested: boolean;
   /** Çemberdeki canlı araç sayısı, cephe indeksine göre. */
   readonly presence: [number, number];
@@ -71,6 +71,9 @@ export class ZoneField {
    * sahibinin ucuna (sahibi yoksa sıfıra) yavaşça döner. Sahip değişimi `events`e yazılır.
    */
   step(stepMs: number, vehicles: readonly Vehicle[], events: WarEvent[]): void {
+    if (!Number.isFinite(stepMs) || stepMs < 0)
+      throw new RangeError('Bölge adımı sonlu ve negatif olmayan süre olmalı');
+    if (stepMs === 0) return;
     const dt = stepMs / 1000;
     const { soloSeconds, maxAdvantage, decayPerSecond } = WAR.capture;
     for (const zone of this.zones) {

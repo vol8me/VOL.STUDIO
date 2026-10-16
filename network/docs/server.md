@@ -37,9 +37,22 @@ URL'sini yola çevirerek sınar; `file:///` birleştirmesi POSIX'te yanlış eş
 
 `authenticateJoin(options)` oda `onAuth`unda çağrılır: protokol sürümünü ve oda kodu biçimini doğrular,
 adı temizler ve `{ name, code }` döndürür. `rejectJoin(neden)` istemcide `JoinError(neden)` olarak
-görünen `ServerError(4400, neden)` üretir. Ret **`onAuth`ta** yapılır: `onCreate`te fırlatılan
-`ServerError`un kodu Colyseus'un HTTP katmanında durum kodu olur ve 4400 geçersiz olduğu için istemci
-nedensiz `500` görür. `uniqueName(istenen, alınanlar)` odada çakışan adı `Ada 2`, `Ada 3` diye açar.
+görünen `ServerError(4400, neden)` üretir. Oda yaratılmadan önce çalışan statik `onAuth`,
+HTTP durum kodu kullanmalıdır (`400`, aynı neden); istemci her iki taşıma biçimini tanır.
+`4400` HTTP'de geçersizdir ve nedensiz `500` üretir. Statik ön denetim `true` döndürdüğünde
+instance `onAuth` yerel nesne bağlarını yeniden kurabilir; kimlik doğrulama yükü dönerse
+Colyseus instance kancasını atlar ([resmî yaşam döngüsü](https://docs.colyseus.io/auth/room)).
+`uniqueName(istenen, alınanlar)` odada çakışan adı `Ada 2`, `Ada 3` diye açar.
+
+`RoomSlots` pahalı oda kurulmadan önce süreç içi yer ayırır; `claim()` kapasitede `null`,
+başarıda idempotent bırakma işlevi verir. Oda kurulum hatası ve `onDispose` yeri bırakmalıdır.
+HTTP rezervasyonları WebSocket sınırına dahil olmadığı için oda tavanı ayrıca gerekir.
+VOL.TEST birincil ve taşma odalarını birlikte sınırlar; bu güvenlik tavanı ölçülmüş yük kapasitesi değildir.
+
+`InputPacer<C>` adım başına tek girdi tüketir, titreşim tamponu ve sınırlı son-komut tutma uygular.
+Tutulan komutun dönüşümü tüketicinin `hold` callback'indedir; paket oyun kuralı taşımaz.
+`ServerTimeline` (`./client`) benzetim zamanını SDK sunucu saatine bağlar; zamanlı veri kuyruğu
+oyundan bağımsız `@volstudio/core/time` `EventQueue` mekanizmasıdır.
 
 ## Bağlantı kapısı ve kötüye kullanım sınırları
 
@@ -63,7 +76,8 @@ Colyseus `context.ip`si `x-real-ip` ve `x-forwarded-for` başlıklarına güveni
 yazabildiği için sınır olarak kullanılmaz. Önde güvenilir bir ters vekil varsa `VOL_NET_TRUST_PROXY=1`
 adresi `X-Forwarded-For`un **sağ** ucundan okur (vekilin eklediği değer). IPv6 adresleri /64 önekine
 indirgenir: bir ağ tek adres sayılır ve saldırgan aynı önek içinde adres döndürerek sınırı aşamaz.
-Toplam soket sınırı oda sayısını dolaylı bağlar; oda başına oyuncu sınırı odanın `maxClients`idir.
+IPv4-eşlemeli IPv6'nın onaltılık ve noktalı yazımları aynı kovayı kullanır; bozuk forwarded
+adres soketin adresine düşer. Oda başına oyuncu sınırı odanın `maxClients`idir.
 
 İstemcide kapının reddi `JoinError('busy')` olur (`429`/`503`); oyun "biraz sonra dene" der. Yükseltme aşamasındaki ret
 WebSocket hatası olarak göründüğünden `unreachable` kalır. Köken denetimi yalnız `Origin` başlığı gönderen istemciyi (tarayıcı, Tauri/Android webview) sınar;
@@ -71,7 +85,9 @@ başlıksız Node istemcisi geçer, çünkü başlığı sahteleyebilen istemci 
 değildir. Liste boşsa denetim yoktur; uzak erişim açılırken (`VOL_NET_HOST=0.0.0.0`) liste verilmelidir.
 Tauri kabuğunun kökenleri `tauri://localhost`, `http://tauri.localhost` ve `https://tauri.localhost`tur.
 İzlenen adres sayısı 50 000 ile sınırlıdır; boşta kalan adresler süpürülür. Saldırı sırasında günlük
-şişmesin diye her ret nedeni günlüğe bir kez yazılır; sayaçlar `ConnectionGuard.stats()`tadır.
+şişmesin diye her ret nedeni günlüğe bir kez yazılır; istemci adresi yazılmaz.
+Sayaçlar `ConnectionGuard.stats()`tadır. Kökenler URL biçimiyle doğrulanır, varsayılan port ve
+büyük harf normalleştirilir; kullanıcı bilgisi, sorgu veya fragment taşıyan liste başlatmayı durdurur.
 
 ### Yavaş tüketici
 
@@ -87,7 +103,9 @@ okunur, yoksa 0 döner (ölçüm eksik olabilir, sunucuyu düşüremez).
 `Logger` yapılandırılmış JSONL yazar: `{ seq, t, lvl, src, ev, data? }`. `ev` noktalı küçük harfli
 olay adıdır (`listening`, `host.signal`). Kayıtlar sınırlı bir halkada da tutulur; `since(seq, limit,
 minLevel)` `{ records, next, dropped }` döndürür, `dropped` halkadan düşmüş kayıt sayısıdır. Hedef
-yazımı sunucuyu düşürmez. `stdoutSink` her kaydı bir satır yazar; `fileSink` satırları tamponlar ve
+yazımı sunucuyu düşürmez. Halka da JSONL ile aynı serileştirilebilir anlık görüntüyü tutar;
+sonradan değiştirilen veri ve döngüsel nesne `/logs`u bozamaz. Kapanış idempotenttir ve bir hedefin
+hatası diğer hedefleri kapatmayı engellemez. `stdoutSink` her kaydı bir satır yazar; `fileSink` satırları tamponlar ve
 `flushMs` aralığında ya da kapanışta yazar (`SIGKILL`de son aralık kaybolabilir).
 
 ## İşletim kapısı
@@ -105,8 +123,9 @@ kapısıdır.
 `Host` başlığı loopback değilse 403 verilir (DNS yeniden bağlama); joker adrese (`0.0.0.0`) bağlanmak
 açık uzak erişim kararıdır ve bu sınırı kaldırır. Gövde 64 KiB üstünde 413, geçersiz JSON 400, bilinmeyen
 yol 404, yanlış yöntem 405 alır. Rota `OpsError(status, message)` fırlatarak durum kodu seçer; başka hata
-500 olur, ayrıntı yanıta sızmaz ve günlüğe yazılır. CORS yoktur: tarayıcı sayfası bu kapıyı çağıramaz,
-ajan ve betikler Node'dan okur.
+500 olur, ayrıntı yanıta sızmaz ve günlüğe yazılır. `Origin` taşıyan veya `Sec-Fetch-Site: cross-site`
+istekler rota çalışmadan 403 alır: yalnız CORS eksikliği basit POST'un yan etkisini önlemez.
+Ajan ve betikler Node'dan okur. IPv6 dinleme adresleri köşeli parantezli kullanılabilir URL döndürür.
 
 ## Ölçüm ve sınırlar
 
@@ -114,7 +133,10 @@ ajan ve betikler Node'dan okur.
   çıkarılır, Windows'ta zamanlayıcı ayrıca ~15,6 ms ayrıktır. Okuma histogramı sıfırlar ve sıfırlamadan
   sonraki ilk örnek yalnız zaman çıpasıdır, ölçülmez.
 - `processSnapshot()`: bellek, işlemci, çalışma süresi, süreç ve sürüm bilgisi.
-- `Ring`/`summarize`: son N ölçümün ortalama, p50, p99 ve en büyük değeri; ayırma yapmaz.
+- `summarize`: CORE `@volstudio/core/collections` `RollingWindow` ölçümlerini milisaniye
+  özeti olarak verir (ortalama, p50, p99 ve en büyük değer). Son N örneğin saklanması CORE'a
+  aittir; ekleme tahsissizdir, yüzdelik sıralaması istendiğinde oluşturulur ve yeni örneğe kadar
+  yeniden kullanılır. Olay döngüsü ve süreç ölçümleri Node'a özgü olduğundan bu pakette kalır.
 - `TokenBucket(ratePerSecond, burst, startAt)`: oyuncu başına komut ve adres başına istek sınırı; saat dışarıdan verilir.
 - `envInteger`, `envText`, `envChoice`, `envFlag`: geçersiz değer başlatmayı `RangeError` ile durdurur.
   `listenSettings`: `VOL_NET_PORT` (varsayılan 2567) ve `VOL_NET_HOST` (varsayılan loopback).

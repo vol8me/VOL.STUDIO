@@ -4,7 +4,7 @@ import { COMBAT, PROJECTILE_CAPACITY, type CombatConfig } from '@/config/combat'
 import { PARTS } from '@/config/parts';
 import { bitIndex, partSide } from './chassis/parts';
 import { idleCommand, type TankCommand } from './command';
-import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
+import { Projectiles, type Projectile, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
 import {
@@ -91,6 +91,7 @@ export class Simulation {
   private readonly collisionDamagePairs = new Set<string>();
   private nextId: EntityId = 1;
   private playerId: EntityId | null = null;
+  private rosterRevision = 0;
   timeMs = 0;
 
   constructor(options: SimulationOptions) {
@@ -105,8 +106,10 @@ export class Simulation {
       options.projectileCapacity ?? PROJECTILE_CAPACITY,
       weapon.projectileLifeMs,
       weapon.flight,
+      WEAPON_STYLES.indexOf(weapon.style),
     );
     this.profileWeapons[0] = weapon;
+    this.weaponProfiles.set(weapon, 0);
     this.applyAir();
     if (options.spawnPlayer !== false) {
       const center = this.world.center;
@@ -116,6 +119,11 @@ export class Simulation {
 
   get vehicles(): readonly Vehicle[] {
     return this.vehicleList;
+  }
+
+  /** Araç üyeliği değişince artar; uzamsal tüketiciler eski varlık referanslarını bırakır. */
+  get vehicleRevision(): number {
+    return this.rosterRevision;
   }
 
   /**
@@ -172,16 +180,19 @@ export class Simulation {
     id?: EntityId,
     spec: VehicleSpec = this.defaultSpec,
   ): Vehicle {
+    if (![x, y, hull].every(Number.isFinite)) throw new RangeError('Doğma konumu sonlu olmalı');
     if (team !== null && !Number.isSafeInteger(team))
       throw new RangeError('Takım kimliği güvenli tamsayı olmalı');
-    if (id !== undefined && (!Number.isSafeInteger(id) || id < 1 || this.vehicle(id)))
+    const nextId = id ?? this.nextId;
+    if (!Number.isSafeInteger(nextId) || nextId < 1 || this.vehicle(nextId))
       throw new RangeError('Araç kimliği pozitif, güvenli ve tekil tamsayı olmalı');
-    this.nextId = Math.max(this.nextId, (id ?? 0) + 1);
     this.profileFor(spec.armament.weapon);
-    const vehicle = new Vehicle(id ?? this.nextId++, spec, this.combat, team);
+    const vehicle = new Vehicle(nextId, spec, this.combat, team);
     vehicle.chassis.place(x, y, hull);
     Object.assign(vehicle.spawnPoint, { x, y, hull });
+    this.nextId = Math.max(this.nextId, nextId + 1);
     this.vehicleList.push(vehicle);
+    this.rosterRevision++;
     this.inputs.set(vehicle.id, idleCommand());
     return vehicle;
   }
@@ -192,6 +203,7 @@ export class Simulation {
     const index = this.vehicleList.findIndex((vehicle) => vehicle.id === id);
     if (index < 0) return;
     this.vehicleList.splice(index, 1);
+    this.rosterRevision++;
     this.inputs.delete(id);
     this.drownCarry.delete(id);
   }
@@ -203,11 +215,12 @@ export class Simulation {
   replacePlayer(spec: VehicleSpec): Vehicle {
     const old = this.player;
     const { x, y, hull } = old.chassis;
+    const next = this.spawn(x, y, hull, old.team, undefined, spec);
     const index = this.vehicleList.indexOf(old);
     this.vehicleList.splice(index, 1);
+    this.rosterRevision++;
     this.inputs.delete(old.id);
     this.drownCarry.delete(old.id);
-    const next = this.spawn(x, y, hull, old.team, undefined, spec);
     Object.assign(next.spawnPoint, old.spawnPoint);
     this.playerId = next.id;
     return next;
@@ -220,10 +233,22 @@ export class Simulation {
     source?: EntityId,
     cause: DamageCause = 'direct',
   ): number {
+    return this.damage(targetId, amount, source, cause);
+  }
+
+  private damage(
+    targetId: EntityId,
+    amount: number,
+    source: EntityId | undefined,
+    cause: DamageCause,
+    projectileScale?: number,
+  ): number {
     const target = this.vehicle(targetId);
     if (!target) return 0;
     if (source !== undefined && this.isFriendly(source, target)) return 0;
-    const applied = target.vitality.damage(this.scaleDamage(target, amount, source, cause));
+    const applied = target.vitality.damage(
+      this.scaleDamage(target, amount, source, cause, projectileScale),
+    );
     if (applied === 0) return 0;
     target.wear.touch();
     this.emit({
@@ -280,11 +305,12 @@ export class Simulation {
     amount: number,
     source: EntityId | undefined,
     cause: DamageCause,
+    projectileScale?: number,
   ): number {
     if (cause === 'drown') return amount;
     let scale = target.effect.taken;
     const dealer = source === undefined ? undefined : this.vehicle(source);
-    if (dealer && cause === 'projectile') scale *= dealer.effect.dealt;
+    if (cause === 'projectile') scale *= projectileScale ?? dealer?.effect.dealt ?? 1;
     if (cause === 'collision') {
       if (dealer) scale *= dealer.effect.ram;
       scale *= target.effect.ramTaken;
@@ -377,9 +403,20 @@ export class Simulation {
     return source !== undefined && source.team === target.team;
   }
 
-  private canProjectileHit(owner: EntityId, target: ProjectileTarget): boolean {
+  private canProjectileHit(
+    owner: EntityId,
+    target: ProjectileTarget,
+    projectile?: Projectile,
+  ): boolean {
     const vehicle = this.vehicle(target.id);
-    return vehicle !== undefined && vehicle.vitality.alive && !this.isFriendly(owner, vehicle);
+    if (!vehicle || !vehicle.vitality.alive) return false;
+    if (
+      !this.combat.friendlyFire &&
+      vehicle.team !== null &&
+      projectile?.sourceTeam === vehicle.team
+    )
+      return false;
+    return !this.isFriendly(owner, vehicle);
   }
 
   /**
@@ -388,8 +425,9 @@ export class Simulation {
    * komutunu alır.
    */
   step(input: TankCommand | CommandSource, stepMs: number): void {
-    if (!Number.isFinite(stepMs) || stepMs < 0)
+    if (!Number.isFinite(stepMs) || stepMs < 0 || !Number.isFinite(this.timeMs + stepMs))
       throw new RangeError('Simülasyon adımı sonlu ve negatif olmayan süre olmalı');
+    if (stepMs === 0) return;
     this.weather?.step(stepMs);
     this.applyAir();
     const dt = stepMs / 1000;
@@ -427,10 +465,10 @@ export class Simulation {
         const offsetY = Math.cos(tank.hull) * tank.trackOffset;
         const left = tank.groundLeft - groundLeft;
         const right = tank.groundRight - groundRight;
-        this.weather.compress(tank.x - offsetX, tank.y - offsetY, left * amountPerUnit);
-        this.weather.compress(tank.x + offsetX, tank.y + offsetY, right * amountPerUnit);
         // Geçen palet ve ayak yeşilliği ezer; süzülen araç yere değmez.
         if (tank.kind !== 'hover') {
+          this.weather.compress(tank.x - offsetX, tank.y - offsetY, left * amountPerUnit);
+          this.weather.compress(tank.x + offsetX, tank.y + offsetY, right * amountPerUnit);
           this.weather.trample(tank.x - offsetX, tank.y - offsetY, left * tramplePerUnit);
           this.weather.trample(tank.x + offsetX, tank.y + offsetY, right * tramplePerUnit);
         }
@@ -477,11 +515,17 @@ export class Simulation {
           projectile.x,
           projectile.y,
         );
-        const applied = this.applyDamage(struck.id, weapon.damage, projectile.owner, 'projectile');
+        const applied = this.damage(
+          struck.id,
+          weapon.damage,
+          projectile.owner,
+          'projectile',
+          projectile.damageScale,
+        );
         if (applied > 0 && struck.vitality.alive)
           this.wearParts(struck, projectile.x, projectile.y, applied);
       },
-      (owner, target) => this.canProjectileHit(owner, target),
+      (owner, target, projectile) => this.canProjectileHit(owner, target, projectile),
     );
     if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS);
   }
@@ -568,6 +612,7 @@ export class Simulation {
 
   private emit(event: SimEvent): void {
     this.events.push(event);
+    if (this.events.length > MAX_EVENTS) this.events.splice(0, this.events.length - MAX_EVENTS);
   }
 
   /**
@@ -690,6 +735,7 @@ export class Simulation {
         launch.vy,
         profile,
         this.elevationOf(vehicle),
+        { team: vehicle.team, damageScale: vehicle.effect.dealt },
       );
       this.emit({
         kind: 'fired',

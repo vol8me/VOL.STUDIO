@@ -76,6 +76,12 @@ sunulur. Çıkış niyeti uygulama düzeyinde sonlandırmaya dönüşür.
 `DisplayModeController` native durum sorgusunu ve tercih uygulamasını aynı
 kuyrukta tutar. Kapanış önce bu niyeti yerleştirir, sonra ayar snapshot'ını
 yazar; destroy sonrası geç sorgu eski sahibin tercihini değiştirmez.
+Eşzamanlı `start()` çağrıları aynı kurulumun tamamlanmasını bekler. Kendi
+tam ekran isteğinin gecikmiş native/DOM olayı daha yeni tercihi geri alamaz.
+Dış pencere değişiminden doğan tercih yazımları da `flush()` kapsamındadır;
+reddedilen yazım kapanışa hata olarak ulaşır, sonraki başarılı yazım hatayı
+temizler. Pencere ve tercih abonelikleri ile F11 dinleyicisi tek
+`DisposableScope` altında kapanır; bir temizleme hatası diğerlerini sızdırmaz.
 `reportDiagnostics` IPC ve native append/sync hatasını reddeder;
 oyun hata sınırı reddi yakalar, ölçüm sahibi kaybı sayar. Kayıp veya eksik
 pencere cihaz ölçümünde başarılı kabul üretmez; hata metni yerel dosya yolu taşımaz.

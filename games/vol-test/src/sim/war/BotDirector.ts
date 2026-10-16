@@ -31,6 +31,8 @@ export class BotDirector {
     seed: number,
     private readonly perFaction: number = WAR.population.perFaction,
   ) {
+    if (!Number.isSafeInteger(perFaction) || perFaction < 0)
+      throw new RangeError('Cephe nüfusu negatif olmayan güvenli tamsayı olmalı');
     this.random = createStatefulRandom(seed);
     this.roster = new WeightedPicker(
       VEHICLE_IDS.map((id) => ({
@@ -50,6 +52,8 @@ export class BotDirector {
   review(war: War, force = false): void {
     if (!force && war.timeMs < this.reviewAtMs) return;
     this.reviewAtMs = war.timeMs + WAR.population.reviewMs;
+    for (const id of this.assignments.keys())
+      if (!war.combatants.has(id)) this.assignments.delete(id);
     for (let faction = 0; faction < WAR.factions; faction++) {
       this.trim(war, faction);
       while (war.population(faction) < this.perFaction) this.spawnBot(war, faction);
@@ -85,7 +89,7 @@ export class BotDirector {
         );
       }
       // Ölü bot hiçbir oyuncunun gözünden kaybolmaz; bu yüzden en yüksek puanı alır.
-      const score = vehicle.vitality.alive ? nearest : Number.MAX_VALUE;
+      const score = vehicle.vitality.alive ? (Number.isFinite(nearest) ? nearest : 0) : Infinity;
       if (score > chosenScore) {
         chosenScore = score;
         chosen = combatant;

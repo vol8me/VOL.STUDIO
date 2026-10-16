@@ -45,6 +45,39 @@ afterEach(() => {
 });
 
 describe('routeSimEvents', () => {
+  it('aynı paketteki her hasar kendi önceki isabetine bağlanır; duvar hasarı mermi noktasını kullanmaz', () => {
+    const t = targets();
+    routeSimEvents(
+      [
+        { kind: 'hit', owner: PLAYER, target: OTHER, x: 10, y: 20, angle: 0 },
+        {
+          kind: 'damaged',
+          source: PLAYER,
+          target: OTHER,
+          cause: 'projectile',
+          amount: 5,
+          health: 95,
+        },
+        { kind: 'hit', owner: PLAYER, target: OTHER, x: 50, y: 60, angle: 0 },
+        {
+          kind: 'damaged',
+          source: PLAYER,
+          target: OTHER,
+          cause: 'projectile',
+          amount: 7,
+          health: 88,
+        },
+        { kind: 'damaged', source: undefined, target: OTHER, cause: 'wall', amount: 3, health: 85 },
+      ],
+      t,
+    );
+    expect(t.effects.damage.mock.calls).toEqual([
+      [10, 20, 5, 'dealt'],
+      [50, 60, 7, 'dealt'],
+      [70, 80, 3, 'other'],
+    ]);
+  });
+
   it('oyuncunun atışı: namlu, küçük kamera itmesi ve titreşim; sarsıntı YOK', () => {
     const t = targets();
     routeSimEvents(

@@ -13,6 +13,7 @@ const STEP_MS = 1000 / 60;
 const WARMUP_STEPS = 120;
 const SAMPLES = 25;
 const STEPS_PER_SAMPLE = 60;
+const LIFE_MS = (Math.max(WARMUP_STEPS, STEPS_PER_SAMPLE) + 1) * STEP_MS;
 
 const map = new World(1_000_000, 1_000_000, 128);
 const events: SimEvent[] = [];
@@ -32,7 +33,7 @@ function median(values: number[]): number {
 }
 
 const projectilesSeries = COUNTS.map((count) => {
-  const projectiles = new Projectiles(count, Number.POSITIVE_INFINITY);
+  const projectiles = new Projectiles(count, LIFE_MS);
   load(projectiles, count);
   for (let step = 0; step < WARMUP_STEPS; step++) projectiles.step(STEP_MS, map, events);
   const samples: number[] = [];

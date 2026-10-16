@@ -1,9 +1,67 @@
 import { describe, expect, it } from 'vitest';
-import { VEHICLE_IDS } from '@/config/vehicles';
+import { VEHICLE_IDS, VEHICLES } from '@/config/vehicles';
 import { ScenarioRunner } from '@/sim/scenarios/ScenarioRunner';
 import { command, simulation, STEP_MS } from '../../support/sim';
 
 describe('ScenarioRunner', () => {
+  it('dünya kenarında her araç kendi ayak iziyle tamamen içeride doğar', () => {
+    const sim = simulation(1024);
+    sim.player.chassis.place(80, 80, 0);
+    const runner = new ScenarioRunner(sim);
+    runner.select('sandbox', 1);
+    for (const vehicle of sim.vehicles) {
+      const chassis = vehicle.chassis;
+      const { halfLength, halfWidth } = chassis.shape;
+      for (const forward of [-halfLength, halfLength])
+        for (const right of [-halfWidth, halfWidth]) {
+          const x = chassis.x + Math.cos(chassis.hull) * forward - Math.sin(chassis.hull) * right;
+          const y = chassis.y + Math.sin(chassis.hull) * forward + Math.cos(chassis.hull) * right;
+          expect(sim.world.contains(x, y), vehicle.spec.id).toBe(true);
+        }
+    }
+  });
+
+  it('geçersiz seçim çalışan senaryoyu silmez', () => {
+    const sim = simulation();
+    const runner = new ScenarioRunner(sim);
+    runner.select('sandbox', 7);
+    const before = [...sim.vehicles];
+    expect(() => runner.select('invalid' as 'empty', 7)).toThrow(RangeError);
+    expect(() => runner.select('empty', NaN)).toThrow(RangeError);
+    expect(sim.vehicles).toEqual(before);
+    expect(runner.scenario).toBe('sandbox');
+    expect(runner.currentSeed).toBe(7);
+  });
+
+  it('geliştirici araç değişiminde eski oyuncu referansını bırakır ve yeni konuma nişan alır', () => {
+    const sim = simulation();
+    const runner = new ScenarioRunner(sim);
+    runner.select('multitank', 7);
+    const observer = sim.vehicles[1];
+    for (const other of sim.vehicles.slice(2)) sim.despawn(other.id);
+    observer.chassis.place(1000, 1000, 0);
+    sim.player.chassis.place(1100, 1000, 0);
+    expect(runner.commandFor(observer, command()).aimX).toBe(100);
+    const next = sim.replacePlayer(VEHICLES.goliath);
+    next.chassis.place(900, 1000, 0);
+    expect(runner.commandFor(observer, command()).aimX).toBe(-100);
+  });
+
+  it('yakındaki enkaz hedef değildir; yeniden doğan araç tekrar hedef olur', () => {
+    const sim = simulation();
+    const runner = new ScenarioRunner(sim);
+    runner.select('multitank', 7);
+    const observer = sim.vehicles[1];
+    for (const other of sim.vehicles.slice(2)) sim.despawn(other.id);
+    observer.chassis.place(1000, 1000, 0);
+    sim.player.chassis.place(1100, 1000, 0);
+    sim.applyDamage(sim.player.id, sim.player.vitality.maxHealth);
+    expect(runner.commandFor(observer, command()).aimX).toBe(0);
+    sim.respawnVehicle(sim.player.id, 1100, 1000, 0);
+    sim.timeMs += STEP_MS;
+    expect(runner.commandFor(observer, command()).aimX).toBe(100);
+  });
+
   it('boş dünyayı korur; tekrar açıp kapamak araç, mermi ve indeks büyütmez', () => {
     const sim = simulation();
     const runner = new ScenarioRunner(sim);

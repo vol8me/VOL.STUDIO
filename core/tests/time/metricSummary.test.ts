@@ -19,4 +19,19 @@ describe('summarizeMetricSamples', () => {
     expect(summarizeMetricSamples([])).toBeNull();
     expect(summarizeMetricSamples([NaN])).toBeNull();
   });
+
+  it('negatif ve taşan toplamlı örnekleri ortak sayısal pencereyle özetler', () => {
+    expect(summarizeMetricSamples([-4, -2])).toEqual({
+      min: -4,
+      max: -2,
+      avg: -3,
+      samples: 2,
+      p50: -2,
+      p95: -2,
+      p99: -2,
+    });
+    expect(summarizeMetricSamples([Number.MAX_VALUE, Number.MAX_VALUE])?.avg).toBe(
+      Number.MAX_VALUE,
+    );
+  });
 });

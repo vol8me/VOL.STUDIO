@@ -39,6 +39,7 @@ export class PathFinder {
   private readonly stamp: Int32Array;
   private readonly open: MinHeap;
   private generation = 0;
+  private searching = false;
 
   constructor(
     readonly cols: number,
@@ -57,15 +58,21 @@ export class PathFinder {
 
   /** Bkz. `findPath` — aynı sözleşme, tamponlar yeniden kullanılır. */
   find(start: GridPoint, goal: GridPoint, options: FindPathOptions = {}): GridPoint[] | null {
-    this.generation++;
-    this.open.clear();
-    return search({ cols: this.cols, rows: this.rows }, start, goal, options, {
-      gScore: this.gScore,
-      cameFrom: this.cameFrom,
-      stamp: this.stamp,
-      generation: this.generation,
-      open: this.open,
-    });
+    if (this.searching) throw new Error('PathFinder: find sırasında yeniden giriş yapılamaz');
+    this.searching = true;
+    try {
+      this.generation++;
+      this.open.clear();
+      return search({ cols: this.cols, rows: this.rows }, start, goal, options, {
+        gScore: this.gScore,
+        cameFrom: this.cameFrom,
+        stamp: this.stamp,
+        generation: this.generation,
+        open: this.open,
+      });
+    } finally {
+      this.searching = false;
+    }
   }
 }
 
@@ -126,7 +133,12 @@ function search(
   const maxNodes = options.maxNodes ?? cols * rows;
 
   const inBounds = (p: GridPoint): boolean =>
-    p.col >= 0 && p.row >= 0 && p.col < cols && p.row < rows;
+    Number.isInteger(p.col) &&
+    Number.isInteger(p.row) &&
+    p.col >= 0 &&
+    p.row >= 0 &&
+    p.col < cols &&
+    p.row < rows;
 
   if (!inBounds(start) || !inBounds(goal)) return null;
   if (!isWalkable(start) || !isWalkable(goal)) return null;
@@ -134,11 +146,16 @@ function search(
   const index = (p: GridPoint): number => p.row * cols + p.col;
   const startIndex = index(start);
   const goalIndex = index(goal);
-  if (startIndex === goalIndex) return [start];
+  if (startIndex === goalIndex) return [{ col: start.col, row: start.row }];
 
   // Çapraz komşuluk varsa Chebyshev, yoksa Manhattan — admissible kalması için.
   const hasDiagonal = neighbours.some((n) => n.col !== 0 && n.row !== 0);
+  // Özel maliyetin alt sınırı ve atlamalı komşuluğun geometrisi bilinmez.
+  const useHeuristic =
+    options.cost === undefined &&
+    neighbours.every((offset) => Math.abs(offset.col) <= 1 && Math.abs(offset.row) <= 1);
   const heuristic = (col: number, row: number): number => {
+    if (!useHeuristic) return 0;
     const dx = Math.abs(col - goal.col);
     const dy = Math.abs(row - goal.row);
     return hasDiagonal ? Math.max(dx, dy) : dx + dy;

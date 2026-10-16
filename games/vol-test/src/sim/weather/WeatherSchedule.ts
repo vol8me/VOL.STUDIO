@@ -62,7 +62,7 @@ export class WeatherSchedule {
   }
 
   eventAt(elapsedMs: number): WeatherEvent {
-    if (!Number.isFinite(elapsedMs) || elapsedMs < 0)
+    if (!Number.isFinite(elapsedMs) || elapsedMs < 0 || elapsedMs > Number.MAX_SAFE_INTEGER)
       throw new RangeError('Hava saati sonlu ve negatif olmayan bir sayı olmalı.');
     const block = Math.floor(elapsedMs / WEATHER.events.maxMs);
     const random = createRandom(this.seed ^ Math.imul(block + 1, 0x9e3779b1));

@@ -53,7 +53,6 @@ export class TextArea {
     this.maxLength = maxLength;
     this.onInputHandler = onInput;
     this.onCommitHandler = onCommit;
-    this.committedValue = value;
 
     this.element = document.createElement('div');
     this.element.className = 'vol-textarea';
@@ -62,15 +61,16 @@ export class TextArea {
     this.textarea.className = 'vol-textarea__input';
     this.textarea.rows = rows;
     this.textarea.value = value;
+    this.committedValue = this.textarea.value;
     this.textarea.disabled = disabled;
     this.textarea.readOnly = readOnly;
     if (ariaLabel) this.textarea.setAttribute('aria-label', ariaLabel);
     this.setInvalid(invalid);
     if (placeholder) this.textarea.placeholder = placeholder;
-    if (maxLength) this.textarea.maxLength = maxLength;
+    if (maxLength !== undefined) this.textarea.maxLength = maxLength;
     this.element.appendChild(this.textarea);
 
-    if (maxLength) {
+    if (maxLength !== undefined) {
       this.counterElement = document.createElement('span');
       this.counterElement.className = 'vol-textarea__counter';
       this.element.appendChild(this.counterElement);
@@ -117,7 +117,7 @@ export class TextArea {
       this.cancelTextEntry = requestTextEntryForElement(this.textarea, {
         multiline: true,
         apply: (value) => {
-          this.textarea.value = value.slice(0, this.maxLength);
+          this.textarea.value = value;
           boundInput();
           boundChange();
         },
@@ -150,19 +150,20 @@ export class TextArea {
   setValue(value: string): void {
     this.cancelTextEntry?.();
     this.textarea.value = value;
-    this.committedValue = value;
+    this.committedValue = this.textarea.value;
     this.renderCounter();
   }
 
   setValueAndNotify(value: string): void {
     this.cancelTextEntry?.();
-    const changed = value !== this.textarea.value;
+    const previous = this.textarea.value;
     this.textarea.value = value;
-    this.committedValue = value;
+    const actual = this.textarea.value;
+    this.committedValue = actual;
     this.renderCounter();
-    if (changed) {
-      this.onInputHandler?.(value);
-      this.onCommitHandler?.(value);
+    if (actual !== previous) {
+      this.onInputHandler?.(actual);
+      this.onCommitHandler?.(actual);
     }
   }
 
@@ -194,7 +195,7 @@ export class TextArea {
   }
 
   private renderCounter(): void {
-    if (!this.counterElement || !this.maxLength) return;
+    if (!this.counterElement || this.maxLength === undefined) return;
     this.counterElement.textContent = `${this.textarea.value.length} / ${this.maxLength}`;
   }
 }

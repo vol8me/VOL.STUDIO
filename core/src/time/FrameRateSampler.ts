@@ -1,74 +1,4 @@
-/**
- * Kayan pencere istatistiği. min/max yalnızca pencereden eleman DÜŞTÜĞÜNDE tam
- * tarama ile güncellenir; her eklemede `Math.min(...values)` çağırmak ölçüm
- * aracının kendi maliyetini ölçtüğü şeye yaklaştırır.
- */
-export class RollingWindow {
-  private readonly values: number[] = [];
-  private readonly capacity: number;
-  private total = 0;
-  private minValue = 0;
-  private maxValue = 0;
-
-  constructor(capacity = 60) {
-    this.capacity = Math.max(1, Math.floor(capacity));
-  }
-
-  push(value: number): void {
-    this.values.push(value);
-    this.total += value;
-
-    if (this.values.length > this.capacity) {
-      const removed = this.values.shift()!;
-      this.total -= removed;
-      if (removed === this.minValue || removed === this.maxValue) {
-        this.recomputeExtremes();
-        return;
-      }
-    } else if (this.values.length === 1) {
-      this.minValue = value;
-      this.maxValue = value;
-      return;
-    }
-
-    if (value < this.minValue) this.minValue = value;
-    if (value > this.maxValue) this.maxValue = value;
-  }
-
-  clear(): void {
-    this.values.length = 0;
-    this.total = 0;
-    this.minValue = 0;
-    this.maxValue = 0;
-  }
-
-  get count(): number {
-    return this.values.length;
-  }
-
-  get average(): number {
-    return this.values.length > 0 ? this.total / this.values.length : 0;
-  }
-
-  get min(): number {
-    return this.minValue;
-  }
-
-  get max(): number {
-    return this.maxValue;
-  }
-
-  private recomputeExtremes(): void {
-    let min = Infinity;
-    let max = -Infinity;
-    for (const sample of this.values) {
-      if (sample < min) min = sample;
-      if (sample > max) max = sample;
-    }
-    this.minValue = Number.isFinite(min) ? min : 0;
-    this.maxValue = Number.isFinite(max) ? max : 0;
-  }
-}
+import { RollingWindow } from '../collections/RollingWindow';
 
 /**
  * Kare aralığı örnekleyicisi — damgalardan aralık üretir, aralıklardan FPS.
@@ -98,6 +28,7 @@ export class FrameRateSampler {
    * @returns Bir örnek üretildiyse `true`.
    */
   sample(nowMs: number): boolean {
+    if (!Number.isFinite(nowMs)) return false;
     const hadBaseline = this.hasBaseline;
     if (hadBaseline) this.window.push(nowMs - this.lastMs);
     this.lastMs = nowMs;
@@ -111,6 +42,7 @@ export class FrameRateSampler {
    * girerse FPS dakikalarca düşük görünür.
    */
   markBaseline(nowMs: number): void {
+    if (!Number.isFinite(nowMs)) return;
     this.lastMs = nowMs;
     this.hasBaseline = true;
   }

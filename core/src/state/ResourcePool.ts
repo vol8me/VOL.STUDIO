@@ -21,8 +21,8 @@ export class ResourcePool<TResource extends string> {
    * @param caps Üst sınırlar (opsiyonel). Sınırı olmayan kaynak sınırsızdır.
    */
   constructor(initial: Record<TResource, number>, caps: Partial<Record<TResource, number>> = {}) {
-    this.amounts = { ...initial };
-    this.caps = { ...caps };
+    this.amounts = Object.assign(Object.create(null) as Record<TResource, number>, initial);
+    this.caps = Object.assign(Object.create(null) as Partial<Record<TResource, number>>, caps);
 
     // Sonlu olmayan bir başlangıç değeri ya da sınır, ilk `add`den itibaren
     // tüm bakiyeyi NaN'e çevirir ve kaynağı görünmez olur.
@@ -77,10 +77,12 @@ export class ResourcePool<TResource extends string> {
    * tek çağrıda atomik olarak yapılır.
    */
   spend(cost: ResourceCost<TResource>): boolean {
-    if (!this.canAfford(cost)) return false;
-    for (const [resource, amount] of Object.entries(cost) as [TResource, number][]) {
-      // canAfford zaten kontrol etti; get() içindeki clamping gereksiz.
-      if (amount > 0) this.amounts[resource] = this.amounts[resource] - amount;
+    const entries = Object.entries(cost) as [TResource, number][];
+    for (const [resource, amount] of entries) {
+      if (!isFiniteNumber(amount) || (amount > 0 && this.get(resource) < amount)) return false;
+    }
+    for (const [resource, amount] of entries) {
+      if (amount > 0) this.amounts[resource] = this.get(resource) - amount;
     }
     return true;
   }

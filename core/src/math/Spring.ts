@@ -45,9 +45,13 @@ export class Spring1D {
     }
 
     const dtSec = Math.min(deltaMs, TECH.MAX_SIM_STEP_MS) / TECH.MS_PER_SECOND;
-    this.velocity += (target - this.value) * stiffness * dtSec;
-    this.velocity *= Math.max(0, 1 - damping * dtSec);
-    this.value += this.velocity * dtSec;
+    const velocity =
+      (this.velocity + (target - this.value) * stiffness * dtSec) *
+      Math.max(0, 1 - damping * dtSec);
+    const value = this.value + velocity * dtSec;
+    if (!Number.isFinite(velocity) || !Number.isFinite(value)) return this.value;
+    this.velocity = velocity;
+    this.value = value;
     return this.value;
   }
 

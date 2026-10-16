@@ -116,4 +116,4 @@ if (values.profile !== undefined) {
 }
 await report.close();
 console.log(JSON.stringify({ out, summary, verdict }, null, 2));
-if (verdict && !verdict.pass) process.exitCode = 1;
+if (verdict && (!verdict.pass || !verdict.complete)) process.exitCode = 1;

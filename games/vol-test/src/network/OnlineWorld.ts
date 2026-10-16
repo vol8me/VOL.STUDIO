@@ -1,5 +1,6 @@
 import { clampSimulationStep } from '@volstudio/core';
 import { DisposableScope } from '@volstudio/core/lifecycle';
+import { EventQueue } from '@volstudio/core/time';
 import { NETWORK } from '@/config/network';
 import { STRIKER, vehicleAt } from '@/config/vehicles';
 import type { TankCommand } from '@/sim/command';
@@ -13,7 +14,6 @@ import type { OnlineSession } from './OnlineSession';
 import { PredictedPilot, type PilotPose } from './PredictedPilot';
 import { applyVitals, RemoteTanks } from './RemoteTanks';
 import { NO_TEAM, type PlayerSnapshot } from './schema';
-import { EventQueue } from './timeline';
 
 /**
  * Sunucunun bildirdiği isabeti/patlamayı, aynı sahibin yerel mermisiyle eşleştirme yarıçapı: görüntü

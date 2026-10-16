@@ -116,11 +116,14 @@ export function stepPredictedVehicle(
   stepMs: number,
   onLaunch?: (launch: Launch, mount: number) => void,
 ): boolean {
+  if (!Number.isFinite(stepMs) || stepMs < 0)
+    throw new RangeError('Öngörü adımı sonlu ve negatif olmayan süre olmalı');
+  if (stepMs === 0) return false;
   const chassis = vehicle.chassis;
   chassis.capturePose();
   if (!vehicle.vitality.alive) return false;
   chassis.step(command, world, stepMs / 1000);
-  vehicle.gun.update(stepMs);
+  vehicle.gun.update(stepMs * vehicle.effect.fireRate);
   if (command.fire && aimAligned(vehicle, command) && vehicle.gun.tryTrigger()) {
     triggerVolley(vehicle, onLaunch);
     return true;

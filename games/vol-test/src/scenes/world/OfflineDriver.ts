@@ -76,10 +76,12 @@ export class OfflineDriver implements WorldDriver {
       (stepMs) => {
         const command = controls.step(stepMs);
         const { x, y } = player.chassis;
+        const wasAlive = player.vitality.alive;
         this.sim.step((vehicle) => this.scenarios.commandFor(vehicle, command), stepMs);
-        services?.progress.travel(
-          Math.hypot(player.chassis.x - x, player.chassis.y - y) / WORLD.metre,
-        );
+        if (wasAlive && player.vitality.alive)
+          services?.progress.travel(
+            Math.hypot(player.chassis.x - x, player.chassis.y - y) / WORLD.metre,
+          );
       },
       { acceptedDeltaMs: clampSimulationStep(deltaMs), paused },
     );
@@ -129,12 +131,14 @@ export class OfflineDriver implements WorldDriver {
 
   /** Çevrimiçi kod ilk kullanımda yüklenir; çevrimdışı oyun onu hiç indirmeyebilir. */
   private async openLobby(hud: Hud): Promise<void> {
+    if (this.context.scope.isDisposed()) return;
     try {
       const online = await import('./online');
+      if (this.context.scope.isDisposed()) return;
       this.lobby ??= online.createLobby(hud, this.context);
       this.lobby.open();
     } catch {
-      hud.notify('voltest:online.error.failed', 'danger');
+      if (!this.context.scope.isDisposed()) hud.notify('voltest:online.error.failed', 'danger');
     }
   }
 }

@@ -43,6 +43,8 @@ export class RoundLoop {
   private round: number;
   private running = false;
   private completed = false;
+  private started = false;
+  private notifying = false;
 
   constructor(options: RoundLoopOptions) {
     this.round = requireFinite(options.startRound ?? 1, 'RoundLoop startRound');
@@ -61,8 +63,10 @@ export class RoundLoop {
   start(): void {
     if (this.running || this.completed) return;
     this.running = true;
-    this.onRoundStart?.(this.round);
+    if (this.started) return;
+    this.started = true;
     this.breakTimer.trigger();
+    this.notifyRound();
   }
 
   /** Molayı dondurur; `update()` çağrıları etkisiz kalır. */
@@ -72,7 +76,7 @@ export class RoundLoop {
 
   /** Duraklatılmış döngüyü kaldığı yerden sürdürür. */
   resume(): void {
-    if (!this.completed) this.running = true;
+    if (this.started && !this.completed) this.running = true;
   }
 
   /**
@@ -80,12 +84,12 @@ export class RoundLoop {
    * Döngü çalışmıyorsa ya da bitmişse hiçbir şey yapmaz.
    */
   skipBreak(): void {
-    if (!this.running || this.completed) return;
+    if (!this.running || this.completed || this.notifying) return;
     this.advance();
   }
 
   update(deltaMs: number): void {
-    if (!this.running || this.completed) return;
+    if (!this.running || this.completed || this.notifying) return;
 
     this.breakTimer.update(deltaMs);
     if (this.breakTimer.isReady()) {
@@ -126,7 +130,16 @@ export class RoundLoop {
     }
 
     this.round = next;
-    this.onRoundStart?.(next);
     this.breakTimer.trigger();
+    this.notifyRound();
+  }
+
+  private notifyRound(): void {
+    this.notifying = true;
+    try {
+      this.onRoundStart?.(this.round);
+    } finally {
+      this.notifying = false;
+    }
   }
 }

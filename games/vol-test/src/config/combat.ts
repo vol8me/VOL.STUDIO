@@ -21,6 +21,9 @@ export const COMBAT = {
 /** Aynı anda havada kalabilen en çok mermi; dolunca en yaşlı mermi yeni atışa verilir. */
 export const PROJECTILE_CAPACITY = 256;
 
+/** Çok küçük önizleme adımı sınırsız yol arabelleği veya CPU işi üretemez. */
+export const PROJECTILE_PREVIEW_MAX_STEPS = 1024;
+
 export interface CombatConfig {
   readonly maxHealth: number;
   readonly friendlyFire: boolean;

@@ -1,5 +1,6 @@
 export { Scheduler, type CancelScheduled } from './Scheduler';
 export { Cooldown } from './Cooldown';
+export { EventQueue } from './EventQueue';
 export { RoundLoop, type RoundLoopOptions } from './RoundLoop';
 export { Clock } from './Clock';
 export { summarizeFrameIntervals, type FrameIntervalSummary } from './frameSummary';

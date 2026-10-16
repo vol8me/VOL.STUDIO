@@ -110,7 +110,13 @@ export async function runFleet<S = unknown>(options: FleetOptions<S>): Promise<F
   } = options;
   if (!Number.isSafeInteger(clients) || clients < 1)
     throw new RangeError('İstemci sayısı pozitif tam sayı olmalı.');
-  if (!(durationMs > 0) || !(sampleMs > 0) || !(actMs > 0) || !(rampMs >= 0))
+  if (
+    ![durationMs, sampleMs, actMs, rampMs].every(Number.isFinite) ||
+    !(durationMs > 0) ||
+    !(sampleMs > 0) ||
+    !(actMs > 0) ||
+    !(rampMs >= 0)
+  )
     throw new RangeError('Süreler pozitif olmalı.');
 
   const lobby = createLobby(endpoint);
@@ -138,6 +144,8 @@ export async function runFleet<S = unknown>(options: FleetOptions<S>): Promise<F
   let errors = 0;
   let actErrors = 0;
   let running = true;
+  const pendingJoins = new AbortController();
+  const joinSignal = signal ? AbortSignal.any([signal, pendingJoins.signal]) : pendingJoins.signal;
 
   const attach = (bot: Bot<S>, room: Room<S>): void => {
     room.reconnection.enabled = reconnect;
@@ -195,7 +203,7 @@ export async function runFleet<S = unknown>(options: FleetOptions<S>): Promise<F
 
   const joins = Promise.all(
     bots.map(async (bot) => {
-      await sleep(clients === 1 ? 0 : (rampMs * bot.index) / (clients - 1), signal);
+      await sleep(clients === 1 ? 0 : (rampMs * bot.index) / (clients - 1), joinSignal);
       if (running && !signal?.aborted) await join(bot);
     }),
   );
@@ -252,6 +260,7 @@ export async function runFleet<S = unknown>(options: FleetOptions<S>): Promise<F
 
   await sleep(durationMs, signal);
   running = false;
+  pendingJoins.abort();
   clearInterval(actTimer);
   clearInterval(sampleTimer);
   await joins;

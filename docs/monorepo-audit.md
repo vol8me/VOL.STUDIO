@@ -1126,3 +1126,351 @@ Kaynak sonrası iki taze `high` koşusu `bundle`da durdu (2,3 dk): vitrin app 22
 Fallow audit varsayılan kurallarla **FAIL** döndü: sıfır yeni dead-code ve sıfır kopya grubu, miras alınmış 12 unused adayı ve değişen 24 dosyada 45 karmaşıklık/CRAP adayı. Kapsam kaynağı `estimated` olduğundan gerçek regresyonları olan yeni indeks karşılaştırıcısını bile kapsamsız sayar; bu puan test kapsamı kanıtı değildir. Node CLI/test girişlerini eksik tanıdığı için çalıştırılan organize betiği ve contract testleri unused görünür; bu uyarılar silme kanıtı değildir. Yeni doğrulayıcı ve dalga/makbuz/uygulama-izin kontrolleri özel yardımcılarla ayrıldı. Fallow boundary/policy yapılandırması yoktur; sıfır değerleri ölçüm sayılmaz. Mimari kanıt repo contract/layer bekçilerindendir. Bu genel uyarılar tam kalite kapısının PASS sonucu diye sunulmaz.
 
 Ham karma/indeks kontrolü yedi örnekte sırasıyla 767 / 827 ms medyan ölçüldü (yerel, aynı ağaç; kısmi sahneleme reddi). Pre-commit iki eşleşme kontrolü yapar; yaklaşık 1,7 sn ek kontrol maliyeti, ayrı indeks kopyasında tam takımı ikinci kez sınama yerine uyuşmazlığı reddeden karardır. Yerel CLI yanlış indeksle çıkış 1 verdi; Git bayrağı, CRLF ve sahne dışı yeni bağımlılık regresyonları geçer.
+
+## 28. VOL.TEST üzerinden CORE ve network sağlamlaştırması (2026-10-17)
+
+Çalışma temiz `1f87893a` ağacından `codex/vol-test-core-hardening` dalında başladı;
+önceden bulunan yedi yerel commit korundu. Dört ayrı ajan CORE mekanizmaları,
+oyun simülasyonu, network ve fiziksel cihaz entegrasyonu alanlarında çalıştı;
+ana ajan girdi, UI, AgentLab ve native görüntü kipi yaşamını ele aldı.
+Graphify sorguları kaynakla karşılaştırıldı. Kullanıcı bu oturum için bütün
+kapıları ve git işlemlerini açıkça yetkilendirdi.
+
+**Kaynakta kapatılan 113 ayrı kusur grubu:** CORE 26, girdi/UI/native 21,
+oyun 32, network 30 ve cihaz araçları 4. NaN/Infinity/negatif varyantları,
+araç başına parametreler ve mimari taşımalar ayrı bulgu sayılmadı. Network
+iklim doğrulaması N23, aynı invariantın simülasyon sınırındaki G22 kaydıyla
+birleştirildi; aşağıda ayrıca sayılmaz. Bu sayı test sayısı veya üretim
+yayın kabulü değildir.
+
+C01–C25 ve R01–R21 eski kaynakta başarısız regresyonla görüldü. C26'nın
+sonlanmayan eski döngüsü çalıştırılmadı; kontrol akışı ve düzeltme sonrası
+sınır testi kanıttır. Oyun ve ağ kayıtları kaynak izleme ile negatif
+regresyonlara dayanır; bütün eski kaynak için toplu RED koşusu iddia edilmez.
+Her aşağıdaki kaynak kusuru düzeltildi; birleşik kapılar ve fiziksel cihaz
+sonuçları ayrı kabul olarak kaydedilir.
+
+### Ortak mekanizma sahipliği
+
+VOL.TEST'in yerel `AimPresence` ve zaman kuyruğu kaldırıldı; oyun artık
+CORE `PresenceEnvelope` ve `EventQueue` exportlarını tüketir. AgentLab
+yerel halka yerine CORE `RingBuffer`, senaryo hedefleme mevcut CORE
+`SpatialIndex` etkinlik filtresini kullanır. `InputPacer<C>` ve
+`ServerTimeline` network paketinin sunucu/istemci yüzeylerine taşındı.
+`RoomSlots` generic network mekanizmasıdır; dünya tavanı oyun config'indedir.
+Network ölçüm halkası ile CORE kare/diagnostics penceresi de CORE
+`RollingWindow` içinde birleştirildi; yüzdelik, ortalama ve uç değer hesabı
+tek mekanizmadan gelir. Node saat/process ölçümü network adaptöründe kalır.
+CORE'a oyun veya network bağımlılığı eklenmedi; network CORE collections
+alt girişini tüketir. Public tip/runtime ad kilitleri üç bilinçli CORE
+export'u için güncellendi. Bu sahiplik taşımaları kusur sayısını artırmaz.
+
+### CORE mekanizmaları — C01–C26
+
+- **C01** — **Seri writer yeniden girişinde paralel disk yazımı.** `save` callback'i
+  eşzamanlı `enqueue(2)` çağırınca `enqueue(1)` bitmeden ikinci write başlıyordu.
+  Kilit callback'ten önce alınır. Kanıt:
+  `core/tests/persistence/latestValueWriter.test.ts`, “save içinden eşzamanlı enqueue”.
+
+- **C02** — **Scope temizlikte aynı kaynağı iki kez kapatıyordu.** Son kaynağın önceki
+  timer'ı iptal etmesi indeksleri kaydırıyordu. Kaynak önce pop edilir, sonra
+  dispose çağrılır. Kanıt: `core/tests/lifecycle/disposableScope.test.ts`,
+  “temizlik sırasında kardeş timer iptali”.
+
+- **C03** — **Değiştirilen capture seçeneği listener sızdırıyordu.** Kayıt sonrası
+  seçenek nesnesi değişince remove yanlış capture kullanıyordu. Kayıt seçenekleri
+  kopyalanır. Kanıt: aynı dosya, “listener seçeneklerinin sonradan değişmesi”.
+
+- **C04** — **Pool factory aynı örneği birden fazla sahibe veriyordu.** Aktif veya ön
+  üretilmiş kimliği factory yeniden döndürünce sahiplik seti gerçeği temsil
+  etmiyordu. Factory sonuçları mevcut sahipliğe karşı doğrulanır. Kanıt:
+  `core/tests/pool/objectPool.test.ts`, aktif factory ve prewarm duplicate testleri.
+
+- **C05** — **Prewarm boş havuz bütçesini aşıyordu.** prewarm=10/maxIdle=2 on nesne
+  üretip saklıyordu. Üretim tavana kelepçelenir; geçersiz adetler üretimden önce
+  reddedilir. Kanıt: aynı dosya, “prewarm maxIdle bütçesini aşacak”.
+
+- **C06** — **Generic null/undefined pool değerleri boş zannediliyordu.** Null değer
+  için gereksiz factory çağrısı, undefined için yanlış çift iade hatası vardı.
+  Boşluk length ile belirlenir. Kanıt: aynı dosya, “generic %s örneği”.
+
+- **C07** — **StateMachine belgelenmiş hata kurtarması çalışmıyordu.** Hata kancasında
+  transition, hâlâ tutulan geçiş kilidinden reddediliyordu. Kaynak state geri
+  yüklenince kilit bırakılır. Kanıt: `core/tests/state/stateMachine.test.ts`,
+  “hata kancası bilinçli kurtarma durumuna geçebilir”.
+
+- **C08** — **Prototip alanları kayıtlı state sayılıyordu.** `toString` ve `__proto__`
+  hedefleri geçerli kabul ediliyordu. Başlangıç/transition kendi anahtarını arar.
+  Kanıt: aynı dosya, “prototip alanları”, “kayıtlı olmayan başlangıç”.
+
+- **C09** — **ResourcePool maliyet getterı kontrol sonrası değişebiliyordu.** Getter
+  önce 2 sonra10 verdiğinde bakiye5→-5 oluyordu. Kalemler bir kez okunup aynı
+  snapshot doğrulanır ve düşülür. Kanıt: `core/tests/state/resourcePool.test.ts`,
+  “maliyet getterı harcama boyunca bir kez okunur”.
+
+- **C10** — **Kaynak adı prototiple çakışınca bakiye NaN oluyordu.** `toString` ve
+  `__proto__` için miras alınan cap sayı gibi kullanılıyordu. İç sözlükler
+  prototipsizdir. Kanıt: aynı dosya, “prototiple aynı adlı kaynak”.
+
+- **C11** — **RoundLoop pause/start aynı turu yeniden bildiriyordu.** Tur üretimi ve
+  mola baştan başlıyordu. Başlatılmışlık ayrı izlenir; kalan mola korunur.
+  Kanıt: `core/tests/time/cooldownAndRoundLoop.test.ts`, “pause sonrası start”.
+
+- **C12** — **İlk start öncesi resume ilk turu atlıyordu.** Hazır timer update ile
+  tur2'ye ilerliyordu. Resume yalnız başlamış döngüyü sürdürür. Kanıt:
+  aynı dosya, “ilk start öncesi resume”.
+
+- **C13** — **Tur callback'i yeniden update/skipBreak ile döngüyü zincirliyordu.**
+  Tek start tur1,2,3'ü anında çalıştırabiliyordu. Bildirim esnasında ilerleme
+  reddedilir, timer bildirimden önce kurulur. Kanıt: aynı dosya,
+  “tur kancası güncellemeyi yeniden çağırınca”.
+
+- **C14** — _*A* pozitif fakat1'den küçük maliyette yanlış rota seçiyordu._* Örnekte
+  maliyet1.5 rotası yerine4 seçildi. Alt sınırı bilinmeyen cost callback'inde
+  sezgisel sıfırlanır; atlamalı komşulukta da aşırı tahmin yapılmaz.
+  Kanıt: `core/tests/grid/findPath.test.ts`, “birden küçük maliyetler”.
+
+- **C15** — **PathFinder kesirli koordinatı başka hücreye eşliyordu.** (0,0.5),
+  cols=2'de (1,0) ile aynı indeks oluyordu. Bounds tam sayı şartını içerir.
+  Kanıt: aynı dosya, “kesirli koordinatlar”.
+
+- **C16** — **Tek hücreli yol giriş nesnesiyle alias taşıyordu.** Başlangıç sonradan
+  değiştirilince saklanan yol değişiyordu. Sonuç kendi koordinatını oluşturur.
+  Kanıt: aynı dosya, “tek hücrelik sonuç başlangıç nesnesine bağlı kalmaz”.
+
+- **C17** — **PathFinder callback içindeki arama dış aramanın tamponunu bozuyordu.**
+  Aynı instance yeniden girişini reddeder, finally ile kilit açılır. Kanıt:
+  aynı dosya, “PathFinder callback içindeki arama”.
+
+- **C18** — **FlowField ters maliyet topluyordu.** Hücreye giriş sözleşmesine rağmen
+  komşudan çıkış maliyeti alınıyordu (beklenen7 yerine2). Ters Dijkstra mevcut
+  hedef hücreye giriş maliyetini ekler. Kanıt:
+  `core/tests/grid/flowFieldAndLine.test.ts`, “maliyet hedefe girmenin maliyetidir”.
+
+- **C19** — **FlowField tek yönlü kenarı ters dolaşmıyordu.** Yalnız sağa komşulukta
+  sağdaki hedefe soldan yol bulunamıyordu. Geri taramada ofset çıkarılır.
+  Kanıt: aynı dosya, “tek yönlü komşuluğu hedef aramasında tersine yürür”.
+
+- **C20** — **FlowField kesirli/NaN sorgu sahte yol üretiyordu.** Typed array yanlış
+  indeksi undefined/NaN rotaya dönüşüyordu. Ortak tam sayı bounds kontrolü
+  null/Infinity/boş yol döndürür. Kanıt: aynı dosya, “kesirli ve NaN sorgular”.
+
+- **C21** — **Kalıcı state dinleyicileri yeni değerden sonra eski değer alıyordu.**
+  A dinleyicisi1 sırasında2 yazınca B [2,1] görüyordu. Bildirimler FIFO
+  snapshotlarla yürür. Kanıt:
+  `core/tests/persistence/persistedObservableState.test.ts`, “dinleyicinin yeni state yazması”.
+
+- **C22** — **Bildirim sırasında yeni abonelik mevcut yayına ekleniyordu.** Canlı
+  Set iterasyonu yeni dinleyiciyi de yürütüyordu. Her yayın dinleyici snapshot'ı
+  alır. Kanıt: aynı dosya, “bildirim sırasında eklenen abonelik”.
+
+- **C23** — **Debounce gerçekte throttle gibi davranıyordu.** t0/t80 değişimleri
+  t100'de yazılıyordu; t180 beklenmeliydi. Her değişim timer'ı yeniler, aynı
+  bekleyen promise korunur. Kanıt: aynı dosya, “debounce gecikmesi”.
+
+- **C24** — **Spring finite girdiden aritmetik Infinity'yi state'e yazıyordu.**
+  Sonraki normal adımlar da bozuktı. Hız ve değer önce hesaplanıp birlikte
+  doğrulanır; taşan frame önceki state'i korur. Kanıt:
+  `core/tests/math/spring.test.ts`, “sonlu girdilerin aritmetik taşması”.
+
+- **C25** — **Bresenham görüş hattı yönüne göre engeli değiştiriyordu.** (0,0)→(2,1)
+  orta hücre(1,0); ters yönde(1,1) idi. Uçların kararlı sırası eşitlikleri
+  aynı çözer. Kanıt: `core/tests/grid/flowFieldAndLine.test.ts`,
+  “eşit uzaklıktaki iki hücre arasında yön değişimi”.
+
+- **C26** — **Bresenham nonfinite uçta sonlanmayan döngüye giriyordu.** NaN/Infinity
+  karşılaştırmaları çıkışı imkânsız kılıyordu. Kırpılan uçlar güvenli tam sayı
+  olarak doğrulanır. Kanıt: aynı dosya, “geçersiz koordinat %s”. Eski sonsuz
+  döngü çalıştırılmadı; bu bulgunun RED kanıtı kaynak kontrol akışıdır.
+
+### Girdi, UI, AgentLab ve native görüntü kipi — R01–R21
+
+| Kimlik | Önceki kusur                                                                                                                | Düzeltme                                                                        | Regresyon                                                                            |
+| ------ | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| R01    | Radyal ölü bölgenin üstündeki çapraz kol niyeti sağlayıcı seçilirken eksen başına sınanıp yutuluyordu.                      | Seçim ve durum aynı radyal sınıra bağlandı.                                     | core/tests/input/gamepadController.test.ts                                           |
+| R02    | Sonsuz eksen veya kopuk kol etkinlik sinyali üretebiliyordu.                                                                | Etkinlik canlı bağlantı ve sonlu eksen ister.                                   | core/tests/input/gamepadController.test.ts                                           |
+| R03    | Özel nişan eksenleri ve nişan deadzone'u kol seçiminde dikkate alınmıyordu; anlamlı nişan varken başka boş kol seçiliyordu. | GamepadSelectionOptions ve etkinlik çözümü aynı GamepadInputOptions'ı kullanır. | core/tests/input/gamepadController.test.ts                                           |
+| R04    | Standart dışı eşleme, belgelenen sınırın tersine tahmini düğme/eksenlerle oyun komutu üretiyordu.                           | Yalnız kip sinyali korunur; oyun durumu nötrdür.                                | core/tests/input/gamepadController.test.ts                                           |
+| R05    | Kapatılmış GamepadController sonraki update ile yeniden kola bağlanıyordu.                                                  | Kapanış kalıcıdır.                                                              | core/tests/input/gamepadController.test.ts                                           |
+| R06    | Input Enter gönderimi commit'ten önce eski modeli okuyordu.                                                                 | Önce commit, sonra onEnter.                                                     | core/tests/ui/primitives/Input.test.ts                                               |
+| R07    | Basılı Enter'ın otomatik tekrarı yeniden gönderim üretiyordu.                                                               | Repeat gönderimi yoksayılır.                                                    | core/tests/ui/primitives/Input.test.ts                                               |
+| R08    | Commit ile alanın kapatılması aynı olayın ikinci kullanıcı işlemini engellemiyordu.                                         | Destroy sonrası onEnter/ikinci bildirim yok.                                    | core/tests/ui/primitives/Input.test.ts                                               |
+| R09    | Number Input setterı native değer boşken geçersiz ham dizgiyi bildiriyor; sonraki change sahte commit yapıyordu.            | Bildirim ve committedValue yerel normalize değerdir.                            | core/tests/ui/primitives/Input.test.ts                                               |
+| R10    | TextArea CRLF normalizasyonu fazladan commit ve model/DOM ayrışması üretiyordu.                                             | Başlangıç ve setterlar native LF değerini saklar/bildirir.                      | core/tests/ui/primitives/TextArea.test.ts                                            |
+| R11    | maxLength=0 TextArea ve kol metin girişinde sınırsız sayılıyordu.                                                           | Sıfır açık sınırdır; sayaç ve sağlayıcı aynı sınırı kullanır.                   | core/tests/ui/primitives/TextArea.test.ts; core/tests/ui/textEntry/textEntry.test.ts |
+| R12    | Native metin sağlayıcısının uzun cevabı alanın sınırını aşabiliyordu.                                                       | Ortak UTF-16 kesici, yarım vekil çift bırakmadan alan sınırını uygular.         | core/tests/ui/textEntry/textEntry.test.ts                                            |
+| R13    | Bekleyen metin sağlayıcısı, arada native readOnly yapılmış alana yazıyordu.                                                 | Sonuç uygulanmadan readOnly yeniden sınanır.                                    | core/tests/ui/textEntry/textEntry.test.ts                                            |
+| R14    | AgentLab geçersiz veya geri saatle NaN/negatif telemetri üretiyordu.                                                        | Sonlu ve monoton örnek kapısı.                                                  | games/vol-test/tests/app/AgentLab.test.ts                                            |
+| R15    | AgentLab geçmişi kaynak nested verisi veya geri dönen kayıt referansından değiştirilebiliyordu.                             | Giriş/çıkış snapshotları ayrılır; yerel Ring silinip CORE RingBuffer tüketilir. | games/vol-test/tests/app/AgentLab.test.ts                                            |
+| R16    | AgentLab olay verisi t/ev alanlarını ezerek kanıt zamanını/türünü değiştirebiliyordu.                                       | Metadata son yazılır.                                                           | games/vol-test/tests/app/AgentLab.test.ts                                            |
+| R17    | AgentLab kaldırılınca zorlanmış girdi kalıyor, elde tutulan API kapanmış sahneyi sürebiliyordu.                             | Idempotent release ve eski API iptali.                                          | games/vol-test/tests/app/AgentLab.test.ts                                            |
+| R18    | İkinci DisplayModeController.start ilk kurulum bitmeden tamamlanıyordu.                                                     | Başlangıç promise'i paylaşılır.                                                 | tauri-v2/tests/window/DisplayModeController.test.ts                                  |
+| R19    | Geciken native fullscreen yankısı yeni windowed tercihini geriye alıyordu.                                                  | Kendi pencere isteğinin yankısı yeni niyeti değiştirmez.                        | tauri-v2/tests/window/DisplayModeController.test.ts                                  |
+| R20    | Native görüntü değişiminin kalıcılık reddi flush'ta görünmüyordu.                                                           | Bekleyen tercih yazımları flush'a dahil; hata ve toparlama izlenir.             | tauri-v2/tests/window/DisplayModeController.test.ts                                  |
+| R21    | Bir native unsubscribe hatası diğer abonelikleri ve F11 denetleyicisini sızdırıyordu.                                       | Tek DisposableScope ile bağımsız kaynakların tümü kapatılır.                    | tauri-v2/tests/window/DisplayModeController.test.ts                                  |
+
+### Simülasyon ve sahne yaşamı — G01–G32
+
+Bu tablodaki test yollarının kökü `games/vol-test/`tir.
+
+| Kimlik | Önceki davranış → düzeltme                                                                                                                                                                                                                                      | Regresyon                                                                                                                                                                                                                                      |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| G01    | Sıfır süreli simülasyon/öngörü ateş ve temas üretiyor, mermi üst üste hedefe çarpıyor, savaş bot doğuruyordu. Geçersiz savaş süresi simülasyon reddetmeden savaş saatini bozuyordu. → Model adımlarında önce süre doğrulaması, sıfırda yan etkisiz dönüş.       | `games/vol-test/tests/sim/Simulation.test.ts`, `games/vol-test/tests/sim/vehicleStep.test.ts`, `games/vol-test/tests/sim/combat/Projectiles.test.ts`, `games/vol-test/tests/sim/war/War.test.ts`, `games/vol-test/tests/sim/war/Zones.test.ts` |
+| G02    | Sonlu olmayan doğuş pozu dünyaya girip fizik ve uzamsal indeksi zehirliyordu. → Araç/kimlik kaydı değişmeden konum doğrulanıyor.                                                                                                                                | `games/vol-test/tests/sim/Simulation.test.ts`: bozuk doğuş kimlik tüketmez                                                                                                                                                                     |
+| G03    | Son güvenli açık kimlikten sonra otomatik kimlik güvenli tamsayı dışına çıkıyordu; başarısız oyuncu değişimi eski oyuncuyu önceden silmiş oluyordu. → Otomatik kimlik de doğrulanıyor, yeni oyuncu başarıyla kurulmadan eskisi çıkarılmıyor.                    | `games/vol-test/tests/sim/Simulation.test.ts`: kimlik sınırı ve başarısız araç değişimi                                                                                                                                                        |
+| G04    | Olay tavanı yalnız `step` sonunda uygulanıyordu; dışarıdan hasar/iyileştirme kuyruğu sınırsız büyüyordu. → Her emit tavanı koruyor.                                                                                                                             | `games/vol-test/tests/sim/Simulation.test.ts`: 1000 hasar/iyileştirme çifti, 512 olay sınırı                                                                                                                                                   |
+| G05    | Yere değmeyen hover karı sıkıştırıyordu. → Kar sıkıştırma da yeşillik ezme gibi temas eden şasilere ait.                                                                                                                                                        | `games/vol-test/tests/sim/Simulation.test.ts`: karlı dünyada hareket eden Manta hiçbir hücreyi sıkıştırmaz                                                                                                                                     |
+| G06    | Manta overdrive sunucuda 1.45x silah dolumu kullanırken öngörü 1x kullanıyordu. → Ortak `vehicle.effect.fireRate` tüketiliyor.                                                                                                                                  | `games/vol-test/tests/sim/vehicleStep.test.ts`: 15 araç × 240 adım atış, dolum ve tam şasi eşitliği                                                                                                                                            |
+| G07    | Başlangıç mermi profili ömrü ve bütün uçuş profilinin fiziksel değerleri doğrulanmıyordu; sıfır yerçekimi gibi değerler uçuş hesabını bozuyordu. → İlk ve ek profiller aynı doğrulamayı kullanıyor.                                                             | `games/vol-test/tests/sim/combat/Projectiles.test.ts`: başlangıç/ek profil geçerliliği                                                                                                                                                         |
+| G08    | Geçersiz profilli doğuş `live` sayısını artırdıktan sonra atıyordu; NaN doğuş canlı havuza giriyordu. → Doğuş doğrulaması slot seçimi ve yeniden kullanımdan önce.                                                                                              | `games/vol-test/tests/sim/combat/Projectiles.test.ts`: boş/dolu havuz başarısız doğuşta aynen kalır                                                                                                                                            |
+| G09    | Negatif eşleme yarıçapı karesi alınınca pozitif olup yanlış mermiyi siliyordu. → Eşleme geometrisi silmeden önce doğrulanıyor.                                                                                                                                  | `games/vol-test/tests/sim/combat/Projectiles.test.ts`: negatif yarıçapta mermi korunur                                                                                                                                                         |
+| G10    | Çok küçük geçerli önizleme adımı sınırsız Float32Array veya devasa döngü ayırıyordu. → Config sahibi 1024 adım tavanı, efektif örnek süresini büyütüyor.                                                                                                        | `games/vol-test/tests/sim/combat/Projectiles.test.ts`: `Number.MIN_VALUE`, sınırlı yol ve korunmuş menzil                                                                                                                                      |
+| G11    | Atıcı oyundan ayrılınca havadaki mermisinin cephe kimliği kayboluyor ve dost ateşi açılıyordu. → Mermi atış cephesini taşır, sahip ayrılsa da dosttan geçer.                                                                                                    | `games/vol-test/tests/sim/combat/CombatIntegration.test.ts`: ayrılan atıcı, dostu geçen ve düşmanı vuran gerçek mermi                                                                                                                          |
+| G12    | Havada bekleyen merminin kuşatma gücü isabet anındaki atıcıdan okunuyor; atıcı ayrılınca bonus kayboluyordu. → Hasar çarpanı atışta kaydedilir.                                                                                                                 | `games/vol-test/tests/sim/combat/CombatIntegration.test.ts`: Leviathan atıştan sonra ayrılır, isabet bonusu korur                                                                                                                              |
+| G13    | Parça aşınma sönümü gecikme eşiği geçildiğinde bütün adımı sönmeye sayıyordu. → Yalnız eşik ötesindeki süre kullanılır.                                                                                                                                         | `games/vol-test/tests/sim/combat/PartWear.test.ts`: büyük/bölünmüş eşik adımı aynı aşınmayı verir                                                                                                                                              |
+| G14    | Büyük adım sessizlik süresini onarım süresine sayıp parçayı erken onarıyordu. → Sessizlik ve aktif onarım süresi ayrılır.                                                                                                                                       | `games/vol-test/tests/sim/combat/PartWear.test.ts`: tam quietMs sonunda parça hâlâ kırık                                                                                                                                                       |
+| G15    | İlk onarım sonraki parçaya kalan süreyi atıyor, büyük adım en çok bir parçayı onarıyordu. → Artan süre taşınır ve hak edilen onarım maskesi tamamlanır.                                                                                                         | `games/vol-test/tests/sim/combat/PartWear.test.ts`: 1.5 + 0.5 aralık ve büyük/bölünmüş iki parça onarımı                                                                                                                                       |
+| G16    | Senaryo indeksi araç değişimi sonrası eski oyuncu nesnesini hedeflemeye devam ediyordu. → Simülasyon üyelik revizyonu ve indeks yeniden kurulumu.                                                                                                               | `games/vol-test/tests/sim/scenarios/ScenarioRunner.test.ts`: aynı saatte değişen oyuncunun yeni konumuna nişan                                                                                                                                 |
+| G17    | Senaryo botu en yakın enkaza nişan alıyordu. → CORE SpatialIndex `isActive` filtresi canlılığı tüketiyor.                                                                                                                                                       | `games/vol-test/tests/sim/scenarios/ScenarioRunner.test.ts`: enkaz seçilmez, yeniden doğuş tekrar hedef olur                                                                                                                                   |
+| G18    | Senaryo bütün şasileri Striker yarı boyuyla kelepçeliyor, geniş araç köşeleri dünya dışında doğuyordu. → `chassisConfigOf` ile her aracın ayak izi kullanılır.                                                                                                  | `games/vol-test/tests/sim/scenarios/ScenarioRunner.test.ts`: dünya kenarında bütün katalog köşeleri içeride                                                                                                                                    |
+| G19    | Geçersiz senaryo seçimi eski kadroyu sildikten sonra hata veriyordu. → Mevcut `isScenario`/`validSeed` kapıları önce çalışır.                                                                                                                                   | `games/vol-test/tests/sim/scenarios/ScenarioRunner.test.ts`: reddedilen seçim kadro, mod ve tohumu korur                                                                                                                                       |
+| G20    | Sert zemin yüklemesi önceki yumuşak uyumu bırakmıyor, sonraki adım doğru kaydı yeniden bozuyordu. → Başarılı restore eski blend'i iptal eder.                                                                                                                   | `games/vol-test/tests/sim/weather/SurfaceGrid.test.ts`: kuru sert yüklemeden sonra eski ıslak hedef geri gelmez                                                                                                                                |
+| G21    | Yağış ve pozitif blend farkı aynı adımda toplanınca su/kar kapasitesi aşılabiliyordu; sonsuz uyum süresi kalıcı bekleme yaratıyordu. → Blend son değerleri fiziksel tavanda tutulur, süre sonlu olmalıdır.                                                      | `games/vol-test/tests/sim/weather/SurfaceGrid.test.ts`: yağışla eşzamanlı kapasite ve sonsuz süre reddi                                                                                                                                        |
+| G22    | Bozuk mevsim ve tutarsız yüzey/rüzgâr takvimi restore'da kabul ediliyor, kimi hatalar hücre yazıldıktan sonra çıkıyordu. → Enum, güvenli saat tavanı, sabit adım hizası ve saat sırası önce doğrulanır.                                                         | `games/vol-test/tests/sim/weather/WeatherSystem.test.ts`, `WeatherSchedule.test.ts`: reddedilen snapshot bütün dünyayı korur                                                                                                                   |
+| G23    | Aynı mevsime ait yetkili iklim yüklemesi istemcinin zorlanmış havasını temizlemiyordu. → Sert yüklemede doğal takvim yeniden kurulur, forced temizlenir.                                                                                                        | `games/vol-test/tests/sim/weather/WeatherSystem.test.ts`: zorlanmış kar → yetkili doğal çerçeve, sonraki mevsimde de doğal hava                                                                                                                |
+| G24    | Geçersiz mevsim/alıştırma süresi takvim değiştirilip rüzgâr işlendikten sonra hata verebiliyordu. → Geçiş isteği herhangi bir değişiklikten önce doğrulanır.                                                                                                    | `games/vol-test/tests/sim/weather/WeatherSystem.test.ts`: bozuk geçiş snapshot'ı değiştirmez                                                                                                                                                   |
+| G25    | Infinity bot hedefi sonsuz doğum döngüsü, kesirli hedef yuvarlanmış nüfus yaratıyordu. → Nüfus negatif olmayan güvenli tamsayıdır.                                                                                                                              | `games/vol-test/tests/sim/war/War.test.ts`: geçersiz bot nüfusu constructor'da reddedilir                                                                                                                                                      |
+| G26    | Bot beyninin kurulması hata verince önceden doğmuş fizik gövdesi sahipsiz kalıyordu. → Başarısız kurulum gövdeyi geri söker.                                                                                                                                    | `games/vol-test/tests/sim/war/War.test.ts`: hata sonrası hem combatant hem sim araç listesi boş                                                                                                                                                |
+| G27    | Yönetici dışından ayrılan botların görev kayıtları sonsuza dek Map'te kalıyordu. → Nüfus incelemesi artık dünyada olmayan görevleri bırakır.                                                                                                                    | `games/vol-test/tests/sim/war/War.test.ts`: 30 çıkarma/yenileme turundan sonra kayıt sayısı canlı kadro kadar                                                                                                                                  |
+| G28    | İnsan olmayan dünyada canlı botun Infinity uzaklığı ölü botun MAX_VALUE önceliğini geçiyordu; önce canlı bot kaldırılıyordu. → İnsan yokluğu nötr uzaklık, ölüm kesin öncelik.                                                                                  | `games/vol-test/tests/sim/war/War.test.ts`: ölü bot varken canlı bot korunur                                                                                                                                                                   |
+| G29    | Aynı pakette bir hedefe gelen bütün hasar sayıları son isabet noktasına yerleşiyor, duvar hasarı da mermi noktasını alabiliyordu. → Atıcı ve hedefle eşlenen en yakın önceki isabet, sıra tersse sonraki ilk eşleşme kullanılır; duvar kendi konumundadır.      | `games/vol-test/tests/scenes/world/SimEventRouter.test.ts`: iki atışın ayrı noktası ve duvar fallback'i                                                                                                                                        |
+| G30    | Yeniden doğuş ışınlanması kat edilen mesafe sayılıp ilerleme istatistiğini büyütüyordu. → Yalnız adım başı ve sonunda canlı sürüş mesafesi kayda geçer.                                                                                                         | `games/vol-test/tests/scenes/world/OfflineDriver.test.ts`: uzak respawn sonrası travel çağrısı yok                                                                                                                                             |
+| G31    | Tembel ağ importu sahne kapandıktan sonra lobi kurup açabiliyor veya ölü HUD'a hata bildiriyordu. → CORE scope yaşamı await öncesi/sonrası ve catch'te kontrol edilir.                                                                                          | `games/vol-test/tests/scenes/world/OfflineDriver.test.ts`: import beklenirken dispose sonrası createLobby yok                                                                                                                                  |
+| G32    | Kapanmış çıkartma havuzunun eski tutamakları yok edilmiş Phaser görüntülerine erişiyor, ikinci destroy yeniden yok ediyordu; bozuk delta sönüş saatini zehirliyordu. → Kapanış tek sefer, tutamaklar geçersiz, havuz boşaltılır, bozuk akış süresi yok sayılır. | `games/vol-test/tests/view/effects/DecalPool.test.ts`: eski tutamak/double destroy/bozuk delta sonrası doğal sönüş                                                                                                                             |
+
+### Ağ güven sınırları, oturum ve ölçüm — N01–N31
+
+Bu bölümde `games/vol-test/tests/` yolları VOL.TEST'e, `network/tests/` yolları network
+paketine aittir. N23, G22 ile birleştirildiğinden 30 ayrı kayıt vardır.
+
+- **N01 — İstemci oda işletim ayarlarını belirleyebiliyordu.** Colyseus `onCreate` için istemci seçenekleriyle kayıt seçeneklerini shallow birleştiriyordu; eksik `primary`, `seed`, `climateStore`, `perFaction` alanları ağdan taşınabiliyordu. `RegisteredWorld` yalnız süreç içi defaults ve WeakMap nesne kimliğiyle verilmiş birincil konfigürasyonu tüketir. Kanıt: `games/vol-test/tests/server/WorldRoom.test.ts` “ağ seçenekleri işletim ayarlarını ve kalıcılığı ele geçiremez”; `startWorldServer.test.ts` birincil `autoDispose=false` ve gerçek depo load/save bağı.
+
+- **N02 — Geçersiz katılım pahalı dünya yaratıldıktan sonra reddediliyordu.** Statik `onAuth` sürüm/araç/cepheyi oda kurulmadan denetler. HTTP için 400, WebSocket için 4400 aynı istemci nedenine iner; SDK yükü yerel araç nesnesi bağını klonlamasın diye statik kapı `true` döndürür. Kanıt: `WorldRoom.test.ts` “geçersiz katılım oda kurulmadan reddedilir”, depo `load` hiç çağrılmaz; bütün eski protokol/model/cephe ret testleri korunur.
+
+- **N03 — HTTP ile oda yaratma WebSocket tavanını aşabiliyordu.** `RoomSlots` pahalı constructor öncesi yer ayırır; birincil dahil `NETWORK.maxRooms=4`, doluluk 503/busy. Constructor/onCreate hatası ve onDispose yer bırakır. Kanıt: `network/tests/server/roomSlots.test.ts`; `WorldRoom.test.ts` HTTP kapasite/boşalan yer ve ardışık failed-onCreate testleri. Bu güvenlik tavanı, ölçülmüş eşzamanlı oyuncu kapasitesi değildir.
+
+- **N04 — Ops portu açılmazsa oyun sunucusu açık kalıyordu.** Başlangıcın birincil dünya ve ops aşamaları rollback ile `started.stop()` çağırır. Kanıt: `startWorldServer.test.ts` dolu ops portu → hata, sıfır oda ve yeniden sağlıklı başlangıç.
+
+- **N05 — Ops kapanış hatası oyun sunucusunun kapanmasını engelliyordu.** Stop tek promise üzerinde birleştirilir; oyun host'u finally içinde kapanır. Kanıt: `startWorldServer.test.ts` ops close reddi, `http.listening=false`, iki stop çağrısında tek close.
+
+- **N06 — Kopmuş oyuncunun eski girdi tamponu tüketilmeye devam ediyordu.** `connected=false` anında komut IDLE olur, pacer sıfırlanır; kopuk araç yeni ateş/yürüyüş niyeti üretmez. Kanıt: `WorldRoom.test.ts` dolu gerçek SDK girdi tamponunda kopma geri çağrısı, sonraki adımlarda consumed=0.
+
+- **N07 — Ret günlükleri istemci adresini taşıyordu.** ConnectionGuard günlükte yalnız neden/durum bırakır. VOL.TEST katılma/kopma/çıkma/yavaş istemci günlüklerinden oturum ve görünen ad da kaldırıldı. Kanıt: `network/tests/server/guard.test.ts` gerçek ret günlüğünde `address` alanı yok; çıktı neden sayaçlarıyla izlenir.
+
+- **N08 — Aynı IPv4 farklı IPv6 gösterimlerinde farklı hız kovasına düşüyordu.** Noktalı ve onaltılık IPv4-mapped IPv6 aynı IPv4 anahtarına iner. Kanıt: `guard.test.ts` `::ffff` noktalı, hex ve tam yazım eşitliği.
+
+- **N09 — Güvenilir vekil modunda geçersiz X-Forwarded-For yeni kovalar açabiliyordu.** Sağ uç yalnız gerçek IP ise kullanılır, aksi halde socket adresi esas alınır. Kanıt: `guard.test.ts` iki farklı geçersiz forwarded değerle ikinci gerçek HTTP isteği 429.
+
+- **N10 — Köken listesi URL olmayan veya yanlış eşleşen değerleri kabul ediyordu.** Kullanıcı bilgisi/sorgu/fragment/bozuk IPv6 reddedilir; büyük harf ve varsayılan port normalize edilir. Kanıt: `guard.test.ts` geçersiz liste matrisi ve aynı HTTPS kökeninin `:443` eşleşmesi.
+
+- **N11 — Doğrudan verilen NaN/Infinity sınırları korumayı devre dışı bırakabiliyordu.** ConnectionGuard sayıları ve Ops gövde sınırı oluşturulurken doğrulanır. Kanıt: `guard.test.ts` dört sınırın bozuk değer matrisi; `ops.test.ts` NaN maxBodyBytes başlangıç reddi.
+
+- **N12 — CORS olmaması ops POST yan etkisini engellemiyordu.** Origin taşıyan ve cross-site fetch istekleri rota çağrılmadan reddedilir. Kanıt: `ops.test.ts` yabancı ve null Origin ile basit text/plain POST, 403 ve sıfır handler çağrısı.
+
+- **N13 — IPv6 host'undan üretilen endpoint URL'si geçersizdi.** Oyun ve ops endpoint'i IPv6 adresini köşeli paranteze alır. Kanıt: `host.test.ts` gerçek IPv6 SDK katılımı; `ops.test.ts` gerçek IPv6 health fetch.
+
+- **N14 — Shutdown timeout sonrası geç tamamlanan stop ikinci exit çağrısı yapıyordu.** Finish idempotenttir, timer temizlenir. Kanıt: `host.test.ts` zaman aşımından sonra resolve edilen stop yalnız bir exit(1) üretir.
+
+- **N15 — Logger halkası dosya çıktısıyla aynı güvenli snapshot değildi.** Döngüsel nesne veya BigInt dosyada güvenli olsa da `/logs`u bozabiliyor, sonradan mutasyon geçmişi değiştirebiliyordu. Halka güvenli JSONL'nin snapshot'ını saklar. Kanıt: `log.test.ts` mutasyon, BigInt ve döngüsel nesnede JSON.stringify(since()) başarısı.
+
+- **N16 — Bir sink close hatası diğer sink'lerin ve shutdown'ın kapanmasını kesiyordu.** Her sink ayrı korunur; ortak logger/child kapanışı tek kez yürür. Kanıt: `log.test.ts` ilk sink hata verir, ikinci kapanır, child tekrar kapatamaz.
+
+- **N17 — OnlineSession kurucusu başarısız olduğunda oda açık kalıyordu.** Open, settle ve constructor'ı aynı cleanup sınırında tutar; kısmi subscription/predict kaynakları bırakılır, hata JoinError'a dönüşür. Kanıt: `OnlineSession.test.ts` Predict kurulma hatasında room.leave bir kez.
+
+- **N18 — İlk state henüz yoksa settle TypeError veriyor; bozuk timeout da kontrolsüz davranıyordu.** State yokluğu beklenen bekleme durumudur; timeout baştan sonlu/pozitif doğrulanır. Kanıt: `OnlineSession.test.ts` undefined state timeout-cleanup, NaN/Infinity/0/negatif timeout'ta eşleştirme çağrılmaması.
+
+- **N19 — İlk alınmış durum saat dönüşümüne uygulanmıyordu.** OnlineSession başlarken var olan state/SDK saat çifti hemen observe edilir; sonraki yama beklenmez. Kanıt: `OnlineSession.test.ts` open dönüş anında timeline.known=true.
+
+- **N20 — Yeniden bağlantıda iklim yalnız sonraki periyodik yayını bekliyordu.** İstemci onReconnect'te iklimi yeniden ister; sunucu kopmada eski istek aralığı ve slow-consumer geçmişini temizler. Kanıt: `OnlineSession.test.ts` gerçek kopma/dönüşte CLIMATE_REQUEST tekrar gönderilir ve aynı kayıt korunur; lifecycle matrisi yeşil.
+
+- **N21 — Tekrarlanan dispose öngörü sürücüsünü yeniden dispose ediyordu.** Oturum dispose'u idempotenttir, paralel leave çağrıları bir promise üzerinde birleşir. Kanıt: `OnlineSession.test.ts` iki dispose → tek predict.dispose, kapalı socket, bildirimsiz cleanup.
+
+- **N22 — Olay paketinin runtime şeması hiç doğrulanmıyordu.** Null, tanınmayan tür, eksik/sonlu olmayan sayı veya aşırı olay dizisi çizim/queue koduna girebiliyordu. `isEventBatch` bütün event variant'larını ve paket zaman/boyut sınırını denetler; OnlineSession yalnız geçerli yükü dağıtır. Kanıt: `games/vol-test/tests/network/events.test.ts` bütün variant'lar ve her sayısal alanın NaN/Infinity/string bozulması, bilinmeyen/prototype tür ve aşırı batch.
+
+- **N24 — Eksik sunucu ölçümü sıfır ve complete=true olabiliyordu.** ObserveServer her alanı ayrı nullable tutar; null oda ve bozuk değer çökmez, sıfır adım örneği ölçüm sayılmaz. Negatif ölçüm bütçe başarısı olmaz. Kanıt: `network/tests/drive/verdict.test.ts` yalnız loop, null/boş oda, NaN ve sıfır adım örneği.
+
+- **N25 — Birden çok odanın atımları toplam yerine max olarak raporlanıyordu.** Aynı örneğin bütün oda eviction değerleri toplanır, örneklerin en kötüsü alınır. Kanıt: `verdict.test.ts` 2+3 atım → 5.
+
+- **N26 — Örneksiz p99=0 başarı kabul ediliyor, CLI eksik hükümde başarılı çıkıyordu.** Join/patch/ping count=0 ölçülmemiştir; complete=false. VOL.TEST drive profili `!pass || !complete` ile başarısız çıkar. Kanıt: `verdict.test.ts` örneksiz ping skipped/ok=false/complete=false; CLI çıkış koşulu kaynakta bu hükmü tüketir.
+
+- **N27 — Bozuk ağ aracısı kara delikte sınırsız bellek çekiyor, gerçek geri basıncı gizliyordu.** Yön başına varsayılan 1 MiB sınırı kaynak socket'i pause eder, hedef write(false) için drain beklenir. Kanıt: `network/tests/drive/impair.test.ts` 4 MiB yük, 64 KiB limit, tek okuma parçası toleransıyla ≤128 KiB kuyruk, bytesUp yükten az; release sonrası eksiksiz sıralı teslim. Gerçek cihaz/paket kaybı kanıtı değildir.
+
+- **N28 — Bozuk impairment profili kalıcı tıkanmış zaman kuyruğu yaratabiliyordu.** NaN/negatif süre, geçersiz olasılık ve sıfır/sonsuz bant genişliği reddedilir; profil hata halinde değişmez. Kanıt: `impair.test.ts` invalid setProfile matrisi ve temiz profil korunması.
+
+- **N29 — Filo süre sonu gelecekteki ramp zamanlayıcılarını bekliyordu.** Koşu süresinden uzun ramp raporu ve bağlantıları gereksiz uzatıyordu. Bitiş pending join sleep'lerini abort eder; başlamış katılım sonuçlanınca oda bırakılır. Kanıt: `fleet.test.ts` 50 ms koşu/3000 ms ramp bir saniyeden önce biter, sonraki istemci katılmaz.
+
+- **N30 — Sonsuz filo süreleri Node timer taşmasıyla çok kısa koşuya dönüşebiliyordu.** Süre ve aralıklar finite doğrulanır. Kanıt: `fleet.test.ts` Infinity duration başlangıç reddi.
+
+- **N31 — İlk beş saniyedeki bağlantı kopuşu kalıcı kapanışa dönüşüyordu.** SDK'nın varsayılan `minUptime=5000` davranışı ürün tarafından değiştirilmezken eski test bunu kendi içinde sıfırlayıp kusuru gizliyordu. `NETWORK.reconnectMinUptimeMs=0` gerçek OnlineSession bağlantısında, yerleşme öncesinde uygulanır; test doğrudan ürün oturumunu kurar. Eski kaynakta `reconnecting → closed`, düzeltme sonrası `reconnecting → live` ve aynı oyuncu/iklim kaydı gerçek SDK soketiyle doğrulandı (`games/vol-test/tests/network/OnlineSession.test.ts`).
+
+### Cihaz araçları — D01–D04
+
+- D01: Yanıtsız CDP evaluate işlemi cihaz turunu ve finally temizliğini sonsuza kadar tutuyordu. İstek süre sınırı ve sonraki isteğin çalıştığını doğrulayan test eklendi.
+
+- D02: WebView kopuşu/hatası bütün bekleyen işleri açık bırakıyordu. İdempotent kapanış her isteği reddediyor ve sonraki çağrıyı kapalı olarak döndürüyor.
+
+- D03: WebView keşfi veya soket açılışı başarısız olunca adb forward portu sızıyordu. Kurulum catch ve açılış timeout temizliği eklendi.
+
+- D04: Windows Deck CLI rsync.cmd komutunu native execFileSync ile çözemiyordu. Var olan ortak süreç adaptörü tüketiliyor; gerçek platform shim regresyonu eklendi.
+
+Regresyonlar `scripts/android/tests/webviewClient.test.mjs` ve
+`devtools/deck/tests/deckContract.test.mjs` altındadır. Cihazın bağlı olması,
+önceki kurulu uygulama veya SDK içinde derleme güncel paketin kabulü değildir.
+
+### Birleşik doğrulama ve açık kabul
+
+İlk `fast` koşusu 3,3 dk'da durdu: yeni CDP yardımcısının iki checkJs
+hatası ve WeatherSystem biçimi düzeltildi. Son ajan düzenlemeleri koşu
+sırasında ağacı değiştirdiği için koşucu bütün statik dalgayı haklı olarak
+geçersiz saydı; bu koşu yeşil kapı kanıtı değildir. 683 contract testi ve
+paket tip/lint işlemlerinin tekil başarısı tam kapının yerini tutmaz.
+
+İkinci `fast` turu 3,0 dk'da rapordaki paket kısaltmalı test yolları ve git dışı
+cihaz probunun regex kaçışından düştü; tam depo yolları ve doğru regex ile
+odaklı belge/lint doğrulaması geçti. Bağımsız diff incelemesi bu tur eklenen
+DisplayMode kalıcılık hata takibinde F11 toparlama yolunu yakaladı. İki RED
+regresyon sonrasında native olay ve F11 aynı tercih yazımına bağlandı;
+23 görüntü kipi testi PASS. Çalışma sırasında oluşan bu regresyon 113 eski
+kusurun kapanış sayısına eklenmedi.
+
+Üçüncü `fast` turunda statik dalga ve audio-synth testleri geçti; CORE testi
+başlarken son sayısal pencere birleştirmesini tamamlamak için koşu bilinçli
+durduruldu. Kesilen koşu tam kapı kanıtı değildir. Birleştirme sonrası
+67 CORE ve 48 network/oda testi ile iki paket tip denetimi geçti.
+
+Dördüncü tur başlangıç bundle karşılaştırmasının üretilmiş JS/CSS dosyaları
+kaynak taramasına girdiği için lintte durdu. Çıktılar mevcut `dist` alanına
+taşındı; bekçi kuralları değiştirilmedi. Sonrasında `fast` 7,3 dk'da geçti
+(409,6 sn tam test; statik aşamalar aynı baytların başarılı makbuzundan).
+
+İlk `high` derlemeyi geçti, app bundle bütçesinde durdu; sonraki aşamalar
+NOT-RUN kaldı. Başlangıç commit'i `1f87893a` Vite load katmanında okunarak
+çalışma kaynağı değiştirilmeden ölçüldü: vitrin 237.782 → 238.480 B (+698 B),
+VOL.TEST 304.617 → 307.203 B (+2.586 B), gzip9. Vendor ve CSS baytları aynı.
+Ortaklaştırmadan sonra kalan artış; yaşam döngüsü, sayısal pencere, girdi/metin
+ve oyun/ağ sınır doğrulamalarının maliyetidir. App bütçeleri ölçülen
+232,9/300,0 KiB'ye güncellendi (önce 232,2/297,8); uygulama vendor içine
+taşınmadı. Graphify kaynak indeksi yenilendi; iki barrel sözdizimi uyarısı
+nedeniyle mimari hükümler kaynakla ayrıca doğrulandı.
+
+Nihai high/signoff ve güncel paketlerin Lenovo/Deck sonuçları henüz
+tamamlanmadı; bu aşamada NOT-RUN. Kapsam, atlama veya güvenlik eşiği ve
+piksel temeli gevşetilmedi. Genel timeout artırılmadı.
+
+Üretim hesap kimliği/auth sağlayıcısı, internet WSS/sertifika dağıtımı,
+gerçek WAN ve 1/24 saat soak kabulü bu kaynak testlerinden türetilemez.
+Protokol katılım doğrulaması hesap kimlik doğrulaması değildir. A* özel
+maliyet fonksiyonunda doğru alt sınır bilinmediği için sezgisel sıfırlanır;
+daha fazla düğüm ziyaret edebilir, performans hükmü scaling ölçümüne bağlıdır.
+İnsan beğenisi, fiziksel kol/haptik hissi ve yapılmamış platform kabulleri
+F07–F09/F13 sahiplerinde açık kalır.

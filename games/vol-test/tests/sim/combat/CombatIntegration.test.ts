@@ -3,9 +3,43 @@ import { COMBAT } from '@/config/combat';
 import { Simulation } from '@/sim/Simulation';
 import type { SimEvent } from '@/sim/events';
 import { command, simulation, STEP_MS, world } from '../../support/sim';
-import { STRIKER } from '@/config/vehicles';
+import { STRIKER, LEVIATHAN } from '@/config/vehicles';
+import { SKILLS } from '@/config/skills';
 
 describe('Simulation savaş yaşam döngüsü', () => {
+  it('ayrılan atıcının havadaki mermisi takım arkadaşını vurmaz, düşmana devam eder', () => {
+    const sim = new Simulation({ world: world(), spawnPlayer: false });
+    const shooter = sim.spawn(1000, 1000, 0, 0);
+    const ally = sim.spawn(1140, 1000, 0, 0);
+    const foe = sim.spawn(1240, 1000, 0, 1);
+    sim.step((vehicle) => command({ fire: vehicle === shooter, aimX: 1 }), STEP_MS);
+    expect(sim.projectiles.count).toBe(1);
+    sim.despawn(shooter.id);
+    for (let i = 0; i < 90; i++) sim.step(command(), STEP_MS);
+    expect(ally.vitality.health).toBe(ally.vitality.maxHealth);
+    expect(foe.vitality.health).toBeLessThan(foe.vitality.maxHealth);
+  });
+
+  it('mermi kuşatma gücünü atış anından taşır; atıcı ayrılınca kaybetmez', () => {
+    const sim = new Simulation({ world: world(), spawnPlayer: false });
+    const shooter = sim.spawn(1000, 1000, 0, null, undefined, LEVIATHAN);
+    const foe = sim.spawn(1250, 1000, 0);
+    sim.step(
+      (vehicle) => command({ fire: vehicle === shooter, boost: vehicle === shooter, aimX: 1 }),
+      STEP_MS,
+    );
+    expect(shooter.effect.dealt).toBe(SKILLS.siege.dealt);
+    expect(sim.projectiles.count).toBeGreaterThan(0);
+    sim.despawn(shooter.id);
+    const events: SimEvent[] = [];
+    for (let i = 0; i < 90; i++) {
+      sim.step(command(), STEP_MS);
+      sim.drainEvents(events);
+    }
+    const damage = events.find((event) => event.kind === 'damaged' && event.target === foe.id);
+    expect(damage).toMatchObject({ amount: LEVIATHAN.armament.weapon.damage * SKILLS.siege.dealt });
+  });
+
   it('yetkili hasar ve iyileşme kapısı olayları doğru sırada üretir; ölü araç ateş etmez', () => {
     const sim = simulation();
     const enemy = sim.spawn(2400, 2048, 0);

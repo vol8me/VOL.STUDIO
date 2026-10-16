@@ -1,5 +1,6 @@
 import type { IncomingMessage, Server as HttpServer, ServerResponse } from 'node:http';
 import type { Duplex } from 'node:stream';
+import { isIP } from 'node:net';
 import { TokenBucket } from './limits';
 import { envFlag, envInteger, type Env } from './env';
 import type { Logger } from './log';
@@ -41,7 +42,7 @@ export function guardSettings(env: Env): GuardSettings {
     .map((origin) => origin.trim())
     .filter((origin) => origin !== '');
   for (const origin of origins) {
-    if (!/^[a-z][a-z0-9+.-]*:\/\/[^/\s]+$/i.test(origin))
+    if (normalizeOrigin(origin) === null)
       throw new RangeError(`VOL_NET_ORIGINS geçersiz köken: ${origin}`);
   }
   return {
@@ -61,7 +62,7 @@ export function guardSettings(env: Env): GuardSettings {
       100_000,
     ),
     requestBurst: envInteger(env, 'VOL_NET_REQUEST_BURST', DEFAULT_GUARD.requestBurst, 1, 100_000),
-    origins: origins.map((origin) => origin.toLowerCase()),
+    origins: origins.map((origin) => normalizeOrigin(origin)!),
     trustProxy: envFlag(env, 'VOL_NET_TRUST_PROXY'),
   };
 }
@@ -88,6 +89,17 @@ const PASS: Verdict = { ok: true, release: () => undefined };
 const MAX_TRACKED_ADDRESSES = 50_000;
 const SWEEP_EVERY = 256;
 
+function normalizeOrigin(value: string): string | null {
+  if (!/^[a-z][a-z0-9+.-]*:\/\/[^/\s]+$/i.test(value)) return null;
+  try {
+    const url = new URL(value);
+    if (!url.hostname || url.username || url.password || url.search || url.hash) return null;
+    return `${url.protocol}//${url.host}`.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Adres anahtarı: IPv4 olduğu gibi, IPv4-eşlemeli IPv6 IPv4'e iner, IPv6 /64 önekine indirgenir
  * (bir ağ tek adres sayılır; saldırgan aynı /64 içinde adres döndürerek sınırı aşamaz).
@@ -95,19 +107,28 @@ const SWEEP_EVERY = 256;
 export function addressKey(raw: string | undefined): string {
   if (!raw) return 'unknown';
   const address = raw.toLowerCase().replace(/%.*$/, '');
-  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(address);
-  if (mapped) return mapped[1];
-  if (!address.includes(':')) return address;
-  const [head, tail = ''] = address.split('::');
+  const kind = isIP(address);
+  if (kind === 0) return 'unknown';
+  if (kind === 4) return address;
+  const canonical = new URL(`http://[${address}]`).hostname.slice(1, -1);
+  const [head, tail = ''] = canonical.split('::');
   const headGroups = head === '' ? [] : head.split(':');
-  const tailGroups = address.includes('::') && tail !== '' ? tail.split(':') : [];
-  const groups = address.includes('::')
+  const tailGroups = canonical.includes('::') && tail !== '' ? tail.split(':') : [];
+  const groups = canonical.includes('::')
     ? [
         ...headGroups,
         ...Array<string>(Math.max(0, 8 - headGroups.length - tailGroups.length)).fill('0'),
         ...tailGroups,
       ]
     : headGroups;
+  if (
+    groups.slice(0, 5).every((group) => Number.parseInt(group, 16) === 0) &&
+    groups[5] === 'ffff'
+  ) {
+    const high = Number.parseInt(groups[6], 16);
+    const low = Number.parseInt(groups[7], 16);
+    return `${high >>> 8}.${high & 255}.${low >>> 8}.${low & 255}`;
+  }
   return `${groups
     .slice(0, 4)
     .map((group) => group.padStart(4, '0'))
@@ -133,7 +154,22 @@ export class ConnectionGuard {
   constructor(
     readonly settings: GuardSettings = DEFAULT_GUARD,
     private readonly now: () => number = () => performance.now(),
-  ) {}
+  ) {
+    for (const value of [
+      settings.maxSockets,
+      settings.maxSocketsPerAddress,
+      settings.requestsPerSecond,
+      settings.requestBurst,
+    ])
+      if (!Number.isSafeInteger(value) || value < 1)
+        throw new RangeError('Bağlantı sınırları pozitif tam sayı olmalı.');
+    if (settings.origins.some((origin) => normalizeOrigin(origin) === null))
+      throw new RangeError('Köken izin listesi geçersiz.');
+    this.settings = {
+      ...settings,
+      origins: settings.origins.map((origin) => normalizeOrigin(origin)!),
+    };
+  }
 
   /** Eşleştirme gibi sıradan HTTP istekleri: köken ve hız denetlenir, soket sayılmaz. */
   admitRequest(address: string | undefined, origin: string | undefined): Verdict {
@@ -155,7 +191,11 @@ export class ConnectionGuard {
     upgrade: boolean,
   ): Verdict {
     const { origins } = this.settings;
-    if (origin !== undefined && origins.length > 0 && !origins.includes(origin.toLowerCase()))
+    if (
+      origin !== undefined &&
+      origins.length > 0 &&
+      !origins.includes(normalizeOrigin(origin) ?? '')
+    )
       return this.reject('origin', 403, 0);
     const key = addressKey(address);
     const at = this.now();
@@ -228,7 +268,7 @@ function remoteAddress(req: IncomingMessage, trustProxy: boolean): string | unde
   if (trustProxy) {
     const forwarded = req.headers['x-forwarded-for'];
     const last = (Array.isArray(forwarded) ? forwarded.join(',') : forwarded)?.split(',').at(-1);
-    if (last && last.trim() !== '') return last.trim();
+    if (last && isIP(last.trim()) !== 0) return last.trim();
   }
   return req.socket.remoteAddress;
 }
@@ -265,14 +305,13 @@ export function installGuard(
   const previousMax = http.maxConnections as number | undefined;
   http.maxConnections = guard.settings.maxSockets * 4;
   const warned = new Set<string>();
-  const note = (verdict: Extract<Verdict, { ok: false }>, address: string | undefined): void => {
+  const note = (verdict: Extract<Verdict, { ok: false }>): void => {
     // Saldırı sırasında günlük şişmesin: neden başına bir kez, ayrıntı sayaçta.
     if (warned.has(verdict.reason)) return;
     warned.add(verdict.reason);
     logger?.warn('guard.rejected', {
       reason: verdict.reason,
       status: verdict.status,
-      address: addressKey(address),
     });
   };
   http.emit = function guardedEmit(this: HttpServer, event: string | symbol, ...args: unknown[]) {
@@ -281,7 +320,7 @@ export function installGuard(
       const address = remoteAddress(req, trustProxy);
       const verdict = guard.admitRequest(address, req.headers.origin);
       if (!verdict.ok) {
-        note(verdict, address);
+        note(verdict);
         refuse(res, verdict);
         return true;
       }
@@ -290,7 +329,7 @@ export function installGuard(
       const address = remoteAddress(req, trustProxy);
       const verdict = guard.admitUpgrade(address, req.headers.origin);
       if (!verdict.ok) {
-        note(verdict, address);
+        note(verdict);
         refuse(socket, verdict);
         return true;
       }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WEAPON } from '@/config/tank';
+import { PROJECTILE_PREVIEW_MAX_STEPS } from '@/config/combat';
 import { Projectiles, type ProjectileTarget } from '@/sim/combat/Projectiles';
 import type { SimEvent } from '@/sim/events';
 import { world } from '../../support/sim';
@@ -17,6 +18,67 @@ function band(id: number, minX: number, maxX = Infinity): ProjectileTarget {
     },
   };
 }
+
+describe('Projectiles sınırları', () => {
+  it('çok küçük önizleme adımında yol ve iş miktarı sınırlı kalır; menzil korunur', () => {
+    const pool = new Projectiles(1, 2500);
+    const aim = pool.preview(1, 100, 100, 100, 0, world(), [], Number.MIN_VALUE);
+    expect(aim.pathLength).toBeLessThanOrEqual(PROJECTILE_PREVIEW_MAX_STEPS + 2);
+    expect(aim.path.length).toBeLessThanOrEqual((PROJECTILE_PREVIEW_MAX_STEPS + 2) * 2);
+    expect(aim.x).toBeCloseTo(350, 9);
+    expect(pool.count).toBe(0);
+  });
+  it('başlangıç ve ek profil aynı ömür ve uçuş kurallarını doğrular', () => {
+    for (const life of [0, -1, NaN, Infinity])
+      expect(() => new Projectiles(2, life)).toThrow(RangeError);
+    const pool = new Projectiles(2, 1000);
+    for (const patch of [
+      { gravity: 0 },
+      { drag: -1 },
+      { maxRange: 0 },
+      { muzzleHeight: NaN },
+      { launchSpeed: Infinity },
+    ]) {
+      const flight = { ...WEAPON.flight, ...patch };
+      expect(() => new Projectiles(2, 1000, flight)).toThrow(RangeError);
+      expect(() => pool.addProfile(1000, flight)).toThrow(RangeError);
+    }
+    expect(pool.addProfile(1000, WEAPON.flight)).toBe(1);
+  });
+
+  it('reddedilen doğuş havuz kapasitesini tüketmez ve dolu havuzun eski mermisini bozmaz', () => {
+    const pool = new Projectiles(1, 1000);
+    expect(() => pool.spawn(1, 100, 100, 10, 0, 99)).toThrow(RangeError);
+    expect(pool.count).toBe(0);
+    pool.spawn(1, 100, 100, 10, 0);
+    const before = { ...pool.items[0] };
+    expect(() => pool.spawn(2, NaN, 100, 10, 0)).toThrow(RangeError);
+    expect(() => pool.spawn(2, 100, 100, Infinity, 0)).toThrow(RangeError);
+    expect(() => pool.spawn(2, 100, 100, 10, 0, 0, -1)).toThrow(RangeError);
+    expect(pool.count).toBe(1);
+    expect(pool.items[0]).toEqual(before);
+  });
+
+  it('geçersiz ve sıfır adım bir mermiyi geri taşımaz veya isabet üretmez', () => {
+    const pool = new Projectiles(1, 1000);
+    pool.spawn(1, 100, 100, 10, 0);
+    const before = { ...pool.items[0] };
+    const events: SimEvent[] = [];
+    for (const step of [-1, NaN, Infinity])
+      expect(() => pool.step(step, world(), events)).toThrow(RangeError);
+    pool.step(0, world(), events, [band(2, 90, 110)]);
+    expect(pool.items[0]).toEqual(before);
+    expect(pool.count).toBe(1);
+    expect(events).toEqual([]);
+  });
+
+  it('negatif eşleme yarıçapı mermiyi yanlışlıkla silemez', () => {
+    const pool = new Projectiles(1, 1000);
+    pool.spawn(1, 100, 100, 10, 0);
+    expect(() => pool.retire(1, 100, 100, -1)).toThrow(RangeError);
+    expect(pool.count).toBe(1);
+  });
+});
 
 describe('Projectiles.retire', () => {
   it('sahibinin noktaya en yakın mermisini yarıçap içindeyse kaldırır', () => {

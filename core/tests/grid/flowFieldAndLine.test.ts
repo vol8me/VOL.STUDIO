@@ -19,6 +19,39 @@ function walls(rows: string[]) {
 }
 
 describe('FlowField', () => {
+  it('maliyet hedefe girmenin maliyetidir, kaynak hücreden çıkmanın değil', () => {
+    const field = new FlowField(3, 1);
+    field.compute([{ col: 2, row: 0 }], { cost: ({ col }) => [10, 2, 7][col] });
+    expect(field.getCost(1, 0)).toBe(7);
+    expect(field.getCost(0, 0)).toBe(9);
+  });
+
+  it('tek yönlü komşuluğu hedef aramasında tersine yürür', () => {
+    const field = new FlowField(4, 1);
+    field.compute([{ col: 3, row: 0 }], { neighbours: [{ col: 1, row: 0 }] });
+    expect(field.traceFrom(0, 0)).toEqual([
+      { col: 0, row: 0 },
+      { col: 1, row: 0 },
+      { col: 2, row: 0 },
+      { col: 3, row: 0 },
+    ]);
+    field.compute([{ col: 0, row: 0 }], { neighbours: [{ col: 1, row: 0 }] });
+    expect(field.getNext(1, 0)).toBeNull();
+  });
+
+  it('kesirli ve NaN sorgular geçersiz indeks veya NaN yol üretmez', () => {
+    const field = new FlowField(2, 2);
+    field.compute([{ col: 1, row: 1 }]);
+    for (const [col, row] of [
+      [0, 0.5],
+      [Number.NaN, 0],
+    ]) {
+      expect(field.getCost(col, row)).toBe(Infinity);
+      expect(field.getNext(col, row)).toBeNull();
+      expect(field.traceFrom(col, row)).toEqual([]);
+    }
+  });
+
   it('geçersiz boyut reddedilir', () => {
     expect(() => new FlowField(0, 3)).toThrow(/pozitif tam sayı/);
   });
@@ -132,6 +165,23 @@ describe('FlowField', () => {
 });
 
 describe('bresenhamLine', () => {
+  it.each([Number.NaN, Infinity, -Infinity, Number.MAX_VALUE])(
+    'geçersiz koordinat %s sonsuz çizim döngüsünden önce reddedilir',
+    (col) => {
+      expect(() => bresenhamLine({ col, row: 0 }, { col: 2, row: 1 })).toThrow(/koordinat/);
+      expect(() => bresenhamLine({ col: 0, row: 0 }, { col, row: 1 })).toThrow(/koordinat/);
+    },
+  );
+
+  it('eşit uzaklıktaki iki hücre arasında yön değişimi görüşü değiştirmez', () => {
+    const start = { col: 0, row: 0 };
+    const end = { col: 2, row: 1 };
+    const forward = bresenhamLine(start, end);
+    expect(bresenhamLine(end, start)).toEqual([...forward].reverse());
+    const blocks = (point: GridPoint) => point.col === 1 && point.row === 0;
+    expect(hasLineOfSight(start, end, { blocks })).toBe(hasLineOfSight(end, start, { blocks }));
+  });
+
   it('uçları DAHİL eder', () => {
     const line = bresenhamLine({ col: 0, row: 0 }, { col: 3, row: 0 });
     expect(line[0]).toEqual({ col: 0, row: 0 });

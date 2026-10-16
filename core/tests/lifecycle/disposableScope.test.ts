@@ -2,6 +2,27 @@ import { describe, it, expect, vi } from 'vitest';
 import { DisposableScope } from '../../src/lifecycle/DisposableScope';
 
 describe('DisposableScope', () => {
+  it('temizlik sırasında kardeş timer iptali kaynağı ikinci kez kapatmaz', () => {
+    const scope = new DisposableScope();
+    const timer = scope.addTimeout(() => undefined, 1000);
+    const dispose = vi.fn(() => timer.cancel());
+    scope.add({ dispose });
+    scope.dispose();
+    expect(dispose).toHaveBeenCalledTimes(1);
+  });
+
+  it('listener seçeneklerinin sonradan değişmesi capture temizliğini bozmaz', () => {
+    const target = new EventTarget();
+    const scope = new DisposableScope();
+    const listener = vi.fn();
+    const options = { capture: true };
+    scope.addListener(target, 'ping', listener, options);
+    options.capture = false;
+    scope.dispose();
+    target.dispatchEvent(new Event('ping'));
+    expect(listener).not.toHaveBeenCalled();
+  });
+
   it('add ile kaydedilen kaynak dispose() çağrılana kadar kapatılmaz', () => {
     const scope = new DisposableScope();
     const dispose = vi.fn();

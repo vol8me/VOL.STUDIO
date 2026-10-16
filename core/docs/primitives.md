@@ -15,6 +15,11 @@ politikanın karşılığıdır. Sessiz düzeltme yapılandırma hatasını gizl
 
 ## Simülasyon ve rastgelelik
 
+`EventQueue<T>` dışarıdan verilen sonlu zaman damgalarını sıralar; eşit zamanlarda ekleme
+sırasını korur. `release(until, out)` zamanı gelen verileri çağıranın dizisine ekler.
+Kapasite aşımında en eski zamanlı öğe atılır; kuyruk kendi saatini veya zamanlayıcısını kurmaz.
+VOL.TEST uzak ağ olaylarının çizim zamanını bu mekanizmayla bekletir.
+
 `SimulationClock` render delta'sını sabit adımlara böler. Varsayılan
 `partialStep: 'simulate'` artık süreyi değişken adım olarak işler; hızlı
 tepki sağlar, sonuç render temposundan bağımsız değildir. `'defer'` yalnız
@@ -42,6 +47,9 @@ Yazım sürerken ara snapshotlar birikmez; bekleyen en güncel değer yazılır.
 başarısızlığı exception ile bildirilir. `stop` yeni tetikleri kapatır;
 terminal dayanıklılık için `flushAndDispose` beklenir.
 
+`LatestValueWriter` yazım callback'i eşzamanlı olarak yeni değer kuyruğa
+eklese de tek yazım yürütür; bekleyen değer ilk yazım bitmeden başlamaz.
+
 ### `PersistedObservableState`
 
 Yükleme, abonelik, debounce ve seri son-değer-kazanır yazım sağlar. Parse,
@@ -53,6 +61,11 @@ oluşmaz. Bellek ve dinleyiciler eşzamanlı, kalıcılık Promise ile güncelle
 Promise'leri açıkta bırakmaz fakat disk dayanıklılığı vaat etmez. `get`
 son snapshot'ı okumaya devam eder. `flushAndDispose` kuyruğun boşalmasını
 bekleyen terminal bariyerdir.
+
+Debounce süresi son değişimden ölçülür. Dinleyicinin başlattığı yeni değişim,
+mevcut snapshot bütün dinleyicilere ulaştıktan sonra yayınlanır; dinleyiciler
+eski değeri yeni değerden sonra almaz. Yayın sırasında eklenen abonelik bir
+sonraki yayından itibaren katılır; kapanış kalan bildirimi durdurur.
 
 ## Zaman
 
@@ -79,6 +92,10 @@ Ardışık tur ve aradaki molayı yürütür. İlk tur `start` ile hemen başlar
 `totalRounds` yoksa sürer, `skipBreak` aradaki molayı geçer. Turun ürün
 anlamı ve bitiş işlemi callback üzerinden tüketicidedir.
 
+`start` ilk turu bir kez bildirir; pause sonrası tekrar çağrılırsa kalan
+moladan devam eder. İlk `start` öncesi `resume` etkisizdir. Tur başlangıç
+kancası içinden `update` ve `skipBreak` yeniden girişleri yok sayılır.
+
 ### `Clock`
 
 Duraklatılabilir ve ölçeklenebilir geçen süreyi tutar. Ölçek sıfırsa donar.
@@ -94,11 +111,19 @@ onEnter yeni durumu okur. Kanca fırlarsa state kaynağa döner fakat dış
 etkiler geri alınamaz. İstisna güvenliği ve `onTransitionError` kurtarması
 tüketicinindir.
 
+Başlangıç ve geçiş hedefi yalnız durum tablosunun kendi anahtarlarıdır;
+prototip alanları durum sayılmaz. Hata kancası kaynak durum geri yüklendikten
+ve geçiş kilidi kaldırıldıktan sonra çağrılır, kurtarma geçişi yapabilir.
+
 ### `ResourcePool`
 
 Tüketicinin tanımladığı kaynak kümesinde toplu harcama atomiktir. Bir kalem
 yetersiz ise hiçbir kalem düşmez; kapasite ve kaynak adları oyun kuralı olarak
 CORE'a gömülmez.
+
+Harcama maliyetinin her kalemi bir kez okunur; dinamik getter kontrol ile
+düşüm arasındaki tutarı değiştiremez. Kaynak sözlüğü prototipsizdir; JavaScript
+prototipiyle aynı adlı kaynaklar da normal sayı olarak saklanır.
 
 ### `EventBus`
 
@@ -123,6 +148,12 @@ tekrarlanan arama için tamponları yeniden kullanan `PathFinder` seçilir.
 Sezgisel gerçek maliyeti aşmadığında en kısa yol garantisi vardır. Komşuluk
 ve çapraz adım maliyeti aynı modelle seçilir.
 
+Özel maliyet fonksiyonunun alt sınırı bilinmediğinde veya komşuluk uzak
+hücrelere atladığında sezgisel sıfır seçilir; 1'den küçük pozitif maliyetler
+de en kısa yol garantisini korur. Koordinatlar tam sayıdır. `PathFinder`
+aynı örnekte callback içinden aramayı reddeder; ayrı örnekler bağımsızdır.
+Tek hücreli yol dahil sonuç koordinatları giriş nesnelerinden bağımsızdır.
+
 ### `FlowField`
 
 Çok birimin aynı hedefe yönelmesi için hedeften geriye Dijkstra alanı kurar.
@@ -131,8 +162,17 @@ ve çapraz adım maliyeti aynı modelle seçilir.
 Hedef değişince bütün alan geçersizdir. Az birim ve sık hedef değişiminde
 A* farklı maliyet/iş modeli sunar.
 
+Alan, ileri yöndeki hücreye giriş maliyetini toplar; ters taramada komşuluk
+ofsetleri ters çevrilir. Böylece tek yönlü yollar ve farklı hedef giriş
+maliyetleri A* ile aynı modeli kullanır. Kesirli/sonlu olmayan sorgu
+koordinatları ulaşılamaz hücre gibi sonuçlanır.
+
 Doğru ve görüş `bresenhamLine` ile `hasLineOfSight` üzerindedir. Hücre uçları
 ve engel sayma politikası açık parametreyle seçilir.
+
+Bresenham eşitlikleri uçların kararlı sırasıyla çözülür; ters yön aynı hücre
+dizisinin tersini verir. Kesirli uçlar tam sayıya kırpılır, sonlu olmayan veya
+güvenli tam sayı aralığını aşan uçlar sonsuz döngüden önce reddedilir.
 
 ### `SpatialIndex`
 
@@ -153,6 +193,25 @@ dizisine yazan `queryInto`/`queryRadiusInto` kullanılır. `queryStamp` ve
 `assertQueryValid` geçerlilik denetimi sağlar.
 
 ## Koleksiyonlar
+
+### `RollingWindow`
+
+`@volstudio/core/collections` son N sayısal örnek için tek mekanizmadır;
+`FrameRateSampler`, `Diagnostics`, metrik özeti ve network sunucu ölçümleri
+aynı pencereyi tüketir. Kapasite pozitif güvenli tamsayıdır; geçersiz
+yapılandırma `RangeError` verir. Sonlu olmayan akış örneği eski örneği
+düşürmeden atlanır; sıfır ve negatif sonlu değer geçerli örnektir.
+
+`count`, `average`, `min`, `max` ve `percentile(oran)` boş pencerede sıfırdır.
+Yüzdelik doğrusal ara değer üretmez: sıralı örnekte `floor(N × oran)` indisi
+seçilir, oran 1 son örneği verir. Oran sonlu ve 0–1 aralığında olmalıdır;
+boş pencerede de geçersiz oran reddedilir. `clear` bütün istatistiği sıfırlar.
+
+Ekleme sabit `Float64Array` halkasında tahsis yapmaz. Normal aralıkta ortalama
+telafili toplamla tutulur; uç değer taraması eski uç düştükten sonraki okumaya,
+sıralama yüzdelik sorgusuna ertelenir. Aynı pencerenin yüzdelikleri sıralamayı
+paylaşır. Sonlu örneklerin toplamı taşarsa ortalama ağırlıklı hesaplanır;
+sonraki örnekler pencereyi yeniden normal sayı aralığına getirebilir.
 
 ### `RingBuffer`
 
@@ -185,6 +244,11 @@ yabancı ya da iki kez iade edilen nesneyi reddeder. `reset` içinde tutulmuş
 referansları bırakmak tüketicinindir. `maxIdle` tepe yükünün kalıcı havuz
 boyutuna dönüşmesini önler.
 
+Factory boştaki veya aktif bir örneği yeniden üretirse sahiplik ihlali
+reddedilir. Ön üretim `maxIdle` sınırını aşmaz; sayılar negatif olmayan güvenli
+tam sayıdır (`maxIdle` için `Infinity` sınırsızdır). Generic `null`/`undefined`
+değerleri boş havuz işareti sayılmaz.
+
 ## Geometri ve hareket
 
 Geometri saf sayılar ve yapısal verilerle çalışır. `circlesOverlap`,
@@ -203,6 +267,14 @@ dışlar. Kare başına sabit lerp oranı frame hızından bağımsız değildir
 
 Hız taşıyan yay-damperdır; hedefi aşabilir. Uzun delta sınırlanır, hızın
 sayısal taşması duruma yayılmaz. Hafızasız `damp` ile aynı mekanizma değildir.
+
+### `PresenceEnvelope`
+
+Boolean etkinliği farklı açılma ve sönme süreleriyle 0–1 düzeyine taşır;
+çıktıya smoothstep uygulanır. `update` oyun/render deltasından ilerler,
+yarıda yön değiştirme mevcut düzeyden sürer. Süreler pozitif ve sonludur;
+bozuk/negatif delta yok sayılır. `reset` sıfırlar. Nişan çizgisi, vurgu veya
+başka sunumun etkinlik anlamı tüketiciye aittir.
 
 ### `solveTwoBoneIk`
 
@@ -257,6 +329,11 @@ Popover dış tıklamayla kapanınca yeni odağı çalmaz. SettingsForm yalnız
 etiket/kontrol düzenidir. `KeyedVirtualList` satırda kurulan bileşeni
 `destroyItem` ile kapatır.
 
+`DisposableScope` kaynakları kapatmadan önce kaydından çıkarır; temizlik
+sırasında kardeş zamanlayıcı iptali başka kaynağı iki kez kapatmaz. DOM
+listener seçenekleri kayıt anında kopyalanır, dışarıdaki `capture` değişimi
+kapanışın doğru listener'ı kaldırmasını engellemez.
+
 `CanvasViewportController` çizim sol sürüklemesini tüketiciye bırakır;
 kamera orta tuş veya Space+sol ile kayar, tekerlek imleçteki belge noktasını
 korur. `CommandHistory` byte bütçeli transaction/undo/redo mekanizmasıdır.
@@ -276,6 +353,13 @@ kılar. Geç sonuç değer, `onInput`, `onCommit` ve odağı değiştirmez.
 `TextEntryProvider.open(request, signal?)` iptal sinyalinde native kaynakları
 kapatır; eski tek argümanlı sağlayıcılar çalışır, geç sonuçları uygulanmaz.
 Yerel ekran klavyesi iptalde modal ve geri aboneliğini kapatır.
+
+`Input` Enter tuşunda önce `onCommit`, ardından `onEnter` çağırır; tuş tekrarı
+yeni işlem üretmez. Commit sırasında kapatılan bileşenin ikinci aksiyonu
+çalışmaz. `Input`/`TextArea` setter'ları tarayıcının normalize ettiği gerçek
+değeri saklar ve bildirir. Native metin sonucu `maxLength` sınırını (0 dahil)
+UTF-16 surrogate çiftini bölmeden uygular; sonuç geldiğinde `readOnly` yeniden
+denetlenir.
 
 ## Grafik ve platform yeteneği
 
@@ -325,6 +409,11 @@ sahipken bu yedeği kullanır; çubuk bırakılınca başka sağlayıcının esk
 dönmez. Eylemler etkin sağlayıcılar üzerinden birleşmeye devam eder.
 
 ### Sabit tick'e girdi taşıma
+
+Gamepad etkinlik kararı ile üretilen vektör aynı radyal deadzone hesabını
+kullanır. `GamepadSelectionOptions` hareket/nişan eksenleri ve deadzone
+seçimini taşır. Standard dışı eşleme yalnız giriş kipinin etkinliğini bildirir;
+tahmini oyun eylemi üretmez. Kapatılan sağlayıcı tekrar gamepad taramaz.
 
 Render karesi ile sabit tick aynı hızda değildir. Bir basış ya da eksen
 değeri, kendisini bildiren karede tick üretilmemişse kaybolmamalıdır.

@@ -25,6 +25,8 @@ export class PersistedObservableState<T> {
   private readonly scope = new DisposableScope();
   private readonly writer: LatestValueWriter<T>;
   private readonly listeners = new Set<(state: T) => void>();
+  private readonly notifications: Array<{ snapshot: T; listeners: Array<(state: T) => void> }> = [];
+  private notifying = false;
   private readonly debounceMs: number;
   private state: T;
   private timer: CancellableDisposable | null = null;
@@ -117,13 +119,14 @@ export class PersistedObservableState<T> {
 
   private schedulePersist(): Promise<void> {
     if (this.debounceMs === 0) return this.writer.enqueue(this.get());
-    if (this.pendingPersist) return this.pendingPersist;
-
-    this.pendingPersist = new Promise<void>((resolve, reject) => {
-      this.resolvePending = resolve;
-      this.rejectPending = reject;
-    });
-    void this.pendingPersist.catch(() => undefined);
+    if (!this.pendingPersist) {
+      this.pendingPersist = new Promise<void>((resolve, reject) => {
+        this.resolvePending = resolve;
+        this.rejectPending = reject;
+      });
+      void this.pendingPersist.catch(() => undefined);
+    }
+    this.timer?.cancel();
     this.timer = this.scope.addTimeout(() => {
       this.timer = null;
       this.commitPendingPersist();
@@ -146,13 +149,24 @@ export class PersistedObservableState<T> {
   }
 
   private notify(): void {
-    const snapshot = this.get();
-    for (const listener of this.listeners) {
-      try {
-        listener(this.options.clone(snapshot));
-      } catch (error) {
-        this.reportListenerError(error);
+    this.notifications.push({ snapshot: this.get(), listeners: [...this.listeners] });
+    if (this.notifying) return;
+    this.notifying = true;
+    try {
+      for (let index = 0; index < this.notifications.length && !this.disposed; index++) {
+        const { snapshot, listeners } = this.notifications[index];
+        for (const listener of listeners) {
+          if (this.disposed) break;
+          try {
+            listener(this.options.clone(snapshot));
+          } catch (error) {
+            this.reportListenerError(error);
+          }
+        }
       }
+    } finally {
+      this.notifications.length = 0;
+      this.notifying = false;
     }
   }
 

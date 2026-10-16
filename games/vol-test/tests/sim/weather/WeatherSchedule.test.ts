@@ -47,6 +47,7 @@ describe('WeatherSchedule', () => {
     expect(middle.snow).toBeCloseTo(0.5);
     expect(schedule.frameAt(30_000 + WEATHER.transitionMs).snow).toBe(1);
     expect(() => schedule.eventAt(-1)).toThrow(RangeError);
+    expect(() => schedule.eventAt(Number.MAX_SAFE_INTEGER + 1)).toThrow(RangeError);
   });
 
   it('override başlangıcı rüzgârda sıçrama yaratmaz', () => {

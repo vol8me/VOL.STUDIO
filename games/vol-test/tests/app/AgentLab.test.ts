@@ -39,6 +39,58 @@ function lab() {
 }
 
 describe('AgentLab', () => {
+  it('geçersiz ve geri giden saat örnekleri telemetri zamanını zehirlemez', () => {
+    const { lab: instance } = lab();
+    instance.sample(NaN);
+    instance.sample(1000);
+    instance.sample(Infinity);
+    instance.sample(900);
+    instance.record('geçerli');
+    instance.sample(1000 + LAB.sampleMs);
+    expect((instance.run('telemetry') as Array<{ t: number }>).map((row) => row.t)).toEqual([
+      0,
+      LAB.sampleMs,
+    ]);
+    expect(instance.run('events')).toEqual([{ ev: 'geçerli', t: 0 }]);
+  });
+
+  it('telemetri ve olay snapshotları kaynak ve okuyan tarafından değiştirilemez', () => {
+    const { lab: instance, world } = lab();
+    const extra = { count: 1 };
+    world.current = state({ extra });
+    instance.sample(1000);
+    extra.count = 9;
+    const returned = instance.run('telemetry') as Array<{ extra: { count: number } }>;
+    expect(returned[0].extra.count).toBe(1);
+    returned[0].extra.count = 20;
+    expect(instance.run('telemetry')).toEqual([expect.objectContaining({ extra: { count: 1 } })]);
+    const data = { nested: { count: 2 } };
+    instance.record('ölçüm', data);
+    data.nested.count = 10;
+    const events = instance.run('events') as Array<{ nested: { count: number } }>;
+    events[0].nested.count = 30;
+    expect(instance.run('events')).toEqual([{ ev: 'ölçüm', t: 0, nested: { count: 2 } }]);
+  });
+
+  it('olay verisi ölçümün zamanını veya olay adını değiştiremez', () => {
+    const { lab: instance } = lab();
+    instance.sample(500);
+    instance.record('isabet', { ev: 'sahte', t: -99, damage: 5 });
+    expect(instance.run('events')).toEqual([{ ev: 'isabet', t: 0, damage: 5 }]);
+  });
+
+  it('laboratuvar kaldırılınca girdi bırakılır ve eski API sahneyi süremez', () => {
+    const { lab: instance, inputs } = lab();
+    const target: { volLab?: VolLabApi } = {};
+    const remove = installAgentLab(target, instance);
+    const api = target.volLab!;
+    api.run('input', { fire: true });
+    remove();
+    remove();
+    expect(inputs).toEqual([{ fire: true }, null]);
+    expect(() => api.run('input', { fire: true })).toThrow();
+    expect(inputs).toHaveLength(2);
+  });
   it('durum, yardım ve komut kaydı tutarlıdır; bilinmeyen komut fırlatır', () => {
     const { lab: instance } = lab();
     expect(instance.run('state')).toMatchObject({ scenario: 'empty', seed: 7, vehicle: 'striker' });

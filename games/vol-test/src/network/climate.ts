@@ -1,4 +1,5 @@
 import type { ClimateSnapshot, SurfaceSnapshot } from '@/sim/weather/types';
+import { SEASONS } from '@/config/seasons';
 
 /** Sunucunun odaya yayınladığı iklim anlık görüntüsünün ileti adı. */
 export const CLIMATE_MESSAGE = 'climate';
@@ -36,12 +37,32 @@ export function isClimateSnapshot(value: unknown): value is ClimateSnapshot {
     'windY',
   ])
     if (typeof snapshot[key] !== 'number' || !Number.isFinite(snapshot[key])) return false;
-  if (typeof snapshot.season !== 'string') return false;
+  if (!(SEASONS.order as readonly unknown[]).includes(snapshot.season)) return false;
+  if (
+    !Number.isSafeInteger(snapshot.seed) ||
+    (snapshot.seed as number) < 0 ||
+    (snapshot.seed as number) > 0xffffffff
+  )
+    return false;
+  for (const key of ['elapsedMs', 'surfaceMs', 'windMs'])
+    if ((snapshot[key] as number) < 0 || (snapshot[key] as number) > Number.MAX_SAFE_INTEGER)
+      return false;
+  if (
+    (snapshot.surfaceMs as number) > (snapshot.windMs as number) ||
+    (snapshot.windMs as number) > (snapshot.elapsedMs as number)
+  )
+    return false;
   const surface = snapshot.surface as Record<string, unknown> | null | undefined;
   if (typeof surface !== 'object' || surface === null) return false;
   const columns = surface.columns;
   const rows = surface.rows;
-  if (!Number.isInteger(columns) || !Number.isInteger(rows)) return false;
+  if (
+    !Number.isSafeInteger(columns) ||
+    !Number.isSafeInteger(rows) ||
+    (columns as number) < 1 ||
+    (rows as number) < 1
+  )
+    return false;
   const count = (columns as number) * (rows as number);
   if (!(count > 0) || count > 1 << 20) return false;
   return FIELDS.every((field) => {

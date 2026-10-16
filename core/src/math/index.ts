@@ -1,5 +1,6 @@
 export { Vector2 } from './Vector2';
 export { Spring1D, type SpringConfig } from './Spring';
+export { PresenceEnvelope } from './PresenceEnvelope';
 export {
   distance,
   distanceSquared,

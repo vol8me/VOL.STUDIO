@@ -11,6 +11,7 @@ import { EVENT_MESSAGE, type EventBatch, type NetEvent } from '@/network/events'
 import { PredictedPilot } from '@/network/PredictedPilot';
 import { ROOM } from '@/network/rooms';
 import type { WorldSnapshot, TankInputData } from '@/network/schema';
+import { WORLD_SCHEMA } from '@/network/schema';
 import { World } from '@/sim/world/World';
 import { createPrimaryWorld } from '../../server/index';
 import { commandAt } from '../support/commands';
@@ -86,6 +87,37 @@ function exposed(...group: Seat[]): void {
 }
 
 describe('WorldRoom katılım', () => {
+  it('ağ seçenekleri işletim ayarlarını ve kalıcılığı ele geçiremez', async () => {
+    await boot();
+    const seat = await track(
+      new Client(server!.endpoint).create<WorldSnapshot>(
+        ROOM.world,
+        {
+          protocol: 2,
+          primary: true,
+          seed: 999,
+          perFaction: 100000,
+          climateStore: { load: 'bozuk' },
+          logger: { child: 'bozuk' },
+          internal: { primary: true },
+        },
+        WORLD_SCHEMA,
+      ) as Promise<Seat>,
+    );
+    const local = serverRoom(seat);
+    expect(local.autoDispose).toBe(true);
+    expect(local.battle.combatants.size).toBe(1);
+    await seat.leave();
+    await until(() => !matchMaker.getLocalRoomById(seat.roomId), 'oda kapanışı');
+  });
+
+  it('geçersiz katılım oda kurulmadan reddedilir', async () => {
+    const load = vi.fn(() => undefined);
+    await boot({ perFaction: 0, climateStore: { load, save: () => true } });
+    expect(await failure(join({ protocol: -1 }))).toBe('protocol');
+    expect(load).not.toHaveBeenCalled();
+  });
+
   it('oyuncu kaydı adı, aracı, cephesi ve sağlığıyla görünür; dünya durumu cephe ve bölge taşır', async () => {
     await boot();
     const seat = await join({ name: 'Ada' });
@@ -226,6 +258,44 @@ describe('WorldRoom cepheler', () => {
 });
 
 describe('WorldRoom botlar ve kalıcılık', () => {
+  it('başlatılamayan odalar süreçte kapasite sızdırmaz', async () => {
+    const load = vi.fn<() => undefined>(() => {
+      throw new Error('depo açılamadı');
+    });
+    await boot({ perFaction: 0, climateStore: { load, save: () => true } });
+    const client = new Client(server!.endpoint);
+    for (let index = 0; index <= NETWORK.maxRooms; index++)
+      expect(
+        await failure(client.create<WorldSnapshot>(ROOM.world, { protocol: 2 }, WORLD_SCHEMA)),
+      ).not.toBe('busy');
+    load.mockReturnValue(undefined);
+    const admitted = await track(
+      client.create<WorldSnapshot>(ROOM.world, { protocol: 2 }, WORLD_SCHEMA) as Promise<Seat>,
+    );
+    expect(admitted.state.players.size).toBe(1);
+  });
+
+  it('HTTP oda kurma istekleri birincil dahil süreç kapasitesini aşamaz, kapanış yer açar', async () => {
+    await boot();
+    await createPrimaryWorld({ perFaction: 0 });
+    const client = new Client(server!.endpoint);
+    for (let index = 1; index < NETWORK.maxRooms; index++)
+      await track(
+        client.create<WorldSnapshot>(ROOM.world, { protocol: 2 }, WORLD_SCHEMA) as Promise<Seat>,
+      );
+    expect(
+      await failure(client.create<WorldSnapshot>(ROOM.world, { protocol: 2 }, WORLD_SCHEMA)),
+    ).toBe('busy');
+    expect(serverRoomCount()).toBe(NETWORK.maxRooms);
+    const freed = seats.at(-1)!;
+    await freed.leave();
+    await until(() => !matchMaker.getLocalRoomById(freed.roomId), 'boşalan oda');
+    const admitted = await track(
+      client.create<WorldSnapshot>(ROOM.world, { protocol: 2 }, WORLD_SCHEMA) as Promise<Seat>,
+    );
+    expect(admitted.roomId).not.toBe(freed.roomId);
+  });
+
   it('her cephe hedef sayıya botla tamamlanır; insan girince fazla bot çıkar', async () => {
     await boot({ perFaction: 3 });
     const seat = await join({ name: 'Ada', faction: 0 });
@@ -273,6 +343,27 @@ describe('WorldRoom botlar ve kalıcılık', () => {
 });
 
 describe('WorldRoom girdi yetkisi', () => {
+  it('kopuk oyuncunun tampon girdisi tüketilmez ve tutulan niyet sıfırlanır', async () => {
+    await boot();
+    const seat = await join();
+    const local = serverRoom(seat);
+    const client = local.clients.find((entry) => entry.sessionId === seat.sessionId)!;
+    const input = seat.input<TankInputData>();
+    for (let index = 0; index < 8; index++) {
+      input.data.fire = true;
+      input.data.moveY = -1;
+      input.send();
+    }
+    await until(() => local.inputs.get(seat.sessionId).size > 0, 'tampon girdi');
+    // Kopma geri çağrısı ile bir sonraki adım arasındaki aralığı deterministik kurar.
+    vi.spyOn(local, 'allowReconnection').mockReturnValue(Promise.resolve(client) as never);
+    local.onDrop(client);
+    const tick = local.state.tick;
+    await until(() => local.state.tick > tick + 3, 'kopuk adımlar');
+    expect(local.inputStats(seat.sessionId)?.consumed).toBe(0);
+    expect(local.state.players.get(seat.sessionId)?.connected).toBe(false);
+  });
+
   it('girdiye göre ilerler: sunucu aracı sürer, durum istemciye yansır', async () => {
     await boot();
     const seat = await join();

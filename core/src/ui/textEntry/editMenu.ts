@@ -1,4 +1,5 @@
 import { i18next } from '../../i18n/I18n';
+import { fitToRoom } from './graphemes';
 import { ContextMenu, type ContextMenuEntry } from '../overlays/ContextMenu';
 import {
   createWebClipboardAdapter,
@@ -98,13 +99,6 @@ function asEditableField(target: EventTarget | null): EditableField | null {
 
 function dispatchInput(field: EditableField, inputType: string, data: string | null): void {
   field.dispatchEvent(new InputEvent('input', { bubbles: true, inputType, data }));
-}
-
-/** `maxLength` UTF-16 kod birimi sayar; kesim vekil çiftin yarısını bırakırsa o yarı atılır. */
-function fitToRoom(text: string, room: number): string {
-  const cut = text.slice(0, Math.max(0, room));
-  const last = cut.charCodeAt(cut.length - 1);
-  return last >= 0xd800 && last <= 0xdbff ? cut.slice(0, -1) : cut;
 }
 
 const LABEL_KEYS = {

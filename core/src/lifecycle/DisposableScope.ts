@@ -73,8 +73,9 @@ export class DisposableScope implements Disposable {
       target.addEventListener(type, listener);
       this.add({ dispose: () => target.removeEventListener(type, listener) });
     } else {
-      target.addEventListener(type, listener, options);
-      this.add({ dispose: () => target.removeEventListener(type, listener, options) });
+      const registeredOptions = typeof options === 'boolean' ? options : { ...options };
+      target.addEventListener(type, listener, registeredOptions);
+      this.add({ dispose: () => target.removeEventListener(type, listener, registeredOptions) });
     }
   }
 
@@ -162,9 +163,10 @@ export class DisposableScope implements Disposable {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    for (let i = this.disposables.length - 1; i >= 0; i--) {
+    while (this.disposables.length > 0) {
+      const disposable = this.disposables.pop()!;
       try {
-        this.disposables[i].dispose();
+        disposable.dispose();
       } catch {
         // Bilinçli olarak yutulur — bkz. yukarıdaki JSDoc.
       }

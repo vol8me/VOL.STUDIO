@@ -49,7 +49,7 @@ function isCodedError(error: unknown): error is CodedError {
 export function classifyJoinError(error: unknown): JoinFailure {
   if (error instanceof JoinError) return error.reason;
   if (isCodedError(error)) {
-    if (error.code === REJECT_CODE) {
+    if (error.code === REJECT_CODE || error.code === 400) {
       return (JOIN_REJECTIONS as readonly string[]).includes(error.message)
         ? (error.message as JoinRejection)
         : 'failed';

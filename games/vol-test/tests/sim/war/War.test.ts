@@ -5,6 +5,7 @@ import { WAR } from '@/config/war';
 import { BotBrain } from '@/sim/ai/BotBrain';
 import { idleCommand } from '@/sim/command';
 import { baseCenter } from '@/sim/war/Deployment';
+import { BotDirector } from '@/sim/war/BotDirector';
 import type { WarStepEvent } from '@/sim/war/War';
 import { NO_OWNER } from '@/sim/war/Zones';
 import { newWar, SIZE } from './support';
@@ -28,6 +29,36 @@ const bot = (war: ReturnType<typeof newWar>, faction: number, spec = STRIKER) =>
   );
 
 describe('War.join', () => {
+  it('geçersiz süre saati ve dünyayı kısmen ilerletemez; sıfır adım bot üretmez', () => {
+    const war = newWar({ perFaction: 1 });
+    const events: WarStepEvent[] = [];
+    for (const step of [-1, NaN, Infinity])
+      expect(() => war.step(step, idleCommand, events)).toThrow(RangeError);
+    war.step(0, idleCommand, events);
+    expect(war.timeMs).toBe(0);
+    expect(war.sim.timeMs).toBe(0);
+    expect(war.combatants.size).toBe(0);
+    expect(events).toEqual([]);
+  });
+
+  it('geçersiz bot nüfusu reddedilir', () => {
+    for (const perFaction of [-1, 0.5, NaN, Infinity])
+      expect(() => newWar({ perFaction })).toThrow(RangeError);
+  });
+
+  it('beyni kurulamazsa botun sahipsiz fizik gövdesi dünyada kalmaz', () => {
+    const war = newWar();
+    expect(() =>
+      war.addBot('Bot', STRIKER, 0, () => {
+        throw new Error('Beyin kurulamadı');
+      }),
+    ).toThrow('Beyin kurulamadı');
+    expect(war.combatants.size).toBe(0);
+    expect(war.sim.vehicles).toHaveLength(0);
+    expect(() => bot(war, -1)).toThrow(RangeError);
+    expect(war.sim.vehicles).toHaveLength(0);
+  });
+
   it('insan üssünde doğar, korumalıdır ve cephe takım kimliğidir', () => {
     const war = newWar();
     const human = war.join({ name: 'Ada', spec: DART });
@@ -180,6 +211,31 @@ describe('War.step', () => {
 const SLOW_MS = 30_000;
 
 describe('BotDirector', () => {
+  it('insan olmayan dünyada da fazla bot çıkarılırken ölü bot önceliklidir', () => {
+    const war = newWar();
+    const alive = bot(war, 0);
+    const dead = bot(war, 0);
+    dead.vehicle.vitality.protectionRemainingMs = 0;
+    war.sim.applyDamage(dead.vehicle.id, dead.vehicle.vitality.maxHealth);
+    new BotDirector(7, 1).trim(war, 0);
+    expect(war.combatants.has(alive.vehicle.id)).toBe(true);
+    expect(war.combatants.has(dead.vehicle.id)).toBe(false);
+  });
+
+  it('dışarıdan kaldırılan botların görev kayıtları sonraki nüfus turunda bırakılır', () => {
+    const war = newWar();
+    const director = new BotDirector(7, 1);
+    for (let turn = 0; turn < 30; turn++) {
+      director.review(war, true);
+      for (const id of [...war.combatants.keys()]) war.leave(id);
+    }
+    director.review(war, true);
+    // İç kaynak ölçümü: davranış doğru görünse de ayrılan her botun kaydı kalıcı büyümemeli.
+    const allocations = (director as unknown as { assignments: ReadonlyMap<number, unknown> })
+      .assignments;
+    expect(allocations.size).toBe(war.combatants.size);
+  });
+
   it('her cepheyi hedef nüfusa botlarla tamamlar ve araçlar farklı takma ad taşır', () => {
     const war = newWar({ populate: true, seed: 5 });
     run(war, 2);

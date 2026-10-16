@@ -45,6 +45,13 @@ describe('guardSettings', () => {
     expect(() => guardSettings({ VOL_NET_MAX_SOCKETS: '0' })).toThrow(RangeError);
     expect(() => guardSettings({ VOL_NET_ORIGINS: 'oyun.example' })).toThrow(/köken/);
     expect(() => guardSettings({ VOL_NET_ORIGINS: 'https://a.example/yol' })).toThrow(/köken/);
+    for (const origin of [
+      'https://a.example?x',
+      'https://a.example#x',
+      'https://u:p@a.example',
+      'https://[bad]',
+    ])
+      expect(() => guardSettings({ VOL_NET_ORIGINS: origin })).toThrow(/köken/);
   });
 });
 
@@ -52,6 +59,9 @@ describe('addressKey', () => {
   it('IPv4’ü olduğu gibi, eşlemeli IPv6’yı IPv4’e indirger', () => {
     expect(addressKey('203.0.113.7')).toBe('203.0.113.7');
     expect(addressKey('::ffff:203.0.113.7')).toBe('203.0.113.7');
+    expect(addressKey('::ffff:cb00:7107')).toBe('203.0.113.7');
+    expect(addressKey('0:0:0:0:0:ffff:cb00:7107')).toBe('203.0.113.7');
+    expect(addressKey('sahte-adres')).toBe('unknown');
   });
 
   it('IPv6’yı /64 önekine indirger; aynı ağdaki adresler tek anahtardır', () => {
@@ -69,6 +79,17 @@ describe('addressKey', () => {
 });
 
 describe('ConnectionGuard', () => {
+  it('doğrudan verilen bozuk sınır korumayı sessizce kapatamaz', () => {
+    for (const field of ['maxSockets', 'maxSocketsPerAddress', 'requestsPerSecond', 'requestBurst'])
+      for (const value of [NaN, Infinity, 0, -1])
+        expect(() => new ConnectionGuard(settings({ [field]: value }))).toThrow(RangeError);
+  });
+
+  it('aynı kökenin varsayılan portunu ve büyük harflerini normalleştirir', () => {
+    const guard = new ConnectionGuard(settings({ origins: ['https://OYUN.example:443'] }));
+    expect(guard.admitRequest('127.0.0.1', 'https://oyun.example').ok).toBe(true);
+  });
+
   it('adres başına hız aşılınca 429 ve Retry-After verir; başka adres etkilenmez', () => {
     let now = 0;
     const guard = new ConnectionGuard(
@@ -198,6 +219,7 @@ describe('startHost + guard', () => {
     const warnings = logger.since().records.filter((record) => record.ev === 'guard.rejected');
     expect(warnings).toHaveLength(1);
     expect(warnings[0].data).toMatchObject({ reason: 'rate', status: 429 });
+    expect(warnings[0].data).not.toHaveProperty('address');
   });
 
   it('yabancı köken HTTP’de 403 alır, izinli köken geçer', async () => {
@@ -220,6 +242,12 @@ describe('startHost + guard', () => {
     for (let index = 0; index < 6; index++)
       statuses.push((await head(host.port, { 'X-Forwarded-For': `9.9.9.${index}` })).status);
     expect(statuses).not.toContain(429);
+  });
+
+  it('geçersiz forwarded adresleri yeni hız kovaları açamaz', async () => {
+    const host = await start(settings({ requestsPerSecond: 1, requestBurst: 1, trustProxy: true }));
+    await head(host.port, { 'X-Forwarded-For': 'gecersiz-1' });
+    expect((await head(host.port, { 'X-Forwarded-For': 'gecersiz-2' })).status).toBe(429);
   });
 
   it('gerçek istemci eşleşir; aşan soket kapıda reddedilir, kapanınca yer açılır', async () => {

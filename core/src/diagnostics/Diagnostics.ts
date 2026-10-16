@@ -1,5 +1,6 @@
 import './diagnostics.css';
-import { FrameRateSampler, RollingWindow } from '../time/FrameRateSampler';
+import { FrameRateSampler } from '../time/FrameRateSampler';
+import { RollingWindow } from '../collections/RollingWindow';
 import { NoopTransport, type DiagnosticsTransport } from './transport';
 import type {
   DiagnosticsSnapshot,

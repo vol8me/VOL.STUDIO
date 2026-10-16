@@ -1,9 +1,10 @@
-import { JoinError, type Lobby, type Room } from '@volstudio/network/client';
+import { JoinError, Predict, type Lobby, type Room } from '@volstudio/network/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NETWORK } from '@/config/network';
 import type { EventBatch } from '@/network/events';
 import { ROOM } from '@/network/rooms';
 import { OnlineSession, type ConnectionStatus } from '@/network/OnlineSession';
+import { CLIMATE_REQUEST } from '@/network/climate';
 import type { WorldSnapshot } from '@/network/schema';
 import { openSession, startServer, until, type TestServer } from '../support/netHarness';
 
@@ -40,6 +41,7 @@ describe('OnlineSession katılım', () => {
     expect(session.self?.name).toBe('Yolcu');
     expect(session.self?.vehicleId).toBeGreaterThan(0);
     expect(session.self?.team).toBeGreaterThanOrEqual(0);
+    expect(session.timeline.known).toBe(true);
     await until(() => session.timeline.known, 'sunucu ekseni');
     // Olaylar benzetim saatiyle gelir; eksen dönüşümü SDK sunucu saatine yakın düşmelidir.
     await until(() => session.room.state.timeMs > 200, 'yama akışı');
@@ -111,19 +113,21 @@ describe('OnlineSession olaylar ve durum', () => {
     await session.leave();
   });
 
-  it('kopan bağlantı reconnecting olur, geri gelince live olur ve kayıt korunur', async () => {
-    const session = await open();
+  it('katılımdan hemen sonra kopunca reconnecting ve live olur, kayıt korunur', async () => {
+    server = await startServer();
+    const session = await OnlineSession.open({ endpoint: server.endpoint, name: 'Pilot' });
+    sessions.push(session);
     const record = session.self;
+    const send = vi.spyOn(session.room, 'send');
     const seen: ConnectionStatus[] = [];
     session.onStatus((status) => seen.push(status));
-    session.room.reconnection.enabled = true;
-    session.room.reconnection.minUptime = 0;
     // 4010: istemcinin "ağ gitti, yeniden dene" kapanış kodu.
     session.room.connection.close(4010);
     await until(() => seen.length >= 2, 'kopma ve dönüş');
     expect(seen.slice(0, 2)).toEqual(['reconnecting', 'live']);
     expect(session.status).toBe('live');
     expect(session.self).toBe(record);
+    expect(send).toHaveBeenCalledWith(CLIMATE_REQUEST);
   });
 
   it('dispose dinleyicileri bırakır ve odadan ayrılır', async () => {
@@ -131,7 +135,10 @@ describe('OnlineSession olaylar ve durum', () => {
     const listener = vi.fn();
     session.onEvents(listener);
     session.onStatus(listener);
+    const disposePredict = vi.spyOn(session.predict, 'dispose');
     session.dispose();
+    session.dispose();
+    expect(disposePredict).toHaveBeenCalledOnce();
     expect(session.status).toBe('closed');
     await until(() => !session.room.connection.isOpen, 'bağlantı kapanışı');
     expect(listener).not.toHaveBeenCalled();
@@ -161,6 +168,7 @@ function fakeSignal<A extends unknown[]>(): FakeSignal<A> {
 function emptyRoom() {
   const room = {
     sessionId: 'ben',
+    reconnection: { minUptime: 5000 },
     state: { players: new Map<string, unknown>() },
     onStateChange: fakeSignal<[unknown]>(),
     onLeave: fakeSignal<[number]>(),
@@ -173,6 +181,40 @@ function emptyRoom() {
 }
 
 describe('OnlineSession yerleşme', () => {
+  it('yerleşme süresi bozuksa bağlantı kurulmaz', async () => {
+    const { lobby } = emptyRoom();
+    for (const timeout of [NaN, Infinity, -1, 0])
+      expect(
+        await failure(
+          OnlineSession.open({ endpoint: '', name: 'A', lobby, settleTimeoutMs: timeout }),
+        ),
+      ).toBe('failed');
+    expect(lobby.joinOrCreate).not.toHaveBeenCalled();
+  });
+
+  it('öngörü kurulamazsa açık oda bırakılmaz ve hata JoinError olur', async () => {
+    const { raw, lobby } = emptyRoom();
+    raw.state.players.set('ben', {});
+    const get = vi.spyOn(Predict, 'get').mockImplementationOnce(() => {
+      throw new Error('kurulamadı');
+    });
+    try {
+      expect(await failure(OnlineSession.open({ endpoint: '', name: 'A', lobby }))).toBe('failed');
+      expect(raw.leave).toHaveBeenCalledOnce();
+    } finally {
+      get.mockRestore();
+    }
+  });
+
+  it('ilk durum henüz yoksa TypeError yerine yerleşme süresini bekler', async () => {
+    const { raw, lobby } = emptyRoom();
+    Object.assign(raw, { state: undefined });
+    expect(
+      await failure(OnlineSession.open({ endpoint: '', name: 'A', lobby, settleTimeoutMs: 10 })),
+    ).toBe('failed');
+    expect(raw.leave).toHaveBeenCalledOnce();
+  });
+
   it('kayıt gelmezse süre dolunca failed olur ve odadan çıkar', async () => {
     const { raw, lobby } = emptyRoom();
     const reason = await failure(

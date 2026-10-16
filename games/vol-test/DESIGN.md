@@ -4,8 +4,8 @@
 
 VOL.TEST, CORE mekanizmaları ve native kabuğun gerçek oyun tüketicisidir.
 Açık sürüş alanı tank fiziğini, nişanı, çevreyi ve platform servislerini
-birlikte sınar. Kalıcı dünya engeli yoktur; seçilen senaryo araç veya hedef
-ekler; senaryo kadrosu yuvaya göre dört aracı döndürür, böylece her araç görünüm, atış ve ses yoluyla sınanır. Oyun ana menüyle açılır; menü, garaj, ayarlar ve geliştirici ekranları ile HUD ve duraklatma katmanı vardır.
+birlikte sınar. Dünya göller ve kayalar içerir; seçilen senaryo araç veya hedef
+ekler; senaryo kadrosu yuvaya göre araç kataloğunu döndürür, böylece her araç görünüm, atış ve ses yoluyla sınanır. Oyun ana menüyle açılır; menü, garaj, ayarlar ve geliştirici ekranları ile HUD ve duraklatma katmanı vardır.
 
 ## Model ve sunum
 
@@ -33,6 +33,15 @@ taret ve süspansiyon önceki ve güncel durum arasında ara değerle çizilir.
 Simülasyon olay kuyruğunu sahne her karede bir kez boşaltır. Görünüm model
 kurallarını üretmez ve modele geri yazmaz. Listener, timer, ses ve native
 abonelikler sahibinin kapanışında sökülür.
+
+Sıfır süreli adım modelde yan etki üretmez: komut okunmaz, ateş ve temas çözümü
+çalışmaz. Geçersiz süre ve doğuş konumu durum değişmeden reddedilir. Olay kuyruğu
+adım dışındaki hasar/iyileştirme çağrılarında da sınırlıdır. Senaryo hedeflemesi
+CORE `SpatialIndex` etkinlik filtresini kullanır; ölü araçlar seçilmez, üyelik
+revizyonu değişince kaldırılmış araç referansları bırakılır. Araç değişimi yeni
+oyuncuyu aynı adımdaki hedeflemeye taşır; sınırdaki doğuş her şasinin kendi ayak
+izine göre kelepçelenir. Nişan çizgisinin açılıp sönmesi CORE `PresenceEnvelope`
+tarafından sürülür.
 
 ## Dünya ve sanat
 
@@ -92,6 +101,11 @@ değerlerini okur; komşu örnekler ve dünya koordinatına bağlı konturlar su
 ve mevsim lekelerinin hücre biçiminde tekrarlanmasını önler. Kamera yalnız
 görünen alanı keser, dünya desenini yeniden konumlandırmaz. Kar tonu gerçek
 sıkışmayı, yansıma tankın gerçek gövde, taret ve palet dokularını kullanır.
+
+Süzülen araç yere basmadığından karı sıkıştırmaz ve yeşilliği ezmez. Sert iklim
+yüklemesi önceki yumuşak hücre uyumunu ve yerel hava zorlamasını bırakır; bozuk
+mevsim veya tutarsız yüzey/rüzgâr saati hiçbir hücreye yazılmadan reddedilir.
+Yumuşak uyum yağışla aynı anda çalışırken de su ve kar kapasitesini aşamaz.
 
 Yağış, toz, dalga ve araç yansıması havuzlarının kapasitesi sabittir.
 Düşük kalite sunum yoğunluğunu azaltır; birikim veya fizik değişmez.
@@ -562,7 +576,9 @@ kaybeder; `tests/sim/combat/PartWear.test.ts` kaç isabette kırıldığını ar
 ölümden ÖNCE kırıldığını doğrular. Rastgelelik yoktur: aynı atış dizisi aynı parçayı kırar. Aşınma bir
 süre dinlenen parçada söner; kırık parça, aracın hasar almadığı `repair.quietMs` boyunca sessizlik
 sürerse birer birer yerine oturur (can yenilenmesiyle aynı sessizlik fikri) ve doğuş/sıfırlama hepsini
-onarır.
+onarır. Sessizlik süresi onarım süresine sayılmaz; sönme yalnız eşiğin ötesindeki
+süreyi tüketir. Bir onarımdan kalan süre sonraki parçaya aktarılır, büyük ve
+bölünmüş adımlar aynı onarım maskesini üretir.
 
 Kırık parçanın sürüşe etkisi şasidedir ve `Chassis.parts` (bit maskesi) ile ağ durumuna girer: tamsayıdır,
 `CHASSIS_STATE_SNAPPED` listesindedir ve uzak araçta ara değer ALMAZ (`RemoteTanks`); aşınmanın kendisi
@@ -670,16 +686,21 @@ bir kez hasar alınır.
 savaş komutlarının ve dünya sistemlerinin kullanacağı tek kapıdır. Hasar ve
 iyileşme gerçek değişen miktarı döndürür; miktarlar sonlu, negatif olmayan
 sayıdır. Ölüm canı sıfıra indirir; cansız araç hareket etmez, ateş etmez,
-fiziksel araç teması çözmez ve mermi hedefi olmaz. Ölüyü yalnız yeniden doğma
+canlı araç gibi hareket etmez ve mermi hedefi olmaz; sabit enkaz olarak temasa
+katılır. Ölüyü yalnız yeniden doğma
 canlandırır; araç kimliği değişmez. Doğumda ilk yerleştirme konumu kullanılır;
 yetkili çağıran bu konumu açıkça geçebilir. Gövde fiziği ve atış beklemesi
-sıfırlanır. Henüz yerleştirmeyi serbest bir doğum alanına kaydıran sunucu
-kuralı bulunmaz.
+sıfırlanır. Savaşın `War` katmanı doğmadan önce üssündeki en boş adayı seçer.
+Yeniden doğuşun konum sıçraması kalıcı sürüş mesafesine eklenmez.
 
 İsteğe bağlı takım kimliği `Simulation.spawn` ile verilir. Her iki araç
 aynı takımdaysa ve `friendlyFire` kapalıysa dost mermileri hedefi geçer;
 nişan önizlemesi de aynı kuralı kullanır. Takımsız araçlar herkese
-karşı hedef sayılır. `damaged`, `healed`, `died` ve `respawned`
+karşı hedef sayılır. Mermi atış anındaki takım ve hasar çarpanını taşır; atıcı
+ayrılınca dost ateşi açılmaz ve kuşatma bonusu kaybolmaz. Mermi profilleri ve
+doğuşları havuz değiştirilmeden doğrulanır; nişan önizlemesi en çok
+`PROJECTILE_PREVIEW_MAX_STEPS` adım ayırır. Aynı paketteki hasar sayıları kendi
+atıcı/isabet noktalarıyla eşleşir. `damaged`, `healed`, `died` ve `respawned`
 olayları araç kimliği ve varsa kaynak kimliğiyle sunuma aktarılır. HUD,
 CORE can çubuğuyla güncel canı ve ölüm/koruma süresini i18n anahtarıyla
 gösterir. Sunucu tarafı savaş yetkilendirmesi, kalıcı ölüm politikası ve spawn
@@ -983,7 +1004,7 @@ Gönderilen app/vendor/css bütçeleri kök quality.json sahibindedir;
 ölçü güncel üretim build'iyle bundle kapısından alınır.
 
 Saf simülasyon (`Simulation`, `ScenarioRunner`) CORE'a yalnız `random`,
-`spatial`, `math` ve `physics` alt yüzeyleriyle bağlanır; Node'da DOM ve CSS
+`spatial`, `math`, `time` ve `physics` alt yüzeyleriyle bağlanır; Node'da DOM ve CSS
 yükleyicisi olmadan seedli koşar. `pnpm --filter @volstudio/vol-test load`
 araç, mermi ve hava yüküyle tek `Simulation.step` süresini başlangıç ve uzun
 oturum pencereleri için ölçer. Yalnız CPU simülasyonudur; çizim ve cihaz
@@ -1069,8 +1090,8 @@ Duraklatma döngüleri keser, kaldırılan araç ve kapanan sahne sesleri söker
 Araç hareketsiz ve nişan sabitken canlı döngü kaynağı yoktur. Müzik, ambiyans
 ve hava sesi yüklenmez. Yük ve kayma, palet yüzeyi ile **zemin hızı**
 arasındaki farktan ölçülür (`Tank.surfaceLeft/surfaceRight`); paletlerin
-katettiği yol (`groundLeft/groundRight`) işaretli bir integraldir ve hız
-değildir. Ses yayın kabulü kaynak/PCM/manifest ve codec sonrası teknik QA ile
+katettiği yol (`groundLeft/groundRight`) mutlak temas mesafesidir; geri sürüşte
+de artar ve hız değildir. Ses yayın kabulü kaynak/PCM/manifest ve codec sonrası teknik QA ile
 verilir; dinleme yapıldığı iddiası teknik sonuçtan türetilmez.
 
 ## Çok oyunculu
@@ -1085,7 +1106,7 @@ altındadır (`build:server` çıktısı Node ile başlar) ve [network](../../ne
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `server/WorldRoom.ts`                             | Kalıcı savaş dünyası: 60 Hz adım, 20 Hz yama, `War` nesnesini sarar                           |
 | `server/index.ts`                                 | Oda kaydı ve birincil dünya (insan kalmasa da kapanmaz)                                       |
-| `server/InputPacer.ts`                            | Girdi titreşim tamponu; geç girdi sayılı boşta adım olur                                      |
+| `@volstudio/network/server` `InputPacer`          | Ortak girdi titreşim tamponu; geç girdi sayılı boşta adım olur                                |
 | `src/network/OnlineSession.ts`                    | Bağlanma, bağlantı durumu, ping/titreşim, olay dağıtımı                                       |
 | `src/network/PredictedPilot.ts`, `OnlineWorld.ts` | Kendi aracın öngörüsü, uzlaştırma, uzak araç ara değeri                                       |
 | `src/network/warView.ts`                          | Şemadan savaş görüntüsü (cepheler, bölgeler, tablo) ve bildirim akışı satırı                  |
@@ -1102,6 +1123,11 @@ tanımsız araç ya da aralık dışı cephe protokol ihlali olarak reddedilir, 
 bozacaksa sunucu kendi seçer. Botlar da oyuncu kaydında görünür (`bot` alanı: skor tablosu, harita).
 Kurallar yalnız `src/config/network.ts` ve `src/config/war.ts` içindedir; testler dünya seçeneklerini
 (`perFaction`, tohum) `createRooms`a verir, ağdan değiştirilemez.
+Oda kaydı yalnız süreç içi konfigürasyonu tüketir; birincil dünya oluşturma yetkisi nesne kimliğiyle
+taşınır ve JSON seçenekleri bunu taklit edemez. Statik katılım denetimi pahalı dünya kurulmadan çalışır.
+Birincil dahil toplam oda sayısı `NETWORK.maxRooms` güvenlik tavanındadır; HTTP rezervasyonuyla
+açılan odalar da sayılır, doluluk `busy` verir. Bu sayı ölçülmüş eşzamanlı oyuncu kapasitesi değildir.
+Başlatma sırasında birincil dünya veya ops portu başarısızsa oyun sunucusu geri kapatılır.
 
 Sunucu yalnız niyeti (`TankInput`) kabul eder; poz, hasar, skor, bölge ve ateş sonucu onundur. İstemci her
 sabit adımda aynı `Simulation` adımıyla kendi aracını öngörür, Colyseus `Predict` sunucu durumunu
@@ -1120,6 +1146,11 @@ ertelenir ki atış ve ölüm tankın göründüğü yerle örtüşsün. Aşağ�
   oturumla yeniden kurulurdu ve menüden açılan alıştırma çevrimiçi sürücüyle gelirdi.
 - Bilerek ayrılma `leave(true)` ile hemen düşer; kopma 15 sn yeniden bağlanma ister ve çubukta
   uyarı verir; bağlantı kapanırsa oyuncu çevrimdışı dünyaya `online.lost` bildirimiyle döner.
+  İlk başarılı katılımdan hemen sonra da yeniden deneme açıktır (`reconnectMinUptimeMs: 0`);
+  SDK'nın varsayılan ilk 5 saniyelik yeniden bağlanmama eşiği kullanılmaz.
+- Kopuk oyuncunun tampon niyeti ve tutulan komutu yürütülmez; dönüşte girdi ve yavaş tüketici
+  zamanları sıfırlanır, istemci iklimi yeniden ister. Olay paketi tür/sayı/boyut denetiminden geçer.
+  Olay kuyruğu CORE `EventQueue`, saat dönüşümü network `ServerTimeline` tüketimidir.
 - Oyuncu araçları da cepheye bağlıdır (`Vehicle.team`): aynı cepheden ateş hasar vermez, kendi
   kendine hasar da yoktur.
 - Savaş kazanılınca (`warWon`) puanlar ve bölgeler sıfırlanır; oyuncular çıkarılmaz, dünya sürer.
@@ -1129,6 +1160,8 @@ Sunucu işletimi (ortam değişkenleri ve sınırların gerekçesi [network sunu
 köken izin listesi) kurar; `VOL_NET_OPS_PORT` verilirse loopback'te `/healthz`, `/metrics` ve `/logs` açılır.
 `/metrics` her dünya odası için insan sayısı, adım süresi özeti (ortalama, p95, en büyük) ve trafik özeti
 (istemci sayısı, kuyruktaki ve toplam gönderilen/alınan bayt, atılan yavaş tüketici) ile kapı sayaçlarını verir.
+Oda adım süresi geçmişi CORE `RollingWindow` mekanizmasını tüketir; örnek sayısı ve milisaniye sunumu
+sunucuya aittir.
 Yazma kuyruğu `NETWORK.slowConsumer.limitBytes` üstünde tolerans süresince kalan istemci `1013` koduyla atılır.
 Kapıya takılan katılım istemcide `online.error.busy` ("sunucu yoğun") olarak görünür.
 
@@ -1166,6 +1199,10 @@ yüzeyi vardır (`src/app/AgentLab.ts`; sayılar `src/config/lab.ts`). Bayrak yo
 sayfa farkı yoktur. Girdi geçersiz kılma oyuncunun kendi komut yolundan (`PlayerControls.step`) geçer;
 simülasyon saati, RNG ve kurallar aynıdır, yani laboratuvarla sürülen oturum insan oturumuyla aynı
 dünyadır. Telemetri sınırlı halkadadır (600 durum örneği, 400 olay), uzun oturumda bellek büyümez.
+Halkaları CORE `RingBuffer` taşır. Dışarı verilen örnek ve olaylar kopyadır;
+okuyanın değiştirmesi kayıtlı geçmişi değiştirmez. Geçersiz veya geri akan saat
+örneği atlanır, işaret alanları olay türü ve zamanını ezemez. Laboratuvar
+kapanınca girdi geçersiz kılması bırakılır ve saklanmış API referansı işlem yapamaz.
 Kullanım: `volLab.run('state')`, `volLab.run('input', { moveX: 1, fire: true })`. Komutlar ve belge
 tablosu `tests/app/AgentLab.test.ts` ile birebir eşitlenir:
 

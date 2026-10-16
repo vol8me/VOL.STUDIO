@@ -64,7 +64,7 @@ export class WeatherSystem {
   }
 
   step(dtMs: number): void {
-    if (!Number.isFinite(dtMs) || dtMs < 0 || !Number.isFinite(this.elapsedMs + dtMs))
+    if (!Number.isFinite(dtMs) || dtMs < 0 || this.elapsedMs + dtMs > Number.MAX_SAFE_INTEGER)
       throw new RangeError('Hava adımı sonlu ve negatif olmayan bir sayı olmalı.');
     const end = this.elapsedMs + dtMs;
     while (this.surfaceMs + WEATHER.surface.stepMs <= end) {
@@ -90,6 +90,13 @@ export class WeatherSystem {
    * takvim ve hava değişir. Çevrimiçi dünyada takvimi sunucu yönetir; çağıran orada bunu kullanmaz.
    */
   setSeason(season: SeasonKind, warmupMs = 0): void {
+    if (
+      !SEASONS.order.includes(season) ||
+      !Number.isFinite(warmupMs) ||
+      warmupMs < 0 ||
+      this.elapsedMs + warmupMs > Number.MAX_SAFE_INTEGER
+    )
+      throw new RangeError('Mevsim geçerli, alıştırma süresi sonlu ve negatif olmayan sayı olmalı');
     const count = SEASONS.order.length;
     const phase = Math.floor(this.elapsedMs / SEASONS.durationMs);
     const index = SEASONS.order.indexOf(season);
@@ -158,10 +165,16 @@ export class WeatherSystem {
     if (
       snapshot.version !== 1 ||
       snapshot.seed !== this.seed ||
+      !SEASONS.order.includes(snapshot.season) ||
       !numbers.every(Number.isFinite) ||
       snapshot.elapsedMs < 0 ||
+      snapshot.elapsedMs > Number.MAX_SAFE_INTEGER ||
       snapshot.surfaceMs < 0 ||
-      snapshot.surfaceMs > snapshot.elapsedMs
+      snapshot.surfaceMs > snapshot.elapsedMs ||
+      snapshot.elapsedMs - snapshot.surfaceMs >= WEATHER.surface.stepMs ||
+      snapshot.surfaceMs % WEATHER.surface.stepMs !== 0 ||
+      snapshot.windMs < snapshot.surfaceMs ||
+      snapshot.windMs > snapshot.elapsedMs
     )
       return false;
     const aligned =
@@ -172,10 +185,9 @@ export class WeatherSystem {
     }
     if (!this.surface.restore(snapshot.surface)) return false;
     // Mevsim saati başlangıç mevsiminden sayılır: sunucunun takvimi, istemcinin yerel seçimini ezer.
-    if (snapshot.season !== this.initialSeason) {
-      this.initialSeason = snapshot.season;
-      this.schedule = new WeatherSchedule(this.seed, undefined, snapshot.season);
-    }
+    this.forced = undefined;
+    this.initialSeason = snapshot.season;
+    this.schedule = new WeatherSchedule(this.seed, undefined, snapshot.season);
     this.elapsedMs = snapshot.elapsedMs;
     this.surfaceMs = snapshot.surfaceMs;
     this.windMs = snapshot.windMs;

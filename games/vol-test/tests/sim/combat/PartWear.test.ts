@@ -262,6 +262,39 @@ describe('PartWear: süzülen aracın yan iticileri', () => {
 });
 
 describe('PartWear: sönüm ve onarım', () => {
+  it('sessizlik eşiğini geçen adım yalnız eşikten sonraki süre kadar aşınma söndürür', () => {
+    const one = build(STRIKER);
+    const many = build(STRIKER);
+    for (const vehicle of [one, many]) strike(vehicle, 0, vehicle.chassis.shape.halfWidth, 10);
+    one.wear.step(one.chassis, PARTS.wear.decayDelayMs + 100);
+    many.wear.step(many.chassis, PARTS.wear.decayDelayMs);
+    many.wear.step(many.chassis, 100);
+    expect(one.wear.wearOf(1)).toBeCloseTo(many.wear.wearOf(1), 12);
+    expect(one.wear.wearOf(1)).toBeGreaterThan(0);
+  });
+
+  it('sessizlik onarım süresine sayılmaz; büyük ve bölünmüş adımlar aynı parçaları onarır', () => {
+    const one = build(STRIKER);
+    const many = build(STRIKER);
+    one.chassis.parts = many.chassis.parts = TRACK_LEFT | TRACK_RIGHT;
+    expect(one.wear.step(one.chassis, PARTS.repair.quietMs)).toBe(0);
+    expect(one.chassis.parts).toBe(TRACK_LEFT | TRACK_RIGHT);
+    one.wear.step(one.chassis, PARTS.repair.intervalMs * 2);
+    const total = PARTS.repair.quietMs + PARTS.repair.intervalMs * 2;
+    for (let elapsed = 0; elapsed < total; elapsed += 100) many.wear.step(many.chassis, 100);
+    expect(one.chassis.parts).toBe(0);
+    expect(many.chassis.parts).toBe(one.chassis.parts);
+  });
+
+  it('onarım artan süreyi sonraki parçaya taşır', () => {
+    const tank = build(STRIKER);
+    tank.chassis.parts = TRACK_LEFT | TRACK_RIGHT;
+    tank.wear.step(tank.chassis, PARTS.repair.quietMs + PARTS.repair.intervalMs * 1.5);
+    expect(tank.chassis.parts).toBe(TRACK_RIGHT);
+    tank.wear.step(tank.chassis, PARTS.repair.intervalMs * 0.5);
+    expect(tank.chassis.parts).toBe(0);
+  });
+
   function worn(): Vehicle {
     const tank = build(STRIKER);
     strike(tank, 0, tank.chassis.shape.halfWidth, 20);

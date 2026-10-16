@@ -1,60 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { FrameRateSampler, RollingWindow } from '../../src/time/FrameRateSampler';
-
-describe('RollingWindow', () => {
-  it('boşken sıfır bildirir — bölme yapmaz', () => {
-    const w = new RollingWindow(4);
-    expect(w.count).toBe(0);
-    expect(w.average).toBe(0);
-    expect(w.min).toBe(0);
-    expect(w.max).toBe(0);
-  });
-
-  it('kapasiteyi aşan en eski örneği düşürür', () => {
-    const w = new RollingWindow(3);
-    for (const v of [10, 20, 30, 40]) w.push(v);
-    expect(w.count).toBe(3);
-    expect(w.average).toBeCloseTo(30, 10);
-  });
-
-  /* Düşen değer uç değerlerden biriyse tam tarama gerekir; asıl tuzak burası. */
-  it('uç değer pencereden düştüğünde min/max YENİDEN hesaplanır', () => {
-    const w = new RollingWindow(3);
-    w.push(1);
-    w.push(50);
-    w.push(5);
-    expect(w.min).toBe(1);
-    expect(w.max).toBe(50);
-
-    w.push(7); // 1 düşer
-    expect(w.min).toBe(5);
-    expect(w.max).toBe(50);
-
-    w.push(9); // 50 düşer
-    expect(w.min).toBe(5);
-    expect(w.max).toBe(9);
-  });
-
-  it('clear() pencereyi ve uçları sıfırlar', () => {
-    const w = new RollingWindow(3);
-    w.push(12);
-    w.clear();
-    expect(w.count).toBe(0);
-    expect(w.average).toBe(0);
-    expect(w.min).toBe(0);
-    expect(w.max).toBe(0);
-  });
-
-  it('kapasite en az 1 olur', () => {
-    const w = new RollingWindow(0);
-    w.push(4);
-    w.push(8);
-    expect(w.count).toBe(1);
-    expect(w.average).toBe(8);
-  });
-});
+import { FrameRateSampler } from '../../src/time/FrameRateSampler';
 
 describe('FrameRateSampler', () => {
+  it('bozuk damga ve taban geçerli aralığın ölçümünü düşürmez', () => {
+    const sampler = new FrameRateSampler(2);
+    expect(sampler.sample(NaN)).toBe(false);
+    expect(sampler.sample(0)).toBe(false);
+    expect(sampler.sample(Infinity)).toBe(false);
+    sampler.markBaseline(NaN);
+    expect(sampler.sample(16)).toBe(true);
+    expect(sampler.count).toBe(1);
+    expect(sampler.average).toBe(16);
+    sampler.push(NaN);
+    expect(sampler.count).toBe(1);
+  });
+
   it('İLK damga örnek üretmez — yalnız taban kurar', () => {
     const s = new FrameRateSampler();
     expect(s.sample(1000)).toBe(false);

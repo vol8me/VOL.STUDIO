@@ -24,9 +24,9 @@ export interface FleetBudget {
 
 /** Sunucunun `/metrics` çıktısından türetilen, koşu boyunca görülen en kötü değerler. */
 export interface ServerObservation {
-  readonly stepP95Ms: number;
-  readonly loopP99Ms: number;
-  readonly evictions: number;
+  readonly stepP95Ms: number | null;
+  readonly loopP99Ms: number | null;
+  readonly evictions: number | null;
 }
 
 export interface VerdictCheck {
@@ -51,30 +51,35 @@ export interface Verdict {
 
 /** Bir `/metrics` yanıtından koşunun en kötü sunucu değerlerini çıkarır; biçim tanınmazsa `null`. */
 export function observeServer(metrics: readonly unknown[]): ServerObservation | null {
-  let stepP95Ms = 0;
-  let loopP99Ms = 0;
-  let evictions = 0;
-  let seen = false;
+  let stepP95Ms: number | null = null;
+  let loopP99Ms: number | null = null;
+  let evictions: number | null = null;
+  const valid = (value: unknown): value is number =>
+    typeof value === 'number' && Number.isFinite(value) && value >= 0;
   for (const entry of metrics) {
     const body = (entry as { metrics?: Record<string, unknown> } | null)?.metrics;
     if (!body || typeof body !== 'object') continue;
     const loop = (body.loop as { p99Ms?: unknown } | undefined)?.p99Ms;
     const rooms = Array.isArray(body.rooms) ? body.rooms : [];
-    if (typeof loop === 'number') {
-      loopP99Ms = Math.max(loopP99Ms, loop);
-      seen = true;
-    }
-    for (const room of rooms) {
-      const step = (room as { step?: { p95?: unknown } }).step?.p95;
-      const traffic = (room as { traffic?: { evictions?: unknown } }).traffic?.evictions;
-      if (typeof step === 'number') {
-        stepP95Ms = Math.max(stepP95Ms, step);
-        seen = true;
-      }
-      if (typeof traffic === 'number') evictions = Math.max(evictions, traffic);
-    }
+    if (valid(loop)) loopP99Ms = Math.max(loopP99Ms ?? 0, loop);
+    if (rooms.length === 0) continue;
+    const steps: unknown[] = rooms.map(
+      (room: { step?: { p95?: unknown; count?: number } } | null) =>
+        room?.step?.count === 0 ? undefined : room?.step?.p95,
+    );
+    const drops: unknown[] = rooms.map(
+      (room: { traffic?: { evictions?: unknown } } | null) => room?.traffic?.evictions,
+    );
+    if (steps.every(valid)) stepP95Ms = Math.max(stepP95Ms ?? 0, ...steps);
+    if (drops.every(valid))
+      evictions = Math.max(
+        evictions ?? 0,
+        drops.reduce((sum, value) => sum + value, 0),
+      );
   }
-  return seen ? { stepP95Ms, loopP99Ms, evictions } : null;
+  return stepP95Ms === null && loopP99Ms === null && evictions === null
+    ? null
+    : { stepP95Ms, loopP99Ms, evictions };
 }
 
 function check(
@@ -84,7 +89,12 @@ function check(
   bound: 'max' | 'min',
 ): VerdictCheck {
   if (value === null) return { name, ok: false, value, limit, bound, skipped: true };
-  const ok = bound === 'max' ? value <= limit : value >= limit;
+  const ok =
+    Number.isFinite(value) &&
+    value >= 0 &&
+    Number.isFinite(limit) &&
+    limit >= 0 &&
+    (bound === 'max' ? value <= limit : value >= limit);
   return { name, ok, value, limit, bound, skipped: false };
 }
 
@@ -106,9 +116,24 @@ export function judgeFleet(
     check('dropped', summary.dropped, budget.maxDropped, 'max'),
     check('errors', summary.errors, budget.maxErrors, 'max'),
     check('actErrors', summary.actErrors, budget.maxActErrors, 'max'),
-    check('joinP99Ms', summary.joinMs.p99, budget.joinP99Ms, 'max'),
-    check('patchGapP99Ms', summary.patchGapMs.p99, budget.patchGapP99Ms, 'max'),
-    check('pingP99Ms', summary.pingMs.p99, budget.pingP99Ms, 'max'),
+    check(
+      'joinP99Ms',
+      summary.joinMs.count > 0 ? summary.joinMs.p99 : null,
+      budget.joinP99Ms,
+      'max',
+    ),
+    check(
+      'patchGapP99Ms',
+      summary.patchGapMs.count > 0 ? summary.patchGapMs.p99 : null,
+      budget.patchGapP99Ms,
+      'max',
+    ),
+    check(
+      'pingP99Ms',
+      summary.pingMs.count > 0 ? summary.pingMs.p99 : null,
+      budget.pingP99Ms,
+      'max',
+    ),
     check('patchesPerSecond', summary.patchesPerSecond, budget.minPatchesPerSecond, 'min'),
     check('serverStepP95Ms', server?.stepP95Ms ?? null, budget.serverStepP95Ms, 'max'),
     check('serverLoopP99Ms', server?.loopP99Ms ?? null, budget.serverLoopP99Ms, 'max'),

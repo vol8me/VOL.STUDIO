@@ -49,6 +49,46 @@ function nextData(socket: Socket): Promise<{ text: string; ms: number }> {
 }
 
 describe('ImpairedLink', () => {
+  it('kara delikte tampon sınırlıdır; serbest bırakınca bütün baytlar sıralı ulaşır', async () => {
+    const port = await startEcho();
+    const proxy = await ImpairedLink.start(
+      { host: '127.0.0.1', port },
+      { maxBufferedBytes: 64 * 1024 },
+    );
+    links.push(proxy);
+    const socket = await open(proxy.port);
+    const payload = Buffer.alloc(4 * 1024 * 1024, 7);
+    let received = 0;
+    const done = new Promise<void>((resolve) =>
+      socket.on('data', (chunk: Buffer) => {
+        received += chunk.length;
+        expect(chunk.every((value) => value === 7)).toBe(true);
+        if (received === payload.length) resolve();
+      }),
+    );
+    proxy.blackhole();
+    socket.write(payload);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Tek Node okuma parçası sınırı aşabilir; bütün yük kuyruğa çekilmemelidir.
+    expect(proxy.stats().bufferedBytes).toBeLessThanOrEqual(128 * 1024);
+    expect(proxy.stats().bytesUp).toBeLessThan(payload.length);
+    proxy.release();
+    await done;
+    expect(received).toBe(payload.length);
+  });
+
+  it('bozuk profil mevcut hattın zamanlamasını değiştiremez', async () => {
+    const proxy = await link();
+    for (const profile of [
+      { latencyMs: NaN },
+      { latencyMs: -1 },
+      { latencyMs: 0, bytesPerSecond: 0 },
+      { latencyMs: 0, stallProbability: 2 },
+    ])
+      expect(() => proxy.setProfile(profile)).toThrow(RangeError);
+    expect(proxy.profile).toEqual(CLEAN_LINK);
+  });
+
   it('temiz hatta veriyi olduğu gibi ve çabuk geri getirir; sayaçları tutar', async () => {
     const proxy = await link();
     const socket = await open(proxy.port);

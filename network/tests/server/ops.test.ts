@@ -63,6 +63,36 @@ async function json(server: OpsServer, path: string, init?: RequestInit) {
 }
 
 describe('serveOps', () => {
+  it('tarayıcının basit POST isteğini rota çalışmadan reddeder', async () => {
+    let calls = 0;
+    const server = await start({
+      routes: {
+        'POST /do': () => {
+          calls++;
+        },
+      },
+    });
+    for (const origin of ['https://yabanci.example', 'null']) {
+      const response = await fetch(`${server.endpoint}/do`, {
+        method: 'POST',
+        headers: { Origin: origin, 'Content-Type': 'text/plain' },
+        body: '{}',
+      });
+      expect(response.status).toBe(403);
+    }
+    expect(calls).toBe(0);
+  });
+
+  it('IPv6 dinleme adresini kullanılabilir URL olarak döndürür', async () => {
+    const server = await start({ host: '::1' });
+    expect(server.endpoint).toBe(`http://[::1]:${server.port}`);
+    expect((await fetch(`${server.endpoint}/healthz`)).status).toBe(200);
+  });
+
+  it('bozuk gövde sınırı sınırsız okumaya dönüşemez', async () => {
+    await expect(serveOps({ port: 0, maxBodyBytes: NaN })).rejects.toThrow(RangeError);
+  });
+
   it('sağlık ucu düz metin ok verir ve önbelleğe almayı yasaklar', async () => {
     const server = await start();
     const response = await fetch(`${server.endpoint}/healthz`);

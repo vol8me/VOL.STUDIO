@@ -9,7 +9,11 @@ import { OfflineDriver } from '@/scenes/world/OfflineDriver';
 import type { PlayerControls } from '@/scenes/world/PlayerControls';
 import type { DriverContext } from '@/scenes/world/WorldDriver';
 import { World } from '@/sim/world/World';
+import { idleCommand } from '@/sim/command';
 import { fakeScene } from '../../support/fakeScene';
+
+const online = vi.hoisted(() => ({ createLobby: vi.fn(() => ({ open: vi.fn() })) }));
+vi.mock('@/scenes/world/online', () => online);
 
 function driver(vehicle?: VehicleId): {
   driver: OfflineDriver;
@@ -48,6 +52,31 @@ function driver(vehicle?: VehicleId): {
 }
 
 describe('OfflineDriver', () => {
+  it('yeniden doğuş ışınlanmasını sürülen mesafeye yazmaz', () => {
+    const { driver: offline, scope, context } = driver('striker');
+    Object.assign(context.controls, { step: idleCommand });
+    offline.player.chassis.place(1000, 1000);
+    offline.sim.applyDamage(offline.player.id, offline.player.vitality.maxHealth);
+    offline.player.vitality.respawnRemainingMs = 1;
+    offline.advance(1000 / 60, 1000 / 60, false);
+    expect(offline.player.vitality.alive).toBe(true);
+    expect(context.services!.progress.travel).not.toHaveBeenCalled();
+    scope.dispose();
+  });
+
+  it('tembel ağ kodu yüklenirken kapanan sahnede lobi kurulmaz', async () => {
+    const { driver: offline, scope } = driver('striker');
+    const actions: Array<{ id: string; run: () => void }> = [];
+    offline.attachHud({
+      setPauseActions: (next: typeof actions) => actions.push(...next),
+    } as never);
+    online.createLobby.mockClear();
+    actions[0].run();
+    scope.dispose();
+    await vi.dynamicImportSettled();
+    expect(online.createLobby).not.toHaveBeenCalled();
+  });
+
   it('kayıtlı araç tercihiyle başlar; her araç kendi tanımını sürer', () => {
     for (const id of VEHICLE_IDS) {
       const { driver: offline, scope } = driver(id);

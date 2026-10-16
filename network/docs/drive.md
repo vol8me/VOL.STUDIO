@@ -29,6 +29,8 @@ await report.close();
 `reconnect` kopan botu SDK'nın yeniden bağlanmasına bırakır; varsayılan kapalıdır, kopma ölçülür.
 `signal` koşuyu erken bitirir. `act` her `actMs`te bağlı her bot için çağrılır; fırlatırsa `actErrors`
 sayılır ve koşu sürer.
+Koşu bitince henüz başlamamış katılım zamanlayıcıları iptal edilir; uzun `rampMs` bitişi uzatmaz.
+Başlamış eşleştirmeler sonuçlanınca açık oda bırakmadan kapatılır.
 
 ## Rapor
 
@@ -68,9 +70,15 @@ link.sever(); // bağlantıları hemen yok eder (Wi-Fi'dan LTE'ye geçiş)
 
 TCP sıralı olduğundan gecikme ve titreşim sırayı bozmaz; paket kaybı yeniden iletim bekleyişi olarak
 (`stallMs`, arkadaki her şeyi geciktirir) modellenir, gerçek paket kaybı bu katmanın altındadır.
-`bytesPerSecond` yön başına bant genişliğini sınırlar. `stats()` bağlantı, bayt ve geciktirilen parça
-sayar. Bu bir ağ emülatörü değil, tekrarlanabilir bir bozulma kaynağıdır; ölçülen sayılar o profilin
+`bytesPerSecond` yön başına bant genişliğini sınırlar. Yön başına `maxBufferedBytes` (varsayılan 1 MiB)
+üstünde kaynak soket okumayı durdurur; tek okuma parçası sınırı aşabilir. Hedef yazımı dolunca
+`drain` beklenir: kara delik sınırsız belleğe çekmez, taşıma geri basıncını korur.
+`stats()` bağlantı, bayt, tampon baytı ve geciktirilen parça sayar. Bu bir ağ emülatörü değil, tekrarlanabilir bir bozulma kaynağıdır; ölçülen sayılar o profilin
 sonucudur, gerçek ağ ya da cihaz kabulü değildir.
+
+`judgeFleet` sıfır örnekli gecikme dağılımını ölçülmemiş olarak işaretler; `complete` yanlıştır.
+`observeServer` eksik/bozuk alanı sıfıra çeviremez ve aynı örnekteki bütün odaların atımlarını toplar.
+VOL.TEST `--profile` koşusu başarısız **veya eksik** hükümde sıfırdan farklı çıkış verir.
 
 ## VOL.TEST
 

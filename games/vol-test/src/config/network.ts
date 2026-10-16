@@ -5,6 +5,8 @@ export const NETWORK = {
    * ölçüm kanıtı olmadan artırılmaz (bkz. DESIGN: kapasite).
    */
   maxPlayers: 24,
+  /** Birincil ve taşma odalarının toplam güvenlik tavanı; ölçülmüş oyuncu kapasitesi değildir. */
+  maxRooms: 4,
   /**
    * Sunucunun ve istemci öngörüsünün sabit adım hızı (Hz). `GAME.simulationStepMs` ile aynı
    * adımdır (testle kilitli): öngörü ve yeniden oynatma sunucuyla aynı `dt` ile ilerler.
@@ -16,6 +18,8 @@ export const NETWORK = {
    * nominalin dört katıdır, aşan istemci Colyseus tarafından düşürülür.
    */
   maxMessagesPerSecond: 240,
+  /** Tek sunucu olay paketindeki üst sınır; bozuk yayın istemciyi sınırsız iş yaptıramaz. */
+  maxEventBatch: 4096,
   /** Geliştirme sunucusu; üretim adresi derleme zamanı `VITE_VOLTEST_SERVER` ile verilir. */
   defaultEndpoint: 'http://127.0.0.1:2567',
   /** Ad vermeyen oyuncuya atanan ad; araç numarası eklenir. */
@@ -39,6 +43,8 @@ export const NETWORK = {
   inputLead: 2,
   /** Kopan oyuncunun aracının yeniden bağlanmayı bekleme süresi (sn). */
   reconnectSeconds: 15,
+  /** İlk başarılı katılımdan itibaren geçici kopmayı yeniden dener; SDK'nın 5 sn eşiği kullanılmaz. */
+  reconnectMinUptimeMs: 0,
   /** Uzak araçların çizildiği geriye dönük süre (ms): iki yama arasını ara değerle doldurur. */
   interpolationDelayMs: 100,
   /**

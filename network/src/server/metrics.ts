@@ -1,45 +1,5 @@
 import { monitorEventLoopDelay, type IntervalHistogram } from 'node:perf_hooks';
-
-/** Sabit uzunluklu halka: son N ölçüm. Ayırma yapmaz. */
-export class Ring {
-  private readonly values: Float64Array;
-  private next = 0;
-  private filled = 0;
-
-  constructor(size: number) {
-    this.values = new Float64Array(size);
-  }
-
-  push(value: number): void {
-    this.values[this.next] = value;
-    this.next = (this.next + 1) % this.values.length;
-    this.filled = Math.min(this.filled + 1, this.values.length);
-  }
-
-  get count(): number {
-    return this.filled;
-  }
-
-  /** Yüzdelik değer (0-1); boşsa 0. */
-  percentile(fraction: number): number {
-    if (this.filled === 0) return 0;
-    const sorted = this.values.slice(0, this.filled).sort();
-    return sorted[Math.min(this.filled - 1, Math.floor(this.filled * fraction))];
-  }
-
-  get mean(): number {
-    if (this.filled === 0) return 0;
-    let sum = 0;
-    for (let index = 0; index < this.filled; index++) sum += this.values[index];
-    return sum / this.filled;
-  }
-
-  get max(): number {
-    let max = 0;
-    for (let index = 0; index < this.filled; index++) max = Math.max(max, this.values[index]);
-    return max;
-  }
-}
+import type { RollingWindow } from '@volstudio/core/collections';
 
 export interface TickSummary {
   readonly samples: number;
@@ -49,13 +9,13 @@ export interface TickSummary {
   readonly maxMs: number;
 }
 
-export function summarize(ring: Ring): TickSummary {
+export function summarize(window: RollingWindow): TickSummary {
   return {
-    samples: ring.count,
-    meanMs: ring.mean,
-    p50Ms: ring.percentile(0.5),
-    p99Ms: ring.percentile(0.99),
-    maxMs: ring.max,
+    samples: window.count,
+    meanMs: window.average,
+    p50Ms: window.percentile(0.5),
+    p99Ms: window.percentile(0.99),
+    maxMs: window.max,
   };
 }
 

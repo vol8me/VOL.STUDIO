@@ -1,6 +1,11 @@
-import { GAMEPAD_DEFAULT_DEAD_ZONE, isGamepadInputActive, type PadLike } from './GamepadState';
+import {
+  GAMEPAD_DEFAULT_DEAD_ZONE,
+  isGamepadInputActive,
+  type GamepadInputOptions,
+  type PadLike,
+} from './GamepadState';
 
-export interface GamepadSelectionOptions {
+export interface GamepadSelectionOptions extends GamepadInputOptions {
   padIndex?: number;
   deadZone?: number;
 }
@@ -21,7 +26,7 @@ export function selectGamepad(
     (pad) => pad.index === previous?.index && pad.id === previous.id,
   );
   const active = (pad: PadLike) =>
-    isGamepadInputActive(pad, options.deadZone ?? GAMEPAD_DEFAULT_DEAD_ZONE);
+    isGamepadInputActive(pad, options.deadZone ?? GAMEPAD_DEFAULT_DEAD_ZONE, options);
   if (retained && active(retained)) return retained;
   return candidates.find(active) ?? retained ?? candidates[0] ?? null;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { COMBAT } from '@/config/combat';
-import { STRIKER, type VehicleSpec } from '@/config/vehicles';
+import { STRIKER, VEHICLES, VEHICLE_IDS, type VehicleSpec } from '@/config/vehicles';
 import { Vehicle } from '@/sim/entities/Vehicle';
 import type { SimEvent } from '@/sim/events';
 import { Simulation } from '@/sim/Simulation';
@@ -69,6 +69,37 @@ function launchOf(vehicle: Vehicle, mount = 0): Launch {
 }
 
 describe('stepPredictedVehicle', () => {
+  it.each(VEHICLE_IDS)('%s yeteneği açıkken öngörü ve sunucu silahı aynı adımda ateşler', (id) => {
+    const space = world();
+    const spec = VEHICLES[id];
+    const sim = new Simulation({ world: space, vehicle: spec });
+    sim.player.chassis.place(2048, 2048, 0);
+    const client = mirror(spec);
+    const input = command({ boost: true, fire: true, moveX: 1, aimX: 1 });
+    for (let step = 0; step < 240; step++) {
+      sim.step(input, STEP_MS);
+      const fired = stepPredictedVehicle(client, input, space, STEP_MS);
+      const events = sim.drainEvents([]);
+      expect(fired, `adım ${step}`).toBe(events.some((event) => event.kind === 'fired'));
+      expect(client.gun.getRemaining(), `dolum ${step}`).toBe(sim.player.gun.getRemaining());
+      expect(client.chassis.captureState(), `şasi ${step}`).toEqual(
+        sim.player.chassis.captureState(),
+      );
+    }
+  });
+
+  it('geçersiz ve sıfır süre öngörü durumunu değiştirmez', () => {
+    const vehicle = mirror();
+    const before = vehicle.chassis.captureState();
+    for (const step of [-1, NaN, Infinity])
+      expect(() => stepPredictedVehicle(vehicle, command({ fire: true }), world(), step)).toThrow(
+        RangeError,
+      );
+    expect(stepPredictedVehicle(vehicle, command({ fire: true }), world(), 0)).toBe(false);
+    expect(vehicle.chassis.captureState()).toEqual(before);
+    expect(vehicle.gun.getRemaining()).toBe(0);
+  });
+
   it('tek araçlı sunucu adımıyla bit bit aynı şasi durumunu ve silah beklemesini üretir', () => {
     const space = world();
     const { sim, vehicle: server } = lone(space);

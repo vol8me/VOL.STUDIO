@@ -8,6 +8,32 @@ const rain = new WeatherSchedule(7, 'rain').frameAt(0);
 const clear = new WeatherSchedule(7, 'clear').frameAt(0);
 
 describe('SurfaceGrid', () => {
+  it('sert yükleme önceki yumuşak uyumu iptal eder', () => {
+    const grid = new SurfaceGrid(128, 128, 7);
+    const clean = grid.snapshot();
+    const wet = { ...clean, wetness: new Uint8Array(clean.wetness.length).fill(255) };
+    expect(grid.blendToward(wet, 1000)).toBe(true);
+    expect(grid.restore(clean)).toBe(true);
+    grid.step(clear, 1);
+    expect(grid.sample(32, 32, clear).wetness).toBe(0);
+  });
+
+  it('yağış sırasında yumuşak uyum su ve kar kapasitesini aşamaz', () => {
+    const grid = new SurfaceGrid(128, 128, 7);
+    const snapshot = grid.snapshot();
+    const full = new Uint8Array(snapshot.puddle.length).fill(255);
+    grid.blendToward({ ...snapshot, puddle: full, snow: full }, 1000);
+    grid.step({ ...snow, rain: 1 }, 1);
+    const sample = grid.sample(32, 32, snow);
+    expect(sample.puddleDepth).toBeLessThanOrEqual(WEATHER.surface.maxPuddleDepth);
+    expect(sample.snowDepth).toBeLessThanOrEqual(WEATHER.surface.maxSnowDepth);
+  });
+
+  it('sonsuz uyum süresi hücreleri kalıcı beklemede bırakmaz', () => {
+    const grid = new SurfaceGrid(128, 128, 7);
+    expect(grid.blendToward(grid.snapshot(), Infinity)).toBe(false);
+  });
+
   it('aynı temas mesafesi delta bölünmesinden bağımsız aynı kar sıkışmasını verir', () => {
     const one = new SurfaceGrid(128, 128, 7);
     const many = new SurfaceGrid(128, 128, 7);

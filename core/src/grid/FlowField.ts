@@ -47,16 +47,13 @@ export class FlowField {
    * noktası); her hücre EN YAKIN hedefe yönlenir.
    */
   compute(goals: readonly GridPoint[], options: FlowFieldOptions = {}): void {
-    const { cols, rows } = this;
+    const { cols } = this;
     const neighbours = options.neighbours ?? ORTHOGONAL_NEIGHBOURS;
     const isWalkable = options.isWalkable ?? (() => true);
     const costOf = options.cost ?? (() => 1);
 
     this.costs.fill(Infinity);
     this.next.fill(-1);
-
-    const inBounds = (col: number, row: number): boolean =>
-      col >= 0 && row >= 0 && col < cols && row < rows;
 
     // Dijkstra dalgası: maliyete göre sıralı işlenir. Tüm kenar maliyetleri
     // eşitse bu bir BFS'e indirgenir; farklıysa sıralama şart, aksi halde
@@ -65,7 +62,7 @@ export class FlowField {
     // ızgaralarda (binlerce hücre) darboğaz oluşturuyordu.
     const queue = new MinHeap();
     for (const goal of goals) {
-      if (!inBounds(goal.col, goal.row) || !isWalkable(goal)) continue;
+      if (!this.inBounds(goal.col, goal.row) || !isWalkable(goal)) continue;
       const index = goal.row * cols + goal.col;
       this.costs[index] = 0;
       queue.push(index, 0);
@@ -81,17 +78,17 @@ export class FlowField {
       if (staleKey > this.costs[current]) continue;
       const col = current % cols;
       const row = Math.floor(current / cols);
+      // Ters taramada kenar, komşudan mevcut hücreye girişin maliyetini taşır.
+      const step = costOf({ col, row });
+      if (!(step > 0) || !Number.isFinite(step)) continue;
 
       for (const offset of neighbours) {
-        const nc = col + offset.col;
-        const nr = row + offset.row;
-        if (!inBounds(nc, nr)) continue;
+        const nc = col - offset.col;
+        const nr = row - offset.row;
+        if (!this.inBounds(nc, nr)) continue;
 
         const point = { col: nc, row: nr };
         if (!isWalkable(point)) continue;
-
-        const step = costOf(point);
-        if (!(step > 0) || !Number.isFinite(step)) continue;
 
         const diagonal = offset.col !== 0 && offset.row !== 0;
         const candidate = this.costs[current] + step * (diagonal ? Math.SQRT2 : 1);
@@ -109,13 +106,13 @@ export class FlowField {
 
   /** Hücrenin hedefe toplam maliyeti; ulaşılamıyorsa `Infinity`. */
   getCost(col: number, row: number): number {
-    if (col < 0 || row < 0 || col >= this.cols || row >= this.rows) return Infinity;
+    if (!this.inBounds(col, row)) return Infinity;
     return this.costs[row * this.cols + col];
   }
 
   /** Hedefe doğru bir sonraki hücre; hedefteyse ya da ulaşılamıyorsa `null`. */
   getNext(col: number, row: number): GridPoint | null {
-    if (col < 0 || row < 0 || col >= this.cols || row >= this.rows) return null;
+    if (!this.inBounds(col, row)) return null;
     const index = this.next[row * this.cols + col];
     if (index < 0) return null;
     return { col: index % this.cols, row: Math.floor(index / this.cols) };
@@ -140,5 +137,16 @@ export class FlowField {
       current = this.getNext(current.col, current.row);
     }
     return path;
+  }
+
+  private inBounds(col: number, row: number): boolean {
+    return (
+      Number.isInteger(col) &&
+      Number.isInteger(row) &&
+      col >= 0 &&
+      row >= 0 &&
+      col < this.cols &&
+      row < this.rows
+    );
   }
 }

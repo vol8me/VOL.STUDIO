@@ -38,9 +38,14 @@ export class ObjectPool<T> {
     this.resetFn = options.reset;
     this.maxIdle = options.maxIdle ?? Infinity;
 
-    const prewarm = Math.max(0, options.prewarm ?? 0);
+    const requestedPrewarm = options.prewarm ?? 0;
+    if (!Number.isSafeInteger(requestedPrewarm) || requestedPrewarm < 0)
+      throw new RangeError('ObjectPool: prewarm negatif olmayan güvenli tam sayı olmalı');
+    if (this.maxIdle !== Infinity && (!Number.isSafeInteger(this.maxIdle) || this.maxIdle < 0))
+      throw new RangeError('ObjectPool: maxIdle negatif olmayan güvenli tam sayı olmalı');
+    const prewarm = Math.min(requestedPrewarm, this.maxIdle);
     for (let i = 0; i < prewarm; i++) {
-      const item = this.createFn();
+      const item = this.createUnique();
       this.idle.push(item);
       this.idleSet.add(item);
     }
@@ -48,9 +53,8 @@ export class ObjectPool<T> {
 
   /** Boştaki bir örneği verir; yoksa yenisini üretir. */
   acquire(): T {
-    const reused = this.idle.pop();
-    const item = reused ?? this.createFn();
-    if (reused !== undefined) this.idleSet.delete(reused);
+    const item = this.idle.length > 0 ? this.idle.pop()! : this.createUnique();
+    this.idleSet.delete(item);
     this.activeSet.add(item);
     return item;
   }
@@ -91,5 +95,12 @@ export class ObjectPool<T> {
   clear(): void {
     this.idle.length = 0;
     this.idleSet.clear();
+  }
+
+  private createUnique(): T {
+    const item = this.createFn();
+    if (this.activeSet.has(item) || this.idleSet.has(item))
+      throw new Error('ObjectPool: factory zaten sahip olunan örneği yeniden üretti');
+    return item;
   }
 }
