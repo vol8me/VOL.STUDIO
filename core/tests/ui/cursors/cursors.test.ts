@@ -269,6 +269,45 @@ describe('CursorController', () => {
     expect(document.querySelector('.vol-reticle')).toBeNull();
   });
 
+  it('atış büyümesi konumlanan kabuğa değil içindeki SVG öğesine uygulanır: kabuk tek atışta kaymaz', async () => {
+    const { controller, target } = await make({ mode: 'shooter' });
+    moveTo(target, 900, 500);
+    const reticle = document.querySelector<HTMLElement>('.vol-reticle')!;
+    const animate = vi.fn();
+    const glyph = reticle.firstElementChild as Element;
+    reticle.animate = animate;
+    glyph.animate = animate;
+    controller.pulseReticle();
+    expect(animate).toHaveBeenCalledTimes(1);
+    expect(animate.mock.contexts[0]).toBe(glyph);
+    controller.dispose();
+  });
+
+  it('gizlenip geri gelen nişangâh fare kıpırdamadan son konumda açılır; ayrılınca ya da dokunmada unutulur', async () => {
+    const { controller, target } = await make({ mode: 'shooter' });
+    const reticle = (): HTMLElement => document.querySelector<HTMLElement>('.vol-reticle')!;
+    moveTo(target, 300, 200);
+    controller.setVisible(false);
+    expect(reticle().hidden).toBe(true);
+    // Gizliyken gelen hareket de izlenir.
+    moveTo(target, 320, 210);
+    controller.setVisible(true);
+    expect(reticle().style.transform).toContain('translate3d(320px, 210px, 0)');
+    expect(reticle().hidden).toBe(false);
+
+    controller.setVisible(false);
+    target.dispatchEvent(new Event('pointerleave'));
+    controller.setVisible(true);
+    expect(reticle().hidden).toBe(true);
+
+    moveTo(target, 50, 60);
+    controller.setVisible(false);
+    moveTo(target, 70, 80, 'touch');
+    controller.setVisible(true);
+    expect(reticle().hidden).toBe(true);
+    controller.dispose();
+  });
+
   it('nişangâh açılımı sınırlıdır, seçim yenilenir; vuruş işareti renk değiştirip geri döner', async () => {
     vi.useFakeTimers();
     try {

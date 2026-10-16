@@ -103,7 +103,11 @@ function mount(services?: GameServices, data?: WorldStartData): Harness {
       off: vi.fn(),
       activePointer: { x: 0, y: 0, isDown: false },
     },
-    events: { once: (_name: string, handler: () => void) => (shutdown = handler) },
+    events: {
+      once: (_name: string, handler: () => void) => (shutdown = handler),
+      on: () => undefined,
+      off: () => undefined,
+    },
     scene: { restart },
   });
   scene.create(data);

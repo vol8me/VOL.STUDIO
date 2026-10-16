@@ -76,6 +76,8 @@ export class CursorController implements Disposable {
   private reticleSize: number;
   private reticleScale = 1;
   private reticleElement: HTMLDivElement | null = null;
+  /** Hedef yüzeydeki son fare konumu: görünmezken de izlenir, yeniden görününce nişangâh oraya konur. */
+  private lastPoint: { x: number; y: number } | null = null;
   private hitTimer: ReturnType<typeof setTimeout> | null = null;
   private visible = true;
   private disposed = false;
@@ -93,7 +95,10 @@ export class CursorController implements Disposable {
     this.previousCursor = this.target.style.cursor;
 
     this.scope.addListener(this.target, 'pointermove', (event) => this.onPointerMove(event));
-    this.scope.addListener(this.target, 'pointerleave', () => this.hideReticle());
+    this.scope.addListener(this.target, 'pointerleave', () => {
+      this.lastPoint = null;
+      this.hideReticle();
+    });
     this.scope.addListener(this.target, 'pointerdown', (event) => this.onPointerMove(event));
 
     this.ready = (options.data ? Promise.resolve(options.data) : loadCursorData()).then((data) => {
@@ -157,11 +162,15 @@ export class CursorController implements Disposable {
     this.layoutReticle();
   }
 
-  /** Atış/vurgu için kısa büyüme; hareket azaltılmışta animasyonsuz ve durağan kalır. */
+  /**
+   * Atış/vurgu için kısa büyüme; hareket azaltılmışta animasyonsuz ve durağan kalır. Büyüme konumlanan
+   * kabuğa değil içindeki SVG'ye uygulanır: kabuğa verilen `scale` özelliği `translate3d` konumunu da
+   * çarpar ve nişangâh tek atışta imlecin yanına kayardı.
+   */
   pulseReticle(): void {
-    const element = this.reticleElement;
-    if (!element || this.reducedMotion || typeof element.animate !== 'function') return;
-    element.animate([{ scale: '1' }, { scale: '1.3' }, { scale: '1' }], {
+    const glyph = this.reticleElement?.firstElementChild;
+    if (!glyph || this.reducedMotion || typeof glyph.animate !== 'function') return;
+    glyph.animate([{ scale: '1' }, { scale: '1.3' }, { scale: '1' }], {
       duration: 140,
       easing: 'ease-out',
     });
@@ -286,6 +295,8 @@ export class CursorController implements Disposable {
     }
     this.reticleElement.innerHTML = reticleSvg(entry, data.reticleSize);
     this.layoutReticle();
+    // Gizlenip geri gelen nişangâh (ölüm, duraklatma) fare kıpırdamasını beklemeden imlecin altında açılır.
+    if (this.lastPoint) this.placeReticle(this.lastPoint.x, this.lastPoint.y);
   }
 
   private layoutReticle(): void {
@@ -302,15 +313,23 @@ export class CursorController implements Disposable {
   }
 
   private onPointerMove(event: Event): void {
+    const pointer = event as PointerEvent;
+    const touch = pointer.pointerType === 'touch';
+    this.lastPoint = touch ? null : { x: pointer.clientX, y: pointer.clientY };
     const element = this.reticleElement;
     if (!element || this.currentMode !== 'shooter' || !this.visible) return;
-    const pointer = event as PointerEvent;
-    if (pointer.pointerType === 'touch') {
+    if (touch) {
       element.hidden = true;
       return;
     }
-    // Aynı olay içinde konumlanır: bir sonraki kare bu konumla çizilir (≤1 kare gecikme).
-    element.style.transform = `translate3d(${pointer.clientX}px, ${pointer.clientY}px, 0) translate(-50%, -50%)`;
+    this.placeReticle(pointer.clientX, pointer.clientY);
+  }
+
+  /** Aynı olay içinde konumlanır: bir sonraki kare bu konumla çizilir (≤1 kare gecikme). */
+  private placeReticle(x: number, y: number): void {
+    const element = this.reticleElement;
+    if (!element) return;
+    element.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
     element.hidden = false;
   }
 

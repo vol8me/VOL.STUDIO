@@ -113,6 +113,41 @@ test('nişangâh arenası: yerel imleç gizli, nişangâh işaretçiyi aynı ola
   await expect(reticle).toBeHidden();
 });
 
+test('nişangâh arenası: atış büyümesi sırasında nişangâh merkezi imleçten kaymaz', async ({
+  page,
+}) => {
+  await openIdentity(page);
+  const arena = page.locator('[data-arena="shooter"]');
+  await arena.scrollIntoViewIfNeeded();
+  const box = (await arena.boundingBox())!;
+  const x = box.x + box.width - 60;
+  const y = box.y + box.height - 40;
+  await page.mouse.move(x, y);
+  const reticle = page.locator('.vol-reticle');
+  await expect(reticle).toBeVisible();
+  // Büyüme animasyonu (140 ms) boyunca her karede merkezin imlece uzaklığı ölçülür.
+  const sampler = reticle.evaluate(
+    (element, point) =>
+      new Promise<number>((resolve) => {
+        let worst = 0;
+        const end = performance.now() + 300;
+        const tick = (): void => {
+          const rect = element.getBoundingClientRect();
+          const dx = rect.left + rect.width / 2 - point.x;
+          const dy = rect.top + rect.height / 2 - point.y;
+          worst = Math.max(worst, Math.hypot(dx, dy));
+          if (performance.now() < end) requestAnimationFrame(tick);
+          else resolve(worst);
+        };
+        tick();
+      }),
+    { x, y },
+  );
+  await page.mouse.down();
+  await page.mouse.up();
+  expect(await sampler).toBeLessThanOrEqual(1);
+});
+
 test('galeri: her kayıtlı imleç ve nişangâh bir önizleme taşır', async ({ page }) => {
   await openIdentity(page);
   await expect(page.locator('[data-cursor-id]')).toHaveCount(39 + 0, { timeout: 15_000 });

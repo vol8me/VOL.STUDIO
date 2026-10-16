@@ -437,6 +437,8 @@ gerekirse özel AGENTS ve MCP uygulanır; bu plan `.pen` erişimi gerektirmez.
 32×32 piksel önerilir (tarayıcılar 128×128 üstünü yok sayar), SVG doğal boyut taşır, yüksek
 yoğunlukta `image-set`. Büyük, animasyonlu veya dinamik açılımlı nişangâh çizilen **yazılım
 imleçtir**: yerel imleç gizlenir, ≤1 kare gecikmeyle işaretçiyi izler, pointer lock ile uyumludur.
+Atış büyümesi konumlanan kabuğa değil içindeki SVG'ye uygulanır (kabuktaki `scale` özelliği `translate3d`
+konumunu da çarpıp nişangâhı kaydırır); gizlenip geri gelen nişangâh son fare konumunda açılır.
 Dokunmatik girdide imleç yoktur. Kol işaretçisi (mevcut) ile tek sahip vardır. İmleç skin
 aksanını taşır, hareket azaltılmışta animasyonsuz durağan kalır, tek bilgi kanalı olamaz.
 WebView2/WebKitGTK/Android'de davranış ölçülür; ölçülemeyen hücre NOT-RUN yazılır.

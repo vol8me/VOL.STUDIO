@@ -65,7 +65,11 @@ function mount(preferences: Record<string, unknown> = {}): Harness {
         get: (key: string) => registry.get(key),
       },
     },
-    events: { once: (_name: string, handler: () => void) => (shutdown = handler) },
+    events: {
+      once: (_name: string, handler: () => void) => (shutdown = handler),
+      on: () => undefined,
+      off: () => undefined,
+    },
     scene: { isActive: (key: string) => running.has(key), stop, restart },
   });
   scene.create();
