@@ -850,7 +850,7 @@ etiketin altına iner.
 **Geliştirici ekranı.** Dünya bölümü (`DevWorldPanel`) mevsim, hava, araç ve arka plan yoğunluğunu verir;
 seçim `GameSettings`e yazılır ve anında uygulanır: menü arka planı ve açık alıştırma dünyası mevsimi ve
 havayı `WeatherSystem.setSeason`/`setOverride` ile hemen değiştirir (öncelik: bağlantı parametresi, ölçüm
-geçersiz kılması, ayar; `climateChoice`), araç seçimi vitrine ve bir sonraki girişe geçer. Alıştırma bölümü
+geçersiz kılması, ayar; `climateChoice`), araç seçimi vitrine geçer ve oynanan çevrimdışı dünyada oyuncuyu yerinde yeni araçla değiştirir (`Simulation.replacePlayer`). Alıştırma bölümü
 senaryo, tohum ve kaos kadranıdır.
 
 **Telefonda garaj.** Dikeyde şerit alt levhadır; araç kartları tek satırlık yatay `scroll-snap` şeridinde

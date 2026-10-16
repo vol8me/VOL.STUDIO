@@ -15,7 +15,10 @@ function driver(vehicle?: VehicleId): {
   driver: OfflineDriver;
   scope: DisposableScope;
   context: DriverContext;
+  /** Ayar aboneleri: testler tercih değişimini bunları çağırarak yayar. */
+  listeners: Array<(value: GamePreferences) => void>;
 } {
+  const listeners: Array<(value: GamePreferences) => void> = [];
   const scope = new DisposableScope();
   const services =
     vehicle === undefined
@@ -23,7 +26,10 @@ function driver(vehicle?: VehicleId): {
       : ({
           settings: {
             get: () => ({ scenario: 'empty', seed: 1, chaos: 1.5, vehicle }) as GamePreferences,
-            subscribe: () => () => undefined,
+            subscribe: (listener: (value: GamePreferences) => void) => {
+              listeners.push(listener);
+              return () => undefined;
+            },
           },
           progress: { travel: vi.fn() },
         } as unknown as GameServices);
@@ -38,7 +44,7 @@ function driver(vehicle?: VehicleId): {
     restart: vi.fn(),
     toMenu: vi.fn(),
   };
-  return { driver: new OfflineDriver(context), scope, context };
+  return { driver: new OfflineDriver(context), scope, context, listeners };
 }
 
 describe('OfflineDriver', () => {
@@ -48,6 +54,23 @@ describe('OfflineDriver', () => {
       expect(offline.player.spec).toBe(VEHICLES[id]);
       scope.dispose();
     }
+  });
+
+  it('geliştirici ekranından araç değişince oynanan araç yerinde yeni tanıma geçer', () => {
+    const { driver: offline, scope, listeners } = driver('striker');
+    const before = offline.player;
+    before.chassis.place(1234, 2345, 0.5);
+    const preferences = { scenario: 'empty', seed: 1, chaos: 1.5, vehicle: 'goliath' };
+    for (const listener of listeners) listener(preferences as GamePreferences);
+    expect(offline.player.spec).toBe(VEHICLES.goliath);
+    expect(offline.player.id).not.toBe(before.id);
+    expect(offline.player.chassis.x).toBeCloseTo(1234);
+    expect(offline.player.chassis.y).toBeCloseTo(2345);
+    // Aynı araç yeniden seçilirse oyuncu değişmez.
+    const current = offline.player;
+    for (const listener of listeners) listener(preferences as GamePreferences);
+    expect(offline.player).toBe(current);
+    scope.dispose();
   });
 
   it('kaydedilen kaos çarpanı simülasyonun temposu olur', () => {

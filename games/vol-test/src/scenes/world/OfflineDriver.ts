@@ -43,6 +43,9 @@ export class OfflineDriver implements WorldDriver {
       scope.addSubscription(
         services.settings.subscribe((value) => {
           this.sim.pace = value.chaos;
+          // Geliştirici ekranından seçilen araç oynanan dünyada da anında geçerlidir.
+          if (value.vehicle !== this.sim.player.spec.id)
+            this.sim.replacePlayer(VEHICLES[value.vehicle]);
           this.scenarios.select(
             overrides?.scenario ?? value.scenario,
             overrides?.seed ?? value.seed,

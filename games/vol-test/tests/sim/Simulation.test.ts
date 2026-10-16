@@ -4,7 +4,7 @@ import { Simulation } from '@/sim/Simulation';
 import { WeatherSystem } from '@/sim/weather/WeatherSystem';
 import type { SimEvent } from '@/sim/events';
 import { command, simulation, STEP_MS, world } from '../support/sim';
-import { STRIKER } from '@/config/vehicles';
+import { STRIKER, VEHICLES } from '@/config/vehicles';
 
 describe('Simulation', () => {
   it('spawnPlayer kapalıyken kontrol edilen araç doğmaz, araçlar komut kaynağıyla sürülür', () => {
@@ -263,6 +263,28 @@ describe('Simulation', () => {
     sim.despawn(999);
     expect(sim.vehicles).toHaveLength(1);
     expect(sim.spawn(0, 0).id).toBeGreaterThan(other.id);
+  });
+
+  it('replacePlayer oyuncuyu aynı yerde ve yönde yeni tanımla, yeni kimlikle ve tam canla doğurur', () => {
+    const sim = simulation();
+    const bot = sim.spawn(500, 500, 0);
+    const old = sim.player;
+    old.chassis.place(900, 1100, 1.25);
+    sim.applyDamage(old.id, 10);
+    const next = sim.replacePlayer(VEHICLES.goliath);
+    expect(sim.player).toBe(next);
+    expect(next.spec).toBe(VEHICLES.goliath);
+    expect(next.id).not.toBe(old.id);
+    expect(sim.vehicle(old.id)).toBeUndefined();
+    expect(sim.vehicle(bot.id)).toBe(bot);
+    expect(next.chassis.x).toBeCloseTo(900);
+    expect(next.chassis.y).toBeCloseTo(1100);
+    expect(next.chassis.hull).toBeCloseTo(1.25);
+    expect(next.vitality.health).toBe(next.vitality.maxHealth);
+    // Yeni oyuncu komutu alır, eskisinin komutu artık kimseyi sürmez.
+    const x = next.chassis.x;
+    for (let i = 0; i < 20; i++) sim.step(() => command({ moveX: 1 }), STEP_MS);
+    expect(next.chassis.x).not.toBe(x);
   });
 
   it('açık kimlikle doğan araç kimliği korur ve sonraki kimlikler çakışmaz', () => {

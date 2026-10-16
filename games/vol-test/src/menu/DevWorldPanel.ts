@@ -41,7 +41,7 @@ interface Row {
 /**
  * Geliştirici ekranının dünya bölümü: mevsim, hava, araç ve menü arka planının yoğunluğu. Seçimler
  * `GameSettings`e yazılır ve anında uygulanır: menü arka planı ve açık alıştırma dünyası mevsimi ve havayı
- * hemen değiştirir, araç seçimi vitrine ve bir sonraki girişe geçer. Alıştırma senaryosu, tohum ve kaos
+ * hemen değiştirir, araç seçimi vitrine geçer ve oynanan çevrimdışı dünyada oyuncuyu yerinde yeni araçla değiştirir (`Simulation.replacePlayer`). Alıştırma senaryosu, tohum ve kaos
  * `ScenarioPanel`dedir.
  */
 export class DevWorldPanel {

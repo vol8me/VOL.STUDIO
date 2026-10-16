@@ -196,6 +196,23 @@ export class Simulation {
     this.drownCarry.delete(id);
   }
 
+  /**
+   * Kontrol edilen aracı başka bir tanımla değiştirir: yeni araç eskisinin konumunda ve yönünde, tam
+   * canla doğar (yeni kimlik; eskisi dünyadan kalkar). Geliştirici ekranının "araç" seçimi içindir.
+   */
+  replacePlayer(spec: VehicleSpec): Vehicle {
+    const old = this.player;
+    const { x, y, hull } = old.chassis;
+    const index = this.vehicleList.indexOf(old);
+    this.vehicleList.splice(index, 1);
+    this.inputs.delete(old.id);
+    this.drownCarry.delete(old.id);
+    const next = this.spawn(x, y, hull, old.team, undefined, spec);
+    Object.assign(next.spawnPoint, old.spawnPoint);
+    this.playerId = next.id;
+    return next;
+  }
+
   /** Yetkili komutların ve savaş çözümünün ortak hasar kapısı; gerçek düşen canı döndürür. */
   applyDamage(
     targetId: EntityId,
