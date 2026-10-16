@@ -831,7 +831,7 @@ Açılış sırası Boot → Backdrop + Menu → (Garage | Settings | Dev | Worl
 | `Backdrop` | Menülerin altında yürüyen araç alayı (savaşsız, sessiz); dünya açılınca durur                                           |
 | `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı                               |
 | `Garage`   | Araç kartları (ad, görev, üç ölçü, yetenek adı ve sayılarla açıklaması), ad, cephe; savaşa katıl, alıştırmaya çık, geri |
-| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi                                                |
+| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi, çözünürlük                                    |
 | `Dev`      | Mevsim, hava, araç, arka plan yoğunluğu; senaryo, tohum ve kaos kadranı                                                 |
 | `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)                                    |
 
@@ -842,7 +842,7 @@ geliştirici ve duraklatma aynı şeridi paylaşır, ekranlar arası geçiş şe
 (`MENU.fadeMs`, `slidePx`; CSS `--vt-slide`/`--vt-slide-ms` aynı sayıyı taşır, `prefers-reduced-motion`da
 anında). Duraklatma (`PauseOverlay`) aynı `ScreenFrame`i CORE `Modal` içinde taşır: modal yalnız odak tuzağı,
 Escape ve Android geri sözleşmesini verir. Katman ayar satırı taşımaz: yalnız düğmeler vardır (Devam et,
-Ayarlar, Geliştirici, sürücü eylemleri). "Ayarlar" `SettingsScreen`i (dil, kalite, ses, titreşim, ekran kipi),
+Ayarlar, Geliştirici, sürücü eylemleri). "Ayarlar" `SettingsScreen`i (dil, kalite, ses, titreşim, ekran kipi, çözünürlük),
 "Geliştirici" `DevScreen`i şeridin içinde açar; geri düğmesi menüye döner. Oyuncu ayarı ile
 geliştirici ayarı böylece tek yerde ve ayrı durur. Geniş denetimli satırlar `stackOnNarrow` ile dar ekranda
 etiketin altına iner.
@@ -966,6 +966,18 @@ Gerçek GPU kare süresi bu makinede ölçülmedi; kabul cihazdadır.
 Uyarlanır çözünürlük (`AdaptiveResolution`) 90 karelik pencerede ortalama kare süresi 22 ms'yi aşarsa çizim
 ölçeğini kısar (alt sınır 0,5) ve canvas'ı yeniden kurar. Duraklatılmışken ölçmez: dünya donmuştur, kare süresi
 oynanışı temsil etmez ve yeniden kurulum donmuş görüntüyü değiştirirdi; pause e2e'si bu sözleşmeye dayanır.
+
+**Çözünürlük ayarı** (`src/config/resolution.ts`, Ayarlar ve duraklatma şeridi) iki ayrı kavramdır. _Çizim çözünürlüğü_
+her platformda (PC, Android, Deck, web) sunulur: Otomatik (varsayılan; yukarıdaki uyarlanır ölçek) ya da sabit %100,
+%85, %70, %50; sabit seçim uyarlanır kısmayı durdurur ve canvas'ı anında yeniden kurar (oyuncu seçimi ilk canvas'tan
+önce uygulanır, ölçüm oturumlarında uygulanmaz). Dünya ve ekran boyutu değişmez, yalnız netlik ve GPU yükü
+değişir. Basamaklar bilinçli seçilmiştir: 1'in üstü (süper-örnekleme) CORE'da kapalıdır ve %50'nin altı kenarları belirgin
+kalınlaştırır; `maxDpr` ve `maxPixels` tavanları seçimin de üstünde sert sınırdır, yani %100 "tavanın izin verdiği en net"
+demektir. _Pencere boyutu_ yalnız native masaüstü penceresinde ve pencereli kipte görünür (Android, tarayıcı ve Deck'in
+tam ekran oturumunda yoktur): ekrana sığan ön ayarlar (1280×720'den 2560×1440'a) listelenir, seçim `DisplayModeController`
+ile uygulanır ve aynı boyut tekrar uygulanmaz (başka bir ayarın değişimi pencereyi yeniden ortalamaz).
+Çizim çözünürlüğü yeni davranış olarak birim testlerle ve Chromium e2e'siyle (canvas piksel genişliği) doğrulandı;
+gerçek WebView2, Android ve Deck pencere/çözünürlük davranışı bu turda cihazda ölçülmedi.
 
 Gönderilen app/vendor/css bütçeleri kök quality.json sahibindedir;
 ölçü güncel üretim build'iyle bundle kapısından alınır.

@@ -228,7 +228,17 @@
       "sandbox": "Fizik alanı",
       "multitank": "Çoklu tank"
     },
-    "menu": "Ana menü"
+    "menu": "Ana menü",
+    "resolution": "Çizim çözünürlüğü",
+    "resolutionOption": {
+      "auto": "Otomatik (önerilen)",
+      "scale": "%{{percent}}"
+    },
+    "windowSize": "Pencere boyutu",
+    "windowSizeOption": {
+      "auto": "Değiştirme",
+      "size": "{{width}} × {{height}}"
+    }
   },
   "war": {
     "faction": {

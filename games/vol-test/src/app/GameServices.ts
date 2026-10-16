@@ -38,6 +38,7 @@ import {
   type RuntimePlatform,
   type SessionKind,
 } from '@volstudio/tauri-v2';
+import { windowSizeOf } from '@/config/resolution';
 import { GameProgress } from './GameProgress';
 import { GameSettings } from './GameSettings';
 import { IntegrityFeed } from './IntegrityFeed';
@@ -96,6 +97,7 @@ export class GameServices {
             getMode: () => this.settings.get().display,
             setMode: (display) => this.settings.update({ display }),
             subscribe: (listener) => this.settings.subscribe(listener),
+            getWindowedSize: () => windowSizeOf(this.settings.get().windowSize),
           }),
         )
       : null;

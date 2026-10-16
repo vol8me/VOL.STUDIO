@@ -3,6 +3,13 @@ import { sanitizeName } from '@volstudio/network/protocol';
 import { BACKDROP } from '@/config/backdrop';
 import { CHAOS, validChaos } from '@/config/chaos';
 import { isScenario, validSeed, SCENARIO, type ScenarioId } from '@/config/scenarios';
+import {
+  isRenderScaleChoice,
+  isWindowSizeChoice,
+  RESOLUTION_AUTO,
+  type RenderScaleChoice,
+  type WindowSizeChoice,
+} from '@/config/resolution';
 import { initialEffectLevel, type EffectLevel } from '@/config/quality';
 import { SEASONS, type SeasonKind } from '@/config/seasons';
 import { isVehicleId, STRIKER, type VehicleId } from '@/config/vehicles';
@@ -38,6 +45,10 @@ export interface GamePreferences {
   /** Zemin ızgarası: dokunmatik cihazda `G` tuşu yoktur, bu ayar açıp kapatır. */
   grid: boolean;
   display: 'windowed' | 'fullscreen';
+  /** Çizim çözünürlüğü: `auto` yavaş karelerde ölçeği kısar, sayı sabit ölçektir (`config/resolution.ts`). */
+  resolution: RenderScaleChoice;
+  /** Native pencerenin pencereli kipteki içerik boyutu (`auto`: boyuta dokunulmaz). */
+  windowSize: WindowSizeChoice;
   scenario: ScenarioId;
   seed: number;
   /** Kaos kadranı (`CHAOS`): alıştırma dünyasında hareket hızı ve atış sıklığı çarpanı. */
@@ -87,6 +98,8 @@ function parsePreferences(value: unknown, fallback: GamePreferences): GamePrefer
       input.display === 'fullscreen' || input.display === 'windowed'
         ? input.display
         : fallback.display,
+    resolution: isRenderScaleChoice(input.resolution) ? input.resolution : fallback.resolution,
+    windowSize: isWindowSizeChoice(input.windowSize) ? input.windowSize : fallback.windowSize,
     season: isSeasonChoice(input.season) ? input.season : fallback.season,
     weather: isWeatherChoice(input.weather) ? input.weather : fallback.weather,
     backdropDensity:
@@ -108,6 +121,8 @@ export class GameSettings {
       haptics: true,
       grid: true,
       display: 'windowed',
+      resolution: RESOLUTION_AUTO,
+      windowSize: RESOLUTION_AUTO,
       scenario: 'empty',
       seed: SCENARIO.defaultSeed,
       chaos: CHAOS.default,
@@ -130,6 +145,8 @@ export class GameSettings {
         a.haptics === b.haptics &&
         a.grid === b.grid &&
         a.display === b.display &&
+        a.resolution === b.resolution &&
+        a.windowSize === b.windowSize &&
         a.scenario === b.scenario &&
         a.seed === b.seed &&
         a.chaos === b.chaos &&

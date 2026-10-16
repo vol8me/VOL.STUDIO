@@ -72,4 +72,35 @@ describe('AdaptiveResolution', () => {
     window.dispatchEvent(new Event('resize'));
     expect(core.refresh).toHaveBeenCalledTimes(1);
   });
+
+  it('sabit ölçek seçilince uyarlanır kısma durur, canvas yalnız ölçek değişince yeniden kurulur; auto geri getirir', () => {
+    const resolution = new AdaptiveResolution();
+    const { game, step } = fakeGame();
+    const detach = resolution.attach(game);
+    resolution.apply(game, 0.7);
+    expect(resolution.scale).toBe(0.7);
+    expect(core.refresh).toHaveBeenCalledTimes(1);
+    // Yavaş kareler sabit ölçeği kısmaz.
+    for (let frame = 0; frame < 600; frame++) step(40);
+    expect(resolution.scale).toBe(0.7);
+    expect(core.refresh).toHaveBeenCalledTimes(1);
+    // Aynı seçim yeniden uygulanınca canvas yeniden kurulmaz.
+    resolution.apply(game, 0.7);
+    expect(core.refresh).toHaveBeenCalledTimes(1);
+    // Auto 1'den başlar ve yavaş karede yeniden kısar.
+    resolution.apply(game, 'auto');
+    expect(resolution.scale).toBe(1);
+    expect(core.refresh).toHaveBeenCalledTimes(2);
+    for (let frame = 0; frame < 400; frame++) step(40);
+    expect(resolution.scale).toBeLessThan(1);
+    detach();
+  });
+
+  it('choose değişimi bildirir ve ilk seçim kurulumdan önce canvas istemeden uygulanır', () => {
+    const resolution = new AdaptiveResolution();
+    expect(resolution.choose(0.5)).toBe(true);
+    expect(resolution.choose(0.5)).toBe(false);
+    expect(resolution.scale).toBe(0.5);
+    expect(core.refresh).not.toHaveBeenCalled();
+  });
 });

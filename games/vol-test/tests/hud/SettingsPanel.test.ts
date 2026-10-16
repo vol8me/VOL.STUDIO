@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { i18next } from '@volstudio/core/i18n';
 import { LocalStorageAdapter, ScopedSaveManager } from '@volstudio/core';
 import { GameSettings } from '@/app/GameSettings';
 import { SettingsPanel } from '@/hud/SettingsPanel';
@@ -83,5 +84,69 @@ describe('SettingsPanel', () => {
     panel.destroy();
     settings.dispose();
     parent.remove();
+  });
+
+  function pick(parent: HTMLElement, id: string, label: string): void {
+    parent.querySelector<HTMLElement>(`[data-testid="${id}"]`)!.click();
+    const option = [...document.body.querySelectorAll<HTMLElement>('[role="option"]')].find(
+      (candidate) => candidate.textContent === label,
+    );
+    expect(option, `${label} seçeneği`).toBeDefined();
+    option!.click();
+  }
+
+  it('çizim çözünürlüğü her oturumda sunulur: otomatik ve sabit basamaklar tercihe yazılır', async () => {
+    const { settings, panel, parent } = await mount(false);
+    expect(settings.get().resolution).toBe('auto');
+    pick(
+      parent,
+      'settings-resolution',
+      i18next.t('voltest:pause.resolutionOption.scale', { percent: 70 }),
+    );
+    await vi.waitFor(() => expect(settings.get().resolution).toBe(0.7));
+    pick(parent, 'settings-resolution', i18next.t('voltest:pause.resolutionOption.auto'));
+    await vi.waitFor(() => expect(settings.get().resolution).toBe('auto'));
+    // Dış değişim seçimi taşır.
+    await settings.update({ resolution: 0.5 });
+    expect(parent.querySelector('[data-testid="settings-resolution"]')?.textContent).toContain(
+      '50',
+    );
+    expect(parent.querySelector('[data-testid="settings-window-size"]')).toBeNull();
+    panel.destroy();
+    settings.dispose();
+    parent.remove();
+  });
+
+  it('pencere boyutu yalnız native pencerede sunulur, ekrana sığanları listeler ve tam ekranda gizlenir', async () => {
+    vi.stubGlobal('screen', { availWidth: 1920, availHeight: 1040 });
+    try {
+      const { settings, panel, parent } = await mount(true);
+      const row = parent
+        .querySelector('[data-testid="settings-window-size"]')!
+        .closest('.vol-settings-row') as HTMLElement;
+      expect(row.hidden).toBe(false);
+      parent.querySelector<HTMLElement>('[data-testid="settings-window-size"]')!.click();
+      const labels = [...document.body.querySelectorAll('[role="option"]')].map(
+        (o) => o.textContent,
+      );
+      // 1920×1080 bu ekrana (1040 yüksek) sığmaz.
+      expect(labels).toEqual([
+        i18next.t('voltest:pause.windowSizeOption.auto'),
+        '1280 × 720',
+        '1600 × 900',
+      ]);
+      document.body.click();
+      pick(parent, 'settings-window-size', '1600 × 900');
+      await vi.waitFor(() => expect(settings.get().windowSize).toBe('1600x900'));
+      await settings.update({ display: 'fullscreen' });
+      expect(row.hidden).toBe(true);
+      await settings.update({ display: 'windowed' });
+      expect(row.hidden).toBe(false);
+      panel.destroy();
+      settings.dispose();
+      parent.remove();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

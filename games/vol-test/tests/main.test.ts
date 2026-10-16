@@ -10,6 +10,8 @@ const boundary = vi.hoisted(() => ({
   editMenu: vi.fn(),
   fatal: vi.fn(),
   applyLanguage: vi.fn(() => Promise.resolve()),
+  chooseResolution: vi.fn(),
+  applyResolution: vi.fn(),
 }));
 
 vi.mock('@volstudio/core', () => ({
@@ -33,6 +35,8 @@ vi.mock('@/app/AdaptiveResolution', () => ({
   AdaptiveResolution: class {
     scale = 1;
     attach = () => () => undefined;
+    choose = boundary.chooseResolution;
+    apply = boundary.applyResolution;
   },
 }));
 vi.mock('@/app/language', () => ({ applyLanguage: boundary.applyLanguage }));
@@ -51,7 +55,10 @@ describe('oyun açılış sahipliği', () => {
     history.replaceState({}, '', '/');
     boundary.createServices.mockResolvedValue({
       dispose: boundary.disposeServices,
-      settings: { get: () => ({ language: 'auto' }) },
+      settings: {
+        get: () => ({ language: 'auto', resolution: 'auto' }),
+        subscribe: () => () => undefined,
+      },
     });
     boundary.suppressMenus.mockReturnValue(boundary.stopMenus);
     boundary.editMenu.mockReturnValue(boundary.stopEditMenu);
@@ -96,6 +103,11 @@ describe('oyun açılış sahipliği', () => {
     await vi.waitFor(() => expect(boundary.editMenu).toHaveBeenCalledTimes(1));
     expect(boundary.suppressMenus).toHaveBeenCalledTimes(1);
     expect(boundary.applyLanguage).toHaveBeenCalledWith('auto');
+    // Oyuncunun çözünürlük seçimi ilk canvas'tan önce uygulanır.
+    expect(boundary.chooseResolution).toHaveBeenCalledWith('auto');
+    expect(boundary.chooseResolution.mock.invocationCallOrder[0]).toBeLessThan(
+      boundary.createGame.mock.invocationCallOrder[0],
+    );
     expect(boundary.stopMenus).not.toHaveBeenCalled();
     expect(boundary.stopEditMenu).not.toHaveBeenCalled();
     handlers.destroy();

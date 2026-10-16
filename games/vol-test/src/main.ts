@@ -45,6 +45,8 @@ async function boot(): Promise<void> {
   try {
     const services = scope.add(await GameServices.create());
     const resolution = new AdaptiveResolution(() => services.isPaused);
+    // Oyuncunun çözünürlük seçimi ilk canvas'tan önce geçerlidir; ölçüm oturumlarında çözünürlük sabit kalır.
+    if (!services.measurements) resolution.choose(services.settings.get().resolution);
     await applyLanguage(services.settings.get().language);
     loading.servicesReady();
     game = await createVolGame({
@@ -78,7 +80,18 @@ async function boot(): Promise<void> {
           onGpuSample: (sample) => services.measurements!.renderGpu(sample),
         }),
       );
-    if (!services.measurements) scope.addSubscription(resolution.attach(game));
+    if (!services.measurements) {
+      scope.addSubscription(resolution.attach(game));
+      // Değişen seçim canvas'ı yeniden kurar; ilk seçim oyun kurulmadan önce uygulanmıştır.
+      let applied = services.settings.get().resolution;
+      scope.addSubscription(
+        services.settings.subscribe((value) => {
+          if (value.resolution === applied) return;
+          applied = value.resolution;
+          resolution.apply(game!, applied);
+        }),
+      );
+    }
     scope.addSubscription(suppressNativeMenus(document));
     // Yerel menü kapalıyken düzenlenebilir alanlar (senaryo paneli) kendi Kes/Kopyala/Yapıştır menüsünü alır.
     scope.addSubscription(installEditMenu(document));

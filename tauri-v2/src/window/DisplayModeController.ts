@@ -16,8 +16,8 @@ export interface DisplayModeControllerOptions {
   readonly setMode: (mode: DisplayMode) => Promise<void> | void;
   /** Tercih değişince çağrılacak dinleyiciyi bağlar; aboneliği kaldıran fonksiyonu döner. */
   readonly subscribe: (listener: () => void) => () => void;
-  /** Pencereli kipte uygulanacak içerik boyutu; verilmezse boyuta dokunulmaz. */
-  readonly getWindowedSize?: () => { readonly width: number; readonly height: number };
+  /** Pencereli kipte uygulanacak içerik boyutu; verilmezse ya da `undefined` dönerse boyuta dokunulmaz. */
+  readonly getWindowedSize?: () => { readonly width: number; readonly height: number } | undefined;
   /** Native pencere yoksa DOM tam ekranına alınacak kök. */
   readonly target?: Element;
   readonly windowAdapter?: DisplayWindow;
@@ -40,6 +40,8 @@ export class DisplayModeController {
   private applyQueue: Promise<void> = Promise.resolve();
   private applyGeneration = 0;
   private applyFailure: { error: unknown } | null = null;
+  /** Pencereye en son uygulanan boyut: tercih deposundaki başka bir değişim pencereyi yeniden ortalamaz. */
+  private appliedSize: string | null = null;
   private stopPreference: (() => void) | null = null;
   private stopNativeWatch: (() => void) | null = null;
   private started = false;
@@ -131,11 +133,20 @@ export class DisplayModeController {
     if (this.isStale(generation)) return;
     if (isFullscreen !== wantsFullscreen) {
       await this.window.setFullscreen(wantsFullscreen);
+      // Tam ekrandan çıkış ve girişte pencere boyutu sistemin elindedir: pencereliye dönünce yeniden uygulanır.
+      this.appliedSize = null;
     }
     if (this.isStale(generation) || wantsFullscreen) return;
 
     const size = this.options.getWindowedSize?.();
-    if (size) await this.window.setResolution(size.width, size.height);
+    if (!size) {
+      this.appliedSize = null;
+      return;
+    }
+    const key = `${size.width}x${size.height}`;
+    if (key === this.appliedSize) return;
+    await this.window.setResolution(size.width, size.height);
+    this.appliedSize = key;
   }
 
   private recordApplyError(error: unknown): void {

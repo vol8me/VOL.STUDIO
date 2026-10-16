@@ -89,7 +89,8 @@ describe('WorldCursor', () => {
     pointer(canvas, 10, 10);
     const reticle = document.querySelector<HTMLElement>('.vol-reticle')!;
     const animate = vi.fn();
-    Object.defineProperty(reticle, 'animate', { value: animate });
+    // Büyüme kabuğa değil içindeki SVG'ye uygulanır (kabuğa verilen `scale` konumu da çarpıp kaydırırdı).
+    Object.defineProperty(reticle.firstElementChild, 'animate', { value: animate });
     cursor.fired();
     expect(animate).toHaveBeenCalledTimes(1);
     const before = reticle.style.color;

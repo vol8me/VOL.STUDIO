@@ -159,6 +159,36 @@ describe('DisplayModeController — native pencere', () => {
     expect(native.adapter.setResolution).toHaveBeenCalledWith(1280, 720);
   });
 
+  it('aynı boyut yeniden uygulanmaz: başka bir tercih değişimi pencereyi ortalamaz; boyut değişince uygulanır', async () => {
+    const preference = makePreference('windowed');
+    const native = makeNativeWindow();
+    let size = { width: 1280, height: 720 };
+    const listeners = new Set<() => void>();
+    const notify = (): void => listeners.forEach((listener) => listener());
+    const controller = create({
+      ...preference,
+      subscribe: (listener) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      windowAdapter: native.adapter,
+      getWindowedSize: () => size,
+    });
+    await controller.start();
+    expect(native.adapter.setResolution).toHaveBeenCalledTimes(1);
+
+    // Başka bir ayarın değişimi de tercih dinleyicisini tetikler (ses kaydırıcısı gibi).
+    notify();
+    await controller.flush();
+    expect(native.adapter.setResolution).toHaveBeenCalledTimes(1);
+
+    size = { width: 1920, height: 1080 };
+    notify();
+    await controller.flush();
+    expect(native.adapter.setResolution).toHaveBeenLastCalledWith(1920, 1080);
+    expect(native.adapter.setResolution).toHaveBeenCalledTimes(2);
+  });
+
   it('art arda gelen isteklerde yalnız sonuncusu pencereye dokunur', async () => {
     const preference = makePreference('windowed');
     const native = makeNativeWindow();

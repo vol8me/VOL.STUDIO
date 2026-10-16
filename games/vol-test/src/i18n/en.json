@@ -228,7 +228,17 @@
       "sandbox": "Physics sandbox",
       "multitank": "Multiple tanks"
     },
-    "menu": "Main menu"
+    "menu": "Main menu",
+    "resolution": "Render resolution",
+    "resolutionOption": {
+      "auto": "Automatic (recommended)",
+      "scale": "{{percent}}%"
+    },
+    "windowSize": "Window size",
+    "windowSizeOption": {
+      "auto": "Keep as is",
+      "size": "{{width}} × {{height}}"
+    }
   },
   "war": {
     "faction": {
