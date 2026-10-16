@@ -340,6 +340,30 @@ describe('Simulation', () => {
     expect(collision).toBeDefined();
   });
 
+  it('ölü aracın enkazı katıdır: canlı araç içinden geçemez, enkaz yerinde kalır, hasar almaz', () => {
+    const sim = simulation();
+    const wreck = sim.spawn(2048 + 120, 2048, 0);
+    sim.applyDamage(wreck.id, wreck.vitality.maxHealth, undefined, 'collision');
+    expect(wreck.vitality.alive).toBe(false);
+    const parked = { x: wreck.chassis.x, y: wreck.chassis.y };
+    const health = sim.player.vitality.health;
+    const events: SimEvent[] = [];
+    for (let step = 0; step < 240; step++) {
+      sim.step((vehicle) => command({ moveX: vehicle.id === sim.player.id ? 1 : 0 }), STEP_MS);
+      sim.drainEvents(events);
+      const gap = Math.hypot(
+        wreck.chassis.x - sim.player.chassis.x,
+        wreck.chassis.y - sim.player.chassis.y,
+      );
+      expect(gap, `adım ${step}`).toBeGreaterThan(2 * 21 - 1);
+    }
+    expect(wreck.chassis.x).toBeCloseTo(parked.x, 0);
+    expect(wreck.chassis.y).toBeCloseTo(parked.y, 0);
+    expect(sim.player.chassis.x).toBeLessThan(parked.x);
+    expect(sim.player.vitality.health).toBe(health);
+    expect(events.some((event) => event.kind === 'collision' && event.b === wreck.id)).toBe(true);
+  });
+
   it('aynı komut dizisi aynı sonucu verir', () => {
     const run = () => {
       const sim = simulation();

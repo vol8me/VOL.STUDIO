@@ -258,6 +258,26 @@ describe.each(WALKER_IDS.map((id) => [id, SPIDER_LOOKS[id]] as const))(
       expect(hipY(b) - hipY(a)).toBeCloseTo(4, 0);
     });
 
+    it('tırmanışta ayaklar kayanın üstünde durur: tabandaki ayak da büyür ve adım daha yükseğe kalkar', () => {
+      const ground = build();
+      const rock = build();
+      rock.legs.setClimb(8, 1.7);
+      ground.walk(40, topSpeed);
+      rock.walk(40, topSpeed);
+      const planted = (rig: ReturnType<typeof build>): number => {
+        let smallest = Infinity;
+        for (let i = 0; i < rig.legs.legCount; i++) {
+          if (rig.legs.footOf(i).lift === 0)
+            smallest = Math.min(smallest, rig.legs.partsOf(i)[2].scale);
+        }
+        return smallest;
+      };
+      expect(planted(rock)).toBeGreaterThan(planted(ground));
+      rock.legs.setClimb(0, 1);
+      rock.walk(4, topSpeed);
+      expect(planted(rock)).toBeCloseTo(planted(ground), 1);
+    });
+
     it('ışık dünyada sabittir: gövde dönünce gölge kayması gövde-yerel yönde döner', () => {
       const forward = lightLocal(0, { x: 0, y: 0 });
       const turned = lightLocal(Math.PI / 2, { x: 0, y: 0 });

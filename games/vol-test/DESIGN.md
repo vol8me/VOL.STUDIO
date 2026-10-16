@@ -183,9 +183,11 @@ Araçlar kayaya türüne göre tepki verir (`ROCKS`):
 
 Sunum `src/view/terrain/RockView.ts`, `src/config/rockView.ts`: lob çokgeni düzensizdir, kubbe basamakları
 ışığa (`LIGHT`) doğru kayar, gölge lob yüksekliğiyle uzar; ıslaklıkla koyulaşır, kar derinliği başlık olarak
-birikir, dibinde yosun tutamları vardır. Örümcek tırmanırken kalçası kalkar, gövdesi geriye yaslanır ve
-ayaklar daha ağır basıp toz kaldırır (`SpiderView.climbRock`, `ROCK_VIEW.spiderClimb`; değer yumuşatılır,
-ağdan gelmez, her istemci kendi öngörüsünden türetir). Kayalar harita dokusuna da basılır (`src/hud/lakeMap.ts`).
+birikir, dibinde yosun tutamları vardır. Örümcek tırmanırken ayakları kayanın üstüne basar (taban
+yüksekliği `stepUp`), kalça aynı payla kalkar, adımlar basamak çıkar gibi `swingGain` kat yükseğe kalkar,
+gövde geriye yaslanır ve ayaklar daha ağır basıp toz kaldırır (`SpiderView.climbRock`,
+`SpiderLegs.setClimb`, `ROCK_VIEW.spiderClimb`). Yükselme bir yaydır: çıkışta hafifçe aşar ve oturur;
+ağdan gelmez, her istemci kendi öngörüsünden türetir. Kayalar harita dokusuna da basılır (`src/hud/lakeMap.ts`).
 
 ### Yeşillik ve kalıcı iklim
 
@@ -412,7 +414,9 @@ dönüşün dışına savrulur, koşuda sekmeyle kıvrılır, havada düz uzanı
 (kulak ve boynuz görünür), sırt raylı Panther'de silah kafanın üstünden geçer (`head.over`). Koşuda gövde
 sekmeyle ileri-geri savrulur ve her basışta hafifçe yükselir; dönüşte gövde dönüşün dışına kayar, yönü
 hizadan geri kalır ve yay dönüş bitince sallanıp yatışır, iç bacaklar daha yüksek kalkar, dış pençe toz
-savurur (`LEAPER_VIEW.turn`, `LEAPER_VIEW.stride`). Çarpışan ayak izi sanatla birlikte güncellendi
+savurur, ayaklar gövdenin kaydığı yöne açılıp toplanır ve kafa gövdeden önce dönüşe bakar. Havadaki ayak
+belirgin kalkar (diz dışa katlanır, pençe büyür) ve gövde her sekmede boyuna uzayıp toplanır
+(`LEAPER_VIEW.turn`, `LEAPER_VIEW.stride`, `LEAPER_ART.gait`). Çarpışan ayak izi sanatla birlikte güncellendi
 (Jackal 26×13, Panther 32×16, Rhino 42×26 yarım ölçü); kafa burun ucunda biter, kuyruk ve kulaklar çarpışmaya
 girmez.
 Enerji tonları: Jackal limon, Panther kızıl, Rhino camgöbeği. Oran ve renk beğenisinin insan doğrulaması
@@ -640,7 +644,9 @@ alanı seçimi bu simülasyon mekanizmasının üzerindeki oyun kurallarıdır.
 canlılığı bir önceki kareyle karşılaştırır ve canlıdan ölüye geçişte tek bir patlama oynatır; araç görünümü
 `VehicleView.setWrecked(true)` ile olduğu yerde kalır: gövde isli renge çekilir (`src/view/charring.ts`; ışık ve
 ağız parlaması söner, örümcek hayaletleri silinir), poz donar ve gölgesi yerinde durur, yani araç birden yok
-olmaz; yeniden doğunca `setWrecked(false)` her rengi eski hâline getirir. Karşılaştırma simülasyon olayına değil canlılık durumuna
+olmaz; yeniden doğunca `setWrecked(false)` her rengi eski hâline getirir. Enkaz katıdır: canlı araç ölünün
+gövdesinden geçemez, `Simulation.collideWreck` ölüyü sabit bir kütle olarak (`WRECK_MASS`) aynı çarpışma
+çözücüsünden geçirir; ölü yerinden oynamaz, çarpan hasar almaz (yalnız `collision` olayı ve geri tepme). Karşılaştırma simülasyon olayına değil canlılık durumuna
 dayandığı için çevrimdışı sandbox ve çevrimiçi istemci aynı yoldan geçer; ilk görülen ölü araç (geç katılım)
 patlamadan gizlenir. Patlama `EffectsView.wreck`tir: parlama, şok halkası, yanık, kor/kıvılcım/toz parçacıkları
 ve `src/config/debris.ts` ayarlarıyla 6-8 enkaz parçası. İlk iki parça aracın gerçek çizimidir (tankta taret ve

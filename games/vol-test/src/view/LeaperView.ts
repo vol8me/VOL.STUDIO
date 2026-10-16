@@ -294,6 +294,7 @@ export class LeaperView implements VehicleView {
     // Koşuda gövde sekmeyle ileri-geri savrulur ve her basışta (sekmede iki kez) hafifçe yükselir.
     const surge = Math.cos(strideAngle) * view.stride.surge * effort * ground;
     const bob = 1 + Math.cos(strideAngle * 2) * view.stride.bob * effort * ground;
+    const stretch = Math.sin(strideAngle * 2) * view.stride.stretch * effort * ground;
     this.body
       .setPosition(
         frame.pitch + surge,
@@ -304,7 +305,10 @@ export class LeaperView implements VehicleView {
           collapse * view.stub.roll +
           this.twist.value,
       )
-      .setScale((1 + view.leap.rise * arc) * bob * (1 - this.weight.value * art.weight.dip));
+      .setScale(
+        (1 + view.leap.rise * arc) * bob * (1 - this.weight.value * art.weight.dip) * (1 + stretch),
+        (1 + view.leap.rise * arc) * bob * (1 - this.weight.value * art.weight.dip) * (1 - stretch),
+      );
 
     this.placeHead(frame, deltaMs);
     this.placeTail(turnLoad, strideAngle, effort * ground, deltaMs);
@@ -440,7 +444,9 @@ export class LeaperView implements VehicleView {
     const leapX = hx + (front ? art.gait.footFront + art.gait.leapReach : -art.gait.leapReach);
     const fx = walkX + (leapX - walkX) * this.air;
     const lift = Math.max(gait.lift * liftGain, this.air);
-    const fy = leg.side * (offset + art.gait.splay + art.gait.footOut * lift);
+    // Ayaklar gövdenin kaydığı yöne kayar: dış bacak yana açılır, iç bacak kalçasına toplanır.
+    const brace = -this.turnLoad * LEAPER_VIEW.turn.brace;
+    const fy = leg.side * (offset + art.gait.splay + art.gait.footOut * lift) + brace;
     leg.footX = fx;
     leg.footY = fy;
 
@@ -451,7 +457,7 @@ export class LeaperView implements VehicleView {
     // Ön bacağın dirseği geriye, arka bacağın dizi ileriye bakar; ikisi de dışa bükülür.
     const shift = (front ? -1 : 1) * art.gait.kneeShift * bend;
     const kx = hx + dx * 0.5 + shift;
-    const ky = hy + dy * 0.5 + leg.side * art.gait.kneeOut * bend;
+    const ky = hy + dy * 0.5 + leg.side * (art.gait.kneeOut * bend + art.gait.kneeLift * lift);
     const gone = (this.broken & leg.bit) !== 0;
 
     leg.hip.setPosition(hx, hy);
@@ -527,8 +533,10 @@ export class LeaperView implements VehicleView {
   private placeHead(frame: TankFrame, deltaMs: number): void {
     const { head } = this.art;
     const view = LEAPER_VIEW.head;
+    // Kafa gövdeden önce dönüşe bakar: dönüş yükü nişana eklenir (işaret açısal hızınki).
     const wanted = Phaser.Math.Clamp(
-      angleDelta(frame.hull, frame.turret) * head.follow,
+      angleDelta(frame.hull, frame.turret) * head.follow +
+        this.turnLoad * head.yaw * LEAPER_VIEW.turn.lead,
       -head.yaw,
       head.yaw,
     );

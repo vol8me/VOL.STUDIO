@@ -7,7 +7,12 @@ import { idleCommand, type TankCommand } from './command';
 import { Projectiles, type ProjectileTarget } from './combat/Projectiles';
 import { Vehicle, type EntityId } from './entities/Vehicle';
 import type { DamageCause, SimEvent } from './events';
-import { createContact, resolveBodyContact, type Contact } from '@volstudio/core/physics';
+import {
+  createContact,
+  resolveBodyContact,
+  RigidBody,
+  type Contact,
+} from '@volstudio/core/physics';
 import { CHAOS, validChaos } from '@/config/chaos';
 import type { Chassis } from './chassis/Chassis';
 import type { ChassisPose } from './chassis/ChassisState';
@@ -49,6 +54,8 @@ export type CommandSource = (vehicle: Vehicle) => TankCommand;
 /** Olay kuyruğunun tavanı: boşaltılmayan kuyruk belleği büyütmez. */
 const MAX_EVENTS = 512;
 /** Araç/duvar temas çözümünün üst sınırı: sıkışık kümede de adım süresi sabit kalır. */
+/** Enkazın temsil cisminin kütlesi ve eylemsizliği: çarpan araca göre sonsuz sayılır. */
+const WRECK_MASS = 1e12;
 const CONTACT_PASSES = 4;
 const IDLE = idleCommand();
 
@@ -74,6 +81,8 @@ export class Simulation {
   private readonly previewPose: ChassisPose = { x: 0, y: 0, hull: 0, turret: 0, pitch: 0, roll: 0 };
   private readonly previewLaunch: LaunchBuffer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0 };
   private readonly contact = createContact();
+  /** Enkazın yerine geçen oynamaz cisim: kütlesi sonsuza yakındır, temasta yalnız çarpan taraf itilir. */
+  private readonly anchor = new RigidBody(WRECK_MASS, WRECK_MASS);
   private readonly pacedContact = createContact();
   private tempo: number = CHAOS.default;
   private readonly inputs = new Map<EntityId, TankCommand>();
@@ -547,7 +556,15 @@ export class Simulation {
       for (let second = first + 1; second < list.length; second++) {
         const a = list[first];
         const b = list[second];
-        if (!a.vitality.alive || !b.vitality.alive) continue;
+        if (!a.vitality.alive || !b.vitality.alive) {
+          // İki enkaz birbirine değmez; canlı araç enkaza katı bir engel gibi çarpar.
+          if (
+            a.vitality.alive !== b.vitality.alive &&
+            this.collideWreck(a.vitality.alive ? a : b, a.vitality.alive ? b : a)
+          )
+            moved = true;
+          continue;
+        }
         const ax = a.chassis.x;
         const ay = a.chassis.y;
         const bx = b.chassis.x;
@@ -581,6 +598,40 @@ export class Simulation {
           this.applyImpactDamage(b.id, hit.speed, this.combat.collision, 'collision', a.id);
         }
       }
+    }
+    return moved;
+  }
+
+  /**
+   * Canlı aracın yerde kalan enkaza çarpması: enkaz yerinden oynamaz, araç dışarı itilir ve sekir.
+   * Enkaza çarpmak hasar vermez (enkaz zaten ölüdür); çarpma olayı ses ve titreşim için yine yazılır.
+   */
+  private collideWreck(mover: Vehicle, wreck: Vehicle): boolean {
+    const body = this.anchor;
+    const chassis = wreck.chassis;
+    body.reset(chassis.x, chassis.y, chassis.angle);
+    const x = mover.chassis.x;
+    const y = mover.chassis.y;
+    const hit = resolveBodyContact(
+      mover.chassis,
+      mover.chassis.shape,
+      body,
+      chassis.shape,
+      this.contact,
+    );
+    const moved = mover.chassis.x !== x || mover.chassis.y !== y;
+    if (hit.speed > mover.chassis.impactEventSpeed) {
+      mover.chassis.kickFrom(hit);
+      this.emit({
+        kind: 'collision',
+        a: mover.id,
+        b: wreck.id,
+        x: hit.x,
+        y: hit.y,
+        normalX: hit.normalX,
+        normalY: hit.normalY,
+        speed: hit.speed,
+      });
     }
     return moved;
   }

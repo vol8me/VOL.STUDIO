@@ -37,9 +37,18 @@ export const ROCK_VIEW = {
   /** Kaya dibindeki yeşillik: tutam sayısı ve rengi (mevsim yeşilliğiyle aynı aileden). */
   moss: { count: 7, color: 0x5e7a3a, dark: 0x3f5a28, size: 0.12 },
   /**
-   * Örümceğin kaya tırmanışı sunumu (fizik `ROCKS.climb`): kalça kalkar (kalça yüksekliğinin oranı),
-   * gövde geriye yaslanır (piksel), her ayak daha ağır basar ve daha çok toz kaldırır. `settleMs`
-   * kayaya girişte ve çıkışta geçişi yumuşatır: gövde birden sıçramaz.
+   * Örümceğin kaya tırmanışı sunumu (fizik `ROCKS.climb`): ayaklar kayanın üstüne basar (`stepUp`,
+   * kalça yüksekliğinin oranı) ve kalça aynı payla kalkar; adımlar basamak çıkar gibi `swingGain` kat
+   * yükseğe kalkar, gövde `leanBack` piksel geriye yaslanır. Yükselme `heave` yayıdır: çıkışta
+   * hafifçe aşar ve oturur, giriş sıçramaz. Her ayak daha ağır basar ve daha çok toz kaldırır.
    */
-  spiderClimb: { hipRise: 0.4, leanBack: 2.6, settleMs: 130, dustBoost: 1.1, plantBoost: 0.35 },
+  spiderClimb: {
+    stepUp: 0.85,
+    hipRise: 0.2,
+    swingGain: 1.7,
+    leanBack: 3.4,
+    heave: { stiffness: 230, damping: 14 },
+    dustBoost: 1.1,
+    plantBoost: 0.35,
+  },
 } as const;

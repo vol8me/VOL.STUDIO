@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Spring1D } from '@volstudio/core/math';
 import { GhostTrail, clamp01, poseSourceOf, type PoseSourceNode } from '@volstudio/core';
 import { SPIDER_ART, SPIDER_TELEPORT_UNITS, type PartBox, type SpiderLook } from '@/config/spiders';
 import type { WalkerSpec } from '@/config/vehicles';
@@ -77,6 +78,7 @@ export class SpiderView implements VehicleView {
   private limpSway = 0;
   /** Yumuşatılmış kaya tırmanışı [0, 1] (`TankFrame.climb`): kalçayı kaldırır, ayakları ağırlaştırır. */
   private climbEase = 0;
+  private readonly heave = new Spring1D();
 
   constructor(
     scene: Phaser.Scene,
@@ -190,19 +192,24 @@ export class SpiderView implements VehicleView {
   }
 
   /**
-   * Kaya tırmanışı: kalça kalkar ve gövde geriye yaslanır; değer simülasyonun `climb` türevinden gelir ve
-   * giriş/çıkışta yumuşatılır. Bacak çözümü yükselmiş kalçayı okur: ayaklar kayaya gerilir, tırmanış
-   * dümdüz yürüyüşten görünür biçimde ayrılır.
+   * Kaya tırmanışı: ayaklar kayanın üstüne basar, kalça aynı payla (artı biraz) kalkar ve gövde geriye
+   * yaslanır; adımlar basamak çıkar gibi yükseğe kalkar. Yükselme simülasyonun `climb` türevini hedef
+   * alan bir yaydır: girişte tırmanır, çıkışta hafifçe aşar ve oturur, gövde birden sıçramaz.
    */
   private climbRock(frame: TankFrame, pose: SpiderPose, deltaMs: number): void {
     const climb = ROCK_VIEW.spiderClimb;
-    this.climbEase +=
-      ((frame.climb ?? 0) - this.climbEase) * (1 - Math.exp(-deltaMs / climb.settleMs));
-    if (this.climbEase < 0.002) {
+    const lift = this.heave.update(frame.climb ?? 0, deltaMs, climb.heave);
+    this.climbEase = clamp01(lift);
+    if (Math.abs(lift) < 0.002 && Math.abs(this.heave.velocity) < 0.01 && !frame.climb) {
+      this.heave.value = 0;
+      this.heave.velocity = 0;
       this.climbEase = 0;
+      this.legs.setClimb(0, 1);
       return;
     }
-    pose.hipHeight += this.look.body.hipHeight * climb.hipRise * this.climbEase;
+    const rise = this.look.body.hipHeight * climb.stepUp * lift;
+    this.legs.setClimb(Math.max(0, rise), 1 + (climb.swingGain - 1) * this.climbEase);
+    pose.hipHeight += rise + this.look.body.hipHeight * climb.hipRise * this.climbEase;
     pose.leanX -= climb.leanBack * this.climbEase;
   }
 

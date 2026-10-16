@@ -79,6 +79,8 @@ export class SpiderLegs {
   /** Kırık bacakların bit maskesi (bit sırası bacak sırasıdır) ve gövdenin kırık yana çökmesi. */
   private broken = 0;
   private sag = 0;
+  private elevation = 0;
+  private swingGain = 1;
 
   constructor(
     scene: Phaser.Scene,
@@ -220,6 +222,15 @@ export class SpiderLegs {
     this.sag = sag;
   }
 
+  /**
+   * Basılan yüzeyin yüksekliği ve adım tepesinin çarpanı: tırmanışta ayaklar zeminde değil kayanın
+   * üstünde durur (taban yüksekliği) ve basamak çıkar gibi daha yükseğe kalkar.
+   */
+  setClimb(elevation: number, swingGain: number): void {
+    this.elevation = elevation;
+    this.swingGain = swingGain;
+  }
+
   private isBroken(index: number): boolean {
     return (this.broken & (1 << index)) !== 0;
   }
@@ -355,7 +366,7 @@ export class SpiderLegs {
       const reach = Math.hypot(dx, dy);
       const dirX = reach > 1e-3 ? dx / reach : 1;
       const dirY = reach > 1e-3 ? dy / reach : 0;
-      const footHeight = lift * spec.swingPeak;
+      const footHeight = this.elevation + lift * spec.swingPeak * this.swingGain;
       const tucked = Math.max(reach - gait.swingTuckPx * lift, spec.femur * 0.32);
       const sol = solveLeg(tucked, hipHeight, footHeight, spec.femur, spec.tibia, this.solution);
 

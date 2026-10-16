@@ -162,6 +162,45 @@ describe('LeaperView', () => {
     expect(Math.abs(tail.rotation - Math.PI)).toBeLessThan(0.08);
   });
 
+  it('dönüşte kafa gövdeden önce dönüşe bakar; dış bacak yana açılır, iç bacak toplanır', () => {
+    const scene = fakeScene();
+    const view = new LeaperView(
+      scene as unknown as Phaser.Scene,
+      JACKAL,
+      scene.add.container(0, 0) as never,
+    );
+    const list = view.root.list as unknown as Array<{ list?: Array<Record<string, unknown>> }>;
+    const body = list[list.length - 1];
+    const head = body.list!.find(
+      (object) => object.args && (object.args as unknown[])[3] === 'jackal/head',
+    ) as unknown as { rotation: number };
+    const feet = view.root.list.filter(
+      (object) => (object as { args?: unknown[] }).args?.[3] === 'jackal/foot',
+    ) as unknown as Array<{ y: number }>;
+    const run = { speed: JACKAL.leaper.maxSpeed, vx: JACKAL.leaper.maxSpeed };
+    const tick = (omega: number): void =>
+      view.update(
+        frame({
+          hull: 0,
+          turret: 0,
+          treadLeft: 30,
+          treadRight: 30,
+          angularVelocity: omega,
+          ...run,
+        }),
+        16.7,
+      );
+    for (let step = 0; step < 90; step++) tick(0);
+    const straight = feet.map((foot) => foot.y);
+    expect(Math.abs(head.rotation)).toBeLessThan(1e-6);
+    for (let step = 0; step < 90; step++) tick(JACKAL.leaper.maxTurnRate);
+    // Sağa dönüş: kafa nişan gövdeyle hizalıyken bile sağa (artı) bakar.
+    expect(head.rotation).toBeGreaterThan(0.1);
+    // Sol (dış) bacaklar gövdenin kaydığı yöne (eksi y) açılır; iç bacağın kalkışı ayrıca dışa açtığından
+    // yalnız dış yan ölçülür.
+    for (const index of [0, 1]) expect(feet[index].y).toBeLessThan(straight[index] - 0.5);
+  });
+
   it('omuz silahlı sıçrayıcıda kafa silahların üstünde, sırt raylıda altındadır', () => {
     const order = (spec: typeof JACKAL) => {
       const scene = fakeScene();

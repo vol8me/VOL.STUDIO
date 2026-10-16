@@ -58,6 +58,8 @@ export interface LeaperArt {
     readonly kneeShift: number;
     readonly footOut: number;
     readonly lift: number;
+    /** Havadaki ayakta dizin dışa ek kalkışı (dünya birimi): bacak basamak çıkar gibi katlanır. */
+    readonly kneeLift: number;
     readonly leapReach: number;
   };
   /** Silah yuvası: resim boyu ve milin yeri (dikey konum hep ortadır); namlu ucu `pivotX + reach`tir. */
@@ -102,8 +104,9 @@ export const LEAPER_ART: Readonly<Record<LeaperId, LeaperArt>> = {
       splay: 6,
       kneeOut: 4.4,
       kneeShift: 2.4,
-      footOut: 1.8,
-      lift: 0.18,
+      footOut: 3.4,
+      lift: 0.34,
+      kneeLift: 3.2,
       leapReach: 12,
     },
     arm: { width: 23, height: 11, pivotX: 5.6 },
@@ -143,8 +146,9 @@ export const LEAPER_ART: Readonly<Record<LeaperId, LeaperArt>> = {
       splay: 7,
       kneeOut: 5.2,
       kneeShift: 2.8,
-      footOut: 2.2,
-      lift: 0.16,
+      footOut: 4,
+      lift: 0.3,
+      kneeLift: 3.8,
       leapReach: 14,
     },
     arm: { width: 46, height: 11, pivotX: 7 },
@@ -184,8 +188,9 @@ export const LEAPER_ART: Readonly<Record<LeaperId, LeaperArt>> = {
       splay: 12,
       kneeOut: 8,
       kneeShift: 4,
-      footOut: 3.4,
-      lift: 0.12,
+      footOut: 6.2,
+      lift: 0.24,
+      kneeLift: 6,
       leapReach: 20,
     },
     arm: { width: 55, height: 18, pivotX: 10 },
@@ -211,26 +216,31 @@ export const LEAPER_VIEW = {
   /** Sekmenin yayı: ayak basışı gövdeyi çökertir, yay toparlar. */
   weightSpring: { stiffness: 280, damping: 13 } satisfies SpringConfig,
   /** Ağırlık aktarımı: gövdenin yük bindiği ayağa kayması (dünya birimi) ve yatışı (rad). */
-  sway: { px: 1.3, roll: 0.02 },
+  sway: { px: 1.8, roll: 0.045 },
   /** Boşta ayakların oturduğu süre sabiti (ms) ve bu hızın altı boşta sayılır (birim/s). */
   settle: { tauMs: 120, idleSpeed: 12, idleTurn: 0.3 },
   /** Bir bacak çiftinin diğerine fazı ve sol/sağ bacağın sekmedeki küçük gecikmesi (gait çevrimi). */
   bound: { pairOffset: 0.5, sideLag: 0.1 },
   /**
    * Sekmenin gövdeye yansıması: koşuda gövde ileri-geri savrulur (`surge`, dünya birimi) ve her
-   * sekmede iki kez hafifçe yükselir (`bob`, ölçek oranı); ikisi de hızla ölçeklenir.
+   * sekmede iki kez hafifçe yükselir (`bob`, ölçek oranı); `stretch` sekmenin uçuş ve basış anında
+   * gövdeyi boyuna uzatıp toplar (hacim korunur). Hepsi hızla ölçeklenir.
    */
-  stride: { surge: 1.5, bob: 0.032 },
+  stride: { surge: 2.2, bob: 0.05, stretch: 0.035 },
   /**
    * Dönüşün yükü (`turn` = açısal hız / tavan, hızla ağırlaşır): gövde dönüşün dışına kayar (`shift`,
    * dünya birimi) ve ağırlığı arkadan gelir (`twist`, rad; yay aşımı dönüş bitince sallanır); iç
-   * bacaklar daha yüksek kalkar (`lift`) ve sert dönüşte basış tozu artar (`dust`).
+   * bacaklar daha yüksek kalkar (`lift`) ve sert dönüşte basış tozu artar (`dust`). Dış bacaklar
+   * dönüşe karşı yana açılıp basar, iç bacaklar toplanır (`brace`, dünya birimi); kafa gövdeden önce
+   * dönüşe bakar (`lead`: kafa sınırının oranı).
    */
   turn: {
-    shift: 2.6,
-    twist: 0.2,
-    lift: 0.55,
+    shift: 3.4,
+    twist: 0.3,
+    lift: 0.7,
     dust: 2,
+    brace: 2.2,
+    lead: 0.8,
     spring: { stiffness: 150, damping: 9 } satisfies SpringConfig,
   },
   /**

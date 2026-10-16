@@ -111,6 +111,17 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       expect(thorax(first).scale as number).toBeCloseTo(rest, 2);
     });
 
+    it('tırmanış yayı çıkışta hafifçe aşar ve oturur (kalça tepe yapıp geri gelir)', () => {
+      const rig = build(spec);
+      const thorax = (rig.art.list as FakeObject[])[6];
+      let peak = 0;
+      for (let step = 0; step < 120; step++) {
+        rig.view.update(frame({ vx: 80, speed: 80, climb: 1 }), 16);
+        peak = Math.max(peak, thorax.scale as number);
+      }
+      expect(peak).toBeGreaterThan(thorax.scale as number);
+    });
+
     it('çekirdek atılımda büyür; duyargalar dönüşte geride sürüklenir', () => {
       const calm = build(spec);
       const boosted = build(spec);
