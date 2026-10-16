@@ -5,7 +5,7 @@ import { tankTexture } from '@/view/textures';
 import { VehicleViews } from '@/view/VehicleViews';
 import { SpiderView } from '@/view/SpiderView';
 import { TankView } from '@/view/TankView';
-import { fakeScene, lastCall } from '../support/fakeScene';
+import { fakeScene, lastCall, frameKey } from '../support/fakeScene';
 
 const striker = (id: number) => ({ id, spec: STRIKER });
 
@@ -44,7 +44,7 @@ describe('VehicleViews', () => {
       { id: 2, spec: BULWARK },
       { id: 3, spec: DART },
     ]);
-    const used = (key: string) => scene.created.filter((object) => object.args[2] === key).length;
+    const used = (key: string) => scene.created.filter((object) => frameKey(object) === key).length;
     expect(used(tankTexture('striker', 'hull'))).toBe(1);
     expect(used(tankTexture('bulwark', 'hull'))).toBe(1);
     expect(used(tankTexture('dart', 'hull'))).toBe(1);

@@ -134,6 +134,26 @@ geçersiz desen reddedildi. Motorun fiziksel hissi insan doğrulaması ister.
 Samsung bu 600 sn'lik ölçümde erişilebilir değildi; sonraki turda 90 sn'lik boş dünya ölçümü yukarıdadır, uzun oturum ve çoklu tank Samsung'da ölçülmedi. Kontrol ve titreşim hissiyatı gerçek insan kabulü olarak ayrı kalır;
 ses yayını teknik QA, runtime decode/çıkış ise hedef cihaz doğrulamasıdır.
 
+### Dünya sahnesi: toplu çizim boşaltması ve ışık katmanı (2026-10-16)
+
+`vol-test` `?lab=1&start=world` dünyası (`multitank`, 7 araç, Arachnid; AgentLab ile sürekli hareket ve ateş),
+debug APK, WebView CDP + `dumpsys gfxinfo` (8 sn pencere, kare/8). Lenovo TB350FU'da kare süresini çizim
+çağrısı sayısı değil WebGL toplu çizim boşaltması (`bufferSubData`, ~1,2 ms) belirledi; en büyük tetikleyici araç
+kapsayıcılarının içindeki ADD görüntülerdi (hepsi gizlenince 26 → 73 FPS). Işık görüntüleri ortak ADD katmanına
+taşındı ([DESIGN](../games/vol-test/DESIGN.md) araç dokuları bölümü).
+
+| Cihaz           | Önce (kare/sn, p50)     | Sonra (kare/sn, p50) | Canvas (sonra) |
+| --------------- | ----------------------- | -------------------- | -------------- |
+| Lenovo TB350FU  | 26 (73 ms)              | 67 (15 ms)           | 2000×1199      |
+| Samsung (60 Hz) | ölçülmedi (aynı yöntem) | 55 (12 ms)           | 1664×768       |
+
+Yakınlaştırma (kamera `setZoom`, sonra APK): Lenovo 0,55×: 53, 1×: 58, 1,5×: 63, 1,9×: 61 kare/sn; Samsung 0,55×:
+53, 1×: 54, 1,5×: 55, 1,9×: 56. Önce satırındaki Lenovo canvas'ı uyarlanabilir çözünürlük ölçeği yüzünden 1000×599'du;
+sonra ölçek 1'e çıktığı için iki katı piksele rağmen kare hızı 2,5 kat yükseldi. Bu tek commit'in öncesi/sonrası
+karşılaştırması değildir: aynı koşuda yanında doku atlası taşıması (çizim çağrısı ~480 → ~55) da vardır; yalnız ADD
+gizleme deneyi (26 → 73) ışık katmanının payını ayırır. Düşük kalite profili, Steam Deck ve Samsung'un "önce" değeri
+bu turda ölçülmedi.
+
 ### Dikey ve yatay native kare ölçümü (2026-10-08)
 
 Güncel çalışma ağacından üretilen debug APK (`vol-test`; yeni dakika haritası ve yükleme ekranı dahil), iki cihaz × iki yön,

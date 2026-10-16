@@ -4,7 +4,7 @@ import type { TankId, VehicleSpec } from '@/config/vehicles';
 import { WEATHER_VIEW } from '@/config/weatherView';
 import type { TankFrame } from '../VehicleView';
 import { TreadRig } from '../TreadRig';
-import { TEXTURE_SCALE, tankTexture } from '../textures';
+import { tankTexture, TEXTURE_SCALE, VEHICLE_ATLAS } from '../textures';
 import type { WeatherRect } from './WeatherParticles';
 import type { WeatherSource } from './SurfaceLayer';
 
@@ -91,9 +91,11 @@ export class VehicleReflectionPool {
     const scene = this.scene;
     const art = TANK_ART[spec.id];
     const treads = new TreadRig(scene, spec);
-    const hull = scene.add.image(0, 0, tankTexture(spec.id, 'hull')).setScale(1 / TEXTURE_SCALE);
+    const hull = scene.add
+      .image(0, 0, VEHICLE_ATLAS, tankTexture(spec.id, 'hull'))
+      .setScale(1 / TEXTURE_SCALE);
     const turret = scene.add
-      .image(0, 0, tankTexture(spec.id, 'turret'))
+      .image(0, 0, VEHICLE_ATLAS, tankTexture(spec.id, 'turret'))
       .setOrigin(art.turret.pivotX / art.turret.width, 0.5)
       .setScale(1 / TEXTURE_SCALE);
     for (const part of [hull, turret, ...treads.parts]) {

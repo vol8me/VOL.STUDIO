@@ -530,6 +530,22 @@ Bütün örümcek ve süzülen araç parçaları açılışta TEK doku atlasına
 ya da kara çiziliyordu) ve büyük SVG'ler GL'ye doğrudan yüklenince parça parça rasterleniyordu; tek atlas
 ikisini de önler ve araçlar aynı dokuyu paylaşır.
 
+Atlas efekt dokularını (iz, kıvılcım, patlama, kalkan, enkaz kıymığı) ve tank parçalarını da taşır;
+kare adı eski doku anahtarıdır (`TEXTURE.spark` → `vehicle-atlas` karesi `fx-spark`) ve iz yaması çizilirken
+paletin adım sayısına göre alt kareler (`treadFrame`) seçilir. Ölçüm (Lenovo TB350FU, Mali-G57, WebGL1,
+`multitank`, 7 araç): bir karedeki çizim çağrısı ~480'den ~55'e indi, ama kare hızı yükselmedi; asıl maliyet
+çizim çağrısı değil **toplu çizim boşaltmasıdır** (`bufferSubData`, bu GPU'da tanesi ~1,2 ms) ve onu en çok
+**harmanlama kipi değişimi** (ADD↔NORMAL) tetikler.
+
+Bu yüzden ışık görüntüleri (itici parlaması, duyarga uçları, top ısınma ışığı) araç kapsayıcısında değil ortak
+ADD katmanında (`VehicleViews.lighting`) çizilir: kapsayıcıdaki tek bir ADD çocuğu her araçta iki boşaltma
+demekti (20 araç kapsayıcısı → 40 boşaltma, 22 FPS; çocuklar gizlenince 73 FPS). Görünüm kodu ışığı yine
+kapsayıcının yerel uzayında sürer (`addGlowPose` sahneye çizilmeyen bir poz tutucusu verir); `GlowMirror` her
+çizimden önce (`PRE_RENDER`) tutucuyu ata kapsayıcının dünya dönüşümüyle ortak katmandaki gerçek görüntüye
+taşır. Atalardan biri gizliyse, soluksa (batma) ya da yanmışsa (`isCharred`) ışık da gizlenir. Yeni bir ADD
+görüntüsü araç kapsayıcısına doğrudan konmaz; tek bir kalkan gibi tek örnekli, kendi kapsayıcısında toplu
+katmanlar bunun dışındadır.
+
 ## Sürüş ve süspansiyon
 
 ### Parça hasarı

@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { TANK_ART, treadView, type TreadView } from '@/config/tankView';
 import type { TankSpec } from '@/config/vehicles';
-import { TEXTURE, TEXTURE_SCALE, treadBandTexture } from './textures';
+import { TEXTURE, TEXTURE_SCALE, treadBandTexture, VEHICLE_ATLAS } from './textures';
 import { treadFrame } from './TreadTexture';
 
 const INV = 1 / TEXTURE_SCALE;
@@ -33,7 +33,7 @@ export class TreadRig {
     this.ends = [-1, 1].flatMap((side) =>
       [-1, 1].map((end) =>
         scene.add
-          .image((end * view.width) / 2, side * view.offset, TEXTURE.treadEnd)
+          .image((end * view.width) / 2, side * view.offset, VEHICLE_ATLAS, TEXTURE.treadEnd)
           .setScale(INV * (view.height / TREAD_END_TEXTURE_DIAMETER))
           .setTint(tint),
       ),
@@ -45,7 +45,7 @@ export class TreadRig {
         .setTint(tint);
     const bases = [-1, 1].map((side) =>
       scene.add
-        .image(0, side * view.offset, TEXTURE.treadBase)
+        .image(0, side * view.offset, VEHICLE_ATLAS, TEXTURE.treadBase)
         .setDisplaySize(view.width, view.height),
     );
     this.bands = [band(-1), band(1)];

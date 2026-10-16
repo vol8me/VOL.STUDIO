@@ -15,6 +15,7 @@ function build(width = 1280, height = 800) {
     add: fake.add,
     cameras: { main: camera },
     textures: { exists: () => true },
+    events: fake.events,
     game: { registry: { get: () => undefined } },
   } as unknown as Phaser.Scene;
   const showroom = new Showroom(scene, STRIKER);

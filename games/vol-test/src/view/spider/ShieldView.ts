@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { clamp01 } from '@volstudio/core';
 import { Spring1D } from '@volstudio/core/math';
 import { SPIDER_ART, type SpiderShield } from '@/config/spiders';
-import { TEXTURE } from '../textures';
+import { TEXTURE, VEHICLE_ATLAS } from '../textures';
 import { SHIELD_TEXTURE, SHIELD_TEXTURE_SIZE } from './shieldTextures';
 
 const TAU = Math.PI * 2;
@@ -61,7 +61,7 @@ export class ShieldView {
   ) {
     if (!(durationMs > 0)) throw new RangeError('Kalkan süresi pozitif olmalı');
     const add = (key: string, tint: number): Phaser.GameObjects.Image =>
-      scene.add.image(0, 0, key).setBlendMode(Phaser.BlendModes.ADD).setTint(tint);
+      scene.add.image(0, 0, VEHICLE_ATLAS, key).setBlendMode(Phaser.BlendModes.ADD).setTint(tint);
     this.dome = add(SHIELD_TEXTURE.dome, look.tint);
     this.outer = add(SHIELD_TEXTURE.mesh, look.tint);
     this.inner = add(SHIELD_TEXTURE.mesh, look.rim);

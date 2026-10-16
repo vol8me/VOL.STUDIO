@@ -11,6 +11,11 @@ export type FakeObject = Record<string, unknown> & {
   readonly args: unknown[];
 };
 
+/** Görüntünün mantıksal doku adı: ortak atlasta kare adı, başka dokuda anahtarın kendisi. */
+export function frameKey(object: { readonly args: unknown[] }): unknown {
+  return object.args[2] === 'vehicle-atlas' ? object.args[3] : object.args[2];
+}
+
 export function fakeObject(kind: string, args: unknown[] = []): FakeObject {
   const calls: Array<[string, unknown[]]> = [];
   const state: Record<string, unknown> = { kind, args, calls, visible: true, emitting: false };
@@ -18,7 +23,7 @@ export function fakeObject(kind: string, args: unknown[] = []): FakeObject {
   // doku ve dünya dönüşümü taşır. Diğer alanlar tanımsız kalır.
   state.list = kind === 'container' ? (args[2] ?? []) : undefined;
   state.texture = kind === 'image' ? { key: args[2] } : undefined;
-  state.frame = undefined;
+  state.frame = kind === 'image' && typeof args[3] === 'string' ? { name: args[3] } : undefined;
   if (kind === 'text') {
     // Gerçek Text ölçüsü yazıdan gelir; sahte: karakter başına 7 px, 14 px yükseklik.
     state.width = (typeof args[2] === 'string' ? args[2].length : 0) * 7;
@@ -73,6 +78,7 @@ export interface FakeScene {
     exists: (key: string) => boolean;
     addCanvas: ReturnType<typeof vi.fn>;
     addSpriteSheet: ReturnType<typeof vi.fn>;
+    remove: ReturnType<typeof vi.fn>;
     get: (key: string) => { getSourceImage: () => HTMLCanvasElement };
   };
   readonly load: {
@@ -80,6 +86,7 @@ export interface FakeScene {
     image: ReturnType<typeof vi.fn>;
     on: ReturnType<typeof vi.fn>;
   };
+  readonly events: { on: ReturnType<typeof vi.fn>; off: ReturnType<typeof vi.fn> };
 }
 
 export function fakeScene(): FakeScene {
@@ -121,8 +128,10 @@ export function fakeScene(): FakeScene {
         };
       }),
       addSpriteSheet: vi.fn((key: string) => textureKeys.add(key)),
+      remove: vi.fn((key: string) => textureKeys.delete(key)),
       get: () => ({ getSourceImage: () => document.createElement('canvas') }),
     },
     load: { svg: vi.fn(), image: vi.fn(), on: vi.fn() },
+    events: { on: vi.fn(), off: vi.fn() },
   };
 }

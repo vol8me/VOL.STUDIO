@@ -4,7 +4,7 @@ import { Spring1D } from '@volstudio/core/math';
 import { LIGHT, TANK_SHADOW_HEIGHT } from '@/config/light';
 import { TANK_ART, type TankArt } from '@/config/tankView';
 import type { TankSpec } from '@/config/vehicles';
-import { TEXTURE_SCALE, tankTexture } from './textures';
+import { tankTexture, TEXTURE_SCALE, VEHICLE_ATLAS } from './textures';
 import { TreadRig } from './TreadRig';
 import { TankLights } from './TankLights';
 import type { TankFrame, VehicleView } from './VehicleView';
@@ -57,17 +57,17 @@ export class TankView implements VehicleView {
 
     this.treads = new TreadRig(scene, spec);
 
-    const hull = scene.add.image(0, 0, tankTexture(spec.id, 'hull')).setScale(INV);
+    const hull = scene.add.image(0, 0, VEHICLE_ATLAS, tankTexture(spec.id, 'hull')).setScale(INV);
     const feeler = art.feeler;
     this.feelers = [-1, 1].map((side) =>
       scene.add
-        .image(feeler.anchorX, side * feeler.anchorY, tankTexture(spec.id, 'feeler'))
+        .image(feeler.anchorX, side * feeler.anchorY, VEHICLE_ATLAS, tankTexture(spec.id, 'feeler'))
         .setOrigin(1 / feeler.width, 0.5)
         .setScale(INV)
         .setRotation(Math.PI - side * feeler.rest),
     );
     this.turret = scene.add
-      .image(0, 0, tankTexture(spec.id, 'turret'))
+      .image(0, 0, VEHICLE_ATLAS, tankTexture(spec.id, 'turret'))
       .setOrigin(art.turret.pivotX / art.turret.width, 0.5)
       .setScale(INV);
     this.turretRig = scene.add.container(0, 0, [this.turret]);

@@ -8,12 +8,13 @@ import { Projectiles } from '@/sim/combat/Projectiles';
 import { ARACHNID, STRIKER } from '@/config/vehicles';
 import { EffectsView, hash01, type VehicleFxFrame } from '@/view/EffectsView';
 import { TEXTURE } from '@/view/textures';
-import { fakeScene, lastCall, type FakeObject } from '../support/fakeScene';
+import { fakeScene, lastCall, type FakeObject, frameKey } from '../support/fakeScene';
 
 function build(profile = EFFECT_LEVELS.high) {
   const scene = fakeScene();
   const view = new EffectsView(scene as unknown as Phaser.Scene, profile);
-  const byTexture = (key: string) => () => scene.created.filter((object) => object.args[2] === key);
+  const byTexture = (key: string) => () =>
+    scene.created.filter((object) => frameKey(object) === key);
   const particles = () => scene.created.filter((object) => object.kind === 'particles');
   const graphics = () => scene.created.filter((object) => object.kind === 'graphics');
   const [tracers] = graphics();
@@ -403,7 +404,11 @@ function debrisOf(scene: ReturnType<typeof fakeScene>) {
     (object) => object.kind === 'image' && object.args[2] === '__DEFAULT',
   );
   const chunks = images.filter((_, index) => index % 2 === 0);
-  const textures = chunks.map((chunk) => lastCall(chunk, 'setTexture')?.[0]);
+  // Ortak atlasta görüntü `setTexture(atlas, kare)` alır: mantıksal doku kare adıdır.
+  const textures = chunks.map((chunk) => {
+    const call = lastCall(chunk, 'setTexture');
+    return call?.[1] ?? call?.[0];
+  });
   return { chunks, textures };
 }
 
@@ -621,7 +626,7 @@ describe('EffectsView: iz disiplini', () => {
 
 describe('EffectsView: ayak izi', () => {
   const feet = (scene: ReturnType<typeof fakeScene>) =>
-    scene.created.filter((object) => object.args[2] === TEXTURE.footPrint);
+    scene.created.filter((object) => frameKey(object) === TEXTURE.footPrint);
 
   it('basan pençe boyuna ölçekli küçük bir delik basar', () => {
     const { view, scene } = build();

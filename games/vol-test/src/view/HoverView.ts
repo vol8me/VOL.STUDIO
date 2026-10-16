@@ -9,7 +9,8 @@ import { TRACK_LEFT, TRACK_RIGHT } from '@/sim/chassis/parts';
 import { mountPose, muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { CorePulse } from './CorePulse';
 import { Feelers } from './Feelers';
-import { TEXTURE, TEXTURE_SCALE, addHoverImage } from './textures';
+import { addGlowPose, GlowMirror } from './glow';
+import { addHoverImage, TEXTURE, TEXTURE_SCALE, VEHICLE_ATLAS } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
 import { WATER_VIEW } from '@/config/waterView';
 import { setCharred, sinkRoot } from './charring';
@@ -38,7 +39,9 @@ export class HoverView implements VehicleView {
   private readonly turret: Phaser.GameObjects.Image;
   private readonly pods: Phaser.GameObjects.Image[];
   private readonly fans: Phaser.GameObjects.Image[];
+  /** İtici parlamasının yerel poz tutucuları ve ortak katmandaki çizicileri. */
   private readonly nozzles: Phaser.GameObjects.Image[];
+  private readonly glows: GlowMirror[];
   /** Her yuvanın ağız parlaması (çok namlulu araçta yuva başına bir tane) ve kalan süresi. */
   private readonly flashes: Phaser.GameObjects.Image[];
   private readonly flashMs: number[];
@@ -84,11 +87,9 @@ export class HoverView implements VehicleView {
       addHoverImage(scene, spec.id, 'fan', art.pod.x + art.fan.x, side * offset).setScale(INV, INV),
     );
     this.nozzles = [-1, 1].map((side) =>
-      scene.add
-        .image(art.nozzle.x, side * offset, TEXTURE.blast)
+      addGlowPose(scene, art.nozzle.x, side * offset, TEXTURE.blast)
         .setScale((art.nozzle.scale * 24) / GLOW_TEXTURE_PX)
         .setTint(art.glow)
-        .setBlendMode(Phaser.BlendModes.ADD)
         .setAlpha(0.3),
     );
 
@@ -119,8 +120,11 @@ export class HoverView implements VehicleView {
       ...this.guns.map((g) => g.image),
       this.turretRig,
     ]);
-    this.root = scene.add.container(0, 0, [...this.pods, ...this.fans, ...this.nozzles, this.body]);
+    this.root = scene.add.container(0, 0, [...this.pods, ...this.fans, this.body]);
     this.root.setDepth(HOVER_VIEW.depth);
+    // Işık görüntüleri (itici parlaması, duyarga uçları) kapsayıcıda değil ortak ışık katmanında çizilir.
+    this.feelers.attach(lighting, this.body);
+    this.glows = this.nozzles.map((nozzle) => new GlowMirror(scene, lighting, this.root, nozzle));
     this.shadowSource = poseSourceOf([
       ...this.pods,
       ...this.feelers.parts,
@@ -131,7 +135,7 @@ export class HoverView implements VehicleView {
 
     this.flashes = spec.armament.mounts.map(() =>
       scene.add
-        .image(0, 0, TEXTURE.flash)
+        .image(0, 0, VEHICLE_ATLAS, TEXTURE.flash)
         .setTint(SHOT_LOOK[spec.armament.weapon.style].glow)
         .setOrigin(0, 0.5)
         .setScale(INV * art.flashScale)
@@ -140,10 +144,14 @@ export class HoverView implements VehicleView {
     this.flashMs = this.flashes.map(() => 0);
     for (const flash of this.flashes) lighting.add(flash);
     this.dust = scene.add
-      .particles(0, 0, TEXTURE.spark, HOVER_VIEW.dust.emitter)
+      .particles(0, 0, VEHICLE_ATLAS, { ...HOVER_VIEW.dust.emitter, frame: TEXTURE.spark })
       .setDepth(HOVER_VIEW.dust.depth);
     this.glow = scene.add
-      .particles(0, 0, TEXTURE.spark, { ...HOVER_VIEW.glow.emitter, tint: art.glow })
+      .particles(0, 0, VEHICLE_ATLAS, {
+        ...HOVER_VIEW.glow.emitter,
+        tint: art.glow,
+        frame: TEXTURE.spark,
+      })
       .setDepth(HOVER_VIEW.glow.depth)
       .setBlendMode(Phaser.BlendModes.ADD);
   }
@@ -262,6 +270,7 @@ export class HoverView implements VehicleView {
     for (const flash of this.flashes) flash.destroy();
     this.core.destroy();
     this.feelers.destroy();
+    for (const glow of this.glows) glow.destroy();
     this.dust.destroy();
     this.glow.destroy();
     this.root.destroy();

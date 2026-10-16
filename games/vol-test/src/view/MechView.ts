@@ -11,7 +11,7 @@ import { mountPose, muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { setCharred, sinkRoot, submergeRoot } from './charring';
 import { CorePulse } from './CorePulse';
 import type { FootPrintSink } from './SpiderView';
-import { TEXTURE, TEXTURE_SCALE, addMechImage } from './textures';
+import { addMechImage, TEXTURE, TEXTURE_SCALE, VEHICLE_ATLAS } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
 
 const INV = 1 / TEXTURE_SCALE;
@@ -129,7 +129,7 @@ export class MechView implements VehicleView {
         .setOrigin(art.arm.pivotX / art.arm.width, 0.5)
         .setScale(INV),
       flash: scene.add
-        .image(0, 0, TEXTURE.flash)
+        .image(0, 0, VEHICLE_ATLAS, TEXTURE.flash)
         .setTint(art.glow)
         .setOrigin(0, 0.5)
         .setScale(INV * art.flashScale)
@@ -160,7 +160,7 @@ export class MechView implements VehicleView {
       ...this.arms.map((a) => a.image),
     ]);
     this.dust = scene.add
-      .particles(0, 0, TEXTURE.spark, MECH_VIEW.dust.emitter)
+      .particles(0, 0, VEHICLE_ATLAS, { ...MECH_VIEW.dust.emitter, frame: TEXTURE.spark })
       .setDepth(MECH_VIEW.dust.depth);
   }
 

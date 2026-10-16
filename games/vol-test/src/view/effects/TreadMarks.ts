@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
-import { TEXTURE, treadFrame } from '../textures';
+import { TEXTURE, treadFrame, VEHICLE_ATLAS } from '../textures';
 import { DecalPool, type DecalRef } from './DecalPool';
 
 /** Bir paletin temas izi: son örnek noktası, yer yolu ve devam eden bandın başlangıcı. */
@@ -30,7 +30,8 @@ export class TreadMarks {
   constructor(scene: Phaser.Scene, capacityScale = 1) {
     const marks = FX.marks;
     this.decals = new DecalPool(scene, {
-      texture: TEXTURE.treadPrint,
+      texture: VEHICLE_ATLAS,
+      frame: TEXTURE.treadPrint,
       tint: PALETTE.treadMark,
       capacity: Math.max(1, Math.round(marks.capacity * capacityScale)),
       depth: marks.depth,

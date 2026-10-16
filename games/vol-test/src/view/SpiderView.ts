@@ -14,7 +14,7 @@ import { SpiderCannon } from './spider/SpiderCannon';
 import { SpiderLegs, lightLocal, type LightLocal } from './spider/SpiderLegs';
 import { SpiderMotion, type SpiderPose } from './spider/SpiderMotion';
 import { FX } from '@/config/fx';
-import { TEXTURE, TEXTURE_SCALE, addSpiderImage } from './textures';
+import { addSpiderImage, TEXTURE, TEXTURE_SCALE, VEHICLE_ATLAS } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
 import { ROCK_VIEW } from '@/config/rockView';
 import { WATER_VIEW } from '@/config/waterView';
@@ -134,6 +134,7 @@ export class SpiderView implements VehicleView {
       this.core.image,
     ]);
 
+    this.feelers.attach(lighting, this.art);
     this.cannons = this.spec.armament.mounts.map(
       () => new SpiderCannon(scene, look, lighting, this.shadowRoot),
     );
@@ -145,7 +146,7 @@ export class SpiderView implements VehicleView {
     if (look.leap) this.leap = new LeapTracker(abilityMs);
     if (look.shield) this.shield = new ShieldView(scene, look.shield, abilityMs);
     this.dust = scene.add
-      .particles(0, 0, TEXTURE.spark, look.dust.emitter)
+      .particles(0, 0, VEHICLE_ATLAS, { ...look.dust.emitter, frame: TEXTURE.spark })
       .setDepth(look.dust.depth);
   }
 

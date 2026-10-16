@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
-import { TEXTURE } from '../textures';
+import { addAtlasParticles, TEXTURE } from '../textures';
 
 type Emitter = Phaser.GameObjects.Particles.ParticleEmitter;
 
@@ -37,8 +37,8 @@ export class VehicleTrail {
   private readonly dust: Emitter;
 
   constructor(scene: Phaser.Scene) {
-    this.exhaust = scene.add.particles(0, 0, TEXTURE.spark, EXHAUST).setDepth(9);
-    this.dust = scene.add.particles(0, 0, TEXTURE.spark, DUST).setDepth(7);
+    this.exhaust = addAtlasParticles(scene, TEXTURE.spark, EXHAUST).setDepth(9);
+    this.dust = addAtlasParticles(scene, TEXTURE.spark, DUST).setDepth(7);
   }
 
   follow(

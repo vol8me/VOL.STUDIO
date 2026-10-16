@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { FX } from '@/config/fx';
 import { TreadMarks } from '@/view/effects/TreadMarks';
 import { TEXTURE, treadFrame } from '@/view/textures';
-import { fakeScene, type FakeObject } from '../../support/fakeScene';
+import { fakeScene, type FakeObject, frameKey } from '../../support/fakeScene';
 
 const STEP = FX.marks.spacing;
 const OFFSET = 15;
@@ -13,7 +13,7 @@ function build(scale = 1) {
   const marks = new TreadMarks(scene as unknown as Phaser.Scene, scale);
   const images = (): FakeObject[] =>
     scene.created.filter(
-      (object) => object.kind === 'image' && object.args[2] === TEXTURE.treadPrint,
+      (object) => object.kind === 'image' && frameKey(object) === TEXTURE.treadPrint,
     );
   return { marks, images };
 }
@@ -44,7 +44,7 @@ function leftBands(images: FakeObject[]): Band[] {
         from: Number(image.x) - length / 2,
         to: Number(image.x) + length / 2,
         length,
-        steps: Number(frame.replace('steps-', '')),
+        steps: Number(frame.replace(`${TEXTURE.treadPrint}/steps-`, '')),
       };
     })
     .sort((a, b) => a.from - b.from);

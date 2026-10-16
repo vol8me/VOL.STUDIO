@@ -36,7 +36,8 @@ describe('Feelers', () => {
     expect(stalks).toHaveLength(2);
     expect(tips).toHaveLength(2);
     expect(view.parts.every((part, index) => (part as unknown) === stalks[index])).toBe(true);
-    expect(view.objects).toHaveLength(4);
+    // Işık uçları kapsayıcıya girmez: yerel poz tutucusudur, çizimi ortak ışık katmanındadır.
+    expect(view.objects).toHaveLength(2);
   });
 
   it('bağlantı parçanın yerel uzayındadır: konum, dönüş ve büyüklük parçayı izler', () => {

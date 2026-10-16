@@ -12,6 +12,12 @@ interface Remembered {
 }
 
 const remembered = new WeakMap<object, Remembered>();
+const charredRoots = new WeakSet<object>();
+
+/** Kök (ya da kökün atası) yanmış mı: kapsayıcı dışında çizilen ışıklar (`GlowMirror`) buna göre söner. */
+export function isCharred(node: object): boolean {
+  return charredRoots.has(node);
+}
 
 function walk(node: Phaser.GameObjects.GameObject, visit: (object: Tintable) => void): void {
   const container = node as Phaser.GameObjects.Container;
@@ -37,6 +43,8 @@ type Tintable = Phaser.GameObjects.GameObject &
  * Gölge katmanı kökün dışındadır ve bu işlevden etkilenmez.
  */
 export function setCharred(root: Phaser.GameObjects.Container, on: boolean): void {
+  if (on) charredRoots.add(root);
+  else charredRoots.delete(root);
   walk(root, (object) => {
     if (typeof object.setTint !== 'function' || typeof object.clearTint !== 'function') return;
     const glow = object.blendMode === Phaser.BlendModes.ADD;

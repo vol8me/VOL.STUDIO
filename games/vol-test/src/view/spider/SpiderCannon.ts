@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { Spring1D } from '@volstudio/core/math';
 import { SPIDER_ART, type SpiderLook } from '@/config/spiders';
-import { TEXTURE, TEXTURE_SCALE, addSpiderImage } from '../textures';
+import { addGlowPose, GlowMirror } from '../glow';
+import { addSpiderImage, TEXTURE, TEXTURE_SCALE, VEHICLE_ATLAS } from '../textures';
 
 const INV = 1 / TEXTURE_SCALE;
 /** Işık dokusu (`TEXTURE.blast`) 64 px'tir. */
@@ -17,7 +18,9 @@ export class SpiderCannon {
   readonly root: Phaser.GameObjects.Container;
   private readonly housing: Phaser.GameObjects.Image;
   private readonly barrels: Phaser.GameObjects.Image;
+  /** Isınma ışığının yerel poz tutucusu; çizimi ortak ışık katmanındaki `coilGlow` yapar. */
   private readonly coil: Phaser.GameObjects.Image;
+  private readonly coilGlow: GlowMirror;
   private readonly housingShadow: Phaser.GameObjects.Image;
   private readonly barrelShadow: Phaser.GameObjects.Image;
   private readonly flash: Phaser.GameObjects.Image;
@@ -44,13 +47,12 @@ export class SpiderCannon {
 
     this.barrels = place(addSpiderImage(scene, look.id, 'cannon-barrels'), barrelBox);
     this.housing = place(addSpiderImage(scene, look.id, 'cannon-housing'), housingBox);
-    this.coil = scene.add
-      .image(cannon.coilX, 0, TEXTURE.blast)
+    this.coil = addGlowPose(scene, cannon.coilX, 0, TEXTURE.blast)
       .setScale(cannon.coilGlowPx / GLOW_TEXTURE_PX)
       .setTint(cannon.glow)
-      .setBlendMode(Phaser.BlendModes.ADD)
       .setAlpha(0);
-    this.root = scene.add.container(0, 0, [this.barrels, this.housing, this.coil]);
+    this.root = scene.add.container(0, 0, [this.barrels, this.housing]);
+    this.coilGlow = new GlowMirror(scene, lighting, this.root, this.coil);
 
     const dark = (image: Phaser.GameObjects.Image): Phaser.GameObjects.Image =>
       image.setTint(0x000000).setAlpha(SPIDER_ART.shadowAlpha);
@@ -59,7 +61,7 @@ export class SpiderCannon {
     shadowLayer.add([this.barrelShadow, this.housingShadow]);
 
     this.flash = scene.add
-      .image(0, 0, TEXTURE.blast)
+      .image(0, 0, VEHICLE_ATLAS, TEXTURE.blast)
       .setTint(cannon.glow)
       .setOrigin(0.25, 0.5)
       .setVisible(false);
@@ -149,6 +151,7 @@ export class SpiderCannon {
 
   destroy(): void {
     this.flash.destroy();
+    this.coilGlow.destroy();
     this.housingShadow.destroy();
     this.barrelShadow.destroy();
     this.root.destroy();

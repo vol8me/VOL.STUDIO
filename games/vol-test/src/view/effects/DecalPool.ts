@@ -3,6 +3,8 @@ import { RingBuffer } from '@volstudio/core/collections';
 
 export interface DecalPoolConfig {
   readonly texture: string;
+  /** Atlas karesi: çıkartma ortak atlasın bir karesidir (`place` karesiz çağrılınca bu kare kalır). */
+  readonly frame?: string;
   readonly tint: number;
   readonly capacity: number;
   readonly depth: number;
@@ -64,7 +66,7 @@ export class DecalPool {
     if (this.pool.length < config.capacity) {
       decal = {
         image: this.scene.add
-          .image(x, y, config.texture)
+          .image(x, y, config.texture, config.frame)
           .setTint(config.tint)
           .setDepth(config.depth),
         bornMs: this.nowMs,

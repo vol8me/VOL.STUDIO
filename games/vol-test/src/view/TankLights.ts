@@ -5,7 +5,7 @@ import { TANK_ART, TANK_LIGHTS, type TankArt } from '@/config/tankView';
 import type { TankSpec } from '@/config/vehicles';
 import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { CorePulse } from './CorePulse';
-import { TEXTURE, TEXTURE_SCALE } from './textures';
+import { TEXTURE, TEXTURE_SCALE, VEHICLE_ATLAS } from './textures';
 import type { TankFrame } from './VehicleView';
 
 const INV = 1 / TEXTURE_SCALE;
@@ -34,7 +34,7 @@ export class TankLights {
     this.core = new CorePulse(scene, this.art.coreScale, this.art.glow);
     this.bodyPart = this.core.image;
     this.flash = scene.add
-      .image(0, 0, TEXTURE.flash)
+      .image(0, 0, VEHICLE_ATLAS, TEXTURE.flash)
       .setTint(SHOT_LOOK[spec.armament.weapon.style].glow)
       .setOrigin(0, 0.5)
       .setScale(INV * this.art.flashScale)

@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
-import { TEXTURE } from '../textures';
+import { addAtlasImage, TEXTURE, VEHICLE_ATLAS } from '../textures';
 import { DecalPool } from './DecalPool';
 
 /** Genişleyerek sönen ışık: parlama ve şok halkası aynı yaşam döngüsünü paylaşır. */
@@ -34,7 +34,8 @@ export class Blasts {
     this.rings = new PulsePool(scene, TEXTURE.ring, PALETTE.blastCore, 12);
     const scorch = FX.blast.scorch;
     this.scorches = new DecalPool(scene, {
-      texture: TEXTURE.scorch,
+      texture: VEHICLE_ATLAS,
+      frame: TEXTURE.scorch,
       tint: PALETTE.scorch,
       capacity: Math.max(1, Math.round(scorch.capacity * decalScale)),
       depth: scorch.depth,
@@ -88,7 +89,7 @@ class PulsePool {
 
   constructor(
     private readonly scene: Phaser.Scene,
-    private readonly texture: string,
+    private readonly frame: string,
     private readonly tint: number,
     private readonly depth: number,
   ) {}
@@ -97,7 +98,7 @@ class PulsePool {
     let pulse: Pulse;
     if (this.pulses.length < LIVE_LIMIT) {
       pulse = {
-        image: this.scene.add.image(x, y, this.texture).setTint(this.tint).setDepth(this.depth),
+        image: addAtlasImage(this.scene, this.frame, x, y).setTint(this.tint).setDepth(this.depth),
         ageMs: 0,
         durationMs,
         from,

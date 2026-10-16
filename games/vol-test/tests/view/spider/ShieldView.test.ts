@@ -5,7 +5,7 @@ import { GOLIATH } from '@/config/vehicles';
 import { SHIELD_TEXTURE } from '@/view/spider/shieldTextures';
 import { ShieldView } from '@/view/spider/ShieldView';
 import { TEXTURE } from '@/view/textures';
-import { fakeScene, lastCall, type FakeObject } from '../../support/fakeScene';
+import { fakeScene, lastCall, type FakeObject, frameKey } from '../../support/fakeScene';
 
 const STEP = 1000 / 60;
 const shield = SPIDER_LOOKS.goliath.shield!;
@@ -15,7 +15,7 @@ function build() {
   const scene = fakeScene();
   const view = new ShieldView(scene as unknown as Phaser.Scene, shield, durationMs);
   const image = (key: string): FakeObject =>
-    scene.created.find((object) => object.kind === 'image' && object.args[2] === key)!;
+    scene.created.find((object) => object.kind === 'image' && frameKey(object) === key)!;
   return {
     scene,
     view,
@@ -116,7 +116,7 @@ describe('ShieldView', () => {
     rig.view.absorb(300, 200);
     rig.view.update(true, STEP, 100, 200);
     const flares = rig.scene.created.filter(
-      (object) => object.kind === 'image' && object.args[2] === TEXTURE.spark && object.visible,
+      (object) => object.kind === 'image' && frameKey(object) === TEXTURE.spark && object.visible,
     );
     expect(flares.length).toBeGreaterThan(0);
     const lit = flares.find((flare) => (flare.x as number) > 50)!;
@@ -165,7 +165,7 @@ describe('ShieldView', () => {
     rig.view.destroy();
     expect(lastCall(rig.root, 'destroy')).toBeDefined();
     const ground = rig.scene.created.filter(
-      (object) => object.kind === 'image' && object.args[2] === TEXTURE.spark,
+      (object) => object.kind === 'image' && frameKey(object) === TEXTURE.spark,
     );
     expect(ground.some((object) => lastCall(object, 'destroy') !== undefined)).toBe(true);
   });

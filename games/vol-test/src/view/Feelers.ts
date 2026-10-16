@@ -1,7 +1,8 @@
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import { Spring1D, type SpringConfig } from '@volstudio/core/math';
 import type { FeelerArt } from '@/config/sensors';
-import { TEXTURE } from './textures';
+import { addGlowPose, GlowMirror } from './glow';
+import { TEXTURE, VEHICLE_ATLAS } from './textures';
 
 /** Duyargaların yayı: Striker'ın duyargasıyla aynıdır (yumuşak ve hafif salınımlı). */
 const SPRING: SpringConfig = { stiffness: 90, damping: 9 };
@@ -24,27 +25,36 @@ export interface FeelerDrive {
  */
 export class Feelers {
   private readonly stalks: Phaser.GameObjects.Image[];
+  /** Işık uçlarının yerel poz tutucuları; çizimi `attach` ile kurulan `GlowMirror` yapar. */
   private readonly tips: Phaser.GameObjects.Image[];
+  private readonly mirrors: GlowMirror[] = [];
   private readonly springs = [new Spring1D(), new Spring1D()];
 
   constructor(
-    scene: Phaser.Scene,
+    private readonly scene: Phaser.Scene,
     private readonly art: FeelerArt,
   ) {
     this.stalks = [-1, 1].map(() =>
       scene.add
-        .image(0, 0, TEXTURE.antenna)
+        .image(0, 0, VEHICLE_ATLAS, TEXTURE.antenna)
         .setOrigin(0, 0.5)
         .setScale(art.length / TEXTURE_PX.length, art.thickness / TEXTURE_PX.thickness)
         .setTint(art.tint),
     );
     this.tips = [-1, 1].map(() =>
-      scene.add
-        .image(0, 0, TEXTURE.spark)
+      addGlowPose(scene, 0, 0, TEXTURE.spark)
         .setScale(art.tipSize / TIP_TEXTURE_PX)
-        .setTint(art.glow)
-        .setBlendMode(Phaser.BlendModes.ADD),
+        .setTint(art.glow),
     );
+  }
+
+  /**
+   * Işık uçlarını ortak ışık katmanına bağlar. `parent` gövdelerin konduğu kapsayıcıdır (uçlar onun
+   * uzayında sürülür). Kapsayıcı duyargalardan sonra kurulduğu için ayrı bir adımdır.
+   */
+  attach(lighting: Phaser.GameObjects.Container, parent: Phaser.GameObjects.Container): void {
+    for (const tip of this.tips)
+      this.mirrors.push(new GlowMirror(this.scene, lighting, parent, tip));
   }
 
   /** Duyargaların gölge veren gövde görüntüleri (ışık uçları dahil değil). */
@@ -52,9 +62,9 @@ export class Feelers {
     return this.stalks;
   }
 
-  /** Kapsayıcıya konacak bütün görüntüler: önce gövdeler, üstlerinde ışık uçları. */
+  /** Kapsayıcıya konacak görüntüler (gövdeler); ışık uçları kapsayıcıya girmez, `attach` çizer. */
   get objects(): readonly Phaser.GameObjects.Image[] {
-    return [...this.stalks, ...this.tips];
+    return this.stalks;
   }
 
   /**
@@ -106,6 +116,9 @@ export class Feelers {
   }
 
   destroy(): void {
-    for (const part of [...this.stalks, ...this.tips]) part.destroy();
+    for (const part of this.stalks) part.destroy();
+    for (const mirror of this.mirrors) mirror.destroy();
+    // Bağlanmamış uçlar (vitrin dışı kurulumlar, testler) tutucuyu kendileri yıkar.
+    if (this.mirrors.length === 0) for (const tip of this.tips) tip.destroy();
   }
 }

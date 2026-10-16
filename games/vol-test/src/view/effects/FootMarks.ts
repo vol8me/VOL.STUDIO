@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
-import { TEXTURE } from '../textures';
+import { TEXTURE, VEHICLE_ATLAS } from '../textures';
 import { DecalPool } from './DecalPool';
 
 /** Bir ayak izinin ölçeksiz kenarı (birim): sivri pençenin deliği, bacaktan büyük görünmeyecek kadar küçüktür. */
@@ -18,7 +18,8 @@ export class FootMarks {
   constructor(scene: Phaser.Scene, capacityScale = 1) {
     const feet = FX.feet;
     this.decals = new DecalPool(scene, {
-      texture: TEXTURE.footPrint,
+      texture: VEHICLE_ATLAS,
+      frame: TEXTURE.footPrint,
       tint: PALETTE.treadMark,
       capacity: Math.max(1, Math.round(feet.capacity * capacityScale)),
       depth: feet.depth,
@@ -26,7 +27,8 @@ export class FootMarks {
       holdShare: feet.holdShare,
     });
     this.boots = new DecalPool(scene, {
-      texture: TEXTURE.bootPrint,
+      texture: VEHICLE_ATLAS,
+      frame: TEXTURE.bootPrint,
       tint: PALETTE.treadMark,
       capacity: Math.max(1, Math.round(feet.bootCapacity * capacityScale)),
       depth: feet.depth,

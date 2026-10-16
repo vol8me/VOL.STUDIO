@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
-import { TEXTURE } from '../textures';
+import { TEXTURE, VEHICLE_ATLAS } from '../textures';
 
 type Emitter = Phaser.GameObjects.Particles.ParticleEmitter;
 type EmitterConfig = Phaser.Types.GameObjects.Particles.ParticleEmitterConfig;
@@ -101,7 +101,11 @@ export class ParticleFx {
   constructor(scene: Phaser.Scene) {
     const make = (definition: { depth: number; config: EmitterConfig }): Emitter =>
       scene.add
-        .particles(0, 0, TEXTURE.spark, { ...definition.config, emitting: false })
+        .particles(0, 0, VEHICLE_ATLAS, {
+          ...definition.config,
+          frame: TEXTURE.spark,
+          emitting: false,
+        })
         .setDepth(definition.depth);
     this.emitters = {
       dust: make(EMITTERS.dust),

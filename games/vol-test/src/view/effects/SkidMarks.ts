@@ -2,7 +2,7 @@ import type Phaser from 'phaser';
 import { clamp } from '@volstudio/core/math/interpolation';
 import { FX } from '@/config/fx';
 import { PALETTE } from '@/config/palette';
-import { TEXTURE } from '../textures';
+import { TEXTURE, VEHICLE_ATLAS } from '../textures';
 import { DecalPool } from './DecalPool';
 
 interface Contact {
@@ -25,7 +25,8 @@ export class SkidMarks {
   constructor(scene: Phaser.Scene, capacityScale = 1) {
     const skid = FX.skid;
     this.decals = new DecalPool(scene, {
-      texture: TEXTURE.skid,
+      texture: VEHICLE_ATLAS,
+      frame: TEXTURE.skid,
       tint: PALETTE.skidMark,
       capacity: Math.max(1, Math.round(skid.capacity * capacityScale)),
       depth: skid.depth,

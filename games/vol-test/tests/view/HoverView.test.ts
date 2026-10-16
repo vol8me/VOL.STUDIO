@@ -9,7 +9,7 @@ import { muzzlePose } from '@/sim/muzzle';
 import { HoverView } from '@/view/HoverView';
 import { TEXTURE, TEXTURE_SCALE, hoverFrame } from '@/view/textures';
 import type { TankFrame } from '@/view/VehicleView';
-import { fakeScene, lastCall, type FakeObject } from '../support/fakeScene';
+import { fakeScene, lastCall, type FakeObject, frameKey } from '../support/fakeScene';
 
 const INV = 1 / TEXTURE_SCALE;
 
@@ -64,7 +64,7 @@ describe('HoverView (manta)', () => {
     const { body, byTexture } = build();
     const list = body.list as FakeObject[];
     const hull = byTexture(hoverFrame('manta', 'hull'))[0];
-    const stalks = list.filter((child) => child.args[2] === TEXTURE.antenna);
+    const stalks = list.filter((child) => frameKey(child) === TEXTURE.antenna);
     expect(stalks).toHaveLength(2);
     for (const stalk of stalks) expect(list.indexOf(stalk)).toBeLessThan(list.indexOf(hull));
   });
@@ -105,7 +105,7 @@ describe('HoverView (manta)', () => {
     // Çekirdek ve duyargalar gövde kapsayıcısındadır: yatış ve nefes onları da taşır; taret üsttedir.
     expect(calm.body.list).toContain(core(calm));
     const stalksOf = (b: ReturnType<typeof build>) =>
-      (b.body.list as FakeObject[]).filter((child) => child.args[2] === TEXTURE.antenna);
+      (b.body.list as FakeObject[]).filter((child) => frameKey(child) === TEXTURE.antenna);
     const stalks = stalksOf(calm);
     expect(stalks).toHaveLength(2);
     expect(stalks.map((stalk) => stalk.y)).toEqual([

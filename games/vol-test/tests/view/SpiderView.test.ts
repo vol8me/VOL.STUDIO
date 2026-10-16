@@ -6,7 +6,7 @@ import { muzzlePose, type MuzzlePose } from '@/sim/muzzle';
 import { SpiderView } from '@/view/SpiderView';
 import { TEXTURE } from '@/view/textures';
 import type { TankFrame } from '@/view/VehicleView';
-import { fakeScene, lastCall, type FakeObject } from '../support/fakeScene';
+import { fakeScene, lastCall, type FakeObject, frameKey } from '../support/fakeScene';
 
 const frame = (overrides: Partial<TankFrame> = {}): TankFrame => ({
   x: 100,
@@ -50,8 +50,8 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
 
     it('bacaklar gövdenin ALTINDA kalır: çizim sırası bacaklar, duyargalar, karın, göğüs, toplar', () => {
       const { art, root } = build(spec);
-      // Duyargalar (iki gövde, iki uç) göğsün altından çıkar: bacak katmanı ile karın arasındadır.
-      const [legLayer, , , , , abdomen, thorax] = art.list as FakeObject[];
+      // Duyargalar (iki gövde; ışık uçları ortak ışık katmanında) göğsün altından çıkar: bacak katmanı ile karın arasındadır.
+      const [legLayer, , , abdomen, thorax] = art.list as FakeObject[];
       expect(legLayer.kind).toBe('container');
       expect(abdomen.args[3]).toBe(`${spec.id}/abdomen`);
       expect(thorax.args[3]).toBe(`${spec.id}/thorax`);
@@ -71,8 +71,8 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
     it('göğsün çekirdeği göğüsten sonra, ön duyargalar göğsün ALTINDA çizilir', () => {
       const { art, view } = build(spec);
       const children = art.list as FakeObject[];
-      const core = children.find((child) => child.args[2] === TEXTURE.core)!;
-      const stalks = children.filter((child) => child.args[2] === TEXTURE.antenna);
+      const core = children.find((child) => frameKey(child) === TEXTURE.core)!;
+      const stalks = children.filter((child) => frameKey(child) === TEXTURE.antenna);
       const thorax = children.find((child) => child.args[3] === `${spec.id}/thorax`)!;
       expect(stalks).toHaveLength(2);
       expect(children.indexOf(core)).toBeGreaterThan(children.indexOf(thorax));
@@ -88,7 +88,7 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
     it('kayaya tırmanırken kalça kalkar ve gövde geriye yaslanır; yumuşak girer, çıkınca düzelir', () => {
       const flat = build(spec);
       const climbing = build(spec);
-      const thorax = (b: ReturnType<typeof build>) => (b.art.list as FakeObject[])[6];
+      const thorax = (b: ReturnType<typeof build>) => (b.art.list as FakeObject[])[4];
       for (let step = 0; step < 30; step++) {
         flat.view.update(frame({ vx: 80, speed: 80 }), 16);
         climbing.view.update(frame({ vx: 80, speed: 80, climb: 1 }), 16);
@@ -113,7 +113,7 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
 
     it('tırmanış yayı çıkışta hafifçe aşar ve oturur (kalça tepe yapıp geri gelir)', () => {
       const rig = build(spec);
-      const thorax = (rig.art.list as FakeObject[])[6];
+      const thorax = (rig.art.list as FakeObject[])[4];
       let peak = 0;
       for (let step = 0; step < 120; step++) {
         rig.view.update(frame({ vx: 80, speed: 80, climb: 1 }), 16);
@@ -128,12 +128,14 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       calm.view.update(frame(), 16);
       boosted.view.update(frame({ boosting: true, speed: spec.walker.maxSpeed }), 16);
       const core = (b: ReturnType<typeof build>) =>
-        (b.art.list as FakeObject[]).find((child) => child.args[2] === TEXTURE.core)!;
+        (b.art.list as FakeObject[]).find((child) => frameKey(child) === TEXTURE.core)!;
       expect(core(boosted).scale as number).toBeGreaterThan(core(calm).scale as number);
 
       const turning = build(spec);
       const stalk = () =>
-        (turning.art.list as FakeObject[]).filter((child) => child.args[2] === TEXTURE.antenna)[1];
+        (turning.art.list as FakeObject[]).filter(
+          (child) => frameKey(child) === TEXTURE.antenna,
+        )[1];
       turning.view.update(frame(), 16);
       const rest = stalk().rotation as number;
       for (let step = 0; step < 20; step++) turning.view.update(frame({ angularVelocity: 3 }), 16);
@@ -142,7 +144,7 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
 
     it('sıçrama: uçuşta gövde yükselip büyür ve zemin gölgesi soluklaşır; inişte her şey yere döner', () => {
       const { view, art, shadowRoot } = build(spec);
-      const thorax = (art.list as FakeObject[])[6];
+      const thorax = (art.list as FakeObject[])[4];
       for (let i = 0; i < 40; i++) view.update(frame({ vx: 150, speed: 150 }), 16);
       const grounded = thorax.scale as number;
       expect(shadowRoot.alpha).toBe(1);
@@ -179,7 +181,7 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
 
     it('dash artık yoktur: sıçramayan hızlı yürüyüş gövdeyi büyütmez, hayalet kopya doğmaz', () => {
       const { scene, view, art } = build(spec);
-      const thorax = (art.list as FakeObject[])[6];
+      const thorax = (art.list as FakeObject[])[4];
       for (let i = 0; i < 60; i++) view.update(frame({ x: 100 + i * 3, vx: 150, speed: 150 }), 16);
       const base = thorax.scale as number;
       for (let i = 0; i < 60; i++)
@@ -285,9 +287,11 @@ describe.each([ARACHNID, WIDOW].map((spec) => [spec.id, spec] as const))(
       const { view, lighting, root } = build(spec);
       view.fire(0);
       view.update(frame({ hull: 0.9, turret: 0.3, pitch: 1.5, roll: -1 }), 0);
+      // Ortak ışık katmanına ağız parlamalarının yanında ışık yansıtıcıları (`GlowMirror`) da girer.
       const flashList = lighting.calls
         .filter(([name]) => name === 'add')
-        .map(([, args]) => args[0] as FakeObject);
+        .map(([, args]) => args[0] as FakeObject)
+        .filter((child) => !child.calls.some(([name]) => name === 'setBlendMode'));
       expect(flashList).toHaveLength(spec.armament.mounts.length);
       const tip: MuzzlePose = { x: 0, y: 0, angle: 0 };
       muzzlePose(
@@ -388,7 +392,7 @@ describe('SpiderView: yetenek görünümü', () => {
       lighting as never,
     );
     const dome = scene.created.find(
-      (object) => object.kind === 'image' && object.args[2] === 'fx-shield-dome',
+      (object) => object.kind === 'image' && frameKey(object) === 'fx-shield-dome',
     );
     return { scene, view, dome };
   };

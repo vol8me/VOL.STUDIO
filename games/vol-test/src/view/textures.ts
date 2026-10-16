@@ -15,7 +15,7 @@ import strikerTurretUrl from '@/assets/vehicles/striker/turret.svg?url';
 import { FX } from '@/config/fx';
 import { tankSpecs, treadView } from '@/config/tankView';
 import { SPIDER_PARTS, type SpiderPartId } from '@/config/spiders';
-import { createShieldTextures } from './spider/shieldTextures';
+import { createShieldTextures, SHIELD_TEXTURE } from './spider/shieldTextures';
 import {
   HOVER_IDS,
   LEAPER_IDS,
@@ -162,6 +162,48 @@ export const VEHICLE_ATLAS = 'vehicle-atlas';
 const ATLAS_GAP = 4;
 const ATLAS_WIDTH = 2048;
 
+/** Atlasa giren çalışma anı efekt dokuları (`createRuntimeTextures` önce bunları çizer, sonra atlasa taşır). */
+const ATLAS_FX_KEYS: readonly string[] = [
+  TEXTURE.antenna,
+  TEXTURE.spark,
+  TEXTURE.treadBase,
+  TEXTURE.skid,
+  TEXTURE.treadPrint,
+  TEXTURE.footPrint,
+  TEXTURE.bootPrint,
+  TEXTURE.scorch,
+  TEXTURE.ring,
+  TEXTURE.blast,
+  TEXTURE.core,
+  TEXTURE.flash,
+  TEXTURE.treadEnd,
+  shardTexture(0),
+  shardTexture(1),
+  shardTexture(2),
+  SHIELD_TEXTURE.dome,
+  SHIELD_TEXTURE.mesh,
+  SHIELD_TEXTURE.rim,
+];
+
+/** Atlas karesiyle bir görüntü nesnesi yaratır; efekt, parça ve araç görüntüleri aynı dokuyu paylaşır. */
+export function addAtlasImage(
+  scene: Phaser.Scene,
+  frame: string,
+  x = 0,
+  y = 0,
+): Phaser.GameObjects.Image {
+  return scene.add.image(x, y, VEHICLE_ATLAS, frame);
+}
+
+/** Atlas karesinden parçacık yayıcısı yaratır (`frame` yapılandırmaya eklenir). */
+export function addAtlasParticles(
+  scene: Phaser.Scene,
+  frame: string,
+  config: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig,
+): Phaser.GameObjects.Particles.ParticleEmitter {
+  return scene.add.particles(0, 0, VEHICLE_ATLAS, { ...config, frame });
+}
+
 /** Örümcek parçasının atlas karesiyle bir görüntü nesnesi yaratır. */
 export function addSpiderImage(
   scene: Phaser.Scene,
@@ -196,10 +238,12 @@ export function addHoverImage(
 }
 
 /**
- * Örümcek ve süzülen araç parçalarını TEK atlasa çizer ve ayrı dokuları söker. Neden: bir karede 14+
- * ayrı doku GL toplu çizim sınırında yanlış dokuyla karışıp parçaları kesiyordu (süzülen aracın
- * pervaneleri yarım ya da kara çiziliyordu); tek atlas toplu çizimi tek doku yapar, araçlar aynı atlası
- * paylaştığı için sahneye doku eklemez (ölçüm: `DESIGN.md`).
+ * Örümcek, süzülen araç, mech, tank parçalarını ve çalışma anında çizilen efekt dokularını TEK atlasa çizer ve
+ * ayrı dokuları söker. Neden: bir karede 14+ ayrı doku GL toplu çizim sınırında yanlış dokuyla karışıp
+ * parçaları kesiyordu (süzülen aracın pervaneleri yarım ya da kara çiziliyordu); üstelik ardışık iki farklı
+ * doku toplu çizimi böler: palet izi ile ayak izi aynı derinlikte iç içe dizilince her görüntü ayrı çizim
+ * çağrısı oluyor, WebView'da çağrı başına maliyet sahneyi tablette ~30 kareye indiriyordu (ölçüm: `DESIGN.md`).
+ * Tek atlas toplu çizimi tek doku yapar; kare adı kaynak doku anahtarıdır (efektler) ya da `<araç>/<parça>`dır.
  * Ayrıca büyük SVG'ler GL'ye `Image` olarak doğrudan yüklenince parça parça rasterlenir; önce 2B
  * tuvale çizmek rasterlamayı tamamlar. Kareler satır satır dizilir.
  */
@@ -207,7 +251,7 @@ function bakeVehicleAtlas(scene: Phaser.Scene): void {
   const placed: Array<{
     frame: string;
     key: string;
-    image: HTMLImageElement;
+    image: HTMLImageElement | HTMLCanvasElement;
     x: number;
     y: number;
   }> = [];
@@ -227,10 +271,17 @@ function bakeVehicleAtlas(scene: Phaser.Scene): void {
     ...ROBOT_IDS.flatMap((id) =>
       robotParts(id).map((part) => ({ key: mechTexture(id, part), frame: mechFrame(id, part) })),
     ),
+    ...tankSpecs().flatMap((spec) =>
+      (['hull', 'turret', 'feeler'] as const).map((part) => {
+        const key = tankTexture(spec.id, part);
+        return { key, frame: key };
+      }),
+    ),
+    ...ATLAS_FX_KEYS.map((key) => ({ key, frame: key })),
   ];
   for (const { key, frame } of sources) {
     const image = scene.textures.get(key).getSourceImage();
-    if (!(image instanceof HTMLImageElement)) return;
+    if (!(image instanceof HTMLImageElement) && !(image instanceof HTMLCanvasElement)) return;
     if (x + image.width > ATLAS_WIDTH) {
       x = 0;
       y += rowHeight + ATLAS_GAP;
@@ -249,8 +300,13 @@ function bakeVehicleAtlas(scene: Phaser.Scene): void {
   for (const { key } of placed) scene.textures.remove(key);
   const atlas = scene.textures.addCanvas(VEHICLE_ATLAS, canvas);
   if (!atlas) throw new Error('Araç atlası dokusu eklenemedi');
-  for (const { frame, image, x: left, y: top } of placed)
+  for (const { frame, image, x: left, y: top } of placed) {
     atlas.add(frame, 0, left, top, image.width, image.height);
+    // Palet izi dokusu en uzun bandın adımlarını taşır; kısa bantlar baştan kesilmiş çerçevelerdir.
+    if (frame === TEXTURE.treadPrint)
+      for (let steps = 1; steps <= FX.marks.maxGrousers; steps++)
+        atlas.add(treadFrame(steps), 0, left, top, TREAD_STEP_PX * steps, image.height);
+  }
 }
 
 /** Örümcek parçalarını yükleme kuyruğuna ekler (BootScene `preload`). */
@@ -310,12 +366,12 @@ const TREAD_STEP_PX = 8;
 
 /** Palet izi dokusunun `steps` pabuç adımı taşıyan çerçevesinin adı (1..`FX.marks.maxGrousers`). */
 export function treadFrame(steps: number): string {
-  return `steps-${steps}`;
+  return `${TEXTURE.treadPrint}/steps-${steps}`;
 }
 
 /** Çalışma anında çizilen efekt dokuları. */
 export function createRuntimeTextures(scene: Phaser.Scene): void {
-  bakeVehicleAtlas(scene);
+  if (scene.textures.exists(VEHICLE_ATLAS)) return;
   createShieldTextures(scene);
   for (const spec of tankSpecs())
     createTreadTexture(
@@ -365,7 +421,7 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
   // tabanı, enine pabuç (grouser) çukuru ve kenarlara itilmiş kum sırtı.
   // Doku en uzun bandın pabuç sayısı kadar adım taşır; kısa bantlar baştan kesilmiş çerçeveler (`treadFrame`).
   const treadWidth = TREAD_STEP_PX * FX.marks.maxGrousers;
-  const tread = canvasTexture(scene, TEXTURE.treadPrint, treadWidth, 16, (g) => {
+  canvasTexture(scene, TEXTURE.treadPrint, treadWidth, 16, (g) => {
     g.fillStyle = 'rgba(255,255,255,0.45)';
     g.fillRect(0, 2, treadWidth, 12);
     g.fillStyle = 'rgba(255,255,255,1)';
@@ -375,8 +431,6 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
     g.fillRect(0, 0, treadWidth, 2);
     g.fillRect(0, 14, treadWidth, 2);
   });
-  for (let steps = 1; steps <= FX.marks.maxGrousers; steps++)
-    tread?.add(treadFrame(steps), 0, 0, 0, TREAD_STEP_PX * steps, 16);
   // Örümcek ayak izi: sivri pençenin zemine açtığı küçük, yuvarlak delik. Koyu çekirdek, yumuşak
   // kenar ve çevresinde ezilmiş toprağın ince halkası; yönsüzdür, bacak ucu gibi küçük ve diktir.
   canvasTexture(scene, TEXTURE.footPrint, 16, 16, (g) => {
@@ -503,4 +557,5 @@ export function createRuntimeTextures(scene: Phaser.Scene): void {
     g.fillStyle = light;
     g.fillRect(0, 0, 64, 64);
   });
+  bakeVehicleAtlas(scene);
 }

@@ -92,7 +92,14 @@ export function shedArt(spec: VehicleSpec): readonly ChunkArt[] {
     case 'tank': {
       const wheel = treadView(spec).height / TREAD_END_PX;
       pieces = [
-        { texture: TEXTURE.treadEnd, originX: 0.5, originY: 0.5, scale: INV * wheel, tint: null },
+        {
+          texture: VEHICLE_ATLAS,
+          frame: TEXTURE.treadEnd,
+          originX: 0.5,
+          originY: 0.5,
+          scale: INV * wheel,
+          tint: null,
+        },
         shards[0],
         shards[1 % shards.length],
       ];
@@ -135,7 +142,8 @@ export function wreckArt(spec: VehicleSpec): WreckArt {
   if (cached) return cached;
   const tint = DEBRIS.shardTint[spec.kind];
   const shards: ChunkArt[] = Array.from({ length: DEBRIS.shardVariants }, (_, variant) => ({
-    texture: shardTexture(variant),
+    texture: VEHICLE_ATLAS,
+    frame: shardTexture(variant),
     originX: 0.5,
     originY: 0.5,
     scale: 0.5,
@@ -173,14 +181,16 @@ export function wreckArt(spec: VehicleSpec): WreckArt {
     const art = TANK_ART[spec.id];
     big = [
       {
-        texture: tankTexture(spec.id, 'turret'),
+        texture: VEHICLE_ATLAS,
+        frame: tankTexture(spec.id, 'turret'),
         originX: art.turret.pivotX / art.turret.width,
         originY: 0.5,
         scale: INV,
         tint: null,
       },
       {
-        texture: tankTexture(spec.id, 'feeler'),
+        texture: VEHICLE_ATLAS,
+        frame: tankTexture(spec.id, 'feeler'),
         originX: 1 / art.feeler.width,
         originY: 0.5,
         scale: INV,

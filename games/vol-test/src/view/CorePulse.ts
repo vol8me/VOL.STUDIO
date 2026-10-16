@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { TEXTURE, TEXTURE_SCALE } from './textures';
+import { TEXTURE, TEXTURE_SCALE, VEHICLE_ATLAS } from './textures';
 
 const INV = 1 / TEXTURE_SCALE;
 /** Çekirdek ölçeği nabzın ortalamasıdır; Striker'ın 0.75'i referans alınır. */
@@ -29,7 +29,7 @@ export class CorePulse {
    */
   constructor(scene: Phaser.Scene, scale: number, tint: number, fill = false) {
     this.gain = scale / CORE_REFERENCE;
-    const image = scene.add.image(0, 0, TEXTURE.core).setScale(INV * this.gain);
+    const image = scene.add.image(0, 0, VEHICLE_ATLAS, TEXTURE.core).setScale(INV * this.gain);
     this.image = image.setTint(tint);
     if (fill) this.image.setTintMode(Phaser.TintModes.FILL);
   }

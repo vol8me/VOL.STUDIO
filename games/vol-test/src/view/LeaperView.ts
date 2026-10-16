@@ -18,7 +18,7 @@ import { setCharred, sinkRoot, submergeRoot } from './charring';
 import { CorePulse } from './CorePulse';
 import { gaitOf } from './MechView';
 import type { FootPrintSink } from './SpiderView';
-import { TEXTURE, TEXTURE_SCALE, addMechImage } from './textures';
+import { addMechImage, TEXTURE, TEXTURE_SCALE, VEHICLE_ATLAS } from './textures';
 import type { TankFrame, VehicleView } from './VehicleView';
 
 const INV = 1 / TEXTURE_SCALE;
@@ -170,7 +170,11 @@ export class LeaperView implements VehicleView {
       image: addMechImage(scene, spec.id, 'arm')
         .setOrigin(art.arm.pivotX / art.arm.width, 0.5)
         .setScale(INV),
-      flash: scene.add.image(0, 0, TEXTURE.flash).setTint(art.glow).setOrigin(0, 0.5).setScale(INV),
+      flash: scene.add
+        .image(0, 0, VEHICLE_ATLAS, TEXTURE.flash)
+        .setTint(art.glow)
+        .setOrigin(0, 0.5)
+        .setScale(INV),
       recoil: new Spring1D(),
       flashMs: 0,
     }));
@@ -180,7 +184,7 @@ export class LeaperView implements VehicleView {
     }
     this.flames = art.thrusters.map(() => ({
       image: scene.add
-        .image(0, 0, TEXTURE.flash)
+        .image(0, 0, VEHICLE_ATLAS, TEXTURE.flash)
         .setTint(art.glow)
         .setTintMode(Phaser.TintModes.FILL)
         .setOrigin(0, 0.5)
@@ -215,7 +219,7 @@ export class LeaperView implements VehicleView {
       ...armImages,
     ]);
     this.dust = scene.add
-      .particles(0, 0, TEXTURE.spark, LEAPER_VIEW.dust.emitter)
+      .particles(0, 0, VEHICLE_ATLAS, { ...LEAPER_VIEW.dust.emitter, frame: TEXTURE.spark })
       .setDepth(LEAPER_VIEW.dust.depth);
   }
 

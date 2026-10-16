@@ -4,7 +4,7 @@ import { BULWARK, DART, STRIKER } from '@/config/vehicles';
 import { WEATHER_VIEW } from '@/config/weatherView';
 import { TEXTURE, tankTexture, treadBandTexture } from '@/view/textures';
 import { VehicleReflectionPool } from '@/view/weather/VehicleReflectionPool';
-import { fakeScene, lastCall } from '../../support/fakeScene';
+import { fakeScene, lastCall, frameKey } from '../../support/fakeScene';
 import { sample, vehicle, weather } from '../../support/weatherFixtures';
 
 const rect = { x: 0, y: 0, width: 256, height: 256 };
@@ -17,7 +17,7 @@ describe('VehicleReflectionPool', () => {
     pool.update(weather(), rect, [vehicle(1, { spec: BULWARK })]);
     const textures = scene.created
       .filter((object) => object.kind === 'image')
-      .map((object) => object.args[2]);
+      .map((object) => frameKey(object));
     expect(textures).toContain(tankTexture('bulwark', 'hull'));
     expect(textures).toContain(tankTexture('bulwark', 'turret'));
     expect(textures).toContain(TEXTURE.treadEnd);

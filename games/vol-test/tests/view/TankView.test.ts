@@ -5,7 +5,7 @@ import { BULWARK, DART, STRIKER, type TankSpec } from '@/config/vehicles';
 import { muzzlePose } from '@/sim/muzzle';
 import { TankView, type TankFrame } from '@/view/TankView';
 import { TEXTURE, TEXTURE_SCALE, tankTexture, treadBandTexture } from '@/view/textures';
-import { fakeScene, lastCall } from '../support/fakeScene';
+import { fakeScene, lastCall, frameKey } from '../support/fakeScene';
 
 const frame = (overrides: Partial<TankFrame> = {}): TankFrame => ({
   x: 100,
@@ -190,7 +190,11 @@ describe.each(tankSpecs().map((spec) => [spec.id, spec] as const))('TankView (%s
     const shadows = scene.created.slice(before);
     // Palet tabanları (2), palet uçları (4), duyargalar (2), gövde, taret.
     expect(shadows).toHaveLength(10);
-    const keys = shadows.map((sprite) => sprite.args[2]);
+    // Gölge görüntüsü dokuyu `setTexture(atlas, kare)` ile alır: mantıksal doku kare adıdır.
+    const keys = shadows.map((sprite) => {
+      const call = lastCall(sprite, 'setTexture');
+      return call?.[1] ?? call?.[0];
+    });
     expect(keys).not.toContain(TEXTURE.core);
     expect(keys).not.toContain(TEXTURE.flash);
     expect(keys).not.toContain(TEXTURE.tread);
@@ -239,7 +243,7 @@ describe('TankView araçlar arası ayrım', () => {
   it('her araç yalnız kendi gövde, taret ve duyarga dokusunu kurar', () => {
     for (const spec of tankSpecs()) {
       const { scene } = build(spec);
-      const keys = new Set(scene.created.map((object) => object.args[2]));
+      const keys = new Set(scene.created.map((object) => frameKey(object)));
       for (const other of tankSpecs()) {
         for (const part of ['hull', 'turret', 'feeler'] as const)
           expect(keys.has(tankTexture(other.id, part))).toBe(other.id === spec.id);
