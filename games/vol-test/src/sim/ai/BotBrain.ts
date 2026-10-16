@@ -88,6 +88,9 @@ export class BotBrain {
   private clockMs = 0;
   private nextThinkMs = 0;
   private aimNoise = 0;
+  /** Algıda görülen enkazlar (yerinde sabit): konum ve çarpışma yarıçapı; yönlendirme her karede okur. */
+  private readonly wrecks: { x: number; y: number; radius: number }[] = [];
+  private readonly away = { x: 0, y: 0 };
   private avoidX = 0;
   private avoidY = 0;
   private orbit = 1;
@@ -218,6 +221,7 @@ export class BotBrain {
     }
     [dx, dy] = this.lakePush(sim.world, dx, dy);
     [dx, dy] = this.rockPush(sim.world, dx, dy);
+    [dx, dy] = this.wreckPush(dx, dy);
     const length = Math.hypot(dx, dy);
     if (length > 1) {
       dx /= length;
@@ -256,8 +260,14 @@ export class BotBrain {
     let rallyX = 0;
     let rallyY = 0;
     let rallyCount = 0;
+    let wreckCount = 0;
     for (const other of sim.vehicles) {
-      if (other === self || !other.vitality.alive) continue;
+      if (other === self) continue;
+      if (!other.vitality.alive) {
+        // Enkaz katıdır ve yerinden oynamaz: hedef ya da müttefik sayılmaz, yalnız engeldir.
+        this.noteWreck(other, wreckCount++);
+        continue;
+      }
       const ox = other.chassis.x - x;
       const oy = other.chassis.y - y;
       const distanceSq = ox * ox + oy * oy;
@@ -286,6 +296,7 @@ export class BotBrain {
         avoidY -= (oy / distance) * push;
       }
     }
+    this.wrecks.length = wreckCount;
     this.avoidX = avoidX;
     this.avoidY = avoidY;
     this.selectTarget(best, bestScore);
@@ -529,6 +540,59 @@ export class BotBrain {
       const push = into * length * (1 + closeness);
       const slide = this.orbit * into * length * BOT.rockSlide;
       return [dx + grade.x * push - grade.y * slide, dy + grade.y * push + grade.x * slide];
+    }
+    return [dx, dy];
+  }
+
+  /** Enkazı algı listesine yazır (nesne yeniden kullanılır, kare başına ayırma yoktur). */
+  private noteWreck(wreck: Vehicle, index: number): void {
+    const { x, y, shape } = wreck.chassis;
+    const entry = this.wrecks[index];
+    const radius = Math.hypot(shape.halfWidth, shape.halfLength);
+    if (entry) {
+      entry.x = x;
+      entry.y = y;
+      entry.radius = radius;
+    } else this.wrecks[index] = { x, y, radius };
+  }
+
+  /**
+   * Enkaz katı bir engeldir (`Simulation.collideWreck`): yönü kayayla aynı biçimde sıyırır. Önündeki
+   * enkaza doğru giden bot, enkaza bakan bileşenden arındırılır, yüzeyden itilir ve yörünge yönünde
+   * teğete kayar; bu yüzden ölü gövdenin önünde kilitlenmez. Tırmanan yürüyücü de aşamaz: enkaz kaya
+   * değil gövdedir, bütün şasileri durdurur.
+   */
+  private wreckPush(dx: number, dy: number): [number, number] {
+    if (this.wrecks.length === 0) return [dx, dy];
+    const length = Math.hypot(dx, dy);
+    if (length < 1e-6) return [dx, dy];
+    const chassis = this.vehicle.chassis;
+    const { x, y } = chassis;
+    const ux = dx / length;
+    const uy = dy / length;
+    const reach = chassis.shape.halfWidth + BOT.rockMargin;
+    const last = BOT.rockLookahead[BOT.rockLookahead.length - 1];
+    for (const ahead of BOT.rockLookahead) {
+      const px = x + ux * ahead;
+      const py = y + uy * ahead;
+      for (const wreck of this.wrecks) {
+        const offsetX = px - wreck.x;
+        const offsetY = py - wreck.y;
+        const distance = Math.hypot(offsetX, offsetY);
+        if (distance - wreck.radius - reach > 0 || distance < 1e-6) continue;
+        // `away` enkazdan noktaya bakar: hareket ona doğruysa (negatif iç çarpım) enkaza gidiyordur.
+        this.away.x = offsetX / distance;
+        this.away.y = offsetY / distance;
+        const into = -(ux * this.away.x + uy * this.away.y);
+        if (into <= 0) continue;
+        const closeness = 1 - ahead / last + 0.3;
+        const push = into * length * (1 + closeness);
+        const slide = this.orbit * into * length * BOT.rockSlide;
+        return [
+          dx + this.away.x * push - this.away.y * slide,
+          dy + this.away.y * push + this.away.x * slide,
+        ];
+      }
     }
     return [dx, dy];
   }

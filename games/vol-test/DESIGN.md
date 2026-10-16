@@ -180,6 +180,9 @@ Araçlar kayaya türüne göre tepki verir (`ROCKS`):
   üstündeyse kayayı bırakır ve kaya modeli düz üst silindirdir (yükseklik soyutlaması, yamaç yok).
 - Bot yüzemeyen araçta kayanın önündeki mesafeleri tarar ve teğete sıyrılır (`BotBrain.rockPush`); örümcek
   botu kayayı engel saymaz.
+- Bot enkazı da engel sayar: ölü araç hedef ve müttefik değildir ama katıdır (`Simulation.collideWreck`), bu yüzden
+  bot algıda enkazları listeler (`BotBrain.noteWreck`) ve yönünü kayayla aynı biçimde teğete sıyırır
+  (`BotBrain.wreckPush`); örümcek botu da enkazı aşamaz, çünkü enkaz kaya değil gövdedir.
 
 Sunum `src/view/terrain/RockView.ts`, `src/config/rockView.ts`: lob çokgeni düzensizdir, kubbe basamakları
 ışığa (`LIGHT`) doğru kayar, gölge lob yüksekliğiyle uzar; ıslaklıkla koyulaşır, kar derinliği başlık olarak
