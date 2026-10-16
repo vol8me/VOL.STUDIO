@@ -89,6 +89,15 @@
         "name": "Rhino",
         "class": "HEAVY LEAPER"
       }
+    },
+    "skillTitle": "Skill",
+    "skillInfo": {
+      "dash": "{{seconds, number}} s: top speed rises {{speed}}%.",
+      "leap": "{{seconds, number}} s: {{speed}}% faster, leaps over rocks and water.",
+      "shield": "{{seconds, number}} s: no combat damage, shots cannot push you.",
+      "overdrive": "{{seconds, number}} s: fire rate rises {{fireRate}}%, speed {{speed}}%.",
+      "ram": "{{seconds, number}} s: speed rises {{speed}}%; a rival you hit at speed takes {{ram, number}}x damage, you take {{ramTaken}}% collision damage.",
+      "siege": "{{seconds, number}} s: speed drops {{slow}}%; incoming damage falls {{takenDown}}%, your damage rises {{dealtUp}}%."
     }
   },
   "dev": {
@@ -138,8 +147,8 @@
     "fullscreen": "Fullscreen",
     "fireReload": "Shot reload",
     "health": "Vehicle health",
-    "respawnIn": "Vehicle destroyed · respawn in {{seconds}} s",
-    "protection": "Respawn protection · {{seconds}} s",
+    "respawnIn": "Vehicle destroyed · respawn in {{seconds, number}} s",
+    "protection": "Respawn protection · {{seconds, number}} s",
     "skill": {
       "dash": "Dash reserve",
       "leap": "Leap reserve",

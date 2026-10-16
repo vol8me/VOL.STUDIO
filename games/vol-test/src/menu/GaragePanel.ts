@@ -13,11 +13,12 @@ import {
 } from '@volstudio/core/ui';
 import { NAME_MAX_LENGTH } from '@volstudio/network/protocol';
 import { FACTION_AUTO } from '@/app/GameSettings';
-import { VEHICLE_IDS, type VehicleId } from '@/config/vehicles';
+import type { SkillId } from '@/config/skills';
+import { VEHICLE_IDS, VEHICLES, type VehicleId } from '@/config/vehicles';
 import { WAR } from '@/config/war';
 import type { MessageKey } from '@/i18n/keys';
 import { ScreenFrame } from './ScreenFrame';
-import { vehicleStats, type VehicleStats } from './vehicleStats';
+import { skillInfo, vehicleStats, type VehicleStats } from './vehicleStats';
 import { VEHICLE_CLASS_KEYS, VEHICLE_NAME_KEYS } from './vehicleNames';
 
 /** Garajdan çıkan katılım seçimi. */
@@ -67,6 +68,16 @@ const STAT_KEYS = {
   firepower: 'voltest:garage.stat.firepower',
 } as const satisfies Record<keyof VehicleStats, MessageKey>;
 
+/** Yetenek adı (kontrol ipuçlarıyla ortak) ve açıklaması; anahtarlar yazıyla durur ki kullanım denetlenebilsin. */
+const SKILL_KEYS = {
+  dash: ['voltest:controls.skill.dash', 'voltest:garage.skillInfo.dash'],
+  leap: ['voltest:controls.skill.leap', 'voltest:garage.skillInfo.leap'],
+  shield: ['voltest:controls.skill.shield', 'voltest:garage.skillInfo.shield'],
+  overdrive: ['voltest:controls.skill.overdrive', 'voltest:garage.skillInfo.overdrive'],
+  ram: ['voltest:controls.skill.ram', 'voltest:garage.skillInfo.ram'],
+  siege: ['voltest:controls.skill.siege', 'voltest:garage.skillInfo.siege'],
+} as const satisfies Record<SkillId, readonly [MessageKey, MessageKey]>;
+
 const FACTION_KEYS: readonly MessageKey[] = [
   'voltest:war.faction.amber',
   'voltest:war.faction.blue',
@@ -76,6 +87,9 @@ interface Entry {
   readonly id: VehicleId;
   readonly card: CardTile;
   readonly statLabels: Map<keyof VehicleStats, Text>;
+  /** Yetenek başlığı (ad) ve ne yaptığını sayılarla söyleyen açıklama. */
+  readonly skillTitle: Text;
+  readonly skillText: Text;
 }
 
 /**
@@ -231,6 +245,7 @@ export class GaragePanel {
         rarityLabel: i18next.t(VEHICLE_CLASS_KEYS[entry.id]),
       });
       for (const [stat, label] of entry.statLabels) label.setContent(i18next.t(STAT_KEYS[stat]));
+      this.describeSkill(entry);
       this.syncSelect(entry);
     }
     if (this.statusKey) this.status.setContent(i18next.t(this.statusKey));
@@ -280,7 +295,22 @@ export class GaragePanel {
       statLabels.set(stat, label);
     }
     card.addDetail({ element: stats });
-    return { id, card, statLabels };
+    const skillTitle = this.scope.addDestroyable(new Text('', { variant: 'muted', tag: 'span' }));
+    const skillText = this.scope.addDestroyable(new Text('', { variant: 'muted', tag: 'p' }));
+    const skill = document.createElement('div');
+    skill.className = 'vt-garage__skill';
+    skill.dataset.testid = `garage-skill-${id}`;
+    skill.append(skillTitle.element, skillText.element);
+    card.addDetail({ element: skill });
+    return { id, card, statLabels, skillTitle, skillText };
+  }
+
+  /** Yetenek adı ve açıklaması; sayılar aracın config'inden gelir, dil değişince yeniden yazılır. */
+  private describeSkill(entry: Entry): void {
+    const info = skillInfo(VEHICLES[entry.id]);
+    const [name, description] = SKILL_KEYS[info.skill];
+    entry.skillTitle.setContent(`${i18next.t('voltest:garage.skillTitle')}: ${i18next.t(name)}`);
+    entry.skillText.setContent(i18next.t(description, { ...info, slow: -info.speed }));
   }
 
   private select(id: VehicleId, notify: boolean): void {

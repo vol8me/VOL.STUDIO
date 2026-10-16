@@ -157,6 +157,28 @@ describe('GaragePanel', () => {
     expect(pick('dart').disabled).toBe(false);
   });
 
+  it('her kart aracın yeteneğini adıyla ve config verisinden gelen sayılarla anlatır', async () => {
+    const { find } = mount();
+    const text = (id: VehicleId): string => find(`garage-skill-${id}`).textContent ?? '';
+    // Manta: 1,6 sn, atış temposu %45, hız %25 (SKILLS.overdrive, MANTA.hover).
+    expect(text('manta')).toContain('Yetenek: Aşırı yük');
+    expect(text('manta')).toContain('1,6 sn');
+    expect(text('manta')).toContain('%45');
+    expect(text('manta')).toContain('%25');
+    // Barracuda: çarpma 2,4 kat, kendi bedeli %30.
+    expect(text('barracuda')).toContain('2,4 kat');
+    expect(text('barracuda')).toContain('%30');
+    // Leviathan yavaşlar: hızı %45 düşer, gelen hasar %10 azalır, verdiği %5 artar.
+    expect(text('leviathan')).toContain('%45 düşer');
+    expect(text('leviathan')).toContain('%10 azalır');
+    expect(text('leviathan')).toContain('%5 artar');
+    // Hiçbir kartta çözülmemiş yer tutucu kalmaz.
+    for (const id of VEHICLE_IDS) expect(text(id), id).not.toMatch(/\{\{|undefined|NaN/);
+    await i18next.changeLanguage('en');
+    expect(text('manta')).toContain('Skill: Overdrive');
+    expect(text('manta')).toContain('fire rate rises 45%');
+  });
+
   it('alıştırma ve geri niyetlerini bildirir', () => {
     const { find, onPractice, onBack } = mount();
     find('garage-practice').click();

@@ -89,6 +89,15 @@
         "name": "Rhino",
         "class": "AĞIR SIÇRAYICI"
       }
+    },
+    "skillTitle": "Yetenek",
+    "skillInfo": {
+      "dash": "{{seconds, number}} sn: azami hız %{{speed}} artar.",
+      "leap": "{{seconds, number}} sn: %{{speed}} hızlanır, kayanın ve suyun üstünden sıçrar.",
+      "shield": "{{seconds, number}} sn: savaş hasarı almaz, mermiler itmez.",
+      "overdrive": "{{seconds, number}} sn: atış temposu %{{fireRate}}, hız %{{speed}} artar.",
+      "ram": "{{seconds, number}} sn: hız %{{speed}} artar; hızla çarptığın rakip {{ram, number}} kat hasar alır, sen çarpışmada %{{ramTaken}} hasar yersin.",
+      "siege": "{{seconds, number}} sn: hız %{{slow}} düşer; gelen hasar %{{takenDown}} azalır, verdiğin hasar %{{dealtUp}} artar."
     }
   },
   "dev": {
@@ -138,8 +147,8 @@
     "fullscreen": "Tam ekran",
     "fireReload": "Atış dolumu",
     "health": "Araç canı",
-    "respawnIn": "Araç imha oldu · {{seconds}} sn sonra yeniden doğacak",
-    "protection": "Yeniden doğma koruması · {{seconds}} sn",
+    "respawnIn": "Araç imha oldu · {{seconds, number}} sn sonra yeniden doğacak",
+    "protection": "Yeniden doğma koruması · {{seconds, number}} sn",
     "skill": {
       "dash": "Atılım deposu",
       "leap": "Sıçrama deposu",

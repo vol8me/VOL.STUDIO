@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TANK_IDS, VEHICLE_IDS, VEHICLES, type VehicleSpec } from '@/config/vehicles';
-import { rawStats, vehicleStats } from '@/menu/vehicleStats';
+import { SKILLS } from '@/config/skills';
+import { rawStats, skillInfo, vehicleStats } from '@/menu/vehicleStats';
 
 describe('vehicleStats', () => {
   it('her ölçüde katalogun en iyisi 1 olur ve hiçbiri 0 ile 1 dışına çıkmaz', () => {
@@ -40,5 +41,20 @@ describe('vehicleStats', () => {
     );
     // Sırayla ateşleyen iki top Striker'ın tek topuyla aynı sınıftadır.
     expect(rawStats(arachnid).firepower).toBeGreaterThan(rawStats(striker).firepower * 0.8);
+  });
+
+  it('yetenek bilgisi süreyi depodan, çarpanları SKILLS ve şasi config verisinden türetir', () => {
+    const manta = skillInfo(VEHICLES.manta);
+    expect(manta).toMatchObject({ skill: 'overdrive', seconds: 1.6, speed: 25, fireRate: 45 });
+    const barracuda = skillInfo(VEHICLES.barracuda);
+    expect(barracuda).toMatchObject({ skill: 'ram', ram: SKILLS.ram.ram, ramTaken: 30, speed: 60 });
+    const leviathan = skillInfo(VEHICLES.leviathan);
+    expect(leviathan).toMatchObject({ skill: 'siege', speed: -45, takenDown: 10, dealtUp: 5 });
+    // Tank `boostMultiplier`, ötekiler `dashMultiplier` kullanır: ikisi de okunur.
+    expect(skillInfo(VEHICLES.striker).speed).toBeGreaterThan(0);
+    for (const id of VEHICLE_IDS) {
+      const info = skillInfo(VEHICLES[id]);
+      expect(Number.isFinite(info.seconds) && info.seconds > 0, id).toBe(true);
+    }
   });
 });

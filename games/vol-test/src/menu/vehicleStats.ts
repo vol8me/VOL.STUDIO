@@ -1,4 +1,7 @@
+import { SKILLS, type SkillId } from '@/config/skills';
 import {
+  chassisConfigOf,
+  skillOf,
   topSpeedOf,
   VEHICLE_IDS,
   VEHICLES,
@@ -49,5 +52,41 @@ export function vehicleStats(id: VehicleId): VehicleStats {
     durability: stats.durability / MAXIMUM.durability,
     speed: stats.speed / MAXIMUM.speed,
     firepower: stats.firepower / MAXIMUM.firepower,
+  };
+}
+
+/** Garajda yeteneğin yazıya dökülen sayıları (yüzdeler tam sayıya yuvarlanır; hepsi config'ten türer). */
+export interface SkillInfo {
+  readonly skill: SkillId;
+  /** Hız deposunun tek basışta açık kaldığı süre (sn). */
+  readonly seconds: number;
+  /** Yetenek açıkken azami hız değişimi (%; yavaşlayanda eksi). */
+  readonly speed: number;
+  /** Atış temposu artışı (%). */
+  readonly fireRate: number;
+  /** Rakibe çarpışma hasarı çarpanı ve çarpmanın kendine bedeli (%). */
+  readonly ram: number;
+  readonly ramTaken: number;
+  /** Gelen hasar azalışı ve verilen hasar artışı (%). */
+  readonly takenDown: number;
+  readonly dealtUp: number;
+}
+
+const percent = (factor: number): number => Math.round((factor - 1) * 100);
+
+export function skillInfo(spec: VehicleSpec): SkillInfo {
+  const skill = skillOf(spec);
+  const config = chassisConfigOf(spec);
+  const effect = SKILLS[skill];
+  const multiplier = 'boostMultiplier' in config ? config.boostMultiplier : config.dashMultiplier;
+  return {
+    skill,
+    seconds: Math.round((config.boostCapacity / config.boostDrain) * 10) / 10,
+    speed: percent(multiplier),
+    fireRate: percent(effect.fireRate),
+    ram: Math.round(effect.ram * 10) / 10,
+    ramTaken: Math.round(effect.ramTaken * 100),
+    takenDown: -percent(effect.taken),
+    dealtUp: percent(effect.dealt),
   };
 }

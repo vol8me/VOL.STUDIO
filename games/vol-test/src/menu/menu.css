@@ -165,6 +165,18 @@
   gap: var(--vol-space-xs);
 }
 
+.vt-garage__skill {
+  display: grid;
+  gap: var(--vol-space-xs);
+  margin-top: var(--vol-space-sm);
+  font-size: var(--vol-text-label);
+}
+
+.vt-garage__skill .vol-text {
+  margin: 0;
+  text-align: start;
+}
+
 .vt-garage__stat .vol-text {
   text-align: start;
 }

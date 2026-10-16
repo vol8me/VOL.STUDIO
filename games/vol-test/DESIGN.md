@@ -826,14 +826,14 @@ Açılış sırası Boot → Backdrop + Menu → (Garage | Settings | Dev | Worl
 `firstScene` ile ilk ekranı seçer: oyuncu ana menüyü görür; ölçüm koşusu (Deck sondası) ve
 `?start=world` geliştirme bağlantısı menüyü atlayıp alıştırma dünyasını açar.
 
-| Ekran      | İçerik                                                                                    |
-| ---------- | ----------------------------------------------------------------------------------------- |
-| `Backdrop` | Menülerin altında yürüyen araç alayı (savaşsız, sessiz); dünya açılınca durur             |
-| `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı |
-| `Garage`   | Araç kartları (ad, görev, üç ölçü), ad, cephe; savaşa katıl, alıştırmaya çık, geri        |
-| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi                  |
-| `Dev`      | Mevsim, hava, araç, arka plan yoğunluğu; senaryo, tohum ve kaos kadranı                   |
-| `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)      |
+| Ekran      | İçerik                                                                                                                  |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `Backdrop` | Menülerin altında yürüyen araç alayı (savaşsız, sessiz); dünya açılınca durur                                           |
+| `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı                               |
+| `Garage`   | Araç kartları (ad, görev, üç ölçü, yetenek adı ve sayılarla açıklaması), ad, cephe; savaşa katıl, alıştırmaya çık, geri |
+| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi                                                |
+| `Dev`      | Mevsim, hava, araç, arka plan yoğunluğu; senaryo, tohum ve kaos kadranı                                                 |
+| `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)                                    |
 
 Bütün ekranlar aynı taksonomiden gelir: `ScreenFrame` başlık şeridi (geri `IconButton`, başlık, alt başlık),
 kayan gövde (`ScrollView`) ve eylem şeridini kurar; ekranlar yalnız içeriklerini gövdeye, düğmelerini şeride
