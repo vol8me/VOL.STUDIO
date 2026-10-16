@@ -109,15 +109,21 @@ export function routeSimEvents(events: readonly SimEvent[], targets: SimEventTar
         break;
       case 'hit':
         // Kalkan vuruşu emdiyse dalgayı kendisi çizer: gövde kıymığı ve kıvılcımı yoktur.
-        if (!targets.tank(event.target)?.absorb?.(event.x, event.y)) {
+        const absorbed = targets.tank(event.target)?.absorb?.(event.x, event.y) === true;
+        if (!absorbed) {
           targets.effects.hit(event.x, event.y, event.angle);
           chipTarget(targets, event);
         }
         if (event.owner === targets.player && event.target !== targets.player)
           targets.reticle?.hit();
         if (event.target === targets.player) {
-          targets.camera.addTrauma(FEEL.hit.trauma);
-          vibrate('warning', 1);
+          if (absorbed) {
+            targets.camera.addTrauma(FEEL.hit.absorbedTrauma);
+            vibrate('tap', FEEL.hit.absorbedHaptic);
+          } else {
+            targets.camera.addTrauma(FEEL.hit.trauma);
+            vibrate('warning', 1);
+          }
         }
         break;
       case 'damaged':

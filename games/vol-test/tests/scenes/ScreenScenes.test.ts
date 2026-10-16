@@ -13,12 +13,11 @@ import type { ScreenScene } from '@/scenes/ScreenScene';
 
 const showroom = vi.hoisted(() => ({
   setVehicle: vi.fn(),
-  setGround: vi.fn(),
   update: vi.fn(),
   destroy: vi.fn(),
   clock: 0,
   area: undefined as { x: number; y: number; width: number; height: number } | undefined,
-  created: [] as Array<{ mode: string | undefined }>,
+  created: 0,
 }));
 const online = vi.hoisted(() => ({
   connectWar: vi.fn(),
@@ -31,12 +30,11 @@ vi.mock('@/audio/sceneAudio', () => ({ createSceneAudio: sceneAudio.create }));
 vi.mock('@/view/Showroom', () => ({
   Showroom: class {
     setVehicle = showroom.setVehicle;
-    setGround = showroom.setGround;
     update = showroom.update;
     destroy = showroom.destroy;
     clockMs = 0;
-    constructor(_scene: unknown, _spec: unknown, mode?: string) {
-      showroom.created.push({ mode });
+    constructor() {
+      showroom.created += 1;
     }
     get freeArea() {
       return showroom.area;
@@ -92,7 +90,6 @@ function services(
     display: 'windowed',
     scenario: 'empty',
     seed: 1,
-    backdrop: false,
     backdropDensity: 5,
     season: 'auto',
     weather: 'auto',
@@ -237,10 +234,13 @@ describe('ScreenScene odağı', () => {
 describe('MenuScene', () => {
   it('menüyü kurar, vitrini çizer ve her seçeneği solarak ilgili sahneye götürür', () => {
     const { services: env } = services();
+    showroom.created = 0;
     const harness = mount(() => new MenuScene(env, nativeWindow() as never));
     expect(harness.find('menu')).not.toBeNull();
     harness.scene.update(0, 16);
-    expect(showroom.update).toHaveBeenCalledWith(16, expect.anything());
+    // Ana menüde araç tablası yoktur; yalnız arkadaki alay görünür.
+    expect(showroom.created).toBe(0);
+    expect(showroom.update).not.toHaveBeenCalled();
 
     harness.find('menu-play').click();
     expect(harness.find('menu').dataset.leaving).toBe('true');
@@ -314,7 +314,7 @@ describe('MenuScene', () => {
     harness.shutdown();
     expect(getBackHandlerCount()).toBe(before);
     expect(harness.parent.querySelector('[data-testid="menu"]')).toBeNull();
-    expect(showroom.destroy).toHaveBeenCalled();
+    expect(showroom.destroy).not.toHaveBeenCalled();
   });
 });
 
@@ -446,28 +446,60 @@ describe('GarageScene', () => {
 });
 
 describe('ScreenScene canlı arka plan', () => {
-  it('açıkken arka plan sahnesini başlatır, vitrin zeminini gölgeye indirir ve boş alanı yayınlar', () => {
-    const { services: env } = services({ backdrop: true });
-    showroom.created.length = 0;
+  it('her ekran arka plan sahnesini başlatır ve kamerayı saydam yapar; ayar yoktur', () => {
+    for (const make of [
+      (env: GameServices) => new MenuScene(env, nativeWindow(false) as never),
+      (env: GameServices) => new SettingsScene(env),
+      (env: GameServices) => new GarageScene(env),
+      (env: GameServices) => new DevScene(env),
+    ]) {
+      const { services: env } = services();
+      const harness = mount(() => make(env));
+      expect(harness.scenePlugin.launch).toHaveBeenCalledWith('Backdrop');
+      expect(harness.scene.cameras.main.setBackgroundColor).toHaveBeenCalledWith('rgba(0,0,0,0)');
+    }
+  });
+
+  it('araç tablası yalnız araç seçilen ekranlarda (garaj, geliştirici) kurulur', () => {
+    const count = (make: (env: GameServices) => ScreenScene): number => {
+      const { services: env } = services();
+      showroom.created = 0;
+      mount(() => make(env));
+      return showroom.created;
+    };
+    expect(count((env) => new MenuScene(env, nativeWindow(false) as never))).toBe(0);
+    expect(count((env) => new SettingsScene(env))).toBe(0);
+    expect(count((env) => new GarageScene(env))).toBe(1);
+    expect(count((env) => new DevScene(env))).toBe(1);
+  });
+
+  it('vitrinsiz ekran boş alanı panelden kendisi hesaplar ve yalnız değişince yayınlar', () => {
+    const { services: env } = services();
     const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
-    expect(showroom.created.at(-1)?.mode).toBe('disc');
-    expect(menu.scenePlugin.launch).toHaveBeenCalledWith('Backdrop');
-    showroom.area = { x: 0, y: 0, width: 840, height: 800 };
     menu.scene.update(0, 16);
-    expect(menu.registry.get('vol-test:menu-area')).toEqual(showroom.area);
+    // Panel ölçüsü jsdom'da sıfırdır: tüm ekran boştur.
+    expect(menu.registry.get('vol-test:menu-area')).toEqual({
+      x: 0,
+      y: 0,
+      width: 1280,
+      height: 800,
+    });
+    const area = menu.registry.get('vol-test:menu-area');
+    menu.scene.update(0, 16);
+    expect(menu.registry.get('vol-test:menu-area')).toBe(area);
+  });
+
+  it('vitrinli ekran boş alanı vitrinin kamera alanından yayınlar', () => {
+    const { services: env } = services();
+    showroom.area = { x: 0, y: 0, width: 840, height: 800 };
+    const garage = mount(() => new GarageScene(env));
+    garage.scene.update(0, 16);
+    expect(garage.registry.get('vol-test:menu-area')).toEqual(showroom.area);
     showroom.area = undefined;
   });
 
-  it('kapalıyken arka plan başlatılmaz ve vitrin ızgaralı zeminde kalır', () => {
-    const { services: env } = services({ backdrop: false });
-    showroom.created.length = 0;
-    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
-    expect(showroom.created.at(-1)?.mode).toBe('plane');
-    expect(menu.scenePlugin.launch).not.toHaveBeenCalled();
-  });
-
   it('dünyaya geçerken arka plan sahnesi sahne değişmeden önce durdurulur', () => {
-    const { services: env } = services({ backdrop: true });
+    const { services: env } = services();
     const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
     menu.find('menu-practice').click();
     expect(menu.scenePlugin.stop).not.toHaveBeenCalled();
@@ -480,30 +512,27 @@ describe('ScreenScene canlı arka plan', () => {
     expect(order[0]).toBeLessThan(order[1]);
   });
 
-  it('diğer menü ekranlarına geçerken arka plan sürer; tabla saati ekranlar arası taşınır', () => {
-    const { services: env } = services({ backdrop: true });
+  it('diğer menü ekranlarına geçerken arka plan sürer', () => {
+    const { services: env } = services();
     const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
     menu.find('menu-settings').click();
     menu.finishFade();
     expect(menu.scenePlugin.stop).not.toHaveBeenCalled();
+    expect(menu.start).toHaveBeenCalledWith('Settings', {});
+  });
+
+  it('tabla saati vitrinli ekranın kapanışında yazılır; vitrinsiz ekran saat yazmaz', () => {
+    const { services: env } = services();
+    const garage = mount(() => new GarageScene(env));
+    garage.shutdown();
+    expect(garage.registry.has('vol-test:showroom-clock')).toBe(true);
+    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
     menu.shutdown();
-    expect(menu.registry.has('vol-test:showroom-clock')).toBe(true);
+    expect(menu.registry.has('vol-test:showroom-clock')).toBe(false);
   });
 });
 
 describe('ScreenScene ayar değişimi', () => {
-  it('canlı arka plan ayarı açılıp kapanınca sahneyi başlatır, durdurur ve zemini değiştirir', () => {
-    const { services: env, emit } = services({ backdrop: false });
-    const menu = mount(() => new MenuScene(env, nativeWindow(false) as never));
-    expect(menu.scenePlugin.launch).not.toHaveBeenCalled();
-    emit({ backdrop: true });
-    expect(menu.scenePlugin.launch).toHaveBeenCalledWith('Backdrop');
-    expect(showroom.setGround).toHaveBeenLastCalledWith('disc');
-    emit({ backdrop: false });
-    expect(menu.scenePlugin.stop).toHaveBeenCalledWith('Backdrop');
-    expect(showroom.setGround).toHaveBeenLastCalledWith('plane');
-  });
-
   it('geliştirici ekranında araç seçimi vitrine anında yansır', () => {
     const { services: env, emit } = services();
     mount(() => new DevScene(env));

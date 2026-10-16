@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type * as CoreModule from '@volstudio/core';
 import type { GameServices } from '@/app/GameServices';
 import { BACKDROP } from '@/config/backdrop';
-import { BackdropScene } from '@/scenes/BackdropScene';
+import { BackdropScene, paradeUnits } from '@/scenes/BackdropScene';
 import { MENU_AREA_KEY } from '@/view/menuLayout';
 import { fakeObject, fakeScene, lastCall } from '../support/fakeScene';
 
@@ -39,7 +39,6 @@ function mount(preferences: Record<string, unknown> = {}): Harness {
     quality: 'high',
     season: 'auto',
     weather: 'auto',
-    backdrop: true,
     backdropDensity: 2,
     ...preferences,
   };
@@ -147,6 +146,19 @@ describe('BackdropScene', { timeout: 30_000 }, () => {
     harness.update();
     expect(harness.restart).not.toHaveBeenCalled();
     harness.push({ backdropDensity: 6 });
+    expect(harness.restart).toHaveBeenCalledTimes(1);
+  });
+
+  it('düşük kalite alay sayısını çalışma anında sınırlar; eski kayıtlı yoğunluk da hafif kalır', () => {
+    expect(paradeUnits('high', BACKDROP.density.default)).toBe(BACKDROP.density.default);
+    expect(paradeUnits('low', BACKDROP.density.default)).toBe(BACKDROP.density.low);
+    expect(paradeUnits('low', BACKDROP.density.min)).toBe(BACKDROP.density.min);
+    const harness = mount({ backdropDensity: BACKDROP.density.default });
+    harness.update();
+    // Yüksekten düşüğe geçmek alayı seyreltir (baştan kurulur); sınırın üstündeki ayar bir şey değiştirmez.
+    harness.push({ quality: 'low' });
+    expect(harness.restart).toHaveBeenCalledTimes(1);
+    harness.push({ backdropDensity: BACKDROP.density.max });
     expect(harness.restart).toHaveBeenCalledTimes(1);
   });
 

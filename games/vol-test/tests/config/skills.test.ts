@@ -100,4 +100,15 @@ describe('araç yetenekleri', () => {
   it('yalnız kalkan ve kuşatma yerinde durur; ötekiler fırlar (kamera itmesi bu ayrıma bakar)', () => {
     expect(SKILL_IDS.filter((skill) => !skillLunges(skill))).toEqual(['shield', 'siege']);
   });
+
+  it('sıçrayan her araç sıçramaya dolu depoyla başlar: kısmi depo uçuş yayını (kapasite/tüketim) bozardı', () => {
+    for (const id of VEHICLE_IDS) {
+      const spec = VEHICLES[id];
+      if (skillOf(spec) !== 'leap') continue;
+      const config =
+        spec.kind === 'walker' ? spec.walker : spec.kind === 'leaper' ? spec.leaper : null;
+      expect(config, `${id}: sıçrama yalnız yürüyücü ve sıçrayıcıda tanımlıdır`).not.toBeNull();
+      expect(config!.boostRestart, id).toBe(config!.boostCapacity);
+    }
+  });
 });

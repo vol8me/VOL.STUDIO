@@ -17,6 +17,10 @@ export class GarageScene extends ScreenScene {
     super('Garage', services);
   }
 
+  protected override get showcase(): boolean {
+    return true;
+  }
+
   protected override createScreen(): ScreenPanel {
     const { settings } = this.services;
     const preferences = settings.get();

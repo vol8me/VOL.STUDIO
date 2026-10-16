@@ -3,7 +3,7 @@ import { applyVolViewport, DisposableScope } from '@volstudio/core';
 import type { GameServices } from '@/app/GameServices';
 import { BACKDROP } from '@/config/backdrop';
 import { CAMERA } from '@/config/camera';
-import { EFFECT_LEVELS } from '@/config/quality';
+import { EFFECT_LEVELS, type EffectLevel } from '@/config/quality';
 import { FEEL } from '@/config/feel';
 import { SEASONS } from '@/config/seasons';
 import { WATER_VIEW } from '@/config/waterView';
@@ -25,6 +25,14 @@ import { WreckDirector } from './world/WreckDirector';
 
 /** Arka planda kamera sarsılmaz ve titreşim istenmez: tepkiler yalnız oyuncunun içindir. */
 const STILL_CAMERA = { kick: () => undefined, addTrauma: () => undefined };
+
+/**
+ * Alaydaki araç sayısı: ayarın yoğunluğu, düşük kalitede `BACKDROP.density.low` ile sınırlanır. Sınır kayıtlı
+ * ayara değil çalışma anına uygulanır: eski kayıtlar da (varsayılan 6) düşük cihazda hafif kalır.
+ */
+export function paradeUnits(quality: EffectLevel, density: number): number {
+  return quality === 'low' ? Math.min(density, BACKDROP.density.low) : density;
+}
 
 /** Dinleyici çok uzaktadır: patlama titreşimi ve sarsıntısı hiçbir olayda eşiğe girmez. */
 const FAR_LISTENER = { x: -1e9, y: -1e9 };
@@ -85,11 +93,12 @@ export class BackdropScene extends Phaser.Scene {
       ),
     );
     if (choice.season) this.environment.model.step(SEASONS.previewWarmupMs);
+    const initialUnits = paradeUnits(preferences.quality, preferences.backdropDensity);
     this.parade = new BackdropParade({
       world,
       weather: this.environment.model,
       seed: BACKDROP.seed,
-      units: preferences.backdropDensity,
+      units: initialUnits,
     });
     this.effects = this.scope.addDestroyable(new EffectsView(this, profile, world));
     this.vehicles = this.scope.addDestroyable(
@@ -118,7 +127,7 @@ export class BackdropScene extends Phaser.Scene {
     this.place(true);
 
     // Ayar değişimi yalnız ilgili parçayı yeniler: ses ya da araç seçimi havayı ve kamerayı etkilemez.
-    let applied = { ...choice, quality: preferences.quality, density: preferences.backdropDensity };
+    let applied = { ...choice, quality: preferences.quality, units: initialUnits };
     this.scope.addSubscription(
       settings.subscribe((value) => {
         const next = climateChoice(
@@ -135,8 +144,9 @@ export class BackdropScene extends Phaser.Scene {
           this.environment.applyProfile(level);
         }
         // Alay büyüklüğü kurulurken belirlenir: değişince alay baştan kurulur.
-        const restart = value.backdropDensity !== applied.density;
-        applied = { ...next, quality: value.quality, density: value.backdropDensity };
+        const units = paradeUnits(value.quality, value.backdropDensity);
+        const restart = units !== applied.units;
+        applied = { ...next, quality: value.quality, units };
         if (restart) this.scene.restart();
       }),
     );

@@ -32,8 +32,11 @@ export const FEEL = {
     hapticRadius: 280,
     haptic: 0.55,
   },
-  /** Oyuncu isabet aldı: sarsıntı tavanlı, titreşim güçlü. */
-  hit: { trauma: 0.35 },
+  /**
+   * Oyuncu isabet aldı: sarsıntı tavanlı, titreşim güçlü. Kalkan emdiyse hasar yoktur: hafif bir
+   * sarsıntı ve kısa bir dokunuş yeter (`absorbed*`), yoksa korunan oyuncu her mermide uyarı alır.
+   */
+  hit: { trauma: 0.35, absorbedTrauma: 0.1, absorbedHaptic: 0.45 },
   wall: {
     /** Bu çarpma hızında yankı, sarsıntı ve titreşim tam şiddettedir. */
     fullSpeed: 340,

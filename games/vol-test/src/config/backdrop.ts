@@ -1,7 +1,7 @@
-/** Menü arka planı: menülerin arkasında ekrandan geçen yürüyüş alayının sayıları (sahne `BackdropScene`). */
+/** Menü arka planı (her zaman açık): menülerin arkasında ekrandan geçen yürüyüş alayının sayıları (sahne `BackdropScene`). */
 export const BACKDROP = {
-  /** Aynı anda ekrandan geçen araç sayısı: seçilebilir aralık ve varsayılan. */
-  density: { min: 2, max: 10, default: 6 },
+  /** Aynı anda ekrandan geçen araç sayısı: seçilebilir aralık, varsayılan ve düşük kalitedeki üst sınır. */
+  density: { min: 2, max: 10, default: 6, low: 3 },
   /** Araç sırasını, giriş yönlerini ve zamanlamaları tohumlar. */
   seed: 1907,
   /**

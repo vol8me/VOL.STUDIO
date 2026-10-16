@@ -9,6 +9,10 @@ export class DevScene extends ScreenScene {
     super('Dev', services);
   }
 
+  protected override get showcase(): boolean {
+    return true;
+  }
+
   protected override createScreen(): ScreenPanel {
     // Araç seçimi vitrine anında yansır.
     let shown = this.services.settings.get().vehicle;

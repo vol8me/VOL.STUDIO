@@ -11,14 +11,9 @@ import type { TankFrame, VehicleView } from './VehicleView';
 const SHOWROOM = MENU.showroom;
 
 /**
- * Vitrinin zemini: `plane` ızgaralı kum zeminidir (arkada başka sahne yokken); `disc` araca yalnız bir
- * gölge ve halka verir, zemini saydam bırakır (arkada canlı savaş oynarken).
- */
-export type ShowroomGround = 'plane' | 'disc';
-
-/**
- * Menü ve garajın vitrini: oyundaki gerçek araç görünümünü yavaş dönen bir tablada gösterir. Görünüm
- * sınıfları oyunla aynıdır; yeni araç otomatik olarak vitrine girer.
+ * Araç seçilen ekranların (garaj, geliştirici) vitrini: oyundaki gerçek araç görünümünü yavaş dönen bir
+ * tablada gösterir. Zemin saydamdır (arkada yürüyüş alayı oynar); araca yalnız bir gölge ve halka verilir.
+ * Görünüm sınıfları oyunla aynıdır; yeni araç otomatik olarak vitrine girer.
  */
 export class Showroom {
   private readonly ground: Phaser.GameObjects.Graphics;
@@ -33,14 +28,13 @@ export class Showroom {
   constructor(
     private readonly scene: Phaser.Scene,
     spec: VehicleSpec,
-    private mode: ShowroomGround = 'plane',
   ) {
     this.ground = scene.add.graphics().setDepth(-100);
     this.lighting = scene.add
       .container(0, 0)
       .setDepth(TANK_LIGHTS.depth)
       .setBlendMode(Phaser.BlendModes.ADD);
-    this.drawGround();
+    this.drawDisc();
     this.setVehicle(spec);
   }
 
@@ -53,13 +47,6 @@ export class Showroom {
     this.extent = SHOWROOM.vehicleExtent[spec.id] ?? SHOWROOM.extent;
     this.view = createVehicleView(this.scene, spec, this.lighting);
     this.view.root.setDepth(10);
-  }
-
-  /** Zemin kipini değiştirir; aynı kipte işlem yapmaz. */
-  setGround(mode: ShowroomGround): void {
-    if (mode === this.mode) return;
-    this.mode = mode;
-    this.drawGround();
   }
 
   /**
@@ -142,32 +129,9 @@ export class Showroom {
     );
   }
 
-  private drawGround(): void {
-    this.ground.clear();
-    if (this.mode === 'disc') {
-      this.drawDisc();
-      return;
-    }
-    const half = SHOWROOM.groundHalf;
-    this.ground.fillStyle(PALETTE.sand, 1);
-    this.ground.fillRect(-half, -half, half * 2, half * 2);
-    for (const major of [false, true]) {
-      const style = major ? PALETTE.gridMajor : PALETTE.gridMinor;
-      this.ground.lineStyle(major ? 1.5 : 1, style.color, style.alpha);
-      this.ground.beginPath();
-      for (let at = -half; at <= half; at += SHOWROOM.gridStep) {
-        if (((at / SHOWROOM.gridStep) % 4 === 0) !== major) continue;
-        this.ground.moveTo(at, -half);
-        this.ground.lineTo(at, half);
-        this.ground.moveTo(-half, at);
-        this.ground.lineTo(half, at);
-      }
-      this.ground.strokePath();
-    }
-  }
-
-  /** Saydam zeminde aracı yerine bağlayan yumuşak gölge ve ince bir tabla halkası. */
+  /** Aracı yerine bağlayan yumuşak gölge ve ince bir tabla halkası. */
   private drawDisc(): void {
+    this.ground.clear();
     const { shadow, ring } = SHOWROOM.disc;
     const radius = this.extent * ring.radius;
     for (const layer of shadow.layers) {

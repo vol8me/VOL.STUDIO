@@ -89,17 +89,17 @@ describe('Showroom', () => {
     expect(showroom.freeArea).toEqual({ x: 440, y: 0, width: 840, height: 800 });
   });
 
-  it('zemin kipi: ızgaralı düzlem ya da saydam zeminde gölge; aynı kip yeniden çizilmez', () => {
+  it('zemini saydamdır: araca yalnız gölge ve halka çizilir, her karede yeniden çizilmez', () => {
     const { fake, showroom } = build();
     const ground = fake.created.find((object) => object.kind === 'graphics')!;
-    const clears = (): number => ground.calls.filter(([name]) => name === 'clear').length;
-    const before = clears();
-    showroom.setGround('plane');
-    expect(clears()).toBe(before);
-    showroom.setGround('disc');
-    expect(clears()).toBe(before + 1);
-    expect(ground.calls.some(([name]) => name === 'fillCircle')).toBe(true);
-    expect(ground.calls.some(([name]) => name === 'strokeCircle')).toBe(true);
+    const names = (): string[] => ground.calls.map(([name]) => name);
+    expect(names()).toContain('fillCircle');
+    expect(names()).toContain('strokeCircle');
+    expect(names()).not.toContain('fillRect');
+    const before = names().length;
+    showroom.update(16);
+    showroom.update(16);
+    expect(names()).toHaveLength(before);
   });
 
   it('tabla saati taşınabilir: aynı saat aynı açıyı verir, bozuk değer yok sayılır', () => {

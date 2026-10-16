@@ -4,10 +4,10 @@ import { UIRoot } from '@volstudio/core/ui';
 import { createSceneAudio } from '@/audio/sceneAudio';
 import type { GameServices } from '@/app/GameServices';
 import { MENU } from '@/config/menu';
-import { PALETTE } from '@/config/palette';
 import { VEHICLES, type VehicleSpec } from '@/config/vehicles';
-import { MENU_AREA_KEY, type FreeArea } from '@/view/menuLayout';
+import { freeArea, MENU_AREA_KEY, type FreeArea, type PanelRect } from '@/view/menuLayout';
 import { Showroom } from '@/view/Showroom';
+import { renderQualityOf } from './world/CameraRig';
 
 /** Bir ekranın DOM paneli: sahne onu bağlar, odaklar ve kapanışta söker. */
 export interface ScreenPanel {
@@ -40,19 +40,19 @@ function sameArea(a: FreeArea | undefined, b: FreeArea): boolean {
 }
 
 /**
- * Menü, garaj, ayarlar ve geliştirici ekranlarının iskeleti: sağ şerit paneli ve araç vitrini. Canlı
- * arka plan açıksa (`backdrop` ayarı) altlarındaki `Backdrop` sahnesi yürüyüş alayını oynatır; sahne saydam
- * kalır ve vitrin zemini yalnız bir gölgeye iner. Vitrin kamerayı panelin bıraktığı alana kurar; geri
- * tuşu (Android geri, Escape köprüsü) `onBack`e gider; ekran değişimi şeridin kenara kaymasıyla yapılır.
- * Alt sınıf yalnız panelini kurar ve geçişlerini söyler.
+ * Menü, garaj, ayarlar ve geliştirici ekranlarının iskeleti: sağ şerit paneli. Altlarındaki `Backdrop`
+ * sahnesi her zaman yürüyüş alayını oynatır (kapatma ayarı yoktur); bu sahne saydam kalır. Araç vitrini
+ * yalnız aracın seçildiği ekranlarda (`showcase`: garaj, geliştirici) vardır ve alayın üstünde dönen bir
+ * tabladır; ana menü ve ayarlar yalnız alayı gösterir. Boş alan (panelin bıraktığı yer) alayın odağını
+ * belirler; geri tuşu (Android geri, Escape köprüsü) `onBack`e gider; ekran değişimi şeridin kenara
+ * kaymasıyla yapılır. Alt sınıf yalnız panelini kurar ve geçişlerini söyler.
  */
 export abstract class ScreenScene extends Phaser.Scene {
   protected scope = new DisposableScope();
   protected ui!: UIRoot;
-  private showroom!: Showroom;
+  private showroom: Showroom | undefined;
   private screen: ScreenPanel | undefined;
   private leaving = false;
-  private backdrop = false;
   private published: FreeArea | undefined;
 
   constructor(
@@ -68,24 +68,15 @@ export abstract class ScreenScene extends Phaser.Scene {
     this.leaving = false;
     this.published = undefined;
     applyVolViewport(this);
-    const settings = this.services.settings;
-    this.backdrop = settings.get().backdrop;
     this.ui = this.scope.addDestroyable(
       new UIRoot(this.game.canvas.parentElement ?? document.body),
     );
-    this.showroom = this.scope.addDestroyable(
-      new Showroom(this, this.showcaseSpec(), this.backdrop ? 'disc' : 'plane'),
-    );
+    this.showroom = this.showcase
+      ? this.scope.addDestroyable(new Showroom(this, this.showcaseSpec()))
+      : undefined;
     const clock = this.game.registry.get(CLOCK_KEY) as unknown;
-    if (typeof clock === 'number') this.showroom.clockMs = clock;
-    this.applyBackdrop();
-    this.scope.addSubscription(
-      settings.subscribe((value) => {
-        if (value.backdrop === this.backdrop) return;
-        this.backdrop = value.backdrop;
-        this.applyBackdrop();
-      }),
-    );
+    if (this.showroom && typeof clock === 'number') this.showroom.clockMs = clock;
+    this.startBackdrop();
     const screen = this.createScreen(data);
     this.screen = screen;
     this.scope.addDestroyable(screen);
@@ -103,23 +94,25 @@ export abstract class ScreenScene extends Phaser.Scene {
     });
     this.scope.addSubscription(() => cancelAnimationFrame(focus));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.registry.set(CLOCK_KEY, this.showroom.clockMs);
+      if (this.showroom) this.game.registry.set(CLOCK_KEY, this.showroom.clockMs);
       this.scope.dispose();
     });
   }
 
-  /**
-   * Canlı arka planı ayara uydurur: açıkken sahne saydamdır, vitrin zemini gölgeye iner ve arka plan
-   * sahnesi çalışır; kapalıyken kamera koyu zemine, vitrin ızgaralı kuma döner ve arka plan durur.
-   */
-  private applyBackdrop(): void {
-    this.cameras.main.setBackgroundColor(this.backdrop ? CLEAR : PALETTE.void);
-    this.showroom.setGround(this.backdrop ? 'disc' : 'plane');
+  /** Sahneyi saydam yapar ve arka plan sahnesini (çalışmıyorsa) başlatır; ekranlar arası geçişte sürer. */
+  private startBackdrop(): void {
+    this.cameras.main.setBackgroundColor(CLEAR);
     const plugin = this.scene;
-    if (!plugin.get(BACKDROP_SCENE)) return;
-    const running = plugin.isActive(BACKDROP_SCENE);
-    if (this.backdrop && !running) plugin.launch(BACKDROP_SCENE);
-    else if (!this.backdrop && running) plugin.stop(BACKDROP_SCENE);
+    if (plugin.get(BACKDROP_SCENE) && !plugin.isActive(BACKDROP_SCENE))
+      plugin.launch(BACKDROP_SCENE);
+  }
+
+  /** Panelin bıraktığı boş alan: vitrin varsa onun kamera alanı, yoksa aynı hesap ekran boyundan. */
+  private spareArea(panel: PanelRect | undefined): FreeArea {
+    if (this.showroom?.freeArea) return this.showroom.freeArea;
+    const quality = renderQualityOf(this);
+    const { width, height } = this.cameras.main;
+    return freeArea(width / quality, height / quality, MENU.showroom.stackedFraction, panel);
   }
 
   /**
@@ -140,10 +133,11 @@ export abstract class ScreenScene extends Phaser.Scene {
   }
 
   override update(_time: number, delta: number): void {
-    this.showroom.update(delta, this.screen?.element.getBoundingClientRect());
+    const panel = this.screen?.element.getBoundingClientRect();
+    this.showroom?.update(delta, panel);
     // Arka plan sahnesi alayın odağını bu alana göre kurar; yalnız değişince yazılır.
-    const area = this.showroom.freeArea;
-    if (area && !sameArea(this.published, area)) {
+    const area = this.spareArea(panel);
+    if (!sameArea(this.published, area)) {
       this.published = area;
       this.game.registry.set(MENU_AREA_KEY, area);
     }
@@ -157,13 +151,18 @@ export abstract class ScreenScene extends Phaser.Scene {
     return false;
   }
 
+  /** Bu ekran aracı bir tablada gösterir mi (araç seçilen ekranlar); ana menü ve ayarlar göstermez. */
+  protected get showcase(): boolean {
+    return false;
+  }
+
   /** Vitrinde gösterilen araç: oyuncunun seçtiği araç. */
   protected showcaseSpec(): VehicleSpec {
     return VEHICLES[this.services.settings.get().vehicle];
   }
 
   protected setShowcase(spec: VehicleSpec): void {
-    this.showroom.setVehicle(spec);
+    this.showroom?.setVehicle(spec);
   }
 
   /**

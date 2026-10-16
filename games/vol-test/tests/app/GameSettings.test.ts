@@ -59,39 +59,30 @@ describe('cihaz tercihleri', () => {
       language: 'en',
       season: 'auto',
       weather: 'auto',
-      backdrop: false,
       backdropDensity: BACKDROP.density.default,
     });
     expect(localStorage.getItem('synced.voltest.preferences')).toBeNull();
     next.dispose();
   });
-  it('mevsim, hava, arka plan ve yoğunluk seçimleri kaydedilir; geçersiz değer eskisini korur', async () => {
+  it('mevsim, hava ve arka plan yoğunluğu seçimleri kaydedilir; geçersiz değer eskisini korur', async () => {
     localStorage.clear();
     const settings = new GameSettings(store(), 'Linux');
     await settings.load();
-    expect(settings.get()).toMatchObject({ backdrop: true, season: 'auto', weather: 'auto' });
-    await settings.update({
-      season: 'winter',
-      weather: 'snow',
-      backdrop: false,
-      backdropDensity: 7,
-    });
+    expect(settings.get()).toMatchObject({ season: 'auto', weather: 'auto' });
+    await settings.update({ season: 'winter', weather: 'snow', backdropDensity: 7 });
     expect(settings.get()).toMatchObject({
       season: 'winter',
       weather: 'snow',
-      backdrop: false,
       backdropDensity: 7,
     });
     await settings.update({
       season: 'monsoon' as never,
       weather: 'fog' as never,
-      backdrop: 'yes' as never,
       backdropDensity: 99,
     });
     expect(settings.get()).toMatchObject({
       season: 'winter',
       weather: 'snow',
-      backdrop: false,
       backdropDensity: 7,
     });
     await settings.update({ season: 'auto', weather: 'auto', backdropDensity: 2 });
@@ -99,11 +90,25 @@ describe('cihaz tercihleri', () => {
     settings.dispose();
   });
 
-  it('düşük kalite varsayılanı canlı menü arka planını kapalı açar', async () => {
+  it('menü arka planı artık bir ayar değildir; yoğunluk her cihazda aynı varsayılanla açılır', async () => {
+    for (const agent of ['Mozilla/5.0 (Linux; Android 16)', 'Linux']) {
+      localStorage.clear();
+      const settings = new GameSettings(store(), agent);
+      await settings.load();
+      expect(settings.get()).not.toHaveProperty('backdrop');
+      expect(settings.get().backdropDensity).toBe(BACKDROP.density.default);
+      settings.dispose();
+    }
+  });
+
+  it('eski kayıttaki `backdrop` alanı yok sayılır ve tercihe sızmaz', async () => {
     localStorage.clear();
-    const settings = new GameSettings(store(), 'Mozilla/5.0 (Linux; Android 16)');
+    const saves = store();
+    await saves.save('device.voltest.preferences', { backdrop: false, backdropDensity: 4 });
+    const settings = new GameSettings(saves, 'Linux');
     await settings.load();
-    expect(settings.get().backdrop).toBe(false);
+    expect(settings.get()).not.toHaveProperty('backdrop');
+    expect(settings.get().backdropDensity).toBe(4);
     settings.dispose();
   });
 
@@ -137,7 +142,6 @@ describe('cihaz tercihleri', () => {
       language: 'auto',
       season: 'auto',
       weather: 'auto',
-      backdrop: true,
       backdropDensity: BACKDROP.density.default,
     });
     const changes: unknown[] = [];

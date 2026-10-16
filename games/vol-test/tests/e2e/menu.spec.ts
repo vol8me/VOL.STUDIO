@@ -10,7 +10,7 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
-test('oyun ana menüyle açılır; vitrin çizilir, dünya ve HUD henüz yoktur, konsol temiz', async ({
+test('oyun ana menüyle açılır; arka plan alayı çizilir, dünya ve HUD henüz yoktur, konsol temiz', async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -65,12 +65,18 @@ test('ayarlar: dil değişimi menüye yansır ve yeniden açılışta korunur', 
 test('dar ekranda menü ve garaj panelleri ekrana sığar', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 780 });
   await page.goto('/');
+  // Panel alttan kayarak girer (`vt-sheet-in`): ölçüm giriş animasyonu bitene dek yoklanır; gerçek taşma
+  // süre dolunca da düşer.
   const fits = async (id: string): Promise<void> => {
-    const box = await page.getByTestId(id).boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.x).toBeGreaterThanOrEqual(0);
-    expect(box!.x + box!.width).toBeLessThanOrEqual(390 + 1);
-    expect(box!.y + box!.height).toBeLessThanOrEqual(780 + 1);
+    const bounds = async (): Promise<{ right: number; bottom: number; left: number }> => {
+      const box = await page.getByTestId(id).boundingBox();
+      expect(box).not.toBeNull();
+      return { left: box!.x, right: box!.x + box!.width, bottom: box!.y + box!.height };
+    };
+    await expect.poll(async () => (await bounds()).bottom).toBeLessThanOrEqual(780 + 1);
+    const box = await bounds();
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(390 + 1);
   };
   await fits('menu');
   await page.getByTestId('menu-play').click();

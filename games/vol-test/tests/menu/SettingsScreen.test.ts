@@ -60,14 +60,12 @@ describe('SettingsScreen', () => {
     expect(range.value).toBe('0.2');
   });
 
-  it('canlı menü arka planı onay kutusu tercihe yazılır ve tercihten tazelenir', async () => {
-    const { settings, find } = await mount();
-    const box = find('settings-backdrop').querySelector<HTMLInputElement>('input')!;
-    expect(box.checked).toBe(true);
-    box.click();
-    await vi.waitFor(() => expect(settings.get().backdrop).toBe(false));
-    await settings.update({ backdrop: true });
-    await vi.waitFor(() => expect(box.checked).toBe(true));
+  it('menü arka planı için ayar sunulmaz: alay her zaman açıktır', async () => {
+    const { screen } = await mount();
+    expect(screen.element.querySelector('[data-testid="settings-backdrop"]')).toBeNull();
+    expect(
+      screen.element.querySelector('input[type="checkbox"][data-testid*="backdrop"]'),
+    ).toBeNull();
   });
 
   it('kalite seçimi tercihe yazılır', async () => {

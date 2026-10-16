@@ -815,7 +815,7 @@ Açılış sırası Boot → Backdrop + Menu → (Garage | Settings | Dev | Worl
 | `Backdrop` | Menülerin altında yürüyen araç alayı (savaşsız, sessiz); dünya açılınca durur             |
 | `Menu`     | Savaşa katıl (garaj), alıştırma, ayarlar; çıkış yalnız native masaüstü ve Deck'te, onaylı |
 | `Garage`   | Araç kartları (ad, görev, üç ölçü), ad, cephe; savaşa katıl, alıştırmaya çık, geri        |
-| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi, menü arka planı |
+| `Settings` | Dil (otomatik/Türkçe/English), efekt kalitesi, ses, titreşim, ekran kipi                  |
 | `Dev`      | Mevsim, hava, araç, arka plan yoğunluğu; senaryo, tohum ve kaos kadranı                   |
 | `World`    | Oyun; duraklatma menüsünde "Ana menü" (çevrimiçide "Savaştan ayrıl" da menüye döner)      |
 
@@ -826,8 +826,8 @@ geliştirici ve duraklatma aynı şeridi paylaşır, ekranlar arası geçiş şe
 (`MENU.fadeMs`, `slidePx`; CSS `--vt-slide`/`--vt-slide-ms` aynı sayıyı taşır, `prefers-reduced-motion`da
 anında). Duraklatma (`PauseOverlay`) aynı `ScreenFrame`i CORE `Modal` içinde taşır: modal yalnız odak tuzağı,
 Escape ve Android geri sözleşmesini verir. Katman ayar satırı taşımaz: yalnız düğmeler vardır (Devam et,
-Ayarlar, Geliştirici, sürücü eylemleri). "Ayarlar" `SettingsScreen`i (dil, kalite, ses, titreşim, ekran kipi,
-menü arka planı), "Geliştirici" `DevScreen`i şeridin içinde açar; geri düğmesi menüye döner. Oyuncu ayarı ile
+Ayarlar, Geliştirici, sürücü eylemleri). "Ayarlar" `SettingsScreen`i (dil, kalite, ses, titreşim, ekran kipi),
+"Geliştirici" `DevScreen`i şeridin içinde açar; geri düğmesi menüye döner. Oyuncu ayarı ile
 geliştirici ayarı böylece tek yerde ve ayrı durur. Geniş denetimli satırlar `stackOnNarrow` ile dar ekranda
 etiketin altına iner.
 
@@ -856,14 +856,18 @@ yakındakilerden yana kayarak yol verir, aralıklı olarak atılım/sıçrama g�
 dolu açılır (her araç yolunun rastgele bir yerinden başlar), ön ısınma ve ileri sarım yoktur. Dünya göl ve
 kayasız düz karadır: yürüyüş hiçbir yerde takılmaz. Kamera sabittir (`BACKDROP.camera.zoom`); sahnenin
 merkezi, menü şeridi alayı örtmesin diye menü sahnesinin oyun kayıt defterine yazdığı boş alana
-(`MENU_AREA_KEY`, `freeArea`) oturur ve araç vitrini aynı alanı paylaşır. Arka plan sessizdir, hasar ve
-titreşim geri bildirimi yoktur, üstüne `dim` karartması konur. Ayar `backdrop` (varsayılan: kalite `low`
-değilse açık) ve `backdropDensity` (aynı anda 2–10 araç, varsayılan 6); yoğunluk değişince alay baştan kurulur,
-mevsim/hava/kalite yalnız ilgili parçayı yeniler. Dünya sahnesi açılırken önce arka plan durdurulur (doku
-anahtarları çakışmasın). Arkada ayrıca oyunun gerçek araç görünümleri (`TankView`, `SpiderView`) saydam zeminde
-dönen tablada durur (`Showroom`; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde
-onları dolaşık bir poza sürükler, taretleri salınır); kamera şeridin bıraktığı boş alana kurulur ve sığmazsa
-yakınlaştırma küçülür (`src/config/menu.ts`).
+(`MENU_AREA_KEY`, `freeArea`) oturur. Arka plan sessizdir, hasar ve titreşim geri bildirimi yoktur, üstüne
+`dim` karartması konur. Alay standarttır: kapatma ayarı yoktur ve her menü ekranında çalışır. Tek ayar
+`backdropDensity`dir (aynı anda 2–10 araç, varsayılan 6) ve yalnız geliştirici ekranındadır; düşük kalitede
+sayı çalışma anında `BACKDROP.density.low` (3) ile sınırlanır (`paradeUnits`: kayıtlı eski değerler de hafif
+kalır, alay kapanmaz seyrelir); yoğunluk değişince alay baştan kurulur, mevsim/hava/kalite yalnız ilgili parçayı yeniler.
+Dünya sahnesi açılırken önce arka plan durdurulur (doku anahtarları çakışmasın). Ana menü ve ayarlar
+yalnız alayı gösterir. Araç seçilen ekranlarda (garaj, geliştirici) alayın üstünde oyunun gerçek araç
+görünümleri (`TankView`, `SpiderView`) saydam zeminde dönen tablada durur (`Showroom`: araca yalnız bir
+gölge ve halka verilir; bacaklı yürüyücü dönmez, çünkü ayaklar dünya uzayında basılır ve dönen gövde onları
+dolaşık bir poza sürükler, taretleri salınır); kamera şeridin bıraktığı boş alana kurulur ve sığmazsa
+yakınlaştırma küçülür (`src/config/menu.ts`). Vitrinsiz ekranda boş alanı `ScreenScene` aynı hesapla
+(`freeArea`) panelden çıkarır.
 Android geri tuşu garajdan ve ayarlardan menüye döner, menüde çıkış onayını açar ya da kapatır.
 
 Garajdaki seçim (araç, cephe, ad) ve ayarlardaki dil `GameSettings`e yazılır ve oturumlar arasında

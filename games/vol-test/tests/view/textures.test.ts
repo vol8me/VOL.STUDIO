@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DEBRIS } from '@/config/debris';
 import { tankSpecs } from '@/config/tankView';
 import { HOVER_IDS, LEAPER_IDS, MECH_IDS } from '@/config/vehicles';
+import { SHIELD_TEXTURE } from '@/view/spider/shieldTextures';
 import {
   createRuntimeTextures,
   queueHoverTextures,
@@ -87,6 +88,7 @@ describe('textures', () => {
         TEXTURE.ring,
         TEXTURE.scorch,
         ...Array.from({ length: DEBRIS.shardVariants }, (_, variant) => shardTexture(variant)),
+        ...Object.values(SHIELD_TEXTURE),
         TEXTURE.skid,
         TEXTURE.spark,
         TEXTURE.treadBase,

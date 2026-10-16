@@ -74,14 +74,20 @@ describe('routeSimEvents', () => {
     expect(t.effects.chip).toHaveBeenCalled();
   });
 
-  it('kalkanlı hedefin isabeti yine oyuncu geri bildirimini tetikler (titreşim ve nişangâh)', () => {
+  it('kalkanlı hedefin isabeti nişangâhı tetikler; korunan oyuncu hafif sarsılır, kalkansız tam sarsılır', () => {
     const t = targets();
     const reticle = { fired: vi.fn(), hit: vi.fn() };
     const shielded = { ...t, reticle, tank: () => ({ fire: vi.fn(), absorb: () => true }) };
     routeSimEvents([{ kind: 'hit', owner: PLAYER, target: OTHER, x: 0, y: 0, angle: 0 }], shielded);
     expect(reticle.hit).toHaveBeenCalled();
+    haptics.patterns.length = 0;
     routeSimEvents([{ kind: 'hit', owner: OTHER, target: PLAYER, x: 0, y: 0, angle: 0 }], shielded);
-    expect(t.camera.addTrauma).toHaveBeenCalledWith(FEEL.hit.trauma);
+    expect(t.camera.addTrauma).toHaveBeenLastCalledWith(FEEL.hit.absorbedTrauma);
+    expect(FEEL.hit.absorbedTrauma).toBeLessThan(FEEL.hit.trauma);
+    expect(haptics.patterns).toEqual(['tap']);
+    const bare = { ...t, tank: () => ({ fire: vi.fn(), absorb: () => false }) };
+    routeSimEvents([{ kind: 'hit', owner: OTHER, target: PLAYER, x: 0, y: 0, angle: 0 }], bare);
+    expect(t.camera.addTrauma).toHaveBeenLastCalledWith(FEEL.hit.trauma);
     expect(haptics.patterns).toContain('warning');
   });
 

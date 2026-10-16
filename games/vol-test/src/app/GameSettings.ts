@@ -53,8 +53,6 @@ export interface GamePreferences {
   season: SeasonChoice;
   /** Zorlanan hava durumu (`auto`: mevsim takvimi seçer). */
   weather: WeatherChoice;
-  /** Menülerin arkasında yürüyen araç alayı oynar; kapalıysa düz vitrin zemini görünür. */
-  backdrop: boolean;
   /** Menü arka planındaki alayda aynı anda yürüyen araç sayısı. */
   backdropDensity: number;
 }
@@ -91,7 +89,6 @@ function parsePreferences(value: unknown, fallback: GamePreferences): GamePrefer
         : fallback.display,
     season: isSeasonChoice(input.season) ? input.season : fallback.season,
     weather: isWeatherChoice(input.weather) ? input.weather : fallback.weather,
-    backdrop: typeof input.backdrop === 'boolean' ? input.backdrop : fallback.backdrop,
     backdropDensity:
       Number.isInteger(input.backdropDensity) &&
       (input.backdropDensity as number) >= BACKDROP.density.min &&
@@ -120,8 +117,6 @@ export class GameSettings {
       language: 'auto',
       season: CLIMATE_AUTO,
       weather: CLIMATE_AUTO,
-      // Düşük kalite (Android varsayılanı) canlı arka planı kapalı açar: ikinci bir dünya çizilmez.
-      backdrop: initialEffectLevel(userAgent) !== 'low',
       backdropDensity: BACKDROP.density.default,
     };
     this.state = new PersistedObservableState({
@@ -144,7 +139,6 @@ export class GameSettings {
         a.language === b.language &&
         a.season === b.season &&
         a.weather === b.weather &&
-        a.backdrop === b.backdrop &&
         a.backdropDensity === b.backdropDensity,
       store: {
         load: (_key, fallback) => store.load(KEY, fallback),
