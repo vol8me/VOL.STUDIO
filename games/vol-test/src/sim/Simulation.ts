@@ -206,7 +206,7 @@ export class Simulation {
     const target = this.vehicle(targetId);
     if (!target) return 0;
     if (source !== undefined && this.isFriendly(source, target)) return 0;
-    const applied = target.vitality.damage(amount);
+    const applied = target.vitality.damage(this.scaleDamage(target, amount, source, cause));
     if (applied === 0) return 0;
     target.wear.touch();
     this.emit({
@@ -251,6 +251,28 @@ export class Simulation {
     }
     this.drownCarry.delete(vehicle.id);
     this.applyDamage(vehicle.id, carry, undefined, 'drown');
+  }
+
+  /**
+   * Yeteneğin hasara etkisi (`config/skills.ts`): hedefin zırhı/kalkanı gelen hasarı çarpar, atan aracın
+   * yeteneği mermi ve çarpışma hasarını büyütür, çarpma atağı yapanın kendi çarpışma hasarı azalır.
+   * Boğulma etkilenmez: kalkan suda boğulmayı durdurmaz. Çarpanlar hasar kapısında tek yerdedir.
+   */
+  private scaleDamage(
+    target: Vehicle,
+    amount: number,
+    source: EntityId | undefined,
+    cause: DamageCause,
+  ): number {
+    if (cause === 'drown') return amount;
+    let scale = target.effect.taken;
+    const dealer = source === undefined ? undefined : this.vehicle(source);
+    if (dealer && cause === 'projectile') scale *= dealer.effect.dealt;
+    if (cause === 'collision') {
+      if (dealer) scale *= dealer.effect.ram;
+      scale *= target.effect.ramTaken;
+    }
+    return amount * scale;
   }
 
   /** Ölü hedefe can basmaz; ölümden çıkış yalnız respawnVehicle ile gerçekleşir. */
@@ -416,7 +438,7 @@ export class Simulation {
     }
     for (const vehicle of this.vehicleList) {
       if (!vehicle.vitality.alive) continue;
-      vehicle.gun.update(stepMs * this.tempo);
+      vehicle.gun.update(stepMs * this.tempo * vehicle.effect.fireRate);
       const command = this.inputs.get(vehicle.id)!;
       if (command.fire && aimAligned(vehicle, command) && vehicle.gun.tryTrigger())
         this.fire(vehicle);
@@ -431,7 +453,7 @@ export class Simulation {
         if (!struck) return;
         const weapon = this.profileWeapons[projectile.profile];
         const speed = Math.hypot(projectile.vx, projectile.vy) || 1;
-        const impulse = weapon.hitImpulse * (speed / weapon.projectileSpeed);
+        const impulse = weapon.hitImpulse * (speed / weapon.projectileSpeed) * struck.effect.push;
         struck.chassis.applyImpulse(
           (projectile.vx / speed) * impulse,
           (projectile.vy / speed) * impulse,

@@ -72,12 +72,13 @@ describe('Hover sürüşü', () => {
     const subject = hover();
     run(subject, { moveX: 1, aimX: 1, brake: true }, 0.3);
     expect(subject.boosting).toBe(true);
-    expect(subject.speed).toBeGreaterThan(HOVER.maxSpeed * 1.2);
+    // Manta'nın aşırı yükü hız kazandırır ama küçüktür (asıl kazanç silah temposudur).
+    expect(subject.speed).toBeGreaterThan(HOVER.maxSpeed * 1.08);
     run(subject, { moveX: 1, aimX: 1 }, 0.1);
     expect(subject.boosting).toBe(false);
 
     const drained = hover();
-    run(drained, { moveX: 1, aimX: 1, brake: true }, 2);
+    run(drained, { moveX: 1, aimX: 1, brake: true }, 3);
     expect(drained.boosting).toBe(false);
     expect(drained.boost).toBeLessThan(drained.boostCapacity);
     run(drained, { aimX: 1 }, 6);

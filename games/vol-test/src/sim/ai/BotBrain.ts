@@ -2,6 +2,7 @@ import { angleDelta, wrapAngle } from '@volstudio/core/math';
 import { clamp, lerp } from '@volstudio/core/math/interpolation';
 import { createStatefulRandom, type StatefulRandom } from '@volstudio/core/random';
 import { BOT } from '@/config/bot';
+import type { SkillId } from '@/config/skills';
 import type { TankCommand } from '../command';
 import type { EntityId, Vehicle } from '../entities/Vehicle';
 import type { Simulation } from '../Simulation';
@@ -91,6 +92,8 @@ export class BotBrain {
   /** Algıda görülen enkazlar (yerinde sabit): konum ve çarpışma yarıçapı; yönlendirme her karede okur. */
   private readonly wrecks: { x: number; y: number; radius: number }[] = [];
   private readonly away = { x: 0, y: 0 };
+  /** Yoluna mermi geliyor mu (algı adımında yenilenir): kalkan yeteneği bunu bekler. */
+  private threatened = false;
   private avoidX = 0;
   private avoidY = 0;
   private orbit = 1;
@@ -213,6 +216,13 @@ export class BotBrain {
         break;
     }
 
+    const skill = this.vehicle.skill;
+    if (skill !== 'dash' && skill !== 'leap') {
+      wantsBoost = this.mode === 'unstick' ? false : this.wantsSkill(skill, targetDistance, range);
+      // Çarpma atağı hedefe düz yüklenir; yörüngede dönmek hızı boşa harcar.
+      if (wantsBoost && skill === 'ram' && target)
+        [dx, dy] = this.toward(target.chassis.x, target.chassis.y);
+    }
     if (this.mode !== 'unstick') {
       const dodge = this.profile.evasion * BOT.tactics.dodgeWeight;
       dx += this.avoidX + this.dodgeX * dodge;
@@ -230,7 +240,9 @@ export class BotBrain {
     out.moveX = dx;
     out.moveY = dy;
     this.lastMove = Math.min(1, length);
-    const boosting = this.decideBoost(wantsBoost && this.lastMove > 0.5);
+    // Atılım ve çarpma atağı hareket ister; kalkan, aşırı yük ve kuşatma durağan botta da açılır.
+    const travels = skill === 'dash' || skill === 'leap' || skill === 'ram';
+    const boosting = this.decideBoost(wantsBoost && (!travels || this.lastMove > 0.5));
     // Yürüyücünün ve süzülenin hızlanması Shift değil Space atılımıdır (`brake` alanı); tank Shift ile hızlanır.
     if (chassis.kind !== 'tank') out.brake = boosting;
     else out.boost = boosting;
@@ -317,7 +329,9 @@ export class BotBrain {
     }
     this.dodgeX = 0;
     this.dodgeY = 0;
-    if (this.profile.evasion > 0) this.scanProjectiles(sim);
+    this.threatened = false;
+    // Kalkan yeteneği kaçınma kişiliğinden bağımsız mermiyi görmek zorundadır; kaçınma ağırlığı yine kişiliktedir.
+    if (this.profile.evasion > 0 || this.vehicle.skill === 'shield') this.scanProjectiles(sim);
   }
 
   /** Hedef puanı (düşük iyi): mesafe, can açığı ve doğma korumasıyla ayarlanmış etkin uzaklık. */
@@ -365,6 +379,7 @@ export class BotBrain {
       const urgency = 1 - 0.5 * (time / tactics.dodgeHorizonS);
       sx += px * side * urgency;
       sy += py * side * urgency;
+      this.threatened = true;
     }
     const length = Math.hypot(sx, sy);
     if (length > 1) {
@@ -628,6 +643,30 @@ export class BotBrain {
       this.vehicle.chassis.hull + Math.PI + side * (0.5 + this.random.next() * 0.9),
     );
     this.unstickUntilMs = this.clockMs + BOT.unstickMs;
+  }
+
+  /**
+   * Hız deposundan beslenen özel yeteneklerin (kalkan, aşırı yük, çarpma, kuşatma) ne zaman açılacağı.
+   * Hepsi savaşa özgüdür: bot bunları yürüyüşte ya da uzak hedefte harcamaz, yoksa depo boşken gerekeni
+   * yapamaz.
+   */
+  private wantsSkill(skill: SkillId, targetDistance: number, range: number): boolean {
+    if (this.mode !== 'engage' || !this.target) return false;
+    switch (skill) {
+      case 'shield':
+        return this.threatened;
+      case 'overdrive':
+        return targetDistance <= range * BOT.fireRangeFraction;
+      case 'ram':
+        return targetDistance <= range * BOT.skills.ramRange && targetDistance > BOT.skills.ramMin;
+      case 'siege':
+        return (
+          targetDistance <= range * BOT.fireRangeFraction &&
+          targetDistance >= range * BOT.skills.siegeMin
+        );
+      default:
+        return false;
+    }
   }
 
   /** Atılım depoya göre açılıp kapanır; eşikler arası aralık titremeyi önler. */

@@ -64,7 +64,8 @@ export class Walker extends Chassis {
     const moving = length > config.moveDeadzone;
     // Atılım kilitlidir: Space ile başlar (depo eşiği aşılmışsa) ve bırakılsa da depo boşalana dek sürer.
     this.reserve.update(command.brake || this.reserve.active, dt);
-    const dashing = this.reserve.active;
+    // Atılım yetenek açıkken vardır; yürüyüşü zorlamayan yetenek (kalkan) hız ve yönü değiştirmez.
+    const dashing = this.reserve.active && config.dashPull > 0;
     const mobility =
       (1 - config.gripSensitivity * (1 - clamp(surface?.grip ?? 1, 0, 1))) * this.traverse(world);
     // Hareket yoksa atılım gövdenin baktığı yöne gider: av atılışı durduğu yerden de başlar.

@@ -23,9 +23,11 @@ export const WALKER = {
   acceleration: 1250,
   /** Komut bırakılınca ya da hedef hıza göre fazla hızlıyken yavaşlama ivmesi. */
   braking: 1700,
-  /** Atılım (av atılışı): tavan çarpanı ve atılırken ivme. */
+  /** Yetenek hızı: tavan çarpanı ve ivme; `dashPull` 0 ise yürüyüşü zorlamaz (kalkan); `leapTurnRate` havadaki hız yönünün dönüşü (rad/s). */
   dashMultiplier: 2.3,
   dashAcceleration: 3600,
+  dashPull: 1,
+  leapTurnRate: 1,
   /** Zemin tutuşunun ivme ve hızı kısma oranı (0 etkilemez, 1 palet gibi tam etkiler). */
   gripSensitivity: 0.55,
 

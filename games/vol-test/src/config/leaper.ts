@@ -23,6 +23,7 @@ export const LEAPER = {
   /** Sıçrama: tavan çarpanı ve itilirken ivme (kalkış neredeyse anidir). */
   dashMultiplier: 2.35,
   dashAcceleration: 6000,
+  dashPull: 1,
   /** Zemin tutuşunun ivme ve hızı kısma oranı. */
   gripSensitivity: 0.4,
 

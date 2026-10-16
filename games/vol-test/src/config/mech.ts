@@ -22,6 +22,9 @@ export const MECH = {
   /** Atılım (koşu): tavan çarpanı ve atılırken ivme. */
   dashMultiplier: 1.7,
   dashAcceleration: 1500,
+  /** Walker sayı biçiminin gereği: mech atılımda baktığı yöne fırlar ve havaya çıkmaz. */
+  dashPull: 1,
+  leapTurnRate: 1,
   /** Zemin tutuşunun ivme ve hızı kısma oranı. */
   gripSensitivity: 0.45,
 

@@ -11,7 +11,7 @@ export const BOT = {
   thinkIntervalMs: 160,
   /** Düşmanı fark etme mesafesi (birim); en uzun silah menzilinden büyüktür. */
   sightRange: 1100,
-  /** Hedef bu çarpanla büyütülmüş görüş mesafesine çıkana dek bırakılmaz (titreşimi önler). */
+  /** Hedef, görüş mesafesinin bu katına çıkana dek bırakılmaz (titreşimi önler). */
   loseSightFactor: 1.2,
   /** Yeni hedef, güncelinden bu oranda yakınsa hedef değiştirilir. */
   switchCloserFactor: 0.6,
@@ -78,6 +78,9 @@ export const BOT = {
   boostStopFraction: 0.1,
   /** Yürüyücü hedef menzilinin bu oranından uzaktaysa av atılışıyla kapanır. */
   walkerPounceRange: 0.6,
+
+  /** Özel yetenekler: çarpma `ramRange` katı menzilde ve `ramMin` birimden uzakta, kuşatma `siegeMin` katından uzakta. */
+  skills: { ramRange: 1.1, ramMin: 90, siegeMin: 0.45 },
 
   /** Geri çekilen bot canı bu orana dönünce savaşa döner. */
   retreatExitHealth: 0.65,

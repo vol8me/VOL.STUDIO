@@ -10,6 +10,7 @@ import { HOVER, type HoverConfig } from './hover';
 import type { LeaperConfig } from './leaper';
 import { JACKAL, PANTHER, RHINO } from './leaperVehicles';
 import { MECH, type MechConfig } from './mech';
+import type { SkillId } from './skills';
 import { WALKER, type WalkerConfig } from './walker';
 
 /** Sıçrayıcı tanımları dosya boyu sınırı için `leaperVehicles.ts`tedir; buradan dışa aktarılır. */
@@ -98,6 +99,11 @@ export interface Armament {
 interface VehicleBase {
   readonly id: VehicleId;
   readonly health: number;
+  /**
+   * Hız deposundan beslenen yetenek (`config/skills.ts`). Verilmezse türün varsayılanı geçerlidir:
+   * sıçrayıcı `leap`, öteki türler `dash` (bkz. `skillOf`).
+   */
+  readonly skill?: SkillId;
   readonly suspension: SuspensionConfig;
   readonly armament: Armament;
 }
@@ -144,6 +150,11 @@ export interface LeaperSpec extends VehicleBase {
 }
 
 export type VehicleSpec = TankSpec | WalkerSpec | HoverSpec | MechSpec | LeaperSpec;
+
+/** Aracın yeteneği: tanımda yazılıysa o, yoksa türün varsayılanı. */
+export function skillOf(spec: VehicleSpec): SkillId {
+  return spec.skill ?? (spec.kind === 'leaper' ? 'leap' : 'dash');
+}
 
 /** Şasinin tüm türlerde ortak sayıları (gövde ayak izi, depo, taret hızı). */
 export function chassisConfigOf(
@@ -320,6 +331,7 @@ export const ARACHNID: WalkerSpec = {
   kind: 'walker',
   id: 'arachnid',
   health: 108,
+  skill: 'leap',
   walker: { ...WALKER, maxSpeed: 162 },
   suspension: {
     ...SUSPENSION,
@@ -364,6 +376,7 @@ export const WIDOW: WalkerSpec = {
   kind: 'walker',
   id: 'widow',
   health: 92,
+  skill: 'leap',
   walker: {
     ...WALKER,
     mass: 1250,
@@ -429,6 +442,7 @@ export const GOLIATH: WalkerSpec = {
   kind: 'walker',
   id: 'goliath',
   health: 360,
+  skill: 'shield',
   walker: {
     ...WALKER,
     mass: 9200,
@@ -438,15 +452,18 @@ export const GOLIATH: WalkerSpec = {
     maxSpeed: 86,
     acceleration: 520,
     braking: 820,
-    dashMultiplier: 1.7,
-    dashAcceleration: 1500,
+    // Kalkan sıçrama değildir: depo hız kazandırmaz, yürüyüşü zorlamaz (`dashPull`).
+    dashMultiplier: 1,
+    dashAcceleration: 520,
+    dashPull: 0,
     maxTurnRate: 1.5,
     turnAcceleration: 7,
     steerGain: 3,
-    boostCapacity: 110,
-    boostDrain: 190,
-    boostRegen: 24,
-    boostRestart: 100,
+    // Kalkan 2,3 sn sürer, dolum 5,4 sn.
+    boostCapacity: 70,
+    boostDrain: 30,
+    boostRegen: 13,
+    boostRestart: 70,
     wallRestitution: 0.16,
     impactKick: 0.03,
     turretTurnRate: 3.4,
@@ -496,7 +513,15 @@ export const MANTA: HoverSpec = {
   kind: 'hover',
   id: 'manta',
   health: 120,
-  hover: HOVER,
+  skill: 'overdrive',
+  // Aşırı yük 1,6 sn sürer, dolum 4 sn; hız kazancı küçüktür, asıl kazanç silahın katlanan temposudur.
+  hover: {
+    ...HOVER,
+    dashMultiplier: 1.25,
+    dashAcceleration: 900,
+    boostDrain: 50,
+    boostRegen: 20,
+  },
   suspension: {
     ...SUSPENSION,
     frequency: 1.5,
@@ -535,6 +560,7 @@ export const BARRACUDA: HoverSpec = {
   kind: 'hover',
   id: 'barracuda',
   health: 120,
+  skill: 'ram',
   hover: {
     ...HOVER,
     mass: 620,
@@ -550,8 +576,9 @@ export const BARRACUDA: HoverSpec = {
     turnAcceleration: 42,
     steerGain: 8,
     boostCapacity: 70,
-    boostDrain: 160,
+    boostDrain: 90,
     boostRegen: 34,
+    boostRestart: 70,
     wallRestitution: 0.6,
     impactKick: 0.24,
     turretTurnRate: 8.5,
@@ -600,6 +627,7 @@ export const LEVIATHAN: HoverSpec = {
   kind: 'hover',
   id: 'leviathan',
   health: 170,
+  skill: 'siege',
   hover: {
     ...HOVER,
     mass: 3100,
@@ -609,16 +637,18 @@ export const LEVIATHAN: HoverSpec = {
     maxSpeed: 150,
     acceleration: 300,
     braking: 190,
-    dashMultiplier: 1.4,
-    dashAcceleration: 700,
+    // Kuşatma duruşu: gemi yavaşlar ve yürüyüşe zorlanmaz (`dashPull`); asıl kazanç zırh ve ateş gücüdür.
+    dashMultiplier: 0.55,
+    dashAcceleration: 300,
+    dashPull: 0,
     gripSensitivity: 0.12,
     maxTurnRate: 2.4,
     turnAcceleration: 10,
     steerGain: 4,
-    boostCapacity: 100,
-    boostDrain: 150,
-    boostRegen: 22,
-    boostRestart: 100,
+    boostCapacity: 75,
+    boostDrain: 25,
+    boostRegen: 15,
+    boostRestart: 75,
     wallRestitution: 0.3,
     impactKick: 0.07,
     turretTurnRate: 3.6,

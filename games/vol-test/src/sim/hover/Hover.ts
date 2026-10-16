@@ -65,12 +65,14 @@ export class Hover extends Chassis {
     // Atılım basılı tutulduğu sürece vardır: bırakınca iticiler söner, depo dolmaya başlar.
     this.reserve.update(command.brake || command.boost, dt);
     const dashing = this.reserve.active;
+    // Yürüyüşü zorlayan yetenek (atılım) komut olmasa da baktığı yöne çeker; kuşatma duruşu çekmez.
+    const surging = dashing && config.dashPull > 0;
     const mobility = 1 - config.gripSensitivity * (1 - clamp(surface?.grip ?? 1, 0, 1));
     this.traverse(world);
     // Hareket yoksa atılım gövdenin baktığı yöne gider: durduğu yerden de fırlar.
     const wantX = moving ? command.moveX / length : Math.cos(this.angle);
     const wantY = moving ? command.moveY / length : Math.sin(this.angle);
-    const pull = dashing ? 1 : moving ? Math.min(1, length) : 0;
+    const pull = surging ? 1 : moving ? Math.min(1, length) : 0;
     const top = config.maxSpeed * (dashing ? config.dashMultiplier : 1) * mobility * this.capacity;
     const targetX = wantX * pull * top;
     const targetY = wantY * pull * top;

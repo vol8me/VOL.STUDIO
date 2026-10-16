@@ -23,6 +23,8 @@ export const HOVER = {
   /** Atılım: tavan çarpanı ve atılırken ivme. */
   dashMultiplier: 1.55,
   dashAcceleration: 1500,
+  /** 1: yetenek açıkken araç hareket etmese de baktığı yöne fırlar; 0: yalnız tavan/ivme değişir. */
+  dashPull: 1,
   /** Zemin tutuşunun ivme ve hızı kısma oranı (süzülen araç zeminden az etkilenir). */
   gripSensitivity: 0.2,
 

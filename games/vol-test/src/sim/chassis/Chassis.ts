@@ -148,6 +148,14 @@ export abstract class Chassis extends RigidBody {
     return this.reserve.active;
   }
 
+  /**
+   * Araç havada mı: yalnız sıçrayabilen şasi (sıçrayıcı, Arachnid, Widow) atılımda havaya çıkar. Görünüm
+   * ve ses yerdeki hâlden ayırmak için bunu okur; yetenek deposundan türetilir, ağ durumu değildir.
+   */
+  get airborne(): boolean {
+    return false;
+  }
+
   get boostCapacity(): number {
     return this.config.boostCapacity;
   }

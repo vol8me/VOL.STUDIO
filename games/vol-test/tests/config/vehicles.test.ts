@@ -39,7 +39,10 @@ describe('araç tanımı geçerliliği', () => {
       it('sayılar sonlu ve pozitiftir', () => {
         expect(spec.health).toBeGreaterThan(0);
         const numbers = [
-          ...Object.values(chassisConfigOf(spec)),
+          // `dashPull` 0 olabilir (yürüyüşü zorlamayan yetenek); öteki sayılar pozitiftir.
+          ...Object.entries(chassisConfigOf(spec))
+            .filter(([key]) => key !== 'dashPull')
+            .map(([, value]) => value),
           ...Object.values(spec.suspension),
           armament.weapon.intervalMs,
           armament.weapon.projectileSpeed,

@@ -1,8 +1,9 @@
 import { segmentOrientedBoxEntryT } from '@volstudio/core/math';
 import { Cooldown } from '@volstudio/core/time';
 import type { WeaponConfig } from '@/config/tank';
-import type { Armament, VehicleSpec } from '@/config/vehicles';
+import { skillOf, type Armament, type VehicleSpec } from '@/config/vehicles';
 import { COMBAT, type CombatConfig } from '@/config/combat';
+import { SKILLS, type SkillEffect, type SkillId } from '@/config/skills';
 import { PartWear } from '../combat/PartWear';
 import { Vitality } from '../combat/Vitality';
 import type { Chassis } from '../chassis/Chassis';
@@ -10,6 +11,7 @@ import { Hover } from '../hover/Hover';
 import { Leaper } from '../leaper/Leaper';
 import { Mech } from '../mech/Mech';
 import { Tank } from '../tank/Tank';
+import { LeapingWalker } from '../walker/LeapingWalker';
 import { Walker } from '../walker/Walker';
 
 /** Simülasyondaki varlıkların kimliği; simülasyon ömrü boyunca tekildir. */
@@ -48,7 +50,9 @@ export class Vehicle {
       case 'tank':
         return new Tank(spec.tank, spec.suspension);
       case 'walker':
-        return new Walker(spec.walker, spec.suspension);
+        return skillOf(spec) === 'leap'
+          ? new LeapingWalker(spec.walker, spec.suspension)
+          : new Walker(spec.walker, spec.suspension);
       case 'hover':
         return new Hover(spec.hover, spec.suspension);
       case 'mech':
@@ -56,6 +60,19 @@ export class Vehicle {
       case 'leaper':
         return new Leaper(spec.leaper, spec.suspension);
     }
+  }
+
+  /** Aracın yeteneği (`config/skills.ts`). */
+  get skill(): SkillId {
+    return skillOf(this.spec);
+  }
+
+  /**
+   * Şu an geçerli yetenek çarpanları: yetenek yalnız hız deposu aktifken (`chassis.boosting`) açıktır,
+   * kapalıyken hepsi 1'dir. Sunucu ve öngörü aynı depodan aynı çarpanı türetir.
+   */
+  get effect(): SkillEffect {
+    return this.chassis.boosting ? SKILLS[this.skill] : SKILLS.dash;
   }
 
   get armament(): Armament {
