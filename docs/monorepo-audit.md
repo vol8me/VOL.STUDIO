@@ -1547,7 +1547,8 @@ ortaya çıkardığı C27/C28 modal kusurları CORE'da RED→GREEN kapatıldı.
 tek Escape/Start ve kapanış temizliğini sınar. Yeni E2E iki motorda hem yalnız
 klavye hem yalnız sanal standard kol akışıyla 4/4 PASS verdi; skip/flaky yok.
 Oyunda B'nin duraklatma açmaması ve yeniden menüye dönüş de aynı akıştadır.
-Son kaynak için native paket ve taze tam kapı kabulü henüz tamamlanmadı.
+Son kaynak temiz `922a83dd` commit'inde yeniden paketlendi; iki motordaki
+tam ürün E2E'si de aşağıdaki taze kapıda geçti.
 
 Son pencere/kol düzeltmelerinin tam build'i geçti; bundle kapısı oyunda
 300,0 KiB sınırına karşı 302,1 KiB ölçerek düştü. Gzip9 bayt karşılaştırması:
@@ -1556,6 +1557,18 @@ Başlangıç `1f87893a` kaynağına toplam fark +740/+4.701 B; vendor ve CSS
 baytları hâlâ aynı. Gerçek kol yolunu açan CORE mekanizması ve niyet/katman
 sahipliği için yalnız oyun app bütçesi ölçülen 302,1 KiB'ye taşındı; vitrin
 232,9 KiB sınırında kaldı. Kod vendor'a taşınmadı; bundle tekrar PASS.
+
+**Son taze `signoff`: temiz `922a83dd`, 18/18 PASS, 63,6 dk.** Makbuz
+kullanılmadı; başlangıç yükü %23, yük uyarısı yok. Bütün `high` aşamaları,
+sekiz Rust birimi, tam ses kapsamı/doğrulaması ve JS/Rust güvenliği geçti.
+Contract 683 PASS / 2 mevcut SKIP. E2E toplamı 1.170 PASS / 21 mevcut SKIP,
+sıfır FAIL ve sıfır flaky: vitrin Chromium 552/2, WebKit 487/18; VOL.TEST
+Chromium 66/0, WebKit 65/1 (PASS/SKIP). Vitrin 23,8 dk, ürün 16,7 dk,
+tam ses kapsamı 9,2 dk sürdü. Kaynak koşu boyunca değişmedi. Bu sonuç
+önceki başarısız veya kesilen koşuların yerine geçen nihai kapı kanıtıdır;
+atlamalar [kapı sözleşmesindeki](gates.md) mevcut motor boşluklarıdır.
+Tek yeşil koşu F10.13'ün performans kabulü değildir: vitrin hâlâ 10 dk
+hedefini aşar; ürünün bozuk ağ ve araç matrisiyle toplam E2E 40,6 dk'dır.
 
 ### Üretim sunucu build'i ve native cihaz kanıtı
 
@@ -1599,19 +1612,52 @@ geçici sunucu/tüneller kapalı. HTTP/WS ve kısa süreli kabul, WSS/WAN/soak d
 Fiziksel düğme veya hissiyat kabulü yapılmadı. Otomatik uyandırma erişimi
 olmadığından cihaz suspend edilmedi; uyku/uyanma NOT-RUN.
 
-Cihazda sanal kol START ile oyunu duraklatırken menü/garaj D-pad/A/B
+İlk pakette sanal kol START ile oyunu duraklatırken menü/garaj D-pad/A/B
 gezinmesi çalışmadı. Bu gerçek ürün FAIL'i ortak CORE gezinmesinin oyun
-tarafından tüketilmediğini gösterdi; G33 kaynak entegrasyonu ve iki motorlu
-E2E geçti, ancak yeni native artifact kabulü tamamlanmadan cihaz yolu PASS
-sayılmaz. R19'un son düzeltmesi
-de frontend'i değiştirdiğinden önceki native hash yeni kaynak kabulü değildir.
+tarafından tüketilmediğini gösterdi; G33 ve C27/C28 düzeltmeleri son temiz
+`922a83dd` kaynağından yeniden paketlendi. Android APK ile steamrt4 AppImage
+aynı 454 dosyalık `chrome105` frontend hash'ini taşıyor. Kurulu APK ve Deck
+ikili/AppRun hash'leri kendi yeni artifactleriyle eşleşti; önceki paket
+başarısı son kaynağa aktarılmadı.
+
+**Son Lenovo paketi: 18/18 çevrimdışı + 16/16 ağ PASS.** Soğuk açılış
+693 ms; katılım isteğinden 1.188 ms sonraki kopuş aynı oda/oyuncu kaydıyla
+toparlandı. Zaman çizelgesi ve iklim ilerledi, tohum korundu; gerçek
+dokunmatik sürüş 92,1 birim hareket üretti. 17 sn kesintiden sonra oturum
+süresinin dolması, çevrimdışı dönüş, erişilemez sunucudan yeniden katılım ve
+menüye çıkış geçti. Ağ turu öncesi/sonrası kurulu APK hash'i eşit. Geçici
+USB bildirimi normal kapatılarak çevrimiçi HUD/dünya görüntüsü alındı;
+kalıcı bildirim/USB ayarı değişmedi. Son çıkışta insan sayısı sıfır;
+uygulama ve tura ait adb yönlendirmeleri kapandı, ayarlar ve veri korundu.
+
+**Son Deck paketi: gerçek SLR4 çevrimdışı kol turu PASS.** Süreç kökü yine
+`steamrt`/`4`/`4.0.20260805.254769`, pressure-vessel işareti mevcut,
+GameMode açık ve ölçüm modu kapalı. İşletim sistemi sanal koluyla
+menü/garaj/ayarlar/alıştırma, oynanışta B'nin menü açmaması, Start ile pause,
+iç ayardan B ile yalnız bir katman geri dönüş, tekrar B ile devam ve
+menüye çıkıp yeniden giriş geçti. Görüntülerde doğru odak halkası doğrulandı.
+GameMode pencere kipini sunmadığından iki F11 basışı aynı süreç ve pencere
+durumuyla canlı kaldı; bu yalnız no-op kabulüdür. Gerçek native pencere
+kipi döngüsü ve R19 yarışının cihazda üretilmesi NOT-RUN; gerçek adaptörlü
+regresyon bunun ayrı kaynak kanıtıdır. Son ağ turu başlarken Deck erişimi
+yeniden kayboldu. Bilinen tek SSH adresi, mevcut komşu kaydı ve yalnız
+doğrulanmış cihaza tek uyandırma denemesi erişimi geri getirmedi; fiziksel
+uyandırma/ağ kontrolü gerekiyor. Yeni paketin ağ kabulü NOT-RUN kaldı.
+Kalıcı güç ayarı değişmedi; erişim öncesinde yenilenen geçici `idle`
+engeli 3.600 sn ile sınırlı, fakat erişim kaybından sonra uzaktan temizliği
+doğrulanamadı. Eski paketin ağ PASS'i bu kabulün yerine geçmez.
+Host'taki bu tura ait sunucu/vekil/tünel süreçleri kapatıldı; sahipliği
+doğrulanmayan eski adb geliştirme yönlendirmeleri topluca silinmedi.
 
 Yerel makine kanıtları VOL.TEST paketinin git dışı records alanındadır:
 `hardening-fast.json`, `hardening-high.json`, `hardening-signoff.json`,
 24 istemci koşusunun `acceptance.json` kaydı, `native-build-manifest.json`,
-`android-device-tour.json` ve `android-network.json`. Kimlik/adresler
-halka açık rapora alınmaz. Buradaki ilk native artifactler `07ae25a9`
-runtime'ına aittir; son pencere/kol düzeltmelerinin yeniden paketlenmesi beklenir.
+`native-acceptance-922a83dd.json`, `android-device-tour-922a83dd.json`,
+`android-network-922a83dd.json` ve `deck-runtime-922a83dd.json`.
+Signoff'un commit/ağaç karması `hardening-signoff-source-922a83dd.json`
+kopyasında korunur. İlk native artifactler `07ae25a9`, son pencere/kol
+düzeltmelerini içeren paketler `922a83dd` kaynağına aittir. Kimlik/adresler
+halka açık rapora alınmaz.
 
 Üretim hesap kimliği/auth sağlayıcısı, internet WSS/sertifika dağıtımı,
 gerçek WAN ve 1/24 saat soak kabulü bu kaynak testlerinden türetilemez.

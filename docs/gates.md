@@ -19,6 +19,10 @@ koşularda vitrin E2E 22,6 ve 26,3 dk sürdü; sonraki başarısız `signoff`
 36,2 dk'da WebKit E2E hatasıyla düştü. Ardından **aynı performans değişikliği
 öncesi çalışma ağacında üç tam `signoff` PASS** (48,4 / 47,0 / 48,1 dk),
 ancak vitrin E2E yine 24–26 dk seviyesinde. Kapı bekçileri eklendikten sonraki taze koşu (`eb81a52c`): **18/18 PASS, 37,7 dk**, vitrin E2E 20,5 dk ([rapor §26](monorepo-audit.md)); tek koşudur. Kaynak sağlamlaştırma değişikliklerinin nihai taze koşusu da **18/18 PASS, 41,8 dk**; vitrin E2E 21,5 dk, tam audio kapsamı 9,0 dk sürdü ([rapor §27](monorepo-audit.md)).
+Son VOL.TEST/CORE/network sağlamlaştırma turunun temiz `922a83dd` kaynağı da
+**18/18 PASS, 63,6 dk** verdi: vitrin E2E 23,8 dk, ürün E2E 16,7 dk, tam ses
+kapsamı 9,2 dk. E2E 1.170 PASS / 21 mevcut SKIP, sıfır FAIL/flaky;
+başlangıç yükü %23 ve bütün aşamalar tazeydi ([rapor §28](monorepo-audit.md)).
 Bedel: görsel, erişilebilirlik ve etkileşim gerilemeleri push'ta değil `signoff`ta yakalanır. Bir arayüz
 değişikliğini push etmeden önce kanıtlamak için `pnpm exec just ui-check` (yüzey kaydı + build + iki motorlu e2e) koşar. **20–26 dk vitrin E2E maliyeti kabul edilemez**; yalnız push yolundan
 çıkarılmıştır, henüz hızlandırılmamıştır: bkz. [F10.13](../TODO.md).

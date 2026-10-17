@@ -230,12 +230,15 @@ node scripts/android/device-tour.mjs --serial <no> --apk <app-universal-debug.ap
 - **Sayı alanı:** `type=number` alanında `selectionStart` null döner; "kelime seçildi" hükmü NOT-RUN yazılır, seçimin
   varlığını çubuğun Kes/Kopyala düğümleri kanıtlar.
 - **Sınır:** dokunma hissi, ses dinleme ve gerçek AT insan kabulüdür. Bölünmüş ekran ve yüzen klavye turda sürülmez.
-- **Son koşu (2026-10-17, temiz `07ae25a9`, debug aarch64 APK):** Lenovo TB350FU
+- **Son koşu (2026-10-17, temiz `922a83dd`, debug aarch64 APK):** Lenovo TB350FU
   (Android 14) **18/18 çevrimdışı + 16/16 native ağ kontrolü PASS**. Kurulu
-  APK hash'i yerel artifact ile üç kez eşleşti. Soğuk açılış 684 ms; katılımdan
-  1.126 ms sonraki kopuş otomatik toparlandı, aynı oda/oyuncu ve ilerleyen
+  APK hash'i kurulumda ve ağ turunun öncesi/sonrasında yerel artifact ile
+  eşleşti. Soğuk açılış 693 ms; katılım isteğinden 1.188 ms sonraki kopuş
+  otomatik toparlandı, aynı oda/oyuncu ve ilerleyen
   simülasyon/iklim korundu. Dokunmatik sürüş, süresi dolan oturumun reddi ve
   yeniden katılım geçti. Ayarlar geri yazıldı, uygulama verisi korundu.
+  Geçici USB bildirimi kapatılarak çevrimiçi HUD/dünya görüntüsü de alındı;
+  bildirim veya USB için kalıcı ayar değiştirilmedi.
   Bu local HTTP/WS debug kabulüdür; release WSS/TLS, internet, fiziksel
   haptik/ses ve Samsung'da bu kaynak için kabul NOT-RUN'dır. Ayrıntı
   [sağlamlaştırma raporu §28](monorepo-audit.md) içindedir.

@@ -40,19 +40,22 @@ kapısı çıktıdaki GLIBC gereksiniminin hedef tabanı aşmadığını doğrul
 Host'ta üretilmiş daha yeni glibc bağımlı paket aynı hedefte kabul edilmez.
 Paketleme ayrıntıları [Linux rehberindedir](linux.md).
 
-**Güncel VOL.TEST paket kanıtı (2026-10-17):** temiz `07ae25a9` kaynağındaki
+**Güncel VOL.TEST paket kanıtı (2026-10-17):** temiz `922a83dd` kaynağındaki
 aynı `chrome105` frontend'den steamrt4 SDK `4.0.20260805.254769` release
 AppImage üretildi. 280 ELF dosyası GLIBC ≤ 2.41 sınırında, yasak GPU sürücü
 kütüphanesi sıfır; 14 GStreamer eklentisi ve paketli OGG/Vorbis çözme PASS.
 Geçici erişim kaybı sonrası cihazdaki ikili ve AppRun hash'leri eşleşti.
 Resmî sabit runtime arşivinin SHA-256'sı doğrulanıp ayrı devkit alanına kuruldu;
 gerçek oyun süreci `steamrt`/`4`/`4.0.20260805.254769` kökünde ve pressure-vessel
-içinde çalıştı. GameMode menüsü ve kısa HTTP/WS ağ turu PASS: erken kopuşta
-aynı oda/oyuncu ve iklimle dönüş, uzun kopuşta çevrimdışı alıştırmaya dönüş,
-yeniden katılım ve çıkış. Sanal kol START ile duraklatıyor ve oyunda hareket
-ediyor; **menü/garaj D-pad/A/B gezinmesi FAIL**. CORE tüketim düzeltmesinin
-güncel paket kabulü bekleniyor. Fiziksel düğmeler, uyku/uyanma, WSS/WAN ve
-uzun oturum bu koşuda NOT-RUN; [rapor §28](monorepo-audit.md) kapsamı ayırır.
+içinde çalıştı. Yeni pakette işletim sistemi sanal koluyla menü/garaj/ayarlar,
+alıştırma, Start ile pause, iç ayardan tek B ile geri, ikinci B ile devam
+ve menüye dönüp yeniden giriş PASS. İlk paketin menü/garaj D-pad/A/B FAIL'i
+CORE gezinme tüketimiyle kapandı. GameMode pencere kipini sunmaz; F11
+no-op/canlılık PASS, gerçek native kip döngüsü NOT-RUN'dır.
+İlk `07ae25a9` paketin kısa HTTP/WS ağ turu geçti; yeni paketin son ağ turu
+başlarken erişim yeniden kayboldu ve bu kabul henüz tamamlanmadı.
+Fiziksel düğmeler, uyku/uyanma, WSS/WAN ve uzun oturum bu koşuda NOT-RUN;
+[rapor §28](monorepo-audit.md) kapsamı ayırır.
 
 ### Host derlemesiyle vitrin (SLR4 kabı yokken)
 
